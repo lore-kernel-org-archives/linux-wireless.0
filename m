@@ -1,225 +1,352 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f48.google.com ([209.85.215.48]:48964 "EHLO
-	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752810Ab3IVWmj (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:36598 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759377Ab3ICFCu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Sep 2013 18:42:39 -0400
-Received: by mail-la0-f48.google.com with SMTP id er20so1894009lab.21
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Sep 2013 15:42:38 -0700 (PDT)
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: wcn36xx@lists.infradead.org,
-	Eugene Krasnikov <k.eugene.e@gmail.com>
-Subject: [PATCH v4 03/16] wcn36xx: add debug.c
-Date: Sun, 22 Sep 2013 23:42:00 +0100
-Message-Id: <1379889733-6215-4-git-send-email-k.eugene.e@gmail.com> (sfid-20130923_004250_887799_729D67D6)
-In-Reply-To: <1379889733-6215-1-git-send-email-k.eugene.e@gmail.com>
-References: <1379889733-6215-1-git-send-email-k.eugene.e@gmail.com>
+	Tue, 3 Sep 2013 01:02:50 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/3] ath9k: Update AR9485 1.1 initvals
+Date: Tue,  3 Sep 2013 10:28:57 +0530
+Message-Id: <1378184337-1816-3-git-send-email-sujith@msujith.org> (sfid-20130903_070254_463291_CD79663D)
+In-Reply-To: <1378184337-1816-1-git-send-email-sujith@msujith.org>
+References: <1378184337-1816-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-adding debug.c
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
+* Remove duplicate array mappings.
+* Fix ETSI CCA compliance.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/wcn36xx/debug.c | 188 +++++++++++++++++++++++++++++++
- 1 file changed, 188 insertions(+)
- create mode 100644 drivers/net/wireless/ath/wcn36xx/debug.c
+ drivers/net/wireless/ath/ath9k/ar9485_initvals.h | 218 +++++++++++++++++++----
+ 1 file changed, 184 insertions(+), 34 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/debug.c b/drivers/net/wireless/ath/wcn36xx/debug.c
-new file mode 100644
-index 0000000..682bcd6
---- /dev/null
-+++ b/drivers/net/wireless/ath/wcn36xx/debug.c
-@@ -0,0 +1,188 @@
-+/*
-+ * Copyright (c) 2013 Eugene Krasnikov <k.eugene.e@gmail.com>
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-+
-+#include <linux/debugfs.h>
-+#include <linux/uaccess.h>
-+#include "wcn36xx.h"
-+#include "debug.h"
-+#include "pmc.h"
-+
-+#ifdef CONFIG_WCN36XX_DEBUGFS
-+
-+static int wcn36xx_debugfs_open(struct inode *inode, struct file *file)
-+{
-+	file->private_data = inode->i_private;
-+
-+	return 0;
-+}
-+
-+static ssize_t read_file_bool_bmps(struct file *file, char __user *user_buf,
-+				   size_t count, loff_t *ppos)
-+{
-+	struct wcn36xx *wcn = file->private_data;
-+	struct wcn36xx_vif *vif_priv = NULL;
-+	struct ieee80211_vif *vif = NULL;
-+	char buf[3];
-+
-+	list_for_each_entry(vif_priv, &wcn->vif_list, list) {
-+			vif = container_of((void *)vif_priv,
-+				   struct ieee80211_vif,
-+				   drv_priv);
-+			if (NL80211_IFTYPE_STATION == vif->type) {
-+				if (vif_priv->pw_state == WCN36XX_BMPS)
-+					buf[0] = '1';
-+				else
-+					buf[0] = '0';
-+				break;
-+			}
-+	}
-+	buf[1] = '\n';
-+	buf[2] = 0x00;
-+
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, 2);
-+}
-+
-+static ssize_t write_file_bool_bmps(struct file *file,
-+				    const char __user *user_buf,
-+				    size_t count, loff_t *ppos)
-+{
-+	struct wcn36xx *wcn = file->private_data;
-+	struct wcn36xx_vif *vif_priv = NULL;
-+	struct ieee80211_vif *vif = NULL;
-+
-+	char buf[32];
-+	int buf_size;
-+
-+	buf_size = min(count, (sizeof(buf)-1));
-+	if (copy_from_user(buf, user_buf, buf_size))
-+		return -EFAULT;
-+
-+	switch (buf[0]) {
-+	case 'y':
-+	case 'Y':
-+	case '1':
-+		list_for_each_entry(vif_priv, &wcn->vif_list, list) {
-+			vif = container_of((void *)vif_priv,
-+				   struct ieee80211_vif,
-+				   drv_priv);
-+			if (NL80211_IFTYPE_STATION == vif->type) {
-+				wcn36xx_enable_keep_alive_null_packet(wcn, vif);
-+				wcn36xx_pmc_enter_bmps_state(wcn, vif);
-+			}
-+		}
-+		break;
-+	case 'n':
-+	case 'N':
-+	case '0':
-+		list_for_each_entry(vif_priv, &wcn->vif_list, list) {
-+			vif = container_of((void *)vif_priv,
-+				   struct ieee80211_vif,
-+				   drv_priv);
-+			if (NL80211_IFTYPE_STATION == vif->type)
-+				wcn36xx_pmc_exit_bmps_state(wcn, vif);
-+		}
-+		break;
-+	}
-+
-+	return count;
-+}
-+
-+static const struct file_operations fops_wcn36xx_bmps = {
-+	.open  =       wcn36xx_debugfs_open,
-+	.read  =       read_file_bool_bmps,
-+	.write =       write_file_bool_bmps,
+diff --git a/drivers/net/wireless/ath/ath9k/ar9485_initvals.h b/drivers/net/wireless/ath/ath9k/ar9485_initvals.h
+index 88ff1d7..6f899c6 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9485_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9485_initvals.h
+@@ -20,7 +20,17 @@
+ 
+ /* AR9485 1.1 */
+ 
+-#define ar9485_1_1_mac_postamble ar9300_2p2_mac_postamble
++static const u32 ar9485_1_1_mac_postamble[][5] = {
++	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
++	{0x00001030, 0x00000230, 0x00000460, 0x000002c0, 0x00000160},
++	{0x00001070, 0x00000168, 0x000002d0, 0x00000318, 0x0000018c},
++	{0x000010b0, 0x00000e60, 0x00001cc0, 0x00007c70, 0x00003e38},
++	{0x00008014, 0x03e803e8, 0x07d007d0, 0x10801600, 0x08400b00},
++	{0x0000801c, 0x128d8027, 0x128d804f, 0x12e00057, 0x12e0002b},
++	{0x00008120, 0x08f04800, 0x08f04800, 0x08f04810, 0x08f04810},
++	{0x000081d0, 0x00003210, 0x00003210, 0x0000320a, 0x0000320a},
++	{0x00008318, 0x00003e80, 0x00007d00, 0x00006880, 0x00003440},
++};
+ 
+ static const u32 ar9485_1_1_pcie_phy_pll_on_clkreq_disable_L1[][2] = {
+ 	/* Addr      allmodes  */
+@@ -34,6 +44,7 @@ static const u32 ar9485Common_wo_xlna_rx_gain_1_1[][2] = {
+ 	{0x00009e00, 0x037216a0},
+ 	{0x00009e04, 0x00182020},
+ 	{0x00009e18, 0x00000000},
++	{0x00009e20, 0x000003a8},
+ 	{0x00009e2c, 0x00004121},
+ 	{0x00009e44, 0x02282324},
+ 	{0x0000a000, 0x00060005},
+@@ -174,7 +185,7 @@ static const u32 ar9485Modes_high_power_tx_gain_1_1[][5] = {
+ 	{0x0000a2e0, 0x00000000, 0x00000000, 0xfe2d3552, 0xfe2d3552},
+ 	{0x0000a2e4, 0x00000000, 0x00000000, 0xfe2d3552, 0xfe2d3552},
+ 	{0x0000a2e8, 0x00000000, 0x00000000, 0xfe2d3552, 0xfe2d3552},
+-	{0x0000a410, 0x000050d9, 0x000050d9, 0x000050d8, 0x000050d8},
++	{0x0000a410, 0x000050d9, 0x000050d9, 0x000050da, 0x000050da},
+ 	{0x0000a458, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+ 	{0x0000a500, 0x00022200, 0x00022200, 0x00000000, 0x00000000},
+ 	{0x0000a504, 0x05062002, 0x05062002, 0x04000002, 0x04000002},
+@@ -200,14 +211,14 @@ static const u32 ar9485Modes_high_power_tx_gain_1_1[][5] = {
+ 	{0x0000a554, 0x7d06ffcb, 0x7d06ffcb, 0x57001ce9, 0x57001ce9},
+ 	{0x0000a558, 0x8407ff0b, 0x8407ff0b, 0x5a001ceb, 0x5a001ceb},
+ 	{0x0000a55c, 0x8907ffcb, 0x8907ffcb, 0x5e001eeb, 0x5e001eeb},
+-	{0x0000a560, 0x900fff0b, 0x900fff0b, 0x5e001eeb, 0x5e001eeb},
+-	{0x0000a564, 0x960fffcb, 0x960fffcb, 0x5e001eeb, 0x5e001eeb},
+-	{0x0000a568, 0x9c1fff0b, 0x9c1fff0b, 0x5e001eeb, 0x5e001eeb},
+-	{0x0000a56c, 0x9c1fff0b, 0x9c1fff0b, 0x5e001eeb, 0x5e001eeb},
+-	{0x0000a570, 0x9c1fff0b, 0x9c1fff0b, 0x5e001eeb, 0x5e001eeb},
+-	{0x0000a574, 0x9c1fff0b, 0x9c1fff0b, 0x5e001eeb, 0x5e001eeb},
+-	{0x0000a578, 0x9c1fff0b, 0x9c1fff0b, 0x5e001eeb, 0x5e001eeb},
+-	{0x0000a57c, 0x9c1fff0b, 0x9c1fff0b, 0x5e001eeb, 0x5e001eeb},
++	{0x0000a560, 0x900fff0b, 0x900fff0b, 0x62001eee, 0x62001eee},
++	{0x0000a564, 0x960fffcb, 0x960fffcb, 0x66001ff6, 0x66001ff6},
++	{0x0000a568, 0x9c1fff0b, 0x9c1fff0b, 0x66001ff6, 0x66001ff6},
++	{0x0000a56c, 0x9c1fff0b, 0x9c1fff0b, 0x66001ff6, 0x66001ff6},
++	{0x0000a570, 0x9c1fff0b, 0x9c1fff0b, 0x66001ff6, 0x66001ff6},
++	{0x0000a574, 0x9c1fff0b, 0x9c1fff0b, 0x66001ff6, 0x66001ff6},
++	{0x0000a578, 0x9c1fff0b, 0x9c1fff0b, 0x66001ff6, 0x66001ff6},
++	{0x0000a57c, 0x9c1fff0b, 0x9c1fff0b, 0x66001ff6, 0x66001ff6},
+ 	{0x0000a580, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+ 	{0x0000a584, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+ 	{0x0000a588, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+@@ -263,6 +274,11 @@ static const u32 ar9485Modes_high_power_tx_gain_1_1[][5] = {
+ static const u32 ar9485Modes_green_ob_db_tx_gain_1_1[][5] = {
+ 	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
+ 	{0x000098bc, 0x00000003, 0x00000003, 0x00000003, 0x00000003},
++	{0x0000a2d8, 0xf999a83a, 0xf999a83a, 0x7999a83a, 0x7999a83a},
++	{0x0000a2dc, 0x00000000, 0x00000000, 0xfe2d3552, 0xfe2d3552},
++	{0x0000a2e0, 0x00000000, 0x00000000, 0xfe2d3552, 0xfe2d3552},
++	{0x0000a2e4, 0x00000000, 0x00000000, 0xfe2d3552, 0xfe2d3552},
++	{0x0000a2e8, 0x00000000, 0x00000000, 0xfe2d3552, 0xfe2d3552},
+ 	{0x0000a410, 0x000050d9, 0x000050d9, 0x000050d8, 0x000050d8},
+ 	{0x0000a458, 0x80000000, 0x80000000, 0x80000000, 0x80000000},
+ 	{0x0000a500, 0x00022200, 0x00022200, 0x00000006, 0x00000006},
+@@ -297,6 +313,22 @@ static const u32 ar9485Modes_green_ob_db_tx_gain_1_1[][5] = {
+ 	{0x0000a574, 0x9c1fff0b, 0x9c1fff0b, 0x5e001eeb, 0x5e001eeb},
+ 	{0x0000a578, 0x9c1fff0b, 0x9c1fff0b, 0x5e001eeb, 0x5e001eeb},
+ 	{0x0000a57c, 0x9c1fff0b, 0x9c1fff0b, 0x5e001eeb, 0x5e001eeb},
++	{0x0000a580, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a584, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a588, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a58c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a590, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a594, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a598, 0x00000000, 0x00000000, 0x01404501, 0x01404501},
++	{0x0000a59c, 0x00000000, 0x00000000, 0x02808a02, 0x02808a02},
++	{0x0000a5a0, 0x00000000, 0x00000000, 0x02808a02, 0x02808a02},
++	{0x0000a5a4, 0x00000000, 0x00000000, 0x02808803, 0x02808803},
++	{0x0000a5a8, 0x00000000, 0x00000000, 0x04c14b04, 0x04c14b04},
++	{0x0000a5ac, 0x00000000, 0x00000000, 0x04c15305, 0x04c15305},
++	{0x0000a5b0, 0x00000000, 0x00000000, 0x04c15305, 0x04c15305},
++	{0x0000a5b4, 0x00000000, 0x00000000, 0x04c15305, 0x04c15305},
++	{0x0000a5b8, 0x00000000, 0x00000000, 0x04c15305, 0x04c15305},
++	{0x0000a5bc, 0x00000000, 0x00000000, 0x04c15305, 0x04c15305},
+ 	{0x0000b500, 0x0000001a, 0x0000001a, 0x0000001a, 0x0000001a},
+ 	{0x0000b504, 0x0000001a, 0x0000001a, 0x0000001a, 0x0000001a},
+ 	{0x0000b508, 0x0000001a, 0x0000001a, 0x0000001a, 0x0000001a},
+@@ -341,6 +373,100 @@ static const u32 ar9485Modes_high_ob_db_tx_gain_1_1[][5] = {
+ 	{0x0000a2e0, 0x00000000, 0x00000000, 0xffc63a84, 0xffc63a84},
+ 	{0x0000a2e4, 0x00000000, 0x00000000, 0xfe0fc000, 0xfe0fc000},
+ 	{0x0000a2e8, 0x00000000, 0x00000000, 0xfff00000, 0xfff00000},
++	{0x0000a410, 0x000050d9, 0x000050d9, 0x000050da, 0x000050da},
++	{0x0000a458, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a500, 0x00022200, 0x00022200, 0x00000000, 0x00000000},
++	{0x0000a504, 0x05062002, 0x05062002, 0x04000002, 0x04000002},
++	{0x0000a508, 0x0c002e00, 0x0c002e00, 0x08000004, 0x08000004},
++	{0x0000a50c, 0x11062202, 0x11062202, 0x0d000200, 0x0d000200},
++	{0x0000a510, 0x17022e00, 0x17022e00, 0x11000202, 0x11000202},
++	{0x0000a514, 0x1d000ec2, 0x1d000ec2, 0x15000400, 0x15000400},
++	{0x0000a518, 0x25020ec0, 0x25020ec0, 0x19000402, 0x19000402},
++	{0x0000a51c, 0x2b020ec3, 0x2b020ec3, 0x1d000404, 0x1d000404},
++	{0x0000a520, 0x2f001f04, 0x2f001f04, 0x21000603, 0x21000603},
++	{0x0000a524, 0x35001fc4, 0x35001fc4, 0x25000605, 0x25000605},
++	{0x0000a528, 0x3c022f04, 0x3c022f04, 0x2a000a03, 0x2a000a03},
++	{0x0000a52c, 0x41023e85, 0x41023e85, 0x2c000a04, 0x2c000a04},
++	{0x0000a530, 0x48023ec6, 0x48023ec6, 0x34000e20, 0x34000e20},
++	{0x0000a534, 0x4d023f01, 0x4d023f01, 0x35000e21, 0x35000e21},
++	{0x0000a538, 0x53023f4b, 0x53023f4b, 0x43000e62, 0x43000e62},
++	{0x0000a53c, 0x5a027f09, 0x5a027f09, 0x45000e63, 0x45000e63},
++	{0x0000a540, 0x5f027fc9, 0x5f027fc9, 0x49000e65, 0x49000e65},
++	{0x0000a544, 0x6502feca, 0x6502feca, 0x4b000e66, 0x4b000e66},
++	{0x0000a548, 0x6b02ff4a, 0x6b02ff4a, 0x4d001645, 0x4d001645},
++	{0x0000a54c, 0x7203feca, 0x7203feca, 0x51001865, 0x51001865},
++	{0x0000a550, 0x7703ff0b, 0x7703ff0b, 0x55001a86, 0x55001a86},
++	{0x0000a554, 0x7d06ffcb, 0x7d06ffcb, 0x57001ce9, 0x57001ce9},
++	{0x0000a558, 0x8407ff0b, 0x8407ff0b, 0x5a001ceb, 0x5a001ceb},
++	{0x0000a55c, 0x8907ffcb, 0x8907ffcb, 0x5e001eeb, 0x5e001eeb},
++	{0x0000a560, 0x900fff0b, 0x900fff0b, 0x62001eee, 0x62001eee},
++	{0x0000a564, 0x960fffcb, 0x960fffcb, 0x66001ff6, 0x66001ff6},
++	{0x0000a568, 0x9c1fff0b, 0x9c1fff0b, 0x66001ff6, 0x66001ff6},
++	{0x0000a56c, 0x9c1fff0b, 0x9c1fff0b, 0x66001ff6, 0x66001ff6},
++	{0x0000a570, 0x9c1fff0b, 0x9c1fff0b, 0x66001ff6, 0x66001ff6},
++	{0x0000a574, 0x9c1fff0b, 0x9c1fff0b, 0x66001ff6, 0x66001ff6},
++	{0x0000a578, 0x9c1fff0b, 0x9c1fff0b, 0x66001ff6, 0x66001ff6},
++	{0x0000a57c, 0x9c1fff0b, 0x9c1fff0b, 0x66001ff6, 0x66001ff6},
++	{0x0000a580, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a584, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a588, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a58c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a590, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a594, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a598, 0x00000000, 0x00000000, 0x01404501, 0x01404501},
++	{0x0000a59c, 0x00000000, 0x00000000, 0x02808a02, 0x02808a02},
++	{0x0000a5a0, 0x00000000, 0x00000000, 0x02808a02, 0x02808a02},
++	{0x0000a5a4, 0x00000000, 0x00000000, 0x02808803, 0x02808803},
++	{0x0000a5a8, 0x00000000, 0x00000000, 0x04c14b04, 0x04c14b04},
++	{0x0000a5ac, 0x00000000, 0x00000000, 0x04c15305, 0x04c15305},
++	{0x0000a5b0, 0x00000000, 0x00000000, 0x04c15305, 0x04c15305},
++	{0x0000a5b4, 0x00000000, 0x00000000, 0x04c15305, 0x04c15305},
++	{0x0000a5b8, 0x00000000, 0x00000000, 0x04c15305, 0x04c15305},
++	{0x0000a5bc, 0x00000000, 0x00000000, 0x04c15305, 0x04c15305},
++	{0x0000b500, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000b504, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000b508, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000b50c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000b510, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000b514, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000b518, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000b51c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000b520, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000b524, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000b528, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000b52c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000b530, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000b534, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000b538, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000b53c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000b540, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000b544, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000b548, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000b54c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000b550, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000b554, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000b558, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000b55c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000b560, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000b564, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000b568, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000b56c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000b570, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000b574, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000b578, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000b57c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x00016044, 0x05d6b2db, 0x05d6b2db, 0x05d6b2db, 0x05d6b2db},
++	{0x00016048, 0x6c924260, 0x6c924260, 0x6c924260, 0x6c924260},
 +};
 +
-+static ssize_t write_file_dump(struct file *file,
-+				    const char __user *user_buf,
-+				    size_t count, loff_t *ppos)
-+{
-+	struct wcn36xx *wcn = file->private_data;
-+	char buf[255], *tmp;
-+	int buf_size;
-+	u32 arg[WCN36xx_MAX_DUMP_ARGS];
-+	int i;
-+
-+	memset(buf, 0, sizeof(buf));
-+	memset(arg, 0, sizeof(arg));
-+
-+	buf_size = min(count, (sizeof(buf) - 1));
-+	if (copy_from_user(buf, user_buf, buf_size))
-+		return -EFAULT;
-+
-+	tmp = buf;
-+
-+	for (i = 0; i < WCN36xx_MAX_DUMP_ARGS; i++) {
-+		char *begin;
-+		begin = strsep(&tmp, " ");
-+		if (begin == NULL)
-+			break;
-+
-+		if (kstrtoul(begin, 0, (unsigned long *)(arg + i)) != 0)
-+			break;
-+	}
-+
-+	wcn36xx_info("DUMP args is %d %d %d %d %d\n", arg[0], arg[1], arg[2],
-+		     arg[3], arg[4]);
-+	wcn36xx_smd_dump_cmd_req(wcn, arg[0], arg[1], arg[2], arg[3], arg[4]);
-+
-+	return count;
-+}
-+
-+static const struct file_operations fops_wcn36xx_dump = {
-+	.open  =       wcn36xx_debugfs_open,
-+	.write =       write_file_dump,
++static const u32 ar9485Modes_low_ob_db_tx_gain_1_1[][5] = {
++	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
++	{0x000098bc, 0x00000002, 0x00000002, 0x00000002, 0x00000002},
++	{0x0000a2d8, 0xf999a83a, 0xf999a83a, 0x7999a83a, 0x7999a83a},
++	{0x0000a2dc, 0x00000000, 0x00000000, 0xfe2d3552, 0xfe2d3552},
++	{0x0000a2e0, 0x00000000, 0x00000000, 0xfe2d3552, 0xfe2d3552},
++	{0x0000a2e4, 0x00000000, 0x00000000, 0xfe2d3552, 0xfe2d3552},
++	{0x0000a2e8, 0x00000000, 0x00000000, 0xfe2d3552, 0xfe2d3552},
+ 	{0x0000a410, 0x000050d9, 0x000050d9, 0x000050d8, 0x000050d8},
+ 	{0x0000a458, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+ 	{0x0000a500, 0x00022200, 0x00022200, 0x00000000, 0x00000000},
+@@ -427,7 +553,7 @@ static const u32 ar9485Modes_high_ob_db_tx_gain_1_1[][5] = {
+ 	{0x00016048, 0x6c924260, 0x6c924260, 0x6c924260, 0x6c924260},
+ };
+ 
+-static const u32 ar9485Modes_low_ob_db_tx_gain_1_1[][5] = {
++static const u32 ar9485_modes_lowest_ob_db_tx_gain_1_1[][5] = {
+ 	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
+ 	{0x000098bc, 0x00000002, 0x00000002, 0x00000002, 0x00000002},
+ 	{0x0000a2d8, 0xf999a83a, 0xf999a83a, 0x7999a83a, 0x7999a83a},
+@@ -521,12 +647,15 @@ static const u32 ar9485Modes_low_ob_db_tx_gain_1_1[][5] = {
+ 	{0x00016048, 0x6c924260, 0x6c924260, 0x6c924260, 0x6c924260},
+ };
+ 
+-#define ar9485_modes_lowest_ob_db_tx_gain_1_1 ar9485Modes_low_ob_db_tx_gain_1_1
+-
+ static const u32 ar9485Modes_green_spur_ob_db_tx_gain_1_1[][5] = {
+ 	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
+ 	{0x000098bc, 0x00000003, 0x00000003, 0x00000003, 0x00000003},
+-	{0x0000a410, 0x000050d9, 0x000050d9, 0x000050d8, 0x000050d8},
++	{0x0000a2d8, 0xf999a83a, 0xf999a83a, 0x7999a83a, 0x7999a83a},
++	{0x0000a2dc, 0x00000000, 0x00000000, 0xffad452a, 0xffad452a},
++	{0x0000a2e0, 0x00000000, 0x00000000, 0xffc98634, 0xffc98634},
++	{0x0000a2e4, 0x00000000, 0x00000000, 0xfff60780, 0xfff60780},
++	{0x0000a2e8, 0x00000000, 0x00000000, 0xfffff800, 0xfffff800},
++	{0x0000a410, 0x000050d9, 0x000050d9, 0x000050d9, 0x000050d9},
+ 	{0x0000a458, 0x80000000, 0x80000000, 0x80000000, 0x80000000},
+ 	{0x0000a500, 0x00022200, 0x00022200, 0x00000006, 0x00000006},
+ 	{0x0000a504, 0x05062002, 0x05062002, 0x03000201, 0x03000201},
+@@ -543,23 +672,39 @@ static const u32 ar9485Modes_green_spur_ob_db_tx_gain_1_1[][5] = {
+ 	{0x0000a530, 0x48023ec6, 0x48023ec6, 0x310006e0, 0x310006e0},
+ 	{0x0000a534, 0x4d023f01, 0x4d023f01, 0x330006e0, 0x330006e0},
+ 	{0x0000a538, 0x53023f4b, 0x53023f4b, 0x3e0008e3, 0x3e0008e3},
+-	{0x0000a53c, 0x5a027f09, 0x5a027f09, 0x410008e5, 0x410008e5},
+-	{0x0000a540, 0x5f027fc9, 0x5f027fc9, 0x430008e6, 0x430008e6},
+-	{0x0000a544, 0x6502feca, 0x6502feca, 0x4a0008ec, 0x4a0008ec},
+-	{0x0000a548, 0x6b02ff4a, 0x6b02ff4a, 0x4e0008f1, 0x4e0008f1},
+-	{0x0000a54c, 0x7203feca, 0x7203feca, 0x520008f3, 0x520008f3},
+-	{0x0000a550, 0x7703ff0b, 0x7703ff0b, 0x54000eed, 0x54000eed},
+-	{0x0000a554, 0x7d06ffcb, 0x7d06ffcb, 0x58000ef1, 0x58000ef1},
+-	{0x0000a558, 0x8407ff0b, 0x8407ff0b, 0x5c000ef3, 0x5c000ef3},
+-	{0x0000a55c, 0x8907ffcb, 0x8907ffcb, 0x60000ef5, 0x60000ef5},
+-	{0x0000a560, 0x900fff0b, 0x900fff0b, 0x62000ef6, 0x62000ef6},
+-	{0x0000a564, 0x960fffcb, 0x960fffcb, 0x62000ef6, 0x62000ef6},
+-	{0x0000a568, 0x9c1fff0b, 0x9c1fff0b, 0x62000ef6, 0x62000ef6},
+-	{0x0000a56c, 0x9c1fff0b, 0x9c1fff0b, 0x62000ef6, 0x62000ef6},
+-	{0x0000a570, 0x9c1fff0b, 0x9c1fff0b, 0x62000ef6, 0x62000ef6},
+-	{0x0000a574, 0x9c1fff0b, 0x9c1fff0b, 0x62000ef6, 0x62000ef6},
+-	{0x0000a578, 0x9c1fff0b, 0x9c1fff0b, 0x62000ef6, 0x62000ef6},
+-	{0x0000a57c, 0x9c1fff0b, 0x9c1fff0b, 0x62000ef6, 0x62000ef6},
++	{0x0000a53c, 0x5a027f09, 0x5a027f09, 0x430008e6, 0x430008e6},
++	{0x0000a540, 0x5f027fc9, 0x5f027fc9, 0x4a0008ec, 0x4a0008ec},
++	{0x0000a544, 0x6502feca, 0x6502feca, 0x4e0008f1, 0x4e0008f1},
++	{0x0000a548, 0x6b02ff4a, 0x6b02ff4a, 0x520008f3, 0x520008f3},
++	{0x0000a54c, 0x7203feca, 0x7203feca, 0x54000eed, 0x54000eed},
++	{0x0000a550, 0x7703ff0b, 0x7703ff0b, 0x58000ef1, 0x58000ef1},
++	{0x0000a554, 0x7d06ffcb, 0x7d06ffcb, 0x5c000ef3, 0x5c000ef3},
++	{0x0000a558, 0x8407ff0b, 0x8407ff0b, 0x62000ef6, 0x62000ef6},
++	{0x0000a55c, 0x8907ffcb, 0x8907ffcb, 0x66001ff0, 0x66001ff0},
++	{0x0000a560, 0x900fff0b, 0x900fff0b, 0x68001ff6, 0x68001ff6},
++	{0x0000a564, 0x960fffcb, 0x960fffcb, 0x68001ff6, 0x68001ff6},
++	{0x0000a568, 0x9c1fff0b, 0x9c1fff0b, 0x68001ff6, 0x68001ff6},
++	{0x0000a56c, 0x9c1fff0b, 0x9c1fff0b, 0x68001ff6, 0x68001ff6},
++	{0x0000a570, 0x9c1fff0b, 0x9c1fff0b, 0x68001ff6, 0x68001ff6},
++	{0x0000a574, 0x9c1fff0b, 0x9c1fff0b, 0x68001ff6, 0x68001ff6},
++	{0x0000a578, 0x9c1fff0b, 0x9c1fff0b, 0x68001ff6, 0x68001ff6},
++	{0x0000a57c, 0x9c1fff0b, 0x9c1fff0b, 0x68001ff6, 0x68001ff6},
++	{0x0000a580, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a584, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a588, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a58c, 0x00000000, 0x00000000, 0x01804000, 0x01804000},
++	{0x0000a590, 0x00000000, 0x00000000, 0x02808a02, 0x02808a02},
++	{0x0000a594, 0x00000000, 0x00000000, 0x0340ca02, 0x0340ca02},
++	{0x0000a598, 0x00000000, 0x00000000, 0x0340cd03, 0x0340cd03},
++	{0x0000a59c, 0x00000000, 0x00000000, 0x0340cd03, 0x0340cd03},
++	{0x0000a5a0, 0x00000000, 0x00000000, 0x06415304, 0x06415304},
++	{0x0000a5a4, 0x00000000, 0x00000000, 0x04c11905, 0x04c11905},
++	{0x0000a5a8, 0x00000000, 0x00000000, 0x06415905, 0x06415905},
++	{0x0000a5ac, 0x00000000, 0x00000000, 0x06415905, 0x06415905},
++	{0x0000a5b0, 0x00000000, 0x00000000, 0x06415905, 0x06415905},
++	{0x0000a5b4, 0x00000000, 0x00000000, 0x06415905, 0x06415905},
++	{0x0000a5b8, 0x00000000, 0x00000000, 0x06415905, 0x06415905},
++	{0x0000a5bc, 0x00000000, 0x00000000, 0x06415905, 0x06415905},
+ 	{0x0000b500, 0x0000001a, 0x0000001a, 0x0000001a, 0x0000001a},
+ 	{0x0000b504, 0x0000001a, 0x0000001a, 0x0000001a, 0x0000001a},
+ 	{0x0000b508, 0x0000001a, 0x0000001a, 0x0000001a, 0x0000001a},
+@@ -823,6 +968,7 @@ static const u32 ar9485_common_rx_gain_1_1[][2] = {
+ 	{0x00009e00, 0x03721b20},
+ 	{0x00009e04, 0x00082020},
+ 	{0x00009e18, 0x0300501e},
++	{0x00009e20, 0x000003ba},
+ 	{0x00009e2c, 0x00002e21},
+ 	{0x00009e44, 0x02182324},
+ 	{0x0000a000, 0x00060005},
+@@ -1001,7 +1147,6 @@ static const u32 ar9485_1_1_baseband_postamble[][5] = {
+ 	{0x00009e10, 0x7ec88d2e, 0x7ec88d2e, 0x7ec80d2e, 0x7ec80d2e},
+ 	{0x00009e14, 0x31395d53, 0x31396053, 0x312e6053, 0x312e5d53},
+ 	{0x00009e1c, 0x0001cf9c, 0x0001cf9c, 0x00021f9c, 0x00021f9c},
+-	{0x00009e20, 0x000003b5, 0x000003b5, 0x000003ce, 0x000003ce},
+ 	{0x00009e3c, 0xcf946220, 0xcf946220, 0xcf946222, 0xcf946222},
+ 	{0x00009e48, 0x5030201a, 0x5030201a, 0x50302010, 0x50302010},
+ 	{0x00009fc8, 0x0003f000, 0x0003f000, 0x0001a000, 0x0001a000},
+@@ -1020,7 +1165,7 @@ static const u32 ar9485_1_1_baseband_postamble[][5] = {
+ 	{0x0000a284, 0x00000000, 0x00000000, 0x000002a0, 0x000002a0},
+ 	{0x0000a288, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+ 	{0x0000a28c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000a2c4, 0x00158d18, 0x00158d18, 0x00058d18, 0x00058d18},
++	{0x0000a2c4, 0x00158d18, 0x00158d18, 0x00158d18, 0x00158d18},
+ 	{0x0000a2d0, 0x00071981, 0x00071981, 0x00071982, 0x00071982},
+ 	{0x0000a2d8, 0xf999a83a, 0xf999a83a, 0xf999a83a, 0xf999a83a},
+ 	{0x0000a358, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+@@ -1206,6 +1351,11 @@ static const u32 ar9485_1_1_mac_core[][2] = {
+ 	{0x000083d0, 0x000301ff},
+ };
+ 
+-#define ar9485_1_1_baseband_core_txfir_coeff_japan_2484 ar9462_2p0_baseband_core_txfir_coeff_japan_2484
++static const u32 ar9485_1_1_baseband_core_txfir_coeff_japan_2484[][2] = {
++	/* Addr      allmodes  */
++	{0x0000a398, 0x00000000},
++	{0x0000a39c, 0x6f7f0301},
++	{0x0000a3a0, 0xca9228ee},
 +};
-+
-+#define ADD_FILE(name, mode, fop, priv_data)		\
-+	do {							\
-+		struct dentry *d;				\
-+		d = debugfs_create_file(__stringify(name),	\
-+					mode, dfs->rootdir,	\
-+					priv_data, fop);	\
-+		dfs->file_##name.dentry = d;			\
-+		if (IS_ERR(d)) {				\
-+			wcn36xx_warn("Create the debugfs entry failed");\
-+			dfs->file_##name.dentry = NULL;		\
-+		}						\
-+	} while (0)
-+
-+
-+void wcn36xx_debugfs_init(struct wcn36xx *wcn)
-+{
-+	struct wcn36xx_dfs_entry *dfs = &wcn->dfs;
-+
-+	dfs->rootdir = debugfs_create_dir(KBUILD_MODNAME,
-+					  wcn->hw->wiphy->debugfsdir);
-+	if (IS_ERR(dfs->rootdir)) {
-+		wcn36xx_warn("Create the debugfs failed\n");
-+		dfs->rootdir = NULL;
-+	}
-+
-+	ADD_FILE(bmps_switcher, S_IRUSR | S_IWUSR,
-+		 &fops_wcn36xx_bmps, wcn);
-+	ADD_FILE(dump, S_IWUSR, &fops_wcn36xx_dump, wcn);
-+}
-+
-+void wcn36xx_debugfs_exit(struct wcn36xx *wcn)
-+{
-+	struct wcn36xx_dfs_entry *dfs = &wcn->dfs;
-+	debugfs_remove_recursive(dfs->rootdir);
-+}
-+
-+#endif /* CONFIG_WCN36XX_DEBUGFS */
+ 
+ #endif /* INITVALS_9485_H */
 -- 
-1.8.1.2
+1.8.4
 
