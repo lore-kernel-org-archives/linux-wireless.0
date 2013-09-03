@@ -1,119 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:49051 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753427Ab3I0Oig (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Sep 2013 10:38:36 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 3/4] ath10k: remove ce_sendlist_send
-Date: Fri, 27 Sep 2013 16:38:25 +0200
-Message-ID: <1380292706-3609-4-git-send-email-michal.kazior@tieto.com> (sfid-20130927_163842_517206_9D509391)
-In-Reply-To: <1380292706-3609-1-git-send-email-michal.kazior@tieto.com>
-References: <1380292706-3609-1-git-send-email-michal.kazior@tieto.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:5421 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759470Ab3ICHOA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Sep 2013 03:14:00 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Bartosz Markowski <bartosz.markowski@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v3 2/2] ath10k: implement per-VDEV FW statistics
+References: <1377778061-22331-1-git-send-email-bartosz.markowski@tieto.com>
+	<1377778061-22331-3-git-send-email-bartosz.markowski@tieto.com>
+Date: Tue, 3 Sep 2013 10:13:55 +0300
+In-Reply-To: <1377778061-22331-3-git-send-email-bartosz.markowski@tieto.com>
+	(Bartosz Markowski's message of "Thu, 29 Aug 2013 14:07:40 +0200")
+Message-ID: <87a9ju1ioc.fsf@kamboji.qca.qualcomm.com> (sfid-20130903_091404_989869_56931DFF)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It is completely pointless to keep this function
-around. It doesn't do anything different than
-ce_send except it introduces more overhead.
+Bartosz Markowski <bartosz.markowski@tieto.com> writes:
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/ce.c  |   34 ---------------------------------
- drivers/net/wireless/ath/ath10k/ce.h  |   15 ---------------
- drivers/net/wireless/ath/ath10k/pci.c |    4 ++--
- 3 files changed, 2 insertions(+), 51 deletions(-)
+> The WMI_REQUEST_PEER_STAT command with latst (1.0.0.716) FW
+> can return per-VDEV statistics. Using debugfs we can fetch this info now.
+>
+> This is a backward compatible change. In case of older FW the VDEV
+> statistics are simply not returned.
+>
+> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
 
-diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
-index 834e29e..9e6daa9 100644
---- a/drivers/net/wireless/ath/ath10k/ce.c
-+++ b/drivers/net/wireless/ath/ath10k/ce.c
-@@ -338,40 +338,6 @@ int ath10k_ce_send(struct ath10k_ce_pipe *ce_state,
- 	return ret;
- }
- 
--int ath10k_ce_sendlist_send(struct ath10k_ce_pipe *ce_state,
--			    void *per_transfer_context,
--			    unsigned int transfer_id,
--			    u32 paddr, unsigned int nbytes,
--			    u32 flags)
--{
--	struct ath10k_ce_ring *src_ring = ce_state->src_ring;
--	struct ath10k *ar = ce_state->ar;
--	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
--	unsigned int nentries_mask = src_ring->nentries_mask;
--	unsigned int sw_index;
--	unsigned int write_index;
--	int delta, ret = -ENOMEM;
--
--	spin_lock_bh(&ar_pci->ce_lock);
--
--	sw_index = src_ring->sw_index;
--	write_index = src_ring->write_index;
--
--	delta = CE_RING_DELTA(nentries_mask, write_index, sw_index - 1);
--
--	if (delta >= 1) {
--		ret = ath10k_ce_send_nolock(ce_state, per_transfer_context,
--					    paddr, nbytes,
--					    transfer_id, flags);
--		if (ret)
--			ath10k_warn("CE send failed: %d\n", ret);
--	}
--
--	spin_unlock_bh(&ar_pci->ce_lock);
--
--	return ret;
--}
--
- int ath10k_ce_recv_buf_enqueue(struct ath10k_ce_pipe *ce_state,
- 			       void *per_recv_context,
- 			       u32 buffer)
-diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
-index aec8028..949b174 100644
---- a/drivers/net/wireless/ath/ath10k/ce.h
-+++ b/drivers/net/wireless/ath/ath10k/ce.h
-@@ -156,21 +156,6 @@ void ath10k_ce_send_cb_register(struct ath10k_ce_pipe *ce_state,
- 				void (*send_cb)(struct ath10k_ce_pipe *),
- 				int disable_interrupts);
- 
--/*
-- * Queue a "sendlist" of buffers to be sent using gather to a single
-- * anonymous destination buffer
-- *   ce         - which copy engine to use
-- *   sendlist        - list of simple buffers to send using gather
-- *   transfer_id     - arbitrary ID; reflected to destination
-- * Returns 0 on success; otherwise an error status.
-- *
-- * Implemenation note: Pushes multiple buffers with Gather to Source ring.
-- */
--int ath10k_ce_sendlist_send(struct ath10k_ce_pipe *ce_state,
--			    void *per_transfer_context,
--			    unsigned int transfer_id,
--			    u32 paddr, unsigned int nbytes,
--			    u32 flags);
- 
- /*==================Recv=======================*/
- 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index dff23d9..4f6a978 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -730,8 +730,8 @@ static int ath10k_pci_hif_send_head(struct ath10k *ar, u8 pipe_id,
- 	pipe_info->num_sends_allowed--;
- 	spin_unlock_bh(&pipe_info->pipe_lock);
- 
--	ret = ath10k_ce_sendlist_send(ce_hdl, nbuf, transfer_id,
--				      skb_cb->paddr, len, flags);
-+	ret = ath10k_ce_send(ce_hdl, nbuf, skb_cb->paddr, len, transfer_id,
-+			     flags);
- 	if (ret)
- 		ath10k_warn("CE send failed: %p\n", nbuf);
- 
+[...]
+
+>  	if (num_peer_stats) {
+> -		struct wmi_peer_stats *peer_stats;
+>  		struct ath10k_peer_stat *s;
+> +		struct wmi_peer_stats_1 *peer_stats_1;
+> +		struct wmi_peer_stats_2 *peer_stats_2;
+>  
+>  		stats->peers = num_peer_stats;
+>  
+>  		for (i = 0; i < num_peer_stats; i++) {
+> -			peer_stats = (struct wmi_peer_stats *)tmp;
+> +			peer_stats_1 = (struct wmi_peer_stats_1 *)tmp;
+
+You still have this evil cast here which assumes struct wmi_peer_stats_1
+starts with the same content as _2. It's better to spell that out in the
+code, for example like this:
+
+if (test_bit(ATH10K_FW_FEATURE_VDEV_STATS, ar->fw_features)) {
+             peer_v2 = (struct wmi_peer_stats_v2 *)tmp;
+             peer_stats = &peer_v2->common;
+             tmp += sizeof(*peer_v2);
+} else {
+             peer_v1 = (struct wmi_peer_stats_v1 *)tmp;
+             peer_stats = &peer_v1->common;
+             tmp += sizeof(*peer_v1);
+}
+
+> +struct wmi_peer_stats_1 {
+
+struct wmi_peer_stats_v1
+
+> +struct wmi_peer_stats_2 {
+
+struct wmi_peer_stats_v2
+
 -- 
-1.7.9.5
-
+Kalle Valo
