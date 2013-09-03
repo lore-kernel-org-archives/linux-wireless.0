@@ -1,37 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:9137 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754436Ab3IZV52 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Sep 2013 17:57:28 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-Date: Thu, 26 Sep 2013 14:57:21 -0700
-Subject: RE: [patch] mwifiex: potential integer underflow in
- mwifiex_ret_wmm_get_status()
-Message-ID: <477F20668A386D41ADCC57781B1F70430F4507819C@SC-VEXCH1.marvell.com> (sfid-20130926_235733_116736_3301BB83)
-References: <20130925085729.GC6661@elgon.mountain>
- <477F20668A386D41ADCC57781B1F70430F45077CDA@SC-VEXCH1.marvell.com>
- <20130925182359.GV6247@mwanda>
- <477F20668A386D41ADCC57781B1F70430F45077E52@SC-VEXCH1.marvell.com>
- <477F20668A386D41ADCC57781B1F70430F45078155@SC-VEXCH1.marvell.com>
- <20130926210703.GE6247@mwanda>
-In-Reply-To: <20130926210703.GE6247@mwanda>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:43112 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755739Ab3ICOec (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Sep 2013 10:34:32 -0400
+Received: by mail-wg0-f41.google.com with SMTP id a12so1343685wgh.0
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Sep 2013 07:34:31 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <luca@coelho.fi>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 09/12] wlcore: fix regulatory domain bit translation
+Date: Tue,  3 Sep 2013 17:34:05 +0300
+Message-Id: <1378218848-7853-9-git-send-email-eliad@wizery.com> (sfid-20130903_163436_719563_C64D820F)
+In-Reply-To: <1378218848-7853-1-git-send-email-eliad@wizery.com>
+References: <1378218848-7853-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+From: Ido Reis <idor@ti.com>
 
-> There are several other similar functions as well.  For example, the
-> while loops in mwifiex_ret_tx_rate_cfg() and mwifiex_get_power_level().
+This is a fix for channels 52,56,60,64 bit translation.
 
-Thanks for pointing it out. We will have them fixed.
+Reported-by: Yaniv Machani <yanivma@ti.com>
+Signed-off-by: Ido Reis <idor@ti.com>
+Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/ti/wlcore/cmd.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Regards,
-Bing
+diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
+index e3ae425..1cb3296 100644
+--- a/drivers/net/wireless/ti/wlcore/cmd.c
++++ b/drivers/net/wireless/ti/wlcore/cmd.c
+@@ -1613,8 +1613,10 @@ static int wlcore_get_reg_conf_ch_idx(enum ieee80211_band band, u16 ch)
+ 	case IEEE80211_BAND_5GHZ:
+ 		if (ch >= 8 && ch <= 16)
+ 			idx = ((ch-8)/4 + 18);
+-		else if (ch >= 34 && ch <= 64)
++		else if (ch >= 34 && ch <= 48)
+ 			idx = ((ch-34)/2 + 3 + 18);
++		else if (ch >= 52 && ch <= 64)
++			idx = ((ch-52)/4 + 11 + 18);
+ 		else if (ch >= 100 && ch <= 140)
+ 			idx = ((ch-100)/4 + 15 + 18);
+ 		else if (ch >= 149 && ch <= 165)
+-- 
+1.8.3.rc1.35.g9b79519
 
