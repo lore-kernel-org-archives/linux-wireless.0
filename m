@@ -1,97 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perceval.ideasonboard.com ([95.142.166.194]:56115 "EHLO
-	perceval.ideasonboard.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751077Ab3I0B4I (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:48597 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756564Ab3ICFCs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Sep 2013 21:56:08 -0400
-From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-To: Russell King <rmk+kernel@arm.linux.org.uk>
-Cc: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
-	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
-	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
-	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	uclinux-dist-devel@blackfin.uclinux.org,
-	Mauro Carvalho Chehab <m.chehab@samsung.com>
-Subject: Re: [PATCH 31/51] DMA-API: media: omap3isp: use dma_coerce_mask_and_coherent()
-Date: Fri, 27 Sep 2013 03:56:13 +0200
-Message-ID: <4110555.qb0XUyFHNE@avalon> (sfid-20130927_035632_432600_A418D240)
-In-Reply-To: <E1VMmCg-0007j1-Pi@rmk-PC.arm.linux.org.uk>
-References: <20130919212235.GD12758@n2100.arm.linux.org.uk> <E1VMmCg-0007j1-Pi@rmk-PC.arm.linux.org.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 3 Sep 2013 01:02:48 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/3] ath9k: Fix regulatory compliance for AR9462/AR9565
+Date: Tue,  3 Sep 2013 10:28:55 +0530
+Message-Id: <1378184337-1816-1-git-send-email-sujith@msujith.org> (sfid-20130903_070250_594318_F7A9E9A6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Russell,
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Thank you for the patch.
+Adjust the CCA values based on the regulatory domain
+present in the EEPROM.
 
-On Thursday 19 September 2013 22:56:02 Russell King wrote:
-> The code sequence:
-> 	isp->raw_dmamask = DMA_BIT_MASK(32);
-> 	isp->dev->dma_mask = &isp->raw_dmamask;
-> 	isp->dev->coherent_dma_mask = DMA_BIT_MASK(32);
-> bypasses the architectures check on the DMA mask.  It can be replaced
-> with dma_coerce_mask_and_coherent(), avoiding the direct initialization
-> of this mask.
-> 
-> Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h |  4 ++++
+ drivers/net/wireless/ath/ath9k/hw.c         | 12 ++++++++++++
+ 2 files changed, 16 insertions(+)
 
-Acked-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-
-> ---
->  drivers/media/platform/omap3isp/isp.c |    6 +++---
->  drivers/media/platform/omap3isp/isp.h |    3 ---
->  2 files changed, 3 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/media/platform/omap3isp/isp.c
-> b/drivers/media/platform/omap3isp/isp.c index df3a0ec..1c36080 100644
-> --- a/drivers/media/platform/omap3isp/isp.c
-> +++ b/drivers/media/platform/omap3isp/isp.c
-> @@ -2182,9 +2182,9 @@ static int isp_probe(struct platform_device *pdev)
->  	isp->pdata = pdata;
->  	isp->ref_count = 0;
-> 
-> -	isp->raw_dmamask = DMA_BIT_MASK(32);
-> -	isp->dev->dma_mask = &isp->raw_dmamask;
-> -	isp->dev->coherent_dma_mask = DMA_BIT_MASK(32);
-> +	ret = dma_coerce_mask_and_coherent(isp->dev, DMA_BIT_MASK(32));
-> +	if (ret)
-> +		return ret;
-> 
->  	platform_set_drvdata(pdev, isp);
-> 
-> diff --git a/drivers/media/platform/omap3isp/isp.h
-> b/drivers/media/platform/omap3isp/isp.h index cd3eff4..ce65d3a 100644
-> --- a/drivers/media/platform/omap3isp/isp.h
-> +++ b/drivers/media/platform/omap3isp/isp.h
-> @@ -152,7 +152,6 @@ struct isp_xclk {
->   * @mmio_base_phys: Array with physical L4 bus addresses for ISP register
->   *                  regions.
->   * @mmio_size: Array with ISP register regions size in bytes.
-> - * @raw_dmamask: Raw DMA mask
->   * @stat_lock: Spinlock for handling statistics
->   * @isp_mutex: Mutex for serializing requests to ISP.
->   * @crashed: Bitmask of crashed entities (indexed by entity ID)
-> @@ -190,8 +189,6 @@ struct isp_device {
->  	unsigned long mmio_base_phys[OMAP3_ISP_IOMEM_LAST];
->  	resource_size_t mmio_size[OMAP3_ISP_IOMEM_LAST];
-> 
-> -	u64 raw_dmamask;
-> -
->  	/* ISP Obj */
->  	spinlock_t stat_lock;	/* common lock for statistic drivers */
->  	struct mutex isp_mutex;	/* For handling ref_count field */
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+index 6fd7523..fca6243 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+@@ -343,8 +343,12 @@
+ 
+ #define AR_PHY_CCA_NOM_VAL_9462_2GHZ          -127
+ #define AR_PHY_CCA_MIN_GOOD_VAL_9462_2GHZ     -127
++#define AR_PHY_CCA_MAX_GOOD_VAL_9462_2GHZ     -60
++#define AR_PHY_CCA_MAX_GOOD_VAL_9462_FCC_2GHZ -95
+ #define AR_PHY_CCA_NOM_VAL_9462_5GHZ          -127
+ #define AR_PHY_CCA_MIN_GOOD_VAL_9462_5GHZ     -127
++#define AR_PHY_CCA_MAX_GOOD_VAL_9462_5GHZ     -60
++#define AR_PHY_CCA_MAX_GOOD_VAL_9462_FCC_5GHZ -100
+ 
+ #define AR_PHY_CCA_NOM_VAL_9330_2GHZ          -118
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index ecc6ec4..260e0c6 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -549,6 +549,18 @@ static int ath9k_hw_post_init(struct ath_hw *ah)
+ 
+ 	ath9k_hw_ani_init(ah);
+ 
++	/*
++	 * EEPROM needs to be initialized before we do this.
++	 * This is required for regulatory compliance.
++	 */
++	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
++		u16 regdmn = ah->eep_ops->get_eeprom(ah, EEP_REG_0);
++		if ((regdmn & 0xF0) == CTL_FCC) {
++			ah->nf_2g.max = AR_PHY_CCA_MAX_GOOD_VAL_9462_FCC_2GHZ;
++			ah->nf_5g.max = AR_PHY_CCA_MAX_GOOD_VAL_9462_FCC_5GHZ;
++		}
++	}
++
+ 	return 0;
+ }
+ 
 -- 
-Regards,
-
-Laurent Pinchart
+1.8.4
 
