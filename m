@@ -1,77 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f44.google.com ([209.85.219.44]:44898 "EHLO
-	mail-oa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753009Ab3IPOfI (ORCPT
+Received: from mail1.bemta3.messagelabs.com ([195.245.230.171]:41308 "EHLO
+	mail1.bemta3.messagelabs.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760029Ab3ICO1H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Sep 2013 10:35:08 -0400
-Received: by mail-oa0-f44.google.com with SMTP id g12so69339oah.3
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Sep 2013 07:35:07 -0700 (PDT)
-Date: Mon, 16 Sep 2013 09:35:06 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Jason Andrews <jasona@cadence.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: guidance on struct alignment for rtl8192cu driver
-Message-ID: <20130916143506.GC18593@thinkpad-t410> (sfid-20130916_163513_080833_1D9389B1)
-References: <985A2B0C3F73B74792F35D4098E1CA7CB143670E93@MAILSJ3.global.cadence.com>
- <52346DE2.9090904@lwfinger.net>
+	Tue, 3 Sep 2013 10:27:07 -0400
+From: Andrew Delamare <andrew.delamare@powerethernet.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: ACS compile to hostapd 2.0
+Date: Tue, 3 Sep 2013 14:26:51 +0000
+Message-ID: <2ce6e0837f3c48d39e72cd07b5cdd491@THHSTE15D1BE3.hs20.net> (sfid-20130903_162711_305809_7EF621CA)
+References: <7f4ff1930bfc4f3b8160b1595950c5a1@THHSTE15D1BE3.hs20.net>
+ <CA+BoTQn7nhsDxedekMTZ9ZqFyo55zR3iGPuTYvVqELGYGh5njg@mail.gmail.com>
+In-Reply-To: <CA+BoTQn7nhsDxedekMTZ9ZqFyo55zR3iGPuTYvVqELGYGh5njg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <52346DE2.9090904@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Sep 14, 2013 at 09:08:34AM -0500, Larry Finger wrote:
-> On 09/14/2013 12:36 AM, Jason Andrews wrote:
-> >I'm using an ASUS USB N13 on an ARM platform with the rtl8192cu driver.
-> >Linux kernel is 3.10 so I probably don't have the latest and greatest driver.
-> >
-> >When I booted I got an ARM alignment trap caused by the driver.
-> >
-> >I determined the cause was the 1st argument to spin_lock_irqsave() has an unaligned address.
-> >
-> >By trial-and-error I found that if I edit wifi.h and insert 2 dummy bytes into the rtl_priv struct just above priv (last variable) the locks work and the driver works fine.
-> >
-> >What is the recommended way to make sure the last variable in the rtl_priv struct (u8 priv[0]) is aligned on a 4 byte boundary so the driver works on ARM machines?
-> 
-> There are a lot of improvements for this driver in 3.11. The
-> backports release has that code. In addition, I am currently working
-> at improving the power management for 3.13.
-> 
-> The presence of unaligned variables that cause alignment traps on
-> ARM does not surprise me as I test only on x86 and ppc
-> architectures. I now own a Raspberry Pi and I will soon be testing
-> with it as well.
-> 
-> What does surprise me is that the first argument in all the calls to
-> spin_lock_irqsave() are contained within the rtl_locks struct and
-> everything there should be aligned. Perhaps some ARM expert will
-> know why aligning the last item in the rtl_priv struct fixes the
-> problem.
+SGV5IE1pY2hhbCwKClRoYW5rcyBmb3IgdGhlIHN1cGVyIHNwZWVkeSByZXNwb25zZS4KCldoaWNo
+IHJlcG9zaXRvcnkgaXMgdGhhdCBpbj8gCgpJZiB5b3UgY291bGQgcG9pbnQgbWUgdG8gdGhlIHJp
+Z2h0IEdpdCByZXBvc2l0b3J5IG9yIGZ0cCBkb3dubG9hZCB0aGF0IHdvdWxkIGJlIGdyZWF0LgoK
+ClJlZ2FyZHMKLS0KQW5kcmV3IERlbGFtYXJlCkRpcmVjdG9yIE9mIFRlY2hub2xvZ3kKUG93ZXIg
+RXRoZXJuZXQgTHRkCjA3NTg1OTU2NzQ4CgoKCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tCkZy
+b206IE1pY2hhbCBLYXppb3IgW21haWx0bzptaWNoYWwua2F6aW9yQHRpZXRvLmNvbV0gClNlbnQ6
+IFR1ZXNkYXksIFNlcHRlbWJlciAzLCAyMDEzIDE6NTMgUE0KVG86IEFuZHJldyBEZWxhbWFyZQpD
+YzogbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnClN1YmplY3Q6IFJlOiBBQ1MgY29tcGls
+ZSB0byBob3N0YXBkIDIuMAoKT24gMyBTZXB0ZW1iZXIgMjAxMyAxNDozMywgQW5kcmV3IERlbGFt
+YXJlIDxhbmRyZXcuZGVsYW1hcmVAcG93ZXJldGhlcm5ldC5jb20+IHdyb3RlOgo+IEhleSB0aGVy
+ZSwKPgo+IFNvIEkgd2FudCB0byBnZXQgQUNTIHdvcmtpbmcgYW5kIEkgaGF2ZSBsb29rZWQgYXQg
+eW91ciBBQ1MgcGFnZSBhdDogCj4gaHR0cDovL3dpcmVsZXNzLmtlcm5lbC5vcmcvZW4vdXNlcnMv
+RG9jdW1lbnRhdGlvbi9hY3MKPgo+IEkgZm91bmQgdGhlcmUgaXMgYSBwYXRjaHNldCB0aGF0IHlv
+dSBjYW4gdXNlIHdpdGggdGhlIEFDUyBjb2RlIHRoYXQgcGF0Y2hlcyBhIHN0YW5kYXJkIGhvc3Rh
+cGQuIFNvIEkgdHJpZWQgdGhpcyBwYXRjaCBhbmQgSSBhbSBoYXZpbmcgaXNzdWVzIGdldHRpbmcg
+QUNTIHRvIHBhdGNoIGludG8gaG9zdGFwZCAyLjAuIFdoYXQgaXMgdGhlIGNvZGUgc3RyYW5kIHRo
+YXQgdGhpcyBwYXRjaCB3b3JrcyBvbj8KCkhpLAoKQUNTIGhhcyBiZWVuIG1lcmdlZCBpbnRvIGhv
+c3RhcGQgbWFzdGVyIGJyYW5jaCAzIGRheXMgYWdvIHNvIHlvdSBjYW4gdHJ5IHB1bGxpbmcgdGhh
+dC4KClRoZSBwYXRjaCBvbiB0aGUgYWZvcmVtZW50aW9uZWQgcGFnZSBwcm9iYWJseSBkb2Vzbid0
+IGFwcGx5IG9uIGEgMi4wIHJlbGVhc2UgYXMtaXMuCgoKTWljaGHFgi4KCl9fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18K
+VGhpcyBlbWFpbCBoYXMgYmVlbiBzY2FubmVkIGJ5IHRoZSBTeW1hbnRlYyBFbWFpbCBTZWN1cml0
+eS5jbG91ZCBzZXJ2aWNlLgpGb3IgbW9yZSBpbmZvcm1hdGlvbiBwbGVhc2UgdmlzaXQgaHR0cDov
+L3d3dy5zeW1hbnRlY2Nsb3VkLmNvbSBfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCgpfX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fClRoaXMg
+ZW1haWwgaGFzIGJlZW4gc2Nhbm5lZCBieSB0aGUgU3ltYW50ZWMgRW1haWwgU2VjdXJpdHkuY2xv
+dWQgc2VydmljZS4KRm9yIG1vcmUgaW5mb3JtYXRpb24gcGxlYXNlIHZpc2l0IGh0dHA6Ly93d3cu
+c3ltYW50ZWNjbG91ZC5jb20KX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwo=
 
-Depending on architecture version and configuration ARM may or may not
-allow unaligned accesses. Even when allowed there is a cost though, so
-it's better to properly align the data. In the past this would have
-always meant 4-byte alignment, but my ARM experience is a bit dated now
-and I don't know about 64-bit ARM. That variable-size array probably
-only has byte alignment.
-
-> As far as I know, the proper way to do a 4-byte alignment is as in
-> the following patch:
-> 
-> Index: wireless-testing-save/drivers/net/wireless/rtlwifi/wifi.h
-> ===================================================================
-> --- wireless-testing-save.orig/drivers/net/wireless/rtlwifi/wifi.h
-> +++ wireless-testing-save/drivers/net/wireless/rtlwifi/wifi.h
-> @@ -2057,7 +2057,7 @@ struct rtl_priv {
->  	  that it points to the data allocated
->  	  beyond  this structure like:
->  	  rtl_pci_priv or rtl_usb_priv */
-> -	u8 priv[0];
-> +	u8 __aligned(4) priv[0];
->  };
-
-__attribute__((aligned)) might be a safer bet, as this will align it to
-the largest alignment that could possibly be needed.
-
-Seth
