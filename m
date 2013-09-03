@@ -1,33 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:40262 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754841Ab3IITKn (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:47415 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759455Ab3ICHFK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Sep 2013 15:10:43 -0400
-Message-ID: <522E1D31.2090403@candelatech.com> (sfid-20130909_211051_077109_F514A307)
-Date: Mon, 09 Sep 2013 12:10:41 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 3 Sep 2013 03:05:10 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Bartosz Markowski <bartosz.markowski@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v3 1/2] ath10k: update wal_dbg_tx_stats structure with missing parameter.
+References: <1377778061-22331-1-git-send-email-bartosz.markowski@tieto.com>
+	<1377778061-22331-2-git-send-email-bartosz.markowski@tieto.com>
+Date: Tue, 3 Sep 2013 10:05:04 +0300
+In-Reply-To: <1377778061-22331-2-git-send-email-bartosz.markowski@tieto.com>
+	(Bartosz Markowski's message of "Thu, 29 Aug 2013 14:07:39 +0200")
+Message-ID: <87eh961j33.fsf@kamboji.qca.qualcomm.com> (sfid-20130903_090514_220246_E19C976F)
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>
-Subject: Always send management frames at MCS-0??
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I had a user request that we support always sending management frames
-(such as EAPOL) at the lowest rate.  Evidently, other equipment does this,
-where as normal-ish supplicant/linux tends to send them at much higher
-rates.
+Bartosz Markowski <bartosz.markowski@tieto.com> writes:
 
-Any suggestions on how to go about doing this properly?
+> It's very imporatant to keep these structs up to date with FW abi,
+> due to the arithmetic we use while read the fw_stats.
+>
+> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+> ---
+>  drivers/net/wireless/ath/ath10k/wmi.h |    3 +++
+>  1 file changed, 3 insertions(+)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+> index 08860c4..5b94707 100644
+> --- a/drivers/net/wireless/ath/ath10k/wmi.h
+> +++ b/drivers/net/wireless/ath/ath10k/wmi.h
+> @@ -1767,6 +1767,9 @@ struct wal_dbg_tx_stats {
+>  	/* wal pdev resets  */
+>  	__le32 pdev_resets;
+>  
+> +	/* frames dropped due to non-availability of stateless TIDs */
+> +	__le32 stateless_tid_alloc_failure;
+> +
+>  	__le32 phy_underrun;
 
-Any opinions on whether it's a good idea or not?
-
-Thanks,
-Ben
+I still wonder if this needs a feature bit. At least you should mention
+in the commit log why it's not needed.
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Kalle Valo
