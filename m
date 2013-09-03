@@ -1,66 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:46909 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751555Ab3IXNJl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Sep 2013 09:09:41 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 2/5] ath10k: document decap modes
-Date: Tue, 24 Sep 2013 15:09:15 +0200
-Message-ID: <1380028158-861-3-git-send-email-michal.kazior@tieto.com> (sfid-20130924_150946_405982_0197AE9F)
-In-Reply-To: <1380028158-861-1-git-send-email-michal.kazior@tieto.com>
-References: <1380028158-861-1-git-send-email-michal.kazior@tieto.com>
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:39621 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932473Ab3ICIoG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Sep 2013 04:44:06 -0400
+Subject: [PATCH 2/3] ath10k: implement ath10k_debug_start/stop()
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 03 Sep 2013 11:44:03 +0300
+Message-ID: <20130903084403.26199.47052.stgit@localhost6.localdomain6> (sfid-20130903_104410_696310_8B43590A)
+In-Reply-To: <20130903084302.26199.3538.stgit@localhost6.localdomain6>
+References: <20130903084302.26199.3538.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Clarify how each decap mode works in one place.
+Needed for the HTT stats implementation.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath10k/rx_desc.h |   24 ++++++++++++++++++++++--
- 1 file changed, 22 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.c  |    6 ++++++
+ drivers/net/wireless/ath/ath10k/debug.c |   10 ++++++++++
+ drivers/net/wireless/ath/ath10k/debug.h |   11 +++++++++++
+ 3 files changed, 27 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/rx_desc.h b/drivers/net/wireless/ath/ath10k/rx_desc.h
-index bfec6c8..1c584c4 100644
---- a/drivers/net/wireless/ath/ath10k/rx_desc.h
-+++ b/drivers/net/wireless/ath/ath10k/rx_desc.h
-@@ -422,10 +422,30 @@ struct rx_mpdu_end {
- #define RX_MSDU_START_INFO1_IP_FRAG             (1 << 14)
- #define RX_MSDU_START_INFO1_TCP_ONLY_ACK        (1 << 15)
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 2dd39a8..4f2b0e7 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -630,6 +630,10 @@ int ath10k_core_start(struct ath10k *ar)
+ 	if (status)
+ 		goto err_disconnect_htc;
  
-+/* The decapped header (rx_hdr_status) contains the following:
-+ *  a) 802.11 header
-+ *  [padding to 4 bytes]
-+ *  b) HW crypto parameter
-+ *     - 0 bytes for no security
-+ *     - 4 bytes for WEP
-+ *     - 8 bytes for TKIP, AES
-+ *  [padding to 4 bytes]
-+ *  c) A-MSDU subframe header (14 bytes) if appliable
-+ *  d) LLC/SNAP (RFC1042, 8 bytes)
-+ *
-+ * In case of A-MSDU only first frame in sequence contains (a) and (b). */
- enum rx_msdu_decap_format {
--	RX_MSDU_DECAP_RAW           = 0,
--	RX_MSDU_DECAP_NATIVE_WIFI   = 1,
-+	RX_MSDU_DECAP_RAW = 0,
++	status = ath10k_debug_start(ar);
++	if (status)
++		goto err_disconnect_htc;
 +
-+	/* Note: QoS frames are reported as non-QoS. The rx_hdr_status in
-+	 * htt_rx_desc contains the original decapped 802.11 header. */
-+	RX_MSDU_DECAP_NATIVE_WIFI = 1,
+ 	ar->free_vdev_map = (1 << TARGET_NUM_VDEVS) - 1;
+ 
+ 	return 0;
+@@ -647,6 +651,7 @@ EXPORT_SYMBOL(ath10k_core_start);
+ 
+ void ath10k_core_stop(struct ath10k *ar)
+ {
++	ath10k_debug_stop(ar);
+ 	ath10k_htc_stop(&ar->htc);
+ 	ath10k_htt_detach(&ar->htt);
+ 	ath10k_wmi_detach(ar);
+@@ -777,6 +782,7 @@ void ath10k_core_unregister(struct ath10k *ar)
+ 	 * Otherwise we will fail to submit commands to FW and mac80211 will be
+ 	 * unhappy about callback failures. */
+ 	ath10k_mac_unregister(ar);
 +
-+	/* Payload contains an ethernet header (struct ethhdr). */
- 	RX_MSDU_DECAP_ETHERNET2_DIX = 2,
-+
-+	/* Payload contains two 48-bit addresses and 2-byte length (14 bytes
-+	 * total), followed by an RFC1042 header (8 bytes). */
- 	RX_MSDU_DECAP_8023_SNAP_LLC = 3
+ 	ath10k_core_free_firmware_files(ar);
+ }
+ EXPORT_SYMBOL(ath10k_core_unregister);
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 09f535a..219d469 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -517,6 +517,15 @@ static const struct file_operations fops_chip_id = {
+ 	.llseek = default_llseek,
  };
  
--- 
-1.7.9.5
++int ath10k_debug_start(struct ath10k *ar)
++{
++	return 0;
++}
++
++void ath10k_debug_stop(struct ath10k *ar)
++{
++}
++
+ int ath10k_debug_create(struct ath10k *ar)
+ {
+ 	ar->debug.debugfs_phy = debugfs_create_dir("ath10k",
+@@ -541,6 +550,7 @@ int ath10k_debug_create(struct ath10k *ar)
+ 
+ 	return 0;
+ }
++
+ #endif /* CONFIG_ATH10K_DEBUGFS */
+ 
+ #ifdef CONFIG_ATH10K_DEBUG
+diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
+index 168140c..9c442a8 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.h
++++ b/drivers/net/wireless/ath/ath10k/debug.h
+@@ -42,6 +42,8 @@ extern __printf(1, 2) int ath10k_err(const char *fmt, ...);
+ extern __printf(1, 2) int ath10k_warn(const char *fmt, ...);
+ 
+ #ifdef CONFIG_ATH10K_DEBUGFS
++int ath10k_debug_start(struct ath10k *ar);
++void ath10k_debug_stop(struct ath10k *ar);
+ int ath10k_debug_create(struct ath10k *ar);
+ void ath10k_debug_read_service_map(struct ath10k *ar,
+ 				   void *service_map,
+@@ -50,6 +52,15 @@ void ath10k_debug_read_target_stats(struct ath10k *ar,
+ 				    struct wmi_stats_event *ev);
+ 
+ #else
++int ath10k_debug_start(struct ath10k *ar)
++{
++	return 0;
++}
++
++void ath10k_debug_stop(struct ath10k *ar)
++{
++}
++
+ static inline int ath10k_debug_create(struct ath10k *ar)
+ {
+ 	return 0;
 
