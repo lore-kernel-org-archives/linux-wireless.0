@@ -1,82 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f179.google.com ([74.125.82.179]:40740 "EHLO
-	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751178Ab3IIJYy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Sep 2013 05:24:54 -0400
-Received: by mail-we0-f179.google.com with SMTP id x55so3936856wes.38
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Sep 2013 02:24:53 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <luca@coelho.fi>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 02/13] wlcore: print active channel in the driver_state
-Date: Mon,  9 Sep 2013 12:24:33 +0300
-Message-Id: <1378718684-14430-2-git-send-email-eliad@wizery.com> (sfid-20130909_112457_857297_7BCB7DB3)
-In-Reply-To: <1378718684-14430-1-git-send-email-eliad@wizery.com>
-References: <1378718684-14430-1-git-send-email-eliad@wizery.com>
+Received: from ebb05.tieto.com ([131.207.168.36]:50711 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759773Ab3ICMZO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Sep 2013 08:25:14 -0400
+From: Bartosz Markowski <bartosz.markowski@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Bartosz Markowski <bartosz.markowski@tieto.com>
+Subject: [PATCH 2/2] ath10k: remove obsolete INIT STATUS definitions
+Date: Tue, 3 Sep 2013 14:24:03 +0200
+Message-ID: <1378211043-20299-2-git-send-email-bartosz.markowski@tieto.com> (sfid-20130903_142520_945919_55DA8391)
+In-Reply-To: <1378211043-20299-1-git-send-email-bartosz.markowski@tieto.com>
+References: <1378211043-20299-1-git-send-email-bartosz.markowski@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Victor Goldenshtein <victorg@ti.com>
+There's no functional changes. Just a small cleanup.
 
-Print current active channel/s and a role type for
-that channel in the driver_state debugfs.
-
-Signed-off-by: Victor Goldenshtein <victorg@ti.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
 ---
- drivers/net/wireless/ti/wlcore/debugfs.c | 18 +++++++++++++++++-
- 1 file changed, 17 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/wmi.h |    8 --------
+ 1 file changed, 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/debugfs.c b/drivers/net/wireless/ti/wlcore/debugfs.c
-index e17630c..89893c7 100644
---- a/drivers/net/wireless/ti/wlcore/debugfs.c
-+++ b/drivers/net/wireless/ti/wlcore/debugfs.c
-@@ -437,6 +437,7 @@ static ssize_t driver_state_read(struct file *file, char __user *user_buf,
- 	int res = 0;
- 	ssize_t ret;
- 	char *buf;
-+	struct wl12xx_vif *wlvif;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 08860c4..40fcf05 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -763,14 +763,6 @@ struct wmi_service_ready_event {
+ 	struct wlan_host_mem_req mem_reqs[1];
+ } __packed;
  
- #define DRIVER_STATE_BUF_LEN 1024
+-/*
+- * status consists of  upper 16 bits fo int status and lower 16 bits of
+- * module ID that retuned status
+- */
+-#define WLAN_INIT_STATUS_SUCCESS   0x0
+-#define WLAN_GET_INIT_STATUS_REASON(status)    ((status) & 0xffff)
+-#define WLAN_GET_INIT_STATUS_MODULE_ID(status) (((status) >> 16) & 0xffff)
+-
+ #define WMI_SERVICE_READY_TIMEOUT_HZ (5*HZ)
+ #define WMI_UNIFIED_READY_TIMEOUT_HZ (5*HZ)
  
-@@ -450,12 +451,28 @@ static ssize_t driver_state_read(struct file *file, char __user *user_buf,
- 	(res += scnprintf(buf + res, DRIVER_STATE_BUF_LEN - res,\
- 			  #x " = " fmt "\n", wl->x))
- 
-+#define DRIVER_STATE_PRINT_GENERIC(x, fmt, args...)   \
-+	(res += scnprintf(buf + res, DRIVER_STATE_BUF_LEN - res,\
-+			  #x " = " fmt "\n", args))
-+
- #define DRIVER_STATE_PRINT_LONG(x) DRIVER_STATE_PRINT(x, "%ld")
- #define DRIVER_STATE_PRINT_INT(x)  DRIVER_STATE_PRINT(x, "%d")
- #define DRIVER_STATE_PRINT_STR(x)  DRIVER_STATE_PRINT(x, "%s")
- #define DRIVER_STATE_PRINT_LHEX(x) DRIVER_STATE_PRINT(x, "0x%lx")
- #define DRIVER_STATE_PRINT_HEX(x)  DRIVER_STATE_PRINT(x, "0x%x")
- 
-+	wl12xx_for_each_wlvif_sta(wl, wlvif) {
-+		if (!test_bit(WLVIF_FLAG_STA_ASSOCIATED, &wlvif->flags))
-+			continue;
-+
-+		DRIVER_STATE_PRINT_GENERIC(channel, "%d (%s)", wlvif->channel,
-+					   wlvif->p2p ? "P2P-CL" : "STA");
-+	}
-+
-+	wl12xx_for_each_wlvif_ap(wl, wlvif)
-+		DRIVER_STATE_PRINT_GENERIC(channel, "%d (%s)", wlvif->channel,
-+					   wlvif->p2p ? "P2P-GO" : "AP");
-+
- 	DRIVER_STATE_PRINT_INT(tx_blocks_available);
- 	DRIVER_STATE_PRINT_INT(tx_allocated_blocks);
- 	DRIVER_STATE_PRINT_INT(tx_allocated_pkts[0]);
-@@ -474,7 +491,6 @@ static ssize_t driver_state_read(struct file *file, char __user *user_buf,
- 	DRIVER_STATE_PRINT_INT(tx_blocks_freed);
- 	DRIVER_STATE_PRINT_INT(rx_counter);
- 	DRIVER_STATE_PRINT_INT(state);
--	DRIVER_STATE_PRINT_INT(channel);
- 	DRIVER_STATE_PRINT_INT(band);
- 	DRIVER_STATE_PRINT_INT(power_level);
- 	DRIVER_STATE_PRINT_INT(sg_enabled);
 -- 
-1.8.3.rc1.35.g9b79519
+1.7.10
 
