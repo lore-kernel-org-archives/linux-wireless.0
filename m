@@ -1,63 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:57741 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753134Ab3IPFLA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Sep 2013 01:11:00 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/3] ath9k: Handle FATAL interrupts correctly
-Date: Mon, 16 Sep 2013 10:37:00 +0530
-Message-Id: <1379308021-20891-2-git-send-email-sujith@msujith.org> (sfid-20130916_071104_610993_789DC34C)
-In-Reply-To: <1379308021-20891-1-git-send-email-sujith@msujith.org>
-References: <1379308021-20891-1-git-send-email-sujith@msujith.org>
+Received: from ebb05.tieto.com ([131.207.168.36]:63107 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759746Ab3ICIVf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Sep 2013 04:21:35 -0400
+From: Bartosz Markowski <bartosz.markowski@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Bartosz Markowski <bartosz.markowski@tieto.com>
+Subject: [PATCH v4 0/2] add per-VDEV FW statistics
+Date: Tue, 3 Sep 2013 10:21:19 +0200
+Message-ID: <1378196481-13983-1-git-send-email-bartosz.markowski@tieto.com> (sfid-20130903_102145_086853_8347F634)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+FW 1.0.0.716 brings per-VDEV statistics. This patch-set implements
+debugfs mechanism to fetch them. There's still few more fileds we
+can read from the FW stats event, which are not covered here.
+Let's bring them in the future.
 
-When a FATAL interrupt is received, a full chip reset is
-required, which is done in the main tasklet. But since
-the reset routine is scheduled as a work item, make sure
-that interrupts are not enabled in the tasklet before the
-reset is done.
+Changes:
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/main.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+V2:
+* introduce wmi_peer_stats_common struct
+* fetch and print peer RX rates
+* break up wmi_peer_stats_common update into separate patch
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index e4f6590..cdb3b1e 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -362,6 +362,13 @@ void ath9k_tasklet(unsigned long data)
- 			type = RESET_TYPE_BB_WATCHDOG;
- 
- 		ath9k_queue_reset(sc, type);
-+
-+		/*
-+		 * Increment the ref. counter here so that
-+		 * interrupts are enabled in the reset routine.
-+		 */
-+		atomic_inc(&ah->intr_ref_cnt);
-+		ath_dbg(common, ANY, "FATAL: Skipping interrupts\n");
- 		goto out;
- 	}
- 
-@@ -400,10 +407,9 @@ void ath9k_tasklet(unsigned long data)
- 
- 	ath9k_btcoex_handle_interrupt(sc, status);
- 
--out:
- 	/* re-enable hardware interrupt */
- 	ath9k_hw_enable_interrupts(ah);
--
-+out:
- 	spin_unlock(&sc->sc_pcu_lock);
- 	ath9k_ps_restore(sc);
- }
+V3:
+* rebase
+* fix sparse endianness warnings
+
+V4:
+* rebase
+* document the wal_dbg_tx_stats changes
+* refactor wmi_peer_stats_common/v1/v2 handling
+
+Bartosz Markowski (2):
+  ath10k: update wal_dbg_tx_stats structure with missing parameter.
+  ath10k: implement per-VDEV FW statistics
+
+ drivers/net/wireless/ath/ath10k/core.h  |   27 ++++++++++
+ drivers/net/wireless/ath/ath10k/debug.c |   70 +++++++++++++++++++++---
+ drivers/net/wireless/ath/ath10k/wmi.c   |    4 +-
+ drivers/net/wireless/ath/ath10k/wmi.h   |   90 ++++++++++++++++++++++++++-----
+ 4 files changed, 170 insertions(+), 21 deletions(-)
+
 -- 
-1.8.4
+1.7.10
 
