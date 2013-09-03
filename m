@@ -1,37 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f52.google.com ([209.85.215.52]:52982 "EHLO
-	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755418Ab3I3U4w (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Sep 2013 16:56:52 -0400
-Received: by mail-la0-f52.google.com with SMTP id ev20so4863759lab.25
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Sep 2013 13:56:50 -0700 (PDT)
+Received: from purkki.adurom.net ([80.68.90.206]:59114 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754356Ab3ICFsM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Sep 2013 01:48:12 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: Joe Perches <joe@perches.com>
+Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
+	linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org
+Subject: Re: [PATCH v2 13/16] wcn36xx: add wcn36xx.h
+References: <1377248299-21007-1-git-send-email-k.eugene.e@gmail.com>
+	<1377248299-21007-14-git-send-email-k.eugene.e@gmail.com>
+	<1377298929.2816.15.camel@joe-AO722>
+	<87ioyjux5w.fsf@purkki.adurom.net>
+	<1378144193.1953.88.camel@joe-AO722>
+	<87bo4av6fj.fsf@purkki.adurom.net>
+	<1378185231.29083.15.camel@joe-AO722>
+	<877geyv5ma.fsf@purkki.adurom.net> <1378186024.2048.0.camel@joe-AO722>
+	<8738pmv4zv.fsf@purkki.adurom.net> <1378186879.2048.2.camel@joe-AO722>
+Date: Tue, 03 Sep 2013 08:48:10 +0300
+In-Reply-To: <1378186879.2048.2.camel@joe-AO722> (Joe Perches's message of
+	"Mon, 02 Sep 2013 22:41:19 -0700")
+Message-ID: <87y57etq05.fsf@purkki.adurom.net> (sfid-20130903_074815_368411_0BDE303C)
 MIME-Version: 1.0
-In-Reply-To: <1379399136-3181-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1379399136-3181-1-git-send-email-janusz.dziedzic@tieto.com>
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Date: Mon, 30 Sep 2013 13:56:30 -0700
-Message-ID: <CAB=NE6Up37DkyWY__mvAhTb9vd-Rv=oHwsw5851XtAA8ukcYOA@mail.gmail.com> (sfid-20130930_225702_326156_13E71A24)
-Subject: Re: [PATCH] cfg80211: parse dfs region for internal regdb option
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 16, 2013 at 11:25 PM, Janusz Dziedzic
-<janusz.dziedzic@tieto.com> wrote:
-> Add support for parsing and setting the dfs region (ETSI, FCC, JP)
-> when the internal regulatory database is used. Before this
-> the DFS region was being ignored even if present on the used
-> db.txt
+Joe Perches <joe@perches.com> writes:
+
+> On Tue, 2013-09-03 at 08:39 +0300, Kalle Valo wrote:
+>> >> What does module mean in this context?
+>> >
+>> > KBUILD_MODNAME
+>> 
+>> Ok, so there's no way to have functionality like ATH6KL_DBG_BOOT which
+>> prints information from various files during firmware boot. So
+>> dynamic_debug is not really usable for my work flow.
 >
-> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+> I'm confused by your response.
+> Dynamic debug can work with external masks/levels.
+> What functionality do you think you're missing?
 
-Reviewed-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+I was just replying to your question why I think dynamic_debug is not
+usable in wifi drivers.
 
-It'd be nice to automate the list somehow in the future.
-
-  Luis
+-- 
+Kalle Valo
