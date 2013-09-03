@@ -1,66 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:8503 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751975Ab3IQL2h convert rfc822-to-8bit (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:35004 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759377Ab3ICFCs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Sep 2013 07:28:37 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Eliad Peller <eliad@wizery.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [RFC] mac80211: correctly close cancelled scans
-Date: Tue, 17 Sep 2013 11:28:17 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301DB0B1C@HASMSX103.ger.corp.intel.com> (sfid-20130917_132841_206219_B7F65EF4)
-References: <1379396919-11983-1-git-send-email-emmanuel.grumbach@intel.com>
- <CAB3XZEc-h=mS-etjvm_zeJ2czsLj9yseq+jpsXOR=smy5+7Rdg@mail.gmail.com>
-In-Reply-To: <CAB3XZEc-h=mS-etjvm_zeJ2czsLj9yseq+jpsXOR=smy5+7Rdg@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Tue, 3 Sep 2013 01:02:48 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/3] ath9k: Add and use initvals for channel 14
+Date: Tue,  3 Sep 2013 10:28:56 +0530
+Message-Id: <1378184337-1816-2-git-send-email-sujith@msujith.org> (sfid-20130903_070252_366258_E88A4864)
+In-Reply-To: <1378184337-1816-1-git-send-email-sujith@msujith.org>
+References: <1378184337-1816-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Tue, Sep 17, 2013 at 8:48 AM, Emmanuel Grumbach
-> <emmanuel.grumbach@intel.com> wrote:
-> > __ieee80211_scan_completed is called from a worker. This means that
-> > the following flow is possible.
-> >
-> >  * driver calls ieee80211_scan_completed
-> >  * mac80211 cancels the scan (that is already complete)
-> >  * __ieee80211_scan_complete runs
-> >
-> > When scan_work will finally run, it will see that the scan hasn't been
-> > aborted and might even trigger another scan on another band. This
-> > leads to a situation where cfg80211's scan is not done and no further
-> > scan can be issued.
-> >
-> > Fix this by setting a new flag when a HW scan is being cancelled so
-> > that no other scan will be triggered.
-> >
-> > Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> > ---
-> [...]
-> 
-> >         if (test_bit(SCAN_HW_SCANNING, &local->scanning)) {
-> > -               if (local->ops->cancel_hw_scan)
-> > +               /*
-> > +                * Make sure that __ieee80211_scan_completed doesn't trigger a
-> > +                * scan on another band.
-> > +                */
-> > +               set_bit(SCAN_HW_CANCELLED, &local->scanning);
-> > +               if (local->ops->cancel_hw_scan) {
-> >                         drv_cancel_hw_scan(local,
-> >                                 rcu_dereference_protected(local->scan_sdata,
-> >
-> > lockdep_is_held(&local->mtx)));
-> > +               }
-> >                 goto out;
-> >         }
-> 
-> you don't seem to clear this flag anywhere...
-> 
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Yeah - just like SCAN_HW_SCANNING isn't cleared anywhere... but... in __ieee80211_scan_completed:
+This is missing for AR9565.
 
-	local->scanning = 0;
-	local->scan_chandef.chan = NULL;
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c           | 2 ++
+ drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h | 7 +++++++
+ 2 files changed, 9 insertions(+)
 
-yes I know. Don't ask.
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+index d40bdd2..b07f164 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+@@ -364,6 +364,8 @@ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
+ 
+ 		INIT_INI_ARRAY(&ah->iniModesFastClock,
+ 				ar9565_1p0_modes_fast_clock);
++		INIT_INI_ARRAY(&ah->iniCckfirJapan2484,
++			       ar9565_1p0_baseband_core_txfir_coeff_japan_2484);
+ 	} else {
+ 		/* mac */
+ 		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_CORE],
+diff --git a/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h
+index 03ecc07..a8c757b 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h
+@@ -1231,4 +1231,11 @@ static const u32 ar9565_1p0_modes_high_power_tx_gain_table[][5] = {
+ 	{0x00016054, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+ };
+ 
++static const u32 ar9565_1p0_baseband_core_txfir_coeff_japan_2484[][2] = {
++	/* Addr      allmodes  */
++	{0x0000a398, 0x00000000},
++	{0x0000a39c, 0x6f7f0301},
++	{0x0000a3a0, 0xca9228ee},
++};
++
+ #endif /* INITVALS_9565_1P0_H */
+-- 
+1.8.4
+
