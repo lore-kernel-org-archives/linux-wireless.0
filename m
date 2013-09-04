@@ -1,41 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from star.freakempire.de ([37.221.197.231]:43129 "EHLO
-	star.geekplace.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752966Ab3IFPti (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:42850 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758653Ab3IDSFG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Sep 2013 11:49:38 -0400
-From: Florian Schmaus <fschmaus@gmail.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Florian Schmaus <fschmaus@gmail.com>
-Subject: [PATCH] Don't get iw version from git if there is no .git/
-Date: Fri,  6 Sep 2013 17:41:10 +0200
-Message-Id: <1378482070-8863-1-git-send-email-fschmaus@gmail.com> (sfid-20130906_174941_218823_D6E9E686)
+	Wed, 4 Sep 2013 14:05:06 -0400
+Date: Wed, 04 Sep 2013 14:05:03 -0400 (EDT)
+Message-Id: <20130904.140503.666147189279362088.davem@davemloft.net> (sfid-20130904_200519_274529_9CEAD3B3)
+To: jeffrey.t.kirsher@intel.com
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netfilter-devel@vger.kernel.org
+Subject: Re: merge window warning
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <CAL3LdT5s=8E123aR8rwCZjjGUjv3jTzyJxX3fzu56kge6PHh2g@mail.gmail.com>
+References: <20130904.131001.1189384206727310769.davem@davemloft.net>
+	<CAL3LdT5s=8E123aR8rwCZjjGUjv3jTzyJxX3fzu56kge6PHh2g@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The version.sh script should only try to get the version from git if the
-source actually resides in a git repository, i.e. .git/ exists. Doing
-otherwise in a non-git source repo results in git ascending until it
-finds a .git directory, which will cause problems in some source-based
-distributions ( https://bugs.gentoo.org/show_bug.cgi?id=482334 ).
----
- version.sh | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Date: Wed, 4 Sep 2013 10:40:45 -0700
 
-diff --git a/version.sh b/version.sh
-index 80e55ab..0f1aa1d 100755
---- a/version.sh
-+++ b/version.sh
-@@ -3,7 +3,7 @@
- VERSION="3.11"
- OUT="$1"
- 
--if head=`git rev-parse --verify HEAD 2>/dev/null`; then
-+if [ -d .git ] && head=`git rev-parse --verify HEAD 2>/dev/null`; then
- 	git update-index --refresh --unmerged > /dev/null
- 	descr=$(git describe)
- 
--- 
-1.8.1.5
+> Would Jesse's i40e series be acceptable if I push today, since 4
+> versions have been sent previously for review?  I ask, because I was
+> in the process of submitting v5 and want to make sure it is ok before
+> submitting.
 
+It's a new driver, so it should be OK.
