@@ -1,61 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:16243 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751313Ab3IJLSj (ORCPT
+Received: from mail-oa0-f41.google.com ([209.85.219.41]:50207 "EHLO
+	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935174Ab3IDRks (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Sep 2013 07:18:39 -0400
-Received: from epcpsbgr1.samsung.com
- (u141.gpu120.samsung.co.kr [203.254.230.141])
- by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MSW0053YQ32TG50@mailout3.samsung.com> for
- linux-wireless@vger.kernel.org; Tue, 10 Sep 2013 20:18:38 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: "'John W. Linville'" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>,
-	'Larry Finger' <Larry.Finger@lwfinger.net>,
-	'Chaoming Li' <chaoming_li@realsil.com.cn>
-References: <00b101ceae16$ecb87c30$c6297490$%han@samsung.com>
-In-reply-to: <00b101ceae16$ecb87c30$c6297490$%han@samsung.com>
-Subject: [PATCH 02/12] wireless: rtlwifi: remove unnecessary pci_set_drvdata()
-Date: Tue, 10 Sep 2013 20:18:38 +0900
-Message-id: <00b301ceae17$7f417480$7dc45d80$%han@samsung.com> (sfid-20130910_131842_867059_C83BF04A)
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+	Wed, 4 Sep 2013 13:40:48 -0400
+MIME-Version: 1.0
+In-Reply-To: <20130904.131001.1189384206727310769.davem@davemloft.net>
+References: <20130904.131001.1189384206727310769.davem@davemloft.net>
+Date: Wed, 4 Sep 2013 10:40:45 -0700
+Message-ID: <CAL3LdT5s=8E123aR8rwCZjjGUjv3jTzyJxX3fzu56kge6PHh2g@mail.gmail.com> (sfid-20130904_194055_993207_13B24448)
+Subject: Re: merge window warning
+From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+To: David Miller <davem@davemloft.net>
+Cc: netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org,
+	netfilter-devel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver core clears the driver data to NULL after device_release
-or on probe failure. Thus, it is not needed to manually clear the
-device driver data to NULL.
+Would Jesse's i40e series be acceptable if I push today, since 4
+versions have been sent previously for review?  I ask, because I was
+in the process of submitting v5 and want to make sure it is ok before
+submitting.
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
----
- drivers/net/wireless/rtlwifi/pci.c |    3 ---
- 1 file changed, 3 deletions(-)
+On Wed, Sep 4, 2013 at 10:10 AM, David Miller <davem@davemloft.net> wrote:
+>
+> The merge window is now open.
+>
+> This means if a feature patch isn't in patchwork already, and
+> completely ready to apply, you should not submit it at this time.
+>
+> I will just automatically reject any inappropriate patches sent from
+> now until the net-next tree opens again after the merge window closes,
+> in order to assist with my ability to process the current backlog
+> efficiently.
+>
+> Thanks.
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe netdev" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
-index 703f839..2b6d3e0 100644
---- a/drivers/net/wireless/rtlwifi/pci.c
-+++ b/drivers/net/wireless/rtlwifi/pci.c
-@@ -2009,7 +2009,6 @@ fail2:
- fail1:
- 	if (hw)
- 		ieee80211_free_hw(hw);
--	pci_set_drvdata(pdev, NULL);
- 	pci_disable_device(pdev);
- 
- 	return err;
-@@ -2064,8 +2063,6 @@ void rtl_pci_disconnect(struct pci_dev *pdev)
- 
- 	rtl_pci_disable_aspm(hw);
- 
--	pci_set_drvdata(pdev, NULL);
--
- 	ieee80211_free_hw(hw);
- }
- EXPORT_SYMBOL(rtl_pci_disconnect);
+
+
 -- 
-1.7.10.4
-
-
+Cheers,
+Jeff
