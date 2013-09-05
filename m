@@ -1,38 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:39601 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932473Ab3ICInw (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:37872 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753224Ab3IEFat (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Sep 2013 04:43:52 -0400
-Subject: [PATCH 0/3] ath10k: HTT stats
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Thu, 5 Sep 2013 01:30:49 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-Date: Tue, 03 Sep 2013 11:43:48 +0300
-Message-ID: <20130903084302.26199.3538.stgit@localhost6.localdomain6> (sfid-20130903_104355_336008_09F27B10)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Subject: [PATCH] ath9k: Add DELL 1707 to supported card table
+Date: Thu,  5 Sep 2013 10:56:54 +0530
+Message-Id: <1378358814-31214-1-git-send-email-sujith@msujith.org> (sfid-20130905_073103_641680_1696C0DB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adds trace events and a debugfs interface to enable HTT stats
-from firmware.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
+ drivers/net/wireless/ath/ath9k/pci.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-Kalle Valo (3):
-      ath10k: add trace event ath10k_htt_stats
-      ath10k: implement ath10k_debug_start/stop()
-      ath10k: add htt_stats_enable debugfs file
-
-
- drivers/net/wireless/ath/ath10k/core.c   |    6 +
- drivers/net/wireless/ath/ath10k/core.h   |    3 +
- drivers/net/wireless/ath/ath10k/debug.c  |  121 ++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/debug.h  |   11 +++
- drivers/net/wireless/ath/ath10k/htt.h    |    1 
- drivers/net/wireless/ath/ath10k/htt_rx.c |    5 +
- drivers/net/wireless/ath/ath10k/htt_tx.c |   42 ++++++++++
- drivers/net/wireless/ath/ath10k/trace.h  |   21 +++++
- 8 files changed, 209 insertions(+), 1 deletion(-)
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index 1aa757a..7e4c252 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -379,6 +379,11 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
+ 			 PCI_VENDOR_ID_HP,
+ 			 0x217F),
+ 	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0036,
++			 PCI_VENDOR_ID_DELL,
++			 0x020E),
++	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
+ 
+ 	/* WB335 2-ANT */
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+-- 
+1.8.4
 
