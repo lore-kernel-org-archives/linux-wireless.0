@@ -1,55 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:36411 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750862Ab3IJIyx (ORCPT
+Received: from mail-pb0-f49.google.com ([209.85.160.49]:41932 "EHLO
+	mail-pb0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757006Ab3IETOw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Sep 2013 04:54:53 -0400
-Received: from epcpsbgr2.samsung.com
- (u142.gpu120.samsung.co.kr [203.254.230.142])
- by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MSW00KX5JF3ZO01@mailout4.samsung.com> for
- linux-wireless@vger.kernel.org; Tue, 10 Sep 2013 17:54:47 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: "'John W. Linville'" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>,
-	'Brett Rudley' <brudley@broadcom.com>,
-	'Arend van Spriel' <arend@broadcom.com>,
-	"'Franky (Zhenhui) Lin'" <frankyl@broadcom.com>,
-	'Hante Meuleman' <meuleman@broadcom.com>
-References: <005101ceae02$9cbb95f0$d632c1d0$%han@samsung.com>
-In-reply-to: <005101ceae02$9cbb95f0$d632c1d0$%han@samsung.com>
-Subject: [PATCH 3/8] wireless: brcmfmac: use dev_get_platdata()
-Date: Tue, 10 Sep 2013 17:54:47 +0900
-Message-id: <005501ceae03$66c0cf50$34426df0$%han@samsung.com> (sfid-20130910_105457_441670_464487F0)
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+	Thu, 5 Sep 2013 15:14:52 -0400
+Received: by mail-pb0-f49.google.com with SMTP id xb4so2195479pbc.22
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Sep 2013 12:14:52 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	devel@lists.open80211s.org, distro11s@cozybit.com,
+	Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>,
+	Colleen Twitty <colleen@cozybit.com>
+Subject: [PATCH v2] mac80211: fix the setting of extended supported rate IE
+Date: Thu,  5 Sep 2013 12:14:39 -0700
+Message-Id: <1378408479-1025-1-git-send-email-yeohchunyeow@cozybit.com> (sfid-20130905_211456_716152_7A1B1F38)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the wrapper function for retrieving the platform data instead of
-accessing dev->platform_data directly. This is a cosmetic change
-to make the code simpler and enhance the readability.
+The patch "mac80211: select and adjust bitrates according to
+channel mode" causes regression and breaks the extended supported rate
+IE setting. Since "i" is starting with 8, so this is not necessary
+to introduce "skip" here.
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+Signed-off-by: Colleen Twitty <colleen@cozybit.com>
+Reviewed-by: Jason Abele <jason@cozybit.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+v2: remove skip (Jason)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-index 64f4a2b..592ae13 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-@@ -468,7 +468,7 @@ static int brcmf_sdio_pd_probe(struct platform_device *pdev)
- 
- 	brcmf_dbg(SDIO, "Enter\n");
- 
--	brcmfmac_sdio_pdata = pdev->dev.platform_data;
-+	brcmfmac_sdio_pdata = dev_get_platdata(&pdev->dev);
- 
- 	if (brcmfmac_sdio_pdata->power_on)
- 		brcmfmac_sdio_pdata->power_on();
+ net/mac80211/util.c |    3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 3c8283b..4bb639f 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2128,14 +2128,11 @@ int ieee80211_add_ext_srates_ie(struct ieee80211_sub_if_data *sdata,
+ 		pos = skb_put(skb, exrates + 2);
+ 		*pos++ = WLAN_EID_EXT_SUPP_RATES;
+ 		*pos++ = exrates;
+-		skip = 0;
+ 		for (i = 8; i < sband->n_bitrates; i++) {
+ 			u8 basic = 0;
+ 			if ((rate_flags & sband->bitrates[i].flags)
+ 			    != rate_flags)
+ 				continue;
+-			if (skip++ < 8)
+-				continue;
+ 			if (need_basic && basic_rates & BIT(i))
+ 				basic = 0x80;
+ 			rate = DIV_ROUND_UP(sband->bitrates[i].bitrate,
 -- 
-1.7.10.4
-
+1.7.9.5
 
