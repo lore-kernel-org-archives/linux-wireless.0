@@ -1,56 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f169.google.com ([209.85.215.169]:64900 "EHLO
-	mail-ea0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750718Ab3IXMGo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Sep 2013 08:06:44 -0400
-Received: by mail-ea0-f169.google.com with SMTP id k11so2449445eaj.0
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Sep 2013 05:06:43 -0700 (PDT)
-From: Marek Puzyniak <marek.puzyniak@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Marek Puzyniak <marek.puzyniak@tieto.com>
-Subject: [PATCH] ath10k: make monitor vdev down before stoping it
-Date: Tue, 24 Sep 2013 14:06:24 +0200
-Message-Id: <1380024384-30512-1-git-send-email-marek.puzyniak@tieto.com> (sfid-20130924_140648_315405_08AC578A)
+Received: from mx1.redhat.com ([209.132.183.28]:5683 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752710Ab3IEQB0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Sep 2013 12:01:26 -0400
+Message-ID: <1378397092.3580.21.camel@dcbw.foobar.com> (sfid-20130905_180135_500254_FA7FE41C)
+Subject: Re: Linux Wireless Mini-Summit in New Orleans -- 19-20 September (6
+ weeks from today!)
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	marcel@holtmann.org, Samuel Ortiz <samuel@sortiz.org>,
+	Gustavo Padovan <gustavo@padovan.org>,
+	linux-bluetooth@vger.kernel.org, linux-nfc@ml01.01.org
+Date: Thu, 05 Sep 2013 11:04:52 -0500
+In-Reply-To: <20130905133907.GE1947@tuxdriver.com>
+References: <20130808185410.GD30925@tuxdriver.com>
+	 <20130808190428.GF30925@tuxdriver.com>
+	 <20130905133907.GE1947@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Following sequence causes FW crash:
--monitor vdev up,
--monitor vdev stop,
--monitor vdev delete.
-Making monitor vdev down before stoping it works ok:
--monitor vdev up,
--monitor vdev down,
--monitor vdev stop,
--monitor vdev delete.
+On Thu, 2013-09-05 at 09:39 -0400, John W. Linville wrote:
+> On Thu, Aug 08, 2013 at 03:04:29PM -0400, John W. Linville wrote:
+> > Sorry, forgot to copy linux-bluetooth and linux-nfc...
+> > 
+> > On Thu, Aug 08, 2013 at 02:54:11PM -0400, John W. Linville wrote:
+> > > Greetings!
+> > > 
+> > > This is a reminder that we will have a Linux Wireless Mini-Summit in
+> > > New Orleans this year on 19-20 September.  This will immediately follow
+> > > LinuxCon and will run concurrently with Linux Plumber's Conference.
+> > > This event includes Linux developers for wireless LAN (802.11),
+> > > Bluetooth, and NFC technologies.  Both kernel and userland developers
+> > > are welcomed and heartily encouraged to attend!
+> > > 
+> > > 	http://wireless.kernel.org/en/developers/Summits/New-Orleans-2013
+> > > 
+> > > The link above is a Wiki.  We are using it to collect discussion
+> > > topics and to negotiate agenda/scheduling options for the event.
+> > > Please go there to record your intent to attend the event and to
+> > > propopse topics for discussion.
+> > > 
+> > > Please be aware that in order to attend the event above one must
+> > > register for either LinuxCon or for Linux Plumbers Conference.
+> > > Act now, before those events fill-up and close their registrations!
+> > > 
+> > > We are allotted one "large" room (up to ~80 people "theater style"), and
+> > > two "small" rooms (up to ~25 people) for this event.  Based on history
+> > > and the numbers of contributors, the larger room will primarily be
+> > > for the 802.11 discussions and any "plenary" topics while the smaller
+> > > rooms will be for Bluetooth, NFC, and any "breakout" topics.
+> > > 
+> > > So...thoughts?  Topics to discuss?
+> 
+> Ping?  We're now just 2 weeks away!
+> 
+> Is our topic list complete?  It looks a bit light...
+> 
+> Anyone have any input on scheduling the topics?  Are there any
+> overlapping LPC sessions that it would make sense to work around?
 
-Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+I'm attending though I haven't put my name on the wiki yet.
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 51988d9..24b94c8 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -567,12 +567,9 @@ static int ath10k_monitor_stop(struct ath10k *ar)
- 
- 	lockdep_assert_held(&ar->conf_mutex);
- 
--	/* For some reasons, ath10k_wmi_vdev_down() here couse
--	 * often ath10k_wmi_vdev_stop() to fail. Next we could
--	 * not run monitor vdev and driver reload
--	 * required. Don't see such problems we skip
--	 * ath10k_wmi_vdev_down() here.
--	 */
-+	ret = ath10k_wmi_vdev_down(ar, ar->monitor_vdev_id);
-+	if (ret)
-+		ath10k_warn("Monitor vdev down failed: %d\n", ret);
- 
- 	ret = ath10k_wmi_vdev_stop(ar, ar->monitor_vdev_id);
- 	if (ret)
--- 
-1.8.1.2
+Random thoughts; it doesn't look like any of these are covered in the
+regular LinuxConf or LPC sessions.
+
+1) State of the Union (maybe by multiple people in the same session per
+their expertise), since perhaps not everyone doing eg 802.11 stuff knows
+what's happening in BT or NFC land, or not everyone working on a
+specific driver may know what new stuff their driver might need to be
+fixed up for.  Maybe 5 minutes or less for things like:
+
+  * what's under the most active development right now?
+  * upcoming new driver, hardware, and new capabilities
+  * new 802.11 standards
+  * and what's coming up in the next year from the standards orgs
+  * what people will start working on soon
+  * what will 3.13 or 3.14 look like from a wireless perspective?
+  * 11s mesh status?
+  * anything interesting in wpa_supplicant land?
+  * anything new/interesting on the Android front?
+
+2) Bluetooth - update about what's new and what's coming up in Bluez
+land, and interaction with kernel 802.11 if any, 
+
+3) NFC - update about what's new and what's coming up in NFC land, where
+it's getting used, what the stack looks like
+
+4) What are users having the most problems with and how these problems
+be fixed better/more quickly?  Are they driver bugs?  Are they stack
+bugs?  Supplicant bugs?  NM/GUI/etc bugs?  Is there anything in our
+development processes that's not working as smoothly as it could be?
+
+Dan
 
