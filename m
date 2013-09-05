@@ -1,62 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48716 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751952Ab3IJRAW (ORCPT
+Received: from mail-qa0-f49.google.com ([209.85.216.49]:47766 "EHLO
+	mail-qa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751993Ab3IEOBJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Sep 2013 13:00:22 -0400
-Date: Tue, 10 Sep 2013 12:56:06 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Andrea Merello <andrea.merello@gmail.com>
-Cc: wlanfae@realtek.com, shwei <shwei@realtek.com.tw>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Greg Kroah-Hartman <greg@kroah.com>,
-	linux-wireless@vger.kernel.org,
-	Michael Wu <flamingice@sourmilk.net>
-Subject: Re: RTL8187SE staging Linux driver
-Message-ID: <20130910165606.GB1960@tuxdriver.com> (sfid-20130910_190040_940083_B35174AA)
-References: <CAN8YU5NTKUtS8+YzmcOSM3=YUX-FSwLTD86F_hXsNdVkw5NEGA@mail.gmail.com>
+	Thu, 5 Sep 2013 10:01:09 -0400
+Received: by mail-qa0-f49.google.com with SMTP id w8so916466qac.8
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Sep 2013 07:01:06 -0700 (PDT)
+Message-ID: <52288EA0.9070802@gmail.com> (sfid-20130905_160113_189283_02B64673)
+Date: Thu, 05 Sep 2013 10:01:04 -0400
+From: Jonathan Bither <jonbither@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAN8YU5NTKUtS8+YzmcOSM3=YUX-FSwLTD86F_hXsNdVkw5NEGA@mail.gmail.com>
+To: abbas.chunawala@slscorp.com
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Error:ACS not working even after the Makefile and the configuration
+ options are set.
+References: <52286C01.6080303@slscorp.com>
+In-Reply-To: <52286C01.6080303@slscorp.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 10, 2013 at 05:59:54PM +0200, Andrea Merello wrote:
-> Hello,
-> 
-> As you probably know, in the current Linux kernel there is a staging
-> driver for the RTL8187SE device (based on my older RTL8180/RTL8185
-> Linux driver), while there also a regular (not staging) driver
-> supporting older RTL8185 and RTL8180 devices
-> (net/wireless/rtl818x/rtl8180) .
-> 
-> As far as I can see, the RTL8187SE device seems not so much different
-> from an RTL8185 device.
-> I would like to try (in my spare time) to add support for RTL8187SE
-> device in the current RTL818x driver, in order to avoid code
-> duplication, remove a driver from staging, and make RTL8187SE using
-> mac80211.
-> 
-> Do any one of you have any comment/objection/suggestions about this ?
+On 09/05/2013 07:33 AM, Abbas Chunawala wrote:
+> Hi,
+> Greetings.
+>
+> No ACS prints.
+> Instead an error
+> ath0 : IEEE 802.11 : Fetching channel rate/frequency not supported
+^ You seem to be using the driver MadWiFi instead of Ath5k based upon
+the interface name. MadWiFi is deprecated in support of the Ath5k driver.
 
-I would be extremely happy for you to tackle this.
+You need to blacklist MadWiFi first before loading Ath5k.
+> The channel variable is set right in the configuration file.
+> How to get the acs prints.
+> The command for the hostapd invocation is a s follows:-
+> hostapd -B /tmp/secath0 -dd -e /etc/wpa2/entropy.
+>
+> Thanks
+> Regards
+> Abbas Chunawala
+> (System Level Solutions (I) Pvt. Ltd. )
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe
+> linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-> Is it possible to get the RTL8187SE documentation to make things easier?
-
-This info used to be readily available.  If you can't find a source, I
-probably still have a (mildly useful) datasheet somewhere in my heap...
-
-> For now I will probably keep different RF code for the two cards even
-> if the RTL8225 (zebra 2) radio is used by both RTL8187SE and some
-> RTL8185 devices, however if I could get enough documentation about it,
-> it would be great to try to merge also RF code..
-> 
-> Thank you,
-> Andrea
-
-Seems reasonable...
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
