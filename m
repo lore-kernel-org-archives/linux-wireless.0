@@ -1,76 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.20]:56155 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755739Ab3I3N1O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Sep 2013 09:27:14 -0400
-Received: from [192.168.2.102] ([93.218.116.97]) by mail.gmx.com (mrgmx103)
- with ESMTPSA (Nemesis) id 0MJSuF-1VOhpb1lox-0039fw for
- <linux-wireless@vger.kernel.org>; Mon, 30 Sep 2013 15:27:13 +0200
-Message-ID: <52497C2E.1060406@rempel-privat.de> (sfid-20130930_152841_482724_A371E452)
-Date: Mon, 30 Sep 2013 15:27:10 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
-MIME-Version: 1.0
-To: Bruno Randolf <br1@einfach.org>, linux-wireless@vger.kernel.org,
-	nbd@openwrt.org, sujith@msujith.org
-CC: Ingo Randolf <ingo.randolf@qupik.com>
-Subject: Re: ath9k AR9287 status?
-References: <52492FB0.3010201@einfach.org> <5249443E.3080700@rempel-privat.de> <524954BE.8060603@einfach.org>
-In-Reply-To: <524954BE.8060603@einfach.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-pd0-f170.google.com ([209.85.192.170]:49781 "EHLO
+	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763301Ab3IEBjv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Sep 2013 21:39:51 -0400
+Received: by mail-pd0-f170.google.com with SMTP id x10so1090055pdj.29
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Sep 2013 18:39:50 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	devel@lists.open80211s.org, distro11s@cozybit.com,
+	Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>,
+	Colleen Twitty <colleen@cozybit.com>
+Subject: [PATCH] mac80211: fix the setting of extended supported rate IE
+Date: Wed,  4 Sep 2013 18:39:43 -0700
+Message-Id: <1378345183-5921-1-git-send-email-yeohchunyeow@cozybit.com> (sfid-20130905_034305_344776_64C6F516)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 30.09.2013 12:38, schrieb Bruno Randolf:
-> On 09/30/2013 10:28 AM, Oleksij Rempel wrote:
->> It works at least for me, as AP and as STA...
-> 
-> Thanks, good to hear! :)
-> 
->> Check:
->> - PCIe related power managment - ASPM.
-> 
-> That sounds most suspicious. Will try to see what can be done in the
-> BIOS or if disabling ASPM in the kernel helps.
-> 
->> - WiFi related PM. "iw dev wlan0 get power_save"
-> 
-> That would only affect STA and IBSS mode, right?
-> 
->> - defect device?
-> 
-> Having the same problem on two setups... maybe but it's unlikely...
-> 
->>> I have a AR9287 PCI-Express card which is behaving more than weird with
->>> kernel 3.2 and with the current (3.10.4-1) backports drivers: It can't
->>> connect to APs (many reconnects), with hostap it _seems_ to work as an
->>> AP, but no beacons are seen and no stations can connect, similar in
->>> ad-hoc mode, and when bringing the interface down the whole system
->>> freezes...
->>
->> Is it regression? Are there any working kernel version?
-> 
-> I have tried with 3.2 clean (Ubuntu 12.04 default) and with the
-> mentioned backports version. If you point me to a known working
-> backports version I can try it.
+The patch "mac80211: select and adjust bitrates according to
+channel mode" causes regression and breaks the extended supported rate
+IE setting. Fix this.
 
-I use 3.11 right now. In case of PCIe issue, backport wont help you.
-Test completely new kernel.
-What is your host hardware?
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+Signed-off-by: Colleen Twitty <colleen@cozybit.com>
+---
+ net/mac80211/util.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
->>> Or - can anyone recommend a good half size PCI-Express card that works
->>> well with ath9k?
->>
->> If you wont to bay some new toy, then take a look here:
->> http://wikidevi.com/wiki/Atheros
->> I would take AR9462, there are some interesting highlights ;) (suddenly
->> I do not have it right now)
-> 
-> integrated bluetooth 4.0; 8bit Spectral Scan?
-
-Here are some descriptions:
-http://wikidevi.com/wiki/Atheros_WiFi_Support
-
-
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 3c8283b..21fef9f 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2134,13 +2134,13 @@ int ieee80211_add_ext_srates_ie(struct ieee80211_sub_if_data *sdata,
+ 			if ((rate_flags & sband->bitrates[i].flags)
+ 			    != rate_flags)
+ 				continue;
+-			if (skip++ < 8)
+-				continue;
+ 			if (need_basic && basic_rates & BIT(i))
+ 				basic = 0x80;
+ 			rate = DIV_ROUND_UP(sband->bitrates[i].bitrate,
+ 					    5 * (1 << shift));
+ 			*pos++ = basic | (u8) rate;
++			if (skip++ < 8)
++				continue;
+ 		}
+ 	}
+ 	return 0;
 -- 
-Regards,
-Oleksij
+1.7.9.5
+
