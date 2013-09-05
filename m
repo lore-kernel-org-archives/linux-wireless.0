@@ -1,51 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:55478 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752743Ab3IPGB6 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:59469 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753224Ab3IEFDt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Sep 2013 02:01:58 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, stable@vger.kernel.org
-Subject: [PATCH] ath9k: Fix regression in LNA diversity
-Date: Mon, 16 Sep 2013 11:27:59 +0530
-Message-Id: <1379311079-8411-1-git-send-email-sujith@msujith.org> (sfid-20130916_080201_847820_CBD55B5A)
+	Thu, 5 Sep 2013 01:03:49 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Joe Perches <joe@perches.com>
+CC: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/2] qca-swiss-army-knife: add ath10k trace-cmd plugin
+References: <1376939466-8282-1-git-send-email-kvalo@qca.qualcomm.com>
+	<1376939466-8282-2-git-send-email-kvalo@qca.qualcomm.com>
+	<CAB=NE6UCmO4QbFjtav8xPDAoebpTqDNwz_qQxg1TQ8cKGcbFGg@mail.gmail.com>
+	<871u53swie.fsf@kamboji.qca.qualcomm.com>
+	<1378357025.1787.79.camel@joe-AO722>
+Date: Thu, 5 Sep 2013 08:03:44 +0300
+In-Reply-To: <1378357025.1787.79.camel@joe-AO722> (Joe Perches's message of
+	"Wed, 4 Sep 2013 21:57:05 -0700")
+Message-ID: <87sixjrhan.fsf@kamboji.qca.qualcomm.com> (sfid-20130905_070353_160400_76637B24)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Joe Perches <joe@perches.com> writes:
 
-The commit "ath9k: Optimize LNA check" tried
-to use the "rs_firstaggr" flag to optimize the LNA
-combining algorithm when processing subframes in
-an A-MPDU. This doesn't appear to work well in practice,
-so revert it and use the old method of relying on
-"rs_moreaggr".
+> On Thu, 2013-09-05 at 07:49 +0300, Kalle Valo wrote:
+>> "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com> writes:
+>> > I just removed 3 trailing spaces on the 2 patches. One had two
+>> > trailing spaces, the last patch had one.
+>> 
+>> Oh, sorry about that. Any ideas how I could check for those myself?
+>
+> scripts/checkpatch.pl <patch>
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/recv.c | 7 -------
- 1 file changed, 7 deletions(-)
+Checkpatch works also with trace-cmd plugins written in python?
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 4ee472a..ab9e3a8 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -1270,13 +1270,6 @@ static void ath9k_antenna_check(struct ath_softc *sc,
- 		return;
- 
- 	/*
--	 * All MPDUs in an aggregate will use the same LNA
--	 * as the first MPDU.
--	 */
--	if (rs->rs_isaggr && !rs->rs_firstaggr)
--		return;
--
--	/*
- 	 * Change the default rx antenna if rx diversity
- 	 * chooses the other antenna 3 times in a row.
- 	 */
+> git am <patch>
+
+Yeah, I guess I could do that, it's just a bit inconvienient.
+
 -- 
-1.8.4
-
+Kalle Valo
