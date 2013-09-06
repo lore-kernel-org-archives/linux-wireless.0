@@ -1,38 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:20772 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752709Ab3I0QqN (ORCPT
+Received: from star.freakempire.de ([37.221.197.231]:43129 "EHLO
+	star.geekplace.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752966Ab3IFPti (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Sep 2013 12:46:13 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 0/3] ath10k: implement FW IE support
-References: <20130927131812.20789.9941.stgit@localhost6.localdomain6>
-Date: Fri, 27 Sep 2013 19:46:07 +0300
-In-Reply-To: <20130927131812.20789.9941.stgit@localhost6.localdomain6> (Kalle
-	Valo's message of "Fri, 27 Sep 2013 16:20:43 +0300")
-Message-ID: <87siwqjjqo.fsf@kamboji.qca.qualcomm.com> (sfid-20130927_184616_520123_0F5CCED8)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Fri, 6 Sep 2013 11:49:38 -0400
+From: Florian Schmaus <fschmaus@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Florian Schmaus <fschmaus@gmail.com>
+Subject: [PATCH] Don't get iw version from git if there is no .git/
+Date: Fri,  6 Sep 2013 17:41:10 +0200
+Message-Id: <1378482070-8863-1-git-send-email-fschmaus@gmail.com> (sfid-20130906_174941_218823_D6E9E686)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+The version.sh script should only try to get the version from git if the
+source actually resides in a git repository, i.e. .git/ exists. Doing
+otherwise in a non-git source repo results in git ascending until it
+finds a .git directory, which will cause problems in some source-based
+distributions ( https://bugs.gentoo.org/show_bug.cgi?id=482334 ).
+---
+ version.sh | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> FW IE format is needed for ath10k automatically detect what features the
-> firmware image supports. This is important especially with 10.x firmwares which
-> has a different interface.
->
-> Please review.
->
-> v2:
->
-> * added accidentally dropped board file loading (michal)
->
-> * check that ATH10K_FW_IE_FW_IMAGE is available, fail otherwise
-
-Forget this, the changes I made are missing here. I'll send v3.
-
+diff --git a/version.sh b/version.sh
+index 80e55ab..0f1aa1d 100755
+--- a/version.sh
++++ b/version.sh
+@@ -3,7 +3,7 @@
+ VERSION="3.11"
+ OUT="$1"
+ 
+-if head=`git rev-parse --verify HEAD 2>/dev/null`; then
++if [ -d .git ] && head=`git rev-parse --verify HEAD 2>/dev/null`; then
+ 	git update-index --refresh --unmerged > /dev/null
+ 	descr=$(git describe)
+ 
 -- 
-Kalle Valo
+1.8.1.5
+
