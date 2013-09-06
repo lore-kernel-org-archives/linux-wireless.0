@@ -1,223 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f179.google.com ([209.85.214.179]:35294 "EHLO
-	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752928Ab3IVNdQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Sep 2013 09:33:16 -0400
-Received: by mail-ob0-f179.google.com with SMTP id wn1so2619468obc.24
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Sep 2013 06:33:16 -0700 (PDT)
-Message-ID: <523EF199.3090606@lwfinger.net> (sfid-20130922_153320_030591_9937208C)
-Date: Sun, 22 Sep 2013 08:33:13 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:49978 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755583Ab3IFQhT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Sep 2013 12:37:19 -0400
+Message-ID: <522A04B4.3050708@hauke-m.de> (sfid-20130906_183724_122916_15EDCBAB)
+Date: Fri, 06 Sep 2013 18:37:08 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-To: Catalin Iacob <iacobcatalin@gmail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi: remove duplicate declarations and macros in
- headers
-References: <1379840786-4809-1-git-send-email-iacobcatalin@gmail.com>
-In-Reply-To: <1379840786-4809-1-git-send-email-iacobcatalin@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Arend van Spriel <arend@broadcom.com>
+CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: bcma problem on x86_64
+References: <522879D0.2030107@broadcom.com> <CACna6ryc0_9xcQonuJbK6aB0-ak_izLTi_LNGHB=Lsx0Q5t-Zw@mail.gmail.com> <52299AC3.5010809@broadcom.com> <5229F3D1.9000200@broadcom.com>
+In-Reply-To: <5229F3D1.9000200@broadcom.com>
+Content-Type: multipart/mixed;
+ boundary="------------020406000102000105030605"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/22/2013 04:06 AM, Catalin Iacob wrote:
-> This patch brings no functional change.
->
-> There are still duplicate macros across the rtlwifi directory, for example
-> IQK_DELAY_TIME is defined multiple times, sometimes with different values,
-> this patch only removes duplicates within the same header file.
->
-> Signed-off-by: Catalin Iacob <iacobcatalin@gmail.com>
-> ---
->   drivers/net/wireless/rtlwifi/base.h                |  1 -
->   drivers/net/wireless/rtlwifi/rtl8192c/phy_common.h |  2 --
->   drivers/net/wireless/rtlwifi/rtl8192ce/def.h       |  2 --
->   drivers/net/wireless/rtlwifi/rtl8192ce/phy.h       |  3 ---
->   drivers/net/wireless/rtlwifi/rtl8192ce/reg.h       | 20 --------------------
->   drivers/net/wireless/rtlwifi/rtl8192de/phy.h       |  3 ---
->   drivers/net/wireless/rtlwifi/rtl8192se/reg.h       |  5 -----
->   drivers/net/wireless/rtlwifi/wifi.h                |  2 --
->   8 files changed, 38 deletions(-)
+This is a multi-part message in MIME format.
+--------------020406000102000105030605
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-The differing values of IQK_DELAY_TIME are needed for the various chips. This 
-patch is
+On 09/06/2013 05:25 PM, Arend van Spriel wrote:
+> On 09/06/2013 11:05 AM, Arend van Spriel wrote:
+>> On 09/06/2013 10:05 AM, Rafał Miłecki wrote:
+>>> Hi,
+>>>
+>>> 2013/9/5 Arend van Spriel <arend@broadcom.com>:
+>>>> Since 3.11-rc4 I am seeing a problem with bcma on x64 (see attached
+>>>> log). I
+>>>> thought I misconfigured my setup, but just upgraded to 3.11 and I am
+>>>> still
+>>>> seeing the same issue. Did you have any reports like this?
+>>>
+>>> Unfortunately I wasn't testing final 3.11 with x86_64, I'll give it a
+>>> try over the weekend.
+>>>
+>>
+>> I am bisecting. Will let you know when I find something.
+> 
+> Bisect points to:
+> 
+> fd4edf197544bae1c77d84bad354aa7ce1d08ce1 is the first bad commit
+> commit fd4edf197544bae1c77d84bad354aa7ce1d08ce1
+> Author: Hauke Mehrtens <hauke@hauke-m.de>
+> Date:   Mon Jul 15 13:15:08 2013 +0200
+> 
+>     bcma: fix handling of big addrl
+> 
+>     The return value of bcma_erom_get_addr_desc() is a unsigned value
+> and it
+>     could wrap around in the two complement writing. This happens for one
+>     core in the BCM4708 SoC.
+> 
+>     Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+>     Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> 
+> It is probably caused by using IS_ERR_VALUE() macro which does a
+> unsigned long cast, which gives different results on 64-bit platform.
+> 
+> This patch was submitted upstream yesterday by Dave for 3.12-rc1.
+> 
+> Regards,
+> Arend
+> 
+Hi Arend,
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+Thanks for spotting this. This commit is not in final 3.11, otherwise
+I would have suspected it before.
 
-Thanks,
+Could you please try the attached patch.
 
-Larry
+Hauke
 
->
-> diff --git a/drivers/net/wireless/rtlwifi/base.h b/drivers/net/wireless/rtlwifi/base.h
-> index 0e5fe09..c07f114 100644
-> --- a/drivers/net/wireless/rtlwifi/base.h
-> +++ b/drivers/net/wireless/rtlwifi/base.h
-> @@ -114,7 +114,6 @@ void rtl_init_rfkill(struct ieee80211_hw *hw);
->   void rtl_deinit_rfkill(struct ieee80211_hw *hw);
->
->   void rtl_beacon_statistic(struct ieee80211_hw *hw, struct sk_buff *skb);
-> -void rtl_watch_dog_timer_callback(unsigned long data);
->   void rtl_deinit_deferred_work(struct ieee80211_hw *hw);
->
->   bool rtl_action_proc(struct ieee80211_hw *hw, struct sk_buff *skb, u8 is_tx);
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.h b/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.h
-> index cec10d6..24957e2 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.h
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.h
-> @@ -39,9 +39,7 @@
->   #define RT_CANNOT_IO(hw)		false
->   #define HIGHPOWER_RADIOA_ARRAYLEN	22
->
-> -#define IQK_ADDA_REG_NUM		16
->   #define MAX_TOLERANCE			5
-> -#define	IQK_DELAY_TIME			1
->
->   #define	APK_BB_REG_NUM			5
->   #define	APK_AFE_REG_NUM			16
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/def.h b/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
-> index 3cfa1bb..fa24de4 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
-> @@ -152,8 +152,6 @@ enum version_8192c {
->   #define IS_VENDOR_UMC_A_CUT(version)	((IS_CHIP_VENDOR_UMC(version)) ? \
->   	((GET_CVID_CUT_VERSION(version)) ? false : true) : false)
->   #define IS_CHIP_VER_B(version)  ((version & CHIP_VER_B) ? true : false)
-> -#define IS_VENDOR_UMC_A_CUT(version)	((IS_CHIP_VENDOR_UMC(version)) ? \
-> -	((GET_CVID_CUT_VERSION(version)) ? false : true) : false)
->   #define IS_92C_SERIAL(version)  ((version & CHIP_92C_BITMASK) ? true : false)
->   #define IS_CHIP_VENDOR_UMC(version)		\
->   	((version & CHIP_VENDOR_UMC) ? true : false)
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/phy.h b/drivers/net/wireless/rtlwifi/rtl8192ce/phy.h
-> index d5e3b70..80a0893 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192ce/phy.h
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192ce/phy.h
-> @@ -39,9 +39,7 @@
->   #define RT_CANNOT_IO(hw)		false
->   #define HIGHPOWER_RADIOA_ARRAYLEN	22
->
-> -#define IQK_ADDA_REG_NUM		16
->   #define MAX_TOLERANCE			5
-> -#define	IQK_DELAY_TIME			1
->
->   #define	APK_BB_REG_NUM			5
->   #define	APK_AFE_REG_NUM			16
-> @@ -226,7 +224,6 @@ bool rtl92c_phy_config_rf_with_headerfile(struct ieee80211_hw *hw,
->   					  enum radio_path rfpath);
->   bool rtl8192_phy_check_is_legal_rfpath(struct ieee80211_hw *hw,
->   					      u32 rfpath);
-> -bool rtl92c_phy_set_io_cmd(struct ieee80211_hw *hw, enum io_type iotype);
->   bool rtl92ce_phy_set_rf_power_state(struct ieee80211_hw *hw,
->   					  enum rf_pwrstate rfpwr_state);
->   void rtl92ce_phy_set_rf_on(struct ieee80211_hw *hw);
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h b/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h
-> index bd4aef7..8922ecb 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h
-> @@ -560,7 +560,6 @@
->   #define	EEPROM_DEFAULT_TXPOWERLEVEL		0x22
->   #define	EEPROM_DEFAULT_HT40_2SDIFF		0x0
->   #define EEPROM_DEFAULT_HT20_DIFF		2
-> -#define	EEPROM_DEFAULT_LEGACYHTTXPOWERDIFF	0x3
->   #define EEPROM_DEFAULT_HT40_PWRMAXOFFSET	0
->   #define EEPROM_DEFAULT_HT20_PWRMAXOFFSET	0
->
-> @@ -639,17 +638,8 @@
->
->   #define	EEPROM_TXPWR_GROUP			0x6F
->
-> -#define EEPROM_TSSI_A				0x76
-> -#define EEPROM_TSSI_B				0x77
-> -#define EEPROM_THERMAL_METER			0x78
-> -
->   #define EEPROM_CHANNELPLAN			0x75
->
-> -#define RF_OPTION1				0x79
-> -#define RF_OPTION2				0x7A
-> -#define RF_OPTION3				0x7B
-> -#define RF_OPTION4				0x7C
-> -
->   #define	STOPBECON				BIT(6)
->   #define	STOPHIGHT				BIT(5)
->   #define	STOPMGT					BIT(4)
-> @@ -689,13 +679,6 @@
->   #define RSV_CTRL				0x001C
->   #define RD_CTRL					0x0524
->
-> -#define REG_USB_INFO				0xFE17
-> -#define REG_USB_SPECIAL_OPTION			0xFE55
-> -
-> -#define REG_USB_DMA_AGG_TO			0xFE5B
-> -#define REG_USB_AGG_TO				0xFE5C
-> -#define REG_USB_AGG_TH				0xFE5D
-> -
->   #define REG_USB_VID				0xFE60
->   #define REG_USB_PID				0xFE62
->   #define REG_USB_OPTIONAL			0xFE64
-> @@ -1196,9 +1179,6 @@
->   #define POLLING_LLT_THRESHOLD			20
->   #define POLLING_READY_TIMEOUT_COUNT		1000
->
-> -#define	MAX_MSS_DENSITY_2T			0x13
-> -#define	MAX_MSS_DENSITY_1T			0x0A
-> -
->   #define EPROM_CMD_OPERATING_MODE_MASK	((1<<7)|(1<<6))
->   #define EPROM_CMD_CONFIG			0x3
->   #define EPROM_CMD_LOAD				1
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/phy.h b/drivers/net/wireless/rtlwifi/rtl8192de/phy.h
-> index f074952..a66232e 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192de/phy.h
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192de/phy.h
-> @@ -39,9 +39,7 @@
->   #define RT_CANNOT_IO(hw)			false
->   #define HIGHPOWER_RADIOA_ARRAYLEN		22
->
-> -#define IQK_ADDA_REG_NUM			16
->   #define MAX_TOLERANCE				5
-> -#define	IQK_DELAY_TIME				1
->
->   #define	APK_BB_REG_NUM				5
->   #define	APK_AFE_REG_NUM				16
-> @@ -173,6 +171,5 @@ void rtl92d_acquire_cckandrw_pagea_ctl(struct ieee80211_hw *hw,
->   				       unsigned long *flag);
->   u8 rtl92d_get_rightchnlplace_for_iqk(u8 chnl);
->   void rtl92d_phy_reload_iqk_setting(struct ieee80211_hw *hw, u8 channel);
-> -void rtl92d_phy_iq_calibrate(struct ieee80211_hw *hw);
->
->   #endif
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/reg.h b/drivers/net/wireless/rtlwifi/rtl8192se/reg.h
-> index 84d1181..c81c835 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192se/reg.h
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192se/reg.h
-> @@ -425,14 +425,9 @@
->   #define	EXT_IMEM_CODE_DONE			BIT(2)
->   #define	IMEM_CHK_RPT				BIT(1)
->   #define	IMEM_CODE_DONE				BIT(0)
-> -#define	IMEM_CODE_DONE				BIT(0)
-> -#define	IMEM_CHK_RPT				BIT(1)
->   #define	EMEM_CODE_DONE				BIT(2)
->   #define	EMEM_CHK_RPT				BIT(3)
-> -#define	DMEM_CODE_DONE				BIT(4)
->   #define	IMEM_RDY				BIT(5)
-> -#define	BASECHG					BIT(6)
-> -#define	FWRDY					BIT(7)
->   #define	LOAD_FW_READY				(IMEM_CODE_DONE | \
->   						IMEM_CHK_RPT | \
->   						EMEM_CODE_DONE | \
-> diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
-> index cc03e7c..96763dc 100644
-> --- a/drivers/net/wireless/rtlwifi/wifi.h
-> +++ b/drivers/net/wireless/rtlwifi/wifi.h
-> @@ -192,8 +192,6 @@ enum hardware_type {
->   (IS_HARDWARE_TYPE_8192DE(rtlhal) || IS_HARDWARE_TYPE_8192DU(rtlhal))
->   #define	IS_HARDWARE_TYPE_8723(rtlhal)			\
->   (IS_HARDWARE_TYPE_8723E(rtlhal) || IS_HARDWARE_TYPE_8723U(rtlhal))
-> -#define IS_HARDWARE_TYPE_8723U(rtlhal)			\
-> -	(rtlhal->hw_type == HARDWARE_TYPE_RTL8723U)
->
->   #define RX_HAL_IS_CCK_RATE(_pdesc)\
->   	(_pdesc->rxmcs == DESC92_RATE1M ||		\
->
 
+
+
+--------------020406000102000105030605
+Content-Type: text/x-patch;
+ name="0001-bcma-fix-error-handling.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="0001-bcma-fix-error-handling.patch"
+
+>From 4a6337b38369977b94d6e752c57b09e7f4539830 Mon Sep 17 00:00:00 2001
+From: Hauke Mehrtens <hauke@hauke-m.de>
+Date: Fri, 6 Sep 2013 18:32:41 +0200
+Subject: [PATCH] bcma: fix error handling
+
+---
+ drivers/bcma/scan.c |   12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
+index cd6b20f..b7906d5 100644
+--- a/drivers/bcma/scan.c
++++ b/drivers/bcma/scan.c
+@@ -269,6 +269,8 @@ static struct bcma_device *bcma_find_core_reverse(struct bcma_bus *bus, u16 core
+ 	return NULL;
+ }
+ 
++#define IS_ERR_VALUE_U32 unlikely((x) >= (u32)-MAX_ERRNO)
++
+ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
+ 			      struct bcma_device_id *match, int core_num,
+ 			      struct bcma_device *core)
+@@ -351,11 +353,11 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
+ 	 * the main register space for the core
+ 	 */
+ 	tmp = bcma_erom_get_addr_desc(bus, eromptr, SCAN_ADDR_TYPE_SLAVE, 0);
+-	if (tmp == 0 || IS_ERR_VALUE(tmp)) {
++	if (tmp == 0 || IS_ERR_VALUE_U32(tmp)) {
+ 		/* Try again to see if it is a bridge */
+ 		tmp = bcma_erom_get_addr_desc(bus, eromptr,
+ 					      SCAN_ADDR_TYPE_BRIDGE, 0);
+-		if (tmp == 0 || IS_ERR_VALUE(tmp)) {
++		if (tmp == 0 || IS_ERR_VALUE_U32(tmp)) {
+ 			return -EILSEQ;
+ 		} else {
+ 			bcma_info(bus, "Bridge found\n");
+@@ -369,7 +371,7 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
+ 		for (j = 0; ; j++) {
+ 			tmp = bcma_erom_get_addr_desc(bus, eromptr,
+ 				SCAN_ADDR_TYPE_SLAVE, i);
+-			if (IS_ERR_VALUE(tmp)) {
++			if (IS_ERR_VALUE_U32(tmp)) {
+ 				/* no more entries for port _i_ */
+ 				/* pr_debug("erom: slave port %d "
+ 				 * "has %d descriptors\n", i, j); */
+@@ -386,7 +388,7 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
+ 		for (j = 0; ; j++) {
+ 			tmp = bcma_erom_get_addr_desc(bus, eromptr,
+ 				SCAN_ADDR_TYPE_MWRAP, i);
+-			if (IS_ERR_VALUE(tmp)) {
++			if (IS_ERR_VALUE_U32(tmp)) {
+ 				/* no more entries for port _i_ */
+ 				/* pr_debug("erom: master wrapper %d "
+ 				 * "has %d descriptors\n", i, j); */
+@@ -404,7 +406,7 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
+ 		for (j = 0; ; j++) {
+ 			tmp = bcma_erom_get_addr_desc(bus, eromptr,
+ 				SCAN_ADDR_TYPE_SWRAP, i + hack);
+-			if (IS_ERR_VALUE(tmp)) {
++			if (IS_ERR_VALUE_U32(tmp)) {
+ 				/* no more entries for port _i_ */
+ 				/* pr_debug("erom: master wrapper %d "
+ 				 * has %d descriptors\n", i, j); */
+-- 
+1.7.10.4
+
+
+--------------020406000102000105030605--
