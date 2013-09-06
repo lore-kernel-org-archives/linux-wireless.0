@@ -1,45 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:45613 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757460Ab3IBIdE (ORCPT
+Received: from mms2.broadcom.com ([216.31.210.18]:1602 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750777Ab3IFJFZ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Sep 2013 04:33:04 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 6/8] ath9k: Enable antenna diversity for WB335
-Date: Mon,  2 Sep 2013 13:59:04 +0530
-Message-Id: <1378110546-22305-6-git-send-email-sujith@msujith.org> (sfid-20130902_103311_036256_664A7CF6)
-In-Reply-To: <1378110546-22305-1-git-send-email-sujith@msujith.org>
-References: <21028.19411.335796.192256@gargle.gargle.HOWL>
- <1378110546-22305-1-git-send-email-sujith@msujith.org>
+	Fri, 6 Sep 2013 05:05:25 -0400
+Message-ID: <52299AC3.5010809@broadcom.com> (sfid-20130906_110528_366549_C21EEAA5)
+Date: Fri, 6 Sep 2013 11:05:07 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: bcma problem on x86_64
+References: <522879D0.2030107@broadcom.com>
+ <CACna6ryc0_9xcQonuJbK6aB0-ak_izLTi_LNGHB=Lsx0Q5t-Zw@mail.gmail.com>
+In-Reply-To: <CACna6ryc0_9xcQonuJbK6aB0-ak_izLTi_LNGHB=Lsx0Q5t-Zw@mail.gmail.com>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On 09/06/2013 10:05 AM, Rafał Miłecki wrote:
+> Hi,
+>
+> 2013/9/5 Arend van Spriel <arend@broadcom.com>:
+>> Since 3.11-rc4 I am seeing a problem with bcma on x64 (see attached log). I
+>> thought I misconfigured my setup, but just upgraded to 3.11 and I am still
+>> seeing the same issue. Did you have any reports like this?
+>
+> Unfortunately I wasn't testing final 3.11 with x86_64, I'll give it a
+> try over the weekend.
+>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/pci.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+I am bisecting. Will let you know when I find something.
 
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index d089a7c..b43a2ec 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -269,7 +269,11 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
- 
- 	{ PCI_VDEVICE(ATHEROS, 0x0034) }, /* PCI-E  AR9462 */
- 	{ PCI_VDEVICE(ATHEROS, 0x0037) }, /* PCI-E  AR1111/AR9485 */
--	{ PCI_VDEVICE(ATHEROS, 0x0036) }, /* PCI-E  AR9565 */
-+
-+	/* PCI-E AR9565 (WB335) */
-+	{ PCI_VDEVICE(ATHEROS, 0x0036),
-+	  .driver_data = ATH9K_PCI_BT_ANT_DIV },
-+
- 	{ 0 }
- };
- 
--- 
-1.8.4
+Gr. AvS
 
