@@ -1,38 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:16988 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752205Ab3IQMak (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Sep 2013 08:30:40 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH v2] cfg80211: don't start p2p device while in RFKILL
-Date: Tue, 17 Sep 2013 15:30:36 +0300
-Message-Id: <1379421036-6206-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20130917_143043_928522_5267EEDF)
+Received: from mail-ob0-f170.google.com ([209.85.214.170]:45605 "EHLO
+	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752490Ab3IFPNQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Sep 2013 11:13:16 -0400
+Message-ID: <5229F10A.7000503@lwfinger.net> (sfid-20130906_171333_703555_416A96D0)
+Date: Fri, 06 Sep 2013 10:13:14 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+CC: LKML <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Build warnings in b43 and b43legacy
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
-v2: Check the rfkill before adding the interface
----
- net/wireless/nl80211.c |    3 +++
- 1 file changed, 3 insertions(+)
+Geert,
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 316503f..a344f23 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -8659,6 +8659,9 @@ static int nl80211_start_p2p_device(struct sk_buff *skb, struct genl_info *info)
- 	if (wdev->iftype != NL80211_IFTYPE_P2P_DEVICE)
- 		return -EOPNOTSUPP;
- 
-+	if (rfkill_blocked(rdev->rfkill))
-+		return -ERFKILL;
-+
- 	if (wdev->p2p_started)
- 		return 0;
- 
--- 
-1.7.10.4
+In http://lkml.indiana.edu/hypermail/linux/kernel/1309.0/00918.html and earlier 
+postings of the build regressions in 3.11-rcX, I notice the following entries:
 
++ /scratch/kisskb/src/drivers/net/wireless/b43/b43.h: warning: 'packed' 
+attribute ignored for field of type 'union <anonymous>' [-Wattributes]: => 641:2
++ /scratch/kisskb/src/drivers/net/wireless/b43/xmit.h: warning: 'packed' 
+attribute ignored for field of type 'struct <anonymous>' [-Wattributes]: => 
+64:3, 88:3, 290:3, 283:3, 77:3
++ /scratch/kisskb/src/drivers/net/wireless/b43legacy/b43legacy.h: warning: 
+'packed' attribute ignored for field of type 'union <anonymous>' [-Wattributes]: 
+=> 381:2
+
+ From the indicated source lines, and some research on the topic of packed 
+attributes of anonymous entities, I think I know what it would take to fix 
+these; however, I am reluctant to touch this code. Firstly, my compiler does not 
+show the warning, and secondly, blindly reworking those critical structures 
+could cause severe regressions.
+
+What compiler version and options does it take to get these warnings to appear?
+
+Thanks,
+
+Larry
