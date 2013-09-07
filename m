@@ -1,53 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f176.google.com ([209.85.217.176]:62002 "EHLO
-	mail-lb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753150Ab3IVWmy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Sep 2013 18:42:54 -0400
-Received: by mail-lb0-f176.google.com with SMTP id y6so2125410lbh.35
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Sep 2013 15:42:53 -0700 (PDT)
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: wcn36xx@lists.infradead.org,
-	Eugene Krasnikov <k.eugene.e@gmail.com>
-Subject: [PATCH v4 14/16] wcn36xx: add Kconfig
-Date: Sun, 22 Sep 2013 23:42:11 +0100
-Message-Id: <1379889733-6215-15-git-send-email-k.eugene.e@gmail.com> (sfid-20130923_005039_701260_1D9E9EBA)
-In-Reply-To: <1379889733-6215-1-git-send-email-k.eugene.e@gmail.com>
-References: <1379889733-6215-1-git-send-email-k.eugene.e@gmail.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:53683 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751687Ab3IGPDJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 Sep 2013 11:03:09 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, zajec5@gmail.com,
+	arend@broadcom.com, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 3.12] bcma: fix error code handling on 64 Bit systems
+Date: Sat,  7 Sep 2013 17:02:49 +0200
+Message-Id: <1378566169-24302-1-git-send-email-hauke@hauke-m.de> (sfid-20130907_170314_289479_B2714671)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-adding Kconfig
+On most 64 Bit systems unsigned long is 64 bit long and then -MAX_ERRNO
+is out of the range of a u32 used to store the error code in.
+This patch casts the -MAX_ERRNO to a u32 instead.
 
-Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
+This fixes a regression introduced in:
+commit fd4edf197544bae1c77d84bad354aa7ce1d08ce1
+Author: Hauke Mehrtens <hauke@hauke-m.de>
+Date:   Mon Jul 15 13:15:08 2013 +0200
+
+    bcma: fix handling of big addrl
+
+Reported-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Tested-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/wcn36xx/Kconfig | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
- create mode 100644 drivers/net/wireless/ath/wcn36xx/Kconfig
+ drivers/bcma/scan.c |   12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/Kconfig b/drivers/net/wireless/ath/wcn36xx/Kconfig
-new file mode 100644
-index 0000000..591ebae
---- /dev/null
-+++ b/drivers/net/wireless/ath/wcn36xx/Kconfig
-@@ -0,0 +1,16 @@
-+config WCN36XX
-+	tristate "Qualcomm Atheros WCN3660/3680 support"
-+	depends on MAC80211 && HAS_DMA
-+	---help---
-+	  This module adds support for wireless adapters based on
-+	  Qualcomm Atheros WCN3660 and WCN3680 mobile chipsets.
+diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
+index cd6b20f..3776840 100644
+--- a/drivers/bcma/scan.c
++++ b/drivers/bcma/scan.c
+@@ -269,6 +269,8 @@ static struct bcma_device *bcma_find_core_reverse(struct bcma_bus *bus, u16 core
+ 	return NULL;
+ }
+ 
++#define IS_ERR_VALUE_U32(x) ((x) >= (u32)-MAX_ERRNO)
 +
-+	  If you choose to build a module, it'll be called wcn36xx.
-+
-+config WCN36XX_DEBUGFS
-+	bool "WCN36XX debugfs support"
-+	depends on WCN36XX
-+	---help---
-+	  Enabled debugfs support
-+
-+	  If unsure, say Y to make it easier to debug problems.
+ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
+ 			      struct bcma_device_id *match, int core_num,
+ 			      struct bcma_device *core)
+@@ -351,11 +353,11 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
+ 	 * the main register space for the core
+ 	 */
+ 	tmp = bcma_erom_get_addr_desc(bus, eromptr, SCAN_ADDR_TYPE_SLAVE, 0);
+-	if (tmp == 0 || IS_ERR_VALUE(tmp)) {
++	if (tmp == 0 || IS_ERR_VALUE_U32(tmp)) {
+ 		/* Try again to see if it is a bridge */
+ 		tmp = bcma_erom_get_addr_desc(bus, eromptr,
+ 					      SCAN_ADDR_TYPE_BRIDGE, 0);
+-		if (tmp == 0 || IS_ERR_VALUE(tmp)) {
++		if (tmp == 0 || IS_ERR_VALUE_U32(tmp)) {
+ 			return -EILSEQ;
+ 		} else {
+ 			bcma_info(bus, "Bridge found\n");
+@@ -369,7 +371,7 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
+ 		for (j = 0; ; j++) {
+ 			tmp = bcma_erom_get_addr_desc(bus, eromptr,
+ 				SCAN_ADDR_TYPE_SLAVE, i);
+-			if (IS_ERR_VALUE(tmp)) {
++			if (IS_ERR_VALUE_U32(tmp)) {
+ 				/* no more entries for port _i_ */
+ 				/* pr_debug("erom: slave port %d "
+ 				 * "has %d descriptors\n", i, j); */
+@@ -386,7 +388,7 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
+ 		for (j = 0; ; j++) {
+ 			tmp = bcma_erom_get_addr_desc(bus, eromptr,
+ 				SCAN_ADDR_TYPE_MWRAP, i);
+-			if (IS_ERR_VALUE(tmp)) {
++			if (IS_ERR_VALUE_U32(tmp)) {
+ 				/* no more entries for port _i_ */
+ 				/* pr_debug("erom: master wrapper %d "
+ 				 * "has %d descriptors\n", i, j); */
+@@ -404,7 +406,7 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
+ 		for (j = 0; ; j++) {
+ 			tmp = bcma_erom_get_addr_desc(bus, eromptr,
+ 				SCAN_ADDR_TYPE_SWRAP, i + hack);
+-			if (IS_ERR_VALUE(tmp)) {
++			if (IS_ERR_VALUE_U32(tmp)) {
+ 				/* no more entries for port _i_ */
+ 				/* pr_debug("erom: master wrapper %d "
+ 				 * has %d descriptors\n", i, j); */
 -- 
-1.8.1.2
+1.7.10.4
 
