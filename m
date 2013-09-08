@@ -1,59 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:55714 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751069Ab3IJL1v (ORCPT
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:51977 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752498Ab3IHOz6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Sep 2013 07:27:51 -0400
-Received: from epcpsbgr4.samsung.com
- (u144.gpu120.samsung.co.kr [203.254.230.144])
- by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MSW0056CQHYP8C0@mailout2.samsung.com> for
- linux-wireless@vger.kernel.org; Tue, 10 Sep 2013 20:27:50 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: "'John W. Linville'" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>,
-	'Lennert Buytenhek' <buytenh@wantstofly.org>
-References: <00b101ceae16$ecb87c30$c6297490$%han@samsung.com>
-In-reply-to: <00b101ceae16$ecb87c30$c6297490$%han@samsung.com>
-Subject: [PATCH 09/12] wireless: mwl8k: remove unnecessary pci_set_drvdata()
-Date: Tue, 10 Sep 2013 20:27:49 +0900
-Message-id: <00ba01ceae18$c81b3f00$5851bd00$%han@samsung.com> (sfid-20130910_132754_797054_E86D1A86)
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+	Sun, 8 Sep 2013 10:55:58 -0400
+Subject: [PATCH 5/8] ath10k: add boot debug messages to htc.c
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Sun, 08 Sep 2013 17:55:56 +0300
+Message-ID: <20130908145556.3136.94506.stgit@localhost6.localdomain6> (sfid-20130908_165601_314101_AE1FE709)
+In-Reply-To: <20130908145435.3136.49168.stgit@localhost6.localdomain6>
+References: <20130908145435.3136.49168.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver core clears the driver data to NULL after device_release
-or on probe failure. Thus, it is not needed to manually clear the
-device driver data to NULL.
+To unify the boot debug level.
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/mwl8k.c |    2 --
- 1 file changed, 2 deletions(-)
+ drivers/net/wireless/ath/ath10k/htc.c |   16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index a3707fd..b953ad6 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -6093,7 +6093,6 @@ err_iounmap:
- 	if (priv->sram != NULL)
- 		pci_iounmap(pdev, priv->sram);
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index 7d445d3..f03fd8d 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -752,8 +752,8 @@ int ath10k_htc_connect_service(struct ath10k_htc *htc,
+ 	tx_alloc = ath10k_htc_get_credit_allocation(htc,
+ 						    conn_req->service_id);
+ 	if (!tx_alloc)
+-		ath10k_dbg(ATH10K_DBG_HTC,
+-			   "HTC Service %s does not allocate target credits\n",
++		ath10k_dbg(ATH10K_DBG_BOOT,
++			   "boot htc service %s does not allocate target credits\n",
+ 			   htc_service_name(conn_req->service_id));
  
--	pci_set_drvdata(pdev, NULL);
- 	ieee80211_free_hw(hw);
+ 	skb = ath10k_htc_build_tx_ctrl_skb(htc->ar);
+@@ -873,19 +873,19 @@ setup:
+ 	if (status)
+ 		return status;
  
- err_free_reg:
-@@ -6147,7 +6146,6 @@ static void mwl8k_remove(struct pci_dev *pdev)
- unmap:
- 	pci_iounmap(pdev, priv->regs);
- 	pci_iounmap(pdev, priv->sram);
--	pci_set_drvdata(pdev, NULL);
- 	ieee80211_free_hw(hw);
- 	pci_release_regions(pdev);
- 	pci_disable_device(pdev);
--- 
-1.7.10.4
-
+-	ath10k_dbg(ATH10K_DBG_HTC,
+-		   "HTC service: %s UL pipe: %d DL pipe: %d eid: %d ready\n",
++	ath10k_dbg(ATH10K_DBG_BOOT,
++		   "boot htc service '%s' ul pipe %d dl pipe %d eid %d ready\n",
+ 		   htc_service_name(ep->service_id), ep->ul_pipe_id,
+ 		   ep->dl_pipe_id, ep->eid);
+ 
+-	ath10k_dbg(ATH10K_DBG_HTC,
+-		   "EP %d UL polled: %d, DL polled: %d\n",
++	ath10k_dbg(ATH10K_DBG_BOOT,
++		   "boot htc ep %d ul polled %d dl polled %d\n",
+ 		   ep->eid, ep->ul_is_polled, ep->dl_is_polled);
+ 
+ 	if (disable_credit_flow_ctrl && ep->tx_credit_flow_enabled) {
+ 		ep->tx_credit_flow_enabled = false;
+-		ath10k_dbg(ATH10K_DBG_HTC,
+-			   "HTC service: %s eid: %d TX flow control disabled\n",
++		ath10k_dbg(ATH10K_DBG_BOOT,
++			   "boot htc service '%s' eid %d TX flow control disabled\n",
+ 			   htc_service_name(ep->service_id), assigned_eid);
+ 	}
+ 
 
