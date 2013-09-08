@@ -1,42 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:39750 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750938Ab3IUUJV (ORCPT
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:51518 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751886Ab3IHOzl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Sep 2013 16:09:21 -0400
-Date: Sat, 21 Sep 2013 21:00:00 +0100
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Heiko =?iso-8859-1?Q?St=FCbner?= <heiko@sntech.de>
-Cc: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
-	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
-	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
-	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	uclinux-dist-devel@blackfin.uclinux.org,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>
-Subject: Re: [PATCH 24/51] DMA-API: dma: pl330: add
-	dma_set_mask_and_coherent() call
-Message-ID: <20130921200000.GS25647@n2100.arm.linux.org.uk> (sfid-20130921_220953_003140_C46CB6E1)
-References: <20130919212235.GD12758@n2100.arm.linux.org.uk> <E1VMm5t-0007i5-V7@rmk-PC.arm.linux.org.uk> <201309201926.29084.heiko@sntech.de>
+	Sun, 8 Sep 2013 10:55:41 -0400
+Subject: [PATCH 2/8] ath10k: rename ATH10K_DBG_CORE to BOOT
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Sun, 08 Sep 2013 17:55:38 +0300
+Message-ID: <20130908145538.3136.40193.stgit@localhost6.localdomain6> (sfid-20130908_165543_654745_61878372)
+In-Reply-To: <20130908145435.3136.49168.stgit@localhost6.localdomain6>
+References: <20130908145435.3136.49168.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <201309201926.29084.heiko@sntech.de>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 20, 2013 at 07:26:27PM +0200, Heiko Stübner wrote:
-> Am Donnerstag, 19. September 2013, 23:49:01 schrieb Russell King:
-> > The DMA API requires drivers to call the appropriate dma_set_mask()
-> > functions before doing any DMA mapping.  Add this required call to
-> > the AMBA PL08x driver.
-> 			^--- copy and paste error - should of course be PL330
+core.c mostly deals with driver and firmware starting related
+actions. And we can use the boot level also in other components,
+like PCI and HTT.
 
-Fixed, thanks.
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c  |    6 +++---
+ drivers/net/wireless/ath/ath10k/debug.h |    2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 8a68839..0ed60fd 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -53,7 +53,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 
+ static void ath10k_send_suspend_complete(struct ath10k *ar)
+ {
+-	ath10k_dbg(ATH10K_DBG_CORE, "%s\n", __func__);
++	ath10k_dbg(ATH10K_DBG_BOOT, "%s\n", __func__);
+ 
+ 	ar->is_target_paused = true;
+ 	wake_up(&ar->event_queue);
+@@ -101,7 +101,7 @@ static int ath10k_init_connect_htc(struct ath10k *ar)
+ 		goto timeout;
+ 	}
+ 
+-	ath10k_dbg(ATH10K_DBG_CORE, "core wmi ready\n");
++	ath10k_dbg(ATH10K_DBG_BOOT, "core wmi ready\n");
+ 	return 0;
+ 
+ timeout:
+@@ -203,7 +203,7 @@ static int ath10k_push_board_ext_data(struct ath10k *ar,
+ 		return ret;
+ 	}
+ 
+-	ath10k_dbg(ATH10K_DBG_CORE,
++	ath10k_dbg(ATH10K_DBG_BOOT,
+ 		   "ath10k: Board extended Data download addr: 0x%x\n",
+ 		   board_ext_data_addr);
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
+index dfa3070..4bef061 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.h
++++ b/drivers/net/wireless/ath/ath10k/debug.h
+@@ -27,7 +27,7 @@ enum ath10k_debug_mask {
+ 	ATH10K_DBG_HTC		= 0x00000004,
+ 	ATH10K_DBG_HTT		= 0x00000008,
+ 	ATH10K_DBG_MAC		= 0x00000010,
+-	ATH10K_DBG_CORE		= 0x00000020,
++	ATH10K_DBG_BOOT		= 0x00000020,
+ 	ATH10K_DBG_PCI_DUMP	= 0x00000040,
+ 	ATH10K_DBG_HTT_DUMP	= 0x00000080,
+ 	ATH10K_DBG_MGMT		= 0x00000100,
+
