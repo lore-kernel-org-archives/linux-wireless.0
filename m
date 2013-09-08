@@ -1,61 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:35911 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753018Ab3IZSAM (ORCPT
+Received: from mail-bk0-f54.google.com ([209.85.214.54]:63047 "EHLO
+	mail-bk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750987Ab3IHGUq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Sep 2013 14:00:12 -0400
-Date: Thu, 26 Sep 2013 13:47:51 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Gustavo Padovan <gustavo@padovan.org>,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: bluetooth 2013-09-23
-Message-ID: <20130926174750.GB1931@tuxdriver.com> (sfid-20130926_200030_001648_A578A7F8)
-References: <20130923210049.GG18215@joana>
+	Sun, 8 Sep 2013 02:20:46 -0400
+Received: by mail-bk0-f54.google.com with SMTP id mz12so1866798bkb.13
+        for <linux-wireless@vger.kernel.org>; Sat, 07 Sep 2013 23:20:45 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130923210049.GG18215@joana>
+In-Reply-To: <1378408479-1025-1-git-send-email-yeohchunyeow@cozybit.com>
+References: <1378408479-1025-1-git-send-email-yeohchunyeow@cozybit.com>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Sat, 7 Sep 2013 23:20:25 -0700
+Message-ID: <CAG6hwVNn4f2J8GMgPEJiE_gf+3n26CmwSJV7+P_GG2Hopamg_g@mail.gmail.com> (sfid-20130908_082049_943911_3CF97E27)
+Subject: Re: [PATCH v2] mac80211: fix the setting of extended supported rate IE
+To: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>,
+	open11s <devel@lists.open80211s.org>,
+	"distro11s@cozybit.com" <distro11s@cozybit.com>,
+	Colleen Twitty <colleen@cozybit.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 23, 2013 at 06:00:49PM -0300, Gustavo Padovan wrote:
-> Hi John,
-> 
-> First Bluetooth fixes to 3.12, it includes:
-> 
-> * 3 patches to add device id for 3 new hardwares.
-> 
-> * 2 patches from Johan to fix the rfkill behaviour during setup stage
-> 
-> * a small clean up in the rfcomm TTY code that fixes a potential racy
-> condition (by Gianluca Anzolin)
-> 
-> * 2 fixes to proper set encryption key size and security level in the
-> peripheral role of Bluetooth LE devices. (by Andre Guedes)
-> 
-> * a fix for dealing devices where pairing is not necessary, we were keeping
-> the Bluetooth ACL connection alive for too much time. (by Syam Sidhardhan)
-> 
-> Please pull or let me know of any problems! Thanks!
-> 
-> 
-> 	Gustavo
-> 
+On Thu, Sep 5, 2013 at 12:14 PM, Chun-Yeow Yeoh
+<yeohchunyeow@cozybit.com> wrote:
+> The patch "mac80211: select and adjust bitrates according to
+> channel mode" causes regression and breaks the extended supported rate
+> IE setting. Since "i" is starting with 8, so this is not necessary
+> to introduce "skip" here.
+>
+> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+> Signed-off-by: Colleen Twitty <colleen@cozybit.com>
+> Reviewed-by: Jason Abele <jason@cozybit.com>
 > ---
-> The following changes since commit f4e1a4d3ecbb9e42bdf8e7869ee8a4ebfa27fb20:
-> 
->   rt2800: change initialization sequence to fix system freeze (2013-09-09 14:44:34 -0400)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth master
-> 
-> for you to fetch changes up to 5bcecf325378218a8e248bb6bcae96ec7362f8ef:
-> 
->   Bluetooth: btusb: Add support for Belkin F8065bf (2013-09-23 17:44:25 -0300)
+> v2: remove skip (Jason)
+>
+>  net/mac80211/util.c |    3 ---
+>  1 file changed, 3 deletions(-)
+>
+> diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+> index 3c8283b..4bb639f 100644
+> --- a/net/mac80211/util.c
+> +++ b/net/mac80211/util.c
+> @@ -2128,14 +2128,11 @@ int ieee80211_add_ext_srates_ie(struct ieee80211_sub_if_data *sdata,
+>                 pos = skb_put(skb, exrates + 2);
+>                 *pos++ = WLAN_EID_EXT_SUPP_RATES;
+>                 *pos++ = exrates;
+> -               skip = 0;
 
-Pulling now...
+You could also remove the declaration then?
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Thomas
