@@ -1,37 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:55744 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752855Ab3I3O1Z (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:33687 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751886Ab3IHOz3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Sep 2013 10:27:25 -0400
-Message-ID: <1380551237.14467.12.camel@jlt4.sipsolutions.net> (sfid-20130930_162728_987423_B22DBF41)
-Subject: Re: Kernel panic in ieee80211_calculate_rx_timestamp
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Lindroth <thomas.lindroth@gmail.com>
+	Sun, 8 Sep 2013 10:55:29 -0400
+Subject: [PATCH 0/8] ath10k: boot, bmi and mac debug message cleanup
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 Cc: linux-wireless@vger.kernel.org
-Date: Mon, 30 Sep 2013 16:27:17 +0200
-In-Reply-To: <523B3BEA.9000100@gmail.com> (sfid-20130919_200122_426878_A0C53351)
-References: <523B3BEA.9000100@gmail.com>
-	 (sfid-20130919_200122_426878_A0C53351)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Date: Sun, 08 Sep 2013 17:55:25 +0300
+Message-ID: <20130908145435.3136.49168.stgit@localhost6.localdomain6> (sfid-20130908_165541_291902_1CFCCA2F)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-09-19 at 20:01 +0200, Thomas Lindroth wrote:
-> I recently got a ath9k_htc based dongle and running kismet for a few
-> hours results in a kernel panic (divide error) in
-> ieee80211_calculate_rx_timestamp with kernel 3.11.0.
-> 
-> The problem seems to occur when the call to cfg80211_calculate_bitrate
-> returns 0. I've used this patch to temporarily works around the problem.
+Simple message log cleanup. Please review.
 
-Seems fair, but maybe it should print out the rate info so you can see
-what was actually received - most likely this is a driver bug though.
+---
 
-If you submit a patch that can be applied with signed-off-by etc. I can
-apply it.
+Kalle Valo (8):
+      ath10k: add BMI log level
+      ath10k: rename ATH10K_DBG_CORE to BOOT
+      ath10k: cleanup debug messages in core.c
+      ath10k: add boot debug messages to pci.c and ce.c
+      ath10k: add boot debug messages to htc.c
+      ath10k: add boot messages to htt.c
+      ath10k: clean mac.c debug messages
+      ath10k: print phymode as a string
 
-johannes
 
+ drivers/net/wireless/ath/ath10k/bmi.c    |   42 ++++---
+ drivers/net/wireless/ath/ath10k/ce.c     |    8 +
+ drivers/net/wireless/ath/ath10k/core.c   |   11 +-
+ drivers/net/wireless/ath/ath10k/debug.h  |    3 
+ drivers/net/wireless/ath/ath10k/htc.c    |   16 +--
+ drivers/net/wireless/ath/ath10k/htt_rx.c |    2 
+ drivers/net/wireless/ath/ath10k/htt_tx.c |    2 
+ drivers/net/wireless/ath/ath10k/mac.c    |  185 ++++++++++++++++--------------
+ drivers/net/wireless/ath/ath10k/pci.c    |    6 +
+ drivers/net/wireless/ath/ath10k/wmi.h    |   42 +++++++
+ 10 files changed, 197 insertions(+), 120 deletions(-)
 
