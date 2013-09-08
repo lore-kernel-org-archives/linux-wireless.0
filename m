@@ -1,104 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:48373 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751699Ab3IJIvt (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:33693 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752498Ab3IHOzq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Sep 2013 04:51:49 -0400
-Received: from epcpsbgr5.samsung.com
- (u145.gpu120.samsung.co.kr [203.254.230.145])
- by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MSW00MT2J6T6QW0@mailout3.samsung.com> for
- linux-wireless@vger.kernel.org; Tue, 10 Sep 2013 17:51:47 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: "'John W. Linville'" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>,
-	'Jiri Slaby' <jirislaby@gmail.com>,
-	'Nick Kossifidis' <mickflemm@gmail.com>,
-	"'Luis R. Rodriguez'" <mcgrof@qca.qualcomm.com>
-References: <005101ceae02$9cbb95f0$d632c1d0$%han@samsung.com>
-In-reply-to: <005101ceae02$9cbb95f0$d632c1d0$%han@samsung.com>
-Subject: [PATCH 1/8] wireless: ath5k: use dev_get_platdata()
-Date: Tue, 10 Sep 2013 17:51:47 +0900
-Message-id: <005301ceae02$fbabc8f0$f3035ad0$%han@samsung.com> (sfid-20130910_105156_017344_83993DC8)
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+	Sun, 8 Sep 2013 10:55:46 -0400
+Subject: [PATCH 3/8] ath10k: cleanup debug messages in core.c
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Sun, 08 Sep 2013 17:55:44 +0300
+Message-ID: <20130908145544.3136.77144.stgit@localhost6.localdomain6> (sfid-20130908_165549_232616_1DA453D6)
+In-Reply-To: <20130908145435.3136.49168.stgit@localhost6.localdomain6>
+References: <20130908145435.3136.49168.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the wrapper function for retrieving the platform data instead of
-accessing dev->platform_data directly. This is a cosmetic change
-to make the code simpler and enhance the readability.
+Fix them to follow the general logging style in ath10k.
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+While at it, add print id chip_id to the debug log.
+
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath5k/ahb.c |   15 ++++++---------
- 1 file changed, 6 insertions(+), 9 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.c |    9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/ahb.c b/drivers/net/wireless/ath/ath5k/ahb.c
-index e9bc9e6..79bffe1 100644
---- a/drivers/net/wireless/ath/ath5k/ahb.c
-+++ b/drivers/net/wireless/ath/ath5k/ahb.c
-@@ -37,12 +37,9 @@ ath5k_ahb_eeprom_read(struct ath_common *common, u32 off, u16 *data)
- {
- 	struct ath5k_hw *ah = common->priv;
- 	struct platform_device *pdev = to_platform_device(ah->dev);
--	struct ar231x_board_config *bcfg = pdev->dev.platform_data;
-+	struct ar231x_board_config *bcfg = dev_get_platdata(&pdev->dev);
- 	u16 *eeprom, *eeprom_end;
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 0ed60fd..76906d5 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -53,7 +53,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
  
--
--
--	bcfg = pdev->dev.platform_data;
- 	eeprom = (u16 *) bcfg->radio;
- 	eeprom_end = ((void *) bcfg->config) + BOARD_CONFIG_BUFSZ;
- 
-@@ -57,7 +54,7 @@ ath5k_ahb_eeprom_read(struct ath_common *common, u32 off, u16 *data)
- int ath5k_hw_read_srev(struct ath5k_hw *ah)
+ static void ath10k_send_suspend_complete(struct ath10k *ar)
  {
- 	struct platform_device *pdev = to_platform_device(ah->dev);
--	struct ar231x_board_config *bcfg = pdev->dev.platform_data;
-+	struct ar231x_board_config *bcfg = dev_get_platdata(&pdev->dev);
- 	ah->ah_mac_srev = bcfg->devid;
+-	ath10k_dbg(ATH10K_DBG_BOOT, "%s\n", __func__);
++	ath10k_dbg(ATH10K_DBG_BOOT, "boot suspend complete\n");
+ 
+ 	ar->is_target_paused = true;
+ 	wake_up(&ar->event_queue);
+@@ -101,7 +101,7 @@ static int ath10k_init_connect_htc(struct ath10k *ar)
+ 		goto timeout;
+ 	}
+ 
+-	ath10k_dbg(ATH10K_DBG_BOOT, "core wmi ready\n");
++	ath10k_dbg(ATH10K_DBG_BOOT, "boot wmi ready\n");
  	return 0;
- }
-@@ -65,7 +62,7 @@ int ath5k_hw_read_srev(struct ath5k_hw *ah)
- static int ath5k_ahb_eeprom_read_mac(struct ath5k_hw *ah, u8 *mac)
- {
- 	struct platform_device *pdev = to_platform_device(ah->dev);
--	struct ar231x_board_config *bcfg = pdev->dev.platform_data;
-+	struct ar231x_board_config *bcfg = dev_get_platdata(&pdev->dev);
- 	u8 *cfg_mac;
  
- 	if (to_platform_device(ah->dev)->id == 0)
-@@ -87,7 +84,7 @@ static const struct ath_bus_ops ath_ahb_bus_ops = {
- /*Initialization*/
- static int ath_ahb_probe(struct platform_device *pdev)
- {
--	struct ar231x_board_config *bcfg = pdev->dev.platform_data;
-+	struct ar231x_board_config *bcfg = dev_get_platdata(&pdev->dev);
- 	struct ath5k_hw *ah;
- 	struct ieee80211_hw *hw;
- 	struct resource *res;
-@@ -96,7 +93,7 @@ static int ath_ahb_probe(struct platform_device *pdev)
- 	int ret = 0;
- 	u32 reg;
+ timeout:
+@@ -204,7 +204,7 @@ static int ath10k_push_board_ext_data(struct ath10k *ar,
+ 	}
  
--	if (!pdev->dev.platform_data) {
-+	if (!dev_get_platdata(&pdev->dev)) {
- 		dev_err(&pdev->dev, "no platform data specified\n");
- 		ret = -EINVAL;
- 		goto err_out;
-@@ -193,7 +190,7 @@ static int ath_ahb_probe(struct platform_device *pdev)
+ 	ath10k_dbg(ATH10K_DBG_BOOT,
+-		   "ath10k: Board extended Data download addr: 0x%x\n",
++		   "boot push board extended data addr 0x%x\n",
+ 		   board_ext_data_addr);
  
- static int ath_ahb_remove(struct platform_device *pdev)
+ 	if (board_ext_data_addr == 0)
+@@ -722,6 +722,9 @@ static int ath10k_core_check_chip_id(struct ath10k *ar)
  {
--	struct ar231x_board_config *bcfg = pdev->dev.platform_data;
-+	struct ar231x_board_config *bcfg = dev_get_platdata(&pdev->dev);
- 	struct ieee80211_hw *hw = platform_get_drvdata(pdev);
- 	struct ath5k_hw *ah;
- 	u32 reg;
--- 
-1.7.10.4
-
+ 	u32 hw_revision = MS(ar->chip_id, SOC_CHIP_ID_REV);
+ 
++	ath10k_dbg(ATH10K_DBG_BOOT, "boot chip_id 0x%08x hw_revision 0x%x\n",
++		   ar->chip_id, hw_revision);
++
+ 	/* Check that we are not using hw1.0 (some of them have same pci id
+ 	 * as hw2.0) before doing anything else as ath10k crashes horribly
+ 	 * due to missing hw1.0 workarounds. */
 
