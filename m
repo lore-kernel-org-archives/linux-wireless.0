@@ -1,102 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f182.google.com ([74.125.82.182]:55559 "EHLO
-	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751753Ab3IIJY7 (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:48147 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755443Ab3IIVZq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Sep 2013 05:24:59 -0400
-Received: by mail-we0-f182.google.com with SMTP id q59so4080089wes.27
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Sep 2013 02:24:57 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <luca@coelho.fi>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 05/13] wlcore: fwlog dynamic mem_block control
-Date: Mon,  9 Sep 2013 12:24:36 +0300
-Message-Id: <1378718684-14430-5-git-send-email-eliad@wizery.com> (sfid-20130909_112504_056997_6D345A80)
-In-Reply-To: <1378718684-14430-1-git-send-email-eliad@wizery.com>
-References: <1378718684-14430-1-git-send-email-eliad@wizery.com>
+	Mon, 9 Sep 2013 17:25:46 -0400
+Received: by mail-ob0-f174.google.com with SMTP id wd6so6439919obb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Sep 2013 14:25:46 -0700 (PDT)
+Date: Mon, 9 Sep 2013 16:25:44 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Performance problems with Netgear WNDAP350
+Message-ID: <20130909212544.GA27771@thinkpad-t410> (sfid-20130909_232550_013099_9793BFC7)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ido Reis <idor@ti.com>
+After the previous fix to deal with invalid ECSA IEs in probe response
+frames, I've received more reports of trouble with this AP. I've been
+experimenting with one and have uncovered some odd behavior that I'm not
+sure how to deal with.
 
-number of fwlog mem_blocks can be configured using module param.
-this is a fw debug feature: in case a large fw log data is busrted during
-a short period of time, the memory get filled and data is lost.
-this allows us to dynamicly set the fw log mem_block usage, although
-configuring more mem_block for logger comes at the expense of TP.
+I've found in testing TCP throughput with iperf that the performance
+ranges from somewhat inconsistent to downright terrible with Linux STAs.
+I've tried iwlwifi, ath9k, and brcmsmac, and all are similar. I also
+tested with OSX, and while performance is pretty inconsistent it never
+gets to the point of being absolutely terrible. My test setup has the
+iperf server behind the APs ethernet interface with the client on the
+STA.
 
-Signed-off-by: Yair Shapira <yair.shapira@ti.com>
-Signed-off-by: Ido Reis <idor@ti.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/ti/wlcore/conf.h |  5 ++++-
- drivers/net/wireless/ti/wlcore/main.c | 16 ++++++++++++++++
- 2 files changed, 20 insertions(+), 1 deletion(-)
+What I'm seeing under wireshark is that everything seems to go fine for
+a while, but sometimes the AP is failing to transmit the TCP ACKs from
+the iperf server to the STA in a timely fashion. This delay can be
+seconds in length, and I see it with iwlwifi, ath9k, and brcmsmac. I've
+run wireshark on my iperf server, and the delays do not show up between
+the same ACKs there.
 
-diff --git a/drivers/net/wireless/ti/wlcore/conf.h b/drivers/net/wireless/ti/wlcore/conf.h
-index 2b96ff8..40995c4 100644
---- a/drivers/net/wireless/ti/wlcore/conf.h
-+++ b/drivers/net/wireless/ti/wlcore/conf.h
-@@ -1274,6 +1274,9 @@ struct conf_rx_streaming_settings {
- 	u8 always;
- } __packed;
- 
-+#define CONF_FWLOG_MIN_MEM_BLOCKS	2
-+#define CONF_FWLOG_MAX_MEM_BLOCKS	16
-+
- struct conf_fwlog {
- 	/* Continuous or on-demand */
- 	u8 mode;
-@@ -1281,7 +1284,7 @@ struct conf_fwlog {
- 	/*
- 	 * Number of memory blocks dedicated for the FW logger
- 	 *
--	 * Range: 1-3, or 0 to disable the FW logger
-+	 * Range: 2-16, or 0 to disable the FW logger
- 	 */
- 	u8 mem_blocks;
- 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index dbf3315..ebb1076 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -44,6 +44,7 @@
- #define WL1271_BOOT_RETRIES 3
- 
- static char *fwlog_param;
-+static int fwlog_mem_blocks = -1;
- static int bug_on_recovery = -1;
- static int no_recovery     = -1;
- 
-@@ -291,6 +292,18 @@ static void wlcore_adjust_conf(struct wl1271 *wl)
- {
- 	/* Adjust settings according to optional module parameters */
- 
-+	/* Firmware Logger params */
-+	if (fwlog_mem_blocks != -1) {
-+		if (fwlog_mem_blocks >= CONF_FWLOG_MIN_MEM_BLOCKS &&
-+		    fwlog_mem_blocks <= CONF_FWLOG_MAX_MEM_BLOCKS) {
-+			wl->conf.fwlog.mem_blocks = fwlog_mem_blocks;
-+		} else {
-+			wl1271_error(
-+				"Illegal fwlog_mem_blocks=%d using default %d",
-+				fwlog_mem_blocks, wl->conf.fwlog.mem_blocks);
-+		}
-+	}
-+
- 	if (fwlog_param) {
- 		if (!strcmp(fwlog_param, "continuous")) {
- 			wl->conf.fwlog.mode = WL12XX_FWLOG_CONTINUOUS;
-@@ -6161,6 +6174,9 @@ module_param_named(fwlog, fwlog_param, charp, 0);
- MODULE_PARM_DESC(fwlog,
- 		 "FW logger options: continuous, ondemand, dbgpins or disable");
- 
-+module_param(fwlog_mem_blocks, int, S_IRUSR | S_IWUSR);
-+MODULE_PARM_DESC(fwlog_mem_blocks, "fwlog mem_blocks");
-+
- module_param(bug_on_recovery, int, S_IRUSR | S_IWUSR);
- MODULE_PARM_DESC(bug_on_recovery, "BUG() on fw recovery");
- 
--- 
-1.8.3.rc1.35.g9b79519
+I see the delays when running the iperf client on OSX too, but they're
+never quite as bad. The difference seems to be that once the TCP window
+is exhaused, OSX enables power save for a couple hundred msecs before
+retransmitting. This somehow seems to get the AP to transmit the frames
+(though the TIM never indicates that there are any buffered frames). I
+don't see the problem if I prevent the AP from transmitting A-MPDUs,
+even if the STAs continue using aggregation.
 
+So it seems apparent that this AP has issues. I'm hoping to solicit some
+suggestions on how we might be able to deal with it. I could try to
+emulate the behavior I see from OSX, but that won't help for drivers
+that don't support power save.
+
+I posted some wireshark traces in case someone else can find something
+else informative that I've missed. They're at
+http://people.canonical.com/~sforshee/wndap350/:
+
+ * iperf-iwlwifi.pcapng.gz: Trace from iperf client on Linux STA with
+   iwlwifi
+ * iperf-server.pcapng.gz: Trace from the iperf server for the same test
+   as iperf-iwlwifi
+ * iperf-osx.pcapng.gz: Trace from iperf client on OSX, using Broadcom
+   wireless
+
+I'm happy to collect more data if there's anything else that would be
+useful.
+
+Thanks,
+Seth
