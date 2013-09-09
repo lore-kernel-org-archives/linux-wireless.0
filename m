@@ -1,65 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:58556 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751176Ab3IIF0x (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:48834 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750970Ab3IIIA3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Sep 2013 01:26:53 -0400
-From: Jingoo Han <jg1.han@samsung.com>
-To: "'John W. Linville'" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	'David Miller' <davem@davemloft.net>,
-	'Bing Zhao' <bzhao@marvell.com>,
-	'Jingoo Han' <jg1.han@samsung.com>
-Subject: [PATCH] mwifiex: Remove casting the return value which is a void
- pointer
-Date: Mon, 09 Sep 2013 14:26:51 +0900
-Message-id: <004d01cead1d$3058dcf0$910a96d0$%han@samsung.com> (sfid-20130909_072701_372813_0DA773F8)
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+	Mon, 9 Sep 2013 04:00:29 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: prevent CE from looping indefinitely
+References: <1378213798-24769-1-git-send-email-michal.kazior@tieto.com>
+Date: Mon, 9 Sep 2013 11:00:11 +0300
+In-Reply-To: <1378213798-24769-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Tue, 3 Sep 2013 15:09:58 +0200")
+Message-ID: <87txhuctmc.fsf@kamboji.qca.qualcomm.com> (sfid-20130909_100032_635668_F33F133B)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Casting the return value which is a void pointer is redundant.
-The conversion from void pointer to any other pointer type is
-guaranteed by the C programming language.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
----
- drivers/net/wireless/mwifiex/pcie.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+> The double while() could end up running forever.
+> Inner while() would complete very fast. However
+> the completion processing could take enough time
+> for more completions to flow in. In that case the
+> outer while() would not terminate and run again,
+> and again. This could happen especially on a slow
+> host system.
+>
+> This could lead to a system freeze during heavy
+> traffic. Note: this doesn't solve all known
+> starvation issues yet.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-index 52da8ee..33fa943 100644
---- a/drivers/net/wireless/mwifiex/pcie.c
-+++ b/drivers/net/wireless/mwifiex/pcie.c
-@@ -93,7 +93,7 @@ static int mwifiex_pcie_suspend(struct device *dev)
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 
- 	if (pdev) {
--		card = (struct pcie_service_card *) pci_get_drvdata(pdev);
-+		card = pci_get_drvdata(pdev);
- 		if (!card || !card->adapter) {
- 			pr_err("Card or adapter structure is not valid\n");
- 			return 0;
-@@ -128,7 +128,7 @@ static int mwifiex_pcie_resume(struct device *dev)
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 
- 	if (pdev) {
--		card = (struct pcie_service_card *) pci_get_drvdata(pdev);
-+		card = pci_get_drvdata(pdev);
- 		if (!card || !card->adapter) {
- 			pr_err("Card or adapter structure is not valid\n");
- 			return 0;
-@@ -2037,7 +2037,7 @@ static irqreturn_t mwifiex_pcie_interrupt(int irq, void *context)
- 		goto exit;
- 	}
- 
--	card = (struct pcie_service_card *) pci_get_drvdata(pdev);
-+	card = pci_get_drvdata(pdev);
- 	if (!card || !card->adapter) {
- 		pr_debug("info: %s: card=%p adapter=%p\n", __func__, card,
- 			 card ? card->adapter : NULL);
+Applied, thanks.
+
 -- 
-1.7.10.4
-
-
+Kalle Valo
