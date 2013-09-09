@@ -1,38 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from p15195424.pureserver.info ([82.165.34.74]:49778 "EHLO
-	p15195424.pureserver.info" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751839Ab3IMSVM (ORCPT
+Received: from mailout3.samsung.com ([203.254.224.33]:58556 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751176Ab3IIF0x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Sep 2013 14:21:12 -0400
-Message-ID: <5233575E.6000904@ilande.co.uk> (sfid-20130913_202115_464754_72F3F8CC)
-Date: Fri, 13 Sep 2013 19:20:14 +0100
-From: Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>
-MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-References: <5232DAF0.6040907@ilande.co.uk> <52330CB4.7020902@ilande.co.uk> <523312D0.3020001@ilande.co.uk> <523352C8.8000902@lwfinger.net>
-In-Reply-To: <523352C8.8000902@lwfinger.net>
-Subject: Re: rtl8192cu: testing with EdiMax USB
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 9 Sep 2013 01:26:53 -0400
+From: Jingoo Han <jg1.han@samsung.com>
+To: "'John W. Linville'" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	'David Miller' <davem@davemloft.net>,
+	'Bing Zhao' <bzhao@marvell.com>,
+	'Jingoo Han' <jg1.han@samsung.com>
+Subject: [PATCH] mwifiex: Remove casting the return value which is a void
+ pointer
+Date: Mon, 09 Sep 2013 14:26:51 +0900
+Message-id: <004d01cead1d$3058dcf0$910a96d0$%han@samsung.com> (sfid-20130909_072701_372813_0DA773F8)
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 13/09/13 19:00, Larry Finger wrote:
+Casting the return value which is a void pointer is redundant.
+The conversion from void pointer to any other pointer type is
+guaranteed by the C programming language.
 
-> Thanks for the info. Eliminating the call to rtl92c_dm_diginit() is a
-> very large hammer to attack a small flea, but that points to a potential
-> problem.
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+---
+ drivers/net/wireless/mwifiex/pcie.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Glad that it proves useful to you. If you need me to run test patches 
-(e.g. logging calculated power values to dmesg), please send them 
-through to me off-list and I'll run them and send you back the results.
+diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+index 52da8ee..33fa943 100644
+--- a/drivers/net/wireless/mwifiex/pcie.c
++++ b/drivers/net/wireless/mwifiex/pcie.c
+@@ -93,7 +93,7 @@ static int mwifiex_pcie_suspend(struct device *dev)
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 
+ 	if (pdev) {
+-		card = (struct pcie_service_card *) pci_get_drvdata(pdev);
++		card = pci_get_drvdata(pdev);
+ 		if (!card || !card->adapter) {
+ 			pr_err("Card or adapter structure is not valid\n");
+ 			return 0;
+@@ -128,7 +128,7 @@ static int mwifiex_pcie_resume(struct device *dev)
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 
+ 	if (pdev) {
+-		card = (struct pcie_service_card *) pci_get_drvdata(pdev);
++		card = pci_get_drvdata(pdev);
+ 		if (!card || !card->adapter) {
+ 			pr_err("Card or adapter structure is not valid\n");
+ 			return 0;
+@@ -2037,7 +2037,7 @@ static irqreturn_t mwifiex_pcie_interrupt(int irq, void *context)
+ 		goto exit;
+ 	}
+ 
+-	card = (struct pcie_service_card *) pci_get_drvdata(pdev);
++	card = pci_get_drvdata(pdev);
+ 	if (!card || !card->adapter) {
+ 		pr_debug("info: %s: card=%p adapter=%p\n", __func__, card,
+ 			 card ? card->adapter : NULL);
+-- 
+1.7.10.4
 
-Given that it could be related to power calculations, another bit of 
-information that may help you recreate this is that my desk is really 
-close to the AP (probably 10m or a bit less), and so the indicated 
-signal strength should be close to maximum.
 
-
-HTH,
-
-Mark.
