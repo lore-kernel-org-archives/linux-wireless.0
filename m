@@ -1,30 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:36693 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751012Ab3ILBTU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Sep 2013 21:19:20 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: Sujith Manoharan <sujith@msujith.org>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/3] ath9k: Fix issue with parsing malformed CFP IE
-References: <1378879859-32290-1-git-send-email-sujith@msujith.org>
-	<1378879859-32290-2-git-send-email-sujith@msujith.org>
-Date: Thu, 12 Sep 2013 04:19:18 +0300
-In-Reply-To: <1378879859-32290-2-git-send-email-sujith@msujith.org> (Sujith
-	Manoharan's message of "Wed, 11 Sep 2013 11:40:58 +0530")
-Message-ID: <878uz2u99l.fsf@purkki.adurom.net> (sfid-20130912_031924_276675_965F53AC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from smtprelay0054.hostedemail.com ([216.40.44.54]:57550 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751075Ab3IIFvc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Sep 2013 01:51:32 -0400
+Message-ID: <1378705263.1928.7.camel@joe-AO722> (sfid-20130909_075139_778102_B9E9AE48)
+Subject: Re: [PATCH] mwifiex: Remove casting the return value which is a
+ void pointer
+From: Joe Perches <joe@perches.com>
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: "'John W. Linville'" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	'David Miller' <davem@davemloft.net>,
+	'Bing Zhao' <bzhao@marvell.com>
+Date: Sun, 08 Sep 2013 22:41:03 -0700
+In-Reply-To: <004d01cead1d$3058dcf0$910a96d0$%han@samsung.com>
+References: <004d01cead1d$3058dcf0$910a96d0$%han@samsung.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sujith Manoharan <sujith@msujith.org> writes:
+On Mon, 2013-09-09 at 14:26 +0900, Jingoo Han wrote:
+> Casting the return value which is a void pointer is redundant.
+> The conversion from void pointer to any other pointer type is
+> guaranteed by the C programming language.
 
-> [1] : http://msujith.org/ath9k/cfp/Malformed-CF-Param.png
+spatch (aka: Coccinelle) should be able to find a lot
+of these with:
 
-Not that it matters anything, but tshark most likely would have given
-you ASCII output of that :)
+$ cat void.cocci 
+@@
+void *t;
+type other;
+@@
 
--- 
-Kalle Valo
+-	(other *)t
++	t
+
+
