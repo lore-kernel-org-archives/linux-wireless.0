@@ -1,46 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f52.google.com ([209.85.215.52]:45079 "EHLO
-	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752539Ab3ILPe1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Sep 2013 11:34:27 -0400
-From: Vladimir Murzin <murzin.v@gmail.com>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: coelho@ti.com, linville@tuxdriver.com,
-	Vladimir Murzin <murzin.v@gmail.com>
-Subject: [PATCH 3/3] wlcore: limit base for output buffer in dev_mem_read
-Date: Thu, 12 Sep 2013 17:32:23 +0200
-Message-Id: <1378999943-1968-4-git-send-email-murzin.v@gmail.com> (sfid-20130912_173436_030185_B9E609F4)
-In-Reply-To: <1378999943-1968-1-git-send-email-murzin.v@gmail.com>
-References: <1378999943-1968-1-git-send-email-murzin.v@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:2426 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751321Ab3IIKgv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Sep 2013 06:36:51 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: users@rt2x00.serialmonkey.com
+Subject: [PATCH 1/2] rt2800: change initialization sequence to fix system freeze
+Date: Mon,  9 Sep 2013 12:37:37 +0200
+Message-Id: <1378723058-7858-1-git-send-email-sgruszka@redhat.com> (sfid-20130909_123655_490156_054B5EAD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-dev_mem_read tries to speed up things a bit by limiting output
-buffer which can not exceed WLCORE_MAX_BLOCK_SIZE. However,
-WLCORE_MAX_BLOCK_SIZE is based on PAGE_SIZE which may vary.
+My commit
 
-Use 4K size base for buffer explicitly.
+commit c630ccf1a127578421a928489d51e99c05037054
+Author: Stanislaw Gruszka <stf_xl@wp.pl>
+Date:   Sat Mar 16 19:19:46 2013 +0100
 
-Signed-off-by: Vladimir Murzin <murzin.v@gmail.com>
+    rt2800: rearrange bbp/rfcsr initialization
+
+make Maxim machine freeze when try to start wireless device.
+
+Initialization order and sending MCU_BOOT_SIGNAL request, changed in
+above commit, is important. Doing things incorrectly make PCIe bus
+problems, which can froze the machine.
+
+This patch change initialization sequence like vendor driver do:
+function NICInitializeAsic() from
+2011_1007_RT5390_RT5392_Linux_STA_V2.5.0.3_DPO (PCI devices) and
+DPO_RT5572_LinuxSTA_2.6.1.3_20121022 (according Mediatek, latest driver
+for RT8070/RT3070/RT3370/RT3572/RT5370/RT5372/RT5572 USB devices).
+It fixes freezes on Maxim system.
+
+Resolve:
+https://bugzilla.redhat.com/show_bug.cgi?id=1000679
+
+Reported-and-tested-by: Maxim Polyakov <polyakov@dexmalabs.com>
+Bisected-by: Igor Gnatenko <i.gnatenko.brain@gmail.com>
+Cc: stable@vger.kernel.org # 3.10+
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/ti/wlcore/debugfs.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/rt2x00/rt2800lib.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/debugfs.c b/drivers/net/wireless/ti/wlcore/debugfs.c
-index e17630c..6b413a7 100644
---- a/drivers/net/wireless/ti/wlcore/debugfs.c
-+++ b/drivers/net/wireless/ti/wlcore/debugfs.c
-@@ -38,7 +38,8 @@
- /* ms */
- #define WL1271_DEBUGFS_STATS_LIFETIME 1000
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index d217c9e..8f6820a 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -6631,19 +6631,20 @@ int rt2800_enable_radio(struct rt2x00_dev *rt2x00dev)
+ 		     rt2800_init_registers(rt2x00dev)))
+ 		return -EIO;
  
--#define WLCORE_MAX_BLOCK_SIZE ((size_t)(4*PAGE_SIZE))
-+#define WLCORE_PAGE_SIZE	4096
-+#define WLCORE_MAX_BLOCK_SIZE ((size_t)(4*WLCORE_PAGE_SIZE))
++	if (unlikely(rt2800_wait_bbp_rf_ready(rt2x00dev)))
++		return -EIO;
++
+ 	/*
+ 	 * Send signal to firmware during boot time.
+ 	 */
+ 	rt2800_register_write(rt2x00dev, H2M_BBP_AGENT, 0);
+ 	rt2800_register_write(rt2x00dev, H2M_MAILBOX_CSR, 0);
+-	if (rt2x00_is_usb(rt2x00dev)) {
++	if (rt2x00_is_usb(rt2x00dev))
+ 		rt2800_register_write(rt2x00dev, H2M_INT_SRC, 0);
+-		rt2800_mcu_request(rt2x00dev, MCU_BOOT_SIGNAL, 0, 0, 0);
+-	}
++	rt2800_mcu_request(rt2x00dev, MCU_BOOT_SIGNAL, 0, 0, 0);
+ 	msleep(1);
  
- /* debugfs macros idea from mac80211 */
- int wl1271_format_buffer(char __user *userbuf, size_t count,
+-	if (unlikely(rt2800_wait_bbp_rf_ready(rt2x00dev) ||
+-		     rt2800_wait_bbp_ready(rt2x00dev)))
++	if (unlikely(rt2800_wait_bbp_ready(rt2x00dev)))
+ 		return -EIO;
+ 
+ 	rt2800_init_bbp(rt2x00dev);
 -- 
-1.7.10.4
+1.7.11.7
 
