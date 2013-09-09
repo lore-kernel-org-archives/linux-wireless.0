@@ -1,36 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:57492 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750968Ab3IPVom (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Sep 2013 17:44:42 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH 2/8 V2] rtlwifi: rtl8192de: Fix smatch warnings in rtl8192de/hw.c
-References: <1379357722-17687-1-git-send-email-Larry.Finger@lwfinger.net>
-	<1379357722-17687-3-git-send-email-Larry.Finger@lwfinger.net>
-Date: Tue, 17 Sep 2013 00:44:39 +0300
-In-Reply-To: <1379357722-17687-3-git-send-email-Larry.Finger@lwfinger.net>
-	(Larry Finger's message of "Mon, 16 Sep 2013 13:55:16 -0500")
-Message-ID: <874n9ktpa0.fsf@purkki.adurom.net> (sfid-20130916_234452_882714_9573F816)
+Received: from mail.candelatech.com ([208.74.158.172]:40262 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754841Ab3IITKn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Sep 2013 15:10:43 -0400
+Message-ID: <522E1D31.2090403@candelatech.com> (sfid-20130909_211051_077109_F514A307)
+Date: Mon, 09 Sep 2013 12:10:41 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>
+Subject: Always send management frames at MCS-0??
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+I had a user request that we support always sending management frames
+(such as EAPOL) at the lowest rate.  Evidently, other equipment does this,
+where as normal-ish supplicant/linux tends to send them at much higher
+rates.
 
-> Smatch lists the following:
->   CHECK   drivers/net/wireless/rtlwifi/rtl8192de/hw.c
-> drivers/net/wireless/rtlwifi/rtl8192de/hw.c:1200 rtl92de_set_qos() info: ignoring unreachable code.
-> drivers/net/wireless/rtlwifi/rtl8192de/hw.c:1200 rtl92de_set_qos() info: ignoring unreachable code.
->
-> Dead code is commented out. It has not been deleted in case I find a need for
-> it later.
+Any suggestions on how to go about doing this properly?
 
-We should not have any commented out code. It's better to remove it and
-if it's ever needed it can be found from the git history.
+Any opinions on whether it's a good idea or not?
+
+Thanks,
+Ben
 
 -- 
-Kalle Valo
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
