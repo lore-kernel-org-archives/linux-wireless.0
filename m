@@ -1,37 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:32629 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759482Ab3ICI1O (ORCPT
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:65369 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752574Ab3IITPd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Sep 2013 04:27:14 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <ath6kl-devel@qca.qualcomm.com>, <linux-wireless@vger.kernel.org>,
-	<ath10k@lists.infradead.org>
-Subject: Re: Pull request: ath 20130930
-References: <87wqmyz5i9.fsf@kamboji.qca.qualcomm.com>
-Date: Tue, 3 Sep 2013 11:27:08 +0300
-In-Reply-To: <87wqmyz5i9.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-	of "Tue, 3 Sep 2013 11:14:22 +0300")
-Message-ID: <87sixmz4wz.fsf@kamboji.qca.qualcomm.com> (sfid-20130903_102719_513313_605215EB)
+	Mon, 9 Sep 2013 15:15:33 -0400
+Received: by mail-wg0-f45.google.com with SMTP id y10so5753552wgg.12
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Sep 2013 12:15:32 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <522E1D31.2090403@candelatech.com>
+References: <522E1D31.2090403@candelatech.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Tue, 10 Sep 2013 00:45:12 +0530
+Message-ID: <CABPxzYLaLUdCXULmx7mV5Gk7L_RrnG4Zq-vO6XRCUt0pvm9SJA@mail.gmail.com> (sfid-20130909_211536_124031_CE6E7F09)
+Subject: Re: Always send management frames at MCS-0??
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
-
-> Hi John,
+On Tue, Sep 10, 2013 at 12:40 AM, Ben Greear <greearb@candelatech.com> wrote:
+> I had a user request that we support always sending management frames
+> (such as EAPOL) at the lowest rate.  Evidently, other equipment does this,
+> where as normal-ish supplicant/linux tends to send them at much higher
+> rates.
 >
-> here are latest ath10k changes, I hope it's still time to get these to
-> 3.12. The changelog for the pull request:
+> Any suggestions on how to go about doing this properly?
 >
-> Bartosz dropped support for qca98xx hw1.0 hardware from ath10k, it's
-> just too much to support it. Michal added support for the new firmware
-> interface. Marek fixed WEP in AP and IBSS mode. Rest of the changes are
-> minor fixes or cleanups.
+> Any opinions on whether it's a good idea or not?
 
-Oops, the date in the subject is wrong. Of course it should be 20130903.
-
--- 
-Kalle Valo
+EAPOL frames are data frams from WLAN perspective
+and are unicast, thats why we send at highest possible
+MCS supported. There is no advantage in forcing them to
+go at lower rates.
