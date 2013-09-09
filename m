@@ -1,42 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kvm.w1.fi ([128.177.28.162]:53364 "EHLO
-	jmaline2.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756419Ab3IZLJt (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:35953 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750879Ab3IISpM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Sep 2013 07:09:49 -0400
-Date: Thu, 26 Sep 2013 14:09:34 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Chet Lanctot <clanctot@codeaurora.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 0/2] nl80211/cfg80211: Support PMF on drivers with
- integrated AP SME
-Message-ID: <20130926110934.GA5070@w1.fi> (sfid-20130926_130952_579317_6B8EFCD7)
-References: <1379446296-22236-1-git-send-email-clanctot@codeaurora.org>
+	Mon, 9 Sep 2013 14:45:12 -0400
+Date: Mon, 9 Sep 2013 14:33:50 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Solomon Peachy <pizza@shaftnet.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] cw1200:  Don't perform SPI transfers in interrupt
+ context
+Message-ID: <20130909183350.GB1955@tuxdriver.com> (sfid-20130909_204518_495298_046A6B7D)
+References: <1377649787-2817-1-git-send-email-pizza@shaftnet.org>
+ <20130903115856.GA16844@shaftnet.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1379446296-22236-1-git-send-email-clanctot@codeaurora.org>
+In-Reply-To: <20130903115856.GA16844@shaftnet.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 17, 2013 at 12:31:34PM -0700, Chet Lanctot wrote:
-> These patches represent a small number of changes to the
-> nl80211/cfg80211 interface to support Protected Management Frames
-> (PMF, 802.11w) on an AP.  Specifically, these changes are needed for
-> drivers that have the AP SME integrated.
+On Tue, Sep 03, 2013 at 07:58:57AM -0400, Solomon Peachy wrote:
+> On Tue, Aug 27, 2013 at 08:29:46PM -0400, Solomon Peachy wrote:
+> > When we get an interrupt from the hardware, the first thing the driver does
+> > is tell the device to mask off the interrupt line.  Unfortunately this
+> > involves a SPI transaction in interrupt context.  Some (most?) SPI
+> > controllers perform the transfer asynchronously and try to sleep.
+> > This is bad, and triggers a BUG().
 > 
-> Support is added for drivers that do not implement the SA Query procedure
-> that is part of PMF.  Instead, the need for upper layer software to
-> do this procedure is advertised.  And support is added so that  whether
-> PMF should be used for station connections is communicated to the driver.
+> Did this patch series get dropped?  I saw that the followup series 
+> of minor cleanups were merged into wireless-next, but not these.
+> 
+> Since they didn't make it into 3.11, I intend to submit them to -stable, 
+> but I need to make sure they at least make it into -next.
 
-The patches here have some issues in not compiling and formatting
-(trailing whitespace) and as such, cannot be applied as-is. I'd expect a
-new version to be posted to address those issues.
-
-That said, if there is any feedback on the general direction used here,
-that would obviously be welcome even before the updated patches are
-posted.
+I'll be sending them for 3.12 soon...
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
