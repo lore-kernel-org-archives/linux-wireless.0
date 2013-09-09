@@ -1,45 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f178.google.com ([209.85.214.178]:35551 "EHLO
-	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754473Ab3IYR6N (ORCPT
+Received: from mail-oa0-f54.google.com ([209.85.219.54]:63430 "EHLO
+	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755554Ab3IIVux (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Sep 2013 13:58:13 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH 5/8 V4] rtlwifi: Fix smatch warning in pci.c
-Date: Wed, 25 Sep 2013 12:57:46 -0500
-Message-Id: <1380131869-19185-6-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130925_221700_191636_8F7B882E)
-In-Reply-To: <1380131869-19185-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1380131869-19185-1-git-send-email-Larry.Finger@lwfinger.net>
+	Mon, 9 Sep 2013 17:50:53 -0400
+Received: by mail-oa0-f54.google.com with SMTP id j10so7232923oah.27
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Sep 2013 14:50:52 -0700 (PDT)
+Date: Mon, 9 Sep 2013 16:50:50 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net, marcel@holtmann.org,
+	Samuel Ortiz <samuel@sortiz.org>,
+	Gustavo Padovan <gustavo@padovan.org>,
+	linux-bluetooth@vger.kernel.org, linux-nfc@ml01.01.org
+Subject: Re: Linux Wireless Mini-Summit in New Orleans -- 19-20 September
+Message-ID: <20130909215050.GC27771@thinkpad-t410> (sfid-20130909_235057_360859_0F2F7FAC)
+References: <20130808185410.GD30925@tuxdriver.com>
+ <20130808190428.GF30925@tuxdriver.com>
+ <20130905133907.GE1947@tuxdriver.com>
+ <1378397092.3580.21.camel@dcbw.foobar.com>
+ <20130909192346.GC1955@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130909192346.GC1955@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Smatch reports the following:
-  CHECK   drivers/net/wireless/rtlwifi/pci.c
-drivers/net/wireless/rtlwifi/pci.c:739 _rtl_pci_rx_interrupt() warn: assigning (-98) to unsigned variable 'stats.noise'
+On Mon, Sep 09, 2013 at 03:23:46PM -0400, John W. Linville wrote:
+> Seth, Stanislaw, etc -- anyone want to cover issues dealing with
+> supporting wireless in distributions?
 
-The variable 'stats.noise' is not used. That initializer is removed.
+Probably best if we can get input from all those present representing
+distros. I'm happy to share about what our biggest pain points are in
+Ubuntu.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/pci.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
-index 703f839..6295ed2 100644
---- a/drivers/net/wireless/rtlwifi/pci.c
-+++ b/drivers/net/wireless/rtlwifi/pci.c
-@@ -736,7 +736,6 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
- 
- 	struct rtl_stats stats = {
- 		.signal = 0,
--		.noise = -98,
- 		.rate = 0,
- 	};
- 	int index = rtlpci->rx_ring[rx_queue_idx].idx;
--- 
-1.8.1.4
-
+Seth
