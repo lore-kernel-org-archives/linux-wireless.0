@@ -1,79 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:34957 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752728Ab3IVTvT (ORCPT
+Received: from mail-oa0-f44.google.com ([209.85.219.44]:40045 "EHLO
+	mail-oa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755603Ab3IIVwX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Sep 2013 15:51:19 -0400
-From: Peter Senna Tschudin <peter.senna@gmail.com>
-To: Larry.Finger@lwfinger.net
-Cc: chaoming_li@realsil.com.cn, joe@perches.com,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	kernel-janitors@vger.kernel.org,
-	Peter Senna Tschudin <peter.senna@gmail.com>
-Subject: [PATCH V2] wireless: rtlwifi: Replace variable with a brake
-Date: Sun, 22 Sep 2013 21:50:10 +0200
-Message-Id: <1379879410-22787-1-git-send-email-peter.senna@gmail.com> (sfid-20130922_215139_545322_7B5EF10E)
+	Mon, 9 Sep 2013 17:52:23 -0400
+Received: by mail-oa0-f44.google.com with SMTP id l17so7148405oag.31
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Sep 2013 14:52:22 -0700 (PDT)
+Message-ID: <522E4315.4040806@lwfinger.net> (sfid-20130909_235226_064217_675F9B22)
+Date: Mon, 09 Sep 2013 16:52:21 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Vincent Thiele <vincentthiele@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: No connection with TP-Link TL-WN823N (rtl8192cu)
+References: <CAEZsi7Hde5NyTRgm7Lf_4LvHMAEJouzaqMNUwxr-iSipuEcsyQ@mail.gmail.com>
+In-Reply-To: <CAEZsi7Hde5NyTRgm7Lf_4LvHMAEJouzaqMNUwxr-iSipuEcsyQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes the variable continual, and change the while loop
-to break when efuse_data == 0xFF.
+On 09/09/2013 03:40 PM, Vincent Thiele wrote:
+> I use TL-WN823N usb-stick with ubuntu but native drivers disconnect
+> few seconds after boot. For wlan i need to install this package:
+> https://code.google.com/p/realtek-8188cus-wireless-drivers-3444749-ubuntu-1304/.
+> But this package can not be used with a kernel > 3.9. Please fix the
+> native drivers. Best regards
 
-Tested by compilation only.
+I am sorry that you are having problems with your system, but your log was 
+essentially useless. I saw one disconnect due to reason 4 (disassociation due to 
+inactivity).
 
-CC: Joe Perches <joe@perches.com>
-Signed-off-by: Peter Senna Tschudin <peter.senna@gmail.com>
----
-Changes from V1:
- - Fix the indetation
- - Remove remaining } from removed else
+There were many changes in the rtl8192cu driver for kernel 3.11, and you need to 
+run it, or a backports version of the wireless code. Your 3.8.0 kernel is too old.
 
-Please ignore the patch:
-[PATCH 12/19] wireless: Change variable type to bool
+I have been running rtl8192cu for the past 24 hours without a permanent 
+disconnect. Under NetworkManager, I see some reason 7 deauthentications, but 
+running under ifup, there have been no disassociations or deauthentications in 
+over 6 hours.
 
-And apply this one instead.
+I am using openSUSE KDE. There may be a problem with the Ubuntu user code as it 
+seems to operate differently.
 
-The variable continual was declared as int, but was used as bool. I
-sent previous patch changing the variable type to bool, but Joe Perches
-proposed that removing the variable and adding a brake would be better.
-
- drivers/net/wireless/rtlwifi/efuse.c | 18 ++++++++----------
- 1 file changed, 8 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/net/wireless/rtlwifi/efuse.c b/drivers/net/wireless/rtlwifi/efuse.c
-index 838a1ed..2aedd9f 100644
---- a/drivers/net/wireless/rtlwifi/efuse.c
-+++ b/drivers/net/wireless/rtlwifi/efuse.c
-@@ -1203,20 +1203,18 @@ static void efuse_power_switch(struct ieee80211_hw *hw, u8 write, u8 pwrstate)
- 
- static u16 efuse_get_current_size(struct ieee80211_hw *hw)
- {
--	int continual = true;
- 	u16 efuse_addr = 0;
- 	u8 hworden;
- 	u8 efuse_data, word_cnts;
- 
--	while (continual && efuse_one_byte_read(hw, efuse_addr, &efuse_data)
--	       && (efuse_addr < EFUSE_MAX_SIZE)) {
--		if (efuse_data != 0xFF) {
--			hworden = efuse_data & 0x0F;
--			word_cnts = efuse_calculate_word_cnts(hworden);
--			efuse_addr = efuse_addr + (word_cnts * 2) + 1;
--		} else {
--			continual = false;
--		}
-+	while (efuse_one_byte_read(hw, efuse_addr, &efuse_data) &&
-+					(efuse_addr < EFUSE_MAX_SIZE)) {
-+		if (efuse_data == 0xFF)
-+			break;
-+
-+		hworden = efuse_data & 0x0F;
-+		word_cnts = efuse_calculate_word_cnts(hworden);
-+		efuse_addr = efuse_addr + (word_cnts * 2) + 1;
- 	}
- 
- 	return efuse_addr;
--- 
-1.8.3.1
+Larry
 
