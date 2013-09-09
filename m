@@ -1,93 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ring0.de ([91.143.88.219]:35073 "EHLO smtp.ring0.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752692Ab3IVOZX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Sep 2013 10:25:23 -0400
-Date: Sun, 22 Sep 2013 16:24:56 +0200
-From: Sebastian Reichel <sre@ring0.de>
-To: Pavel Machek <pavel@ucw.cz>
-Cc: Luciano Coelho <coelho@ti.com>,
-	Grazvydas Ignotas <notasas@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Tony Lindgren <tony@atomide.com>, nsekhar@ti.com,
-	mturquette@linaro.org, mark.rutland@arm.com,
-	Felipe Balbi <balbi@ti.com>, grant.likely@linaro.org,
-	rob.herring@calxeda.com, devicetree-discuss@lists.ozlabs.org,
-	linux-doc@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v2 0/9] wilink: add device tree support
-Message-ID: <20130922142455.GA31967@earth.universe> (sfid-20130922_162604_221840_B1D03DDB)
-References: <1372776948-24840-1-git-send-email-coelho@ti.com>
- <CANOLnOPBHesTiV61zpQ_QS9c7E91K50EnbMnGhvgaViuA_3=Bw@mail.gmail.com>
- <1372859132.21065.111.camel@cumari.coelho.fi>
- <20130921122718.GA4431@amd.pavel.ucw.cz>
- <20130921141614.GA21383@earth.universe>
- <20130922133632.GB8643@amd.pavel.ucw.cz>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="DocE+STaALJfprDB"
-In-Reply-To: <20130922133632.GB8643@amd.pavel.ucw.cz>
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:39359 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751178Ab3IIJYw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Sep 2013 05:24:52 -0400
+Received: by mail-wg0-f48.google.com with SMTP id n12so2575702wgh.3
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Sep 2013 02:24:51 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <luca@coelho.fi>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 01/13] wl18xx: default config alignment with phy defaults
+Date: Mon,  9 Sep 2013 12:24:32 +0300
+Message-Id: <1378718684-14430-1-git-send-email-eliad@wizery.com> (sfid-20130909_112456_464557_BA2D01B8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Igal Chernobelsky <igalc@ti.com>
 
---DocE+STaALJfprDB
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Driver default config is aligned with phy default parameters.
 
-On Sun, Sep 22, 2013 at 03:36:32PM +0200, Pavel Machek wrote:
-> > > > Unfortunately I don't have much time to work on wl1251.  I think it
-> > > > wouldn't be too difficult to do though, so patches are welcome. ;)
-> > > >=20
-> > > > Maybe you could try to make this change and I could support you if
-> > > > needed?
-> > > >=20
-> > > >=20
-> > > > > I can offer you my help testing things on pandora and I'm sure so=
-meone
-> > > > > here could try it on N900.
-> > > >=20
-> > > > I could try it on the N900, if it is still bootable easily with the
-> > > > mainline. ;)
-> > >=20
-> > > 3.11 should be bootable on mainline, including device tree and
-> > > video. (But excluding some other stuff, like MMC.)
-> >=20
-> > I got external MMC (=3D> =B5SD) working with some small modifications of
-> > the omap3-n900.dts file. I have not yet tried internal MMC, since
-> > its not important for me at the moment, but I guess its also just a
-> > small change in the dts file.
->=20
-> Can we get the diff? :-).
+Now that RDL1_3 has 2 antennas defined by default we need to explicitly
+define ht.mode to HT_MODE_WIDE to have SISO40 as default.
 
-I will sent a patchset for the omap3-n900.dts file in the next days.
+Signed-off-by: Yair Shapira <yair.shapira@ti.com>
+Signed-off-by: Igal Chernobelsky <igalc@ti.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/ti/wl18xx/main.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
--- Sebastian
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index aef0c91..7302308 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -505,7 +505,7 @@ static struct wlcore_conf wl18xx_conf = {
+ 
+ static struct wl18xx_priv_conf wl18xx_default_priv_conf = {
+ 	.ht = {
+-		.mode				= HT_MODE_DEFAULT,
++		.mode				= HT_MODE_WIDE,
+ 	},
+ 	.phy = {
+ 		.phy_standalone			= 0x00,
+@@ -516,7 +516,7 @@ static struct wl18xx_priv_conf wl18xx_default_priv_conf = {
+ 		.auto_detect			= 0x00,
+ 		.dedicated_fem			= FEM_NONE,
+ 		.low_band_component		= COMPONENT_3_WAY_SWITCH,
+-		.low_band_component_type	= 0x04,
++		.low_band_component_type	= 0x05,
+ 		.high_band_component		= COMPONENT_2_WAY_SWITCH,
+ 		.high_band_component_type	= 0x09,
+ 		.tcxo_ldo_voltage		= 0x00,
+@@ -556,15 +556,15 @@ static struct wl18xx_priv_conf wl18xx_default_priv_conf = {
+ 		.per_chan_pwr_limit_arr_11p	= { 0xff, 0xff, 0xff, 0xff,
+ 						    0xff, 0xff, 0xff },
+ 		.psat				= 0,
+-		.low_power_val			= 0x08,
+-		.med_power_val			= 0x12,
+-		.high_power_val			= 0x18,
+-		.low_power_val_2nd		= 0x05,
+-		.med_power_val_2nd		= 0x0a,
+-		.high_power_val_2nd		= 0x14,
+ 		.external_pa_dc2dc		= 0,
+ 		.number_of_assembled_ant2_4	= 2,
+ 		.number_of_assembled_ant5	= 1,
++		.low_power_val			= 0xff,
++		.med_power_val			= 0xff,
++		.high_power_val			= 0xff,
++		.low_power_val_2nd		= 0xff,
++		.med_power_val_2nd		= 0xff,
++		.high_power_val_2nd		= 0xff,
+ 		.tx_rf_margin			= 1,
+ 	},
+ };
+-- 
+1.8.3.rc1.35.g9b79519
 
---DocE+STaALJfprDB
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.14 (GNU/Linux)
-
-iQIcBAEBCAAGBQJSPv23AAoJENju1/PIO/qaCicP+wdhXI0ya2fzalM6KTu4A9GH
-aVXTSDi9+PSzTd3XvxpwbdBQCvje99j/PDLWkoiv8s3MQAkPNBwDpkE3ukK0/2ER
-RdMOpX6JIVtX0VcZm8BLFeM1Fi4WWDkwqDmKU4VON5aqg4OMayCd1vEcGP1Yepua
-MGo1+p3hPgy7ZYUGzXsUKifdJiN9NpJmn2hcOEP0Hd/o44mYBT0bPxHeQ/HyD2RX
-NQ2i8YzcmtAnEeIbwiYkNJzzc2Z3wiTLkP9tYpv22kEX/5h7PzAmxnecRFYtz/m7
-8MW03zNV6S4Et/vOSNQNHZhPsXS32+LsFBZcYTwVgCqXz53qIIRKzPsMokNp6UHv
-RwOCevUUXX4WFk7S3c0zyNIaXopYeJSy8xWhIGQxAEXYZSLtxCn60u53pWcDEZAV
-oKTNm6tBb4/npOdkmSFnj5Ls9g3aUWVJNARsOeTyTxfGgFe9ET2LD2/57WJYQHyu
-v1V1sa0cSf921Jp7drZbAj2vdHHLw+IivJF9ydfsu3uJfuD7hy6OtuDs6TCQNakx
-GSRImkKxQxOhSdNw0RPGZoy2EKGr8ybN+3CzsjHPXvCE32kJkhVdUw+tyJBxZ36o
-xNgxBWDouoWO8dA0Qd/UrknA/XMAMfD4japCCiFtJEQ9/Jf5LDMvp4LJT8chbuSN
-bcg2s8xa3QlWiB/K3XUU
-=g66U
------END PGP SIGNATURE-----
-
---DocE+STaALJfprDB--
