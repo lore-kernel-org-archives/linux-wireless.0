@@ -1,69 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:48597 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756564Ab3ICFCs (ORCPT
+Received: from mail-we0-f179.google.com ([74.125.82.179]:40740 "EHLO
+	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751178Ab3IIJYy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Sep 2013 01:02:48 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/3] ath9k: Fix regulatory compliance for AR9462/AR9565
-Date: Tue,  3 Sep 2013 10:28:55 +0530
-Message-Id: <1378184337-1816-1-git-send-email-sujith@msujith.org> (sfid-20130903_070250_594318_F7A9E9A6)
+	Mon, 9 Sep 2013 05:24:54 -0400
+Received: by mail-we0-f179.google.com with SMTP id x55so3936856wes.38
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Sep 2013 02:24:53 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <luca@coelho.fi>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 02/13] wlcore: print active channel in the driver_state
+Date: Mon,  9 Sep 2013 12:24:33 +0300
+Message-Id: <1378718684-14430-2-git-send-email-eliad@wizery.com> (sfid-20130909_112457_857297_7BCB7DB3)
+In-Reply-To: <1378718684-14430-1-git-send-email-eliad@wizery.com>
+References: <1378718684-14430-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+From: Victor Goldenshtein <victorg@ti.com>
 
-Adjust the CCA values based on the regulatory domain
-present in the EEPROM.
+Print current active channel/s and a role type for
+that channel in the driver_state debugfs.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_phy.h |  4 ++++
- drivers/net/wireless/ath/ath9k/hw.c         | 12 ++++++++++++
- 2 files changed, 16 insertions(+)
+ drivers/net/wireless/ti/wlcore/debugfs.c | 18 +++++++++++++++++-
+ 1 file changed, 17 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-index 6fd7523..fca6243 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-@@ -343,8 +343,12 @@
+diff --git a/drivers/net/wireless/ti/wlcore/debugfs.c b/drivers/net/wireless/ti/wlcore/debugfs.c
+index e17630c..89893c7 100644
+--- a/drivers/net/wireless/ti/wlcore/debugfs.c
++++ b/drivers/net/wireless/ti/wlcore/debugfs.c
+@@ -437,6 +437,7 @@ static ssize_t driver_state_read(struct file *file, char __user *user_buf,
+ 	int res = 0;
+ 	ssize_t ret;
+ 	char *buf;
++	struct wl12xx_vif *wlvif;
  
- #define AR_PHY_CCA_NOM_VAL_9462_2GHZ          -127
- #define AR_PHY_CCA_MIN_GOOD_VAL_9462_2GHZ     -127
-+#define AR_PHY_CCA_MAX_GOOD_VAL_9462_2GHZ     -60
-+#define AR_PHY_CCA_MAX_GOOD_VAL_9462_FCC_2GHZ -95
- #define AR_PHY_CCA_NOM_VAL_9462_5GHZ          -127
- #define AR_PHY_CCA_MIN_GOOD_VAL_9462_5GHZ     -127
-+#define AR_PHY_CCA_MAX_GOOD_VAL_9462_5GHZ     -60
-+#define AR_PHY_CCA_MAX_GOOD_VAL_9462_FCC_5GHZ -100
+ #define DRIVER_STATE_BUF_LEN 1024
  
- #define AR_PHY_CCA_NOM_VAL_9330_2GHZ          -118
+@@ -450,12 +451,28 @@ static ssize_t driver_state_read(struct file *file, char __user *user_buf,
+ 	(res += scnprintf(buf + res, DRIVER_STATE_BUF_LEN - res,\
+ 			  #x " = " fmt "\n", wl->x))
  
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index ecc6ec4..260e0c6 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -549,6 +549,18 @@ static int ath9k_hw_post_init(struct ath_hw *ah)
++#define DRIVER_STATE_PRINT_GENERIC(x, fmt, args...)   \
++	(res += scnprintf(buf + res, DRIVER_STATE_BUF_LEN - res,\
++			  #x " = " fmt "\n", args))
++
+ #define DRIVER_STATE_PRINT_LONG(x) DRIVER_STATE_PRINT(x, "%ld")
+ #define DRIVER_STATE_PRINT_INT(x)  DRIVER_STATE_PRINT(x, "%d")
+ #define DRIVER_STATE_PRINT_STR(x)  DRIVER_STATE_PRINT(x, "%s")
+ #define DRIVER_STATE_PRINT_LHEX(x) DRIVER_STATE_PRINT(x, "0x%lx")
+ #define DRIVER_STATE_PRINT_HEX(x)  DRIVER_STATE_PRINT(x, "0x%x")
  
- 	ath9k_hw_ani_init(ah);
- 
-+	/*
-+	 * EEPROM needs to be initialized before we do this.
-+	 * This is required for regulatory compliance.
-+	 */
-+	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
-+		u16 regdmn = ah->eep_ops->get_eeprom(ah, EEP_REG_0);
-+		if ((regdmn & 0xF0) == CTL_FCC) {
-+			ah->nf_2g.max = AR_PHY_CCA_MAX_GOOD_VAL_9462_FCC_2GHZ;
-+			ah->nf_5g.max = AR_PHY_CCA_MAX_GOOD_VAL_9462_FCC_5GHZ;
-+		}
++	wl12xx_for_each_wlvif_sta(wl, wlvif) {
++		if (!test_bit(WLVIF_FLAG_STA_ASSOCIATED, &wlvif->flags))
++			continue;
++
++		DRIVER_STATE_PRINT_GENERIC(channel, "%d (%s)", wlvif->channel,
++					   wlvif->p2p ? "P2P-CL" : "STA");
 +	}
 +
- 	return 0;
- }
- 
++	wl12xx_for_each_wlvif_ap(wl, wlvif)
++		DRIVER_STATE_PRINT_GENERIC(channel, "%d (%s)", wlvif->channel,
++					   wlvif->p2p ? "P2P-GO" : "AP");
++
+ 	DRIVER_STATE_PRINT_INT(tx_blocks_available);
+ 	DRIVER_STATE_PRINT_INT(tx_allocated_blocks);
+ 	DRIVER_STATE_PRINT_INT(tx_allocated_pkts[0]);
+@@ -474,7 +491,6 @@ static ssize_t driver_state_read(struct file *file, char __user *user_buf,
+ 	DRIVER_STATE_PRINT_INT(tx_blocks_freed);
+ 	DRIVER_STATE_PRINT_INT(rx_counter);
+ 	DRIVER_STATE_PRINT_INT(state);
+-	DRIVER_STATE_PRINT_INT(channel);
+ 	DRIVER_STATE_PRINT_INT(band);
+ 	DRIVER_STATE_PRINT_INT(power_level);
+ 	DRIVER_STATE_PRINT_INT(sg_enabled);
 -- 
-1.8.4
+1.8.3.rc1.35.g9b79519
 
