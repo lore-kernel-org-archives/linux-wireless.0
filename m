@@ -1,53 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:64271 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751626Ab3IAGgf (ORCPT
+Received: from mailrelay02.solcon.nl ([212.45.32.108]:43805 "EHLO
+	mailrelay02.solcon.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752571Ab3IIS7y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Sep 2013 02:36:35 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 0/6] ath10k: CE cleanups
-References: <1377068249-26025-1-git-send-email-michal.kazior@tieto.com>
-	<1377601683-12072-1-git-send-email-michal.kazior@tieto.com>
-Date: Sun, 1 Sep 2013 09:36:30 +0300
-In-Reply-To: <1377601683-12072-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Tue, 27 Aug 2013 13:07:57 +0200")
-Message-ID: <87zjrx6ob5.fsf@kamboji.qca.qualcomm.com> (sfid-20130901_083640_331823_5A0F8E3D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 9 Sep 2013 14:59:54 -0400
+From: Albert Pool <albertpool@solcon.nl>
+To: Pontus Fuchs <pontus.fuchs@gmail.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Albert Pool <albertpool@solcon.nl>
+Subject: [PATCH] ar5523: Add USB ID of D-Link WUA-2340 rev A1
+Date: Mon,  9 Sep 2013 20:36:30 +0200
+Message-Id: <1378751790-2465-1-git-send-email-albertpool@solcon.nl> (sfid-20130909_210019_118181_000EE0DC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Signed-off-by: Albert Pool <albertpool@solcon.nl>
+Reported-by: Michael Landrum <landrummd@gmail.com>
+---
+ drivers/net/wireless/ath/ar5523/ar5523.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-> This patchset contains non-functional changes
-> except patch #1 which changes memory allocation
-> from dynamic to static.
->
-> There is still some more to clean up in PCI/CE
-> but it's probably better to keep patchsets compact
-> and more frequent.
->
-> v2:
->  * fix checkpatch warning (Kalle)
->
->
-> Michal.
->
->
-> Michal Kazior (6):
->   ath10k: use inline ce_state structure
->   ath10k: remove ce_op_state
->   ath10k: remove unused ce_attr parameters
->   ath10k: rename hif_ce_pipe_info to ath10k_pci_pipe
->   ath10k: rename ce_state to ath10k_ce_pipe
->   ath10k: rename ce_ring_state to ath10k_ce_ring
-
-Applied all six, thanks.
-
-I dropped the lock addition from patch 1 and patch 5 had a conflict due
-to that change. Please double check that I didn't break anything.
-
+diff --git a/drivers/net/wireless/ath/ar5523/ar5523.c b/drivers/net/wireless/ath/ar5523/ar5523.c
+index 17d7fec..280fc3d 100644
+--- a/drivers/net/wireless/ath/ar5523/ar5523.c
++++ b/drivers/net/wireless/ath/ar5523/ar5523.c
+@@ -1762,6 +1762,7 @@ static struct usb_device_id ar5523_id_table[] = {
+ 	AR5523_DEVICE_UX(0x2001, 0x3a00),	/* Dlink / DWLAG132 */
+ 	AR5523_DEVICE_UG(0x2001, 0x3a02),	/* Dlink / DWLG132 */
+ 	AR5523_DEVICE_UX(0x2001, 0x3a04),	/* Dlink / DWLAG122 */
++	AR5523_DEVICE_UG(0x07d1, 0x3a07),	/* D-Link / WUA-2340 rev A1 */
+ 	AR5523_DEVICE_UG(0x1690, 0x0712),	/* Gigaset / AR5523 */
+ 	AR5523_DEVICE_UG(0x1690, 0x0710),	/* Gigaset / SMCWUSBTG */
+ 	AR5523_DEVICE_UG(0x129b, 0x160c),	/* Gigaset / USB stick 108
 -- 
-Kalle Valo
+1.7.10.4
+
