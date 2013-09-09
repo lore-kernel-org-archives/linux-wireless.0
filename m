@@ -1,45 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f41.google.com ([209.85.219.41]:33149 "EHLO
-	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751276Ab3IPSzv (ORCPT
+Received: from purkki.adurom.net ([80.68.90.206]:45158 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752571Ab3IIUBC convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Sep 2013 14:55:51 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH 5/8 V2] [PATCH 5/7: rtlwifi: Fix smatch warning in pci.c
-Date: Mon, 16 Sep 2013 13:55:19 -0500
-Message-Id: <1379357722-17687-6-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130916_205640_210604_8C86C082)
-In-Reply-To: <1379357722-17687-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1379357722-17687-1-git-send-email-Larry.Finger@lwfinger.net>
+	Mon, 9 Sep 2013 16:01:02 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: regulatory will stuck when cfg80211 is built-in
+References: <CAFSJ42bTQkQO+yugN7BBjygQd7LY9H0bPBoPfoH7yyfyMzuGqA@mail.gmail.com>
+Date: Mon, 09 Sep 2013 23:01:00 +0300
+In-Reply-To: <CAFSJ42bTQkQO+yugN7BBjygQd7LY9H0bPBoPfoH7yyfyMzuGqA@mail.gmail.com>
+	(Eugene Krasnikov's message of "Mon, 9 Sep 2013 08:16:47 +0200")
+Message-ID: <87ppshu5mr.fsf@purkki.adurom.net> (sfid-20130909_220105_685476_1F91499F)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Smatch reports the following:
-  CHECK   drivers/net/wireless/rtlwifi/pci.c
-drivers/net/wireless/rtlwifi/pci.c:739 _rtl_pci_rx_interrupt() warn: assigning (-98) to unsigned variable 'stats.noise'
+Eugene Krasnikov <k.eugene.e@gmail.com> writes:
 
-This variable is not used and is removed.
+> There is a problem with regulatory part of cfg80211 when cfg80211 is
+> built-in the kernel. On regulatory init cfg80211 will try to notify
+> user space about changing current domain to world regulatory but at
+> that time user space is not up and running yet and uevent message will
+> be lost. So what will happen is that cfg80211 will wait for the
+> response from user space and all requests to set current regulatory
+> will be dropped with the following error: “Pending regulatory request,
+> waiting for it to be processed...”.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/pci.c | 1 -
- 1 file changed, 1 deletion(-)
+Does CONFIG_CFG80211_INTERNAL_REGDB help?
 
-diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
-index 703f839..6295ed2 100644
---- a/drivers/net/wireless/rtlwifi/pci.c
-+++ b/drivers/net/wireless/rtlwifi/pci.c
-@@ -736,7 +736,6 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
- 
- 	struct rtl_stats stats = {
- 		.signal = 0,
--		.noise = -98,
- 		.rate = 0,
- 	};
- 	int index = rtlpci->rx_ring[rx_queue_idx].idx;
 -- 
-1.8.1.4
-
+Kalle Valo
