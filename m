@@ -1,74 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:39302 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754195Ab3ITL10 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Sep 2013 07:27:26 -0400
-In-Reply-To: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-From: Russell King <rmk+kernel@arm.linux.org.uk>
-To: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
-	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
-	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
-	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	uclinux-dist-devel@blackfin.uclinux.org
-Cc: Sathya Perla <sathya.perla@emulex.com>,
-	Subbu Seetharaman <subbu.seetharaman@emulex.com>,
-	Ajit Khaparde <ajit.khaparde@emulex.com>
-Subject: [PATCH 11/51] DMA-API: net: emulex/benet: replace
- dma_set_mask()+dma_set_coherent_mask() with new
- helper
-Message-Id: <E1VMltI-0007gK-2r@rmk-PC.arm.linux.org.uk> (sfid-20130920_132736_604835_5BE8BE2F)
-Date: Thu, 19 Sep 2013 22:36:00 +0100
+Received: from mx1.redhat.com ([209.132.183.28]:53335 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751814Ab3IIKgv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Sep 2013 06:36:51 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: users@rt2x00.serialmonkey.com
+Subject: [PATCH 2/2] rt2800: comment enable radio initialization sequence
+Date: Mon,  9 Sep 2013 12:37:38 +0200
+Message-Id: <1378723058-7858-2-git-send-email-sgruszka@redhat.com> (sfid-20130909_123654_890973_F7CE13EA)
+In-Reply-To: <1378723058-7858-1-git-send-email-sgruszka@redhat.com>
+References: <1378723058-7858-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replace the following sequence:
-
-	dma_set_mask(dev, mask);
-	dma_set_coherent_mask(dev, mask);
-
-with a call to the new helper dma_set_mask_and_coherent().
-
-Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/ethernet/emulex/benet/be_main.c |   12 ++----------
- 1 files changed, 2 insertions(+), 10 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800lib.c | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/ethernet/emulex/benet/be_main.c b/drivers/net/ethernet/emulex/benet/be_main.c
-index 3224d28..2084151 100644
---- a/drivers/net/ethernet/emulex/benet/be_main.c
-+++ b/drivers/net/ethernet/emulex/benet/be_main.c
-@@ -4335,19 +4335,11 @@ static int be_probe(struct pci_dev *pdev, const struct pci_device_id *pdev_id)
- 	adapter->netdev = netdev;
- 	SET_NETDEV_DEV(netdev, &pdev->dev);
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 8f6820a..959f94f 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -6625,17 +6625,20 @@ int rt2800_enable_radio(struct rt2x00_dev *rt2x00dev)
+ 	u16 word;
  
--	status = dma_set_mask(&pdev->dev, DMA_BIT_MASK(64));
-+	status = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
- 	if (!status) {
--		status = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(64));
--		if (status < 0) {
--			dev_err(&pdev->dev, "dma_set_coherent_mask failed\n");
--			goto free_netdev;
--		}
- 		netdev->features |= NETIF_F_HIGHDMA;
- 	} else {
--		status = dma_set_mask(&pdev->dev, DMA_BIT_MASK(32));
--		if (!status)
--			status = dma_set_coherent_mask(&pdev->dev,
--						       DMA_BIT_MASK(32));
-+		status = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
- 		if (status) {
- 			dev_err(&pdev->dev, "Could not set PCI DMA Mask\n");
- 			goto free_netdev;
+ 	/*
+-	 * Initialize all registers.
++	 * Initialize MAC registers.
+ 	 */
+ 	if (unlikely(rt2800_wait_wpdma_ready(rt2x00dev) ||
+ 		     rt2800_init_registers(rt2x00dev)))
+ 		return -EIO;
+ 
++	/*
++	 * Wait BBP/RF to wake up.
++	 */
+ 	if (unlikely(rt2800_wait_bbp_rf_ready(rt2x00dev)))
+ 		return -EIO;
+ 
+ 	/*
+-	 * Send signal to firmware during boot time.
++	 * Send signal during boot time to initialize firmware.
+ 	 */
+ 	rt2800_register_write(rt2x00dev, H2M_BBP_AGENT, 0);
+ 	rt2800_register_write(rt2x00dev, H2M_MAILBOX_CSR, 0);
+@@ -6644,9 +6647,15 @@ int rt2800_enable_radio(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_mcu_request(rt2x00dev, MCU_BOOT_SIGNAL, 0, 0, 0);
+ 	msleep(1);
+ 
++	/*
++	 * Make sure BBP is up and running.
++	 */
+ 	if (unlikely(rt2800_wait_bbp_ready(rt2x00dev)))
+ 		return -EIO;
+ 
++	/*
++	 * Initialize BBP/RF registers.
++	 */
+ 	rt2800_init_bbp(rt2x00dev);
+ 	rt2800_init_rfcsr(rt2x00dev);
+ 
 -- 
-1.7.4.4
+1.7.11.7
 
