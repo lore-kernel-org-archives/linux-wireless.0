@@ -1,100 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0117.hostedemail.com ([216.40.44.117]:49898 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751384Ab3IYTht (ORCPT
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:46203 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751822Ab3IIJZL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Sep 2013 15:37:49 -0400
-From: Joe Perches <joe@perches.com>
-To: netdev@vger.kernel.org
-Cc: "David S. Miller" <davem@davemloft.net>,
-	linux-kernel@vger.kernel.org, wimax@linuxwimax.org,
-	ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org, brcm80211-dev-list@broadcom.com
-Subject: [PATCH 00/11 - GIT PULL] drivers: net: Last block of Remove extern from function prototypes
-Date: Wed, 25 Sep 2013 12:37:18 -0700
-Message-Id: <cover.1380137609.git.joe@perches.com> (sfid-20130925_224501_172498_C9EFC0F0)
+	Mon, 9 Sep 2013 05:25:11 -0400
+Received: by mail-wi0-f181.google.com with SMTP id ex4so990540wid.14
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Sep 2013 02:25:10 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <luca@coelho.fi>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 13/13] wlcore: save last regdom configuration on stop
+Date: Mon,  9 Sep 2013 12:24:44 +0300
+Message-Id: <1378718684-14430-13-git-send-email-eliad@wizery.com> (sfid-20130909_114831_214280_B3FE9EA2)
+In-Reply-To: <1378718684-14430-1-git-send-email-eliad@wizery.com>
+References: <1378718684-14430-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The following changes since commit 294da3abaa73a0b69fd54e442b0b5bd9455b7be6:
+In order to reconfigure the correct reg domain on
+recovery, we have to save the current configuration
+before clearing it (wl->reg_ch_conf_pending is
+considered before configuring a new regdomain).
 
-  irda: Remove extern from function prototypes (2013-09-24 12:54:17 -0700)
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/ti/wlcore/main.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-are available in the git repository at:
-
-  git://repo.or.cz/linux-2.6/trivial-mods.git 20130925_dn_externs_3
-
-for you to fetch changes up to a958df5dc3065ce517726dc54087639e13ffee8f:
-
-  rtlwifi: Remove extern from function prototypes (2013-09-24 18:06:51 -0700)
-
-----------------------------------------------------------------
-Joe Perches (11):
-  vmxnet3: Remove extern from function prototypes
-  wan: Remove extern from function prototypes
-  wimax: Remove extern from function prototypes
-  ath: Remove extern from function prototypes
-  brcm80211: Remove extern from function prototypes
-  ipw2x00: Remove extern from function prototypes
-  iwlegacy: Remove extern from function prototypes
-  iwlwifi: Remove extern from function prototypes
-  mwifiex: Remove extern from function prototypes
-  orinoco: Remove extern from function prototypes
-  rtlwifi: Remove extern from function prototypes
-
- drivers/net/vmxnet3/vmxnet3_int.h                  |   4 +-
- drivers/net/wan/x25_asy.h                          |   2 +-
- drivers/net/wan/z85230.h                           |  27 +-
- drivers/net/wimax/i2400m/i2400m-usb.h              |  27 +-
- drivers/net/wimax/i2400m/i2400m.h                  | 117 ++++---
- drivers/net/wireless/ath/ath10k/debug.h            |   8 +-
- drivers/net/wireless/ath/ath6kl/common.h           |   3 +-
- drivers/net/wireless/ath/ath6kl/debug.h            |   9 +-
- drivers/net/wireless/ath/ath9k/ath9k.h             |   2 +-
- drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |  30 +-
- drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h  |  27 +-
- .../net/wireless/brcm80211/brcmfmac/dhd_proto.h    |  12 +-
- .../net/wireless/brcm80211/brcmfmac/sdio_chip.h    |  23 +-
- .../net/wireless/brcm80211/brcmfmac/sdio_host.h    |  92 +++--
- drivers/net/wireless/brcm80211/brcmsmac/aiutils.h  |  18 +-
- drivers/net/wireless/brcm80211/brcmsmac/ampdu.h    |  22 +-
- drivers/net/wireless/brcm80211/brcmsmac/antsel.h   |  14 +-
- drivers/net/wireless/brcm80211/brcmsmac/channel.h  |  20 +-
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.h  |  38 +--
- drivers/net/wireless/brcm80211/brcmsmac/main.h     | 110 +++---
- .../net/wireless/brcm80211/brcmsmac/phy/phy_hal.h  | 219 ++++++------
- .../net/wireless/brcm80211/brcmsmac/phy/phy_int.h  | 371 ++++++++++-----------
- drivers/net/wireless/brcm80211/brcmsmac/phy_shim.h |  91 +++--
- drivers/net/wireless/brcm80211/brcmsmac/pmu.h      |   4 +-
- drivers/net/wireless/brcm80211/brcmsmac/pub.h      | 145 ++++----
- drivers/net/wireless/brcm80211/brcmsmac/rate.h     |  48 ++-
- drivers/net/wireless/brcm80211/brcmsmac/stf.h      |  31 +-
- .../net/wireless/brcm80211/brcmsmac/ucode_loader.h |  16 +-
- drivers/net/wireless/brcm80211/include/brcmu_d11.h |   2 +-
- .../net/wireless/brcm80211/include/brcmu_utils.h   |  44 ++-
- drivers/net/wireless/ipw2x00/libipw.h              |  87 +++--
- drivers/net/wireless/iwlegacy/3945.h               |  82 +++--
- drivers/net/wireless/iwlegacy/4965.h               |   2 +-
- drivers/net/wireless/iwlegacy/common.h             |  66 ++--
- drivers/net/wireless/iwlwifi/dvm/agn.h             |   2 +-
- drivers/net/wireless/iwlwifi/dvm/dev.h             |   2 +-
- drivers/net/wireless/iwlwifi/dvm/rs.h              |   8 +-
- drivers/net/wireless/iwlwifi/mvm/rs.h              |   9 +-
- drivers/net/wireless/mwifiex/wmm.h                 |  24 +-
- drivers/net/wireless/orinoco/orinoco.h             |  31 +-
- drivers/net/wireless/rtlwifi/cam.h                 |  10 +-
- drivers/net/wireless/rtlwifi/efuse.h               |  29 +-
- drivers/net/wireless/rtlwifi/rtl8188ee/phy.h       |  49 ++-
- drivers/net/wireless/rtlwifi/rtl8192ce/phy.h       |  54 ++-
- drivers/net/wireless/rtlwifi/rtl8192ce/rf.h        |  13 +-
- drivers/net/wireless/rtlwifi/rtl8192cu/rf.h        |  13 +-
- drivers/net/wireless/rtlwifi/rtl8192de/hw.h        |   7 +-
- drivers/net/wireless/rtlwifi/rtl8192de/phy.h       |  44 ++-
- drivers/net/wireless/rtlwifi/rtl8192de/rf.h        |  18 +-
- drivers/net/wireless/rtlwifi/rtl8723ae/phy.h       |  61 ++--
- drivers/net/wireless/rtlwifi/rtl8723ae/rf.h        |  13 +-
- 51 files changed, 1026 insertions(+), 1174 deletions(-)
-
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index acb3502..657b9eb 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -1950,8 +1950,10 @@ static void wlcore_op_stop_locked(struct wl1271 *wl)
+ 
+ 	/*
+ 	 * FW channels must be re-calibrated after recovery,
+-	 * clear the last Reg-Domain channel configuration.
++	 * save current Reg-Domain channel configuration and clear it.
+ 	 */
++	memcpy(wl->reg_ch_conf_pending, wl->reg_ch_conf_last,
++	       sizeof(wl->reg_ch_conf_pending));
+ 	memset(wl->reg_ch_conf_last, 0, sizeof(wl->reg_ch_conf_last));
+ }
+ 
 -- 
-1.8.1.2.459.gbcd45b4.dirty
+1.8.3.rc1.35.g9b79519
 
