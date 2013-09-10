@@ -1,190 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:48821 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753328Ab3I0QzE (ORCPT
+Received: from mail-ob0-f178.google.com ([209.85.214.178]:41972 "EHLO
+	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751911Ab3IJOeW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Sep 2013 12:55:04 -0400
-Subject: [PATCH v3 2/3] ath10k: store separate pointers for firmware data
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 27 Sep 2013 19:55:01 +0300
-Message-ID: <20130927165501.2570.1569.stgit@localhost6.localdomain6> (sfid-20130927_185507_370756_C2C88403)
-In-Reply-To: <20130927164636.2570.24076.stgit@localhost6.localdomain6>
-References: <20130927164636.2570.24076.stgit@localhost6.localdomain6>
+	Tue, 10 Sep 2013 10:34:22 -0400
+Received: by mail-ob0-f178.google.com with SMTP id ef5so7321337obb.9
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Sep 2013 07:34:21 -0700 (PDT)
+Message-ID: <522F2DEB.1090903@lwfinger.net> (sfid-20130910_163425_463998_5DB10A3D)
+Date: Tue, 10 Sep 2013 09:34:19 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Jingoo Han <jg1.han@samsung.com>
+CC: "'John W. Linville'" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	'Chaoming Li' <chaoming_li@realsil.com.cn>
+Subject: Re: [PATCH 02/12] wireless: rtlwifi: remove unnecessary pci_set_drvdata()
+References: <00b101ceae16$ecb87c30$c6297490$%han@samsung.com> <00b301ceae17$7f417480$7dc45d80$%han@samsung.com>
+In-Reply-To: <00b301ceae17$7f417480$7dc45d80$%han@samsung.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Needed for firmware IE formatted images.
+On 09/10/2013 06:18 AM, Jingoo Han wrote:
+> The driver core clears the driver data to NULL after device_release
+> or on probe failure. Thus, it is not needed to manually clear the
+> device driver data to NULL.
+>
+> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+> ---
+>   drivers/net/wireless/rtlwifi/pci.c |    3 ---
+>   1 file changed, 3 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
+> index 703f839..2b6d3e0 100644
+> --- a/drivers/net/wireless/rtlwifi/pci.c
+> +++ b/drivers/net/wireless/rtlwifi/pci.c
+> @@ -2009,7 +2009,6 @@ fail2:
+>   fail1:
+>   	if (hw)
+>   		ieee80211_free_hw(hw);
+> -	pci_set_drvdata(pdev, NULL);
+>   	pci_disable_device(pdev);
+>
+>   	return err;
+> @@ -2064,8 +2063,6 @@ void rtl_pci_disconnect(struct pci_dev *pdev)
+>
+>   	rtl_pci_disable_aspm(hw);
+>
+> -	pci_set_drvdata(pdev, NULL);
+> -
+>   	ieee80211_free_hw(hw);
+>   }
+>   EXPORT_SYMBOL(rtl_pci_disconnect);
+>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c |   43 ++++++++++++++++++++++----------
- drivers/net/wireless/ath/ath10k/core.h |    8 ++++++
- 2 files changed, 37 insertions(+), 14 deletions(-)
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index e07c487..6a354f7 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -189,8 +189,7 @@ static const struct firmware *ath10k_fetch_fw_file(struct ath10k *ar,
- 	return fw;
- }
- 
--static int ath10k_push_board_ext_data(struct ath10k *ar,
--				      const struct firmware *fw)
-+static int ath10k_push_board_ext_data(struct ath10k *ar)
- {
- 	u32 board_data_size = QCA988X_BOARD_DATA_SZ;
- 	u32 board_ext_data_size = QCA988X_BOARD_EXT_DATA_SZ;
-@@ -210,14 +209,14 @@ static int ath10k_push_board_ext_data(struct ath10k *ar,
- 	if (board_ext_data_addr == 0)
- 		return 0;
- 
--	if (fw->size != (board_data_size + board_ext_data_size)) {
-+	if (ar->board_len != (board_data_size + board_ext_data_size)) {
- 		ath10k_err("invalid board (ext) data sizes %zu != %d+%d\n",
--			   fw->size, board_data_size, board_ext_data_size);
-+			   ar->board_len, board_data_size, board_ext_data_size);
- 		return -EINVAL;
- 	}
- 
- 	ret = ath10k_bmi_write_memory(ar, board_ext_data_addr,
--				      fw->data + board_data_size,
-+				      ar->board_data + board_data_size,
- 				      board_ext_data_size);
- 	if (ret) {
- 		ath10k_err("could not write board ext data (%d)\n", ret);
-@@ -236,12 +235,11 @@ static int ath10k_push_board_ext_data(struct ath10k *ar,
- 
- static int ath10k_download_board_data(struct ath10k *ar)
- {
--	const struct firmware *fw = ar->board;
- 	u32 board_data_size = QCA988X_BOARD_DATA_SZ;
- 	u32 address;
- 	int ret;
- 
--	ret = ath10k_push_board_ext_data(ar, fw);
-+	ret = ath10k_push_board_ext_data(ar);
- 	if (ret) {
- 		ath10k_err("could not push board ext data (%d)\n", ret);
- 		goto exit;
-@@ -253,8 +251,9 @@ static int ath10k_download_board_data(struct ath10k *ar)
- 		goto exit;
- 	}
- 
--	ret = ath10k_bmi_write_memory(ar, address, fw->data,
--				      min_t(u32, board_data_size, fw->size));
-+	ret = ath10k_bmi_write_memory(ar, address, ar->board_data,
-+				      min_t(u32, board_data_size,
-+					    ar->board_len));
- 	if (ret) {
- 		ath10k_err("could not write board data (%d)\n", ret);
- 		goto exit;
-@@ -272,17 +271,16 @@ exit:
- 
- static int ath10k_download_and_run_otp(struct ath10k *ar)
- {
--	const struct firmware *fw = ar->otp;
- 	u32 address = ar->hw_params.patch_load_addr;
- 	u32 exec_param;
- 	int ret;
- 
- 	/* OTP is optional */
- 
--	if (!ar->otp)
-+	if (!ar->otp_data || !ar->otp_len)
- 		return 0;
- 
--	ret = ath10k_bmi_fast_download(ar, address, fw->data, fw->size);
-+	ret = ath10k_bmi_fast_download(ar, address, ar->otp_data, ar->otp_len);
- 	if (ret) {
- 		ath10k_err("could not write otp (%d)\n", ret);
- 		goto exit;
-@@ -301,13 +299,13 @@ exit:
- 
- static int ath10k_download_fw(struct ath10k *ar)
- {
--	const struct firmware *fw = ar->firmware;
- 	u32 address;
- 	int ret;
- 
- 	address = ar->hw_params.patch_load_addr;
- 
--	ret = ath10k_bmi_fast_download(ar, address, fw->data, fw->size);
-+	ret = ath10k_bmi_fast_download(ar, address, ar->firmware_data,
-+				       ar->firmware_len);
- 	if (ret) {
- 		ath10k_err("could not write fw (%d)\n", ret);
- 		goto exit;
-@@ -329,8 +327,16 @@ static void ath10k_core_free_firmware_files(struct ath10k *ar)
- 		release_firmware(ar->firmware);
- 
- 	ar->board = NULL;
-+	ar->board_data = NULL;
-+	ar->board_len = 0;
-+
- 	ar->otp = NULL;
-+	ar->otp_data = NULL;
-+	ar->otp_len = 0;
-+
- 	ar->firmware = NULL;
-+	ar->firmware_data = NULL;
-+	ar->firmware_len = 0;
- }
- 
- static int ath10k_core_fetch_firmware_files(struct ath10k *ar)
-@@ -356,6 +362,9 @@ static int ath10k_core_fetch_firmware_files(struct ath10k *ar)
- 		goto err;
- 	}
- 
-+	ar->board_data = ar->board->data;
-+	ar->board_len = ar->board->size;
-+
- 	ar->firmware = ath10k_fetch_fw_file(ar,
- 					    ar->hw_params.fw.dir,
- 					    ar->hw_params.fw.fw);
-@@ -365,6 +374,9 @@ static int ath10k_core_fetch_firmware_files(struct ath10k *ar)
- 		goto err;
- 	}
- 
-+	ar->firmware_data = ar->firmware->data;
-+	ar->firmware_len = ar->firmware->size;
-+
- 	/* OTP may be undefined. If so, don't fetch it at all */
- 	if (ar->hw_params.fw.otp == NULL)
- 		return 0;
-@@ -378,6 +390,9 @@ static int ath10k_core_fetch_firmware_files(struct ath10k *ar)
- 		goto err;
- 	}
- 
-+	ar->otp_data = ar->otp->data;
-+	ar->otp_len = ar->otp->size;
-+
- 	return 0;
- 
- err:
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 12b03b6..511b20d 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -325,8 +325,16 @@ struct ath10k {
- 	} hw_params;
- 
- 	const struct firmware *board;
-+	const void *board_data;
-+	size_t board_len;
-+
- 	const struct firmware *otp;
-+	const void *otp_data;
-+	size_t otp_len;
-+
- 	const struct firmware *firmware;
-+	const void *firmware_data;
-+	size_t firmware_len;
- 
- 	struct {
- 		struct completion started;
+Thanks,
+
+Larry
 
