@@ -1,44 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxsystems.it ([2.119.245.41]:50089 "EHLO
-	mail.linuxsystems.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752787Ab3IOUlc (ORCPT
+Received: from mailout1.samsung.com ([203.254.224.24]:58782 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751069Ab3IJLZR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Sep 2013 16:41:32 -0400
-Message-ID: <523619A8.7000702@linuxsystems.it> (sfid-20130915_224145_496586_8AF6A7F0)
-Date: Sun, 15 Sep 2013 22:33:44 +0200
-From: =?ISO-8859-15?Q?Niccol=F2_Belli?= <darkbasic@linuxsystems.it>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-CC: ilw@linux.intel.com
-Subject: iwlwifi (5100 AGN) AP mode (experimental?)
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+	Tue, 10 Sep 2013 07:25:17 -0400
+Received: from epcpsbgr1.samsung.com
+ (u141.gpu120.samsung.co.kr [203.254.230.141])
+ by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MSW004KIQE07GJ0@mailout1.samsung.com> for
+ linux-wireless@vger.kernel.org; Tue, 10 Sep 2013 20:25:12 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: "'John W. Linville'" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>,
+	'Kalle Valo' <kvalo@qca.qualcomm.com>,
+	ath10k@lists.infradead.org
+References: <00b101ceae16$ecb87c30$c6297490$%han@samsung.com>
+In-reply-to: <00b101ceae16$ecb87c30$c6297490$%han@samsung.com>
+Subject: [PATCH 06/12] wireless: ath10k: remove unnecessary pci_set_drvdata()
+Date: Tue, 10 Sep 2013 20:25:11 +0900
+Message-id: <00b701ceae18$69cd1860$3d674920$%han@samsung.com> (sfid-20130910_132521_166715_8EBBCAAF)
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-I read[1] iwlwifi should have experimental support for AP mode.
+The driver core clears the driver data to NULL after device_release
+or on probe failure. Thus, it is not needed to manually clear the
+device driver data to NULL.
 
-Unfortunately ap mode isn't listed:
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c |    2 --
+ 1 file changed, 2 deletions(-)
 
-laptop ~ # iw list | grep -i ap
-                 Capabilities: 0x1072
-                 Capabilities: 0x1072
-                  * start_ap
-                  * set_noack_map
-                  * AP: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70 0x80 
-0x90 0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
-                  * AP/VLAN: 0x00 0x10 0x20 0x30 0x40 0x50 0x60 0x70 
-0x80 0x90 0xa0 0xb0 0xc0 0xd0 0xe0 0xf0
-                  * AP: 0x00 0x20 0x40 0xa0 0xb0 0xc0 0xd0
-                  * AP/VLAN: 0x00 0x20 0x40 0xa0 0xb0 0xc0 0xd0
-         HT Capability overrides:
-
-Do I need a special firmware/kernel version? I'm using 3.11.0 and 
-linux-firmware-20130728.
-
-Thanks,
-Niccolò
-
-[1]http://wireless.kernel.org/en/users/Drivers/iwlwifi
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index e2f9ef5..5ef0422 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -2414,7 +2414,6 @@ err_region:
+ err_device:
+ 	pci_disable_device(pdev);
+ err_ar:
+-	pci_set_drvdata(pdev, NULL);
+ 	ath10k_core_destroy(ar);
+ err_ar_pci:
+ 	/* call HIF PCI free here */
+@@ -2442,7 +2441,6 @@ static void ath10k_pci_remove(struct pci_dev *pdev)
+ 
+ 	ath10k_core_unregister(ar);
+ 
+-	pci_set_drvdata(pdev, NULL);
+ 	pci_iounmap(pdev, ar_pci->mem);
+ 	pci_release_region(pdev, BAR_NUM);
+ 	pci_clear_master(pdev);
 -- 
-http://www.linuxsystems.it
+1.7.10.4
+
+
