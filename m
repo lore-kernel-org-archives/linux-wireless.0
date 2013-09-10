@@ -1,48 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:50711 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759773Ab3ICMZO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Sep 2013 08:25:14 -0400
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Bartosz Markowski <bartosz.markowski@tieto.com>
-Subject: [PATCH 2/2] ath10k: remove obsolete INIT STATUS definitions
-Date: Tue, 3 Sep 2013 14:24:03 +0200
-Message-ID: <1378211043-20299-2-git-send-email-bartosz.markowski@tieto.com> (sfid-20130903_142520_945919_55DA8391)
-In-Reply-To: <1378211043-20299-1-git-send-email-bartosz.markowski@tieto.com>
-References: <1378211043-20299-1-git-send-email-bartosz.markowski@tieto.com>
+Received: from mail.candelatech.com ([208.74.158.172]:45275 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751481Ab3IJPtG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Sep 2013 11:49:06 -0400
+Message-ID: <522F3F6B.2070203@candelatech.com> (sfid-20130910_174911_172109_678728DF)
+Date: Tue, 10 Sep 2013 08:48:59 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Sujith Manoharan <sujith@msujith.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>
+Subject: Re: Always send management frames at MCS-0??
+References: <522E1D31.2090403@candelatech.com> <21038.54250.912310.332354@gargle.gargle.HOWL>
+In-Reply-To: <21038.54250.912310.332354@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There's no functional changes. Just a small cleanup.
+On 09/10/2013 01:10 AM, Sujith Manoharan wrote:
+> Ben Greear wrote:
+>> I had a user request that we support always sending management frames
+>> (such as EAPOL) at the lowest rate.  Evidently, other equipment does this,
+>> where as normal-ish supplicant/linux tends to send them at much higher
+>> rates.
+>>
+>> Any suggestions on how to go about doing this properly?
+>
+> If this is with ath9k_rate_control, then it is a known bug:
+> https://bugzilla.redhat.com/show_bug.cgi?id=927191
 
-Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
----
- drivers/net/wireless/ath/ath10k/wmi.h |    8 --------
- 1 file changed, 8 deletions(-)
+I'm not using ath9k rate control in this case, and at least most messages
+get through fine.  We didn't actually see any obvious improvement when forcing
+everything to 6Mbps, but since my user was asking, I wanted to run the
+idea past the list.
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 08860c4..40fcf05 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -763,14 +763,6 @@ struct wmi_service_ready_event {
- 	struct wlan_host_mem_req mem_reqs[1];
- } __packed;
- 
--/*
-- * status consists of  upper 16 bits fo int status and lower 16 bits of
-- * module ID that retuned status
-- */
--#define WLAN_INIT_STATUS_SUCCESS   0x0
--#define WLAN_GET_INIT_STATUS_REASON(status)    ((status) & 0xffff)
--#define WLAN_GET_INIT_STATUS_MODULE_ID(status) (((status) >> 16) & 0xffff)
--
- #define WMI_SERVICE_READY_TIMEOUT_HZ (5*HZ)
- #define WMI_UNIFIED_READY_TIMEOUT_HZ (5*HZ)
- 
+Rate control is not perfect, and on initial bringup it doesn't have
+many packets to work with so I thought it might still be useful to allow
+users to specify a particular rate for EAPOL packets.  Maybe using
+a socket ioctl so user-space (ie, supplicant/hostapd) can control it,
+for example.
+
+Thanks,
+Ben
+
 -- 
-1.7.10
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
