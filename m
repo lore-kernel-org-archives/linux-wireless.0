@@ -1,73 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:50369 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754201Ab3IJHTT (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:63711 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751243Ab3IJV4p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Sep 2013 03:19:19 -0400
-Message-ID: <1378797585.4799.54.camel@porter.coelho.fi> (sfid-20130910_091923_833030_44B486DA)
-Subject: Re: [PATCH 07/12] wlcore: cleanup scan debug prints
-From: Luca Coelho <luca@coelho.fi>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 10 Sep 2013 10:19:45 +0300
-In-Reply-To: <1378218848-7853-7-git-send-email-eliad@wizery.com>
-References: <1378218848-7853-1-git-send-email-eliad@wizery.com>
-	 <1378218848-7853-7-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 10 Sep 2013 17:56:45 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Jingoo Han <jg1.han@samsung.com>
+CC: "'John W. Linville'" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH 06/12] wireless: ath10k: remove unnecessary pci_set_drvdata()
+References: <00b101ceae16$ecb87c30$c6297490$%han@samsung.com>
+	<00b701ceae18$69cd1860$3d674920$%han@samsung.com>
+Date: Wed, 11 Sep 2013 00:56:35 +0300
+In-Reply-To: <00b701ceae18$69cd1860$3d674920$%han@samsung.com> (Jingoo Han's
+	message of "Tue, 10 Sep 2013 20:25:11 +0900")
+Message-ID: <87zjrkibn0.fsf@kamboji.qca.qualcomm.com> (sfid-20130910_235648_920758_8E45DD4B)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-09-03 at 17:34 +0300, Eliad Peller wrote:
-> From: Victor Goldenshtein <victorg@ti.com>
-> 
-> Remove scan debug dumps which are rarely used.
-> Make scan debug prints more clear and short.
-> 
-> Signed-off-by: Victor Goldenshtein <victorg@ti.com>
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> ---
+Jingoo Han <jg1.han@samsung.com> writes:
 
-This is fine, these dumps were used when the firmware scan APIs were
-changing all the time and we were having lots of problems following it.
-It can be removed now to reduce excessive output.
+> The driver core clears the driver data to NULL after device_release
+> or on probe failure. Thus, it is not needed to manually clear the
+> device driver data to NULL.
+>
+> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
 
-Some nitpicks below.
+Thanks, look good. Do you want me to apply this to my ath.git tree or
+are you planning to send this via some other route?
 
-[...]
-> diff --git a/drivers/net/wireless/ti/wlcore/scan.c b/drivers/net/wireless/ti/wlcore/scan.c
-> index f407101..bbe0bc4 100644
-> --- a/drivers/net/wireless/ti/wlcore/scan.c
-> +++ b/drivers/net/wireless/ti/wlcore/scan.c
-> @@ -174,17 +174,7 @@ wlcore_scan_get_channels(struct wl1271 *wl,
->  		    /* if radar is set, we ignore the passive flag */
->  		    (radar ||
->  		     !!(flags & IEEE80211_CHAN_PASSIVE_SCAN) == passive)) {
-> -			wl1271_debug(DEBUG_SCAN, "band %d, center_freq %d ",
-> -				     req_channels[i]->band,
-> -				     req_channels[i]->center_freq);
-> -			wl1271_debug(DEBUG_SCAN, "hw_value %d, flags %X",
-> -				     req_channels[i]->hw_value,
-> -				     req_channels[i]->flags);
-> -			wl1271_debug(DEBUG_SCAN, "max_power %d",
-> -				     req_channels[i]->max_power);
-> -			wl1271_debug(DEBUG_SCAN, "min_dwell_time %d max dwell time %d",
-> -				     min_dwell_time_active,
-> -				     max_dwell_time_active);
-> +
->  
-
-Unnecessary extra line here.
-
-[...]
-> @@ -222,6 +212,18 @@ wlcore_scan_get_channels(struct wl1271 *wl,
->  					     *n_pactive_ch);
->  			}
->  
-> +			wl1271_debug(DEBUG_SCAN, "freq %04d, ch. %03d, flags 0x%02X, power %02d, min/max_dwell %02d/%02d%s%s",
-
-Left-padding with zeros is quite ugly with the decimals here.
-
---
-Luca.
-
+-- 
+Kalle Valo
