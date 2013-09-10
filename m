@@ -1,85 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f169.google.com ([209.85.214.169]:40210 "EHLO
-	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754459Ab3IYR6M (ORCPT
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:44445 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753611Ab3IJG2G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Sep 2013 13:58:12 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH 4/8 V4] rtlwifi: rtl8192_common: Fix smatch errors and warnings in rtl8192c/dm_common.c
-Date: Wed, 25 Sep 2013 12:57:45 -0500
-Message-Id: <1380131869-19185-5-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130925_221659_413871_604C04E1)
-In-Reply-To: <1380131869-19185-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1380131869-19185-1-git-send-email-Larry.Finger@lwfinger.net>
+	Tue, 10 Sep 2013 02:28:06 -0400
+Message-ID: <1378794508.4799.33.camel@porter.coelho.fi> (sfid-20130910_082813_678862_C5811AEA)
+Subject: Re: Linux Wireless Mini-Summit in New Orleans -- 19-20 September
+From: Luca Coelho <luca@coelho.fi>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net, marcel@holtmann.org,
+	Samuel Ortiz <samuel@sortiz.org>,
+	Gustavo Padovan <gustavo@padovan.org>,
+	linux-bluetooth@vger.kernel.org, linux-nfc@ml01.01.org
+Date: Tue, 10 Sep 2013 09:28:28 +0300
+In-Reply-To: <20130909192346.GC1955@tuxdriver.com>
+References: <20130808185410.GD30925@tuxdriver.com>
+	 <20130808190428.GF30925@tuxdriver.com>
+	 <20130905133907.GE1947@tuxdriver.com>
+	 <1378397092.3580.21.camel@dcbw.foobar.com>
+	 <20130909192346.GC1955@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Smatch lists the following:
-  CHECK   drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c:551 rtl92c_dm_pwdb_monitor() info: ignoring unreachable code.
-drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c:551 rtl92c_dm_pwdb_monitor() info: ignoring unreachable code.
-drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c:870 rtl92c_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'txpwr_level' 2 <= 2
-drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c:870 rtl92c_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'txpwr_level' 2 <= 2
-drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c:882 rtl92c_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'txpwr_level' 2 <= 2
-drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c:883 rtl92c_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'txpwr_level' 2 <= 2
-drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c:891 rtl92c_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'txpwr_level' 2 <= 2
-drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c:892 rtl92c_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'txpwr_level' 2 <= 2
+Hi John,
 
-The unreachable code message is fixed by deleting the code that follows a return.
+On Mon, 2013-09-09 at 15:23 -0400, John W. Linville wrote:
+> Arend, Kalle, Johannes, Luca, etc -- anyone want to talk about driver
+> developments and/or issues between drivers and mac80211 or other
+> parts of the stack?
 
-The errors are fixed by increasing the size of txpwr_level.
+Unfortunately I didn't get "sponsorship" to join the summit this year.
+Second one (for different reasons) that I'll miss in a row.  Hopefully
+next time I'll be there.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c | 25 +----------------------
- 1 file changed, 1 insertion(+), 24 deletions(-)
+Have fun! :)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-index d2d57a2..e9caa5d 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-@@ -541,29 +541,6 @@ EXPORT_SYMBOL(rtl92c_dm_write_dig);
- 
- static void rtl92c_dm_pwdb_monitor(struct ieee80211_hw *hw)
- {
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	long tmpentry_max_pwdb = 0, tmpentry_min_pwdb = 0xff;
--
--	u8 h2c_parameter[3] = { 0 };
--
--	return;
--
--	if (tmpentry_max_pwdb != 0) {
--		rtlpriv->dm.entry_max_undec_sm_pwdb = tmpentry_max_pwdb;
--	} else {
--		rtlpriv->dm.entry_max_undec_sm_pwdb = 0;
--	}
--
--	if (tmpentry_min_pwdb != 0xff) {
--		rtlpriv->dm.entry_min_undec_sm_pwdb = tmpentry_min_pwdb;
--	} else {
--		rtlpriv->dm.entry_min_undec_sm_pwdb = 0;
--	}
--
--	h2c_parameter[2] = (u8) (rtlpriv->dm.undec_sm_pwdb & 0xFF);
--	h2c_parameter[0] = 0;
--
--	rtl92c_fill_h2c_cmd(hw, H2C_RSSI_REPORT, 3, h2c_parameter);
- }
- 
- void rtl92c_dm_init_edca_turbo(struct ieee80211_hw *hw)
-@@ -673,7 +650,7 @@ static void rtl92c_dm_txpower_tracking_callback_thermalmeter(struct ieee80211_hw
- 	s8 cck_index = 0;
- 	int i;
- 	bool is2t = IS_92C_SERIAL(rtlhal->version);
--	s8 txpwr_level[2] = {0, 0};
-+	s8 txpwr_level[3] = {0, 0, 0};
- 	u8 ofdm_min_index = 6, rf;
- 
- 	rtlpriv->dm.txpower_trackinginit = true;
--- 
-1.8.1.4
+--
+Cheers,
+Luca.
 
