@@ -1,61 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f47.google.com ([209.85.219.47]:33720 "EHLO
-	mail-oa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751079Ab3IMRXA (ORCPT
+Received: from mail-la0-f52.google.com ([209.85.215.52]:51560 "EHLO
+	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751383Ab3IJLac (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Sep 2013 13:23:00 -0400
-Received: by mail-oa0-f47.google.com with SMTP id g12so1446056oah.34
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Sep 2013 10:22:59 -0700 (PDT)
-Message-ID: <523349F2.2000702@lwfinger.net> (sfid-20130913_192304_101960_CFA53BD4)
-Date: Fri, 13 Sep 2013 12:22:58 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 10 Sep 2013 07:30:32 -0400
+Received: by mail-la0-f52.google.com with SMTP id ev20so5981771lab.39
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Sep 2013 04:30:31 -0700 (PDT)
 MIME-Version: 1.0
-To: Albert Lo <alo@airpatrolcorp.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: problems setting the channel
-References: <bd4dc3b2edbb45789121bddb33960aa2@CO1PR05MB345.namprd05.prod.outlook.com>
-In-Reply-To: <bd4dc3b2edbb45789121bddb33960aa2@CO1PR05MB345.namprd05.prod.outlook.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <00b201ceae17$2e5c3a00$8b14ae00$%han@samsung.com>
+References: <00b101ceae16$ecb87c30$c6297490$%han@samsung.com>
+	<00b201ceae17$2e5c3a00$8b14ae00$%han@samsung.com>
+Date: Tue, 10 Sep 2013 14:30:31 +0300
+Message-ID: <CANUX_P3YqAfpEgWSp2ha8qWTm84M48cBvMDdTtOs7evMhm0tdw@mail.gmail.com> (sfid-20130910_133035_924377_9F783E7D)
+Subject: Re: [PATCH 01/12] wireless: iwlwifi: remove unnecessary pci_set_drvdata()
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/13/2013 12:11 PM, Albert Lo wrote:
+On Tue, Sep 10, 2013 at 2:16 PM, Jingoo Han <jg1.han@samsung.com> wrote:
+> The driver core clears the driver data to NULL after device_release
+> or on probe failure. Thus, it is not needed to manually clear the
+> device driver data to NULL.
 >
-> Hello,
+> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+> ---
+>  drivers/net/wireless/iwlwifi/pcie/drv.c |    3 ---
+>  1 file changed, 3 deletions(-)
 >
-> Forgive the newbie question, but I'm having a hard time setting the channel.  Here is my output:
->
-> ======================================
-> root@OpenWrt:~# iw dev wlan0 info
-> Interface wlan0
->      ifindex 7
->      wdev 0x2
->      addr 04:f0:21:01:1b:91
->      type AP
->      wiphy 0
->      channel 11 (2462 MHz) NO HT
-> root@OpenWrt:~# iw reg get
-> country US:
->      (2402 - 2472 @ 40), (3, 27)
->      (5170 - 5250 @ 40), (3, 17)
->      (5250 - 5330 @ 40), (3, 20), DFS
->      (5490 - 5600 @ 40), (3, 20), DFS
->      (5650 - 5710 @ 40), (3, 20), DFS
->      (5735 - 5835 @ 40), (3, 30)
-> root@OpenWrt:/# iw dev wlan0 set channel 10
-> root@OpenWrt:/# iw dev wlan0 set channel 19
-> command failed: Invalid argument (-22)
 
---snip--
-
-> Any ideas as to how I can set wlan0 to the channels in  Band2?
-
-There is no channel 19 in wifi! That is the reason you cannot select it.
-
-To select Band 2, you would need a dual-band Access Point. Do you have one?
-
-Clearly, you have little knowledge of wifi. I suggest you read 
-http://en.wikipedia.org/wiki/List_of_WLAN_channels.
-
-Larry
-
+I picked it up - thanks.
