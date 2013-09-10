@@ -1,46 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:48072 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751811Ab3IIJZE (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:56082 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754364Ab3IJIlk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Sep 2013 05:25:04 -0400
-Received: by mail-wi0-f181.google.com with SMTP id ex4so987171wid.8
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Sep 2013 02:25:03 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <luca@coelho.fi>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 08/13] wlcore: read fw panic log only in host mode
-Date: Mon,  9 Sep 2013 12:24:39 +0300
-Message-Id: <1378718684-14430-8-git-send-email-eliad@wizery.com> (sfid-20130909_112513_869664_947B862A)
-In-Reply-To: <1378718684-14430-1-git-send-email-eliad@wizery.com>
-References: <1378718684-14430-1-git-send-email-eliad@wizery.com>
+	Tue, 10 Sep 2013 04:41:40 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21038.55900.901542.571888@gargle.gargle.HOWL> (sfid-20130910_104145_036806_2FC05CFE)
+Date: Tue, 10 Sep 2013 14:07:48 +0530
+To: Seth Forshee <seth.forshee@canonical.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Performance problems with Netgear WNDAP350
+In-Reply-To: <20130909212544.GA27771@thinkpad-t410>
+References: <20130909212544.GA27771@thinkpad-t410>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Barak Bercovitz <barak@wizery.com>
+Seth Forshee wrote:
+> I posted some wireshark traces in case someone else can find something
+> else informative that I've missed. They're at
+> http://people.canonical.com/~sforshee/wndap350/:
+> 
+>  * iperf-iwlwifi.pcapng.gz: Trace from iperf client on Linux STA with
+>    iwlwifi
+>  * iperf-server.pcapng.gz: Trace from the iperf server for the same test
+>    as iperf-iwlwifi
+>  * iperf-osx.pcapng.gz: Trace from iperf client on OSX, using Broadcom
+>    wireless
 
-Reading FW panic log is only supported in host mode (SDIO)
+The link with the iwlwifi client seems to be drowning in RTS/CTS exchanges
+compared with the osx client.
 
-Signed-off-by: Barak Bercovitz <barak@wizery.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/ti/wlcore/main.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+iwlwifi: total: 109087, RTS - 9782 (9.0 %)
+osx:     total: 522581, RTS - 8366 (1.6 %)
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 58800ab..8639ea9 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -943,7 +943,8 @@ static void wl1271_recovery_work(struct work_struct *work)
- 		goto out_unlock;
- 
- 	if (!test_bit(WL1271_FLAG_INTENDED_FW_RECOVERY, &wl->flags)) {
--		wl12xx_read_fwlog_panic(wl);
-+		if (wl->conf.fwlog.output == WL12XX_FWLOG_OUTPUT_HOST)
-+			wl12xx_read_fwlog_panic(wl);
- 		wlcore_print_recovery(wl);
- 	}
- 
--- 
-1.8.3.rc1.35.g9b79519
-
+Sujith
