@@ -1,40 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:42763 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756456Ab3INNqp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Sep 2013 09:46:45 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Subject: [PATCH 3.12] ath9k: fix stale flag handling on buffer clone
-Date: Sat, 14 Sep 2013 15:46:33 +0200
-Message-Id: <1379166393-31285-1-git-send-email-nbd@openwrt.org> (sfid-20130914_154655_650796_07E44D89)
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:45360 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753497Ab3IJG4O (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Sep 2013 02:56:14 -0400
+Message-ID: <1378796198.4799.49.camel@porter.coelho.fi> (sfid-20130910_085617_148329_6A4F904A)
+Subject: Re: [PATCH 02/12] wlcore: add new plt power-mode: CHIP_AWAKE
+From: Luca Coelho <luca@coelho.fi>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: Eliad Peller <eliad@wizery.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 10 Sep 2013 09:56:38 +0300
+In-Reply-To: <CA+XVXfdiudFgdXVAugkHVBLPVgLyrsokosCyhpNd5c5G7DOcOg@mail.gmail.com>
+References: <1378218848-7853-1-git-send-email-eliad@wizery.com>
+	 <1378218848-7853-2-git-send-email-eliad@wizery.com>
+	 <1378794813.4799.35.camel@porter.coelho.fi>
+	 <CA+XVXfdiudFgdXVAugkHVBLPVgLyrsokosCyhpNd5c5G7DOcOg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixes a regression from commit
-"ath9k: shrink a few data structures by reordering fields"
+On Tue, 2013-09-10 at 08:47 +0200, Arik Nemtsov wrote:
+> On Tue, Sep 10, 2013 at 9:33 AM, Luca Coelho <luca@coelho.fi> wrote:
+> > On Tue, 2013-09-03 at 17:33 +0300, Eliad Peller wrote:
+> >> From: Yair Shapira <yair.shapira@ti.com>
+> >>
+> >> Under this mode the chip is powered on including sdio
+> >> but no FW is downloaded and run, interrupts are not enabled, etc...
+> >>
+> >> This mode is intended to allow RTTT to bridge sdio as a transport
+> >> to the chip.
+> >>
+> >> Driver only provides sdio access using the dev_mem debugfs file.
+> >>
+> >> Some fixes done to the code that ensures that PLT mode and normal
+> >> driver power mode (ifconfig/add_interface) are mutually excluded.
+> >>
+> >> Signed-off-by: Yair Shapira <yair.shapira@ti.com>
+> >> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> >> ---
+> >
+> > I had some comments to this patch internally while I was still at TI.
+> > Namely, I asked why do we need a new way of doing this if this is
+> > already possible via debugsfs (using the gpio_power file)?
+> 
+> Are you commenting on the correct patch? Seems this is just a patch to
+> prevent "ifconfig up" during PLT mode..
 
-When cloning a buffer, the stale flag (part of bf_state now) needs to be
-reset after copying the state to prevent tx processing hangs.
+Yes, I'm commenting on the right patch.  It allows the chip power
+(namely the WLAN_EN GPIO pin) to be set directly, without loading the
+firmware and doing other initialization stuff.  This can already be
+controlled via the gpio_power debugfs file.  I've used that a bunch of
+times, including with the RTTT tool.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/xmit.c | 1 +
- 1 file changed, 1 insertion(+)
+Okay, this patch has a few more protections (eg. not allowing an
+interface to be added while the chip is powered in this way), but this
+could also be added on top of the existing implementation.
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 35b515f..a749e0f 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -399,6 +399,7 @@ static struct ath_buf* ath_clone_txbuf(struct ath_softc *sc, struct ath_buf *bf)
- 	tbf->bf_buf_addr = bf->bf_buf_addr;
- 	memcpy(tbf->bf_desc, bf->bf_desc, sc->sc_ah->caps.tx_desc_len);
- 	tbf->bf_state = bf->bf_state;
-+	tbf->bf_state.stale = false;
- 
- 	return tbf;
- }
--- 
-1.8.0.2
+--
+Luca.
 
