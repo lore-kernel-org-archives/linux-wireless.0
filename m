@@ -1,175 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f176.google.com ([74.125.82.176]:42651 "EHLO
-	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753254Ab3IZR5o (ORCPT
+Received: from mailout2.samsung.com ([203.254.224.25]:31765 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751081Ab3IJI4l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Sep 2013 13:57:44 -0400
-Received: by mail-we0-f176.google.com with SMTP id u56so1522130wes.7
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Sep 2013 10:57:42 -0700 (PDT)
-Message-ID: <1380218254.2059.14.camel@canaries64-MCP7A> (sfid-20130926_195748_500402_0F25774E)
-Subject: [PATCH 4/5] staging: vt6656: rxtx.c Move rts_cts pointer assignment
-  to s_vGenerateTxParameter
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 26 Sep 2013 18:57:34 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 10 Sep 2013 04:56:41 -0400
+Received: from epcpsbgr1.samsung.com
+ (u141.gpu120.samsung.co.kr [203.254.230.141])
+ by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MSW00EZJJFG4SU0@mailout2.samsung.com> for
+ linux-wireless@vger.kernel.org; Tue, 10 Sep 2013 17:56:27 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: "'John W. Linville'" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
+References: <005101ceae02$9cbb95f0$d632c1d0$%han@samsung.com>
+In-reply-to: <005101ceae02$9cbb95f0$d632c1d0$%han@samsung.com>
+Subject: [PATCH 5/8] wireless: libertas: use dev_get_platdata()
+Date: Tue, 10 Sep 2013 17:56:27 +0900
+Message-id: <005701ceae03$a286a0f0$e793e2d0$%han@samsung.com> (sfid-20130910_105645_119438_2C605AB2)
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move rts/cts pointers to relevant vnt_tx_data_head position. 
+Use the wrapper function for retrieving the platform data instead of
+accessing dev->platform_data directly. This is a cosmetic change
+to make the code simpler and enhance the readability.
 
-Remove old rts_cts pointers in calling functions.
-
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
 ---
- drivers/staging/vt6656/rxtx.c | 44 ++++++++++++++++++++++---------------------
- 1 file changed, 23 insertions(+), 21 deletions(-)
+ drivers/net/wireless/libertas/if_spi.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 7002b5d..468a78b 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -847,7 +847,7 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
- 	struct ethhdr *psEthHeader, bool need_rts)
+diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
+index 4bb6574..5d39ec8 100644
+--- a/drivers/net/wireless/libertas/if_spi.c
++++ b/drivers/net/wireless/libertas/if_spi.c
+@@ -1128,7 +1128,7 @@ static int if_spi_probe(struct spi_device *spi)
  {
- 	struct vnt_tx_fifo_head *pFifoHead = &tx_buffer->fifo_head;
--	union vnt_tx_data_head *head = rts_cts;
-+	union vnt_tx_data_head *head = NULL;
- 	u32 cbMACHdLen = WLAN_HDR_ADDR3_LEN; /* 24 */
- 	u16 wFifoCtl;
- 	u8 byFBOption = AUTO_FB_NONE;
-@@ -885,8 +885,13 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
- 		pBuf->wTxRrvTime_b = vnt_rxtx_rsvtime_le16(pDevice,
- 			PK_TYPE_11B, cbFrameSize, pDevice->byTopCCKBasicRate,
- 				bNeedACK);
--		if (need_mic)
-+
-+		if (need_mic) {
- 			*mic_hdr = &tx_buffer->tx_head.tx_rts.tx.mic.hdr;
-+			head = &tx_buffer->tx_head.tx_rts.tx.mic.head;
-+		} else {
-+			head = &tx_buffer->tx_head.tx_rts.tx.head;
-+		}
+ 	struct if_spi_card *card;
+ 	struct lbs_private *priv = NULL;
+-	struct libertas_spi_platform_data *pdata = spi->dev.platform_data;
++	struct libertas_spi_platform_data *pdata = dev_get_platdata(&spi->dev);
+ 	int err = 0;
  
- 		/* Fill RTS */
- 		s_vFillRTSHead(pDevice, byPktType, head, cbFrameSize,
-@@ -904,8 +909,12 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
- 		pBuf->wCTSTxRrvTime_ba = s_uGetRTSCTSRsvTime(pDevice, 3,
- 				byPktType, cbFrameSize, wCurrentRate);
- 
--		if (need_mic)
-+		if (need_mic) {
- 			*mic_hdr = &tx_buffer->tx_head.tx_cts.tx.mic.hdr;
-+			head = &tx_buffer->tx_head.tx_cts.tx.mic.head;
-+		} else {
-+			head = &tx_buffer->tx_head.tx_cts.tx.head;
-+		}
- 
- 		/* Fill CTS */
- 		s_vFillCTSHead(pDevice, uDMAIdx, byPktType, head,
-@@ -921,8 +930,13 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
- 				byPktType, cbFrameSize, wCurrentRate);
- 		pBuf->wTxRrvTime = vnt_rxtx_rsvtime_le16(pDevice, byPktType,
- 				cbFrameSize, wCurrentRate, bNeedACK);
--		if (need_mic)
-+
-+		if (need_mic) {
- 			*mic_hdr = &tx_buffer->tx_head.tx_ab.tx.mic.hdr;
-+			head = &tx_buffer->tx_head.tx_ab.tx.mic.head;
-+		} else {
-+			head = &tx_buffer->tx_head.tx_ab.tx.head;
-+		}
- 
- 		/* Fill RTS */
- 		s_vFillRTSHead(pDevice, byPktType, head, cbFrameSize,
-@@ -948,8 +962,12 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
- 		pBuf->wTxRrvTime = vnt_rxtx_rsvtime_le16(pDevice, PK_TYPE_11B,
- 				cbFrameSize, wCurrentRate, bNeedACK);
- 
--		if (need_mic)
-+		if (need_mic) {
- 			*mic_hdr = &tx_buffer->tx_head.tx_ab.tx.mic.hdr;
-+			head = &tx_buffer->tx_head.tx_ab.tx.mic.head;
-+		} else {
-+			head = &tx_buffer->tx_head.tx_ab.tx.head;
-+		}
- 
- 		/* Fill RTS */
- 		s_vFillRTSHead(pDevice, byPktType, head, cbFrameSize,
-@@ -1130,8 +1148,6 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
-     if (byPktType == PK_TYPE_11GB || byPktType == PK_TYPE_11GA) {//802.11g packet
-         if (byFBOption == AUTO_FB_NONE) {
-             if (bRTS == true) {//RTS_need
--		rts_cts = (struct vnt_rts_g *) (pbyTxBufferAddr + wTxBufSize +
--				sizeof(struct vnt_rrv_time_rts) + cbMICHDR);
- 		pvTxDataHd = (struct vnt_tx_datahead_g *) (pbyTxBufferAddr +
- 			wTxBufSize + sizeof(struct vnt_rrv_time_rts) +
- 				cbMICHDR + sizeof(struct vnt_rts_g));
-@@ -1140,8 +1156,6 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
- 				sizeof(struct vnt_tx_datahead_g);
-             }
-             else { //RTS_needless
--		rts_cts = (struct vnt_cts *) (pbyTxBufferAddr + wTxBufSize +
--				sizeof(struct vnt_rrv_time_cts) + cbMICHDR);
- 		pvTxDataHd = (struct vnt_tx_datahead_g *)(pbyTxBufferAddr +
- 			wTxBufSize + sizeof(struct vnt_rrv_time_cts) +
- 				cbMICHDR + sizeof(struct vnt_cts));
-@@ -1152,8 +1166,6 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
-         } else {
-             // Auto Fall Back
-             if (bRTS == true) {//RTS_need
--		rts_cts = (struct vnt_rts_g_fb *)(pbyTxBufferAddr + wTxBufSize +
--				sizeof(struct vnt_rrv_time_rts) + cbMICHDR);
- 		pvTxDataHd = (struct vnt_tx_datahead_g_fb *) (pbyTxBufferAddr +
- 			wTxBufSize + sizeof(struct vnt_rrv_time_rts) +
- 				cbMICHDR + sizeof(struct vnt_rts_g_fb));
-@@ -1162,8 +1174,6 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
- 				sizeof(struct vnt_tx_datahead_g_fb);
-             }
-             else if (bRTS == false) { //RTS_needless
--		rts_cts = (struct vnt_cts_fb *) (pbyTxBufferAddr + wTxBufSize +
--			sizeof(struct vnt_rrv_time_cts) + cbMICHDR);
- 		pvTxDataHd = (struct vnt_tx_datahead_g_fb *) (pbyTxBufferAddr +
- 			wTxBufSize + sizeof(struct vnt_rrv_time_cts) +
- 				cbMICHDR + sizeof(struct vnt_cts_fb));
-@@ -1176,8 +1186,6 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
-     else {//802.11a/b packet
-         if (byFBOption == AUTO_FB_NONE) {
-             if (bRTS == true) {//RTS_need
--		rts_cts = (struct vnt_rts_ab *) (pbyTxBufferAddr + wTxBufSize +
--				sizeof(struct vnt_rrv_time_ab) + cbMICHDR);
- 		pvTxDataHd = (struct vnt_tx_datahead_ab *)(pbyTxBufferAddr +
- 			wTxBufSize + sizeof(struct vnt_rrv_time_ab) + cbMICHDR +
- 						sizeof(struct vnt_rts_ab));
-@@ -1194,8 +1202,6 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
-         } else {
-             // Auto Fall Back
-             if (bRTS == true) {//RTS_need
--		rts_cts = (struct vnt_rts_a_fb *)(pbyTxBufferAddr + wTxBufSize +
--				sizeof(struct vnt_rrv_time_ab) + cbMICHDR);
- 		pvTxDataHd = (struct vnt_tx_datahead_a_fb *)(pbyTxBufferAddr +
- 			wTxBufSize + sizeof(struct vnt_rrv_time_ab) + cbMICHDR +
- 					sizeof(struct vnt_rts_a_fb));
-@@ -1597,8 +1603,6 @@ CMD_STATUS csMgmt_xmit(struct vnt_private *pDevice,
- 
-     //Set RrvTime/RTS/CTS Buffer
-     if (byPktType == PK_TYPE_11GB || byPktType == PK_TYPE_11GA) {//802.11g packet
--	rts_cts = (struct vnt_cts *) (pbyTxBufferAddr + wTxBufSize +
--					sizeof(struct vnt_rrv_time_cts));
- 	pvTxDataHd = (struct vnt_tx_datahead_g *)(pbyTxBufferAddr + wTxBufSize +
- 		sizeof(struct vnt_rrv_time_cts) + sizeof(struct vnt_cts));
- 	cbHeaderSize = wTxBufSize + sizeof(struct vnt_rrv_time_cts) +
-@@ -2003,8 +2007,6 @@ void vDMA0_tx_80211(struct vnt_private *pDevice, struct sk_buff *skb)
-     //the rest of pTxBufHead->wFragCtl:FragTyp will be set later in s_vFillFragParameter()
- 
-     if (byPktType == PK_TYPE_11GB || byPktType == PK_TYPE_11GA) {//802.11g packet
--	rts_cts = (struct vnt_cts *) (pbyTxBufferAddr + wTxBufSize +
--			sizeof(struct vnt_rrv_time_cts) + cbMICHDR);
- 	pvTxDataHd = (struct vnt_tx_datahead_g *) (pbyTxBufferAddr +
- 		wTxBufSize + sizeof(struct vnt_rrv_time_cts) + cbMICHDR +
- 					sizeof(struct vnt_cts));
+ 	lbs_deb_enter(LBS_DEB_SPI);
 -- 
-1.8.3.2
+1.7.10.4
+
 
