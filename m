@@ -1,82 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:11678 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753550Ab3IWMau (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:54379 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754005Ab3IJGee (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Sep 2013 08:30:50 -0400
-Message-ID: <52403478.6010305@atmel.com> (sfid-20130923_143106_295458_401B8D01)
-Date: Mon, 23 Sep 2013 14:30:48 +0200
-From: Nicolas Ferre <nicolas.ferre@atmel.com>
-MIME-Version: 1.0
-To: Russell King <rmk+kernel@arm.linux.org.uk>,
-	<alsa-devel@alsa-project.org>, <b43-dev@lists.infradead.org>,
-	<devel@driverdev.osuosl.org>, <devicetree@vger.kernel.org>,
-	<dri-devel@lists.freedesktop.org>,
-	<e1000-devel@lists.sourceforge.net>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-crypto@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-	<linux-fbdev@vger.kernel.org>, <linux-ide@vger.kernel.org>,
-	<linux-media@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-	<linux-nvme@lists.infradead.org>, <linux-omap@vger.kernel.org>,
-	<linuxppc-dev@lists.ozlabs.org>,
-	<linux-samsung-soc@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-	<linux-tegra@vger.kernel.org>, <linux-usb@vger.kernel.org>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	<uclinux-dist-devel@blackfin.uclinux.org>
-CC: Kukjin Kim <kgene.kim@samsung.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Alexander Shishkin <alexander.shishkin@linux.intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Felipe Balbi <balbi@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH 36/51] DMA-API: usb: use dma_set_coherent_mask()
-References: <20130919212235.GD12758@n2100.arm.linux.org.uk> <E1VMmHX-0007jq-Cj@rmk-PC.arm.linux.org.uk>
-In-Reply-To: <E1VMmHX-0007jq-Cj@rmk-PC.arm.linux.org.uk>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Tue, 10 Sep 2013 02:34:34 -0400
+Message-ID: <1378794898.4799.37.camel@porter.coelho.fi> (sfid-20130910_083437_293724_3650DEB9)
+Subject: Re: [PATCH 03/12] wlcore: disable elp sleep while in plt mode
+From: Luca Coelho <luca@coelho.fi>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 10 Sep 2013 09:34:58 +0300
+In-Reply-To: <1378218848-7853-3-git-send-email-eliad@wizery.com>
+References: <1378218848-7853-1-git-send-email-eliad@wizery.com>
+	 <1378218848-7853-3-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 20/09/2013 00:01, Russell King :
-> The correct way for a driver to specify the coherent DMA mask is
-> not to directly access the field in the struct device, but to use
-> dma_set_coherent_mask().  Only arch and bus code should access this
-> member directly.
->
-> Convert all direct write accesses to using the correct API.
->
-> Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+On Tue, 2013-09-03 at 17:33 +0300, Eliad Peller wrote:
+> From: Yair Shapira <yair.shapira@ti.com>
+> 
+> We now disable elp sleep during plt mode to allow normal operation of
+> plt tools such as calibrator.
+> 
+> Having elp_sleep enabled during plt mode is actually not required and
+> in fact it disrupt plt operations such as rx statistics etc.
+> 
+> Signed-off-by: Yair Shapira <yair.shapira@ti.com>
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
 > ---
->   drivers/usb/chipidea/ci_hdrc_imx.c |    5 +++--
->   drivers/usb/dwc3/dwc3-exynos.c     |    5 +++--
->   drivers/usb/gadget/lpc32xx_udc.c   |    4 +++-
->   drivers/usb/host/ehci-atmel.c      |    5 +++--
 
-For Atmel driver:
+I also had a comment internally about this one.  Why do we need this?
+AFAICT this would never happen in real life, since the firmware is not
+even loaded at this point.  Is there any real life situation where we
+try to go into ELP while in PLT mode?
 
-Acked-by: Nicolas Ferre <nicolas.ferre@atmel.com>
+--
+Luca.
 
-[..]
-
-> diff --git a/drivers/usb/host/ehci-atmel.c b/drivers/usb/host/ehci-atmel.c
-> index 3b645ff..5831a88 100644
-> --- a/drivers/usb/host/ehci-atmel.c
-> +++ b/drivers/usb/host/ehci-atmel.c
-> @@ -92,8 +92,9 @@ static int ehci_atmel_drv_probe(struct platform_device *pdev)
->   	 */
->   	if (!pdev->dev.dma_mask)
->   		pdev->dev.dma_mask = &pdev->dev.coherent_dma_mask;
-> -	if (!pdev->dev.coherent_dma_mask)
-> -		pdev->dev.coherent_dma_mask = DMA_BIT_MASK(32);
-> +	retval = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(32));
-> +	if (retval)
-> +		goto fail_create_hcd;
->
->   	hcd = usb_create_hcd(driver, &pdev->dev, dev_name(&pdev->dev));
->   	if (!hcd) {
-
-[..]
-
-Thanks,
--- 
-Nicolas Ferre
