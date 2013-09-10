@@ -1,42 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:41005 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752042Ab3IKHss (ORCPT
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:54538 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751719Ab3IJP74 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Sep 2013 03:48:48 -0400
-Received: by mail-ie0-f171.google.com with SMTP id 16so7335339iea.16
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Sep 2013 00:48:46 -0700 (PDT)
+	Tue, 10 Sep 2013 11:59:56 -0400
 MIME-Version: 1.0
-In-Reply-To: <1378799431.4799.63.camel@porter.coelho.fi>
-References: <1378218848-7853-1-git-send-email-eliad@wizery.com>
-	<1378218848-7853-12-git-send-email-eliad@wizery.com>
-	<1378799431.4799.63.camel@porter.coelho.fi>
-Date: Wed, 11 Sep 2013 09:48:46 +0200
-Message-ID: <CAB3XZEeer+NTKwWc5GkjZQdswSkPfsGhinvpcK2BbarqjCeA5A@mail.gmail.com> (sfid-20130911_094851_857786_5ED44F0B)
-Subject: Re: [PATCH 12/12] wlcore: always register dummy hardirq
-From: Eliad Peller <eliad@wizery.com>
-To: Luca Coelho <luca@coelho.fi>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Reply-To: andrea.merello@gmail.com
+Date: Tue, 10 Sep 2013 17:59:54 +0200
+Message-ID: <CAN8YU5NTKUtS8+YzmcOSM3=YUX-FSwLTD86F_hXsNdVkw5NEGA@mail.gmail.com> (sfid-20130910_180019_411817_78F881A6)
+Subject: RTL8187SE staging Linux driver
+From: Andrea Merello <andrea.merello@gmail.com>
+To: wlanfae@realtek.com, shwei <shwei@realtek.com.tw>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Greg Kroah-Hartman <greg@kroah.com>,
+	linux-wireless@vger.kernel.org,
+	Michael Wu <flamingice@sourmilk.net>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 10, 2013 at 10:50 AM, Luca Coelho <luca@coelho.fi> wrote:
-> On Tue, 2013-09-03 at 17:34 +0300, Eliad Peller wrote:
->> From: Arik Nemtsov <arik@wizery.com>
->>
->> This keeps the kernel happy when using edge-irqs and requesting a
->> threaded irq.
->>
->> Signed-off-by: Arik Nemtsov <arik@wizery.com>
->> Signed-off-by: Eliad Peller <eliad@wizery.com>
->> ---
->
-> Ouch, I think this is not going to fit at all with the DT patches I
-> sent.
->
-this is quite minor patch (only making sure we always define hardirq
-when threaded_irq is used. i don't think it should conflict (at least
-logically) with DT patches...
+Hello,
 
-Eliad.
+As you probably know, in the current Linux kernel there is a staging
+driver for the RTL8187SE device (based on my older RTL8180/RTL8185
+Linux driver), while there also a regular (not staging) driver
+supporting older RTL8185 and RTL8180 devices
+(net/wireless/rtl818x/rtl8180) .
+
+As far as I can see, the RTL8187SE device seems not so much different
+from an RTL8185 device.
+I would like to try (in my spare time) to add support for RTL8187SE
+device in the current RTL818x driver, in order to avoid code
+duplication, remove a driver from staging, and make RTL8187SE using
+mac80211.
+
+Do any one of you have any comment/objection/suggestions about this ?
+
+Is it possible to get the RTL8187SE documentation to make things easier?
+
+For now I will probably keep different RF code for the two cards even
+if the RTL8225 (zebra 2) radio is used by both RTL8187SE and some
+RTL8185 devices, however if I could get enough documentation about it,
+it would be great to try to merge also RF code..
+
+Thank you,
+Andrea
