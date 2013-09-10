@@ -1,58 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:50774 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754365Ab3I0SJk (ORCPT
+Received: from mailout4.samsung.com ([203.254.224.34]:36638 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750862Ab3IJIzn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Sep 2013 14:09:40 -0400
-Date: Fri, 27 Sep 2013 14:04:43 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Gustavo Padovan <gustavo@padovan.org>
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: bluetooth 2013-09-23
-Message-ID: <20130927180443.GA10994@tuxdriver.com> (sfid-20130927_200957_115838_73275E98)
-References: <20130923210049.GG18215@joana>
- <20130926174750.GB1931@tuxdriver.com>
- <20130927152413.GC13211@joana>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130927152413.GC13211@joana>
+	Tue, 10 Sep 2013 04:55:43 -0400
+Received: from epcpsbgr3.samsung.com
+ (u143.gpu120.samsung.co.kr [203.254.230.143])
+ by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MSW00D65JGTR8R0@mailout4.samsung.com> for
+ linux-wireless@vger.kernel.org; Tue, 10 Sep 2013 17:55:42 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: "'John W. Linville'" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>,
+	'Solomon Peachy' <pizza@shaftnet.org>
+References: <005101ceae02$9cbb95f0$d632c1d0$%han@samsung.com>
+In-reply-to: <005101ceae02$9cbb95f0$d632c1d0$%han@samsung.com>
+Subject: [PATCH 4/8] wireless: cw1200: use dev_get_platdata()
+Date: Tue, 10 Sep 2013 17:55:41 +0900
+Message-id: <005601ceae03$8716db00$95449100$%han@samsung.com> (sfid-20130910_105546_258180_524AE621)
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 27, 2013 at 12:24:13PM -0300, Gustavo Padovan wrote:
-> Hi John,
-> 
-> 2013-09-26 John W. Linville <linville@tuxdriver.com>:
-> 
-> > On Mon, Sep 23, 2013 at 06:00:49PM -0300, Gustavo Padovan wrote:
+Use the wrapper function for retrieving the platform data instead of
+accessing dev->platform_data directly. This is a cosmetic change
+to make the code simpler and enhance the readability.
 
-> > > The following changes since commit f4e1a4d3ecbb9e42bdf8e7869ee8a4ebfa27fb20:
-> > > 
-> > >   rt2800: change initialization sequence to fix system freeze (2013-09-09 14:44:34 -0400)
-> > > 
-> > > are available in the git repository at:
-> > > 
-> > >   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth master
-> > > 
-> > > for you to fetch changes up to 5bcecf325378218a8e248bb6bcae96ec7362f8ef:
-> > > 
-> > >   Bluetooth: btusb: Add support for Belkin F8065bf (2013-09-23 17:44:25 -0300)
-> > 
-> > Pulling now...
-> 
-> Thanks for pulling. However as Stephen pointed out in the linux-next merge
-> conflict email from today we have a style issue, a closing brace bad indented.
-> This is from conflict resolution I made last week. I fixed it when merging
-> bluetooth.git into bluetooth-next.git. 
-> 
-> So when pushing this to Dave could you please tell him about this issue and
-> that the fix is already provided by bluetooth-next. Do you agree with this
-> solution?
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+---
+ drivers/net/wireless/cw1200/cw1200_spi.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-I fixed it in my merge for Dave -- I think that will be fine.
-
-John
+diff --git a/drivers/net/wireless/cw1200/cw1200_spi.c b/drivers/net/wireless/cw1200/cw1200_spi.c
+index d063760..b7d1e0f 100644
+--- a/drivers/net/wireless/cw1200/cw1200_spi.c
++++ b/drivers/net/wireless/cw1200/cw1200_spi.c
+@@ -355,7 +355,7 @@ static struct hwbus_ops cw1200_spi_hwbus_ops = {
+ static int cw1200_spi_probe(struct spi_device *func)
+ {
+ 	const struct cw1200_platform_data_spi *plat_data =
+-		func->dev.platform_data;
++		dev_get_platdata(&func->dev);
+ 	struct hwbus_priv *self;
+ 	int status;
+ 
+@@ -431,7 +431,7 @@ static int cw1200_spi_disconnect(struct spi_device *func)
+ 		}
+ 		kfree(self);
+ 	}
+-	cw1200_spi_off(func->dev.platform_data);
++	cw1200_spi_off(dev_get_platdata(&func->dev));
+ 
+ 	return 0;
+ }
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.10.4
+
+
