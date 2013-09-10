@@ -1,36 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f181.google.com ([209.85.214.181]:54133 "EHLO
-	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752995Ab3ILGYO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Sep 2013 02:24:14 -0400
-Received: by mail-ob0-f181.google.com with SMTP id gq1so127783obb.12
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Sep 2013 23:24:14 -0700 (PDT)
-Message-ID: <52315E0C.9010806@lwfinger.net> (sfid-20130912_082417_785330_A30B5F5B)
-Date: Thu, 12 Sep 2013 01:24:12 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from ebb06.tieto.com ([131.207.168.38]:45718 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751751Ab3IJNuK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Sep 2013 09:50:10 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 2/7] ath10k: add HTC TX credits replenishing notification
+Date: Tue, 10 Sep 2013 15:49:58 +0200
+Message-ID: <1378821003-22925-3-git-send-email-michal.kazior@tieto.com> (sfid-20130910_155018_966705_8CA478A9)
+In-Reply-To: <1378821003-22925-1-git-send-email-michal.kazior@tieto.com>
+References: <1378821003-22925-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
-To: Vincent Thiele <vincentthiele@gmail.com>
-CC: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>
-Subject: Re: No connection with TP-Link TL-WN823N (rtl8192cu)
-References: <CAEZsi7Hde5NyTRgm7Lf_4LvHMAEJouzaqMNUwxr-iSipuEcsyQ@mail.gmail.com> <522E4315.4040806@lwfinger.net> <1378764913.31180.9.camel@dcbw.foobar.com> <CAEZsi7FY8HdBcb0p1svijAdFjB0MbrYv_Zft0B_+RQTpGWCnhQ@mail.gmail.com> <1378916091.1693.21.camel@dcbw.foobar.com> <52309B75.3010408@lwfinger.net> <5230A440.5050709@ilande.co.uk> <5230B573.9030800@lwfinger.net> <CAEZsi7G+FqUh2fBXLLR17qiBb1ggLu2+11aYRt2Wppr1gGK-Wg@mail.gmail.com> <52311E9A.7030902@lwfinger.net> <CAEZsi7F-RxaZJNaYi53kTtsQbxL4TU6DhTPo5v-O5ry=pawb_Q@mail.gmail.com>
-In-Reply-To: <CAEZsi7F-RxaZJNaYi53kTtsQbxL4TU6DhTPo5v-O5ry=pawb_Q@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/12/2013 12:57 AM, Vincent Thiele wrote:
-> No i tried your "ping-solution" with kernel 3.11 but it dosen't work.
+This will allow higher layers to anticipate and
+act upon TX credits renewal. This will be
+important for some future rework of WMI command
+submission.
 
-I just discovered that your device is a 300 Mbps unit, which implies a 2x2 
-configuration. The only one of them that I have does not work with any Linux 
-driver; however, some of the postings that I have read suggest that this one 
-will work with the vendor driver.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/htc.c |    9 +++++++++
+ drivers/net/wireless/ath/ath10k/htc.h |    1 +
+ 2 files changed, 10 insertions(+)
 
-I just bought a TL-WN823N on E-Bay. I think the expected delivery is Sept. 16. 
-Once I get it, I will try to see what I can learn.
-
-Larry
-
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index 65c6e0c..030748e 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -150,6 +150,9 @@ err:
+ 	ep->tx_credits += credits;
+ 	spin_unlock_bh(&htc->tx_lock);
+ 
++	if (ep->ep_ops.ep_tx_credits)
++		ep->ep_ops.ep_tx_credits(htc->ar);
++
+ 	/* this is the simplest way to handle out-of-resources for non-credit
+ 	 * based endpoints. credit based endpoints can still get -ENOSR, but
+ 	 * this is highly unlikely as credit reservation should prevent that */
+@@ -303,6 +306,12 @@ ath10k_htc_process_credit_report(struct ath10k_htc *htc,
+ 		ep = &htc->endpoint[report->eid];
+ 		ep->tx_credits += report->credits;
+ 
++		if (ep->ep_ops.ep_tx_credits) {
++			spin_unlock_bh(&htc->tx_lock);
++			ep->ep_ops.ep_tx_credits(htc->ar);
++			spin_lock_bh(&htc->tx_lock);
++		}
++
+ 		if (ep->tx_credits && !skb_queue_empty(&ep->tx_queue))
+ 			queue_work(htc->ar->workqueue, &ep->send_work);
+ 	}
+diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
+index e1dd8c7..92ca29b 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.h
++++ b/drivers/net/wireless/ath/ath10k/htc.h
+@@ -276,6 +276,7 @@ struct ath10k_htc_ops {
+ struct ath10k_htc_ep_ops {
+ 	void (*ep_tx_complete)(struct ath10k *, struct sk_buff *);
+ 	void (*ep_rx_complete)(struct ath10k *, struct sk_buff *);
++	void (*ep_tx_credits)(struct ath10k *);
+ };
+ 
+ /* service connection information */
+-- 
+1.7.9.5
 
