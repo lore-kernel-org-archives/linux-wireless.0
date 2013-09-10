@@ -1,84 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:5736 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753706Ab3IQTb6 (ORCPT
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:63954 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750893Ab3IJJSC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Sep 2013 15:31:58 -0400
-From: Chet Lanctot <clanctot@codeaurora.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Chet Lanctot <clanctot@codeaurora.org>
-Subject: [PATCH 1/2] nl80211/cfg80211: Driver with AP SME advertises need for PMF SA Query
-Date: Tue, 17 Sep 2013 12:31:35 -0700
-Message-Id: <1379446296-22236-2-git-send-email-clanctot@codeaurora.org> (sfid-20130917_213226_743831_B2F42172)
-In-Reply-To: <1379446296-22236-1-git-send-email-clanctot@codeaurora.org>
-References: <1379446296-22236-1-git-send-email-clanctot@codeaurora.org>
+	Tue, 10 Sep 2013 05:18:02 -0400
+Received: by mail-wi0-f182.google.com with SMTP id ez12so413959wid.9
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Sep 2013 02:18:01 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <522E5558.4070008@candelatech.com>
+References: <522E1D31.2090403@candelatech.com> <CABPxzYLaLUdCXULmx7mV5Gk7L_RrnG4Zq-vO6XRCUt0pvm9SJA@mail.gmail.com>
+ <522E5558.4070008@candelatech.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Tue, 10 Sep 2013 14:47:41 +0530
+Message-ID: <CABPxzYKcVyomdXaDxT3mLXQb0sYfM=UdoZwpbsb4qohTkPU3Cw@mail.gmail.com> (sfid-20130910_111806_592962_1E5C9A06)
+Subject: Re: Always send management frames at MCS-0??
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Needed for drivers that have AP SME integrated but do not implement
-The SA Query procedure that is part of Protected Management Frames
-(PMF, 802.11w).  Instead, the need for upper layer software to do
-this procedure is advertised through nl80211/cfg80211.
+On Tue, Sep 10, 2013 at 4:40 AM, Ben Greear <greearb@candelatech.com> wrote:
 
-Signed-off-by: Chet Lanctot <clanctot@codeaurora.org>
----
- include/uapi/linux/nl80211.h | 11 ++++++++---
- net/wireless/nl80211.c       |  3 ++-
- 2 files changed, 10 insertions(+), 4 deletions(-)
-
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index eb68735..aa1d122 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1891,6 +1891,9 @@ enum nl80211_iftype {
-  * @NL80211_STA_FLAG_ASSOCIATED: station is associated; used with drivers
-  *	that support %NL80211_FEATURE_FULL_AP_CLIENT_STATE to transition a
-  *	previously added station into associated state
-+ * @NL80211_STA_FLAG_NO_SA_QUERY_REQUIRED: no SA Query procedure is needed
-+ *	when an association request is received from a station with which there
-+ *	is already a MFP connection
-  * @NL80211_STA_FLAG_MAX: highest station flag number currently defined
-  * @__NL80211_STA_FLAG_AFTER_LAST: internal use
-  */
-@@ -1903,6 +1906,7 @@ enum nl80211_sta_flags {
- 	NL80211_STA_FLAG_AUTHENTICATED,
- 	NL80211_STA_FLAG_TDLS_PEER,
- 	NL80211_STA_FLAG_ASSOCIATED,
-+	NL80211_STA_FLAG_NO_SA_QUERY_REQUIRED,
- 
- 	/* keep last */
- 	__NL80211_STA_FLAG_AFTER_LAST,
-@@ -3648,11 +3652,12 @@ enum nl80211_tdls_operation {
- 
- /*
-  * enum nl80211_ap_sme_features - device-integrated AP features
-- * Reserved for future use, no bits are defined in
-- * NL80211_ATTR_DEVICE_AP_SME yet.
-+ * @NL80211_ATTR_AP_SME_NO_SA_QUERY: This device is not able to do
-+ *	the MFP SA query procedure and needs hostapd to do this procedure
-+ */
- enum nl80211_ap_sme_features {
-+	NL80211_AP_SME_FEATURE_NO_SA_QUERY
- };
-- */
- 
- /**
-  * enum nl80211_feature_flags - device/driver features
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 587ff84..14a14d4 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3766,7 +3766,8 @@ int cfg80211_check_station_change(struct wiphy *wiphy,
- 				  BIT(NL80211_STA_FLAG_ASSOCIATED) |
- 				  BIT(NL80211_STA_FLAG_SHORT_PREAMBLE) |
- 				  BIT(NL80211_STA_FLAG_WME) |
--				  BIT(NL80211_STA_FLAG_MFP)))
-+				  BIT(NL80211_STA_FLAG_MFP) |
-+				  BIT(NL80211_STA_FLAG_SA_QUERY_REQUIRED)))
- 			return -EINVAL;
- 
- 		/* but authenticated/associated only if driver handles it */
--- 
-1.7.12.rc0.22.gcdd159b
-
+> Would forcing them to a lower rate at least theoretically improve
+> the chance that the packets are properly delivered?
+Yes. But we already have a RC algorithm taking care of that.
+Right?
