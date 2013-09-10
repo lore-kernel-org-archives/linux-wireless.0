@@ -1,40 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:21321 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753313Ab3IEEtu (ORCPT
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:55086 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751654Ab3IJOE6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Sep 2013 00:49:50 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2] qca-swiss-army-knife: add ath10k trace-cmd plugin
-References: <1376939466-8282-1-git-send-email-kvalo@qca.qualcomm.com>
-	<1376939466-8282-2-git-send-email-kvalo@qca.qualcomm.com>
-	<CAB=NE6UCmO4QbFjtav8xPDAoebpTqDNwz_qQxg1TQ8cKGcbFGg@mail.gmail.com>
-Date: Thu, 5 Sep 2013 07:49:45 +0300
-In-Reply-To: <CAB=NE6UCmO4QbFjtav8xPDAoebpTqDNwz_qQxg1TQ8cKGcbFGg@mail.gmail.com>
-	(Luis R. Rodriguez's message of "Wed, 4 Sep 2013 11:57:12 -0700")
-Message-ID: <871u53swie.fsf@kamboji.qca.qualcomm.com> (sfid-20130905_064954_008815_D220E275)
+	Tue, 10 Sep 2013 10:04:58 -0400
+Received: by mail-ie0-f176.google.com with SMTP id w15so471528iea.7
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Sep 2013 07:04:57 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1378794898.4799.37.camel@porter.coelho.fi>
+References: <1378218848-7853-1-git-send-email-eliad@wizery.com>
+	<1378218848-7853-3-git-send-email-eliad@wizery.com>
+	<1378794898.4799.37.camel@porter.coelho.fi>
+Date: Tue, 10 Sep 2013 16:04:57 +0200
+Message-ID: <CAB3XZEdNkEAsC8mz_jpz8UmjnK_pBwfGSChZQLGiuhtd0Q9Wnw@mail.gmail.com> (sfid-20130910_160501_568843_F23E5806)
+Subject: Re: [PATCH 03/12] wlcore: disable elp sleep while in plt mode
+From: Eliad Peller <eliad@wizery.com>
+To: Luca Coelho <luca@coelho.fi>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com> writes:
-
-> On Mon, Aug 19, 2013 at 12:11 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->> This one's a skeleton as well.
+On Tue, Sep 10, 2013 at 9:34 AM, Luca Coelho <luca@coelho.fi> wrote:
+> On Tue, 2013-09-03 at 17:33 +0300, Eliad Peller wrote:
+>> From: Yair Shapira <yair.shapira@ti.com>
 >>
->> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+>> We now disable elp sleep during plt mode to allow normal operation of
+>> plt tools such as calibrator.
+>>
+>> Having elp_sleep enabled during plt mode is actually not required and
+>> in fact it disrupt plt operations such as rx statistics etc.
+>>
+>> Signed-off-by: Yair Shapira <yair.shapira@ti.com>
+>> Signed-off-by: Eliad Peller <eliad@wizery.com>
+>> ---
 >
-> Applied both and pushed, thanks!
+> I also had a comment internally about this one.  Why do we need this?
+> AFAICT this would never happen in real life, since the firmware is not
+> even loaded at this point.  Is there any real life situation where we
+> try to go into ELP while in PLT mode?
+>
+i'm not familiar with the whole plt process, but i guess some flows
+might indeed end up in elp (e.g. via wl1271_cmd_interrogate(), in
+order to read statistics)
 
-Thanks.
-
-> I just removed 3 trailing spaces on the 2 patches. One had two
-> trailing spaces, the last patch had one.
-
-Oh, sorry about that. Any ideas how I could check for those myself?
-
--- 
-Kalle Valo
+Eliad.
