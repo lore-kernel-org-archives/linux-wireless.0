@@ -1,60 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:39567 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754680Ab3ITNCs (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:46493 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751125Ab3IJJOp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Sep 2013 09:02:48 -0400
-In-Reply-To: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-From: Russell King <rmk+kernel@arm.linux.org.uk>
-To: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
-	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
-	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
-	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	uclinux-dist-devel@blackfin.uclinux.org
-Cc: Gary Zambrano <zambrano@broadcom.com>
-Subject: [PATCH 09/51] DMA-API: net: broadcom/b44: replace
- dma_set_mask()+dma_set_coherent_mask() with new
- helper
-Message-Id: <E1VMlrL-0007g2-QQ@rmk-PC.arm.linux.org.uk> (sfid-20130920_150302_542379_ACD1E0B4)
-Date: Thu, 19 Sep 2013 22:33:59 +0100
+	Tue, 10 Sep 2013 05:14:45 -0400
+Message-ID: <1378804510.4799.69.camel@porter.coelho.fi> (sfid-20130910_111453_918734_5760ADDA)
+Subject: Re: [PATCH 06/12] wlcore: send EAPOL frames with voice priority
+From: Luca Coelho <luca@coelho.fi>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: Eliad Peller <eliad@wizery.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 10 Sep 2013 12:15:10 +0300
+In-Reply-To: <CA+XVXfc6RG1BngT_+doiOUhtYAgnG9Q0-oXns-ckJkU7XhE5ag@mail.gmail.com>
+References: <1378218848-7853-1-git-send-email-eliad@wizery.com>
+	 <1378218848-7853-6-git-send-email-eliad@wizery.com>
+	 <1378795636.4799.44.camel@porter.coelho.fi>
+	 <CA+XVXfc6RG1BngT_+doiOUhtYAgnG9Q0-oXns-ckJkU7XhE5ag@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replace the following sequence:
+On Tue, 2013-09-10 at 11:11 +0200, Arik Nemtsov wrote:
+> On Tue, Sep 10, 2013 at 9:47 AM, Luca Coelho <luca@coelho.fi> wrote:
+> > On Tue, 2013-09-03 at 17:34 +0300, Eliad Peller wrote:
+> >> From: Igal Chernobelsky <igalc@ti.com>
+> >>
+> >> Send EAPOL frames with voice priority by setting TX_HW_ATTR_EAPOL_FRAME
+> >> new bit in tx attribute. Sending EAPOL with voice priority fixes
+> >> re-key timeout during heavy traffic issue.
+> >>
+> >> Signed-off-by: Igal Chernobelsky <igalc@ti.com>
+> >> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> >> ---
+> >
+> > This seems to be the same problem that Ben had and debugged by himself
+> > [1].  Fixing this in hostapd/wpa_supplicant seems more appropriate?
+> >
+> > This patch seems to take an advantage of some sort of hack in the
+> > firmware that will change the priority by itself when the
+> > TX_HW_ATTR_EAPOL_GRAME bit is set.  If we have a good reason to use this
+> > patch, we need to take care of the firmware version as well.  This
+> > probably doesn't work with the latest published firmware.
+> >
+> > [1] http://mid.gmane.org/522E18E5.1020503@candelatech.com
+> 
+> I believe he only fixed one mode (AP - hostapd) but not the other (GO
+> - wpa_supplicant). Anyway that's what we tested at the time.
 
-	dma_set_mask(dev, mask);
-	dma_set_coherent_mask(dev, mask);
+Okay, I didn't dig much into it.
 
-with a call to the new helper dma_set_mask_and_coherent().
 
-Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
----
- drivers/net/ethernet/broadcom/b44.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+> Anyway marking it as this level doesn't do any harm. You're right
+> about the FW version though - it should be upstreamed first.
 
-diff --git a/drivers/net/ethernet/broadcom/b44.c b/drivers/net/ethernet/broadcom/b44.c
-index 9b017d9..b4d2018 100644
---- a/drivers/net/ethernet/broadcom/b44.c
-+++ b/drivers/net/ethernet/broadcom/b44.c
-@@ -2183,8 +2183,7 @@ static int b44_init_one(struct ssb_device *sdev,
- 		goto err_out_free_dev;
- 	}
- 
--	if (dma_set_mask(sdev->dma_dev, DMA_BIT_MASK(30)) ||
--	    dma_set_coherent_mask(sdev->dma_dev, DMA_BIT_MASK(30))) {
-+	if (dma_set_mask_and_coherent(sdev->dma_dev, DMA_BIT_MASK(30))) {
- 		dev_err(sdev->dev,
- 			"Required 30BIT DMA mask unsupported by the system\n");
- 		goto err_out_powerdown;
--- 
-1.7.4.4
+Fair enough.  If the firmware implements this, no reason why not use it.
+But I'll wait for the new firmware before applying this.
+
+--
+Luca.
 
