@@ -1,33 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:1804 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755807Ab3IIWfA (ORCPT
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:54830 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752019Ab3IJQXY convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Sep 2013 18:35:00 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Bartosz Markowski <bartosz.markowski@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: define ath10k_debug_start/_stop as static inline
-References: <1378741845-30080-1-git-send-email-bartosz.markowski@tieto.com>
-Date: Tue, 10 Sep 2013 01:34:39 +0300
-In-Reply-To: <1378741845-30080-1-git-send-email-bartosz.markowski@tieto.com>
-	(Bartosz Markowski's message of "Mon, 9 Sep 2013 17:50:45 +0200")
-Message-ID: <87mwnl7hfk.fsf@kamboji.qca.qualcomm.com> (sfid-20130910_003507_259335_31CE06DB)
+	Tue, 10 Sep 2013 12:23:24 -0400
+Received: by mail-ie0-f171.google.com with SMTP id 16so5420922iea.2
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Sep 2013 09:23:24 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <87ppshu5mr.fsf@purkki.adurom.net>
+References: <CAFSJ42bTQkQO+yugN7BBjygQd7LY9H0bPBoPfoH7yyfyMzuGqA@mail.gmail.com>
+	<87ppshu5mr.fsf@purkki.adurom.net>
+Date: Tue, 10 Sep 2013 18:23:23 +0200
+Message-ID: <CAFSJ42b_jOJA7ABK7GqDi0KO-Nnv-8CvhMC6ysTicPhe00kS=w@mail.gmail.com> (sfid-20130910_182337_195265_1AB642E9)
+Subject: Re: regulatory will stuck when cfg80211 is built-in
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bartosz Markowski <bartosz.markowski@tieto.com> writes:
+No, the flag CONFIG_CFG80211_INTERNAL_REGDB  does not help and it should not.
 
-> Otherwise if CONFIG_ATH10K_DEBUGFS won't be set we will
-> end up with multiple definitions and compilation failure
-> in each place the header is included.
+The problem is that cfg80211 will stuck in situation when cfg80211 is
+initialized before user space. One way to get cfg80211 out of this
+state is to run crda once right after user space is up and running.
+But again is this intentional? Or it is more like a workaround?
+
+2013/9/9 Kalle Valo <kvalo@adurom.com>:
+> Eugene Krasnikov <k.eugene.e@gmail.com> writes:
 >
-> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+>> There is a problem with regulatory part of cfg80211 when cfg80211 is
+>> built-in the kernel. On regulatory init cfg80211 will try to notify
+>> user space about changing current domain to world regulatory but at
+>> that time user space is not up and running yet and uevent message will
+>> be lost. So what will happen is that cfg80211 will wait for the
+>> response from user space and all requests to set current regulatory
+>> will be dropped with the following error: “Pending regulatory request,
+>> waiting for it to be processed...”.
+>
+> Does CONFIG_CFG80211_INTERNAL_REGDB help?
+>
+> --
+> Kalle Valo
 
-Doh, I broke this. Sorry about that. Path applied, thanks for fixing
-this.
+
 
 -- 
-Kalle Valo
+Best regards,
+Eugene
