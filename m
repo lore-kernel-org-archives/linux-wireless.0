@@ -1,79 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:45606 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754378Ab3I3Ncz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Sep 2013 09:32:55 -0400
-Date: Mon, 30 Sep 2013 08:32:30 -0500
-From: Felipe Balbi <balbi@ti.com>
-To: Ben Hutchings <ben@decadent.org.uk>
-CC: <balbi@ti.com>, Luca Coelho <luca@coelho.fi>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	<linux-wireless@vger.kernel.org>, Pavel Machek <pavel@denx.de>
-Subject: Re: [PATCH] ti-connectivity: add wl1251 firmware and license
-Message-ID: <20130930133230.GC2455@radagast> (sfid-20130930_153300_015906_71D3CEB6)
-Reply-To: <balbi@ti.com>
-References: <1380033894-5007-1-git-send-email-balbi@ti.com>
- <1380107096.4503.8.camel@porter.coelho.fi>
- <1380107278.4503.9.camel@porter.coelho.fi>
- <20130925132359.GE10746@radagast>
- <1380512269.1441.10.camel@deadeye.wl.decadent.org.uk>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="XMCwj5IQnwKtuyBG"
-In-Reply-To: <1380512269.1441.10.camel@deadeye.wl.decadent.org.uk>
+Received: from mailout1.samsung.com ([203.254.224.24]:58887 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751069Ab3IJL0O (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Sep 2013 07:26:14 -0400
+Received: from epcpsbgr2.samsung.com
+ (u142.gpu120.samsung.co.kr [203.254.230.142])
+ by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MSW008GRQFPSNC0@mailout1.samsung.com> for
+ linux-wireless@vger.kernel.org; Tue, 10 Sep 2013 20:26:13 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: "'John W. Linville'" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>,
+	'Vladimir Kondratiev' <qca_vkondrat@qca.qualcomm.com>,
+	wil6210@qca.qualcomm.com
+References: <00b101ceae16$ecb87c30$c6297490$%han@samsung.com>
+In-reply-to: <00b101ceae16$ecb87c30$c6297490$%han@samsung.com>
+Subject: [PATCH 07/12] wireless: wil6210: remove unnecessary pci_set_drvdata()
+Date: Tue, 10 Sep 2013 20:26:13 +0900
+Message-id: <00b801ceae18$8e5498c0$aafdca40$%han@samsung.com> (sfid-20130910_132617_077047_2D66392E)
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---XMCwj5IQnwKtuyBG
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+The driver core clears the driver data to NULL after device_release
+or on probe failure. Thus, it is not needed to manually clear the
+device driver data to NULL.
 
-On Mon, Sep 30, 2013 at 04:37:49AM +0100, Ben Hutchings wrote:
-> On Wed, 2013-09-25 at 08:23 -0500, Felipe Balbi wrote:
-> > Hi,
-> >=20
-> > On Wed, Sep 25, 2013 at 02:07:58PM +0300, Luca Coelho wrote:
-> [...]
-> > > Ah, and I forgot to say that you should update the WHENCE file
-> > > accordingly too.  Check the wl12xx and wl18xx drivers for examples.
-> >=20
-> > I'll send a pull request, but how about this ? I don't think we can
-> > change the license. It seems like the other firmwares are using the
-> > older license, I'd argue those should be changed to the new one, but
-> > that's another discussion.
-> [...]
->=20
-> I haven't seen this pull request, so it looks like there is nothing for
-> me to apply at the moment.
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+---
+ drivers/net/wireless/ath/wil6210/pcie_bus.c |    1 -
+ 1 file changed, 1 deletion(-)
 
-yeah, give me a couple more days, I need to finish something up here.
+diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+index eb1dc7a..eeceab3 100644
+--- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
++++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+@@ -197,7 +197,6 @@ static void wil_pcie_remove(struct pci_dev *pdev)
+ 	pci_iounmap(pdev, wil->csr);
+ 	pci_release_region(pdev, 0);
+ 	pci_disable_device(pdev);
+-	pci_set_drvdata(pdev, NULL);
+ }
+ 
+ static DEFINE_PCI_DEVICE_TABLE(wil6210_pcie_ids) = {
+-- 
+1.7.10.4
 
-cheers
 
---=20
-balbi
-
---XMCwj5IQnwKtuyBG
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJSSX1tAAoJEIaOsuA1yqREP2sQAIOcvGcxARmAJNbAqJlnzp+0
-da1RnaxE5Abmg2WQBmzYPYV4cFq+Nu8dU3C6HCdzo5nFP6Ht52rjTsc4iH3SF77k
-mqDCWvaMbicpQFzym5f2KwA2NHx2gHkCY80EcLGozN16DNryIqKm9MrGVWZYSK/X
-vDn0Dif5Jh0G+xtJpiNEJjXFhz0PesnMZiAaE6gvDUAN0IILnWy76YeGAexan/H5
-6hWrMdirHiQkGoqCP7Yvqi2EvuWIwP6pg9bqulJi/hn/pbojfOVeJaob/HZIBlWX
-OkSCTGPcLBTFEKiuBiMRQictrFg4yY3WM6y1ZF2h0NN2js1wcFFx+czuKWMDe78D
-hvnB9ZlS8miH2agffCMexEFXUXmoGlfKk4c6UJKNkBn5eIrJMEccHbuqkJDKEcaL
-HbgbaIGRWUCEihANE9MHJBOzqvFz/L07AWFjvtZIQEOk0CgTCocEG9FKCrupoBBt
-0gJ1cWgbdqCtXpS2Zy8YzTi48GtqcQNN0aG0dKnqmOEtPPRasGK7kF4SMkCXvlEe
-fodqHkjGYfH4Uop3kbL05lsB18rn/pORipgSD1mMJxsOFWVPdcEJCGGpAU9fv2Dg
-NgbGCV24S82jfxOkPIIMaqgjfCViQuIeGhgUjL+GoJJQoZukQHyk973WplTRk+j0
-+EXbe2ALa7Y90ywK4Ybj
-=Q91R
------END PGP SIGNATURE-----
-
---XMCwj5IQnwKtuyBG--
