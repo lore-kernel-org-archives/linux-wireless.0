@@ -1,61 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:36638 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750862Ab3IJIzn (ORCPT
+Received: from mail-pb0-f44.google.com ([209.85.160.44]:40571 "EHLO
+	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754554Ab3IJGsO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Sep 2013 04:55:43 -0400
-Received: from epcpsbgr3.samsung.com
- (u143.gpu120.samsung.co.kr [203.254.230.143])
- by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MSW00D65JGTR8R0@mailout4.samsung.com> for
- linux-wireless@vger.kernel.org; Tue, 10 Sep 2013 17:55:42 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: "'John W. Linville'" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>,
-	'Solomon Peachy' <pizza@shaftnet.org>
-References: <005101ceae02$9cbb95f0$d632c1d0$%han@samsung.com>
-In-reply-to: <005101ceae02$9cbb95f0$d632c1d0$%han@samsung.com>
-Subject: [PATCH 4/8] wireless: cw1200: use dev_get_platdata()
-Date: Tue, 10 Sep 2013 17:55:41 +0900
-Message-id: <005601ceae03$8716db00$95449100$%han@samsung.com> (sfid-20130910_105546_258180_524AE621)
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+	Tue, 10 Sep 2013 02:48:14 -0400
+Received: by mail-pb0-f44.google.com with SMTP id xa7so7165336pbc.3
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Sep 2013 23:48:13 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1378794813.4799.35.camel@porter.coelho.fi>
+References: <1378218848-7853-1-git-send-email-eliad@wizery.com>
+ <1378218848-7853-2-git-send-email-eliad@wizery.com> <1378794813.4799.35.camel@porter.coelho.fi>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Tue, 10 Sep 2013 08:47:58 +0200
+Message-ID: <CA+XVXfdiudFgdXVAugkHVBLPVgLyrsokosCyhpNd5c5G7DOcOg@mail.gmail.com> (sfid-20130910_084820_415647_E11B67FD)
+Subject: Re: [PATCH 02/12] wlcore: add new plt power-mode: CHIP_AWAKE
+To: Luca Coelho <luca@coelho.fi>
+Cc: Eliad Peller <eliad@wizery.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the wrapper function for retrieving the platform data instead of
-accessing dev->platform_data directly. This is a cosmetic change
-to make the code simpler and enhance the readability.
+On Tue, Sep 10, 2013 at 9:33 AM, Luca Coelho <luca@coelho.fi> wrote:
+> On Tue, 2013-09-03 at 17:33 +0300, Eliad Peller wrote:
+>> From: Yair Shapira <yair.shapira@ti.com>
+>>
+>> Under this mode the chip is powered on including sdio
+>> but no FW is downloaded and run, interrupts are not enabled, etc...
+>>
+>> This mode is intended to allow RTTT to bridge sdio as a transport
+>> to the chip.
+>>
+>> Driver only provides sdio access using the dev_mem debugfs file.
+>>
+>> Some fixes done to the code that ensures that PLT mode and normal
+>> driver power mode (ifconfig/add_interface) are mutually excluded.
+>>
+>> Signed-off-by: Yair Shapira <yair.shapira@ti.com>
+>> Signed-off-by: Eliad Peller <eliad@wizery.com>
+>> ---
+>
+> I had some comments to this patch internally while I was still at TI.
+> Namely, I asked why do we need a new way of doing this if this is
+> already possible via debugsfs (using the gpio_power file)?
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
----
- drivers/net/wireless/cw1200/cw1200_spi.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/cw1200/cw1200_spi.c b/drivers/net/wireless/cw1200/cw1200_spi.c
-index d063760..b7d1e0f 100644
---- a/drivers/net/wireless/cw1200/cw1200_spi.c
-+++ b/drivers/net/wireless/cw1200/cw1200_spi.c
-@@ -355,7 +355,7 @@ static struct hwbus_ops cw1200_spi_hwbus_ops = {
- static int cw1200_spi_probe(struct spi_device *func)
- {
- 	const struct cw1200_platform_data_spi *plat_data =
--		func->dev.platform_data;
-+		dev_get_platdata(&func->dev);
- 	struct hwbus_priv *self;
- 	int status;
- 
-@@ -431,7 +431,7 @@ static int cw1200_spi_disconnect(struct spi_device *func)
- 		}
- 		kfree(self);
- 	}
--	cw1200_spi_off(func->dev.platform_data);
-+	cw1200_spi_off(dev_get_platdata(&func->dev));
- 
- 	return 0;
- }
--- 
-1.7.10.4
-
-
+Are you commenting on the correct patch? Seems this is just a patch to
+prevent "ifconfig up" during PLT mode..
