@@ -1,43 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f51.google.com ([209.85.214.51]:61143 "EHLO
-	mail-bk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752623Ab3IRNSR (ORCPT
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:41554 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750899Ab3IJJLl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Sep 2013 09:18:17 -0400
-Received: by mail-bk0-f51.google.com with SMTP id mx10so2881999bkb.10
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Sep 2013 06:18:16 -0700 (PDT)
-Message-ID: <5239A815.40909@gmail.com> (sfid-20130918_151831_084214_F1BC41E1)
-Date: Wed, 18 Sep 2013 15:18:13 +0200
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+	Tue, 10 Sep 2013 05:11:41 -0400
+Received: by mail-pa0-f47.google.com with SMTP id kl13so7414288pab.6
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Sep 2013 02:11:41 -0700 (PDT)
 MIME-Version: 1.0
-To: peter@stuge.se, linux-wireless <linux-wireless@vger.kernel.org>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
-Subject: Re: RT3573 wpa_supplicant: "nl80211: Delete station $my_ap" after
- "SME: Send 20/40 BSS Coexistence to $my_ap"
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1378795636.4799.44.camel@porter.coelho.fi>
+References: <1378218848-7853-1-git-send-email-eliad@wizery.com>
+ <1378218848-7853-6-git-send-email-eliad@wizery.com> <1378795636.4799.44.camel@porter.coelho.fi>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Tue, 10 Sep 2013 11:11:25 +0200
+Message-ID: <CA+XVXfc6RG1BngT_+doiOUhtYAgnG9Q0-oXns-ckJkU7XhE5ag@mail.gmail.com> (sfid-20130910_111144_759584_DDB10254)
+Subject: Re: [PATCH 06/12] wlcore: send EAPOL frames with voice priority
+To: Luca Coelho <luca@coelho.fi>
+Cc: Eliad Peller <eliad@wizery.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Peter Stuge wrote:
+On Tue, Sep 10, 2013 at 9:47 AM, Luca Coelho <luca@coelho.fi> wrote:
+> On Tue, 2013-09-03 at 17:34 +0300, Eliad Peller wrote:
+>> From: Igal Chernobelsky <igalc@ti.com>
+>>
+>> Send EAPOL frames with voice priority by setting TX_HW_ATTR_EAPOL_FRAME
+>> new bit in tx attribute. Sending EAPOL with voice priority fixes
+>> re-key timeout during heavy traffic issue.
+>>
+>> Signed-off-by: Igal Chernobelsky <igalc@ti.com>
+>> Signed-off-by: Eliad Peller <eliad@wizery.com>
+>> ---
+>
+> This seems to be the same problem that Ben had and debugged by himself
+> [1].  Fixing this in hostapd/wpa_supplicant seems more appropriate?
+>
+> This patch seems to take an advantage of some sort of hack in the
+> firmware that will change the priority by itself when the
+> TX_HW_ATTR_EAPOL_GRAME bit is set.  If we have a good reason to use this
+> patch, we need to take care of the firmware version as well.  This
+> probably doesn't work with the latest published firmware.
+>
+> [1] http://mid.gmane.org/522E18E5.1020503@candelatech.com
 
-> I'm testing the WNDA4100 with torvalds/linux.git and as of a day or
-> two ago and wpa_supplicant-2.0.
-> 
-> I haven't measured throughput. Latency is really bad for interactive
-> connections, but at least the packets are flowing on all bands. Yay!
-> 
-> Ping to the access point is around 3 ms with the odd 20+ ms when the
-> kernel goes off to do something else.
+I believe he only fixed one mode (AP - hostapd) but not the other (GO
+- wpa_supplicant). Anyway that's what we tested at the time.
 
-Support for RT3573 was added recently, you should use wireless-next:
-http://git.kernel.org/cgit/linux/kernel/git/linville/wireless-next.git
+Anyway marking it as this level doesn't do any harm. You're right
+about the FW version though - it should be upstreamed first.
 
-You can also try latest fw(v0.33):
-http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/attachments/20130111/f8ebe4d3/attachment.bin
-
-md5sum:
-======
-ac4f6d8b679945208a978e397c016aa7 rt2870.bin (8192 bytes)
-
-# mv /lib/firmware/rt2870.bin /lib/firmware/rt2870.bin.orig
-# mv attachment.bin /lib/firmware/rt2870.bin
+Arik
