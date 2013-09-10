@@ -1,55 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:7028 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752047Ab3IMKiN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Sep 2013 06:38:13 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: ilw@linux.intel.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [RFC 5/5] iwlwifi: quiesce mac80211 before fw restart
-Date: Fri, 13 Sep 2013 12:36:08 +0200
-Message-Id: <1379068568-27552-6-git-send-email-sgruszka@redhat.com> (sfid-20130913_123824_651068_C34AF372)
-In-Reply-To: <1379068568-27552-1-git-send-email-sgruszka@redhat.com>
-References: <1379068568-27552-1-git-send-email-sgruszka@redhat.com>
+Received: from mail.candelatech.com ([208.74.158.172]:44794 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753729Ab3IJPbr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Sep 2013 11:31:47 -0400
+Message-ID: <522F3B5E.1010100@candelatech.com> (sfid-20130910_173151_506617_A7209AC7)
+Date: Tue, 10 Sep 2013 08:31:42 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Eliad Peller <eliad@wizery.com>
+CC: Luca Coelho <luca@coelho.fi>, Arik Nemtsov <arik@wizery.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 06/12] wlcore: send EAPOL frames with voice priority
+References: <1378218848-7853-1-git-send-email-eliad@wizery.com> <1378218848-7853-6-git-send-email-eliad@wizery.com> <1378795636.4799.44.camel@porter.coelho.fi> <CA+XVXfc6RG1BngT_+doiOUhtYAgnG9Q0-oXns-ckJkU7XhE5ag@mail.gmail.com> <1378804510.4799.69.camel@porter.coelho.fi> <CAB3XZEfPQb1FWT3wukBZvSkP9eB1kO=wPpWFxKXBmX5YULAVqw@mail.gmail.com>
+In-Reply-To: <CAB3XZEfPQb1FWT3wukBZvSkP9eB1kO=wPpWFxKXBmX5YULAVqw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlwifi/dvm/mac80211.c | 1 +
- drivers/net/wireless/iwlwifi/dvm/main.c     | 4 +++-
- 2 files changed, 4 insertions(+), 1 deletion(-)
+On 09/10/2013 07:15 AM, Eliad Peller wrote:
+> On Tue, Sep 10, 2013 at 12:15 PM, Luca Coelho <luca@coelho.fi> wrote:
+>> On Tue, 2013-09-10 at 11:11 +0200, Arik Nemtsov wrote:
+>>> On Tue, Sep 10, 2013 at 9:47 AM, Luca Coelho <luca@coelho.fi> wrote:
+>>>> On Tue, 2013-09-03 at 17:34 +0300, Eliad Peller wrote:
+>>>>> From: Igal Chernobelsky <igalc@ti.com>
+>>>>>
+>>>>> Send EAPOL frames with voice priority by setting TX_HW_ATTR_EAPOL_FRAME
+>>>>> new bit in tx attribute. Sending EAPOL with voice priority fixes
+>>>>> re-key timeout during heavy traffic issue.
+>>>>>
+>>>>> Signed-off-by: Igal Chernobelsky <igalc@ti.com>
+>>>>> Signed-off-by: Eliad Peller <eliad@wizery.com>
+>>>>> ---
+>>>>
+>>>> This seems to be the same problem that Ben had and debugged by himself
+>>>> [1].  Fixing this in hostapd/wpa_supplicant seems more appropriate?
 
-diff --git a/drivers/net/wireless/iwlwifi/dvm/mac80211.c b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
-index cae4d31..e819e5b 100644
---- a/drivers/net/wireless/iwlwifi/dvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
-@@ -393,6 +393,7 @@ static int iwlagn_mac_suspend(struct ieee80211_hw *hw,
- 
-  error:
- 	priv->wowlan = false;
-+	ieee80211_quiesce(priv->hw);
- 	iwlagn_prepare_restart(priv);
- 	ieee80211_restart_hw(priv->hw);
-  out:
-diff --git a/drivers/net/wireless/iwlwifi/dvm/main.c b/drivers/net/wireless/iwlwifi/dvm/main.c
-index 7aad766..2e0fbea 100644
---- a/drivers/net/wireless/iwlwifi/dvm/main.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/main.c
-@@ -975,10 +975,12 @@ static void iwl_bg_restart(struct work_struct *data)
- 		return;
- 
- 	if (test_and_clear_bit(STATUS_FW_ERROR, &priv->status)) {
-+		iwl_cancel_deferred_work(priv);
-+		if (priv->mac80211_registered)
-+			ieee80211_quiesce(priv->hw);
- 		mutex_lock(&priv->mutex);
- 		iwlagn_prepare_restart(priv);
- 		mutex_unlock(&priv->mutex);
--		iwl_cancel_deferred_work(priv);
- 		if (priv->mac80211_registered)
- 			ieee80211_restart_hw(priv->hw);
- 		else
+I just posted hostapd/supplicant patches yesterday that fix it for both
+AP mode and for station mode (at least in my configuration using ath9k
+and 3.11 kernel).
+
+Thanks,
+Ben
+
 -- 
-1.8.3.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
