@@ -1,38 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f169.google.com ([209.85.214.169]:54290 "EHLO
-	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751529Ab3IMRwa (ORCPT
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:65349 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751757Ab3IJNqx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Sep 2013 13:52:30 -0400
-Received: by mail-ob0-f169.google.com with SMTP id wp4so1406023obc.0
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Sep 2013 10:52:30 -0700 (PDT)
-Message-ID: <523350DC.5050905@lwfinger.net> (sfid-20130913_195233_933517_5A3FF24C)
-Date: Fri, 13 Sep 2013 12:52:28 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 10 Sep 2013 09:46:53 -0400
+Received: by mail-ie0-f175.google.com with SMTP id 9so1876413iec.34
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Sep 2013 06:46:50 -0700 (PDT)
 MIME-Version: 1.0
-To: Timothy Rundle <tgrundlesr@gmail.com>
-CC: Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: RTL8192CU continually reconnecting
-References: <CALa3VXYo1yTuDr22M7AUcp0WLQszzdMSJczRgmD57uPd_68vWQ@mail.gmail.com> <522D054B.5060205@lwfinger.net> <522DD856.7050309@ilande.co.uk> <522DE1BE.6070904@lwfinger.net> <522DE8CA.9010008@ilande.co.uk> <522DFF83.6000605@lwfinger.net> <522E0573.4000804@ilande.co.uk> <522E1B7D.5010107@lwfinger.net> <522E463E.4040701@ilande.co.uk> <522E5416.4010901@lwfinger.net> <522E5D83.9060103@ilande.co.uk> <522E896E.7000607@lwfinger.net> <522EB51A.2080004@ilande.co.uk> <522F3757.8030600@lwfinger.net> <522F7B61.6060208@ilande.co.uk> <5230CDF1.1040905@lwfinger.net> <CALa3VXbxQ1Z2J5weV7rQ16c53D1MQyDL1YGQrV6EkCJYfh=uYA@mail.gmail.com>
-In-Reply-To: <CALa3VXbxQ1Z2J5weV7rQ16c53D1MQyDL1YGQrV6EkCJYfh=uYA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1378796198.4799.49.camel@porter.coelho.fi>
+References: <1378218848-7853-1-git-send-email-eliad@wizery.com>
+	<1378218848-7853-2-git-send-email-eliad@wizery.com>
+	<1378794813.4799.35.camel@porter.coelho.fi>
+	<CA+XVXfdiudFgdXVAugkHVBLPVgLyrsokosCyhpNd5c5G7DOcOg@mail.gmail.com>
+	<1378796198.4799.49.camel@porter.coelho.fi>
+Date: Tue, 10 Sep 2013 15:46:50 +0200
+Message-ID: <CAB3XZEd=n5=pG9=Rvj6P6RHygqYyoqh3rGa3ntQf9f=obK03Sg@mail.gmail.com> (sfid-20130910_154656_150493_74F90A33)
+Subject: Re: [PATCH 02/12] wlcore: add new plt power-mode: CHIP_AWAKE
+From: Eliad Peller <eliad@wizery.com>
+To: Luca Coelho <luca@coelho.fi>
+Cc: Arik Nemtsov <arik@wizery.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/12/2013 05:24 PM, Timothy Rundle wrote:
+On Tue, Sep 10, 2013 at 9:56 AM, Luca Coelho <luca@coelho.fi> wrote:
+> On Tue, 2013-09-10 at 08:47 +0200, Arik Nemtsov wrote:
+>> On Tue, Sep 10, 2013 at 9:33 AM, Luca Coelho <luca@coelho.fi> wrote:
+>> > On Tue, 2013-09-03 at 17:33 +0300, Eliad Peller wrote:
+>> >> From: Yair Shapira <yair.shapira@ti.com>
+>> >>
+>> >> Under this mode the chip is powered on including sdio
+>> >> but no FW is downloaded and run, interrupts are not enabled, etc...
+>> >>
+>> >> This mode is intended to allow RTTT to bridge sdio as a transport
+>> >> to the chip.
+>> >>
+>> >> Driver only provides sdio access using the dev_mem debugfs file.
+>> >>
+>> >> Some fixes done to the code that ensures that PLT mode and normal
+>> >> driver power mode (ifconfig/add_interface) are mutually excluded.
+>> >>
+>> >> Signed-off-by: Yair Shapira <yair.shapira@ti.com>
+>> >> Signed-off-by: Eliad Peller <eliad@wizery.com>
+>> >> ---
+>> >
+>> > I had some comments to this patch internally while I was still at TI.
+>> > Namely, I asked why do we need a new way of doing this if this is
+>> > already possible via debugsfs (using the gpio_power file)?
+>>
+>> Are you commenting on the correct patch? Seems this is just a patch to
+>> prevent "ifconfig up" during PLT mode..
 >
-> I finally got some free time to go through all the patches. My results were
-> similar to Mark's, but I do not get the watchdog messages, though I am pretty
-> sure watchdog is disabled on my PC. I did even try installing openSUSE 12.3, but
-> did not have any success.  It didn't even find my wireless network. I manually
-> configured the network via network-manager, but still no luck.
+> Yes, I'm commenting on the right patch.  It allows the chip power
+> (namely the WLAN_EN GPIO pin) to be set directly, without loading the
+> firmware and doing other initialization stuff.  This can already be
+> controlled via the gpio_power debugfs file.  I've used that a bunch of
+> times, including with the RTTT tool.
 >
-> Let me know if you need anything else from me.
+> Okay, this patch has a few more protections (eg. not allowing an
+> interface to be added while the chip is powered in this way), but this
+> could also be added on top of the existing implementation.
+>
+i guess this just a bit "cleaner" (similar to the way PLT is used).
+the gpio_power debugfs only toggles the gpio power, without changing
+the driver mode, so adding similar protections will be more
+complicated.
 
-The watchdog in rtl8192cu has nothing to do with any kernel watchdog timers. 
-They are totally separate.
-
-Larry
-
-
+Eliad.
