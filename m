@@ -1,79 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:36456 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756597Ab3IBIcx (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:54892 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753703Ab3IJGiu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Sep 2013 04:32:53 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
+	Tue, 10 Sep 2013 02:38:50 -0400
+Message-ID: <1378795155.4799.40.camel@porter.coelho.fi> (sfid-20130910_083853_111641_61A28274)
+Subject: Re: [PATCH 05/12] wl18xx: increase the number of allowed BA sessions
+From: Luca Coelho <luca@coelho.fi>
+To: Eliad Peller <eliad@wizery.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 1/8] ath9k: Update initvals for AR9565 1.0
-Date: Mon,  2 Sep 2013 13:58:59 +0530
-Message-Id: <1378110546-22305-1-git-send-email-sujith@msujith.org> (sfid-20130902_103305_573023_9F28FEC4)
-In-Reply-To: <21028.19411.335796.192256@gargle.gargle.HOWL>
-References: <21028.19411.335796.192256@gargle.gargle.HOWL>
+Date: Tue, 10 Sep 2013 09:39:15 +0300
+In-Reply-To: <1378218848-7853-5-git-send-email-eliad@wizery.com>
+References: <1378218848-7853-1-git-send-email-eliad@wizery.com>
+	 <1378218848-7853-5-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Tue, 2013-09-03 at 17:34 +0300, Eliad Peller wrote:
+> From: Victor Goldenshtein <victorg@ti.com>
+> 
+> The current fw (actually starting from fw 8.5.0.0.58)
+> supports 8 rx BA sessions.
+> 
+> Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> ---
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h | 17 +++++++++--------
- 1 file changed, 9 insertions(+), 8 deletions(-)
+The latest firmware version published at linux-firmware.git is
+8.5.0.0.55 (wl18xx-fw-2.bin), so this patch cannot be taken into the
+official tree yet.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h
-index e85a8b0..03ecc07 100644
---- a/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h
-@@ -272,9 +272,9 @@ static const u32 ar9565_1p0_baseband_core[][2] = {
- 	{0x0000a398, 0x001f0e0f},
- 	{0x0000a39c, 0x0075393f},
- 	{0x0000a3a0, 0xb79f6427},
--	{0x0000a3a4, 0x00000000},
--	{0x0000a3a8, 0xaaaaaaaa},
--	{0x0000a3ac, 0x3c466478},
-+	{0x0000a3a4, 0x00000011},
-+	{0x0000a3a8, 0xaaaaaa6e},
-+	{0x0000a3ac, 0x3c466455},
- 	{0x0000a3c0, 0x20202020},
- 	{0x0000a3c4, 0x22222220},
- 	{0x0000a3c8, 0x20200020},
-@@ -295,11 +295,11 @@ static const u32 ar9565_1p0_baseband_core[][2] = {
- 	{0x0000a404, 0x00000000},
- 	{0x0000a408, 0x0e79e5c6},
- 	{0x0000a40c, 0x00820820},
--	{0x0000a414, 0x1ce739ce},
-+	{0x0000a414, 0x1ce739c5},
- 	{0x0000a418, 0x2d001dce},
--	{0x0000a41c, 0x1ce739ce},
-+	{0x0000a41c, 0x1ce739c5},
- 	{0x0000a420, 0x000001ce},
--	{0x0000a424, 0x1ce739ce},
-+	{0x0000a424, 0x1ce739c5},
- 	{0x0000a428, 0x000001ce},
- 	{0x0000a42c, 0x1ce739ce},
- 	{0x0000a430, 0x1ce739ce},
-@@ -351,9 +351,9 @@ static const u32 ar9565_1p0_baseband_postamble[][5] = {
- 	{0x00009e14, 0x37b95d5e, 0x37b9605e, 0x3379605e, 0x33795d5e},
- 	{0x00009e18, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
- 	{0x00009e1c, 0x0001cf9c, 0x0001cf9c, 0x00021f9c, 0x00021f9c},
--	{0x00009e20, 0x000003b5, 0x000003b5, 0x000003ce, 0x000003ce},
-+	{0x00009e20, 0x000003b5, 0x000003b5, 0x000003a4, 0x000003a4},
- 	{0x00009e2c, 0x0000001c, 0x0000001c, 0x00000021, 0x00000021},
--	{0x00009e3c, 0xcf946222, 0xcf946222, 0xcf946222, 0xcf946222},
-+	{0x00009e3c, 0xcf946222, 0xcf946222, 0xcf946220, 0xcf946220},
- 	{0x00009e44, 0xfe321e27, 0xfe321e27, 0xfe291e27, 0xfe291e27},
- 	{0x00009e48, 0x5030201a, 0x5030201a, 0x50302012, 0x50302012},
- 	{0x00009fc8, 0x0003f000, 0x0003f000, 0x0001a000, 0x0001a000},
-@@ -452,6 +452,7 @@ static const u32 ar9565_1p0_Common_rx_gain_table[][2] = {
- 	/* Addr      allmodes  */
- 	{0x00004050, 0x00300300},
- 	{0x0000406c, 0x00100000},
-+	{0x00009e20, 0x000003b6},
- 	{0x0000a000, 0x00010000},
- 	{0x0000a004, 0x00030002},
- 	{0x0000a008, 0x00050004},
--- 
-1.8.4
+Please publish a newer version of the firmware (with appropriate
+increase in the filename version), since I cannot do that myself
+anymore.
+
+--
+Luca.
 
