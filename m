@@ -1,70 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:33693 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752498Ab3IHOzq (ORCPT
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:34099 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751380Ab3IJOPW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Sep 2013 10:55:46 -0400
-Subject: [PATCH 3/8] ath10k: cleanup debug messages in core.c
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Sun, 08 Sep 2013 17:55:44 +0300
-Message-ID: <20130908145544.3136.77144.stgit@localhost6.localdomain6> (sfid-20130908_165549_232616_1DA453D6)
-In-Reply-To: <20130908145435.3136.49168.stgit@localhost6.localdomain6>
-References: <20130908145435.3136.49168.stgit@localhost6.localdomain6>
+	Tue, 10 Sep 2013 10:15:22 -0400
+Received: by mail-ie0-f178.google.com with SMTP id to1so5554142ieb.23
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Sep 2013 07:15:22 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1378804510.4799.69.camel@porter.coelho.fi>
+References: <1378218848-7853-1-git-send-email-eliad@wizery.com>
+	<1378218848-7853-6-git-send-email-eliad@wizery.com>
+	<1378795636.4799.44.camel@porter.coelho.fi>
+	<CA+XVXfc6RG1BngT_+doiOUhtYAgnG9Q0-oXns-ckJkU7XhE5ag@mail.gmail.com>
+	<1378804510.4799.69.camel@porter.coelho.fi>
+Date: Tue, 10 Sep 2013 16:15:21 +0200
+Message-ID: <CAB3XZEfPQb1FWT3wukBZvSkP9eB1kO=wPpWFxKXBmX5YULAVqw@mail.gmail.com> (sfid-20130910_161541_532754_C1FC6363)
+Subject: Re: [PATCH 06/12] wlcore: send EAPOL frames with voice priority
+From: Eliad Peller <eliad@wizery.com>
+To: Luca Coelho <luca@coelho.fi>
+Cc: Arik Nemtsov <arik@wizery.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix them to follow the general logging style in ath10k.
+On Tue, Sep 10, 2013 at 12:15 PM, Luca Coelho <luca@coelho.fi> wrote:
+> On Tue, 2013-09-10 at 11:11 +0200, Arik Nemtsov wrote:
+>> On Tue, Sep 10, 2013 at 9:47 AM, Luca Coelho <luca@coelho.fi> wrote:
+>> > On Tue, 2013-09-03 at 17:34 +0300, Eliad Peller wrote:
+>> >> From: Igal Chernobelsky <igalc@ti.com>
+>> >>
+>> >> Send EAPOL frames with voice priority by setting TX_HW_ATTR_EAPOL_FRAME
+>> >> new bit in tx attribute. Sending EAPOL with voice priority fixes
+>> >> re-key timeout during heavy traffic issue.
+>> >>
+>> >> Signed-off-by: Igal Chernobelsky <igalc@ti.com>
+>> >> Signed-off-by: Eliad Peller <eliad@wizery.com>
+>> >> ---
+>> >
+>> > This seems to be the same problem that Ben had and debugged by himself
+>> > [1].  Fixing this in hostapd/wpa_supplicant seems more appropriate?
+>> >
+>> > This patch seems to take an advantage of some sort of hack in the
+>> > firmware that will change the priority by itself when the
+>> > TX_HW_ATTR_EAPOL_GRAME bit is set.  If we have a good reason to use this
+>> > patch, we need to take care of the firmware version as well.  This
+>> > probably doesn't work with the latest published firmware.
+>> >
+>> > [1] http://mid.gmane.org/522E18E5.1020503@candelatech.com
+>>
+>> I believe he only fixed one mode (AP - hostapd) but not the other (GO
+>> - wpa_supplicant). Anyway that's what we tested at the time.
+>
+> Okay, I didn't dig much into it.
+>
+>
+>> Anyway marking it as this level doesn't do any harm. You're right
+>> about the FW version though - it should be upstreamed first.
+>
+> Fair enough.  If the firmware implements this, no reason why not use it.
+> But I'll wait for the new firmware before applying this.
+>
+this change is backward compatible, so there's no issue applying it as is.
+however, if you prefer waiting for a newer fw that's fine too.
+i'll add it to the waiting list :)
 
-While at it, add print id chip_id to the debug log.
-
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c |    9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 0ed60fd..76906d5 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -53,7 +53,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 
- static void ath10k_send_suspend_complete(struct ath10k *ar)
- {
--	ath10k_dbg(ATH10K_DBG_BOOT, "%s\n", __func__);
-+	ath10k_dbg(ATH10K_DBG_BOOT, "boot suspend complete\n");
- 
- 	ar->is_target_paused = true;
- 	wake_up(&ar->event_queue);
-@@ -101,7 +101,7 @@ static int ath10k_init_connect_htc(struct ath10k *ar)
- 		goto timeout;
- 	}
- 
--	ath10k_dbg(ATH10K_DBG_BOOT, "core wmi ready\n");
-+	ath10k_dbg(ATH10K_DBG_BOOT, "boot wmi ready\n");
- 	return 0;
- 
- timeout:
-@@ -204,7 +204,7 @@ static int ath10k_push_board_ext_data(struct ath10k *ar,
- 	}
- 
- 	ath10k_dbg(ATH10K_DBG_BOOT,
--		   "ath10k: Board extended Data download addr: 0x%x\n",
-+		   "boot push board extended data addr 0x%x\n",
- 		   board_ext_data_addr);
- 
- 	if (board_ext_data_addr == 0)
-@@ -722,6 +722,9 @@ static int ath10k_core_check_chip_id(struct ath10k *ar)
- {
- 	u32 hw_revision = MS(ar->chip_id, SOC_CHIP_ID_REV);
- 
-+	ath10k_dbg(ATH10K_DBG_BOOT, "boot chip_id 0x%08x hw_revision 0x%x\n",
-+		   ar->chip_id, hw_revision);
-+
- 	/* Check that we are not using hw1.0 (some of them have same pci id
- 	 * as hw2.0) before doing anything else as ath10k crashes horribly
- 	 * due to missing hw1.0 workarounds. */
-
+Eliad.
