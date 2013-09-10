@@ -1,248 +1,211 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:64582 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753874Ab3IQSyo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Sep 2013 14:54:44 -0400
-Received: by mail-wg0-f45.google.com with SMTP id y10so5546315wgg.12
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Sep 2013 11:54:43 -0700 (PDT)
-Message-ID: <1379444075.5456.22.camel@canaries32-MCP7A> (sfid-20130917_205451_787271_0A91A895)
-Subject: [PATCH 1/2] staging vt6656: desc.h remove typedef struct
- tagSTxBufHead to rxtx.h
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 17 Sep 2013 19:54:35 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from ebb05.tieto.com ([131.207.168.36]:42868 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752064Ab3IJNuN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Sep 2013 09:50:13 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 5/7] ath10k: improve beacon submission latency
+Date: Tue, 10 Sep 2013 15:50:01 +0200
+Message-ID: <1378821003-22925-6-git-send-email-michal.kazior@tieto.com> (sfid-20130910_155020_455244_5B5C7E13)
+In-Reply-To: <1378821003-22925-1-git-send-email-michal.kazior@tieto.com>
+References: <1378821003-22925-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In code it is referred to as fifo to renamed to
-typedef struct tagSTxBufHead -> struct vnt_tx_fifo_head
+The patch prevents beacon misses in some case of
+heavy load on a system.
 
-This is only needed by rxtc.c so moved to rxtx.h
+If a beacon can't be transmitted directly from an
+SWBA event it will be left in arvif->beacon and
+transmission will be retried once TX credits
+become available.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/staging/vt6656/desc.h |  9 --------
- drivers/staging/vt6656/rxtx.c | 52 ++++++++++++++++++++++++++++---------------
- drivers/staging/vt6656/rxtx.h | 12 ++++++----
- 3 files changed, 42 insertions(+), 31 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.h |    1 +
+ drivers/net/wireless/ath/ath10k/mac.c  |    7 ++++
+ drivers/net/wireless/ath/ath10k/wmi.c  |   70 ++++++++++++++++++++++++++------
+ drivers/net/wireless/ath/ath10k/wmi.h  |    3 +-
+ 4 files changed, 67 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/staging/vt6656/desc.h b/drivers/staging/vt6656/desc.h
-index 4675135..afe7074 100644
---- a/drivers/staging/vt6656/desc.h
-+++ b/drivers/staging/vt6656/desc.h
-@@ -146,15 +146,6 @@
- /*
-  * TX FIFO header
-  */
--typedef struct tagSTxBufHead {
--	u32 adwTxKey[4];
--    u16    wFIFOCtl;
--    u16    wTimeStamp;
--    u16    wFragCtl;
--    u16    wReserved;
--} __attribute__ ((__packed__))
--STxBufHead, *PSTxBufHead;
--typedef const STxBufHead *PCSTxBufHead;
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index c953a33..14b7d3d 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -204,6 +204,7 @@ struct ath10k_vif {
+ 	enum wmi_vdev_subtype vdev_subtype;
+ 	u32 beacon_interval;
+ 	u32 dtim_period;
++	struct sk_buff *beacon;
  
- typedef struct tagSTxShortBufHead {
-     u16    wFIFOCtl;
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index fb743a8..a733e3b 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -844,13 +844,14 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
- 	void *rts_cts, u32 cbFrameSize, int bNeedACK, u32 uDMAIdx,
- 	struct ethhdr *psEthHeader, bool need_rts)
- {
-+	struct vnt_tx_fifo_head *pFifoHead =
-+				(struct vnt_tx_fifo_head *)pTxBufHead;
- 	union vnt_tx_data_head *head = rts_cts;
- 	u32 cbMACHdLen = WLAN_HDR_ADDR3_LEN; /* 24 */
- 	u16 wFifoCtl;
- 	u8 byFBOption = AUTO_FB_NONE;
+ 	struct ath10k *ar;
+ 	struct ieee80211_vif *vif;
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 248248b..439d0c3 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2056,6 +2056,13 @@ static void ath10k_remove_interface(struct ieee80211_hw *hw,
  
-     //DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"s_vGenerateTxParameter...\n");
--    PSTxBufHead pFifoHead = (PSTxBufHead)pTxBufHead;
-     pFifoHead->wReserved = wCurrentRate;
-     wFifoCtl = pFifoHead->wFIFOCtl;
+ 	ath10k_dbg(ATH10K_DBG_MAC, "Remove interface: id %d\n", arvif->vdev_id);
  
-@@ -953,11 +954,12 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
- */
- 
- static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
--	struct vnt_tx_buffer *pTxBufHead, int bNeedEncryption,
-+	struct vnt_tx_buffer *tx_buffer, int bNeedEncryption,
- 	u32 uSkbPacketLen, u32 uDMAIdx,	struct ethhdr *psEthHeader,
- 	u8 *pPacket, PSKeyItem pTransmitKey, u32 uNodeIndex, u16 wCurrentRate,
- 	u32 *pcbHeaderLen, u32 *pcbTotalLen)
- {
-+	struct vnt_tx_fifo_head *pTxBufHead = &tx_buffer->fifo_head;
- 	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
- 	u32 cbFrameSize, cbFrameBodySize;
- 	u32 cb802_1_H_len;
-@@ -980,7 +982,6 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
- 	u32 dwMICKey0, dwMICKey1, dwMIC_Priority;
- 	u32 *pdwMIC_L, *pdwMIC_R;
- 	int bSoftWEP = false;
--
- 	pvRrvTime = pMICHDR = pvTxDataHd = NULL;
- 
- 	if (bNeedEncryption && pTransmitKey->pvKeyTable) {
-@@ -1103,7 +1104,8 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
-     }
- 
-     pbyTxBufferAddr = (u8 *) &(pTxBufHead->adwTxKey[0]);
--    wTxBufSize = sizeof(STxBufHead);
-+	wTxBufSize = sizeof(struct vnt_tx_fifo_head);
++	spin_lock_bh(&ar->data_lock);
++	if (arvif->beacon) {
++		dev_kfree_skb_any(arvif->beacon);
++		arvif->beacon = NULL;
++	}
++	spin_unlock_bh(&ar->data_lock);
 +
-     if (byPktType == PK_TYPE_11GB || byPktType == PK_TYPE_11GA) {//802.11g packet
-         if (byFBOption == AUTO_FB_NONE) {
-             if (bRTS == true) {//RTS_need
-@@ -1467,8 +1469,8 @@ CMD_STATUS csMgmt_xmit(struct vnt_private *pDevice,
- {
- 	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
- 	struct vnt_tx_buffer *pTX_Buffer;
--	PSTxBufHead pTxBufHead;
- 	struct vnt_usb_send_context *pContext;
-+	struct vnt_tx_fifo_head *pTxBufHead;
- 	struct ieee80211_hdr *pMACHeader;
- 	struct ethhdr sEthHeader;
- 	u8 byPktType, *pbyTxBufferAddr;
-@@ -1490,10 +1492,10 @@ CMD_STATUS csMgmt_xmit(struct vnt_private *pDevice,
-     }
+ 	ar->free_vdev_map |= 1 << (arvif->vdev_id);
  
- 	pTX_Buffer = (struct vnt_tx_buffer *)&pContext->Data[0];
--    pbyTxBufferAddr = (u8 *)&(pTX_Buffer->adwTxKey[0]);
-     cbFrameBodySize = pPacket->cbPayloadLen;
--    pTxBufHead = (PSTxBufHead) pbyTxBufferAddr;
--    wTxBufSize = sizeof(STxBufHead);
-+	pTxBufHead = &pTX_Buffer->fifo_head;
-+	pbyTxBufferAddr = (u8 *)&pTxBufHead->adwTxKey[0];
-+	wTxBufSize = sizeof(struct vnt_tx_fifo_head);
+ 	if (arvif->vdev_type == WMI_VDEV_TYPE_AP) {
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index ff407c2..c13e434 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -120,8 +120,51 @@ err_pull:
+ 	return ret;
+ }
  
-     if (pDevice->byBBType == BB_TYPE_11A) {
-         wCurrentRate = RATE_6M;
-@@ -1725,10 +1727,14 @@ CMD_STATUS csMgmt_xmit(struct vnt_private *pDevice,
-     pContext->uBufLen = (u16)cbReqCount + 4;  //USB header
- 
-     if (WLAN_GET_FC_TODS(pMACHeader->frame_control) == 0) {
--        s_vSaveTxPktInfo(pDevice, (u8) (pTX_Buffer->byPKTNO & 0x0F), &(pMACHeader->addr1[0]), (u16)cbFrameSize, pTX_Buffer->wFIFOCtl);
-+	s_vSaveTxPktInfo(pDevice, (u8)(pTX_Buffer->byPKTNO & 0x0F),
-+			&pMACHeader->addr1[0], (u16)cbFrameSize,
-+			pTxBufHead->wFIFOCtl);
-     }
-     else {
--        s_vSaveTxPktInfo(pDevice, (u8) (pTX_Buffer->byPKTNO & 0x0F), &(pMACHeader->addr3[0]), (u16)cbFrameSize, pTX_Buffer->wFIFOCtl);
-+	s_vSaveTxPktInfo(pDevice, (u8)(pTX_Buffer->byPKTNO & 0x0F),
-+			&pMACHeader->addr3[0], (u16)cbFrameSize,
-+			pTxBufHead->wFIFOCtl);
-     }
- 
-     PIPEnsSendBulkOut(pDevice,pContext);
-@@ -1823,6 +1829,7 @@ void vDMA0_tx_80211(struct vnt_private *pDevice, struct sk_buff *skb)
- {
- 	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
- 	struct vnt_tx_buffer *pTX_Buffer;
-+	struct vnt_tx_fifo_head *pTxBufHead;
- 	u8 byPktType;
- 	u8 *pbyTxBufferAddr;
- 	void *rts_cts = NULL;
-@@ -1831,7 +1838,6 @@ void vDMA0_tx_80211(struct vnt_private *pDevice, struct sk_buff *skb)
- 	struct ieee80211_hdr *pMACHeader;
- 	u32 cbHeaderSize, cbFrameBodySize;
- 	int bNeedACK, bIsPSPOLL = false;
--	PSTxBufHead pTxBufHead;
- 	u32 cbFrameSize;
- 	u32 cbIVlen = 0, cbICVlen = 0, cbMIClen = 0, cbFCSlen = 4;
- 	u32 uPadding = 0;
-@@ -1872,9 +1878,9 @@ void vDMA0_tx_80211(struct vnt_private *pDevice, struct sk_buff *skb)
-     }
- 
- 	pTX_Buffer = (struct vnt_tx_buffer *)&pContext->Data[0];
--    pbyTxBufferAddr = (u8 *)(&pTX_Buffer->adwTxKey[0]);
--    pTxBufHead = (PSTxBufHead) pbyTxBufferAddr;
--    wTxBufSize = sizeof(STxBufHead);
-+	pTxBufHead = &pTX_Buffer->fifo_head;
-+	pbyTxBufferAddr = (u8 *)&pTxBufHead->adwTxKey[0];
-+	wTxBufSize = sizeof(struct vnt_tx_fifo_head);
- 
-     if (pDevice->byBBType == BB_TYPE_11A) {
-         wCurrentRate = RATE_6M;
-@@ -2181,10 +2187,14 @@ void vDMA0_tx_80211(struct vnt_private *pDevice, struct sk_buff *skb)
-     pContext->uBufLen = (u16)cbReqCount + 4;  //USB header
- 
-     if (WLAN_GET_FC_TODS(pMACHeader->frame_control) == 0) {
--        s_vSaveTxPktInfo(pDevice, (u8) (pTX_Buffer->byPKTNO & 0x0F), &(pMACHeader->addr1[0]), (u16)cbFrameSize, pTX_Buffer->wFIFOCtl);
-+	s_vSaveTxPktInfo(pDevice, (u8)(pTX_Buffer->byPKTNO & 0x0F),
-+			&pMACHeader->addr1[0], (u16)cbFrameSize,
-+			pTxBufHead->wFIFOCtl);
-     }
-     else {
--        s_vSaveTxPktInfo(pDevice, (u8) (pTX_Buffer->byPKTNO & 0x0F), &(pMACHeader->addr3[0]), (u16)cbFrameSize, pTX_Buffer->wFIFOCtl);
-+	s_vSaveTxPktInfo(pDevice, (u8)(pTX_Buffer->byPKTNO & 0x0F),
-+			&pMACHeader->addr3[0], (u16)cbFrameSize,
-+			pTxBufHead->wFIFOCtl);
-     }
-     PIPEnsSendBulkOut(pDevice,pContext);
-     return ;
-@@ -2566,7 +2576,10 @@ int nsDMA_tx_packet(struct vnt_private *pDevice,
-     pContext->Type = CONTEXT_DATA_PACKET;
-     pContext->uBufLen = (u16)BytesToWrite + 4 ; //USB header
- 
--    s_vSaveTxPktInfo(pDevice, (u8) (pTX_Buffer->byPKTNO & 0x0F), &(pContext->sEthHeader.h_dest[0]), (u16) (BytesToWrite-uHeaderLen), pTX_Buffer->wFIFOCtl);
-+    s_vSaveTxPktInfo(pDevice, (u8)(pTX_Buffer->byPKTNO & 0x0F),
-+			&pContext->sEthHeader.h_dest[0],
-+			(u16)(BytesToWrite-uHeaderLen),
-+			pTX_Buffer->fifo_head.wFIFOCtl);
- 
-     status = PIPEnsSendBulkOut(pDevice,pContext);
- 
-@@ -2717,7 +2730,10 @@ int bRelayPacketSend(struct vnt_private *pDevice, u8 *pbySkbData, u32 uDataLen,
-     pContext->Type = CONTEXT_DATA_PACKET;
-     pContext->uBufLen = (u16)BytesToWrite + 4 ; //USB header
- 
--    s_vSaveTxPktInfo(pDevice, (u8) (pTX_Buffer->byPKTNO & 0x0F), &(pContext->sEthHeader.h_dest[0]), (u16) (BytesToWrite-uHeaderLen), pTX_Buffer->wFIFOCtl);
-+    s_vSaveTxPktInfo(pDevice, (u8)(pTX_Buffer->byPKTNO & 0x0F),
-+		&pContext->sEthHeader.h_dest[0],
-+		(u16)(BytesToWrite - uHeaderLen),
-+		pTX_Buffer->fifo_head.wFIFOCtl);
- 
-     status = PIPEnsSendBulkOut(pDevice,pContext);
- 
-diff --git a/drivers/staging/vt6656/rxtx.h b/drivers/staging/vt6656/rxtx.h
-index 4bbee1c..137e62d 100644
---- a/drivers/staging/vt6656/rxtx.h
-+++ b/drivers/staging/vt6656/rxtx.h
-@@ -180,10 +180,7 @@ union vnt_tx_data_head {
- 	struct vnt_cts_fb cts_g_fb;
- };
- 
--struct vnt_tx_buffer {
--	u8 byType;
--	u8 byPKTNO;
--	u16 wTxByteCount;
-+struct vnt_tx_fifo_head {
- 	u32 adwTxKey[4];
- 	u16 wFIFOCtl;
- 	u16 wTimeStamp;
-@@ -191,6 +188,13 @@ struct vnt_tx_buffer {
- 	u16 wReserved;
- } __packed;
- 
-+struct vnt_tx_buffer {
-+	u8 byType;
-+	u8 byPKTNO;
-+	u16 wTxByteCount;
-+	struct vnt_tx_fifo_head fifo_head;
-+} __packed;
++static void ath10k_wmi_tx_beacon_nowait(struct ath10k_vif *arvif)
++{
++	struct wmi_bcn_tx_arg arg = {0};
++	int ret;
 +
- struct vnt_beacon_buffer {
- 	u8 byType;
- 	u8 byPKTNO;
++	lockdep_assert_held(&arvif->ar->data_lock);
++
++	if (arvif->beacon == NULL)
++		return;
++
++	arg.vdev_id = arvif->vdev_id;
++	arg.tx_rate = 0;
++	arg.tx_power = 0;
++	arg.bcn = arvif->beacon->data;
++	arg.bcn_len = arvif->beacon->len;
++
++	ret = ath10k_wmi_beacon_send_nowait(arvif->ar, &arg);
++	if (ret)
++		return;
++
++	dev_kfree_skb_any(arvif->beacon);
++	arvif->beacon = NULL;
++}
++
++static void ath10k_wmi_tx_beacons_iter(void *data, u8 *mac,
++				       struct ieee80211_vif *vif)
++{
++	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
++
++	ath10k_wmi_tx_beacon_nowait(arvif);
++}
++
++static void ath10k_wmi_tx_beacons_nowait(struct ath10k *ar)
++{
++	spin_lock_bh(&ar->data_lock);
++	ieee80211_iterate_active_interfaces_atomic(ar->hw,
++						   IEEE80211_IFACE_ITER_NORMAL,
++						   ath10k_wmi_tx_beacons_iter,
++						   NULL);
++	spin_unlock_bh(&ar->data_lock);
++}
++
+ static void ath10k_wmi_op_ep_tx_credits(struct ath10k *ar)
+ {
++	ath10k_wmi_tx_beacons_nowait(ar);
+ 	wake_up(&ar->wmi.tx_credits_wq);
+ }
+ 
+@@ -131,6 +174,7 @@ static int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb,
+ 	int ret = -EINVAL;
+ 
+ 	wait_event_timeout(ar->wmi.tx_credits_wq, ({
++		ath10k_wmi_tx_beacons_nowait(ar);
+ 		ret = ath10k_wmi_cmd_send_nowait(ar, skb, cmd_id);
+ 		(ret != -EAGAIN);
+ 	}), 3*HZ);
+@@ -760,10 +804,8 @@ static void ath10k_wmi_event_host_swba(struct ath10k *ar, struct sk_buff *skb)
+ 	int i = -1;
+ 	struct wmi_bcn_info *bcn_info;
+ 	struct ath10k_vif *arvif;
+-	struct wmi_bcn_tx_arg arg;
+ 	struct sk_buff *bcn;
+ 	int vdev_id = 0;
+-	int ret;
+ 
+ 	ath10k_dbg(ATH10K_DBG_MGMT, "WMI_HOST_SWBA_EVENTID\n");
+ 
+@@ -820,17 +862,17 @@ static void ath10k_wmi_event_host_swba(struct ath10k *ar, struct sk_buff *skb)
+ 		ath10k_wmi_update_tim(ar, arvif, bcn, bcn_info);
+ 		ath10k_wmi_update_noa(ar, arvif, bcn, bcn_info);
+ 
+-		arg.vdev_id = arvif->vdev_id;
+-		arg.tx_rate = 0;
+-		arg.tx_power = 0;
+-		arg.bcn = bcn->data;
+-		arg.bcn_len = bcn->len;
++		spin_lock_bh(&ar->data_lock);
++		if (arvif->beacon) {
++			ath10k_warn("SWBA overrun on vdev %d\n",
++				    arvif->vdev_id);
++			dev_kfree_skb_any(arvif->beacon);
++		}
+ 
+-		ret = ath10k_wmi_beacon_send(ar, &arg);
+-		if (ret)
+-			ath10k_warn("could not send beacon (%d)\n", ret);
++		arvif->beacon = bcn;
+ 
+-		dev_kfree_skb_any(bcn);
++		ath10k_wmi_tx_beacon_nowait(arvif);
++		spin_unlock_bh(&ar->data_lock);
+ 	}
+ }
+ 
+@@ -1181,6 +1223,7 @@ static void ath10k_wmi_process_rx(struct ath10k *ar, struct sk_buff *skb)
+ 	 * thus can't be defered to a worker thread */
+ 	switch (event_id) {
+ 	case WMI_MGMT_RX_EVENTID:
++	case WMI_HOST_SWBA_EVENTID:
+ 		ath10k_wmi_event_process(ar, skb);
+ 		return;
+ 	default:
+@@ -2138,7 +2181,8 @@ int ath10k_wmi_peer_assoc(struct ath10k *ar,
+ 	return ath10k_wmi_cmd_send(ar, skb, WMI_PEER_ASSOC_CMDID);
+ }
+ 
+-int ath10k_wmi_beacon_send(struct ath10k *ar, const struct wmi_bcn_tx_arg *arg)
++int ath10k_wmi_beacon_send_nowait(struct ath10k *ar,
++				  const struct wmi_bcn_tx_arg *arg)
+ {
+ 	struct wmi_bcn_tx_cmd *cmd;
+ 	struct sk_buff *skb;
+@@ -2154,7 +2198,7 @@ int ath10k_wmi_beacon_send(struct ath10k *ar, const struct wmi_bcn_tx_arg *arg)
+ 	cmd->hdr.bcn_len  = __cpu_to_le32(arg->bcn_len);
+ 	memcpy(cmd->bcn, arg->bcn, arg->bcn_len);
+ 
+-	return ath10k_wmi_cmd_send(ar, skb, WMI_BCN_TX_CMDID);
++	return ath10k_wmi_cmd_send_nowait(ar, skb, WMI_BCN_TX_CMDID);
+ }
+ 
+ static void ath10k_wmi_pdev_set_wmm_param(struct wmi_wmm_params *params,
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 40fcf05..482461a 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -3068,7 +3068,8 @@ int ath10k_wmi_set_ap_ps_param(struct ath10k *ar, u32 vdev_id, const u8 *mac,
+ 			       enum wmi_ap_ps_peer_param param_id, u32 value);
+ int ath10k_wmi_scan_chan_list(struct ath10k *ar,
+ 			      const struct wmi_scan_chan_list_arg *arg);
+-int ath10k_wmi_beacon_send(struct ath10k *ar, const struct wmi_bcn_tx_arg *arg);
++int ath10k_wmi_beacon_send_nowait(struct ath10k *ar,
++				  const struct wmi_bcn_tx_arg *arg);
+ int ath10k_wmi_pdev_set_wmm_params(struct ath10k *ar,
+ 			const struct wmi_pdev_set_wmm_params_arg *arg);
+ int ath10k_wmi_request_stats(struct ath10k *ar, enum wmi_stats_id stats_id);
 -- 
-1.8.1.2
+1.7.9.5
 
