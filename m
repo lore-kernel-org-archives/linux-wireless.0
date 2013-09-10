@@ -1,38 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:53753 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750767Ab3IZOa5 (ORCPT
+Received: from p15195424.pureserver.info ([82.165.34.74]:41512 "EHLO
+	p15195424.pureserver.info" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751225Ab3IJUFs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Sep 2013 10:30:57 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Marek Puzyniak <marek.puzyniak@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: make monitor vdev down before stoping it
-References: <1380024384-30512-1-git-send-email-marek.puzyniak@tieto.com>
-Date: Thu, 26 Sep 2013 17:30:46 +0300
-In-Reply-To: <1380024384-30512-1-git-send-email-marek.puzyniak@tieto.com>
-	(Marek Puzyniak's message of "Tue, 24 Sep 2013 14:06:24 +0200")
-Message-ID: <871u4bpsdl.fsf@kamboji.qca.qualcomm.com> (sfid-20130926_163100_565851_08413629)
+	Tue, 10 Sep 2013 16:05:48 -0400
+Message-ID: <522F7B61.6060208@ilande.co.uk> (sfid-20130910_220557_291322_21DF12FB)
+Date: Tue, 10 Sep 2013 21:04:49 +0100
+From: Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: Timothy Rundle <tgrundlesr@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <CALa3VXYo1yTuDr22M7AUcp0WLQszzdMSJczRgmD57uPd_68vWQ@mail.gmail.com> <522D054B.5060205@lwfinger.net> <522DD856.7050309@ilande.co.uk> <522DE1BE.6070904@lwfinger.net> <522DE8CA.9010008@ilande.co.uk> <522DFF83.6000605@lwfinger.net> <522E0573.4000804@ilande.co.uk> <522E1B7D.5010107@lwfinger.net> <522E463E.4040701@ilande.co.uk> <522E5416.4010901@lwfinger.net> <522E5D83.9060103@ilande.co.uk> <522E896E.7000607@lwfinger.net> <522EB51A.2080004@ilande.co.uk> <522F3757.8030600@lwfinger.net>
+In-Reply-To: <522F3757.8030600@lwfinger.net>
+Subject: Re: RTL8192CU continually reconnecting
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Marek Puzyniak <marek.puzyniak@tieto.com> writes:
+On 10/09/13 16:14, Larry Finger wrote:
 
-> Following sequence causes FW crash:
-> -monitor vdev up,
-> -monitor vdev stop,
-> -monitor vdev delete.
-> Making monitor vdev down before stoping it works ok:
-> -monitor vdev up,
-> -monitor vdev down,
-> -monitor vdev stop,
-> -monitor vdev delete.
+> Those disconnects do happen for reasons that I do not understand. They
+> will be worse on your system without a network manager as it appears
+> that you need to manually reconnect at that point, or at least it took a
+> long time for the system to react. With NetworkManager, that reconnect
+> is automatic, and relatively quick.
+
+Okay - understood.
+
+>> Whilst checking various parts of my kernel, I noticed for the first
+>> time during
+>> testing that my current kernel configuration doesn't have SMP enabled.
+>> This got
+>> me thinking that perhaps there are other build options which could
+>> have an
+>> effect on the driver. Hence I also uploaded a copy of my .config file to
+>> http://www.ilande.co.uk/tmp/rtl8192cu-config in the hope that maybe
+>> this can
+>> help you recreate the issue locally?
 >
-> Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
+> As I have a dual-core CPU, thus I always have SMP set. That should not
+> be a problem. In fact, the concurrent operation of 2 CPUs usually causes
+> more problems. I will review that configuration.
 
-Thanks, applied.
+I'd definitely be interested to know if by duplicating that same 
+configuration, you see the same issues that I do.
 
--- 
-Kalle Valo
+> You can now disable the logging. When the watchdog reports that contact
+> with the AP has been lost, that is certainly true, and the watchdog is
+> doing its job. In addition, nothing was received from any AP, which
+> leads me to conclude that the receiver has locked up for some reason. I
+> need to check to see what the code does to recover. Perhaps that will
+> help me understand the problem. In my current run that has run for 20
+> hours, I have had two disconnects for Reason 3, but more importantly, I
+> have had two watchdog restarts. It does happen on my system, just a lot
+> less frequently. BTW, my ping loss rate is about 3%. That is too high,
+> but not as bad as yours.
+
+Interesting. Perhaps there is something different in the initial 
+programming of the radio that causes it to crash on my particular 
+hardware revision? As before, please let me know if there is anything 
+else you require.
+
+
+ATB,
+
+Mark.
+
