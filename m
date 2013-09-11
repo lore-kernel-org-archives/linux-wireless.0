@@ -1,49 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:63306 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755305Ab3I3TGF (ORCPT
+Received: from mail-bk0-f52.google.com ([209.85.214.52]:43201 "EHLO
+	mail-bk0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752588Ab3IKFGr convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Sep 2013 15:06:05 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3 0/3] ath10k: implement FW IE support
-References: <20130927164636.2570.24076.stgit@localhost6.localdomain6>
-Date: Mon, 30 Sep 2013 22:05:59 +0300
-In-Reply-To: <20130927164636.2570.24076.stgit@localhost6.localdomain6> (Kalle
-	Valo's message of "Fri, 27 Sep 2013 19:54:48 +0300")
-Message-ID: <87vc1idt9k.fsf@kamboji.qca.qualcomm.com> (sfid-20130930_210615_583007_E428DA4A)
+	Wed, 11 Sep 2013 01:06:47 -0400
+Received: by mail-bk0-f52.google.com with SMTP id e11so3239486bkh.25
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Sep 2013 22:06:46 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20130910141413.GE29385@localhost>
+References: <1378821003-22925-1-git-send-email-michal.kazior@tieto.com>
+	<1378821003-22925-2-git-send-email-michal.kazior@tieto.com>
+	<20130910141413.GE29385@localhost>
+Date: Wed, 11 Sep 2013 07:06:46 +0200
+Message-ID: <CA+BoTQ=E6NpACFWkgFthbY4AjNp_nbfF1kKkQb9iPrAkD6SBfw@mail.gmail.com> (sfid-20130911_070700_912343_7D36BEB6)
+Subject: Re: [PATCH 1/7] ath10k: simplify HTC credits calculation
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: ath10k@lists.infradead.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+On 10 September 2013 16:14, Bob Copeland <me@bobcopeland.com> wrote:
+> On Tue, Sep 10, 2013 at 03:49:57PM +0200, Michal Kazior wrote:
+>> +             skb = __skb_dequeue(&ep->tx_queue);
+>> +
+>> +             if (ep->tx_credit_flow_enabled) {
+>> +                     /* integer division w/ round-up */
+>> +                     credits = (skb->len + htc->target_credit_size - 1) /
+>> +                               htc->target_credit_size;
+>
+> There's a macro for that...
+>
+>             credits = DIV_ROUND_UP(skb->len, htc->target_credit_size);
 
-> FW IE format is needed for ath10k automatically detect what features the
-> firmware image supports. This is important especially with 10.x firmwares which
-> has a different interface.
->
-> Please review.
->
-> v2:
->
-> * added accidentally dropped board file loading (michal)
->
-> * check that ATH10K_FW_IE_FW_IMAGE is available, fail otherwise
->
-> v3:
->
-> * resend with changes really listed in v2
->
-> ---
->
-> Kalle Valo (3):
->       ath10k: rename board_data in struct ath10k
->       ath10k: store separate pointers for firmware data
->       ath10k: implement firmware IE container support
+I didn't know that. Thanks!
 
-All three applied.
 
--- 
-Kalle Valo
+Michał.
