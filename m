@@ -1,53 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:60241 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750753Ab3IPSzk (ORCPT
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:42854 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751819Ab3IKGLB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Sep 2013 14:55:40 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH 0/8i V2] rtlwifi: Patches to fix problems shown by smatch
-Date: Mon, 16 Sep 2013 13:55:14 -0500
-Message-Id: <1379357722-17687-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130916_205549_707377_07C32E5B)
+	Wed, 11 Sep 2013 02:11:01 -0400
+MIME-Version: 1.0
+Reply-To: andrea.merello@gmail.com
+In-Reply-To: <522F584E.6000806@lwfinger.net>
+References: <CAN8YU5NTKUtS8+YzmcOSM3=YUX-FSwLTD86F_hXsNdVkw5NEGA@mail.gmail.com>
+	<522F584E.6000806@lwfinger.net>
+Date: Wed, 11 Sep 2013 08:11:00 +0200
+Message-ID: <CAN8YU5PCFj-gtQwuuR3fM52YAVTi_5NYPbDVj-KMSzMpXjvFWQ@mail.gmail.com> (sfid-20130911_081106_489826_8E482F05)
+Subject: Re: RTL8187SE staging Linux driver
+From: Andrea Merello <andrea.merello@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: wlanfae@realtek.com, shwei <shwei@realtek.com.tw>,
+	John Linville <linville@tuxdriver.com>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Greg Kroah-Hartman <greg@kroah.com>,
+	linux-wireless@vger.kernel.org,
+	Michael Wu <flamingice@sourmilk.net>,
+	Bernhard Schiffner <bernhard@schiffner-limbach.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix smatch warnings and errors in the rtlwifi family of drivers.
+Thanks for your code and for documentation!
 
-V2 addresses comments by David Laight and Sergei Shtylyov.
+I see you did your work in a new net/wireless/rtl818x/rtl8187se
+directory and you produced a new driver.
+Now I have to evaluate whether to keep doing it in this way, trying to
+continue your work, or to merge support in
+net/wireless/rtl818x/rtl8180 code, that was my original idea..
+Now that I have documentation I can better evaluate how much the two
+boards are similar..
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+Andrea
 
-Larry Finger (8):
-  rtlwifi: rtl8192du: Fix smatch errors in /rtl8192de/dm.c
-  rtlwifi: rtl8192de: Fix smatch warnings in rtl8192de/hw.c
-  rtlwifi: rtl8192cu: Fix smatch warning in rtl8192cu/trx.c
-  rtlwifi: rtl8192_common: Fix smatch errors and warnings in
-    rtl8192c/dm_common.c
-  [PATCH 5/7: rtlwifi: Fix smatch warning in pci.c
-  rtlwifi: Fix smatch warnings in usb.c
-  rtlwifi: rtl8188ee: Fix smatch warning in rtl8188ee/hw.c
-  rtlwifi: Remove variable 'noise' from rtl_stats struct
-
- drivers/net/wireless/rtlwifi/pci.c                | 1 -
- drivers/net/wireless/rtlwifi/rtl8188ee/hw.c       | 1 +
- drivers/net/wireless/rtlwifi/rtl8188ee/trx.c      | 1 -
- drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c | 4 +++-
- drivers/net/wireless/rtlwifi/rtl8192ce/trx.c      | 1 -
- drivers/net/wireless/rtlwifi/rtl8192cu/trx.c      | 2 --
- drivers/net/wireless/rtlwifi/rtl8192de/dm.c       | 8 ++++++--
- drivers/net/wireless/rtlwifi/rtl8192de/hw.c       | 2 ++
- drivers/net/wireless/rtlwifi/rtl8192de/trx.c      | 1 -
- drivers/net/wireless/rtlwifi/rtl8192se/trx.c      | 1 -
- drivers/net/wireless/rtlwifi/rtl8723ae/trx.c      | 1 -
- drivers/net/wireless/rtlwifi/usb.c                | 8 +++++---
- drivers/net/wireless/rtlwifi/wifi.h               | 1 -
- 13 files changed, 17 insertions(+), 15 deletions(-)
-
--- 
-1.8.1.4
-
+On Tue, Sep 10, 2013 at 7:35 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 09/10/2013 10:59 AM, Andrea Merello wrote:
+>>
+>> Hello,
+>>
+>> As you probably know, in the current Linux kernel there is a staging
+>> driver for the RTL8187SE device (based on my older RTL8180/RTL8185
+>> Linux driver), while there also a regular (not staging) driver
+>> supporting older RTL8185 and RTL8180 devices
+>> (net/wireless/rtl818x/rtl8180) .
+>>
+>> As far as I can see, the RTL8187SE device seems not so much different
+>> from an RTL8185 device.
+>> I would like to try (in my spare time) to add support for RTL8187SE
+>> device in the current RTL818x driver, in order to avoid code
+>> duplication, remove a driver from staging, and make RTL8187SE using
+>> mac80211.
+>>
+>> Do any one of you have any comment/objection/suggestions about this ?
+>>
+>> Is it possible to get the RTL8187SE documentation to make things easier?
+>>
+>> For now I will probably keep different RF code for the two cards even
+>> if the RTL8225 (zebra 2) radio is used by both RTL8187SE and some
+>> RTL8185 devices, however if I could get enough documentation about it,
+>> it would be great to try to merge also RF code..
+>
+>
+> I too would be very happy for you to do this. At one point, I was trying to
+> do this and I had a version that very nearly worked. The driver was
+> receiving data and transmitting short packets but failing on longer ones.
+> Length 42 was OK, but 68 failed. At that point, the chip locked up and
+> needed to be power cycled. It seems that I got the DMA wrong, but I could
+> never find it, and eventually, I had to move on.
+>
+> At the moment, I am working at getting it to build on the current kernel.
+> When I finish that, I will send the code to you. Even if you decide to scrap
+> it, it may help you a little.
+>
+> Attached is the datasheet, which is the only documentation I have.
+>
+> Larry
+>
+>
