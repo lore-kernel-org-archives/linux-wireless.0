@@ -1,66 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:46496 "EHLO ebb05.tieto.com"
+Received: from mout.gmx.net ([212.227.15.18]:53538 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751212Ab3IPMtk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Sep 2013 08:49:40 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC 2/4] ath10k: document decap modes
-Date: Mon, 16 Sep 2013 14:49:15 +0200
-Message-ID: <1379335757-15180-3-git-send-email-michal.kazior@tieto.com> (sfid-20130916_144943_344888_22D3F96F)
-In-Reply-To: <1379335757-15180-1-git-send-email-michal.kazior@tieto.com>
-References: <1379335757-15180-1-git-send-email-michal.kazior@tieto.com>
+	id S1753911Ab3IKScE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Sep 2013 14:32:04 -0400
+Received: from [192.168.2.100] ([79.218.107.113]) by mail.gmx.com (mrgmx002)
+ with ESMTPSA (Nemesis) id 0LanoO-1VmGCI132e-00kR8a for
+ <linux-wireless@vger.kernel.org>; Wed, 11 Sep 2013 20:32:02 +0200
+Message-ID: <5230B721.40104@rempel-privat.de> (sfid-20130911_203208_520996_4FAB4A88)
+Date: Wed, 11 Sep 2013 20:32:01 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: linux-wireless@vger.kernel.org
+Subject: correct way to reduce traffic needed for LED triggering
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Clarify how each decap mode works in one place.
+Hello all,
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/rx_desc.h |   24 ++++++++++++++++++++++--
- 1 file changed, 22 insertions(+), 2 deletions(-)
+what is correct way to reduce IO needed for LED blinking? I did it with 
+ieee80211_queue_delayed_work(.., &priv->led-work, msecs_to_jiffird(HZ));
 
-diff --git a/drivers/net/wireless/ath/ath10k/rx_desc.h b/drivers/net/wireless/ath/ath10k/rx_desc.h
-index bfec6c8..1c584c4 100644
---- a/drivers/net/wireless/ath/ath10k/rx_desc.h
-+++ b/drivers/net/wireless/ath/ath10k/rx_desc.h
-@@ -422,10 +422,30 @@ struct rx_mpdu_end {
- #define RX_MSDU_START_INFO1_IP_FRAG             (1 << 14)
- #define RX_MSDU_START_INFO1_TCP_ONLY_ACK        (1 << 15)
- 
-+/* The decapped header (rx_hdr_status) contains the following:
-+ *  a) 802.11 header
-+ *  [padding to 4 bytes]
-+ *  b) HW crypto parameter
-+ *     - 0 bytes for no security
-+ *     - 4 bytes for WEP
-+ *     - 8 bytes for TKIP, AES
-+ *  [padding to 4 bytes]
-+ *  c) A-MSDU subframe header (14 bytes) if appliable
-+ *  d) LLC/SNAP (RFC1042, 8 bytes)
-+ *
-+ * In case of A-MSDU only first frame in sequence contains (a) and (b). */
- enum rx_msdu_decap_format {
--	RX_MSDU_DECAP_RAW           = 0,
--	RX_MSDU_DECAP_NATIVE_WIFI   = 1,
-+	RX_MSDU_DECAP_RAW = 0,
-+
-+	/* Note: QoS frames are reported as non-QoS. The rx_hdr_status in
-+	 * htt_rx_desc contains the original decapped 802.11 header. */
-+	RX_MSDU_DECAP_NATIVE_WIFI = 1,
-+
-+	/* Payload contains an ethernet header (struct ethhdr). */
- 	RX_MSDU_DECAP_ETHERNET2_DIX = 2,
-+
-+	/* Payload contains two 48-bit addresses and 2-byte length (14 bytes
-+	 * total), followed by an RFC1042 header (8 bytes). */
- 	RX_MSDU_DECAP_8023_SNAP_LLC = 3
- };
- 
+or are there other way to regulate it?
 -- 
-1.7.9.5
-
+Regards,
+Oleksij
