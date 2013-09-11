@@ -1,32 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:4911 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755881Ab3I3VLS (ORCPT
+Received: from mailout1.samsung.com ([203.254.224.24]:61928 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752667Ab3IKAcx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Sep 2013 17:11:18 -0400
-Cc: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
-	<linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	<rodrigue@qca.qualcomm.com>
-Date: Mon, 30 Sep 2013 14:11:15 -0700
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Subject: Re: [RFC] ath9k: add HT40 spectral scan capability
-Message-ID: <20130930211115.GA29102@pogo> (sfid-20130930_231122_714933_403B6BDC)
-References: <1380206258-16452-1-git-send-email-lorenzo.bianconi83@gmail.com>
- <20130930164840.GB15780@pandem0nium>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20130930164840.GB15780@pandem0nium>
+	Tue, 10 Sep 2013 20:32:53 -0400
+Received: from epcpsbgr3.samsung.com
+ (u143.gpu120.samsung.co.kr [203.254.230.143])
+ by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MSX007ZAQT4AY60@mailout1.samsung.com> for
+ linux-wireless@vger.kernel.org; Wed, 11 Sep 2013 09:32:52 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Kalle Valo' <kvalo@qca.qualcomm.com>
+Cc: "'John W. Linville'" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+	'Jingoo Han' <jg1.han@samsung.com>
+References: <00b101ceae16$ecb87c30$c6297490$%han@samsung.com>
+ <00b701ceae18$69cd1860$3d674920$%han@samsung.com>
+ <87zjrkibn0.fsf@kamboji.qca.qualcomm.com>
+In-reply-to: <87zjrkibn0.fsf@kamboji.qca.qualcomm.com>
+Subject: Re: [PATCH 06/12] wireless: ath10k: remove unnecessary
+ pci_set_drvdata()
+Date: Wed, 11 Sep 2013 09:32:52 +0900
+Message-id: <002d01ceae86$7331d760$59958620$%han@samsung.com> (sfid-20130911_023257_292669_056A6863)
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 30, 2013 at 06:48:40PM +0200, Simon Wunderlich wrote:
-> On Thu, Sep 26, 2013 at 04:37:38PM +0200, Lorenzo Bianconi wrote:
+On Wednesday, September 11, 2013 6:57 AM, Kalle Valo wrote:
+> Jingoo Han <jg1.han@samsung.com> writes:
 > 
-> One more thing: please don't change the format for HT20 -
-> there are already userspace programs which rely on the order
-> of the parameters as they are now. 
+> > The driver core clears the driver data to NULL after device_release
+> > or on probe failure. Thus, it is not needed to manually clear the
+> > device driver data to NULL.
+> >
+> > Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+> 
+> Thanks, look good. Do you want me to apply this to my ath.git tree or
+> are you planning to send this via some other route?
+> 
 
-Great, where are these userpace programs?
+Hi Kalle Valo,
 
-  Luis
+It would be good that you apply this to your ath.git tree.
+Thank you. :-)
+
+Best regards,
+Jingoo Han
+
