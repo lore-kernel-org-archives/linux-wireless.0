@@ -1,68 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:39378 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754444Ab3ITLy5 (ORCPT
+Received: from p15195424.pureserver.info ([82.165.34.74]:53667 "EHLO
+	p15195424.pureserver.info" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752846Ab3IKRMo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Sep 2013 07:54:57 -0400
-In-Reply-To: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-From: Russell King <rmk+kernel@arm.linux.org.uk>
-To: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
-	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
-	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
-	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	uclinux-dist-devel@blackfin.uclinux.org
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 15/51] DMA-API: net: b43legacy: replace
- dma_set_mask()+dma_set_coherent_mask() with new
- helper
-Message-Id: <E1VMlxA-0007gs-Ll@rmk-PC.arm.linux.org.uk> (sfid-20130920_135511_266383_B4B3E1DA)
-Date: Thu, 19 Sep 2013 22:40:00 +0100
+	Wed, 11 Sep 2013 13:12:44 -0400
+Message-ID: <5230A440.5050709@ilande.co.uk> (sfid-20130911_191248_873282_86FE86BA)
+Date: Wed, 11 Sep 2013 18:11:28 +0100
+From: Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>
+MIME-Version: 1.0
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: Dan Williams <dcbw@redhat.com>,
+	Vincent Thiele <vincentthiele@gmail.com>,
+	linux-wireless@vger.kernel.org
+References: <CAEZsi7Hde5NyTRgm7Lf_4LvHMAEJouzaqMNUwxr-iSipuEcsyQ@mail.gmail.com>  <522E4315.4040806@lwfinger.net> <1378764913.31180.9.camel@dcbw.foobar.com>  <CAEZsi7FY8HdBcb0p1svijAdFjB0MbrYv_Zft0B_+RQTpGWCnhQ@mail.gmail.com> <1378916091.1693.21.camel@dcbw.foobar.com> <52309B75.3010408@lwfinger.net>
+In-Reply-To: <52309B75.3010408@lwfinger.net>
+Subject: Re: No connection with TP-Link TL-WN823N (rtl8192cu)
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replace the following sequence:
+On 11/09/13 17:33, Larry Finger wrote:
 
-	dma_set_mask(dev, mask);
-	dma_set_coherent_mask(dev, mask);
+>> So the AP is disconnecting the device a couple seconds with reason 4,
+>> which is "Disassociated due to inactivity". My thought is that this
+>> points to a driver bug (Larry?).
+>
+> Possibly, but for reference, my Edimax EW-7811Un has been running for 37
+> hours. During that time, I have had no deauthentications and only 2
+> instances of the "AP lost" reconnections. The latter is what I am
+> currently trying to fix, but at that error rate, it is difficult. I am
+> running the latest 3.11 kernel from wireless testing.
+>
+> The only thing I am doing that is unusual is that I am pinging my router
+> at a 5 second interval using the command
+>
+> ping -i5 192.168.1.1
+>
+> It is possible that I am preventing a power save operation, which is
+> making a difference.
 
-with a call to the new helper dma_set_mask_and_coherent().
+Hi Larry,
 
-Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
----
- drivers/net/wireless/b43legacy/dma.c |    9 +++------
- 1 files changed, 3 insertions(+), 6 deletions(-)
+For comparison, what does your device report when plugged in? My device 
+reports this:
 
-diff --git a/drivers/net/wireless/b43legacy/dma.c b/drivers/net/wireless/b43legacy/dma.c
-index 42eb26c..b2ed179 100644
---- a/drivers/net/wireless/b43legacy/dma.c
-+++ b/drivers/net/wireless/b43legacy/dma.c
-@@ -806,12 +806,9 @@ static int b43legacy_dma_set_mask(struct b43legacy_wldev *dev, u64 mask)
- 	/* Try to set the DMA mask. If it fails, try falling back to a
- 	 * lower mask, as we can always also support a lower one. */
- 	while (1) {
--		err = dma_set_mask(dev->dev->dma_dev, mask);
--		if (!err) {
--			err = dma_set_coherent_mask(dev->dev->dma_dev, mask);
--			if (!err)
--				break;
--		}
-+		err = dma_set_mask_and_coherent(dev->dev->dma_dev, mask);
-+		if (!err)
-+			break;
- 		if (mask == DMA_BIT_MASK(64)) {
- 			mask = DMA_BIT_MASK(32);
- 			fallback = true;
--- 
-1.7.4.4
+Sep 10 00:28:41 kentang kernel: [90532.399226] usb 4-1.2: new high-speed 
+USB device number 26 using ehci-pci
+Sep 10 00:28:41 kentang kernel: [90532.492624] usb 4-1.2: New USB device 
+found, idVendor=0bda, idProduct=8176
+Sep 10 00:28:41 kentang kernel: [90532.492627] usb 4-1.2: New USB device 
+strings: Mfr=1, Product=2, SerialNumber=3
+Sep 10 00:28:41 kentang kernel: [90532.492629] usb 4-1.2: Manufacturer: 
+Realtek
+Sep 10 00:28:41 kentang kernel: [90532.492630] usb 4-1.2: SerialNumber: 
+00e04c000001
+Sep 10 00:28:41 kentang kernel: [90532.502454] rtl8192cu: Chip version 0x10
+Sep 10 00:28:42 kentang kernel: [90532.581772] rtl8192cu: MAC address: 
+00:0b:81:89:81:b8
+Sep 10 00:28:42 kentang kernel: [90532.581776] rtl8192cu: Board Type 0
 
+Also what type of USB port are you using? I'm plugged direct (no hub) 
+into a ehci-pci port on a laptop if that makes a difference to power?
+
+
+ATB,
+
+Mark.
