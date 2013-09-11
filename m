@@ -1,97 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:53485 "EHLO ebb06.tieto.com"
+Received: from mout.gmx.net ([212.227.17.20]:59938 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754847Ab3IYJia (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Sep 2013 05:38:30 -0400
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Bartosz Markowski <bartosz.markowski@tieto.com>
-Subject: [PATCH 06/13] ath10k: drop the fw versioning sanity check
-Date: Wed, 25 Sep 2013 11:38:04 +0200
-Message-ID: <1380101891-18312-7-git-send-email-bartosz.markowski@tieto.com> (sfid-20130925_114831_409408_203B806B)
-In-Reply-To: <1380101891-18312-1-git-send-email-bartosz.markowski@tieto.com>
-References: <1380101891-18312-1-git-send-email-bartosz.markowski@tieto.com>
+	id S1752981Ab3IKPus (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Sep 2013 11:50:48 -0400
+Received: from [192.168.2.102] ([79.218.107.113]) by mail.gmx.com (mrgmx003)
+ with ESMTPSA (Nemesis) id 0MOwbP-1VHIVk0h1j-006RtU for
+ <linux-wireless@vger.kernel.org>; Wed, 11 Sep 2013 17:50:47 +0200
+Message-ID: <52309155.6050207@rempel-privat.de> (sfid-20130911_175052_036784_BBBCDBE5)
+Date: Wed, 11 Sep 2013 17:50:45 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Drasko DRASKOVIC <drasko.draskovic@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: ath9k_htc embedded modules
+References: <CAEk6gTALcc95aQhrdRMy4fLwbJ63VwF4RJT4yqrWovgpbRNFqg@mail.gmail.com>
+In-Reply-To: <CAEk6gTALcc95aQhrdRMy4fLwbJ63VwF4RJT4yqrWovgpbRNFqg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It was corrupted and leading to compilation warning
-core.c: In function 'ath10k_check_fw_version':
-core.c:79: warning: comparison is always true due to limited range of data type
+Am 10.09.2013 12:09, schrieb Drasko DRASKOVIC:
+> Hi all,
+> anyone aware of ath9k_htc supported embedded modules on the market
+> (Atheros AR9002U UB94, i.e. AR9280+AR7010 combo).
+>
+> All I could find from USB based modules is Ralink RT5572 and RT3572
+> and I do not know how these are supported in linux-wireless (for
+> example AP mode).
 
-Since we are going to support new FW track in the driver,
-the sanity check for fw version number would be an overkill
-then. This is just for information purposes anyway.
+Mitsumi Electric DWM-W034
 
-Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
-Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
----
- drivers/net/wireless/ath/ath10k/core.c |   25 -------------------------
- drivers/net/wireless/ath/ath10k/hw.h   |    6 ------
- 2 files changed, 31 deletions(-)
+http://wikidevi.com/wiki/Mitsumi_Electric_DWM-W034
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 76906d5..31860a6 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -59,27 +59,6 @@ static void ath10k_send_suspend_complete(struct ath10k *ar)
- 	wake_up(&ar->event_queue);
- }
- 
--static int ath10k_check_fw_version(struct ath10k *ar)
--{
--	char version[32];
--
--	if (ar->fw_version_major >= SUPPORTED_FW_MAJOR &&
--	    ar->fw_version_minor >= SUPPORTED_FW_MINOR &&
--	    ar->fw_version_release >= SUPPORTED_FW_RELEASE &&
--	    ar->fw_version_build >= SUPPORTED_FW_BUILD)
--		return 0;
--
--	snprintf(version, sizeof(version), "%u.%u.%u.%u",
--		 SUPPORTED_FW_MAJOR, SUPPORTED_FW_MINOR,
--		 SUPPORTED_FW_RELEASE, SUPPORTED_FW_BUILD);
--
--	ath10k_warn("WARNING: Firmware version %s is not officially supported.\n",
--		    ar->hw->wiphy->fw_version);
--	ath10k_warn("Please upgrade to version %s (or newer)\n", version);
--
--	return 0;
--}
--
- static int ath10k_init_connect_htc(struct ath10k *ar)
- {
- 	int status;
-@@ -616,10 +595,6 @@ int ath10k_core_start(struct ath10k *ar)
- 
- 	ath10k_info("firmware %s booted\n", ar->hw->wiphy->fw_version);
- 
--	status = ath10k_check_fw_version(ar);
--	if (status)
--		goto err_disconnect_htc;
--
- 	status = ath10k_wmi_cmd_init(ar);
- 	if (status) {
- 		ath10k_err("could not send WMI init command (%d)\n", status);
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 643f0c9..1b3cf01 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -20,12 +20,6 @@
- 
- #include "targaddrs.h"
- 
--/* Supported FW version */
--#define SUPPORTED_FW_MAJOR	1
--#define SUPPORTED_FW_MINOR	0
--#define SUPPORTED_FW_RELEASE	0
--#define SUPPORTED_FW_BUILD	636
--
- /* QCA988X 1.0 definitions (unsupported) */
- #define QCA988X_HW_1_0_CHIP_ID_REV	0x0
- 
+http://www.ebay.de/sch/i.html?_odkw=DWM-W034&_osacat=0&_from=R40&LH_PrefLoc=2&_trksid=p2045573.m570.l1313.TR0.TRC0&_nkw=DWM-W034&_sacat=0
+
 -- 
-1.7.10
-
+Regards,
+Oleksij
