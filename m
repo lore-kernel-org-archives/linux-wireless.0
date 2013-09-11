@@ -1,98 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:47935 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754313Ab3ISWz5 (ORCPT
+Received: from mail-la0-f43.google.com ([209.85.215.43]:39768 "EHLO
+	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751758Ab3IKI7v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Sep 2013 18:55:57 -0400
-In-Reply-To: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-From: Russell King <rmk+kernel@arm.linux.org.uk>
-To: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
-	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
-	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
-	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	uclinux-dist-devel@blackfin.uclinux.org
-Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	Jesse Brandeburg <jesse.brandeburg@intel.com>,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	Carolyn Wyborny <carolyn.wyborny@intel.com>,
-	Don Skidmore <donald.c.skidmore@intel.com>,
-	Greg Rose <gregory.v.rose@intel.com>,
-	Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>,
-	Alex Duyck <alexander.h.duyck@intel.com>,
-	John Ronciak <john.ronciak@intel.com>,
-	Tushar Dave <tushar.n.dave@intel.com>
-Subject: [PATCH 08/51] DMA-API: net: intel/ixgbevf: fix 32-bit DMA mask
- handling
-Message-Id: <E1VMlqN-0007fw-MQ@rmk-PC.arm.linux.org.uk> (sfid-20130920_005602_493983_35699367)
-Date: Thu, 19 Sep 2013 22:32:59 +0100
+	Wed, 11 Sep 2013 04:59:51 -0400
+Received: by mail-la0-f43.google.com with SMTP id ep20so7205043lab.16
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Sep 2013 01:59:49 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <DUB122-W36FEB8099A8B6081E03DDBF7390@phx.gbl>
+References: <DUB122-W36FEB8099A8B6081E03DDBF7390@phx.gbl>
+Date: Wed, 11 Sep 2013 11:59:49 +0300
+Message-ID: <CANUX_P2HG+j_kJ03WZe34Lf_9GPFnaTC_Ka--DP+xm1PDwtN5w@mail.gmail.com> (sfid-20130911_110003_938030_EBB66434)
+Subject: Re: iwlwifi crash with "Microcode SW error detected"
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: "Toufilk ..." <toufik2@hotmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The fallback to 32-bit DMA mask is rather odd:
-	if (!dma_set_mask(&pdev->dev, DMA_BIT_MASK(64)) &&
-	    !dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(64))) {
-		pci_using_dac = 1;
-	} else {
-		err = dma_set_mask(&pdev->dev, DMA_BIT_MASK(32));
-		if (err) {
-			err = dma_set_coherent_mask(&pdev->dev,
-						    DMA_BIT_MASK(32));
-			if (err) {
-				dev_err(&pdev->dev, "No usable DMA "
-					"configuration, aborting\n");
-				goto err_dma;
-			}
-		}
-		pci_using_dac = 0;
-	}
-This means we only set the coherent DMA mask in the fallback path if
-the DMA mask set failed, which is silly.  This fixes it to set the
-coherent DMA mask only if dma_set_mask() succeeded, and to error out
-if either fails.
+Hi,
 
-Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
----
- drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c |   15 +++++----------
- 1 files changed, 5 insertions(+), 10 deletions(-)
+thanks for your report
 
-diff --git a/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c b/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
-index 59a62bb..e34c2da 100644
---- a/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
-+++ b/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c
-@@ -3326,19 +3326,14 @@ static int ixgbevf_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	if (err)
- 		return err;
- 
--	if (!dma_set_mask(&pdev->dev, DMA_BIT_MASK(64)) &&
--	    !dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(64))) {
-+	if (!dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64))) {
- 		pci_using_dac = 1;
- 	} else {
--		err = dma_set_mask(&pdev->dev, DMA_BIT_MASK(32));
-+		err = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
- 		if (err) {
--			err = dma_set_coherent_mask(&pdev->dev,
--						    DMA_BIT_MASK(32));
--			if (err) {
--				dev_err(&pdev->dev, "No usable DMA "
--					"configuration, aborting\n");
--				goto err_dma;
--			}
-+			dev_err(&pdev->dev, "No usable DMA "
-+				"configuration, aborting\n");
-+			goto err_dma;
- 		}
- 		pci_using_dac = 0;
- 	}
--- 
-1.7.4.4
+> [   74.374420] iwlwifi 0000:01:00.0: Start IWL Error Log Dump:
+> [   74.374429] iwlwifi 0000:01:00.0: Status: 0x00000000, count: 6
+> [   74.374438] iwlwifi 0000:01:00.0: 0x0000003C | NMI_INTERRUPT_DATA_ACTION_PT
+> [   74.374445] iwlwifi 0000:01:00.0: 0x059002A3 | uPc
+> [   74.374452] iwlwifi 0000:01:00.0: 0x00000000 | branchlink1
+> [   74.374459] iwlwifi 0000:01:00.0: 0x00000C8A | branchlink2
+> [   74.374466] iwlwifi 0000:01:00.0: 0x00014078 | interruptlink1
+> [   74.374473] iwlwifi 0000:01:00.0: 0x00000676 | interruptlink2
+> [   74.374480] iwlwifi 0000:01:00.0: 0x00014D9A | data1
+> [   74.374486] iwlwifi 0000:01:00.0: 0x00000008 | data2
+> [   74.374493] iwlwifi 0000:01:00.0: 0x03030000 | data3
+> [   74.374500] iwlwifi 0000:01:00.0: 0x59009500 | beacon time
+> [   74.374507] iwlwifi 0000:01:00.0: 0x539A8E27 | tsf low
+> [   74.374514] iwlwifi 0000:01:00.0: 0x00000040 | tsf hi
+> [   74.374521] iwlwifi 0000:01:00.0: 0x00000000 | time gp1
+> [   74.374528] iwlwifi 0000:01:00.0: 0x0431E87A | time gp2
+> [   74.374534] iwlwifi 0000:01:00.0: 0x00000000 | time gp3
+> [   74.374541] iwlwifi 0000:01:00.0: 0x00321600 | uCode version
+> [   74.374548] iwlwifi 0000:01:00.0: 0x00000144 | hw version
+> [   74.374555] iwlwifi 0000:01:00.0: 0x00489204 | board version
+> [   74.374562] iwlwifi 0000:01:00.0: 0x0018001C | hcmd
+> [   74.374569] iwlwifi 0000:01:00.0: 0x26F63800 | isr0
+> [   74.374575] iwlwifi 0000:01:00.0: 0x01018000 | isr1
+> [   74.374582] iwlwifi 0000:01:00.0: 0x0000000A | isr2
+> [   74.374589] iwlwifi 0000:01:00.0: 0x4041FC81 | isr3
+> [   74.374596] iwlwifi 0000:01:00.0: 0x00000000 | isr4
+> [   74.374603] iwlwifi 0000:01:00.0: 0x10800112 | isr_pref
+> [   74.374609] iwlwifi 0000:01:00.0: 0x00014D9A | wait_event
+> [   74.374616] iwlwifi 0000:01:00.0: 0x000000D0 | l2p_control
+> [   74.374623] iwlwifi 0000:01:00.0: 0x00019C20 | l2p_duration
+> [   74.374630] iwlwifi 0000:01:00.0: 0x0000003F | l2p_mhvalid
+> [   74.374637] iwlwifi 0000:01:00.0: 0x000000CF | l2p_addr_match
+> [   74.374644] iwlwifi 0000:01:00.0: 0x00000005 | lmpm_pmg_sel
+> [   74.374651] iwlwifi 0000:01:00.0: 0xA3925B33 | timestamp
+> [   74.374658] iwlwifi 0000:01:00.0: 0x00346878 | flow_handler
+> [   74.374667] ieee80211 phy0: Hardware restart was requested
 
+This is a firmware issue that has been fixed in later versions that we
+haven't released yet. I hope that I will able to release the new
+firmware very soon.
