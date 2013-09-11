@@ -1,44 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:27293 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756856Ab3IZMiv (ORCPT
+Received: from mail-la0-f54.google.com ([209.85.215.54]:58819 "EHLO
+	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755695Ab3IKQH6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Sep 2013 08:38:51 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Bartosz Markowski <bartosz.markowski@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 05/13] ath10k: split ath10k_wmi_service_ready_event_rx
-References: <1380187792-25626-1-git-send-email-bartosz.markowski@tieto.com>
-	<1380187792-25626-6-git-send-email-bartosz.markowski@tieto.com>
-Date: Thu, 26 Sep 2013 15:38:39 +0300
-In-Reply-To: <1380187792-25626-6-git-send-email-bartosz.markowski@tieto.com>
-	(Bartosz Markowski's message of "Thu, 26 Sep 2013 11:29:44 +0200")
-Message-ID: <8761tnrc4w.fsf@kamboji.qca.qualcomm.com> (sfid-20130926_150917_571344_C84723C8)
+	Wed, 11 Sep 2013 12:07:58 -0400
+Received: by mail-la0-f54.google.com with SMTP id ea20so7673673lab.13
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Sep 2013 09:07:57 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <52309155.6050207@rempel-privat.de>
+References: <CAEk6gTALcc95aQhrdRMy4fLwbJ63VwF4RJT4yqrWovgpbRNFqg@mail.gmail.com>
+	<52309155.6050207@rempel-privat.de>
+Date: Wed, 11 Sep 2013 18:07:57 +0200
+Message-ID: <CAEk6gTDR2QqbJ2uUiUT-Fbz2G-_Hwm0VeBW0rQLP_46x0UeT9g@mail.gmail.com> (sfid-20130911_181743_107797_260D09E1)
+Subject: Re: ath9k_htc embedded modules
+From: Drasko DRASKOVIC <drasko.draskovic@gmail.com>
+To: Oleksij Rempel <linux@rempel-privat.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bartosz Markowski <bartosz.markowski@tieto.com> writes:
-
-> Since the both firmwares we are going to support,
-> have significantly different APIs (WMI and shared
-> structures), it's easier to actually split the whole
-> event handling functions, instead cutting them inside.
+On Wed, Sep 11, 2013 at 5:50 PM, Oleksij Rempel <linux@rempel-privat.de> wrote:
+> Am 10.09.2013 12:09, schrieb Drasko DRASKOVIC:
 >
-> The fork starts now on ath10k_wmi_process_rx().
+>> Hi all,
+>> anyone aware of ath9k_htc supported embedded modules on the market
+>> (Atheros AR9002U UB94, i.e. AR9280+AR7010 combo).
+>>
+>> All I could find from USB based modules is Ralink RT5572 and RT3572
+>> and I do not know how these are supported in linux-wireless (for
+>> example AP mode).
 >
-> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+>
+> Mitsumi Electric DWM-W034
+>
+> http://wikidevi.com/wiki/Mitsumi_Electric_DWM-W034
+>
+> http://www.ebay.de/sch/i.html?_odkw=DWM-W034&_osacat=0&_from=R40&LH_PrefLoc=2&_trksid=p2045573.m570.l1313.TR0.TRC0&_nkw=DWM-W034&_sacat=0
 
-[...]
+I was thinking more on reliable supplier from which this can be bought
+in quantities.
 
-> +	complete(&ar->wmi.service_ready);
-> +}
-> +
-> +
->  static int ath10k_wmi_ready_event_rx(struct ath10k *ar, struct sk_buff *skb)
-
-Only one empty line between functions.
-
--- 
-Kalle Valo
+BR,
+Drasko
