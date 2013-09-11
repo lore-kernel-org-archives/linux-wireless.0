@@ -1,76 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx4.wp.pl ([212.77.101.8]:19321 "EHLO mx4.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753410Ab3IWNmM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Sep 2013 09:42:12 -0400
-Date: Mon, 23 Sep 2013 15:42:08 +0200
-From: Jakub Kicinski <kubakici@wp.pl>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	moorray@wp.pl
-Subject: Re: [PATCH 3.12] Revert "rt2x00pci: Use PCI MSIs whenever possible"
-Message-ID: <20130923154208.2cf570d3@north> (sfid-20130923_154215_847316_B73244E7)
-In-Reply-To: <20130923020812.GA1577@redhat.com>
-References: <20130923020812.GA1577@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-ie0-f181.google.com ([209.85.223.181]:62979 "EHLO
+	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750974Ab3IKIKh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Sep 2013 04:10:37 -0400
+Received: by mail-ie0-f181.google.com with SMTP id y16so12464627ieg.26
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Sep 2013 01:10:37 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1378799252.4799.61.camel@porter.coelho.fi>
+References: <1378218848-7853-1-git-send-email-eliad@wizery.com>
+	<1378218848-7853-11-git-send-email-eliad@wizery.com>
+	<1378799252.4799.61.camel@porter.coelho.fi>
+Date: Wed, 11 Sep 2013 10:10:37 +0200
+Message-ID: <CAB3XZEdrEsAwDxPzY4ER+SHFLQN5-x6CXSpLFcW_KpGZ2ZCWkQ@mail.gmail.com> (sfid-20130911_101043_948228_D011568A)
+Subject: Re: [PATCH 11/12] wl18xx: print new RDL versions during boot
+From: Eliad Peller <eliad@wizery.com>
+To: Luca Coelho <luca@coelho.fi>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 23 Sep 2013 04:08:13 +0200, Stanislaw Gruszka wrote:
->This reverts commit 9483f40d8d01918b399b4e24d0c1111db0afffeb.
+On Tue, Sep 10, 2013 at 10:47 AM, Luca Coelho <luca@coelho.fi> wrote:
+> On Tue, 2013-09-03 at 17:34 +0300, Eliad Peller wrote:
+>> From: Victor Goldenshtein <victorg@ti.com>
+>>
+>> Extract and print info for the new RDL 5, 6, 7 and 8.
+>> Replace const struct with function which translates
+>> the RDL number to string.
+>>
+>> Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+>> Signed-off-by: Barak Bercovitz <barak@wizery.com>
+>> Signed-off-by: Eliad Peller <eliad@wizery.com>
+>> ---
 >
->Some devices stop to connect with above commit, see:
->https://bugzilla.kernel.org/show_bug.cgi?id=61621
+> Why convert the array with a function? The array looks much cleaner to
+> me.
 >
->Since there is no clear benefit of having MSI enabled, just revert
->change to fix the problem.
->
->Cc: stable@vger.kernel.org # 3.11+
->Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+the version numbers are not successive (4 -> 0x11), so i think it
+makes sense, but i guess we can revert back to array if you prefer it
+that way.
 
-Acked-by: Jakub Kicinski <kubakici@wp.pl>
-
->---
-> drivers/net/wireless/rt2x00/rt2x00pci.c | 9 +--------
-> 1 file changed, 1 insertion(+), 8 deletions(-)
+> [...[
+>> diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+>> index b47eb62..aef0c91 100644
+>> --- a/drivers/net/wireless/ti/wl18xx/main.c
+>> +++ b/drivers/net/wireless/ti/wl18xx/main.c
+>> @@ -1228,16 +1228,46 @@ static u32 wl18xx_ap_get_mimo_wide_rate_mask(struct wl1271 *wl,
+>>       }
+>>  }
+>>
+>> +static const char *wl18xx_rdl_name(enum wl18xx_rdl_num rdl_num)
+>> +{
+>> +     switch (rdl_num) {
+>> +     case RDL_1_HP:
+>> +         return "183xH";
+>> +     case RDL_2_SP:
+>> +         return "183x or 180x";
+>> +     case RDL_3_HP:
+>> +         return "187xH";
+>> +     case RDL_4_SP:
+>> +         return "187x";
+>> +     case RDL_5_SP:
+>> +         return "RDL11 - Not Supported";
+>> +     case RDL_6_SP:
+>> +         return "180xD";
+>> +     case RDL_7_SP:
+>> +         return "RDL13 - Not Supported (1893Q)";
+>> +     case RDL_8_SP:
+>> +         return "18xxQ";
+>> +     default:
+>> +         return "UNTRIMMED";
 >
->diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.c b/drivers/net/wireless/rt2x00/rt2x00pci.c
->index 76d95de..dc49e52 100644
->--- a/drivers/net/wireless/rt2x00/rt2x00pci.c
->+++ b/drivers/net/wireless/rt2x00/rt2x00pci.c
->@@ -105,13 +105,11 @@ int rt2x00pci_probe(struct pci_dev *pci_dev, const struct rt2x00_ops *ops)
-> 		goto exit_release_regions;
-> 	}
-> 
->-	pci_enable_msi(pci_dev);
->-
-> 	hw = ieee80211_alloc_hw(sizeof(struct rt2x00_dev), ops->hw);
-> 	if (!hw) {
-> 		rt2x00_probe_err("Failed to allocate hardware\n");
-> 		retval = -ENOMEM;
->-		goto exit_disable_msi;
->+		goto exit_release_regions;
-> 	}
-> 
-> 	pci_set_drvdata(pci_dev, hw);
->@@ -152,9 +150,6 @@ exit_free_reg:
-> exit_free_device:
-> 	ieee80211_free_hw(hw);
-> 
->-exit_disable_msi:
->-	pci_disable_msi(pci_dev);
->-
-> exit_release_regions:
-> 	pci_release_regions(pci_dev);
-> 
->@@ -179,8 +174,6 @@ void rt2x00pci_remove(struct pci_dev *pci_dev)
-> 	rt2x00pci_free_reg(rt2x00dev);
-> 	ieee80211_free_hw(hw);
-> 
->-	pci_disable_msi(pci_dev);
->-
-> 	/*
-> 	 * Free the PCI device data.
-> 	 */
+> This may become misleading if we get more RDLs versions in the future.
+> And the untrimmed case is probably reporting 0? Or something predefined,
+> hopefully, otherwise how can we know that we wouldn't randomly get a
+> valid value?
+>
+you're right here.
+untrimmed devices always use the 0 value.
+i'll split it to "untrimmed" and "unknown".
 
+> Also, in the unsupported cases, it would probably be better to bail out?
+i'm not sure what "not supported" actually mean here (it might still work...).
+i'd prefer continue using these values only for debugging (there
+shouldn't really be such unsupported devices out there, afaik)
+
+Eliad.
