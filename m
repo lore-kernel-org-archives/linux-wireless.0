@@ -1,64 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f178.google.com ([209.85.217.178]:39671 "EHLO
-	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753374Ab3INTot (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:47535 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752265Ab3IKGO7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Sep 2013 15:44:49 -0400
-Received: by mail-lb0-f178.google.com with SMTP id z5so3041029lbh.23
-        for <linux-wireless@vger.kernel.org>; Sat, 14 Sep 2013 12:44:47 -0700 (PDT)
-Message-ID: <5234BCB6.6050508@cogentembedded.com> (sfid-20130914_214511_150792_1A0DF702)
-Date: Sat, 14 Sep 2013 23:44:54 +0400
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH 6/7] rtlwifi: Fix smatch warnings in usb.c
-References: <1379094304-22041-1-git-send-email-Larry.Finger@lwfinger.net> <1379094304-22041-7-git-send-email-Larry.Finger@lwfinger.net>
-In-Reply-To: <1379094304-22041-7-git-send-email-Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 11 Sep 2013 02:14:59 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/3] ath9k: Fix calibration for AR9462
+Date: Wed, 11 Sep 2013 11:40:57 +0530
+Message-Id: <1378879859-32290-1-git-send-email-sujith@msujith.org> (sfid-20130911_081502_284885_D15A1BF4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-On 09/13/2013 09:45 PM, Larry Finger wrote:
+TX IQ calibration is disabled by default for AR9462, this
+is done using the initvals (reg 0xa644).
 
-> Smatch displays the following:
->    CHECK   drivers/net/wireless/rtlwifi/usb.c
-> drivers/net/wireless/rtlwifi/usb.c:458 _rtl_usb_rx_process_agg() warn: assigning (-98) to unsigned variable 'stats.noise'
-> drivers/net/wireless/rtlwifi/usb.c:503 _rtl_usb_rx_process_noagg() warn: assigning (-98) to unsigned variable 'stats.noise'
-> drivers/net/wireless/rtlwifi/usb.c:596 _rtl_rx_get_padding() info: ignoring unreachable code.
-> drivers/net/wireless/rtlwifi/usb.c:596 _rtl_rx_get_padding() info: ignoring unreachable code.
+But, to compensate for this, the AR_PHY_RX_DELAY register
+should be set to the max allowed value when performing
+calibration.
 
-> The negative number to an unsigned quantity is fixed by adding 256 to -98
-> to get the equivalent negative number.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
->   drivers/net/wireless/rtlwifi/usb.c | 10 +++++++---
->   1 file changed, 7 insertions(+), 3 deletions(-)
-
-> diff --git a/drivers/net/wireless/rtlwifi/usb.c b/drivers/net/wireless/rtlwifi/usb.c
-> index e56778c..9f3dcb8 100644
-> --- a/drivers/net/wireless/rtlwifi/usb.c
-> +++ b/drivers/net/wireless/rtlwifi/usb.c
-[...]
-> @@ -582,12 +582,15 @@ static void _rtl_rx_work(unsigned long param)
->   static unsigned int _rtl_rx_get_padding(struct ieee80211_hdr *hdr,
->   					unsigned int len)
->   {
-> +#if NET_IP_ALIGN != 0
->   	unsigned int padding = 0;
-> +#endif
->
->   	/* make function no-op when possible */
-> -	if (NET_IP_ALIGN == 0 || len < sizeof(*hdr))
-> +	if (NET_IP_ALIGN == 0 || len < sizeof(struct ieee80211_hdr))
-
-    Why this collateral and undocumented change? What does it achieve?
-
->   		return 0;
-
-WBR, Sergei
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index 6988e1d..6001bc0 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -1019,6 +1019,7 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
+ 	bool is_reusable = true, status = true;
+ 	bool run_rtt_cal = false, run_agc_cal, sep_iq_cal = false;
+ 	bool rtt = !!(ah->caps.hw_caps & ATH9K_HW_CAP_RTT);
++	u32 rx_delay = 0;
+ 	u32 agc_ctrl = 0, agc_supp_cals = AR_PHY_AGC_CONTROL_OFFSET_CAL |
+ 					  AR_PHY_AGC_CONTROL_FLTR_CAL   |
+ 					  AR_PHY_AGC_CONTROL_PKDET_CAL;
+@@ -1099,6 +1100,15 @@ skip_tx_iqcal:
+ 		REG_WRITE(ah, AR_PHY_ACTIVE, AR_PHY_ACTIVE_EN);
+ 	}
+ 
++	if (REG_READ(ah, AR_PHY_CL_CAL_CTL) & AR_PHY_CL_CAL_ENABLE) {
++		rx_delay = REG_READ(ah, AR_PHY_RX_DELAY);
++		/* Disable BB_active */
++		REG_WRITE(ah, AR_PHY_ACTIVE, AR_PHY_ACTIVE_DIS);
++		udelay(5);
++		REG_WRITE(ah, AR_PHY_RX_DELAY, AR_PHY_RX_DELAY_DELAY);
++		REG_WRITE(ah, AR_PHY_ACTIVE, AR_PHY_ACTIVE_EN);
++	}
++
+ 	if (run_agc_cal || !(ah->ah_flags & AH_FASTCC)) {
+ 		/* Calibrate the AGC */
+ 		REG_WRITE(ah, AR_PHY_AGC_CONTROL,
+@@ -1113,6 +1123,11 @@ skip_tx_iqcal:
+ 		ar9003_hw_do_manual_peak_cal(ah, chan);
+ 	}
+ 
++	if (REG_READ(ah, AR_PHY_CL_CAL_CTL) & AR_PHY_CL_CAL_ENABLE) {
++		REG_WRITE(ah, AR_PHY_RX_DELAY, rx_delay);
++		udelay(5);
++	}
++
+ 	if (ath9k_hw_mci_is_enabled(ah) && IS_CHAN_2GHZ(chan) && run_agc_cal)
+ 		ar9003_mci_init_cal_done(ah);
+ 
+-- 
+1.8.4
 
