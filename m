@@ -1,34 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from leit.jelmoni.net ([78.46.129.73]:55615 "EHLO leit.jelmoni.net"
+Received: from mx1.redhat.com ([209.132.183.28]:37107 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753944Ab3IKQjD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Sep 2013 12:39:03 -0400
-Received: from localhost (localhost.jelmoni.net [127.0.0.1])
-	by leit.jelmoni.net (Postfix) with ESMTP id E4E7F80E1
-	for <linux-wireless@vger.kernel.org>; Wed, 11 Sep 2013 18:32:12 +0200 (CEST)
-Received: from leit.jelmoni.net ([127.0.0.1])
-	by localhost (leit.jelmoni.net [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id wWofmASdrZDf for <linux-wireless@vger.kernel.org>;
-	Wed, 11 Sep 2013 18:32:12 +0200 (CEST)
-Received: from laptop-beat.swiss-wireless.com.ar (host25.186-108-166.telecom.net.ar [186.108.166.25])
-	(Authenticated sender: genauth@swiss-wireless.com.ar)
-	by leit.jelmoni.net (Postfix) with ESMTPSA id F20FA80DF
-	for <linux-wireless@vger.kernel.org>; Wed, 11 Sep 2013 18:32:11 +0200 (CEST)
-Message-ID: <52309B0A.7030504@swiss-wireless.com.ar> (sfid-20130911_183908_467219_650B5263)
-Date: Wed, 11 Sep 2013 13:32:10 -0300
-From: Beat Meier <mbe_shop@swiss-wireless.com.ar>
-MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Is there an utility analog athstat in madwifi for linux wireless???
-Content-Type: text/plain; charset=ISO-8859-1
+	id S1754039Ab3IKU4H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Sep 2013 16:56:07 -0400
+Message-ID: <1378933233.1693.31.camel@dcbw.foobar.com> (sfid-20130911_225611_196612_F847D2AB)
+Subject: Re: Is there an utility analog athstat in madwifi for linux
+ wireless???
+From: Dan Williams <dcbw@redhat.com>
+To: Beat Meier <mbe_shop@swiss-wireless.com.ar>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 11 Sep 2013 16:00:33 -0500
+In-Reply-To: <52309B0A.7030504@swiss-wireless.com.ar>
+References: <52309B0A.7030504@swiss-wireless.com.ar>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello
+On Wed, 2013-09-11 at 13:32 -0300, Beat Meier wrote:
+> Hello
+> 
+> Is there any tool for wireless debugging like athstat for madwifi which
+> tells you CRC errors, long retries etc.??
 
-Is there any tool for wireless debugging like athstat for madwifi which
-tells you CRC errors, long retries etc.??
+You're probably looking for 'debugfs', which has the following counters:
 
-Thanks
+	DEBUGFS_ADD_COUNTER(rx_packets, rx_packets);
+	DEBUGFS_ADD_COUNTER(tx_packets, tx_packets);
+	DEBUGFS_ADD_COUNTER(rx_bytes, rx_bytes);
+	DEBUGFS_ADD_COUNTER(tx_bytes, tx_bytes);
+	DEBUGFS_ADD_COUNTER(rx_duplicates, num_duplicates);
+	DEBUGFS_ADD_COUNTER(rx_fragments, rx_fragments);
+	DEBUGFS_ADD_COUNTER(rx_dropped, rx_dropped);
+	DEBUGFS_ADD_COUNTER(tx_fragments, tx_fragments);
+	DEBUGFS_ADD_COUNTER(tx_filtered, tx_filtered_count);
+	DEBUGFS_ADD_COUNTER(tx_retry_failed, tx_retry_failed);
+	DEBUGFS_ADD_COUNTER(tx_retry_count, tx_retry_count);
+	DEBUGFS_ADD_COUNTER(wep_weak_iv_count, wep_weak_iv_count);
 
-Beat
+CRC errors might be represented by rx_dropped, but I'm not sure, as the
+code doesn't split CRC errors out from other RX decryption errors.
+
+Dan
+
