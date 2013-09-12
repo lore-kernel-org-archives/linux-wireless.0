@@ -1,90 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.ispras.ru ([83.149.199.45]:46453 "EHLO mail.ispras.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759990Ab3ICUJF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Sep 2013 16:09:05 -0400
-Message-ID: <522641DE.70902@ispras.ru> (sfid-20130903_220930_473283_8C0D7875)
-Date: Wed, 04 Sep 2013 00:09:02 +0400
-From: Alexey Khoroshilov <khoroshilov@ispras.ru>
+Received: from mail-vc0-f178.google.com ([209.85.220.178]:61836 "EHLO
+	mail-vc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752331Ab3ILGIS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Sep 2013 02:08:18 -0400
+Received: by mail-vc0-f178.google.com with SMTP id ha12so6850925vcb.23
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Sep 2013 23:08:17 -0700 (PDT)
 MIME-Version: 1.0
-To: htl10@users.sourceforge.net
-CC: larry.finger@lwfinger.net, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org,
-	gregkh@linuxfoundation.org
-Subject: Re: [PATCH] rtl8187: fix use after free on failure path in rtl8187_init_urbs()
-References: <1378103685.43571.YahooMailBasic@web172301.mail.ir2.yahoo.com>
-In-Reply-To: <1378103685.43571.YahooMailBasic@web172301.mail.ir2.yahoo.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <CACPKTAP1EkW8_Ljs4oAY-gp_CmeD-nMkohKy-8RFP__BOcOTAA@mail.gmail.com>
+References: <CACPKTAP1EkW8_Ljs4oAY-gp_CmeD-nMkohKy-8RFP__BOcOTAA@mail.gmail.com>
+Date: Thu, 12 Sep 2013 11:38:17 +0530
+Message-ID: <CACPKTAMAgO5twMuscFiSPTp3Ej7StSETWN+E=TeJZYRyjPcf1Q@mail.gmail.com> (sfid-20130912_080822_476641_5ABD3942)
+Subject: Re: AR9002 data sheet
+From: Prabhunath G <gprabhunath@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02.09.2013 10:34, Hin-Tak Leung wrote:
-> ------------------------------
-> On Mon, Sep 2, 2013 05:06 BST Alexey Khoroshilov wrote:
->
->> On 01.09.2013 10:51, Hin-Tak Leung wrote:
->>> ------------------------------
->>> On Sat, Aug 31, 2013 22:18 BST Alexey Khoroshilov wrote:
->>>
->>> In case of __dev_alloc_skb() failure rtl8187_init_urbs()
->>> calls usb_free_urb(entry) where 'entry' can points to urb
->>> allocated at the previous iteration. That means refcnt will be
->>> decremented incorrectly and the urb can be used after memory
->>> deallocation.
->>>
->>> The patch fixes the issue and implements error handling of init_urbs
->>> in rtl8187_start().
->>>
->>> Found by Linux Driver Verification project (linuxtesting.org).
->>>
->>> Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
->>> ---
->>> drivers/net/wireless/rtl818x/rtl8187/dev.c | 15 ++++++++++-----
->>> 1 file changed, 10 insertions(+), 5 deletions(-)
->>>
->>> diff --git a/drivers/net/wireless/rtl818x/rtl8187/dev.c b/drivers/net/wireless/rtl818x/rtl8187/dev.c
->>> index f49220e..e83d53c 100644
->>> --- a/drivers/net/wireless/rtl818x/rtl8187/dev.c
->>> +++ b/drivers/net/wireless/rtl818x/rtl8187/dev.c
->>> @@ -438,17 +438,16 @@ static int rtl8187_init_urbs(struct ieee80211_hw *dev)
->>>            skb_queue_tail(&priv->rx_queue, skb);
->>>            usb_anchor_urb(entry, &priv->anchored);
->>>            ret = usb_submit_urb(entry, GFP_KERNEL);
->>> +        usb_free_urb(entry);
->>>            if (ret) {
->>>                skb_unlink(skb, &priv->rx_queue);
->>>                usb_unanchor_urb(entry);
->>>                goto err;
->>>            }
->>> -        usb_free_urb(entry);
->>>        }
->>>        return ret;
->>>
->>> err:
->>> -    usb_free_urb(entry);
->>>        kfree_skb(skb);
->>>        usb_kill_anchored_urbs(&priv->anchored);
->>>        return ret;
->>> This part looks wrong - you free_urb(entry) then unanchor_urb(entry).
->> I do not see any problems here.
->> usb_free_urb() just decrements refcnt of the urb.
->> While usb_anchor_urb() and usb_unanchor_urb() increment and decrement it
->> as well.
->> So actual memory deallocation will happen in usb_unanchor_urb().
-> If the routines work as you say, they probably are misnamed, and/or prototyped wrongly?
-> Also, you are making assumptions about how they are implemented, and relying
-> on the implementation details to be fixed for eternity.
->
-> I am just saying,
->
-> XXX_free(some_entity);
-> if(condtion)
->       do_stuff(some_entity);
->
-> looks wrong, and if that's intentional, those routines really shouldn't be named as such.
-There is an alias for usb_free_urb() named usb_put_urb().
-I will resend the patch with such substitution.
+Or any datasheet of 802.11 b/g/n device for which there is a
+development of linux driver
 
---
-Alexey
+Thanks,
+Prabhu
+
+
+On Thu, Sep 12, 2013 at 11:30 AM, Prabhunath G <gprabhunath@gmail.com> wrote:
+> Dear All,
+>
+>        I am interested to analyse the ath9k drivers having an agenda
+> of contributing in near future.
+> Can I get the datasheet of AR9002 so that I can start analysing the driver.
+>
+> Regards,
+> Prabhunath G
+> Linux Trainer
+> Bangalore
+
+
+
+-- 
+Regards,
+Prabhunath G
+Linux Trainer
+Bangalore
