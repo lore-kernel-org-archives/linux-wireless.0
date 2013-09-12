@@ -1,183 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f179.google.com ([209.85.214.179]:45137 "EHLO
-	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752188Ab3IVR0J (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Sep 2013 13:26:09 -0400
-Received: by mail-ob0-f179.google.com with SMTP id wn1so2763744obc.24
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Sep 2013 10:26:09 -0700 (PDT)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:45943 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754071Ab3ILMuz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Sep 2013 08:50:55 -0400
+Message-ID: <5231B8A6.2010004@hauke-m.de> (sfid-20130912_145058_873829_079D3367)
+Date: Thu, 12 Sep 2013 14:50:46 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-In-Reply-To: <20130922123200.GA17832@mail.catnarok.net>
-References: <20130921223440.GA5297@mail.catnarok.net>
-	<loom.20130922T072315-740@post.gmane.org>
-	<20130922123200.GA17832@mail.catnarok.net>
-Date: Sun, 22 Sep 2013 12:26:09 -0500
-Message-ID: <CAD_xsFMrBZCHGZY6sX=wnREh5SoFZcqhUSAikuGsOoK_y9gDOA@mail.gmail.com> (sfid-20130922_192626_298153_592E7976)
-Subject: Re: brcmsmac causes soft lockup in 3.12-rc1
-From: Adam Honse <calcprogrammer1@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: multipart/mixed; boundary=089e01633baa08977204e6fc33a0
+To: Arend van Spriel <arend@broadcom.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Broadcom PCI ID 14e4:4313 reuse?
+References: <52319C4D.6030803@hauke-m.de> <5231B269.5060404@broadcom.com>
+In-Reply-To: <5231B269.5060404@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---089e01633baa08977204e6fc33a0
-Content-Type: text/plain; charset=ISO-8859-1
+On 09/12/2013 02:24 PM, Arend van Spriel wrote:
+> On 09/12/2013 12:49 PM, Hauke Mehrtens wrote:
+>> Hi Arend,
+>>
+>> In OpenWrt someone reported that he has a BCM4313 with the PCI id
+>> 14e4:4313 [0]. The b43 wiki [1] says this was used for a BCM4311 with
+>> just ieee80211a support.
+> 
+> That is what I found over here as well.
+> 
+>> Is it correct that BCM4313 also uses this PCI id, this chip was was
+>> directly soldered onto a router? Is the b43 wiki wrong and 14e4:4313 was
+>> not used for the BCM4311 or was this PCI id reused for a different
+>> device?
+> 
+> It is weird that this comes up with PCI id 0x4313. The chip id is read
+> from chipcommon and indeed returns 0x4313. The core revisions that bcma
+> finds indicate also that this is indeed a bcm4313.
 
-Attached is the output of lspci -vnn
+Could it be that this is some default PCI id which is normally changed
+by a vendor to something else? I have seen the BCM43224 with the PCI id
+14e4:a8d8 only on routers expect after I introduced a error in bcma and
+all the BCM43224 turned to have this PCI id. ;-)
 
---089e01633baa08977204e6fc33a0
-Content-Type: text/plain; charset=US-ASCII; name="lspci output.txt"
-Content-Disposition: attachment; filename="lspci output.txt"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hlwjf61s0
+>> I am planing to prepare a patch adding support for a BCM4313 with the
+>> PCI ID of 14e4:4313 and I will ignore that there could be some BCM4311
+>> with this PCI id.
+> 
+> You mean a patch in brcmsmac? Maybe brcms_c_chipmatch_pci() should check
+> the chip id as well (like brcms_c_chipmatch_soc()).
 
-YWRhbUBBZGFtLWR2NnotNzAwMDp+JCB1bmFtZSAtYQpMaW51eCBBZGFtLWR2NnotNzAwMCAzLjEx
-LjAtOC1nZW5lcmljICMxNS1VYnVudHUgU01QIEZyaSBTZXAgMjAgMDQ6MTE6MjYgVVRDIDIwMTMg
-eDg2XzY0IHg4Nl82NCB4ODZfNjQgR05VL0xpbnV4CmFkYW1AQWRhbS1kdjZ6LTcwMDA6fiQgbHNw
-Y2kgLXZubgowMDowMC4wIEhvc3QgYnJpZGdlIFswNjAwXTogQWR2YW5jZWQgTWljcm8gRGV2aWNl
-cywgSW5jLiBbQU1EXSBGYW1pbHkgMTVoIChNb2RlbHMgMTBoLTFmaCkgUHJvY2Vzc29yIFJvb3Qg
-Q29tcGxleCBbMTAyMjoxNDEwXQoJU3Vic3lzdGVtOiBIZXdsZXR0LVBhY2thcmQgQ29tcGFueSBE
-ZXZpY2UgWzEwM2M6MTgzMV0KCUZsYWdzOiBidXMgbWFzdGVyLCA2Nk1IeiwgbWVkaXVtIGRldnNl
-bCwgbGF0ZW5jeSAzMgoKMDA6MDEuMCBWR0EgY29tcGF0aWJsZSBjb250cm9sbGVyIFswMzAwXTog
-QWR2YW5jZWQgTWljcm8gRGV2aWNlcywgSW5jLiBbQU1EL0FUSV0gRGV2aWNlIFsxMDAyOjk5MDBd
-IChwcm9nLWlmIDAwIFtWR0EgY29udHJvbGxlcl0pCglTdWJzeXN0ZW06IEhld2xldHQtUGFja2Fy
-ZCBDb21wYW55IERldmljZSBbMTAzYzoxODMxXQoJRmxhZ3M6IGJ1cyBtYXN0ZXIsIGZhc3QgZGV2
-c2VsLCBsYXRlbmN5IDAsIElSUSA1NgoJTWVtb3J5IGF0IGQwMDAwMDAwICgzMi1iaXQsIHByZWZl
-dGNoYWJsZSkgW3NpemU9MjU2TV0KCUkvTyBwb3J0cyBhdCA0MDAwIFtzaXplPTI1Nl0KCU1lbW9y
-eSBhdCBmMDQwMDAwMCAoMzItYml0LCBub24tcHJlZmV0Y2hhYmxlKSBbc2l6ZT0yNTZLXQoJRXhw
-YW5zaW9uIFJPTSBhdCA8dW5hc3NpZ25lZD4gW2Rpc2FibGVkXQoJQ2FwYWJpbGl0aWVzOiA8YWNj
-ZXNzIGRlbmllZD4KCUtlcm5lbCBkcml2ZXIgaW4gdXNlOiByYWRlb24KCjAwOjAxLjEgQXVkaW8g
-ZGV2aWNlIFswNDAzXTogQWR2YW5jZWQgTWljcm8gRGV2aWNlcywgSW5jLiBbQU1EL0FUSV0gVHJp
-bml0eSBIRE1JIEF1ZGlvIENvbnRyb2xsZXIgWzEwMDI6OTkwMl0KCVN1YnN5c3RlbTogSGV3bGV0
-dC1QYWNrYXJkIENvbXBhbnkgRGV2aWNlIFsxMDNjOjE4MzFdCglGbGFnczogYnVzIG1hc3Rlciwg
-ZmFzdCBkZXZzZWwsIGxhdGVuY3kgMCwgSVJRIDU1CglNZW1vcnkgYXQgZjA0NDQwMDAgKDMyLWJp
-dCwgbm9uLXByZWZldGNoYWJsZSkgW3NpemU9MTZLXQoJQ2FwYWJpbGl0aWVzOiA8YWNjZXNzIGRl
-bmllZD4KCUtlcm5lbCBkcml2ZXIgaW4gdXNlOiBzbmRfaGRhX2ludGVsCgowMDowMi4wIFBDSSBi
-cmlkZ2UgWzA2MDRdOiBBZHZhbmNlZCBNaWNybyBEZXZpY2VzLCBJbmMuIFtBTURdIEZhbWlseSAx
-NWggKE1vZGVscyAxMGgtMWZoKSBQcm9jZXNzb3IgUm9vdCBQb3J0IFsxMDIyOjE0MTJdIChwcm9n
-LWlmIDAwIFtOb3JtYWwgZGVjb2RlXSkKCUZsYWdzOiBidXMgbWFzdGVyLCBmYXN0IGRldnNlbCwg
-bGF0ZW5jeSAwCglCdXM6IHByaW1hcnk9MDAsIHNlY29uZGFyeT0wMSwgc3Vib3JkaW5hdGU9MDEs
-IHNlYy1sYXRlbmN5PTAKCUkvTyBiZWhpbmQgYnJpZGdlOiAwMDAwMzAwMC0wMDAwM2ZmZgoJTWVt
-b3J5IGJlaGluZCBicmlkZ2U6IGYwMzAwMDAwLWYwM2ZmZmZmCglQcmVmZXRjaGFibGUgbWVtb3J5
-IGJlaGluZCBicmlkZ2U6IDAwMDAwMDAwZTAwMDAwMDAtMDAwMDAwMDBlZmZmZmZmZgoJQ2FwYWJp
-bGl0aWVzOiA8YWNjZXNzIGRlbmllZD4KCUtlcm5lbCBkcml2ZXIgaW4gdXNlOiBwY2llcG9ydAoK
-MDA6MDQuMCBQQ0kgYnJpZGdlIFswNjA0XTogQWR2YW5jZWQgTWljcm8gRGV2aWNlcywgSW5jLiBb
-QU1EXSBGYW1pbHkgMTVoIChNb2RlbHMgMTBoLTFmaCkgUHJvY2Vzc29yIFJvb3QgUG9ydCBbMTAy
-MjoxNDE0XSAocHJvZy1pZiAwMCBbTm9ybWFsIGRlY29kZV0pCglGbGFnczogYnVzIG1hc3Rlciwg
-ZmFzdCBkZXZzZWwsIGxhdGVuY3kgMAoJQnVzOiBwcmltYXJ5PTAwLCBzZWNvbmRhcnk9MDIsIHN1
-Ym9yZGluYXRlPTAyLCBzZWMtbGF0ZW5jeT0wCglJL08gYmVoaW5kIGJyaWRnZTogMDAwMDUwMDAt
-MDAwMDVmZmYKCU1lbW9yeSBiZWhpbmQgYnJpZGdlOiBmMDIwMDAwMC1mMDJmZmZmZgoJUHJlZmV0
-Y2hhYmxlIG1lbW9yeSBiZWhpbmQgYnJpZGdlOiAwMDAwMDAwMGYwNTAwMDAwLTAwMDAwMDAwZjA2
-ZmZmZmYKCUNhcGFiaWxpdGllczogPGFjY2VzcyBkZW5pZWQ+CglLZXJuZWwgZHJpdmVyIGluIHVz
-ZTogcGNpZXBvcnQKCjAwOjEwLjAgVVNCIGNvbnRyb2xsZXIgWzBjMDNdOiBBZHZhbmNlZCBNaWNy
-byBEZXZpY2VzLCBJbmMuIFtBTURdIEZDSCBVU0IgWEhDSSBDb250cm9sbGVyIFsxMDIyOjc4MTJd
-IChyZXYgMDMpIChwcm9nLWlmIDMwIFtYSENJXSkKCVN1YnN5c3RlbTogSGV3bGV0dC1QYWNrYXJk
-IENvbXBhbnkgRGV2aWNlIFsxMDNjOjE4MzFdCglGbGFnczogYnVzIG1hc3RlciwgZmFzdCBkZXZz
-ZWwsIGxhdGVuY3kgMCwgSVJRIDE4CglNZW1vcnkgYXQgZjA0NDgwMDAgKDY0LWJpdCwgbm9uLXBy
-ZWZldGNoYWJsZSkgW3NpemU9OEtdCglDYXBhYmlsaXRpZXM6IDxhY2Nlc3MgZGVuaWVkPgoJS2Vy
-bmVsIGRyaXZlciBpbiB1c2U6IHhoY2lfaGNkCgowMDoxMC4xIFVTQiBjb250cm9sbGVyIFswYzAz
-XTogQWR2YW5jZWQgTWljcm8gRGV2aWNlcywgSW5jLiBbQU1EXSBGQ0ggVVNCIFhIQ0kgQ29udHJv
-bGxlciBbMTAyMjo3ODEyXSAocmV2IDAzKSAocHJvZy1pZiAzMCBbWEhDSV0pCglTdWJzeXN0ZW06
-IEhld2xldHQtUGFja2FyZCBDb21wYW55IERldmljZSBbMTAzYzoxODMxXQoJRmxhZ3M6IGJ1cyBt
-YXN0ZXIsIGZhc3QgZGV2c2VsLCBsYXRlbmN5IDAsIElSUSAxNwoJTWVtb3J5IGF0IGYwNDRhMDAw
-ICg2NC1iaXQsIG5vbi1wcmVmZXRjaGFibGUpIFtzaXplPThLXQoJQ2FwYWJpbGl0aWVzOiA8YWNj
-ZXNzIGRlbmllZD4KCUtlcm5lbCBkcml2ZXIgaW4gdXNlOiB4aGNpX2hjZAoKMDA6MTEuMCBTQVRB
-IGNvbnRyb2xsZXIgWzAxMDZdOiBBZHZhbmNlZCBNaWNybyBEZXZpY2VzLCBJbmMuIFtBTURdIEZD
-SCBTQVRBIENvbnRyb2xsZXIgW0FIQ0kgbW9kZV0gWzEwMjI6NzgwNF0gKHByb2ctaWYgMDEgW0FI
-Q0kgMS4wXSkKCVN1YnN5c3RlbTogSGV3bGV0dC1QYWNrYXJkIENvbXBhbnkgRGV2aWNlIFsxMDNj
-OjE4MzFdCglGbGFnczogYnVzIG1hc3RlciwgNjZNSHosIG1lZGl1bSBkZXZzZWwsIGxhdGVuY3kg
-NjQsIElSUSA1NAoJSS9PIHBvcnRzIGF0IDQxMTggW3NpemU9OF0KCUkvTyBwb3J0cyBhdCA0MTI0
-IFtzaXplPTRdCglJL08gcG9ydHMgYXQgNDExMCBbc2l6ZT04XQoJSS9PIHBvcnRzIGF0IDQxMjAg
-W3NpemU9NF0KCUkvTyBwb3J0cyBhdCA0MTAwIFtzaXplPTE2XQoJTWVtb3J5IGF0IGYwNDRlMDAw
-ICgzMi1iaXQsIG5vbi1wcmVmZXRjaGFibGUpIFtzaXplPTJLXQoJQ2FwYWJpbGl0aWVzOiA8YWNj
-ZXNzIGRlbmllZD4KCUtlcm5lbCBkcml2ZXIgaW4gdXNlOiBhaGNpCgowMDoxMi4wIFVTQiBjb250
-cm9sbGVyIFswYzAzXTogQWR2YW5jZWQgTWljcm8gRGV2aWNlcywgSW5jLiBbQU1EXSBGQ0ggVVNC
-IE9IQ0kgQ29udHJvbGxlciBbMTAyMjo3ODA3XSAocmV2IDExKSAocHJvZy1pZiAxMCBbT0hDSV0p
-CglTdWJzeXN0ZW06IEhld2xldHQtUGFja2FyZCBDb21wYW55IERldmljZSBbMTAzYzoxODMxXQoJ
-RmxhZ3M6IGJ1cyBtYXN0ZXIsIDY2TUh6LCBtZWRpdW0gZGV2c2VsLCBsYXRlbmN5IDMyLCBJUlEg
-MTgKCU1lbW9yeSBhdCBmMDQ0ZDAwMCAoMzItYml0LCBub24tcHJlZmV0Y2hhYmxlKSBbc2l6ZT00
-S10KCUtlcm5lbCBkcml2ZXIgaW4gdXNlOiBvaGNpLXBjaQoKMDA6MTIuMiBVU0IgY29udHJvbGxl
-ciBbMGMwM106IEFkdmFuY2VkIE1pY3JvIERldmljZXMsIEluYy4gW0FNRF0gRkNIIFVTQiBFSENJ
-IENvbnRyb2xsZXIgWzEwMjI6NzgwOF0gKHJldiAxMSkgKHByb2ctaWYgMjAgW0VIQ0ldKQoJU3Vi
-c3lzdGVtOiBIZXdsZXR0LVBhY2thcmQgQ29tcGFueSBEZXZpY2UgWzEwM2M6MTgzMV0KCUZsYWdz
-OiBidXMgbWFzdGVyLCA2Nk1IeiwgbWVkaXVtIGRldnNlbCwgbGF0ZW5jeSAzMiwgSVJRIDE3CglN
-ZW1vcnkgYXQgZjA0NGMwMDAgKDMyLWJpdCwgbm9uLXByZWZldGNoYWJsZSkgW3NpemU9MjU2XQoJ
-Q2FwYWJpbGl0aWVzOiA8YWNjZXNzIGRlbmllZD4KCUtlcm5lbCBkcml2ZXIgaW4gdXNlOiBlaGNp
-LXBjaQoKMDA6MTQuMCBTTUJ1cyBbMGMwNV06IEFkdmFuY2VkIE1pY3JvIERldmljZXMsIEluYy4g
-W0FNRF0gRkNIIFNNQnVzIENvbnRyb2xsZXIgWzEwMjI6NzgwYl0gKHJldiAxNCkKCVN1YnN5c3Rl
-bTogSGV3bGV0dC1QYWNrYXJkIENvbXBhbnkgRGV2aWNlIFsxMDNjOjE4MzFdCglGbGFnczogNjZN
-SHosIG1lZGl1bSBkZXZzZWwKCjAwOjE0LjIgQXVkaW8gZGV2aWNlIFswNDAzXTogQWR2YW5jZWQg
-TWljcm8gRGV2aWNlcywgSW5jLiBbQU1EXSBGQ0ggQXphbGlhIENvbnRyb2xsZXIgWzEwMjI6Nzgw
-ZF0gKHJldiAwMSkKCVN1YnN5c3RlbTogSGV3bGV0dC1QYWNrYXJkIENvbXBhbnkgRGV2aWNlIFsx
-MDNjOjE4MzFdCglGbGFnczogYnVzIG1hc3Rlciwgc2xvdyBkZXZzZWwsIGxhdGVuY3kgMzIsIElS
-USAxNgoJTWVtb3J5IGF0IGYwNDQwMDAwICg2NC1iaXQsIG5vbi1wcmVmZXRjaGFibGUpIFtzaXpl
-PTE2S10KCUNhcGFiaWxpdGllczogPGFjY2VzcyBkZW5pZWQ+CglLZXJuZWwgZHJpdmVyIGluIHVz
-ZTogc25kX2hkYV9pbnRlbAoKMDA6MTQuMyBJU0EgYnJpZGdlIFswNjAxXTogQWR2YW5jZWQgTWlj
-cm8gRGV2aWNlcywgSW5jLiBbQU1EXSBGQ0ggTFBDIEJyaWRnZSBbMTAyMjo3ODBlXSAocmV2IDEx
-KQoJU3Vic3lzdGVtOiBIZXdsZXR0LVBhY2thcmQgQ29tcGFueSBEZXZpY2UgWzEwM2M6MTgzMV0K
-CUZsYWdzOiBidXMgbWFzdGVyLCA2Nk1IeiwgbWVkaXVtIGRldnNlbCwgbGF0ZW5jeSAwCgowMDox
-NC40IFBDSSBicmlkZ2UgWzA2MDRdOiBBZHZhbmNlZCBNaWNybyBEZXZpY2VzLCBJbmMuIFtBTURd
-IEZDSCBQQ0kgQnJpZGdlIFsxMDIyOjc4MGZdIChyZXYgNDApIChwcm9nLWlmIDAxIFtTdWJ0cmFj
-dGl2ZSBkZWNvZGVdKQoJRmxhZ3M6IGJ1cyBtYXN0ZXIsIDY2TUh6LCBtZWRpdW0gZGV2c2VsLCBs
-YXRlbmN5IDY0CglCdXM6IHByaW1hcnk9MDAsIHNlY29uZGFyeT0wMywgc3Vib3JkaW5hdGU9MDMs
-IHNlYy1sYXRlbmN5PTY0CgowMDoxNS4wIFBDSSBicmlkZ2UgWzA2MDRdOiBBZHZhbmNlZCBNaWNy
-byBEZXZpY2VzLCBJbmMuIFtBTURdIEh1ZHNvbiBQQ0kgdG8gUENJIGJyaWRnZSAoUENJRSBwb3J0
-IDApIFsxMDIyOjQzYTBdIChwcm9nLWlmIDAwIFtOb3JtYWwgZGVjb2RlXSkKCUZsYWdzOiBidXMg
-bWFzdGVyLCBmYXN0IGRldnNlbCwgbGF0ZW5jeSAwCglCdXM6IHByaW1hcnk9MDAsIHNlY29uZGFy
-eT0wNCwgc3Vib3JkaW5hdGU9MDQsIHNlYy1sYXRlbmN5PTAKCUkvTyBiZWhpbmQgYnJpZGdlOiAw
-MDAwMjAwMC0wMDAwMmZmZgoJTWVtb3J5IGJlaGluZCBicmlkZ2U6IGYwMTAwMDAwLWYwMWZmZmZm
-CglDYXBhYmlsaXRpZXM6IDxhY2Nlc3MgZGVuaWVkPgoJS2VybmVsIGRyaXZlciBpbiB1c2U6IHBj
-aWVwb3J0CgowMDoxNS4xIFBDSSBicmlkZ2UgWzA2MDRdOiBBZHZhbmNlZCBNaWNybyBEZXZpY2Vz
-LCBJbmMuIFtBTURdIEh1ZHNvbiBQQ0kgdG8gUENJIGJyaWRnZSAoUENJRSBwb3J0IDEpIFsxMDIy
-OjQzYTFdIChwcm9nLWlmIDAwIFtOb3JtYWwgZGVjb2RlXSkKCUZsYWdzOiBidXMgbWFzdGVyLCBm
-YXN0IGRldnNlbCwgbGF0ZW5jeSAwCglCdXM6IHByaW1hcnk9MDAsIHNlY29uZGFyeT0wNSwgc3Vi
-b3JkaW5hdGU9MDUsIHNlYy1sYXRlbmN5PTAKCU1lbW9yeSBiZWhpbmQgYnJpZGdlOiBmMDAwMDAw
-MC1mMDBmZmZmZgoJQ2FwYWJpbGl0aWVzOiA8YWNjZXNzIGRlbmllZD4KCUtlcm5lbCBkcml2ZXIg
-aW4gdXNlOiBwY2llcG9ydAoKMDA6MTguMCBIb3N0IGJyaWRnZSBbMDYwMF06IEFkdmFuY2VkIE1p
-Y3JvIERldmljZXMsIEluYy4gW0FNRF0gRmFtaWx5IDE1aCAoTW9kZWxzIDEwaC0xZmgpIFByb2Nl
-c3NvciBGdW5jdGlvbiAwIFsxMDIyOjE0MDBdCglGbGFnczogZmFzdCBkZXZzZWwKCjAwOjE4LjEg
-SG9zdCBicmlkZ2UgWzA2MDBdOiBBZHZhbmNlZCBNaWNybyBEZXZpY2VzLCBJbmMuIFtBTURdIEZh
-bWlseSAxNWggKE1vZGVscyAxMGgtMWZoKSBQcm9jZXNzb3IgRnVuY3Rpb24gMSBbMTAyMjoxNDAx
-XQoJRmxhZ3M6IGZhc3QgZGV2c2VsCgowMDoxOC4yIEhvc3QgYnJpZGdlIFswNjAwXTogQWR2YW5j
-ZWQgTWljcm8gRGV2aWNlcywgSW5jLiBbQU1EXSBGYW1pbHkgMTVoIChNb2RlbHMgMTBoLTFmaCkg
-UHJvY2Vzc29yIEZ1bmN0aW9uIDIgWzEwMjI6MTQwMl0KCUZsYWdzOiBmYXN0IGRldnNlbAoKMDA6
-MTguMyBIb3N0IGJyaWRnZSBbMDYwMF06IEFkdmFuY2VkIE1pY3JvIERldmljZXMsIEluYy4gW0FN
-RF0gRmFtaWx5IDE1aCAoTW9kZWxzIDEwaC0xZmgpIFByb2Nlc3NvciBGdW5jdGlvbiAzIFsxMDIy
-OjE0MDNdCglGbGFnczogZmFzdCBkZXZzZWwKCUNhcGFiaWxpdGllczogPGFjY2VzcyBkZW5pZWQ+
-CglLZXJuZWwgZHJpdmVyIGluIHVzZTogazEwdGVtcAoKMDA6MTguNCBIb3N0IGJyaWRnZSBbMDYw
-MF06IEFkdmFuY2VkIE1pY3JvIERldmljZXMsIEluYy4gW0FNRF0gRmFtaWx5IDE1aCAoTW9kZWxz
-IDEwaC0xZmgpIFByb2Nlc3NvciBGdW5jdGlvbiA0IFsxMDIyOjE0MDRdCglGbGFnczogZmFzdCBk
-ZXZzZWwKCjAwOjE4LjUgSG9zdCBicmlkZ2UgWzA2MDBdOiBBZHZhbmNlZCBNaWNybyBEZXZpY2Vz
-LCBJbmMuIFtBTURdIEZhbWlseSAxNWggKE1vZGVscyAxMGgtMWZoKSBQcm9jZXNzb3IgRnVuY3Rp
-b24gNSBbMTAyMjoxNDA1XQoJRmxhZ3M6IGZhc3QgZGV2c2VsCgowMTowMC4wIFZHQSBjb21wYXRp
-YmxlIGNvbnRyb2xsZXIgWzAzMDBdOiBBZHZhbmNlZCBNaWNybyBEZXZpY2VzLCBJbmMuIFtBTUQv
-QVRJXSBDaGVsc2VhIExQIFtSYWRlb24gSEQgNzczME1dIFsxMDAyOjY4MmZdIChwcm9nLWlmIDAw
-IFtWR0EgY29udHJvbGxlcl0pCglTdWJzeXN0ZW06IEhld2xldHQtUGFja2FyZCBDb21wYW55IERl
-dmljZSBbMTAzYzoxODMxXQoJUGh5c2ljYWwgU2xvdDogMAoJRmxhZ3M6IGJ1cyBtYXN0ZXIsIGZh
-c3QgZGV2c2VsLCBsYXRlbmN5IDAsIElSUSA1NwoJTWVtb3J5IGF0IGUwMDAwMDAwICg2NC1iaXQs
-IHByZWZldGNoYWJsZSkgW3NpemU9MjU2TV0KCU1lbW9yeSBhdCBmMDMwMDAwMCAoNjQtYml0LCBu
-b24tcHJlZmV0Y2hhYmxlKSBbc2l6ZT0yNTZLXQoJSS9PIHBvcnRzIGF0IDMwMDAgW3NpemU9MjU2
-XQoJW3ZpcnR1YWxdIEV4cGFuc2lvbiBST00gYXQgZjAzNDAwMDAgW2Rpc2FibGVkXSBbc2l6ZT0x
-MjhLXQoJQ2FwYWJpbGl0aWVzOiA8YWNjZXNzIGRlbmllZD4KCUtlcm5lbCBkcml2ZXIgaW4gdXNl
-OiByYWRlb24KCjAyOjAwLjAgTmV0d29yayBjb250cm9sbGVyIFswMjgwXTogQnJvYWRjb20gQ29y
-cG9yYXRpb24gQkNNNDMxMyA4MDIuMTFiZ24gV2lyZWxlc3MgTmV0d29yayBBZGFwdGVyIFsxNGU0
-OjQ3MjddIChyZXYgMDEpCglTdWJzeXN0ZW06IEhld2xldHQtUGFja2FyZCBDb21wYW55IERldmlj
-ZSBbMTAzYzoxNzk1XQoJUGh5c2ljYWwgU2xvdDogMC0xCglGbGFnczogYnVzIG1hc3RlciwgZmFz
-dCBkZXZzZWwsIGxhdGVuY3kgMCwgSVJRIDE2CglNZW1vcnkgYXQgZjAyMDAwMDAgKDY0LWJpdCwg
-bm9uLXByZWZldGNoYWJsZSkgW3NpemU9MTZLXQoJQ2FwYWJpbGl0aWVzOiA8YWNjZXNzIGRlbmll
-ZD4KCUtlcm5lbCBkcml2ZXIgaW4gdXNlOiBiY21hLXBjaS1icmlkZ2UKCjA0OjAwLjAgRXRoZXJu
-ZXQgY29udHJvbGxlciBbMDIwMF06IFJlYWx0ZWsgU2VtaWNvbmR1Y3RvciBDby4sIEx0ZC4gUlRM
-ODExMS84MTY4Lzg0MTEgUENJIEV4cHJlc3MgR2lnYWJpdCBFdGhlcm5ldCBDb250cm9sbGVyIFsx
-MGVjOjgxNjhdIChyZXYgMDcpCglTdWJzeXN0ZW06IEhld2xldHQtUGFja2FyZCBDb21wYW55IERl
-dmljZSBbMTAzYzoxODJkXQoJRmxhZ3M6IGJ1cyBtYXN0ZXIsIGZhc3QgZGV2c2VsLCBsYXRlbmN5
-IDAsIElSUSA1MwoJSS9PIHBvcnRzIGF0IDIwMDAgW3NpemU9MjU2XQoJTWVtb3J5IGF0IGYwMTA0
-MDAwICg2NC1iaXQsIHByZWZldGNoYWJsZSkgW3NpemU9NEtdCglNZW1vcnkgYXQgZjAxMDAwMDAg
-KDY0LWJpdCwgcHJlZmV0Y2hhYmxlKSBbc2l6ZT0xNktdCglDYXBhYmlsaXRpZXM6IDxhY2Nlc3Mg
-ZGVuaWVkPgoJS2VybmVsIGRyaXZlciBpbiB1c2U6IHI4MTY5CgowNTowMC4wIFVuYXNzaWduZWQg
-Y2xhc3MgW2ZmMDBdOiBSZWFsdGVrIFNlbWljb25kdWN0b3IgQ28uLCBMdGQuIFJUUzUyMjkgUENJ
-IEV4cHJlc3MgQ2FyZCBSZWFkZXIgWzEwZWM6NTIyOV0gKHJldiAwMSkKCVN1YnN5c3RlbTogSGV3
-bGV0dC1QYWNrYXJkIENvbXBhbnkgRGV2aWNlIFsxMDNjOjE4MzFdCglGbGFnczogYnVzIG1hc3Rl
-ciwgZmFzdCBkZXZzZWwsIGxhdGVuY3kgMCwgSVJRIDUyCglNZW1vcnkgYXQgZjAwMDAwMDAgKDMy
-LWJpdCwgbm9uLXByZWZldGNoYWJsZSkgW3NpemU9NEtdCglDYXBhYmlsaXRpZXM6IDxhY2Nlc3Mg
-ZGVuaWVkPgoJS2VybmVsIGRyaXZlciBpbiB1c2U6IHJ0c3hfcGNpCgo=
---089e01633baa08977204e6fc33a0--
+Yes I want to add this to the pci ids of bcma and to brcmsmacs
+brcms_c_chipmatch_pci() function.
+
+> 
+> Regards,
+> Arend
+> 
+>> Log of BCM4313:
+>>
+>> [    0.316000] pci 0000:01:00.0: [14e4:4313] type 00 class 0x028000
+>> (...)
+>> [   10.616000] PCI: Enabling device 0000:01:00.0 (0000 -> 0002)
+>> [   10.624000] bcma: bus0: Found chip with id 0x4313, rev 0x01 and
+>> package 0x08
+>> [   10.628000] bcma: bus0: Core 0 found: ChipCommon (manuf 0x4BF, id
+>> 0x800, rev 0x24, class 0x0)
+>> [   10.640000] bcma: bus0: Core 1 found: IEEE 802.11 (manuf 0x4BF, id
+>> 0x812, rev 0x18, class 0x0)
+>> [   10.648000] bcma: bus0: Core 2 found: PCIe (manuf 0x4BF, id 0x820,
+>> rev 0x11, class 0x0)
+>> [   10.656000] bcma: bus0: Using fallback SPROM failed (err -2)
+>> [   10.660000] bcma: bus0: No SPROM available
+>> [   10.676000] bcma: bus0: Bus registered
+>> [   11.040000] b43-phy0: Broadcom 4313 WLAN found (core revision 24)
+>> [   11.048000] b43-phy0 ERROR: FOUND UNSUPPORTED PHY (Analog 10, Type 8
+>> (LCN), Revision 1)
+>>
+>>
+>> [0]: https://dev.openwrt.org/ticket/13551
+>> [1]: http://wireless.kernel.org/en/users/Drivers/b43
+>>
+>> Hauke
+>>
+> 
+> 
+
