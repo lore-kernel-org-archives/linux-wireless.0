@@ -1,49 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53886 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753507Ab3ILTXT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Sep 2013 15:23:19 -0400
-Message-ID: <1379013966.29583.27.camel@dcbw.foobar.com> (sfid-20130912_212324_813492_D160C9E9)
-Subject: Re: Linux Wireless Mini-Summit in New Orleans -- 19-20 September
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Daniel Wagner <wagi@monom.org>, linux-wireless@vger.kernel.org,
-	johannes@sipsolutions.net, marcel@holtmann.org,
-	Samuel Ortiz <samuel@sortiz.org>,
-	Gustavo Padovan <gustavo@padovan.org>,
-	linux-bluetooth@vger.kernel.org, linux-nfc@ml01.01.org
-Date: Thu, 12 Sep 2013 14:26:06 -0500
-In-Reply-To: <20130912184835.GC14253@tuxdriver.com>
-References: <20130808185410.GD30925@tuxdriver.com>
-	 <20130808190428.GF30925@tuxdriver.com>
-	 <20130905133907.GE1947@tuxdriver.com>
-	 <1378397092.3580.21.camel@dcbw.foobar.com>
-	 <20130909192346.GC1955@tuxdriver.com> <52320A22.1040609@monom.org>
-	 <20130912184835.GC14253@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-lb0-f180.google.com ([209.85.217.180]:43769 "EHLO
+	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752738Ab3ILPeG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Sep 2013 11:34:06 -0400
+From: Vladimir Murzin <murzin.v@gmail.com>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: coelho@ti.com, linville@tuxdriver.com,
+	Vladimir Murzin <murzin.v@gmail.com>
+Subject: [PATCH 2/3] wl12xx/wl18xx: limit base for aggregate buffer size to 4K
+Date: Thu, 12 Sep 2013 17:32:22 +0200
+Message-Id: <1378999943-1968-3-git-send-email-murzin.v@gmail.com> (sfid-20130912_173414_867074_7E2C27AC)
+In-Reply-To: <1378999943-1968-1-git-send-email-murzin.v@gmail.com>
+References: <1378999943-1968-1-git-send-email-murzin.v@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-09-12 at 14:48 -0400, John W. Linville wrote:
-> On Thu, Sep 12, 2013 at 08:38:26PM +0200, Daniel Wagner wrote:
-> > Hi John,
-> > 
-> > On 09/09/2013 09:23 PM, John W. Linville wrote:
-> 
-> > >Dan Williams, Daniel Wagner, etc -- anyone got some user stories
-> > >to share?
-> > 
-> > Not much news from the user front, though I could give a short
-> > update what's happening on ConnMan if you like.
-> 
-> I think that Patrik Flykt is going to handle that...
-> 
-> Surely there is some infotainment angle to be discussed?? :-)
+WL{12,18}XX_AGGR_BUFFER_SIZE is depends on PAGE_SIZE which may be more
+than 4K. In this case memory might be aggressively wasted.
 
-I can do a short update on NetworkManager too, but there's no
-infotainment angle to it at all :)
+Use 4K size base for buffer explicitly.
 
-Dan
+Signed-off-by: Vladimir Murzin <murzin.v@gmail.com>
+---
+ drivers/net/wireless/ti/wl12xx/wl12xx.h |    3 ++-
+ drivers/net/wireless/ti/wl18xx/wl18xx.h |    3 ++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/net/wireless/ti/wl12xx/wl12xx.h b/drivers/net/wireless/ti/wl12xx/wl12xx.h
+index 9e5484a..3649d40 100644
+--- a/drivers/net/wireless/ti/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/ti/wl12xx/wl12xx.h
+@@ -56,7 +56,8 @@
+ #define WL128X_SUBTYPE_MR_VER	WLCORE_FW_VER_IGNORE
+ #define WL128X_MINOR_MR_VER	42
+ 
+-#define WL12XX_AGGR_BUFFER_SIZE	(4 * PAGE_SIZE)
++#define WL12XX_PAGE_SIZE	4096
++#define WL12XX_AGGR_BUFFER_SIZE	(4 * WL12XX_PAGE_SIZE)
+ 
+ #define WL12XX_NUM_TX_DESCRIPTORS 16
+ #define WL12XX_NUM_RX_DESCRIPTORS 8
+diff --git a/drivers/net/wireless/ti/wl18xx/wl18xx.h b/drivers/net/wireless/ti/wl18xx/wl18xx.h
+index 9204e07..a3214b4 100644
+--- a/drivers/net/wireless/ti/wl18xx/wl18xx.h
++++ b/drivers/net/wireless/ti/wl18xx/wl18xx.h
+@@ -33,7 +33,8 @@
+ 
+ #define WL18XX_CMD_MAX_SIZE          740
+ 
+-#define WL18XX_AGGR_BUFFER_SIZE		(13 * PAGE_SIZE)
++#define WL18XX_PAGE_SIZE		4096
++#define WL18XX_AGGR_BUFFER_SIZE		(13 * WL18XX_PAGE_SIZE)
+ 
+ #define WL18XX_NUM_TX_DESCRIPTORS 32
+ #define WL18XX_NUM_RX_DESCRIPTORS 32
+-- 
+1.7.10.4
 
