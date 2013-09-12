@@ -1,51 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:54830 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752019Ab3IJQXY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Sep 2013 12:23:24 -0400
-Received: by mail-ie0-f171.google.com with SMTP id 16so5420922iea.2
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Sep 2013 09:23:24 -0700 (PDT)
+Received: from mms3.broadcom.com ([216.31.210.19]:1933 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753707Ab3ILM1m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Sep 2013 08:27:42 -0400
+Message-ID: <5231B269.5060404@broadcom.com> (sfid-20130912_142745_361965_17CA421A)
+Date: Thu, 12 Sep 2013 14:24:09 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <87ppshu5mr.fsf@purkki.adurom.net>
-References: <CAFSJ42bTQkQO+yugN7BBjygQd7LY9H0bPBoPfoH7yyfyMzuGqA@mail.gmail.com>
-	<87ppshu5mr.fsf@purkki.adurom.net>
-Date: Tue, 10 Sep 2013 18:23:23 +0200
-Message-ID: <CAFSJ42b_jOJA7ABK7GqDi0KO-Nnv-8CvhMC6ysTicPhe00kS=w@mail.gmail.com> (sfid-20130910_182337_195265_1AB642E9)
-Subject: Re: regulatory will stuck when cfg80211 is built-in
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: Kalle Valo <kvalo@adurom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=windows-1252
+To: "Hauke Mehrtens" <hauke@hauke-m.de>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Broadcom PCI ID 14e4:4313 reuse?
+References: <52319C4D.6030803@hauke-m.de>
+In-Reply-To: <52319C4D.6030803@hauke-m.de>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-No, the flag CONFIG_CFG80211_INTERNAL_REGDB  does not help and it should not.
-
-The problem is that cfg80211 will stuck in situation when cfg80211 is
-initialized before user space. One way to get cfg80211 out of this
-state is to run crda once right after user space is up and running.
-But again is this intentional? Or it is more like a workaround?
-
-2013/9/9 Kalle Valo <kvalo@adurom.com>:
-> Eugene Krasnikov <k.eugene.e@gmail.com> writes:
+On 09/12/2013 12:49 PM, Hauke Mehrtens wrote:
+> Hi Arend,
 >
->> There is a problem with regulatory part of cfg80211 when cfg80211 is
->> built-in the kernel. On regulatory init cfg80211 will try to notify
->> user space about changing current domain to world regulatory but at
->> that time user space is not up and running yet and uevent message will
->> be lost. So what will happen is that cfg80211 will wait for the
->> response from user space and all requests to set current regulatory
->> will be dropped with the following error: “Pending regulatory request,
->> waiting for it to be processed...”.
+> In OpenWrt someone reported that he has a BCM4313 with the PCI id
+> 14e4:4313 [0]. The b43 wiki [1] says this was used for a BCM4311 with
+> just ieee80211a support.
+
+That is what I found over here as well.
+
+> Is it correct that BCM4313 also uses this PCI id, this chip was was
+> directly soldered onto a router? Is the b43 wiki wrong and 14e4:4313 was
+> not used for the BCM4311 or was this PCI id reused for a different device?
+
+It is weird that this comes up with PCI id 0x4313. The chip id is read 
+from chipcommon and indeed returns 0x4313. The core revisions that bcma 
+finds indicate also that this is indeed a bcm4313.
+
+> I am planing to prepare a patch adding support for a BCM4313 with the
+> PCI ID of 14e4:4313 and I will ignore that there could be some BCM4311
+> with this PCI id.
+
+You mean a patch in brcmsmac? Maybe brcms_c_chipmatch_pci() should check 
+the chip id as well (like brcms_c_chipmatch_soc()).
+
+Regards,
+Arend
+
+> Log of BCM4313:
 >
-> Does CONFIG_CFG80211_INTERNAL_REGDB help?
+> [    0.316000] pci 0000:01:00.0: [14e4:4313] type 00 class 0x028000
+> (...)
+> [   10.616000] PCI: Enabling device 0000:01:00.0 (0000 -> 0002)
+> [   10.624000] bcma: bus0: Found chip with id 0x4313, rev 0x01 and
+> package 0x08
+> [   10.628000] bcma: bus0: Core 0 found: ChipCommon (manuf 0x4BF, id
+> 0x800, rev 0x24, class 0x0)
+> [   10.640000] bcma: bus0: Core 1 found: IEEE 802.11 (manuf 0x4BF, id
+> 0x812, rev 0x18, class 0x0)
+> [   10.648000] bcma: bus0: Core 2 found: PCIe (manuf 0x4BF, id 0x820,
+> rev 0x11, class 0x0)
+> [   10.656000] bcma: bus0: Using fallback SPROM failed (err -2)
+> [   10.660000] bcma: bus0: No SPROM available
+> [   10.676000] bcma: bus0: Bus registered
+> [   11.040000] b43-phy0: Broadcom 4313 WLAN found (core revision 24)
+> [   11.048000] b43-phy0 ERROR: FOUND UNSUPPORTED PHY (Analog 10, Type 8
+> (LCN), Revision 1)
 >
-> --
-> Kalle Valo
+>
+> [0]: https://dev.openwrt.org/ticket/13551
+> [1]: http://wireless.kernel.org/en/users/Drivers/b43
+>
+> Hauke
+>
 
 
-
--- 
-Best regards,
-Eugene
