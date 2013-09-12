@@ -1,46 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:57978 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752678Ab3ISCVt (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:22090 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753905Ab3ILQtz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Sep 2013 22:21:49 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
-Subject: [PATCH] rtlwifi: Align private space in rtl_priv struct
-Date: Wed, 18 Sep 2013 21:21:35 -0500
-Message-Id: <1379557295-18484-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130919_042157_926999_7112796E)
+	Thu, 12 Sep 2013 12:49:55 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 5/7] ath10k: improve beacon submission latency
+References: <1378821003-22925-1-git-send-email-michal.kazior@tieto.com>
+	<1378821003-22925-6-git-send-email-michal.kazior@tieto.com>
+Date: Thu, 12 Sep 2013 19:47:36 +0300
+In-Reply-To: <1378821003-22925-6-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Tue, 10 Sep 2013 15:50:01 +0200")
+Message-ID: <87sixadm1j.fsf@qca.qualcomm.com> (sfid-20130912_184958_655855_75E4E3C3)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The private array at the end of the rtl_priv struct is not aligned.
-On ARM architecture, this causes an alignment trap and is fixed by aligning
-that array with __align(sizeof(void *)). That should properly align that
-space according to the requirements of all architectures.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Reported-by: Jason Andrews <jasona@cadence.com>
-Tested-by: Jason Andrews <jasona@cadence.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>
----
- drivers/net/wireless/rtlwifi/wifi.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> The patch prevents beacon misses in some case of
+> heavy load on a system.
+>
+> If a beacon can't be transmitted directly from an
+> SWBA event it will be left in arvif->beacon and
+> transmission will be retried once TX credits
+> become available.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
-index cc03e7c..7032587 100644
---- a/drivers/net/wireless/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/rtlwifi/wifi.h
-@@ -2057,7 +2057,7 @@ struct rtl_priv {
- 	   that it points to the data allocated
- 	   beyond  this structure like:
- 	   rtl_pci_priv or rtl_usb_priv */
--	u8 priv[0];
-+	u8 priv[0] __aligned(sizeof(void *));
- };
- 
- #define rtl_priv(hw)		(((struct rtl_priv *)(hw)->priv))
+[...]
+
+>  static void ath10k_wmi_op_ep_tx_credits(struct ath10k *ar)
+>  {
+> +	ath10k_wmi_tx_beacons_nowait(ar);
+>  	wake_up(&ar->wmi.tx_credits_wq);
+>  }
+>  
+> @@ -131,6 +174,7 @@ static int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb,
+>  	int ret = -EINVAL;
+>  
+>  	wait_event_timeout(ar->wmi.tx_credits_wq, ({
+> +		ath10k_wmi_tx_beacons_nowait(ar);
+>  		ret = ath10k_wmi_cmd_send_nowait(ar, skb, cmd_id);
+>  		(ret != -EAGAIN);
+
+Please add a short comment to both calls of
+ath10k_wmi_tx_beacons_nowait(). Something like "first transmit all
+pending beacons" or similar.
+
 -- 
-1.8.1.4
-
+Kalle Valo
