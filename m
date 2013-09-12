@@ -1,124 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:40885 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753128Ab3IAHBm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Sep 2013 03:01:42 -0400
-Subject: [PATCH v2 2/7] ath10k: make target_ce_config_wlan more readable
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Sun, 01 Sep 2013 10:01:39 +0300
-Message-ID: <20130901070139.14695.84511.stgit@localhost6.localdomain6> (sfid-20130901_090145_355677_C2FEF8B4)
-In-Reply-To: <20130901070020.14695.16694.stgit@localhost6.localdomain6>
-References: <20130901070020.14695.16694.stgit@localhost6.localdomain6>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:45266 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751926Ab3ILKt5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Sep 2013 06:49:57 -0400
+Message-ID: <52319C4D.6030803@hauke-m.de> (sfid-20130912_125000_701001_5987B93B)
+Date: Thu, 12 Sep 2013 12:49:49 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: Broadcom PCI ID 14e4:4313 reuse?
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It's easier to read t if the field names are visible.
+Hi Arend,
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/pci.c |   85 ++++++++++++++++++++++++++++-----
- 1 file changed, 71 insertions(+), 14 deletions(-)
+In OpenWrt someone reported that he has a BCM4313 with the PCI id
+14e4:4313 [0]. The b43 wiki [1] says this was used for a BCM4311 with
+just ieee80211a support.
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index b1709d7..362814a 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -125,21 +125,78 @@ static const struct ce_attr host_ce_config_wlan[] = {
- 
- /* Target firmware's Copy Engine configuration. */
- static const struct ce_pipe_config target_ce_config_wlan[] = {
--	/* host->target HTC control and raw streams */
--	{ /* CE0 */ 0, PIPEDIR_OUT, 32, 256, CE_ATTR_FLAGS, 0,},
--	/* target->host HTT + HTC control */
--	{ /* CE1 */ 1, PIPEDIR_IN, 32, 512, CE_ATTR_FLAGS, 0,},
--	/* target->host WMI */
--	{ /* CE2 */ 2, PIPEDIR_IN, 32, 2048, CE_ATTR_FLAGS, 0,},
--	/* host->target WMI */
--	{ /* CE3 */ 3, PIPEDIR_OUT, 32, 2048, CE_ATTR_FLAGS, 0,},
--	/* host->target HTT */
--	{ /* CE4 */ 4, PIPEDIR_OUT, 256, 256, CE_ATTR_FLAGS, 0,},
-+	/* CE0: host->target HTC control and raw streams */
-+	{
-+		.pipenum = 0,
-+		.pipedir = PIPEDIR_OUT,
-+		.nentries = 32,
-+		.nbytes_max = 256,
-+		.flags = CE_ATTR_FLAGS,
-+		.reserved = 0,
-+	},
-+
-+	/* CE1: target->host HTT + HTC control */
-+	{
-+		.pipenum = 1,
-+		.pipedir = PIPEDIR_IN,
-+		.nentries = 32,
-+		.nbytes_max = 512,
-+		.flags = CE_ATTR_FLAGS,
-+		.reserved = 0,
-+	},
-+
-+	/* CE2: target->host WMI */
-+	{
-+		.pipenum = 2,
-+		.pipedir = PIPEDIR_IN,
-+		.nentries = 32,
-+		.nbytes_max = 2048,
-+		.flags = CE_ATTR_FLAGS,
-+		.reserved = 0,
-+	},
-+
-+	/* CE3: host->target WMI */
-+	{
-+		.pipenum = 3,
-+		.pipedir = PIPEDIR_OUT,
-+		.nentries = 32,
-+		.nbytes_max = 2048,
-+		.flags = CE_ATTR_FLAGS,
-+		.reserved = 0,
-+	},
-+
-+	/* CE4: host->target HTT */
-+	{
-+		.pipenum = 4,
-+		.pipedir = PIPEDIR_OUT,
-+		.nentries = 256,
-+		.nbytes_max = 256,
-+		.flags = CE_ATTR_FLAGS,
-+		.reserved = 0,
-+	},
-+
- 	/* NB: 50% of src nentries, since tx has 2 frags */
--	/* unused */
--	{ /* CE5 */ 5, PIPEDIR_OUT, 32, 2048, CE_ATTR_FLAGS, 0,},
--	/* Reserved for target autonomous hif_memcpy */
--	{ /* CE6 */ 6, PIPEDIR_INOUT, 32, 4096, CE_ATTR_FLAGS, 0,},
-+
-+	/* CE5: unused */
-+	{
-+		.pipenum = 5,
-+		.pipedir = PIPEDIR_OUT,
-+		.nentries = 32,
-+		.nbytes_max = 2048,
-+		.flags = CE_ATTR_FLAGS,
-+		.reserved = 0,
-+	},
-+
-+	/* CE6: Reserved for target autonomous hif_memcpy */
-+	{
-+		.pipenum = 6,
-+		.pipedir = PIPEDIR_INOUT,
-+		.nentries = 32,
-+		.nbytes_max = 4096,
-+		.flags = CE_ATTR_FLAGS,
-+		.reserved = 0,
-+	},
-+
- 	/* CE7 used only by Host */
- };
- 
+Is it correct that BCM4313 also uses this PCI id, this chip was was
+directly soldered onto a router? Is the b43 wiki wrong and 14e4:4313 was
+not used for the BCM4311 or was this PCI id reused for a different device?
 
+I am planing to prepare a patch adding support for a BCM4313 with the
+PCI ID of 14e4:4313 and I will ignore that there could be some BCM4311
+with this PCI id.
+
+Log of BCM4313:
+
+[    0.316000] pci 0000:01:00.0: [14e4:4313] type 00 class 0x028000
+(...)
+[   10.616000] PCI: Enabling device 0000:01:00.0 (0000 -> 0002)
+[   10.624000] bcma: bus0: Found chip with id 0x4313, rev 0x01 and
+package 0x08
+[   10.628000] bcma: bus0: Core 0 found: ChipCommon (manuf 0x4BF, id
+0x800, rev 0x24, class 0x0)
+[   10.640000] bcma: bus0: Core 1 found: IEEE 802.11 (manuf 0x4BF, id
+0x812, rev 0x18, class 0x0)
+[   10.648000] bcma: bus0: Core 2 found: PCIe (manuf 0x4BF, id 0x820,
+rev 0x11, class 0x0)
+[   10.656000] bcma: bus0: Using fallback SPROM failed (err -2)
+[   10.660000] bcma: bus0: No SPROM available
+[   10.676000] bcma: bus0: Bus registered
+[   11.040000] b43-phy0: Broadcom 4313 WLAN found (core revision 24)
+[   11.048000] b43-phy0 ERROR: FOUND UNSUPPORTED PHY (Analog 10, Type 8
+(LCN), Revision 1)
+
+
+[0]: https://dev.openwrt.org/ticket/13551
+[1]: http://wireless.kernel.org/en/users/Drivers/b43
+
+Hauke
