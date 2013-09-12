@@ -1,111 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out03.msg.oleane.net ([62.161.7.1]:54907 "EHLO
-	smtp-out03.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754488Ab3IBHix convert rfc822-to-8bit (ORCPT
+Received: from hotel311.server4you.de ([85.25.146.15]:58187 "EHLO
+	hotel311.server4you.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755300Ab3ILSia (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Sep 2013 03:38:53 -0400
-Received: from smtp04.msg.oleane.net (smtp04.mail.priv [172.17.20.113])
-	by smtp-out03.msg.oleane.net with ESMTP id r827cpa1011579
-	for <linux-wireless@vger.kernel.org>; Mon, 2 Sep 2013 09:38:52 +0200
-Subject: RE: [PATCH V4] cfg80211: vlan priority handling in WMM
-Date: Mon, 2 Sep 2013 09:17:57 +0200
-Message-ID: <773DB8A82AB6A046AE0195C68612A319015E105E@sbs2003.acksys.local> (sfid-20130902_093857_281834_6915A04F)
-In-Reply-To: <1377518692-30084-1-git-send-email-cedric.voncken@acksys.fr>
+	Thu, 12 Sep 2013 14:38:30 -0400
+Message-ID: <52320A22.1040609@monom.org> (sfid-20130912_203834_485618_723D04B0)
+Date: Thu, 12 Sep 2013 20:38:26 +0200
+From: Daniel Wagner <wagi@monom.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-References: <1377518692-30084-1-git-send-email-cedric.voncken@acksys.fr>
-From: "Cedric VONCKEN" <cedric.voncken@acksys.fr>
-To: <linux-wireless@vger.kernel.org>
-Cc: "Johannes Berg" <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net, marcel@holtmann.org,
+	Samuel Ortiz <samuel@sortiz.org>,
+	Gustavo Padovan <gustavo@padovan.org>,
+	linux-bluetooth@vger.kernel.org, linux-nfc@ml01.01.org
+Subject: Re: Linux Wireless Mini-Summit in New Orleans -- 19-20 September
+References: <20130808185410.GD30925@tuxdriver.com> <20130808190428.GF30925@tuxdriver.com> <20130905133907.GE1947@tuxdriver.com> <1378397092.3580.21.camel@dcbw.foobar.com> <20130909192346.GC1955@tuxdriver.com>
+In-Reply-To: <20130909192346.GC1955@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-	I sent this patch next week, and I have no answer. 
-	Is it applied refused? 
+Hi John,
 
-	Regards.
+On 09/09/2013 09:23 PM, John W. Linville wrote:
+> On Thu, Sep 05, 2013 at 11:04:52AM -0500, Dan Williams wrote:
+>> On Thu, 2013-09-05 at 09:39 -0400, John W. Linville wrote:
+>>> On Thu, Aug 08, 2013 at 03:04:29PM -0400, John W. Linville wrote:
+>>>> Sorry, forgot to copy linux-bluetooth and linux-nfc...
+>>>>
+>>>> On Thu, Aug 08, 2013 at 02:54:11PM -0400, John W. Linville wrote:
+>>>>> Greetings!
+>>>>>
+>>>>> This is a reminder that we will have a Linux Wireless Mini-Summit in
+>>>>> New Orleans this year on 19-20 September.  This will immediately follow
+>>>>> LinuxCon and will run concurrently with Linux Plumber's Conference.
+>>>>> This event includes Linux developers for wireless LAN (802.11),
+>>>>> Bluetooth, and NFC technologies.  Both kernel and userland developers
+>>>>> are welcomed and heartily encouraged to attend!
+>>>>>
+>>>>> 	http://wireless.kernel.org/en/developers/Summits/New-Orleans-2013
+>>>>>
+>>>>> The link above is a Wiki.  We are using it to collect discussion
+>>>>> topics and to negotiate agenda/scheduling options for the event.
+>>>>> Please go there to record your intent to attend the event and to
+>>>>> propopse topics for discussion.
+>>>>>
+>>>>> Please be aware that in order to attend the event above one must
+>>>>> register for either LinuxCon or for Linux Plumbers Conference.
+>>>>> Act now, before those events fill-up and close their registrations!
+>>>>>
+>>>>> We are allotted one "large" room (up to ~80 people "theater style"), and
+>>>>> two "small" rooms (up to ~25 people) for this event.  Based on history
+>>>>> and the numbers of contributors, the larger room will primarily be
+>>>>> for the 802.11 discussions and any "plenary" topics while the smaller
+>>>>> rooms will be for Bluetooth, NFC, and any "breakout" topics.
+>>>>>
+>>>>> So...thoughts?  Topics to discuss?
+>>>
+>>> Ping?  We're now just 2 weeks away!
+>>>
+>>> Is our topic list complete?  It looks a bit light...
+>>>
+>>> Anyone have any input on scheduling the topics?  Are there any
+>>> overlapping LPC sessions that it would make sense to work around?
+>>
+>> I'm attending though I haven't put my name on the wiki yet.
+>>
+>> Random thoughts; it doesn't look like any of these are covered in the
+>> regular LinuxConf or LPC sessions.
+>>
+>> 1) State of the Union (maybe by multiple people in the same session per
+>> their expertise), since perhaps not everyone doing eg 802.11 stuff knows
+>> what's happening in BT or NFC land, or not everyone working on a
+>> specific driver may know what new stuff their driver might need to be
+>> fixed up for.  Maybe 5 minutes or less for things like:
+>>
+>>    * what's under the most active development right now?
+>>    * upcoming new driver, hardware, and new capabilities
+>>    * new 802.11 standards
+>>    * and what's coming up in the next year from the standards orgs
+>>    * what people will start working on soon
+>>    * what will 3.13 or 3.14 look like from a wireless perspective?
+>>    * 11s mesh status?
+>>    * anything interesting in wpa_supplicant land?
+>>    * anything new/interesting on the Android front?
+>>
+>> 2) Bluetooth - update about what's new and what's coming up in Bluez
+>> land, and interaction with kernel 802.11 if any,
+>>
+>> 3) NFC - update about what's new and what's coming up in NFC land, where
+>> it's getting used, what the stack looks like
+>>
+>> 4) What are users having the most problems with and how these problems
+>> be fixed better/more quickly?  Are they driver bugs?  Are they stack
+>> bugs?  Supplicant bugs?  NM/GUI/etc bugs?  Is there anything in our
+>> development processes that's not working as smoothly as it could be?
+>
+> Thanks, Dan -- those all look like decent discussion points.
+> I've added most of the points above to the topic list:
+>
+> 	http://wireless.kernel.org/en/developers/Summits/New-Orleans-2013
+>
+> Now, we need a few volunteers...
+>
+> Gustavo, can you do a session on Bluetooth developments?
+>
+> Samuel, can you cover NFC?
+>
+> Jouni, would you mind doing your usual update on the standards
+> activities?  Also, is there anything new/interesting to report on
+> wpa_suppliant and/or hostapd?
+>
+> Johannes, would you cover your vision for mac80211 for the next year
+> or so?  Anything in progress now that needs to be discussed?
+>
+> Who should cover any Android topics?
+>
+> Arend, Kalle, Johannes, Luca, etc -- anyone want to talk about driver
+> developments and/or issues between drivers and mac80211 or other
+> parts of the stack?
+>
+> Seth, Stanislaw, etc -- anyone want to cover issues dealing with
+> supporting wireless in distributions?
+>
+> Dan Williams, Daniel Wagner, etc -- anyone got some user stories
+> to share?
 
-	Cedric Voncken
-> -----Message d'origine-----
-> De : cedric.voncken@acksys.fr [mailto:cedric.voncken@acksys.fr]
-> Envoyé : lundi 26 août 2013 14:05
-> À : linux-wireless@vger.kernel.org
-> Cc : Cedric VONCKEN
-> Objet : [PATCH V4] cfg80211: vlan priority handling in WMM
-> 
-> From: cedric Voncken <cedric.voncken@acksys.fr>
-> 
-> If the VLAN tci is set in skb->vlan_tci use the priority field to determine the
-> WMM priority.
-> 
-> Signed-off-by: cedric Voncken <cedric.voncken@acksys.fr>
-> ---
->  net/wireless/util.c |    8 ++++++++
->  1 files changed, 8 insertions(+), 0 deletions(-)
-> 
-> V2 modifications:
-> 	Fix indentation
-> 	Use symbolic constant
-> 	include the header linux/if_vlan.h
-> 
-> V3 modifications:
-> 	Check the vlan_tci validity with macro vlan_tx_tag_present
-> 	Get the vlan_tci field value with macro vlan_tx_tag_get
-> 	Request to netdev mailling list to know if the VLAN priority value 0
-> must be treated as no priority request. I add the Ben Hutchings reply below:
-> 	IEEE 802.1q refers to the definition in 802.1d:
-> 
-> 	> The user_priority parameter is the priority requested by the
-> 	> originating service user. The value of this parameter is in the range
-> 	> 0 through 7.
-> 	>
-> 	> NOTE -- The default user_priority value is 0. Values 1 through 7
-> form an
-> 	> ordered sequence of user_priorities, with 1 being the lowest value
-> and
-> 	> 7 the highest. See 7.7.3 and Annex G (informative) for further
-> 	> explanation of the use of user_priority values.
-> 
-> 	So a value of 0 should be treated as no priority request, same as for
-> an untagged frame.
-> 
-> V4 modifications:
-> 	Fix patch format
-> 
-> diff --git a/net/wireless/util.c b/net/wireless/util.c index ce090c1..9e4cac2
-> 100644
-> --- a/net/wireless/util.c
-> +++ b/net/wireless/util.c
-> @@ -10,6 +10,7 @@
->  #include <net/cfg80211.h>
->  #include <net/ip.h>
->  #include <net/dsfield.h>
-> +#include <linux/if_vlan.h>
->  #include "core.h"
->  #include "rdev-ops.h"
-> 
-> @@ -691,6 +692,7 @@ EXPORT_SYMBOL(ieee80211_amsdu_to_8023s);
->  unsigned int cfg80211_classify8021d(struct sk_buff *skb)  {
->  	unsigned int dscp;
-> +	unsigned char vlan_priority;
-> 
->  	/* skb->priority values from 256->263 are magic values to
->  	 * directly indicate a specific 802.1d priority.  This is used @@ -700,6
-> +702,13 @@ unsigned int cfg80211_classify8021d(struct sk_buff *skb)
->  	if (skb->priority >= 256 && skb->priority <= 263)
->  		return skb->priority - 256;
-> 
-> +	if (vlan_tx_tag_present(skb)) {
-> +		vlan_priority = (vlan_tx_tag_get(skb) & VLAN_PRIO_MASK)
-> +			>> VLAN_PRIO_SHIFT;
-> +		if (vlan_priority > 0)
-> +			return vlan_priority;
-> +	}
-> +
->  	switch (skb->protocol) {
->  	case htons(ETH_P_IP):
->  		dscp = ipv4_get_dsfield(ip_hdr(skb)) & 0xfc;
-> --
-> 1.7.2.5
+Not much news from the user front, though I could give a short
+update what's happening on ConnMan if you like.
+
+cheers,
+daniel
 
