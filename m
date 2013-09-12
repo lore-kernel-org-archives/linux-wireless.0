@@ -1,81 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:25015 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753799Ab3IXTna convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Sep 2013 15:43:30 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Johan Hedberg <johan.hedberg@gmail.com>
-CC: Marcel Holtmann <marcel@holtmann.org>,
-	"linux-bluetooth@vger.kernel.org" <linux-bluetooth@vger.kernel.org>,
-	Gustavo Padovan <gustavo@padovan.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Mike Frysinger <vapier@chromium.org>,
-	Hyuckjoo Lee <hyuckjoo.lee@samsung.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Date: Tue, 24 Sep 2013 12:42:57 -0700
-Subject: RE: [PATCH v5 1/2] Bluetooth: btmrvl: add setup handler
-Message-ID: <477F20668A386D41ADCC57781B1F70430F450779D4@SC-VEXCH1.marvell.com> (sfid-20130924_214336_034025_7C512647)
-References: <1379715667-22424-1-git-send-email-bzhao@marvell.com>
- <18678858-E711-43E5-AFE6-E637D1CECFFB@holtmann.org>
- <477F20668A386D41ADCC57781B1F70430F44C59418@SC-VEXCH1.marvell.com>
- <DF6283E3-8476-400F-A230-CB7CA0F98564@holtmann.org>
- <477F20668A386D41ADCC57781B1F70430F450779A4@SC-VEXCH1.marvell.com>
- <20130924193010.GA2584@x220.p-661hnu-f1>
-In-Reply-To: <20130924193010.GA2584@x220.p-661hnu-f1>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail.candelatech.com ([208.74.158.172]:60428 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754140Ab3ILScm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Sep 2013 14:32:42 -0400
+Received: from [192.168.100.226] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id r8CIWfnU002409
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Sep 2013 11:32:42 -0700
+Message-ID: <523208C9.7050909@candelatech.com> (sfid-20130912_203248_683551_F4436FB4)
+Date: Thu, 12 Sep 2013 11:32:41 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: iee80211_scan_work crash in 3.11.0+ kernel.
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johan,
+This kernel has our standard set of patches, but nothing much beyond
+what we ran in the 3.9 kernel for some time without seeing this particular
+crash, so I am thinking it might be something new in 3.11.  I do have my
+scan-one-channel patch in this tree, so it's possible it is somehow
+to blame.
 
-> Hi Bing,
-> 
-> On Tue, Sep 24, 2013, Bing Zhao wrote:
-> > > that is a bug. It should only be ever called once. Could this be due
-> > > to RFKILL issue we had? Please re-test with Johan's patches applied
-> > > and check if it makes a difference. Otherwise please send some logs
-> > > since we want to get this fixed.
-> >
-> > Amitkumar Karwar has tested it with latest code on bluetooth-next tree
-> > but the result is the same.
-> > Apparently two threads race to call hci_dev_open(). If the thread from
-> > hci_sock calls hci_dev_open earlier, it ends up not updating HCI_SETUP
-> > hdev flag in hci_power_on(). This results that the setup handler gets
-> > called again when user brings up the interface later.
-> 
-> Let's see if I understood this right: the only hci_dev_open call in
-> hci_sock.c is the one for the HCIDEVUP ioctl. So what you're doing is
-> having user space call the HCIDEVUP ioctl before our own hci_power_on
-> callback gets called to initialize the adapter?
+This happened on restart of our user-space app, which would have been
+restarting supplicant/hostapd and re-configuring interfaces.  It should
+not have been actually creating or deleting any network devices as they
+were already created.
 
-That's right. The ioctl is initiated by the Bluetooth daemon.
-Amitkumar has a setup that can reproduce this corner case easily.
-I tested it on my Ubuntu but I couldn't replicate it.
+This crash was in a kernel w/out debugging symbols, but after re-building with
+debugging, it decodes to here:
 
-> 
-> You're right that we're missing the clearing of the HCI_SETUP flag for
-> such a scenario. Could you try the attached patch. It should fix the
-> issue. One problem that it does have is that if the HCIDEVUP ioctl path
-> goes through before hci_power_on gets called we will never notify mgmt
-> of the adapter. However, that might be acceptable here since if you're
-> using HCIDEVUP like this it seems it's not a mgmt based system anyway.
-> 
-> > I checked the bluetooth-next tree, the following two patches (by
-> > Johan) are not present in this tree.
-> >
-> > bf54303 Bluetooth: Fix rfkill functionality during the HCI setup stage
-> > 5e13036 Bluetooth: Introduce a new HCI_RFKILLED flag
-> >
-> > They are in bluetooth.git tree. So, I'm not certain if Amitkumar has
-> > applied them manually or not. Anyway we will re-test with Johan's
-> > patches applied and confirm if they fix the race or not.
-> 
-> I don't think these patches will help you in this case.
+(gdb) l *(ieee80211_scan_work+0x321)
+0x8e11 is in ieee80211_scan_work (/home/greearb/git/linux-3.11.dev.y/net/mac80211/scan.c:608).
+603	{
+604		/*
+605		 * TODO: channel switching also consumes quite some time,
+606		 * add that delay as well to get a better estimation
+607		 */
+608		if (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN)
+609			return IEEE80211_PASSIVE_CHANNEL_TIME;
+610		return IEEE80211_PROBE_DELAY + IEEE80211_CHANNEL_TIME;
+611	}
+612	
+(gdb)
 
-OK, we will test your patch instead.
+Maybe scan_channel_idx is out of bounds somehow?
 
-Thanks,
-Bing
+My 3.11 tree is at:
+
+http://dmz2.candelatech.com/git/gitweb.cgi?p=linux-3.11.dev.y/.git;a=summary
+
+
+[518743.539126] BUG: unable to handle kernel paging request at 00003b43
+[518743.540019] IP: [<f861be11>] ieee80211_scan_work+0x321/0x3e0 [mac80211]
+[518743.540019] *pdpt = 0000000016113001 *pde = 0000000000000000
+[518743.540019] Oops: 0000 [#1] PREEMPT SMP
+[518743.540019] Modules linked in: ipt_MASQUERADE iptable_nat iptable_raw xt_CT veth nfnetlink_log nfnetlink nf_conntrack]
+[518743.540019] CPU: 0 PID: 565 Comm: kworker/u4:0 Tainted: G         C O 3.11.0+ #20
+[518743.645757] Hardware name: To Be Filled By O.E.M. To Be Filled By O.E.M./To be filled by O.E.M., BIOS 080015  05/31/20
+[518743.645757] Workqueue: phy0 ieee80211_scan_work [mac80211]
+[518743.645757] task: f1f54d40 ti: effd8000 task.ti: effd8000
+[518743.645757] EIP: 0060:[<f861be11>] EFLAGS: 00010202 CPU: 0
+[518743.645757] EIP is at ieee80211_scan_work+0x321/0x3e0 [mac80211]
+[518743.645757] EAX: 00003b3b EBX: f463c360 ECX: 1ee6d214 EDX: f465b400
+[518743.645757] ESI: 00000000 EDI: 00000001 EBP: effd9ef8 ESP: effd9ec8
+[518743.645757]  DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
+[518743.645757] CR0: 8005003b CR2: 00003b43 CR3: 2ff88000 CR4: 000007e0
+[518743.645757] Stack:
+[518743.645757]  0001d7cb f79db400 f463cf2c f463ceb0 f463ce78 f463ce80 1ee6d110 f536eaec
+[518743.645757]  00000000 f463cf2c f1ff1a80 00000080 effd9f30 c0471d1a c0487f9d f79db400
+[518743.645757]  f1f54d40 c0c3e980 efc7eb2a f496f695 f496f600 00001000 f5004400 f1ff1a80
+[518743.645757] Call Trace:
+[518743.645757]  [<c0471d1a>] process_one_work+0x11a/0x400
+[518743.645757]  [<c0487f9d>] ? try_to_wake_up+0x1bd/0x220
+[518743.645757]  [<c0472f5f>] worker_thread+0xff/0x3c0
+[518743.645757]  [<c0477ff4>] kthread+0xa4/0xb0
+[518743.645757]  [<c0472e60>] ? manage_workers+0x2a0/0x2a0
+[518743.645757]  [<c0480000>] ? SyS_setgroups+0xb0/0xf0
+[518743.645757]  [<c09d35b7>] ret_from_kernel_thread+0x1b/0x28
+[518743.645757]  [<c0477f50>] ? kthread_freezable_should_stop+0x50/0x50
+[518743.645757] Code: 01 00 00 00 8b 45 e4 e8 8e cf 3a c8 8b 8b c4 0b 00 00 8b 93 94 0b 00 00 89 4d e8 8b 83 a4 0b 00 00 0
+[518743.645757] EIP: [<f861be11>] ieee80211_scan_work+0x321/0x3e0 [mac80211] SS:ESP 0068:effd9ec8
+[518743.645757] CR2: 0000000000003b43
+[518743.963077] ---[ end trace 7b4bcf9767616f77 ]---
+[518743.971245] BUG: unable to handle kernel paging request at ffffffec
+[518743.972018] IP: [<c0477a3f>] kthread_data+0xf/0x20
+[518743.972018] *pdpt = 0000000000d85001 *pde = 00000000379fd067 *pte = 0000000000000000
+[518743.972018] Oops: 0000 [#2] PREEMPT SMP
+[518743.972018] Modules linked in: ipt_MASQUERADE iptable_nat iptable_raw xt_CT veth nfnetlink_log nfnetlink nf_conntrack]
+[518743.972018] CPU: 0 PID: 565 Comm: kworker/u4:0 Tainted: G      D  C O 3.11.0+ #20
+[518743.972018] Hardware name: To Be Filled By O.E.M. To Be Filled By O.E.M./To be filled by O.E.M., BIOS 080015  05/31/20
+[518743.972018] task: f1f54d40 ti: effd8000 task.ti: effd8000
+[518743.972018] EIP: 0060:[<c0477a3f>] EFLAGS: 00010002 CPU: 0
+[518743.972018] EIP is at kthread_data+0xf/0x20
+[518743.972018] EAX: 00000000 EBX: 00000000 ECX: f79db400 EDX: 00000000
+[518743.972018] ESI: 00000000 EDI: f1f54d40 EBP: effd9c90 ESP: effd9c88
+[518743.972018]  DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
+[518743.972018] CR0: 8005003b CR2: 00000014 CR3: 36fee000 CR4: 000007e0
+[518743.972018] Stack:
+[518743.972018]  c04704e0 f1f54d40 effd9d20 c09cac99 c0c937d4 00000086 00000086 effd9cc4
+[518743.972018]  f1f54d40 c0d7e400 c0d7e400 c0d7e400 c0d7e400 f5b10b80 00000235 f79db400
+[518743.972018]  f1f54d40 effd9cec 00000246 c0457098 00000246 0035df80 f1f54d40 f1f54d40
+[518743.972018] Call Trace:
+[518743.972018]  [<c04704e0>] ? wq_worker_sleeping+0x10/0x80
+[518743.972018]  [<c09cac99>] __schedule+0x5c9/0x7d0
+[518743.972018]  [<c0457098>] ? __cleanup_sighand+0x28/0x30
+[518743.972018]  [<c04de8bc>] ? call_rcu+0x1c/0x20
+[518743.972018]  [<c045a87f>] ? release_task+0x2bf/0x410
+[518743.972018]  [<c04c2901>] ? cgroup_exit+0x31/0xf0
+[518743.972018]  [<c09cb043>] schedule+0x23/0x60
+[518743.972018]  [<c045bb77>] do_exit+0x5f7/0x980
+[518743.972018]  [<c09c86f3>] ? printk+0x3d/0x3f
+[518743.972018]  [<c09cdf16>] oops_end+0x96/0xd0
+[518743.972018]  [<c044bb38>] no_context+0xd8/0x1f0
+[518743.972018]  [<c044bd08>] __bad_area_nosemaphore+0xb8/0x160
+[518743.972018]  [<c044bdc7>] bad_area_nosemaphore+0x17/0x20
+[518743.972018]  [<c09d017d>] __do_page_fault+0x33d/0x4a0
+[518743.972018]  [<c0490f05>] ? dequeue_task_fair+0x65/0x590
+[518743.972018]  [<c048c0b6>] ? __dequeue_entity+0x26/0x50
+[518743.972018]  [<c0410b0e>] ? __switch_to+0xee/0x3b0
+[518743.972018]  [<c09d02e0>] ? __do_page_fault+0x4a0/0x4a0
+[518743.972018]  [<c09d02ed>] do_page_fault+0xd/0x10
+[518743.972018]  [<c09cd6bf>] error_code+0x67/0x6c
+[518743.972018]  [<f861be11>] ? ieee80211_scan_work+0x321/0x3e0 [mac80211]
+[518743.972018]  [<c0471d1a>] process_one_work+0x11a/0x400
+[518743.972018]  [<c0487f9d>] ? try_to_wake_up+0x1bd/0x220
+[518743.972018]  [<c0472f5f>] worker_thread+0xff/0x3c0
+[518743.972018]  [<c0477ff4>] kthread+0xa4/0xb0
+[518743.972018]  [<c0472e60>] ? manage_workers+0x2a0/0x2a0
+[518743.972018]  [<c0480000>] ? SyS_setgroups+0xb0/0xf0
+[518743.972018]  [<c09d35b7>] ret_from_kernel_thread+0x1b/0x28
+[518743.972018]  [<c0477f50>] ? kthread_freezable_should_stop+0x50/0x50
+[518743.972018] Code: 8d 74 26 00 64 a1 ac 7f d7 c0 8b 80 9c 02 00 00 5d 8b 40 e4 c1 e8 02 83 e0 01 c3 90 55 89 e5 3e 8d e
+[518743.972018] EIP: [<c0477a3f>] kthread_data+0xf/0x20 SS:ESP 0068:effd9c88
+[518743.972018] CR2: 00000000ffffffec
+[518743.972018] ---[ end trace 7b4bcf9767616f78 ]---
+[518743.972018] Fixing recursive fault but reboot is needed!
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
