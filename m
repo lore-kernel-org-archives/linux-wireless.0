@@ -1,41 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:44718 "EHLO ebb05.tieto.com"
+Received: from mx1.redhat.com ([209.132.183.28]:47959 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753734Ab3I0Oic (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Sep 2013 10:38:32 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 0/4] ath10k: clean ups
-Date: Fri, 27 Sep 2013 16:38:22 +0200
-Message-ID: <1380292706-3609-1-git-send-email-michal.kazior@tieto.com> (sfid-20130927_163835_740528_49AF62A7)
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1753352Ab3IMIr1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Sep 2013 04:47:27 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: ilw@linux.intel.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] iwlwifi: do not dump stack whet triggering firmware restart
+Date: Fri, 13 Sep 2013 10:45:30 +0200
+Message-Id: <1379061930-2007-1-git-send-email-sgruszka@redhat.com> (sfid-20130913_104731_749582_6F802F06)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+We send REPLY_ERROR command to the device to force microcode error
+and restart firmware. This is not a problem, so do not dump stack
+on such situation.
 
-First two patches are non-functional changes.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/pcie/tx.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-The latter two should remove some overhead from TX
-path and CE processing. Nothing extraordinary.
-
-
-Michal Kazior (4):
-  ath10k: split tid calculation from tx function
-  ath10k: split vdev_id calculation from tx function
-  ath10k: remove ce_sendlist_send
-  ath10k: remove num_sends_allowed
-
- drivers/net/wireless/ath/ath10k/ce.c  |   35 ++++++------------------
- drivers/net/wireless/ath/ath10k/ce.h  |   16 +----------
- drivers/net/wireless/ath/ath10k/mac.c |   48 ++++++++++++++++++++-------------
- drivers/net/wireless/ath/ath10k/pci.c |   25 +++--------------
- drivers/net/wireless/ath/ath10k/pci.h |    3 ---
- 5 files changed, 42 insertions(+), 85 deletions(-)
-
+diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
+index f45eb29..ec49033 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
+@@ -1546,7 +1546,8 @@ static int iwl_pcie_send_hcmd_sync(struct iwl_trans *trans,
+ 	if (test_bit(STATUS_FW_ERROR, &trans_pcie->status)) {
+ 		IWL_ERR(trans, "FW error in SYNC CMD %s\n",
+ 			get_cmd_string(trans_pcie, cmd->id));
+-		dump_stack();
++		if (cmd->id != REPLY_ERROR)
++			dump_stack();
+ 		ret = -EIO;
+ 		goto cancel;
+ 	}
 -- 
-1.7.9.5
+1.8.3.1
 
