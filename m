@@ -1,36 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:42911 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1757123Ab3IBRty (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Sep 2013 13:49:54 -0400
-Message-ID: <1378144193.1953.88.camel@joe-AO722> (sfid-20130902_194957_650656_BF029B63)
-Subject: Re: [PATCH v2 13/16] wcn36xx: add wcn36xx.h
-From: Joe Perches <joe@perches.com>
-To: Kalle Valo <kvalo@adurom.com>
-Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org
-Date: Mon, 02 Sep 2013 10:49:53 -0700
-In-Reply-To: <87ioyjux5w.fsf@purkki.adurom.net>
-References: <1377248299-21007-1-git-send-email-k.eugene.e@gmail.com>
-	 <1377248299-21007-14-git-send-email-k.eugene.e@gmail.com>
-	 <1377298929.2816.15.camel@joe-AO722> <87ioyjux5w.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from mail-ob0-f170.google.com ([209.85.214.170]:33231 "EHLO
+	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753354Ab3IMRpT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Sep 2013 13:45:19 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 2/7] rtlwifi: rtl8192de: Fix smatch warnings in rtl8192de/hw.c
+Date: Fri, 13 Sep 2013 12:44:59 -0500
+Message-Id: <1379094304-22041-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130913_194606_090170_F333E65B)
+In-Reply-To: <1379094304-22041-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1379094304-22041-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-09-02 at 17:15 +0300, Kalle Valo wrote:
-> Joe Perches <joe@perches.com> writes:
-> 
-> >> +#define wcn36xx_dbg(mask, fmt, arg...) do {			\
-> >> +	if (debug_mask & mask)					\
-> >> +		printk(KERN_DEBUG pr_fmt(fmt), ##arg);	\
-> >> +} while (0)
-> >
-> > And maybe this one using pr_debug so dynamic_debug
-> > can work too.
-> 
-> Please, no dynamic_debug. It's useless on a wifi driver.
+Smatch lists the following:
+  CHECK   drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+drivers/net/wireless/rtlwifi/rtl8192de/hw.c:1200 rtl92de_set_qos() info: ignoring unreachable code.
+drivers/net/wireless/rtlwifi/rtl8192de/hw.c:1200 rtl92de_set_qos() info: ignoring unreachable code.
 
-Why is that?
+Dead code is removed.
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/rtl8192de/hw.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+index 7dd8f6d..c9b0894 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+@@ -1194,6 +1194,7 @@ void rtl92d_linked_set_reg(struct ieee80211_hw *hw)
+  * mac80211 will send pkt when scan */
+ void rtl92de_set_qos(struct ieee80211_hw *hw, int aci)
+ {
++/*
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	rtl92d_dm_init_edca_turbo(hw);
+ 	return;
+@@ -1213,6 +1214,7 @@ void rtl92de_set_qos(struct ieee80211_hw *hw, int aci)
+ 		RT_ASSERT(false, "invalid aci: %d !\n", aci);
+ 		break;
+ 	}
++ */
+ }
+ 
+ void rtl92de_enable_interrupt(struct ieee80211_hw *hw)
+-- 
+1.8.1.4
 
