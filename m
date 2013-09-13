@@ -1,47 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:32871 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751118Ab3IFJsi (ORCPT
+Received: from p15195424.pureserver.info ([82.165.34.74]:60475 "EHLO
+	p15195424.pureserver.info" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751858Ab3IMJaP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Sep 2013 05:48:38 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Bartosz Markowski <bartosz.markowski@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v4 2/2] ath10k: implement per-VDEV FW statistics
-References: <1378196481-13983-1-git-send-email-bartosz.markowski@tieto.com>
-	<1378196481-13983-3-git-send-email-bartosz.markowski@tieto.com>
-Date: Fri, 6 Sep 2013 12:48:28 +0300
-In-Reply-To: <1378196481-13983-3-git-send-email-bartosz.markowski@tieto.com>
-	(Bartosz Markowski's message of "Tue, 3 Sep 2013 10:21:21 +0200")
-Message-ID: <87eh92i8lv.fsf@kamboji.qca.qualcomm.com> (sfid-20130906_114841_354785_1B4A5D95)
+	Fri, 13 Sep 2013 05:30:15 -0400
+Message-ID: <5232DAF0.6040907@ilande.co.uk> (sfid-20130913_113023_518896_7B3F323C)
+Date: Fri, 13 Sep 2013 10:29:20 +0100
+From: Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: rtl8192cu: testing with EdiMax USB
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bartosz Markowski <bartosz.markowski@tieto.com> writes:
+Hi all,
 
-> The WMI_REQUEST_PEER_STAT command with latst (1.0.0.716) FW
-> can return per-VDEV statistics. Using debugfs we can fetch this info now.
->
-> This is a backward compatible change. In case of older FW the VDEV
-> statistics are simply not returned.
->
-> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
-> ---
+So talking to some colleagues at work, I managed to find someone else 
+who uses the EdiMax USB dongle and persuaded them to lend it to me for 
+the weekend in order to see whether it could be related to a hardware 
+difference with my OEM dongle.
 
-[...]
+I've just tested with the EdiMax USB dongle which reports as "Bus 004 
+Device 004: ID 7392:7811 Edimax Technology Co., Ltd EW-7811Un 802.11n 
+Wireless Adapter [Realtek RTL8188CUS]" in lsusb, which I believe is 
+exactly the same hardware that Larry is using. And again I still see the 
+problem with disassociation.
 
->  		for (i = 0; i < num_peer_stats; i++) {
-> -			peer_stats = (struct wmi_peer_stats *)tmp;
-> +			peer_stats = (struct wmi_peer_stats_common *)tmp;
+I spent a bit more time tinkering further with debug=0x5, forgetting 
+that I had left your last diagnostic patch applied. Based upon when the 
+beacon output disappears in the logs (after updating the power 
+registers), it does seem likely that is a power-related problem.
 
-You still have the evil cast here :)
+The two power-related messages that stand out to me are:
 
-(Evil here meaning that that you make the implicit assumption that _v1
-and _v2 start with the _common struct.)
+1) Repeated output of "pHalData->bHwRadioOff and eRfPowerStateToSet do 
+not match: pHalData->bHwRadioOff 0, eRfPowerStateToSet 0" messages
 
-Let me send v5 and you can review that before I commit.
+2) rtl92c_dm_txpower_tracking_callback_thermalmeter() seems to be called 
+X seconds before the "AP off for X seconds" messages
 
--- 
-Kalle Valo
+Larry - I've sent you the complete debug off-list from the EdiMax, so it 
+should be a like-for-like comparison with your setup. Hopefully 
+comparing with your output will help you work out exactly what the 
+problem is.
+
+
+ATB,
+
+Mark.
