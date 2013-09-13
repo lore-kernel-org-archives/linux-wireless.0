@@ -1,90 +1,247 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:35573 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755363Ab3IKR5H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Sep 2013 13:57:07 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>,
-	Steven Liu <steven.liu@mediatek.com>,
-	JasonYS Cheng <jasonys.cheng@mediatek.com>
-Subject: [PATCH] rt2x00: rt2800lib: fix band selection and LNA PE control for RT3593 PCIe cards
-Date: Wed, 11 Sep 2013 19:56:45 +0200
-Message-Id: <1378922205-19054-1-git-send-email-juhosg@openwrt.org> (sfid-20130911_195711_279095_295CB11F)
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:62964 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751529Ab3IMRok (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Sep 2013 13:44:40 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH] rtlwifi: rtl8192cu: Convert driver to use rtl_process_phyinfo()
+Date: Fri, 13 Sep 2013 12:44:27 -0500
+Message-Id: <1379094267-21972-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130913_194448_462573_64E296CA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The band selection and PE control code for the
-RT3593 chipsets only handles USB based devices
-currently. Due to this limitation RT3593 based
-PCIe cards are not working correctly.
+Remove routine _rtl92c_process_phyinfo() by using the equivalent routine
+in driver rtlwifi.
 
-On PCIe cards band selection is controlled via
-GPIO #8 which is identical to the USB devices.
-The LNA PE control is slightly different, all
-LNA PEs are controlled by GPIO #4.
+This change also allows the removal of 5 additional routines from rtl8192cu.
 
-Update the code to configure the GPIO_CTRL register
-correctly on PCIe devices.
-
-Cc: Steven Liu <steven.liu@mediatek.com>
-Cc: JasonYS Cheng <jasonys.cheng@mediatek.com>
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/rt2x00/rt2800lib.c |   26 +++++++++++++++++---------
- 1 file changed, 17 insertions(+), 9 deletions(-)
+ drivers/net/wireless/rtlwifi/rtl8192cu/mac.c | 187 +--------------------------
+ 1 file changed, 2 insertions(+), 185 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 88ce656..5f0a94c 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -3315,29 +3315,37 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
- 		rt2800_rfcsr_write(rt2x00dev, 8, 0x80);
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c b/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
+index da4f587..3936853 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
+@@ -32,6 +32,7 @@
+ #include "../usb.h"
+ #include "../ps.h"
+ #include "../cam.h"
++#include "../stats.h"
+ #include "reg.h"
+ #include "def.h"
+ #include "phy.h"
+@@ -738,16 +739,6 @@ static u8 _rtl92c_evm_db_to_percentage(char value)
+ 	return ret_val;
+ }
  
- 	if (rt2x00_rt(rt2x00dev, RT3593)) {
--		if (rt2x00_is_usb(rt2x00dev)) {
--			rt2800_register_read(rt2x00dev, GPIO_CTRL, &reg);
-+		rt2800_register_read(rt2x00dev, GPIO_CTRL, &reg);
- 
--			/* Band selection. GPIO #8 controls all paths */
-+		/* Band selection */
-+		if (rt2x00_is_usb(rt2x00dev) ||
-+		    rt2x00_is_pcie(rt2x00dev)) {
-+			/* GPIO #8 controls all paths */
- 			rt2x00_set_field32(&reg, GPIO_CTRL_DIR8, 0);
- 			if (rf->channel <= 14)
- 				rt2x00_set_field32(&reg, GPIO_CTRL_VAL8, 1);
- 			else
- 				rt2x00_set_field32(&reg, GPIO_CTRL_VAL8, 0);
-+		}
- 
-+		/* LNA PE control. */
-+		if (rt2x00_is_usb(rt2x00dev)) {
-+			/* GPIO #4 controls PE0 and PE1,
-+			 * GPIO #7 controls PE2
-+			 */
- 			rt2x00_set_field32(&reg, GPIO_CTRL_DIR4, 0);
- 			rt2x00_set_field32(&reg, GPIO_CTRL_DIR7, 0);
- 
--			/* LNA PE control.
--			* GPIO #4 controls PE0 and PE1,
--			* GPIO #7 controls PE2
--			*/
- 			rt2x00_set_field32(&reg, GPIO_CTRL_VAL4, 1);
- 			rt2x00_set_field32(&reg, GPIO_CTRL_VAL7, 1);
+-static long _rtl92c_translate_todbm(struct ieee80211_hw *hw,
+-				     u8 signal_strength_index)
+-{
+-	long signal_power;
 -
--			rt2800_register_write(rt2x00dev, GPIO_CTRL, reg);
-+		} else if (rt2x00_is_pcie(rt2x00dev)) {
-+			/* GPIO #4 controls PE0, PE1 and PE2 */
-+			rt2x00_set_field32(&reg, GPIO_CTRL_DIR4, 0);
-+			rt2x00_set_field32(&reg, GPIO_CTRL_VAL4, 1);
- 		}
+-	signal_power = (long)((signal_strength_index + 1) >> 1);
+-	signal_power -= 95;
+-	return signal_power;
+-}
+-
+ static long _rtl92c_signal_scale_mapping(struct ieee80211_hw *hw,
+ 		long currsig)
+ {
+@@ -913,180 +904,6 @@ static void _rtl92c_query_rxphystatus(struct ieee80211_hw *hw,
+ 			  (hw, total_rssi /= rf_rx_num));
+ }
  
-+		rt2800_register_write(rt2x00dev, GPIO_CTRL, reg);
-+
- 		/* AGC init */
- 		if (rf->channel <= 14)
- 			reg = 0x1c + 2 * rt2x00dev->lna_gain;
+-static void _rtl92c_process_ui_rssi(struct ieee80211_hw *hw,
+-		struct rtl_stats *pstats)
+-{
+-	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	struct rtl_phy *rtlphy = &(rtlpriv->phy);
+-	u8 rfpath;
+-	u32 last_rssi, tmpval;
+-
+-	if (pstats->packet_toself || pstats->packet_beacon) {
+-		rtlpriv->stats.rssi_calculate_cnt++;
+-		if (rtlpriv->stats.ui_rssi.total_num++ >=
+-		    PHY_RSSI_SLID_WIN_MAX) {
+-			rtlpriv->stats.ui_rssi.total_num =
+-			    PHY_RSSI_SLID_WIN_MAX;
+-			last_rssi =
+-			    rtlpriv->stats.ui_rssi.elements[rtlpriv->
+-							   stats.ui_rssi.index];
+-			rtlpriv->stats.ui_rssi.total_val -= last_rssi;
+-		}
+-		rtlpriv->stats.ui_rssi.total_val += pstats->signalstrength;
+-		rtlpriv->stats.ui_rssi.elements[rtlpriv->stats.ui_rssi.
+-					index++] = pstats->signalstrength;
+-		if (rtlpriv->stats.ui_rssi.index >= PHY_RSSI_SLID_WIN_MAX)
+-			rtlpriv->stats.ui_rssi.index = 0;
+-		tmpval = rtlpriv->stats.ui_rssi.total_val /
+-		    rtlpriv->stats.ui_rssi.total_num;
+-		rtlpriv->stats.signal_strength =
+-		    _rtl92c_translate_todbm(hw, (u8) tmpval);
+-		pstats->rssi = rtlpriv->stats.signal_strength;
+-	}
+-	if (!pstats->is_cck && pstats->packet_toself) {
+-		for (rfpath = RF90_PATH_A; rfpath < rtlphy->num_total_rfpath;
+-		     rfpath++) {
+-			if (!rtl8192_phy_check_is_legal_rfpath(hw, rfpath))
+-				continue;
+-			if (rtlpriv->stats.rx_rssi_percentage[rfpath] == 0) {
+-				rtlpriv->stats.rx_rssi_percentage[rfpath] =
+-				    pstats->rx_mimo_signalstrength[rfpath];
+-			}
+-			if (pstats->rx_mimo_signalstrength[rfpath] >
+-			    rtlpriv->stats.rx_rssi_percentage[rfpath]) {
+-				rtlpriv->stats.rx_rssi_percentage[rfpath] =
+-				    ((rtlpriv->stats.
+-				      rx_rssi_percentage[rfpath] *
+-				      (RX_SMOOTH_FACTOR - 1)) +
+-				     (pstats->rx_mimo_signalstrength[rfpath])) /
+-				    (RX_SMOOTH_FACTOR);
+-
+-				rtlpriv->stats.rx_rssi_percentage[rfpath] =
+-				    rtlpriv->stats.rx_rssi_percentage[rfpath] +
+-				    1;
+-			} else {
+-				rtlpriv->stats.rx_rssi_percentage[rfpath] =
+-				    ((rtlpriv->stats.
+-				      rx_rssi_percentage[rfpath] *
+-				      (RX_SMOOTH_FACTOR - 1)) +
+-				     (pstats->rx_mimo_signalstrength[rfpath])) /
+-				    (RX_SMOOTH_FACTOR);
+-			}
+-		}
+-	}
+-}
+-
+-static void _rtl92c_update_rxsignalstatistics(struct ieee80211_hw *hw,
+-					       struct rtl_stats *pstats)
+-{
+-	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	int weighting = 0;
+-
+-	if (rtlpriv->stats.recv_signal_power == 0)
+-		rtlpriv->stats.recv_signal_power = pstats->recvsignalpower;
+-	if (pstats->recvsignalpower > rtlpriv->stats.recv_signal_power)
+-		weighting = 5;
+-	else if (pstats->recvsignalpower < rtlpriv->stats.recv_signal_power)
+-		weighting = (-5);
+-	rtlpriv->stats.recv_signal_power =
+-	    (rtlpriv->stats.recv_signal_power * 5 +
+-	     pstats->recvsignalpower + weighting) / 6;
+-}
+-
+-static void _rtl92c_process_pwdb(struct ieee80211_hw *hw,
+-		struct rtl_stats *pstats)
+-{
+-	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
+-	long undec_sm_pwdb = 0;
+-
+-	if (mac->opmode == NL80211_IFTYPE_ADHOC) {
+-		return;
+-	} else {
+-		undec_sm_pwdb = rtlpriv->dm.undec_sm_pwdb;
+-	}
+-	if (pstats->packet_toself || pstats->packet_beacon) {
+-		if (undec_sm_pwdb < 0)
+-			undec_sm_pwdb = pstats->rx_pwdb_all;
+-		if (pstats->rx_pwdb_all > (u32) undec_sm_pwdb) {
+-			undec_sm_pwdb = (((undec_sm_pwdb) *
+-			      (RX_SMOOTH_FACTOR - 1)) +
+-			     (pstats->rx_pwdb_all)) / (RX_SMOOTH_FACTOR);
+-			undec_sm_pwdb += 1;
+-		} else {
+-			undec_sm_pwdb = (((undec_sm_pwdb) *
+-			      (RX_SMOOTH_FACTOR - 1)) +
+-			     (pstats->rx_pwdb_all)) / (RX_SMOOTH_FACTOR);
+-		}
+-		rtlpriv->dm.undec_sm_pwdb = undec_sm_pwdb;
+-		_rtl92c_update_rxsignalstatistics(hw, pstats);
+-	}
+-}
+-
+-static void _rtl92c_process_LINK_Q(struct ieee80211_hw *hw,
+-					     struct rtl_stats *pstats)
+-{
+-	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	u32 last_evm = 0, n_stream, tmpval;
+-
+-	if (pstats->signalquality != 0) {
+-		if (pstats->packet_toself || pstats->packet_beacon) {
+-			if (rtlpriv->stats.LINK_Q.total_num++ >=
+-			    PHY_LINKQUALITY_SLID_WIN_MAX) {
+-				rtlpriv->stats.LINK_Q.total_num =
+-				    PHY_LINKQUALITY_SLID_WIN_MAX;
+-				last_evm =
+-				    rtlpriv->stats.LINK_Q.elements
+-				    [rtlpriv->stats.LINK_Q.index];
+-				rtlpriv->stats.LINK_Q.total_val -=
+-				    last_evm;
+-			}
+-			rtlpriv->stats.LINK_Q.total_val +=
+-			    pstats->signalquality;
+-			rtlpriv->stats.LINK_Q.elements
+-			   [rtlpriv->stats.LINK_Q.index++] =
+-			    pstats->signalquality;
+-			if (rtlpriv->stats.LINK_Q.index >=
+-			    PHY_LINKQUALITY_SLID_WIN_MAX)
+-				rtlpriv->stats.LINK_Q.index = 0;
+-			tmpval = rtlpriv->stats.LINK_Q.total_val /
+-			    rtlpriv->stats.LINK_Q.total_num;
+-			rtlpriv->stats.signal_quality = tmpval;
+-			rtlpriv->stats.last_sigstrength_inpercent = tmpval;
+-			for (n_stream = 0; n_stream < 2;
+-			     n_stream++) {
+-				if (pstats->RX_SIGQ[n_stream] != -1) {
+-					if (!rtlpriv->stats.RX_EVM[n_stream]) {
+-						rtlpriv->stats.RX_EVM[n_stream]
+-						 = pstats->RX_SIGQ[n_stream];
+-					}
+-					rtlpriv->stats.RX_EVM[n_stream] =
+-					    ((rtlpriv->stats.RX_EVM
+-					    [n_stream] *
+-					    (RX_SMOOTH_FACTOR - 1)) +
+-					    (pstats->RX_SIGQ
+-					    [n_stream] * 1)) /
+-					    (RX_SMOOTH_FACTOR);
+-				}
+-			}
+-		}
+-	} else {
+-		;
+-	}
+-}
+-
+-static void _rtl92c_process_phyinfo(struct ieee80211_hw *hw,
+-				     u8 *buffer,
+-				     struct rtl_stats *pcurrent_stats)
+-{
+-	if (!pcurrent_stats->packet_matchbssid &&
+-	    !pcurrent_stats->packet_beacon)
+-		return;
+-	_rtl92c_process_ui_rssi(hw, pcurrent_stats);
+-	_rtl92c_process_pwdb(hw, pcurrent_stats);
+-	_rtl92c_process_LINK_Q(hw, pcurrent_stats);
+-}
+-
+ void rtl92c_translate_rx_signal_stuff(struct ieee80211_hw *hw,
+ 					       struct sk_buff *skb,
+ 					       struct rtl_stats *pstats,
+@@ -1123,5 +940,5 @@ void rtl92c_translate_rx_signal_stuff(struct ieee80211_hw *hw,
+ 	_rtl92c_query_rxphystatus(hw, pstats, pdesc, p_drvinfo,
+ 				   packet_matchbssid, packet_toself,
+ 				   packet_beacon);
+-	_rtl92c_process_phyinfo(hw, tmp_buf, pstats);
++	rtl_process_phyinfo(hw, tmp_buf, pstats);
+ }
 -- 
-1.7.10
+1.8.1.4
+
