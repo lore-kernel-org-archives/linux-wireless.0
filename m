@@ -1,51 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from svenfoo.org ([82.94.215.22]:50108 "EHLO mail.zonque.de"
+Received: from ebb06.tieto.com ([131.207.168.38]:42544 "EHLO ebb06.tieto.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753055Ab3IQSZt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Sep 2013 14:25:49 -0400
-From: Daniel Mack <zonque@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: s.neumann@raumfeld.com, afenkart@gmail.com, bzhao@marvell.com,
-	linville@tuxdriver.com, johannes.berg@intel.com,
-	Daniel Mack <zonque@gmail.com>, <stable@vger.kernel.org>
-Subject: [PATCH 3.12] mwifiex: queue main work from main process when bailing on races
-Date: Tue, 17 Sep 2013 20:25:30 +0200
-Message-Id: <1379442330-18249-1-git-send-email-zonque@gmail.com> (sfid-20130917_202552_895527_167FFB4B)
+	id S1754516Ab3IMMRF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Sep 2013 08:17:05 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCHv2 1/7] ath10k: simplify HTC credits calculation
+Date: Fri, 13 Sep 2013 14:16:52 +0200
+Message-ID: <1379074618-30534-2-git-send-email-michal.kazior@tieto.com> (sfid-20130913_141712_702219_6E952B6D)
+In-Reply-To: <1379074618-30534-1-git-send-email-michal.kazior@tieto.com>
+References: <1378821003-22925-1-git-send-email-michal.kazior@tieto.com>
+ <1379074618-30534-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Queue main_work in case mwifiex_main_process() bails due to an already
-processed transaction. This is particularly necessary because
-mwifiex_main_process() is called from both the SDIO interrupt handler
-and the workqueue. In case an interrupt occurs while the main process
-is currently executed from the workqueue, the interrupt is lost,
-resulting in a command timeout and consequently a card reset.
+Credit calculation was overly complex
+unnecessarily. Now skb dequeing is more unified.
 
-I'm marking this for stable kernel in version 3.7+, because on our
-platform, the issue appears since 601216e12c ("mwifiex: process RX
-packets in SDIO IRQ thread directly") went in.
-
-Signed-off-by: Daniel Mack <zonque@gmail.com>
-Reported-by: Sven Neumann <s.neumann@raumfeld.com>
-Reported-by: Andreas Fenkart <afenkart@gmail.com>
-Cc: Bing Zhao <bzhao@marvell.com>
-Cc: <stable@vger.kernel.org> [v3.7+]
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/mwifiex/main.c | 1 +
- 1 file changed, 1 insertion(+)
+v2:
+ * use DIV_ROUND_UP
 
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index ff4ed96..0700bc2 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -235,6 +235,7 @@ int mwifiex_main_process(struct mwifiex_adapter *adapter)
- 	/* Check if already processing */
- 	if (adapter->mwifiex_processing) {
- 		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
-+		queue_work(adapter->workqueue, &adapter->main_work);
- 		goto exit_main_proc;
- 	} else {
- 		adapter->mwifiex_processing = true;
+ drivers/net/wireless/ath/ath10k/htc.c |   58 ++++++---------------------------
+ 1 file changed, 10 insertions(+), 48 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index f03fd8d..1da0f82 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -167,49 +167,6 @@ err:
+ 	return ret;
+ }
+ 
+-static struct sk_buff *ath10k_htc_get_skb_credit_based(struct ath10k_htc *htc,
+-						       struct ath10k_htc_ep *ep,
+-						       u8 *credits)
+-{
+-	struct sk_buff *skb;
+-	struct ath10k_skb_cb *skb_cb;
+-	int credits_required;
+-	int remainder;
+-	unsigned int transfer_len;
+-
+-	lockdep_assert_held(&htc->tx_lock);
+-
+-	skb = __skb_dequeue(&ep->tx_queue);
+-	if (!skb)
+-		return NULL;
+-
+-	skb_cb = ATH10K_SKB_CB(skb);
+-	transfer_len = skb->len;
+-
+-	if (likely(transfer_len <= htc->target_credit_size)) {
+-		credits_required = 1;
+-	} else {
+-		/* figure out how many credits this message requires */
+-		credits_required = transfer_len / htc->target_credit_size;
+-		remainder = transfer_len % htc->target_credit_size;
+-
+-		if (remainder)
+-			credits_required++;
+-	}
+-
+-	ath10k_dbg(ATH10K_DBG_HTC, "Credits required %d got %d\n",
+-		   credits_required, ep->tx_credits);
+-
+-	if (ep->tx_credits < credits_required) {
+-		__skb_queue_head(&ep->tx_queue, skb);
+-		return NULL;
+-	}
+-
+-	ep->tx_credits -= credits_required;
+-	*credits = credits_required;
+-	return skb;
+-}
+-
+ static void ath10k_htc_send_work(struct work_struct *work)
+ {
+ 	struct ath10k_htc_ep *ep = container_of(work,
+@@ -224,11 +181,16 @@ static void ath10k_htc_send_work(struct work_struct *work)
+ 			ath10k_htc_send_complete_check(ep, 0);
+ 
+ 		spin_lock_bh(&htc->tx_lock);
+-		if (ep->tx_credit_flow_enabled)
+-			skb = ath10k_htc_get_skb_credit_based(htc, ep,
+-							      &credits);
+-		else
+-			skb = __skb_dequeue(&ep->tx_queue);
++		skb = __skb_dequeue(&ep->tx_queue);
++
++		if (ep->tx_credit_flow_enabled) {
++			credits = DIV_ROUND_UP(skb->len,
++					       htc->target_credit_size);
++			if (ep->tx_credits < credits) {
++				__skb_queue_head(&ep->tx_queue, skb);
++				skb = NULL;
++			}
++		}
+ 		spin_unlock_bh(&htc->tx_lock);
+ 
+ 		if (!skb)
 -- 
-1.8.3.1
+1.7.9.5
 
