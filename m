@@ -1,39 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:47787 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751294Ab3IPJuT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Sep 2013 05:50:19 -0400
-Date: Mon, 16 Sep 2013 17:50:13 +0800
-From: Fengguang Wu <fengguang.wu@intel.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Hante Meuleman <meuleman@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	brcm80211-dev-list@broadcom.com
-Subject: Re: [brcmfmac] BUG: unable to handle kernel paging request at
- ffffffff82196446
-Message-ID: <20130916095013.GA13395@localhost> (sfid-20130916_115022_497904_46A14170)
-References: <20130902102327.GB14264@localhost>
- <5236CC49.7000206@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5236CC49.7000206@broadcom.com>
+Received: from mail-oa0-f41.google.com ([209.85.219.41]:59839 "EHLO
+	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751513Ab3IMRpW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Sep 2013 13:45:22 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 5/7: rtlwifi: Fix smatch warning in pci.c
+Date: Fri, 13 Sep 2013 12:45:02 -0500
+Message-Id: <1379094304-22041-6-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130913_194541_556712_4764FE20)
+In-Reply-To: <1379094304-22041-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1379094304-22041-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 16, 2013 at 11:15:53AM +0200, Arend van Spriel wrote:
-> On 09/02/2013 12:23 PM, Fengguang Wu wrote:
-> >Greetings,
-> >
-> >I got the below dmesg and the first bad commit is
-> 
-> Hi Fengguang,
-> 
-> I could not reproduce this issue. Could you retest with the attached
-> patch file applied and let me know if that fixes the problem?
+Smatch reports the following:
+  CHECK   drivers/net/wireless/rtlwifi/pci.c
+drivers/net/wireless/rtlwifi/pci.c:739 _rtl_pci_rx_interrupt() warn: assigning (-98) to unsigned variable 'stats.noise'
 
-Sure. I've queued the patch for testing. Will report back 1-2 days
-later.
+This problem is fixed by changing the value to 256 - 98.
 
-Thanks,
-Fengguang
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/pci.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
+index 703f839..bf498f5 100644
+--- a/drivers/net/wireless/rtlwifi/pci.c
++++ b/drivers/net/wireless/rtlwifi/pci.c
+@@ -736,7 +736,7 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
+ 
+ 	struct rtl_stats stats = {
+ 		.signal = 0,
+-		.noise = -98,
++		.noise = 158,	/* -98 dBm */
+ 		.rate = 0,
+ 	};
+ 	int index = rtlpci->rx_ring[rx_queue_idx].idx;
+-- 
+1.8.1.4
+
