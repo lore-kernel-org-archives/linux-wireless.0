@@ -1,50 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f175.google.com ([209.85.220.175]:63194 "EHLO
-	mail-vc0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758718Ab3IBSyY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Sep 2013 14:54:24 -0400
-Received: by mail-vc0-f175.google.com with SMTP id ia10so3175036vcb.20
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Sep 2013 11:54:23 -0700 (PDT)
+Received: from ebb05.tieto.com ([131.207.168.36]:54848 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754516Ab3IMMRL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Sep 2013 08:17:11 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCHv2 6/7] ath10k: remove wmi pending count limit
+Date: Fri, 13 Sep 2013 14:16:57 +0200
+Message-ID: <1379074618-30534-7-git-send-email-michal.kazior@tieto.com> (sfid-20130913_141724_804688_4CE2200B)
+In-Reply-To: <1379074618-30534-1-git-send-email-michal.kazior@tieto.com>
+References: <1378821003-22925-1-git-send-email-michal.kazior@tieto.com>
+ <1379074618-30534-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
-In-Reply-To: <5224A1F9.3030907@hauke-m.de>
-References: <1378118306-7890-1-git-send-email-k.eugene.e@gmail.com>
-	<5224A1F9.3030907@hauke-m.de>
-Date: Mon, 2 Sep 2013 20:54:23 +0200
-Message-ID: <CAFSJ42YUgJ-Bnx_DW_oJn6bk4BRVtyeD=b+G5oenefb3S7ZLNQ@mail.gmail.com> (sfid-20130902_205427_656569_B866932B)
-Subject: Re: [PATCH] wcn36xx: mac80211 driver for Qualcomm WCN3660/WCN3680 hardware
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	wcn36xx@lists.infradead.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Will check with legal department if licenses are compliant and come back to you.
-But I guess for driver contribution it's not mandatory.
+It is no longer used nor necessary since WMI
+commands can block.
 
-2013/9/2 Hauke Mehrtens <hauke@hauke-m.de>:
-> On 09/02/2013 12:38 PM, Eugene Krasnikov wrote:
->> This is a mac80211 driver for Qualcomm WCN3660/WCN3680 devices. So
->> far WCN3660/WCN3680 is available only on MSM platform.
->>
->> Firmware can be found here:
->> https://github.com/AOKP/vendor_sony/find/jb-mr1
->
-> Will you send the firmware for inclusion to linux-fimware?
-> I am also missing the firmware for ath10k there.
->
->> Wiki page is available here:
->> http://wireless.kernel.org/en/users/Drivers/wcn36xx
->>
->
-> Hauke
->
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/core.h |    2 --
+ drivers/net/wireless/ath/ath10k/mac.c  |    9 ---------
+ drivers/net/wireless/ath/ath10k/wmi.c  |   32 --------------------------------
+ drivers/net/wireless/ath/ath10k/wmi.h  |    2 --
+ 4 files changed, 45 deletions(-)
 
-
-
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 14b7d3d..c2b6a76 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -112,8 +112,6 @@ struct ath10k_wmi {
+ 	enum ath10k_htc_ep_id eid;
+ 	struct completion service_ready;
+ 	struct completion unified_ready;
+-	atomic_t pending_tx_count;
+-	wait_queue_head_t wq;
+ 	wait_queue_head_t tx_credits_wq;
+ 
+ 	struct sk_buff_head wmi_event_list;
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 6c3e9d1..11aa13e 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1224,8 +1224,6 @@ static void ath10k_bss_disassoc(struct ieee80211_hw *hw,
+ 	/* FIXME: why don't we print error if wmi call fails? */
+ 	ret = ath10k_wmi_vdev_down(ar, arvif->vdev_id);
+ 
+-	ath10k_wmi_flush_tx(ar);
+-
+ 	arvif->def_wep_key_index = 0;
+ }
+ 
+@@ -1664,8 +1662,6 @@ static int ath10k_abort_scan(struct ath10k *ar)
+ 		return -EIO;
+ 	}
+ 
+-	ath10k_wmi_flush_tx(ar);
+-
+ 	ret = wait_for_completion_timeout(&ar->scan.completed, 3*HZ);
+ 	if (ret == 0)
+ 		ath10k_warn("timed out while waiting for scan to stop\n");
+@@ -1699,10 +1695,6 @@ static int ath10k_start_scan(struct ath10k *ar,
+ 	if (ret)
+ 		return ret;
+ 
+-	/* make sure we submit the command so the completion
+-	* timeout makes sense */
+-	ath10k_wmi_flush_tx(ar);
+-
+ 	ret = wait_for_completion_timeout(&ar->scan.started, 1*HZ);
+ 	if (ret == 0) {
+ 		ath10k_abort_scan(ar);
+@@ -1924,7 +1916,6 @@ static int ath10k_config(struct ieee80211_hw *hw, u32 changed)
+ 			ret = ath10k_monitor_destroy(ar);
+ 	}
+ 
+-	ath10k_wmi_flush_tx(ar);
+ 	mutex_unlock(&ar->conf_mutex);
+ 	return ret;
+ }
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 9152dae..b29d2b9 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -23,30 +23,6 @@
+ #include "wmi.h"
+ #include "mac.h"
+ 
+-void ath10k_wmi_flush_tx(struct ath10k *ar)
+-{
+-	int ret;
+-
+-	lockdep_assert_held(&ar->conf_mutex);
+-
+-	if (ar->state == ATH10K_STATE_WEDGED) {
+-		ath10k_warn("wmi flush skipped - device is wedged anyway\n");
+-		return;
+-	}
+-
+-	ret = wait_event_timeout(ar->wmi.wq,
+-				 atomic_read(&ar->wmi.pending_tx_count) == 0,
+-				 5*HZ);
+-	if (atomic_read(&ar->wmi.pending_tx_count) == 0)
+-		return;
+-
+-	if (ret == 0)
+-		ret = -ETIMEDOUT;
+-
+-	if (ret < 0)
+-		ath10k_warn("wmi flush failed (%d)\n", ret);
+-}
+-
+ int ath10k_wmi_wait_for_service_ready(struct ath10k *ar)
+ {
+ 	int ret;
+@@ -85,9 +61,6 @@ static struct sk_buff *ath10k_wmi_alloc_skb(u32 len)
+ static void ath10k_wmi_htc_tx_complete(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	dev_kfree_skb(skb);
+-
+-	if (atomic_sub_return(1, &ar->wmi.pending_tx_count) == 0)
+-		wake_up(&ar->wmi.wq);
+ }
+ 
+ static int ath10k_wmi_cmd_send_nowait(struct ath10k *ar, struct sk_buff *skb,
+@@ -1243,7 +1216,6 @@ int ath10k_wmi_attach(struct ath10k *ar)
+ {
+ 	init_completion(&ar->wmi.service_ready);
+ 	init_completion(&ar->wmi.unified_ready);
+-	init_waitqueue_head(&ar->wmi.wq);
+ 	init_waitqueue_head(&ar->wmi.tx_credits_wq);
+ 
+ 	skb_queue_head_init(&ar->wmi.wmi_event_list);
+@@ -1254,10 +1226,6 @@ int ath10k_wmi_attach(struct ath10k *ar)
+ 
+ void ath10k_wmi_detach(struct ath10k *ar)
+ {
+-	/* HTC should've drained the packets already */
+-	if (WARN_ON(atomic_read(&ar->wmi.pending_tx_count) > 0))
+-		ath10k_warn("there are still pending packets\n");
+-
+ 	cancel_work_sync(&ar->wmi.wmi_event_work);
+ 	skb_queue_purge(&ar->wmi.wmi_event_list);
+ }
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index b100431..2c52c23 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -3044,7 +3044,6 @@ struct wmi_force_fw_hang_cmd {
+ 
+ #define WMI_MAX_EVENT 0x1000
+ /* Maximum number of pending TXed WMI packets */
+-#define WMI_MAX_PENDING_TX_COUNT 128
+ #define WMI_SKB_HEADROOM sizeof(struct wmi_cmd_hdr)
+ 
+ /* By default disable power save for IBSS */
+@@ -3057,7 +3056,6 @@ int ath10k_wmi_attach(struct ath10k *ar);
+ void ath10k_wmi_detach(struct ath10k *ar);
+ int ath10k_wmi_wait_for_service_ready(struct ath10k *ar);
+ int ath10k_wmi_wait_for_unified_ready(struct ath10k *ar);
+-void ath10k_wmi_flush_tx(struct ath10k *ar);
+ 
+ int ath10k_wmi_connect_htc_service(struct ath10k *ar);
+ int ath10k_wmi_pdev_set_channel(struct ath10k *ar,
 -- 
-Best regards,
-Eugene
+1.7.9.5
+
