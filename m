@@ -1,39 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:35301 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754472Ab3IJItK (ORCPT
+Received: from p15195424.pureserver.info ([82.165.34.74]:57152 "EHLO
+	p15195424.pureserver.info" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751904Ab3IMJCU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Sep 2013 04:49:10 -0400
-Received: from epcpsbgr4.samsung.com
- (u144.gpu120.samsung.co.kr [203.254.230.144])
- by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MSW00H6CJ55SIN0@mailout4.samsung.com> for
- linux-wireless@vger.kernel.org; Tue, 10 Sep 2013 17:49:08 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: "'John W. Linville'" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
-Subject: [PATCH] wireless: use dev_get_platdata()
-Date: Tue, 10 Sep 2013 17:49:08 +0900
-Message-id: <005101ceae02$9cbb95f0$d632c1d0$%han@samsung.com> (sfid-20130910_104926_715185_0013B0D4)
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+	Fri, 13 Sep 2013 05:02:20 -0400
+Message-ID: <5232D462.6010500@ilande.co.uk> (sfid-20130913_110224_215651_FBE7313D)
+Date: Fri, 13 Sep 2013 10:01:22 +0100
+From: Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>
+MIME-Version: 1.0
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: Timothy Rundle <tgrundlesr@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+References: <CALa3VXYo1yTuDr22M7AUcp0WLQszzdMSJczRgmD57uPd_68vWQ@mail.gmail.com> <522D054B.5060205@lwfinger.net> <522DD856.7050309@ilande.co.uk> <522DE1BE.6070904@lwfinger.net> <522DE8CA.9010008@ilande.co.uk> <522DFF83.6000605@lwfinger.net> <522E0573.4000804@ilande.co.uk> <522E1B7D.5010107@lwfinger.net> <522E463E.4040701@ilande.co.uk> <522E5416.4010901@lwfinger.net> <522E5D83.9060103@ilande.co.uk> <522E896E.7000607@lwfinger.net> <522EB51A.2080004@ilande.co.uk> <522F3757.8030600@lwfinger.net> <522F7B61.6060208@ilande.co.uk> <5230CDF1.1040905@lwfinger.net>
+In-Reply-To: <5230CDF1.1040905@lwfinger.net>
+Subject: Re: RTL8192CU continually reconnecting
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the wrapper function for retrieving the platform data instead of
-accessing dev->platform_data directly. This is a cosmetic change
-to make the code simpler and enhance the readability.
+On 11/09/13 21:09, Larry Finger wrote:
 
----
- drivers/net/wireless/ath/ath5k/ahb.c                   |   15 ++++++---------
- drivers/net/wireless/ath/ath9k/ahb.c                   |    4 ++--
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    2 +-
- drivers/net/wireless/cw1200/cw1200_spi.c               |    4 ++--
- drivers/net/wireless/libertas/if_spi.c                 |    2 +-
- drivers/net/wireless/ti/wl1251/spi.c                   |    2 +-
- drivers/net/wireless/ti/wl12xx/main.c                  |    2 +-
- drivers/net/wireless/ti/wlcore/main.c                  |    2 +-
- drivers/net/wireless/ti/wlcore/spi.c                   |    2 +-
- 9 files changed, 16 insertions(+), 19 deletions(-)
+> I am now running a kernel built with your configuration. I needed to
+> make a couple of changes as it did not have one of the modules my disk
+> system needs, and nouveau caused kernel panics, but we are now
+> operational. Outside of the whole system being slow due to only one 2.0
+> GHz CPU, the wireless connection seems to be stable. At least, there
+> have been no disconnects in the first half hour.
 
+Thanks for testing Larry. Last night I finished building an SMP-capable 
+kernel with the same configuration and I see no change in behaviour. So 
+I think we can rule this out as a possible cause.
+
+
+ATB,
+
+Mark.
