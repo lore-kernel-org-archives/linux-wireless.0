@@ -1,138 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f180.google.com ([209.85.220.180]:41286 "EHLO
-	mail-vc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752589Ab3IWTrU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Sep 2013 15:47:20 -0400
-Received: by mail-vc0-f180.google.com with SMTP id ld13so2457889vcb.25
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Sep 2013 12:47:19 -0700 (PDT)
+Received: from ebb05.tieto.com ([131.207.168.36]:54848 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751846Ab3IMMRF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Sep 2013 08:17:05 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCHv2 0/7] ath10k: improve TX path
+Date: Fri, 13 Sep 2013 14:16:51 +0200
+Message-ID: <1379074618-30534-1-git-send-email-michal.kazior@tieto.com> (sfid-20130913_141710_842182_9A8C988F)
+In-Reply-To: <1378821003-22925-1-git-send-email-michal.kazior@tieto.com>
+References: <1378821003-22925-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
-In-Reply-To: <CAObL_7GA-SD5bK7Hnwyp_vnoLxSbcGGtnzgyD-GBHAwaxF1JxQ@mail.gmail.com>
-References: <CAObL_7HXC8qQ54O5QPAo7cQT2yeK-etgKD-7aoaL3dkT4qcOow@mail.gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB301DB3584@HASMSX103.ger.corp.intel.com>
-	<CAObL_7GA-SD5bK7Hnwyp_vnoLxSbcGGtnzgyD-GBHAwaxF1JxQ@mail.gmail.com>
-Date: Mon, 23 Sep 2013 22:47:19 +0300
-Message-ID: <CANUX_P1_t_qtEbxW8h231W_OUbr5m2P92uQkROtWxhHcnpT=Bg@mail.gmail.com> (sfid-20130923_214725_594451_D8EB401B)
-Subject: Re: [Ilw] Intel 6300 crashes hard (3.11 regression?)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Andrew Lutomirski <andy@luto.us>
-Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->>> I've had a failure twice on 3.11.1-200.fc19.x86_64.  I've never seen it on
->>> earlier Fedora kernels or on 3.11-rc3.  The computer hangs for a minute or so.
->>> When it comes back, wireless doesn't work.  rmmoding and modprobing
->>> iwldvm doesn't help (it's at the bottom of the attachment).
->>>
->>> Even rebooting doesn't fix it unless I pull the battery.  Otherwise iwlwifi loads
->>> but wlan0 doesn't appear and the only log line is the one saying that iwlwifi
->>> loaded.
->>>
->>> The messages on startup are:
->>>
->>> [   11.440725] iwlwifi 0000:03:00.0: can't disable ASPM; OS doesn't
->>> have ASPM control
->>> [   11.440788] iwlwifi 0000:03:00.0: irq 51 for MSI/MSI-X
->>> [   11.455653] iwlwifi 0000:03:00.0: loaded firmware version 9.221.4.1
->>> build 25532 op_mode iwldvm
->>> [   11.517924] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_DEBUG enabled
->>> [   11.517930] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_DEBUGFS enabled
->>> [   11.517932] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_DEVICE_TRACING
->>> disabled
->>> [   11.517934] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_P2P disabled
->>> [   11.517936] iwlwifi 0000:03:00.0: Detected Intel(R) Centrino(R)
->>> Ultimate-N 6300 AGN, REV=0x74
->>> [   11.519626] iwlwifi 0000:03:00.0: L1 Enabled; Disabling L0S
->>>
->>> (Both failures happened with pcie_aspm=force, but this is without it.
->>> I want to see if disabling that option fixes it.)
->>
->> Please do and report back - what I can see here is that we kinda can't access the NIC - so I would be curious if pcie_aspm=force changes the game here.
->>
->
-> It happened again.  This time I got some stuff in the middle of the
-> dump that I didn't notice last time:
->
-> [ 1125.076283] iwlwifi 0000:03:00.0: Q 19 is active and mapped to fifo
-> 2 ra_tid 0xa5a5 [90,1515870810]
-> [ 1127.073531] iwlwifi 0000:03:00.0: Error sending REPLY_TXFIFO_FLUSH:
-> time out after 2000ms.
-> [ 1127.073544] iwlwifi 0000:03:00.0: Current CMD queue read_ptr 135
-> write_ptr 143
-> [ 1127.073550] iwlwifi 0000:03:00.0: Couldn't flush the AGG queue
-> [ 1129.110029] iwlwifi 0000:03:00.0: Error sending REPLY_ADD_STA: time
-> out after 2000ms.
-> [ 1129.110037] iwlwifi 0000:03:00.0: Current CMD queue read_ptr 135
-> write_ptr 146
-> [ 1129.110044] wlan0: HW problem - can not stop rx aggregation for
-> 50:a7:33:27:30:78 tid 0
-> [ 1131.107391] iwlwifi 0000:03:00.0: Error sending REPLY_ADD_STA: time
-> out after 2000ms.
-> [ 1131.107399] iwlwifi 0000:03:00.0: Current CMD queue read_ptr 135
-> write_ptr 149
-> [ 1131.107405] wlan0: HW problem - can not stop rx aggregation for
-> 50:a7:33:27:30:78 tid 1
-> [ 1133.104739] iwlwifi 0000:03:00.0: Error sending REPLY_ADD_STA: time
-> out after 2000ms.
-> [ 1133.104745] iwlwifi 0000:03:00.0: Current CMD queue read_ptr 135
-> write_ptr 152
-> [ 1133.104750] wlan0: HW problem - can not stop rx aggregation for
-> 50:a7:33:27:30:78 tid 5
-> [ 1135.102155] iwlwifi 0000:03:00.0: Error sending REPLY_ADD_STA: time
-> out after 2000ms.
-> [ 1135.102160] iwlwifi 0000:03:00.0: Current CMD queue read_ptr 135
-> write_ptr 155
-> [ 1135.102163] wlan0: HW problem - can not stop rx aggregation for
-> 50:a7:33:27:30:78 tid 6
-> [ 1137.099675] iwlwifi 0000:03:00.0: Error sending REPLY_QOS_PARAM:
-> time out after 2000ms.
-> [ 1137.099682] iwlwifi 0000:03:00.0: Current CMD queue read_ptr 135
-> write_ptr 158
-> [ 1137.099686] iwlwifi 0000:03:00.0: Failed to update QoS
-> [ 1139.097113] iwlwifi 0000:03:00.0: Error sending REPLY_RXON: time
-> out after 2000ms.
-> [ 1139.097120] iwlwifi 0000:03:00.0: Current CMD queue read_ptr 135
-> write_ptr 161
-> [ 1139.097124] iwlwifi 0000:03:00.0: Error clearing ASSOC_MSK on BSS (-110)
-> [ 1141.094533] iwlwifi 0000:03:00.0: Error sending REPLY_RXON: time
-> out after 2000ms.
-> [ 1141.094589] iwlwifi 0000:03:00.0: Current CMD queue read_ptr 135
-> write_ptr 164
-> [ 1141.094633] iwlwifi 0000:03:00.0: Error clearing ASSOC_MSK on BSS (-110)
-> [ 1141.314184] iwlwifi 0000:03:00.0: No space in command queue
-> [ 1141.314259] iwlwifi 0000:03:00.0: Restarting adapter queue is full
-> [ 1141.314305] iwlwifi 0000:03:00.0: Error sending REPLY_LEDS_CMD:
-> enqueue_hcmd failed: -28
-> [ 1143.091961] iwlwifi 0000:03:00.0: Error sending REPLY_RXON: time
-> out after 2000ms.
-> [ 1143.092016] iwlwifi 0000:03:00.0: Current CMD queue read_ptr 135
-> write_ptr 165
-> [ 1143.092060] iwlwifi 0000:03:00.0: Error clearing ASSOC_MSK on BSS (-110)
-> [ 1145.090373] iwlwifi 0000:03:00.0: fail to flush all tx fifo queues Q 0
-> [ 1145.090450] iwlwifi 0000:03:00.0: Current SW read_ptr 142 write_ptr 143
-> [ 1145.110262] iwl data: 00000000: 90 3b 0d a2 00 88 ff ff 50 3b 0d a2
-> 00 88 ff ff  .;......P;......
-> [ 1145.130280] iwlwifi 0000:03:00.0: FH TRBs(0) = 0x5a5a5a5a
-> [ 1145.149994] iwlwifi 0000:03:00.0: FH TRBs(1) = 0x5a5a5a5a
-> [ 1145.169813] iwlwifi 0000:03:00.0: FH TRBs(2) = 0x5a5a5a5a
-> [ 1145.189419] iwlwifi 0000:03:00.0: FH TRBs(3) = 0x5a5a5a5a
-> [ 1145.208993] iwlwifi 0000:03:00.0: FH TRBs(4) = 0x5a5a5a5a
-> [ 1145.228552] iwlwifi 0000:03:00.0: FH TRBs(5) = 0x5a5a5a5a
-> [ 1145.248097] iwlwifi 0000:03:00.0: FH TRBs(6) = 0x5a5a5a5a
-> [ 1145.267558] iwlwifi 0000:03:00.0: FH TRBs(7) = 0x5a5a5a5a
->
+Hi,
 
-Just saw this:
+This patchset addresses two issues:
 
-[ 3030.922014] pci_pm_runtime_suspend():
-hcd_pci_runtime_suspend+0x0/0x50 returns -16
-[ 3116.219553] pci_pm_runtime_suspend():
-hcd_pci_runtime_suspend+0x0/0x50 returns -16
-[ 3208.606354] iwlwifi 0000:03:00.0: Error sending POWER_TABLE_CMD:
-time out after 2000ms.
+ * system/userspace starvation on heavy briding
+   UDP TX
+ * unstable/inconsistent UDP TX throughput
 
-can it be that the PCI subsystem gets confused after suspend resume?
+In short the patchset simplifies TX path by
+removing HTC TX workers, makes WMI commands block
+and makes ath10k more responsive to queues
+becoming full. This contributes to both improved
+throughput and makes the system more responsive
+under heavy UDP TX load.
+
+Max stable briding TX (ath10k as TX):
+ UDP w/o patchset: 520mbps
+ UDP w/  patchset: 570mbps
+
+ TCP w/o patchset: 350mbps
+ TCP w/  patchset: 400mbps
+
+Measured with two 2x2 cards, one acting as an AP
+on AP135 board, the other as a STA on a core i5
+laptop. The AP135 was passing traffic from a
+station on LAN/eth1 to the STA/wlan0.
+
+v2:
+ * use DIV_ROUND_UP
+ * comment usage of ath10k_wmi_tx_beacons_nowait
+ * additional check for tx_credits_flow_enabled
+
+
+Michal Kazior (7):
+  ath10k: simplify HTC credits calculation
+  ath10k: add HTC TX credits replenishing notification
+  ath10k: make WMI commands block by design
+  ath10k: simplify HTC command submitting
+  ath10k: improve beacon submission latency
+  ath10k: remove wmi pending count limit
+  ath10k: remove wmi event worker thread
+
+ drivers/net/wireless/ath/ath10k/core.h  |    7 +-
+ drivers/net/wireless/ath/ath10k/htc.c   |  215 +++++++------------------------
+ drivers/net/wireless/ath/ath10k/htc.h   |    5 +-
+ drivers/net/wireless/ath/ath10k/mac.c   |   16 +--
+ drivers/net/wireless/ath/ath10k/trace.h |   11 +-
+ drivers/net/wireless/ath/ath10k/wmi.c   |  201 ++++++++++++++---------------
+ drivers/net/wireless/ath/ath10k/wmi.h   |    5 +-
+ 7 files changed, 160 insertions(+), 300 deletions(-)
+
+-- 
+1.7.9.5
+
