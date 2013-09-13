@@ -1,104 +1,262 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f41.google.com ([209.85.219.41]:57626 "EHLO
-	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754063Ab3IZS0I (ORCPT
+Received: from mail-pb0-f51.google.com ([209.85.160.51]:38005 "EHLO
+	mail-pb0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755295Ab3IMXg2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Sep 2013 14:26:08 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH 5/7] rtlwifi: rtl8192ce: Convert driver to use new rtl_phy_scan_operation_backup() routine
-Date: Thu, 26 Sep 2013 13:25:31 -0500
-Message-Id: <1380219933-16784-6-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130926_202651_058188_25CDFBD3)
-In-Reply-To: <1380219933-16784-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1380219933-16784-1-git-send-email-Larry.Finger@lwfinger.net>
+	Fri, 13 Sep 2013 19:36:28 -0400
+Received: by mail-pb0-f51.google.com with SMTP id jt11so1839644pbb.10
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Sep 2013 16:36:27 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	devel@lists.open80211s.org, distro11s@cozybit.com,
+	Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+Subject: [PATCH 2/5] {nl,cfg,mac}80211: enable the triggering of CSA frame in mesh
+Date: Fri, 13 Sep 2013 16:36:09 -0700
+Message-Id: <1379115372-28426-3-git-send-email-yeohchunyeow@cozybit.com> (sfid-20130914_013631_920595_F127178F)
+In-Reply-To: <1379115372-28426-1-git-send-email-yeohchunyeow@cozybit.com>
+References: <1379115372-28426-1-git-send-email-yeohchunyeow@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Now that rtl_phy_scan_operation_backup() exists, convert rtl8192de to use it.
-Routine rtl92d_phy_scan_operation_backup() is no longer used and is removed.
+Allow the triggering of CSA frame using mesh interface. The
+rules are more or less same with IBSS, such as not allowed to
+change between the band and channel width has to be same from
+the previous mode. Also, move the ieee80211_send_action_csa
+to a common space so that it can be re-used by mesh interface.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
 ---
- drivers/net/wireless/rtlwifi/rtl8192de/phy.c | 28 ----------------------------
- drivers/net/wireless/rtlwifi/rtl8192de/phy.h |  1 -
- drivers/net/wireless/rtlwifi/rtl8192de/sw.c  |  3 ++-
- 3 files changed, 2 insertions(+), 30 deletions(-)
+ net/mac80211/cfg.c         |   19 ++++++++++
+ net/mac80211/ibss.c        |   54 ---------------------------
+ net/mac80211/ieee80211_i.h |    2 +
+ net/mac80211/util.c        |   88 ++++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/nl80211.c     |    1 +
+ 5 files changed, 110 insertions(+), 54 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/phy.c b/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
-index 840bac5..13196cc 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
-@@ -1022,34 +1022,6 @@ void rtl92d_phy_set_txpower_level(struct ieee80211_hw *hw, u8 channel)
- 	rtl92d_phy_rf6052_set_ofdm_txpower(hw, &ofdmpowerlevel[0], channel);
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index b455e72..438c689 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2907,6 +2907,7 @@ static int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_chanctx_conf *chanctx_conf;
+ 	struct ieee80211_chanctx *chanctx;
++	struct ieee80211_if_mesh *ifmsh;
+ 	int err, num_chanctx;
+ 
+ 	if (!list_empty(&local->roc_list) || local->scanning)
+@@ -2990,6 +2991,24 @@ static int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 		if (err < 0)
+ 			return err;
+ 		break;
++	case NL80211_IFTYPE_MESH_POINT:
++		ifmsh = &sdata->u.mesh;
++
++		if (!ifmsh->mesh_id)
++			return -EINVAL;
++
++		if (params->chandef.width != sdata->vif.bss_conf.chandef.width)
++			return -EINVAL;
++
++		/* changes into another band are not supported */
++		if (sdata->vif.bss_conf.chandef.chan->band !=
++		    params->chandef.chan->band)
++			return -EINVAL;
++
++		err = ieee80211_send_action_csa(sdata, params);
++		if (err < 0)
++			return err;
++		break;
+ 	default:
+ 		return -EOPNOTSUPP;
+ 	}
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 5ea9b3a..017e206 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -428,60 +428,6 @@ static void ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 				  tsf, false);
  }
  
--void rtl92d_phy_scan_operation_backup(struct ieee80211_hw *hw, u8 operation)
+-static int ieee80211_send_action_csa(struct ieee80211_sub_if_data *sdata,
+-				     struct cfg80211_csa_settings *csa_settings)
 -{
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
--	enum io_type iotype;
+-	struct sk_buff *skb;
+-	struct ieee80211_mgmt *mgmt;
+-	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
+-	struct ieee80211_local *local = sdata->local;
+-	int freq;
+-	int hdr_len = offsetof(struct ieee80211_mgmt, u.action.u.chan_switch) +
+-		      sizeof(mgmt->u.action.u.chan_switch);
+-	u8 *pos;
 -
--	if (!is_hal_stop(rtlhal)) {
--		switch (operation) {
--		case SCAN_OPT_BACKUP:
--			rtlhal->current_bandtypebackup =
--						 rtlhal->current_bandtype;
--			iotype = IO_CMD_PAUSE_DM_BY_SCAN;
--			rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_IO_CMD,
--						      (u8 *)&iotype);
--			break;
--		case SCAN_OPT_RESTORE:
--			iotype = IO_CMD_RESUME_DM_BY_SCAN;
--			rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_IO_CMD,
--						      (u8 *)&iotype);
--			break;
--		default:
--			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "Unknown Scan Backup operation\n");
--			break;
--		}
+-	skb = dev_alloc_skb(local->tx_headroom + hdr_len +
+-			    5 +	/* channel switch announcement element */
+-			    3);	/* secondary channel offset element */
+-	if (!skb)
+-		return -1;
+-
+-	skb_reserve(skb, local->tx_headroom);
+-	mgmt = (struct ieee80211_mgmt *)skb_put(skb, hdr_len);
+-	memset(mgmt, 0, hdr_len);
+-	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
+-					  IEEE80211_STYPE_ACTION);
+-
+-	eth_broadcast_addr(mgmt->da);
+-	memcpy(mgmt->sa, sdata->vif.addr, ETH_ALEN);
+-	memcpy(mgmt->bssid, ifibss->bssid, ETH_ALEN);
+-	mgmt->u.action.category = WLAN_CATEGORY_SPECTRUM_MGMT;
+-	mgmt->u.action.u.chan_switch.action_code = WLAN_ACTION_SPCT_CHL_SWITCH;
+-	pos = skb_put(skb, 5);
+-	*pos++ = WLAN_EID_CHANNEL_SWITCH;			/* EID */
+-	*pos++ = 3;						/* IE length */
+-	*pos++ = csa_settings->block_tx ? 1 : 0;		/* CSA mode */
+-	freq = csa_settings->chandef.chan->center_freq;
+-	*pos++ = ieee80211_frequency_to_channel(freq);		/* channel */
+-	*pos++ = csa_settings->count;				/* count */
+-
+-	if (csa_settings->chandef.width == NL80211_CHAN_WIDTH_40) {
+-		enum nl80211_channel_type ch_type;
+-
+-		skb_put(skb, 3);
+-		*pos++ = WLAN_EID_SECONDARY_CHANNEL_OFFSET;	/* EID */
+-		*pos++ = 1;					/* IE length */
+-		ch_type = cfg80211_get_chandef_type(&csa_settings->chandef);
+-		if (ch_type == NL80211_CHAN_HT40PLUS)
+-			*pos++ = IEEE80211_HT_PARAM_CHA_SEC_ABOVE;
+-		else
+-			*pos++ = IEEE80211_HT_PARAM_CHA_SEC_BELOW;
 -	}
+-
+-	ieee80211_tx_skb(sdata, skb);
+-	return 0;
 -}
 -
- void rtl92d_phy_set_bw_mode(struct ieee80211_hw *hw,
- 			    enum nl80211_channel_type ch_type)
+ int ieee80211_ibss_csa_beacon(struct ieee80211_sub_if_data *sdata,
+ 			      struct cfg80211_csa_settings *csa_settings)
  {
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/phy.h b/drivers/net/wireless/rtlwifi/rtl8192de/phy.h
-index 8f07606..33df0d1c 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/phy.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/phy.h
-@@ -139,7 +139,6 @@ bool rtl92c_phy_config_rf_with_feaderfile(struct ieee80211_hw *hw,
- 					  enum radio_path rfpath);
- void rtl92d_phy_get_hw_reg_originalvalue(struct ieee80211_hw *hw);
- void rtl92d_phy_set_txpower_level(struct ieee80211_hw *hw, u8 channel);
--void rtl92d_phy_scan_operation_backup(struct ieee80211_hw *hw, u8 operation);
- void rtl92d_phy_set_bw_mode(struct ieee80211_hw *hw,
- 			    enum nl80211_channel_type ch_type);
- u8 rtl92d_phy_sw_chnl(struct ieee80211_hw *hw);
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/sw.c b/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
-index c18c04b..edab5a5 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
-@@ -30,6 +30,7 @@
- #include "../wifi.h"
- #include "../core.h"
- #include "../pci.h"
-+#include "../base.h"
- #include "reg.h"
- #include "def.h"
- #include "phy.h"
-@@ -236,7 +237,7 @@ static struct rtl_hal_ops rtl8192de_hal_ops = {
- 	.set_bw_mode = rtl92d_phy_set_bw_mode,
- 	.switch_channel = rtl92d_phy_sw_chnl,
- 	.dm_watchdog = rtl92d_dm_watchdog,
--	.scan_operation_backup = rtl92d_phy_scan_operation_backup,
-+	.scan_operation_backup = rtl_phy_scan_operation_backup,
- 	.set_rf_power_state = rtl92d_phy_set_rf_power_state,
- 	.led_control = rtl92de_led_control,
- 	.set_desc = rtl92de_set_desc,
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 7f13b65..829ff7e 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1714,6 +1714,8 @@ void ieee80211_dfs_cac_timer(unsigned long data);
+ void ieee80211_dfs_cac_timer_work(struct work_struct *work);
+ void ieee80211_dfs_cac_cancel(struct ieee80211_local *local);
+ void ieee80211_dfs_radar_detected_work(struct work_struct *work);
++int ieee80211_send_action_csa(struct ieee80211_sub_if_data *sdata,
++			      struct cfg80211_csa_settings *csa_settings);
+ 
+ #ifdef CONFIG_MAC80211_NOINLINE
+ #define debug_noinline noinline
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 133667c..c013cc4 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2361,3 +2361,91 @@ u32 ieee80211_chandef_downgrade(struct cfg80211_chan_def *c)
+ 
+ 	return ret;
+ }
++
++int ieee80211_send_action_csa(struct ieee80211_sub_if_data *sdata,
++			      struct cfg80211_csa_settings *csa_settings)
++{
++	struct sk_buff *skb;
++	struct ieee80211_mgmt *mgmt;
++	struct ieee80211_local *local = sdata->local;
++	int freq;
++	int hdr_len = offsetof(struct ieee80211_mgmt, u.action.u.chan_switch) +
++			       sizeof(mgmt->u.action.u.chan_switch);
++	u8 *pos;
++
++	if (sdata->vif.type != NL80211_IFTYPE_ADHOC &&
++	    sdata->vif.type != NL80211_IFTYPE_MESH_POINT)
++		return -EOPNOTSUPP;
++
++	skb = dev_alloc_skb(local->tx_headroom + hdr_len +
++			    5 + /* channel switch announcement element */
++			    3 + /* secondary channel offset element */
++			    8); /* mesh channel switch parameters element */
++	if (!skb)
++		return -1;
++
++	skb_reserve(skb, local->tx_headroom);
++	mgmt = (struct ieee80211_mgmt *)skb_put(skb, hdr_len);
++	memset(mgmt, 0, hdr_len);
++	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
++					  IEEE80211_STYPE_ACTION);
++
++	eth_broadcast_addr(mgmt->da);
++	memcpy(mgmt->sa, sdata->vif.addr, ETH_ALEN);
++	if (ieee80211_vif_is_mesh(&sdata->vif)) {
++		memcpy(mgmt->bssid, sdata->vif.addr, ETH_ALEN);
++	} else {
++		struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
++		memcpy(mgmt->bssid, ifibss->bssid, ETH_ALEN);
++	}
++	mgmt->u.action.category = WLAN_CATEGORY_SPECTRUM_MGMT;
++	mgmt->u.action.u.chan_switch.action_code = WLAN_ACTION_SPCT_CHL_SWITCH;
++	pos = skb_put(skb, 5);
++	*pos++ = WLAN_EID_CHANNEL_SWITCH;			/* EID */
++	*pos++ = 3;						/* IE length */
++	*pos++ = csa_settings->block_tx ? 1 : 0;		/* CSA mode */
++	freq = csa_settings->chandef.chan->center_freq;
++	*pos++ = ieee80211_frequency_to_channel(freq);		/* channel */
++	*pos++ = csa_settings->count;				/* count */
++
++	if (csa_settings->chandef.width == NL80211_CHAN_WIDTH_40) {
++		enum nl80211_channel_type ch_type;
++
++		skb_put(skb, 3);
++		*pos++ = WLAN_EID_SECONDARY_CHANNEL_OFFSET;	/* EID */
++		*pos++ = 1;					/* IE length */
++		ch_type = cfg80211_get_chandef_type(&csa_settings->chandef);
++		if (ch_type == NL80211_CHAN_HT40PLUS)
++			*pos++ = IEEE80211_HT_PARAM_CHA_SEC_ABOVE;
++		else
++			*pos++ = IEEE80211_HT_PARAM_CHA_SEC_BELOW;
++	}
++
++	if (ieee80211_vif_is_mesh(&sdata->vif)) {
++		struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
++		__le16 pre_value;
++
++		skb_put(skb, 8);
++		*pos++ = WLAN_EID_CHAN_SWITCH_PARAM;		/* EID */
++		*pos++ = 6;					/* IE length */
++		*pos++ = sdata->u.mesh.mshcfg.dot11MeshTTL;	/* Mesh TTL */
++		*pos = 0x00;	/* Mesh Flag: Tx Restrict, Initiator, Reason */
++		*pos |= WLAN_EID_CHAN_SWITCH_PARAM_INITIATOR;
++		*pos++ |= csa_settings->block_tx ?
++			  WLAN_EID_CHAN_SWITCH_PARAM_TX_RESTRICT : 0x00;
++		put_unaligned_le16(WLAN_REASON_MESH_CHAN, pos); /* Reason Cd */
++		pos += 2;
++		if (!ifmsh->pre_value)
++			ifmsh->pre_value = 1;
++		else
++			ifmsh->pre_value++;
++		pre_value = cpu_to_le16(ifmsh->pre_value);
++		memcpy(pos, &pre_value, 2);		/* Precedence Value */
++		pos += 2;
++		ifmsh->chsw_init = true;
++	}
++
++	ieee80211_tx_skb(sdata, skb);
++	return 0;
++}
++
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index da8de5b..7bb5aca 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5650,6 +5650,7 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
+ 			return -EINVAL;
+ 		break;
+ 	case NL80211_IFTYPE_ADHOC:
++	case NL80211_IFTYPE_MESH_POINT:
+ 		break;
+ 	default:
+ 		return -EOPNOTSUPP;
 -- 
-1.8.1.4
+1.7.9.5
 
