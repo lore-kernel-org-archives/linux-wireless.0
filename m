@@ -1,84 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:57523 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755092Ab3IKQE1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Sep 2013 12:04:27 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
+Received: from mx1.redhat.com ([209.132.183.28]:7028 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752047Ab3IMKiN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Sep 2013 06:38:13 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: ilw@linux.intel.com
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/3 v2] ath9k: Handle abnormal NAV in AP mode
-Date: Wed, 11 Sep 2013 21:30:27 +0530
-Message-Id: <1378915227-23095-1-git-send-email-sujith@msujith.org> (sfid-20130911_180430_855515_474FA7C9)
-In-Reply-To: <1378879859-32290-1-git-send-email-sujith@msujith.org>
-References: <1378879859-32290-1-git-send-email-sujith@msujith.org>
+Subject: [RFC 5/5] iwlwifi: quiesce mac80211 before fw restart
+Date: Fri, 13 Sep 2013 12:36:08 +0200
+Message-Id: <1379068568-27552-6-git-send-email-sgruszka@redhat.com> (sfid-20130913_123824_651068_C34AF372)
+In-Reply-To: <1379068568-27552-1-git-send-email-sgruszka@redhat.com>
+References: <1379068568-27552-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-
-Beacon transmission would get stuck if the NAV is
-an invalid value for some reason. Check and correct
-the NAV value in the HW when this happens.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
-v2 - Use AR_NAV macro instead of the register address.
+ drivers/net/wireless/iwlwifi/dvm/mac80211.c | 1 +
+ drivers/net/wireless/iwlwifi/dvm/main.c     | 4 +++-
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
- drivers/net/wireless/ath/ath9k/beacon.c |  2 ++
- drivers/net/wireless/ath/ath9k/hw.c     | 13 +++++++++++++
- drivers/net/wireless/ath/ath9k/hw.h     |  1 +
- 3 files changed, 16 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index b5c16b3a..17be353 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -334,6 +334,8 @@ void ath9k_beacon_tasklet(unsigned long data)
- 	if (ath9k_hw_numtxpending(ah, sc->beacon.beaconq) != 0) {
- 		sc->beacon.bmisscnt++;
+diff --git a/drivers/net/wireless/iwlwifi/dvm/mac80211.c b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+index cae4d31..e819e5b 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+@@ -393,6 +393,7 @@ static int iwlagn_mac_suspend(struct ieee80211_hw *hw,
  
-+		ath9k_hw_check_nav(ah);
-+
- 		if (!ath9k_hw_check_alive(ah))
- 			ieee80211_queue_work(sc->hw, &sc->hw_check_work);
+  error:
+ 	priv->wowlan = false;
++	ieee80211_quiesce(priv->hw);
+ 	iwlagn_prepare_restart(priv);
+ 	ieee80211_restart_hw(priv->hw);
+  out:
+diff --git a/drivers/net/wireless/iwlwifi/dvm/main.c b/drivers/net/wireless/iwlwifi/dvm/main.c
+index 7aad766..2e0fbea 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/main.c
++++ b/drivers/net/wireless/iwlwifi/dvm/main.c
+@@ -975,10 +975,12 @@ static void iwl_bg_restart(struct work_struct *data)
+ 		return;
  
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 260e0c6..11ed897 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1656,6 +1656,19 @@ hang_check_iter:
- 	return true;
- }
- 
-+void ath9k_hw_check_nav(struct ath_hw *ah)
-+{
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	u32 val;
-+
-+	val = REG_READ(ah, AR_NAV);
-+	if (val != 0xdeadbeef && val > 0x7fff) {
-+		ath_dbg(common, BSTUCK, "Abnormal NAV: 0x%x\n", val);
-+		REG_WRITE(ah, AR_NAV, 0);
-+	}
-+}
-+EXPORT_SYMBOL(ath9k_hw_check_nav);
-+
- bool ath9k_hw_check_alive(struct ath_hw *ah)
- {
- 	int count = 50;
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 88f67c3..8e1c675 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -1031,6 +1031,7 @@ void ath9k_hw_set11nmac2040(struct ath_hw *ah);
- void ath9k_hw_beaconinit(struct ath_hw *ah, u32 next_beacon, u32 beacon_period);
- void ath9k_hw_set_sta_beacon_timers(struct ath_hw *ah,
- 				    const struct ath9k_beacon_state *bs);
-+void ath9k_hw_check_nav(struct ath_hw *ah);
- bool ath9k_hw_check_alive(struct ath_hw *ah);
- 
- bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode);
+ 	if (test_and_clear_bit(STATUS_FW_ERROR, &priv->status)) {
++		iwl_cancel_deferred_work(priv);
++		if (priv->mac80211_registered)
++			ieee80211_quiesce(priv->hw);
+ 		mutex_lock(&priv->mutex);
+ 		iwlagn_prepare_restart(priv);
+ 		mutex_unlock(&priv->mutex);
+-		iwl_cancel_deferred_work(priv);
+ 		if (priv->mac80211_registered)
+ 			ieee80211_restart_hw(priv->hw);
+ 		else
 -- 
-1.8.4
+1.8.3.1
 
