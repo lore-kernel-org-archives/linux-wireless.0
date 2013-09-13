@@ -1,81 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f42.google.com ([209.85.214.42]:44906 "EHLO
-	mail-bk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755099Ab3IYKj6 convert rfc822-to-8bit (ORCPT
+Received: from mail-pb0-f52.google.com ([209.85.160.52]:40612 "EHLO
+	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755295Ab3IMXga (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Sep 2013 06:39:58 -0400
-Received: by mail-bk0-f42.google.com with SMTP id my10so2254144bkb.29
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Sep 2013 03:39:57 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1380101891-18312-13-git-send-email-bartosz.markowski@tieto.com>
-References: <1380101891-18312-1-git-send-email-bartosz.markowski@tieto.com>
-	<1380101891-18312-13-git-send-email-bartosz.markowski@tieto.com>
-Date: Wed, 25 Sep 2013 12:39:57 +0200
-Message-ID: <CA+BoTQndK8X==vsCJ0d3dwKc-6wAQyT2j138tnZxtOzw9siK+g@mail.gmail.com> (sfid-20130925_124001_968453_CABACD0D)
-Subject: Re: [PATCH 12/13] ath10k: introduce dynamic pdev parameters
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Bartosz Markowski <bartosz.markowski@tieto.com>
-Cc: ath10k@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 13 Sep 2013 19:36:30 -0400
+Received: by mail-pb0-f52.google.com with SMTP id wz12so1819309pbc.25
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Sep 2013 16:36:30 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	devel@lists.open80211s.org, distro11s@cozybit.com,
+	Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+Subject: [PATCH 3/5] mac80211: adding the CSA and MCSP elements in mesh beaconing
+Date: Fri, 13 Sep 2013 16:36:10 -0700
+Message-Id: <1379115372-28426-4-git-send-email-yeohchunyeow@cozybit.com> (sfid-20130914_013633_891430_ED0C217A)
+In-Reply-To: <1379115372-28426-1-git-send-email-yeohchunyeow@cozybit.com>
+References: <1379115372-28426-1-git-send-email-yeohchunyeow@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 25 September 2013 11:38, Bartosz Markowski
-<bartosz.markowski@tieto.com> wrote:
-> +struct wmi_pdev_param_map {
-> +       u32 wmi_pdev_param_tx_chain_mask;
-> +       u32 wmi_pdev_param_rx_chain_mask;
-> +       u32 wmi_pdev_param_txpower_limit2g;
-> +       u32 wmi_pdev_param_txpower_limit5g;
-> +       u32 wmi_pdev_param_txpower_scale;
-> +       u32 wmi_pdev_param_beacon_gen_mode;
-> +       u32 wmi_pdev_param_beacon_tx_mode;
-> +       u32 wmi_pdev_param_resmgr_offchan_mode;
-> +       u32 wmi_pdev_param_protection_mode;
-> +       u32 wmi_pdev_param_dynamic_bw;
-> +       u32 wmi_pdev_param_non_agg_sw_retry_th;
-> +       u32 wmi_pdev_param_agg_sw_retry_th;
-> +       u32 wmi_pdev_param_sta_kickout_th;
-> +       u32 wmi_pdev_param_ac_aggrsize_scaling;
-> +       u32 wmi_pdev_param_ltr_enable;
-> +       u32 wmi_pdev_param_ltr_ac_latency_be;
-> +       u32 wmi_pdev_param_ltr_ac_latency_bk;
-> +       u32 wmi_pdev_param_ltr_ac_latency_vi;
-> +       u32 wmi_pdev_param_ltr_ac_latency_vo;
-> +       u32 wmi_pdev_param_ltr_ac_latency_timeout;
-> +       u32 wmi_pdev_param_ltr_sleep_override;
-> +       u32 wmi_pdev_param_ltr_rx_override;
-> +       u32 wmi_pdev_param_ltr_tx_activity_timeout;
-> +       u32 wmi_pdev_param_l1ss_enable;
-> +       u32 wmi_pdev_param_dsleep_enable;
-> +       u32 wmi_pdev_param_pcielp_txbuf_flush;
-> +       u32 wmi_pdev_param_pcielp_txbuf_watermark;
-> +       u32 wmi_pdev_param_pcielp_txbuf_tmo_en;
-> +       u32 wmi_pdev_param_pcielp_txbuf_tmo_value;
-> +       u32 wmi_pdev_param_pdev_stats_update_period;
-> +       u32 wmi_pdev_param_vdev_stats_update_period;
-> +       u32 wmi_pdev_param_peer_stats_update_period;
-> +       u32 wmi_pdev_param_bcnflt_stats_update_period;
-> +       u32 wmi_pdev_param_pmf_qos;
-> +       u32 wmi_pdev_param_arp_ac_override;
-> +       u32 wmi_pdev_param_arpdhcp_ac_override;
-> +       u32 wmi_pdev_param_dcs;
-> +       u32 wmi_pdev_param_ani_enable;
-> +       u32 wmi_pdev_param_ani_poll_period;
-> +       u32 wmi_pdev_param_ani_listen_period;
-> +       u32 wmi_pdev_param_ani_ofdm_level;
-> +       u32 wmi_pdev_param_ani_cck_level;
-> +       u32 wmi_pdev_param_dyntxchain;
-> +       u32 wmi_pdev_param_proxy_sta;
-> +       u32 wmi_pdev_param_idle_ps_config;
-> +       u32 wmi_pdev_param_power_gating_sleep;
-> +       u32 wmi_pdev_param_fast_channel_reset;
-> +       u32 wmi_pdev_param_burst_dur;
-> +       u32 wmi_pdev_param_burst_enable;
+Support the adding of CSA and MCSP elements while building the beacon
+for mesh if necessary. This is defined in the IEEE Std 802.11-2012
+section 10.9.8.4.3 that both CSA and MCSP elements must be included
+in beacon and probe response frames until the intended channel
+switch time.
 
-Same as per vdev_param patch. I think there's no need for the
-extraneous `wmi_pdev_param_`.
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+---
+ net/mac80211/ieee80211_i.h |    2 ++
+ net/mac80211/mesh.c        |   35 +++++++++++++++++++++++++++++++++++
+ 2 files changed, 37 insertions(+)
 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 829ff7e..f10907f 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -599,7 +599,9 @@ struct ieee80211_if_mesh {
+ 	int ps_peers_deep_sleep;
+ 	struct ps_data ps;
+ 	/* Channel Switching Support */
++	struct cfg80211_csa_settings *csa_settings;
+ 	bool chsw_init;
++	u8 chsw_ttl;
+ 	u16 pre_value;
+ };
+ 
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 308ef98..a839ab9 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -624,6 +624,10 @@ ieee80211_mesh_build_beacon(struct ieee80211_if_mesh *ifmsh)
+ 
+ 	head_len = hdr_len +
+ 		   2 + /* NULL SSID */
++		   /* Channel Switch Announcement */
++		   2 + sizeof(struct ieee80211_channel_sw_ie) +
++		   /* Mesh Channel Swith Parameters */
++		   2 + sizeof(struct ieee80211_mesh_chansw_params_ie) +
+ 		   2 + 8 + /* supported rates */
+ 		   2 + 3; /* DS params */
+ 	tail_len = 2 + (IEEE80211_MAX_SUPP_RATES - 8) +
+@@ -665,6 +669,36 @@ ieee80211_mesh_build_beacon(struct ieee80211_if_mesh *ifmsh)
+ 	*pos++ = WLAN_EID_SSID;
+ 	*pos++ = 0x0;
+ 
++	if (ifmsh->csa_settings) {
++		struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
++		__le16 pre_value;
++
++		pos = skb_put(skb, 13);
++		memset(pos, 0, 13);
++		*pos++ = WLAN_EID_CHANNEL_SWITCH;
++		*pos++ = 3;
++		*pos++ = 0x0;
++		*pos++ = ieee80211_frequency_to_channel(
++				ifmsh->csa_settings->chandef.chan->center_freq);
++		sdata->csa_counter_offset_beacon = hdr_len + 6;
++		*pos++ = ifmsh->csa_settings->count;
++		*pos++ = WLAN_EID_CHAN_SWITCH_PARAM;
++		*pos++ = 6;
++		if (ifmsh->chsw_init) {
++			*pos++ = ifmsh->mshcfg.dot11MeshTTL;
++			*pos |= WLAN_EID_CHAN_SWITCH_PARAM_INITIATOR;
++		} else {
++			*pos++ = ifmsh->chsw_ttl;
++		}
++		*pos++ |= ifmsh->csa_settings->block_tx ?
++			  WLAN_EID_CHAN_SWITCH_PARAM_TX_RESTRICT : 0x00;
++		put_unaligned_le16(WLAN_REASON_MESH_CHAN, pos);
++		pos += 2;
++		pre_value = cpu_to_le16(ifmsh->pre_value);
++		memcpy(pos, &pre_value, 2);
++		pos += 2;
++	}
++
+ 	if (ieee80211_add_srates_ie(sdata, skb, true, band) ||
+ 	    mesh_add_ds_params_ie(sdata, skb))
+ 		goto out_free;
+@@ -942,6 +976,7 @@ static int mesh_fwd_csa_frame(struct ieee80211_sub_if_data *sdata,
+ 	offset_ttl = (len < 42) ? 7 : 10;
+ 	*(pos + offset_ttl) -= 1;
+ 	*(pos + offset_ttl + 1) &= ~WLAN_EID_CHAN_SWITCH_PARAM_INITIATOR;
++	sdata->u.mesh.chsw_ttl = *(pos + offset_ttl);
+ 
+ 	memcpy(mgmt_fwd, mgmt, len);
+ 	eth_broadcast_addr(mgmt_fwd->da);
+-- 
+1.7.9.5
 
-Michał.
