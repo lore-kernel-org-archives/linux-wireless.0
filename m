@@ -1,43 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:54237 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751907Ab3IQKF0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Sep 2013 06:05:26 -0400
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-pd0-f175.google.com ([209.85.192.175]:56458 "EHLO
+	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755295Ab3IMXgY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Sep 2013 19:36:24 -0400
+Received: by mail-pd0-f175.google.com with SMTP id q10so1847854pdj.6
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Sep 2013 16:36:24 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Subject: [PATCH 3.12] ath9k: don't use BAW tracking on PS responses for non-AMPDU packets
-Date: Tue, 17 Sep 2013 12:05:15 +0200
-Message-Id: <1379412315-85130-1-git-send-email-nbd@openwrt.org> (sfid-20130917_120529_765660_4481D02E)
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	devel@lists.open80211s.org, distro11s@cozybit.com,
+	Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+Subject: [PATCH 0/5] Add Mesh Channel Switch Support
+Date: Fri, 13 Sep 2013 16:36:07 -0700
+Message-Id: <1379115372-28426-1-git-send-email-yeohchunyeow@cozybit.com> (sfid-20130914_013628_869968_DA230C8D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When .release_buffered_frames was implemented, only A-MPDU packets were
-buffered internally. Now that this has changed, the BUF_AMPDU flag needs
-to be checked before calling ath_tx_addto_baw
+These are the patches required to support Mesh Basic Service Set (MBSS)
+channel switch.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/xmit.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+The design is more or less same with the IBSS. Additional procedures
+or elements that are required for mesh operation are as follow:
+ * Add additional information element (IE) known as Mesh Channel Switch
+   Parameters (MCSP) required in CSA action, beacon and probe response 
+   frames.
+ * Forwarding of CSA frame if the conditions defined in the standard 
+   are met.
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 5849960..9b3736e 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1556,8 +1556,10 @@ void ath9k_release_buffered_frames(struct ieee80211_hw *hw,
- 			__skb_unlink(bf->bf_mpdu, tid_q);
- 			list_add_tail(&bf->list, &bf_q);
- 			ath_set_rates(tid->an->vif, tid->an->sta, bf);
--			ath_tx_addto_baw(sc, tid, bf);
--			bf->bf_state.bf_type &= ~BUF_AGGR;
-+			if (bf_isampdu(bf)) {
-+				ath_tx_addto_baw(sc, tid, bf);
-+				bf->bf_state.bf_type &= ~BUF_AGGR;
-+			}
- 			if (bf_tail)
- 				bf_tail->bf_next = bf;
- 
+Limitations:
+ * Channel switch is only allow for the same band and also same channel
+   width from the previous setting.
+
+These patches are reviewed and commented by Bob Copeland and Thomas 
+Pedersen. Any further comments are welcomed.
+
+Chun-Yeow Yeoh (5):
+  mac80211: process the CSA frame for mesh accordingly
+  {nl,cfg,mac}80211: enable the triggering of CSA frame in mesh
+  mac80211: adding the CSA and MCSP elements in mesh beaconing
+  {nl,cfg,mac}80211: finalizing mesh channel switching
+  mac80211: process mesh channel switching using beacon
+
+ include/linux/ieee80211.h  |   20 ++++
+ net/mac80211/Kconfig       |   11 ++
+ net/mac80211/cfg.c         |   24 ++++
+ net/mac80211/debug.h       |   10 ++
+ net/mac80211/ibss.c        |   58 +--------
+ net/mac80211/ieee80211_i.h |   14 +++
+ net/mac80211/mesh.c        |  284 +++++++++++++++++++++++++++++++++++++++++++-
+ net/mac80211/mlme.c        |    4 +-
+ net/mac80211/rx.c          |    5 +-
+ net/mac80211/spectmgmt.c   |    8 +-
+ net/mac80211/tx.c          |   16 +++
+ net/mac80211/util.c        |   97 +++++++++++++++
+ net/wireless/nl80211.c     |    4 +-
+ 13 files changed, 491 insertions(+), 64 deletions(-)
+
 -- 
-1.8.0.2
+1.7.9.5
 
