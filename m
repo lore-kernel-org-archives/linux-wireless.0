@@ -1,60 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:41035 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752197Ab3IQLXA (ORCPT
+Received: from mail-ob0-f177.google.com ([209.85.214.177]:47663 "EHLO
+	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753933Ab3IMRpX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Sep 2013 07:23:00 -0400
-Received: by mail-ie0-f169.google.com with SMTP id tp5so10155836ieb.28
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Sep 2013 04:22:58 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1379396919-11983-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1379396919-11983-1-git-send-email-emmanuel.grumbach@intel.com>
-Date: Tue, 17 Sep 2013 13:22:58 +0200
-Message-ID: <CAB3XZEc-h=mS-etjvm_zeJ2czsLj9yseq+jpsXOR=smy5+7Rdg@mail.gmail.com> (sfid-20130917_132304_653078_A3E89CF8)
-Subject: Re: [RFC] mac80211: correctly close cancelled scans
-From: Eliad Peller <eliad@wizery.com>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 13 Sep 2013 13:45:23 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 6/7] rtlwifi: Fix smatch warnings in usb.c
+Date: Fri, 13 Sep 2013 12:45:03 -0500
+Message-Id: <1379094304-22041-7-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130913_194551_056447_AE484B34)
+In-Reply-To: <1379094304-22041-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1379094304-22041-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 17, 2013 at 8:48 AM, Emmanuel Grumbach
-<emmanuel.grumbach@intel.com> wrote:
-> __ieee80211_scan_completed is called from a worker. This
-> means that the following flow is possible.
->
->  * driver calls ieee80211_scan_completed
->  * mac80211 cancels the scan (that is already complete)
->  * __ieee80211_scan_complete runs
->
-> When scan_work will finally run, it will see that the scan
-> hasn't been aborted and might even trigger another scan on
-> another band. This leads to a situation where cfg80211's
-> scan is not done and no further scan can be issued.
->
-> Fix this by setting a new flag when a HW scan is being
-> cancelled so that no other scan will be triggered.
->
-> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> ---
-[...]
+Smatch displays the following:
+  CHECK   drivers/net/wireless/rtlwifi/usb.c
+drivers/net/wireless/rtlwifi/usb.c:458 _rtl_usb_rx_process_agg() warn: assigning (-98) to unsigned variable 'stats.noise'
+drivers/net/wireless/rtlwifi/usb.c:503 _rtl_usb_rx_process_noagg() warn: assigning (-98) to unsigned variable 'stats.noise'
+drivers/net/wireless/rtlwifi/usb.c:596 _rtl_rx_get_padding() info: ignoring unreachable code.
+drivers/net/wireless/rtlwifi/usb.c:596 _rtl_rx_get_padding() info: ignoring unreachable code.
 
->         if (test_bit(SCAN_HW_SCANNING, &local->scanning)) {
-> -               if (local->ops->cancel_hw_scan)
-> +               /*
-> +                * Make sure that __ieee80211_scan_completed doesn't trigger a
-> +                * scan on another band.
-> +                */
-> +               set_bit(SCAN_HW_CANCELLED, &local->scanning);
-> +               if (local->ops->cancel_hw_scan) {
->                         drv_cancel_hw_scan(local,
->                                 rcu_dereference_protected(local->scan_sdata,
->                                                 lockdep_is_held(&local->mtx)));
-> +               }
->                 goto out;
->         }
+The negative number to an unsigned quantity is fixed by adding 256 to -98
+to get the equivalent negative number.
 
-you don't seem to clear this flag anywhere...
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/usb.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-Eliad.
+diff --git a/drivers/net/wireless/rtlwifi/usb.c b/drivers/net/wireless/rtlwifi/usb.c
+index e56778c..9f3dcb8 100644
+--- a/drivers/net/wireless/rtlwifi/usb.c
++++ b/drivers/net/wireless/rtlwifi/usb.c
+@@ -455,7 +455,7 @@ static void _rtl_usb_rx_process_agg(struct ieee80211_hw *hw,
+ 	struct ieee80211_rx_status rx_status = {0};
+ 	struct rtl_stats stats = {
+ 		.signal = 0,
+-		.noise = -98,
++		.noise = 158, /* -98 dBm */
+ 		.rate = 0,
+ 	};
+ 
+@@ -498,7 +498,7 @@ static void _rtl_usb_rx_process_noagg(struct ieee80211_hw *hw,
+ 	struct ieee80211_rx_status rx_status = {0};
+ 	struct rtl_stats stats = {
+ 		.signal = 0,
+-		.noise = -98,
++		.noise = 158, /* -98 dBm */
+ 		.rate = 0,
+ 	};
+ 
+@@ -582,12 +582,15 @@ static void _rtl_rx_work(unsigned long param)
+ static unsigned int _rtl_rx_get_padding(struct ieee80211_hdr *hdr,
+ 					unsigned int len)
+ {
++#if NET_IP_ALIGN != 0
+ 	unsigned int padding = 0;
++#endif
+ 
+ 	/* make function no-op when possible */
+-	if (NET_IP_ALIGN == 0 || len < sizeof(*hdr))
++	if (NET_IP_ALIGN == 0 || len < sizeof(struct ieee80211_hdr))
+ 		return 0;
+ 
++#if NET_IP_ALIGN != 0
+ 	/* alignment calculation as in lbtf_rx() / carl9170_rx_copy_data() */
+ 	/* TODO: deduplicate common code, define helper function instead? */
+ 
+@@ -608,6 +611,7 @@ static unsigned int _rtl_rx_get_padding(struct ieee80211_hdr *hdr,
+ 		padding ^= NET_IP_ALIGN;
+ 
+ 	return padding;
++#endif
+ }
+ 
+ #define __RADIO_TAP_SIZE_RSV	32
+-- 
+1.8.1.4
+
