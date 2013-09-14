@@ -1,72 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f53.google.com ([209.85.219.53]:59597 "EHLO
-	mail-oa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751043Ab3IPSzt (ORCPT
+Received: from mx-sanjose2.Cadence.COM ([158.140.2.61]:43879 "EHLO
+	mx-sanjose2.cadence.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751408Ab3ING2L convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Sep 2013 14:55:49 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH 4/8 V2] rtlwifi: rtl8192_common: Fix smatch errors and warnings in rtl8192c/dm_common.c
-Date: Mon, 16 Sep 2013 13:55:18 -0500
-Message-Id: <1379357722-17687-5-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130916_205600_384917_5894F53D)
-In-Reply-To: <1379357722-17687-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1379357722-17687-1-git-send-email-Larry.Finger@lwfinger.net>
+	Sat, 14 Sep 2013 02:28:11 -0400
+Received: from exowa05sj.global.cadence.com (sjmail.Cadence.COM [158.140.32.174])
+	by mx-sanjose2.cadence.com (8.14.4/8.14.4) with ESMTP id r8E5XQvT001536
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=FAIL)
+	for <linux-wireless@vger.kernel.org>; Fri, 13 Sep 2013 22:33:27 -0700 (PDT)
+From: Jason Andrews <jasona@cadence.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Fri, 13 Sep 2013 22:36:07 -0700
+Subject: guidance on struct alignment for rtl8192cu driver
+Message-ID: <985A2B0C3F73B74792F35D4098E1CA7CB143670E93@MAILSJ3.global.cadence.com> (sfid-20130914_082815_320137_4377D7D8)
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Smatch lists the following:
-  CHECK   drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c:551 rtl92c_dm_pwdb_monitor() info: ignoring unreachable code.
-drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c:551 rtl92c_dm_pwdb_monitor() info: ignoring unreachable code.
-drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c:870 rtl92c_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'txpwr_level' 2 <= 2
-drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c:870 rtl92c_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'txpwr_level' 2 <= 2
-drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c:882 rtl92c_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'txpwr_level' 2 <= 2
-drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c:883 rtl92c_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'txpwr_level' 2 <= 2
-drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c:891 rtl92c_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'txpwr_level' 2 <= 2
-drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c:892 rtl92c_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'txpwr_level' 2 <= 2
+I'm using an ASUS USB N13 on an ARM platform with the rtl8192cu driver.
+Linux kernel is 3.10 so I probably don't have the latest and greatest driver.
 
-The unreachable code message is fixed by commenting out the code that follows a return.
-The code is not deleted in case it is needed later.
+When I booted I got an ARM alignment trap caused by the driver.
 
-The errors are fixed by increasing the size of txpwr_level.
+I determined the cause was the 1st argument to spin_lock_irqsave() has an unaligned address.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+By trial-and-error I found that if I edit wifi.h and insert 2 dummy bytes into the rtl_priv struct just above priv (last variable) the locks work and the driver works fine.
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-index d2d57a2..0721756 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-@@ -541,6 +541,7 @@ EXPORT_SYMBOL(rtl92c_dm_write_dig);
- 
- static void rtl92c_dm_pwdb_monitor(struct ieee80211_hw *hw)
- {
-+/*
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	long tmpentry_max_pwdb = 0, tmpentry_min_pwdb = 0xff;
- 
-@@ -564,6 +565,7 @@ static void rtl92c_dm_pwdb_monitor(struct ieee80211_hw *hw)
- 	h2c_parameter[0] = 0;
- 
- 	rtl92c_fill_h2c_cmd(hw, H2C_RSSI_REPORT, 3, h2c_parameter);
-+ */
- }
- 
- void rtl92c_dm_init_edca_turbo(struct ieee80211_hw *hw)
-@@ -673,7 +675,7 @@ static void rtl92c_dm_txpower_tracking_callback_thermalmeter(struct ieee80211_hw
- 	s8 cck_index = 0;
- 	int i;
- 	bool is2t = IS_92C_SERIAL(rtlhal->version);
--	s8 txpwr_level[2] = {0, 0};
-+	s8 txpwr_level[3] = {0, 0, 0};
- 	u8 ofdm_min_index = 6, rf;
- 
- 	rtlpriv->dm.txpower_trackinginit = true;
--- 
-1.8.1.4
+What is the recommended way to make sure the last variable in the rtl_priv struct (u8 priv[0]) is aligned on a 4 byte boundary so the driver works on ARM machines?
+
+Regards,
+Jason
 
