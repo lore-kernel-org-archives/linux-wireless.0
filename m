@@ -1,148 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:51553 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753047Ab3IQPlq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Sep 2013 11:41:46 -0400
-Received: by mail-ee0-f46.google.com with SMTP id c13so2826631eek.33
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Sep 2013 08:41:45 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <luca@coelho.fi>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 09/11] wl18xx: fix boot process in high temperature environment
-Date: Tue, 17 Sep 2013 18:41:28 +0300
-Message-Id: <1379432490-22157-9-git-send-email-eliad@wizery.com> (sfid-20130917_174831_188397_2F416E7C)
-In-Reply-To: <1379432490-22157-1-git-send-email-eliad@wizery.com>
-References: <1379432490-22157-1-git-send-email-eliad@wizery.com>
+Received: from leit.jelmoni.net ([78.46.129.73]:36387 "EHLO leit.jelmoni.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932356Ab3INUtE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Sep 2013 16:49:04 -0400
+Received: from localhost (localhost.jelmoni.net [127.0.0.1])
+	by leit.jelmoni.net (Postfix) with ESMTP id 98D0F80D1
+	for <linux-wireless@vger.kernel.org>; Sat, 14 Sep 2013 22:39:24 +0200 (CEST)
+Received: from leit.jelmoni.net ([127.0.0.1])
+	by localhost (leit.jelmoni.net [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id 7-9A5GSh82oj for <linux-wireless@vger.kernel.org>;
+	Sat, 14 Sep 2013 22:39:24 +0200 (CEST)
+Received: from laptop-beat.swiss-wireless.com.ar (host194.190-229-210.telecom.net.ar [190.229.210.194])
+	(Authenticated sender: genauth@swiss-wireless.com.ar)
+	by leit.jelmoni.net (Postfix) with ESMTPSA id CC22F80D2
+	for <linux-wireless@vger.kernel.org>; Sat, 14 Sep 2013 22:39:23 +0200 (CEST)
+Message-ID: <5234C962.8010006@swiss-wireless.com.ar> (sfid-20130914_224908_768982_9AF52CB0)
+Date: Sat, 14 Sep 2013 17:38:58 -0300
+From: Beat Meier <mbe_ml@swiss-wireless.com.ar>
+MIME-Version: 1.0
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: mac80211 and kernel 3.8.13 1/2 speed as with madwifi and kernel 2.6.23
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Victor Goldenshtein <victorg@ti.com>
+Hello
 
-In addition to existing WCS PLL configuration add and enable
-also the coex PLL during init phase. This fixes boot failures
-due to silicon latchup in high temperature environment (>85c).
+I'm trying to use again mac driver instead of old madwifi driver for
+atheros cards.
+I have following problem.
+On Clients using mac80211 (wpa_supplicant) it's just fine but if you use
+it with hostapd you have about 1/2 speed
+as with madwifi. Problem could be also kernel<->wireless driver issue.
+With madwifi I'm using an old kernel 2.6.23 (voyage-0.5 distribution)
+and with mac80211 a new kernel 3.8.13 (voyage-0.9.1)
 
-Signed-off-by: Victor Goldenshtein <victorg@ti.com>
-Signed-off-by: Nadim Zubidat <nadimz@ti.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/ti/wl18xx/main.c | 53 +++++++++++++++++++++++++++++++++++
- drivers/net/wireless/ti/wl18xx/reg.h  | 13 +++++++++
- 2 files changed, 66 insertions(+)
+Example:
+5.5km 5.8GHz link 2xAlix board, 2xWLM54AGP23 card, 2x Hyperlink 27dbi
+grids, wireless card speed set to 24M
+to get max. signal on this cards...
+Signal on both sites is -60
 
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index 7aa0eb8..b47eb62 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -623,6 +623,18 @@ static const int wl18xx_rtable[REG_TABLE_LEN] = {
- 	[REG_RAW_FW_STATUS_ADDR]	= WL18XX_FW_STATUS_ADDR,
- };
- 
-+static const struct wl18xx_clk_cfg wl18xx_clk_table_coex[NUM_CLOCK_CONFIGS] = {
-+	[CLOCK_CONFIG_16_2_M]	= { 8,  121, 0, 0, false },
-+	[CLOCK_CONFIG_16_368_M]	= { 8,  120, 0, 0, false },
-+	[CLOCK_CONFIG_16_8_M]	= { 8,  117, 0, 0, false },
-+	[CLOCK_CONFIG_19_2_M]	= { 10, 128, 0, 0, false },
-+	[CLOCK_CONFIG_26_M]	= { 11, 104, 0, 0, false },
-+	[CLOCK_CONFIG_32_736_M]	= { 8,  120, 0, 0, false },
-+	[CLOCK_CONFIG_33_6_M]	= { 8,  117, 0, 0, false },
-+	[CLOCK_CONFIG_38_468_M]	= { 10, 128, 0, 0, false },
-+	[CLOCK_CONFIG_52_M]	= { 11, 104, 0, 0, false },
-+};
-+
- static const struct wl18xx_clk_cfg wl18xx_clk_table[NUM_CLOCK_CONFIGS] = {
- 	[CLOCK_CONFIG_16_2_M]	= { 7,  104,  801, 4,  true },
- 	[CLOCK_CONFIG_16_368_M]	= { 9,  132, 3751, 4,  true },
-@@ -704,6 +716,23 @@ static int wl18xx_set_clk(struct wl1271 *wl)
- 		     wl18xx_clk_table[clk_freq].p, wl18xx_clk_table[clk_freq].q,
- 		     wl18xx_clk_table[clk_freq].swallow ? "swallow" : "spit");
- 
-+	/* coex PLL configuration */
-+	ret = wl18xx_top_reg_write(wl, PLLSH_COEX_PLL_N,
-+				   wl18xx_clk_table_coex[clk_freq].n);
-+	if (ret < 0)
-+		goto out;
-+
-+	ret = wl18xx_top_reg_write(wl, PLLSH_COEX_PLL_M,
-+				   wl18xx_clk_table_coex[clk_freq].m);
-+	if (ret < 0)
-+		goto out;
-+
-+	/* bypass the swallowing logic */
-+	ret = wl18xx_top_reg_write(wl, PLLSH_COEX_PLL_SWALLOW_EN,
-+				   PLLSH_COEX_PLL_SWALLOW_EN_VAL1);
-+	if (ret < 0)
-+		goto out;
-+
- 	ret = wl18xx_top_reg_write(wl, PLLSH_WCS_PLL_N,
- 				   wl18xx_clk_table[clk_freq].n);
- 	if (ret < 0)
-@@ -745,6 +774,30 @@ static int wl18xx_set_clk(struct wl1271 *wl)
- 					   PLLSH_WCS_PLL_SWALLOW_EN_VAL2);
- 	}
- 
-+	/* choose WCS PLL */
-+	ret = wl18xx_top_reg_write(wl, PLLSH_WL_PLL_SEL,
-+				   PLLSH_WL_PLL_SEL_WCS_PLL);
-+	if (ret < 0)
-+		goto out;
-+
-+	/* enable both PLLs */
-+	ret = wl18xx_top_reg_write(wl, PLLSH_WL_PLL_EN, PLLSH_WL_PLL_EN_VAL1);
-+	if (ret < 0)
-+		goto out;
-+
-+	udelay(1000);
-+
-+	/* disable coex PLL */
-+	ret = wl18xx_top_reg_write(wl, PLLSH_WL_PLL_EN, PLLSH_WL_PLL_EN_VAL2);
-+	if (ret < 0)
-+		goto out;
-+
-+	/* reset the swallowing logic */
-+	ret = wl18xx_top_reg_write(wl, PLLSH_COEX_PLL_SWALLOW_EN,
-+				   PLLSH_COEX_PLL_SWALLOW_EN_VAL2);
-+	if (ret < 0)
-+		goto out;
-+
- out:
- 	return ret;
- }
-diff --git a/drivers/net/wireless/ti/wl18xx/reg.h b/drivers/net/wireless/ti/wl18xx/reg.h
-index 05dd8ba..88de3f2 100644
---- a/drivers/net/wireless/ti/wl18xx/reg.h
-+++ b/drivers/net/wireless/ti/wl18xx/reg.h
-@@ -114,6 +114,11 @@
- #define PLATFORM_DETECTION		0xA0E3E0
- #define OCS_EN				0xA02080
- #define PRIMARY_CLK_DETECT		0xA020A6
-+#define PLLSH_COEX_PLL_N		0xA02384
-+#define PLLSH_COEX_PLL_M		0xA02382
-+#define PLLSH_COEX_PLL_SWALLOW_EN	0xA0238E
-+#define PLLSH_WL_PLL_SEL		0xA02398
-+
- #define PLLSH_WCS_PLL_N			0xA02362
- #define PLLSH_WCS_PLL_M			0xA02360
- #define PLLSH_WCS_PLL_Q_FACTOR_CFG_1	0xA02364
-@@ -128,9 +133,17 @@
- #define PLLSH_WCS_PLL_P_FACTOR_CFG_1_MASK	0xFFFF
- #define PLLSH_WCS_PLL_P_FACTOR_CFG_2_MASK	0x000F
- 
-+#define PLLSH_WL_PLL_EN_VAL1		0x7
-+#define PLLSH_WL_PLL_EN_VAL2		0x2
-+#define PLLSH_COEX_PLL_SWALLOW_EN_VAL1	0x2
-+#define PLLSH_COEX_PLL_SWALLOW_EN_VAL2	0x11
-+
- #define PLLSH_WCS_PLL_SWALLOW_EN_VAL1	0x1
- #define PLLSH_WCS_PLL_SWALLOW_EN_VAL2	0x12
- 
-+#define PLLSH_WL_PLL_SEL_WCS_PLL	0x0
-+#define PLLSH_WL_PLL_SEL_COEX_PLL	0x1
-+
- #define WL18XX_REG_FUSE_DATA_1_3	0xA0260C
- #define WL18XX_PG_VER_MASK		0x70
- #define WL18XX_PG_VER_OFFSET		4
--- 
-1.8.3.rc1.35.g9b79519
+With madwifi driver on both site you get 12.8Mbps/14.5Mbps download/upload
+madwifi driver on server, mac80211 on client you still get 13.4/13.8Mbps
+BUT if you use mac80211 on ap master mode with hostap you get only
+7Mbps/5.5Mbps.
+Tried all 4 constellation (old/new, new/old, new/new and old/old) and
+the issue is only
+if the hostapt is running with new kernel/mac80211
 
+Same stuff on other links with other cards like CM9.
+
+What I have seen is that with madwifi driver the cpu is 90-100% cpu
+usage with ksoftirqd
+with mac80211 not...
+Could this be a kernel interrupt issue? Are there several policies which
+changed with kernel?
+
+Anyone having same issue?
+
+Greetings and thanks
