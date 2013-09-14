@@ -1,135 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:44339 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755344Ab3I3Qso (ORCPT
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:45652 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756335Ab3INOIi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Sep 2013 12:48:44 -0400
-Date: Mon, 30 Sep 2013 18:48:40 +0200
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	mcgrof@qca.qualcomm.com, simon.wunderlich@s2003.tu-chemnitz.de
-Subject: Re: [RFC] ath9k: add HT40 spectral scan capability
-Message-ID: <20130930164840.GB15780@pandem0nium> (sfid-20130930_184847_884833_F2E002D3)
-References: <1380206258-16452-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	Sat, 14 Sep 2013 10:08:38 -0400
+Received: by mail-ie0-f176.google.com with SMTP id as1so4769945iec.35
+        for <linux-wireless@vger.kernel.org>; Sat, 14 Sep 2013 07:08:37 -0700 (PDT)
+Message-ID: <52346DE2.9090904@lwfinger.net> (sfid-20130914_160854_856363_843118B5)
+Date: Sat, 14 Sep 2013 09:08:34 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="eJnRUKwClWJh1Khz"
-In-Reply-To: <1380206258-16452-1-git-send-email-lorenzo.bianconi83@gmail.com>
+To: Jason Andrews <jasona@cadence.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: guidance on struct alignment for rtl8192cu driver
+References: <985A2B0C3F73B74792F35D4098E1CA7CB143670E93@MAILSJ3.global.cadence.com>
+In-Reply-To: <985A2B0C3F73B74792F35D4098E1CA7CB143670E93@MAILSJ3.global.cadence.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 09/14/2013 12:36 AM, Jason Andrews wrote:
+> I'm using an ASUS USB N13 on an ARM platform with the rtl8192cu driver.
+> Linux kernel is 3.10 so I probably don't have the latest and greatest driver.
+>
+> When I booted I got an ARM alignment trap caused by the driver.
+>
+> I determined the cause was the 1st argument to spin_lock_irqsave() has an unaligned address.
+>
+> By trial-and-error I found that if I edit wifi.h and insert 2 dummy bytes into the rtl_priv struct just above priv (last variable) the locks work and the driver works fine.
+>
+> What is the recommended way to make sure the last variable in the rtl_priv struct (u8 priv[0]) is aligned on a 4 byte boundary so the driver works on ARM machines?
 
---eJnRUKwClWJh1Khz
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+There are a lot of improvements for this driver in 3.11. The backports release 
+has that code. In addition, I am currently working at improving the power 
+management for 3.13.
 
-On Thu, Sep 26, 2013 at 04:37:38PM +0200, Lorenzo Bianconi wrote:
-> Add spectral scan feature on HT40 channels for ath9k. This patch extends
-> previous capability added by Simon Wunderlich
->=20
-> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-> ---
->  drivers/net/wireless/ath/ath9k/ath9k.h |  47 +++++++----
->  drivers/net/wireless/ath/ath9k/calib.c |  10 +--
->  drivers/net/wireless/ath/ath9k/calib.h |   3 +-
->  drivers/net/wireless/ath/ath9k/hw.c    |   2 +-
->  drivers/net/wireless/ath/ath9k/link.c  |   3 +-
->  drivers/net/wireless/ath/ath9k/recv.c  | 142 ++++++++++++++++++++++-----=
-------
->  6 files changed, 139 insertions(+), 68 deletions(-)
->=20
-> diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireles=
-s/ath/ath9k/ath9k.h
-> index 2ee35f6..b44955e 100644
-> --- a/drivers/net/wireless/ath/ath9k/ath9k.h
-> +++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-> @@ -875,32 +875,49 @@ static inline u8 spectral_bitmap_weight(u8 *bins)
->   * TODO: this might need rework when switching to nl80211-based
->   * interface.
->   */
-> -enum ath_fft_sample_type {
-> -	ATH_FFT_SAMPLE_HT20 =3D 1,
-> +enum fft_sample_type {
-> +	FFT_SAMPLE_HT20 =3D 1,
-> +	FFT_SAMPLE_HT20_40,
->  };
-> =20
->  struct fft_sample_tlv {
-> -	u8 type;	/* see ath_fft_sample */
-> +	enum fft_sample_type type;
->  	__be16 length;
->  	/* type dependent data follows */
->  } __packed;
-> =20
-> -struct fft_sample_ht20 {
-> +struct fft_sample {
->  	struct fft_sample_tlv tlv;
-> -
-> -	u8 max_exp;
-> -
->  	__be16 freq;
-> -	s8 rssi;
-> -	s8 noise;
-> -
-> -	__be16 max_magnitude;
-> -	u8 max_index;
-> -	u8 bitmap_weight;
-> -
->  	__be64 tsf;
-> =20
-> -	u8 data[SPECTRAL_HT20_NUM_BINS];
-> +	union {
-> +		struct {
-> +			s8 rssi;
-> +			s8 nf;
-> +
-> +			u8 data[SPECTRAL_HT20_NUM_BINS];
-> +			__be16 max_mag;
-> +			u8 max_idx;
-> +			u8 bitmap_w;
-> +			u8 max_exp;
-> +		} ht20;
-> +		struct {
-> +			s8 lower_rssi;
-> +			s8 upper_rssi;
-> +			s8 lower_nf;
-> +			s8 upper_nf;
-> +
-> +			u8 data[SPECTRAL_HT20_40_NUM_BINS];
-> +			__be16 lower_max_mag;
-> +			__be16 upper_max_mag;
-> +			u8 lower_max_idx;
-> +			u8 upper_max_idx;
-> +			u8 lower_bitmap_w;
-> +			u8 upper_bitmap_w;
-> +			u8 max_exp;
-> +		} ht20_40;
-> +	};
->  } __packed;
+The presence of unaligned variables that cause alignment traps on ARM does not 
+surprise me as I test only on x86 and ppc architectures. I now own a Raspberry 
+Pi and I will soon be testing with it as well.
 
-One more thing: please don't change the format for HT20 - there are already=
- userspace
-programs which rely on the order of the parameters as they are now. This is=
- why we have
-added the TLVs in the first place - you can just add a new type for HT40 (a=
-s you did),
-but keep the format of other formats (HT20).
+What does surprise me is that the first argument in all the calls to 
+spin_lock_irqsave() are contained within the rtl_locks struct and everything 
+there should be aligned. Perhaps some ARM expert will know why aligning the last 
+item in the rtl_priv struct fixes the problem.
 
-Thanks,
-	Simon
+As far as I know, the proper way to do a 4-byte alignment is as in the following 
+patch:
 
---eJnRUKwClWJh1Khz
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+Index: wireless-testing-save/drivers/net/wireless/rtlwifi/wifi.h
+===================================================================
+--- wireless-testing-save.orig/drivers/net/wireless/rtlwifi/wifi.h
++++ wireless-testing-save/drivers/net/wireless/rtlwifi/wifi.h
+@@ -2057,7 +2057,7 @@ struct rtl_priv {
+  	  that it points to the data allocated
+  	  beyond  this structure like:
+  	  rtl_pci_priv or rtl_usb_priv */
+-	u8 priv[0];
++	u8 __aligned(4) priv[0];
+  };
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
+  #define rtl_priv(hw)           (((struct rtl_priv *)(hw)->priv))
 
-iEYEARECAAYFAlJJq2cACgkQrzg/fFk7axZRnwCgzXHpBcWkns68AdvUlUDvh/zd
-TRAAn3iMSMAXaHUFBXOP+fbtOEaVCddO
-=Ilat
------END PGP SIGNATURE-----
+Larry
 
---eJnRUKwClWJh1Khz--
