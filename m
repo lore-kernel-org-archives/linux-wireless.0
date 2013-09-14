@@ -1,40 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47959 "EHLO mx1.redhat.com"
+Received: from nbd.name ([46.4.11.11]:42763 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753352Ab3IMIr1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Sep 2013 04:47:27 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: ilw@linux.intel.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] iwlwifi: do not dump stack whet triggering firmware restart
-Date: Fri, 13 Sep 2013 10:45:30 +0200
-Message-Id: <1379061930-2007-1-git-send-email-sgruszka@redhat.com> (sfid-20130913_104731_749582_6F802F06)
+	id S1756456Ab3INNqp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Sep 2013 09:46:45 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
+Subject: [PATCH 3.12] ath9k: fix stale flag handling on buffer clone
+Date: Sat, 14 Sep 2013 15:46:33 +0200
+Message-Id: <1379166393-31285-1-git-send-email-nbd@openwrt.org> (sfid-20130914_154655_650796_07E44D89)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We send REPLY_ERROR command to the device to force microcode error
-and restart firmware. This is not a problem, so do not dump stack
-on such situation.
+Fixes a regression from commit
+"ath9k: shrink a few data structures by reordering fields"
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+When cloning a buffer, the stale flag (part of bf_state now) needs to be
+reset after copying the state to prevent tx processing hangs.
+
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/iwlwifi/pcie/tx.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/xmit.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
-index f45eb29..ec49033 100644
---- a/drivers/net/wireless/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
-@@ -1546,7 +1546,8 @@ static int iwl_pcie_send_hcmd_sync(struct iwl_trans *trans,
- 	if (test_bit(STATUS_FW_ERROR, &trans_pcie->status)) {
- 		IWL_ERR(trans, "FW error in SYNC CMD %s\n",
- 			get_cmd_string(trans_pcie, cmd->id));
--		dump_stack();
-+		if (cmd->id != REPLY_ERROR)
-+			dump_stack();
- 		ret = -EIO;
- 		goto cancel;
- 	}
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 35b515f..a749e0f 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -399,6 +399,7 @@ static struct ath_buf* ath_clone_txbuf(struct ath_softc *sc, struct ath_buf *bf)
+ 	tbf->bf_buf_addr = bf->bf_buf_addr;
+ 	memcpy(tbf->bf_desc, bf->bf_desc, sc->sc_ah->caps.tx_desc_len);
+ 	tbf->bf_state = bf->bf_state;
++	tbf->bf_state.stale = false;
+ 
+ 	return tbf;
+ }
 -- 
-1.8.3.1
+1.8.0.2
 
