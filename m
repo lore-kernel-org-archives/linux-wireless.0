@@ -1,81 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:33695 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752498Ab3IHOzw (ORCPT
+Received: from p15195424.pureserver.info ([82.165.34.74]:33026 "EHLO
+	p15195424.pureserver.info" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932153Ab3INQKR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Sep 2013 10:55:52 -0400
-Subject: [PATCH 4/8] ath10k: add boot debug messages to pci.c and ce.c
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Sun, 08 Sep 2013 17:55:50 +0300
-Message-ID: <20130908145550.3136.92297.stgit@localhost6.localdomain6> (sfid-20130908_165554_539077_9DAD0698)
-In-Reply-To: <20130908145435.3136.49168.stgit@localhost6.localdomain6>
-References: <20130908145435.3136.49168.stgit@localhost6.localdomain6>
+	Sat, 14 Sep 2013 12:10:17 -0400
+Message-ID: <52348A2D.8000008@ilande.co.uk> (sfid-20130914_181021_916749_6696CDA8)
+Date: Sat, 14 Sep 2013 17:09:17 +0100
+From: Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: rtl8192cu: notes on investigating power issues
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To unify all boot related debug messages into one debug
-level.
+Hi Larry,
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/ce.c  |    8 ++++++++
- drivers/net/wireless/ath/ath10k/pci.c |    6 ++++--
- 2 files changed, 12 insertions(+), 2 deletions(-)
+I spent some time yesterday evening adding various debugging statements 
+around the driver to get a feel for what was happening, with some 
+success. Included below are my notes from testing.
 
-diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
-index afe5df4..38c2571 100644
---- a/drivers/net/wireless/ath/ath10k/ce.c
-+++ b/drivers/net/wireless/ath/ath10k/ce.c
-@@ -1010,6 +1010,10 @@ static int ath10k_ce_init_src_ring(struct ath10k *ar,
- 	ath10k_ce_src_ring_lowmark_set(ar, ctrl_addr, 0);
- 	ath10k_ce_src_ring_highmark_set(ar, ctrl_addr, nentries);
- 
-+	ath10k_dbg(ATH10K_DBG_BOOT,
-+		   "boot ce src ring id %d entries %d base_addr %p\n",
-+		   ce_id, nentries, src_ring->base_addr_owner_space);
-+
- 	return 0;
- }
- 
-@@ -1091,6 +1095,10 @@ static int ath10k_ce_init_dest_ring(struct ath10k *ar,
- 	ath10k_ce_dest_ring_lowmark_set(ar, ctrl_addr, 0);
- 	ath10k_ce_dest_ring_highmark_set(ar, ctrl_addr, nentries);
- 
-+	ath10k_dbg(ATH10K_DBG_BOOT,
-+		   "boot ce dest ring id %d entries %d base_addr %p\n",
-+		   ce_id, nentries, dest_ring->base_addr_owner_space);
-+
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 880fcd0d..503a8c170 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -2375,10 +2375,10 @@ static void ath10k_pci_dump_features(struct ath10k_pci *ar_pci)
- 
- 		switch (i) {
- 		case ATH10K_PCI_FEATURE_MSI_X:
--			ath10k_dbg(ATH10K_DBG_PCI, "device supports MSI-X\n");
-+			ath10k_dbg(ATH10K_DBG_BOOT, "device supports MSI-X\n");
- 			break;
- 		case ATH10K_PCI_FEATURE_SOC_POWER_SAVE:
--			ath10k_dbg(ATH10K_DBG_PCI, "QCA98XX SoC power save enabled\n");
-+			ath10k_dbg(ATH10K_DBG_BOOT, "QCA98XX SoC power save enabled\n");
- 			break;
- 		}
- 	}
-@@ -2504,6 +2504,8 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
- 
- 	ath10k_do_pci_sleep(ar);
- 
-+	ath10k_dbg(ATH10K_DBG_BOOT, "boot pci_mem 0x%p\n", ar_pci->mem);
-+
- 	ret = ath10k_core_register(ar, chip_id);
- 	if (ret) {
- 		ath10k_err("could not register driver core (%d)\n", ret);
+The key appears to be the calculation of the dig (transmitter gain?) 
+value, for which the function chain looks like this:
 
+1) rtl92c_dm_ctrl_initgain_by_rssi() sets the dig value
+
+This value controls the power output from the transmitter and should lie 
+between DM_DIG_MIN and DM_DIG_MAX (note the *higher* the number, the 
+*lower* the power output). Setting the penultimate line to read 
+"digtable->cur_igvalue = DM_DIG_MIN" appears to force maximum power and 
+actually gives me a working connection.
+
+Displaying various values in this function showed that the problem was 
+that I had an exceptionally high value of digtable->rssi_val_min which 
+was much higher than DM_DIG_MAX and so had the effect of disabling the 
+radio.
+
+2) rtl92c_dm_dynamic_bb_powersaving() sets digtable->rssi_val_min
+
+This is actually done by a simple assignment "dm_pstable->rssi_val_min = 
+rtlpriv->dm.undec_sm_pwdb".
+
+3) _rtl92c_process_pwdb() sets rltpriv->dm.undec_sm_pwdb
+
+This value is updated by comparing the existing value with the current 
+value of pstats->rx_pwdb_all. If there is a difference, then slide the 
+new value towards pstats->rx_pwdb_all and then use it to update 
+rltpriv->dm.undec_sm_pwdb.
+
+4) _rtl92c_query_rxphystatus() sets pstats->rx_pwdb_all
+
+pstats->rx_pwdb_all was set to be a percentage conversion of the current 
+antenna power read from the radio.
+
+What was happening in my case:
+
+1) pstats->rx_pwdb_all was mostly set to 100 (%) due to high signal strength
+
+2) rltpriv->dm.undec_sm_pwdb would then slide towards a high value 
+(around 0x40-0x4d) within a few seconds
+
+3) Hence digtable->rssi_val_min would tend to hover at around the same level
+
+4) digtable->cur_igvalue would be set to the same high value (> 0x3f or 
+DM_DIG_MAX), therefore disabling the radio and disconnecting from the AP
+
+
+Unfortunately I'm not particularly familiar with these types of power 
+calculations (and there weren't many comments explaining how they 
+worked), but the one thing that didn't seem right is that 
+pstats->rx_pwdb_all claims to be a *percentage* and yet 
+rtl92c_dm_dynamic_bb_powersaving() uses it as the basis to set the 
+*value* of dm_pstable->rssi_val_min.
+
+
+ATB,
+
+Mark.
