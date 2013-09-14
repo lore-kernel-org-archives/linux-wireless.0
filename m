@@ -1,84 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0174.hostedemail.com ([216.40.44.174]:50112 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755426Ab3IYTil (ORCPT
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:52839 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932353Ab3INUaQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Sep 2013 15:38:41 -0400
-From: Joe Perches <joe@perches.com>
-To: netdev@vger.kernel.org
-Cc: "David S. Miller" <davem@davemloft.net>,
-	Bing Zhao <bzhao@marvell.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 09/11] mwifiex: Remove extern from function prototypes
-Date: Wed, 25 Sep 2013 12:37:27 -0700
-Message-Id: <b3a7cd194857b3dc099e8f8bb0ed97bb4a1b5fde.1380137610.git.joe@perches.com> (sfid-20130925_224500_292350_B5D0F981)
-In-Reply-To: <cover.1380137609.git.joe@perches.com>
-References: <cover.1380137609.git.joe@perches.com>
+	Sat, 14 Sep 2013 16:30:16 -0400
+Message-ID: <5234C755.80709@lwfinger.net> (sfid-20130914_223025_346905_4C5847C6)
+Date: Sat, 14 Sep 2013 15:30:13 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH 2/7] rtlwifi: rtl8192de: Fix smatch warnings in rtl8192de/hw.c
+References: <1379094304-22041-1-git-send-email-Larry.Finger@lwfinger.net> <1379094304-22041-3-git-send-email-Larry.Finger@lwfinger.net> <5234C03A.2070701@cogentembedded.com>
+In-Reply-To: <5234C03A.2070701@cogentembedded.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are a mix of function prototypes with and without extern
-in the kernel sources.  Standardize on not using extern for
-function prototypes.
+On 09/14/2013 02:59 PM, Sergei Shtylyov wrote:
+> Hello.
+>
+> On 09/13/2013 09:44 PM, Larry Finger wrote:
+>
+>> Smatch lists the following:
+>>    CHECK   drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+>> drivers/net/wireless/rtlwifi/rtl8192de/hw.c:1200 rtl92de_set_qos() info:
+>> ignoring unreachable code.
+>> drivers/net/wireless/rtlwifi/rtl8192de/hw.c:1200 rtl92de_set_qos() info:
+>> ignoring unreachable code.
+>
+>> Dead code is removed.
+>
+>     It is instead commented out, including non-dead code it seems...
+>
+>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>> ---
+>>   drivers/net/wireless/rtlwifi/rtl8192de/hw.c | 2 ++
+>>   1 file changed, 2 insertions(+)
+>>
+>> diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+>> b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+>> index 7dd8f6d..c9b0894 100644
+>> --- a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+>> +++ b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+>> @@ -1194,6 +1194,7 @@ void rtl92d_linked_set_reg(struct ieee80211_hw *hw)
+>>    * mac80211 will send pkt when scan */
+>>   void rtl92de_set_qos(struct ieee80211_hw *hw, int aci)
+>>   {
+>> +/*
+>>       struct rtl_priv *rtlpriv = rtl_priv(hw);
+>>       rtl92d_dm_init_edca_turbo(hw);
+>>       return;
+>
+>     Shouldn't the comment start here (and *return* removed)? It's also
+> better to remove the dead code than just to comment it out.
 
-Function prototypes don't need to be written with extern.
-extern is assumed by the compiler.  Its use is as unnecessary as
-using auto to declare automatic/local variables in a block.
+That would leave some unused variables.
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/mwifiex/wmm.h | 24 ++++++++++--------------
- 1 file changed, 10 insertions(+), 14 deletions(-)
+>> @@ -1213,6 +1214,7 @@ void rtl92de_set_qos(struct ieee80211_hw *hw, int aci)
+>>           RT_ASSERT(false, "invalid aci: %d !\n", aci);
+>>           break;
+>>       }
+>> + */
+>>   }
 
-diff --git a/drivers/net/wireless/mwifiex/wmm.h b/drivers/net/wireless/mwifiex/wmm.h
-index 644d6e0..0f129d4 100644
---- a/drivers/net/wireless/mwifiex/wmm.h
-+++ b/drivers/net/wireless/mwifiex/wmm.h
-@@ -83,11 +83,10 @@ mwifiex_wmm_is_ra_list_empty(struct list_head *ra_list_hhead)
- }
- 
- void mwifiex_wmm_add_buf_txqueue(struct mwifiex_private *priv,
--					struct sk_buff *skb);
-+				 struct sk_buff *skb);
- void mwifiex_ralist_add(struct mwifiex_private *priv, u8 *ra);
- void mwifiex_rotate_priolists(struct mwifiex_private *priv,
--			      struct mwifiex_ra_list_tbl *ra,
--			      int tid);
-+			      struct mwifiex_ra_list_tbl *ra, int tid);
- 
- int mwifiex_wmm_lists_empty(struct mwifiex_adapter *adapter);
- void mwifiex_wmm_process_tx(struct mwifiex_adapter *adapter);
-@@ -95,21 +94,18 @@ int mwifiex_is_ralist_valid(struct mwifiex_private *priv,
- 			    struct mwifiex_ra_list_tbl *ra_list, int tid);
- 
- u8 mwifiex_wmm_compute_drv_pkt_delay(struct mwifiex_private *priv,
--					     const struct sk_buff *skb);
-+				     const struct sk_buff *skb);
- void mwifiex_wmm_init(struct mwifiex_adapter *adapter);
- 
--extern u32 mwifiex_wmm_process_association_req(struct mwifiex_private *priv,
--						 u8 **assoc_buf,
--						 struct ieee_types_wmm_parameter
--						 *wmmie,
--						 struct ieee80211_ht_cap
--						 *htcap);
-+u32 mwifiex_wmm_process_association_req(struct mwifiex_private *priv,
-+					u8 **assoc_buf,
-+					struct ieee_types_wmm_parameter *wmmie,
-+					struct ieee80211_ht_cap *htcap);
- 
- void mwifiex_wmm_setup_queue_priorities(struct mwifiex_private *priv,
--					struct ieee_types_wmm_parameter
--					*wmm_ie);
-+					struct ieee_types_wmm_parameter *wmm_ie);
- void mwifiex_wmm_setup_ac_downgrade(struct mwifiex_private *priv);
--extern int mwifiex_ret_wmm_get_status(struct mwifiex_private *priv,
--				      const struct host_cmd_ds_command *resp);
-+int mwifiex_ret_wmm_get_status(struct mwifiex_private *priv,
-+			       const struct host_cmd_ds_command *resp);
- 
- #endif /* !_MWIFIEX_WMM_H_ */
--- 
-1.8.1.2.459.gbcd45b4.dirty
+I'm not sure what that unreachable code might do, thus I saved it as a comment 
+for possible future use. I need to do further evaluation on this fragment, and 
+probably consult with the Realtek engineers.
+
+Larry
+
 
