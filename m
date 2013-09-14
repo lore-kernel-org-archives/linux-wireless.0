@@ -1,47 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:38505 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752622Ab3IISwZ (ORCPT
+Received: from 162-17-110-37-static.hfc.comcastbusiness.net ([162.17.110.37]:58002
+	"EHLO stuffed.shaftnet.org" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1756519Ab3INCsk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Sep 2013 14:52:25 -0400
-Received: from [192.168.100.226] (firewall.candelatech.com [70.89.124.249])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id r89IqLPn008607
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Mon, 9 Sep 2013 11:52:22 -0700
-Message-ID: <522E18E5.1020503@candelatech.com> (sfid-20130909_205235_097361_9D32CFA2)
-Date: Mon, 09 Sep 2013 11:52:21 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Specifying priority for management frames?
-References: <5228CAB6.5060308@candelatech.com>
-In-Reply-To: <5228CAB6.5060308@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Fri, 13 Sep 2013 22:48:40 -0400
+From: Solomon Peachy <pizza@shaftnet.org>
+To: linux-wireless@vger.kernel.org
+Cc: Solomon Peachy <pizza@shaftnet.org>
+Subject: [PATCH] cw1200: Use a threaded oneshot irq handler for cw1200_spi
+Date: Fri, 13 Sep 2013 22:48:34 -0400
+Message-Id: <1379126914-27922-1-git-send-email-pizza@shaftnet.org> (sfid-20130914_044843_495255_BA262553)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/05/2013 11:17 AM, Ben Greear wrote:
-> While debugging a problem with group-rekeys, we noticed that the sniffer (on external machine)
-> reported management packets are sent in the best-effort QoS queue.
->
-> It seems to me that these should be in the VO queue instead, or at least
-> we should be able to specify the queue in supplicant when sending the frames?
+This supercedes the older patch ("cw1200: Don't perform SPI transfers in
+interrupt context") that badly attempted to fix this problem.
 
-This is a problem in supplicant/hostapd.  They were not setting the socket
-priority to (256 + 7) as they should have been doing.  With that fix, packets
-on the air show the proper 'VO' QoS queue.
+This is a far simpler solution, with has the added benefit of actually
+working.
 
-I posted patches to fix supplicant/hostapd to the hostapd mailing list.
-Hopefully they are proper patches...at least they seem to work for me.
+Signed-off-by: Solomon Peachy <pizza@shaftnet.org>
+---
+ drivers/net/wireless/cw1200/cw1200_spi.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-At least the hostapd side of this seemed to slip in with the addition
-of the new non-monitor eapol tx status feature.
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/cw1200/cw1200_spi.c b/drivers/net/wireless/cw1200/cw1200_spi.c
+index 5a64ac9..899cad3 100644
+--- a/drivers/net/wireless/cw1200/cw1200_spi.c
++++ b/drivers/net/wireless/cw1200/cw1200_spi.c
+@@ -250,9 +250,10 @@ static int cw1200_spi_irq_subscribe(struct hwbus_priv *self)
+ 
+ 	pr_debug("SW IRQ subscribe\n");
+ 
+-	ret = request_any_context_irq(self->func->irq, cw1200_spi_irq_handler,
+-				      IRQF_TRIGGER_HIGH,
+-				      "cw1200_wlan_irq", self);
++	ret = request_threaded_irq(self->func->irq, NULL,
++				   cw1200_spi_irq_handler,
++				   IRQF_TRIGGER_HIGH | IRQF_ONESHOT,
++				   "cw1200_wlan_irq", self);
+ 	if (WARN_ON(ret < 0))
+ 		goto exit;
+ 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.8.3.1
 
