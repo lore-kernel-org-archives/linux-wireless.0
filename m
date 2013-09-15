@@ -1,62 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:55566 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753204Ab3IVNgd (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:34267 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752741Ab3IOHqy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Sep 2013 09:36:33 -0400
-Date: Sun, 22 Sep 2013 15:36:32 +0200
-From: Pavel Machek <pavel@ucw.cz>
-To: Luciano Coelho <coelho@ti.com>,
-	Grazvydas Ignotas <notasas@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Tony Lindgren <tony@atomide.com>, nsekhar@ti.com,
-	mturquette@linaro.org, mark.rutland@arm.com,
-	Felipe Balbi <balbi@ti.com>, grant.likely@linaro.org,
-	rob.herring@calxeda.com, devicetree-discuss@lists.ozlabs.org,
-	linux-doc@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v2 0/9] wilink: add device tree support
-Message-ID: <20130922133632.GB8643@amd.pavel.ucw.cz> (sfid-20130922_153650_752928_5A367EEF)
-References: <1372776948-24840-1-git-send-email-coelho@ti.com>
- <CANOLnOPBHesTiV61zpQ_QS9c7E91K50EnbMnGhvgaViuA_3=Bw@mail.gmail.com>
- <1372859132.21065.111.camel@cumari.coelho.fi>
- <20130921122718.GA4431@amd.pavel.ucw.cz>
- <20130921141614.GA21383@earth.universe>
+	Sun, 15 Sep 2013 03:46:54 -0400
+From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+To: Jingoo Han <jg1.han@samsung.com>
+CC: "'John W. Linville'" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: Re: [PATCH 07/12] wireless: wil6210: remove unnecessary pci_set_drvdata()
+Date: Sun, 15 Sep 2013 10:46:50 +0300
+Message-ID: <1712658.NzU3oG495s@lx-vladimir> (sfid-20130915_094714_118951_17B16B55)
+In-Reply-To: <00b801ceae18$8e5498c0$aafdca40$%han@samsung.com>
+References: <00b101ceae16$ecb87c30$c6297490$%han@samsung.com> <00b801ceae18$8e5498c0$aafdca40$%han@samsung.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20130921141614.GA21383@earth.universe>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
-
-> > > Unfortunately I don't have much time to work on wl1251.  I think it
-> > > wouldn't be too difficult to do though, so patches are welcome. ;)
-> > > 
-> > > Maybe you could try to make this change and I could support you if
-> > > needed?
-> > > 
-> > > 
-> > > > I can offer you my help testing things on pandora and I'm sure someone
-> > > > here could try it on N900.
-> > > 
-> > > I could try it on the N900, if it is still bootable easily with the
-> > > mainline. ;)
-> > 
-> > 3.11 should be bootable on mainline, including device tree and
-> > video. (But excluding some other stuff, like MMC.)
+On Tuesday, September 10, 2013 08:26:13 PM Jingoo Han wrote:
+> The driver core clears the driver data to NULL after device_release
+> or on probe failure. Thus, it is not needed to manually clear the
+> device driver data to NULL.
 > 
-> I got external MMC (=> µSD) working with some small modifications of
-> the omap3-n900.dts file. I have not yet tried internal MMC, since
-> its not important for me at the moment, but I guess its also just a
-> small change in the dts file.
+> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+> ---
+>  drivers/net/wireless/ath/wil6210/pcie_bus.c |    1 -
+>  1 file changed, 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+> index eb1dc7a..eeceab3 100644
+> --- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
+> +++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+> @@ -197,7 +197,6 @@ static void wil_pcie_remove(struct pci_dev *pdev)
+>  	pci_iounmap(pdev, wil->csr);
+>  	pci_release_region(pdev, 0);
+>  	pci_disable_device(pdev);
+> -	pci_set_drvdata(pdev, NULL);
+>  }
+>  
+>  static DEFINE_PCI_DEVICE_TABLE(wil6210_pcie_ids) = {
+> 
 
-Can we get the diff? :-).
-									Pavel
+Here is my
 
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+Acked-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
