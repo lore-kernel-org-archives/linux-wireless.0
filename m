@@ -1,56 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s15283307.onlinehome-server.info ([87.106.208.187]:45008 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754400Ab3IXToG convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Sep 2013 15:44:06 -0400
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
-Subject: Re: [PATCH v5 2/2] Bluetooth: btmrvl: add calibration data download support
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <477F20668A386D41ADCC57781B1F70430F450779BE@SC-VEXCH1.marvell.com>
-Date: Tue, 24 Sep 2013 21:43:49 +0200
-Cc: "linux-bluetooth@vger.kernel.org" <linux-bluetooth@vger.kernel.org>,
-	Gustavo Padovan <gustavo@padovan.org>,
-	Johan Hedberg <johan.hedberg@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Mike Frysinger <vapier@chromium.org>,
-	Hyuckjoo Lee <hyuckjoo.lee@samsung.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Message-Id: <C42E9D11-1E8B-499E-96E0-74469F7649EC@holtmann.org> (sfid-20130924_214411_661257_E5572F27)
-References: <1379715667-22424-1-git-send-email-bzhao@marvell.com> <1379715667-22424-2-git-send-email-bzhao@marvell.com> <05172D80-CE30-4B7D-A64E-11B8E320EF7F@holtmann.org> <477F20668A386D41ADCC57781B1F70430F44C59423@SC-VEXCH1.marvell.com> <34088279-04B9-49D0-9387-88A602F518EC@holtmann.org> <477F20668A386D41ADCC57781B1F70430F450779BE@SC-VEXCH1.marvell.com>
-To: Bing Zhao <bzhao@marvell.com>
+Received: from ebb05.tieto.com ([131.207.168.36]:60942 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751212Ab3IPMtn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Sep 2013 08:49:43 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC 4/4] ath10k: align RX frames properly
+Date: Mon, 16 Sep 2013 14:49:17 +0200
+Message-ID: <1379335757-15180-5-git-send-email-michal.kazior@tieto.com> (sfid-20130916_144947_572493_46E3F362)
+In-Reply-To: <1379335757-15180-1-git-send-email-michal.kazior@tieto.com>
+References: <1379335757-15180-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Bing,
+Ethernet-like decapping mode leaves IP protocol
+frame not aligned to 4-byte boundaries. This leads
+to re-aligning in mac80211 which in turn leads to
+CPU cache thrashing on lower end host machines and
+very poor performance.
 
->>> The reason of not using __hci_cmd_sync() is that we are sending vendor specific command here
->> (MRVL_VENDOR_PKT). The __hci_cmd_sync seems handle HCI_COMMAND_PKT only.
->>> Please let us know if you have any suggestion to solve this problem.
->> 
->> what is a MRVL_VENDOR_PKT actually?
-> 
-> It's defined as 0xfe in our driver. The firmware doesn't understand 0xff (HCI_VENDOR_PKT).
+Since HW doesn't allow to change payload offset
+properly the solution is to force HW to decap in
+Native Wifi mode which always has 24-bytes long
+802.11 header (even for QoS frames). This means IP
+frame is properly aligned in this decap mode.
 
-so it is actually out-of-channel vendor packet.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/hw.h |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
->> 
->> If you guys are not using standard HCI command/event for vendor operation, then this obviously does
->> not fit. However a similar model might make sense instead of manually building packets all the time.
-> 
-> We can extend __hci_cmd_sync() function with a new parameter 'type'.
-> This way we can pass HCI_VENDOR_PKT into __hci_cmd_sync(), while other drivers will pass in HCI_COMMAND_PKT.
-
-That will actually not work. And I also do not want to do that. The __hci_cmd_sync() is for real HCI packets. That means types 0x01 and 0x04 only. They need to adhere to the HCI flow control mechanism for commands.
-
-> Our driver will make HCI_VENDOR_PKT -> MRVL_VENDOR_PKT conversion before downloading the frame to firmware. And the MRVL_VENDOR_PKT frame from firmware will be replaced with HCI_VENDOR_PKT while uploading the frame to stack.
-> 
-> Please let us know if this approach works for you or not.
-
-I think this is best kept inside the driver. However you might consider building something like __hci_cmd_sync() that is specific to your driver, but allows for a similar flow within ->setup().
-
-Regards
-
-Marcel
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 643f0c9..8c1be768 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -74,7 +74,11 @@ enum ath10k_mcast2ucast_mode {
+ #define TARGET_RX_CHAIN_MASK			(BIT(0) | BIT(1) | BIT(2))
+ #define TARGET_RX_TIMEOUT_LO_PRI		100
+ #define TARGET_RX_TIMEOUT_HI_PRI		40
+-#define TARGET_RX_DECAP_MODE			ATH10K_HW_TXRX_ETHERNET
++
++/* Native Wifi decap mode is used to align IP frames to 4-byte boundaries and
++ * avoid a very expensive re-alignment in mac80211. */
++#define TARGET_RX_DECAP_MODE			ATH10K_HW_TXRX_NATIVE_WIFI
++
+ #define TARGET_SCAN_MAX_PENDING_REQS		4
+ #define TARGET_BMISS_OFFLOAD_MAX_VDEV		3
+ #define TARGET_ROAM_OFFLOAD_MAX_VDEV		3
+-- 
+1.7.9.5
 
