@@ -1,72 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54671 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752310Ab3IWQI7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Sep 2013 12:08:59 -0400
-Message-ID: <1379952829.2475.16.camel@dcbw.foobar.com> (sfid-20130923_180903_556457_20E454DD)
-Subject: Re: NetworkManager not listing access points
-From: Dan Williams <dcbw@redhat.com>
-To: Detlev Casanova <detlev.casanova@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, laurent.pinchart@ideasonboard.com
-Date: Mon, 23 Sep 2013 11:13:49 -0500
-In-Reply-To: <3006906.Q9n0kfrGGo@naboo>
-References: <31357461.i5mG9q5IfA@naboo> <5951977.8jla5cTcNa@naboo>
-	 <1379796719.4699.0.camel@jlt4.sipsolutions.net> <3006906.Q9n0kfrGGo@naboo>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from s72.web-hosting.com ([198.187.29.21]:56278 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752355Ab3IPFLC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Sep 2013 01:11:02 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/3] ath9k: Remove incorrect diversity initialization
+Date: Mon, 16 Sep 2013 10:37:01 +0530
+Message-Id: <1379308021-20891-3-git-send-email-sujith@msujith.org> (sfid-20130916_071106_898444_0EE25738)
+In-Reply-To: <1379308021-20891-1-git-send-email-sujith@msujith.org>
+References: <1379308021-20891-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2013-09-22 at 16:20 +0200, Detlev Casanova wrote:
-> Le samedi 21 septembre 2013 22:51:59 Johannes Berg a écrit :
-> > On Thu, 2013-09-19 at 07:58 +0200, Detlev Casanova wrote:
-> > > Here is the output (attached file for formatting)
-> > 
-> > Was that from the good case? The bad case would have been 
-> more
-> > interesting.
-> 
-> This is both cases. I made another one and here, I can give more 
-> details:
-> 
-> Network manager is trying to list APs and fails until time 
-> 1379858724.386569
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Ok, the logs indicate that the driver simply doesn't see any scan
-results:
+Fast antenna diversity is required only for single chain
+chips and the diversity initialization is done in the
+per-family board setup routines. Enabling of diversity
+should be done based on the calibrated EEPROM/OTP data,
+doing it for all chips is incorrect.
 
-1379858724.381522: Received scan results (0 BSSes)
+Remove the code that sets the fast_div bit for all cards, since
+the documentation for the AR_PHY_CCK_DETECT register says:
 
-Then 20 seconds later (after the explicit iwlist), it finds some scan
-results:
+reg 642: sig_detect_cck
+enable_ant_fast_div : Only used for single chain chips.
 
-1379858746.953924: Received scan results (3 BSSes)
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar5008_phy.c | 3 ---
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c | 3 ---
+ 2 files changed, 6 deletions(-)
 
-So I'm not sure what's going on here, but I don't think NetworkManager
-is the issue; it's likely in the supplicant's scanning code or in the
-driver itself.  NetworkManager asks the supplicant to scan with both the
-wildcard SSID and any hidden-tagged SSID, and the wildcard SSID should
-ensure that all available APs are found.
-
-Johannes, does anything else jump out at you in the logs?
-
-Dan
-
-> The The first "iwlist wlan0 scan" is done juste after the log line 
-> (1379858738.682054). It lists the APs in range in the console but 
-> not in the Network Manager ui.
-> 
-> The second "iwlist wlan0 scan" is done at time 1379858739.802067 
-> and APs are being listed in the console and in the Network Manager 
-> UI.
-> 
-> After that, NM will connect to the acces point with SSID "Maison".
-> 
-> It also looks like the listing in Network Manager comes between the 
-> moment "iwlist wlan0 scan" is run for the second time and the 
-> moment is shows its output on the console.
-> 
-> Detlev.
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+index 9e4e2a6..cb6435e 100644
+--- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+@@ -631,9 +631,6 @@ static void ar5008_hw_override_ini(struct ath_hw *ah,
+ 		REG_WRITE(ah, AR_PCU_MISC_MODE2, val);
+ 	}
+ 
+-	REG_SET_BIT(ah, AR_PHY_CCK_DETECT,
+-		    AR_PHY_CCK_DETECT_BB_ENABLE_ANT_FAST_DIV);
+-
+ 	if (AR_SREV_9280_20_OR_LATER(ah))
+ 		return;
+ 	/*
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index ec37213..0131ba2 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -632,9 +632,6 @@ static void ar9003_hw_override_ini(struct ath_hw *ah)
+ 	       AR_PCU_MISC_MODE2_CFP_IGNORE;
+ 	REG_WRITE(ah, AR_PCU_MISC_MODE2, val);
+ 
+-	REG_SET_BIT(ah, AR_PHY_CCK_DETECT,
+-		    AR_PHY_CCK_DETECT_BB_ENABLE_ANT_FAST_DIV);
+-
+ 	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
+ 		REG_WRITE(ah, AR_GLB_SWREG_DISCONT_MODE,
+ 			  AR_GLB_SWREG_DISCONT_EN_BT_WLAN);
+-- 
+1.8.4
 
