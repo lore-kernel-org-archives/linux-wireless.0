@@ -1,107 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:39269 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754516Ab3ITLTw (ORCPT
+Received: from mail-ob0-f179.google.com ([209.85.214.179]:46008 "EHLO
+	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751043Ab3IPSzo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Sep 2013 07:19:52 -0400
-In-Reply-To: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-From: Russell King <rmk+kernel@arm.linux.org.uk>
-To: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
-	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
-	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
-	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	uclinux-dist-devel@blackfin.uclinux.org
-Cc: Tejun Heo <tj@kernel.org>, Inki Dae <inki.dae@samsung.com>,
-	Joonyoung Shim <jy0922.shim@samsung.com>,
-	Seung-Woo Kim <sw0312.kim@samsung.com>,
-	Kyungmin Park <kyungmin.park@samsung.com>,
-	David Airlie <airlied@linux.ie>,
-	Kukjin Kim <kgene.kim@samsung.com>
-Subject: [PATCH 39/51] DMA-API: others: use dma_set_coherent_mask()
-Message-Id: <E1VMnNq-0007s4-HN@rmk-PC.arm.linux.org.uk> (sfid-20130920_132009_399120_B10E3C5B)
-Date: Fri, 20 Sep 2013 00:11:38 +0100
+	Mon, 16 Sep 2013 14:55:44 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 1/8 V2] rtlwifi: rtl8192du: Fix smatch errors in /rtl8192de/dm.c
+Date: Mon, 16 Sep 2013 13:55:15 -0500
+Message-Id: <1379357722-17687-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130916_205647_388768_994D361E)
+In-Reply-To: <1379357722-17687-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1379357722-17687-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The correct way for a driver to specify the coherent DMA mask is
-not to directly access the field in the struct device, but to use
-dma_set_coherent_mask().  Only arch and bus code should access this
-member directly.
+Smatch lists the following:
+  CHECK   drivers/net/wireless/rtlwifi/rtl8192de/dm.c
+drivers/net/wireless/rtlwifi/rtl8192de/dm.c:1054 rtl92d_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'ofdm_index' 2 <= 2
+drivers/net/wireless/rtlwifi/rtl8192de/dm.c:1056 rtl92d_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'ofdm_index' 2 <= 2
+drivers/net/wireless/rtlwifi/rtl8192de/dm.c:1126 rtl92d_dm_txpower_tracking_callback_thermalmeter() debug: remove_pools: nr_children over 4000 (4596). (rtlpriv->dbg.global_debuglevel merged)
+drivers/net/wireless/rtlwifi/rtl8192de/dm.c:1126 rtl92d_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'cckswing_table_ch1ch13' 33 <= 255
+drivers/net/wireless/rtlwifi/rtl8192de/dm.c:1129 rtl92d_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'cckswing_table_ch1ch13' 33 <= 255
+drivers/net/wireless/rtlwifi/rtl8192de/dm.c:1132 rtl92d_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'cckswing_table_ch1ch13' 33 <= 255
+drivers/net/wireless/rtlwifi/rtl8192de/dm.c:1135 rtl92d_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'cckswing_table_ch1ch13' 33 <= 255
+drivers/net/wireless/rtlwifi/rtl8192de/dm.c:1138 rtl92d_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'cckswing_table_ch1ch13' 33 <= 255
+drivers/net/wireless/rtlwifi/rtl8192de/dm.c:1141 rtl92d_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'cckswing_table_ch1ch13' 33 <= 255
+drivers/net/wireless/rtlwifi/rtl8192de/dm.c:1144 rtl92d_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'cckswing_table_ch1ch13' 33 <= 255
+drivers/net/wireless/rtlwifi/rtl8192de/dm.c:1147 rtl92d_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'cckswing_table_ch1ch13' 33 <= 255
+drivers/net/wireless/rtlwifi/rtl8192de/dm.c:1151 rtl92d_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'cckswing_table_ch14' 33 <= 255
+drivers/net/wireless/rtlwifi/rtl8192de/dm.c:1154 rtl92d_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'cckswing_table_ch14' 33 <= 255
+drivers/net/wireless/rtlwifi/rtl8192de/dm.c:1157 rtl92d_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'cckswing_table_ch14' 33 <= 255
+drivers/net/wireless/rtlwifi/rtl8192de/dm.c:1160 rtl92d_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'cckswing_table_ch14' 33 <= 255
+drivers/net/wireless/rtlwifi/rtl8192de/dm.c:1163 rtl92d_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'cckswing_table_ch14' 33 <= 255
+drivers/net/wireless/rtlwifi/rtl8192de/dm.c:1166 rtl92d_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'cckswing_table_ch14' 33 <= 255
+drivers/net/wireless/rtlwifi/rtl8192de/dm.c:1169 rtl92d_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'cckswing_table_ch14' 33 <= 255
+drivers/net/wireless/rtlwifi/rtl8192de/dm.c:1172 rtl92d_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'cckswing_table_ch14' 33 <= 255
 
-Convert all direct write accesses to using the correct API.
+This patch fixes several off-by-one errors. It also removes a commented-out line
+referincing variable 'noise'. That variable will be removed later in this patch
+set.
 
-Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/ata/pata_ixp4xx_cf.c             |    5 ++++-
- drivers/gpu/drm/exynos/exynos_drm_drv.c  |    6 +++++-
- drivers/gpu/drm/omapdrm/omap_dmm_tiler.c |    5 +++--
- 3 files changed, 12 insertions(+), 4 deletions(-)
+ drivers/net/wireless/rtlwifi/rtl8192de/dm.c  | 8 ++++++--
+ drivers/net/wireless/rtlwifi/rtl8192de/trx.c | 1 -
+ 2 files changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/ata/pata_ixp4xx_cf.c b/drivers/ata/pata_ixp4xx_cf.c
-index 1ec53f8..ddf470c 100644
---- a/drivers/ata/pata_ixp4xx_cf.c
-+++ b/drivers/ata/pata_ixp4xx_cf.c
-@@ -144,6 +144,7 @@ static int ixp4xx_pata_probe(struct platform_device *pdev)
- 	struct ata_host *host;
- 	struct ata_port *ap;
- 	struct ixp4xx_pata_data *data = dev_get_platdata(&pdev->dev);
-+	int ret;
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/dm.c b/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
+index 47875ba..eaeee77 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
+@@ -840,9 +840,9 @@ static void rtl92d_dm_txpower_tracking_callback_thermalmeter(
+ 	bool internal_pa = false;
+ 	long ele_a = 0, ele_d, temp_cck, val_x, value32;
+ 	long val_y, ele_c = 0;
+-	u8 ofdm_index[2];
++	u8 ofdm_index[3];
+ 	s8 cck_index = 0;
+-	u8 ofdm_index_old[2] = {0, 0};
++	u8 ofdm_index_old[3] = {0, 0, 0};
+ 	s8 cck_index_old = 0;
+ 	u8 index;
+ 	int i;
+@@ -1118,6 +1118,10 @@ static void rtl92d_dm_txpower_tracking_callback_thermalmeter(
+ 				 val_x, val_y, ele_a, ele_c, ele_d,
+ 				 val_x, val_y);
  
- 	cs0 = platform_get_resource(pdev, IORESOURCE_MEM, 0);
- 	cs1 = platform_get_resource(pdev, IORESOURCE_MEM, 1);
-@@ -157,7 +158,9 @@ static int ixp4xx_pata_probe(struct platform_device *pdev)
- 		return -ENOMEM;
- 
- 	/* acquire resources and fill host */
--	pdev->dev.coherent_dma_mask = DMA_BIT_MASK(32);
-+	ret = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(32));
-+	if (ret)
-+		return ret;
- 
- 	data->cs0 = devm_ioremap(&pdev->dev, cs0->start, 0x1000);
- 	data->cs1 = devm_ioremap(&pdev->dev, cs1->start, 0x1000);
-diff --git a/drivers/gpu/drm/exynos/exynos_drm_drv.c b/drivers/gpu/drm/exynos/exynos_drm_drv.c
-index bb82ef7..81192d0 100644
---- a/drivers/gpu/drm/exynos/exynos_drm_drv.c
-+++ b/drivers/gpu/drm/exynos/exynos_drm_drv.c
-@@ -286,7 +286,11 @@ static struct drm_driver exynos_drm_driver = {
- 
- static int exynos_drm_platform_probe(struct platform_device *pdev)
- {
--	pdev->dev.coherent_dma_mask = DMA_BIT_MASK(32);
-+	int ret;
-+
-+	ret = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(32));
-+	if (ret)
-+		return ret;
- 
- 	return drm_platform_init(&exynos_drm_driver, pdev);
- }
-diff --git a/drivers/gpu/drm/omapdrm/omap_dmm_tiler.c b/drivers/gpu/drm/omapdrm/omap_dmm_tiler.c
-index acf6678..701c4c1 100644
---- a/drivers/gpu/drm/omapdrm/omap_dmm_tiler.c
-+++ b/drivers/gpu/drm/omapdrm/omap_dmm_tiler.c
-@@ -664,8 +664,9 @@ static int omap_dmm_probe(struct platform_device *dev)
++			if (cck_index >= CCK_TABLE_SIZE)
++				cck_index = CCK_TABLE_SIZE - 1;
++			if (cck_index < 0)
++				cck_index = 0;
+ 			if (rtlhal->current_bandtype == BAND_ON_2_4G) {
+ 				/* Adjust CCK according to IQK result */
+ 				if (!rtlpriv->dm.cck_inch14) {
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/trx.c b/drivers/net/wireless/rtlwifi/rtl8192de/trx.c
+index b8ec718..945ddec 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/trx.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/trx.c
+@@ -526,7 +526,6 @@ bool rtl92de_rx_query_desc(struct ieee80211_hw *hw,	struct rtl_stats *stats,
  	}
- 
- 	/* set dma mask for device */
--	/* NOTE: this is a workaround for the hwmod not initializing properly */
--	dev->dev.coherent_dma_mask = DMA_BIT_MASK(32);
-+	ret = dma_set_coherent_mask(&dev->dev, DMA_BIT_MASK(32));
-+	if (ret)
-+		goto fail;
- 
- 	omap_dmm->dummy_pa = page_to_phys(omap_dmm->dummy_page);
+ 	/*rx_status->qual = stats->signal; */
+ 	rx_status->signal = stats->rssi + 10;
+-	/*rx_status->noise = -stats->noise; */
+ 	return true;
+ }
  
 -- 
-1.7.4.4
+1.8.1.4
 
