@@ -1,51 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail1.bemta3.messagelabs.com ([195.245.230.171]:41308 "EHLO
-	mail1.bemta3.messagelabs.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1760029Ab3ICO1H (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Sep 2013 10:27:07 -0400
-From: Andrew Delamare <andrew.delamare@powerethernet.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: ACS compile to hostapd 2.0
-Date: Tue, 3 Sep 2013 14:26:51 +0000
-Message-ID: <2ce6e0837f3c48d39e72cd07b5cdd491@THHSTE15D1BE3.hs20.net> (sfid-20130903_162711_305809_7EF621CA)
-References: <7f4ff1930bfc4f3b8160b1595950c5a1@THHSTE15D1BE3.hs20.net>
- <CA+BoTQn7nhsDxedekMTZ9ZqFyo55zR3iGPuTYvVqELGYGh5njg@mail.gmail.com>
-In-Reply-To: <CA+BoTQn7nhsDxedekMTZ9ZqFyo55zR3iGPuTYvVqELGYGh5njg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:20643 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751002Ab3IPVPA convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Sep 2013 17:15:00 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Daniel Mack <zonque@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "s.neumann@raumfeld.com" <s.neumann@raumfeld.com>,
+	"afenkart@gmail.com" <afenkart@gmail.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"johannes.berg@intel.com" <johannes.berg@intel.com>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Date: Mon, 16 Sep 2013 14:14:08 -0700
+Subject: RE: [PATCH 1/1] mwifiex: queue main work from main process when
+ bailing on races
+Message-ID: <477F20668A386D41ADCC57781B1F70430F44C5849E@SC-VEXCH1.marvell.com> (sfid-20130916_231508_085090_97FABE06)
+References: <1379331546-30617-1-git-send-email-zonque@gmail.com>
+ <1379331546-30617-2-git-send-email-zonque@gmail.com>
+In-Reply-To: <1379331546-30617-2-git-send-email-zonque@gmail.com>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGV5IE1pY2hhbCwKClRoYW5rcyBmb3IgdGhlIHN1cGVyIHNwZWVkeSByZXNwb25zZS4KCldoaWNo
-IHJlcG9zaXRvcnkgaXMgdGhhdCBpbj8gCgpJZiB5b3UgY291bGQgcG9pbnQgbWUgdG8gdGhlIHJp
-Z2h0IEdpdCByZXBvc2l0b3J5IG9yIGZ0cCBkb3dubG9hZCB0aGF0IHdvdWxkIGJlIGdyZWF0LgoK
-ClJlZ2FyZHMKLS0KQW5kcmV3IERlbGFtYXJlCkRpcmVjdG9yIE9mIFRlY2hub2xvZ3kKUG93ZXIg
-RXRoZXJuZXQgTHRkCjA3NTg1OTU2NzQ4CgoKCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tCkZy
-b206IE1pY2hhbCBLYXppb3IgW21haWx0bzptaWNoYWwua2F6aW9yQHRpZXRvLmNvbV0gClNlbnQ6
-IFR1ZXNkYXksIFNlcHRlbWJlciAzLCAyMDEzIDE6NTMgUE0KVG86IEFuZHJldyBEZWxhbWFyZQpD
-YzogbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnClN1YmplY3Q6IFJlOiBBQ1MgY29tcGls
-ZSB0byBob3N0YXBkIDIuMAoKT24gMyBTZXB0ZW1iZXIgMjAxMyAxNDozMywgQW5kcmV3IERlbGFt
-YXJlIDxhbmRyZXcuZGVsYW1hcmVAcG93ZXJldGhlcm5ldC5jb20+IHdyb3RlOgo+IEhleSB0aGVy
-ZSwKPgo+IFNvIEkgd2FudCB0byBnZXQgQUNTIHdvcmtpbmcgYW5kIEkgaGF2ZSBsb29rZWQgYXQg
-eW91ciBBQ1MgcGFnZSBhdDogCj4gaHR0cDovL3dpcmVsZXNzLmtlcm5lbC5vcmcvZW4vdXNlcnMv
-RG9jdW1lbnRhdGlvbi9hY3MKPgo+IEkgZm91bmQgdGhlcmUgaXMgYSBwYXRjaHNldCB0aGF0IHlv
-dSBjYW4gdXNlIHdpdGggdGhlIEFDUyBjb2RlIHRoYXQgcGF0Y2hlcyBhIHN0YW5kYXJkIGhvc3Rh
-cGQuIFNvIEkgdHJpZWQgdGhpcyBwYXRjaCBhbmQgSSBhbSBoYXZpbmcgaXNzdWVzIGdldHRpbmcg
-QUNTIHRvIHBhdGNoIGludG8gaG9zdGFwZCAyLjAuIFdoYXQgaXMgdGhlIGNvZGUgc3RyYW5kIHRo
-YXQgdGhpcyBwYXRjaCB3b3JrcyBvbj8KCkhpLAoKQUNTIGhhcyBiZWVuIG1lcmdlZCBpbnRvIGhv
-c3RhcGQgbWFzdGVyIGJyYW5jaCAzIGRheXMgYWdvIHNvIHlvdSBjYW4gdHJ5IHB1bGxpbmcgdGhh
-dC4KClRoZSBwYXRjaCBvbiB0aGUgYWZvcmVtZW50aW9uZWQgcGFnZSBwcm9iYWJseSBkb2Vzbid0
-IGFwcGx5IG9uIGEgMi4wIHJlbGVhc2UgYXMtaXMuCgoKTWljaGHFgi4KCl9fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18K
-VGhpcyBlbWFpbCBoYXMgYmVlbiBzY2FubmVkIGJ5IHRoZSBTeW1hbnRlYyBFbWFpbCBTZWN1cml0
-eS5jbG91ZCBzZXJ2aWNlLgpGb3IgbW9yZSBpbmZvcm1hdGlvbiBwbGVhc2UgdmlzaXQgaHR0cDov
-L3d3dy5zeW1hbnRlY2Nsb3VkLmNvbSBfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCgpfX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fClRoaXMg
-ZW1haWwgaGFzIGJlZW4gc2Nhbm5lZCBieSB0aGUgU3ltYW50ZWMgRW1haWwgU2VjdXJpdHkuY2xv
-dWQgc2VydmljZS4KRm9yIG1vcmUgaW5mb3JtYXRpb24gcGxlYXNlIHZpc2l0IGh0dHA6Ly93d3cu
-c3ltYW50ZWNjbG91ZC5jb20KX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwo=
+Hi Daniel,
+
+Thanks for the patch.
+
+> Queue main_work in case mwifiex_main_process() bails due to an already
+> processed transaction. This is particularly necessary because
+> mwifiex_main_process() is called from both the SDIO interrupt handler
+> and the workqueue. In case an interrupt occurs while the main process
+> is currently executed from the workqueue, the interrupt is lost,
+> resulting in a command timeout and consequently a card reset.
+> 
+> I'm marking this for stable kernel in version 3.7+, because on our
+> platform, the issue appears since 601216e12c ("mwifiex: process RX
+> packets in SDIO IRQ thread directly") went in.
+> 
+> Signed-off-by: Daniel Mack <zonque@gmail.com>
+> Reported-by: Sven Neumann <s.neumann@raumfeld.com>
+> Reported-by: Andreas Fenkart <andreas.fenkart@streamunlimited.com>
+> Cc: Bing Zhao <bzhao@marvell.com>
+> Cc: <stable@vger.kernel.org> [v3.7+]
+> ---
+>  drivers/net/wireless/mwifiex/main.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
+> index ff4ed96..0700bc2 100644
+> --- a/drivers/net/wireless/mwifiex/main.c
+> +++ b/drivers/net/wireless/mwifiex/main.c
+> @@ -235,6 +235,7 @@ int mwifiex_main_process(struct mwifiex_adapter *adapter)
+>  	/* Check if already processing */
+>  	if (adapter->mwifiex_processing) {
+>  		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
+> +		queue_work(adapter->workqueue, &adapter->main_work);
+
+This is specific to SDIO interface, so we'd add a check here.
+
++               if (adapter->iface_type == MWIFIEX_SDIO)
++                       queue_work(adapter->workqueue, &adapter->main_work);
+
+Thanks,
+Bing
+
+>  		goto exit_main_proc;
+>  	} else {
+>  		adapter->mwifiex_processing = true;
+> --
+> 1.8.3.1
 
