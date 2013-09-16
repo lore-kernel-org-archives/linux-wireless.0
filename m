@@ -1,81 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:42566 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751195Ab3IJTQa (ORCPT
+Received: from mail-ob0-f170.google.com ([209.85.214.170]:53422 "EHLO
+	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751136Ab3IPSzq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Sep 2013 15:16:30 -0400
-Message-ID: <1378840613.4223.34.camel@porter.coelho.fi> (sfid-20130910_211633_362597_0A92C075)
-Subject: Re: [PATCH 02/12] wlcore: add new plt power-mode: CHIP_AWAKE
-From: Luca Coelho <luca@coelho.fi>
-To: Eliad Peller <eliad@wizery.com>
-Cc: Arik Nemtsov <arik@wizery.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Tue, 10 Sep 2013 22:16:53 +0300
-In-Reply-To: <CAB3XZEd=n5=pG9=Rvj6P6RHygqYyoqh3rGa3ntQf9f=obK03Sg@mail.gmail.com>
-References: <1378218848-7853-1-git-send-email-eliad@wizery.com>
-	 <1378218848-7853-2-git-send-email-eliad@wizery.com>
-	 <1378794813.4799.35.camel@porter.coelho.fi>
-	 <CA+XVXfdiudFgdXVAugkHVBLPVgLyrsokosCyhpNd5c5G7DOcOg@mail.gmail.com>
-	 <1378796198.4799.49.camel@porter.coelho.fi>
-	 <CAB3XZEd=n5=pG9=Rvj6P6RHygqYyoqh3rGa3ntQf9f=obK03Sg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 16 Sep 2013 14:55:46 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 2/8 V2] rtlwifi: rtl8192de: Fix smatch warnings in rtl8192de/hw.c
+Date: Mon, 16 Sep 2013 13:55:16 -0500
+Message-Id: <1379357722-17687-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130916_205652_742630_4B707D7A)
+In-Reply-To: <1379357722-17687-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1379357722-17687-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-09-10 at 15:46 +0200, Eliad Peller wrote:
-> On Tue, Sep 10, 2013 at 9:56 AM, Luca Coelho <luca@coelho.fi> wrote:
-> > On Tue, 2013-09-10 at 08:47 +0200, Arik Nemtsov wrote:
-> >> On Tue, Sep 10, 2013 at 9:33 AM, Luca Coelho <luca@coelho.fi> wrote:
-> >> > On Tue, 2013-09-03 at 17:33 +0300, Eliad Peller wrote:
-> >> >> From: Yair Shapira <yair.shapira@ti.com>
-> >> >>
-> >> >> Under this mode the chip is powered on including sdio
-> >> >> but no FW is downloaded and run, interrupts are not enabled, etc...
-> >> >>
-> >> >> This mode is intended to allow RTTT to bridge sdio as a transport
-> >> >> to the chip.
-> >> >>
-> >> >> Driver only provides sdio access using the dev_mem debugfs file.
-> >> >>
-> >> >> Some fixes done to the code that ensures that PLT mode and normal
-> >> >> driver power mode (ifconfig/add_interface) are mutually excluded.
-> >> >>
-> >> >> Signed-off-by: Yair Shapira <yair.shapira@ti.com>
-> >> >> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> >> >> ---
-> >> >
-> >> > I had some comments to this patch internally while I was still at TI.
-> >> > Namely, I asked why do we need a new way of doing this if this is
-> >> > already possible via debugsfs (using the gpio_power file)?
-> >>
-> >> Are you commenting on the correct patch? Seems this is just a patch to
-> >> prevent "ifconfig up" during PLT mode..
-> >
-> > Yes, I'm commenting on the right patch.  It allows the chip power
-> > (namely the WLAN_EN GPIO pin) to be set directly, without loading the
-> > firmware and doing other initialization stuff.  This can already be
-> > controlled via the gpio_power debugfs file.  I've used that a bunch of
-> > times, including with the RTTT tool.
-> >
-> > Okay, this patch has a few more protections (eg. not allowing an
-> > interface to be added while the chip is powered in this way), but this
-> > could also be added on top of the existing implementation.
-> >
-> i guess this just a bit "cleaner" (similar to the way PLT is used).
-> the gpio_power debugfs only toggles the gpio power, without changing
-> the driver mode, so adding similar protections will be more
-> complicated.
+Smatch lists the following:
+  CHECK   drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+drivers/net/wireless/rtlwifi/rtl8192de/hw.c:1200 rtl92de_set_qos() info: ignoring unreachable code.
+drivers/net/wireless/rtlwifi/rtl8192de/hw.c:1200 rtl92de_set_qos() info: ignoring unreachable code.
 
-Maybe, but the truth is that you don't need to add these protections,
-unless you really want to shoot your own foot and start mangling with
-the interfaces.  These tools are usually used in very controlled
-environments (like RF R&D and production testing).
+Dead code is commented out. It has not been deleted in case I find a need for
+it later.
 
-Still, this is okay, but it's just bad to see things being done in two
-different ways.  I guess whoever requested this "new feature" didn't
-know about the gpio toggling debugfs file.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/rtl8192de/hw.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
---
-Luca.
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+index 7dd8f6d..c9b0894 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+@@ -1194,6 +1194,7 @@ void rtl92d_linked_set_reg(struct ieee80211_hw *hw)
+  * mac80211 will send pkt when scan */
+ void rtl92de_set_qos(struct ieee80211_hw *hw, int aci)
+ {
++/*
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	rtl92d_dm_init_edca_turbo(hw);
+ 	return;
+@@ -1213,6 +1214,7 @@ void rtl92de_set_qos(struct ieee80211_hw *hw, int aci)
+ 		RT_ASSERT(false, "invalid aci: %d !\n", aci);
+ 		break;
+ 	}
++ */
+ }
+ 
+ void rtl92de_enable_interrupt(struct ieee80211_hw *hw)
+-- 
+1.8.1.4
 
