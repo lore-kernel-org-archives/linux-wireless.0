@@ -1,69 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:39429 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754575Ab3ITMKO (ORCPT
+Received: from mail-oa0-f49.google.com ([209.85.219.49]:49405 "EHLO
+	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751149Ab3IPRjy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Sep 2013 08:10:14 -0400
-In-Reply-To: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-From: Russell King <rmk+kernel@arm.linux.org.uk>
-To: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
-	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
-	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
-	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	uclinux-dist-devel@blackfin.uclinux.org
-Cc: Vinod Koul <vinod.koul@intel.com>,
-	Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 27/51] DMA-API: provide a helper to setup DMA masks
-Message-Id: <E1VMm8o-0007iV-Ac@rmk-PC.arm.linux.org.uk> (sfid-20130920_141027_712726_17C1426E)
-Date: Thu, 19 Sep 2013 22:52:02 +0100
+	Mon, 16 Sep 2013 13:39:54 -0400
+Message-ID: <52374267.9040200@lwfinger.net> (sfid-20130916_194003_186523_FA609834)
+Date: Mon, 16 Sep 2013 12:39:51 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: David Laight <David.Laight@ACULAB.COM>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH 5/7: rtlwifi: Fix smatch warning in pci.c
+References: <1379094304-22041-1-git-send-email-Larry.Finger@lwfinger.net> <1379094304-22041-6-git-send-email-Larry.Finger@lwfinger.net> <AE90C24D6B3A694183C094C60CF0A2F6026B733B@saturn3.aculab.com>
+In-Reply-To: <AE90C24D6B3A694183C094C60CF0A2F6026B733B@saturn3.aculab.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Many drivers contain code such as:
+On 09/16/2013 04:26 AM, David Laight wrote:
+>> Smatch reports the following:
+>>    CHECK   drivers/net/wireless/rtlwifi/pci.c
+>> drivers/net/wireless/rtlwifi/pci.c:739 _rtl_pci_rx_interrupt() warn: assigning (-98) to unsigned
+>> variable 'stats.noise'
+>>
+>> This problem is fixed by changing the value to 256 - 98.
+>>
+>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>> ---
+>>   drivers/net/wireless/rtlwifi/pci.c | 2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
+>> index 703f839..bf498f5 100644
+>> --- a/drivers/net/wireless/rtlwifi/pci.c
+>> +++ b/drivers/net/wireless/rtlwifi/pci.c
+>> @@ -736,7 +736,7 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
+>>
+>>   	struct rtl_stats stats = {
+>>   		.signal = 0,
+>> -		.noise = -98,
+>> +		.noise = 158,	/* -98 dBm */
+>>   		.rate = 0,
+>>   	};
+>>   	int index = rtlpci->rx_ring[rx_queue_idx].idx;
+>
+> That doesn't look nice at all.
+> Something like (unsigned int)-98 would be slightly better,
+> but it looks as though something is actually wrong with
+> the type of 'noise' itself.
 
-	dev->dma_mask = &dev->coherent_dma_mask;
-	dev->coherent_dma_mask = MASK;
+The type of 'noise' is probably a legacy of wireless extensions. In fact, that 
+variable is not used and will be deleted in V2 of the patches.
 
-Let's move this pattern out of drivers and have the DMA API provide a
-helper for it.  This helper uses dma_set_mask_and_coherent() to allow
-platform issues to be properly dealt with via dma_set_mask()/
-dma_is_supported().
+Thanks,
 
-Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
----
- include/linux/dma-mapping.h |   10 ++++++++++
- 1 files changed, 10 insertions(+), 0 deletions(-)
+Larry
 
-diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
-index ec951f9..27d1421 100644
---- a/include/linux/dma-mapping.h
-+++ b/include/linux/dma-mapping.h
-@@ -111,6 +111,16 @@ static inline int dma_set_mask_and_coherent(struct device *dev, u64 mask)
- 	return rc;
- }
- 
-+/*
-+ * Similar to the above, except it deals with the case where the device
-+ * does not have dev->dma_mask appropriately setup.
-+ */
-+static inline int dma_coerce_mask_and_coherent(struct device *dev, u64 mask)
-+{
-+	dev->dma_mask = &dev->coherent_dma_mask;
-+	return dma_set_mask_and_coherent(dev, mask);
-+}
-+
- extern u64 dma_get_required_mask(struct device *dev);
- 
- static inline unsigned int dma_get_max_seg_size(struct device *dev)
--- 
-1.7.4.4
 
