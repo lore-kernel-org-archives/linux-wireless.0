@@ -1,172 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:63675 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756245Ab3IZJaO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Sep 2013 05:30:14 -0400
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Bartosz Markowski <bartosz.markowski@tieto.com>
-Subject: [PATCH v2 13/13] ath10k: handle FW API differences for scan structures
-Date: Thu, 26 Sep 2013 11:29:52 +0200
-Message-ID: <1380187792-25626-14-git-send-email-bartosz.markowski@tieto.com> (sfid-20130926_114457_425399_7AB39AEF)
-In-Reply-To: <1380187792-25626-1-git-send-email-bartosz.markowski@tieto.com>
-References: <1380187792-25626-1-git-send-email-bartosz.markowski@tieto.com>
+Received: from mail-la0-f46.google.com ([209.85.215.46]:53568 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751029Ab3IPTEP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Sep 2013 15:04:15 -0400
+Received: by mail-la0-f46.google.com with SMTP id eh20so3457822lab.5
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Sep 2013 12:04:14 -0700 (PDT)
+Message-ID: <5237562D.4080509@cogentembedded.com> (sfid-20130916_210419_074817_D1807A46)
+Date: Mon, 16 Sep 2013 23:04:13 +0400
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH 5/8 V2] [PATCH 5/7: rtlwifi: Fix smatch warning in pci.c
+References: <1379357722-17687-1-git-send-email-Larry.Finger@lwfinger.net> <1379357722-17687-6-git-send-email-Larry.Finger@lwfinger.net>
+In-Reply-To: <1379357722-17687-6-git-send-email-Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The wmi_start_scan_cmd has an extra filed in our main
-firmware track, reflact that to not have a mismatch in
-case of 10.x track.
+On 09/16/2013 10:55 PM, Larry Finger wrote:
 
-Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
----
- drivers/net/wireless/ath/ath10k/wmi.c |   19 ++++++--
- drivers/net/wireless/ath/ath10k/wmi.h |   82 +++++++++++++++++++++++++++++++++
- 2 files changed, 97 insertions(+), 4 deletions(-)
+> Smatch reports the following:
+>    CHECK   drivers/net/wireless/rtlwifi/pci.c
+> drivers/net/wireless/rtlwifi/pci.c:739 _rtl_pci_rx_interrupt() warn: assigning (-98) to unsigned variable 'stats.noise'
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 8c3316d..328d4eb 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -2341,11 +2341,15 @@ int ath10k_wmi_cmd_init(struct ath10k *ar)
- 	return ret;
- }
- 
--static int ath10k_wmi_start_scan_calc_len(const struct wmi_start_scan_arg *arg)
-+static int ath10k_wmi_start_scan_calc_len(struct ath10k *ar,
-+					  const struct wmi_start_scan_arg *arg)
- {
- 	int len;
- 
--	len = sizeof(struct wmi_start_scan_cmd);
-+	if (test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features))
-+		len = sizeof(struct wmi_start_scan_cmd_10x);
-+	else
-+		len = sizeof(struct wmi_start_scan_cmd);
- 
- 	if (arg->ie_len) {
- 		if (!arg->ie)
-@@ -2405,7 +2409,7 @@ int ath10k_wmi_start_scan(struct ath10k *ar,
- 	int len = 0;
- 	int i;
- 
--	len = ath10k_wmi_start_scan_calc_len(arg);
-+	len = ath10k_wmi_start_scan_calc_len(ar, arg);
- 	if (len < 0)
- 		return len; /* len contains error code here */
- 
-@@ -2437,7 +2441,14 @@ int ath10k_wmi_start_scan(struct ath10k *ar,
- 	cmd->scan_ctrl_flags    = __cpu_to_le32(arg->scan_ctrl_flags);
- 
- 	/* TLV list starts after fields included in the struct */
--	off = sizeof(*cmd);
-+	/* There's just one filed that differes the two start_scan
-+	 * structures - burst_duration, which we are not using btw,
-+	   no point to make the split here, just shift the buffer to fit with
-+	   given FW */
-+	if (test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features))
-+		off = sizeof(struct wmi_start_scan_cmd_10x);
-+	else
-+		off = sizeof(struct wmi_start_scan_cmd);
- 
- 	if (arg->n_channels) {
- 		channels = (void *)skb->data + off;
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 80ab2f0..7692c14 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -1715,6 +1715,88 @@ struct wmi_start_scan_cmd {
- 	 */
- } __packed;
- 
-+/* This is the definition from 10.X firmware branch */
-+struct wmi_start_scan_cmd_10x {
-+	/* Scan ID */
-+	__le32 scan_id;
-+
-+	/* Scan requestor ID */
-+	__le32 scan_req_id;
-+
-+	/* VDEV id(interface) that is requesting scan */
-+	__le32 vdev_id;
-+
-+	/* Scan Priority, input to scan scheduler */
-+	__le32 scan_priority;
-+
-+	/* Scan events subscription */
-+	__le32 notify_scan_events;
-+
-+	/* dwell time in msec on active channels */
-+	__le32 dwell_time_active;
-+
-+	/* dwell time in msec on passive channels */
-+	__le32 dwell_time_passive;
-+
-+	/*
-+	 * min time in msec on the BSS channel,only valid if atleast one
-+	 * VDEV is active
-+	 */
-+	__le32 min_rest_time;
-+
-+	/*
-+	 * max rest time in msec on the BSS channel,only valid if at least
-+	 * one VDEV is active
-+	 */
-+	/*
-+	 * the scanner will rest on the bss channel at least min_rest_time
-+	 * after min_rest_time the scanner will start checking for tx/rx
-+	 * activity on all VDEVs. if there is no activity the scanner will
-+	 * switch to off channel. if there is activity the scanner will let
-+	 * the radio on the bss channel until max_rest_time expires.at
-+	 * max_rest_time scanner will switch to off channel irrespective of
-+	 * activity. activity is determined by the idle_time parameter.
-+	 */
-+	__le32 max_rest_time;
-+
-+	/*
-+	 * time before sending next set of probe requests.
-+	 * The scanner keeps repeating probe requests transmission with
-+	 * period specified by repeat_probe_time.
-+	 * The number of probe requests specified depends on the ssid_list
-+	 * and bssid_list
-+	 */
-+	__le32 repeat_probe_time;
-+
-+	/* time in msec between 2 consequetive probe requests with in a set. */
-+	__le32 probe_spacing_time;
-+
-+	/*
-+	 * data inactivity time in msec on bss channel that will be used by
-+	 * scanner for measuring the inactivity.
-+	 */
-+	__le32 idle_time;
-+
-+	/* maximum time in msec allowed for scan  */
-+	__le32 max_scan_time;
-+
-+	/*
-+	 * delay in msec before sending first probe request after switching
-+	 * to a channel
-+	 */
-+	__le32 probe_delay;
-+
-+	/* Scan control flags */
-+	__le32 scan_ctrl_flags;
-+
-+	/*
-+	 * TLV (tag length value )  paramerters follow the scan_cmd structure.
-+	 * TLV can contain channel list, bssid list, ssid list and
-+	 * ie. the TLV tags are defined above;
-+	 */
-+} __packed;
-+
-+
- struct wmi_ssid_arg {
- 	int len;
- 	const u8 *ssid;
--- 
-1.7.10
+> This variable is not used and is removed.
+
+    It is not a variable but a structure field initializer you're removing.
+
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+>   drivers/net/wireless/rtlwifi/pci.c | 1 -
+>   1 file changed, 1 deletion(-)
+
+> diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
+> index 703f839..6295ed2 100644
+> --- a/drivers/net/wireless/rtlwifi/pci.c
+> +++ b/drivers/net/wireless/rtlwifi/pci.c
+> @@ -736,7 +736,6 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
+>
+>   	struct rtl_stats stats = {
+>   		.signal = 0,
+> -		.noise = -98,
+>   		.rate = 0,
+>   	};
+
+WBR, Sergei
 
