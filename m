@@ -1,56 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2150 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755096Ab3IYLGF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Sep 2013 07:06:05 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 5/7] brcmfmac: fix sparse error 'bad constant
- expression'
-Date: Wed, 25 Sep 2013 13:05:44 +0200
-Message-ID: <1380107146-24026-6-git-send-email-arend@broadcom.com> (sfid-20130925_130609_006278_1A38A999)
-In-Reply-To: <1380107146-24026-1-git-send-email-arend@broadcom.com>
-References: <1380107146-24026-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s72.web-hosting.com ([198.187.29.21]:57741 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753134Ab3IPFLA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Sep 2013 01:11:00 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/3] ath9k: Handle FATAL interrupts correctly
+Date: Mon, 16 Sep 2013 10:37:00 +0530
+Message-Id: <1379308021-20891-2-git-send-email-sujith@msujith.org> (sfid-20130916_071104_610993_789DC34C)
+In-Reply-To: <1379308021-20891-1-git-send-email-sujith@msujith.org>
+References: <1379308021-20891-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The definition of BRCMF_EVENTING_MASK_LEN results in a sparse
-error message
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-.../fweh.c:331:22: error: bad constant expression
-.../fweh.c:388:22: error: bad constant expression
-.../dhd_common.c:256:22: error: bad constant expression
+When a FATAL interrupt is received, a full chip reset is
+required, which is done in the main tasklet. But since
+the reset routine is scheduled as a work item, make sure
+that interrupts are not enabled in the tasklet before the
+reset is done.
 
-This is caused by the use of roundup() in BRCMF_EVENTING_MASK_LEN
-and it is used to allocate an array variable on the stack. Better
-use DIV_ROUND_UP() macro.
-
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/fweh.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/main.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fweh.h b/drivers/net/wireless/brcm80211/brcmfmac/fweh.h
-index 9ee5c51..14bc24d 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fweh.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fweh.h
-@@ -115,7 +115,7 @@ enum brcmf_fweh_event_code {
- };
- #undef BRCMF_ENUM_DEF
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index e4f6590..cdb3b1e 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -362,6 +362,13 @@ void ath9k_tasklet(unsigned long data)
+ 			type = RESET_TYPE_BB_WATCHDOG;
  
--#define BRCMF_EVENTING_MASK_LEN		(roundup(BRCMF_E_LAST, 8)/8)
-+#define BRCMF_EVENTING_MASK_LEN		DIV_ROUND_UP(BRCMF_E_LAST, 8)
+ 		ath9k_queue_reset(sc, type);
++
++		/*
++		 * Increment the ref. counter here so that
++		 * interrupts are enabled in the reset routine.
++		 */
++		atomic_inc(&ah->intr_ref_cnt);
++		ath_dbg(common, ANY, "FATAL: Skipping interrupts\n");
+ 		goto out;
+ 	}
  
- /* flags field values in struct brcmf_event_msg */
- #define BRCMF_EVENT_MSG_LINK		0x01
+@@ -400,10 +407,9 @@ void ath9k_tasklet(unsigned long data)
+ 
+ 	ath9k_btcoex_handle_interrupt(sc, status);
+ 
+-out:
+ 	/* re-enable hardware interrupt */
+ 	ath9k_hw_enable_interrupts(ah);
+-
++out:
+ 	spin_unlock(&sc->sc_pcu_lock);
+ 	ath9k_ps_restore(sc);
+ }
 -- 
-1.7.10.4
-
+1.8.4
 
