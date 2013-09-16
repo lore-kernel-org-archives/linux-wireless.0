@@ -1,59 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:55651 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751069Ab3IJL1K (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:55478 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752743Ab3IPGB6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Sep 2013 07:27:10 -0400
-Received: from epcpsbgr3.samsung.com
- (u143.gpu120.samsung.co.kr [203.254.230.143])
- by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MSW00MA4QGQDH10@mailout2.samsung.com> for
- linux-wireless@vger.kernel.org; Tue, 10 Sep 2013 20:27:09 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: "'John W. Linville'" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>,
-	'Stanislav Yakovlev' <stas.yakovlev@gmail.com>
-References: <00b101ceae16$ecb87c30$c6297490$%han@samsung.com>
-In-reply-to: <00b101ceae16$ecb87c30$c6297490$%han@samsung.com>
-Subject: [PATCH 08/12] wireless: ipw2x00: remove unnecessary pci_set_drvdata()
-Date: Tue, 10 Sep 2013 20:27:09 +0900
-Message-id: <00b901ceae18$afc7fb50$0f57f1f0$%han@samsung.com> (sfid-20130910_132713_759992_260065B6)
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+	Mon, 16 Sep 2013 02:01:58 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, stable@vger.kernel.org
+Subject: [PATCH] ath9k: Fix regression in LNA diversity
+Date: Mon, 16 Sep 2013 11:27:59 +0530
+Message-Id: <1379311079-8411-1-git-send-email-sujith@msujith.org> (sfid-20130916_080201_847820_CBD55B5A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver core clears the driver data to NULL after device_release
-or on probe failure. Thus, it is not needed to manually clear the
-device driver data to NULL.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+The commit "ath9k: Optimize LNA check" tried
+to use the "rs_firstaggr" flag to optimize the LNA
+combining algorithm when processing subframes in
+an A-MPDU. This doesn't appear to work well in practice,
+so revert it and use the old method of relying on
+"rs_moreaggr".
+
+Cc: stable@vger.kernel.org
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/ipw2x00/ipw2200.c |    2 --
- 1 file changed, 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/recv.c | 7 -------
+ 1 file changed, 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
-index 6b823a1..f394af7 100644
---- a/drivers/net/wireless/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-@@ -11885,7 +11885,6 @@ static int ipw_pci_probe(struct pci_dev *pdev,
- 	pci_release_regions(pdev);
-       out_pci_disable_device:
- 	pci_disable_device(pdev);
--	pci_set_drvdata(pdev, NULL);
-       out_free_libipw:
- 	free_libipw(priv->net_dev, 0);
-       out:
-@@ -11966,7 +11965,6 @@ static void ipw_pci_remove(struct pci_dev *pdev)
- 	iounmap(priv->hw_base);
- 	pci_release_regions(pdev);
- 	pci_disable_device(pdev);
--	pci_set_drvdata(pdev, NULL);
- 	/* wiphy_unregister needs to be here, before free_libipw */
- 	wiphy_unregister(priv->ieee->wdev.wiphy);
- 	kfree(priv->ieee->a_band.channels);
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 4ee472a..ab9e3a8 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -1270,13 +1270,6 @@ static void ath9k_antenna_check(struct ath_softc *sc,
+ 		return;
+ 
+ 	/*
+-	 * All MPDUs in an aggregate will use the same LNA
+-	 * as the first MPDU.
+-	 */
+-	if (rs->rs_isaggr && !rs->rs_firstaggr)
+-		return;
+-
+-	/*
+ 	 * Change the default rx antenna if rx diversity
+ 	 * chooses the other antenna 3 times in a row.
+ 	 */
 -- 
-1.7.10.4
-
+1.8.4
 
