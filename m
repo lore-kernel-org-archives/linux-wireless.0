@@ -1,61 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f181.google.com ([209.85.220.181]:56900 "EHLO
-	mail-vc0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751876Ab3IRT5y (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Sep 2013 15:57:54 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH 2/8 V3] rtlwifi: rtl8192de: Fix smatch warnings in rtl8192de/hw.c
-Date: Wed, 18 Sep 2013 14:57:34 -0500
-Message-Id: <1379534260-14841-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130918_215808_683868_04F836B4)
-In-Reply-To: <1379534260-14841-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1379534260-14841-1-git-send-email-Larry.Finger@lwfinger.net>
+Received: from ebb05.tieto.com ([131.207.168.36]:60942 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751212Ab3IPMti (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Sep 2013 08:49:38 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC 0/4] ath10k: improve RX performance
+Date: Mon, 16 Sep 2013 14:49:13 +0200
+Message-ID: <1379335757-15180-1-git-send-email-michal.kazior@tieto.com> (sfid-20130916_144941_555728_6F367541)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Smatch lists the following:
-  CHECK   drivers/net/wireless/rtlwifi/rtl8192de/hw.c
-drivers/net/wireless/rtlwifi/rtl8192de/hw.c:1200 rtl92de_set_qos() info: ignoring unreachable code.
-drivers/net/wireless/rtlwifi/rtl8192de/hw.c:1200 rtl92de_set_qos() info: ignoring unreachable code.
+Hi,
 
-The dead code is deleted.
+This patchset gives clear RX performance
+improvement on AP135. Throughput is at least
+doubled (300mbps -> 600mbps, UDP RX, 2x2).
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/rtl8192de/hw.c |   19 -------------------
- 1 file changed, 19 deletions(-)
+Patches depend on my RFC patch "mac80211: support
+reporting A-MSDU subframes individually".
 
-Index: wireless-testing-save/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
-===================================================================
---- wireless-testing-save.orig/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
-+++ wireless-testing-save/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
-@@ -1194,25 +1194,6 @@ void rtl92d_linked_set_reg(struct ieee80
-  * mac80211 will send pkt when scan */
- void rtl92de_set_qos(struct ieee80211_hw *hw, int aci)
- {
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	rtl92d_dm_init_edca_turbo(hw);
--	return;
--	switch (aci) {
--	case AC1_BK:
--		rtl_write_dword(rtlpriv, REG_EDCA_BK_PARAM, 0xa44f);
--		break;
--	case AC0_BE:
--		break;
--	case AC2_VI:
--		rtl_write_dword(rtlpriv, REG_EDCA_VI_PARAM, 0x5e4322);
--		break;
--	case AC3_VO:
--		rtl_write_dword(rtlpriv, REG_EDCA_VO_PARAM, 0x2f3222);
--		break;
--	default:
--		RT_ASSERT(false, "invalid aci: %d !\n", aci);
--		break;
--	}
- }
- 
- void rtl92de_enable_interrupt(struct ieee80211_hw *hw)
+
+Michal.
+
+
+Michal Kazior (4):
+  ath10k: report A-MSDU subframes individually
+  ath10k: document decap modes
+  ath10k: cleanup RX decap handling
+  ath10k: align RX frames properly
+
+ drivers/net/wireless/ath/ath10k/htt.h     |    1 +
+ drivers/net/wireless/ath/ath10k/htt_rx.c  |  251 ++++++++++++-----------------
+ drivers/net/wireless/ath/ath10k/hw.h      |    6 +-
+ drivers/net/wireless/ath/ath10k/rx_desc.h |   24 ++-
+ drivers/net/wireless/ath/ath10k/txrx.c    |    5 +
+ 5 files changed, 135 insertions(+), 152 deletions(-)
+
+-- 
+1.7.9.5
+
