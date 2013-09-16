@@ -1,50 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:40323 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752169Ab3ICFIC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Sep 2013 01:08:02 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: Joe Perches <joe@perches.com>
-Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org
-Subject: Re: [PATCH v2 13/16] wcn36xx: add wcn36xx.h
-References: <1377248299-21007-1-git-send-email-k.eugene.e@gmail.com>
-	<1377248299-21007-14-git-send-email-k.eugene.e@gmail.com>
-	<1377298929.2816.15.camel@joe-AO722>
-	<87ioyjux5w.fsf@purkki.adurom.net>
-	<1378144193.1953.88.camel@joe-AO722>
-Date: Tue, 03 Sep 2013 08:08:00 +0300
-In-Reply-To: <1378144193.1953.88.camel@joe-AO722> (Joe Perches's message of
-	"Mon, 02 Sep 2013 10:49:53 -0700")
-Message-ID: <87bo4av6fj.fsf@purkki.adurom.net> (sfid-20130903_070806_639471_C3666EB0)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-oa0-f50.google.com ([209.85.219.50]:52400 "EHLO
+	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751043Ab3IPSzr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Sep 2013 14:55:47 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 3/8 V2] rtlwifi: rtl8192cu: Fix smatch warning in rtl8192cu/trx.c
+Date: Mon, 16 Sep 2013 13:55:17 -0500
+Message-Id: <1379357722-17687-4-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130916_205556_354372_9B251561)
+In-Reply-To: <1379357722-17687-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1379357722-17687-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Joe Perches <joe@perches.com> writes:
+Smatch lists the following:
+  CHECK   drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
+drivers/net/wireless/rtlwifi/rtl8192cu/trx.c:367 _rtl_rx_process() warn: assigning (-98) to unsigned variable 'stats.noise'
 
-> On Mon, 2013-09-02 at 17:15 +0300, Kalle Valo wrote:
->> Joe Perches <joe@perches.com> writes:
->> 
->> >> +#define wcn36xx_dbg(mask, fmt, arg...) do {			\
->> >> +	if (debug_mask & mask)					\
->> >> +		printk(KERN_DEBUG pr_fmt(fmt), ##arg);	\
->> >> +} while (0)
->> >
->> > And maybe this one using pr_debug so dynamic_debug
->> > can work too.
->> 
->> Please, no dynamic_debug. It's useless on a wifi driver.
->
-> Why is that?
+This variable is unused, thus it is removed.
 
-It's not really usable in practise, at least the last time I looked at
-it. It's cumbersome to enable log messages based on their line numbers
-and line numbers change so you can't really make any scripts to help
-with that. And enabling log messages on the file level is sometimes too
-much. So it would really need some sort of grouping feature with a
-stable interface.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/rtl8192cu/trx.c | 2 --
+ 1 file changed, 2 deletions(-)
 
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
+index 763cf1d..04c7e57 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
+@@ -349,7 +349,6 @@ bool rtl92cu_rx_query_desc(struct ieee80211_hw *hw,
+ 	}
+ 	/*rx_status->qual = stats->signal; */
+ 	rx_status->signal = stats->rssi + 10;
+-	/*rx_status->noise = -stats->noise; */
+ 	return true;
+ }
+ 
+@@ -364,7 +363,6 @@ static void _rtl_rx_process(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	u8 *rxdesc;
+ 	struct rtl_stats stats = {
+ 		.signal = 0,
+-		.noise = -98,
+ 		.rate = 0,
+ 	};
+ 	struct rx_fwinfo_92c *p_drvinfo;
 -- 
-Kalle Valo
+1.8.1.4
+
