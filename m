@@ -1,59 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:47168 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753281Ab3IWTko convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Sep 2013 15:40:44 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Peter Senna Tschudin <peter.senna@gmail.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-Date: Mon, 23 Sep 2013 12:40:33 -0700
-Subject: RE: [PATCH 11/19] wireless: Change variable type to bool
-Message-ID: <477F20668A386D41ADCC57781B1F70430F44C59426@SC-VEXCH1.marvell.com> (sfid-20130923_214114_266818_64EB023B)
-References: <1379802471-30252-1-git-send-email-peter.senna@gmail.com>
- <1379802471-30252-11-git-send-email-peter.senna@gmail.com>
-In-Reply-To: <1379802471-30252-11-git-send-email-peter.senna@gmail.com>
-Content-Type: text/plain; charset=US-ASCII
-MIME-Version: 1.0
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:60241 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750753Ab3IPSzk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Sep 2013 14:55:40 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 0/8i V2] rtlwifi: Patches to fix problems shown by smatch
+Date: Mon, 16 Sep 2013 13:55:14 -0500
+Message-Id: <1379357722-17687-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130916_205549_707377_07C32E5B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Peter,
+Fix smatch warnings and errors in the rtlwifi family of drivers.
 
-Thanks for your patch.
+V2 addresses comments by David Laight and Sergei Shtylyov.
 
-> The variables cancel_scan_cmd, enable_data, hs_activate and valid are
-> only assigned the values true and false. Change its type to bool.
-> 
-> The simplified semantic patch that find this problem is as
-> follows (http://coccinelle.lip6.fr/):
-> 
-> @exists@
-> type T;
-> identifier b;
-> @@
-> - T
-> + bool
->   b = ...;
->   ... when any
->   b = \(true\|false\)
-> 
-> Signed-off-by: Peter Senna Tschudin <peter.senna@gmail.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-Acked-by: Bing Zhao <bzhao@marvell.com>
+Larry Finger (8):
+  rtlwifi: rtl8192du: Fix smatch errors in /rtl8192de/dm.c
+  rtlwifi: rtl8192de: Fix smatch warnings in rtl8192de/hw.c
+  rtlwifi: rtl8192cu: Fix smatch warning in rtl8192cu/trx.c
+  rtlwifi: rtl8192_common: Fix smatch errors and warnings in
+    rtl8192c/dm_common.c
+  [PATCH 5/7: rtlwifi: Fix smatch warning in pci.c
+  rtlwifi: Fix smatch warnings in usb.c
+  rtlwifi: rtl8188ee: Fix smatch warning in rtl8188ee/hw.c
+  rtlwifi: Remove variable 'noise' from rtl_stats struct
 
-Thanks,
-Bing
+ drivers/net/wireless/rtlwifi/pci.c                | 1 -
+ drivers/net/wireless/rtlwifi/rtl8188ee/hw.c       | 1 +
+ drivers/net/wireless/rtlwifi/rtl8188ee/trx.c      | 1 -
+ drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c | 4 +++-
+ drivers/net/wireless/rtlwifi/rtl8192ce/trx.c      | 1 -
+ drivers/net/wireless/rtlwifi/rtl8192cu/trx.c      | 2 --
+ drivers/net/wireless/rtlwifi/rtl8192de/dm.c       | 8 ++++++--
+ drivers/net/wireless/rtlwifi/rtl8192de/hw.c       | 2 ++
+ drivers/net/wireless/rtlwifi/rtl8192de/trx.c      | 1 -
+ drivers/net/wireless/rtlwifi/rtl8192se/trx.c      | 1 -
+ drivers/net/wireless/rtlwifi/rtl8723ae/trx.c      | 1 -
+ drivers/net/wireless/rtlwifi/usb.c                | 8 +++++---
+ drivers/net/wireless/rtlwifi/wifi.h               | 1 -
+ 13 files changed, 17 insertions(+), 15 deletions(-)
 
-> ---
->  drivers/net/wireless/mwifiex/cmdevt.c  | 2 +-
->  drivers/net/wireless/mwifiex/join.c    | 2 +-
->  drivers/net/wireless/mwifiex/sta_cmd.c | 2 +-
->  drivers/net/wireless/mwifiex/wmm.c     | 2 +-
->  4 files changed, 4 insertions(+), 4 deletions(-)
-
+-- 
+1.8.1.4
 
