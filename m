@@ -1,102 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:47842 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754265Ab3ISWsr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Sep 2013 18:48:47 -0400
-In-Reply-To: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-From: Russell King <rmk+kernel@arm.linux.org.uk>
-To: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
-	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
-	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
-	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	uclinux-dist-devel@blackfin.uclinux.org
-Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	Jesse Brandeburg <jesse.brandeburg@intel.com>,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	Carolyn Wyborny <carolyn.wyborny@intel.com>,
-	Don Skidmore <donald.c.skidmore@intel.com>,
-	Greg Rose <gregory.v.rose@intel.com>,
-	Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>,
-	Alex Duyck <alexander.h.duyck@intel.com>,
-	John Ronciak <john.ronciak@intel.com>,
-	Tushar Dave <tushar.n.dave@intel.com>
-Subject: [PATCH 03/51] DMA-API: net: intel/e1000e: fix 32-bit DMA mask
- handling
-Message-Id: <E1VMllX-0007fP-33@rmk-PC.arm.linux.org.uk> (sfid-20130920_004857_575887_717EC708)
-Date: Thu, 19 Sep 2013 22:27:59 +0100
+Received: from svenfoo.org ([82.94.215.22]:48004 "EHLO mail.zonque.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752464Ab3IPLjR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Sep 2013 07:39:17 -0400
+From: Daniel Mack <zonque@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: s.neumann@raumfeld.com, afenkart@gmail.com, bzhao@marvell.com,
+	linville@tuxdriver.com, johannes.berg@intel.com,
+	Daniel Mack <zonque@gmail.com>
+Subject: [PATCH] mwifiex: fix command timeout with SDIO interrupts enabled
+Date: Mon, 16 Sep 2013 13:39:05 +0200
+Message-Id: <1379331546-30617-1-git-send-email-zonque@gmail.com> (sfid-20130916_133921_136069_48650D7D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The fallback to 32-bit DMA mask is rather odd:
-	err = dma_set_mask(&pdev->dev, DMA_BIT_MASK(64));
-	if (!err) {
-		err = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(64));
-		if (!err)
-			pci_using_dac = 1;
-	} else {
-		err = dma_set_mask(&pdev->dev, DMA_BIT_MASK(32));
-		if (err) {
-			err = dma_set_coherent_mask(&pdev->dev,
-						    DMA_BIT_MASK(32));
-			if (err) {
-				dev_err(&pdev->dev,
-					"No usable DMA configuration, aborting\n");
-				goto err_dma;
-			}
-		}
-	}
-This means we only set the coherent DMA mask in the fallback path if
-the DMA mask set failed, which is silly.  This fixes it to set the
-coherent DMA mask only if dma_set_mask() succeeded, and to error out
-if either fails.
+We've been hunting a command timeout issue in the mwifiex driver which
+occurs on an AM33xx platform when Andreas Fenkart's omap_hsmmc SDIO IRQ
+patches are applied (they are not yet in the mainline kernel). We first
+suspected the mmc host driver to be racy, but that wasn't the case.
 
-Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
----
- drivers/net/ethernet/intel/e1000e/netdev.c |   18 ++++++------------
- 1 files changed, 6 insertions(+), 12 deletions(-)
+I dug a little through the changes between 3.7 and 3.10 on the mwifiex
+driver, and it turned out that the culprit is 601216e12 ("mwifiex:
+process RX packets in SDIO IRQ thread directly"), especially the
+situation where mwifiex_main_process() bails when mwifiex_processing is
+set.
 
-diff --git a/drivers/net/ethernet/intel/e1000e/netdev.c b/drivers/net/ethernet/intel/e1000e/netdev.c
-index e87e9b0..519e293 100644
---- a/drivers/net/ethernet/intel/e1000e/netdev.c
-+++ b/drivers/net/ethernet/intel/e1000e/netdev.c
-@@ -6553,21 +6553,15 @@ static int e1000_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		return err;
- 
- 	pci_using_dac = 0;
--	err = dma_set_mask(&pdev->dev, DMA_BIT_MASK(64));
-+	err = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
- 	if (!err) {
--		err = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(64));
--		if (!err)
--			pci_using_dac = 1;
-+		pci_using_dac = 1;
- 	} else {
--		err = dma_set_mask(&pdev->dev, DMA_BIT_MASK(32));
-+		err = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
- 		if (err) {
--			err = dma_set_coherent_mask(&pdev->dev,
--						    DMA_BIT_MASK(32));
--			if (err) {
--				dev_err(&pdev->dev,
--					"No usable DMA configuration, aborting\n");
--				goto err_dma;
--			}
-+			dev_err(&pdev->dev,
-+				"No usable DMA configuration, aborting\n");
-+			goto err_dma;
- 		}
- 	}
- 
+In other words: if an SDIO irq arrives while the driver is processing
+mwifiex_main_process() from the work queue, we effectively loose the
+interrupt, which then results in a command timeout.
+
+I've written a little test case scenario that calls
+mwifiex_dump_station_info() through the SIOCGIWSTATS ioctl excessively,
+and that reproduces the problem after a couple of seconds already:
+
+  https://gist.github.com/zonque/6579314
+
+
+The fix for this issue is quite simple and works very well.
+
+
+Thanks,
+Daniel
+
+
+Daniel Mack (1):
+  mwifiex: queue main work from main process when bailing on races
+
+ drivers/net/wireless/mwifiex/main.c | 1 +
+ 1 file changed, 1 insertion(+)
+
 -- 
-1.7.4.4
+1.8.3.1
 
