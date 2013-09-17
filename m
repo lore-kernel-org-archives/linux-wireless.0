@@ -1,45 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.22]:57021 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932249Ab3IMOYW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Sep 2013 10:24:22 -0400
-Received: from [192.168.2.102] ([93.218.92.56]) by mail.gmx.com (mrgmx102)
- with ESMTPSA (Nemesis) id 0LsOsW-1W4rl53IJU-011w1g for
- <linux-wireless@vger.kernel.org>; Fri, 13 Sep 2013 16:24:20 +0200
-Message-ID: <5233200E.4010102@rempel-privat.de> (sfid-20130913_162426_005884_531E888F)
-Date: Fri, 13 Sep 2013 16:24:14 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
-MIME-Version: 1.0
-To: Prabhunath G <gprabhunath@gmail.com>
-CC: linux-wireless@vger.kernel.org,
-	kernelnewbies <kernelnewbies@kernelnewbies.org>
-Subject: Re: WEP/WPA/WPA2 implementation in software
-References: <CACPKTAM-mtTS7QVSq817TQ11dS-cLA+nKgXF6yDGYvxw9rhucw@mail.gmail.com>
-In-Reply-To: <CACPKTAM-mtTS7QVSq817TQ11dS-cLA+nKgXF6yDGYvxw9rhucw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mail-ee0-f51.google.com ([74.125.83.51]:38314 "EHLO
+	mail-ee0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753042Ab3IQPls (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Sep 2013 11:41:48 -0400
+Received: by mail-ee0-f51.google.com with SMTP id c1so2807825eek.38
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Sep 2013 08:41:47 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <luca@coelho.fi>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 11/11] wlcore: always register dummy hardirq
+Date: Tue, 17 Sep 2013 18:41:30 +0300
+Message-Id: <1379432490-22157-11-git-send-email-eliad@wizery.com> (sfid-20130917_174153_807317_BB75F7BF)
+In-Reply-To: <1379432490-22157-1-git-send-email-eliad@wizery.com>
+References: <1379432490-22157-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 13.09.2013 13:53, schrieb Prabhunath G:
-> Dear All,
->
->           Suppose there is no hardware support for
-> encryption/decryption for Wi-Fi devices. Will the data be
-> encrypted/decrypted by software implementation. If yes, is it done at
-> the application level or at the kernel level (mac80211).
-> Kindly clarify.
-> If the question has to be rephrased, please do it
+From: Arik Nemtsov <arik@wizery.com>
 
-Hi,
+This keeps the kernel happy when using edge-irqs and requesting a
+threaded irq.
 
-see hostapd on AP site and wpa_supplicant on STA:
-http://wireless.kernel.org/en/users/Documentation/wpa_supplicant
-http://wireless.kernel.org/en/users/Documentation/hostapd
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/ti/wlcore/main.c | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
 
-check documentation here on:
-http://wireless.kernel.org/en/users/Documentation
-may be it will answer some of your questions.
-
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 4b52e5a..1f556b6 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -5994,6 +5994,11 @@ static const struct wiphy_wowlan_support wlcore_wowlan_support = {
+ };
+ #endif
+ 
++static irqreturn_t wlcore_hardirq(int irq, void *cookie)
++{
++	return IRQ_WAKE_THREAD;
++}
++
+ static void wlcore_nvs_cb(const struct firmware *fw, void *context)
+ {
+ 	struct wl1271 *wl = context;
+@@ -6002,6 +6007,7 @@ static void wlcore_nvs_cb(const struct firmware *fw, void *context)
+ 	struct wl12xx_platform_data *pdata = pdev_data->pdata;
+ 	unsigned long irqflags;
+ 	int ret;
++	irq_handler_t hardirq_fn = NULL;
+ 
+ 	if (fw) {
+ 		wl->nvs = kmemdup(fw->data, fw->size, GFP_KERNEL);
+@@ -6030,12 +6036,14 @@ static void wlcore_nvs_cb(const struct firmware *fw, void *context)
+ 	wl->platform_quirks = pdata->platform_quirks;
+ 	wl->if_ops = pdev_data->if_ops;
+ 
+-	if (wl->platform_quirks & WL12XX_PLATFORM_QUIRK_EDGE_IRQ)
++	if (wl->platform_quirks & WL12XX_PLATFORM_QUIRK_EDGE_IRQ) {
+ 		irqflags = IRQF_TRIGGER_RISING;
+-	else
++		hardirq_fn = wlcore_hardirq;
++	} else {
+ 		irqflags = IRQF_TRIGGER_HIGH | IRQF_ONESHOT;
++	}
+ 
+-	ret = request_threaded_irq(wl->irq, NULL, wlcore_irq,
++	ret = request_threaded_irq(wl->irq, hardirq_fn, wlcore_irq,
+ 				   irqflags, pdev->name, wl);
+ 	if (ret < 0) {
+ 		wl1271_error("request_irq() failed: %d", ret);
 -- 
-Regards,
-Oleksij
+1.8.3.rc1.35.g9b79519
+
