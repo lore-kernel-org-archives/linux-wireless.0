@@ -1,73 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f49.google.com ([209.85.216.49]:36561 "EHLO
-	mail-qa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752155Ab3I0PYT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Sep 2013 11:24:19 -0400
-Date: Fri, 27 Sep 2013 12:24:13 -0300
-From: Gustavo Padovan <gustavo@padovan.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: bluetooth 2013-09-23
-Message-ID: <20130927152413.GC13211@joana> (sfid-20130927_172423_296881_32A59FBA)
-References: <20130923210049.GG18215@joana>
- <20130926174750.GB1931@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130926174750.GB1931@tuxdriver.com>
+Received: from mga09.intel.com ([134.134.136.24]:32398 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752722Ab3IQMXn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Sep 2013 08:23:43 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH] cfg80211: don't start p2p device while in RFKILL
+Date: Tue, 17 Sep 2013 15:23:39 +0300
+Message-Id: <1379420619-6123-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20130917_142353_657499_16B62AEC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ net/wireless/nl80211.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
-2013-09-26 John W. Linville <linville@tuxdriver.com>:
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 316503f..6bb03b5 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -8666,6 +8666,9 @@ static int nl80211_start_p2p_device(struct sk_buff *skb, struct genl_info *info)
+ 	if (err)
+ 		return err;
+ 
++	if (rfkill_blocked(rdev->rfkill))
++		return -ERFKILL;
++
+ 	err = rdev_start_p2p_device(rdev, wdev);
+ 	if (err)
+ 		return err;
+-- 
+1.7.10.4
 
-> On Mon, Sep 23, 2013 at 06:00:49PM -0300, Gustavo Padovan wrote:
-> > Hi John,
-> > 
-> > First Bluetooth fixes to 3.12, it includes:
-> > 
-> > * 3 patches to add device id for 3 new hardwares.
-> > 
-> > * 2 patches from Johan to fix the rfkill behaviour during setup stage
-> > 
-> > * a small clean up in the rfcomm TTY code that fixes a potential racy
-> > condition (by Gianluca Anzolin)
-> > 
-> > * 2 fixes to proper set encryption key size and security level in the
-> > peripheral role of Bluetooth LE devices. (by Andre Guedes)
-> > 
-> > * a fix for dealing devices where pairing is not necessary, we were keeping
-> > the Bluetooth ACL connection alive for too much time. (by Syam Sidhardhan)
-> > 
-> > Please pull or let me know of any problems! Thanks!
-> > 
-> > 
-> > 	Gustavo
-> > 
-> > ---
-> > The following changes since commit f4e1a4d3ecbb9e42bdf8e7869ee8a4ebfa27fb20:
-> > 
-> >   rt2800: change initialization sequence to fix system freeze (2013-09-09 14:44:34 -0400)
-> > 
-> > are available in the git repository at:
-> > 
-> >   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth master
-> > 
-> > for you to fetch changes up to 5bcecf325378218a8e248bb6bcae96ec7362f8ef:
-> > 
-> >   Bluetooth: btusb: Add support for Belkin F8065bf (2013-09-23 17:44:25 -0300)
-> 
-> Pulling now...
-
-Thanks for pulling. However as Stephen pointed out in the linux-next merge
-conflict email from today we have a style issue, a closing brace bad indented.
-This is from conflict resolution I made last week. I fixed it when merging
-bluetooth.git into bluetooth-next.git. 
-
-So when pushing this to Dave could you please tell him about this issue and
-that the fix is already provided by bluetooth-next. Do you agree with this
-solution?
-
-	Gustavo
