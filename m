@@ -1,205 +1,287 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2821 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755160Ab3IYKLU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Sep 2013 06:11:20 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>, stable@vger.kernel.org,
-	"Tod Jackson" <tod.jackson@gmail.com>,
-	"Joe Perches" <joe@perches.com>,
-	"Rafal Milecki" <zajec5@gmail.com>,
-	"Hauke Mehrtens" <hauke@hauke-m.de>
-Subject: [PATCH for-3.12 2/3] bcma: make bcma_core_pci_{up,down}()
- callable from atomic context
-Date: Wed, 25 Sep 2013 12:11:02 +0200
-Message-ID: <1380103864-10447-3-git-send-email-arend@broadcom.com> (sfid-20130925_121128_285517_B54CEF37)
-In-Reply-To: <1380103864-10447-1-git-send-email-arend@broadcom.com>
-References: <1380103864-10447-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-ee0-f43.google.com ([74.125.83.43]:55003 "EHLO
+	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752826Ab3IQPli (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Sep 2013 11:41:38 -0400
+Received: by mail-ee0-f43.google.com with SMTP id e52so2843702eek.30
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Sep 2013 08:41:36 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <luca@coelho.fi>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 01/11] wlcore: ROC on AP channel before auth reply
+Date: Tue, 17 Sep 2013 18:41:20 +0300
+Message-Id: <1379432490-22157-1-git-send-email-eliad@wizery.com> (sfid-20130917_174142_114664_D4BDD798)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes the bcma_core_pci_power_save() call from
-the bcma_core_pci_{up,down}() functions as it tries to schedule
-thus requiring to call them from non-atomic context. The function
-bcma_core_pci_power_save() is now exported so the calling module
-can explicitly use it in non-atomic context. This fixes the
-'scheduling while atomic' issue reported by Tod Jackson and
-Joe Perches.
+From: Arik Nemtsov <arik@wizery.com>
 
-[   13.210710] BUG: scheduling while atomic: dhcpcd/1800/0x00000202
-[   13.210718] Modules linked in: brcmsmac nouveau coretemp kvm_intel kvm cordic brcmutil bcma dell_wmi atl1c ttm mxm_wmi wmi
-[   13.210756] CPU: 2 PID: 1800 Comm: dhcpcd Not tainted 3.11.0-wl #1
-[   13.210762] Hardware name: Alienware M11x R2/M11x R2, BIOS A04 11/23/2010
-[   13.210767]  ffff880177c92c40 ffff880170fd1948 ffffffff8169af5b 0000000000000007
-[   13.210777]  ffff880170fd1ab0 ffff880170fd1958 ffffffff81697ee2 ffff880170fd19d8
-[   13.210785]  ffffffff816a19f5 00000000000f4240 000000000000d080 ffff880170fd1fd8
-[   13.210794] Call Trace:
-[   13.210813]  [<ffffffff8169af5b>] dump_stack+0x4f/0x84
-[   13.210826]  [<ffffffff81697ee2>] __schedule_bug+0x43/0x51
-[   13.210837]  [<ffffffff816a19f5>] __schedule+0x6e5/0x810
-[   13.210845]  [<ffffffff816a1c34>] schedule+0x24/0x70
-[   13.210855]  [<ffffffff816a04fc>] schedule_hrtimeout_range_clock+0x10c/0x150
-[   13.210867]  [<ffffffff810684e0>] ? update_rmtp+0x60/0x60
-[   13.210877]  [<ffffffff8106915f>] ? hrtimer_start_range_ns+0xf/0x20
-[   13.210887]  [<ffffffff816a054e>] schedule_hrtimeout_range+0xe/0x10
-[   13.210897]  [<ffffffff8104f6fb>] usleep_range+0x3b/0x40
-[   13.210910]  [<ffffffffa00371af>] bcma_pcie_mdio_set_phy.isra.3+0x4f/0x80 [bcma]
-[   13.210921]  [<ffffffffa003729f>] bcma_pcie_mdio_write.isra.4+0xbf/0xd0 [bcma]
-[   13.210932]  [<ffffffffa0037498>] bcma_pcie_mdio_writeread.isra.6.constprop.13+0x18/0x30 [bcma]
-[   13.210942]  [<ffffffffa00374ee>] bcma_core_pci_power_save+0x3e/0x80 [bcma]
-[   13.210953]  [<ffffffffa003765d>] bcma_core_pci_up+0x2d/0x60 [bcma]
-[   13.210975]  [<ffffffffa03dc17c>] brcms_c_up+0xfc/0x430 [brcmsmac]
-[   13.210989]  [<ffffffffa03d1a7d>] brcms_up+0x1d/0x20 [brcmsmac]
-[   13.211003]  [<ffffffffa03d2498>] brcms_ops_start+0x298/0x340 [brcmsmac]
-[   13.211020]  [<ffffffff81600a12>] ? cfg80211_netdev_notifier_call+0xd2/0x5f0
-[   13.211030]  [<ffffffff815fa53d>] ? packet_notifier+0xad/0x1d0
-[   13.211064]  [<ffffffff81656e75>] ieee80211_do_open+0x325/0xf80
-[   13.211076]  [<ffffffff8106ac09>] ? __raw_notifier_call_chain+0x9/0x10
-[   13.211086]  [<ffffffff81657b41>] ieee80211_open+0x71/0x80
-[   13.211101]  [<ffffffff81526267>] __dev_open+0x87/0xe0
-[   13.211109]  [<ffffffff8152650c>] __dev_change_flags+0x9c/0x180
-[   13.211117]  [<ffffffff815266a3>] dev_change_flags+0x23/0x70
-[   13.211127]  [<ffffffff8158cd68>] devinet_ioctl+0x5b8/0x6a0
-[   13.211136]  [<ffffffff8158d5c5>] inet_ioctl+0x75/0x90
-[   13.211147]  [<ffffffff8150b38b>] sock_do_ioctl+0x2b/0x70
-[   13.211155]  [<ffffffff8150b681>] sock_ioctl+0x71/0x2a0
-[   13.211169]  [<ffffffff8114ed47>] do_vfs_ioctl+0x87/0x520
-[   13.211180]  [<ffffffff8113f159>] ? ____fput+0x9/0x10
-[   13.211198]  [<ffffffff8106228c>] ? task_work_run+0x9c/0xd0
-[   13.211202]  [<ffffffff8114f271>] SyS_ioctl+0x91/0xb0
-[   13.211208]  [<ffffffff816aa252>] system_call_fastpath+0x16/0x1b
-[   13.211217] NOHZ: local_softirq_pending 202
+Start a ROC on the AP channel beforing sending the authentication reply
+to a connecting STA. This ROC is held up to 1 second via a timer. If the
+station is authorized and added by mac80211, the ROC is extended until
+the station is fully authorized.
+We make sure not to ROC twice when several stations are connecting in
+parallel and to only release the ROC when both the pending-reply timer
+and the STA-state callbacks do not require it.
 
-The issue was introduced in v3.11 kernel by following commit:
-
-commit aa51e598d04c6acf5477934cd6383f5a17ce9029
-Author: Hauke Mehrtens <hauke@hauke-m.de>
-Date:   Sat Aug 24 00:32:31 2013 +0200
-
-    brcmsmac: use bcma PCIe up and down functions
-
-    replace the calls to bcma_core_pci_extend_L1timer() by calls to the
-    newly introduced bcma_core_pci_ip() and bcma_core_pci_down()
-
-    Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-    Cc: Arend van Spriel <arend@broadcom.com>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-This fix has been discussed with Hauke Mehrtens [1] selection
-option 3) and is intended for v3.12.
-
-Ref:
-[1] http://mid.gmane.org/5239B12D.3040206@hauke-m.de
-
-Cc: <stable@vger.kernel.org> # 3.11.x
-Cc: Tod Jackson <tod.jackson@gmail.com>
-Cc: Joe Perches <joe@perches.com>
-Cc: Rafal Milecki <zajec5@gmail.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/bcma/driver_pci.c            |   49 ++++++++++++++++++----------------
- include/linux/bcma/bcma_driver_pci.h |    1 +
- 2 files changed, 27 insertions(+), 23 deletions(-)
+ drivers/net/wireless/ti/wlcore/main.c     | 101 +++++++++++++++++++++++++-----
+ drivers/net/wireless/ti/wlcore/tx.c       |  25 ++++++--
+ drivers/net/wireless/ti/wlcore/tx.h       |   3 +
+ drivers/net/wireless/ti/wlcore/wlcore.h   |   2 +
+ drivers/net/wireless/ti/wlcore/wlcore_i.h |   9 +++
+ 5 files changed, 120 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/bcma/driver_pci.c b/drivers/bcma/driver_pci.c
-index c9fd694..50329d1 100644
---- a/drivers/bcma/driver_pci.c
-+++ b/drivers/bcma/driver_pci.c
-@@ -210,25 +210,6 @@ static void bcma_core_pci_config_fixup(struct bcma_drv_pci *pc)
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 38995f9..b64b465 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -2008,6 +2008,47 @@ out:
+ 	mutex_unlock(&wl->mutex);
+ }
+ 
++static void wlcore_pending_auth_complete_work(struct work_struct *work)
++{
++	struct delayed_work *dwork;
++	struct wl1271 *wl;
++	struct wl12xx_vif *wlvif;
++	unsigned long time_spare;
++	int ret;
++
++	dwork = container_of(work, struct delayed_work, work);
++	wlvif = container_of(dwork, struct wl12xx_vif,
++			     pending_auth_complete_work);
++	wl = wlvif->wl;
++
++	mutex_lock(&wl->mutex);
++
++	if (unlikely(wl->state != WLCORE_STATE_ON))
++		goto out;
++
++	/*
++	 * Make sure a second really passed since the last auth reply. Maybe
++	 * a second auth reply arrived while we were stuck on the mutex.
++	 * Check for a little less than the timeout to protect from scheduler
++	 * irregularities.
++	 */
++	time_spare = jiffies +
++			msecs_to_jiffies(WLCORE_PEND_AUTH_ROC_TIMEOUT - 50);
++	if (!time_after(time_spare, wlvif->pending_auth_reply_time))
++		goto out;
++
++	ret = wl1271_ps_elp_wakeup(wl);
++	if (ret < 0)
++		goto out;
++
++	/* cancel the ROC if active */
++	wlcore_update_inconn_sta(wl, wlvif, NULL, false);
++
++	wl1271_ps_elp_sleep(wl);
++out:
++	mutex_unlock(&wl->mutex);
++}
++
+ static int wl12xx_allocate_rate_policy(struct wl1271 *wl, u8 *idx)
+ {
+ 	u8 policy = find_first_zero_bit(wl->rate_policies_map,
+@@ -2159,6 +2200,8 @@ static int wl12xx_init_vif_data(struct wl1271 *wl, struct ieee80211_vif *vif)
+ 			  wlcore_channel_switch_work);
+ 	INIT_DELAYED_WORK(&wlvif->connection_loss_work,
+ 			  wlcore_connection_loss_work);
++	INIT_DELAYED_WORK(&wlvif->pending_auth_complete_work,
++			  wlcore_pending_auth_complete_work);
+ 	INIT_LIST_HEAD(&wlvif->list);
+ 
+ 	setup_timer(&wlvif->rx_streaming_timer, wl1271_rx_streaming_timer,
+@@ -2590,6 +2633,7 @@ unlock:
+ 	cancel_work_sync(&wlvif->rx_streaming_disable_work);
+ 	cancel_delayed_work_sync(&wlvif->connection_loss_work);
+ 	cancel_delayed_work_sync(&wlvif->channel_switch_work);
++	cancel_delayed_work_sync(&wlvif->pending_auth_complete_work);
+ 
+ 	mutex_lock(&wl->mutex);
+ }
+@@ -3969,6 +4013,13 @@ static void wl1271_bss_info_changed_ap(struct wl1271 *wl,
+ 			}
+ 		} else {
+ 			if (test_bit(WLVIF_FLAG_AP_STARTED, &wlvif->flags)) {
++				/*
++				 * AP might be in ROC in case we have just
++				 * sent auth reply. handle it.
++				 */
++				if (test_bit(wlvif->role_id, wl->roc_map))
++					wl12xx_croc(wl, wlvif->role_id);
++
+ 				ret = wl12xx_cmd_role_stop_ap(wl, wlvif);
+ 				if (ret < 0)
+ 					goto out;
+@@ -4656,29 +4707,49 @@ static void wlcore_roc_if_possible(struct wl1271 *wl,
+ 	wl12xx_roc(wl, wlvif, wlvif->role_id, wlvif->band, wlvif->channel);
+ }
+ 
+-static void wlcore_update_inconn_sta(struct wl1271 *wl,
+-				     struct wl12xx_vif *wlvif,
+-				     struct wl1271_station *wl_sta,
+-				     bool in_connection)
++/*
++ * when wl_sta is NULL, we treat this call as if coming from a
++ * pending auth reply.
++ * wl->mutex must be taken and the FW must be awake when the call
++ * takes place.
++ */
++void wlcore_update_inconn_sta(struct wl1271 *wl, struct wl12xx_vif *wlvif,
++			      struct wl1271_station *wl_sta, bool in_conn)
+ {
+-	if (in_connection) {
+-		if (WARN_ON(wl_sta->in_connection))
++	if (in_conn) {
++		if (WARN_ON(wl_sta && wl_sta->in_connection))
+ 			return;
+-		wl_sta->in_connection = true;
+-		if (!wlvif->inconn_count++)
++
++		if (!wlvif->ap_pending_auth_reply &&
++		    !wlvif->inconn_count)
+ 			wlcore_roc_if_possible(wl, wlvif);
++
++		if (wl_sta) {
++			wl_sta->in_connection = true;
++			wlvif->inconn_count++;
++		} else {
++			wlvif->ap_pending_auth_reply = true;
++		}
+ 	} else {
+-		if (!wl_sta->in_connection)
++		if (wl_sta && !wl_sta->in_connection)
++			return;
++
++		if (WARN_ON(!wl_sta && !wlvif->ap_pending_auth_reply))
+ 			return;
+ 
+-		wl_sta->in_connection = false;
+-		wlvif->inconn_count--;
+-		if (WARN_ON(wlvif->inconn_count < 0))
++		if (WARN_ON(wl_sta && !wlvif->inconn_count))
+ 			return;
+ 
+-		if (!wlvif->inconn_count)
+-			if (test_bit(wlvif->role_id, wl->roc_map))
+-				wl12xx_croc(wl, wlvif->role_id);
++		if (wl_sta) {
++			wl_sta->in_connection = false;
++			wlvif->inconn_count--;
++		} else {
++			wlvif->ap_pending_auth_reply = false;
++		}
++
++		if (!wlvif->inconn_count && !wlvif->ap_pending_auth_reply &&
++		    test_bit(wlvif->role_id, wl->roc_map))
++			wl12xx_croc(wl, wlvif->role_id);
  	}
  }
  
--static void bcma_core_pci_power_save(struct bcma_drv_pci *pc, bool up)
--{
--	u16 data;
--
--	if (pc->core->id.rev >= 15 && pc->core->id.rev <= 20) {
--		data = up ? 0x74 : 0x7C;
--		bcma_pcie_mdio_writeread(pc, BCMA_CORE_PCI_MDIO_BLK1,
--					 BCMA_CORE_PCI_MDIO_BLK1_MGMT1, 0x7F64);
--		bcma_pcie_mdio_writeread(pc, BCMA_CORE_PCI_MDIO_BLK1,
--					 BCMA_CORE_PCI_MDIO_BLK1_MGMT3, data);
--	} else if (pc->core->id.rev >= 21 && pc->core->id.rev <= 22) {
--		data = up ? 0x75 : 0x7D;
--		bcma_pcie_mdio_writeread(pc, BCMA_CORE_PCI_MDIO_BLK1,
--					 BCMA_CORE_PCI_MDIO_BLK1_MGMT1, 0x7E65);
--		bcma_pcie_mdio_writeread(pc, BCMA_CORE_PCI_MDIO_BLK1,
--					 BCMA_CORE_PCI_MDIO_BLK1_MGMT3, data);
--	}
--}
--
- /**************************************************
-  * Init.
-  **************************************************/
-@@ -255,6 +236,32 @@ void bcma_core_pci_init(struct bcma_drv_pci *pc)
- 		bcma_core_pci_clientmode_init(pc);
- }
+diff --git a/drivers/net/wireless/ti/wlcore/tx.c b/drivers/net/wireless/ti/wlcore/tx.c
+index 7e93fe6..03249da 100644
+--- a/drivers/net/wireless/ti/wlcore/tx.c
++++ b/drivers/net/wireless/ti/wlcore/tx.c
+@@ -86,19 +86,34 @@ void wl1271_free_tx_id(struct wl1271 *wl, int id)
+ EXPORT_SYMBOL(wl1271_free_tx_id);
  
-+void bcma_core_pci_power_save(struct bcma_bus *bus, bool up)
-+{
-+	struct bcma_drv_pci *pc;
-+	u16 data;
-+
-+	if (bus->hosttype != BCMA_HOSTTYPE_PCI)
+ static void wl1271_tx_ap_update_inconnection_sta(struct wl1271 *wl,
++						 struct wl12xx_vif *wlvif,
+ 						 struct sk_buff *skb)
+ {
+ 	struct ieee80211_hdr *hdr;
+ 
++	hdr = (struct ieee80211_hdr *)(skb->data +
++				       sizeof(struct wl1271_tx_hw_descr));
++	if (!ieee80211_is_auth(hdr->frame_control))
 +		return;
 +
-+	pc = &bus->drv_pci[0];
+ 	/*
+ 	 * add the station to the known list before transmitting the
+ 	 * authentication response. this way it won't get de-authed by FW
+ 	 * when transmitting too soon.
+ 	 */
+-	hdr = (struct ieee80211_hdr *)(skb->data +
+-				       sizeof(struct wl1271_tx_hw_descr));
+-	if (ieee80211_is_auth(hdr->frame_control))
+-		wl1271_acx_set_inconnection_sta(wl, hdr->addr1);
++	wl1271_acx_set_inconnection_sta(wl, hdr->addr1);
 +
-+	if (pc->core->id.rev >= 15 && pc->core->id.rev <= 20) {
-+		data = up ? 0x74 : 0x7C;
-+		bcma_pcie_mdio_writeread(pc, BCMA_CORE_PCI_MDIO_BLK1,
-+					 BCMA_CORE_PCI_MDIO_BLK1_MGMT1, 0x7F64);
-+		bcma_pcie_mdio_writeread(pc, BCMA_CORE_PCI_MDIO_BLK1,
-+					 BCMA_CORE_PCI_MDIO_BLK1_MGMT3, data);
-+	} else if (pc->core->id.rev >= 21 && pc->core->id.rev <= 22) {
-+		data = up ? 0x75 : 0x7D;
-+		bcma_pcie_mdio_writeread(pc, BCMA_CORE_PCI_MDIO_BLK1,
-+					 BCMA_CORE_PCI_MDIO_BLK1_MGMT1, 0x7E65);
-+		bcma_pcie_mdio_writeread(pc, BCMA_CORE_PCI_MDIO_BLK1,
-+					 BCMA_CORE_PCI_MDIO_BLK1_MGMT3, data);
-+	}
-+}
-+EXPORT_SYMBOL_GPL(bcma_core_pci_power_save);
++	/*
++	 * ROC for 1 second on the AP channel for completing the connection.
++	 * Note the ROC will be continued by the update_sta_state callbacks
++	 * once the station reaches the associated state.
++	 */
++	wlcore_update_inconn_sta(wl, wlvif, NULL, true);
++	wlvif->pending_auth_reply_time = jiffies;
++	cancel_delayed_work(&wlvif->pending_auth_complete_work);
++	ieee80211_queue_delayed_work(wl->hw,
++				&wlvif->pending_auth_complete_work,
++				msecs_to_jiffies(WLCORE_PEND_AUTH_ROC_TIMEOUT));
+ }
+ 
+ static void wl1271_tx_regulate_link(struct wl1271 *wl,
+@@ -404,7 +419,7 @@ static int wl1271_prepare_tx_frame(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 	wl1271_tx_fill_hdr(wl, wlvif, skb, extra, info, hlid);
+ 
+ 	if (!is_dummy && wlvif && wlvif->bss_type == BSS_TYPE_AP_BSS) {
+-		wl1271_tx_ap_update_inconnection_sta(wl, skb);
++		wl1271_tx_ap_update_inconnection_sta(wl, wlvif, skb);
+ 		wl1271_tx_regulate_link(wl, wlvif, hlid);
+ 	}
+ 
+diff --git a/drivers/net/wireless/ti/wlcore/tx.h b/drivers/net/wireless/ti/wlcore/tx.h
+index 55aa4ac..35489c3 100644
+--- a/drivers/net/wireless/ti/wlcore/tx.h
++++ b/drivers/net/wireless/ti/wlcore/tx.h
+@@ -56,6 +56,9 @@
+ /* Used for management frames and dummy packets */
+ #define WL1271_TID_MGMT 7
+ 
++/* stop a ROC for pending authentication reply after this time (ms) */
++#define WLCORE_PEND_AUTH_ROC_TIMEOUT     1000
 +
- int bcma_core_pci_irq_ctl(struct bcma_drv_pci *pc, struct bcma_device *core,
- 			  bool enable)
- {
-@@ -310,8 +317,6 @@ void bcma_core_pci_up(struct bcma_bus *bus)
+ struct wl127x_tx_mem {
+ 	/*
+ 	 * Number of extra memory blocks to allocate for this packet
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
+index 0034979..54ce5d5 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore.h
+@@ -481,6 +481,8 @@ int wlcore_set_key(struct wl1271 *wl, enum set_key_cmd cmd,
+ 		   struct ieee80211_sta *sta,
+ 		   struct ieee80211_key_conf *key_conf);
+ void wlcore_regdomain_config(struct wl1271 *wl);
++void wlcore_update_inconn_sta(struct wl1271 *wl, struct wl12xx_vif *wlvif,
++			      struct wl1271_station *wl_sta, bool in_conn);
  
- 	pc = &bus->drv_pci[0];
+ static inline void
+ wlcore_set_ht_cap(struct wl1271 *wl, enum ieee80211_band band,
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
+index e5e1464..14fd111 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
+@@ -456,6 +456,15 @@ struct wl12xx_vif {
+ 	 */
+ 	int hw_queue_base;
  
--	bcma_core_pci_power_save(pc, true);
--
- 	bcma_core_pci_extend_L1timer(pc, true);
- }
- EXPORT_SYMBOL_GPL(bcma_core_pci_up);
-@@ -326,7 +331,5 @@ void bcma_core_pci_down(struct bcma_bus *bus)
- 	pc = &bus->drv_pci[0];
- 
- 	bcma_core_pci_extend_L1timer(pc, false);
--
--	bcma_core_pci_power_save(pc, false);
- }
- EXPORT_SYMBOL_GPL(bcma_core_pci_down);
-diff --git a/include/linux/bcma/bcma_driver_pci.h b/include/linux/bcma/bcma_driver_pci.h
-index d66033f..0333e60 100644
---- a/include/linux/bcma/bcma_driver_pci.h
-+++ b/include/linux/bcma/bcma_driver_pci.h
-@@ -242,6 +242,7 @@ extern int bcma_core_pci_irq_ctl(struct bcma_drv_pci *pc,
- 				 struct bcma_device *core, bool enable);
- extern void bcma_core_pci_up(struct bcma_bus *bus);
- extern void bcma_core_pci_down(struct bcma_bus *bus);
-+extern void bcma_core_pci_power_save(struct bcma_bus *bus, bool up);
- 
- extern int bcma_core_pci_pcibios_map_irq(const struct pci_dev *dev);
- extern int bcma_core_pci_plat_dev_init(struct pci_dev *dev);
++	/* do we have a pending auth reply? (and ROC) */
++	bool ap_pending_auth_reply;
++
++	/* time when we sent the pending auth reply */
++	unsigned long pending_auth_reply_time;
++
++	/* work for canceling ROC after pending auth reply */
++	struct delayed_work pending_auth_complete_work;
++
+ 	/*
+ 	 * This struct must be last!
+ 	 * data that has to be saved acrossed reconfigs (e.g. recovery)
 -- 
-1.7.10.4
-
+1.8.3.rc1.35.g9b79519
 
