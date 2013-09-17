@@ -1,46 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:61761 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750949Ab3IYJi1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Sep 2013 05:38:27 -0400
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Bartosz Markowski <bartosz.markowski@tieto.com>
-Subject: [PATCH 03/13] ath10k: warn if give WMI command is not supported
-Date: Wed, 25 Sep 2013 11:38:01 +0200
-Message-ID: <1380101891-18312-4-git-send-email-bartosz.markowski@tieto.com> (sfid-20130925_113832_734132_8802263D)
-In-Reply-To: <1380101891-18312-1-git-send-email-bartosz.markowski@tieto.com>
-References: <1380101891-18312-1-git-send-email-bartosz.markowski@tieto.com>
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:41035 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752197Ab3IQLXA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Sep 2013 07:23:00 -0400
+Received: by mail-ie0-f169.google.com with SMTP id tp5so10155836ieb.28
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Sep 2013 04:22:58 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1379396919-11983-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1379396919-11983-1-git-send-email-emmanuel.grumbach@intel.com>
+Date: Tue, 17 Sep 2013 13:22:58 +0200
+Message-ID: <CAB3XZEc-h=mS-etjvm_zeJ2czsLj9yseq+jpsXOR=smy5+7Rdg@mail.gmail.com> (sfid-20130917_132304_653078_A3E89CF8)
+Subject: Re: [RFC] mac80211: correctly close cancelled scans
+From: Eliad Peller <eliad@wizery.com>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This will show and make it easier to track the API
-differences in the new AP firmware.
+On Tue, Sep 17, 2013 at 8:48 AM, Emmanuel Grumbach
+<emmanuel.grumbach@intel.com> wrote:
+> __ieee80211_scan_completed is called from a worker. This
+> means that the following flow is possible.
+>
+>  * driver calls ieee80211_scan_completed
+>  * mac80211 cancels the scan (that is already complete)
+>  * __ieee80211_scan_complete runs
+>
+> When scan_work will finally run, it will see that the scan
+> hasn't been aborted and might even trigger another scan on
+> another band. This leads to a situation where cfg80211's
+> scan is not done and no further scan can be issued.
+>
+> Fix this by setting a new flag when a HW scan is being
+> cancelled so that no other scan will be triggered.
+>
+> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> ---
+[...]
 
-Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
----
- drivers/net/wireless/ath/ath10k/wmi.c |    5 +++++
- 1 file changed, 5 insertions(+)
+>         if (test_bit(SCAN_HW_SCANNING, &local->scanning)) {
+> -               if (local->ops->cancel_hw_scan)
+> +               /*
+> +                * Make sure that __ieee80211_scan_completed doesn't trigger a
+> +                * scan on another band.
+> +                */
+> +               set_bit(SCAN_HW_CANCELLED, &local->scanning);
+> +               if (local->ops->cancel_hw_scan) {
+>                         drv_cancel_hw_scan(local,
+>                                 rcu_dereference_protected(local->scan_sdata,
+>                                                 lockdep_is_held(&local->mtx)));
+> +               }
+>                 goto out;
+>         }
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index dd490b4..ed137b8 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -399,6 +399,11 @@ static int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb,
- {
- 	int ret = -EINVAL;
- 
-+	if (cmd_id == WMI_CMD_UNDEFINED) {
-+		ath10k_warn("command not supported by given firmware\n");
-+		return ret;
-+	}
-+
- 	wait_event_timeout(ar->wmi.tx_credits_wq, ({
- 		/* try to send pending beacons first. they take priority */
- 		ath10k_wmi_tx_beacons_nowait(ar);
--- 
-1.7.10
+you don't seem to clear this flag anywhere...
 
+Eliad.
