@@ -1,211 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:43081 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752170Ab3IAHCL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Sep 2013 03:02:11 -0400
-Subject: [PATCH v2 6/7] ath10k: convert ath10k_pci_wake() to return
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Sun, 01 Sep 2013 10:02:07 +0300
-Message-ID: <20130901070207.14695.9309.stgit@localhost6.localdomain6> (sfid-20130901_090215_170048_2B2F57FD)
-In-Reply-To: <20130901070020.14695.16694.stgit@localhost6.localdomain6>
-References: <20130901070020.14695.16694.stgit@localhost6.localdomain6>
+Received: from foo.stuge.se ([212.116.89.98]:34260 "EHLO foo.stuge.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751859Ab3IQIuJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Sep 2013 04:50:09 -0400
+Message-ID: <20130917084327.6955.qmail@stuge.se> (sfid-20130917_105029_956546_8074F167)
+Date: Tue, 17 Sep 2013 10:43:27 +0200
+From: Peter Stuge <peter@stuge.se>
+To: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	hostap@lists.shmoo.com
+Subject: RT3573 wpa_supplicant: "nl80211: Delete station $my_ap" after
+	"SME: Send 20/40 BSS Coexistence to $my_ap"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We should not try to access hw if wakeup fails so add
-proper error checking for that. Also add the timeout lenght
-to the warning message.
+Xose Vazquez Perez wrote:
+> 0x0846, 0x9012 NETGEAR WNDA4100 N900 Wireless Dual Band USB Adapter
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/ce.c  |   43 ++++++++++++++++++++++++++-------
- drivers/net/wireless/ath/ath10k/pci.c |   11 +++++---
- drivers/net/wireless/ath/ath10k/pci.h |    8 ++++--
- 3 files changed, 45 insertions(+), 17 deletions(-)
+I'm testing the WNDA4100 with torvalds/linux.git and as of a day or
+two ago and wpa_supplicant-2.0.
 
-diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
-index 6a80142..19f23a2 100644
---- a/drivers/net/wireless/ath/ath10k/ce.c
-+++ b/drivers/net/wireless/ath/ath10k/ce.c
-@@ -277,7 +277,9 @@ static int ath10k_ce_send_nolock(struct ath10k_ce_pipe *ce_state,
- 		ath10k_warn("%s: send more we can (nbytes: %d, max: %d)\n",
- 			    __func__, nbytes, ce_state->src_sz_max);
- 
--	ath10k_pci_wake(ar);
-+	ret = ath10k_pci_wake(ar);
-+	if (ret)
-+		return ret;
- 
- 	if (unlikely(CE_RING_DELTA(nentries_mask,
- 				   write_index, sw_index - 1) <= 0)) {
-@@ -419,7 +421,9 @@ int ath10k_ce_recv_buf_enqueue(struct ath10k_ce_pipe *ce_state,
- 	write_index = dest_ring->write_index;
- 	sw_index = dest_ring->sw_index;
- 
--	ath10k_pci_wake(ar);
-+	ret = ath10k_pci_wake(ar);
-+	if (ret)
-+		goto out;
- 
- 	if (CE_RING_DELTA(nentries_mask, write_index, sw_index - 1) > 0) {
- 		struct ce_desc *base = dest_ring->base_addr_owner_space;
-@@ -441,6 +445,8 @@ int ath10k_ce_recv_buf_enqueue(struct ath10k_ce_pipe *ce_state,
- 		ret = -EIO;
- 	}
- 	ath10k_pci_sleep(ar);
-+
-+out:
- 	spin_unlock_bh(&ar_pci->ce_lock);
- 
- 	return ret;
-@@ -596,6 +602,7 @@ static int ath10k_ce_completed_send_next_nolock(struct ath10k_ce_pipe *ce_state,
- 	unsigned int sw_index = src_ring->sw_index;
- 	struct ce_desc *sdesc, *sbase;
- 	unsigned int read_index;
-+	int ret;
- 
- 	if (src_ring->hw_index == sw_index) {
- 		/*
-@@ -605,10 +612,15 @@ static int ath10k_ce_completed_send_next_nolock(struct ath10k_ce_pipe *ce_state,
- 		 * the SW has really caught up to the HW, or if the cached
- 		 * value of the HW index has become stale.
- 		 */
--		ath10k_pci_wake(ar);
-+
-+		ret = ath10k_pci_wake(ar);
-+		if (ret)
-+			return ret;
-+
- 		src_ring->hw_index =
- 			ath10k_ce_src_ring_read_index_get(ar, ctrl_addr);
- 		src_ring->hw_index &= nentries_mask;
-+
- 		ath10k_pci_sleep(ar);
- 	}
- 
-@@ -735,8 +747,12 @@ void ath10k_ce_per_engine_service(struct ath10k *ar, unsigned int ce_id)
- 	unsigned int nbytes;
- 	unsigned int id;
- 	unsigned int flags;
-+	int ret;
-+
-+	ret = ath10k_pci_wake(ar);
-+	if (ret)
-+		return;
- 
--	ath10k_pci_wake(ar);
- 	spin_lock_bh(&ar_pci->ce_lock);
- 
- 	/* Clear the copy-complete interrupts that will be handled here. */
-@@ -795,10 +811,13 @@ void ath10k_ce_per_engine_service(struct ath10k *ar, unsigned int ce_id)
- void ath10k_ce_per_engine_service_any(struct ath10k *ar)
- {
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
--	int ce_id;
-+	int ce_id, ret;
- 	u32 intr_summary;
- 
--	ath10k_pci_wake(ar);
-+	ret = ath10k_pci_wake(ar);
-+	if (ret)
-+		return;
-+
- 	intr_summary = CE_INTERRUPT_SUMMARY(ar);
- 
- 	for (ce_id = 0; intr_summary && (ce_id < ar_pci->ce_count); ce_id++) {
-@@ -826,8 +845,11 @@ static void ath10k_ce_per_engine_handler_adjust(struct ath10k_ce_pipe *ce_state,
- {
- 	u32 ctrl_addr = ce_state->ctrl_addr;
- 	struct ath10k *ar = ce_state->ar;
-+	int ret;
- 
--	ath10k_pci_wake(ar);
-+	ret = ath10k_pci_wake(ar);
-+	if (ret)
-+		return;
- 
- 	if ((!disable_copy_compl_intr) &&
- 	    (ce_state->send_cb || ce_state->recv_cb))
-@@ -843,9 +865,12 @@ static void ath10k_ce_per_engine_handler_adjust(struct ath10k_ce_pipe *ce_state,
- void ath10k_ce_disable_interrupts(struct ath10k *ar)
- {
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
--	int ce_id;
-+	int ce_id, ret;
-+
-+	ret = ath10k_pci_wake(ar);
-+	if (ret)
-+		return;
- 
--	ath10k_pci_wake(ar);
- 	for (ce_id = 0; ce_id < ar_pci->ce_count; ce_id++) {
- 		struct ath10k_ce_pipe *ce_state = &ar_pci->ce_states[ce_id];
- 		u32 ctrl_addr = ce_state->ctrl_addr;
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index e0cf75f..29ccd04 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -537,7 +537,7 @@ static void ath10k_pci_wait(struct ath10k *ar)
- 		ath10k_warn("Unable to wakeup target\n");
- }
- 
--void ath10k_do_pci_wake(struct ath10k *ar)
-+int ath10k_do_pci_wake(struct ath10k *ar)
- {
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	void __iomem *pci_addr = ar_pci->mem;
-@@ -553,18 +553,19 @@ void ath10k_do_pci_wake(struct ath10k *ar)
- 	atomic_inc(&ar_pci->keep_awake_count);
- 
- 	if (ar_pci->verified_awake)
--		return;
-+		return 0;
- 
- 	for (;;) {
- 		if (ath10k_pci_target_is_awake(ar)) {
- 			ar_pci->verified_awake = true;
--			break;
-+			return 0;
- 		}
- 
- 		if (tot_delay > PCIE_WAKE_TIMEOUT) {
--			ath10k_warn("target takes too long to wake up (awake count %d)\n",
-+			ath10k_warn("target took longer %d us to wake up (awake count %d)\n",
-+				    PCIE_WAKE_TIMEOUT,
- 				    atomic_read(&ar_pci->keep_awake_count));
--			break;
-+			return -ETIMEDOUT;
- 		}
- 
- 		udelay(curr_delay);
-diff --git a/drivers/net/wireless/ath/ath10k/pci.h b/drivers/net/wireless/ath/ath10k/pci.h
-index 395f610..7c49f6f 100644
---- a/drivers/net/wireless/ath/ath10k/pci.h
-+++ b/drivers/net/wireless/ath/ath10k/pci.h
-@@ -321,15 +321,17 @@ static inline u32 ath10k_pci_read32(struct ath10k *ar, u32 offset)
- 	return ioread32(ar_pci->mem + offset);
- }
- 
--void ath10k_do_pci_wake(struct ath10k *ar);
-+int ath10k_do_pci_wake(struct ath10k *ar);
- void ath10k_do_pci_sleep(struct ath10k *ar);
- 
--static inline void ath10k_pci_wake(struct ath10k *ar)
-+static inline int ath10k_pci_wake(struct ath10k *ar)
- {
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 
- 	if (test_bit(ATH10K_PCI_FEATURE_SOC_POWER_SAVE, ar_pci->features))
--		ath10k_do_pci_wake(ar);
-+		return ath10k_do_pci_wake(ar);
-+
-+	return 0;
- }
- 
- static inline void ath10k_pci_sleep(struct ath10k *ar)
+I haven't measured throughput. Latency is really bad for interactive
+connections, but at least the packets are flowing on all bands. Yay!
 
+Ping to the access point is around 3 ms with the odd 20+ ms when the
+kernel goes off to do something else.
+
+
+Here's my problem:
+
+After wpa_supplicant -Dnl80211 -ddd sees scan results and says
+"SME: Send 20/40 BSS Coexistence to $my_ap" and that frame is acked,
+wpa_supplicant seems to receive a "link up" event which causes it to
+delete the existing association for no good reason. It blacklists my
+ap so I need to reconnect manually with iw dev wlan1 connect -w $ssid.
+
+(Oh, and iw dev wlan1 connect -w consistently says "Unspecified failure"
+even though the connection is established fine by wpa_supplicant. Other
+problem though.)
+
+My AP is hidden, so it isn't included in the scan results. But
+wpa_supplicant is connected to it fine when the scan results arrive.
+
+wpa_supplicant does *not* disconnect if I manually initiate a scan
+when there is no other link activity, this only happens for
+"Scan requested (ret=0) - scan timeout 30 seconds" scans.
+
+--8<-- wpa_supplicant -ddd log snippet with MAC address replaced with $my_ap.
+wlan1: New scan results available
+SME: Send 20/40 BSS Coexistence to $my_ap
+nl80211: Send Action frame (ifindex=6, freq=2417 MHz wait=0 ms no_cck=0)
+nl80211: CMD_FRAME freq=2417 wait=0 no_cck=0 no_ack=0 offchanok=1
+nl80211: Frame TX command accepted; cookie 0xffff880039f70700
+wlan1: Checking for other virtual interfaces sharing same radio (phy1) in event_scan_results
+nl80211: Event message available
+nl80211: MLME event 60
+nl80211: MLME event frame - hexdump(len=34): d0 00 da 00 $my_ap 84 1b 5e 7e e1 bc $my_ap d0 72 04 00 48 01 00 49 03 00 06 05
+nl80211: Frame TX status event
+nl80211: Action TX status: cookie=0ffff880039f70700 (match) (ack=1)
+wlan1: Event TX_STATUS (18) received
+wlan1: EVENT_TX_STATUS dst=$my_ap type=0 stype=13
+RTM_NEWLINK: operstate=1 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan1' added
+nl80211: if_removed already cleared - ignore event
+nl80211: Event message available
+nl80211: Delete station $my_ap
+nl80211: Event message available
+nl80211: MLME event 39
+nl80211: MLME event frame - hexdump(len=26): c0 00 00 00 $my_ap 84 1b 5e 7e e1 bc $my_ap 00 00 04 00
+nl80211: Deauthenticate event
+wlan1: Event DEAUTH (12) received
+wlan1: Deauthentication notification
+wlan1:  * reason 4 (locally generated)
+wlan1:  * address $my_ap
+Deauthentication frame IE(s) - hexdump(len=0): [NULL]
+wlan1: CTRL-EVENT-DISCONNECTED bssid=$my_ap reason=4 locally_generated=1
+wlan1: Auto connect enabled: try to reconnect (wps=0 wpa_state=9)
+wlan1: Setting scan request: 0 sec 100000 usec
+Added BSSID $my_ap into blacklist
+wlan1: Blacklist count 1 --> request scan in 100 ms
+wlan1: Setting scan request: 0 sec 100000 usec
+wlan1: Disconnect event - remove keys
+wpa_driver_nl80211_set_key: ifindex=6 alg=0 addr=(nil) key_idx=0 set_tx=0 seq_len=0 key_len=0
+wpa_driver_nl80211_set_key: ifindex=6 alg=0 addr=(nil) key_idx=1 set_tx=0 seq_len=0 key_len=0
+wpa_driver_nl80211_set_key: ifindex=6 alg=0 addr=(nil) key_idx=2 set_tx=0 seq_len=0 key_len=0
+wpa_driver_nl80211_set_key: ifindex=6 alg=0 addr=(nil) key_idx=3 set_tx=0 seq_len=0 key_len=0
+wpa_driver_nl80211_set_key: ifindex=6 alg=0 addr=0x112f828 key_idx=0 set_tx=0 seq_len=0 key_len=0
+   addr=$my_ap
+wlan1: State: COMPLETED -> DISCONNECTED
+-->8--
+
+
+What's the problem? wpa_supplicant or rt2800usb or mac80211 or all of
+the above?
+
+
+Thanks
+
+//Peter
