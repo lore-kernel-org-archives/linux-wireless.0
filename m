@@ -1,69 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:39144 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754357Ab3ITK6L (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Sep 2013 06:58:11 -0400
-In-Reply-To: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-From: Russell King <rmk+kernel@arm.linux.org.uk>
-To: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
-	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
-	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
-	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	uclinux-dist-devel@blackfin.uclinux.org
-Cc: Chris Ball <cjb@laptop.org>, Chris Ball <cjb@laptop.org>
-Subject: [PATCH 50/51] ARM: 7797/1: mmc: Use dma_max_pfn(dev) helper for
- bounce_limit calculations
-Message-Id: <E1VMnsJ-0002E4-3c@rmk-PC.arm.linux.org.uk> (sfid-20130920_125815_499745_68879482)
-Date: Fri, 20 Sep 2013 00:43:07 +0100
+Received: from nbd.name ([46.4.11.11]:50424 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752432Ab3IQJPu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Sep 2013 05:15:50 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, thomas@net.t-labs.tu-berlin.de
+Subject: [PATCH 3.12] mac80211: drop spoofed packets in ad-hoc mode
+Date: Tue, 17 Sep 2013 11:15:43 +0200
+Message-Id: <1379409343-38116-1-git-send-email-nbd@openwrt.org> (sfid-20130917_111556_255674_9702E919)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Santosh Shilimkar <santosh.shilimkar@ti.com>
+If an Ad-Hoc node receives packets with the Cell ID or its own MAC
+address as source address, it hits a WARN_ON in sta_info_insert_check()
+With many packets, this can massively spam the logs. One way that this
+can easily happen is through having Cisco APs in the area with rouge AP
+detection and countermeasures enabled.
+Such Cisco APs will regularly send fake beacons, disassoc and deauth
+packets that trigger these warnings.
 
-DMA bounce limit is the maximum direct DMA'able memory beyond which
-bounce buffers has to be used to perform dma operations. MMC queue layr
-relies on dma_mask but its calculation is based on max_*pfn which
-don't have uniform meaning across architectures. So make use of
-dma_max_pfn() which is expected to return the DMAable maximum pfn
-value across architectures.
+To fix this issue, drop such spoofed packets early in the rx path.
 
-Signed-off-by: Santosh Shilimkar <santosh.shilimkar@ti.com>
-Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+Cc: stable@vger.kernel.org
+Reported-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/mmc/card/queue.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ net/mac80211/rx.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/mmc/card/queue.c b/drivers/mmc/card/queue.c
-index fa9632e..357bbc5 100644
---- a/drivers/mmc/card/queue.c
-+++ b/drivers/mmc/card/queue.c
-@@ -15,6 +15,7 @@
- #include <linux/freezer.h>
- #include <linux/kthread.h>
- #include <linux/scatterlist.h>
-+#include <linux/dma-mapping.h>
- 
- #include <linux/mmc/card.h>
- #include <linux/mmc/host.h>
-@@ -196,7 +197,7 @@ int mmc_init_queue(struct mmc_queue *mq, struct mmc_card *card,
- 	struct mmc_queue_req *mqrq_prev = &mq->mqrq[1];
- 
- 	if (mmc_dev(host)->dma_mask && *mmc_dev(host)->dma_mask)
--		limit = *mmc_dev(host)->dma_mask;
-+		limit = dma_max_pfn(mmc_dev(host)) << PAGE_SHIFT;
- 
- 	mq->card = card;
- 	mq->queue = blk_init_queue(mmc_request_fn, lock);
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 54395d7..674eac1 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -3056,6 +3056,9 @@ static int prepare_for_handlers(struct ieee80211_rx_data *rx,
+ 	case NL80211_IFTYPE_ADHOC:
+ 		if (!bssid)
+ 			return 0;
++		if (ether_addr_equal(sdata->vif.addr, hdr->addr2) ||
++		    ether_addr_equal(sdata->u.ibss.bssid, hdr->addr2))
++			return 0;
+ 		if (ieee80211_is_beacon(hdr->frame_control)) {
+ 			return 1;
+ 		} else if (!ieee80211_bssid_match(bssid, sdata->u.ibss.bssid)) {
 -- 
-1.7.4.4
+1.8.0.2
 
