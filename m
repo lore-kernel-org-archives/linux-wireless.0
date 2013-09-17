@@ -1,101 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from foo.stuge.se ([212.116.89.98]:34260 "EHLO foo.stuge.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751859Ab3IQIuJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Sep 2013 04:50:09 -0400
-Message-ID: <20130917084327.6955.qmail@stuge.se> (sfid-20130917_105029_956546_8074F167)
-Date: Tue, 17 Sep 2013 10:43:27 +0200
-From: Peter Stuge <peter@stuge.se>
-To: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	hostap@lists.shmoo.com
-Subject: RT3573 wpa_supplicant: "nl80211: Delete station $my_ap" after
-	"SME: Send 20/40 BSS Coexistence to $my_ap"
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:51553 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753047Ab3IQPlq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Sep 2013 11:41:46 -0400
+Received: by mail-ee0-f46.google.com with SMTP id c13so2826631eek.33
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Sep 2013 08:41:45 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <luca@coelho.fi>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 09/11] wl18xx: fix boot process in high temperature environment
+Date: Tue, 17 Sep 2013 18:41:28 +0300
+Message-Id: <1379432490-22157-9-git-send-email-eliad@wizery.com> (sfid-20130917_174831_188397_2F416E7C)
+In-Reply-To: <1379432490-22157-1-git-send-email-eliad@wizery.com>
+References: <1379432490-22157-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Xose Vazquez Perez wrote:
-> 0x0846, 0x9012 NETGEAR WNDA4100 N900 Wireless Dual Band USB Adapter
+From: Victor Goldenshtein <victorg@ti.com>
 
-I'm testing the WNDA4100 with torvalds/linux.git and as of a day or
-two ago and wpa_supplicant-2.0.
+In addition to existing WCS PLL configuration add and enable
+also the coex PLL during init phase. This fixes boot failures
+due to silicon latchup in high temperature environment (>85c).
 
-I haven't measured throughput. Latency is really bad for interactive
-connections, but at least the packets are flowing on all bands. Yay!
+Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+Signed-off-by: Nadim Zubidat <nadimz@ti.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/ti/wl18xx/main.c | 53 +++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ti/wl18xx/reg.h  | 13 +++++++++
+ 2 files changed, 66 insertions(+)
 
-Ping to the access point is around 3 ms with the odd 20+ ms when the
-kernel goes off to do something else.
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index 7aa0eb8..b47eb62 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -623,6 +623,18 @@ static const int wl18xx_rtable[REG_TABLE_LEN] = {
+ 	[REG_RAW_FW_STATUS_ADDR]	= WL18XX_FW_STATUS_ADDR,
+ };
+ 
++static const struct wl18xx_clk_cfg wl18xx_clk_table_coex[NUM_CLOCK_CONFIGS] = {
++	[CLOCK_CONFIG_16_2_M]	= { 8,  121, 0, 0, false },
++	[CLOCK_CONFIG_16_368_M]	= { 8,  120, 0, 0, false },
++	[CLOCK_CONFIG_16_8_M]	= { 8,  117, 0, 0, false },
++	[CLOCK_CONFIG_19_2_M]	= { 10, 128, 0, 0, false },
++	[CLOCK_CONFIG_26_M]	= { 11, 104, 0, 0, false },
++	[CLOCK_CONFIG_32_736_M]	= { 8,  120, 0, 0, false },
++	[CLOCK_CONFIG_33_6_M]	= { 8,  117, 0, 0, false },
++	[CLOCK_CONFIG_38_468_M]	= { 10, 128, 0, 0, false },
++	[CLOCK_CONFIG_52_M]	= { 11, 104, 0, 0, false },
++};
++
+ static const struct wl18xx_clk_cfg wl18xx_clk_table[NUM_CLOCK_CONFIGS] = {
+ 	[CLOCK_CONFIG_16_2_M]	= { 7,  104,  801, 4,  true },
+ 	[CLOCK_CONFIG_16_368_M]	= { 9,  132, 3751, 4,  true },
+@@ -704,6 +716,23 @@ static int wl18xx_set_clk(struct wl1271 *wl)
+ 		     wl18xx_clk_table[clk_freq].p, wl18xx_clk_table[clk_freq].q,
+ 		     wl18xx_clk_table[clk_freq].swallow ? "swallow" : "spit");
+ 
++	/* coex PLL configuration */
++	ret = wl18xx_top_reg_write(wl, PLLSH_COEX_PLL_N,
++				   wl18xx_clk_table_coex[clk_freq].n);
++	if (ret < 0)
++		goto out;
++
++	ret = wl18xx_top_reg_write(wl, PLLSH_COEX_PLL_M,
++				   wl18xx_clk_table_coex[clk_freq].m);
++	if (ret < 0)
++		goto out;
++
++	/* bypass the swallowing logic */
++	ret = wl18xx_top_reg_write(wl, PLLSH_COEX_PLL_SWALLOW_EN,
++				   PLLSH_COEX_PLL_SWALLOW_EN_VAL1);
++	if (ret < 0)
++		goto out;
++
+ 	ret = wl18xx_top_reg_write(wl, PLLSH_WCS_PLL_N,
+ 				   wl18xx_clk_table[clk_freq].n);
+ 	if (ret < 0)
+@@ -745,6 +774,30 @@ static int wl18xx_set_clk(struct wl1271 *wl)
+ 					   PLLSH_WCS_PLL_SWALLOW_EN_VAL2);
+ 	}
+ 
++	/* choose WCS PLL */
++	ret = wl18xx_top_reg_write(wl, PLLSH_WL_PLL_SEL,
++				   PLLSH_WL_PLL_SEL_WCS_PLL);
++	if (ret < 0)
++		goto out;
++
++	/* enable both PLLs */
++	ret = wl18xx_top_reg_write(wl, PLLSH_WL_PLL_EN, PLLSH_WL_PLL_EN_VAL1);
++	if (ret < 0)
++		goto out;
++
++	udelay(1000);
++
++	/* disable coex PLL */
++	ret = wl18xx_top_reg_write(wl, PLLSH_WL_PLL_EN, PLLSH_WL_PLL_EN_VAL2);
++	if (ret < 0)
++		goto out;
++
++	/* reset the swallowing logic */
++	ret = wl18xx_top_reg_write(wl, PLLSH_COEX_PLL_SWALLOW_EN,
++				   PLLSH_COEX_PLL_SWALLOW_EN_VAL2);
++	if (ret < 0)
++		goto out;
++
+ out:
+ 	return ret;
+ }
+diff --git a/drivers/net/wireless/ti/wl18xx/reg.h b/drivers/net/wireless/ti/wl18xx/reg.h
+index 05dd8ba..88de3f2 100644
+--- a/drivers/net/wireless/ti/wl18xx/reg.h
++++ b/drivers/net/wireless/ti/wl18xx/reg.h
+@@ -114,6 +114,11 @@
+ #define PLATFORM_DETECTION		0xA0E3E0
+ #define OCS_EN				0xA02080
+ #define PRIMARY_CLK_DETECT		0xA020A6
++#define PLLSH_COEX_PLL_N		0xA02384
++#define PLLSH_COEX_PLL_M		0xA02382
++#define PLLSH_COEX_PLL_SWALLOW_EN	0xA0238E
++#define PLLSH_WL_PLL_SEL		0xA02398
++
+ #define PLLSH_WCS_PLL_N			0xA02362
+ #define PLLSH_WCS_PLL_M			0xA02360
+ #define PLLSH_WCS_PLL_Q_FACTOR_CFG_1	0xA02364
+@@ -128,9 +133,17 @@
+ #define PLLSH_WCS_PLL_P_FACTOR_CFG_1_MASK	0xFFFF
+ #define PLLSH_WCS_PLL_P_FACTOR_CFG_2_MASK	0x000F
+ 
++#define PLLSH_WL_PLL_EN_VAL1		0x7
++#define PLLSH_WL_PLL_EN_VAL2		0x2
++#define PLLSH_COEX_PLL_SWALLOW_EN_VAL1	0x2
++#define PLLSH_COEX_PLL_SWALLOW_EN_VAL2	0x11
++
+ #define PLLSH_WCS_PLL_SWALLOW_EN_VAL1	0x1
+ #define PLLSH_WCS_PLL_SWALLOW_EN_VAL2	0x12
+ 
++#define PLLSH_WL_PLL_SEL_WCS_PLL	0x0
++#define PLLSH_WL_PLL_SEL_COEX_PLL	0x1
++
+ #define WL18XX_REG_FUSE_DATA_1_3	0xA0260C
+ #define WL18XX_PG_VER_MASK		0x70
+ #define WL18XX_PG_VER_OFFSET		4
+-- 
+1.8.3.rc1.35.g9b79519
 
-
-Here's my problem:
-
-After wpa_supplicant -Dnl80211 -ddd sees scan results and says
-"SME: Send 20/40 BSS Coexistence to $my_ap" and that frame is acked,
-wpa_supplicant seems to receive a "link up" event which causes it to
-delete the existing association for no good reason. It blacklists my
-ap so I need to reconnect manually with iw dev wlan1 connect -w $ssid.
-
-(Oh, and iw dev wlan1 connect -w consistently says "Unspecified failure"
-even though the connection is established fine by wpa_supplicant. Other
-problem though.)
-
-My AP is hidden, so it isn't included in the scan results. But
-wpa_supplicant is connected to it fine when the scan results arrive.
-
-wpa_supplicant does *not* disconnect if I manually initiate a scan
-when there is no other link activity, this only happens for
-"Scan requested (ret=0) - scan timeout 30 seconds" scans.
-
---8<-- wpa_supplicant -ddd log snippet with MAC address replaced with $my_ap.
-wlan1: New scan results available
-SME: Send 20/40 BSS Coexistence to $my_ap
-nl80211: Send Action frame (ifindex=6, freq=2417 MHz wait=0 ms no_cck=0)
-nl80211: CMD_FRAME freq=2417 wait=0 no_cck=0 no_ack=0 offchanok=1
-nl80211: Frame TX command accepted; cookie 0xffff880039f70700
-wlan1: Checking for other virtual interfaces sharing same radio (phy1) in event_scan_results
-nl80211: Event message available
-nl80211: MLME event 60
-nl80211: MLME event frame - hexdump(len=34): d0 00 da 00 $my_ap 84 1b 5e 7e e1 bc $my_ap d0 72 04 00 48 01 00 49 03 00 06 05
-nl80211: Frame TX status event
-nl80211: Action TX status: cookie=0ffff880039f70700 (match) (ack=1)
-wlan1: Event TX_STATUS (18) received
-wlan1: EVENT_TX_STATUS dst=$my_ap type=0 stype=13
-RTM_NEWLINK: operstate=1 ifi_flags=0x1003 ([UP])
-RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan1' added
-nl80211: if_removed already cleared - ignore event
-nl80211: Event message available
-nl80211: Delete station $my_ap
-nl80211: Event message available
-nl80211: MLME event 39
-nl80211: MLME event frame - hexdump(len=26): c0 00 00 00 $my_ap 84 1b 5e 7e e1 bc $my_ap 00 00 04 00
-nl80211: Deauthenticate event
-wlan1: Event DEAUTH (12) received
-wlan1: Deauthentication notification
-wlan1:  * reason 4 (locally generated)
-wlan1:  * address $my_ap
-Deauthentication frame IE(s) - hexdump(len=0): [NULL]
-wlan1: CTRL-EVENT-DISCONNECTED bssid=$my_ap reason=4 locally_generated=1
-wlan1: Auto connect enabled: try to reconnect (wps=0 wpa_state=9)
-wlan1: Setting scan request: 0 sec 100000 usec
-Added BSSID $my_ap into blacklist
-wlan1: Blacklist count 1 --> request scan in 100 ms
-wlan1: Setting scan request: 0 sec 100000 usec
-wlan1: Disconnect event - remove keys
-wpa_driver_nl80211_set_key: ifindex=6 alg=0 addr=(nil) key_idx=0 set_tx=0 seq_len=0 key_len=0
-wpa_driver_nl80211_set_key: ifindex=6 alg=0 addr=(nil) key_idx=1 set_tx=0 seq_len=0 key_len=0
-wpa_driver_nl80211_set_key: ifindex=6 alg=0 addr=(nil) key_idx=2 set_tx=0 seq_len=0 key_len=0
-wpa_driver_nl80211_set_key: ifindex=6 alg=0 addr=(nil) key_idx=3 set_tx=0 seq_len=0 key_len=0
-wpa_driver_nl80211_set_key: ifindex=6 alg=0 addr=0x112f828 key_idx=0 set_tx=0 seq_len=0 key_len=0
-   addr=$my_ap
-wlan1: State: COMPLETED -> DISCONNECTED
--->8--
-
-
-What's the problem? wpa_supplicant or rt2800usb or mac80211 or all of
-the above?
-
-
-Thanks
-
-//Peter
