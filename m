@@ -1,45 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f44.google.com ([209.85.219.44]:40045 "EHLO
-	mail-oa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755603Ab3IIVwX (ORCPT
+Received: from mail-ea0-f172.google.com ([209.85.215.172]:41251 "EHLO
+	mail-ea0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752828Ab3IQPlj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Sep 2013 17:52:23 -0400
-Received: by mail-oa0-f44.google.com with SMTP id l17so7148405oag.31
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Sep 2013 14:52:22 -0700 (PDT)
-Message-ID: <522E4315.4040806@lwfinger.net> (sfid-20130909_235226_064217_675F9B22)
-Date: Mon, 09 Sep 2013 16:52:21 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Vincent Thiele <vincentthiele@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: No connection with TP-Link TL-WN823N (rtl8192cu)
-References: <CAEZsi7Hde5NyTRgm7Lf_4LvHMAEJouzaqMNUwxr-iSipuEcsyQ@mail.gmail.com>
-In-Reply-To: <CAEZsi7Hde5NyTRgm7Lf_4LvHMAEJouzaqMNUwxr-iSipuEcsyQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 17 Sep 2013 11:41:39 -0400
+Received: by mail-ea0-f172.google.com with SMTP id r16so2847778ead.31
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Sep 2013 08:41:38 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <luca@coelho.fi>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 02/11] wlcore: add new plt power-mode: CHIP_AWAKE
+Date: Tue, 17 Sep 2013 18:41:21 +0300
+Message-Id: <1379432490-22157-2-git-send-email-eliad@wizery.com> (sfid-20130917_174143_358971_2421E3A1)
+In-Reply-To: <1379432490-22157-1-git-send-email-eliad@wizery.com>
+References: <1379432490-22157-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/09/2013 03:40 PM, Vincent Thiele wrote:
-> I use TL-WN823N usb-stick with ubuntu but native drivers disconnect
-> few seconds after boot. For wlan i need to install this package:
-> https://code.google.com/p/realtek-8188cus-wireless-drivers-3444749-ubuntu-1304/.
-> But this package can not be used with a kernel > 3.9. Please fix the
-> native drivers. Best regards
+From: Yair Shapira <yair.shapira@ti.com>
 
-I am sorry that you are having problems with your system, but your log was 
-essentially useless. I saw one disconnect due to reason 4 (disassociation due to 
-inactivity).
+Under this mode the chip is powered on including sdio
+but no FW is downloaded and run, interrupts are not enabled, etc...
 
-There were many changes in the rtl8192cu driver for kernel 3.11, and you need to 
-run it, or a backports version of the wireless code. Your 3.8.0 kernel is too old.
+This mode is intended to allow RTTT to bridge sdio as a transport
+to the chip.
 
-I have been running rtl8192cu for the past 24 hours without a permanent 
-disconnect. Under NetworkManager, I see some reason 7 deauthentications, but 
-running under ifup, there have been no disassociations or deauthentications in 
-over 6 hours.
+Driver only provides sdio access using the dev_mem debugfs file.
 
-I am using openSUSE KDE. There may be a problem with the Ubuntu user code as it 
-seems to operate differently.
+Some fixes done to the code that ensures that PLT mode and normal
+driver power mode (ifconfig/add_interface) are mutually excluded.
 
-Larry
+Signed-off-by: Yair Shapira <yair.shapira@ti.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/ti/wlcore/main.c     | 16 ++++++++++++----
+ drivers/net/wireless/ti/wlcore/testmode.c | 13 +++++++++++--
+ drivers/net/wireless/ti/wlcore/wlcore_i.h |  1 +
+ 3 files changed, 24 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index b64b465..611e81d 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -1062,7 +1062,8 @@ int wl1271_plt_start(struct wl1271 *wl, const enum plt_mode plt_mode)
+ 	static const char* const PLT_MODE[] = {
+ 		"PLT_OFF",
+ 		"PLT_ON",
+-		"PLT_FEM_DETECT"
++		"PLT_FEM_DETECT",
++		"PLT_CHIP_AWAKE"
+ 	};
+ 
+ 	int ret;
+@@ -1088,9 +1089,11 @@ int wl1271_plt_start(struct wl1271 *wl, const enum plt_mode plt_mode)
+ 		if (ret < 0)
+ 			goto power_off;
+ 
+-		ret = wl->ops->plt_init(wl);
+-		if (ret < 0)
+-			goto power_off;
++		if (plt_mode != PLT_CHIP_AWAKE) {
++			ret = wl->ops->plt_init(wl);
++			if (ret < 0)
++				goto power_off;
++		}
+ 
+ 		wl->state = WLCORE_STATE_ON;
+ 		wl1271_notice("firmware booted in PLT mode %s (%s)",
+@@ -2419,6 +2422,11 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 	int ret = 0;
+ 	u8 role_type;
+ 
++	if (wl->plt) {
++		wl1271_error("Adding Interface not allowed while in PLT mode");
++		return -EBUSY;
++	}
++
+ 	vif->driver_flags |= IEEE80211_VIF_BEACON_FILTER |
+ 			     IEEE80211_VIF_SUPPORTS_CQM_RSSI;
+ 
+diff --git a/drivers/net/wireless/ti/wlcore/testmode.c b/drivers/net/wireless/ti/wlcore/testmode.c
+index 527590f..a3b7d95 100644
+--- a/drivers/net/wireless/ti/wlcore/testmode.c
++++ b/drivers/net/wireless/ti/wlcore/testmode.c
+@@ -297,7 +297,8 @@ static int wl1271_tm_cmd_set_plt_mode(struct wl1271 *wl, struct nlattr *tb[])
+ 		ret = wl1271_plt_stop(wl);
+ 		break;
+ 	case PLT_ON:
+-		ret = wl1271_plt_start(wl, PLT_ON);
++	case PLT_CHIP_AWAKE:
++		ret = wl1271_plt_start(wl, val);
+ 		break;
+ 	case PLT_FEM_DETECT:
+ 		ret = wl1271_tm_detect_fem(wl, tb);
+@@ -361,6 +362,7 @@ int wl1271_tm_cmd(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ {
+ 	struct wl1271 *wl = hw->priv;
+ 	struct nlattr *tb[WL1271_TM_ATTR_MAX + 1];
++	u32 nla_cmd;
+ 	int err;
+ 
+ 	err = nla_parse(tb, WL1271_TM_ATTR_MAX, data, len, wl1271_tm_policy);
+@@ -370,7 +372,14 @@ int wl1271_tm_cmd(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	if (!tb[WL1271_TM_ATTR_CMD_ID])
+ 		return -EINVAL;
+ 
+-	switch (nla_get_u32(tb[WL1271_TM_ATTR_CMD_ID])) {
++	nla_cmd = nla_get_u32(tb[WL1271_TM_ATTR_CMD_ID]);
++
++	/* Only SET_PLT_MODE is allowed in case of mode PLT_CHIP_AWAKE */
++	if (wl->plt_mode == PLT_CHIP_AWAKE &&
++	    nla_cmd != WL1271_TM_CMD_SET_PLT_MODE)
++		return -EOPNOTSUPP;
++
++	switch (nla_cmd) {
+ 	case WL1271_TM_CMD_TEST:
+ 		return wl1271_tm_cmd_test(wl, tb);
+ 	case WL1271_TM_CMD_INTERROGATE:
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
+index 14fd111..3f4f08b 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
+@@ -307,6 +307,7 @@ enum plt_mode {
+ 	PLT_OFF = 0,
+ 	PLT_ON = 1,
+ 	PLT_FEM_DETECT = 2,
++	PLT_CHIP_AWAKE = 3
+ };
+ 
+ struct wl12xx_rx_filter_field {
+-- 
+1.8.3.rc1.35.g9b79519
 
