@@ -1,112 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yh0-f54.google.com ([209.85.213.54]:34861 "EHLO
-	mail-yh0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751157Ab3ISQS0 (ORCPT
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:59373 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752434Ab3IQLa6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Sep 2013 12:18:26 -0400
-Received: by mail-yh0-f54.google.com with SMTP id z20so4231805yhz.27
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Sep 2013 09:18:26 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 2/4] ath: move common dynamic regulatory domain setting to a helper
-Date: Thu, 19 Sep 2013 11:18:08 -0500
-Message-Id: <1379607490-18972-3-git-send-email-mcgrof@do-not-panic.com> (sfid-20130919_181829_250802_2D19E380)
-In-Reply-To: <1379607490-18972-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1379607490-18972-1-git-send-email-mcgrof@do-not-panic.com>
+	Tue, 17 Sep 2013 07:30:58 -0400
+Received: by mail-ie0-f170.google.com with SMTP id x13so10004464ief.15
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Sep 2013 04:30:57 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB301DB0B1C@HASMSX103.ger.corp.intel.com>
+References: <1379396919-11983-1-git-send-email-emmanuel.grumbach@intel.com>
+	<CAB3XZEc-h=mS-etjvm_zeJ2czsLj9yseq+jpsXOR=smy5+7Rdg@mail.gmail.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB301DB0B1C@HASMSX103.ger.corp.intel.com>
+Date: Tue, 17 Sep 2013 13:30:57 +0200
+Message-ID: <CAB3XZEfuOmiotA5GtprJNm_XqFK20=8JJAbv9TAD6qaZkX80Tw@mail.gmail.com> (sfid-20130917_133101_201541_89A897EC)
+Subject: Re: [RFC] mac80211: correctly close cancelled scans
+From: Eliad Peller <eliad@wizery.com>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+On Tue, Sep 17, 2013 at 2:28 PM, Grumbach, Emmanuel
+<emmanuel.grumbach@intel.com> wrote:
+>> On Tue, Sep 17, 2013 at 8:48 AM, Emmanuel Grumbach
+>> <emmanuel.grumbach@intel.com> wrote:
+>> > __ieee80211_scan_completed is called from a worker. This means that
+>> > the following flow is possible.
+>> >
+>> >  * driver calls ieee80211_scan_completed
+>> >  * mac80211 cancels the scan (that is already complete)
+>> >  * __ieee80211_scan_complete runs
+>> >
+>> > When scan_work will finally run, it will see that the scan hasn't been
+>> > aborted and might even trigger another scan on another band. This
+>> > leads to a situation where cfg80211's scan is not done and no further
+>> > scan can be issued.
+>> >
+>> > Fix this by setting a new flag when a HW scan is being cancelled so
+>> > that no other scan will be triggered.
+>> >
+>> > Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+>> > ---
+>> [...]
+>>
+>> >         if (test_bit(SCAN_HW_SCANNING, &local->scanning)) {
+>> > -               if (local->ops->cancel_hw_scan)
+>> > +               /*
+>> > +                * Make sure that __ieee80211_scan_completed doesn't trigger a
+>> > +                * scan on another band.
+>> > +                */
+>> > +               set_bit(SCAN_HW_CANCELLED, &local->scanning);
+>> > +               if (local->ops->cancel_hw_scan) {
+>> >                         drv_cancel_hw_scan(local,
+>> >                                 rcu_dereference_protected(local->scan_sdata,
+>> >
+>> > lockdep_is_held(&local->mtx)));
+>> > +               }
+>> >                 goto out;
+>> >         }
+>>
+>> you don't seem to clear this flag anywhere...
+>>
+>
+> Yeah - just like SCAN_HW_SCANNING isn't cleared anywhere... but... in __ieee80211_scan_completed:
+>
+>         local->scanning = 0;
+>         local->scan_chandef.chan = NULL;
+>
+> yes I know. Don't ask.
 
-This moves the dynamic regulatory domain selection code into
-a helper.
+oh, right, i overlooked it :)
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- drivers/net/wireless/ath/regd.c |   55 ++++++++++++++++++++++++++-------------
- 1 file changed, 37 insertions(+), 18 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
-index 7d077c7..8373650 100644
---- a/drivers/net/wireless/ath/regd.c
-+++ b/drivers/net/wireless/ath/regd.c
-@@ -356,14 +356,48 @@ static u16 ath_regd_find_country_by_name(char *alpha2)
- 	return -1;
- }
- 
-+static int __ath_reg_dyn_country(struct wiphy *wiphy,
-+				 struct ath_regulatory *reg,
-+				 struct regulatory_request *request)
-+{
-+	u16 country_code;
-+
-+	if (!ath_is_world_regd(reg))
-+		return -EINVAL;
-+
-+	country_code = ath_regd_find_country_by_name(request->alpha2);
-+	if (country_code == (u16) -1)
-+		return -EINVAL;
-+
-+	reg->current_rd = COUNTRY_ERD_FLAG;
-+	reg->current_rd |= country_code;
-+
-+	__ath_regd_init(reg);
-+
-+	ath_reg_apply_world_flags(wiphy, request->initiator, reg);
-+
-+	return 0;
-+}
-+
-+static void ath_reg_dyn_country(struct wiphy *wiphy,
-+				struct ath_regulatory *reg,
-+				struct regulatory_request *request)
-+{
-+	if (__ath_reg_dyn_country(wiphy, reg, request))
-+		return;
-+
-+	printk(KERN_DEBUG "ath: regdomain 0x%0x "
-+			  "dynamically updated by %s\n",
-+	       reg->current_rd,
-+	       reg_initiator_name(request->initiator));
-+}
-+
- void ath_reg_notifier_apply(struct wiphy *wiphy,
- 			    struct regulatory_request *request,
- 			    struct ath_regulatory *reg)
- {
- 	struct ath_common *common = container_of(reg, struct ath_common,
- 						 regulatory);
--	u16 country_code;
--
- 	/* We always apply this */
- 	ath_reg_apply_radar_flags(wiphy);
- 
-@@ -391,22 +425,7 @@ void ath_reg_notifier_apply(struct wiphy *wiphy,
- 	case NL80211_REGDOM_SET_BY_USER:
- 		break;
- 	case NL80211_REGDOM_SET_BY_COUNTRY_IE:
--		if (!ath_is_world_regd(reg))
--			break;
--
--		country_code = ath_regd_find_country_by_name(request->alpha2);
--		if (country_code == (u16) -1)
--			break;
--
--		reg->current_rd = COUNTRY_ERD_FLAG;
--		reg->current_rd |= country_code;
--
--		printk(KERN_DEBUG "ath: regdomain 0x%0x updated by CountryIE\n",
--			reg->current_rd);
--		__ath_regd_init(reg);
--
--		ath_reg_apply_world_flags(wiphy, request->initiator, reg);
--
-+		ath_reg_dyn_country(wiphy, reg, request);
- 		break;
- 	}
- }
--- 
-1.7.10.4
-
+Eliad.
