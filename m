@@ -1,172 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:55912 "EHLO ebb05.tieto.com"
+Received: from mga09.intel.com ([134.134.136.24]:63596 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751267Ab3IYJid (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Sep 2013 05:38:33 -0400
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Bartosz Markowski <bartosz.markowski@tieto.com>
-Subject: [PATCH 13/13] ath10k: handle FW API differences for scan structures
-Date: Wed, 25 Sep 2013 11:38:11 +0200
-Message-ID: <1380101891-18312-14-git-send-email-bartosz.markowski@tieto.com> (sfid-20130925_113845_498153_9E46C716)
-In-Reply-To: <1380101891-18312-1-git-send-email-bartosz.markowski@tieto.com>
-References: <1380101891-18312-1-git-send-email-bartosz.markowski@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1751247Ab3IQFtA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Sep 2013 01:49:00 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [RFC] mac80211: correctly close cancelled scans
+Date: Tue, 17 Sep 2013 08:48:38 +0300
+Message-Id: <1379396919-11983-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20130917_074903_860444_E605037C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The wmi_start_scan_cmd has an extra filed in our main
-firmware track, reflact that to not have a mismatch in
-case of 10.x track.
+__ieee80211_scan_completed is called from a worker. This
+means that the following flow is possible.
 
-Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+ * driver calls ieee80211_scan_completed
+ * mac80211 cancels the scan (that is already complete)
+ * __ieee80211_scan_complete runs
+
+When scan_work will finally run, it will see that the scan
+hasn't been aborted and might even trigger another scan on
+another band. This leads to a situation where cfg80211's
+scan is not done and no further scan can be issued.
+
+Fix this by setting a new flag when a HW scan is being
+cancelled so that no other scan will be triggered.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/wmi.c |   19 ++++++--
- drivers/net/wireless/ath/ath10k/wmi.h |   82 +++++++++++++++++++++++++++++++++
- 2 files changed, 97 insertions(+), 4 deletions(-)
+ net/mac80211/ieee80211_i.h |    3 +++
+ net/mac80211/scan.c        |   22 +++++++++++++++++++++-
+ 2 files changed, 24 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 2a55bc8..d4ba78546 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -2377,11 +2377,15 @@ out:
- 	return ath10k_wmi_cmd_send(ar, buf, ar->wmi.cmd->wmi_init_cmdid);
- }
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index d604e16..a523e5a 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -893,6 +893,8 @@ struct tpt_led_trigger {
+  *	that the scan completed.
+  * @SCAN_ABORTED: Set for our scan work function when the driver reported
+  *	a scan complete for an aborted scan.
++ * @SCAN_HW_CANCELLED: Set for our scan work function when the scan is being
++ *	cancelled.
+  */
+ enum {
+ 	SCAN_SW_SCANNING,
+@@ -900,6 +902,7 @@ enum {
+ 	SCAN_ONCHANNEL_SCANNING,
+ 	SCAN_COMPLETED,
+ 	SCAN_ABORTED,
++	SCAN_HW_CANCELLED,
+ };
  
--static int ath10k_wmi_start_scan_calc_len(const struct wmi_start_scan_arg *arg)
-+static int ath10k_wmi_start_scan_calc_len(struct ath10k *ar,
-+					  const struct wmi_start_scan_arg *arg)
- {
- 	int len;
+ /**
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 08afe74..67f81a4 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -238,6 +238,9 @@ static bool ieee80211_prep_hw_scan(struct ieee80211_local *local)
+ 	enum ieee80211_band band;
+ 	int i, ielen, n_chans;
  
--	len = sizeof(struct wmi_start_scan_cmd);
-+	if (test_bit(ATH10K_FW_FEATURE_10X, ar->fw_features))
-+		len = sizeof(struct wmi_start_scan_cmd_10x);
-+	else
-+		len = sizeof(struct wmi_start_scan_cmd);
- 
- 	if (arg->ie_len) {
- 		if (!arg->ie)
-@@ -2441,7 +2445,7 @@ int ath10k_wmi_start_scan(struct ath10k *ar,
- 	int len = 0;
- 	int i;
- 
--	len = ath10k_wmi_start_scan_calc_len(arg);
-+	len = ath10k_wmi_start_scan_calc_len(ar, arg);
- 	if (len < 0)
- 		return len; /* len contains error code here */
- 
-@@ -2473,7 +2477,14 @@ int ath10k_wmi_start_scan(struct ath10k *ar,
- 	cmd->scan_ctrl_flags    = __cpu_to_le32(arg->scan_ctrl_flags);
- 
- 	/* TLV list starts after fields included in the struct */
--	off = sizeof(*cmd);
-+	/* There's just one filed that differes the two start_scan
-+	 * structures - burst_duration, which we are not using btw,
-+	   no point to make the split here, just shift the buffer to fit with
-+	   given FW */
-+	if (test_bit(ATH10K_FW_FEATURE_10X, ar->fw_features))
-+		off = sizeof(struct wmi_start_scan_cmd_10x);
-+	else
-+		off = sizeof(struct wmi_start_scan_cmd);
- 
- 	if (arg->n_channels) {
- 		channels = (void *)skb->data + off;
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index fcada27..75b9978 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -1715,6 +1715,88 @@ struct wmi_start_scan_cmd {
- 	 */
- } __packed;
- 
-+/* This is the definition from 10.X firmware branch */
-+struct wmi_start_scan_cmd_10x {
-+	/* Scan ID */
-+	__le32 scan_id;
++	if (test_bit(SCAN_HW_CANCELLED, &local->scanning))
++		return false;
 +
-+	/* Scan requestor ID */
-+	__le32 scan_req_id;
-+
-+	/* VDEV id(interface) that is requesting scan */
-+	__le32 vdev_id;
-+
-+	/* Scan Priority, input to scan scheduler */
-+	__le32 scan_priority;
-+
-+	/* Scan events subscription */
-+	__le32 notify_scan_events;
-+
-+	/* dwell time in msec on active channels */
-+	__le32 dwell_time_active;
-+
-+	/* dwell time in msec on passive channels */
-+	__le32 dwell_time_passive;
-+
+ 	do {
+ 		if (local->hw_scan_band == IEEE80211_NUM_BANDS)
+ 			return false;
+@@ -940,11 +943,28 @@ void ieee80211_scan_cancel(struct ieee80211_local *local)
+ 	if (!local->scan_req)
+ 		goto out;
+ 
 +	/*
-+	 * min time in msec on the BSS channel,only valid if atleast one
-+	 * VDEV is active
++	 * We have a scan running and the driver already reported completion,
++	 * but the worker hasn't run yet or is stuck on the mutex - mark it as
++	 * cancelled.
 +	 */
-+	__le32 min_rest_time;
++	if (test_bit(SCAN_HW_SCANNING, &local->scanning) &&
++	    test_bit(SCAN_COMPLETED, &local->scanning)) {
++		set_bit(SCAN_HW_CANCELLED, &local->scanning);
++		goto out;
++	}
 +
-+	/*
-+	 * max rest time in msec on the BSS channel,only valid if at least
-+	 * one VDEV is active
-+	 */
-+	/*
-+	 * the scanner will rest on the bss channel at least min_rest_time
-+	 * after min_rest_time the scanner will start checking for tx/rx
-+	 * activity on all VDEVs. if there is no activity the scanner will
-+	 * switch to off channel. if there is activity the scanner will let
-+	 * the radio on the bss channel until max_rest_time expires.at
-+	 * max_rest_time scanner will switch to off channel irrespective of
-+	 * activity. activity is determined by the idle_time parameter.
-+	 */
-+	__le32 max_rest_time;
-+
-+	/*
-+	 * time before sending next set of probe requests.
-+	 * The scanner keeps repeating probe requests transmission with
-+	 * period specified by repeat_probe_time.
-+	 * The number of probe requests specified depends on the ssid_list
-+	 * and bssid_list
-+	 */
-+	__le32 repeat_probe_time;
-+
-+	/* time in msec between 2 consequetive probe requests with in a set. */
-+	__le32 probe_spacing_time;
-+
-+	/*
-+	 * data inactivity time in msec on bss channel that will be used by
-+	 * scanner for measuring the inactivity.
-+	 */
-+	__le32 idle_time;
-+
-+	/* maximum time in msec allowed for scan  */
-+	__le32 max_scan_time;
-+
-+	/*
-+	 * delay in msec before sending first probe request after switching
-+	 * to a channel
-+	 */
-+	__le32 probe_delay;
-+
-+	/* Scan control flags */
-+	__le32 scan_ctrl_flags;
-+
-+	/*
-+	 * TLV (tag length value )  paramerters follow the scan_cmd structure.
-+	 * TLV can contain channel list, bssid list, ssid list and
-+	 * ie. the TLV tags are defined above;
-+	 */
-+} __packed;
-+
-+
- struct wmi_ssid_arg {
- 	int len;
- 	const u8 *ssid;
+ 	if (test_bit(SCAN_HW_SCANNING, &local->scanning)) {
+-		if (local->ops->cancel_hw_scan)
++		/*
++		 * Make sure that __ieee80211_scan_completed doesn't trigger a
++		 * scan on another band.
++		 */
++		set_bit(SCAN_HW_CANCELLED, &local->scanning);
++		if (local->ops->cancel_hw_scan) {
+ 			drv_cancel_hw_scan(local,
+ 				rcu_dereference_protected(local->scan_sdata,
+ 						lockdep_is_held(&local->mtx)));
++		}
+ 		goto out;
+ 	}
+ 
 -- 
-1.7.10
+1.7.10.4
 
