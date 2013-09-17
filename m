@@ -1,53 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:47575 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751533Ab3IRNWY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Sep 2013 09:22:24 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: fix num_sends_allowed replenishing
-Date: Wed, 18 Sep 2013 15:22:17 +0200
-Message-ID: <1379510537-8731-1-git-send-email-michal.kazior@tieto.com> (sfid-20130918_152227_651842_0DCCFB18)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-ea0-f171.google.com ([209.85.215.171]:41241 "EHLO
+	mail-ea0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752960Ab3IQPln (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Sep 2013 11:41:43 -0400
+Received: by mail-ea0-f171.google.com with SMTP id n15so2847794ead.30
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Sep 2013 08:41:42 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <luca@coelho.fi>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 06/11] wlcore: fix unsafe dereference of the wlvif
+Date: Tue, 17 Sep 2013 18:41:25 +0300
+Message-Id: <1379432490-22157-6-git-send-email-eliad@wizery.com> (sfid-20130917_174152_730730_1DBF9270)
+In-Reply-To: <1379432490-22157-1-git-send-email-eliad@wizery.com>
+References: <1379432490-22157-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Recent ce_sendlist removal patch has broken
-num_sends_allowed incrementing. num_sends_allowed
-exceeded initial values and could overflow.
+From: Victor Goldenshtein <victorg@ti.com>
 
-This code was supposed to replenish
-num_sends_allowed for partial sendlist items (i.e.
-before final sendlist item from a sendlist was
-completed and could be processed by completion
-handlers).
+wlvif could be passed as NULL from the wlcore_tx_work_locked()
+to the wl1271_prepare_tx_frame() and to wl1271_skb_queue_head()
+functions. This may lead to a Kernel panic, fix this by
+validating that wlvif != NULL.
 
-Fortunately it seems it cause any major breakage,
-yet.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/net/wireless/ath/ath10k/pci.c |    4 ----
- 1 file changed, 4 deletions(-)
+ drivers/net/wireless/ti/wlcore/tx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index f1faf46..dff23d9 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -626,10 +626,6 @@ static void ath10k_pci_ce_send_done(struct ath10k_ce_pipe *ce_state)
- 	while (ath10k_ce_completed_send_next(ce_state, &transfer_context,
- 					     &ce_data, &nbytes,
- 					     &transfer_id) == 0) {
--		spin_lock_bh(&pipe_info->pipe_lock);
--		pipe_info->num_sends_allowed++;
--		spin_unlock_bh(&pipe_info->pipe_lock);
--
- 		compl = get_free_compl(pipe_info);
- 		if (!compl)
- 			break;
+diff --git a/drivers/net/wireless/ti/wlcore/tx.c b/drivers/net/wireless/ti/wlcore/tx.c
+index 03249da..87cd707 100644
+--- a/drivers/net/wireless/ti/wlcore/tx.c
++++ b/drivers/net/wireless/ti/wlcore/tx.c
+@@ -401,7 +401,7 @@ static int wl1271_prepare_tx_frame(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 		is_wep = (cipher == WLAN_CIPHER_SUITE_WEP40) ||
+ 			 (cipher == WLAN_CIPHER_SUITE_WEP104);
+ 
+-		if (WARN_ON(is_wep && wlvif->default_key != idx)) {
++		if (WARN_ON(is_wep && wlvif && wlvif->default_key != idx)) {
+ 			ret = wl1271_set_default_wep_key(wl, wlvif, idx);
+ 			if (ret < 0)
+ 				return ret;
 -- 
-1.7.9.5
+1.8.3.rc1.35.g9b79519
 
