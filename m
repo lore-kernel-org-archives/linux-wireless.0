@@ -1,56 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f49.google.com ([209.85.160.49]:41932 "EHLO
-	mail-pb0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757006Ab3IETOw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Sep 2013 15:14:52 -0400
-Received: by mail-pb0-f49.google.com with SMTP id xb4so2195479pbc.22
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Sep 2013 12:14:52 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	devel@lists.open80211s.org, distro11s@cozybit.com,
-	Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>,
-	Colleen Twitty <colleen@cozybit.com>
-Subject: [PATCH v2] mac80211: fix the setting of extended supported rate IE
-Date: Thu,  5 Sep 2013 12:14:39 -0700
-Message-Id: <1378408479-1025-1-git-send-email-yeohchunyeow@cozybit.com> (sfid-20130905_211456_716152_7A1B1F38)
+Received: from ebb05.tieto.com ([131.207.168.36]:46998 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751604Ab3IRMna (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Sep 2013 08:43:30 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 0/5] ath10k: tx performance patches
+Date: Wed, 18 Sep 2013 14:43:17 +0200
+Message-ID: <1379508202-9660-1-git-send-email-michal.kazior@tieto.com> (sfid-20130918_144333_487478_A6277BA2)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch "mac80211: select and adjust bitrates according to
-channel mode" causes regression and breaks the extended supported rate
-IE setting. Since "i" is starting with 8, so this is not necessary
-to introduce "skip" here.
+Hi,
 
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-Signed-off-by: Colleen Twitty <colleen@cozybit.com>
-Reviewed-by: Jason Abele <jason@cozybit.com>
----
-v2: remove skip (Jason)
+This patchset reduces CPU load and improves
+improves TX performance on AP135 by additional
+30mbps (give or take; 560mbps -> 590mbps), at
+least on my testbed.
 
- net/mac80211/util.c |    3 ---
- 1 file changed, 3 deletions(-)
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 3c8283b..4bb639f 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -2128,14 +2128,11 @@ int ieee80211_add_ext_srates_ie(struct ieee80211_sub_if_data *sdata,
- 		pos = skb_put(skb, exrates + 2);
- 		*pos++ = WLAN_EID_EXT_SUPP_RATES;
- 		*pos++ = exrates;
--		skip = 0;
- 		for (i = 8; i < sband->n_bitrates; i++) {
- 			u8 basic = 0;
- 			if ((rate_flags & sband->bitrates[i].flags)
- 			    != rate_flags)
- 				continue;
--			if (skip++ < 8)
--				continue;
- 			if (need_basic && basic_rates & BIT(i))
- 				basic = 0x80;
- 			rate = DIV_ROUND_UP(sband->bitrates[i].bitrate,
+Michal Kazior (5):
+  ath10k: use num_pending_tx instead of msdu id bitmap
+  ath10k: avoid needless memset on TX path
+  ath10k: decouple HTT TX completions
+  ath10k: cleanup HTT TX functions
+  ath10k: use msdu headroom to store txfrag
+
+ drivers/net/wireless/ath/ath10k/core.h   |   12 +-
+ drivers/net/wireless/ath/ath10k/htc.c    |    2 +-
+ drivers/net/wireless/ath/ath10k/htt_rx.c |    4 +-
+ drivers/net/wireless/ath/ath10k/htt_tx.c |  249 ++++++++++++------------------
+ drivers/net/wireless/ath/ath10k/mac.c    |    9 +-
+ drivers/net/wireless/ath/ath10k/txrx.c   |   65 +++-----
+ drivers/net/wireless/ath/ath10k/txrx.h   |    5 +-
+ 7 files changed, 131 insertions(+), 215 deletions(-)
+
 -- 
 1.7.9.5
 
