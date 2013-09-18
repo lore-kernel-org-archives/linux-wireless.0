@@ -1,80 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:58543 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750825Ab3IYXK4 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Sep 2013 19:10:56 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-Date: Wed, 25 Sep 2013 16:10:47 -0700
-Subject: RE: [patch] mwifiex: potential integer underflow in
- mwifiex_ret_wmm_get_status()
-Message-ID: <477F20668A386D41ADCC57781B1F70430F45077E52@SC-VEXCH1.marvell.com> (sfid-20130926_011059_944907_0AE8AC9B)
-References: <20130925085729.GC6661@elgon.mountain>
- <477F20668A386D41ADCC57781B1F70430F45077CDA@SC-VEXCH1.marvell.com>
- <20130925182359.GV6247@mwanda>
-In-Reply-To: <20130925182359.GV6247@mwanda>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-ea0-f171.google.com ([209.85.215.171]:58242 "EHLO
+	mail-ea0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751865Ab3IRUrG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Sep 2013 16:47:06 -0400
+Received: by mail-ea0-f171.google.com with SMTP id n15so3732717ead.16
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Sep 2013 13:47:04 -0700 (PDT)
+From: Detlev Casanova <detlev.casanova@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	laurent.pinchart@ideasonboard.com
+Subject: NetworkManager not listing access points
+Date: Wed, 18 Sep 2013 22:47:15 +0200
+Message-ID: <31357461.i5mG9q5IfA@naboo> (sfid-20130918_224710_281230_E69528DB)
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+Hello,
 
-Thanks for your comments.
+After a bisection on the kernel, it seems that a patch is causing a 
+problem with NetworkManager: 
 
-> > I think we can change the 'resp_len' variable type to a signed integer
-> > to fix this issue.
-> 
-> No, that doesn't work because the comparison against sizeof() get's
-> promoted to size_t.  In other words, negative values still count as
-> large positive values.
+commit 0172bb75073e11a5aa9d8a953bdaefb8709f00c8 ("cfg80211: 
+use DS or HT operation IEs to determine BSS channel")
 
-You are right. The negative value counts as a large positive number while comparing against sizeof().
-I can add a "const int hdr_size" variable to store the value of sizeof(...) and compare resp_len to hdr_size. The "sizeof(...)" has been used multiple times in this function, so I think it's worth adding a variable for it.
+The Wifi access points are not listed in the KDE plasma widget and it 
+won't even connect to the saved ones even if they are in range.
 
+There is a fix though: running "iwlist wlan0 scan" twice as root (which 
+properly lists APs in reach) and the second time must be run about two 
+seconds after the first time.
 
-diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
-index 95fa359..c97df5a 100644
---- a/drivers/net/wireless/mwifiex/wmm.c
-+++ b/drivers/net/wireless/mwifiex/wmm.c
-@@ -707,10 +707,10 @@ int mwifiex_ret_wmm_get_status(struct mwifiex_private *priv,
-                               const struct host_cmd_ds_command *resp)
- {
-        u8 *curr = (u8 *) &resp->params.get_wmm_status;
--       uint16_t resp_len = le16_to_cpu(resp->size), tlv_len;
-+       int resp_len = le16_to_cpu(resp->size), tlv_len;
-        int valid = true;
--
-        struct mwifiex_ie_types_data *tlv_hdr;
-+       const int hdr_size = sizeof(tlv_hdr->header);
-        struct mwifiex_ie_types_wmm_queue_status *tlv_wmm_qstatus;
-        struct ieee_types_wmm_parameter *wmm_param_ie = NULL;
-        struct mwifiex_wmm_ac_status *ac_status;
-@@ -718,7 +718,7 @@ int mwifiex_ret_wmm_get_status(struct mwifiex_private *priv,
-        dev_dbg(priv->adapter->dev, "info: WMM: WMM_GET_STATUS cmdresp received: %d\n",
-                resp_len);
+Then NetworkManager lists the access points and connects to the 
+prefered one if possible (normal behavior).
 
--       while ((resp_len >= sizeof(tlv_hdr->header)) && valid) {
-+       while (resp_len >= hdr_size && valid) {
-                tlv_hdr = (struct mwifiex_ie_types_data *) curr;
-                tlv_len = le16_to_cpu(tlv_hdr->header.len);
+This also happens with nm-applet in Gnome.
 
-@@ -772,8 +772,8 @@ int mwifiex_ret_wmm_get_status(struct mwifiex_private *priv,
-                        break;
-                }
+The hardware is: 14e4:4315 (Network controller: Broadcom Corporation 
+BCM4312 802.11b/g LP-PHY (rev 01)) on an Intel Core i3 M370 CPU (64 
+bits) computer.
 
--               curr += (tlv_len + sizeof(tlv_hdr->header));
--               resp_len -= (tlv_len + sizeof(tlv_hdr->header));
-+               curr += tlv_len + hdr_size;
-+               resp_len -= tlv_len + hdr_size;
-        }
+The abnormal behaviour is not random, it happens every time.
 
-        mwifiex_wmm_setup_queue_priorities(priv, wmm_param_ie);
-
-
-Thanks,
-Bing
+Detlev Casanova
