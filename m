@@ -1,66 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from postler.einfach.org ([91.250.116.113]:49132 "EHLO
-	postler.einfach.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756967Ab3I3KjC (ORCPT
+Received: from mail-bk0-f51.google.com ([209.85.214.51]:39046 "EHLO
+	mail-bk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751865Ab3IRNH1 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Sep 2013 06:39:02 -0400
-Message-ID: <524954BE.8060603@einfach.org> (sfid-20130930_123907_978819_834E94D0)
-Date: Mon, 30 Sep 2013 11:38:54 +0100
-From: Bruno Randolf <br1@einfach.org>
+	Wed, 18 Sep 2013 09:07:27 -0400
+Received: by mail-bk0-f51.google.com with SMTP id mx10so2766767bkb.24
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Sep 2013 06:07:25 -0700 (PDT)
 MIME-Version: 1.0
-To: Oleksij Rempel <linux@rempel-privat.de>,
-	linux-wireless@vger.kernel.org, nbd@openwrt.org, sujith@msujith.org
-CC: Ingo Randolf <ingo.randolf@qupik.com>
-Subject: Re: ath9k AR9287 status?
-References: <52492FB0.3010201@einfach.org> <5249443E.3080700@rempel-privat.de>
-In-Reply-To: <5249443E.3080700@rempel-privat.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <CACKGw+HgRbZU4DV5ZFHZA-X-78nEUd87hDeabMr1r1fRc-yOvw@mail.gmail.com>
+References: <1379497651-29933-1-git-send-email-bartosz.markowski@tieto.com>
+	<CA+BoTQ=fRoVXNaeiiWUwc_tLiW4GJZnCKJKYO55+JHqOSasAkA@mail.gmail.com>
+	<CACKGw+HgRbZU4DV5ZFHZA-X-78nEUd87hDeabMr1r1fRc-yOvw@mail.gmail.com>
+Date: Wed, 18 Sep 2013 15:07:24 +0200
+Message-ID: <CA+BoTQ=hxXkkFhTJSikoAbCa1CLZE+P7n0dWjYStany6bs9vGA@mail.gmail.com> (sfid-20130918_150731_339145_519553E7)
+Subject: Re: [PATCH] ath10k: implement host memory chunks feature
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Bartosz Markowski <bartosz.markowski@tieto.com>
+Cc: ath10k@lists.infradead.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/30/2013 10:28 AM, Oleksij Rempel wrote:
-> It works at least for me, as AP and as STA...
-
-Thanks, good to hear! :)
-
-> Check:
-> - PCIe related power managment - ASPM.
-
-That sounds most suspicious. Will try to see what can be done in the 
-BIOS or if disabling ASPM in the kernel helps.
-
-> - WiFi related PM. "iw dev wlan0 get power_save"
-
-That would only affect STA and IBSS mode, right?
-
-> - defect device?
-
-Having the same problem on two setups... maybe but it's unlikely...
-
->> I have a AR9287 PCI-Express card which is behaving more than weird with
->> kernel 3.2 and with the current (3.10.4-1) backports drivers: It can't
->> connect to APs (many reconnects), with hostap it _seems_ to work as an
->> AP, but no beacons are seen and no stations can connect, similar in
->> ad-hoc mode, and when bringing the interface down the whole system
->> freezes...
+On 18 September 2013 14:36, Bartosz Markowski
+<bartosz.markowski@tieto.com> wrote:
+> On 18 September 2013 12:51, Michal Kazior <michal.kazior@tieto.com> wrote:
+>> On 18 September 2013 11:47, Bartosz Markowski
+>>> +       ar->hif.ops->chunk_free(ar, idx);
+>>> +}
+>>> +
+>>>  #endif /* _HIF_H_ */
+>>> diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+>>> index f1faf46..547d67d 100644
+>>> --- a/drivers/net/wireless/ath/ath10k/pci.c
+>>> +++ b/drivers/net/wireless/ath/ath10k/pci.c
+>>> @@ -1966,6 +1966,49 @@ static int ath10k_pci_hif_resume(struct ath10k *ar)
+>>>  }
+>>>  #endif
+>>>
+>>> +static int ath10k_pci_hif_chunk_alloc(struct ath10k *ar,
+>>> +                                     u32 req_id,
+>>> +                                     u32 idx,
+>>> +                                     u32 num_units,
+>>> +                                     u32 unit_len)
+>>> +{
+>>> +       dma_addr_t paddr;
+>>> +       struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+>>> +
+>>> +       if (!num_units  || !unit_len)
+>>> +               return 0;
+>>> +
+>>
+>> I'm not seeing any checks against buffer overflow of mem_chunks[req_id].
 >
-> Is it regression? Are there any working kernel version?
+> if (idx == ATH10K_MAX_MEM_CHUNKS) in ath10k_wmi_alloc_host_mem ?
 
-I have tried with 3.2 clean (Ubuntu 12.04 default) and with the 
-mentioned backports version. If you point me to a known working 
-backports version I can try it.
+Oh, but the check is _after_ call to chunk_alloc(). What if
+ath10k_wmi_alloc_host_mem() were to be called while idx == MAX?
 
->> Or - can anyone recommend a good half size PCI-Express card that works
->> well with ath9k?
->
-> If you wont to bay some new toy, then take a look here:
-> http://wikidevi.com/wiki/Atheros
-> I would take AR9462, there are some interesting highlights ;) (suddenly
-> I do not have it right now)
 
-integrated bluetooth 4.0; 8bit Spectral Scan?
-
-Thanks!
-
-bruno
-
+Micha³.
