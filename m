@@ -1,173 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:56278 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753309Ab3IZPrl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Sep 2013 11:47:41 -0400
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Bartosz Markowski <bartosz.markowski@tieto.com>
-Subject: [PATCH v3 10/13] ath10k: add TARGET values for 10.x firmware
-Date: Thu, 26 Sep 2013 17:47:14 +0200
-Message-ID: <1380210437-4391-11-git-send-email-bartosz.markowski@tieto.com> (sfid-20130926_174753_934748_3417514D)
-In-Reply-To: <1380210437-4391-1-git-send-email-bartosz.markowski@tieto.com>
-References: <1380210437-4391-1-git-send-email-bartosz.markowski@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-vc0-f179.google.com ([209.85.220.179]:58140 "EHLO
+	mail-vc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753496Ab3IRT7i (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Sep 2013 15:59:38 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 8/8 V3] rtlwifi: Remove all remaining references to variable 'noise' in rtl_stats struct
+Date: Wed, 18 Sep 2013 14:58:59 -0500
+Message-Id: <1379534339-14895-9-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130918_220009_153209_C842377A)
+In-Reply-To: <1379534339-14895-5-git-send-email-Larry.Finger@lwfinger.net>
+References: <1379534339-14895-5-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Introduce all TARGET specific values for 10.x firmware.
-Some of them are common for both firmwares we will support,
-but to avoid confusion, define everything with prefix 10X_.
+This completes removal of all places that reference variable 'noise'
+in the rtl_stats struct. The definition of the struct is unchanged.
 
-Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/ath/ath10k/hw.h  |   31 ++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.c |   58 ++++++++++++++++-----------------
- 2 files changed, 60 insertions(+), 29 deletions(-)
+ drivers/net/wireless/rtlwifi/rtl8188ee/trx.c | 1 -
+ drivers/net/wireless/rtlwifi/rtl8192ce/trx.c | 1 -
+ drivers/net/wireless/rtlwifi/rtl8192se/trx.c | 1 -
+ drivers/net/wireless/rtlwifi/rtl8723ae/trx.c | 1 -
+ 4 files changed, 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 66e721a..2de13db 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -53,6 +53,7 @@ enum ath10k_mcast2ucast_mode {
- 	ATH10K_MCAST2UCAST_ENABLED = 1,
- };
+Index: wireless-testing-save/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c
+===================================================================
+--- wireless-testing-save.orig/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c
++++ wireless-testing-save/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c
+@@ -477,7 +477,6 @@ bool rtl88ee_rx_query_desc(struct ieee80
  
-+/* Target specific defines for MAIN firmware */
- #define TARGET_NUM_VDEVS			8
- #define TARGET_NUM_PEER_AST			2
- #define TARGET_NUM_WDS_ENTRIES			32
-@@ -87,6 +88,36 @@ enum ath10k_mcast2ucast_mode {
- #define TARGET_NUM_MSDU_DESC			(1024 + 400)
- #define TARGET_MAX_FRAG_ENTRIES			0
+ 	/*rx_status->qual = status->signal; */
+ 	rx_status->signal = status->recvsignalpower + 10;
+-	/*rx_status->noise = -status->noise; */
+ 	if (status->packet_report_type == TX_REPORT2) {
+ 		status->macid_valid_entry[0] =
+ 			 GET_RX_RPT2_DESC_MACID_VALID_1(pdesc);
+Index: wireless-testing-save/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
+===================================================================
+--- wireless-testing-save.orig/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
++++ wireless-testing-save/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
+@@ -420,7 +420,6 @@ bool rtl92ce_rx_query_desc(struct ieee80
  
-+/* Target specific defines for 10.X firmware */
-+#define TARGET_10X_NUM_VDEVS			16
-+#define TARGET_10X_NUM_PEER_AST			2
-+#define TARGET_10X_NUM_WDS_ENTRIES		32
-+#define TARGET_10X_DMA_BURST_SIZE		0
-+#define TARGET_10X_MAC_AGGR_DELIM		0
-+#define TARGET_10X_AST_SKID_LIMIT		16
-+#define TARGET_10X_NUM_PEERS			(128 + (TARGET_10X_NUM_VDEVS))
-+#define TARGET_10X_NUM_OFFLOAD_PEERS		0
-+#define TARGET_10X_NUM_OFFLOAD_REORDER_BUFS	0
-+#define TARGET_10X_NUM_PEER_KEYS		2
-+#define TARGET_10X_NUM_TIDS			256
-+#define TARGET_10X_TX_CHAIN_MASK		(BIT(0) | BIT(1) | BIT(2))
-+#define TARGET_10X_RX_CHAIN_MASK		(BIT(0) | BIT(1) | BIT(2))
-+#define TARGET_10X_RX_TIMEOUT_LO_PRI		100
-+#define TARGET_10X_RX_TIMEOUT_HI_PRI		40
-+#define TARGET_10X_RX_DECAP_MODE		ATH10K_HW_TXRX_ETHERNET
-+#define TARGET_10X_SCAN_MAX_PENDING_REQS	4
-+#define TARGET_10X_BMISS_OFFLOAD_MAX_VDEV	2
-+#define TARGET_10X_ROAM_OFFLOAD_MAX_VDEV	2
-+#define TARGET_10X_ROAM_OFFLOAD_MAX_AP_PROFILES	8
-+#define TARGET_10X_GTK_OFFLOAD_MAX_VDEV		3
-+#define TARGET_10X_NUM_MCAST_GROUPS		0
-+#define TARGET_10X_NUM_MCAST_TABLE_ELEMS	0
-+#define TARGET_10X_MCAST2UCAST_MODE		ATH10K_MCAST2UCAST_DISABLED
-+#define TARGET_10X_TX_DBG_LOG_SIZE		1024
-+#define TARGET_10X_RX_SKIP_DEFRAG_TIMEOUT_DUP_DETECTION_CHECK 1
-+#define TARGET_10X_VOW_CONFIG			0
-+#define TARGET_10X_NUM_MSDU_DESC		(1024 + 400)
-+#define TARGET_10X_MAX_FRAG_ENTRIES		0
+ 	/*rx_status->qual = stats->signal; */
+ 	rx_status->signal = stats->recvsignalpower + 10;
+-	/*rx_status->noise = -stats->noise; */
  
- /* Number of Copy Engines supported */
- #define CE_COUNT 8
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 71ad1b8..637f8d0 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -1451,9 +1451,9 @@ static void ath10k_wmi_10x_service_ready_event_rx(struct ath10k *ar,
- 			 * peers, 1 extra for self peer on target */
- 			/* this needs to be tied, host and target
- 			 * can get out of sync */
--			num_units = TARGET_NUM_PEERS + 1;
-+			num_units = TARGET_10X_NUM_PEERS + 1;
- 		else if (num_unit_info & NUM_UNITS_IS_NUM_VDEVS)
--			num_units = TARGET_NUM_VDEVS + 1;
-+			num_units = TARGET_10X_NUM_VDEVS + 1;
+ 	return true;
+ }
+Index: wireless-testing-save/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
+===================================================================
+--- wireless-testing-save.orig/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
++++ wireless-testing-save/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
+@@ -330,7 +330,6 @@ bool rtl92se_rx_query_desc(struct ieee80
  
- 		ath10k_dbg(ATH10K_DBG_WMI,
- 			   "wmi mem_req_id %d num_units %d num_unit_info %d unit size %d actual units %d\n",
-@@ -2015,48 +2015,48 @@ static int ath10k_wmi_10x_cmd_init(struct ath10k *ar)
- 	u32 len, val;
- 	int i;
+ 	/*rx_status->qual = stats->signal; */
+ 	rx_status->signal = stats->rssi + 10;
+-	/*rx_status->noise = -stats->noise; */
  
--	config.num_vdevs = __cpu_to_le32(TARGET_NUM_VDEVS);
--	config.num_peers = __cpu_to_le32(TARGET_NUM_PEERS + TARGET_NUM_VDEVS);
--	config.num_peer_keys = __cpu_to_le32(TARGET_NUM_PEER_KEYS);
--	config.num_tids = __cpu_to_le32(TARGET_NUM_TIDS);
--	config.ast_skid_limit = __cpu_to_le32(TARGET_AST_SKID_LIMIT);
--	config.tx_chain_mask = __cpu_to_le32(TARGET_TX_CHAIN_MASK);
--	config.rx_chain_mask = __cpu_to_le32(TARGET_RX_CHAIN_MASK);
--	config.rx_timeout_pri_vo = __cpu_to_le32(TARGET_RX_TIMEOUT_LO_PRI);
--	config.rx_timeout_pri_vi = __cpu_to_le32(TARGET_RX_TIMEOUT_LO_PRI);
--	config.rx_timeout_pri_be = __cpu_to_le32(TARGET_RX_TIMEOUT_LO_PRI);
--	config.rx_timeout_pri_bk = __cpu_to_le32(TARGET_RX_TIMEOUT_HI_PRI);
--	config.rx_decap_mode = __cpu_to_le32(TARGET_RX_DECAP_MODE);
-+	config.num_vdevs = __cpu_to_le32(TARGET_10X_NUM_VDEVS);
-+	config.num_peers = __cpu_to_le32(TARGET_10X_NUM_PEERS);
-+	config.num_peer_keys = __cpu_to_le32(TARGET_10X_NUM_PEER_KEYS);
-+	config.num_tids = __cpu_to_le32(TARGET_10X_NUM_TIDS);
-+	config.ast_skid_limit = __cpu_to_le32(TARGET_10X_AST_SKID_LIMIT);
-+	config.tx_chain_mask = __cpu_to_le32(TARGET_10X_TX_CHAIN_MASK);
-+	config.rx_chain_mask = __cpu_to_le32(TARGET_10X_RX_CHAIN_MASK);
-+	config.rx_timeout_pri_vo = __cpu_to_le32(TARGET_10X_RX_TIMEOUT_LO_PRI);
-+	config.rx_timeout_pri_vi = __cpu_to_le32(TARGET_10X_RX_TIMEOUT_LO_PRI);
-+	config.rx_timeout_pri_be = __cpu_to_le32(TARGET_10X_RX_TIMEOUT_LO_PRI);
-+	config.rx_timeout_pri_bk = __cpu_to_le32(TARGET_10X_RX_TIMEOUT_HI_PRI);
-+	config.rx_decap_mode = __cpu_to_le32(TARGET_10X_RX_DECAP_MODE);
+ 	return true;
+ }
+Index: wireless-testing-save/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
+===================================================================
+--- wireless-testing-save.orig/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
++++ wireless-testing-save/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
+@@ -359,7 +359,6 @@ bool rtl8723ae_rx_query_desc(struct ieee
  
- 	config.scan_max_pending_reqs =
--		__cpu_to_le32(TARGET_SCAN_MAX_PENDING_REQS);
-+		__cpu_to_le32(TARGET_10X_SCAN_MAX_PENDING_REQS);
+ 	/*rx_status->qual = status->signal; */
+ 	rx_status->signal = status->recvsignalpower + 10;
+-	/*rx_status->noise = -status->noise; */
  
- 	config.bmiss_offload_max_vdev =
--		__cpu_to_le32(TARGET_BMISS_OFFLOAD_MAX_VDEV);
-+		__cpu_to_le32(TARGET_10X_BMISS_OFFLOAD_MAX_VDEV);
- 
- 	config.roam_offload_max_vdev =
--		__cpu_to_le32(TARGET_ROAM_OFFLOAD_MAX_VDEV);
-+		__cpu_to_le32(TARGET_10X_ROAM_OFFLOAD_MAX_VDEV);
- 
- 	config.roam_offload_max_ap_profiles =
--		__cpu_to_le32(TARGET_ROAM_OFFLOAD_MAX_AP_PROFILES);
-+		__cpu_to_le32(TARGET_10X_ROAM_OFFLOAD_MAX_AP_PROFILES);
- 
--	config.num_mcast_groups = __cpu_to_le32(TARGET_NUM_MCAST_GROUPS);
-+	config.num_mcast_groups = __cpu_to_le32(TARGET_10X_NUM_MCAST_GROUPS);
- 	config.num_mcast_table_elems =
--		__cpu_to_le32(TARGET_NUM_MCAST_TABLE_ELEMS);
-+		__cpu_to_le32(TARGET_10X_NUM_MCAST_TABLE_ELEMS);
- 
--	config.mcast2ucast_mode = __cpu_to_le32(TARGET_MCAST2UCAST_MODE);
--	config.tx_dbg_log_size = __cpu_to_le32(TARGET_TX_DBG_LOG_SIZE);
--	config.num_wds_entries = __cpu_to_le32(TARGET_NUM_WDS_ENTRIES);
--	config.dma_burst_size = __cpu_to_le32(TARGET_DMA_BURST_SIZE);
--	config.mac_aggr_delim = __cpu_to_le32(TARGET_MAC_AGGR_DELIM);
-+	config.mcast2ucast_mode = __cpu_to_le32(TARGET_10X_MCAST2UCAST_MODE);
-+	config.tx_dbg_log_size = __cpu_to_le32(TARGET_10X_TX_DBG_LOG_SIZE);
-+	config.num_wds_entries = __cpu_to_le32(TARGET_10X_NUM_WDS_ENTRIES);
-+	config.dma_burst_size = __cpu_to_le32(TARGET_10X_DMA_BURST_SIZE);
-+	config.mac_aggr_delim = __cpu_to_le32(TARGET_10X_MAC_AGGR_DELIM);
- 
--	val = TARGET_RX_SKIP_DEFRAG_TIMEOUT_DUP_DETECTION_CHECK;
-+	val = TARGET_10X_RX_SKIP_DEFRAG_TIMEOUT_DUP_DETECTION_CHECK;
- 	config.rx_skip_defrag_timeout_dup_detection_check = __cpu_to_le32(val);
- 
--	config.vow_config = __cpu_to_le32(TARGET_VOW_CONFIG);
-+	config.vow_config = __cpu_to_le32(TARGET_10X_VOW_CONFIG);
- 
--	config.num_msdu_desc = __cpu_to_le32(TARGET_NUM_MSDU_DESC);
--	config.max_frag_entries = __cpu_to_le32(TARGET_MAX_FRAG_ENTRIES);
-+	config.num_msdu_desc = __cpu_to_le32(TARGET_10X_NUM_MSDU_DESC);
-+	config.max_frag_entries = __cpu_to_le32(TARGET_10X_MAX_FRAG_ENTRIES);
- 
- 	len = sizeof(*cmd) +
- 	      (sizeof(struct host_memory_chunk) * ar->wmi.num_mem_chunks);
--- 
-1.7.10
-
+ 	return true;
+ }
