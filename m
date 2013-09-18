@@ -1,51 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:57240 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754008Ab3IBIas (ORCPT
+Received: from mx-sanjose.Cadence.COM ([158.140.2.60]:62137 "EHLO
+	mx-sanjose.cadence.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751136Ab3IRE7l convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Sep 2013 04:30:48 -0400
-From: Sujith Manoharan <sujith@msujith.org>
+	Wed, 18 Sep 2013 00:59:41 -0400
+From: Jason Andrews <jasona@cadence.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Emmanuel Grumbach <egrumbach@gmail.com>
+CC: Seth Forshee <seth.forshee@canonical.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 17 Sep 2013 21:59:19 -0700
+Subject: RE: guidance on struct alignment for rtl8192cu driver
+Message-ID: <985A2B0C3F73B74792F35D4098E1CA7CB14372959B@MAILSJ3.global.cadence.com> (sfid-20130918_065945_040299_1397CEEC)
+References: <985A2B0C3F73B74792F35D4098E1CA7CB143670E93@MAILSJ3.global.cadence.com>
+ <52346DE2.9090904@lwfinger.net> <20130916143506.GC18593@thinkpad-t410>
+ <523724AF.8040506@lwfinger.net>
+ <CANUX_P3iBywud0SxXtnwUWby0DNm-UoB-CP=X+tdsS7MbmVg=Q@mail.gmail.com>
+ <52375EA3.4090408@lwfinger.net>
+In-Reply-To: <52375EA3.4090408@lwfinger.net>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21028.19411.335796.192256@gargle.gargle.HOWL> (sfid-20130902_103051_716048_F6AC821C)
-Date: Mon, 2 Sep 2013 13:56:59 +0530
-To: John Linville <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 0/8] ath9k patches
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+> -----Original Message-----
+> From: Larry Finger [mailto:larry.finger@gmail.com] On Behalf Of Larry
+> Finger
+> Sent: Monday, September 16, 2013 9:40 PM
+> To: Emmanuel Grumbach
+> Cc: Seth Forshee; Jason Andrews; linux-wireless@vger.kernel.org
+> Subject: Re: guidance on struct alignment for rtl8192cu driver
+> 
+> On 09/16/2013 02:29 PM, Emmanuel Grumbach wrote:
+> >>>> Index: wireless-testing-save/drivers/net/wireless/rtlwifi/wifi.h
+> >>>>
+> ===================================================================
+> >>>> --- wireless-testing-save.orig/drivers/net/wireless/rtlwifi/wifi.h
+> >>>> +++ wireless-testing-save/drivers/net/wireless/rtlwifi/wifi.h
+> >>>> @@ -2057,7 +2057,7 @@ struct rtl_priv {
+> >>>>            that it points to the data allocated
+> >>>>            beyond  this structure like:
+> >>>>            rtl_pci_priv or rtl_usb_priv */
+> >>>> -       u8 priv[0];
+> >>>> +       u8 __aligned(4) priv[0];
+> >>>>    };
+> >>>
+> >>>
+> >>> __attribute__((aligned)) might be a safer bet, as this will align
+> it to
+> >>> the largest alignment that could possibly be needed.
+> >
+> > Or copy the code from mac80211.h:
+> >
+> > u8 drv_priv[0] __aligned(sizeof(void *));
+> >
+> > I did the same in iwlwifi.
+> > Note the new way to add the __aligned thing. Joe will tell you that
+> is
+> > better than __attribute__ blablabla
+> 
+> Thanks. I had noticed that checkpatch.pl complains about the
+> __attribute
+> construction.
+> 
+> Larry
+> 
 
-This series adds various updates for AR9565.
+Larry,
 
-v2 - Identify cards that don't support antenna diversity.
+I confirmed that my original alignment error is properly solved by:
 
-Sujith
+    u8 drv_priv[0] __aligned(sizeof(void *));
 
-Sujith Manoharan (8):
-  ath9k: Update initvals for AR9565 1.0
-  ath9k: Bypass EEPROM for diversity cap for AR9565
-  ath9k: Fix antenna diversity init for AR9565
-  ath9k: Use correct RX gain table for AR9565
-  ath9k: Add support for AR9565 v1.0.1 LNA diversity
-  ath9k: Enable antenna diversity for WB335
-  ath9k: Identify CUS252 cards
-  ath9k: Identify WB335 Antenna configuration
+The driver is now working for my ARM system.
 
- drivers/net/wireless/ath/ath9k/antenna.c           |  36 +---
- drivers/net/wireless/ath/ath9k/ar9002_phy.c        |   1 +
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c     |  22 ++-
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.h     |   2 +
- drivers/net/wireless/ath/ath9k/ar9003_hw.c         |   3 +
- drivers/net/wireless/ath/ath9k/ar9003_phy.c        |  23 ++-
- .../net/wireless/ath/ath9k/ar9565_1p0_initvals.h   |  17 +-
- drivers/net/wireless/ath/ath9k/ath9k.h             |  16 +-
- drivers/net/wireless/ath/ath9k/hw.h                |   1 +
- drivers/net/wireless/ath/ath9k/init.c              |  20 +++
- drivers/net/wireless/ath/ath9k/pci.c               | 190 ++++++++++++++++++++-
- 11 files changed, 279 insertions(+), 52 deletions(-)
-
--- 
-1.8.4
+Regards,
+Jason
 
