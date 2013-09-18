@@ -1,86 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:46296 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751212Ab3IPMiW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Sep 2013 08:38:22 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC] mac80211: support reporting A-MSDU subframes individually
-Date: Mon, 16 Sep 2013 14:38:09 +0200
-Message-ID: <1379335089-10538-1-git-send-email-michal.kazior@tieto.com> (sfid-20130916_143829_861770_A51AC17E)
+Received: from szxga02-in.huawei.com ([119.145.14.65]:27344 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751428Ab3IRDpX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Sep 2013 23:45:23 -0400
+Message-ID: <523921BD.3030205@huawei.com> (sfid-20130918_054547_444397_ED0A28E4)
+Date: Wed, 18 Sep 2013 11:45:01 +0800
+From: Xishi Qiu <qiuxishi@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: <rob@landley.net>, <johannes@sipsolutions.net>,
+	Andrew Morton <akpm@linux-foundation.org>
+CC: <linux-doc@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>,
+	<linux-wireless@vger.kernel.org>, Xishi Qiu <qiuxishi@huawei.com>
+Subject: [PATCH] doc: fix some typos in documentations
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some devices may not be able to report A-MSDUs in
-single buffers. Drivers for such devices were
-forced to re-assemble A-MSDUs which would then
-be eventually disassembled by mac80211. This could
-lead to CPU cache thrashing and poor performance.
+Fix some typos in five documentations, no functional change.
 
-Since A-MSDU has a single sequence number all
-subframes share it. This was in conflict with
-retransmission/duplication recovery
-(IEEE802.11-2012: 9.3.2.10).
-
-Patch introduces a new flag that is meant to be
-set for all individually reported A-MSDU subframes
-except the last one. This ensures the
-last_seq_ctrl is updated after the last subframe
-is processed. If an A-MSDU is actually a duplicate
-transmission all reported subframes will be
-properly discarded.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Xishi Qiu <qiuxishi@huawei.com>
 ---
- include/net/mac80211.h |   10 ++++++++++
- net/mac80211/rx.c      |    2 +-
- 2 files changed, 11 insertions(+), 1 deletion(-)
+ Documentation/md.txt              |    2 +-
+ Documentation/rfkill.txt          |    2 +-
+ Documentation/rt-mutex-design.txt |    2 +-
+ Documentation/static-keys.txt     |    4 ++--
+ Documentation/sysfs-rules.txt     |    2 +-
+ 5 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 06ffae8..f8f049d 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -829,6 +829,15 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
-  * @RX_FLAG_STBC_MASK: STBC 2 bit bitmask. 1 - Nss=1, 2 - Nss=2, 3 - Nss=3
-  * @RX_FLAG_10MHZ: 10 MHz (half channel) was used
-  * @RX_FLAG_5MHZ: 5 MHz (quarter channel) was used
-+ * @RX_FLAG_AMSDU_MORE: Some drivers may prefer to report separate A-MSDU
-+ *	subframes instead of a one huge frame for performance reasons.
-+ *	All, but the last MSDU from an A-MSDU should have this flag set. E.g.
-+ *	if an A-MSDU has 3 frames, the first 2 must have the flag set, while
-+ *	the 3rd (last) one must not have this flag set. The flag is used to
-+ *	deal with retransmission/duplication recovery properly since A-MSDU
-+ *	subframes share the same sequence number. Reported subframes can be
-+ *	either regular MSDU or singly A-MSDUs. Subframes must not be
-+ *	interleaved with other frames.
-  */
- enum mac80211_rx_flags {
- 	RX_FLAG_MMIC_ERROR		= BIT(0),
-@@ -859,6 +868,7 @@ enum mac80211_rx_flags {
- 	RX_FLAG_STBC_MASK		= BIT(26) | BIT(27),
- 	RX_FLAG_10MHZ			= BIT(28),
- 	RX_FLAG_5MHZ			= BIT(29),
-+	RX_FLAG_AMSDU_MORE		= BIT(30),
- };
+diff --git a/Documentation/md.txt b/Documentation/md.txt
+index fbb2fcb..f925666 100644
+--- a/Documentation/md.txt
++++ b/Documentation/md.txt
+@@ -533,7 +533,7 @@ also have
+       found.  The count in 'mismatch_cnt' is the number of sectors
+       that were re-written, or (for 'check') would have been
+       re-written.  As most raid levels work in units of pages rather
+-      than sectors, this my be larger than the number of actual errors
++      than sectors, this may be larger than the number of actual errors
+       by a factor of the number of sectors in a page.
  
- #define RX_FLAG_STBC_SHIFT		26
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 8e908e1..43bee02 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -995,7 +995,7 @@ ieee80211_rx_h_check(struct ieee80211_rx_data *rx)
- 				rx->sta->num_duplicates++;
- 			}
- 			return RX_DROP_UNUSABLE;
--		} else
-+		} else if (!(status->flag & RX_FLAG_AMSDU_MORE))
- 			rx->sta->last_seq_ctrl[rx->seqno_idx] = hdr->seq_ctrl;
- 	}
+    bitmap_set_bits
+diff --git a/Documentation/rfkill.txt b/Documentation/rfkill.txt
+index 03c9d92..f430004 100644
+--- a/Documentation/rfkill.txt
++++ b/Documentation/rfkill.txt
+@@ -71,7 +71,7 @@ To create an rfkill driver, driver's Kconfig needs to have
+ 	depends on RFKILL || !RFKILL
  
+ to ensure the driver cannot be built-in when rfkill is modular. The !RFKILL
+-case allows the driver to be built when rfkill is not configured, which which
++case allows the driver to be built when rfkill is not configured, which
+ case all rfkill API can still be used but will be provided by static inlines
+ which compile to almost nothing.
+ 
+diff --git a/Documentation/rt-mutex-design.txt b/Documentation/rt-mutex-design.txt
+index a5bcd7f..8666070 100644
+--- a/Documentation/rt-mutex-design.txt
++++ b/Documentation/rt-mutex-design.txt
+@@ -30,7 +30,7 @@ is something called unbounded priority inversion.  That is when the high
+ priority process is prevented from running by a lower priority process for
+ an undetermined amount of time.
+ 
+-The classic example of unbounded priority inversion is were you have three
++The classic example of unbounded priority inversion is where you have three
+ processes, let's call them processes A, B, and C, where A is the highest
+ priority process, C is the lowest, and B is in between. A tries to grab a lock
+ that C owns and must wait and lets C run to release the lock. But in the
+diff --git a/Documentation/static-keys.txt b/Documentation/static-keys.txt
+index 9f5263d..c4407a4 100644
+--- a/Documentation/static-keys.txt
++++ b/Documentation/static-keys.txt
+@@ -116,7 +116,7 @@ The branch(es) can then be switched via:
+ 	static_key_slow_dec(&key);
+ 
+ Thus, 'static_key_slow_inc()' means 'make the branch true', and
+-'static_key_slow_dec()' means 'make the the branch false' with appropriate
++'static_key_slow_dec()' means 'make the branch false' with appropriate
+ reference counting. For example, if the key is initialized true, a
+ static_key_slow_dec(), will switch the branch to false. And a subsequent
+ static_key_slow_inc(), will change the branch back to true. Likewise, if the
+@@ -236,7 +236,7 @@ label case adds:
+ 
+ If we then include the padding bytes, the jump label code saves, 16 total bytes
+ of instruction memory for this small function. In this case the non-jump label
+-function is 80 bytes long. Thus, we have have saved 20% of the instruction
++function is 80 bytes long. Thus, we have saved 20% of the instruction
+ footprint. We can in fact improve this even further, since the 5-byte no-op
+ really can be a 2-byte no-op since we can reach the branch with a 2-byte jmp.
+ However, we have not yet implemented optimal no-op sizes (they are currently
+diff --git a/Documentation/sysfs-rules.txt b/Documentation/sysfs-rules.txt
+index c1a1fd6..a5f985e 100644
+--- a/Documentation/sysfs-rules.txt
++++ b/Documentation/sysfs-rules.txt
+@@ -47,7 +47,7 @@ versions of the sysfs interface.
+         at device creation and removal
+       - the unique key to the device at that point in time
+       - the kernel's path to the device directory without the leading
+-        /sys, and always starting with with a slash
++        /sys, and always starting with a slash
+       - all elements of a devpath must be real directories. Symlinks
+         pointing to /sys/devices must always be resolved to their real
+         target and the target path must be used to access the device.
 -- 
-1.7.9.5
+1.7.1
+
 
