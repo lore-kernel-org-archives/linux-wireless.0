@@ -1,56 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:60942 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751212Ab3IPMtn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Sep 2013 08:49:43 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC 4/4] ath10k: align RX frames properly
-Date: Mon, 16 Sep 2013 14:49:17 +0200
-Message-ID: <1379335757-15180-5-git-send-email-michal.kazior@tieto.com> (sfid-20130916_144947_572493_46E3F362)
-In-Reply-To: <1379335757-15180-1-git-send-email-michal.kazior@tieto.com>
-References: <1379335757-15180-1-git-send-email-michal.kazior@tieto.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:45891 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751355Ab3IRN5L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Sep 2013 09:57:11 -0400
+Message-ID: <5239B12D.3040206@hauke-m.de> (sfid-20130918_155715_034547_42FD4E4B)
+Date: Wed, 18 Sep 2013 15:57:01 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Arend van Spriel <arend@broadcom.com>
+CC: Joe Perches <joe@perches.com>, brcm80211-dev-list@broadcom.com,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Subject: Re: fyi: scheduling while atomic dmesg output 3.12-rc1
+References: <1379439942.2012.16.camel@joe-AO722> <52397023.2080000@broadcom.com>
+In-Reply-To: <52397023.2080000@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ethernet-like decapping mode leaves IP protocol
-frame not aligned to 4-byte boundaries. This leads
-to re-aligning in mac80211 which in turn leads to
-CPU cache thrashing on lower end host machines and
-very poor performance.
+On 09/18/2013 11:19 AM, Arend van Spriel wrote:
+> On 09/17/2013 07:45 PM, Joe Perches wrote:
+>> <3>[   11.206312] BUG: scheduling while atomic:
+>> NetworkManager/866/0x00000200
+> 
+> Thanks, Joe
+> 
+> I got a report on this few days ago. It was introduced by bcma API
+> change and I already sent email to the committer of that change, ie.
+> Hauke Mehrtens. Hope it will be settled soon how to fix this.
+> 
+> Gr. AvS
 
-Since HW doesn't allow to change payload offset
-properly the solution is to force HW to decap in
-Native Wifi mode which always has 24-bytes long
-802.11 header (even for QoS frames). This means IP
-frame is properly aligned in this decap mode.
+Hi,
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/hw.h |    6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+I see four solutions for the problem:
 
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 643f0c9..8c1be768 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -74,7 +74,11 @@ enum ath10k_mcast2ucast_mode {
- #define TARGET_RX_CHAIN_MASK			(BIT(0) | BIT(1) | BIT(2))
- #define TARGET_RX_TIMEOUT_LO_PRI		100
- #define TARGET_RX_TIMEOUT_HI_PRI		40
--#define TARGET_RX_DECAP_MODE			ATH10K_HW_TXRX_ETHERNET
-+
-+/* Native Wifi decap mode is used to align IP frames to 4-byte boundaries and
-+ * avoid a very expensive re-alignment in mac80211. */
-+#define TARGET_RX_DECAP_MODE			ATH10K_HW_TXRX_NATIVE_WIFI
-+
- #define TARGET_SCAN_MAX_PENDING_REQS		4
- #define TARGET_BMISS_OFFLOAD_MAX_VDEV		3
- #define TARGET_ROAM_OFFLOAD_MAX_VDEV		3
--- 
-1.7.9.5
+1. convert the usleep_range(1000, 2000) into udelay(1000) in
+drivers/bcma/driver_pci.c
 
+2. remove the call of bcma_core_pci_power_save() from bcma_core_pci_up()
+so that it does not get called by brcmsmac.
+
+3. remove the call of bcma_core_pci_power_save() from bcma_core_pci_up()
+and move the call to somewhere out of the big spin lock.
+
+4. convert the big brmcsmac spin lock into a mutex lock and use an
+additional spin lock for the parts where it is actually needed.
+
+For 3.12 I am for solution 1 or 2 and for the long term 3.13? I am for
+solution 4, but that needs bigger changes.
+
+Hauke
