@@ -1,67 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lennier.cc.vt.edu ([198.82.162.213]:56490 "EHLO
-	lennier.cc.vt.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757945Ab3IMNeR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Sep 2013 09:34:17 -0400
-To: Prabhunath G <gprabhunath@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	kernelnewbies <kernelnewbies@kernelnewbies.org>
-Subject: Re: WEP/WPA/WPA2 implementation in software
-In-Reply-To: Your message of "Fri, 13 Sep 2013 17:23:22 +0530."
-             <CACPKTAM-mtTS7QVSq817TQ11dS-cLA+nKgXF6yDGYvxw9rhucw@mail.gmail.com>
-From: Valdis.Kletnieks@vt.edu
-References: <CACPKTAM-mtTS7QVSq817TQ11dS-cLA+nKgXF6yDGYvxw9rhucw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="==_Exmh_1379079132_1704P";
-	 micalg=pgp-sha1; protocol="application/pgp-signature"
-Date: Fri, 13 Sep 2013 09:32:12 -0400
-Message-ID: <119646.1379079132@turing-police.cc.vt.edu> (sfid-20130913_153423_710112_DF3BE198)
+Received: from foo.stuge.se ([212.116.89.98]:59501 "EHLO foo.stuge.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751635Ab3IRPmi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Sep 2013 11:42:38 -0400
+Message-ID: <20130918154233.31983.qmail@stuge.se> (sfid-20130918_174253_616526_D0660EB2)
+Date: Wed, 18 Sep 2013 17:42:33 +0200
+From: Peter Stuge <peter@stuge.se>
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+Subject: Re: RT3573 wpa_supplicant: "nl80211: Delete station $my_ap" after
+	"SME: Send 20/40 BSS Coexistence to $my_ap"
+References: <5239A815.40909@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5239A815.40909@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---==_Exmh_1379079132_1704P
-Content-Type: text/plain; charset=us-ascii
+Xose Vazquez Perez wrote:
+> > I'm testing the WNDA4100 with torvalds/linux.git and as of a day or
+> > two ago and wpa_supplicant-2.0.
+> > 
+> > I haven't measured throughput. Latency is really bad for interactive
+> > connections, but at least the packets are flowing on all bands. Yay!
+> > 
+> > Ping to the access point is around 3 ms with the odd 20+ ms when the
+> > kernel goes off to do something else.
+> 
+> Support for RT3573 was added recently, you should use wireless-next:
+> http://git.kernel.org/cgit/linux/kernel/git/linville/wireless-next.git
 
-On Fri, 13 Sep 2013 17:23:22 +0530, Prabhunath G said:
+I made a typo in my first email - it should have read:
 
->          Suppose there is no hardware support for
-> encryption/decryption for Wi-Fi devices
+"I'm testing the WNDA4100 with torvalds/linux.git as of a day or two ago"
 
-1) Do not use WEP.  It's busted. It's *known* busted.  You transmit
-packets for more than a minute or so using WEP, you may as well not
-bother with crypto at all.  Yes, it's really that busted.
+I am on linux.git commit d8efd82eece89f8a5790b0febf17522affe9e1f1
+which contains commit f212781, current wireless-next/master HEAD.
 
-2) You're much better off spending the $15 to get a wireless card
-that actually has hardware WPA2 support on it.  The devices are
-cheap, there's no reason to inflict pain on yourself.
+I also looked on the rt2x00 list for proposed 3573 patches but didn't
+see any. I hope I already have the latest code.
 
-I'd not be at all surprised if a card that doesn't have crypto
-support isn't *also* lacking other hardware support for WPA/WPA2
-So while it may well be *possible* to do it in software, I'd have
-to rank it as one of the more masochistic ideas I've heard in a
-long time.
+Do you suspect that my problem (as described briefly in the email
+subject and with more detail after the part of my email which you
+quoted) is related to the device driver rather than higher-up parts
+of the stack?
 
---==_Exmh_1379079132_1704P
-Content-Type: application/pgp-signature
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.14 (GNU/Linux)
-Comment: Exmh version 2.5 07/13/2001
+> You can also try latest fw(v0.33):
+> http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/attachments/20130111/f8ebe4d3/attachment.bin
 
-iQIVAwUBUjMT3AdmEQWDXROgAQJNVg//S52NXny5ysNI2ZtcZ8/OgBYWGssDO1Vi
-33LpAlArd8Y3WzVV23wtphYQQ8hLzDnQtv/WFEKLphxA18UqWaBxH47zGr9ZKfes
-UuuG62Z5fbdorRM6yFXZhMJE4mZeUEUwjmDRsCaeCQZ8EWyk/dC93T56iTTC/FVQ
-57vj4NRhM47aCnSbnr3XxwhfhPkKrP01CxNBboAlu1ljvLK4Rkz0wZ2k7GFpFyzr
-gzXhjd2UiaVRApTZvkc3F8zeIipDufMVb4z2OKWTFmVRI/2erYEkioMNFb4yFnme
-0LoxsjafXUghM1Kpuon5UWzpJ0DLRMS1ZnWHlBQjo0B4d2RpIHAxfzsD2way0M93
-Q4uymaAPcONP7uRwKQTM7c6rRSYsxX/JhaedioZ72ftlRNXayhc52R1NWw/2WHyG
-YgiIkE1S86N1ZWldWRq6J4n+nCXYxGAMHe/H6/DVKhqLE0TC9a2p5EuZXr+Sv/7b
-8ErPAG6IlxKfdPlhJnO1GNkyVPrfne5dwKQ9iGDfte4m8a5l0TVkfSNVmM7kTewK
-5czum4xfZ2z4xMar/GLnBNYWzh6M6G/hLmUn+l/S/vT7GWgeJHzvnRN1zoa8NmK0
-Cb+vZYLXCkGtyl1nVL1nTiO/shuYbrb4cfImYuqXGDmQIjbgC8XgGtlAmb1Zv1B2
-1d4z4FyfXM8=
-=ywzV
------END PGP SIGNATURE-----
+Thanks! Will try this and get back to you.
 
---==_Exmh_1379079132_1704P--
+But why isn't this file in linux-firmware.git? Especially if it was
+sent already in January?
+
+
+Kind regards
+
+//Peter
