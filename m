@@ -1,57 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:41936 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753927Ab3IYR6E (ORCPT
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:39477 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754444Ab3ITMQC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Sep 2013 13:58:04 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH 0/8 V4] rtlwifi: Patches to fix problems shown by smatch
-Date: Wed, 25 Sep 2013 12:57:41 -0500
-Message-Id: <1380131869-19185-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130925_221657_688148_E3866650)
+	Fri, 20 Sep 2013 08:16:02 -0400
+In-Reply-To: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+From: Russell King <rmk+kernel@arm.linux.org.uk>
+To: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
+	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
+	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
+	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	uclinux-dist-devel@blackfin.uclinux.org
+Cc: Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
+	Mauro Carvalho Chehab <m.chehab@samsung.com>
+Subject: [PATCH 31/51] DMA-API: media: omap3isp: use
+ dma_coerce_mask_and_coherent()
+Message-Id: <E1VMmCg-0007j1-Pi@rmk-PC.arm.linux.org.uk> (sfid-20130920_141617_543804_E26B5765)
+Date: Thu, 19 Sep 2013 22:56:02 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix smatch warnings and errors in the rtlwifi family of drivers.
+The code sequence:
+	isp->raw_dmamask = DMA_BIT_MASK(32);
+	isp->dev->dma_mask = &isp->raw_dmamask;
+	isp->dev->coherent_dma_mask = DMA_BIT_MASK(32);
+bypasses the architectures check on the DMA mask.  It can be replaced
+with dma_coerce_mask_and_coherent(), avoiding the direct initialization
+of this mask.
 
-V2 addresses comments by David Laight and Sergei Shtylyov.
-V3 addresses further comments by David, Sergei, and Kalle Valo. The
-   dead code is removed, and the variable is left in the struct.
-V4 Fixes extra line removed by accident from rtl8192de/hw.c as
-   noted by Sergei
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
 ---
+ drivers/media/platform/omap3isp/isp.c |    6 +++---
+ drivers/media/platform/omap3isp/isp.h |    3 ---
+ 2 files changed, 3 insertions(+), 6 deletions(-)
 
-Larry Finger (8):
-  rtlwifi: rtl8192du: Fix smatch errors in /rtl8192de/dm.c
-  rtlwifi: rtl8192de: Fix smatch warnings in rtl8192de/hw.c
-  rtlwifi: rtl8192cu: Fix smatch warning in rtl8192cu/trx.c
-  rtlwifi: rtl8192_common: Fix smatch errors and warnings in
-    rtl8192c/dm_common.c
-  rtlwifi: Fix smatch warning in pci.c
-  rtlwifi: Fix smatch warnings in usb.c
-  rtlwifi: rtl8188ee: Fix smatch warning in rtl8188ee/hw.c
-  rtlwifi: Remove all remaining references to variable 'noise' in
-    rtl_stats struct
-
- drivers/net/wireless/rtlwifi/pci.c                |  1 -
- drivers/net/wireless/rtlwifi/rtl8188ee/hw.c       |  1 +
- drivers/net/wireless/rtlwifi/rtl8188ee/trx.c      |  1 -
- drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c | 25 +----------------------
- drivers/net/wireless/rtlwifi/rtl8192ce/trx.c      |  1 -
- drivers/net/wireless/rtlwifi/rtl8192cu/trx.c      |  2 --
- drivers/net/wireless/rtlwifi/rtl8192de/dm.c       |  8 ++++++--
- drivers/net/wireless/rtlwifi/rtl8192de/hw.c       | 18 ----------------
- drivers/net/wireless/rtlwifi/rtl8192de/trx.c      |  1 -
- drivers/net/wireless/rtlwifi/rtl8192se/trx.c      |  1 -
- drivers/net/wireless/rtlwifi/rtl8723ae/trx.c      |  1 -
- drivers/net/wireless/rtlwifi/usb.c                |  6 ++++--
- 12 files changed, 12 insertions(+), 54 deletions(-)
-
+diff --git a/drivers/media/platform/omap3isp/isp.c b/drivers/media/platform/omap3isp/isp.c
+index df3a0ec..1c36080 100644
+--- a/drivers/media/platform/omap3isp/isp.c
++++ b/drivers/media/platform/omap3isp/isp.c
+@@ -2182,9 +2182,9 @@ static int isp_probe(struct platform_device *pdev)
+ 	isp->pdata = pdata;
+ 	isp->ref_count = 0;
+ 
+-	isp->raw_dmamask = DMA_BIT_MASK(32);
+-	isp->dev->dma_mask = &isp->raw_dmamask;
+-	isp->dev->coherent_dma_mask = DMA_BIT_MASK(32);
++	ret = dma_coerce_mask_and_coherent(isp->dev, DMA_BIT_MASK(32));
++	if (ret)
++		return ret;
+ 
+ 	platform_set_drvdata(pdev, isp);
+ 
+diff --git a/drivers/media/platform/omap3isp/isp.h b/drivers/media/platform/omap3isp/isp.h
+index cd3eff4..ce65d3a 100644
+--- a/drivers/media/platform/omap3isp/isp.h
++++ b/drivers/media/platform/omap3isp/isp.h
+@@ -152,7 +152,6 @@ struct isp_xclk {
+  * @mmio_base_phys: Array with physical L4 bus addresses for ISP register
+  *                  regions.
+  * @mmio_size: Array with ISP register regions size in bytes.
+- * @raw_dmamask: Raw DMA mask
+  * @stat_lock: Spinlock for handling statistics
+  * @isp_mutex: Mutex for serializing requests to ISP.
+  * @crashed: Bitmask of crashed entities (indexed by entity ID)
+@@ -190,8 +189,6 @@ struct isp_device {
+ 	unsigned long mmio_base_phys[OMAP3_ISP_IOMEM_LAST];
+ 	resource_size_t mmio_size[OMAP3_ISP_IOMEM_LAST];
+ 
+-	u64 raw_dmamask;
+-
+ 	/* ISP Obj */
+ 	spinlock_t stat_lock;	/* common lock for statistic drivers */
+ 	struct mutex isp_mutex;	/* For handling ref_count field */
 -- 
-1.8.1.4
+1.7.4.4
 
