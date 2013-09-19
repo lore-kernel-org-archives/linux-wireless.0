@@ -1,69 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:51718 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758348Ab3ICRne (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Sep 2013 13:43:34 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCH 0/4] add IBSS-DFS support
-Date: Tue,  3 Sep 2013 19:43:17 +0200
-Message-Id: <1378230201-25446-1-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130903_194339_082211_60A72C44)
+Received: from foo.stuge.se ([212.116.89.98]:43512 "EHLO foo.stuge.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752050Ab3ISJFM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Sep 2013 05:05:12 -0400
+Message-ID: <20130919090510.24365.qmail@stuge.se> (sfid-20130919_110517_625260_07B59EEE)
+Date: Thu, 19 Sep 2013 11:05:09 +0200
+From: Peter Stuge <peter@stuge.se>
+To: users@rt2x00.serialmonkey.com
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [rt2x00-users] RT3573 wpa_supplicant: "nl80211: Delete station
+	$my_ap" after "SME: Send 20/40 BSS Coexistence to $my_ap"
+References: <5239A815.40909@gmail.com> <20130918154233.31983.qmail@stuge.se>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130918154233.31983.qmail@stuge.se>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset adds DFS support for the IBSS mode. It builds on top of
-the previously sent AP DFS mode and channel switch announcement support.
+Peter Stuge wrote:
+> I am on linux.git commit d8efd82eece89f8a5790b0febf17522affe9e1f1
+> which contains commit f212781, current wireless-next/master HEAD.
+..
+> Do you suspect that my problem (as described briefly in the email
+> subject and with more detail after the part of my email which you
+> quoted) is related to the device driver rather than higher-up parts
+> of the stack?
+..
+> > You can also try latest fw(v0.33):
+> > http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/attachments/20130111/f8ebe4d3/attachment.bin
+> 
+> Thanks! Will try this and get back to you.
 
-The implementation differs from the DFS support as described in IEEE 802.11.
-It does not implement the DFS owner service or uses IBSS DFS elements as
-described in IEEE 802.11-2012 10.9.8.3. The DFS owner service has various
-shortcomings:
+With the above firmware the problem described briefly in Subject and
+in more detail in my original email occurs much more easily, even as
+I am actively generating traffic over the interface. It happened
+twice while I was composing this very short email.
 
- * it requires synchronization to find one central IBSS owner
- * citation: "The potential for hidden nodes within an IBSS means that the
-   IBSS channel switch protocol is best effort."
- * the mechanism does not provide any way to handle big adhoc cells like
-   mesh networks (which is a major target).
 
-Therefore, a stripped down approach is implemented:
-
- * userspace must announce that it wants support for DFS and will handle
-   events using a flag for the ibss_join command.
- * if a radar is detected, inform userspace. Userspace should then select
-   a channel (e.g. decide on it with the peers on higher level protocols
-   before, or wait a random backoff time) and start a channel switch process.
- * if a channel switch announcement from another peeris received, adopt it
-   and re-transmit it (this has been implemented in the IBSS-CSA patchset
-   before)
- * channel switch announcements on DFS channels are interpreted as
-   radar signals and will mark the channel as unusable.
-
-As always, any comments are appreciated.
-
-Cheers,
-        Simon
-
-Simon Wunderlich (4):
-  nl80211: allow CAC only if no operation is going on
-  nl80211/cfg80211: enable DFS for IBSS mode
-  mac80211: enable DFS for IBSS mode
-  ath9k: enable DFS for IBSS mode
-
- drivers/net/wireless/ath/ath9k/init.c |    3 +-
- include/net/cfg80211.h                |    6 ++++
- include/uapi/linux/nl80211.h          |    7 +++++
- net/mac80211/ibss.c                   |   50 +++++++++++++++++++++++++++++----
- net/mac80211/ieee80211_i.h            |    1 +
- net/wireless/chan.c                   |    3 +-
- net/wireless/ibss.c                   |   24 +++++++++++++---
- net/wireless/nl80211.c                |   11 ++++++--
- net/wireless/util.c                   |   11 ++++++--
- 9 files changed, 101 insertions(+), 15 deletions(-)
-
--- 
-1.7.10.4
-
+//Peter
