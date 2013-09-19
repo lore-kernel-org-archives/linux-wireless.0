@@ -1,49 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f41.google.com ([209.85.219.41]:50207 "EHLO
-	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935174Ab3IDRks (ORCPT
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:47842 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754265Ab3ISWsr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Sep 2013 13:40:48 -0400
-MIME-Version: 1.0
-In-Reply-To: <20130904.131001.1189384206727310769.davem@davemloft.net>
-References: <20130904.131001.1189384206727310769.davem@davemloft.net>
-Date: Wed, 4 Sep 2013 10:40:45 -0700
-Message-ID: <CAL3LdT5s=8E123aR8rwCZjjGUjv3jTzyJxX3fzu56kge6PHh2g@mail.gmail.com> (sfid-20130904_194055_993207_13B24448)
-Subject: Re: merge window warning
-From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-To: David Miller <davem@davemloft.net>
-Cc: netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org,
-	netfilter-devel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 19 Sep 2013 18:48:47 -0400
+In-Reply-To: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+From: Russell King <rmk+kernel@arm.linux.org.uk>
+To: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
+	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
+	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
+	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	uclinux-dist-devel@blackfin.uclinux.org
+Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	Jesse Brandeburg <jesse.brandeburg@intel.com>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	Carolyn Wyborny <carolyn.wyborny@intel.com>,
+	Don Skidmore <donald.c.skidmore@intel.com>,
+	Greg Rose <gregory.v.rose@intel.com>,
+	Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>,
+	Alex Duyck <alexander.h.duyck@intel.com>,
+	John Ronciak <john.ronciak@intel.com>,
+	Tushar Dave <tushar.n.dave@intel.com>
+Subject: [PATCH 03/51] DMA-API: net: intel/e1000e: fix 32-bit DMA mask
+ handling
+Message-Id: <E1VMllX-0007fP-33@rmk-PC.arm.linux.org.uk> (sfid-20130920_004857_575887_717EC708)
+Date: Thu, 19 Sep 2013 22:27:59 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Would Jesse's i40e series be acceptable if I push today, since 4
-versions have been sent previously for review?  I ask, because I was
-in the process of submitting v5 and want to make sure it is ok before
-submitting.
+The fallback to 32-bit DMA mask is rather odd:
+	err = dma_set_mask(&pdev->dev, DMA_BIT_MASK(64));
+	if (!err) {
+		err = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(64));
+		if (!err)
+			pci_using_dac = 1;
+	} else {
+		err = dma_set_mask(&pdev->dev, DMA_BIT_MASK(32));
+		if (err) {
+			err = dma_set_coherent_mask(&pdev->dev,
+						    DMA_BIT_MASK(32));
+			if (err) {
+				dev_err(&pdev->dev,
+					"No usable DMA configuration, aborting\n");
+				goto err_dma;
+			}
+		}
+	}
+This means we only set the coherent DMA mask in the fallback path if
+the DMA mask set failed, which is silly.  This fixes it to set the
+coherent DMA mask only if dma_set_mask() succeeded, and to error out
+if either fails.
 
-On Wed, Sep 4, 2013 at 10:10 AM, David Miller <davem@davemloft.net> wrote:
->
-> The merge window is now open.
->
-> This means if a feature patch isn't in patchwork already, and
-> completely ready to apply, you should not submit it at this time.
->
-> I will just automatically reject any inappropriate patches sent from
-> now until the net-next tree opens again after the merge window closes,
-> in order to assist with my ability to process the current backlog
-> efficiently.
->
-> Thanks.
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe netdev" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+---
+ drivers/net/ethernet/intel/e1000e/netdev.c |   18 ++++++------------
+ 1 files changed, 6 insertions(+), 12 deletions(-)
 
-
-
+diff --git a/drivers/net/ethernet/intel/e1000e/netdev.c b/drivers/net/ethernet/intel/e1000e/netdev.c
+index e87e9b0..519e293 100644
+--- a/drivers/net/ethernet/intel/e1000e/netdev.c
++++ b/drivers/net/ethernet/intel/e1000e/netdev.c
+@@ -6553,21 +6553,15 @@ static int e1000_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		return err;
+ 
+ 	pci_using_dac = 0;
+-	err = dma_set_mask(&pdev->dev, DMA_BIT_MASK(64));
++	err = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
+ 	if (!err) {
+-		err = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(64));
+-		if (!err)
+-			pci_using_dac = 1;
++		pci_using_dac = 1;
+ 	} else {
+-		err = dma_set_mask(&pdev->dev, DMA_BIT_MASK(32));
++		err = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
+ 		if (err) {
+-			err = dma_set_coherent_mask(&pdev->dev,
+-						    DMA_BIT_MASK(32));
+-			if (err) {
+-				dev_err(&pdev->dev,
+-					"No usable DMA configuration, aborting\n");
+-				goto err_dma;
+-			}
++			dev_err(&pdev->dev,
++				"No usable DMA configuration, aborting\n");
++			goto err_dma;
+ 		}
+ 	}
+ 
 -- 
-Cheers,
-Jeff
+1.7.4.4
+
