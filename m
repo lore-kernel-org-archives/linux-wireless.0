@@ -1,54 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:58934 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751040Ab3IRNXw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Sep 2013 09:23:52 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Subject: [PATCH 3.12] ath9k: add txq locking for ath_tx_aggr_start
-Date: Wed, 18 Sep 2013 15:23:41 +0200
-Message-Id: <1379510621-9612-1-git-send-email-nbd@openwrt.org> (sfid-20130918_152356_013576_C9F4607C)
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:39359 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754428Ab3ITLwp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Sep 2013 07:52:45 -0400
+In-Reply-To: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+From: Russell King <rmk+kernel@arm.linux.org.uk>
+To: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
+	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
+	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
+	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	uclinux-dist-devel@blackfin.uclinux.org
+Cc: Mauro Carvalho Chehab <m.chehab@samsung.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH 19/51] DMA-API: media: dt3155v4l: replace
+ dma_set_mask()+dma_set_coherent_mask() with new
+ helper
+Message-Id: <E1VMm13-0007hO-9l@rmk-PC.arm.linux.org.uk> (sfid-20130920_135255_298458_6FFB5DE7)
+Date: Thu, 19 Sep 2013 22:44:01 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Prevents race conditions when un-aggregated frames are pending in the
-driver.
+Replace the following sequence:
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+	dma_set_mask(dev, mask);
+	dma_set_coherent_mask(dev, mask);
+
+with a call to the new helper dma_set_mask_and_coherent().
+
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
 ---
- drivers/net/wireless/ath/ath9k/xmit.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/staging/media/dt3155v4l/dt3155v4l.c |    5 +----
+ 1 files changed, 1 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 9b3736e..5ac713d 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1390,11 +1390,15 @@ int ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
- 		      u16 tid, u16 *ssn)
- {
- 	struct ath_atx_tid *txtid;
-+	struct ath_txq *txq;
- 	struct ath_node *an;
- 	u8 density;
+diff --git a/drivers/staging/media/dt3155v4l/dt3155v4l.c b/drivers/staging/media/dt3155v4l/dt3155v4l.c
+index 90d6ac4..081407b 100644
+--- a/drivers/staging/media/dt3155v4l/dt3155v4l.c
++++ b/drivers/staging/media/dt3155v4l/dt3155v4l.c
+@@ -901,10 +901,7 @@ dt3155_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	int err;
+ 	struct dt3155_priv *pd;
  
- 	an = (struct ath_node *)sta->drv_priv;
- 	txtid = ATH_AN_2_TID(an, tid);
-+	txq = txtid->ac->txq;
-+
-+	ath_txq_lock(sc, txq);
- 
- 	/* update ampdu factor/density, they may have changed. This may happen
- 	 * in HT IBSS when a beacon with HT-info is received after the station
-@@ -1418,6 +1422,8 @@ int ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
- 	memset(txtid->tx_buf, 0, sizeof(txtid->tx_buf));
- 	txtid->baw_head = txtid->baw_tail = 0;
- 
-+	ath_txq_unlock_complete(sc, txq);
-+
- 	return 0;
- }
- 
+-	err = dma_set_mask(&pdev->dev, DMA_BIT_MASK(32));
+-	if (err)
+-		return -ENODEV;
+-	err = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(32));
++	err = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
+ 	if (err)
+ 		return -ENODEV;
+ 	pd = kzalloc(sizeof(*pd), GFP_KERNEL);
 -- 
-1.8.0.2
+1.7.4.4
 
