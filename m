@@ -1,54 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:51985 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752271Ab3IHO4E (ORCPT
+Received: from mail-ye0-f181.google.com ([209.85.213.181]:45947 "EHLO
+	mail-ye0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751157Ab3ISQSc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Sep 2013 10:56:04 -0400
-Subject: [PATCH 6/8] ath10k: add boot messages to htt.c
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Sun, 08 Sep 2013 17:56:02 +0300
-Message-ID: <20130908145602.3136.1295.stgit@localhost6.localdomain6> (sfid-20130908_165607_530326_E0361221)
-In-Reply-To: <20130908145435.3136.49168.stgit@localhost6.localdomain6>
-References: <20130908145435.3136.49168.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Thu, 19 Sep 2013 12:18:32 -0400
+Received: by mail-ye0-f181.google.com with SMTP id r14so3446233yen.40
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Sep 2013 09:18:31 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 3/4] ath: split user and driver reguluatory hint parsing
+Date: Thu, 19 Sep 2013 11:18:09 -0500
+Message-Id: <1379607490-18972-4-git-send-email-mcgrof@do-not-panic.com> (sfid-20130919_181835_053631_CE601EFA)
+In-Reply-To: <1379607490-18972-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1379607490-18972-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To unify the boot debug level.
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+On the regulatory notifier split up the parsing of the
+hints coming from drivers or user. We'll treat these
+separately.
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- drivers/net/wireless/ath/ath10k/htt_rx.c |    2 +-
- drivers/net/wireless/ath/ath10k/htt_tx.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/regd.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index af31d2f..a39fbf4 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -502,7 +502,7 @@ int ath10k_htt_rx_attach(struct ath10k_htt *htt)
- 	if (__ath10k_htt_rx_ring_fill_n(htt, htt->rx_ring.fill_level))
- 		goto err_fill_ring;
- 
--	ath10k_dbg(ATH10K_DBG_HTT, "HTT RX ring size: %d, fill_level: %d\n",
-+	ath10k_dbg(ATH10K_DBG_BOOT, "htt rx ring size %d fill_level %d\n",
- 		   htt->rx_ring.size, htt->rx_ring.fill_level);
- 	return 0;
- 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index b6b1420..4548128 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -96,7 +96,7 @@ int ath10k_htt_tx_attach(struct ath10k_htt *htt)
- 	htt->max_num_pending_tx = ath10k_hif_get_free_queue_number(htt->ar,
- 								   pipe);
- 
--	ath10k_dbg(ATH10K_DBG_HTT, "htt tx max num pending tx %d\n",
-+	ath10k_dbg(ATH10K_DBG_BOOT, "htt tx max num pending tx %d\n",
- 		   htt->max_num_pending_tx);
- 
- 	htt->pending_tx = kzalloc(sizeof(*htt->pending_tx) *
+diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
+index 8373650..7222eeb 100644
+--- a/drivers/net/wireless/ath/regd.c
++++ b/drivers/net/wireless/ath/regd.c
+@@ -422,6 +422,7 @@ void ath_reg_notifier_apply(struct wiphy *wiphy,
+ 		       sizeof(struct ath_regulatory));
+ 		break;
+ 	case NL80211_REGDOM_SET_BY_DRIVER:
++		break;
+ 	case NL80211_REGDOM_SET_BY_USER:
+ 		break;
+ 	case NL80211_REGDOM_SET_BY_COUNTRY_IE:
+-- 
+1.7.10.4
 
