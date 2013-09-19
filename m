@@ -1,33 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f54.google.com ([209.85.219.54]:44658 "EHLO
-	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750721Ab3IFIFJ convert rfc822-to-8bit (ORCPT
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:39302 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754195Ab3ITL10 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Sep 2013 04:05:09 -0400
-Received: by mail-oa0-f54.google.com with SMTP id j10so3610892oah.27
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Sep 2013 01:05:08 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <522879D0.2030107@broadcom.com>
-References: <522879D0.2030107@broadcom.com>
-Date: Fri, 6 Sep 2013 10:05:08 +0200
-Message-ID: <CACna6ryc0_9xcQonuJbK6aB0-ak_izLTi_LNGHB=Lsx0Q5t-Zw@mail.gmail.com> (sfid-20130906_100537_220032_D366B376)
-Subject: Re: bcma problem on x86_64
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 20 Sep 2013 07:27:26 -0400
+In-Reply-To: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+From: Russell King <rmk+kernel@arm.linux.org.uk>
+To: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
+	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
+	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
+	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	uclinux-dist-devel@blackfin.uclinux.org
+Cc: Sathya Perla <sathya.perla@emulex.com>,
+	Subbu Seetharaman <subbu.seetharaman@emulex.com>,
+	Ajit Khaparde <ajit.khaparde@emulex.com>
+Subject: [PATCH 11/51] DMA-API: net: emulex/benet: replace
+ dma_set_mask()+dma_set_coherent_mask() with new
+ helper
+Message-Id: <E1VMltI-0007gK-2r@rmk-PC.arm.linux.org.uk> (sfid-20130920_132736_604835_5BE8BE2F)
+Date: Thu, 19 Sep 2013 22:36:00 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Replace the following sequence:
 
-2013/9/5 Arend van Spriel <arend@broadcom.com>:
-> Since 3.11-rc4 I am seeing a problem with bcma on x64 (see attached log). I
-> thought I misconfigured my setup, but just upgraded to 3.11 and I am still
-> seeing the same issue. Did you have any reports like this?
+	dma_set_mask(dev, mask);
+	dma_set_coherent_mask(dev, mask);
 
-Unfortunately I wasn't testing final 3.11 with x86_64, I'll give it a
-try over the weekend.
+with a call to the new helper dma_set_mask_and_coherent().
 
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+---
+ drivers/net/ethernet/emulex/benet/be_main.c |   12 ++----------
+ 1 files changed, 2 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/ethernet/emulex/benet/be_main.c b/drivers/net/ethernet/emulex/benet/be_main.c
+index 3224d28..2084151 100644
+--- a/drivers/net/ethernet/emulex/benet/be_main.c
++++ b/drivers/net/ethernet/emulex/benet/be_main.c
+@@ -4335,19 +4335,11 @@ static int be_probe(struct pci_dev *pdev, const struct pci_device_id *pdev_id)
+ 	adapter->netdev = netdev;
+ 	SET_NETDEV_DEV(netdev, &pdev->dev);
+ 
+-	status = dma_set_mask(&pdev->dev, DMA_BIT_MASK(64));
++	status = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
+ 	if (!status) {
+-		status = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(64));
+-		if (status < 0) {
+-			dev_err(&pdev->dev, "dma_set_coherent_mask failed\n");
+-			goto free_netdev;
+-		}
+ 		netdev->features |= NETIF_F_HIGHDMA;
+ 	} else {
+-		status = dma_set_mask(&pdev->dev, DMA_BIT_MASK(32));
+-		if (!status)
+-			status = dma_set_coherent_mask(&pdev->dev,
+-						       DMA_BIT_MASK(32));
++		status = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
+ 		if (status) {
+ 			dev_err(&pdev->dev, "Could not set PCI DMA Mask\n");
+ 			goto free_netdev;
 -- 
-Rafał
+1.7.4.4
+
