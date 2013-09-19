@@ -1,41 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from p15195424.pureserver.info ([82.165.34.74]:48443 "EHLO
-	p15195424.pureserver.info" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752616Ab3ISGtj (ORCPT
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:39628 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751598Ab3ITO7G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Sep 2013 02:49:39 -0400
-Message-ID: <523A9E4A.5060309@ilande.co.uk> (sfid-20130919_084942_813019_A5D383E0)
-Date: Thu, 19 Sep 2013 07:48:42 +0100
-From: Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>
-MIME-Version: 1.0
-To: Timothy Rundle <tgrundlesr@gmail.com>
-CC: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <CALa3VXYo1yTuDr22M7AUcp0WLQszzdMSJczRgmD57uPd_68vWQ@mail.gmail.com> <522D054B.5060205@lwfinger.net> <522DD856.7050309@ilande.co.uk> <522DE1BE.6070904@lwfinger.net> <522DE8CA.9010008@ilande.co.uk> <522DFF83.6000605@lwfinger.net> <522E0573.4000804@ilande.co.uk> <522E1B7D.5010107@lwfinger.net> <522E463E.4040701@ilande.co.uk> <522E5416.4010901@lwfinger.net> <522E5D83.9060103@ilande.co.uk> <522E896E.7000607@lwfinger.net> <522EB51A.2080004@ilande.co.uk> <522F3757.8030600@lwfinger.net> <522F7B61.6060208@ilande.co.uk> <5230CDF1.1040905@lwfinger.net> <CALa3VXbxQ1Z2J5weV7rQ16c53D1MQyDL1YGQrV6EkCJYfh=uYA@mail.gmail.com> <523350DC.5050905@lwfinger.net> <CALa3VXZ2+7v-0xrWgoPsAjaaybfMUDONZae8bSx4XhAc6h7wUw@mail.gmail.com>
-In-Reply-To: <CALa3VXZ2+7v-0xrWgoPsAjaaybfMUDONZae8bSx4XhAc6h7wUw@mail.gmail.com>
-Subject: Re: RTL8192CU continually reconnecting
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Fri, 20 Sep 2013 10:59:06 -0400
+In-Reply-To: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+From: Russell King <rmk+kernel@arm.linux.org.uk>
+To: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
+	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
+	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
+	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	uclinux-dist-devel@blackfin.uclinux.org
+Cc: Herbert Xu <herbert@gondor.apana.org.au>,
+	"David S. Miller" <davem@davemloft.net>
+Subject: [PATCH 40/51] DMA-API: crypto: fix ixp4xx crypto platform device
+ support
+Message-Id: <E1VMnOo-0007sC-Li@rmk-PC.arm.linux.org.uk> (sfid-20130920_165918_791145_DAD3A315)
+Date: Fri, 20 Sep 2013 00:12:38 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19/09/13 01:42, Timothy Rundle wrote:
+Don't statically allocate struct device's in modules, and shut the
+warning up with an empty release() function.  There's a reason that
+warning is there and that's not for people to hide in this way.  It's
+there to persuade people to use the correct APIs to allocate platform
+devices.
 
-> I found that if I setup a old wireless router as a repeater and keep
-> it within 10-12 feet I have a stable connection.  If I move it back to
-> 12-15 the connection becomes less reliable.  Anything past 15 feet is
-> unusable.
->
-> I see there have been lots of conversations on the topic and you are
-> working on some power management changes.  If you need me to do any
-> testing let me know.
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+---
+ drivers/crypto/ixp4xx_crypto.c |   37 +++++++++++++++++--------------------
+ 1 files changed, 17 insertions(+), 20 deletions(-)
 
-Hi Timothy,
+diff --git a/drivers/crypto/ixp4xx_crypto.c b/drivers/crypto/ixp4xx_crypto.c
+index 21180d6..8306185 100644
+--- a/drivers/crypto/ixp4xx_crypto.c
++++ b/drivers/crypto/ixp4xx_crypto.c
+@@ -218,23 +218,10 @@ static dma_addr_t crypt_phys;
+ 
+ static int support_aes = 1;
+ 
+-static void dev_release(struct device *dev)
+-{
+-	return;
+-}
+-
+ #define DRIVER_NAME "ixp4xx_crypto"
+-static struct platform_device pseudo_dev = {
+-	.name = DRIVER_NAME,
+-	.id   = 0,
+-	.num_resources = 0,
+-	.dev  = {
+-		.coherent_dma_mask = DMA_BIT_MASK(32),
+-		.release = dev_release,
+-	}
+-};
+ 
+-static struct device *dev = &pseudo_dev.dev;
++static struct platform_device *pdev;
++static struct device *dev;
+ 
+ static inline dma_addr_t crypt_virt2phys(struct crypt_ctl *virt)
+ {
+@@ -1418,20 +1405,30 @@ static struct ixp_alg ixp4xx_algos[] = {
+ } };
+ 
+ #define IXP_POSTFIX "-ixp4xx"
++
++static const struct platform_device_info ixp_dev_info __initdata = {
++	.name		= DRIVER_NAME,
++	.id		= 0,
++	.dma_mask	= DMA_BIT_MASK(32),
++};
++
+ static int __init ixp_module_init(void)
+ {
+ 	int num = ARRAY_SIZE(ixp4xx_algos);
+-	int i,err ;
++	int i, err ;
+ 
+-	if (platform_device_register(&pseudo_dev))
+-		return -ENODEV;
++	pdev = platform_device_register_full(&ixp_dev_info);
++	if (IS_ERR(pdev))
++		return PTR_ERR(pdev);
++
++	dev = &pdev->dev;
+ 
+ 	spin_lock_init(&desc_lock);
+ 	spin_lock_init(&emerg_lock);
+ 
+ 	err = init_ixp_crypto();
+ 	if (err) {
+-		platform_device_unregister(&pseudo_dev);
++		platform_device_unregister(pdev);
+ 		return err;
+ 	}
+ 	for (i=0; i< num; i++) {
+@@ -1496,7 +1493,7 @@ static void __exit ixp_module_exit(void)
+ 			crypto_unregister_alg(&ixp4xx_algos[i].crypto);
+ 	}
+ 	release_ixp_crypto();
+-	platform_device_unregister(&pseudo_dev);
++	platform_device_unregister(pdev);
+ }
+ 
+ module_init(ixp_module_init);
+-- 
+1.7.4.4
 
-Thanks for the information. It's just a hunch at the moment, but is your 
-wireless router 802.11b/g only, i.e. it either doesn't have 802.11n 
-enabled or doesn't support 802.11n at all?
-
-
-ATB,
-
-Mark.
