@@ -1,40 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:26094 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752189Ab3ITPau (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Sep 2013 11:30:50 -0400
-Date: Fri, 20 Sep 2013 17:30:45 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Sachin Kamat <sachin.kamat@linaro.org>
-Cc: linux-nfc@lists.01.org, linux-wireless@vger.kernel.org,
-	lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-	Ilan Elias <ilane@ti.com>
-Subject: Re: [PATCH 1/2] NFC: Remove redundant dev_set_drvdata
-Message-ID: <20130920153045.GD26066@zurbaran> (sfid-20130920_173053_766611_E6994789)
-References: <1379667641-31149-1-git-send-email-sachin.kamat@linaro.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1379667641-31149-1-git-send-email-sachin.kamat@linaro.org>
+Received: from mail-ye0-f180.google.com ([209.85.213.180]:63920 "EHLO
+	mail-ye0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751157Ab3ISQSR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Sep 2013 12:18:17 -0400
+Received: by mail-ye0-f180.google.com with SMTP id m15so3537946yen.11
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Sep 2013 09:18:16 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 0/4] ath: add dynamic user regulatory setting support
+Date: Thu, 19 Sep 2013 11:18:06 -0500
+Message-Id: <1379607490-18972-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20130919_181820_743296_4EB6E239)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sachin,
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-On Fri, Sep 20, 2013 at 02:30:40PM +0530, Sachin Kamat wrote:
-> Driver core sets driver data to NULL upon failure or remove.
-> 
-> Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
-> Cc: Ilan Elias <ilane@ti.com>
-> ---
-> Series compile tested.
-> ---
->  drivers/nfc/nfcwilink.c |    2 --
->  1 file changed, 2 deletions(-)
-Applied, thanks.
+This adds dynamic user regulatory domain support for the shared ath
+module.
 
-Cheers,
-Samuel.
+Luis R. Rodriguez (4):
+  cfg80211: export reg_initiator_name()
+  ath: move common dynamic regulatory domain setting to a helper
+  ath: split user and driver reguluatory hint parsing
+  ath: add support for proper dynamic regulatory hints
+
+ drivers/net/wireless/ath/Kconfig |   17 +++++
+ drivers/net/wireless/ath/regd.c  |  140 +++++++++++++++++++++++++++++++++-----
+ include/net/cfg80211.h           |    9 +++
+ net/wireless/reg.c               |   27 +++++---
+ 4 files changed, 165 insertions(+), 28 deletions(-)
 
 -- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+1.7.10.4
+
