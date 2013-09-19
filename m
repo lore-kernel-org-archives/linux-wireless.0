@@ -1,164 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f49.google.com ([209.85.215.49]:49329 "EHLO
-	mail-la0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752810Ab3IVWmu (ORCPT
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:47842 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753689Ab3ISWtb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Sep 2013 18:42:50 -0400
-Received: by mail-la0-f49.google.com with SMTP id ev20so1902621lab.8
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Sep 2013 15:42:49 -0700 (PDT)
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: wcn36xx@lists.infradead.org,
-	Eugene Krasnikov <k.eugene.e@gmail.com>
-Subject: [PATCH v4 11/16] wcn36xx: add smd.h
-Date: Sun, 22 Sep 2013 23:42:08 +0100
-Message-Id: <1379889733-6215-12-git-send-email-k.eugene.e@gmail.com> (sfid-20130923_005039_809653_28F53D93)
-In-Reply-To: <1379889733-6215-1-git-send-email-k.eugene.e@gmail.com>
-References: <1379889733-6215-1-git-send-email-k.eugene.e@gmail.com>
+	Thu, 19 Sep 2013 18:49:31 -0400
+In-Reply-To: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+From: Russell King <rmk+kernel@arm.linux.org.uk>
+To: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
+	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
+	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
+	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	uclinux-dist-devel@blackfin.uclinux.org
+Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	Jesse Brandeburg <jesse.brandeburg@intel.com>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	Carolyn Wyborny <carolyn.wyborny@intel.com>,
+	Don Skidmore <donald.c.skidmore@intel.com>,
+	Greg Rose <gregory.v.rose@intel.com>,
+	Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>,
+	Alex Duyck <alexander.h.duyck@intel.com>,
+	John Ronciak <john.ronciak@intel.com>,
+	Tushar Dave <tushar.n.dave@intel.com>
+Subject: [PATCH 06/51] DMA-API: net: intel/ixgb: fix 32-bit DMA mask handling
+Message-Id: <E1VMloR-0007fk-Ei@rmk-PC.arm.linux.org.uk> (sfid-20130920_004936_164658_A907C1E1)
+Date: Thu, 19 Sep 2013 22:30:59 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-adding smd.h
+The fallback to 32-bit DMA mask is rather odd:
+	err = dma_set_mask(&pdev->dev, DMA_BIT_MASK(64));
+	if (!err) {
+		err = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(64));
+		if (!err)
+			pci_using_dac = 1;
+	} else {
+		err = dma_set_mask(&pdev->dev, DMA_BIT_MASK(32));
+		if (err) {
+			err = dma_set_coherent_mask(&pdev->dev,
+						    DMA_BIT_MASK(32));
+			if (err) {
+				pr_err("No usable DMA configuration, aborting\n");
+				goto err_dma_mask;
+			}
+		}
+	}
+This means we only set the coherent DMA mask in the fallback path if
+the DMA mask set failed, which is silly.  This fixes it to set the
+coherent DMA mask only if dma_set_mask() succeeded, and to error out
+if either fails.
 
-Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
 ---
- drivers/net/wireless/ath/wcn36xx/smd.h | 127 +++++++++++++++++++++++++++++++++
- 1 file changed, 127 insertions(+)
- create mode 100644 drivers/net/wireless/ath/wcn36xx/smd.h
+ drivers/net/ethernet/intel/ixgb/ixgb_main.c |   16 +++++-----------
+ 1 files changed, 5 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.h b/drivers/net/wireless/ath/wcn36xx/smd.h
-new file mode 100644
-index 0000000..e7c3901
---- /dev/null
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.h
-@@ -0,0 +1,127 @@
-+/*
-+ * Copyright (c) 2013 Eugene Krasnikov <k.eugene.e@gmail.com>
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#ifndef _SMD_H_
-+#define _SMD_H_
-+
-+#include "wcn36xx.h"
-+
-+/* Max shared size is 4k but we take less.*/
-+#define WCN36XX_NV_FRAGMENT_SIZE			3072
-+
-+#define WCN36XX_HAL_BUF_SIZE				4096
-+
-+#define HAL_MSG_TIMEOUT 200
-+#define WCN36XX_SMSM_WLAN_TX_ENABLE			0x00000400
-+#define WCN36XX_SMSM_WLAN_TX_RINGS_EMPTY		0x00000200
-+/* The PNO version info be contained in the rsp msg */
-+#define WCN36XX_FW_MSG_PNO_VERSION_MASK			0x8000
-+
-+enum wcn36xx_fw_msg_result {
-+	WCN36XX_FW_MSG_RESULT_SUCCESS			= 0,
-+	WCN36XX_FW_MSG_RESULT_SUCCESS_SYNC		= 1,
-+
-+	WCN36XX_FW_MSG_RESULT_MEM_FAIL			= 5,
-+};
-+
-+/******************************/
-+/* SMD requests and responses */
-+/******************************/
-+struct wcn36xx_fw_msg_status_rsp {
-+	u32	status;
-+} __packed;
-+
-+struct wcn36xx_hal_ind_msg {
-+	struct list_head list;
-+	u8 *msg;
-+	size_t msg_len;
-+};
-+
-+struct wcn36xx;
-+
-+int wcn36xx_smd_open(struct wcn36xx *wcn);
-+void wcn36xx_smd_close(struct wcn36xx *wcn);
-+
-+int wcn36xx_smd_load_nv(struct wcn36xx *wcn);
-+int wcn36xx_smd_start(struct wcn36xx *wcn);
-+int wcn36xx_smd_stop(struct wcn36xx *wcn);
-+int wcn36xx_smd_init_scan(struct wcn36xx *wcn, enum wcn36xx_hal_sys_mode mode);
-+int wcn36xx_smd_start_scan(struct wcn36xx *wcn);
-+int wcn36xx_smd_end_scan(struct wcn36xx *wcn);
-+int wcn36xx_smd_finish_scan(struct wcn36xx *wcn,
-+			    enum wcn36xx_hal_sys_mode mode);
-+int wcn36xx_smd_update_scan_params(struct wcn36xx *wcn);
-+int wcn36xx_smd_add_sta_self(struct wcn36xx *wcn, struct ieee80211_vif *vif);
-+int wcn36xx_smd_delete_sta_self(struct wcn36xx *wcn, u8 *addr);
-+int wcn36xx_smd_delete_sta(struct wcn36xx *wcn, u8 sta_index);
-+int wcn36xx_smd_join(struct wcn36xx *wcn, const u8 *bssid, u8 *vif, u8 ch);
-+int wcn36xx_smd_set_link_st(struct wcn36xx *wcn, const u8 *bssid,
-+			    const u8 *sta_mac,
-+			    enum wcn36xx_hal_link_state state);
-+int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
-+			   struct ieee80211_sta *sta, const u8 *bssid,
-+			   bool update);
-+int wcn36xx_smd_delete_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif);
-+int wcn36xx_smd_config_sta(struct wcn36xx *wcn, struct ieee80211_vif *vif,
-+			   struct ieee80211_sta *sta);
-+int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct ieee80211_vif *vif,
-+			    struct sk_buff *skb_beacon, u16 tim_off,
-+			    u16 p2p_off);
-+int wcn36xx_smd_switch_channel(struct wcn36xx *wcn,
-+			       struct ieee80211_vif *vif, int ch);
-+int wcn36xx_smd_update_proberesp_tmpl(struct wcn36xx *wcn,
-+				      struct ieee80211_vif *vif,
-+				      struct sk_buff *skb);
-+int wcn36xx_smd_set_stakey(struct wcn36xx *wcn,
-+			   enum ani_ed_type enc_type,
-+			   u8 keyidx,
-+			   u8 keylen,
-+			   u8 *key,
-+			   u8 sta_index);
-+int wcn36xx_smd_set_bsskey(struct wcn36xx *wcn,
-+			   enum ani_ed_type enc_type,
-+			   u8 keyidx,
-+			   u8 keylen,
-+			   u8 *key);
-+int wcn36xx_smd_remove_stakey(struct wcn36xx *wcn,
-+			      enum ani_ed_type enc_type,
-+			      u8 keyidx,
-+			      u8 sta_index);
-+int wcn36xx_smd_remove_bsskey(struct wcn36xx *wcn,
-+			      enum ani_ed_type enc_type,
-+			      u8 keyidx);
-+int wcn36xx_smd_enter_bmps(struct wcn36xx *wcn, struct ieee80211_vif *vif);
-+int wcn36xx_smd_exit_bmps(struct wcn36xx *wcn, struct ieee80211_vif *vif);
-+int wcn36xx_smd_set_power_params(struct wcn36xx *wcn, bool ignore_dtim);
-+int wcn36xx_smd_keep_alive_req(struct wcn36xx *wcn,
-+			       struct ieee80211_vif *vif,
-+			       int packet_type);
-+int wcn36xx_smd_dump_cmd_req(struct wcn36xx *wcn, u32 arg1, u32 arg2,
-+			     u32 arg3, u32 arg4, u32 arg5);
-+int wcn36xx_smd_feature_caps_exchange(struct wcn36xx *wcn);
-+
-+int wcn36xx_smd_add_ba_session(struct wcn36xx *wcn,
-+		struct ieee80211_sta *sta,
-+		u16 tid,
-+		u16 *ssn,
-+		u8 direction,
-+		u8 sta_index);
-+int wcn36xx_smd_add_ba(struct wcn36xx *wcn);
-+int wcn36xx_smd_del_ba(struct wcn36xx *wcn, u16 tid, u8 sta_index);
-+int wcn36xx_smd_trigger_ba(struct wcn36xx *wcn, u8 sta_index);
-+
-+int wcn36xx_smd_update_cfg(struct wcn36xx *wcn, u32 cfg_id, u32 value);
-+#endif	/* _SMD_H_ */
+diff --git a/drivers/net/ethernet/intel/ixgb/ixgb_main.c b/drivers/net/ethernet/intel/ixgb/ixgb_main.c
+index 9f6b236..57e390c 100644
+--- a/drivers/net/ethernet/intel/ixgb/ixgb_main.c
++++ b/drivers/net/ethernet/intel/ixgb/ixgb_main.c
+@@ -408,20 +408,14 @@ ixgb_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		return err;
+ 
+ 	pci_using_dac = 0;
+-	err = dma_set_mask(&pdev->dev, DMA_BIT_MASK(64));
++	err = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
+ 	if (!err) {
+-		err = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(64));
+-		if (!err)
+-			pci_using_dac = 1;
++		pci_using_dac = 1;
+ 	} else {
+-		err = dma_set_mask(&pdev->dev, DMA_BIT_MASK(32));
++		err = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
+ 		if (err) {
+-			err = dma_set_coherent_mask(&pdev->dev,
+-						    DMA_BIT_MASK(32));
+-			if (err) {
+-				pr_err("No usable DMA configuration, aborting\n");
+-				goto err_dma_mask;
+-			}
++			pr_err("No usable DMA configuration, aborting\n");
++			goto err_dma_mask;
+ 		}
+ 	}
+ 
 -- 
-1.8.1.2
+1.7.4.4
 
