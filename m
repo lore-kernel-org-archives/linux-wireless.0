@@ -1,50 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:54395 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752136Ab3IKJdf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Sep 2013 05:33:35 -0400
-Message-ID: <523038E8.2070806@openwrt.org> (sfid-20130911_113338_363977_852765DE)
-Date: Wed, 11 Sep 2013 11:33:28 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Ben Greear <greearb@candelatech.com>
-CC: Sujith Manoharan <sujith@msujith.org>,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Always send management frames at MCS-0??
-References: <522E1D31.2090403@candelatech.com> <21038.54250.912310.332354@gargle.gargle.HOWL> <522F3F6B.2070203@candelatech.com>
-In-Reply-To: <522F3F6B.2070203@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:39649 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751776Ab3ITPFc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Sep 2013 11:05:32 -0400
+In-Reply-To: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+From: Russell King <rmk+kernel@arm.linux.org.uk>
+To: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
+	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
+	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
+	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	uclinux-dist-devel@blackfin.uclinux.org
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>
+Subject: [PATCH 16/51] DMA-API: ppc: vio.c: replace
+ dma_set_mask()+dma_set_coherent_mask() with new
+ helper
+Message-Id: <E1VMly8-0007gy-Ru@rmk-PC.arm.linux.org.uk> (sfid-20130920_170544_541903_0461161F)
+Date: Thu, 19 Sep 2013 22:41:00 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-09-10 5:48 PM, Ben Greear wrote:
-> On 09/10/2013 01:10 AM, Sujith Manoharan wrote:
->> Ben Greear wrote:
->>> I had a user request that we support always sending management frames
->>> (such as EAPOL) at the lowest rate.  Evidently, other equipment does this,
->>> where as normal-ish supplicant/linux tends to send them at much higher
->>> rates.
->>>
->>> Any suggestions on how to go about doing this properly?
->>
->> If this is with ath9k_rate_control, then it is a known bug:
->> https://bugzilla.redhat.com/show_bug.cgi?id=927191
-> 
-> I'm not using ath9k rate control in this case, and at least most messages
-> get through fine.  We didn't actually see any obvious improvement when forcing
-> everything to 6Mbps, but since my user was asking, I wanted to run the
-> idea past the list.
-> 
-> Rate control is not perfect, and on initial bringup it doesn't have
-> many packets to work with so I thought it might still be useful to allow
-> users to specify a particular rate for EAPOL packets.  Maybe using
-> a socket ioctl so user-space (ie, supplicant/hostapd) can control it,
-> for example.
-minstrel and minstrel_ht always keep low rates in the rate retry chain
-until enough higher rates have been proven to work.
-I think adding an interface that allows user space to mess with the rate
-selection of EAPOL packets is a bad idea - users will pretty much always
-make worse rate decisions than the rate control module.
+Replace the following sequence:
 
-- Felix
+	dma_set_mask(dev, mask);
+	dma_set_coherent_mask(dev, mask);
+
+with a call to the new helper dma_set_mask_and_coherent().
+
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+---
+ arch/powerpc/kernel/vio.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
+
+diff --git a/arch/powerpc/kernel/vio.c b/arch/powerpc/kernel/vio.c
+index 78a3506..96b6c97 100644
+--- a/arch/powerpc/kernel/vio.c
++++ b/arch/powerpc/kernel/vio.c
+@@ -1413,8 +1413,7 @@ struct vio_dev *vio_register_device_node(struct device_node *of_node)
+ 
+ 		/* needed to ensure proper operation of coherent allocations
+ 		 * later, in case driver doesn't set it explicitly */
+-		dma_set_mask(&viodev->dev, DMA_BIT_MASK(64));
+-		dma_set_coherent_mask(&viodev->dev, DMA_BIT_MASK(64));
++		dma_set_mask_and_coherent(&viodev->dev, DMA_BIT_MASK(64));
+ 	}
+ 
+ 	/* register with generic device framework */
+-- 
+1.7.4.4
+
