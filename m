@@ -1,81 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:64790 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750992Ab3IYR6R (ORCPT
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:39125 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754449Ab3ITK4A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Sep 2013 13:58:17 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH 8/8 V4] rtlwifi: Remove all remaining references to variable 'noise' in rtl_stats struct
-Date: Wed, 25 Sep 2013 12:57:49 -0500
-Message-Id: <1380131869-19185-9-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130925_224501_807256_3557AA79)
-In-Reply-To: <1380131869-19185-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1380131869-19185-1-git-send-email-Larry.Finger@lwfinger.net>
+	Fri, 20 Sep 2013 06:56:00 -0400
+In-Reply-To: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+From: Russell King <rmk+kernel@arm.linux.org.uk>
+To: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
+	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
+	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
+	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	uclinux-dist-devel@blackfin.uclinux.org
+Cc: Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Nicolas Pitre <nicolas.pitre@linaro.org>
+Subject: [PATCH 51/51] ARM: 7805/1: mm: change max*pfn to include the
+ physical offset of memory
+Message-Id: <E1VMntH-0002EF-7Z@rmk-PC.arm.linux.org.uk> (sfid-20130920_125604_119662_D27B106F)
+Date: Fri, 20 Sep 2013 00:44:07 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This completes removal of all places that reference variable 'noise'
-in the rtl_stats struct. The definition of the struct is unchanged.
+From: Santosh Shilimkar <santosh.shilimkar@ti.com>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Most of the kernel code assumes that max*pfn is maximum pfns because
+the physical start of memory is expected to be PFN0. Since this
+assumption is not true on ARM architectures, the meaning of max*pfn
+is number of memory pages. This is done to keep drivers happy which
+are making use of of these variable to calculate the dma bounce limit
+using dma_mask.
+
+Now since we have a architecture override possibility for DMAable
+maximum pfns, lets make meaning of max*pfns as maximum pnfs on ARM
+as well.
+
+Signed-off-by: Santosh Shilimkar <santosh.shilimkar@ti.com>
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
 ---
- drivers/net/wireless/rtlwifi/rtl8188ee/trx.c | 1 -
- drivers/net/wireless/rtlwifi/rtl8192ce/trx.c | 1 -
- drivers/net/wireless/rtlwifi/rtl8192se/trx.c | 1 -
- drivers/net/wireless/rtlwifi/rtl8723ae/trx.c | 1 -
- 4 files changed, 4 deletions(-)
+ arch/arm/include/asm/dma-mapping.h |    8 ++++++++
+ arch/arm/mm/init.c                 |   10 ++++------
+ 2 files changed, 12 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c b/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c
-index a8871d6..5e628ab 100644
---- a/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/trx.c
-@@ -477,7 +477,6 @@ bool rtl88ee_rx_query_desc(struct ieee80211_hw *hw,
- 
- 	/*rx_status->qual = status->signal; */
- 	rx_status->signal = status->recvsignalpower + 10;
--	/*rx_status->noise = -status->noise; */
- 	if (status->packet_report_type == TX_REPORT2) {
- 		status->macid_valid_entry[0] =
- 			 GET_RX_RPT2_DESC_MACID_VALID_1(pdesc);
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-index 6ad23b4..52abf0a 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-@@ -420,7 +420,6 @@ bool rtl92ce_rx_query_desc(struct ieee80211_hw *hw,
- 
- 	/*rx_status->qual = stats->signal; */
- 	rx_status->signal = stats->recvsignalpower + 10;
--	/*rx_status->noise = -stats->noise; */
- 
- 	return true;
+diff --git a/arch/arm/include/asm/dma-mapping.h b/arch/arm/include/asm/dma-mapping.h
+index 5b579b9..863cd84 100644
+--- a/arch/arm/include/asm/dma-mapping.h
++++ b/arch/arm/include/asm/dma-mapping.h
+@@ -64,6 +64,7 @@ static inline dma_addr_t virt_to_dma(struct device *dev, void *addr)
+ {
+ 	return (dma_addr_t)__virt_to_bus((unsigned long)(addr));
  }
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/trx.c b/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
-index c709511..222d2e7 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
-@@ -330,7 +330,6 @@ bool rtl92se_rx_query_desc(struct ieee80211_hw *hw, struct rtl_stats *stats,
- 
- 	/*rx_status->qual = stats->signal; */
- 	rx_status->signal = stats->rssi + 10;
--	/*rx_status->noise = -stats->noise; */
- 
- 	return true;
++
+ #else
+ static inline dma_addr_t pfn_to_dma(struct device *dev, unsigned long pfn)
+ {
+@@ -86,6 +87,13 @@ static inline dma_addr_t virt_to_dma(struct device *dev, void *addr)
  }
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c b/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
-index c72758d..e85ec21 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8723ae/trx.c
-@@ -359,7 +359,6 @@ bool rtl8723ae_rx_query_desc(struct ieee80211_hw *hw,
+ #endif
  
- 	/*rx_status->qual = status->signal; */
- 	rx_status->signal = status->recvsignalpower + 10;
--	/*rx_status->noise = -status->noise; */
- 
- 	return true;
++/* The ARM override for dma_max_pfn() */
++static inline unsigned long dma_max_pfn(struct device *dev)
++{
++	return PHYS_PFN_OFFSET + dma_to_pfn(dev, *dev->dma_mask);
++}
++#define dma_max_pfn(dev) dma_max_pfn(dev)
++
+ /*
+  * DMA errors are defined by all-bits-set in the DMA address.
+  */
+diff --git a/arch/arm/mm/init.c b/arch/arm/mm/init.c
+index 8aab24f..d50533c 100644
+--- a/arch/arm/mm/init.c
++++ b/arch/arm/mm/init.c
+@@ -426,12 +426,10 @@ void __init bootmem_init(void)
+ 	 * This doesn't seem to be used by the Linux memory manager any
+ 	 * more, but is used by ll_rw_block.  If we can get rid of it, we
+ 	 * also get rid of some of the stuff above as well.
+-	 *
+-	 * Note: max_low_pfn and max_pfn reflect the number of _pages_ in
+-	 * the system, not the maximum PFN.
+ 	 */
+-	max_low_pfn = max_low - PHYS_PFN_OFFSET;
+-	max_pfn = max_high - PHYS_PFN_OFFSET;
++	min_low_pfn = min;
++	max_low_pfn = max_low;
++	max_pfn = max_high;
  }
+ 
+ /*
+@@ -537,7 +535,7 @@ static inline void free_area_high(unsigned long pfn, unsigned long end)
+ static void __init free_highpages(void)
+ {
+ #ifdef CONFIG_HIGHMEM
+-	unsigned long max_low = max_low_pfn + PHYS_PFN_OFFSET;
++	unsigned long max_low = max_low_pfn;
+ 	struct memblock_region *mem, *res;
+ 
+ 	/* set highmem page free */
 -- 
-1.8.1.4
+1.7.4.4
 
