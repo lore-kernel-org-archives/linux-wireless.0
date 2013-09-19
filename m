@@ -1,131 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:54868 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750997Ab3IZRty (ORCPT
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:39263 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754195Ab3ITLSz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Sep 2013 13:49:54 -0400
-Received: by mail-wi0-f172.google.com with SMTP id hn9so7465539wib.5
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Sep 2013 10:49:53 -0700 (PDT)
-Message-ID: <1380217784.2059.11.camel@canaries64-MCP7A> (sfid-20130926_194959_180366_4E686C86)
-Subject: [PATCH 2/5] staging: vt6656: rxtx.c create structure to join
- vnt_tx_data_head with vnt_tx_head.
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 26 Sep 2013 18:49:44 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 20 Sep 2013 07:18:55 -0400
+In-Reply-To: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+From: Russell King <rmk+kernel@arm.linux.org.uk>
+To: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
+	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
+	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
+	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	uclinux-dist-devel@blackfin.uclinux.org
+Cc: Herbert Xu <herbert@gondor.apana.org.au>,
+	"David S. Miller" <davem@davemloft.net>
+Subject: [PATCH 41/51] DMA-API: crypto: remove last references to 'static
+ struct device *dev'
+Message-Id: <E1VMnPm-0007sP-Px@rmk-PC.arm.linux.org.uk> (sfid-20130920_131924_067749_064E238B)
+Date: Fri, 20 Sep 2013 00:13:38 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Create struct vnt_tx_mic_hdr for with union vnt_tx_data_head
-for mic mode.
-
-Create union vnt_tx for mic and non mic mode.
-
-Attach vnt_rrv_time_* to relevant tx_head.
-
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
 ---
- drivers/staging/vt6656/rxtx.c | 12 ++++++------
- drivers/staging/vt6656/rxtx.h | 25 ++++++++++++++++++++++---
- 2 files changed, 28 insertions(+), 9 deletions(-)
+ drivers/crypto/ixp4xx_crypto.c |   13 ++++++++-----
+ 1 files changed, 8 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 7b05ee8..c80a809 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -870,7 +870,7 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
-     if (byPktType == PK_TYPE_11GB || byPktType == PK_TYPE_11GA) {
- 	if (need_rts) {
-             //Fill RsvTime
--		struct vnt_rrv_time_rts *pBuf = &tx_buffer->tx_head.rts;
-+		struct vnt_rrv_time_rts *pBuf = &tx_buffer->tx_head.tx_rts.rts;
+diff --git a/drivers/crypto/ixp4xx_crypto.c b/drivers/crypto/ixp4xx_crypto.c
+index 8306185..214357e 100644
+--- a/drivers/crypto/ixp4xx_crypto.c
++++ b/drivers/crypto/ixp4xx_crypto.c
+@@ -221,7 +221,6 @@ static int support_aes = 1;
+ #define DRIVER_NAME "ixp4xx_crypto"
  
- 		pBuf->wRTSTxRrvTime_aa = s_uGetRTSCTSRsvTime(pDevice, 2,
- 				byPktType, cbFrameSize, wCurrentRate);
-@@ -889,7 +889,7 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
-         }
-         else {//RTS_needless, PCF mode
-             //Fill RsvTime
--		struct vnt_rrv_time_cts *pBuf = &tx_buffer->tx_head.cts;
-+		struct vnt_rrv_time_cts *pBuf = &tx_buffer->tx_head.tx_cts.cts;
+ static struct platform_device *pdev;
+-static struct device *dev;
  
- 		pBuf->wTxRrvTime_a = vnt_rxtx_rsvtime_le16(pDevice, byPktType,
- 			cbFrameSize, wCurrentRate, bNeedACK);
-@@ -906,7 +906,7 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
-     else if (byPktType == PK_TYPE_11A) {
- 	if (need_rts) {
-             //Fill RsvTime
--		struct vnt_rrv_time_ab *pBuf = &tx_buffer->tx_head.ab;
-+		struct vnt_rrv_time_ab *pBuf = &tx_buffer->tx_head.tx_ab.ab;
+ static inline dma_addr_t crypt_virt2phys(struct crypt_ctl *virt)
+ {
+@@ -250,6 +249,7 @@ static inline const struct ix_hash_algo *ix_hash(struct crypto_tfm *tfm)
  
- 		pBuf->wRTSTxRrvTime = s_uGetRTSCTSRsvTime(pDevice, 2,
- 				byPktType, cbFrameSize, wCurrentRate);
-@@ -917,7 +917,7 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
- 			bNeedACK, psEthHeader, wCurrentRate, byFBOption);
- 	} else {
-             //Fill RsvTime
--		struct vnt_rrv_time_ab *pBuf = &tx_buffer->tx_head.ab;
-+		struct vnt_rrv_time_ab *pBuf = &tx_buffer->tx_head.tx_ab.ab;
+ static int setup_crypt_desc(void)
+ {
++	struct device *dev = &pdev->dev;
+ 	BUILD_BUG_ON(sizeof(struct crypt_ctl) != 64);
+ 	crypt_virt = dma_alloc_coherent(dev,
+ 			NPE_QLEN * sizeof(struct crypt_ctl),
+@@ -350,6 +350,7 @@ static void finish_scattered_hmac(struct crypt_ctl *crypt)
  
- 		pBuf->wTxRrvTime = vnt_rxtx_rsvtime_le16(pDevice, PK_TYPE_11A,
- 			cbFrameSize, wCurrentRate, bNeedACK);
-@@ -926,7 +926,7 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
-     else if (byPktType == PK_TYPE_11B) {
- 	if (need_rts) {
-             //Fill RsvTime
--		struct vnt_rrv_time_ab *pBuf = &tx_buffer->tx_head.ab;
-+		struct vnt_rrv_time_ab *pBuf = &tx_buffer->tx_head.tx_ab.ab;
+ static void one_packet(dma_addr_t phys)
+ {
++	struct device *dev = &pdev->dev;
+ 	struct crypt_ctl *crypt;
+ 	struct ixp_ctx *ctx;
+ 	int failed;
+@@ -419,7 +420,7 @@ static void crypto_done_action(unsigned long arg)
+ 	tasklet_schedule(&crypto_done_tasklet);
+ }
  
- 		pBuf->wRTSTxRrvTime = s_uGetRTSCTSRsvTime(pDevice, 0,
- 				byPktType, cbFrameSize, wCurrentRate);
-@@ -938,7 +938,7 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
-         }
-         else { //RTS_needless, non PCF mode
-             //Fill RsvTime
--		struct vnt_rrv_time_ab *pBuf = &tx_buffer->tx_head.ab;
-+		struct vnt_rrv_time_ab *pBuf = &tx_buffer->tx_head.tx_ab.ab;
+-static int init_ixp_crypto(void)
++static int init_ixp_crypto(struct device *dev)
+ {
+ 	int ret = -ENODEV;
+ 	u32 msg[2] = { 0, 0 };
+@@ -506,7 +507,7 @@ static int init_ixp_crypto(void)
+ 	return ret;
+ }
  
- 		pBuf->wTxRrvTime = vnt_rxtx_rsvtime_le16(pDevice, PK_TYPE_11B,
- 			cbFrameSize, wCurrentRate, bNeedACK);
-diff --git a/drivers/staging/vt6656/rxtx.h b/drivers/staging/vt6656/rxtx.h
-index 78b7b74..bbda9a3 100644
---- a/drivers/staging/vt6656/rxtx.h
-+++ b/drivers/staging/vt6656/rxtx.h
-@@ -180,10 +180,29 @@ union vnt_tx_data_head {
- 	struct vnt_cts_fb cts_g_fb;
- };
+-static void release_ixp_crypto(void)
++static void release_ixp_crypto(struct device *dev)
+ {
+ 	qmgr_disable_irq(RECV_QID);
+ 	tasklet_kill(&crypto_done_tasklet);
+@@ -873,6 +874,7 @@ static int ablk_perform(struct ablkcipher_request *req, int encrypt)
+ 	enum dma_data_direction src_direction = DMA_BIDIRECTIONAL;
+ 	struct ablk_ctx *req_ctx = ablkcipher_request_ctx(req);
+ 	struct buffer_desc src_hook;
++	struct device *dev = &pdev->dev;
+ 	gfp_t flags = req->base.flags & CRYPTO_TFM_REQ_MAY_SLEEP ?
+ 				GFP_KERNEL : GFP_ATOMIC;
  
-+struct vnt_tx_mic_hdr {
-+	struct vnt_mic_hdr hdr;
-+	union vnt_tx_data_head head;
-+} __packed;
-+
-+union vnt_tx {
-+	struct vnt_tx_mic_hdr mic;
-+	union vnt_tx_data_head head;
-+};
-+
- union vnt_tx_head {
--	struct vnt_rrv_time_rts rts;
--	struct vnt_rrv_time_cts cts;
--	struct vnt_rrv_time_ab ab;
-+	struct {
-+		struct vnt_rrv_time_rts rts;
-+		union vnt_tx tx;
-+	} __packed tx_rts;
-+	struct {
-+		struct vnt_rrv_time_cts cts;
-+		union vnt_tx tx;
-+	} __packed tx_cts;
-+	struct {
-+		struct vnt_rrv_time_ab ab;
-+		union vnt_tx tx;
-+	} __packed tx_ab;
- };
+@@ -997,6 +999,7 @@ static int aead_perform(struct aead_request *req, int encrypt,
+ 	unsigned int cryptlen;
+ 	struct buffer_desc *buf, src_hook;
+ 	struct aead_ctx *req_ctx = aead_request_ctx(req);
++	struct device *dev = &pdev->dev;
+ 	gfp_t flags = req->base.flags & CRYPTO_TFM_REQ_MAY_SLEEP ?
+ 				GFP_KERNEL : GFP_ATOMIC;
  
- struct vnt_tx_fifo_head {
+@@ -1426,7 +1429,7 @@ static int __init ixp_module_init(void)
+ 	spin_lock_init(&desc_lock);
+ 	spin_lock_init(&emerg_lock);
+ 
+-	err = init_ixp_crypto();
++	err = init_ixp_crypto(&pdev->dev);
+ 	if (err) {
+ 		platform_device_unregister(pdev);
+ 		return err;
+@@ -1492,7 +1495,7 @@ static void __exit ixp_module_exit(void)
+ 		if (ixp4xx_algos[i].registered)
+ 			crypto_unregister_alg(&ixp4xx_algos[i].crypto);
+ 	}
+-	release_ixp_crypto();
++	release_ixp_crypto(&pdev->dev);
+ 	platform_device_unregister(pdev);
+ }
+ 
 -- 
-1.8.3.2
+1.7.4.4
 
