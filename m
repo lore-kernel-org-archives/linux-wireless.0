@@ -1,50 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f49.google.com ([209.85.216.49]:47766 "EHLO
-	mail-qa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751993Ab3IEOBJ (ORCPT
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:39390 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754413Ab3ITL7w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Sep 2013 10:01:09 -0400
-Received: by mail-qa0-f49.google.com with SMTP id w8so916466qac.8
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Sep 2013 07:01:06 -0700 (PDT)
-Message-ID: <52288EA0.9070802@gmail.com> (sfid-20130905_160113_189283_02B64673)
-Date: Thu, 05 Sep 2013 10:01:04 -0400
-From: Jonathan Bither <jonbither@gmail.com>
-MIME-Version: 1.0
-To: abbas.chunawala@slscorp.com
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Error:ACS not working even after the Makefile and the configuration
- options are set.
-References: <52286C01.6080303@slscorp.com>
-In-Reply-To: <52286C01.6080303@slscorp.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Fri, 20 Sep 2013 07:59:52 -0400
+In-Reply-To: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+From: Russell King <rmk+kernel@arm.linux.org.uk>
+To: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
+	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
+	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
+	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	uclinux-dist-devel@blackfin.uclinux.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH 20/51] DMA-API: usb: bcma: replace
+ dma_set_mask()+dma_set_coherent_mask() with new
+ helper
+Message-Id: <E1VMm21-0007hW-Dd@rmk-PC.arm.linux.org.uk> (sfid-20130920_140004_295316_531CF93C)
+Date: Thu, 19 Sep 2013 22:45:01 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/05/2013 07:33 AM, Abbas Chunawala wrote:
-> Hi,
-> Greetings.
->
-> No ACS prints.
-> Instead an error
-> ath0 : IEEE 802.11 : Fetching channel rate/frequency not supported
-^ You seem to be using the driver MadWiFi instead of Ath5k based upon
-the interface name. MadWiFi is deprecated in support of the Ath5k driver.
+Replace the following sequence:
 
-You need to blacklist MadWiFi first before loading Ath5k.
-> The channel variable is set right in the configuration file.
-> How to get the acs prints.
-> The command for the hostapd invocation is a s follows:-
-> hostapd -B /tmp/secath0 -dd -e /etc/wpa2/entropy.
->
-> Thanks
-> Regards
-> Abbas Chunawala
-> (System Level Solutions (I) Pvt. Ltd. )
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe
-> linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+	dma_set_mask(dev, mask);
+	dma_set_coherent_mask(dev, mask);
+
+with a call to the new helper dma_set_mask_and_coherent().
+
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+---
+ drivers/usb/host/bcma-hcd.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/usb/host/bcma-hcd.c b/drivers/usb/host/bcma-hcd.c
+index df13d42..205f4a3 100644
+--- a/drivers/usb/host/bcma-hcd.c
++++ b/drivers/usb/host/bcma-hcd.c
+@@ -227,8 +227,7 @@ static int bcma_hcd_probe(struct bcma_device *dev)
+ 
+ 	/* TODO: Probably need checks here; is the core connected? */
+ 
+-	if (dma_set_mask(dev->dma_dev, DMA_BIT_MASK(32)) ||
+-	    dma_set_coherent_mask(dev->dma_dev, DMA_BIT_MASK(32)))
++	if (dma_set_mask_and_coherent(dev->dma_dev, DMA_BIT_MASK(32)))
+ 		return -EOPNOTSUPP;
+ 
+ 	usb_dev = kzalloc(sizeof(struct bcma_hcd_device), GFP_KERNEL);
+-- 
+1.7.4.4
 
