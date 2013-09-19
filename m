@@ -1,55 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:54550 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751025Ab3IZUXL convert rfc822-to-8bit (ORCPT
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:39236 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754379Ab3ITLHv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Sep 2013 16:23:11 -0400
-MIME-Version: 1.0
+	Fri, 20 Sep 2013 07:07:51 -0400
 In-Reply-To: <20130919212235.GD12758@n2100.arm.linux.org.uk>
 References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-Date: Thu, 26 Sep 2013 22:23:08 +0200
-Message-ID: <CACna6rxkpYzdD8_Jfi22vA2suUa3k-JM65_gCySQpp4crVCoPg@mail.gmail.com> (sfid-20130926_222328_787586_07E9AD43)
-Subject: Re: [PATCH 00/51] DMA mask changes
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: alsa-devel@alsa-project.org, b43-dev <b43-dev@lists.infradead.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	devicetree@vger.kernel.org,
-	dri-devel <dri-devel@lists.freedesktop.org>,
-	e1000-devel@lists.sourceforge.net,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	linux-crypto@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-fbdev@vger.kernel.org, linux-ide@vger.kernel.org,
-	linux-media@vger.kernel.org, linux-mmc@vger.kernel.org,
-	linux-nvme@lists.infradead.org, linux-omap@vger.kernel.org,
-	linux ppc dev <linuxppc-dev@lists.ozlabs.org>,
-	linux-samsung-soc@vger.kernel.org,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
+From: Russell King <rmk+kernel@arm.linux.org.uk>
+To: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
+	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
+	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
+	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
 	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
 	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
 	uclinux-dist-devel@blackfin.uclinux.org
-Content-Type: text/plain; charset=UTF-8
+Subject: [PATCH 46/51] ARM: DMA-API: better handing of DMA masks for coherent
+ allocations
+Message-Id: <E1VMnoQ-0000QN-2l@rmk-PC.arm.linux.org.uk> (sfid-20130920_130805_392690_90B47075)
+Date: Fri, 20 Sep 2013 00:39:06 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/9/19 Russell King - ARM Linux <linux@arm.linux.org.uk>:
-> This email is only being sent to the mailing lists in question, not to
-> anyone personally.  The list of individuals is far to great to do that.
-> I'm hoping no mailing lists reject the patches based on the number of
-> recipients.
+We need to start treating DMA masks as something which is specific to
+the bus that the device resides on, otherwise we're going to hit all
+sorts of nasty issues with LPAE and 32-bit DMA controllers in >32-bit
+systems, where memory is offset from PFN 0.
 
-Huh, I think it was enough to send only 3 patches to the b43-dev@. Like:
-[PATCH 01/51] DMA-API: provide a helper to set both DMA and coherent DMA masks
-[PATCH 14/51] DMA-API: net: b43: (...)
-[PATCH 15/51] DMA-API: net: b43legacy: (...)
-;)
+In order to start doing this, we convert the DMA mask to a PFN using
+the device specific dma_to_pfn() macro.  This is the reverse of the
+pfn_to_dma() macro which is used to get the DMA address for the device.
 
-I believe Joe has some nice script for doing it that way. When fixing
-some coding style / formatting, he sends only related patches to the
-given ML.
+This gives us a PFN mask, which we can then check against the PFN
+limit of the DMA zone.
 
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+---
+ arch/arm/mm/dma-mapping.c |   49 ++++++++++++++++++++++++++++++++++++++++----
+ arch/arm/mm/init.c        |    2 +
+ arch/arm/mm/mm.h          |    2 +
+ 3 files changed, 48 insertions(+), 5 deletions(-)
+
+diff --git a/arch/arm/mm/dma-mapping.c b/arch/arm/mm/dma-mapping.c
+index f5e1a84..13d55e1 100644
+--- a/arch/arm/mm/dma-mapping.c
++++ b/arch/arm/mm/dma-mapping.c
+@@ -173,10 +173,30 @@ static u64 get_coherent_dma_mask(struct device *dev)
+ 			return 0;
+ 		}
+ 
+-		if ((~mask) & (u64)arm_dma_limit) {
+-			dev_warn(dev, "coherent DMA mask %#llx is smaller "
+-				 "than system GFP_DMA mask %#llx\n",
+-				 mask, (u64)arm_dma_limit);
++		/*
++		 * If the mask allows for more memory than we can address,
++		 * and we actually have that much memory, then fail the
++		 * allocation.
++		 */
++		if (sizeof(mask) != sizeof(dma_addr_t) &&
++		    mask > (dma_addr_t)~0 &&
++		    dma_to_pfn(dev, ~0) > arm_dma_pfn_limit) {
++			dev_warn(dev, "Coherent DMA mask %#llx is larger than dma_addr_t allows\n",
++				 mask);
++			dev_warn(dev, "Driver did not use or check the return value from dma_set_coherent_mask()?\n");
++			return 0;
++		}
++
++		/*
++		 * Now check that the mask, when translated to a PFN,
++		 * fits within the allowable addresses which we can
++		 * allocate.
++		 */
++		if (dma_to_pfn(dev, mask) < arm_dma_pfn_limit) {
++			dev_warn(dev, "Coherent DMA mask %#llx (pfn %#lx-%#lx) covers a smaller range of system memory than the DMA zone pfn 0x0-%#lx\n",
++				 mask,
++				 dma_to_pfn(dev, 0), dma_to_pfn(dev, mask) + 1,
++				 arm_dma_pfn_limit + 1);
+ 			return 0;
+ 		}
+ 	}
+@@ -1007,8 +1027,27 @@ void arm_dma_sync_sg_for_device(struct device *dev, struct scatterlist *sg,
+  */
+ int dma_supported(struct device *dev, u64 mask)
+ {
+-	if (mask < (u64)arm_dma_limit)
++	unsigned long limit;
++
++	/*
++	 * If the mask allows for more memory than we can address,
++	 * and we actually have that much memory, then we must
++	 * indicate that DMA to this device is not supported.
++	 */
++	if (sizeof(mask) != sizeof(dma_addr_t) &&
++	    mask > (dma_addr_t)~0 &&
++	    dma_to_pfn(dev, ~0) > arm_dma_pfn_limit)
++		return 0;
++
++	/*
++	 * Translate the device's DMA mask to a PFN limit.  This
++	 * PFN number includes the page which we can DMA to.
++	 */
++	limit = dma_to_pfn(dev, mask);
++
++	if (limit < arm_dma_pfn_limit)
+ 		return 0;
++
+ 	return 1;
+ }
+ EXPORT_SYMBOL(dma_supported);
+diff --git a/arch/arm/mm/init.c b/arch/arm/mm/init.c
+index febaee7..8aab24f 100644
+--- a/arch/arm/mm/init.c
++++ b/arch/arm/mm/init.c
+@@ -218,6 +218,7 @@ EXPORT_SYMBOL(arm_dma_zone_size);
+  * so a successful GFP_DMA allocation will always satisfy this.
+  */
+ phys_addr_t arm_dma_limit;
++unsigned long arm_dma_pfn_limit;
+ 
+ static void __init arm_adjust_dma_zone(unsigned long *size, unsigned long *hole,
+ 	unsigned long dma_size)
+@@ -240,6 +241,7 @@ void __init setup_dma_zone(const struct machine_desc *mdesc)
+ 		arm_dma_limit = PHYS_OFFSET + arm_dma_zone_size - 1;
+ 	} else
+ 		arm_dma_limit = 0xffffffff;
++	arm_dma_pfn_limit = arm_dma_limit >> PAGE_SHIFT;
+ #endif
+ }
+ 
+diff --git a/arch/arm/mm/mm.h b/arch/arm/mm/mm.h
+index d5a4e9a..d5a982d 100644
+--- a/arch/arm/mm/mm.h
++++ b/arch/arm/mm/mm.h
+@@ -81,8 +81,10 @@ extern __init void add_static_vm_early(struct static_vm *svm);
+ 
+ #ifdef CONFIG_ZONE_DMA
+ extern phys_addr_t arm_dma_limit;
++extern unsigned long arm_dma_pfn_limit;
+ #else
+ #define arm_dma_limit ((phys_addr_t)~0)
++#define arm_dma_pfn_limit (~0ul >> PAGE_SHIFT)
+ #endif
+ 
+ extern phys_addr_t arm_lowmem_limit;
 -- 
-Rafał
+1.7.4.4
+
