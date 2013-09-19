@@ -1,107 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:36417 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751199Ab3IFNGM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Sep 2013 09:06:12 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH 1/2] cfg80211: add support for configuring antenna gain
-Date: Fri,  6 Sep 2013 15:06:02 +0200
-Message-Id: <1378472763-36062-1-git-send-email-nbd@openwrt.org> (sfid-20130906_150617_347565_4460D537)
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:39465 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754568Ab3ITMOx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Sep 2013 08:14:53 -0400
+In-Reply-To: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+From: Russell King <rmk+kernel@arm.linux.org.uk>
+To: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
+	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
+	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
+	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	uclinux-dist-devel@blackfin.uclinux.org
+Cc: Viresh Kumar <viresh.linux@gmail.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>
+Subject: [PATCH 30/51] DMA-API: dma: dw_dmac.c: convert to use
+ dma_coerce_mask_and_coherent()
+Message-Id: <E1VMmBi-0007iw-MP@rmk-PC.arm.linux.org.uk> (sfid-20130920_141504_655825_75AF3767)
+Date: Thu, 19 Sep 2013 22:55:02 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When using high-gain antennas, transmit power needs to be reduced to
-stay within legal EIRP limits.
-This option only reduces transmit power as much as is necessary to
-stay within the limit.
+This code sequence:
+	if (!pdev->dev.dma_mask) {
+		pdev->dev.dma_mask = &pdev->dev.coherent_dma_mask;
+		pdev->dev.coherent_dma_mask = DMA_BIT_MASK(32);
+	}
+bypasses the architectures check on the DMA mask.  It can be replaced
+with dma_coerce_mask_and_coherent(), avoiding the direct initialization
+of this mask.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
 ---
- include/net/cfg80211.h       |  2 ++
- include/uapi/linux/nl80211.h |  5 +++++
- net/wireless/nl80211.c       | 17 +++++++++++++++++
- 3 files changed, 24 insertions(+)
+ drivers/dma/dw/platform.c |    8 +++-----
+ 1 files changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index d530c54..6b73781 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2061,6 +2061,7 @@ struct cfg80211_update_ft_ies_params {
-  *	(as advertised by the nl80211 feature flag.)
-  * @get_tx_power: store the current TX power into the dbm variable;
-  *	return 0 if successful
-+ * @set_antenna_gain: set antenna gain to reduce maximum tx power if necessary
-  *
-  * @set_wds_peer: set the WDS peer for a WDS interface
-  *
-@@ -2283,6 +2284,7 @@ struct cfg80211_ops {
- 				enum nl80211_tx_power_setting type, int mbm);
- 	int	(*get_tx_power)(struct wiphy *wiphy, struct wireless_dev *wdev,
- 				int *dbm);
-+	int	(*set_antenna_gain)(struct wiphy *wiphy, int dbi);
+diff --git a/drivers/dma/dw/platform.c b/drivers/dma/dw/platform.c
+index e35d975..453822c 100644
+--- a/drivers/dma/dw/platform.c
++++ b/drivers/dma/dw/platform.c
+@@ -191,11 +191,9 @@ static int dw_probe(struct platform_device *pdev)
+ 	if (IS_ERR(chip->regs))
+ 		return PTR_ERR(chip->regs);
  
- 	int	(*set_wds_peer)(struct wiphy *wiphy, struct net_device *dev,
- 				const u8 *addr);
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index fde2c02..14b8d50 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1496,6 +1496,9 @@ enum nl80211_commands {
-  * @NL80211_ATTR_RXMGMT_FLAGS: flags for nl80211_send_mgmt(), u32.
-  *	As specified in the &enum nl80211_rxmgmt_flags.
-  *
-+ * @NL80211_ATTR_WIPHY_ANTENNA_GAIN: Configured antenna gain. Used to reduce
-+ *	transmit power to stay within regulatory limits. u32, dBi.
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1806,6 +1809,8 @@ enum nl80211_attrs {
+-	/* Apply default dma_mask if needed */
+-	if (!dev->dma_mask) {
+-		dev->dma_mask = &dev->coherent_dma_mask;
+-		dev->coherent_dma_mask = DMA_BIT_MASK(32);
+-	}
++	err = dma_coerce_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
++	if (err)
++		return err;
  
- 	NL80211_ATTR_RXMGMT_FLAGS,
- 
-+	NL80211_ATTR_WIPHY_ANTENNA_GAIN,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index af8d84a..a29ab58 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -354,6 +354,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 	[NL80211_ATTR_CSA_IES] = { .type = NLA_NESTED },
- 	[NL80211_ATTR_CSA_C_OFF_BEACON] = { .type = NLA_U16 },
- 	[NL80211_ATTR_CSA_C_OFF_PRESP] = { .type = NLA_U16 },
-+	[NL80211_ATTR_WIPHY_ANTENNA_GAIN] = { .type = NLA_U32 },
- };
- 
- /* policy for the key attributes */
-@@ -2033,6 +2034,22 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
- 			goto bad_res;
- 	}
- 
-+	if (info->attrs[NL80211_ATTR_WIPHY_ANTENNA_GAIN]) {
-+		int idx, dbi = 0;
-+
-+		if (!rdev->ops->set_antenna_gain) {
-+			result = -EOPNOTSUPP;
-+			goto bad_res;
-+		}
-+
-+		idx = NL80211_ATTR_WIPHY_ANTENNA_GAIN;
-+		dbi = nla_get_u32(info->attrs[idx]);
-+
-+		result = rdev->ops->set_antenna_gain(&rdev->wiphy, dbi);
-+		if (result)
-+			goto bad_res;
-+	}
-+
- 	if (info->attrs[NL80211_ATTR_WIPHY_ANTENNA_TX] &&
- 	    info->attrs[NL80211_ATTR_WIPHY_ANTENNA_RX]) {
- 		u32 tx_ant, rx_ant;
+ 	pdata = dev_get_platdata(dev);
+ 	if (!pdata)
 -- 
-1.8.0.2
+1.7.4.4
 
