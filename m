@@ -1,102 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:47842 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754350Ab3ISWtQ (ORCPT
+Received: from mail-ye0-f171.google.com ([209.85.213.171]:64221 "EHLO
+	mail-ye0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751157Ab3ISQSW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Sep 2013 18:49:16 -0400
-In-Reply-To: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-From: Russell King <rmk+kernel@arm.linux.org.uk>
-To: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
-	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
-	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
-	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	uclinux-dist-devel@blackfin.uclinux.org
-Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	Jesse Brandeburg <jesse.brandeburg@intel.com>,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	Carolyn Wyborny <carolyn.wyborny@intel.com>,
-	Don Skidmore <donald.c.skidmore@intel.com>,
-	Greg Rose <gregory.v.rose@intel.com>,
-	Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>,
-	Alex Duyck <alexander.h.duyck@intel.com>,
-	John Ronciak <john.ronciak@intel.com>,
-	Tushar Dave <tushar.n.dave@intel.com>
-Subject: [PATCH 05/51] DMA-API: net: intel/igbvf: fix 32-bit DMA mask
- handling
-Message-Id: <E1VMlnT-0007fa-Al@rmk-PC.arm.linux.org.uk> (sfid-20130920_004927_541857_0C7F5A0D)
-Date: Thu, 19 Sep 2013 22:29:59 +0100
+	Thu, 19 Sep 2013 12:18:22 -0400
+Received: by mail-ye0-f171.google.com with SMTP id q3so3571285yen.30
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Sep 2013 09:18:21 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 1/4] cfg80211: export reg_initiator_name()
+Date: Thu, 19 Sep 2013 11:18:07 -0500
+Message-Id: <1379607490-18972-2-git-send-email-mcgrof@do-not-panic.com> (sfid-20130919_181825_353097_F725FC3A)
+In-Reply-To: <1379607490-18972-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1379607490-18972-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The fallback to 32-bit DMA mask is rather odd:
-	err = dma_set_mask(&pdev->dev, DMA_BIT_MASK(64));
-	if (!err) {
-		err = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(64));
-		if (!err)
-			pci_using_dac = 1;
-	} else {
-		err = dma_set_mask(&pdev->dev, DMA_BIT_MASK(32));
-		if (err) {
-			err = dma_set_coherent_mask(&pdev->dev,
-						    DMA_BIT_MASK(32));
-			if (err) {
-				dev_err(&pdev->dev, "No usable DMA "
-					"configuration, aborting\n");
-				goto err_dma;
-			}
-		}
-	}
-This means we only set the coherent DMA mask in the fallback path if
-the DMA mask set failed, which is silly.  This fixes it to set the
-coherent DMA mask only if dma_set_mask() succeeded, and to error out
-if either fails.
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+Drivers can now use this to parse the regulatory request and
+be more verbose when needed.
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- drivers/net/ethernet/intel/igbvf/netdev.c |   18 ++++++------------
- 1 files changed, 6 insertions(+), 12 deletions(-)
+ include/net/cfg80211.h |    9 +++++++++
+ net/wireless/reg.c     |   27 +++++++++++++++++----------
+ 2 files changed, 26 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/ethernet/intel/igbvf/netdev.c b/drivers/net/ethernet/intel/igbvf/netdev.c
-index 93eb7ee..4e6b02f 100644
---- a/drivers/net/ethernet/intel/igbvf/netdev.c
-+++ b/drivers/net/ethernet/intel/igbvf/netdev.c
-@@ -2638,21 +2638,15 @@ static int igbvf_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		return err;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index d530c54..afb2323 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3474,6 +3474,15 @@ extern void wiphy_apply_custom_regulatory(
+ const struct ieee80211_reg_rule *freq_reg_info(struct wiphy *wiphy,
+ 					       u32 center_freq);
  
- 	pci_using_dac = 0;
--	err = dma_set_mask(&pdev->dev, DMA_BIT_MASK(64));
-+	err = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
- 	if (!err) {
--		err = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(64));
--		if (!err)
--			pci_using_dac = 1;
-+		pci_using_dac = 1;
- 	} else {
--		err = dma_set_mask(&pdev->dev, DMA_BIT_MASK(32));
-+		err = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
- 		if (err) {
--			err = dma_set_coherent_mask(&pdev->dev,
--						    DMA_BIT_MASK(32));
--			if (err) {
--				dev_err(&pdev->dev, "No usable DMA "
--				        "configuration, aborting\n");
--				goto err_dma;
--			}
-+			dev_err(&pdev->dev, "No usable DMA "
-+			        "configuration, aborting\n");
-+			goto err_dma;
- 		}
++/**
++ * reg_initiator_name - map regulatory request initiator enum to name
++ * @initiator: the regulatory request initiator
++ *
++ * You can use this to map the regulatory request initiator enum to a
++ * proper string representation.
++ */
++const char *reg_initiator_name(enum nl80211_reg_initiator initiator);
++
+ /*
+  * callbacks for asynchronous cfg80211 methods, notification
+  * functions and BSS handling helpers
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index de06d5d..5164716 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -758,23 +758,25 @@ const struct ieee80211_reg_rule *freq_reg_info(struct wiphy *wiphy,
+ }
+ EXPORT_SYMBOL(freq_reg_info);
+ 
+-#ifdef CONFIG_CFG80211_REG_DEBUG
+-static const char *reg_initiator_name(enum nl80211_reg_initiator initiator)
++const char *reg_initiator_name(enum nl80211_reg_initiator initiator)
+ {
+ 	switch (initiator) {
+ 	case NL80211_REGDOM_SET_BY_CORE:
+-		return "Set by core";
++		return "core";
+ 	case NL80211_REGDOM_SET_BY_USER:
+-		return "Set by user";
++		return "user";
+ 	case NL80211_REGDOM_SET_BY_DRIVER:
+-		return "Set by driver";
++		return "driver";
+ 	case NL80211_REGDOM_SET_BY_COUNTRY_IE:
+-		return "Set by country IE";
++		return "country IE";
+ 	default:
+ 		WARN_ON(1);
+-		return "Set by bug";
++		return "bug";
+ 	}
+ }
++EXPORT_SYMBOL(reg_initiator_name);
++
++#ifdef CONFIG_CFG80211_REG_DEBUG
+ 
+ static void chan_reg_rule_print_dbg(struct ieee80211_channel *chan,
+ 				    const struct ieee80211_reg_rule *reg_rule)
+@@ -969,14 +971,17 @@ static bool ignore_reg_update(struct wiphy *wiphy,
+ 	struct regulatory_request *lr = get_last_request();
+ 
+ 	if (!lr) {
+-		REG_DBG_PRINT("Ignoring regulatory request %s since last_request is not set\n",
++		REG_DBG_PRINT("Ignoring regulatory request set by %s "
++			      "since last_request is not set\n",
+ 			      reg_initiator_name(initiator));
+ 		return true;
  	}
  
+ 	if (initiator == NL80211_REGDOM_SET_BY_CORE &&
+ 	    wiphy->flags & WIPHY_FLAG_CUSTOM_REGULATORY) {
+-		REG_DBG_PRINT("Ignoring regulatory request %s since the driver uses its own custom regulatory domain\n",
++		REG_DBG_PRINT("Ignoring regulatory request set by %s "
++			      "since the driver uses its own custom "
++			      "regulatory domain\n",
+ 			      reg_initiator_name(initiator));
+ 		return true;
+ 	}
+@@ -988,7 +993,9 @@ static bool ignore_reg_update(struct wiphy *wiphy,
+ 	if (wiphy->flags & WIPHY_FLAG_STRICT_REGULATORY && !wiphy->regd &&
+ 	    initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE &&
+ 	    !is_world_regdom(lr->alpha2)) {
+-		REG_DBG_PRINT("Ignoring regulatory request %s since the driver requires its own regulatory domain to be set first\n",
++		REG_DBG_PRINT("Ignoring regulatory request set by %s "
++			      "since the driver requires its own regulatory "
++			      "domain to be set first\n",
+ 			      reg_initiator_name(initiator));
+ 		return true;
+ 	}
 -- 
-1.7.4.4
+1.7.10.4
 
