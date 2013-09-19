@@ -1,37 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:48154 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753749Ab3ICGwj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Sep 2013 02:52:39 -0400
-From: Sujith Manoharan <sujith@msujith.org>
+Received: from ebb06.tieto.com ([131.207.168.38]:47081 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752026Ab3ISHoP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Sep 2013 03:44:15 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH] ath10k: fix tracing of ath10k_wmi_cmd
+Date: Thu, 19 Sep 2013 09:44:09 +0200
+Message-ID: <1379576649-3947-1-git-send-email-michal.kazior@tieto.com> (sfid-20130919_094419_140158_5534A948)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21029.34383.979005.849228@gargle.gargle.HOWL> (sfid-20130903_085244_404159_79EAD53C)
-Date: Tue, 3 Sep 2013 12:18:47 +0530
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/4] initvals: Remove duplicate mapping for AR9485 arrays
-In-Reply-To: <522580E2.2090501@openwrt.org>
-References: <1378184318-1169-1-git-send-email-sujith@msujith.org>
-	<1378184318-1169-2-git-send-email-sujith@msujith.org>
-	<522580E2.2090501@openwrt.org>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau wrote:
-> Why did you make this change? At least the mac_postamble is still
-> identical, and with the other arrays you can just let the initvals tool
-> detect if mappings are duplicate or not.
+One of my recent patches broke tracing. kbuild
+test robot reported this issue.
 
-AR9485 is still maintained and it makes it a bit easier to update the
-initvals. The gain value arrays differ from AR9462/AR9300, so only
-mac_postamble can be reused - which is a small array and space savings
-is marginal.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/trace.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-If PC-OEM card support is compiled out, we can have a bigger gain.
-AR9485 1.1, AR9462 2.0, AR9462 2.1, AR9565 1.0/1.0.1 (AR9565 1.1 to come)
-are not needed for AP platforms.
+diff --git a/drivers/net/wireless/ath/ath10k/trace.h b/drivers/net/wireless/ath/ath10k/trace.h
+index fd53130..90817dd 100644
+--- a/drivers/net/wireless/ath/ath10k/trace.h
++++ b/drivers/net/wireless/ath/ath10k/trace.h
+@@ -119,7 +119,7 @@ TRACE_EVENT(ath10k_wmi_cmd,
+ 		__field(unsigned int, id)
+ 		__field(size_t, buf_len)
+ 		__dynamic_array(u8, buf, buf_len)
+-		__field(int ret)
++		__field(int, ret)
+ 	),
+ 
+ 	TP_fast_assign(
+-- 
+1.7.9.5
 
-Sujith
