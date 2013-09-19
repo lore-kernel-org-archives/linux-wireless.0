@@ -1,190 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:44442 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755543Ab3IYVIp (ORCPT
+Received: from mail-yh0-f54.google.com ([209.85.213.54]:34861 "EHLO
+	mail-yh0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751157Ab3ISQS0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Sep 2013 17:08:45 -0400
-Subject: [PATCH 2/3] ath10k: store separate pointers for firmware data
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 26 Sep 2013 00:08:39 +0300
-Message-ID: <20130925210839.2596.33661.stgit@localhost6.localdomain6> (sfid-20130925_230849_649379_1A500D5C)
-In-Reply-To: <20130925210455.2596.36889.stgit@localhost6.localdomain6>
-References: <20130925210455.2596.36889.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Thu, 19 Sep 2013 12:18:26 -0400
+Received: by mail-yh0-f54.google.com with SMTP id z20so4231805yhz.27
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Sep 2013 09:18:26 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 2/4] ath: move common dynamic regulatory domain setting to a helper
+Date: Thu, 19 Sep 2013 11:18:08 -0500
+Message-Id: <1379607490-18972-3-git-send-email-mcgrof@do-not-panic.com> (sfid-20130919_181829_250802_2D19E380)
+In-Reply-To: <1379607490-18972-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1379607490-18972-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Needed for firmware IE formatted images.
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+This moves the dynamic regulatory domain selection code into
+a helper.
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- drivers/net/wireless/ath/ath10k/core.c |   43 ++++++++++++++++++++++----------
- drivers/net/wireless/ath/ath10k/core.h |    8 ++++++
- 2 files changed, 37 insertions(+), 14 deletions(-)
+ drivers/net/wireless/ath/regd.c |   55 ++++++++++++++++++++++++++-------------
+ 1 file changed, 37 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index e07c487..6a354f7 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -189,8 +189,7 @@ static const struct firmware *ath10k_fetch_fw_file(struct ath10k *ar,
- 	return fw;
+diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
+index 7d077c7..8373650 100644
+--- a/drivers/net/wireless/ath/regd.c
++++ b/drivers/net/wireless/ath/regd.c
+@@ -356,14 +356,48 @@ static u16 ath_regd_find_country_by_name(char *alpha2)
+ 	return -1;
  }
  
--static int ath10k_push_board_ext_data(struct ath10k *ar,
--				      const struct firmware *fw)
-+static int ath10k_push_board_ext_data(struct ath10k *ar)
- {
- 	u32 board_data_size = QCA988X_BOARD_DATA_SZ;
- 	u32 board_ext_data_size = QCA988X_BOARD_EXT_DATA_SZ;
-@@ -210,14 +209,14 @@ static int ath10k_push_board_ext_data(struct ath10k *ar,
- 	if (board_ext_data_addr == 0)
- 		return 0;
- 
--	if (fw->size != (board_data_size + board_ext_data_size)) {
-+	if (ar->board_len != (board_data_size + board_ext_data_size)) {
- 		ath10k_err("invalid board (ext) data sizes %zu != %d+%d\n",
--			   fw->size, board_data_size, board_ext_data_size);
-+			   ar->board_len, board_data_size, board_ext_data_size);
- 		return -EINVAL;
- 	}
- 
- 	ret = ath10k_bmi_write_memory(ar, board_ext_data_addr,
--				      fw->data + board_data_size,
-+				      ar->board_data + board_data_size,
- 				      board_ext_data_size);
- 	if (ret) {
- 		ath10k_err("could not write board ext data (%d)\n", ret);
-@@ -236,12 +235,11 @@ static int ath10k_push_board_ext_data(struct ath10k *ar,
- 
- static int ath10k_download_board_data(struct ath10k *ar)
- {
--	const struct firmware *fw = ar->board;
- 	u32 board_data_size = QCA988X_BOARD_DATA_SZ;
- 	u32 address;
- 	int ret;
- 
--	ret = ath10k_push_board_ext_data(ar, fw);
-+	ret = ath10k_push_board_ext_data(ar);
- 	if (ret) {
- 		ath10k_err("could not push board ext data (%d)\n", ret);
- 		goto exit;
-@@ -253,8 +251,9 @@ static int ath10k_download_board_data(struct ath10k *ar)
- 		goto exit;
- 	}
- 
--	ret = ath10k_bmi_write_memory(ar, address, fw->data,
--				      min_t(u32, board_data_size, fw->size));
-+	ret = ath10k_bmi_write_memory(ar, address, ar->board_data,
-+				      min_t(u32, board_data_size,
-+					    ar->board_len));
- 	if (ret) {
- 		ath10k_err("could not write board data (%d)\n", ret);
- 		goto exit;
-@@ -272,17 +271,16 @@ exit:
- 
- static int ath10k_download_and_run_otp(struct ath10k *ar)
- {
--	const struct firmware *fw = ar->otp;
- 	u32 address = ar->hw_params.patch_load_addr;
- 	u32 exec_param;
- 	int ret;
- 
- 	/* OTP is optional */
- 
--	if (!ar->otp)
-+	if (!ar->otp_data || !ar->otp_len)
- 		return 0;
- 
--	ret = ath10k_bmi_fast_download(ar, address, fw->data, fw->size);
-+	ret = ath10k_bmi_fast_download(ar, address, ar->otp_data, ar->otp_len);
- 	if (ret) {
- 		ath10k_err("could not write otp (%d)\n", ret);
- 		goto exit;
-@@ -301,13 +299,13 @@ exit:
- 
- static int ath10k_download_fw(struct ath10k *ar)
- {
--	const struct firmware *fw = ar->firmware;
- 	u32 address;
- 	int ret;
- 
- 	address = ar->hw_params.patch_load_addr;
- 
--	ret = ath10k_bmi_fast_download(ar, address, fw->data, fw->size);
-+	ret = ath10k_bmi_fast_download(ar, address, ar->firmware_data,
-+				       ar->firmware_len);
- 	if (ret) {
- 		ath10k_err("could not write fw (%d)\n", ret);
- 		goto exit;
-@@ -329,8 +327,16 @@ static void ath10k_core_free_firmware_files(struct ath10k *ar)
- 		release_firmware(ar->firmware);
- 
- 	ar->board = NULL;
-+	ar->board_data = NULL;
-+	ar->board_len = 0;
++static int __ath_reg_dyn_country(struct wiphy *wiphy,
++				 struct ath_regulatory *reg,
++				 struct regulatory_request *request)
++{
++	u16 country_code;
 +
- 	ar->otp = NULL;
-+	ar->otp_data = NULL;
-+	ar->otp_len = 0;
++	if (!ath_is_world_regd(reg))
++		return -EINVAL;
 +
- 	ar->firmware = NULL;
-+	ar->firmware_data = NULL;
-+	ar->firmware_len = 0;
++	country_code = ath_regd_find_country_by_name(request->alpha2);
++	if (country_code == (u16) -1)
++		return -EINVAL;
++
++	reg->current_rd = COUNTRY_ERD_FLAG;
++	reg->current_rd |= country_code;
++
++	__ath_regd_init(reg);
++
++	ath_reg_apply_world_flags(wiphy, request->initiator, reg);
++
++	return 0;
++}
++
++static void ath_reg_dyn_country(struct wiphy *wiphy,
++				struct ath_regulatory *reg,
++				struct regulatory_request *request)
++{
++	if (__ath_reg_dyn_country(wiphy, reg, request))
++		return;
++
++	printk(KERN_DEBUG "ath: regdomain 0x%0x "
++			  "dynamically updated by %s\n",
++	       reg->current_rd,
++	       reg_initiator_name(request->initiator));
++}
++
+ void ath_reg_notifier_apply(struct wiphy *wiphy,
+ 			    struct regulatory_request *request,
+ 			    struct ath_regulatory *reg)
+ {
+ 	struct ath_common *common = container_of(reg, struct ath_common,
+ 						 regulatory);
+-	u16 country_code;
+-
+ 	/* We always apply this */
+ 	ath_reg_apply_radar_flags(wiphy);
+ 
+@@ -391,22 +425,7 @@ void ath_reg_notifier_apply(struct wiphy *wiphy,
+ 	case NL80211_REGDOM_SET_BY_USER:
+ 		break;
+ 	case NL80211_REGDOM_SET_BY_COUNTRY_IE:
+-		if (!ath_is_world_regd(reg))
+-			break;
+-
+-		country_code = ath_regd_find_country_by_name(request->alpha2);
+-		if (country_code == (u16) -1)
+-			break;
+-
+-		reg->current_rd = COUNTRY_ERD_FLAG;
+-		reg->current_rd |= country_code;
+-
+-		printk(KERN_DEBUG "ath: regdomain 0x%0x updated by CountryIE\n",
+-			reg->current_rd);
+-		__ath_regd_init(reg);
+-
+-		ath_reg_apply_world_flags(wiphy, request->initiator, reg);
+-
++		ath_reg_dyn_country(wiphy, reg, request);
+ 		break;
+ 	}
  }
- 
- static int ath10k_core_fetch_firmware_files(struct ath10k *ar)
-@@ -356,6 +362,9 @@ static int ath10k_core_fetch_firmware_files(struct ath10k *ar)
- 		goto err;
- 	}
- 
-+	ar->board_data = ar->board->data;
-+	ar->board_len = ar->board->size;
-+
- 	ar->firmware = ath10k_fetch_fw_file(ar,
- 					    ar->hw_params.fw.dir,
- 					    ar->hw_params.fw.fw);
-@@ -365,6 +374,9 @@ static int ath10k_core_fetch_firmware_files(struct ath10k *ar)
- 		goto err;
- 	}
- 
-+	ar->firmware_data = ar->firmware->data;
-+	ar->firmware_len = ar->firmware->size;
-+
- 	/* OTP may be undefined. If so, don't fetch it at all */
- 	if (ar->hw_params.fw.otp == NULL)
- 		return 0;
-@@ -378,6 +390,9 @@ static int ath10k_core_fetch_firmware_files(struct ath10k *ar)
- 		goto err;
- 	}
- 
-+	ar->otp_data = ar->otp->data;
-+	ar->otp_len = ar->otp->size;
-+
- 	return 0;
- 
- err:
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 12b03b6..511b20d 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -325,8 +325,16 @@ struct ath10k {
- 	} hw_params;
- 
- 	const struct firmware *board;
-+	const void *board_data;
-+	size_t board_len;
-+
- 	const struct firmware *otp;
-+	const void *otp_data;
-+	size_t otp_len;
-+
- 	const struct firmware *firmware;
-+	const void *firmware_data;
-+	size_t firmware_len;
- 
- 	struct {
- 		struct completion started;
+-- 
+1.7.10.4
 
