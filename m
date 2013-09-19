@@ -1,159 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:54578 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752569Ab3IRMgY (ORCPT
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:39316 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754563Ab3ITLg5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Sep 2013 08:36:24 -0400
-Received: by mail-wg0-f42.google.com with SMTP id m15so5661455wgh.3
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Sep 2013 05:36:22 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CA+BoTQ=fRoVXNaeiiWUwc_tLiW4GJZnCKJKYO55+JHqOSasAkA@mail.gmail.com>
-References: <1379497651-29933-1-git-send-email-bartosz.markowski@tieto.com>
-	<CA+BoTQ=fRoVXNaeiiWUwc_tLiW4GJZnCKJKYO55+JHqOSasAkA@mail.gmail.com>
-Date: Wed, 18 Sep 2013 14:36:22 +0200
-Message-ID: <CACKGw+HgRbZU4DV5ZFHZA-X-78nEUd87hDeabMr1r1fRc-yOvw@mail.gmail.com> (sfid-20130918_143638_444396_40971080)
-Subject: Re: [PATCH] ath10k: implement host memory chunks feature
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: ath10k@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 20 Sep 2013 07:36:57 -0400
+In-Reply-To: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+From: Russell King <rmk+kernel@arm.linux.org.uk>
+To: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
+	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
+	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
+	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	uclinux-dist-devel@blackfin.uclinux.org
+Cc: Ben Hutchings <bhutchings@solarflare.com>
+Subject: [PATCH 13/51] DMA-API: net: sfc/efx.c: replace
+ dma_set_mask()+dma_set_coherent_mask() with new
+ helper
+Message-Id: <E1VMlvE-0007gc-B5@rmk-PC.arm.linux.org.uk> (sfid-20130920_133714_149161_4EAC2A64)
+Date: Thu, 19 Sep 2013 22:38:00 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 18 September 2013 12:51, Michal Kazior <michal.kazior@tieto.com> wrote:
-> On 18 September 2013 11:47, Bartosz Markowski
+Replace the following sequence:
 
-[...]
+	dma_set_mask(dev, mask);
+	dma_set_coherent_mask(dev, mask);
 
->> +#define MAX_MEM_CHUNKS 32
->
-> I think this should be prefixed with ATH10K_.
+with a call to the new helper dma_set_mask_and_coherent().
 
-I'll fix this in v2, thanks
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+---
+ drivers/net/ethernet/sfc/efx.c |   12 +-----------
+ 1 files changed, 1 insertions(+), 11 deletions(-)
 
->> +
->> +       /* Allocate/Free the host memory for firmware use */
->> +       int (*chunk_alloc)(struct ath10k *ar, u32 req_id, u32 index,
->> +                          u32 num_units, u32 unit_len);
->> +
->> +       void (*chunk_free)(struct ath10k *ar, int idx);
->
-> Can't we simply use dma_alloc_coherent(ar->dev) and avoid this HIF
-> abstraction? pci_alloc_consistent is just an alias for
-> dma_alloc_coherent anyway.
-
-I guess so, but that's only an option If there's no NACK for current
-version, I will keep it as is.
-
->> @@ -173,4 +179,21 @@ static inline int ath10k_hif_resume(struct ath10k *ar)
->>         return ar->hif.ops->resume(ar);
->>  }
->>
->> +static inline int ath10k_hif_chunk_alloc(struct ath10k *ar,
->> +                                        u32 req_id,
->> +                                        u32 idx,
->> +                                        u32 num_units,
->> +                                        u32 unit_len)
->> +{
->> +       if (!ar->hif.ops->chunk_alloc)
->> +               return -EOPNOTSUPP;
->> +
->> +       return ar->hif.ops->chunk_alloc(ar, req_id, idx, num_units, unit_len);
->> +}
->> +
->> +static inline void ath10k_hif_chunk_free(struct ath10k *ar, int idx)
->> +{
->
-> Missing check for hif.ops->chunk_free pointer here?
-
-As in all void callbacks there. Maybe I will send a separte patch to add this.
-
->> +       ar->hif.ops->chunk_free(ar, idx);
->> +}
->> +
->>  #endif /* _HIF_H_ */
->> diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
->> index f1faf46..547d67d 100644
->> --- a/drivers/net/wireless/ath/ath10k/pci.c
->> +++ b/drivers/net/wireless/ath/ath10k/pci.c
->> @@ -1966,6 +1966,49 @@ static int ath10k_pci_hif_resume(struct ath10k *ar)
->>  }
->>  #endif
->>
->> +static int ath10k_pci_hif_chunk_alloc(struct ath10k *ar,
->> +                                     u32 req_id,
->> +                                     u32 idx,
->> +                                     u32 num_units,
->> +                                     u32 unit_len)
->> +{
->> +       dma_addr_t paddr;
->> +       struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
->> +
->> +       if (!num_units  || !unit_len)
->> +               return 0;
->> +
->
-> I'm not seeing any checks against buffer overflow of mem_chunks[req_id].
-
-if (idx == ATH10K_MAX_MEM_CHUNKS) in ath10k_wmi_alloc_host_mem ?
-
->> diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
->> index 6803ead..89de893 100644
->> --- a/drivers/net/wireless/ath/ath10k/wmi.c
->> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
->> @@ -22,6 +22,7 @@
->>  #include "debug.h"
->>  #include "wmi.h"
->>  #include "mac.h"
->> +#include "hif.h"
->>
->>  int ath10k_wmi_wait_for_service_ready(struct ath10k *ar)
->>  {
->> @@ -964,6 +965,46 @@ static void ath10k_wmi_event_vdev_install_key_complete(struct ath10k *ar,
->>         ath10k_dbg(ATH10K_DBG_WMI, "WMI_VDEV_INSTALL_KEY_COMPLETE_EVENTID\n");
->>  }
->>
->> +#define HOST_MEM_SIZE_UNIT 4
->> +
->> +static void ath10k_wmi_alloc_host_mem(struct ath10k *ar, u32 req_id,
->> +                                     u32 num_units, u32 unit_len)
->> +{
->> +       u32 remaining_units, allocated_units, idx;
->> +
->> +       /* adjust the length to nearest multiple of unit size */
->> +       unit_len = (unit_len + (HOST_MEM_SIZE_UNIT - 1)) &
->> +                  (~(HOST_MEM_SIZE_UNIT - 1));
->
-> round_up() ?
-
-Good point :) Thanks
-
->> @@ -1013,12 +1054,44 @@ static void ath10k_wmi_service_ready_event_rx(struct ath10k *ar,
->>                          ar->fw_version_build);
->>         }
->>
->> -       /* FIXME: it probably should be better to support this */
->> -       if (__le32_to_cpu(ev->num_mem_reqs) > 0) {
->> -               ath10k_warn("target requested %d memory chunks; ignoring\n",
->> +       WARN_ON(__le32_to_cpu(ev->num_mem_reqs) > WMI_MAX_MEM_REQS);
->
-> This seems wrong.
->
-> ath10k_warn() should be used here. Is it really safe to continue and
-> use the num_mem_reqs while it exceeds the limit?
-
-I will change to ath10k_warn(). As far as I know there's no case FW
-requests more than 1 mem_req, but
-hmm maybe it's better to fallback here..
-
->> +
->> +       if (__le32_to_cpu(ev->num_mem_reqs)) {
->
-> if (!__le32_to_cpu(ev->num_mem_reqs))
->   return;
-
-Right, thanks
-
+diff --git a/drivers/net/ethernet/sfc/efx.c b/drivers/net/ethernet/sfc/efx.c
+index 07c9bc4..2e27837 100644
+--- a/drivers/net/ethernet/sfc/efx.c
++++ b/drivers/net/ethernet/sfc/efx.c
+@@ -1121,7 +1121,7 @@ static int efx_init_io(struct efx_nic *efx)
+ 	 */
+ 	while (dma_mask > 0x7fffffffUL) {
+ 		if (dma_supported(&pci_dev->dev, dma_mask)) {
+-			rc = dma_set_mask(&pci_dev->dev, dma_mask);
++			rc = dma_set_mask_and_coherent(&pci_dev->dev, dma_mask);
+ 			if (rc == 0)
+ 				break;
+ 		}
+@@ -1134,16 +1134,6 @@ static int efx_init_io(struct efx_nic *efx)
+ 	}
+ 	netif_dbg(efx, probe, efx->net_dev,
+ 		  "using DMA mask %llx\n", (unsigned long long) dma_mask);
+-	rc = dma_set_coherent_mask(&pci_dev->dev, dma_mask);
+-	if (rc) {
+-		/* dma_set_coherent_mask() is not *allowed* to
+-		 * fail with a mask that dma_set_mask() accepted,
+-		 * but just in case...
+-		 */
+-		netif_err(efx, probe, efx->net_dev,
+-			  "failed to set consistent DMA mask\n");
+-		goto fail2;
+-	}
+ 
+ 	efx->membase_phys = pci_resource_start(efx->pci_dev, EFX_MEM_BAR);
+ 	rc = pci_request_region(pci_dev, EFX_MEM_BAR, "sfc");
 -- 
-Bartosz
+1.7.4.4
+
