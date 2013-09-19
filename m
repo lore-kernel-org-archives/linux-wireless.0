@@ -1,133 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0116.hostedemail.com ([216.40.44.116]:50104 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755405Ab3IYTii (ORCPT
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:39225 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754519Ab3ITLG5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Sep 2013 15:38:38 -0400
-From: Joe Perches <joe@perches.com>
-To: netdev@vger.kernel.org
-Cc: "David S. Miller" <davem@davemloft.net>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 08/11] iwlwifi: Remove extern from function prototypes
-Date: Wed, 25 Sep 2013 12:37:26 -0700
-Message-Id: <b3818394ccdf68d834ca1060c1d5a1fc44e2daee.1380137610.git.joe@perches.com> (sfid-20130925_224458_991406_76CBECC7)
-In-Reply-To: <cover.1380137609.git.joe@perches.com>
-References: <cover.1380137609.git.joe@perches.com>
+	Fri, 20 Sep 2013 07:06:57 -0400
+In-Reply-To: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+From: Russell King <rmk+kernel@arm.linux.org.uk>
+To: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
+	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
+	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
+	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	uclinux-dist-devel@blackfin.uclinux.org
+Subject: [PATCH 45/51] DMA-API: firmware/google/gsmi.c: avoid direct access
+ to DMA masks
+Message-Id: <E1VMnTf-0007ss-9q@rmk-PC.arm.linux.org.uk> (sfid-20130920_130700_359934_7DF429D4)
+Date: Fri, 20 Sep 2013 00:17:39 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are a mix of function prototypes with and without extern
-in the kernel sources.  Standardize on not using extern for
-function prototypes.
+This driver doesn't need to directly access DMA masks if it uses the
+platform_device_register_full() API rather than
+platform_device_register_simple() - the former function can initialize
+the DMA mask appropriately.
 
-Function prototypes don't need to be written with extern.
-extern is assumed by the compiler.  Its use is as unnecessary as
-using auto to declare automatic/local variables in a block.
-
-Signed-off-by: Joe Perches <joe@perches.com>
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
 ---
- drivers/net/wireless/iwlwifi/dvm/agn.h | 2 +-
- drivers/net/wireless/iwlwifi/dvm/dev.h | 2 +-
- drivers/net/wireless/iwlwifi/dvm/rs.h  | 8 ++++----
- drivers/net/wireless/iwlwifi/mvm/rs.h  | 9 ++++-----
- 4 files changed, 10 insertions(+), 11 deletions(-)
+ drivers/firmware/google/gsmi.c |   13 ++++++++-----
+ 1 files changed, 8 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/dvm/agn.h b/drivers/net/wireless/iwlwifi/dvm/agn.h
-index f2a86ff..23d5f02 100644
---- a/drivers/net/wireless/iwlwifi/dvm/agn.h
-+++ b/drivers/net/wireless/iwlwifi/dvm/agn.h
-@@ -397,7 +397,7 @@ static inline __le32 iwl_hw_set_rate_n_flags(u8 rate, u32 flags)
- 	return cpu_to_le32(flags|(u32)rate);
- }
+diff --git a/drivers/firmware/google/gsmi.c b/drivers/firmware/google/gsmi.c
+index 6eb535f..e5a67b2 100644
+--- a/drivers/firmware/google/gsmi.c
++++ b/drivers/firmware/google/gsmi.c
+@@ -764,6 +764,13 @@ static __init int gsmi_system_valid(void)
+ static struct kobject *gsmi_kobj;
+ static struct efivars efivars;
  
--extern int iwl_alive_start(struct iwl_priv *priv);
-+int iwl_alive_start(struct iwl_priv *priv);
++static const struct platform_device_info gsmi_dev_info = {
++	.name		= "gsmi",
++	.id		= -1,
++	/* SMI callbacks require 32bit addresses */
++	.dma_mask	= DMA_BIT_MASK(32),
++};
++
+ static __init int gsmi_init(void)
+ {
+ 	unsigned long flags;
+@@ -776,7 +783,7 @@ static __init int gsmi_init(void)
+ 	gsmi_dev.smi_cmd = acpi_gbl_FADT.smi_command;
  
- #ifdef CONFIG_IWLWIFI_DEBUG
- void iwl_print_rx_config_cmd(struct iwl_priv *priv,
-diff --git a/drivers/net/wireless/iwlwifi/dvm/dev.h b/drivers/net/wireless/iwlwifi/dvm/dev.h
-index a79fdd1..7434d9e 100644
---- a/drivers/net/wireless/iwlwifi/dvm/dev.h
-+++ b/drivers/net/wireless/iwlwifi/dvm/dev.h
-@@ -270,7 +270,7 @@ struct iwl_sensitivity_ranges {
-  * iwlXXXX_     <-- Hardware specific (implemented in iwl-XXXX.c for XXXX)
-  *
-  ****************************************************************************/
--extern void iwl_update_chain_flags(struct iwl_priv *priv);
-+void iwl_update_chain_flags(struct iwl_priv *priv);
- extern const u8 iwl_bcast_addr[ETH_ALEN];
+ 	/* register device */
+-	gsmi_dev.pdev = platform_device_register_simple("gsmi", -1, NULL, 0);
++	gsmi_dev.pdev = platform_device_register_full(&gsmi_dev_info);
+ 	if (IS_ERR(gsmi_dev.pdev)) {
+ 		printk(KERN_ERR "gsmi: unable to register platform device\n");
+ 		return PTR_ERR(gsmi_dev.pdev);
+@@ -785,10 +792,6 @@ static __init int gsmi_init(void)
+ 	/* SMI access needs to be serialized */
+ 	spin_lock_init(&gsmi_dev.lock);
  
- #define IWL_OPERATION_MODE_AUTO     0
-diff --git a/drivers/net/wireless/iwlwifi/dvm/rs.h b/drivers/net/wireless/iwlwifi/dvm/rs.h
-index 5d83cab..26fc550 100644
---- a/drivers/net/wireless/iwlwifi/dvm/rs.h
-+++ b/drivers/net/wireless/iwlwifi/dvm/rs.h
-@@ -407,8 +407,8 @@ static inline u8 first_antenna(u8 mask)
- 
- 
- /* Initialize station's rate scaling information after adding station */
--extern void iwl_rs_rate_init(struct iwl_priv *priv,
--			     struct ieee80211_sta *sta, u8 sta_id);
-+void iwl_rs_rate_init(struct iwl_priv *priv, struct ieee80211_sta *sta,
-+		      u8 sta_id);
- 
- /**
-  * iwl_rate_control_register - Register the rate control algorithm callbacks
-@@ -420,7 +420,7 @@ extern void iwl_rs_rate_init(struct iwl_priv *priv,
-  * ieee80211_register_hw
-  *
-  */
--extern int iwlagn_rate_control_register(void);
-+int iwlagn_rate_control_register(void);
- 
- /**
-  * iwl_rate_control_unregister - Unregister the rate control callbacks
-@@ -428,6 +428,6 @@ extern int iwlagn_rate_control_register(void);
-  * This should be called after calling ieee80211_unregister_hw, but before
-  * the driver is unloaded.
-  */
--extern void iwlagn_rate_control_unregister(void);
-+void iwlagn_rate_control_unregister(void);
- 
- #endif /* __iwl_agn__rs__ */
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.h b/drivers/net/wireless/iwlwifi/mvm/rs.h
-index 335cf16..465d40e 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.h
-@@ -314,9 +314,8 @@ static inline u8 num_of_ant(u8 mask)
- }
- 
- /* Initialize station's rate scaling information after adding station */
--extern void iwl_mvm_rs_rate_init(struct iwl_mvm *mvm,
--				 struct ieee80211_sta *sta,
--				 enum ieee80211_band band);
-+void iwl_mvm_rs_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
-+			  enum ieee80211_band band);
- 
- /**
-  * iwl_rate_control_register - Register the rate control algorithm callbacks
-@@ -328,7 +327,7 @@ extern void iwl_mvm_rs_rate_init(struct iwl_mvm *mvm,
-  * ieee80211_register_hw
-  *
-  */
--extern int iwl_mvm_rate_control_register(void);
-+int iwl_mvm_rate_control_register(void);
- 
- /**
-  * iwl_rate_control_unregister - Unregister the rate control callbacks
-@@ -336,7 +335,7 @@ extern int iwl_mvm_rate_control_register(void);
-  * This should be called after calling ieee80211_unregister_hw, but before
-  * the driver is unloaded.
-  */
--extern void iwl_mvm_rate_control_unregister(void);
-+void iwl_mvm_rate_control_unregister(void);
- 
- struct iwl_mvm_sta;
- 
+-	/* SMI callbacks require 32bit addresses */
+-	gsmi_dev.pdev->dev.coherent_dma_mask = DMA_BIT_MASK(32);
+-	gsmi_dev.pdev->dev.dma_mask =
+-		&gsmi_dev.pdev->dev.coherent_dma_mask;
+ 	ret = -ENOMEM;
+ 	gsmi_dev.dma_pool = dma_pool_create("gsmi", &gsmi_dev.pdev->dev,
+ 					     GSMI_BUF_SIZE, GSMI_BUF_ALIGN, 0);
 -- 
-1.8.1.2.459.gbcd45b4.dirty
+1.7.4.4
 
