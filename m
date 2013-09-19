@@ -1,36 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:41674 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758410Ab3IBOP5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Sep 2013 10:15:57 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: Joe Perches <joe@perches.com>
-Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org
-Subject: Re: [PATCH v2 13/16] wcn36xx: add wcn36xx.h
-References: <1377248299-21007-1-git-send-email-k.eugene.e@gmail.com>
-	<1377248299-21007-14-git-send-email-k.eugene.e@gmail.com>
-	<1377298929.2816.15.camel@joe-AO722>
-Date: Mon, 02 Sep 2013 17:15:55 +0300
-In-Reply-To: <1377298929.2816.15.camel@joe-AO722> (Joe Perches's message of
-	"Fri, 23 Aug 2013 16:02:09 -0700")
-Message-ID: <87ioyjux5w.fsf@purkki.adurom.net> (sfid-20130902_161607_857384_40E3A401)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:39205 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754530Ab3ITLF7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Sep 2013 07:05:59 -0400
+In-Reply-To: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+From: Russell King <rmk+kernel@arm.linux.org.uk>
+To: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
+	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
+	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
+	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	uclinux-dist-devel@blackfin.uclinux.org
+Cc: Jens Axboe <axboe@kernel.dk>, Jens Axboe <axboe@kernel.dk>
+Subject: [PATCH 47/51] ARM: 7794/1: block: Rename parameter dma_mask to
+ max_addr for blk_queue_bounce_limit()
+Message-Id: <E1VMnpO-0001Kt-E7@rmk-PC.arm.linux.org.uk> (sfid-20130920_130602_945943_A101157D)
+Date: Fri, 20 Sep 2013 00:40:06 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Joe Perches <joe@perches.com> writes:
+From: Santosh Shilimkar <santosh.shilimkar@ti.com>
 
->> +#define wcn36xx_dbg(mask, fmt, arg...) do {			\
->> +	if (debug_mask & mask)					\
->> +		printk(KERN_DEBUG pr_fmt(fmt), ##arg);	\
->> +} while (0)
->
-> And maybe this one using pr_debug so dynamic_debug
-> can work too.
+The blk_queue_bounce_limit() API parameter 'dma_mask' is actually the
+maximum address the device can handle rather than a dma_mask. Rename
+it accordingly to avoid it being interpreted as dma_mask.
 
-Please, no dynamic_debug. It's useless on a wifi driver.
+No functional change.
 
+The idea is to fix the bad assumptions about dma_mask wherever it could
+be miss-interpreted.
+
+Signed-off-by: Santosh Shilimkar <santosh.shilimkar@ti.com>
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+---
+ block/blk-settings.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/block/blk-settings.c b/block/blk-settings.c
+index c50ecf0..026c151 100644
+--- a/block/blk-settings.c
++++ b/block/blk-settings.c
+@@ -195,17 +195,17 @@ EXPORT_SYMBOL(blk_queue_make_request);
+ /**
+  * blk_queue_bounce_limit - set bounce buffer limit for queue
+  * @q: the request queue for the device
+- * @dma_mask: the maximum address the device can handle
++ * @max_addr: the maximum address the device can handle
+  *
+  * Description:
+  *    Different hardware can have different requirements as to what pages
+  *    it can do I/O directly to. A low level driver can call
+  *    blk_queue_bounce_limit to have lower memory pages allocated as bounce
+- *    buffers for doing I/O to pages residing above @dma_mask.
++ *    buffers for doing I/O to pages residing above @max_addr.
+  **/
+-void blk_queue_bounce_limit(struct request_queue *q, u64 dma_mask)
++void blk_queue_bounce_limit(struct request_queue *q, u64 max_addr)
+ {
+-	unsigned long b_pfn = dma_mask >> PAGE_SHIFT;
++	unsigned long b_pfn = max_addr >> PAGE_SHIFT;
+ 	int dma = 0;
+ 
+ 	q->bounce_gfp = GFP_NOIO;
 -- 
-Kalle Valo
+1.7.4.4
+
