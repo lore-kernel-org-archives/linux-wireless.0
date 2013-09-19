@@ -1,107 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f41.google.com ([74.125.83.41]:53504 "EHLO
-	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753059Ab3IZSAt (ORCPT
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:39351 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754366Ab3ITLs3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Sep 2013 14:00:49 -0400
-Received: by mail-ee0-f41.google.com with SMTP id d17so731795eek.0
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Sep 2013 11:00:48 -0700 (PDT)
-Message-ID: <1380218441.2059.16.camel@canaries64-MCP7A> (sfid-20130926_200053_059887_173C77D2)
-Subject: [PATCH 5/5] staging: vt6656: rxtx.c remove dead code rts_cts void
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 26 Sep 2013 19:00:41 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 20 Sep 2013 07:48:29 -0400
+In-Reply-To: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+From: Russell King <rmk+kernel@arm.linux.org.uk>
+To: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
+	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
+	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
+	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	uclinux-dist-devel@blackfin.uclinux.org
+Cc: Matthew Wilcox <willy@linux.intel.com>
+Subject: [PATCH 17/51] DMA-API: block: nvme-core: replace
+ dma_set_mask()+dma_set_coherent_mask() with new
+ helper
+Message-Id: <E1VMlz6-0007h9-WF@rmk-PC.arm.linux.org.uk> (sfid-20130920_134841_135706_DFEEE670)
+Date: Thu, 19 Sep 2013 22:42:00 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Replace the following sequence:
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+	dma_set_mask(dev, mask);
+	dma_set_coherent_mask(dev, mask);
+
+with a call to the new helper dma_set_mask_and_coherent().
+
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
 ---
- drivers/staging/vt6656/rxtx.c | 19 +++++++------------
- 1 file changed, 7 insertions(+), 12 deletions(-)
+ drivers/block/nvme-core.c |   10 ++++------
+ 1 files changed, 4 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 468a78b..791144a 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -100,9 +100,8 @@ static void *s_vGetFreeContext(struct vnt_private *pDevice);
+diff --git a/drivers/block/nvme-core.c b/drivers/block/nvme-core.c
+index da52092..26d03fa 100644
+--- a/drivers/block/nvme-core.c
++++ b/drivers/block/nvme-core.c
+@@ -1949,12 +1949,9 @@ static int nvme_dev_map(struct nvme_dev *dev)
+ 	if (pci_request_selected_regions(pdev, bars, "nvme"))
+ 		goto disable_pci;
  
- static void s_vGenerateTxParameter(struct vnt_private *pDevice,
- 	u8 byPktType, u16 wCurrentRate,	struct vnt_tx_buffer *tx_buffer,
--	struct vnt_mic_hdr **mic_hdr, u32 need_mic,
--	void *rts_cts, u32 cbFrameSize, int bNeedACK, u32 uDMAIdx,
--	struct ethhdr *psEthHeader, bool need_rts);
-+	struct vnt_mic_hdr **mic_hdr, u32 need_mic, u32 cbFrameSize,
-+	int bNeedACK, u32 uDMAIdx, struct ethhdr *psEthHeader, bool need_rts);
+-	if (!dma_set_mask(&pdev->dev, DMA_BIT_MASK(64)))
+-		dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(64));
+-	else if (!dma_set_mask(&pdev->dev, DMA_BIT_MASK(32)))
+-		dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(32));
+-	else
+-		goto disable_pci;
++	if (dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64)) &&
++	    dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32)))
++		goto disable;
  
- static u32 s_uFillDataHead(struct vnt_private *pDevice,
- 	u8 byPktType, u16 wCurrentRate, void *pTxDataHead, u32 cbFrameLength,
-@@ -842,9 +841,8 @@ static void s_vFillCTSHead(struct vnt_private *pDevice, u32 uDMAIdx,
+ 	pci_set_drvdata(pdev, dev);
+ 	dev->bar = ioremap(pci_resource_start(pdev, 0), 8192);
+@@ -2168,6 +2165,7 @@ static int nvme_probe(struct pci_dev *pdev, const struct pci_device_id *id)
  
- static void s_vGenerateTxParameter(struct vnt_private *pDevice,
- 	u8 byPktType, u16 wCurrentRate,	struct vnt_tx_buffer *tx_buffer,
--	struct vnt_mic_hdr **mic_hdr, u32 need_mic,
--	void *rts_cts, u32 cbFrameSize, int bNeedACK, u32 uDMAIdx,
--	struct ethhdr *psEthHeader, bool need_rts)
-+	struct vnt_mic_hdr **mic_hdr, u32 need_mic, u32 cbFrameSize,
-+	int bNeedACK, u32 uDMAIdx, struct ethhdr *psEthHeader, bool need_rts)
- {
- 	struct vnt_tx_fifo_head *pFifoHead = &tx_buffer->fifo_head;
- 	union vnt_tx_data_head *head = NULL;
-@@ -1013,7 +1011,6 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
- 	u32 uDuration;
- 	u32 cbHeaderLength = 0, uPadding = 0;
- 	struct vnt_mic_hdr *pMICHDR;
--	void *rts_cts = NULL;
- 	void *pvTxDataHd;
- 	u8 byFBOption = AUTO_FB_NONE, byFragType;
- 	u16 wTxBufSize;
-@@ -1232,7 +1229,7 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
- 
-     //Fill FIFO,RrvTime,RTS,and CTS
-     s_vGenerateTxParameter(pDevice, byPktType, wCurrentRate,
--		tx_buffer, &pMICHDR, cbMICHDR, rts_cts,
-+		tx_buffer, &pMICHDR, cbMICHDR,
- 		cbFrameSize, bNeedACK, uDMAIdx, psEthHeader, bRTS);
-     //Fill DataHead
-     uDuration = s_uFillDataHead(pDevice, byPktType, wCurrentRate, pvTxDataHd, cbFrameSize, uDMAIdx, bNeedACK,
-@@ -1469,7 +1466,6 @@ CMD_STATUS csMgmt_xmit(struct vnt_private *pDevice,
- 	struct ieee80211_hdr *pMACHeader;
- 	struct ethhdr sEthHeader;
- 	u8 byPktType, *pbyTxBufferAddr;
--	void *rts_cts = NULL;
- 	void *pvTxDataHd;
- 	struct vnt_mic_hdr *pMICHDR = NULL;
- 	u32 uDuration, cbReqCount, cbHeaderSize, cbFrameBodySize, cbFrameSize;
-@@ -1628,7 +1624,7 @@ CMD_STATUS csMgmt_xmit(struct vnt_private *pDevice,
- 
- 	/* Fill FIFO,RrvTime,RTS,and CTS */
- 	s_vGenerateTxParameter(pDevice, byPktType, wCurrentRate,
--		pTX_Buffer, &pMICHDR, 0, rts_cts,
-+		pTX_Buffer, &pMICHDR, 0,
- 		cbFrameSize, bNeedACK, TYPE_TXDMA0, &sEthHeader, false);
- 
-     //Fill DataHead
-@@ -1821,7 +1817,6 @@ void vDMA0_tx_80211(struct vnt_private *pDevice, struct sk_buff *skb)
- 	struct vnt_tx_fifo_head *pTxBufHead;
- 	u8 byPktType;
- 	u8 *pbyTxBufferAddr;
--	void *rts_cts = NULL;
- 	void *pvTxDataHd;
- 	u32 uDuration, cbReqCount;
- 	struct ieee80211_hdr *pMACHeader;
-@@ -2033,7 +2028,7 @@ void vDMA0_tx_80211(struct vnt_private *pDevice, struct sk_buff *skb)
- 
- 	/* Fill FIFO,RrvTime,RTS,and CTS */
- 	s_vGenerateTxParameter(pDevice, byPktType, wCurrentRate,
--		pTX_Buffer, &pMICHDR, cbMICHDR, rts_cts,
-+		pTX_Buffer, &pMICHDR, cbMICHDR,
- 		cbFrameSize, bNeedACK, TYPE_TXDMA0, &sEthHeader, false);
- 
-     //Fill DataHead
+ 	INIT_LIST_HEAD(&dev->namespaces);
+ 	dev->pci_dev = pdev;
++
+ 	result = nvme_set_instance(dev);
+ 	if (result)
+ 		goto free;
 -- 
-1.8.3.2
+1.7.4.4
 
