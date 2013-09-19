@@ -1,55 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:44264 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752933Ab3IXNJn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Sep 2013 09:09:43 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 5/5] ath10k: align RX frames properly
-Date: Tue, 24 Sep 2013 15:09:18 +0200
-Message-ID: <1380028158-861-6-git-send-email-michal.kazior@tieto.com> (sfid-20130924_150952_414199_FF782206)
-In-Reply-To: <1380028158-861-1-git-send-email-michal.kazior@tieto.com>
-References: <1380028158-861-1-git-send-email-michal.kazior@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:39559 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753469Ab3ITNCJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Sep 2013 09:02:09 -0400
+In-Reply-To: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+From: Russell King <rmk+kernel@arm.linux.org.uk>
+To: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
+	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
+	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
+	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	uclinux-dist-devel@blackfin.uclinux.org
+Cc: Paul Zimmerman <paulz@synopsys.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH 38/51] DMA-API: staging: use dma_set_coherent_mask()
+Message-Id: <E1VMmJT-0007kZ-Kw@rmk-PC.arm.linux.org.uk> (sfid-20130920_150225_627128_CA2F4E5F)
+Date: Thu, 19 Sep 2013 23:03:03 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ethernet-like decapping mode leaves IP protocol
-frame not aligned to 4-byte boundaries. This leads
-to re-aligning in mac80211 which in turn leads to
-poor CPU cache behaviour on some machines.
+The correct way for a driver to specify the coherent DMA mask is
+not to directly access the field in the struct device, but to use
+dma_set_coherent_mask().  Only arch and bus code should access this
+member directly.
 
-Since HW doesn't allow to change payload offset
-properly the solution is to force HW to decap in
-Native Wifi mode which always has 24-bytes long
-802.11 header (even for QoS frames). This means IP
-frame is properly aligned in this decap mode.
+Convert all direct write accesses to using the correct API.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
 ---
- drivers/net/wireless/ath/ath10k/hw.h |    6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/staging/dwc2/platform.c        |    5 +++--
+ drivers/staging/imx-drm/imx-drm-core.c |    8 ++++++--
+ drivers/staging/imx-drm/ipuv3-crtc.c   |    4 +++-
+ 3 files changed, 12 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 643f0c9..8c1be768 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -74,7 +74,11 @@ enum ath10k_mcast2ucast_mode {
- #define TARGET_RX_CHAIN_MASK			(BIT(0) | BIT(1) | BIT(2))
- #define TARGET_RX_TIMEOUT_LO_PRI		100
- #define TARGET_RX_TIMEOUT_HI_PRI		40
--#define TARGET_RX_DECAP_MODE			ATH10K_HW_TXRX_ETHERNET
+diff --git a/drivers/staging/dwc2/platform.c b/drivers/staging/dwc2/platform.c
+index 44cce2f..1d68c49 100644
+--- a/drivers/staging/dwc2/platform.c
++++ b/drivers/staging/dwc2/platform.c
+@@ -100,8 +100,9 @@ static int dwc2_driver_probe(struct platform_device *dev)
+ 	 */
+ 	if (!dev->dev.dma_mask)
+ 		dev->dev.dma_mask = &dev->dev.coherent_dma_mask;
+-	if (!dev->dev.coherent_dma_mask)
+-		dev->dev.coherent_dma_mask = DMA_BIT_MASK(32);
++	retval = dma_set_coherent_mask(&dev->dev, DMA_BIT_MASK(32));
++	if (retval)
++		return retval;
+ 
+ 	irq = platform_get_irq(dev, 0);
+ 	if (irq < 0) {
+diff --git a/drivers/staging/imx-drm/imx-drm-core.c b/drivers/staging/imx-drm/imx-drm-core.c
+index 47c5888..847f430 100644
+--- a/drivers/staging/imx-drm/imx-drm-core.c
++++ b/drivers/staging/imx-drm/imx-drm-core.c
+@@ -805,6 +805,12 @@ static struct drm_driver imx_drm_driver = {
+ 
+ static int imx_drm_platform_probe(struct platform_device *pdev)
+ {
++	int ret;
 +
-+/* Native Wifi decap mode is used to align IP frames to 4-byte boundaries and
-+ * avoid a very expensive re-alignment in mac80211. */
-+#define TARGET_RX_DECAP_MODE			ATH10K_HW_TXRX_NATIVE_WIFI
++	ret = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(32));
++	if (ret)
++		return ret;
 +
- #define TARGET_SCAN_MAX_PENDING_REQS		4
- #define TARGET_BMISS_OFFLOAD_MAX_VDEV		3
- #define TARGET_ROAM_OFFLOAD_MAX_VDEV		3
+ 	imx_drm_device->dev = &pdev->dev;
+ 
+ 	return drm_platform_init(&imx_drm_driver, pdev);
+@@ -847,8 +853,6 @@ static int __init imx_drm_init(void)
+ 		goto err_pdev;
+ 	}
+ 
+-	imx_drm_pdev->dev.coherent_dma_mask = DMA_BIT_MASK(32),
+-
+ 	ret = platform_driver_register(&imx_drm_pdrv);
+ 	if (ret)
+ 		goto err_pdrv;
+diff --git a/drivers/staging/imx-drm/ipuv3-crtc.c b/drivers/staging/imx-drm/ipuv3-crtc.c
+index 6fd37a7..9e73e8d 100644
+--- a/drivers/staging/imx-drm/ipuv3-crtc.c
++++ b/drivers/staging/imx-drm/ipuv3-crtc.c
+@@ -523,7 +523,9 @@ static int ipu_drm_probe(struct platform_device *pdev)
+ 	if (!pdata)
+ 		return -EINVAL;
+ 
+-	pdev->dev.coherent_dma_mask = DMA_BIT_MASK(32);
++	ret = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(32));
++	if (ret)
++		return ret;
+ 
+ 	ipu_crtc = devm_kzalloc(&pdev->dev, sizeof(*ipu_crtc), GFP_KERNEL);
+ 	if (!ipu_crtc)
 -- 
-1.7.9.5
+1.7.4.4
 
