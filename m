@@ -1,78 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:39359 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751178Ab3IIJYw (ORCPT
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:39588 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754590Ab3ITNza (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Sep 2013 05:24:52 -0400
-Received: by mail-wg0-f48.google.com with SMTP id n12so2575702wgh.3
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Sep 2013 02:24:51 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <luca@coelho.fi>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 01/13] wl18xx: default config alignment with phy defaults
-Date: Mon,  9 Sep 2013 12:24:32 +0300
-Message-Id: <1378718684-14430-1-git-send-email-eliad@wizery.com> (sfid-20130909_112456_464557_BA2D01B8)
+	Fri, 20 Sep 2013 09:55:30 -0400
+Date: Fri, 20 Sep 2013 14:49:38 +0100
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: Felipe Balbi <balbi@ti.com>
+Cc: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
+	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
+	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
+	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	uclinux-dist-devel@blackfin.uclinux.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 42/51] DMA-API: usb: musb: use
+	platform_device_register_full() to avoid directly messing with dma
+	masks
+Message-ID: <20130920134938.GO25647@n2100.arm.linux.org.uk> (sfid-20130920_155607_108076_58335DDB)
+References: <20130919212235.GD12758@n2100.arm.linux.org.uk> <E1VMnQk-0007sX-Ty@rmk-PC.arm.linux.org.uk> <20130920131125.GO26101@radagast>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130920131125.GO26101@radagast>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Igal Chernobelsky <igalc@ti.com>
+On Fri, Sep 20, 2013 at 08:11:25AM -0500, Felipe Balbi wrote:
+> Hi,
+> 
+> On Fri, Sep 20, 2013 at 12:14:38AM +0100, Russell King wrote:
+> > Use platform_device_register_full() for those drivers which can, to
+> > avoid messing directly with DMA masks.  This can only be done when
+> > the driver does not need to access the allocated musb platform device
+> > from within its callbacks, which may be called during the musb
+> > device probing.
+> > 
+> > Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+> 
+> you want me to carry this one through my tree or you prefer getting my
+> Acked-by ? Either way works for me:
+> 
+> Acked-by: Felipe Balbi <balbi@ti.com>
+> 
+> there's also the third option of me setting up a branch with only this
+> patch and we both merge it, that'd also work.
 
-Driver default config is aligned with phy default parameters.
+I think this patch is sufficiently stand-alone that it should be fine
+if you want to take it through your tree.  That may be better in the
+long run to avoid conflicts with this patch and any future work in
+this area during this cycle.
 
-Now that RDL1_3 has 2 antennas defined by default we need to explicitly
-define ht.mode to HT_MODE_WIDE to have SISO40 as default.
-
-Signed-off-by: Yair Shapira <yair.shapira@ti.com>
-Signed-off-by: Igal Chernobelsky <igalc@ti.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/ti/wl18xx/main.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index aef0c91..7302308 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -505,7 +505,7 @@ static struct wlcore_conf wl18xx_conf = {
- 
- static struct wl18xx_priv_conf wl18xx_default_priv_conf = {
- 	.ht = {
--		.mode				= HT_MODE_DEFAULT,
-+		.mode				= HT_MODE_WIDE,
- 	},
- 	.phy = {
- 		.phy_standalone			= 0x00,
-@@ -516,7 +516,7 @@ static struct wl18xx_priv_conf wl18xx_default_priv_conf = {
- 		.auto_detect			= 0x00,
- 		.dedicated_fem			= FEM_NONE,
- 		.low_band_component		= COMPONENT_3_WAY_SWITCH,
--		.low_band_component_type	= 0x04,
-+		.low_band_component_type	= 0x05,
- 		.high_band_component		= COMPONENT_2_WAY_SWITCH,
- 		.high_band_component_type	= 0x09,
- 		.tcxo_ldo_voltage		= 0x00,
-@@ -556,15 +556,15 @@ static struct wl18xx_priv_conf wl18xx_default_priv_conf = {
- 		.per_chan_pwr_limit_arr_11p	= { 0xff, 0xff, 0xff, 0xff,
- 						    0xff, 0xff, 0xff },
- 		.psat				= 0,
--		.low_power_val			= 0x08,
--		.med_power_val			= 0x12,
--		.high_power_val			= 0x18,
--		.low_power_val_2nd		= 0x05,
--		.med_power_val_2nd		= 0x0a,
--		.high_power_val_2nd		= 0x14,
- 		.external_pa_dc2dc		= 0,
- 		.number_of_assembled_ant2_4	= 2,
- 		.number_of_assembled_ant5	= 1,
-+		.low_power_val			= 0xff,
-+		.med_power_val			= 0xff,
-+		.high_power_val			= 0xff,
-+		.low_power_val_2nd		= 0xff,
-+		.med_power_val_2nd		= 0xff,
-+		.high_power_val_2nd		= 0xff,
- 		.tx_rf_margin			= 1,
- 	},
- };
--- 
-1.8.3.rc1.35.g9b79519
-
+Thanks.
