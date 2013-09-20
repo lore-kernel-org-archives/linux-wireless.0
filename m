@@ -1,41 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:47081 "EHLO ebb06.tieto.com"
+Received: from bear.ext.ti.com ([192.94.94.41]:57859 "EHLO bear.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752026Ab3ISHoP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Sep 2013 03:44:15 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: fix tracing of ath10k_wmi_cmd
-Date: Thu, 19 Sep 2013 09:44:09 +0200
-Message-ID: <1379576649-3947-1-git-send-email-michal.kazior@tieto.com> (sfid-20130919_094419_140158_5534A948)
+	id S1754590Ab3ITNQp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Sep 2013 09:16:45 -0400
+Date: Fri, 20 Sep 2013 08:11:25 -0500
+From: Felipe Balbi <balbi@ti.com>
+To: Russell King <rmk+kernel@arm.linux.org.uk>
+CC: <alsa-devel@alsa-project.org>, <b43-dev@lists.infradead.org>,
+	<devel@driverdev.osuosl.org>, <devicetree@vger.kernel.org>,
+	<dri-devel@lists.freedesktop.org>,
+	<e1000-devel@lists.sourceforge.net>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-crypto@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<linux-fbdev@vger.kernel.org>, <linux-ide@vger.kernel.org>,
+	<linux-media@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
+	<linux-nvme@lists.infradead.org>, <linux-omap@vger.kernel.org>,
+	<linuxppc-dev@lists.ozlabs.org>,
+	<linux-samsung-soc@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+	<linux-tegra@vger.kernel.org>, <linux-usb@vger.kernel.org>,
+	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	<uclinux-dist-devel@blackfin.uclinux.org>,
+	Felipe Balbi <balbi@ti.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 42/51] DMA-API: usb: musb: use
+ platform_device_register_full() to avoid directly messing with dma masks
+Message-ID: <20130920131125.GO26101@radagast> (sfid-20130920_151716_234251_4EB4C306)
+Reply-To: <balbi@ti.com>
+References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+ <E1VMnQk-0007sX-Ty@rmk-PC.arm.linux.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="S0GG+JvAI2G0KxBG"
+In-Reply-To: <E1VMnQk-0007sX-Ty@rmk-PC.arm.linux.org.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-One of my recent patches broke tracing. kbuild
-test robot reported this issue.
+--S0GG+JvAI2G0KxBG
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/trace.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Hi,
 
-diff --git a/drivers/net/wireless/ath/ath10k/trace.h b/drivers/net/wireless/ath/ath10k/trace.h
-index fd53130..90817dd 100644
---- a/drivers/net/wireless/ath/ath10k/trace.h
-+++ b/drivers/net/wireless/ath/ath10k/trace.h
-@@ -119,7 +119,7 @@ TRACE_EVENT(ath10k_wmi_cmd,
- 		__field(unsigned int, id)
- 		__field(size_t, buf_len)
- 		__dynamic_array(u8, buf, buf_len)
--		__field(int ret)
-+		__field(int, ret)
- 	),
- 
- 	TP_fast_assign(
--- 
-1.7.9.5
+On Fri, Sep 20, 2013 at 12:14:38AM +0100, Russell King wrote:
+> Use platform_device_register_full() for those drivers which can, to
+> avoid messing directly with DMA masks.  This can only be done when
+> the driver does not need to access the allocated musb platform device
+> from within its callbacks, which may be called during the musb
+> device probing.
+>=20
+> Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
 
+you want me to carry this one through my tree or you prefer getting my
+Acked-by ? Either way works for me:
+
+Acked-by: Felipe Balbi <balbi@ti.com>
+
+there's also the third option of me setting up a branch with only this
+patch and we both merge it, that'd also work.
+
+cheers
+
+--=20
+balbi
+
+--S0GG+JvAI2G0KxBG
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJSPEl9AAoJEIaOsuA1yqREIKYP/0fcIrBOWMvkcjYUJYHm/Vg7
+E8Vfe5ZUQcfPTWoiz5Kzdg+2Y4NG4Zv7Y7TpZj5atvz97zpiT0JAhvy5yf1+q3sv
+qozJJL3JUtpbwcNP4R0/rD6v+2VvyS3lWuJeCI/NJY4zpZ6zYS8WsaR7QRnjUX8O
+wOSIrYcwbr8xNrKIQxWhmEld60Cs4wSZ3TS8fvV0UWBo5CTeZdGZns/gRW5MGmZW
+tdR1nB+KmCqpVga49niAMHKm0DqvBhrXyuZm3T7nrWxXnqY3/bhYM/sGNPAdeGU1
+hJ6Hfe4yNjQpDm9bkRStj3kONevdXFpmnx7ndqnMGA+qAcZYUZP2ZQIP4zKUgPq5
+iM/lX9z+NYtJPzUi2sV6XGHpU5+O2Imy0SP36IvsV3K9RbSv+MDsNqCQRdFzhQjX
+dvR2fzXM6eX5zeRR9fonD3odCCr7sDGj8b+ODFhyp/Imph/e3spE0NWc/1et6KhY
+OOXVb2MRpRBPwA8yjFOfLEn5rgu3u8awCHDe4rmknYVdmzzrZOowTSqw5q6UTK80
+Vz+bJques9CHoUs2StfOeJ4QOn6mzaYi00HjqXZ3BZlBQSTKoPAAzC4H3vS/vPTs
+9PSqsMPPkK4cFcq94JIViy9gzHUKWJREWjM9nmAKMfGdU+xxkTnYLurDBKZy6SAt
+8zFqQe3pzsCzGEpNuH+i
+=q3cb
+-----END PGP SIGNATURE-----
+
+--S0GG+JvAI2G0KxBG--
