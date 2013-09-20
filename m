@@ -1,66 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f42.google.com ([209.85.215.42]:62636 "EHLO
-	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932207Ab3INT7t (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Sep 2013 15:59:49 -0400
-Received: by mail-la0-f42.google.com with SMTP id ep20so2075695lab.1
-        for <linux-wireless@vger.kernel.org>; Sat, 14 Sep 2013 12:59:47 -0700 (PDT)
-Message-ID: <5234C03A.2070701@cogentembedded.com> (sfid-20130914_220009_108841_3E664B8E)
-Date: Sat, 14 Sep 2013 23:59:54 +0400
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Received: from comal.ext.ti.com ([198.47.26.152]:48040 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751652Ab3ITPSA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Sep 2013 11:18:00 -0400
+Date: Fri, 20 Sep 2013 10:15:52 -0500
+From: Felipe Balbi <balbi@ti.com>
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>
+CC: Felipe Balbi <balbi@ti.com>, <alsa-devel@alsa-project.org>,
+	<b43-dev@lists.infradead.org>, <devel@driverdev.osuosl.org>,
+	<devicetree@vger.kernel.org>, <dri-devel@lists.freedesktop.org>,
+	<e1000-devel@lists.sourceforge.net>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-crypto@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<linux-fbdev@vger.kernel.org>, <linux-ide@vger.kernel.org>,
+	<linux-media@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
+	<linux-nvme@lists.infradead.org>, <linux-omap@vger.kernel.org>,
+	<linuxppc-dev@lists.ozlabs.org>,
+	<linux-samsung-soc@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+	<linux-tegra@vger.kernel.org>, <linux-usb@vger.kernel.org>,
+	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	<uclinux-dist-devel@blackfin.uclinux.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 42/51] DMA-API: usb: musb: use
+ platform_device_register_full() to avoid directly messing with dma masks
+Message-ID: <20130920151552.GQ26101@radagast> (sfid-20130920_171812_108227_7434BBF9)
+Reply-To: <balbi@ti.com>
+References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+ <E1VMnQk-0007sX-Ty@rmk-PC.arm.linux.org.uk>
+ <20130920131125.GO26101@radagast>
+ <20130920134938.GO25647@n2100.arm.linux.org.uk>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH 2/7] rtlwifi: rtl8192de: Fix smatch warnings in rtl8192de/hw.c
-References: <1379094304-22041-1-git-send-email-Larry.Finger@lwfinger.net> <1379094304-22041-3-git-send-email-Larry.Finger@lwfinger.net>
-In-Reply-To: <1379094304-22041-3-git-send-email-Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="rKoHqF+aPLVth8b2"
+In-Reply-To: <20130920134938.GO25647@n2100.arm.linux.org.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello.
+--rKoHqF+aPLVth8b2
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-On 09/13/2013 09:44 PM, Larry Finger wrote:
+Hi,
 
-> Smatch lists the following:
->    CHECK   drivers/net/wireless/rtlwifi/rtl8192de/hw.c
-> drivers/net/wireless/rtlwifi/rtl8192de/hw.c:1200 rtl92de_set_qos() info: ignoring unreachable code.
-> drivers/net/wireless/rtlwifi/rtl8192de/hw.c:1200 rtl92de_set_qos() info: ignoring unreachable code.
+On Fri, Sep 20, 2013 at 02:49:38PM +0100, Russell King - ARM Linux wrote:
+> On Fri, Sep 20, 2013 at 08:11:25AM -0500, Felipe Balbi wrote:
+> > Hi,
+> >=20
+> > On Fri, Sep 20, 2013 at 12:14:38AM +0100, Russell King wrote:
+> > > Use platform_device_register_full() for those drivers which can, to
+> > > avoid messing directly with DMA masks.  This can only be done when
+> > > the driver does not need to access the allocated musb platform device
+> > > from within its callbacks, which may be called during the musb
+> > > device probing.
+> > >=20
+> > > Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+> >=20
+> > you want me to carry this one through my tree or you prefer getting my
+> > Acked-by ? Either way works for me:
+> >=20
+> > Acked-by: Felipe Balbi <balbi@ti.com>
+> >=20
+> > there's also the third option of me setting up a branch with only this
+> > patch and we both merge it, that'd also work.
+>=20
+> I think this patch is sufficiently stand-alone that it should be fine
+> if you want to take it through your tree.  That may be better in the
+> long run to avoid conflicts with this patch and any future work in
+> this area during this cycle.
 
-> Dead code is removed.
+awesome, i'll take this one early next week.
 
-    It is instead commented out, including non-dead code it seems...
+--=20
+balbi
 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
->   drivers/net/wireless/rtlwifi/rtl8192de/hw.c | 2 ++
->   1 file changed, 2 insertions(+)
->
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
-> index 7dd8f6d..c9b0894 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
-> @@ -1194,6 +1194,7 @@ void rtl92d_linked_set_reg(struct ieee80211_hw *hw)
->    * mac80211 will send pkt when scan */
->   void rtl92de_set_qos(struct ieee80211_hw *hw, int aci)
->   {
-> +/*
->   	struct rtl_priv *rtlpriv = rtl_priv(hw);
->   	rtl92d_dm_init_edca_turbo(hw);
->   	return;
+--rKoHqF+aPLVth8b2
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
-    Shouldn't the comment start here (and *return* removed)? It's also
-better to remove the dead code than just to comment it out.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
 
-> @@ -1213,6 +1214,7 @@ void rtl92de_set_qos(struct ieee80211_hw *hw, int aci)
->   		RT_ASSERT(false, "invalid aci: %d !\n", aci);
->   		break;
->   	}
-> + */
->   }
+iQIcBAEBAgAGBQJSPGaoAAoJEIaOsuA1yqREE+MP/2yK4ec5lzVPs6fLeF9dUQHh
+yWwfvqZLfu9D9lFIzGOOgfPm03or8ubh7i/ryfKBHxyKiGysUyo2yen3AwOwFgq1
+2VbJzj55Zz5fejj7T9YE2hJPXU3ofUTdkNSJkbOGqnROvzNcCBYorIgcsAceohqP
+biXh7G8wuxJmJqe967o/LVi9M4GL9ny+GqXdqT7TzuPeFzIwnlDpRL2+vgQDD3Y8
+maW6NOBkrF8W7g2qM5qG4oT/LPNyIEAFpJqOYSQ14EgDp0VxviUl4kMDSqihMOM7
+iPMQJPMhNKRx8vSUilrRxGCY636T0bSXZd1x6L+AIQ0XsTzEtFT73v929byiFNso
+bzQpIOgJjrDgUfBi4MnOemhm98+/UhamcqoXq7v6FQ2FyhEMeIgArAIwwr3VxOf1
+E7iiKaT7jVMRMcNZ+7UJsb+09vie5hGleu4M7YBayoxDEEtlWI8t0aOcngW8oVO4
+DHD3uff/mpbTt9UYf7009WRToHXQwLMhbAimBcXbtya9Nxa79LNxT6aWEzfB2uVS
+Ju5j7FEQZUsAMHQdJIUu+kpcEjrc5IKWWsedQul4piraIFh2Jb+8ODrGLEQvMq9e
+8Jxl6hajoiw6zWfr+HMSqJa3MkDtaZ9GEOyvZqlnrBnpNS4dI3jZKDfresiz1fkq
+o5bj9gHe6QmYbP9tPOOz
+=V876
+-----END PGP SIGNATURE-----
 
-WBR, Sergei
-
-
+--rKoHqF+aPLVth8b2--
