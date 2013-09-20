@@ -1,82 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f181.google.com ([209.85.217.181]:33377 "EHLO
-	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750953Ab3IPTHm (ORCPT
+Received: from mail-yh0-f49.google.com ([209.85.213.49]:45430 "EHLO
+	mail-yh0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754467Ab3ITMSk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Sep 2013 15:07:42 -0400
-Received: by mail-lb0-f181.google.com with SMTP id u14so4444640lbd.26
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Sep 2013 12:07:41 -0700 (PDT)
-Message-ID: <523756FC.1050905@cogentembedded.com> (sfid-20130916_210745_704024_0590CA41)
-Date: Mon, 16 Sep 2013 23:07:40 +0400
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+	Fri, 20 Sep 2013 08:18:40 -0400
+Date: Fri, 20 Sep 2013 07:18:34 -0500
+From: Tejun Heo <tj@kernel.org>
+To: Russell King <rmk+kernel@arm.linux.org.uk>
+Cc: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
+	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
+	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
+	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	uclinux-dist-devel@blackfin.uclinux.org,
+	Inki Dae <inki.dae@samsung.com>,
+	Joonyoung Shim <jy0922.shim@samsung.com>,
+	Seung-Woo Kim <sw0312.kim@samsung.com>,
+	Kyungmin Park <kyungmin.park@samsung.com>,
+	David Airlie <airlied@linux.ie>,
+	Kukjin Kim <kgene.kim@samsung.com>
+Subject: Re: [PATCH 39/51] DMA-API: others: use dma_set_coherent_mask()
+Message-ID: <20130920121834.GB7630@mtj.dyndns.org> (sfid-20130920_141854_476639_EBC98338)
+References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+ <E1VMnNq-0007s4-HN@rmk-PC.arm.linux.org.uk>
+ <20130920121652.GA7630@mtj.dyndns.org>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH 6/8 V2] rtlwifi: Fix smatch warnings in usb.c
-References: <1379357722-17687-1-git-send-email-Larry.Finger@lwfinger.net> <1379357722-17687-7-git-send-email-Larry.Finger@lwfinger.net>
-In-Reply-To: <1379357722-17687-7-git-send-email-Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130920121652.GA7630@mtj.dyndns.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/16/2013 10:55 PM, Larry Finger wrote:
+On Fri, Sep 20, 2013 at 07:16:52AM -0500, Tejun Heo wrote:
+> On Fri, Sep 20, 2013 at 12:11:38AM +0100, Russell King wrote:
+> > The correct way for a driver to specify the coherent DMA mask is
+> > not to directly access the field in the struct device, but to use
+> > dma_set_coherent_mask().  Only arch and bus code should access this
+> > member directly.
+> > 
+> > Convert all direct write accesses to using the correct API.
+> > 
+> > Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+> 
+> Acked-by: Tejun Heo <tj@kernel.org>
+> 
+> The patch is pretty widely spread.  I don't mind how it gets routed
+> but what's the plan?
 
-> Smatch displays the following:
->    CHECK   drivers/net/wireless/rtlwifi/usb.c
-> drivers/net/wireless/rtlwifi/usb.c:458 _rtl_usb_rx_process_agg() warn: assigning (-98) to unsigned variable 'stats.noise'
-> drivers/net/wireless/rtlwifi/usb.c:503 _rtl_usb_rx_process_noagg() warn: assigning (-98) to unsigned variable 'stats.noise'
-> drivers/net/wireless/rtlwifi/usb.c:596 _rtl_rx_get_padding() info: ignoring unreachable code.
-> drivers/net/wireless/rtlwifi/usb.c:596 _rtl_rx_get_padding() info: ignoring unreachable code.
+Hmm... maybe hte pata_ixp4xx_cf.c part should be moved to the one
+which updates pata_octeon_cf.c?
 
-> The negative number to an unsigned quantity is fixed by removing the variable
-> as it is no longer used.
+Thanks.
 
-    You're removing only structure field initializer, not a variable.
-
-> The unreachable code info is fixed by including the
-> appropriate section inside #ifdef .. #endif constructions.
-
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
->   drivers/net/wireless/rtlwifi/usb.c | 8 +++++---
->   1 file changed, 5 insertions(+), 3 deletions(-)
-
-> diff --git a/drivers/net/wireless/rtlwifi/usb.c b/drivers/net/wireless/rtlwifi/usb.c
-> index e56778c..60cb0b4 100644
-> --- a/drivers/net/wireless/rtlwifi/usb.c
-> +++ b/drivers/net/wireless/rtlwifi/usb.c
-> @@ -455,7 +455,6 @@ static void _rtl_usb_rx_process_agg(struct ieee80211_hw *hw,
->   	struct ieee80211_rx_status rx_status = {0};
->   	struct rtl_stats stats = {
->   		.signal = 0,
-> -		.noise = -98,
->   		.rate = 0,
->   	};
->
-> @@ -498,7 +497,6 @@ static void _rtl_usb_rx_process_noagg(struct ieee80211_hw *hw,
->   	struct ieee80211_rx_status rx_status = {0};
->   	struct rtl_stats stats = {
->   		.signal = 0,
-> -		.noise = -98,
->   		.rate = 0,
->   	};
->
-> @@ -582,12 +580,15 @@ static void _rtl_rx_work(unsigned long param)
->   static unsigned int _rtl_rx_get_padding(struct ieee80211_hdr *hdr,
->   					unsigned int len)
->   {
-> +#if NET_IP_ALIGN != 0
->   	unsigned int padding = 0;
-> +#endif
->
->   	/* make function no-op when possible */
-> -	if (NET_IP_ALIGN == 0 || len < sizeof(*hdr))
-> +	if (NET_IP_ALIGN == 0 || len < sizeof(struct ieee80211_hdr))
-
-    Hm, I thought you were going to remove this collateral change.
-
->   		return 0;
-
-WBR, Sergei
-
+-- 
+tejun
