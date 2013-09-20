@@ -1,53 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:53543 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751726Ab3IIJZF (ORCPT
+Received: from webmail.solarflare.com ([12.187.104.25]:60693 "EHLO
+	webmail.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751965Ab3ITBVs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Sep 2013 05:25:05 -0400
-Received: by mail-wi0-f178.google.com with SMTP id hn9so3094181wib.11
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Sep 2013 02:25:04 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <luca@coelho.fi>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 09/13] wlcore: Allow stopping fw log in recovery
-Date: Mon,  9 Sep 2013 12:24:40 +0300
-Message-Id: <1378718684-14430-9-git-send-email-eliad@wizery.com> (sfid-20130909_112511_851424_3A84ED58)
-In-Reply-To: <1378718684-14430-1-git-send-email-eliad@wizery.com>
-References: <1378718684-14430-1-git-send-email-eliad@wizery.com>
+	Thu, 19 Sep 2013 21:21:48 -0400
+Message-ID: <1379640097.2500.4.camel@bwh-desktop.uk.level5networks.com> (sfid-20130920_032238_800718_606270B5)
+Subject: Re: [PATCH 01/51] DMA-API: provide a helper to set both DMA and
+ coherent DMA masks
+From: Ben Hutchings <bhutchings@solarflare.com>
+To: Russell King <rmk+kernel@arm.linux.org.uk>
+CC: <alsa-devel@alsa-project.org>, <b43-dev@lists.infradead.org>,
+	<devel@driverdev.osuosl.org>, <devicetree@vger.kernel.org>,
+	<dri-devel@lists.freedesktop.org>,
+	<e1000-devel@lists.sourceforge.net>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-crypto@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<linux-fbdev@vger.kernel.org>, <linux-ide@vger.kernel.org>,
+	<linux-media@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
+	<linux-nvme@lists.infradead.org>, <linux-omap@vger.kernel.org>,
+	<linuxppc-dev@lists.ozlabs.org>,
+	<linux-samsung-soc@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+	<linux-tegra@vger.kernel.org>, <linux-usb@vger.kernel.org>,
+	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+	"Solarflare linux maintainers" <linux-net-drivers@solarflare.com>,
+	<uclinux-dist-devel@blackfin.uclinux.org>,
+	Rob Landley <rob@landley.net>,
+	Vinod Koul <vinod.koul@intel.com>,
+	Dan Williams <dan.j.williams@intel.com>
+Date: Fri, 20 Sep 2013 02:21:37 +0100
+In-Reply-To: <E1VMlja-0007fA-HU@rmk-PC.arm.linux.org.uk>
+References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+	 <E1VMlja-0007fA-HU@rmk-PC.arm.linux.org.uk>
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Barak Bercovitz <barak@wizery.com>
+On Thu, 2013-09-19 at 22:25 +0100, Russell King wrote:
+> Provide a helper to set both the DMA and coherent DMA masks to the
+> same value - this avoids duplicated code in a number of drivers,
+> sometimes with buggy error handling, and also allows us identify
+> which drivers do things differently.
+> 
+> Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+> ---
+>  Documentation/DMA-API-HOWTO.txt |   37 ++++++++++++++++++++++---------------
+>  Documentation/DMA-API.txt       |    8 ++++++++
+>  include/linux/dma-mapping.h     |   14 ++++++++++++++
+>  3 files changed, 44 insertions(+), 15 deletions(-)
+> 
+> diff --git a/Documentation/DMA-API-HOWTO.txt b/Documentation/DMA-API-HOWTO.txt
+> index 14129f1..5e98303 100644
+> --- a/Documentation/DMA-API-HOWTO.txt
+> +++ b/Documentation/DMA-API-HOWTO.txt
+[...]
+> -dma_set_coherent_mask() will always be able to set the same or a
+> -smaller mask as dma_set_mask(). However for the rare case that a
+> +The coherent coherent mask will always be able to set the same or a
+> +smaller mask as the streaming mask. However for the rare case that a
+[...]
 
-The FW panic log is read during recovery work.
-It has to be stopped properly before reading. otherwise,
-inconsistent data might be read which cause the driver
-to freeze.
+The new wording doesn't make sense; a mask doesn't set itself.  I would
+suggest:
 
-__wlcore_cmd_send has to work for the special case of
-CMD_STOP_FWLOGGER, while in recovery, in order to stop
-the fw log before it is read.
+"The coherent mask can always be set to the same or a smaller mask than
+the streaming mask."
 
-Signed-off-by: Barak Bercovitz <barak@wizery.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/ti/wlcore/cmd.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Ben.
 
-diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
-index f6a3d7d..8c8dfa3 100644
---- a/drivers/net/wireless/ti/wlcore/cmd.c
-+++ b/drivers/net/wireless/ti/wlcore/cmd.c
-@@ -60,7 +60,8 @@ static int __wlcore_cmd_send(struct wl1271 *wl, u16 id, void *buf,
- 	u16 status;
- 	u16 poll_count = 0;
- 
--	if (WARN_ON(unlikely(wl->state == WLCORE_STATE_RESTARTING)))
-+	if (WARN_ON(wl->state == WLCORE_STATE_RESTARTING &&
-+		    id != CMD_STOP_FWLOGGER))
- 		return -EIO;
- 
- 	cmd = buf;
 -- 
-1.8.3.rc1.35.g9b79519
+Ben Hutchings, Staff Engineer, Solarflare
+Not speaking for my employer; that's the marketing department's job.
+They asked us to note that Solarflare product names are trademarked.
 
