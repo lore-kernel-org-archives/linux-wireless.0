@@ -1,52 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:36277 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750862Ab3IJI6q (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:30266 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752729Ab3ITFSw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Sep 2013 04:58:46 -0400
-Received: from epcpsbgr1.samsung.com
- (u141.gpu120.samsung.co.kr [203.254.230.141])
- by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MSW0097NJL7PI60@mailout1.samsung.com> for
- linux-wireless@vger.kernel.org; Tue, 10 Sep 2013 17:58:32 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: "'John W. Linville'" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>,
-	'Luciano Coelho' <luca@coelho.fi>
-References: <005101ceae02$9cbb95f0$d632c1d0$%han@samsung.com>
-In-reply-to: <005101ceae02$9cbb95f0$d632c1d0$%han@samsung.com>
-Subject: [PATCH 8/8] wireless: wl12xx: use dev_get_platdata()
-Date: Tue, 10 Sep 2013 17:58:32 +0900
-Message-id: <005a01ceae03$ece02310$c6a06930$%han@samsung.com> (sfid-20130910_105849_925148_CE3D18DB)
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+	Fri, 20 Sep 2013 01:18:52 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/5] ath10k: tx performance patches
+References: <1379508202-9660-1-git-send-email-michal.kazior@tieto.com>
+Date: Fri, 20 Sep 2013 08:18:40 +0300
+In-Reply-To: <1379508202-9660-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Wed, 18 Sep 2013 14:43:17 +0200")
+Message-ID: <87vc1wgjf3.fsf@qca.qualcomm.com> (sfid-20130920_071856_352383_DD11AD28)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the wrapper function for retrieving the platform data instead of
-accessing dev->platform_data directly. This is a cosmetic change
-to make the code simpler and enhance the readability.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
----
- drivers/net/wireless/ti/wl12xx/main.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> Hi,
+>
+> This patchset reduces CPU load and improves
+> improves TX performance on AP135 by additional
+> 30mbps (give or take; 560mbps -> 590mbps), at
+> least on my testbed.
+>
+>
+> Michal Kazior (5):
+>   ath10k: use num_pending_tx instead of msdu id bitmap
+>   ath10k: avoid needless memset on TX path
+>   ath10k: decouple HTT TX completions
+>   ath10k: cleanup HTT TX functions
+>   ath10k: use msdu headroom to store txfrag
 
-diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
-index 1c627da..591526b 100644
---- a/drivers/net/wireless/ti/wl12xx/main.c
-+++ b/drivers/net/wireless/ti/wl12xx/main.c
-@@ -1704,7 +1704,7 @@ static struct ieee80211_sta_ht_cap wl12xx_ht_cap = {
- static int wl12xx_setup(struct wl1271 *wl)
- {
- 	struct wl12xx_priv *priv = wl->priv;
--	struct wlcore_platdev_data *pdev_data = wl->pdev->dev.platform_data;
-+	struct wlcore_platdev_data *pdev_data = dev_get_platdata(&wl->pdev->dev);
- 	struct wl12xx_platform_data *pdata = pdev_data->pdata;
- 
- 	wl->rtable = wl12xx_rtable;
+Thanks, all five applied.
+
 -- 
-1.7.10.4
-
-
+Kalle Valo
