@@ -1,54 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from svenfoo.org ([82.94.215.22]:48004 "EHLO mail.zonque.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752464Ab3IPLjR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Sep 2013 07:39:17 -0400
-From: Daniel Mack <zonque@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: s.neumann@raumfeld.com, afenkart@gmail.com, bzhao@marvell.com,
-	linville@tuxdriver.com, johannes.berg@intel.com,
-	Daniel Mack <zonque@gmail.com>
-Subject: [PATCH] mwifiex: fix command timeout with SDIO interrupts enabled
-Date: Mon, 16 Sep 2013 13:39:05 +0200
-Message-Id: <1379331546-30617-1-git-send-email-zonque@gmail.com> (sfid-20130916_133921_136069_48650D7D)
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:55540 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754202Ab3ITJAd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Sep 2013 05:00:33 -0400
+Received: by mail-pa0-f44.google.com with SMTP id fz6so467825pac.31
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Sep 2013 02:00:33 -0700 (PDT)
+From: Sachin Kamat <sachin.kamat@linaro.org>
+To: linux-nfc@lists.01.org
+Cc: linux-wireless@vger.kernel.org, sameo@linux.intel.com,
+	lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+	sachin.kamat@linaro.org, Ilan Elias <ilane@ti.com>
+Subject: [PATCH 1/2] NFC: Remove redundant dev_set_drvdata
+Date: Fri, 20 Sep 2013 14:30:40 +0530
+Message-Id: <1379667641-31149-1-git-send-email-sachin.kamat@linaro.org> (sfid-20130920_110037_416532_0A714956)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We've been hunting a command timeout issue in the mwifiex driver which
-occurs on an AM33xx platform when Andreas Fenkart's omap_hsmmc SDIO IRQ
-patches are applied (they are not yet in the mainline kernel). We first
-suspected the mmc host driver to be racy, but that wasn't the case.
+Driver core sets driver data to NULL upon failure or remove.
 
-I dug a little through the changes between 3.7 and 3.10 on the mwifiex
-driver, and it turned out that the culprit is 601216e12 ("mwifiex:
-process RX packets in SDIO IRQ thread directly"), especially the
-situation where mwifiex_main_process() bails when mwifiex_processing is
-set.
+Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
+Cc: Ilan Elias <ilane@ti.com>
+---
+Series compile tested.
+---
+ drivers/nfc/nfcwilink.c |    2 --
+ 1 file changed, 2 deletions(-)
 
-In other words: if an SDIO irq arrives while the driver is processing
-mwifiex_main_process() from the work queue, we effectively loose the
-interrupt, which then results in a command timeout.
-
-I've written a little test case scenario that calls
-mwifiex_dump_station_info() through the SIOCGIWSTATS ioctl excessively,
-and that reproduces the problem after a couple of seconds already:
-
-  https://gist.github.com/zonque/6579314
-
-
-The fix for this issue is quite simple and works very well.
-
-
-Thanks,
-Daniel
-
-
-Daniel Mack (1):
-  mwifiex: queue main work from main process when bailing on races
-
- drivers/net/wireless/mwifiex/main.c | 1 +
- 1 file changed, 1 insertion(+)
-
+diff --git a/drivers/nfc/nfcwilink.c b/drivers/nfc/nfcwilink.c
+index 59f95d8..9b1d91ee 100644
+--- a/drivers/nfc/nfcwilink.c
++++ b/drivers/nfc/nfcwilink.c
+@@ -578,8 +578,6 @@ static int nfcwilink_remove(struct platform_device *pdev)
+ 	nci_unregister_device(ndev);
+ 	nci_free_device(ndev);
+ 
+-	dev_set_drvdata(&pdev->dev, NULL);
+-
+ 	return 0;
+ }
+ 
 -- 
-1.8.3.1
+1.7.9.5
 
