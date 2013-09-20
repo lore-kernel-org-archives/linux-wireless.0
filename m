@@ -1,69 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:39465 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754568Ab3ITMOx (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:54400 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754707Ab3ITWVh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Sep 2013 08:14:53 -0400
-In-Reply-To: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-From: Russell King <rmk+kernel@arm.linux.org.uk>
-To: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
-	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
-	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
-	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	uclinux-dist-devel@blackfin.uclinux.org
-Cc: Viresh Kumar <viresh.linux@gmail.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>
-Subject: [PATCH 30/51] DMA-API: dma: dw_dmac.c: convert to use
- dma_coerce_mask_and_coherent()
-Message-Id: <E1VMmBi-0007iw-MP@rmk-PC.arm.linux.org.uk> (sfid-20130920_141504_655825_75AF3767)
-Date: Thu, 19 Sep 2013 22:55:02 +0100
+	Fri, 20 Sep 2013 18:21:37 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-bluetooth@vger.kernel.org>
+CC: Marcel Holtmann <marcel@holtmann.org>,
+	Gustavo Padovan <gustavo@padovan.org>,
+	Johan Hedberg <johan.hedberg@gmail.com>,
+	<linux-wireless@vger.kernel.org>,
+	Mike Frysinger <vapier@chromium.org>,
+	Hyuckjoo Lee <hyuckjoo.lee@samsung.com>,
+	Bing Zhao <bzhao@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH v5 1/2] Bluetooth: btmrvl: add setup handler
+Date: Fri, 20 Sep 2013 15:21:06 -0700
+Message-ID: <1379715667-22424-1-git-send-email-bzhao@marvell.com> (sfid-20130921_002142_513832_0E6BE026)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This code sequence:
-	if (!pdev->dev.dma_mask) {
-		pdev->dev.dma_mask = &pdev->dev.coherent_dma_mask;
-		pdev->dev.coherent_dma_mask = DMA_BIT_MASK(32);
-	}
-bypasses the architectures check on the DMA mask.  It can be replaced
-with dma_coerce_mask_and_coherent(), avoiding the direct initialization
-of this mask.
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+Move initialization code to hdev's setup handler. New flag
+setup_done is added to make sure that initialization is done only
+during driver load time. Our firmware doesn't expect
+re-initialization later when interface is re-enabled.
+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/dma/dw/platform.c |    8 +++-----
- 1 files changed, 3 insertions(+), 5 deletions(-)
+v5: make use of hdev's setup handler (Marcel Holtmann)
 
-diff --git a/drivers/dma/dw/platform.c b/drivers/dma/dw/platform.c
-index e35d975..453822c 100644
---- a/drivers/dma/dw/platform.c
-+++ b/drivers/dma/dw/platform.c
-@@ -191,11 +191,9 @@ static int dw_probe(struct platform_device *pdev)
- 	if (IS_ERR(chip->regs))
- 		return PTR_ERR(chip->regs);
+ drivers/bluetooth/btmrvl_drv.h  |    1 +
+ drivers/bluetooth/btmrvl_main.c |   23 +++++++++++++++++++++--
+ drivers/bluetooth/btmrvl_sdio.c |    6 ------
+ 3 files changed, 22 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/bluetooth/btmrvl_drv.h b/drivers/bluetooth/btmrvl_drv.h
+index 27068d1..e776b8b 100644
+--- a/drivers/bluetooth/btmrvl_drv.h
++++ b/drivers/bluetooth/btmrvl_drv.h
+@@ -68,6 +68,7 @@ struct btmrvl_adapter {
+ 	wait_queue_head_t cmd_wait_q;
+ 	u8 cmd_complete;
+ 	bool is_suspended;
++	bool setup_done;
+ };
  
--	/* Apply default dma_mask if needed */
--	if (!dev->dma_mask) {
--		dev->dma_mask = &dev->coherent_dma_mask;
--		dev->coherent_dma_mask = DMA_BIT_MASK(32);
--	}
-+	err = dma_coerce_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
-+	if (err)
-+		return err;
+ struct btmrvl_private {
+diff --git a/drivers/bluetooth/btmrvl_main.c b/drivers/bluetooth/btmrvl_main.c
+index 9a9f518..e352f8e 100644
+--- a/drivers/bluetooth/btmrvl_main.c
++++ b/drivers/bluetooth/btmrvl_main.c
+@@ -479,6 +479,27 @@ static int btmrvl_open(struct hci_dev *hdev)
+ 	return 0;
+ }
  
- 	pdata = dev_get_platdata(dev);
- 	if (!pdata)
++static int btmrvl_setup(struct hci_dev *hdev)
++{
++	struct btmrvl_private *priv = hci_get_drvdata(hdev);
++	struct btmrvl_adapter *adapter = priv->adapter;
++
++	if (adapter->setup_done)
++		return 0;
++
++	btmrvl_send_module_cfg_cmd(priv, MODULE_BRINGUP_REQ);
++
++	priv->btmrvl_dev.psmode = 1;
++	btmrvl_enable_ps(priv);
++
++	priv->btmrvl_dev.gpio_gap = 0xffff;
++	btmrvl_send_hscfg_cmd(priv);
++
++	adapter->setup_done = true;
++
++	return 0;
++}
++
+ /*
+  * This function handles the event generated by firmware, rx data
+  * received from firmware, and tx data sent from kernel.
+@@ -572,8 +592,7 @@ int btmrvl_register_hdev(struct btmrvl_private *priv)
+ 	hdev->flush = btmrvl_flush;
+ 	hdev->send = btmrvl_send_frame;
+ 	hdev->ioctl = btmrvl_ioctl;
+-
+-	btmrvl_send_module_cfg_cmd(priv, MODULE_BRINGUP_REQ);
++	hdev->setup = btmrvl_setup;
+ 
+ 	hdev->dev_type = priv->btmrvl_dev.dev_type;
+ 
+diff --git a/drivers/bluetooth/btmrvl_sdio.c b/drivers/bluetooth/btmrvl_sdio.c
+index 75c2626..c526915 100644
+--- a/drivers/bluetooth/btmrvl_sdio.c
++++ b/drivers/bluetooth/btmrvl_sdio.c
+@@ -1046,12 +1046,6 @@ static int btmrvl_sdio_probe(struct sdio_func *func,
+ 		goto disable_host_int;
+ 	}
+ 
+-	priv->btmrvl_dev.psmode = 1;
+-	btmrvl_enable_ps(priv);
+-
+-	priv->btmrvl_dev.gpio_gap = 0xffff;
+-	btmrvl_send_hscfg_cmd(priv);
+-
+ 	return 0;
+ 
+ disable_host_int:
 -- 
-1.7.4.4
+1.7.3.4
 
