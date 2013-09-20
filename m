@@ -1,69 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:33517 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750832Ab3IYLE6 (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:45251 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752729Ab3ITFB1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Sep 2013 07:04:58 -0400
-Message-ID: <1380107096.4503.8.camel@porter.coelho.fi> (sfid-20130925_130501_788543_7E1F755B)
-Subject: Re: [PATCH] ti-connectivity: add wl1251 firmware and license
-From: Luca Coelho <luca@coelho.fi>
-To: Felipe Balbi <balbi@ti.com>
-Cc: ben@decadent.org.uk,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org, Pavel Machek <pavel@denx.de>
-Date: Wed, 25 Sep 2013 14:04:56 +0300
-In-Reply-To: <1380033894-5007-1-git-send-email-balbi@ti.com>
-References: <1380033894-5007-1-git-send-email-balbi@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 20 Sep 2013 01:01:27 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: fix tracing of ath10k_wmi_cmd
+References: <1379576649-3947-1-git-send-email-michal.kazior@tieto.com>
+Date: Fri, 20 Sep 2013 08:01:23 +0300
+In-Reply-To: <1379576649-3947-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Thu, 19 Sep 2013 09:44:09 +0200")
+Message-ID: <874n9ghysc.fsf@qca.qualcomm.com> (sfid-20130920_070131_381619_036E2EDD)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi dude,
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Great, this is cool! Finally! :)
+> One of my recent patches broke tracing. kbuild
+> test robot reported this issue.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-A few comments...
+Bad luck as I had accidentally tracing disabled on my test build. Patch
+applied, but changed the commit log to:
 
+commit 9e84f653ac16b718dd2305abe64a29bb3428621e
+Author: Michal Kazior <michal.kazior@tieto.com>
+Date:   Thu Sep 19 09:44:09 2013 +0200
 
-On Tue, 2013-09-24 at 09:44 -0500, Felipe Balbi wrote:
-> It's way overdue that we send these firmware
-> blobs upstream. Thanks for everybody involved
-> in getting this sorted out.
-> 
-> Cc: Luciano Coelho <luca@coelho.fi>
-> Cc: Pavel Machek <pavel@denx.de>
-> Signed-off-by: Felipe Balbi <balbi@ti.com>
-> ---
+    ath10k: fix tracing build for ath10k_wmi_cmd
+    
+    Commit be8b394390 ("ath10k: make WMI commands block by design") broke
+    the build if CONFIG_ATH10K_TRACING was enabled.
+    
+    Reported-by: kbuild test robot <fengguang.wu@intel.com>
+    Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+    Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-The commit message could be a bit more descriptive rather than
-narrative?
-
-
->  ti-connectivity/license-wl1251.txt |  59 +++++++++++++++++++++++++++++++++++++
-
-The license file should be in the root, together with the other licenses
-and called LICENCE.wl1251 (note the en-GB spelling).  Also, this license
-is *very* similar to the one for WiLink6/7/8 (LICENCE.ti-connectivity),
-except for some very minor things and the formatting.  Couldn't the same
-one be used, for the sake of simplicity and consistency?
-
-
->  ti-connectivity/wl1251-fw.bin      | Bin 0 -> 194180 bytes
->  ti-connectivity/wl1251-nvs.bin     | Bin 0 -> 752 bytes
->  3 files changed, 59 insertions(+)
->  create mode 100644 ti-connectivity/license-wl1251.txt
->  create mode 100644 ti-connectivity/wl1251-fw.bin
->  create mode 100644 ti-connectivity/wl1251-nvs.bin
-
-When sending big binary blobs, it's generally better to send pull
-requests instead of patches.  If you add the -p option when calling git
-pull-request, the text will include all the readable parts but will omit
-the binary stuff.
-
-Thank you very much for following up on this!
-
---
-Cheers,
-Luca.
-
+-- 
+Kalle Valo
