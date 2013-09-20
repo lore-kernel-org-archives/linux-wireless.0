@@ -1,58 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:47936 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752391Ab3IURrm (ORCPT
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:39599 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751042Ab3ITOBT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Sep 2013 13:47:42 -0400
-Received: by mail-wi0-f182.google.com with SMTP id ez12so759843wid.3
-        for <linux-wireless@vger.kernel.org>; Sat, 21 Sep 2013 10:47:41 -0700 (PDT)
+	Fri, 20 Sep 2013 10:01:19 -0400
+Date: Fri, 20 Sep 2013 15:00:18 +0100
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: Tejun Heo <tj@kernel.org>
+Cc: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
+	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
+	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
+	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	uclinux-dist-devel@blackfin.uclinux.org,
+	Inki Dae <inki.dae@samsung.com>,
+	Joonyoung Shim <jy0922.shim@samsung.com>,
+	Seung-Woo Kim <sw0312.kim@samsung.com>,
+	Kyungmin Park <kyungmin.park@samsung.com>,
+	David Airlie <airlied@linux.ie>,
+	Kukjin Kim <kgene.kim@samsung.com>
+Subject: Re: [PATCH 39/51] DMA-API: others: use dma_set_coherent_mask()
+Message-ID: <20130920140018.GP25647@n2100.arm.linux.org.uk> (sfid-20130920_160130_776590_A6BD83CD)
+References: <20130919212235.GD12758@n2100.arm.linux.org.uk> <E1VMnNq-0007s4-HN@rmk-PC.arm.linux.org.uk> <20130920121652.GA7630@mtj.dyndns.org>
 MIME-Version: 1.0
-In-Reply-To: <CAEZsi7GtEk2a5PvBCica0zvmGZNPqHK9XzZV2vma9nGDv1j7cw@mail.gmail.com>
-References: <CAEZsi7Hde5NyTRgm7Lf_4LvHMAEJouzaqMNUwxr-iSipuEcsyQ@mail.gmail.com>
-	<522E4315.4040806@lwfinger.net>
-	<1378764913.31180.9.camel@dcbw.foobar.com>
-	<CAEZsi7FY8HdBcb0p1svijAdFjB0MbrYv_Zft0B_+RQTpGWCnhQ@mail.gmail.com>
-	<1378916091.1693.21.camel@dcbw.foobar.com>
-	<52309B75.3010408@lwfinger.net>
-	<5230A440.5050709@ilande.co.uk>
-	<5230B573.9030800@lwfinger.net>
-	<CAEZsi7G+FqUh2fBXLLR17qiBb1ggLu2+11aYRt2Wppr1gGK-Wg@mail.gmail.com>
-	<52311E9A.7030902@lwfinger.net>
-	<CAEZsi7F-RxaZJNaYi53kTtsQbxL4TU6DhTPo5v-O5ry=pawb_Q@mail.gmail.com>
-	<52315E0C.9010806@lwfinger.net>
-	<CAEZsi7GtEk2a5PvBCica0zvmGZNPqHK9XzZV2vma9nGDv1j7cw@mail.gmail.com>
-Date: Sat, 21 Sep 2013 19:47:40 +0200
-Message-ID: <CAEZsi7Fnw_u87W5cXhojMQg8hr6h5PEmwWU9Vh14zzKL6MY4og@mail.gmail.com> (sfid-20130921_194745_867127_DBD53B5D)
-Subject: Re: No connection with TP-Link TL-WN823N (rtl8192cu)
-From: Vincent Thiele <vincentthiele@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130920121652.GA7630@mtj.dyndns.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Any news?
+On Fri, Sep 20, 2013 at 07:16:52AM -0500, Tejun Heo wrote:
+> On Fri, Sep 20, 2013 at 12:11:38AM +0100, Russell King wrote:
+> > The correct way for a driver to specify the coherent DMA mask is
+> > not to directly access the field in the struct device, but to use
+> > dma_set_coherent_mask().  Only arch and bus code should access this
+> > member directly.
+> > 
+> > Convert all direct write accesses to using the correct API.
+> > 
+> > Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+> 
+> Acked-by: Tejun Heo <tj@kernel.org>
+> 
+> The patch is pretty widely spread.  I don't mind how it gets routed
+> but what's the plan?
 
-2013/9/12 Vincent Thiele <vincentthiele@gmail.com>:
-> Thank you very much. The vendor driver doesn't work with 3.8 or 3.9.
-> Therefore i use the patched vendor driver but with 3.10 or 3.11 even
-> the patched dkms driver doesn't work.
->
-> 2013/9/12 Larry Finger <Larry.Finger@lwfinger.net>:
->> On 09/12/2013 12:57 AM, Vincent Thiele wrote:
->>>
->>> No i tried your "ping-solution" with kernel 3.11 but it dosen't work.
->>
->>
->> I just discovered that your device is a 300 Mbps unit, which implies a 2x2
->> configuration. The only one of them that I have does not work with any Linux
->> driver; however, some of the postings that I have read suggest that this one
->> will work with the vendor driver.
->>
->> I just bought a TL-WN823N on E-Bay. I think the expected delivery is Sept.
->> 16. Once I get it, I will try to see what I can learn.
->>
->> Larry
->>
->>
+The plan is... I'm going to try and avoid going through the hell of
+re-posting this patch series to all the recipients another time...
+(It's taken some 17 hours and lots of hand holding to get this patch
+set out without exim jumping off a cliff into deep OOM - soo deep that
+even the OOM killer doesn't run and the CPU is 100% idle because
+every single process stuck in an uninterruptible sleep waiting for
+every other process to free some memory - ouch!)
+
+I know that dealing with this patch set will be a problem due to how
+widespread this is, but much of the driver level changes come down to
+depending on a couple of patches.  One solution would be if I published
+a branch with just the dependencies in, which subsystem maintainers
+could pull, and then apply the appropriate patches on top.
+
+Another would be if subsystem maintainers are happy that I carry them,
+I can add the acks, and then later on towards the end of the cycle,
+provide a branch subsystem maintainers could pull.
+
+Or... if you can think of something easier...
