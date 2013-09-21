@@ -1,59 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:35004 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759377Ab3ICFCs (ORCPT
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:47936 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752391Ab3IURrm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Sep 2013 01:02:48 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/3] ath9k: Add and use initvals for channel 14
-Date: Tue,  3 Sep 2013 10:28:56 +0530
-Message-Id: <1378184337-1816-2-git-send-email-sujith@msujith.org> (sfid-20130903_070252_366258_E88A4864)
-In-Reply-To: <1378184337-1816-1-git-send-email-sujith@msujith.org>
-References: <1378184337-1816-1-git-send-email-sujith@msujith.org>
+	Sat, 21 Sep 2013 13:47:42 -0400
+Received: by mail-wi0-f182.google.com with SMTP id ez12so759843wid.3
+        for <linux-wireless@vger.kernel.org>; Sat, 21 Sep 2013 10:47:41 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAEZsi7GtEk2a5PvBCica0zvmGZNPqHK9XzZV2vma9nGDv1j7cw@mail.gmail.com>
+References: <CAEZsi7Hde5NyTRgm7Lf_4LvHMAEJouzaqMNUwxr-iSipuEcsyQ@mail.gmail.com>
+	<522E4315.4040806@lwfinger.net>
+	<1378764913.31180.9.camel@dcbw.foobar.com>
+	<CAEZsi7FY8HdBcb0p1svijAdFjB0MbrYv_Zft0B_+RQTpGWCnhQ@mail.gmail.com>
+	<1378916091.1693.21.camel@dcbw.foobar.com>
+	<52309B75.3010408@lwfinger.net>
+	<5230A440.5050709@ilande.co.uk>
+	<5230B573.9030800@lwfinger.net>
+	<CAEZsi7G+FqUh2fBXLLR17qiBb1ggLu2+11aYRt2Wppr1gGK-Wg@mail.gmail.com>
+	<52311E9A.7030902@lwfinger.net>
+	<CAEZsi7F-RxaZJNaYi53kTtsQbxL4TU6DhTPo5v-O5ry=pawb_Q@mail.gmail.com>
+	<52315E0C.9010806@lwfinger.net>
+	<CAEZsi7GtEk2a5PvBCica0zvmGZNPqHK9XzZV2vma9nGDv1j7cw@mail.gmail.com>
+Date: Sat, 21 Sep 2013 19:47:40 +0200
+Message-ID: <CAEZsi7Fnw_u87W5cXhojMQg8hr6h5PEmwWU9Vh14zzKL6MY4og@mail.gmail.com> (sfid-20130921_194745_867127_DBD53B5D)
+Subject: Re: No connection with TP-Link TL-WN823N (rtl8192cu)
+From: Vincent Thiele <vincentthiele@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Any news?
 
-This is missing for AR9565.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_hw.c           | 2 ++
- drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h | 7 +++++++
- 2 files changed, 9 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-index d40bdd2..b07f164 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-@@ -364,6 +364,8 @@ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
- 
- 		INIT_INI_ARRAY(&ah->iniModesFastClock,
- 				ar9565_1p0_modes_fast_clock);
-+		INIT_INI_ARRAY(&ah->iniCckfirJapan2484,
-+			       ar9565_1p0_baseband_core_txfir_coeff_japan_2484);
- 	} else {
- 		/* mac */
- 		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_CORE],
-diff --git a/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h
-index 03ecc07..a8c757b 100644
---- a/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h
-@@ -1231,4 +1231,11 @@ static const u32 ar9565_1p0_modes_high_power_tx_gain_table[][5] = {
- 	{0x00016054, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
- };
- 
-+static const u32 ar9565_1p0_baseband_core_txfir_coeff_japan_2484[][2] = {
-+	/* Addr      allmodes  */
-+	{0x0000a398, 0x00000000},
-+	{0x0000a39c, 0x6f7f0301},
-+	{0x0000a3a0, 0xca9228ee},
-+};
-+
- #endif /* INITVALS_9565_1P0_H */
--- 
-1.8.4
-
+2013/9/12 Vincent Thiele <vincentthiele@gmail.com>:
+> Thank you very much. The vendor driver doesn't work with 3.8 or 3.9.
+> Therefore i use the patched vendor driver but with 3.10 or 3.11 even
+> the patched dkms driver doesn't work.
+>
+> 2013/9/12 Larry Finger <Larry.Finger@lwfinger.net>:
+>> On 09/12/2013 12:57 AM, Vincent Thiele wrote:
+>>>
+>>> No i tried your "ping-solution" with kernel 3.11 but it dosen't work.
+>>
+>>
+>> I just discovered that your device is a 300 Mbps unit, which implies a 2x2
+>> configuration. The only one of them that I have does not work with any Linux
+>> driver; however, some of the postings that I have read suggest that this one
+>> will work with the vendor driver.
+>>
+>> I just bought a TL-WN823N on E-Bay. I think the expected delivery is Sept.
+>> 16. Once I get it, I will try to see what I can learn.
+>>
+>> Larry
+>>
+>>
