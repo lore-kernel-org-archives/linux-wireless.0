@@ -1,197 +1,188 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:58065 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751502Ab3IJOxT (ORCPT
+Received: from s15283307.onlinehome-server.info ([87.106.208.187]:40756 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751398Ab3IUREN convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Sep 2013 10:53:19 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: add explicit IBSS driver operations
-Date: Tue, 10 Sep 2013 16:53:14 +0200
-Message-Id: <1378824794-16689-1-git-send-email-johannes@sipsolutions.net> (sfid-20130910_165323_465723_DECA41F4)
+	Sat, 21 Sep 2013 13:04:13 -0400
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
+Subject: Re: [PATCH v5 2/2] Bluetooth: btmrvl: add calibration data download support
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <1379715667-22424-2-git-send-email-bzhao@marvell.com>
+Date: Sat, 21 Sep 2013 12:03:51 -0500
+Cc: <linux-bluetooth@vger.kernel.org>,
+	Gustavo Padovan <gustavo@padovan.org>,
+	Johan Hedberg <johan.hedberg@gmail.com>,
+	<linux-wireless@vger.kernel.org>,
+	Mike Frysinger <vapier@chromium.org>,
+	Hyuckjoo Lee <hyuckjoo.lee@samsung.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Message-Id: <05172D80-CE30-4B7D-A64E-11B8E320EF7F@holtmann.org> (sfid-20130921_190417_046458_6ECB5FDA)
+References: <1379715667-22424-1-git-send-email-bzhao@marvell.com> <1379715667-22424-2-git-send-email-bzhao@marvell.com>
+To: Bing Zhao <bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi Bing,
 
-This can be useful for drivers if they have any failure cases
-when joining an IBSS. Also move setting the queue parameters
-to before this new call, in case the new driver op needs them
-already.
+> A text file containing calibration data in hex format can
+> be provided at following path:
+> 
+> /lib/firmware/mrvl/sd8797_caldata.conf
+> 
+> The data will be downloaded to firmware during initialization.
+> 
+> Reviewed-by: Mike Frysinger <vapier@chromium.org>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> Signed-off-by: Bing Zhao <bzhao@marvell.com>
+> Signed-off-by: Hyuckjoo Lee <hyuckjoo.lee@samsung.com>
+> ---
+> v2: Remove module parameter. The calibration data will be downloaded
+>    only when the device speicific data file is provided.
+>    (Marcel Holtmann)
+> v3: Fix crash (misaligned memory access) on ARM
+> v4: Simplify white space parsing and save some CPU cycles (Mike Frysinger)
+> v5: Improvements in cal data parsing logic. Add explanatory comments.
+>    Replace GFP_ATOMIC flag with GFP_KERNEL (Mike Frysinger)
+> 
+> drivers/bluetooth/btmrvl_drv.h  |   10 +++-
+> drivers/bluetooth/btmrvl_main.c |  144 ++++++++++++++++++++++++++++++++++++++-
+> drivers/bluetooth/btmrvl_sdio.c |    9 ++-
+> drivers/bluetooth/btmrvl_sdio.h |    2 +
+> 4 files changed, 161 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/bluetooth/btmrvl_drv.h b/drivers/bluetooth/btmrvl_drv.h
+> index e776b8b..dcd3468 100644
+> --- a/drivers/bluetooth/btmrvl_drv.h
+> +++ b/drivers/bluetooth/btmrvl_drv.h
+> @@ -23,6 +23,8 @@
+> #include <linux/bitops.h>
+> #include <linux/slab.h>
+> #include <net/bluetooth/bluetooth.h>
+> +#include <linux/ctype.h>
+> +#include <linux/firmware.h>
+> 
+> #define BTM_HEADER_LEN			4
+> #define BTM_UPLD_SIZE			2312
+> @@ -41,6 +43,8 @@ struct btmrvl_thread {
+> struct btmrvl_device {
+> 	void *card;
+> 	struct hci_dev *hcidev;
+> +	struct device *dev;
+> +	const char *cal_data;
+> 
+> 	u8 dev_type;
+> 
+> @@ -92,6 +96,7 @@ struct btmrvl_private {
+> #define BT_CMD_HOST_SLEEP_CONFIG	0x59
+> #define BT_CMD_HOST_SLEEP_ENABLE	0x5A
+> #define BT_CMD_MODULE_CFG_REQ		0x5B
+> +#define BT_CMD_LOAD_CONFIG_DATA		0x61
+> 
+> /* Sub-commands: Module Bringup/Shutdown Request/Response */
+> #define MODULE_BRINGUP_REQ		0xF1
+> @@ -117,10 +122,13 @@ struct btmrvl_private {
+> #define PS_SLEEP			0x01
+> #define PS_AWAKE			0x00
+> 
+> +#define BT_CMD_DATA_SIZE		32
+> +#define BT_CAL_DATA_SIZE		28
+> +
+> struct btmrvl_cmd {
+> 	__le16 ocf_ogf;
+> 	u8 length;
+> -	u8 data[4];
+> +	u8 data[BT_CMD_DATA_SIZE];
+> } __packed;
+> 
+> struct btmrvl_event {
+> diff --git a/drivers/bluetooth/btmrvl_main.c b/drivers/bluetooth/btmrvl_main.c
+> index e352f8e..6eea188 100644
+> --- a/drivers/bluetooth/btmrvl_main.c
+> +++ b/drivers/bluetooth/btmrvl_main.c
+> @@ -57,8 +57,9 @@ bool btmrvl_check_evtpkt(struct btmrvl_private *priv, struct sk_buff *skb)
+> 		ocf = hci_opcode_ocf(opcode);
+> 		ogf = hci_opcode_ogf(opcode);
+> 
+> -		if (ocf == BT_CMD_MODULE_CFG_REQ &&
+> -					priv->btmrvl_dev.sendcmdflag) {
+> +		if ((ocf == BT_CMD_MODULE_CFG_REQ ||
+> +		     ocf == BT_CMD_LOAD_CONFIG_DATA) &&
+> +		    priv->btmrvl_dev.sendcmdflag) {
+> 			priv->btmrvl_dev.sendcmdflag = false;
+> 			priv->adapter->cmd_complete = true;
+> 			wake_up_interruptible(&priv->adapter->cmd_wait_q);
+> @@ -479,6 +480,142 @@ static int btmrvl_open(struct hci_dev *hdev)
+> 	return 0;
+> }
+> 
+> +/*
+> + * This function parses provided calibration data input. It should contain
+> + * hex bytes separated by space or new line character. Here is an example.
+> + * 00 1C 01 37 FF FF FF FF 02 04 7F 01
+> + * CE BA 00 00 00 2D C6 C0 00 00 00 00
+> + * 00 F0 00 00
+> + */
+> +static int btmrvl_parse_cal_cfg(const u8 *src, u32 len, u8 *dst, u32 dst_size)
+> +{
+> +	const u8 *s = src;
+> +	u8 *d = dst;
+> +	int ret;
+> +	u8 tmp[3];
+> +
+> +	tmp[2] = '\0';
+> +	while ((s - src) <= len - 2) {
+> +		if (isspace(*s) || *s == '\n') {
+> +			s++;
+> +			continue;
+> +		}
+> +
+> +		if (isxdigit(*s)) {
+> +			if ((d - dst) >= dst_size) {
+> +				BT_ERR("calibration data file too big!!!");
+> +				return -EINVAL;
+> +			}
+> +
+> +			memcpy(tmp, s, 2);
+> +
+> +			ret = kstrtou8(tmp, 16, d++);
+> +			if (ret < 0)
+> +				return ret;
+> +
+> +			s += 2;
+> +		} else {
+> +			return -EINVAL;
+> +		}
+> +	}
+> +	if (d == dst)
+> +		return -EINVAL;
+> +
+> +	return 0;
+> +}
+> +
+> +static int btmrvl_load_cal_data(struct btmrvl_private *priv,
+> +				u8 *config_data)
+> +{
+> +	struct sk_buff *skb;
+> +	struct btmrvl_cmd *cmd;
+> +	int i;
+> +
+> +	skb = bt_skb_alloc(sizeof(*cmd), GFP_KERNEL);
+> +	if (!skb)
+> +		return -ENOMEM;
+> +
+> +	cmd = (struct btmrvl_cmd *)skb->data;
+> +	cmd->ocf_ogf =
+> +		cpu_to_le16(hci_opcode_pack(OGF, BT_CMD_LOAD_CONFIG_DATA));
+> +	cmd->length = BT_CMD_DATA_SIZE;
+> +	cmd->data[0] = 0x00;
+> +	cmd->data[1] = 0x00;
+> +	cmd->data[2] = 0x00;
+> +	cmd->data[3] = BT_CMD_DATA_SIZE - 4;
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/mac80211.h    |  7 +++++++
- net/mac80211/driver-ops.h | 27 +++++++++++++++++++++++++++
- net/mac80211/ibss.c       | 22 ++++++++++++++++++++--
- net/mac80211/trace.h      | 35 +++++++++++++++++++++++++++++++++++
- 4 files changed, 89 insertions(+), 2 deletions(-)
+why not use __hci_cmd_sync() here. It is designed to be used from ->setup() where it is guaranteed that the HCI request lock is held. And it is guaranteed that ->setup() is executed in a workqueue.
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 9bf07ef..2e8e817 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2671,6 +2671,10 @@ enum ieee80211_roc_type {
-  *	zero using ieee80211_csa_is_complete() after the beacon has been
-  *	transmitted and then call ieee80211_csa_finish().
-  *
-+ * @join_ibss: Join an IBSS (on an IBSS interface); this is called after all
-+ *	information in bss_conf is set up and the beacon can be retrieved. A
-+ *	channel context is bound before this is called.
-+ * @leave_ibss: Leave the IBSS again.
-  */
- struct ieee80211_ops {
- 	void (*tx)(struct ieee80211_hw *hw,
-@@ -2862,6 +2866,9 @@ struct ieee80211_ops {
- 	void (*channel_switch_beacon)(struct ieee80211_hw *hw,
- 				      struct ieee80211_vif *vif,
- 				      struct cfg80211_chan_def *chandef);
-+
-+	int (*join_ibss)(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
-+	void (*leave_ibss)(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
- };
- 
- /**
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index b3ea11f..5d03c47 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -1085,4 +1085,31 @@ drv_channel_switch_beacon(struct ieee80211_sub_if_data *sdata,
- 	}
- }
- 
-+static inline int drv_join_ibss(struct ieee80211_local *local,
-+				struct ieee80211_sub_if_data *sdata)
-+{
-+	int ret = 0;
-+
-+	might_sleep();
-+	check_sdata_in_driver(sdata);
-+
-+	trace_drv_join_ibss(local, sdata, &sdata->vif.bss_conf);
-+	if (local->ops->join_ibss)
-+		ret = local->ops->join_ibss(&local->hw, &sdata->vif);
-+	trace_drv_return_int(local, ret);
-+	return ret;
-+}
-+
-+static inline void drv_leave_ibss(struct ieee80211_local *local,
-+				  struct ieee80211_sub_if_data *sdata)
-+{
-+	might_sleep();
-+	check_sdata_in_driver(sdata);
-+
-+	trace_drv_leave_ibss(local, sdata);
-+	if (local->ops->leave_ibss)
-+		local->ops->leave_ibss(&local->hw, &sdata->vif);
-+	trace_drv_return_void(local);
-+}
-+
- #endif /* __MAC80211_DRIVER_OPS */
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 5ea9b3a..21a0b88 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -229,6 +229,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 	struct beacon_data *presp;
- 	enum nl80211_bss_scan_width scan_width;
- 	bool have_higher_than_11mbit;
-+	int err;
- 
- 	sdata_assert_lock(sdata);
- 
-@@ -247,6 +248,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 		ieee80211_bss_info_change_notify(sdata,
- 						 BSS_CHANGED_IBSS |
- 						 BSS_CHANGED_BEACON_ENABLED);
-+		drv_leave_ibss(local, sdata);
- 	}
- 
- 	presp = rcu_dereference_protected(ifibss->presp,
-@@ -329,11 +331,26 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 	else
- 		sdata->flags &= ~IEEE80211_SDATA_OPERATING_GMODE;
- 
-+	ieee80211_set_wmm_default(sdata, true);
-+
- 	sdata->vif.bss_conf.ibss_joined = true;
- 	sdata->vif.bss_conf.ibss_creator = creator;
--	ieee80211_bss_info_change_notify(sdata, bss_change);
- 
--	ieee80211_set_wmm_default(sdata, true);
-+	err = drv_join_ibss(local, sdata);
-+	if (err) {
-+		sdata->vif.bss_conf.ibss_joined = false;
-+		sdata->vif.bss_conf.ibss_creator = false;
-+		sdata->vif.bss_conf.enable_beacon = false;
-+		sdata->vif.bss_conf.ssid_len = 0;
-+		RCU_INIT_POINTER(ifibss->presp, NULL);
-+		kfree_rcu(presp, rcu_head);
-+		ieee80211_vif_release_channel(sdata);
-+		sdata_info(sdata, "Failed to join IBSS, driver failure: %d\n",
-+			   err);
-+		return;
-+	}
-+
-+	ieee80211_bss_info_change_notify(sdata, bss_change);
- 
- 	ifibss->state = IEEE80211_IBSS_MLME_JOINED;
- 	mod_timer(&ifibss->timer,
-@@ -761,6 +778,7 @@ static void ieee80211_ibss_disconnect(struct ieee80211_sub_if_data *sdata)
- 	clear_bit(SDATA_STATE_OFFCHANNEL_BEACON_STOPPED, &sdata->state);
- 	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON_ENABLED |
- 						BSS_CHANGED_IBSS);
-+	drv_leave_ibss(local, sdata);
- 	ieee80211_vif_release_channel(sdata);
- }
- 
-diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-index 1aba645..5d62c58 100644
---- a/net/mac80211/trace.h
-+++ b/net/mac80211/trace.h
-@@ -1475,6 +1475,41 @@ DEFINE_EVENT(local_sdata_evt, drv_ipv6_addr_change,
- );
- #endif
- 
-+TRACE_EVENT(drv_join_ibss,
-+	TP_PROTO(struct ieee80211_local *local,
-+		 struct ieee80211_sub_if_data *sdata,
-+		 struct ieee80211_bss_conf *info),
-+
-+	TP_ARGS(local, sdata, info),
-+
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+		VIF_ENTRY
-+		__field(u8, dtimper)
-+		__field(u16, bcnint)
-+		__dynamic_array(u8, ssid, info->ssid_len);
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+		VIF_ASSIGN;
-+		__entry->dtimper = info->dtim_period;
-+		__entry->bcnint = info->beacon_int;
-+		memcpy(__get_dynamic_array(ssid), info->ssid, info->ssid_len);
-+	),
-+
-+	TP_printk(
-+		LOCAL_PR_FMT  VIF_PR_FMT,
-+		LOCAL_PR_ARG, VIF_PR_ARG
-+	)
-+);
-+
-+DEFINE_EVENT(local_sdata_evt, drv_leave_ibss,
-+	TP_PROTO(struct ieee80211_local *local,
-+		 struct ieee80211_sub_if_data *sdata),
-+	TP_ARGS(local, sdata)
-+);
-+
- /*
-  * Tracing for API calls that drivers call.
-  */
--- 
-1.8.4.rc3
+Regards
+
+Marcel
 
