@@ -1,41 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:37872 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753224Ab3IEFat (ORCPT
+Received: from mail-we0-f182.google.com ([74.125.82.182]:52442 "EHLO
+	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752493Ab3IUW27 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Sep 2013 01:30:49 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath9k: Add DELL 1707 to supported card table
-Date: Thu,  5 Sep 2013 10:56:54 +0530
-Message-Id: <1378358814-31214-1-git-send-email-sujith@msujith.org> (sfid-20130905_073103_641680_1696C0DB)
+	Sat, 21 Sep 2013 18:28:59 -0400
+From: Peter Senna Tschudin <peter.senna@gmail.com>
+To: bzhao@marvell.com
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org,
+	Peter Senna Tschudin <peter.senna@gmail.com>
+Subject: [PATCH 11/19] wireless: Change variable type to bool
+Date: Sun, 22 Sep 2013 00:27:43 +0200
+Message-Id: <1379802471-30252-11-git-send-email-peter.senna@gmail.com> (sfid-20130922_003307_004649_A799B522)
+In-Reply-To: <1379802471-30252-1-git-send-email-peter.senna@gmail.com>
+References: <1379802471-30252-1-git-send-email-peter.senna@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+The variables cancel_scan_cmd, enable_data, hs_activate and valid are
+only assigned the values true and false. Change its type to bool.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+The simplified semantic patch that find this problem is as
+follows (http://coccinelle.lip6.fr/):
+
+@exists@
+type T;
+identifier b;
+@@
+- T
++ bool
+  b = ...;
+  ... when any
+  b = \(true\|false\)
+
+Signed-off-by: Peter Senna Tschudin <peter.senna@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/pci.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/net/wireless/mwifiex/cmdevt.c  | 2 +-
+ drivers/net/wireless/mwifiex/join.c    | 2 +-
+ drivers/net/wireless/mwifiex/sta_cmd.c | 2 +-
+ drivers/net/wireless/mwifiex/wmm.c     | 2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index 1aa757a..7e4c252 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -379,6 +379,11 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
- 			 PCI_VENDOR_ID_HP,
- 			 0x217F),
- 	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0036,
-+			 PCI_VENDOR_ID_DELL,
-+			 0x020E),
-+	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
+diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
+index 2d76147..fb3fa18 100644
+--- a/drivers/net/wireless/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/mwifiex/cmdevt.c
+@@ -1048,7 +1048,7 @@ mwifiex_cancel_pending_ioctl(struct mwifiex_adapter *adapter)
+ 	struct cmd_ctrl_node *cmd_node = NULL, *tmp_node = NULL;
+ 	unsigned long cmd_flags;
+ 	unsigned long scan_pending_q_flags;
+-	uint16_t cancel_scan_cmd = false;
++	bool cancel_scan_cmd = false;
  
- 	/* WB335 2-ANT */
- 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 	if ((adapter->curr_cmd) &&
+ 	    (adapter->curr_cmd->wait_q_enabled)) {
+diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
+index 9d7c0e6..717fbe2 100644
+--- a/drivers/net/wireless/mwifiex/join.c
++++ b/drivers/net/wireless/mwifiex/join.c
+@@ -621,7 +621,7 @@ int mwifiex_ret_802_11_associate(struct mwifiex_private *priv,
+ 	int ret = 0;
+ 	struct ieee_types_assoc_rsp *assoc_rsp;
+ 	struct mwifiex_bssdescriptor *bss_desc;
+-	u8 enable_data = true;
++	bool enable_data = true;
+ 	u16 cap_info, status_code;
+ 
+ 	assoc_rsp = (struct ieee_types_assoc_rsp *) &resp->params;
+diff --git a/drivers/net/wireless/mwifiex/sta_cmd.c b/drivers/net/wireless/mwifiex/sta_cmd.c
+index c0268b5..7d66018 100644
+--- a/drivers/net/wireless/mwifiex/sta_cmd.c
++++ b/drivers/net/wireless/mwifiex/sta_cmd.c
+@@ -327,7 +327,7 @@ mwifiex_cmd_802_11_hs_cfg(struct mwifiex_private *priv,
+ {
+ 	struct mwifiex_adapter *adapter = priv->adapter;
+ 	struct host_cmd_ds_802_11_hs_cfg_enh *hs_cfg = &cmd->params.opt_hs_cfg;
+-	u16 hs_activate = false;
++	bool hs_activate = false;
+ 
+ 	if (!hscfg_param)
+ 		/* New Activate command */
+diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
+index 2e8f9cd..8f8fea0 100644
+--- a/drivers/net/wireless/mwifiex/wmm.c
++++ b/drivers/net/wireless/mwifiex/wmm.c
+@@ -708,7 +708,7 @@ int mwifiex_ret_wmm_get_status(struct mwifiex_private *priv,
+ {
+ 	u8 *curr = (u8 *) &resp->params.get_wmm_status;
+ 	uint16_t resp_len = le16_to_cpu(resp->size), tlv_len;
+-	int valid = true;
++	bool valid = true;
+ 
+ 	struct mwifiex_ie_types_data *tlv_hdr;
+ 	struct mwifiex_ie_types_wmm_queue_status *tlv_wmm_qstatus;
 -- 
-1.8.4
+1.8.3.1
 
