@@ -1,44 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:33758 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1757512Ab3IAWs3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Sep 2013 18:48:29 -0400
-Message-ID: <1378075707.1953.29.camel@joe-AO722> (sfid-20130902_004844_013432_86E553D4)
-Subject: [PATCH net-hext] wireless: scan: Remove comment to
- compare_ether_addr
-From: Joe Perches <joe@perches.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>
-Date: Sun, 01 Sep 2013 15:48:27 -0700
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from ring0.de ([91.143.88.219]:60137 "EHLO smtp.ring0.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752383Ab3IUOQs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Sep 2013 10:16:48 -0400
+Date: Sat, 21 Sep 2013 16:16:16 +0200
+From: Sebastian Reichel <sre@ring0.de>
+To: Pavel Machek <pavel@ucw.cz>
+Cc: Luciano Coelho <coelho@ti.com>,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Tony Lindgren <tony@atomide.com>, nsekhar@ti.com,
+	mturquette@linaro.org, mark.rutland@arm.com,
+	Felipe Balbi <balbi@ti.com>, grant.likely@linaro.org,
+	rob.herring@calxeda.com, devicetree-discuss@lists.ozlabs.org,
+	linux-doc@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v2 0/9] wilink: add device tree support
+Message-ID: <20130921141614.GA21383@earth.universe> (sfid-20130921_161709_737161_54B42DA0)
+References: <1372776948-24840-1-git-send-email-coelho@ti.com>
+ <CANOLnOPBHesTiV61zpQ_QS9c7E91K50EnbMnGhvgaViuA_3=Bw@mail.gmail.com>
+ <1372859132.21065.111.camel@cumari.coelho.fi>
+ <20130921122718.GA4431@amd.pavel.ucw.cz>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="mP3DRpeJDSE+ciuQ"
+In-Reply-To: <20130921122718.GA4431@amd.pavel.ucw.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This function is being removed, so remove the reference to it.
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- net/wireless/scan.c | 4 ----
- 1 file changed, 4 deletions(-)
+--mP3DRpeJDSE+ciuQ
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index ad1e406..eeb7148 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -465,10 +465,6 @@ static int cmp_bss(struct cfg80211_bss *a,
- 		}
- 	}
- 
--	/*
--	 * we can't use compare_ether_addr here since we need a < > operator.
--	 * The binary return value of compare_ether_addr isn't enough
--	 */
- 	r = memcmp(a->bssid, b->bssid, sizeof(a->bssid));
- 	if (r)
- 		return r;
+On Sat, Sep 21, 2013 at 02:27:18PM +0200, Pavel Machek wrote:
+> Hi!
+>=20
+> > > > This is a follow-up on a previous patch set that had a smaller
+> > > > audience.  This time, I added the lists and people who were involved
+> > > > in the review of the bindings documentation, since most of my chang=
+es
+> > > > in v2 are coming from discussions there.
+> > > >
+> > > > This patch series adds device tree support to the wlcore_sdio drive=
+r,
+> > > > which is used by WiLink6, WiLink7 and WiLink8.
+> > >=20
+> > > Could you perhaps consider doing device tree conversion for wl1251
+> > > too? With the knowledge you have from working on this series, it would
+> > > be much easier for you to do it than for someone else, and I don't
+> > > have much hope someone will do it at all. It's WiLink series chip
+> > > after all. Without this pandora and N900 are going to lose wifi
+> > > support after the switch to dt-only kernel.
+> >=20
+> > Unfortunately I don't have much time to work on wl1251.  I think it
+> > wouldn't be too difficult to do though, so patches are welcome. ;)
+> >=20
+> > Maybe you could try to make this change and I could support you if
+> > needed?
+> >=20
+> >=20
+> > > I can offer you my help testing things on pandora and I'm sure someone
+> > > here could try it on N900.
+> >=20
+> > I could try it on the N900, if it is still bootable easily with the
+> > mainline. ;)
+>=20
+> 3.11 should be bootable on mainline, including device tree and
+> video. (But excluding some other stuff, like MMC.)
 
+I got external MMC (=3D> =B5SD) working with some small modifications of
+the omap3-n900.dts file. I have not yet tried internal MMC, since
+its not important for me at the moment, but I guess its also just a
+small change in the dts file.
 
+-- Sebastian
+
+--mP3DRpeJDSE+ciuQ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+
+iQIcBAEBCAAGBQJSPaouAAoJENju1/PIO/qa6tMP/1MAZ94J9QoJEOmvx3/92OHt
+XYigYI/aoUk9JtWuO7NSBTNKl2H+XRGB63SsitRx864ogy1MKEIKNfd+aQdOMWmy
++CuVhKGaIRUSOt9HpyJOu/hKH4QgGSbzDZZh5tZ1+X/ZUj5DlnXCkepeuJ3VXQWv
+D/fjjnWOnSLYWP/tGRAdBhsOFm1sVcEVHMnWZ8CpBRamjKp5HhHUjUXZctBsedB6
+MtM9BMSA//4iZeIWCQzHHBVWOiUV/Cn6foIeyQuI0vsUobHbOJRYAyDhjnVyNRMB
+PpU9bK5Ultfav30NejyNPKfueZKlUo/Q//HoTwJYdEMKYnEwjomDzXPDwJixsVSF
+mEeOQstZyGAcaz0q/fAsf4naPmiZJ9lj2i26R4fg8YnGQKrBf84oQmGViHnb0yff
+wW+4d4Xl97Z4aybVn8HxTqMrNC9kHaqZFu/sncNJK66wK1wkI2LKYSouhIpJ9Ywm
++szbhVhNSpqTagD1DNf6G09GTbMB2Ruw4Rf3fbGdU3QJgak8l3+2YeI3NbKLf4TF
+ldXTdawgpOebByQJw4kQ61CmT/v8n+uOoeV5acQLEFyqYVLC6OmqtrbBhJUebRX8
+Uc5z9mn2Gimx1A3JwSNYTuSym6pJoUCXctLPUIXO55TvkjRmpozvaz3YkDQpv6dd
+pSR7gEkUpohisVZMz7HA
+=RJDB
+-----END PGP SIGNATURE-----
+
+--mP3DRpeJDSE+ciuQ--
