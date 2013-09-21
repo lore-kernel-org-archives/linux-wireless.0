@@ -1,55 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2568 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754723Ab3IYLF6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Sep 2013 07:05:58 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 0/7] brcmfmac: cleanup and new device support
-Date: Wed, 25 Sep 2013 13:05:39 +0200
-Message-ID: <1380107146-24026-1-git-send-email-arend@broadcom.com> (sfid-20130925_130601_760235_13F4C625)
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:49850 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751759Ab3IUM1U (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Sep 2013 08:27:20 -0400
+Date: Sat, 21 Sep 2013 14:27:18 +0200
+From: Pavel Machek <pavel@ucw.cz>
+To: Luciano Coelho <coelho@ti.com>
+Cc: Grazvydas Ignotas <notasas@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Tony Lindgren <tony@atomide.com>, nsekhar@ti.com,
+	mturquette@linaro.org, mark.rutland@arm.com,
+	Felipe Balbi <balbi@ti.com>, grant.likely@linaro.org,
+	rob.herring@calxeda.com, devicetree-discuss@lists.ozlabs.org,
+	linux-doc@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v2 0/9] wilink: add device tree support
+Message-ID: <20130921122718.GA4431@amd.pavel.ucw.cz> (sfid-20130921_142735_434826_1F5B7679)
+References: <1372776948-24840-1-git-send-email-coelho@ti.com>
+ <CANOLnOPBHesTiV61zpQ_QS9c7E91K50EnbMnGhvgaViuA_3=Bw@mail.gmail.com>
+ <1372859132.21065.111.camel@cumari.coelho.fi>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1372859132.21065.111.camel@cumari.coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series has a few cleanup patches fixing a sparse error, cleaning
-up the rx path and also changing the firmware filename approach after
-getting feedback on this by Stephen Warren. The remaining patches are
-adding support for the BCM4339 SDIO chipset.
+Hi!
 
-This series is intended for v3.13 kernel and applies to the master
-branch of the wireless-next repository.
+> > > This is a follow-up on a previous patch set that had a smaller
+> > > audience.  This time, I added the lists and people who were involved
+> > > in the review of the bindings documentation, since most of my changes
+> > > in v2 are coming from discussions there.
+> > >
+> > > This patch series adds device tree support to the wlcore_sdio driver,
+> > > which is used by WiLink6, WiLink7 and WiLink8.
+> > 
+> > Could you perhaps consider doing device tree conversion for wl1251
+> > too? With the knowledge you have from working on this series, it would
+> > be much easier for you to do it than for someone else, and I don't
+> > have much hope someone will do it at all. It's WiLink series chip
+> > after all. Without this pandora and N900 are going to lose wifi
+> > support after the switch to dt-only kernel.
+> 
+> Unfortunately I don't have much time to work on wl1251.  I think it
+> wouldn't be too difficult to do though, so patches are welcome. ;)
+> 
+> Maybe you could try to make this change and I could support you if
+> needed?
+> 
+> 
+> > I can offer you my help testing things on pandora and I'm sure someone
+> > here could try it on N900.
+> 
+> I could try it on the N900, if it is still bootable easily with the
+> mainline. ;)
 
-Arend van Spriel (2):
-  brcmfmac: fix sparse error 'bad constant expression'
-  brcmfmac: rework rx path bus interface
+3.11 should be bootable on mainline, including device tree and
+video. (But excluding some other stuff, like MMC.)
 
-Franky Lin (4):
-  brcmfmac: sync firmware event list
-  brcmfmac: add BCM4339 SDIO interface support
-  brcmfmac: add valid core index check in related functions
-  brcmfmac: reserve memory for bus layer in sk_buff::cb
-
-Hante Meuleman (1):
-  brcmfmac: Use fw filename and nvram based of devid for sdio.
-
- .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |   11 +-
- drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    2 -
- drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h  |    2 +-
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   38 ++--
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |  234 ++++++++++++--------
- drivers/net/wireless/brcm80211/brcmfmac/fweh.h     |    5 +-
- drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |    2 +
- .../net/wireless/brcm80211/brcmfmac/sdio_chip.c    |   28 +++
- .../net/wireless/brcm80211/brcmfmac/sdio_chip.h    |    8 +
- drivers/net/wireless/brcm80211/brcmfmac/usb.c      |    5 +-
- .../net/wireless/brcm80211/include/brcm_hw_ids.h   |    1 +
- 11 files changed, 211 insertions(+), 125 deletions(-)
-
+									Pavel
 -- 
-1.7.10.4
-
-
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
