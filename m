@@ -1,68 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4871 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750724Ab3IXHxs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Sep 2013 03:53:48 -0400
-Received: from [10.176.68.21] (unknown [10.176.68.21]) by
- mail-sj1-12.sj.broadcom.com (Postfix) with ESMTP id 6024E207C0 for
- <linux-wireless@vger.kernel.org>; Tue, 24 Sep 2013 00:53:36 -0700 (PDT)
-Message-ID: <524144FF.9020908@broadcom.com> (sfid-20130924_095351_732309_D660C654)
-Date: Tue, 24 Sep 2013 09:53:35 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:39750 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750938Ab3IUUJV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Sep 2013 16:09:21 -0400
+Date: Sat, 21 Sep 2013 21:00:00 +0100
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: Heiko =?iso-8859-1?Q?St=FCbner?= <heiko@sntech.de>
+Cc: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
+	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
+	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
+	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	uclinux-dist-devel@blackfin.uclinux.org,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vinod Koul <vinod.koul@intel.com>
+Subject: Re: [PATCH 24/51] DMA-API: dma: pl330: add
+	dma_set_mask_and_coherent() call
+Message-ID: <20130921200000.GS25647@n2100.arm.linux.org.uk> (sfid-20130921_220953_003140_C46CB6E1)
+References: <20130919212235.GD12758@n2100.arm.linux.org.uk> <E1VMm5t-0007i5-V7@rmk-PC.arm.linux.org.uk> <201309201926.29084.heiko@sntech.de>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Re: brcmsmac causes soft lockup in 3.12-rc1
-References: <20130921223440.GA5297@mail.catnarok.net>
- <523FF83D.8030103@broadcom.com>
- <20130924005224.GA27400@mail.catnarok.net>
-In-Reply-To: <20130924005224.GA27400@mail.catnarok.net>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <201309201926.29084.heiko@sntech.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/24/2013 02:52 AM, Michael Stolovitzsky wrote:
-> On Mon, Sep 23, 2013 at 10:13:49AM +0200, Arend van Spriel wrote:
->> On 09/22/2013 12:34 AM, Michael Stolovitzsky wrote:
->>> Hi,
->>>
->>> On 3.12-rc1, modprobe brcmsmac causes a soft lockup (trace #1), effectively killing the box. This is a Lenovo S206
->>> with BCM4313 (14e4:4727), which I believe is a bluetooth combo board. After a while,
->>> RCU scheduler code detects a lockup (trace #2).
->>>
->>> This did not happen in 3.11.1, although brcmsmac hasn't worked on this machine
->>> as far as I remember. In  the previous kernels (~3.2.0+), it loads, but the
->>> reception is extremely weak - you must be within few meters to the AP, and the card would
->>> die after several minutes. The proprietary wl.ko driver works fine.
->>>
->>> I've attached the dmesg output, the kernel configuration and the output of lspci -vnn.
->>> I'm comfortable with experimenting; please let me know how I can help here.
->>
->> A fix for this problem has been submitted to John. I think it is in
->> transit to mainline so probably will be in 3.12-rc2.
->>
->> Here the URL of the patch:
->>
->> https://git.kernel.org/cgit/linux/kernel/git/linville/wireless.git/patch/?id=aaa2ced15ad8dca8048666c9f70736424d696a6b
->>
->
-> Arend, much thanks and an apology for not checking the patches. I will try this out ASAP.
->
-> Is the (presumedly) low RX gain also a known problem with brcmsmac on BCM4313?
+On Fri, Sep 20, 2013 at 07:26:27PM +0200, Heiko Stübner wrote:
+> Am Donnerstag, 19. September 2013, 23:49:01 schrieb Russell King:
+> > The DMA API requires drivers to call the appropriate dma_set_mask()
+> > functions before doing any DMA mapping.  Add this required call to
+> > the AMBA PL08x driver.
+> 			^--- copy and paste error - should of course be PL330
 
-The patch is in 3.12-rc2. There have been more reports on that, but it 
-still needs to be investigated. Can you provide content of 
-/sys/kernel/debug/brcmsmac/bcma*/hardware? You need to have 
-CONFIG_BRCMDBG selected.
-
-Regards,
-Arend
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-
+Fixed, thanks.
