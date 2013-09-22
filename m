@@ -1,97 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:44680 "EHLO ebb06.tieto.com"
+Received: from ring0.de ([91.143.88.219]:35073 "EHLO smtp.ring0.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752961Ab3IZPrg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Sep 2013 11:47:36 -0400
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Bartosz Markowski <bartosz.markowski@tieto.com>
-Subject: [PATCH v3 06/13] ath10k: drop the fw versioning sanity check
-Date: Thu, 26 Sep 2013 17:47:10 +0200
-Message-ID: <1380210437-4391-7-git-send-email-bartosz.markowski@tieto.com> (sfid-20130926_174758_861859_990C5F99)
-In-Reply-To: <1380210437-4391-1-git-send-email-bartosz.markowski@tieto.com>
-References: <1380210437-4391-1-git-send-email-bartosz.markowski@tieto.com>
+	id S1752692Ab3IVOZX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Sep 2013 10:25:23 -0400
+Date: Sun, 22 Sep 2013 16:24:56 +0200
+From: Sebastian Reichel <sre@ring0.de>
+To: Pavel Machek <pavel@ucw.cz>
+Cc: Luciano Coelho <coelho@ti.com>,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Tony Lindgren <tony@atomide.com>, nsekhar@ti.com,
+	mturquette@linaro.org, mark.rutland@arm.com,
+	Felipe Balbi <balbi@ti.com>, grant.likely@linaro.org,
+	rob.herring@calxeda.com, devicetree-discuss@lists.ozlabs.org,
+	linux-doc@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v2 0/9] wilink: add device tree support
+Message-ID: <20130922142455.GA31967@earth.universe> (sfid-20130922_162604_221840_B1D03DDB)
+References: <1372776948-24840-1-git-send-email-coelho@ti.com>
+ <CANOLnOPBHesTiV61zpQ_QS9c7E91K50EnbMnGhvgaViuA_3=Bw@mail.gmail.com>
+ <1372859132.21065.111.camel@cumari.coelho.fi>
+ <20130921122718.GA4431@amd.pavel.ucw.cz>
+ <20130921141614.GA21383@earth.universe>
+ <20130922133632.GB8643@amd.pavel.ucw.cz>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="DocE+STaALJfprDB"
+In-Reply-To: <20130922133632.GB8643@amd.pavel.ucw.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It was corrupted and leading to compilation warning
-core.c: In function 'ath10k_check_fw_version':
-core.c:79: warning: comparison is always true due to limited range of data type
 
-Since we are going to support new FW track in the driver,
-the sanity check for fw version number would be an overkill
-then. This is just for information purposes anyway.
+--DocE+STaALJfprDB
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
-Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
----
- drivers/net/wireless/ath/ath10k/core.c |   25 -------------------------
- drivers/net/wireless/ath/ath10k/hw.h   |    6 ------
- 2 files changed, 31 deletions(-)
+On Sun, Sep 22, 2013 at 03:36:32PM +0200, Pavel Machek wrote:
+> > > > Unfortunately I don't have much time to work on wl1251.  I think it
+> > > > wouldn't be too difficult to do though, so patches are welcome. ;)
+> > > >=20
+> > > > Maybe you could try to make this change and I could support you if
+> > > > needed?
+> > > >=20
+> > > >=20
+> > > > > I can offer you my help testing things on pandora and I'm sure so=
+meone
+> > > > > here could try it on N900.
+> > > >=20
+> > > > I could try it on the N900, if it is still bootable easily with the
+> > > > mainline. ;)
+> > >=20
+> > > 3.11 should be bootable on mainline, including device tree and
+> > > video. (But excluding some other stuff, like MMC.)
+> >=20
+> > I got external MMC (=3D> =B5SD) working with some small modifications of
+> > the omap3-n900.dts file. I have not yet tried internal MMC, since
+> > its not important for me at the moment, but I guess its also just a
+> > small change in the dts file.
+>=20
+> Can we get the diff? :-).
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 76906d5..31860a6 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -59,27 +59,6 @@ static void ath10k_send_suspend_complete(struct ath10k *ar)
- 	wake_up(&ar->event_queue);
- }
- 
--static int ath10k_check_fw_version(struct ath10k *ar)
--{
--	char version[32];
--
--	if (ar->fw_version_major >= SUPPORTED_FW_MAJOR &&
--	    ar->fw_version_minor >= SUPPORTED_FW_MINOR &&
--	    ar->fw_version_release >= SUPPORTED_FW_RELEASE &&
--	    ar->fw_version_build >= SUPPORTED_FW_BUILD)
--		return 0;
--
--	snprintf(version, sizeof(version), "%u.%u.%u.%u",
--		 SUPPORTED_FW_MAJOR, SUPPORTED_FW_MINOR,
--		 SUPPORTED_FW_RELEASE, SUPPORTED_FW_BUILD);
--
--	ath10k_warn("WARNING: Firmware version %s is not officially supported.\n",
--		    ar->hw->wiphy->fw_version);
--	ath10k_warn("Please upgrade to version %s (or newer)\n", version);
--
--	return 0;
--}
--
- static int ath10k_init_connect_htc(struct ath10k *ar)
- {
- 	int status;
-@@ -616,10 +595,6 @@ int ath10k_core_start(struct ath10k *ar)
- 
- 	ath10k_info("firmware %s booted\n", ar->hw->wiphy->fw_version);
- 
--	status = ath10k_check_fw_version(ar);
--	if (status)
--		goto err_disconnect_htc;
--
- 	status = ath10k_wmi_cmd_init(ar);
- 	if (status) {
- 		ath10k_err("could not send WMI init command (%d)\n", status);
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 8c1be768..66e721a 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -20,12 +20,6 @@
- 
- #include "targaddrs.h"
- 
--/* Supported FW version */
--#define SUPPORTED_FW_MAJOR	1
--#define SUPPORTED_FW_MINOR	0
--#define SUPPORTED_FW_RELEASE	0
--#define SUPPORTED_FW_BUILD	636
--
- /* QCA988X 1.0 definitions (unsupported) */
- #define QCA988X_HW_1_0_CHIP_ID_REV	0x0
- 
--- 
-1.7.10
+I will sent a patchset for the omap3-n900.dts file in the next days.
 
+-- Sebastian
+
+--DocE+STaALJfprDB
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+
+iQIcBAEBCAAGBQJSPv23AAoJENju1/PIO/qaCicP+wdhXI0ya2fzalM6KTu4A9GH
+aVXTSDi9+PSzTd3XvxpwbdBQCvje99j/PDLWkoiv8s3MQAkPNBwDpkE3ukK0/2ER
+RdMOpX6JIVtX0VcZm8BLFeM1Fi4WWDkwqDmKU4VON5aqg4OMayCd1vEcGP1Yepua
+MGo1+p3hPgy7ZYUGzXsUKifdJiN9NpJmn2hcOEP0Hd/o44mYBT0bPxHeQ/HyD2RX
+NQ2i8YzcmtAnEeIbwiYkNJzzc2Z3wiTLkP9tYpv22kEX/5h7PzAmxnecRFYtz/m7
+8MW03zNV6S4Et/vOSNQNHZhPsXS32+LsFBZcYTwVgCqXz53qIIRKzPsMokNp6UHv
+RwOCevUUXX4WFk7S3c0zyNIaXopYeJSy8xWhIGQxAEXYZSLtxCn60u53pWcDEZAV
+oKTNm6tBb4/npOdkmSFnj5Ls9g3aUWVJNARsOeTyTxfGgFe9ET2LD2/57WJYQHyu
+v1V1sa0cSf921Jp7drZbAj2vdHHLw+IivJF9ydfsu3uJfuD7hy6OtuDs6TCQNakx
+GSRImkKxQxOhSdNw0RPGZoy2EKGr8ybN+3CzsjHPXvCE32kJkhVdUw+tyJBxZ36o
+xNgxBWDouoWO8dA0Qd/UrknA/XMAMfD4japCCiFtJEQ9/Jf5LDMvp4LJT8chbuSN
+bcg2s8xa3QlWiB/K3XUU
+=g66U
+-----END PGP SIGNATURE-----
+
+--DocE+STaALJfprDB--
