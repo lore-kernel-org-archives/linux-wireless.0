@@ -1,59 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:45553 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751797Ab3IKID5 (ORCPT
+Received: from mail-la0-f49.google.com ([209.85.215.49]:55319 "EHLO
+	mail-la0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752261Ab3IVWmf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Sep 2013 04:03:57 -0400
-Received: by mail-ie0-f176.google.com with SMTP id w15so2654357iea.7
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Sep 2013 01:03:57 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1378841057.4223.38.camel@porter.coelho.fi>
-References: <1378218848-7853-1-git-send-email-eliad@wizery.com>
-	<1378218848-7853-3-git-send-email-eliad@wizery.com>
-	<1378794898.4799.37.camel@porter.coelho.fi>
-	<CAB3XZEdNkEAsC8mz_jpz8UmjnK_pBwfGSChZQLGiuhtd0Q9Wnw@mail.gmail.com>
-	<1378841057.4223.38.camel@porter.coelho.fi>
-Date: Wed, 11 Sep 2013 10:03:55 +0200
-Message-ID: <CAB3XZEe8vJY4t7CbWAkzzCwsTqg0q=nGMqq9B_J-k=57feoP1g@mail.gmail.com> (sfid-20130911_100405_242419_DF7A0FE5)
-Subject: Re: [PATCH 03/12] wlcore: disable elp sleep while in plt mode
-From: Eliad Peller <eliad@wizery.com>
-To: Luca Coelho <luca@coelho.fi>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 22 Sep 2013 18:42:35 -0400
+Received: by mail-la0-f49.google.com with SMTP id ev20so1917188lab.22
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Sep 2013 15:42:34 -0700 (PDT)
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: wcn36xx@lists.infradead.org,
+	Eugene Krasnikov <k.eugene.e@gmail.com>
+Subject: [PATCH v4 00/16] wcn36xx: mac80211 driver for Qualcomm WCN3660/WCN3680 hardware
+Date: Sun, 22 Sep 2013 23:41:57 +0100
+Message-Id: <1379889733-6215-1-git-send-email-k.eugene.e@gmail.com> (sfid-20130923_004238_959828_C9E601F7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 10, 2013 at 10:24 PM, Luca Coelho <luca@coelho.fi> wrote:
-> On Tue, 2013-09-10 at 16:04 +0200, Eliad Peller wrote:
->> On Tue, Sep 10, 2013 at 9:34 AM, Luca Coelho <luca@coelho.fi> wrote:
->> > On Tue, 2013-09-03 at 17:33 +0300, Eliad Peller wrote:
->> >> From: Yair Shapira <yair.shapira@ti.com>
->> >>
->> >> We now disable elp sleep during plt mode to allow normal operation of
->> >> plt tools such as calibrator.
->> >>
->> >> Having elp_sleep enabled during plt mode is actually not required and
->> >> in fact it disrupt plt operations such as rx statistics etc.
->> >>
->> >> Signed-off-by: Yair Shapira <yair.shapira@ti.com>
->> >> Signed-off-by: Eliad Peller <eliad@wizery.com>
->> >> ---
->> >
->> > I also had a comment internally about this one.  Why do we need this?
->> > AFAICT this would never happen in real life, since the firmware is not
->> > even loaded at this point.  Is there any real life situation where we
->> > try to go into ELP while in PLT mode?
->> >
->> i'm not familiar with the whole plt process, but i guess some flows
->> might indeed end up in elp (e.g. via wl1271_cmd_interrogate(), in
->> order to read statistics)
->
-> Well, I don't think this would ever happen.  The PLT stuff is a
-> completely different firmware and, really, if it tries to go into ELP
-> mode it is a bug.
->
-i can see the calibrator calls various WL1271_TM_CMD_TEST commands, so
-i guess they are likely to end up with ps_elp_sleep() calls (in
-wl1271_tm_cmd_test()).
+This is a mac80211 driver for Qualcomm WCN3660/WCN3680 devices. So
+far WCN3660/WCN3680 is available only on MSM platform.
 
-Eliad.
+While waiting for a merge window to be opened a lot of changes were added to wcn36xx. The main goal of changes was to move all properties from wcn36xx struct to wcn36xx_vif and wcn36xx_sta structs.
+
+To make review easier the driver sent in several patches, one patch per file, but after
+review it will be sent as one big file.
+
+Firmware can be found here:
+https://www.codeaurora.org/cgit/external/hisense/platform/vendor/qcom-opensource/wlan/prima/tree/firmware_bin?h=8130_CS
+
+Wiki page is available here:
+http://wireless.kernel.org/en/users/Drivers/wcn36xx
+
+A lot people made a contribution to this driver. Her is the list in
+alphabetical order:
+
+Eugene Krasnikov <k.eugene.e@gmail.com>
+Kalle Valo <kvalo@qca.qualcomm.com>
+Olof Johansson <dev@skyshaper.net>
+Pontus Fuchs <pontus.fuchs@gmail.com>
+Yanbo Li <yanbol@qti.qualcomm.com>
+
+Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
+
+Eugene Krasnikov (16):
+  wcn36xx: add main.c
+  wcn36xx: add wcn36xx.h
+  wcn36xx: add debug.c
+  wcn36xx: add debug.h
+  wcn36xx: add dxe.h
+  wcn36xx: add dxe.c
+  wcn36xx: add hal.h
+  wcn36xx: add pmc.h
+  wcn36xx: add pmc.c
+  wcn36xx: add smd.c
+  wcn36xx: add smd.h
+  wcn36xx: add txrx.h
+  wcn36xx: add txrx.c
+  wcn36xx: add Kconfig
+  wcn36xx: add Makefile
+  wcn36xx: add wcn36xx to ath Makefile and Kconfig
+
+ drivers/net/wireless/ath/Kconfig           |    1 +
+ drivers/net/wireless/ath/Makefile          |    1 +
+ drivers/net/wireless/ath/wcn36xx/Kconfig   |   16 +
+ drivers/net/wireless/ath/wcn36xx/Makefile  |    7 +
+ drivers/net/wireless/ath/wcn36xx/debug.c   |  188 ++
+ drivers/net/wireless/ath/wcn36xx/debug.h   |   49 +
+ drivers/net/wireless/ath/wcn36xx/dxe.c     |  805 +++++
+ drivers/net/wireless/ath/wcn36xx/dxe.h     |  284 ++
+ drivers/net/wireless/ath/wcn36xx/hal.h     | 4657 ++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/wcn36xx/main.c    | 1036 +++++++
+ drivers/net/wireless/ath/wcn36xx/pmc.c     |   62 +
+ drivers/net/wireless/ath/wcn36xx/pmc.h     |   33 +
+ drivers/net/wireless/ath/wcn36xx/smd.c     | 2121 +++++++++++++
+ drivers/net/wireless/ath/wcn36xx/smd.h     |  127 +
+ drivers/net/wireless/ath/wcn36xx/txrx.c    |  284 ++
+ drivers/net/wireless/ath/wcn36xx/txrx.h    |  160 +
+ drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  238 ++
+ 17 files changed, 10069 insertions(+)
+ create mode 100644 drivers/net/wireless/ath/wcn36xx/Kconfig
+ create mode 100644 drivers/net/wireless/ath/wcn36xx/Makefile
+ create mode 100644 drivers/net/wireless/ath/wcn36xx/debug.c
+ create mode 100644 drivers/net/wireless/ath/wcn36xx/debug.h
+ create mode 100644 drivers/net/wireless/ath/wcn36xx/dxe.c
+ create mode 100644 drivers/net/wireless/ath/wcn36xx/dxe.h
+ create mode 100644 drivers/net/wireless/ath/wcn36xx/hal.h
+ create mode 100644 drivers/net/wireless/ath/wcn36xx/main.c
+ create mode 100644 drivers/net/wireless/ath/wcn36xx/pmc.c
+ create mode 100644 drivers/net/wireless/ath/wcn36xx/pmc.h
+ create mode 100644 drivers/net/wireless/ath/wcn36xx/smd.c
+ create mode 100644 drivers/net/wireless/ath/wcn36xx/smd.h
+ create mode 100644 drivers/net/wireless/ath/wcn36xx/txrx.c
+ create mode 100644 drivers/net/wireless/ath/wcn36xx/txrx.h
+ create mode 100644 drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+
+-- 
+1.8.1.2
+
