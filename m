@@ -1,38 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f175.google.com ([74.125.82.175]:46188 "EHLO
-	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754332Ab3ICPoG (ORCPT
+Received: from mail-la0-f49.google.com ([209.85.215.49]:49329 "EHLO
+	mail-la0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752810Ab3IVWmu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Sep 2013 11:44:06 -0400
-Received: by mail-we0-f175.google.com with SMTP id m46so5101649wev.34
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Sep 2013 08:44:03 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <2ce6e0837f3c48d39e72cd07b5cdd491@THHSTE15D1BE3.hs20.net>
-References: <7f4ff1930bfc4f3b8160b1595950c5a1@THHSTE15D1BE3.hs20.net>
-	<CA+BoTQn7nhsDxedekMTZ9ZqFyo55zR3iGPuTYvVqELGYGh5njg@mail.gmail.com>
-	<2ce6e0837f3c48d39e72cd07b5cdd491@THHSTE15D1BE3.hs20.net>
-Date: Tue, 3 Sep 2013 17:44:03 +0200
-Message-ID: <CACKGw+F+7bVP_ZcwZ_CkBkwOVoa2gdT0WwGgVwP7vQQtme2wug@mail.gmail.com> (sfid-20130903_174411_871522_70F38FB0)
-Subject: Re: ACS compile to hostapd 2.0
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-To: Andrew Delamare <andrew.delamare@powerethernet.com>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 22 Sep 2013 18:42:50 -0400
+Received: by mail-la0-f49.google.com with SMTP id ev20so1902621lab.8
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Sep 2013 15:42:49 -0700 (PDT)
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: wcn36xx@lists.infradead.org,
+	Eugene Krasnikov <k.eugene.e@gmail.com>
+Subject: [PATCH v4 11/16] wcn36xx: add smd.h
+Date: Sun, 22 Sep 2013 23:42:08 +0100
+Message-Id: <1379889733-6215-12-git-send-email-k.eugene.e@gmail.com> (sfid-20130923_005039_809653_28F53D93)
+In-Reply-To: <1379889733-6215-1-git-send-email-k.eugene.e@gmail.com>
+References: <1379889733-6215-1-git-send-email-k.eugene.e@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3 September 2013 16:26, Andrew Delamare
-<andrew.delamare@powerethernet.com> wrote:
+adding smd.h
 
-[...]
+Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
+---
+ drivers/net/wireless/ath/wcn36xx/smd.h | 127 +++++++++++++++++++++++++++++++++
+ 1 file changed, 127 insertions(+)
+ create mode 100644 drivers/net/wireless/ath/wcn36xx/smd.h
 
-> Which repository is that in?
->
-> If you could point me to the right Git repository or ftp download that would be great.
-
-http://hostap.epitest.fi/cvs.html
-master branch
-
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.h b/drivers/net/wireless/ath/wcn36xx/smd.h
+new file mode 100644
+index 0000000..e7c3901
+--- /dev/null
++++ b/drivers/net/wireless/ath/wcn36xx/smd.h
+@@ -0,0 +1,127 @@
++/*
++ * Copyright (c) 2013 Eugene Krasnikov <k.eugene.e@gmail.com>
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
++ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
++ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
++ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#ifndef _SMD_H_
++#define _SMD_H_
++
++#include "wcn36xx.h"
++
++/* Max shared size is 4k but we take less.*/
++#define WCN36XX_NV_FRAGMENT_SIZE			3072
++
++#define WCN36XX_HAL_BUF_SIZE				4096
++
++#define HAL_MSG_TIMEOUT 200
++#define WCN36XX_SMSM_WLAN_TX_ENABLE			0x00000400
++#define WCN36XX_SMSM_WLAN_TX_RINGS_EMPTY		0x00000200
++/* The PNO version info be contained in the rsp msg */
++#define WCN36XX_FW_MSG_PNO_VERSION_MASK			0x8000
++
++enum wcn36xx_fw_msg_result {
++	WCN36XX_FW_MSG_RESULT_SUCCESS			= 0,
++	WCN36XX_FW_MSG_RESULT_SUCCESS_SYNC		= 1,
++
++	WCN36XX_FW_MSG_RESULT_MEM_FAIL			= 5,
++};
++
++/******************************/
++/* SMD requests and responses */
++/******************************/
++struct wcn36xx_fw_msg_status_rsp {
++	u32	status;
++} __packed;
++
++struct wcn36xx_hal_ind_msg {
++	struct list_head list;
++	u8 *msg;
++	size_t msg_len;
++};
++
++struct wcn36xx;
++
++int wcn36xx_smd_open(struct wcn36xx *wcn);
++void wcn36xx_smd_close(struct wcn36xx *wcn);
++
++int wcn36xx_smd_load_nv(struct wcn36xx *wcn);
++int wcn36xx_smd_start(struct wcn36xx *wcn);
++int wcn36xx_smd_stop(struct wcn36xx *wcn);
++int wcn36xx_smd_init_scan(struct wcn36xx *wcn, enum wcn36xx_hal_sys_mode mode);
++int wcn36xx_smd_start_scan(struct wcn36xx *wcn);
++int wcn36xx_smd_end_scan(struct wcn36xx *wcn);
++int wcn36xx_smd_finish_scan(struct wcn36xx *wcn,
++			    enum wcn36xx_hal_sys_mode mode);
++int wcn36xx_smd_update_scan_params(struct wcn36xx *wcn);
++int wcn36xx_smd_add_sta_self(struct wcn36xx *wcn, struct ieee80211_vif *vif);
++int wcn36xx_smd_delete_sta_self(struct wcn36xx *wcn, u8 *addr);
++int wcn36xx_smd_delete_sta(struct wcn36xx *wcn, u8 sta_index);
++int wcn36xx_smd_join(struct wcn36xx *wcn, const u8 *bssid, u8 *vif, u8 ch);
++int wcn36xx_smd_set_link_st(struct wcn36xx *wcn, const u8 *bssid,
++			    const u8 *sta_mac,
++			    enum wcn36xx_hal_link_state state);
++int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
++			   struct ieee80211_sta *sta, const u8 *bssid,
++			   bool update);
++int wcn36xx_smd_delete_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif);
++int wcn36xx_smd_config_sta(struct wcn36xx *wcn, struct ieee80211_vif *vif,
++			   struct ieee80211_sta *sta);
++int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct ieee80211_vif *vif,
++			    struct sk_buff *skb_beacon, u16 tim_off,
++			    u16 p2p_off);
++int wcn36xx_smd_switch_channel(struct wcn36xx *wcn,
++			       struct ieee80211_vif *vif, int ch);
++int wcn36xx_smd_update_proberesp_tmpl(struct wcn36xx *wcn,
++				      struct ieee80211_vif *vif,
++				      struct sk_buff *skb);
++int wcn36xx_smd_set_stakey(struct wcn36xx *wcn,
++			   enum ani_ed_type enc_type,
++			   u8 keyidx,
++			   u8 keylen,
++			   u8 *key,
++			   u8 sta_index);
++int wcn36xx_smd_set_bsskey(struct wcn36xx *wcn,
++			   enum ani_ed_type enc_type,
++			   u8 keyidx,
++			   u8 keylen,
++			   u8 *key);
++int wcn36xx_smd_remove_stakey(struct wcn36xx *wcn,
++			      enum ani_ed_type enc_type,
++			      u8 keyidx,
++			      u8 sta_index);
++int wcn36xx_smd_remove_bsskey(struct wcn36xx *wcn,
++			      enum ani_ed_type enc_type,
++			      u8 keyidx);
++int wcn36xx_smd_enter_bmps(struct wcn36xx *wcn, struct ieee80211_vif *vif);
++int wcn36xx_smd_exit_bmps(struct wcn36xx *wcn, struct ieee80211_vif *vif);
++int wcn36xx_smd_set_power_params(struct wcn36xx *wcn, bool ignore_dtim);
++int wcn36xx_smd_keep_alive_req(struct wcn36xx *wcn,
++			       struct ieee80211_vif *vif,
++			       int packet_type);
++int wcn36xx_smd_dump_cmd_req(struct wcn36xx *wcn, u32 arg1, u32 arg2,
++			     u32 arg3, u32 arg4, u32 arg5);
++int wcn36xx_smd_feature_caps_exchange(struct wcn36xx *wcn);
++
++int wcn36xx_smd_add_ba_session(struct wcn36xx *wcn,
++		struct ieee80211_sta *sta,
++		u16 tid,
++		u16 *ssn,
++		u8 direction,
++		u8 sta_index);
++int wcn36xx_smd_add_ba(struct wcn36xx *wcn);
++int wcn36xx_smd_del_ba(struct wcn36xx *wcn, u16 tid, u8 sta_index);
++int wcn36xx_smd_trigger_ba(struct wcn36xx *wcn, u8 sta_index);
++
++int wcn36xx_smd_update_cfg(struct wcn36xx *wcn, u32 cfg_id, u32 value);
++#endif	/* _SMD_H_ */
 -- 
-Bartosz
+1.8.1.2
+
