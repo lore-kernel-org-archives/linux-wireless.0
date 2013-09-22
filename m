@@ -1,31 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:55768 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753938Ab3I3ObM (ORCPT
+Received: from mail-lb0-f179.google.com ([209.85.217.179]:52726 "EHLO
+	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752424Ab3IVWm5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Sep 2013 10:31:12 -0400
-Message-ID: <1380551468.14467.16.camel@jlt4.sipsolutions.net> (sfid-20130930_163114_820138_5C10613F)
-Subject: Re: [PATCH] cfg80211: parse dfs region for internal regdb option
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	rodrigue@qca.qualcomm.com, mcgrof@do-not-panic.com
-Date: Mon, 30 Sep 2013 16:31:08 +0200
-In-Reply-To: <1379399136-3181-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20130917_082645_746795_B2BB7D43)
-References: <1379399136-3181-1-git-send-email-janusz.dziedzic@tieto.com>
-	 (sfid-20130917_082645_746795_B2BB7D43)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 22 Sep 2013 18:42:57 -0400
+Received: by mail-lb0-f179.google.com with SMTP id x18so2192172lbi.10
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Sep 2013 15:42:56 -0700 (PDT)
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: wcn36xx@lists.infradead.org,
+	Eugene Krasnikov <k.eugene.e@gmail.com>
+Subject: [PATCH v4 16/16] wcn36xx: add wcn36xx to ath Makefile and Kconfig
+Date: Sun, 22 Sep 2013 23:42:13 +0100
+Message-Id: <1379889733-6215-17-git-send-email-k.eugene.e@gmail.com> (sfid-20130923_005039_580805_F7F437CE)
+In-Reply-To: <1379889733-6215-1-git-send-email-k.eugene.e@gmail.com>
+References: <1379889733-6215-1-git-send-email-k.eugene.e@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-09-17 at 08:25 +0200, Janusz Dziedzic wrote:
-> Add support for parsing and setting the dfs region (ETSI, FCC, JP)
-> when the internal regulatory database is used. Before this
-> the DFS region was being ignored even if present on the used
-> db.txt
+Now wcn36xx is part of ath family.
 
-Looks good to me, Luis?
+Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
+---
+ drivers/net/wireless/ath/Kconfig  | 1 +
+ drivers/net/wireless/ath/Makefile | 1 +
+ 2 files changed, 2 insertions(+)
 
-johannes
+diff --git a/drivers/net/wireless/ath/Kconfig b/drivers/net/wireless/ath/Kconfig
+index 1abf1d4..ba81d62 100644
+--- a/drivers/net/wireless/ath/Kconfig
++++ b/drivers/net/wireless/ath/Kconfig
+@@ -32,5 +32,6 @@ source "drivers/net/wireless/ath/ath6kl/Kconfig"
+ source "drivers/net/wireless/ath/ar5523/Kconfig"
+ source "drivers/net/wireless/ath/wil6210/Kconfig"
+ source "drivers/net/wireless/ath/ath10k/Kconfig"
++source "drivers/net/wireless/ath/wcn36xx/Kconfig"
+ 
+ endif
+diff --git a/drivers/net/wireless/ath/Makefile b/drivers/net/wireless/ath/Makefile
+index fb05cfd..363b056 100644
+--- a/drivers/net/wireless/ath/Makefile
++++ b/drivers/net/wireless/ath/Makefile
+@@ -5,6 +5,7 @@ obj-$(CONFIG_ATH6KL)		+= ath6kl/
+ obj-$(CONFIG_AR5523)		+= ar5523/
+ obj-$(CONFIG_WIL6210)		+= wil6210/
+ obj-$(CONFIG_ATH10K)		+= ath10k/
++obj-$(CONFIG_WCN36XX)		+= wcn36xx/
+ 
+ obj-$(CONFIG_ATH_COMMON)	+= ath.o
+ 
+-- 
+1.8.1.2
 
