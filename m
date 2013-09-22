@@ -1,70 +1,223 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail02.raumopol.de ([89.238.79.3]:59829 "EHLO
-	mail02.raumopol.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757267Ab3IKUtf (ORCPT
+Received: from mail-ob0-f179.google.com ([209.85.214.179]:35294 "EHLO
+	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752928Ab3IVNdQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Sep 2013 16:49:35 -0400
-Received: from mail03.raumopol.de (mail03.localnet.raumopol.de [192.168.1.10])
-	(using TLSv1 with cipher ADH-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mail02.raumopol.de (Postfix) with ESMTPS id 1653C214C2CB
-	for <linux-wireless@vger.kernel.org>; Wed, 11 Sep 2013 22:35:25 +0200 (CEST)
-Received: from authenticated_user
-	by mail03.raumopol.de (Postfix) with ESMTPSA id E78803832001
-	for <linux-wireless@vger.kernel.org>; Wed, 11 Sep 2013 22:35:24 +0200 (CEST)
-Message-ID: <5230D40B.20704@janno-kaiser.de> (sfid-20130911_224938_673783_AC240265)
-Date: Wed, 11 Sep 2013 22:35:23 +0200
-From: Jan-Oliver Kaiser <mail@janno-kaiser.de>
-Reply-To: mail@janno-kaiser.de
+	Sun, 22 Sep 2013 09:33:16 -0400
+Received: by mail-ob0-f179.google.com with SMTP id wn1so2619468obc.24
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Sep 2013 06:33:16 -0700 (PDT)
+Message-ID: <523EF199.3090606@lwfinger.net> (sfid-20130922_153320_030591_9937208C)
+Date: Sun, 22 Sep 2013 08:33:13 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: brcmfmac, BCM43241
-Content-Type: text/plain; charset=ISO-8859-1
+To: Catalin Iacob <iacobcatalin@gmail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtlwifi: remove duplicate declarations and macros in
+ headers
+References: <1379840786-4809-1-git-send-email-iacobcatalin@gmail.com>
+In-Reply-To: <1379840786-4809-1-git-send-email-iacobcatalin@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 09/22/2013 04:06 AM, Catalin Iacob wrote:
+> This patch brings no functional change.
+>
+> There are still duplicate macros across the rtlwifi directory, for example
+> IQK_DELAY_TIME is defined multiple times, sometimes with different values,
+> this patch only removes duplicates within the same header file.
+>
+> Signed-off-by: Catalin Iacob <iacobcatalin@gmail.com>
+> ---
+>   drivers/net/wireless/rtlwifi/base.h                |  1 -
+>   drivers/net/wireless/rtlwifi/rtl8192c/phy_common.h |  2 --
+>   drivers/net/wireless/rtlwifi/rtl8192ce/def.h       |  2 --
+>   drivers/net/wireless/rtlwifi/rtl8192ce/phy.h       |  3 ---
+>   drivers/net/wireless/rtlwifi/rtl8192ce/reg.h       | 20 --------------------
+>   drivers/net/wireless/rtlwifi/rtl8192de/phy.h       |  3 ---
+>   drivers/net/wireless/rtlwifi/rtl8192se/reg.h       |  5 -----
+>   drivers/net/wireless/rtlwifi/wifi.h                |  2 --
+>   8 files changed, 38 deletions(-)
 
-I am trying to get a BCM43241 card running on a 3.11-amd64 kernel.
-[1] lists the device as supported but gives no instructions on how to
-install it. I managed to extract the firmware from the git binary patch
-contained in [2].
+The differing values of IQK_DELAY_TIME are needed for the various chips. This 
+patch is
 
-I copied the firmware to /lib/firmware/brcm/brcmfmac-sdio.bin and copied
-the content of /dev/nvram to /lib/firmware/brcm/brcmfmac-sdio.txt.
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Previously, `dmesg` would list error that indicated missing files.
-Currently, the output is as follows:
+Thanks,
 
-[12865.299503] brcmfmac: brcmf_sdio_chip_drivestrengthinit: No SDIO
-Drive strength init done for chip 4324 rev 5 pmurev 17
-[12866.393551] brcmfmac: brcmf_sdbrcm_htclk: HT Avail timeout (1000000):
-clkctl 0x50
-[12867.402386] brcmfmac: brcmf_sdbrcm_htclk: HT Avail timeout (1000000):
-clkctl 0x50
-[12867.409143] brcmfmac: brcmf_proto_cdc_query_dcmd: brcmf_proto_cdc_msg
-failed w/status -5
-[12867.409149] brcmfmac: brcmf_fil_cmd_data: Failed err=-5
-[12867.409153] brcmfmac: brcmf_c_preinit_dcmds: Retreiving cur_etheraddr
-failed, -5
-[12867.409157] brcmfmac: brcmf_bus_start: failed: -5
-[12867.409167] brcmfmac: brcmf_sdbrcm_probe: dongle is not responding
-[12868.416890] brcmfmac: brcmf_sdbrcm_htclk: HT Avail timeout (1000000):
-clkctl 0x50
-[12869.426308] brcmfmac: brcmf_sdbrcm_htclk: HT Avail timeout (1000000):
-clkctl 0x50
+Larry
 
-I have not been able to find anything to help with debugging this.
+>
+> diff --git a/drivers/net/wireless/rtlwifi/base.h b/drivers/net/wireless/rtlwifi/base.h
+> index 0e5fe09..c07f114 100644
+> --- a/drivers/net/wireless/rtlwifi/base.h
+> +++ b/drivers/net/wireless/rtlwifi/base.h
+> @@ -114,7 +114,6 @@ void rtl_init_rfkill(struct ieee80211_hw *hw);
+>   void rtl_deinit_rfkill(struct ieee80211_hw *hw);
+>
+>   void rtl_beacon_statistic(struct ieee80211_hw *hw, struct sk_buff *skb);
+> -void rtl_watch_dog_timer_callback(unsigned long data);
+>   void rtl_deinit_deferred_work(struct ieee80211_hw *hw);
+>
+>   bool rtl_action_proc(struct ieee80211_hw *hw, struct sk_buff *skb, u8 is_tx);
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.h b/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.h
+> index cec10d6..24957e2 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.h
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.h
+> @@ -39,9 +39,7 @@
+>   #define RT_CANNOT_IO(hw)		false
+>   #define HIGHPOWER_RADIOA_ARRAYLEN	22
+>
+> -#define IQK_ADDA_REG_NUM		16
+>   #define MAX_TOLERANCE			5
+> -#define	IQK_DELAY_TIME			1
+>
+>   #define	APK_BB_REG_NUM			5
+>   #define	APK_AFE_REG_NUM			16
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/def.h b/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
+> index 3cfa1bb..fa24de4 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
+> @@ -152,8 +152,6 @@ enum version_8192c {
+>   #define IS_VENDOR_UMC_A_CUT(version)	((IS_CHIP_VENDOR_UMC(version)) ? \
+>   	((GET_CVID_CUT_VERSION(version)) ? false : true) : false)
+>   #define IS_CHIP_VER_B(version)  ((version & CHIP_VER_B) ? true : false)
+> -#define IS_VENDOR_UMC_A_CUT(version)	((IS_CHIP_VENDOR_UMC(version)) ? \
+> -	((GET_CVID_CUT_VERSION(version)) ? false : true) : false)
+>   #define IS_92C_SERIAL(version)  ((version & CHIP_92C_BITMASK) ? true : false)
+>   #define IS_CHIP_VENDOR_UMC(version)		\
+>   	((version & CHIP_VENDOR_UMC) ? true : false)
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/phy.h b/drivers/net/wireless/rtlwifi/rtl8192ce/phy.h
+> index d5e3b70..80a0893 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192ce/phy.h
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192ce/phy.h
+> @@ -39,9 +39,7 @@
+>   #define RT_CANNOT_IO(hw)		false
+>   #define HIGHPOWER_RADIOA_ARRAYLEN	22
+>
+> -#define IQK_ADDA_REG_NUM		16
+>   #define MAX_TOLERANCE			5
+> -#define	IQK_DELAY_TIME			1
+>
+>   #define	APK_BB_REG_NUM			5
+>   #define	APK_AFE_REG_NUM			16
+> @@ -226,7 +224,6 @@ bool rtl92c_phy_config_rf_with_headerfile(struct ieee80211_hw *hw,
+>   					  enum radio_path rfpath);
+>   bool rtl8192_phy_check_is_legal_rfpath(struct ieee80211_hw *hw,
+>   					      u32 rfpath);
+> -bool rtl92c_phy_set_io_cmd(struct ieee80211_hw *hw, enum io_type iotype);
+>   bool rtl92ce_phy_set_rf_power_state(struct ieee80211_hw *hw,
+>   					  enum rf_pwrstate rfpwr_state);
+>   void rtl92ce_phy_set_rf_on(struct ieee80211_hw *hw);
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h b/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h
+> index bd4aef7..8922ecb 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h
+> @@ -560,7 +560,6 @@
+>   #define	EEPROM_DEFAULT_TXPOWERLEVEL		0x22
+>   #define	EEPROM_DEFAULT_HT40_2SDIFF		0x0
+>   #define EEPROM_DEFAULT_HT20_DIFF		2
+> -#define	EEPROM_DEFAULT_LEGACYHTTXPOWERDIFF	0x3
+>   #define EEPROM_DEFAULT_HT40_PWRMAXOFFSET	0
+>   #define EEPROM_DEFAULT_HT20_PWRMAXOFFSET	0
+>
+> @@ -639,17 +638,8 @@
+>
+>   #define	EEPROM_TXPWR_GROUP			0x6F
+>
+> -#define EEPROM_TSSI_A				0x76
+> -#define EEPROM_TSSI_B				0x77
+> -#define EEPROM_THERMAL_METER			0x78
+> -
+>   #define EEPROM_CHANNELPLAN			0x75
+>
+> -#define RF_OPTION1				0x79
+> -#define RF_OPTION2				0x7A
+> -#define RF_OPTION3				0x7B
+> -#define RF_OPTION4				0x7C
+> -
+>   #define	STOPBECON				BIT(6)
+>   #define	STOPHIGHT				BIT(5)
+>   #define	STOPMGT					BIT(4)
+> @@ -689,13 +679,6 @@
+>   #define RSV_CTRL				0x001C
+>   #define RD_CTRL					0x0524
+>
+> -#define REG_USB_INFO				0xFE17
+> -#define REG_USB_SPECIAL_OPTION			0xFE55
+> -
+> -#define REG_USB_DMA_AGG_TO			0xFE5B
+> -#define REG_USB_AGG_TO				0xFE5C
+> -#define REG_USB_AGG_TH				0xFE5D
+> -
+>   #define REG_USB_VID				0xFE60
+>   #define REG_USB_PID				0xFE62
+>   #define REG_USB_OPTIONAL			0xFE64
+> @@ -1196,9 +1179,6 @@
+>   #define POLLING_LLT_THRESHOLD			20
+>   #define POLLING_READY_TIMEOUT_COUNT		1000
+>
+> -#define	MAX_MSS_DENSITY_2T			0x13
+> -#define	MAX_MSS_DENSITY_1T			0x0A
+> -
+>   #define EPROM_CMD_OPERATING_MODE_MASK	((1<<7)|(1<<6))
+>   #define EPROM_CMD_CONFIG			0x3
+>   #define EPROM_CMD_LOAD				1
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/phy.h b/drivers/net/wireless/rtlwifi/rtl8192de/phy.h
+> index f074952..a66232e 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192de/phy.h
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192de/phy.h
+> @@ -39,9 +39,7 @@
+>   #define RT_CANNOT_IO(hw)			false
+>   #define HIGHPOWER_RADIOA_ARRAYLEN		22
+>
+> -#define IQK_ADDA_REG_NUM			16
+>   #define MAX_TOLERANCE				5
+> -#define	IQK_DELAY_TIME				1
+>
+>   #define	APK_BB_REG_NUM				5
+>   #define	APK_AFE_REG_NUM				16
+> @@ -173,6 +171,5 @@ void rtl92d_acquire_cckandrw_pagea_ctl(struct ieee80211_hw *hw,
+>   				       unsigned long *flag);
+>   u8 rtl92d_get_rightchnlplace_for_iqk(u8 chnl);
+>   void rtl92d_phy_reload_iqk_setting(struct ieee80211_hw *hw, u8 channel);
+> -void rtl92d_phy_iq_calibrate(struct ieee80211_hw *hw);
+>
+>   #endif
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/reg.h b/drivers/net/wireless/rtlwifi/rtl8192se/reg.h
+> index 84d1181..c81c835 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192se/reg.h
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192se/reg.h
+> @@ -425,14 +425,9 @@
+>   #define	EXT_IMEM_CODE_DONE			BIT(2)
+>   #define	IMEM_CHK_RPT				BIT(1)
+>   #define	IMEM_CODE_DONE				BIT(0)
+> -#define	IMEM_CODE_DONE				BIT(0)
+> -#define	IMEM_CHK_RPT				BIT(1)
+>   #define	EMEM_CODE_DONE				BIT(2)
+>   #define	EMEM_CHK_RPT				BIT(3)
+> -#define	DMEM_CODE_DONE				BIT(4)
+>   #define	IMEM_RDY				BIT(5)
+> -#define	BASECHG					BIT(6)
+> -#define	FWRDY					BIT(7)
+>   #define	LOAD_FW_READY				(IMEM_CODE_DONE | \
+>   						IMEM_CHK_RPT | \
+>   						EMEM_CODE_DONE | \
+> diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
+> index cc03e7c..96763dc 100644
+> --- a/drivers/net/wireless/rtlwifi/wifi.h
+> +++ b/drivers/net/wireless/rtlwifi/wifi.h
+> @@ -192,8 +192,6 @@ enum hardware_type {
+>   (IS_HARDWARE_TYPE_8192DE(rtlhal) || IS_HARDWARE_TYPE_8192DU(rtlhal))
+>   #define	IS_HARDWARE_TYPE_8723(rtlhal)			\
+>   (IS_HARDWARE_TYPE_8723E(rtlhal) || IS_HARDWARE_TYPE_8723U(rtlhal))
+> -#define IS_HARDWARE_TYPE_8723U(rtlhal)			\
+> -	(rtlhal->hw_type == HARDWARE_TYPE_RTL8723U)
+>
+>   #define RX_HAL_IS_CCK_RATE(_pdesc)\
+>   	(_pdesc->rxmcs == DESC92_RATE1M ||		\
+>
 
-There was some discussion in response to [2] that I don't understand. Is
-there something wrong with the firmware itself?
-
-I would be very grateful for any help. I can provide all additional
-information if something is missing from this report. (I can also be
-reached via IRC, 'Eruquen' on freenode)
-
-Thanks in advance,
-Jan-Oliver
-
-[1] http://wireless.kernel.org/en/users/Drivers/brcm80211
-[2] http://www.spinics.net/lists/linux-wireless/msg107754.html
