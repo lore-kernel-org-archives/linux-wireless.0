@@ -1,68 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:34099 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751380Ab3IJOPW (ORCPT
+Received: from mail-lb0-f175.google.com ([209.85.217.175]:50807 "EHLO
+	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752261Ab3IVWmk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Sep 2013 10:15:22 -0400
-Received: by mail-ie0-f178.google.com with SMTP id to1so5554142ieb.23
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Sep 2013 07:15:22 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1378804510.4799.69.camel@porter.coelho.fi>
-References: <1378218848-7853-1-git-send-email-eliad@wizery.com>
-	<1378218848-7853-6-git-send-email-eliad@wizery.com>
-	<1378795636.4799.44.camel@porter.coelho.fi>
-	<CA+XVXfc6RG1BngT_+doiOUhtYAgnG9Q0-oXns-ckJkU7XhE5ag@mail.gmail.com>
-	<1378804510.4799.69.camel@porter.coelho.fi>
-Date: Tue, 10 Sep 2013 16:15:21 +0200
-Message-ID: <CAB3XZEfPQb1FWT3wukBZvSkP9eB1kO=wPpWFxKXBmX5YULAVqw@mail.gmail.com> (sfid-20130910_161541_532754_C1FC6363)
-Subject: Re: [PATCH 06/12] wlcore: send EAPOL frames with voice priority
-From: Eliad Peller <eliad@wizery.com>
-To: Luca Coelho <luca@coelho.fi>
-Cc: Arik Nemtsov <arik@wizery.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 22 Sep 2013 18:42:40 -0400
+Received: by mail-lb0-f175.google.com with SMTP id y6so2119854lbh.6
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Sep 2013 15:42:39 -0700 (PDT)
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: wcn36xx@lists.infradead.org,
+	Eugene Krasnikov <k.eugene.e@gmail.com>
+Subject: [PATCH v4 04/16] wcn36xx: add debug.h
+Date: Sun, 22 Sep 2013 23:42:01 +0100
+Message-Id: <1379889733-6215-5-git-send-email-k.eugene.e@gmail.com> (sfid-20130923_004245_221813_D55F10E7)
+In-Reply-To: <1379889733-6215-1-git-send-email-k.eugene.e@gmail.com>
+References: <1379889733-6215-1-git-send-email-k.eugene.e@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 10, 2013 at 12:15 PM, Luca Coelho <luca@coelho.fi> wrote:
-> On Tue, 2013-09-10 at 11:11 +0200, Arik Nemtsov wrote:
->> On Tue, Sep 10, 2013 at 9:47 AM, Luca Coelho <luca@coelho.fi> wrote:
->> > On Tue, 2013-09-03 at 17:34 +0300, Eliad Peller wrote:
->> >> From: Igal Chernobelsky <igalc@ti.com>
->> >>
->> >> Send EAPOL frames with voice priority by setting TX_HW_ATTR_EAPOL_FRAME
->> >> new bit in tx attribute. Sending EAPOL with voice priority fixes
->> >> re-key timeout during heavy traffic issue.
->> >>
->> >> Signed-off-by: Igal Chernobelsky <igalc@ti.com>
->> >> Signed-off-by: Eliad Peller <eliad@wizery.com>
->> >> ---
->> >
->> > This seems to be the same problem that Ben had and debugged by himself
->> > [1].  Fixing this in hostapd/wpa_supplicant seems more appropriate?
->> >
->> > This patch seems to take an advantage of some sort of hack in the
->> > firmware that will change the priority by itself when the
->> > TX_HW_ATTR_EAPOL_GRAME bit is set.  If we have a good reason to use this
->> > patch, we need to take care of the firmware version as well.  This
->> > probably doesn't work with the latest published firmware.
->> >
->> > [1] http://mid.gmane.org/522E18E5.1020503@candelatech.com
->>
->> I believe he only fixed one mode (AP - hostapd) but not the other (GO
->> - wpa_supplicant). Anyway that's what we tested at the time.
->
-> Okay, I didn't dig much into it.
->
->
->> Anyway marking it as this level doesn't do any harm. You're right
->> about the FW version though - it should be upstreamed first.
->
-> Fair enough.  If the firmware implements this, no reason why not use it.
-> But I'll wait for the new firmware before applying this.
->
-this change is backward compatible, so there's no issue applying it as is.
-however, if you prefer waiting for a newer fw that's fine too.
-i'll add it to the waiting list :)
+adding debug.h
 
-Eliad.
+Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
+---
+ drivers/net/wireless/ath/wcn36xx/debug.h | 49 ++++++++++++++++++++++++++++++++
+ 1 file changed, 49 insertions(+)
+ create mode 100644 drivers/net/wireless/ath/wcn36xx/debug.h
+
+diff --git a/drivers/net/wireless/ath/wcn36xx/debug.h b/drivers/net/wireless/ath/wcn36xx/debug.h
+new file mode 100644
+index 0000000..46307aa
+--- /dev/null
++++ b/drivers/net/wireless/ath/wcn36xx/debug.h
+@@ -0,0 +1,49 @@
++/*
++ * Copyright (c) 2013 Eugene Krasnikov <k.eugene.e@gmail.com>
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
++ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
++ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
++ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#ifndef _WCN36XX_DEBUG_H_
++#define _WCN36XX_DEBUG_H_
++
++#include <linux/kernel.h>
++
++#define WCN36xx_MAX_DUMP_ARGS	5
++
++#ifdef CONFIG_WCN36XX_DEBUGFS
++struct wcn36xx_dfs_file {
++	struct dentry *dentry;
++	u32 value;
++};
++
++struct wcn36xx_dfs_entry {
++	struct dentry *rootdir;
++	struct wcn36xx_dfs_file file_bmps_switcher;
++	struct wcn36xx_dfs_file file_dump;
++};
++
++void wcn36xx_debugfs_init(struct wcn36xx *wcn);
++void wcn36xx_debugfs_exit(struct wcn36xx *wcn);
++
++#else
++static inline void wcn36xx_debugfs_init(struct wcn36xx *wcn)
++{
++}
++static inline void wcn36xx_debugfs_exit(struct wcn36xx *wcn)
++{
++}
++
++#endif /* CONFIG_WCN36XX_DEBUGFS */
++
++#endif	/* _WCN36XX_DEBUG_H_ */
+-- 
+1.8.1.2
+
