@@ -1,47 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f171.google.com ([209.85.215.171]:58242 "EHLO
-	mail-ea0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751865Ab3IRUrG (ORCPT
+Received: from mail-we0-f177.google.com ([74.125.82.177]:36636 "EHLO
+	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752255Ab3IVTQK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Sep 2013 16:47:06 -0400
-Received: by mail-ea0-f171.google.com with SMTP id n15so3732717ead.16
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Sep 2013 13:47:04 -0700 (PDT)
-From: Detlev Casanova <detlev.casanova@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	laurent.pinchart@ideasonboard.com
-Subject: NetworkManager not listing access points
-Date: Wed, 18 Sep 2013 22:47:15 +0200
-Message-ID: <31357461.i5mG9q5IfA@naboo> (sfid-20130918_224710_281230_E69528DB)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Sun, 22 Sep 2013 15:16:10 -0400
+Received: by mail-we0-f177.google.com with SMTP id t60so2298926wes.36
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Sep 2013 12:16:09 -0700 (PDT)
+Message-ID: <1379877358.6139.31.camel@canaries32-MCP7A> (sfid-20130922_211617_323500_BE025FCB)
+Subject: [PATCH ] staging: vt6656: rxtx.c [BUG] s_vGetFreeContext dead lock
+ on null apTD.
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Sun, 22 Sep 2013 20:15:58 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+There seems to be race condition that the device is ndo_start_xmit
+at a point where the device is closing and apTD is NULL resulting
+in dead lock.
 
-After a bisection on the kernel, it seems that a patch is causing a 
-problem with NetworkManager: 
+Add a NULL check to apTD and return NULL to calling functions.
 
-commit 0172bb75073e11a5aa9d8a953bdaefb8709f00c8 ("cfg80211: 
-use DS or HT operation IEs to determine BSS channel")
+This is more likely on 64 bit systems.
 
-The Wifi access points are not listed in the KDE plasma widget and it 
-won't even connect to the saved ones even if they are in range.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/rxtx.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-There is a fix though: running "iwlist wlan0 scan" twice as root (which 
-properly lists APs in reach) and the second time must be run about two 
-seconds after the first time.
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index fb743a8..14f3e85 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -148,6 +148,8 @@ static void *s_vGetFreeContext(struct vnt_private *pDevice)
+     DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"GetFreeContext()\n");
+ 
+     for (ii = 0; ii < pDevice->cbTD; ii++) {
++	if (!pDevice->apTD[ii])
++		return NULL;
+         pContext = pDevice->apTD[ii];
+         if (pContext->bBoolInUse == false) {
+             pContext->bBoolInUse = true;
+-- 
+1.8.3.2
 
-Then NetworkManager lists the access points and connects to the 
-prefered one if possible (normal behavior).
-
-This also happens with nm-applet in Gnome.
-
-The hardware is: 14e4:4315 (Network controller: Broadcom Corporation 
-BCM4312 802.11b/g LP-PHY (rev 01)) on an Intel Core i3 M370 CPU (64 
-bits) computer.
-
-The abnormal behaviour is not random, it happens every time.
-
-Detlev Casanova
