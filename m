@@ -1,49 +1,225 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:55766 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755265Ab3I3Oal (ORCPT
+Received: from mail-la0-f48.google.com ([209.85.215.48]:48964 "EHLO
+	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752810Ab3IVWmj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Sep 2013 10:30:41 -0400
-Message-ID: <1380551437.14467.15.camel@jlt4.sipsolutions.net> (sfid-20130930_163043_872765_0A1F1CF3)
-Subject: Re: [RFC] mac80211: correctly close cancelled scans
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 30 Sep 2013 16:30:37 +0200
-In-Reply-To: <1379396919-11983-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20130917_074903_860444_E605037C)
-References: <1379396919-11983-1-git-send-email-emmanuel.grumbach@intel.com>
-	 (sfid-20130917_074903_860444_E605037C)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 22 Sep 2013 18:42:39 -0400
+Received: by mail-la0-f48.google.com with SMTP id er20so1894009lab.21
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Sep 2013 15:42:38 -0700 (PDT)
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: wcn36xx@lists.infradead.org,
+	Eugene Krasnikov <k.eugene.e@gmail.com>
+Subject: [PATCH v4 03/16] wcn36xx: add debug.c
+Date: Sun, 22 Sep 2013 23:42:00 +0100
+Message-Id: <1379889733-6215-4-git-send-email-k.eugene.e@gmail.com> (sfid-20130923_004250_887799_729D67D6)
+In-Reply-To: <1379889733-6215-1-git-send-email-k.eugene.e@gmail.com>
+References: <1379889733-6215-1-git-send-email-k.eugene.e@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-09-17 at 08:48 +0300, Emmanuel Grumbach wrote:
-> __ieee80211_scan_completed is called from a worker. This
-> means that the following flow is possible.
-> 
->  * driver calls ieee80211_scan_completed
->  * mac80211 cancels the scan (that is already complete)
->  * __ieee80211_scan_complete runs
-> 
-> When scan_work will finally run, it will see that the scan
-> hasn't been aborted and might even trigger another scan on
-> another band. This leads to a situation where cfg80211's
-> scan is not done and no further scan can be issued.
-> 
-> Fix this by setting a new flag when a HW scan is being
-> cancelled so that no other scan will be triggered.
+adding debug.c
 
-I'll apply this
+Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
+---
+ drivers/net/wireless/ath/wcn36xx/debug.c | 188 +++++++++++++++++++++++++++++++
+ 1 file changed, 188 insertions(+)
+ create mode 100644 drivers/net/wireless/ath/wcn36xx/debug.c
 
-
-> +		if (local->ops->cancel_hw_scan) {
->  			drv_cancel_hw_scan(local,
->  				rcu_dereference_protected(local->scan_sdata,
->  						lockdep_is_held(&local->mtx)));
-> +		}
-
-WIthout the extra braces.
-
-johannes
+diff --git a/drivers/net/wireless/ath/wcn36xx/debug.c b/drivers/net/wireless/ath/wcn36xx/debug.c
+new file mode 100644
+index 0000000..682bcd6
+--- /dev/null
++++ b/drivers/net/wireless/ath/wcn36xx/debug.c
+@@ -0,0 +1,188 @@
++/*
++ * Copyright (c) 2013 Eugene Krasnikov <k.eugene.e@gmail.com>
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
++ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
++ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
++ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
++
++#include <linux/debugfs.h>
++#include <linux/uaccess.h>
++#include "wcn36xx.h"
++#include "debug.h"
++#include "pmc.h"
++
++#ifdef CONFIG_WCN36XX_DEBUGFS
++
++static int wcn36xx_debugfs_open(struct inode *inode, struct file *file)
++{
++	file->private_data = inode->i_private;
++
++	return 0;
++}
++
++static ssize_t read_file_bool_bmps(struct file *file, char __user *user_buf,
++				   size_t count, loff_t *ppos)
++{
++	struct wcn36xx *wcn = file->private_data;
++	struct wcn36xx_vif *vif_priv = NULL;
++	struct ieee80211_vif *vif = NULL;
++	char buf[3];
++
++	list_for_each_entry(vif_priv, &wcn->vif_list, list) {
++			vif = container_of((void *)vif_priv,
++				   struct ieee80211_vif,
++				   drv_priv);
++			if (NL80211_IFTYPE_STATION == vif->type) {
++				if (vif_priv->pw_state == WCN36XX_BMPS)
++					buf[0] = '1';
++				else
++					buf[0] = '0';
++				break;
++			}
++	}
++	buf[1] = '\n';
++	buf[2] = 0x00;
++
++	return simple_read_from_buffer(user_buf, count, ppos, buf, 2);
++}
++
++static ssize_t write_file_bool_bmps(struct file *file,
++				    const char __user *user_buf,
++				    size_t count, loff_t *ppos)
++{
++	struct wcn36xx *wcn = file->private_data;
++	struct wcn36xx_vif *vif_priv = NULL;
++	struct ieee80211_vif *vif = NULL;
++
++	char buf[32];
++	int buf_size;
++
++	buf_size = min(count, (sizeof(buf)-1));
++	if (copy_from_user(buf, user_buf, buf_size))
++		return -EFAULT;
++
++	switch (buf[0]) {
++	case 'y':
++	case 'Y':
++	case '1':
++		list_for_each_entry(vif_priv, &wcn->vif_list, list) {
++			vif = container_of((void *)vif_priv,
++				   struct ieee80211_vif,
++				   drv_priv);
++			if (NL80211_IFTYPE_STATION == vif->type) {
++				wcn36xx_enable_keep_alive_null_packet(wcn, vif);
++				wcn36xx_pmc_enter_bmps_state(wcn, vif);
++			}
++		}
++		break;
++	case 'n':
++	case 'N':
++	case '0':
++		list_for_each_entry(vif_priv, &wcn->vif_list, list) {
++			vif = container_of((void *)vif_priv,
++				   struct ieee80211_vif,
++				   drv_priv);
++			if (NL80211_IFTYPE_STATION == vif->type)
++				wcn36xx_pmc_exit_bmps_state(wcn, vif);
++		}
++		break;
++	}
++
++	return count;
++}
++
++static const struct file_operations fops_wcn36xx_bmps = {
++	.open  =       wcn36xx_debugfs_open,
++	.read  =       read_file_bool_bmps,
++	.write =       write_file_bool_bmps,
++};
++
++static ssize_t write_file_dump(struct file *file,
++				    const char __user *user_buf,
++				    size_t count, loff_t *ppos)
++{
++	struct wcn36xx *wcn = file->private_data;
++	char buf[255], *tmp;
++	int buf_size;
++	u32 arg[WCN36xx_MAX_DUMP_ARGS];
++	int i;
++
++	memset(buf, 0, sizeof(buf));
++	memset(arg, 0, sizeof(arg));
++
++	buf_size = min(count, (sizeof(buf) - 1));
++	if (copy_from_user(buf, user_buf, buf_size))
++		return -EFAULT;
++
++	tmp = buf;
++
++	for (i = 0; i < WCN36xx_MAX_DUMP_ARGS; i++) {
++		char *begin;
++		begin = strsep(&tmp, " ");
++		if (begin == NULL)
++			break;
++
++		if (kstrtoul(begin, 0, (unsigned long *)(arg + i)) != 0)
++			break;
++	}
++
++	wcn36xx_info("DUMP args is %d %d %d %d %d\n", arg[0], arg[1], arg[2],
++		     arg[3], arg[4]);
++	wcn36xx_smd_dump_cmd_req(wcn, arg[0], arg[1], arg[2], arg[3], arg[4]);
++
++	return count;
++}
++
++static const struct file_operations fops_wcn36xx_dump = {
++	.open  =       wcn36xx_debugfs_open,
++	.write =       write_file_dump,
++};
++
++#define ADD_FILE(name, mode, fop, priv_data)		\
++	do {							\
++		struct dentry *d;				\
++		d = debugfs_create_file(__stringify(name),	\
++					mode, dfs->rootdir,	\
++					priv_data, fop);	\
++		dfs->file_##name.dentry = d;			\
++		if (IS_ERR(d)) {				\
++			wcn36xx_warn("Create the debugfs entry failed");\
++			dfs->file_##name.dentry = NULL;		\
++		}						\
++	} while (0)
++
++
++void wcn36xx_debugfs_init(struct wcn36xx *wcn)
++{
++	struct wcn36xx_dfs_entry *dfs = &wcn->dfs;
++
++	dfs->rootdir = debugfs_create_dir(KBUILD_MODNAME,
++					  wcn->hw->wiphy->debugfsdir);
++	if (IS_ERR(dfs->rootdir)) {
++		wcn36xx_warn("Create the debugfs failed\n");
++		dfs->rootdir = NULL;
++	}
++
++	ADD_FILE(bmps_switcher, S_IRUSR | S_IWUSR,
++		 &fops_wcn36xx_bmps, wcn);
++	ADD_FILE(dump, S_IWUSR, &fops_wcn36xx_dump, wcn);
++}
++
++void wcn36xx_debugfs_exit(struct wcn36xx *wcn)
++{
++	struct wcn36xx_dfs_entry *dfs = &wcn->dfs;
++	debugfs_remove_recursive(dfs->rootdir);
++}
++
++#endif /* CONFIG_WCN36XX_DEBUGFS */
+-- 
+1.8.1.2
 
