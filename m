@@ -1,271 +1,321 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:34783 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752094Ab3IHPgO (ORCPT
+Received: from mail-lb0-f175.google.com ([209.85.217.175]:62925 "EHLO
+	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753050Ab3IVWmm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Sep 2013 11:36:14 -0400
-Subject: [PATCH] ath10k: delete struct ce_sendlist
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Sun, 08 Sep 2013 18:36:11 +0300
-Message-ID: <20130908153611.4572.43965.stgit@localhost6.localdomain6> (sfid-20130908_173625_220172_38FC2830)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Sun, 22 Sep 2013 18:42:42 -0400
+Received: by mail-lb0-f175.google.com with SMTP id y6so2119864lbh.6
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Sep 2013 15:42:40 -0700 (PDT)
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: wcn36xx@lists.infradead.org,
+	Eugene Krasnikov <k.eugene.e@gmail.com>
+Subject: [PATCH v4 05/16] wcn36xx: add dxe.h
+Date: Sun, 22 Sep 2013 23:42:02 +0100
+Message-Id: <1379889733-6215-6-git-send-email-k.eugene.e@gmail.com> (sfid-20130923_004246_129214_E9B997C0)
+In-Reply-To: <1379889733-6215-1-git-send-email-k.eugene.e@gmail.com>
+References: <1379889733-6215-1-git-send-email-k.eugene.e@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-struct ce_sendlist is useless as we always add just one buffer onto it.
-And most importantly, it's ugly as it doesn't use skb properly.
+adding dxe.h
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/ce.c  |   48 ++++++---------------------------
- drivers/net/wireless/ath/ath10k/ce.h  |   44 +++---------------------------
- drivers/net/wireless/ath/ath10k/pci.c |   40 +++++++++-------------------
- 3 files changed, 25 insertions(+), 107 deletions(-)
+ drivers/net/wireless/ath/wcn36xx/dxe.h | 284 +++++++++++++++++++++++++++++++++
+ 1 file changed, 284 insertions(+)
+ create mode 100644 drivers/net/wireless/ath/wcn36xx/dxe.h
 
-diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
-index 4f8373c..834e29e 100644
---- a/drivers/net/wireless/ath/ath10k/ce.c
-+++ b/drivers/net/wireless/ath/ath10k/ce.c
-@@ -338,33 +338,19 @@ int ath10k_ce_send(struct ath10k_ce_pipe *ce_state,
- 	return ret;
- }
- 
--void ath10k_ce_sendlist_buf_add(struct ce_sendlist *sendlist, u32 buffer,
--				unsigned int nbytes, u32 flags)
--{
--	unsigned int num_items = sendlist->num_items;
--	struct ce_sendlist_item *item;
--
--	item = &sendlist->item[num_items];
--	item->data = buffer;
--	item->u.nbytes = nbytes;
--	item->flags = flags;
--	sendlist->num_items++;
--}
--
- int ath10k_ce_sendlist_send(struct ath10k_ce_pipe *ce_state,
- 			    void *per_transfer_context,
--			    struct ce_sendlist *sendlist,
--			    unsigned int transfer_id)
-+			    unsigned int transfer_id,
-+			    u32 paddr, unsigned int nbytes,
-+			    u32 flags)
- {
- 	struct ath10k_ce_ring *src_ring = ce_state->src_ring;
--	struct ce_sendlist_item *item;
- 	struct ath10k *ar = ce_state->ar;
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	unsigned int nentries_mask = src_ring->nentries_mask;
--	unsigned int num_items = sendlist->num_items;
- 	unsigned int sw_index;
- 	unsigned int write_index;
--	int i, delta, ret = -ENOMEM;
-+	int delta, ret = -ENOMEM;
- 
- 	spin_lock_bh(&ar_pci->ce_lock);
- 
-@@ -373,30 +359,12 @@ int ath10k_ce_sendlist_send(struct ath10k_ce_pipe *ce_state,
- 
- 	delta = CE_RING_DELTA(nentries_mask, write_index, sw_index - 1);
- 
--	if (delta >= num_items) {
--		/*
--		 * Handle all but the last item uniformly.
--		 */
--		for (i = 0; i < num_items - 1; i++) {
--			item = &sendlist->item[i];
--			ret = ath10k_ce_send_nolock(ce_state,
--						    CE_SENDLIST_ITEM_CTXT,
--						    (u32) item->data,
--						    item->u.nbytes, transfer_id,
--						    item->flags |
--						    CE_SEND_FLAG_GATHER);
--			if (ret)
--				ath10k_warn("CE send failed for item: %d\n", i);
--		}
--		/*
--		 * Provide valid context pointer for final item.
--		 */
--		item = &sendlist->item[i];
-+	if (delta >= 1) {
- 		ret = ath10k_ce_send_nolock(ce_state, per_transfer_context,
--					    (u32) item->data, item->u.nbytes,
--					    transfer_id, item->flags);
-+					    paddr, nbytes,
-+					    transfer_id, flags);
- 		if (ret)
--			ath10k_warn("CE send failed for last item: %d\n", i);
-+			ath10k_warn("CE send failed: %d\n", ret);
- 	}
- 
- 	spin_unlock_bh(&ar_pci->ce_lock);
-diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
-index fb22361..aec8028 100644
---- a/drivers/net/wireless/ath/ath10k/ce.h
-+++ b/drivers/net/wireless/ath/ath10k/ce.h
-@@ -27,7 +27,6 @@
- 
- /* Descriptor rings must be aligned to this boundary */
- #define CE_DESC_RING_ALIGN	8
--#define CE_SENDLIST_ITEMS_MAX	12
- #define CE_SEND_FLAG_GATHER	0x00010000
- 
- /*
-@@ -124,24 +123,6 @@ struct ath10k_ce_pipe {
- 	struct ath10k_ce_ring *dest_ring;
- };
- 
--struct ce_sendlist_item {
--	/* e.g. buffer or desc list */
--	dma_addr_t data;
--	union {
--		/* simple buffer */
--		unsigned int nbytes;
--		/* Rx descriptor list */
--		unsigned int ndesc;
--	} u;
--	/* externally-specified flags; OR-ed with internal flags */
--	u32 flags;
--};
--
--struct ce_sendlist {
--	unsigned int num_items;
--	struct ce_sendlist_item item[CE_SENDLIST_ITEMS_MAX];
--};
--
- /* Copy Engine settable attributes */
- struct ce_attr;
- 
-@@ -175,13 +156,6 @@ void ath10k_ce_send_cb_register(struct ath10k_ce_pipe *ce_state,
- 				void (*send_cb)(struct ath10k_ce_pipe *),
- 				int disable_interrupts);
- 
--/* Append a simple buffer (address/length) to a sendlist. */
--void ath10k_ce_sendlist_buf_add(struct ce_sendlist *sendlist,
--				u32 buffer,
--				unsigned int nbytes,
--				/* OR-ed with internal flags */
--				u32 flags);
--
- /*
-  * Queue a "sendlist" of buffers to be sent using gather to a single
-  * anonymous destination buffer
-@@ -193,10 +167,10 @@ void ath10k_ce_sendlist_buf_add(struct ce_sendlist *sendlist,
-  * Implemenation note: Pushes multiple buffers with Gather to Source ring.
-  */
- int ath10k_ce_sendlist_send(struct ath10k_ce_pipe *ce_state,
--			    void *per_transfer_send_context,
--			    struct ce_sendlist *sendlist,
--			    /* 14 bits */
--			    unsigned int transfer_id);
-+			    void *per_transfer_context,
-+			    unsigned int transfer_id,
-+			    u32 paddr, unsigned int nbytes,
-+			    u32 flags);
- 
- /*==================Recv=======================*/
- 
-@@ -307,16 +281,6 @@ struct ce_attr {
- 	unsigned int dest_nentries;
- };
- 
--/*
-- * When using sendlist_send to transfer multiple buffer fragments, the
-- * transfer context of each fragment, except last one, will be filled
-- * with CE_SENDLIST_ITEM_CTXT. ce_completed_send will return success for
-- * each fragment done with send and the transfer context would be
-- * CE_SENDLIST_ITEM_CTXT. Upper layer could use this to identify the
-- * status of a send completion.
-- */
--#define CE_SENDLIST_ITEM_CTXT	((void *)0xcecebeef)
--
- #define SR_BA_ADDRESS		0x0000
- #define SR_SIZE_ADDRESS		0x0004
- #define DR_BA_ADDRESS		0x0008
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 899a8c0..ecaf213 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -626,17 +626,9 @@ static void ath10k_pci_ce_send_done(struct ath10k_ce_pipe *ce_state)
- 	while (ath10k_ce_completed_send_next(ce_state, &transfer_context,
- 					     &ce_data, &nbytes,
- 					     &transfer_id) == 0) {
--		/*
--		 * For the send completion of an item in sendlist, just
--		 * increment num_sends_allowed. The upper layer callback will
--		 * be triggered when last fragment is done with send.
--		 */
--		if (transfer_context == CE_SENDLIST_ITEM_CTXT) {
--			spin_lock_bh(&pipe_info->pipe_lock);
--			pipe_info->num_sends_allowed++;
--			spin_unlock_bh(&pipe_info->pipe_lock);
--			continue;
--		}
-+		spin_lock_bh(&pipe_info->pipe_lock);
-+		pipe_info->num_sends_allowed++;
-+		spin_unlock_bh(&pipe_info->pipe_lock);
- 
- 		compl = get_free_compl(pipe_info);
- 		if (!compl)
-@@ -714,13 +706,10 @@ static int ath10k_pci_hif_send_head(struct ath10k *ar, u8 pipe_id,
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	struct ath10k_pci_pipe *pipe_info = &(ar_pci->pipe_info[pipe_id]);
- 	struct ath10k_ce_pipe *ce_hdl = pipe_info->ce_hdl;
--	struct ce_sendlist sendlist;
- 	unsigned int len;
- 	u32 flags = 0;
- 	int ret;
- 
--	memset(&sendlist, 0, sizeof(struct ce_sendlist));
--
- 	len = min(bytes, nbuf->len);
- 	bytes -= len;
- 
-@@ -735,8 +724,6 @@ static int ath10k_pci_hif_send_head(struct ath10k *ar, u8 pipe_id,
- 			"ath10k tx: data: ",
- 			nbuf->data, nbuf->len);
- 
--	ath10k_ce_sendlist_buf_add(&sendlist, skb_cb->paddr, len, flags);
--
- 	/* Make sure we have resources to handle this request */
- 	spin_lock_bh(&pipe_info->pipe_lock);
- 	if (!pipe_info->num_sends_allowed) {
-@@ -747,7 +734,8 @@ static int ath10k_pci_hif_send_head(struct ath10k *ar, u8 pipe_id,
- 	pipe_info->num_sends_allowed--;
- 	spin_unlock_bh(&pipe_info->pipe_lock);
- 
--	ret = ath10k_ce_sendlist_send(ce_hdl, nbuf, &sendlist, transfer_id);
-+	ret = ath10k_ce_sendlist_send(ce_hdl, nbuf, transfer_id,
-+				      skb_cb->paddr, len, flags);
- 	if (ret)
- 		ath10k_warn("CE send failed: %p\n", nbuf);
- 
-@@ -1302,16 +1290,14 @@ static void ath10k_pci_tx_pipe_cleanup(struct ath10k_pci_pipe *pipe_info)
- 
- 	while (ath10k_ce_cancel_send_next(ce_hdl, (void **)&netbuf,
- 					  &ce_data, &nbytes, &id) == 0) {
--		if (netbuf != CE_SENDLIST_ITEM_CTXT) {
--			/*
--			 * Indicate the completion to higer layer to free
--			 * the buffer
--			 */
--			ATH10K_SKB_CB(netbuf)->is_aborted = true;
--			ar_pci->msg_callbacks_current.tx_completion(ar,
--								    netbuf,
--								    id);
--		}
-+		/*
-+		 * Indicate the completion to higer layer to free
-+		 * the buffer
-+		 */
-+		ATH10K_SKB_CB(netbuf)->is_aborted = true;
-+		ar_pci->msg_callbacks_current.tx_completion(ar,
-+							    netbuf,
-+							    id);
- 	}
- }
- 
+diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.h b/drivers/net/wireless/ath/wcn36xx/dxe.h
+new file mode 100644
+index 0000000..c88562f
+--- /dev/null
++++ b/drivers/net/wireless/ath/wcn36xx/dxe.h
+@@ -0,0 +1,284 @@
++/*
++ * Copyright (c) 2013 Eugene Krasnikov <k.eugene.e@gmail.com>
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
++ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
++ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
++ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#ifndef _DXE_H_
++#define _DXE_H_
++
++#include "wcn36xx.h"
++
++/*
++TX_LOW	= DMA0
++TX_HIGH	= DMA4
++RX_LOW	= DMA1
++RX_HIGH	= DMA3
++H2H_TEST_RX_TX = DMA2
++*/
++
++/* DXE registers */
++#define WCN36XX_DXE_MEM_BASE			0x03000000
++#define WCN36XX_DXE_MEM_REG			0x202000
++
++#define WCN36XX_DXE_CCU_INT			0xA0011
++#define WCN36XX_DXE_REG_CCU_INT			0x200b10
++
++/* TODO This must calculated properly but not hardcoded */
++#define WCN36XX_DXE_CTRL_TX_L			0x328a44
++#define WCN36XX_DXE_CTRL_TX_H			0x32ce44
++#define WCN36XX_DXE_CTRL_RX_L			0x12ad2f
++#define WCN36XX_DXE_CTRL_RX_H			0x12d12f
++#define WCN36XX_DXE_CTRL_TX_H_BD		0x30ce45
++#define WCN36XX_DXE_CTRL_TX_H_SKB		0x32ce4d
++#define WCN36XX_DXE_CTRL_TX_L_BD		0x308a45
++#define WCN36XX_DXE_CTRL_TX_L_SKB		0x328a4d
++
++/* TODO This must calculated properly but not hardcoded */
++#define WCN36XX_DXE_WQ_TX_L			0x17
++#define WCN36XX_DXE_WQ_TX_H			0x17
++#define WCN36XX_DXE_WQ_RX_L			0xB
++#define WCN36XX_DXE_WQ_RX_H			0x4
++
++/* DXE descriptor control filed */
++#define WCN36XX_DXE_CTRL_VALID_MASK (0x00000001)
++
++/* TODO This must calculated properly but not hardcoded */
++/* DXE default control register values */
++#define WCN36XX_DXE_CH_DEFAULT_CTL_RX_L		0x847EAD2F
++#define WCN36XX_DXE_CH_DEFAULT_CTL_RX_H		0x84FED12F
++#define WCN36XX_DXE_CH_DEFAULT_CTL_TX_H		0x853ECF4D
++#define WCN36XX_DXE_CH_DEFAULT_CTL_TX_L		0x843e8b4d
++
++/* Common DXE registers */
++#define WCN36XX_DXE_MEM_CSR			(WCN36XX_DXE_MEM_REG + 0x00)
++#define WCN36XX_DXE_REG_CSR_RESET		(WCN36XX_DXE_MEM_REG + 0x00)
++#define WCN36XX_DXE_ENCH_ADDR			(WCN36XX_DXE_MEM_REG + 0x04)
++#define WCN36XX_DXE_REG_CH_EN			(WCN36XX_DXE_MEM_REG + 0x08)
++#define WCN36XX_DXE_REG_CH_DONE			(WCN36XX_DXE_MEM_REG + 0x0C)
++#define WCN36XX_DXE_REG_CH_ERR			(WCN36XX_DXE_MEM_REG + 0x10)
++#define WCN36XX_DXE_INT_MASK_REG		(WCN36XX_DXE_MEM_REG + 0x18)
++#define WCN36XX_DXE_INT_SRC_RAW_REG		(WCN36XX_DXE_MEM_REG + 0x20)
++	/* #define WCN36XX_DXE_INT_CH6_MASK	0x00000040 */
++	/* #define WCN36XX_DXE_INT_CH5_MASK	0x00000020 */
++	#define WCN36XX_DXE_INT_CH4_MASK	0x00000010
++	#define WCN36XX_DXE_INT_CH3_MASK	0x00000008
++	/* #define WCN36XX_DXE_INT_CH2_MASK	0x00000004 */
++	#define WCN36XX_DXE_INT_CH1_MASK	0x00000002
++	#define WCN36XX_DXE_INT_CH0_MASK	0x00000001
++#define WCN36XX_DXE_0_INT_CLR			(WCN36XX_DXE_MEM_REG + 0x30)
++#define WCN36XX_DXE_0_INT_ED_CLR		(WCN36XX_DXE_MEM_REG + 0x34)
++#define WCN36XX_DXE_0_INT_DONE_CLR		(WCN36XX_DXE_MEM_REG + 0x38)
++#define WCN36XX_DXE_0_INT_ERR_CLR		(WCN36XX_DXE_MEM_REG + 0x3C)
++
++#define WCN36XX_DXE_0_CH0_STATUS		(WCN36XX_DXE_MEM_REG + 0x404)
++#define WCN36XX_DXE_0_CH1_STATUS		(WCN36XX_DXE_MEM_REG + 0x444)
++#define WCN36XX_DXE_0_CH2_STATUS		(WCN36XX_DXE_MEM_REG + 0x484)
++#define WCN36XX_DXE_0_CH3_STATUS		(WCN36XX_DXE_MEM_REG + 0x4C4)
++#define WCN36XX_DXE_0_CH4_STATUS		(WCN36XX_DXE_MEM_REG + 0x504)
++
++#define WCN36XX_DXE_REG_RESET			0x5c89
++
++/* Temporary BMU Workqueue 4 */
++#define WCN36XX_DXE_BMU_WQ_RX_LOW		0xB
++#define WCN36XX_DXE_BMU_WQ_RX_HIGH		0x4
++/* DMA channel offset */
++#define WCN36XX_DXE_TX_LOW_OFFSET		0x400
++#define WCN36XX_DXE_TX_HIGH_OFFSET		0x500
++#define WCN36XX_DXE_RX_LOW_OFFSET		0x440
++#define WCN36XX_DXE_RX_HIGH_OFFSET		0x4C0
++
++/* Address of the next DXE descriptor */
++#define WCN36XX_DXE_CH_NEXT_DESC_ADDR		0x001C
++#define WCN36XX_DXE_CH_NEXT_DESC_ADDR_TX_L	(WCN36XX_DXE_MEM_REG + \
++						 WCN36XX_DXE_TX_LOW_OFFSET + \
++						 WCN36XX_DXE_CH_NEXT_DESC_ADDR)
++#define WCN36XX_DXE_CH_NEXT_DESC_ADDR_TX_H	(WCN36XX_DXE_MEM_REG + \
++						 WCN36XX_DXE_TX_HIGH_OFFSET + \
++						 WCN36XX_DXE_CH_NEXT_DESC_ADDR)
++#define WCN36XX_DXE_CH_NEXT_DESC_ADDR_RX_L	(WCN36XX_DXE_MEM_REG + \
++						 WCN36XX_DXE_RX_LOW_OFFSET + \
++						 WCN36XX_DXE_CH_NEXT_DESC_ADDR)
++#define WCN36XX_DXE_CH_NEXT_DESC_ADDR_RX_H	(WCN36XX_DXE_MEM_REG + \
++						 WCN36XX_DXE_RX_HIGH_OFFSET + \
++						 WCN36XX_DXE_CH_NEXT_DESC_ADDR)
++
++/* DXE Descriptor source address */
++#define WCN36XX_DXE_CH_SRC_ADDR			0x000C
++#define WCN36XX_DXE_CH_SRC_ADDR_RX_L		(WCN36XX_DXE_MEM_REG + \
++						 WCN36XX_DXE_RX_LOW_OFFSET + \
++						 WCN36XX_DXE_CH_SRC_ADDR)
++#define WCN36XX_DXE_CH_SRC_ADDR_RX_H		(WCN36XX_DXE_MEM_REG + \
++						 WCN36XX_DXE_RX_HIGH_OFFSET + \
++						 WCN36XX_DXE_CH_SRC_ADDR)
++
++/* DXE Descriptor address destination address */
++#define WCN36XX_DXE_CH_DEST_ADDR		0x0014
++#define WCN36XX_DXE_CH_DEST_ADDR_TX_L		(WCN36XX_DXE_MEM_REG + \
++						 WCN36XX_DXE_TX_LOW_OFFSET + \
++						 WCN36XX_DXE_CH_DEST_ADDR)
++#define WCN36XX_DXE_CH_DEST_ADDR_TX_H		(WCN36XX_DXE_MEM_REG + \
++						 WCN36XX_DXE_TX_HIGH_OFFSET + \
++						 WCN36XX_DXE_CH_DEST_ADDR)
++#define WCN36XX_DXE_CH_DEST_ADDR_RX_L		(WCN36XX_DXE_MEM_REG + \
++						 WCN36XX_DXE_RX_LOW_OFFSET + \
++						 WCN36XX_DXE_CH_DEST_ADDR)
++#define WCN36XX_DXE_CH_DEST_ADDR_RX_H		(WCN36XX_DXE_MEM_REG + \
++						 WCN36XX_DXE_RX_HIGH_OFFSET + \
++						 WCN36XX_DXE_CH_DEST_ADDR)
++
++/* Interrupt status */
++#define WCN36XX_DXE_CH_STATUS_REG_ADDR		0x0004
++#define WCN36XX_DXE_CH_STATUS_REG_ADDR_TX_L	(WCN36XX_DXE_MEM_REG + \
++						 WCN36XX_DXE_TX_LOW_OFFSET + \
++						 WCN36XX_DXE_CH_STATUS_REG_ADDR)
++#define WCN36XX_DXE_CH_STATUS_REG_ADDR_TX_H	(WCN36XX_DXE_MEM_REG + \
++						 WCN36XX_DXE_TX_HIGH_OFFSET + \
++						 WCN36XX_DXE_CH_STATUS_REG_ADDR)
++#define WCN36XX_DXE_CH_STATUS_REG_ADDR_RX_L	(WCN36XX_DXE_MEM_REG + \
++						 WCN36XX_DXE_RX_LOW_OFFSET + \
++						 WCN36XX_DXE_CH_STATUS_REG_ADDR)
++#define WCN36XX_DXE_CH_STATUS_REG_ADDR_RX_H	(WCN36XX_DXE_MEM_REG + \
++						 WCN36XX_DXE_RX_HIGH_OFFSET + \
++						 WCN36XX_DXE_CH_STATUS_REG_ADDR)
++
++
++/* DXE default control register */
++#define WCN36XX_DXE_REG_CTL_RX_L		(WCN36XX_DXE_MEM_REG + \
++						 WCN36XX_DXE_RX_LOW_OFFSET)
++#define WCN36XX_DXE_REG_CTL_RX_H		(WCN36XX_DXE_MEM_REG + \
++						 WCN36XX_DXE_RX_HIGH_OFFSET)
++#define WCN36XX_DXE_REG_CTL_TX_H		(WCN36XX_DXE_MEM_REG + \
++						 WCN36XX_DXE_TX_HIGH_OFFSET)
++#define WCN36XX_DXE_REG_CTL_TX_L		(WCN36XX_DXE_MEM_REG + \
++						 WCN36XX_DXE_TX_LOW_OFFSET)
++
++#define WCN36XX_SMSM_WLAN_TX_ENABLE		0x00000400
++#define WCN36XX_SMSM_WLAN_TX_RINGS_EMPTY	0x00000200
++
++
++/* Interrupt control channel mask */
++#define WCN36XX_INT_MASK_CHAN_TX_L		0x00000001
++#define WCN36XX_INT_MASK_CHAN_RX_L		0x00000002
++#define WCN36XX_INT_MASK_CHAN_RX_H		0x00000008
++#define WCN36XX_INT_MASK_CHAN_TX_H		0x00000010
++
++#define WCN36XX_BD_CHUNK_SIZE			128
++
++#define WCN36XX_PKT_SIZE			0xF20
++enum wcn36xx_dxe_ch_type {
++	WCN36XX_DXE_CH_TX_L,
++	WCN36XX_DXE_CH_TX_H,
++	WCN36XX_DXE_CH_RX_L,
++	WCN36XX_DXE_CH_RX_H
++};
++
++/* amount of descriptors per channel */
++enum wcn36xx_dxe_ch_desc_num {
++	WCN36XX_DXE_CH_DESC_NUMB_TX_L		= 128,
++	WCN36XX_DXE_CH_DESC_NUMB_TX_H		= 10,
++	WCN36XX_DXE_CH_DESC_NUMB_RX_L		= 512,
++	WCN36XX_DXE_CH_DESC_NUMB_RX_H		= 40
++};
++
++/**
++ * struct wcn36xx_dxe_desc - describes descriptor of one DXE buffer
++ *
++ * @ctrl: is a union that consists of following bits:
++ * union {
++ *	u32	valid		:1; //0 = DMA stop, 1 = DMA continue with this
++ *				    //descriptor
++ *	u32	transfer_type	:2; //0 = Host to Host space
++ *	u32	eop		:1; //End of Packet
++ *	u32	bd_handling	:1; //if transferType = Host to BMU, then 0
++ *				    // means first 128 bytes contain BD, and 1
++ *				    // means create new empty BD
++ *	u32	siq		:1; // SIQ
++ *	u32	diq		:1; // DIQ
++ *	u32	pdu_rel		:1; //0 = don't release BD and PDUs when done,
++ *				    // 1 = release them
++ *	u32	bthld_sel	:4; //BMU Threshold Select
++ *	u32	prio		:3; //Specifies the priority level to use for
++ *				    // the transfer
++ *	u32	stop_channel	:1; //1 = DMA stops processing further, channel
++ *				    //requires re-enabling after this
++ *	u32	intr		:1; //Interrupt on Descriptor Done
++ *	u32	rsvd		:1; //reserved
++ *	u32	size		:14;//14 bits used - ignored for BMU transfers,
++ *				    //only used for host to host transfers?
++ * } ctrl;
++ */
++struct wcn36xx_dxe_desc {
++	u32	ctrl;
++	u32	fr_len;
++
++	u32	src_addr_l;
++	u32	dst_addr_l;
++	u32	phy_next_l;
++	u32	src_addr_h;
++	u32	dst_addr_h;
++	u32	phy_next_h;
++} __packed;
++
++/* DXE Control block */
++struct wcn36xx_dxe_ctl {
++	struct wcn36xx_dxe_ctl	*next;
++	struct wcn36xx_dxe_desc	*desc;
++	unsigned int		desc_phy_addr;
++	int			ctl_blk_order;
++	struct sk_buff		*skb;
++	spinlock_t              skb_lock;
++	void			*bd_cpu_addr;
++	dma_addr_t		bd_phy_addr;
++};
++
++struct wcn36xx_dxe_ch {
++	enum wcn36xx_dxe_ch_type	ch_type;
++	void				*cpu_addr;
++	dma_addr_t			dma_addr;
++	enum wcn36xx_dxe_ch_desc_num	desc_num;
++	/* DXE control block ring */
++	struct wcn36xx_dxe_ctl		*head_blk_ctl;
++	struct wcn36xx_dxe_ctl		*tail_blk_ctl;
++
++	/* DXE channel specific configs */
++	u32				dxe_wq;
++	u32				ctrl_bd;
++	u32				ctrl_skb;
++	u32				reg_ctrl;
++	u32				def_ctrl;
++};
++
++/* Memory Pool for BD headers */
++struct wcn36xx_dxe_mem_pool {
++	int		chunk_size;
++	void		*virt_addr;
++	dma_addr_t	phy_addr;
++};
++
++struct wcn36xx_vif;
++int wcn36xx_dxe_allocate_mem_pools(struct wcn36xx *wcn);
++void wcn36xx_dxe_free_mem_pools(struct wcn36xx *wcn);
++void wcn36xx_dxe_rx_frame(struct wcn36xx *wcn);
++int wcn36xx_dxe_alloc_ctl_blks(struct wcn36xx *wcn);
++void wcn36xx_dxe_free_ctl_blks(struct wcn36xx *wcn);
++int wcn36xx_dxe_init(struct wcn36xx *wcn);
++void wcn36xx_dxe_deinit(struct wcn36xx *wcn);
++int wcn36xx_dxe_init_channels(struct wcn36xx *wcn);
++int wcn36xx_dxe_tx_frame(struct wcn36xx *wcn,
++			 struct wcn36xx_vif *vif_priv,
++			 struct sk_buff *skb,
++			 bool is_low);
++void wcn36xx_dxe_tx_ack_ind(struct wcn36xx *wcn, u32 status);
++void *wcn36xx_dxe_get_next_bd(struct wcn36xx *wcn, bool is_low);
++#endif	/* _DXE_H_ */
+-- 
+1.8.1.2
 
