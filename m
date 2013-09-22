@@ -1,37 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:64581 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751826Ab3IIGQs convert rfc822-to-8bit (ORCPT
+Received: from mail-la0-f54.google.com ([209.85.215.54]:60411 "EHLO
+	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753082Ab3IVWmq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Sep 2013 02:16:48 -0400
-Received: by mail-vb0-f46.google.com with SMTP id p13so3575918vbe.5
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Sep 2013 23:16:48 -0700 (PDT)
-MIME-Version: 1.0
-Date: Mon, 9 Sep 2013 08:16:47 +0200
-Message-ID: <CAFSJ42bTQkQO+yugN7BBjygQd7LY9H0bPBoPfoH7yyfyMzuGqA@mail.gmail.com> (sfid-20130909_081651_849743_82620A8F)
-Subject: regulatory will stuck when cfg80211 is built-in
+	Sun, 22 Sep 2013 18:42:46 -0400
+Received: by mail-la0-f54.google.com with SMTP id ea20so2001631lab.27
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Sep 2013 15:42:45 -0700 (PDT)
 From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=windows-1252
+To: linux-wireless@vger.kernel.org
+Cc: wcn36xx@lists.infradead.org,
+	Eugene Krasnikov <k.eugene.e@gmail.com>
+Subject: [PATCH v4 08/16] wcn36xx: add pmc.h
+Date: Sun, 22 Sep 2013 23:42:05 +0100
+Message-Id: <1379889733-6215-9-git-send-email-k.eugene.e@gmail.com> (sfid-20130923_004256_384971_E78C99CA)
+In-Reply-To: <1379889733-6215-1-git-send-email-k.eugene.e@gmail.com>
+References: <1379889733-6215-1-git-send-email-k.eugene.e@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
+adding pmc.h
 
-There is a problem with regulatory part of cfg80211 when cfg80211 is
-built-in the kernel. On regulatory init cfg80211 will try to notify
-user space about changing current domain to world regulatory but at
-that time user space is not up and running yet and uevent message will
-be lost. So what will happen is that cfg80211 will wait for the
-response from user space and all requests to set current regulatory
-will be dropped with the following error: “Pending regulatory request,
-waiting for it to be processed...”.
+Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
+---
+ drivers/net/wireless/ath/wcn36xx/pmc.h | 33 +++++++++++++++++++++++++++++++++
+ 1 file changed, 33 insertions(+)
+ create mode 100644 drivers/net/wireless/ath/wcn36xx/pmc.h
 
-I assume the problem is known so is there any information on wiki how
-to fix this in official way? Of course one option is to have cfg80211
-as a module but is it really the right wait to go?
-
-
+diff --git a/drivers/net/wireless/ath/wcn36xx/pmc.h b/drivers/net/wireless/ath/wcn36xx/pmc.h
+new file mode 100644
+index 0000000..f72ed68
+--- /dev/null
++++ b/drivers/net/wireless/ath/wcn36xx/pmc.h
+@@ -0,0 +1,33 @@
++/*
++ * Copyright (c) 2013 Eugene Krasnikov <k.eugene.e@gmail.com>
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
++ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
++ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
++ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#ifndef _WCN36XX_PMC_H_
++#define _WCN36XX_PMC_H_
++
++struct wcn36xx;
++
++enum wcn36xx_power_state {
++	WCN36XX_FULL_POWER,
++	WCN36XX_BMPS
++};
++
++int wcn36xx_pmc_enter_bmps_state(struct wcn36xx *wcn,
++				 struct ieee80211_vif *vif);
++int wcn36xx_pmc_exit_bmps_state(struct wcn36xx *wcn,
++				struct ieee80211_vif *vif);
++int wcn36xx_enable_keep_alive_null_packet(struct wcn36xx *wcn,
++					  struct ieee80211_vif *vif);
++#endif	/* _WCN36XX_PMC_H_ */
 -- 
-Best regards,
-Eugene
+1.8.1.2
+
