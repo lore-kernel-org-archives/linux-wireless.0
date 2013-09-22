@@ -1,174 +1,321 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2158 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755104Ab3IYLGF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Sep 2013 07:06:05 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 7/7] brcmfmac: rework rx path bus interface
-Date: Wed, 25 Sep 2013 13:05:46 +0200
-Message-ID: <1380107146-24026-8-git-send-email-arend@broadcom.com> (sfid-20130925_130616_669574_98BE2A4F)
-In-Reply-To: <1380107146-24026-1-git-send-email-arend@broadcom.com>
-References: <1380107146-24026-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-lb0-f180.google.com ([209.85.217.180]:46696 "EHLO
+	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753091Ab3IVWmx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Sep 2013 18:42:53 -0400
+Received: by mail-lb0-f180.google.com with SMTP id q8so2164981lbi.11
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Sep 2013 15:42:52 -0700 (PDT)
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: wcn36xx@lists.infradead.org,
+	Eugene Krasnikov <k.eugene.e@gmail.com>
+Subject: [PATCH v4 13/16] wcn36xx: add txrx.c
+Date: Sun, 22 Sep 2013 23:42:10 +0100
+Message-Id: <1379889733-6215-14-git-send-email-k.eugene.e@gmail.com> (sfid-20130923_005039_449790_43A9E3A0)
+In-Reply-To: <1379889733-6215-1-git-send-email-k.eugene.e@gmail.com>
+References: <1379889733-6215-1-git-send-email-k.eugene.e@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The brcmfmac has common and bus specific part. The rx function api
-was using sk_buff_head. Changed to sk_buff instead.
+adding txrx.c
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h  |    2 +-
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   38 +++++++++-----------
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   12 +++----
- drivers/net/wireless/brcm80211/brcmfmac/usb.c      |    5 +--
- 4 files changed, 22 insertions(+), 35 deletions(-)
+ drivers/net/wireless/ath/wcn36xx/txrx.c | 284 ++++++++++++++++++++++++++++++++
+ 1 file changed, 284 insertions(+)
+ create mode 100644 drivers/net/wireless/ath/wcn36xx/txrx.c
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
-index f7c1985..200ee9b 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
-@@ -136,7 +136,7 @@ extern bool brcmf_c_prec_enq(struct device *dev, struct pktq *q,
- 			 struct sk_buff *pkt, int prec);
- 
- /* Receive frame for delivery to OS.  Callee disposes of rxp. */
--extern void brcmf_rx_frames(struct device *dev, struct sk_buff_head *rxlist);
-+extern void brcmf_rx_frame(struct device *dev, struct sk_buff *rxp);
- 
- /* Indication from bus module regarding presence/insertion of dongle. */
- extern int brcmf_attach(uint bus_hdrlen, struct device *dev);
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-index e067aec..42bf19a 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-@@ -509,9 +509,8 @@ netif_rx:
- 	}
- }
- 
--void brcmf_rx_frames(struct device *dev, struct sk_buff_head *skb_list)
-+void brcmf_rx_frame(struct device *dev, struct sk_buff *skb)
- {
--	struct sk_buff *skb, *pnext;
- 	struct brcmf_if *ifp;
- 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
- 	struct brcmf_pub *drvr = bus_if->drvr;
-@@ -519,29 +518,24 @@ void brcmf_rx_frames(struct device *dev, struct sk_buff_head *skb_list)
- 	u8 ifidx;
- 	int ret;
- 
--	brcmf_dbg(DATA, "Enter: %s: count=%u\n", dev_name(dev),
--		  skb_queue_len(skb_list));
-+	brcmf_dbg(DATA, "Enter: %s: rxp=%p\n", dev_name(dev), skb);
- 
--	skb_queue_walk_safe(skb_list, skb, pnext) {
--		skb_unlink(skb, skb_list);
--
--		/* process and remove protocol-specific header */
--		ret = brcmf_proto_hdrpull(drvr, true, &ifidx, skb);
--		ifp = drvr->iflist[ifidx];
--
--		if (ret || !ifp || !ifp->ndev) {
--			if ((ret != -ENODATA) && ifp)
--				ifp->stats.rx_errors++;
--			brcmu_pkt_buf_free_skb(skb);
--			continue;
--		}
-+	/* process and remove protocol-specific header */
-+	ret = brcmf_proto_hdrpull(drvr, true, &ifidx, skb);
-+	ifp = drvr->iflist[ifidx];
- 
--		rd = (struct brcmf_skb_reorder_data *)skb->cb;
--		if (rd->reorder)
--			brcmf_rxreorder_process_info(ifp, rd->reorder, skb);
--		else
--			brcmf_netif_rx(ifp, skb);
-+	if (ret || !ifp || !ifp->ndev) {
-+		if ((ret != -ENODATA) && ifp)
-+			ifp->stats.rx_errors++;
-+		brcmu_pkt_buf_free_skb(skb);
-+		return;
- 	}
+diff --git a/drivers/net/wireless/ath/wcn36xx/txrx.c b/drivers/net/wireless/ath/wcn36xx/txrx.c
+new file mode 100644
+index 0000000..b2b60e3
+--- /dev/null
++++ b/drivers/net/wireless/ath/wcn36xx/txrx.c
+@@ -0,0 +1,284 @@
++/*
++ * Copyright (c) 2013 Eugene Krasnikov <k.eugene.e@gmail.com>
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
++ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
++ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
++ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
 +
-+	rd = (struct brcmf_skb_reorder_data *)skb->cb;
-+	if (rd->reorder)
-+		brcmf_rxreorder_process_info(ifp, rd->reorder, skb);
++#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
++
++#include "txrx.h"
++
++static inline int get_rssi0(struct wcn36xx_rx_bd *bd)
++{
++	return 100 - ((bd->phy_stat0 >> 24) & 0xff);
++}
++
++int wcn36xx_rx_skb(struct wcn36xx *wcn, struct sk_buff *skb)
++{
++	struct ieee80211_rx_status status;
++	struct ieee80211_hdr *hdr;
++	struct wcn36xx_rx_bd *bd;
++	u16 fc, sn;
++
++	/*
++	 * All fields must be 0, otherwise it can lead to
++	 * unexpected consequences.
++	 */
++	memset(&status, 0, sizeof(status));
++
++	bd = (struct wcn36xx_rx_bd *)skb->data;
++	buff_to_be((u32 *)bd, sizeof(*bd)/sizeof(u32));
++	wcn36xx_dbg_dump(WCN36XX_DBG_RX_DUMP,
++			 "BD   <<< ", (char *)bd,
++			 sizeof(struct wcn36xx_rx_bd));
++
++	skb_put(skb, bd->pdu.mpdu_header_off + bd->pdu.mpdu_len);
++	skb_pull(skb, bd->pdu.mpdu_header_off);
++
++	status.mactime = 10;
++	status.freq = WCN36XX_CENTER_FREQ(wcn);
++	status.band = WCN36XX_BAND(wcn);
++	status.signal = -get_rssi0(bd);
++	status.antenna = 1;
++	status.rate_idx = 1;
++	status.flag = 0;
++	status.rx_flags = 0;
++	status.flag |= RX_FLAG_IV_STRIPPED |
++		       RX_FLAG_MMIC_STRIPPED |
++		       RX_FLAG_DECRYPTED;
++
++	wcn36xx_dbg(WCN36XX_DBG_RX, "status.flags=%x status->vendor_radiotap_len=%x\n",
++		    status.flag,  status.vendor_radiotap_len);
++
++	memcpy(IEEE80211_SKB_RXCB(skb), &status, sizeof(status));
++
++	hdr = (struct ieee80211_hdr *) skb->data;
++	fc = __le16_to_cpu(hdr->frame_control);
++	sn = IEEE80211_SEQ_TO_SN(__le16_to_cpu(hdr->seq_ctrl));
++
++	if (ieee80211_is_beacon(hdr->frame_control)) {
++		wcn36xx_dbg(WCN36XX_DBG_BEACON, "beacon skb %p len %d fc %04x sn %d\n",
++			    skb, skb->len, fc, sn);
++		wcn36xx_dbg_dump(WCN36XX_DBG_BEACON_DUMP, "SKB <<< ",
++				 (char *)skb->data, skb->len);
++	} else {
++		wcn36xx_dbg(WCN36XX_DBG_RX, "rx skb %p len %d fc %04x sn %d\n",
++			    skb, skb->len, fc, sn);
++		wcn36xx_dbg_dump(WCN36XX_DBG_RX_DUMP, "SKB <<< ",
++				 (char *)skb->data, skb->len);
++	}
++
++	ieee80211_rx_irqsafe(wcn->hw, skb);
++
++	return 0;
++}
++
++static void wcn36xx_set_tx_pdu(struct wcn36xx_tx_bd *bd,
++			       u32 mpdu_header_len,
++			       u32 len,
++			       u16 tid)
++{
++	bd->pdu.mpdu_header_len = mpdu_header_len;
++	bd->pdu.mpdu_header_off = sizeof(*bd);
++	bd->pdu.mpdu_data_off = bd->pdu.mpdu_header_len +
++		bd->pdu.mpdu_header_off;
++	bd->pdu.mpdu_len = len;
++	bd->pdu.tid = tid;
++}
++
++static inline struct wcn36xx_vif *get_vif_by_addr(struct wcn36xx *wcn,
++						  u8 *addr)
++{
++	struct wcn36xx_vif *vif_priv = NULL;
++	struct ieee80211_vif *vif = NULL;
++	list_for_each_entry(vif_priv, &wcn->vif_list, list) {
++			vif = container_of((void *)vif_priv,
++				   struct ieee80211_vif,
++				   drv_priv);
++			if (memcmp(vif->addr, addr, ETH_ALEN) == 0)
++				return vif_priv;
++	}
++	wcn36xx_warn("vif %pM not found\n", addr);
++	return NULL;
++}
++static void wcn36xx_set_tx_data(struct wcn36xx_tx_bd *bd,
++				struct wcn36xx *wcn,
++				struct wcn36xx_vif **vif_priv,
++				struct wcn36xx_sta *sta_priv,
++				struct ieee80211_hdr *hdr,
++				bool bcast)
++{
++	struct ieee80211_vif *vif = NULL;
++	struct wcn36xx_vif *__vif_priv = NULL;
++	bd->bd_rate = WCN36XX_BD_RATE_DATA;
++
++	/*
++	 * For not unicast frames mac80211 will not set sta pointer so use
++	 * self_sta_index instead.
++	 */
++	if (sta_priv) {
++		__vif_priv = sta_priv->vif;
++		vif = container_of((void *)__vif_priv,
++				   struct ieee80211_vif,
++				   drv_priv);
++
++		if (vif->type == NL80211_IFTYPE_STATION) {
++			bd->sta_index = sta_priv->bss_sta_index;
++			bd->dpu_desc_idx = sta_priv->bss_dpu_desc_index;
++		} else if (vif->type == NL80211_IFTYPE_AP ||
++			   vif->type == NL80211_IFTYPE_ADHOC ||
++			   vif->type == NL80211_IFTYPE_MESH_POINT) {
++			bd->sta_index = sta_priv->sta_index;
++			bd->dpu_desc_idx = sta_priv->dpu_desc_index;
++		}
++	} else {
++		__vif_priv = get_vif_by_addr(wcn, hdr->addr2);
++		bd->sta_index = __vif_priv->self_sta_index;
++		bd->dpu_desc_idx = __vif_priv->self_dpu_desc_index;
++	}
++
++	bd->dpu_sign = __vif_priv->ucast_dpu_signature;
++
++	if (ieee80211_is_nullfunc(hdr->frame_control) ||
++	   (sta_priv && !sta_priv->is_data_encrypted))
++		bd->dpu_ne = 1;
++
++	if (bcast) {
++		bd->ub = 1;
++		bd->ack_policy = 1;
++	}
++	*vif_priv = __vif_priv;
++}
++
++static void wcn36xx_set_tx_mgmt(struct wcn36xx_tx_bd *bd,
++				struct wcn36xx *wcn,
++				struct wcn36xx_vif **vif_priv,
++				struct ieee80211_hdr *hdr,
++				bool bcast)
++{
++	struct wcn36xx_vif *__vif_priv =
++		get_vif_by_addr(wcn, hdr->addr2);
++	bd->sta_index = __vif_priv->self_sta_index;
++	bd->dpu_desc_idx = __vif_priv->self_dpu_desc_index;
++	bd->dpu_ne = 1;
++
++	/* default rate for unicast */
++	if (ieee80211_is_mgmt(hdr->frame_control))
++		bd->bd_rate = (WCN36XX_BAND(wcn) == IEEE80211_BAND_5GHZ) ?
++			WCN36XX_BD_RATE_CTRL :
++			WCN36XX_BD_RATE_MGMT;
++	else if (ieee80211_is_ctl(hdr->frame_control))
++		bd->bd_rate = WCN36XX_BD_RATE_CTRL;
 +	else
-+		brcmf_netif_rx(ifp, skb);
- }
- 
- void brcmf_txfinalize(struct brcmf_pub *drvr, struct sk_buff *txp,
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 6e72b73..67f05db 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -1492,13 +1492,12 @@ static u8 brcmf_sdbrcm_rxglom(struct brcmf_sdio *bus, u8 rxseq)
- 					   bus->glom.qlen, pfirst, pfirst->data,
- 					   pfirst->len, pfirst->next,
- 					   pfirst->prev);
-+			skb_unlink(pfirst, &bus->glom);
-+			brcmf_rx_frame(bus->sdiodev->dev, pfirst);
-+			bus->sdcnt.rxglompkts++;
- 		}
--		/* sent any remaining packets up */
--		if (bus->glom.qlen)
--			brcmf_rx_frames(bus->sdiodev->dev, &bus->glom);
- 
- 		bus->sdcnt.rxglomframes++;
--		bus->sdcnt.rxglompkts += bus->glom.qlen;
- 	}
- 	return num;
- }
-@@ -1643,7 +1642,6 @@ static void brcmf_pad(struct brcmf_sdio *bus, u16 *pad, u16 *rdlen)
- static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
- {
- 	struct sk_buff *pkt;		/* Packet for event or data frames */
--	struct sk_buff_head pktlist;	/* needed for bus interface */
- 	u16 pad;		/* Number of pad bytes to read */
- 	uint rxleft = 0;	/* Remaining number of frames allowed */
- 	int ret;		/* Return code from calls */
-@@ -1845,9 +1843,7 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
- 			continue;
- 		}
- 
--		skb_queue_head_init(&pktlist);
--		skb_queue_tail(&pktlist, pkt);
--		brcmf_rx_frames(bus->sdiodev->dev, &pktlist);
-+		brcmf_rx_frame(bus->sdiodev->dev, pkt);
- 	}
- 
- 	rxcount = maxframes - rxleft;
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-index 39e01a7..bf6758d 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-@@ -435,7 +435,6 @@ static void brcmf_usb_rx_complete(struct urb *urb)
- 	struct brcmf_usbreq  *req = (struct brcmf_usbreq *)urb->context;
- 	struct brcmf_usbdev_info *devinfo = req->devinfo;
- 	struct sk_buff *skb;
--	struct sk_buff_head skbq;
- 
- 	brcmf_dbg(USB, "Enter, urb->status=%d\n", urb->status);
- 	brcmf_usb_del_fromq(devinfo, req);
-@@ -450,10 +449,8 @@ static void brcmf_usb_rx_complete(struct urb *urb)
- 	}
- 
- 	if (devinfo->bus_pub.state == BRCMFMAC_USB_STATE_UP) {
--		skb_queue_head_init(&skbq);
--		skb_queue_tail(&skbq, skb);
- 		skb_put(skb, urb->actual_length);
--		brcmf_rx_frames(devinfo->dev, &skbq);
-+		brcmf_rx_frame(devinfo->dev, skb);
- 		brcmf_usb_rx_refill(devinfo, req);
- 	} else {
- 		brcmu_pkt_buf_free_skb(skb);
++		wcn36xx_warn("frame control type unknown\n");
++
++	/*
++	 * In joining state trick hardware that probe is sent as
++	 * unicast even if address is broadcast.
++	 */
++	if (__vif_priv->is_joining &&
++	    ieee80211_is_probe_req(hdr->frame_control))
++		bcast = false;
++
++	if (bcast) {
++		/* broadcast */
++		bd->ub = 1;
++		/* No ack needed not unicast */
++		bd->ack_policy = 1;
++		bd->queue_id = WCN36XX_TX_B_WQ_ID;
++	} else
++		bd->queue_id = WCN36XX_TX_U_WQ_ID;
++	*vif_priv = __vif_priv;
++}
++
++int wcn36xx_start_tx(struct wcn36xx *wcn,
++		     struct wcn36xx_sta *sta_priv,
++		     struct sk_buff *skb)
++{
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
++	struct wcn36xx_vif *vif_priv = NULL;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	unsigned long flags;
++	bool is_low = ieee80211_is_data(hdr->frame_control);
++	bool bcast = is_broadcast_ether_addr(hdr->addr1) ||
++		is_multicast_ether_addr(hdr->addr1);
++	struct wcn36xx_tx_bd *bd = wcn36xx_dxe_get_next_bd(wcn, is_low);
++
++	if (!bd) {
++		/*
++		 * TX DXE are used in pairs. One for the BD and one for the
++		 * actual frame. The BD DXE's has a preallocated buffer while
++		 * the skb ones does not. If this isn't true something is really
++		 * wierd. TODO: Recover from this situation
++		 */
++
++		wcn36xx_err("bd address may not be NULL for BD DXE\n");
++		return -EINVAL;
++	}
++
++	memset(bd, 0, sizeof(*bd));
++
++	wcn36xx_dbg(WCN36XX_DBG_TX,
++		    "tx skb %p len %d fc %04x sn %d %s %s\n",
++		    skb, skb->len, __le16_to_cpu(hdr->frame_control),
++		    IEEE80211_SEQ_TO_SN(__le16_to_cpu(hdr->seq_ctrl)),
++		    is_low ? "low" : "high", bcast ? "bcast" : "ucast");
++
++	wcn36xx_dbg_dump(WCN36XX_DBG_TX_DUMP, "", skb->data, skb->len);
++
++	bd->dpu_rf = WCN36XX_BMU_WQ_TX;
++
++	bd->tx_comp = info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS;
++	if (bd->tx_comp) {
++		wcn36xx_dbg(WCN36XX_DBG_DXE, "TX_ACK status requested\n");
++		spin_lock_irqsave(&wcn->dxe_lock, flags);
++		if (wcn->tx_ack_skb) {
++			spin_unlock_irqrestore(&wcn->dxe_lock, flags);
++			wcn36xx_warn("tx_ack_skb already set\n");
++			return -EINVAL;
++		}
++
++		wcn->tx_ack_skb = skb;
++		spin_unlock_irqrestore(&wcn->dxe_lock, flags);
++
++		/* Only one at a time is supported by fw. Stop the TX queues
++		 * until the ack status gets back.
++		 *
++		 * TODO: Add watchdog in case FW does not answer
++		 */
++		ieee80211_stop_queues(wcn->hw);
++	}
++
++	/* Data frames served first*/
++	if (is_low) {
++		wcn36xx_set_tx_data(bd, wcn, &vif_priv, sta_priv, hdr, bcast);
++		wcn36xx_set_tx_pdu(bd,
++			   ieee80211_is_data_qos(hdr->frame_control) ?
++			   sizeof(struct ieee80211_qos_hdr) :
++			   sizeof(struct ieee80211_hdr_3addr),
++			   skb->len, sta_priv ? sta_priv->tid : 0);
++	} else {
++		/* MGMT and CTRL frames are handeld here*/
++		wcn36xx_set_tx_mgmt(bd, wcn, &vif_priv, hdr, bcast);
++		wcn36xx_set_tx_pdu(bd,
++			   ieee80211_is_data_qos(hdr->frame_control) ?
++			   sizeof(struct ieee80211_qos_hdr) :
++			   sizeof(struct ieee80211_hdr_3addr),
++			   skb->len, WCN36XX_TID);
++	}
++
++	buff_to_be((u32 *)bd, sizeof(*bd)/sizeof(u32));
++	bd->tx_bd_sign = 0xbdbdbdbd;
++
++	return wcn36xx_dxe_tx_frame(wcn, vif_priv, skb, is_low);
++}
 -- 
-1.7.10.4
-
+1.8.1.2
 
