@@ -1,60 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:39456 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754428Ab3ITMNv (ORCPT
+Received: from smtpq3.gn.mail.iss.as9143.net ([212.54.34.166]:55498 "EHLO
+	smtpq3.gn.mail.iss.as9143.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752867Ab3IWR1f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Sep 2013 08:13:51 -0400
-In-Reply-To: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-From: Russell King <rmk+kernel@arm.linux.org.uk>
-To: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
-	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
-	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
-	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	uclinux-dist-devel@blackfin.uclinux.org
-Cc: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 29/51] DMA-API: ata: pata_octeon_cf: convert to use
- dma_coerce_mask_and_coherent()
-Message-Id: <E1VMmAk-0007iq-IU@rmk-PC.arm.linux.org.uk> (sfid-20130920_141404_812206_9A7F6CA5)
-Date: Thu, 19 Sep 2013 22:54:02 +0100
+	Mon, 23 Sep 2013 13:27:35 -0400
+Message-ID: <5240729D.80709@gmail.com> (sfid-20130923_192739_791246_2CECC59A)
+Date: Mon, 23 Sep 2013 18:55:57 +0200
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+MIME-Version: 1.0
+To: Stanislaw Gruszka <sgruszka@redhat.com>,
+	linux-wireless@vger.kernel.org
+CC: users@rt2x00.serialmonkey.com, Jakub Kicinski <kubakici@wp.pl>,
+	moorray@wp.pl
+Subject: Re: [PATCH 3.12] Revert "rt2x00pci: Use PCI MSIs whenever possible"
+References: <20130923020812.GA1577@redhat.com>
+In-Reply-To: <20130923020812.GA1577@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Convert this code sequence:
-	pdev->dev.coherent_dma_mask = DMA_BIT_MASK(64);
-	pdev->dev.dma_mask = &pdev->dev.coherent_dma_mask;
-to use dma_coerce_mask_and_coherent() to avoid bypassing the architecture
-check on the DMA mask.
+On 09/23/13 04:08, Stanislaw Gruszka wrote:
+> This reverts commit 9483f40d8d01918b399b4e24d0c1111db0afffeb.
+> 
+> Some devices stop to connect with above commit, see:
+> https://bugzilla.kernel.org/show_bug.cgi?id=61621
+> 
+> Since there is no clear benefit of having MSI enabled, just revert
+> change to fix the problem.
+> 
+> Cc: stable@vger.kernel.org # 3.11+
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
----
- drivers/ata/pata_octeon_cf.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-diff --git a/drivers/ata/pata_octeon_cf.c b/drivers/ata/pata_octeon_cf.c
-index c51bbb9..6231d43 100644
---- a/drivers/ata/pata_octeon_cf.c
-+++ b/drivers/ata/pata_octeon_cf.c
-@@ -1014,8 +1014,9 @@ static int octeon_cf_probe(struct platform_device *pdev)
- 	}
- 	cf_port->c0 = ap->ioaddr.ctl_addr;
- 
--	pdev->dev.coherent_dma_mask = DMA_BIT_MASK(64);
--	pdev->dev.dma_mask = &pdev->dev.coherent_dma_mask;
-+	rv = dma_coerce_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
-+	if (rv)
-+		return ret;
- 
- 	ata_port_desc(ap, "cmd %p ctl %p", base, ap->ioaddr.ctl_addr);
- 
+> ---
+>  drivers/net/wireless/rt2x00/rt2x00pci.c | 9 +--------
+>  1 file changed, 1 insertion(+), 8 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.c b/drivers/net/wireless/rt2x00/rt2x00pci.c
+> index 76d95de..dc49e52 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00pci.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00pci.c
+> @@ -105,13 +105,11 @@ int rt2x00pci_probe(struct pci_dev *pci_dev, const struct rt2x00_ops *ops)
+>  		goto exit_release_regions;
+>  	}
+>  
+> -	pci_enable_msi(pci_dev);
+> -
+>  	hw = ieee80211_alloc_hw(sizeof(struct rt2x00_dev), ops->hw);
+>  	if (!hw) {
+>  		rt2x00_probe_err("Failed to allocate hardware\n");
+>  		retval = -ENOMEM;
+> -		goto exit_disable_msi;
+> +		goto exit_release_regions;
+>  	}
+>  
+>  	pci_set_drvdata(pci_dev, hw);
+> @@ -152,9 +150,6 @@ exit_free_reg:
+>  exit_free_device:
+>  	ieee80211_free_hw(hw);
+>  
+> -exit_disable_msi:
+> -	pci_disable_msi(pci_dev);
+> -
+>  exit_release_regions:
+>  	pci_release_regions(pci_dev);
+>  
+> @@ -179,8 +174,6 @@ void rt2x00pci_remove(struct pci_dev *pci_dev)
+>  	rt2x00pci_free_reg(rt2x00dev);
+>  	ieee80211_free_hw(hw);
+>  
+> -	pci_disable_msi(pci_dev);
+> -
+>  	/*
+>  	 * Free the PCI device data.
+>  	 */
+> 
+
+
 -- 
-1.7.4.4
-
+---
+Gertjan
