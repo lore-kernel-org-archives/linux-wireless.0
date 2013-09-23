@@ -1,120 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:39504 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753128Ab3IAHBg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Sep 2013 03:01:36 -0400
-Subject: [PATCH v2 1/7] ath10k: pci: make host_ce_config_wlan[] more readable
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Sun, 01 Sep 2013 10:01:32 +0300
-Message-ID: <20130901070132.14695.22413.stgit@localhost6.localdomain6> (sfid-20130901_090144_775090_B365A079)
-In-Reply-To: <20130901070020.14695.16694.stgit@localhost6.localdomain6>
-References: <20130901070020.14695.16694.stgit@localhost6.localdomain6>
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:45459 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752393Ab3IWTTZ convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Sep 2013 15:19:25 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+CC: "linux-bluetooth@vger.kernel.org" <linux-bluetooth@vger.kernel.org>,
+	Gustavo Padovan <gustavo@padovan.org>,
+	Johan Hedberg <johan.hedberg@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Mike Frysinger <vapier@chromium.org>,
+	Hyuckjoo Lee <hyuckjoo.lee@samsung.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Date: Mon, 23 Sep 2013 12:18:48 -0700
+Subject: RE: [PATCH v5 1/2] Bluetooth: btmrvl: add setup handler
+Message-ID: <477F20668A386D41ADCC57781B1F70430F44C59418@SC-VEXCH1.marvell.com> (sfid-20130923_211930_848303_CA403A93)
+References: <1379715667-22424-1-git-send-email-bzhao@marvell.com>
+ <18678858-E711-43E5-AFE6-E637D1CECFFB@holtmann.org>
+In-Reply-To: <18678858-E711-43E5-AFE6-E637D1CECFFB@holtmann.org>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It's much more readable if struct entries in host_ce_config_wlan
-are explicitly set.
+Hi Marcel,
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/pci.c |   81 ++++++++++++++++++++++++++-------
- 1 file changed, 63 insertions(+), 18 deletions(-)
+> > -	btmrvl_send_module_cfg_cmd(priv, MODULE_BRINGUP_REQ);
+> > +	hdev->setup = btmrvl_setup;
+> 
+> just to make sure you guys understand how ->setup() works. It is only called once. Bringing the
+> adapter down and up again does not call ->setup() a second time. So do you guys need this setup_done
+> variable and if so, then you need to be a bit more verbose and help me understand why.
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 551fe8c..b1709d7 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -58,24 +58,69 @@ static int ath10k_pci_start_intr(struct ath10k *ar);
- static void ath10k_pci_stop_intr(struct ath10k *ar);
- 
- static const struct ce_attr host_ce_config_wlan[] = {
--	/* host->target HTC control and raw streams */
--	{ /* CE0 */ CE_ATTR_FLAGS, 16, 256, 0 },
--	/* could be moved to share CE3 */
--	/* target->host HTT + HTC control */
--	{ /* CE1 */ CE_ATTR_FLAGS, 0, 512, 512 },
--	/* target->host WMI */
--	{ /* CE2 */ CE_ATTR_FLAGS, 0, 2048, 32 },
--	/* host->target WMI */
--	{ /* CE3 */ CE_ATTR_FLAGS, 32, 2048, 0 },
--	/* host->target HTT */
--	{ /* CE4 */ CE_ATTR_FLAGS | CE_ATTR_DIS_INTR,
--		    CE_HTT_H2T_MSG_SRC_NENTRIES, 256, 0 },
--	/* unused */
--	{ /* CE5 */ CE_ATTR_FLAGS, 0, 0, 0 },
--	/* Target autonomous hif_memcpy */
--	{ /* CE6 */ CE_ATTR_FLAGS, 0, 0, 0 },
--	/* ce_diag, the Diagnostic Window */
--	{ /* CE7 */ CE_ATTR_FLAGS, 2, DIAG_TRANSFER_LIMIT, 2 },
-+	/* CE0: host->target HTC control and raw streams */
-+	{
-+		.flags = CE_ATTR_FLAGS,
-+		.src_nentries = 16,
-+		.src_sz_max = 256,
-+		.dest_nentries = 0,
-+	},
-+
-+	/* CE1: target->host HTT + HTC control */
-+	{
-+		.flags = CE_ATTR_FLAGS,
-+		.src_nentries = 0,
-+		.src_sz_max = 512,
-+		.dest_nentries = 512,
-+	},
-+
-+	/* CE2: target->host WMI */
-+	{
-+		.flags = CE_ATTR_FLAGS,
-+		.src_nentries = 0,
-+		.src_sz_max = 2048,
-+		.dest_nentries = 32,
-+	},
-+
-+	/* CE3: host->target WMI */
-+	{
-+		.flags = CE_ATTR_FLAGS,
-+		.src_nentries = 32,
-+		.src_sz_max = 2048,
-+		.dest_nentries = 0,
-+	},
-+
-+	/* CE4: host->target HTT */
-+	{
-+		.flags = CE_ATTR_FLAGS | CE_ATTR_DIS_INTR,
-+		.src_nentries = CE_HTT_H2T_MSG_SRC_NENTRIES,
-+		.src_sz_max = 256,
-+		.dest_nentries = 0,
-+	},
-+
-+	/* CE5: unused */
-+	{
-+		.flags = CE_ATTR_FLAGS,
-+		.src_nentries = 0,
-+		.src_sz_max = 0,
-+		.dest_nentries = 0,
-+	},
-+
-+	/* CE6: target autonomous hif_memcpy */
-+	{
-+		.flags = CE_ATTR_FLAGS,
-+		.src_nentries = 0,
-+		.src_sz_max = 0,
-+		.dest_nentries = 0,
-+	},
-+
-+	/* CE7: ce_diag, the Diagnostic Window */
-+	{
-+		.flags = CE_ATTR_FLAGS,
-+		.src_nentries = 2,
-+		.src_sz_max = DIAG_TRANSFER_LIMIT,
-+		.dest_nentries = 2,
-+	},
- };
- 
- /* Target firmware's Copy Engine configuration. */
+It's observed that sometimes the setup handler is called twice when Bluetooth daemon is running in background. We will rebase to latest commit on bluetooth-next tree and test again. If the issue is gone with the latest code in -next tree we will remove the setup_done flag.
+
+Thanks,
+Bing
+
 
