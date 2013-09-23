@@ -1,89 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.18]:53494 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752302Ab3IEOHv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Sep 2013 10:07:51 -0400
-Received: from [192.168.2.102] ([79.218.101.214]) by mail.gmx.com (mrgmx103)
- with ESMTPSA (Nemesis) id 0MPlMc-1VMWAQ2VyU-0052Cv for
- <linux-wireless@vger.kernel.org>; Thu, 05 Sep 2013 16:07:48 +0200
-Message-ID: <52289033.8080205@rempel-privat.de> (sfid-20130905_160757_448691_ADAAE7B6)
-Date: Thu, 05 Sep 2013 16:07:47 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:46342 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751835Ab3IWTgA convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Sep 2013 15:36:00 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+CC: "linux-bluetooth@vger.kernel.org" <linux-bluetooth@vger.kernel.org>,
+	Gustavo Padovan <gustavo@padovan.org>,
+	Johan Hedberg <johan.hedberg@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Mike Frysinger <vapier@chromium.org>,
+	Hyuckjoo Lee <hyuckjoo.lee@samsung.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Date: Mon, 23 Sep 2013 12:35:43 -0700
+Subject: RE: [PATCH v5 2/2] Bluetooth: btmrvl: add calibration data download
+ support
+Message-ID: <477F20668A386D41ADCC57781B1F70430F44C59423@SC-VEXCH1.marvell.com> (sfid-20130923_213606_043666_A501E74F)
+References: <1379715667-22424-1-git-send-email-bzhao@marvell.com>
+ <1379715667-22424-2-git-send-email-bzhao@marvell.com>
+ <05172D80-CE30-4B7D-A64E-11B8E320EF7F@holtmann.org>
+In-Reply-To: <05172D80-CE30-4B7D-A64E-11B8E320EF7F@holtmann.org>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: Antonio Quartulli <ordex@autistici.org>
-CC: ath9k-devel <ath9k-devel@lists.ath9k.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: WARNING with ath9k_htc on TL-WN721N
-References: <20130905100914.GA1570@ritirata.org> <52285C02.8050205@rempel-privat.de> <20130905103204.GB1570@ritirata.org>
-In-Reply-To: <20130905103204.GB1570@ritirata.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi Marcel,
 
-thank you.
+> > +	cmd = (struct btmrvl_cmd *)skb->data;
+> > +	cmd->ocf_ogf =
+> > +		cpu_to_le16(hci_opcode_pack(OGF, BT_CMD_LOAD_CONFIG_DATA));
+> > +	cmd->length = BT_CMD_DATA_SIZE;
+> > +	cmd->data[0] = 0x00;
+> > +	cmd->data[1] = 0x00;
+> > +	cmd->data[2] = 0x00;
+> > +	cmd->data[3] = BT_CMD_DATA_SIZE - 4;
+> 
+> why not use __hci_cmd_sync() here. It is designed to be used from ->setup() where it is guaranteed
+> that the HCI request lock is held. And it is guaranteed that ->setup() is executed in a workqueue.
 
-please do some tests for me.
+The reason of not using __hci_cmd_sync() is that we are sending vendor specific command here (MRVL_VENDOR_PKT). The __hci_cmd_sync seems handle HCI_COMMAND_PKT only.
+Please let us know if you have any suggestion to solve this problem.
 
-1. run wireless adapter without other devices on this bus.
+Thanks,
+Bing
 
-> Bus 002 Device 003: ID 0cf3:9271 Atheros Communications, Inc. AR9271 802.11n
-> Bus 002 Device 011: ID 03f0:8607 Hewlett-Packard Optical Mobile Mouse
-> Bus 002 Device 005: ID 0403:6001 Future Technology Devices International, Ltd
-> FT232 USB-Serial (UART) IC
-> Bus 002 Device 006: ID 413c:8187 Dell Computer Corp. DW375 Bluetooth Module
-
-probably Bluetooth can't be removed, so disable it by software.
-
-2. if this warning disappear, plug them back and rung kernel with 
-attached patch. I wont to see if this warning related to channel scan.
-
-3. try latest wireless-next kernel
-https://git.kernel.org/cgit/linux/kernel/git/linville/wireless-next.git/
-
-there are some patches which will affect usb communication, this will be 
-visible on your hardware, in good or bad way. Will see how it performs 
-in your situation.
-
-I assume this warning is related to usb bandwidth. Since we use BULK 
-transfer, we will get only rest of it. If other devices use ISO or 
-Interrupt, They well have priority.
-
-> I'm not using the Intel card listed in lspci. (the iwldvm module is loaded but
-> the interface is down).
->
-> Cheers,
->
->
-> On Thu, Sep 05, 2013 at 12:25:06PM +0200, Oleksij Rempel wrote:
->> Am 05.09.2013 12:09, schrieb Antonio Quartulli:
->>> Hello list,
->>>
->>> I ma connected to my WPA2-PSK protected network and from time to time I get the
->>> following warning in dmesg. I don't experience any malfunctionng but I thought
->>> it was worth reporting. My kernel version is linux-3.10.10. I remember I've seen
->>> this warning also with previous versions.
->>>
->>> The device I use is a TP-LINK TL-WN721N.
->>> lsusb says:
->>>
->>> Bus 002 Device 003: ID 0cf3:9271 Atheros Communications, Inc. AR9271 802.11n
->>>
->>> Cheers,
->>>
->>
->> Hi Antonio,
->>
->> pleas send out of lsusb and lspci.
->>
->>
->> --
->> Regards,
->> Oleksij
->
-
-
--- 
-Regards,
-Oleksij
