@@ -1,48 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:46134 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751577Ab3IJNzO (ORCPT
+Received: from mail-vc0-f180.google.com ([209.85.220.180]:41286 "EHLO
+	mail-vc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752589Ab3IWTrU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Sep 2013 09:55:14 -0400
-Received: by mail-oa0-f46.google.com with SMTP id o20so7773672oag.5
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Sep 2013 06:55:11 -0700 (PDT)
-Date: Tue, 10 Sep 2013 08:55:09 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Sujith Manoharan <sujith@msujith.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Performance problems with Netgear WNDAP350
-Message-ID: <20130910135509.GA4501@thinkpad-t410> (sfid-20130910_155519_197451_B655E418)
-References: <20130909212544.GA27771@thinkpad-t410>
- <21038.55900.901542.571888@gargle.gargle.HOWL>
+	Mon, 23 Sep 2013 15:47:20 -0400
+Received: by mail-vc0-f180.google.com with SMTP id ld13so2457889vcb.25
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Sep 2013 12:47:19 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <21038.55900.901542.571888@gargle.gargle.HOWL>
+In-Reply-To: <CAObL_7GA-SD5bK7Hnwyp_vnoLxSbcGGtnzgyD-GBHAwaxF1JxQ@mail.gmail.com>
+References: <CAObL_7HXC8qQ54O5QPAo7cQT2yeK-etgKD-7aoaL3dkT4qcOow@mail.gmail.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB301DB3584@HASMSX103.ger.corp.intel.com>
+	<CAObL_7GA-SD5bK7Hnwyp_vnoLxSbcGGtnzgyD-GBHAwaxF1JxQ@mail.gmail.com>
+Date: Mon, 23 Sep 2013 22:47:19 +0300
+Message-ID: <CANUX_P1_t_qtEbxW8h231W_OUbr5m2P92uQkROtWxhHcnpT=Bg@mail.gmail.com> (sfid-20130923_214725_594451_D8EB401B)
+Subject: Re: [Ilw] Intel 6300 crashes hard (3.11 regression?)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Andrew Lutomirski <andy@luto.us>
+Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 10, 2013 at 02:07:48PM +0530, Sujith Manoharan wrote:
-> Seth Forshee wrote:
-> > I posted some wireshark traces in case someone else can find something
-> > else informative that I've missed. They're at
-> > http://people.canonical.com/~sforshee/wndap350/:
-> > 
-> >  * iperf-iwlwifi.pcapng.gz: Trace from iperf client on Linux STA with
-> >    iwlwifi
-> >  * iperf-server.pcapng.gz: Trace from the iperf server for the same test
-> >    as iperf-iwlwifi
-> >  * iperf-osx.pcapng.gz: Trace from iperf client on OSX, using Broadcom
-> >    wireless
-> 
-> The link with the iwlwifi client seems to be drowning in RTS/CTS exchanges
-> compared with the osx client.
-> 
-> iwlwifi: total: 109087, RTS - 9782 (9.0 %)
-> osx:     total: 522581, RTS - 8366 (1.6 %)
+>>> I've had a failure twice on 3.11.1-200.fc19.x86_64.  I've never seen it on
+>>> earlier Fedora kernels or on 3.11-rc3.  The computer hangs for a minute or so.
+>>> When it comes back, wireless doesn't work.  rmmoding and modprobing
+>>> iwldvm doesn't help (it's at the bottom of the attachment).
+>>>
+>>> Even rebooting doesn't fix it unless I pull the battery.  Otherwise iwlwifi loads
+>>> but wlan0 doesn't appear and the only log line is the one saying that iwlwifi
+>>> loaded.
+>>>
+>>> The messages on startup are:
+>>>
+>>> [   11.440725] iwlwifi 0000:03:00.0: can't disable ASPM; OS doesn't
+>>> have ASPM control
+>>> [   11.440788] iwlwifi 0000:03:00.0: irq 51 for MSI/MSI-X
+>>> [   11.455653] iwlwifi 0000:03:00.0: loaded firmware version 9.221.4.1
+>>> build 25532 op_mode iwldvm
+>>> [   11.517924] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_DEBUG enabled
+>>> [   11.517930] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_DEBUGFS enabled
+>>> [   11.517932] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_DEVICE_TRACING
+>>> disabled
+>>> [   11.517934] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_P2P disabled
+>>> [   11.517936] iwlwifi 0000:03:00.0: Detected Intel(R) Centrino(R)
+>>> Ultimate-N 6300 AGN, REV=0x74
+>>> [   11.519626] iwlwifi 0000:03:00.0: L1 Enabled; Disabling L0S
+>>>
+>>> (Both failures happened with pcie_aspm=force, but this is without it.
+>>> I want to see if disabling that option fixes it.)
+>>
+>> Please do and report back - what I can see here is that we kinda can't access the NIC - so I would be curious if pcie_aspm=force changes the game here.
+>>
+>
+> It happened again.  This time I got some stuff in the middle of the
+> dump that I didn't notice last time:
+>
+> [ 1125.076283] iwlwifi 0000:03:00.0: Q 19 is active and mapped to fifo
+> 2 ra_tid 0xa5a5 [90,1515870810]
+> [ 1127.073531] iwlwifi 0000:03:00.0: Error sending REPLY_TXFIFO_FLUSH:
+> time out after 2000ms.
+> [ 1127.073544] iwlwifi 0000:03:00.0: Current CMD queue read_ptr 135
+> write_ptr 143
+> [ 1127.073550] iwlwifi 0000:03:00.0: Couldn't flush the AGG queue
+> [ 1129.110029] iwlwifi 0000:03:00.0: Error sending REPLY_ADD_STA: time
+> out after 2000ms.
+> [ 1129.110037] iwlwifi 0000:03:00.0: Current CMD queue read_ptr 135
+> write_ptr 146
+> [ 1129.110044] wlan0: HW problem - can not stop rx aggregation for
+> 50:a7:33:27:30:78 tid 0
+> [ 1131.107391] iwlwifi 0000:03:00.0: Error sending REPLY_ADD_STA: time
+> out after 2000ms.
+> [ 1131.107399] iwlwifi 0000:03:00.0: Current CMD queue read_ptr 135
+> write_ptr 149
+> [ 1131.107405] wlan0: HW problem - can not stop rx aggregation for
+> 50:a7:33:27:30:78 tid 1
+> [ 1133.104739] iwlwifi 0000:03:00.0: Error sending REPLY_ADD_STA: time
+> out after 2000ms.
+> [ 1133.104745] iwlwifi 0000:03:00.0: Current CMD queue read_ptr 135
+> write_ptr 152
+> [ 1133.104750] wlan0: HW problem - can not stop rx aggregation for
+> 50:a7:33:27:30:78 tid 5
+> [ 1135.102155] iwlwifi 0000:03:00.0: Error sending REPLY_ADD_STA: time
+> out after 2000ms.
+> [ 1135.102160] iwlwifi 0000:03:00.0: Current CMD queue read_ptr 135
+> write_ptr 155
+> [ 1135.102163] wlan0: HW problem - can not stop rx aggregation for
+> 50:a7:33:27:30:78 tid 6
+> [ 1137.099675] iwlwifi 0000:03:00.0: Error sending REPLY_QOS_PARAM:
+> time out after 2000ms.
+> [ 1137.099682] iwlwifi 0000:03:00.0: Current CMD queue read_ptr 135
+> write_ptr 158
+> [ 1137.099686] iwlwifi 0000:03:00.0: Failed to update QoS
+> [ 1139.097113] iwlwifi 0000:03:00.0: Error sending REPLY_RXON: time
+> out after 2000ms.
+> [ 1139.097120] iwlwifi 0000:03:00.0: Current CMD queue read_ptr 135
+> write_ptr 161
+> [ 1139.097124] iwlwifi 0000:03:00.0: Error clearing ASSOC_MSK on BSS (-110)
+> [ 1141.094533] iwlwifi 0000:03:00.0: Error sending REPLY_RXON: time
+> out after 2000ms.
+> [ 1141.094589] iwlwifi 0000:03:00.0: Current CMD queue read_ptr 135
+> write_ptr 164
+> [ 1141.094633] iwlwifi 0000:03:00.0: Error clearing ASSOC_MSK on BSS (-110)
+> [ 1141.314184] iwlwifi 0000:03:00.0: No space in command queue
+> [ 1141.314259] iwlwifi 0000:03:00.0: Restarting adapter queue is full
+> [ 1141.314305] iwlwifi 0000:03:00.0: Error sending REPLY_LEDS_CMD:
+> enqueue_hcmd failed: -28
+> [ 1143.091961] iwlwifi 0000:03:00.0: Error sending REPLY_RXON: time
+> out after 2000ms.
+> [ 1143.092016] iwlwifi 0000:03:00.0: Current CMD queue read_ptr 135
+> write_ptr 165
+> [ 1143.092060] iwlwifi 0000:03:00.0: Error clearing ASSOC_MSK on BSS (-110)
+> [ 1145.090373] iwlwifi 0000:03:00.0: fail to flush all tx fifo queues Q 0
+> [ 1145.090450] iwlwifi 0000:03:00.0: Current SW read_ptr 142 write_ptr 143
+> [ 1145.110262] iwl data: 00000000: 90 3b 0d a2 00 88 ff ff 50 3b 0d a2
+> 00 88 ff ff  .;......P;......
+> [ 1145.130280] iwlwifi 0000:03:00.0: FH TRBs(0) = 0x5a5a5a5a
+> [ 1145.149994] iwlwifi 0000:03:00.0: FH TRBs(1) = 0x5a5a5a5a
+> [ 1145.169813] iwlwifi 0000:03:00.0: FH TRBs(2) = 0x5a5a5a5a
+> [ 1145.189419] iwlwifi 0000:03:00.0: FH TRBs(3) = 0x5a5a5a5a
+> [ 1145.208993] iwlwifi 0000:03:00.0: FH TRBs(4) = 0x5a5a5a5a
+> [ 1145.228552] iwlwifi 0000:03:00.0: FH TRBs(5) = 0x5a5a5a5a
+> [ 1145.248097] iwlwifi 0000:03:00.0: FH TRBs(6) = 0x5a5a5a5a
+> [ 1145.267558] iwlwifi 0000:03:00.0: FH TRBs(7) = 0x5a5a5a5a
+>
 
-Yes, but I don't think that's behind the APs failure to send us frames
-for long periods of time. I can better compare the RTS/CTS exchanges
-between the two when I can get an otherwise stable connection to the AP
-from Linux.
+Just saw this:
 
-Seth
+[ 3030.922014] pci_pm_runtime_suspend():
+hcd_pci_runtime_suspend+0x0/0x50 returns -16
+[ 3116.219553] pci_pm_runtime_suspend():
+hcd_pci_runtime_suspend+0x0/0x50 returns -16
+[ 3208.606354] iwlwifi 0000:03:00.0: Error sending POWER_TABLE_CMD:
+time out after 2000ms.
+
+can it be that the PCI subsystem gets confused after suspend resume?
