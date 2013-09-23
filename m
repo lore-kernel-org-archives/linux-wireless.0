@@ -1,220 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:61761 "EHLO ebb06.tieto.com"
+Received: from mx4.wp.pl ([212.77.101.8]:19321 "EHLO mx4.wp.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754561Ab3IYJib (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Sep 2013 05:38:31 -0400
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Bartosz Markowski <bartosz.markowski@tieto.com>
-Subject: [PATCH 08/13] ath10k: bring back the WMI path for mgmt frames
-Date: Wed, 25 Sep 2013 11:38:06 +0200
-Message-ID: <1380101891-18312-9-git-send-email-bartosz.markowski@tieto.com> (sfid-20130925_113836_654845_283F4B1E)
-In-Reply-To: <1380101891-18312-1-git-send-email-bartosz.markowski@tieto.com>
-References: <1380101891-18312-1-git-send-email-bartosz.markowski@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1753410Ab3IWNmM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Sep 2013 09:42:12 -0400
+Date: Mon, 23 Sep 2013 15:42:08 +0200
+From: Jakub Kicinski <kubakici@wp.pl>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	moorray@wp.pl
+Subject: Re: [PATCH 3.12] Revert "rt2x00pci: Use PCI MSIs whenever possible"
+Message-ID: <20130923154208.2cf570d3@north> (sfid-20130923_154215_847316_B73244E7)
+In-Reply-To: <20130923020812.GA1577@redhat.com>
+References: <20130923020812.GA1577@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is still used by the 10.X firmware.
+On Mon, 23 Sep 2013 04:08:13 +0200, Stanislaw Gruszka wrote:
+>This reverts commit 9483f40d8d01918b399b4e24d0c1111db0afffeb.
+>
+>Some devices stop to connect with above commit, see:
+>https://bugzilla.kernel.org/show_bug.cgi?id=61621
+>
+>Since there is no clear benefit of having MSI enabled, just revert
+>change to fix the problem.
+>
+>Cc: stable@vger.kernel.org # 3.11+
+>Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
----
- drivers/net/wireless/ath/ath10k/core.h   |    5 ++-
- drivers/net/wireless/ath/ath10k/htt_tx.c |    4 +--
- drivers/net/wireless/ath/ath10k/mac.c    |   27 ++++++++++------
- drivers/net/wireless/ath/ath10k/wmi.c    |   49 ++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.h    |    1 +
- 5 files changed, 73 insertions(+), 13 deletions(-)
+Acked-by: Jakub Kicinski <kubakici@wp.pl>
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 0c9e6f3..377560d 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -49,9 +49,9 @@ struct ath10k_skb_cb {
- 	dma_addr_t paddr;
- 	bool is_mapped;
- 	bool is_aborted;
-+	u8 vdev_id;
- 
- 	struct {
--		u8 vdev_id;
- 		u8 tid;
- 		bool is_offchan;
- 
-@@ -284,6 +284,9 @@ enum ath10k_fw_features {
- 	/* firmware from 10X branch */
- 	ATH10K_FW_FEATURE_10X = 1,
- 
-+	/* firmware support tx frame management over WMI, otherwise it's HTT */
-+	ATH10K_FW_FEATURE_HAS_WMI_MGMT_TX = 2,
-+
- 	/* keep last */
- 	ATH10K_FW_FEATURE_COUNT,
- };
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index 3b93c6a..d9335e9 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -308,7 +308,7 @@ int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 	struct sk_buff *txdesc = NULL;
- 	struct htt_cmd *cmd;
- 	struct ath10k_skb_cb *skb_cb = ATH10K_SKB_CB(msdu);
--	u8 vdev_id = skb_cb->htt.vdev_id;
-+	u8 vdev_id = skb_cb->vdev_id;
- 	int len = 0;
- 	int msdu_id = -1;
- 	int res;
-@@ -384,7 +384,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 	struct ath10k_skb_cb *skb_cb = ATH10K_SKB_CB(msdu);
- 	struct sk_buff *txdesc = NULL;
- 	bool use_frags;
--	u8 vdev_id = ATH10K_SKB_CB(msdu)->htt.vdev_id;
-+	u8 vdev_id = ATH10K_SKB_CB(msdu)->vdev_id;
- 	u8 tid;
- 	int prefetch_len, desc_len;
- 	int msdu_id = -1;
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 99a9bad..18fae5e 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -1489,7 +1489,7 @@ static void ath10k_tx_h_add_p2p_noa_ie(struct ath10k *ar, struct sk_buff *skb)
- static void ath10k_tx_htt(struct ath10k *ar, struct sk_buff *skb)
- {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
--	int ret;
-+	int ret = 0;
- 
- 	if (ar->htt.target_version_major >= 3) {
- 		/* Since HTT 3.0 there is no separate mgmt tx command */
-@@ -1497,16 +1497,23 @@ static void ath10k_tx_htt(struct ath10k *ar, struct sk_buff *skb)
- 		goto exit;
- 	}
- 
--	if (ieee80211_is_mgmt(hdr->frame_control))
--		ret = ath10k_htt_mgmt_tx(&ar->htt, skb);
--	else if (ieee80211_is_nullfunc(hdr->frame_control))
-+	if (ieee80211_is_mgmt(hdr->frame_control)) {
-+		if (test_bit(ATH10K_FW_FEATURE_HAS_WMI_MGMT_TX,
-+			     ar->fw_features))
-+			ret = ath10k_wmi_mgmt_tx(ar, skb);
-+		else
-+			ret = ath10k_htt_mgmt_tx(&ar->htt, skb);
-+	} else if (!test_bit(ATH10K_FW_FEATURE_HAS_WMI_MGMT_TX,
-+			     ar->fw_features) &&
-+		   ieee80211_is_nullfunc(hdr->frame_control)) {
- 		/* FW does not report tx status properly for NullFunc frames
- 		 * unless they are sent through mgmt tx path. mac80211 sends
--		 * those frames when it detects link/beacon loss and depends on
--		 * the tx status to be correct. */
-+		 * those frames when it detects link/beacon loss and depends
-+		 * on the tx status to be correct. */
- 		ret = ath10k_htt_mgmt_tx(&ar->htt, skb);
--	else
-+	} else {
- 		ret = ath10k_htt_tx(&ar->htt, skb);
-+	}
- 
- exit:
- 	if (ret) {
-@@ -1557,7 +1564,7 @@ void ath10k_offchan_tx_work(struct work_struct *work)
- 
- 		hdr = (struct ieee80211_hdr *)skb->data;
- 		peer_addr = ieee80211_get_DA(hdr);
--		vdev_id = ATH10K_SKB_CB(skb)->htt.vdev_id;
-+		vdev_id = ATH10K_SKB_CB(skb)->vdev_id;
- 
- 		spin_lock_bh(&ar->data_lock);
- 		peer = ath10k_peer_find(ar, vdev_id, peer_addr);
-@@ -1757,14 +1764,14 @@ static void ath10k_tx(struct ieee80211_hw *hw,
- 		ath10k_tx_h_seq_no(skb);
- 	}
- 
-+	ATH10K_SKB_CB(skb)->vdev_id = vdev_id;
- 	ATH10K_SKB_CB(skb)->htt.is_offchan = false;
--	ATH10K_SKB_CB(skb)->htt.vdev_id = vdev_id;
- 	ATH10K_SKB_CB(skb)->htt.tid = tid;
- 
- 	if (info->flags & IEEE80211_TX_CTL_TX_OFFCHAN) {
- 		spin_lock_bh(&ar->data_lock);
- 		ATH10K_SKB_CB(skb)->htt.is_offchan = true;
--		ATH10K_SKB_CB(skb)->htt.vdev_id = ar->scan.vdev_id;
-+		ATH10K_SKB_CB(skb)->vdev_id = ar->scan.vdev_id;
- 		spin_unlock_bh(&ar->data_lock);
- 
- 		ath10k_dbg(ATH10K_DBG_MAC, "queued offchannel skb %p\n", skb);
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 3b1ae88..4992ad1 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -418,6 +418,55 @@ static int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb,
- 	return ret;
- }
- 
-+int ath10k_wmi_mgmt_tx(struct ath10k *ar, struct sk_buff *skb)
-+{
-+	int ret = 0;
-+	struct wmi_mgmt_tx_cmd *cmd;
-+	struct ieee80211_hdr *hdr;
-+	struct sk_buff *wmi_skb;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	int len;
-+	u16 fc;
-+
-+	hdr = (struct ieee80211_hdr *)skb->data;
-+	fc = le16_to_cpu(hdr->frame_control);
-+
-+	if (WARN_ON_ONCE(!ieee80211_is_mgmt(hdr->frame_control)))
-+		return -EINVAL;
-+
-+	len = sizeof(cmd->hdr) + skb->len;
-+	len = round_up(len, 4);
-+
-+	wmi_skb = ath10k_wmi_alloc_skb(len);
-+	if (!wmi_skb)
-+		return -ENOMEM;
-+
-+	cmd = (struct wmi_mgmt_tx_cmd *)wmi_skb->data;
-+
-+	cmd->hdr.vdev_id = __cpu_to_le32(ATH10K_SKB_CB(skb)->vdev_id);
-+	cmd->hdr.tx_rate = 0;
-+	cmd->hdr.tx_power = 0;
-+	cmd->hdr.buf_len = __cpu_to_le32((u32)(skb->len));
-+
-+	memcpy(cmd->hdr.peer_macaddr.addr, ieee80211_get_DA(hdr), ETH_ALEN);
-+	memcpy(cmd->buf, skb->data, skb->len);
-+
-+	ath10k_dbg(ATH10K_DBG_WMI, "wmi mgmt tx skb %p len %d ftype %02x stype %02x\n",
-+		   wmi_skb, wmi_skb->len, fc & IEEE80211_FCTL_FTYPE,
-+		   fc & IEEE80211_FCTL_STYPE);
-+
-+	/* Send the management frame buffer to the target */
-+	ret = ath10k_wmi_cmd_send(ar, wmi_skb, ar->wmi.cmd->wmi_mgmt_tx_cmdid);
-+	if (ret)
-+		return ret;
-+
-+	/* TODO: report tx status to mac80211 - temporary just ACK */
-+	info->flags |= IEEE80211_TX_STAT_ACK;
-+	ieee80211_tx_status_irqsafe(ar->hw, skb);
-+
-+	return ret;
-+}
-+
- static int ath10k_wmi_event_scan(struct ath10k *ar, struct sk_buff *skb)
- {
- 	struct wmi_scan_event *event = (struct wmi_scan_event *)skb->data;
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 3825937..8c67fb4 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -3483,5 +3483,6 @@ int ath10k_wmi_pdev_set_wmm_params(struct ath10k *ar,
- int ath10k_wmi_request_stats(struct ath10k *ar, enum wmi_stats_id stats_id);
- int ath10k_wmi_force_fw_hang(struct ath10k *ar,
- 			     enum wmi_force_fw_hang_type type, u32 delay_ms);
-+int ath10k_wmi_mgmt_tx(struct ath10k *ar, struct sk_buff *skb);
- 
- #endif /* _WMI_H_ */
--- 
-1.7.10
+>---
+> drivers/net/wireless/rt2x00/rt2x00pci.c | 9 +--------
+> 1 file changed, 1 insertion(+), 8 deletions(-)
+>
+>diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.c b/drivers/net/wireless/rt2x00/rt2x00pci.c
+>index 76d95de..dc49e52 100644
+>--- a/drivers/net/wireless/rt2x00/rt2x00pci.c
+>+++ b/drivers/net/wireless/rt2x00/rt2x00pci.c
+>@@ -105,13 +105,11 @@ int rt2x00pci_probe(struct pci_dev *pci_dev, const struct rt2x00_ops *ops)
+> 		goto exit_release_regions;
+> 	}
+> 
+>-	pci_enable_msi(pci_dev);
+>-
+> 	hw = ieee80211_alloc_hw(sizeof(struct rt2x00_dev), ops->hw);
+> 	if (!hw) {
+> 		rt2x00_probe_err("Failed to allocate hardware\n");
+> 		retval = -ENOMEM;
+>-		goto exit_disable_msi;
+>+		goto exit_release_regions;
+> 	}
+> 
+> 	pci_set_drvdata(pci_dev, hw);
+>@@ -152,9 +150,6 @@ exit_free_reg:
+> exit_free_device:
+> 	ieee80211_free_hw(hw);
+> 
+>-exit_disable_msi:
+>-	pci_disable_msi(pci_dev);
+>-
+> exit_release_regions:
+> 	pci_release_regions(pci_dev);
+> 
+>@@ -179,8 +174,6 @@ void rt2x00pci_remove(struct pci_dev *pci_dev)
+> 	rt2x00pci_free_reg(rt2x00dev);
+> 	ieee80211_free_hw(hw);
+> 
+>-	pci_disable_msi(pci_dev);
+>-
+> 	/*
+> 	 * Free the PCI device data.
+> 	 */
 
