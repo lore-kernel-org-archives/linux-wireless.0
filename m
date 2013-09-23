@@ -1,158 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:34875 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750987Ab3IHGcS (ORCPT
+Received: from mga09.intel.com ([134.134.136.24]:44687 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752948Ab3IWSYU convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Sep 2013 02:32:18 -0400
-Received: by mail-wi0-f170.google.com with SMTP id cb5so2251238wib.3
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Sep 2013 23:32:17 -0700 (PDT)
+	Mon, 23 Sep 2013 14:24:20 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Andrew Lutomirski <andy@luto.us>
+CC: "ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [Ilw] Intel 6300 crashes hard (3.11 regression?)
+Date: Mon, 23 Sep 2013 18:24:14 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301DB36D1@HASMSX103.ger.corp.intel.com> (sfid-20130923_202423_552578_F87C2245)
+References: <CAObL_7HXC8qQ54O5QPAo7cQT2yeK-etgKD-7aoaL3dkT4qcOow@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DB3584@HASMSX103.ger.corp.intel.com>
+ <CAObL_7GA-SD5bK7Hnwyp_vnoLxSbcGGtnzgyD-GBHAwaxF1JxQ@mail.gmail.com>
+In-Reply-To: <CAObL_7GA-SD5bK7Hnwyp_vnoLxSbcGGtnzgyD-GBHAwaxF1JxQ@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1377582278-3768-1-git-send-email-c_duttus@qti.qualcomm.com>
-References: <1377582278-3768-1-git-send-email-c_duttus@qti.qualcomm.com>
-Date: Sun, 8 Sep 2013 12:02:16 +0530
-Message-ID: <CACA4iOrhMhksNV78VUafCyw=Jeu++LV4BO5StQD4oVgARPCbfQ@mail.gmail.com> (sfid-20130908_083221_923403_8EB0A55B)
-Subject: Re: [PATCH] cfg80211: Pass station supported channel and oper class
- info to kernel
-From: Sunil Dutt <usdutt@gmail.com>
-To: Sunil Dutt <c_duttus@qti.qualcomm.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, j@w1.fi,
-	"Deepak (QCA)" <djindal@qti.qualcomm.com>,
-	Ashwani <adwivedi@qti.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
-Can you please help in reviewing the patch and upstream the same.
-Regards,
-Sunil
+> >>
+> >> I've had a failure twice on 3.11.1-200.fc19.x86_64.  I've never seen
+> >> it on earlier Fedora kernels or on 3.11-rc3.  The computer hangs for a
+> minute or so.
+> >> When it comes back, wireless doesn't work.  rmmoding and modprobing
+> >> iwldvm doesn't help (it's at the bottom of the attachment).
+> >>
+> >> Even rebooting doesn't fix it unless I pull the battery.  Otherwise
+> >> iwlwifi loads but wlan0 doesn't appear and the only log line is the
+> >> one saying that iwlwifi loaded.
+> >>
+> >> The messages on startup are:
+> >>
+> >> [   11.440725] iwlwifi 0000:03:00.0: can't disable ASPM; OS doesn't
+> >> have ASPM control
+> >> [   11.440788] iwlwifi 0000:03:00.0: irq 51 for MSI/MSI-X
+> >> [   11.455653] iwlwifi 0000:03:00.0: loaded firmware version 9.221.4.1
+> >> build 25532 op_mode iwldvm
+> >> [   11.517924] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_DEBUG enabled
+> >> [   11.517930] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_DEBUGFS enabled
+> >> [   11.517932] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_DEVICE_TRACING
+> >> disabled
+> >> [   11.517934] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_P2P disabled
+> >> [   11.517936] iwlwifi 0000:03:00.0: Detected Intel(R) Centrino(R)
+> >> Ultimate-N 6300 AGN, REV=0x74
+> >> [   11.519626] iwlwifi 0000:03:00.0: L1 Enabled; Disabling L0S
+> >>
+> >> (Both failures happened with pcie_aspm=force, but this is without it.
+> >> I want to see if disabling that option fixes it.)
+> >
+> > Please do and report back - what I can see here is that we kinda can't
+> access the NIC - so I would be curious if pcie_aspm=force changes the game
+> here.
+> >
+> 
+> It happened again.  This time I got some stuff in the middle of the dump that
+> I didn't notice last time:
+> 
+> [ 1125.076283] iwlwifi 0000:03:00.0: Q 19 is active and mapped to fifo
+> 2 ra_tid 0xa5a5 [90,1515870810]
+> [ 1127.073531] iwlwifi 0000:03:00.0: Error sending REPLY_TXFIFO_FLUSH:
+> time out after 2000ms.
+> [ 1127.073544] iwlwifi 0000:03:00.0: Current CMD queue read_ptr 135
+> write_ptr 143 [ 1127.073550] iwlwifi 0000:03:00.0: Couldn't flush the AGG
+> queue [ 1129.110029] iwlwifi 0000:03:00.0: Error sending REPLY_ADD_STA:
+> time out after 2000ms.
+> [ 1129.110037] iwlwifi 0000:03:00.0: Current CMD queue read_ptr 135
+> write_ptr 146 [ 1129.110044] wlan0: HW problem - can not stop rx
+> aggregation for
+> 50:a7:33:27:30:78 tid 0
+> [ 1131.107391] iwlwifi 0000:03:00.0: Error sending REPLY_ADD_STA: time out
+> after 2000ms.
+> [ 1131.107399] iwlwifi 0000:03:00.0: Current CMD queue read_ptr 135
+> write_ptr 149 [ 1131.107405] wlan0: HW problem - can not stop rx
+> aggregation for
+> 50:a7:33:27:30:78 tid 1
+> [ 1133.104739] iwlwifi 0000:03:00.0: Error sending REPLY_ADD_STA: time out
+> after 2000ms.
+> [ 1133.104745] iwlwifi 0000:03:00.0: Current CMD queue read_ptr 135
+> write_ptr 152 [ 1133.104750] wlan0: HW problem - can not stop rx
+> aggregation for
+> 50:a7:33:27:30:78 tid 5
+> [ 1135.102155] iwlwifi 0000:03:00.0: Error sending REPLY_ADD_STA: time out
+> after 2000ms.
+> [ 1135.102160] iwlwifi 0000:03:00.0: Current CMD queue read_ptr 135
+> write_ptr 155 [ 1135.102163] wlan0: HW problem - can not stop rx
+> aggregation for
+> 50:a7:33:27:30:78 tid 6
+> [ 1137.099675] iwlwifi 0000:03:00.0: Error sending REPLY_QOS_PARAM:
+> time out after 2000ms.
+> [ 1137.099682] iwlwifi 0000:03:00.0: Current CMD queue read_ptr 135
+> write_ptr 158 [ 1137.099686] iwlwifi 0000:03:00.0: Failed to update QoS [
+> 1139.097113] iwlwifi 0000:03:00.0: Error sending REPLY_RXON: time out after
+> 2000ms.
+> [ 1139.097120] iwlwifi 0000:03:00.0: Current CMD queue read_ptr 135
+> write_ptr 161 [ 1139.097124] iwlwifi 0000:03:00.0: Error clearing ASSOC_MSK
+> on BSS (-110) [ 1141.094533] iwlwifi 0000:03:00.0: Error sending REPLY_RXON:
+> time out after 2000ms.
+> [ 1141.094589] iwlwifi 0000:03:00.0: Current CMD queue read_ptr 135
+> write_ptr 164 [ 1141.094633] iwlwifi 0000:03:00.0: Error clearing ASSOC_MSK
+> on BSS (-110) [ 1141.314184] iwlwifi 0000:03:00.0: No space in command
+> queue [ 1141.314259] iwlwifi 0000:03:00.0: Restarting adapter queue is full [
+> 1141.314305] iwlwifi 0000:03:00.0: Error sending REPLY_LEDS_CMD:
+> enqueue_hcmd failed: -28
+> [ 1143.091961] iwlwifi 0000:03:00.0: Error sending REPLY_RXON: time out after
+> 2000ms.
+> [ 1143.092016] iwlwifi 0000:03:00.0: Current CMD queue read_ptr 135
+> write_ptr 165 [ 1143.092060] iwlwifi 0000:03:00.0: Error clearing ASSOC_MSK
+> on BSS (-110) [ 1145.090373] iwlwifi 0000:03:00.0: fail to flush all tx fifo queues
+> Q 0 [ 1145.090450] iwlwifi 0000:03:00.0: Current SW read_ptr 142 write_ptr
+> 143 [ 1145.110262] iwl data: 00000000: 90 3b 0d a2 00 88 ff ff 50 3b 0d a2
+> 00 88 ff ff  .;......P;......
+> [ 1145.130280] iwlwifi 0000:03:00.0: FH TRBs(0) = 0x5a5a5a5a [ 1145.149994]
+> iwlwifi 0000:03:00.0: FH TRBs(1) = 0x5a5a5a5a [ 1145.169813] iwlwifi
+> 0000:03:00.0: FH TRBs(2) = 0x5a5a5a5a [ 1145.189419] iwlwifi 0000:03:00.0: FH
+> TRBs(3) = 0x5a5a5a5a [ 1145.208993] iwlwifi 0000:03:00.0: FH TRBs(4) =
+> 0x5a5a5a5a [ 1145.228552] iwlwifi 0000:03:00.0: FH TRBs(5) = 0x5a5a5a5a [
+> 1145.248097] iwlwifi 0000:03:00.0: FH TRBs(6) = 0x5a5a5a5a [ 1145.267558]
+> iwlwifi 0000:03:00.0: FH TRBs(7) = 0x5a5a5a5a
+> 
+> 
+> 3.10 seems stable.
+> 
 
-On Tue, Aug 27, 2013 at 11:14 AM, Sunil Dutt <c_duttus@qti.qualcomm.com> wrote:
-> The information of the peer's supported channels and supported operating
-> classes are required for the driver to perform TDLS off channel
-> operations. This commit enhances the function nl80211_(new)set_station
-> to pass this information of the peer to the driver.
->
-> Signed-off-by: Sunil Dutt <c_duttus@qti.qualcomm.com>
-> ---
->  include/net/cfg80211.h       |  8 ++++++++
->  include/uapi/linux/nl80211.h |  9 +++++++++
->  net/wireless/nl80211.c       | 30 ++++++++++++++++++++++++++++++
->  3 files changed, 47 insertions(+)
->
-> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-> index 9ab7a06..81889ca 100644
-> --- a/include/net/cfg80211.h
-> +++ b/include/net/cfg80211.h
-> @@ -735,6 +735,10 @@ enum station_parameters_apply_mask {
->   * @capability: station capability
->   * @ext_capab: extended capabilities of the station
->   * @ext_capab_len: number of extended capabilities
-> + * @supported_channels: supported channels in IEEE 802.11 format
-> + * @supported_channels_len: number of supported channels
-> + * @supported_oper_classes: supported oper classes in IEEE 802.11 format
-> + * @supported_oper_classes_len: number of supported operating classes
->   */
->  struct station_parameters {
->         const u8 *supported_rates;
-> @@ -754,6 +758,10 @@ struct station_parameters {
->         u16 capability;
->         const u8 *ext_capab;
->         u8 ext_capab_len;
-> +       const u8 *supported_channels;
-> +       u8 supported_channels_len;
-> +       const u8 *supported_oper_classes;
-> +       u8 supported_oper_classes_len;
->  };
->
->  /**
-> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-> index 1f42bc3..61a21a4 100644
-> --- a/include/uapi/linux/nl80211.h
-> +++ b/include/uapi/linux/nl80211.h
-> @@ -1493,6 +1493,11 @@ enum nl80211_commands {
->   * @NL80211_ATTR_CSA_C_OFF_PRESP: Offset of the channel switch counter
->   *     field in the probe response (%NL80211_ATTR_PROBE_RESP).
->   *
-> + * @NL80211_ATTR_STA_SUPPORTED_CHANNELS: array of supported channels.
-> + *
-> + * @NL80211_ATTR_STA_SUPPORTED_OPER_CLASSES: array of supported
-> + *      supported operating classes.
-> + *
->   * @NL80211_ATTR_MAX: highest attribute number currently defined
->   * @__NL80211_ATTR_AFTER_LAST: internal use
->   */
-> @@ -1801,6 +1806,10 @@ enum nl80211_attrs {
->         NL80211_ATTR_CSA_C_OFF_BEACON,
->         NL80211_ATTR_CSA_C_OFF_PRESP,
->
-> +       NL80211_ATTR_STA_SUPPORTED_CHANNELS,
-> +
-> +       NL80211_ATTR_STA_SUPPORTED_OPER_CLASSES,
-> +
->         /* add attributes here, update the policy in nl80211.c */
->
->         __NL80211_ATTR_AFTER_LAST,
-> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-> index 741368c..0765b9a 100644
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -354,6 +354,8 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
->         [NL80211_ATTR_CSA_IES] = { .type = NLA_NESTED },
->         [NL80211_ATTR_CSA_C_OFF_BEACON] = { .type = NLA_U16 },
->         [NL80211_ATTR_CSA_C_OFF_PRESP] = { .type = NLA_U16 },
-> +       [NL80211_ATTR_STA_SUPPORTED_CHANNELS] = { .type = NLA_BINARY },
-> +       [NL80211_ATTR_STA_SUPPORTED_OPER_CLASSES] = { .type = NLA_BINARY },
->  };
->
->  /* policy for the key attributes */
-> @@ -3909,6 +3911,20 @@ static int nl80211_set_station_tdls(struct genl_info *info,
->                 params->vht_capa =
->                         nla_data(info->attrs[NL80211_ATTR_VHT_CAPABILITY]);
->
-> +       if (info->attrs[NL80211_ATTR_STA_SUPPORTED_CHANNELS]) {
-> +               params->supported_channels =
-> +                    nla_data(info->attrs[NL80211_ATTR_STA_SUPPORTED_CHANNELS]);
-> +               params->supported_channels_len =
-> +                    nla_len(info->attrs[NL80211_ATTR_STA_SUPPORTED_CHANNELS]);
-> +       }
-> +
-> +       if (info->attrs[NL80211_ATTR_STA_SUPPORTED_OPER_CLASSES]) {
-> +               params->supported_oper_classes =
-> +                nla_data(info->attrs[NL80211_ATTR_STA_SUPPORTED_OPER_CLASSES]);
-> +               params->supported_oper_classes_len =
-> +                 nla_len(info->attrs[NL80211_ATTR_STA_SUPPORTED_OPER_CLASSES]);
-> +       }
-> +
->         return nl80211_parse_sta_wme(info, params);
->  }
->
-> @@ -4089,6 +4105,20 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
->                         return -EINVAL;
->         }
->
-> +       if (info->attrs[NL80211_ATTR_STA_SUPPORTED_CHANNELS]) {
-> +               params->supported_channels =
-> +                    nla_data(info->attrs[NL80211_ATTR_STA_SUPPORTED_CHANNELS]);
-> +               params->supported_channels_len =
-> +                    nla_len(info->attrs[NL80211_ATTR_STA_SUPPORTED_CHANNELS]);
-> +       }
-> +
-> +       if (info->attrs[NL80211_ATTR_STA_SUPPORTED_OPER_CLASSES]) {
-> +               params->supported_oper_classes =
-> +                nla_data(info->attrs[NL80211_ATTR_STA_SUPPORTED_OPER_CLASSES]);
-> +               params->supported_oper_classes_len =
-> +                 nla_len(info->attrs[NL80211_ATTR_STA_SUPPORTED_OPER_CLASSES]);
-> +       }
-> +
->         err = nl80211_parse_sta_wme(info, &params);
->         if (err)
->                 return err;
-> --
-> 1.8.2.1
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hmm.... Is bisection an option?
+I don't really see any change in our driver that could cause that, but I'll need  to check a bit more.
