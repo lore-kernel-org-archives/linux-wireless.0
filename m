@@ -1,172 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:47842 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754209Ab3ISWse (ORCPT
+Received: from mail-ye0-f171.google.com ([209.85.213.171]:41838 "EHLO
+	mail-ye0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752216Ab3IWVBM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Sep 2013 18:48:34 -0400
-In-Reply-To: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-From: Russell King <rmk+kernel@arm.linux.org.uk>
-To: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
-	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
-	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
-	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	uclinux-dist-devel@blackfin.uclinux.org
-Cc: Rob Landley <rob@landley.net>, Vinod Koul <vinod.koul@intel.com>,
-	Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 01/51] DMA-API: provide a helper to set both DMA and coherent
- DMA masks
-Message-Id: <E1VMlja-0007fA-HU@rmk-PC.arm.linux.org.uk> (sfid-20130920_004856_327220_EE46104C)
-Date: Thu, 19 Sep 2013 22:25:58 +0100
+	Mon, 23 Sep 2013 17:01:12 -0400
+Date: Mon, 23 Sep 2013 18:00:49 -0300
+From: Gustavo Padovan <gustavo@padovan.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: bluetooth 2013-09-23
+Message-ID: <20130923210049.GG18215@joana> (sfid-20130923_230128_928762_7689E5AE)
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="y0ulUmNC+osPPQO6"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Provide a helper to set both the DMA and coherent DMA masks to the
-same value - this avoids duplicated code in a number of drivers,
-sometimes with buggy error handling, and also allows us identify
-which drivers do things differently.
 
-Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+--y0ulUmNC+osPPQO6
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+Hi John,
+
+First Bluetooth fixes to 3.12, it includes:
+
+* 3 patches to add device id for 3 new hardwares.
+
+* 2 patches from Johan to fix the rfkill behaviour during setup stage
+
+* a small clean up in the rfcomm TTY code that fixes a potential racy
+condition (by Gianluca Anzolin)
+
+* 2 fixes to proper set encryption key size and security level in the
+peripheral role of Bluetooth LE devices. (by Andre Guedes)
+
+* a fix for dealing devices where pairing is not necessary, we were keeping
+the Bluetooth ACL connection alive for too much time. (by Syam Sidhardhan)
+
+Please pull or let me know of any problems! Thanks!
+
+
+	Gustavo
+
 ---
- Documentation/DMA-API-HOWTO.txt |   37 ++++++++++++++++++++++---------------
- Documentation/DMA-API.txt       |    8 ++++++++
- include/linux/dma-mapping.h     |   14 ++++++++++++++
- 3 files changed, 44 insertions(+), 15 deletions(-)
+The following changes since commit f4e1a4d3ecbb9e42bdf8e7869ee8a4ebfa27fb20:
 
-diff --git a/Documentation/DMA-API-HOWTO.txt b/Documentation/DMA-API-HOWTO.txt
-index 14129f1..5e98303 100644
---- a/Documentation/DMA-API-HOWTO.txt
-+++ b/Documentation/DMA-API-HOWTO.txt
-@@ -101,14 +101,23 @@ style to do this even if your device holds the default setting,
- because this shows that you did think about these issues wrt. your
- device.
- 
--The query is performed via a call to dma_set_mask():
-+The query is performed via a call to dma_set_mask_and_coherent():
- 
--	int dma_set_mask(struct device *dev, u64 mask);
-+	int dma_set_mask_and_coherent(struct device *dev, u64 mask);
- 
--The query for consistent allocations is performed via a call to
--dma_set_coherent_mask():
-+which will query the mask for both streaming and coherent APIs together.
-+If you have some special requirements, then the following two separate
-+queries can be used instead:
- 
--	int dma_set_coherent_mask(struct device *dev, u64 mask);
-+	The query for streaming mappings is performed via a call to
-+	dma_set_mask():
-+
-+		int dma_set_mask(struct device *dev, u64 mask);
-+
-+	The query for consistent allocations is performed via a call
-+	to dma_set_coherent_mask():
-+
-+		int dma_set_coherent_mask(struct device *dev, u64 mask);
- 
- Here, dev is a pointer to the device struct of your device, and mask
- is a bit mask describing which bits of an address your device
-@@ -137,7 +146,7 @@ exactly why.
- 
- The standard 32-bit addressing device would do something like this:
- 
--	if (dma_set_mask(dev, DMA_BIT_MASK(32))) {
-+	if (dma_set_mask_and_coherent(dev, DMA_BIT_MASK(32))) {
- 		printk(KERN_WARNING
- 		       "mydev: No suitable DMA available.\n");
- 		goto ignore_this_device;
-@@ -171,22 +180,20 @@ If a card is capable of using 64-bit consistent allocations as well,
- 
- 	int using_dac, consistent_using_dac;
- 
--	if (!dma_set_mask(dev, DMA_BIT_MASK(64))) {
-+	if (!dma_set_mask_and_coherent(dev, DMA_BIT_MASK(64))) {
- 		using_dac = 1;
- 	   	consistent_using_dac = 1;
--		dma_set_coherent_mask(dev, DMA_BIT_MASK(64));
--	} else if (!dma_set_mask(dev, DMA_BIT_MASK(32))) {
-+	} else if (!dma_set_mask_and_coherent(dev, DMA_BIT_MASK(32))) {
- 		using_dac = 0;
- 		consistent_using_dac = 0;
--		dma_set_coherent_mask(dev, DMA_BIT_MASK(32));
- 	} else {
- 		printk(KERN_WARNING
- 		       "mydev: No suitable DMA available.\n");
- 		goto ignore_this_device;
- 	}
- 
--dma_set_coherent_mask() will always be able to set the same or a
--smaller mask as dma_set_mask(). However for the rare case that a
-+The coherent coherent mask will always be able to set the same or a
-+smaller mask as the streaming mask. However for the rare case that a
- device driver only uses consistent allocations, one would have to
- check the return value from dma_set_coherent_mask().
- 
-@@ -199,9 +206,9 @@ Finally, if your device can only drive the low 24-bits of
- 		goto ignore_this_device;
- 	}
- 
--When dma_set_mask() is successful, and returns zero, the kernel saves
--away this mask you have provided.  The kernel will use this
--information later when you make DMA mappings.
-+When dma_set_mask() or dma_set_mask_and_coherent() is successful, and
-+returns zero, the kernel saves away this mask you have provided.  The
-+kernel will use this information later when you make DMA mappings.
- 
- There is a case which we are aware of at this time, which is worth
- mentioning in this documentation.  If your device supports multiple
-diff --git a/Documentation/DMA-API.txt b/Documentation/DMA-API.txt
-index 78a6c56..e865279 100644
---- a/Documentation/DMA-API.txt
-+++ b/Documentation/DMA-API.txt
-@@ -142,6 +142,14 @@ internal API for use by the platform than an external API for use by
- driver writers.
- 
- int
-+dma_set_mask_and_coherent(struct device *dev, u64 mask)
-+
-+Checks to see if the mask is possible and updates the device
-+streaming and coherent DMA mask parameters if it is.
-+
-+Returns: 0 if successful and a negative error if not.
-+
-+int
- dma_set_mask(struct device *dev, u64 mask)
- 
- Checks to see if the mask is possible and updates the device
-diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
-index 3a8d0a2..ec951f9 100644
---- a/include/linux/dma-mapping.h
-+++ b/include/linux/dma-mapping.h
-@@ -97,6 +97,20 @@ static inline int dma_set_coherent_mask(struct device *dev, u64 mask)
- }
- #endif
- 
-+/*
-+ * Set both the DMA mask and the coherent DMA mask to the same thing.
-+ * Note that we don't check the return value from dma_set_coherent_mask()
-+ * as the DMA API guarantees that the coherent DMA mask can be set to
-+ * the same or smaller than the streaming DMA mask.
-+ */
-+static inline int dma_set_mask_and_coherent(struct device *dev, u64 mask)
-+{
-+	int rc = dma_set_mask(dev, mask);
-+	if (rc == 0)
-+		dma_set_coherent_mask(dev, mask);
-+	return rc;
-+}
-+
- extern u64 dma_get_required_mask(struct device *dev);
- 
- static inline unsigned int dma_get_max_seg_size(struct device *dev)
--- 
-1.7.4.4
+  rt2800: change initialization sequence to fix system freeze (2013-09-09 14:44:34 -0400)
 
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth master
+
+for you to fetch changes up to 5bcecf325378218a8e248bb6bcae96ec7362f8ef:
+
+  Bluetooth: btusb: Add support for Belkin F8065bf (2013-09-23 17:44:25 -0300)
+
+----------------------------------------------------------------
+Andre Guedes (2):
+      Bluetooth: Fix security level for peripheral role
+      Bluetooth: Fix encryption key size for peripheral role
+
+Gianluca Anzolin (1):
+      Bluetooth: don't release the port in rfcomm_dev_state_change()
+
+Johan Hedberg (2):
+      Bluetooth: Introduce a new HCI_RFKILLED flag
+      Bluetooth: Fix rfkill functionality during the HCI setup stage
+
+Ken O'Brien (1):
+      Bluetooth: btusb: Add support for Belkin F8065bf
+
+Peng Chen (1):
+      Bluetooth: Add a new PID/VID 0cf3/e005 for AR3012.
+
+Raphael Kubo da Costa (1):
+      Bluetooth: Add support for BCM20702A0 [0b05, 17cb]
+
+Syam Sidhardhan (1):
+      Bluetooth: Fix ACL alive for long in case of non pariable devices
+
+ drivers/bluetooth/ath3k.c   |  2 ++
+ drivers/bluetooth/btusb.c   |  5 +++++
+ include/net/bluetooth/hci.h |  1 +
+ net/bluetooth/hci_core.c    | 26 ++++++++++++++++++++------
+ net/bluetooth/hci_event.c   |  6 +++++-
+ net/bluetooth/l2cap_core.c  |  7 +++++++
+ net/bluetooth/rfcomm/tty.c  | 35 ++---------------------------------
+ 7 files changed, 42 insertions(+), 40 deletions(-)
+
+
+--y0ulUmNC+osPPQO6
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+
+iQIcBAEBAgAGBQJSQKwBAAoJEPs3PUX4s20oo6QP/0R2LOHl5VRFKx7TJfKFLMLe
+ZeFGBxK2jKTA1xRGhJ4dUJ6Li6K8QpfA0TMkINk5HGmA9QMc2fO2IUF6o+I0jjlx
+j+A43w54bvG0I0xCG23sl+a3vkMUXWCXOCycZPE3a3GUCyphFwBxal6vEt3AlOQl
+gXhDzO/+DPxzTW3wPS6Am3z33q8d2IFbPZFQYC6TEPKgJw3og7Sc60pcBiZl8r0v
+8TeaT/n40IY2lBKHyhkTB3MnUJVV07F0FAnzgfg/Lp7Up5FQkPSgvq07aHYbSE6M
+S969jaNy0jN8KJk7gXF/1arwit566d1ymZRtk0At2AtUFyyaC2kLmAIS1LG8o8aB
++IZylN0N7SEstn3yjPitBEbEWjxBEJyeLn++SmHsMSspKxj0R3VKKpjogZ6jxpHY
+twhpUeIx4Ls3r3+I6u0hOornF6QydymcUs+thgEjyf+GaYj8M9OlOq3m6WDC1UL7
+64RTfq3KXQjpOw6A3ayessbmZHS7qIncfh+kcNO73+903/KyBmdDZVsnrwRrs07V
+E9m9cHiQg+TRzuncHDrD55jLKN4tICx3yf1oESBT4UrpsWlbP/9rE+nif8eQkJCj
+l4HnAA0KzsCy08zqlYh7XMMC9navDoyYR+AIZ1p1MtjNRKgXZJxT1Q5JhasAC3gr
+Gt+C8CMWPA6rH//aCnWW
+=TPFZ
+-----END PGP SIGNATURE-----
+
+--y0ulUmNC+osPPQO6--
