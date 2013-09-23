@@ -1,67 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:52663 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752109Ab3IHPT6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Sep 2013 11:19:58 -0400
-Subject: [PATCH] ath10k: Calculate correct peer PHY mode for VHT
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Sun, 08 Sep 2013 18:19:55 +0300
-Message-ID: <20130908151955.9228.15022.stgit@localhost6.localdomain6> (sfid-20130908_172003_860935_BC0CC76C)
+Received: from mx1.redhat.com ([209.132.183.28]:36849 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752467Ab3IWJLf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Sep 2013 05:11:35 -0400
+Date: Mon, 23 Sep 2013 04:08:13 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: users@rt2x00.serialmonkey.com, Jakub Kicinski <kubakici@wp.pl>,
+	moorray@wp.pl
+Subject: [PATCH 3.12] Revert "rt2x00pci: Use PCI MSIs whenever possible"
+Message-ID: <20130923020812.GA1577@redhat.com> (sfid-20130923_111139_192427_B50D8368)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+This reverts commit 9483f40d8d01918b399b4e24d0c1111db0afffeb.
 
-The peer PHY mode for 11ac operation needs to be determined
-properly based on the channel bandwidth being used. Fix
-this so that the proper mode is given to the firmware.
+Some devices stop to connect with above commit, see:
+https://bugzilla.kernel.org/show_bug.cgi?id=61621
 
-kvalo: earlier we used 11na-ht20 in STA mode for 11ac AP peer, this
-patch changes that to 11ac-vht80. I didn't notice any change in
-throughput in my tests, but nevertheless it's the right thing
-to do.
+Since there is no clear benefit of having MSI enabled, just revert
+change to fix the problem.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: stable@vger.kernel.org # 3.11+
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c |   14 +++++++++++---
- 1 file changed, 11 insertions(+), 3 deletions(-)
+ drivers/net/wireless/rt2x00/rt2x00pci.c | 9 +--------
+ 1 file changed, 1 insertion(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 2b11856..8b9fb66 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -1080,8 +1080,6 @@ static void ath10k_peer_assoc_h_phymode(struct ath10k *ar,
- {
- 	enum wmi_phy_mode phymode = MODE_UNKNOWN;
+diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.c b/drivers/net/wireless/rt2x00/rt2x00pci.c
+index 76d95de..dc49e52 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00pci.c
++++ b/drivers/net/wireless/rt2x00/rt2x00pci.c
+@@ -105,13 +105,11 @@ int rt2x00pci_probe(struct pci_dev *pci_dev, const struct rt2x00_ops *ops)
+ 		goto exit_release_regions;
+ 	}
  
--	/* FIXME: add VHT */
+-	pci_enable_msi(pci_dev);
 -
- 	switch (ar->hw->conf.chandef.chan->band) {
- 	case IEEE80211_BAND_2GHZ:
- 		if (sta->ht_cap.ht_supported) {
-@@ -1095,7 +1093,17 @@ static void ath10k_peer_assoc_h_phymode(struct ath10k *ar,
+ 	hw = ieee80211_alloc_hw(sizeof(struct rt2x00_dev), ops->hw);
+ 	if (!hw) {
+ 		rt2x00_probe_err("Failed to allocate hardware\n");
+ 		retval = -ENOMEM;
+-		goto exit_disable_msi;
++		goto exit_release_regions;
+ 	}
  
- 		break;
- 	case IEEE80211_BAND_5GHZ:
--		if (sta->ht_cap.ht_supported) {
-+		/*
-+		 * Check VHT first.
-+		 */
-+		if (sta->vht_cap.vht_supported) {
-+			if (sta->bandwidth == IEEE80211_STA_RX_BW_80)
-+				phymode = MODE_11AC_VHT80;
-+			else if (sta->bandwidth == IEEE80211_STA_RX_BW_40)
-+				phymode = MODE_11AC_VHT40;
-+			else if (sta->bandwidth == IEEE80211_STA_RX_BW_20)
-+				phymode = MODE_11AC_VHT20;
-+		} else if (sta->ht_cap.ht_supported) {
- 			if (sta->bandwidth == IEEE80211_STA_RX_BW_40)
- 				phymode = MODE_11NA_HT40;
- 			else
+ 	pci_set_drvdata(pci_dev, hw);
+@@ -152,9 +150,6 @@ exit_free_reg:
+ exit_free_device:
+ 	ieee80211_free_hw(hw);
+ 
+-exit_disable_msi:
+-	pci_disable_msi(pci_dev);
+-
+ exit_release_regions:
+ 	pci_release_regions(pci_dev);
+ 
+@@ -179,8 +174,6 @@ void rt2x00pci_remove(struct pci_dev *pci_dev)
+ 	rt2x00pci_free_reg(rt2x00dev);
+ 	ieee80211_free_hw(hw);
+ 
+-	pci_disable_msi(pci_dev);
+-
+ 	/*
+ 	 * Free the PCI device data.
+ 	 */
+-- 
+1.8.3.1
 
