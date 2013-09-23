@@ -1,51 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:15206 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756377Ab3IZJHL (ORCPT
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:59255 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752709Ab3IWTav (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Sep 2013 05:07:11 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: Bartosz Markowski <bartosz.markowski@tieto.com>,
-	<ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 01/13] ath10k: introduce dynamic WMI structures
-References: <1380101891-18312-1-git-send-email-bartosz.markowski@tieto.com>
-	<1380101891-18312-2-git-send-email-bartosz.markowski@tieto.com>
-	<87ob7grmhv.fsf@kamboji.qca.qualcomm.com>
-	<CA+BoTQk98WwdqyVtyHy9A1Z5kWgmkC6sHVjgaQNbrRLfm8YSiA@mail.gmail.com>
-Date: Thu, 26 Sep 2013 12:07:01 +0300
-In-Reply-To: <CA+BoTQk98WwdqyVtyHy9A1Z5kWgmkC6sHVjgaQNbrRLfm8YSiA@mail.gmail.com>
-	(Michal Kazior's message of "Thu, 26 Sep 2013 11:03:17 +0200")
-Message-ID: <87fvssrlxm.fsf@kamboji.qca.qualcomm.com> (sfid-20130926_110721_993320_BF1585D5)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 23 Sep 2013 15:30:51 -0400
+Received: by mail-wg0-f51.google.com with SMTP id c11so3458770wgh.18
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Sep 2013 12:30:50 -0700 (PDT)
+Message-ID: <1379964642.4007.10.camel@canaries64-MCP7A> (sfid-20130923_213057_379818_165D754A)
+Subject: [PATCH] staging: vt6656: [BUG] iwctl_siwencodeext return if device
+ not open
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 23 Sep 2013 20:30:42 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Don't allow entry to iwctl_siwencodeext if device not open.
 
-> On 26 September 2013 10:54, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->> Bartosz Markowski <bartosz.markowski@tieto.com> writes:
->>
->>> @@ -1293,7 +1438,8 @@ int ath10k_wmi_pdev_resume_target(struct ath10k *ar)
->>>       if (skb == NULL)
->>>               return -ENOMEM;
->>>
->>> -     return ath10k_wmi_cmd_send(ar, skb, WMI_PDEV_RESUME_CMDID);
->>> +     return ath10k_wmi_cmd_send(ar, skb,
->>> +                                ar->wmi.cmd->wmi_pdev_resume_cmdid);
->>>  }
->>
->> I was thinking of adding a macro WMI_PDEV_RESUME_CMDID(ar) for all
->> dynamic wmi ids, that way it would look as closely as possible with the
->> original code. But I'm not sure if that makes sense anymore. Thoughts?
->
-> Seems like an unnecessary indirection to me. You still need to have
-> the mapping structure, unless you want to use macro concatenation (##)
-> instead.
+This fixes a race condition where wpa supplicant/network manager
+enters the function when the device is already closed.
 
-Yeah, there's no real benefit from the macro.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Cc: stable@vger.kernel.org # 3.8+
+---
+ drivers/staging/vt6656/iwctl.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
+diff --git a/drivers/staging/vt6656/iwctl.c b/drivers/staging/vt6656/iwctl.c
+index 033cb50..5968888 100644
+--- a/drivers/staging/vt6656/iwctl.c
++++ b/drivers/staging/vt6656/iwctl.c
+@@ -1634,6 +1634,9 @@ int iwctl_siwencodeext(struct net_device *dev, struct iw_request_info *info,
+ 	if (pMgmt == NULL)
+ 		return -EFAULT;
+ 
++	if (!(pDevice->flags & DEVICE_FLAGS_OPENED))
++		return -ENODEV;
++
+ 	buf = kzalloc(sizeof(struct viawget_wpa_param), GFP_KERNEL);
+ 	if (buf == NULL)
+ 		return -ENOMEM;
 -- 
-Kalle Valo
+1.8.3.2
+
