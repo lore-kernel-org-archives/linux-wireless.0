@@ -1,85 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2111 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752768Ab3IAMcB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Sep 2013 08:32:01 -0400
-Message-ID: <522333AD.9080004@broadcom.com> (sfid-20130901_143223_286790_FC4990B8)
-Date: Sun, 1 Sep 2013 14:31:41 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:40436 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753831Ab3IWMN2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Sep 2013 08:13:28 -0400
+Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1VO513-00061C-5x
+	for linux-wireless@vger.kernel.org; Mon, 23 Sep 2013 08:13:25 -0400
+Received: from linville-x1.hq.tuxdriver.com (localhost.localdomain [127.0.0.1])
+	by linville-x1.hq.tuxdriver.com (8.14.7/8.14.6) with ESMTP id r8NC9SAf006656
+	for <linux-wireless@vger.kernel.org>; Mon, 23 Sep 2013 08:09:29 -0400
+Received: (from linville@localhost)
+	by linville-x1.hq.tuxdriver.com (8.14.7/8.14.7/Submit) id r8NC9SU2006655
+	for linux-wireless@vger.kernel.org; Mon, 23 Sep 2013 08:09:28 -0400
+Date: Mon, 23 Sep 2013 08:09:22 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Subject: wireless-testing rebased, John still traveling
+Message-ID: <20130923120922.GA6594@tuxdriver.com> (sfid-20130923_141331_558114_E3D25117)
 MIME-Version: 1.0
-To: "Hauke Mehrtens" <hauke@hauke-m.de>
-cc: "Geert Uytterhoeven" <geert@linux-m68k.org>,
-	"Randy Dunlap" <rdunlap@infradead.org>,
-	"Stephen Rothwell" <sfr@canb.auug.org.au>,
-	Linux-Next <linux-next@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	brcm80211-dev-list@broadcom.com,
-	linux-kbuild <linux-kbuild@vger.kernel.org>
-Subject: Re: linux-next: Tree for Aug 30 (brcmfmac)
-References: <20130829200013.d9dde1eb64686a32c661b5d3@canb.auug.org.au>
- <52210AB9.2090104@infradead.org>
- <CAMuHMdXFmWyiUJF+4HbD=6oGPVXHBAVx=rOC7u=motTQFCKn7g@mail.gmail.com>
- <5222341B.4070205@broadcom.com> <522238A1.3080008@hauke-m.de>
-In-Reply-To: <522238A1.3080008@hauke-m.de>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/31/13 20:40, Hauke Mehrtens wrote:
-> On 08/31/2013 08:21 PM, Arend van Spriel wrote:
->> On 08/31/13 19:37, Geert Uytterhoeven wrote:
->>> On Fri, Aug 30, 2013 at 11:12 PM, Randy Dunlap<rdunlap@infradead.org>
->>> wrote:
->>>> This bool kconfig symbol:
->>>>
->>>> config BRCMFMAC_SDIO
->>>>           bool "SDIO bus interface support for FullMAC driver"
->>>>           depends on MMC
->>>>
->>>> allows BRCMFMAC_SDIO to be y even when MMC=m.
->>>>
->>>> Is there a reasonable solution to this?
->>
->> Actually, BRCMFMAC should be built in same form as the MMC and/or USB,
->> but only when BRCMFMAC_SDIO or BRCMFMAC_USB are selected.
->>
->> So valid combinations are:
->> MMC=m, USB=m, BRCMFMAC_SDIO=y, BRCMFMAC_USB=y =>  BRCMFMAC=m
->> MMC=m, USB=y, BRCMFMAC_SDIO=y, BRCMFMAC_USB=y =>  BRCMFMAC=m
->> MMC=y, USB=m, BRCMFMAC_SDIO=y, BRCMFMAC_USB=y =>  BRCMFMAC=m
->> MMC=m, USB=y, BRCMFMAC_SDIO=y, BRCMFMAC_USB=n =>  BRCMFMAC=m
->> MMC=m, USB=y, BRCMFMAC_SDIO=n, BRCMFMAC_USB=y =>  BRCMFMAC=m|y
->> MMC=y, USB=m, BRCMFMAC_SDIO=y, BRCMFMAC_USB=n =>  BRCMFMAC=m|y
->> MMC=y, USB=m, BRCMFMAC_SDIO=n, BRCMFMAC_USB=y =>  BRCMFMAC=m
->> MMC=y, USB=y, BRCMFMAC_SDIO=y, BRCMFMAC_USB=y =>  BRCMFMAC=m|y
->> MMC=y, USB=y, BRCMFMAC_SDIO=y, BRCMFMAC_USB=n =>  BRCMFMAC=m|y
->> MMC=y, USB=y, BRCMFMAC_SDIO=n, BRCMFMAC_USB=y =>  BRCMFMAC=m|y
->>
->> Not sure how to express the above.
->
-> This should be expressed with this Kconfig:
->
-> config BRCMFMAC_USB
-> 	bool "USB bus interface support for FullMAC driver"
-> 	depends on (USB = y || USB = BRCMFMAC)
-> 	depends on BRCMFMAC
->
-> config BRCMFMAC_SDIO
-> 	bool "SDIO bus interface support for FullMAC driver"
-> 	depends on (MMC = y || MMC = BRCMFMAC)
-> 	depends on BRCMFMAC
-> 	select FW_LOADER
->
-> I haven't tested it, but we had a similar problem in b43 and fixed it
-> like this.
+All,
 
-Thanks, Hauke
+The wireless testing tree has been rebased.  The base
+commit is a post-rc1 pull by Linus from Dave, commit
+b75ff5e84bb6c2d43a8ec39b240c80f0543821f0.  The wireless and
+wireless-next trees are all based from the same point as well.
 
-I will create a patch fixing this.
+I'm still taking advantage of the opportunity to visit some friends
+in Louisiana.  I hope to be back into the merging business by the
+end of the week -- FYI!
 
-Regards,
-Arend
+Thanks,
 
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
