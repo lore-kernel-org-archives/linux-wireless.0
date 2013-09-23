@@ -1,116 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:47928 "EHLO bear.ext.ti.com"
+Received: from mx1.redhat.com ([209.132.183.28]:54671 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756469Ab3IZK5I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Sep 2013 06:57:08 -0400
-Message-ID: <524411B8.4070000@ti.com> (sfid-20130926_125721_941347_FFA53D9C)
-Date: Thu, 26 Sep 2013 16:21:36 +0530
-From: Archit Taneja <archit@ti.com>
-MIME-Version: 1.0
-To: Russell King <rmk+kernel@arm.linux.org.uk>,
-	<alsa-devel@alsa-project.org>, <b43-dev@lists.infradead.org>,
-	<devel@driverdev.osuosl.org>, <devicetree@vger.kernel.org>,
-	<dri-devel@lists.freedesktop.org>,
-	<e1000-devel@lists.sourceforge.net>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-crypto@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-	<linux-fbdev@vger.kernel.org>, <linux-ide@vger.kernel.org>,
-	<linux-media@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-	<linux-nvme@lists.infradead.org>, <linux-omap@vger.kernel.org>,
-	<linuxppc-dev@lists.ozlabs.org>,
-	<linux-samsung-soc@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-	<linux-tegra@vger.kernel.org>, <linux-usb@vger.kernel.org>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	<uclinux-dist-devel@blackfin.uclinux.org>
-CC: Kukjin Kim <kgene.kim@samsung.com>,
-	Joonyoung Shim <jy0922.shim@samsung.com>,
-	David Airlie <airlied@linux.ie>,
-	Seung-Woo Kim <sw0312.kim@samsung.com>,
-	Inki Dae <inki.dae@samsung.com>,
-	Kyungmin Park <kyungmin.park@samsung.com>,
-	Tejun Heo <tj@kernel.org>, Rob Clark <robdclark@gmail.com>,
-	"Valkeinen, Tomi" <tomi.valkeinen@ti.com>
-Subject: Re: [PATCH 39/51] DMA-API: others: use dma_set_coherent_mask()
-References: <20130919212235.GD12758@n2100.arm.linux.org.uk> <E1VMnNq-0007s4-HN@rmk-PC.arm.linux.org.uk>
-In-Reply-To: <E1VMnNq-0007s4-HN@rmk-PC.arm.linux.org.uk>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	id S1752310Ab3IWQI7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Sep 2013 12:08:59 -0400
+Message-ID: <1379952829.2475.16.camel@dcbw.foobar.com> (sfid-20130923_180903_556457_20E454DD)
+Subject: Re: NetworkManager not listing access points
+From: Dan Williams <dcbw@redhat.com>
+To: Detlev Casanova <detlev.casanova@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, laurent.pinchart@ideasonboard.com
+Date: Mon, 23 Sep 2013 11:13:49 -0500
+In-Reply-To: <3006906.Q9n0kfrGGo@naboo>
+References: <31357461.i5mG9q5IfA@naboo> <5951977.8jla5cTcNa@naboo>
+	 <1379796719.4699.0.camel@jlt4.sipsolutions.net> <3006906.Q9n0kfrGGo@naboo>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Sun, 2013-09-22 at 16:20 +0200, Detlev Casanova wrote:
+> Le samedi 21 septembre 2013 22:51:59 Johannes Berg a écrit :
+> > On Thu, 2013-09-19 at 07:58 +0200, Detlev Casanova wrote:
+> > > Here is the output (attached file for formatting)
+> > 
+> > Was that from the good case? The bad case would have been 
+> more
+> > interesting.
+> 
+> This is both cases. I made another one and here, I can give more 
+> details:
+> 
+> Network manager is trying to list APs and fails until time 
+> 1379858724.386569
 
-On Friday 20 September 2013 04:41 AM, Russell King wrote:
-> The correct way for a driver to specify the coherent DMA mask is
-> not to directly access the field in the struct device, but to use
-> dma_set_coherent_mask().  Only arch and bus code should access this
-> member directly.
->
-> Convert all direct write accesses to using the correct API.
->
-> Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
-> ---
->   drivers/ata/pata_ixp4xx_cf.c             |    5 ++++-
->   drivers/gpu/drm/exynos/exynos_drm_drv.c  |    6 +++++-
->   drivers/gpu/drm/omapdrm/omap_dmm_tiler.c |    5 +++--
->   3 files changed, 12 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/ata/pata_ixp4xx_cf.c b/drivers/ata/pata_ixp4xx_cf.c
-> index 1ec53f8..ddf470c 100644
-> --- a/drivers/ata/pata_ixp4xx_cf.c
-> +++ b/drivers/ata/pata_ixp4xx_cf.c
-> @@ -144,6 +144,7 @@ static int ixp4xx_pata_probe(struct platform_device *pdev)
->   	struct ata_host *host;
->   	struct ata_port *ap;
->   	struct ixp4xx_pata_data *data = dev_get_platdata(&pdev->dev);
-> +	int ret;
->
->   	cs0 = platform_get_resource(pdev, IORESOURCE_MEM, 0);
->   	cs1 = platform_get_resource(pdev, IORESOURCE_MEM, 1);
-> @@ -157,7 +158,9 @@ static int ixp4xx_pata_probe(struct platform_device *pdev)
->   		return -ENOMEM;
->
->   	/* acquire resources and fill host */
-> -	pdev->dev.coherent_dma_mask = DMA_BIT_MASK(32);
-> +	ret = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(32));
-> +	if (ret)
-> +		return ret;
->
->   	data->cs0 = devm_ioremap(&pdev->dev, cs0->start, 0x1000);
->   	data->cs1 = devm_ioremap(&pdev->dev, cs1->start, 0x1000);
-> diff --git a/drivers/gpu/drm/exynos/exynos_drm_drv.c b/drivers/gpu/drm/exynos/exynos_drm_drv.c
-> index bb82ef7..81192d0 100644
-> --- a/drivers/gpu/drm/exynos/exynos_drm_drv.c
-> +++ b/drivers/gpu/drm/exynos/exynos_drm_drv.c
-> @@ -286,7 +286,11 @@ static struct drm_driver exynos_drm_driver = {
->
->   static int exynos_drm_platform_probe(struct platform_device *pdev)
->   {
-> -	pdev->dev.coherent_dma_mask = DMA_BIT_MASK(32);
-> +	int ret;
-> +
-> +	ret = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(32));
-> +	if (ret)
-> +		return ret;
->
->   	return drm_platform_init(&exynos_drm_driver, pdev);
->   }
-> diff --git a/drivers/gpu/drm/omapdrm/omap_dmm_tiler.c b/drivers/gpu/drm/omapdrm/omap_dmm_tiler.c
-> index acf6678..701c4c1 100644
-> --- a/drivers/gpu/drm/omapdrm/omap_dmm_tiler.c
-> +++ b/drivers/gpu/drm/omapdrm/omap_dmm_tiler.c
-> @@ -664,8 +664,9 @@ static int omap_dmm_probe(struct platform_device *dev)
->   	}
->
->   	/* set dma mask for device */
-> -	/* NOTE: this is a workaround for the hwmod not initializing properly */
-> -	dev->dev.coherent_dma_mask = DMA_BIT_MASK(32);
-> +	ret = dma_set_coherent_mask(&dev->dev, DMA_BIT_MASK(32));
-> +	if (ret)
-> +		goto fail;
+Ok, the logs indicate that the driver simply doesn't see any scan
+results:
 
-Tested with omapdrm on omap4 panda es board.
+1379858724.381522: Received scan results (0 BSSes)
 
-Thanks,
-Archit
+Then 20 seconds later (after the explicit iwlist), it finds some scan
+results:
+
+1379858746.953924: Received scan results (3 BSSes)
+
+So I'm not sure what's going on here, but I don't think NetworkManager
+is the issue; it's likely in the supplicant's scanning code or in the
+driver itself.  NetworkManager asks the supplicant to scan with both the
+wildcard SSID and any hidden-tagged SSID, and the wildcard SSID should
+ensure that all available APs are found.
+
+Johannes, does anything else jump out at you in the logs?
+
+Dan
+
+> The The first "iwlist wlan0 scan" is done juste after the log line 
+> (1379858738.682054). It lists the APs in range in the console but 
+> not in the Network Manager ui.
+> 
+> The second "iwlist wlan0 scan" is done at time 1379858739.802067 
+> and APs are being listed in the console and in the Network Manager 
+> UI.
+> 
+> After that, NM will connect to the acces point with SSID "Maison".
+> 
+> It also looks like the listing in Network Manager comes between the 
+> moment "iwlist wlan0 scan" is run for the second time and the 
+> moment is shows its output on the console.
+> 
+> Detlev.
+
 
