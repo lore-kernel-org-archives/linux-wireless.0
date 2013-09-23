@@ -1,35 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns.iliad.fr ([212.27.33.1]:55106 "EHLO ns.iliad.fr"
+Received: from mms2.broadcom.com ([216.31.210.18]:1108 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757890Ab3IBK0p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Sep 2013 06:26:45 -0400
-Message-ID: <1378117603.22316.4.camel@sakura.staff.proxad.net> (sfid-20130902_122647_934218_9BFE3D8E)
-Subject: Re: [PATCH] cfg80211: fix potential deadlock regression
-From: Maxime Bizon <mbizon@freebox.fr>
-Reply-To: mbizon@freebox.fr
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 02 Sep 2013 12:26:43 +0200
-In-Reply-To: <1377865387.16256.15.camel@jlt4.sipsolutions.net>
-References: <1370377370-23055-1-git-send-email-johannes@sipsolutions.net>
-	 <1377719389.559.9.camel@sakura.staff.proxad.net>
-	 <1377865387.16256.15.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="ANSI_X3.4-1968"
-Mime-Version: 1.0
+	id S1752558Ab3IWIOC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Sep 2013 04:14:02 -0400
+Message-ID: <523FF83D.8030103@broadcom.com> (sfid-20130923_101437_670859_332A456A)
+Date: Mon, 23 Sep 2013 10:13:49 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Michael Stolovitzsky" <emestee@catnarok.net>,
+	linux-wireless@vger.kernel.org,
+	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>
+Subject: Re: brcmsmac causes soft lockup in 3.12-rc1
+References: <20130921223440.GA5297@mail.catnarok.net>
+In-Reply-To: <20130921223440.GA5297@mail.catnarok.net>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 09/22/2013 12:34 AM, Michael Stolovitzsky wrote:
+> Hi,
+>
+> On 3.12-rc1, modprobe brcmsmac causes a soft lockup (trace #1), effectively killing the box. This is a Lenovo S206
+> with BCM4313 (14e4:4727), which I believe is a bluetooth combo board. After a while,
+> RCU scheduler code detects a lockup (trace #2).
+>
+> This did not happen in 3.11.1, although brcmsmac hasn't worked on this machine
+> as far as I remember. In  the previous kernels (~3.2.0+), it loads, but the
+> reception is extremely weak - you must be within few meters to the AP, and the card would
+> die after several minutes. The proprietary wl.ko driver works fine.
+>
+> I've attached the dmesg output, the kernel configuration and the output of lspci -vnn.
+> I'm comfortable with experimenting; please let me know how I can help here.
 
-On Fri, 2013-08-30 at 14:23 +0200, Johannes Berg wrote:
+A fix for this problem has been submitted to John. I think it is in 
+transit to mainline so probably will be in 3.12-rc2.
 
-> I think this should be OK:
-> http://p.sipsolutions.net/28cf9ed446845440.txt, can you try?
+Here the URL of the patch:
 
-Works for me
+https://git.kernel.org/cgit/linux/kernel/git/linville/wireless.git/patch/?id=aaa2ced15ad8dca8048666c9f70736424d696a6b
 
-Thanks
-
--- 
-Maxime
-
+Regards,
+Arend
 
