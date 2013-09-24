@@ -1,62 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:15985 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751250Ab3IJLQ3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Sep 2013 07:16:29 -0400
-Received: from epcpsbgr5.samsung.com
- (u145.gpu120.samsung.co.kr [203.254.230.145])
- by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MSW00505PZ0TG50@mailout3.samsung.com> for
- linux-wireless@vger.kernel.org; Tue, 10 Sep 2013 20:16:22 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: "'John W. Linville'" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>,
-	'Johannes Berg' <johannes.berg@intel.com>,
-	'Emmanuel Grumbach' <emmanuel.grumbach@intel.com>,
-	ilw@linux.intel.com
-References: <00b101ceae16$ecb87c30$c6297490$%han@samsung.com>
-In-reply-to: <00b101ceae16$ecb87c30$c6297490$%han@samsung.com>
-Subject: [PATCH 01/12] wireless: iwlwifi: remove unnecessary pci_set_drvdata()
-Date: Tue, 10 Sep 2013 20:16:22 +0900
-Message-id: <00b201ceae17$2e5c3a00$8b14ae00$%han@samsung.com> (sfid-20130910_131632_934457_637390DC)
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from ebb06.tieto.com ([131.207.168.38]:44264 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752933Ab3IXNJn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Sep 2013 09:09:43 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 5/5] ath10k: align RX frames properly
+Date: Tue, 24 Sep 2013 15:09:18 +0200
+Message-ID: <1380028158-861-6-git-send-email-michal.kazior@tieto.com> (sfid-20130924_150952_414199_FF782206)
+In-Reply-To: <1380028158-861-1-git-send-email-michal.kazior@tieto.com>
+References: <1380028158-861-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver core clears the driver data to NULL after device_release
-or on probe failure. Thus, it is not needed to manually clear the
-device driver data to NULL.
+Ethernet-like decapping mode leaves IP protocol
+frame not aligned to 4-byte boundaries. This leads
+to re-aligning in mac80211 which in turn leads to
+poor CPU cache behaviour on some machines.
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+Since HW doesn't allow to change payload offset
+properly the solution is to force HW to decap in
+Native Wifi mode which always has 24-bytes long
+802.11 header (even for QoS frames). This means IP
+frame is properly aligned in this decap mode.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/iwlwifi/pcie/drv.c |    3 ---
- 1 file changed, 3 deletions(-)
+ drivers/net/wireless/ath/ath10k/hw.h |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/drv.c b/drivers/net/wireless/iwlwifi/pcie/drv.c
-index dc02cb9..5c5c423 100644
---- a/drivers/net/wireless/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/drv.c
-@@ -349,7 +349,6 @@ out_free_drv:
- 	iwl_drv_stop(trans_pcie->drv);
- out_free_trans:
- 	iwl_trans_pcie_free(iwl_trans);
--	pci_set_drvdata(pdev, NULL);
- 	return ret;
- }
- 
-@@ -360,8 +359,6 @@ static void iwl_pci_remove(struct pci_dev *pdev)
- 
- 	iwl_drv_stop(trans_pcie->drv);
- 	iwl_trans_pcie_free(trans);
--
--	pci_set_drvdata(pdev, NULL);
- }
- 
- #ifdef CONFIG_PM_SLEEP
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 643f0c9..8c1be768 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -74,7 +74,11 @@ enum ath10k_mcast2ucast_mode {
+ #define TARGET_RX_CHAIN_MASK			(BIT(0) | BIT(1) | BIT(2))
+ #define TARGET_RX_TIMEOUT_LO_PRI		100
+ #define TARGET_RX_TIMEOUT_HI_PRI		40
+-#define TARGET_RX_DECAP_MODE			ATH10K_HW_TXRX_ETHERNET
++
++/* Native Wifi decap mode is used to align IP frames to 4-byte boundaries and
++ * avoid a very expensive re-alignment in mac80211. */
++#define TARGET_RX_DECAP_MODE			ATH10K_HW_TXRX_NATIVE_WIFI
++
+ #define TARGET_SCAN_MAX_PENDING_REQS		4
+ #define TARGET_BMISS_OFFLOAD_MAX_VDEV		3
+ #define TARGET_ROAM_OFFLOAD_MAX_VDEV		3
 -- 
-1.7.10.4
-
+1.7.9.5
 
