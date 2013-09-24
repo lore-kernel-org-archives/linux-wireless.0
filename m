@@ -1,84 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:39608 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932473Ab3ICIn6 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:29472 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750717Ab3IXGWj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Sep 2013 04:43:58 -0400
-Subject: [PATCH 1/3] ath10k: add trace event ath10k_htt_stats
-To: ath10k@lists.infradead.org
+	Tue, 24 Sep 2013 02:22:39 -0400
 From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 03 Sep 2013 11:43:55 +0300
-Message-ID: <20130903084355.26199.33730.stgit@localhost6.localdomain6> (sfid-20130903_104402_680268_4B65A519)
-In-Reply-To: <20130903084302.26199.3538.stgit@localhost6.localdomain6>
-References: <20130903084302.26199.3538.stgit@localhost6.localdomain6>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] ath10k: replenish HTT RX buffers in a tasklet
+References: <1379509691-19904-1-git-send-email-michal.kazior@tieto.com>
+Date: Tue, 24 Sep 2013 09:22:29 +0300
+In-Reply-To: <1379509691-19904-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Wed, 18 Sep 2013 15:08:10 +0200")
+Message-ID: <87r4cebuxm.fsf@kamboji.qca.qualcomm.com> (sfid-20130924_082243_067421_C57BFA71)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For analysing various data path statistics in user space.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/htt_rx.c |    5 ++++-
- drivers/net/wireless/ath/ath10k/trace.h  |   21 +++++++++++++++++++++
- 2 files changed, 25 insertions(+), 1 deletion(-)
+> This fixes system starvation when under heavy RX
+> traffic. This problem could be observed on AP135
+> and led to watchdog resetting the platform.
+>
+> Patch starves FW RX ring buffer by progressively
+> replenishing buffers to auto-balance the RX
+> handled to the host system.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 9bb0ae89..af31d2f 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -20,6 +20,7 @@
- #include "htt.h"
- #include "txrx.h"
- #include "debug.h"
-+#include "trace.h"
- 
- #include <linux/log2.h>
- 
-@@ -1198,8 +1199,10 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
- 	case HTT_T2H_MSG_TYPE_TEST:
- 		/* FIX THIS */
- 		break;
--	case HTT_T2H_MSG_TYPE_TX_INSPECT_IND:
- 	case HTT_T2H_MSG_TYPE_STATS_CONF:
-+		trace_ath10k_htt_stats(skb->data, skb->len);
-+		break;
-+	case HTT_T2H_MSG_TYPE_TX_INSPECT_IND:
- 	case HTT_T2H_MSG_TYPE_RX_ADDBA:
- 	case HTT_T2H_MSG_TYPE_RX_DELBA:
- 	case HTT_T2H_MSG_TYPE_RX_FLUSH:
-diff --git a/drivers/net/wireless/ath/ath10k/trace.h b/drivers/net/wireless/ath/ath10k/trace.h
-index 85e806b..bf1ceb8 100644
---- a/drivers/net/wireless/ath/ath10k/trace.h
-+++ b/drivers/net/wireless/ath/ath10k/trace.h
-@@ -158,6 +158,27 @@ TRACE_EVENT(ath10k_wmi_event,
- 	)
- );
- 
-+TRACE_EVENT(ath10k_htt_stats,
-+	TP_PROTO(void *buf, size_t buf_len),
-+
-+	TP_ARGS(buf, buf_len),
-+
-+	TP_STRUCT__entry(
-+		__field(size_t, buf_len)
-+		__dynamic_array(u8, buf, buf_len)
-+	),
-+
-+	TP_fast_assign(
-+		__entry->buf_len = buf_len;
-+		memcpy(__get_dynamic_array(buf), buf, buf_len);
-+	),
-+
-+	TP_printk(
-+		"len %zu",
-+		__entry->buf_len
-+	)
-+);
-+
- #endif /* _TRACE_H_ || TRACE_HEADER_MULTI_READ*/
- 
- /* we don't want to use include/trace/events */
+Looks good to me. I suspect there is a better way to do this in long
+term, but this looks like a viable short term solution.
 
+Does it decrease throughput in a noticeable way?
+
+-- 
+Kalle Valo
