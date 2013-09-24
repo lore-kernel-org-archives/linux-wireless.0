@@ -1,134 +1,340 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:65429 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755590Ab3ICOeU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Sep 2013 10:34:20 -0400
-Received: by mail-wg0-f52.google.com with SMTP id m14so3335096wgh.19
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Sep 2013 07:34:19 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <luca@coelho.fi>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 02/12] wlcore: add new plt power-mode: CHIP_AWAKE
-Date: Tue,  3 Sep 2013 17:33:58 +0300
-Message-Id: <1378218848-7853-2-git-send-email-eliad@wizery.com> (sfid-20130903_163433_081220_1AA60E57)
-In-Reply-To: <1378218848-7853-1-git-send-email-eliad@wizery.com>
-References: <1378218848-7853-1-git-send-email-eliad@wizery.com>
+Received: from ebb05.tieto.com ([131.207.168.36]:60563 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751138Ab3IXNJk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Sep 2013 09:09:40 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 1/5] ath10k: report A-MSDU subframes individually
+Date: Tue, 24 Sep 2013 15:09:14 +0200
+Message-ID: <1380028158-861-2-git-send-email-michal.kazior@tieto.com> (sfid-20130924_150951_665249_F45DC6DA)
+In-Reply-To: <1380028158-861-1-git-send-email-michal.kazior@tieto.com>
+References: <1380028158-861-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yair Shapira <yair.shapira@ti.com>
+HW reports each A-MSDU subframe as a separate
+sk_buff. It is impossible to configure it to
+behave differently.
 
-Under this mode the chip is powered on including sdio
-but no FW is downloaded and run, interrupts are not enabled, etc...
+Until now ath10k was reconstructing A-MSDUs from
+subframes which involved a lot of memory
+operations. This proved to be a significant
+contributor to degraded RX performance.
 
-This mode is intended to allow RTTT to bridge sdio as a transport
-to the chip.
-
-Driver only provides sdio access using the dev_mem debugfs file.
-
-Some fixes done to the code that ensures that PLT mode and normal
-driver power mode (ifconfig/add_interface) are mutually excluded.
-
-Signed-off-by: Yair Shapira <yair.shapira@ti.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/ti/wlcore/main.c     | 16 ++++++++++++----
- drivers/net/wireless/ti/wlcore/testmode.c | 13 +++++++++++--
- drivers/net/wireless/ti/wlcore/wlcore_i.h |  1 +
- 3 files changed, 24 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath10k/htt_rx.c |  204 ++++++++++++------------------
+ drivers/net/wireless/ath/ath10k/txrx.c   |    2 +
+ 2 files changed, 83 insertions(+), 123 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index b64b465..611e81d 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -1062,7 +1062,8 @@ int wl1271_plt_start(struct wl1271 *wl, const enum plt_mode plt_mode)
- 	static const char* const PLT_MODE[] = {
- 		"PLT_OFF",
- 		"PLT_ON",
--		"PLT_FEM_DETECT"
-+		"PLT_FEM_DETECT",
-+		"PLT_CHIP_AWAKE"
- 	};
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 62ea9c8..f79f815 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -41,6 +41,10 @@
+ /* when under memory pressure rx ring refill may fail and needs a retry */
+ #define HTT_RX_RING_REFILL_RETRY_MS 50
  
- 	int ret;
-@@ -1088,9 +1089,11 @@ int wl1271_plt_start(struct wl1271 *wl, const enum plt_mode plt_mode)
- 		if (ret < 0)
- 			goto power_off;
- 
--		ret = wl->ops->plt_init(wl);
--		if (ret < 0)
--			goto power_off;
-+		if (plt_mode != PLT_CHIP_AWAKE) {
-+			ret = wl->ops->plt_init(wl);
-+			if (ret < 0)
-+				goto power_off;
-+		}
- 
- 		wl->state = WLCORE_STATE_ON;
- 		wl1271_notice("firmware booted in PLT mode %s (%s)",
-@@ -2419,6 +2422,11 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
- 	int ret = 0;
- 	u8 role_type;
- 
-+	if (wl->plt) {
-+		wl1271_error("Adding Interface not allowed while in PLT mode");
-+		return -EBUSY;
-+	}
 +
- 	vif->driver_flags |= IEEE80211_VIF_BEACON_FILTER |
- 			     IEEE80211_VIF_SUPPORTS_CQM_RSSI;
- 
-diff --git a/drivers/net/wireless/ti/wlcore/testmode.c b/drivers/net/wireless/ti/wlcore/testmode.c
-index 527590f..a3b7d95 100644
---- a/drivers/net/wireless/ti/wlcore/testmode.c
-+++ b/drivers/net/wireless/ti/wlcore/testmode.c
-@@ -297,7 +297,8 @@ static int wl1271_tm_cmd_set_plt_mode(struct wl1271 *wl, struct nlattr *tb[])
- 		ret = wl1271_plt_stop(wl);
- 		break;
- 	case PLT_ON:
--		ret = wl1271_plt_start(wl, PLT_ON);
-+	case PLT_CHIP_AWAKE:
-+		ret = wl1271_plt_start(wl, val);
- 		break;
- 	case PLT_FEM_DETECT:
- 		ret = wl1271_tm_detect_fem(wl, tb);
-@@ -361,6 +362,7 @@ int wl1271_tm_cmd(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++static int ath10k_htt_rx_get_csum_state(struct sk_buff *skb);
++
++
+ static int ath10k_htt_rx_ring_size(struct ath10k_htt *htt)
  {
- 	struct wl1271 *wl = hw->priv;
- 	struct nlattr *tb[WL1271_TM_ATTR_MAX + 1];
-+	u32 nla_cmd;
- 	int err;
+ 	int size;
+@@ -591,136 +595,109 @@ static bool ath10k_htt_rx_hdr_is_amsdu(struct ieee80211_hdr *hdr)
+ 	return false;
+ }
  
- 	err = nla_parse(tb, WL1271_TM_ATTR_MAX, data, len, wl1271_tm_policy);
-@@ -370,7 +372,14 @@ int wl1271_tm_cmd(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	if (!tb[WL1271_TM_ATTR_CMD_ID])
- 		return -EINVAL;
- 
--	switch (nla_get_u32(tb[WL1271_TM_ATTR_CMD_ID])) {
-+	nla_cmd = nla_get_u32(tb[WL1271_TM_ATTR_CMD_ID]);
+-static int ath10k_htt_rx_amsdu(struct ath10k_htt *htt,
+-			struct htt_rx_info *info)
++struct rfc1042_hdr {
++	u8 llc_dsap;
++	u8 llc_ssap;
++	u8 llc_ctrl;
++	u8 snap_oui[3];
++	__be16 snap_type;
++} __packed;
 +
-+	/* Only SET_PLT_MODE is allowed in case of mode PLT_CHIP_AWAKE */
-+	if (wl->plt_mode == PLT_CHIP_AWAKE &&
-+	    nla_cmd != WL1271_TM_CMD_SET_PLT_MODE)
-+		return -EOPNOTSUPP;
++struct amsdu_subframe_hdr {
++	u8 dst[ETH_ALEN];
++	u8 src[ETH_ALEN];
++	__be16 len;
++} __packed;
 +
-+	switch (nla_cmd) {
- 	case WL1271_TM_CMD_TEST:
- 		return wl1271_tm_cmd_test(wl, tb);
- 	case WL1271_TM_CMD_INTERROGATE:
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-index 14fd111..3f4f08b 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-@@ -307,6 +307,7 @@ enum plt_mode {
- 	PLT_OFF = 0,
- 	PLT_ON = 1,
- 	PLT_FEM_DETECT = 2,
-+	PLT_CHIP_AWAKE = 3
- };
++static void ath10k_htt_rx_amsdu(struct ath10k_htt *htt,
++				struct htt_rx_info *info)
+ {
+ 	struct htt_rx_desc *rxd;
+-	struct sk_buff *amsdu;
+ 	struct sk_buff *first;
+-	struct ieee80211_hdr *hdr;
+ 	struct sk_buff *skb = info->skb;
+ 	enum rx_msdu_decap_format fmt;
+ 	enum htt_rx_mpdu_encrypt_type enctype;
++	struct ieee80211_hdr *hdr;
++	u8 hdr_buf[64];
+ 	unsigned int hdr_len;
+-	int crypto_len;
  
- struct wl12xx_rx_filter_field {
+ 	rxd = (void *)skb->data - sizeof(*rxd);
+-	fmt = MS(__le32_to_cpu(rxd->msdu_start.info1),
+-			RX_MSDU_START_INFO1_DECAP_FORMAT);
+ 	enctype = MS(__le32_to_cpu(rxd->mpdu_start.info0),
+ 			RX_MPDU_START_INFO0_ENCRYPT_TYPE);
+ 
+-	/* FIXME: No idea what assumptions are safe here. Need logs */
+-	if ((fmt == RX_MSDU_DECAP_RAW && skb->next)) {
+-		ath10k_htt_rx_free_msdu_chain(skb->next);
+-		skb->next = NULL;
+-		return -ENOTSUPP;
+-	}
++	hdr = (struct ieee80211_hdr *)rxd->rx_hdr_status;
++	hdr_len = ieee80211_hdrlen(hdr->frame_control);
++	memcpy(hdr_buf, hdr, hdr_len);
++	hdr = (struct ieee80211_hdr *)hdr_buf;
+ 
+-	/* A-MSDU max is a little less than 8K */
+-	amsdu = dev_alloc_skb(8*1024);
+-	if (!amsdu) {
+-		ath10k_warn("A-MSDU allocation failed\n");
+-		ath10k_htt_rx_free_msdu_chain(skb->next);
+-		skb->next = NULL;
+-		return -ENOMEM;
+-	}
+-
+-	if (fmt >= RX_MSDU_DECAP_NATIVE_WIFI) {
+-		int hdrlen;
+-
+-		hdr = (void *)rxd->rx_hdr_status;
+-		hdrlen = ieee80211_hdrlen(hdr->frame_control);
+-		memcpy(skb_put(amsdu, hdrlen), hdr, hdrlen);
+-	}
++	/* FIXME: Hopefully this is a temporary measure.
++	 *
++	 * Reporting individual A-MSDU subframes means each reported frame
++	 * shares the same sequence number.
++	 *
++	 * mac80211 drops frames it recognizes as duplicates, i.e.
++	 * retransmission flag is set and sequence number matches sequence
++	 * number from a previous frame (as per IEEE 802.11-2012: 9.3.2.10
++	 * "Duplicate detection and recovery")
++	 *
++	 * To avoid frames being dropped clear retransmission flag for all
++	 * received A-MSDUs.
++	 *
++	 * Worst case: actual duplicate frames will be reported but this should
++	 * still be handled gracefully by other OSI/ISO layers. */
++	hdr->frame_control &= cpu_to_le16(~IEEE80211_FCTL_RETRY);
+ 
+ 	first = skb;
+ 	while (skb) {
+ 		void *decap_hdr;
+-		int decap_len = 0;
++		int decap_len;
+ 
+ 		rxd = (void *)skb->data - sizeof(*rxd);
+ 		fmt = MS(__le32_to_cpu(rxd->msdu_start.info1),
+-				RX_MSDU_START_INFO1_DECAP_FORMAT);
++			 RX_MSDU_START_INFO1_DECAP_FORMAT);
+ 		decap_hdr = (void *)rxd->rx_hdr_status;
+ 
+-		if (skb == first) {
+-			/* We receive linked A-MSDU subframe skbuffs. The
+-			 * first one contains the original 802.11 header (and
+-			 * possible crypto param) in the RX descriptor. The
+-			 * A-MSDU subframe header follows that. Each part is
+-			 * aligned to 4 byte boundary. */
+-
+-			hdr = (void *)amsdu->data;
+-			hdr_len = ieee80211_hdrlen(hdr->frame_control);
+-			crypto_len = ath10k_htt_rx_crypto_param_len(enctype);
+-
+-			decap_hdr += roundup(hdr_len, 4);
+-			decap_hdr += roundup(crypto_len, 4);
+-		}
+-
+-		/* When fmt == RX_MSDU_DECAP_8023_SNAP_LLC:
+-		 *
+-		 * SNAP 802.3 consists of:
+-		 * [dst:6][src:6][len:2][dsap:1][ssap:1][ctl:1][snap:5]
+-		 * [data][fcs:4].
+-		 *
+-		 * Since this overlaps with A-MSDU header (da, sa, len)
+-		 * there's nothing extra to do. */
+-
+-		if (fmt == RX_MSDU_DECAP_ETHERNET2_DIX) {
+-			/* Ethernet2 decap inserts ethernet header in place of
+-			 * A-MSDU subframe header. */
+-			skb_pull(skb, 6 + 6 + 2);
+-
+-			/* A-MSDU subframe header length */
+-			decap_len += 6 + 6 + 2;
+-
+-			/* Ethernet2 decap also strips the LLC/SNAP so we need
+-			 * to re-insert it. The LLC/SNAP follows A-MSDU
+-			 * subframe header. */
+-			/* FIXME: Not all LLCs are 8 bytes long */
+-			decap_len += 8;
+-
+-			memcpy(skb_put(amsdu, decap_len), decap_hdr, decap_len);
+-		}
++		skb->ip_summed = ath10k_htt_rx_get_csum_state(skb);
+ 
+-		if (fmt == RX_MSDU_DECAP_NATIVE_WIFI) {
+-			/* Native Wifi decap inserts regular 802.11 header
+-			 * in place of A-MSDU subframe header. */
+-			hdr = (struct ieee80211_hdr *)skb->data;
+-			skb_pull(skb, ieee80211_hdrlen(hdr->frame_control));
+-
+-			/* A-MSDU subframe header length */
+-			decap_len += 6 + 6 + 2;
+-
+-			memcpy(skb_put(amsdu, decap_len), decap_hdr, decap_len);
++		/* First frame in an A-MSDU chain has more decapped data. */
++		if (skb == first) {
++			decap_hdr += round_up(ieee80211_hdrlen(hdr->frame_control), 4);
++			decap_hdr += round_up(ath10k_htt_rx_crypto_param_len(enctype), 4);
+ 		}
+ 
+-		if (fmt == RX_MSDU_DECAP_RAW)
+-			skb_trim(skb, skb->len - 4); /* remove FCS */
+-
+-		memcpy(skb_put(amsdu, skb->len), skb->data, skb->len);
+-
+-		/* A-MSDU subframes are padded to 4bytes
+-		 * but relative to first subframe, not the whole MPDU */
+-		if (skb->next && ((decap_len + skb->len) & 3)) {
+-			int padlen = 4 - ((decap_len + skb->len) & 3);
+-			memset(skb_put(amsdu, padlen), 0, padlen);
++		switch (fmt) {
++		case RX_MSDU_DECAP_RAW:
++			skb_trim(skb, skb->len - FCS_LEN);
++			break;
++		case RX_MSDU_DECAP_NATIVE_WIFI:
++			break;
++		case RX_MSDU_DECAP_ETHERNET2_DIX:
++			decap_len = 0;
++			decap_len += sizeof(struct rfc1042_hdr);
++			decap_len += sizeof(struct amsdu_subframe_hdr);
++
++			skb_pull(skb, sizeof(struct ethhdr));
++			memcpy(skb_push(skb, decap_len), decap_hdr, decap_len);
++			memcpy(skb_push(skb, hdr_len), hdr, hdr_len);
++			break;
++		case RX_MSDU_DECAP_8023_SNAP_LLC:
++			memcpy(skb_push(skb, hdr_len), hdr, hdr_len);
++			break;
+ 		}
+ 
++		info->skb = skb;
++		info->encrypt_type = enctype;
+ 		skb = skb->next;
+-	}
+-
+-	info->skb = amsdu;
+-	info->encrypt_type = enctype;
++		info->skb->next = NULL;
+ 
+-	ath10k_htt_rx_free_msdu_chain(first);
++		ath10k_process_rx(htt->ar, info);
++	}
+ 
+-	return 0;
++	/* FIXME: It might be nice to re-assemble the A-MSDU when there's a
++	 * monitor interface active for sniffing purposes. */
+ }
+ 
+-static int ath10k_htt_rx_msdu(struct ath10k_htt *htt, struct htt_rx_info *info)
++static void ath10k_htt_rx_msdu(struct ath10k_htt *htt, struct htt_rx_info *info)
+ {
+ 	struct sk_buff *skb = info->skb;
+ 	struct htt_rx_desc *rxd;
+@@ -742,6 +719,8 @@ static int ath10k_htt_rx_msdu(struct ath10k_htt *htt, struct htt_rx_info *info)
+ 			RX_MPDU_START_INFO0_ENCRYPT_TYPE);
+ 	hdr = (void *)skb->data - RX_HTT_HDR_STATUS_LEN;
+ 
++	skb->ip_summed = ath10k_htt_rx_get_csum_state(skb);
++
+ 	switch (fmt) {
+ 	case RX_MSDU_DECAP_RAW:
+ 		/* remove trailing FCS */
+@@ -782,7 +761,8 @@ static int ath10k_htt_rx_msdu(struct ath10k_htt *htt, struct htt_rx_info *info)
+ 
+ 	info->skb = skb;
+ 	info->encrypt_type = enctype;
+-	return 0;
++
++	ath10k_process_rx(htt->ar, info);
+ }
+ 
+ static bool ath10k_htt_rx_has_decrypt_err(struct sk_buff *skb)
+@@ -854,8 +834,6 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+ 	int fw_desc_len;
+ 	u8 *fw_desc;
+ 	int i, j;
+-	int ret;
+-	int ip_summed;
+ 
+ 	memset(&info, 0, sizeof(info));
+ 
+@@ -930,11 +908,6 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+ 				continue;
+ 			}
+ 
+-			/* The skb is not yet processed and it may be
+-			 * reallocated. Since the offload is in the original
+-			 * skb extract the checksum now and assign it later */
+-			ip_summed = ath10k_htt_rx_get_csum_state(msdu_head);
+-
+ 			info.skb     = msdu_head;
+ 			info.fcs_err = ath10k_htt_rx_has_fcs_err(msdu_head);
+ 			info.signal  = ATH10K_DEFAULT_NOISE_FLOOR;
+@@ -947,24 +920,9 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+ 			hdr = ath10k_htt_rx_skb_get_hdr(msdu_head);
+ 
+ 			if (ath10k_htt_rx_hdr_is_amsdu(hdr))
+-				ret = ath10k_htt_rx_amsdu(htt, &info);
++				ath10k_htt_rx_amsdu(htt, &info);
+ 			else
+-				ret = ath10k_htt_rx_msdu(htt, &info);
+-
+-			if (ret && !info.fcs_err) {
+-				ath10k_warn("error processing msdus %d\n", ret);
+-				dev_kfree_skb_any(info.skb);
+-				continue;
+-			}
+-
+-			if (ath10k_htt_rx_hdr_is_amsdu((void *)info.skb->data))
+-				ath10k_dbg(ATH10K_DBG_HTT, "htt mpdu is amsdu\n");
+-
+-			info.skb->ip_summed = ip_summed;
+-
+-			ath10k_dbg_dump(ATH10K_DBG_HTT_DUMP, NULL, "htt mpdu: ",
+-					info.skb->data, info.skb->len);
+-			ath10k_process_rx(htt->ar, &info);
++				ath10k_htt_rx_msdu(htt, &info);
+ 		}
+ 	}
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
+index 57931d0..5ae373a 100644
+--- a/drivers/net/wireless/ath/ath10k/txrx.c
++++ b/drivers/net/wireless/ath/ath10k/txrx.c
+@@ -268,6 +268,8 @@ void ath10k_process_rx(struct ath10k *ar, struct htt_rx_info *info)
+ 		   status->vht_nss,
+ 		   status->freq,
+ 		   status->band);
++	ath10k_dbg_dump(ATH10K_DBG_HTT_DUMP, NULL, "rx skb: ",
++			info->skb->data, info->skb->len);
+ 
+ 	ieee80211_rx(ar->hw, info->skb);
+ }
 -- 
-1.8.3.rc1.35.g9b79519
+1.7.9.5
 
