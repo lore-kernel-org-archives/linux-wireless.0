@@ -1,62 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from leit.jelmoni.net ([78.46.129.73]:36387 "EHLO leit.jelmoni.net"
+Received: from ebb06.tieto.com ([131.207.168.38]:46909 "EHLO ebb06.tieto.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932356Ab3INUtE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Sep 2013 16:49:04 -0400
-Received: from localhost (localhost.jelmoni.net [127.0.0.1])
-	by leit.jelmoni.net (Postfix) with ESMTP id 98D0F80D1
-	for <linux-wireless@vger.kernel.org>; Sat, 14 Sep 2013 22:39:24 +0200 (CEST)
-Received: from leit.jelmoni.net ([127.0.0.1])
-	by localhost (leit.jelmoni.net [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id 7-9A5GSh82oj for <linux-wireless@vger.kernel.org>;
-	Sat, 14 Sep 2013 22:39:24 +0200 (CEST)
-Received: from laptop-beat.swiss-wireless.com.ar (host194.190-229-210.telecom.net.ar [190.229.210.194])
-	(Authenticated sender: genauth@swiss-wireless.com.ar)
-	by leit.jelmoni.net (Postfix) with ESMTPSA id CC22F80D2
-	for <linux-wireless@vger.kernel.org>; Sat, 14 Sep 2013 22:39:23 +0200 (CEST)
-Message-ID: <5234C962.8010006@swiss-wireless.com.ar> (sfid-20130914_224908_768982_9AF52CB0)
-Date: Sat, 14 Sep 2013 17:38:58 -0300
-From: Beat Meier <mbe_ml@swiss-wireless.com.ar>
+	id S1751070Ab3IXNJn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Sep 2013 09:09:43 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 4/5] ath10k: fix Native Wifi decap mode RX
+Date: Tue, 24 Sep 2013 15:09:17 +0200
+Message-ID: <1380028158-861-5-git-send-email-michal.kazior@tieto.com> (sfid-20130924_150949_514629_94F3CD6B)
+In-Reply-To: <1380028158-861-1-git-send-email-michal.kazior@tieto.com>
+References: <1380028158-861-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: mac80211 and kernel 3.8.13 1/2 speed as with madwifi and kernel 2.6.23
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello
+NWifi decap mode always reports 802.11 Data
+Frames, even when QoS Data Frames are actually
+received.
 
-I'm trying to use again mac driver instead of old madwifi driver for
-atheros cards.
-I have following problem.
-On Clients using mac80211 (wpa_supplicant) it's just fine but if you use
-it with hostapd you have about 1/2 speed
-as with madwifi. Problem could be also kernel<->wireless driver issue.
-With madwifi I'm using an old kernel 2.6.23 (voyage-0.5 distribution)
-and with mac80211 a new kernel 3.8.13 (voyage-0.9.1)
+This made mac80211 not report frame priority
+properly (since there was no QoS Control field).
 
-Example:
-5.5km 5.8GHz link 2xAlix board, 2xWLM54AGP23 card, 2x Hyperlink 27dbi
-grids, wireless card speed set to 24M
-to get max. signal on this cards...
-Signal on both sites is -60
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/htt_rx.c |   32 +++++++++++++++++++++++++++---
+ 1 file changed, 29 insertions(+), 3 deletions(-)
 
-With madwifi driver on both site you get 12.8Mbps/14.5Mbps download/upload
-madwifi driver on server, mac80211 on client you still get 13.4/13.8Mbps
-BUT if you use mac80211 on ap master mode with hostap you get only
-7Mbps/5.5Mbps.
-Tried all 4 constellation (old/new, new/old, new/new and old/old) and
-the issue is only
-if the hostapt is running with new kernel/mac80211
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index f8620b0..c119057 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -618,7 +618,7 @@ static void ath10k_htt_rx_amsdu(struct ath10k_htt *htt,
+ 	enum rx_msdu_decap_format fmt;
+ 	enum htt_rx_mpdu_encrypt_type enctype;
+ 	struct ieee80211_hdr *hdr;
+-	u8 hdr_buf[64];
++	u8 hdr_buf[64], addr[ETH_ALEN], *qos;
+ 	unsigned int hdr_len;
+ 
+ 	rxd = (void *)skb->data - sizeof(*rxd);
+@@ -671,7 +671,25 @@ static void ath10k_htt_rx_amsdu(struct ath10k_htt *htt,
+ 			skb_trim(skb, skb->len - FCS_LEN);
+ 			break;
+ 		case RX_MSDU_DECAP_NATIVE_WIFI:
+-			/* nothing to do */
++			/* pull decapped header and copy DA */
++			hdr = (struct ieee80211_hdr *)skb->data;
++			hdr_len = ieee80211_hdrlen(hdr->frame_control);
++			memcpy(addr, ieee80211_get_DA(hdr), ETH_ALEN);
++			skb_pull(skb, hdr_len);
++
++			/* push original 802.11 header */
++			hdr = (struct ieee80211_hdr *)hdr_buf;
++			hdr_len = ieee80211_hdrlen(hdr->frame_control);
++			memcpy(skb_push(skb, hdr_len), hdr, hdr_len);
++
++			/* original A-MSDU header has the bit set but we're
++			 * not including A-MSDU subframe header */
++			hdr = (struct ieee80211_hdr *)skb->data;
++			qos = ieee80211_get_qos_ctl(hdr);
++			qos[0] &= ~IEEE80211_QOS_CTL_A_MSDU_PRESENT;
++
++			/* original 802.11 header has a different DA */
++			memcpy(ieee80211_get_DA(hdr), addr, ETH_ALEN);
+ 			break;
+ 		case RX_MSDU_DECAP_ETHERNET2_DIX:
+ 			/* strip ethernet header and insert decapped 802.11
+@@ -736,7 +754,15 @@ static void ath10k_htt_rx_msdu(struct ath10k_htt *htt, struct htt_rx_info *info)
+ 		skb_trim(skb, skb->len - FCS_LEN);
+ 		break;
+ 	case RX_MSDU_DECAP_NATIVE_WIFI:
+-		/* nothing to do here */
++		/* Pull decapped header */
++		hdr = (struct ieee80211_hdr *)skb->data;
++		hdr_len = ieee80211_hdrlen(hdr->frame_control);
++		skb_pull(skb, hdr_len);
++
++		/* Push original header */
++		hdr = (struct ieee80211_hdr *)rxd->rx_hdr_status;
++		hdr_len = ieee80211_hdrlen(hdr->frame_control);
++		memcpy(skb_push(skb, hdr_len), hdr, hdr_len);
+ 		break;
+ 	case RX_MSDU_DECAP_ETHERNET2_DIX:
+ 		/* strip ethernet header and insert decapped 802.11 header and
+-- 
+1.7.9.5
 
-Same stuff on other links with other cards like CM9.
-
-What I have seen is that with madwifi driver the cpu is 90-100% cpu
-usage with ksoftirqd
-with mac80211 not...
-Could this be a kernel interrupt issue? Are there several policies which
-changed with kernel?
-
-Anyone having same issue?
-
-Greetings and thanks
