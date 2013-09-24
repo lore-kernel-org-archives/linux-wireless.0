@@ -1,42 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:63558 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756708Ab3ICRZA (ORCPT
+Received: from s15283307.onlinehome-server.info ([87.106.208.187]:60817 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750752Ab3IXEWP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Sep 2013 13:25:00 -0400
-Received: by mail-ie0-f169.google.com with SMTP id tp5so6270044ieb.14
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Sep 2013 10:25:00 -0700 (PDT)
-MIME-Version: 1.0
-From: Blaise Gassend <blaise@suitabletech.com>
-Date: Tue, 3 Sep 2013 10:24:40 -0700
-Message-ID: <CAPvVjiu62Rgt8gFiv5dRyvv3L4EgTZhMaoZgpSx8QBecY3cNSw@mail.gmail.com> (sfid-20130903_192505_463975_19B144EA)
-Subject: Hidden SSIDs on DFS channels
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 24 Sep 2013 00:22:15 -0400
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
+Subject: Re: [PATCH v5 2/2] Bluetooth: btmrvl: add calibration data download support
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <477F20668A386D41ADCC57781B1F70430F44C59423@SC-VEXCH1.marvell.com>
+Date: Tue, 24 Sep 2013 06:21:56 +0200
+Cc: "linux-bluetooth@vger.kernel.org" <linux-bluetooth@vger.kernel.org>,
+	Gustavo Padovan <gustavo@padovan.org>,
+	Johan Hedberg <johan.hedberg@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Mike Frysinger <vapier@chromium.org>,
+	Hyuckjoo Lee <hyuckjoo.lee@samsung.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Message-Id: <34088279-04B9-49D0-9387-88A602F518EC@holtmann.org> (sfid-20130924_062219_827528_025FD365)
+References: <1379715667-22424-1-git-send-email-bzhao@marvell.com> <1379715667-22424-2-git-send-email-bzhao@marvell.com> <05172D80-CE30-4B7D-A64E-11B8E320EF7F@holtmann.org> <477F20668A386D41ADCC57781B1F70430F44C59423@SC-VEXCH1.marvell.com>
+To: Bing Zhao <bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(Reposting this as my original post went out without a subject.)
+Hi Bing,
 
-Hi,
+>>> +	cmd = (struct btmrvl_cmd *)skb->data;
+>>> +	cmd->ocf_ogf =
+>>> +		cpu_to_le16(hci_opcode_pack(OGF, BT_CMD_LOAD_CONFIG_DATA));
+>>> +	cmd->length = BT_CMD_DATA_SIZE;
+>>> +	cmd->data[0] = 0x00;
+>>> +	cmd->data[1] = 0x00;
+>>> +	cmd->data[2] = 0x00;
+>>> +	cmd->data[3] = BT_CMD_DATA_SIZE - 4;
+>> 
+>> why not use __hci_cmd_sync() here. It is designed to be used from ->setup() where it is guaranteed
+>> that the HCI request lock is held. And it is guaranteed that ->setup() is executed in a workqueue.
+> 
+> The reason of not using __hci_cmd_sync() is that we are sending vendor specific command here (MRVL_VENDOR_PKT). The __hci_cmd_sync seems handle HCI_COMMAND_PKT only.
+> Please let us know if you have any suggestion to solve this problem.
 
-Tracking down a customer problem, I recently discovered that Linux
-does not currently support hidden SSIDs on DFS channels. As far as I
-can tell, there isn't a fundamental reason for this. You could switch
-to a frequency, listen for a beacon, once you see the beacon send a
-directed probe, and listen for responses. I'm sure there are folks on
-this list who have thought about this issue...
+what is a MRVL_VENDOR_PKT actually?
 
-- Are there any reasons you know of why my proposed strategy would not
-work from a regulatory point of view?
+If you guys are not using standard HCI command/event for vendor operation, then this obviously does not fit. However a similar model might make sense instead of manually building packets all the time.
 
-- If a patch were prepared, is this something that would be considered
-for mainstream inclusion?
+Regards
 
-I know that hidden SSIDs are a bad idea. But some customers can be
-hard to convince, and dealing with customers who have hidden SSIDs on
-DFS channels can be a support burden. If we can make it just work for
-them then our life is that much easier.
+Marcel
 
-Regards,
-Blaise
