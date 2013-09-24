@@ -1,46 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:50711 "EHLO ebb05.tieto.com"
+Received: from purkki.adurom.net ([80.68.90.206]:54699 "EHLO purkki.adurom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753758Ab3ICMZN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Sep 2013 08:25:13 -0400
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Bartosz Markowski <bartosz.markowski@tieto.com>
-Subject: [PATCH 1/2] ath10k: set the UART baud rate to 19200
-Date: Tue, 3 Sep 2013 14:24:02 +0200
-Message-ID: <1378211043-20299-1-git-send-email-bartosz.markowski@tieto.com> (sfid-20130903_142518_078701_12BA4906)
+	id S1750757Ab3IXKyx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Sep 2013 06:54:53 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: Peter Senna Tschudin <peter.senna@gmail.com>
+Cc: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH 12/19] wireless: Change variable type to bool
+References: <1379802471-30252-1-git-send-email-peter.senna@gmail.com>
+	<1379802471-30252-12-git-send-email-peter.senna@gmail.com>
+Date: Tue, 24 Sep 2013 13:54:49 +0300
+In-Reply-To: <1379802471-30252-12-git-send-email-peter.senna@gmail.com> (Peter
+	Senna Tschudin's message of "Sun, 22 Sep 2013 00:27:44 +0200")
+Message-ID: <87wqm6sd52.fsf@purkki.adurom.net> (sfid-20130924_125511_521634_74FC1030)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When configuring the host_interests over BMI, set the UART
-baud rate to 19200. This is valid for QCA988X_2.0 devices.
+Peter Senna Tschudin <peter.senna@gmail.com> writes:
 
-Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
----
- drivers/net/wireless/ath/ath10k/core.c |    7 +++++++
- 1 file changed, 7 insertions(+)
+> The variable continual is only assigned the values true and false.
+> Change its type to bool.
+>
+> The simplified semantic patch that find this problem is as
+> follows (http://coccinelle.lip6.fr/):
+>
+> @exists@
+> type T;
+> identifier b;
+> @@
+> - T
+> + bool
+>   b = ...;
+>   ... when any
+>   b = \(true\|false\)
+>
+> Signed-off-by: Peter Senna Tschudin <peter.senna@gmail.com>
+> ---
+>  drivers/net/wireless/rtlwifi/efuse.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 2dd39a8..2c1d2d7 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -435,6 +435,13 @@ static int ath10k_init_uart(struct ath10k *ar)
- 		return ret;
- 	}
- 
-+	/* Set the UART baud rate to 19200. */
-+	ret = ath10k_bmi_write32(ar, hi_desired_baud_rate, 19200);
-+	if (ret) {
-+		ath10k_warn("could not set the baud rate (%d)\n", ret);
-+		return ret;
-+	}
-+
- 	ath10k_info("UART prints enabled\n");
- 	return 0;
- }
+Please prefix the patch title with "rtlwifi:". We use "wireless:" for
+changes to net/wireless.
+
 -- 
-1.7.10
-
+Kalle Valo
