@@ -1,34 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:40143 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753136Ab3IZUOx (ORCPT
+Received: from mail-bk0-f43.google.com ([209.85.214.43]:61208 "EHLO
+	mail-bk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750717Ab3IXGwB convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Sep 2013 16:14:53 -0400
-Received: by mail-wg0-f42.google.com with SMTP id m15so6716762wgh.1
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Sep 2013 13:14:51 -0700 (PDT)
+	Tue, 24 Sep 2013 02:52:01 -0400
+Received: by mail-bk0-f43.google.com with SMTP id mz13so1096470bkb.16
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Sep 2013 23:51:59 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <11844152A5D44584AF048CE72898A409@dragos9054f382>
-References: <11844152A5D44584AF048CE72898A409@dragos9054f382>
-Date: Thu, 26 Sep 2013 22:14:51 +0200
-Message-ID: <CACna6rxsn+UXe4aEph++dtTBQdsyNNGu_8EYnVcQjgJuKu88kg@mail.gmail.com> (sfid-20130926_221526_942666_EC28BE7E)
-Subject: Re: Wireless for Dell D600 for OpenSuse 12.3
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Dragos <dragboan@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <87r4cebuxm.fsf@kamboji.qca.qualcomm.com>
+References: <1379509691-19904-1-git-send-email-michal.kazior@tieto.com>
+	<87r4cebuxm.fsf@kamboji.qca.qualcomm.com>
+Date: Tue, 24 Sep 2013 08:51:59 +0200
+Message-ID: <CA+BoTQ=Tg1Qv8qXqw8++hXiDsBXyeQKDjYesWdNg25ORMQJGRg@mail.gmail.com> (sfid-20130924_085205_368558_05CB7FB0)
+Subject: Re: [RFC] ath10k: replenish HTT RX buffers in a tasklet
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath10k@lists.infradead.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Please, don't sent text/html e-mails. Just use text/plain.
-
-2013/9/23 Dragos <dragboan@gmail.com>:
-> I found your email address on Open Suse Maintainers.
+On 24 September 2013 08:22, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Michal Kazior <michal.kazior@tieto.com> writes:
 >
-> I would like to ask for you support in setting up my wireless for dell 600.
-> My card indicates a NetXtreme BCM 5705M. Please provide me some detailed
-> instructions as I am newbie in Linux (and PC in general)
+>> This fixes system starvation when under heavy RX
+>> traffic. This problem could be observed on AP135
+>> and led to watchdog resetting the platform.
+>>
+>> Patch starves FW RX ring buffer by progressively
+>> replenishing buffers to auto-balance the RX
+>> handled to the host system.
+>>
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>
+> Looks good to me. I suspect there is a better way to do this in long
+> term, but this looks like a viable short term solution.
+>
+> Does it decrease throughput in a noticeable way?
 
-You ask about wireless and then mention BCM5705M, which is an ethernet card.
+I have yet to observe any regressions.
 
-For wireless (assuming it's a Broacom), see
-http://wireless.kernel.org/en/users/Drivers/b43
+
+Michał.
