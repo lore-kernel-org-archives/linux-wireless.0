@@ -1,76 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:39170 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751346Ab3IJT01 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Sep 2013 15:26:27 -0400
-Message-ID: <1378841209.4223.40.camel@porter.coelho.fi> (sfid-20130910_212633_082340_FADE10BD)
-Subject: Re: [PATCH 06/12] wlcore: send EAPOL frames with voice priority
-From: Luca Coelho <luca@coelho.fi>
-To: Eliad Peller <eliad@wizery.com>
-Cc: Arik Nemtsov <arik@wizery.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Tue, 10 Sep 2013 22:26:49 +0300
-In-Reply-To: <CAB3XZEfPQb1FWT3wukBZvSkP9eB1kO=wPpWFxKXBmX5YULAVqw@mail.gmail.com>
-References: <1378218848-7853-1-git-send-email-eliad@wizery.com>
-	 <1378218848-7853-6-git-send-email-eliad@wizery.com>
-	 <1378795636.4799.44.camel@porter.coelho.fi>
-	 <CA+XVXfc6RG1BngT_+doiOUhtYAgnG9Q0-oXns-ckJkU7XhE5ag@mail.gmail.com>
-	 <1378804510.4799.69.camel@porter.coelho.fi>
-	 <CAB3XZEfPQb1FWT3wukBZvSkP9eB1kO=wPpWFxKXBmX5YULAVqw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from ebb06.tieto.com ([131.207.168.38]:46909 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751070Ab3IXNJk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Sep 2013 09:09:40 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 0/5] ath10k: improve RX performance
+Date: Tue, 24 Sep 2013 15:09:13 +0200
+Message-ID: <1380028158-861-1-git-send-email-michal.kazior@tieto.com> (sfid-20130924_150944_169850_28AFFB53)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-09-10 at 16:15 +0200, Eliad Peller wrote:
-> On Tue, Sep 10, 2013 at 12:15 PM, Luca Coelho <luca@coelho.fi> wrote:
-> > On Tue, 2013-09-10 at 11:11 +0200, Arik Nemtsov wrote:
-> >> On Tue, Sep 10, 2013 at 9:47 AM, Luca Coelho <luca@coelho.fi> wrote:
-> >> > On Tue, 2013-09-03 at 17:34 +0300, Eliad Peller wrote:
-> >> >> From: Igal Chernobelsky <igalc@ti.com>
-> >> >>
-> >> >> Send EAPOL frames with voice priority by setting TX_HW_ATTR_EAPOL_FRAME
-> >> >> new bit in tx attribute. Sending EAPOL with voice priority fixes
-> >> >> re-key timeout during heavy traffic issue.
-> >> >>
-> >> >> Signed-off-by: Igal Chernobelsky <igalc@ti.com>
-> >> >> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> >> >> ---
-> >> >
-> >> > This seems to be the same problem that Ben had and debugged by himself
-> >> > [1].  Fixing this in hostapd/wpa_supplicant seems more appropriate?
-> >> >
-> >> > This patch seems to take an advantage of some sort of hack in the
-> >> > firmware that will change the priority by itself when the
-> >> > TX_HW_ATTR_EAPOL_GRAME bit is set.  If we have a good reason to use this
-> >> > patch, we need to take care of the firmware version as well.  This
-> >> > probably doesn't work with the latest published firmware.
-> >> >
-> >> > [1] http://mid.gmane.org/522E18E5.1020503@candelatech.com
-> >>
-> >> I believe he only fixed one mode (AP - hostapd) but not the other (GO
-> >> - wpa_supplicant). Anyway that's what we tested at the time.
-> >
-> > Okay, I didn't dig much into it.
-> >
-> >
-> >> Anyway marking it as this level doesn't do any harm. You're right
-> >> about the FW version though - it should be upstreamed first.
-> >
-> > Fair enough.  If the firmware implements this, no reason why not use it.
-> > But I'll wait for the new firmware before applying this.
-> >
-> this change is backward compatible, so there's no issue applying it as is.
-> however, if you prefer waiting for a newer fw that's fine too.
-> i'll add it to the waiting list :)
+Hi,
 
-Okay, indeed it's probably backwards compatible because that bit was not
-used before.  But I still prefer if you put this in the waiting list,
-because otherwise it seems the issue is solved (if you look at the git
-log) when it is not really fixed until a new firmware version is
-available.
+This patchset gives clear RX performance
+improvement on AP135. Throughput is at least
+doubled (300mbps -> 600mbps, UDP RX, 2x2).
 
---
-Luca.
+This contains a workaround for
+retransmission/duplication recovery.
+
+There's a pending patch for mac80211 that will
+allow proper individiual A-MSDU subframe
+reporting.
+
+Changes since RFC:
+ * comments fixes (Kalle)
+ * one patch extracted/split (Kalle)
+ * commit message adjustments
+
+
+Michal Kazior (5):
+  ath10k: report A-MSDU subframes individually
+  ath10k: document decap modes
+  ath10k: cleanup RX decap handling
+  ath10k: fix Native Wifi decap mode RX
+  ath10k: align RX frames properly
+
+ drivers/net/wireless/ath/ath10k/htt_rx.c  |  273 ++++++++++++++---------------
+ drivers/net/wireless/ath/ath10k/hw.h      |    6 +-
+ drivers/net/wireless/ath/ath10k/rx_desc.h |   24 ++-
+ drivers/net/wireless/ath/ath10k/txrx.c    |    2 +
+ 4 files changed, 158 insertions(+), 147 deletions(-)
+
+-- 
+1.7.9.5
 
