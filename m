@@ -1,42 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve0-f170.google.com ([209.85.128.170]:64688 "EHLO
-	mail-ve0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752015Ab3IRT72 (ORCPT
+Received: from mail-bk0-f54.google.com ([209.85.214.54]:63538 "EHLO
+	mail-bk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753927Ab3IXT44 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Sep 2013 15:59:28 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH 5/8 V3] rtlwifi: Fix smatch warning in pci.c
-Date: Wed, 18 Sep 2013 14:58:56 -0500
-Message-Id: <1379534339-14895-6-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130918_215934_687859_33087534)
-In-Reply-To: <1379534339-14895-5-git-send-email-Larry.Finger@lwfinger.net>
-References: <1379534339-14895-5-git-send-email-Larry.Finger@lwfinger.net>
+	Tue, 24 Sep 2013 15:56:56 -0400
+Received: by mail-bk0-f54.google.com with SMTP id mz12so1919029bkb.41
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Sep 2013 12:56:55 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, the_force@gmx.de
+Subject: [PATCH -stable] p54usb: add USB ID for Corega WLUSB2GTST USB adapter
+Date: Tue, 24 Sep 2013 21:56:46 +0200
+Message-ID: <1908256.18UySgn1pZ@blech> (sfid-20130924_215701_079294_6BA0A482)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Smatch reports the following:
-  CHECK   drivers/net/wireless/rtlwifi/pci.c
-drivers/net/wireless/rtlwifi/pci.c:739 _rtl_pci_rx_interrupt() warn: assigning (-98) to unsigned variable 'stats.noise'
+Added USB ID for Corega WLUSB2GTST USB adapter.
 
-The variable 'stats.noise' is not used. That initializer is removed.
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: <stable@vger.kernel.org>
+Reported-by: Joerg Kalisch <the_force@gmx.de>
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
 ---
- drivers/net/wireless/rtlwifi/pci.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/net/wireless/p54/p54usb.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Index: wireless-testing-save/drivers/net/wireless/rtlwifi/pci.c
-===================================================================
---- wireless-testing-save.orig/drivers/net/wireless/rtlwifi/pci.c
-+++ wireless-testing-save/drivers/net/wireless/rtlwifi/pci.c
-@@ -736,7 +736,6 @@ static void _rtl_pci_rx_interrupt(struct
- 
- 	struct rtl_stats stats = {
- 		.signal = 0,
--		.noise = -98,
- 		.rate = 0,
- 	};
- 	int index = rtlpci->rx_ring[rx_queue_idx].idx;
+diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
+index b9deef6..f42dc3c 100644
+--- a/drivers/net/wireless/p54/p54usb.c
++++ b/drivers/net/wireless/p54/p54usb.c
+@@ -83,6 +83,7 @@ static struct usb_device_id p54u_table[] = {
+ 	{USB_DEVICE(0x06a9, 0x000e)},	/* Westell 802.11g USB (A90-211WG-01) */
+ 	{USB_DEVICE(0x06b9, 0x0121)},	/* Thomson SpeedTouch 121g */
+ 	{USB_DEVICE(0x0707, 0xee13)},   /* SMC 2862W-G version 2 */
++	{USB_DEVICE(0x07aa, 0x0020)},	/* Corega WLUSB2GTST USB */
+ 	{USB_DEVICE(0x0803, 0x4310)},	/* Zoom 4410a */
+ 	{USB_DEVICE(0x083a, 0x4521)},   /* Siemens Gigaset USB Adapter 54 version 2 */
+ 	{USB_DEVICE(0x083a, 0x4531)},	/* T-Com Sinus 154 data II */
+-- 
+1.8.4.rc3
+
