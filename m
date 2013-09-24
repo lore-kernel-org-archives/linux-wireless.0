@@ -1,43 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f170.google.com ([209.85.214.170]:45605 "EHLO
-	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752490Ab3IFPNQ (ORCPT
+Received: from mail-ea0-f169.google.com ([209.85.215.169]:64900 "EHLO
+	mail-ea0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750718Ab3IXMGo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Sep 2013 11:13:16 -0400
-Message-ID: <5229F10A.7000503@lwfinger.net> (sfid-20130906_171333_703555_416A96D0)
-Date: Fri, 06 Sep 2013 10:13:14 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-CC: LKML <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Build warnings in b43 and b43legacy
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 24 Sep 2013 08:06:44 -0400
+Received: by mail-ea0-f169.google.com with SMTP id k11so2449445eaj.0
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Sep 2013 05:06:43 -0700 (PDT)
+From: Marek Puzyniak <marek.puzyniak@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Marek Puzyniak <marek.puzyniak@tieto.com>
+Subject: [PATCH] ath10k: make monitor vdev down before stoping it
+Date: Tue, 24 Sep 2013 14:06:24 +0200
+Message-Id: <1380024384-30512-1-git-send-email-marek.puzyniak@tieto.com> (sfid-20130924_140648_315405_08AC578A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Geert,
+Following sequence causes FW crash:
+-monitor vdev up,
+-monitor vdev stop,
+-monitor vdev delete.
+Making monitor vdev down before stoping it works ok:
+-monitor vdev up,
+-monitor vdev down,
+-monitor vdev stop,
+-monitor vdev delete.
 
-In http://lkml.indiana.edu/hypermail/linux/kernel/1309.0/00918.html and earlier 
-postings of the build regressions in 3.11-rcX, I notice the following entries:
+Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
 
-+ /scratch/kisskb/src/drivers/net/wireless/b43/b43.h: warning: 'packed' 
-attribute ignored for field of type 'union <anonymous>' [-Wattributes]: => 641:2
-+ /scratch/kisskb/src/drivers/net/wireless/b43/xmit.h: warning: 'packed' 
-attribute ignored for field of type 'struct <anonymous>' [-Wattributes]: => 
-64:3, 88:3, 290:3, 283:3, 77:3
-+ /scratch/kisskb/src/drivers/net/wireless/b43legacy/b43legacy.h: warning: 
-'packed' attribute ignored for field of type 'union <anonymous>' [-Wattributes]: 
-=> 381:2
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 51988d9..24b94c8 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -567,12 +567,9 @@ static int ath10k_monitor_stop(struct ath10k *ar)
+ 
+ 	lockdep_assert_held(&ar->conf_mutex);
+ 
+-	/* For some reasons, ath10k_wmi_vdev_down() here couse
+-	 * often ath10k_wmi_vdev_stop() to fail. Next we could
+-	 * not run monitor vdev and driver reload
+-	 * required. Don't see such problems we skip
+-	 * ath10k_wmi_vdev_down() here.
+-	 */
++	ret = ath10k_wmi_vdev_down(ar, ar->monitor_vdev_id);
++	if (ret)
++		ath10k_warn("Monitor vdev down failed: %d\n", ret);
+ 
+ 	ret = ath10k_wmi_vdev_stop(ar, ar->monitor_vdev_id);
+ 	if (ret)
+-- 
+1.8.1.2
 
- From the indicated source lines, and some research on the topic of packed 
-attributes of anonymous entities, I think I know what it would take to fix 
-these; however, I am reluctant to touch this code. Firstly, my compiler does not 
-show the warning, and secondly, blindly reworking those critical structures 
-could cause severe regressions.
-
-What compiler version and options does it take to get these warnings to appear?
-
-Thanks,
-
-Larry
