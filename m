@@ -1,71 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:6474 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753159Ab3IWLDH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Sep 2013 07:03:07 -0400
-Date: Mon, 23 Sep 2013 15:42:22 +0530
-From: Vinod Koul <vinod.koul@intel.com>
-To: Russell King <rmk+kernel@arm.linux.org.uk>
-Cc: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
-	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
-	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
-	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	uclinux-dist-devel@blackfin.uclinux.org,
-	Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [alsa-devel] [PATCH 23/51] DMA-API: dma: pl08x: add
- dma_set_mask_and_coherent() call
-Message-ID: <20130923101222.GH17188@intel.com> (sfid-20130923_130318_944210_468E36FF)
-References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
- <E1VMm4v-0007hz-RC@rmk-PC.arm.linux.org.uk>
+Received: from 174-143-244-95.static.cloud-ips.com ([174.143.244.95]:47656
+	"EHLO mail.catnarok.net" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1752394Ab3IXBPK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Sep 2013 21:15:10 -0400
+Date: Tue, 24 Sep 2013 00:52:24 +0000
+From: Michael Stolovitzsky <emestee@catnarok.net>
+To: linux-wireless@vger.kernel.org
+Subject: Re: brcmsmac causes soft lockup in 3.12-rc1
+Message-ID: <20130924005224.GA27400@mail.catnarok.net> (sfid-20130924_031519_488712_F8737CE8)
+References: <20130921223440.GA5297@mail.catnarok.net>
+ <523FF83D.8030103@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <E1VMm4v-0007hz-RC@rmk-PC.arm.linux.org.uk>
+In-Reply-To: <523FF83D.8030103@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 19, 2013 at 10:48:01PM +0100, Russell King wrote:
-> The DMA API requires drivers to call the appropriate dma_set_mask()
-> functions before doing any DMA mapping.  Add this required call to
-> the AMBA PL08x driver.
+On Mon, Sep 23, 2013 at 10:13:49AM +0200, Arend van Spriel wrote:
+> On 09/22/2013 12:34 AM, Michael Stolovitzsky wrote:
+> >Hi,
+> >
+> >On 3.12-rc1, modprobe brcmsmac causes a soft lockup (trace #1), effectively killing the box. This is a Lenovo S206
+> >with BCM4313 (14e4:4727), which I believe is a bluetooth combo board. After a while,
+> >RCU scheduler code detects a lockup (trace #2).
+> >
+> >This did not happen in 3.11.1, although brcmsmac hasn't worked on this machine
+> >as far as I remember. In  the previous kernels (~3.2.0+), it loads, but the
+> >reception is extremely weak - you must be within few meters to the AP, and the card would
+> >die after several minutes. The proprietary wl.ko driver works fine.
+> >
+> >I've attached the dmesg output, the kernel configuration and the output of lspci -vnn.
+> >I'm comfortable with experimenting; please let me know how I can help here.
 > 
-> Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
-Acked-by: Vinod Koul <vinod.koul@intel.com>
+> A fix for this problem has been submitted to John. I think it is in
+> transit to mainline so probably will be in 3.12-rc2.
+> 
+> Here the URL of the patch:
+> 
+> https://git.kernel.org/cgit/linux/kernel/git/linville/wireless.git/patch/?id=aaa2ced15ad8dca8048666c9f70736424d696a6b
+> 
 
-~Vinod
-> ---
->  drivers/dma/amba-pl08x.c |    5 +++++
->  1 files changed, 5 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/dma/amba-pl08x.c b/drivers/dma/amba-pl08x.c
-> index fce46c5..e51a983 100644
-> --- a/drivers/dma/amba-pl08x.c
-> +++ b/drivers/dma/amba-pl08x.c
-> @@ -2055,6 +2055,11 @@ static int pl08x_probe(struct amba_device *adev, const struct amba_id *id)
->  	if (ret)
->  		return ret;
->  
-> +	/* Ensure that we can do DMA */
-> +	ret = dma_set_mask_and_coherent(&adev->dev, DMA_BIT_MASK(32));
-> +	if (ret)
-> +		goto out_no_pl08x;
-> +
->  	/* Create the driver state holder */
->  	pl08x = kzalloc(sizeof(*pl08x), GFP_KERNEL);
->  	if (!pl08x) {
-> -- 
-> 1.7.4.4
-> 
-> _______________________________________________
-> Alsa-devel mailing list
-> Alsa-devel@alsa-project.org
-> http://mailman.alsa-project.org/mailman/listinfo/alsa-devel
+Arend, much thanks and an apology for not checking the patches. I will try this out ASAP.
 
--- 
+Is the (presumedly) low RX gain also a known problem with brcmsmac on BCM4313?
