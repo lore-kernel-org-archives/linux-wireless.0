@@ -1,52 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:60300 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756019Ab3IZLPQ (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:11821 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750724Ab3IXH3U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Sep 2013 07:15:16 -0400
-Message-ID: <1380194106.14806.2.camel@jlt4.sipsolutions.net> (sfid-20130926_131520_799115_64EF3811)
-Subject: Re: [PATCH 1/2] nl80211/cfg80211: Driver with AP SME advertises
- need for PMF SA Query
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Chet Lanctot <clanctot@codeaurora.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Date: Thu, 26 Sep 2013 13:15:06 +0200
-In-Reply-To: <1379446296-22236-2-git-send-email-clanctot@codeaurora.org> (sfid-20130917_213226_743831_B2F42172)
-References: <1379446296-22236-1-git-send-email-clanctot@codeaurora.org>
-	 <1379446296-22236-2-git-send-email-clanctot@codeaurora.org>
-	 (sfid-20130917_213226_743831_B2F42172)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 24 Sep 2013 03:29:20 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC 0/4] ath10k: improve RX performance
+References: <1379335757-15180-1-git-send-email-michal.kazior@tieto.com>
+	<87mwn2bu0i.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQnxqgz_90+Q8_FhM6PZh8CEW12dOA+ZGqHeYjK=Bbu9wA@mail.gmail.com>
+Date: Tue, 24 Sep 2013 10:29:10 +0300
+In-Reply-To: <CA+BoTQnxqgz_90+Q8_FhM6PZh8CEW12dOA+ZGqHeYjK=Bbu9wA@mail.gmail.com>
+	(Michal Kazior's message of "Tue, 24 Sep 2013 09:19:50 +0200")
+Message-ID: <8761tqbruh.fsf@kamboji.qca.qualcomm.com> (sfid-20130924_092923_772622_6A69FB19)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-09-17 at 12:31 -0700, Chet Lanctot wrote:
-> Needed for drivers that have AP SME integrated but do not implement
-> The SA Query procedure that is part of Protected Management Frames
-> (PMF, 802.11w).  Instead, the need for upper layer software to do
-> this procedure is advertised through nl80211/cfg80211.
-> 
-> Signed-off-by: Chet Lanctot <clanctot@codeaurora.org>
-> ---
->  include/uapi/linux/nl80211.h | 11 ++++++++---
->  net/wireless/nl80211.c       |  3 ++-
->  2 files changed, 10 insertions(+), 4 deletions(-)
-> 
-> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-> index eb68735..aa1d122 100644
-> --- a/include/uapi/linux/nl80211.h
-> +++ b/include/uapi/linux/nl80211.h
-> @@ -1891,6 +1891,9 @@ enum nl80211_iftype {
->   * @NL80211_STA_FLAG_ASSOCIATED: station is associated; used with drivers
->   *	that support %NL80211_FEATURE_FULL_AP_CLIENT_STATE to transition a
->   *	previously added station into associated state
-> + * @NL80211_STA_FLAG_NO_SA_QUERY_REQUIRED: no SA Query procedure is needed
-> + *	when an association request is received from a station with which there
-> + *	is already a MFP connection
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-I don't understand this part, and also why is it part of the *station*
-info? Shouldn't it be part of the new-station event or something like
-that? How can it be valid when reading station info later?
+> On 24 September 2013 08:42, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>> Michal Kazior <michal.kazior@tieto.com> writes:
+>>
+>>> This patchset gives clear RX performance
+>>> improvement on AP135. Throughput is at least
+>>> doubled (300mbps -> 600mbps, UDP RX, 2x2).
+>>>
+>>> Patches depend on my RFC patch "mac80211: support
+>>> reporting A-MSDU subframes individually".
+>>
+>> Preferably I can apply these changes only after the mac80211 patch goes
+>> to net-next (to avoid unnecessary rebasing). Is there a way to
+>> workaround the need for the mac80211 patch in ath10k so that we could
+>> apply these patches ASAP? And once the mac80211 patch is commited we
+>> could just remove the workaround in ath10k.
+>
+> The workaround could be to clear the retransmission flag when
+> reporting A-MSDU frames individually.
 
-johannes
+That sounds very good. Can you do that and resend the patchset, please?
 
+-- 
+Kalle Valo
