@@ -1,67 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53335 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751814Ab3IIKgv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Sep 2013 06:36:51 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: users@rt2x00.serialmonkey.com
-Subject: [PATCH 2/2] rt2800: comment enable radio initialization sequence
-Date: Mon,  9 Sep 2013 12:37:38 +0200
-Message-Id: <1378723058-7858-2-git-send-email-sgruszka@redhat.com> (sfid-20130909_123654_890973_F7CE13EA)
-In-Reply-To: <1378723058-7858-1-git-send-email-sgruszka@redhat.com>
-References: <1378723058-7858-1-git-send-email-sgruszka@redhat.com>
+Received: from smtprelay0249.hostedemail.com ([216.40.44.249]:40067 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755220Ab3IYTio (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Sep 2013 15:38:44 -0400
+From: Joe Perches <joe@perches.com>
+To: netdev@vger.kernel.org
+Cc: "David S. Miller" <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 10/11] orinoco: Remove extern from function prototypes
+Date: Wed, 25 Sep 2013 12:37:28 -0700
+Message-Id: <53406cd734ec5293069acd9135440ff36a4bbdbc.1380137610.git.joe@perches.com> (sfid-20130925_224501_436286_266204FD)
+In-Reply-To: <cover.1380137609.git.joe@perches.com>
+References: <cover.1380137609.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/rt2x00/rt2800lib.c | 13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
+There are a mix of function prototypes with and without extern
+in the kernel sources.  Standardize on not using extern for
+function prototypes.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 8f6820a..959f94f 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -6625,17 +6625,20 @@ int rt2800_enable_radio(struct rt2x00_dev *rt2x00dev)
- 	u16 word;
+Function prototypes don't need to be written with extern.
+extern is assumed by the compiler.  Its use is as unnecessary as
+using auto to declare automatic/local variables in a block.
+
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/net/wireless/orinoco/orinoco.h | 31 ++++++++++++++-----------------
+ 1 file changed, 14 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/net/wireless/orinoco/orinoco.h b/drivers/net/wireless/orinoco/orinoco.h
+index 3bb936b..eebd2be 100644
+--- a/drivers/net/wireless/orinoco/orinoco.h
++++ b/drivers/net/wireless/orinoco/orinoco.h
+@@ -182,23 +182,20 @@ extern int orinoco_debug;
+ /* Exported prototypes                                              */
+ /********************************************************************/
  
- 	/*
--	 * Initialize all registers.
-+	 * Initialize MAC registers.
- 	 */
- 	if (unlikely(rt2800_wait_wpdma_ready(rt2x00dev) ||
- 		     rt2800_init_registers(rt2x00dev)))
- 		return -EIO;
+-extern struct orinoco_private *alloc_orinocodev(
+-	int sizeof_card, struct device *device,
+-	int (*hard_reset)(struct orinoco_private *),
+-	int (*stop_fw)(struct orinoco_private *, int));
+-extern void free_orinocodev(struct orinoco_private *priv);
+-extern int orinoco_init(struct orinoco_private *priv);
+-extern int orinoco_if_add(struct orinoco_private *priv,
+-			  unsigned long base_addr,
+-			  unsigned int irq,
+-			  const struct net_device_ops *ops);
+-extern void orinoco_if_del(struct orinoco_private *priv);
+-extern int orinoco_up(struct orinoco_private *priv);
+-extern void orinoco_down(struct orinoco_private *priv);
+-extern irqreturn_t orinoco_interrupt(int irq, void *dev_id);
+-
+-extern void __orinoco_ev_info(struct net_device *dev, struct hermes *hw);
+-extern void __orinoco_ev_rx(struct net_device *dev, struct hermes *hw);
++struct orinoco_private *alloc_orinocodev(int sizeof_card, struct device *device,
++					 int (*hard_reset)(struct orinoco_private *),
++					 int (*stop_fw)(struct orinoco_private *, int));
++void free_orinocodev(struct orinoco_private *priv);
++int orinoco_init(struct orinoco_private *priv);
++int orinoco_if_add(struct orinoco_private *priv, unsigned long base_addr,
++		   unsigned int irq, const struct net_device_ops *ops);
++void orinoco_if_del(struct orinoco_private *priv);
++int orinoco_up(struct orinoco_private *priv);
++void orinoco_down(struct orinoco_private *priv);
++irqreturn_t orinoco_interrupt(int irq, void *dev_id);
++
++void __orinoco_ev_info(struct net_device *dev, struct hermes *hw);
++void __orinoco_ev_rx(struct net_device *dev, struct hermes *hw);
  
-+	/*
-+	 * Wait BBP/RF to wake up.
-+	 */
- 	if (unlikely(rt2800_wait_bbp_rf_ready(rt2x00dev)))
- 		return -EIO;
- 
- 	/*
--	 * Send signal to firmware during boot time.
-+	 * Send signal during boot time to initialize firmware.
- 	 */
- 	rt2800_register_write(rt2x00dev, H2M_BBP_AGENT, 0);
- 	rt2800_register_write(rt2x00dev, H2M_MAILBOX_CSR, 0);
-@@ -6644,9 +6647,15 @@ int rt2800_enable_radio(struct rt2x00_dev *rt2x00dev)
- 	rt2800_mcu_request(rt2x00dev, MCU_BOOT_SIGNAL, 0, 0, 0);
- 	msleep(1);
- 
-+	/*
-+	 * Make sure BBP is up and running.
-+	 */
- 	if (unlikely(rt2800_wait_bbp_ready(rt2x00dev)))
- 		return -EIO;
- 
-+	/*
-+	 * Initialize BBP/RF registers.
-+	 */
- 	rt2800_init_bbp(rt2x00dev);
- 	rt2800_init_rfcsr(rt2x00dev);
- 
+ int orinoco_process_xmit_skb(struct sk_buff *skb,
+ 			     struct net_device *dev,
 -- 
-1.7.11.7
+1.8.1.2.459.gbcd45b4.dirty
 
