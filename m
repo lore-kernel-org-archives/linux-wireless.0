@@ -1,260 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:52094 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753856Ab3HPIqR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Aug 2013 04:46:17 -0400
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Subject: [PATCH-resend-v2 2/9] ath9k: use chandef instead of channel_type
-Date: Fri, 16 Aug 2013 10:46:04 +0200
-Message-Id: <1376642764-9167-1-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20130816_104623_619563_4F2871D8)
-In-Reply-To: <1376460098-26648-3-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1376460098-26648-3-git-send-email-siwu@hrz.tu-chemnitz.de>
+Received: from mms2.broadcom.com ([216.31.210.18]:2158 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755104Ab3IYLGF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Sep 2013 07:06:05 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 7/7] brcmfmac: rework rx path bus interface
+Date: Wed, 25 Sep 2013 13:05:46 +0200
+Message-ID: <1380107146-24026-8-git-send-email-arend@broadcom.com> (sfid-20130925_130616_669574_98BE2A4F)
+In-Reply-To: <1380107146-24026-1-git-send-email-arend@broadcom.com>
+References: <1380107146-24026-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To enable support for 5/10 MHz, some internal functions must be
-converted from using the (old) channel_type to chandef. This is a good
-chance to change all remaining occurences.
+The brcmfmac has common and bus specific part. The rx function api
+was using sk_buff_head. Changed to sk_buff instead.
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
-Changes to PATCH-resend:
- * fixed compile error in rc.c
----
- drivers/net/wireless/ath/ath9k/common.c       |   67 +++++++++++++++----------
- drivers/net/wireless/ath/ath9k/common.h       |    3 +-
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |    5 +-
- drivers/net/wireless/ath/ath9k/init.c         |    4 +-
- drivers/net/wireless/ath/ath9k/main.c         |    8 ++-
- drivers/net/wireless/ath/ath9k/rc.c           |    4 +-
- 6 files changed, 51 insertions(+), 40 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h  |    2 +-
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   38 +++++++++-----------
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   12 +++----
+ drivers/net/wireless/brcm80211/brcmfmac/usb.c      |    5 +--
+ 4 files changed, 22 insertions(+), 35 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
-index 344fdde..d3063c2 100644
---- a/drivers/net/wireless/ath/ath9k/common.c
-+++ b/drivers/net/wireless/ath/ath9k/common.c
-@@ -49,37 +49,40 @@ int ath9k_cmn_get_hw_crypto_keytype(struct sk_buff *skb)
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
+index f7c1985..200ee9b 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
+@@ -136,7 +136,7 @@ extern bool brcmf_c_prec_enq(struct device *dev, struct pktq *q,
+ 			 struct sk_buff *pkt, int prec);
+ 
+ /* Receive frame for delivery to OS.  Callee disposes of rxp. */
+-extern void brcmf_rx_frames(struct device *dev, struct sk_buff_head *rxlist);
++extern void brcmf_rx_frame(struct device *dev, struct sk_buff *rxp);
+ 
+ /* Indication from bus module regarding presence/insertion of dongle. */
+ extern int brcmf_attach(uint bus_hdrlen, struct device *dev);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+index e067aec..42bf19a 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+@@ -509,9 +509,8 @@ netif_rx:
+ 	}
  }
- EXPORT_SYMBOL(ath9k_cmn_get_hw_crypto_keytype);
  
--static u32 ath9k_get_extchanmode(struct ieee80211_channel *chan,
--				 enum nl80211_channel_type channel_type)
-+static u32 ath9k_get_extchanmode(struct cfg80211_chan_def *chandef)
+-void brcmf_rx_frames(struct device *dev, struct sk_buff_head *skb_list)
++void brcmf_rx_frame(struct device *dev, struct sk_buff *skb)
  {
- 	u32 chanmode = 0;
+-	struct sk_buff *skb, *pnext;
+ 	struct brcmf_if *ifp;
+ 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+ 	struct brcmf_pub *drvr = bus_if->drvr;
+@@ -519,29 +518,24 @@ void brcmf_rx_frames(struct device *dev, struct sk_buff_head *skb_list)
+ 	u8 ifidx;
+ 	int ret;
  
--	switch (chan->band) {
-+	switch (chandef->chan->band) {
- 	case IEEE80211_BAND_2GHZ:
--		switch (channel_type) {
--		case NL80211_CHAN_NO_HT:
--		case NL80211_CHAN_HT20:
-+		switch (chandef->width) {
-+		case NL80211_CHAN_WIDTH_20_NOHT:
-+		case NL80211_CHAN_WIDTH_20:
- 			chanmode = CHANNEL_G_HT20;
- 			break;
--		case NL80211_CHAN_HT40PLUS:
--			chanmode = CHANNEL_G_HT40PLUS;
-+		case NL80211_CHAN_WIDTH_40:
-+			if (chandef->center_freq1 > chandef->chan->center_freq)
-+				chanmode = CHANNEL_G_HT40PLUS;
-+			else
-+				chanmode = CHANNEL_G_HT40MINUS;
- 			break;
--		case NL80211_CHAN_HT40MINUS:
--			chanmode = CHANNEL_G_HT40MINUS;
-+		default:
- 			break;
+-	brcmf_dbg(DATA, "Enter: %s: count=%u\n", dev_name(dev),
+-		  skb_queue_len(skb_list));
++	brcmf_dbg(DATA, "Enter: %s: rxp=%p\n", dev_name(dev), skb);
+ 
+-	skb_queue_walk_safe(skb_list, skb, pnext) {
+-		skb_unlink(skb, skb_list);
+-
+-		/* process and remove protocol-specific header */
+-		ret = brcmf_proto_hdrpull(drvr, true, &ifidx, skb);
+-		ifp = drvr->iflist[ifidx];
+-
+-		if (ret || !ifp || !ifp->ndev) {
+-			if ((ret != -ENODATA) && ifp)
+-				ifp->stats.rx_errors++;
+-			brcmu_pkt_buf_free_skb(skb);
+-			continue;
+-		}
++	/* process and remove protocol-specific header */
++	ret = brcmf_proto_hdrpull(drvr, true, &ifidx, skb);
++	ifp = drvr->iflist[ifidx];
+ 
+-		rd = (struct brcmf_skb_reorder_data *)skb->cb;
+-		if (rd->reorder)
+-			brcmf_rxreorder_process_info(ifp, rd->reorder, skb);
+-		else
+-			brcmf_netif_rx(ifp, skb);
++	if (ret || !ifp || !ifp->ndev) {
++		if ((ret != -ENODATA) && ifp)
++			ifp->stats.rx_errors++;
++		brcmu_pkt_buf_free_skb(skb);
++		return;
+ 	}
++
++	rd = (struct brcmf_skb_reorder_data *)skb->cb;
++	if (rd->reorder)
++		brcmf_rxreorder_process_info(ifp, rd->reorder, skb);
++	else
++		brcmf_netif_rx(ifp, skb);
+ }
+ 
+ void brcmf_txfinalize(struct brcmf_pub *drvr, struct sk_buff *txp,
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index 6e72b73..67f05db 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -1492,13 +1492,12 @@ static u8 brcmf_sdbrcm_rxglom(struct brcmf_sdio *bus, u8 rxseq)
+ 					   bus->glom.qlen, pfirst, pfirst->data,
+ 					   pfirst->len, pfirst->next,
+ 					   pfirst->prev);
++			skb_unlink(pfirst, &bus->glom);
++			brcmf_rx_frame(bus->sdiodev->dev, pfirst);
++			bus->sdcnt.rxglompkts++;
  		}
- 		break;
- 	case IEEE80211_BAND_5GHZ:
--		switch (channel_type) {
--		case NL80211_CHAN_NO_HT:
--		case NL80211_CHAN_HT20:
-+		switch (chandef->width) {
-+		case NL80211_CHAN_WIDTH_20_NOHT:
-+		case NL80211_CHAN_WIDTH_20:
- 			chanmode = CHANNEL_A_HT20;
- 			break;
--		case NL80211_CHAN_HT40PLUS:
--			chanmode = CHANNEL_A_HT40PLUS;
-+		case NL80211_CHAN_WIDTH_40:
-+			if (chandef->center_freq1 > chandef->chan->center_freq)
-+				chanmode = CHANNEL_A_HT40PLUS;
-+			else
-+				chanmode = CHANNEL_A_HT40MINUS;
- 			break;
--		case NL80211_CHAN_HT40MINUS:
--			chanmode = CHANNEL_A_HT40MINUS;
-+		default:
- 			break;
- 		}
- 		break;
-@@ -94,13 +97,12 @@ static u32 ath9k_get_extchanmode(struct ieee80211_channel *chan,
-  * Update internal channel flags.
-  */
- void ath9k_cmn_update_ichannel(struct ath9k_channel *ichan,
--			       struct ieee80211_channel *chan,
--			       enum nl80211_channel_type channel_type)
-+			       struct cfg80211_chan_def *chandef)
+-		/* sent any remaining packets up */
+-		if (bus->glom.qlen)
+-			brcmf_rx_frames(bus->sdiodev->dev, &bus->glom);
+ 
+ 		bus->sdcnt.rxglomframes++;
+-		bus->sdcnt.rxglompkts += bus->glom.qlen;
+ 	}
+ 	return num;
+ }
+@@ -1643,7 +1642,6 @@ static void brcmf_pad(struct brcmf_sdio *bus, u16 *pad, u16 *rdlen)
+ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
  {
--	ichan->channel = chan->center_freq;
--	ichan->chan = chan;
-+	ichan->channel = chandef->chan->center_freq;
-+	ichan->chan = chandef->chan;
+ 	struct sk_buff *pkt;		/* Packet for event or data frames */
+-	struct sk_buff_head pktlist;	/* needed for bus interface */
+ 	u16 pad;		/* Number of pad bytes to read */
+ 	uint rxleft = 0;	/* Remaining number of frames allowed */
+ 	int ret;		/* Return code from calls */
+@@ -1845,9 +1843,7 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
+ 			continue;
+ 		}
  
--	if (chan->band == IEEE80211_BAND_2GHZ) {
-+	if (chandef->chan->band == IEEE80211_BAND_2GHZ) {
- 		ichan->chanmode = CHANNEL_G;
- 		ichan->channelFlags = CHANNEL_2GHZ | CHANNEL_OFDM;
+-		skb_queue_head_init(&pktlist);
+-		skb_queue_tail(&pktlist, pkt);
+-		brcmf_rx_frames(bus->sdiodev->dev, &pktlist);
++		brcmf_rx_frame(bus->sdiodev->dev, pkt);
+ 	}
+ 
+ 	rxcount = maxframes - rxleft;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+index 39e01a7..bf6758d 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+@@ -435,7 +435,6 @@ static void brcmf_usb_rx_complete(struct urb *urb)
+ 	struct brcmf_usbreq  *req = (struct brcmf_usbreq *)urb->context;
+ 	struct brcmf_usbdev_info *devinfo = req->devinfo;
+ 	struct sk_buff *skb;
+-	struct sk_buff_head skbq;
+ 
+ 	brcmf_dbg(USB, "Enter, urb->status=%d\n", urb->status);
+ 	brcmf_usb_del_fromq(devinfo, req);
+@@ -450,10 +449,8 @@ static void brcmf_usb_rx_complete(struct urb *urb)
+ 	}
+ 
+ 	if (devinfo->bus_pub.state == BRCMFMAC_USB_STATE_UP) {
+-		skb_queue_head_init(&skbq);
+-		skb_queue_tail(&skbq, skb);
+ 		skb_put(skb, urb->actual_length);
+-		brcmf_rx_frames(devinfo->dev, &skbq);
++		brcmf_rx_frame(devinfo->dev, skb);
+ 		brcmf_usb_rx_refill(devinfo, req);
  	} else {
-@@ -108,8 +110,22 @@ void ath9k_cmn_update_ichannel(struct ath9k_channel *ichan,
- 		ichan->channelFlags = CHANNEL_5GHZ | CHANNEL_OFDM;
- 	}
- 
--	if (channel_type != NL80211_CHAN_NO_HT)
--		ichan->chanmode = ath9k_get_extchanmode(chan, channel_type);
-+	switch (chandef->width) {
-+	case NL80211_CHAN_WIDTH_5:
-+		ichan->channelFlags |= CHANNEL_QUARTER;
-+		break;
-+	case NL80211_CHAN_WIDTH_10:
-+		ichan->channelFlags |= CHANNEL_HALF;
-+		break;
-+	case NL80211_CHAN_WIDTH_20_NOHT:
-+		break;
-+	case NL80211_CHAN_WIDTH_20:
-+	case NL80211_CHAN_WIDTH_40:
-+		ichan->chanmode = ath9k_get_extchanmode(chandef);
-+		break;
-+	default:
-+		WARN_ON(1);
-+	}
- }
- EXPORT_SYMBOL(ath9k_cmn_update_ichannel);
- 
-@@ -125,8 +141,7 @@ struct ath9k_channel *ath9k_cmn_get_curchannel(struct ieee80211_hw *hw,
- 
- 	chan_idx = curchan->hw_value;
- 	channel = &ah->channels[chan_idx];
--	ath9k_cmn_update_ichannel(channel, curchan,
--				  cfg80211_get_chandef_type(&hw->conf.chandef));
-+	ath9k_cmn_update_ichannel(channel, &hw->conf.chandef);
- 
- 	return channel;
- }
-diff --git a/drivers/net/wireless/ath/ath9k/common.h b/drivers/net/wireless/ath/ath9k/common.h
-index 207d069..e039bcb 100644
---- a/drivers/net/wireless/ath/ath9k/common.h
-+++ b/drivers/net/wireless/ath/ath9k/common.h
-@@ -44,8 +44,7 @@
- 
- int ath9k_cmn_get_hw_crypto_keytype(struct sk_buff *skb);
- void ath9k_cmn_update_ichannel(struct ath9k_channel *ichan,
--			       struct ieee80211_channel *chan,
--			       enum nl80211_channel_type channel_type);
-+			       struct cfg80211_chan_def *chandef);
- struct ath9k_channel *ath9k_cmn_get_curchannel(struct ieee80211_hw *hw,
- 					       struct ath_hw *ah);
- int ath9k_cmn_count_streams(unsigned int chainmask, int max);
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 5c1bec1..d442581 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -1203,16 +1203,13 @@ static int ath9k_htc_config(struct ieee80211_hw *hw, u32 changed)
- 
- 	if ((changed & IEEE80211_CONF_CHANGE_CHANNEL) || chip_reset) {
- 		struct ieee80211_channel *curchan = hw->conf.chandef.chan;
--		enum nl80211_channel_type channel_type =
--			cfg80211_get_chandef_type(&hw->conf.chandef);
- 		int pos = curchan->hw_value;
- 
- 		ath_dbg(common, CONFIG, "Set channel: %d MHz\n",
- 			curchan->center_freq);
- 
- 		ath9k_cmn_update_ichannel(&priv->ah->channels[pos],
--					  hw->conf.chandef.chan,
--					  channel_type);
-+					  &hw->conf.chandef);
- 
- 		if (ath9k_htc_set_channel(priv, hw, &priv->ah->channels[pos]) < 0) {
- 			ath_err(common, "Unable to set channel\n");
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 3b56c2e..85015bf 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -726,13 +726,15 @@ static void ath9k_init_band_txpower(struct ath_softc *sc, int band)
- 	struct ieee80211_supported_band *sband;
- 	struct ieee80211_channel *chan;
- 	struct ath_hw *ah = sc->sc_ah;
-+	struct cfg80211_chan_def chandef;
- 	int i;
- 
- 	sband = &sc->sbands[band];
- 	for (i = 0; i < sband->n_channels; i++) {
- 		chan = &sband->channels[i];
- 		ah->curchan = &ah->channels[chan->hw_value];
--		ath9k_cmn_update_ichannel(ah->curchan, chan, NL80211_CHAN_HT20);
-+		cfg80211_chandef_create(&chandef, chan, NL80211_CHAN_HT20);
-+		ath9k_cmn_update_ichannel(ah->curchan, &chandef);
- 		ath9k_hw_set_txpowerlimit(ah, MAX_RATE_POWER, true);
- 	}
- }
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 0bee105..ba382a8 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1201,8 +1201,6 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
- 
- 	if ((changed & IEEE80211_CONF_CHANGE_CHANNEL) || reset_channel) {
- 		struct ieee80211_channel *curchan = hw->conf.chandef.chan;
--		enum nl80211_channel_type channel_type =
--			cfg80211_get_chandef_type(&conf->chandef);
- 		int pos = curchan->hw_value;
- 		int old_pos = -1;
- 		unsigned long flags;
-@@ -1210,8 +1208,8 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
- 		if (ah->curchan)
- 			old_pos = ah->curchan - &ah->channels[0];
- 
--		ath_dbg(common, CONFIG, "Set channel: %d MHz type: %d\n",
--			curchan->center_freq, channel_type);
-+		ath_dbg(common, CONFIG, "Set channel: %d MHz width: %d\n",
-+			curchan->center_freq, hw->conf.chandef.width);
- 
- 		/* update survey stats for the old channel before switching */
- 		spin_lock_irqsave(&common->cc_lock, flags);
-@@ -1219,7 +1217,7 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
- 		spin_unlock_irqrestore(&common->cc_lock, flags);
- 
- 		ath9k_cmn_update_ichannel(&sc->sc_ah->channels[pos],
--					  curchan, channel_type);
-+					  &conf->chandef);
- 
- 		/*
- 		 * If the operating channel changes, change the survey in-use flags
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index a3c4ca0..7e86abb 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -1326,8 +1326,8 @@ static void ath_rate_update(void *priv, struct ieee80211_supported_band *sband,
- 		ath_rc_init(sc, priv_sta);
- 
- 		ath_dbg(ath9k_hw_common(sc->sc_ah), CONFIG,
--			"Operating HT Bandwidth changed to: %d\n",
--			cfg80211_get_chandef_type(&sc->hw->conf.chandef));
-+			"Operating Bandwidth changed to: %d\n",
-+			sc->hw->conf.chandef.width);
- 	}
- }
- 
+ 		brcmu_pkt_buf_free_skb(skb);
 -- 
 1.7.10.4
+
 
