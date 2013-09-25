@@ -1,76 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:60964 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751811Ab3IIJZK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Sep 2013 05:25:10 -0400
-Received: by mail-we0-f174.google.com with SMTP id q58so3970159wes.19
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Sep 2013 02:25:09 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <luca@coelho.fi>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 12/13] wlcore: fix started_vifs calculation
-Date: Mon,  9 Sep 2013 12:24:43 +0300
-Message-Id: <1378718684-14430-12-git-send-email-eliad@wizery.com> (sfid-20130909_112516_766087_F76F4CF4)
-In-Reply-To: <1378718684-14430-1-git-send-email-eliad@wizery.com>
-References: <1378718684-14430-1-git-send-email-eliad@wizery.com>
+Received: from mx1.redhat.com ([209.132.183.28]:64787 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754612Ab3IYNgs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Sep 2013 09:36:48 -0400
+Date: Wed, 25 Sep 2013 15:34:55 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: users@rt2x00.serialmonkey.com
+Subject: [PATCH] rt2800: add support for radio chip RF3070
+Message-ID: <20130925133454.GD3119@redhat.com> (sfid-20130925_153652_308720_F75B4E06)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wlcore configures different dwell times according to number
-of active interfaces (in order to prevent hurting VO during
-scan).
+Add support for new RF chip ID: 3070. It seems to be the same as 5370,
+maybe vendor just put wrong value on the eeprom, but add this id anyway
+since devices with it showed on the marked.
 
-However, determining active vif only according to
-bss_conf->idle is not explicit enough, and might result
-in non-started vifs being counted as started as well
-(e.g. unassociated sta during sta).
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-Fix it by checking for explicit conditions according
-to the vif type.
-
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/ti/wlcore/scan.c | 24 +++++++++++++++++++++++-
- 1 file changed, 23 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ti/wlcore/scan.c b/drivers/net/wireless/ti/wlcore/scan.c
-index bbe0bc4..867e64b 100644
---- a/drivers/net/wireless/ti/wlcore/scan.c
-+++ b/drivers/net/wireless/ti/wlcore/scan.c
-@@ -92,9 +92,31 @@ out:
- static void wlcore_started_vifs_iter(void *data, u8 *mac,
- 				     struct ieee80211_vif *vif)
- {
-+	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
-+	bool active = false;
- 	int *count = (int *)data;
+diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+index fa33b5e..e3eb952 100644
+--- a/drivers/net/wireless/rt2x00/rt2800.h
++++ b/drivers/net/wireless/rt2x00/rt2800.h
+@@ -52,6 +52,7 @@
+  * RF3322 2.4G 2T2R(RT3352/RT3371/RT3372/RT3391/RT3392)
+  * RF3053 2.4G/5G 3T3R(RT3883/RT3563/RT3573/RT3593/RT3662)
+  * RF5592 2.4G/5G 2T2R
++ * RF3070 2.4G 1T1R
+  * RF5360 2.4G 1T1R
+  * RF5370 2.4G 1T1R
+  * RF5390 2.4G 1T1R
+@@ -70,6 +71,7 @@
+ #define RF3322				0x000c
+ #define RF3053				0x000d
+ #define RF5592				0x000f
++#define RF3070				0x3070
+ #define RF3290				0x3290
+ #define RF5360				0x5360
+ #define RF5370				0x5370
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 88ce656..d2f638f 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -3152,6 +3152,7 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+ 	case RF3322:
+ 		rt2800_config_channel_rf3322(rt2x00dev, conf, rf, info);
+ 		break;
++	case RF3070:
+ 	case RF5360:
+ 	case RF5370:
+ 	case RF5372:
+@@ -3166,7 +3167,8 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+ 		rt2800_config_channel_rf2xxx(rt2x00dev, conf, rf, info);
+ 	}
  
--	if (!vif->bss_conf.idle)
-+	/*
-+	 * count active interfaces according to interface type.
-+	 * checking only bss_conf.idle is bad for some cases, e.g.
-+	 * we don't want to count sta in p2p_find as active interface.
-+	 */
-+	switch (wlvif->bss_type) {
-+	case BSS_TYPE_STA_BSS:
-+		if (test_bit(WLVIF_FLAG_STA_ASSOCIATED, &wlvif->flags))
-+			active = true;
-+		break;
-+
-+	case BSS_TYPE_AP_BSS:
-+		if (wlvif->wl->active_sta_count > 0)
-+			active = true;
-+		break;
-+
-+	default:
-+		break;
-+	}
-+
-+	if (active)
- 		(*count)++;
- }
- 
--- 
-1.8.3.rc1.35.g9b79519
-
+-	if (rt2x00_rf(rt2x00dev, RF3290) ||
++	if (rt2x00_rf(rt2x00dev, RF3070) ||
++	    rt2x00_rf(rt2x00dev, RF3290) ||
+ 	    rt2x00_rf(rt2x00dev, RF3322) ||
+ 	    rt2x00_rf(rt2x00dev, RF5360) ||
+ 	    rt2x00_rf(rt2x00dev, RF5370) ||
+@@ -4264,6 +4266,7 @@ void rt2800_vco_calibration(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_rfcsr_write(rt2x00dev, 7, rfcsr);
+ 		break;
+ 	case RF3053:
++	case RF3070:
+ 	case RF3290:
+ 	case RF5360:
+ 	case RF5370:
+@@ -7021,6 +7024,7 @@ static int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	case RF3022:
+ 	case RF3052:
+ 	case RF3053:
++	case RF3070:
+ 	case RF3290:
+ 	case RF3320:
+ 	case RF3322:
+@@ -7543,6 +7547,7 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ 		   rt2x00_rf(rt2x00dev, RF2020) ||
+ 		   rt2x00_rf(rt2x00dev, RF3021) ||
+ 		   rt2x00_rf(rt2x00dev, RF3022) ||
++		   rt2x00_rf(rt2x00dev, RF3070) ||
+ 		   rt2x00_rf(rt2x00dev, RF3290) ||
+ 		   rt2x00_rf(rt2x00dev, RF3320) ||
+ 		   rt2x00_rf(rt2x00dev, RF3322) ||
+@@ -7671,6 +7676,7 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ 	case RF3320:
+ 	case RF3052:
+ 	case RF3053:
++	case RF3070:
+ 	case RF3290:
+ 	case RF5360:
+ 	case RF5370:
