@@ -1,46 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f178.google.com ([209.85.220.178]:61836 "EHLO
-	mail-vc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752331Ab3ILGIS (ORCPT
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:45644 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754779Ab3IYVIf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Sep 2013 02:08:18 -0400
-Received: by mail-vc0-f178.google.com with SMTP id ha12so6850925vcb.23
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Sep 2013 23:08:17 -0700 (PDT)
+	Wed, 25 Sep 2013 17:08:35 -0400
+Subject: [PATCH 1/3] ath10k: rename board_data in struct ath10k
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 26 Sep 2013 00:08:30 +0300
+Message-ID: <20130925210830.2596.24836.stgit@localhost6.localdomain6> (sfid-20130925_230845_120150_01ADDC24)
+In-Reply-To: <20130925210455.2596.36889.stgit@localhost6.localdomain6>
+References: <20130925210455.2596.36889.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-In-Reply-To: <CACPKTAP1EkW8_Ljs4oAY-gp_CmeD-nMkohKy-8RFP__BOcOTAA@mail.gmail.com>
-References: <CACPKTAP1EkW8_Ljs4oAY-gp_CmeD-nMkohKy-8RFP__BOcOTAA@mail.gmail.com>
-Date: Thu, 12 Sep 2013 11:38:17 +0530
-Message-ID: <CACPKTAMAgO5twMuscFiSPTp3Ej7StSETWN+E=TeJZYRyjPcf1Q@mail.gmail.com> (sfid-20130912_080822_476641_5ABD3942)
-Subject: Re: AR9002 data sheet
-From: Prabhunath G <gprabhunath@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Or any datasheet of 802.11 b/g/n device for which there is a
-development of linux driver
+I will use board_data for something else in the following patch
+so I need to rename it.
 
-Thanks,
-Prabhu
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c |   18 +++++++++---------
+ drivers/net/wireless/ath/ath10k/core.h |    2 +-
+ 2 files changed, 10 insertions(+), 10 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 76906d5..e07c487 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -236,7 +236,7 @@ static int ath10k_push_board_ext_data(struct ath10k *ar,
+ 
+ static int ath10k_download_board_data(struct ath10k *ar)
+ {
+-	const struct firmware *fw = ar->board_data;
++	const struct firmware *fw = ar->board;
+ 	u32 board_data_size = QCA988X_BOARD_DATA_SZ;
+ 	u32 address;
+ 	int ret;
+@@ -319,8 +319,8 @@ exit:
+ 
+ static void ath10k_core_free_firmware_files(struct ath10k *ar)
+ {
+-	if (ar->board_data && !IS_ERR(ar->board_data))
+-		release_firmware(ar->board_data);
++	if (ar->board && !IS_ERR(ar->board))
++		release_firmware(ar->board);
+ 
+ 	if (ar->otp && !IS_ERR(ar->otp))
+ 		release_firmware(ar->otp);
+@@ -328,7 +328,7 @@ static void ath10k_core_free_firmware_files(struct ath10k *ar)
+ 	if (ar->firmware && !IS_ERR(ar->firmware))
+ 		release_firmware(ar->firmware);
+ 
+-	ar->board_data = NULL;
++	ar->board = NULL;
+ 	ar->otp = NULL;
+ 	ar->firmware = NULL;
+ }
+@@ -347,11 +347,11 @@ static int ath10k_core_fetch_firmware_files(struct ath10k *ar)
+ 		return -EINVAL;
+ 	}
+ 
+-	ar->board_data = ath10k_fetch_fw_file(ar,
+-					      ar->hw_params.fw.dir,
+-					      ar->hw_params.fw.board);
+-	if (IS_ERR(ar->board_data)) {
+-		ret = PTR_ERR(ar->board_data);
++	ar->board = ath10k_fetch_fw_file(ar,
++					 ar->hw_params.fw.dir,
++					 ar->hw_params.fw.board);
++	if (IS_ERR(ar->board)) {
++		ret = PTR_ERR(ar->board);
+ 		ath10k_err("could not fetch board data (%d)\n", ret);
+ 		goto err;
+ 	}
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 292ad45..12b03b6 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -324,7 +324,7 @@ struct ath10k {
+ 		} fw;
+ 	} hw_params;
+ 
+-	const struct firmware *board_data;
++	const struct firmware *board;
+ 	const struct firmware *otp;
+ 	const struct firmware *firmware;
+ 
 
-On Thu, Sep 12, 2013 at 11:30 AM, Prabhunath G <gprabhunath@gmail.com> wrote:
-> Dear All,
->
->        I am interested to analyse the ath9k drivers having an agenda
-> of contributing in near future.
-> Can I get the datasheet of AR9002 so that I can start analysing the driver.
->
-> Regards,
-> Prabhunath G
-> Linux Trainer
-> Bangalore
-
-
-
--- 
-Regards,
-Prabhunath G
-Linux Trainer
-Bangalore
