@@ -1,42 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:45722 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759412Ab3ICFZf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Sep 2013 01:25:35 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: Joe Perches <joe@perches.com>
-Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org
-Subject: Re: [PATCH v2 13/16] wcn36xx: add wcn36xx.h
-References: <1377248299-21007-1-git-send-email-k.eugene.e@gmail.com>
-	<1377248299-21007-14-git-send-email-k.eugene.e@gmail.com>
-	<1377298929.2816.15.camel@joe-AO722>
-	<87ioyjux5w.fsf@purkki.adurom.net>
-	<1378144193.1953.88.camel@joe-AO722>
-	<87bo4av6fj.fsf@purkki.adurom.net>
-	<1378185231.29083.15.camel@joe-AO722>
-Date: Tue, 03 Sep 2013 08:25:33 +0300
-In-Reply-To: <1378185231.29083.15.camel@joe-AO722> (Joe Perches's message of
-	"Mon, 02 Sep 2013 22:13:51 -0700")
-Message-ID: <877geyv5ma.fsf@purkki.adurom.net> (sfid-20130903_072538_853359_623E2DA7)
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:35243 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754117Ab3IYCbg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Sep 2013 22:31:36 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Dmitry Khromov <icechrome@gmail.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3.12 1/2] mwifiex: fix hang issue for USB chipsets
+Date: Tue, 24 Sep 2013 19:31:24 -0700
+Message-ID: <1380076285-29930-1-git-send-email-bzhao@marvell.com> (sfid-20130925_043143_042465_8A19E7E7)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Joe Perches <joe@perches.com> writes:
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-> Most don't do that.
-> Generally it's enabled/disabled by module.
->
->> And enabling log messages on the file level is sometimes too
->> much. So it would really need some sort of grouping feature with a
->> stable interface.
->
-> Like by module?
+Bug 60815 - Interface hangs in mwifiex_usb
+https://bugzilla.kernel.org/show_bug.cgi?id=60815
 
-What does module mean in this context? File like "wmi.c" or something
-else?
+We have 4 bytes of interface header for packets delivered to SDIO
+and PCIe, but not for USB interface.
 
+In Tx AMSDU case, currently 4 bytes of garbage data is unnecessarily
+appended for USB packets. This sometimes leads to a firmware hang,
+because it may not interpret the data packet correctly.
+
+Problem is fixed by removing this redundant headroom for USB.
+
+Cc: <stable@vger.kernel.org> # 3.5+
+Tested-by: Dmitry Khromov <icechrome@gmail.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/11n_aggr.c | 3 ++-
+ drivers/net/wireless/mwifiex/11n_aggr.h | 2 +-
+ drivers/net/wireless/mwifiex/wmm.c      | 3 +--
+ 3 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/11n_aggr.c b/drivers/net/wireless/mwifiex/11n_aggr.c
+index 21c6882..1214c58 100644
+--- a/drivers/net/wireless/mwifiex/11n_aggr.c
++++ b/drivers/net/wireless/mwifiex/11n_aggr.c
+@@ -150,7 +150,7 @@ mwifiex_11n_form_amsdu_txpd(struct mwifiex_private *priv,
+  */
+ int
+ mwifiex_11n_aggregate_pkt(struct mwifiex_private *priv,
+-			  struct mwifiex_ra_list_tbl *pra_list, int headroom,
++			  struct mwifiex_ra_list_tbl *pra_list,
+ 			  int ptrindex, unsigned long ra_list_flags)
+ 			  __releases(&priv->wmm.ra_list_spinlock)
+ {
+@@ -160,6 +160,7 @@ mwifiex_11n_aggregate_pkt(struct mwifiex_private *priv,
+ 	int pad = 0, ret;
+ 	struct mwifiex_tx_param tx_param;
+ 	struct txpd *ptx_pd = NULL;
++	int headroom = adapter->iface_type == MWIFIEX_USB ? 0 : INTF_HEADER_LEN;
+ 
+ 	skb_src = skb_peek(&pra_list->skb_head);
+ 	if (!skb_src) {
+diff --git a/drivers/net/wireless/mwifiex/11n_aggr.h b/drivers/net/wireless/mwifiex/11n_aggr.h
+index 900e1c6..892098d 100644
+--- a/drivers/net/wireless/mwifiex/11n_aggr.h
++++ b/drivers/net/wireless/mwifiex/11n_aggr.h
+@@ -26,7 +26,7 @@
+ int mwifiex_11n_deaggregate_pkt(struct mwifiex_private *priv,
+ 				struct sk_buff *skb);
+ int mwifiex_11n_aggregate_pkt(struct mwifiex_private *priv,
+-			      struct mwifiex_ra_list_tbl *ptr, int headroom,
++			      struct mwifiex_ra_list_tbl *ptr,
+ 			      int ptr_index, unsigned long flags)
+ 			      __releases(&priv->wmm.ra_list_spinlock);
+ 
+diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
+index 2e8f9cd..95fa359 100644
+--- a/drivers/net/wireless/mwifiex/wmm.c
++++ b/drivers/net/wireless/mwifiex/wmm.c
+@@ -1239,8 +1239,7 @@ mwifiex_dequeue_tx_packet(struct mwifiex_adapter *adapter)
+ 		if (enable_tx_amsdu && mwifiex_is_amsdu_allowed(priv, tid) &&
+ 		    mwifiex_is_11n_aggragation_possible(priv, ptr,
+ 							adapter->tx_buf_size))
+-			mwifiex_11n_aggregate_pkt(priv, ptr, INTF_HEADER_LEN,
+-						  ptr_index, flags);
++			mwifiex_11n_aggregate_pkt(priv, ptr, ptr_index, flags);
+ 			/* ra_list_spinlock has been freed in
+ 			   mwifiex_11n_aggregate_pkt() */
+ 		else
 -- 
-Kalle Valo
+1.8.2.3
+
