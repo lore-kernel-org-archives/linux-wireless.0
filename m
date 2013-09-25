@@ -1,75 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.20]:63105 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752106Ab3IVUFp convert rfc822-to-8bit (ORCPT
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:45819 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755116Ab3IYLH7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Sep 2013 16:05:45 -0400
-Received: from 3capp-gmx-bs34.server.lan ([172.19.170.86]) by
- mrigmx.server.lan (mrigmx002) with ESMTP (Nemesis) id
- 0La1J5-1Vkojd0FIL-00liiK for <linux-wireless@vger.kernel.org>; Sun, 22 Sep
- 2013 22:05:44 +0200
-MIME-Version: 1.0
-Message-ID: <trinity-4366d417-bdc3-4e3b-a613-25b1af7a51a7-1379880343916@3capp-gmx-bs34> (sfid-20130922_220554_875221_5F1EA440)
-From: the_force@gmx.de
-To: linux-wireless@vger.kernel.org
-Subject: p54usb raspberry pi no wlan0 device
-Content-Type: text/plain; charset=UTF-8
-Date: Sun, 22 Sep 2013 22:05:44 +0200 (CEST)
+	Wed, 25 Sep 2013 07:07:59 -0400
+Message-ID: <1380107278.4503.9.camel@porter.coelho.fi> (sfid-20130925_130805_613803_84B8FEEA)
+Subject: Re: [PATCH] ti-connectivity: add wl1251 firmware and license
+From: Luca Coelho <luca@coelho.fi>
+To: Felipe Balbi <balbi@ti.com>
+Cc: ben@decadent.org.uk,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, Pavel Machek <pavel@denx.de>
+Date: Wed, 25 Sep 2013 14:07:58 +0300
+In-Reply-To: <1380107096.4503.8.camel@porter.coelho.fi>
+References: <1380033894-5007-1-git-send-email-balbi@ti.com>
+	 <1380107096.4503.8.camel@porter.coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 2013-09-25 at 14:04 +0300, Luca Coelho wrote:
+> Hi dude,
+> 
+> Great, this is cool! Finally! :)
+> 
+> A few comments...
+> 
+> 
+> On Tue, 2013-09-24 at 09:44 -0500, Felipe Balbi wrote:
+> > It's way overdue that we send these firmware
+> > blobs upstream. Thanks for everybody involved
+> > in getting this sorted out.
+> > 
+> > Cc: Luciano Coelho <luca@coelho.fi>
+> > Cc: Pavel Machek <pavel@denx.de>
+> > Signed-off-by: Felipe Balbi <balbi@ti.com>
+> > ---
+> 
+> The commit message could be a bit more descriptive rather than
+> narrative?
+> 
+> 
+> >  ti-connectivity/license-wl1251.txt |  59 +++++++++++++++++++++++++++++++++++++
+> 
+> The license file should be in the root, together with the other licenses
+> and called LICENCE.wl1251 (note the en-GB spelling).  Also, this license
+> is *very* similar to the one for WiLink6/7/8 (LICENCE.ti-connectivity),
+> except for some very minor things and the formatting.  Couldn't the same
+> one be used, for the sake of simplicity and consistency?
+> 
+> 
+> >  ti-connectivity/wl1251-fw.bin      | Bin 0 -> 194180 bytes
+> >  ti-connectivity/wl1251-nvs.bin     | Bin 0 -> 752 bytes
+> >  3 files changed, 59 insertions(+)
+> >  create mode 100644 ti-connectivity/license-wl1251.txt
+> >  create mode 100644 ti-connectivity/wl1251-fw.bin
+> >  create mode 100644 ti-connectivity/wl1251-nvs.bin
+> 
+> When sending big binary blobs, it's generally better to send pull
+> requests instead of patches.  If you add the -p option when calling git
+> pull-request, the text will include all the readable parts but will omit
+> the binary stuff.
+> 
+> Thank you very much for following up on this!
 
-Hi Folks,
- 
-i want to use an Corega WLUSB2GTST USB adapter on my Raspberry Pi linux device. I used fwextract utility with the driver file (Windows 2000 driver, nobyteswap option). So i got these 2 files:
- 
-cgwlusb200.arm
-cgwlusb201.arm
- 
-I have copied these files (i tried cgwlusb200.arm also cgwlusb201.arm) to the following location on my Raspberry Pi:
- 
-/lib/firmware/isl3887usb
-/lib/modules/3.6.11+/kernel/drivers/net/wireless/isl3887usb
- 
-After doing a modprobe p54usb, the module seems to load fine:
+Ah, and I forgot to say that you should update the WHENCE file
+accordingly too.  Check the wl12xx and wl18xx drivers for examples.
 
-root@pinulldrei:/lib/firmware# lsmod
-ModuleSize Used by
-p54usb 11627 0
-p54common 30229 1 p54usb
-crc_ccitt 1530 1 p54common
-mac80211 273979 2 p54common,p54usb
-cfg80211 184390 2 mac80211,p54common
-rfkill 18298 1 cfg80211
-tun 14995 2
-snd_bcm2835 16432 0
-snd_pcm 77728 1 snd_bcm2835
-snd_seq 53482 0
-snd_timer 20110 2 snd_pcm,snd_seq
-snd_seq_device 6462 1 snd_seq
-snd 58744 5 snd_bcm2835,snd_timer,snd_pcm,snd_seq,snd_seq_device
-snd_page_alloc 5169 1 snd_pcm
-leds_gpio 2243   0
-led_class 3570  2 leds_gpio,p54common
-root@pinulldrei:/lib/firmware#
+--
+Luca.
 
-dmesg says:
-[1031466.099404] usb 1-1.2.1: new high-speed USB device number 10 using dwc_otg
-[1031466.202908] usb 1-1.2.1: New USB device found, idVendor=07aa, idProduct=0020
-[1031466.202939] usb 1-1.2.1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
-[1031554.700433] cfg80211: Calling CRDA to update world regulatory domain
-[1031554.755865] usbcore: registered new interface driver p54usb
-
-/var/log/messages says:
-Sep 22 21:33:08 pinulldrei kernel: [1031466.099404] usb 1-1.2.1: new high-speed USB device number 10 using dwc_otg
-Sep 22 21:33:09 pinulldrei kernel: [1031466.202908] usb 1-1.2.1: New USB device found, idVendor=07aa, idProduct=0020
-Sep 22 21:33:09 pinulldrei kernel: [1031466.202939] usb 1-1.2.1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
-Sep 22 21:34:37 pinulldrei kernel: [1031554.700433] cfg80211: Calling CRDA to update world regulatory domain
-Sep 22 21:34:37 pinulldrei kernel: [1031554.755865] usbcore: registered new interface driver p54usb
-
-Everything looks fine - but no wlan0 device will be created :-( The led on the stick will not turn on, so i think i have a driver problem.
-
-How can i debug / solve this problem?!?
-
-Greetings from Germany,
-Jörg
