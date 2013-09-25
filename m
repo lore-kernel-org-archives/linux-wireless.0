@@ -1,47 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:34267 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752741Ab3IOHqy (ORCPT
+Received: from smtprelay0098.hostedemail.com ([216.40.44.98]:40039 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754503Ab3IYTiX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Sep 2013 03:46:54 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Jingoo Han <jg1.han@samsung.com>
-CC: "'John W. Linville'" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: Re: [PATCH 07/12] wireless: wil6210: remove unnecessary pci_set_drvdata()
-Date: Sun, 15 Sep 2013 10:46:50 +0300
-Message-ID: <1712658.NzU3oG495s@lx-vladimir> (sfid-20130915_094714_118951_17B16B55)
-In-Reply-To: <00b801ceae18$8e5498c0$aafdca40$%han@samsung.com>
-References: <00b101ceae16$ecb87c30$c6297490$%han@samsung.com> <00b801ceae18$8e5498c0$aafdca40$%han@samsung.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 25 Sep 2013 15:38:23 -0400
+From: Joe Perches <joe@perches.com>
+To: netdev@vger.kernel.org
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 06/11] ipw2x00: Remove extern from function prototypes
+Date: Wed, 25 Sep 2013 12:37:24 -0700
+Message-Id: <89eb744f1a77b32d6ec718618f356df3188403e7.1380137609.git.joe@perches.com> (sfid-20130925_224457_407288_4678BA96)
+In-Reply-To: <cover.1380137609.git.joe@perches.com>
+References: <cover.1380137609.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday, September 10, 2013 08:26:13 PM Jingoo Han wrote:
-> The driver core clears the driver data to NULL after device_release
-> or on probe failure. Thus, it is not needed to manually clear the
-> device driver data to NULL.
-> 
-> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
-> ---
->  drivers/net/wireless/ath/wil6210/pcie_bus.c |    1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-> index eb1dc7a..eeceab3 100644
-> --- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
-> +++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-> @@ -197,7 +197,6 @@ static void wil_pcie_remove(struct pci_dev *pdev)
->  	pci_iounmap(pdev, wil->csr);
->  	pci_release_region(pdev, 0);
->  	pci_disable_device(pdev);
-> -	pci_set_drvdata(pdev, NULL);
->  }
->  
->  static DEFINE_PCI_DEVICE_TABLE(wil6210_pcie_ids) = {
-> 
+There are a mix of function prototypes with and without extern
+in the kernel sources.  Standardize on not using extern for
+function prototypes.
 
-Here is my
+Function prototypes don't need to be written with extern.
+extern is assumed by the compiler.  Its use is as unnecessary as
+using auto to declare automatic/local variables in a block.
 
-Acked-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/net/wireless/ipw2x00/libipw.h | 87 +++++++++++++++--------------------
+ 1 file changed, 38 insertions(+), 49 deletions(-)
+
+diff --git a/drivers/net/wireless/ipw2x00/libipw.h b/drivers/net/wireless/ipw2x00/libipw.h
+index 6eede52..5ce2f59 100644
+--- a/drivers/net/wireless/ipw2x00/libipw.h
++++ b/drivers/net/wireless/ipw2x00/libipw.h
+@@ -950,66 +950,55 @@ static inline int libipw_is_cck_rate(u8 rate)
+ }
+ 
+ /* libipw.c */
+-extern void free_libipw(struct net_device *dev, int monitor);
+-extern struct net_device *alloc_libipw(int sizeof_priv, int monitor);
+-extern int libipw_change_mtu(struct net_device *dev, int new_mtu);
++void free_libipw(struct net_device *dev, int monitor);
++struct net_device *alloc_libipw(int sizeof_priv, int monitor);
++int libipw_change_mtu(struct net_device *dev, int new_mtu);
+ 
+-extern void libipw_networks_age(struct libipw_device *ieee,
+-				   unsigned long age_secs);
++void libipw_networks_age(struct libipw_device *ieee, unsigned long age_secs);
+ 
+-extern int libipw_set_encryption(struct libipw_device *ieee);
++int libipw_set_encryption(struct libipw_device *ieee);
+ 
+ /* libipw_tx.c */
+-extern netdev_tx_t libipw_xmit(struct sk_buff *skb,
+-			       struct net_device *dev);
+-extern void libipw_txb_free(struct libipw_txb *);
++netdev_tx_t libipw_xmit(struct sk_buff *skb, struct net_device *dev);
++void libipw_txb_free(struct libipw_txb *);
+ 
+ /* libipw_rx.c */
+-extern void libipw_rx_any(struct libipw_device *ieee,
+-		     struct sk_buff *skb, struct libipw_rx_stats *stats);
+-extern int libipw_rx(struct libipw_device *ieee, struct sk_buff *skb,
+-			struct libipw_rx_stats *rx_stats);
++void libipw_rx_any(struct libipw_device *ieee, struct sk_buff *skb,
++		   struct libipw_rx_stats *stats);
++int libipw_rx(struct libipw_device *ieee, struct sk_buff *skb,
++	      struct libipw_rx_stats *rx_stats);
+ /* make sure to set stats->len */
+-extern void libipw_rx_mgt(struct libipw_device *ieee,
+-			     struct libipw_hdr_4addr *header,
+-			     struct libipw_rx_stats *stats);
+-extern void libipw_network_reset(struct libipw_network *network);
++void libipw_rx_mgt(struct libipw_device *ieee, struct libipw_hdr_4addr *header,
++		   struct libipw_rx_stats *stats);
++void libipw_network_reset(struct libipw_network *network);
+ 
+ /* libipw_geo.c */
+-extern const struct libipw_geo *libipw_get_geo(struct libipw_device
+-						     *ieee);
+-extern void libipw_set_geo(struct libipw_device *ieee,
+-			     const struct libipw_geo *geo);
+-
+-extern int libipw_is_valid_channel(struct libipw_device *ieee,
+-				      u8 channel);
+-extern int libipw_channel_to_index(struct libipw_device *ieee,
+-				      u8 channel);
+-extern u8 libipw_freq_to_channel(struct libipw_device *ieee, u32 freq);
+-extern u8 libipw_get_channel_flags(struct libipw_device *ieee,
+-				      u8 channel);
+-extern const struct libipw_channel *libipw_get_channel(struct
+-							     libipw_device
+-							     *ieee, u8 channel);
+-extern u32 libipw_channel_to_freq(struct libipw_device * ieee,
+-				      u8 channel);
++const struct libipw_geo *libipw_get_geo(struct libipw_device *ieee);
++void libipw_set_geo(struct libipw_device *ieee, const struct libipw_geo *geo);
++
++int libipw_is_valid_channel(struct libipw_device *ieee, u8 channel);
++int libipw_channel_to_index(struct libipw_device *ieee, u8 channel);
++u8 libipw_freq_to_channel(struct libipw_device *ieee, u32 freq);
++u8 libipw_get_channel_flags(struct libipw_device *ieee, u8 channel);
++const struct libipw_channel *libipw_get_channel(struct libipw_device *ieee,
++						u8 channel);
++u32 libipw_channel_to_freq(struct libipw_device *ieee, u8 channel);
+ 
+ /* libipw_wx.c */
+-extern int libipw_wx_get_scan(struct libipw_device *ieee,
+-				 struct iw_request_info *info,
+-				 union iwreq_data *wrqu, char *key);
+-extern int libipw_wx_set_encode(struct libipw_device *ieee,
+-				   struct iw_request_info *info,
+-				   union iwreq_data *wrqu, char *key);
+-extern int libipw_wx_get_encode(struct libipw_device *ieee,
+-				   struct iw_request_info *info,
+-				   union iwreq_data *wrqu, char *key);
+-extern int libipw_wx_set_encodeext(struct libipw_device *ieee,
+-				      struct iw_request_info *info,
+-				      union iwreq_data *wrqu, char *extra);
+-extern int libipw_wx_get_encodeext(struct libipw_device *ieee,
+-				      struct iw_request_info *info,
+-				      union iwreq_data *wrqu, char *extra);
++int libipw_wx_get_scan(struct libipw_device *ieee, struct iw_request_info *info,
++		       union iwreq_data *wrqu, char *key);
++int libipw_wx_set_encode(struct libipw_device *ieee,
++			 struct iw_request_info *info, union iwreq_data *wrqu,
++			 char *key);
++int libipw_wx_get_encode(struct libipw_device *ieee,
++			 struct iw_request_info *info, union iwreq_data *wrqu,
++			 char *key);
++int libipw_wx_set_encodeext(struct libipw_device *ieee,
++			    struct iw_request_info *info,
++			    union iwreq_data *wrqu, char *extra);
++int libipw_wx_get_encodeext(struct libipw_device *ieee,
++			    struct iw_request_info *info,
++			    union iwreq_data *wrqu, char *extra);
+ 
+ static inline void libipw_increment_scans(struct libipw_device *ieee)
+ {
+-- 
+1.8.1.2.459.gbcd45b4.dirty
+
