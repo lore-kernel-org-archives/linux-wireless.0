@@ -1,57 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ye0-f170.google.com ([209.85.213.170]:58581 "EHLO
-	mail-ye0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754444Ab3ITMRE (ORCPT
+Received: from mail-bk0-f45.google.com ([209.85.214.45]:40763 "EHLO
+	mail-bk0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754886Ab3IYOXh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Sep 2013 08:17:04 -0400
-Date: Fri, 20 Sep 2013 07:16:52 -0500
-From: Tejun Heo <tj@kernel.org>
-To: Russell King <rmk+kernel@arm.linux.org.uk>
-Cc: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
-	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
-	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
-	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	uclinux-dist-devel@blackfin.uclinux.org,
-	Inki Dae <inki.dae@samsung.com>,
-	Joonyoung Shim <jy0922.shim@samsung.com>,
-	Seung-Woo Kim <sw0312.kim@samsung.com>,
-	Kyungmin Park <kyungmin.park@samsung.com>,
-	David Airlie <airlied@linux.ie>,
-	Kukjin Kim <kgene.kim@samsung.com>
-Subject: Re: [PATCH 39/51] DMA-API: others: use dma_set_coherent_mask()
-Message-ID: <20130920121652.GA7630@mtj.dyndns.org> (sfid-20130920_141714_729150_191B2E9E)
-References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
- <E1VMnNq-0007s4-HN@rmk-PC.arm.linux.org.uk>
+	Wed, 25 Sep 2013 10:23:37 -0400
+Message-ID: <5242F1D7.4040404@gmail.com> (sfid-20130925_162342_350983_CC96AAF4)
+Date: Wed, 25 Sep 2013 16:23:19 +0200
+From: Daniel Mack <zonque@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <E1VMnNq-0007s4-HN@rmk-PC.arm.linux.org.uk>
+To: Bing Zhao <bzhao@marvell.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"s.neumann@raumfeld.com" <s.neumann@raumfeld.com>,
+	"afenkart@gmail.com" <afenkart@gmail.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"johannes.berg@intel.com" <johannes.berg@intel.com>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: Re: [PATCH 3.12] mwifiex: queue main work from main process when
+ bailing on races
+References: <1379442330-18249-1-git-send-email-zonque@gmail.com> <477F20668A386D41ADCC57781B1F70430F44C5880A@SC-VEXCH1.marvell.com>
+In-Reply-To: <477F20668A386D41ADCC57781B1F70430F44C5880A@SC-VEXCH1.marvell.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 20, 2013 at 12:11:38AM +0100, Russell King wrote:
-> The correct way for a driver to specify the coherent DMA mask is
-> not to directly access the field in the struct device, but to use
-> dma_set_coherent_mask().  Only arch and bus code should access this
-> member directly.
+On 17.09.2013 21:15, Bing Zhao wrote:
+>> Queue main_work in case mwifiex_main_process() bails due to an already
+>> processed transaction. This is particularly necessary because
+>> mwifiex_main_process() is called from both the SDIO interrupt handler and
+>> the workqueue. In case an interrupt occurs while the main process is
+>> currently executed from the workqueue, the interrupt is lost, resulting in a
+>> command timeout and consequently a card reset.
+>>
+>> I'm marking this for stable kernel in version 3.7+, because on our platform,
+>> the issue appears since 601216e12c ("mwifiex: process RX packets in SDIO
+>> IRQ thread directly") went in.
+>>
+>> Signed-off-by: Daniel Mack <zonque@gmail.com>
+>> Reported-by: Sven Neumann <s.neumann@raumfeld.com>
+>> Reported-by: Andreas Fenkart <afenkart@gmail.com>
+>> Cc: Bing Zhao <bzhao@marvell.com>
+>> Cc: <stable@vger.kernel.org> [v3.7+]
 > 
-> Convert all direct write accesses to using the correct API.
+> Acked-by: Bing Zhao <bzhao@marvell.com>
+
+John, could you pick this one?
+
+
+Many thanks,
+Daniel
+
+
 > 
-> Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+> Thanks,
+> Bing
+> 
+>> ---
+>>  drivers/net/wireless/mwifiex/main.c | 1 +
+>>  1 file changed, 1 insertion(+)
+>>
+>> diff --git a/drivers/net/wireless/mwifiex/main.c
+>> b/drivers/net/wireless/mwifiex/main.c
+>> index ff4ed96..0700bc2 100644
+>> --- a/drivers/net/wireless/mwifiex/main.c
+>> +++ b/drivers/net/wireless/mwifiex/main.c
+>> @@ -235,6 +235,7 @@ int mwifiex_main_process(struct mwifiex_adapter
+>> *adapter)
+>>  	/* Check if already processing */
+>>  	if (adapter->mwifiex_processing) {
+>>  		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
+>> +		queue_work(adapter->workqueue, &adapter->main_work);
+>>  		goto exit_main_proc;
+>>  	} else {
+>>  		adapter->mwifiex_processing = true;
+>> --
+>> 1.8.3.1
+> 
 
-Acked-by: Tejun Heo <tj@kernel.org>
-
-The patch is pretty widely spread.  I don't mind how it gets routed
-but what's the plan?
-
-Thanks.
-
--- 
-tejun
