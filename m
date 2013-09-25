@@ -1,60 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f180.google.com ([209.85.217.180]:43769 "EHLO
-	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752738Ab3ILPeG (ORCPT
+Received: from smtprelay0174.hostedemail.com ([216.40.44.174]:50112 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755426Ab3IYTil (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Sep 2013 11:34:06 -0400
-From: Vladimir Murzin <murzin.v@gmail.com>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: coelho@ti.com, linville@tuxdriver.com,
-	Vladimir Murzin <murzin.v@gmail.com>
-Subject: [PATCH 2/3] wl12xx/wl18xx: limit base for aggregate buffer size to 4K
-Date: Thu, 12 Sep 2013 17:32:22 +0200
-Message-Id: <1378999943-1968-3-git-send-email-murzin.v@gmail.com> (sfid-20130912_173414_867074_7E2C27AC)
-In-Reply-To: <1378999943-1968-1-git-send-email-murzin.v@gmail.com>
-References: <1378999943-1968-1-git-send-email-murzin.v@gmail.com>
+	Wed, 25 Sep 2013 15:38:41 -0400
+From: Joe Perches <joe@perches.com>
+To: netdev@vger.kernel.org
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Bing Zhao <bzhao@marvell.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 09/11] mwifiex: Remove extern from function prototypes
+Date: Wed, 25 Sep 2013 12:37:27 -0700
+Message-Id: <b3a7cd194857b3dc099e8f8bb0ed97bb4a1b5fde.1380137610.git.joe@perches.com> (sfid-20130925_224500_292350_B5D0F981)
+In-Reply-To: <cover.1380137609.git.joe@perches.com>
+References: <cover.1380137609.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-WL{12,18}XX_AGGR_BUFFER_SIZE is depends on PAGE_SIZE which may be more
-than 4K. In this case memory might be aggressively wasted.
+There are a mix of function prototypes with and without extern
+in the kernel sources.  Standardize on not using extern for
+function prototypes.
 
-Use 4K size base for buffer explicitly.
+Function prototypes don't need to be written with extern.
+extern is assumed by the compiler.  Its use is as unnecessary as
+using auto to declare automatic/local variables in a block.
 
-Signed-off-by: Vladimir Murzin <murzin.v@gmail.com>
+Signed-off-by: Joe Perches <joe@perches.com>
 ---
- drivers/net/wireless/ti/wl12xx/wl12xx.h |    3 ++-
- drivers/net/wireless/ti/wl18xx/wl18xx.h |    3 ++-
- 2 files changed, 4 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mwifiex/wmm.h | 24 ++++++++++--------------
+ 1 file changed, 10 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wl12xx/wl12xx.h b/drivers/net/wireless/ti/wl12xx/wl12xx.h
-index 9e5484a..3649d40 100644
---- a/drivers/net/wireless/ti/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/ti/wl12xx/wl12xx.h
-@@ -56,7 +56,8 @@
- #define WL128X_SUBTYPE_MR_VER	WLCORE_FW_VER_IGNORE
- #define WL128X_MINOR_MR_VER	42
+diff --git a/drivers/net/wireless/mwifiex/wmm.h b/drivers/net/wireless/mwifiex/wmm.h
+index 644d6e0..0f129d4 100644
+--- a/drivers/net/wireless/mwifiex/wmm.h
++++ b/drivers/net/wireless/mwifiex/wmm.h
+@@ -83,11 +83,10 @@ mwifiex_wmm_is_ra_list_empty(struct list_head *ra_list_hhead)
+ }
  
--#define WL12XX_AGGR_BUFFER_SIZE	(4 * PAGE_SIZE)
-+#define WL12XX_PAGE_SIZE	4096
-+#define WL12XX_AGGR_BUFFER_SIZE	(4 * WL12XX_PAGE_SIZE)
+ void mwifiex_wmm_add_buf_txqueue(struct mwifiex_private *priv,
+-					struct sk_buff *skb);
++				 struct sk_buff *skb);
+ void mwifiex_ralist_add(struct mwifiex_private *priv, u8 *ra);
+ void mwifiex_rotate_priolists(struct mwifiex_private *priv,
+-			      struct mwifiex_ra_list_tbl *ra,
+-			      int tid);
++			      struct mwifiex_ra_list_tbl *ra, int tid);
  
- #define WL12XX_NUM_TX_DESCRIPTORS 16
- #define WL12XX_NUM_RX_DESCRIPTORS 8
-diff --git a/drivers/net/wireless/ti/wl18xx/wl18xx.h b/drivers/net/wireless/ti/wl18xx/wl18xx.h
-index 9204e07..a3214b4 100644
---- a/drivers/net/wireless/ti/wl18xx/wl18xx.h
-+++ b/drivers/net/wireless/ti/wl18xx/wl18xx.h
-@@ -33,7 +33,8 @@
+ int mwifiex_wmm_lists_empty(struct mwifiex_adapter *adapter);
+ void mwifiex_wmm_process_tx(struct mwifiex_adapter *adapter);
+@@ -95,21 +94,18 @@ int mwifiex_is_ralist_valid(struct mwifiex_private *priv,
+ 			    struct mwifiex_ra_list_tbl *ra_list, int tid);
  
- #define WL18XX_CMD_MAX_SIZE          740
+ u8 mwifiex_wmm_compute_drv_pkt_delay(struct mwifiex_private *priv,
+-					     const struct sk_buff *skb);
++				     const struct sk_buff *skb);
+ void mwifiex_wmm_init(struct mwifiex_adapter *adapter);
  
--#define WL18XX_AGGR_BUFFER_SIZE		(13 * PAGE_SIZE)
-+#define WL18XX_PAGE_SIZE		4096
-+#define WL18XX_AGGR_BUFFER_SIZE		(13 * WL18XX_PAGE_SIZE)
+-extern u32 mwifiex_wmm_process_association_req(struct mwifiex_private *priv,
+-						 u8 **assoc_buf,
+-						 struct ieee_types_wmm_parameter
+-						 *wmmie,
+-						 struct ieee80211_ht_cap
+-						 *htcap);
++u32 mwifiex_wmm_process_association_req(struct mwifiex_private *priv,
++					u8 **assoc_buf,
++					struct ieee_types_wmm_parameter *wmmie,
++					struct ieee80211_ht_cap *htcap);
  
- #define WL18XX_NUM_TX_DESCRIPTORS 32
- #define WL18XX_NUM_RX_DESCRIPTORS 32
+ void mwifiex_wmm_setup_queue_priorities(struct mwifiex_private *priv,
+-					struct ieee_types_wmm_parameter
+-					*wmm_ie);
++					struct ieee_types_wmm_parameter *wmm_ie);
+ void mwifiex_wmm_setup_ac_downgrade(struct mwifiex_private *priv);
+-extern int mwifiex_ret_wmm_get_status(struct mwifiex_private *priv,
+-				      const struct host_cmd_ds_command *resp);
++int mwifiex_ret_wmm_get_status(struct mwifiex_private *priv,
++			       const struct host_cmd_ds_command *resp);
+ 
+ #endif /* !_MWIFIEX_WMM_H_ */
 -- 
-1.7.10.4
+1.8.1.2.459.gbcd45b4.dirty
 
