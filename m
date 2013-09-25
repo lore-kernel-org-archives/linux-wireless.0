@@ -1,42 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:13429 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756601Ab3IKQK2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Sep 2013 12:10:28 -0400
-Message-ID: <1378916091.1693.21.camel@dcbw.foobar.com> (sfid-20130911_181351_047366_5CD2FFB1)
-Subject: Re: No connection with TP-Link TL-WN823N (rtl8192cu)
-From: Dan Williams <dcbw@redhat.com>
-To: Vincent Thiele <vincentthiele@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Date: Wed, 11 Sep 2013 11:14:51 -0500
-In-Reply-To: <CAEZsi7FY8HdBcb0p1svijAdFjB0MbrYv_Zft0B_+RQTpGWCnhQ@mail.gmail.com>
-References: <CAEZsi7Hde5NyTRgm7Lf_4LvHMAEJouzaqMNUwxr-iSipuEcsyQ@mail.gmail.com>
-	 <522E4315.4040806@lwfinger.net> <1378764913.31180.9.camel@dcbw.foobar.com>
-	 <CAEZsi7FY8HdBcb0p1svijAdFjB0MbrYv_Zft0B_+RQTpGWCnhQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ob0-f181.google.com ([209.85.214.181]:57662 "EHLO
+	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753927Ab3IYR6H (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Sep 2013 13:58:07 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 1/8 V4] rtlwifi: rtl8192du: Fix smatch errors in /rtl8192de/dm.c
+Date: Wed, 25 Sep 2013 12:57:42 -0500
+Message-Id: <1380131869-19185-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130925_221658_543567_99B6F1DC)
+In-Reply-To: <1380131869-19185-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1380131869-19185-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some relevant bits:
+Smatch lists the following:
+  CHECK   drivers/net/wireless/rtlwifi/rtl8192de/dm.c
+drivers/net/wireless/rtlwifi/rtl8192de/dm.c:1054 rtl92d_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'ofdm_index' 2 <= 2
+drivers/net/wireless/rtlwifi/rtl8192de/dm.c:1056 rtl92d_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'ofdm_index' 2 <= 2
+drivers/net/wireless/rtlwifi/rtl8192de/dm.c:1126 rtl92d_dm_txpower_tracking_callback_thermalmeter() debug: remove_pools: nr_children over 4000 (4596). (rtlpriv->dbg.global_debuglevel merged)
+drivers/net/wireless/rtlwifi/rtl8192de/dm.c:1126 rtl92d_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'cckswing_table_ch1ch13' 33 <= 255
+drivers/net/wireless/rtlwifi/rtl8192de/dm.c:1129 rtl92d_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'cckswing_table_ch1ch13' 33 <= 255
+drivers/net/wireless/rtlwifi/rtl8192de/dm.c:1132 rtl92d_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'cckswing_table_ch1ch13' 33 <= 255
+drivers/net/wireless/rtlwifi/rtl8192de/dm.c:1135 rtl92d_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'cckswing_table_ch1ch13' 33 <= 255
+drivers/net/wireless/rtlwifi/rtl8192de/dm.c:1138 rtl92d_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'cckswing_table_ch1ch13' 33 <= 255
+drivers/net/wireless/rtlwifi/rtl8192de/dm.c:1141 rtl92d_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'cckswing_table_ch1ch13' 33 <= 255
+drivers/net/wireless/rtlwifi/rtl8192de/dm.c:1144 rtl92d_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'cckswing_table_ch1ch13' 33 <= 255
+drivers/net/wireless/rtlwifi/rtl8192de/dm.c:1147 rtl92d_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'cckswing_table_ch1ch13' 33 <= 255
+drivers/net/wireless/rtlwifi/rtl8192de/dm.c:1151 rtl92d_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'cckswing_table_ch14' 33 <= 255
+drivers/net/wireless/rtlwifi/rtl8192de/dm.c:1154 rtl92d_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'cckswing_table_ch14' 33 <= 255
+drivers/net/wireless/rtlwifi/rtl8192de/dm.c:1157 rtl92d_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'cckswing_table_ch14' 33 <= 255
+drivers/net/wireless/rtlwifi/rtl8192de/dm.c:1160 rtl92d_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'cckswing_table_ch14' 33 <= 255
+drivers/net/wireless/rtlwifi/rtl8192de/dm.c:1163 rtl92d_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'cckswing_table_ch14' 33 <= 255
+drivers/net/wireless/rtlwifi/rtl8192de/dm.c:1166 rtl92d_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'cckswing_table_ch14' 33 <= 255
+drivers/net/wireless/rtlwifi/rtl8192de/dm.c:1169 rtl92d_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'cckswing_table_ch14' 33 <= 255
+drivers/net/wireless/rtlwifi/rtl8192de/dm.c:1172 rtl92d_dm_txpower_tracking_callback_thermalmeter() error: buffer overflow 'cckswing_table_ch14' 33 <= 255
 
-Sep 11 16:49:38 Arbeits-PC NetworkManager[1104]: <info> (wlan0): supplicant interface state: 4-way handshake -> completed
-Sep 11 16:49:44 Arbeits-PC kernel: [ 1749.454788] wlan0: Connection to AP a0:f3:c1:05:80:ec lost
-Sep 11 16:49:45 Arbeits-PC wpa_supplicant[1205]: wlan0: CTRL-EVENT-DISCONNECTED bssid=a0:f3:c1:05:80:ec reason=4
-Sep 11 16:49:45 Arbeits-PC NetworkManager[1104]: <info> (wlan0): supplicant interface state: completed -> disconnected
-Sep 11 16:49:45 Arbeits-PC NetworkManager[1104]: <info> (wlan0): supplicant interface state: disconnected -> scanning
-Sep 11 16:49:45 Arbeits-PC wpa_supplicant[1205]: wlan0: SME: Trying to authenticate with a0:f3:c1:05:80:ec (SSID='WG-WLAN' freq=2427 MHz)
-Sep 11 16:49:45 Arbeits-PC kernel: [ 1750.282343] wlan0: authenticate with a0:f3:c1:05:80:ec
-Sep 11 16:49:45 Arbeits-PC NetworkManager[1104]: <info> (wlan0): supplicant interface state: scanning -> authenticating
-Sep 11 16:49:45 Arbeits-PC kernel: [ 1750.306287] wlan0: send auth to a0:f3:c1:05:80:ec (try 1/3)
-Sep 11 16:49:45 Arbeits-PC kernel: [ 1750.410098] wlan0: send auth to a0:f3:c1:05:80:ec (try 2/3)
-Sep 11 16:49:46 Arbeits-PC kernel: [ 1750.514232] wlan0: send auth to a0:f3:c1:05:80:ec (try 3/3)
-Sep 11 16:49:46 Arbeits-PC kernel: [ 1750.618374] wlan0: authentication with a0:f3:c1:05:80:ec timed out
+This patch fixes several off-by-one errors. It also removes a comment
+referencing variable 'noise' in the rts_stats struct.
 
-So the AP is disconnecting the device a couple seconds with reason 4,
-which is "Disassociated due to inactivity".  My thought is that this
-points to a driver bug (Larry?).
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/rtl8192de/dm.c  | 8 ++++++--
+ drivers/net/wireless/rtlwifi/rtl8192de/trx.c | 1 -
+ 2 files changed, 6 insertions(+), 3 deletions(-)
 
-Dan
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/dm.c b/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
+index 47875ba..eaeee77 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
+@@ -840,9 +840,9 @@ static void rtl92d_dm_txpower_tracking_callback_thermalmeter(
+ 	bool internal_pa = false;
+ 	long ele_a = 0, ele_d, temp_cck, val_x, value32;
+ 	long val_y, ele_c = 0;
+-	u8 ofdm_index[2];
++	u8 ofdm_index[3];
+ 	s8 cck_index = 0;
+-	u8 ofdm_index_old[2] = {0, 0};
++	u8 ofdm_index_old[3] = {0, 0, 0};
+ 	s8 cck_index_old = 0;
+ 	u8 index;
+ 	int i;
+@@ -1118,6 +1118,10 @@ static void rtl92d_dm_txpower_tracking_callback_thermalmeter(
+ 				 val_x, val_y, ele_a, ele_c, ele_d,
+ 				 val_x, val_y);
+ 
++			if (cck_index >= CCK_TABLE_SIZE)
++				cck_index = CCK_TABLE_SIZE - 1;
++			if (cck_index < 0)
++				cck_index = 0;
+ 			if (rtlhal->current_bandtype == BAND_ON_2_4G) {
+ 				/* Adjust CCK according to IQK result */
+ 				if (!rtlpriv->dm.cck_inch14) {
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/trx.c b/drivers/net/wireless/rtlwifi/rtl8192de/trx.c
+index b8ec718..945ddec 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/trx.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/trx.c
+@@ -526,7 +526,6 @@ bool rtl92de_rx_query_desc(struct ieee80211_hw *hw,	struct rtl_stats *stats,
+ 	}
+ 	/*rx_status->qual = stats->signal; */
+ 	rx_status->signal = stats->rssi + 10;
+-	/*rx_status->noise = -stats->noise; */
+ 	return true;
+ }
+ 
+-- 
+1.8.1.4
 
