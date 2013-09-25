@@ -1,41 +1,190 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f52.google.com ([209.85.214.52]:43201 "EHLO
-	mail-bk0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752588Ab3IKFGr convert rfc822-to-8bit (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:44442 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755543Ab3IYVIp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Sep 2013 01:06:47 -0400
-Received: by mail-bk0-f52.google.com with SMTP id e11so3239486bkh.25
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Sep 2013 22:06:46 -0700 (PDT)
+	Wed, 25 Sep 2013 17:08:45 -0400
+Subject: [PATCH 2/3] ath10k: store separate pointers for firmware data
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 26 Sep 2013 00:08:39 +0300
+Message-ID: <20130925210839.2596.33661.stgit@localhost6.localdomain6> (sfid-20130925_230849_649379_1A500D5C)
+In-Reply-To: <20130925210455.2596.36889.stgit@localhost6.localdomain6>
+References: <20130925210455.2596.36889.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-In-Reply-To: <20130910141413.GE29385@localhost>
-References: <1378821003-22925-1-git-send-email-michal.kazior@tieto.com>
-	<1378821003-22925-2-git-send-email-michal.kazior@tieto.com>
-	<20130910141413.GE29385@localhost>
-Date: Wed, 11 Sep 2013 07:06:46 +0200
-Message-ID: <CA+BoTQ=E6NpACFWkgFthbY4AjNp_nbfF1kKkQb9iPrAkD6SBfw@mail.gmail.com> (sfid-20130911_070700_912343_7D36BEB6)
-Subject: Re: [PATCH 1/7] ath10k: simplify HTC credits calculation
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: ath10k@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10 September 2013 16:14, Bob Copeland <me@bobcopeland.com> wrote:
-> On Tue, Sep 10, 2013 at 03:49:57PM +0200, Michal Kazior wrote:
->> +             skb = __skb_dequeue(&ep->tx_queue);
->> +
->> +             if (ep->tx_credit_flow_enabled) {
->> +                     /* integer division w/ round-up */
->> +                     credits = (skb->len + htc->target_credit_size - 1) /
->> +                               htc->target_credit_size;
->
-> There's a macro for that...
->
->             credits = DIV_ROUND_UP(skb->len, htc->target_credit_size);
+Needed for firmware IE formatted images.
 
-I didn't know that. Thanks!
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c |   43 ++++++++++++++++++++++----------
+ drivers/net/wireless/ath/ath10k/core.h |    8 ++++++
+ 2 files changed, 37 insertions(+), 14 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index e07c487..6a354f7 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -189,8 +189,7 @@ static const struct firmware *ath10k_fetch_fw_file(struct ath10k *ar,
+ 	return fw;
+ }
+ 
+-static int ath10k_push_board_ext_data(struct ath10k *ar,
+-				      const struct firmware *fw)
++static int ath10k_push_board_ext_data(struct ath10k *ar)
+ {
+ 	u32 board_data_size = QCA988X_BOARD_DATA_SZ;
+ 	u32 board_ext_data_size = QCA988X_BOARD_EXT_DATA_SZ;
+@@ -210,14 +209,14 @@ static int ath10k_push_board_ext_data(struct ath10k *ar,
+ 	if (board_ext_data_addr == 0)
+ 		return 0;
+ 
+-	if (fw->size != (board_data_size + board_ext_data_size)) {
++	if (ar->board_len != (board_data_size + board_ext_data_size)) {
+ 		ath10k_err("invalid board (ext) data sizes %zu != %d+%d\n",
+-			   fw->size, board_data_size, board_ext_data_size);
++			   ar->board_len, board_data_size, board_ext_data_size);
+ 		return -EINVAL;
+ 	}
+ 
+ 	ret = ath10k_bmi_write_memory(ar, board_ext_data_addr,
+-				      fw->data + board_data_size,
++				      ar->board_data + board_data_size,
+ 				      board_ext_data_size);
+ 	if (ret) {
+ 		ath10k_err("could not write board ext data (%d)\n", ret);
+@@ -236,12 +235,11 @@ static int ath10k_push_board_ext_data(struct ath10k *ar,
+ 
+ static int ath10k_download_board_data(struct ath10k *ar)
+ {
+-	const struct firmware *fw = ar->board;
+ 	u32 board_data_size = QCA988X_BOARD_DATA_SZ;
+ 	u32 address;
+ 	int ret;
+ 
+-	ret = ath10k_push_board_ext_data(ar, fw);
++	ret = ath10k_push_board_ext_data(ar);
+ 	if (ret) {
+ 		ath10k_err("could not push board ext data (%d)\n", ret);
+ 		goto exit;
+@@ -253,8 +251,9 @@ static int ath10k_download_board_data(struct ath10k *ar)
+ 		goto exit;
+ 	}
+ 
+-	ret = ath10k_bmi_write_memory(ar, address, fw->data,
+-				      min_t(u32, board_data_size, fw->size));
++	ret = ath10k_bmi_write_memory(ar, address, ar->board_data,
++				      min_t(u32, board_data_size,
++					    ar->board_len));
+ 	if (ret) {
+ 		ath10k_err("could not write board data (%d)\n", ret);
+ 		goto exit;
+@@ -272,17 +271,16 @@ exit:
+ 
+ static int ath10k_download_and_run_otp(struct ath10k *ar)
+ {
+-	const struct firmware *fw = ar->otp;
+ 	u32 address = ar->hw_params.patch_load_addr;
+ 	u32 exec_param;
+ 	int ret;
+ 
+ 	/* OTP is optional */
+ 
+-	if (!ar->otp)
++	if (!ar->otp_data || !ar->otp_len)
+ 		return 0;
+ 
+-	ret = ath10k_bmi_fast_download(ar, address, fw->data, fw->size);
++	ret = ath10k_bmi_fast_download(ar, address, ar->otp_data, ar->otp_len);
+ 	if (ret) {
+ 		ath10k_err("could not write otp (%d)\n", ret);
+ 		goto exit;
+@@ -301,13 +299,13 @@ exit:
+ 
+ static int ath10k_download_fw(struct ath10k *ar)
+ {
+-	const struct firmware *fw = ar->firmware;
+ 	u32 address;
+ 	int ret;
+ 
+ 	address = ar->hw_params.patch_load_addr;
+ 
+-	ret = ath10k_bmi_fast_download(ar, address, fw->data, fw->size);
++	ret = ath10k_bmi_fast_download(ar, address, ar->firmware_data,
++				       ar->firmware_len);
+ 	if (ret) {
+ 		ath10k_err("could not write fw (%d)\n", ret);
+ 		goto exit;
+@@ -329,8 +327,16 @@ static void ath10k_core_free_firmware_files(struct ath10k *ar)
+ 		release_firmware(ar->firmware);
+ 
+ 	ar->board = NULL;
++	ar->board_data = NULL;
++	ar->board_len = 0;
++
+ 	ar->otp = NULL;
++	ar->otp_data = NULL;
++	ar->otp_len = 0;
++
+ 	ar->firmware = NULL;
++	ar->firmware_data = NULL;
++	ar->firmware_len = 0;
+ }
+ 
+ static int ath10k_core_fetch_firmware_files(struct ath10k *ar)
+@@ -356,6 +362,9 @@ static int ath10k_core_fetch_firmware_files(struct ath10k *ar)
+ 		goto err;
+ 	}
+ 
++	ar->board_data = ar->board->data;
++	ar->board_len = ar->board->size;
++
+ 	ar->firmware = ath10k_fetch_fw_file(ar,
+ 					    ar->hw_params.fw.dir,
+ 					    ar->hw_params.fw.fw);
+@@ -365,6 +374,9 @@ static int ath10k_core_fetch_firmware_files(struct ath10k *ar)
+ 		goto err;
+ 	}
+ 
++	ar->firmware_data = ar->firmware->data;
++	ar->firmware_len = ar->firmware->size;
++
+ 	/* OTP may be undefined. If so, don't fetch it at all */
+ 	if (ar->hw_params.fw.otp == NULL)
+ 		return 0;
+@@ -378,6 +390,9 @@ static int ath10k_core_fetch_firmware_files(struct ath10k *ar)
+ 		goto err;
+ 	}
+ 
++	ar->otp_data = ar->otp->data;
++	ar->otp_len = ar->otp->size;
++
+ 	return 0;
+ 
+ err:
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 12b03b6..511b20d 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -325,8 +325,16 @@ struct ath10k {
+ 	} hw_params;
+ 
+ 	const struct firmware *board;
++	const void *board_data;
++	size_t board_len;
++
+ 	const struct firmware *otp;
++	const void *otp_data;
++	size_t otp_len;
++
+ 	const struct firmware *firmware;
++	const void *firmware_data;
++	size_t firmware_len;
+ 
+ 	struct {
+ 		struct completion started;
 
-Michał.
