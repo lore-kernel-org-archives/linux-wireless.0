@@ -1,79 +1,220 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:2426 "EHLO mx1.redhat.com"
+Received: from ebb06.tieto.com ([131.207.168.38]:61761 "EHLO ebb06.tieto.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751321Ab3IIKgv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Sep 2013 06:36:51 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: users@rt2x00.serialmonkey.com
-Subject: [PATCH 1/2] rt2800: change initialization sequence to fix system freeze
-Date: Mon,  9 Sep 2013 12:37:37 +0200
-Message-Id: <1378723058-7858-1-git-send-email-sgruszka@redhat.com> (sfid-20130909_123655_490156_054B5EAD)
+	id S1754561Ab3IYJib (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Sep 2013 05:38:31 -0400
+From: Bartosz Markowski <bartosz.markowski@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Bartosz Markowski <bartosz.markowski@tieto.com>
+Subject: [PATCH 08/13] ath10k: bring back the WMI path for mgmt frames
+Date: Wed, 25 Sep 2013 11:38:06 +0200
+Message-ID: <1380101891-18312-9-git-send-email-bartosz.markowski@tieto.com> (sfid-20130925_113836_654845_283F4B1E)
+In-Reply-To: <1380101891-18312-1-git-send-email-bartosz.markowski@tieto.com>
+References: <1380101891-18312-1-git-send-email-bartosz.markowski@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-My commit
+This is still used by the 10.X firmware.
 
-commit c630ccf1a127578421a928489d51e99c05037054
-Author: Stanislaw Gruszka <stf_xl@wp.pl>
-Date:   Sat Mar 16 19:19:46 2013 +0100
-
-    rt2800: rearrange bbp/rfcsr initialization
-
-make Maxim machine freeze when try to start wireless device.
-
-Initialization order and sending MCU_BOOT_SIGNAL request, changed in
-above commit, is important. Doing things incorrectly make PCIe bus
-problems, which can froze the machine.
-
-This patch change initialization sequence like vendor driver do:
-function NICInitializeAsic() from
-2011_1007_RT5390_RT5392_Linux_STA_V2.5.0.3_DPO (PCI devices) and
-DPO_RT5572_LinuxSTA_2.6.1.3_20121022 (according Mediatek, latest driver
-for RT8070/RT3070/RT3370/RT3572/RT5370/RT5372/RT5572 USB devices).
-It fixes freezes on Maxim system.
-
-Resolve:
-https://bugzilla.redhat.com/show_bug.cgi?id=1000679
-
-Reported-and-tested-by: Maxim Polyakov <polyakov@dexmalabs.com>
-Bisected-by: Igor Gnatenko <i.gnatenko.brain@gmail.com>
-Cc: stable@vger.kernel.org # 3.10+
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
 ---
- drivers/net/wireless/rt2x00/rt2800lib.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.h   |    5 ++-
+ drivers/net/wireless/ath/ath10k/htt_tx.c |    4 +--
+ drivers/net/wireless/ath/ath10k/mac.c    |   27 ++++++++++------
+ drivers/net/wireless/ath/ath10k/wmi.c    |   49 ++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h    |    1 +
+ 5 files changed, 73 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index d217c9e..8f6820a 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -6631,19 +6631,20 @@ int rt2800_enable_radio(struct rt2x00_dev *rt2x00dev)
- 		     rt2800_init_registers(rt2x00dev)))
- 		return -EIO;
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 0c9e6f3..377560d 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -49,9 +49,9 @@ struct ath10k_skb_cb {
+ 	dma_addr_t paddr;
+ 	bool is_mapped;
+ 	bool is_aborted;
++	u8 vdev_id;
  
-+	if (unlikely(rt2800_wait_bbp_rf_ready(rt2x00dev)))
-+		return -EIO;
+ 	struct {
+-		u8 vdev_id;
+ 		u8 tid;
+ 		bool is_offchan;
+ 
+@@ -284,6 +284,9 @@ enum ath10k_fw_features {
+ 	/* firmware from 10X branch */
+ 	ATH10K_FW_FEATURE_10X = 1,
+ 
++	/* firmware support tx frame management over WMI, otherwise it's HTT */
++	ATH10K_FW_FEATURE_HAS_WMI_MGMT_TX = 2,
 +
- 	/*
- 	 * Send signal to firmware during boot time.
- 	 */
- 	rt2800_register_write(rt2x00dev, H2M_BBP_AGENT, 0);
- 	rt2800_register_write(rt2x00dev, H2M_MAILBOX_CSR, 0);
--	if (rt2x00_is_usb(rt2x00dev)) {
-+	if (rt2x00_is_usb(rt2x00dev))
- 		rt2800_register_write(rt2x00dev, H2M_INT_SRC, 0);
--		rt2800_mcu_request(rt2x00dev, MCU_BOOT_SIGNAL, 0, 0, 0);
--	}
-+	rt2800_mcu_request(rt2x00dev, MCU_BOOT_SIGNAL, 0, 0, 0);
- 	msleep(1);
+ 	/* keep last */
+ 	ATH10K_FW_FEATURE_COUNT,
+ };
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index 3b93c6a..d9335e9 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -308,7 +308,7 @@ int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 	struct sk_buff *txdesc = NULL;
+ 	struct htt_cmd *cmd;
+ 	struct ath10k_skb_cb *skb_cb = ATH10K_SKB_CB(msdu);
+-	u8 vdev_id = skb_cb->htt.vdev_id;
++	u8 vdev_id = skb_cb->vdev_id;
+ 	int len = 0;
+ 	int msdu_id = -1;
+ 	int res;
+@@ -384,7 +384,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 	struct ath10k_skb_cb *skb_cb = ATH10K_SKB_CB(msdu);
+ 	struct sk_buff *txdesc = NULL;
+ 	bool use_frags;
+-	u8 vdev_id = ATH10K_SKB_CB(msdu)->htt.vdev_id;
++	u8 vdev_id = ATH10K_SKB_CB(msdu)->vdev_id;
+ 	u8 tid;
+ 	int prefetch_len, desc_len;
+ 	int msdu_id = -1;
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 99a9bad..18fae5e 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1489,7 +1489,7 @@ static void ath10k_tx_h_add_p2p_noa_ie(struct ath10k *ar, struct sk_buff *skb)
+ static void ath10k_tx_htt(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+-	int ret;
++	int ret = 0;
  
--	if (unlikely(rt2800_wait_bbp_rf_ready(rt2x00dev) ||
--		     rt2800_wait_bbp_ready(rt2x00dev)))
-+	if (unlikely(rt2800_wait_bbp_ready(rt2x00dev)))
- 		return -EIO;
+ 	if (ar->htt.target_version_major >= 3) {
+ 		/* Since HTT 3.0 there is no separate mgmt tx command */
+@@ -1497,16 +1497,23 @@ static void ath10k_tx_htt(struct ath10k *ar, struct sk_buff *skb)
+ 		goto exit;
+ 	}
  
- 	rt2800_init_bbp(rt2x00dev);
+-	if (ieee80211_is_mgmt(hdr->frame_control))
+-		ret = ath10k_htt_mgmt_tx(&ar->htt, skb);
+-	else if (ieee80211_is_nullfunc(hdr->frame_control))
++	if (ieee80211_is_mgmt(hdr->frame_control)) {
++		if (test_bit(ATH10K_FW_FEATURE_HAS_WMI_MGMT_TX,
++			     ar->fw_features))
++			ret = ath10k_wmi_mgmt_tx(ar, skb);
++		else
++			ret = ath10k_htt_mgmt_tx(&ar->htt, skb);
++	} else if (!test_bit(ATH10K_FW_FEATURE_HAS_WMI_MGMT_TX,
++			     ar->fw_features) &&
++		   ieee80211_is_nullfunc(hdr->frame_control)) {
+ 		/* FW does not report tx status properly for NullFunc frames
+ 		 * unless they are sent through mgmt tx path. mac80211 sends
+-		 * those frames when it detects link/beacon loss and depends on
+-		 * the tx status to be correct. */
++		 * those frames when it detects link/beacon loss and depends
++		 * on the tx status to be correct. */
+ 		ret = ath10k_htt_mgmt_tx(&ar->htt, skb);
+-	else
++	} else {
+ 		ret = ath10k_htt_tx(&ar->htt, skb);
++	}
+ 
+ exit:
+ 	if (ret) {
+@@ -1557,7 +1564,7 @@ void ath10k_offchan_tx_work(struct work_struct *work)
+ 
+ 		hdr = (struct ieee80211_hdr *)skb->data;
+ 		peer_addr = ieee80211_get_DA(hdr);
+-		vdev_id = ATH10K_SKB_CB(skb)->htt.vdev_id;
++		vdev_id = ATH10K_SKB_CB(skb)->vdev_id;
+ 
+ 		spin_lock_bh(&ar->data_lock);
+ 		peer = ath10k_peer_find(ar, vdev_id, peer_addr);
+@@ -1757,14 +1764,14 @@ static void ath10k_tx(struct ieee80211_hw *hw,
+ 		ath10k_tx_h_seq_no(skb);
+ 	}
+ 
++	ATH10K_SKB_CB(skb)->vdev_id = vdev_id;
+ 	ATH10K_SKB_CB(skb)->htt.is_offchan = false;
+-	ATH10K_SKB_CB(skb)->htt.vdev_id = vdev_id;
+ 	ATH10K_SKB_CB(skb)->htt.tid = tid;
+ 
+ 	if (info->flags & IEEE80211_TX_CTL_TX_OFFCHAN) {
+ 		spin_lock_bh(&ar->data_lock);
+ 		ATH10K_SKB_CB(skb)->htt.is_offchan = true;
+-		ATH10K_SKB_CB(skb)->htt.vdev_id = ar->scan.vdev_id;
++		ATH10K_SKB_CB(skb)->vdev_id = ar->scan.vdev_id;
+ 		spin_unlock_bh(&ar->data_lock);
+ 
+ 		ath10k_dbg(ATH10K_DBG_MAC, "queued offchannel skb %p\n", skb);
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 3b1ae88..4992ad1 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -418,6 +418,55 @@ static int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb,
+ 	return ret;
+ }
+ 
++int ath10k_wmi_mgmt_tx(struct ath10k *ar, struct sk_buff *skb)
++{
++	int ret = 0;
++	struct wmi_mgmt_tx_cmd *cmd;
++	struct ieee80211_hdr *hdr;
++	struct sk_buff *wmi_skb;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	int len;
++	u16 fc;
++
++	hdr = (struct ieee80211_hdr *)skb->data;
++	fc = le16_to_cpu(hdr->frame_control);
++
++	if (WARN_ON_ONCE(!ieee80211_is_mgmt(hdr->frame_control)))
++		return -EINVAL;
++
++	len = sizeof(cmd->hdr) + skb->len;
++	len = round_up(len, 4);
++
++	wmi_skb = ath10k_wmi_alloc_skb(len);
++	if (!wmi_skb)
++		return -ENOMEM;
++
++	cmd = (struct wmi_mgmt_tx_cmd *)wmi_skb->data;
++
++	cmd->hdr.vdev_id = __cpu_to_le32(ATH10K_SKB_CB(skb)->vdev_id);
++	cmd->hdr.tx_rate = 0;
++	cmd->hdr.tx_power = 0;
++	cmd->hdr.buf_len = __cpu_to_le32((u32)(skb->len));
++
++	memcpy(cmd->hdr.peer_macaddr.addr, ieee80211_get_DA(hdr), ETH_ALEN);
++	memcpy(cmd->buf, skb->data, skb->len);
++
++	ath10k_dbg(ATH10K_DBG_WMI, "wmi mgmt tx skb %p len %d ftype %02x stype %02x\n",
++		   wmi_skb, wmi_skb->len, fc & IEEE80211_FCTL_FTYPE,
++		   fc & IEEE80211_FCTL_STYPE);
++
++	/* Send the management frame buffer to the target */
++	ret = ath10k_wmi_cmd_send(ar, wmi_skb, ar->wmi.cmd->wmi_mgmt_tx_cmdid);
++	if (ret)
++		return ret;
++
++	/* TODO: report tx status to mac80211 - temporary just ACK */
++	info->flags |= IEEE80211_TX_STAT_ACK;
++	ieee80211_tx_status_irqsafe(ar->hw, skb);
++
++	return ret;
++}
++
+ static int ath10k_wmi_event_scan(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	struct wmi_scan_event *event = (struct wmi_scan_event *)skb->data;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 3825937..8c67fb4 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -3483,5 +3483,6 @@ int ath10k_wmi_pdev_set_wmm_params(struct ath10k *ar,
+ int ath10k_wmi_request_stats(struct ath10k *ar, enum wmi_stats_id stats_id);
+ int ath10k_wmi_force_fw_hang(struct ath10k *ar,
+ 			     enum wmi_force_fw_hang_type type, u32 delay_ms);
++int ath10k_wmi_mgmt_tx(struct ath10k *ar, struct sk_buff *skb);
+ 
+ #endif /* _WMI_H_ */
 -- 
-1.7.11.7
+1.7.10
 
