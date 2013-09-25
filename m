@@ -1,80 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from p15195424.pureserver.info ([82.165.34.74]:33026 "EHLO
-	p15195424.pureserver.info" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932153Ab3INQKR (ORCPT
+Received: from mail-ob0-f172.google.com ([209.85.214.172]:36331 "EHLO
+	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751036Ab3IYQqZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Sep 2013 12:10:17 -0400
-Message-ID: <52348A2D.8000008@ilande.co.uk> (sfid-20130914_181021_916749_6696CDA8)
-Date: Sat, 14 Sep 2013 17:09:17 +0100
-From: Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>
+	Wed, 25 Sep 2013 12:46:25 -0400
+Received: by mail-ob0-f172.google.com with SMTP id gq1so7187727obb.3
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Sep 2013 09:46:25 -0700 (PDT)
+Message-ID: <5243135D.30700@lwfinger.net> (sfid-20130925_221656_913692_FDC7D461)
+Date: Wed, 25 Sep 2013 11:46:21 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: rtl8192cu: notes on investigating power issues
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Dan Williams <dcbw@redhat.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: No connection with TP-Link TL-WN823N (rtl8192cu)
+References: <CAEZsi7Hde5NyTRgm7Lf_4LvHMAEJouzaqMNUwxr-iSipuEcsyQ@mail.gmail.com>   <522E4315.4040806@lwfinger.net> <1378764913.31180.9.camel@dcbw.foobar.com>  <524215AD.6060300@lwfinger.net> <1380113275.7555.18.camel@dcbw.foobar.com>
+In-Reply-To: <1380113275.7555.18.camel@dcbw.foobar.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Larry,
+On 09/25/2013 07:47 AM, Dan Williams wrote:
+> On Tue, 2013-09-24 at 17:43 -0500, Larry Finger wrote:
+>> On 09/09/2013 05:15 PM, Dan Williams wrote:
+>>> On Mon, 2013-09-09 at 16:52 -0500, Larry Finger wrote:
+>>
+>>>> I have been running rtl8192cu for the past 24 hours without a permanent
+>>>> disconnect. Under NetworkManager, I see some reason 7 deauthentications, but
+>>>
+>>> Running wpa_supplicant with debugging on might shed some light on these;
+>>> basically:
+>>>
+>>> mv /usr/sbin/wpa_supplicant /
+>>> killall -TERM wpa_supplicant
+>>> /wpa_supplicant -dddtu <piped to your favorite log file>
+>>>
+>>> and NM should automatically reconnect, and then we can figure out what's
+>>> going on in the supplicant.
+>>
+>> Dan,
+>>
+>> The log of wpa_supplicant associated with the reason 7 disconnects are as follows:
+>
+> So reason 7 is "Incorrect frame type or subtype received from
+> unassociated station" which seems like the AP thinks we got
+> disconnected, and would seem to be a driver/mac80211 issue still, right?
 
-I spent some time yesterday evening adding various debugging statements 
-around the driver to get a feel for what was happening, with some 
-success. Included below are my notes from testing.
+Yes. These only happen with rtl8192ce and rtl8192cu. They are a bit more common 
+when running NetworkManager than with ifup. In my current run, they have been at 
+intervals of 1000 to 30,000 seconds apart. Capturing them with wireshark may not 
+be practical.
 
-The key appears to be the calculation of the dig (transmitter gain?) 
-value, for which the function chain looks like this:
+--snip--
 
-1) rtl92c_dm_ctrl_initgain_by_rssi() sets the dig value
+> And got reconnected after a bit more than one second.  So at least it
+> recovers quickly, but the question is more about why the reason 7
+> happened, and what frames caused it, I think.
 
-This value controls the power output from the transmitter and should lie 
-between DM_DIG_MIN and DM_DIG_MAX (note the *higher* the number, the 
-*lower* the power output). Setting the penultimate line to read 
-"digtable->cur_igvalue = DM_DIG_MIN" appears to force maximum power and 
-actually gives me a working connection.
+I agree. The sequence seems to start with an MLME Event 39:
 
-Displaying various values in this function showed that the problem was 
-that I had an exceptionally high value of digtable->rssi_val_min which 
-was much higher than DM_DIG_MAX and so had the effect of disabling the 
-radio.
+.908249: nl80211: MLME event 39
+.908252: nl80211: MLME event frame - hexdump(len=26): c0 00 3a 01 1c 65 9d 5a c3 
+9d 20 e5 2a 01 f7 ea 20 e5 2a 01 f7 ea a0 f6 07 00
+.908269: wlan3: Event DEAUTH (12) received
+.908273: wlan3: Deauthentication notification
 
-2) rtl92c_dm_dynamic_bb_powersaving() sets digtable->rssi_val_min
+All that happens within 25 usec, but I have no clue what triggers that. In 
+addition, I have been unable to find any documentation on MLME events. Any 
+suggestions regarding a source would be appreciated.
 
-This is actually done by a simple assignment "dm_pstable->rssi_val_min = 
-rtlpriv->dm.undec_sm_pwdb".
+Thanks,
 
-3) _rtl92c_process_pwdb() sets rltpriv->dm.undec_sm_pwdb
+Larry
 
-This value is updated by comparing the existing value with the current 
-value of pstats->rx_pwdb_all. If there is a difference, then slide the 
-new value towards pstats->rx_pwdb_all and then use it to update 
-rltpriv->dm.undec_sm_pwdb.
-
-4) _rtl92c_query_rxphystatus() sets pstats->rx_pwdb_all
-
-pstats->rx_pwdb_all was set to be a percentage conversion of the current 
-antenna power read from the radio.
-
-What was happening in my case:
-
-1) pstats->rx_pwdb_all was mostly set to 100 (%) due to high signal strength
-
-2) rltpriv->dm.undec_sm_pwdb would then slide towards a high value 
-(around 0x40-0x4d) within a few seconds
-
-3) Hence digtable->rssi_val_min would tend to hover at around the same level
-
-4) digtable->cur_igvalue would be set to the same high value (> 0x3f or 
-DM_DIG_MAX), therefore disabling the radio and disconnecting from the AP
-
-
-Unfortunately I'm not particularly familiar with these types of power 
-calculations (and there weren't many comments explaining how they 
-worked), but the one thing that didn't seem right is that 
-pstats->rx_pwdb_all claims to be a *percentage* and yet 
-rtl92c_dm_dynamic_bb_powersaving() uses it as the basis to set the 
-*value* of dm_pstable->rssi_val_min.
-
-
-ATB,
-
-Mark.
