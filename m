@@ -1,38 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f52.google.com ([209.85.215.52]:51560 "EHLO
-	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751383Ab3IJLac (ORCPT
+Received: from smtprelay0116.hostedemail.com ([216.40.44.116]:50104 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755405Ab3IYTii (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Sep 2013 07:30:32 -0400
-Received: by mail-la0-f52.google.com with SMTP id ev20so5981771lab.39
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Sep 2013 04:30:31 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <00b201ceae17$2e5c3a00$8b14ae00$%han@samsung.com>
-References: <00b101ceae16$ecb87c30$c6297490$%han@samsung.com>
-	<00b201ceae17$2e5c3a00$8b14ae00$%han@samsung.com>
-Date: Tue, 10 Sep 2013 14:30:31 +0300
-Message-ID: <CANUX_P3YqAfpEgWSp2ha8qWTm84M48cBvMDdTtOs7evMhm0tdw@mail.gmail.com> (sfid-20130910_133035_924377_9F783E7D)
-Subject: Re: [PATCH 01/12] wireless: iwlwifi: remove unnecessary pci_set_drvdata()
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
+	Wed, 25 Sep 2013 15:38:38 -0400
+From: Joe Perches <joe@perches.com>
+To: netdev@vger.kernel.org
+Cc: "David S. Miller" <davem@davemloft.net>,
 	Johannes Berg <johannes.berg@intel.com>,
 	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 08/11] iwlwifi: Remove extern from function prototypes
+Date: Wed, 25 Sep 2013 12:37:26 -0700
+Message-Id: <b3818394ccdf68d834ca1060c1d5a1fc44e2daee.1380137610.git.joe@perches.com> (sfid-20130925_224458_991406_76CBECC7)
+In-Reply-To: <cover.1380137609.git.joe@perches.com>
+References: <cover.1380137609.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 10, 2013 at 2:16 PM, Jingoo Han <jg1.han@samsung.com> wrote:
-> The driver core clears the driver data to NULL after device_release
-> or on probe failure. Thus, it is not needed to manually clear the
-> device driver data to NULL.
->
-> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
-> ---
->  drivers/net/wireless/iwlwifi/pcie/drv.c |    3 ---
->  1 file changed, 3 deletions(-)
->
+There are a mix of function prototypes with and without extern
+in the kernel sources.  Standardize on not using extern for
+function prototypes.
 
-I picked it up - thanks.
+Function prototypes don't need to be written with extern.
+extern is assumed by the compiler.  Its use is as unnecessary as
+using auto to declare automatic/local variables in a block.
+
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/net/wireless/iwlwifi/dvm/agn.h | 2 +-
+ drivers/net/wireless/iwlwifi/dvm/dev.h | 2 +-
+ drivers/net/wireless/iwlwifi/dvm/rs.h  | 8 ++++----
+ drivers/net/wireless/iwlwifi/mvm/rs.h  | 9 ++++-----
+ 4 files changed, 10 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/dvm/agn.h b/drivers/net/wireless/iwlwifi/dvm/agn.h
+index f2a86ff..23d5f02 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/agn.h
++++ b/drivers/net/wireless/iwlwifi/dvm/agn.h
+@@ -397,7 +397,7 @@ static inline __le32 iwl_hw_set_rate_n_flags(u8 rate, u32 flags)
+ 	return cpu_to_le32(flags|(u32)rate);
+ }
+ 
+-extern int iwl_alive_start(struct iwl_priv *priv);
++int iwl_alive_start(struct iwl_priv *priv);
+ 
+ #ifdef CONFIG_IWLWIFI_DEBUG
+ void iwl_print_rx_config_cmd(struct iwl_priv *priv,
+diff --git a/drivers/net/wireless/iwlwifi/dvm/dev.h b/drivers/net/wireless/iwlwifi/dvm/dev.h
+index a79fdd1..7434d9e 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/dev.h
++++ b/drivers/net/wireless/iwlwifi/dvm/dev.h
+@@ -270,7 +270,7 @@ struct iwl_sensitivity_ranges {
+  * iwlXXXX_     <-- Hardware specific (implemented in iwl-XXXX.c for XXXX)
+  *
+  ****************************************************************************/
+-extern void iwl_update_chain_flags(struct iwl_priv *priv);
++void iwl_update_chain_flags(struct iwl_priv *priv);
+ extern const u8 iwl_bcast_addr[ETH_ALEN];
+ 
+ #define IWL_OPERATION_MODE_AUTO     0
+diff --git a/drivers/net/wireless/iwlwifi/dvm/rs.h b/drivers/net/wireless/iwlwifi/dvm/rs.h
+index 5d83cab..26fc550 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/rs.h
++++ b/drivers/net/wireless/iwlwifi/dvm/rs.h
+@@ -407,8 +407,8 @@ static inline u8 first_antenna(u8 mask)
+ 
+ 
+ /* Initialize station's rate scaling information after adding station */
+-extern void iwl_rs_rate_init(struct iwl_priv *priv,
+-			     struct ieee80211_sta *sta, u8 sta_id);
++void iwl_rs_rate_init(struct iwl_priv *priv, struct ieee80211_sta *sta,
++		      u8 sta_id);
+ 
+ /**
+  * iwl_rate_control_register - Register the rate control algorithm callbacks
+@@ -420,7 +420,7 @@ extern void iwl_rs_rate_init(struct iwl_priv *priv,
+  * ieee80211_register_hw
+  *
+  */
+-extern int iwlagn_rate_control_register(void);
++int iwlagn_rate_control_register(void);
+ 
+ /**
+  * iwl_rate_control_unregister - Unregister the rate control callbacks
+@@ -428,6 +428,6 @@ extern int iwlagn_rate_control_register(void);
+  * This should be called after calling ieee80211_unregister_hw, but before
+  * the driver is unloaded.
+  */
+-extern void iwlagn_rate_control_unregister(void);
++void iwlagn_rate_control_unregister(void);
+ 
+ #endif /* __iwl_agn__rs__ */
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.h b/drivers/net/wireless/iwlwifi/mvm/rs.h
+index 335cf16..465d40e 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rs.h
++++ b/drivers/net/wireless/iwlwifi/mvm/rs.h
+@@ -314,9 +314,8 @@ static inline u8 num_of_ant(u8 mask)
+ }
+ 
+ /* Initialize station's rate scaling information after adding station */
+-extern void iwl_mvm_rs_rate_init(struct iwl_mvm *mvm,
+-				 struct ieee80211_sta *sta,
+-				 enum ieee80211_band band);
++void iwl_mvm_rs_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
++			  enum ieee80211_band band);
+ 
+ /**
+  * iwl_rate_control_register - Register the rate control algorithm callbacks
+@@ -328,7 +327,7 @@ extern void iwl_mvm_rs_rate_init(struct iwl_mvm *mvm,
+  * ieee80211_register_hw
+  *
+  */
+-extern int iwl_mvm_rate_control_register(void);
++int iwl_mvm_rate_control_register(void);
+ 
+ /**
+  * iwl_rate_control_unregister - Unregister the rate control callbacks
+@@ -336,7 +335,7 @@ extern int iwl_mvm_rate_control_register(void);
+  * This should be called after calling ieee80211_unregister_hw, but before
+  * the driver is unloaded.
+  */
+-extern void iwl_mvm_rate_control_unregister(void);
++void iwl_mvm_rate_control_unregister(void);
+ 
+ struct iwl_mvm_sta;
+ 
+-- 
+1.8.1.2.459.gbcd45b4.dirty
+
