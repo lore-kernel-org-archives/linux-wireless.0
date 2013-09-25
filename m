@@ -1,96 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:33286 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752642Ab3IZSNt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Sep 2013 14:13:49 -0400
-Message-ID: <1380219220.4592.17.camel@jlt4.sipsolutions.net> (sfid-20130926_201352_821633_CDB53198)
-Subject: pull-request: mac80211 2013-09-26
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 26 Sep 2013 20:13:40 +0200
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-XGD9Q+i157o9/Sl2RX6j"
-Mime-Version: 1.0
+Received: from mms2.broadcom.com ([216.31.210.18]:2144 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755081Ab3IYLGF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Sep 2013 07:06:05 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Franky Lin" <frankyl@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 2/7] brcmfmac: add BCM4339 SDIO interface support
+Date: Wed, 25 Sep 2013 13:05:41 +0200
+Message-ID: <1380107146-24026-3-git-send-email-arend@broadcom.com> (sfid-20130925_130612_121105_412092EC)
+In-Reply-To: <1380107146-24026-1-git-send-email-arend@broadcom.com>
+References: <1380107146-24026-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Franky Lin <frankyl@broadcom.com>
 
---=-XGD9Q+i157o9/Sl2RX6j
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+BCM4339 is an a/b/g/n/ac 1x1 WiFi chip. This patch adds support for it through
+SDIO interface.
 
-John,
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c   |   11 +++--------
+ drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c  |   18 ++++++++++++++++++
+ drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h  |    8 ++++++++
+ drivers/net/wireless/brcm80211/include/brcm_hw_ids.h |    1 +
+ 4 files changed, 30 insertions(+), 8 deletions(-)
 
-Here's a pull request for fixes. I've gotten a bit (more) sick and won't
-be preparing a -next pull request this week, most likely, I have a bunch
-of things to merge for that first.
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+index 64f4a2b..f849d73 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+@@ -34,6 +34,7 @@
+ #include <brcmu_utils.h>
+ #include <brcmu_wifi.h>
+ #include "sdio_host.h"
++#include "sdio_chip.h"
+ #include "dhd_dbg.h"
+ #include "dhd_bus.h"
+ 
+@@ -41,13 +42,6 @@
+ 
+ #define DMA_ALIGN_MASK	0x03
+ 
+-#define SDIO_DEVICE_ID_BROADCOM_43143	43143
+-#define SDIO_DEVICE_ID_BROADCOM_43241	0x4324
+-#define SDIO_DEVICE_ID_BROADCOM_4329	0x4329
+-#define SDIO_DEVICE_ID_BROADCOM_4330	0x4330
+-#define SDIO_DEVICE_ID_BROADCOM_4334	0x4334
+-#define SDIO_DEVICE_ID_BROADCOM_4335	0x4335
+-
+ #define SDIO_FUNC1_BLOCKSIZE		64
+ #define SDIO_FUNC2_BLOCKSIZE		512
+ 
+@@ -58,7 +52,8 @@ static const struct sdio_device_id brcmf_sdmmc_ids[] = {
+ 	{SDIO_DEVICE(SDIO_VENDOR_ID_BROADCOM, SDIO_DEVICE_ID_BROADCOM_4329)},
+ 	{SDIO_DEVICE(SDIO_VENDOR_ID_BROADCOM, SDIO_DEVICE_ID_BROADCOM_4330)},
+ 	{SDIO_DEVICE(SDIO_VENDOR_ID_BROADCOM, SDIO_DEVICE_ID_BROADCOM_4334)},
+-	{SDIO_DEVICE(SDIO_VENDOR_ID_BROADCOM, SDIO_DEVICE_ID_BROADCOM_4335)},
++	{SDIO_DEVICE(SDIO_VENDOR_ID_BROADCOM,
++		     SDIO_DEVICE_ID_BROADCOM_4335_4339)},
+ 	{ /* end: all zeroes */ },
+ };
+ MODULE_DEVICE_TABLE(sdio, brcmf_sdmmc_ids);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
+index ca72177..023ddcb 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
+@@ -18,6 +18,7 @@
+ #include <linux/types.h>
+ #include <linux/netdevice.h>
+ #include <linux/mmc/card.h>
++#include <linux/mmc/sdio_func.h>
+ #include <linux/ssb/ssb_regs.h>
+ #include <linux/bcma/bcma.h>
+ 
+@@ -444,6 +445,9 @@ static int brcmf_sdio_chip_recognition(struct brcmf_sdio_dev *sdiodev,
+ 				   NULL);
+ 	ci->chip = regdata & CID_ID_MASK;
+ 	ci->chiprev = (regdata & CID_REV_MASK) >> CID_REV_SHIFT;
++	if (sdiodev->func[0]->device == SDIO_DEVICE_ID_BROADCOM_4335_4339 &&
++	    ci->chiprev >= 2)
++		ci->chip = BCM4339_CHIP_ID;
+ 	ci->socitype = (regdata & CID_TYPE_MASK) >> CID_TYPE_SHIFT;
+ 
+ 	brcmf_dbg(INFO, "chipid=0x%x chiprev=%d\n", ci->chip, ci->chiprev);
+@@ -541,6 +545,20 @@ static int brcmf_sdio_chip_recognition(struct brcmf_sdio_dev *sdiodev,
+ 		ci->ramsize = 0xc0000;
+ 		ci->rambase = 0x180000;
+ 		break;
++	case BCM4339_CHIP_ID:
++		ci->c_inf[0].wrapbase = 0x18100000;
++		ci->c_inf[0].cib = 0x2e084411;
++		ci->c_inf[1].id = BCMA_CORE_SDIO_DEV;
++		ci->c_inf[1].base = 0x18005000;
++		ci->c_inf[1].wrapbase = 0x18105000;
++		ci->c_inf[1].cib = 0x15004211;
++		ci->c_inf[2].id = BCMA_CORE_ARM_CR4;
++		ci->c_inf[2].base = 0x18002000;
++		ci->c_inf[2].wrapbase = 0x18102000;
++		ci->c_inf[2].cib = 0x04084411;
++		ci->ramsize = 0xc0000;
++		ci->rambase = 0x180000;
++		break;
+ 	default:
+ 		brcmf_err("chipid 0x%x is not supported\n", ci->chip);
+ 		return -ENODEV;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h
+index 83c041f..076b83c 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.h
+@@ -54,6 +54,14 @@
+ 
+ #define BRCMF_MAX_CORENUM	6
+ 
++/* SDIO device ID */
++#define SDIO_DEVICE_ID_BROADCOM_43143		43143
++#define SDIO_DEVICE_ID_BROADCOM_43241		0x4324
++#define SDIO_DEVICE_ID_BROADCOM_4329		0x4329
++#define SDIO_DEVICE_ID_BROADCOM_4330		0x4330
++#define SDIO_DEVICE_ID_BROADCOM_4334		0x4334
++#define SDIO_DEVICE_ID_BROADCOM_4335_4339	0x4335
++
+ struct chip_core_info {
+ 	u16 id;
+ 	u16 rev;
+diff --git a/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h b/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
+index c1fe245..84113ea 100644
+--- a/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
++++ b/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
+@@ -41,5 +41,6 @@
+ #define BCM4331_CHIP_ID		0x4331
+ #define BCM4334_CHIP_ID		0x4334
+ #define BCM4335_CHIP_ID		0x4335
++#define BCM4339_CHIP_ID		0x4339
+ 
+ #endif				/* _BRCM_HW_IDS_H_ */
+-- 
+1.7.10.4
 
-This time I have two fixes for IBSS (including one for wext, hah), a fix
-for extended rates IEs, an active monitor checking fix and a sysfs
-registration race fix.
-
-johannes
-
-The following changes since commit 272b98c6455f00884f0350f775c5342358ebb73f=
-:
-
-  Linux 3.12-rc1 (2013-09-16 16:17:51 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
-
-for you to fetch changes up to aa5f66d5a1df1c2b04bccdcb19711675c765d7c4:
-
-  cfg80211: fix sysfs registration race (2013-09-26 20:03:45 +0200)
-
-----------------------------------------------------------------
-Bruno Randolf (1):
-      cfg80211: fix warning when using WEXT for IBSS
-
-Chun-Yeow Yeoh (1):
-      mac80211: fix the setting of extended supported rate IE
-
-Felix Fietkau (1):
-      mac80211: drop spoofed packets in ad-hoc mode
-
-Johannes Berg (1):
-      cfg80211: fix sysfs registration race
-
-Luciano Coelho (1):
-      cfg80211: use the correct macro to check for active monitor support
-
- net/mac80211/rx.c      |  3 +++
- net/mac80211/util.c    |  5 +----
- net/wireless/core.c    | 21 +++++++++++++--------
- net/wireless/ibss.c    |  3 +++
- net/wireless/nl80211.c |  4 ++--
- 5 files changed, 22 insertions(+), 14 deletions(-)
-
-
---=-XGD9Q+i157o9/Sl2RX6j
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCAAGBQJSRHlUAAoJEDBSmw7B7bqrm6QQANOJNH8NHb9uPYxFOZ950FrO
-gJjjyLToiqaBG2ap3/TdX0wWLduhbRHSz+oRZkmua73lSws0efiFIwrxKucERWRh
-cmhUceim2NlEchG6UEq/cFsZchsdMc1cUiTvBE6ctLTFDCD6isH1nEbxOMjxjxAk
-vwfcArgmipRc/FoFMjxSBqCGFa3ARq01kJix1QRSlCo26VGhwR5jrSzEcbJp6qRU
-cSMcKSn9ppf7P6hzRwQ+Q/EX1ph93Ksjj22wKIiwNHdvG4DpfStJHPZLMlM2ePGe
-cBwZs4lEehoEodZKAI9luZRzH63pAO0KetuCfjfm4a2DLve8gdYPJpwfL+PPOMwN
-6sKDbkfbXemx1uCB980HmCy1fuuSG7L1SXRVNJfnGN2Kxw1lkytICNb4B83uy8PM
-Or8FxlCyhdvVT9g5HvWZOfYSUd97++fFDCyYHJUlQUhPNWq287e/M2TC9EPy9G6a
-FqydfndSFvze3AVNLnFvrV6Iex77/eJZOArom9ZLcuBF87uC/wbL7nqdB0mA6Vat
-6X7YxvXPMhHtjTIZJCFG8RsltcKjDDjLEMEZ3YIf8huaPBDjBxfisTnEDrbVXtQa
-C6KMq6g2itKWnSxO3POBHghDzmx5XKj4bBOZHCnKeL/AAfl7XNqLlJM4pnhCMAiI
-P4C14ZImA3HD+HedYeBV
-=lmIE
------END PGP SIGNATURE-----
-
---=-XGD9Q+i157o9/Sl2RX6j--
 
