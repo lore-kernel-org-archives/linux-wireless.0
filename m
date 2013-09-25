@@ -1,49 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 162-17-110-37-static.hfc.comcastbusiness.net ([162.17.110.37]:38582
-	"EHLO stuffed.shaftnet.org" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752589Ab3IWUAL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Sep 2013 16:00:11 -0400
-From: Solomon Peachy <pizza@shaftnet.org>
-To: linux-wireless@vger.kernel.org
-Cc: Solomon Peachy <pizza@shaftnet.org>
-Subject: [PATCH 3.12 2/2] cw1200: Use a threaded oneshot irq handler for cw1200_spi
-Date: Mon, 23 Sep 2013 16:00:04 -0400
-Message-Id: <1379966404-7047-3-git-send-email-pizza@shaftnet.org> (sfid-20130923_220024_350946_DBBD9422)
-In-Reply-To: <1379966404-7047-1-git-send-email-pizza@shaftnet.org>
-References: <1379966404-7047-1-git-send-email-pizza@shaftnet.org>
+Received: from ebb06.tieto.com ([131.207.168.38]:53485 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750949Ab3IYJiZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Sep 2013 05:38:25 -0400
+From: Bartosz Markowski <bartosz.markowski@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Bartosz Markowski <bartosz.markowski@tieto.com>
+Subject: [PATCH 00/13] ath10k: dual-firmware support (MAIN and 10.X)
+Date: Wed, 25 Sep 2013 11:37:58 +0200
+Message-ID: <1380101891-18312-1-git-send-email-bartosz.markowski@tieto.com> (sfid-20130925_113828_994959_03F487A7)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This supercedes the older patch ("cw1200: Don't perform SPI transfers in
-interrupt context") that badly attempted to fix this problem.
+This patch-set adds framework for dynamic support of 10.X FW branch.
 
-This is a far simpler solution, which has the added benefit of 
-actually working.
+The major changes covered by this work:
+* dynamic WMI structures
+* WMI cmd/event definitions from 10.x FW track
+* memory host chunks feature
+* management frames path over WMI for 10.x
+* WMI RX events handling for MAIN and 10.X split
+* target config split (LARGE AP feature for 10.x)
+* scan start sctructure split
+* dynamic VDEV and PDEV parameters structures
 
-Signed-off-by: Solomon Peachy <pizza@shaftnet.org>
----
- drivers/net/wireless/cw1200/cw1200_spi.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+TODO:
+* add FW IEs to identify (runtime) which FW ath10k deals with
 
-diff --git a/drivers/net/wireless/cw1200/cw1200_spi.c b/drivers/net/wireless/cw1200/cw1200_spi.c
-index 5a64ac9..899cad3 100644
---- a/drivers/net/wireless/cw1200/cw1200_spi.c
-+++ b/drivers/net/wireless/cw1200/cw1200_spi.c
-@@ -250,9 +250,10 @@ static int cw1200_spi_irq_subscribe(struct hwbus_priv *self)
- 
- 	pr_debug("SW IRQ subscribe\n");
- 
--	ret = request_any_context_irq(self->func->irq, cw1200_spi_irq_handler,
--				      IRQF_TRIGGER_HIGH,
--				      "cw1200_wlan_irq", self);
-+	ret = request_threaded_irq(self->func->irq, NULL,
-+				   cw1200_spi_irq_handler,
-+				   IRQF_TRIGGER_HIGH | IRQF_ONESHOT,
-+				   "cw1200_wlan_irq", self);
- 	if (WARN_ON(ret < 0))
- 		goto exit;
- 
+Bartosz Markowski (13):
+  ath10k: introduce dynamic WMI structures
+  ath10k: add wmi_10x_<cmd/event> definitions
+  ath10k: warn if give WMI command is not supported
+  ath10k: implement WMI events handling frame for both firmwares
+  ath10k: split ath10k_wmi_service_ready_event_rx
+  ath10k: drop the fw versioning sanity check
+  ath10k: implement host memory chunks
+  ath10k: bring back the WMI path for mgmt frames
+  ath10k: split wmi_cmd_init path
+  ath10k: add TARGET values for 10.x firmware
+  ath10k: introduce dynamic vdev parameters
+  ath10k: introduce dynamic pdev parameters
+  ath10k: handle FW API differences for scan structures
+
+ drivers/net/wireless/ath/ath10k/core.c   |   29 +-
+ drivers/net/wireless/ath/ath10k/core.h   |   23 +-
+ drivers/net/wireless/ath/ath10k/htt_tx.c |    4 +-
+ drivers/net/wireless/ath/ath10k/hw.h     |   37 +-
+ drivers/net/wireless/ath/ath10k/mac.c    |   93 ++-
+ drivers/net/wireless/ath/ath10k/wmi.c    | 1129 ++++++++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath10k/wmi.h    |  969 ++++++++++++++++++++++++-
+ 7 files changed, 2160 insertions(+), 124 deletions(-)
+
 -- 
-1.8.3.1
+1.7.10
 
