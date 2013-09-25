@@ -1,33 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:33250 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752642Ab3IZR5n (ORCPT
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:41936 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753927Ab3IYR6E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Sep 2013 13:57:43 -0400
-Message-ID: <1380218260.4592.12.camel@jlt4.sipsolutions.net> (sfid-20130926_195747_710425_CBDC708E)
-Subject: Re: [PATCH v3] mac80211: fix the setting of extended supported rate
- IE
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	devel@lists.open80211s.org, distro11s@cozybit.com,
-	Colleen Twitty <colleen@cozybit.com>
-Date: Thu, 26 Sep 2013 19:57:40 +0200
-In-Reply-To: <1378622444-11247-1-git-send-email-yeohchunyeow@cozybit.com> (sfid-20130908_084116_638954_3AF9F99D)
-References: <1378622444-11247-1-git-send-email-yeohchunyeow@cozybit.com>
-	 (sfid-20130908_084116_638954_3AF9F99D)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 25 Sep 2013 13:58:04 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 0/8 V4] rtlwifi: Patches to fix problems shown by smatch
+Date: Wed, 25 Sep 2013 12:57:41 -0500
+Message-Id: <1380131869-19185-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130925_221657_688148_E3866650)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2013-09-07 at 23:40 -0700, Chun-Yeow Yeoh wrote:
-> The patch "mac80211: select and adjust bitrates according to
-> channel mode" causes regression and breaks the extended supported rate
-> IE setting. Since "i" is starting with 8, so this is not necessary
-> to introduce "skip" here.
+Fix smatch warnings and errors in the rtlwifi family of drivers.
 
-Applied.
+V2 addresses comments by David Laight and Sergei Shtylyov.
+V3 addresses further comments by David, Sergei, and Kalle Valo. The
+   dead code is removed, and the variable is left in the struct.
+V4 Fixes extra line removed by accident from rtl8192de/hw.c as
+   noted by Sergei
 
-johannes
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+
+Larry Finger (8):
+  rtlwifi: rtl8192du: Fix smatch errors in /rtl8192de/dm.c
+  rtlwifi: rtl8192de: Fix smatch warnings in rtl8192de/hw.c
+  rtlwifi: rtl8192cu: Fix smatch warning in rtl8192cu/trx.c
+  rtlwifi: rtl8192_common: Fix smatch errors and warnings in
+    rtl8192c/dm_common.c
+  rtlwifi: Fix smatch warning in pci.c
+  rtlwifi: Fix smatch warnings in usb.c
+  rtlwifi: rtl8188ee: Fix smatch warning in rtl8188ee/hw.c
+  rtlwifi: Remove all remaining references to variable 'noise' in
+    rtl_stats struct
+
+ drivers/net/wireless/rtlwifi/pci.c                |  1 -
+ drivers/net/wireless/rtlwifi/rtl8188ee/hw.c       |  1 +
+ drivers/net/wireless/rtlwifi/rtl8188ee/trx.c      |  1 -
+ drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c | 25 +----------------------
+ drivers/net/wireless/rtlwifi/rtl8192ce/trx.c      |  1 -
+ drivers/net/wireless/rtlwifi/rtl8192cu/trx.c      |  2 --
+ drivers/net/wireless/rtlwifi/rtl8192de/dm.c       |  8 ++++++--
+ drivers/net/wireless/rtlwifi/rtl8192de/hw.c       | 18 ----------------
+ drivers/net/wireless/rtlwifi/rtl8192de/trx.c      |  1 -
+ drivers/net/wireless/rtlwifi/rtl8192se/trx.c      |  1 -
+ drivers/net/wireless/rtlwifi/rtl8723ae/trx.c      |  1 -
+ drivers/net/wireless/rtlwifi/usb.c                |  6 ++++--
+ 12 files changed, 12 insertions(+), 54 deletions(-)
+
+-- 
+1.8.1.4
 
