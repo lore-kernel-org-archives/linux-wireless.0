@@ -1,75 +1,173 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f51.google.com ([74.125.83.51]:38314 "EHLO
-	mail-ee0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753042Ab3IQPls (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Sep 2013 11:41:48 -0400
-Received: by mail-ee0-f51.google.com with SMTP id c1so2807825eek.38
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Sep 2013 08:41:47 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <luca@coelho.fi>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 11/11] wlcore: always register dummy hardirq
-Date: Tue, 17 Sep 2013 18:41:30 +0300
-Message-Id: <1379432490-22157-11-git-send-email-eliad@wizery.com> (sfid-20130917_174153_807317_BB75F7BF)
-In-Reply-To: <1379432490-22157-1-git-send-email-eliad@wizery.com>
-References: <1379432490-22157-1-git-send-email-eliad@wizery.com>
+Received: from ebb06.tieto.com ([131.207.168.38]:61761 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753672Ab3IYJie (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Sep 2013 05:38:34 -0400
+From: Bartosz Markowski <bartosz.markowski@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Bartosz Markowski <bartosz.markowski@tieto.com>
+Subject: [PATCH 10/13] ath10k: add TARGET values for 10.x firmware
+Date: Wed, 25 Sep 2013 11:38:08 +0200
+Message-ID: <1380101891-18312-11-git-send-email-bartosz.markowski@tieto.com> (sfid-20130925_113841_849847_D2E3E933)
+In-Reply-To: <1380101891-18312-1-git-send-email-bartosz.markowski@tieto.com>
+References: <1380101891-18312-1-git-send-email-bartosz.markowski@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+Introduce all TARGET specific values for 10.x firmware.
+Some of them are common for both firmwares we will support,
+but to avoid confusion, define everything with prefix 10X_.
 
-This keeps the kernel happy when using edge-irqs and requesting a
-threaded irq.
-
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
 ---
- drivers/net/wireless/ti/wlcore/main.c | 14 +++++++++++---
- 1 file changed, 11 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath10k/hw.h  |   31 ++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.c |   58 ++++++++++++++++-----------------
+ 2 files changed, 60 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 4b52e5a..1f556b6 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -5994,6 +5994,11 @@ static const struct wiphy_wowlan_support wlcore_wowlan_support = {
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 1b3cf01..6cc3453 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -53,6 +53,7 @@ enum ath10k_mcast2ucast_mode {
+ 	ATH10K_MCAST2UCAST_ENABLED = 1,
  };
- #endif
  
-+static irqreturn_t wlcore_hardirq(int irq, void *cookie)
-+{
-+	return IRQ_WAKE_THREAD;
-+}
-+
- static void wlcore_nvs_cb(const struct firmware *fw, void *context)
- {
- 	struct wl1271 *wl = context;
-@@ -6002,6 +6007,7 @@ static void wlcore_nvs_cb(const struct firmware *fw, void *context)
- 	struct wl12xx_platform_data *pdata = pdev_data->pdata;
- 	unsigned long irqflags;
- 	int ret;
-+	irq_handler_t hardirq_fn = NULL;
++/* Target specific defines for MAIN firmware */
+ #define TARGET_NUM_VDEVS			8
+ #define TARGET_NUM_PEER_AST			2
+ #define TARGET_NUM_WDS_ENTRIES			32
+@@ -83,6 +84,36 @@ enum ath10k_mcast2ucast_mode {
+ #define TARGET_NUM_MSDU_DESC			(1024 + 400)
+ #define TARGET_MAX_FRAG_ENTRIES			0
  
- 	if (fw) {
- 		wl->nvs = kmemdup(fw->data, fw->size, GFP_KERNEL);
-@@ -6030,12 +6036,14 @@ static void wlcore_nvs_cb(const struct firmware *fw, void *context)
- 	wl->platform_quirks = pdata->platform_quirks;
- 	wl->if_ops = pdev_data->if_ops;
++/* Target specific defines for 10.X firmware */
++#define TARGET_10X_NUM_VDEVS			16
++#define TARGET_10X_NUM_PEER_AST			2
++#define TARGET_10X_NUM_WDS_ENTRIES		32
++#define TARGET_10X_DMA_BURST_SIZE		0
++#define TARGET_10X_MAC_AGGR_DELIM		0
++#define TARGET_10X_AST_SKID_LIMIT		16
++#define TARGET_10X_NUM_PEERS			(128 + (TARGET_10X_NUM_VDEVS))
++#define TARGET_10X_NUM_OFFLOAD_PEERS		0
++#define TARGET_10X_NUM_OFFLOAD_REORDER_BUFS	0
++#define TARGET_10X_NUM_PEER_KEYS		2
++#define TARGET_10X_NUM_TIDS			256
++#define TARGET_10X_TX_CHAIN_MASK		(BIT(0) | BIT(1) | BIT(2))
++#define TARGET_10X_RX_CHAIN_MASK		(BIT(0) | BIT(1) | BIT(2))
++#define TARGET_10X_RX_TIMEOUT_LO_PRI		100
++#define TARGET_10X_RX_TIMEOUT_HI_PRI		40
++#define TARGET_10X_RX_DECAP_MODE		ATH10K_HW_TXRX_ETHERNET
++#define TARGET_10X_SCAN_MAX_PENDING_REQS	4
++#define TARGET_10X_BMISS_OFFLOAD_MAX_VDEV	2
++#define TARGET_10X_ROAM_OFFLOAD_MAX_VDEV	2
++#define TARGET_10X_ROAM_OFFLOAD_MAX_AP_PROFILES	8
++#define TARGET_10X_GTK_OFFLOAD_MAX_VDEV		3
++#define TARGET_10X_NUM_MCAST_GROUPS		0
++#define TARGET_10X_NUM_MCAST_TABLE_ELEMS	0
++#define TARGET_10X_MCAST2UCAST_MODE		ATH10K_MCAST2UCAST_DISABLED
++#define TARGET_10X_TX_DBG_LOG_SIZE		1024
++#define TARGET_10X_RX_SKIP_DEFRAG_TIMEOUT_DUP_DETECTION_CHECK 1
++#define TARGET_10X_VOW_CONFIG			0
++#define TARGET_10X_NUM_MSDU_DESC		(1024 + 400)
++#define TARGET_10X_MAX_FRAG_ENTRIES		0
  
--	if (wl->platform_quirks & WL12XX_PLATFORM_QUIRK_EDGE_IRQ)
-+	if (wl->platform_quirks & WL12XX_PLATFORM_QUIRK_EDGE_IRQ) {
- 		irqflags = IRQF_TRIGGER_RISING;
--	else
-+		hardirq_fn = wlcore_hardirq;
-+	} else {
- 		irqflags = IRQF_TRIGGER_HIGH | IRQF_ONESHOT;
-+	}
+ /* Number of Copy Engines supported */
+ #define CE_COUNT 8
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index f88a1d3..f0e1ea9 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -1458,9 +1458,9 @@ static void ath10k_wmi_10x_service_ready_event_rx(struct ath10k *ar,
+ 				 * peers, 1 extra for self peer on target */
+ 				/* this needs to be tied, host and target
+ 				 * can get out of sync */
+-				num_units = TARGET_NUM_PEERS + 1;
++				num_units = TARGET_10X_NUM_PEERS + 1;
+ 			if (num_unit_info & NUM_UNITS_IS_NUM_VDEVS)
+-				num_units = TARGET_NUM_VDEVS + 1;
++				num_units = TARGET_10X_NUM_VDEVS + 1;
+ 		}
  
--	ret = request_threaded_irq(wl->irq, NULL, wlcore_irq,
-+	ret = request_threaded_irq(wl->irq, hardirq_fn, wlcore_irq,
- 				   irqflags, pdev->name, wl);
- 	if (ret < 0) {
- 		wl1271_error("request_irq() failed: %d", ret);
+ 		ath10k_dbg(ATH10K_DBG_WMI,
+@@ -2027,48 +2027,48 @@ int ath10k_wmi_10x_cmd_init(struct ath10k *ar)
+ 	u32 len, val;
+ 	int i;
+ 
+-	config.num_vdevs = __cpu_to_le32(TARGET_NUM_VDEVS);
+-	config.num_peers = __cpu_to_le32(TARGET_NUM_PEERS + TARGET_NUM_VDEVS);
+-	config.num_peer_keys = __cpu_to_le32(TARGET_NUM_PEER_KEYS);
+-	config.num_tids = __cpu_to_le32(TARGET_NUM_TIDS);
+-	config.ast_skid_limit = __cpu_to_le32(TARGET_AST_SKID_LIMIT);
+-	config.tx_chain_mask = __cpu_to_le32(TARGET_TX_CHAIN_MASK);
+-	config.rx_chain_mask = __cpu_to_le32(TARGET_RX_CHAIN_MASK);
+-	config.rx_timeout_pri_vo = __cpu_to_le32(TARGET_RX_TIMEOUT_LO_PRI);
+-	config.rx_timeout_pri_vi = __cpu_to_le32(TARGET_RX_TIMEOUT_LO_PRI);
+-	config.rx_timeout_pri_be = __cpu_to_le32(TARGET_RX_TIMEOUT_LO_PRI);
+-	config.rx_timeout_pri_bk = __cpu_to_le32(TARGET_RX_TIMEOUT_HI_PRI);
+-	config.rx_decap_mode = __cpu_to_le32(TARGET_RX_DECAP_MODE);
++	config.num_vdevs = __cpu_to_le32(TARGET_10X_NUM_VDEVS);
++	config.num_peers = __cpu_to_le32(TARGET_10X_NUM_PEERS);
++	config.num_peer_keys = __cpu_to_le32(TARGET_10X_NUM_PEER_KEYS);
++	config.num_tids = __cpu_to_le32(TARGET_10X_NUM_TIDS);
++	config.ast_skid_limit = __cpu_to_le32(TARGET_10X_AST_SKID_LIMIT);
++	config.tx_chain_mask = __cpu_to_le32(TARGET_10X_TX_CHAIN_MASK);
++	config.rx_chain_mask = __cpu_to_le32(TARGET_10X_RX_CHAIN_MASK);
++	config.rx_timeout_pri_vo = __cpu_to_le32(TARGET_10X_RX_TIMEOUT_LO_PRI);
++	config.rx_timeout_pri_vi = __cpu_to_le32(TARGET_10X_RX_TIMEOUT_LO_PRI);
++	config.rx_timeout_pri_be = __cpu_to_le32(TARGET_10X_RX_TIMEOUT_LO_PRI);
++	config.rx_timeout_pri_bk = __cpu_to_le32(TARGET_10X_RX_TIMEOUT_HI_PRI);
++	config.rx_decap_mode = __cpu_to_le32(TARGET_10X_RX_DECAP_MODE);
+ 
+ 	config.scan_max_pending_reqs =
+-		__cpu_to_le32(TARGET_SCAN_MAX_PENDING_REQS);
++		__cpu_to_le32(TARGET_10X_SCAN_MAX_PENDING_REQS);
+ 
+ 	config.bmiss_offload_max_vdev =
+-		__cpu_to_le32(TARGET_BMISS_OFFLOAD_MAX_VDEV);
++		__cpu_to_le32(TARGET_10X_BMISS_OFFLOAD_MAX_VDEV);
+ 
+ 	config.roam_offload_max_vdev =
+-		__cpu_to_le32(TARGET_ROAM_OFFLOAD_MAX_VDEV);
++		__cpu_to_le32(TARGET_10X_ROAM_OFFLOAD_MAX_VDEV);
+ 
+ 	config.roam_offload_max_ap_profiles =
+-		__cpu_to_le32(TARGET_ROAM_OFFLOAD_MAX_AP_PROFILES);
++		__cpu_to_le32(TARGET_10X_ROAM_OFFLOAD_MAX_AP_PROFILES);
+ 
+-	config.num_mcast_groups = __cpu_to_le32(TARGET_NUM_MCAST_GROUPS);
++	config.num_mcast_groups = __cpu_to_le32(TARGET_10X_NUM_MCAST_GROUPS);
+ 	config.num_mcast_table_elems =
+-		__cpu_to_le32(TARGET_NUM_MCAST_TABLE_ELEMS);
++		__cpu_to_le32(TARGET_10X_NUM_MCAST_TABLE_ELEMS);
+ 
+-	config.mcast2ucast_mode = __cpu_to_le32(TARGET_MCAST2UCAST_MODE);
+-	config.tx_dbg_log_size = __cpu_to_le32(TARGET_TX_DBG_LOG_SIZE);
+-	config.num_wds_entries = __cpu_to_le32(TARGET_NUM_WDS_ENTRIES);
+-	config.dma_burst_size = __cpu_to_le32(TARGET_DMA_BURST_SIZE);
+-	config.mac_aggr_delim = __cpu_to_le32(TARGET_MAC_AGGR_DELIM);
++	config.mcast2ucast_mode = __cpu_to_le32(TARGET_10X_MCAST2UCAST_MODE);
++	config.tx_dbg_log_size = __cpu_to_le32(TARGET_10X_TX_DBG_LOG_SIZE);
++	config.num_wds_entries = __cpu_to_le32(TARGET_10X_NUM_WDS_ENTRIES);
++	config.dma_burst_size = __cpu_to_le32(TARGET_10X_DMA_BURST_SIZE);
++	config.mac_aggr_delim = __cpu_to_le32(TARGET_10X_MAC_AGGR_DELIM);
+ 
+-	val = TARGET_RX_SKIP_DEFRAG_TIMEOUT_DUP_DETECTION_CHECK;
++	val = TARGET_10X_RX_SKIP_DEFRAG_TIMEOUT_DUP_DETECTION_CHECK;
+ 	config.rx_skip_defrag_timeout_dup_detection_check = __cpu_to_le32(val);
+ 
+-	config.vow_config = __cpu_to_le32(TARGET_VOW_CONFIG);
++	config.vow_config = __cpu_to_le32(TARGET_10X_VOW_CONFIG);
+ 
+-	config.num_msdu_desc = __cpu_to_le32(TARGET_NUM_MSDU_DESC);
+-	config.max_frag_entries = __cpu_to_le32(TARGET_MAX_FRAG_ENTRIES);
++	config.num_msdu_desc = __cpu_to_le32(TARGET_10X_NUM_MSDU_DESC);
++	config.max_frag_entries = __cpu_to_le32(TARGET_10X_MAX_FRAG_ENTRIES);
+ 
+ 	len = sizeof(*cmd) +
+ 	      (sizeof(struct host_memory_chunk) * ar->wmi.num_mem_chunks);
 -- 
-1.8.3.rc1.35.g9b79519
+1.7.10
 
