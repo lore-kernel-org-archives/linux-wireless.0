@@ -1,52 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:29894 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753313Ab3IZHaO (ORCPT
+Received: from mail-vb0-f52.google.com ([209.85.212.52]:61102 "EHLO
+	mail-vb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755648Ab3IYBlA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Sep 2013 03:30:14 -0400
-Cc: <netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	<ath10k@lists.infradead.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	<linux-kernel@vger.kernel.org>
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH 04/11] ath: Remove extern from function prototypes
-References: <cover.1380137609.git.joe@perches.com>
-	<a3dabaf02d36dbb4051188b706a3e66e6465c56b.1380137609.git.joe@perches.com>
-Date: Thu, 26 Sep 2013 10:30:00 +0300
-In-Reply-To: <a3dabaf02d36dbb4051188b706a3e66e6465c56b.1380137609.git.joe@perches.com>
-	(Joe Perches's message of "Wed, 25 Sep 2013 12:37:22 -0700")
-Message-ID: <871u4ct4zr.fsf@kamboji.qca.qualcomm.com> (sfid-20130926_093039_378319_85A20AD5)
+	Tue, 24 Sep 2013 21:41:00 -0400
+Received: by mail-vb0-f52.google.com with SMTP id f12so3836979vbg.39
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Sep 2013 18:40:59 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Date: Wed, 25 Sep 2013 07:10:59 +0530
+Message-ID: <CACPKTAP_rc2FmzjP2qtO0+rWtK9Wk_WyRtngrtM3FnZQF9JHyA@mail.gmail.com> (sfid-20130925_034108_701054_2D1EA7F5)
+Subject: Tracing Association code
+From: Prabhunath G <gprabhunath@gmail.com>
+To: kernelnewbies <kernelnewbies@kernelnewbies.org>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Joe Perches <joe@perches.com> writes:
+Hi All,
 
-> There are a mix of function prototypes with and without extern
-> in the kernel sources.  Standardize on not using extern for
-> function prototypes.
->
-> Function prototypes don't need to be written with extern.
-> extern is assumed by the compiler.  Its use is as unnecessary as
-> using auto to declare automatic/local variables in a block.
->
-> Signed-off-by: Joe Perches <joe@perches.com>
-> ---
->  drivers/net/wireless/ath/ath10k/debug.h  | 8 ++++----
->  drivers/net/wireless/ath/ath6kl/common.h | 3 +--
->  drivers/net/wireless/ath/ath6kl/debug.h  | 9 ++++-----
->  drivers/net/wireless/ath/ath9k/ath9k.h   | 2 +-
->  4 files changed, 10 insertions(+), 12 deletions(-)
+         I am tracing the association code in linux-wireless. I
+understand that association request has to be triggered from station
+side (userspace-wpa_supplicant) and has to be sent to the AP
+(userspace-hostapd).
 
-For the ath10k and ath6kl changes:
+In the process of tracing, I found the function ieee80211_assoc(...)
+in net/mac80211/cfg.c and also I found that a timer is scheduled to
+execute the timer function. My Questions are
 
-Acked-by: Kalle Valo <kvalo@qca.qualcomm.com>
+1. Who is initiating the timer function, my guess is it should be the
+driver & How ?
+2. On the AP side how is the association request taken from driver  ->
+mac80211 -> hostapd.
 
--- 
-Kalle Valo
+Appreciate your help.
+
+Thanks,
+Prabhu
