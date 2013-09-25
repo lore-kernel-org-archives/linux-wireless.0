@@ -1,72 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36849 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752467Ab3IWJLf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Sep 2013 05:11:35 -0400
-Date: Mon, 23 Sep 2013 04:08:13 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: users@rt2x00.serialmonkey.com, Jakub Kicinski <kubakici@wp.pl>,
-	moorray@wp.pl
-Subject: [PATCH 3.12] Revert "rt2x00pci: Use PCI MSIs whenever possible"
-Message-ID: <20130923020812.GA1577@redhat.com> (sfid-20130923_111139_192427_B50D8368)
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:58543 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750825Ab3IYXK4 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Sep 2013 19:10:56 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+Date: Wed, 25 Sep 2013 16:10:47 -0700
+Subject: RE: [patch] mwifiex: potential integer underflow in
+ mwifiex_ret_wmm_get_status()
+Message-ID: <477F20668A386D41ADCC57781B1F70430F45077E52@SC-VEXCH1.marvell.com> (sfid-20130926_011059_944907_0AE8AC9B)
+References: <20130925085729.GC6661@elgon.mountain>
+ <477F20668A386D41ADCC57781B1F70430F45077CDA@SC-VEXCH1.marvell.com>
+ <20130925182359.GV6247@mwanda>
+In-Reply-To: <20130925182359.GV6247@mwanda>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This reverts commit 9483f40d8d01918b399b4e24d0c1111db0afffeb.
+Hi Dan,
 
-Some devices stop to connect with above commit, see:
-https://bugzilla.kernel.org/show_bug.cgi?id=61621
+Thanks for your comments.
 
-Since there is no clear benefit of having MSI enabled, just revert
-change to fix the problem.
+> > I think we can change the 'resp_len' variable type to a signed integer
+> > to fix this issue.
+> 
+> No, that doesn't work because the comparison against sizeof() get's
+> promoted to size_t.  In other words, negative values still count as
+> large positive values.
 
-Cc: stable@vger.kernel.org # 3.11+
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/rt2x00/rt2x00pci.c | 9 +--------
- 1 file changed, 1 insertion(+), 8 deletions(-)
+You are right. The negative value counts as a large positive number while comparing against sizeof().
+I can add a "const int hdr_size" variable to store the value of sizeof(...) and compare resp_len to hdr_size. The "sizeof(...)" has been used multiple times in this function, so I think it's worth adding a variable for it.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.c b/drivers/net/wireless/rt2x00/rt2x00pci.c
-index 76d95de..dc49e52 100644
---- a/drivers/net/wireless/rt2x00/rt2x00pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00pci.c
-@@ -105,13 +105,11 @@ int rt2x00pci_probe(struct pci_dev *pci_dev, const struct rt2x00_ops *ops)
- 		goto exit_release_regions;
- 	}
- 
--	pci_enable_msi(pci_dev);
+
+diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
+index 95fa359..c97df5a 100644
+--- a/drivers/net/wireless/mwifiex/wmm.c
++++ b/drivers/net/wireless/mwifiex/wmm.c
+@@ -707,10 +707,10 @@ int mwifiex_ret_wmm_get_status(struct mwifiex_private *priv,
+                               const struct host_cmd_ds_command *resp)
+ {
+        u8 *curr = (u8 *) &resp->params.get_wmm_status;
+-       uint16_t resp_len = le16_to_cpu(resp->size), tlv_len;
++       int resp_len = le16_to_cpu(resp->size), tlv_len;
+        int valid = true;
 -
- 	hw = ieee80211_alloc_hw(sizeof(struct rt2x00_dev), ops->hw);
- 	if (!hw) {
- 		rt2x00_probe_err("Failed to allocate hardware\n");
- 		retval = -ENOMEM;
--		goto exit_disable_msi;
-+		goto exit_release_regions;
- 	}
- 
- 	pci_set_drvdata(pci_dev, hw);
-@@ -152,9 +150,6 @@ exit_free_reg:
- exit_free_device:
- 	ieee80211_free_hw(hw);
- 
--exit_disable_msi:
--	pci_disable_msi(pci_dev);
--
- exit_release_regions:
- 	pci_release_regions(pci_dev);
- 
-@@ -179,8 +174,6 @@ void rt2x00pci_remove(struct pci_dev *pci_dev)
- 	rt2x00pci_free_reg(rt2x00dev);
- 	ieee80211_free_hw(hw);
- 
--	pci_disable_msi(pci_dev);
--
- 	/*
- 	 * Free the PCI device data.
- 	 */
--- 
-1.8.3.1
+        struct mwifiex_ie_types_data *tlv_hdr;
++       const int hdr_size = sizeof(tlv_hdr->header);
+        struct mwifiex_ie_types_wmm_queue_status *tlv_wmm_qstatus;
+        struct ieee_types_wmm_parameter *wmm_param_ie = NULL;
+        struct mwifiex_wmm_ac_status *ac_status;
+@@ -718,7 +718,7 @@ int mwifiex_ret_wmm_get_status(struct mwifiex_private *priv,
+        dev_dbg(priv->adapter->dev, "info: WMM: WMM_GET_STATUS cmdresp received: %d\n",
+                resp_len);
 
+-       while ((resp_len >= sizeof(tlv_hdr->header)) && valid) {
++       while (resp_len >= hdr_size && valid) {
+                tlv_hdr = (struct mwifiex_ie_types_data *) curr;
+                tlv_len = le16_to_cpu(tlv_hdr->header.len);
+
+@@ -772,8 +772,8 @@ int mwifiex_ret_wmm_get_status(struct mwifiex_private *priv,
+                        break;
+                }
+
+-               curr += (tlv_len + sizeof(tlv_hdr->header));
+-               resp_len -= (tlv_len + sizeof(tlv_hdr->header));
++               curr += tlv_len + hdr_size;
++               resp_len -= tlv_len + hdr_size;
+        }
+
+        mwifiex_wmm_setup_queue_priorities(priv, wmm_param_ie);
+
+
+Thanks,
+Bing
