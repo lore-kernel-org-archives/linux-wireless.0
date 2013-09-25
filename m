@@ -1,51 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:31765 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751081Ab3IJI4l (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:36044 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753899Ab3IYKiK convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Sep 2013 04:56:41 -0400
-Received: from epcpsbgr1.samsung.com
- (u141.gpu120.samsung.co.kr [203.254.230.141])
- by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MSW00EZJJFG4SU0@mailout2.samsung.com> for
- linux-wireless@vger.kernel.org; Tue, 10 Sep 2013 17:56:27 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: "'John W. Linville'" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
-References: <005101ceae02$9cbb95f0$d632c1d0$%han@samsung.com>
-In-reply-to: <005101ceae02$9cbb95f0$d632c1d0$%han@samsung.com>
-Subject: [PATCH 5/8] wireless: libertas: use dev_get_platdata()
-Date: Tue, 10 Sep 2013 17:56:27 +0900
-Message-id: <005701ceae03$a286a0f0$e793e2d0$%han@samsung.com> (sfid-20130910_105645_119438_2C605AB2)
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+	Wed, 25 Sep 2013 06:38:10 -0400
+Received: by mail-bk0-f46.google.com with SMTP id 6so2154018bkj.33
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Sep 2013 03:38:08 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1380101891-18312-2-git-send-email-bartosz.markowski@tieto.com>
+References: <1380101891-18312-1-git-send-email-bartosz.markowski@tieto.com>
+	<1380101891-18312-2-git-send-email-bartosz.markowski@tieto.com>
+Date: Wed, 25 Sep 2013 12:38:08 +0200
+Message-ID: <CA+BoTQnPyZ-c2j62zsUSR+h03dvyxFOkoUME3H6qO0sQTGWqrg@mail.gmail.com> (sfid-20130925_123815_203389_A8470304)
+Subject: Re: [PATCH 01/13] ath10k: introduce dynamic WMI structures
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Bartosz Markowski <bartosz.markowski@tieto.com>
+Cc: ath10k@lists.infradead.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the wrapper function for retrieving the platform data instead of
-accessing dev->platform_data directly. This is a cosmetic change
-to make the code simpler and enhance the readability.
+On 25 September 2013 11:37, Bartosz Markowski
+<bartosz.markowski@tieto.com> wrote:
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
----
- drivers/net/wireless/libertas/if_spi.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> +struct wmi_cmd_map {
+> +       u32 wmi_init_cmdid;
+> +       u32 wmi_start_scan_cmdid;
+> +       u32 wmi_stop_scan_cmdid;
+> +       u32 wmi_scan_chan_list_cmdid;
+> +       u32 wmi_scan_sch_prio_tbl_cmdid;
+> +       u32 wmi_pdev_set_regdomain_cmdid;
+> +       u32 wmi_pdev_set_channel_cmdid;
+> +       u32 wmi_pdev_set_param_cmdid;
+> +       u32 wmi_pdev_pktlog_enable_cmdid;
+> +       u32 wmi_pdev_pktlog_disable_cmdid;
+> +       u32 wmi_pdev_set_wmm_params_cmdid;
+> +       u32 wmi_pdev_set_ht_cap_ie_cmdid;
+> +       u32 wmi_pdev_set_vht_cap_ie_cmdid;
+> +       u32 wmi_pdev_set_dscp_tid_map_cmdid;
+> +       u32 wmi_pdev_set_quiet_mode_cmdid;
+> +       u32 wmi_pdev_green_ap_ps_enable_cmdid;
+> +       u32 wmi_pdev_get_tpc_config_cmdid;
+> +       u32 wmi_pdev_set_base_macaddr_cmdid;
+> +       u32 wmi_vdev_create_cmdid;
+> +       u32 wmi_vdev_delete_cmdid;
+> +       u32 wmi_vdev_start_request_cmdid;
+> +       u32 wmi_vdev_restart_request_cmdid;
+> +       u32 wmi_vdev_up_cmdid;
+> +       u32 wmi_vdev_stop_cmdid;
+> +       u32 wmi_vdev_down_cmdid;
+> +       u32 wmi_vdev_set_param_cmdid;
+> +       u32 wmi_vdev_install_key_cmdid;
+> +       u32 wmi_peer_create_cmdid;
+> +       u32 wmi_peer_delete_cmdid;
+> +       u32 wmi_peer_flush_tids_cmdid;
+> +       u32 wmi_peer_set_param_cmdid;
+> +       u32 wmi_peer_assoc_cmdid;
+> +       u32 wmi_peer_add_wds_entry_cmdid;
+> +       u32 wmi_peer_remove_wds_entry_cmdid;
+> +       u32 wmi_peer_mcast_group_cmdid;
+> +       u32 wmi_bcn_tx_cmdid;
+> +       u32 wmi_pdev_send_bcn_cmdid;
+> +       u32 wmi_bcn_tmpl_cmdid;
+> +       u32 wmi_bcn_filter_rx_cmdid;
+> +       u32 wmi_prb_req_filter_rx_cmdid;
+> +       u32 wmi_mgmt_tx_cmdid;
+> +       u32 wmi_prb_tmpl_cmdid;
+> +       u32 wmi_addba_clear_resp_cmdid;
+> +       u32 wmi_addba_send_cmdid;
+> +       u32 wmi_addba_status_cmdid;
+> +       u32 wmi_delba_send_cmdid;
+> +       u32 wmi_addba_set_resp_cmdid;
+> +       u32 wmi_send_singleamsdu_cmdid;
+> +       u32 wmi_sta_powersave_mode_cmdid;
+> +       u32 wmi_sta_powersave_param_cmdid;
+> +       u32 wmi_sta_mimo_ps_mode_cmdid;
+> +       u32 wmi_pdev_dfs_enable_cmdid;
+> +       u32 wmi_pdev_dfs_disable_cmdid;
+> +       u32 wmi_roam_scan_mode;
+> +       u32 wmi_roam_scan_rssi_threshold;
+> +       u32 wmi_roam_scan_period;
+> +       u32 wmi_roam_scan_rssi_change_threshold;
+> +       u32 wmi_roam_ap_profile;
+> +       u32 wmi_ofl_scan_add_ap_profile;
+> +       u32 wmi_ofl_scan_remove_ap_profile;
+> +       u32 wmi_ofl_scan_period;
+> +       u32 wmi_p2p_dev_set_device_info;
+> +       u32 wmi_p2p_dev_set_discoverability;
+> +       u32 wmi_p2p_go_set_beacon_ie;
+> +       u32 wmi_p2p_go_set_probe_resp_ie;
+> +       u32 wmi_p2p_set_vendor_ie_data_cmdid;
+> +       u32 wmi_ap_ps_peer_param_cmdid;
+> +       u32 wmi_ap_ps_peer_uapsd_coex_cmdid;
+> +       u32 wmi_peer_rate_retry_sched_cmdid;
+> +       u32 wmi_wlan_profile_trigger_cmdid;
+> +       u32 wmi_wlan_profile_set_hist_intvl_cmdid;
+> +       u32 wmi_wlan_profile_get_profile_data_cmdid;
+> +       u32 wmi_wlan_profile_enable_profile_id_cmdid;
+> +       u32 wmi_wlan_profile_list_profile_id_cmdid;
+> +       u32 wmi_pdev_suspend_cmdid;
+> +       u32 wmi_pdev_resume_cmdid;
+> +       u32 wmi_add_bcn_filter_cmdid;
+> +       u32 wmi_rmv_bcn_filter_cmdid;
+> +       u32 wmi_wow_add_wake_pattern_cmdid;
+> +       u32 wmi_wow_del_wake_pattern_cmdid;
+> +       u32 wmi_wow_enable_disable_wake_event_cmdid;
+> +       u32 wmi_wow_enable_cmdid;
+> +       u32 wmi_wow_hostwakeup_from_sleep_cmdid;
+> +       u32 wmi_rtt_measreq_cmdid;
+> +       u32 wmi_rtt_tsf_cmdid;
+> +       u32 wmi_vdev_spectral_scan_configure_cmdid;
+> +       u32 wmi_vdev_spectral_scan_enable_cmdid;
+> +       u32 wmi_request_stats_cmdid;
+> +       u32 wmi_set_arp_ns_offload_cmdid;
+> +       u32 wmi_network_list_offload_config_cmdid;
+> +       u32 wmi_gtk_offload_cmdid;
+> +       u32 wmi_csa_offload_enable_cmdid;
+> +       u32 wmi_csa_offload_chanswitch_cmdid;
+> +       u32 wmi_chatter_set_mode_cmdid;
+> +       u32 wmi_peer_tid_addba_cmdid;
+> +       u32 wmi_peer_tid_delba_cmdid;
+> +       u32 wmi_sta_dtim_ps_method_cmdid;
+> +       u32 wmi_sta_uapsd_auto_trig_cmdid;
+> +       u32 wmi_sta_keepalive_cmd;
+> +       u32 wmi_echo_cmdid;
+> +       u32 wmi_pdev_utf_cmdid;
+> +       u32 wmi_dbglog_cfg_cmdid;
+> +       u32 wmi_pdev_qvit_cmdid;
+> +       u32 wmi_pdev_ftm_intg_cmdid;
+> +       u32 wmi_vdev_set_keepalive_cmdid;
+> +       u32 wmi_vdev_get_keepalive_cmdid;
+> +       u32 wmi_force_fw_hang_cmdid;
+> +       u32 wmi_gpio_config_cmdid;
+> +       u32 wmi_gpio_output_cmdid;
 
-diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
-index 4bb6574..5d39ec8 100644
---- a/drivers/net/wireless/libertas/if_spi.c
-+++ b/drivers/net/wireless/libertas/if_spi.c
-@@ -1128,7 +1128,7 @@ static int if_spi_probe(struct spi_device *spi)
- {
- 	struct if_spi_card *card;
- 	struct lbs_private *priv = NULL;
--	struct libertas_spi_platform_data *pdata = spi->dev.platform_data;
-+	struct libertas_spi_platform_data *pdata = dev_get_platdata(&spi->dev);
- 	int err = 0;
- 
- 	lbs_deb_enter(LBS_DEB_SPI);
--- 
-1.7.10.4
+I don't think the `wmi_` prefix is necessary here. Structure itself
+already provides a prefix.
 
 
+Michał.
