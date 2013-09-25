@@ -1,61 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:53224 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757408Ab3IBIcz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Sep 2013 04:32:55 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 2/8] ath9k: Bypass EEPROM for diversity cap for AR9565
-Date: Mon,  2 Sep 2013 13:59:00 +0530
-Message-Id: <1378110546-22305-2-git-send-email-sujith@msujith.org> (sfid-20130902_103313_464891_AFC8C8F2)
-In-Reply-To: <1378110546-22305-1-git-send-email-sujith@msujith.org>
-References: <21028.19411.335796.192256@gargle.gargle.HOWL>
- <1378110546-22305-1-git-send-email-sujith@msujith.org>
+Received: from mms2.broadcom.com ([216.31.210.18]:2152 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755099Ab3IYLGF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Sep 2013 07:06:05 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Franky Lin" <frankyl@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 1/7] brcmfmac: sync firmware event list
+Date: Wed, 25 Sep 2013 13:05:40 +0200
+Message-ID: <1380107146-24026-2-git-send-email-arend@broadcom.com> (sfid-20130925_130610_699652_109DF0D9)
+In-Reply-To: <1380107146-24026-1-git-send-email-arend@broadcom.com>
+References: <1380107146-24026-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+From: Franky Lin <frankyl@broadcom.com>
 
-Use a default antenna diversity value for AR9565 instead
-of relying on the EEPROM/OTP programmed value.
+Update event list to keep sync with firmware development. Use calculated event
+mask length instead of hard-coded value.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 5 ++++-
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.h | 2 ++
- 2 files changed, 6 insertions(+), 1 deletion(-)
+ drivers/net/wireless/brcm80211/brcmfmac/dhd.h  |    2 --
+ drivers/net/wireless/brcm80211/brcmfmac/fweh.h |    5 ++++-
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index f486480..6af2d73 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -2991,7 +2991,10 @@ static u32 ath9k_hw_ar9300_get_eeprom(struct ath_hw *ah,
- 	case EEP_CHAIN_MASK_REDUCE:
- 		return (pBase->miscConfiguration >> 0x3) & 0x1;
- 	case EEP_ANT_DIV_CTL1:
--		return eep->base_ext1.ant_div_control;
-+		if (AR_SREV_9565(ah))
-+			return AR9300_EEP_ANTDIV_CONTROL_DEFAULT_VALUE;
-+		else
-+			return eep->base_ext1.ant_div_control;
- 	case EEP_ANTENNA_GAIN_5G:
- 		return eep->modalHeader5G.antennaGain;
- 	case EEP_ANTENNA_GAIN_2G:
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-index 75d4fb4..0e5daa5 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-@@ -52,6 +52,8 @@
- #define AR9300_PAPRD_SCALE_2		0x70000000
- #define AR9300_PAPRD_SCALE_2_S		28
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+index 2eb9e64..4de9aac 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+@@ -97,8 +97,6 @@
+ #define	WLC_PHY_TYPE_LCN	8
+ #define	WLC_PHY_TYPE_NULL	0xf
  
-+#define AR9300_EEP_ANTDIV_CONTROL_DEFAULT_VALUE 0xc9
+-#define BRCMF_EVENTING_MASK_LEN	16
+-
+ #define TOE_TX_CSUM_OL		0x00000001
+ #define TOE_RX_CSUM_OL		0x00000002
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fweh.h b/drivers/net/wireless/brcm80211/brcmfmac/fweh.h
+index e679214..9ee5c51 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fweh.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fweh.h
+@@ -102,7 +102,8 @@ struct brcmf_event;
+ 	BRCMF_ENUM_DEF(DCS_REQUEST, 73) \
+ 	BRCMF_ENUM_DEF(FIFO_CREDIT_MAP, 74) \
+ 	BRCMF_ENUM_DEF(ACTION_FRAME_RX, 75) \
+-	BRCMF_ENUM_DEF(BCMC_CREDIT_SUPPORT, 127)
++	BRCMF_ENUM_DEF(BCMC_CREDIT_SUPPORT, 127) \
++	BRCMF_ENUM_DEF(PSTA_PRIMARY_INTF_IND, 128)
+ 
+ #define BRCMF_ENUM_DEF(id, val) \
+ 	BRCMF_E_##id = (val),
+@@ -114,6 +115,8 @@ enum brcmf_fweh_event_code {
+ };
+ #undef BRCMF_ENUM_DEF
+ 
++#define BRCMF_EVENTING_MASK_LEN		(roundup(BRCMF_E_LAST, 8)/8)
 +
- /* Delta from which to start power to pdadc table */
- /* This offset is used in both open loop and closed loop power control
-  * schemes. In open loop power control, it is not really needed, but for
+ /* flags field values in struct brcmf_event_msg */
+ #define BRCMF_EVENT_MSG_LINK		0x01
+ #define BRCMF_EVENT_MSG_FLUSHTXQ	0x02
 -- 
-1.8.4
+1.7.10.4
+
 
