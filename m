@@ -1,41 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:30266 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752729Ab3ITFSw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Sep 2013 01:18:52 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/5] ath10k: tx performance patches
-References: <1379508202-9660-1-git-send-email-michal.kazior@tieto.com>
-Date: Fri, 20 Sep 2013 08:18:40 +0300
-In-Reply-To: <1379508202-9660-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Wed, 18 Sep 2013 14:43:17 +0200")
-Message-ID: <87vc1wgjf3.fsf@qca.qualcomm.com> (sfid-20130920_071856_352383_DD11AD28)
-MIME-Version: 1.0
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:43498 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750791Ab3IYQZv convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Sep 2013 12:25:51 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+Date: Wed, 25 Sep 2013 09:25:46 -0700
+Subject: RE: [patch] mwifiex: potential integer underflow in
+ mwifiex_ret_wmm_get_status()
+Message-ID: <477F20668A386D41ADCC57781B1F70430F45077CDA@SC-VEXCH1.marvell.com> (sfid-20130925_221653_549823_0B3D17DE)
+References: <20130925085729.GC6661@elgon.mountain>
+In-Reply-To: <20130925085729.GC6661@elgon.mountain>
 Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Hi Dan,
 
-> Hi,
->
-> This patchset reduces CPU load and improves
-> improves TX performance on AP135 by additional
-> 30mbps (give or take; 560mbps -> 590mbps), at
-> least on my testbed.
->
->
-> Michal Kazior (5):
->   ath10k: use num_pending_tx instead of msdu id bitmap
->   ath10k: avoid needless memset on TX path
->   ath10k: decouple HTT TX completions
->   ath10k: cleanup HTT TX functions
->   ath10k: use msdu headroom to store txfrag
+> If "resp_len" gets set to negative then it counts as a high positive value.
+> 
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> ---
+> I spotted this reviewing the int => bool changes, but I don't have the
+> hardware and can't test it.
 
-Thanks, all five applied.
+Thanks for spotting this potential integer underflow problem.
 
--- 
-Kalle Valo
+I think we can change the 'resp_len' variable type to a signed integer to fix this issue.
+
+Thanks,
+Bing
+
+> 
+> diff --git a/drivers/net/wireless/mwifiex/wmm.c
+> b/drivers/net/wireless/mwifiex/wmm.c
+> index 2e8f9cd..3c6ee3a 100644
+> --- a/drivers/net/wireless/mwifiex/wmm.c
+> +++ b/drivers/net/wireless/mwifiex/wmm.c
+> @@ -772,6 +772,8 @@ int mwifiex_ret_wmm_get_status(struct
+> mwifiex_private *priv,
+>  			break;
+>  		}
+> 
+> +		if (resp_len < tlv_len + sizeof(tlv_hdr->header))
+> +			break;
+>  		curr += (tlv_len + sizeof(tlv_hdr->header));
+>  		resp_len -= (tlv_len + sizeof(tlv_hdr->header));
+>  	}
