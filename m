@@ -1,54 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f45.google.com ([209.85.215.45]:48885 "EHLO
-	mail-la0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752068Ab3ILHlx (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:7164 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751013Ab3IZJEW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Sep 2013 03:41:53 -0400
-Received: by mail-la0-f45.google.com with SMTP id eh20so8228109lab.4
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Sep 2013 00:41:52 -0700 (PDT)
+	Thu, 26 Sep 2013 05:04:22 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Bartosz Markowski <bartosz.markowski@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 07/13] ath10k: implement host memory chunks
+References: <1380101891-18312-1-git-send-email-bartosz.markowski@tieto.com>
+	<1380101891-18312-8-git-send-email-bartosz.markowski@tieto.com>
+Date: Thu, 26 Sep 2013 12:04:12 +0300
+In-Reply-To: <1380101891-18312-8-git-send-email-bartosz.markowski@tieto.com>
+	(Bartosz Markowski's message of "Wed, 25 Sep 2013 11:38:05 +0200")
+Message-ID: <87k3i4rm2b.fsf@kamboji.qca.qualcomm.com> (sfid-20130926_110427_494761_8DB94E08)
 MIME-Version: 1.0
-In-Reply-To: <52315E0C.9010806@lwfinger.net>
-References: <CAEZsi7Hde5NyTRgm7Lf_4LvHMAEJouzaqMNUwxr-iSipuEcsyQ@mail.gmail.com>
-	<522E4315.4040806@lwfinger.net>
-	<1378764913.31180.9.camel@dcbw.foobar.com>
-	<CAEZsi7FY8HdBcb0p1svijAdFjB0MbrYv_Zft0B_+RQTpGWCnhQ@mail.gmail.com>
-	<1378916091.1693.21.camel@dcbw.foobar.com>
-	<52309B75.3010408@lwfinger.net>
-	<5230A440.5050709@ilande.co.uk>
-	<5230B573.9030800@lwfinger.net>
-	<CAEZsi7G+FqUh2fBXLLR17qiBb1ggLu2+11aYRt2Wppr1gGK-Wg@mail.gmail.com>
-	<52311E9A.7030902@lwfinger.net>
-	<CAEZsi7F-RxaZJNaYi53kTtsQbxL4TU6DhTPo5v-O5ry=pawb_Q@mail.gmail.com>
-	<52315E0C.9010806@lwfinger.net>
-Date: Thu, 12 Sep 2013 09:41:52 +0200
-Message-ID: <CAEZsi7GtEk2a5PvBCica0zvmGZNPqHK9XzZV2vma9nGDv1j7cw@mail.gmail.com> (sfid-20130912_094156_883849_F4E93654)
-Subject: Re: No connection with TP-Link TL-WN823N (rtl8192cu)
-From: Vincent Thiele <vincentthiele@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thank you very much. The vendor driver doesn't work with 3.8 or 3.9.
-Therefore i use the patched vendor driver but with 3.10 or 3.11 even
-the patched dkms driver doesn't work.
+Bartosz Markowski <bartosz.markowski@tieto.com> writes:
 
-2013/9/12 Larry Finger <Larry.Finger@lwfinger.net>:
-> On 09/12/2013 12:57 AM, Vincent Thiele wrote:
->>
->> No i tried your "ping-solution" with kernel 3.11 but it dosen't work.
+> 10.X firmware can request a memory pool from host to offload
+> it's own resources. This is a feature designed especially
+> for AP mode where the target has to deal with large number
+> of peers.
 >
+> So we allocate and map a consistent DMA memory which FW can
+> use to store e.g. peer rate contol maps.
 >
-> I just discovered that your device is a 300 Mbps unit, which implies a 2x2
-> configuration. The only one of them that I have does not work with any Linux
-> driver; however, some of the postings that I have read suggest that this one
-> will work with the vendor driver.
->
-> I just bought a TL-WN823N on E-Bay. I think the expected delivery is Sept.
-> 16. Once I get it, I will try to see what I can learn.
->
-> Larry
->
->
+> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+
+[...]
+
+> +		if (num_unit_info) {
+> +			if (num_unit_info & NUM_UNITS_IS_NUM_PEERS)
+> +				/* number of units to allocate is number of
+> +				 * peers, 1 extra for self peer on target */
+> +				/* this needs to be tied, host and target
+> +				 * can get out of sync */
+> +				num_units = TARGET_NUM_PEERS + 1;
+> +			if (num_unit_info & NUM_UNITS_IS_NUM_VDEVS)
+> +				num_units = TARGET_NUM_VDEVS + 1;
+> +		}
+
+The outer if test looks useless. I think this can be simplified to just:
+
+if (num_unit_info & NUM_UNITS_IS_NUM_PEERS)
+        ....
+else if (num_unit_info & NUM_UNITS_IS_NUM_VDEVS)
+        ...
+
+-- 
+Kalle Valo
