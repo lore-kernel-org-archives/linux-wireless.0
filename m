@@ -1,82 +1,173 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:34821 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751892Ab3IKGPA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Sep 2013 02:15:00 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/3] ath9k: Handle abnormal NAV in AP mode
-Date: Wed, 11 Sep 2013 11:40:59 +0530
-Message-Id: <1378879859-32290-3-git-send-email-sujith@msujith.org> (sfid-20130911_081506_325540_6A698692)
-In-Reply-To: <1378879859-32290-1-git-send-email-sujith@msujith.org>
-References: <1378879859-32290-1-git-send-email-sujith@msujith.org>
+Received: from ebb06.tieto.com ([131.207.168.38]:56278 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753309Ab3IZPrl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Sep 2013 11:47:41 -0400
+From: Bartosz Markowski <bartosz.markowski@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Bartosz Markowski <bartosz.markowski@tieto.com>
+Subject: [PATCH v3 10/13] ath10k: add TARGET values for 10.x firmware
+Date: Thu, 26 Sep 2013 17:47:14 +0200
+Message-ID: <1380210437-4391-11-git-send-email-bartosz.markowski@tieto.com> (sfid-20130926_174753_934748_3417514D)
+In-Reply-To: <1380210437-4391-1-git-send-email-bartosz.markowski@tieto.com>
+References: <1380210437-4391-1-git-send-email-bartosz.markowski@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Introduce all TARGET specific values for 10.x firmware.
+Some of them are common for both firmwares we will support,
+but to avoid confusion, define everything with prefix 10X_.
 
-Beacon transmission would get stuck if the NAV is
-an invalid value for some reason. Check and correct
-the NAV value in the HW when this happens.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
 ---
- drivers/net/wireless/ath/ath9k/beacon.c |  2 ++
- drivers/net/wireless/ath/ath9k/hw.c     | 13 +++++++++++++
- drivers/net/wireless/ath/ath9k/hw.h     |  1 +
- 3 files changed, 16 insertions(+)
+ drivers/net/wireless/ath/ath10k/hw.h  |   31 ++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.c |   58 ++++++++++++++++-----------------
+ 2 files changed, 60 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index b5c16b3a..17be353 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -334,6 +334,8 @@ void ath9k_beacon_tasklet(unsigned long data)
- 	if (ath9k_hw_numtxpending(ah, sc->beacon.beaconq) != 0) {
- 		sc->beacon.bmisscnt++;
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 66e721a..2de13db 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -53,6 +53,7 @@ enum ath10k_mcast2ucast_mode {
+ 	ATH10K_MCAST2UCAST_ENABLED = 1,
+ };
  
-+		ath9k_hw_check_nav(ah);
-+
- 		if (!ath9k_hw_check_alive(ah))
- 			ieee80211_queue_work(sc->hw, &sc->hw_check_work);
++/* Target specific defines for MAIN firmware */
+ #define TARGET_NUM_VDEVS			8
+ #define TARGET_NUM_PEER_AST			2
+ #define TARGET_NUM_WDS_ENTRIES			32
+@@ -87,6 +88,36 @@ enum ath10k_mcast2ucast_mode {
+ #define TARGET_NUM_MSDU_DESC			(1024 + 400)
+ #define TARGET_MAX_FRAG_ENTRIES			0
  
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 260e0c6..7d6e35d 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1656,6 +1656,19 @@ hang_check_iter:
- 	return true;
- }
++/* Target specific defines for 10.X firmware */
++#define TARGET_10X_NUM_VDEVS			16
++#define TARGET_10X_NUM_PEER_AST			2
++#define TARGET_10X_NUM_WDS_ENTRIES		32
++#define TARGET_10X_DMA_BURST_SIZE		0
++#define TARGET_10X_MAC_AGGR_DELIM		0
++#define TARGET_10X_AST_SKID_LIMIT		16
++#define TARGET_10X_NUM_PEERS			(128 + (TARGET_10X_NUM_VDEVS))
++#define TARGET_10X_NUM_OFFLOAD_PEERS		0
++#define TARGET_10X_NUM_OFFLOAD_REORDER_BUFS	0
++#define TARGET_10X_NUM_PEER_KEYS		2
++#define TARGET_10X_NUM_TIDS			256
++#define TARGET_10X_TX_CHAIN_MASK		(BIT(0) | BIT(1) | BIT(2))
++#define TARGET_10X_RX_CHAIN_MASK		(BIT(0) | BIT(1) | BIT(2))
++#define TARGET_10X_RX_TIMEOUT_LO_PRI		100
++#define TARGET_10X_RX_TIMEOUT_HI_PRI		40
++#define TARGET_10X_RX_DECAP_MODE		ATH10K_HW_TXRX_ETHERNET
++#define TARGET_10X_SCAN_MAX_PENDING_REQS	4
++#define TARGET_10X_BMISS_OFFLOAD_MAX_VDEV	2
++#define TARGET_10X_ROAM_OFFLOAD_MAX_VDEV	2
++#define TARGET_10X_ROAM_OFFLOAD_MAX_AP_PROFILES	8
++#define TARGET_10X_GTK_OFFLOAD_MAX_VDEV		3
++#define TARGET_10X_NUM_MCAST_GROUPS		0
++#define TARGET_10X_NUM_MCAST_TABLE_ELEMS	0
++#define TARGET_10X_MCAST2UCAST_MODE		ATH10K_MCAST2UCAST_DISABLED
++#define TARGET_10X_TX_DBG_LOG_SIZE		1024
++#define TARGET_10X_RX_SKIP_DEFRAG_TIMEOUT_DUP_DETECTION_CHECK 1
++#define TARGET_10X_VOW_CONFIG			0
++#define TARGET_10X_NUM_MSDU_DESC		(1024 + 400)
++#define TARGET_10X_MAX_FRAG_ENTRIES		0
  
-+void ath9k_hw_check_nav(struct ath_hw *ah)
-+{
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	u32 val;
-+
-+	val = REG_READ(ah, 0x8084);
-+	if (val != 0xdeadbeef && val > 0x7fff) {
-+		ath_dbg(common, BSTUCK, "Abnormal NAV: 0x%x\n", val);
-+		REG_WRITE(ah, 0x8084, 0);
-+	}
-+}
-+EXPORT_SYMBOL(ath9k_hw_check_nav);
-+
- bool ath9k_hw_check_alive(struct ath_hw *ah)
- {
- 	int count = 50;
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 88f67c3..8e1c675 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -1031,6 +1031,7 @@ void ath9k_hw_set11nmac2040(struct ath_hw *ah);
- void ath9k_hw_beaconinit(struct ath_hw *ah, u32 next_beacon, u32 beacon_period);
- void ath9k_hw_set_sta_beacon_timers(struct ath_hw *ah,
- 				    const struct ath9k_beacon_state *bs);
-+void ath9k_hw_check_nav(struct ath_hw *ah);
- bool ath9k_hw_check_alive(struct ath_hw *ah);
+ /* Number of Copy Engines supported */
+ #define CE_COUNT 8
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 71ad1b8..637f8d0 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -1451,9 +1451,9 @@ static void ath10k_wmi_10x_service_ready_event_rx(struct ath10k *ar,
+ 			 * peers, 1 extra for self peer on target */
+ 			/* this needs to be tied, host and target
+ 			 * can get out of sync */
+-			num_units = TARGET_NUM_PEERS + 1;
++			num_units = TARGET_10X_NUM_PEERS + 1;
+ 		else if (num_unit_info & NUM_UNITS_IS_NUM_VDEVS)
+-			num_units = TARGET_NUM_VDEVS + 1;
++			num_units = TARGET_10X_NUM_VDEVS + 1;
  
- bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode);
+ 		ath10k_dbg(ATH10K_DBG_WMI,
+ 			   "wmi mem_req_id %d num_units %d num_unit_info %d unit size %d actual units %d\n",
+@@ -2015,48 +2015,48 @@ static int ath10k_wmi_10x_cmd_init(struct ath10k *ar)
+ 	u32 len, val;
+ 	int i;
+ 
+-	config.num_vdevs = __cpu_to_le32(TARGET_NUM_VDEVS);
+-	config.num_peers = __cpu_to_le32(TARGET_NUM_PEERS + TARGET_NUM_VDEVS);
+-	config.num_peer_keys = __cpu_to_le32(TARGET_NUM_PEER_KEYS);
+-	config.num_tids = __cpu_to_le32(TARGET_NUM_TIDS);
+-	config.ast_skid_limit = __cpu_to_le32(TARGET_AST_SKID_LIMIT);
+-	config.tx_chain_mask = __cpu_to_le32(TARGET_TX_CHAIN_MASK);
+-	config.rx_chain_mask = __cpu_to_le32(TARGET_RX_CHAIN_MASK);
+-	config.rx_timeout_pri_vo = __cpu_to_le32(TARGET_RX_TIMEOUT_LO_PRI);
+-	config.rx_timeout_pri_vi = __cpu_to_le32(TARGET_RX_TIMEOUT_LO_PRI);
+-	config.rx_timeout_pri_be = __cpu_to_le32(TARGET_RX_TIMEOUT_LO_PRI);
+-	config.rx_timeout_pri_bk = __cpu_to_le32(TARGET_RX_TIMEOUT_HI_PRI);
+-	config.rx_decap_mode = __cpu_to_le32(TARGET_RX_DECAP_MODE);
++	config.num_vdevs = __cpu_to_le32(TARGET_10X_NUM_VDEVS);
++	config.num_peers = __cpu_to_le32(TARGET_10X_NUM_PEERS);
++	config.num_peer_keys = __cpu_to_le32(TARGET_10X_NUM_PEER_KEYS);
++	config.num_tids = __cpu_to_le32(TARGET_10X_NUM_TIDS);
++	config.ast_skid_limit = __cpu_to_le32(TARGET_10X_AST_SKID_LIMIT);
++	config.tx_chain_mask = __cpu_to_le32(TARGET_10X_TX_CHAIN_MASK);
++	config.rx_chain_mask = __cpu_to_le32(TARGET_10X_RX_CHAIN_MASK);
++	config.rx_timeout_pri_vo = __cpu_to_le32(TARGET_10X_RX_TIMEOUT_LO_PRI);
++	config.rx_timeout_pri_vi = __cpu_to_le32(TARGET_10X_RX_TIMEOUT_LO_PRI);
++	config.rx_timeout_pri_be = __cpu_to_le32(TARGET_10X_RX_TIMEOUT_LO_PRI);
++	config.rx_timeout_pri_bk = __cpu_to_le32(TARGET_10X_RX_TIMEOUT_HI_PRI);
++	config.rx_decap_mode = __cpu_to_le32(TARGET_10X_RX_DECAP_MODE);
+ 
+ 	config.scan_max_pending_reqs =
+-		__cpu_to_le32(TARGET_SCAN_MAX_PENDING_REQS);
++		__cpu_to_le32(TARGET_10X_SCAN_MAX_PENDING_REQS);
+ 
+ 	config.bmiss_offload_max_vdev =
+-		__cpu_to_le32(TARGET_BMISS_OFFLOAD_MAX_VDEV);
++		__cpu_to_le32(TARGET_10X_BMISS_OFFLOAD_MAX_VDEV);
+ 
+ 	config.roam_offload_max_vdev =
+-		__cpu_to_le32(TARGET_ROAM_OFFLOAD_MAX_VDEV);
++		__cpu_to_le32(TARGET_10X_ROAM_OFFLOAD_MAX_VDEV);
+ 
+ 	config.roam_offload_max_ap_profiles =
+-		__cpu_to_le32(TARGET_ROAM_OFFLOAD_MAX_AP_PROFILES);
++		__cpu_to_le32(TARGET_10X_ROAM_OFFLOAD_MAX_AP_PROFILES);
+ 
+-	config.num_mcast_groups = __cpu_to_le32(TARGET_NUM_MCAST_GROUPS);
++	config.num_mcast_groups = __cpu_to_le32(TARGET_10X_NUM_MCAST_GROUPS);
+ 	config.num_mcast_table_elems =
+-		__cpu_to_le32(TARGET_NUM_MCAST_TABLE_ELEMS);
++		__cpu_to_le32(TARGET_10X_NUM_MCAST_TABLE_ELEMS);
+ 
+-	config.mcast2ucast_mode = __cpu_to_le32(TARGET_MCAST2UCAST_MODE);
+-	config.tx_dbg_log_size = __cpu_to_le32(TARGET_TX_DBG_LOG_SIZE);
+-	config.num_wds_entries = __cpu_to_le32(TARGET_NUM_WDS_ENTRIES);
+-	config.dma_burst_size = __cpu_to_le32(TARGET_DMA_BURST_SIZE);
+-	config.mac_aggr_delim = __cpu_to_le32(TARGET_MAC_AGGR_DELIM);
++	config.mcast2ucast_mode = __cpu_to_le32(TARGET_10X_MCAST2UCAST_MODE);
++	config.tx_dbg_log_size = __cpu_to_le32(TARGET_10X_TX_DBG_LOG_SIZE);
++	config.num_wds_entries = __cpu_to_le32(TARGET_10X_NUM_WDS_ENTRIES);
++	config.dma_burst_size = __cpu_to_le32(TARGET_10X_DMA_BURST_SIZE);
++	config.mac_aggr_delim = __cpu_to_le32(TARGET_10X_MAC_AGGR_DELIM);
+ 
+-	val = TARGET_RX_SKIP_DEFRAG_TIMEOUT_DUP_DETECTION_CHECK;
++	val = TARGET_10X_RX_SKIP_DEFRAG_TIMEOUT_DUP_DETECTION_CHECK;
+ 	config.rx_skip_defrag_timeout_dup_detection_check = __cpu_to_le32(val);
+ 
+-	config.vow_config = __cpu_to_le32(TARGET_VOW_CONFIG);
++	config.vow_config = __cpu_to_le32(TARGET_10X_VOW_CONFIG);
+ 
+-	config.num_msdu_desc = __cpu_to_le32(TARGET_NUM_MSDU_DESC);
+-	config.max_frag_entries = __cpu_to_le32(TARGET_MAX_FRAG_ENTRIES);
++	config.num_msdu_desc = __cpu_to_le32(TARGET_10X_NUM_MSDU_DESC);
++	config.max_frag_entries = __cpu_to_le32(TARGET_10X_MAX_FRAG_ENTRIES);
+ 
+ 	len = sizeof(*cmd) +
+ 	      (sizeof(struct host_memory_chunk) * ar->wmi.num_mem_chunks);
 -- 
-1.8.4
+1.7.10
 
