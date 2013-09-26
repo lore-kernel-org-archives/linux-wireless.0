@@ -1,56 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:46883 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755272Ab3I3TKg (ORCPT
+Received: from postler.einfach.org ([91.250.116.113]:37639 "EHLO
+	postler.einfach.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753377Ab3IZQDd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Sep 2013 15:10:36 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/4] ath10k: split vdev_id calculation from tx function
-References: <1380292706-3609-1-git-send-email-michal.kazior@tieto.com>
-	<1380292706-3609-3-git-send-email-michal.kazior@tieto.com>
-Date: Mon, 30 Sep 2013 22:10:30 +0300
-In-Reply-To: <1380292706-3609-3-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Fri, 27 Sep 2013 16:38:24 +0200")
-Message-ID: <87mwmudt21.fsf@kamboji.qca.qualcomm.com> (sfid-20130930_211040_196847_454623EF)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 26 Sep 2013 12:03:33 -0400
+From: Bruno Randolf <br1@einfach.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	Bruno Randolf <br1@einfach.org>
+Subject: [PATCH] cfg80211: fix warning when using WEXT for IBSS
+Date: Thu, 26 Sep 2013 16:55:28 +0100
+Message-Id: <1380210928-6604-1-git-send-email-br1@einfach.org> (sfid-20130926_180352_931750_6EA1486F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Fix kernel warning when using WEXT for configuring ad-hoc mode,
+e.g.  "iwconfig wlan0 essid test channel 1"
 
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+[ 1003.460000] WARNING: at net/wireless/chan.c:373
+cfg80211_chandef_usable+0x50/0x21c [cfg80211]()
 
-Empty commit log.
+The warning is caused by an uninitialized variable center_freq1.
 
-> ---
->  drivers/net/wireless/ath/ath10k/mac.c |   25 +++++++++++++++----------
->  1 file changed, 15 insertions(+), 10 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-> index 7415a60..4b7c949 100644
-> --- a/drivers/net/wireless/ath/ath10k/mac.c
-> +++ b/drivers/net/wireless/ath/ath10k/mac.c
-> @@ -1421,6 +1421,19 @@ static u8 ath10k_tx_h_get_tid(struct ieee80211_hdr *hdr)
->  	return ieee80211_get_qos_ctl(hdr)[0] & IEEE80211_QOS_CTL_TID_MASK;
->  }
->  
-> +static u8 ath10k_tx_h_get_vdev_id(struct ath10k *ar,
-> +				  struct ieee80211_tx_info *info)
-> +{
-> +	if (info->control.vif)
-> +		return ath10k_vif_to_arvif(info->control.vif)->vdev_id;
-> +
-> +	if (ar->monitor_enabled)
-> +		return ar->monitor_vdev_id;
-> +
-> +	ath10k_warn("could not resolve vdev id\n");
-> +	return 0;
-> +}
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+ net/wireless/ibss.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Empty line before return would be nice.
-
+diff --git a/net/wireless/ibss.c b/net/wireless/ibss.c
+index 39bff7d..a096e2c 100644
+--- a/net/wireless/ibss.c
++++ b/net/wireless/ibss.c
+@@ -263,6 +263,7 @@ int cfg80211_ibss_wext_join(struct cfg80211_registered_device *rdev,
+ 				if (chan->flags & IEEE80211_CHAN_DISABLED)
+ 					continue;
+ 				wdev->wext.ibss.chandef.chan = chan;
++				wdev->wext.ibss.chandef.center_freq1 = chan->center_freq;
+ 				break;
+ 			}
+ 
+@@ -347,6 +348,7 @@ int cfg80211_ibss_wext_siwfreq(struct net_device *dev,
+ 	if (chan) {
+ 		wdev->wext.ibss.chandef.chan = chan;
+ 		wdev->wext.ibss.chandef.width = NL80211_CHAN_WIDTH_20_NOHT;
++		wdev->wext.ibss.chandef.center_freq1 = freq;
+ 		wdev->wext.ibss.channel_fixed = true;
+ 	} else {
+ 		/* cfg80211_ibss_wext_join will pick one if needed */
 -- 
-Kalle Valo
+1.8.1.2
+
