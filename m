@@ -1,36 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:32398 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752722Ab3IQMXn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Sep 2013 08:23:43 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH] cfg80211: don't start p2p device while in RFKILL
-Date: Tue, 17 Sep 2013 15:23:39 +0300
-Message-Id: <1379420619-6123-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20130917_142353_657499_16B62AEC)
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:3944 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756678Ab3IZNFx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Sep 2013 09:05:53 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Bartosz Markowski <bartosz.markowski@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 00/13] ath10k: dual-firmware support (MAIN and 10.X)
+References: <1380187792-25626-1-git-send-email-bartosz.markowski@tieto.com>
+Date: Thu, 26 Sep 2013 16:05:41 +0300
+In-Reply-To: <1380187792-25626-1-git-send-email-bartosz.markowski@tieto.com>
+	(Bartosz Markowski's message of "Thu, 26 Sep 2013 11:29:39 +0200")
+Message-ID: <87y56jpwbe.fsf@kamboji.qca.qualcomm.com> (sfid-20130926_150918_195402_6B10F8F9)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- net/wireless/nl80211.c |    3 +++
- 1 file changed, 3 insertions(+)
+Bartosz Markowski <bartosz.markowski@tieto.com> writes:
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 316503f..6bb03b5 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -8666,6 +8666,9 @@ static int nl80211_start_p2p_device(struct sk_buff *skb, struct genl_info *info)
- 	if (err)
- 		return err;
- 
-+	if (rfkill_blocked(rdev->rfkill))
-+		return -ERFKILL;
-+
- 	err = rdev_start_p2p_device(rdev, wdev);
- 	if (err)
- 		return err;
+> This patch-set adds framework for dynamic support of 10.X FW branch.
+>
+> The major changes covered by this work:
+> * dynamic WMI structures
+> * WMI cmd/event definitions from 10.x FW track
+> * memory host chunks feature
+> * management frames path over WMI for 10.x
+> * WMI RX events handling for MAIN and 10.X split
+> * target config split (LARGE AP feature for 10.x)
+> * scan start sctructure split
+> * dynamic VDEV and PDEV parameters structures
+>
+> Changes in v2 
+> (review comments from Kalle and Michal):
+> * WMI cmd, pdev and vdev params names trimmed
+> * ath10k_wmi_cmd_init() exposed only
+> * few 'if' statements simplifications
+> * 10.x mgmt frames over WMI - 'BUG: scheduling while atomic' fixed
+
+This is looking very good now, I had only had few nitpicks which I found
+while reviewing this.
+
 -- 
-1.7.10.4
-
+Kalle Valo
