@@ -1,77 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0249.hostedemail.com ([216.40.44.249]:40067 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755220Ab3IYTio (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:15206 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756377Ab3IZJHL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Sep 2013 15:38:44 -0400
-From: Joe Perches <joe@perches.com>
-To: netdev@vger.kernel.org
-Cc: "David S. Miller" <davem@davemloft.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 10/11] orinoco: Remove extern from function prototypes
-Date: Wed, 25 Sep 2013 12:37:28 -0700
-Message-Id: <53406cd734ec5293069acd9135440ff36a4bbdbc.1380137610.git.joe@perches.com> (sfid-20130925_224501_436286_266204FD)
-In-Reply-To: <cover.1380137609.git.joe@perches.com>
-References: <cover.1380137609.git.joe@perches.com>
+	Thu, 26 Sep 2013 05:07:11 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: Bartosz Markowski <bartosz.markowski@tieto.com>,
+	<ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 01/13] ath10k: introduce dynamic WMI structures
+References: <1380101891-18312-1-git-send-email-bartosz.markowski@tieto.com>
+	<1380101891-18312-2-git-send-email-bartosz.markowski@tieto.com>
+	<87ob7grmhv.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQk98WwdqyVtyHy9A1Z5kWgmkC6sHVjgaQNbrRLfm8YSiA@mail.gmail.com>
+Date: Thu, 26 Sep 2013 12:07:01 +0300
+In-Reply-To: <CA+BoTQk98WwdqyVtyHy9A1Z5kWgmkC6sHVjgaQNbrRLfm8YSiA@mail.gmail.com>
+	(Michal Kazior's message of "Thu, 26 Sep 2013 11:03:17 +0200")
+Message-ID: <87fvssrlxm.fsf@kamboji.qca.qualcomm.com> (sfid-20130926_110721_993320_BF1585D5)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are a mix of function prototypes with and without extern
-in the kernel sources.  Standardize on not using extern for
-function prototypes.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Function prototypes don't need to be written with extern.
-extern is assumed by the compiler.  Its use is as unnecessary as
-using auto to declare automatic/local variables in a block.
+> On 26 September 2013 10:54, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>> Bartosz Markowski <bartosz.markowski@tieto.com> writes:
+>>
+>>> @@ -1293,7 +1438,8 @@ int ath10k_wmi_pdev_resume_target(struct ath10k *ar)
+>>>       if (skb == NULL)
+>>>               return -ENOMEM;
+>>>
+>>> -     return ath10k_wmi_cmd_send(ar, skb, WMI_PDEV_RESUME_CMDID);
+>>> +     return ath10k_wmi_cmd_send(ar, skb,
+>>> +                                ar->wmi.cmd->wmi_pdev_resume_cmdid);
+>>>  }
+>>
+>> I was thinking of adding a macro WMI_PDEV_RESUME_CMDID(ar) for all
+>> dynamic wmi ids, that way it would look as closely as possible with the
+>> original code. But I'm not sure if that makes sense anymore. Thoughts?
+>
+> Seems like an unnecessary indirection to me. You still need to have
+> the mapping structure, unless you want to use macro concatenation (##)
+> instead.
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/orinoco/orinoco.h | 31 ++++++++++++++-----------------
- 1 file changed, 14 insertions(+), 17 deletions(-)
+Yeah, there's no real benefit from the macro.
 
-diff --git a/drivers/net/wireless/orinoco/orinoco.h b/drivers/net/wireless/orinoco/orinoco.h
-index 3bb936b..eebd2be 100644
---- a/drivers/net/wireless/orinoco/orinoco.h
-+++ b/drivers/net/wireless/orinoco/orinoco.h
-@@ -182,23 +182,20 @@ extern int orinoco_debug;
- /* Exported prototypes                                              */
- /********************************************************************/
- 
--extern struct orinoco_private *alloc_orinocodev(
--	int sizeof_card, struct device *device,
--	int (*hard_reset)(struct orinoco_private *),
--	int (*stop_fw)(struct orinoco_private *, int));
--extern void free_orinocodev(struct orinoco_private *priv);
--extern int orinoco_init(struct orinoco_private *priv);
--extern int orinoco_if_add(struct orinoco_private *priv,
--			  unsigned long base_addr,
--			  unsigned int irq,
--			  const struct net_device_ops *ops);
--extern void orinoco_if_del(struct orinoco_private *priv);
--extern int orinoco_up(struct orinoco_private *priv);
--extern void orinoco_down(struct orinoco_private *priv);
--extern irqreturn_t orinoco_interrupt(int irq, void *dev_id);
--
--extern void __orinoco_ev_info(struct net_device *dev, struct hermes *hw);
--extern void __orinoco_ev_rx(struct net_device *dev, struct hermes *hw);
-+struct orinoco_private *alloc_orinocodev(int sizeof_card, struct device *device,
-+					 int (*hard_reset)(struct orinoco_private *),
-+					 int (*stop_fw)(struct orinoco_private *, int));
-+void free_orinocodev(struct orinoco_private *priv);
-+int orinoco_init(struct orinoco_private *priv);
-+int orinoco_if_add(struct orinoco_private *priv, unsigned long base_addr,
-+		   unsigned int irq, const struct net_device_ops *ops);
-+void orinoco_if_del(struct orinoco_private *priv);
-+int orinoco_up(struct orinoco_private *priv);
-+void orinoco_down(struct orinoco_private *priv);
-+irqreturn_t orinoco_interrupt(int irq, void *dev_id);
-+
-+void __orinoco_ev_info(struct net_device *dev, struct hermes *hw);
-+void __orinoco_ev_rx(struct net_device *dev, struct hermes *hw);
- 
- int orinoco_process_xmit_skb(struct sk_buff *skb,
- 			     struct net_device *dev,
 -- 
-1.8.1.2.459.gbcd45b4.dirty
-
+Kalle Valo
