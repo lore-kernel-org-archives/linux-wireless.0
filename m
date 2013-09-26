@@ -1,30 +1,24 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:40535 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752831Ab3IDRKI (ORCPT
+Received: from 174-143-244-95.static.cloud-ips.com ([174.143.244.95]:36620
+	"EHLO mail.catnarok.net" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1750853Ab3IZBRc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Sep 2013 13:10:08 -0400
-Date: Wed, 04 Sep 2013 13:10:01 -0400 (EDT)
-Message-Id: <20130904.131001.1189384206727310769.davem@davemloft.net> (sfid-20130904_191012_711845_A6F0A919)
-To: netdev@vger.kernel.org
-CC: linux-wireless@vger.kernel.org, netfilter-devel@vger.kernel.org
-Subject: merge window warning
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 25 Sep 2013 21:17:32 -0400
+Date: Thu, 26 Sep 2013 00:54:39 +0000
+From: Michael Stolovitzsky <emestee@catnarok.net>
+To: linux-wireless@vger.kernel.org
+Subject: Re: bcma 3.12-rc1 scheduling while atomic
+Message-ID: <20130926005439.GA19054@mail.catnarok.net> (sfid-20130926_031735_456695_0FBEBF8A)
+References: <1380142945.23272.42.camel@dcbw.foobar.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1380142945.23272.42.camel@dcbw.foobar.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 13-09-25, Dan Williams wrote:
 
-The merge window is now open.
+> [    7.607842] BUG: scheduling while atomic: NetworkManager/523/0x00000200
+[...]
 
-This means if a feature patch isn't in patchwork already, and
-completely ready to apply, you should not submit it at this time.
-
-I will just automatically reject any inappropriate patches sent from
-now until the net-next tree opens again after the merge window closes,
-in order to assist with my ability to process the current backlog
-efficiently.
-
-Thanks.
-
+I am observing the same with BCM4313. Let me know if I can help in any way.
