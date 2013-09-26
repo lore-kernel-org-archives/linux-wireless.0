@@ -1,83 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:51251 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752093Ab3IVUXR (ORCPT
+Received: from mail-bk0-f42.google.com ([209.85.214.42]:62734 "EHLO
+	mail-bk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755226Ab3IZJDU convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Sep 2013 16:23:17 -0400
-From: Peter Senna Tschudin <peter.senna@gmail.com>
-To: Larry.Finger@lwfinger.net
-Cc: joe@perches.com, sergei.shtylyov@cogentembedded.com,
-	chaoming_li@realsil.com.cn, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
-	Peter Senna Tschudin <peter.senna@gmail.com>
-Subject: [PATCH V3] wireless: rtlwifi: Replace variable with a break
-Date: Sun, 22 Sep 2013 22:22:46 +0200
-Message-Id: <1379881366-25487-1-git-send-email-peter.senna@gmail.com> (sfid-20130922_222344_596088_A4CEA4D6)
+	Thu, 26 Sep 2013 05:03:20 -0400
+Received: by mail-bk0-f42.google.com with SMTP id my10so292865bkb.15
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Sep 2013 02:03:17 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87ob7grmhv.fsf@kamboji.qca.qualcomm.com>
+References: <1380101891-18312-1-git-send-email-bartosz.markowski@tieto.com>
+	<1380101891-18312-2-git-send-email-bartosz.markowski@tieto.com>
+	<87ob7grmhv.fsf@kamboji.qca.qualcomm.com>
+Date: Thu, 26 Sep 2013 11:03:17 +0200
+Message-ID: <CA+BoTQk98WwdqyVtyHy9A1Z5kWgmkC6sHVjgaQNbrRLfm8YSiA@mail.gmail.com> (sfid-20130926_110326_585020_FE45E03F)
+Subject: Re: [PATCH 01/13] ath10k: introduce dynamic WMI structures
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Bartosz Markowski <bartosz.markowski@tieto.com>,
+	ath10k@lists.infradead.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes the variable continual, and change the while loop
-to break when efuse_data == 0xFF.
+On 26 September 2013 10:54, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Bartosz Markowski <bartosz.markowski@tieto.com> writes:
+>
+>> This is the initial framework to implement dynamic
+>> WMI API in order to support new firmware (from so
+>> called 10.X branch)
+>>
+>> The realization is to have a static WMI cmd map for
+>> each of the firmwares, registered upom wmi init.
+>>
+>> This patch creates such map for MAIN FW, updates
+>> wmi_cmd_send() calls to take as a parameter
+>> the map value instead of direct WMI enum.
+>>
+>> As soon as complete 10.X API will be on place,
+>> we will introduce the FW IE mechanics to dynamicaly
+>> identify which FW is being used and based on that
+>> we will use correct map, API, structures, etc.
+>>
+>> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+>> ---
+>
+> [...]
+>
+>> @@ -1293,7 +1438,8 @@ int ath10k_wmi_pdev_resume_target(struct ath10k *ar)
+>>       if (skb == NULL)
+>>               return -ENOMEM;
+>>
+>> -     return ath10k_wmi_cmd_send(ar, skb, WMI_PDEV_RESUME_CMDID);
+>> +     return ath10k_wmi_cmd_send(ar, skb,
+>> +                                ar->wmi.cmd->wmi_pdev_resume_cmdid);
+>>  }
+>
+> I was thinking of adding a macro WMI_PDEV_RESUME_CMDID(ar) for all
+> dynamic wmi ids, that way it would look as closely as possible with the
+> original code. But I'm not sure if that makes sense anymore. Thoughts?
 
-Tested by compilation only.
+Seems like an unnecessary indirection to me. You still need to have
+the mapping structure, unless you want to use macro concatenation (##)
+instead.
 
-CC: Joe Perches <joe@perches.com>
-Signed-off-by: Peter Senna Tschudin <peter.senna@gmail.com>
----
-Changes from V2:
- - Fix typo in the subject
- - Fix indentation
 
-Changes from V1:
- - Fix the indetation
- - Remove remaining } from removed else
-
-Please ignore the patch:
-[PATCH 12/19] wireless: Change variable type to bool
-
-And apply this one instead.
-
-The variable continual was declared as int, but was used as bool. I
-sent previous patch changing the variable type to bool, but Joe Perches
-proposed that removing the variable and adding a break would be better.
-
- drivers/net/wireless/rtlwifi/efuse.c | 18 ++++++++----------
- 1 file changed, 8 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/net/wireless/rtlwifi/efuse.c b/drivers/net/wireless/rtlwifi/efuse.c
-index 838a1ed..ae13fb9 100644
---- a/drivers/net/wireless/rtlwifi/efuse.c
-+++ b/drivers/net/wireless/rtlwifi/efuse.c
-@@ -1203,20 +1203,18 @@ static void efuse_power_switch(struct ieee80211_hw *hw, u8 write, u8 pwrstate)
- 
- static u16 efuse_get_current_size(struct ieee80211_hw *hw)
- {
--	int continual = true;
- 	u16 efuse_addr = 0;
- 	u8 hworden;
- 	u8 efuse_data, word_cnts;
- 
--	while (continual && efuse_one_byte_read(hw, efuse_addr, &efuse_data)
--	       && (efuse_addr < EFUSE_MAX_SIZE)) {
--		if (efuse_data != 0xFF) {
--			hworden = efuse_data & 0x0F;
--			word_cnts = efuse_calculate_word_cnts(hworden);
--			efuse_addr = efuse_addr + (word_cnts * 2) + 1;
--		} else {
--			continual = false;
--		}
-+	while (efuse_one_byte_read(hw, efuse_addr, &efuse_data) &&
-+	       efuse_addr < EFUSE_MAX_SIZE) {
-+		if (efuse_data == 0xFF)
-+			break;
-+
-+		hworden = efuse_data & 0x0F;
-+		word_cnts = efuse_calculate_word_cnts(hworden);
-+		efuse_addr = efuse_addr + (word_cnts * 2) + 1;
- 	}
- 
- 	return efuse_addr;
--- 
-1.8.3.1
-
+Michał.
