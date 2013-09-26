@@ -1,86 +1,361 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f176.google.com ([209.85.215.176]:63110 "EHLO
-	mail-ea0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752884Ab3IQPll (ORCPT
+Received: from mail-ea0-f177.google.com ([209.85.215.177]:38074 "EHLO
+	mail-ea0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750773Ab3IZOhg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Sep 2013 11:41:41 -0400
-Received: by mail-ea0-f176.google.com with SMTP id q16so2821027ead.35
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Sep 2013 08:41:40 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <luca@coelho.fi>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 04/11] wlcore: re-enable idle handling
-Date: Tue, 17 Sep 2013 18:41:23 +0300
-Message-Id: <1379432490-22157-4-git-send-email-eliad@wizery.com> (sfid-20130917_174151_713439_D9D878B0)
-In-Reply-To: <1379432490-22157-1-git-send-email-eliad@wizery.com>
-References: <1379432490-22157-1-git-send-email-eliad@wizery.com>
+	Thu, 26 Sep 2013 10:37:36 -0400
+Received: by mail-ea0-f177.google.com with SMTP id f15so596505eak.36
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Sep 2013 07:37:35 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@qca.qualcomm.com,
+	simon.wunderlich@s2003.tu-chemnitz.de
+Subject: [RFC] ath9k: add HT40 spectral scan capability
+Date: Thu, 26 Sep 2013 16:37:38 +0200
+Message-Id: <1380206258-16452-1-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20130926_163740_427670_0398E9CD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+Add spectral scan feature on HT40 channels for ath9k. This patch extends
+previous capability added by Simon Wunderlich
 
-We need some stuff done on idle change, most notably we have to stop
-sched-scanning. Take care of this by reintroducing idle handling.
-
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 ---
- drivers/net/wireless/ti/wlcore/main.c     | 22 ++++++++++++++++++++++
- drivers/net/wireless/ti/wlcore/wlcore_i.h |  1 +
- 2 files changed, 23 insertions(+)
+ drivers/net/wireless/ath/ath9k/ath9k.h |  47 +++++++----
+ drivers/net/wireless/ath/ath9k/calib.c |  10 +--
+ drivers/net/wireless/ath/ath9k/calib.h |   3 +-
+ drivers/net/wireless/ath/ath9k/hw.c    |   2 +-
+ drivers/net/wireless/ath/ath9k/link.c  |   3 +-
+ drivers/net/wireless/ath/ath9k/recv.c  | 142 ++++++++++++++++++++++-----------
+ 6 files changed, 139 insertions(+), 68 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 611e81d..d952593 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -2927,6 +2927,25 @@ static void wl1271_set_band_rate(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- 	wlvif->rate_set = wlvif->basic_rate_set;
- }
- 
-+static void wl1271_sta_handle_idle(struct wl1271 *wl, struct wl12xx_vif *wlvif,
-+				   bool idle)
-+{
-+	bool cur_idle = !test_bit(WLVIF_FLAG_ACTIVE, &wlvif->flags);
-+
-+	if (idle == cur_idle)
-+		return;
-+
-+	if (idle) {
-+		clear_bit(WLVIF_FLAG_ACTIVE, &wlvif->flags);
-+	} else {
-+		/* The current firmware only supports sched_scan in idle */
-+		if (wl->sched_vif == wlvif)
-+			wl->ops->sched_scan_stop(wl, wlvif);
-+
-+		set_bit(WLVIF_FLAG_ACTIVE, &wlvif->flags);
-+	}
-+}
-+
- static int wl12xx_config_vif(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 			     struct ieee80211_conf *conf, u32 changed)
- {
-@@ -4179,6 +4198,9 @@ static void wl1271_bss_info_changed_sta(struct wl1271 *wl,
- 		do_join = true;
- 	}
- 
-+	if (changed & BSS_CHANGED_IDLE && !is_ibss)
-+		wl1271_sta_handle_idle(wl, wlvif, bss_conf->idle);
-+
- 	if (changed & BSS_CHANGED_CQM) {
- 		bool enable = false;
- 		if (bss_conf->cqm_rssi_thold)
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-index 3f4f08b..2a50e08 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-@@ -255,6 +255,7 @@ enum wl12xx_vif_flags {
- 	WLVIF_FLAG_CS_PROGRESS,
- 	WLVIF_FLAG_AP_PROBE_RESP_SET,
- 	WLVIF_FLAG_IN_USE,
-+	WLVIF_FLAG_ACTIVE,
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 2ee35f6..b44955e 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -875,32 +875,49 @@ static inline u8 spectral_bitmap_weight(u8 *bins)
+  * TODO: this might need rework when switching to nl80211-based
+  * interface.
+  */
+-enum ath_fft_sample_type {
+-	ATH_FFT_SAMPLE_HT20 = 1,
++enum fft_sample_type {
++	FFT_SAMPLE_HT20 = 1,
++	FFT_SAMPLE_HT20_40,
  };
  
- struct wl12xx_vif;
+ struct fft_sample_tlv {
+-	u8 type;	/* see ath_fft_sample */
++	enum fft_sample_type type;
+ 	__be16 length;
+ 	/* type dependent data follows */
+ } __packed;
+ 
+-struct fft_sample_ht20 {
++struct fft_sample {
+ 	struct fft_sample_tlv tlv;
+-
+-	u8 max_exp;
+-
+ 	__be16 freq;
+-	s8 rssi;
+-	s8 noise;
+-
+-	__be16 max_magnitude;
+-	u8 max_index;
+-	u8 bitmap_weight;
+-
+ 	__be64 tsf;
+ 
+-	u8 data[SPECTRAL_HT20_NUM_BINS];
++	union {
++		struct {
++			s8 rssi;
++			s8 nf;
++
++			u8 data[SPECTRAL_HT20_NUM_BINS];
++			__be16 max_mag;
++			u8 max_idx;
++			u8 bitmap_w;
++			u8 max_exp;
++		} ht20;
++		struct {
++			s8 lower_rssi;
++			s8 upper_rssi;
++			s8 lower_nf;
++			s8 upper_nf;
++
++			u8 data[SPECTRAL_HT20_40_NUM_BINS];
++			__be16 lower_max_mag;
++			__be16 upper_max_mag;
++			u8 lower_max_idx;
++			u8 upper_max_idx;
++			u8 lower_bitmap_w;
++			u8 upper_bitmap_w;
++			u8 max_exp;
++		} ht20_40;
++	};
+ } __packed;
+ 
+ void ath9k_tasklet(unsigned long data);
+diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
+index 5e8219a..d09eaeb 100644
+--- a/drivers/net/wireless/ath/ath9k/calib.c
++++ b/drivers/net/wireless/ath/ath9k/calib.c
+@@ -63,13 +63,13 @@ static s16 ath9k_hw_get_default_nf(struct ath_hw *ah,
+ 	return ath9k_hw_get_nf_limits(ah, chan)->nominal;
+ }
+ 
+-s16 ath9k_hw_getchan_noise(struct ath_hw *ah, struct ath9k_channel *chan)
++s16 ath9k_hw_getchan_noise(struct ath_hw *ah, struct ath9k_channel *chan,
++			   s16 nf)
+ {
+ 	s8 noise = ATH_DEFAULT_NOISE_FLOOR;
+ 
+-	if (chan && chan->noisefloor) {
+-		s8 delta = chan->noisefloor -
+-			   ATH9K_NF_CAL_NOISE_THRESH -
++	if (nf) {
++		s8 delta = nf - ATH9K_NF_CAL_NOISE_THRESH -
+ 			   ath9k_hw_get_default_nf(ah, chan);
+ 		if (delta > 0)
+ 			noise += delta;
+@@ -394,7 +394,7 @@ bool ath9k_hw_getnf(struct ath_hw *ah, struct ath9k_channel *chan)
+ 	caldata->nfcal_pending = false;
+ 	ath9k_hw_update_nfcal_hist_buffer(ah, caldata, nfarray);
+ 	chan->noisefloor = h[0].privNF;
+-	ah->noise = ath9k_hw_getchan_noise(ah, chan);
++	ah->noise = ath9k_hw_getchan_noise(ah, chan, chan->noisefloor);
+ 	return true;
+ }
+ EXPORT_SYMBOL(ath9k_hw_getnf);
+diff --git a/drivers/net/wireless/ath/ath9k/calib.h b/drivers/net/wireless/ath/ath9k/calib.h
+index 3d70b8c..b8ed95e 100644
+--- a/drivers/net/wireless/ath/ath9k/calib.h
++++ b/drivers/net/wireless/ath/ath9k/calib.h
+@@ -116,7 +116,8 @@ void ath9k_init_nfcal_hist_buffer(struct ath_hw *ah,
+ void ath9k_hw_bstuck_nfcal(struct ath_hw *ah);
+ void ath9k_hw_reset_calibration(struct ath_hw *ah,
+ 				struct ath9k_cal_list *currCal);
+-s16 ath9k_hw_getchan_noise(struct ath_hw *ah, struct ath9k_channel *chan);
++s16 ath9k_hw_getchan_noise(struct ath_hw *ah, struct ath9k_channel *chan,
++			   s16 nf);
+ 
+ 
+ #endif /* CALIB_H */
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index ecc6ec4..2f1427d 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1882,7 +1882,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	} else if (caldata) {
+ 		caldata->paprd_packet_sent = false;
+ 	}
+-	ah->noise = ath9k_hw_getchan_noise(ah, chan);
++	ah->noise = ath9k_hw_getchan_noise(ah, chan, chan->noisefloor);
+ 
+ 	if (fastcc) {
+ 		r = ath9k_hw_do_fastcc(ah, chan);
+diff --git a/drivers/net/wireless/ath/ath9k/link.c b/drivers/net/wireless/ath/ath9k/link.c
+index 2f831db..3e747cc 100644
+--- a/drivers/net/wireless/ath/ath9k/link.c
++++ b/drivers/net/wireless/ath/ath9k/link.c
+@@ -516,7 +516,8 @@ void ath_update_survey_nf(struct ath_softc *sc, int channel)
+ 
+ 	if (chan->noisefloor) {
+ 		survey->filled |= SURVEY_INFO_NOISE_DBM;
+-		survey->noise = ath9k_hw_getchan_noise(ah, chan);
++		survey->noise = ath9k_hw_getchan_noise(ah, chan,
++						       chan->noisefloor);
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 4ee472a..525f07c 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -972,14 +972,13 @@ static int ath_process_fft(struct ath_softc *sc, struct ieee80211_hdr *hdr,
+ {
+ #ifdef CONFIG_ATH9K_DEBUGFS
+ 	struct ath_hw *ah = sc->sc_ah;
+-	u8 bins[SPECTRAL_HT20_NUM_BINS];
+-	u8 *vdata = (u8 *)hdr;
+-	struct fft_sample_ht20 fft_sample;
++	u8 type, num_bins, *data, *vdata = (u8 *) hdr;
++	struct fft_sample fft_data;
+ 	struct ath_radar_info *radar_info;
+-	struct ath_ht20_mag_info *mag_info;
+ 	int len = rs->rs_datalen;
+ 	int dc_pos;
+-	u16 length, max_magnitude;
++	u16 length, fft_len;
++	enum nl80211_channel_type chtype;
+ 
+ 	/* AR9280 and before report via ATH9K_PHYERR_RADAR, AR93xx and newer
+ 	 * via ATH9K_PHYERR_SPECTRAL. Haven't seen ATH9K_PHYERR_FALSE_RADAR_EXT
+@@ -997,45 +996,53 @@ static int ath_process_fft(struct ath_softc *sc, struct ieee80211_hdr *hdr,
+ 	if (!(radar_info->pulse_bw_info & SPECTRAL_SCAN_BITMASK))
+ 		return 0;
+ 
+-	/* Variation in the data length is possible and will be fixed later.
+-	 * Note that we only support HT20 for now.
+-	 *
+-	 * TODO: add HT20_40 support as well.
+-	 */
+-	if ((len > SPECTRAL_HT20_TOTAL_DATA_LEN + 2) ||
+-	    (len < SPECTRAL_HT20_TOTAL_DATA_LEN - 1))
++	chtype = cfg80211_get_chandef_type(&sc->hw->conf.chandef);
++	if ((chtype == NL80211_CHAN_HT40MINUS) ||
++	    (chtype == NL80211_CHAN_HT40PLUS)) {
++		type = FFT_SAMPLE_HT20_40;
++		num_bins = SPECTRAL_HT20_40_NUM_BINS;
++		fft_len = SPECTRAL_HT20_40_TOTAL_DATA_LEN;
++		data = (u8 *) fft_data.ht20_40.data;
++	} else {
++		type = FFT_SAMPLE_HT20;
++		num_bins = SPECTRAL_HT20_NUM_BINS;
++		fft_len = SPECTRAL_HT20_TOTAL_DATA_LEN;
++		data = (u8 *) fft_data.ht20.data;
++	}
++
++	/* variation in the data length is possible and will be fixed later */
++	if ((len > fft_len + 2) || (len < fft_len - 1))
+ 		return 1;
+ 
+-	fft_sample.tlv.type = ATH_FFT_SAMPLE_HT20;
+-	length = sizeof(fft_sample) - sizeof(fft_sample.tlv);
+-	fft_sample.tlv.length = __cpu_to_be16(length);
++	fft_data.tlv.type = __cpu_to_be32(type);
++	length = sizeof(fft_data) - sizeof(fft_data.tlv);
++	fft_data.tlv.length = __cpu_to_be16(length);
+ 
+-	fft_sample.freq = __cpu_to_be16(ah->curchan->chan->center_freq);
+-	fft_sample.rssi = fix_rssi_inv_only(rs->rs_rssi_ctl0);
+-	fft_sample.noise = ah->noise;
++	fft_data.freq = __cpu_to_be16(ah->curchan->chan->center_freq);
++	fft_data.tsf = __cpu_to_be64(tsf);
+ 
+-	switch (len - SPECTRAL_HT20_TOTAL_DATA_LEN) {
++	switch (len - fft_len) {
+ 	case 0:
+ 		/* length correct, nothing to do. */
+-		memcpy(bins, vdata, SPECTRAL_HT20_NUM_BINS);
++		memcpy(data, vdata, num_bins);
+ 		break;
+ 	case -1:
+ 		/* first byte missing, duplicate it. */
+-		memcpy(&bins[1], vdata, SPECTRAL_HT20_NUM_BINS - 1);
+-		bins[0] = vdata[0];
++		memcpy(&data[1], vdata, num_bins - 1);
++		data[0] = vdata[0];
+ 		break;
+ 	case 2:
+ 		/* MAC added 2 extra bytes at bin 30 and 32, remove them. */
+-		memcpy(bins, vdata, 30);
+-		bins[30] = vdata[31];
+-		memcpy(&bins[31], &vdata[33], SPECTRAL_HT20_NUM_BINS - 31);
++		memcpy(data, vdata, 30);
++		data[30] = vdata[31];
++		memcpy(&data[31], &vdata[33], num_bins - 31);
+ 		break;
+ 	case 1:
+ 		/* MAC added 2 extra bytes AND first byte is missing. */
+-		bins[0] = vdata[0];
+-		memcpy(&bins[0], vdata, 30);
+-		bins[31] = vdata[31];
+-		memcpy(&bins[32], &vdata[33], SPECTRAL_HT20_NUM_BINS - 32);
++		data[0] = vdata[0];
++		memcpy(&data[1], vdata, 30);
++		data[31] = vdata[31];
++		memcpy(&data[32], &vdata[33], num_bins - 32);
+ 		break;
+ 	default:
+ 		return 1;
+@@ -1044,23 +1051,68 @@ static int ath_process_fft(struct ath_softc *sc, struct ieee80211_hdr *hdr,
+ 	/* DC value (value in the middle) is the blind spot of the spectral
+ 	 * sample and invalid, interpolate it.
+ 	 */
+-	dc_pos = SPECTRAL_HT20_NUM_BINS / 2;
+-	bins[dc_pos] = (bins[dc_pos + 1] + bins[dc_pos - 1]) / 2;
+-
+-	/* mag data is at the end of the frame, in front of radar_info */
+-	mag_info = ((struct ath_ht20_mag_info *)radar_info) - 1;
+-
+-	/* copy raw bins without scaling them */
+-	memcpy(fft_sample.data, bins, SPECTRAL_HT20_NUM_BINS);
+-	fft_sample.max_exp = mag_info->max_exp & 0xf;
+-
+-	max_magnitude = spectral_max_magnitude(mag_info->all_bins);
+-	fft_sample.max_magnitude = __cpu_to_be16(max_magnitude);
+-	fft_sample.max_index = spectral_max_index(mag_info->all_bins);
+-	fft_sample.bitmap_weight = spectral_bitmap_weight(mag_info->all_bins);
+-	fft_sample.tsf = __cpu_to_be64(tsf);
++	dc_pos = num_bins / 2;
++	data[dc_pos] = (data[dc_pos + 1] + data[dc_pos - 1]) / 2;
++
++	if ((chtype == NL80211_CHAN_HT40MINUS) ||
++	    (chtype == NL80211_CHAN_HT40PLUS)) {
++		u16 lower_max_mag, upper_max_mag;
++		s16 nf_ext;
++		struct ath_ht20_40_mag_info *mag_info;
++		struct ath9k_hw_cal_data *caldata = ah->caldata;
++
++		if (caldata)
++			nf_ext = ath9k_hw_getchan_noise(ah, ah->curchan,
++						caldata->nfCalHist[3].privNF);
++		else
++			nf_ext = ATH_DEFAULT_NOISE_FLOOR;
++
++		mag_info = ((struct ath_ht20_40_mag_info *)radar_info) - 1;
++		lower_max_mag = spectral_max_magnitude(mag_info->lower_bins);
++		upper_max_mag = spectral_max_magnitude(mag_info->upper_bins);
++
++		if (chtype == NL80211_CHAN_HT40PLUS) {
++			fft_data.ht20_40.lower_rssi =
++				fix_rssi_inv_only(rs->rs_rssi_ctl0);
++			fft_data.ht20_40.upper_rssi =
++				fix_rssi_inv_only(rs->rs_rssi_ext0);
++			fft_data.ht20_40.lower_nf = ah->noise;
++			fft_data.ht20_40.upper_nf = nf_ext;
++		} else {
++			fft_data.ht20_40.lower_rssi =
++				fix_rssi_inv_only(rs->rs_rssi_ext0);
++			fft_data.ht20_40.upper_rssi =
++				fix_rssi_inv_only(rs->rs_rssi_ctl0);
++			fft_data.ht20_40.lower_nf = nf_ext;
++			fft_data.ht20_40.upper_nf = ah->noise;
++		}
++		fft_data.ht20_40.lower_max_mag = __cpu_to_be16(lower_max_mag);
++		fft_data.ht20_40.lower_max_idx =
++			spectral_max_index(mag_info->lower_bins);
++		fft_data.ht20_40.lower_bitmap_w =
++			spectral_bitmap_weight(mag_info->lower_bins);
++		fft_data.ht20_40.upper_max_mag = __cpu_to_be16(upper_max_mag);
++		fft_data.ht20_40.upper_max_idx =
++			spectral_max_index(mag_info->upper_bins);
++		fft_data.ht20_40.upper_bitmap_w =
++			spectral_bitmap_weight(mag_info->upper_bins);
++		fft_data.ht20_40.max_exp = mag_info->max_exp & 0xf;
++	} else {
++		u16 max_mag;
++		struct ath_ht20_mag_info *mag_info;
++
++		mag_info = ((struct ath_ht20_mag_info *)radar_info) - 1;
++		max_mag = spectral_max_magnitude(mag_info->all_bins);
++		fft_data.ht20.rssi = fix_rssi_inv_only(rs->rs_rssi_ctl0);
++		fft_data.ht20.nf = ah->noise;
++		fft_data.ht20.max_mag = __cpu_to_be16(max_mag);
++		fft_data.ht20.max_idx = spectral_max_index(mag_info->all_bins);
++		fft_data.ht20.bitmap_w =
++			spectral_bitmap_weight(mag_info->all_bins);
++		fft_data.ht20.max_exp = mag_info->max_exp & 0xf;
++	}
+ 
+-	ath_debug_send_fft_sample(sc, &fft_sample.tlv);
++	ath_debug_send_fft_sample(sc, &fft_data.tlv);
+ 	return 1;
+ #else
+ 	return 0;
 -- 
-1.8.3.rc1.35.g9b79519
+1.8.1.2
 
