@@ -1,265 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:53313 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752921Ab3I0NVL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Sep 2013 09:21:11 -0400
-Subject: [PATCH v2 3/3] ath10k: implement firmware IE container support
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 27 Sep 2013 16:21:05 +0300
-Message-ID: <20130927132105.20789.33862.stgit@localhost6.localdomain6> (sfid-20130927_152129_252497_C9E5F588)
-In-Reply-To: <20130927131812.20789.9941.stgit@localhost6.localdomain6>
-References: <20130927131812.20789.9941.stgit@localhost6.localdomain6>
+Received: from mx1.redhat.com ([209.132.183.28]:16766 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751395Ab3IZIRM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Sep 2013 04:17:12 -0400
+Message-ID: <5243ED7C.7070203@redhat.com> (sfid-20130926_101718_847465_704AC648)
+Date: Thu, 26 Sep 2013 10:17:00 +0200
+From: Daniel Borkmann <dborkman@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Arend van Spriel <arend@broadcom.com>
+CC: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: bcma 3.12-rc1 scheduling while atomic
+References: <1380142945.23272.42.camel@dcbw.foobar.com> <5243E72A.4040108@broadcom.com>
+In-Reply-To: <5243E72A.4040108@broadcom.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Firmware IE containers can dynamically provide various information what
-firmware supports. Also it can embed more than one image so updating firmware
-is easy, user just needs to update one file in /lib/firmware/.
+On 09/26/2013 09:50 AM, Arend van Spriel wrote:
+> On 09/25/2013 11:02 PM, Dan Williams wrote:
+>> static int brcms_ops_start(struct ieee80211_hw *hw)
+>> {
+>>     ...
+>>          spin_lock_bh(&wl->lock);
+>>     ...
+>>                          err = brcms_up(wl);
+>>                          <eventually calls usleep() from bcma_pcie_mdio_set_phy()>
+>>     ...
+>>          spin_unlock_bh(&wl->lock);
+>>     ...
+>> }
+>
+> Hi Dan,
+>
+> I submitted two patches to John yesterday to address this.
+>
+> http://mid.gmane.org/1380103864-10447-3-git-send-email-arend@broadcom.com
+> http://mid.gmane.org/1380103864-10447-4-git-send-email-arend@broadcom.com
 
-The firmware API 2 or higher will use the IE container format, the current API
-1 will not use the new format but it still is supported for some time. FW API 2
-files are named as firmware-2.bin (which contains both firmware and otp images)
-and API 1 files are firmware.bin and otp.bin.
+Awesome, thanks !
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c |  153 ++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/core.h |    2 
- drivers/net/wireless/ath/ath10k/hw.h   |   19 ++++
- drivers/net/wireless/ath/ath10k/wmi.c  |    3 -
- 4 files changed, 175 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 6a354f7..a1a3dcc 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -339,7 +339,7 @@ static void ath10k_core_free_firmware_files(struct ath10k *ar)
- 	ar->firmware_len = 0;
- }
- 
--static int ath10k_core_fetch_firmware_files(struct ath10k *ar)
-+static int ath10k_core_fetch_firmware_api_1(struct ath10k *ar)
- {
- 	int ret = 0;
- 
-@@ -400,6 +400,157 @@ err:
- 	return ret;
- }
- 
-+static int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name)
-+{
-+	size_t magic_len, len, ie_len;
-+	struct ath10k_fw_ie *hdr;
-+	const u8 *data;
-+	int ie_id, i, index, bit;
-+	__le32 *timestamp;
-+
-+	ar->firmware = ath10k_fetch_fw_file(ar, ar->hw_params.fw.dir, name);
-+	if (IS_ERR(ar->firmware)) {
-+		ath10k_err("Could not fetch firmware file '%s': %ld\n",
-+			   name, PTR_ERR(ar->firmware));
-+		return PTR_ERR(ar->firmware);
-+	}
-+
-+	data = ar->firmware->data;
-+	len = ar->firmware->size;
-+
-+	/* magic also includes the null byte, check that as well */
-+	magic_len = strlen(ATH10K_FIRMWARE_MAGIC) + 1;
-+
-+	if (len < magic_len) {
-+		ath10k_err("firmware image too small to contain magic: %d\n",
-+			   len);
-+		return -EINVAL;
-+	}
-+
-+	if (memcmp(data, ATH10K_FIRMWARE_MAGIC, magic_len) != 0) {
-+		ath10k_err("Invalid firmware magic\n");
-+		return -EINVAL;
-+	}
-+
-+	/* jump over the padding */
-+	magic_len = ALIGN(magic_len, 4);
-+
-+	len -= magic_len;
-+	data += magic_len;
-+
-+	/* loop elements */
-+	while (len > sizeof(struct ath10k_fw_ie)) {
-+		hdr = (struct ath10k_fw_ie *)data;
-+
-+		ie_id = le32_to_cpu(hdr->id);
-+		ie_len = le32_to_cpu(hdr->len);
-+
-+		len -= sizeof(*hdr);
-+		data += sizeof(*hdr);
-+
-+		if (len < ie_len) {
-+			ath10k_err("Invalid length for FW IE %d (%d < %d)\n",
-+				   ie_id, len, ie_len);
-+			return -EINVAL;
-+		}
-+
-+		switch (ie_id) {
-+		case ATH10K_FW_IE_FW_VERSION:
-+			if (ie_len > sizeof(ar->hw->wiphy->fw_version) - 1)
-+				break;
-+
-+			memcpy(ar->hw->wiphy->fw_version, data, ie_len);
-+			ar->hw->wiphy->fw_version[ie_len] = '\0';
-+
-+			ath10k_dbg(ATH10K_DBG_BOOT,
-+				   "found fw version %s\n",
-+				    ar->hw->wiphy->fw_version);
-+			break;
-+		case ATH10K_FW_IE_TIMESTAMP:
-+			if (ie_len != sizeof(u32))
-+				break;
-+
-+			timestamp = (__le32 *)data;
-+
-+			ath10k_dbg(ATH10K_DBG_BOOT, "found fw timestamp %d\n",
-+				   le32_to_cpup(timestamp));
-+			break;
-+		case ATH10K_FW_IE_FEATURES:
-+			ath10k_dbg(ATH10K_DBG_BOOT,
-+				   "found firmware features ie (%zd B)\n",
-+				   ie_len);
-+
-+			for (i = 0; i < ATH10K_FW_FEATURE_COUNT; i++) {
-+				index = i / 8;
-+				bit = i % 8;
-+
-+				if (index == ie_len)
-+					break;
-+
-+				if (data[index] & (1 << bit))
-+					__set_bit(i, ar->fw_features);
-+			}
-+
-+			ath10k_dbg_dump(ATH10K_DBG_BOOT, "features", "",
-+					ar->fw_features,
-+					sizeof(ar->fw_features));
-+			break;
-+		case ATH10K_FW_IE_FW_IMAGE:
-+			ath10k_dbg(ATH10K_DBG_BOOT,
-+				   "found fw image ie (%zd B)\n",
-+				   ie_len);
-+
-+			ar->firmware_data = data;
-+			ar->firmware_len = ie_len;
-+
-+			break;
-+		case ATH10K_FW_IE_OTP_IMAGE:
-+			ath10k_dbg(ATH10K_DBG_BOOT,
-+				   "found otp image ie (%zd B)\n",
-+				   ie_len);
-+
-+			ar->otp_data = data;
-+			ar->otp_len = ie_len;
-+
-+			break;
-+		default:
-+			ath10k_warn("Unknown FW IE: %u\n",
-+				    le32_to_cpu(hdr->id));
-+			break;
-+		}
-+
-+		/* jump over the padding */
-+		ie_len = ALIGN(ie_len, 4);
-+
-+		len -= ie_len;
-+		data += ie_len;
-+	};
-+
-+	return 0;
-+}
-+
-+static int ath10k_core_fetch_firmware_files(struct ath10k *ar)
-+{
-+	int ret;
-+
-+	ret = ath10k_core_fetch_firmware_api_n(ar, ATH10K_FW_API2_FILE);
-+	if (ret == 0) {
-+		ar->fw_api = 2;
-+		goto out;
-+	}
-+
-+	ret = ath10k_core_fetch_firmware_api_1(ar);
-+	if (ret)
-+		return ret;
-+
-+	ar->fw_api = 1;
-+
-+out:
-+	ath10k_dbg(ATH10K_DBG_BOOT, "using fw api %d\n", ar->fw_api);
-+
-+	return 0;
-+}
-+
- static int ath10k_init_download_firmware(struct ath10k *ar)
- {
- 	int ret;
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 511b20d..3b5e78d 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -336,6 +336,8 @@ struct ath10k {
- 	const void *firmware_data;
- 	size_t firmware_len;
- 
-+	int fw_api;
-+
- 	struct {
- 		struct completion started;
- 		struct completion completed;
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 643f0c9..a9cac43 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -38,6 +38,25 @@
- #define QCA988X_HW_2_0_BOARD_DATA_FILE	"board.bin"
- #define QCA988X_HW_2_0_PATCH_LOAD_ADDR	0x1234
- 
-+#define ATH10K_FW_API2_FILE		"firmware-2.bin"
-+
-+/* includes also the null byte */
-+#define ATH10K_FIRMWARE_MAGIC               "QCA-ATH10K"
-+
-+struct ath10k_fw_ie {
-+	__le32 id;
-+	__le32 len;
-+	u8 data[0];
-+};
-+
-+enum ath10k_fw_ie_type {
-+	ATH10K_FW_IE_FW_VERSION = 0,
-+	ATH10K_FW_IE_TIMESTAMP = 1,
-+	ATH10K_FW_IE_FEATURES = 2,
-+	ATH10K_FW_IE_FW_IMAGE = 3,
-+	ATH10K_FW_IE_OTP_IMAGE = 4,
-+};
-+
- /* Known pecularities:
-  *  - current FW doesn't support raw rx mode (last tested v599)
-  *  - current FW dumps upon raw tx mode (last tested v599)
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 6803ead..771d77c 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -988,7 +988,8 @@ static void ath10k_wmi_service_ready_event_rx(struct ath10k *ar,
- 	ar->phy_capability = __le32_to_cpu(ev->phy_capability);
- 	ar->num_rf_chains = __le32_to_cpu(ev->num_rf_chains);
- 
--	if (ar->fw_version_build > 636)
-+	/* only manually set fw features when not using FW IE format */
-+	if (ar->fw_api == 1 && ar->fw_version_build > 636)
- 		set_bit(ATH10K_FW_FEATURE_EXT_WMI_MGMT_RX, ar->fw_features);
- 
- 	if (ar->num_rf_chains > WMI_MAX_SPATIAL_STREAM) {
-
+> Regards,
+> Arend
+>
+>> [    7.607842] BUG: scheduling while atomic: NetworkManager/523/0x00000200
+>> [    7.607846] Modules linked in: arc4 brcmsmac cordic brcmutil b43 mac80211 nls_utf8 hfsplus snd_hda_codec_hdmi snd_hda_codec_cirrus cfg80211 i915 snd_hda_intel snd_hda_codec snd_hwdep ssb snd_seq snd_seq_device mmc_core snd_pcm joydev iTCO_wdt snd_page_alloc iTCO_vendor_support snd_timer uvcvideo x86_pkg_temp_thermal videobuf2_vmalloc videobuf2_memops videobuf2_core videodev snd coretemp kvm_intel kvm btusb bluetooth applesmc input_polldev crc32_pclmul crc32c_intel i2c_algo_bit media drm_kms_helper ghash_clmulni_intel soundcore drm rfkill microcode pcspkr bcm5974 lpc_ich mfd_core bcma i2c_i801 mei_me shpchp mei video apple_bl i2c_core
+>> [    7.607889] CPU: 0 PID: 523 Comm: NetworkManager Not tainted 3.12.0-rc1+ #3
+>> [    7.607891] Hardware name: Apple Inc. MacBookAir5,1/Mac-66F35F19FE2A0D05, BIOS MBA51.88Z.00EF.B02.1211271028 11/27/2012
+>> [    7.607893]  ffff88026f214280 ffff880257751498 ffffffff81659c85 ffff8802577515d0
+>> [    7.607896]  ffff8802577514a8 ffffffff81655f39 ffff880257751508 ffffffff8165e8a6
+>> [    7.607899]  ffff880257751fd8 0000000000014280 ffff880257751fd8 0000000000014280
+>> [    7.607902] Call Trace:
+>> [    7.607910]  [<ffffffff81659c85>] dump_stack+0x45/0x56
+>> [    7.607914]  [<ffffffff81655f39>] __schedule_bug+0x4d/0x5b
+>> [    7.607918]  [<ffffffff8165e8a6>] __schedule+0x746/0x750
+>> [    7.607922]  [<ffffffff8165e8d9>] schedule+0x29/0x70
+>> [    7.607926]  [<ffffffff8165dd0c>] schedule_hrtimeout_range_clock+0x12c/0x170
+>> [    7.607930]  [<ffffffff8108cb00>] ? hrtimer_get_res+0x50/0x50
+>> [    7.607933]  [<ffffffff8165dc8c>] ? schedule_hrtimeout_range_clock+0xac/0x170
+>> [    7.607936]  [<ffffffff8165dd63>] schedule_hrtimeout_range+0x13/0x20
+>> [    7.607941]  [<ffffffff81073bf0>] usleep_range+0x40/0x50
+>> [    7.607948]  [<ffffffffa00603df>] bcma_pcie_mdio_set_phy.isra.3+0x4f/0x80 [bcma]
+>> [    7.607954]  [<ffffffffa00605c7>] bcma_pcie_mdio_write.isra.5+0xc7/0xd0 [bcma]
+>> [    7.607960]  [<ffffffffa00606aa>] bcma_pcie_mdio_writeread.isra.6.constprop.13+0x1a/0x30 [bcma]
+>> [    7.607965]  [<ffffffffa00606fa>] bcma_core_pci_power_save+0x3a/0x70 [bcma]
+>> [    7.607971]  [<ffffffffa0060869>] bcma_core_pci_up+0x29/0x60 [bcma]
+>> [    7.607981]  [<ffffffffa05b55df>] brcms_c_up+0xff/0x440 [brcmsmac]
+>> [    7.607987]  [<ffffffffa05ab242>] brcms_ops_start+0xf2/0x360 [brcmsmac]
+>> [    7.607999]  [<ffffffffa042be3a>] ? cfg80211_netdev_notifier_call+0x40a/0x600 [cfg80211]
+>> [    7.608005]  [<ffffffff815c9f48>] ? inetdev_event+0x38/0x510
+>> [    7.608019]  [<ffffffffa04cda71>] ieee80211_do_open+0x2e1/0xd80 [mac80211]
+>> [    7.608022]  [<ffffffff8166466c>] ? notifier_call_chain+0x4c/0x70
+>> [    7.608032]  [<ffffffffa04ce579>] ieee80211_open+0x69/0x70 [mac80211]
+>> [    7.608036]  [<ffffffff8155f14f>] __dev_open+0xbf/0x140
+>> [    7.608040]  [<ffffffff8155f412>] __dev_change_flags+0x92/0x170
+>> [    7.608043]  [<ffffffff8155f59d>] dev_change_flags+0x1d/0x60
+>> [    7.608047]  [<ffffffff8156ca69>] do_setlink+0x339/0xa00
+>> [    7.608051]  [<ffffffff8131f020>] ? __nla_put+0x20/0x30
+>> [    7.608063]  [<ffffffffa044544c>] ? nl80211_send_wiphy+0x3fc/0x2470 [cfg80211]
+>> [    7.608066]  [<ffffffff8131edd2>] ? nla_parse+0x32/0xe0
+>> [    7.608070]  [<ffffffff8156dd94>] rtnl_newlink+0x394/0x5e0
+>> [    7.608075]  [<ffffffff8129e63e>] ? selinux_capable+0x2e/0x40
+>> [    7.608079]  [<ffffffff8156a769>] rtnetlink_rcv_msg+0x99/0x260
+>> [    7.608082]  [<ffffffff8129b8c5>] ? sock_has_perm+0x75/0x90
+>> [    7.608085]  [<ffffffff8156a6d0>] ? rtnetlink_rcv+0x30/0x30
+>> [    7.608089]  [<ffffffff81589709>] netlink_rcv_skb+0xa9/0xc0
+>> [    7.608093]  [<ffffffff8156a6c8>] rtnetlink_rcv+0x28/0x30
+>> [    7.608097]  [<ffffffff81588d5d>] netlink_unicast+0xdd/0x190
+>> [    7.608100]  [<ffffffff8158910f>] netlink_sendmsg+0x2ff/0x740
+>> [    7.608104]  [<ffffffff81585d02>] ? netlink_seq_next+0x142/0x150
+>> [    7.608107]  [<ffffffff8158707c>] ? netlink_recvmsg+0x1ec/0x390
+>> [    7.608112]  [<ffffffff81544b9b>] sock_sendmsg+0x8b/0xc0
+>> [    7.608116]  [<ffffffff8154488e>] ? move_addr_to_kernel.part.16+0x1e/0x60
+>> [    7.608120]  [<ffffffff81545401>] ? move_addr_to_kernel+0x21/0x30
+>> [    7.608123]  [<ffffffff815453cc>] ___sys_sendmsg+0x36c/0x380
+>> [    7.608127]  [<ffffffff81544d95>] ? SYSC_sendto+0x175/0x1c0
+>> [    7.608131]  [<ffffffff81545ad2>] __sys_sendmsg+0x42/0x80
+>> [    7.608134]  [<ffffffff81545b22>] SyS_sendmsg+0x12/0x20
+>> [    7.608138]  [<ffffffff81668c29>] system_call_fastpath+0x16/0x1b
+>>
+>>
+>
+>
