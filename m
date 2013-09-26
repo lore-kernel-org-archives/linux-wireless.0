@@ -1,69 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:56484 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752268Ab3IVTZz (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:60314 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755712Ab3IZLQE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Sep 2013 15:25:55 -0400
-From: Peter Senna Tschudin <peter.senna@gmail.com>
-To: Larry.Finger@lwfinger.net
-Cc: chaoming_li@realsil.com.cn, joe@perches.com,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	kernel-janitors@vger.kernel.org,
-	Peter Senna Tschudin <peter.senna@gmail.com>
-Subject: [PATCH] wireless: rtlwifi: Replace variable with a brake
-Date: Sun, 22 Sep 2013 21:24:42 +0200
-Message-Id: <1379877882-21254-1-git-send-email-peter.senna@gmail.com> (sfid-20130922_212644_676458_36D7A76A)
+	Thu, 26 Sep 2013 07:16:04 -0400
+Message-ID: <1380194160.14806.3.camel@jlt4.sipsolutions.net> (sfid-20130926_131607_990374_567BCFAA)
+Subject: Re: [PATCH 2/2] nl80211/cfg80211: PMF Requirement communicated to
+ driver with AP SME
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Chet Lanctot <clanctot@codeaurora.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Date: Thu, 26 Sep 2013 13:16:00 +0200
+In-Reply-To: <1379446296-22236-3-git-send-email-clanctot@codeaurora.org> (sfid-20130917_213227_344083_0A8DC8D3)
+References: <1379446296-22236-1-git-send-email-clanctot@codeaurora.org>
+	 <1379446296-22236-3-git-send-email-clanctot@codeaurora.org>
+	 (sfid-20130917_213227_344083_0A8DC8D3)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes the variable continual, and change the while loop
-to break when efuse_data == 0xFF.
+On Tue, 2013-09-17 at 12:31 -0700, Chet Lanctot wrote:
+> Needed for drivers that have AP SME integrated.  Whether PMF (Protected
+> Management Frames, 802.11w) should be used for station connections
+> is communicated from upper layer software through nl80211/cfg80211.
 
-CC: Joe Perches <joe@perches.com>
-Signed-off-by: Peter Senna Tschudin <peter.senna@gmail.com>
----
-Please ignore the patch:
-[PATCH 12/19] wireless: Change variable type to bool
+This is a bit unclear, what's expected of the driver?
 
-And apply this one instead.
 
-The variable continual was declared as int, but was used as bool. I
-sent previous patch changing the variable type to bool, but Joe Perches
-proposed that removing the variable and adding a brake would be better.
+> +	if (info->attrs[NL80211_ATTR_USE_MFP]) {
+> +		params.mfp = nla_get_u32(info->attrs[NL80211_ATTR_USE_MFP]);
+> +		if (params.mfp != NL80211_MFP_REQUIRED &&
+> +		    params.mfp != NL80211_MFP_OPTIONAL &&
+> +		    params.mfp != NL80211_MFP_NO)
+> +			return -EINVAL;
+> +	} else
+> +		params.mfp = NL80211_MFP_NO;
+> +
 
- drivers/net/wireless/rtlwifi/efuse.c | 11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+checkpatch.
 
-diff --git a/drivers/net/wireless/rtlwifi/efuse.c b/drivers/net/wireless/rtlwifi/efuse.c
-index 838a1ed..d1328fc 100644
---- a/drivers/net/wireless/rtlwifi/efuse.c
-+++ b/drivers/net/wireless/rtlwifi/efuse.c
-@@ -1203,19 +1203,18 @@ static void efuse_power_switch(struct ieee80211_hw *hw, u8 write, u8 pwrstate)
- 
- static u16 efuse_get_current_size(struct ieee80211_hw *hw)
- {
--	int continual = true;
- 	u16 efuse_addr = 0;
- 	u8 hworden;
- 	u8 efuse_data, word_cnts;
- 
--	while (continual && efuse_one_byte_read(hw, efuse_addr, &efuse_data)
--	       && (efuse_addr < EFUSE_MAX_SIZE)) {
--		if (efuse_data != 0xFF) {
-+	while (efuse_one_byte_read(hw, efuse_addr, &efuse_data) &&
-+					(efuse_addr < EFUSE_MAX_SIZE)) {
-+		if (efuse_data == 0xFF)
-+			break;
-+
- 			hworden = efuse_data & 0x0F;
- 			word_cnts = efuse_calculate_word_cnts(hworden);
- 			efuse_addr = efuse_addr + (word_cnts * 2) + 1;
--		} else {
--			continual = false;
- 		}
- 	}
- 
--- 
-1.8.3.1
+johannes
 
