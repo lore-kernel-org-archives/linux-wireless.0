@@ -1,59 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:39635 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751726Ab3ITPDv (ORCPT
+Received: from smtprelay0190.hostedemail.com ([216.40.44.190]:42494 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752223Ab3IZSDB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Sep 2013 11:03:51 -0400
-In-Reply-To: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-From: Russell King <rmk+kernel@arm.linux.org.uk>
-To: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
-	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
-	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
-	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	uclinux-dist-devel@blackfin.uclinux.org
-Cc: Dan Williams <dan.j.williams@intel.com>,
-	Vinod Koul <vinod.koul@intel.com>
-Subject: [PATCH 23/51] DMA-API: dma: pl08x: add dma_set_mask_and_coherent()
- call
-Message-Id: <E1VMm4v-0007hz-RC@rmk-PC.arm.linux.org.uk> (sfid-20130920_170405_237967_A62AF62B)
-Date: Thu, 19 Sep 2013 22:48:01 +0100
+	Thu, 26 Sep 2013 14:03:01 -0400
+Message-ID: <1380218576.17366.76.camel@joe-AO722> (sfid-20130926_200306_358749_F3AF1517)
+Subject: Re: [PATCH 00/11 - GIT PULL] drivers: net: Last block of Remove
+ extern from function prototypes
+From: Joe Perches <joe@perches.com>
+To: David Miller <davem@redhat.com>
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	wimax@linuxwimax.org, ath10k@lists.infradead.org,
+	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
+	brcm80211-dev-list@broadcom.com
+Date: Thu, 26 Sep 2013 11:02:56 -0700
+In-Reply-To: <20130926.134408.91633054642517467.davem@redhat.com>
+References: <cover.1380137609.git.joe@perches.com>
+	 <20130926.134408.91633054642517467.davem@redhat.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The DMA API requires drivers to call the appropriate dma_set_mask()
-functions before doing any DMA mapping.  Add this required call to
-the AMBA PL08x driver.
+On Thu, 2013-09-26 at 13:44 -0400, David Miller wrote:
+> From: Joe Perches <joe@perches.com>
+> Date: Wed, 25 Sep 2013 12:37:18 -0700
+[]
+> Pulled, thanks Joe.
+> That should be about it for networking right?
 
-Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
----
- drivers/dma/amba-pl08x.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+Yes for drivers/net/...
 
-diff --git a/drivers/dma/amba-pl08x.c b/drivers/dma/amba-pl08x.c
-index fce46c5..e51a983 100644
---- a/drivers/dma/amba-pl08x.c
-+++ b/drivers/dma/amba-pl08x.c
-@@ -2055,6 +2055,11 @@ static int pl08x_probe(struct amba_device *adev, const struct amba_id *id)
- 	if (ret)
- 		return ret;
- 
-+	/* Ensure that we can do DMA */
-+	ret = dma_set_mask_and_coherent(&adev->dev, DMA_BIT_MASK(32));
-+	if (ret)
-+		goto out_no_pl08x;
-+
- 	/* Create the driver state holder */
- 	pl08x = kzalloc(sizeof(*pl08x), GFP_KERNEL);
- 	if (!pl08x) {
--- 
-1.7.4.4
+There are some more files like:
+
+include/linux/etherdevice.h
+include/linux/inetdevice.h
+include/linux/net.h
+include/linux/netdevice.h
+include/linux/skbuff.h
+
+and some netfilter ones:
+
+include/linux/netfilter*.h
+include/linux/netfilter/...
+
+and maybe a few others like:
+
+include/linux/atmdev.h
+include/linux/fddidevice.h
+
+that I was planning on converting then submitting.
+
+Want those in one more pull request or
+maybe individually?
 
