@@ -1,72 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:39599 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751042Ab3ITOBT (ORCPT
+Received: from mail-oa0-f51.google.com ([209.85.219.51]:52081 "EHLO
+	mail-oa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753969Ab3IZS0F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Sep 2013 10:01:19 -0400
-Date: Fri, 20 Sep 2013 15:00:18 +0100
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Tejun Heo <tj@kernel.org>
-Cc: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
-	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
-	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
-	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	uclinux-dist-devel@blackfin.uclinux.org,
-	Inki Dae <inki.dae@samsung.com>,
-	Joonyoung Shim <jy0922.shim@samsung.com>,
-	Seung-Woo Kim <sw0312.kim@samsung.com>,
-	Kyungmin Park <kyungmin.park@samsung.com>,
-	David Airlie <airlied@linux.ie>,
-	Kukjin Kim <kgene.kim@samsung.com>
-Subject: Re: [PATCH 39/51] DMA-API: others: use dma_set_coherent_mask()
-Message-ID: <20130920140018.GP25647@n2100.arm.linux.org.uk> (sfid-20130920_160130_776590_A6BD83CD)
-References: <20130919212235.GD12758@n2100.arm.linux.org.uk> <E1VMnNq-0007s4-HN@rmk-PC.arm.linux.org.uk> <20130920121652.GA7630@mtj.dyndns.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130920121652.GA7630@mtj.dyndns.org>
+	Thu, 26 Sep 2013 14:26:05 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 0/7] Convert drivers to a common rtl_phy_scan_operation_backup() routine
+Date: Thu, 26 Sep 2013 13:25:26 -0500
+Message-Id: <1380219933-16784-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130926_202622_405919_02CD465D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 20, 2013 at 07:16:52AM -0500, Tejun Heo wrote:
-> On Fri, Sep 20, 2013 at 12:11:38AM +0100, Russell King wrote:
-> > The correct way for a driver to specify the coherent DMA mask is
-> > not to directly access the field in the struct device, but to use
-> > dma_set_coherent_mask().  Only arch and bus code should access this
-> > member directly.
-> > 
-> > Convert all direct write accesses to using the correct API.
-> > 
-> > Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
-> 
-> Acked-by: Tejun Heo <tj@kernel.org>
-> 
-> The patch is pretty widely spread.  I don't mind how it gets routed
-> but what's the plan?
+Several of the driver implement this routine using the same code. This set
+of patches creates a common routine in driver rtlwifi, converts each of the
+drivers to use the new routine, and then deletes the now unused old code.
 
-The plan is... I'm going to try and avoid going through the hell of
-re-posting this patch series to all the recipients another time...
-(It's taken some 17 hours and lots of hand holding to get this patch
-set out without exim jumping off a cliff into deep OOM - soo deep that
-even the OOM killer doesn't run and the CPU is 100% idle because
-every single process stuck in an uninterruptible sleep waiting for
-every other process to free some memory - ouch!)
+These patches rely on two prerequisite patches:
 
-I know that dealing with this patch set will be a problem due to how
-widespread this is, but much of the driver level changes come down to
-depending on a couple of patches.  One solution would be if I published
-a branch with just the dependencies in, which subsystem maintainers
-could pull, and then apply the appropriate patches on top.
+[PATCH 11/11] rtlwifi: Remove extern from function prototypes by Joe Perches
+TCH] rtlwifi: remove duplicate declarations and macros in headers by Catalin Iacob
 
-Another would be if subsystem maintainers are happy that I carry them,
-I can add the acks, and then later on towards the end of the cycle,
-provide a branch subsystem maintainers could pull.
+None of these patches fix any bugs. They merely reduce the size of the source code,
+thus they need no particular priority.
 
-Or... if you can think of something easier...
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+
+Larry Finger (7):
+  rtlwifi: Implement a common rtl_phy_scan_operation_backup() routine
+  rtlwifi: rtl8192cu: Convert to use new rtl_phy_scan_operation_backup()
+    routine
+  rtlwifi: rtl8192ce: Convert driver to use new
+    rtl_phy_scan_operation_backup() routine
+  rtlwifi: rtl8192c: Remove rtl8192c_phy_scan_operation_backup()
+  rtlwifi: rtl8192ce: Convert driver to use new
+    rtl_phy_scan_operation_backup() routine
+  rtlwifi: rtl8723ae: Convert driver to use new
+    rtl_phy_scan_operation_backup() routine
+  rtlwifi: rtl8188ee: Convert driver to use new
+    rtl_phy_scan_operation_backup() routine
+
+ drivers/net/wireless/rtlwifi/base.c                | 29 +++++++++++++++++++++
+ drivers/net/wireless/rtlwifi/base.h                |  1 +
+ drivers/net/wireless/rtlwifi/rtl8188ee/phy.c       | 28 --------------------
+ drivers/net/wireless/rtlwifi/rtl8188ee/phy.h       |  1 -
+ drivers/net/wireless/rtlwifi/rtl8188ee/sw.c        |  3 ++-
+ drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c | 30 ----------------------
+ drivers/net/wireless/rtlwifi/rtl8192c/phy_common.h |  2 --
+ drivers/net/wireless/rtlwifi/rtl8192ce/phy.h       |  1 -
+ drivers/net/wireless/rtlwifi/rtl8192ce/sw.c        |  3 ++-
+ drivers/net/wireless/rtlwifi/rtl8192cu/sw.c        |  3 ++-
+ drivers/net/wireless/rtlwifi/rtl8192de/phy.c       | 28 --------------------
+ drivers/net/wireless/rtlwifi/rtl8192de/phy.h       |  1 -
+ drivers/net/wireless/rtlwifi/rtl8192de/sw.c        |  3 ++-
+ drivers/net/wireless/rtlwifi/rtl8723ae/phy.c       | 29 ---------------------
+ drivers/net/wireless/rtlwifi/rtl8723ae/phy.h       |  1 -
+ drivers/net/wireless/rtlwifi/rtl8723ae/sw.c        |  3 ++-
+ 16 files changed, 40 insertions(+), 126 deletions(-)
+
+-- 
+1.8.1.4
+
