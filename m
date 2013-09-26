@@ -1,32 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f181.google.com ([74.125.82.181]:41707 "EHLO
-	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755018Ab3I2VLC convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Sep 2013 17:11:02 -0400
-Received: by mail-we0-f181.google.com with SMTP id p61so4803726wes.12
-        for <linux-wireless@vger.kernel.org>; Sun, 29 Sep 2013 14:11:01 -0700 (PDT)
+Received: from ebb05.tieto.com ([131.207.168.36]:56240 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753057Ab3IZPrk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Sep 2013 11:47:40 -0400
+From: Bartosz Markowski <bartosz.markowski@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Bartosz Markowski <bartosz.markowski@tieto.com>
+Subject: [PATCH v3 13/13] ath10k: handle FW API differences for scan structures
+Date: Thu, 26 Sep 2013 17:47:17 +0200
+Message-ID: <1380210437-4391-14-git-send-email-bartosz.markowski@tieto.com> (sfid-20130926_174807_445556_A8EEA9E2)
+In-Reply-To: <1380210437-4391-1-git-send-email-bartosz.markowski@tieto.com>
+References: <1380210437-4391-1-git-send-email-bartosz.markowski@tieto.com>
 MIME-Version: 1.0
-In-Reply-To: <CACna6rx-8C+jMDG+BL3RQhfqp1+ozbjqamvn=7PzKG=JUa1J_w@mail.gmail.com>
-References: <31357461.i5mG9q5IfA@naboo>
-	<CACna6rx-8C+jMDG+BL3RQhfqp1+ozbjqamvn=7PzKG=JUa1J_w@mail.gmail.com>
-Date: Sun, 29 Sep 2013 23:11:01 +0200
-Message-ID: <CACna6rwHVpHuDjnUaWmUWqM0eWkecDY75JuSVXniFr6B3LSMRg@mail.gmail.com> (sfid-20130929_231106_184326_A84DE296)
-Subject: Re: NetworkManager not listing access points
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Detlev Casanova <detlev.casanova@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes.berg@intel.com>,
-	laurent.pinchart@ideasonboard.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/9/29 Rafał Miłecki <zajec5@gmail.com>:
-> Scanning on channel b43 is failing even worse starting with that
-> commit.
+The wmi_start_scan_cmd has an extra filed in our main
+firmware track, reflact that to not have a mismatch in
+case of 10.x track.
 
-s/b43/13/
+Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.c |   19 ++++++--
+ drivers/net/wireless/ath/ath10k/wmi.h |   82 +++++++++++++++++++++++++++++++++
+ 2 files changed, 97 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 3460cf4..e7dc911 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -2341,11 +2341,15 @@ int ath10k_wmi_cmd_init(struct ath10k *ar)
+ 	return ret;
+ }
+ 
+-static int ath10k_wmi_start_scan_calc_len(const struct wmi_start_scan_arg *arg)
++static int ath10k_wmi_start_scan_calc_len(struct ath10k *ar,
++					  const struct wmi_start_scan_arg *arg)
+ {
+ 	int len;
+ 
+-	len = sizeof(struct wmi_start_scan_cmd);
++	if (test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features))
++		len = sizeof(struct wmi_start_scan_cmd_10x);
++	else
++		len = sizeof(struct wmi_start_scan_cmd);
+ 
+ 	if (arg->ie_len) {
+ 		if (!arg->ie)
+@@ -2405,7 +2409,7 @@ int ath10k_wmi_start_scan(struct ath10k *ar,
+ 	int len = 0;
+ 	int i;
+ 
+-	len = ath10k_wmi_start_scan_calc_len(arg);
++	len = ath10k_wmi_start_scan_calc_len(ar, arg);
+ 	if (len < 0)
+ 		return len; /* len contains error code here */
+ 
+@@ -2437,7 +2441,14 @@ int ath10k_wmi_start_scan(struct ath10k *ar,
+ 	cmd->scan_ctrl_flags    = __cpu_to_le32(arg->scan_ctrl_flags);
+ 
+ 	/* TLV list starts after fields included in the struct */
+-	off = sizeof(*cmd);
++	/* There's just one filed that differes the two start_scan
++	 * structures - burst_duration, which we are not using btw,
++	   no point to make the split here, just shift the buffer to fit with
++	   given FW */
++	if (test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features))
++		off = sizeof(struct wmi_start_scan_cmd_10x);
++	else
++		off = sizeof(struct wmi_start_scan_cmd);
+ 
+ 	if (arg->n_channels) {
+ 		channels = (void *)skb->data + off;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 80ab2f0..7692c14 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -1715,6 +1715,88 @@ struct wmi_start_scan_cmd {
+ 	 */
+ } __packed;
+ 
++/* This is the definition from 10.X firmware branch */
++struct wmi_start_scan_cmd_10x {
++	/* Scan ID */
++	__le32 scan_id;
++
++	/* Scan requestor ID */
++	__le32 scan_req_id;
++
++	/* VDEV id(interface) that is requesting scan */
++	__le32 vdev_id;
++
++	/* Scan Priority, input to scan scheduler */
++	__le32 scan_priority;
++
++	/* Scan events subscription */
++	__le32 notify_scan_events;
++
++	/* dwell time in msec on active channels */
++	__le32 dwell_time_active;
++
++	/* dwell time in msec on passive channels */
++	__le32 dwell_time_passive;
++
++	/*
++	 * min time in msec on the BSS channel,only valid if atleast one
++	 * VDEV is active
++	 */
++	__le32 min_rest_time;
++
++	/*
++	 * max rest time in msec on the BSS channel,only valid if at least
++	 * one VDEV is active
++	 */
++	/*
++	 * the scanner will rest on the bss channel at least min_rest_time
++	 * after min_rest_time the scanner will start checking for tx/rx
++	 * activity on all VDEVs. if there is no activity the scanner will
++	 * switch to off channel. if there is activity the scanner will let
++	 * the radio on the bss channel until max_rest_time expires.at
++	 * max_rest_time scanner will switch to off channel irrespective of
++	 * activity. activity is determined by the idle_time parameter.
++	 */
++	__le32 max_rest_time;
++
++	/*
++	 * time before sending next set of probe requests.
++	 * The scanner keeps repeating probe requests transmission with
++	 * period specified by repeat_probe_time.
++	 * The number of probe requests specified depends on the ssid_list
++	 * and bssid_list
++	 */
++	__le32 repeat_probe_time;
++
++	/* time in msec between 2 consequetive probe requests with in a set. */
++	__le32 probe_spacing_time;
++
++	/*
++	 * data inactivity time in msec on bss channel that will be used by
++	 * scanner for measuring the inactivity.
++	 */
++	__le32 idle_time;
++
++	/* maximum time in msec allowed for scan  */
++	__le32 max_scan_time;
++
++	/*
++	 * delay in msec before sending first probe request after switching
++	 * to a channel
++	 */
++	__le32 probe_delay;
++
++	/* Scan control flags */
++	__le32 scan_ctrl_flags;
++
++	/*
++	 * TLV (tag length value )  paramerters follow the scan_cmd structure.
++	 * TLV can contain channel list, bssid list, ssid list and
++	 * ie. the TLV tags are defined above;
++	 */
++} __packed;
++
++
+ struct wmi_ssid_arg {
+ 	int len;
+ 	const u8 *ssid;
 -- 
-Rafał
+1.7.10
+
