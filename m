@@ -1,32 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55328 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756422Ab3IML2H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Sep 2013 07:28:07 -0400
-Date: Fri, 13 Sep 2013 13:26:09 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: ilw@linux.intel.com, linux-wireless@vger.kernel.org
-Subject: Re: [RFC 4/5] mac80211: add generic quiesce procedure
-Message-ID: <20130913112608.GA27628@redhat.com> (sfid-20130913_132815_972577_F5672294)
-References: <1379068568-27552-1-git-send-email-sgruszka@redhat.com>
- <1379068568-27552-5-git-send-email-sgruszka@redhat.com>
- <1379070837.14883.11.camel@jlt4.sipsolutions.net>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:53753 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750767Ab3IZOa5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Sep 2013 10:30:57 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Marek Puzyniak <marek.puzyniak@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: make monitor vdev down before stoping it
+References: <1380024384-30512-1-git-send-email-marek.puzyniak@tieto.com>
+Date: Thu, 26 Sep 2013 17:30:46 +0300
+In-Reply-To: <1380024384-30512-1-git-send-email-marek.puzyniak@tieto.com>
+	(Marek Puzyniak's message of "Tue, 24 Sep 2013 14:06:24 +0200")
+Message-ID: <871u4bpsdl.fsf@kamboji.qca.qualcomm.com> (sfid-20130926_163100_565851_08413629)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1379070837.14883.11.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 13, 2013 at 01:13:57PM +0200, Johannes Berg wrote:
-> On Fri, 2013-09-13 at 12:36 +0200, Stanislaw Gruszka wrote:
-> > Add function ieee80211_quiesce() end export it to allow be used by
-> > drivers. It is intended to be used before restart_hw to stop mac80211
-> > timers/works . Reverse quiesce on ieee80211_reconfig().
-> 
-> Why can't this be done inside restart_hw()?
+Marek Puzyniak <marek.puzyniak@tieto.com> writes:
 
-iwlwifi stop device before call restart_hw() and we need to
-quiesce before iwlwifi stop device (like done in patch 5).
+> Following sequence causes FW crash:
+> -monitor vdev up,
+> -monitor vdev stop,
+> -monitor vdev delete.
+> Making monitor vdev down before stoping it works ok:
+> -monitor vdev up,
+> -monitor vdev down,
+> -monitor vdev stop,
+> -monitor vdev delete.
+>
+> Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
 
-Stanislaw
+Thanks, applied.
+
+-- 
+Kalle Valo
