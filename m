@@ -1,51 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:53568 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751029Ab3IPTEP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Sep 2013 15:04:15 -0400
-Received: by mail-la0-f46.google.com with SMTP id eh20so3457822lab.5
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Sep 2013 12:04:14 -0700 (PDT)
-Message-ID: <5237562D.4080509@cogentembedded.com> (sfid-20130916_210419_074817_D1807A46)
-Date: Mon, 16 Sep 2013 23:04:13 +0400
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Received: from ebb05.tieto.com ([131.207.168.36]:63675 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756228Ab3IZJaK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Sep 2013 05:30:10 -0400
+From: Bartosz Markowski <bartosz.markowski@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Bartosz Markowski <bartosz.markowski@tieto.com>
+Subject: [PATCH v2 06/13] ath10k: drop the fw versioning sanity check
+Date: Thu, 26 Sep 2013 11:29:45 +0200
+Message-ID: <1380187792-25626-7-git-send-email-bartosz.markowski@tieto.com> (sfid-20130926_113025_042417_4A19A6B2)
+In-Reply-To: <1380187792-25626-1-git-send-email-bartosz.markowski@tieto.com>
+References: <1380187792-25626-1-git-send-email-bartosz.markowski@tieto.com>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH 5/8 V2] [PATCH 5/7: rtlwifi: Fix smatch warning in pci.c
-References: <1379357722-17687-1-git-send-email-Larry.Finger@lwfinger.net> <1379357722-17687-6-git-send-email-Larry.Finger@lwfinger.net>
-In-Reply-To: <1379357722-17687-6-git-send-email-Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/16/2013 10:55 PM, Larry Finger wrote:
+It was corrupted and leading to compilation warning
+core.c: In function 'ath10k_check_fw_version':
+core.c:79: warning: comparison is always true due to limited range of data type
 
-> Smatch reports the following:
->    CHECK   drivers/net/wireless/rtlwifi/pci.c
-> drivers/net/wireless/rtlwifi/pci.c:739 _rtl_pci_rx_interrupt() warn: assigning (-98) to unsigned variable 'stats.noise'
+Since we are going to support new FW track in the driver,
+the sanity check for fw version number would be an overkill
+then. This is just for information purposes anyway.
 
-> This variable is not used and is removed.
+Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
+Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c |   25 -------------------------
+ drivers/net/wireless/ath/ath10k/hw.h   |    6 ------
+ 2 files changed, 31 deletions(-)
 
-    It is not a variable but a structure field initializer you're removing.
-
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
->   drivers/net/wireless/rtlwifi/pci.c | 1 -
->   1 file changed, 1 deletion(-)
-
-> diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
-> index 703f839..6295ed2 100644
-> --- a/drivers/net/wireless/rtlwifi/pci.c
-> +++ b/drivers/net/wireless/rtlwifi/pci.c
-> @@ -736,7 +736,6 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
->
->   	struct rtl_stats stats = {
->   		.signal = 0,
-> -		.noise = -98,
->   		.rate = 0,
->   	};
-
-WBR, Sergei
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 76906d5..31860a6 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -59,27 +59,6 @@ static void ath10k_send_suspend_complete(struct ath10k *ar)
+ 	wake_up(&ar->event_queue);
+ }
+ 
+-static int ath10k_check_fw_version(struct ath10k *ar)
+-{
+-	char version[32];
+-
+-	if (ar->fw_version_major >= SUPPORTED_FW_MAJOR &&
+-	    ar->fw_version_minor >= SUPPORTED_FW_MINOR &&
+-	    ar->fw_version_release >= SUPPORTED_FW_RELEASE &&
+-	    ar->fw_version_build >= SUPPORTED_FW_BUILD)
+-		return 0;
+-
+-	snprintf(version, sizeof(version), "%u.%u.%u.%u",
+-		 SUPPORTED_FW_MAJOR, SUPPORTED_FW_MINOR,
+-		 SUPPORTED_FW_RELEASE, SUPPORTED_FW_BUILD);
+-
+-	ath10k_warn("WARNING: Firmware version %s is not officially supported.\n",
+-		    ar->hw->wiphy->fw_version);
+-	ath10k_warn("Please upgrade to version %s (or newer)\n", version);
+-
+-	return 0;
+-}
+-
+ static int ath10k_init_connect_htc(struct ath10k *ar)
+ {
+ 	int status;
+@@ -616,10 +595,6 @@ int ath10k_core_start(struct ath10k *ar)
+ 
+ 	ath10k_info("firmware %s booted\n", ar->hw->wiphy->fw_version);
+ 
+-	status = ath10k_check_fw_version(ar);
+-	if (status)
+-		goto err_disconnect_htc;
+-
+ 	status = ath10k_wmi_cmd_init(ar);
+ 	if (status) {
+ 		ath10k_err("could not send WMI init command (%d)\n", status);
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 8c1be768..66e721a 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -20,12 +20,6 @@
+ 
+ #include "targaddrs.h"
+ 
+-/* Supported FW version */
+-#define SUPPORTED_FW_MAJOR	1
+-#define SUPPORTED_FW_MINOR	0
+-#define SUPPORTED_FW_RELEASE	0
+-#define SUPPORTED_FW_BUILD	636
+-
+ /* QCA988X 1.0 definitions (unsupported) */
+ #define QCA988X_HW_1_0_CHIP_ID_REV	0x0
+ 
+-- 
+1.7.10
 
