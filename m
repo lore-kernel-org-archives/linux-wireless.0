@@ -1,65 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f47.google.com ([209.85.214.47]:42833 "EHLO
-	mail-bk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751452Ab3IZHpZ convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:35911 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753018Ab3IZSAM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Sep 2013 03:45:25 -0400
-Received: by mail-bk0-f47.google.com with SMTP id mx12so265379bkb.6
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Sep 2013 00:45:24 -0700 (PDT)
+	Thu, 26 Sep 2013 14:00:12 -0400
+Date: Thu, 26 Sep 2013 13:47:51 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Gustavo Padovan <gustavo@padovan.org>,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: bluetooth 2013-09-23
+Message-ID: <20130926174750.GB1931@tuxdriver.com> (sfid-20130926_200030_001648_A578A7F8)
+References: <20130923210049.GG18215@joana>
 MIME-Version: 1.0
-In-Reply-To: <87a9j0t5ep.fsf@kamboji.qca.qualcomm.com>
-References: <1380028158-861-1-git-send-email-michal.kazior@tieto.com>
-	<87a9j0t5ep.fsf@kamboji.qca.qualcomm.com>
-Date: Thu, 26 Sep 2013 09:45:23 +0200
-Message-ID: <CA+BoTQke6JstVxtRxUinSxWMP6WDcO3JuqiaXqivSO2QD1aVgw@mail.gmail.com> (sfid-20130926_094529_144993_5244E8B8)
-Subject: Re: [PATCH 0/5] ath10k: improve RX performance
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130923210049.GG18215@joana>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 26 September 2013 09:21, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Michal Kazior <michal.kazior@tieto.com> writes:
->
->> This patchset gives clear RX performance
->> improvement on AP135. Throughput is at least
->> doubled (300mbps -> 600mbps, UDP RX, 2x2).
->>
->> This contains a workaround for
->> retransmission/duplication recovery.
->>
->> There's a pending patch for mac80211 that will
->> allow proper individiual A-MSDU subframe
->> reporting.
->>
->> Changes since RFC:
->>  * comments fixes (Kalle)
->>  * one patch extracted/split (Kalle)
->>  * commit message adjustments
->>
->>
->> Michal Kazior (5):
->>   ath10k: report A-MSDU subframes individually
->>   ath10k: document decap modes
->>   ath10k: cleanup RX decap handling
->>   ath10k: fix Native Wifi decap mode RX
->>   ath10k: align RX frames properly
->
-> All five applies, thanks.
->
-> There were few long lines, I fixed those myself. Can you please double
-> check that I didn't break anything?
->
-> Kalle
->
-> For patch 1 I did:
->
-> (...)
+On Mon, Sep 23, 2013 at 06:00:49PM -0300, Gustavo Padovan wrote:
+> Hi John,
+> 
+> First Bluetooth fixes to 3.12, it includes:
+> 
+> * 3 patches to add device id for 3 new hardwares.
+> 
+> * 2 patches from Johan to fix the rfkill behaviour during setup stage
+> 
+> * a small clean up in the rfcomm TTY code that fixes a potential racy
+> condition (by Gianluca Anzolin)
+> 
+> * 2 fixes to proper set encryption key size and security level in the
+> peripheral role of Bluetooth LE devices. (by Andre Guedes)
+> 
+> * a fix for dealing devices where pairing is not necessary, we were keeping
+> the Bluetooth ACL connection alive for too much time. (by Syam Sidhardhan)
+> 
+> Please pull or let me know of any problems! Thanks!
+> 
+> 
+> 	Gustavo
+> 
+> ---
+> The following changes since commit f4e1a4d3ecbb9e42bdf8e7869ee8a4ebfa27fb20:
+> 
+>   rt2800: change initialization sequence to fix system freeze (2013-09-09 14:44:34 -0400)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth master
+> 
+> for you to fetch changes up to 5bcecf325378218a8e248bb6bcae96ec7362f8ef:
+> 
+>   Bluetooth: btusb: Add support for Belkin F8065bf (2013-09-23 17:44:25 -0300)
 
-Looks good. Thanks!
+Pulling now...
 
-
-Michał.
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
