@@ -1,39 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.20]:59938 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752981Ab3IKPus (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Sep 2013 11:50:48 -0400
-Received: from [192.168.2.102] ([79.218.107.113]) by mail.gmx.com (mrgmx003)
- with ESMTPSA (Nemesis) id 0MOwbP-1VHIVk0h1j-006RtU for
- <linux-wireless@vger.kernel.org>; Wed, 11 Sep 2013 17:50:47 +0200
-Message-ID: <52309155.6050207@rempel-privat.de> (sfid-20130911_175052_036784_BBBCDBE5)
-Date: Wed, 11 Sep 2013 17:50:45 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
-MIME-Version: 1.0
-To: Drasko DRASKOVIC <drasko.draskovic@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: ath9k_htc embedded modules
-References: <CAEk6gTALcc95aQhrdRMy4fLwbJ63VwF4RJT4yqrWovgpbRNFqg@mail.gmail.com>
-In-Reply-To: <CAEk6gTALcc95aQhrdRMy4fLwbJ63VwF4RJT4yqrWovgpbRNFqg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from s3.sipsolutions.net ([144.76.43.152]:60236 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756350Ab3IZK6n (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Sep 2013 06:58:43 -0400
+Message-ID: <1380193118.14806.0.camel@jlt4.sipsolutions.net> (sfid-20130926_125846_733636_80D6DF2A)
+Subject: Re: [PATCH] cfg80211: Provision to pass probe response ie along
+ with remain on channel request
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sreenath Sharma <sreenats@broadcom.com>
+Cc: linux-wireless@vger.kernel.org, j@w1.fi
+Date: Thu, 26 Sep 2013 12:58:38 +0200
+In-Reply-To: <20130926073414.GA15283@sreenath-Precision-M4700>
+References: <20130926073414.GA15283@sreenath-Precision-M4700>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 10.09.2013 12:09, schrieb Drasko DRASKOVIC:
-> Hi all,
-> anyone aware of ath9k_htc supported embedded modules on the market
-> (Atheros AR9002U UB94, i.e. AR9280+AR7010 combo).
->
-> All I could find from USB based modules is Ralink RT5572 and RT3572
-> and I do not know how these are supported in linux-wireless (for
-> example AP mode).
+On Thu, 2013-09-26 at 13:04 +0530, Sreenath Sharma wrote:
+> The probe response ie should be set in driver before the listen state
+> for a listen only P2P device. Right now probe response ie is set using
+> driver specific private command implementations. This commit enhances the
+> remain_on_channel command handler to pass probe response ie along with
+> rest of the arguments.
+> 
+> Another approach is the addition of a new nl80211 command specific to pass
+> ies to driver. This will give more flexibilty to upper layer.
 
-Mitsumi Electric DWM-W034
+Umm, no, nack. this is totally bogus. You're implementing something like
+"P2P-listen offload" but hiding it inside the "remain-on-channel"
+command. That's totally the wrong way to go about it.
 
-http://wikidevi.com/wiki/Mitsumi_Electric_DWM-W034
+NACK. Not going to accept this.
 
-http://www.ebay.de/sch/i.html?_odkw=DWM-W034&_osacat=0&_from=R40&LH_PrefLoc=2&_trksid=p2045573.m570.l1313.TR0.TRC0&_nkw=DWM-W034&_sacat=0
+johannes
 
--- 
-Regards,
-Oleksij
