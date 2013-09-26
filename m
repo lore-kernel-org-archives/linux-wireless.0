@@ -1,61 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:41164 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752689Ab3IYXXt convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Sep 2013 19:23:49 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Johan Hedberg <johan.hedberg@gmail.com>
-CC: Marcel Holtmann <marcel@holtmann.org>,
-	"linux-bluetooth@vger.kernel.org" <linux-bluetooth@vger.kernel.org>,
-	Gustavo Padovan <gustavo@padovan.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Mike Frysinger <vapier@chromium.org>,
-	Hyuckjoo Lee <hyuckjoo.lee@samsung.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Date: Wed, 25 Sep 2013 16:23:35 -0700
-Subject: RE: [PATCH v5 1/2] Bluetooth: btmrvl: add setup handler
-Message-ID: <477F20668A386D41ADCC57781B1F70430F45077E5B@SC-VEXCH1.marvell.com> (sfid-20130926_012358_401650_ECF79838)
-References: <1379715667-22424-1-git-send-email-bzhao@marvell.com>
- <18678858-E711-43E5-AFE6-E637D1CECFFB@holtmann.org>
- <477F20668A386D41ADCC57781B1F70430F44C59418@SC-VEXCH1.marvell.com>
- <DF6283E3-8476-400F-A230-CB7CA0F98564@holtmann.org>
- <477F20668A386D41ADCC57781B1F70430F450779A4@SC-VEXCH1.marvell.com>
- <20130924193010.GA2584@x220.p-661hnu-f1>
-In-Reply-To: <20130924193010.GA2584@x220.p-661hnu-f1>
-Content-Type: text/plain; charset="us-ascii"
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:36994 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754176Ab3IZTAR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Sep 2013 15:00:17 -0400
+Date: Thu, 26 Sep 2013 14:57:43 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+	ath6kl-devel@qca.qualcomm.com
+Subject: Re: Pull request: ath 20130930
+Message-ID: <20130926185742.GC1931@tuxdriver.com> (sfid-20130926_210022_425107_81F77A92)
+References: <87wqmyz5i9.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87wqmyz5i9.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johan,
+On Tue, Sep 03, 2013 at 11:14:22AM +0300, Kalle Valo wrote:
+> Hi John,
+> 
+> here are latest ath10k changes, I hope it's still time to get these to
+> 3.12. The changelog for the pull request:
+> 
+> Bartosz dropped support for qca98xx hw1.0 hardware from ath10k, it's
+> just too much to support it. Michal added support for the new firmware
+> interface. Marek fixed WEP in AP and IBSS mode. Rest of the changes are
+> minor fixes or cleanups.
+> 
+> The following changes since commit 9d0e2f0772d394060bf3b17cd1f3a35574365103:
+> 
+>   ath6kl: Fix invalid pointer access on fuzz testing with AP mode (2013-08-07 10:58:59 +0300)
+> 
+> are available in the git repository at:
+> 
+>   git://github.com/kvalo/ath.git for-linville
+> 
+> for you to fetch changes up to 763b8cd31493f452094fd0eaeedb8cad37c756a2:
+> 
+>   ath10k: add chip_id file to debugfs (2013-09-03 09:59:53 +0300)
 
-> You're right that we're missing the clearing of the HCI_SETUP flag for
-> such a scenario. Could you try the attached patch. It should fix the
+Pulling now...
 
-We have tested your patch. Yes, it fixes the problem. Thanks!
-
-> issue. One problem that it does have is that if the HCIDEVUP ioctl path
-> goes through before hci_power_on gets called we will never notify mgmt
-> of the adapter. However, that might be acceptable here since if you're
-> using HCIDEVUP like this it seems it's not a mgmt based system anyway.
-
-Do you think the following change helps?
-
-diff --git a/net/bluetooth/hci_core.c b/net/bluetooth/hci_core.c
-index 3d9f02b..24814b0 100644
---- a/net/bluetooth/hci_core.c
-+++ b/net/bluetooth/hci_core.c
-@@ -1665,7 +1665,7 @@ static void hci_power_on(struct work_struct *work)
- 	BT_DBG("%s", hdev->name);
- 
- 	err = hci_dev_open(hdev->id);
--	if (err < 0) {
-+	if (err < 0 && err != -EALREADY) {
- 		mgmt_set_powered_failed(hdev, err);
- 		return;
- 	}
-
-Thanks,
-Bing
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
