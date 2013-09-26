@@ -1,81 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:35244 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754117Ab3IYCbi (ORCPT
+Received: from kvm.w1.fi ([128.177.28.162]:53364 "EHLO
+	jmaline2.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756419Ab3IZLJt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Sep 2013 22:31:38 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Dmitry Khromov <icechrome@gmail.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3.12 2/2] mwifiex: fix NULL pointer dereference in usb suspend handler
-Date: Tue, 24 Sep 2013 19:31:25 -0700
-Message-ID: <1380076285-29930-2-git-send-email-bzhao@marvell.com> (sfid-20130925_043143_623659_81D14349)
-In-Reply-To: <1380076285-29930-1-git-send-email-bzhao@marvell.com>
-References: <1380076285-29930-1-git-send-email-bzhao@marvell.com>
+	Thu, 26 Sep 2013 07:09:49 -0400
+Date: Thu, 26 Sep 2013 14:09:34 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Chet Lanctot <clanctot@codeaurora.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 0/2] nl80211/cfg80211: Support PMF on drivers with
+ integrated AP SME
+Message-ID: <20130926110934.GA5070@w1.fi> (sfid-20130926_130952_579317_6B8EFCD7)
+References: <1379446296-22236-1-git-send-email-clanctot@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1379446296-22236-1-git-send-email-clanctot@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bug 60815 - Interface hangs in mwifiex_usb
-https://bugzilla.kernel.org/show_bug.cgi?id=60815
+On Tue, Sep 17, 2013 at 12:31:34PM -0700, Chet Lanctot wrote:
+> These patches represent a small number of changes to the
+> nl80211/cfg80211 interface to support Protected Management Frames
+> (PMF, 802.11w) on an AP.  Specifically, these changes are needed for
+> drivers that have the AP SME integrated.
+> 
+> Support is added for drivers that do not implement the SA Query procedure
+> that is part of PMF.  Instead, the need for upper layer software to
+> do this procedure is advertised.  And support is added so that  whether
+> PMF should be used for station connections is communicated to the driver.
 
-[ 2.883807] BUG: unable to handle kernel NULL pointer dereference
-            at 0000000000000048
-[ 2.883813] IP: [<ffffffff815a65e0>] pfifo_fast_enqueue+0x90/0x90
+The patches here have some issues in not compiling and formatting
+(trailing whitespace) and as such, cannot be applied as-is. I'd expect a
+new version to be posted to address those issues.
 
-[ 2.883834] CPU: 1 PID: 3220 Comm: kworker/u8:90 Not tainted
-            3.11.1-monotone-l0 #6
-[ 2.883834] Hardware name: Microsoft Corporation Surface with
-            Windows 8 Pro/Surface with Windows 8 Pro,
-            BIOS 1.03.0450 03/29/2013
+That said, if there is any feedback on the general direction used here,
+that would obviously be welcome even before the updated patches are
+posted.
 
-On Surface Pro, suspend to ram gives a NULL pointer dereference in
-pfifo_fast_enqueue(). The stack trace reveals that the offending
-call is clearing carrier in mwifiex_usb suspend handler.
-
-Since commit 1499d9f "mwifiex: don't drop carrier flag over suspend"
-has removed the carrier flag handling over suspend/resume in SDIO
-and PCIe drivers, I'm removing it in USB driver too. This also fixes
-the bug for Surface Pro.
-
-Cc: <stable@vger.kernel.org> # 3.5+
-Tested-by: Dmitry Khromov <icechrome@gmail.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/usb.c | 7 -------
- 1 file changed, 7 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/usb.c b/drivers/net/wireless/mwifiex/usb.c
-index 2472d4b..1c70b8d 100644
---- a/drivers/net/wireless/mwifiex/usb.c
-+++ b/drivers/net/wireless/mwifiex/usb.c
-@@ -447,9 +447,6 @@ static int mwifiex_usb_suspend(struct usb_interface *intf, pm_message_t message)
- 	 */
- 	adapter->is_suspended = true;
- 
--	for (i = 0; i < adapter->priv_num; i++)
--		netif_carrier_off(adapter->priv[i]->netdev);
--
- 	if (atomic_read(&card->rx_cmd_urb_pending) && card->rx_cmd.urb)
- 		usb_kill_urb(card->rx_cmd.urb);
- 
-@@ -509,10 +506,6 @@ static int mwifiex_usb_resume(struct usb_interface *intf)
- 						  MWIFIEX_RX_CMD_BUF_SIZE);
- 	}
- 
--	for (i = 0; i < adapter->priv_num; i++)
--		if (adapter->priv[i]->media_connected)
--			netif_carrier_on(adapter->priv[i]->netdev);
--
- 	/* Disable Host Sleep */
- 	if (adapter->hs_activated)
- 		mwifiex_cancel_hs(mwifiex_get_priv(adapter,
 -- 
-1.8.2.3
-
+Jouni Malinen                                            PGP id EFC895FA
