@@ -1,96 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:64787 "EHLO mx1.redhat.com"
+Received: from ebb05.tieto.com ([131.207.168.36]:61615 "EHLO ebb05.tieto.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754612Ab3IYNgs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Sep 2013 09:36:48 -0400
-Date: Wed, 25 Sep 2013 15:34:55 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: users@rt2x00.serialmonkey.com
-Subject: [PATCH] rt2800: add support for radio chip RF3070
-Message-ID: <20130925133454.GD3119@redhat.com> (sfid-20130925_153652_308720_F75B4E06)
+	id S1752092Ab3IZJaC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Sep 2013 05:30:02 -0400
+From: Bartosz Markowski <bartosz.markowski@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Bartosz Markowski <bartosz.markowski@tieto.com>
+Subject: [PATCH v2 03/13] ath10k: warn if give WMI command is not supported
+Date: Thu, 26 Sep 2013 11:29:42 +0200
+Message-ID: <1380187792-25626-4-git-send-email-bartosz.markowski@tieto.com> (sfid-20130926_113014_886305_8F4167DD)
+In-Reply-To: <1380187792-25626-1-git-send-email-bartosz.markowski@tieto.com>
+References: <1380187792-25626-1-git-send-email-bartosz.markowski@tieto.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add support for new RF chip ID: 3070. It seems to be the same as 5370,
-maybe vendor just put wrong value on the eeprom, but add this id anyway
-since devices with it showed on the marked.
+This will show and make it easier to track the API
+differences in the new AP firmware.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.c |    5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-index fa33b5e..e3eb952 100644
---- a/drivers/net/wireless/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/rt2x00/rt2800.h
-@@ -52,6 +52,7 @@
-  * RF3322 2.4G 2T2R(RT3352/RT3371/RT3372/RT3391/RT3392)
-  * RF3053 2.4G/5G 3T3R(RT3883/RT3563/RT3573/RT3593/RT3662)
-  * RF5592 2.4G/5G 2T2R
-+ * RF3070 2.4G 1T1R
-  * RF5360 2.4G 1T1R
-  * RF5370 2.4G 1T1R
-  * RF5390 2.4G 1T1R
-@@ -70,6 +71,7 @@
- #define RF3322				0x000c
- #define RF3053				0x000d
- #define RF5592				0x000f
-+#define RF3070				0x3070
- #define RF3290				0x3290
- #define RF5360				0x5360
- #define RF5370				0x5370
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 88ce656..d2f638f 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -3152,6 +3152,7 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
- 	case RF3322:
- 		rt2800_config_channel_rf3322(rt2x00dev, conf, rf, info);
- 		break;
-+	case RF3070:
- 	case RF5360:
- 	case RF5370:
- 	case RF5372:
-@@ -3166,7 +3167,8 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
- 		rt2800_config_channel_rf2xxx(rt2x00dev, conf, rf, info);
- 	}
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index cfb2082..fe55360 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -390,6 +390,11 @@ static int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb,
+ {
+ 	int ret = -EINVAL;
  
--	if (rt2x00_rf(rt2x00dev, RF3290) ||
-+	if (rt2x00_rf(rt2x00dev, RF3070) ||
-+	    rt2x00_rf(rt2x00dev, RF3290) ||
- 	    rt2x00_rf(rt2x00dev, RF3322) ||
- 	    rt2x00_rf(rt2x00dev, RF5360) ||
- 	    rt2x00_rf(rt2x00dev, RF5370) ||
-@@ -4264,6 +4266,7 @@ void rt2800_vco_calibration(struct rt2x00_dev *rt2x00dev)
- 		rt2800_rfcsr_write(rt2x00dev, 7, rfcsr);
- 		break;
- 	case RF3053:
-+	case RF3070:
- 	case RF3290:
- 	case RF5360:
- 	case RF5370:
-@@ -7021,6 +7024,7 @@ static int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	case RF3022:
- 	case RF3052:
- 	case RF3053:
-+	case RF3070:
- 	case RF3290:
- 	case RF3320:
- 	case RF3322:
-@@ -7543,6 +7547,7 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 		   rt2x00_rf(rt2x00dev, RF2020) ||
- 		   rt2x00_rf(rt2x00dev, RF3021) ||
- 		   rt2x00_rf(rt2x00dev, RF3022) ||
-+		   rt2x00_rf(rt2x00dev, RF3070) ||
- 		   rt2x00_rf(rt2x00dev, RF3290) ||
- 		   rt2x00_rf(rt2x00dev, RF3320) ||
- 		   rt2x00_rf(rt2x00dev, RF3322) ||
-@@ -7671,6 +7676,7 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 	case RF3320:
- 	case RF3052:
- 	case RF3053:
-+	case RF3070:
- 	case RF3290:
- 	case RF5360:
- 	case RF5370:
++	if (cmd_id == WMI_CMD_UNDEFINED) {
++		ath10k_warn("command not supported by given firmware\n");
++		return ret;
++	}
++
+ 	wait_event_timeout(ar->wmi.tx_credits_wq, ({
+ 		/* try to send pending beacons first. they take priority */
+ 		ath10k_wmi_tx_beacons_nowait(ar);
+-- 
+1.7.10
+
