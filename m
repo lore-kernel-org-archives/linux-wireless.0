@@ -1,97 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm19-vm0.bullet.mail.ird.yahoo.com ([77.238.189.92]:31810 "HELO
-	nm19-vm0.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753186Ab3IAH6C convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Sep 2013 03:58:02 -0400
-Message-ID: <1378021881.73447.YahooMailBasic@web172302.mail.ir2.yahoo.com> (sfid-20130901_095806_924699_3188217C)
-Date: Sun, 1 Sep 2013 08:51:21 +0100 (BST)
-From: Hin-Tak Leung <htl10@users.sourceforge.net>
-Reply-To: htl10@users.sourceforge.net
-Subject: Re: [PATCH] rtl8187: fix use after free on failure path in rtl8187_init_urbs()
-To: khoroshilov@ispras.ru, herton@canonical.com,
-	larry.finger@lwfinger.net
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ldv-project@linuxtesting.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:54868 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750997Ab3IZRty (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Sep 2013 13:49:54 -0400
+Received: by mail-wi0-f172.google.com with SMTP id hn9so7465539wib.5
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Sep 2013 10:49:53 -0700 (PDT)
+Message-ID: <1380217784.2059.11.camel@canaries64-MCP7A> (sfid-20130926_194959_180366_4E686C86)
+Subject: [PATCH 2/5] staging: vt6656: rxtx.c create structure to join
+ vnt_tx_data_head with vnt_tx_head.
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 26 Sep 2013 18:49:44 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-------------------------------
-On Sat, Aug 31, 2013 22:18 BST Alexey Khoroshilov wrote:
+Create struct vnt_tx_mic_hdr for with union vnt_tx_data_head
+for mic mode.
 
->In case of __dev_alloc_skb() failure rtl8187_init_urbs()
->calls usb_free_urb(entry) where 'entry' can points to urb
->allocated at the previous iteration. That means refcnt will be
->decremented incorrectly and the urb can be used after memory
->deallocation.
->
->The patch fixes the issue and implements error handling of init_urbs
->in rtl8187_start().
->
->Found by Linux Driver Verification project (linuxtesting.org).
->
->Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
->---
-> drivers/net/wireless/rtl818x/rtl8187/dev.c | 15 ++++++++++-----
-> 1 file changed, 10 insertions(+), 5 deletions(-)
->
->diff --git a/drivers/net/wireless/rtl818x/rtl8187/dev.c b/drivers/net/wireless/rtl818x/rtl8187/dev.c
->index f49220e..e83d53c 100644
->--- a/drivers/net/wireless/rtl818x/rtl8187/dev.c
->+++ b/drivers/net/wireless/rtl818x/rtl8187/dev.c
->@@ -438,17 +438,16 @@ static int rtl8187_init_urbs(struct ieee80211_hw *dev)
->         skb_queue_tail(&priv->rx_queue, skb);
->         usb_anchor_urb(entry, &priv->anchored);
->         ret = usb_submit_urb(entry, GFP_KERNEL);
->+        usb_free_urb(entry);
->         if (ret) {
->             skb_unlink(skb, &priv->rx_queue);
->             usb_unanchor_urb(entry);
->             goto err;
->         }
->-        usb_free_urb(entry);
->     }
->     return ret;
->
-> err:
->-    usb_free_urb(entry);
->     kfree_skb(skb);
->     usb_kill_anchored_urbs(&priv->anchored);
->     return ret;
+Create union vnt_tx for mic and non mic mode.
 
-This part looks wrong - you free_urb(entry) then unanchor_urb(entry).
+Attach vnt_rrv_time_* to relevant tx_head.
 
->@@ -956,8 +955,12 @@ static int rtl8187_start(struct ieee80211_hw *dev)
->                   (RETRY_COUNT < 8  /* short retry limit */) |
->                   (RETRY_COUNT < 0  /* long retry limit */) |
->                   (7 < 21 /* MAX TX DMA */));
->-        rtl8187_init_urbs(dev);
->-        rtl8187b_init_status_urb(dev);
->+        ret = rtl8187_init_urbs(dev);
->+        if (ret)
->+            goto rtl8187_start_exit;
->+        ret = rtl8187b_init_status_urb(dev);
->+        if (ret)
->+            usb_kill_anchored_urbs(&priv->anchored);
->         goto rtl8187_start_exit;
->     }
-> 
->@@ -966,7 +969,9 @@ static int rtl8187_start(struct ieee80211_hw *dev)
->     rtl818x_iowrite32(priv, &priv->map->MAR[0], ~0);
->     rtl818x_iowrite32(priv, &priv->map->MAR[1], ~0);
-> 
->-    rtl8187_init_urbs(dev);
->+    ret = rtl8187_init_urbs(dev);
->+    if (ret)
->+        goto rtl8187_start_exit;
-> 
->     reg = RTL818X_RX_CONF_ONLYERLPKT |
->           RTL818X_RX_CONF_RX_AUTORESETPHY |
->-- 
->1.8.1.2
->
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/rxtx.c | 12 ++++++------
+ drivers/staging/vt6656/rxtx.h | 25 ++++++++++++++++++++++---
+ 2 files changed, 28 insertions(+), 9 deletions(-)
 
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 7b05ee8..c80a809 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -870,7 +870,7 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
+     if (byPktType == PK_TYPE_11GB || byPktType == PK_TYPE_11GA) {
+ 	if (need_rts) {
+             //Fill RsvTime
+-		struct vnt_rrv_time_rts *pBuf = &tx_buffer->tx_head.rts;
++		struct vnt_rrv_time_rts *pBuf = &tx_buffer->tx_head.tx_rts.rts;
+ 
+ 		pBuf->wRTSTxRrvTime_aa = s_uGetRTSCTSRsvTime(pDevice, 2,
+ 				byPktType, cbFrameSize, wCurrentRate);
+@@ -889,7 +889,7 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
+         }
+         else {//RTS_needless, PCF mode
+             //Fill RsvTime
+-		struct vnt_rrv_time_cts *pBuf = &tx_buffer->tx_head.cts;
++		struct vnt_rrv_time_cts *pBuf = &tx_buffer->tx_head.tx_cts.cts;
+ 
+ 		pBuf->wTxRrvTime_a = vnt_rxtx_rsvtime_le16(pDevice, byPktType,
+ 			cbFrameSize, wCurrentRate, bNeedACK);
+@@ -906,7 +906,7 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
+     else if (byPktType == PK_TYPE_11A) {
+ 	if (need_rts) {
+             //Fill RsvTime
+-		struct vnt_rrv_time_ab *pBuf = &tx_buffer->tx_head.ab;
++		struct vnt_rrv_time_ab *pBuf = &tx_buffer->tx_head.tx_ab.ab;
+ 
+ 		pBuf->wRTSTxRrvTime = s_uGetRTSCTSRsvTime(pDevice, 2,
+ 				byPktType, cbFrameSize, wCurrentRate);
+@@ -917,7 +917,7 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
+ 			bNeedACK, psEthHeader, wCurrentRate, byFBOption);
+ 	} else {
+             //Fill RsvTime
+-		struct vnt_rrv_time_ab *pBuf = &tx_buffer->tx_head.ab;
++		struct vnt_rrv_time_ab *pBuf = &tx_buffer->tx_head.tx_ab.ab;
+ 
+ 		pBuf->wTxRrvTime = vnt_rxtx_rsvtime_le16(pDevice, PK_TYPE_11A,
+ 			cbFrameSize, wCurrentRate, bNeedACK);
+@@ -926,7 +926,7 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
+     else if (byPktType == PK_TYPE_11B) {
+ 	if (need_rts) {
+             //Fill RsvTime
+-		struct vnt_rrv_time_ab *pBuf = &tx_buffer->tx_head.ab;
++		struct vnt_rrv_time_ab *pBuf = &tx_buffer->tx_head.tx_ab.ab;
+ 
+ 		pBuf->wRTSTxRrvTime = s_uGetRTSCTSRsvTime(pDevice, 0,
+ 				byPktType, cbFrameSize, wCurrentRate);
+@@ -938,7 +938,7 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
+         }
+         else { //RTS_needless, non PCF mode
+             //Fill RsvTime
+-		struct vnt_rrv_time_ab *pBuf = &tx_buffer->tx_head.ab;
++		struct vnt_rrv_time_ab *pBuf = &tx_buffer->tx_head.tx_ab.ab;
+ 
+ 		pBuf->wTxRrvTime = vnt_rxtx_rsvtime_le16(pDevice, PK_TYPE_11B,
+ 			cbFrameSize, wCurrentRate, bNeedACK);
+diff --git a/drivers/staging/vt6656/rxtx.h b/drivers/staging/vt6656/rxtx.h
+index 78b7b74..bbda9a3 100644
+--- a/drivers/staging/vt6656/rxtx.h
++++ b/drivers/staging/vt6656/rxtx.h
+@@ -180,10 +180,29 @@ union vnt_tx_data_head {
+ 	struct vnt_cts_fb cts_g_fb;
+ };
+ 
++struct vnt_tx_mic_hdr {
++	struct vnt_mic_hdr hdr;
++	union vnt_tx_data_head head;
++} __packed;
++
++union vnt_tx {
++	struct vnt_tx_mic_hdr mic;
++	union vnt_tx_data_head head;
++};
++
+ union vnt_tx_head {
+-	struct vnt_rrv_time_rts rts;
+-	struct vnt_rrv_time_cts cts;
+-	struct vnt_rrv_time_ab ab;
++	struct {
++		struct vnt_rrv_time_rts rts;
++		union vnt_tx tx;
++	} __packed tx_rts;
++	struct {
++		struct vnt_rrv_time_cts cts;
++		union vnt_tx tx;
++	} __packed tx_cts;
++	struct {
++		struct vnt_rrv_time_ab ab;
++		union vnt_tx tx;
++	} __packed tx_ab;
+ };
+ 
+ struct vnt_tx_fifo_head {
+-- 
+1.8.3.2
 
