@@ -1,66 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:39369 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754444Ab3ITLxv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Sep 2013 07:53:51 -0400
-In-Reply-To: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-From: Russell King <rmk+kernel@arm.linux.org.uk>
-To: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
-	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
-	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
-	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	uclinux-dist-devel@blackfin.uclinux.org
-Cc: Eilon Greenstein <eilong@broadcom.com>
-Subject: [PATCH 10/51] DMA-API: net: broadcom/bnx2x: replace
- dma_set_mask()+dma_set_coherent_mask() with new
- helper
-Message-Id: <E1VMlsJ-0007g8-UO@rmk-PC.arm.linux.org.uk> (sfid-20130920_135407_991445_CE64A5B8)
-Date: Thu, 19 Sep 2013 22:34:59 +0100
+Received: from ebb06.tieto.com ([131.207.168.38]:44680 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750805Ab3IZPrc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Sep 2013 11:47:32 -0400
+From: Bartosz Markowski <bartosz.markowski@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Bartosz Markowski <bartosz.markowski@tieto.com>
+Subject: [PATCH v3 00/13] ath10k: dual-firmware support (MAIN and 10.X)
+Date: Thu, 26 Sep 2013 17:47:04 +0200
+Message-ID: <1380210437-4391-1-git-send-email-bartosz.markowski@tieto.com> (sfid-20130926_174735_781825_AF8883F7)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replace the following sequence:
+The major changes covered by this work:
+* dynamic WMI structures
+* WMI cmd/event definitions from 10.x FW track
+* memory host chunks feature
+* management frames path over WMI for 10.x
+* WMI RX events handling for MAIN and 10.X split
+* target config split (LARGE AP feature for 10.x)
+* scan start sctructure split
+* dynamic VDEV and PDEV parameters structures
 
-	dma_set_mask(dev, mask);
-	dma_set_coherent_mask(dev, mask);
+Changes in v2:
+(review comments from Kalle and Michal):
+* WMI cmd, pdev and vdev params names trimmed
+* ath10k_wmi_cmd_init() exposed only
+* few 'if' statements simplifications
+* 10.x mgmt frames over WMI - 'BUG: scheduling while atomic' fixed
 
-with a call to the new helper dma_set_mask_and_coherent().
+Changes in v3:
+* print cmd_id when warning about unsupported WMI command
+* remove excessive empty line
 
-Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
----
- drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c |    8 ++------
- 1 files changed, 2 insertions(+), 6 deletions(-)
+Bartosz Markowski (13):
+  ath10k: introduce dynamic WMI structures
+  ath10k: add wmi_10x_<cmd/event> definitions
+  ath10k: warn if give WMI command is not supported
+  ath10k: implement WMI events handling frame for both firmwares
+  ath10k: split ath10k_wmi_service_ready_event_rx
+  ath10k: drop the fw versioning sanity check
+  ath10k: implement host memory chunks
+  ath10k: bring back the WMI path for mgmt frames
+  ath10k: split wmi_cmd_init path
+  ath10k: add TARGET values for 10.x firmware
+  ath10k: introduce dynamic vdev parameters
+  ath10k: introduce dynamic pdev parameters
+  ath10k: handle FW API differences for scan structures
 
-diff --git a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
-index 2f8dbbb..e6c3e66 100644
---- a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
-+++ b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
-@@ -12072,13 +12072,9 @@ static int bnx2x_set_coherency_mask(struct bnx2x *bp)
- {
- 	struct device *dev = &bp->pdev->dev;
- 
--	if (dma_set_mask(dev, DMA_BIT_MASK(64)) == 0) {
-+	if (dma_set_mask_and_coherent(dev, DMA_BIT_MASK(64)) == 0) {
- 		bp->flags |= USING_DAC_FLAG;
--		if (dma_set_coherent_mask(dev, DMA_BIT_MASK(64)) != 0) {
--			dev_err(dev, "dma_set_coherent_mask failed, aborting\n");
--			return -EIO;
--		}
--	} else if (dma_set_mask(dev, DMA_BIT_MASK(32)) != 0) {
-+	} else if (dma_set_mask_and_coherent(dev, DMA_BIT_MASK(32)) != 0) {
- 		dev_err(dev, "System does not support DMA, aborting\n");
- 		return -EIO;
- 	}
+ drivers/net/wireless/ath/ath10k/core.c   |   28 +-
+ drivers/net/wireless/ath/ath10k/core.h   |   28 +-
+ drivers/net/wireless/ath/ath10k/htt_tx.c |    4 +-
+ drivers/net/wireless/ath/ath10k/hw.h     |   37 +-
+ drivers/net/wireless/ath/ath10k/mac.c    |  133 +++-
+ drivers/net/wireless/ath/ath10k/mac.h    |    2 +
+ drivers/net/wireless/ath/ath10k/wmi.c    | 1085 ++++++++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath10k/wmi.h    |  968 +++++++++++++++++++++++++-
+ 8 files changed, 2158 insertions(+), 127 deletions(-)
+
 -- 
-1.7.4.4
+1.7.10
 
