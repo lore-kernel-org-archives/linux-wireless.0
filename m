@@ -1,90 +1,341 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:57859 "EHLO bear.ext.ti.com"
+Received: from ebb06.tieto.com ([131.207.168.38]:44680 "EHLO ebb06.tieto.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754590Ab3ITNQp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Sep 2013 09:16:45 -0400
-Date: Fri, 20 Sep 2013 08:11:25 -0500
-From: Felipe Balbi <balbi@ti.com>
-To: Russell King <rmk+kernel@arm.linux.org.uk>
-CC: <alsa-devel@alsa-project.org>, <b43-dev@lists.infradead.org>,
-	<devel@driverdev.osuosl.org>, <devicetree@vger.kernel.org>,
-	<dri-devel@lists.freedesktop.org>,
-	<e1000-devel@lists.sourceforge.net>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-crypto@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-	<linux-fbdev@vger.kernel.org>, <linux-ide@vger.kernel.org>,
-	<linux-media@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-	<linux-nvme@lists.infradead.org>, <linux-omap@vger.kernel.org>,
-	<linuxppc-dev@lists.ozlabs.org>,
-	<linux-samsung-soc@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-	<linux-tegra@vger.kernel.org>, <linux-usb@vger.kernel.org>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	<uclinux-dist-devel@blackfin.uclinux.org>,
-	Felipe Balbi <balbi@ti.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 42/51] DMA-API: usb: musb: use
- platform_device_register_full() to avoid directly messing with dma masks
-Message-ID: <20130920131125.GO26101@radagast> (sfid-20130920_151716_234251_4EB4C306)
-Reply-To: <balbi@ti.com>
-References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
- <E1VMnQk-0007sX-Ty@rmk-PC.arm.linux.org.uk>
+	id S1753295Ab3IZPrk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Sep 2013 11:47:40 -0400
+From: Bartosz Markowski <bartosz.markowski@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Bartosz Markowski <bartosz.markowski@tieto.com>
+Subject: [PATCH v3 08/13] ath10k: bring back the WMI path for mgmt frames
+Date: Thu, 26 Sep 2013 17:47:12 +0200
+Message-ID: <1380210437-4391-9-git-send-email-bartosz.markowski@tieto.com> (sfid-20130926_174801_166022_700D63EA)
+In-Reply-To: <1380210437-4391-1-git-send-email-bartosz.markowski@tieto.com>
+References: <1380210437-4391-1-git-send-email-bartosz.markowski@tieto.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="S0GG+JvAI2G0KxBG"
-In-Reply-To: <E1VMnQk-0007sX-Ty@rmk-PC.arm.linux.org.uk>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---S0GG+JvAI2G0KxBG
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+This is still the only way to submit mgmt frames in case
+of 10.X firmware.
 
-Hi,
+This patch introduces wmi_mgmt_tx queue, because of the
+fact WMI command can block. This is a problem for
+ath10k_tx_htt(), since it's called from atomic context.
+The skb queue and worker are introduced to move the mgmt
+frame handling out of .tx callback context and not block.
 
-On Fri, Sep 20, 2013 at 12:14:38AM +0100, Russell King wrote:
-> Use platform_device_register_full() for those drivers which can, to
-> avoid messing directly with DMA masks.  This can only be done when
-> the driver does not need to access the allocated musb platform device
-> from within its callbacks, which may be called during the musb
-> device probing.
->=20
-> Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c   |    3 ++
+ drivers/net/wireless/ath/ath10k/core.h   |   10 ++++-
+ drivers/net/wireless/ath/ath10k/htt_tx.c |    4 +-
+ drivers/net/wireless/ath/ath10k/mac.c    |   70 +++++++++++++++++++++++++-----
+ drivers/net/wireless/ath/ath10k/mac.h    |    2 +
+ drivers/net/wireless/ath/ath10k/wmi.c    |   51 ++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h    |    1 +
+ 7 files changed, 128 insertions(+), 13 deletions(-)
 
-you want me to carry this one through my tree or you prefer getting my
-Acked-by ? Either way works for me:
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 31860a6..bd74dac 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -520,6 +520,9 @@ struct ath10k *ath10k_core_create(void *hif_priv, struct device *dev,
+ 	INIT_WORK(&ar->offchan_tx_work, ath10k_offchan_tx_work);
+ 	skb_queue_head_init(&ar->offchan_tx_queue);
+ 
++	INIT_WORK(&ar->wmi_mgmt_tx_work, ath10k_mgmt_over_wmi_tx_work);
++	skb_queue_head_init(&ar->wmi_mgmt_tx_queue);
++
+ 	init_waitqueue_head(&ar->event_queue);
+ 
+ 	INIT_WORK(&ar->restart_work, ath10k_core_restart);
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index e2a2658..984db11 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -43,15 +43,17 @@
+ /* Antenna noise floor */
+ #define ATH10K_DEFAULT_NOISE_FLOOR -95
+ 
++#define ATH10K_MAX_NUM_MGMT_PENDING 16
++
+ struct ath10k;
+ 
+ struct ath10k_skb_cb {
+ 	dma_addr_t paddr;
+ 	bool is_mapped;
+ 	bool is_aborted;
++	u8 vdev_id;
+ 
+ 	struct {
+-		u8 vdev_id;
+ 		u8 tid;
+ 		bool is_offchan;
+ 
+@@ -284,6 +286,9 @@ enum ath10k_fw_features {
+ 	/* firmware from 10X branch */
+ 	ATH10K_FW_FEATURE_WMI_10X = 1,
+ 
++	/* firmware support tx frame management over WMI, otherwise it's HTT */
++	ATH10K_FW_FEATURE_HAS_WMI_MGMT_TX = 2,
++
+ 	/* keep last */
+ 	ATH10K_FW_FEATURE_COUNT,
+ };
+@@ -393,6 +398,9 @@ struct ath10k {
+ 	struct completion offchan_tx_completed;
+ 	struct sk_buff *offchan_tx_skb;
+ 
++	struct work_struct wmi_mgmt_tx_work;
++	struct sk_buff_head wmi_mgmt_tx_queue;
++
+ 	enum ath10k_state state;
+ 
+ 	struct work_struct restart_work;
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index 3b93c6a..d9335e9 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -308,7 +308,7 @@ int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 	struct sk_buff *txdesc = NULL;
+ 	struct htt_cmd *cmd;
+ 	struct ath10k_skb_cb *skb_cb = ATH10K_SKB_CB(msdu);
+-	u8 vdev_id = skb_cb->htt.vdev_id;
++	u8 vdev_id = skb_cb->vdev_id;
+ 	int len = 0;
+ 	int msdu_id = -1;
+ 	int res;
+@@ -384,7 +384,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 	struct ath10k_skb_cb *skb_cb = ATH10K_SKB_CB(msdu);
+ 	struct sk_buff *txdesc = NULL;
+ 	bool use_frags;
+-	u8 vdev_id = ATH10K_SKB_CB(msdu)->htt.vdev_id;
++	u8 vdev_id = ATH10K_SKB_CB(msdu)->vdev_id;
+ 	u8 tid;
+ 	int prefetch_len, desc_len;
+ 	int msdu_id = -1;
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index df4d299..f0bc707 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1486,7 +1486,7 @@ static void ath10k_tx_h_add_p2p_noa_ie(struct ath10k *ar, struct sk_buff *skb)
+ static void ath10k_tx_htt(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+-	int ret;
++	int ret = 0;
+ 
+ 	if (ar->htt.target_version_major >= 3) {
+ 		/* Since HTT 3.0 there is no separate mgmt tx command */
+@@ -1494,16 +1494,32 @@ static void ath10k_tx_htt(struct ath10k *ar, struct sk_buff *skb)
+ 		goto exit;
+ 	}
+ 
+-	if (ieee80211_is_mgmt(hdr->frame_control))
+-		ret = ath10k_htt_mgmt_tx(&ar->htt, skb);
+-	else if (ieee80211_is_nullfunc(hdr->frame_control))
++	if (ieee80211_is_mgmt(hdr->frame_control)) {
++		if (test_bit(ATH10K_FW_FEATURE_HAS_WMI_MGMT_TX,
++			     ar->fw_features)) {
++			if (skb_queue_len(&ar->wmi_mgmt_tx_queue) >=
++			    ATH10K_MAX_NUM_MGMT_PENDING) {
++				ath10k_warn("wmi mgmt_tx queue limit reached\n");
++				ret = -EBUSY;
++				goto exit;
++			}
++
++			skb_queue_tail(&ar->wmi_mgmt_tx_queue, skb);
++			ieee80211_queue_work(ar->hw, &ar->wmi_mgmt_tx_work);
++		} else {
++			ret = ath10k_htt_mgmt_tx(&ar->htt, skb);
++		}
++	} else if (!test_bit(ATH10K_FW_FEATURE_HAS_WMI_MGMT_TX,
++			     ar->fw_features) &&
++		   ieee80211_is_nullfunc(hdr->frame_control)) {
+ 		/* FW does not report tx status properly for NullFunc frames
+ 		 * unless they are sent through mgmt tx path. mac80211 sends
+-		 * those frames when it detects link/beacon loss and depends on
+-		 * the tx status to be correct. */
++		 * those frames when it detects link/beacon loss and depends
++		 * on the tx status to be correct. */
+ 		ret = ath10k_htt_mgmt_tx(&ar->htt, skb);
+-	else
++	} else {
+ 		ret = ath10k_htt_tx(&ar->htt, skb);
++	}
+ 
+ exit:
+ 	if (ret) {
+@@ -1554,7 +1570,7 @@ void ath10k_offchan_tx_work(struct work_struct *work)
+ 
+ 		hdr = (struct ieee80211_hdr *)skb->data;
+ 		peer_addr = ieee80211_get_DA(hdr);
+-		vdev_id = ATH10K_SKB_CB(skb)->htt.vdev_id;
++		vdev_id = ATH10K_SKB_CB(skb)->vdev_id;
+ 
+ 		spin_lock_bh(&ar->data_lock);
+ 		peer = ath10k_peer_find(ar, vdev_id, peer_addr);
+@@ -1596,6 +1612,36 @@ void ath10k_offchan_tx_work(struct work_struct *work)
+ 	}
+ }
+ 
++void ath10k_mgmt_over_wmi_tx_purge(struct ath10k *ar)
++{
++	struct sk_buff *skb;
++
++	for (;;) {
++		skb = skb_dequeue(&ar->wmi_mgmt_tx_queue);
++		if (!skb)
++			break;
++
++		ieee80211_free_txskb(ar->hw, skb);
++	}
++}
++
++void ath10k_mgmt_over_wmi_tx_work(struct work_struct *work)
++{
++	struct ath10k *ar = container_of(work, struct ath10k, wmi_mgmt_tx_work);
++	struct sk_buff *skb;
++	int ret;
++
++	for (;;) {
++		skb = skb_dequeue(&ar->wmi_mgmt_tx_queue);
++		if (!skb)
++			break;
++
++		ret = ath10k_wmi_mgmt_tx(ar, skb);
++		if (ret)
++			ath10k_warn("wmi mgmt_tx failed (%d)\n", ret);
++	}
++}
++
+ /************/
+ /* Scanning */
+ /************/
+@@ -1754,14 +1800,14 @@ static void ath10k_tx(struct ieee80211_hw *hw,
+ 		ath10k_tx_h_seq_no(skb);
+ 	}
+ 
++	ATH10K_SKB_CB(skb)->vdev_id = vdev_id;
+ 	ATH10K_SKB_CB(skb)->htt.is_offchan = false;
+-	ATH10K_SKB_CB(skb)->htt.vdev_id = vdev_id;
+ 	ATH10K_SKB_CB(skb)->htt.tid = tid;
+ 
+ 	if (info->flags & IEEE80211_TX_CTL_TX_OFFCHAN) {
+ 		spin_lock_bh(&ar->data_lock);
+ 		ATH10K_SKB_CB(skb)->htt.is_offchan = true;
+-		ATH10K_SKB_CB(skb)->htt.vdev_id = ar->scan.vdev_id;
++		ATH10K_SKB_CB(skb)->vdev_id = ar->scan.vdev_id;
+ 		spin_unlock_bh(&ar->data_lock);
+ 
+ 		ath10k_dbg(ATH10K_DBG_MAC, "queued offchannel skb %p\n", skb);
+@@ -1783,6 +1829,7 @@ void ath10k_halt(struct ath10k *ar)
+ 
+ 	del_timer_sync(&ar->scan.timeout);
+ 	ath10k_offchan_tx_purge(ar);
++	ath10k_mgmt_over_wmi_tx_purge(ar);
+ 	ath10k_peer_cleanup_all(ar);
+ 	ath10k_core_stop(ar);
+ 	ath10k_hif_power_down(ar);
+@@ -1859,7 +1906,10 @@ static void ath10k_stop(struct ieee80211_hw *hw)
+ 	ar->state = ATH10K_STATE_OFF;
+ 	mutex_unlock(&ar->conf_mutex);
+ 
++	ath10k_mgmt_over_wmi_tx_purge(ar);
++
+ 	cancel_work_sync(&ar->offchan_tx_work);
++	cancel_work_sync(&ar->wmi_mgmt_tx_work);
+ 	cancel_work_sync(&ar->restart_work);
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/mac.h b/drivers/net/wireless/ath/ath10k/mac.h
+index 6fce9bf..ba10219 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.h
++++ b/drivers/net/wireless/ath/ath10k/mac.h
+@@ -34,6 +34,8 @@ struct ath10k_vif *ath10k_get_arvif(struct ath10k *ar, u32 vdev_id);
+ void ath10k_reset_scan(unsigned long ptr);
+ void ath10k_offchan_tx_purge(struct ath10k *ar);
+ void ath10k_offchan_tx_work(struct work_struct *work);
++void ath10k_mgmt_over_wmi_tx_purge(struct ath10k *ar);
++void ath10k_mgmt_over_wmi_tx_work(struct work_struct *work);
+ void ath10k_halt(struct ath10k *ar);
+ 
+ static inline struct ath10k_vif *ath10k_vif_to_arvif(struct ieee80211_vif *vif)
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 97ba23e..8c22367 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -410,6 +410,57 @@ static int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb,
+ 	return ret;
+ }
+ 
++int ath10k_wmi_mgmt_tx(struct ath10k *ar, struct sk_buff *skb)
++{
++	int ret = 0;
++	struct wmi_mgmt_tx_cmd *cmd;
++	struct ieee80211_hdr *hdr;
++	struct sk_buff *wmi_skb;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	int len;
++	u16 fc;
++
++	hdr = (struct ieee80211_hdr *)skb->data;
++	fc = le16_to_cpu(hdr->frame_control);
++
++	if (WARN_ON_ONCE(!ieee80211_is_mgmt(hdr->frame_control)))
++		return -EINVAL;
++
++	len = sizeof(cmd->hdr) + skb->len;
++	len = round_up(len, 4);
++
++	wmi_skb = ath10k_wmi_alloc_skb(len);
++	if (!wmi_skb)
++		return -ENOMEM;
++
++	cmd = (struct wmi_mgmt_tx_cmd *)wmi_skb->data;
++
++	cmd->hdr.vdev_id = __cpu_to_le32(ATH10K_SKB_CB(skb)->vdev_id);
++	cmd->hdr.tx_rate = 0;
++	cmd->hdr.tx_power = 0;
++	cmd->hdr.buf_len = __cpu_to_le32((u32)(skb->len));
++
++	memcpy(cmd->hdr.peer_macaddr.addr, ieee80211_get_DA(hdr), ETH_ALEN);
++	memcpy(cmd->buf, skb->data, skb->len);
++
++	ath10k_dbg(ATH10K_DBG_WMI, "wmi mgmt tx skb %p len %d ftype %02x stype %02x\n",
++		   wmi_skb, wmi_skb->len, fc & IEEE80211_FCTL_FTYPE,
++		   fc & IEEE80211_FCTL_STYPE);
++
++	/* Send the management frame buffer to the target */
++	ret = ath10k_wmi_cmd_send(ar, wmi_skb, ar->wmi.cmd->mgmt_tx_cmdid);
++	if (ret) {
++		dev_kfree_skb_any(skb);
++		return ret;
++	}
++
++	/* TODO: report tx status to mac80211 - temporary just ACK */
++	info->flags |= IEEE80211_TX_STAT_ACK;
++	ieee80211_tx_status_irqsafe(ar->hw, skb);
++
++	return ret;
++}
++
+ static int ath10k_wmi_event_scan(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	struct wmi_scan_event *event = (struct wmi_scan_event *)skb->data;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 56339d2..1c515d6 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -3483,5 +3483,6 @@ int ath10k_wmi_pdev_set_wmm_params(struct ath10k *ar,
+ int ath10k_wmi_request_stats(struct ath10k *ar, enum wmi_stats_id stats_id);
+ int ath10k_wmi_force_fw_hang(struct ath10k *ar,
+ 			     enum wmi_force_fw_hang_type type, u32 delay_ms);
++int ath10k_wmi_mgmt_tx(struct ath10k *ar, struct sk_buff *skb);
+ 
+ #endif /* _WMI_H_ */
+-- 
+1.7.10
 
-Acked-by: Felipe Balbi <balbi@ti.com>
-
-there's also the third option of me setting up a branch with only this
-patch and we both merge it, that'd also work.
-
-cheers
-
---=20
-balbi
-
---S0GG+JvAI2G0KxBG
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJSPEl9AAoJEIaOsuA1yqREIKYP/0fcIrBOWMvkcjYUJYHm/Vg7
-E8Vfe5ZUQcfPTWoiz5Kzdg+2Y4NG4Zv7Y7TpZj5atvz97zpiT0JAhvy5yf1+q3sv
-qozJJL3JUtpbwcNP4R0/rD6v+2VvyS3lWuJeCI/NJY4zpZ6zYS8WsaR7QRnjUX8O
-wOSIrYcwbr8xNrKIQxWhmEld60Cs4wSZ3TS8fvV0UWBo5CTeZdGZns/gRW5MGmZW
-tdR1nB+KmCqpVga49niAMHKm0DqvBhrXyuZm3T7nrWxXnqY3/bhYM/sGNPAdeGU1
-hJ6Hfe4yNjQpDm9bkRStj3kONevdXFpmnx7ndqnMGA+qAcZYUZP2ZQIP4zKUgPq5
-iM/lX9z+NYtJPzUi2sV6XGHpU5+O2Imy0SP36IvsV3K9RbSv+MDsNqCQRdFzhQjX
-dvR2fzXM6eX5zeRR9fonD3odCCr7sDGj8b+ODFhyp/Imph/e3spE0NWc/1et6KhY
-OOXVb2MRpRBPwA8yjFOfLEn5rgu3u8awCHDe4rmknYVdmzzrZOowTSqw5q6UTK80
-Vz+bJques9CHoUs2StfOeJ4QOn6mzaYi00HjqXZ3BZlBQSTKoPAAzC4H3vS/vPTs
-9PSqsMPPkK4cFcq94JIViy9gzHUKWJREWjM9nmAKMfGdU+xxkTnYLurDBKZy6SAt
-8zFqQe3pzsCzGEpNuH+i
-=q3cb
------END PGP SIGNATURE-----
-
---S0GG+JvAI2G0KxBG--
