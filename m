@@ -1,69 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:55728 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751726Ab3IIJZA (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:7246 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751091Ab3IZIMU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Sep 2013 05:25:00 -0400
-Received: by mail-wi0-f182.google.com with SMTP id ez12so3093312wid.15
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Sep 2013 02:24:59 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <luca@coelho.fi>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 06/13] wl12xx/wl18xx: update default fw logger's settings
-Date: Mon,  9 Sep 2013 12:24:37 +0300
-Message-Id: <1378718684-14430-6-git-send-email-eliad@wizery.com> (sfid-20130909_112507_752050_437A2EF3)
-In-Reply-To: <1378718684-14430-1-git-send-email-eliad@wizery.com>
-References: <1378718684-14430-1-git-send-email-eliad@wizery.com>
+	Thu, 26 Sep 2013 04:12:20 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Bartosz Markowski <bartosz.markowski@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 01/13] ath10k: introduce dynamic WMI structures
+References: <1380101891-18312-1-git-send-email-bartosz.markowski@tieto.com>
+	<1380101891-18312-2-git-send-email-bartosz.markowski@tieto.com>
+Date: Thu, 26 Sep 2013 11:12:12 +0300
+In-Reply-To: <1380101891-18312-2-git-send-email-bartosz.markowski@tieto.com>
+	(Bartosz Markowski's message of "Wed, 25 Sep 2013 11:37:59 +0200")
+Message-ID: <87wqm4rogz.fsf@kamboji.qca.qualcomm.com> (sfid-20130926_101226_101422_8899404F)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ido Reis <idor@ti.com>
+Bartosz Markowski <bartosz.markowski@tieto.com> writes:
 
-update the fw logger mode to continuous, and output to dbgpins (uart).
+> This is the initial framework to implement dynamic
+> WMI API in order to support new firmware (from so
+> called 10.X branch)
+>
+> The realization is to have a static WMI cmd map for
+> each of the firmwares, registered upom wmi init.
+>
+> This patch creates such map for MAIN FW, updates
+> wmi_cmd_send() calls to take as a parameter
+> the map value instead of direct WMI enum.
+>
+> As soon as complete 10.X API will be on place,
+> we will introduce the FW IE mechanics to dynamicaly
+> identify which FW is being used and based on that
+> we will use correct map, API, structures, etc.
+>
+> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
 
-Signed-off-by: Ido Reis <idor@ti.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/ti/wl12xx/main.c | 4 ++--
- drivers/net/wireless/ti/wl18xx/main.c | 4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
+[...]
 
-diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
-index f147e32..d94173c 100644
---- a/drivers/net/wireless/ti/wl12xx/main.c
-+++ b/drivers/net/wireless/ti/wl12xx/main.c
-@@ -333,11 +333,11 @@ static struct wlcore_conf wl12xx_conf = {
- 		.always                        = 0,
- 	},
- 	.fwlog = {
--		.mode                         = WL12XX_FWLOG_ON_DEMAND,
-+		.mode                         = WL12XX_FWLOG_CONTINUOUS,
- 		.mem_blocks                   = 2,
- 		.severity                     = 0,
- 		.timestamp                    = WL12XX_FWLOG_TIMESTAMP_DISABLED,
--		.output                       = WL12XX_FWLOG_OUTPUT_HOST,
-+		.output                       = WL12XX_FWLOG_OUTPUT_DBG_PINS,
- 		.threshold                    = 0,
- 	},
- 	.rate = {
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index a02e0bf..aaea0cc 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -456,11 +456,11 @@ static struct wlcore_conf wl18xx_conf = {
- 		.always                        = 0,
- 	},
- 	.fwlog = {
--		.mode                         = WL12XX_FWLOG_ON_DEMAND,
-+		.mode                         = WL12XX_FWLOG_CONTINUOUS,
- 		.mem_blocks                   = 2,
- 		.severity                     = 0,
- 		.timestamp                    = WL12XX_FWLOG_TIMESTAMP_DISABLED,
--		.output                       = WL12XX_FWLOG_OUTPUT_HOST,
-+		.output                       = WL12XX_FWLOG_OUTPUT_DBG_PINS,
- 		.threshold                    = 0,
- 	},
- 	.rate = {
+> @@ -268,6 +269,9 @@ enum ath10k_fw_features {
+>  	/* wmi_mgmt_rx_hdr contains extra RSSI information */
+>  	ATH10K_FW_FEATURE_EXT_WMI_MGMT_RX = 0,
+>  
+> +	/* firmware from 10X branch */
+> +	ATH10K_FW_FEATURE_10X = 1,
+> +
+
+As this feature bit seems to be only used related the WMI code, I think
+it's better to rename it to ATH10K_FW_FEATURE_WMI_10X. Better to keep
+the scope of feature bits as small as practically possible. That way
+it's easier to disable features when the firmware interface changes.
+
 -- 
-1.8.3.rc1.35.g9b79519
-
+Kalle Valo
