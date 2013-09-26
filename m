@@ -1,259 +1,574 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:34918 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756564Ab3ICFCc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Sep 2013 01:02:32 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/4] initvals: Add missing initval arrays for AR9485
-Date: Tue,  3 Sep 2013 10:28:37 +0530
-Message-Id: <1378184318-1169-3-git-send-email-sujith@msujith.org> (sfid-20130903_070235_195064_4157D054)
-In-Reply-To: <1378184318-1169-1-git-send-email-sujith@msujith.org>
-References: <1378184318-1169-1-git-send-email-sujith@msujith.org>
+Received: from ebb05.tieto.com ([131.207.168.36]:64722 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756240Ab3IZJaN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Sep 2013 05:30:13 -0400
+From: Bartosz Markowski <bartosz.markowski@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Bartosz Markowski <bartosz.markowski@tieto.com>
+Subject: [PATCH v2 11/13] ath10k: introduce dynamic vdev parameters
+Date: Thu, 26 Sep 2013 11:29:50 +0200
+Message-ID: <1380187792-25626-12-git-send-email-bartosz.markowski@tieto.com> (sfid-20130926_113022_072444_A59D7087)
+In-Reply-To: <1380187792-25626-1-git-send-email-bartosz.markowski@tieto.com>
+References: <1380187792-25626-1-git-send-email-bartosz.markowski@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Both firmwares (main and 10.x) have different set of vdev
+parameters. To stay in sync with FW API, this patch introduces
+a dynamic registering method.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+ath10k_wmi_vdev_set_param() takes now indirect u32 value
+to identify the Vdev parameter it want's to set.
+
+Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
 ---
- tools/initvals/ar9485_initvals.h | 188 +++++++++++++++++++++++++++++++++++++++
- tools/initvals/initvals.c        |   4 +
- 2 files changed, 192 insertions(+)
+ drivers/net/wireless/ath/ath10k/core.h |    1 +
+ drivers/net/wireless/ath/ath10k/mac.c  |   55 +++++-----
+ drivers/net/wireless/ath/ath10k/wmi.c  |  129 +++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/wmi.h  |  172 +++++++++++++++++++++++++++++++-
+ 4 files changed, 332 insertions(+), 25 deletions(-)
 
-diff --git a/tools/initvals/ar9485_initvals.h b/tools/initvals/ar9485_initvals.h
-index 5b5ab76..4b37ced 100644
---- a/tools/initvals/ar9485_initvals.h
-+++ b/tools/initvals/ar9485_initvals.h
-@@ -270,6 +270,100 @@ static const u32 ar9485Modes_high_power_tx_gain_1_1[][5] = {
- 	{0x00016048, 0x6c924260, 0x6c924260, 0x6c924260, 0x6c924260},
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 984db11..124e724 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -119,6 +119,7 @@ struct ath10k_wmi {
+ 	struct completion unified_ready;
+ 	wait_queue_head_t tx_credits_wq;
+ 	struct wmi_cmd_map *cmd;
++	struct wmi_vdev_param_map *vdev_param;
+ 
+ 	u32 num_mem_chunks;
+ 	struct ath10k_mem_chunk mem_chunks[ATH10K_MAX_MEM_REQS];
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index cadf90d..d8aba57 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -334,25 +334,29 @@ static int ath10k_peer_create(struct ath10k *ar, u32 vdev_id, const u8 *addr)
+ 
+ static int  ath10k_mac_set_rts(struct ath10k_vif *arvif, u32 value)
+ {
++	struct ath10k *ar = arvif->ar;
++	u32 vdev_param;
++
+ 	if (value != 0xFFFFFFFF)
+ 		value = min_t(u32, arvif->ar->hw->wiphy->rts_threshold,
+ 			      ATH10K_RTS_MAX);
+ 
+-	return ath10k_wmi_vdev_set_param(arvif->ar, arvif->vdev_id,
+-					 WMI_VDEV_PARAM_RTS_THRESHOLD,
+-					 value);
++	vdev_param = ar->wmi.vdev_param->rts_threshold;
++	return ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param, value);
+ }
+ 
+ static int ath10k_mac_set_frag(struct ath10k_vif *arvif, u32 value)
+ {
++	struct ath10k *ar = arvif->ar;
++	u32 vdev_param;
++
+ 	if (value != 0xFFFFFFFF)
+ 		value = clamp_t(u32, arvif->ar->hw->wiphy->frag_threshold,
+ 				ATH10K_FRAGMT_THRESHOLD_MIN,
+ 				ATH10K_FRAGMT_THRESHOLD_MAX);
+ 
+-	return ath10k_wmi_vdev_set_param(arvif->ar, arvif->vdev_id,
+-					 WMI_VDEV_PARAM_FRAGMENTATION_THRESHOLD,
+-					 value);
++	vdev_param = ar->wmi.vdev_param->fragmentation_threshold;
++	return ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param, value);
+ }
+ 
+ static int ath10k_peer_delete(struct ath10k *ar, u32 vdev_id, const u8 *addr)
+@@ -677,6 +681,7 @@ static void ath10k_control_ibss(struct ath10k_vif *arvif,
+ 				struct ieee80211_bss_conf *info,
+ 				const u8 self_peer[ETH_ALEN])
+ {
++	u32 vdev_param;
+ 	int ret = 0;
+ 
+ 	lockdep_assert_held(&arvif->ar->conf_mutex);
+@@ -710,8 +715,8 @@ static void ath10k_control_ibss(struct ath10k_vif *arvif,
+ 		return;
+ 	}
+ 
+-	ret = ath10k_wmi_vdev_set_param(arvif->ar, arvif->vdev_id,
+-					WMI_VDEV_PARAM_ATIM_WINDOW,
++	vdev_param = arvif->ar->wmi.vdev_param->atim_window;
++	ret = ath10k_wmi_vdev_set_param(arvif->ar, arvif->vdev_id, vdev_param,
+ 					ATH10K_DEFAULT_ATIM);
+ 	if (ret)
+ 		ath10k_warn("Failed to set IBSS ATIM for VDEV:%d ret:%d\n",
+@@ -1433,6 +1438,7 @@ static void ath10k_tx_h_update_wep_key(struct sk_buff *skb)
+ 	struct ath10k *ar = arvif->ar;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 	struct ieee80211_key_conf *key = info->control.hw_key;
++	u32 vdev_param;
+ 	int ret;
+ 
+ 	if (!ieee80211_has_protected(hdr->frame_control))
+@@ -1451,8 +1457,8 @@ static void ath10k_tx_h_update_wep_key(struct sk_buff *skb)
+ 	ath10k_dbg(ATH10K_DBG_MAC, "mac vdev %d keyidx %d\n",
+ 		   arvif->vdev_id, key->keyidx);
+ 
+-	ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id,
+-					WMI_VDEV_PARAM_DEF_KEYID,
++	vdev_param = ar->wmi.vdev_param->def_keyid;
++	ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
+ 					key->keyidx);
+ 	if (ret) {
+ 		ath10k_warn("could not update wep keyidx (%d)\n", ret);
+@@ -1986,6 +1992,7 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
+ 	int ret = 0;
+ 	u32 value;
+ 	int bit;
++	u32 vdev_param;
+ 
+ 	mutex_lock(&ar->conf_mutex);
+ 
+@@ -2047,13 +2054,14 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
+ 		goto exit;
+ 	}
+ 
+-	ret = ath10k_wmi_vdev_set_param(ar, 0, WMI_VDEV_PARAM_DEF_KEYID,
++	vdev_param = ar->wmi.vdev_param->def_keyid;
++	ret = ath10k_wmi_vdev_set_param(ar, 0, vdev_param,
+ 					arvif->def_wep_key_index);
+ 	if (ret)
+ 		ath10k_warn("Failed to set default keyid: %d\n", ret);
+ 
+-	ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id,
+-					WMI_VDEV_PARAM_TX_ENCAP_TYPE,
++	vdev_param = ar->wmi.vdev_param->tx_encap_type;
++	ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
+ 					ATH10K_HW_TXRX_NATIVE_WIFI);
+ 	if (ret)
+ 		ath10k_warn("Failed to set TX encap: %d\n", ret);
+@@ -2204,6 +2212,7 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
+ 	struct ath10k *ar = hw->priv;
+ 	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
+ 	int ret = 0;
++	u32 vdev_param;
+ 
+ 	mutex_lock(&ar->conf_mutex);
+ 
+@@ -2212,8 +2221,8 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
+ 
+ 	if (changed & BSS_CHANGED_BEACON_INT) {
+ 		arvif->beacon_interval = info->beacon_int;
+-		ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id,
+-						WMI_VDEV_PARAM_BEACON_INTERVAL,
++		vdev_param = ar->wmi.vdev_param->beacon_interval;
++		ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
+ 						arvif->beacon_interval);
+ 		ath10k_dbg(ATH10K_DBG_MAC,
+ 			   "mac vdev %d beacon_interval %d\n",
+@@ -2244,8 +2253,8 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
+ 			   "mac vdev %d dtim_period %d\n",
+ 			   arvif->vdev_id, arvif->dtim_period);
+ 
+-		ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id,
+-						WMI_VDEV_PARAM_DTIM_PERIOD,
++		vdev_param = ar->wmi.vdev_param->dtim_period;
++		ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
+ 						arvif->dtim_period);
+ 		if (ret)
+ 			ath10k_warn("Failed to set dtim period for VDEV: %d\n",
+@@ -2312,8 +2321,8 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
+ 		ath10k_dbg(ATH10K_DBG_MAC, "mac vdev %d cts_prot %d\n",
+ 			   arvif->vdev_id, cts_prot);
+ 
+-		ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id,
+-						WMI_VDEV_PARAM_ENABLE_RTSCTS,
++		vdev_param = ar->wmi.vdev_param->enable_rtscts;
++		ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
+ 						cts_prot);
+ 		if (ret)
+ 			ath10k_warn("Failed to set CTS prot for VDEV: %d\n",
+@@ -2331,8 +2340,8 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
+ 		ath10k_dbg(ATH10K_DBG_MAC, "mac vdev %d slot_time %d\n",
+ 			   arvif->vdev_id, slottime);
+ 
+-		ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id,
+-						WMI_VDEV_PARAM_SLOT_TIME,
++		vdev_param = ar->wmi.vdev_param->slot_time;
++		ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
+ 						slottime);
+ 		if (ret)
+ 			ath10k_warn("Failed to set erp slot for VDEV: %d\n",
+@@ -2350,8 +2359,8 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
+ 			   "mac vdev %d preamble %dn",
+ 			   arvif->vdev_id, preamble);
+ 
+-		ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id,
+-						WMI_VDEV_PARAM_PREAMBLE,
++		vdev_param = ar->wmi.vdev_param->preamble;
++		ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
+ 						preamble);
+ 		if (ret)
+ 			ath10k_warn("Failed to set preamble for VDEV: %d\n",
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index de50856..a6bd87e 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -265,6 +265,124 @@ static struct wmi_cmd_map wmi_10x_cmd_map = {
+ 	.gpio_output_cmdid = WMI_10X_GPIO_OUTPUT_CMDID,
  };
  
-+static const u32 ar9485Modes_green_ob_db_tx_gain_1_1[][5] = {
-+	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
-+	{0x000098bc, 0x00000003, 0x00000003, 0x00000003, 0x00000003},
-+	{0x0000a2d8, 0xf999a83a, 0xf999a83a, 0x7999a83a, 0x7999a83a},
-+	{0x0000a2dc, 0x00000000, 0x00000000, 0xfe2d3552, 0xfe2d3552},
-+	{0x0000a2e0, 0x00000000, 0x00000000, 0xfe2d3552, 0xfe2d3552},
-+	{0x0000a2e4, 0x00000000, 0x00000000, 0xfe2d3552, 0xfe2d3552},
-+	{0x0000a2e8, 0x00000000, 0x00000000, 0xfe2d3552, 0xfe2d3552},
-+	{0x0000a410, 0x000050d9, 0x000050d9, 0x000050d8, 0x000050d8},
-+	{0x0000a458, 0x80000000, 0x80000000, 0x80000000, 0x80000000},
-+	{0x0000a500, 0x00022200, 0x00022200, 0x00000006, 0x00000006},
-+	{0x0000a504, 0x05062002, 0x05062002, 0x03000201, 0x03000201},
-+	{0x0000a508, 0x0c002e00, 0x0c002e00, 0x06000203, 0x06000203},
-+	{0x0000a50c, 0x11062202, 0x11062202, 0x0a000401, 0x0a000401},
-+	{0x0000a510, 0x17022e00, 0x17022e00, 0x0e000403, 0x0e000403},
-+	{0x0000a514, 0x1d000ec2, 0x1d000ec2, 0x12000405, 0x12000405},
-+	{0x0000a518, 0x25020ec0, 0x25020ec0, 0x15000604, 0x15000604},
-+	{0x0000a51c, 0x2b020ec3, 0x2b020ec3, 0x18000605, 0x18000605},
-+	{0x0000a520, 0x2f001f04, 0x2f001f04, 0x1c000a04, 0x1c000a04},
-+	{0x0000a524, 0x35001fc4, 0x35001fc4, 0x21000a06, 0x21000a06},
-+	{0x0000a528, 0x3c022f04, 0x3c022f04, 0x29000a24, 0x29000a24},
-+	{0x0000a52c, 0x41023e85, 0x41023e85, 0x2f000e21, 0x2f000e21},
-+	{0x0000a530, 0x48023ec6, 0x48023ec6, 0x31000e20, 0x31000e20},
-+	{0x0000a534, 0x4d023f01, 0x4d023f01, 0x33000e20, 0x33000e20},
-+	{0x0000a538, 0x53023f4b, 0x53023f4b, 0x43000e62, 0x43000e62},
-+	{0x0000a53c, 0x5a027f09, 0x5a027f09, 0x45000e63, 0x45000e63},
-+	{0x0000a540, 0x5f027fc9, 0x5f027fc9, 0x49000e65, 0x49000e65},
-+	{0x0000a544, 0x6502feca, 0x6502feca, 0x4b000e66, 0x4b000e66},
-+	{0x0000a548, 0x6b02ff4a, 0x6b02ff4a, 0x4d001645, 0x4d001645},
-+	{0x0000a54c, 0x7203feca, 0x7203feca, 0x51001865, 0x51001865},
-+	{0x0000a550, 0x7703ff0b, 0x7703ff0b, 0x55001a86, 0x55001a86},
-+	{0x0000a554, 0x7d06ffcb, 0x7d06ffcb, 0x57001ce9, 0x57001ce9},
-+	{0x0000a558, 0x8407ff0b, 0x8407ff0b, 0x5a001ceb, 0x5a001ceb},
-+	{0x0000a55c, 0x8907ffcb, 0x8907ffcb, 0x5e001eeb, 0x5e001eeb},
-+	{0x0000a560, 0x900fff0b, 0x900fff0b, 0x5e001eeb, 0x5e001eeb},
-+	{0x0000a564, 0x960fffcb, 0x960fffcb, 0x5e001eeb, 0x5e001eeb},
-+	{0x0000a568, 0x9c1fff0b, 0x9c1fff0b, 0x5e001eeb, 0x5e001eeb},
-+	{0x0000a56c, 0x9c1fff0b, 0x9c1fff0b, 0x5e001eeb, 0x5e001eeb},
-+	{0x0000a570, 0x9c1fff0b, 0x9c1fff0b, 0x5e001eeb, 0x5e001eeb},
-+	{0x0000a574, 0x9c1fff0b, 0x9c1fff0b, 0x5e001eeb, 0x5e001eeb},
-+	{0x0000a578, 0x9c1fff0b, 0x9c1fff0b, 0x5e001eeb, 0x5e001eeb},
-+	{0x0000a57c, 0x9c1fff0b, 0x9c1fff0b, 0x5e001eeb, 0x5e001eeb},
-+	{0x0000a580, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-+	{0x0000a584, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-+	{0x0000a588, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-+	{0x0000a58c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-+	{0x0000a590, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-+	{0x0000a594, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-+	{0x0000a598, 0x00000000, 0x00000000, 0x01404501, 0x01404501},
-+	{0x0000a59c, 0x00000000, 0x00000000, 0x02808a02, 0x02808a02},
-+	{0x0000a5a0, 0x00000000, 0x00000000, 0x02808a02, 0x02808a02},
-+	{0x0000a5a4, 0x00000000, 0x00000000, 0x02808803, 0x02808803},
-+	{0x0000a5a8, 0x00000000, 0x00000000, 0x04c14b04, 0x04c14b04},
-+	{0x0000a5ac, 0x00000000, 0x00000000, 0x04c15305, 0x04c15305},
-+	{0x0000a5b0, 0x00000000, 0x00000000, 0x04c15305, 0x04c15305},
-+	{0x0000a5b4, 0x00000000, 0x00000000, 0x04c15305, 0x04c15305},
-+	{0x0000a5b8, 0x00000000, 0x00000000, 0x04c15305, 0x04c15305},
-+	{0x0000a5bc, 0x00000000, 0x00000000, 0x04c15305, 0x04c15305},
-+	{0x0000b500, 0x0000001a, 0x0000001a, 0x0000001a, 0x0000001a},
-+	{0x0000b504, 0x0000001a, 0x0000001a, 0x0000001a, 0x0000001a},
-+	{0x0000b508, 0x0000001a, 0x0000001a, 0x0000001a, 0x0000001a},
-+	{0x0000b50c, 0x0000001a, 0x0000001a, 0x0000001a, 0x0000001a},
-+	{0x0000b510, 0x0000001a, 0x0000001a, 0x0000001a, 0x0000001a},
-+	{0x0000b514, 0x0000001a, 0x0000001a, 0x0000001a, 0x0000001a},
-+	{0x0000b518, 0x0000001a, 0x0000001a, 0x0000001a, 0x0000001a},
-+	{0x0000b51c, 0x0000001a, 0x0000001a, 0x0000001a, 0x0000001a},
-+	{0x0000b520, 0x0000001a, 0x0000001a, 0x0000001a, 0x0000001a},
-+	{0x0000b524, 0x0000001a, 0x0000001a, 0x0000001a, 0x0000001a},
-+	{0x0000b528, 0x0000001a, 0x0000001a, 0x0000001a, 0x0000001a},
-+	{0x0000b52c, 0x0000002a, 0x0000002a, 0x0000002a, 0x0000002a},
-+	{0x0000b530, 0x0000003a, 0x0000003a, 0x0000003a, 0x0000003a},
-+	{0x0000b534, 0x0000004a, 0x0000004a, 0x0000004a, 0x0000004a},
-+	{0x0000b538, 0x0000005b, 0x0000005b, 0x0000005b, 0x0000005b},
-+	{0x0000b53c, 0x0000005b, 0x0000005b, 0x0000005b, 0x0000005b},
-+	{0x0000b540, 0x0000005b, 0x0000005b, 0x0000005b, 0x0000005b},
-+	{0x0000b544, 0x0000005b, 0x0000005b, 0x0000005b, 0x0000005b},
-+	{0x0000b548, 0x0000005b, 0x0000005b, 0x0000005b, 0x0000005b},
-+	{0x0000b54c, 0x0000005b, 0x0000005b, 0x0000005b, 0x0000005b},
-+	{0x0000b550, 0x0000005b, 0x0000005b, 0x0000005b, 0x0000005b},
-+	{0x0000b554, 0x0000005b, 0x0000005b, 0x0000005b, 0x0000005b},
-+	{0x0000b558, 0x0000005b, 0x0000005b, 0x0000005b, 0x0000005b},
-+	{0x0000b55c, 0x0000005b, 0x0000005b, 0x0000005b, 0x0000005b},
-+	{0x0000b560, 0x0000005b, 0x0000005b, 0x0000005b, 0x0000005b},
-+	{0x0000b564, 0x0000005b, 0x0000005b, 0x0000005b, 0x0000005b},
-+	{0x0000b568, 0x0000005b, 0x0000005b, 0x0000005b, 0x0000005b},
-+	{0x0000b56c, 0x0000005b, 0x0000005b, 0x0000005b, 0x0000005b},
-+	{0x0000b570, 0x0000005b, 0x0000005b, 0x0000005b, 0x0000005b},
-+	{0x0000b574, 0x0000005b, 0x0000005b, 0x0000005b, 0x0000005b},
-+	{0x0000b578, 0x0000005b, 0x0000005b, 0x0000005b, 0x0000005b},
-+	{0x0000b57c, 0x0000005b, 0x0000005b, 0x0000005b, 0x0000005b},
-+	{0x00016044, 0x05d6b2db, 0x05d6b2db, 0x05d6b2db, 0x05d6b2db},
-+	{0x00016048, 0x6c924260, 0x6c924260, 0x6c924260, 0x6c924260},
++/* MAIN WMI VDEV param map */
++static struct wmi_vdev_param_map wmi_vdev_param_map = {
++	.rts_threshold = WMI_VDEV_PARAM_RTS_THRESHOLD,
++	.fragmentation_threshold = WMI_VDEV_PARAM_FRAGMENTATION_THRESHOLD,
++	.beacon_interval = WMI_VDEV_PARAM_BEACON_INTERVAL,
++	.listen_interval = WMI_VDEV_PARAM_LISTEN_INTERVAL,
++	.multicast_rate = WMI_VDEV_PARAM_MULTICAST_RATE,
++	.mgmt_tx_rate = WMI_VDEV_PARAM_MGMT_TX_RATE,
++	.slot_time = WMI_VDEV_PARAM_SLOT_TIME,
++	.preamble = WMI_VDEV_PARAM_PREAMBLE,
++	.swba_time = WMI_VDEV_PARAM_SWBA_TIME,
++	.wmi_vdev_stats_update_period = WMI_VDEV_STATS_UPDATE_PERIOD,
++	.wmi_vdev_pwrsave_ageout_time = WMI_VDEV_PWRSAVE_AGEOUT_TIME,
++	.wmi_vdev_host_swba_interval = WMI_VDEV_HOST_SWBA_INTERVAL,
++	.dtim_period = WMI_VDEV_PARAM_DTIM_PERIOD,
++	.wmi_vdev_oc_scheduler_air_time_limit =
++					WMI_VDEV_OC_SCHEDULER_AIR_TIME_LIMIT,
++	.wds = WMI_VDEV_PARAM_WDS,
++	.atim_window = WMI_VDEV_PARAM_ATIM_WINDOW,
++	.bmiss_count_max = WMI_VDEV_PARAM_BMISS_COUNT_MAX,
++	.bmiss_first_bcnt = WMI_VDEV_PARAM_BMISS_FIRST_BCNT,
++	.bmiss_final_bcnt = WMI_VDEV_PARAM_BMISS_FINAL_BCNT,
++	.feature_wmm = WMI_VDEV_PARAM_FEATURE_WMM,
++	.chwidth = WMI_VDEV_PARAM_CHWIDTH,
++	.chextoffset = WMI_VDEV_PARAM_CHEXTOFFSET,
++	.disable_htprotection =	WMI_VDEV_PARAM_DISABLE_HTPROTECTION,
++	.sta_quickkickout = WMI_VDEV_PARAM_STA_QUICKKICKOUT,
++	.mgmt_rate = WMI_VDEV_PARAM_MGMT_RATE,
++	.protection_mode = WMI_VDEV_PARAM_PROTECTION_MODE,
++	.fixed_rate = WMI_VDEV_PARAM_FIXED_RATE,
++	.sgi = WMI_VDEV_PARAM_SGI,
++	.ldpc = WMI_VDEV_PARAM_LDPC,
++	.tx_stbc = WMI_VDEV_PARAM_TX_STBC,
++	.rx_stbc = WMI_VDEV_PARAM_RX_STBC,
++	.intra_bss_fwd = WMI_VDEV_PARAM_INTRA_BSS_FWD,
++	.def_keyid = WMI_VDEV_PARAM_DEF_KEYID,
++	.nss = WMI_VDEV_PARAM_NSS,
++	.bcast_data_rate = WMI_VDEV_PARAM_BCAST_DATA_RATE,
++	.mcast_data_rate = WMI_VDEV_PARAM_MCAST_DATA_RATE,
++	.mcast_indicate = WMI_VDEV_PARAM_MCAST_INDICATE,
++	.dhcp_indicate = WMI_VDEV_PARAM_DHCP_INDICATE,
++	.unknown_dest_indicate = WMI_VDEV_PARAM_UNKNOWN_DEST_INDICATE,
++	.ap_keepalive_min_idle_inactive_time_secs =
++			WMI_VDEV_PARAM_AP_KEEPALIVE_MIN_IDLE_INACTIVE_TIME_SECS,
++	.ap_keepalive_max_idle_inactive_time_secs =
++			WMI_VDEV_PARAM_AP_KEEPALIVE_MAX_IDLE_INACTIVE_TIME_SECS,
++	.ap_keepalive_max_unresponsive_time_secs =
++			WMI_VDEV_PARAM_AP_KEEPALIVE_MAX_UNRESPONSIVE_TIME_SECS,
++	.ap_enable_nawds = WMI_VDEV_PARAM_AP_ENABLE_NAWDS,
++	.mcast2ucast_set = WMI_VDEV_PARAM_UNSUPPORTED,
++	.enable_rtscts = WMI_VDEV_PARAM_ENABLE_RTSCTS,
++	.txbf = WMI_VDEV_PARAM_TXBF,
++	.packet_powersave = WMI_VDEV_PARAM_PACKET_POWERSAVE,
++	.drop_unencry = WMI_VDEV_PARAM_DROP_UNENCRY,
++	.tx_encap_type = WMI_VDEV_PARAM_TX_ENCAP_TYPE,
++	.ap_detect_out_of_sync_sleeping_sta_time_secs =
++					WMI_VDEV_PARAM_UNSUPPORTED,
 +};
 +
- static const u32 ar9485Modes_high_ob_db_tx_gain_1_1[][5] = {
- 	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
- 	{0x000098bc, 0x00000002, 0x00000002, 0x00000002, 0x00000002},
-@@ -552,6 +646,100 @@ static const u32 ar9485_modes_lowest_ob_db_tx_gain_1_1[][5] = {
- 	{0x00016048, 0x6c924260, 0x6c924260, 0x6c924260, 0x6c924260},
++/* 10.X WMI VDEV param map */
++static struct wmi_vdev_param_map wmi_10x_vdev_param_map = {
++	.rts_threshold = WMI_10X_VDEV_PARAM_RTS_THRESHOLD,
++	.fragmentation_threshold = WMI_10X_VDEV_PARAM_FRAGMENTATION_THRESHOLD,
++	.beacon_interval = WMI_10X_VDEV_PARAM_BEACON_INTERVAL,
++	.listen_interval = WMI_10X_VDEV_PARAM_LISTEN_INTERVAL,
++	.multicast_rate = WMI_10X_VDEV_PARAM_MULTICAST_RATE,
++	.mgmt_tx_rate = WMI_10X_VDEV_PARAM_MGMT_TX_RATE,
++	.slot_time = WMI_10X_VDEV_PARAM_SLOT_TIME,
++	.preamble = WMI_10X_VDEV_PARAM_PREAMBLE,
++	.swba_time = WMI_10X_VDEV_PARAM_SWBA_TIME,
++	.wmi_vdev_stats_update_period = WMI_10X_VDEV_STATS_UPDATE_PERIOD,
++	.wmi_vdev_pwrsave_ageout_time = WMI_10X_VDEV_PWRSAVE_AGEOUT_TIME,
++	.wmi_vdev_host_swba_interval = WMI_10X_VDEV_HOST_SWBA_INTERVAL,
++	.dtim_period = WMI_10X_VDEV_PARAM_DTIM_PERIOD,
++	.wmi_vdev_oc_scheduler_air_time_limit =
++				WMI_10X_VDEV_OC_SCHEDULER_AIR_TIME_LIMIT,
++	.wds = WMI_10X_VDEV_PARAM_WDS,
++	.atim_window = WMI_10X_VDEV_PARAM_ATIM_WINDOW,
++	.bmiss_count_max = WMI_10X_VDEV_PARAM_BMISS_COUNT_MAX,
++	.bmiss_first_bcnt = WMI_VDEV_PARAM_UNSUPPORTED,
++	.bmiss_final_bcnt = WMI_VDEV_PARAM_UNSUPPORTED,
++	.feature_wmm = WMI_10X_VDEV_PARAM_FEATURE_WMM,
++	.chwidth = WMI_10X_VDEV_PARAM_CHWIDTH,
++	.chextoffset = WMI_10X_VDEV_PARAM_CHEXTOFFSET,
++	.disable_htprotection = WMI_10X_VDEV_PARAM_DISABLE_HTPROTECTION,
++	.sta_quickkickout = WMI_10X_VDEV_PARAM_STA_QUICKKICKOUT,
++	.mgmt_rate = WMI_10X_VDEV_PARAM_MGMT_RATE,
++	.protection_mode = WMI_10X_VDEV_PARAM_PROTECTION_MODE,
++	.fixed_rate = WMI_10X_VDEV_PARAM_FIXED_RATE,
++	.sgi = WMI_10X_VDEV_PARAM_SGI,
++	.ldpc = WMI_10X_VDEV_PARAM_LDPC,
++	.tx_stbc = WMI_10X_VDEV_PARAM_TX_STBC,
++	.rx_stbc = WMI_10X_VDEV_PARAM_RX_STBC,
++	.intra_bss_fwd = WMI_10X_VDEV_PARAM_INTRA_BSS_FWD,
++	.def_keyid = WMI_10X_VDEV_PARAM_DEF_KEYID,
++	.nss = WMI_10X_VDEV_PARAM_NSS,
++	.bcast_data_rate = WMI_10X_VDEV_PARAM_BCAST_DATA_RATE,
++	.mcast_data_rate = WMI_10X_VDEV_PARAM_MCAST_DATA_RATE,
++	.mcast_indicate = WMI_10X_VDEV_PARAM_MCAST_INDICATE,
++	.dhcp_indicate = WMI_10X_VDEV_PARAM_DHCP_INDICATE,
++	.unknown_dest_indicate = WMI_10X_VDEV_PARAM_UNKNOWN_DEST_INDICATE,
++	.ap_keepalive_min_idle_inactive_time_secs =
++		WMI_10X_VDEV_PARAM_AP_KEEPALIVE_MIN_IDLE_INACTIVE_TIME_SECS,
++	.ap_keepalive_max_idle_inactive_time_secs =
++		WMI_10X_VDEV_PARAM_AP_KEEPALIVE_MAX_IDLE_INACTIVE_TIME_SECS,
++	.ap_keepalive_max_unresponsive_time_secs =
++		WMI_10X_VDEV_PARAM_AP_KEEPALIVE_MAX_UNRESPONSIVE_TIME_SECS,
++	.ap_enable_nawds = WMI_10X_VDEV_PARAM_AP_ENABLE_NAWDS,
++	.mcast2ucast_set = WMI_10X_VDEV_PARAM_MCAST2UCAST_SET,
++	.enable_rtscts = WMI_10X_VDEV_PARAM_ENABLE_RTSCTS,
++	.txbf = WMI_VDEV_PARAM_UNSUPPORTED,
++	.packet_powersave = WMI_VDEV_PARAM_UNSUPPORTED,
++	.drop_unencry = WMI_VDEV_PARAM_UNSUPPORTED,
++	.tx_encap_type = WMI_VDEV_PARAM_UNSUPPORTED,
++	.ap_detect_out_of_sync_sleeping_sta_time_secs =
++		WMI_10X_VDEV_PARAM_AP_DETECT_OUT_OF_SYNC_SLEEPING_STA_TIME_SECS,
++};
++
+ int ath10k_wmi_wait_for_service_ready(struct ath10k *ar)
+ {
+ 	int ret;
+@@ -1751,9 +1869,11 @@ int ath10k_wmi_attach(struct ath10k *ar)
+ 	if (test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features)) {
+ 		ath10k_warn("Firmware 10.X is not yet supported\n");
+ 		ar->wmi.cmd = &wmi_10x_cmd_map;
++		ar->wmi.vdev_param = &wmi_10x_vdev_param_map;
+ 		ret = -ENOTSUPP;
+ 	} else {
+ 		ar->wmi.cmd = &wmi_cmd_map;
++		ar->wmi.vdev_param = &wmi_vdev_param_map;
+ 		ret = 0;
+ 	}
+ 
+@@ -2516,11 +2636,18 @@ int ath10k_wmi_vdev_down(struct ath10k *ar, u32 vdev_id)
+ }
+ 
+ int ath10k_wmi_vdev_set_param(struct ath10k *ar, u32 vdev_id,
+-			      enum wmi_vdev_param param_id, u32 param_value)
++			      u32 param_id, u32 param_value)
+ {
+ 	struct wmi_vdev_set_param_cmd *cmd;
+ 	struct sk_buff *skb;
+ 
++	if (param_id == WMI_VDEV_PARAM_UNSUPPORTED) {
++		ath10k_dbg(ATH10K_DBG_WMI,
++			   "vdev param %d not supported by firmware\n",
++			    param_id);
++		return -EINVAL;
++	}
++
+ 	skb = ath10k_wmi_alloc_skb(sizeof(*cmd));
+ 	if (!skb)
+ 		return -ENOMEM;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 5383f7e..1518586 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -2695,6 +2695,61 @@ enum wmi_rate_preamble {
+ /* Value to disable fixed rate setting */
+ #define WMI_FIXED_RATE_NONE    (0xff)
+ 
++struct wmi_vdev_param_map {
++	u32 rts_threshold;
++	u32 fragmentation_threshold;
++	u32 beacon_interval;
++	u32 listen_interval;
++	u32 multicast_rate;
++	u32 mgmt_tx_rate;
++	u32 slot_time;
++	u32 preamble;
++	u32 swba_time;
++	u32 wmi_vdev_stats_update_period;
++	u32 wmi_vdev_pwrsave_ageout_time;
++	u32 wmi_vdev_host_swba_interval;
++	u32 dtim_period;
++	u32 wmi_vdev_oc_scheduler_air_time_limit;
++	u32 wds;
++	u32 atim_window;
++	u32 bmiss_count_max;
++	u32 bmiss_first_bcnt;
++	u32 bmiss_final_bcnt;
++	u32 feature_wmm;
++	u32 chwidth;
++	u32 chextoffset;
++	u32 disable_htprotection;
++	u32 sta_quickkickout;
++	u32 mgmt_rate;
++	u32 protection_mode;
++	u32 fixed_rate;
++	u32 sgi;
++	u32 ldpc;
++	u32 tx_stbc;
++	u32 rx_stbc;
++	u32 intra_bss_fwd;
++	u32 def_keyid;
++	u32 nss;
++	u32 bcast_data_rate;
++	u32 mcast_data_rate;
++	u32 mcast_indicate;
++	u32 dhcp_indicate;
++	u32 unknown_dest_indicate;
++	u32 ap_keepalive_min_idle_inactive_time_secs;
++	u32 ap_keepalive_max_idle_inactive_time_secs;
++	u32 ap_keepalive_max_unresponsive_time_secs;
++	u32 ap_enable_nawds;
++	u32 mcast2ucast_set;
++	u32 enable_rtscts;
++	u32 txbf;
++	u32 packet_powersave;
++	u32 drop_unencry;
++	u32 tx_encap_type;
++	u32 ap_detect_out_of_sync_sleeping_sta_time_secs;
++};
++
++#define WMI_VDEV_PARAM_UNSUPPORTED 0
++
+ /* the definition of different VDEV parameters */
+ enum wmi_vdev_param {
+ 	/* RTS Threshold */
+@@ -2826,6 +2881,121 @@ enum wmi_vdev_param {
+ 	WMI_VDEV_PARAM_TX_ENCAP_TYPE,
  };
  
-+static const u32 ar9485Modes_green_spur_ob_db_tx_gain_1_1[][5] = {
-+	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
-+	{0x000098bc, 0x00000003, 0x00000003, 0x00000003, 0x00000003},
-+	{0x0000a2d8, 0xf999a83a, 0xf999a83a, 0x7999a83a, 0x7999a83a},
-+	{0x0000a2dc, 0x00000000, 0x00000000, 0xffad452a, 0xffad452a},
-+	{0x0000a2e0, 0x00000000, 0x00000000, 0xffc98634, 0xffc98634},
-+	{0x0000a2e4, 0x00000000, 0x00000000, 0xfff60780, 0xfff60780},
-+	{0x0000a2e8, 0x00000000, 0x00000000, 0xfffff800, 0xfffff800},
-+	{0x0000a410, 0x000050d9, 0x000050d9, 0x000050d7, 0x000050d7},
-+	{0x0000a458, 0x80000000, 0x80000000, 0x80000000, 0x80000000},
-+	{0x0000a500, 0x00022200, 0x00022200, 0x00000006, 0x00000006},
-+	{0x0000a504, 0x05062002, 0x05062002, 0x03000201, 0x03000201},
-+	{0x0000a508, 0x0c002e00, 0x0c002e00, 0x07000203, 0x07000203},
-+	{0x0000a50c, 0x11062202, 0x11062202, 0x0a000401, 0x0a000401},
-+	{0x0000a510, 0x17022e00, 0x17022e00, 0x0e000403, 0x0e000403},
-+	{0x0000a514, 0x1d000ec2, 0x1d000ec2, 0x12000405, 0x12000405},
-+	{0x0000a518, 0x25020ec0, 0x25020ec0, 0x14000406, 0x14000406},
-+	{0x0000a51c, 0x2b020ec3, 0x2b020ec3, 0x1800040a, 0x1800040a},
-+	{0x0000a520, 0x2f001f04, 0x2f001f04, 0x1c000460, 0x1c000460},
-+	{0x0000a524, 0x35001fc4, 0x35001fc4, 0x22000463, 0x22000463},
-+	{0x0000a528, 0x3c022f04, 0x3c022f04, 0x26000465, 0x26000465},
-+	{0x0000a52c, 0x41023e85, 0x41023e85, 0x2e0006e0, 0x2e0006e0},
-+	{0x0000a530, 0x48023ec6, 0x48023ec6, 0x310006e0, 0x310006e0},
-+	{0x0000a534, 0x4d023f01, 0x4d023f01, 0x330006e0, 0x330006e0},
-+	{0x0000a538, 0x53023f4b, 0x53023f4b, 0x3e0008e3, 0x3e0008e3},
-+	{0x0000a53c, 0x5a027f09, 0x5a027f09, 0x430008e6, 0x430008e6},
-+	{0x0000a540, 0x5f027fc9, 0x5f027fc9, 0x4a0008ec, 0x4a0008ec},
-+	{0x0000a544, 0x6502feca, 0x6502feca, 0x4e0008f1, 0x4e0008f1},
-+	{0x0000a548, 0x6b02ff4a, 0x6b02ff4a, 0x520008f3, 0x520008f3},
-+	{0x0000a54c, 0x7203feca, 0x7203feca, 0x54000eed, 0x54000eed},
-+	{0x0000a550, 0x7703ff0b, 0x7703ff0b, 0x58000ef1, 0x58000ef1},
-+	{0x0000a554, 0x7d06ffcb, 0x7d06ffcb, 0x5c000ef3, 0x5c000ef3},
-+	{0x0000a558, 0x8407ff0b, 0x8407ff0b, 0x62000ef6, 0x62000ef6},
-+	{0x0000a55c, 0x8907ffcb, 0x8907ffcb, 0x62000ef6, 0x62000ef6},
-+	{0x0000a560, 0x900fff0b, 0x900fff0b, 0x62000ef6, 0x62000ef6},
-+	{0x0000a564, 0x960fffcb, 0x960fffcb, 0x62000ef6, 0x62000ef6},
-+	{0x0000a568, 0x9c1fff0b, 0x9c1fff0b, 0x62000ef6, 0x62000ef6},
-+	{0x0000a56c, 0x9c1fff0b, 0x9c1fff0b, 0x62000ef6, 0x62000ef6},
-+	{0x0000a570, 0x9c1fff0b, 0x9c1fff0b, 0x62000ef6, 0x62000ef6},
-+	{0x0000a574, 0x9c1fff0b, 0x9c1fff0b, 0x62000ef6, 0x62000ef6},
-+	{0x0000a578, 0x9c1fff0b, 0x9c1fff0b, 0x62000ef6, 0x62000ef6},
-+	{0x0000a57c, 0x9c1fff0b, 0x9c1fff0b, 0x62000ef6, 0x62000ef6},
-+	{0x0000a580, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-+	{0x0000a584, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-+	{0x0000a588, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-+	{0x0000a58c, 0x00000000, 0x00000000, 0x01804000, 0x01804000},
-+	{0x0000a590, 0x00000000, 0x00000000, 0x02808a02, 0x02808a02},
-+	{0x0000a594, 0x00000000, 0x00000000, 0x0340ca02, 0x0340ca02},
-+	{0x0000a598, 0x00000000, 0x00000000, 0x0340cd03, 0x0340cd03},
-+	{0x0000a59c, 0x00000000, 0x00000000, 0x0340cd03, 0x0340cd03},
-+	{0x0000a5a0, 0x00000000, 0x00000000, 0x06415304, 0x06415304},
-+	{0x0000a5a4, 0x00000000, 0x00000000, 0x04c11905, 0x04c11905},
-+	{0x0000a5a8, 0x00000000, 0x00000000, 0x06415905, 0x06415905},
-+	{0x0000a5ac, 0x00000000, 0x00000000, 0x06415905, 0x06415905},
-+	{0x0000a5b0, 0x00000000, 0x00000000, 0x06415905, 0x06415905},
-+	{0x0000a5b4, 0x00000000, 0x00000000, 0x06415905, 0x06415905},
-+	{0x0000a5b8, 0x00000000, 0x00000000, 0x06415905, 0x06415905},
-+	{0x0000a5bc, 0x00000000, 0x00000000, 0x06415905, 0x06415905},
-+	{0x0000b500, 0x0000001a, 0x0000001a, 0x0000001a, 0x0000001a},
-+	{0x0000b504, 0x0000001a, 0x0000001a, 0x0000001a, 0x0000001a},
-+	{0x0000b508, 0x0000001a, 0x0000001a, 0x0000001a, 0x0000001a},
-+	{0x0000b50c, 0x0000001a, 0x0000001a, 0x0000001a, 0x0000001a},
-+	{0x0000b510, 0x0000001a, 0x0000001a, 0x0000001a, 0x0000001a},
-+	{0x0000b514, 0x0000001a, 0x0000001a, 0x0000001a, 0x0000001a},
-+	{0x0000b518, 0x0000001a, 0x0000001a, 0x0000001a, 0x0000001a},
-+	{0x0000b51c, 0x0000001a, 0x0000001a, 0x0000001a, 0x0000001a},
-+	{0x0000b520, 0x0000001a, 0x0000001a, 0x0000001a, 0x0000001a},
-+	{0x0000b524, 0x0000001a, 0x0000001a, 0x0000001a, 0x0000001a},
-+	{0x0000b528, 0x0000001a, 0x0000001a, 0x0000001a, 0x0000001a},
-+	{0x0000b52c, 0x0000002a, 0x0000002a, 0x0000002a, 0x0000002a},
-+	{0x0000b530, 0x0000003a, 0x0000003a, 0x0000003a, 0x0000003a},
-+	{0x0000b534, 0x0000004a, 0x0000004a, 0x0000004a, 0x0000004a},
-+	{0x0000b538, 0x0000005b, 0x0000005b, 0x0000005b, 0x0000005b},
-+	{0x0000b53c, 0x0000005b, 0x0000005b, 0x0000005b, 0x0000005b},
-+	{0x0000b540, 0x0000005b, 0x0000005b, 0x0000005b, 0x0000005b},
-+	{0x0000b544, 0x0000005b, 0x0000005b, 0x0000005b, 0x0000005b},
-+	{0x0000b548, 0x0000005b, 0x0000005b, 0x0000005b, 0x0000005b},
-+	{0x0000b54c, 0x0000005b, 0x0000005b, 0x0000005b, 0x0000005b},
-+	{0x0000b550, 0x0000005b, 0x0000005b, 0x0000005b, 0x0000005b},
-+	{0x0000b554, 0x0000005b, 0x0000005b, 0x0000005b, 0x0000005b},
-+	{0x0000b558, 0x0000005b, 0x0000005b, 0x0000005b, 0x0000005b},
-+	{0x0000b55c, 0x0000005b, 0x0000005b, 0x0000005b, 0x0000005b},
-+	{0x0000b560, 0x0000005b, 0x0000005b, 0x0000005b, 0x0000005b},
-+	{0x0000b564, 0x0000005b, 0x0000005b, 0x0000005b, 0x0000005b},
-+	{0x0000b568, 0x0000005b, 0x0000005b, 0x0000005b, 0x0000005b},
-+	{0x0000b56c, 0x0000005b, 0x0000005b, 0x0000005b, 0x0000005b},
-+	{0x0000b570, 0x0000005b, 0x0000005b, 0x0000005b, 0x0000005b},
-+	{0x0000b574, 0x0000005b, 0x0000005b, 0x0000005b, 0x0000005b},
-+	{0x0000b578, 0x0000005b, 0x0000005b, 0x0000005b, 0x0000005b},
-+	{0x0000b57c, 0x0000005b, 0x0000005b, 0x0000005b, 0x0000005b},
-+	{0x00016044, 0x05d6b2db, 0x05d6b2db, 0x05d6b2db, 0x05d6b2db},
-+	{0x00016048, 0x6c924260, 0x6c924260, 0x6c924260, 0x6c924260},
++/* the definition of different VDEV parameters */
++enum wmi_10x_vdev_param {
++	/* RTS Threshold */
++	WMI_10X_VDEV_PARAM_RTS_THRESHOLD = 0x1,
++	/* Fragmentation threshold */
++	WMI_10X_VDEV_PARAM_FRAGMENTATION_THRESHOLD,
++	/* beacon interval in TUs */
++	WMI_10X_VDEV_PARAM_BEACON_INTERVAL,
++	/* Listen interval in TUs */
++	WMI_10X_VDEV_PARAM_LISTEN_INTERVAL,
++	/* muticast rate in Mbps */
++	WMI_10X_VDEV_PARAM_MULTICAST_RATE,
++	/* management frame rate in Mbps */
++	WMI_10X_VDEV_PARAM_MGMT_TX_RATE,
++	/* slot time (long vs short) */
++	WMI_10X_VDEV_PARAM_SLOT_TIME,
++	/* preamble (long vs short) */
++	WMI_10X_VDEV_PARAM_PREAMBLE,
++	/* SWBA time (time before tbtt in msec) */
++	WMI_10X_VDEV_PARAM_SWBA_TIME,
++	/* time period for updating VDEV stats */
++	WMI_10X_VDEV_STATS_UPDATE_PERIOD,
++	/* age out time in msec for frames queued for station in power save */
++	WMI_10X_VDEV_PWRSAVE_AGEOUT_TIME,
++	/*
++	 * Host SWBA interval (time in msec before tbtt for SWBA event
++	 * generation).
++	 */
++	WMI_10X_VDEV_HOST_SWBA_INTERVAL,
++	/* DTIM period (specified in units of num beacon intervals) */
++	WMI_10X_VDEV_PARAM_DTIM_PERIOD,
++	/*
++	 * scheduler air time limit for this VDEV. used by off chan
++	 * scheduler.
++	 */
++	WMI_10X_VDEV_OC_SCHEDULER_AIR_TIME_LIMIT,
++	/* enable/dsiable WDS for this VDEV  */
++	WMI_10X_VDEV_PARAM_WDS,
++	/* ATIM Window */
++	WMI_10X_VDEV_PARAM_ATIM_WINDOW,
++	/* BMISS max */
++	WMI_10X_VDEV_PARAM_BMISS_COUNT_MAX,
++	/* WMM enables/disabled */
++	WMI_10X_VDEV_PARAM_FEATURE_WMM,
++	/* Channel width */
++	WMI_10X_VDEV_PARAM_CHWIDTH,
++	/* Channel Offset */
++	WMI_10X_VDEV_PARAM_CHEXTOFFSET,
++	/* Disable HT Protection */
++	WMI_10X_VDEV_PARAM_DISABLE_HTPROTECTION,
++	/* Quick STA Kickout */
++	WMI_10X_VDEV_PARAM_STA_QUICKKICKOUT,
++	/* Rate to be used with Management frames */
++	WMI_10X_VDEV_PARAM_MGMT_RATE,
++	/* Protection Mode */
++	WMI_10X_VDEV_PARAM_PROTECTION_MODE,
++	/* Fixed rate setting */
++	WMI_10X_VDEV_PARAM_FIXED_RATE,
++	/* Short GI Enable/Disable */
++	WMI_10X_VDEV_PARAM_SGI,
++	/* Enable LDPC */
++	WMI_10X_VDEV_PARAM_LDPC,
++	/* Enable Tx STBC */
++	WMI_10X_VDEV_PARAM_TX_STBC,
++	/* Enable Rx STBC */
++	WMI_10X_VDEV_PARAM_RX_STBC,
++	/* Intra BSS forwarding  */
++	WMI_10X_VDEV_PARAM_INTRA_BSS_FWD,
++	/* Setting Default xmit key for Vdev */
++	WMI_10X_VDEV_PARAM_DEF_KEYID,
++	/* NSS width */
++	WMI_10X_VDEV_PARAM_NSS,
++	/* Set the custom rate for the broadcast data frames */
++	WMI_10X_VDEV_PARAM_BCAST_DATA_RATE,
++	/* Set the custom rate (rate-code) for multicast data frames */
++	WMI_10X_VDEV_PARAM_MCAST_DATA_RATE,
++	/* Tx multicast packet indicate Enable/Disable */
++	WMI_10X_VDEV_PARAM_MCAST_INDICATE,
++	/* Tx DHCP packet indicate Enable/Disable */
++	WMI_10X_VDEV_PARAM_DHCP_INDICATE,
++	/* Enable host inspection of Tx unicast packet to unknown destination */
++	WMI_10X_VDEV_PARAM_UNKNOWN_DEST_INDICATE,
++
++	/* The minimum amount of time AP begins to consider STA inactive */
++	WMI_10X_VDEV_PARAM_AP_KEEPALIVE_MIN_IDLE_INACTIVE_TIME_SECS,
++
++	/*
++	 * An associated STA is considered inactive when there is no recent
++	 * TX/RX activity and no downlink frames are buffered for it. Once a
++	 * STA exceeds the maximum idle inactive time, the AP will send an
++	 * 802.11 data-null as a keep alive to verify the STA is still
++	 * associated. If the STA does ACK the data-null, or if the data-null
++	 * is buffered and the STA does not retrieve it, the STA will be
++	 * considered unresponsive
++	 * (see WMI_10X_VDEV_AP_KEEPALIVE_MAX_UNRESPONSIVE_TIME_SECS).
++	 */
++	WMI_10X_VDEV_PARAM_AP_KEEPALIVE_MAX_IDLE_INACTIVE_TIME_SECS,
++
++	/*
++	 * An associated STA is considered unresponsive if there is no recent
++	 * TX/RX activity and downlink frames are buffered for it. Once a STA
++	 * exceeds the maximum unresponsive time, the AP will send a
++	 * WMI_10X_STA_KICKOUT event to the host so the STA can be deleted. */
++	WMI_10X_VDEV_PARAM_AP_KEEPALIVE_MAX_UNRESPONSIVE_TIME_SECS,
++
++	/* Enable NAWDS : MCAST INSPECT Enable, NAWDS Flag set */
++	WMI_10X_VDEV_PARAM_AP_ENABLE_NAWDS,
++
++	WMI_10X_VDEV_PARAM_MCAST2UCAST_SET,
++	/* Enable/Disable RTS-CTS */
++	WMI_10X_VDEV_PARAM_ENABLE_RTSCTS,
++
++	WMI_10X_VDEV_PARAM_AP_DETECT_OUT_OF_SYNC_SLEEPING_STA_TIME_SECS,
 +};
 +
- static const u32 ar9485_1_1[][2] = {
- 	/* Addr      allmodes  */
- 	{0x0000a580, 0x00000000},
-diff --git a/tools/initvals/initvals.c b/tools/initvals/initvals.c
-index d1b5f16..3cefca1 100644
---- a/tools/initvals/initvals.c
-+++ b/tools/initvals/initvals.c
-@@ -254,6 +254,8 @@ struct initval_family {
- #define ar9485_poseidon1_1_radio_postamble			ar9485_1_1_radio_postamble
- #define ar9485_poseidon1_1_mac_core				ar9485_1_1_mac_core
- #define ar9485_poseidon1_1_baseband_core_txfir_coeff_japan_2484 ar9485_1_1_baseband_core_txfir_coeff_japan_2484
-+#define ar9485_modes_green_ob_db_tx_gain_poseidon1_1		ar9485Modes_green_ob_db_tx_gain_1_1
-+#define ar9485_modes_green_spur_ob_db_tx_gain_poseidon1_1	ar9485Modes_green_spur_ob_db_tx_gain_1_1
- 
- #include "ar9485_1_1.ini"
- 
-@@ -832,9 +834,11 @@ static void ar9485_hw_print_initvals(bool check)
- 	INI_PRINT(ar9485_1_1_pcie_phy_pll_on_clkreq_disable_L1);
- 	INI_PRINT(ar9485Common_wo_xlna_rx_gain_1_1);
- 	INI_PRINT(ar9485Modes_high_power_tx_gain_1_1);
-+	INI_PRINT(ar9485Modes_green_ob_db_tx_gain_1_1);
- 	INI_PRINT(ar9485Modes_high_ob_db_tx_gain_1_1);
- 	INI_PRINT(ar9485Modes_low_ob_db_tx_gain_1_1);
- 	INI_PRINT(ar9485_modes_lowest_ob_db_tx_gain_1_1);
-+	INI_PRINT(ar9485Modes_green_spur_ob_db_tx_gain_1_1);
- 	INI_PRINT(ar9485_1_1);
- 	INI_PRINT(ar9485_1_1_radio_core);
- 	INI_PRINT(ar9485_1_1_baseband_core);
+ /* slot time long */
+ #define WMI_VDEV_SLOT_TIME_LONG		0x1
+ /* slot time short */
+@@ -3648,7 +3818,7 @@ int ath10k_wmi_vdev_up(struct ath10k *ar, u32 vdev_id, u32 aid,
+ 		       const u8 *bssid);
+ int ath10k_wmi_vdev_down(struct ath10k *ar, u32 vdev_id);
+ int ath10k_wmi_vdev_set_param(struct ath10k *ar, u32 vdev_id,
+-			      enum wmi_vdev_param param_id, u32 param_value);
++			      u32 param_id, u32 param_value);
+ int ath10k_wmi_vdev_install_key(struct ath10k *ar,
+ 				const struct wmi_vdev_install_key_arg *arg);
+ int ath10k_wmi_peer_create(struct ath10k *ar, u32 vdev_id,
 -- 
-1.8.4
+1.7.10
 
