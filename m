@@ -1,58 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:52950 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751626Ab3IAGep (ORCPT
+Received: from mail-bk0-f51.google.com ([209.85.214.51]:51277 "EHLO
+	mail-bk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750933Ab3IZFqS convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Sep 2013 02:34:45 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	<ath10k@lists.infradead.org>
-Subject: Re: [PATCH v2 1/6] ath10k: use inline ce_state structure
-References: <1377068249-26025-1-git-send-email-michal.kazior@tieto.com>
-	<1377601683-12072-1-git-send-email-michal.kazior@tieto.com>
-	<1377601683-12072-2-git-send-email-michal.kazior@tieto.com>
-	<87y57mjvwu.fsf@kamboji.qca.qualcomm.com>
-	<CA+BoTQ=mBeWQLvaLUL4gnTENRbGUK_fTkj9bP3HP-OSzBwG0Dg@mail.gmail.com>
-Date: Sun, 1 Sep 2013 09:34:24 +0300
-In-Reply-To: <CA+BoTQ=mBeWQLvaLUL4gnTENRbGUK_fTkj9bP3HP-OSzBwG0Dg@mail.gmail.com>
-	(Michal Kazior's message of "Wed, 28 Aug 2013 07:32:50 +0200")
-Message-ID: <874na582z3.fsf@kamboji.qca.qualcomm.com> (sfid-20130901_083458_955338_ED767CE5)
+	Thu, 26 Sep 2013 01:46:18 -0400
+Received: by mail-bk0-f51.google.com with SMTP id mx10so224482bkb.38
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Sep 2013 22:46:16 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20130925210848.2596.56332.stgit@localhost6.localdomain6>
+References: <20130925210455.2596.36889.stgit@localhost6.localdomain6>
+	<20130925210848.2596.56332.stgit@localhost6.localdomain6>
+Date: Thu, 26 Sep 2013 07:46:16 +0200
+Message-ID: <CA+BoTQ=BhtjC1YNLs9OYBPN6TiYhyrwYoK2A1wifS01HVJp1YA@mail.gmail.com> (sfid-20130926_074621_480692_04BD3240)
+Subject: Re: [PATCH 3/3] ath10k: implement firmware IE container support
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath10k@lists.infradead.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+On 25 September 2013 23:08, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> +static int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name)
+> +{
+> +       size_t magic_len, len, ie_len;
+> +       struct ath10k_fw_ie *hdr;
+> +       const u8 *data;
+> +       int ie_id, i, index, bit;
+> +       __le32 *timestamp;
+> +
+> +       ar->firmware = ath10k_fetch_fw_file(ar, ar->hw_params.fw.dir, name);
+> +       if (IS_ERR(ar->firmware)) {
+> +               ath10k_err("Could not fetch firmware file '%s': %ld\n",
+> +                          name, PTR_ERR(ar->firmware));
+> +               return PTR_ERR(ar->firmware);
+> +       }
+> +
+> +       data = ar->firmware->data;
+> +       len = ar->firmware->size;
+> +
+> +       /* magic also includes the null byte, check that as well */
+> +       magic_len = strlen(ATH10K_FIRMWARE_MAGIC) + 1;
+> +
+> +       if (len < magic_len) {
+> +               ath10k_err("firmware image too small to contain magic: %d\n",
+> +                          len);
+> +               return -EINVAL;
+> +       }
+> +
+> +       if (memcmp(data, ATH10K_FIRMWARE_MAGIC, magic_len) != 0) {
+> +               ath10k_err("Invalid firmware magic\n");
+> +               return -EINVAL;
+> +       }
+> +
+> +       /* jump over the padding */
+> +       magic_len = ALIGN(magic_len, 4);
+> +
+> +       len -= magic_len;
+> +       data += magic_len;
+> +
+> +       /* loop elements */
+> +       while (len > sizeof(struct ath10k_fw_ie)) {
+> +               hdr = (struct ath10k_fw_ie *)data;
+> +
+> +               ie_id = le32_to_cpu(hdr->id);
+> +               ie_len = le32_to_cpu(hdr->len);
+> +
+> +               len -= sizeof(*hdr);
+> +               data += sizeof(*hdr);
+> +
+> +               if (len < ie_len) {
+> +                       ath10k_err("Invalid length for FW IE %d (%d < %d)\n",
+> +                                  ie_id, len, ie_len);
+> +                       return -EINVAL;
+> +               }
+> +
+> +               switch (ie_id) {
+> +               case ATH10K_FW_IE_FW_VERSION:
+> +                       if (ie_len > sizeof(ar->hw->wiphy->fw_version) - 1)
+> +                               break;
+> +
+> +                       memcpy(ar->hw->wiphy->fw_version, data, ie_len);
+> +                       ar->hw->wiphy->fw_version[ie_len] = '\0';
+> +
+> +                       ath10k_dbg(ATH10K_DBG_BOOT,
+> +                                  "found fw version %s\n",
+> +                                   ar->hw->wiphy->fw_version);
+> +                       break;
+> +               case ATH10K_FW_IE_TIMESTAMP:
+> +                       if (ie_len != sizeof(u32))
+> +                               break;
+> +
+> +                       timestamp = (__le32 *)data;
+> +
+> +                       ath10k_dbg(ATH10K_DBG_BOOT, "found fw timestamp %d\n",
+> +                                  le32_to_cpup(timestamp));
+> +                       break;
+> +               case ATH10K_FW_IE_FEATURES:
+> +                       ath10k_dbg(ATH10K_DBG_BOOT,
+> +                                  "found firmware features ie (%zd B)\n",
+> +                                  ie_len);
+> +
+> +                       for (i = 0; i < ATH10K_FW_FEATURE_COUNT; i++) {
+> +                               index = i / 8;
+> +                               bit = i % 8;
+> +
+> +                               if (index == ie_len)
+> +                                       break;
+> +
+> +                               if (data[index] & (1 << bit))
+> +                                       __set_bit(i, ar->fw_features);
+> +                       }
+> +
+> +                       ath10k_dbg_dump(ATH10K_DBG_BOOT, "features", "",
+> +                                       ar->fw_features,
+> +                                       sizeof(ar->fw_features));
+> +                       break;
+> +               case ATH10K_FW_IE_FW_IMAGE:
+> +                       ath10k_dbg(ATH10K_DBG_BOOT,
+> +                                  "found fw image ie (%zd B)\n",
+> +                                  ie_len);
+> +
+> +                       ar->firmware_data = data;
+> +                       ar->firmware_len = ie_len;
+> +
+> +                       break;
+> +               case ATH10K_FW_IE_OTP_IMAGE:
+> +                       ath10k_dbg(ATH10K_DBG_BOOT,
+> +                                  "found otp image ie (%zd B)\n",
+> +                                  ie_len);
+> +
+> +                       ar->otp_data = data;
+> +                       ar->otp_len = ie_len;
+> +
+> +                       break;
+> +               default:
+> +                       ath10k_warn("Unknown FW IE: %u\n",
+> +                                   le32_to_cpu(hdr->id));
+> +                       break;
+> +               }
+> +
+> +               /* jump over the padding */
+> +               ie_len = ALIGN(ie_len, 4);
+> +
+> +               len -= ie_len;
+> +               data += ie_len;
+> +       };
+> +
+> +       return 0;
+> +}
+> +
+> +static int ath10k_core_fetch_firmware_files(struct ath10k *ar)
+> +{
+> +       int ret;
+> +
+> +       ret = ath10k_core_fetch_firmware_api_n(ar, ATH10K_FW_API2_FILE);
+> +       if (ret == 0) {
+> +               ar->fw_api = 2;
+> +               goto out;
+> +       }
 
-> On 28 August 2013 06:12, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->> Michal Kazior <michal.kazior@tieto.com> writes:
->>
->>> Simplifies memory managament of ce_state.
->>>
->>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->>
->> Sorry, I noticed this only in my second review round:
->>
->>> --- a/drivers/net/wireless/ath/ath10k/pci.h
->>> +++ b/drivers/net/wireless/ath/ath10k/pci.h
->>> @@ -233,7 +233,10 @@ struct ath10k_pci {
->>>       spinlock_t ce_lock;
->>>
->>>       /* Map CE id to ce_state */
->>> -     struct ce_state *ce_id_to_state[CE_COUNT_MAX];
->>> +     struct ce_state ce_states[CE_COUNT_MAX];
->>> +
->>> +     /* makes sure that dummy reads are atomic */
->>> +     spinlock_t hw_v1_workaround_lock;
->>>  };
->>
->> That lock doesn't look right. Is it a leftover from a rebase?
->
-> Oh, good catch. I wonder how it got there..
+Did you skip board file intentionally?
 
-I had patches pending on this patchset, so I removed the lock from this
-patch and applied it.
 
--- 
-Kalle Valo
+Michał.
