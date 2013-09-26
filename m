@@ -1,140 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 162-17-110-37-static.hfc.comcastbusiness.net ([162.17.110.37]:38578
-	"EHLO stuffed.shaftnet.org" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753308Ab3IWUAK (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:49062 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751112Ab3IZGSO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Sep 2013 16:00:10 -0400
-From: Solomon Peachy <pizza@shaftnet.org>
-To: linux-wireless@vger.kernel.org
-Cc: Solomon Peachy <pizza@shaftnet.org>
-Subject: [PATCH 3.12 1/2] Revert "cw1200: Don't perform SPI transfers in interrupt context"
-Date: Mon, 23 Sep 2013 16:00:03 -0400
-Message-Id: <1379966404-7047-2-git-send-email-pizza@shaftnet.org> (sfid-20130923_220025_689937_253D9A26)
-In-Reply-To: <1379966404-7047-1-git-send-email-pizza@shaftnet.org>
-References: <1379966404-7047-1-git-send-email-pizza@shaftnet.org>
+	Thu, 26 Sep 2013 02:18:14 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 3/3] ath10k: implement firmware IE container support
+References: <20130925210455.2596.36889.stgit@localhost6.localdomain6>
+	<20130925210848.2596.56332.stgit@localhost6.localdomain6>
+	<CA+BoTQ=BhtjC1YNLs9OYBPN6TiYhyrwYoK2A1wifS01HVJp1YA@mail.gmail.com>
+	<878uykunyc.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQ=v0snRLTP44LXVdQx2UVKYxLCW-JiWyMWOR4eEzMvFKA@mail.gmail.com>
+Date: Thu, 26 Sep 2013 09:18:05 +0300
+In-Reply-To: <CA+BoTQ=v0snRLTP44LXVdQx2UVKYxLCW-JiWyMWOR4eEzMvFKA@mail.gmail.com>
+	(Michal Kazior's message of "Thu, 26 Sep 2013 08:04:39 +0200")
+Message-ID: <87vc1ot8bm.fsf@kamboji.qca.qualcomm.com> (sfid-20130926_081825_814432_A1E7222B)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This reverts commit aec8e88c947b7017e2b4bbcb68a4bfc4a1f8ad35.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-This solution turned out to cause interrupt delivery problems, and
-rather than trying to fix this approach, it has been scrapped in favor
-of an alternative (and far simpler) implementation.
+> On 26 September 2013 07:55, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>> Michal Kazior <michal.kazior@tieto.com> writes:
+>>
+>>> Did you skip board file intentionally?
+>>
+>> Yes, because my understanding is that the board file is not tied to any
+>> particular firmware version. The board file should be specific to the
+>> hardware configuration in use, or at least that's how it is with ath6kl.
+>
+> But the board file is not loaded at all for API 2. The api_1 variant
+> requests 3 files and can result with up to 3 binaries loaded. api_n
+> requests 1 file and can result with up to 2 binaries loaded.
 
-Signed-off-by: Solomon Peachy <pizza@shaftnet.org>
----
- drivers/net/wireless/cw1200/cw1200_spi.c | 19 +++----------------
- drivers/net/wireless/cw1200/fwio.c       |  2 +-
- drivers/net/wireless/cw1200/hwbus.h      |  1 -
- drivers/net/wireless/cw1200/hwio.c       | 15 ---------------
- 4 files changed, 4 insertions(+), 33 deletions(-)
+Oops, that's clearly a bug. How did it even pass my tests without the
+board file? I'll send v2 to fix that.
 
-diff --git a/drivers/net/wireless/cw1200/cw1200_spi.c b/drivers/net/wireless/cw1200/cw1200_spi.c
-index f5e6b48..5a64ac9 100644
---- a/drivers/net/wireless/cw1200/cw1200_spi.c
-+++ b/drivers/net/wireless/cw1200/cw1200_spi.c
-@@ -42,7 +42,6 @@ struct hwbus_priv {
- 	spinlock_t		lock; /* Serialize all bus operations */
- 	wait_queue_head_t       wq;
- 	int claimed;
--	int irq_disabled;
- };
- 
- #define SDIO_TO_SPI_ADDR(addr) ((addr & 0x1f)>>2)
-@@ -238,8 +237,6 @@ static irqreturn_t cw1200_spi_irq_handler(int irq, void *dev_id)
- 	struct hwbus_priv *self = dev_id;
- 
- 	if (self->core) {
--		disable_irq_nosync(self->func->irq);
--		self->irq_disabled = 1;
- 		cw1200_irq_handler(self->core);
- 		return IRQ_HANDLED;
- 	} else {
-@@ -273,22 +270,13 @@ exit:
- 
- static int cw1200_spi_irq_unsubscribe(struct hwbus_priv *self)
- {
-+	int ret = 0;
-+
- 	pr_debug("SW IRQ unsubscribe\n");
- 	disable_irq_wake(self->func->irq);
- 	free_irq(self->func->irq, self);
- 
--	return 0;
--}
--
--static int cw1200_spi_irq_enable(struct hwbus_priv *self, int enable)
--{
--	/* Disables are handled by the interrupt handler */
--	if (enable && self->irq_disabled) {
--		enable_irq(self->func->irq);
--		self->irq_disabled = 0;
--	}
--
--	return 0;
-+	return ret;
- }
- 
- static int cw1200_spi_off(const struct cw1200_platform_data_spi *pdata)
-@@ -368,7 +356,6 @@ static struct hwbus_ops cw1200_spi_hwbus_ops = {
- 	.unlock			= cw1200_spi_unlock,
- 	.align_size		= cw1200_spi_align_size,
- 	.power_mgmt		= cw1200_spi_pm,
--	.irq_enable             = cw1200_spi_irq_enable,
- };
- 
- /* Probe Function to be called by SPI stack when device is discovered */
-diff --git a/drivers/net/wireless/cw1200/fwio.c b/drivers/net/wireless/cw1200/fwio.c
-index 0b2061b..acdff0f 100644
---- a/drivers/net/wireless/cw1200/fwio.c
-+++ b/drivers/net/wireless/cw1200/fwio.c
-@@ -485,7 +485,7 @@ int cw1200_load_firmware(struct cw1200_common *priv)
- 
- 	/* Enable interrupt signalling */
- 	priv->hwbus_ops->lock(priv->hwbus_priv);
--	ret = __cw1200_irq_enable(priv, 2);
-+	ret = __cw1200_irq_enable(priv, 1);
- 	priv->hwbus_ops->unlock(priv->hwbus_priv);
- 	if (ret < 0)
- 		goto unsubscribe;
-diff --git a/drivers/net/wireless/cw1200/hwbus.h b/drivers/net/wireless/cw1200/hwbus.h
-index 51dfb3a..8b2fc83 100644
---- a/drivers/net/wireless/cw1200/hwbus.h
-+++ b/drivers/net/wireless/cw1200/hwbus.h
-@@ -28,7 +28,6 @@ struct hwbus_ops {
- 	void (*unlock)(struct hwbus_priv *self);
- 	size_t (*align_size)(struct hwbus_priv *self, size_t size);
- 	int (*power_mgmt)(struct hwbus_priv *self, bool suspend);
--	int (*irq_enable)(struct hwbus_priv *self, int enable);
- };
- 
- #endif /* CW1200_HWBUS_H */
-diff --git a/drivers/net/wireless/cw1200/hwio.c b/drivers/net/wireless/cw1200/hwio.c
-index 41bd761..ff230b7 100644
---- a/drivers/net/wireless/cw1200/hwio.c
-+++ b/drivers/net/wireless/cw1200/hwio.c
-@@ -273,21 +273,6 @@ int __cw1200_irq_enable(struct cw1200_common *priv, int enable)
- 	u16 val16;
- 	int ret;
- 
--	/* We need to do this hack because the SPI layer can sleep on I/O
--	   and the general path involves I/O to the device in interrupt
--	   context.
--
--	   However, the initial enable call needs to go to the hardware.
--
--	   We don't worry about shutdown because we do a full reset which
--	   clears the interrupt enabled bits.
--	*/
--	if (priv->hwbus_ops->irq_enable) {
--		ret = priv->hwbus_ops->irq_enable(priv->hwbus_priv, enable);
--		if (ret || enable < 2)
--			return ret;
--	}
--
- 	if (HIF_8601_SILICON == priv->hw_type) {
- 		ret = __cw1200_reg_read_32(priv, ST90TDS_CONFIG_REG_ID, &val32);
- 		if (ret < 0) {
+So my idea is that with API 2 we load only firmware-2.bin and board.bin
+from user space. With API 1 we continue loading firmware.bin, otp.bin
+(optional) and board.bin, just as before. And firmware-2.bin can contain
+the old firmware.bin (mandatory) and otp.bin (optional) images.
+
+I just realised that I'm missing a check that there really is a firmware
+image inside firmware-2.bin, need to add that as well.
+
 -- 
-1.8.3.1
-
+Kalle Valo
