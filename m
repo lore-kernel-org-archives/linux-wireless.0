@@ -1,60 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:39522 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753746Ab3ITMsZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Sep 2013 08:48:25 -0400
-In-Reply-To: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-From: Russell King <rmk+kernel@arm.linux.org.uk>
-To: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
-	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
-	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
-	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	uclinux-dist-devel@blackfin.uclinux.org
-Subject: [PATCH 34/51] DMA-API: net: octeon: use
- dma_coerce_mask_and_coherent()
-Message-Id: <E1VMmFb-0007jO-50@rmk-PC.arm.linux.org.uk> (sfid-20130920_144836_647595_FE17364E)
-Date: Thu, 19 Sep 2013 22:59:03 +0100
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:9137 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754436Ab3IZV52 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Sep 2013 17:57:28 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+Date: Thu, 26 Sep 2013 14:57:21 -0700
+Subject: RE: [patch] mwifiex: potential integer underflow in
+ mwifiex_ret_wmm_get_status()
+Message-ID: <477F20668A386D41ADCC57781B1F70430F4507819C@SC-VEXCH1.marvell.com> (sfid-20130926_235733_116736_3301BB83)
+References: <20130925085729.GC6661@elgon.mountain>
+ <477F20668A386D41ADCC57781B1F70430F45077CDA@SC-VEXCH1.marvell.com>
+ <20130925182359.GV6247@mwanda>
+ <477F20668A386D41ADCC57781B1F70430F45077E52@SC-VEXCH1.marvell.com>
+ <477F20668A386D41ADCC57781B1F70430F45078155@SC-VEXCH1.marvell.com>
+ <20130926210703.GE6247@mwanda>
+In-Reply-To: <20130926210703.GE6247@mwanda>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The code sequence:
-	pdev->dev.coherent_dma_mask = DMA_BIT_MASK(64);
-	pdev->dev.dma_mask = &pdev->dev.coherent_dma_mask;
-bypasses the architectures check on the DMA mask.  It can be replaced
-with dma_coerce_mask_and_coherent(), avoiding the direct initialization
-of this mask.
+Hi Dan,
 
-Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
----
- drivers/net/ethernet/octeon/octeon_mgmt.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+> There are several other similar functions as well.  For example, the
+> while loops in mwifiex_ret_tx_rate_cfg() and mwifiex_get_power_level().
 
-diff --git a/drivers/net/ethernet/octeon/octeon_mgmt.c b/drivers/net/ethernet/octeon/octeon_mgmt.c
-index 622aa75..2006a07 100644
---- a/drivers/net/ethernet/octeon/octeon_mgmt.c
-+++ b/drivers/net/ethernet/octeon/octeon_mgmt.c
-@@ -1552,8 +1552,9 @@ static int octeon_mgmt_probe(struct platform_device *pdev)
- 
- 	p->phy_np = of_parse_phandle(pdev->dev.of_node, "phy-handle", 0);
- 
--	pdev->dev.coherent_dma_mask = DMA_BIT_MASK(64);
--	pdev->dev.dma_mask = &pdev->dev.coherent_dma_mask;
-+	result = dma_coerce_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
-+	if (result)
-+		goto err;
- 
- 	netif_carrier_off(netdev);
- 	result = register_netdev(netdev);
--- 
-1.7.4.4
+Thanks for pointing it out. We will have them fixed.
+
+Regards,
+Bing
 
