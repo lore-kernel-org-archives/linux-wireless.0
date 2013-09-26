@@ -1,53 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f170.google.com ([209.85.192.170]:49781 "EHLO
-	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763301Ab3IEBjv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Sep 2013 21:39:51 -0400
-Received: by mail-pd0-f170.google.com with SMTP id x10so1090055pdj.29
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Sep 2013 18:39:50 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	devel@lists.open80211s.org, distro11s@cozybit.com,
-	Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>,
-	Colleen Twitty <colleen@cozybit.com>
-Subject: [PATCH] mac80211: fix the setting of extended supported rate IE
-Date: Wed,  4 Sep 2013 18:39:43 -0700
-Message-Id: <1378345183-5921-1-git-send-email-yeohchunyeow@cozybit.com> (sfid-20130905_034305_344776_64C6F516)
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:57386 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752951Ab3IZU5l convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Sep 2013 16:57:41 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+Date: Thu, 26 Sep 2013 13:57:32 -0700
+Subject: RE: [patch] mwifiex: potential integer underflow in
+ mwifiex_ret_wmm_get_status()
+Message-ID: <477F20668A386D41ADCC57781B1F70430F45078155@SC-VEXCH1.marvell.com> (sfid-20130926_225746_885469_ED1924DC)
+References: <20130925085729.GC6661@elgon.mountain>
+ <477F20668A386D41ADCC57781B1F70430F45077CDA@SC-VEXCH1.marvell.com>
+ <20130925182359.GV6247@mwanda>
+ <477F20668A386D41ADCC57781B1F70430F45077E52@SC-VEXCH1.marvell.com>
+In-Reply-To: <477F20668A386D41ADCC57781B1F70430F45077E52@SC-VEXCH1.marvell.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch "mac80211: select and adjust bitrates according to
-channel mode" causes regression and breaks the extended supported rate
-IE setting. Fix this.
+Hi Dan,
 
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-Signed-off-by: Colleen Twitty <colleen@cozybit.com>
----
- net/mac80211/util.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+> > No, that doesn't work because the comparison against sizeof() get's
+> > promoted to size_t.  In other words, negative values still count as
+> > large positive values.
+> 
+> You are right. The negative value counts as a large positive number while comparing against sizeof().
+> I can add a "const int hdr_size" variable to store the value of sizeof(...) and compare resp_len to
+> hdr_size. The "sizeof(...)" has been used multiple times in this function, so I think it's worth
+> adding a variable for it.
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 3c8283b..21fef9f 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -2134,13 +2134,13 @@ int ieee80211_add_ext_srates_ie(struct ieee80211_sub_if_data *sdata,
- 			if ((rate_flags & sband->bitrates[i].flags)
- 			    != rate_flags)
- 				continue;
--			if (skip++ < 8)
--				continue;
- 			if (need_basic && basic_rates & BIT(i))
- 				basic = 0x80;
- 			rate = DIV_ROUND_UP(sband->bitrates[i].bitrate,
- 					    5 * (1 << shift));
- 			*pos++ = basic | (u8) rate;
-+			if (skip++ < 8)
-+				continue;
- 		}
- 	}
- 	return 0;
--- 
-1.7.9.5
+Well, there is another problem here.
+We might have accessed invalid memory while handling switch case in last iteration, because we didn't count tlv_len in "while(...)" condition check.
+
+To fix this, Dan's change makes sense. But we should check the length before accessing the buffer.
+
+@@ -722,6 +722,9 @@ int mwifiex_ret_wmm_get_status(struct mwifiex_private *priv,
+ 		tlv_hdr = (struct mwifiex_ie_types_data *) curr;
+ 		tlv_len = le16_to_cpu(tlv_hdr->header.len);
+ 
++		if (resp_len < tlv_len + sizeof(tlv_hdr->header))
++			break;
++
+ 		switch (le16_to_cpu(tlv_hdr->header.type)) {
+ 		case TLV_TYPE_WMMQSTATUS:
+ 			tlv_wmm_qstatus =
+
+Thanks,
+Bing
 
