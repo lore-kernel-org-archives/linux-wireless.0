@@ -1,132 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:39803 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753233Ab3IWLmQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Sep 2013 07:42:16 -0400
-Date: Mon, 23 Sep 2013 12:37:55 +0100
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Vinod Koul <vinod.koul@intel.com>
-Cc: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
-	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
-	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
-	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	uclinux-dist-devel@blackfin.uclinux.org,
-	Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [alsa-devel] [PATCH 43/51] DMA-API: dma: edma.c: no need to
-	explicitly initialize DMA masks
-Message-ID: <20130923113755.GT25647@n2100.arm.linux.org.uk> (sfid-20130923_134225_659811_77328B45)
-References: <20130919212235.GD12758@n2100.arm.linux.org.uk> <E1VMnRj-0007sg-1Z@rmk-PC.arm.linux.org.uk> <20130923102533.GI17188@intel.com>
+Received: from ebb06.tieto.com ([131.207.168.38]:49051 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753734Ab3I0Oii (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Sep 2013 10:38:38 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 4/4] ath10k: remove num_sends_allowed
+Date: Fri, 27 Sep 2013 16:38:26 +0200
+Message-ID: <1380292706-3609-5-git-send-email-michal.kazior@tieto.com> (sfid-20130927_163843_891977_8C49E900)
+In-Reply-To: <1380292706-3609-1-git-send-email-michal.kazior@tieto.com>
+References: <1380292706-3609-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130923102533.GI17188@intel.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 23, 2013 at 03:55:33PM +0530, Vinod Koul wrote:
-> On Fri, Sep 20, 2013 at 12:15:39AM +0100, Russell King wrote:
-> > register_platform_device_full() can setup the DMA mask provided the
-> > appropriate member is set in struct platform_device_info.  So lets
-> > make that be the case.  This avoids a direct reference to the DMA
-> > masks by this driver.
-> > 
-> > Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
-> Acked-by: Vinod Koul <vinod.koul@intel.com>
-> 
-> This also brings me question that should we force the driver to use the
-> dma_set_mask_and_coherent() API or they have below flexiblity too?
+The value provided by num_sends_allowed is now
+derived from CE source ringbuffer state.
 
-There's two issues here:
-1. dma_set_mask_and_coherent() will only work if dev->dma_mask points at
-   some storage for the mask.  This needs to have .dma_mask in the
-   platform_device_info initialised.
-
-2. Yes, this driver should also be calling the appropriate DMA mask setting
-   functions in addition to having the mask initialized at device creation
-   time.
-
-Here's a replacement patch, though maybe it would be better to roll all
-the additions of dma_set_mask_and_coherent() in drivers/dma into one
-patch?  In other words, combine the addition of this with these two
-patches:
-
-	dma: pl330: add dma_set_mask_and_coherent() call
-	dma: pl08x: add dma_set_mask_and_coherent() call
-
-8<=====
-From: Russell King <rmk+kernel@arm.linux.org.uk>
-Subject: [PATCH] DMA-API: dma: edma.c: no need to explicitly initialize DMA
- masks
-
-register_platform_device_full() can setup the DMA mask provided the
-appropriate member is set in struct platform_device_info.  So lets
-make that be the case.  This avoids a direct reference to the DMA
-masks by this driver.
-
-While here, add the dma_set_mask_and_coherent() call which the DMA API
-requires DMA-using drivers to call.
-
-Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/dma/edma.c |   10 ++++++----
- 1 files changed, 6 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath10k/ce.c  |   17 ++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/ce.h  |    1 +
+ drivers/net/wireless/ath/ath10k/pci.c |   21 +--------------------
+ drivers/net/wireless/ath/ath10k/pci.h |    3 ---
+ 4 files changed, 18 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/dma/edma.c b/drivers/dma/edma.c
-index ff50ff4..fd5e48c 100644
---- a/drivers/dma/edma.c
-+++ b/drivers/dma/edma.c
-@@ -631,6 +631,10 @@ static int edma_probe(struct platform_device *pdev)
- 	struct edma_cc *ecc;
- 	int ret;
+diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
+index 9e6daa9..e46951b 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.c
++++ b/drivers/net/wireless/ath/ath10k/ce.c
+@@ -283,7 +283,7 @@ static int ath10k_ce_send_nolock(struct ath10k_ce_pipe *ce_state,
  
-+	ret = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
-+	if (ret)
-+		return ret;
+ 	if (unlikely(CE_RING_DELTA(nentries_mask,
+ 				   write_index, sw_index - 1) <= 0)) {
+-		ret = -EIO;
++		ret = -ENOSR;
+ 		goto exit;
+ 	}
+ 
+@@ -338,6 +338,21 @@ int ath10k_ce_send(struct ath10k_ce_pipe *ce_state,
+ 	return ret;
+ }
+ 
++int ath10k_ce_num_free_src_entries(struct ath10k_ce_pipe *pipe)
++{
++	struct ath10k *ar = pipe->ar;
++	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
++	int delta;
 +
- 	ecc = devm_kzalloc(&pdev->dev, sizeof(*ecc), GFP_KERNEL);
- 	if (!ecc) {
- 		dev_err(&pdev->dev, "Can't allocate controller\n");
-@@ -702,11 +706,13 @@ static struct platform_device *pdev0, *pdev1;
- static const struct platform_device_info edma_dev_info0 = {
- 	.name = "edma-dma-engine",
- 	.id = 0,
-+	.dma_mask = DMA_BIT_MASK(32),
- };
++	spin_lock_bh(&ar_pci->ce_lock);
++	delta = CE_RING_DELTA(pipe->src_ring->nentries_mask,
++			      pipe->src_ring->write_index,
++			      pipe->src_ring->sw_index - 1);
++	spin_unlock_bh(&ar_pci->ce_lock);
++
++	return delta;
++}
++
+ int ath10k_ce_recv_buf_enqueue(struct ath10k_ce_pipe *ce_state,
+ 			       void *per_recv_context,
+ 			       u32 buffer)
+diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
+index 949b174..15d45b5 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.h
++++ b/drivers/net/wireless/ath/ath10k/ce.h
+@@ -156,6 +156,7 @@ void ath10k_ce_send_cb_register(struct ath10k_ce_pipe *ce_state,
+ 				void (*send_cb)(struct ath10k_ce_pipe *),
+ 				int disable_interrupts);
  
- static const struct platform_device_info edma_dev_info1 = {
- 	.name = "edma-dma-engine",
- 	.id = 1,
-+	.dma_mask = DMA_BIT_MASK(32),
- };
++int ath10k_ce_num_free_src_entries(struct ath10k_ce_pipe *pipe);
  
- static int edma_init(void)
-@@ -720,8 +726,6 @@ static int edma_init(void)
- 			ret = PTR_ERR(pdev0);
- 			goto out;
+ /*==================Recv=======================*/
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 4f6a978..f8d59c7 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -720,16 +720,6 @@ static int ath10k_pci_hif_send_head(struct ath10k *ar, u8 pipe_id,
+ 			"ath10k tx: data: ",
+ 			nbuf->data, nbuf->len);
+ 
+-	/* Make sure we have resources to handle this request */
+-	spin_lock_bh(&pipe_info->pipe_lock);
+-	if (!pipe_info->num_sends_allowed) {
+-		ath10k_warn("Pipe: %d is full\n", pipe_id);
+-		spin_unlock_bh(&pipe_info->pipe_lock);
+-		return -ENOSR;
+-	}
+-	pipe_info->num_sends_allowed--;
+-	spin_unlock_bh(&pipe_info->pipe_lock);
+-
+ 	ret = ath10k_ce_send(ce_hdl, nbuf, skb_cb->paddr, len, transfer_id,
+ 			     flags);
+ 	if (ret)
+@@ -741,14 +731,7 @@ static int ath10k_pci_hif_send_head(struct ath10k *ar, u8 pipe_id,
+ static u16 ath10k_pci_hif_get_free_queue_number(struct ath10k *ar, u8 pipe)
+ {
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+-	struct ath10k_pci_pipe *pipe_info = &(ar_pci->pipe_info[pipe]);
+-	int ret;
+-
+-	spin_lock_bh(&pipe_info->pipe_lock);
+-	ret = pipe_info->num_sends_allowed;
+-	spin_unlock_bh(&pipe_info->pipe_lock);
+-
+-	return ret;
++	return ath10k_ce_num_free_src_entries(ar_pci->pipe_info[pipe].ce_hdl);
+ }
+ 
+ static void ath10k_pci_hif_dump_area(struct ath10k *ar)
+@@ -863,7 +846,6 @@ static int ath10k_pci_start_ce(struct ath10k *ar)
+ 						   ath10k_pci_ce_send_done,
+ 						   disable_interrupts);
+ 			completions += attr->src_nentries;
+-			pipe_info->num_sends_allowed = attr->src_nentries - 1;
  		}
--		pdev0->dev.dma_mask = &pdev0->dev.coherent_dma_mask;
--		pdev0->dev.coherent_dma_mask = DMA_BIT_MASK(32);
+ 
+ 		if (attr->dest_nentries) {
+@@ -1033,7 +1015,6 @@ static void ath10k_pci_process_ce(struct ath10k *ar)
+ 		 */
+ 		spin_lock_bh(&compl->pipe_info->pipe_lock);
+ 		list_add_tail(&compl->list, &compl->pipe_info->compl_free);
+-		compl->pipe_info->num_sends_allowed += send_done;
+ 		spin_unlock_bh(&compl->pipe_info->pipe_lock);
  	}
  
- 	if (EDMA_CTLRS == 2) {
-@@ -731,8 +735,6 @@ static int edma_init(void)
- 			platform_device_unregister(pdev0);
- 			ret = PTR_ERR(pdev1);
- 		}
--		pdev1->dev.dma_mask = &pdev1->dev.coherent_dma_mask;
--		pdev1->dev.coherent_dma_mask = DMA_BIT_MASK(32);
- 	}
+diff --git a/drivers/net/wireless/ath/ath10k/pci.h b/drivers/net/wireless/ath/ath10k/pci.h
+index 7c49f6f..52fb7b9 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.h
++++ b/drivers/net/wireless/ath/ath10k/pci.h
+@@ -178,9 +178,6 @@ struct ath10k_pci_pipe {
+ 	/* List of free CE completion slots */
+ 	struct list_head compl_free;
  
- out:
+-	/* Limit the number of outstanding send requests. */
+-	int num_sends_allowed;
+-
+ 	struct ath10k_pci *ar_pci;
+ 	struct tasklet_struct intr;
+ };
 -- 
-1.7.4.4
-
+1.7.9.5
 
