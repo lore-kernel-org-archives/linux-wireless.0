@@ -1,52 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:55099 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751069Ab3IJLWM (ORCPT
+Received: from mail-wg0-f54.google.com ([74.125.82.54]:60614 "EHLO
+	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752562Ab3I0GZn convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Sep 2013 07:22:12 -0400
-Received: from epcpsbgr4.samsung.com
- (u144.gpu120.samsung.co.kr [203.254.230.144])
- by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MSW00F3EQ8TQH11@mailout2.samsung.com> for
- linux-wireless@vger.kernel.org; Tue, 10 Sep 2013 20:22:10 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: "'John W. Linville'" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>,
-	'Thomas Huehn' <thomas@net.t-labs.tu-berlin.de>,
-	'Karl Beldan' <karl.beldan@rivierawaves.com>
-References: <00b101ceae16$ecb87c30$c6297490$%han@samsung.com>
-In-reply-to: <00b101ceae16$ecb87c30$c6297490$%han@samsung.com>
-Subject: [PATCH 04/12] wireless: adm8211: remove unnecessary pci_set_drvdata()
-Date: Tue, 10 Sep 2013 20:22:10 +0900
-Message-id: <00b501ceae17$fdd33040$f97990c0$%han@samsung.com> (sfid-20130910_132215_852629_140F5E74)
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+	Fri, 27 Sep 2013 02:25:43 -0400
+Received: by mail-wg0-f54.google.com with SMTP id m15so2159465wgh.21
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Sep 2013 23:25:41 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <5239DEB6.7080902@broadcom.com>
+References: <1379439942.2012.16.camel@joe-AO722>
+	<52397023.2080000@broadcom.com>
+	<5239B12D.3040206@hauke-m.de>
+	<5239DEB6.7080902@broadcom.com>
+Date: Fri, 27 Sep 2013 08:25:41 +0200
+Message-ID: <CACna6rxvFA9d6=XQ1p=jmy6mLr_F=g642gh0t4E=9fdR6ff9Bw@mail.gmail.com> (sfid-20130927_082645_120463_1B836BF2)
+Subject: Re: fyi: scheduling while atomic dmesg output 3.12-rc1
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>, Joe Perches <joe@perches.com>,
+	brcm80211 development <brcm80211-dev-list@broadcom.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver core clears the driver data to NULL after device_release
-or on probe failure. Thus, it is not needed to manually clear the
-device driver data to NULL.
+2013/9/18 Arend van Spriel <arend@broadcom.com>:
+> On 09/18/2013 03:57 PM, Hauke Mehrtens wrote:
+>>
+>> On 09/18/2013 11:19 AM, Arend van Spriel wrote:
+>>>
+>>> On 09/17/2013 07:45 PM, Joe Perches wrote:
+>>>>
+>>>> <3>[   11.206312] BUG: scheduling while atomic:
+>>>> NetworkManager/866/0x00000200
+>>>
+>>>
+>>> Thanks, Joe
+>>>
+>>> I got a report on this few days ago. It was introduced by bcma API
+>>> change and I already sent email to the committer of that change, ie.
+>>> Hauke Mehrtens. Hope it will be settled soon how to fix this.
+>>>
+>>> Gr. AvS
+>>
+>>
+>> Hi,
+>>
+>> I see four solutions for the problem:
+>>
+>> 1. convert the usleep_range(1000, 2000) into udelay(1000) in
+>> drivers/bcma/driver_pci.c
+>>
+>> 2. remove the call of bcma_core_pci_power_save() from bcma_core_pci_up()
+>> so that it does not get called by brcmsmac.
+>>
+>> 3. remove the call of bcma_core_pci_power_save() from bcma_core_pci_up()
+>> and move the call to somewhere out of the big spin lock.
+>>
+>> 4. convert the big brmcsmac spin lock into a mutex lock and use an
+>> additional spin lock for the parts where it is actually needed.
+>>
+>> For 3.12 I am for solution 1 or 2 and for the long term 3.13? I am for
+>> solution 4, but that needs bigger changes.
+>
+>
+> Agree. When looking into this I considered option 4 would be a bigger work,
+> but I agree we should aim for that in the long term. For the short term I
+> would say option 2 makes sense although I guess the power_save call is there
+> for a reason. So I will also look if option 3 is doable.
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
----
- drivers/net/wireless/adm8211.c |    1 -
- 1 file changed, 1 deletion(-)
+I'm OK with that (sorry, was on holidays for the last week).
 
-diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
-index f9a24e5..cfce83e 100644
---- a/drivers/net/wireless/adm8211.c
-+++ b/drivers/net/wireless/adm8211.c
-@@ -1924,7 +1924,6 @@ static int adm8211_probe(struct pci_dev *pdev,
- 	pci_iounmap(pdev, priv->map);
- 
-  err_free_dev:
--	pci_set_drvdata(pdev, NULL);
- 	ieee80211_free_hw(dev);
- 
-  err_free_reg:
 -- 
-1.7.10.4
-
-
+Rafał
