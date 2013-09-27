@@ -1,98 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:18246 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753352Ab3IWLQM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Sep 2013 07:16:12 -0400
-Date: Mon, 23 Sep 2013 15:55:33 +0530
-From: Vinod Koul <vinod.koul@intel.com>
-To: Russell King <rmk+kernel@arm.linux.org.uk>
-Cc: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
-	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
-	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
-	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	uclinux-dist-devel@blackfin.uclinux.org,
-	Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [alsa-devel] [PATCH 43/51] DMA-API: dma: edma.c: no need to
- explicitly initialize DMA masks
-Message-ID: <20130923102533.GI17188@intel.com> (sfid-20130923_131640_216831_14706F33)
-References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
- <E1VMnRj-0007sg-1Z@rmk-PC.arm.linux.org.uk>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:42713 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753399Ab3I0R4g (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Sep 2013 13:56:36 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Sven Neumann <s.neumann@raumfeld.com>,
+	Andreas Fenkart <andreas.fenkart@streamunlimited.com>,
+	Daniel Mack <zonque@gmail.com>,
+	Dylan Reid <dgreid@chromium.org>,
+	Paul Stewart <pstew@chromium.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3.12] mwifiex: fix SDIO interrupt lost issue
+Date: Fri, 27 Sep 2013 10:55:38 -0700
+Message-ID: <1380304538-2816-1-git-send-email-bzhao@marvell.com> (sfid-20130927_195640_026336_A2D65842)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <E1VMnRj-0007sg-1Z@rmk-PC.arm.linux.org.uk>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 20, 2013 at 12:15:39AM +0100, Russell King wrote:
-> register_platform_device_full() can setup the DMA mask provided the
-> appropriate member is set in struct platform_device_info.  So lets
-> make that be the case.  This avoids a direct reference to the DMA
-> masks by this driver.
-> 
-> Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
-Acked-by: Vinod Koul <vinod.koul@intel.com>
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-This also brings me question that should we force the driver to use the
-dma_set_mask_and_coherent() API or they have below flexiblity too?
+601216e "mwifiex: process RX packets in SDIO IRQ thread directly"
+introduced a command timeout issue which can be reproduced easily on
+an AM33xx platform using a test application written by Daniel Mack:
 
-~Vinod
+https://gist.github.com/zonque/6579314
 
-> ---
->  drivers/dma/edma.c |    6 ++----
->  1 files changed, 2 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/dma/edma.c b/drivers/dma/edma.c
-> index ff50ff4..7f9fe30 100644
-> --- a/drivers/dma/edma.c
-> +++ b/drivers/dma/edma.c
-> @@ -702,11 +702,13 @@ static struct platform_device *pdev0, *pdev1;
->  static const struct platform_device_info edma_dev_info0 = {
->  	.name = "edma-dma-engine",
->  	.id = 0,
-> +	.dma_mask = DMA_BIT_MASK(32),
->  };
->  
->  static const struct platform_device_info edma_dev_info1 = {
->  	.name = "edma-dma-engine",
->  	.id = 1,
-> +	.dma_mask = DMA_BIT_MASK(32),
->  };
+mwifiex_main_process() is called from both the SDIO handler and
+the workqueue. In case an interrupt occurs right after the
+int_status check, but before updating the mwifiex_processing flag,
+this interrupt gets lost, resulting in a command timeout and
+consequently a card reset.
 
+Let main_proc_lock protect both int_status and mwifiex_processing
+flag. This fixes the interrupt lost issue.
 
->  
->  static int edma_init(void)
-> @@ -720,8 +722,6 @@ static int edma_init(void)
->  			ret = PTR_ERR(pdev0);
->  			goto out;
->  		}
-> -		pdev0->dev.dma_mask = &pdev0->dev.coherent_dma_mask;
-> -		pdev0->dev.coherent_dma_mask = DMA_BIT_MASK(32);
->  	}
->  
->  	if (EDMA_CTLRS == 2) {
-> @@ -731,8 +731,6 @@ static int edma_init(void)
->  			platform_device_unregister(pdev0);
->  			ret = PTR_ERR(pdev1);
->  		}
-> -		pdev1->dev.dma_mask = &pdev1->dev.coherent_dma_mask;
-> -		pdev1->dev.coherent_dma_mask = DMA_BIT_MASK(32);
->  	}
->  
->  out:
-> -- 
-> 1.7.4.4
-> 
-> _______________________________________________
-> Alsa-devel mailing list
-> Alsa-devel@alsa-project.org
-> http://mailman.alsa-project.org/mailman/listinfo/alsa-devel
+Cc: <stable@vger.kernel.org> # 3.7+
+Reported-by: Sven Neumann <s.neumann@raumfeld.com>
+Reported-by: Andreas Fenkart <andreas.fenkart@streamunlimited.com>
+Tested-by: Daniel Mack <zonque@gmail.com>
+Reviewed-by: Dylan Reid <dgreid@chromium.org>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Paul Stewart <pstew@chromium.org>
+---
+ drivers/net/wireless/mwifiex/main.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
+index fd77833..c2b91f5 100644
+--- a/drivers/net/wireless/mwifiex/main.c
++++ b/drivers/net/wireless/mwifiex/main.c
+@@ -358,10 +358,12 @@ process_start:
+ 		}
+ 	} while (true);
+ 
+-	if ((adapter->int_status) || IS_CARD_RX_RCVD(adapter))
++	spin_lock_irqsave(&adapter->main_proc_lock, flags);
++	if ((adapter->int_status) || IS_CARD_RX_RCVD(adapter)) {
++		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
+ 		goto process_start;
++	}
+ 
+-	spin_lock_irqsave(&adapter->main_proc_lock, flags);
+ 	adapter->mwifiex_processing = false;
+ 	spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
+ 
 -- 
+1.8.2.3
+
