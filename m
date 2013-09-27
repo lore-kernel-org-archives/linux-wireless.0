@@ -1,51 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.ispras.ru ([83.149.199.45]:40399 "EHLO mail.ispras.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754732Ab3I1DwP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Sep 2013 23:52:15 -0400
-From: Alexey Khoroshilov <khoroshilov@ispras.ru>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
-Subject: [PATCH] carl9170: fix leaks at failure path in carl9170_usb_probe()
-Date: Fri, 27 Sep 2013 23:51:51 -0400
-Message-Id: <1380340311-4630-1-git-send-email-khoroshilov@ispras.ru> (sfid-20130928_055259_162095_E9B5B052)
+Received: from shards.monkeyblade.net ([149.20.54.216]:49901 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754653Ab3I0VDd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Sep 2013 17:03:33 -0400
+Date: Fri, 27 Sep 2013 17:03:31 -0400 (EDT)
+Message-Id: <20130927.170331.51526037504942244.davem@davemloft.net> (sfid-20130927_230338_501063_AAAE4369)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2013-09-27
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20130927180549.GB10994@tuxdriver.com>
+References: <20130927180549.GB10994@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-carl9170_usb_probe() does not handle request_firmware_nowait() failure
-that leads to several leaks in this case.
-The patch adds all required deallocations.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 27 Sep 2013 14:05:49 -0400
 
-Found by Linux Driver Verification project (linuxtesting.org).
+> Please pull this batch of fixes intended for the 3.12 stream!
 
-Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
----
- drivers/net/wireless/ath/carl9170/usb.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/carl9170/usb.c b/drivers/net/wireless/ath/carl9170/usb.c
-index 307bc0d..3c76de1 100644
---- a/drivers/net/wireless/ath/carl9170/usb.c
-+++ b/drivers/net/wireless/ath/carl9170/usb.c
-@@ -1076,8 +1076,14 @@ static int carl9170_usb_probe(struct usb_interface *intf,
- 
- 	carl9170_set_state(ar, CARL9170_STOPPED);
- 
--	return request_firmware_nowait(THIS_MODULE, 1, CARL9170FW_NAME,
-+	err = request_firmware_nowait(THIS_MODULE, 1, CARL9170FW_NAME,
- 		&ar->udev->dev, GFP_KERNEL, ar, carl9170_usb_firmware_step2);
-+	if (err) {
-+		usb_put_dev(udev);
-+		usb_put_dev(udev);
-+		carl9170_free(ar);
-+	}
-+	return err;
- }
- 
- static void carl9170_usb_disconnect(struct usb_interface *intf)
--- 
-1.8.1.2
+Pulled, thanks a lot John.
 
