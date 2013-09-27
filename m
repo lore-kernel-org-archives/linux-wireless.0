@@ -1,53 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:44638 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756017Ab3I2Tji (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Sep 2013 15:39:38 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH 3.12 1/2] mac80211: use sta_info_get_bss() for nl80211 tx and client probing
-Date: Sun, 29 Sep 2013 21:39:33 +0200
-Message-Id: <1380483574-88667-1-git-send-email-nbd@openwrt.org> (sfid-20130929_213947_125853_9088A103)
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:35727 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751031Ab3I0MaV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Sep 2013 08:30:21 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Bartosz Markowski <bartosz.markowski@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v3 00/13] ath10k: dual-firmware support (MAIN and 10.X)
+References: <1380210437-4391-1-git-send-email-bartosz.markowski@tieto.com>
+Date: Fri, 27 Sep 2013 15:30:11 +0300
+In-Reply-To: <1380210437-4391-1-git-send-email-bartosz.markowski@tieto.com>
+	(Bartosz Markowski's message of "Thu, 26 Sep 2013 17:47:04 +0200")
+Message-ID: <87had6la5o.fsf@kamboji.qca.qualcomm.com> (sfid-20130927_143024_975643_BBBFC690)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This allows calls for clients in AP_VLANs (e.g. for 4-addr) to succeed
+Bartosz Markowski <bartosz.markowski@tieto.com> writes:
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- net/mac80211/cfg.c | 2 +-
- net/mac80211/tx.c  | 3 ++-
- 2 files changed, 3 insertions(+), 2 deletions(-)
+> The major changes covered by this work:
+> * dynamic WMI structures
+> * WMI cmd/event definitions from 10.x FW track
+> * memory host chunks feature
+> * management frames path over WMI for 10.x
+> * WMI RX events handling for MAIN and 10.X split
+> * target config split (LARGE AP feature for 10.x)
+> * scan start sctructure split
+> * dynamic VDEV and PDEV parameters structures
+>
+> Changes in v2:
+> (review comments from Kalle and Michal):
+> * WMI cmd, pdev and vdev params names trimmed
+> * ath10k_wmi_cmd_init() exposed only
+> * few 'if' statements simplifications
+> * 10.x mgmt frames over WMI - 'BUG: scheduling while atomic' fixed
+>
+> Changes in v3:
+> * print cmd_id when warning about unsupported WMI command
+> * remove excessive empty line
+>
+> Bartosz Markowski (13):
+>   ath10k: introduce dynamic WMI structures
+>   ath10k: add wmi_10x_<cmd/event> definitions
+>   ath10k: warn if give WMI command is not supported
+>   ath10k: implement WMI events handling frame for both firmwares
+>   ath10k: split ath10k_wmi_service_ready_event_rx
+>   ath10k: drop the fw versioning sanity check
+>   ath10k: implement host memory chunks
+>   ath10k: bring back the WMI path for mgmt frames
+>   ath10k: split wmi_cmd_init path
+>   ath10k: add TARGET values for 10.x firmware
+>   ath10k: introduce dynamic vdev parameters
+>   ath10k: introduce dynamic pdev parameters
+>   ath10k: handle FW API differences for scan structures
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 2e7855a..629dee7 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3518,7 +3518,7 @@ static int ieee80211_probe_client(struct wiphy *wiphy, struct net_device *dev,
- 		return -EINVAL;
- 	}
- 	band = chanctx_conf->def.chan->band;
--	sta = sta_info_get(sdata, peer);
-+	sta = sta_info_get_bss(sdata, peer);
- 	if (sta) {
- 		qos = test_sta_flag(sta, WLAN_STA_WME);
- 	} else {
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 3456c04..70b5a05 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1120,7 +1120,8 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
- 		tx->sta = rcu_dereference(sdata->u.vlan.sta);
- 		if (!tx->sta && sdata->dev->ieee80211_ptr->use_4addr)
- 			return TX_DROP;
--	} else if (info->flags & IEEE80211_TX_CTL_INJECTED ||
-+	} else if (info->flags & (IEEE80211_TX_CTL_INJECTED |
-+				  IEEE80211_TX_INTFL_NL80211_FRAME_TX) ||
- 		   tx->sdata->control_port_protocol == tx->skb->protocol) {
- 		tx->sta = sta_info_get_bss(sdata, hdr->addr1);
- 	}
+Thanks, all 13 applied.
+
 -- 
-1.8.0.2
-
+Kalle Valo
