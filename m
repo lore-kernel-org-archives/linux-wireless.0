@@ -1,107 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:42868 "EHLO ebb05.tieto.com"
+Received: from ebb06.tieto.com ([131.207.168.38]:49051 "EHLO ebb06.tieto.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751989Ab3IJNuK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Sep 2013 09:50:10 -0400
+	id S1753427Ab3I0Oig (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Sep 2013 10:38:36 -0400
 From: Michal Kazior <michal.kazior@tieto.com>
 To: <ath10k@lists.infradead.org>
 CC: <linux-wireless@vger.kernel.org>,
 	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 1/7] ath10k: simplify HTC credits calculation
-Date: Tue, 10 Sep 2013 15:49:57 +0200
-Message-ID: <1378821003-22925-2-git-send-email-michal.kazior@tieto.com> (sfid-20130910_155033_241394_6144DA07)
-In-Reply-To: <1378821003-22925-1-git-send-email-michal.kazior@tieto.com>
-References: <1378821003-22925-1-git-send-email-michal.kazior@tieto.com>
+Subject: [PATCH 3/4] ath10k: remove ce_sendlist_send
+Date: Fri, 27 Sep 2013 16:38:25 +0200
+Message-ID: <1380292706-3609-4-git-send-email-michal.kazior@tieto.com> (sfid-20130927_163842_517206_9D509391)
+In-Reply-To: <1380292706-3609-1-git-send-email-michal.kazior@tieto.com>
+References: <1380292706-3609-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Credit calculation was overly complex
-unnecessarily. Now skb dequeing is more unified.
+It is completely pointless to keep this function
+around. It doesn't do anything different than
+ce_send except it introduces more overhead.
 
 Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/ath/ath10k/htc.c |   59 ++++++---------------------------
- 1 file changed, 11 insertions(+), 48 deletions(-)
+ drivers/net/wireless/ath/ath10k/ce.c  |   34 ---------------------------------
+ drivers/net/wireless/ath/ath10k/ce.h  |   15 ---------------
+ drivers/net/wireless/ath/ath10k/pci.c |    4 ++--
+ 3 files changed, 2 insertions(+), 51 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index 7d445d3..65c6e0c 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -167,49 +167,6 @@ err:
+diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
+index 834e29e..9e6daa9 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.c
++++ b/drivers/net/wireless/ath/ath10k/ce.c
+@@ -338,40 +338,6 @@ int ath10k_ce_send(struct ath10k_ce_pipe *ce_state,
  	return ret;
  }
  
--static struct sk_buff *ath10k_htc_get_skb_credit_based(struct ath10k_htc *htc,
--						       struct ath10k_htc_ep *ep,
--						       u8 *credits)
+-int ath10k_ce_sendlist_send(struct ath10k_ce_pipe *ce_state,
+-			    void *per_transfer_context,
+-			    unsigned int transfer_id,
+-			    u32 paddr, unsigned int nbytes,
+-			    u32 flags)
 -{
--	struct sk_buff *skb;
--	struct ath10k_skb_cb *skb_cb;
--	int credits_required;
--	int remainder;
--	unsigned int transfer_len;
+-	struct ath10k_ce_ring *src_ring = ce_state->src_ring;
+-	struct ath10k *ar = ce_state->ar;
+-	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+-	unsigned int nentries_mask = src_ring->nentries_mask;
+-	unsigned int sw_index;
+-	unsigned int write_index;
+-	int delta, ret = -ENOMEM;
 -
--	lockdep_assert_held(&htc->tx_lock);
+-	spin_lock_bh(&ar_pci->ce_lock);
 -
--	skb = __skb_dequeue(&ep->tx_queue);
--	if (!skb)
--		return NULL;
+-	sw_index = src_ring->sw_index;
+-	write_index = src_ring->write_index;
 -
--	skb_cb = ATH10K_SKB_CB(skb);
--	transfer_len = skb->len;
+-	delta = CE_RING_DELTA(nentries_mask, write_index, sw_index - 1);
 -
--	if (likely(transfer_len <= htc->target_credit_size)) {
--		credits_required = 1;
--	} else {
--		/* figure out how many credits this message requires */
--		credits_required = transfer_len / htc->target_credit_size;
--		remainder = transfer_len % htc->target_credit_size;
--
--		if (remainder)
--			credits_required++;
+-	if (delta >= 1) {
+-		ret = ath10k_ce_send_nolock(ce_state, per_transfer_context,
+-					    paddr, nbytes,
+-					    transfer_id, flags);
+-		if (ret)
+-			ath10k_warn("CE send failed: %d\n", ret);
 -	}
 -
--	ath10k_dbg(ATH10K_DBG_HTC, "Credits required %d got %d\n",
--		   credits_required, ep->tx_credits);
+-	spin_unlock_bh(&ar_pci->ce_lock);
 -
--	if (ep->tx_credits < credits_required) {
--		__skb_queue_head(&ep->tx_queue, skb);
--		return NULL;
--	}
--
--	ep->tx_credits -= credits_required;
--	*credits = credits_required;
--	return skb;
+-	return ret;
 -}
 -
- static void ath10k_htc_send_work(struct work_struct *work)
- {
- 	struct ath10k_htc_ep *ep = container_of(work,
-@@ -224,11 +181,17 @@ static void ath10k_htc_send_work(struct work_struct *work)
- 			ath10k_htc_send_complete_check(ep, 0);
+ int ath10k_ce_recv_buf_enqueue(struct ath10k_ce_pipe *ce_state,
+ 			       void *per_recv_context,
+ 			       u32 buffer)
+diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
+index aec8028..949b174 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.h
++++ b/drivers/net/wireless/ath/ath10k/ce.h
+@@ -156,21 +156,6 @@ void ath10k_ce_send_cb_register(struct ath10k_ce_pipe *ce_state,
+ 				void (*send_cb)(struct ath10k_ce_pipe *),
+ 				int disable_interrupts);
  
- 		spin_lock_bh(&htc->tx_lock);
--		if (ep->tx_credit_flow_enabled)
--			skb = ath10k_htc_get_skb_credit_based(htc, ep,
--							      &credits);
--		else
--			skb = __skb_dequeue(&ep->tx_queue);
-+		skb = __skb_dequeue(&ep->tx_queue);
-+
-+		if (ep->tx_credit_flow_enabled) {
-+			/* integer division w/ round-up */
-+			credits = (skb->len + htc->target_credit_size - 1) /
-+				  htc->target_credit_size;
-+			if (ep->tx_credits < credits) {
-+				__skb_queue_head(&ep->tx_queue, skb);
-+				skb = NULL;
-+			}
-+		}
- 		spin_unlock_bh(&htc->tx_lock);
+-/*
+- * Queue a "sendlist" of buffers to be sent using gather to a single
+- * anonymous destination buffer
+- *   ce         - which copy engine to use
+- *   sendlist        - list of simple buffers to send using gather
+- *   transfer_id     - arbitrary ID; reflected to destination
+- * Returns 0 on success; otherwise an error status.
+- *
+- * Implemenation note: Pushes multiple buffers with Gather to Source ring.
+- */
+-int ath10k_ce_sendlist_send(struct ath10k_ce_pipe *ce_state,
+-			    void *per_transfer_context,
+-			    unsigned int transfer_id,
+-			    u32 paddr, unsigned int nbytes,
+-			    u32 flags);
  
- 		if (!skb)
+ /*==================Recv=======================*/
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index dff23d9..4f6a978 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -730,8 +730,8 @@ static int ath10k_pci_hif_send_head(struct ath10k *ar, u8 pipe_id,
+ 	pipe_info->num_sends_allowed--;
+ 	spin_unlock_bh(&pipe_info->pipe_lock);
+ 
+-	ret = ath10k_ce_sendlist_send(ce_hdl, nbuf, transfer_id,
+-				      skb_cb->paddr, len, flags);
++	ret = ath10k_ce_send(ce_hdl, nbuf, skb_cb->paddr, len, transfer_id,
++			     flags);
+ 	if (ret)
+ 		ath10k_warn("CE send failed: %p\n", nbuf);
+ 
 -- 
 1.7.9.5
 
