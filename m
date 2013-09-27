@@ -1,82 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2950 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753792Ab3IKWlo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Sep 2013 18:41:44 -0400
-Message-ID: <5230F19F.2070701@broadcom.com> (sfid-20130912_004147_691039_C5992A0A)
-Date: Wed, 11 Sep 2013 15:41:35 -0700
-From: "Franky Lin" <frankyl@broadcom.com>
+Received: from perceval.ideasonboard.com ([95.142.166.194]:56115 "EHLO
+	perceval.ideasonboard.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751077Ab3I0B4I (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Sep 2013 21:56:08 -0400
+From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+To: Russell King <rmk+kernel@arm.linux.org.uk>
+Cc: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
+	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
+	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
+	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	uclinux-dist-devel@blackfin.uclinux.org,
+	Mauro Carvalho Chehab <m.chehab@samsung.com>
+Subject: Re: [PATCH 31/51] DMA-API: media: omap3isp: use dma_coerce_mask_and_coherent()
+Date: Fri, 27 Sep 2013 03:56:13 +0200
+Message-ID: <4110555.qb0XUyFHNE@avalon> (sfid-20130927_035632_432600_A418D240)
+In-Reply-To: <E1VMmCg-0007j1-Pi@rmk-PC.arm.linux.org.uk>
+References: <20130919212235.GD12758@n2100.arm.linux.org.uk> <E1VMmCg-0007j1-Pi@rmk-PC.arm.linux.org.uk>
 MIME-Version: 1.0
-To: mail@janno-kaiser.de
-cc: linux-wireless@vger.kernel.org
-Subject: Re: brcmfmac, BCM43241
-References: <5230D40B.20704@janno-kaiser.de>
-In-Reply-To: <5230D40B.20704@janno-kaiser.de>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Jan-Oliver,
+Hi Russell,
 
-Could you please send us the full log? Also please share more details 
-about the hardware platform you are using. We need to figure out how to 
-get the nvram file.
+Thank you for the patch.
 
+On Thursday 19 September 2013 22:56:02 Russell King wrote:
+> The code sequence:
+> 	isp->raw_dmamask = DMA_BIT_MASK(32);
+> 	isp->dev->dma_mask = &isp->raw_dmamask;
+> 	isp->dev->coherent_dma_mask = DMA_BIT_MASK(32);
+> bypasses the architectures check on the DMA mask.  It can be replaced
+> with dma_coerce_mask_and_coherent(), avoiding the direct initialization
+> of this mask.
+> 
+> Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+
+Acked-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+
+> ---
+>  drivers/media/platform/omap3isp/isp.c |    6 +++---
+>  drivers/media/platform/omap3isp/isp.h |    3 ---
+>  2 files changed, 3 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/media/platform/omap3isp/isp.c
+> b/drivers/media/platform/omap3isp/isp.c index df3a0ec..1c36080 100644
+> --- a/drivers/media/platform/omap3isp/isp.c
+> +++ b/drivers/media/platform/omap3isp/isp.c
+> @@ -2182,9 +2182,9 @@ static int isp_probe(struct platform_device *pdev)
+>  	isp->pdata = pdata;
+>  	isp->ref_count = 0;
+> 
+> -	isp->raw_dmamask = DMA_BIT_MASK(32);
+> -	isp->dev->dma_mask = &isp->raw_dmamask;
+> -	isp->dev->coherent_dma_mask = DMA_BIT_MASK(32);
+> +	ret = dma_coerce_mask_and_coherent(isp->dev, DMA_BIT_MASK(32));
+> +	if (ret)
+> +		return ret;
+> 
+>  	platform_set_drvdata(pdev, isp);
+> 
+> diff --git a/drivers/media/platform/omap3isp/isp.h
+> b/drivers/media/platform/omap3isp/isp.h index cd3eff4..ce65d3a 100644
+> --- a/drivers/media/platform/omap3isp/isp.h
+> +++ b/drivers/media/platform/omap3isp/isp.h
+> @@ -152,7 +152,6 @@ struct isp_xclk {
+>   * @mmio_base_phys: Array with physical L4 bus addresses for ISP register
+>   *                  regions.
+>   * @mmio_size: Array with ISP register regions size in bytes.
+> - * @raw_dmamask: Raw DMA mask
+>   * @stat_lock: Spinlock for handling statistics
+>   * @isp_mutex: Mutex for serializing requests to ISP.
+>   * @crashed: Bitmask of crashed entities (indexed by entity ID)
+> @@ -190,8 +189,6 @@ struct isp_device {
+>  	unsigned long mmio_base_phys[OMAP3_ISP_IOMEM_LAST];
+>  	resource_size_t mmio_size[OMAP3_ISP_IOMEM_LAST];
+> 
+> -	u64 raw_dmamask;
+> -
+>  	/* ISP Obj */
+>  	spinlock_t stat_lock;	/* common lock for statistic drivers */
+>  	struct mutex isp_mutex;	/* For handling ref_count field */
+-- 
 Regards,
-Franky
 
-On 09/11/2013 01:35 PM, Jan-Oliver Kaiser wrote:
-> Hi,
->
-> I am trying to get a BCM43241 card running on a 3.11-amd64 kernel.
-> [1] lists the device as supported but gives no instructions on how to
-> install it. I managed to extract the firmware from the git binary patch
-> contained in [2].
->
-> I copied the firmware to /lib/firmware/brcm/brcmfmac-sdio.bin and copied
-> the content of /dev/nvram to /lib/firmware/brcm/brcmfmac-sdio.txt.
->
-> Previously, `dmesg` would list error that indicated missing files.
-> Currently, the output is as follows:
->
-> [12865.299503] brcmfmac: brcmf_sdio_chip_drivestrengthinit: No SDIO
-> Drive strength init done for chip 4324 rev 5 pmurev 17
-> [12866.393551] brcmfmac: brcmf_sdbrcm_htclk: HT Avail timeout (1000000):
-> clkctl 0x50
-> [12867.402386] brcmfmac: brcmf_sdbrcm_htclk: HT Avail timeout (1000000):
-> clkctl 0x50
-> [12867.409143] brcmfmac: brcmf_proto_cdc_query_dcmd: brcmf_proto_cdc_msg
-> failed w/status -5
-> [12867.409149] brcmfmac: brcmf_fil_cmd_data: Failed err=-5
-> [12867.409153] brcmfmac: brcmf_c_preinit_dcmds: Retreiving cur_etheraddr
-> failed, -5
-> [12867.409157] brcmfmac: brcmf_bus_start: failed: -5
-> [12867.409167] brcmfmac: brcmf_sdbrcm_probe: dongle is not responding
-> [12868.416890] brcmfmac: brcmf_sdbrcm_htclk: HT Avail timeout (1000000):
-> clkctl 0x50
-> [12869.426308] brcmfmac: brcmf_sdbrcm_htclk: HT Avail timeout (1000000):
-> clkctl 0x50
->
-> I have not been able to find anything to help with debugging this.
->
-> There was some discussion in response to [2] that I don't understand. Is
-> there something wrong with the firmware itself?
->
-> I would be very grateful for any help. I can provide all additional
-> information if something is missing from this report. (I can also be
-> reached via IRC, 'Eruquen' on freenode)
->
-> Thanks in advance,
-> Jan-Oliver
->
-> [1] http://wireless.kernel.org/en/users/Drivers/brcm80211
-> [2] http://www.spinics.net/lists/linux-wireless/msg107754.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
+Laurent Pinchart
 
