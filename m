@@ -1,98 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out05.msg.oleane.net ([62.161.7.3]:37457 "EHLO
-	smtp-out05.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750966Ab3I0KaM convert rfc822-to-8bit (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:48814 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752950Ab3I0Qy5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Sep 2013 06:30:12 -0400
-Received: from smtp03.msg.oleane.net (smtp03.mail.priv [172.17.20.112])
-	by smtp-out05.msg.oleane.net with ESMTP id r8RAUApu003469
-	for <linux-wireless@vger.kernel.org>; Fri, 27 Sep 2013 12:30:10 +0200
-Subject: [PATCH V4] cfg80211: vlan priority handling in WMM
-Date: Fri, 27 Sep 2013 12:09:26 +0200
-Message-ID: <773DB8A82AB6A046AE0195C68612A3190164B0BF@sbs2003.acksys.local> (sfid-20130927_123017_024655_E4B13B17)
+	Fri, 27 Sep 2013 12:54:57 -0400
+Subject: [PATCH v3 1/3] ath10k: rename board_data in struct ath10k
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 27 Sep 2013 19:54:55 +0300
+Message-ID: <20130927165455.2570.86725.stgit@localhost6.localdomain6> (sfid-20130927_185500_346041_0389AB84)
+In-Reply-To: <20130927164636.2570.24076.stgit@localhost6.localdomain6>
+References: <20130927164636.2570.24076.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-From: "Cedric VONCKEN" <cedric.voncken@acksys.fr>
-To: <linux-wireless@vger.kernel.org>
-Cc: <johannes@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the VLAN tci is set in skb->vlan_tci use the priority field to 
- determine the WMM priority.
+I will use board_data for something else in the following patch
+so I need to rename it.
+
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c |   18 +++++++++---------
+ drivers/net/wireless/ath/ath10k/core.h |    2 +-
+ 2 files changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 76906d5..e07c487 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -236,7 +236,7 @@ static int ath10k_push_board_ext_data(struct ath10k *ar,
  
- Signed-off-by: cedric Voncken <cedric.voncken@acksys.fr>
- ---
-  net/wireless/util.c |    8 +++++++
- 1 files changed, 8 insertions(+), 0 deletions(-)
-
-V2 modifications:
-	Fix indentation
-	Use symbolic constant
-	include the header linux/if_vlan.h
-
-V3 modifications:
-	Check the vlan_tci validity with macro vlan_tx_tag_present
-	Get the vlan_tci field value with macro vlan_tx_tag_get
-	Request to netdev mailling list to know if the VLAN priority
-value 0 must be treated as no priority request. I add the Ben Hutchings
-reply below:
-	IEEE 802.1q refers to the definition in 802.1d:
-
-	> The user_priority parameter is the priority requested by the
-	> originating service user. The value of this parameter is in
-the range
-	> 0 through 7.
-	>
-	> NOTE -- The default user_priority value is 0. Values 1 through
-7 form an
-	> ordered sequence of user_priorities, with 1 being the lowest
-value and
-	> 7 the highest. See 7.7.3 and Annex G (informative) for further
-	> explanation of the use of user_priority values.
-
-	So a value of 0 should be treated as no priority request, same
-as for an untagged frame.
-
-V4 modifications:
-	Fix patch format
-
-diff --git a/net/wireless/util.c b/net/wireless/util.c index
-ce090c1..9e4cac2 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -10,6 +10,7 @@
- #include <net/cfg80211.h>
- #include <net/ip.h>
- #include <net/dsfield.h>
-+#include <linux/if_vlan.h>
- #include "core.h"
- #include "rdev-ops.h"
+ static int ath10k_download_board_data(struct ath10k *ar)
+ {
+-	const struct firmware *fw = ar->board_data;
++	const struct firmware *fw = ar->board;
+ 	u32 board_data_size = QCA988X_BOARD_DATA_SZ;
+ 	u32 address;
+ 	int ret;
+@@ -319,8 +319,8 @@ exit:
  
-@@ -691,5 +692,6 @@ EXPORT_SYMBOL(ieee80211_amsdu_to_8023s);
- unsigned int cfg80211_classify8021d(struct sk_buff *skb)  {
- 	unsigned int dscp;
-+	unsigned char vlan_priority;
+ static void ath10k_core_free_firmware_files(struct ath10k *ar)
+ {
+-	if (ar->board_data && !IS_ERR(ar->board_data))
+-		release_firmware(ar->board_data);
++	if (ar->board && !IS_ERR(ar->board))
++		release_firmware(ar->board);
  
- 	/* skb->priority values from 256->263 are magic values to
- 	 * directly indicate a specific 802.1d priority.  This is used 
-
-@@ -700,6 +702,13 @@ unsigned int cfg80211_classify8021d(struct sk_buff
-*skb)
- 	if (skb->priority >= 256 && skb->priority <= 263)
- 		return skb->priority - 256;
+ 	if (ar->otp && !IS_ERR(ar->otp))
+ 		release_firmware(ar->otp);
+@@ -328,7 +328,7 @@ static void ath10k_core_free_firmware_files(struct ath10k *ar)
+ 	if (ar->firmware && !IS_ERR(ar->firmware))
+ 		release_firmware(ar->firmware);
  
-+	if (vlan_tx_tag_present(skb)) {
-+		vlan_priority = (vlan_tx_tag_get(skb) & VLAN_PRIO_MASK)
-+			>> VLAN_PRIO_SHIFT;
-+		if (vlan_priority > 0)
-+			return vlan_priority;
-+	}
-+
- 	switch (skb->protocol) {
- 	case htons(ETH_P_IP):
- 		dscp = ipv4_get_dsfield(ip_hdr(skb)) & 0xfc;
-
-
+-	ar->board_data = NULL;
++	ar->board = NULL;
+ 	ar->otp = NULL;
+ 	ar->firmware = NULL;
+ }
+@@ -347,11 +347,11 @@ static int ath10k_core_fetch_firmware_files(struct ath10k *ar)
+ 		return -EINVAL;
+ 	}
+ 
+-	ar->board_data = ath10k_fetch_fw_file(ar,
+-					      ar->hw_params.fw.dir,
+-					      ar->hw_params.fw.board);
+-	if (IS_ERR(ar->board_data)) {
+-		ret = PTR_ERR(ar->board_data);
++	ar->board = ath10k_fetch_fw_file(ar,
++					 ar->hw_params.fw.dir,
++					 ar->hw_params.fw.board);
++	if (IS_ERR(ar->board)) {
++		ret = PTR_ERR(ar->board);
+ 		ath10k_err("could not fetch board data (%d)\n", ret);
+ 		goto err;
+ 	}
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 292ad45..12b03b6 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -324,7 +324,7 @@ struct ath10k {
+ 		} fw;
+ 	} hw_params;
+ 
+-	const struct firmware *board_data;
++	const struct firmware *board;
+ 	const struct firmware *otp;
+ 	const struct firmware *firmware;
+ 
 
