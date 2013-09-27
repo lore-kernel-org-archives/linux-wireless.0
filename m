@@ -1,91 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:53239 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753441Ab3IWNfQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Sep 2013 09:35:16 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] mac80211: support reporting A-MSDU subframes individually
-Date: Mon, 23 Sep 2013 15:34:38 +0200
-Message-ID: <1379943278-1014-1-git-send-email-michal.kazior@tieto.com> (sfid-20130923_153521_856593_749A370A)
+Received: from 174-143-244-95.static.cloud-ips.com ([174.143.244.95]:58577
+	"EHLO mail.catnarok.net" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1751457Ab3I0IZg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Sep 2013 04:25:36 -0400
+Date: Fri, 27 Sep 2013 08:02:39 +0000
+From: Michael Stolovitzsky <emestee@catnarok.net>
+To: linux-wireless@vger.kernel.org
+Subject: Re: bcma 3.12-rc1 scheduling while atomic
+Message-ID: <20130927080239.GA2492@mail.catnarok.net> (sfid-20130927_102539_847850_F42235BD)
+References: <1380142945.23272.42.camel@dcbw.foobar.com>
+ <5243E72A.4040108@broadcom.com>
+ <5243ED7C.7070203@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5243ED7C.7070203@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some devices may not be able to report A-MSDUs in
-single buffers. Drivers for such devices were
-forced to re-assemble A-MSDUs which would then
-be eventually disassembled by mac80211. This could
-lead to CPU cache thrashing and poor performance.
+On 13-09-26, Daniel Borkmann wrote:
+> On 09/26/2013 09:50 AM, Arend van Spriel wrote:
+> >On 09/25/2013 11:02 PM, Dan Williams wrote:
+> >>static int brcms_ops_start(struct ieee80211_hw *hw)
+> >>{
+> >>    ...
+> >>         spin_lock_bh(&wl->lock);
+> >>    ...
+> >>                         err = brcms_up(wl);
+> >>                         <eventually calls usleep() from bcma_pcie_mdio_set_phy()>
+> >>    ...
+> >>         spin_unlock_bh(&wl->lock);
+> >>    ...
+> >>}
+> >
+> >Hi Dan,
+> >
+> >I submitted two patches to John yesterday to address this.
+> >
+> >http://mid.gmane.org/1380103864-10447-3-git-send-email-arend@broadcom.com
+> >http://mid.gmane.org/1380103864-10447-4-git-send-email-arend@broadcom.com
+> 
+> >>[    7.607842] BUG: scheduling while atomic: NetworkManager/523/0x00000200
 
-Since A-MSDU has a single sequence number all
-subframes share it. This was in conflict with
-retransmission/duplication recovery
-(IEEE802.11-2012: 9.3.2.10).
+Hi,
 
-Patch introduces a new flag that is meant to be
-set for all individually reported A-MSDU subframes
-except the last one. This ensures the
-last_seq_ctrl is updated after the last subframe
-is processed. If an A-MSDU is actually a duplicate
-transmission all reported subframes will be
-properly discarded.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
-There were no comments on the RFC so far so I'm
-posting this as a patch.
-
-The first driver that will use this is ath10k. 
-
- include/net/mac80211.h |   10 ++++++++++
- net/mac80211/rx.c      |    2 +-
- 2 files changed, 11 insertions(+), 1 deletion(-)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 06ffae8..f8f049d 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -829,6 +829,15 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
-  * @RX_FLAG_STBC_MASK: STBC 2 bit bitmask. 1 - Nss=1, 2 - Nss=2, 3 - Nss=3
-  * @RX_FLAG_10MHZ: 10 MHz (half channel) was used
-  * @RX_FLAG_5MHZ: 5 MHz (quarter channel) was used
-+ * @RX_FLAG_AMSDU_MORE: Some drivers may prefer to report separate A-MSDU
-+ *	subframes instead of a one huge frame for performance reasons.
-+ *	All, but the last MSDU from an A-MSDU should have this flag set. E.g.
-+ *	if an A-MSDU has 3 frames, the first 2 must have the flag set, while
-+ *	the 3rd (last) one must not have this flag set. The flag is used to
-+ *	deal with retransmission/duplication recovery properly since A-MSDU
-+ *	subframes share the same sequence number. Reported subframes can be
-+ *	either regular MSDU or singly A-MSDUs. Subframes must not be
-+ *	interleaved with other frames.
-  */
- enum mac80211_rx_flags {
- 	RX_FLAG_MMIC_ERROR		= BIT(0),
-@@ -859,6 +868,7 @@ enum mac80211_rx_flags {
- 	RX_FLAG_STBC_MASK		= BIT(26) | BIT(27),
- 	RX_FLAG_10MHZ			= BIT(28),
- 	RX_FLAG_5MHZ			= BIT(29),
-+	RX_FLAG_AMSDU_MORE		= BIT(30),
- };
- 
- #define RX_FLAG_STBC_SHIFT		26
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 8e908e1..43bee02 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -995,7 +995,7 @@ ieee80211_rx_h_check(struct ieee80211_rx_data *rx)
- 				rx->sta->num_duplicates++;
- 			}
- 			return RX_DROP_UNUSABLE;
--		} else
-+		} else if (!(status->flag & RX_FLAG_AMSDU_MORE))
- 			rx->sta->last_seq_ctrl[rx->seqno_idx] = hdr->seq_ctrl;
- 	}
- 
--- 
-1.7.9.5
-
+Just wanted to confirm that this removed the problem for me in 3.12.0-rc2. 
+Thanks again!.
