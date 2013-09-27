@@ -1,61 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f52.google.com ([209.85.215.52]:45059 "EHLO
-	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750786Ab3IPTFl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Sep 2013 15:05:41 -0400
-Received: by mail-la0-f52.google.com with SMTP id ev20so3396248lab.25
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Sep 2013 12:05:40 -0700 (PDT)
-Message-ID: <52375683.8060103@cogentembedded.com> (sfid-20130916_210545_092893_73DAE978)
-Date: Mon, 16 Sep 2013 23:05:39 +0400
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Received: from ebb05.tieto.com ([131.207.168.36]:44718 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753734Ab3I0Oic (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Sep 2013 10:38:32 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 0/4] ath10k: clean ups
+Date: Fri, 27 Sep 2013 16:38:22 +0200
+Message-ID: <1380292706-3609-1-git-send-email-michal.kazior@tieto.com> (sfid-20130927_163835_740528_49AF62A7)
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH 3/8 V2] rtlwifi: rtl8192cu: Fix smatch warning in rtl8192cu/trx.c
-References: <1379357722-17687-1-git-send-email-Larry.Finger@lwfinger.net> <1379357722-17687-4-git-send-email-Larry.Finger@lwfinger.net>
-In-Reply-To: <1379357722-17687-4-git-send-email-Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/16/2013 10:55 PM, Larry Finger wrote:
+Hi,
 
-> Smatch lists the following:
->    CHECK   drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
-> drivers/net/wireless/rtlwifi/rtl8192cu/trx.c:367 _rtl_rx_process() warn: assigning (-98) to unsigned variable 'stats.noise'
+First two patches are non-functional changes.
 
-> This variable is unused, thus it is removed.
+The latter two should remove some overhead from TX
+path and CE processing. Nothing extraordinary.
 
-    It's a structure field initializer you're removing, not a variable. And 
-also a comment.
 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
->   drivers/net/wireless/rtlwifi/rtl8192cu/trx.c | 2 --
->   1 file changed, 2 deletions(-)
+Michal Kazior (4):
+  ath10k: split tid calculation from tx function
+  ath10k: split vdev_id calculation from tx function
+  ath10k: remove ce_sendlist_send
+  ath10k: remove num_sends_allowed
 
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
-> index 763cf1d..04c7e57 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
-> @@ -349,7 +349,6 @@ bool rtl92cu_rx_query_desc(struct ieee80211_hw *hw,
->   	}
->   	/*rx_status->qual = stats->signal; */
->   	rx_status->signal = stats->rssi + 10;
-> -	/*rx_status->noise = -stats->noise; */
->   	return true;
->   }
->
-> @@ -364,7 +363,6 @@ static void _rtl_rx_process(struct ieee80211_hw *hw, struct sk_buff *skb)
->   	u8 *rxdesc;
->   	struct rtl_stats stats = {
->   		.signal = 0,
-> -		.noise = -98,
->   		.rate = 0,
->   	};
+ drivers/net/wireless/ath/ath10k/ce.c  |   35 ++++++------------------
+ drivers/net/wireless/ath/ath10k/ce.h  |   16 +----------
+ drivers/net/wireless/ath/ath10k/mac.c |   48 ++++++++++++++++++++-------------
+ drivers/net/wireless/ath/ath10k/pci.c |   25 +++--------------
+ drivers/net/wireless/ath/ath10k/pci.h |    3 ---
+ 5 files changed, 42 insertions(+), 85 deletions(-)
 
-WBR, Sergei
-
+-- 
+1.7.9.5
 
