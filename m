@@ -1,58 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f52.google.com ([209.85.219.52]:35210 "EHLO
-	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755272Ab3IKQeF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Sep 2013 12:34:05 -0400
-Received: by mail-oa0-f52.google.com with SMTP id f4so9441136oah.25
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Sep 2013 09:34:04 -0700 (PDT)
-Message-ID: <52309B75.3010408@lwfinger.net> (sfid-20130911_183409_832175_E46A19D3)
-Date: Wed, 11 Sep 2013 11:33:57 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from ebb06.tieto.com ([131.207.168.38]:49051 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753849Ab3I0Oie (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Sep 2013 10:38:34 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 1/4] ath10k: split tid calculation from tx function
+Date: Fri, 27 Sep 2013 16:38:23 +0200
+Message-ID: <1380292706-3609-2-git-send-email-michal.kazior@tieto.com> (sfid-20130927_163838_149120_6C060E9D)
+In-Reply-To: <1380292706-3609-1-git-send-email-michal.kazior@tieto.com>
+References: <1380292706-3609-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
-To: Dan Williams <dcbw@redhat.com>
-CC: Vincent Thiele <vincentthiele@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: No connection with TP-Link TL-WN823N (rtl8192cu)
-References: <CAEZsi7Hde5NyTRgm7Lf_4LvHMAEJouzaqMNUwxr-iSipuEcsyQ@mail.gmail.com>  <522E4315.4040806@lwfinger.net> <1378764913.31180.9.camel@dcbw.foobar.com>  <CAEZsi7FY8HdBcb0p1svijAdFjB0MbrYv_Zft0B_+RQTpGWCnhQ@mail.gmail.com> <1378916091.1693.21.camel@dcbw.foobar.com>
-In-Reply-To: <1378916091.1693.21.camel@dcbw.foobar.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/11/2013 11:14 AM, Dan Williams wrote:
-> Some relevant bits:
->
-> Sep 11 16:49:38 Arbeits-PC NetworkManager[1104]: <info> (wlan0): supplicant interface state: 4-way handshake -> completed
-> Sep 11 16:49:44 Arbeits-PC kernel: [ 1749.454788] wlan0: Connection to AP a0:f3:c1:05:80:ec lost
-> Sep 11 16:49:45 Arbeits-PC wpa_supplicant[1205]: wlan0: CTRL-EVENT-DISCONNECTED bssid=a0:f3:c1:05:80:ec reason=4
-> Sep 11 16:49:45 Arbeits-PC NetworkManager[1104]: <info> (wlan0): supplicant interface state: completed -> disconnected
-> Sep 11 16:49:45 Arbeits-PC NetworkManager[1104]: <info> (wlan0): supplicant interface state: disconnected -> scanning
-> Sep 11 16:49:45 Arbeits-PC wpa_supplicant[1205]: wlan0: SME: Trying to authenticate with a0:f3:c1:05:80:ec (SSID='WG-WLAN' freq=2427 MHz)
-> Sep 11 16:49:45 Arbeits-PC kernel: [ 1750.282343] wlan0: authenticate with a0:f3:c1:05:80:ec
-> Sep 11 16:49:45 Arbeits-PC NetworkManager[1104]: <info> (wlan0): supplicant interface state: scanning -> authenticating
-> Sep 11 16:49:45 Arbeits-PC kernel: [ 1750.306287] wlan0: send auth to a0:f3:c1:05:80:ec (try 1/3)
-> Sep 11 16:49:45 Arbeits-PC kernel: [ 1750.410098] wlan0: send auth to a0:f3:c1:05:80:ec (try 2/3)
-> Sep 11 16:49:46 Arbeits-PC kernel: [ 1750.514232] wlan0: send auth to a0:f3:c1:05:80:ec (try 3/3)
-> Sep 11 16:49:46 Arbeits-PC kernel: [ 1750.618374] wlan0: authentication with a0:f3:c1:05:80:ec timed out
->
-> So the AP is disconnecting the device a couple seconds with reason 4,
-> which is "Disassociated due to inactivity".  My thought is that this
-> points to a driver bug (Larry?).
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c |   23 +++++++++++++++--------
+ 1 file changed, 15 insertions(+), 8 deletions(-)
 
-Possibly, but for reference, my Edimax EW-7811Un has been running for 37 hours. 
-During that time, I have had no deauthentications and only 2 instances of the 
-"AP lost" reconnections. The latter is what I am currently trying to fix, but at 
-that error rate, it is difficult. I am running the latest 3.11 kernel from 
-wireless testing.
-
-The only thing I am doing that is unusual is that I am pinging my router at a 5 
-second interval using the command
-
-ping -i5 192.168.1.1
-
-It is possible that I am preventing a power save operation, which is making a 
-difference.
-
-Larry
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 8684e03..7415a60 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1407,6 +1407,20 @@ static void ath10k_reg_notifier(struct wiphy *wiphy,
+ /* TX handlers */
+ /***************/
+ 
++static u8 ath10k_tx_h_get_tid(struct ieee80211_hdr *hdr)
++{
++	if (ieee80211_is_mgmt(hdr->frame_control))
++		return HTT_DATA_TX_EXT_TID_MGMT;
++
++	if (!ieee80211_is_data_qos(hdr->frame_control))
++		return HTT_DATA_TX_EXT_TID_NON_QOS_MCAST_BCAST;
++
++	if (!is_unicast_ether_addr(ieee80211_get_DA(hdr)))
++		return HTT_DATA_TX_EXT_TID_NON_QOS_MCAST_BCAST;
++
++	return ieee80211_get_qos_ctl(hdr)[0] & IEEE80211_QOS_CTL_TID_MASK;
++}
++
+ /*
+  * Frames sent to the FW have to be in "Native Wifi" format.
+  * Strip the QoS field from the 802.11 header.
+@@ -1788,14 +1802,7 @@ static void ath10k_tx(struct ieee80211_hw *hw,
+ 
+ 	/* we must calculate tid before we apply qos workaround
+ 	 * as we'd lose the qos control field */
+-	tid = HTT_DATA_TX_EXT_TID_NON_QOS_MCAST_BCAST;
+-	if (ieee80211_is_mgmt(hdr->frame_control)) {
+-		tid = HTT_DATA_TX_EXT_TID_MGMT;
+-	} else if (ieee80211_is_data_qos(hdr->frame_control) &&
+-		   is_unicast_ether_addr(ieee80211_get_DA(hdr))) {
+-		u8 *qc = ieee80211_get_qos_ctl(hdr);
+-		tid = qc[0] & IEEE80211_QOS_CTL_TID_MASK;
+-	}
++	tid = ath10k_tx_h_get_tid(hdr);
+ 
+ 	/* it makes no sense to process injected frames like that */
+ 	if (info->control.vif &&
+-- 
+1.7.9.5
 
