@@ -1,137 +1,190 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f171.google.com ([74.125.82.171]:59130 "EHLO
-	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751707Ab3IIJY5 (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:48821 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753328Ab3I0QzE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Sep 2013 05:24:57 -0400
-Received: by mail-we0-f171.google.com with SMTP id t61so3945567wes.16
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Sep 2013 02:24:56 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <luca@coelho.fi>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 04/13] wlcore: fix interrogate command length
-Date: Mon,  9 Sep 2013 12:24:35 +0300
-Message-Id: <1378718684-14430-4-git-send-email-eliad@wizery.com> (sfid-20130909_112501_368142_1DBB42B2)
-In-Reply-To: <1378718684-14430-1-git-send-email-eliad@wizery.com>
-References: <1378718684-14430-1-git-send-email-eliad@wizery.com>
+	Fri, 27 Sep 2013 12:55:04 -0400
+Subject: [PATCH v3 2/3] ath10k: store separate pointers for firmware data
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 27 Sep 2013 19:55:01 +0300
+Message-ID: <20130927165501.2570.1569.stgit@localhost6.localdomain6> (sfid-20130927_185507_370756_C2C88403)
+In-Reply-To: <20130927164636.2570.24076.stgit@localhost6.localdomain6>
+References: <20130927164636.2570.24076.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Igal Chernobelsky <igalc@ti.com>
+Needed for firmware IE formatted images.
 
-Change interrogate command prototype to have command size
-and returned buffer length.
-This fixes the issue when command parameters are needed to
-be passed to FW in addition to acx header as in the case with
-get RSSI command, where role_id has to be passed.
-
-Signed-off-by: Igal Chernobelsky <igalc@ti.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/ti/wlcore/acx.c      | 10 ++++++----
- drivers/net/wireless/ti/wlcore/cmd.c      |  9 +++++----
- drivers/net/wireless/ti/wlcore/cmd.h      |  3 ++-
- drivers/net/wireless/ti/wlcore/testmode.c |  3 ++-
- 4 files changed, 15 insertions(+), 10 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.c |   43 ++++++++++++++++++++++----------
+ drivers/net/wireless/ath/ath10k/core.h |    8 ++++++
+ 2 files changed, 37 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/acx.c b/drivers/net/wireless/ti/wlcore/acx.c
-index 7a970cd..ec83675 100644
---- a/drivers/net/wireless/ti/wlcore/acx.c
-+++ b/drivers/net/wireless/ti/wlcore/acx.c
-@@ -162,7 +162,8 @@ int wl1271_acx_mem_map(struct wl1271 *wl, struct acx_header *mem_map,
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index e07c487..6a354f7 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -189,8 +189,7 @@ static const struct firmware *ath10k_fetch_fw_file(struct ath10k *ar,
+ 	return fw;
+ }
  
- 	wl1271_debug(DEBUG_ACX, "acx mem map");
- 
--	ret = wl1271_cmd_interrogate(wl, ACX_MEM_MAP, mem_map, len);
-+	ret = wl1271_cmd_interrogate(wl, ACX_MEM_MAP, mem_map,
-+				     sizeof(struct acx_header), len);
- 	if (ret < 0)
- 		return ret;
- 
-@@ -722,6 +723,7 @@ int wl1271_acx_statistics(struct wl1271 *wl, void *stats)
- 	wl1271_debug(DEBUG_ACX, "acx statistics");
- 
- 	ret = wl1271_cmd_interrogate(wl, ACX_STATISTICS, stats,
-+				     sizeof(struct acx_header),
- 				     wl->stats.fw_stats_len);
- 	if (ret < 0) {
- 		wl1271_warning("acx statistics failed: %d", ret);
-@@ -1470,8 +1472,8 @@ int wl12xx_acx_tsf_info(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 
- 	tsf_info->role_id = wlvif->role_id;
- 
--	ret = wl1271_cmd_interrogate(wl, ACX_TSF_INFO,
--				     tsf_info, sizeof(*tsf_info));
-+	ret = wl1271_cmd_interrogate(wl, ACX_TSF_INFO, tsf_info,
-+				sizeof(struct acx_header), sizeof(*tsf_info));
- 	if (ret < 0) {
- 		wl1271_warning("acx tsf info interrogate failed");
- 		goto out;
-@@ -1752,7 +1754,7 @@ int wlcore_acx_average_rssi(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 
- 	acx->role_id = wlvif->role_id;
- 	ret = wl1271_cmd_interrogate(wl, ACX_ROAMING_STATISTICS_TBL,
--				     acx, sizeof(*acx));
-+				     acx, sizeof(*acx), sizeof(*acx));
- 	if (ret	< 0) {
- 		wl1271_warning("acx roaming statistics failed: %d", ret);
- 		ret = -ENOMEM;
-diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
-index 1cb3296..f6a3d7d 100644
---- a/drivers/net/wireless/ti/wlcore/cmd.c
-+++ b/drivers/net/wireless/ti/wlcore/cmd.c
-@@ -845,7 +845,8 @@ EXPORT_SYMBOL_GPL(wl1271_cmd_test);
-  * @buf: buffer for the response, including all headers, must work with dma
-  * @len: length of buf
-  */
--int wl1271_cmd_interrogate(struct wl1271 *wl, u16 id, void *buf, size_t len)
-+int wl1271_cmd_interrogate(struct wl1271 *wl, u16 id, void *buf,
-+			   size_t cmd_len, size_t res_len)
+-static int ath10k_push_board_ext_data(struct ath10k *ar,
+-				      const struct firmware *fw)
++static int ath10k_push_board_ext_data(struct ath10k *ar)
  {
- 	struct acx_header *acx = buf;
- 	int ret;
-@@ -854,10 +855,10 @@ int wl1271_cmd_interrogate(struct wl1271 *wl, u16 id, void *buf, size_t len)
+ 	u32 board_data_size = QCA988X_BOARD_DATA_SZ;
+ 	u32 board_ext_data_size = QCA988X_BOARD_EXT_DATA_SZ;
+@@ -210,14 +209,14 @@ static int ath10k_push_board_ext_data(struct ath10k *ar,
+ 	if (board_ext_data_addr == 0)
+ 		return 0;
  
- 	acx->id = cpu_to_le16(id);
- 
--	/* payload length, does not include any headers */
--	acx->len = cpu_to_le16(len - sizeof(*acx));
-+	/* response payload length, does not include any headers */
-+	acx->len = cpu_to_le16(res_len - sizeof(*acx));
- 
--	ret = wl1271_cmd_send(wl, CMD_INTERROGATE, acx, sizeof(*acx), len);
-+	ret = wl1271_cmd_send(wl, CMD_INTERROGATE, acx, cmd_len, res_len);
- 	if (ret < 0)
- 		wl1271_error("INTERROGATE command failed");
- 
-diff --git a/drivers/net/wireless/ti/wlcore/cmd.h b/drivers/net/wireless/ti/wlcore/cmd.h
-index fd34123..323d4a8 100644
---- a/drivers/net/wireless/ti/wlcore/cmd.h
-+++ b/drivers/net/wireless/ti/wlcore/cmd.h
-@@ -45,7 +45,8 @@ int wl12xx_start_dev(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 		     enum ieee80211_band band, int channel);
- int wl12xx_stop_dev(struct wl1271 *wl, struct wl12xx_vif *wlvif);
- int wl1271_cmd_test(struct wl1271 *wl, void *buf, size_t buf_len, u8 answer);
--int wl1271_cmd_interrogate(struct wl1271 *wl, u16 id, void *buf, size_t len);
-+int wl1271_cmd_interrogate(struct wl1271 *wl, u16 id, void *buf,
-+			   size_t cmd_len, size_t res_len);
- int wl1271_cmd_configure(struct wl1271 *wl, u16 id, void *buf, size_t len);
- int wlcore_cmd_configure_failsafe(struct wl1271 *wl, u16 id, void *buf,
- 				  size_t len, unsigned long valid_rets);
-diff --git a/drivers/net/wireless/ti/wlcore/testmode.c b/drivers/net/wireless/ti/wlcore/testmode.c
-index a3b7d95..ddad58f 100644
---- a/drivers/net/wireless/ti/wlcore/testmode.c
-+++ b/drivers/net/wireless/ti/wlcore/testmode.c
-@@ -179,7 +179,8 @@ static int wl1271_tm_cmd_interrogate(struct wl1271 *wl, struct nlattr *tb[])
- 		goto out_sleep;
+-	if (fw->size != (board_data_size + board_ext_data_size)) {
++	if (ar->board_len != (board_data_size + board_ext_data_size)) {
+ 		ath10k_err("invalid board (ext) data sizes %zu != %d+%d\n",
+-			   fw->size, board_data_size, board_ext_data_size);
++			   ar->board_len, board_data_size, board_ext_data_size);
+ 		return -EINVAL;
  	}
  
--	ret = wl1271_cmd_interrogate(wl, ie_id, cmd, sizeof(*cmd));
-+	ret = wl1271_cmd_interrogate(wl, ie_id, cmd,
-+				     sizeof(struct acx_header), sizeof(*cmd));
- 	if (ret < 0) {
- 		wl1271_warning("testmode cmd interrogate failed: %d", ret);
- 		goto out_free;
--- 
-1.8.3.rc1.35.g9b79519
+ 	ret = ath10k_bmi_write_memory(ar, board_ext_data_addr,
+-				      fw->data + board_data_size,
++				      ar->board_data + board_data_size,
+ 				      board_ext_data_size);
+ 	if (ret) {
+ 		ath10k_err("could not write board ext data (%d)\n", ret);
+@@ -236,12 +235,11 @@ static int ath10k_push_board_ext_data(struct ath10k *ar,
+ 
+ static int ath10k_download_board_data(struct ath10k *ar)
+ {
+-	const struct firmware *fw = ar->board;
+ 	u32 board_data_size = QCA988X_BOARD_DATA_SZ;
+ 	u32 address;
+ 	int ret;
+ 
+-	ret = ath10k_push_board_ext_data(ar, fw);
++	ret = ath10k_push_board_ext_data(ar);
+ 	if (ret) {
+ 		ath10k_err("could not push board ext data (%d)\n", ret);
+ 		goto exit;
+@@ -253,8 +251,9 @@ static int ath10k_download_board_data(struct ath10k *ar)
+ 		goto exit;
+ 	}
+ 
+-	ret = ath10k_bmi_write_memory(ar, address, fw->data,
+-				      min_t(u32, board_data_size, fw->size));
++	ret = ath10k_bmi_write_memory(ar, address, ar->board_data,
++				      min_t(u32, board_data_size,
++					    ar->board_len));
+ 	if (ret) {
+ 		ath10k_err("could not write board data (%d)\n", ret);
+ 		goto exit;
+@@ -272,17 +271,16 @@ exit:
+ 
+ static int ath10k_download_and_run_otp(struct ath10k *ar)
+ {
+-	const struct firmware *fw = ar->otp;
+ 	u32 address = ar->hw_params.patch_load_addr;
+ 	u32 exec_param;
+ 	int ret;
+ 
+ 	/* OTP is optional */
+ 
+-	if (!ar->otp)
++	if (!ar->otp_data || !ar->otp_len)
+ 		return 0;
+ 
+-	ret = ath10k_bmi_fast_download(ar, address, fw->data, fw->size);
++	ret = ath10k_bmi_fast_download(ar, address, ar->otp_data, ar->otp_len);
+ 	if (ret) {
+ 		ath10k_err("could not write otp (%d)\n", ret);
+ 		goto exit;
+@@ -301,13 +299,13 @@ exit:
+ 
+ static int ath10k_download_fw(struct ath10k *ar)
+ {
+-	const struct firmware *fw = ar->firmware;
+ 	u32 address;
+ 	int ret;
+ 
+ 	address = ar->hw_params.patch_load_addr;
+ 
+-	ret = ath10k_bmi_fast_download(ar, address, fw->data, fw->size);
++	ret = ath10k_bmi_fast_download(ar, address, ar->firmware_data,
++				       ar->firmware_len);
+ 	if (ret) {
+ 		ath10k_err("could not write fw (%d)\n", ret);
+ 		goto exit;
+@@ -329,8 +327,16 @@ static void ath10k_core_free_firmware_files(struct ath10k *ar)
+ 		release_firmware(ar->firmware);
+ 
+ 	ar->board = NULL;
++	ar->board_data = NULL;
++	ar->board_len = 0;
++
+ 	ar->otp = NULL;
++	ar->otp_data = NULL;
++	ar->otp_len = 0;
++
+ 	ar->firmware = NULL;
++	ar->firmware_data = NULL;
++	ar->firmware_len = 0;
+ }
+ 
+ static int ath10k_core_fetch_firmware_files(struct ath10k *ar)
+@@ -356,6 +362,9 @@ static int ath10k_core_fetch_firmware_files(struct ath10k *ar)
+ 		goto err;
+ 	}
+ 
++	ar->board_data = ar->board->data;
++	ar->board_len = ar->board->size;
++
+ 	ar->firmware = ath10k_fetch_fw_file(ar,
+ 					    ar->hw_params.fw.dir,
+ 					    ar->hw_params.fw.fw);
+@@ -365,6 +374,9 @@ static int ath10k_core_fetch_firmware_files(struct ath10k *ar)
+ 		goto err;
+ 	}
+ 
++	ar->firmware_data = ar->firmware->data;
++	ar->firmware_len = ar->firmware->size;
++
+ 	/* OTP may be undefined. If so, don't fetch it at all */
+ 	if (ar->hw_params.fw.otp == NULL)
+ 		return 0;
+@@ -378,6 +390,9 @@ static int ath10k_core_fetch_firmware_files(struct ath10k *ar)
+ 		goto err;
+ 	}
+ 
++	ar->otp_data = ar->otp->data;
++	ar->otp_len = ar->otp->size;
++
+ 	return 0;
+ 
+ err:
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 12b03b6..511b20d 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -325,8 +325,16 @@ struct ath10k {
+ 	} hw_params;
+ 
+ 	const struct firmware *board;
++	const void *board_data;
++	size_t board_len;
++
+ 	const struct firmware *otp;
++	const void *otp_data;
++	size_t otp_len;
++
+ 	const struct firmware *firmware;
++	const void *firmware_data;
++	size_t firmware_len;
+ 
+ 	struct {
+ 		struct completion started;
 
