@@ -1,170 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:61615 "EHLO ebb05.tieto.com"
+Received: from mail.ispras.ru ([83.149.199.45]:40980 "EHLO mail.ispras.ru"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756099Ab3IZJaG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Sep 2013 05:30:06 -0400
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Bartosz Markowski <bartosz.markowski@tieto.com>
-Subject: [PATCH v2 05/13] ath10k: split ath10k_wmi_service_ready_event_rx
-Date: Thu, 26 Sep 2013 11:29:44 +0200
-Message-ID: <1380187792-25626-6-git-send-email-bartosz.markowski@tieto.com> (sfid-20130926_114457_859205_02A267E0)
-In-Reply-To: <1380187792-25626-1-git-send-email-bartosz.markowski@tieto.com>
-References: <1380187792-25626-1-git-send-email-bartosz.markowski@tieto.com>
+	id S1751090Ab3I1FQZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Sep 2013 01:16:25 -0400
+Message-ID: <52466624.4040106@ispras.ru> (sfid-20130928_071708_738370_E8DA216D)
+Date: Sat, 28 Sep 2013 01:16:20 -0400
+From: Alexey Khoroshilov <khoroshilov@ispras.ru>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Fabio Estevam <festevam@gmail.com>
+CC: Christian Lamparter <chunkeey@googlemail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	ldv-project@linuxtesting.org
+Subject: Re: [PATCH] carl9170: fix leaks at failure path in carl9170_usb_probe()
+References: <1380340311-4630-1-git-send-email-khoroshilov@ispras.ru> <CAOMZO5DE0OdXhWNEr2HAswvgryBqP8VNk3+vanwsi38L6pL9OA@mail.gmail.com>
+In-Reply-To: <CAOMZO5DE0OdXhWNEr2HAswvgryBqP8VNk3+vanwsi38L6pL9OA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since the both firmwares we are going to support,
-have significantly different APIs (WMI and shared
-structures), it's easier to actually split the whole
-event handling functions, instead cutting them inside.
+On 28.09.2013 00:17, Fabio Estevam wrote:
+> On Sat, Sep 28, 2013 at 12:51 AM, Alexey Khoroshilov
+> <khoroshilov@ispras.ru> wrote:
+>
+>> -       return request_firmware_nowait(THIS_MODULE, 1, CARL9170FW_NAME,
+>> +       err = request_firmware_nowait(THIS_MODULE, 1, CARL9170FW_NAME,
+>>                  &ar->udev->dev, GFP_KERNEL, ar, carl9170_usb_firmware_step2);
+>> +       if (err) {
+>> +               usb_put_dev(udev);
+>> +               usb_put_dev(udev);
+> You are doing the same free twice.
+Yes, because it was get twice.
+> I guess you meant to also free: usb_put_dev(ar->udev)
+udev and ar->udev are equal, so technically the patch is correct.
 
-The fork starts now on ath10k_wmi_process_rx().
+I agree that there is some inconsistency, but I would prefer to fix it 
+at usb_get_dev() side with a comment about reasons for the double get.
 
-Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
----
- drivers/net/wireless/ath/ath10k/wmi.c |   66 ++++++++++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath10k/wmi.h |   40 ++++++++++++++++++++
- 2 files changed, 105 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 2a7de6d..8f4d0f6 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -1300,6 +1300,70 @@ static void ath10k_wmi_service_ready_event_rx(struct ath10k *ar,
- 	complete(&ar->wmi.service_ready);
- }
- 
-+static void ath10k_wmi_10x_service_ready_event_rx(struct ath10k *ar,
-+						  struct sk_buff *skb)
-+{
-+	struct wmi_service_ready_event_10x *ev = (void *)skb->data;
-+
-+	if (skb->len < sizeof(*ev)) {
-+		ath10k_warn("Service ready event was %d B but expected %zu B. Wrong firmware version?\n",
-+			    skb->len, sizeof(*ev));
-+		return;
-+	}
-+
-+	ar->hw_min_tx_power = __le32_to_cpu(ev->hw_min_tx_power);
-+	ar->hw_max_tx_power = __le32_to_cpu(ev->hw_max_tx_power);
-+	ar->ht_cap_info = __le32_to_cpu(ev->ht_cap_info);
-+	ar->vht_cap_info = __le32_to_cpu(ev->vht_cap_info);
-+	ar->fw_version_major =
-+		(__le32_to_cpu(ev->sw_version) & 0xff000000) >> 24;
-+	ar->fw_version_minor = (__le32_to_cpu(ev->sw_version) & 0x00ffffff);
-+	ar->phy_capability = __le32_to_cpu(ev->phy_capability);
-+	ar->num_rf_chains = __le32_to_cpu(ev->num_rf_chains);
-+
-+	if (ar->num_rf_chains > WMI_MAX_SPATIAL_STREAM) {
-+		ath10k_warn("hardware advertises support for more spatial streams than it should (%d > %d)\n",
-+			    ar->num_rf_chains, WMI_MAX_SPATIAL_STREAM);
-+		ar->num_rf_chains = WMI_MAX_SPATIAL_STREAM;
-+	}
-+
-+	ar->ath_common.regulatory.current_rd =
-+		__le32_to_cpu(ev->hal_reg_capabilities.eeprom_rd);
-+
-+	ath10k_debug_read_service_map(ar, ev->wmi_service_bitmap,
-+				      sizeof(ev->wmi_service_bitmap));
-+
-+	if (strlen(ar->hw->wiphy->fw_version) == 0) {
-+		snprintf(ar->hw->wiphy->fw_version,
-+			 sizeof(ar->hw->wiphy->fw_version),
-+			 "%u.%u",
-+			 ar->fw_version_major,
-+			 ar->fw_version_minor);
-+	}
-+
-+	/* FIXME: it probably should be better to support this.
-+	   TODO: Next patch introduce memory chunks. It's a must for 10.x FW */
-+	if (__le32_to_cpu(ev->num_mem_reqs) > 0) {
-+		ath10k_warn("target requested %d memory chunks; ignoring\n",
-+			    __le32_to_cpu(ev->num_mem_reqs));
-+	}
-+
-+	ath10k_dbg(ATH10K_DBG_WMI,
-+		   "wmi event service ready sw_ver 0x%08x abi_ver %u phy_cap 0x%08x ht_cap 0x%08x vht_cap 0x%08x vht_supp_msc 0x%08x sys_cap_info 0x%08x mem_reqs %u num_rf_chains %u\n",
-+		   __le32_to_cpu(ev->sw_version),
-+		   __le32_to_cpu(ev->abi_version),
-+		   __le32_to_cpu(ev->phy_capability),
-+		   __le32_to_cpu(ev->ht_cap_info),
-+		   __le32_to_cpu(ev->vht_cap_info),
-+		   __le32_to_cpu(ev->vht_supp_mcs),
-+		   __le32_to_cpu(ev->sys_cap_info),
-+		   __le32_to_cpu(ev->num_mem_reqs),
-+		   __le32_to_cpu(ev->num_rf_chains));
-+
-+	complete(&ar->wmi.service_ready);
-+}
-+
-+
- static int ath10k_wmi_ready_event_rx(struct ath10k *ar, struct sk_buff *skb)
- {
- 	struct wmi_ready_event *ev = (struct wmi_ready_event *)skb->data;
-@@ -1536,7 +1600,7 @@ static void ath10k_wmi_10x_process_rx(struct ath10k *ar, struct sk_buff *skb)
- 		ath10k_wmi_event_vdev_resume_req(ar, skb);
- 		break;
- 	case WMI_10X_SERVICE_READY_EVENTID:
--		ath10k_wmi_service_ready_event_rx(ar, skb);
-+		ath10k_wmi_10x_service_ready_event_rx(ar, skb);
- 		break;
- 	case WMI_10X_READY_EVENTID:
- 		ath10k_wmi_ready_event_rx(ar, skb);
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index d8414ab..a0cfdfd 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -1130,6 +1130,46 @@ struct wmi_service_ready_event {
- 	struct wlan_host_mem_req mem_reqs[1];
- } __packed;
- 
-+/* This is the definition from 10.X firmware branch */
-+struct wmi_service_ready_event_10x {
-+	__le32 sw_version;
-+	__le32 abi_version;
-+
-+	/* WMI_PHY_CAPABILITY */
-+	__le32 phy_capability;
-+
-+	/* Maximum number of frag table entries that SW will populate less 1 */
-+	__le32 max_frag_entry;
-+	__le32 wmi_service_bitmap[WMI_SERVICE_BM_SIZE];
-+	__le32 num_rf_chains;
-+
-+	/*
-+	 * The following field is only valid for service type
-+	 * WMI_SERVICE_11AC
-+	 */
-+	__le32 ht_cap_info; /* WMI HT Capability */
-+	__le32 vht_cap_info; /* VHT capability info field of 802.11ac */
-+	__le32 vht_supp_mcs; /* VHT Supported MCS Set field Rx/Tx same */
-+	__le32 hw_min_tx_power;
-+	__le32 hw_max_tx_power;
-+
-+	struct hal_reg_capabilities hal_reg_capabilities;
-+
-+	__le32 sys_cap_info;
-+	__le32 min_pkt_size_enable; /* Enterprise mode short pkt enable */
-+
-+	/*
-+	 * request to host to allocate a chuck of memory and pss it down to FW
-+	 * via WM_INIT. FW uses this as FW extesnsion memory for saving its
-+	 * data structures. Only valid for low latency interfaces like PCIE
-+	 * where FW can access this memory directly (or) by DMA.
-+	 */
-+	__le32 num_mem_reqs;
-+
-+	struct wlan_host_mem_req mem_reqs[1];
-+} __packed;
-+
-+
- #define WMI_SERVICE_READY_TIMEOUT_HZ (5*HZ)
- #define WMI_UNIFIED_READY_TIMEOUT_HZ (5*HZ)
- 
--- 
-1.7.10
+--
+Alexey
 
