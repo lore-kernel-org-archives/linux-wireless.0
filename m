@@ -1,83 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:45587 "EHLO
-	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754612Ab3IYNmP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Sep 2013 09:42:15 -0400
-Message-ID: <1380116535.4503.19.camel@porter.coelho.fi> (sfid-20130925_154232_034198_4C210879)
-Subject: Re: [PATCH] ti-connectivity: add wl1251 firmware and license
-From: Luca Coelho <luca@coelho.fi>
-To: balbi@ti.com
-Cc: ben@decadent.org.uk,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org, Pavel Machek <pavel@denx.de>
-Date: Wed, 25 Sep 2013 16:42:15 +0300
-In-Reply-To: <20130925132359.GE10746@radagast>
-References: <1380033894-5007-1-git-send-email-balbi@ti.com>
-	 <1380107096.4503.8.camel@porter.coelho.fi>
-	 <1380107278.4503.9.camel@porter.coelho.fi>
-	 <20130925132359.GE10746@radagast>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail.ispras.ru ([83.149.199.45]:40399 "EHLO mail.ispras.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754732Ab3I1DwP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Sep 2013 23:52:15 -0400
+From: Alexey Khoroshilov <khoroshilov@ispras.ru>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
+Subject: [PATCH] carl9170: fix leaks at failure path in carl9170_usb_probe()
+Date: Fri, 27 Sep 2013 23:51:51 -0400
+Message-Id: <1380340311-4630-1-git-send-email-khoroshilov@ispras.ru> (sfid-20130928_055259_162095_E9B5B052)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-09-25 at 08:23 -0500, Felipe Balbi wrote:
-> On Wed, Sep 25, 2013 at 02:07:58PM +0300, Luca Coelho wrote:
-> > On Wed, 2013-09-25 at 14:04 +0300, Luca Coelho wrote:
-> > > When sending big binary blobs, it's generally better to send pull
-> > > requests instead of patches.  If you add the -p option when calling git
-> > > pull-request, the text will include all the readable parts but will omit
-> > > the binary stuff.
-> > > 
-> > > Thank you very much for following up on this!
-> > 
-> > Ah, and I forgot to say that you should update the WHENCE file
-> > accordingly too.  Check the wl12xx and wl18xx drivers for examples.
-> 
-> I'll send a pull request, but how about this ? I don't think we can
-> change the license. It seems like the other firmwares are using the
-> older license, I'd argue those should be changed to the new one, but
-> that's another discussion.
+carl9170_usb_probe() does not handle request_firmware_nowait() failure
+that leads to several leaks in this case.
+The patch adds all required deallocations.
 
-Cool, in general it looks good!
+Found by Linux Driver Verification project (linuxtesting.org).
 
-Though it would be nice to know if the same "new" license could be used
-for all the firmwares to avoid almost identical licenses.
+Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+---
+ drivers/net/wireless/ath/carl9170/usb.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-More comments below...
-
-> diff --git a/WHENCE b/WHENCE
-> index e66fea5..4e9e2ed 100644
-> --- a/WHENCE
-> +++ b/WHENCE
-> @@ -1705,6 +1705,19 @@ Licence: Redistributable. See LICENCE.tda7706-firmware.txt for details.
->  
->  --------------------------------------------------------------------------
->  
-> +Driver: wl1251 - Texas Instruments 802.11 WLAN driver for WiLink4 chips
-> +
-> +File: ti-connectivity/wl1251-fw.bin
-> +File: ti-connectivity/wl1251-nvs.bin
-
-Don't you have the firmware version number to add here with "Version:"
-tags like the other ones? I think you can easily find the version by
-running strings on the binary and grepping for "Rev" (at least with the
-newer WiLinks, this works).
-
-
-> +Licence: See LICENCE.wl1251 for details.
-> +
-> +The driver expects to find the firmwares under a ti-connectivity subdirectory.
-> +So if your system looks for firmwares in /lib/firmware, the firmwares for
-> +wl12xx chips must be located in /lib/firmware/ti-connectivity/.
-
-It's a bit stupid that this was never changed in wl1251, but it still
-expects the driver in the "root" firmwares directory (ie.
-in /lib/firmware/wl1251-fw.bin, not
-in /lib/firmware/ti-connectivity/wl1251-fw.bin).  Maybe now is the right
-time to change the driver appropriately to keep consistency? ;)
-
---
-Luca.
+diff --git a/drivers/net/wireless/ath/carl9170/usb.c b/drivers/net/wireless/ath/carl9170/usb.c
+index 307bc0d..3c76de1 100644
+--- a/drivers/net/wireless/ath/carl9170/usb.c
++++ b/drivers/net/wireless/ath/carl9170/usb.c
+@@ -1076,8 +1076,14 @@ static int carl9170_usb_probe(struct usb_interface *intf,
+ 
+ 	carl9170_set_state(ar, CARL9170_STOPPED);
+ 
+-	return request_firmware_nowait(THIS_MODULE, 1, CARL9170FW_NAME,
++	err = request_firmware_nowait(THIS_MODULE, 1, CARL9170FW_NAME,
+ 		&ar->udev->dev, GFP_KERNEL, ar, carl9170_usb_firmware_step2);
++	if (err) {
++		usb_put_dev(udev);
++		usb_put_dev(udev);
++		carl9170_free(ar);
++	}
++	return err;
+ }
+ 
+ static void carl9170_usb_disconnect(struct usb_interface *intf)
+-- 
+1.8.1.2
 
