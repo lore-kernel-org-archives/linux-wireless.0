@@ -1,53 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:44914 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753545Ab3IEFi5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Sep 2013 01:38:57 -0400
-Message-ID: <1378359531.1944.3.camel@joe-AO722> (sfid-20130905_073913_384330_A7FED0B8)
-Subject: Re: [PATCH 2/2] qca-swiss-army-knife: add ath10k trace-cmd plugin
-From: Joe Perches <joe@perches.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 04 Sep 2013 22:38:51 -0700
-In-Reply-To: <87sixjrhan.fsf@kamboji.qca.qualcomm.com>
-References: <1376939466-8282-1-git-send-email-kvalo@qca.qualcomm.com>
-	 <1376939466-8282-2-git-send-email-kvalo@qca.qualcomm.com>
-	 <CAB=NE6UCmO4QbFjtav8xPDAoebpTqDNwz_qQxg1TQ8cKGcbFGg@mail.gmail.com>
-	 <871u53swie.fsf@kamboji.qca.qualcomm.com>
-	 <1378357025.1787.79.camel@joe-AO722>
-	 <87sixjrhan.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:56648 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751141Ab3I2Lkn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 Sep 2013 07:40:43 -0400
+Received: by mail-ie0-f182.google.com with SMTP id aq17so7737198iec.41
+        for <linux-wireless@vger.kernel.org>; Sun, 29 Sep 2013 04:40:43 -0700 (PDT)
+MIME-Version: 1.0
+Date: Sun, 29 Sep 2013 13:40:43 +0200
+Message-ID: <CAPNxggZ30Ghg03Vza+Vay=txF1vznWD46FBb8rWVM2AGJ+Q1qQ@mail.gmail.com> (sfid-20130929_134046_994362_EE419D67)
+Subject: Troubleshooting a WLAN Adapter
+From: Arokux X <arokux@gmail.com>
+To: Larry.Finger@lwfinger.net
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-09-05 at 08:03 +0300, Kalle Valo wrote:
-> Joe Perches <joe@perches.com> writes:
-> 
-> > On Thu, 2013-09-05 at 07:49 +0300, Kalle Valo wrote:
-> >> "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com> writes:
-> >> > I just removed 3 trailing spaces on the 2 patches. One had two
-> >> > trailing spaces, the last patch had one.
-> >> 
-> >> Oh, sorry about that. Any ideas how I could check for those myself?
-> >
-> > scripts/checkpatch.pl <patch>
-> 
-> Checkpatch works also with trace-cmd plugins written in python?
+Dear Larry, dear all,
 
-Don't see why not.
+may I please draw your attention to the following thread
 
-Trailing spaces are trailing spaces and the trailing
-space test is done way before looking at file type
-specific tests.
+http://thread.gmane.org/gmane.linux.usb.general/94872
 
-> > git am <patch>
-> 
-> Yeah, I guess I could do that, it's just a bit inconvienient.
+I am working on a USB EHCI bus glue driver. I have tested several USB
+devices and they work. However I cannot get an on-board WLAN Adapter
+(idVendor=0bda, idProduct=8176) working. I have have run out of ideas
+how to troubleshoot the issue. I hope you will have some.
 
-scripting a git am script for a patch
-set is just a for loop...
-
-You could also use scripts/cleanpatch
-
+Best regards,
+Arokux
