@@ -1,103 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:54867 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755298Ab3IBFr6 (ORCPT
+Received: from mail-we0-f181.google.com ([74.125.82.181]:36625 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754864Ab3I2VK2 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Sep 2013 01:47:58 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/6] ath9k: Fix antenna diversity init for AR9565
-Date: Mon,  2 Sep 2013 11:14:02 +0530
-Message-Id: <1378100645-29868-3-git-send-email-sujith@msujith.org> (sfid-20130902_074806_335273_6FDD6192)
-In-Reply-To: <1378100645-29868-1-git-send-email-sujith@msujith.org>
-References: <1378100645-29868-1-git-send-email-sujith@msujith.org>
+	Sun, 29 Sep 2013 17:10:28 -0400
+Received: by mail-we0-f181.google.com with SMTP id p61so4685415wes.40
+        for <linux-wireless@vger.kernel.org>; Sun, 29 Sep 2013 14:10:27 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <31357461.i5mG9q5IfA@naboo>
+References: <31357461.i5mG9q5IfA@naboo>
+Date: Sun, 29 Sep 2013 23:10:26 +0200
+Message-ID: <CACna6rx-8C+jMDG+BL3RQhfqp1+ozbjqamvn=7PzKG=JUa1J_w@mail.gmail.com> (sfid-20130929_231043_051363_CF5729EF)
+Subject: Re: NetworkManager not listing access points
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Detlev Casanova <detlev.casanova@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes.berg@intel.com>,
+	laurent.pinchart@ideasonboard.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+2013/9/18 Detlev Casanova <detlev.casanova@gmail.com>:
+> After a bisection on the kernel, it seems that a patch is causing a
+> problem with NetworkManager:
+>
+> commit 0172bb75073e11a5aa9d8a953bdaefb8709f00c8 ("cfg80211:
+> use DS or HT operation IEs to determine BSS channel")
+>
+> (...)
+>
+> The hardware is: 14e4:4315 (Network controller: Broadcom Corporation
+> BCM4312 802.11b/g LP-PHY (rev 01)) on an Intel Core i3 M370 CPU (64
+> bits) computer.
 
-Program the HW registers (AR_PHY_CCK_DETECT, AR_PHY_MC_GAIN_CTRL)
-with the correct values for AR9565 to allow LNA combining.
+See:
+http://www.spinics.net/lists/linux-wireless/msg105359.html
+("Scanning regression since "cfg80211: use DS or HT operation IEs to
+determine BSS channel"")
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 17 ++++++++++++++++-
- drivers/net/wireless/ath/ath9k/ar9003_phy.c    | 17 ++++++++++++-----
- 2 files changed, 28 insertions(+), 6 deletions(-)
+It seems that starting with the mentioned commit, b43 doesn't report
+any results on the 1st scanning. No idea how this patch affected b43.
+Scanning on channel b43 is failing even worse starting with that
+commit.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 6af2d73..5982256 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3659,9 +3659,23 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
- 		if (AR_SREV_9565(ah)) {
- 			if (common->bt_ant_diversity) {
- 				regval |= (1 << AR_PHY_ANT_SW_RX_PROT_S);
-+
-+				REG_SET_BIT(ah, AR_PHY_RESTART,
-+					    AR_PHY_RESTART_ENABLE_DIV_M2FLAG);
-+
-+				/* Force WLAN LNA diversity ON */
-+				REG_SET_BIT(ah, AR_BTCOEX_WL_LNADIV,
-+					    AR_BTCOEX_WL_LNADIV_FORCE_ON);
- 			} else {
- 				regval &= ~(1 << AR_PHY_ANT_DIV_LNADIV_S);
- 				regval &= ~(1 << AR_PHY_ANT_SW_RX_PROT_S);
-+
-+				REG_CLR_BIT(ah, AR_PHY_MC_GAIN_CTRL,
-+					    (1 << AR_PHY_ANT_SW_RX_PROT_S));
-+
-+				/* Force WLAN LNA diversity OFF */
-+				REG_CLR_BIT(ah, AR_BTCOEX_WL_LNADIV,
-+					    AR_BTCOEX_WL_LNADIV_FORCE_ON);
- 			}
- 		}
- 
-@@ -3672,7 +3686,8 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
- 		regval &= (~AR_FAST_DIV_ENABLE);
- 		regval |= ((value >> 7) & 0x1) << AR_FAST_DIV_ENABLE_S;
- 
--		if (AR_SREV_9485(ah) && common->bt_ant_diversity)
-+		if ((AR_SREV_9485(ah) || AR_SREV_9565(ah))
-+		    && common->bt_ant_diversity)
- 			regval |= AR_FAST_DIV_ENABLE;
- 
- 		REG_WRITE(ah, AR_PHY_CCK_DETECT, regval);
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index e897648..9ca9b2c 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -1489,17 +1489,24 @@ static void ar9003_hw_set_bt_ant_diversity(struct ath_hw *ah, bool enable)
- 	} else if (AR_SREV_9565(ah)) {
- 		if (enable) {
- 			REG_SET_BIT(ah, AR_PHY_MC_GAIN_CTRL,
-+				    AR_ANT_DIV_ENABLE);
-+			REG_SET_BIT(ah, AR_PHY_MC_GAIN_CTRL,
- 				    (1 << AR_PHY_ANT_SW_RX_PROT_S));
--			if (ah->curchan && IS_CHAN_2GHZ(ah->curchan))
--				REG_SET_BIT(ah, AR_PHY_RESTART,
--					    AR_PHY_RESTART_ENABLE_DIV_M2FLAG);
-+			REG_SET_BIT(ah, AR_PHY_CCK_DETECT,
-+				    AR_FAST_DIV_ENABLE);
-+			REG_SET_BIT(ah, AR_PHY_RESTART,
-+				    AR_PHY_RESTART_ENABLE_DIV_M2FLAG);
- 			REG_SET_BIT(ah, AR_BTCOEX_WL_LNADIV,
- 				    AR_BTCOEX_WL_LNADIV_FORCE_ON);
- 		} else {
--			REG_CLR_BIT(ah, AR_PHY_MC_GAIN_CTRL, AR_ANT_DIV_ENABLE);
-+			REG_CLR_BIT(ah, AR_PHY_MC_GAIN_CTRL,
-+				    AR_ANT_DIV_ENABLE);
- 			REG_CLR_BIT(ah, AR_PHY_MC_GAIN_CTRL,
- 				    (1 << AR_PHY_ANT_SW_RX_PROT_S));
--			REG_CLR_BIT(ah, AR_PHY_CCK_DETECT, AR_FAST_DIV_ENABLE);
-+			REG_CLR_BIT(ah, AR_PHY_CCK_DETECT,
-+				    AR_FAST_DIV_ENABLE);
-+			REG_CLR_BIT(ah, AR_PHY_RESTART,
-+				    AR_PHY_RESTART_ENABLE_DIV_M2FLAG);
- 			REG_CLR_BIT(ah, AR_BTCOEX_WL_LNADIV,
- 				    AR_BTCOEX_WL_LNADIV_FORCE_ON);
- 
 -- 
-1.8.4
-
+Rafał
