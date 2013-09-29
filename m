@@ -1,65 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:45652 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756335Ab3INOIi (ORCPT
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:57958 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755908Ab3I2T3C convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Sep 2013 10:08:38 -0400
-Received: by mail-ie0-f176.google.com with SMTP id as1so4769945iec.35
-        for <linux-wireless@vger.kernel.org>; Sat, 14 Sep 2013 07:08:37 -0700 (PDT)
-Message-ID: <52346DE2.9090904@lwfinger.net> (sfid-20130914_160854_856363_843118B5)
-Date: Sat, 14 Sep 2013 09:08:34 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sun, 29 Sep 2013 15:29:02 -0400
+Received: by mail-wi0-f182.google.com with SMTP id ez12so2889129wid.15
+        for <linux-wireless@vger.kernel.org>; Sun, 29 Sep 2013 12:29:01 -0700 (PDT)
+From: Detlev Casanova <detlev.casanova@gmail.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, laurent.pinchart@ideasonboard.com
+Subject: Re: NetworkManager not listing access points
+Date: Sun, 29 Sep 2013 21:29:17 +0200
+Message-ID: <3913713.WUui18VufC@naboo> (sfid-20130929_214415_668531_EAD52444)
+In-Reply-To: <1379952829.2475.16.camel@dcbw.foobar.com>
+References: <31357461.i5mG9q5IfA@naboo> <3006906.Q9n0kfrGGo@naboo> <1379952829.2475.16.camel@dcbw.foobar.com>
 MIME-Version: 1.0
-To: Jason Andrews <jasona@cadence.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: guidance on struct alignment for rtl8192cu driver
-References: <985A2B0C3F73B74792F35D4098E1CA7CB143670E93@MAILSJ3.global.cadence.com>
-In-Reply-To: <985A2B0C3F73B74792F35D4098E1CA7CB143670E93@MAILSJ3.global.cadence.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/14/2013 12:36 AM, Jason Andrews wrote:
-> I'm using an ASUS USB N13 on an ARM platform with the rtl8192cu driver.
-> Linux kernel is 3.10 so I probably don't have the latest and greatest driver.
->
-> When I booted I got an ARM alignment trap caused by the driver.
->
-> I determined the cause was the 1st argument to spin_lock_irqsave() has an unaligned address.
->
-> By trial-and-error I found that if I edit wifi.h and insert 2 dummy bytes into the rtl_priv struct just above priv (last variable) the locks work and the driver works fine.
->
-> What is the recommended way to make sure the last variable in the rtl_priv struct (u8 priv[0]) is aligned on a 4 byte boundary so the driver works on ARM machines?
+Le lundi 23 septembre 2013 11:13:49 Dan Williams a écrit :
+> On Sun, 2013-09-22 at 16:20 +0200, Detlev Casanova wrote:
+> > Le samedi 21 septembre 2013 22:51:59 Johannes Berg a écrit :
+> > > On Thu, 2013-09-19 at 07:58 +0200, Detlev Casanova wrote:
+> > > > Here is the output (attached file for formatting)
+> > > 
+> > > Was that from the good case? The bad case would have been
+> > 
+> > more
+> > 
+> > > interesting.
+> > 
+> > This is both cases. I made another one and here, I can give more
+> > details:
+> > 
+> > Network manager is trying to list APs and fails until time
+> > 1379858724.386569
+> 
+> Ok, the logs indicate that the driver simply doesn't see any scan
+> results:
+> 
+> 1379858724.381522: Received scan results (0 BSSes)
+> 
+> Then 20 seconds later (after the explicit iwlist), it finds some scan
+> results:
+> 
+> 1379858746.953924: Received scan results (3 BSSes)
+> 
+> So I'm not sure what's going on here, but I don't think NetworkManager
+> is the issue; it's likely in the supplicant's scanning code or in the
+> driver itself.  NetworkManager asks the supplicant to scan with both the
+> wildcard SSID and any hidden-tagged SSID, and the wildcard SSID should
+> ensure that all available APs are found.
 
-There are a lot of improvements for this driver in 3.11. The backports release 
-has that code. In addition, I am currently working at improving the power 
-management for 3.13.
+Yes and the problem is most likely to be in the driver because it doesn't 
+occur before commit 0172bb75073e11a5aa9d8a953bdaefb8709f00c8 ("cfg80211: use 
+DS or HT operation IEs to determine BSS channel")
 
-The presence of unaligned variables that cause alignment traps on ARM does not 
-surprise me as I test only on x86 and ppc architectures. I now own a Raspberry 
-Pi and I will soon be testing with it as well.
-
-What does surprise me is that the first argument in all the calls to 
-spin_lock_irqsave() are contained within the rtl_locks struct and everything 
-there should be aligned. Perhaps some ARM expert will know why aligning the last 
-item in the rtl_priv struct fixes the problem.
-
-As far as I know, the proper way to do a 4-byte alignment is as in the following 
-patch:
-
-Index: wireless-testing-save/drivers/net/wireless/rtlwifi/wifi.h
-===================================================================
---- wireless-testing-save.orig/drivers/net/wireless/rtlwifi/wifi.h
-+++ wireless-testing-save/drivers/net/wireless/rtlwifi/wifi.h
-@@ -2057,7 +2057,7 @@ struct rtl_priv {
-  	  that it points to the data allocated
-  	  beyond  this structure like:
-  	  rtl_pci_priv or rtl_usb_priv */
--	u8 priv[0];
-+	u8 __aligned(4) priv[0];
-  };
-
-  #define rtl_priv(hw)           (((struct rtl_priv *)(hw)->priv))
-
-Larry
+> Johannes, does anything else jump out at you in the logs?
+> 
+> Dan
+> 
+> > The The first "iwlist wlan0 scan" is done juste after the log line
+> > (1379858738.682054). It lists the APs in range in the console but
+> > not in the Network Manager ui.
+> > 
+> > The second "iwlist wlan0 scan" is done at time 1379858739.802067
+> > and APs are being listed in the console and in the Network Manager
+> > UI.
+> > 
+> > After that, NM will connect to the acces point with SSID "Maison".
+> > 
+> > It also looks like the listing in Network Manager comes between the
+> > moment "iwlist wlan0 scan" is run for the second time and the
+> > moment is shows its output on the console.
+> > 
+> > Detlev.
 
