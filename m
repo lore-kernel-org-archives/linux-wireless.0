@@ -1,109 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:5736 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753934Ab3IQTcA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Sep 2013 15:32:00 -0400
-From: Chet Lanctot <clanctot@codeaurora.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Chet Lanctot <clanctot@codeaurora.org>
-Subject: [PATCH 2/2] nl80211/cfg80211: PMF Requirement communicated to driver with AP SME
-Date: Tue, 17 Sep 2013 12:31:36 -0700
-Message-Id: <1379446296-22236-3-git-send-email-clanctot@codeaurora.org> (sfid-20130917_213227_344083_0A8DC8D3)
-In-Reply-To: <1379446296-22236-1-git-send-email-clanctot@codeaurora.org>
-References: <1379446296-22236-1-git-send-email-clanctot@codeaurora.org>
+Received: from nbd.name ([46.4.11.11]:38643 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751019Ab3I2LGn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 Sep 2013 07:06:43 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
+Subject: [PATCH 3.12] ath9k: fix powersave response handling for BA session packets
+Date: Sun, 29 Sep 2013 13:06:31 +0200
+Message-Id: <1380452791-1261-1-git-send-email-nbd@openwrt.org> (sfid-20130929_130657_944702_49A8556A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Needed for drivers that have AP SME integrated.  Whether PMF (Protected
-Management Frames, 802.11w) should be used for station connections
-is communicated from upper layer software through nl80211/cfg80211.
+When a packet is passed from mac80211 to the driver with the
+IEEE80211_TX_CTL_PS_RESPONSE flag set, it bypasses the normal driver
+internal queueing and goes directly to the UAPSD queue.
 
-Signed-off-by: Chet Lanctot <clanctot@codeaurora.org>
+When that happens, packets that are part of a BlockAck session still
+need to be tracked as such inside the driver, otherwise it will create
+discrepancies in the receiver BA reorder window, causing traffic stalls.
+This only happens in AP mode with powersave-enabled clients.
+
+This patch fixes the regression introduced in the commit
+"ath9k: use software queues for un-aggregated data packets"
+
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- include/net/cfg80211.h       |  3 +++
- include/uapi/linux/nl80211.h | 14 ++++++++++----
- net/wireless/nl80211.c       |  9 +++++++++
- 3 files changed, 22 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath9k/xmit.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index aeaf6df..5ac389c 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -636,6 +636,8 @@ struct cfg80211_acl_data {
-  *	user space)
-  * @ssid_len: length of @ssid
-  * @hidden_ssid: whether to hide the SSID in Beacon/Probe Response frames
-+ * @mfp: indicate whether management frame protection is used for 
-+ *	station connections 
-  * @crypto: crypto settings
-  * @privacy: the BSS uses privacy
-  * @auth_type: Authentication type (algorithm)
-@@ -655,6 +657,7 @@ struct cfg80211_ap_settings {
- 	const u8 *ssid;
- 	size_t ssid_len;
- 	enum nl80211_hidden_ssid hidden_ssid;
-+	enum nl80211_mfp mfp;
- 	struct cfg80211_crypto_settings crypto;
- 	bool privacy;
- 	enum nl80211_auth_type auth_type;
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index aa1d122..f711ab5 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1063,8 +1063,8 @@ enum nl80211_commands {
-  *
-  * @NL80211_ATTR_USE_MFP: Whether management frame protection (IEEE 802.11w) is
-  *	used for the association (&enum nl80211_mfp, represented as a u32);
-- *	this attribute can be used
-- *	with %NL80211_CMD_ASSOCIATE and %NL80211_CMD_CONNECT requests
-+ *	this attribute can be used with %NL80211_CMD_ASSOCIATE,
-+ *	%NL80211_CMD_CONNECT, and @NL80211_CMD_START_AP requests
-  *
-  * @NL80211_ATTR_STA_FLAGS2: Attribute containing a
-  *	&struct nl80211_sta_flag_update.
-@@ -2934,12 +2934,18 @@ enum nl80211_key_type {
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 13f5434..1ce8af2 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1969,15 +1969,18 @@ static void ath_tx_txqaddbuf(struct ath_softc *sc, struct ath_txq *txq,
+ static void ath_tx_send_normal(struct ath_softc *sc, struct ath_txq *txq,
+ 			       struct ath_atx_tid *tid, struct sk_buff *skb)
+ {
++	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+ 	struct ath_frame_info *fi = get_frame_info(skb);
+ 	struct list_head bf_head;
+-	struct ath_buf *bf;
+-
+-	bf = fi->bf;
++	struct ath_buf *bf = fi->bf;
  
- /**
-  * enum nl80211_mfp - Management frame protection state
-- * @NL80211_MFP_NO: Management frame protection not used
-- * @NL80211_MFP_REQUIRED: Management frame protection required
-+ * @NL80211_MFP_NO: Management frame protection not used on 
-+ *	any connection 
-+ * @NL80211_MFP_REQUIRED: Management frame protection required 
-+ *	on all connections 
-+ * @NL80211_MFP_OPTIONAL: For an AP, management frame 
-+ *	protection is optional for a station connection depending
-+ *	on whether the station supports MFP
-  */
- enum nl80211_mfp {
- 	NL80211_MFP_NO,
- 	NL80211_MFP_REQUIRED,
-+	NL80211_MFP_OPTIONAL,
- };
+ 	INIT_LIST_HEAD(&bf_head);
+ 	list_add_tail(&bf->list, &bf_head);
+ 	bf->bf_state.bf_type = 0;
++	if (tid && (tx_info->flags & IEEE80211_TX_CTL_AMPDU)) {
++		bf->bf_state.bf_type = BUF_AMPDU;
++		ath_tx_addto_baw(sc, tid, bf);
++	}
  
- enum nl80211_wpa_versions {
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 14a14d4..1702ae9 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3207,6 +3207,15 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
- 			return PTR_ERR(params.acl);
- 	}
- 
-+	if (info->attrs[NL80211_ATTR_USE_MFP]) {
-+		params.mfp = nla_get_u32(info->attrs[NL80211_ATTR_USE_MFP]);
-+		if (params.mfp != NL80211_MFP_REQUIRED &&
-+		    params.mfp != NL80211_MFP_OPTIONAL &&
-+		    params.mfp != NL80211_MFP_NO)
-+			return -EINVAL;
-+	} else
-+		params.mfp = NL80211_MFP_NO;
-+
- 	err = rdev_start_ap(rdev, dev, &params);
- 	if (!err) {
- 		wdev->preset_chandef = params.chandef;
+ 	bf->bf_next = NULL;
+ 	bf->bf_lastbf = bf;
 -- 
-1.7.12.rc0.22.gcdd159b
+1.8.0.2
 
