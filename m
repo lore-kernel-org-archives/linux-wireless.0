@@ -1,43 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gecko.sbs.de ([194.138.37.40]:34895 "EHLO gecko.sbs.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758549Ab3JKPs1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Oct 2013 11:48:27 -0400
-Message-ID: <1381506302.3711.10.camel@djensen-laptop> (sfid-20131011_174857_400503_E05B8310)
-Subject: Re: [PATCH] cfg80211: fix channel to frequency mapping in 5.9GHz
- range
-From: Dennis H Jensen <dennis.h.jensen@siemens.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Date: Fri, 11 Oct 2013 17:45:02 +0200
-In-Reply-To: <1381499778.14293.21.camel@jlt4.sipsolutions.net>
-References: <1381492780-3068-1-git-send-email-dennis.h.jensen@siemens.com>
-	 <1381499778.14293.21.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ve0-f171.google.com ([209.85.128.171]:42721 "EHLO
+	mail-ve0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752788Ab3I3XcQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Sep 2013 19:32:16 -0400
+Received: by mail-ve0-f171.google.com with SMTP id pa12so4590119veb.2
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Sep 2013 16:32:15 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20130925180057.GA11394@mail.catnarok.net>
+References: <20130921223440.GA5297@mail.catnarok.net>
+	<523FF83D.8030103@broadcom.com>
+	<20130924005224.GA27400@mail.catnarok.net>
+	<524144FF.9020908@broadcom.com>
+	<20130925180057.GA11394@mail.catnarok.net>
+Date: Mon, 30 Sep 2013 18:32:15 -0500
+Message-ID: <CAD_xsFNeTzqkyG5aeYWBGb756SW0_SHrdAKtkGQ_PBGZHxOXYg@mail.gmail.com> (sfid-20131001_013219_892358_8689949F)
+Subject: Re: brcmsmac causes soft lockup in 3.12-rc1
+From: Adam Honse <calcprogrammer1@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-10-11 at 15:56 +0200, Johannes Berg wrote:
-> On Fri, 2013-10-11 at 13:59 +0200, Dennis H Jensen wrote:
-> > Currently the frequencies (5910 - 5980) cannot be used because they
-> > are mapped into the 4.9GHz channels; this patch closes that hole.
-> 
-> > @@ -79,6 +79,8 @@ int ieee80211_channel_to_frequency(int chan, enum ieee80211_band band)
-> >  	case IEEE80211_BAND_5GHZ:
-> >  		if (chan >= 182 && chan <= 196)
-> >  			return 4000 + chan * 5;
-> > +		else if (chan > 196)
-> > +			return 5000 + (chan - 15) * 5;
-> 
-> Where does the +/- 15 come from? I can't find any evidence for this in
-> Annex E.
+Same here, using the 3.12.0-rc2 or newer from Ubuntu kernel PPA and my
+BCM4313 works flawlessly, something it's never done before.  Great
+work!
 
-I didn't double check Annex E. I just wanted to recover the lost
-frequencies that the 15 channels (182 - 196), map into 4.9 GHz.
-
-
-//Dennis
-
-
-
+On Wed, Sep 25, 2013 at 1:00 PM, Michael Stolovitzsky
+<emestee@catnarok.net> wrote:
+> On 13-09-24, Arend van Spriel wrote:
+>> On 09/24/2013 02:52 AM, Michael Stolovitzsky wrote:
+>> >On Mon, Sep 23, 2013 at 10:13:49AM +0200, Arend van Spriel wrote:
+>> >>On 09/22/2013 12:34 AM, Michael Stolovitzsky wrote:
+>> >>>Hi,
+>> >>>
+>> >>>On 3.12-rc1, modprobe brcmsmac causes a soft lockup (trace #1), effectively killing the box. This is a Lenovo S206
+>> >>>with BCM4313 (14e4:4727), which I believe is a bluetooth combo board. After a while,
+>> >>>RCU scheduler code detects a lockup (trace #2).
+>> >>>
+> [...]
+>> >>
+>> >>A fix for this problem has been submitted to John. I think it is in
+>> >>transit to mainline so probably will be in 3.12-rc2.
+>> >>
+>> >>Here the URL of the patch:
+>> >>
+>> >>https://git.kernel.org/cgit/linux/kernel/git/linville/wireless.git/patch/?id=aaa2ced15ad8dca8048666c9f70736424d696a6b
+>> >>
+>> >
+> [...]
+>> The patch is in 3.12-rc2. There have been more reports on that, but
+>> it still needs to be investigated. Can you provide content of
+>> /sys/kernel/debug/brcmsmac/bcma*/hardware? You need to have
+>> CONFIG_BRCMDBG selected.
+>>
+>
+> Here you go:
+>
+> board vendor: 14e4
+> board type: 587
+> board revision: 1307
+> board flags: 402201
+> board flags2: 884
+> firmware revision: 262032c
+>
+> Once again thank you. On 3.12.0-rc2, brcmsmac seems to work fine, which has never happened before, and makes me
+> very happy. Now I am getting new bug messages that I have to look at.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
