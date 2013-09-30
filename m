@@ -1,135 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hotel311.server4you.de ([85.25.146.15]:58187 "EHLO
-	hotel311.server4you.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755300Ab3ILSia (ORCPT
+Received: from postler.einfach.org ([91.250.116.113]:59002 "EHLO
+	postler.einfach.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753462Ab3I3IA6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Sep 2013 14:38:30 -0400
-Message-ID: <52320A22.1040609@monom.org> (sfid-20130912_203834_485618_723D04B0)
-Date: Thu, 12 Sep 2013 20:38:26 +0200
-From: Daniel Wagner <wagi@monom.org>
+	Mon, 30 Sep 2013 04:00:58 -0400
+Message-ID: <52492FB0.3010201@einfach.org> (sfid-20130930_100101_785529_6DAEED90)
+Date: Mon, 30 Sep 2013 09:00:48 +0100
+From: Bruno Randolf <br1@einfach.org>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	johannes@sipsolutions.net, marcel@holtmann.org,
-	Samuel Ortiz <samuel@sortiz.org>,
-	Gustavo Padovan <gustavo@padovan.org>,
-	linux-bluetooth@vger.kernel.org, linux-nfc@ml01.01.org
-Subject: Re: Linux Wireless Mini-Summit in New Orleans -- 19-20 September
-References: <20130808185410.GD30925@tuxdriver.com> <20130808190428.GF30925@tuxdriver.com> <20130905133907.GE1947@tuxdriver.com> <1378397092.3580.21.camel@dcbw.foobar.com> <20130909192346.GC1955@tuxdriver.com>
-In-Reply-To: <20130909192346.GC1955@tuxdriver.com>
+To: linux-wireless@vger.kernel.org, nbd@openwrt.org,
+	sujith@msujith.org, linux@rempel-privat.de
+CC: Ingo Randolf <ingo.randolf@qupik.com>
+Subject: ath9k AR9287 status?
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Hello!
 
-On 09/09/2013 09:23 PM, John W. Linville wrote:
-> On Thu, Sep 05, 2013 at 11:04:52AM -0500, Dan Williams wrote:
->> On Thu, 2013-09-05 at 09:39 -0400, John W. Linville wrote:
->>> On Thu, Aug 08, 2013 at 03:04:29PM -0400, John W. Linville wrote:
->>>> Sorry, forgot to copy linux-bluetooth and linux-nfc...
->>>>
->>>> On Thu, Aug 08, 2013 at 02:54:11PM -0400, John W. Linville wrote:
->>>>> Greetings!
->>>>>
->>>>> This is a reminder that we will have a Linux Wireless Mini-Summit in
->>>>> New Orleans this year on 19-20 September.  This will immediately follow
->>>>> LinuxCon and will run concurrently with Linux Plumber's Conference.
->>>>> This event includes Linux developers for wireless LAN (802.11),
->>>>> Bluetooth, and NFC technologies.  Both kernel and userland developers
->>>>> are welcomed and heartily encouraged to attend!
->>>>>
->>>>> 	http://wireless.kernel.org/en/developers/Summits/New-Orleans-2013
->>>>>
->>>>> The link above is a Wiki.  We are using it to collect discussion
->>>>> topics and to negotiate agenda/scheduling options for the event.
->>>>> Please go there to record your intent to attend the event and to
->>>>> propopse topics for discussion.
->>>>>
->>>>> Please be aware that in order to attend the event above one must
->>>>> register for either LinuxCon or for Linux Plumbers Conference.
->>>>> Act now, before those events fill-up and close their registrations!
->>>>>
->>>>> We are allotted one "large" room (up to ~80 people "theater style"), and
->>>>> two "small" rooms (up to ~25 people) for this event.  Based on history
->>>>> and the numbers of contributors, the larger room will primarily be
->>>>> for the 802.11 discussions and any "plenary" topics while the smaller
->>>>> rooms will be for Bluetooth, NFC, and any "breakout" topics.
->>>>>
->>>>> So...thoughts?  Topics to discuss?
->>>
->>> Ping?  We're now just 2 weeks away!
->>>
->>> Is our topic list complete?  It looks a bit light...
->>>
->>> Anyone have any input on scheduling the topics?  Are there any
->>> overlapping LPC sessions that it would make sense to work around?
->>
->> I'm attending though I haven't put my name on the wiki yet.
->>
->> Random thoughts; it doesn't look like any of these are covered in the
->> regular LinuxConf or LPC sessions.
->>
->> 1) State of the Union (maybe by multiple people in the same session per
->> their expertise), since perhaps not everyone doing eg 802.11 stuff knows
->> what's happening in BT or NFC land, or not everyone working on a
->> specific driver may know what new stuff their driver might need to be
->> fixed up for.  Maybe 5 minutes or less for things like:
->>
->>    * what's under the most active development right now?
->>    * upcoming new driver, hardware, and new capabilities
->>    * new 802.11 standards
->>    * and what's coming up in the next year from the standards orgs
->>    * what people will start working on soon
->>    * what will 3.13 or 3.14 look like from a wireless perspective?
->>    * 11s mesh status?
->>    * anything interesting in wpa_supplicant land?
->>    * anything new/interesting on the Android front?
->>
->> 2) Bluetooth - update about what's new and what's coming up in Bluez
->> land, and interaction with kernel 802.11 if any,
->>
->> 3) NFC - update about what's new and what's coming up in NFC land, where
->> it's getting used, what the stack looks like
->>
->> 4) What are users having the most problems with and how these problems
->> be fixed better/more quickly?  Are they driver bugs?  Are they stack
->> bugs?  Supplicant bugs?  NM/GUI/etc bugs?  Is there anything in our
->> development processes that's not working as smoothly as it could be?
->
-> Thanks, Dan -- those all look like decent discussion points.
-> I've added most of the points above to the topic list:
->
-> 	http://wireless.kernel.org/en/developers/Summits/New-Orleans-2013
->
-> Now, we need a few volunteers...
->
-> Gustavo, can you do a session on Bluetooth developments?
->
-> Samuel, can you cover NFC?
->
-> Jouni, would you mind doing your usual update on the standards
-> activities?  Also, is there anything new/interesting to report on
-> wpa_suppliant and/or hostapd?
->
-> Johannes, would you cover your vision for mac80211 for the next year
-> or so?  Anything in progress now that needs to be discussed?
->
-> Who should cover any Android topics?
->
-> Arend, Kalle, Johannes, Luca, etc -- anyone want to talk about driver
-> developments and/or issues between drivers and mac80211 or other
-> parts of the stack?
->
-> Seth, Stanislaw, etc -- anyone want to cover issues dealing with
-> supporting wireless in distributions?
->
-> Dan Williams, Daniel Wagner, etc -- anyone got some user stories
-> to share?
+What is the status of AR9287 support in ath9k?
 
-Not much news from the user front, though I could give a short
-update what's happening on ConnMan if you like.
+I have a AR9287 PCI-Express card which is behaving more than weird with 
+kernel 3.2 and with the current (3.10.4-1) backports drivers: It can't 
+connect to APs (many reconnects), with hostap it _seems_ to work as an 
+AP, but no beacons are seen and no stations can connect, similar in 
+ad-hoc mode, and when bringing the interface down the whole system 
+freezes...
 
-cheers,
-daniel
+I've seen some related bugs in the bugtracker, but I wonder what the 
+experiences with this chipset are in general?
 
+Or - can anyone recommend a good half size PCI-Express card that works 
+well with ath9k?
+
+Thanks,
+bruno
