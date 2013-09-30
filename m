@@ -1,91 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:46909 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751070Ab3IXNJn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Sep 2013 09:09:43 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 4/5] ath10k: fix Native Wifi decap mode RX
-Date: Tue, 24 Sep 2013 15:09:17 +0200
-Message-ID: <1380028158-861-5-git-send-email-michal.kazior@tieto.com> (sfid-20130924_150949_514629_94F3CD6B)
-In-Reply-To: <1380028158-861-1-git-send-email-michal.kazior@tieto.com>
-References: <1380028158-861-1-git-send-email-michal.kazior@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:37780 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754058Ab3I3Dh6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 Sep 2013 23:37:58 -0400
+Message-ID: <1380512269.1441.10.camel@deadeye.wl.decadent.org.uk> (sfid-20130930_053922_740197_F2DC74F5)
+Subject: Re: [PATCH] ti-connectivity: add wl1251 firmware and license
+From: Ben Hutchings <ben@decadent.org.uk>
+To: balbi@ti.com
+Cc: Luca Coelho <luca@coelho.fi>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, Pavel Machek <pavel@denx.de>
+Date: Mon, 30 Sep 2013 04:37:49 +0100
+In-Reply-To: <20130925132359.GE10746@radagast>
+References: <1380033894-5007-1-git-send-email-balbi@ti.com>
+	 <1380107096.4503.8.camel@porter.coelho.fi>
+	 <1380107278.4503.9.camel@porter.coelho.fi>
+	 <20130925132359.GE10746@radagast>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-atwqUuQ/WkUoTxBMSWKl"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-NWifi decap mode always reports 802.11 Data
-Frames, even when QoS Data Frames are actually
-received.
 
-This made mac80211 not report frame priority
-properly (since there was no QoS Control field).
+--=-atwqUuQ/WkUoTxBMSWKl
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/htt_rx.c |   32 +++++++++++++++++++++++++++---
- 1 file changed, 29 insertions(+), 3 deletions(-)
+On Wed, 2013-09-25 at 08:23 -0500, Felipe Balbi wrote:
+> Hi,
+>=20
+> On Wed, Sep 25, 2013 at 02:07:58PM +0300, Luca Coelho wrote:
+[...]
+> > Ah, and I forgot to say that you should update the WHENCE file
+> > accordingly too.  Check the wl12xx and wl18xx drivers for examples.
+>=20
+> I'll send a pull request, but how about this ? I don't think we can
+> change the license. It seems like the other firmwares are using the
+> older license, I'd argue those should be changed to the new one, but
+> that's another discussion.
+[...]
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index f8620b0..c119057 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -618,7 +618,7 @@ static void ath10k_htt_rx_amsdu(struct ath10k_htt *htt,
- 	enum rx_msdu_decap_format fmt;
- 	enum htt_rx_mpdu_encrypt_type enctype;
- 	struct ieee80211_hdr *hdr;
--	u8 hdr_buf[64];
-+	u8 hdr_buf[64], addr[ETH_ALEN], *qos;
- 	unsigned int hdr_len;
- 
- 	rxd = (void *)skb->data - sizeof(*rxd);
-@@ -671,7 +671,25 @@ static void ath10k_htt_rx_amsdu(struct ath10k_htt *htt,
- 			skb_trim(skb, skb->len - FCS_LEN);
- 			break;
- 		case RX_MSDU_DECAP_NATIVE_WIFI:
--			/* nothing to do */
-+			/* pull decapped header and copy DA */
-+			hdr = (struct ieee80211_hdr *)skb->data;
-+			hdr_len = ieee80211_hdrlen(hdr->frame_control);
-+			memcpy(addr, ieee80211_get_DA(hdr), ETH_ALEN);
-+			skb_pull(skb, hdr_len);
-+
-+			/* push original 802.11 header */
-+			hdr = (struct ieee80211_hdr *)hdr_buf;
-+			hdr_len = ieee80211_hdrlen(hdr->frame_control);
-+			memcpy(skb_push(skb, hdr_len), hdr, hdr_len);
-+
-+			/* original A-MSDU header has the bit set but we're
-+			 * not including A-MSDU subframe header */
-+			hdr = (struct ieee80211_hdr *)skb->data;
-+			qos = ieee80211_get_qos_ctl(hdr);
-+			qos[0] &= ~IEEE80211_QOS_CTL_A_MSDU_PRESENT;
-+
-+			/* original 802.11 header has a different DA */
-+			memcpy(ieee80211_get_DA(hdr), addr, ETH_ALEN);
- 			break;
- 		case RX_MSDU_DECAP_ETHERNET2_DIX:
- 			/* strip ethernet header and insert decapped 802.11
-@@ -736,7 +754,15 @@ static void ath10k_htt_rx_msdu(struct ath10k_htt *htt, struct htt_rx_info *info)
- 		skb_trim(skb, skb->len - FCS_LEN);
- 		break;
- 	case RX_MSDU_DECAP_NATIVE_WIFI:
--		/* nothing to do here */
-+		/* Pull decapped header */
-+		hdr = (struct ieee80211_hdr *)skb->data;
-+		hdr_len = ieee80211_hdrlen(hdr->frame_control);
-+		skb_pull(skb, hdr_len);
-+
-+		/* Push original header */
-+		hdr = (struct ieee80211_hdr *)rxd->rx_hdr_status;
-+		hdr_len = ieee80211_hdrlen(hdr->frame_control);
-+		memcpy(skb_push(skb, hdr_len), hdr, hdr_len);
- 		break;
- 	case RX_MSDU_DECAP_ETHERNET2_DIX:
- 		/* strip ethernet header and insert decapped 802.11 header and
--- 
-1.7.9.5
+I haven't seen this pull request, so it looks like there is nothing for
+me to apply at the moment.
 
+Ben.
+
+--=20
+Ben Hutchings
+Life is like a sewer:
+what you get out of it depends on what you put into it.
+
+--=-atwqUuQ/WkUoTxBMSWKl
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+
+iQIVAwUAUkjyDee/yOyVhhEJAQqGsBAAsfkrwSAMDWAzZM2rE27qfhAgRFAASTmx
+OEZIN1U50poQKKlzl8GvpAFCoRE19nNijpEIyaK8SlQo5BDIXb+rs+K2xsxlIGo6
+couF4G7qLt6grp6Q9blacC57BcbPpabN9+2qDbxuj19sT4XlciqAWQChA3gJjKsM
+3ZxdINRSShVowA6Ro4TDOeWGkpoO1dkLS5Crqpy4r2yNGesdeCEdYYI0Tt+d4wfK
+tiq4E6jYcoKCKzmbaUzG+FZGxUIuzyIzPx4Yto/TE044SInX+w9TyC/EHjavef4P
+wxs8iS2EXu07DZCK6h+qLvD1HXN7kVdJpbsC4Na6BTSpCG8JdwgIzo/uBw4+8mIj
+PxYeN9L0vpch6AlDq4o0KBc63mL5UR5xVL/po3fgWXTOIm5TjuIDdzgwaxiCsqAC
+EqBEE+vz9c5hSldYjndU0p3a2WsUZ8IgDsnq4XJezqaOheN60017dWbDJ4Q4xxjI
+TugY/n209PZYp28FKb82R9eZDLIlVSiTDE24vyQ8qHDzhxeiNIkI8IrIpJIBN75g
+/F7oYy1JjmoXexolVWZzuYpt5oZlBXzs98oEaOMrghRCemzAHW1uwmqQc6h3HkP8
+DQlaqYThjteu49qCYeWCPFnLLeOGGDtFXB1OUji3CtNtZ0yUFvuF2Gs4l+HLQx/o
+Hphgz433TII=
+=vARW
+-----END PGP SIGNATURE-----
+
+--=-atwqUuQ/WkUoTxBMSWKl--
