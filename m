@@ -1,32 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 174-143-244-95.static.cloud-ips.com ([174.143.244.95]:59762
-	"EHLO mail.catnarok.net" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1752940Ab3IVMyk (ORCPT
+Received: from kvm.w1.fi ([128.177.28.162]:55461 "EHLO
+	jmaline2.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753900Ab3I3JgN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Sep 2013 08:54:40 -0400
-Date: Sun, 22 Sep 2013 12:32:00 +0000
-From: Michael Stolovitzsky <emestee@catnarok.net>
-To: linux-wireless@vger.kernel.org
-Subject: Re: brcmsmac causes soft lockup in 3.12-rc1
-Message-ID: <20130922123200.GA17832@mail.catnarok.net> (sfid-20130922_145444_552128_A2623047)
-References: <20130921223440.GA5297@mail.catnarok.net>
- <loom.20130922T072315-740@post.gmane.org>
+	Mon, 30 Sep 2013 05:36:13 -0400
+Date: Mon, 30 Sep 2013 12:36:05 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211: Run deferred scan if last roc_list item is not
+ started
+Message-ID: <20130930093605.GA23614@w1.fi> (sfid-20130930_113616_627099_8F3FCAD4)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <loom.20130922T072315-740@post.gmane.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Sep 22, 2013 at 05:33:29AM +0000, Adam Honse wrote:
-> I'm having the same issues on my laptop.  Under Debian, Ubuntu, and Arch I
-> had the same problem in every kernel release I tried brcmsmac on in that the
-> range is very poor.  My router in the basement was intermittent upstairs in
-> the room directly above the router, and got barely enough signal to work
-> reliably sitting next to it.  I just switched the machine back to Ubuntu
-> (GNOME Remix) today to test the Radeon drivers but upon installing 3.12 I'm
-> getting the same soft-lockup bug, crashes the whole PC before I can log in
-> and even see what's going on.  The closed source Broadcom STA driver works
-> fine on supported kernels.
-> 
+mac80211 scan processing could get stuck if roc work for pending, but
+not started when a scan request was deferred due to such roc item.
+Normally the deferred scan would be started from
+ieee80211_start_next_roc(), but ieee80211_sw_roc_work() calls that only
+if the finished ROC was started. Fix this by calling
+ieee80211_run_deferred_scan() in the case the last ROC was not actually
+started.
 
-Please post lspci -vnn, I wanna see if the hardware is identical.
+This issue was hit relatively easily in P2P find operations where Listen
+state (remain-on-channel) and Search state (scan) are repeated in a
+loop.
+
+Signed-off-by: Jouni Malinen <j@w1.fi>
+---
+ net/mac80211/offchannel.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
+index acd1f71..0c2a294 100644
+--- a/net/mac80211/offchannel.c
++++ b/net/mac80211/offchannel.c
+@@ -394,6 +394,8 @@ void ieee80211_sw_roc_work(struct work_struct *work)
+ 
+ 		if (started)
+ 			ieee80211_start_next_roc(local);
++		else if (list_empty(&local->roc_list))
++			ieee80211_run_deferred_scan(local);
+ 	}
+ 
+  out_unlock:
+-- 
+1.7.9.5
+
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
