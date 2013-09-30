@@ -1,45 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out06.msg.oleane.net ([62.161.7.4]:54685 "EHLO
-	smtp-out06.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752617Ab3IRPeV convert rfc822-to-8bit (ORCPT
+Received: from postler.einfach.org ([91.250.116.113]:58262 "EHLO
+	postler.einfach.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753638Ab3I3QMx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Sep 2013 11:34:21 -0400
-Received: from smtp04.msg.oleane.net (smtp04.mail.priv [172.17.20.113])
-	by smtp-out06.msg.oleane.net with ESMTP id r8IFYJ0a002077
-	for <linux-wireless@vger.kernel.org>; Wed, 18 Sep 2013 17:34:20 +0200
-Received: from acksys.fr ([195.6.104.67]) (authenticated)
-	by smtp04.msg.oleane.net (MTA) with ESMTP id r8IFDmqx003941
-	for <linux-wireless@vger.kernel.org>; Wed, 18 Sep 2013 17:13:48 +0200
-Subject: Question on 802.11n feature
-Date: Wed, 18 Sep 2013 17:13:47 +0200
-Message-ID: <773DB8A82AB6A046AE0195C68612A319015E1429@sbs2003.acksys.local> (sfid-20130918_173426_025428_2A739BAC)
+	Mon, 30 Sep 2013 12:12:53 -0400
+Message-ID: <5249A2F7.5090908@einfach.org> (sfid-20130930_181257_909180_DD3D27EF)
+Date: Mon, 30 Sep 2013 17:12:39 +0100
+From: Bruno Randolf <br1@einfach.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-From: "Cedric VONCKEN" <cedric.voncken@acksys.fr>
-To: <linux-wireless@vger.kernel.org>
+To: Oleksij Rempel <linux@rempel-privat.de>,
+	linux-wireless@vger.kernel.org, nbd@openwrt.org, sujith@msujith.org
+CC: Ingo Randolf <ingo.randolf@qupik.com>
+Subject: Re: ath9k AR9287 status?
+References: <52492FB0.3010201@einfach.org> <5249443E.3080700@rempel-privat.de> <524954BE.8060603@einfach.org> <52497C2E.1060406@rempel-privat.de>
+In-Reply-To: <52497C2E.1060406@rempel-privat.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-	Dear mailling list, 
+On 09/30/2013 02:27 PM, Oleksij Rempel wrote:
+>>> Check:
+>>> - PCIe related power managment - ASPM.
 
-	I am using a unex DNMA-863 with AR9106 chipset and ath9k linux
-driver.
+Hmm, disabling ASPM in the BIOS and per kernel command line 
+(pcie_aspm=off) did not help.
 
-	I would like to know if in this configuration I could support
-these features:
-		- MRC (Maximal ratio combining)
-		- A-MSDU
-		- A-MPDU
-		- MLD (Maximum Likehood Decoding)
-		- SST
-		- U-APSD (Unscheduled Automatic Power Save Delivery)
+> I use 3.11 right now. In case of PCIe issue, backport wont help you.
+> Test completely new kernel.
 
-If some features are supported, is it possible to enable/disable it? if
-yes how I can do that ?
+I'll try 3.11 later.
 
-	Thanks for your help.
-	
+> What is your host hardware?
 
-Cedric Voncken 
+Its a Advantech MIO-2261N (Atom N260).
 
+Thanks,
+bruno
