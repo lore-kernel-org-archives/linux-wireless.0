@@ -1,36 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from p15195424.pureserver.info ([82.165.34.74]:33490 "EHLO
-	p15195424.pureserver.info" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751179Ab3IORtE (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:46883 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755272Ab3I3TKg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Sep 2013 13:49:04 -0400
-Message-ID: <5235F2D0.6090505@ilande.co.uk> (sfid-20130915_194919_748700_F808CC15)
-Date: Sun, 15 Sep 2013 18:48:00 +0100
-From: Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>
+	Mon, 30 Sep 2013 15:10:36 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/4] ath10k: split vdev_id calculation from tx function
+References: <1380292706-3609-1-git-send-email-michal.kazior@tieto.com>
+	<1380292706-3609-3-git-send-email-michal.kazior@tieto.com>
+Date: Mon, 30 Sep 2013 22:10:30 +0300
+In-Reply-To: <1380292706-3609-3-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Fri, 27 Sep 2013 16:38:24 +0200")
+Message-ID: <87mwmudt21.fsf@kamboji.qca.qualcomm.com> (sfid-20130930_211040_196847_454623EF)
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: Olivier Reuland <olivier@reuland.ch>,
-	linux-wireless@vger.kernel.org
-References: <CALa3VXYo1yTuDr22M7AUcp0WLQszzdMSJczRgmD57uPd_68vWQ@mail.gmail.com> <522D054B.5060205@lwfinger.net> <522DD856.7050309@ilande.co.uk> <522DE1BE.6070904@lwfinger.net> <522DE8CA.9010008@ilande.co.uk> <522DFF83.6000605@lwfinger.net> <loom.20130915T101439-276@post.gmane.org> <5235BB3B.5030800@lwfinger.net>
-In-Reply-To: <5235BB3B.5030800@lwfinger.net>
-Subject: Re: RTL8192CU continually reconnecting
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 15/09/13 14:50, Larry Finger wrote:
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-> There is a known problem with the dynamic power management code for this
-> chip. Unfortunately, the problem does not affect my system. At the
-> moment, my device that uses rtl8192cu has been connected for 12 hours
-> with no disconnects. The only evidence of a bug here is poor performance.
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-Did my email to the list yesterday provide any further clues at all? I 
-know that you're looking at re-working the power code, but if there is 
-any chance of a stop-gap fix for 3.12 then I know it would be greatly 
-appreciated :)
+Empty commit log.
 
+> ---
+>  drivers/net/wireless/ath/ath10k/mac.c |   25 +++++++++++++++----------
+>  1 file changed, 15 insertions(+), 10 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+> index 7415a60..4b7c949 100644
+> --- a/drivers/net/wireless/ath/ath10k/mac.c
+> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+> @@ -1421,6 +1421,19 @@ static u8 ath10k_tx_h_get_tid(struct ieee80211_hdr *hdr)
+>  	return ieee80211_get_qos_ctl(hdr)[0] & IEEE80211_QOS_CTL_TID_MASK;
+>  }
+>  
+> +static u8 ath10k_tx_h_get_vdev_id(struct ath10k *ar,
+> +				  struct ieee80211_tx_info *info)
+> +{
+> +	if (info->control.vif)
+> +		return ath10k_vif_to_arvif(info->control.vif)->vdev_id;
+> +
+> +	if (ar->monitor_enabled)
+> +		return ar->monitor_vdev_id;
+> +
+> +	ath10k_warn("could not resolve vdev id\n");
+> +	return 0;
+> +}
 
-ATB,
+Empty line before return would be nice.
 
-Mark.
+-- 
+Kalle Valo
