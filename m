@@ -1,54 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:54128 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752788Ab3I3JC5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Sep 2013 05:02:57 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] iwlwifi: pcie: fix merge damage
-Date: Mon, 30 Sep 2013 11:02:46 +0200
-Message-Id: <1380531766-15384-1-git-send-email-johannes@sipsolutions.net> (sfid-20130930_110300_453054_8E26BCBD)
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:37756 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753989Ab3I3DaY convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 Sep 2013 23:30:24 -0400
+Message-ID: <1380511808.1441.3.camel@deadeye.wl.decadent.org.uk> (sfid-20130930_053040_060454_B076002E)
+Subject: Re: [PATCH] cw1200: Add SDD file for the Sagrad SG901-1091/1098
+ WLAN modules.
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Solomon Peachy <pizza@shaftnet.org>
+Cc: David Woodhouse <dwmw2@infradead.org>,
+	Adam Harriman <adam@sagrad.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 30 Sep 2013 04:30:08 +0100
+In-Reply-To: <1378335153-23059-1-git-send-email-pizza@shaftnet.org>
+References: <1378335153-23059-1-git-send-email-pizza@shaftnet.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, 2013-09-04 at 18:52 -0400, Solomon Peachy wrote:
+> Sagrad has granted permission to redistribute this file, which contains
+> calibration and initialization tables for for their WLAN modules.
+> 
+> Please note that the cw1200 driver still requires firmware files, which
+> are separately licensed by ST-E.  When (if?) explicit permission is
+> obtained to redistribute the firmware, it will be added.
+> 
+> Signed-off-by: Solomon Peachy <pizza@shaftnet.org>
+> Signed-off-by: Adam Harriman <adam@sagrad.com>
+> ---
+>  WHENCE                   |  22 ++++++++++++++++++++++
+>  sdd_sagrad_1091_1098.bin | Bin 0 -> 816 bytes
+>  2 files changed, 22 insertions(+)
+>  create mode 100644 sdd_sagrad_1091_1098.bin
+[...]
 
-The merge b35c8097 seems to have lost commit eabc4ac5d,
-put the code back.
+Applied, thanks.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/pcie/trans.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Ben.
 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
-index bad95d2..c3f904d 100644
---- a/drivers/net/wireless/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
-@@ -1401,6 +1401,10 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 	spin_lock_init(&trans_pcie->reg_lock);
- 	init_waitqueue_head(&trans_pcie->ucode_write_waitq);
- 
-+	err = pci_enable_device(pdev);
-+	if (err)
-+		goto out_no_pci;
-+
- 	if (!cfg->base_params->pcie_l1_allowed) {
- 		/*
- 		 * W/A - seems to solve weird behavior. We need to remove this
-@@ -1412,10 +1416,6 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 				       PCIE_LINK_STATE_CLKPM);
- 	}
- 
--	err = pci_enable_device(pdev);
--	if (err)
--		goto out_no_pci;
--
- 	pci_set_master(pdev);
- 
- 	err = pci_set_dma_mask(pdev, DMA_BIT_MASK(36));
 -- 
-1.8.4.rc3
-
+Ben Hutchings
+Life is like a sewer:
+what you get out of it depends on what you put into it.
