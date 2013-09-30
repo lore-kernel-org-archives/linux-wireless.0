@@ -1,69 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from p15195424.pureserver.info ([82.165.34.74]:41512 "EHLO
-	p15195424.pureserver.info" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751225Ab3IJUFs (ORCPT
+Received: from caiajhbdccac.dreamhost.com ([208.97.132.202]:51181 "EHLO
+	homiemail-a86.g.dreamhost.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1756115Ab3I3Tkv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Sep 2013 16:05:48 -0400
-Message-ID: <522F7B61.6060208@ilande.co.uk> (sfid-20130910_220557_291322_21DF12FB)
-Date: Tue, 10 Sep 2013 21:04:49 +0100
-From: Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>
+	Mon, 30 Sep 2013 15:40:51 -0400
+Received: from homiemail-a86.g.dreamhost.com (localhost [127.0.0.1])
+	by homiemail-a86.g.dreamhost.com (Postfix) with ESMTP id 7776A360082
+	for <linux-wireless@vger.kernel.org>; Mon, 30 Sep 2013 12:40:51 -0700 (PDT)
+Received: from mail-pa0-f54.google.com (mail-pa0-f54.google.com [209.85.220.54])
+	(using TLSv1 with cipher RC4-SHA (128/128 bits))
+	(No client certificate requested)
+	(Authenticated sender: erik@erikelmore.com)
+	by homiemail-a86.g.dreamhost.com (Postfix) with ESMTPSA id 59A4236007F
+	for <linux-wireless@vger.kernel.org>; Mon, 30 Sep 2013 12:40:51 -0700 (PDT)
+Received: by mail-pa0-f54.google.com with SMTP id kx10so6319428pab.41
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Sep 2013 12:40:50 -0700 (PDT)
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: Timothy Rundle <tgrundlesr@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-References: <CALa3VXYo1yTuDr22M7AUcp0WLQszzdMSJczRgmD57uPd_68vWQ@mail.gmail.com> <522D054B.5060205@lwfinger.net> <522DD856.7050309@ilande.co.uk> <522DE1BE.6070904@lwfinger.net> <522DE8CA.9010008@ilande.co.uk> <522DFF83.6000605@lwfinger.net> <522E0573.4000804@ilande.co.uk> <522E1B7D.5010107@lwfinger.net> <522E463E.4040701@ilande.co.uk> <522E5416.4010901@lwfinger.net> <522E5D83.9060103@ilande.co.uk> <522E896E.7000607@lwfinger.net> <522EB51A.2080004@ilande.co.uk> <522F3757.8030600@lwfinger.net>
-In-Reply-To: <522F3757.8030600@lwfinger.net>
-Subject: Re: RTL8192CU continually reconnecting
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Date: Mon, 30 Sep 2013 15:40:50 -0400
+Message-ID: <CA+=D8wmgsBimQhSYDqWbuzwM544YrX1Gj9gsmftQUHoD+QYeZw@mail.gmail.com> (sfid-20130930_214056_226699_398609EB)
+Subject: Idea: wifi-over-ethernet (bear with me)
+From: Erik Elmore <erik@erikelmore.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/09/13 16:14, Larry Finger wrote:
+Hello, linux-wireless.  I have an idea that I'd like to get some
+feedback from you all.  I admit this idea is weird/flawed/broken and
+seemingly useless, but I do have a practical application in mind, so
+please hear me out.
 
-> Those disconnects do happen for reasons that I do not understand. They
-> will be worse on your system without a network manager as it appears
-> that you need to manually reconnect at that point, or at least it took a
-> long time for the system to react. With NetworkManager, that reconnect
-> is automatic, and relatively quick.
+Imagine two physical locations, site 1 and 2, that are well outside of
+normal wifi range of each other.  Each site has a device that listens
+for a subset of wifi frames and then sends them over a distribution
+network to its counterpart at the other site.  Each device will also
+re-transmit frames received via the distribution network.  Let's call
+these devices listener1 and listener2.
 
-Okay - understood.
+Each site also contains one client device that wants to form an ad-hoc
+network with the one in the other site.  Assuming that listener1 and
+listener2 are configured to forward frames having a TA belonging to
+the client device in their site, is it feasible for these devices to
+form an ad-hoc network with the help of the listener devices?
 
->> Whilst checking various parts of my kernel, I noticed for the first
->> time during
->> testing that my current kernel configuration doesn't have SMP enabled.
->> This got
->> me thinking that perhaps there are other build options which could
->> have an
->> effect on the driver. Hence I also uploaded a copy of my .config file to
->> http://www.ilande.co.uk/tmp/rtl8192cu-config in the hope that maybe
->> this can
->> help you recreate the issue locally?
->
-> As I have a dual-core CPU, thus I always have SMP set. That should not
-> be a problem. In fact, the concurrent operation of 2 CPUs usually causes
-> more problems. I will review that configuration.
+I do have a proof-of-concept in the works.  It's not quite right yet,
+but some things seem to work (sorta).
 
-I'd definitely be interested to know if by duplicating that same 
-configuration, you see the same issues that I do.
+I welcome any comments, including those that call my sanity into question.
 
-> You can now disable the logging. When the watchdog reports that contact
-> with the AP has been lost, that is certainly true, and the watchdog is
-> doing its job. In addition, nothing was received from any AP, which
-> leads me to conclude that the receiver has locked up for some reason. I
-> need to check to see what the code does to recover. Perhaps that will
-> help me understand the problem. In my current run that has run for 20
-> hours, I have had two disconnects for Reason 3, but more importantly, I
-> have had two watchdog restarts. It does happen on my system, just a lot
-> less frequently. BTW, my ping loss rate is about 3%. That is too high,
-> but not as bad as yours.
+Thanks!
 
-Interesting. Perhaps there is something different in the initial 
-programming of the radio that causes it to crash on my particular 
-hardware revision? As before, please let me know if there is anything 
-else you require.
-
-
-ATB,
-
-Mark.
-
++=
+Erik Elmore
