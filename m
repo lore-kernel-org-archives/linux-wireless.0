@@ -1,40 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:34691 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932756Ab3ICMwI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Sep 2013 08:52:08 -0400
-From: Masami Ichikawa <masami256@gmail.com>
-To: kvalo@adurom.com, IvDoorn@gmail.com, gwingerde@gmail.com,
-	helmut.schaa@googlemail.com, linville@tuxdriver.com
-Cc: Masami Ichikawa <masami256@gmail.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] rt2x00: Add WLI-UC-G300HP's Product ID
-Date: Tue,  3 Sep 2013 21:51:56 +0900
-Message-Id: <1378212716-13525-1-git-send-email-masami256@gmail.com> (sfid-20130903_145230_445332_BFD72DFB)
+Received: from mms3.broadcom.com ([216.31.210.19]:2098 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754834Ab3I3OVC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Sep 2013 10:21:02 -0400
+Message-ID: <524988C7.1080903@broadcom.com> (sfid-20130930_162106_280526_3886495E)
+Date: Mon, 30 Sep 2013 16:20:55 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Dan Williams" <dcbw@redhat.com>
+cc: "Arend van Spriel" <aspriel@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: NetworkManager not connecting anymore
+References: <CAJ65rDzRUZcZG5+iz2TeQLW7YS+T5xD+M-BxpJp23N=W4dn1+g@mail.gmail.com>
+ <1380549653.6136.4.camel@dcbw.foobar.com>
+In-Reply-To: <1380549653.6136.4.camel@dcbw.foobar.com>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Support Bufallo WLI-UC-G300HP.
+On 09/30/13 16:00, Dan Williams wrote:
+> On Sun, 2013-09-29 at 11:11 +0200, Arend van Spriel wrote:
+>> With a recent update on my Ubuntu 12.10 laptop, wireless connection is no
+>> longer working with NetworkManager. It is working when using wpa_supplicant
+>> directly. The nm-applet indicates 'device not ready' for the Wireless
+>> Networks. Attached is the syslog upon inserting the wireless driver module,
+>> which is brcmsmac. Not sure if the state change below correlates to the
+>> nm-applet status.
+>>
+>> NetworkManager[1121]:<info>  (wlan0): device state change: unmanaged ->
+>> unavailable (reason 'managed') [10 20 2]
+>
+> 'unavailable' could mean a couple things:
+>
+> 1) supplicant isn't running or can't be contacted via D-Bus
 
-Signed-off-by: Masami Ichikawa <masami256@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800usb.c | 1 +
- 1 file changed, 1 insertion(+)
+Hi Dan,
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index 840833b..518277d 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -977,6 +977,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	{ USB_DEVICE(0x0411, 0x016f) },
- 	{ USB_DEVICE(0x0411, 0x01a2) },
- 	{ USB_DEVICE(0x0411, 0x01ee) },
-+	{ USB_DEVICE(0x0411, 0x01a8) },
- 	/* Corega */
- 	{ USB_DEVICE(0x07aa, 0x002f) },
- 	{ USB_DEVICE(0x07aa, 0x003c) },
--- 
-1.8.3.1
+Thanks for explaining. 1) seems to be the issue. 'ps -ae | grep wpa' did 
+not return anything. I decided to remove and install wpa_supplicant. 
+Sometimes the helpdesk approach works ;-)
+
+Regards,
+Arend
 
