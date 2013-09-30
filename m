@@ -1,46 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:60942 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751212Ab3IPMti (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Sep 2013 08:49:38 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC 0/4] ath10k: improve RX performance
-Date: Mon, 16 Sep 2013 14:49:13 +0200
-Message-ID: <1379335757-15180-1-git-send-email-michal.kazior@tieto.com> (sfid-20130916_144941_555728_6F367541)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([144.76.43.152]:55744 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752855Ab3I3O1Z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Sep 2013 10:27:25 -0400
+Message-ID: <1380551237.14467.12.camel@jlt4.sipsolutions.net> (sfid-20130930_162728_987423_B22DBF41)
+Subject: Re: Kernel panic in ieee80211_calculate_rx_timestamp
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Lindroth <thomas.lindroth@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 30 Sep 2013 16:27:17 +0200
+In-Reply-To: <523B3BEA.9000100@gmail.com> (sfid-20130919_200122_426878_A0C53351)
+References: <523B3BEA.9000100@gmail.com>
+	 (sfid-20130919_200122_426878_A0C53351)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Thu, 2013-09-19 at 20:01 +0200, Thomas Lindroth wrote:
+> I recently got a ath9k_htc based dongle and running kismet for a few
+> hours results in a kernel panic (divide error) in
+> ieee80211_calculate_rx_timestamp with kernel 3.11.0.
+> 
+> The problem seems to occur when the call to cfg80211_calculate_bitrate
+> returns 0. I've used this patch to temporarily works around the problem.
 
-This patchset gives clear RX performance
-improvement on AP135. Throughput is at least
-doubled (300mbps -> 600mbps, UDP RX, 2x2).
+Seems fair, but maybe it should print out the rate info so you can see
+what was actually received - most likely this is a driver bug though.
 
-Patches depend on my RFC patch "mac80211: support
-reporting A-MSDU subframes individually".
+If you submit a patch that can be applied with signed-off-by etc. I can
+apply it.
 
+johannes
 
-Michal.
-
-
-Michal Kazior (4):
-  ath10k: report A-MSDU subframes individually
-  ath10k: document decap modes
-  ath10k: cleanup RX decap handling
-  ath10k: align RX frames properly
-
- drivers/net/wireless/ath/ath10k/htt.h     |    1 +
- drivers/net/wireless/ath/ath10k/htt_rx.c  |  251 ++++++++++++-----------------
- drivers/net/wireless/ath/ath10k/hw.h      |    6 +-
- drivers/net/wireless/ath/ath10k/rx_desc.h |   24 ++-
- drivers/net/wireless/ath/ath10k/txrx.c    |    5 +
- 5 files changed, 135 insertions(+), 152 deletions(-)
-
--- 
-1.7.9.5
 
