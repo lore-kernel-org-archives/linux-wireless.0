@@ -1,46 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:36127 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752690Ab3ICFNx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Sep 2013 01:13:53 -0400
-Message-ID: <1378185231.29083.15.camel@joe-AO722> (sfid-20130903_071357_045061_88A19A5A)
-Subject: Re: [PATCH v2 13/16] wcn36xx: add wcn36xx.h
-From: Joe Perches <joe@perches.com>
-To: Kalle Valo <kvalo@adurom.com>
-Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org
-Date: Mon, 02 Sep 2013 22:13:51 -0700
-In-Reply-To: <87bo4av6fj.fsf@purkki.adurom.net>
-References: <1377248299-21007-1-git-send-email-k.eugene.e@gmail.com>
-	 <1377248299-21007-14-git-send-email-k.eugene.e@gmail.com>
-	 <1377298929.2816.15.camel@joe-AO722> <87ioyjux5w.fsf@purkki.adurom.net>
-	 <1378144193.1953.88.camel@joe-AO722> <87bo4av6fj.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:60101 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754934Ab3I3Qxp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Sep 2013 12:53:45 -0400
+Message-ID: <1380559680.32539.1.camel@paschendale> (sfid-20130930_185348_302018_88E537B7)
+Subject: Re: [PATCH 12/12] wlcore: always register dummy hardirq
+From: Luca Coelho <luca@coelho.fi>
+To: Eliad Peller <eliad@wizery.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Mon, 30 Sep 2013 19:48:00 +0300
+In-Reply-To: <CAB3XZEeer+NTKwWc5GkjZQdswSkPfsGhinvpcK2BbarqjCeA5A@mail.gmail.com>
+References: <1378218848-7853-1-git-send-email-eliad@wizery.com>
+	 <1378218848-7853-12-git-send-email-eliad@wizery.com>
+	 <1378799431.4799.63.camel@porter.coelho.fi>
+	 <CAB3XZEeer+NTKwWc5GkjZQdswSkPfsGhinvpcK2BbarqjCeA5A@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-09-03 at 08:08 +0300, Kalle Valo wrote:
-> Joe Perches <joe@perches.com> writes:
-> Please, no dynamic_debug. It's useless on a wifi driver.
-> > Why is that?
-> It's not really usable in practise, at least the last time I looked at
-> it.
+On Wed, 2013-09-11 at 09:48 +0200, Eliad Peller wrote:
+> On Tue, Sep 10, 2013 at 10:50 AM, Luca Coelho <luca@coelho.fi> wrote:
+> > On Tue, 2013-09-03 at 17:34 +0300, Eliad Peller wrote:
+> >> From: Arik Nemtsov <arik@wizery.com>
+> >>
+> >> This keeps the kernel happy when using edge-irqs and requesting a
+> >> threaded irq.
+> >>
+> >> Signed-off-by: Arik Nemtsov <arik@wizery.com>
+> >> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> >> ---
+> >
+> > Ouch, I think this is not going to fit at all with the DT patches I
+> > sent.
+> >
+> this is quite minor patch (only making sure we always define hardirq
+> when threaded_irq is used. i don't think it should conflict (at least
+> logically) with DT patches...
 
-Then you probably haven't looked recently.
+It will.  Just take a look at my DT patch series.  Anyway, I'll apply
+this for now and whoever (if ever) take over my DT series, will have to
+make sure it still works. :P
 
-> It's cumbersome to enable log messages based on their line numbers
-> and line numbers change so you can't really make any scripts to help
-> with that.
-
-Most don't do that.
-Generally it's enabled/disabled by module.
-
-> And enabling log messages on the file level is sometimes too
-> much. So it would really need some sort of grouping feature with a
-> stable interface.
-
-Like by module?
-
-
+--
+Cheers,
+Luca.
 
