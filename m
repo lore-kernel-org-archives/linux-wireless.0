@@ -1,61 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f49.google.com ([209.85.214.49]:39390 "EHLO
-	mail-bk0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752093Ab3IVUi0 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:54604 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755281Ab3I3KeZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Sep 2013 16:38:26 -0400
-Received: by mail-bk0-f49.google.com with SMTP id r7so873792bkg.36
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Sep 2013 13:38:25 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: the_force@gmx.de
+	Mon, 30 Sep 2013 06:34:25 -0400
+Message-ID: <1380537261.14467.8.camel@jlt4.sipsolutions.net> (sfid-20130930_123434_338995_9031FAA0)
+Subject: Re: [PATCH 3.12 2/2] mac80211: update sta->last_rx on acked tx
+ frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: p54usb raspberry pi no wlan0 device
-Date: Sun, 22 Sep 2013 22:38:21 +0200
-Message-ID: <1508948.9yCuDuyPXl@blech> (sfid-20130922_223859_924428_97D1C3F7)
-In-Reply-To: <trinity-4366d417-bdc3-4e3b-a613-25b1af7a51a7-1379880343916@3capp-gmx-bs34>
-References: <trinity-4366d417-bdc3-4e3b-a613-25b1af7a51a7-1379880343916@3capp-gmx-bs34>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Date: Mon, 30 Sep 2013 12:34:21 +0200
+In-Reply-To: <52494861.8010007@openwrt.org>
+References: <1380483574-88667-1-git-send-email-nbd@openwrt.org>
+	  <1380483574-88667-2-git-send-email-nbd@openwrt.org>
+	 <1380532248.14467.4.camel@jlt4.sipsolutions.net>
+	 <52494861.8010007@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Mon, 2013-09-30 at 11:46 +0200, Felix Fietkau wrote:
+> On 2013-09-30 11:10 AM, Johannes Berg wrote:
+> > On Sun, 2013-09-29 at 21:39 +0200, Felix Fietkau wrote:
+> >> When clients are idle for too long, hostapd sends nullfunc frames for
+> >> probing. When those are acked by the client, the idle time needs to be
+> >> updated.
+> >> 
+> >> To make this work (and to avoid unnecessary probing), update sta->last_rx
+> >> whenever an ACK was received for a tx packet. Only do this if the flag
+> >> IEEE80211_HW_REPORTS_TX_ACK_STATUS is set.
+> > 
+> > Why that last bit? If we got an ack status, wouldn't it be OK to do
+> > either way? Or are you saying drivers are lying more often than not
+> > otherwise?
+> I added that just in case, some drivers might not be fully reliable wrt.
+> reporting the ACK status.
 
-On Sunday, September 22, 2013 10:05:44 PM the_force@gmx.de wrote:
-> i want to use an Corega WLUSB2GTST USB adapter on my Raspberry Pi linux device. 
-> I used fwextract utility with the driver file (Windows 2000 driver, nobyteswap option).
-> So i got these 2 files:
->  
-> cgwlusb200.arm
-> cgwlusb201.arm
-I think I found the driver. It's a generic firmware, but it's really old (pre 2.7.0.0).
-You should go to <http://wireless.kernel.org/en/users/Drivers/p54> and get the latest
-one from there for your device (isl3887usb > 2.6.29).
-  
-> I have copied these files (i tried cgwlusb200.arm also cgwlusb201.arm) to the following location on my Raspberry Pi:
->  
-> /lib/firmware/isl3887usb
-This should be the right location and filename for the firmware.
+Ok, I'll apply it.
 
-> Sep 22 21:33:09 pinulldrei kernel: [1031466.202908] usb 1-1.2.1: New USB device found, idVendor=07aa, idProduct=0020
-I can't find this device-id in the p54u_table. Did you add it manually?
+johannes
 
-> Sep 22 21:33:09 pinulldrei kernel: [1031466.202939] usb 1-1.2.1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
-> Sep 22 21:34:37 pinulldrei kernel: [1031554.700433] cfg80211: Calling CRDA to update world regulatory domain
-> Sep 22 21:34:37 pinulldrei kernel: [1031554.755865] usbcore: registered new interface driver p54usb
-
-Is this output cropped? p54usb announces which firmware file it requests.
-Furthermore, In your case you should have seen something like this in dmesg:
-"wrong firmware, please get a firmware for "isl3887usb" and try again."
-
-> Everything looks fine - but no wlan0 device will be created :-( The led on the stick
-> will not turn on, so i think i have a driver problem.
->
-> How can i debug / solve this problem?!?
-Looks like the firmware on the device crashed. You should physically disconnect and 
-reconnect the stick before trying again.
- 
-> Greetings from Germany,
-Regards from Germany,
-
-Christian
