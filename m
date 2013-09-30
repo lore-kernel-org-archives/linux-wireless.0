@@ -1,41 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:45459 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752393Ab3IWTTZ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Sep 2013 15:19:25 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-CC: "linux-bluetooth@vger.kernel.org" <linux-bluetooth@vger.kernel.org>,
-	Gustavo Padovan <gustavo@padovan.org>,
-	Johan Hedberg <johan.hedberg@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Mike Frysinger <vapier@chromium.org>,
-	Hyuckjoo Lee <hyuckjoo.lee@samsung.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Date: Mon, 23 Sep 2013 12:18:48 -0700
-Subject: RE: [PATCH v5 1/2] Bluetooth: btmrvl: add setup handler
-Message-ID: <477F20668A386D41ADCC57781B1F70430F44C59418@SC-VEXCH1.marvell.com> (sfid-20130923_211930_848303_CA403A93)
-References: <1379715667-22424-1-git-send-email-bzhao@marvell.com>
- <18678858-E711-43E5-AFE6-E637D1CECFFB@holtmann.org>
-In-Reply-To: <18678858-E711-43E5-AFE6-E637D1CECFFB@holtmann.org>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-la0-f52.google.com ([209.85.215.52]:52982 "EHLO
+	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755418Ab3I3U4w (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Sep 2013 16:56:52 -0400
+Received: by mail-la0-f52.google.com with SMTP id ev20so4863759lab.25
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Sep 2013 13:56:50 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <1379399136-3181-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1379399136-3181-1-git-send-email-janusz.dziedzic@tieto.com>
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Date: Mon, 30 Sep 2013 13:56:30 -0700
+Message-ID: <CAB=NE6Up37DkyWY__mvAhTb9vd-Rv=oHwsw5851XtAA8ukcYOA@mail.gmail.com> (sfid-20130930_225702_326156_13E71A24)
+Subject: Re: [PATCH] cfg80211: parse dfs region for internal regdb option
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Marcel,
+On Mon, Sep 16, 2013 at 11:25 PM, Janusz Dziedzic
+<janusz.dziedzic@tieto.com> wrote:
+> Add support for parsing and setting the dfs region (ETSI, FCC, JP)
+> when the internal regulatory database is used. Before this
+> the DFS region was being ignored even if present on the used
+> db.txt
+>
+> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 
-> > -	btmrvl_send_module_cfg_cmd(priv, MODULE_BRINGUP_REQ);
-> > +	hdev->setup = btmrvl_setup;
-> 
-> just to make sure you guys understand how ->setup() works. It is only called once. Bringing the
-> adapter down and up again does not call ->setup() a second time. So do you guys need this setup_done
-> variable and if so, then you need to be a bit more verbose and help me understand why.
+Reviewed-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 
-It's observed that sometimes the setup handler is called twice when Bluetooth daemon is running in background. We will rebase to latest commit on bluetooth-next tree and test again. If the issue is gone with the latest code in -next tree we will remove the setup_done flag.
+It'd be nice to automate the list somehow in the future.
 
-Thanks,
-Bing
-
-
+  Luis
