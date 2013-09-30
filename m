@@ -1,39 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:2980 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753913Ab3ILQMQ (ORCPT
+Received: from mail-la0-f52.google.com ([209.85.215.52]:37863 "EHLO
+	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755663Ab3I3Vrx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Sep 2013 12:12:16 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/8] ath10k: boot, bmi and mac debug message cleanup
-References: <20130908145435.3136.49168.stgit@localhost6.localdomain6>
-Date: Thu, 12 Sep 2013 19:12:13 +0300
-In-Reply-To: <20130908145435.3136.49168.stgit@localhost6.localdomain6> (Kalle
-	Valo's message of "Sun, 08 Sep 2013 17:55:25 +0300")
-Message-ID: <87d2oef28y.fsf@qca.qualcomm.com> (sfid-20130912_181220_826718_BADCBACB)
+	Mon, 30 Sep 2013 17:47:53 -0400
+Received: by mail-la0-f52.google.com with SMTP id ev20so5007737lab.39
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Sep 2013 14:47:51 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CAA2SeNJ47Rur8u5CeoQrULQRsKaiWATV8DA0VuSjrEB2B3=+VQ@mail.gmail.com>
+References: <1380206258-16452-1-git-send-email-lorenzo.bianconi83@gmail.com>
+ <20130930164840.GB15780@pandem0nium> <20130930211115.GA29102@pogo> <CAA2SeNJ47Rur8u5CeoQrULQRsKaiWATV8DA0VuSjrEB2B3=+VQ@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Mon, 30 Sep 2013 14:47:31 -0700
+Message-ID: <CAB=NE6VrOTUmpEpwM=4-p6smhDdi32S4en9TmzLUZH5rGTj9Hg@mail.gmail.com> (sfid-20130930_234756_500949_CB540F18)
+Subject: Re: [RFC] ath9k: add HT40 spectral scan capability
+To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+On Mon, Sep 30, 2013 at 2:25 PM, Lorenzo Bianconi
+<lorenzo.bianconi83@gmail.com> wrote:
+> Simon developed this UI:
+> https://github.com/simonwunderlich/FFT_eval
+> I developed a new one using qt-qwt (not compiled statically) in order
+> to support scan on HT40 channels:
+> https://github.com/LorenzoBianconi/ath_spectral
+> It is not finalized yet since I have to review it using Simon's
+> suggestions for the new format of "fft_sample" data structure.
 
-> Simple message log cleanup. Please review.
->
-> ---
->
-> Kalle Valo (8):
->       ath10k: add BMI log level
->       ath10k: rename ATH10K_DBG_CORE to BOOT
->       ath10k: cleanup debug messages in core.c
->       ath10k: add boot debug messages to pci.c and ce.c
->       ath10k: add boot debug messages to htc.c
->       ath10k: add boot messages to htt.c
->       ath10k: clean mac.c debug messages
->       ath10k: print phymode as a string
+OK great! Then agreed with you. Can you please document spectral scan
+progress somewhere here:
 
-Applied.
+http://wireless.kernel.org/en/users/Drivers/ath9k
 
-Kalle
+ Maybe a new section? Pointers to the applications would be great too!
+
+ Luis
