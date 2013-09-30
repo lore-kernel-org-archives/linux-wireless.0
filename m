@@ -1,56 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f175.google.com ([209.85.220.175]:40157 "EHLO
-	mail-vc0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751876Ab3IRT5w (ORCPT
+Received: from mail-bk0-f54.google.com ([209.85.214.54]:54706 "EHLO
+	mail-bk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755085Ab3I3L2Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Sep 2013 15:57:52 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH 0/8 V3] rtlwifi: Patches to fix problems shown by smatch
-Date: Wed, 18 Sep 2013 14:57:32 -0500
-Message-Id: <1379534260-14841-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20130918_215805_167719_D42288DF)
+	Mon, 30 Sep 2013 07:28:16 -0400
+From: Thierry Reding <thierry.reding@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, linux-next@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: linux-next: manual merge of the wireless-next tree
+Date: Mon, 30 Sep 2013 13:26:13 +0200
+Message-Id: <1380540373-25352-11-git-send-email-treding@nvidia.com> (sfid-20130930_132850_060658_3C497510)
+In-Reply-To: <1380540373-25352-1-git-send-email-treding@nvidia.com>
+References: <1380540373-25352-1-git-send-email-treding@nvidia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix smatch warnings and errors in the rtlwifi family of drivers.
+Today's linux-next merge of the wireless-next tree got conflicts in
 
-V2 addresses comments by David Laight and Sergei Shtylyov.
-V3 addresses further comments by David, Sergei, and Kalle Valo. The
-   dead code is removed, and the variable is left in the struct.
+	drivers/net/wireless/rtlwifi/rtl8192ce/phy.h
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+I fixed it up (see below). Please check if the resolution looks correct.
+
+Thanks,
+Thierry
 ---
-
-Larry Finger (8):
-  rtlwifi: rtl8192du: Fix smatch errors in /rtl8192de/dm.c
-  rtlwifi: rtl8192de: Fix smatch warnings in rtl8192de/hw.c
-  rtlwifi: rtl8192cu: Fix smatch warning in rtl8192cu/trx.c
-  rtlwifi: rtl8192_common: Fix smatch errors and warnings in
-    rtl8192c/dm_common.c
-  rtlwifi: Fix smatch warning in pci.c
-  rtlwifi: Fix smatch warnings in usb.c
-  rtlwifi: rtl8188ee: Fix smatch warning in rtl8188ee/hw.c
-  rtlwifi: Remove all remaining references to variable 'noise'
-    in rtl_stats struct
-
- drivers/net/wireless/rtlwifi/pci.c                | 1 -
- drivers/net/wireless/rtlwifi/rtl8188ee/hw.c       | 1 +
- drivers/net/wireless/rtlwifi/rtl8188ee/trx.c      | 1 -
- drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c | 4 +++-
- drivers/net/wireless/rtlwifi/rtl8192ce/trx.c      | 1 -
- drivers/net/wireless/rtlwifi/rtl8192cu/trx.c      | 2 --
- drivers/net/wireless/rtlwifi/rtl8192de/dm.c       | 8 ++++++--
- drivers/net/wireless/rtlwifi/rtl8192de/hw.c       | 2 ++
- drivers/net/wireless/rtlwifi/rtl8192de/trx.c      | 1 -
- drivers/net/wireless/rtlwifi/rtl8192se/trx.c      | 1 -
- drivers/net/wireless/rtlwifi/rtl8723ae/trx.c      | 1 -
- drivers/net/wireless/rtlwifi/usb.c                | 6 ++++--
- drivers/net/wireless/rtlwifi/wifi.h               | 1 -
- 13 files changed, 16 insertions(+), 14 deletions(-)
-
--- 
-1.8.1.4
-
+diff --cc drivers/net/wireless/rtlwifi/rtl8192ce/phy.h
+index f8973e5,80a0893..bb319b0
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/phy.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/phy.h
+@@@ -217,10 -222,10 +215,9 @@@ void _rtl92ce_phy_lc_calibrate(struct i
+  void rtl92c_phy_set_rfpath_switch(struct ieee80211_hw *hw, bool bmain);
+  bool rtl92c_phy_config_rf_with_headerfile(struct ieee80211_hw *hw,
+  					  enum radio_path rfpath);
+ -bool rtl8192_phy_check_is_legal_rfpath(struct ieee80211_hw *hw,
+ -					      u32 rfpath);
+ +bool rtl8192_phy_check_is_legal_rfpath(struct ieee80211_hw *hw, u32 rfpath);
+- bool rtl92c_phy_set_io_cmd(struct ieee80211_hw *hw, enum io_type iotype);
+  bool rtl92ce_phy_set_rf_power_state(struct ieee80211_hw *hw,
+ -					  enum rf_pwrstate rfpwr_state);
+ +				    enum rf_pwrstate rfpwr_state);
+  void rtl92ce_phy_set_rf_on(struct ieee80211_hw *hw);
+  bool rtl92c_phy_set_io_cmd(struct ieee80211_hw *hw, enum io_type iotype);
+  void rtl92c_phy_set_io(struct ieee80211_hw *hw);
