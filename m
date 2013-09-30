@@ -1,54 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from caiajhbdccac.dreamhost.com ([208.97.132.202]:51181 "EHLO
-	homiemail-a86.g.dreamhost.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1756115Ab3I3Tkv (ORCPT
+Received: from mail-oa0-f52.google.com ([209.85.219.52]:45719 "EHLO
+	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755154Ab3I3VZn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Sep 2013 15:40:51 -0400
-Received: from homiemail-a86.g.dreamhost.com (localhost [127.0.0.1])
-	by homiemail-a86.g.dreamhost.com (Postfix) with ESMTP id 7776A360082
-	for <linux-wireless@vger.kernel.org>; Mon, 30 Sep 2013 12:40:51 -0700 (PDT)
-Received: from mail-pa0-f54.google.com (mail-pa0-f54.google.com [209.85.220.54])
-	(using TLSv1 with cipher RC4-SHA (128/128 bits))
-	(No client certificate requested)
-	(Authenticated sender: erik@erikelmore.com)
-	by homiemail-a86.g.dreamhost.com (Postfix) with ESMTPSA id 59A4236007F
-	for <linux-wireless@vger.kernel.org>; Mon, 30 Sep 2013 12:40:51 -0700 (PDT)
-Received: by mail-pa0-f54.google.com with SMTP id kx10so6319428pab.41
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Sep 2013 12:40:50 -0700 (PDT)
+	Mon, 30 Sep 2013 17:25:43 -0400
+Received: by mail-oa0-f52.google.com with SMTP id n2so4081922oag.25
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Sep 2013 14:25:43 -0700 (PDT)
 MIME-Version: 1.0
-Date: Mon, 30 Sep 2013 15:40:50 -0400
-Message-ID: <CA+=D8wmgsBimQhSYDqWbuzwM544YrX1Gj9gsmftQUHoD+QYeZw@mail.gmail.com> (sfid-20130930_214056_226699_398609EB)
-Subject: Idea: wifi-over-ethernet (bear with me)
-From: Erik Elmore <erik@erikelmore.com>
-To: linux-wireless@vger.kernel.org
+In-Reply-To: <20130930211115.GA29102@pogo>
+References: <1380206258-16452-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	<20130930164840.GB15780@pandem0nium>
+	<20130930211115.GA29102@pogo>
+Date: Mon, 30 Sep 2013 23:25:42 +0200
+Message-ID: <CAA2SeNJ47Rur8u5CeoQrULQRsKaiWATV8DA0VuSjrEB2B3=+VQ@mail.gmail.com> (sfid-20130930_232547_824071_A0D152B6)
+Subject: Re: [RFC] ath9k: add HT40 spectral scan capability
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello, linux-wireless.  I have an idea that I'd like to get some
-feedback from you all.  I admit this idea is weird/flawed/broken and
-seemingly useless, but I do have a practical application in mind, so
-please hear me out.
+Simon developed this UI:
+https://github.com/simonwunderlich/FFT_eval
+I developed a new one using qt-qwt (not compiled statically) in order
+to support scan on HT40 channels:
+https://github.com/LorenzoBianconi/ath_spectral
+It is not finalized yet since I have to review it using Simon's
+suggestions for the new format of "fft_sample" data structure.
 
-Imagine two physical locations, site 1 and 2, that are well outside of
-normal wifi range of each other.  Each site has a device that listens
-for a subset of wifi frames and then sends them over a distribution
-network to its counterpart at the other site.  Each device will also
-re-transmit frames received via the distribution network.  Let's call
-these devices listener1 and listener2.
+Cheers,
+Lorenzo
 
-Each site also contains one client device that wants to form an ad-hoc
-network with the one in the other site.  Assuming that listener1 and
-listener2 are configured to forward frames having a TA belonging to
-the client device in their site, is it feasible for these devices to
-form an ad-hoc network with the help of the listener devices?
+2013/9/30 Luis R. Rodriguez <rodrigue@qca.qualcomm.com>:
+> On Mon, Sep 30, 2013 at 06:48:40PM +0200, Simon Wunderlich wrote:
+>> On Thu, Sep 26, 2013 at 04:37:38PM +0200, Lorenzo Bianconi wrote:
+>>
+>> One more thing: please don't change the format for HT20 -
+>> there are already userspace programs which rely on the order
+>> of the parameters as they are now.
+>
+> Great, where are these userpace programs?
+>
+>   Luis
 
-I do have a proof-of-concept in the works.  It's not quite right yet,
-but some things seem to work (sorta).
 
-I welcome any comments, including those that call my sanity into question.
 
-Thanks!
-
-+=
-Erik Elmore
+-- 
+UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
+unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
+umount; make clean; sleep
