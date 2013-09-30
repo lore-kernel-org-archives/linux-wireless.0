@@ -1,98 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:47842 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753689Ab3ISWtb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Sep 2013 18:49:31 -0400
-In-Reply-To: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
-From: Russell King <rmk+kernel@arm.linux.org.uk>
-To: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
-	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
-	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
-	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	uclinux-dist-devel@blackfin.uclinux.org
-Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	Jesse Brandeburg <jesse.brandeburg@intel.com>,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	Carolyn Wyborny <carolyn.wyborny@intel.com>,
-	Don Skidmore <donald.c.skidmore@intel.com>,
-	Greg Rose <gregory.v.rose@intel.com>,
-	Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>,
-	Alex Duyck <alexander.h.duyck@intel.com>,
-	John Ronciak <john.ronciak@intel.com>,
-	Tushar Dave <tushar.n.dave@intel.com>
-Subject: [PATCH 06/51] DMA-API: net: intel/ixgb: fix 32-bit DMA mask handling
-Message-Id: <E1VMloR-0007fk-Ei@rmk-PC.arm.linux.org.uk> (sfid-20130920_004936_164658_A907C1E1)
-Date: Thu, 19 Sep 2013 22:30:59 +0100
+Received: from bear.ext.ti.com ([192.94.94.41]:45606 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754378Ab3I3Ncz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Sep 2013 09:32:55 -0400
+Date: Mon, 30 Sep 2013 08:32:30 -0500
+From: Felipe Balbi <balbi@ti.com>
+To: Ben Hutchings <ben@decadent.org.uk>
+CC: <balbi@ti.com>, Luca Coelho <luca@coelho.fi>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	<linux-wireless@vger.kernel.org>, Pavel Machek <pavel@denx.de>
+Subject: Re: [PATCH] ti-connectivity: add wl1251 firmware and license
+Message-ID: <20130930133230.GC2455@radagast> (sfid-20130930_153300_015906_71D3CEB6)
+Reply-To: <balbi@ti.com>
+References: <1380033894-5007-1-git-send-email-balbi@ti.com>
+ <1380107096.4503.8.camel@porter.coelho.fi>
+ <1380107278.4503.9.camel@porter.coelho.fi>
+ <20130925132359.GE10746@radagast>
+ <1380512269.1441.10.camel@deadeye.wl.decadent.org.uk>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="XMCwj5IQnwKtuyBG"
+In-Reply-To: <1380512269.1441.10.camel@deadeye.wl.decadent.org.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The fallback to 32-bit DMA mask is rather odd:
-	err = dma_set_mask(&pdev->dev, DMA_BIT_MASK(64));
-	if (!err) {
-		err = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(64));
-		if (!err)
-			pci_using_dac = 1;
-	} else {
-		err = dma_set_mask(&pdev->dev, DMA_BIT_MASK(32));
-		if (err) {
-			err = dma_set_coherent_mask(&pdev->dev,
-						    DMA_BIT_MASK(32));
-			if (err) {
-				pr_err("No usable DMA configuration, aborting\n");
-				goto err_dma_mask;
-			}
-		}
-	}
-This means we only set the coherent DMA mask in the fallback path if
-the DMA mask set failed, which is silly.  This fixes it to set the
-coherent DMA mask only if dma_set_mask() succeeded, and to error out
-if either fails.
+--XMCwj5IQnwKtuyBG
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
----
- drivers/net/ethernet/intel/ixgb/ixgb_main.c |   16 +++++-----------
- 1 files changed, 5 insertions(+), 11 deletions(-)
+On Mon, Sep 30, 2013 at 04:37:49AM +0100, Ben Hutchings wrote:
+> On Wed, 2013-09-25 at 08:23 -0500, Felipe Balbi wrote:
+> > Hi,
+> >=20
+> > On Wed, Sep 25, 2013 at 02:07:58PM +0300, Luca Coelho wrote:
+> [...]
+> > > Ah, and I forgot to say that you should update the WHENCE file
+> > > accordingly too.  Check the wl12xx and wl18xx drivers for examples.
+> >=20
+> > I'll send a pull request, but how about this ? I don't think we can
+> > change the license. It seems like the other firmwares are using the
+> > older license, I'd argue those should be changed to the new one, but
+> > that's another discussion.
+> [...]
+>=20
+> I haven't seen this pull request, so it looks like there is nothing for
+> me to apply at the moment.
 
-diff --git a/drivers/net/ethernet/intel/ixgb/ixgb_main.c b/drivers/net/ethernet/intel/ixgb/ixgb_main.c
-index 9f6b236..57e390c 100644
---- a/drivers/net/ethernet/intel/ixgb/ixgb_main.c
-+++ b/drivers/net/ethernet/intel/ixgb/ixgb_main.c
-@@ -408,20 +408,14 @@ ixgb_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		return err;
- 
- 	pci_using_dac = 0;
--	err = dma_set_mask(&pdev->dev, DMA_BIT_MASK(64));
-+	err = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
- 	if (!err) {
--		err = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(64));
--		if (!err)
--			pci_using_dac = 1;
-+		pci_using_dac = 1;
- 	} else {
--		err = dma_set_mask(&pdev->dev, DMA_BIT_MASK(32));
-+		err = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
- 		if (err) {
--			err = dma_set_coherent_mask(&pdev->dev,
--						    DMA_BIT_MASK(32));
--			if (err) {
--				pr_err("No usable DMA configuration, aborting\n");
--				goto err_dma_mask;
--			}
-+			pr_err("No usable DMA configuration, aborting\n");
-+			goto err_dma_mask;
- 		}
- 	}
- 
--- 
-1.7.4.4
+yeah, give me a couple more days, I need to finish something up here.
 
+cheers
+
+--=20
+balbi
+
+--XMCwj5IQnwKtuyBG
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJSSX1tAAoJEIaOsuA1yqREP2sQAIOcvGcxARmAJNbAqJlnzp+0
+da1RnaxE5Abmg2WQBmzYPYV4cFq+Nu8dU3C6HCdzo5nFP6Ht52rjTsc4iH3SF77k
+mqDCWvaMbicpQFzym5f2KwA2NHx2gHkCY80EcLGozN16DNryIqKm9MrGVWZYSK/X
+vDn0Dif5Jh0G+xtJpiNEJjXFhz0PesnMZiAaE6gvDUAN0IILnWy76YeGAexan/H5
+6hWrMdirHiQkGoqCP7Yvqi2EvuWIwP6pg9bqulJi/hn/pbojfOVeJaob/HZIBlWX
+OkSCTGPcLBTFEKiuBiMRQictrFg4yY3WM6y1ZF2h0NN2js1wcFFx+czuKWMDe78D
+hvnB9ZlS8miH2agffCMexEFXUXmoGlfKk4c6UJKNkBn5eIrJMEccHbuqkJDKEcaL
+HbgbaIGRWUCEihANE9MHJBOzqvFz/L07AWFjvtZIQEOk0CgTCocEG9FKCrupoBBt
+0gJ1cWgbdqCtXpS2Zy8YzTi48GtqcQNN0aG0dKnqmOEtPPRasGK7kF4SMkCXvlEe
+fodqHkjGYfH4Uop3kbL05lsB18rn/pORipgSD1mMJxsOFWVPdcEJCGGpAU9fv2Dg
+NgbGCV24S82jfxOkPIIMaqgjfCViQuIeGhgUjL+GoJJQoZukQHyk973WplTRk+j0
++EXbe2ALa7Y90ywK4Ybj
+=Q91R
+-----END PGP SIGNATURE-----
+
+--XMCwj5IQnwKtuyBG--
