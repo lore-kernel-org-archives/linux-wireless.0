@@ -1,271 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:59143 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932647Ab3JOSrG (ORCPT
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:62759 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752764Ab3JAPA0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Oct 2013 14:47:06 -0400
-Subject: [PATCH 4/7] ath10k: fix scheduling while atomic config bug
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Tue, 1 Oct 2013 11:00:26 -0400
+Received: by mail-wg0-f48.google.com with SMTP id n12so7439722wgh.15
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Oct 2013 08:00:24 -0700 (PDT)
+Message-ID: <1380639620.2087.6.camel@canaries64-MCP7A> (sfid-20131001_170034_158737_4880EE3E)
+Subject: [PATCH 6/8] staging: vt6656: rxtx.c parse out vnt_rxtx_datahead_ab
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
 Cc: linux-wireless@vger.kernel.org
-Date: Tue, 15 Oct 2013 21:47:02 +0300
-Message-ID: <20131015184702.14123.63521.stgit@localhost6.localdomain6> (sfid-20131015_204709_265149_3AC8FDEA)
-In-Reply-To: <20131015184548.14123.56949.stgit@localhost6.localdomain6>
-References: <20131015184548.14123.56949.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Date: Tue, 01 Oct 2013 16:00:20 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michal Kazior <michal.kazior@tieto.com>
+Parse struct vnt_tx_datahead_ab from s_uFillDataHead and
+move to struct vnt_rts_ab structure returning duration down
+functions.
 
-Recent HTC/WMI changes introduced the bug. ath10k
-was using _atomic iteration function with
-sleepable functions.
+Both are returned in s_uFillDataHead at this stage as pvTxDataHd
+is only null in s_bPacketToWirelessUsb.
 
-mac80211 provides another iteration function but
-it cannot be safely called in hw_config() callback
-due to local->iflist_mtx being possibly acquired
-already.
-
-The patch uses internal vif list for iteration
-purposes and removes/refactors no longer necessary
-_iter functions.
-
-Reported-By: Kalle Valo <kvalo@qca.qualcomm.com>
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c |  146 ++++++++++++++-------------------
- 1 file changed, 62 insertions(+), 84 deletions(-)
+ drivers/staging/vt6656/rxtx.c | 53 +++++++++++++++++++++----------------------
+ drivers/staging/vt6656/rxtx.h |  1 +
+ 2 files changed, 27 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index c8e4180..bd42a14 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -723,35 +723,30 @@ static void ath10k_control_ibss(struct ath10k_vif *arvif,
- /*
-  * Review this when mac80211 gains per-interface powersave support.
-  */
--static void ath10k_ps_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
-+static int ath10k_mac_vif_setup_ps(struct ath10k_vif *arvif)
- {
--	struct ath10k_generic_iter *ar_iter = data;
--	struct ieee80211_conf *conf = &ar_iter->ar->hw->conf;
--	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
-+	struct ath10k *ar = arvif->ar;
-+	struct ieee80211_conf *conf = &ar->hw->conf;
- 	enum wmi_sta_powersave_param param;
- 	enum wmi_sta_ps_mode psmode;
- 	int ret;
- 
- 	lockdep_assert_held(&arvif->ar->conf_mutex);
- 
--	if (vif->type != NL80211_IFTYPE_STATION)
--		return;
-+	if (arvif->vif->type != NL80211_IFTYPE_STATION)
-+		return 0;
- 
- 	if (conf->flags & IEEE80211_CONF_PS) {
- 		psmode = WMI_STA_PS_MODE_ENABLED;
- 		param = WMI_STA_PS_PARAM_INACTIVITY_TIME;
- 
--		ret = ath10k_wmi_set_sta_ps_param(ar_iter->ar,
--						  arvif->vdev_id,
--						  param,
-+		ret = ath10k_wmi_set_sta_ps_param(ar, arvif->vdev_id, param,
- 						  conf->dynamic_ps_timeout);
- 		if (ret) {
- 			ath10k_warn("Failed to set inactivity time for VDEV: %d\n",
- 				    arvif->vdev_id);
--			return;
-+			return ret;
- 		}
--
--		ar_iter->ret = ret;
- 	} else {
- 		psmode = WMI_STA_PS_MODE_DISABLED;
- 	}
-@@ -759,11 +754,14 @@ static void ath10k_ps_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
- 	ath10k_dbg(ATH10K_DBG_MAC, "mac vdev %d psmode %s\n",
- 		   arvif->vdev_id, psmode ? "enable" : "disable");
- 
--	ar_iter->ret = ath10k_wmi_set_psmode(ar_iter->ar, arvif->vdev_id,
--					     psmode);
--	if (ar_iter->ret)
-+	ret = ath10k_wmi_set_psmode(ar, arvif->vdev_id, psmode);
-+	if (ret) {
- 		ath10k_warn("Failed to set PS Mode: %d for VDEV: %d\n",
- 			    psmode, arvif->vdev_id);
-+		return ret;
-+	}
-+
-+	return 0;
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 1d02724..0a77092 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -569,6 +569,20 @@ static u16 vnt_rxtx_datahead_a_fb(struct vnt_private *priv, u8 pkt_type,
+ 	return buf->wDuration;
  }
  
- /**********************/
-@@ -1959,9 +1957,10 @@ static void ath10k_stop(struct ieee80211_hw *hw)
- 	cancel_work_sync(&ar->restart_work);
- }
- 
--static void ath10k_config_ps(struct ath10k *ar)
-+static int ath10k_config_ps(struct ath10k *ar)
- {
--	struct ath10k_generic_iter ar_iter;
-+	struct ath10k_vif *arvif;
-+	int ret = 0;
- 
- 	lockdep_assert_held(&ar->conf_mutex);
- 
-@@ -1970,17 +1969,17 @@ static void ath10k_config_ps(struct ath10k *ar)
- 	 * vdevs at this point we must not iterate over this interface list.
- 	 * This setting will be updated upon add_interface(). */
- 	if (ar->state == ATH10K_STATE_RESTARTED)
--		return;
--
--	memset(&ar_iter, 0, sizeof(struct ath10k_generic_iter));
--	ar_iter.ar = ar;
-+		return 0;
- 
--	ieee80211_iterate_active_interfaces_atomic(
--		ar->hw, IEEE80211_IFACE_ITER_NORMAL,
--		ath10k_ps_iter, &ar_iter);
-+	list_for_each_entry(arvif, &ar->arvifs, list) {
-+		ret = ath10k_mac_vif_setup_ps(arvif);
-+		if (ret) {
-+			ath10k_warn("could not setup powersave (%d)\n", ret);
-+			break;
-+		}
-+	}
- 
--	if (ar_iter.ret)
--		ath10k_warn("failed to set ps config (%d)\n", ar_iter.ret);
-+	return ret;
- }
- 
- static int ath10k_config(struct ieee80211_hw *hw, u32 changed)
-@@ -2882,86 +2881,65 @@ static int ath10k_cancel_remain_on_channel(struct ieee80211_hw *hw)
-  * Both RTS and Fragmentation threshold are interface-specific
-  * in ath10k, but device-specific in mac80211.
-  */
--static void ath10k_set_rts_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
--{
--	struct ath10k_generic_iter *ar_iter = data;
--	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
--	u32 rts = ar_iter->ar->hw->wiphy->rts_threshold;
- 
--	lockdep_assert_held(&arvif->ar->conf_mutex);
-+static int ath10k_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
++static u16 vnt_rxtx_datahead_ab(struct vnt_private *priv, u8 pkt_type,
++		u16 rate, struct vnt_tx_datahead_ab *buf,
++		u32 frame_len, int need_ack)
 +{
-+	struct ath10k *ar = hw->priv;
-+	struct ath10k_vif *arvif;
-+	int ret = 0;
- 
- 	/* During HW reconfiguration mac80211 reports all interfaces that were
- 	 * running until reconfiguration was started. Since FW doesn't have any
- 	 * vdevs at this point we must not iterate over this interface list.
- 	 * This setting will be updated upon add_interface(). */
--	if (ar_iter->ar->state == ATH10K_STATE_RESTARTED)
--		return;
--
--	ath10k_dbg(ATH10K_DBG_MAC, "mac vdev %d rts_threshold %d\n",
--		   arvif->vdev_id, rts);
--
--	ar_iter->ret = ath10k_mac_set_rts(arvif, rts);
--	if (ar_iter->ret)
--		ath10k_warn("Failed to set RTS threshold for VDEV: %d\n",
--			    arvif->vdev_id);
--}
--
--static int ath10k_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
--{
--	struct ath10k_generic_iter ar_iter;
--	struct ath10k *ar = hw->priv;
--
--	memset(&ar_iter, 0, sizeof(struct ath10k_generic_iter));
--	ar_iter.ar = ar;
-+	if (ar->state == ATH10K_STATE_RESTARTED)
-+		return 0;
- 
- 	mutex_lock(&ar->conf_mutex);
--	ieee80211_iterate_active_interfaces_atomic(
--		hw, IEEE80211_IFACE_ITER_NORMAL,
--		ath10k_set_rts_iter, &ar_iter);
-+	list_for_each_entry(arvif, &ar->arvifs, list) {
-+		ath10k_dbg(ATH10K_DBG_MAC, "mac vdev %d rts threshold %d\n",
-+			   arvif->vdev_id, value);
++	/* Get SignalField,ServiceField,Length */
++	BBvCalculateParameter(priv, frame_len, rate, pkt_type, &buf->ab);
++	/* Get Duration and TimeStampOff */
++	buf->wDuration = s_uGetDataDuration(priv, pkt_type, need_ack);
 +
-+		ret = ath10k_mac_set_rts(arvif, value);
-+		if (ret) {
-+			ath10k_warn("could not set rts threshold for vdev %d (%d)\n",
-+				    arvif->vdev_id, ret);
-+			break;
-+		}
-+	}
- 	mutex_unlock(&ar->conf_mutex);
++	buf->wTimeStampOff = vnt_time_stamp_off(priv, rate);
++
++	return buf->wDuration;
++}
++
+ static u32 s_uFillDataHead(struct vnt_private *pDevice,
+ 	u8 byPktType, u16 wCurrentRate, void *pTxDataHead, u32 cbFrameLength,
+ 	u32 uDMAIdx, int bNeedAck, u8 byFBOption)
+@@ -581,28 +595,16 @@ static u32 s_uFillDataHead(struct vnt_private *pDevice,
+     if (byPktType == PK_TYPE_11A) {
+ 		struct vnt_tx_datahead_ab *pBuf =
+ 			(struct vnt_tx_datahead_ab *)pTxDataHead;
+-            //Get SignalField,ServiceField,Length
+-		BBvCalculateParameter(pDevice, cbFrameLength, wCurrentRate,
+-			byPktType, &pBuf->ab);
+-            //Get Duration and TimeStampOff
+-		pBuf->wDuration = s_uGetDataDuration(pDevice,
+-				byPktType, bNeedAck);
+-		pBuf->wTimeStampOff = vnt_time_stamp_off(pDevice,
+-								wCurrentRate);
+-            return (pBuf->wDuration);
++
++		return vnt_rxtx_datahead_ab(pDevice, byPktType,	wCurrentRate,
++				pBuf, cbFrameLength, bNeedAck);
+     }
+     else if (byPktType == PK_TYPE_11B) {
+ 		struct vnt_tx_datahead_ab *pBuf =
+ 			(struct vnt_tx_datahead_ab *)pTxDataHead;
+-            //Get SignalField,ServiceField,Length
+-		BBvCalculateParameter(pDevice, cbFrameLength, wCurrentRate,
+-			byPktType, &pBuf->ab);
+-            //Get Duration and TimeStampOff
+-		pBuf->wDuration = s_uGetDataDuration(pDevice,
+-				byPktType, bNeedAck);
+-		pBuf->wTimeStampOff = vnt_time_stamp_off(pDevice,
+-								wCurrentRate);
+-            return (pBuf->wDuration);
++
++		return vnt_rxtx_datahead_ab(pDevice, byPktType,	wCurrentRate,
++				pBuf, cbFrameLength, bNeedAck);
+     }
+     return 0;
+ }
+@@ -703,7 +705,8 @@ static u16 vnt_rxtx_rts_ab_head(struct vnt_private *priv,
  
--	return ar_iter.ret;
-+	return ret;
+ 	vnt_fill_ieee80211_rts(priv, &buf->data, eth_hdr, buf->wDuration);
+ 
+-	return 0;
++	return vnt_rxtx_datahead_ab(priv, pkt_type, current_rate,
++			&buf->data_head, frame_len, need_ack);
  }
  
--static void ath10k_set_frag_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
-+static int ath10k_set_frag_threshold(struct ieee80211_hw *hw, u32 value)
- {
--	struct ath10k_generic_iter *ar_iter = data;
--	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
--	u32 frag = ar_iter->ar->hw->wiphy->frag_threshold;
--
--	lockdep_assert_held(&arvif->ar->conf_mutex);
-+	struct ath10k *ar = hw->priv;
-+	struct ath10k_vif *arvif;
-+	int ret = 0;
+ static u16 vnt_rxtx_rts_a_fb_head(struct vnt_private *priv,
+@@ -764,7 +767,7 @@ static u16 s_vFillRTSHead(struct vnt_private *pDevice, u8 byPktType,
+ 			break;
+ 		}
+ 	case PK_TYPE_11B:
+-		vnt_rxtx_rts_ab_head(pDevice, &head->rts_ab,
++		return vnt_rxtx_rts_ab_head(pDevice, &head->rts_ab,
+ 			psEthHeader, byPktType, cbFrameLength,
+ 			bNeedAck, wCurrentRate, byFBOption);
+ 	}
+@@ -947,7 +950,7 @@ static u16 s_vGenerateTxParameter(struct vnt_private *pDevice,
+ 				cbFrameSize, wCurrentRate, bNeedACK);
  
- 	/* During HW reconfiguration mac80211 reports all interfaces that were
- 	 * running until reconfiguration was started. Since FW doesn't have any
- 	 * vdevs at this point we must not iterate over this interface list.
- 	 * This setting will be updated upon add_interface(). */
--	if (ar_iter->ar->state == ATH10K_STATE_RESTARTED)
--		return;
--
--	ath10k_dbg(ATH10K_DBG_MAC, "mac vdev %d fragmentation_threshold %d\n",
--		   arvif->vdev_id, frag);
--
--	ar_iter->ret = ath10k_mac_set_frag(arvif, frag);
--	if (ar_iter->ret)
--		ath10k_warn("Failed to set frag threshold for VDEV: %d\n",
--			    arvif->vdev_id);
--}
--
--static int ath10k_set_frag_threshold(struct ieee80211_hw *hw, u32 value)
--{
--	struct ath10k_generic_iter ar_iter;
--	struct ath10k *ar = hw->priv;
--
--	memset(&ar_iter, 0, sizeof(struct ath10k_generic_iter));
--	ar_iter.ar = ar;
-+	if (ar->state == ATH10K_STATE_RESTARTED)
-+		return 0;
+ 		/* Fill RTS */
+-		s_vFillRTSHead(pDevice, byPktType, head, cbFrameSize,
++		return s_vFillRTSHead(pDevice, byPktType, head, cbFrameSize,
+ 			bNeedACK, psEthHeader, wCurrentRate, byFBOption);
+ 	} else {
+             //Fill RsvTime
+@@ -978,7 +981,7 @@ static u16 s_vGenerateTxParameter(struct vnt_private *pDevice,
+ 		}
  
- 	mutex_lock(&ar->conf_mutex);
--	ieee80211_iterate_active_interfaces_atomic(
--		hw, IEEE80211_IFACE_ITER_NORMAL,
--		ath10k_set_frag_iter, &ar_iter);
-+	list_for_each_entry(arvif, &ar->arvifs, list) {
-+		ath10k_dbg(ATH10K_DBG_MAC, "mac vdev %d fragmentation threshold %d\n",
-+			   arvif->vdev_id, value);
-+
-+		ret = ath10k_mac_set_rts(arvif, value);
-+		if (ret) {
-+			ath10k_warn("could not set fragmentation threshold for vdev %d (%d)\n",
-+				    arvif->vdev_id, ret);
-+			break;
-+		}
-+	}
- 	mutex_unlock(&ar->conf_mutex);
+ 		/* Fill RTS */
+-		s_vFillRTSHead(pDevice, byPktType, head, cbFrameSize,
++		return s_vFillRTSHead(pDevice, byPktType, head, cbFrameSize,
+ 			bNeedACK, psEthHeader, wCurrentRate, byFBOption);
+         }
+         else { //RTS_needless, non PCF mode
+@@ -1179,12 +1182,8 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
+     else {//802.11a/b packet
+         if (byFBOption == AUTO_FB_NONE) {
+             if (bRTS == true) {//RTS_need
+-		pvTxDataHd = (struct vnt_tx_datahead_ab *)(pbyTxBufferAddr +
+-			wTxBufSize + sizeof(struct vnt_rrv_time_ab) + cbMICHDR +
+-						sizeof(struct vnt_rts_ab));
+ 		cbHeaderLength = wTxBufSize + sizeof(struct vnt_rrv_time_ab) +
+-			cbMICHDR + sizeof(struct vnt_rts_ab) +
+-				sizeof(struct vnt_tx_datahead_ab);
++			cbMICHDR + sizeof(struct vnt_rts_ab);
+             }
+             else if (bRTS == false) { //RTS_needless, no MICHDR
+ 		pvTxDataHd = (struct vnt_tx_datahead_ab *)(pbyTxBufferAddr +
+diff --git a/drivers/staging/vt6656/rxtx.h b/drivers/staging/vt6656/rxtx.h
+index d8f25d1..d905b97 100644
+--- a/drivers/staging/vt6656/rxtx.h
++++ b/drivers/staging/vt6656/rxtx.h
+@@ -140,6 +140,7 @@ struct vnt_rts_ab {
+ 	u16 wDuration;
+ 	u16 wReserved;
+ 	struct ieee80211_rts data;
++	struct vnt_tx_datahead_ab data_head;
+ } __packed;
  
--	return ar_iter.ret;
-+	return ret;
- }
- 
- static void ath10k_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
+ struct vnt_rts_a_fb {
+-- 
+1.8.3.2
+
+
 
