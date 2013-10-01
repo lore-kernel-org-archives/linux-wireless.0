@@ -1,65 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:42561 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751383Ab3JURO5 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:59662 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751372Ab3JALa0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Oct 2013 13:14:57 -0400
-Received: by mail-wg0-f43.google.com with SMTP id b13so6749960wgh.34
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Oct 2013 10:14:56 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, janusz.dziedzic@tieto.com,
-	smihir@qti.qualcomm.com, tushnimb@qca.qualcomm.com,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 1/5] ath: fix logic on ath_reg_apply_active_scan_flags()
-Date: Mon, 21 Oct 2013 19:14:47 +0200
-Message-Id: <1382375691-25476-2-git-send-email-mcgrof@do-not-panic.com> (sfid-20131021_191459_718003_D41113F4)
-In-Reply-To: <1382375691-25476-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1382375691-25476-1-git-send-email-mcgrof@do-not-panic.com>
+	Tue, 1 Oct 2013 07:30:26 -0400
+Message-ID: <1380627023.14430.34.camel@jlt4.sipsolutions.net> (sfid-20131001_133030_007020_F7F2AEAD)
+Subject: Re: [PATCH 5/5] mac80211: process mesh channel switching using
+ beacon
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	devel@lists.open80211s.org, distro11s@cozybit.com
+Date: Tue, 01 Oct 2013 13:30:23 +0200
+In-Reply-To: <1379115372-28426-6-git-send-email-yeohchunyeow@cozybit.com> (sfid-20130914_013635_982078_9678C34E)
+References: <1379115372-28426-1-git-send-email-yeohchunyeow@cozybit.com>
+	 <1379115372-28426-6-git-send-email-yeohchunyeow@cozybit.com>
+	 (sfid-20130914_013635_982078_9678C34E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The existing logic removes the passive scan flag from
-channels 12 and 13 when a regulatory hint coming from
-something other than a country IE has been passed. This
-is incorrect, the original intention was to ensure we
-always have passive scan enabled for these two channels
-for a specific set of custom world regulatory domains.
+On Fri, 2013-09-13 at 16:36 -0700, Chun-Yeow Yeoh wrote:
 
-Cc: smihir@qti.qualcomm.com
-Cc: tushnimb@qca.qualcomm.com
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- drivers/net/wireless/ath/regd.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+>  	err = ieee80211_parse_ch_switch_ie(sdata, elems, beacon,
+>  					   ifibss->chandef.chan->band,
+>  					   sta_flags, ifibss->bssid,
+> -					   &params.count, &mode,
+> +					   &params.count, &mode, &ttl,
+>  					   &params.chandef);
 
-diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
-index c00687e..1b4a532 100644
---- a/drivers/net/wireless/ath/regd.c
-+++ b/drivers/net/wireless/ath/regd.c
-@@ -255,16 +255,16 @@ ath_reg_apply_active_scan_flags(struct wiphy *wiphy,
- 		return;
- 
- 	/*
--	 * If no country IE has been received always enable active scan
--	 * on these channels. This is only done for specific regulatory SKUs
-+	 * If no country IE has been received always enable passive scan
-+	 * and no-ibss on these channels. This is only done for specific
-+	 * regulatory SKUs.
- 	 */
- 	if (initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE) {
- 		ch = &sband->channels[11]; /* CH 12 */
--		if (ch->flags & IEEE80211_CHAN_PASSIVE_SCAN)
--			ch->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
-+		ch->flags |= IEEE80211_CHAN_PASSIVE_SCAN;
-+
- 		ch = &sband->channels[12]; /* CH 13 */
--		if (ch->flags & IEEE80211_CHAN_PASSIVE_SCAN)
--			ch->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
-+		ch->flags |= IEEE80211_CHAN_PASSIVE_SCAN;
- 		return;
- 	}
- 
--- 
-1.8.4.rc3
+I think it'd be worth doing some refactoring here to have an output
+struct ... the parameters to this function are getting unreal. :)
+
+> +	if (!cfg80211_chandef_usable(sdata->local->hw.wiphy, &params.chandef,
+> +				     IEEE80211_CHAN_DISABLED)) {
+> +		sdata_info(sdata,
+> +			   "mesh STA %pM switches to unsupported channel (%d MHz, width:%d, CF1/2: %d/%d MHz), aborting\n",
+> +			   sdata->vif.addr,
+> +			   params.chandef.chan->center_freq,
+> +			   params.chandef.width,
+> +			   params.chandef.center_freq1,
+> +			   params.chandef.center_freq2);
+> +	}
+
+Seems like you should *do* something here, like return false?
+
+johannes
 
