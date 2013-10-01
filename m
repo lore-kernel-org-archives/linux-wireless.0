@@ -1,64 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:46192 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753492Ab3JaPzD (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:56594 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751585Ab3JATTq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Oct 2013 11:55:03 -0400
-From: "Undekari, Sunil Dutt" <usdutt@qti.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"j@w1.fi" <j@w1.fi>
-Subject: RE: [PATCH] cfg80211: Introduce critical protocol indication for
- p2p connection.
-Date: Thu, 31 Oct 2013 15:54:58 +0000
-Message-ID: <26F3B0343EE4744AA14EEEF9E1E534511F7A6606@aphydexd01a> (sfid-20131031_165508_711159_DCEF4904)
-References: <1383230452-12608-1-git-send-email-usdutt@qti.qualcomm.com>
-	 (sfid-20131031_154108_037102_6F3E1A6D)
- <1383230593.14302.1.camel@jlt4.sipsolutions.net>
-	 <26F3B0343EE4744AA14EEEF9E1E534511F7A65CC@aphydexd01a>
- <1383233115.14302.2.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1383233115.14302.2.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+	Tue, 1 Oct 2013 15:19:46 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-bluetooth@vger.kernel.org>
+CC: Marcel Holtmann <marcel@holtmann.org>,
+	Gustavo Padovan <gustavo@padovan.org>,
+	Johan Hedberg <johan.hedberg@gmail.com>,
+	<linux-wireless@vger.kernel.org>,
+	Mike Frysinger <vapier@chromium.org>,
+	Hyuckjoo Lee <hyuckjoo.lee@samsung.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v6 2/4] Bluetooth: btmrvl: get rid of struct btmrvl_cmd
+Date: Tue, 1 Oct 2013 12:19:13 -0700
+Message-ID: <1380655155-10007-3-git-send-email-bzhao@marvell.com> (sfid-20131001_211951_832280_B9C947A5)
+In-Reply-To: <1380655155-10007-1-git-send-email-bzhao@marvell.com>
+References: <1380655155-10007-1-git-send-email-bzhao@marvell.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pkp1c3QgZG8gaXQgaW4gdGhlIHN1cHBsaWNhbnQgLSB0aGF0IGhhcyBmdWxsIGNvbnRyb2wgb3Zl
-ciB3aGF0J3MgZ29pbmcgb24gd2l0aCBhIGdpdmVuIGRldmljZS4NCj5UcnlpbmcgdG8gaGF2ZSB0
-aGUga2VybmVsIG1hbmFnZSBtdWx0aXBsZSB0aGluZ3MgdGhhdCBtYXkgb3IgbWF5IG5vdCBiZSBl
-eGNsdXNpdmUgYW5kIGFyZSBhbGwgZG9uZSBpbiB1c2Vyc3BhY2UgaXMgZ29pbmcgdG8gYmUgYSBm
-dXRpbGUgZXhlcmNpc2UuDQpQbGVhc2Ugbm90ZSB0aGF0IHRoZSBzY2FucyB0aGF0IGFyZSBtZW50
-aW9uZWQgYnkgbWUgaW4gdGhpcyBjb250ZXh0IGFyZSBub3QgdHJpZ2dlcmVkIGJ5IHRoZSBzdXBw
-bGljYW50LCByYXRoZXIgdGhlIGhvc3QgZHJpdmVyIHdvdWxkIGluaXRpYXRlIHRoZW0uDQpUaGUg
-ZHJpdmVyIC8gZmlybXdhcmUgd291bGQgZG8gc3VjaCBzY2FucyBmb3IgYSBiZXR0ZXIgcm9hbSBw
-ZXJmb3JtYW5jZS4NCkkgd291bGQgc2F5LCBzb21lIGhhbmRzaGFrZSBiZXR3ZWVuIHRoZSBzdXBw
-bGljYW50IGFuZCB0aGUgZHJpdmVyIHdvdWxkIGJlIG5lZWRlZCBmb3IgYSBiZXR0ZXIgdW5kZXJz
-dGFuZGluZyBvbiB0aGUgb3BlcmF0aW9ucy4NClBsZWFzZSBoYXZlIHlvdXIgc2F5Lg0KUmVnYXJk
-cywNClN1bmlsDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBKb2hhbm5lcyBC
-ZXJnIFttYWlsdG86am9oYW5uZXNAc2lwc29sdXRpb25zLm5ldF0gDQpTZW50OiBUaHVyc2RheSwg
-T2N0b2JlciAzMSwgMjAxMyA4OjU1IFBNDQpUbzogVW5kZWthcmksIFN1bmlsIER1dHQNCkNjOiBs
-aW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IGpAdzEuZmkNClN1YmplY3Q6IFJlOiBbUEFU
-Q0hdIGNmZzgwMjExOiBJbnRyb2R1Y2UgY3JpdGljYWwgcHJvdG9jb2wgaW5kaWNhdGlvbiBmb3Ig
-cDJwIGNvbm5lY3Rpb24uDQoNCk9uIFRodSwgMjAxMy0xMC0zMSBhdCAxNToyMiArMDAwMCwgVW5k
-ZWthcmksIFN1bmlsIER1dHQgd3JvdGU6DQo+ID4gVGhhdCdzIG5vdCB3aGF0IHRoZSBjcml0aWNh
-bCBwcm90b2NvbCBzdHVmZiB3YXMgZGVzaWduZWQgZm9yLCBzbyBuby4NCj4gSSB3b3VsZCBjb25z
-aWRlciB0aGUgUDJQIGNvbm5lY3Rpb24gcGhhc2UgKFAyUCtXUFMrV1BBKSB0byBiZSBjcml0aWNh
-bCANCj4gYW5kIGFueSBvZmYgY2hhbm5lbCBvcGVyYXRpb25zIChzY2FuKSB0cmlnZ2VyZWQgYnkg
-dGhlIGhvc3QgZHJpdmVyIA0KPiB3b3VsZCByZXN1bHQgaW4gdGhlIGRlbGF5ZWQgLyBmYWlsZWQg
-UDJQIGNvbm5lY3Rpb24gYXR0ZW1wdC4NCj4gSSBzdXBwb3NlIHRoZXJlIHNob3VsZCBiZSBhbiBp
-bmRpY2F0aW9uIHRvIHRoZSBob3N0IGRyaXZlciB3LnIudCBwMnAgDQo+IGNvbm5lY3Rpb24gYXR0
-ZW1wdCBzbyB0aGF0IGFueSBvZmYgbG9hZCBvcGVyYXRpb25zIG9uIGFueSBvdGhlciANCj4gaW50
-ZXJmYWNlIHNoYXJpbmcgdGhlIHNhbWUgcmFkaW8gd291bGQgYmUgYXZvaWRlZCBieSB0aGUgZHJp
-dmVyLg0KPiBTaW5jZSB0aGVyZSBpcyBhbHJlYWR5IGFuIGV4aXN0aW5nIGludGVyZmFjZSB0aHJv
-dWdoIHRoZSBjcml0aWNhbCANCj4gcHJvdG9jb2wgaW5kaWNhdGlvbiwgSSB0aG91Z2h0IG9mIGV4
-dGVuZGluZyBpdCB0byBhbHNvIGluY2x1ZGUgYSBQMlAgDQo+IHByb3RvY29sL2Nvbm5lY3Rpb24u
-IFRoaXMgbmV3IHByb3RvIGlkIHdvdWxkIGJlIGFuIGluZGljYXRpb24gdG8gdGhlIA0KPiBkcml2
-ZXJzIHRvIGFsbG93IHRoZSBzY2FuIG9uIHRoZSBjdXJyZW50IGludGVyZmFjZSBhbmQgYXZvaWQg
-YW55IHNjYW5zIA0KPiBvbiBhbm90aGVyIGNvbnNpZGVyaW5nIHRoZSBmYWN0IHRoYXQgYSBwMnAg
-Y29ubmVjdGlvbiByZXF1aXJlcyBhIHNjYW4uDQo+IERvIHlvdSBwcm9wb3NlIGFuIGFsdGVybmF0
-aXZlIChhIG5ldyBpbnRlcmZhY2U/KSB0byBhY2hpZXZlIHRoZSBzYW1lPw0KDQpKdXN0IGRvIGl0
-IGluIHRoZSBzdXBwbGljYW50IC0gdGhhdCBoYXMgZnVsbCBjb250cm9sIG92ZXIgd2hhdCdzIGdv
-aW5nIG9uIHdpdGggYSBnaXZlbiBkZXZpY2UuDQoNClRyeWluZyB0byBoYXZlIHRoZSBrZXJuZWwg
-bWFuYWdlIG11bHRpcGxlIHRoaW5ncyB0aGF0IG1heSBvciBtYXkgbm90IGJlIGV4Y2x1c2l2ZSBh
-bmQgYXJlIGFsbCBkb25lIGluIHVzZXJzcGFjZSBpcyBnb2luZyB0byBiZSBhIGZ1dGlsZSBleGVy
-Y2lzZS4NCg0Kam9oYW5uZXMNCg0K
+From: Amitkumar Karwar <akarwar@marvell.com>
+
+Replace this proprietary structure with the standard one
+(struct hci_command_hdr).
+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+v6: remove proprietary struct btmrvl_cmd
+
+ drivers/bluetooth/btmrvl_drv.h  |  6 ------
+ drivers/bluetooth/btmrvl_main.c | 12 ++++++------
+ 2 files changed, 6 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/bluetooth/btmrvl_drv.h b/drivers/bluetooth/btmrvl_drv.h
+index 27068d1..42f7028 100644
+--- a/drivers/bluetooth/btmrvl_drv.h
++++ b/drivers/bluetooth/btmrvl_drv.h
+@@ -116,12 +116,6 @@ struct btmrvl_private {
+ #define PS_SLEEP			0x01
+ #define PS_AWAKE			0x00
+ 
+-struct btmrvl_cmd {
+-	__le16 ocf_ogf;
+-	u8 length;
+-	u8 data[4];
+-} __packed;
+-
+ struct btmrvl_event {
+ 	u8 ec;		/* event counter */
+ 	u8 length;
+diff --git a/drivers/bluetooth/btmrvl_main.c b/drivers/bluetooth/btmrvl_main.c
+index d9d4229..a4da7c8 100644
+--- a/drivers/bluetooth/btmrvl_main.c
++++ b/drivers/bluetooth/btmrvl_main.c
+@@ -170,20 +170,20 @@ static int btmrvl_send_sync_cmd(struct btmrvl_private *priv, u16 cmd_no,
+ 				const void *param, u8 len)
+ {
+ 	struct sk_buff *skb;
+-	struct btmrvl_cmd *cmd;
++	struct hci_command_hdr *hdr;
+ 
+-	skb = bt_skb_alloc(sizeof(*cmd), GFP_ATOMIC);
++	skb = bt_skb_alloc(HCI_COMMAND_HDR_SIZE + len, GFP_ATOMIC);
+ 	if (skb == NULL) {
+ 		BT_ERR("No free skb");
+ 		return -ENOMEM;
+ 	}
+ 
+-	cmd = (struct btmrvl_cmd *) skb_put(skb, sizeof(*cmd));
+-	cmd->ocf_ogf = cpu_to_le16(hci_opcode_pack(OGF, cmd_no));
+-	cmd->length = len;
++	hdr = (struct hci_command_hdr *)skb_put(skb, HCI_COMMAND_HDR_SIZE);
++	hdr->opcode = cpu_to_le16(hci_opcode_pack(OGF, cmd_no));
++	hdr->plen = len;
+ 
+ 	if (len)
+-		memcpy(cmd->data, param, len);
++		memcpy(skb_put(skb, len), param, len);
+ 
+ 	bt_cb(skb)->pkt_type = MRVL_VENDOR_PKT;
+ 
+-- 
+1.8.0
+
