@@ -1,55 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:50955 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756586Ab3JJSRR (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:59562 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753480Ab3JALJV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Oct 2013 14:17:17 -0400
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
-	Fabio Estevam <festevam@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	ldv-project@linuxtesting.org
-Subject: Re: [PATCH] carl9170: fix leaks at failure path in carl9170_usb_probe()
-Date: Thu, 10 Oct 2013 20:17:09 +0200
-Message-ID: <9668029.9aMApUIsT2@blech> (sfid-20131010_201755_644323_4EF8F17B)
-In-Reply-To: <20131010175952.GG2691@tuxdriver.com>
-References: <1380340311-4630-1-git-send-email-khoroshilov@ispras.ru> <52466624.4040106@ispras.ru> <20131010175952.GG2691@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 1 Oct 2013 07:09:21 -0400
+Message-ID: <1380625757.14430.22.camel@jlt4.sipsolutions.net> (sfid-20131001_131000_689901_93D78937)
+Subject: Re: [PATCH 2/4] nl80211/cfg80211: enable DFS for IBSS mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Date: Tue, 01 Oct 2013 13:09:17 +0200
+In-Reply-To: <1378230201-25446-3-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1378230201-25446-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <1378230201-25446-3-git-send-email-siwu@hrz.tu-chemnitz.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, October 10, 2013 01:59:52 PM John W. Linville wrote:
-> On Sat, Sep 28, 2013 at 01:16:20AM -0400, Alexey Khoroshilov wrote:
-> > On 28.09.2013 00:17, Fabio Estevam wrote:
-> > >On Sat, Sep 28, 2013 at 12:51 AM, Alexey Khoroshilov
-> > ><khoroshilov@ispras.ru> wrote:
-> > >
-> > >>-       return request_firmware_nowait(THIS_MODULE, 1, CARL9170FW_NAME,
-> > >>+       err = request_firmware_nowait(THIS_MODULE, 1, CARL9170FW_NAME,
-> > >>                 &ar->udev->dev, GFP_KERNEL, ar, carl9170_usb_firmware_step2);
-> > >>+       if (err) {
-> > >>+               usb_put_dev(udev);
-> > >>+               usb_put_dev(udev);
-> > >You are doing the same free twice.
-> > Yes, because it was get twice.
-> > >I guess you meant to also free: usb_put_dev(ar->udev)
-> > udev and ar->udev are equal, so technically the patch is correct.
-> > 
-> > I agree that there is some inconsistency, but I would prefer to fix
-> > it at usb_get_dev() side with a comment about reasons for the double
-> > get.
-> 
-> What is the reason for the double get?
+On Tue, 2013-09-03 at 19:43 +0200, Simon Wunderlich wrote:
+> To use DFS in IBSS mode, userspace is required to react to radar events.
+> It can inform nl80211 that it is capable of doing so by adding a
+> NL80211_ATTR_CONTROL_PORT_DFS attribute when joining the IBSS.
 
-The idea is:
-One (extra) reference protects the asynchronous firmware loader callback
-from disappearing "udev".
+I don't like that name, it makes no sense. This has nothing to do with
+the port control (802.1X-style) at all.
 
-Regards,
-Chr
- 
- 
+> If this attribute is supplied, DFS channels may be used if the driver
+> supports it. Support will be checked even if a channel without DFS will
+> be joined, as the channel might change later due to scan activity or
+> channel switch announcements.
+
+You also really should document *what* is required of userspace here.
+You're kinda saying this needs to be implemented, but not saying what
+needs to be done. I can't even tell - what does it really have to do?
+Don't you implement most of it in patches 3 and 4 anyway in the kernel?
+
+johannes
+
