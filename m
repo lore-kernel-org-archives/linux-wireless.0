@@ -1,40 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:44310 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755708Ab3JQQCt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Oct 2013 12:02:49 -0400
-Message-ID: <1382025750.14410.20.camel@jlt4.sipsolutions.net> (sfid-20131017_180252_662918_197A7631)
-Subject: Re: [PATCH v5 4/5] {nl,cfg,mac}80211: implement mesh channel switch
- userspace API
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	devel@lists.open80211s.org,
-	"distro11s@cozybit.com" <distro11s@cozybit.com>
-Date: Thu, 17 Oct 2013 18:02:30 +0200
-In-Reply-To: <CAHS2MGMgTp9homs-moVXTVfyFtcuYPPbHBiiW0XD9kBYJ0hb5w@mail.gmail.com> (sfid-20131017_175208_552032_89AFFCB3)
-References: <1381802911-3921-1-git-send-email-yeohchunyeow@cozybit.com>
-	 <1381802911-3921-5-git-send-email-yeohchunyeow@cozybit.com>
-	 <1382022683.14410.18.camel@jlt4.sipsolutions.net>
-	 <CAHS2MGMgTp9homs-moVXTVfyFtcuYPPbHBiiW0XD9kBYJ0hb5w@mail.gmail.com>
-	 (sfid-20131017_175208_552032_89AFFCB3)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from arrakis.dune.hu ([78.24.191.176]:60933 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751095Ab3JASD2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Oct 2013 14:03:28 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 3/3] rt2x00: rt2800lib: fix VGC programming for RT3572 and RT3593
+Date: Tue,  1 Oct 2013 20:03:16 +0200
+Message-Id: <1380650596-18659-3-git-send-email-juhosg@openwrt.org> (sfid-20131001_200341_237264_EAF0444C)
+In-Reply-To: <1380650596-18659-1-git-send-email-juhosg@openwrt.org>
+References: <1380650596-18659-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-10-17 at 23:52 +0800, Chun-Yeow Yeoh wrote:
-> > If this fails, do we leak the CSA settings?
-> If failed, beacon won't include the CSA settings. But If there is any
-> other calling mesh_rebuild_beacon and succeed, the it will be included
-> up if the channel switch count is not expired. At the same time, CSA
-> action frame is also transmitted, so others may use this to start the
-> CSA process.
+According to the DPO_RT5572_LinuxSTA_2.6.1.3_20121022
+reference driver, programming of the 'BBP 66' register
+on the RT3572 and on the RT3593 chipsets must be done
+via the 'rt2800_bbp_write_with_rx_chain' function. This
+ensures that value is correclty set for each RX
+chain.
 
-That part makes sense. But we propagate the error up, and then we
-probably never call the finish function?
+References:
+  RT35xx_ChipAGCAdjust and RT35xx_SetAGCInitValue functions
+  in chips/rt35xx.c
 
-johannes
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 0dd15b2..c706ddc 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -4442,11 +4442,17 @@ static inline void rt2800_set_vgc(struct rt2x00_dev *rt2x00dev,
+ 				  struct link_qual *qual, u8 vgc_level)
+ {
+ 	if (qual->vgc_level != vgc_level) {
+-		if (rt2x00_rt(rt2x00dev, RT5592)) {
++		if (rt2x00_rt(rt2x00dev, RT3572) ||
++		    rt2x00_rt(rt2x00dev, RT3593)) {
++			rt2800_bbp_write_with_rx_chain(rt2x00dev, 66,
++						       vgc_level);
++		} else if (rt2x00_rt(rt2x00dev, RT5592)) {
+ 			rt2800_bbp_write(rt2x00dev, 83, qual->rssi > -65 ? 0x4a : 0x7a);
+ 			rt2800_bbp_write_with_rx_chain(rt2x00dev, 66, vgc_level);
+-		} else
++		} else {
+ 			rt2800_bbp_write(rt2x00dev, 66, vgc_level);
++		}
++
+ 		qual->vgc_level = vgc_level;
+ 		qual->vgc_level_reg = vgc_level;
+ 	}
+-- 
+1.7.10
