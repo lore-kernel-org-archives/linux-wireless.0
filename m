@@ -1,31 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:59396 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753099Ab3JAKS4 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:48204 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754512Ab3JAAnS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Oct 2013 06:18:56 -0400
-Message-ID: <1380622731.14430.7.camel@jlt4.sipsolutions.net> (sfid-20131001_121859_121445_C4341C4F)
-Subject: Re: [PATCH] cfg80211: parse dfs region for internal regdb option
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	rodrigue@qca.qualcomm.com
-Date: Tue, 01 Oct 2013 12:18:51 +0200
-In-Reply-To: <1379399136-3181-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20130917_082645_746795_B2BB7D43)
-References: <1379399136-3181-1-git-send-email-janusz.dziedzic@tieto.com>
-	 (sfid-20130917_082645_746795_B2BB7D43)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 30 Sep 2013 20:43:18 -0400
+Message-ID: <a6a968ed9a6ea34fc3e0da4a548f8046.squirrel@www.codeaurora.org> (sfid-20131001_024322_411842_9B3DF8AD)
+In-Reply-To: <20130926110934.GA5070@w1.fi>
+References: <1379446296-22236-1-git-send-email-clanctot@codeaurora.org>
+    <20130926110934.GA5070@w1.fi>
+Date: Tue, 1 Oct 2013 00:43:14 -0000
+Subject: Re: [PATCH 0/2] nl80211/cfg80211: Support PMF on drivers with
+ integrated AP SME
+From: clanctot@codeaurora.org
+To: "Jouni Malinen" <j@w1.fi>
+Cc: "Chet Lanctot" <clanctot@codeaurora.org>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org,
+	"Johannes Berg" <johannes@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-09-17 at 08:25 +0200, Janusz Dziedzic wrote:
-> Add support for parsing and setting the dfs region (ETSI, FCC, JP)
-> when the internal regulatory database is used. Before this
-> the DFS region was being ignored even if present on the used
-> db.txt
+> On Tue, Sep 17, 2013 at 12:31:34PM -0700, Chet Lanctot wrote:
+>> These patches represent a small number of changes to the
+>> nl80211/cfg80211 interface to support Protected Management Frames
+>> (PMF, 802.11w) on an AP.  Specifically, these changes are needed for
+>> drivers that have the AP SME integrated.
+>>
+>> Support is added for drivers that do not implement the SA Query
+>> procedure
+>> that is part of PMF.  Instead, the need for upper layer software to
+>> do this procedure is advertised.  And support is added so that  whether
+>> PMF should be used for station connections is communicated to the
+>> driver.
+>
+> The patches here have some issues in not compiling and formatting
+> (trailing whitespace) and as such, cannot be applied as-is. I'd expect a
+> new version to be posted to address those issues.
+>
+> That said, if there is any feedback on the general direction used here,
+> that would obviously be welcome even before the updated patches are
+> posted.
+>
+> --
+> Jouni Malinen                                            PGP id EFC895FA
+>
 
-Applied.
+Thank you Jouni for your comments.
 
-johannes
+You are correct, a new version of the patches will be sent out that
+address the compiling and formatting issues.  I am also getting feedback
+from others, and I will incorporate that feedback as well before sending
+out the updated patches.
+
+   - Chet Lanctot
 
