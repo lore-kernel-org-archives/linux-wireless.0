@@ -1,280 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:43442 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750754Ab3J3QZR (ORCPT
+Received: from caiajhbdcaib.dreamhost.com ([208.97.132.81]:42250 "EHLO
+	homiemail-a64.g.dreamhost.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755522Ab3JADjT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Oct 2013 12:25:17 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: j@w1.fi, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2] hwsim tests: use argparse module
-Date: Wed, 30 Oct 2013 17:25:13 +0100
-Message-Id: <1383150313-4155-1-git-send-email-johannes@sipsolutions.net> (sfid-20131030_172521_552346_2306CF4D)
+	Mon, 30 Sep 2013 23:39:19 -0400
+Received: from homiemail-a64.g.dreamhost.com (localhost [127.0.0.1])
+	by homiemail-a64.g.dreamhost.com (Postfix) with ESMTP id ADF0D43807C
+	for <linux-wireless@vger.kernel.org>; Mon, 30 Sep 2013 20:39:18 -0700 (PDT)
+Received: from mail-pa0-f42.google.com (mail-pa0-f42.google.com [209.85.220.42])
+	(using TLSv1 with cipher RC4-SHA (128/128 bits))
+	(No client certificate requested)
+	(Authenticated sender: erik@erikelmore.com)
+	by homiemail-a64.g.dreamhost.com (Postfix) with ESMTPSA id 9CB22438079
+	for <linux-wireless@vger.kernel.org>; Mon, 30 Sep 2013 20:39:18 -0700 (PDT)
+Received: by mail-pa0-f42.google.com with SMTP id lj1so6819698pab.29
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Sep 2013 20:39:18 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAGRGNgXy37rXWou4sWDfUe+UhpXqxLanhSaH0MPNw_oV+mYbOA@mail.gmail.com>
+References: <CA+=D8wmgsBimQhSYDqWbuzwM544YrX1Gj9gsmftQUHoD+QYeZw@mail.gmail.com>
+	<CAGRGNgXy37rXWou4sWDfUe+UhpXqxLanhSaH0MPNw_oV+mYbOA@mail.gmail.com>
+Date: Mon, 30 Sep 2013 23:39:18 -0400
+Message-ID: <CA+=D8wnh59iQfmk8nDjnEZUBHpiZBXFBWwtGu_y_Ldy1b06Jnw@mail.gmail.com> (sfid-20131001_053922_477885_4E4DA451)
+Subject: Re: Idea: wifi-over-ethernet (bear with me)
+From: Erik Elmore <erik@erikelmore.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+There are a few big ideas, but the one big idea that got me started on
+this line of thought was to make it possible for devices that only
+support ad-hoc networks to function over great distances.
 
-Instead of re-implementing a command-line parser, use the
-argparse module.
-
-The only real change (I hope) is that the test module must
-now be given to the -f option without the .py suffix.
-
-Also, --help now works, and if a test module/test name is
-given that doesn't exist, the valid list is printed.
-
-Signed-hostap: Johannes Berg <johannes.berg@intel.com>
----
- tests/hwsim/run-all.sh   |   4 +-
- tests/hwsim/run-tests.py | 144 +++++++++++++++++++++++++----------------------
- 2 files changed, 80 insertions(+), 68 deletions(-)
-
-diff --git a/tests/hwsim/run-all.sh b/tests/hwsim/run-all.sh
-index 07006af..9471dd8 100755
---- a/tests/hwsim/run-all.sh
-+++ b/tests/hwsim/run-all.sh
-@@ -24,7 +24,7 @@ if [ "x$1" = "xconcurrent-valgrind" ]; then
-     DATE=`ls -1tr $LOGDIR | tail -1 | cut -f1 -d-`
-     rm $LOGDIR/last-debug
-     for i in autogo discovery grpform; do
--	./run-tests.py -l $LOGDIR/$DATE-run-$i $DB -e $LOGDIR/$DATE-failed-$i -r $LOGDIR/results.txt -f test_p2p_$i.py || errors=1
-+	./run-tests.py -l $LOGDIR/$DATE-run-$i $DB -e $LOGDIR/$DATE-failed-$i -r $LOGDIR/results.txt -f test_p2p_$i || errors=1
- 	cat $LOGDIR/$DATE-run-$i >> $LOGDIR/last-debug
-     done
-     ./stop-wifi.sh
-@@ -45,7 +45,7 @@ elif [ "x$1" = "xconcurrent" ]; then
-     DATE=`ls -1tr $LOGDIR | tail -1 | cut -f1 -d-`
-     rm $LOGDIR/last-debug
-     for i in autogo discovery grpform; do
--	./run-tests.py -l $LOGDIR/$DATE-run-$i $DB -e $LOGDIR/$DATE-failed-$i -r $LOGDIR/results.txt -f test_p2p_$i.py || errors=1
-+	./run-tests.py -l $LOGDIR/$DATE-run-$i $DB -e $LOGDIR/$DATE-failed-$i -r $LOGDIR/results.txt -f test_p2p_$i || errors=1
- 	cat $LOGDIR/$DATE-run-$i >> $LOGDIR/last-debug
-     done
-     ./stop-wifi.sh
-diff --git a/tests/hwsim/run-tests.py b/tests/hwsim/run-tests.py
-index e319eec..9644b4a 100755
---- a/tests/hwsim/run-tests.py
-+++ b/tests/hwsim/run-tests.py
-@@ -11,6 +11,7 @@ import re
- import sys
- import time
- from datetime import datetime
-+import argparse
- 
- import logging
- logger = logging.getLogger(__name__)
-@@ -47,49 +48,74 @@ def report(conn, build, commit, run, test, result, diff):
-             print "sql: %r" % (params, )
- 
- def main():
--    test_file = None
--    error_file = None
--    log_file = None
--    results_file = None
--    conn = None
-+    tests = []
-+    test_modules = []
-+    for t in os.listdir("."):
-+        m = re.match(r'(test_.*)\.py$', t)
-+        if m:
-+            logger.debug("Import test cases from " + t)
-+            mod = __import__(m.group(1))
-+            test_modules.append(mod.__name__)
-+            for s in dir(mod):
-+                if s.startswith("test_"):
-+                    func = mod.__dict__.get(s)
-+                    tests.append(func)
-+    test_names = list(set([t.__name__ for t in tests]))
-+
-     run = None
--    build = None
-     commit = None
--    idx = 1
-     print_res = False
--    if len(sys.argv) > 1 and sys.argv[1] == '-d':
--        logging.basicConfig(level=logging.DEBUG)
--        idx = idx + 1
--    elif len(sys.argv) > 1 and sys.argv[1] == '-q':
--        logging.basicConfig(level=logging.WARNING)
--        print_res = True
--        idx = idx + 1
--    elif len(sys.argv) > 2 and sys.argv[1] == '-l':
--        log_file = sys.argv[2]
--        logging.basicConfig(filename=log_file,level=logging.DEBUG)
--        idx = idx + 2
-+
-+    parser = argparse.ArgumentParser(description='hwsim test runner')
-+    group = parser.add_mutually_exclusive_group()
-+    group.add_argument('-d', const=logging.DEBUG, action='store_const',
-+                       dest='loglevel', default=logging.INFO,
-+                       help="verbose debug output")
-+    group.add_argument('-q', const=logging.WARNING, action='store_const',
-+                       dest='loglevel', help="be quiet")
-+    group.add_argument('-l', metavar='<filename>', dest='logfile',
-+                       help='debug log filename')
-+
-+    parser.add_argument('-e', metavar="<filename>", dest='errorfile',
-+                        help='error filename')
-+    parser.add_argument('-r', metavar="<filename>", dest='resultsfile',
-+                        help='results filename')
-+    parser.add_argument('-S', metavar='<sqlite3 db>', dest='database',
-+                        help='database to write results to')
-+    parser.add_argument('-b', metavar='<build>', dest='build', help='build ID')
-+    parser.add_argument('-L', action='store_true', dest='update_tests_db',
-+                        help='List tests (and update descriptions in DB)')
-+    parser.add_argument('-f', dest='testmodule', metavar='<test module>',
-+                        help='execute only tests from this test module',
-+                        type=str, choices=[[]] + test_modules)
-+    parser.add_argument('tests', metavar='<test>', nargs='*', type=str,
-+                        help='tests to run (only valid without -f)',
-+                        choices=[[]] + test_names)
-+
-+    args = parser.parse_args()
-+
-+    if args.tests and args.testmodule:
-+        print 'Invalid arguments - both test module and tests given'
-+        sys.exit(2)
-+
-+    if args.logfile:
-+        logging.basicConfig(filename=args.logfile,
-+                            level=logging.DEBUG)
-+        log_to_file = True
-     else:
--        logging.basicConfig(level=logging.INFO)
--
--    while len(sys.argv) > idx:
--        if len(sys.argv) > idx + 1 and sys.argv[idx] == '-e':
--            error_file = sys.argv[idx + 1]
--            idx = idx + 2
--        elif len(sys.argv) > idx + 1 and sys.argv[idx] == '-r':
--            results_file = sys.argv[idx + 1]
--            idx = idx + 2
--        elif len(sys.argv) > idx + 1 and sys.argv[idx] == '-f':
--            test_file = sys.argv[idx + 1]
--            idx = idx + 2
--        elif len(sys.argv) > idx + 1 and sys.argv[idx] == '-S':
--            import sqlite3
--            conn = sqlite3.connect(sys.argv[idx + 1])
--            idx = idx + 2
--        elif len(sys.argv) > idx + 1 and sys.argv[idx] == '-b':
--            build = sys.argv[idx + 1]
--            idx = idx + 2
--        else:
--            break
-+        logging.basicConfig(level=args.loglevel)
-+        log_to_file = False
-+        if args.loglevel == logging.WARNING:
-+            print_res = True
-+
-+    error_file = args.errorfile
-+    results_file = args.resultsfile
-+
-+    if args.database:
-+        import sqlite3
-+        conn = sqlite3.connect(args.database)
-+    else:
-+        conn = None
- 
-     if conn:
-         run = str(int(time.time()))
-@@ -101,20 +127,7 @@ def main():
-         except IOError:
-             pass
- 
--    tests = []
--    for t in os.listdir("."):
--        m = re.match(r'(test_.*)\.py$', t)
--        if m:
--            if test_file and test_file not in t:
--                continue
--            logger.debug("Import test cases from " + t)
--            mod = __import__(m.group(1))
--            for s in dir(mod):
--                if s.startswith("test_"):
--                    func = mod.__dict__.get(s)
--                    tests.append(func)
--
--    if len(sys.argv) > idx and sys.argv[idx] == '-L':
-+    if args.update_tests_db:
-         for t in tests:
-             print t.__name__ + " - " + t.__doc__
-             if conn:
-@@ -130,10 +143,6 @@ def main():
-             conn.close()
-         sys.exit(0)
- 
--    if len(sys.argv) > idx:
--        test_filter = sys.argv[idx]
--    else:
--        test_filter = None
- 
-     dev0 = WpaSupplicant('wlan0', '/tmp/wpas-wlan0')
-     dev1 = WpaSupplicant('wlan1', '/tmp/wpas-wlan1')
-@@ -156,12 +165,15 @@ def main():
-     failed = []
- 
-     for t in tests:
--        if test_filter:
--            if test_filter != t.__name__:
-+        if args.tests:
-+            if not t.__name__ in args.tests:
-+                continue
-+        if args.testmodule:
-+            if not t.__module__ == args.testmodule:
-                 continue
-         reset_devs(dev, apdev)
-         logger.info("START " + t.__name__)
--        if log_file:
-+        if log_to_file:
-             print "START " + t.__name__
-             sys.stdout.flush()
-         if t.__doc__:
-@@ -191,11 +203,11 @@ def main():
-             else:
-                 passed.append(t.__name__)
-                 result = "PASS"
--            report(conn, build, commit, run, t.__name__, result, diff)
-+            report(conn, args.build, commit, run, t.__name__, result, diff)
-             result = result + " " + t.__name__ + " "
-             result = result + str(diff.total_seconds()) + " " + str(end)
-             logger.info(result)
--            if log_file or print_res:
-+            if log_to_file or print_res:
-                 print result
-                 sys.stdout.flush()
-             if results_file:
-@@ -207,10 +219,10 @@ def main():
-             diff = end - start
-             logger.info(e)
-             failed.append(t.__name__)
--            report(conn, build, commit, run, t.__name__, "FAIL", diff)
-+            report(conn, args.build, commit, run, t.__name__, "FAIL", diff)
-             result = "FAIL " + t.__name__ + " " + str(diff.total_seconds()) + " " + str(end)
-             logger.info(result)
--            if log_file:
-+            if log_to_file:
-                 print result
-                 sys.stdout.flush()
-             if results_file:
-@@ -224,7 +236,7 @@ def main():
-                 logger.info("Failed to issue TEST-STOP after " + t.__name__ + " for " + d.ifname)
-                 logger.info(e)
- 
--    if not test_filter:
-+    if not args.tests:
-         reset_devs(dev, apdev)
- 
-     if conn:
-@@ -242,7 +254,7 @@ def main():
-     logger.info("passed all " + str(len(passed)) + " test case(s)")
-     if len(skipped):
-         logger.info("skipped " + str(len(skipped)) + " test case(s)")
--    if log_file:
-+    if log_to_file:
-         print "passed all " + str(len(passed)) + " test case(s)"
-         if len(skipped):
-             print "skipped " + str(len(skipped)) + " test case(s)"
--- 
-1.8.4.rc3
-
+On Mon, Sep 30, 2013 at 8:42 PM, Julian Calaby <julian.calaby@gmail.com> wrote:
+> Hi Erik,
+>
+> On Tue, Oct 1, 2013 at 5:40 AM, Erik Elmore <erik@erikelmore.com> wrote:
+>> Hello, linux-wireless.  I have an idea that I'd like to get some
+>> feedback from you all.  I admit this idea is weird/flawed/broken and
+>> seemingly useless, but I do have a practical application in mind, so
+>> please hear me out.
+>>
+>> Imagine two physical locations, site 1 and 2, that are well outside of
+>> normal wifi range of each other.  Each site has a device that listens
+>> for a subset of wifi frames and then sends them over a distribution
+>> network to its counterpart at the other site.  Each device will also
+>> re-transmit frames received via the distribution network.  Let's call
+>> these devices listener1 and listener2.
+>>
+>> Each site also contains one client device that wants to form an ad-hoc
+>> network with the one in the other site.  Assuming that listener1 and
+>> listener2 are configured to forward frames having a TA belonging to
+>> the client device in their site, is it feasible for these devices to
+>> form an ad-hoc network with the help of the listener devices?
+>
+> Firstly, what's the big plan? - I can't see any useful reason to
+> "tunnel" ad-hoc networks between two points, assuming that you did
+> have all the hardware and software working properly, what is the end
+> goal here, why do you need to have two devices at remote locations
+> form an ad-hoc network with each other? What goal do you have in mind
+> that wouldn't work with a normal managed network?
+>
+> Just so you know, this sort of setup is almost painfully easy to
+> achieve if you use managed networks. - You could simply have a VPN or
+> tunnelling setup of some type between the two access points and have
+> that bridged into the wireless network. This would be 100% transparent
+> as far as clients on the network would be concerned. My previous job
+> had a network that worked somewhat like that with VPNs connecting
+> three offices with WiFi, two data centres and several remote clients
+> into a "single" big network.
+>
+> Thanks,
+>
+> --
+> Julian Calaby
+>
+> Email: julian.calaby@gmail.com
+> Profile: http://www.google.com/profiles/julian.calaby/
+> .Plan: http://sites.google.com/site/juliancalaby/
