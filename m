@@ -1,65 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f51.google.com ([209.85.214.51]:32921 "EHLO
-	mail-bk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934637Ab3JPOF6 convert rfc822-to-8bit (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:59650 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751119Ab3JAL1r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Oct 2013 10:05:58 -0400
-Received: by mail-bk0-f51.google.com with SMTP id mx10so294330bkb.10
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Oct 2013 07:05:57 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87bo2p74sp.fsf@kamboji.qca.qualcomm.com>
-References: <1381858196-17000-1-git-send-email-michal.kazior@tieto.com>
-	<8761sybbye.fsf@kamboji.qca.qualcomm.com>
-	<87bo2p74sp.fsf@kamboji.qca.qualcomm.com>
-Date: Wed, 16 Oct 2013 07:05:56 -0700
-Message-ID: <CA+BoTQ=wpEWF3sWavKSfKy4s6qW097amCt_VqbapZg-ECWOE=g@mail.gmail.com> (sfid-20131016_160619_500761_1B42ABF7)
-Subject: Re: [PATCH 0/7] ath10k: fixes 2013-10-15
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath10k@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+	Tue, 1 Oct 2013 07:27:47 -0400
+Message-ID: <1380626864.14430.32.camel@jlt4.sipsolutions.net> (sfid-20131001_132749_445955_76972B45)
+Subject: Re: [PATCH 4/5] {nl,cfg,mac}80211: finalizing mesh channel switching
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	devel@lists.open80211s.org, distro11s@cozybit.com
+Date: Tue, 01 Oct 2013 13:27:44 +0200
+In-Reply-To: <1379115372-28426-5-git-send-email-yeohchunyeow@cozybit.com> (sfid-20130914_013634_171516_9BF59D4C)
+References: <1379115372-28426-1-git-send-email-yeohchunyeow@cozybit.com>
+	 <1379115372-28426-5-git-send-email-yeohchunyeow@cozybit.com>
+	 (sfid-20130914_013634_171516_9BF59D4C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 16 October 2013 05:56, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Kalle Valo <kvalo@qca.qualcomm.com> writes:
->
->> Michal Kazior <michal.kazior@tieto.com> writes:
->>
->>> This is a bunch of fixes I've had queued up for
->>> some time now. I was reluctant to send them
->>> without some additional checks and because some of
->>> the fixes are not ideal. At least we can get a
->>> discussion going if anything raises any serious
->>> concern.
->>>
->>>
->>> Michal Kazior (7):
->>>   ath10k: prevent starting monitor without a vdev
->>>   ath10k: add sanity checks for monitor management
->>>   ath10k: fix endianess in prints
->>>   ath10k: fix NSS reporting in RX
->>>   ath10k: fix NULL deref upon early FW crash
->>>   ath10k: fix device initialization routine
->>>   ath10k: fix FW crashes on heavy TX on 10.1.389 AP FW
->>
->> I get few long line warnings:
->>
->> drivers/net/wireless/ath/ath10k/pci.c:1842: WARNING: line over 80 characters
->> drivers/net/wireless/ath/ath10k/pci.c:1844: WARNING: line over 80 characters
->> drivers/net/wireless/ath/ath10k/pci.c:1847: WARNING: line over 80 characters
->> drivers/net/wireless/ath/ath10k/pci.c:1848: WARNING: line over 80 characters
->> drivers/net/wireless/ath/ath10k/pci.c:1856: WARNING: line over 80 characters
->> drivers/net/wireless/ath/ath10k/pci.c:1875: WARNING: line over 80 characters
->> drivers/net/wireless/ath/ath10k/pci.c:1877: WARNING: line over 80 characters
->> drivers/net/wireless/ath/ath10k/pci.c:1883: WARNING: line over 80 characters
->> drivers/net/wireless/ath/ath10k/mac.c:2284: WARNING: line over 80 characters
->
-> Michal, if it's ok for you I'll submit v2 of this patchset. I'll fix the
-> long line warnings and also I do small cleanup to the warm reset code.
+On Fri, 2013-09-13 at 16:36 -0700, Chun-Yeow Yeoh wrote:
+> Finalizing the requried procedures for channel switching completion and
 
-I am totally okay with this. Thank you for your trouble.
+typo: required
 
+> also adding the function for updating the beacon and probe response frames
+> with CSA and MCSP elements. Once the channel switching is completed, the
+> CSA and MCSP elements are removed from the beacon or probe response frames
+> as defined in the IEEE Std 802.11-2012 section 10.9.8.4.3.
 
-Micał
+I'd prefer you rewrote this to be more active ... this seems rather
+observer style :)
+
+> +int ieee80211_mesh_finish_csa(struct ieee80211_sub_if_data *sdata)
+> +{
+> +	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+> +	int ret = 0;
+> +
+> +	/* Remove the CSA and MCSP elements from the beacon */
+> +	kfree(ifmsh->csa_settings);
+> +	ifmsh->csa_settings = NULL;
+> +	ret = ieee80211_mesh_rebuild_beacon(sdata);
+> +	if (ret)
+> +		return -EINVAL;
+
+This seems totally racy with what I pointed out in the other patch ...
+
+> +	/* Reset the TTL value and Initiator flag */
+> +	ifmsh->chsw_init = false;
+> +	ifmsh->chsw_ttl = 0;
+> +
+> +	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
+> +
+> +	mcsa_dbg(sdata, "complete switching to center freq %d MHz",
+> +		 sdata->vif.bss_conf.chandef.chan->center_freq);
+> +	return ret;
+
+return 0
+
+> +	tmp_csa_settings = kmalloc(sizeof(struct cfg80211_csa_settings),
+> +				   GFP_ATOMIC);
+> +	if (!tmp_csa_settings) {
+> +		mcsa_dbg(sdata, "could not allocate memory for csa beaconing");
+
+You should never print a message for memory allocation failures, they
+already give very verbose output.
+
+> +	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
+> +	return ret;
+
+return 0
+
+johannes
+
