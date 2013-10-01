@@ -1,63 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s15283307.onlinehome-server.info ([87.106.208.187]:44739 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752000Ab3JBFco convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Oct 2013 01:32:44 -0400
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
-Subject: Re: [PATCH v6 4/4] Bluetooth: btmrvl: add calibration data download support
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <1380655155-10007-5-git-send-email-bzhao@marvell.com>
-Date: Wed, 2 Oct 2013 07:32:27 +0200
-Cc: <linux-bluetooth@vger.kernel.org>,
-	Gustavo Padovan <gustavo@padovan.org>,
-	Johan Hedberg <johan.hedberg@gmail.com>,
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:50779 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751079Ab3JAQYZ convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Oct 2013 12:24:25 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Johan Hedberg <johan.hedberg@gmail.com>
+CC: Marcel Holtmann <marcel@holtmann.org>,
+	"linux-bluetooth@vger.kernel.org development"
+	<linux-bluetooth@vger.kernel.org>,
+	"Gustavo F. Padovan" <gustavo@padovan.org>,
+	"linux-wireless@vger.kernel.org Wireless"
 	<linux-wireless@vger.kernel.org>,
 	Mike Frysinger <vapier@chromium.org>,
 	Hyuckjoo Lee <hyuckjoo.lee@samsung.com>,
 	Amitkumar Karwar <akarwar@marvell.com>
-Message-Id: <53A79334-AC60-4B9A-BD94-CD5EE3F7746C@holtmann.org> (sfid-20131002_073248_993397_04C55E6C)
-References: <1380655155-10007-1-git-send-email-bzhao@marvell.com> <1380655155-10007-5-git-send-email-bzhao@marvell.com>
-To: Bing Zhao <bzhao@marvell.com>
+Date: Tue, 1 Oct 2013 09:23:56 -0700
+Subject: RE: [PATCH v5 1/2] Bluetooth: btmrvl: add setup handler
+Message-ID: <477F20668A386D41ADCC57781B1F70430F451FABE7@SC-VEXCH1.marvell.com> (sfid-20131001_182430_744279_E89EFB72)
+References: <1379715667-22424-1-git-send-email-bzhao@marvell.com>
+ <18678858-E711-43E5-AFE6-E637D1CECFFB@holtmann.org>
+ <477F20668A386D41ADCC57781B1F70430F44C59418@SC-VEXCH1.marvell.com>
+ <DF6283E3-8476-400F-A230-CB7CA0F98564@holtmann.org>
+ <477F20668A386D41ADCC57781B1F70430F450779A4@SC-VEXCH1.marvell.com>
+ <20130924193010.GA2584@x220.p-661hnu-f1>
+ <477F20668A386D41ADCC57781B1F70430F45077E5B@SC-VEXCH1.marvell.com>
+ <B3090D30-6F81-4E12-8F58-E650F77BB72E@holtmann.org>
+ <20131001111309.GA19641@x220.p-661hnu-f1>
+In-Reply-To: <20131001111309.GA19641@x220.p-661hnu-f1>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Bing,
+Hi Johan,
 
-> A text file containing calibration data in hex format can
-> be provided at following path:
+> Hi Marcel & Bing,
 > 
-> /lib/firmware/mrvl/sd8797_caldata.conf
+> On Thu, Sep 26, 2013, Marcel Holtmann wrote:
+> > >> You're right that we're missing the clearing of the HCI_SETUP flag
+> > >> for such a scenario. Could you try the attached patch. It should
+> > >> fix the
+> > >
+> > > We have tested your patch. Yes, it fixes the problem. Thanks!
+> >
+> > then lets get a proper version with full commit message explaining the
+> > issue merged upstream. As I said, this is a real bug we need to fix.
 > 
-> The data will be downloaded to firmware during initialization.
-> 
-> Reviewed-by: Mike Frysinger <vapier@chromium.org>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> Signed-off-by: Bing Zhao <bzhao@marvell.com>
-> Signed-off-by: Hyuckjoo Lee <hyuckjoo.lee@samsung.com>
-> ---
-> v2: Remove module parameter. The calibration data will be downloaded
->    only when the device speicific data file is provided.
->    (Marcel Holtmann)
-> v3: Fix crash (misaligned memory access) on ARM
-> v4: Simplify white space parsing and save some CPU cycles (Mike Frysinger)
-> v5: Improvements in cal data parsing logic. Add explanatory comments.
->    Replace GFP_ATOMIC flag with GFP_KERNEL (Mike Frysinger)
-> v6: Remove redundant label 'done' and 'cfg' check, and a new line character check
->    (Mike Frysinger)
->    Use btmrvl_send_sync_cmd() for downloading calibration data.
->    (Marcel Holtmann)
-> 
-> drivers/bluetooth/btmrvl_drv.h  |   8 +++
-> drivers/bluetooth/btmrvl_main.c | 116 ++++++++++++++++++++++++++++++++++++++++
-> drivers/bluetooth/btmrvl_sdio.c |   9 +++-
-> drivers/bluetooth/btmrvl_sdio.h |   2 +
-> 4 files changed, 134 insertions(+), 1 deletion(-)
+> I've just sent a new patch set titled "[PATCH 0/2] Bluetooth: Fix
+> hci_dev_open race condition". Bing, could you please test this with your
+> original setup so we ensure that the issue is still properly handled.
 
-Acked-by: Marcel Holtmann <marcel@holtmann.org>
+We tested this new patch set with our original setup and the issue is not seen.
 
-Regards
-
-Marcel
+Thanks,
+Bing
 
