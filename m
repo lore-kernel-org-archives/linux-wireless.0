@@ -1,118 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:35004 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760342Ab3JPKx4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Oct 2013 06:53:56 -0400
-From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+Received: from s3.sipsolutions.net ([144.76.43.152]:58804 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751326Ab3JAH2u (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Oct 2013 03:28:50 -0400
+Message-ID: <1380612524.14430.0.camel@jlt4.sipsolutions.net> (sfid-20131001_092854_044765_D56882E0)
+Subject: Re: [PATCH] iwlwifi: pcie: fix merge damage
+From: Johannes Berg <johannes@sipsolutions.net>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Rhyland Klein <rklein@nvidia.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	linux-acpi@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: [PATCH 2/5] net: rfkill: gpio: clean up clock handling
-Date: Wed, 16 Oct 2013 13:53:40 +0300
-Message-Id: <1381920823-15403-3-git-send-email-heikki.krogerus@linux.intel.com> (sfid-20131016_125452_164301_9BCA7AE1)
-In-Reply-To: <1381920823-15403-1-git-send-email-heikki.krogerus@linux.intel.com>
-References: <1381920823-15403-1-git-send-email-heikki.krogerus@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 01 Oct 2013 09:28:44 +0200
+In-Reply-To: <20130930203206.GM10994@tuxdriver.com>
+References: <1380531766-15384-1-git-send-email-johannes@sipsolutions.net>
+	 <1380532074.14467.2.camel@jlt4.sipsolutions.net>
+	 <20130930203206.GM10994@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use a simple flag to see the state of the clock, and make
-the clock available even without a name. Also, get rid of
-HAVE_CLK dependency.
+On Mon, 2013-09-30 at 16:32 -0400, John W. Linville wrote:
+> On Mon, Sep 30, 2013 at 11:07:54AM +0200, Johannes Berg wrote:
+> > On Mon, 2013-09-30 at 11:02 +0200, Johannes Berg wrote:
+> > > From: Johannes Berg <johannes.berg@intel.com>
+> > > 
+> > > The merge b35c8097 seems to have lost commit eabc4ac5d,
+> > > put the code back.
+> > > 
+> > > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> > 
+> > Ah, forgot to say - John, I think you should apply this as a patch,
+> > having it in my pull request seems odd. But if you're of another opinion
+> > I can stick it into my next -next pull request too.
+> 
+> OK -- does this need to be treated as a fix?  Or is -next OK?
 
-Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
----
- net/rfkill/Kconfig       |  2 +-
- net/rfkill/rfkill-gpio.c | 35 ++++++++---------------------------
- 2 files changed, 9 insertions(+), 28 deletions(-)
+I believe the merge damage only occurred during merging wireless.git (or
+one of its upstreams) into wireless-next.git.
 
-diff --git a/net/rfkill/Kconfig b/net/rfkill/Kconfig
-index 78efe89..4c10e7e 100644
---- a/net/rfkill/Kconfig
-+++ b/net/rfkill/Kconfig
-@@ -36,7 +36,7 @@ config RFKILL_REGULATOR
- 
- config RFKILL_GPIO
- 	tristate "GPIO RFKILL driver"
--	depends on RFKILL && GPIOLIB && HAVE_CLK
-+	depends on RFKILL && GPIOLIB
- 	default n
- 	help
- 	  If you say yes here you get support of a generic gpio RFKILL
-diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
-index 0705806..1d104e7 100644
---- a/net/rfkill/rfkill-gpio.c
-+++ b/net/rfkill/rfkill-gpio.c
-@@ -27,24 +27,13 @@
- 
- #include <linux/rfkill-gpio.h>
- 
--enum rfkill_gpio_clk_state {
--	UNSPECIFIED = 0,
--	PWR_ENABLED,
--	PWR_DISABLED
--};
--
--#define PWR_CLK_SET(_RF, _EN) \
--	((_RF)->pwr_clk_enabled = (!(_EN) ? PWR_ENABLED : PWR_DISABLED))
--#define PWR_CLK_ENABLED(_RF) ((_RF)->pwr_clk_enabled == PWR_ENABLED)
--#define PWR_CLK_DISABLED(_RF) ((_RF)->pwr_clk_enabled != PWR_ENABLED)
--
- struct rfkill_gpio_data {
- 	struct rfkill_gpio_platform_data	*pdata;
- 	struct rfkill				*rfkill_dev;
- 	char					*reset_name;
- 	char					*shutdown_name;
--	enum rfkill_gpio_clk_state		pwr_clk_enabled;
--	struct clk				*pwr_clk;
-+	struct clk				*clk;
-+	bool					clk_enabled;
- };
- 
- static int rfkill_gpio_set_power(void *data, bool blocked)
-@@ -56,19 +45,18 @@ static int rfkill_gpio_set_power(void *data, bool blocked)
- 			gpio_direction_output(rfkill->pdata->shutdown_gpio, 0);
- 		if (gpio_is_valid(rfkill->pdata->reset_gpio))
- 			gpio_direction_output(rfkill->pdata->reset_gpio, 0);
--		if (rfkill->pwr_clk && PWR_CLK_ENABLED(rfkill))
--			clk_disable(rfkill->pwr_clk);
-+		if (!IS_ERR(rfkill->clk) && rfkill->clk_enabled)
-+			clk_disable(rfkill->clk);
- 	} else {
--		if (rfkill->pwr_clk && PWR_CLK_DISABLED(rfkill))
--			clk_enable(rfkill->pwr_clk);
-+		if (!IS_ERR(rfkill->clk) && !rfkill->clk_enabled)
-+			clk_enable(rfkill->clk);
- 		if (gpio_is_valid(rfkill->pdata->reset_gpio))
- 			gpio_direction_output(rfkill->pdata->reset_gpio, 1);
- 		if (gpio_is_valid(rfkill->pdata->shutdown_gpio))
- 			gpio_direction_output(rfkill->pdata->shutdown_gpio, 1);
- 	}
- 
--	if (rfkill->pwr_clk)
--		PWR_CLK_SET(rfkill, blocked);
-+	rfkill->clk_enabled = blocked;
- 
- 	return 0;
- }
-@@ -123,14 +111,7 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
- 	snprintf(rfkill->reset_name, len + 6 , "%s_reset", pdata->name);
- 	snprintf(rfkill->shutdown_name, len + 9, "%s_shutdown", pdata->name);
- 
--	if (pdata->power_clk_name) {
--		rfkill->pwr_clk = devm_clk_get(&pdev->dev,
--						pdata->power_clk_name);
--		if (IS_ERR(rfkill->pwr_clk)) {
--			pr_warn("%s: can't find pwr_clk.\n", __func__);
--			return PTR_ERR(rfkill->pwr_clk);
--		}
--	}
-+	rfkill->clk = devm_clk_get(&pdev->dev, pdata->power_clk_name);
- 
- 	if (gpio_is_valid(pdata->reset_gpio)) {
- 		ret = devm_gpio_request(&pdev->dev, pdata->reset_gpio,
--- 
-1.8.4.rc3
+johannes
 
