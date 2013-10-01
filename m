@@ -1,39 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:17842 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753748Ab3JVWV0 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Oct 2013 18:21:26 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"janusz.dziedzic@tieto.com" <janusz.dziedzic@tieto.com>,
-	"smihir@qti.qualcomm.com" <smihir@qti.qualcomm.com>,
-	"tushnimb@qca.qualcomm.com" <tushnimb@qca.qualcomm.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Date: Tue, 22 Oct 2013 15:21:04 -0700
-Subject: RE: [PATCH 07/14] mwifiex: consolidate no-ibss and passive scan to
- no-ir
-Message-ID: <477F20668A386D41ADCC57781B1F70430F4556D40B@SC-VEXCH1.marvell.com> (sfid-20131023_002129_599559_CD33066A)
-References: <1382376158-25586-1-git-send-email-mcgrof@do-not-panic.com>
- <1382376158-25586-8-git-send-email-mcgrof@do-not-panic.com>
-In-Reply-To: <1382376158-25586-8-git-send-email-mcgrof@do-not-panic.com>
-Content-Type: text/plain; charset=US-ASCII
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([144.76.43.152]:59856 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751211Ab3JAMcJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Oct 2013 08:32:09 -0400
+Message-ID: <1380630722.14430.40.camel@jlt4.sipsolutions.net> (sfid-20131001_143212_815235_FD5F8262)
+Subject: Re: [PATCH 3.12] mac80211: fix a tx power handling regression
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 01 Oct 2013 14:32:02 +0200
+In-Reply-To: <52495798.1030408@openwrt.org>
+References: <1380458883-19862-1-git-send-email-nbd@openwrt.org>
+	  <1380532158.14467.3.camel@jlt4.sipsolutions.net>
+	  <524947C0.7060607@openwrt.org>
+	 <1380537498.14467.10.camel@jlt4.sipsolutions.net>
+	 <52495798.1030408@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
+On Mon, 2013-09-30 at 12:51 +0200, Felix Fietkau wrote:
 
-> Subject: [PATCH 07/14] mwifiex: consolidate no-ibss and passive scan to no-ir
-> 
-> Cc: Amitkumar Karwar <akarwar@marvell.com>
-> Cc: Bing Zhao <bzhao@marvell.com>
-> Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+> > Not sure I see why? It's an absolute value after we do the calculations
+> > in that interface that has the TPC.
+> Maybe we need to rework this somehow, but in the mean time, this patch
+> fixes a serious regression that I've been looking into for a while now.
+> I haven't worked out the exact conditions that trigger this yet, but
+> often when an AP VLAN gets destroyed and recreated, or when a new
+> temporary interface is brought up and then down again, the tx power for
+> *all* interfaces gets reset to the lowest possible level.
 
-Acked-by: Bing Zhao <bzhao@marvell.com>
+I think we just need to skip VLANs in the loop instead, they don't
+really matter here. Can you try that? Using the max would effectively
+ignore them since they might always have 0 for bss_conf.txpower.
 
-Thanks,
-Bing
+johannes
+
