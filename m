@@ -1,110 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:4993 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932284Ab3JOL6C (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:59392 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752964Ab3JAKRZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Oct 2013 07:58:02 -0400
-From: Kefeng Wang <wangkefeng.wang@huawei.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Pablo Neira Ayuso <pablo@netfilter.org>,
-	"Stephen Hemminger" <stephen@networkplumber.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Francois Romieu <romieu@fr.zoreil.com>,
-	"Ben Hutchings" <bhutchings@solarflare.com>,
-	Chas Williams <chas@cmf.nrl.navy.mil>,
-	Marc Kleine-Budde <mkl@pengutronix.de>,
-	Samuel Ortiz <samuel@sortiz.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Oliver Neukum <oneukum@suse.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	"Boris Ostrovsky" <boris.ostrovsky@oracle.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	"Michael S. Tsirkin" <mst@redhat.com>, <netfilter@vger.kernel.org>,
-	<netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	<guohanjun@huawei.com>
-Subject: [PATCH 08/18] atm: use wrapper functions of net_ratelimit() to simplify code
-Date: Tue, 15 Oct 2013 19:45:04 +0800
-Message-ID: <1381837514-50660-9-git-send-email-wangkefeng.wang@huawei.com> (sfid-20131015_140332_663213_C8EF0823)
-In-Reply-To: <1381837514-50660-1-git-send-email-wangkefeng.wang@huawei.com>
-References: <1381837514-50660-1-git-send-email-wangkefeng.wang@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 1 Oct 2013 06:17:25 -0400
+Message-ID: <1380622642.14430.5.camel@jlt4.sipsolutions.net> (sfid-20131001_121727_829481_B7BCD78D)
+Subject: Re: [PATCH 3/3] mac80211: allow configuring smps_mode_in_ps
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Eliad Peller <eliad@wizery.com>
+Date: Tue, 01 Oct 2013 12:17:22 +0200
+In-Reply-To: <1377852561-16754-3-git-send-email-johannes@sipsolutions.net> (sfid-20130830_104935_274969_0AC9B6AF)
+References: <1377852561-16754-1-git-send-email-johannes@sipsolutions.net>
+	 <1377852561-16754-3-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130830_104935_274969_0AC9B6AF)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-net_ratelimited_function() is called to simplify code.
+On Fri, 2013-08-30 at 10:49 +0200, Johannes Berg wrote:
+> From: Eliad Peller <eliad@wizery.com>
+> 
+> When in automatic smps mode (default for station mode),
+> mac80211 configures dynamic smps when the station enters
+> powersave.
+> 
+> However, drivers might prefer using different modes in this
+> case (e.g. due to major throughput degradation).
+> 
+> Add a new hw->smps_mode_in_ps field that can be configured
+> by the driver in order to override the default smps dynamic mode.
 
-Signed-off-by: Kefeng Wang <wangkefeng.wang@huawei.com>
----
- drivers/atm/solos-pci.c | 20 +++++++++-----------
- 1 file changed, 9 insertions(+), 11 deletions(-)
+Dropping this, we ended up not wanting/needing it.
 
-diff --git a/drivers/atm/solos-pci.c b/drivers/atm/solos-pci.c
-index 32784d1..a4d20e9 100644
---- a/drivers/atm/solos-pci.c
-+++ b/drivers/atm/solos-pci.c
-@@ -807,8 +807,8 @@ void solos_bh(unsigned long card_arg)
- 
- 				skb = alloc_skb(size + 1, GFP_ATOMIC);
- 				if (!skb) {
--					if (net_ratelimit())
--						dev_warn(&card->dev->dev, "Failed to allocate sk_buff for RX\n");
-+					net_ratelimited_function(dev_warn, &card->dev->dev,
-+						"Failed to allocate sk_buff for RX\n");
- 					continue;
- 				}
- 
-@@ -829,8 +829,8 @@ void solos_bh(unsigned long card_arg)
- 				vcc = find_vcc(card->atmdev[port], le16_to_cpu(header->vpi),
- 					       le16_to_cpu(header->vci));
- 				if (!vcc) {
--					if (net_ratelimit())
--						dev_warn(&card->dev->dev, "Received packet for unknown VPI.VCI %d.%d on port %d\n",
-+					net_ratelimited_function(dev_warn, &card->dev->dev,
-+						"Received packet for unknown VPI.VCI %d.%d on port %d\n",
- 							 le16_to_cpu(header->vpi), le16_to_cpu(header->vci),
- 							 port);
- 					dev_kfree_skb_any(skb);
-@@ -856,9 +856,8 @@ void solos_bh(unsigned long card_arg)
- 					break;
- 				spin_lock(&card->cli_queue_lock);
- 				if (skb_queue_len(&card->cli_queue[port]) > 10) {
--					if (net_ratelimit())
--						dev_warn(&card->dev->dev, "Dropping console response on port %d\n",
--							 port);
-+					net_ratelimited_function(dev_warn, &card->dev->dev,
-+						"Dropping console response on port %d\n", port);
- 					dev_kfree_skb_any(skb);
- 				} else
- 					skb_queue_tail(&card->cli_queue[port], skb);
-@@ -878,8 +877,7 @@ void solos_bh(unsigned long card_arg)
- 					  card->config_regs + RX_DMA_ADDR(port));
- 				card->rx_skb[port] = skb;
- 			} else {
--				if (net_ratelimit())
--					dev_warn(&card->dev->dev, "Failed to allocate RX skb");
-+				net_ratelimited_function(dev_warn, &card->dev->dev, "Failed to allocate RX skb");
- 
- 				/* We'll have to try again later */
- 				tasklet_schedule(&card->tlet);
-@@ -927,8 +925,8 @@ static int popen(struct atm_vcc *vcc)
- 
- 	skb = alloc_skb(sizeof(*header), GFP_KERNEL);
- 	if (!skb) {
--		if (net_ratelimit())
--			dev_warn(&card->dev->dev, "Failed to allocate sk_buff in popen()\n");
-+		net_ratelimited_function(dev_warn, &card->dev->dev,
-+			"Failed to allocate sk_buff in popen()\n");
- 		return -ENOMEM;
- 	}
- 	header = (void *)skb_put(skb, sizeof(*header));
--- 
-1.8.2.1
-
+johannes
 
