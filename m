@@ -1,79 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:52058 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751874Ab3JPD3Q (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:59428 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752171Ab3JAKZV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Oct 2013 23:29:16 -0400
-Message-ID: <525E0784.1070805@huawei.com> (sfid-20131016_052940_485656_4CD249F5)
-Date: Wed, 16 Oct 2013 11:27:00 +0800
-From: Kefeng Wang <wangkefeng.wang@huawei.com>
-MIME-Version: 1.0
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-CC: <linux-kernel@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Pablo Neira Ayuso <pablo@netfilter.org>,
-	Stephen Hemminger <stephen@networkplumber.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	"Francois Romieu" <romieu@fr.zoreil.com>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	Chas Williams <chas@cmf.nrl.navy.mil>,
-	Marc Kleine-Budde <mkl@pengutronix.de>,
-	Samuel Ortiz <samuel@sortiz.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Oliver Neukum <oneukum@suse.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	"Michael S. Tsirkin" <mst@redhat.com>, <netfilter@vger.kernel.org>,
-	<netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	<guohanjun@huawei.com>
-Subject: Re: [PATCH 14/18] net: usb: use wrapper functions of net_ratelimit()
- to simplify code
-References: <1381837514-50660-1-git-send-email-wangkefeng.wang@huawei.com> <1381837514-50660-15-git-send-email-wangkefeng.wang@huawei.com> <525D921C.2030709@cogentembedded.com>
-In-Reply-To: <525D921C.2030709@cogentembedded.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Tue, 1 Oct 2013 06:25:21 -0400
+Message-ID: <1380623118.14430.11.camel@jlt4.sipsolutions.net> (sfid-20131001_122524_759660_118A2D97)
+Subject: Re: [PATCH] mac80211: improve default WMM parameter setting
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Fred Zhou <fred.zy@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 01 Oct 2013 12:25:18 +0200
+In-Reply-To: <1378739021-3072-1-git-send-email-fred.zy@gmail.com> (sfid-20130909_170453_757067_9E1E8251)
+References: <1378739021-3072-1-git-send-email-fred.zy@gmail.com>
+	 (sfid-20130909_170453_757067_9E1E8251)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks for you reply.
-On 10/16 3:06, Sergei Shtylyov wrote:
-> Hello.
-> 
-> On 10/15/2013 03:45 PM, Kefeng Wang wrote:
-> 
->> net_ratelimited_function() is called to simplify code.
-> 
->> Signed-off-by: Kefeng Wang <wangkefeng.wang@huawei.com>
->> ---
->>   drivers/net/usb/usbnet.c | 4 ++--
->>   1 file changed, 2 insertions(+), 2 deletions(-)
-> 
->> diff --git a/drivers/net/usb/usbnet.c b/drivers/net/usb/usbnet.c
->> index bf94e10..edf81de 100644
->> --- a/drivers/net/usb/usbnet.c
->> +++ b/drivers/net/usb/usbnet.c
->> @@ -450,8 +450,8 @@ void usbnet_defer_kevent (struct usbnet *dev, int work)
->>   {
->>       set_bit (work, &dev->flags);
->>       if (!schedule_work (&dev->kevent)) {
->> -        if (net_ratelimit())
->> -            netdev_err(dev->net, "kevent %d may have been dropped\n", work);
->> +        net_ratelimited_function(netdev_err, dev->net,
->> +            "kevent %d may have been dropped\n", work);
-> 
->    The continuation line should start under 'netdev_err'. Same about the other patches where you didn't change the indentation of the continuation lines though you should have.
+On Mon, 2013-09-09 at 23:03 +0800, Fred Zhou wrote:
+> Move the default setting for WMM parameters outside the for loop
+> to avoid redundant assignment multiple times.
 
-Got it, indentation will be changed.
+Applied.
 
-> WBR, Sergei
-> 
-> 
-> .
-> 
-
+johannes
 
