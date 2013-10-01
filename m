@@ -1,94 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f51.google.com ([74.125.83.51]:60226 "EHLO
-	mail-ee0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753772Ab3J3LpT (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:59552 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753311Ab3JALFR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Oct 2013 07:45:19 -0400
-Received: by mail-ee0-f51.google.com with SMTP id d41so577873eek.10
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Oct 2013 04:45:18 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH/RFT 09/12] ath10k: propagate ath10k_ce_disable_interrupts() errors
-Date: Wed, 30 Oct 2013 12:42:23 +0100
-Message-Id: <1383133346-8135-10-git-send-email-michal.kazior@tieto.com> (sfid-20131030_124558_002430_35F138BC)
-In-Reply-To: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com>
-References: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com>
+	Tue, 1 Oct 2013 07:05:17 -0400
+Message-ID: <1380625512.14430.19.camel@jlt4.sipsolutions.net> (sfid-20131001_130521_759963_A0071411)
+Subject: Re: [PATCH 2/2] mac80211: implement support for configuring antenna
+ gain
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 01 Oct 2013 13:05:12 +0200
+In-Reply-To: <1378472763-36062-2-git-send-email-nbd@openwrt.org>
+References: <1378472763-36062-1-git-send-email-nbd@openwrt.org>
+	 <1378472763-36062-2-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This shouldn't be silenced. This will be necessary
-for PCI init code reordering.
+On Fri, 2013-09-06 at 15:06 +0200, Felix Fietkau wrote:
+> Report the maximum allowable extra antenna gain to the driver to allow
+> it to reduce the tx power even further based on internal data
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/ce.c  | 6 ++++--
- drivers/net/wireless/ath/ath10k/ce.h  | 2 +-
- drivers/net/wireless/ath/ath10k/pci.c | 6 +++++-
- 3 files changed, 10 insertions(+), 4 deletions(-)
+I don't quite understand the maximum thing here - what's a user to do
+who has an antenna that goes over? Is that then intended to not be
+supported? That seems odd. A very high gain antenna might just result in
+signal distortions, but what's the reason for limiting it this way?
 
-diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
-index 657e8f2..3e8395d 100644
---- a/drivers/net/wireless/ath/ath10k/ce.c
-+++ b/drivers/net/wireless/ath/ath10k/ce.c
-@@ -792,13 +792,13 @@ static void ath10k_ce_per_engine_handler_adjust(struct ath10k_ce_pipe *ce_state,
- 	ath10k_pci_sleep(ar);
- }
- 
--void ath10k_ce_disable_interrupts(struct ath10k *ar)
-+int ath10k_ce_disable_interrupts(struct ath10k *ar)
- {
- 	int ce_id, ret;
- 
- 	ret = ath10k_pci_wake(ar);
- 	if (ret)
--		return;
-+		return ret;
- 
- 	for (ce_id = 0; ce_id < CE_COUNT; ce_id++) {
- 		u32 ctrl_addr = ath10k_ce_base_address(ce_id);
-@@ -807,7 +807,9 @@ void ath10k_ce_disable_interrupts(struct ath10k *ar)
- 		ath10k_ce_error_intr_disable(ar, ctrl_addr);
- 		ath10k_ce_watermark_intr_disable(ar, ctrl_addr);
- 	}
-+
- 	ath10k_pci_sleep(ar);
-+	return ret;
- }
- 
- void ath10k_ce_send_cb_register(struct ath10k_ce_pipe *ce_state,
-diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
-index 15d45b5..67dbde6 100644
---- a/drivers/net/wireless/ath/ath10k/ce.h
-+++ b/drivers/net/wireless/ath/ath10k/ce.h
-@@ -234,7 +234,7 @@ void ath10k_ce_deinit(struct ath10k_ce_pipe *ce_state);
- /*==================CE Interrupt Handlers====================*/
- void ath10k_ce_per_engine_service_any(struct ath10k *ar);
- void ath10k_ce_per_engine_service(struct ath10k *ar, unsigned int ce_id);
--void ath10k_ce_disable_interrupts(struct ath10k *ar);
-+int ath10k_ce_disable_interrupts(struct ath10k *ar);
- 
- /* ce_attr.flags values */
- /* Use NonSnooping PCIe accesses? */
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index ffc63cc..63ad250 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -879,8 +879,12 @@ static void ath10k_pci_stop_ce(struct ath10k *ar)
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	struct ath10k_pci_compl *compl;
- 	struct sk_buff *skb;
-+	int ret;
-+
-+	ret = ath10k_ce_disable_interrupts(ar);
-+	if (ret)
-+		ath10k_warn("failed to disable CE interrupts (%d)\n", ret);
- 
--	ath10k_ce_disable_interrupts(ar);
- 	ath10k_pci_kill_tasklet(ar);
- 
- 	/* Mark pending completions as aborted, so that upper layers free up
--- 
-1.8.4.rc3
+johannes
 
