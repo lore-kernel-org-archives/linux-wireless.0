@@ -1,83 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.152]:53937 "EHLO
-	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754383Ab3JKXRo (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:59390 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752979Ab3JAKRD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Oct 2013 19:17:44 -0400
-Received: from /spool/local
-	by e34.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-wireless@vger.kernel.org> from <paulmck@linux.vnet.ibm.com>;
-	Fri, 11 Oct 2013 17:17:43 -0600
-From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
-To: linux-kernel@vger.kernel.org
-Cc: mingo@kernel.org, laijs@cn.fujitsu.com, dipankar@in.ibm.com,
-	akpm@linux-foundation.org, mathieu.desnoyers@efficios.com,
-	josh@joshtriplett.org, niv@us.ibm.com, tglx@linutronix.de,
-	peterz@infradead.org, rostedt@goodmis.org, dhowells@redhat.com,
-	edumazet@google.com, darren@dvhart.com, fweisbec@gmail.com,
-	sbw@mit.edu, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH v3 tip/core/rcu 10/14] mac80211: Apply ACCESS_ONCE() to avoid sparse false positive
-Date: Fri, 11 Oct 2013 16:17:27 -0700
-Message-Id: <1381533451-29018-10-git-send-email-paulmck@linux.vnet.ibm.com> (sfid-20131012_012053_536519_A90E5E66)
-In-Reply-To: <1381533451-29018-1-git-send-email-paulmck@linux.vnet.ibm.com>
-References: <20131011231659.GA28062@linux.vnet.ibm.com>
- <1381533451-29018-1-git-send-email-paulmck@linux.vnet.ibm.com>
+	Tue, 1 Oct 2013 06:17:03 -0400
+Message-ID: <1380622620.14430.4.camel@jlt4.sipsolutions.net> (sfid-20131001_121706_933700_A71A85CD)
+Subject: Re: [PATCH 2/3] ieee80211: fix vht cap definitions
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Eliad Peller <eliad@wizery.com>
+Date: Tue, 01 Oct 2013 12:17:00 +0200
+In-Reply-To: <1377852561-16754-2-git-send-email-johannes@sipsolutions.net> (sfid-20130830_104933_745876_8986D88D)
+References: <1377852561-16754-1-git-send-email-johannes@sipsolutions.net>
+	 <1377852561-16754-2-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20130830_104933_745876_8986D88D)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+On Fri, 2013-08-30 at 10:49 +0200, Johannes Berg wrote:
+> From: Eliad Peller <eliad@wizery.com>
+> 
+> VHT_CAP_BEAMFORMER_ANTENNAS cap is actually defined in the draft as
+> VHT_CAP_BEAMFORMEE_STS_MAX, and its size is 3 bits long.
+> 
+> VHT_CAP_SOUNDING_DIMENSIONS is also 3 bits long.
+> 
+> Fix the definitions and change the cap masking accordingly.
 
-The sparse checking for rcu_assign_pointer() was recently upgraded
-to reject non-__kernel address spaces.  This also rejects __rcu,
-which is almost always the right thing to do.  However, the uses in
-sta_info_hash_del() are legitimate: They are assigning a pointer to an
-element from an RCU-protected list, and all elements of this list are
-already visible to caller.
+Applied.
 
-This commit therefore silences this false positive by laundering the
-pointer using ACCESS_ONCE() as suggested by Eric Dumazet and Josh
-Triplett.
-
-Reported-by: kbuild test robot <fengguang.wu@intel.com>
-Signed-off-by: Paul E. McKenney <paulmck@linux.vnet.ibm.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
----
- net/mac80211/sta_info.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index aeb967a0aeed..494f03c0831f 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -74,8 +74,8 @@ static int sta_info_hash_del(struct ieee80211_local *local,
- 	if (!s)
- 		return -ENOENT;
- 	if (s == sta) {
--		rcu_assign_pointer(local->sta_hash[STA_HASH(sta->sta.addr)],
--				   s->hnext);
-+		/* Both --rcu and visible, so ACCESS_ONCE() is OK. */
-+		ACCESS_ONCE(local->sta_hash[STA_HASH(sta->sta.addr)]) = s->hnext;
- 		return 0;
- 	}
- 
-@@ -84,7 +84,8 @@ static int sta_info_hash_del(struct ieee80211_local *local,
- 		s = rcu_dereference_protected(s->hnext,
- 					lockdep_is_held(&local->sta_mtx));
- 	if (rcu_access_pointer(s->hnext)) {
--		rcu_assign_pointer(s->hnext, sta->hnext);
-+		/* Both --rcu and visible, so ACCESS_ONCE() is OK. */
-+		ACCESS_ONCE(s->hnext) = sta->hnext;
- 		return 0;
- 	}
- 
--- 
-1.8.1.5
+johannes
 
