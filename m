@@ -1,48 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4376 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758936Ab3JONpJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Oct 2013 09:45:09 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 00/12] brcmfmac: fixes for MMC hosts without
- scatter-gather
-Date: Tue, 15 Oct 2013 15:44:45 +0200
-Message-ID: <1381844697-24881-1-git-send-email-arend@broadcom.com> (sfid-20131015_154545_692929_2BBC1E19)
+Received: from mail-oa0-f50.google.com ([209.85.219.50]:40458 "EHLO
+	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753223Ab3JAWjg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Oct 2013 18:39:36 -0400
+Received: by mail-oa0-f50.google.com with SMTP id j1so3579oag.37
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Oct 2013 15:39:36 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1380627023.14430.34.camel@jlt4.sipsolutions.net>
+References: <1379115372-28426-1-git-send-email-yeohchunyeow@cozybit.com>
+	<1379115372-28426-6-git-send-email-yeohchunyeow@cozybit.com>
+	<1380627023.14430.34.camel@jlt4.sipsolutions.net>
+Date: Wed, 2 Oct 2013 06:39:36 +0800
+Message-ID: <CAHS2MGMHbcSONb6Ze9_=wUnBynAGayM+tmdC3OWS1jcYbOOSGA@mail.gmail.com> (sfid-20131002_003939_075316_47AE93F1)
+Subject: Re: [PATCH 5/5] mac80211: process mesh channel switching using beacon
+From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	devel@lists.open80211s.org,
+	"distro11s@cozybit.com" <distro11s@cozybit.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On our internal test setups it turned out that the MMC host controller
-did not support scatterlists (struct mmc_host::max_segs == 1). It took
-a number of patches to cleanup and support this. While at it some debug
-trace functions were modified and added.
+> I think it'd be worth doing some refactoring here to have an output
+> struct ... the parameters to this function are getting unreal. :)
+Yes. Bob commented this before. I will take a look on this.
 
-Arend van Spriel (12):
-  brcmfmac: store address in trace_brcmf_hexdump()
-  brcmfmac: add tracepoint for capturing the SDPCM header
-  brcmfmac: rename variable max_seg_sz to max_seg_cnt for clarity
-  brcmfmac: determine host controller related variables during probe
-  brcmfmac: rework scatter-gather code in brcmf_sdio_buffrw()
-  brcmfmac: rename brcmf_sdio_buffrw()
-  brcmfmac: rework single packet transfers
-  brcmfmac: verify result of brcmf_sdio_addrprep() calls
-  brcmfmac: remove stale code from brcmf_sdcard_recv_chain()
-  brcmfmac: fix brcmf_sdcard_send_pkt() for host without sg support
-  brcmfmac: fix brcmf_sdio_txpkt_prep() for host without sg support
-  brcmfmac: fix brcmf_sdcard_recv_chain() for host without sg support
+> Seems like you should *do* something here, like return false?
+Yes. You are right.
 
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |  186 +++++++++++---------
- .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |   17 ++
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |  111 +++++++-----
- .../net/wireless/brcm80211/brcmfmac/sdio_host.h    |    6 +-
- .../net/wireless/brcm80211/brcmfmac/tracepoint.h   |   21 ++-
- 5 files changed, 216 insertions(+), 125 deletions(-)
-
--- 
-1.7.10.4
-
-
+-- Chun-Yeow
