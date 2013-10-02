@@ -1,41 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:48429 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752216Ab3JCXUD (ORCPT
+Received: from mail-we0-f177.google.com ([74.125.82.177]:56999 "EHLO
+	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753717Ab3JBXCB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Oct 2013 19:20:03 -0400
-Message-ID: <524DFB9B.7010205@candelatech.com> (sfid-20131004_012014_993748_1DA7F82A)
-Date: Thu, 03 Oct 2013 16:19:55 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 2 Oct 2013 19:02:01 -0400
 MIME-Version: 1.0
-To: Rick Jones <rick.jones2@hp.com>
-CC: netdev <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Ideas on why using WPA2 encryption speeds up many TCP connections?
-References: <524DB6F6.6020405@candelatech.com> <524DBC93.1070400@hp.com> <524DC2B8.905@candelatech.com>
-In-Reply-To: <524DC2B8.905@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <524C092A.4090801@hauke-m.de>
+References: <1380103864-10447-1-git-send-email-arend@broadcom.com>
+	<1380103864-10447-3-git-send-email-arend@broadcom.com>
+	<524C092A.4090801@hauke-m.de>
+Date: Wed, 2 Oct 2013 16:02:00 -0700
+Message-ID: <CAHgOGU15ZeHBoVO588WABc2w5GT-M94hff=aAFiiJ9dj9UCOhQ@mail.gmail.com> (sfid-20131003_010224_048295_6878FA22)
+Subject: Re: [PATCH for-3.12 2/3] bcma: make bcma_core_pci_{up,down}()
+ callable from atomic context
+From: Tod Jackson <tod.jackson@gmail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	stable@vger.kernel.org, Joe Perches <joe@perches.com>,
+	Rafal Milecki <zajec5@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I was seeing an un-expectedly bad wifi train rates, so I changed to ath9k-rate-control,
-rebooted, and re-ran the tests.  Throughput is much improved.  I really hope it wasn't just
-a reboot that fixed it, but too burned out to do more tests today.
+The warnings are gone, indeed. brcmsmac is now working great for me.
 
-I still see better TCP throughput with WPA2 when using 25-200 stations/streams.
+(Late for me too... for some reason this e-mail was in my spam
+folder... stupid gmail!)
 
-For anyone who wants to wade through some big automated reports, see the links
-near the top of this page (suggestions for improving those reports are welcome):
-
-http://www.candelatech.com/lf_wifi_examples.php
-
-(The 600 station reports are a bit dated and were done in a fairly busy
-  wifi environment.  We'll re-run those sometime soon-ish.)
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+On 10/2/13, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> On 09/25/2013 12:11 PM, Arend van Spriel wrote:
+>> This patch removes the bcma_core_pci_power_save() call from
+>> the bcma_core_pci_{up,down}() functions as it tries to schedule
+>> thus requiring to call them from non-atomic context. The function
+>> bcma_core_pci_power_save() is now exported so the calling module
+>> can explicitly use it in non-atomic context. This fixes the
+>> 'scheduling while atomic' issue reported by Tod Jackson and
+>> Joe Perches.
+>>
+>> [   13.210710] BUG: scheduling while atomic: dhcpcd/1800/0x00000202
+>> [   13.210718] Modules linked in: brcmsmac nouveau coretemp kvm_intel kvm
+>> cordic brcmutil bcma dell_wmi atl1c ttm mxm_wmi wmi
+>> [   13.210756] CPU: 2 PID: 1800 Comm: dhcpcd Not tainted 3.11.0-wl #1
+>> [   13.210762] Hardware name: Alienware M11x R2/M11x R2, BIOS A04
+>> 11/23/2010
+>> [   13.210767]  ffff880177c92c40 ffff880170fd1948 ffffffff8169af5b
+>> 0000000000000007
+>> [   13.210777]  ffff880170fd1ab0 ffff880170fd1958 ffffffff81697ee2
+>> ffff880170fd19d8
+>> [   13.210785]  ffffffff816a19f5 00000000000f4240 000000000000d080
+>> ffff880170fd1fd8
+>> [   13.210794] Call Trace:
+>> [   13.210813]  [<ffffffff8169af5b>] dump_stack+0x4f/0x84
+>> [   13.210826]  [<ffffffff81697ee2>] __schedule_bug+0x43/0x51
+>> [   13.210837]  [<ffffffff816a19f5>] __schedule+0x6e5/0x810
+>> [   13.210845]  [<ffffffff816a1c34>] schedule+0x24/0x70
+>> [   13.210855]  [<ffffffff816a04fc>]
+>> schedule_hrtimeout_range_clock+0x10c/0x150
+>> [   13.210867]  [<ffffffff810684e0>] ? update_rmtp+0x60/0x60
+>> [   13.210877]  [<ffffffff8106915f>] ? hrtimer_start_range_ns+0xf/0x20
+>> [   13.210887]  [<ffffffff816a054e>] schedule_hrtimeout_range+0xe/0x10
+>> [   13.210897]  [<ffffffff8104f6fb>] usleep_range+0x3b/0x40
+>> [   13.210910]  [<ffffffffa00371af>]
+>> bcma_pcie_mdio_set_phy.isra.3+0x4f/0x80 [bcma]
+>> [   13.210921]  [<ffffffffa003729f>] bcma_pcie_mdio_write.isra.4+0xbf/0xd0
+>> [bcma]
+>> [   13.210932]  [<ffffffffa0037498>]
+>> bcma_pcie_mdio_writeread.isra.6.constprop.13+0x18/0x30 [bcma]
+>> [   13.210942]  [<ffffffffa00374ee>] bcma_core_pci_power_save+0x3e/0x80
+>> [bcma]
+>> [   13.210953]  [<ffffffffa003765d>] bcma_core_pci_up+0x2d/0x60 [bcma]
+>> [   13.210975]  [<ffffffffa03dc17c>] brcms_c_up+0xfc/0x430 [brcmsmac]
+>> [   13.210989]  [<ffffffffa03d1a7d>] brcms_up+0x1d/0x20 [brcmsmac]
+>> [   13.211003]  [<ffffffffa03d2498>] brcms_ops_start+0x298/0x340
+>> [brcmsmac]
+>> [   13.211020]  [<ffffffff81600a12>] ?
+>> cfg80211_netdev_notifier_call+0xd2/0x5f0
+>> [   13.211030]  [<ffffffff815fa53d>] ? packet_notifier+0xad/0x1d0
+>> [   13.211064]  [<ffffffff81656e75>] ieee80211_do_open+0x325/0xf80
+>> [   13.211076]  [<ffffffff8106ac09>] ? __raw_notifier_call_chain+0x9/0x10
+>> [   13.211086]  [<ffffffff81657b41>] ieee80211_open+0x71/0x80
+>> [   13.211101]  [<ffffffff81526267>] __dev_open+0x87/0xe0
+>> [   13.211109]  [<ffffffff8152650c>] __dev_change_flags+0x9c/0x180
+>> [   13.211117]  [<ffffffff815266a3>] dev_change_flags+0x23/0x70
+>> [   13.211127]  [<ffffffff8158cd68>] devinet_ioctl+0x5b8/0x6a0
+>> [   13.211136]  [<ffffffff8158d5c5>] inet_ioctl+0x75/0x90
+>> [   13.211147]  [<ffffffff8150b38b>] sock_do_ioctl+0x2b/0x70
+>> [   13.211155]  [<ffffffff8150b681>] sock_ioctl+0x71/0x2a0
+>> [   13.211169]  [<ffffffff8114ed47>] do_vfs_ioctl+0x87/0x520
+>> [   13.211180]  [<ffffffff8113f159>] ? ____fput+0x9/0x10
+>> [   13.211198]  [<ffffffff8106228c>] ? task_work_run+0x9c/0xd0
+>> [   13.211202]  [<ffffffff8114f271>] SyS_ioctl+0x91/0xb0
+>> [   13.211208]  [<ffffffff816aa252>] system_call_fastpath+0x16/0x1b
+>> [   13.211217] NOHZ: local_softirq_pending 202
+>>
+>> The issue was introduced in v3.11 kernel by following commit:
+>>
+>> commit aa51e598d04c6acf5477934cd6383f5a17ce9029
+>> Author: Hauke Mehrtens <hauke@hauke-m.de>
+>> Date:   Sat Aug 24 00:32:31 2013 +0200
+>>
+>>     brcmsmac: use bcma PCIe up and down functions
+>>
+>>     replace the calls to bcma_core_pci_extend_L1timer() by calls to the
+>>     newly introduced bcma_core_pci_ip() and bcma_core_pci_down()
+>>
+>>     Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+>>     Cc: Arend van Spriel <arend@broadcom.com>
+>>     Signed-off-by: John W. Linville <linville@tuxdriver.com>
+>>
+>> This fix has been discussed with Hauke Mehrtens [1] selection
+>> option 3) and is intended for v3.12.
+>>
+>> Ref:
+>> [1] http://mid.gmane.org/5239B12D.3040206@hauke-m.de
+>>
+>> Cc: <stable@vger.kernel.org> # 3.11.x
+>> Cc: Tod Jackson <tod.jackson@gmail.com>
+>> Cc: Joe Perches <joe@perches.com>
+>> Cc: Rafal Milecki <zajec5@gmail.com>
+>> Cc: Hauke Mehrtens <hauke@hauke-m.de>
+>> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+>> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+>
+> Acked-by: Hauke Mehrtens <hauke@hauke-m.de>
+>
+>
+> Hi,
+>
+> This is a little late but I am ok with the brcmsmac patch and the bcma
+> patch, feel free to add my Acked-by. This should go into 3.12 and 3.13+.
+>
+> Hauke
+>
