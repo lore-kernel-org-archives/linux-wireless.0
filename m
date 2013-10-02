@@ -1,100 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vserver.eikelenboom.it ([84.200.39.61]:57134 "EHLO
-	smtp.eikelenboom.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759945Ab3JOUTZ (ORCPT
+Received: from mail-oa0-f49.google.com ([209.85.219.49]:62040 "EHLO
+	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753051Ab3JBKHd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Oct 2013 16:19:25 -0400
-Date: Tue, 15 Oct 2013 22:19:18 +0200
-From: Sander Eikelenboom <linux@eikelenboom.it>
-Message-ID: <1701086355.20131015221918@eikelenboom.it> (sfid-20131015_221932_676181_3467B467)
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [Ilw] drivers/net/wireless/iwlwifi/dvm/tx.c:456 iwlagn_tx_skb+0x6c5/0x883()
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB301DC4E24@HASMSX103.ger.corp.intel.com>
-References: <9010061839.20131015123940@eikelenboom.it> <0BA3FCBA62E2DC44AF3030971E174FB301DC46E5@HASMSX103.ger.corp.intel.com> <1127865420.20131015151054@eikelenboom.it> <0BA3FCBA62E2DC44AF3030971E174FB301DC4AB7@HASMSX103.ger.corp.intel.com> <1764863131.20131015210406@eikelenboom.it> <0BA3FCBA62E2DC44AF3030971E174FB301DC4E24@HASMSX103.ger.corp.intel.com>
+	Wed, 2 Oct 2013 06:07:33 -0400
+Received: by mail-oa0-f49.google.com with SMTP id i4so521950oah.8
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Oct 2013 03:07:33 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1380704100.13329.6.camel@jlt4.sipsolutions.net>
+References: <1380545557-25103-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	<1380704100.13329.6.camel@jlt4.sipsolutions.net>
+Date: Wed, 2 Oct 2013 12:07:33 +0200
+Message-ID: <CAA2SeN+nhLU7vGDNLJCD=UrNRSFm5hT6HGEEhUqr1kAcMF3O-A@mail.gmail.com> (sfid-20131002_120737_156878_29667DBC)
+Subject: Re: [PATCH] mac80211: allow mgmt frame transmission on DFS channels
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Before start beaconing cfg80211_reg_can_beacon() verifies the channel
+is CAC checked and available calling cfg80211_secondary_chans_ok().
+Although the channel is marked NL80211_DFS_AVAILABLE after a CAC
+period, ieee80211_monitor_start_xmit() does not allow to inject mgmt
+frames on DFS channels causing association failures.
 
-Tuesday, October 15, 2013, 9:11:36 PM, you wrote:
+Lorenzo
 
->> > Please apply this:
->> > diff --git a/drivers/net/wireless/iwlwifi/dvm/tx.c
->> b/drivers/net/wireless/iwlwifi/dvm/tx.c
->> > index d131f85..5968f19 100644
->> > --- a/drivers/net/wireless/iwlwifi/dvm/tx.c
->> > +++ b/drivers/net/wireless/iwlwifi/dvm/tx.c
->> > @@ -457,8 +457,8 @@ int iwlagn_tx_skb(struct iwl_priv *priv,
->> >         WARN_ON_ONCE(is_agg &&
->> >                      priv->queue_to_mac80211[txq_id] != info->hw_queue);
->> >
->> > -       IWL_DEBUG_TX(priv, "TX to [%d|%d] Q:%d - seq: 0x%x\n", sta_id, tid,
->> > -                    txq_id, seq_number);
->> > +       IWL_DEBUG_TX(priv, "TX to [%d|%d] Q:%d info Q %d - seq: 0x%x\n",
->> sta_id, tid,
->> > +                    txq_id, info->hw_queue, seq_number);
->> >
->> >         if (iwl_trans_tx(priv->trans, skb, dev_cmd, txq_id))
->> >                 goto drop_unlock_sta;
->> 
->> > and send the output back to me
->> 
->> > Thanks.
->> 
-
-> Can you please apply the patch attached (and remove the previous change)?
-> Thanks.
+2013/10/2 Johannes Berg <johannes@sipsolutions.net>:
+> On Mon, 2013-09-30 at 14:52 +0200, Lorenzo Bianconi wrote:
+>> Allow management frame injection on DFS channels if the channel has been CAC
+>> checked and is available
+>
+>> +++ b/net/mac80211/tx.c
+>> @@ -1694,8 +1694,10 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
+>>        * radar detection by itself. We can do that later by adding a
+>>        * monitor flag interfaces used for AP support.
+>>        */
+>> -     if ((chan->flags & (IEEE80211_CHAN_NO_IBSS | IEEE80211_CHAN_RADAR |
+>> -                         IEEE80211_CHAN_PASSIVE_SCAN)))
+>> +     if (((chan->flags & (IEEE80211_CHAN_PASSIVE_SCAN |
+>> +                          IEEE80211_CHAN_NO_IBSS))) ||
+>> +         ((chan->flags & IEEE80211_CHAN_RADAR) &&
+>> +          chan->dfs_state != NL80211_DFS_AVAILABLE))
+>
+> This would be the only place where mac80211 is accessing
+> chan->dfs_state, does that make sense? Why is it not needed elsewhere?
+>
+> johannes
+>
 
 
-That seems to make the warning go away :-)
 
-[    7.306696] iwlwifi 0000:02:00.0: L1 Disabled; Enabling L0S
-[    7.315790] iwlwifi 0000:02:00.0: Radio type=0x2-0x1-0x0
-[    7.362212] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 9 on FIFO 7 WrPtr: 0
-[    7.364973] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 0 on FIFO 3 WrPtr: 0
-[    7.365090] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 1 on FIFO 2 WrPtr: 0
-[    7.365208] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 2 on FIFO 1 WrPtr: 0
-[    7.365324] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 3 on FIFO 0 WrPtr: 0
-[    7.365440] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 4 on FIFO 0 WrPtr: 0
-[    7.365556] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 5 on FIFO 4 WrPtr: 0
-[    7.365672] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 6 on FIFO 2 WrPtr: 0
-[    7.365789] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 7 on FIFO 5 WrPtr: 0
-[    7.365905] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 8 on FIFO 4 WrPtr: 0
-[    7.366034] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 10 on FIFO 5 WrPtr: 0
-[    7.602726] iwlwifi 0000:02:00.0: L1 Disabled; Enabling L0S
-[    7.612133] iwlwifi 0000:02:00.0: Radio type=0x2-0x1-0x0
-[    7.658168] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 9 on FIFO 7 WrPtr: 0
-[    7.661021] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 0 on FIFO 3 WrPtr: 0
-[    7.663693] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 1 on FIFO 2 WrPtr: 0
-[    7.666341] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 2 on FIFO 1 WrPtr: 0
-[    7.668914] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 3 on FIFO 0 WrPtr: 0
-[    7.671464] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 4 on FIFO 0 WrPtr: 0
-[    7.673057] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 5 on FIFO 4 WrPtr: 0
-[    7.674631] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 6 on FIFO 2 WrPtr: 0
-[    7.676174] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 7 on FIFO 5 WrPtr: 0
-[    7.677657] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 8 on FIFO 4 WrPtr: 0
-[    7.679133] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 10 on FIFO 5 WrPtr: 0
-[    7.730037] device wlan0 entered promiscuous mode
-[    7.732390] xen_bridge: port 2(wlan0) entered forwarding state
-[    7.733984] xen_bridge: port 2(wlan0) entered forwarding state
-[    7.735692] cfg80211: Pending regulatory request, waiting for it to be processed...
-[    7.743541] iwlwifi 0000:02:00.0: I iwlagn_tx_skb TX to [14|8] Q:8 - seq: 0x0
-[    7.745347] device wlan0 left promiscuous mode
-[    7.747088] xen_bridge: port 2(wlan0) entered disabled state
-[    7.748034] iwlwifi 0000:02:00.0: I iwl_trans_pcie_reclaim [Q 8] 0 -> 1 (1)
-[    7.748039] iwlwifi 0000:02:00.0: I iwlagn_rx_reply_tx TXQ 8 status SUCCESS (0x00000201)
-[    7.748042] iwlwifi 0000:02:00.0: I iwlagn_rx_reply_tx                               initial_rate 0x820a retries 0, idx=0 ssn=1 seq_ctl=0x0
-[    7.769963] iwlwifi 0000:02:00.0: I iwl_pcie_txq_inc_wr_ptr Q:9 WR: 0x23
-[    7.821813] iwlwifi 0000:02:00.0: I iwl_pcie_txq_inc_wr_ptr Q:9 WR: 0x24
-[    7.824914] iwlwifi 0000:02:00.0: I iwl_pcie_txq_inc_wr_ptr Q:9 WR: 0x25
-[    7.828033] iwlwifi 0000:02:00.0: I iwl_pcie_txq_inc_wr_ptr Q:9 WR: 0x26
-[    7.831078] iwlwifi 0000:02:00.0: I iwl_pcie_txq_inc_wr_ptr Q:9 WR: 0x27
-[    7.834005] iwlwifi 0000:02:00.0: I iwl_pcie_txq_inc_wr_ptr Q:9 WR: 0x28
-[    7.836087] iwlwifi 0000:02:00.0: I iwl_pcie_txq_unmap Q 9 Free 39
-
+-- 
+UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
+unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
+umount; make clean; sleep
