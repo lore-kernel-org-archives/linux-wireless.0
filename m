@@ -1,50 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:59662 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751372Ab3JALa0 (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:49401 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753603Ab3JBVFY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Oct 2013 07:30:26 -0400
-Message-ID: <1380627023.14430.34.camel@jlt4.sipsolutions.net> (sfid-20131001_133030_007020_F7F2AEAD)
-Subject: Re: [PATCH 5/5] mac80211: process mesh channel switching using
- beacon
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	devel@lists.open80211s.org, distro11s@cozybit.com
-Date: Tue, 01 Oct 2013 13:30:23 +0200
-In-Reply-To: <1379115372-28426-6-git-send-email-yeohchunyeow@cozybit.com> (sfid-20130914_013635_982078_9678C34E)
-References: <1379115372-28426-1-git-send-email-yeohchunyeow@cozybit.com>
-	 <1379115372-28426-6-git-send-email-yeohchunyeow@cozybit.com>
-	 (sfid-20130914_013635_982078_9678C34E)
-Content-Type: text/plain; charset="UTF-8"
+	Wed, 2 Oct 2013 17:05:24 -0400
+Date: Wed, 02 Oct 2013 17:05:21 -0400 (EDT)
+Message-Id: <20131002.170521.463969346066312216.davem@davemloft.net> (sfid-20131002_230556_754948_435F0546)
+To: joe@perches.com
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, e1000-devel@lists.sourceforge.net,
+	linux-usb@vger.kernel.org, ath10k@lists.infradead.org,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+	b43-dev@lists.infradead.org, brcm80211-dev-list@broadcom.com,
+	bridge@lists.linux-foundation.org, netfilter-devel@vger.kernel.org
+Subject: Re: [PATCH net-next] net:drivers/net: Miscellaneous conversions to
+ ETH_ALEN
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1380679480.2081.24.camel@joe-AO722>
+References: <1380679480.2081.24.camel@joe-AO722>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-09-13 at 16:36 -0700, Chun-Yeow Yeoh wrote:
+From: Joe Perches <joe@perches.com>
+Date: Tue, 01 Oct 2013 19:04:40 -0700
 
->  	err = ieee80211_parse_ch_switch_ie(sdata, elems, beacon,
->  					   ifibss->chandef.chan->band,
->  					   sta_flags, ifibss->bssid,
-> -					   &params.count, &mode,
-> +					   &params.count, &mode, &ttl,
->  					   &params.chandef);
+> Convert the memset/memcpy uses of 6 to ETH_ALEN
+> where appropriate.
+> 
+> Also convert some struct definitions and u8 array
+> declarations of [6] to ETH_ALEN.
+> 
+> Signed-off-by: Joe Perches <joe@perches.com>
 
-I think it'd be worth doing some refactoring here to have an output
-struct ... the parameters to this function are getting unreal. :)
-
-> +	if (!cfg80211_chandef_usable(sdata->local->hw.wiphy, &params.chandef,
-> +				     IEEE80211_CHAN_DISABLED)) {
-> +		sdata_info(sdata,
-> +			   "mesh STA %pM switches to unsupported channel (%d MHz, width:%d, CF1/2: %d/%d MHz), aborting\n",
-> +			   sdata->vif.addr,
-> +			   params.chandef.chan->center_freq,
-> +			   params.chandef.width,
-> +			   params.chandef.center_freq1,
-> +			   params.chandef.center_freq2);
-> +	}
-
-Seems like you should *do* something here, like return false?
-
-johannes
-
+Looks fine, applied, thanks Joe.
