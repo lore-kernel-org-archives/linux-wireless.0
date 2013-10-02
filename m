@@ -1,52 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f53.google.com ([74.125.83.53]:38693 "EHLO
-	mail-ee0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752738Ab3JBGtC (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:55005 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754248Ab3JBMkK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Oct 2013 02:49:02 -0400
-Received: by mail-ee0-f53.google.com with SMTP id b15so160603eek.12
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Oct 2013 23:49:01 -0700 (PDT)
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Bartosz Markowski <bartosz.markowski@tieto.com>
-Subject: [PATCH 2/2] ath10k: extend the max_scan time
-Date: Wed,  2 Oct 2013 08:48:52 +0200
-Message-Id: <1380696532-4147-2-git-send-email-bartosz.markowski@tieto.com> (sfid-20131002_084908_746746_0DDEC82E)
-In-Reply-To: <1380696532-4147-1-git-send-email-bartosz.markowski@tieto.com>
-References: <1380696532-4147-1-git-send-email-bartosz.markowski@tieto.com>
+	Wed, 2 Oct 2013 08:40:10 -0400
+Date: Wed, 2 Oct 2013 14:40:06 +0200
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
+	linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: Re: [PATCH 2/4] nl80211/cfg80211: enable DFS for IBSS mode
+Message-ID: <20131002124006.GA23903@pandem0nium> (sfid-20131002_144018_312927_1C9D3834)
+References: <1378230201-25446-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <1378230201-25446-3-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <1380625757.14430.22.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="XsQoSWH+UP9D9v3l"
+In-Reply-To: <1380625757.14430.22.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It was observed few times, the artificial max_scan limit we
-are using mainly to detect FW hangs, can be not enough for
-instance while being associated and during heavy traffic.
 
-What we do if the FW won't return with scan results within
-the max_time time is a scan abort.
+--XsQoSWH+UP9D9v3l
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-This is especially visible with 10.X fw which in combination
-with dual band HW (scanning 32 channels) can end up with
-hw_scan close to 10 seconds.
+On Tue, Oct 01, 2013 at 01:09:17PM +0200, Johannes Berg wrote:
+> On Tue, 2013-09-03 at 19:43 +0200, Simon Wunderlich wrote:
+> > To use DFS in IBSS mode, userspace is required to react to radar events.
+> > It can inform nl80211 that it is capable of doing so by adding a
+> > NL80211_ATTR_CONTROL_PORT_DFS attribute when joining the IBSS.
+>=20
+> I don't like that name, it makes no sense. This has nothing to do with
+> the port control (802.1X-style) at all.
+>=20
 
-Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
----
- drivers/net/wireless/ath/ath10k/wmi.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+How about NL80211_ATTR_DFS_CAPABLE instead?
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 416dabb..f9766fa 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -2522,7 +2522,7 @@ void ath10k_wmi_start_scan_init(struct ath10k *ar,
- 	arg->repeat_probe_time = 0;
- 	arg->probe_spacing_time = 0;
- 	arg->idle_time = 0;
--	arg->max_scan_time = 5000;
-+	arg->max_scan_time = 20000;
- 	arg->probe_delay = 5;
- 	arg->notify_scan_events = WMI_SCAN_EVENT_STARTED
- 		| WMI_SCAN_EVENT_COMPLETED
--- 
-1.7.9.5
 
+> > If this attribute is supplied, DFS channels may be used if the driver
+> > supports it. Support will be checked even if a channel without DFS will
+> > be joined, as the channel might change later due to scan activity or
+> > channel switch announcements.
+>=20
+> You also really should document *what* is required of userspace here.
+> You're kinda saying this needs to be implemented, but not saying what
+> needs to be done. I can't even tell - what does it really have to do?
+
+Yeah, I should document this a little more: Userspace should react to
+radar events and apprioately switch the channel when this happens. As
+non-capable tools (like wpa_supplicant in it's current state) do not
+react on radar events but might select DFS channels when available, there
+might be non-conforming behaviour. Therefore I'm introducing this flag.
+
+Userspace programs are supposed to set this flag when they have channel
+management and radar avoidance/channel change functionality is implemented
+to unlock DFS channels.
+
+> Don't you implement most of it in patches 3 and 4 anyway in the kernel?
+
+Nope, I don't.
+
+I can resend the patchset with some more documentation on this.
+
+Thanks,
+	Simon
+
+--XsQoSWH+UP9D9v3l
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iEYEARECAAYFAlJMFCYACgkQrzg/fFk7axZPnQCg5fw/1QPkRQjVdM3cTqniPaVB
+wzUAnR0+n8JiTBytxvMOduHOOKP49PzZ
+=IgOH
+-----END PGP SIGNATURE-----
+
+--XsQoSWH+UP9D9v3l--
