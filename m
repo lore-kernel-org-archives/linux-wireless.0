@@ -1,63 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:59625 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752703Ab3JALWE (ORCPT
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:43014 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752962Ab3JBJEw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Oct 2013 07:22:04 -0400
-Message-ID: <1380626514.14430.25.camel@jlt4.sipsolutions.net> (sfid-20131001_132208_212857_4435C8E2)
-Subject: Re: [PATCH 1/5] mac80211: process the CSA frame for mesh accordingly
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	devel@lists.open80211s.org, distro11s@cozybit.com
-Date: Tue, 01 Oct 2013 13:21:54 +0200
-In-Reply-To: <1379115372-28426-2-git-send-email-yeohchunyeow@cozybit.com> (sfid-20130914_013631_722279_4FCA5354)
-References: <1379115372-28426-1-git-send-email-yeohchunyeow@cozybit.com>
-	 <1379115372-28426-2-git-send-email-yeohchunyeow@cozybit.com>
-	 (sfid-20130914_013631_722279_4FCA5354)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 2 Oct 2013 05:04:52 -0400
+Received: by mail-ie0-f182.google.com with SMTP id aq17so1134325iec.41
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Oct 2013 02:04:51 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1380703470.13329.1.camel@jlt4.sipsolutions.net>
+References: <1380699789-3765-1-git-send-email-helmut.schaa@googlemail.com>
+	<1380703470.13329.1.camel@jlt4.sipsolutions.net>
+Date: Wed, 2 Oct 2013 11:04:51 +0200
+Message-ID: <CAGXE3d8B=9dZ9xnramK3vLaNY8uDrpEp1itQh6WVp_4o+Qk3+g@mail.gmail.com> (sfid-20131002_110455_565610_6298BD01)
+Subject: Re: [PATCH] nl80211: Provide per channel maximum regulatory transmit power
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>, Jouni Malinen <j@w1.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-09-13 at 16:36 -0700, Chun-Yeow Yeoh wrote:
+On Wed, Oct 2, 2013 at 10:44 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2013-10-02 at 09:43 +0200, Helmut Schaa wrote:
+>> In some cases its not only required to know the maximum transmit power
+>> the hw is capable of. Instead, userspace (hostapd) might want to know
+>> the maximum transmit power as defined in the current regulatory domain
+>> (for example for 802.11d country IEs).
+>
+> Why wouldn't it use (the equivalent of) "iw reg get" for that?
 
-> +	skb = dev_alloc_skb(local->tx_headroom + len);
-> +	if (!skb)
-> +		return -1;
+Might be the more sane approach.
 
--ENOMEM ?
+I noticed that hostapd generates 11d IEs based on the channel list it
+reads from the kernel.
+Thus restricting STAs to the max tx power the hw is capable of. Just
+adding the max regulatory
+tx power looked like an easy solution :)
 
-> +	skb_reserve(skb, local->tx_headroom);
-> +	mgmt_fwd = (struct ieee80211_mgmt *) skb_put(skb, len);
-> +
-> +	/* offset_ttl is based on whether the secondary channel
-> +	 * offset is available or not. Substract 1 from the mesh TTL
-> +	 * and disable the initiator flag before forwarding.
-> +	 */
-> +	offset_ttl = (len < 42) ? 7 : 10;
-> +	*(pos + offset_ttl) -= 1;
-> +	*(pos + offset_ttl + 1) &= ~WLAN_EID_CHAN_SWITCH_PARAM_INITIATOR;
+Jouni, would you be ok with using the kernels regulatory domain for
+11d IEs in hostapd?
 
-That's somewhat ugly, is there no better way to express that? Maybe with
-different structs or something? I guess I can live with it, just asking
-though.
-
-
-> +	/* forward or re-broadcast the CSA frame */
-> +	if (fwd_csa) {
-> +		if (mesh_fwd_csa_frame(sdata, mgmt, len) < 0)
-> +			mcsa_dbg(sdata, "Failed to forward the CSA frame");
-> +	}
-> +
-> +	/* block the Tx only after fowarding the CSA frame if required */
-
-typo: forwarding
-
-> +	block_tx = !!(elems.mesh_chansw_params_ie->mesh_flags
-> +		      & WLAN_EID_CHAN_SWITCH_PARAM_TX_RESTRICT);
-
-No need for !! with bool variables
-
-johannes
-
+Thanks,
+Helmut
