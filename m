@@ -1,37 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:58756 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752517Ab3JXFne (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:35337 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752832Ab3JBJFj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Oct 2013 01:43:34 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/3] ath10k: tx power fixes
-References: <1382526135-3215-1-git-send-email-michal.kazior@tieto.com>
-Date: Thu, 24 Oct 2013 08:43:28 +0300
-In-Reply-To: <1382526135-3215-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Wed, 23 Oct 2013 04:02:12 -0700")
-Message-ID: <87iownjkan.fsf@kamboji.qca.qualcomm.com> (sfid-20131024_074337_380471_29054420)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 2 Oct 2013 05:05:39 -0400
+Message-ID: <1380704731.13329.11.camel@jlt4.sipsolutions.net> (sfid-20131002_110541_674413_473F72E3)
+Subject: Re: [PATCH V4] cfg80211: vlan priority handling in WMM
+From: Johannes Berg <johannes@sipsolutions.net>
+To: cedric.voncken@acksys.fr
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 02 Oct 2013 11:05:31 +0200
+In-Reply-To: <1377518692-30084-1-git-send-email-cedric.voncken@acksys.fr> (sfid-20130826_142554_845931_84216FA9)
+References: <1377518692-30084-1-git-send-email-cedric.voncken@acksys.fr>
+	 (sfid-20130826_142554_845931_84216FA9)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+On Mon, 2013-08-26 at 14:04 +0200, cedric.voncken@acksys.fr wrote:
+> From: cedric Voncken <cedric.voncken@acksys.fr>
+> 
+> If the VLAN tci is set in skb->vlan_tci use the priority field to determine the WMM priority.
 
-> Hi,
->
-> This patchset fixes power units used in ath10k and
-> also make it respect (user) configurable tx power.
->
->
-> Michal Kazior (3):
->   ath10k: setup min channel power to a reasonable value
->   ath10k: use proper tx power unit
->   ath10k: respect power_level values
+Applied, with a linebreak in that commit log. Your (unnecessary) resend
+of this also didn't even apply because it was line-wrapped in the patch.
 
-Thanks, all patches applied.
+johannes
 
--- 
-Kalle Valo
