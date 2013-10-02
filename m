@@ -1,34 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f50.google.com ([209.85.219.50]:40458 "EHLO
-	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753223Ab3JAWjg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Oct 2013 18:39:36 -0400
-Received: by mail-oa0-f50.google.com with SMTP id j1so3579oag.37
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Oct 2013 15:39:36 -0700 (PDT)
+Received: from ebb05.tieto.com ([131.207.168.36]:58257 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752948Ab3JBJDv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Oct 2013 05:03:51 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 1/4] ath10k: split tid calculation from tx function
+Date: Wed, 2 Oct 2013 11:03:38 +0200
+Message-ID: <1380704621-4670-2-git-send-email-michal.kazior@tieto.com> (sfid-20131002_110355_362102_F6BEB451)
+In-Reply-To: <1380704621-4670-1-git-send-email-michal.kazior@tieto.com>
+References: <1380292706-3609-1-git-send-email-michal.kazior@tieto.com>
+ <1380704621-4670-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
-In-Reply-To: <1380627023.14430.34.camel@jlt4.sipsolutions.net>
-References: <1379115372-28426-1-git-send-email-yeohchunyeow@cozybit.com>
-	<1379115372-28426-6-git-send-email-yeohchunyeow@cozybit.com>
-	<1380627023.14430.34.camel@jlt4.sipsolutions.net>
-Date: Wed, 2 Oct 2013 06:39:36 +0800
-Message-ID: <CAHS2MGMHbcSONb6Ze9_=wUnBynAGayM+tmdC3OWS1jcYbOOSGA@mail.gmail.com> (sfid-20131002_003939_075316_47AE93F1)
-Subject: Re: [PATCH 5/5] mac80211: process mesh channel switching using beacon
-From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	devel@lists.open80211s.org,
-	"distro11s@cozybit.com" <distro11s@cozybit.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I think it'd be worth doing some refactoring here to have an output
-> struct ... the parameters to this function are getting unreal. :)
-Yes. Bob commented this before. I will take a look on this.
+Tidy up ath10k_tx().
 
-> Seems like you should *do* something here, like return false?
-Yes. You are right.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c |   23 +++++++++++++++--------
+ 1 file changed, 15 insertions(+), 8 deletions(-)
 
--- Chun-Yeow
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 8684e03..7415a60 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1407,6 +1407,20 @@ static void ath10k_reg_notifier(struct wiphy *wiphy,
+ /* TX handlers */
+ /***************/
+ 
++static u8 ath10k_tx_h_get_tid(struct ieee80211_hdr *hdr)
++{
++	if (ieee80211_is_mgmt(hdr->frame_control))
++		return HTT_DATA_TX_EXT_TID_MGMT;
++
++	if (!ieee80211_is_data_qos(hdr->frame_control))
++		return HTT_DATA_TX_EXT_TID_NON_QOS_MCAST_BCAST;
++
++	if (!is_unicast_ether_addr(ieee80211_get_DA(hdr)))
++		return HTT_DATA_TX_EXT_TID_NON_QOS_MCAST_BCAST;
++
++	return ieee80211_get_qos_ctl(hdr)[0] & IEEE80211_QOS_CTL_TID_MASK;
++}
++
+ /*
+  * Frames sent to the FW have to be in "Native Wifi" format.
+  * Strip the QoS field from the 802.11 header.
+@@ -1788,14 +1802,7 @@ static void ath10k_tx(struct ieee80211_hw *hw,
+ 
+ 	/* we must calculate tid before we apply qos workaround
+ 	 * as we'd lose the qos control field */
+-	tid = HTT_DATA_TX_EXT_TID_NON_QOS_MCAST_BCAST;
+-	if (ieee80211_is_mgmt(hdr->frame_control)) {
+-		tid = HTT_DATA_TX_EXT_TID_MGMT;
+-	} else if (ieee80211_is_data_qos(hdr->frame_control) &&
+-		   is_unicast_ether_addr(ieee80211_get_DA(hdr))) {
+-		u8 *qc = ieee80211_get_qos_ctl(hdr);
+-		tid = qc[0] & IEEE80211_QOS_CTL_TID_MASK;
+-	}
++	tid = ath10k_tx_h_get_tid(hdr);
+ 
+ 	/* it makes no sense to process injected frames like that */
+ 	if (info->control.vif &&
+-- 
+1.7.9.5
+
