@@ -1,47 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f48.google.com ([74.125.83.48]:44411 "EHLO
-	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752501Ab3JXVaa (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52509 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753834Ab3JBVPQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Oct 2013 17:30:30 -0400
-Received: by mail-ee0-f48.google.com with SMTP id e50so1404506eek.7
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Oct 2013 14:30:28 -0700 (PDT)
-Date: Fri, 25 Oct 2013 00:30:26 +0300
-From: Georgiana Rodica Chelu <georgiana.chelu93@gmail.com>
-To: opw-kernel@googlegroups.com
+	Wed, 2 Oct 2013 17:15:16 -0400
+Date: Wed, 2 Oct 2013 14:58:14 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless@vger.kernel.org
-Subject: [Patch v2 1/3] net: wireless: replace printk with netdev_warn in
- adm8211.c
-Message-ID: <20131024213026.GA3569@fireworks> (sfid-20131024_233033_437584_F664DB03)
+Subject: Re: [PATCH] iwlwifi: pcie: fix merge damage
+Message-ID: <20131002185814.GA2045@tuxdriver.com> (sfid-20131002_231521_000997_9005CA53)
+References: <1380531766-15384-1-git-send-email-johannes@sipsolutions.net>
+ <1380706904.13329.15.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1380706904.13329.15.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-WARNING: Prefer netdev_warn(netdev, ... then dev_warn(dev, ... then pr_warn(...
-to printk(KERN_WARNING ...
+On Wed, Oct 02, 2013 at 11:41:44AM +0200, Johannes Berg wrote:
+> On Mon, 2013-09-30 at 11:02 +0200, Johannes Berg wrote:
+> > From: Johannes Berg <johannes.berg@intel.com>
+> > 
+> > The merge b35c8097 seems to have lost commit eabc4ac5d,
+> > put the code back.
+> 
+> I'm rebasing my tree on -rc1, which actually includes the merge commit,
+> so it still makes sense for me to include this commit - I've done that
+> now. Sorry for the confusion.
 
-Signed-off-by: Georgiana Rodica Chelu <georgiana.chelu93@gmail.com>
----
- drivers/net/wireless/adm8211.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+I'm not sure I follow -- please don't base on anything I don't already
+have in my tree if you want me to pull from you.
 
-diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
-index f9a24e5..0d0dcba 100644
---- a/drivers/net/wireless/adm8211.c
-+++ b/drivers/net/wireless/adm8211.c
-@@ -151,8 +151,9 @@ static int adm8211_read_eeprom(struct ieee80211_hw *dev)
- 		else
- 			priv->rf_type = ADM8211_TYPE_AIROHA;
- 
--		printk(KERN_WARNING "%s (adm8211): Unknown RFtype %d\n",
--		       pci_name(priv->pdev), (cr49 >> 3) & 0x7);
-+		netdev_warn(priv->pdev, "(adm8211): Unknown RFtype %d\n",
-+			    pci_name(priv->pdev), (cr49 >> 3) & 0x7);
-+
- 	}
- 
- 	priv->bbp_type = cr49 & 0x7;
+I applied the patch to wireless-next today, FWIW.
+
+John
 -- 
-1.8.1.2
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
