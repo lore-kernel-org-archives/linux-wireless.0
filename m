@@ -1,64 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:46636 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:35295 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756819Ab3JKMxI (ORCPT
+	with ESMTP id S1753010Ab3JBIuF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Oct 2013 08:53:08 -0400
+	Wed, 2 Oct 2013 04:50:05 -0400
+Message-ID: <1380703802.13329.4.camel@jlt4.sipsolutions.net> (sfid-20131002_105009_807492_1D1E947E)
+Subject: Re: [PATCH v2 4/5] {nl,cfg,mac}80211: finalizing mesh channel
+ switching
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] wireless: radiotap: fix parsing buffer overrun
-Date: Fri, 11 Oct 2013 14:53:02 +0200
-Message-Id: <1381495982-28486-1-git-send-email-johannes@sipsolutions.net> (sfid-20131011_145313_711958_FED82D6C)
+To: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	devel@lists.open80211s.org, distro11s@cozybit.com
+Date: Wed, 02 Oct 2013 10:50:02 +0200
+In-Reply-To: <1380700964-844-5-git-send-email-yeohchunyeow@cozybit.com> (sfid-20131002_100258_662690_85CD382C)
+References: <1380700964-844-1-git-send-email-yeohchunyeow@cozybit.com>
+	 <1380700964-844-5-git-send-email-yeohchunyeow@cozybit.com>
+	 (sfid-20131002_100258_662690_85CD382C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, 2013-10-02 at 01:02 -0700, Chun-Yeow Yeoh wrote:
+> Finalizing the required procedures for channel switching completion based
+> on the procedures  defined in the IEEE Std 802.11-2012 section 10.9.8.4.3:
+>  * Add the function for updating the beacon and probe response frames
+>    with CSA and MCSP elements during the period of switching to the new
+>    channel.
+>  * The ifmsh->csa_settings is set to NULL and the CSA and MCSP elements
+>    will then be removed from the beacon or probe response frames once the
+>    new channel is switched to.
+> 
+> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+> ---
+> v2: fix typo mistake, commit message and return value.  
+>     use spinlock to protect csa_settings  (Johannes Berg)
 
-When parsing an invalid radiotap header, the parser can overrun
-the buffer that is passed in because it doesn't correctly check
- 1) the minimum radiotap header size
- 2) the space for extended bitmaps
+Is the spinlock really the best idea? It seems you could just use RCU
+instead and avoid the extra lock? It's not exactly a hotpath, but the
+paths that are assigning this should be locked already (I'd hope,
+otherwise there might be more races) and the reader could be RCU.
 
-The first issue doesn't affect any in-kernel user as they all
-check the minimum size before calling the radiotap function.
-The second issue could potentially affect the kernel if an skb
-is passed in that consists only of the radiotap header with a
-lot of extended bitmaps that extend past the SKB. In that case
-a read-only buffer overrun by at most 4 bytes is possible.
-
-Fix this by adding the appropriate checks to the parser.
-
-Cc: stable@vger.kernel.org
-Reported-by: Evan Huus <eapache@gmail.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/radiotap.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
-
-diff --git a/net/wireless/radiotap.c b/net/wireless/radiotap.c
-index 7d604c0..6c67926 100644
---- a/net/wireless/radiotap.c
-+++ b/net/wireless/radiotap.c
-@@ -102,6 +102,8 @@ int ieee80211_radiotap_iterator_init(
- 		return -EINVAL;
- 
- 	/* sanity check for allowed length and radiotap length field */
-+	if (max_length < sizeof(struct ieee80211_radiotap_header))
-+		return -EINVAL;
- 	if (max_length < get_unaligned_le16(&radiotap_header->it_len))
- 		return -EINVAL;
- 
-@@ -131,7 +133,8 @@ int ieee80211_radiotap_iterator_init(
- 			 */
- 
- 			if ((unsigned long)iterator->_arg -
--			    (unsigned long)iterator->_rtheader >
-+			    (unsigned long)iterator->_rtheader +
-+			    sizeof(uint32_t >
- 			    (unsigned long)iterator->_max_length)
- 				return -EINVAL;
- 		}
--- 
-1.8.4.rc3
+johannes
 
