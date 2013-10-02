@@ -1,56 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lizzard.sbs.de ([194.138.37.39]:29248 "EHLO lizzard.sbs.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757855Ab3JOJng (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Oct 2013 05:43:36 -0400
-Message-ID: <1381830012.3711.50.camel@djensen-laptop> (sfid-20131015_114339_747878_17DE3982)
-Subject: Re: [PATCH] cfg80211: fix channel to frequency mapping in 5.9GHz
- range
-From: Dennis H Jensen <dennis.h.jensen@siemens.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Date: Tue, 15 Oct 2013 11:40:12 +0200
-In-Reply-To: <1381763193.13092.19.camel@jlt4.sipsolutions.net>
-References: <1381492780-3068-1-git-send-email-dennis.h.jensen@siemens.com>
-	 <1381499778.14293.21.camel@jlt4.sipsolutions.net>
-	 <1381506302.3711.10.camel@djensen-laptop>
-	 <1381752176.13092.10.camel@jlt4.sipsolutions.net>
-	 <1381752976.3711.14.camel@djensen-laptop>
-	 <1381759370.13092.11.camel@jlt4.sipsolutions.net>
-	 <1381762681.3711.36.camel@djensen-laptop>
-	 <1381763193.13092.19.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:33225 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753621Ab3JBLxZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Oct 2013 07:53:25 -0400
+Message-ID: <524C092A.4090801@hauke-m.de> (sfid-20131002_135330_376762_E579F712)
+Date: Wed, 02 Oct 2013 13:53:14 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	stable@vger.kernel.org, Tod Jackson <tod.jackson@gmail.com>,
+	Joe Perches <joe@perches.com>, Rafal Milecki <zajec5@gmail.com>
+Subject: Re: [PATCH for-3.12 2/3] bcma: make bcma_core_pci_{up,down}() callable
+ from atomic context
+References: <1380103864-10447-1-git-send-email-arend@broadcom.com> <1380103864-10447-3-git-send-email-arend@broadcom.com>
+In-Reply-To: <1380103864-10447-3-git-send-email-arend@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-10-14 at 17:06 +0200, Johannes Berg wrote:
-> On Mon, 2013-10-14 at 16:58 +0200, Dennis H Jensen wrote:
+On 09/25/2013 12:11 PM, Arend van Spriel wrote:
+> This patch removes the bcma_core_pci_power_save() call from
+> the bcma_core_pci_{up,down}() functions as it tries to schedule
+> thus requiring to call them from non-atomic context. The function
+> bcma_core_pci_power_save() is now exported so the calling module
+> can explicitly use it in non-atomic context. This fixes the
+> 'scheduling while atomic' issue reported by Tod Jackson and
+> Joe Perches.
 > 
-> > > > The commit 59eb21a6504731fc16db4cf9463065dd61093e08 moved those channels
-> > > > to 4.9 GHz but left a hole in the 5.9 Ghz range.
-> > > 
-> > > But there was no +/- 15 before, so what gives?
-> > 
-> > Well no :) but there also wasn't a special case for that particular
-> > channel set (182 - 196).
+> [   13.210710] BUG: scheduling while atomic: dhcpcd/1800/0x00000202
+> [   13.210718] Modules linked in: brcmsmac nouveau coretemp kvm_intel kvm cordic brcmutil bcma dell_wmi atl1c ttm mxm_wmi wmi
+> [   13.210756] CPU: 2 PID: 1800 Comm: dhcpcd Not tainted 3.11.0-wl #1
+> [   13.210762] Hardware name: Alienware M11x R2/M11x R2, BIOS A04 11/23/2010
+> [   13.210767]  ffff880177c92c40 ffff880170fd1948 ffffffff8169af5b 0000000000000007
+> [   13.210777]  ffff880170fd1ab0 ffff880170fd1958 ffffffff81697ee2 ffff880170fd19d8
+> [   13.210785]  ffffffff816a19f5 00000000000f4240 000000000000d080 ffff880170fd1fd8
+> [   13.210794] Call Trace:
+> [   13.210813]  [<ffffffff8169af5b>] dump_stack+0x4f/0x84
+> [   13.210826]  [<ffffffff81697ee2>] __schedule_bug+0x43/0x51
+> [   13.210837]  [<ffffffff816a19f5>] __schedule+0x6e5/0x810
+> [   13.210845]  [<ffffffff816a1c34>] schedule+0x24/0x70
+> [   13.210855]  [<ffffffff816a04fc>] schedule_hrtimeout_range_clock+0x10c/0x150
+> [   13.210867]  [<ffffffff810684e0>] ? update_rmtp+0x60/0x60
+> [   13.210877]  [<ffffffff8106915f>] ? hrtimer_start_range_ns+0xf/0x20
+> [   13.210887]  [<ffffffff816a054e>] schedule_hrtimeout_range+0xe/0x10
+> [   13.210897]  [<ffffffff8104f6fb>] usleep_range+0x3b/0x40
+> [   13.210910]  [<ffffffffa00371af>] bcma_pcie_mdio_set_phy.isra.3+0x4f/0x80 [bcma]
+> [   13.210921]  [<ffffffffa003729f>] bcma_pcie_mdio_write.isra.4+0xbf/0xd0 [bcma]
+> [   13.210932]  [<ffffffffa0037498>] bcma_pcie_mdio_writeread.isra.6.constprop.13+0x18/0x30 [bcma]
+> [   13.210942]  [<ffffffffa00374ee>] bcma_core_pci_power_save+0x3e/0x80 [bcma]
+> [   13.210953]  [<ffffffffa003765d>] bcma_core_pci_up+0x2d/0x60 [bcma]
+> [   13.210975]  [<ffffffffa03dc17c>] brcms_c_up+0xfc/0x430 [brcmsmac]
+> [   13.210989]  [<ffffffffa03d1a7d>] brcms_up+0x1d/0x20 [brcmsmac]
+> [   13.211003]  [<ffffffffa03d2498>] brcms_ops_start+0x298/0x340 [brcmsmac]
+> [   13.211020]  [<ffffffff81600a12>] ? cfg80211_netdev_notifier_call+0xd2/0x5f0
+> [   13.211030]  [<ffffffff815fa53d>] ? packet_notifier+0xad/0x1d0
+> [   13.211064]  [<ffffffff81656e75>] ieee80211_do_open+0x325/0xf80
+> [   13.211076]  [<ffffffff8106ac09>] ? __raw_notifier_call_chain+0x9/0x10
+> [   13.211086]  [<ffffffff81657b41>] ieee80211_open+0x71/0x80
+> [   13.211101]  [<ffffffff81526267>] __dev_open+0x87/0xe0
+> [   13.211109]  [<ffffffff8152650c>] __dev_change_flags+0x9c/0x180
+> [   13.211117]  [<ffffffff815266a3>] dev_change_flags+0x23/0x70
+> [   13.211127]  [<ffffffff8158cd68>] devinet_ioctl+0x5b8/0x6a0
+> [   13.211136]  [<ffffffff8158d5c5>] inet_ioctl+0x75/0x90
+> [   13.211147]  [<ffffffff8150b38b>] sock_do_ioctl+0x2b/0x70
+> [   13.211155]  [<ffffffff8150b681>] sock_ioctl+0x71/0x2a0
+> [   13.211169]  [<ffffffff8114ed47>] do_vfs_ioctl+0x87/0x520
+> [   13.211180]  [<ffffffff8113f159>] ? ____fput+0x9/0x10
+> [   13.211198]  [<ffffffff8106228c>] ? task_work_run+0x9c/0xd0
+> [   13.211202]  [<ffffffff8114f271>] SyS_ioctl+0x91/0xb0
+> [   13.211208]  [<ffffffff816aa252>] system_call_fastpath+0x16/0x1b
+> [   13.211217] NOHZ: local_softirq_pending 202
 > 
-> Yes, but then before 5910 would have been channel 182. Now you're making
-> it channel 197. That doesn't really make sense at all.
-
-OK, fair enough, but the fact is that there is a hole in the frequencies
-that were added in 802.11p.
-
-> > In case that doesn't do it. What is needed to get channel 182 to be 5910
-> > MHz as Annex E defines for the US and Europe? Channel to frequency
-> > mapping based on operating class?
+> The issue was introduced in v3.11 kernel by following commit:
 > 
-> Annex E is the 802.11 spec, to get something into that ...
+> commit aa51e598d04c6acf5477934cd6383f5a17ce9029
+> Author: Hauke Mehrtens <hauke@hauke-m.de>
+> Date:   Sat Aug 24 00:32:31 2013 +0200
+> 
+>     brcmsmac: use bcma PCIe up and down functions
+> 
+>     replace the calls to bcma_core_pci_extend_L1timer() by calls to the
+>     newly introduced bcma_core_pci_ip() and bcma_core_pci_down()
+> 
+>     Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+>     Cc: Arend van Spriel <arend@broadcom.com>
+>     Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> 
+> This fix has been discussed with Hauke Mehrtens [1] selection
+> option 3) and is intended for v3.12.
+> 
+> Ref:
+> [1] http://mid.gmane.org/5239B12D.3040206@hauke-m.de
+> 
+> Cc: <stable@vger.kernel.org> # 3.11.x
+> Cc: Tod Jackson <tod.jackson@gmail.com>
+> Cc: Joe Perches <joe@perches.com>
+> Cc: Rafal Milecki <zajec5@gmail.com>
+> Cc: Hauke Mehrtens <hauke@hauke-m.de>
+> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
 
-You misunderstood me; the European operating class 14, for example,
-states that channel 182 is to be 5910.
-
-Best regards,
-Dennis
+Acked-by: Hauke Mehrtens <hauke@hauke-m.de>
 
 
+Hi,
+
+This is a little late but I am ok with the brcmsmac patch and the bcma
+patch, feel free to add my Acked-by. This should go into 3.12 and 3.13+.
+
+Hauke
