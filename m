@@ -1,47 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:42823 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751331Ab3JGX2C (ORCPT
+Received: from s15283307.onlinehome-server.info ([87.106.208.187]:44702 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752101Ab3JBF2u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Oct 2013 19:28:02 -0400
-Received: by mail-ie0-f172.google.com with SMTP id x13so17943529ief.17
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Oct 2013 16:28:02 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH] cfg80211: fix nl80211.h documentation for DFS enum states
-Date: Mon,  7 Oct 2013 16:27:55 -0700
-Message-Id: <1381188475-5195-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20131008_012807_768458_043630FB)
+	Wed, 2 Oct 2013 01:28:50 -0400
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
+Subject: Re: [PATCH v6 3/4] Bluetooth: btmrvl: add setup handler
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <1380655155-10007-4-git-send-email-bzhao@marvell.com>
+Date: Wed, 2 Oct 2013 07:28:29 +0200
+Cc: <linux-bluetooth@vger.kernel.org>,
+	Gustavo Padovan <gustavo@padovan.org>,
+	Johan Hedberg <johan.hedberg@gmail.com>,
+	<linux-wireless@vger.kernel.org>,
+	Mike Frysinger <vapier@chromium.org>,
+	Hyuckjoo Lee <hyuckjoo.lee@samsung.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Message-Id: <CCFF3D0B-57CE-40C7-A836-E0631822FF23@holtmann.org> (sfid-20131002_072854_909700_98027A4B)
+References: <1380655155-10007-1-git-send-email-bzhao@marvell.com> <1380655155-10007-4-git-send-email-bzhao@marvell.com>
+To: Bing Zhao <bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The names are prefixed incorrectly on the documentation.
+Hi Bing,
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- include/uapi/linux/nl80211.h | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+> Move initialization code to hdev's setup handler.
+> 
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> Signed-off-by: Bing Zhao <bzhao@marvell.com>
+> ---
+> v6: remove setup_done variable (Marcel Holtmann)
+>    This change requires a fix in hci_core for hci_setup.
+> v5: make use of hdev's setup handler (Marcel Holtmann)
+> 
+> drivers/bluetooth/btmrvl_main.c | 18 ++++++++++++++++--
+> drivers/bluetooth/btmrvl_sdio.c |  6 ------
+> 2 files changed, 16 insertions(+), 8 deletions(-)
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 71b519f..6ab79ea 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -3860,11 +3860,11 @@ enum nl80211_radar_event {
-  *
-  * Channel states used by the DFS code.
-  *
-- * @IEEE80211_DFS_USABLE: The channel can be used, but channel availability
-+ * @NL80211_DFS_USABLE: The channel can be used, but channel availability
-  *	check (CAC) must be performed before using it for AP or IBSS.
-- * @IEEE80211_DFS_UNAVAILABLE: A radar has been detected on this channel, it
-+ * @NL80211_DFS_UNAVAILABLE: A radar has been detected on this channel, it
-  *	is therefore marked as not available.
-- * @IEEE80211_DFS_AVAILABLE: The channel has been CAC checked and is available.
-+ * @NL80211_DFS_AVAILABLE: The channel has been CAC checked and is available.
-  */
- 
- enum nl80211_dfs_state {
--- 
-1.8.4.rc3
+Acked-by: Marcel Holtmann <marcel@holtmann.org>
+
+Regards
+
+Marcel
 
