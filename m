@@ -1,31 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:64301 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760239Ab3JPIus (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Oct 2013 04:50:48 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Bartosz Markowski <bartosz.markowski@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] ath10k: do not warn about unsupported vdev param
-References: <1381821980-7966-1-git-send-email-bartosz.markowski@tieto.com>
-Date: Wed, 16 Oct 2013 11:50:42 +0300
-In-Reply-To: <1381821980-7966-1-git-send-email-bartosz.markowski@tieto.com>
-	(Bartosz Markowski's message of "Tue, 15 Oct 2013 09:26:20 +0200")
-Message-ID: <8761sx8uql.fsf@kamboji.qca.qualcomm.com> (sfid-20131016_105055_743513_B957AD55)
+Received: from ebb05.tieto.com ([131.207.168.36]:48557 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752765Ab3JBJDu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Oct 2013 05:03:50 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 0/4] ath10k: clean ups
+Date: Wed, 2 Oct 2013 11:03:37 +0200
+Message-ID: <1380704621-4670-1-git-send-email-michal.kazior@tieto.com> (sfid-20131002_110354_329881_B796DD0F)
+In-Reply-To: <1380292706-3609-1-git-send-email-michal.kazior@tieto.com>
+References: <1380292706-3609-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bartosz Markowski <bartosz.markowski@tieto.com> writes:
+Hi,
 
-> 10.X firmware does not support WMI_VDEV_PARAM_TX_ENCAP_TYPE.
-> It's a known limitation and we should not warn about this.
->
-> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+First two patches are non-functional changes.
 
-Thanks, applied.
+The latter two should remove some overhead from TX
+path and CE processing. Nothing extraordinary.
+
+
+PATCH v2:
+ * add commit messages for patch #1 and #2 (Kalle)
+
+
+Michal Kazior (4):
+  ath10k: split tid calculation from tx function
+  ath10k: split vdev_id calculation from tx function
+  ath10k: remove ce_sendlist_send
+  ath10k: remove num_sends_allowed
+
+ drivers/net/wireless/ath/ath10k/ce.c  |   35 ++++++------------------
+ drivers/net/wireless/ath/ath10k/ce.h  |   16 +----------
+ drivers/net/wireless/ath/ath10k/mac.c |   48 ++++++++++++++++++++-------------
+ drivers/net/wireless/ath/ath10k/pci.c |   25 +++--------------
+ drivers/net/wireless/ath/ath10k/pci.h |    3 ---
+ 5 files changed, 42 insertions(+), 85 deletions(-)
 
 -- 
-Kalle Valo
+1.7.9.5
+
