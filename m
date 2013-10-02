@@ -1,120 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:58257 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753380Ab3JBJDx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Oct 2013 05:03:53 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 3/4] ath10k: remove ce_sendlist_send
-Date: Wed, 2 Oct 2013 11:03:40 +0200
-Message-ID: <1380704621-4670-4-git-send-email-michal.kazior@tieto.com> (sfid-20131002_110400_270200_A58A8984)
-In-Reply-To: <1380704621-4670-1-git-send-email-michal.kazior@tieto.com>
-References: <1380292706-3609-1-git-send-email-michal.kazior@tieto.com>
- <1380704621-4670-1-git-send-email-michal.kazior@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s15283307.onlinehome-server.info ([87.106.208.187]:37086 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751987Ab3JBF0y convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Oct 2013 01:26:54 -0400
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
+Subject: Re: [PATCH v6 2/4] Bluetooth: btmrvl: get rid of struct btmrvl_cmd
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <1380655155-10007-3-git-send-email-bzhao@marvell.com>
+Date: Wed, 2 Oct 2013 07:26:28 +0200
+Cc: <linux-bluetooth@vger.kernel.org>,
+	Gustavo Padovan <gustavo@padovan.org>,
+	Johan Hedberg <johan.hedberg@gmail.com>,
+	<linux-wireless@vger.kernel.org>,
+	Mike Frysinger <vapier@chromium.org>,
+	Hyuckjoo Lee <hyuckjoo.lee@samsung.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Message-Id: <10F14A5E-AC08-4E2C-BA13-F4E23B78B72E@holtmann.org> (sfid-20131002_072659_047923_616B9876)
+References: <1380655155-10007-1-git-send-email-bzhao@marvell.com> <1380655155-10007-3-git-send-email-bzhao@marvell.com>
+To: Bing Zhao <bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It is completely pointless to keep this function
-around. It doesn't do anything different than
-ce_send except it introduces more overhead.
+Hi Bing,
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/ce.c  |   34 ---------------------------------
- drivers/net/wireless/ath/ath10k/ce.h  |   15 ---------------
- drivers/net/wireless/ath/ath10k/pci.c |    4 ++--
- 3 files changed, 2 insertions(+), 51 deletions(-)
+> Replace this proprietary structure with the standard one
+> (struct hci_command_hdr).
+> 
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> Signed-off-by: Bing Zhao <bzhao@marvell.com>
+> ---
+> v6: remove proprietary struct btmrvl_cmd
+> 
+> drivers/bluetooth/btmrvl_drv.h  |  6 ------
+> drivers/bluetooth/btmrvl_main.c | 12 ++++++------
+> 2 files changed, 6 insertions(+), 12 deletions(-)
+> 
+> diff --git a/drivers/bluetooth/btmrvl_drv.h b/drivers/bluetooth/btmrvl_drv.h
+> index 27068d1..42f7028 100644
+> --- a/drivers/bluetooth/btmrvl_drv.h
+> +++ b/drivers/bluetooth/btmrvl_drv.h
+> @@ -116,12 +116,6 @@ struct btmrvl_private {
+> #define PS_SLEEP			0x01
+> #define PS_AWAKE			0x00
+> 
+> -struct btmrvl_cmd {
+> -	__le16 ocf_ogf;
+> -	u8 length;
+> -	u8 data[4];
+> -} __packed;
+> -
+> struct btmrvl_event {
+> 	u8 ec;		/* event counter */
+> 	u8 length;
+> diff --git a/drivers/bluetooth/btmrvl_main.c b/drivers/bluetooth/btmrvl_main.c
+> index d9d4229..a4da7c8 100644
+> --- a/drivers/bluetooth/btmrvl_main.c
+> +++ b/drivers/bluetooth/btmrvl_main.c
+> @@ -170,20 +170,20 @@ static int btmrvl_send_sync_cmd(struct btmrvl_private *priv, u16 cmd_no,
+> 				const void *param, u8 len)
+> {
+> 	struct sk_buff *skb;
+> -	struct btmrvl_cmd *cmd;
+> +	struct hci_command_hdr *hdr;
+> 
+> -	skb = bt_skb_alloc(sizeof(*cmd), GFP_ATOMIC);
+> +	skb = bt_skb_alloc(HCI_COMMAND_HDR_SIZE + len, GFP_ATOMIC);
+> 	if (skb == NULL) {
+> 		BT_ERR("No free skb");
+> 		return -ENOMEM;
+> 	}
+> 
+> -	cmd = (struct btmrvl_cmd *) skb_put(skb, sizeof(*cmd));
+> -	cmd->ocf_ogf = cpu_to_le16(hci_opcode_pack(OGF, cmd_no));
+> -	cmd->length = len;
+> +	hdr = (struct hci_command_hdr *)skb_put(skb, HCI_COMMAND_HDR_SIZE);
+> +	hdr->opcode = cpu_to_le16(hci_opcode_pack(OGF, cmd_no));
+> +	hdr->plen = len;
 
-diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
-index 834e29e..9e6daa9 100644
---- a/drivers/net/wireless/ath/ath10k/ce.c
-+++ b/drivers/net/wireless/ath/ath10k/ce.c
-@@ -338,40 +338,6 @@ int ath10k_ce_send(struct ath10k_ce_pipe *ce_state,
- 	return ret;
- }
- 
--int ath10k_ce_sendlist_send(struct ath10k_ce_pipe *ce_state,
--			    void *per_transfer_context,
--			    unsigned int transfer_id,
--			    u32 paddr, unsigned int nbytes,
--			    u32 flags)
--{
--	struct ath10k_ce_ring *src_ring = ce_state->src_ring;
--	struct ath10k *ar = ce_state->ar;
--	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
--	unsigned int nentries_mask = src_ring->nentries_mask;
--	unsigned int sw_index;
--	unsigned int write_index;
--	int delta, ret = -ENOMEM;
--
--	spin_lock_bh(&ar_pci->ce_lock);
--
--	sw_index = src_ring->sw_index;
--	write_index = src_ring->write_index;
--
--	delta = CE_RING_DELTA(nentries_mask, write_index, sw_index - 1);
--
--	if (delta >= 1) {
--		ret = ath10k_ce_send_nolock(ce_state, per_transfer_context,
--					    paddr, nbytes,
--					    transfer_id, flags);
--		if (ret)
--			ath10k_warn("CE send failed: %d\n", ret);
--	}
--
--	spin_unlock_bh(&ar_pci->ce_lock);
--
--	return ret;
--}
--
- int ath10k_ce_recv_buf_enqueue(struct ath10k_ce_pipe *ce_state,
- 			       void *per_recv_context,
- 			       u32 buffer)
-diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
-index aec8028..949b174 100644
---- a/drivers/net/wireless/ath/ath10k/ce.h
-+++ b/drivers/net/wireless/ath/ath10k/ce.h
-@@ -156,21 +156,6 @@ void ath10k_ce_send_cb_register(struct ath10k_ce_pipe *ce_state,
- 				void (*send_cb)(struct ath10k_ce_pipe *),
- 				int disable_interrupts);
- 
--/*
-- * Queue a "sendlist" of buffers to be sent using gather to a single
-- * anonymous destination buffer
-- *   ce         - which copy engine to use
-- *   sendlist        - list of simple buffers to send using gather
-- *   transfer_id     - arbitrary ID; reflected to destination
-- * Returns 0 on success; otherwise an error status.
-- *
-- * Implemenation note: Pushes multiple buffers with Gather to Source ring.
-- */
--int ath10k_ce_sendlist_send(struct ath10k_ce_pipe *ce_state,
--			    void *per_transfer_context,
--			    unsigned int transfer_id,
--			    u32 paddr, unsigned int nbytes,
--			    u32 flags);
- 
- /*==================Recv=======================*/
- 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index dff23d9..4f6a978 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -730,8 +730,8 @@ static int ath10k_pci_hif_send_head(struct ath10k *ar, u8 pipe_id,
- 	pipe_info->num_sends_allowed--;
- 	spin_unlock_bh(&pipe_info->pipe_lock);
- 
--	ret = ath10k_ce_sendlist_send(ce_hdl, nbuf, transfer_id,
--				      skb_cb->paddr, len, flags);
-+	ret = ath10k_ce_send(ce_hdl, nbuf, skb_cb->paddr, len, transfer_id,
-+			     flags);
- 	if (ret)
- 		ath10k_warn("CE send failed: %p\n", nbuf);
- 
--- 
-1.7.9.5
+I like this change a lot since it makes the code much simpler. Now if you would also just use the full 16-bit opcode instead of this pack function it would become dead simple. Especially then you can use __constant_cpu_to_le16.
+
+Regards
+
+Marcel
 
