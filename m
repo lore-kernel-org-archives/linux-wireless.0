@@ -1,73 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:42155 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751544Ab3JDUHN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Oct 2013 16:07:13 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH] rt2x00: rt2800lib: fix default VGC values for RT3572 for the 5GHz band
-Date: Fri,  4 Oct 2013 22:07:09 +0200
-Message-Id: <1380917229-13269-1-git-send-email-juhosg@openwrt.org> (sfid-20131004_220718_181092_75A8E0B4)
+Received: from devils.ext.ti.com ([198.47.26.153]:48092 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753582Ab3JBM4U (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Oct 2013 08:56:20 -0400
+Date: Wed, 2 Oct 2013 07:55:35 -0500
+From: Felipe Balbi <balbi@ti.com>
+To: Felipe Balbi <balbi@ti.com>, <dwmw2@infradead.org>,
+	<ben@decadent.org.uk>
+CC: Luca Coelho <luca@coelho.fi>, <ben@decadent.org.uk>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	<linux-wireless@vger.kernel.org>, Pavel Machek <pavel@denx.de>
+Subject: [GIT PULL] firmware: wl1251 firmware binary
+Message-ID: <20131002125535.GL1476@radagast> (sfid-20131002_145637_287187_3C97D212)
+Reply-To: <balbi@ti.com>
+References: <1380033894-5007-1-git-send-email-balbi@ti.com>
+ <1380107096.4503.8.camel@porter.coelho.fi>
+ <1380107278.4503.9.camel@porter.coelho.fi>
+ <20130925132359.GE10746@radagast>
+ <1380116535.4503.19.camel@porter.coelho.fi>
+ <20130925135943.GI10746@radagast>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="pdSIrcRjgC24tZqG"
+In-Reply-To: <20130925135943.GI10746@radagast>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The rt2x00 driver uses 0x22 as a default VGC value
-in VGC adjustment for the RT3572 chipset. In the
-Ralink DPO_RT5572_LinuxSTA_2.6.1.3_20121022 driver,
-this value is only used for initialization. During
-VGC adjustment, the reference driver uses different
-values.
+--pdSIrcRjgC24tZqG
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Update the 'rt2800_get_default_vgc' function to
-synchronize the values with the reference driver.
-Also add the missing AGC initialization code into
-the 'rt2800_config_channel' function.
+Hi,
 
-References:
-  RT35xx_SetAGCInitValue in chip/rt35xx.c
-  RT35xx_ChipAGCAdjust in chip/rt35xx.c
+here's a pull request for wl4 firmware. I'll send a patch for wl1251
+driver updating firmware load path.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |   15 +++++++++++----
- 1 file changed, 11 insertions(+), 4 deletions(-)
+The following changes since commit b8ac7c7e27dcd13fa3c843aaf62457e9c57ea4db:
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 95c18dc..7508729 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -3310,9 +3310,18 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
- 
- 	rt2800_register_write(rt2x00dev, TX_PIN_CFG, tx_pin);
- 
--	if (rt2x00_rt(rt2x00dev, RT3572))
-+	if (rt2x00_rt(rt2x00dev, RT3572)) {
- 		rt2800_rfcsr_write(rt2x00dev, 8, 0x80);
- 
-+		/* AGC init */
-+		if (rf->channel <= 14)
-+			reg = 0x1c + (2 * rt2x00dev->lna_gain);
-+		else
-+			reg = 0x22 + ((rt2x00dev->lna_gain * 5) / 3);
-+
-+		rt2800_bbp_write_with_rx_chain(rt2x00dev, 66, reg);
-+	}
-+
- 	if (rt2x00_rt(rt2x00dev, RT3593)) {
- 		rt2800_register_read(rt2x00dev, GPIO_CTRL, &reg);
- 
-@@ -4421,9 +4430,7 @@ static u8 rt2800_get_default_vgc(struct rt2x00_dev *rt2x00dev)
- 		else
- 			vgc = 0x2e + rt2x00dev->lna_gain;
- 	} else { /* 5GHZ band */
--		if (rt2x00_rt(rt2x00dev, RT3572))
--			vgc = 0x22 + (rt2x00dev->lna_gain * 5) / 3;
--		else if (rt2x00_rt(rt2x00dev, RT3593))
-+		if (rt2x00_rt(rt2x00dev, RT3593))
- 			vgc = 0x20 + (rt2x00dev->lna_gain * 5) / 3;
- 		else if (rt2x00_rt(rt2x00dev, RT5592))
- 			vgc = 0x24 + (2 * rt2x00dev->lna_gain);
--- 
-1.7.10
+  linux-firmware: Add Brocade FC/FCOE Adapter firmware files (2013-09-30 04=
+:53:32 +0100)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/balbi/linux-firmware.git wi=
+link4
+
+for you to fetch changes up to d726804dbc8dad88587b6be17716714cd91ed86c:
+
+  ti-connectivity: add wl1251 firmware and license (2013-10-02 06:55:39 -05=
+00)
+
+----------------------------------------------------------------
+Felipe Balbi (1):
+      ti-connectivity: add wl1251 firmware and license
+
+ LICENCE.wl1251                 |  59 +++++++++++++++++++++++++++++++++++++=
+++++
+ WHENCE                         |  18 +++++++++++++
+ ti-connectivity/wl1251-fw.bin  | Bin 0 -> 194180 bytes
+ ti-connectivity/wl1251-nvs.bin | Bin 0 -> 752 bytes
+ 4 files changed, 77 insertions(+)
+ create mode 100644 LICENCE.wl1251
+ create mode 100644 ti-connectivity/wl1251-fw.bin
+ create mode 100644 ti-connectivity/wl1251-nvs.bin
+
+--=20
+balbi
+
+--pdSIrcRjgC24tZqG
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJSTBfGAAoJEIaOsuA1yqREaF8P/AjKcMlM+XhdjWGRzwSLSy6/
+c7yfYCnENqTWvicheSNl0kanY3oMK2WigFU/0pXcLGl25NwqA9GobIk9EksUo4Ya
+i40r4TFskL5Wfikqohl2DEhpzbpgyPQTqTxanceDYFTB4RCC+VgciHpBTso3oD83
++y9Q4QAHTkTO9DS8IPoQKqYy54+PNgk4iYNndnl6W/kWm6N7H5HTNcQ+Judf0SuL
+0NYAh+Wfvw+0Uc3q7hlICQLuz1I4RRnw8dNVdd8D3ybsjlR15WpRmPPuP6EoXCRl
+MXR1+YHmXHjkRG1rgYTolOtlfT66czSxGP4GQv6QNvPcojH/+UotjG7fZ6U61Ia7
+JJEp4TCLVUwXJ/cYvbcnO7e013K8IVAXcmhgsJNEyRxJ4JtmN5r+38JWhKeogVuf
+lsAUw3yMkf/hIY/8cIFwy7HQ5dDP6aQ4/hYQ11dC53h+zjOUG2mLAWGU7cGGeZ28
+lQveHnQ1bme6NXzwEJ75u+4+6eqxoUAtIbmjSfRtSMp0CJjhUk35HvXEPnnRJJhe
+FdqfpLcHrtloeC5IcwVelTRJI82EDQrIBVIrtLWue2ZW0IoAgMcw2EhBwca2uCpM
+B8D/zko79h4/ikxw8rrJzHQmu2kAhU5KOgz24j1J9xpNaoULvy3VRp9GRTi/GRXC
+lYPB3UHoN+2XuXVZTasS
+=OEhv
+-----END PGP SIGNATURE-----
+
+--pdSIrcRjgC24tZqG--
