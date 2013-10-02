@@ -1,43 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve0-f175.google.com ([209.85.128.175]:60877 "EHLO
-	mail-ve0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751796Ab3JGH5H (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:36713 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753385Ab3JBQU2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Oct 2013 03:57:07 -0400
-Received: by mail-ve0-f175.google.com with SMTP id jy13so3552701veb.34
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Oct 2013 00:57:07 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1381132198.13586.1.camel@jlt4.sipsolutions.net>
-References: <1380234508-3121-1-git-send-email-k.eugene.e@gmail.com>
-	<20131004234514.GA11128@garbanzo.do-not-panic.com>
-	<1381132198.13586.1.camel@jlt4.sipsolutions.net>
-Date: Mon, 7 Oct 2013 08:57:06 +0100
-Message-ID: <CAFSJ42agnFAy1ShGvQERz4pHKJ02ByZAZGWg-m9TGM8am8Lewg@mail.gmail.com> (sfid-20131007_095712_157898_8F41EBBE)
-Subject: Re: [PATCH] wcn36xx: mac80211 driver for Qualcomm WCN3660/WCN3680 hardware
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	wcn36xx@lists.infradead.org, wcn36xx@qca.qualcomm.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 2 Oct 2013 12:20:28 -0400
+Message-ID: <1380730816.13329.28.camel@jlt4.sipsolutions.net> (sfid-20131002_182031_229873_D6EE9781)
+Subject: Re: [PATCH v2] mac80211: implement STA CSA for drivers using
+ channel contexts
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 02 Oct 2013 18:20:16 +0200
+In-Reply-To: <1378044951-13682-1-git-send-email-arik@wizery.com> (sfid-20130901_161614_768170_0FA669D7)
+References: <1378044951-13682-1-git-send-email-arik@wizery.com>
+	 (sfid-20130901_161614_768170_0FA669D7)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanx Johannes for advice. Will try it as well.
+On Sun, 2013-09-01 at 17:15 +0300, Arik Nemtsov wrote:
+> Limit the current implementation to a single channel context used by
+> a single vif, thereby avoiding multi-vif/channel complexities.
+> 
+> Reuse the main function from AP CSA code, but move a portion out in
+> order to fit the STA scenario.
+> 
+> Add a new mac80211 HW flag so we don't break devices that don't support
+> channel switch with channel-contexts. The new behavior will be opt-in.
 
-2013/10/7 Johannes Berg <johannes@sipsolutions.net>:
-> On Fri, 2013-10-04 at 16:45 -0700, Luis R. Rodriguez wrote:
->
->> Nice! I test compiled with sparse enabled and got this:
->
-> Could also consider running smatch.
->
-> johannes
->
+Applied, sorry for the delay.
 
+johannes
 
-
--- 
-Best regards,
-Eugene
