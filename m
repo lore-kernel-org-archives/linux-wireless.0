@@ -1,25 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:44152 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757062Ab3JQPMH (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52742 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753630Ab3JBVpJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Oct 2013 11:12:07 -0400
-Message-ID: <1382022723.14410.19.camel@jlt4.sipsolutions.net> (sfid-20131017_171211_290706_A39AEE27)
-Subject: Re: [PATCH v5 0/5]  Add Mesh Channel Switch Support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	devel@lists.open80211s.org, distro11s@cozybit.com
-Date: Thu, 17 Oct 2013 17:12:03 +0200
-In-Reply-To: <1381802911-3921-1-git-send-email-yeohchunyeow@cozybit.com> (sfid-20131015_040854_338238_EA2B2232)
-References: <1381802911-3921-1-git-send-email-yeohchunyeow@cozybit.com>
-	 (sfid-20131015_040854_338238_EA2B2232)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 2 Oct 2013 17:45:09 -0400
+Date: Wed, 2 Oct 2013 14:50:03 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] iwlwifi: pcie: fix merge damage
+Message-ID: <20131002185002.GA21613@tuxdriver.com> (sfid-20131002_234516_504958_A8B645A8)
+References: <1380531766-15384-1-git-send-email-johannes@sipsolutions.net>
+ <1380706904.13329.15.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1380706904.13329.15.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've applied patches 1-3 and there's one question on patch 4.
+On Wed, Oct 02, 2013 at 11:41:44AM +0200, Johannes Berg wrote:
+> On Mon, 2013-09-30 at 11:02 +0200, Johannes Berg wrote:
+> > From: Johannes Berg <johannes.berg@intel.com>
+> > 
+> > The merge b35c8097 seems to have lost commit eabc4ac5d,
+> > put the code back.
+> 
+> I'm rebasing my tree on -rc1, which actually includes the merge commit,
+> so it still makes sense for me to include this commit - I've done that
+> now. Sorry for the confusion.
 
-johannes
+I'm not sure I follow -- please don't base on anything I don't already
+have in my tree if you want me to pull from you.
 
+I applied the patch to wireless-next today, FWIW.
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
