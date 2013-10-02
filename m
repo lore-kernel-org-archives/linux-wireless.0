@@ -1,52 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f43.google.com ([209.85.212.43]:48355 "EHLO
-	mail-vb0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756490Ab3JKUoW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Oct 2013 16:44:22 -0400
-Received: by mail-vb0-f43.google.com with SMTP id h11so3141064vbh.2
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Oct 2013 13:44:21 -0700 (PDT)
+Received: from ebb05.tieto.com ([131.207.168.36]:48557 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753004Ab3JBJDv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Oct 2013 05:03:51 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 2/4] ath10k: split vdev_id calculation from tx function
+Date: Wed, 2 Oct 2013 11:03:39 +0200
+Message-ID: <1380704621-4670-3-git-send-email-michal.kazior@tieto.com> (sfid-20131002_110358_113677_1701B14F)
+In-Reply-To: <1380704621-4670-1-git-send-email-michal.kazior@tieto.com>
+References: <1380292706-3609-1-git-send-email-michal.kazior@tieto.com>
+ <1380704621-4670-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
-In-Reply-To: <20131011153026.GA13099@localhost>
-References: <20131011153026.GA13099@localhost>
-Date: Fri, 11 Oct 2013 21:44:20 +0100
-Message-ID: <CAFSJ42Z3fpBbr3j5X1q7T1iQ8a0KZtw0jHnAO+_DBaKuXtLZ9Q@mail.gmail.com> (sfid-20131011_224429_218022_295B6B3F)
-Subject: Re: [wireless-next:master 82/98] drivers/net/wireless/ath/wcn36xx/smd.c:1330:2-8:
- preceding lock on line 1324
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: Fengguang Wu <fengguang.wu@intel.com>
-Cc: kbuild-all@01.org, "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	wcn36xx <wcn36xx@lists.infradead.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Good patch, thanx!
+Tidy up ath10k_tx().
 
-On Fri, Oct 11, 2013 at 4:30 PM, Fengguang Wu <fengguang.wu@intel.com> wrote:
->
-> Hi Eugene,
->
-> FYI, there are coccinelle warnings in
->
-> tree:   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next.git master
-> head:   e25aa82a89db9e3b09d02b5481aa375c7712a10d
-> commit: 8e84c25821698bdef73c0329fb2022a4673b7adc [82/98] wcn36xx: mac80211 driver for Qualcomm WCN3660/WCN3680 hardware
->
->>> drivers/net/wireless/ath/wcn36xx/smd.c:1330:2-8: preceding lock on line 1324
-> --
->>> drivers/net/wireless/ath/wcn36xx/debug.c:27:11-31: WARNING opportunity for simple_open, see also structure on line 106
->>> drivers/net/wireless/ath/wcn36xx/debug.c:27:11-31: WARNING opportunity for simple_open, see also structure on line 148
->
-> Please consider folding the attached diff :-)
->
-> ---
-> 0-DAY kernel build testing backend              Open Source Technology Center
-> http://lists.01.org/mailman/listinfo/kbuild                 Intel Corporation
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c |   25 +++++++++++++++----------
+ 1 file changed, 15 insertions(+), 10 deletions(-)
 
-
-
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 7415a60..4b7c949 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1421,6 +1421,19 @@ static u8 ath10k_tx_h_get_tid(struct ieee80211_hdr *hdr)
+ 	return ieee80211_get_qos_ctl(hdr)[0] & IEEE80211_QOS_CTL_TID_MASK;
+ }
+ 
++static u8 ath10k_tx_h_get_vdev_id(struct ath10k *ar,
++				  struct ieee80211_tx_info *info)
++{
++	if (info->control.vif)
++		return ath10k_vif_to_arvif(info->control.vif)->vdev_id;
++
++	if (ar->monitor_enabled)
++		return ar->monitor_vdev_id;
++
++	ath10k_warn("could not resolve vdev id\n");
++	return 0;
++}
++
+ /*
+  * Frames sent to the FW have to be in "Native Wifi" format.
+  * Strip the QoS field from the 802.11 header.
+@@ -1785,16 +1798,7 @@ static void ath10k_tx(struct ieee80211_hw *hw,
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 	struct ath10k *ar = hw->priv;
+-	struct ath10k_vif *arvif = NULL;
+-	u32 vdev_id = 0;
+-	u8 tid;
+-
+-	if (info->control.vif) {
+-		arvif = ath10k_vif_to_arvif(info->control.vif);
+-		vdev_id = arvif->vdev_id;
+-	} else if (ar->monitor_enabled) {
+-		vdev_id = ar->monitor_vdev_id;
+-	}
++	u8 tid, vdev_id;
+ 
+ 	/* We should disable CCK RATE due to P2P */
+ 	if (info->flags & IEEE80211_TX_CTL_NO_CCK_RATE)
+@@ -1803,6 +1807,7 @@ static void ath10k_tx(struct ieee80211_hw *hw,
+ 	/* we must calculate tid before we apply qos workaround
+ 	 * as we'd lose the qos control field */
+ 	tid = ath10k_tx_h_get_tid(hdr);
++	vdev_id = ath10k_tx_h_get_vdev_id(ar, info);
+ 
+ 	/* it makes no sense to process injected frames like that */
+ 	if (info->control.vif &&
 -- 
-Best regards,
-Eugene
+1.7.9.5
+
