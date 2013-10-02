@@ -1,88 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:57776 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754562Ab3JCTRU (ORCPT
+Received: from mail-we0-f171.google.com ([74.125.82.171]:35593 "EHLO
+	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751601Ab3JBAze (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Oct 2013 15:17:20 -0400
-Message-ID: <524DC2B8.905@candelatech.com> (sfid-20131003_211728_251865_3C466687)
-Date: Thu, 03 Oct 2013 12:17:12 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 1 Oct 2013 20:55:34 -0400
+Received: by mail-we0-f171.google.com with SMTP id p61so129950wes.2
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Oct 2013 17:55:33 -0700 (PDT)
 MIME-Version: 1.0
-To: Rick Jones <rick.jones2@hp.com>
-CC: netdev <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Ideas on why using WPA2 encryption speeds up many TCP connections?
-References: <524DB6F6.6020405@candelatech.com> <524DBC93.1070400@hp.com>
-In-Reply-To: <524DBC93.1070400@hp.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <524995BD.8040000@canonical.com>
+References: <524995BD.8040000@canonical.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Tue, 1 Oct 2013 17:55:13 -0700
+Message-ID: <CAB=NE6UVLbh92RbB-VB_4baUdSErSaft1eZ=hc-bXwPpp0PD0Q@mail.gmail.com> (sfid-20131002_025537_969584_3402BBA0)
+Subject: Re: ath10k firmware in linux-firmware
+To: Tim Gardner <tim.gardner@canonical.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/03/2013 11:50 AM, Rick Jones wrote:
-> On 10/03/2013 11:27 AM, Ben Greear wrote:
->> I'm seeing something a bit strange and wondering if anyone had an
->> opinion on why...
->>
->> I am testing up to 200 wifi station systems, each with a TCP connection
->> running on them (download only, from VAP to stations).
->>
->> Without encryption (ie, open network), I see total throughput go from
->> about 108Mbps down to 69Mbps as I add more stations (I add 25 at a time,
->> so the 108Mbps is with 25 active, and 69Mbps is with 200 active).
->>
->> However, if I enable encryption, the throughput is actually higher
->> (111Mbps to 71Mbps).  I'm doing encryption in software, so it adds a fair
->> bit of CPU load in this test.  The numbers bounce around since this is
->> wifi after all, but in general encryption tends to win reliably in this
->> test.
->>
->> When testing with a single station (and 5 tcp streams with jacked up
->> snd/rcv buffers) the open networks perform significantly better at total throughput:
->> 263Mbps vs 246Mbps.
->>
->> Maybe the extra delay for decryption increases odds that GRO will take
->> affect for the many, slower streams (and maybe that will decrease ACK
->> traffic?)
->>
->> Any other ideas?
->
-> Fewer times two or more stations step on one another?  The recievers will only try to transmit when they receive data.  Modulo timing, if the individual
-> downloads are a bit slower, less chance of the receivers looking to send ACKs back through at the same time?  Got any low-level stats for the health and well
-> being of the wireless network?
+On Mon, Sep 30, 2013 at 8:16 AM, Tim Gardner <tim.gardner@canonical.com> wrote:
+> Kalle - Do you have a time frame for when you might request that ath10k
+> firmware be merged into upstream linux-firmware now that the driver has
+> been merged into the 3.11 kernel?
 
-The tcp connection stats are taken after running for 60 seconds, and I take 3-sec running averages
-as well as 60 second averages.  So, I think that it would have to be total decrease in ACKs,
-not just timing, to make a difference.  The 3 and 60 second stats show consistently higher throughput
-with encryption when using 25+ stations/connections.
+We're wrapping things up for that, hope to get that in there ASAP.
 
-Also, it works out that the sending sockets all sort of send randomly as they
-are able, so I don't think there would be any particular ACK flood seen..
-
-I have great quantities of low level stats, but I have not dug into them in detail
-just yet.  In general, my RF environment in this test is fairly controlled, as
-I am cabling the systems using good semi-rigid SMA cables and an RF attenuator.
-There will be some external interference of course, as they are not in an
-isolation chamber.
-
-
-As for the difference in 1 stations vs 25+, then it is very likely related to
-low level things like MPDU working better with a single station, and probably
-better ACK avoidance (I recall about 20kpps download, 4kpps upload in a previous
-test with a single station, which indicates to me we must not be acking every
-packet-on-the-air..somehow).
-
-(For grins, I played with the delayed-ack-segs from an out-of-tree patch and
-can get TCP throughput up to 300Mbps by setting delayed ack segs to 64 in
-single station/5 stream, open network test).
-
-Thanks,
-Ben
-
->
-> rick jones
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+  Luis
