@@ -1,37 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f43.google.com ([209.85.215.43]:59903 "EHLO
-	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751026Ab3JTJz3 (ORCPT
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:62447 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753551Ab3JBLoa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Oct 2013 05:55:29 -0400
-Received: by mail-la0-f43.google.com with SMTP id el20so1783575lab.2
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Oct 2013 02:55:27 -0700 (PDT)
+	Wed, 2 Oct 2013 07:44:30 -0400
+Received: by mail-pa0-f50.google.com with SMTP id fb1so917291pad.37
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Oct 2013 04:44:29 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1382120516.14393.21.camel@jlt4.sipsolutions.net>
-References: <1381797731-2454-1-git-send-email-mcgrof@do-not-panic.com>
- <1381797731-2454-2-git-send-email-mcgrof@do-not-panic.com>
- <20131018180107.GG28130@tuxdriver.com> <1382120516.14393.21.camel@jlt4.sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Sun, 20 Oct 2013 11:55:07 +0200
-Message-ID: <CAB=NE6XqSonLcD1qLSUCfUFyMJNeK-e9V=h6+UdOXGZnOhg3fQ@mail.gmail.com> (sfid-20131020_115532_693956_A650B6ED)
-Subject: Re: [PATCH 1/6] cfg80211: export reg_initiator_name()
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <CA+XVXfdy2VdnTa55YJMQHTc+bj-oBUuSb1rT0nKbLKK7BZrSjQ@mail.gmail.com>
+References: <1378044951-13682-1-git-send-email-arik@wizery.com> <CA+XVXfdy2VdnTa55YJMQHTc+bj-oBUuSb1rT0nKbLKK7BZrSjQ@mail.gmail.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Wed, 2 Oct 2013 14:44:14 +0300
+Message-ID: <CA+XVXffqJ1C4s0zhrpvDK+Zaxu6Rv0b126FQjCcD7mhGZQK9bg@mail.gmail.com> (sfid-20131002_134433_390696_38FB166B)
+Subject: Re: [PATCH v2] mac80211: implement STA CSA for drivers using channel contexts
+To: Johannes Berg <johannes.berg@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 18, 2013 at 8:21 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Fri, 2013-10-18 at 14:01 -0400, John W. Linville wrote:
->> I'm going to merge this series, including the cfg80211.h change...FYI!
+On Sun, Sep 29, 2013 at 10:06 AM, Arik Nemtsov <arik@wizery.com> wrote:
+> On Sun, Sep 1, 2013 at 5:15 PM, Arik Nemtsov <arik@wizery.com> wrote:
+>> Limit the current implementation to a single channel context used by
+>> a single vif, thereby avoiding multi-vif/channel complexities.
+>>
+>> Reuse the main function from AP CSA code, but move a portion out in
+>> order to fit the STA scenario.
+>>
+>> Add a new mac80211 HW flag so we don't break devices that don't support
+>> channel switch with channel-contexts. The new behavior will be opt-in.
+>>
+>> Signed-off-by: Arik Nemtsov <arik@wizery.com>
 >
-> I already have this patch though, hmm.
+> Ping?
 
-I have another series similar to this coming up soon but much more
-intrusive, it'll deal with cfg80211 / nl80211 flags and tons of
-drivers use them. I'll just post it to both and you guys can decide
-what tree this goes in. Just giving an early heads up now.
+Ping 2 :)
+(Just saw your email on the list urging pings)
 
-  Luis
+Arik
