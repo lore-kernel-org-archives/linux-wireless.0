@@ -1,51 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:43723 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933198Ab3JORAf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Oct 2013 13:00:35 -0400
-Date: Tue, 15 Oct 2013 12:59:38 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Daniel Mack <zonque@gmail.com>
-Cc: Bing Zhao <bzhao@marvell.com>, linux-wireless@vger.kernel.org,
-	Sven Neumann <s.neumann@raumfeld.com>,
-	Andreas Fenkart <andreas.fenkart@streamunlimited.com>,
-	Dylan Reid <dgreid@chromium.org>,
-	Paul Stewart <pstew@chromium.org>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: Re: [PATCH 3.12] mwifiex: fix SDIO interrupt lost issue
-Message-ID: <20131015165938.GA7615@tuxdriver.com> (sfid-20131015_190050_287573_8348B182)
-References: <1380304538-2816-1-git-send-email-bzhao@marvell.com>
- <525D1B3A.8090805@gmail.com>
+Received: from ebb05.tieto.com ([131.207.168.36]:48557 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753399Ab3JBJDy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Oct 2013 05:03:54 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 4/4] ath10k: remove num_sends_allowed
+Date: Wed, 2 Oct 2013 11:03:41 +0200
+Message-ID: <1380704621-4670-5-git-send-email-michal.kazior@tieto.com> (sfid-20131002_110359_131574_C5CDC9D8)
+In-Reply-To: <1380704621-4670-1-git-send-email-michal.kazior@tieto.com>
+References: <1380292706-3609-1-git-send-email-michal.kazior@tieto.com>
+ <1380704621-4670-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <525D1B3A.8090805@gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 15, 2013 at 12:38:50PM +0200, Daniel Mack wrote: > On 27.09.2013 19:55, Bing Zhao wrote:
-> > From: Amitkumar Karwar <akarwar@marvell.com>
-> > 
-> > 601216e "mwifiex: process RX packets in SDIO IRQ thread directly"
-> > introduced a command timeout issue which can be reproduced easily on
-> > an AM33xx platform using a test application written by Daniel Mack:
-> > 
-> > https://gist.github.com/zonque/6579314
-> > 
-> > mwifiex_main_process() is called from both the SDIO handler and
-> > the workqueue. In case an interrupt occurs right after the
-> > int_status check, but before updating the mwifiex_processing flag,
-> > this interrupt gets lost, resulting in a command timeout and
-> > consequently a card reset.
-> > 
-> > Let main_proc_lock protect both int_status and mwifiex_processing
-> > flag. This fixes the interrupt lost issue.
-> 
-> John, could you take this patch trough your tree?
+The value provided by num_sends_allowed is now
+derived from CE source ringbuffer state.
 
-I already did, and it is already in Dave's tree too...
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/ce.c  |   17 ++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/ce.h  |    1 +
+ drivers/net/wireless/ath/ath10k/pci.c |   21 +--------------------
+ drivers/net/wireless/ath/ath10k/pci.h |    3 ---
+ 4 files changed, 18 insertions(+), 24 deletions(-)
 
-John
+diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
+index 9e6daa9..e46951b 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.c
++++ b/drivers/net/wireless/ath/ath10k/ce.c
+@@ -283,7 +283,7 @@ static int ath10k_ce_send_nolock(struct ath10k_ce_pipe *ce_state,
+ 
+ 	if (unlikely(CE_RING_DELTA(nentries_mask,
+ 				   write_index, sw_index - 1) <= 0)) {
+-		ret = -EIO;
++		ret = -ENOSR;
+ 		goto exit;
+ 	}
+ 
+@@ -338,6 +338,21 @@ int ath10k_ce_send(struct ath10k_ce_pipe *ce_state,
+ 	return ret;
+ }
+ 
++int ath10k_ce_num_free_src_entries(struct ath10k_ce_pipe *pipe)
++{
++	struct ath10k *ar = pipe->ar;
++	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
++	int delta;
++
++	spin_lock_bh(&ar_pci->ce_lock);
++	delta = CE_RING_DELTA(pipe->src_ring->nentries_mask,
++			      pipe->src_ring->write_index,
++			      pipe->src_ring->sw_index - 1);
++	spin_unlock_bh(&ar_pci->ce_lock);
++
++	return delta;
++}
++
+ int ath10k_ce_recv_buf_enqueue(struct ath10k_ce_pipe *ce_state,
+ 			       void *per_recv_context,
+ 			       u32 buffer)
+diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
+index 949b174..15d45b5 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.h
++++ b/drivers/net/wireless/ath/ath10k/ce.h
+@@ -156,6 +156,7 @@ void ath10k_ce_send_cb_register(struct ath10k_ce_pipe *ce_state,
+ 				void (*send_cb)(struct ath10k_ce_pipe *),
+ 				int disable_interrupts);
+ 
++int ath10k_ce_num_free_src_entries(struct ath10k_ce_pipe *pipe);
+ 
+ /*==================Recv=======================*/
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 4f6a978..f8d59c7 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -720,16 +720,6 @@ static int ath10k_pci_hif_send_head(struct ath10k *ar, u8 pipe_id,
+ 			"ath10k tx: data: ",
+ 			nbuf->data, nbuf->len);
+ 
+-	/* Make sure we have resources to handle this request */
+-	spin_lock_bh(&pipe_info->pipe_lock);
+-	if (!pipe_info->num_sends_allowed) {
+-		ath10k_warn("Pipe: %d is full\n", pipe_id);
+-		spin_unlock_bh(&pipe_info->pipe_lock);
+-		return -ENOSR;
+-	}
+-	pipe_info->num_sends_allowed--;
+-	spin_unlock_bh(&pipe_info->pipe_lock);
+-
+ 	ret = ath10k_ce_send(ce_hdl, nbuf, skb_cb->paddr, len, transfer_id,
+ 			     flags);
+ 	if (ret)
+@@ -741,14 +731,7 @@ static int ath10k_pci_hif_send_head(struct ath10k *ar, u8 pipe_id,
+ static u16 ath10k_pci_hif_get_free_queue_number(struct ath10k *ar, u8 pipe)
+ {
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+-	struct ath10k_pci_pipe *pipe_info = &(ar_pci->pipe_info[pipe]);
+-	int ret;
+-
+-	spin_lock_bh(&pipe_info->pipe_lock);
+-	ret = pipe_info->num_sends_allowed;
+-	spin_unlock_bh(&pipe_info->pipe_lock);
+-
+-	return ret;
++	return ath10k_ce_num_free_src_entries(ar_pci->pipe_info[pipe].ce_hdl);
+ }
+ 
+ static void ath10k_pci_hif_dump_area(struct ath10k *ar)
+@@ -863,7 +846,6 @@ static int ath10k_pci_start_ce(struct ath10k *ar)
+ 						   ath10k_pci_ce_send_done,
+ 						   disable_interrupts);
+ 			completions += attr->src_nentries;
+-			pipe_info->num_sends_allowed = attr->src_nentries - 1;
+ 		}
+ 
+ 		if (attr->dest_nentries) {
+@@ -1033,7 +1015,6 @@ static void ath10k_pci_process_ce(struct ath10k *ar)
+ 		 */
+ 		spin_lock_bh(&compl->pipe_info->pipe_lock);
+ 		list_add_tail(&compl->list, &compl->pipe_info->compl_free);
+-		compl->pipe_info->num_sends_allowed += send_done;
+ 		spin_unlock_bh(&compl->pipe_info->pipe_lock);
+ 	}
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/pci.h b/drivers/net/wireless/ath/ath10k/pci.h
+index 7c49f6f..52fb7b9 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.h
++++ b/drivers/net/wireless/ath/ath10k/pci.h
+@@ -178,9 +178,6 @@ struct ath10k_pci_pipe {
+ 	/* List of free CE completion slots */
+ 	struct list_head compl_free;
+ 
+-	/* Limit the number of outstanding send requests. */
+-	int num_sends_allowed;
+-
+ 	struct ath10k_pci *ar_pci;
+ 	struct tasklet_struct intr;
+ };
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.9.5
+
