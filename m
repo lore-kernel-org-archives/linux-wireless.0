@@ -1,64 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59282 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756495Ab3J1PaZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Oct 2013 11:30:25 -0400
-Message-ID: <1382974161.1542.18.camel@dcbw.foobar.com> (sfid-20131028_163046_223902_1D22CAFE)
-Subject: Re: [PATCH 16/16] wl1251: Add sysfs file address for setting
- permanent mac address
-From: Dan Williams <dcbw@redhat.com>
-To: Pali =?ISO-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Luciano Coelho <luca@coelho.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
-	joni.lapilainen@gmail.com
-Date: Mon, 28 Oct 2013 10:29:21 -0500
-In-Reply-To: <201310281604.48542@pali>
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
-	 <1382971562.1542.6.camel@dcbw.foobar.com>
-	 <1382972215.17956.30.camel@jlt4.sipsolutions.net> <201310281604.48542@pali>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-bk0-f54.google.com ([209.85.214.54]:55255 "EHLO
+	mail-bk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751977Ab3JBFfj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Oct 2013 01:35:39 -0400
+Received: by mail-bk0-f54.google.com with SMTP id mz12so118277bkb.27
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Oct 2013 22:35:37 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <8761th6ja6.fsf@kamboji.qca.qualcomm.com>
+References: <1380292567-2363-1-git-send-email-michal.kazior@tieto.com>
+	<1380292567-2363-3-git-send-email-michal.kazior@tieto.com>
+	<8761th6ja6.fsf@kamboji.qca.qualcomm.com>
+Date: Wed, 2 Oct 2013 07:35:37 +0200
+Message-ID: <CA+BoTQnjG9MnbPsLM-RtAwuGNp_ZAfbvwvR_zg1Ks0ZmUxAtrQ@mail.gmail.com> (sfid-20131002_073542_620011_6D355160)
+Subject: Re: [PATCH 2/2] ath10k: fix scheduling while atomic bug
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath10k@lists.infradead.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-10-28 at 16:04 +0100, Pali Rohár wrote:
-> On Monday 28 October 2013 15:56:55 Johannes Berg wrote:
-> > On Mon, 2013-10-28 at 09:46 -0500, Dan Williams wrote:
-> > > If the device doesn't actually *have* a permanent MAC
-> > > address, then it shouldn't be returning one via ethtool,
-> > > and should return an error for ETHTOOL_GPERMADDR.
-> > 
-> > There's currently no provision for that, but I agree it would
-> > be better to do so.
-> > 
-> > johannes
-> 
-> So what to do with devices which has MAC address stored in some 
-> obscure place and there is userspace binary which can read it?
-> 
-> I think that there should be some way to tell kernel that *this* 
-> is the permanent address and it should use it.
-> 
-> This is reason why I proposed patch which adding sysfs entry for 
-> setting permanent address from userspace in wl1251 driver.
+On 1 October 2013 18:35, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Michal Kazior <michal.kazior@tieto.com> writes:
+>
+>> Recent WMI/HTC changes broke WEP with multiple
+>> keys. If WMI had no HTC TX credits to submit
+>> command for default wep index update it would
+>> trigger a bug.
+>>
+>> This simply moves the wep key index update to a
+>> worker.
+>>
+>> The key update may happen some time after first
+>> frame with a different wep key has been sent (i.e.
+>> some frames will be sent with old key). This was
+>> the case before too as WMI commands were
+>> asynchronous.
+>>
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>
+> This looks problematic. Basically you just delay sending the WMI
+> command, but there's no guarantee that we actually have free credits at
+> the time of transmission. So to me it looks like this fixes the issue
+> just by luck.
 
-Ok, so the N900's MAC is stored in the "cal partition", which is a
-region of flash exposed to the OS as /dev/mtd1.  That also stores the
-regulatory domain.  Typically userspace binaries are used to pull out
-this and other data (see
-https://dev.openwrt.org/browser/packages/utils/calvaria/files/src/calvaria.c ) which is then used to initialize the device.
+One thing at a time.
 
-Any idea what kernel driver is used to expose the CAL partition
-as /dev/mtd1?  If it's nothing special maybe a small EEPROM-style driver
-could be written to read the relevant areas (and since they don't ever
-change, don't need to worry about something else writing at the same
-time).
+This patch fixes 'scheduling while atomic' bug that was introduced
+with recent HTC/WMI changes.
 
-Dan
+Multiple wep key handling had the same issue you point out before
+HTC/WMI changes.
+
+To fix the issue you mention we'd need to stop mac80211 queues, queue
+frame(s) with a new key on internal queue, schedule a work. The work
+should set new wep key index, send pending frames from internal queue
+and wake mac80211 queues. This is a bit more complex than it sounds
+though.
 
 
+Michał
