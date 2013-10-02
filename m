@@ -1,67 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:36057 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753170Ab3JHCUK (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:51951 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752562Ab3JBAQb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Oct 2013 22:20:10 -0400
-Date: Mon, 7 Oct 2013 19:13:04 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linville@tuxdriver.com, Alex Dubov <oakad@yahoo.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Kay Sievers <kay.sievers@vrfy.org>
-Subject: Re: [PATCH V2] memstick: Fix memory leak in memstick_check() error
- path
-Message-ID: <20131008021304.GB32733@kroah.com> (sfid-20131008_042027_503797_F89EACA7)
-References: <1380834798-5829-1-git-send-email-Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1380834798-5829-1-git-send-email-Larry.Finger@lwfinger.net>
+	Tue, 1 Oct 2013 20:16:31 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@venema.h4ckr.net, Ben Greear <greearb@candelatech.com>
+Subject: [RFC] ath9k:  Don't let rx tasklet run forever.
+Date: Tue,  1 Oct 2013 17:15:52 -0700
+Message-Id: <1380672952-5749-1-git-send-email-greearb@candelatech.com> (sfid-20131002_021644_800334_4D60495B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Oct 06, 2013 at 10:21:51PM -0500, Larry Finger wrote:
-> With kernel 3.12-rc3, kmemleak reports the following leak:
-> 
-> > unreferenced object 0xffff8800ae85c190 (size 16):
-> >   comm "kworker/u4:3", pid 685, jiffies 4294916336 (age 2831.760s)
-> >   hex dump (first 16 bytes):
-> >     6d 65 6d 73 74 69 63 6b 30 00 00 00 00 00 00 00  memstick0.......
-> >   backtrace:
-> >     [<ffffffff8146a0d1>] kmemleak_alloc+0x21/0x50
-> >     [<ffffffff81160720>] __kmalloc_track_caller+0x160/0x2f0
-> >     [<ffffffff81237b9b>] kvasprintf+0x5b/0x90
-> >     [<ffffffff8122c0c1>] kobject_set_name_vargs+0x21/0x60
-> >     [<ffffffff812e7f5c>] dev_set_name+0x3c/0x40
-> >     [<ffffffffa02bf918>] memstick_check+0xb8/0x340 [memstick]
-> >     [<ffffffff81069862>] process_one_work+0x1d2/0x670
-> >     [<ffffffff8106a88a>] worker_thread+0x11a/0x370
-> >     [<ffffffff81072ea6>] kthread+0xd6/0xe0
-> >     [<ffffffff81478bbc>] ret_from_fork+0x7c/0xb0
-> 
-> This problem was introduced by commit 0252c3b "memstick: struct device -
-> replace bus_id with dev_name(), dev_set_name()" where the name is not freed
-> in the error path. The name is also leaked in memstick_free_card(). 
-> 
-> Thanks to Catalin Marinas for suggesting the fix.
-> 
-> Cc: Kay Sievers <kay.sievers@vrfy.org>
-> Cc: Alex Dubov <oakad@yahoo.com>
-> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
-> 
-> V2 fixes the typos in the commit message, and frees the name in
-> memstick_free_card() as well as the error path in memstick_check().
+From: Ben Greear <greearb@candelatech.com>
 
-Looking back at this, to try to figure out why the kmemleak report shows
-up, shows that this is a mess.  Why would we be erroring out _before_ we
-try to register the struct device with the driver core, yet we had
-already initialized the struct device structure?  Only set up the
-structure right before sending it to driver core, don't delay in
-allocation, only problems can happen (like here.)
+I saw this splat below on a 3.9.11+ kernel system configured to receive
+a UDP flood using wpa2 encryption and software-crypt.  This patch attempts
+to fix this by returning after processing a max of 1000 packets.
 
-To fix this up, will take some major work, which I can't do, sorry, but
-this patch will not work either.
+BUG: soft lockup - CPU#0 stuck for 22s! [btserver:32646]
+Modules linked in: nfsv4 auth_rpcgss nfs fscache nf_nat_ipv4 nf_nat 8021q garp stp mrp llc macvlan wanlink(O) pktgen lockd sunrpc f71882fg snd_hda_codec_hdmi
+snd_hda_codec_realtek snd_hda_intel snd_hda_codec snd_hwdep cdc_acm joydev snd_seq snd_seq_device snd_pcm coretemp ath9k hwmon ath9k_common mperf ath9k_hw
+intel_powerclamp ath kvm_intel mac80211 kvm cfg80211 iTCO_wdt microcode iTCO_vendor_support snd_page_alloc e1000e i2c_i801 snd_timer mos7840 pcspkr serio_raw
+snd soundcore ptp pps_core lpc_ich uinput ipv6 i915 video i2c_algo_bit drm_kms_helper drm i2c_core [last unloaded: iptable_nat]
+CPU 0
+Pid: 32646, comm: btserver Tainted: G         C O 3.9.11+ #126 To be filled by O.E.M. To be filled by O.E.M./HURONRIVER
+RIP: 0010:[<ffffffff81017e1d>]  [<ffffffff81017e1d>] __kernel_fpu_begin+0x48/0x8b
+RSP: 0000:ffff88021fa03918  EFLAGS: 00000286
+RAX: 00000000ffffffff RBX: ffffffff81549567 RCX: ffff88020bc48000
+RDX: 00000000ffffffff RSI: ffff88021fa03a28 RDI: ffff88020f8d5a00
+RBP: ffff88021fa03918 R08: ffff8801b54a1978 R09: 0000000000000010
+R10: ffff88020c5cb490 R11: 0000000000000200 R12: ffff88021fa03888
+R13: ffffffff815d235d R14: ffff88021fa03918 R15: ffff88020c5cb400
+FS:  00007f02f9605740(0000) GS:ffff88021fa00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00000000023b4c60 CR3: 000000020b754000 CR4: 00000000000407f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+Process btserver (pid: 32646, threadinfo ffff880210666000, task ffff88020bc48000)
+Stack:
+  ffff88021fa03928 ffffffff8108b1f2 ffff88021fa03958 ffffffff8108c05d
+  ffff88021fa03a28 ffff88021fa03a28 ffff88020c5c9c00 ffff88021fa03a08
+  ffff88021fa039d8 ffffffffa05be460 ffff880200000010 ffff8801b54a1978
+Call Trace:
+  <IRQ>
+  [<ffffffff8108b1f2>] kernel_fpu_begin+0x42/0x44
+  [<ffffffff8108c05d>] aes_encrypt+0x46/0x62
+  [<ffffffffa05be460>] ieee80211_aes_ccm_decrypt+0xcf/0x108 [mac80211]
+  [<ffffffffa05b1e0f>] ieee80211_crypto_ccmp_decrypt+0x1c7/0x247 [mac80211]
+  [<ffffffffa05c530d>] ieee80211_rx_handlers+0x305/0x18c9 [mac80211]
+  [<ffffffff815d235d>] ? apic_timer_interrupt+0x6d/0x80
+  [<ffffffffa05c71cf>] ieee80211_prepare_and_rx_handle+0x8fe/0x96a [mac80211]
+  [<ffffffffa05c79c4>] ieee80211_rx+0x6e9/0x759 [mac80211]
+  [<ffffffffa08f5f99>] ath_rx_tasklet+0xff8/0x10d1 [ath9k]
+  [<ffffffffa08f43a1>] ath9k_tasklet+0xf9/0x150 [ath9k]
+  [<ffffffff8109d5af>] tasklet_action+0x7d/0xcc
+  [<ffffffff8109da08>] __do_softirq+0x114/0x254
+  [<ffffffff815caf51>] ? _raw_spin_unlock_irqrestore+0x31/0x3c
+  [<ffffffff815caf15>] ? _raw_spin_unlock+0x24/0x2f
+  [<ffffffff8109dbda>] irq_exit+0x4b/0xa8
+  [<ffffffff815d33dd>] do_IRQ+0x9d/0xb4
+  [<ffffffff815cb4ad>] common_interrupt+0x6d/0x6d
+  <EOI>
+Code: 4c 05 00 00 00 00 00 00 65 48 c7 04 25 b0 c6 00 00 00 00 00 00 b0 01 84 c0 48 8b b9 50 05 00 00 74 1b 83 c8 ff 89 c2 48 0f ae 37 <48> 8b 81 50 05 00 00 f6
+80 00 02 00 00 01 75 06 eb 2f 48 0f ae
 
-greg k-h
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/ath/ath9k/recv.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index a1b0ec2..b3511c8 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -1162,6 +1162,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 	u64 tsf = 0;
+ 	u32 tsf_lower = 0;
+ 	unsigned long flags;
++	int max_per_round = 1000; /* max of 1000 per call if not flushing */
+ 
+ 	if (edma)
+ 		dma_type = DMA_BIDIRECTIONAL;
+@@ -1176,6 +1177,11 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 	do {
+ 		bool decrypt_error = false;
+ 
++		if (!flush) {
++			if (--max_per_round == 0)
++				break;
++		}
++
+ 		memset(&rs, 0, sizeof(rs));
+ 		if (edma)
+ 			bf = ath_edma_get_next_rx_buf(sc, &rs, qtype);
+-- 
+1.7.3.4
+
