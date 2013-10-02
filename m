@@ -1,60 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:36647 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752864Ab3JBQHe (ORCPT
+Received: from mail-pb0-f47.google.com ([209.85.160.47]:46291 "EHLO
+	mail-pb0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752923Ab3JBICv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Oct 2013 12:07:34 -0400
-Message-ID: <1380730039.13329.27.camel@jlt4.sipsolutions.net> (sfid-20131002_180737_805065_1463F0D1)
-Subject: Re: [PATCH 2/4] nl80211/cfg80211: enable DFS for IBSS mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Date: Wed, 02 Oct 2013 18:07:19 +0200
-In-Reply-To: <20131002124006.GA23903@pandem0nium>
-References: <1378230201-25446-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1378230201-25446-3-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1380625757.14430.22.camel@jlt4.sipsolutions.net>
-	 <20131002124006.GA23903@pandem0nium>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 2 Oct 2013 04:02:51 -0400
+Received: by mail-pb0-f47.google.com with SMTP id rr4so537620pbb.20
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Oct 2013 01:02:51 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	devel@lists.open80211s.org, distro11s@cozybit.com,
+	Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+Subject: [PATCH v2 0/5] Add Mesh Channel Switch Support
+Date: Wed,  2 Oct 2013 01:02:39 -0700
+Message-Id: <1380700964-844-1-git-send-email-yeohchunyeow@cozybit.com> (sfid-20131002_100256_361794_9DAD3478)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-10-02 at 14:40 +0200, Simon Wunderlich wrote:
+These are the patches required to support Mesh Basic Service Set (MBSS)
+channel switch.
 
-> > > NL80211_ATTR_CONTROL_PORT_DFS attribute when joining the IBSS.
-> > 
-> > I don't like that name, it makes no sense. This has nothing to do with
-> > the port control (802.1X-style) at all.
-> 
-> How about NL80211_ATTR_DFS_CAPABLE instead?
+The design is more or less same with the IBSS. Additional procedures
+or elements that are required for mesh operation are as follow:
+ * Add additional information element (IE) known as Mesh Channel Switch
+   Parameters (MCSP) required in CSA action, beacon and probe response 
+   frames.
+ * Forwarding of CSA frame if the conditions defined in the standard 
+   are met.
 
-That seems also confusing, like a hardware capability or something...
+Limitations:
+ * Channel switch is only allow for the same band and also same channel
+   width from the previous setting.
 
-Maybe rather "NL80211_ATTR_HANDLE_DFS" or something?
+These patches are reviewed and commented by Bob Copeland, Thomas Pedersen
+and Johannes Berg. Any further comments are welcomed.
 
-> Yeah, I should document this a little more: Userspace should react to
-> radar events and apprioately switch the channel when this happens. As
-> non-capable tools (like wpa_supplicant in it's current state) do not
-> react on radar events but might select DFS channels when available, there
-> might be non-conforming behaviour. Therefore I'm introducing this flag.
-> 
-> Userspace programs are supposed to set this flag when they have channel
-> management and radar avoidance/channel change functionality is implemented
-> to unlock DFS channels.
+Chun-Yeow Yeoh (5):
+  mac80211: process the CSA frame for mesh accordingly
+  {nl,cfg,mac}80211: enable the triggering of CSA frame in mesh
+  mac80211: add the CSA and MCSP elements in mesh beaconing
+  {nl,cfg,mac}80211: finalizing mesh channel switching
+  mac80211: process mesh channel switching using beacon
 
-I think we may we want some safeguard, e.g. only give the userspace a
-second or so to react and tear down the IBSS otherwise? Even with
-userspace that is capable of handling it, it could have crashed and the
-IBSS will continue operating in that case since we don't tear down the
-IBSS when it crashes. Or we could do that, require userspace to keep the
-nl80211 socket open, but the timing seems easier?
+ include/linux/ieee80211.h  |   20 +++
+ include/net/cfg80211.h     |    4 +
+ net/mac80211/Kconfig       |   11 ++
+ net/mac80211/cfg.c         |   24 ++++
+ net/mac80211/debug.h       |   10 ++
+ net/mac80211/ibss.c        |   60 +--------
+ net/mac80211/ieee80211_i.h |   21 +++-
+ net/mac80211/mesh.c        |  289 +++++++++++++++++++++++++++++++++++++++++++-
+ net/mac80211/mlme.c        |   30 +++--
+ net/mac80211/rx.c          |    5 +-
+ net/mac80211/spectmgmt.c   |   33 +++--
+ net/mac80211/tx.c          |   16 +++
+ net/mac80211/util.c        |   96 +++++++++++++++
+ net/wireless/nl80211.c     |    4 +-
+ 14 files changed, 526 insertions(+), 97 deletions(-)
 
-> I can resend the patchset with some more documentation on this.
-
-Thanks.
-
-johannes
+-- 
+1.7.9.5
 
