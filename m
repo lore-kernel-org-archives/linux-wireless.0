@@ -1,55 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:14375 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934252Ab3JPNbs (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:35325 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752917Ab3JBJBB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Oct 2013 09:31:48 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 6/7] ath10k: fix device initialization routine
-References: <1381858196-17000-1-git-send-email-michal.kazior@tieto.com>
-	<1381858196-17000-7-git-send-email-michal.kazior@tieto.com>
-Date: Wed, 16 Oct 2013 16:31:42 +0300
-In-Reply-To: <1381858196-17000-7-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Tue, 15 Oct 2013 10:29:55 -0700")
-Message-ID: <877gdd735t.fsf@kamboji.qca.qualcomm.com> (sfid-20131016_153159_274520_2BF48697)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 2 Oct 2013 05:01:01 -0400
+Message-ID: <1380704456.13329.8.camel@jlt4.sipsolutions.net> (sfid-20131002_110105_703788_84938009)
+Subject: Re: [PATCH] cfg80211: Pass station supported channel and oper class
+ info to kernel
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sunil Dutt <c_duttus@qti.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, j@w1.fi
+Date: Wed, 02 Oct 2013 11:00:56 +0200
+In-Reply-To: <1377582278-3768-1-git-send-email-c_duttus@qti.qualcomm.com>
+References: <1377582278-3768-1-git-send-email-c_duttus@qti.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+On Tue, 2013-08-27 at 11:14 +0530, Sunil Dutt wrote:
 
-> Hardware revision 2 does not support cold reset
-> correctly. As such it would sometimes lead to host
-> machine freeze or data bus errors.
->
-> The patch introduces warm reset function which is
-> used instead of the cold reset one. It also moves
-> the reset before interrupts are being set up to
-> prevent any kind of spurious interrupts from being
-> handled.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> +	if (info->attrs[NL80211_ATTR_STA_SUPPORTED_CHANNELS]) {
+> +		params->supported_channels =
+> +		     nla_data(info->attrs[NL80211_ATTR_STA_SUPPORTED_CHANNELS]);
+> +		params->supported_channels_len =
+> +		     nla_len(info->attrs[NL80211_ATTR_STA_SUPPORTED_CHANNELS]);
 
-[...]
+It seems you should validate that the length is even, and at least 2?
 
-> +	/* reset CE */
-> +	addr = ar_pci->mem + RTC_SOC_BASE_ADDRESS + SOC_RESET_CONTROL_ADDRESS;
-> +	val = ioread32(addr);
-> +	val |= SOC_RESET_CONTROL_CE_RST_MASK;
-> +	iowrite32(val, addr);
-> +	val = ioread32(addr);
-> +	msleep(10);
-> +
-> +	/* unreset CE */
-> +	val &= ~SOC_RESET_CONTROL_CE_RST_MASK, addr;
-> +	iowrite32(val, addr);
+> +	if (info->attrs[NL80211_ATTR_STA_SUPPORTED_OPER_CLASSES]) {
+> +		params->supported_oper_classes =
+> +		 nla_data(info->attrs[NL80211_ATTR_STA_SUPPORTED_OPER_CLASSES]);
+> +		params->supported_oper_classes_len =
+> +		  nla_len(info->attrs[NL80211_ATTR_STA_SUPPORTED_OPER_CLASSES]);
 
-This looks wrong, I assume it was supposed to be this:
+Similarly here (with different rules)
 
-val &= ~SOC_RESET_CONTROL_CE_RST_MASK;
+Does this even make sense in set_station() rather than only
+new_station()?
 
--- 
-Kalle Valo
+johannes
+
