@@ -1,49 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:56191 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753106Ab3JGI3b (ORCPT
+Received: from mail-ea0-f178.google.com ([209.85.215.178]:62231 "EHLO
+	mail-ea0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751374Ab3JCX0n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Oct 2013 04:29:31 -0400
-Message-ID: <1381134567.13586.3.camel@jlt4.sipsolutions.net> (sfid-20131007_102934_686779_457D9E72)
-Subject: Re: [PATCH 2/2] mac80211: implement support for configuring antenna
- gain
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 07 Oct 2013 10:29:27 +0200
-In-Reply-To: <524FF599.5040706@openwrt.org>
-References: <1378472763-36062-1-git-send-email-nbd@openwrt.org>
-	   <1378472763-36062-2-git-send-email-nbd@openwrt.org>
-	  <1380625512.14430.19.camel@jlt4.sipsolutions.net>
-	  <524AAE97.5020708@openwrt.org>
-	 <1380628244.14430.37.camel@jlt4.sipsolutions.net>
-	 <524FF599.5040706@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 3 Oct 2013 19:26:43 -0400
+Received: by mail-ea0-f178.google.com with SMTP id a15so1429136eae.9
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Oct 2013 16:26:42 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <477F20668A386D41ADCC57781B1F70430F451FB266@SC-VEXCH1.marvell.com>
+References: <1380824600-13655-1-git-send-email-bzhao@marvell.com>
+	<CAJdJm_N1=a7URKmU8xOsOzOaYHKQdNXiR7VryeOc4+i2uf7RqQ@mail.gmail.com>
+	<477F20668A386D41ADCC57781B1F70430F451FB266@SC-VEXCH1.marvell.com>
+Date: Thu, 3 Oct 2013 19:26:41 -0400
+Message-ID: <CAJdJm_NJe-wrAHFgrGP5ytMxfgP0RREJCqnE9L=hAbVXbNqFdQ@mail.gmail.com> (sfid-20131004_012656_451074_95A4C154)
+Subject: Re: [PATCH] Bluetooth: btmrvl: operate on 16-bit opcodes instead of ogf/ocf
+From: Anderson Lizardo <anderson.lizardo@openbossa.org>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: BlueZ development <linux-bluetooth@vger.kernel.org>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Gustavo Padovan <gustavo@padovan.org>,
+	Johan Hedberg <johan.hedberg@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2013-10-05 at 13:18 +0200, Felix Fietkau wrote:
+Hi Bing,
 
-> > I understand. I don't understand the pieces about "max_antenna_gain".
+On Thu, Oct 3, 2013 at 5:06 PM, Bing Zhao <bzhao@marvell.com> wrote:
+>> >         hdr = (struct hci_command_hdr *)skb_put(skb, HCI_COMMAND_HDR_SIZE);
+>> > -       hdr->opcode = cpu_to_le16(hci_opcode_pack(OGF, cmd_no));
+>> > +       hdr->opcode = cpu_to_le16(opcode);
+>>
+>> Are you sure the callers of btmrvl_send_sync_cmd() do not need to be
+>> changed to pass an opcode instead of just the OCF?
+>
+> Previously we pass the cmd_no which is the OCF bits to the function, and the function packs it to opcode.
+>
+> Now I changed the macros of the cmd_no from OCF to opcode as shown below, so no change to the callers.
+>
+> -/* Bluetooth commands  */
+> -#define BT_CMD_AUTO_SLEEP_MODE         0x23
+> -#define BT_CMD_HOST_SLEEP_CONFIG       0x59
+> -#define BT_CMD_HOST_SLEEP_ENABLE       0x5A
+> -#define BT_CMD_MODULE_CFG_REQ          0x5B
+> -#define BT_CMD_LOAD_CONFIG_DATA                0x61
+> +/* Vendor specific Bluetooth commands */
+> +#define BT_CMD_AUTO_SLEEP_MODE         0xFC23
+> +#define BT_CMD_HOST_SLEEP_CONFIG       0xFC59
+> +#define BT_CMD_HOST_SLEEP_ENABLE       0xFC5A
+> +#define BT_CMD_MODULE_CFG_REQ          0xFC5B
+> +#define BT_CMD_LOAD_CONFIG_DATA                0xFC61
 
-> Right now ath9k has an antenna gain value in the EEPROM, and it compares
-> it against the channel max_antenna_gain value.
+Now I got it :)
 
-I just don't understand what the max means. If I connect a 5dBi gain
-antenna, but the "max antenna gain" is 3dBi, what should happen?
-
-> Let's assume we have configured the tx power to the maximum value, the
-> regdb allows 3 dB antenna gain, and the ath9k EEPROM contains an antenna
-> gain of 3 dB as well.
-> If we now add another 3 dB of user-configured antenna gain, it first
-> starts tapping into the regulatory-allowed antenna gain before reducing
-> tx power in mac80211. The driver needs to know about this, so I put the
-> calculated maximum antenna gain into the hw conf as well.
-
-I don't think it really works this way, does it? I don't believe the
-"regulatory-allowed antenna gain" is really something that's allowed on
-top of the EIRP?
-
-johannes
-
+Best Regards,
+-- 
+Anderson Lizardo
+Instituto Nokia de Tecnologia - INdT
+Manaus - Brazil
