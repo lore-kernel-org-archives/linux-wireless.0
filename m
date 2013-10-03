@@ -1,70 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:60170 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762214Ab3JQRqW (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:48429 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752216Ab3JCXUD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Oct 2013 13:46:22 -0400
-From: "Chauhan, Rajesh" <rajeshc@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Rodriguez, Luis" <rodrigue@qca.qualcomm.com>,
-	"Malinen, Jouni" <jouni@qca.qualcomm.com>,
-	"Bahini, Henri" <hbahini@qca.qualcomm.com>,
-	"Chang, Leo" <schang@qca.qualcomm.com>,
-	"Luo, Xun" <xunl@qca.qualcomm.com>,
-	"Chauhan, Rajesh" <rajeshc@qca.qualcomm.com>
-Subject: RE: [PATCH] cfg80211/nl80211: Add support to report unsafe
- frequency ranges(s)
-Date: Thu, 17 Oct 2013 17:46:20 +0000
-Message-ID: <D19FD2B13A40CD4B8DA64DB9B8F112E9218DAD14@nasanexd01a.na.qualcomm.com> (sfid-20131017_194636_004811_4E9A1171)
-References: <1381985833-31312-1-git-send-email-rajeshc@qca.qualcomm.com>
- <1382020835.14410.16.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+	Thu, 3 Oct 2013 19:20:03 -0400
+Message-ID: <524DFB9B.7010205@candelatech.com> (sfid-20131004_012014_993748_1DA7F82A)
+Date: Thu, 03 Oct 2013 16:19:55 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
+To: Rick Jones <rick.jones2@hp.com>
+CC: netdev <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Ideas on why using WPA2 encryption speeds up many TCP connections?
+References: <524DB6F6.6020405@candelatech.com> <524DBC93.1070400@hp.com> <524DC2B8.905@candelatech.com>
+In-Reply-To: <524DC2B8.905@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSm9oYW5uZXMsDQoNCkxldCBtZSBhbHNvIHJlcGxhY2UgU0FQIHdpdGggU29mdEFQLg0KDQpT
-byBub3cgY29tbWl0IHRleHQgd291bGQgYmU6DQoNCmNmZzgwMjExL25sODAyMTE6IEFkZCBBUEkg
-dG8gcmVwb3J0IGZyZXF1ZW5jeSByYW5nZShzKSB0byBiZSBhdm9pZGVkDQoNCkFkZCBzdXBwb3J0
-IGZvciBXTEFOIGRyaXZlciB0byByZXBvcnQgZnJlcXVlbmN5IHJhbmdlKHMpIHRvIGJlIGF2b2lk
-ZWQgYmVjYXVzZSBvZiBpbnRlcmZlcmVuY2UuIElmIFNvZnRBUC9QMlAtR08gaXMgb3BlcmF0aW5n
-IG9uIGludGVyZmVyaW5nIGZyZXF1ZW5jeSB0aGVuIHVzZXIgc3BhY2Ugc2hvdWxkIHN0b3AgYW5k
-IHJlc3RhcnQgdGhlbSBhdm9pZGluZyBpbnRlcmZlcmluZyBmcmVxdWVuY3kgcmFuZ2UocykuIFVz
-ZXIgc3BhY2UgbWF5IGRlY2lkZSB0byBjb250aW51ZSBvcGVyYXRpb24gb24gaW50ZXJmZXJpbmcg
-ZnJlcXVlbmN5LCBidXQgaW4gc3VjaCBjYXNlLCB0aGVyZSBtaWdodCBiZSBpbXBhY3Qgb24gcGVy
-Zm9ybWFuY2UuDQoNClJlZ2FyZHMsDQpSYWplc2ggQ2hhdWhhbg0KDQoNCi0tLS0tT3JpZ2luYWwg
-TWVzc2FnZS0tLS0tDQpGcm9tOiBDaGF1aGFuLCBSYWplc2ggDQpTZW50OiBUaHVyc2RheSwgT2N0
-b2JlciAxNywgMjAxMyAxMDoyMCBBTQ0KVG86ICdKb2hhbm5lcyBCZXJnJw0KQ2M6IGxpbnV4LXdp
-cmVsZXNzQHZnZXIua2VybmVsLm9yZzsgUm9kcmlndWV6LCBMdWlzOyBNYWxpbmVuLCBKb3VuaTsg
-QmFoaW5pLCBIZW5yaTsgQ2hhbmcsIExlbzsgTHVvLCBYdW47IENoYXVoYW4sIFJhamVzaA0KU3Vi
-amVjdDogUkU6IFtQQVRDSF0gY2ZnODAyMTEvbmw4MDIxMTogQWRkIHN1cHBvcnQgdG8gcmVwb3J0
-IHVuc2FmZSBmcmVxdWVuY3kgcmFuZ2VzKHMpDQoNCkhpIEpvaGFubmVzLA0KDQpUaGFua3MgZm9y
-IHlvdXIgY29tbWVudC4gUHVycG9zZSBvZiB0aGlzIHBhdGNoIGlzIHRvIGFkZCBhbiBBUEkgZm9y
-IFdMQU4gZHJpdmVyIHRvIHJlcG9ydCBmcmVxdWVuY3kgcmFuZ2VzIHdoaWNoIHNob3VsZCBiZSBh
-dm9pZGVkIGZvciBTQVAvUDJQLUdPIGJlY2F1c2Ugb2YgaW50ZXJmZXJlbmNlLg0KDQpIb3cgYWJv
-dXQgaWYgSSByZXdvcmQgY29tbWl0IHRlc3QgYXMgYmVsb3c/DQoNCmNmZzgwMjExL25sODAyMTE6
-IEFkZCBBUEkgdG8gcmVwb3J0IGZyZXF1ZW5jeSByYW5nZShzKSB0byBiZSBhdm9pZGVkDQoNCkFk
-ZCBzdXBwb3J0IGZvciBXTEFOIGRyaXZlciB0byByZXBvcnQgZnJlcXVlbmN5IHJhbmdlKHMpIHRv
-IGJlIGF2b2lkZWQgYmVjYXVzZSBvZiBpbnRlcmZlcmVuY2UuIElmIFNBUC9QMlAtR08gaXMgb3Bl
-cmF0aW5nIG9uIGludGVyZmVyaW5nIGZyZXF1ZW5jeSB0aGVuIHVzZXIgc3BhY2Ugc2hvdWxkIHN0
-b3AgYW5kIHJlc3RhcnQgdGhlbSBhdm9pZGluZyBpbnRlcmZlcmluZyBmcmVxdWVuY3kgcmFuZ2Uo
-cykuIFVzZXIgc3BhY2UgbWF5IGRlY2lkZSB0byBjb250aW51ZSBvcGVyYXRpb24gb24gaW50ZXJm
-ZXJpbmcgZnJlcXVlbmN5LCBidXQgaW4gc3VjaCBjYXNlLCB0aGVyZSBtaWdodCBiZSBpbXBhY3Qg
-b24gcGVyZm9ybWFuY2UuDQoNClJlZ2FyZHMsDQpSYWplc2ggQ2hhdWhhbg0KDQoNCi0tLS0tT3Jp
-Z2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBKb2hhbm5lcyBCZXJnIFttYWlsdG86am9oYW5uZXNA
-c2lwc29sdXRpb25zLm5ldF0NClNlbnQ6IFRodXJzZGF5LCBPY3RvYmVyIDE3LCAyMDEzIDc6NDEg
-QU0NClRvOiBDaGF1aGFuLCBSYWplc2gNCkNjOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5v
-cmc7IFJvZHJpZ3VleiwgTHVpczsgTWFsaW5lbiwgSm91bmkNClN1YmplY3Q6IFJlOiBbUEFUQ0hd
-IGNmZzgwMjExL25sODAyMTE6IEFkZCBzdXBwb3J0IHRvIHJlcG9ydCB1bnNhZmUgZnJlcXVlbmN5
-IHJhbmdlcyhzKQ0KDQpPbiBXZWQsIDIwMTMtMTAtMTYgYXQgMjE6NTcgLTA3MDAsIFJhamVzaCBD
-aGF1aGFuIHdyb3RlOg0KPiBBZGQgc3VwcG9ydCBmb3IgV0xBTiBkcml2ZXIgdG8gcmVwb3J0IHVu
-c2FmZSBmcmVxdWVuY3kgcmFuZ2UocykuIA0KDQpXaHk/DQoNCj4gVXNlcg0KPiBzcGFjZSBzaG91
-bGQgbW92ZSBTQVAvUDJQLUdPIG91dCBvZiB0aG9zZSB1bnNhZmUgZnJlcXVlbmN5IHJhbmdlKHMp
-Lg0KPiBVc2VyIHNwYWNlIG1heSBkZWNpZGUgdG8gY29udGludWUgb3BlcmF0aW9uIG9uIHVuc2Fm
-ZSBmcmVxdWVuY3kgYnV0IGluIA0KPiBzdWNoIGNhc2UgdGhlcmUgbWlnaHQgYmUgaW1wYWN0IG9u
-IHBlcmZvcm1hbmNlIGJlY2F1c2Ugb2YgaW50ZXJmZXJlbmNlLg0KDQpTQVA/IEkgZG9uJ3QgdGhp
-bmsgU0FQIHdpbGwgbW92ZSAtIHRoZXkncmUgcHJldHR5IHN0dWNrIGluIFdhbGxkb3JmIDpQDQoN
-ClRoaXMgaXMgcHJldHR5IHN0cmFuZ2UgcGF0Y2gsIGFuZCB2ZXJ5IGxpdHRsZSBqdXN0aWZpY2F0
-aW9uLg0KDQoiVW5zYWZlIiBpcyBhbHNvIGEgcmVhbGx5IGJhZCB3b3JkLg0KDQpqb2hhbm5lcw0K
-DQo=
+I was seeing an un-expectedly bad wifi train rates, so I changed to ath9k-rate-control,
+rebooted, and re-ran the tests.  Throughput is much improved.  I really hope it wasn't just
+a reboot that fixed it, but too burned out to do more tests today.
+
+I still see better TCP throughput with WPA2 when using 25-200 stations/streams.
+
+For anyone who wants to wade through some big automated reports, see the links
+near the top of this page (suggestions for improving those reports are welcome):
+
+http://www.candelatech.com/lf_wifi_examples.php
+
+(The 600 station reports are a bit dated and were done in a fairly busy
+  wifi environment.  We'll re-run those sometime soon-ish.)
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
