@@ -1,91 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f43.google.com ([74.125.83.43]:46122 "EHLO
-	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756788Ab3J1S1Y (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:57776 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754562Ab3JCTRU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Oct 2013 14:27:24 -0400
-Received: by mail-ee0-f43.google.com with SMTP id b47so2166861eek.16
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Oct 2013 11:27:23 -0700 (PDT)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	Marek Puzyniak <marek.puzyniak@tieto.com>
-Subject: [PATCH 5/5] cfg80211: fix dfs channel state after stopping AP
-Date: Mon, 28 Oct 2013 19:27:04 +0100
-Message-Id: <1382984824-3729-5-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131028_192729_907667_8CF156CB)
-In-Reply-To: <1382984824-3729-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1382984824-3729-1-git-send-email-janusz.dziedzic@tieto.com>
+	Thu, 3 Oct 2013 15:17:20 -0400
+Message-ID: <524DC2B8.905@candelatech.com> (sfid-20131003_211728_251865_3C466687)
+Date: Thu, 03 Oct 2013 12:17:12 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Rick Jones <rick.jones2@hp.com>
+CC: netdev <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Ideas on why using WPA2 encryption speeds up many TCP connections?
+References: <524DB6F6.6020405@candelatech.com> <524DBC93.1070400@hp.com>
+In-Reply-To: <524DBC93.1070400@hp.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Marek Puzyniak <marek.puzyniak@tieto.com>
+On 10/03/2013 11:50 AM, Rick Jones wrote:
+> On 10/03/2013 11:27 AM, Ben Greear wrote:
+>> I'm seeing something a bit strange and wondering if anyone had an
+>> opinion on why...
+>>
+>> I am testing up to 200 wifi station systems, each with a TCP connection
+>> running on them (download only, from VAP to stations).
+>>
+>> Without encryption (ie, open network), I see total throughput go from
+>> about 108Mbps down to 69Mbps as I add more stations (I add 25 at a time,
+>> so the 108Mbps is with 25 active, and 69Mbps is with 200 active).
+>>
+>> However, if I enable encryption, the throughput is actually higher
+>> (111Mbps to 71Mbps).  I'm doing encryption in software, so it adds a fair
+>> bit of CPU load in this test.  The numbers bounce around since this is
+>> wifi after all, but in general encryption tends to win reliably in this
+>> test.
+>>
+>> When testing with a single station (and 5 tcp streams with jacked up
+>> snd/rcv buffers) the open networks perform significantly better at total throughput:
+>> 263Mbps vs 246Mbps.
+>>
+>> Maybe the extra delay for decryption increases odds that GRO will take
+>> affect for the many, slower streams (and maybe that will decrease ACK
+>> traffic?)
+>>
+>> Any other ideas?
+>
+> Fewer times two or more stations step on one another?  The recievers will only try to transmit when they receive data.  Modulo timing, if the individual
+> downloads are a bit slower, less chance of the receivers looking to send ACKs back through at the same time?  Got any low-level stats for the health and well
+> being of the wireless network?
 
-This can be called when a mode of operation that can supports
-initiating radiation on a DFS channel leaves that channel to
-ensure that if the mode of operation is started again on it
-that it will require a new channel availability check.
+The tcp connection stats are taken after running for 60 seconds, and I take 3-sec running averages
+as well as 60 second averages.  So, I think that it would have to be total decrease in ACKs,
+not just timing, to make a difference.  The 3 and 60 second stats show consistently higher throughput
+with encryption when using 25+ stations/connections.
 
-Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
-Reviewed-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- include/net/cfg80211.h |   10 ++++++++++
- net/mac80211/cfg.c     |    6 ++++++
- net/wireless/mlme.c    |    7 +++++++
- 3 files changed, 23 insertions(+)
+Also, it works out that the sending sockets all sort of send randomly as they
+are able, so I don't think there would be any particular ACK flood seen..
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 8b52fcb..cc1ba48 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -4135,6 +4135,16 @@ void cfg80211_cac_event(struct net_device *netdev,
- 			struct cfg80211_chan_def *chandef,
- 			enum nl80211_radar_event event, gfp_t gfp);
- 
-+/**
-+ * cfg80211_leave_dfs_channel - Leaving dfs channel
-+ * @wiphy: the wiphy
-+ * @chandef: chandef for the current channel
-+ *
-+ * This function is called when dfs channel is being not used for diffrent
-+ * reasons. Make channel DFS USABLE again.
-+ */
-+void cfg80211_leave_dfs_channel(struct wiphy *wiphy,
-+				struct cfg80211_chan_def *chandef);
- 
- /**
-  * cfg80211_cqm_pktloss_notify - notify userspace about packetloss to peer
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 5690d21..10778ae 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1096,6 +1096,12 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
- 		cfg80211_cac_event(sdata->dev, &chandef,
- 				   NL80211_RADAR_CAC_ABORTED,
- 				   GFP_KERNEL);
-+	} else if (sdata->radar_required) {
-+		/*
-+		 * AP stopped on DFS channel so change that channel state
-+		 * to NL80211_DFS_USABLE again.
-+		 */
-+		cfg80211_leave_dfs_channel(wiphy, &sdata->vif.bss_conf.chandef);
- 	}
- 
- 	drv_stop_ap(sdata->local, sdata);
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index a50c27b..c75b1d3 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -797,3 +797,10 @@ void cfg80211_cac_event(struct net_device *netdev,
- 	nl80211_radar_notify(rdev, chandef, event, netdev, gfp);
- }
- EXPORT_SYMBOL(cfg80211_cac_event);
-+
-+void cfg80211_leave_dfs_channel(struct wiphy *wiphy,
-+				struct cfg80211_chan_def *chandef)
-+{
-+	cfg80211_set_dfs_state(wiphy, chandef, NL80211_DFS_USABLE);
-+}
-+EXPORT_SYMBOL(cfg80211_leave_dfs_channel);
+I have great quantities of low level stats, but I have not dug into them in detail
+just yet.  In general, my RF environment in this test is fairly controlled, as
+I am cabling the systems using good semi-rigid SMA cables and an RF attenuator.
+There will be some external interference of course, as they are not in an
+isolation chamber.
+
+
+As for the difference in 1 stations vs 25+, then it is very likely related to
+low level things like MPDU working better with a single station, and probably
+better ACK avoidance (I recall about 20kpps download, 4kpps upload in a previous
+test with a single station, which indicates to me we must not be acking every
+packet-on-the-air..somehow).
+
+(For grins, I played with the delayed-ack-segs from an out-of-tree patch and
+can get TCP throughput up to 300Mbps by setting delayed ack segs to 64 in
+single station/5 stream, open network test).
+
+Thanks,
+Ben
+
+>
+> rick jones
+
+
 -- 
-1.7.9.5
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
