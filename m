@@ -1,79 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.150]:45742 "EHLO
-	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752090Ab3JIV36 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Oct 2013 17:29:58 -0400
-Received: from /spool/local
-	by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-wireless@vger.kernel.org> from <paulmck@linux.vnet.ibm.com>;
-	Wed, 9 Oct 2013 15:29:57 -0600
-From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
-To: linux-kernel@vger.kernel.org
-Cc: mingo@kernel.org, laijs@cn.fujitsu.com, dipankar@in.ibm.com,
-	akpm@linux-foundation.org, mathieu.desnoyers@efficios.com,
-	josh@joshtriplett.org, niv@us.ibm.com, tglx@linutronix.de,
-	peterz@infradead.org, rostedt@goodmis.org, dhowells@redhat.com,
-	edumazet@google.com, darren@dvhart.com, fweisbec@gmail.com,
-	sbw@mit.edu, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH v2 tip/core/rcu 10/13] mac80211: Apply rcu_access_pointer() to avoid sparse false positive
-Date: Wed,  9 Oct 2013 14:29:43 -0700
-Message-Id: <1381354186-16285-10-git-send-email-paulmck@linux.vnet.ibm.com> (sfid-20131009_233336_912133_0987DAAC)
-In-Reply-To: <1381354186-16285-1-git-send-email-paulmck@linux.vnet.ibm.com>
-References: <20131009212920.GA15413@linux.vnet.ibm.com>
- <1381354186-16285-1-git-send-email-paulmck@linux.vnet.ibm.com>
+Received: from mail.gw90.de ([188.40.100.199]:49003 "EHLO mail.gw90.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753895Ab3JCJPE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Oct 2013 05:15:04 -0400
+Message-ID: <1380789509.8125.6.camel@mattotaupa> (sfid-20131003_111509_402548_B6F144BD)
+Subject: Re: [rt2x00-users] [PATCH 1/2] rt2x00: rt2800lib: remove
+ TXMIXER_GAIN entries from the extended EEPROM map
+From: Paul Menzel <paulepanter@users.sourceforge.net>
+To: Gabor Juhos <juhosg@openwrt.org>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Date: Thu, 03 Oct 2013 10:38:29 +0200
+In-Reply-To: <1380742914-22486-1-git-send-email-juhosg@openwrt.org>
+References: <1380742914-22486-1-git-send-email-juhosg@openwrt.org>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
+	boundary="=-3WxOhD5TtncOSd+a5sGt"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
 
-The sparse checking for rcu_assign_pointer() was recently upgraded
-to reject non-__kernel address spaces.  This also rejects __rcu,
-which is almost always the right thing to do.  However, the uses in
-sta_info_hash_del() are legitimate: They are assigning a pointer to an
-element from an RCU-protected list, and all elements of this list are
-already visible to caller.
+--=-3WxOhD5TtncOSd+a5sGt
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-This commit therefore silences this false positive by laundering the
-pointer using rcu_access_pointer() as suggested by Josh Triplett.
+Dear Gabor,
 
-Reported-by: kbuild test robot <fengguang.wu@intel.com>
-Signed-off-by: Paul E. McKenney <paulmck@linux.vnet.ibm.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
----
- net/mac80211/sta_info.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index aeb967a0aeed..d18ab89a5725 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -75,7 +75,7 @@ static int sta_info_hash_del(struct ieee80211_local *local,
- 		return -ENOENT;
- 	if (s == sta) {
- 		rcu_assign_pointer(local->sta_hash[STA_HASH(sta->sta.addr)],
--				   s->hnext);
-+				   rcu_access_pointer(s->hnext));
- 		return 0;
- 	}
- 
-@@ -84,7 +84,7 @@ static int sta_info_hash_del(struct ieee80211_local *local,
- 		s = rcu_dereference_protected(s->hnext,
- 					lockdep_is_held(&local->sta_mtx));
- 	if (rcu_access_pointer(s->hnext)) {
--		rcu_assign_pointer(s->hnext, sta->hnext);
-+		rcu_assign_pointer(s->hnext, rcu_access_pointer(sta->hnext));
- 		return 0;
- 	}
- 
--- 
-1.8.1.5
+thank you for the patch!
+
+
+Am Mittwoch, den 02.10.2013, 21:41 +0200 schrieb Gabor Juhos:
+> The comments are indicating the TXMIXER_GAIN_BG and
+> the TXMIXED_GAIN_A entries are overlapping with the
+
+(I think if you use =C2=BBthe=C2=AB twice, it is just singular =C2=BBentry=
+=C2=AB.)
+
+> RSSI_BG2 and RSSI_A2 entries in the extended EEPROM
+> map. This is not correct, becuase the upper byte of
+
+bec*au*se
+
+> the RSSI_BG2 and RSSI_A2 entries are reserved. There
+> are no TX mixer gain values are stored at all in the
+> extended EEPROM.
+>=20
+> Remove the initialization of these entries from the
+> extended EEPROM map to reflect this.
+>=20
+> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+> ---
+>  drivers/net/wireless/rt2x00/rt2800lib.c |    2 --
+>  1 file changed, 2 deletions(-)
+>=20
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wirele=
+ss/rt2x00/rt2800lib.c
+> index c706ddc..c979bb7 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -280,10 +280,8 @@ static const unsigned int rt2800_eeprom_map_ext[EEPR=
+OM_WORD_COUNT] =3D {
+>  	[EEPROM_RSSI_BG]		=3D 0x0028,
+>  	[EEPROM_TXPOWER_DELTA]		=3D 0x0028, /* Overlaps with RSSI_BG */
+>  	[EEPROM_RSSI_BG2]		=3D 0x0029,
+> -	[EEPROM_TXMIXER_GAIN_BG]	=3D 0x0029, /* Overlaps with RSSI_BG2 */
+>  	[EEPROM_RSSI_A]			=3D 0x002a,
+>  	[EEPROM_RSSI_A2]		=3D 0x002b,
+> -	[EEPROM_TXMIXER_GAIN_A]		=3D 0x002b, /* Overlaps with RSSI_A2 */
+>  	[EEPROM_TXPOWER_BG1]		=3D 0x0030,
+>  	[EEPROM_TXPOWER_BG2]		=3D 0x0037,
+>  	[EEPROM_EXT_TXPOWER_BG3]	=3D 0x003e,
+
+Do you know if this fixes any problems and should be backported to
+stable? If any testing can be done on
+
+        idVendor           0x148f Ralink Technology, Corp.
+        idProduct          0x2870 RT2870 Wireless Adapter
+
+please tell me.
+
+With the fixes above,
+
+Acked-by: Paul Menzel <paulepanter@users.sourceforge.net>
+
+
+Thanks,
+
+Paul
+
+--=-3WxOhD5TtncOSd+a5sGt
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+
+iEYEABECAAYFAlJNLQYACgkQPX1aK2wOHVjuAACdEU1nB85jdHS3HnPwpxl6SpMu
+N5UAniwjUkhe6bHBLTfBVMdChL2w7+IK
+=dzQC
+-----END PGP SIGNATURE-----
+
+--=-3WxOhD5TtncOSd+a5sGt--
 
