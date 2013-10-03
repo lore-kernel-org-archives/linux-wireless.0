@@ -1,43 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:44639 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751339Ab3JINkn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Oct 2013 09:40:43 -0400
-Received: by mail-lb0-f174.google.com with SMTP id w6so775447lbh.19
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Oct 2013 06:40:42 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20131009132429.GA1265@redhat.com>
-References: <20131009132429.GA1265@redhat.com>
-Date: Wed, 9 Oct 2013 16:40:41 +0300
-Message-ID: <CANUX_P1_nOFS8EY05vu3A+1G5gG5eamWMAu-Pd=X=bvTowSj2Q@mail.gmail.com> (sfid-20131009_154046_906553_4295B75B)
-Subject: Re: [PATCH] iwlwifi: don't WARN on bad firmware state
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: "ilw@linux.intel.com" <ilw@linux.intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from arrakis.dune.hu ([78.24.191.176]:44138 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752299Ab3JCMHI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Oct 2013 08:07:08 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Paul Menzel <paulepanter@users.sourceforge.net>,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v2 1/2] rt2x00: rt2800lib: remove TXMIXER_GAIN entries from the extended EEPROM map
+Date: Thu,  3 Oct 2013 14:07:01 +0200
+Message-Id: <1380802022-28646-1-git-send-email-juhosg@openwrt.org> (sfid-20131003_140713_106360_03864220)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 9, 2013 at 4:24 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> When we restart firmware and it is marked as not alive, we can still get
-> calls from mac80211. Don't WARN on in this situation as this triggers
-> automatic bug reports with no valuable information.
->
-> This continuation of:
->
-> commit 8ca95995e64f5d270889badb3e449dca91106a2b
-> Author: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> Date:   Sun Sep 15 11:37:17 2013 +0300
->
->     iwlwifi: don't WARN on host commands sent when firmware is dead
->
-> which remove WARN_ONCE from one place, but those warnings are also
-> triggered from other functions.
->
-> Patch also adds unlikely() statement.
->
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+The comments are indicating that the TXMIXER_GAIN_BG
+and TXMIXED_GAIN_A entries are overlapping with the
+RSSI_BG2 and RSSI_A2 entries in the extended EEPROM
+map. This is not correct, because the upper byte of
+the RSSI_BG2 and RSSI_A2 entries are reserved. There
+are no TX mixer gain values are stored at all in the
+extended EEPROM.
 
-I picked it up. Thanks.
+Remove the initialization of these entries from the
+extended EEPROM map to reflect this.
+
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Acked-by: Paul Menzel <paulepanter@users.sourceforge.net>
+---
+Changes since v1:
+  - improve commit message and fix a typo
+  - add Paul's Acked-by tag
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |    2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index c706ddc..c979bb7 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -280,10 +280,8 @@ static const unsigned int rt2800_eeprom_map_ext[EEPROM_WORD_COUNT] = {
+ 	[EEPROM_RSSI_BG]		= 0x0028,
+ 	[EEPROM_TXPOWER_DELTA]		= 0x0028, /* Overlaps with RSSI_BG */
+ 	[EEPROM_RSSI_BG2]		= 0x0029,
+-	[EEPROM_TXMIXER_GAIN_BG]	= 0x0029, /* Overlaps with RSSI_BG2 */
+ 	[EEPROM_RSSI_A]			= 0x002a,
+ 	[EEPROM_RSSI_A2]		= 0x002b,
+-	[EEPROM_TXMIXER_GAIN_A]		= 0x002b, /* Overlaps with RSSI_A2 */
+ 	[EEPROM_TXPOWER_BG1]		= 0x0030,
+ 	[EEPROM_TXPOWER_BG2]		= 0x0037,
+ 	[EEPROM_EXT_TXPOWER_BG3]	= 0x003e,
+-- 
+1.7.10
