@@ -1,93 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:48769 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752427Ab3JQHmq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Oct 2013 03:42:46 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 08/21] rt2x00: rt2800pci: use rt2800mmio prefix for queue functions
-Date: Thu, 17 Oct 2013 09:42:22 +0200
-Message-Id: <1381995755-16471-9-git-send-email-juhosg@openwrt.org> (sfid-20131017_100807_407585_3B7AD9F8)
-In-Reply-To: <1381995755-16471-1-git-send-email-juhosg@openwrt.org>
-References: <1381995755-16471-1-git-send-email-juhosg@openwrt.org>
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:9717 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751374Ab3JCHUx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Oct 2013 03:20:53 -0400
+From: "Undekari, Sunil Dutt" <c_duttus@qti.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"j@w1.fi" <j@w1.fi>
+Subject: RE: [PATCH] cfg80211: Pass station supported channel and oper class
+ info to kernel
+Date: Thu, 3 Oct 2013 07:20:48 +0000
+Message-ID: <26F3B0343EE4744AA14EEEF9E1E534511F71B55F@aphydexd01a> (sfid-20131003_092110_270599_EA8CEB1A)
+References: <1377582278-3768-1-git-send-email-c_duttus@qti.qualcomm.com>
+ <1380704456.13329.8.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1380704456.13329.8.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The functions are used for devices with memory
-mapped I/O and contain no PCI specific code at
-all. Use rt2800mmio prefix instead of rt2800pci
-in the function names to reflect that.
-
-The patch contains no functional changes.
-
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/rt2x00/rt2800pci.c |   16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 12454b0..118f2d5 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -204,7 +204,7 @@ static inline int rt2800pci_read_eeprom_efuse(struct rt2x00_dev *rt2x00dev)
- /*
-  * Queue handlers.
-  */
--static void rt2800pci_start_queue(struct data_queue *queue)
-+static void rt2800mmio_start_queue(struct data_queue *queue)
- {
- 	struct rt2x00_dev *rt2x00dev = queue->rt2x00dev;
- 	u32 reg;
-@@ -231,7 +231,7 @@ static void rt2800pci_start_queue(struct data_queue *queue)
- 	}
- }
- 
--static void rt2800pci_kick_queue(struct data_queue *queue)
-+static void rt2800mmio_kick_queue(struct data_queue *queue)
- {
- 	struct rt2x00_dev *rt2x00dev = queue->rt2x00dev;
- 	struct queue_entry *entry;
-@@ -255,7 +255,7 @@ static void rt2800pci_kick_queue(struct data_queue *queue)
- 	}
- }
- 
--static void rt2800pci_stop_queue(struct data_queue *queue)
-+static void rt2800mmio_stop_queue(struct data_queue *queue)
- {
- 	struct rt2x00_dev *rt2x00dev = queue->rt2x00dev;
- 	u32 reg;
-@@ -669,9 +669,9 @@ static const struct rt2x00lib_ops rt2800pci_rt2x00_ops = {
- 	.link_tuner		= rt2800_link_tuner,
- 	.gain_calibration	= rt2800_gain_calibration,
- 	.vco_calibration	= rt2800_vco_calibration,
--	.start_queue		= rt2800pci_start_queue,
--	.kick_queue		= rt2800pci_kick_queue,
--	.stop_queue		= rt2800pci_stop_queue,
-+	.start_queue		= rt2800mmio_start_queue,
-+	.kick_queue		= rt2800mmio_kick_queue,
-+	.stop_queue		= rt2800mmio_stop_queue,
- 	.flush_queue		= rt2x00mmio_flush_queue,
- 	.write_tx_desc		= rt2800mmio_write_tx_desc,
- 	.write_tx_data		= rt2800_write_tx_data,
-@@ -689,7 +689,7 @@ static const struct rt2x00lib_ops rt2800pci_rt2x00_ops = {
- 	.sta_remove		= rt2800_sta_remove,
- };
- 
--static void rt2800pci_queue_init(struct data_queue *queue)
-+static void rt2800mmio_queue_init(struct data_queue *queue)
- {
- 	struct rt2x00_dev *rt2x00dev = queue->rt2x00dev;
- 	unsigned short txwi_size, rxwi_size;
-@@ -739,7 +739,7 @@ static const struct rt2x00_ops rt2800pci_ops = {
- 	.eeprom_size		= EEPROM_SIZE,
- 	.rf_size		= RF_SIZE,
- 	.tx_queues		= NUM_TX_QUEUES,
--	.queue_init		= rt2800pci_queue_init,
-+	.queue_init		= rt2800mmio_queue_init,
- 	.lib			= &rt2800pci_rt2x00_ops,
- 	.drv			= &rt2800pci_rt2800_ops,
- 	.hw			= &rt2800pci_mac80211_ops,
--- 
-1.7.10
+VGhhbmtzIEpvaGFubmVzIGZvciB0aGUgcmV2aWV3Lg0KDQo+SXQgc2VlbXMgeW91IHNob3VsZCB2
+YWxpZGF0ZSB0aGF0IHRoZSBsZW5ndGggaXMgZXZlbiwgYW5kIGF0IGxlYXN0IDI/DQpDYW4gSSBr
+bm93IHdoeSB0aGUgY2hlY2sgZm9yIGV2ZW4vIGF0bGVhc3QgMiBpcz8gVGhvdWdoIEkgd291bGQg
+dmFsaWRhdGUgZm9yIGEgbm9uIHplcm8gbGVuZ3RoIGFuZCByZXR1cm4gZmFpbHVyZSBpbiB0aGUg
+ZWxzZSwgY29uc2lkZXJpbmcgYSBjYXNlIHdoZXJlIHRoZSBURExTIHBlZXIgYWR2ZXJ0aXNlcyBh
+IHNpbmdsZSBjaGFubmVsLiBTaG91bGRuJ3QgaXQgc3VmZmljZT8NCg0KPiBEb2VzIHRoaXMgZXZl
+biBtYWtlIHNlbnNlIGluIHNldF9zdGF0aW9uKCkgcmF0aGVyIHRoYW4gb25seSBuZXdfc3RhdGlv
+bigpPw0KSSB3b3VsZCBoYXZlIHRoaXMgaW4gYm90aCBuZXdfc3RhdGlvbiBhbmQgc2V0X3N0YXRp
+b24uIENvbnNpZGVyaW5nIHRoZSBjdXJyZW50IGJlaGF2aW9yIG9mIHRoZSBzdXBwbGljYW50IHdo
+ZXJlIG5ld19zdGF0aW9uIGFuZCBzZXRfc3RhdGlvbiBhcmUgaW52b2tlZCBiZWZvcmUgYW5kIGFm
+dGVyIHRoZSBUUEsgaGFuZHNoYWtlLCBpdCB3b3VsZCBiZSBmaW5lIHRvIGhhdmUgb25seSBpbiBz
+ZXRfc3RhdGlvbiBidXQgSSBzdXBwb3NlIE5MIGNoYW5nZXMgc2hvdWxkIG5vdCByZWx5IG9uIHN1
+cHBsaWNhbnQncyBiZWhhdmlvci4NCg0KUmVnYXJkcywNClN1bmlsDQotLS0tLU9yaWdpbmFsIE1l
+c3NhZ2UtLS0tLQ0KRnJvbTogSm9oYW5uZXMgQmVyZyBbbWFpbHRvOmpvaGFubmVzQHNpcHNvbHV0
+aW9ucy5uZXRdIA0KU2VudDogV2VkbmVzZGF5LCBPY3RvYmVyIDAyLCAyMDEzIDI6MzEgUE0NClRv
+OiBVbmRla2FyaSwgU3VuaWwgRHV0dA0KQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9y
+ZzsgakB3MS5maQ0KU3ViamVjdDogUmU6IFtQQVRDSF0gY2ZnODAyMTE6IFBhc3Mgc3RhdGlvbiBz
+dXBwb3J0ZWQgY2hhbm5lbCBhbmQgb3BlciBjbGFzcyBpbmZvIHRvIGtlcm5lbA0KDQpPbiBUdWUs
+IDIwMTMtMDgtMjcgYXQgMTE6MTQgKzA1MzAsIFN1bmlsIER1dHQgd3JvdGU6DQoNCj4gKwlpZiAo
+aW5mby0+YXR0cnNbTkw4MDIxMV9BVFRSX1NUQV9TVVBQT1JURURfQ0hBTk5FTFNdKSB7DQo+ICsJ
+CXBhcmFtcy0+c3VwcG9ydGVkX2NoYW5uZWxzID0NCj4gKwkJICAgICBubGFfZGF0YShpbmZvLT5h
+dHRyc1tOTDgwMjExX0FUVFJfU1RBX1NVUFBPUlRFRF9DSEFOTkVMU10pOw0KPiArCQlwYXJhbXMt
+PnN1cHBvcnRlZF9jaGFubmVsc19sZW4gPQ0KPiArCQkgICAgIG5sYV9sZW4oaW5mby0+YXR0cnNb
+Tkw4MDIxMV9BVFRSX1NUQV9TVVBQT1JURURfQ0hBTk5FTFNdKTsNCg0KSXQgc2VlbXMgeW91IHNo
+b3VsZCB2YWxpZGF0ZSB0aGF0IHRoZSBsZW5ndGggaXMgZXZlbiwgYW5kIGF0IGxlYXN0IDI/DQoN
+Cj4gKwlpZiAoaW5mby0+YXR0cnNbTkw4MDIxMV9BVFRSX1NUQV9TVVBQT1JURURfT1BFUl9DTEFT
+U0VTXSkgew0KPiArCQlwYXJhbXMtPnN1cHBvcnRlZF9vcGVyX2NsYXNzZXMgPQ0KPiArCQkgbmxh
+X2RhdGEoaW5mby0+YXR0cnNbTkw4MDIxMV9BVFRSX1NUQV9TVVBQT1JURURfT1BFUl9DTEFTU0VT
+XSk7DQo+ICsJCXBhcmFtcy0+c3VwcG9ydGVkX29wZXJfY2xhc3Nlc19sZW4gPQ0KPiArCQkgIG5s
+YV9sZW4oaW5mby0+YXR0cnNbTkw4MDIxMV9BVFRSX1NUQV9TVVBQT1JURURfT1BFUl9DTEFTU0VT
+XSk7DQoNClNpbWlsYXJseSBoZXJlICh3aXRoIGRpZmZlcmVudCBydWxlcykNCg0KRG9lcyB0aGlz
+IGV2ZW4gbWFrZSBzZW5zZSBpbiBzZXRfc3RhdGlvbigpIHJhdGhlciB0aGFuIG9ubHkgbmV3X3N0
+YXRpb24oKT8NCg0Kam9oYW5uZXMNCg0K
