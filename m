@@ -1,55 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f172.google.com ([209.85.217.172]:49781 "EHLO
-	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752705Ab3JHMAd (ORCPT
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:62863 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752297Ab3JCKHo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Oct 2013 08:00:33 -0400
-Received: by mail-lb0-f172.google.com with SMTP id x18so6764176lbi.17
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Oct 2013 05:00:32 -0700 (PDT)
+	Thu, 3 Oct 2013 06:07:44 -0400
+Received: by mail-wi0-f175.google.com with SMTP id ez12so8645564wid.8
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Oct 2013 03:07:43 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1381233152.13359.10.camel@jlt4.sipsolutions.net>
-References: <1381231915-24232-1-git-send-email-ard.biesheuvel@linaro.org>
-	<1381233152.13359.10.camel@jlt4.sipsolutions.net>
-Date: Tue, 8 Oct 2013 14:00:31 +0200
-Message-ID: <CAKv+Gu9-ddqyuGg=NDFoWzNko+0uMG_po6WnzTc7g3DAzx=_dQ@mail.gmail.com> (sfid-20131008_140036_579986_E79A1E33)
-Subject: Re: [PATCH] mac80211: port CCMP to cryptoapi's CCM driver
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <1380612524.14430.0.camel@jlt4.sipsolutions.net>
+References: <1380531766-15384-1-git-send-email-johannes@sipsolutions.net>
+	<1380532074.14467.2.camel@jlt4.sipsolutions.net>
+	<20130930203206.GM10994@tuxdriver.com>
+	<1380612524.14430.0.camel@jlt4.sipsolutions.net>
+Date: Thu, 3 Oct 2013 12:07:43 +0200
+Message-ID: <CA+icZUVf1A2+-LPEARpOnRShm2BXagtHtw7+SidTs2b_ifV97A@mail.gmail.com> (sfid-20131003_120748_225909_81D2FBC2)
+Subject: Re: [PATCH] iwlwifi: pcie: fix merge damage
+From: Sedat Dilek <sedat.dilek@gmail.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Patch Tracking <patches@linaro.org>, linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8 October 2013 13:52, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2013-10-08 at 13:31 +0200, Ard Biesheuvel wrote:
+On Tue, Oct 1, 2013 at 9:28 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Mon, 2013-09-30 at 16:32 -0400, John W. Linville wrote:
+>> On Mon, Sep 30, 2013 at 11:07:54AM +0200, Johannes Berg wrote:
+>> > On Mon, 2013-09-30 at 11:02 +0200, Johannes Berg wrote:
+>> > > From: Johannes Berg <johannes.berg@intel.com>
+>> > >
+>> > > The merge b35c8097 seems to have lost commit eabc4ac5d,
+>> > > put the code back.
+>> > >
+>> > > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+>> >
+>> > Ah, forgot to say - John, I think you should apply this as a patch,
+>> > having it in my pull request seems odd. But if you're of another opinion
+>> > I can stick it into my next -next pull request too.
+>>
+>> OK -- does this need to be treated as a fix?  Or is -next OK?
 >
-> Hmm, thanks I guess. I'll need to review this in more detail, but I have
-> a question first:
->
->> +     /* allocate the variable sized aead_request on the stack */
->> +     int l = DIV_ROUND_UP(crypto_aead_reqsize(tfm),
->> +                          sizeof(struct aead_request));
->> +     struct aead_request req[1 + l];
->
-> This looks a bit odd, why round up first and then add one? Why even
-> bother using a struct array rather than some local struct like
->
-> struct {
->   struct aead_request req;
->   u8 data[crypto_aed_reqsize(tfm)];
-> } req_data;
->
-> or so?
+> I believe the merge damage only occurred during merging wireless.git (or
+> one of its upstreams) into wireless-next.git.
 >
 
-Yes, that looks much better. I will put that in my v2, let me know if
-you have more questions/comments.
+Hmm, this patch applies also for Linux v3.12-rc3+, so you are sure it
+is not for iwlwifi-3.12-fixes?
 
-BTW I should probably have mentioned that this is fully tested code:
-my zd1211 works happily with it using pairwise CCMP with no
-regressions in performance.
-
-
-Cheers,
-Ard.
+- Sedat -
