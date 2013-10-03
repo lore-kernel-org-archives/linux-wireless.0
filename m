@@ -1,912 +1,233 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:32937 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755497Ab3J1Hmh (ORCPT
+Received: from mail-qa0-f45.google.com ([209.85.216.45]:34816 "EHLO
+	mail-qa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754108Ab3JCRsc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Oct 2013 03:42:37 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/4] ath9k: Fix wow.c compilation
-Date: Mon, 28 Oct 2013 13:08:08 +0530
-Message-Id: <1382945891-12779-1-git-send-email-sujith@msujith.org> (sfid-20131028_084241_217193_0CE44F90)
+	Thu, 3 Oct 2013 13:48:32 -0400
+Date: Thu, 3 Oct 2013 14:48:25 -0300
+From: Gustavo Padovan <gustavo@padovan.org>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: pull request: bluetooth-next 2013-10-03
+Message-ID: <20131003174825.GB22728@joana> (sfid-20131003_194851_963911_08C5C0FA)
+References: <20131003174524.GA22728@joana>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="7AUc2qLy4jB3hD7Z"
+In-Reply-To: <20131003174524.GA22728@joana>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-The HW routines to set various WoW registers are present
-in wow.c. For some reason, it has been compiled as part
-of the main ath9k.ko module all this time, when it should
-really be part of ath9k_hw.ko. This patch renames the file to
-ar9003_wow.ko and adds it to ath9k_hw.ko.
+--7AUc2qLy4jB3hD7Z
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/Makefile     |   3 +-
- drivers/net/wireless/ath/ath9k/ar9003_wow.c | 422 ++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/wow.c        | 422 ----------------------------
- 3 files changed, 424 insertions(+), 423 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath9k/ar9003_wow.c
- delete mode 100644 drivers/net/wireless/ath/ath9k/wow.c
+Hi John
 
-diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
-index f86a261..796686a 100644
---- a/drivers/net/wireless/ath/ath9k/Makefile
-+++ b/drivers/net/wireless/ath/ath9k/Makefile
-@@ -14,7 +14,6 @@ ath9k-$(CONFIG_ATH9K_AHB) += ahb.o
- ath9k-$(CONFIG_ATH9K_DEBUGFS) += debug.o
- ath9k-$(CONFIG_ATH9K_DFS_DEBUGFS) += dfs_debug.o
- ath9k-$(CONFIG_ATH9K_DFS_CERTIFIED) += dfs.o
--ath9k-$(CONFIG_PM_SLEEP) += wow.o
- ath9k-$(CONFIG_ATH9K_TX99) += tx99.o
- 
- obj-$(CONFIG_ATH9K) += ath9k.o
-@@ -41,6 +40,8 @@ ath9k_hw-y:=	\
- 		ar9003_eeprom.o \
- 		ar9003_paprd.o
- 
-+ath9k_hw-$(CONFIG_PM_SLEEP) += ar9003_wow.o
-+
- ath9k_hw-$(CONFIG_ATH9K_BTCOEX_SUPPORT) += btcoex.o \
- 					   ar9003_mci.o
- obj-$(CONFIG_ATH9K_HW) += ath9k_hw.o
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_wow.c b/drivers/net/wireless/ath/ath9k/ar9003_wow.c
-new file mode 100644
-index 0000000..81c88dd
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_wow.c
-@@ -0,0 +1,422 @@
-+/*
-+ * Copyright (c) 2012 Qualcomm Atheros, Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#include <linux/export.h>
-+#include "ath9k.h"
-+#include "reg.h"
-+#include "hw-ops.h"
-+
-+const char *ath9k_hw_wow_event_to_string(u32 wow_event)
-+{
-+	if (wow_event & AH_WOW_MAGIC_PATTERN_EN)
-+		return "Magic pattern";
-+	if (wow_event & AH_WOW_USER_PATTERN_EN)
-+		return "User pattern";
-+	if (wow_event & AH_WOW_LINK_CHANGE)
-+		return "Link change";
-+	if (wow_event & AH_WOW_BEACON_MISS)
-+		return "Beacon miss";
-+
-+	return  "unknown reason";
-+}
-+EXPORT_SYMBOL(ath9k_hw_wow_event_to_string);
-+
-+static void ath9k_hw_set_powermode_wow_sleep(struct ath_hw *ah)
-+{
-+	struct ath_common *common = ath9k_hw_common(ah);
-+
-+	REG_SET_BIT(ah, AR_STA_ID1, AR_STA_ID1_PWR_SAV);
-+
-+	/* set rx disable bit */
-+	REG_WRITE(ah, AR_CR, AR_CR_RXD);
-+
-+	if (!ath9k_hw_wait(ah, AR_CR, AR_CR_RXE, 0, AH_WAIT_TIMEOUT)) {
-+		ath_err(common, "Failed to stop Rx DMA in 10ms AR_CR=0x%08x AR_DIAG_SW=0x%08x\n",
-+			REG_READ(ah, AR_CR), REG_READ(ah, AR_DIAG_SW));
-+		return;
-+	}
-+
-+	REG_WRITE(ah, AR_RTC_FORCE_WAKE, AR_RTC_FORCE_WAKE_ON_INT);
-+}
-+
-+static void ath9k_wow_create_keep_alive_pattern(struct ath_hw *ah)
-+{
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	u8 sta_mac_addr[ETH_ALEN], ap_mac_addr[ETH_ALEN];
-+	u32 ctl[13] = {0};
-+	u32 data_word[KAL_NUM_DATA_WORDS];
-+	u8 i;
-+	u32 wow_ka_data_word0;
-+
-+	memcpy(sta_mac_addr, common->macaddr, ETH_ALEN);
-+	memcpy(ap_mac_addr, common->curbssid, ETH_ALEN);
-+
-+	/* set the transmit buffer */
-+	ctl[0] = (KAL_FRAME_LEN | (MAX_RATE_POWER << 16));
-+	ctl[1] = 0;
-+	ctl[3] = 0xb;	/* OFDM_6M hardware value for this rate */
-+	ctl[4] = 0;
-+	ctl[7] = (ah->txchainmask) << 2;
-+	ctl[2] = 0xf << 16; /* tx_tries 0 */
-+
-+	for (i = 0; i < KAL_NUM_DESC_WORDS; i++)
-+		REG_WRITE(ah, (AR_WOW_KA_DESC_WORD2 + i * 4), ctl[i]);
-+
-+	REG_WRITE(ah, (AR_WOW_KA_DESC_WORD2 + i * 4), ctl[i]);
-+
-+	data_word[0] = (KAL_FRAME_TYPE << 2) | (KAL_FRAME_SUB_TYPE << 4) |
-+		       (KAL_TO_DS << 8) | (KAL_DURATION_ID << 16);
-+	data_word[1] = (ap_mac_addr[3] << 24) | (ap_mac_addr[2] << 16) |
-+		       (ap_mac_addr[1] << 8) | (ap_mac_addr[0]);
-+	data_word[2] = (sta_mac_addr[1] << 24) | (sta_mac_addr[0] << 16) |
-+		       (ap_mac_addr[5] << 8) | (ap_mac_addr[4]);
-+	data_word[3] = (sta_mac_addr[5] << 24) | (sta_mac_addr[4] << 16) |
-+		       (sta_mac_addr[3] << 8) | (sta_mac_addr[2]);
-+	data_word[4] = (ap_mac_addr[3] << 24) | (ap_mac_addr[2] << 16) |
-+		       (ap_mac_addr[1] << 8) | (ap_mac_addr[0]);
-+	data_word[5] = (ap_mac_addr[5] << 8) | (ap_mac_addr[4]);
-+
-+	if (AR_SREV_9462_20(ah)) {
-+		/* AR9462 2.0 has an extra descriptor word (time based
-+		 * discard) compared to other chips */
-+		REG_WRITE(ah, (AR_WOW_KA_DESC_WORD2 + (12 * 4)), 0);
-+		wow_ka_data_word0 = AR_WOW_TXBUF(13);
-+	} else {
-+		wow_ka_data_word0 = AR_WOW_TXBUF(12);
-+	}
-+
-+	for (i = 0; i < KAL_NUM_DATA_WORDS; i++)
-+		REG_WRITE(ah, (wow_ka_data_word0 + i*4), data_word[i]);
-+
-+}
-+
-+void ath9k_hw_wow_apply_pattern(struct ath_hw *ah, u8 *user_pattern,
-+				u8 *user_mask, int pattern_count,
-+				int pattern_len)
-+{
-+	int i;
-+	u32 pattern_val, mask_val;
-+	u32 set, clr;
-+
-+	/* FIXME: should check count by querying the hardware capability */
-+	if (pattern_count >= MAX_NUM_PATTERN)
-+		return;
-+
-+	REG_SET_BIT(ah, AR_WOW_PATTERN, BIT(pattern_count));
-+
-+	/* set the registers for pattern */
-+	for (i = 0; i < MAX_PATTERN_SIZE; i += 4) {
-+		memcpy(&pattern_val, user_pattern, 4);
-+		REG_WRITE(ah, (AR_WOW_TB_PATTERN(pattern_count) + i),
-+			  pattern_val);
-+		user_pattern += 4;
-+	}
-+
-+	/* set the registers for mask */
-+	for (i = 0; i < MAX_PATTERN_MASK_SIZE; i += 4) {
-+		memcpy(&mask_val, user_mask, 4);
-+		REG_WRITE(ah, (AR_WOW_TB_MASK(pattern_count) + i), mask_val);
-+		user_mask += 4;
-+	}
-+
-+	/* set the pattern length to be matched
-+	 *
-+	 * AR_WOW_LENGTH1_REG1
-+	 * bit 31:24 pattern 0 length
-+	 * bit 23:16 pattern 1 length
-+	 * bit 15:8 pattern 2 length
-+	 * bit 7:0 pattern 3 length
-+	 *
-+	 * AR_WOW_LENGTH1_REG2
-+	 * bit 31:24 pattern 4 length
-+	 * bit 23:16 pattern 5 length
-+	 * bit 15:8 pattern 6 length
-+	 * bit 7:0 pattern 7 length
-+	 *
-+	 * the below logic writes out the new
-+	 * pattern length for the corresponding
-+	 * pattern_count, while masking out the
-+	 * other fields
-+	 */
-+
-+	ah->wow_event_mask |= BIT(pattern_count + AR_WOW_PAT_FOUND_SHIFT);
-+
-+	if (pattern_count < 4) {
-+		/* Pattern 0-3 uses AR_WOW_LENGTH1 register */
-+		set = (pattern_len & AR_WOW_LENGTH_MAX) <<
-+		       AR_WOW_LEN1_SHIFT(pattern_count);
-+		clr = AR_WOW_LENGTH1_MASK(pattern_count);
-+		REG_RMW(ah, AR_WOW_LENGTH1, set, clr);
-+	} else {
-+		/* Pattern 4-7 uses AR_WOW_LENGTH2 register */
-+		set = (pattern_len & AR_WOW_LENGTH_MAX) <<
-+		       AR_WOW_LEN2_SHIFT(pattern_count);
-+		clr = AR_WOW_LENGTH2_MASK(pattern_count);
-+		REG_RMW(ah, AR_WOW_LENGTH2, set, clr);
-+	}
-+
-+}
-+EXPORT_SYMBOL(ath9k_hw_wow_apply_pattern);
-+
-+u32 ath9k_hw_wow_wakeup(struct ath_hw *ah)
-+{
-+	u32 wow_status = 0;
-+	u32 val = 0, rval;
-+
-+	/*
-+	 * read the WoW status register to know
-+	 * the wakeup reason
-+	 */
-+	rval = REG_READ(ah, AR_WOW_PATTERN);
-+	val = AR_WOW_STATUS(rval);
-+
-+	/*
-+	 * mask only the WoW events that we have enabled. Sometimes
-+	 * we have spurious WoW events from the AR_WOW_PATTERN
-+	 * register. This mask will clean it up.
-+	 */
-+
-+	val &= ah->wow_event_mask;
-+
-+	if (val) {
-+		if (val & AR_WOW_MAGIC_PAT_FOUND)
-+			wow_status |= AH_WOW_MAGIC_PATTERN_EN;
-+		if (AR_WOW_PATTERN_FOUND(val))
-+			wow_status |= AH_WOW_USER_PATTERN_EN;
-+		if (val & AR_WOW_KEEP_ALIVE_FAIL)
-+			wow_status |= AH_WOW_LINK_CHANGE;
-+		if (val & AR_WOW_BEACON_FAIL)
-+			wow_status |= AH_WOW_BEACON_MISS;
-+	}
-+
-+	/*
-+	 * set and clear WOW_PME_CLEAR registers for the chip to
-+	 * generate next wow signal.
-+	 * disable D3 before accessing other registers ?
-+	 */
-+
-+	/* do we need to check the bit value 0x01000000 (7-10) ?? */
-+	REG_RMW(ah, AR_PCIE_PM_CTRL, AR_PMCTRL_WOW_PME_CLR,
-+		AR_PMCTRL_PWR_STATE_D1D3);
-+
-+	/*
-+	 * clear all events
-+	 */
-+	REG_WRITE(ah, AR_WOW_PATTERN,
-+		  AR_WOW_CLEAR_EVENTS(REG_READ(ah, AR_WOW_PATTERN)));
-+
-+	/*
-+	 * restore the beacon threshold to init value
-+	 */
-+	REG_WRITE(ah, AR_RSSI_THR, INIT_RSSI_THR);
-+
-+	/*
-+	 * Restore the way the PCI-E reset, Power-On-Reset, external
-+	 * PCIE_POR_SHORT pins are tied to its original value.
-+	 * Previously just before WoW sleep, we untie the PCI-E
-+	 * reset to our Chip's Power On Reset so that any PCI-E
-+	 * reset from the bus will not reset our chip
-+	 */
-+	if (ah->is_pciexpress)
-+		ath9k_hw_configpcipowersave(ah, false);
-+
-+	ah->wow_event_mask = 0;
-+
-+	return wow_status;
-+}
-+EXPORT_SYMBOL(ath9k_hw_wow_wakeup);
-+
-+void ath9k_hw_wow_enable(struct ath_hw *ah, u32 pattern_enable)
-+{
-+	u32 wow_event_mask;
-+	u32 set, clr;
-+
-+	/*
-+	 * wow_event_mask is a mask to the AR_WOW_PATTERN register to
-+	 * indicate which WoW events we have enabled. The WoW events
-+	 * are from the 'pattern_enable' in this function and
-+	 * 'pattern_count' of ath9k_hw_wow_apply_pattern()
-+	 */
-+	wow_event_mask = ah->wow_event_mask;
-+
-+	/*
-+	 * Untie Power-on-Reset from the PCI-E-Reset. When we are in
-+	 * WOW sleep, we do want the Reset from the PCI-E to disturb
-+	 * our hw state
-+	 */
-+	if (ah->is_pciexpress) {
-+		/*
-+		 * we need to untie the internal POR (power-on-reset)
-+		 * to the external PCI-E reset. We also need to tie
-+		 * the PCI-E Phy reset to the PCI-E reset.
-+		 */
-+		set = AR_WA_RESET_EN | AR_WA_POR_SHORT;
-+		clr = AR_WA_UNTIE_RESET_EN | AR_WA_D3_L1_DISABLE;
-+		REG_RMW(ah, AR_WA, set, clr);
-+	}
-+
-+	/*
-+	 * set the power states appropriately and enable PME
-+	 */
-+	set = AR_PMCTRL_HOST_PME_EN | AR_PMCTRL_PWR_PM_CTRL_ENA |
-+	      AR_PMCTRL_AUX_PWR_DET | AR_PMCTRL_WOW_PME_CLR;
-+
-+	/*
-+	 * set and clear WOW_PME_CLEAR registers for the chip
-+	 * to generate next wow signal.
-+	 */
-+	REG_SET_BIT(ah, AR_PCIE_PM_CTRL, set);
-+	clr = AR_PMCTRL_WOW_PME_CLR;
-+	REG_CLR_BIT(ah, AR_PCIE_PM_CTRL, clr);
-+
-+	/*
-+	 * Setup for:
-+	 *	- beacon misses
-+	 *	- magic pattern
-+	 *	- keep alive timeout
-+	 *	- pattern matching
-+	 */
-+
-+	/*
-+	 * Program default values for pattern backoff, aifs/slot/KAL count,
-+	 * beacon miss timeout, KAL timeout, etc.
-+	 */
-+	set = AR_WOW_BACK_OFF_SHIFT(AR_WOW_PAT_BACKOFF);
-+	REG_SET_BIT(ah, AR_WOW_PATTERN, set);
-+
-+	set = AR_WOW_AIFS_CNT(AR_WOW_CNT_AIFS_CNT) |
-+	      AR_WOW_SLOT_CNT(AR_WOW_CNT_SLOT_CNT) |
-+	      AR_WOW_KEEP_ALIVE_CNT(AR_WOW_CNT_KA_CNT);
-+	REG_SET_BIT(ah, AR_WOW_COUNT, set);
-+
-+	if (pattern_enable & AH_WOW_BEACON_MISS)
-+		set = AR_WOW_BEACON_TIMO;
-+	/* We are not using beacon miss, program a large value */
-+	else
-+		set = AR_WOW_BEACON_TIMO_MAX;
-+
-+	REG_WRITE(ah, AR_WOW_BCN_TIMO, set);
-+
-+	/*
-+	 * Keep alive timo in ms except AR9280
-+	 */
-+	if (!pattern_enable)
-+		set = AR_WOW_KEEP_ALIVE_NEVER;
-+	else
-+		set = KAL_TIMEOUT * 32;
-+
-+	REG_WRITE(ah, AR_WOW_KEEP_ALIVE_TIMO, set);
-+
-+	/*
-+	 * Keep alive delay in us. based on 'power on clock',
-+	 * therefore in usec
-+	 */
-+	set = KAL_DELAY * 1000;
-+	REG_WRITE(ah, AR_WOW_KEEP_ALIVE_DELAY, set);
-+
-+	/*
-+	 * Create keep alive pattern to respond to beacons
-+	 */
-+	ath9k_wow_create_keep_alive_pattern(ah);
-+
-+	/*
-+	 * Configure MAC WoW Registers
-+	 */
-+	set = 0;
-+	/* Send keep alive timeouts anyway */
-+	clr = AR_WOW_KEEP_ALIVE_AUTO_DIS;
-+
-+	if (pattern_enable & AH_WOW_LINK_CHANGE)
-+		wow_event_mask |= AR_WOW_KEEP_ALIVE_FAIL;
-+	else
-+		set = AR_WOW_KEEP_ALIVE_FAIL_DIS;
-+
-+	set = AR_WOW_KEEP_ALIVE_FAIL_DIS;
-+	REG_RMW(ah, AR_WOW_KEEP_ALIVE, set, clr);
-+
-+	/*
-+	 * we are relying on a bmiss failure. ensure we have
-+	 * enough threshold to prevent false positives
-+	 */
-+	REG_RMW_FIELD(ah, AR_RSSI_THR, AR_RSSI_THR_BM_THR,
-+		      AR_WOW_BMISSTHRESHOLD);
-+
-+	set = 0;
-+	clr = 0;
-+
-+	if (pattern_enable & AH_WOW_BEACON_MISS) {
-+		set = AR_WOW_BEACON_FAIL_EN;
-+		wow_event_mask |= AR_WOW_BEACON_FAIL;
-+	} else {
-+		clr = AR_WOW_BEACON_FAIL_EN;
-+	}
-+
-+	REG_RMW(ah, AR_WOW_BCN_EN, set, clr);
-+
-+	set = 0;
-+	clr = 0;
-+	/*
-+	 * Enable the magic packet registers
-+	 */
-+	if (pattern_enable & AH_WOW_MAGIC_PATTERN_EN) {
-+		set = AR_WOW_MAGIC_EN;
-+		wow_event_mask |= AR_WOW_MAGIC_PAT_FOUND;
-+	} else {
-+		clr = AR_WOW_MAGIC_EN;
-+	}
-+	set |= AR_WOW_MAC_INTR_EN;
-+	REG_RMW(ah, AR_WOW_PATTERN, set, clr);
-+
-+	REG_WRITE(ah, AR_WOW_PATTERN_MATCH_LT_256B,
-+		  AR_WOW_PATTERN_SUPPORTED);
-+
-+	/*
-+	 * Set the power states appropriately and enable PME
-+	 */
-+	clr = 0;
-+	set = AR_PMCTRL_PWR_STATE_D1D3 | AR_PMCTRL_HOST_PME_EN |
-+	      AR_PMCTRL_PWR_PM_CTRL_ENA;
-+
-+	clr = AR_PCIE_PM_CTRL_ENA;
-+	REG_RMW(ah, AR_PCIE_PM_CTRL, set, clr);
-+
-+	/*
-+	 * this is needed to prevent the chip waking up
-+	 * the host within 3-4 seconds with certain
-+	 * platform/BIOS. The fix is to enable
-+	 * D1 & D3 to match original definition and
-+	 * also match the OTP value. Anyway this
-+	 * is more related to SW WOW.
-+	 */
-+	clr = AR_PMCTRL_PWR_STATE_D1D3;
-+	REG_CLR_BIT(ah, AR_PCIE_PM_CTRL, clr);
-+
-+	set = AR_PMCTRL_PWR_STATE_D1D3_REAL;
-+	REG_SET_BIT(ah, AR_PCIE_PM_CTRL, set);
-+
-+	REG_CLR_BIT(ah, AR_STA_ID1, AR_STA_ID1_PRESERVE_SEQNUM);
-+
-+	/* to bring down WOW power low margin */
-+	set = BIT(13);
-+	REG_SET_BIT(ah, AR_PCIE_PHY_REG3, set);
-+	/* HW WoW */
-+	clr = BIT(5);
-+	REG_CLR_BIT(ah, AR_PCU_MISC_MODE3, clr);
-+
-+	ath9k_hw_set_powermode_wow_sleep(ah);
-+	ah->wow_event_mask = wow_event_mask;
-+}
-+EXPORT_SYMBOL(ath9k_hw_wow_enable);
-diff --git a/drivers/net/wireless/ath/ath9k/wow.c b/drivers/net/wireless/ath/ath9k/wow.c
-deleted file mode 100644
-index 81c88dd..0000000
---- a/drivers/net/wireless/ath/ath9k/wow.c
-+++ /dev/null
-@@ -1,422 +0,0 @@
--/*
-- * Copyright (c) 2012 Qualcomm Atheros, Inc.
-- *
-- * Permission to use, copy, modify, and/or distribute this software for any
-- * purpose with or without fee is hereby granted, provided that the above
-- * copyright notice and this permission notice appear in all copies.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-- */
--
--#include <linux/export.h>
--#include "ath9k.h"
--#include "reg.h"
--#include "hw-ops.h"
--
--const char *ath9k_hw_wow_event_to_string(u32 wow_event)
--{
--	if (wow_event & AH_WOW_MAGIC_PATTERN_EN)
--		return "Magic pattern";
--	if (wow_event & AH_WOW_USER_PATTERN_EN)
--		return "User pattern";
--	if (wow_event & AH_WOW_LINK_CHANGE)
--		return "Link change";
--	if (wow_event & AH_WOW_BEACON_MISS)
--		return "Beacon miss";
--
--	return  "unknown reason";
--}
--EXPORT_SYMBOL(ath9k_hw_wow_event_to_string);
--
--static void ath9k_hw_set_powermode_wow_sleep(struct ath_hw *ah)
--{
--	struct ath_common *common = ath9k_hw_common(ah);
--
--	REG_SET_BIT(ah, AR_STA_ID1, AR_STA_ID1_PWR_SAV);
--
--	/* set rx disable bit */
--	REG_WRITE(ah, AR_CR, AR_CR_RXD);
--
--	if (!ath9k_hw_wait(ah, AR_CR, AR_CR_RXE, 0, AH_WAIT_TIMEOUT)) {
--		ath_err(common, "Failed to stop Rx DMA in 10ms AR_CR=0x%08x AR_DIAG_SW=0x%08x\n",
--			REG_READ(ah, AR_CR), REG_READ(ah, AR_DIAG_SW));
--		return;
--	}
--
--	REG_WRITE(ah, AR_RTC_FORCE_WAKE, AR_RTC_FORCE_WAKE_ON_INT);
--}
--
--static void ath9k_wow_create_keep_alive_pattern(struct ath_hw *ah)
--{
--	struct ath_common *common = ath9k_hw_common(ah);
--	u8 sta_mac_addr[ETH_ALEN], ap_mac_addr[ETH_ALEN];
--	u32 ctl[13] = {0};
--	u32 data_word[KAL_NUM_DATA_WORDS];
--	u8 i;
--	u32 wow_ka_data_word0;
--
--	memcpy(sta_mac_addr, common->macaddr, ETH_ALEN);
--	memcpy(ap_mac_addr, common->curbssid, ETH_ALEN);
--
--	/* set the transmit buffer */
--	ctl[0] = (KAL_FRAME_LEN | (MAX_RATE_POWER << 16));
--	ctl[1] = 0;
--	ctl[3] = 0xb;	/* OFDM_6M hardware value for this rate */
--	ctl[4] = 0;
--	ctl[7] = (ah->txchainmask) << 2;
--	ctl[2] = 0xf << 16; /* tx_tries 0 */
--
--	for (i = 0; i < KAL_NUM_DESC_WORDS; i++)
--		REG_WRITE(ah, (AR_WOW_KA_DESC_WORD2 + i * 4), ctl[i]);
--
--	REG_WRITE(ah, (AR_WOW_KA_DESC_WORD2 + i * 4), ctl[i]);
--
--	data_word[0] = (KAL_FRAME_TYPE << 2) | (KAL_FRAME_SUB_TYPE << 4) |
--		       (KAL_TO_DS << 8) | (KAL_DURATION_ID << 16);
--	data_word[1] = (ap_mac_addr[3] << 24) | (ap_mac_addr[2] << 16) |
--		       (ap_mac_addr[1] << 8) | (ap_mac_addr[0]);
--	data_word[2] = (sta_mac_addr[1] << 24) | (sta_mac_addr[0] << 16) |
--		       (ap_mac_addr[5] << 8) | (ap_mac_addr[4]);
--	data_word[3] = (sta_mac_addr[5] << 24) | (sta_mac_addr[4] << 16) |
--		       (sta_mac_addr[3] << 8) | (sta_mac_addr[2]);
--	data_word[4] = (ap_mac_addr[3] << 24) | (ap_mac_addr[2] << 16) |
--		       (ap_mac_addr[1] << 8) | (ap_mac_addr[0]);
--	data_word[5] = (ap_mac_addr[5] << 8) | (ap_mac_addr[4]);
--
--	if (AR_SREV_9462_20(ah)) {
--		/* AR9462 2.0 has an extra descriptor word (time based
--		 * discard) compared to other chips */
--		REG_WRITE(ah, (AR_WOW_KA_DESC_WORD2 + (12 * 4)), 0);
--		wow_ka_data_word0 = AR_WOW_TXBUF(13);
--	} else {
--		wow_ka_data_word0 = AR_WOW_TXBUF(12);
--	}
--
--	for (i = 0; i < KAL_NUM_DATA_WORDS; i++)
--		REG_WRITE(ah, (wow_ka_data_word0 + i*4), data_word[i]);
--
--}
--
--void ath9k_hw_wow_apply_pattern(struct ath_hw *ah, u8 *user_pattern,
--				u8 *user_mask, int pattern_count,
--				int pattern_len)
--{
--	int i;
--	u32 pattern_val, mask_val;
--	u32 set, clr;
--
--	/* FIXME: should check count by querying the hardware capability */
--	if (pattern_count >= MAX_NUM_PATTERN)
--		return;
--
--	REG_SET_BIT(ah, AR_WOW_PATTERN, BIT(pattern_count));
--
--	/* set the registers for pattern */
--	for (i = 0; i < MAX_PATTERN_SIZE; i += 4) {
--		memcpy(&pattern_val, user_pattern, 4);
--		REG_WRITE(ah, (AR_WOW_TB_PATTERN(pattern_count) + i),
--			  pattern_val);
--		user_pattern += 4;
--	}
--
--	/* set the registers for mask */
--	for (i = 0; i < MAX_PATTERN_MASK_SIZE; i += 4) {
--		memcpy(&mask_val, user_mask, 4);
--		REG_WRITE(ah, (AR_WOW_TB_MASK(pattern_count) + i), mask_val);
--		user_mask += 4;
--	}
--
--	/* set the pattern length to be matched
--	 *
--	 * AR_WOW_LENGTH1_REG1
--	 * bit 31:24 pattern 0 length
--	 * bit 23:16 pattern 1 length
--	 * bit 15:8 pattern 2 length
--	 * bit 7:0 pattern 3 length
--	 *
--	 * AR_WOW_LENGTH1_REG2
--	 * bit 31:24 pattern 4 length
--	 * bit 23:16 pattern 5 length
--	 * bit 15:8 pattern 6 length
--	 * bit 7:0 pattern 7 length
--	 *
--	 * the below logic writes out the new
--	 * pattern length for the corresponding
--	 * pattern_count, while masking out the
--	 * other fields
--	 */
--
--	ah->wow_event_mask |= BIT(pattern_count + AR_WOW_PAT_FOUND_SHIFT);
--
--	if (pattern_count < 4) {
--		/* Pattern 0-3 uses AR_WOW_LENGTH1 register */
--		set = (pattern_len & AR_WOW_LENGTH_MAX) <<
--		       AR_WOW_LEN1_SHIFT(pattern_count);
--		clr = AR_WOW_LENGTH1_MASK(pattern_count);
--		REG_RMW(ah, AR_WOW_LENGTH1, set, clr);
--	} else {
--		/* Pattern 4-7 uses AR_WOW_LENGTH2 register */
--		set = (pattern_len & AR_WOW_LENGTH_MAX) <<
--		       AR_WOW_LEN2_SHIFT(pattern_count);
--		clr = AR_WOW_LENGTH2_MASK(pattern_count);
--		REG_RMW(ah, AR_WOW_LENGTH2, set, clr);
--	}
--
--}
--EXPORT_SYMBOL(ath9k_hw_wow_apply_pattern);
--
--u32 ath9k_hw_wow_wakeup(struct ath_hw *ah)
--{
--	u32 wow_status = 0;
--	u32 val = 0, rval;
--
--	/*
--	 * read the WoW status register to know
--	 * the wakeup reason
--	 */
--	rval = REG_READ(ah, AR_WOW_PATTERN);
--	val = AR_WOW_STATUS(rval);
--
--	/*
--	 * mask only the WoW events that we have enabled. Sometimes
--	 * we have spurious WoW events from the AR_WOW_PATTERN
--	 * register. This mask will clean it up.
--	 */
--
--	val &= ah->wow_event_mask;
--
--	if (val) {
--		if (val & AR_WOW_MAGIC_PAT_FOUND)
--			wow_status |= AH_WOW_MAGIC_PATTERN_EN;
--		if (AR_WOW_PATTERN_FOUND(val))
--			wow_status |= AH_WOW_USER_PATTERN_EN;
--		if (val & AR_WOW_KEEP_ALIVE_FAIL)
--			wow_status |= AH_WOW_LINK_CHANGE;
--		if (val & AR_WOW_BEACON_FAIL)
--			wow_status |= AH_WOW_BEACON_MISS;
--	}
--
--	/*
--	 * set and clear WOW_PME_CLEAR registers for the chip to
--	 * generate next wow signal.
--	 * disable D3 before accessing other registers ?
--	 */
--
--	/* do we need to check the bit value 0x01000000 (7-10) ?? */
--	REG_RMW(ah, AR_PCIE_PM_CTRL, AR_PMCTRL_WOW_PME_CLR,
--		AR_PMCTRL_PWR_STATE_D1D3);
--
--	/*
--	 * clear all events
--	 */
--	REG_WRITE(ah, AR_WOW_PATTERN,
--		  AR_WOW_CLEAR_EVENTS(REG_READ(ah, AR_WOW_PATTERN)));
--
--	/*
--	 * restore the beacon threshold to init value
--	 */
--	REG_WRITE(ah, AR_RSSI_THR, INIT_RSSI_THR);
--
--	/*
--	 * Restore the way the PCI-E reset, Power-On-Reset, external
--	 * PCIE_POR_SHORT pins are tied to its original value.
--	 * Previously just before WoW sleep, we untie the PCI-E
--	 * reset to our Chip's Power On Reset so that any PCI-E
--	 * reset from the bus will not reset our chip
--	 */
--	if (ah->is_pciexpress)
--		ath9k_hw_configpcipowersave(ah, false);
--
--	ah->wow_event_mask = 0;
--
--	return wow_status;
--}
--EXPORT_SYMBOL(ath9k_hw_wow_wakeup);
--
--void ath9k_hw_wow_enable(struct ath_hw *ah, u32 pattern_enable)
--{
--	u32 wow_event_mask;
--	u32 set, clr;
--
--	/*
--	 * wow_event_mask is a mask to the AR_WOW_PATTERN register to
--	 * indicate which WoW events we have enabled. The WoW events
--	 * are from the 'pattern_enable' in this function and
--	 * 'pattern_count' of ath9k_hw_wow_apply_pattern()
--	 */
--	wow_event_mask = ah->wow_event_mask;
--
--	/*
--	 * Untie Power-on-Reset from the PCI-E-Reset. When we are in
--	 * WOW sleep, we do want the Reset from the PCI-E to disturb
--	 * our hw state
--	 */
--	if (ah->is_pciexpress) {
--		/*
--		 * we need to untie the internal POR (power-on-reset)
--		 * to the external PCI-E reset. We also need to tie
--		 * the PCI-E Phy reset to the PCI-E reset.
--		 */
--		set = AR_WA_RESET_EN | AR_WA_POR_SHORT;
--		clr = AR_WA_UNTIE_RESET_EN | AR_WA_D3_L1_DISABLE;
--		REG_RMW(ah, AR_WA, set, clr);
--	}
--
--	/*
--	 * set the power states appropriately and enable PME
--	 */
--	set = AR_PMCTRL_HOST_PME_EN | AR_PMCTRL_PWR_PM_CTRL_ENA |
--	      AR_PMCTRL_AUX_PWR_DET | AR_PMCTRL_WOW_PME_CLR;
--
--	/*
--	 * set and clear WOW_PME_CLEAR registers for the chip
--	 * to generate next wow signal.
--	 */
--	REG_SET_BIT(ah, AR_PCIE_PM_CTRL, set);
--	clr = AR_PMCTRL_WOW_PME_CLR;
--	REG_CLR_BIT(ah, AR_PCIE_PM_CTRL, clr);
--
--	/*
--	 * Setup for:
--	 *	- beacon misses
--	 *	- magic pattern
--	 *	- keep alive timeout
--	 *	- pattern matching
--	 */
--
--	/*
--	 * Program default values for pattern backoff, aifs/slot/KAL count,
--	 * beacon miss timeout, KAL timeout, etc.
--	 */
--	set = AR_WOW_BACK_OFF_SHIFT(AR_WOW_PAT_BACKOFF);
--	REG_SET_BIT(ah, AR_WOW_PATTERN, set);
--
--	set = AR_WOW_AIFS_CNT(AR_WOW_CNT_AIFS_CNT) |
--	      AR_WOW_SLOT_CNT(AR_WOW_CNT_SLOT_CNT) |
--	      AR_WOW_KEEP_ALIVE_CNT(AR_WOW_CNT_KA_CNT);
--	REG_SET_BIT(ah, AR_WOW_COUNT, set);
--
--	if (pattern_enable & AH_WOW_BEACON_MISS)
--		set = AR_WOW_BEACON_TIMO;
--	/* We are not using beacon miss, program a large value */
--	else
--		set = AR_WOW_BEACON_TIMO_MAX;
--
--	REG_WRITE(ah, AR_WOW_BCN_TIMO, set);
--
--	/*
--	 * Keep alive timo in ms except AR9280
--	 */
--	if (!pattern_enable)
--		set = AR_WOW_KEEP_ALIVE_NEVER;
--	else
--		set = KAL_TIMEOUT * 32;
--
--	REG_WRITE(ah, AR_WOW_KEEP_ALIVE_TIMO, set);
--
--	/*
--	 * Keep alive delay in us. based on 'power on clock',
--	 * therefore in usec
--	 */
--	set = KAL_DELAY * 1000;
--	REG_WRITE(ah, AR_WOW_KEEP_ALIVE_DELAY, set);
--
--	/*
--	 * Create keep alive pattern to respond to beacons
--	 */
--	ath9k_wow_create_keep_alive_pattern(ah);
--
--	/*
--	 * Configure MAC WoW Registers
--	 */
--	set = 0;
--	/* Send keep alive timeouts anyway */
--	clr = AR_WOW_KEEP_ALIVE_AUTO_DIS;
--
--	if (pattern_enable & AH_WOW_LINK_CHANGE)
--		wow_event_mask |= AR_WOW_KEEP_ALIVE_FAIL;
--	else
--		set = AR_WOW_KEEP_ALIVE_FAIL_DIS;
--
--	set = AR_WOW_KEEP_ALIVE_FAIL_DIS;
--	REG_RMW(ah, AR_WOW_KEEP_ALIVE, set, clr);
--
--	/*
--	 * we are relying on a bmiss failure. ensure we have
--	 * enough threshold to prevent false positives
--	 */
--	REG_RMW_FIELD(ah, AR_RSSI_THR, AR_RSSI_THR_BM_THR,
--		      AR_WOW_BMISSTHRESHOLD);
--
--	set = 0;
--	clr = 0;
--
--	if (pattern_enable & AH_WOW_BEACON_MISS) {
--		set = AR_WOW_BEACON_FAIL_EN;
--		wow_event_mask |= AR_WOW_BEACON_FAIL;
--	} else {
--		clr = AR_WOW_BEACON_FAIL_EN;
--	}
--
--	REG_RMW(ah, AR_WOW_BCN_EN, set, clr);
--
--	set = 0;
--	clr = 0;
--	/*
--	 * Enable the magic packet registers
--	 */
--	if (pattern_enable & AH_WOW_MAGIC_PATTERN_EN) {
--		set = AR_WOW_MAGIC_EN;
--		wow_event_mask |= AR_WOW_MAGIC_PAT_FOUND;
--	} else {
--		clr = AR_WOW_MAGIC_EN;
--	}
--	set |= AR_WOW_MAC_INTR_EN;
--	REG_RMW(ah, AR_WOW_PATTERN, set, clr);
--
--	REG_WRITE(ah, AR_WOW_PATTERN_MATCH_LT_256B,
--		  AR_WOW_PATTERN_SUPPORTED);
--
--	/*
--	 * Set the power states appropriately and enable PME
--	 */
--	clr = 0;
--	set = AR_PMCTRL_PWR_STATE_D1D3 | AR_PMCTRL_HOST_PME_EN |
--	      AR_PMCTRL_PWR_PM_CTRL_ENA;
--
--	clr = AR_PCIE_PM_CTRL_ENA;
--	REG_RMW(ah, AR_PCIE_PM_CTRL, set, clr);
--
--	/*
--	 * this is needed to prevent the chip waking up
--	 * the host within 3-4 seconds with certain
--	 * platform/BIOS. The fix is to enable
--	 * D1 & D3 to match original definition and
--	 * also match the OTP value. Anyway this
--	 * is more related to SW WOW.
--	 */
--	clr = AR_PMCTRL_PWR_STATE_D1D3;
--	REG_CLR_BIT(ah, AR_PCIE_PM_CTRL, clr);
--
--	set = AR_PMCTRL_PWR_STATE_D1D3_REAL;
--	REG_SET_BIT(ah, AR_PCIE_PM_CTRL, set);
--
--	REG_CLR_BIT(ah, AR_STA_ID1, AR_STA_ID1_PRESERVE_SEQNUM);
--
--	/* to bring down WOW power low margin */
--	set = BIT(13);
--	REG_SET_BIT(ah, AR_PCIE_PHY_REG3, set);
--	/* HW WoW */
--	clr = BIT(5);
--	REG_CLR_BIT(ah, AR_PCU_MISC_MODE3, clr);
--
--	ath9k_hw_set_powermode_wow_sleep(ah);
--	ah->wow_event_mask = wow_event_mask;
--}
--EXPORT_SYMBOL(ath9k_hw_wow_enable);
--- 
-1.8.4.1
+I forgot to sign it. Signing now..
 
+	Gustavo
+
+2013-10-03 Gustavo Padovan <gustavo@padovan.org>:
+
+> Hi John,
+>=20
+> A series of patches for 3.12. The big work here is from Marcel and Johan.=
+ They
+> did a lot of work in the L2CAP, HCI and MGMT layers. The most important o=
+nes
+> are the addition of a new MGMT command to enable/disable LE advertisement=
+ and
+> the introduction of the HCI user channel to allow applications to get dir=
+ectly
+> and exclusive access to Bluetooth devices.
+>=20
+> Please pull, or let me know of any issues. Thanks!
+>=20
+> 	Gustavo
+>=20
+> --
+> The following changes since commit f4e1a4d3ecbb9e42bdf8e7869ee8a4ebfa27fb=
+20:
+>=20
+>   rt2800: change initialization sequence to fix system freeze (2013-09-09=
+ 14:44:34 -0400)
+>=20
+> are available in the git repository at:
+>=20
+>   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next =
+for-upstream
+>=20
+> for you to fetch changes up to 4f3e219d95a3c31b916dcd5e2631c4e440736f79:
+>=20
+>   Bluetooth: Only one command per L2CAP LE signalling is supported (2013-=
+10-03 16:09:59 +0300)
+>=20
+> ----------------------------------------------------------------
+> Amitkumar Karwar (4):
+>       Bluetooth: btmrvl: add btmrvl_send_sync_cmd() function
+>       Bluetooth: btmrvl: get rid of struct btmrvl_cmd
+>       Bluetooth: btmrvl: add setup handler
+>       Bluetooth: btmrvl: add calibration data download support
+>=20
+> Andre Guedes (2):
+>       Bluetooth: Fix security level for peripheral role
+>       Bluetooth: Fix encryption key size for peripheral role
+>=20
+> DoHyun Pyun (8):
+>       Bluetooth: Add the definition and structure for Set Reserved LT_ADDR
+>       Bluetooth: Add the definition and structure for Delete Reserved LT_=
+ADDR
+>       Bluetooth: Add the definition and structure for Set CSB Data
+>       Bluetooth: Add the structure for Write Sync Train Parameters
+>       Bluetooth: Add the definition and structure for Set CSB
+>       Bluetooth: Add the definition for Start Synchronization Train
+>       Bluetooth: Add the definition and stcuture for Sync Train Complete
+>       Bluetooth: Add the definition for Slave Page Response Timeout
+>=20
+> Gianluca Anzolin (1):
+>       Bluetooth: don't release the port in rfcomm_dev_state_change()
+>=20
+> Gustavo Padovan (1):
+>       Merge git://git.kernel.org/.../bluetooth/bluetooth
+>=20
+> Johan Hedberg (25):
+>       Bluetooth: Introduce a new HCI_RFKILLED flag
+>       Bluetooth: Fix rfkill functionality during the HCI setup stage
+>       Bluetooth: Remove unused event mask struct
+>       Bluetooth: Fix double error response for l2cap_create_chan_req
+>       Bluetooth: Fix L2CAP error return used for failed channel lookups
+>       Bluetooth: Fix L2CAP Disconnect response for unknown CID
+>       Bluetooth: Fix L2CAP command reject reason
+>       Bluetooth: Fix sending responses to identified L2CAP response packe=
+ts
+>       Bluetooth: Fix responding to invalid L2CAP signaling commands
+>       Bluetooth: Fix waiting for clearing of BT_SK_SUSPEND flag
+>       Bluetooth: Add synchronization train parameters reading support
+>       Bluetooth: Add event mask page 2 setting support
+>       Bluetooth: Add clarifying comment to bt_sock_wait_state()
+>       Bluetooth: Clean up socket locking in l2cap_sock_recvmsg
+>       Bluetooth: Fix busy return for mgmt_set_powered in some cases
+>       Bluetooth: Move mgmt response convenience functions to a better loc=
+ation
+>       Bluetooth: Use async request for LE enable/disable
+>       Bluetooth: Add new mgmt setting for LE advertising
+>       Bluetooth: Add new mgmt_set_advertising command
+>       Bluetooth: Refactor hci_dev_open to a separate hci_dev_do_open func=
+tion
+>       Bluetooth: Fix workqueue synchronization in hci_dev_open
+>       Bluetooth: Introduce a new HCI_BREDR_ENABLED flag
+>       Bluetooth: Add a new mgmt_set_bredr command
+>       Bluetooth: Fix REJECTED vs NOT_SUPPORTED mgmt responses
+>       Bluetooth: Fix advertising data flags with disabled BR/EDR
+>=20
+> Ken O'Brien (1):
+>       Bluetooth: btusb: Add support for Belkin F8065bf
+>=20
+> Marcel Holtmann (35):
+>       Bluetooth: Refactor raw socket filter into more readable code
+>       Bluetooth: Fix handling of getpeername() for HCI sockets
+>       Bluetooth: Fix handling of getsockname() for HCI sockets
+>       Bluetooth: Report error for HCI reset ioctl when device is down
+>       Bluetooth: Fix error handling for HCI socket options
+>       Bluetooth: Restrict ioctls to HCI raw channel sockets
+>       Bluetooth: Introduce user channel flag for HCI devices
+>       Bluetooth: Introduce new HCI socket channel for user operation
+>       Bluetooth: Use devname:vhci module alias for virtual HCI driver
+>       Bluetooth: Add support creating virtual AMP controllers
+>       Bluetooth: Disable upper layer connections when user channel is act=
+ive
+>       Bluetooth: Use GFP_KERNEL when cloning SKB in a workqueue
+>       Bluetooth: Only schedule raw queue when user channel is active
+>       Bluetooth: Use only 2 bits for controller type information
+>       Bluetooth: Replace BDADDR_LOCAL with BDADDR_NONE
+>       Bluetooth: Provide high speed configuration option
+>       Bluetooth: Send new settings event when changing high speed option
+>       Bluetooth: Require CAP_NET_ADMIN for HCI User Channel operation
+>       Bluetooth: Enable -D__CHECK_ENDIAN__ for sparse by default
+>       Bluetooth: Restrict disabling of HS when controller is powered off
+>       Bluetooth: Add management command for setting static address
+>       Bluetooth: Increment management interface revision
+>       Bluetooth: Fix memory leak with L2CAP signal channels
+>       Bluetooth: Restrict SSP setting changes to BR/EDR enabled controlle=
+rs
+>       Bluetooth: Allow setting static address even if LE is disabled
+>       Bluetooth: Restrict loading of link keys to BR/EDR capable controll=
+ers
+>       Bluetooth: Restrict loading of long term keys to LE capable control=
+lers
+>       Bluetooth: Allow changing device class when BR/EDR is disabled
+>       Bluetooth: Fix switch statement order for L2CAP fixed channels
+>       Bluetooth: Don't copy L2CAP LE signalling to raw sockets
+>       Bluetooth: SMP packets are only valid on LE connections
+>       Bluetooth: L2CAP connectionless channels are only valid for BR/EDR
+>       Bluetooth: Drop packets on ATT fixed channel on BR/EDR
+>       Bluetooth: Check minimum length of SMP packets
+>       Bluetooth: Only one command per L2CAP LE signalling is supported
+>=20
+> Peng Chen (1):
+>       Bluetooth: Add a new PID/VID 0cf3/e005 for AR3012.
+>=20
+> Peter Senna Tschudin (1):
+>       Bluetooth: Fix assignment of 0/1 to bool variables
+>=20
+> Raphael Kubo da Costa (1):
+>       Bluetooth: Add support for BCM20702A0 [0b05, 17cb]
+>=20
+> Syam Sidhardhan (1):
+>       Bluetooth: Fix ACL alive for long in case of non pariable devices
+>=20
+>  drivers/bluetooth/Makefile        |   2 +
+>  drivers/bluetooth/ath3k.c         |   2 +
+>  drivers/bluetooth/btmrvl_drv.h    |  12 +-
+>  drivers/bluetooth/btmrvl_main.c   | 269 +++++++++++++++---------
+>  drivers/bluetooth/btmrvl_sdio.c   |  15 +-
+>  drivers/bluetooth/btmrvl_sdio.h   |   2 +
+>  drivers/bluetooth/btusb.c         |   5 +
+>  drivers/bluetooth/hci_vhci.c      | 170 ++++++++++-----
+>  include/net/bluetooth/bluetooth.h |   5 +-
+>  include/net/bluetooth/hci.h       |  82 +++++++-
+>  include/net/bluetooth/hci_core.h  |   2 +-
+>  include/net/bluetooth/l2cap.h     |   1 +
+>  include/net/bluetooth/mgmt.h      |  11 +
+>  net/bluetooth/Makefile            |   2 +
+>  net/bluetooth/af_bluetooth.c      |  41 ++++
+>  net/bluetooth/hci_conn.c          |   4 +
+>  net/bluetooth/hci_core.c          | 213 +++++++++++++++----
+>  net/bluetooth/hci_event.c         |  23 ++-
+>  net/bluetooth/hci_sock.c          | 204 ++++++++++++++----
+>  net/bluetooth/l2cap_core.c        | 169 +++++++++------
+>  net/bluetooth/l2cap_sock.c        |  20 +-
+>  net/bluetooth/mgmt.c              | 562 ++++++++++++++++++++++++++++++++=
+++++++++----------
+>  net/bluetooth/rfcomm/sock.c       |   7 +-
+>  net/bluetooth/rfcomm/tty.c        |  35 +---
+>  net/bluetooth/smp.c               |  15 +-
+>  25 files changed, 1390 insertions(+), 483 deletions(-)
+>=20
+>=20
+
+--7AUc2qLy4jB3hD7Z
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+
+iQIcBAEBAgAGBQJSTa3pAAoJEPs3PUX4s20oeGcP/07x+BR+fZEBd5SVm5qDxevw
+Vz2eFNZmPssokqkAOFakslMyTV7XHoBKU6Wrc6hLJXZQXzKC9qO6MQZF/vjrZGpY
+azBOEC9/eO9EvmWYQFUvHNX4OC62wdBINI+MLcg8/TnmAmwEAjkz6XTxdorzmt1h
+mjUtW/hhRpkMFn0gZlIWb/QFiqXdKma6dJW5RaxIjxSM3PYSf5i+bTXwNo1rL2D8
+fCrgpXwY09xN8L60TKkD2Ba0HXT8E2nkEy9tojooHn7V9tFHw6j0/cc7gljiQd5d
+Ghpm/MdEC94alSbJBiiiYlbunKFjA/h9zDOSU9RG58ZhGY9YIujB7mjZj79pc/d1
+O8vr+0D/kHaK8FaRGrKqZlDV1SygFPKORruK/x9XYl+W5V36YQms+OFoeSwkl7Wc
+8IRFO+JqLmoxsO+A0t/Z2sT02Ov5RNnJ9Hja8ZIWdamHye8eRFnxnSwpNZQj2TSS
+HLSluwte/ja4difSO0HKVGsHF23dg7YWJ8fvD6FwX8L9IJYsk0zpCWZyCpdR6Mh8
+TaGP6JUhgJM6Vo9tf1lSWZpkzZODAGEzOYT1wgbQ67zLGDir/6yunlXw/cxtFFS+
+UZKHqH6FklsaMvBYx3r/NfC9ezet8zvgdY+UO77/WirH3StLDP9wy8tWPt+/m42t
+VfV4jyqYGIOsogZjDZNK
+=6dPr
+-----END PGP SIGNATURE-----
+
+--7AUc2qLy4jB3hD7Z--
