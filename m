@@ -1,46 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f43.google.com ([209.85.219.43]:59421 "EHLO
-	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753300Ab3JAWjU (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:39294 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755360Ab3JCUaP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Oct 2013 18:39:20 -0400
-Received: by mail-oa0-f43.google.com with SMTP id f4so4303oah.30
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Oct 2013 15:39:20 -0700 (PDT)
+	Thu, 3 Oct 2013 16:30:15 -0400
+Date: Thu, 3 Oct 2013 16:19:35 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Gustavo Padovan <gustavo@padovan.org>,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: bluetooth-next 2013-10-03
+Message-ID: <20131003201935.GF3142@tuxdriver.com> (sfid-20131003_223040_359050_91A37072)
+References: <20131003174524.GA22728@joana>
 MIME-Version: 1.0
-In-Reply-To: <1380626864.14430.32.camel@jlt4.sipsolutions.net>
-References: <1379115372-28426-1-git-send-email-yeohchunyeow@cozybit.com>
-	<1379115372-28426-5-git-send-email-yeohchunyeow@cozybit.com>
-	<1380626864.14430.32.camel@jlt4.sipsolutions.net>
-Date: Wed, 2 Oct 2013 06:39:20 +0800
-Message-ID: <CAHS2MGOGJ4d2W5fWeHivkV6f4KrSMYxur24DG7R+pk-4SPJ38g@mail.gmail.com> (sfid-20131002_003923_156990_19FD0A99)
-Subject: Re: [PATCH 4/5] {nl,cfg,mac}80211: finalizing mesh channel switching
-From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	devel@lists.open80211s.org,
-	"distro11s@cozybit.com" <distro11s@cozybit.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131003174524.GA22728@joana>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I'd prefer you rewrote this to be more active ... this seems rather
-> observer style :)
-Alright.
+On Thu, Oct 03, 2013 at 02:45:24PM -0300, Gustavo Padovan wrote:
+> Hi John,
+> 
+> A series of patches for 3.12. The big work here is from Marcel and Johan. They
+> did a lot of work in the L2CAP, HCI and MGMT layers. The most important ones
+> are the addition of a new MGMT command to enable/disable LE advertisement and
+> the introduction of the HCI user channel to allow applications to get directly
+> and exclusive access to Bluetooth devices.
+> 
+> Please pull, or let me know of any issues. Thanks!
+> 
+> 	Gustavo
+> 
+> --
+> The following changes since commit f4e1a4d3ecbb9e42bdf8e7869ee8a4ebfa27fb20:
+> 
+>   rt2800: change initialization sequence to fix system freeze (2013-09-09 14:44:34 -0400)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next for-upstream
+> 
+> for you to fetch changes up to 4f3e219d95a3c31b916dcd5e2631c4e440736f79:
+> 
+>   Bluetooth: Only one command per L2CAP LE signalling is supported (2013-10-03 16:09:59 +0300)
 
->
-> This seems totally racy with what I pointed out in the other patch ...
->
-Definitely take a look on this.
+Pulling now...
 
-> You should never print a message for memory allocation failures, they
-> already give very verbose output.
-Ok.
-
->> +     ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
->> +     return ret;
->
-> return 0
-Ok
-
---- Chun-Yeow
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
