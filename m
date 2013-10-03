@@ -1,54 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:34223 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752374Ab3J3LYH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Oct 2013 07:24:07 -0400
-Date: Wed, 30 Oct 2013 12:24:05 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
-Cc: Luciano Coelho <luca@coelho.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, sre@ring0.de, joni.lapilainen@gmail.com,
-	David Gnedt <david.gnedt@davizone.at>
-Subject: Re: [PATCH 02/16] wl1251: fix scan behaviour while not associated
-Message-ID: <20131030112405.GA8204@amd.pavel.ucw.cz> (sfid-20131030_122432_198113_D7C205FA)
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
- <1382819655-30430-3-git-send-email-pali.rohar@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1382819655-30430-3-git-send-email-pali.rohar@gmail.com>
+Received: from arrakis.dune.hu ([78.24.191.176]:44142 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752754Ab3JCMHI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Oct 2013 08:07:08 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Paul Menzel <paulepanter@users.sourceforge.net>,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v2 2/2] rt2x00: rt2800lib: remove TXPOWER_DELTA entry from extended EEPROM map
+Date: Thu,  3 Oct 2013 14:07:02 +0200
+Message-Id: <1380802022-28646-2-git-send-email-juhosg@openwrt.org> (sfid-20131003_140715_348226_5BFE05DD)
+In-Reply-To: <1380802022-28646-1-git-send-email-juhosg@openwrt.org>
+References: <1380802022-28646-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat 2013-10-26 22:34:01, Pali Rohár wrote:
-> From: David Gnedt <david.gnedt@davizone.at>
-> 
-> With a dissacociated card I often encoutered very long scan delays.
-> 
-> My guess is that it has something to do with the cards DTIM handling and
-> another firmware bug mentioned in the TI WLAN driver, which is described as
-> the card may never end scanning if the channel is overloaded because it
-> can't send probe requests. I think the firmware somehow also tries to
-> receive DTIM messages when the BSSID is not set. Therefore most of the time
-> it waits for DTIM messages and can't do scanning work.
-> 
-> Anyway we can workaround this misbehaviour by setting the HIGH_PRIORITY
-> bit for scans in disassociated state.
-> 
-> Signed-off-by: David Gnedt <david.gnedt@davizone.at>
+The TXPOWER_DELTA field of the regular EEPROM
+stores the TX power compensation value for HT40.
+The extended EEPROM has no such field, it stores
+separate TX power values for HT20 and for HT40.
 
-I guess you should add your Signed-off-by: here (as you are sending
-the patch forward).
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Acked-by: Paul Menzel <paulepanter@users.sourceforge.net>
+---
+Changes since v1:
+  - add Paul's Acked-by tag
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |    1 -
+ 1 file changed, 1 deletion(-)
 
-Other than that:
-
-Reviewed-by: Pavel Machek <pavel@ucw.cz>
-
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index c979bb7..315f4af 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -278,7 +278,6 @@ static const unsigned int rt2800_eeprom_map_ext[EEPROM_WORD_COUNT] = {
+ 	[EEPROM_LNA]			= 0x0026,
+ 	[EEPROM_EXT_LNA2]		= 0x0027,
+ 	[EEPROM_RSSI_BG]		= 0x0028,
+-	[EEPROM_TXPOWER_DELTA]		= 0x0028, /* Overlaps with RSSI_BG */
+ 	[EEPROM_RSSI_BG2]		= 0x0029,
+ 	[EEPROM_RSSI_A]			= 0x002a,
+ 	[EEPROM_RSSI_A2]		= 0x002b,
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+1.7.10
