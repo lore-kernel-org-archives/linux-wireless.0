@@ -1,38 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:62129 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755326Ab3JQPwH (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:39298 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755414Ab3JCUaR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Oct 2013 11:52:07 -0400
-Received: by mail-ob0-f182.google.com with SMTP id va2so2024255obc.41
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Oct 2013 08:52:06 -0700 (PDT)
+	Thu, 3 Oct 2013 16:30:17 -0400
+Date: Thu, 3 Oct 2013 16:17:06 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qca.qualcomm.com,
+	ath10k@lists.infradead.org
+Subject: Re: Pull request: ath 20131001
+Message-ID: <20131003201706.GE3142@tuxdriver.com> (sfid-20131003_223025_029362_29A94F0D)
+References: <87wqlw6fwr.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1382022683.14410.18.camel@jlt4.sipsolutions.net>
-References: <1381802911-3921-1-git-send-email-yeohchunyeow@cozybit.com>
-	<1381802911-3921-5-git-send-email-yeohchunyeow@cozybit.com>
-	<1382022683.14410.18.camel@jlt4.sipsolutions.net>
-Date: Thu, 17 Oct 2013 23:52:06 +0800
-Message-ID: <CAHS2MGMgTp9homs-moVXTVfyFtcuYPPbHBiiW0XD9kBYJ0hb5w@mail.gmail.com> (sfid-20131017_175211_606674_11A36EC8)
-Subject: Re: [PATCH v5 4/5] {nl,cfg,mac}80211: implement mesh channel switch
- userspace API
-From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	devel@lists.open80211s.org,
-	"distro11s@cozybit.com" <distro11s@cozybit.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87wqlw6fwr.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> If this fails, do we leak the CSA settings?
-If failed, beacon won't include the CSA settings. But If there is any
-other calling mesh_rebuild_beacon and succeed, the it will be included
-up if the channel switch count is not expired. At the same time, CSA
-action frame is also transmitted, so others may use this to start the
-CSA process.
+On Tue, Oct 01, 2013 at 08:48:36PM +0300, Kalle Valo wrote:
+> Hi John,
+> 
+> here's a bigger pull request including patches applied during the merge
+> window. Major changes are:
+> 
+> * throughput improvements including aligning the RX frames correctly and
+>   optimising HTT layer (Michal)
+> 
+> * remove qca98xx hw1.0 support (Bartosz)
+> 
+> * add support for firmware version 999.999.0.636 (Michal)
+> 
+> * firmware htt statistics support (Kalle)
+> 
+> * fix WEP in AP and IBSS mode (Marek)
+> 
+> * fix a mutex unlock balance in debugfs file (Shafi)
+> 
+> And of course there's a lot of smaller fixes and cleanup.
+> 
+> To avoid the pull request getting too big, I didn't include the latest
+> patches from ath.git. I'm planning to send them once you have pulled
+> this one. Please let me know if there are any problems.
+> 
+> Kalle
+> 
+> 
+> The following changes since commit 9d0e2f0772d394060bf3b17cd1f3a35574365103:
+> 
+>   ath6kl: Fix invalid pointer access on fuzz testing with AP mode (2013-08-07 10:58:59 +0300)
+> 
+> are available in the git repository at:
+> 
+>   git://github.com/kvalo/ath.git tags/for-linville-20131001
+> 
+> for you to fetch changes up to 6e712d427cb0542afdd5220edb6e4f4f8a5b952d:
+> 
+>   ath10k: replenish HTT RX buffers in a tasklet (2013-09-26 17:22:54 +0300)
 
-Am I answer your question?
+Pulling now...
 
-----
-Chun-Yeow
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
