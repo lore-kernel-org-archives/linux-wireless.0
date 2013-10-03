@@ -1,35 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:49944 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752248Ab3JWQqk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Oct 2013 12:46:40 -0400
-Received: by mail-wi0-f178.google.com with SMTP id hn9so1214766wib.5
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Oct 2013 09:46:39 -0700 (PDT)
-Date: Wed, 23 Oct 2013 18:46:54 +0200
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Sujith Manoharan <sujith@msujith.org>
-Cc: voncken <cedric.voncken@acksys.fr>,
-	'John Linville' <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath9k: Identify Killer Wireless cards
-Message-ID: <20131023164653.GA22500@magnum.frso.rivierawaves.com> (sfid-20131023_184643_471196_33C66579)
-References: <1382519771-11170-1-git-send-email-sujith@msujith.org>
- <014d01cecff7$ce744080$6b5cc180$@acksys.fr>
- <21095.58324.375248.315193@gargle.gargle.HOWL>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <21095.58324.375248.315193@gargle.gargle.HOWL>
+Received: from arrakis.dune.hu ([78.24.191.176]:50102 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754317Ab3JCSAu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Oct 2013 14:00:50 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v2 4/4] rt2x00: rt2800lib: fix VGC programming for RT3572 and RT3593
+Date: Thu,  3 Oct 2013 20:00:43 +0200
+Message-Id: <1380823243-11149-4-git-send-email-juhosg@openwrt.org> (sfid-20131003_200054_746970_DE7FAF28)
+In-Reply-To: <1380823243-11149-1-git-send-email-juhosg@openwrt.org>
+References: <1380823243-11149-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 23, 2013 at 08:27:24PM +0530, Sujith Manoharan wrote:
-> voncken wrote:
-> > 	What is a PCI killer ?
-> 
-> http://www.killergaming.com/solutions/Wireless
-> http://www.qca.qualcomm.com/networking/feature.php?feature=32
-> 
-Jokes apart, the links do not give much technical information ..
- 
-Karl
+According to the DPO_RT5572_LinuxSTA_2.6.1.3_20121022
+reference driver, programming of the 'BBP 66' register
+on the RT3572 and RT3593 chipsets must be done via the
+'rt2800_bbp_write_with_rx_chain' function. This ensures
+that value is correclty set for all RX chains.
+
+References:
+  RT35xx_ChipAGCAdjust and RT35xx_SetAGCInitValue functions
+  in chips/rt35xx.c
+
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 55b421f..f81e943 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -4442,11 +4442,17 @@ static inline void rt2800_set_vgc(struct rt2x00_dev *rt2x00dev,
+ 				  struct link_qual *qual, u8 vgc_level)
+ {
+ 	if (qual->vgc_level != vgc_level) {
+-		if (rt2x00_rt(rt2x00dev, RT5592)) {
++		if (rt2x00_rt(rt2x00dev, RT3572) ||
++		    rt2x00_rt(rt2x00dev, RT3593)) {
++			rt2800_bbp_write_with_rx_chain(rt2x00dev, 66,
++						       vgc_level);
++		} else if (rt2x00_rt(rt2x00dev, RT5592)) {
+ 			rt2800_bbp_write(rt2x00dev, 83, qual->rssi > -65 ? 0x4a : 0x7a);
+ 			rt2800_bbp_write_with_rx_chain(rt2x00dev, 66, vgc_level);
+-		} else
++		} else {
+ 			rt2800_bbp_write(rt2x00dev, 66, vgc_level);
++		}
++
+ 		qual->vgc_level = vgc_level;
+ 		qual->vgc_level_reg = vgc_level;
+ 	}
+-- 
+1.7.10
