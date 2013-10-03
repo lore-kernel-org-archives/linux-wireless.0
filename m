@@ -1,75 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f45.google.com ([74.125.83.45]:37075 "EHLO
-	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753120Ab3JZTo6 (ORCPT
+Received: from mail-oa0-f54.google.com ([209.85.219.54]:34128 "EHLO
+	mail-oa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753034Ab3JCBdV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Oct 2013 15:44:58 -0400
-Received: by mail-ee0-f45.google.com with SMTP id c50so3421333eek.4
-        for <linux-wireless@vger.kernel.org>; Sat, 26 Oct 2013 12:44:57 -0700 (PDT)
-Date: Sat, 26 Oct 2013 22:44:53 +0300
-From: Georgiana Rodica Chelu <georgiana.chelu93@gmail.com>
-To: opw-kernel@googlegroups.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [Patch v3 2/3] net: wireless: replace printk with pr_warn in
- adm8211.c
-Message-ID: <20131026194453.GA11494@fireworks> (sfid-20131026_214528_347661_448C1758)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 2 Oct 2013 21:33:21 -0400
+Received: by mail-oa0-f54.google.com with SMTP id n5so1674040oag.41
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Oct 2013 18:33:20 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	smihir@qti.qualcomm.com, tushnimb@qca.qualcomm.com
+Subject: [PATCH 2/2] cfg80211: simplfy strict custom alpha2 regdomain check
+Date: Wed,  2 Oct 2013 18:33:10 -0700
+Message-Id: <1380763990-5981-2-git-send-email-mcgrof@do-not-panic.com> (sfid-20131003_033323_564404_CEA4CC72)
+In-Reply-To: <1380763990-5981-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1380763990-5981-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-WARNING: Prefer netdev_warn(netdev, ... then dev_warn(dev, ... then pr_warn(...
-to printk(KERN_WARNING ...
+This makes it easier to read.
 
-Signed-off-by: Georgiana Rodica Chelu <georgiana.chelu93@gmail.com>
+Cc: smihir@qti.qualcomm.com
+Cc: tushnimb@qca.qualcomm.com
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- drivers/net/wireless/adm8211.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+ net/wireless/reg.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
-index e36d54d..0392b52 100644
---- a/drivers/net/wireless/adm8211.c
-+++ b/drivers/net/wireless/adm8211.c
-@@ -169,13 +169,13 @@ static int adm8211_read_eeprom(struct ieee80211_hw *dev)
- 		else
- 			priv->bbp_type = ADM8211_TYPE_ADMTEK;
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 9b488c7..ec3d45e 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -964,6 +964,13 @@ static bool reg_dev_ignore_cell_hint(struct wiphy *wiphy)
+ }
+ #endif
  
--		printk(KERN_WARNING "%s (adm8211): Unknown BBPtype: %d\n",
--		       pci_name(priv->pdev), cr49 >> 3);
-+		pr_warn("%s (adm8211): Unknown BBPtype: %d\n",
-+			pci_name(priv->pdev), cr49 >> 3);
- 	}
++static bool wiphy_strict_alpha2_regd(struct wiphy *wiphy)
++{
++	if (wiphy->flags & WIPHY_FLAG_STRICT_REGULATORY &&
++	    !(wiphy->flags & WIPHY_FLAG_CUSTOM_REGULATORY))
++		return true;
++	return false;
++}
  
- 	if (priv->eeprom->country_code >= ARRAY_SIZE(cranges)) {
--		printk(KERN_WARNING "%s (adm8211): Invalid country code (%d)\n",
--		       pci_name(priv->pdev), priv->eeprom->country_code);
-+		pr_warn("%s (adm8211): Invalid country code (%d)\n",
-+			pci_name(priv->pdev), priv->eeprom->country_code);
- 
- 		chan_range = cranges[2];
- 	} else
-@@ -209,8 +209,8 @@ static int adm8211_read_eeprom(struct ieee80211_hw *dev)
- 		else
- 			priv->specific_bbptype = ADM8211_BBP_ADM8011;
- 
--		printk(KERN_WARNING "%s (adm8211): Unknown specific BBP: %d\n",
--		       pci_name(priv->pdev), priv->eeprom->specific_bbptype);
-+		pr_warn("%s (adm8211): Unknown specific BBP: %d\n",
-+			pci_name(priv->pdev), priv->eeprom->specific_bbptype);
- 	}
- 
- 	switch (priv->eeprom->specific_rftype) {
-@@ -230,8 +230,8 @@ static int adm8211_read_eeprom(struct ieee80211_hw *dev)
- 		else if (priv->pdev->revision == ADM8211_REV_AB)
- 			priv->transceiver_type = ADM8211_RFMD2948;
- 
--		printk(KERN_WARNING "%s (adm8211): Unknown transceiver: %d\n",
--		       pci_name(priv->pdev), priv->eeprom->specific_rftype);
-+		pr_warn("%s (adm8211): Unknown transceiver: %d\n",
-+			pci_name(priv->pdev), priv->eeprom->specific_rftype);
- 
- 		break;
- 	}
+ static bool ignore_reg_update(struct wiphy *wiphy,
+ 			      enum nl80211_reg_initiator initiator)
+@@ -990,9 +997,8 @@ static bool ignore_reg_update(struct wiphy *wiphy,
+ 	 * wiphy->regd will be set once the device has its own
+ 	 * desired regulatory domain set
+ 	 */
+-	if (wiphy->flags & WIPHY_FLAG_STRICT_REGULATORY && !wiphy->regd &&
++	if (wiphy_strict_alpha2_regd(wiphy) && !wiphy->regd &&
+ 	    initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE &&
+-	    !(wiphy->flags & WIPHY_FLAG_CUSTOM_REGULATORY) &&
+ 	    !is_world_regdom(lr->alpha2)) {
+ 		REG_DBG_PRINT("Ignoring regulatory request set by %s "
+ 			      "since the driver requires its own regulatory "
 -- 
-1.8.1.2
+1.8.4.rc3
 
