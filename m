@@ -1,59 +1,297 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f51.google.com ([74.125.83.51]:60837 "EHLO
-	mail-ee0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752687Ab3J1GVC (ORCPT
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:59524 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750868Ab3JDFKU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Oct 2013 02:21:02 -0400
-Received: by mail-ee0-f51.google.com with SMTP id d41so3200361eek.10
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Oct 2013 23:21:00 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 2/2] ath10k: plug memory leak on beacon tx
-Date: Mon, 28 Oct 2013 07:18:14 +0100
-Message-Id: <1382941094-3291-3-git-send-email-michal.kazior@tieto.com> (sfid-20131028_072110_809630_6A382BAB)
-In-Reply-To: <1382941094-3291-1-git-send-email-michal.kazior@tieto.com>
-References: <1382941094-3291-1-git-send-email-michal.kazior@tieto.com>
+	Fri, 4 Oct 2013 01:10:20 -0400
+Message-ID: <1380863434.4265.34.camel@porter.coelho.fi> (sfid-20131004_071044_279050_7C47DF76)
+Subject: Re: [PATCH v2 01/11] wlcore: ROC on AP channel before auth reply
+From: Luca Coelho <luca@coelho.fi>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 04 Oct 2013 08:10:34 +0300
+In-Reply-To: <1379432490-22157-1-git-send-email-eliad@wizery.com>
+References: <1379432490-22157-1-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If beacon tx command failed the wmi command buffer
-was not freed. This led to OOM in the long run.
-This became aparent when stress testing
-multi-BSSID.
+Hi,
 
-Reported-By: Tomasz Skapski <tomasz.skapski@tieto.com>
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/wmi.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+I think I forgot to say, but I already applied all this series and John
+has already pulled it.  Just for the record.
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 8db9db2..f79f17c 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -3092,6 +3092,7 @@ int ath10k_wmi_beacon_send_nowait(struct ath10k *ar,
- {
- 	struct wmi_bcn_tx_cmd *cmd;
- 	struct sk_buff *skb;
-+	int ret;
- 
- 	skb = ath10k_wmi_alloc_skb(sizeof(*cmd) + arg->bcn_len);
- 	if (!skb)
-@@ -3104,7 +3105,11 @@ int ath10k_wmi_beacon_send_nowait(struct ath10k *ar,
- 	cmd->hdr.bcn_len  = __cpu_to_le32(arg->bcn_len);
- 	memcpy(cmd->bcn, arg->bcn, arg->bcn_len);
- 
--	return ath10k_wmi_cmd_send_nowait(ar, skb, ar->wmi.cmd->bcn_tx_cmdid);
-+	ret = ath10k_wmi_cmd_send_nowait(ar, skb, ar->wmi.cmd->bcn_tx_cmdid);
-+	if (ret)
-+		dev_kfree_skb(skb);
-+
-+	return ret;
- }
- 
- static void ath10k_wmi_pdev_set_wmm_param(struct wmi_wmm_params *params,
--- 
-1.8.4.rc3
+--
+Luca.
+
+On Tue, 2013-09-17 at 18:41 +0300, Eliad Peller wrote:
+> From: Arik Nemtsov <arik@wizery.com>
+> 
+> Start a ROC on the AP channel beforing sending the authentication reply
+> to a connecting STA. This ROC is held up to 1 second via a timer. If the
+> station is authorized and added by mac80211, the ROC is extended until
+> the station is fully authorized.
+> We make sure not to ROC twice when several stations are connecting in
+> parallel and to only release the ROC when both the pending-reply timer
+> and the STA-state callbacks do not require it.
+> 
+> Signed-off-by: Arik Nemtsov <arik@wizery.com>
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> ---
+>  drivers/net/wireless/ti/wlcore/main.c     | 101 +++++++++++++++++++++++++-----
+>  drivers/net/wireless/ti/wlcore/tx.c       |  25 ++++++--
+>  drivers/net/wireless/ti/wlcore/tx.h       |   3 +
+>  drivers/net/wireless/ti/wlcore/wlcore.h   |   2 +
+>  drivers/net/wireless/ti/wlcore/wlcore_i.h |   9 +++
+>  5 files changed, 120 insertions(+), 20 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+> index 38995f9..b64b465 100644
+> --- a/drivers/net/wireless/ti/wlcore/main.c
+> +++ b/drivers/net/wireless/ti/wlcore/main.c
+> @@ -2008,6 +2008,47 @@ out:
+>  	mutex_unlock(&wl->mutex);
+>  }
+>  
+> +static void wlcore_pending_auth_complete_work(struct work_struct *work)
+> +{
+> +	struct delayed_work *dwork;
+> +	struct wl1271 *wl;
+> +	struct wl12xx_vif *wlvif;
+> +	unsigned long time_spare;
+> +	int ret;
+> +
+> +	dwork = container_of(work, struct delayed_work, work);
+> +	wlvif = container_of(dwork, struct wl12xx_vif,
+> +			     pending_auth_complete_work);
+> +	wl = wlvif->wl;
+> +
+> +	mutex_lock(&wl->mutex);
+> +
+> +	if (unlikely(wl->state != WLCORE_STATE_ON))
+> +		goto out;
+> +
+> +	/*
+> +	 * Make sure a second really passed since the last auth reply. Maybe
+> +	 * a second auth reply arrived while we were stuck on the mutex.
+> +	 * Check for a little less than the timeout to protect from scheduler
+> +	 * irregularities.
+> +	 */
+> +	time_spare = jiffies +
+> +			msecs_to_jiffies(WLCORE_PEND_AUTH_ROC_TIMEOUT - 50);
+> +	if (!time_after(time_spare, wlvif->pending_auth_reply_time))
+> +		goto out;
+> +
+> +	ret = wl1271_ps_elp_wakeup(wl);
+> +	if (ret < 0)
+> +		goto out;
+> +
+> +	/* cancel the ROC if active */
+> +	wlcore_update_inconn_sta(wl, wlvif, NULL, false);
+> +
+> +	wl1271_ps_elp_sleep(wl);
+> +out:
+> +	mutex_unlock(&wl->mutex);
+> +}
+> +
+>  static int wl12xx_allocate_rate_policy(struct wl1271 *wl, u8 *idx)
+>  {
+>  	u8 policy = find_first_zero_bit(wl->rate_policies_map,
+> @@ -2159,6 +2200,8 @@ static int wl12xx_init_vif_data(struct wl1271 *wl, struct ieee80211_vif *vif)
+>  			  wlcore_channel_switch_work);
+>  	INIT_DELAYED_WORK(&wlvif->connection_loss_work,
+>  			  wlcore_connection_loss_work);
+> +	INIT_DELAYED_WORK(&wlvif->pending_auth_complete_work,
+> +			  wlcore_pending_auth_complete_work);
+>  	INIT_LIST_HEAD(&wlvif->list);
+>  
+>  	setup_timer(&wlvif->rx_streaming_timer, wl1271_rx_streaming_timer,
+> @@ -2590,6 +2633,7 @@ unlock:
+>  	cancel_work_sync(&wlvif->rx_streaming_disable_work);
+>  	cancel_delayed_work_sync(&wlvif->connection_loss_work);
+>  	cancel_delayed_work_sync(&wlvif->channel_switch_work);
+> +	cancel_delayed_work_sync(&wlvif->pending_auth_complete_work);
+>  
+>  	mutex_lock(&wl->mutex);
+>  }
+> @@ -3969,6 +4013,13 @@ static void wl1271_bss_info_changed_ap(struct wl1271 *wl,
+>  			}
+>  		} else {
+>  			if (test_bit(WLVIF_FLAG_AP_STARTED, &wlvif->flags)) {
+> +				/*
+> +				 * AP might be in ROC in case we have just
+> +				 * sent auth reply. handle it.
+> +				 */
+> +				if (test_bit(wlvif->role_id, wl->roc_map))
+> +					wl12xx_croc(wl, wlvif->role_id);
+> +
+>  				ret = wl12xx_cmd_role_stop_ap(wl, wlvif);
+>  				if (ret < 0)
+>  					goto out;
+> @@ -4656,29 +4707,49 @@ static void wlcore_roc_if_possible(struct wl1271 *wl,
+>  	wl12xx_roc(wl, wlvif, wlvif->role_id, wlvif->band, wlvif->channel);
+>  }
+>  
+> -static void wlcore_update_inconn_sta(struct wl1271 *wl,
+> -				     struct wl12xx_vif *wlvif,
+> -				     struct wl1271_station *wl_sta,
+> -				     bool in_connection)
+> +/*
+> + * when wl_sta is NULL, we treat this call as if coming from a
+> + * pending auth reply.
+> + * wl->mutex must be taken and the FW must be awake when the call
+> + * takes place.
+> + */
+> +void wlcore_update_inconn_sta(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+> +			      struct wl1271_station *wl_sta, bool in_conn)
+>  {
+> -	if (in_connection) {
+> -		if (WARN_ON(wl_sta->in_connection))
+> +	if (in_conn) {
+> +		if (WARN_ON(wl_sta && wl_sta->in_connection))
+>  			return;
+> -		wl_sta->in_connection = true;
+> -		if (!wlvif->inconn_count++)
+> +
+> +		if (!wlvif->ap_pending_auth_reply &&
+> +		    !wlvif->inconn_count)
+>  			wlcore_roc_if_possible(wl, wlvif);
+> +
+> +		if (wl_sta) {
+> +			wl_sta->in_connection = true;
+> +			wlvif->inconn_count++;
+> +		} else {
+> +			wlvif->ap_pending_auth_reply = true;
+> +		}
+>  	} else {
+> -		if (!wl_sta->in_connection)
+> +		if (wl_sta && !wl_sta->in_connection)
+> +			return;
+> +
+> +		if (WARN_ON(!wl_sta && !wlvif->ap_pending_auth_reply))
+>  			return;
+>  
+> -		wl_sta->in_connection = false;
+> -		wlvif->inconn_count--;
+> -		if (WARN_ON(wlvif->inconn_count < 0))
+> +		if (WARN_ON(wl_sta && !wlvif->inconn_count))
+>  			return;
+>  
+> -		if (!wlvif->inconn_count)
+> -			if (test_bit(wlvif->role_id, wl->roc_map))
+> -				wl12xx_croc(wl, wlvif->role_id);
+> +		if (wl_sta) {
+> +			wl_sta->in_connection = false;
+> +			wlvif->inconn_count--;
+> +		} else {
+> +			wlvif->ap_pending_auth_reply = false;
+> +		}
+> +
+> +		if (!wlvif->inconn_count && !wlvif->ap_pending_auth_reply &&
+> +		    test_bit(wlvif->role_id, wl->roc_map))
+> +			wl12xx_croc(wl, wlvif->role_id);
+>  	}
+>  }
+>  
+> diff --git a/drivers/net/wireless/ti/wlcore/tx.c b/drivers/net/wireless/ti/wlcore/tx.c
+> index 7e93fe6..03249da 100644
+> --- a/drivers/net/wireless/ti/wlcore/tx.c
+> +++ b/drivers/net/wireless/ti/wlcore/tx.c
+> @@ -86,19 +86,34 @@ void wl1271_free_tx_id(struct wl1271 *wl, int id)
+>  EXPORT_SYMBOL(wl1271_free_tx_id);
+>  
+>  static void wl1271_tx_ap_update_inconnection_sta(struct wl1271 *wl,
+> +						 struct wl12xx_vif *wlvif,
+>  						 struct sk_buff *skb)
+>  {
+>  	struct ieee80211_hdr *hdr;
+>  
+> +	hdr = (struct ieee80211_hdr *)(skb->data +
+> +				       sizeof(struct wl1271_tx_hw_descr));
+> +	if (!ieee80211_is_auth(hdr->frame_control))
+> +		return;
+> +
+>  	/*
+>  	 * add the station to the known list before transmitting the
+>  	 * authentication response. this way it won't get de-authed by FW
+>  	 * when transmitting too soon.
+>  	 */
+> -	hdr = (struct ieee80211_hdr *)(skb->data +
+> -				       sizeof(struct wl1271_tx_hw_descr));
+> -	if (ieee80211_is_auth(hdr->frame_control))
+> -		wl1271_acx_set_inconnection_sta(wl, hdr->addr1);
+> +	wl1271_acx_set_inconnection_sta(wl, hdr->addr1);
+> +
+> +	/*
+> +	 * ROC for 1 second on the AP channel for completing the connection.
+> +	 * Note the ROC will be continued by the update_sta_state callbacks
+> +	 * once the station reaches the associated state.
+> +	 */
+> +	wlcore_update_inconn_sta(wl, wlvif, NULL, true);
+> +	wlvif->pending_auth_reply_time = jiffies;
+> +	cancel_delayed_work(&wlvif->pending_auth_complete_work);
+> +	ieee80211_queue_delayed_work(wl->hw,
+> +				&wlvif->pending_auth_complete_work,
+> +				msecs_to_jiffies(WLCORE_PEND_AUTH_ROC_TIMEOUT));
+>  }
+>  
+>  static void wl1271_tx_regulate_link(struct wl1271 *wl,
+> @@ -404,7 +419,7 @@ static int wl1271_prepare_tx_frame(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+>  	wl1271_tx_fill_hdr(wl, wlvif, skb, extra, info, hlid);
+>  
+>  	if (!is_dummy && wlvif && wlvif->bss_type == BSS_TYPE_AP_BSS) {
+> -		wl1271_tx_ap_update_inconnection_sta(wl, skb);
+> +		wl1271_tx_ap_update_inconnection_sta(wl, wlvif, skb);
+>  		wl1271_tx_regulate_link(wl, wlvif, hlid);
+>  	}
+>  
+> diff --git a/drivers/net/wireless/ti/wlcore/tx.h b/drivers/net/wireless/ti/wlcore/tx.h
+> index 55aa4ac..35489c3 100644
+> --- a/drivers/net/wireless/ti/wlcore/tx.h
+> +++ b/drivers/net/wireless/ti/wlcore/tx.h
+> @@ -56,6 +56,9 @@
+>  /* Used for management frames and dummy packets */
+>  #define WL1271_TID_MGMT 7
+>  
+> +/* stop a ROC for pending authentication reply after this time (ms) */
+> +#define WLCORE_PEND_AUTH_ROC_TIMEOUT     1000
+> +
+>  struct wl127x_tx_mem {
+>  	/*
+>  	 * Number of extra memory blocks to allocate for this packet
+> diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
+> index 0034979..54ce5d5 100644
+> --- a/drivers/net/wireless/ti/wlcore/wlcore.h
+> +++ b/drivers/net/wireless/ti/wlcore/wlcore.h
+> @@ -481,6 +481,8 @@ int wlcore_set_key(struct wl1271 *wl, enum set_key_cmd cmd,
+>  		   struct ieee80211_sta *sta,
+>  		   struct ieee80211_key_conf *key_conf);
+>  void wlcore_regdomain_config(struct wl1271 *wl);
+> +void wlcore_update_inconn_sta(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+> +			      struct wl1271_station *wl_sta, bool in_conn);
+>  
+>  static inline void
+>  wlcore_set_ht_cap(struct wl1271 *wl, enum ieee80211_band band,
+> diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
+> index e5e1464..14fd111 100644
+> --- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
+> +++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
+> @@ -456,6 +456,15 @@ struct wl12xx_vif {
+>  	 */
+>  	int hw_queue_base;
+>  
+> +	/* do we have a pending auth reply? (and ROC) */
+> +	bool ap_pending_auth_reply;
+> +
+> +	/* time when we sent the pending auth reply */
+> +	unsigned long pending_auth_reply_time;
+> +
+> +	/* work for canceling ROC after pending auth reply */
+> +	struct delayed_work pending_auth_complete_work;
+> +
+>  	/*
+>  	 * This struct must be last!
+>  	 * data that has to be saved acrossed reconfigs (e.g. recovery)
+
 
