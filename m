@@ -1,87 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server75.greatnet.de ([83.133.96.62]:59564 "EHLO
-	server75.greatnet.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750936Ab3JWJfL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Oct 2013 05:35:11 -0400
-Received: from [192.168.0.11] (i577B2BBD.versanet.de [87.123.43.189])
-	by server75.greatnet.de (Postfix) with ESMTPA id D634A22AC470
-	for <linux-wireless@vger.kernel.org>; Wed, 23 Oct 2013 11:24:49 +0200 (CEST)
-Message-ID: <526795E1.90701@crlf.de> (sfid-20131023_113516_301445_D45C2C1C)
-Date: Wed, 23 Oct 2013 11:24:49 +0200
-From: Dietmar Rudolph <dietmar@crlf.de>
+Received: from ebb06.tieto.com ([131.207.168.38]:62717 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753125Ab3JDIRu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Oct 2013 04:17:50 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 0/2] ath10k: wep & ampdu fix
+Date: Fri, 4 Oct 2013 10:17:08 +0200
+Message-ID: <1380874630-14280-1-git-send-email-michal.kazior@tieto.com> (sfid-20131004_101754_512388_E182E40C)
+In-Reply-To: <to=1380292567-2363-1-git-send-email-michal.kazior@tieto.com>
+References: <to=1380292567-2363-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: iwl3945 filling kern.log when HW switch is off
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello, I hope this is the correct place to put a bug report in. I do 
-not subscribe to this mailing list, but feel free to send PM in case 
-you need additional info. You shoudn't :-)
+Hi,
 
-After installing Ubuntu 13.10, I noticed kern.log growing faster 
-than you could look at. Within a few working hours, kern.log was >6GB!
+One throughput fix and one bug fix.
 
-The reason is that I intentionally disabled WiFi on this laptop by 
-turning the HW switch off. However, this makes iwl3945 write a log 
-entry into kern.log every few microseconds!
+The bug fix addresses my oversight when reworking
+HTC/WMI. I haven't seen the error yet but I'm
+quite certain this should be fixed.
 
-The workaround is to turn the HW switch on. The bug fix would be to 
-write just a single line to kern.log.
+v2:
+ * A-MPDU patch contains a workaround for
+   Netgear/Linksys 11ac APs
+   (Kalle, can you kindly test this, please?)
+ * patchset cover mail title changed to avoid
+   confusion (too many patchsets named the same
+   way..)
 
-Regards
-Dietmar
 
-- - - from kern.log:
+Michal Kazior (1):
+  ath10k: fix scheduling while atomic bug
 
-Oct 22 18:28:52 C50 kernel: [  141.144085] iwl3945 0000:02:00.0: 
-Radio disabled by HW RF Kill switch
-Oct 22 18:28:52 C50 kernel: [  141.144214] iwl3945 0000:02:00.0: 
-Radio disabled by HW RF Kill switch
-Oct 22 18:28:52 C50 kernel: [  141.145167] iwl3945 0000:02:00.0: 
-Radio disabled by HW RF Kill switch
-Oct 22 18:28:52 C50 kernel: [  141.145304] iwl3945 0000:02:00.0: 
-Radio disabled by HW RF Kill switch
-Oct 22 18:28:52 C50 kernel: [  141.146184] iwl3945 0000:02:00.0: 
-Radio disabled by HW RF Kill switch
-Oct 22 18:28:52 C50 kernel: [  141.146315] iwl3945 0000:02:00.0: 
-Radio disabled by HW RF Kill switch
-Oct 22 18:28:52 C50 kernel: [  141.147164] iwl3945 0000:02:00.0: 
-Radio disabled by HW RF Kill switch
-Oct 22 18:28:52 C50 kernel: [  141.147304] iwl3945 0000:02:00.0: 
-Radio disabled by HW RF Kill switch
-Oct 22 18:28:52 C50 kernel: [  141.148254] iwl3945 0000:02:00.0: 
-Radio disabled by HW RF Kill switch
-Oct 22 18:28:52 C50 kernel: [  141.148387] iwl3945 0000:02:00.0: 
-Radio disabled by HW RF Kill switch
-Oct 22 18:28:52 C50 kernel: [  141.149217] iwl3945 0000:02:00.0: 
-Radio disabled by HW RF Kill switch
-Oct 22 18:28:52 C50 kernel: [  141.149347] iwl3945 0000:02:00.0: 
-Radio disabled by HW RF Kill switch
-Oct 22 18:28:52 C50 kernel: [  141.150165] iwl3945 0000:02:00.0: 
-Radio disabled by HW RF Kill switch
-Oct 22 18:28:52 C50 kernel: [  141.150294] iwl3945 0000:02:00.0: 
-Radio disabled by HW RF Kill switch
-Oct 22 18:28:52 C50 kernel: [  141.151113] iwl3945 0000:02:00.0: 
-Radio disabled by HW RF Kill switch
-Oct 22 18:28:52 C50 kernel: [  141.151243] iwl3945 0000:02:00.0: 
-Radio disabled by HW RF Kill switch
-Oct 22 18:28:52 C50 kernel: [  141.152097] iwl3945 0000:02:00.0: 
-Radio disabled by HW RF Kill switch
-Oct 22 18:28:52 C50 kernel: [  141.152227] iwl3945 0000:02:00.0: 
-Radio disabled by HW RF Kill switch
+Sujith Manoharan (1):
+  ath10k: Fix bug in max. VHT A-MPDU size
 
+ drivers/net/wireless/ath/ath10k/core.h |    4 +-
+ drivers/net/wireless/ath/ath10k/mac.c  |   67 +++++++++++++++++++++++---------
+ 2 files changed, 52 insertions(+), 19 deletions(-)
 
 -- 
-Dietmar Rudolph
-Geschäftsführer/President
+1.7.9.5
 
-CR/LF GmbH
-Obere Fuhr 27, 45136 Essen, Germany
-phone: ++49 201 254566
-mailto: dietmar@crlf.de, http://www.crlf.de
-
-CR/LF Beratungsgesellschaft für EDV-Anwendungen mbH
-Essen HRB 7016 - GF: Dipl.-Math. Dietmar Rudolph
