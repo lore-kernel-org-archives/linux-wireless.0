@@ -1,89 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 220-135-115-6.HINET-IP.hinet.net ([220.135.115.6]:51885 "EHLO
-	ns.kevlo.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751203Ab3JXFrQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Oct 2013 01:47:16 -0400
-Date: Thu, 24 Oct 2013 13:24:08 +0800
-From: Kevin Lo <kevlo@kevlo.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: [PATCH] rt2x00: rt2800lib: update RF registers for RT5390
-Message-ID: <20131024052408.GA7828@ns.kevlo.org> (sfid-20131024_074719_644874_0AEC96F2)
+Received: from mx4.wp.pl ([212.77.101.8]:33121 "EHLO mx4.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754024Ab3JDOFV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Oct 2013 10:05:21 -0400
+Date: Fri, 4 Oct 2013 16:06:44 +0200
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+To: Gabor Juhos <juhosg@openwrt.org>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Paul Menzel <paulepanter@users.sourceforge.net>
+Subject: Re: [rt2x00-users] [PATCH v2 1/2] rt2x00: rt2800lib: remove
+ TXMIXER_GAIN entries from the extended EEPROM map
+Message-ID: <20131004140644.GC32428@localhost.localdomain> (sfid-20131004_160525_226004_F435719D)
+References: <1380802022-28646-1-git-send-email-juhosg@openwrt.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1380802022-28646-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mirror the latest MediaTek/Ralink driver with respect to RT5390 RF register
-programming.  The PCI and USB devices use different init values.
+On Thu, Oct 03, 2013 at 02:07:01PM +0200, Gabor Juhos wrote:
+> The comments are indicating that the TXMIXER_GAIN_BG
+> and TXMIXED_GAIN_A entries are overlapping with the
+> RSSI_BG2 and RSSI_A2 entries in the extended EEPROM
+> map. This is not correct, because the upper byte of
+> the RSSI_BG2 and RSSI_A2 entries are reserved. There
+> are no TX mixer gain values are stored at all in the
+> extended EEPROM.
+> 
+> Remove the initialization of these entries from the
+> extended EEPROM map to reflect this.
+> 
+> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+> Acked-by: Paul Menzel <paulepanter@users.sourceforge.net>
 
-Signed-off-by: Kevin Lo <kevlo@kevlo.org>
----
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index c5738f1..2c4e436 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -6453,7 +6453,7 @@ static void rt2800_init_rfcsr_5390(struct rt2x00_dev *rt2x00dev)
- 	rt2800_rfcsr_write(rt2x00dev, 7, 0x00);
- 	rt2800_rfcsr_write(rt2x00dev, 10, 0x53);
- 	rt2800_rfcsr_write(rt2x00dev, 11, 0x4a);
--	rt2800_rfcsr_write(rt2x00dev, 12, 0xc6);
-+	rt2800_rfcsr_write(rt2x00dev, 12, 0x46);
- 	rt2800_rfcsr_write(rt2x00dev, 13, 0x9f);
- 	rt2800_rfcsr_write(rt2x00dev, 14, 0x00);
- 	rt2800_rfcsr_write(rt2x00dev, 15, 0x00);
-@@ -6466,7 +6466,8 @@ static void rt2800_init_rfcsr_5390(struct rt2x00_dev *rt2x00dev)
- 	rt2800_rfcsr_write(rt2x00dev, 22, 0x20);
- 	rt2800_rfcsr_write(rt2x00dev, 23, 0x00);
- 	rt2800_rfcsr_write(rt2x00dev, 24, 0x00);
--	if (rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5390F))
-+	if (rt2x00_is_usb(rt2x00dev) &&
-+	    rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5390F))
- 		rt2800_rfcsr_write(rt2x00dev, 25, 0x80);
- 	else
- 		rt2800_rfcsr_write(rt2x00dev, 25, 0xc0);
-@@ -6486,10 +6487,7 @@ static void rt2800_init_rfcsr_5390(struct rt2x00_dev *rt2x00dev)
- 	rt2800_rfcsr_write(rt2x00dev, 38, 0x85);
- 	rt2800_rfcsr_write(rt2x00dev, 39, 0x1b);
- 
--	if (rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5390F))
--		rt2800_rfcsr_write(rt2x00dev, 40, 0x0b);
--	else
--		rt2800_rfcsr_write(rt2x00dev, 40, 0x4b);
-+	rt2800_rfcsr_write(rt2x00dev, 40, 0x0b);
- 	rt2800_rfcsr_write(rt2x00dev, 41, 0xbb);
- 	rt2800_rfcsr_write(rt2x00dev, 42, 0xd2);
- 	rt2800_rfcsr_write(rt2x00dev, 43, 0x9a);
-@@ -6510,16 +6508,26 @@ static void rt2800_init_rfcsr_5390(struct rt2x00_dev *rt2x00dev)
- 		rt2800_rfcsr_write(rt2x00dev, 53, 0x84);
- 	rt2800_rfcsr_write(rt2x00dev, 54, 0x78);
- 	rt2800_rfcsr_write(rt2x00dev, 55, 0x44);
--	rt2800_rfcsr_write(rt2x00dev, 56, 0x22);
-+	if (rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5390F))
-+		rt2800_rfcsr_write(rt2x00dev, 56, 0x42);
-+	else
-+		rt2800_rfcsr_write(rt2x00dev, 56, 0x22);
- 	rt2800_rfcsr_write(rt2x00dev, 57, 0x80);
- 	rt2800_rfcsr_write(rt2x00dev, 58, 0x7f);
- 	rt2800_rfcsr_write(rt2x00dev, 59, 0x8f);
- 
- 	rt2800_rfcsr_write(rt2x00dev, 60, 0x45);
--	if (rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5390F))
--		rt2800_rfcsr_write(rt2x00dev, 61, 0xd1);
--	else
--		rt2800_rfcsr_write(rt2x00dev, 61, 0xdd);
-+	if (rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5390F)) {
-+		if (rt2x00_is_usb(rt2x00dev))
-+			rt2800_rfcsr_write(rt2x00dev, 61, 0xd1);
-+		else
-+			rt2800_rfcsr_write(rt2x00dev, 61, 0xd5);
-+	} else {
-+		if (rt2x00_is_usb(rt2x00dev))
-+			rt2800_rfcsr_write(rt2x00dev, 61, 0xdd);
-+		else
-+			rt2800_rfcsr_write(rt2x00dev, 61, 0xb5);
-+	}
- 	rt2800_rfcsr_write(rt2x00dev, 62, 0x00);
- 	rt2800_rfcsr_write(rt2x00dev, 63, 0x00);
- 
+Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
