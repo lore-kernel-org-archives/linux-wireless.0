@@ -1,55 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f171.google.com ([209.85.217.171]:50580 "EHLO
-	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754128Ab3JHOwT (ORCPT
+Received: from www.linutronix.de ([62.245.132.108]:52745 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751149Ab3JDKMT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Oct 2013 10:52:19 -0400
-Received: by mail-lb0-f171.google.com with SMTP id u14so6888539lbd.2
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Oct 2013 07:52:18 -0700 (PDT)
+	Fri, 4 Oct 2013 06:12:19 -0400
+Date: Fri, 4 Oct 2013 12:12:16 +0200
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To: Thomas Meyer <thomas@m3y3r.de>
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	linux-rt-users@vger.kernel.org,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org, tglx@linutronix.de
+Subject: Re: Kernel panic in 3.10.10-rt7 (iwlwifi)
+Message-ID: <20131004101216.GA17043@linutronix.de> (sfid-20131004_121225_553792_61B2C629)
+References: <2CD18B42-2489-4DF7-98D6-4D002329DC63@m3y3r.de>
 MIME-Version: 1.0
-In-Reply-To: <1381239951.13359.13.camel@jlt4.sipsolutions.net>
-References: <1381231915-24232-1-git-send-email-ard.biesheuvel@linaro.org>
-	<1381233152.13359.10.camel@jlt4.sipsolutions.net>
-	<AE90C24D6B3A694183C094C60CF0A2F6026B737B@saturn3.aculab.com>
-	<23D74823-0DE3-4A87-9E89-310F437A328D@linaro.org>
-	<1381239908.13359.12.camel@jlt4.sipsolutions.net>
-	<1381239951.13359.13.camel@jlt4.sipsolutions.net>
-Date: Tue, 8 Oct 2013 16:52:17 +0200
-Message-ID: <CAKv+Gu8D_7d=u1PGWuxoLEETHe8uJMby3K98uQWQn7tk=t_t_w@mail.gmail.com> (sfid-20131008_165332_539746_57ED6D73)
-Subject: Re: [PATCH] mac80211: port CCMP to cryptoapi's CCM driver
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: David Laight <David.Laight@aculab.com>,
-	"<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
-	"<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
-	"<patches@linaro.org>" <patches@linaro.org>,
-	"<linville@tuxdriver.com>" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <2CD18B42-2489-4DF7-98D6-4D002329DC63@m3y3r.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8 October 2013 15:45, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2013-10-08 at 15:45 +0200, Johannes Berg wrote:
->> On Tue, 2013-10-08 at 15:41 +0200, Ard Biesheuvel wrote:
->>
->> > Actually, as the size is always the same, it should be feasible to
->> > alloc a couple of request structs at init time. would one for rx and
->> > one for tx be sufficient? or is this code more reentrant than that?
->>
->> TX can run concurrently on multiple (four) queues using the same key.
+* Thomas Meyer | 2013-09-15 23:49:29 [+0200]:
+
+>Hi,
+Hi,
+
+>My system did lockup after short time of usage. I was only able to capture this screenshot:
 >
-> And maybe even more with injection ... I wouldn't go there.
->
+>Any ideas?
 
-OK, clear.
+the problem seems to be that they use sleeping locks in the primary irq
+handler.
 
-If you think this patch has any merit at all, I am happy to modify it
-so that it kmalloc()s the request struct with GFP_ATOMIC at every
-invocation.
-However, personally I don't think this should be necessary and in fact
-my patch removes a stack allocation of u8[48] (from
-ieee80211_crypto_ccmp_decrypt() and from ccmp_encrypt_skb() in wpa.c)
-so it does even out a bit.
+iwl_pcie_rx_replenish() takes the same lock (->irq_lock) and additionaly
+->lock so I think tunrning everything into raw locks isn't very wise for
+the latency.
 
-regards,
-Ard.
+The threaded handler takes for a very short time irq_lock lock. It also
+takes the ->lock via (iwl_pcie_rxq_inc_wr_ptr()) with irqs off (that one
+looks short, too) and others for instance via iwl_pcie_rx_handle().
+Ideally the driver should hold one spinlock to synchronize the primary
+and threaded irq handler while disabling the interrupt in the iwl
+hardware. Everything else would then hold one or two mutex(es) and could
+even allocate memory with GFP_KERNEL.
+
+For now I think the simply thing would be just to let both handlers run
+in the thread. Does this patch solve your problem?
+
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index aeb70e1..42567fc 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -1456,6 +1456,20 @@ static const struct iwl_trans_ops trans_ops_pcie = {
+ 	.set_bits_mask = iwl_trans_pcie_set_bits_mask,
+ };
+ 
++#ifdef CONFIG_PREEMPT_RT_BASE
++static irqreturn_t iwl_rt_irq_handler(int irq, void *dev_id)
++{
++	irqreturn_t ret;
++
++	local_bh_disable();
++	ret = iwl_pcie_isr_ict(irq, dev_id);
++	local_bh_enable();
++	if (ret == IRQ_WAKE_THREAD)
++		ret = iwl_pcie_irq_handler(irq, dev_id);
++	return ret;
++}
++#endif
++
+ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ 				       const struct pci_device_id *ent,
+ 				       const struct iwl_cfg *cfg)
+@@ -1566,9 +1580,14 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ 	if (iwl_pcie_alloc_ict(trans))
+ 		goto out_free_cmd_pool;
+ 
++#ifdef CONFIG_PREEMPT_RT_BASE
++	if (request_threaded_irq(pdev->irq, NULL, iwl_rt_irq_handler,
++				 IRQF_SHARED | IRQF_ONESHOT, DRV_NAME, trans)) {
++#else
+ 	if (request_threaded_irq(pdev->irq, iwl_pcie_isr_ict,
+ 				 iwl_pcie_irq_handler,
+ 				 IRQF_SHARED, DRV_NAME, trans)) {
++#endif
+ 		IWL_ERR(trans, "Error allocating IRQ %d\n", pdev->irq);
+ 		goto out_free_ict;
+ 	}
+-- 
+1.8.4.rc3
+
+
+>With kind regards
+>Thomas
+
+Sebastian
