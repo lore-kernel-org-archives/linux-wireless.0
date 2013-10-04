@@ -1,149 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm11.bullet.mail.ird.yahoo.com ([77.238.189.64]:38238 "HELO
-	nm11.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753853Ab3JaN44 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Oct 2013 09:56:56 -0400
-References: <1382537927.62604.YahooMailNeo@web171801.mail.ir2.yahoo.com> <1382538469.7892.YahooMailNeo@web171805.mail.ir2.yahoo.com> <20131024112206.GB1677@redhat.com> <1382614336.89589.YahooMailNeo@web171804.mail.ir2.yahoo.com> <20131024113748.GD1677@redhat.com>
-Message-ID: <1383227814.41997.YahooMailNeo@web171801.mail.ir2.yahoo.com> (sfid-20131031_145700_224967_743B6B4D)
-Date: Thu, 31 Oct 2013 13:56:54 +0000 (GMT)
-From: Gianfranco Costamagna <costamagnagianfranco@yahoo.it>
-Reply-To: Gianfranco Costamagna <costamagnagianfranco@yahoo.it>
-Subject: Re: Edimax EW-7733UnD
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20131024113748.GD1677@redhat.com>
+Received: from 220-133-188-53.HINET-IP.hinet.net ([220.133.188.53]:30558 "EHLO
+	ns.kevlo.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751600Ab3JDBmE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Oct 2013 21:42:04 -0400
+Message-ID: <524E1CC5.3030004@kevlo.org> (sfid-20131004_034208_499842_12800F5D)
+Date: Fri, 04 Oct 2013 09:41:25 +0800
+From: Kevin Lo <kevlo@kevlo.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+To: John Linville <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: [PATCH v2] rt2x00: rt2800lib: remove duplicate rf_vals for RF3053
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+We already have rf_vals_3x with same values.  Hence rf_vals_3053 is removed
+in this patch.
+
+Signed-off-by: Kevin Lo <kevlo@kevlo.org>
+Acked-by: Paul Menzel <paulepanter@users.sourceforge.net>
+---
+Changes since v1:
+   - update comment of rf_vals_3x to indicate that it also supports RF3053
+   - add Paul's Acked-by tag
+---
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c 
+b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 25aaa5e..78ce749 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -7224,7 +7224,7 @@ static const struct rf_channel rf_vals[] = {
+
+  /*
+   * RF value list for rt3xxx
+- * Supports: 2.4 GHz (all) & 5.2 GHz (RF3052)
++ * Supports: 2.4 GHz (all) & 5.2 GHz (RF3052 & RF3053)
+   */
+  static const struct rf_channel rf_vals_3x[] = {
+         {1,  241, 2, 2 },
+@@ -7420,72 +7420,6 @@ static const struct rf_channel 
+rf_vals_5592_xtal40[] = {
+         {196, 83, 0, 12, 1},
+  };
+
+-static const struct rf_channel rf_vals_3053[] = {
+-       /* Channel, N, R, K */
+-       {1, 241, 2, 2},
+-       {2, 241, 2, 7},
+-       {3, 242, 2, 2},
+-       {4, 242, 2, 7},
+-       {5, 243, 2, 2},
+-       {6, 243, 2, 7},
+-       {7, 244, 2, 2},
+-       {8, 244, 2, 7},
+-       {9, 245, 2, 2},
+-       {10, 245, 2, 7},
+-       {11, 246, 2, 2},
+-       {12, 246, 2, 7},
+-       {13, 247, 2, 2},
+-       {14, 248, 2, 4},
+-
+-       {36, 0x56, 0, 4},
+-       {38, 0x56, 0, 6},
+-       {40, 0x56, 0, 8},
+-       {44, 0x57, 0, 0},
+-       {46, 0x57, 0, 2},
+-       {48, 0x57, 0, 4},
+-       {52, 0x57, 0, 8},
+-       {54, 0x57, 0, 10},
+-       {56, 0x58, 0, 0},
+-       {60, 0x58, 0, 4},
+-       {62, 0x58, 0, 6},
+-       {64, 0x58, 0, 8},
+-
+-       {100, 0x5B, 0, 8},
+-       {102, 0x5B, 0, 10},
+-       {104, 0x5C, 0, 0},
+-       {108, 0x5C, 0, 4},
+-       {110, 0x5C, 0, 6},
+-       {112, 0x5C, 0, 8},
+-
+-       /* NOTE: Channel 114 has been removed intentionally.
+-        * The EEPROM contains no TX power values for that,
+-        * and it is disabled in the vendor driver as well.
+-        */
+-
+-       {116, 0x5D, 0, 0},
+-       {118, 0x5D, 0, 2},
+-       {120, 0x5D, 0, 4},
+-       {124, 0x5D, 0, 8},
+-       {126, 0x5D, 0, 10},
+-       {128, 0x5E, 0, 0},
+-       {132, 0x5E, 0, 4},
+-       {134, 0x5E, 0, 6},
+-       {136, 0x5E, 0, 8},
+-       {140, 0x5F, 0, 0},
+-
+-       {149, 0x5F, 0, 9},
+-       {151, 0x5F, 0, 11},
+-       {153, 0x60, 0, 1},
+-       {157, 0x60, 0, 5},
+-       {159, 0x60, 0, 7},
+-       {161, 0x60, 0, 9},
+-       {165, 0x61, 0, 1},
+-       {167, 0x61, 0, 3},
+-       {169, 0x61, 0, 5},
+-       {171, 0x61, 0, 7},
+-       {173, 0x61, 0, 9},
+-};
+-
+  static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+  {
+         struct hw_mode_spec *spec = &rt2x00dev->spec;
+@@ -7575,14 +7509,11 @@ static int rt2800_probe_hw_mode(struct 
+rt2x00_dev *rt2x00dev)
+                    rt2x00_rf(rt2x00dev, RF5392)) {
+                 spec->num_channels = 14;
+                 spec->channels = rf_vals_3x;
+-       } else if (rt2x00_rf(rt2x00dev, RF3052)) {
++       } else if (rt2x00_rf(rt2x00dev, RF3052) ||
++                  rt2x00_rf(rt2x00dev, RF3053)) {
+                 spec->supported_bands |= SUPPORT_BAND_5GHZ;
+                 spec->num_channels = ARRAY_SIZE(rf_vals_3x);
+                 spec->channels = rf_vals_3x;
+-       } else if (rt2x00_rf(rt2x00dev, RF3053)) {
+-               spec->supported_bands |= SUPPORT_BAND_5GHZ;
+-               spec->num_channels = ARRAY_SIZE(rf_vals_3053);
+-               spec->channels = rf_vals_3053;
+         } else if (rt2x00_rf(rt2x00dev, RF5592)) {
+                 spec->supported_bands |= SUPPORT_BAND_5GHZ;
 
 
-> Il Giovedì 24 Ottobre 2013 13:41, Stanislaw Gruszka <sgruszka@redhat.com> ha scritto:
-> > On Thu, Oct 24, 2013 at 12:32:16PM +0100, Gianfranco Costamagna wrote:
->> 
->> 
->>  Il Giovedì 24 Ottobre 2013 13:25, Stanislaw Gruszka 
-> <sgruszka@redhat.com> ha scritto:
->> 
->>  On Wed, Oct 23, 2013 at 03:27:49PM +0100, Gianfranco Costamagna wrote:
->>  >
->>  >> Hi Kernel Wireless developers, I write here since I have an issue 
-> with this module.
->>  >> 
->>  >> 
->>  >> We bought 2 of them since they are both 2.4 and 5Ghz capable, and 
-> they seem to be powerful enough for our pourposes
->>  >> 
-> http://www.edimax.com/au/produce_detail.php?pd_id=399&pl1_id=1&pl2_id=44
->>  >> 
->>  >> 
->>  >> Anyway there is a problem, that the linux kernel seems to be not 
-> supporting them
->>  >> 
->>  >> I tried following this guide
->>  >> http://wikidevi.com/wiki/Edimax_EW-7733UnD
->>  >> rt3573sta, possibly rt5572sta, and future support in rt2800usb 
-> "uhosg's patchset adding support, may be in by k3.12"
->>  >> but at this moment it is showing an interface with one of them (I 
-> cannot connect to anything, the interface shown seems to be incorrect), with 
-> another I get a kernel anic and with the third one doesn't work at all.
->>  >> 
->>  >> lsusb |grep Edimax
->>  >> 
->>  >> Bus 002 Device 002: ID 7392:7733 Edimax Technology Co., Ltd 
->>  >
->>  >I have that exect device and it works ok here, but I'm using 
->>  >wireless-testing tree. So perhaps you should try install that
->>  >tree or use backports .
->> 
->> 
->>  Wonderful! I don't really understand what do you mean with backports, 
-> are you referring to "linux kernel backports" right?
-> 
-> Yes.
-> 
->>  So I can choose the backport source or to checkout and build the 
-> wireless-testing tree.
->> 
->>  Just as information, how long will it take to have it into the stable 
-> mainline?
-> 
-> Current wireless-testing content will be available on 3.13 ,
-> though I think that device should also work on 3.12 .
-> 
-
-Ok I built a custom kernel but I still have some issues
-Ubuntu 13.10 x64
-git clone http://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
-cd wireless-testing
-copied my config from this kernel http://kernel.ubuntu.com/~kernel-ppa/mainline/v3.12-rc7-saucy/
-
-make oldconfig
-(a tail of my .config file after the make)
-CONFIG_RT2800PCI=m
-CONFIG_RT2800PCI_RT33XX=y
-CONFIG_RT2800PCI_RT35XX=y
-CONFIG_RT2800PCI_RT53XX=y
-CONFIG_RT2800PCI_RT3290=y
-CONFIG_RT2500USB=m
-CONFIG_RT73USB=m
-CONFIG_RT2800USB=m
-CONFIG_RT2800USB_RT33XX=y
-CONFIG_RT2800USB_RT35XX=y
-# CONFIG_RT2800USB_RT3573 is not set
-CONFIG_RT2800USB_RT53XX=y
-CONFIG_RT2800USB_RT55XX=y
-CONFIG_RT2800USB_UNKNOWN=y
-CONFIG_RT2800_LIB=m
-CONFIG_RT2800_LIB_MMIO=m
-CONFIG_RT2X00_LIB_MMIO=m
-CONFIG_RT2X00_LIB_PCI=m
-CONFIG_RT2X00_LIB_USB=m
-CONFIG_RT2X00_LIB=m
-CONFIG_RT2X00_LIB_FIRMWARE=y
-CONFIG_RT2X00_LIB_CRYPTO=y
-CONFIG_RT2X00_LIB_LEDS=y
-# CONFIG_RT2X00_LIB_DEBUGFS is not set
-# CONFIG_RT2X00_DEBUG is not set
-
-(apt-get build-dep linux)
-make
-make all
-sudo make modules_install
-sudo make install
-
-I was surprised that everything was automatically copied in /boot and grub automatically found the new kernel without manual mkinitrd anymore (so long time from my last kernel build)
-
-Reboot
-
-locutus@gianfranco-Latitude-E5520:~/wireless-testing$ uname -a
-Linux gianfranco-Latitude-E5520 3.12.0-rc5-wl #2 SMP Thu Oct 31 14:04:43 CET 2013 x86_64 x86_64 x86_64 GNU/Linux
-
-
-put key in my pc
-[  471.585065] usb 2-1.2: new high-speed USB device number 11 using ehci-pci
-[  471.693762] usb 2-1.2: New USB device found, idVendor=7392, idProduct=7733
-[  471.693766] usb 2-1.2: New USB device strings: Mfr=1, Product=2, SerialNumber=3
-[  471.693768] usb 2-1.2: Product: 802.11 n WLAN
-[  471.693770] usb 2-1.2: Manufacturer: Ralink
-[  471.693771] usb 2-1.2: SerialNumber: 1.0
-
-sudo modprobe rt2800usb
-
-[  540.170899] usbcore: registered new interface driver rt2800usb
-
-nothing works...
-
-Can you please help me again?
-
-Many thanks
-
-have a nice day,
-
-Gianfranco
-
-> 
-> Stanislaw  
-> 
