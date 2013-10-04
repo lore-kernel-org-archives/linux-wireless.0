@@ -1,278 +1,199 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f182.google.com ([209.85.215.182]:54845 "EHLO
-	mail-ea0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754926Ab3JKMKD (ORCPT
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:46682 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750951Ab3JDXfE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Oct 2013 08:10:03 -0400
-Received: by mail-ea0-f182.google.com with SMTP id o10so1843951eaj.13
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Oct 2013 05:10:02 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@qca.qualcomm.com,
-	simon.wunderlich@s2003.tu-chemnitz.de
-Subject: [PATCH v2 2/2] ath9k: add HT40 spectral scan capability
-Date: Fri, 11 Oct 2013 14:09:55 +0200
-Message-Id: <1381493395-7632-3-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20131011_141012_085385_076D98B2)
-In-Reply-To: <1381493395-7632-1-git-send-email-lorenzo.bianconi83@gmail.com>
-References: <1381493395-7632-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	Fri, 4 Oct 2013 19:35:04 -0400
+Received: by mail-pa0-f52.google.com with SMTP id kl14so4774771pab.39
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Oct 2013 16:35:03 -0700 (PDT)
+Date: Fri, 4 Oct 2013 16:45:18 -0700
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	wcn36xx@lists.infradead.org, wcn36xx@qca.qualcomm.com
+Subject: Re: [PATCH] wcn36xx: mac80211 driver for Qualcomm WCN3660/WCN3680
+ hardware
+Message-ID: <20131004234514.GA11128@garbanzo.do-not-panic.com> (sfid-20131005_013509_992900_728570EE)
+References: <1380234508-3121-1-git-send-email-k.eugene.e@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1380234508-3121-1-git-send-email-k.eugene.e@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add spectral scan feature on HT40 channels for ath9k. This patch extends
-previous capability added by Simon Wunderlich
+On Thu, Sep 26, 2013 at 11:28:28PM +0100, Eugene Krasnikov wrote:
+> This is a mac80211 driver for Qualcomm WCN3660/WCN3680 devices. So
+> far WCN3660/WCN3680 is available only on MSM platform.
+> 
+> Firmware can be found here:
+> https://www.codeaurora.org/cgit/external/hisense/platform/vendor/qcom-opensource/wlan/prima/tree/firmware_bin?h=8130_CS
+> 
+> Wiki page is available here:
+> http://wireless.kernel.org/en/users/Drivers/wcn36xx
+> 
+> A lot people made a contribution to this driver. Here is the list in
+> alphabetical order:
+> 
+> Eugene Krasnikov <k.eugene.e@gmail.com>
+> Kalle Valo <kvalo@qca.qualcomm.com>
+> Olof Johansson <dev@skyshaper.net>
+> Pontus Fuchs <pontus.fuchs@gmail.com>
+> Yanbo Li <yanbol@qti.qualcomm.com>
+> 
+> Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-Reviewed-by: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Tested-by: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Nice! I test compiled with sparse enabled and got this:
+
+mcgrof@chalten ~/wireless-testing (git::master)$ make C=1
+M=drivers/net/wireless/ath/wcn36xx/
+CHECK   drivers/net/wireless/ath/wcn36xx/main.c
+CC [M]  drivers/net/wireless/ath/wcn36xx/main.o
+CHECK   drivers/net/wireless/ath/wcn36xx/dxe.c
+CC [M]  drivers/net/wireless/ath/wcn36xx/dxe.o
+CHECK   drivers/net/wireless/ath/wcn36xx/txrx.c
+CC [M]  drivers/net/wireless/ath/wcn36xx/txrx.o
+CHECK   drivers/net/wireless/ath/wcn36xx/smd.c
+/home/mcgrof/wireless-testing/arch/x86/include/asm/bitops.h:329:18: warning: invalid access past the end of 'caps' (4096 8)
+/home/mcgrof/wireless-testing/arch/x86/include/asm/bitops.h:329:18: warning: invalid access past the end of 'caps' (512 8)
+/home/mcgrof/wireless-testing/arch/x86/include/asm/bitops.h:329:18: warning: invalid access past the end of 'caps' (128 8)
+/home/mcgrof/wireless-testing/arch/x86/include/asm/bitops.h:329:18: warning: invalid access past the end of 'caps' (8 8)
+/home/mcgrof/wireless-testing/arch/x86/include/asm/bitops.h:329:18: warning: invalid access past the end of 'caps' (256 8)
+/home/mcgrof/wireless-testing/arch/x86/include/asm/bitops.h:329:18: warning: invalid access past the end of 'caps' (4096 8)
+CC [M]  drivers/net/wireless/ath/wcn36xx/smd.o
+CHECK   drivers/net/wireless/ath/wcn36xx/pmc.c
+CC [M]  drivers/net/wireless/ath/wcn36xx/pmc.o
+CHECK   drivers/net/wireless/ath/wcn36xx/debug.c
+CC [M]  drivers/net/wireless/ath/wcn36xx/debug.o
+LD [M]
+drivers/net/wireless/ath/wcn36xx/wcn36xx.o
+Building modules, stage 2.
+MODPOST 1 modules
+LD [M]
+drivers/net/wireless/ath/wcn36xx/wcn36xx.ko
+
+Can you merge this in prior to integration as well? I've only test
+compiled it so would appreciate a run time test.
+
+  Luis
+
+>From 4558cfc69270ad3ed1a480a8c846b11910af7357 Mon Sep 17 00:00:00 2001
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Fri, 4 Oct 2013 16:19:17 -0700
+Subject: [PATCH] wcn36xx: add initial regulatory support
+
+The NVRAM still needs to be processed and other requirements
+addressed but this should at least get this going with the
+default 0x64 regulatory domain on the ath module.
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |  29 +++++++
- drivers/net/wireless/ath/ath9k/recv.c  | 146 ++++++++++++++++++++++++---------
- 2 files changed, 137 insertions(+), 38 deletions(-)
+ drivers/net/wireless/ath/wcn36xx/Kconfig   |    1 +
+ drivers/net/wireless/ath/wcn36xx/main.c    |   34 ++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/wcn36xx/wcn36xx.h |    2 ++
+ 3 files changed, 37 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 8878f2d..bd73245 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -879,6 +879,7 @@ static inline u8 spectral_bitmap_weight(u8 *bins)
-  */
- enum ath_fft_sample_type {
- 	ATH_FFT_SAMPLE_HT20 = 1,
-+	ATH_FFT_SAMPLE_HT20_40,
- };
+diff --git a/drivers/net/wireless/ath/wcn36xx/Kconfig b/drivers/net/wireless/ath/wcn36xx/Kconfig
+index 591ebae..5011fea 100644
+--- a/drivers/net/wireless/ath/wcn36xx/Kconfig
++++ b/drivers/net/wireless/ath/wcn36xx/Kconfig
+@@ -1,6 +1,7 @@
+ config WCN36XX
+ 	tristate "Qualcomm Atheros WCN3660/3680 support"
+ 	depends on MAC80211 && HAS_DMA
++	select ATH_COMMON
+ 	---help---
+ 	  This module adds support for wireless adapters based on
+ 	  Qualcomm Atheros WCN3660 and WCN3680 mobile chipsets.
+diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
+index 7839b31..ab8ecaa 100644
+--- a/drivers/net/wireless/ath/wcn36xx/main.c
++++ b/drivers/net/wireless/ath/wcn36xx/main.c
+@@ -24,6 +24,12 @@ unsigned int wcn36xx_dbg_mask;
+ module_param_named(debug_mask, wcn36xx_dbg_mask, uint, 0644);
+ MODULE_PARM_DESC(debug_mask, "Debugging mask");
  
- struct fft_sample_tlv {
-@@ -905,6 +906,34 @@ struct fft_sample_ht20 {
- 	u8 data[SPECTRAL_HT20_NUM_BINS];
- } __packed;
- 
-+struct fft_sample_ht20_40 {
-+	struct fft_sample_tlv tlv;
++/* XXX: parse NVRAM */
++static struct ath_regulatory ath_reg_default = {
++	.current_rd = 0x64,
++	.power_limit = 63,
++};
 +
-+	u8 channel_type;
-+	__be16 freq;
-+
-+	s8 lower_rssi;
-+	s8 upper_rssi;
-+
-+	__be64 tsf;
-+
-+	s8 lower_noise;
-+	s8 upper_noise;
-+
-+	__be16 lower_max_magnitude;
-+	__be16 upper_max_magnitude;
-+
-+	u8 lower_max_index;
-+	u8 upper_max_index;
-+
-+	u8 lower_bitmap_weight;
-+	u8 upper_bitmap_weight;
-+
-+	u8 max_exp;
-+
-+	u8 data[SPECTRAL_HT20_40_NUM_BINS];
-+} __packed;
-+
- void ath9k_tasklet(unsigned long data);
- int ath_cabq_update(struct ath_softc *);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index ab9e3a8..7886af6 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -972,14 +972,15 @@ static int ath_process_fft(struct ath_softc *sc, struct ieee80211_hdr *hdr,
- {
- #ifdef CONFIG_ATH9K_DEBUGFS
- 	struct ath_hw *ah = sc->sc_ah;
--	u8 bins[SPECTRAL_HT20_NUM_BINS];
--	u8 *vdata = (u8 *)hdr;
--	struct fft_sample_ht20 fft_sample;
-+	u8 num_bins, *bins, *vdata = (u8 *)hdr;
-+	struct fft_sample_ht20 fft_sample_20;
-+	struct fft_sample_ht20_40 fft_sample_40;
-+	struct fft_sample_tlv *tlv;
- 	struct ath_radar_info *radar_info;
--	struct ath_ht20_mag_info *mag_info;
- 	int len = rs->rs_datalen;
- 	int dc_pos;
--	u16 length, max_magnitude;
-+	u16 fft_len, length, freq = ah->curchan->chan->center_freq;
-+	enum nl80211_channel_type chan_type;
- 
- 	/* AR9280 and before report via ATH9K_PHYERR_RADAR, AR93xx and newer
- 	 * via ATH9K_PHYERR_SPECTRAL. Haven't seen ATH9K_PHYERR_FALSE_RADAR_EXT
-@@ -997,45 +998,44 @@ static int ath_process_fft(struct ath_softc *sc, struct ieee80211_hdr *hdr,
- 	if (!(radar_info->pulse_bw_info & SPECTRAL_SCAN_BITMASK))
- 		return 0;
- 
--	/* Variation in the data length is possible and will be fixed later.
--	 * Note that we only support HT20 for now.
--	 *
--	 * TODO: add HT20_40 support as well.
--	 */
--	if ((len > SPECTRAL_HT20_TOTAL_DATA_LEN + 2) ||
--	    (len < SPECTRAL_HT20_TOTAL_DATA_LEN - 1))
--		return 1;
--
--	fft_sample.tlv.type = ATH_FFT_SAMPLE_HT20;
--	length = sizeof(fft_sample) - sizeof(fft_sample.tlv);
--	fft_sample.tlv.length = __cpu_to_be16(length);
-+	chan_type = cfg80211_get_chandef_type(&sc->hw->conf.chandef);
-+	if ((chan_type == NL80211_CHAN_HT40MINUS) ||
-+	    (chan_type == NL80211_CHAN_HT40PLUS)) {
-+		fft_len = SPECTRAL_HT20_40_TOTAL_DATA_LEN;
-+		num_bins = SPECTRAL_HT20_40_NUM_BINS;
-+		bins = (u8 *)fft_sample_40.data;
-+	} else {
-+		fft_len = SPECTRAL_HT20_TOTAL_DATA_LEN;
-+		num_bins = SPECTRAL_HT20_NUM_BINS;
-+		bins = (u8 *)fft_sample_20.data;
-+	}
- 
--	fft_sample.freq = __cpu_to_be16(ah->curchan->chan->center_freq);
--	fft_sample.rssi = fix_rssi_inv_only(rs->rs_rssi_ctl0);
--	fft_sample.noise = ah->noise;
-+	/* Variation in the data length is possible and will be fixed later */
-+	if ((len > fft_len + 2) || (len < fft_len - 1))
-+		return 1;
- 
--	switch (len - SPECTRAL_HT20_TOTAL_DATA_LEN) {
-+	switch (len - fft_len) {
- 	case 0:
- 		/* length correct, nothing to do. */
--		memcpy(bins, vdata, SPECTRAL_HT20_NUM_BINS);
-+		memcpy(bins, vdata, num_bins);
- 		break;
- 	case -1:
- 		/* first byte missing, duplicate it. */
--		memcpy(&bins[1], vdata, SPECTRAL_HT20_NUM_BINS - 1);
-+		memcpy(&bins[1], vdata, num_bins - 1);
- 		bins[0] = vdata[0];
- 		break;
- 	case 2:
- 		/* MAC added 2 extra bytes at bin 30 and 32, remove them. */
- 		memcpy(bins, vdata, 30);
- 		bins[30] = vdata[31];
--		memcpy(&bins[31], &vdata[33], SPECTRAL_HT20_NUM_BINS - 31);
-+		memcpy(&bins[31], &vdata[33], num_bins - 31);
- 		break;
- 	case 1:
- 		/* MAC added 2 extra bytes AND first byte is missing. */
- 		bins[0] = vdata[0];
--		memcpy(&bins[0], vdata, 30);
-+		memcpy(&bins[1], vdata, 30);
- 		bins[31] = vdata[31];
--		memcpy(&bins[32], &vdata[33], SPECTRAL_HT20_NUM_BINS - 32);
-+		memcpy(&bins[32], &vdata[33], num_bins - 32);
- 		break;
- 	default:
- 		return 1;
-@@ -1044,23 +1044,93 @@ static int ath_process_fft(struct ath_softc *sc, struct ieee80211_hdr *hdr,
- 	/* DC value (value in the middle) is the blind spot of the spectral
- 	 * sample and invalid, interpolate it.
- 	 */
--	dc_pos = SPECTRAL_HT20_NUM_BINS / 2;
-+	dc_pos = num_bins / 2;
- 	bins[dc_pos] = (bins[dc_pos + 1] + bins[dc_pos - 1]) / 2;
- 
--	/* mag data is at the end of the frame, in front of radar_info */
--	mag_info = ((struct ath_ht20_mag_info *)radar_info) - 1;
-+	if ((chan_type == NL80211_CHAN_HT40MINUS) ||
-+	    (chan_type == NL80211_CHAN_HT40PLUS)) {
-+		s8 lower_rssi, upper_rssi;
-+		s16 ext_nf;
-+		u8 lower_max_index, upper_max_index;
-+		u8 lower_bitmap_w, upper_bitmap_w;
-+		u16 lower_mag, upper_mag;
-+		struct ath9k_hw_cal_data *caldata = ah->caldata;
-+		struct ath_ht20_40_mag_info *mag_info;
-+
-+		if (caldata)
-+			ext_nf = ath9k_hw_getchan_noise(ah, ah->curchan,
-+					caldata->nfCalHist[3].privNF);
-+		else
-+			ext_nf = ATH_DEFAULT_NOISE_FLOOR;
-+
-+		length = sizeof(fft_sample_40) - sizeof(struct fft_sample_tlv);
-+		fft_sample_40.tlv.type = ATH_FFT_SAMPLE_HT20_40;
-+		fft_sample_40.tlv.length = __cpu_to_be16(length);
-+		fft_sample_40.freq = __cpu_to_be16(freq);
-+		fft_sample_40.channel_type = chan_type;
- 
--	/* copy raw bins without scaling them */
--	memcpy(fft_sample.data, bins, SPECTRAL_HT20_NUM_BINS);
--	fft_sample.max_exp = mag_info->max_exp & 0xf;
-+		if (chan_type == NL80211_CHAN_HT40PLUS) {
-+			lower_rssi = fix_rssi_inv_only(rs->rs_rssi_ctl0);
-+			upper_rssi = fix_rssi_inv_only(rs->rs_rssi_ext0);
-+
-+			fft_sample_40.lower_noise = ah->noise;
-+			fft_sample_40.upper_noise = ext_nf;
-+		} else {
-+			lower_rssi = fix_rssi_inv_only(rs->rs_rssi_ext0);
-+			upper_rssi = fix_rssi_inv_only(rs->rs_rssi_ctl0);
- 
--	max_magnitude = spectral_max_magnitude(mag_info->all_bins);
--	fft_sample.max_magnitude = __cpu_to_be16(max_magnitude);
--	fft_sample.max_index = spectral_max_index(mag_info->all_bins);
--	fft_sample.bitmap_weight = spectral_bitmap_weight(mag_info->all_bins);
--	fft_sample.tsf = __cpu_to_be64(tsf);
-+			fft_sample_40.lower_noise = ext_nf;
-+			fft_sample_40.upper_noise = ah->noise;
-+		}
-+		fft_sample_40.lower_rssi = lower_rssi;
-+		fft_sample_40.upper_rssi = upper_rssi;
-+
-+		mag_info = ((struct ath_ht20_40_mag_info *)radar_info) - 1;
-+		lower_mag = spectral_max_magnitude(mag_info->lower_bins);
-+		upper_mag = spectral_max_magnitude(mag_info->upper_bins);
-+		fft_sample_40.lower_max_magnitude = __cpu_to_be16(lower_mag);
-+		fft_sample_40.upper_max_magnitude = __cpu_to_be16(upper_mag);
-+		lower_max_index = spectral_max_index(mag_info->lower_bins);
-+		upper_max_index = spectral_max_index(mag_info->upper_bins);
-+		fft_sample_40.lower_max_index = lower_max_index;
-+		fft_sample_40.upper_max_index = upper_max_index;
-+		lower_bitmap_w = spectral_bitmap_weight(mag_info->lower_bins);
-+		upper_bitmap_w = spectral_bitmap_weight(mag_info->upper_bins);
-+		fft_sample_40.lower_bitmap_weight = lower_bitmap_w;
-+		fft_sample_40.upper_bitmap_weight = upper_bitmap_w;
-+		fft_sample_40.max_exp = mag_info->max_exp & 0xf;
-+
-+		fft_sample_40.tsf = __cpu_to_be64(tsf);
-+
-+		tlv = (struct fft_sample_tlv *)&fft_sample_40;
-+	} else {
-+		u8 max_index, bitmap_w;
-+		u16 magnitude;
-+		struct ath_ht20_mag_info *mag_info;
-+
-+		length = sizeof(fft_sample_20) - sizeof(struct fft_sample_tlv);
-+		fft_sample_20.tlv.type = ATH_FFT_SAMPLE_HT20;
-+		fft_sample_20.tlv.length = __cpu_to_be16(length);
-+		fft_sample_20.freq = __cpu_to_be16(freq);
-+
-+		fft_sample_20.rssi = fix_rssi_inv_only(rs->rs_rssi_ctl0);
-+		fft_sample_20.noise = ah->noise;
-+
-+		mag_info = ((struct ath_ht20_mag_info *)radar_info) - 1;
-+		magnitude = spectral_max_magnitude(mag_info->all_bins);
-+		fft_sample_20.max_magnitude = __cpu_to_be16(magnitude);
-+		max_index = spectral_max_index(mag_info->all_bins);
-+		fft_sample_20.max_index = max_index;
-+		bitmap_w = spectral_bitmap_weight(mag_info->all_bins);
-+		fft_sample_20.bitmap_weight = bitmap_w;
-+		fft_sample_20.max_exp = mag_info->max_exp & 0xf;
-+
-+		fft_sample_20.tsf = __cpu_to_be64(tsf);
-+
-+		tlv = (struct fft_sample_tlv *)&fft_sample_20;
-+	}
- 
--	ath_debug_send_fft_sample(sc, &fft_sample.tlv);
-+	ath_debug_send_fft_sample(sc, tlv);
- 	return 1;
- #else
+ #define CHAN2G(_freq, _idx) { \
+ 	.band = IEEE80211_BAND_2GHZ, \
+ 	.center_freq = (_freq), \
+@@ -939,12 +945,27 @@ static int wcn36xx_platform_get_resources(struct wcn36xx *wcn,
  	return 0;
+ }
+ 
++static void wcn_reg_notifier(struct wiphy *wiphy,
++			     struct regulatory_request *request)
++{
++	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
++	struct wcn36xx *wcn = hw->priv;
++	struct ath_regulatory *reg = wcn->reg;
++
++	ath_reg_notifier_apply(wiphy, request, reg);
++
++	/* XXX: Set tx power, and DFS domain */
++
++	return;
++}
++
+ static int wcn36xx_probe(struct platform_device *pdev)
+ {
+ 	struct ieee80211_hw *hw;
+ 	struct wcn36xx *wcn;
+ 	int ret;
+ 	u8 addr[ETH_ALEN];
++	struct ath_regulatory *reg;
+ 
+ 	wcn36xx_dbg(WCN36XX_DBG_MAC, "platform probe\n");
+ 
+@@ -971,11 +992,24 @@ static int wcn36xx_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		goto out_wq;
+ 
++	wcn->reg = &ath_reg_default;
++	reg = wcn->reg;
++	ret = ath_regd_init(reg, wcn->hw->wiphy,
++			    wcn_reg_notifier);
++	if (ret)
++		goto out_wq;
++
+ 	wcn36xx_init_ieee80211(wcn);
+ 	ret = ieee80211_register_hw(wcn->hw);
+ 	if (ret)
+ 		goto out_unmap;
+ 
++	if (!ath_is_world_regd(wcn->reg)) {
++		ret = regulatory_hint(wcn->hw->wiphy, reg->alpha2);
++		if (ret)
++			goto out_unmap;
++	}
++
+ 	return 0;
+ 
+ out_unmap:
+diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+index 58b6383..d7eeeae 100644
+--- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
++++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+@@ -28,6 +28,7 @@
+ #include "dxe.h"
+ #include "pmc.h"
+ #include "debug.h"
++#include "../regd.h"
+ 
+ #define WLAN_NV_FILE               "wlan/prima/WCNSS_qcom_wlan_nv.bin"
+ #define WCN36XX_AGGR_BUFFER_SIZE 64
+@@ -214,6 +215,7 @@ struct wcn36xx {
+ 	struct wcn36xx_dxe_mem_pool data_mem_pool;
+ 
+ 	struct sk_buff		*tx_ack_skb;
++	struct ath_regulatory *reg;
+ 
+ #ifdef CONFIG_WCN36XX_DEBUGFS
+ 	/* Debug file system entry */
 -- 
-1.8.1.2
+1.7.10.4
 
