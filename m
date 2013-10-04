@@ -1,62 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:35816 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755822Ab3J2OX6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Oct 2013 10:23:58 -0400
-Received: by mail-wi0-f177.google.com with SMTP id f4so1376762wiw.4
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Oct 2013 07:23:57 -0700 (PDT)
+Received: from mms2.broadcom.com ([216.31.210.18]:2410 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750728Ab3JDHsV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Oct 2013 03:48:21 -0400
+Message-ID: <524E72B7.5000102@broadcom.com> (sfid-20131004_094833_632277_2F1C67E2)
+Date: Fri, 4 Oct 2013 09:48:07 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <CAMP44s3uRF=jNn5ZHZ=QOcvuMoXxsfkxU=VOq3K02Q0qOspEdA@mail.gmail.com>
-References: <CAMP44s1XJRHV8bAX=_-TkSKMkY8Nw1=eHorqTCZ2QmtR5m8uJA@mail.gmail.com>
- <526E20EA.9090203@rempel-privat.de> <CAMP44s2Cvw9HF3c3Asuq+bTSD36Gw6PXOUVjAcCD+hf6KB_awg@mail.gmail.com>
- <CABPxzY+xJ7kst-sYwP8RJwMO_zkNYWKaYy=_LS7WQfuxquK24w@mail.gmail.com>
- <CAMP44s0087jYz5AiEaEzwt7GqH9ed8PWE1CmvMPr4Dqn3yE6rA@mail.gmail.com>
- <CABPxzYLwwyFCFw1pEt0v9Xw4kcue1C_RZx0RbTbMrUw=+MWvgQ@mail.gmail.com>
- <CAMP44s0svc2MRKCrZXS5ZYRZNPoomQkcKHdC2m2BGy7di+TCyA@mail.gmail.com>
- <CABPxzYL-Gzbzoc_ui+qUQ6uzoKp=Yq7yLWZvc7PoEjiH3dFczg@mail.gmail.com> <CAMP44s3uRF=jNn5ZHZ=QOcvuMoXxsfkxU=VOq3K02Q0qOspEdA@mail.gmail.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Tue, 29 Oct 2013 19:53:37 +0530
-Message-ID: <CABPxzYJbNjAwymwUq0pN=YyuCBGy2qz_BKafatHTWK+yH8PbkA@mail.gmail.com> (sfid-20131029_152401_895543_D81CC0E9)
-Subject: Re: I always need a miracle to connect with iwlwifi
-To: Felipe Contreras <felipe.contreras@gmail.com>
-Cc: Oleksij Rempel <linux@rempel-privat.de>, ilw@linux.intel.com,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Eugene Krasnikov" <k.eugene.e@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	wcn36xx@lists.infradead.org
+Subject: Re: [PATCH] wcn36xx: mac80211 driver for Qualcomm
+ WCN3660/WCN3680 hardware
+References: <1380234106-12802-1-git-send-email-k.eugene.e@gmail.com>
+ <CAFSJ42bybEGtkzJ99fZHrcPs=gTnvJVHxM7d8anJvn1VOs7V7A@mail.gmail.com>
+ <20131003205710.GH3142@tuxdriver.com>
+ <CAFSJ42ZwJzd46UXE2crzuaMVRLzre9SVm_vFcQ-KAVY6Q9c3QQ@mail.gmail.com>
+In-Reply-To: <CAFSJ42ZwJzd46UXE2crzuaMVRLzre9SVm_vFcQ-KAVY6Q9c3QQ@mail.gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 29, 2013 at 3:02 AM, Felipe Contreras
-<felipe.contreras@gmail.com> wrote:
-> On Mon, Oct 28, 2013 at 2:44 PM, Krishna Chaitanya
-> <chaitanya.mgit@gmail.com> wrote:
->> On Tue, Oct 29, 2013 at 1:36 AM, Felipe Contreras
->> <felipe.contreras@gmail.com> wrote:
->>> On Mon, Oct 28, 2013 at 1:27 PM, Krishna Chaitanya
->>> <chaitanya.mgit@gmail.com> wrote:
->>
->>>> From the logs we can see that we have received authentication response,
->>>> so the association request is getting dropped somewhere? We might
->>>> need the mac80211 and iwlwifi trace-cmd logs to check for the drop.
+On 10/03/2013 11:22 PM, Eugene Krasnikov wrote:
+> Hm, weird... do not see this problem myself. Let me try to sync latest
+> wireless-next and will try to apply latest patch from this mailthread
+> on top.
+
+Hi Eugene,
+
+Do you build the driver as module. John is building it built-in then kernel.
+
+Gr. AvS
+
+> P.S. If somebody esle can try to apply this patch and build that would
+> be useful to know if problem is visible on others PCs as well.
+>
+> 2013/10/3 John W. Linville <linville@tuxdriver.com>:
+>> On Thu, Sep 26, 2013 at 11:25:18PM +0100, Eugene Krasnikov wrote:
+>>> Hi John,
+>>>
+>>> This is the latest version of wcn36xx driver on top of current
+>>> wireless-next tree. Please let me know if you have any problems with
+>>> applying it.
+>>>
+>>> 2013/9/26 Eugene Krasnikov <k.eugene.e@gmail.com>:
+>>>> This is a mac80211 driver for Qualcomm WCN3660/WCN3680 devices. So
+>>>> far WCN3660/WCN3680 is available only on MSM platform.
 >>>>
->>>> http://wireless.kernel.org/en/developers/Documentation/mac80211/tracing
->>>
->>> There you go:
->>> http://people.freedesktop.org/~felipec/wpa/trace.dat.xz
->>>
->> Hmm.."trace-cmd report -i trace.dat" returned lots of errors, i have even
->> tried with the trace-cmd from git (ubuntu). Did it worked fro you?
+>>>> Firmware can be found here:
+>>>> https://www.codeaurora.org/cgit/external/hisense/platform/vendor/qcom-opensource/wlan/prima/tree/firmware_bin?h=8130_CS
+>>>>
+>>>> Wiki page is available here:
+>>>> http://wireless.kernel.org/en/users/Drivers/wcn36xx
+>>>>
+>>>> A lot people made a contribution to this driver. Here is the list in
+>>>> alphabetical order:
+>>>>
+>>>> Eugene Krasnikov <k.eugene.e@gmail.com>
+>>>> Kalle Valo <kvalo@qca.qualcomm.com>
+>>>> Olof Johansson <dev@skyshaper.net>
+>>>> Pontus Fuchs <pontus.fuchs@gmail.com>
+>>>> Yanbo Li <yanbol@qti.qualcomm.com>
+>>>>
+>>>> Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
+>>
+>> 'make allyesconfig' yield this:
+>>
+>>    LD      drivers/net/wireless/ath/ath.o
+>>    LD      drivers/net/wireless/ath/built-in.o
+>> drivers/net/wireless/ath/wcn36xx/built-in.o: In function `_GLOBAL__sub_I_65535_0_wcn36xx_set_default_rates':
+>> /home/linville/git/wireless-next/drivers/net/wireless/ath/wcn36xx/main.c:302: multiple definition of `debug_mask'
+>> drivers/net/wireless/ath/ath6kl/built-in.o:/home/linville/git/wireless-next/drivers/net/wireless/ath/ath6kl/cfg80211.c:1208: first defined here
+>> make[2]: *** [drivers/net/wireless/ath/built-in.o] Error 1
+>> make[1]: *** [drivers/net/wireless/ath] Error 2
+>> make: *** [drivers/net/wireless/] Error 2
+>>
+>> --
+>> John W. Linville                Someday the world will need a hero, and you
+>> linville@tuxdriver.com                  might be all we have.  Be ready.
 >
-> Yes, but maybe I overrode the file. I've pushed a new one again. The
-> sha-1 is 36c260d8d8c171a24eb1aa7b2ea736b06c9b55b7.
 >
-Thanks, able to decode now. I am not familiar with the
-iwlwifi code, but let me give it a try.
+>
 
 
-
--- 
-Thanks,
-Regards,
-Chaitanya T K.
