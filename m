@@ -1,40 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f49.google.com ([74.125.83.49]:51712 "EHLO
-	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752085Ab3JYKbs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Oct 2013 06:31:48 -0400
-Received: by mail-ee0-f49.google.com with SMTP id e52so68736eek.22
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Oct 2013 03:31:47 -0700 (PDT)
-Message-ID: <526A488C.9050705@gmail.com> (sfid-20131025_123202_981313_D1BB31FD)
-Date: Fri, 25 Oct 2013 12:31:40 +0200
-From: Pontus Fuchs <pontus.fuchs@gmail.com>
+Received: from mx3.wp.pl ([212.77.101.7]:35811 "EHLO mx3.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754087Ab3JDOS3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Oct 2013 10:18:29 -0400
+Date: Fri, 4 Oct 2013 16:19:51 +0200
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+To: Gabor Juhos <juhosg@openwrt.org>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	stable@vger.kernel.org
+Subject: Re: [rt2x00-users] [PATCH v2 1/4] rt2x00: rt2800lib: fix VGC
+ adjustment for RT5592
+Message-ID: <20131004141951.GA7842@localhost.localdomain> (sfid-20131004_161833_401576_520C4B58)
+References: <1380823243-11149-1-git-send-email-juhosg@openwrt.org>
 MIME-Version: 1.0
-To: =?UTF-8?B?WWFubmlrIFbDtmxrZXI=?= <yannikv@yahoo.de>,
-	Oleksij Rempel <linux@rempel-privat.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ar5523 Gigaset USB Adapter 108 issue
-References: <Pine.LNX.4.44L0.1310181041080.1164-100000@iolanthe.rowland.org> <52614E9B.6040400@rempel-privat.de> <526155ED.1090007@yahoo.de> <52615EFA.80902@rempel-privat.de> <526162ED.8030901@yahoo.de> <52616CD0.2000203@rempel-privat.de> <5262789D.8030704@yahoo.de> <5262BA7A.2050803@rempel-privat.de> <5266C4C1.80408@yahoo.de> <5266C7BF.20503@rempel-privat.de> <526916A9.2050002@yahoo.de>
-In-Reply-To: <526916A9.2050002@yahoo.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1380823243-11149-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Oct 03, 2013 at 08:00:40PM +0200, Gabor Juhos wrote:
+> In commit 3d81535ea5940446510a8a5cee1c6ad23c90c753
+> (rt2800: 5592: add chip specific vgc calculations)
+> the rt2800_link_tuner function has been modified to
+> adjust VGC level for the RT5592 chipset.
+> 
+> On the RT5592 chipset, the VGC level must be adjusted
+> only if rssi is greater than -65. However the current
+> code adjusts the VGC value by 0x10 regardless of the
+> actual chipset if the rssi value is between -80 and
+> -65.
+> 
+> Fix the broken behaviour by reordering the if-else
+> statements.
+> 
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 
-> as reported the connection sometimes breakes down, when that happens
-> the dmesg contains multiple repetitions of the line
-> [ 9577.930431] usb 3-14: ar5523_data_rx_cb: USB err: -2
-
-Hi,
-
-Can you reproduce your problem with debugging enabled for the ar5523 driver:
-
-As root execute:
-
-echo "module ar5523 +p" > /sys/kernel/debug/dynamic_debug/control
-
-Cheers,
-
-Pontus
-
-
+Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
