@@ -1,43 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f169.google.com ([209.85.214.169]:62684 "EHLO
-	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751085Ab3JUQUG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Oct 2013 12:20:06 -0400
-Received: by mail-ob0-f169.google.com with SMTP id wp4so6082066obc.28
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Oct 2013 09:20:03 -0700 (PDT)
-Message-ID: <52655431.9050805@lwfinger.net> (sfid-20131021_182011_029026_830906C2)
-Date: Mon, 21 Oct 2013 11:20:01 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mx4.wp.pl ([212.77.101.8]:4395 "EHLO mx4.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754664Ab3JDOg6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Oct 2013 10:36:58 -0400
+Date: Fri, 4 Oct 2013 16:38:23 +0200
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+To: Gabor Juhos <juhosg@openwrt.org>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [rt2x00-users] [PATCH v2 3/4] rt2x00: rt2800lib: fix default VGC
+ values for RT3593
+Message-ID: <20131004143822.GC7842@localhost.localdomain> (sfid-20131004_163702_430652_33F4DD44)
+References: <1380823243-11149-1-git-send-email-juhosg@openwrt.org>
+ <1380823243-11149-3-git-send-email-juhosg@openwrt.org>
 MIME-Version: 1.0
-To: Mark Moes <mark_moes@live.nl>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: rtl8187 AP/Master mode
-References: <DUB119-W4654D1E1A8377FA92B6E049E010@phx.gbl> <DUB119-W4825EB1294BF48BA2BAAB39E010@phx.gbl>
-In-Reply-To: <DUB119-W4825EB1294BF48BA2BAAB39E010@phx.gbl>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1380823243-11149-3-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/21/2013 06:21 AM, Mark Moes wrote:
-> Hi,
->
->
-> I was wondering if there's any work being done on the AP/Master mode implementation of the rtl8187 chip as listed here: http://wireless.kernel.org/en/users/Drivers/rtl8187
->
-> If not, could anyone give a guesstimate of how much work is needed to write the code for this functionality?
+On Thu, Oct 03, 2013 at 08:00:42PM +0200, Gabor Juhos wrote:
+> Update the rt2800_get_default_vgc function to use the same VGC
+> values that the DPO_RT5572_LinuxSTA_2.6.1.3_20121022 reference
+> driver uses.
+> 
+> References:
+>   RT35xx_ChipAGCAdjust in chips/rt35xx.c
+>   RT3593_R66_MID_LOW_SENS_GET macro in include/chip/rt3593.h
+>   RT3593_R66_NON_MID_LOW_SEMS_GET macro in include/chips/rt3593.h
+> 
+> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 
-The RTL8187L chip does not implement QoS queuing. It might work in an AP, but it 
-would certainly fall over with a heavy load. The RTL8187B might work better. 
-When you add the fact that the internal workings of these chips are unpublished 
-and unknown to us, implementing either AP or Master mode would likely be difficult.
+Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
 
-It is impossible to guesstimate the time required. All that I can tell you is 
-that adapting this driver to work with either of these two modes is very low on 
-my priority list.
+> @@ -4422,6 +4423,8 @@ static u8 rt2800_get_default_vgc(struct rt2x00_dev *rt2x00dev)
+>  	} else { /* 5GHZ band */
+>  		if (rt2x00_rt(rt2x00dev, RT3572))
+>  			vgc = 0x22 + (rt2x00dev->lna_gain * 5) / 3;
 
-Larry
+Looks RT3572 values should be also changed ? According to:
 
-
-
+                if (pAd->CommonCfg.BBPCurrentBW == BW_20)
+                {
+                        R66 = 0x32 + (lanGain*5) / 3;
+                        if (Rssi > RSSI_FOR_MID_LOW_SENSIBILITY)
+                                R66 += 0x10;
+                }
+                else
+                {
+                        R66 = 0x3A + (lanGain*5)/3;
+                        if (Rssi > RSSI_FOR_MID_LOW_SENSIBILITY)
+                                R66 += 0x10;
+                }       
 
