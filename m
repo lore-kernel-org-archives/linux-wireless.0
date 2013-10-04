@@ -1,104 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:33624 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932647Ab3JOSq7 (ORCPT
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:36573 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752239Ab3JDTnf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Oct 2013 14:46:59 -0400
-Subject: [PATCH 3/7] ath10k: track vif list internally
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 15 Oct 2013 21:46:56 +0300
-Message-ID: <20131015184656.14123.70575.stgit@localhost6.localdomain6> (sfid-20131015_204701_681835_CF828C3D)
-In-Reply-To: <20131015184548.14123.56949.stgit@localhost6.localdomain6>
-References: <20131015184548.14123.56949.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Fri, 4 Oct 2013 15:43:35 -0400
+Message-ID: <1380915828.30424.0.camel@porter.coelho.fi> (sfid-20131004_214352_355145_6F1193F7)
+Subject: Re: [GIT PULL] firmware: wl1251 firmware binary
+From: Luca Coelho <luca@coelho.fi>
+To: balbi@ti.com
+Cc: dwmw2@infradead.org, ben@decadent.org.uk,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, Pavel Machek <pavel@denx.de>
+Date: Fri, 04 Oct 2013 22:43:48 +0300
+In-Reply-To: <20131004153246.GJ16059@radagast>
+References: <1380033894-5007-1-git-send-email-balbi@ti.com>
+	 <1380107096.4503.8.camel@porter.coelho.fi>
+	 <1380107278.4503.9.camel@porter.coelho.fi>
+	 <20130925132359.GE10746@radagast>
+	 <1380116535.4503.19.camel@porter.coelho.fi>
+	 <20130925135943.GI10746@radagast> <20131002125535.GL1476@radagast>
+	 <1380862901.4265.33.camel@porter.coelho.fi>
+	 <20131004153246.GJ16059@radagast>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michal Kazior <michal.kazior@tieto.com>
+On Fri, 2013-10-04 at 10:32 -0500, Felipe Balbi wrote:
+> diff --git a/LICENCE.wl1251 b/LICENCE.wl1251
+> new file mode 100644
+> index 0000000..bd0f5f1
+> --- /dev/null
+> +++ b/LICENCE.wl1251
+> @@ -0,0 +1,59 @@
+> +Copyright (c) 2000 – 2013 Texas Instruments Incorporated
+> +
+> +All rights reserved not granted herein.
+> +
+> +Limited License.
+> +
+> +Texas Instruments Incorporated grants a world-wide, royalty-free, non-exclusive
+> +license under copyrights and patents it now or hereafter owns or controls to
+> +make, have made, use, import, offer to sell and sell ("Utilize") this software
+> +subject to the terms herein.  With respect to the foregoing patent license,
+> +such license is granted  solely to the extent that any such patent is necessary
+> +to Utilize the software alone.  The patent license shall not apply to any
+> +combinations which include this software, other than combinations with devices
+> +manufactured by or for TI (“TI Devices”).  No hardware patent is licensed
+> +hereunder.
+> +
+> +Redistributions must preserve existing copyright notices and reproduce this
+> +license (including the above copyright notice and the disclaimer and (if
+> +applicable) source code license limitations below) in the documentation and/or
+> +other materials provided with the distribution
+> +
+> +Redistribution and use in binary form, without modification, are permitted
+> +provided that the following conditions are met:
+> +
+> +*	No reverse engineering, decompilation, or disassembly of this software
+> +	is permitted with respect to any software provided in binary form.
+> +
+> +*	any redistribution and use are licensed by TI for use only with TI
+> +	Devices.
+> +
+> +*	Nothing shall obligate TI to provide you with source code for the
+> +	software licensed and provided to you in object code.
+> +
+> +If software source code is provided to you, modification and redistribution of
+> +the source code are permitted provided that the following conditions are met:
+> +
+> +*	any redistribution and use of the source code, including any resulting
+> +	derivative works, are licensed by TI for use only with TI Devices.
+> +
+> +*	any redistribution and use of any object code compiled from the source
+> +	code and any resulting derivative works, are licensed by TI for use
+> +	only with TI Devices.
+> +
+> +Neither the name of Texas Instruments Incorporated nor the names of its
+> +suppliers may be used to endorse or promote products derived from this software
+> +without specific prior written permission.
+> +
+> +DISCLAIMER.
+> +
+> +THIS SOFTWARE IS PROVIDED BY TI AND TI’S LICENSORS "AS IS" AND ANY EXPRESS OR
+> +IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+> +MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+> +EVENT SHALL TI AND TI’S LICENSORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+> +INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+> +LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+> +PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+> +LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+> +OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+> +ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+> diff --git a/WHENCE b/WHENCE
+> index aac3ba9..3a35670 100644
+> --- a/WHENCE
+> +++ b/WHENCE
+> @@ -1712,6 +1712,24 @@ Licence: Redistributable. See LICENCE.tda7706-firmware.txt for details.
+>  
+>  --------------------------------------------------------------------------
+>  
+> +Driver: wl1251 - Texas Instruments 802.11 WLAN driver for WiLink4 chips
+> +
+> +File: ti-connectivity/wl1251-fw.bin
+> +Version: 4.0.4.3.7
+> +
+> +File: ti-connectivity/wl1251-nvs.bin
+> +
+> +Licence: See LICENCE.wl1251 for details.
+> +
+> +The published NVS files are for testing only.  Every device needs to
+> +have a unique NVS which is properly calibrated for best results.
+> +
+> +The driver expects to find the firmwares under a ti-connectivity subdirectory.
+> +So if your system looks for firmwares in /lib/firmware, the firmwares for
+> +wl12xx chips must be located in /lib/firmware/ti-connectivity/.
+> +
+> +--------------------------------------------------------------------------
+> +
+>  Driver: wl12xx - Texas Instruments 802.11 WLAN driver for WiLink6/7 chips
+>  
+>  File: ti-connectivity/wl1271-fw.bin
+> diff --git a/ti-connectivity/wl1251-fw.bin b/ti-connectivity/wl1251-fw.bin
+> new file mode 100644
+> index 0000000..f89c983
+> Binary files /dev/null and b/ti-connectivity/wl1251-fw.bin differ
+> diff --git a/ti-connectivity/wl1251-nvs.bin b/ti-connectivity/wl1251-nvs.bin
+> new file mode 100644
+> index 0000000..2bf9c50
+> Binary files /dev/null and b/ti-connectivity/wl1251-nvs.bin differ
+> 
 
-mac80211 interface interations functions have
-peculiar locking issues. This patch introduces
-internal (to ath10k) vif list that will be used
-for vif iteration purposes.
+Looks good to me:
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c |    2 ++
- drivers/net/wireless/ath/ath10k/core.h |    3 +++
- drivers/net/wireless/ath/ath10k/mac.c  |    3 +++
- 3 files changed, 8 insertions(+)
+Acked-by: Luciano Coelho <luca@coelho.fi>
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index c5561a9..ed51b51 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -713,6 +713,7 @@ struct ath10k *ath10k_core_create(void *hif_priv, struct device *dev,
- 	mutex_init(&ar->conf_mutex);
- 	spin_lock_init(&ar->data_lock);
- 
-+	INIT_LIST_HEAD(&ar->arvifs);
- 	INIT_LIST_HEAD(&ar->peers);
- 	init_waitqueue_head(&ar->peer_mapping_wq);
- 
-@@ -824,6 +825,7 @@ int ath10k_core_start(struct ath10k *ar)
- 		goto err_disconnect_htc;
- 
- 	ar->free_vdev_map = (1 << TARGET_NUM_VDEVS) - 1;
-+	INIT_LIST_HEAD(&ar->arvifs);
- 
- 	return 0;
- 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index cef5455..0934f76 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -205,6 +205,8 @@ struct ath10k_peer {
- #define ATH10K_VDEV_SETUP_TIMEOUT_HZ (5*HZ)
- 
- struct ath10k_vif {
-+	struct list_head list;
-+
- 	u32 vdev_id;
- 	enum wmi_vdev_type vdev_type;
- 	enum wmi_vdev_subtype vdev_subtype;
-@@ -404,6 +406,7 @@ struct ath10k {
- 	/* protects shared structure data */
- 	spinlock_t data_lock;
- 
-+	struct list_head arvifs;
- 	struct list_head peers;
- 	wait_queue_head_t peer_mapping_wq;
- 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 16e55bd..c8e4180 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2093,6 +2093,7 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 	}
- 
- 	ar->free_vdev_map &= ~BIT(arvif->vdev_id);
-+	list_add(&arvif->list, &ar->arvifs);
- 
- 	vdev_param = ar->wmi.vdev_param->def_keyid;
- 	ret = ath10k_wmi_vdev_set_param(ar, 0, vdev_param,
-@@ -2175,6 +2176,7 @@ err_peer_delete:
- err_vdev_delete:
- 	ath10k_wmi_vdev_delete(ar, arvif->vdev_id);
- 	ar->free_vdev_map &= ~BIT(arvif->vdev_id);
-+	list_del(&arvif->list);
- 
- err:
- 	mutex_unlock(&ar->conf_mutex);
-@@ -2201,6 +2203,7 @@ static void ath10k_remove_interface(struct ieee80211_hw *hw,
- 	spin_unlock_bh(&ar->data_lock);
- 
- 	ar->free_vdev_map |= 1 << (arvif->vdev_id);
-+	list_del(&arvif->list);
- 
- 	if (arvif->vdev_type == WMI_VDEV_TYPE_AP) {
- 		ret = ath10k_peer_delete(arvif->ar, arvif->vdev_id, vif->addr);
+--
+Luca.
 
