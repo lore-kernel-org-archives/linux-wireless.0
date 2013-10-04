@@ -1,62 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f178.google.com ([209.85.215.178]:62231 "EHLO
-	mail-ea0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751374Ab3JCX0n (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Oct 2013 19:26:43 -0400
-Received: by mail-ea0-f178.google.com with SMTP id a15so1429136eae.9
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Oct 2013 16:26:42 -0700 (PDT)
+Received: from ebb05.tieto.com ([131.207.168.36]:42910 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751257Ab3JDGN1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Oct 2013 02:13:27 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 2/2] ath10k: fix possible memory leak in new FW loading
+Date: Fri, 4 Oct 2013 08:13:20 +0200
+Message-ID: <1380867200-19714-3-git-send-email-michal.kazior@tieto.com> (sfid-20131004_081332_377961_CFDB7B6C)
+In-Reply-To: <1380867200-19714-1-git-send-email-michal.kazior@tieto.com>
+References: <1380867200-19714-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
-In-Reply-To: <477F20668A386D41ADCC57781B1F70430F451FB266@SC-VEXCH1.marvell.com>
-References: <1380824600-13655-1-git-send-email-bzhao@marvell.com>
-	<CAJdJm_N1=a7URKmU8xOsOzOaYHKQdNXiR7VryeOc4+i2uf7RqQ@mail.gmail.com>
-	<477F20668A386D41ADCC57781B1F70430F451FB266@SC-VEXCH1.marvell.com>
-Date: Thu, 3 Oct 2013 19:26:41 -0400
-Message-ID: <CAJdJm_NJe-wrAHFgrGP5ytMxfgP0RREJCqnE9L=hAbVXbNqFdQ@mail.gmail.com> (sfid-20131004_012656_451074_95A4C154)
-Subject: Re: [PATCH] Bluetooth: btmrvl: operate on 16-bit opcodes instead of ogf/ocf
-From: Anderson Lizardo <anderson.lizardo@openbossa.org>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: BlueZ development <linux-bluetooth@vger.kernel.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Gustavo Padovan <gustavo@padovan.org>,
-	Johan Hedberg <johan.hedberg@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Bing,
+Some failpaths did `return` instead of a `goto`
+leaking requested firmware.
 
-On Thu, Oct 3, 2013 at 5:06 PM, Bing Zhao <bzhao@marvell.com> wrote:
->> >         hdr = (struct hci_command_hdr *)skb_put(skb, HCI_COMMAND_HDR_SIZE);
->> > -       hdr->opcode = cpu_to_le16(hci_opcode_pack(OGF, cmd_no));
->> > +       hdr->opcode = cpu_to_le16(opcode);
->>
->> Are you sure the callers of btmrvl_send_sync_cmd() do not need to be
->> changed to pass an opcode instead of just the OCF?
->
-> Previously we pass the cmd_no which is the OCF bits to the function, and the function packs it to opcode.
->
-> Now I changed the macros of the cmd_no from OCF to opcode as shown below, so no change to the callers.
->
-> -/* Bluetooth commands  */
-> -#define BT_CMD_AUTO_SLEEP_MODE         0x23
-> -#define BT_CMD_HOST_SLEEP_CONFIG       0x59
-> -#define BT_CMD_HOST_SLEEP_ENABLE       0x5A
-> -#define BT_CMD_MODULE_CFG_REQ          0x5B
-> -#define BT_CMD_LOAD_CONFIG_DATA                0x61
-> +/* Vendor specific Bluetooth commands */
-> +#define BT_CMD_AUTO_SLEEP_MODE         0xFC23
-> +#define BT_CMD_HOST_SLEEP_CONFIG       0xFC59
-> +#define BT_CMD_HOST_SLEEP_ENABLE       0xFC5A
-> +#define BT_CMD_MODULE_CFG_REQ          0xFC5B
-> +#define BT_CMD_LOAD_CONFIG_DATA                0xFC61
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c |    9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-Now I got it :)
-
-Best Regards,
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index bf85d34..5acb404 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -404,12 +404,14 @@ static int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name)
+ 	if (len < magic_len) {
+ 		ath10k_err("firmware image too small to contain magic: %zu\n",
+ 			   len);
+-		return -EINVAL;
++		ret = -EINVAL;
++		goto err;
+ 	}
+ 
+ 	if (memcmp(data, ATH10K_FIRMWARE_MAGIC, magic_len) != 0) {
+ 		ath10k_err("Invalid firmware magic\n");
+-		return -EINVAL;
++		ret = -EINVAL;
++		goto err;
+ 	}
+ 
+ 	/* jump over the padding */
+@@ -431,7 +433,8 @@ static int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name)
+ 		if (len < ie_len) {
+ 			ath10k_err("Invalid length for FW IE %d (%zu < %zu)\n",
+ 				   ie_id, len, ie_len);
+-			return -EINVAL;
++			ret = -EINVAL;
++			goto err;
+ 		}
+ 
+ 		switch (ie_id) {
 -- 
-Anderson Lizardo
-Instituto Nokia de Tecnologia - INdT
-Manaus - Brazil
+1.7.9.5
+
