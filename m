@@ -1,73 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f41.google.com ([74.125.83.41]:51314 "EHLO
-	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753930Ab3JZUki (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Oct 2013 16:40:38 -0400
-From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Luciano Coelho <luca@coelho.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
-	joni.lapilainen@gmail.com, pali.rohar@gmail.com,
-	David Gnedt <david.gnedt@davizone.at>
-Subject: [PATCH 13/16] wl1251: enforce changed hw encryption support on monitor state change
-Date: Sat, 26 Oct 2013 22:34:12 +0200
-Message-Id: <1382819655-30430-14-git-send-email-pali.rohar@gmail.com> (sfid-20131026_224045_283476_1C79A2F9)
-In-Reply-To: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+Received: from ebb06.tieto.com ([131.207.168.38]:44555 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751265Ab3JDFnv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Oct 2013 01:43:51 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH/RFT v2 0/4] ath10k: fixes
+Date: Fri, 4 Oct 2013 07:43:41 +0200
+Message-ID: <1380865425-3791-1-git-send-email-michal.kazior@tieto.com> (sfid-20131004_074355_026736_C97160EA)
+In-Reply-To: <1380805765-31521-1-git-send-email-michal.kazior@tieto.com>
+References: <1380805765-31521-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Gnedt <david.gnedt@davizone.at>
+Hi,
 
-The firmware doesn't support per packet encryption selection, so disable hw
-encryption support completly while a monitor interface is present to support
-injection of packets (which shouldn't get encrypted by hw).
-To enforce the changed hw encryption support force a disassociation on
-non-monitor interfaces.
-For disassociation a workaround using hw connection monitor is employed,
-which temporary enables hw connection manager flag.
+This patchset addresses recently spotted issue
+with (yet another) scheduling while atomic bug
+(the other being WEP key index setting). This one
+is related to hw_config() and powersave settings.
+This comes from recent changes I've done to
+HTC/WMI. WMI commands can block now so it's
+illegal to call them in an atomic context anymore.
 
-Signed-off-by: David Gnedt <david.gnedt@davizone.at>
----
- drivers/net/wireless/ti/wl1251/main.c |   13 +++++++++++++
- 1 file changed, 13 insertions(+)
+ath10k needs to setup some settings per-vdev (i.e.
+per-interface) such as powersave, rts, fragmentation.
+Until now mac80211 iteration functions were used.
+However using non-atomic iteration function variant
+doesn't solve the problem as it introduces an
+issue with iflist_mtx deadlock in some cases.
 
-diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
-index 174f403..f054741 100644
---- a/drivers/net/wireless/ti/wl1251/main.c
-+++ b/drivers/net/wireless/ti/wl1251/main.c
-@@ -685,6 +685,16 @@ static int wl1251_op_config(struct ieee80211_hw *hw, u32 changed)
- 		wl->power_level = conf->power_level;
- 	}
- 
-+	/*
-+	 * Tell stack that connection is lost because hw encryption isn't
-+	 * supported in monitor mode.
-+	 * XXX This requires temporary enabling the hw connection monitor flag
-+	 */
-+	if ((changed & IEEE80211_CONF_CHANGE_MONITOR) && wl->vif) {
-+		wl->hw->flags |= IEEE80211_HW_CONNECTION_MONITOR;
-+		ieee80211_connection_loss(wl->vif);
-+	}
-+
- out_sleep:
- 	wl1251_ps_elp_sleep(wl);
- 
-@@ -1116,6 +1126,9 @@ static void wl1251_op_bss_info_changed(struct ieee80211_hw *hw,
- 	}
- 
- 	if (changed & BSS_CHANGED_ASSOC) {
-+		/* XXX Disable temporary enabled hw connection monitor flag */
-+		wl->hw->flags &= ~IEEE80211_HW_CONNECTION_MONITOR;
-+
- 		if (bss_conf->assoc) {
- 			wl->beacon_int = bss_conf->beacon_int;
- 
+I briefly tried to reproduce the issue Kalle
+reported but was unsuccessful thus the "/RFT".
+
+v2:
+ * fix kbuild test robot warning
+   (uninitialized `ret`)
+ * add patch #4 that removes code that becomes
+   unnecessary after patch #3
+
+
+Michal Kazior (4):
+  ath10k: fix add_interface failure handling
+  ath10k: track vif list internally
+  ath10k: fix scheduling while atomic config bug
+  ath10k: remove unnecessary checks
+
+ drivers/net/wireless/ath/ath10k/core.c |    2 +
+ drivers/net/wireless/ath/ath10k/core.h |    3 +
+ drivers/net/wireless/ath/ath10k/mac.c  |  200 +++++++++++++++-----------------
+ 3 files changed, 97 insertions(+), 108 deletions(-)
+
 -- 
-1.7.10.4
+1.7.9.5
 
