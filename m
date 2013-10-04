@@ -1,79 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0189.hostedemail.com ([216.40.44.189]:35909 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S932283Ab3JOQYd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Oct 2013 12:24:33 -0400
-Message-ID: <1381854263.22110.19.camel@joe-AO722> (sfid-20131015_182459_576016_9B0AE92D)
-Subject: Re: [PATCH 02/18] net: use wrapper functions of net_ratelimit() to
- simplify code
-From: Joe Perches <joe@perches.com>
-To: Kefeng Wang <wangkefeng.wang@huawei.com>
-Cc: linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Pablo Neira Ayuso <pablo@netfilter.org>,
-	Stephen Hemminger <stephen@networkplumber.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Francois Romieu <romieu@fr.zoreil.com>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	Chas Williams <chas@cmf.nrl.navy.mil>,
-	Marc Kleine-Budde <mkl@pengutronix.de>,
-	Samuel Ortiz <samuel@sortiz.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Oliver Neukum <oneukum@suse.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	"Michael S. Tsirkin" <mst@redhat.com>, netfilter@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	guohanjun@huawei.com
-Date: Tue, 15 Oct 2013 09:24:23 -0700
-In-Reply-To: <1381837514-50660-3-git-send-email-wangkefeng.wang@huawei.com>
-References: <1381837514-50660-1-git-send-email-wangkefeng.wang@huawei.com>
-	 <1381837514-50660-3-git-send-email-wangkefeng.wang@huawei.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from ebb06.tieto.com ([131.207.168.38]:62717 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752983Ab3JDIRp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Oct 2013 04:17:45 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 1/2] ath10k: Fix bug in max. VHT A-MPDU size
+Date: Fri, 4 Oct 2013 10:17:09 +0200
+Message-ID: <1380874630-14280-2-git-send-email-michal.kazior@tieto.com> (sfid-20131004_101750_919478_75FF7C49)
+In-Reply-To: <1380874630-14280-1-git-send-email-michal.kazior@tieto.com>
+References: <to=1380292567-2363-1-git-send-email-michal.kazior@tieto.com>
+ <1380874630-14280-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-10-15 at 19:44 +0800, Kefeng Wang wrote:
-> Wrapper functions net_ratelimited_function() and net_XXX_ratelimited()
-> are called to simplify code.
-[]
-> diff --git a/net/bridge/br_fdb.c b/net/bridge/br_fdb.c
-[]
-> @@ -465,10 +465,8 @@ void br_fdb_update(struct net_bridge *br, struct net_bridge_port *source,
->  	if (likely(fdb)) {
->  		/* attempt to update an entry for a local interface */
->  		if (unlikely(fdb->is_local)) {
-> -			if (net_ratelimit())
-> -				br_warn(br, "received packet on %s with "
-> -					"own address as source address\n",
-> -					source->dev->name);
-> +			net_ratelimited_function(br_warn, br, "received packet on %s "
-> +				"with own address as source address\n", source->dev->name);
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Hello Kefeng.
+For VHT peers, the maximum A-MPDU size has to be calculated
+from the VHT capabilities element and not the HT-cap. The formula
+is the same, but a higher value is used in VHT, allowing larger
+aggregates to be transmitted.
 
-When these types of lines are changed, please coalesce the
-fragmented format pieces into a single string.
+The patch contains a workaround for some Netgear/Linksys APs that
+report Rx A-MPDU factor incorrectly.
 
-It makes grep a bit easier and 80 columns limits don't
-apply to formats.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c |   14 +++++++++++++-
+ 1 file changed, 13 insertions(+), 1 deletion(-)
 
-I think using net_ratelimited_function is not particularly
-clarifying here.
-
-Maybe net_ratelimited_function should be removed instead
-of its use sites expanded.
-
-Perhaps adding macros like #define br_warn_ratelimited()
-would be better.
-
-This comment applies to the whole series.
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 8684e03..7e06e75 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1033,14 +1033,26 @@ static void ath10k_peer_assoc_h_vht(struct ath10k *ar,
+ 				    struct wmi_peer_assoc_complete_arg *arg)
+ {
+ 	const struct ieee80211_sta_vht_cap *vht_cap = &sta->vht_cap;
++	u8 ampdu_factor;
+ 
+ 	if (!vht_cap->vht_supported)
+ 		return;
+ 
+ 	arg->peer_flags |= WMI_PEER_VHT;
+-
+ 	arg->peer_vht_caps = vht_cap->cap;
+ 
++	ampdu_factor =
++		(vht_cap->cap & IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK) >>
++		IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_SHIFT;
++
++	/* Workaround: Some Netgear/Linksys 11ac APs set Rx A-MPDU factor to
++	 * zero in VHT IE. Using it would result in degraded throughput.
++	 * arg->peer_max_mpdu at this point contains HT max_mpdu so keep
++	 * it if VHT max_mpdu is smaller. */
++	arg->peer_max_mpdu = max(arg->peer_max_mpdu,
++				 (1 << (IEEE80211_HT_MAX_AMPDU_FACTOR +
++					ampdu_factor)) - 1);
++
+ 	if (sta->bandwidth == IEEE80211_STA_RX_BW_80)
+ 		arg->peer_flags |= WMI_PEER_80MHZ;
+ 
+-- 
+1.7.9.5
 
