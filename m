@@ -1,744 +1,403 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f178.google.com ([74.125.82.178]:42177 "EHLO
-	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756812Ab3J1Qm2 (ORCPT
+Received: from cassiel.sirena.org.uk ([80.68.93.111]:34317 "EHLO
+	cassiel.sirena.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751957Ab3JDUXm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Oct 2013 12:42:28 -0400
-Received: by mail-we0-f178.google.com with SMTP id q59so6742390wes.23
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Oct 2013 09:42:26 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linux-wireless@vger.kernel.org
-Cc: wireless-regdb@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH v2 3/6] crda: add regulatory domain stream parser
-Date: Mon, 28 Oct 2013 17:42:03 +0100
-Message-Id: <1382978526-23929-4-git-send-email-mcgrof@do-not-panic.com> (sfid-20131028_174231_990573_838BA509)
-In-Reply-To: <1382978526-23929-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1382978526-23929-1-git-send-email-mcgrof@do-not-panic.com>
+	Fri, 4 Oct 2013 16:23:42 -0400
+Date: Fri, 4 Oct 2013 21:22:26 +0100
+From: Mark Brown <broonie@kernel.org>
+To: Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Franky Lin <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Joe Perches <joe@perches.com>,
+	"David S. Miller" <davem@davemloft.net>
+Cc: linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Thierry Reding <thierry.reding@gmail.com>,
+	netdev@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	linux-wireless@vger.kernel.org
+Message-ID: <20131004202226.GT27287@sirena.org.uk> (sfid-20131004_222406_033960_D321C6ED)
+References: <20131003171440.GD27287@sirena.org.uk>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="0zAvg8I2HpXbmZ+A"
+In-Reply-To: <20131003171440.GD27287@sirena.org.uk>
+Subject: Re: Build failure after merge of the drm-intel tree
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds a stream parser for regulatory domains. This
-allows developers to build regulatory domains now using
-the db.txt from a stream, either stdin, or a from an
-opened file.
 
-This also adds a simple db2rd which for now only uses the
-library but with a bit of effort can also be used as a
-suitable replacement for the kernel's genregdb.awk.
+--0zAvg8I2HpXbmZ+A
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- Makefile |  10 +-
- db2rd.c  |  32 ++++
- reglib.c | 543 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- reglib.h |  44 ++++++
- 4 files changed, 627 insertions(+), 2 deletions(-)
- create mode 100644 db2rd.c
+While merging the wireless-next tree into -next there were conflicts in
+several headers due to conflicts between various commits from Joe
+Perches removing extern from headers in the net-next tree and
+development in the wireless tree.
 
-diff --git a/Makefile b/Makefile
-index 7d2e33f..bd9c220 100644
---- a/Makefile
-+++ b/Makefile
-@@ -24,10 +24,11 @@ PUBKEY_DIR?=pubkeys
- RUNTIME_PUBKEY_DIR?=/etc/wireless-regdb/pubkeys
- 
- CFLAGS += -Wall -g
-+LDLIBS += -lm
- 
- all: all_noverify verify
- 
--all_noverify: crda intersect regdbdump
-+all_noverify: crda intersect regdbdump db2rd
- 
- ifeq ($(USE_OPENSSL),1)
- CFLAGS += -DUSE_OPENSSL -DPUBKEY_DIR=\"$(RUNTIME_PUBKEY_DIR)\" `pkg-config --cflags openssl`
-@@ -121,6 +122,10 @@ intersect: reglib.o intersect.o
- 	$(NQ) '  LD  ' $@
- 	$(Q)$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LDLIBS)
- 
-+db2rd: reglib.o db2rd.o
-+	$(NQ) '  LD  ' $@
-+	$(Q)$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LDLIBS)
-+
- verify: $(REG_BIN) regdbdump
- 	$(NQ) '  CHK  $(REG_BIN)'
- 	$(Q)./regdbdump $(REG_BIN) >/dev/null
-@@ -152,5 +157,6 @@ install: crda crda.8.gz regdbdump.8.gz
- 	$(Q)$(INSTALL) -m 644 -t $(DESTDIR)/$(MANDIR)/man8/ regdbdump.8.gz
- 
- clean:
--	$(Q)rm -f crda regdbdump intersect *.o *~ *.pyc keys-*.c *.gz \
-+	$(Q)rm -f crda regdbdump intersect db2rd \
-+		*.o *~ *.pyc keys-*.c *.gz \
- 	udev/$(UDEV_LEVEL)regulatory.rules udev/regulatory.rules.parsed
-diff --git a/db2rd.c b/db2rd.c
-new file mode 100644
-index 0000000..51ec051
---- /dev/null
-+++ b/db2rd.c
-@@ -0,0 +1,32 @@
-+#include <errno.h>
-+#include <stdlib.h>
-+#include <stdio.h>
-+#include <arpa/inet.h> /* ntohl */
-+#include <string.h>
-+
-+#include "nl80211.h"
-+#include "reglib.h"
-+
-+int main(int argc, char **argv)
-+{
-+	struct ieee80211_regdomain *rd = NULL;
-+	FILE *fp;
-+
-+	if (argc != 1) {
-+		fprintf(stderr, "Usage: cat db.txt | %s\n", argv[0]);
-+		return -EINVAL;
-+	}
-+
-+	fp = reglib_create_parse_stream(stdin);
-+	if (!fp)
-+		return -EINVAL;
-+
-+	reglib_for_each_country_stream(fp, rd) {
-+		reglib_print_regdom(rd);
-+		free(rd);
-+	}
-+
-+	fclose(fp);
-+
-+	return 0;
-+}
-diff --git a/reglib.c b/reglib.c
-index b0c61e5..6191acd 100644
---- a/reglib.c
-+++ b/reglib.c
-@@ -38,6 +38,19 @@
- #include "keys-gcrypt.c"
- #endif
- 
-+int debug = 0;
-+
-+struct reglib_rule_parse_list {
-+	int n_parsers;
-+	int (*rule_parsers[])(char *line, struct ieee80211_reg_rule *reg_rule);
-+};
-+
-+struct reglib_country_parse_list {
-+	int n_parsers;
-+	int (*country_parsers[])(char *line, struct ieee80211_regdomain *rd);
-+};
-+
-+
- void *
- reglib_get_file_ptr(uint8_t *db, size_t dblen, size_t structlen, uint32_t ptr)
- {
-@@ -707,3 +720,533 @@ void reglib_print_regdom(const struct ieee80211_regdomain *rd)
- 		print_reg_rule(&rd->reg_rules[i]);
- 	printf("\n");
- }
-+
-+static unsigned int reglib_parse_dfs_region(char *dfs_region)
-+{
-+	if (strncmp(dfs_region, "DFS-FCC", 7) == 0)
-+		return REGDB_DFS_FCC;
-+	if (strncmp(dfs_region, "DFS-ETSI", 8) == 0)
-+		return REGDB_DFS_ETSI;
-+	if (strncmp(dfs_region, "DFS-JP", 6) == 0)
-+		return REGDB_DFS_JP;
-+	return REGDB_DFS_UNSET;
-+}
-+
-+static uint32_t reglib_parse_rule_flag(char *flag_s)
-+{
-+	if (strncmp(flag_s, "NO-OFDM", 7) == 0)
-+		return RRF_NO_OFDM;
-+	if (strncmp(flag_s, "NO-CCK", 6) == 0)
-+		return RRF_NO_CCK;
-+	if (strncmp(flag_s, "NO-INDOOR", 9) == 0)
-+		return RRF_NO_INDOOR;
-+	if (strncmp(flag_s, "NO-OUTDOOR", 10) == 0)
-+		return RRF_NO_OUTDOOR;
-+	if (strncmp(flag_s, "DFS", 3) == 0)
-+		return RRF_DFS;
-+	if (strncmp(flag_s, "PTP-ONLY", 8) == 0)
-+		return RRF_PTP_ONLY;
-+	if (strncmp(flag_s, "PTMP-ONLY", 9) == 0)
-+		return RRF_PTMP_ONLY;
-+	if (strncmp(flag_s, "NO-IR", 5) == 0)
-+		return RRF_NO_IR;
-+
-+	return 0;
-+}
-+
-+static int
-+reglib_parse_rule_simple(char *line, struct ieee80211_reg_rule *reg_rule)
-+{
-+	int hits;
-+	float start_freq_khz, end_freq_khz, max_bandwidth_khz, max_eirp;
-+
-+	hits = sscanf(line, "\t(%f - %f @ %f), (%f)\n",
-+		      &start_freq_khz,
-+		      &end_freq_khz,
-+		      &max_bandwidth_khz,
-+		      &max_eirp);
-+
-+	if (hits != 4)
-+		return -EINVAL;
-+
-+	reg_rule->freq_range.start_freq_khz =
-+		REGLIB_MHZ_TO_KHZ(start_freq_khz);
-+	reg_rule->freq_range.end_freq_khz =
-+		REGLIB_MHZ_TO_KHZ(end_freq_khz);
-+	reg_rule->freq_range.max_bandwidth_khz =
-+		REGLIB_MHZ_TO_KHZ(max_bandwidth_khz);
-+	reg_rule->power_rule.max_eirp =
-+		REGLIB_DBM_TO_MBM(max_eirp);
-+
-+	reg_rule->flags = 0;
-+
-+	if (debug)
-+		printf("reglib_parse_rule_simple(): %d line: %s", hits, line);
-+
-+
-+	return 0;
-+}
-+
-+static int
-+reglib_parse_rule_simple_mw(char *line, struct ieee80211_reg_rule *reg_rule)
-+{
-+	int hits;
-+	float start_freq_khz, end_freq_khz, max_bandwidth_khz, max_eirp;
-+	char mw[3];
-+
-+	hits = sscanf(line, "\t(%f - %f @ %f), (%f %2[mW])\n",
-+		      &start_freq_khz,
-+		      &end_freq_khz,
-+		      &max_bandwidth_khz,
-+		      &max_eirp, mw);
-+
-+	if (hits != 4)
-+		return -EINVAL;
-+
-+
-+	reg_rule->freq_range.start_freq_khz =
-+		REGLIB_MHZ_TO_KHZ(start_freq_khz);
-+	reg_rule->freq_range.end_freq_khz =
-+		REGLIB_MHZ_TO_KHZ(end_freq_khz);
-+	reg_rule->freq_range.max_bandwidth_khz =
-+		REGLIB_MHZ_TO_KHZ(max_bandwidth_khz);
-+	reg_rule->power_rule.max_eirp =
-+		REGLIB_MW_TO_MBM(max_eirp);
-+
-+	reg_rule->flags = 0;
-+
-+	if (debug)
-+		printf("reglib_parse_rule_simple_mw(): %d line: %s",
-+		       hits, line);
-+
-+	return 0;
-+}
-+
-+static int
-+reglib_parse_rule_args(char *line, struct ieee80211_reg_rule *reg_rule)
-+{
-+#define IGNORE_COMMA_OR_SPACE "%*[ ,]"
-+	int hits;
-+	char flag_list[9][100];
-+	unsigned int i = 0;
-+	float start_freq_khz, end_freq_khz, max_bandwidth_khz, max_eirp;
-+
-+	for (i = 0; i < 9; i++)
-+		memset(flag_list[i], 0, sizeof(flag_list[i]));
-+
-+	hits = sscanf(line, "\t(%f - %f @ %f), (%f)"
-+		      IGNORE_COMMA_OR_SPACE "%s"
-+		      IGNORE_COMMA_OR_SPACE "%s"
-+		      IGNORE_COMMA_OR_SPACE "%s"
-+		      IGNORE_COMMA_OR_SPACE "%s"
-+		      IGNORE_COMMA_OR_SPACE "%s"
-+		      IGNORE_COMMA_OR_SPACE "%s"
-+		      IGNORE_COMMA_OR_SPACE "%s"
-+		      IGNORE_COMMA_OR_SPACE "%s"
-+		      IGNORE_COMMA_OR_SPACE "%s",
-+		      &start_freq_khz,
-+		      &end_freq_khz,
-+		      &max_bandwidth_khz,
-+		      &max_eirp,
-+		      flag_list[0],
-+		      flag_list[1],
-+		      flag_list[2],
-+		      flag_list[3],
-+		      flag_list[4],
-+		      flag_list[5],
-+		      flag_list[6],
-+		      flag_list[7],
-+		      flag_list[8]);
-+
-+	if (hits < 5)
-+		return -EINVAL;
-+
-+	reg_rule->freq_range.start_freq_khz =
-+		REGLIB_MHZ_TO_KHZ(start_freq_khz);
-+	reg_rule->freq_range.end_freq_khz =
-+		REGLIB_MHZ_TO_KHZ(end_freq_khz);
-+	reg_rule->freq_range.max_bandwidth_khz =
-+		REGLIB_MHZ_TO_KHZ(max_bandwidth_khz);
-+	reg_rule->power_rule.max_eirp =
-+		REGLIB_DBM_TO_MBM(max_eirp);
-+
-+	for (i = 0; i < 8; i++)
-+		reg_rule->flags |= reglib_parse_rule_flag(flag_list[i]);
-+
-+	if (debug)
-+		printf("reglib_parse_rule_args(): %d flags: %d, line: %s",
-+		       hits, reg_rule->flags, line);
-+
-+	return 0;
-+#undef IGNORE_COMMA_OR_SPACE
-+}
-+
-+
-+static int
-+reglib_parse_rule_args_mw(char *line, struct ieee80211_reg_rule *reg_rule)
-+{
-+#define IGNORE_COMMA_OR_SPACE "%*[ ,]"
-+	int hits;
-+	char flag_list[9][100];
-+	unsigned int i = 0;
-+	char mw[3];
-+	float start_freq_khz, end_freq_khz, max_bandwidth_khz, max_eirp;
-+
-+	for (i = 0; i < 9; i++)
-+		memset(flag_list[i], 0, sizeof(flag_list[i]));
-+
-+	hits = sscanf(line, "\t(%f - %f @ %f), (%f %2[mW])"
-+		      IGNORE_COMMA_OR_SPACE "%s"
-+		      IGNORE_COMMA_OR_SPACE "%s"
-+		      IGNORE_COMMA_OR_SPACE "%s"
-+		      IGNORE_COMMA_OR_SPACE "%s"
-+		      IGNORE_COMMA_OR_SPACE "%s"
-+		      IGNORE_COMMA_OR_SPACE "%s"
-+		      IGNORE_COMMA_OR_SPACE "%s"
-+		      IGNORE_COMMA_OR_SPACE "%s"
-+		      IGNORE_COMMA_OR_SPACE "%s",
-+		      &start_freq_khz,
-+		      &end_freq_khz,
-+		      &max_bandwidth_khz,
-+		      &max_eirp,
-+		      mw,
-+		      flag_list[0],
-+		      flag_list[1],
-+		      flag_list[2],
-+		      flag_list[3],
-+		      flag_list[4],
-+		      flag_list[5],
-+		      flag_list[6],
-+		      flag_list[7],
-+		      flag_list[8]);
-+
-+	if (hits < 5)
-+		return -EINVAL;
-+
-+	reg_rule->freq_range.start_freq_khz =
-+		REGLIB_MHZ_TO_KHZ(start_freq_khz);
-+	reg_rule->freq_range.end_freq_khz =
-+		REGLIB_MHZ_TO_KHZ(end_freq_khz);
-+	reg_rule->freq_range.max_bandwidth_khz =
-+		REGLIB_MHZ_TO_KHZ(max_bandwidth_khz);
-+	reg_rule->power_rule.max_eirp =
-+		REGLIB_MW_TO_MBM(max_eirp);
-+
-+	for (i = 0; i < 8; i++)
-+		reg_rule->flags |= reglib_parse_rule_flag(flag_list[i]);
-+
-+	if (debug)
-+		printf("reglib_parse_rule_args_mw(): %d flags: %d, line: %s",
-+		       hits, reg_rule->flags, line);
-+	return 0;
-+#undef IGNORE_COMMA_OR_SPACE
-+}
-+
-+static int reglib_parse_rule(FILE *fp, struct ieee80211_reg_rule *reg_rule)
-+{
-+	char line[1024];
-+	char *line_p;
-+	unsigned int i;
-+	int r = 0;
-+	struct reglib_rule_parse_list *reglib_rule_parsers;
-+	size_t size_parsers = sizeof(struct reglib_rule_parse_list) + 
-+				4 * sizeof(int (*)(char *, struct ieee80211_reg_rule *));
-+
-+	reglib_rule_parsers = malloc(size_parsers);
-+	if (!reglib_rule_parsers)
-+		return -EINVAL;
-+	memset(reglib_rule_parsers, 0, size_parsers);
-+
-+	reglib_rule_parsers->n_parsers = 4;
-+
-+	/*
-+	 * XXX: sscanf() is a bit odd with picking up mW
-+	 * case over the simple one, this order however works,
-+	 * gotta figure out how to be more precise.
-+	 */
-+	reglib_rule_parsers->rule_parsers[0] = reglib_parse_rule_args_mw;
-+	reglib_rule_parsers->rule_parsers[1] = reglib_parse_rule_args;
-+	reglib_rule_parsers->rule_parsers[2] = reglib_parse_rule_simple;
-+	reglib_rule_parsers->rule_parsers[3] = reglib_parse_rule_simple_mw;
-+
-+	memset(line, 0, sizeof(line));
-+	line_p = fgets(line, sizeof(line), fp);
-+	if (line_p != line)
-+		return -EINVAL;
-+
-+	for (i = 0; i < reglib_rule_parsers->n_parsers; i++) {
-+		r = reglib_rule_parsers->rule_parsers[i](line, reg_rule);
-+		if (r == 0)
-+			break;
-+	}
-+
-+	return r;
-+}
-+
-+static uint32_t
-+reglib_get_n_rules(FILE *fp, struct ieee80211_reg_rule *reg_rule)
-+{
-+	uint32_t n_rules = 0;
-+	int r;
-+	bool save_debug = false;
-+
-+	save_debug = debug;
-+	debug = false;
-+
-+	while (1) {
-+		r = reglib_parse_rule(fp, reg_rule);
-+		if (r != 0)
-+			break;
-+		n_rules++;
-+	}
-+
-+	debug = save_debug;
-+
-+	return n_rules;
-+}
-+
-+static int reglib_parse_reg_rule(FILE *fp, struct ieee80211_reg_rule *reg_rule)
-+{
-+	int r;
-+
-+	while (1) {
-+		r = reglib_parse_rule(fp, reg_rule);
-+		if (r != 0)
-+			continue;
-+		return 0;
-+	}
-+}
-+
-+static struct ieee80211_regdomain *
-+reglib_parse_rules(FILE *fp, struct ieee80211_regdomain *trd)
-+{
-+	struct ieee80211_regdomain *rd;
-+	struct ieee80211_reg_rule rule;
-+	struct ieee80211_reg_rule *reg_rule;
-+	fpos_t pos;
-+	unsigned int i;
-+	uint32_t size_of_regd = 0, num_rules = 0;
-+	int r;
-+
-+	memset(&rule, 0, sizeof(rule));
-+	reg_rule = &rule;
-+
-+	r = fgetpos(fp, &pos);
-+	if (r != 0) {
-+		fprintf(stderr, "fgetpos() failed: %s\n",
-+			strerror(errno));
-+		return NULL;
-+	}
-+
-+	num_rules = reglib_get_n_rules(fp, reg_rule);
-+	if (!num_rules)
-+		return NULL;
-+
-+	size_of_regd = reglib_array_len(sizeof(struct ieee80211_regdomain),
-+					num_rules + 1,
-+					sizeof(struct ieee80211_reg_rule));
-+	rd = malloc(size_of_regd);
-+	if (!rd)
-+		return NULL;
-+
-+	memset(rd, 0, size_of_regd);
-+	memcpy(rd, trd, sizeof(*trd));
-+
-+	rd->n_reg_rules = num_rules;
-+
-+	r = fsetpos(fp, &pos);
-+	if (r != 0) {
-+		fprintf(stderr, "fsetpos() failed: %s\n",
-+			strerror(errno));
-+		free(rd);
-+		return NULL;
-+	}
-+	for (i = 0; i < num_rules; i++) {
-+		struct ieee80211_reg_rule *rrule = &rd->reg_rules[i];
-+
-+		if (reglib_parse_reg_rule(fp, rrule) != 0) {
-+			fprintf(stderr, "rule parse failed\n");
-+			free(rd);
-+			return NULL;
-+		}
-+	}
-+	return rd;
-+}
-+
-+static int
-+reglib_parse_country_simple(char *line, struct ieee80211_regdomain *rd)
-+{
-+	char dfs_region_alpha[9];
-+	char alpha2[2];
-+	int hits;
-+
-+	memset(rd, 0, sizeof(rd));
-+	memset(alpha2, 0, sizeof(alpha2));
-+	memset(dfs_region_alpha, 0, sizeof(dfs_region_alpha));
-+
-+	hits = sscanf(line, "country %2[a-zA-Z0-9]:",
-+		      alpha2);
-+
-+	if (hits != 1)
-+		return -EINVAL;
-+
-+	rd->alpha2[0] = alpha2[0];
-+	rd->alpha2[1] = alpha2[1];
-+
-+	return 0;
-+}
-+
-+static int reglib_parse_country_dfs(char *line, struct ieee80211_regdomain *rd)
-+{
-+	char dfs_region_alpha[9];
-+	char alpha2[2];
-+	int hits;
-+
-+	memset(rd, 0, sizeof(rd));
-+	memset(alpha2, 0, sizeof(alpha2));
-+	memset(dfs_region_alpha, 0, sizeof(dfs_region_alpha));
-+
-+	hits = sscanf(line, "country %2[a-zA-Z0-9]:%*[ ]%s\n",
-+		      alpha2,
-+		      dfs_region_alpha);
-+	if (hits <= 0)
-+		return -EINVAL;
-+
-+	if (hits != 2)
-+		return -EINVAL;
-+
-+
-+	rd->alpha2[0] = alpha2[0];
-+	rd->alpha2[1] = alpha2[1];
-+	rd->dfs_region = reglib_parse_dfs_region(dfs_region_alpha);
-+
-+	return 0;
-+}
-+
-+struct ieee80211_regdomain *__reglib_parse_country(FILE *fp)
-+{
-+	struct ieee80211_regdomain *rd;
-+	struct ieee80211_regdomain tmp_rd;
-+	char line[1024];
-+	char *line_p;
-+	unsigned int i;
-+	int r = 0;
-+	struct reglib_country_parse_list *reglib_country_parsers;
-+	size_t size_of_parsers = sizeof(struct reglib_country_parse_list) +
-+					2 * sizeof(int (*)(char *, struct ieee80211_regdomain *));
-+
-+	reglib_country_parsers = malloc(size_of_parsers);
-+	if (!reglib_country_parsers)
-+		return NULL;
-+	memset(reglib_country_parsers, 0, size_of_parsers);
-+
-+	reglib_country_parsers->n_parsers = 2;
-+	reglib_country_parsers->country_parsers[0] =
-+			reglib_parse_country_dfs;
-+	reglib_country_parsers->country_parsers[1] =
-+			reglib_parse_country_simple;
-+
-+	memset(&tmp_rd, 0, sizeof(tmp_rd));
-+	memset(line, 0, sizeof(line));
-+
-+	line_p = fgets(line, sizeof(line), fp);
-+
-+	if (line_p != line)
-+		return NULL;
-+
-+	for (i = 0; i < reglib_country_parsers->n_parsers; i++) {
-+		r = reglib_country_parsers->country_parsers[i](line, &tmp_rd);
-+		if (r == 0)
-+			break;
-+	}
-+
-+	if (r != 0) {
-+		fprintf(stderr, "Invalid country line: %s", line);
-+		return NULL;
-+	}
-+
-+	rd = reglib_parse_rules(fp, &tmp_rd);
-+
-+	return rd;
-+}
-+
-+static int reglib_find_next_country_stream(FILE *fp)
-+{
-+	fpos_t prev_pos;
-+	int r;
-+	unsigned int i = 0;
-+
-+	while(1) {
-+		char line[1024];
-+		char *line_p;
-+
-+		r = fgetpos(fp, &prev_pos);
-+		if (r != 0) {
-+			fprintf(stderr, "fgetpos() failed: %s\n",
-+				strerror(errno));
-+			return r;
-+		}
-+
-+		memset(line, 0, sizeof(line));
-+
-+		line_p = fgets(line, sizeof(line), fp);
-+		if (line_p == line) {
-+			if (strspn(line, "\n") == strlen(line)) {
-+				i++;
-+				continue;
-+			}
-+			if (strncmp(line, "country", 7) != 0)
-+				continue;
-+			r = fsetpos(fp, &prev_pos);
-+			if (r != 0) {
-+				fprintf(stderr, "fsetpos() failed: %s\n",
-+					strerror(errno));
-+				return r;
-+			}
-+			return 0;
-+		} else
-+			return EOF;
-+	}
-+}
-+
-+struct ieee80211_regdomain *reglib_parse_country(FILE *fp)
-+{
-+	int r;
-+
-+	r = reglib_find_next_country_stream(fp);
-+	if (r != 0)
-+		return NULL;
-+	return __reglib_parse_country(fp);
-+}
-+
-+FILE *reglib_create_parse_stream(FILE *f)
-+{
-+	unsigned int lines = 0;
-+	FILE *fp;
-+
-+	fp = tmpfile();
-+	if (errno) {
-+		fprintf(stderr, "%s\n", strerror(errno));
-+		return NULL;
-+	}
-+
-+	while(1) {
-+		char line[1024];
-+		char *line_p;
-+
-+		line_p = fgets(line, sizeof(line), f);
-+		if (line_p == line) {
-+			if (strchr(line, '#') == NULL) {
-+				fputs(line, fp);
-+				lines++;
-+			}
-+			continue;
-+		} else
-+			break;
-+	}
-+
-+	rewind(fp);
-+	fflush(fp);
-+
-+	return fp;
-+}
-diff --git a/reglib.h b/reglib.h
-index 7a586a3..885792e 100644
---- a/reglib.h
-+++ b/reglib.h
-@@ -1,10 +1,12 @@
- #ifndef REG_LIB_H
- #define REG_LIB_H
- 
-+#include <stdio.h>
- #include <stdlib.h>
- #include <stdint.h>
- #include <stdbool.h>
- #include <sys/stat.h>
-+#include <math.h>
- 
- #include "regdb.h"
- 
-@@ -35,6 +37,19 @@ struct ieee80211_regdomain {
- 	struct ieee80211_reg_rule reg_rules[];
- };
- 
-+/* Remove this once upstream nl80211.h gets this */
-+#define NL80211_RRF_NO_IR (1<<7)
-+
-+#define REGLIB_MHZ_TO_KHZ(freq) ((freq) * 1000)
-+#define REGLIB_KHZ_TO_MHZ(freq) ((freq) / 1000)
-+#define REGLIB_DBI_TO_MBI(gain) ((gain) * 100)
-+#define REGLIB_MBI_TO_DBI(gain) ((gain) / 100)
-+#define REGLIB_DBM_TO_MBM(gain) ((gain) * 100)
-+#define REGLIB_MBM_TO_DBM(gain) ((gain) / 100)
-+
-+#define REGLIB_MW_TO_DBM(gain) (10 * log10(gain))
-+#define REGLIB_MW_TO_MBM(gain) (REGLIB_DBM_TO_MBM(REGLIB_MW_TO_DBM(gain)))
-+
- /**
-  * struct reglib_regdb_ctx - reglib regdb context
-  *
-@@ -180,4 +195,33 @@ reglib_intersect_rds(const struct ieee80211_regdomain *rd1,
- const struct ieee80211_regdomain *
- reglib_intersect_regdb(const struct reglib_regdb_ctx *ctx);
- 
-+/**
-+ * @reglib_create_parse_stream - provide a clean new stream for processing
-+ *
-+ * @fp: FILE stream, could be stdin, or a stream from an open file.
-+ *
-+ * In order to parse a stream we recommend to create a new stream
-+ * using this helper. A new stream is preferred in order to work
-+ * with stdin, as otherwise we cannot rewind() and move around
-+ * the stream. This helper will create new stream using tmpfile()
-+ * and also remove all comments. It will be closed and the file
-+ * deleted when the process terminates.
-+ */
-+FILE *reglib_create_parse_stream(FILE *fp);
-+
-+/**
-+ * @reglib_parse_country - parse stream to build a regulatory domain
-+ *
-+ * @fp: FILE stream, could be stdin, or a stream from an open file.
-+ *
-+ * Parse stream and return back a built regulatory domain. Returns
-+ * NULL if one could not be built.
-+ */
-+struct ieee80211_regdomain *reglib_parse_country(FILE *fp);
-+
-+#define reglib_for_each_country_stream(__fp, __rd)		\
-+	for (__rd = reglib_parse_country(__fp);			\
-+	     __rd != NULL;					\
-+	     __rd = reglib_parse_country(__fp))			\
-+
- #endif
--- 
-1.8.4.rc3
+I've resolved this as below (sorry, got some extra stuff that resolved
+automatically).
 
+diff --cc drivers/net/wireless/ath/ath10k/debug.h
+index bb00633,fa58148..6576b82
+--- a/drivers/net/wireless/ath/ath10k/debug.h
++++ b/drivers/net/wireless/ath/ath10k/debug.h
+@@@ -37,11 -38,13 +38,13 @@@ enum ath10k_debug_mask=20
+ =20
+  extern unsigned int ath10k_debug_mask;
+ =20
+ -extern __printf(1, 2) int ath10k_info(const char *fmt, ...);
+ -extern __printf(1, 2) int ath10k_err(const char *fmt, ...);
+ -extern __printf(1, 2) int ath10k_warn(const char *fmt, ...);
+ +__printf(1, 2) int ath10k_info(const char *fmt, ...);
+ +__printf(1, 2) int ath10k_err(const char *fmt, ...);
+ +__printf(1, 2) int ath10k_warn(const char *fmt, ...);
+ =20
+  #ifdef CONFIG_ATH10K_DEBUGFS
++ int ath10k_debug_start(struct ath10k *ar);
++ void ath10k_debug_stop(struct ath10k *ar);
+  int ath10k_debug_create(struct ath10k *ar);
+  void ath10k_debug_read_service_map(struct ath10k *ar,
+  				   void *service_map,
+diff --cc drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+index c3462b7,091c905..2a23bf2
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+@@@ -464,9 -459,11 +459,9 @@@ static struct sdio_driver brcmf_sdmmc_d
+ =20
+  static int brcmf_sdio_pd_probe(struct platform_device *pdev)
+  {
+ -	int ret;
+ -
+  	brcmf_dbg(SDIO, "Enter\n");
+ =20
+- 	brcmfmac_sdio_pdata =3D pdev->dev.platform_data;
++ 	brcmfmac_sdio_pdata =3D dev_get_platdata(&pdev->dev);
+ =20
+  	if (brcmfmac_sdio_pdata->power_on)
+  		brcmfmac_sdio_pdata->power_on();
+diff --cc drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
+index 7f1340d,200ee9b..a6eb09e
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
+@@@ -132,34 -132,34 +132,34 @@@ struct pktq *brcmf_bus_gettxq(struct br
+   * interface functions from common layer
+   */
+ =20
+ -extern bool brcmf_c_prec_enq(struct device *dev, struct pktq *q,
+ -			 struct sk_buff *pkt, int prec);
+ +bool brcmf_c_prec_enq(struct device *dev, struct pktq *q, struct sk_buff =
+*pkt,
+ +		      int prec);
+ =20
+  /* Receive frame for delivery to OS.  Callee disposes of rxp. */
+- void brcmf_rx_frames(struct device *dev, struct sk_buff_head *rxlist);
+ -extern void brcmf_rx_frame(struct device *dev, struct sk_buff *rxp);
+++void brcmf_rx_frame(struct device *dev, struct sk_buff *rxp);
+ =20
+  /* Indication from bus module regarding presence/insertion of dongle. */
+ -extern int brcmf_attach(uint bus_hdrlen, struct device *dev);
+ +int brcmf_attach(uint bus_hdrlen, struct device *dev);
+  /* Indication from bus module regarding removal/absence of dongle */
+ -extern void brcmf_detach(struct device *dev);
+ +void brcmf_detach(struct device *dev);
+  /* Indication from bus module that dongle should be reset */
+ -extern void brcmf_dev_reset(struct device *dev);
+ +void brcmf_dev_reset(struct device *dev);
+  /* Indication from bus module to change flow-control state */
+ -extern void brcmf_txflowblock(struct device *dev, bool state);
+ +void brcmf_txflowblock(struct device *dev, bool state);
+ =20
+  /* Notify the bus has transferred the tx packet to firmware */
+ -extern void brcmf_txcomplete(struct device *dev, struct sk_buff *txp,
+ -			     bool success);
+ +void brcmf_txcomplete(struct device *dev, struct sk_buff *txp, bool succe=
+ss);
+ =20
+ -extern int brcmf_bus_start(struct device *dev);
+ +int brcmf_bus_start(struct device *dev);
+ =20
+  #ifdef CONFIG_BRCMFMAC_SDIO
+ -extern void brcmf_sdio_exit(void);
+ -extern void brcmf_sdio_init(void);
+ +void brcmf_sdio_exit(void);
+ +void brcmf_sdio_init(void);
+ +void brcmf_sdio_register(void);
+  #endif
+  #ifdef CONFIG_BRCMFMAC_USB
+ -extern void brcmf_usb_exit(void);
+ -extern void brcmf_usb_init(void);
+ +void brcmf_usb_exit(void);
+ +void brcmf_usb_register(void);
+  #endif
+ =20
+  #endif				/* _BRCMF_BUS_H_ */
+diff --cc drivers/net/wireless/rtlwifi/rtl8188ee/phy.h
+index 71ddf4f,d4545f0..8e1f1be
+--- a/drivers/net/wireless/rtlwifi/rtl8188ee/phy.h
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/phy.h
+@@@ -200,26 -200,29 +200,25 @@@ enum _ANT_DIV_TYPE=20
+  	CGCS_RX_SW_ANTDIV		=3D 0x05,
+  };
+ =20
+ -extern u32 rtl88e_phy_query_bb_reg(struct ieee80211_hw *hw,
+ -				   u32 regaddr, u32 bitmask);
+ -extern void rtl88e_phy_set_bb_reg(struct ieee80211_hw *hw,
+ -				  u32 regaddr, u32 bitmask, u32 data);
+ -extern u32 rtl88e_phy_query_rf_reg(struct ieee80211_hw *hw,
+ -				   enum radio_path rfpath, u32 regaddr,
+ -				   u32 bitmask);
+ -extern void rtl88e_phy_set_rf_reg(struct ieee80211_hw *hw,
+ -				  enum radio_path rfpath, u32 regaddr,
+ -				  u32 bitmask, u32 data);
+ -extern bool rtl88e_phy_mac_config(struct ieee80211_hw *hw);
+ -extern bool rtl88e_phy_bb_config(struct ieee80211_hw *hw);
+ -extern bool rtl88e_phy_rf_config(struct ieee80211_hw *hw);
+ -extern void rtl88e_phy_get_hw_reg_originalvalue(struct ieee80211_hw *hw);
+ -extern void rtl88e_phy_get_txpower_level(struct ieee80211_hw *hw,
+ -					 long *powerlevel);
+ -extern void rtl88e_phy_set_txpower_level(struct ieee80211_hw *hw, u8 chan=
+nel);
+ -extern void rtl88e_phy_set_bw_mode_callback(struct ieee80211_hw *hw);
+ -extern void rtl88e_phy_set_bw_mode(struct ieee80211_hw *hw,
+ -				   enum nl80211_channel_type ch_type);
+ -extern void rtl88e_phy_sw_chnl_callback(struct ieee80211_hw *hw);
+ -extern u8 rtl88e_phy_sw_chnl(struct ieee80211_hw *hw);
+ -extern void rtl88e_phy_iq_calibrate(struct ieee80211_hw *hw, bool b_recov=
+ery);
+ +u32 rtl88e_phy_query_bb_reg(struct ieee80211_hw *hw, u32 regaddr, u32 bit=
+mask);
+ +void rtl88e_phy_set_bb_reg(struct ieee80211_hw *hw, u32 regaddr, u32 bitm=
+ask,
+ +			   u32 data);
+ +u32 rtl88e_phy_query_rf_reg(struct ieee80211_hw *hw, enum radio_path rfpa=
+th,
+ +			    u32 regaddr, u32 bitmask);
+ +void rtl88e_phy_set_rf_reg(struct ieee80211_hw *hw, enum radio_path rfpat=
+h,
+ +			   u32 regaddr, u32 bitmask, u32 data);
+ +bool rtl88e_phy_mac_config(struct ieee80211_hw *hw);
+ +bool rtl88e_phy_bb_config(struct ieee80211_hw *hw);
+ +bool rtl88e_phy_rf_config(struct ieee80211_hw *hw);
+ +void rtl88e_phy_get_hw_reg_originalvalue(struct ieee80211_hw *hw);
+ +void rtl88e_phy_get_txpower_level(struct ieee80211_hw *hw, long *powerlev=
+el);
+ +void rtl88e_phy_set_txpower_level(struct ieee80211_hw *hw, u8 channel);
+- void rtl88e_phy_scan_operation_backup(struct ieee80211_hw *hw, u8 operati=
+on);
+ +void rtl88e_phy_set_bw_mode_callback(struct ieee80211_hw *hw);
+ +void rtl88e_phy_set_bw_mode(struct ieee80211_hw *hw,
+ +			    enum nl80211_channel_type ch_type);
+ +void rtl88e_phy_sw_chnl_callback(struct ieee80211_hw *hw);
+ +u8 rtl88e_phy_sw_chnl(struct ieee80211_hw *hw);
+ +void rtl88e_phy_iq_calibrate(struct ieee80211_hw *hw, bool b_recovery);
+  void rtl88e_phy_lc_calibrate(struct ieee80211_hw *hw);
+  void rtl88e_phy_set_rfpath_switch(struct ieee80211_hw *hw, bool bmain);
+  bool rtl88e_phy_config_rf_with_headerfile(struct ieee80211_hw *hw,
+diff --cc drivers/net/wireless/rtlwifi/rtl8192ce/phy.h
+index f8973e5,aeb268b..9bb4658
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/phy.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/phy.h
+@@@ -199,14 -200,15 +197,14 @@@ bool rtl92c_phy_mac_config(struct ieee8
+  bool rtl92ce_phy_bb_config(struct ieee80211_hw *hw);
+  bool rtl92c_phy_rf_config(struct ieee80211_hw *hw);
+  bool rtl92c_phy_config_rf_with_feaderfile(struct ieee80211_hw *hw,
+ -						 enum radio_path rfpath);
+ +					  enum radio_path rfpath);
+  void rtl92c_phy_get_hw_reg_originalvalue(struct ieee80211_hw *hw);
+ -void rtl92c_phy_get_txpower_level(struct ieee80211_hw *hw,
+ -					 long *powerlevel);
+ +void rtl92c_phy_get_txpower_level(struct ieee80211_hw *hw, long *powerlev=
+el);
+  void rtl92c_phy_set_txpower_level(struct ieee80211_hw *hw, u8 channel);
+- bool rtl92c_phy_update_txpower_dbm(struct ieee80211_hw *hw, long power_in=
+dbm);
+- void rtl92c_phy_scan_operation_backup(struct ieee80211_hw *hw, u8 operati=
+on);
++ bool rtl92c_phy_update_txpower_dbm(struct ieee80211_hw *hw,
++ 					  long power_indbm);
+  void rtl92c_phy_set_bw_mode(struct ieee80211_hw *hw,
+ -				   enum nl80211_channel_type ch_type);
+ +			    enum nl80211_channel_type ch_type);
+  void rtl92c_phy_sw_chnl_callback(struct ieee80211_hw *hw);
+  u8 rtl92c_phy_sw_chnl(struct ieee80211_hw *hw);
+  void rtl92c_phy_iq_calibrate(struct ieee80211_hw *hw, bool b_recovery);
+@@@ -217,10 -220,10 +215,10 @@@ void _rtl92ce_phy_lc_calibrate(struct i
+  void rtl92c_phy_set_rfpath_switch(struct ieee80211_hw *hw, bool bmain);
+  bool rtl92c_phy_config_rf_with_headerfile(struct ieee80211_hw *hw,
+  					  enum radio_path rfpath);
+- bool rtl8192_phy_check_is_legal_rfpath(struct ieee80211_hw *hw, u32 rfpat=
+h);
+- bool rtl92c_phy_set_io_cmd(struct ieee80211_hw *hw, enum io_type iotype);
++ bool rtl8192_phy_check_is_legal_rfpath(struct ieee80211_hw *hw,
++ 					      u32 rfpath);
+  bool rtl92ce_phy_set_rf_power_state(struct ieee80211_hw *hw,
+ -					  enum rf_pwrstate rfpwr_state);
+ +				    enum rf_pwrstate rfpwr_state);
+  void rtl92ce_phy_set_rf_on(struct ieee80211_hw *hw);
+  bool rtl92c_phy_set_io_cmd(struct ieee80211_hw *hw, enum io_type iotype);
+  void rtl92c_phy_set_io(struct ieee80211_hw *hw);
+diff --cc drivers/net/wireless/rtlwifi/rtl8192de/phy.h
+index 0f993f4,bef3040..33df0d1c
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/phy.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/phy.h
+@@@ -127,24 -125,26 +125,23 @@@ static inline void rtl92d_release_cckan
+  			*flag);
+  }
+ =20
+ -extern u32 rtl92d_phy_query_bb_reg(struct ieee80211_hw *hw,
+ -				   u32 regaddr, u32 bitmask);
+ -extern void rtl92d_phy_set_bb_reg(struct ieee80211_hw *hw,
+ -				  u32 regaddr, u32 bitmask, u32 data);
+ -extern u32 rtl92d_phy_query_rf_reg(struct ieee80211_hw *hw,
+ -				   enum radio_path rfpath, u32 regaddr,
+ -				   u32 bitmask);
+ -extern void rtl92d_phy_set_rf_reg(struct ieee80211_hw *hw,
+ -				  enum radio_path rfpath, u32 regaddr,
+ -				  u32 bitmask, u32 data);
+ -extern bool rtl92d_phy_mac_config(struct ieee80211_hw *hw);
+ -extern bool rtl92d_phy_bb_config(struct ieee80211_hw *hw);
+ -extern bool rtl92d_phy_rf_config(struct ieee80211_hw *hw);
+ -extern bool rtl92c_phy_config_rf_with_feaderfile(struct ieee80211_hw *hw,
+ -						 enum radio_path rfpath);
+ -extern void rtl92d_phy_get_hw_reg_originalvalue(struct ieee80211_hw *hw);
+ -extern void rtl92d_phy_set_txpower_level(struct ieee80211_hw *hw, u8 chan=
+nel);
+ -extern void rtl92d_phy_set_bw_mode(struct ieee80211_hw *hw,
+ -				   enum nl80211_channel_type ch_type);
+ -extern u8 rtl92d_phy_sw_chnl(struct ieee80211_hw *hw);
+ +u32 rtl92d_phy_query_bb_reg(struct ieee80211_hw *hw, u32 regaddr, u32 bit=
+mask);
+ +void rtl92d_phy_set_bb_reg(struct ieee80211_hw *hw, u32 regaddr, u32 bitm=
+ask,
+ +			   u32 data);
+ +u32 rtl92d_phy_query_rf_reg(struct ieee80211_hw *hw, enum radio_path rfpa=
+th,
+ +			    u32 regaddr, u32 bitmask);
+ +void rtl92d_phy_set_rf_reg(struct ieee80211_hw *hw, enum radio_path rfpat=
+h,
+ +			   u32 regaddr, u32 bitmask, u32 data);
+ +bool rtl92d_phy_mac_config(struct ieee80211_hw *hw);
+ +bool rtl92d_phy_bb_config(struct ieee80211_hw *hw);
+ +bool rtl92d_phy_rf_config(struct ieee80211_hw *hw);
+ +bool rtl92c_phy_config_rf_with_feaderfile(struct ieee80211_hw *hw,
+ +					  enum radio_path rfpath);
+ +void rtl92d_phy_get_hw_reg_originalvalue(struct ieee80211_hw *hw);
+ +void rtl92d_phy_set_txpower_level(struct ieee80211_hw *hw, u8 channel);
+- void rtl92d_phy_scan_operation_backup(struct ieee80211_hw *hw, u8 operati=
+on);
+ +void rtl92d_phy_set_bw_mode(struct ieee80211_hw *hw,
+ +			    enum nl80211_channel_type ch_type);
+ +u8 rtl92d_phy_sw_chnl(struct ieee80211_hw *hw);
+  bool rtl92d_phy_config_rf_with_headerfile(struct ieee80211_hw *hw,
+  					  enum rf_content content,
+  					  enum radio_path rfpath);
+diff --cc drivers/net/wireless/rtlwifi/rtl8723ae/phy.h
+index bbb950d,3d8f9e3..bb18023
+--- a/drivers/net/wireless/rtlwifi/rtl8723ae/phy.h
++++ b/drivers/net/wireless/rtlwifi/rtl8723ae/phy.h
+@@@ -183,33 -183,34 +183,30 @@@ struct tx_power_struct=20
+  	u32 mcs_original_offset[4][16];
+  };
+ =20
+ -extern u32 rtl8723ae_phy_query_bb_reg(struct ieee80211_hw *hw,
+ -				      u32 regaddr, u32 bitmask);
+ -extern void rtl8723ae_phy_set_bb_reg(struct ieee80211_hw *hw,
+ -				     u32 regaddr, u32 bitmask, u32 data);
+ -extern u32 rtl8723ae_phy_query_rf_reg(struct ieee80211_hw *hw,
+ -				      enum radio_path rfpath, u32 regaddr,
+ -				      u32 bitmask);
+ -extern void rtl8723ae_phy_set_rf_reg(struct ieee80211_hw *hw,
+ -				     enum radio_path rfpath, u32 regaddr,
+ -				     u32 bitmask, u32 data);
+ -extern bool rtl8723ae_phy_mac_config(struct ieee80211_hw *hw);
+ -extern bool rtl8723ae_phy_bb_config(struct ieee80211_hw *hw);
+ -extern bool rtl8723ae_phy_rf_config(struct ieee80211_hw *hw);
+ -extern bool rtl92c_phy_config_rf_with_feaderfile(struct ieee80211_hw *hw,
+ -						 enum radio_path rfpath);
+ -extern void rtl8723ae_phy_get_hw_reg_originalvalue(struct ieee80211_hw *h=
+w);
+ -extern void rtl8723ae_phy_get_txpower_level(struct ieee80211_hw *hw,
+ -					    long *powerlevel);
+ -extern void rtl8723ae_phy_set_txpower_level(struct ieee80211_hw *hw,
+ -					    u8 channel);
+ -extern bool rtl8723ae_phy_update_txpower_dbm(struct ieee80211_hw *hw,
+ -					     long power_indbm);
+ -extern void rtl8723ae_phy_set_bw_mode_callback(struct ieee80211_hw *hw);
+ -extern void rtl8723ae_phy_set_bw_mode(struct ieee80211_hw *hw,
+ -				      enum nl80211_channel_type ch_type);
+ -extern void rtl8723ae_phy_sw_chnl_callback(struct ieee80211_hw *hw);
+ -extern u8 rtl8723ae_phy_sw_chnl(struct ieee80211_hw *hw);
+ -extern void rtl8723ae_phy_iq_calibrate(struct ieee80211_hw *hw, bool reco=
+very);
+ +u32 rtl8723ae_phy_query_bb_reg(struct ieee80211_hw *hw, u32 regaddr,
+ +			       u32 bitmask);
+- void rtl8723ae_phy_set_bb_reg(struct ieee80211_hw *hw, u32 regaddr, u32 b=
+itmask,
+- 			      u32 data);
+- u32 rtl8723ae_phy_query_rf_reg(struct ieee80211_hw *hw,
+- 			       enum radio_path rfpath, u32 regaddr,
+- 			       u32 bitmask);
+- void rtl8723ae_phy_set_rf_reg(struct ieee80211_hw *hw,
+- 			      enum radio_path rfpath, u32 regaddr, u32 bitmask,
+- 			      u32 data);
+++void rtl8723ae_phy_set_bb_reg(struct ieee80211_hw *hw, u32 regaddr,
+++			      u32 bitmask, u32 data);
+++u32 rtl8723ae_phy_query_rf_reg(struct ieee80211_hw *hw, enum radio_path r=
+fpath,
+++			       u32 regaddr, u32 bitmask);
+++void rtl8723ae_phy_set_rf_reg(struct ieee80211_hw *hw, enum radio_path rf=
+path,
+++			      u32 regaddr, u32 bitmask, u32 data);
+ +bool rtl8723ae_phy_mac_config(struct ieee80211_hw *hw);
+ +bool rtl8723ae_phy_bb_config(struct ieee80211_hw *hw);
+ +bool rtl8723ae_phy_rf_config(struct ieee80211_hw *hw);
+ +bool rtl92c_phy_config_rf_with_feaderfile(struct ieee80211_hw *hw,
+ +					  enum radio_path rfpath);
+ +void rtl8723ae_phy_get_hw_reg_originalvalue(struct ieee80211_hw *hw);
+ +void rtl8723ae_phy_get_txpower_level(struct ieee80211_hw *hw, long *power=
+level);
+ +void rtl8723ae_phy_set_txpower_level(struct ieee80211_hw *hw, u8 channel);
+ +bool rtl8723ae_phy_update_txpower_dbm(struct ieee80211_hw *hw,
+- 				      long power_indbm);
+- void rtl8723ae_phy_scan_operation_backup(struct ieee80211_hw *hw, u8 oper=
+ation);
+++                                      long power_indbm);
+ +void rtl8723ae_phy_set_bw_mode_callback(struct ieee80211_hw *hw);
+ +void rtl8723ae_phy_set_bw_mode(struct ieee80211_hw *hw,
+ +			       enum nl80211_channel_type ch_type);
+ +void rtl8723ae_phy_sw_chnl_callback(struct ieee80211_hw *hw);
+ +u8 rtl8723ae_phy_sw_chnl(struct ieee80211_hw *hw);
+ +void rtl8723ae_phy_iq_calibrate(struct ieee80211_hw *hw, bool recovery);
+  void rtl8723ae_phy_lc_calibrate(struct ieee80211_hw *hw);
+  void rtl8723ae_phy_set_rfpath_switch(struct ieee80211_hw *hw, bool bmain);
+  bool rtl8723ae_phy_config_rf_with_headerfile(struct ieee80211_hw *hw,
+
+--0zAvg8I2HpXbmZ+A
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.21 (GNU/Linux)
+
+iQIcBAEBAgAGBQJSTyN/AAoJELSic+t+oim9IpcP/Ru2wNtFkC0wubXhZyUqAeMY
+XRf5xAjGydiYCogx0O79dmuOW6VvHYUYPImxxnoWxo0zGSSFwAgP2x4pHdTQG1lP
+5mNdvbp67x9H+KesgLmK//xANTNLY115cY6JhcPEGyGUlGFYphyocJ9lRhj5FUP/
+s116DQUZN8R545EPmM6QQ4IFZ+IxP/ZdS4YUrjtPJ4bnJuhzn3LP43c6AIujUF87
+YwaVEhLibDC/IecMaEQR3MCn45UUtDe0TiLrCrmsh7VUda/2yfwE8p/05BT3SYek
+5PsO+Sd9Nnwa6gm2RUgd/k0ygKSnc4S4QDyfKmBAzT5S/Dvc5NMt+pCbKNwDZD9H
+LRiL9XMR7X2QoD+qH/BXOaMYpl4YYeLAwvs3OuMu5KJEvHXlbBd2wI3o/yfGzz/N
+peVCzYeQx4L2Mpj1m3QZZJS8PbxtDnEtKWoV1zbSzPEpBFol2pBDX8Xx/eLCKWgt
+2Qgth1ywmfKvIeEqLH+nhB2dykAaMqDxT4M579tSPGdGAn1XV8AXFaJ/8prrK4iv
+4SKzo1cYD+iZ65vHaZVGD/7AZ+i61Ju9rKFH08mUmmgAfmWnjCMfCscjm4OXIhwy
+7uylCks3Fdg3AEw8cutYKO6mDQrwfGYc+ByP0QYpWl0oQwyVoyop5SJPGYMSVgLn
+D86obr3yttrhKD1KVD1u
+=Q9i1
+-----END PGP SIGNATURE-----
+
+--0zAvg8I2HpXbmZ+A--
