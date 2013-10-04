@@ -1,96 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:54912 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753016Ab3JGG4O (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Oct 2013 02:56:14 -0400
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 06/11] bcma: convert bus code to use dev_groups
-Date: Sun,  6 Oct 2013 23:55:45 -0700
-Message-Id: <1381128950-28125-7-git-send-email-gregkh@linuxfoundation.org> (sfid-20131007_085733_032868_CDD82F57)
-In-Reply-To: <1381128950-28125-1-git-send-email-gregkh@linuxfoundation.org>
-References: <1381128950-28125-1-git-send-email-gregkh@linuxfoundation.org>
+Received: from ebb05.tieto.com ([131.207.168.36]:56508 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751268Ab3JDFnv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Oct 2013 01:43:51 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH/RFT v2 1/4] ath10k: fix add_interface failure handling
+Date: Fri, 4 Oct 2013 07:43:42 +0200
+Message-ID: <1380865425-3791-2-git-send-email-michal.kazior@tieto.com> (sfid-20131004_074355_603704_381F5BC7)
+In-Reply-To: <1380865425-3791-1-git-send-email-michal.kazior@tieto.com>
+References: <1380805765-31521-1-git-send-email-michal.kazior@tieto.com>
+ <1380865425-3791-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The dev_attrs field of struct bus_type is going away soon, dev_groups
-should be used instead.  This converts the bcma bus code to use the
-correct field.
+If something failed along add_interface() setup it
+was possible to leak a vdev id, vdev and peer.
 
-Cc: Rafał Miłecki <zajec5@gmail.com>
-Cc: <linux-wireless@vger.kernel.org>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+This could end up with leaked FW state or FW crash
+(assuming add_interface() failure wasn't a result of
+a crash).
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
+ drivers/net/wireless/ath/ath10k/mac.c |   50 ++++++++++++++++++++++++---------
+ 1 file changed, 37 insertions(+), 13 deletions(-)
 
-Rafał, I can take this through my driver-core tree if you like, just let
-me know what would be the easiest for you.
-
- drivers/bcma/main.c | 23 ++++++++++++++++-------
- 1 file changed, 16 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index 90ee350..e15430a 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -30,28 +30,37 @@ static ssize_t manuf_show(struct device *dev, struct device_attribute *attr, cha
- 	struct bcma_device *core = container_of(dev, struct bcma_device, dev);
- 	return sprintf(buf, "0x%03X\n", core->id.manuf);
- }
-+static DEVICE_ATTR_RO(manuf);
-+
- static ssize_t id_show(struct device *dev, struct device_attribute *attr, char *buf)
- {
- 	struct bcma_device *core = container_of(dev, struct bcma_device, dev);
- 	return sprintf(buf, "0x%03X\n", core->id.id);
- }
-+static DEVICE_ATTR_RO(id);
-+
- static ssize_t rev_show(struct device *dev, struct device_attribute *attr, char *buf)
- {
- 	struct bcma_device *core = container_of(dev, struct bcma_device, dev);
- 	return sprintf(buf, "0x%02X\n", core->id.rev);
- }
-+static DEVICE_ATTR_RO(rev);
-+
- static ssize_t class_show(struct device *dev, struct device_attribute *attr, char *buf)
- {
- 	struct bcma_device *core = container_of(dev, struct bcma_device, dev);
- 	return sprintf(buf, "0x%X\n", core->id.class);
- }
--static struct device_attribute bcma_device_attrs[] = {
--	__ATTR_RO(manuf),
--	__ATTR_RO(id),
--	__ATTR_RO(rev),
--	__ATTR_RO(class),
--	__ATTR_NULL,
-+static DEVICE_ATTR_RO(class);
-+
-+static struct attribute *bcma_device_attrs[] = {
-+	&dev_attr_manuf.attr,
-+	&dev_attr_id.attr,
-+	&dev_attr_rev.attr,
-+	&dev_attr_class.attr,
-+	NULL,
- };
-+ATTRIBUTE_GROUPS(bcma_device);
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 8684e03..7f8b258 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2001,18 +2001,17 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
+ 	if ((vif->type == NL80211_IFTYPE_MONITOR) && ar->monitor_present) {
+ 		ath10k_warn("Only one monitor interface allowed\n");
+ 		ret = -EBUSY;
+-		goto exit;
++		goto err;
+ 	}
  
- static struct bus_type bcma_bus_type = {
- 	.name		= "bcma",
-@@ -59,7 +68,7 @@ static struct bus_type bcma_bus_type = {
- 	.probe		= bcma_device_probe,
- 	.remove		= bcma_device_remove,
- 	.uevent		= bcma_device_uevent,
--	.dev_attrs	= bcma_device_attrs,
-+	.dev_groups	= bcma_device_groups,
- };
+ 	bit = ffs(ar->free_vdev_map);
+ 	if (bit == 0) {
+ 		ret = -EBUSY;
+-		goto exit;
++		goto err;
+ 	}
  
- static u16 bcma_cc_core_id(struct bcma_bus *bus)
+ 	arvif->vdev_id = bit - 1;
+ 	arvif->vdev_subtype = WMI_VDEV_SUBTYPE_NONE;
+-	ar->free_vdev_map &= ~(1 << arvif->vdev_id);
+ 
+ 	if (ar->p2p)
+ 		arvif->vdev_subtype = WMI_VDEV_SUBTYPE_P2P_DEVICE;
+@@ -2048,26 +2047,32 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
+ 				     arvif->vdev_subtype, vif->addr);
+ 	if (ret) {
+ 		ath10k_warn("WMI vdev create failed: ret %d\n", ret);
+-		goto exit;
++		goto err;
+ 	}
+ 
++	ar->free_vdev_map &= ~BIT(arvif->vdev_id);
++
+ 	vdev_param = ar->wmi.vdev_param->def_keyid;
+ 	ret = ath10k_wmi_vdev_set_param(ar, 0, vdev_param,
+ 					arvif->def_wep_key_index);
+-	if (ret)
++	if (ret) {
+ 		ath10k_warn("Failed to set default keyid: %d\n", ret);
++		goto err_vdev_delete;
++	}
+ 
+ 	vdev_param = ar->wmi.vdev_param->tx_encap_type;
+ 	ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
+ 					ATH10K_HW_TXRX_NATIVE_WIFI);
+-	if (ret)
++	if (ret) {
+ 		ath10k_warn("Failed to set TX encap: %d\n", ret);
++		goto err_vdev_delete;
++	}
+ 
+ 	if (arvif->vdev_type == WMI_VDEV_TYPE_AP) {
+ 		ret = ath10k_peer_create(ar, arvif->vdev_id, vif->addr);
+ 		if (ret) {
+ 			ath10k_warn("Failed to create peer for AP: %d\n", ret);
+-			goto exit;
++			goto err_vdev_delete;
+ 		}
+ 	}
+ 
+@@ -2076,38 +2081,57 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
+ 		value = WMI_STA_PS_RX_WAKE_POLICY_WAKE;
+ 		ret = ath10k_wmi_set_sta_ps_param(ar, arvif->vdev_id,
+ 						  param, value);
+-		if (ret)
++		if (ret) {
+ 			ath10k_warn("Failed to set RX wake policy: %d\n", ret);
++			goto err_peer_delete;
++		}
+ 
+ 		param = WMI_STA_PS_PARAM_TX_WAKE_THRESHOLD;
+ 		value = WMI_STA_PS_TX_WAKE_THRESHOLD_ALWAYS;
+ 		ret = ath10k_wmi_set_sta_ps_param(ar, arvif->vdev_id,
+ 						  param, value);
+-		if (ret)
++		if (ret) {
+ 			ath10k_warn("Failed to set TX wake thresh: %d\n", ret);
++			goto err_peer_delete;
++		}
+ 
+ 		param = WMI_STA_PS_PARAM_PSPOLL_COUNT;
+ 		value = WMI_STA_PS_PSPOLL_COUNT_NO_MAX;
+ 		ret = ath10k_wmi_set_sta_ps_param(ar, arvif->vdev_id,
+ 						  param, value);
+-		if (ret)
++		if (ret) {
+ 			ath10k_warn("Failed to set PSPOLL count: %d\n", ret);
++			goto err_peer_delete;
++		}
+ 	}
+ 
+ 	ret = ath10k_mac_set_rts(arvif, ar->hw->wiphy->rts_threshold);
+-	if (ret)
++	if (ret) {
+ 		ath10k_warn("failed to set rts threshold for vdev %d (%d)\n",
+ 			    arvif->vdev_id, ret);
++		goto err_peer_delete;
++	}
+ 
+ 	ret = ath10k_mac_set_frag(arvif, ar->hw->wiphy->frag_threshold);
+-	if (ret)
++	if (ret) {
+ 		ath10k_warn("failed to set frag threshold for vdev %d (%d)\n",
+ 			    arvif->vdev_id, ret);
++		goto err_peer_delete;
++	}
+ 
+ 	if (arvif->vdev_type == WMI_VDEV_TYPE_MONITOR)
+ 		ar->monitor_present = true;
+ 
+-exit:
++	mutex_unlock(&ar->conf_mutex);
++	return 0;
++
++err_peer_delete:
++	if (arvif->vdev_type == WMI_VDEV_TYPE_AP)
++		ath10k_wmi_peer_delete(ar, arvif->vdev_id, vif->addr);
++err_vdev_delete:
++	ath10k_wmi_vdev_delete(ar, arvif->vdev_id);
++	ar->free_vdev_map &= ~BIT(arvif->vdev_id);
++err:
+ 	mutex_unlock(&ar->conf_mutex);
+ 	return ret;
+ }
 -- 
-1.8.4.6.g82e253f.dirty
+1.7.9.5
 
