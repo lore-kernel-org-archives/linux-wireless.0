@@ -1,129 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:51911 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755497Ab3J1Hmj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Oct 2013 03:42:39 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 4/4] ath9k: Add an initialization routine for WoW
-Date: Mon, 28 Oct 2013 13:08:11 +0530
-Message-Id: <1382945891-12779-4-git-send-email-sujith@msujith.org> (sfid-20131028_084244_408348_C4C6F52E)
-In-Reply-To: <1382945891-12779-1-git-send-email-sujith@msujith.org>
-References: <1382945891-12779-1-git-send-email-sujith@msujith.org>
+Received: from ebb06.tieto.com ([131.207.168.38]:62717 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753184Ab3JDIRw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Oct 2013 04:17:52 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 2/2] ath10k: fix scheduling while atomic bug
+Date: Fri, 4 Oct 2013 10:17:10 +0200
+Message-ID: <1380874630-14280-3-git-send-email-michal.kazior@tieto.com> (sfid-20131004_101757_257503_5911306B)
+In-Reply-To: <1380874630-14280-1-git-send-email-michal.kazior@tieto.com>
+References: <to=1380292567-2363-1-git-send-email-michal.kazior@tieto.com>
+ <1380874630-14280-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Recent WMI/HTC changes made it possible for WMI
+commands to sleep (if there's not enough HTC TX
+credits to submit a command). TX path is in an
+atomic context so calling WMI commands in it is
+wrong.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+This simply moves WEP key index update to a worker
+and fixes the 'scheduling while atomic' bug.
+
+This still leaves multiple WEP key handling laggy,
+i.e. some frames may be TXed with an old/different
+key (although recipient should still be able to RX
+them).
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |  4 ++++
- drivers/net/wireless/ath/ath9k/init.c  | 20 +-------------------
- drivers/net/wireless/ath/ath9k/wow.c   | 20 ++++++++++++++++++++
- 3 files changed, 25 insertions(+), 19 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.h |    4 ++-
+ drivers/net/wireless/ath/ath10k/mac.c  |   53 ++++++++++++++++++++++----------
+ 2 files changed, 39 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 9e1b728..b351df3 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -575,11 +575,15 @@ static inline void ath_fill_led_pin(struct ath_softc *sc)
- /************************/
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index ce36daa..cef5455 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -215,8 +215,10 @@ struct ath10k_vif {
+ 	struct ath10k *ar;
+ 	struct ieee80211_vif *vif;
  
- #ifdef CONFIG_ATH9K_WOW
-+void ath9k_init_wow(struct ieee80211_hw *hw);
- int ath9k_suspend(struct ieee80211_hw *hw,
- 		  struct cfg80211_wowlan *wowlan);
- int ath9k_resume(struct ieee80211_hw *hw);
- void ath9k_set_wakeup(struct ieee80211_hw *hw, bool enabled);
- #else
-+static inline void ath9k_init_wow(struct ieee80211_hw *hw)
-+{
-+}
- static inline int ath9k_suspend(struct ieee80211_hw *hw,
- 				struct cfg80211_wowlan *wowlan)
- {
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index ee7da65..600aa0b 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -870,15 +870,6 @@ static const struct ieee80211_iface_combination if_comb[] = {
- 	}
- };
++	struct work_struct wep_key_work;
+ 	struct ieee80211_key_conf *wep_keys[WMI_MAX_KEY_INDEX + 1];
+-	u8 def_wep_key_index;
++	u8 def_wep_key_idx;
++	u8 def_wep_key_newidx;
  
--#ifdef CONFIG_ATH9K_WOW
--static const struct wiphy_wowlan_support ath9k_wowlan_support = {
--	.flags = WIPHY_WOWLAN_MAGIC_PKT | WIPHY_WOWLAN_DISCONNECT,
--	.n_patterns = MAX_NUM_USER_PATTERN,
--	.pattern_min_len = 1,
--	.pattern_max_len = MAX_PATTERN_SIZE,
--};
--#endif
--
- void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- {
- 	struct ath_hw *ah = sc->sc_ah;
-@@ -928,16 +919,6 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_5_10_MHZ;
- 	hw->wiphy->flags |= WIPHY_FLAG_HAS_CHANNEL_SWITCH;
+ 	u16 tx_seq_no;
  
--#ifdef CONFIG_ATH9K_WOW
--	if ((ah->caps.hw_caps & ATH9K_HW_WOW_DEVICE_CAPABLE) &&
--	    (sc->driver_data & ATH9K_PCI_WOW) &&
--	    device_can_wakeup(sc->dev))
--		hw->wiphy->wowlan = &ath9k_wowlan_support;
--
--	atomic_set(&sc->wow_sleep_proc_intr, -1);
--	atomic_set(&sc->wow_got_bmiss_intr, -1);
--#endif
--
- 	hw->queues = 4;
- 	hw->max_rates = 4;
- 	hw->channel_change_time = 5000;
-@@ -963,6 +944,7 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 		hw->wiphy->bands[IEEE80211_BAND_5GHZ] =
- 			&sc->sbands[IEEE80211_BAND_5GHZ];
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 7e06e75..378d868 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1238,7 +1238,7 @@ static void ath10k_bss_disassoc(struct ieee80211_hw *hw,
+ 	/* FIXME: why don't we print error if wmi call fails? */
+ 	ret = ath10k_wmi_vdev_down(ar, arvif->vdev_id);
  
-+	ath9k_init_wow(hw);
- 	ath9k_reload_chainmask_settings(sc);
- 
- 	SET_IEEE80211_PERM_ADDR(hw, common->macaddr);
-diff --git a/drivers/net/wireless/ath/ath9k/wow.c b/drivers/net/wireless/ath/ath9k/wow.c
-index e161bbc..f1cde81 100644
---- a/drivers/net/wireless/ath/ath9k/wow.c
-+++ b/drivers/net/wireless/ath/ath9k/wow.c
-@@ -16,6 +16,13 @@
- 
- #include "ath9k.h"
- 
-+static const struct wiphy_wowlan_support ath9k_wowlan_support = {
-+	.flags = WIPHY_WOWLAN_MAGIC_PKT | WIPHY_WOWLAN_DISCONNECT,
-+	.n_patterns = MAX_NUM_USER_PATTERN,
-+	.pattern_min_len = 1,
-+	.pattern_max_len = MAX_PATTERN_SIZE,
-+};
-+
- static void ath9k_wow_map_triggers(struct ath_softc *sc,
- 				   struct cfg80211_wowlan *wowlan,
- 				   u32 *wow_triggers)
-@@ -339,3 +346,16 @@ void ath9k_set_wakeup(struct ieee80211_hw *hw, bool enabled)
- 	device_set_wakeup_enable(sc->dev, enabled);
- 	mutex_unlock(&sc->mutex);
+-	arvif->def_wep_key_index = 0;
++	arvif->def_wep_key_idx = 0;
  }
-+
-+void ath9k_init_wow(struct ieee80211_hw *hw)
+ 
+ static int ath10k_station_assoc(struct ath10k *ar, struct ath10k_vif *arvif,
+@@ -1439,6 +1439,30 @@ static void ath10k_tx_h_qos_workaround(struct ieee80211_hw *hw,
+ 	skb_pull(skb, IEEE80211_QOS_CTL_LEN);
+ }
+ 
++static void ath10k_tx_wep_key_work(struct work_struct *work)
 +{
-+	struct ath_softc *sc = hw->priv;
++	struct ath10k_vif *arvif = container_of(work, struct ath10k_vif,
++						wep_key_work);
++	int ret, keyidx = arvif->def_wep_key_newidx;
 +
-+	if ((sc->sc_ah->caps.hw_caps & ATH9K_HW_WOW_DEVICE_CAPABLE) &&
-+	    (sc->driver_data & ATH9K_PCI_WOW) &&
-+	    device_can_wakeup(sc->dev))
-+		hw->wiphy->wowlan = &ath9k_wowlan_support;
++	if (arvif->def_wep_key_idx == keyidx)
++		return;
 +
-+	atomic_set(&sc->wow_sleep_proc_intr, -1);
-+	atomic_set(&sc->wow_got_bmiss_intr, -1);
++	ath10k_dbg(ATH10K_DBG_MAC, "mac vdev %d set keyidx %d\n",
++		   arvif->vdev_id, keyidx);
++
++	ret = ath10k_wmi_vdev_set_param(arvif->ar,
++					arvif->vdev_id,
++					arvif->ar->wmi.vdev_param->def_keyid,
++					keyidx);
++	if (ret) {
++		ath10k_warn("could not update wep keyidx (%d)\n", ret);
++		return;
++	}
++
++	arvif->def_wep_key_idx = keyidx;
 +}
++
+ static void ath10k_tx_h_update_wep_key(struct sk_buff *skb)
+ {
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+@@ -1447,8 +1471,6 @@ static void ath10k_tx_h_update_wep_key(struct sk_buff *skb)
+ 	struct ath10k *ar = arvif->ar;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 	struct ieee80211_key_conf *key = info->control.hw_key;
+-	u32 vdev_param;
+-	int ret;
+ 
+ 	if (!ieee80211_has_protected(hdr->frame_control))
+ 		return;
+@@ -1460,21 +1482,14 @@ static void ath10k_tx_h_update_wep_key(struct sk_buff *skb)
+ 	    key->cipher != WLAN_CIPHER_SUITE_WEP104)
+ 		return;
+ 
+-	if (key->keyidx == arvif->def_wep_key_index)
+-		return;
+-
+-	ath10k_dbg(ATH10K_DBG_MAC, "mac vdev %d keyidx %d\n",
+-		   arvif->vdev_id, key->keyidx);
+-
+-	vdev_param = ar->wmi.vdev_param->def_keyid;
+-	ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
+-					key->keyidx);
+-	if (ret) {
+-		ath10k_warn("could not update wep keyidx (%d)\n", ret);
++	if (key->keyidx == arvif->def_wep_key_idx)
+ 		return;
+-	}
+ 
+-	arvif->def_wep_key_index = key->keyidx;
++	/* FIXME: Most likely a few frames will be TXed with an old key. Simply
++	 * queueing frames until key index is updated is not an option because
++	 * sk_buff may need more processing to be done, e.g. offchannel */
++	arvif->def_wep_key_newidx = key->keyidx;
++	ieee80211_queue_work(ar->hw, &arvif->wep_key_work);
+ }
+ 
+ static void ath10k_tx_h_add_p2p_noa_ie(struct ath10k *ar, struct sk_buff *skb)
+@@ -2010,6 +2025,8 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
+ 	arvif->ar = ar;
+ 	arvif->vif = vif;
+ 
++	INIT_WORK(&arvif->wep_key_work, ath10k_tx_wep_key_work);
++
+ 	if ((vif->type == NL80211_IFTYPE_MONITOR) && ar->monitor_present) {
+ 		ath10k_warn("Only one monitor interface allowed\n");
+ 		ret = -EBUSY;
+@@ -2065,7 +2082,7 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
+ 
+ 	vdev_param = ar->wmi.vdev_param->def_keyid;
+ 	ret = ath10k_wmi_vdev_set_param(ar, 0, vdev_param,
+-					arvif->def_wep_key_index);
++					arvif->def_wep_key_idx);
+ 	if (ret)
+ 		ath10k_warn("Failed to set default keyid: %d\n", ret);
+ 
+@@ -2133,6 +2150,8 @@ static void ath10k_remove_interface(struct ieee80211_hw *hw,
+ 
+ 	mutex_lock(&ar->conf_mutex);
+ 
++	cancel_work_sync(&arvif->wep_key_work);
++
+ 	spin_lock_bh(&ar->data_lock);
+ 	if (arvif->beacon) {
+ 		dev_kfree_skb_any(arvif->beacon);
 -- 
-1.8.4.1
+1.7.9.5
 
