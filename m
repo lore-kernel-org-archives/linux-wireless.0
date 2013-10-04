@@ -1,55 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:50046 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757423Ab3JQRTn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Oct 2013 13:19:43 -0400
-From: "Chauhan, Rajesh" <rajeshc@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Rodriguez, Luis" <rodrigue@qca.qualcomm.com>,
-	"Malinen, Jouni" <jouni@qca.qualcomm.com>,
-	"Bahini, Henri" <hbahini@qca.qualcomm.com>,
-	"Chang, Leo" <schang@qca.qualcomm.com>,
-	"Luo, Xun" <xunl@qca.qualcomm.com>,
-	"Chauhan, Rajesh" <rajeshc@qca.qualcomm.com>
-Subject: RE: [PATCH] cfg80211/nl80211: Add support to report unsafe
- frequency ranges(s)
-Date: Thu, 17 Oct 2013 17:19:41 +0000
-Message-ID: <D19FD2B13A40CD4B8DA64DB9B8F112E9218DAC92@nasanexd01a.na.qualcomm.com> (sfid-20131017_191947_050792_D5846548)
-References: <1381985833-31312-1-git-send-email-rajeshc@qca.qualcomm.com>
- <1382020835.14410.16.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1382020835.14410.16.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+Received: from ebb05.tieto.com ([131.207.168.36]:56508 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751320Ab3JDFnw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Oct 2013 01:43:52 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH/RFT v2 2/4] ath10k: track vif list internally
+Date: Fri, 4 Oct 2013 07:43:43 +0200
+Message-ID: <1380865425-3791-3-git-send-email-michal.kazior@tieto.com> (sfid-20131004_074357_200233_D53C75CD)
+In-Reply-To: <1380865425-3791-1-git-send-email-michal.kazior@tieto.com>
+References: <1380805765-31521-1-git-send-email-michal.kazior@tieto.com>
+ <1380865425-3791-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSm9oYW5uZXMsDQoNClRoYW5rcyBmb3IgeW91ciBjb21tZW50LiBQdXJwb3NlIG9mIHRoaXMg
-cGF0Y2ggaXMgdG8gYWRkIGFuIEFQSSBmb3IgV0xBTiBkcml2ZXIgdG8gcmVwb3J0IGZyZXF1ZW5j
-eSByYW5nZXMgd2hpY2ggc2hvdWxkIGJlIGF2b2lkZWQgZm9yIFNBUC9QMlAtR08gYmVjYXVzZSBv
-ZiBpbnRlcmZlcmVuY2UuDQoNCkhvdyBhYm91dCBpZiBJIHJld29yZCBjb21taXQgdGVzdCBhcyBi
-ZWxvdz8NCg0KY2ZnODAyMTEvbmw4MDIxMTogQWRkIEFQSSB0byByZXBvcnQgZnJlcXVlbmN5IHJh
-bmdlKHMpIHRvIGJlIGF2b2lkZWQNCg0KQWRkIHN1cHBvcnQgZm9yIFdMQU4gZHJpdmVyIHRvIHJl
-cG9ydCBmcmVxdWVuY3kgcmFuZ2UocykgdG8gYmUgYXZvaWRlZCBiZWNhdXNlIG9mIGludGVyZmVy
-ZW5jZS4gSWYgU0FQL1AyUC1HTyBpcyBvcGVyYXRpbmcgb24gaW50ZXJmZXJpbmcgZnJlcXVlbmN5
-IHRoZW4gdXNlciBzcGFjZSBzaG91bGQgc3RvcCBhbmQgcmVzdGFydCB0aGVtIGF2b2lkaW5nIGlu
-dGVyZmVyaW5nIGZyZXF1ZW5jeSByYW5nZShzKS4gVXNlciBzcGFjZSBtYXkgZGVjaWRlIHRvIGNv
-bnRpbnVlIG9wZXJhdGlvbiBvbiBpbnRlcmZlcmluZyBmcmVxdWVuY3ksIGJ1dCBpbiBzdWNoIGNh
-c2UsIHRoZXJlIG1pZ2h0IGJlIGltcGFjdCBvbiBwZXJmb3JtYW5jZS4NCg0KUmVnYXJkcywNClJh
-amVzaCBDaGF1aGFuDQoNCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEpvaGFu
-bmVzIEJlcmcgW21haWx0bzpqb2hhbm5lc0BzaXBzb2x1dGlvbnMubmV0XSANClNlbnQ6IFRodXJz
-ZGF5LCBPY3RvYmVyIDE3LCAyMDEzIDc6NDEgQU0NClRvOiBDaGF1aGFuLCBSYWplc2gNCkNjOiBs
-aW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IFJvZHJpZ3VleiwgTHVpczsgTWFsaW5lbiwg
-Sm91bmkNClN1YmplY3Q6IFJlOiBbUEFUQ0hdIGNmZzgwMjExL25sODAyMTE6IEFkZCBzdXBwb3J0
-IHRvIHJlcG9ydCB1bnNhZmUgZnJlcXVlbmN5IHJhbmdlcyhzKQ0KDQpPbiBXZWQsIDIwMTMtMTAt
-MTYgYXQgMjE6NTcgLTA3MDAsIFJhamVzaCBDaGF1aGFuIHdyb3RlOg0KPiBBZGQgc3VwcG9ydCBm
-b3IgV0xBTiBkcml2ZXIgdG8gcmVwb3J0IHVuc2FmZSBmcmVxdWVuY3kgcmFuZ2UocykuIA0KDQpX
-aHk/DQoNCj4gVXNlcg0KPiBzcGFjZSBzaG91bGQgbW92ZSBTQVAvUDJQLUdPIG91dCBvZiB0aG9z
-ZSB1bnNhZmUgZnJlcXVlbmN5IHJhbmdlKHMpLg0KPiBVc2VyIHNwYWNlIG1heSBkZWNpZGUgdG8g
-Y29udGludWUgb3BlcmF0aW9uIG9uIHVuc2FmZSBmcmVxdWVuY3kgYnV0IGluIA0KPiBzdWNoIGNh
-c2UgdGhlcmUgbWlnaHQgYmUgaW1wYWN0IG9uIHBlcmZvcm1hbmNlIGJlY2F1c2Ugb2YgaW50ZXJm
-ZXJlbmNlLg0KDQpTQVA/IEkgZG9uJ3QgdGhpbmsgU0FQIHdpbGwgbW92ZSAtIHRoZXkncmUgcHJl
-dHR5IHN0dWNrIGluIFdhbGxkb3JmIDpQDQoNClRoaXMgaXMgcHJldHR5IHN0cmFuZ2UgcGF0Y2gs
-IGFuZCB2ZXJ5IGxpdHRsZSBqdXN0aWZpY2F0aW9uLg0KDQoiVW5zYWZlIiBpcyBhbHNvIGEgcmVh
-bGx5IGJhZCB3b3JkLg0KDQpqb2hhbm5lcw0KDQo=
+mac80211 interface interations functions have
+peculiar locking issues. This patch introduces
+internal (to ath10k) vif list that will be used
+for vif iteration purposes.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c |    2 ++
+ drivers/net/wireless/ath/ath10k/core.h |    3 +++
+ drivers/net/wireless/ath/ath10k/mac.c  |    3 +++
+ 3 files changed, 8 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 7b5dd09..4d04dc8 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -710,6 +710,7 @@ struct ath10k *ath10k_core_create(void *hif_priv, struct device *dev,
+ 	mutex_init(&ar->conf_mutex);
+ 	spin_lock_init(&ar->data_lock);
+ 
++	INIT_LIST_HEAD(&ar->arvifs);
+ 	INIT_LIST_HEAD(&ar->peers);
+ 	init_waitqueue_head(&ar->peer_mapping_wq);
+ 
+@@ -817,6 +818,7 @@ int ath10k_core_start(struct ath10k *ar)
+ 		goto err_disconnect_htc;
+ 
+ 	ar->free_vdev_map = (1 << TARGET_NUM_VDEVS) - 1;
++	INIT_LIST_HEAD(&ar->arvifs);
+ 
+ 	return 0;
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index ce36daa..de20ac0 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -205,6 +205,8 @@ struct ath10k_peer {
+ #define ATH10K_VDEV_SETUP_TIMEOUT_HZ (5*HZ)
+ 
+ struct ath10k_vif {
++	struct list_head list;
++
+ 	u32 vdev_id;
+ 	enum wmi_vdev_type vdev_type;
+ 	enum wmi_vdev_subtype vdev_subtype;
+@@ -402,6 +404,7 @@ struct ath10k {
+ 	/* protects shared structure data */
+ 	spinlock_t data_lock;
+ 
++	struct list_head arvifs;
+ 	struct list_head peers;
+ 	wait_queue_head_t peer_mapping_wq;
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 7f8b258..292e5cd 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2051,6 +2051,7 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
+ 	}
+ 
+ 	ar->free_vdev_map &= ~BIT(arvif->vdev_id);
++	list_add(&arvif->list, &ar->arvifs);
+ 
+ 	vdev_param = ar->wmi.vdev_param->def_keyid;
+ 	ret = ath10k_wmi_vdev_set_param(ar, 0, vdev_param,
+@@ -2131,6 +2132,7 @@ err_peer_delete:
+ err_vdev_delete:
+ 	ath10k_wmi_vdev_delete(ar, arvif->vdev_id);
+ 	ar->free_vdev_map &= ~BIT(arvif->vdev_id);
++	list_del(&arvif->list);
+ err:
+ 	mutex_unlock(&ar->conf_mutex);
+ 	return ret;
+@@ -2153,6 +2155,7 @@ static void ath10k_remove_interface(struct ieee80211_hw *hw,
+ 	spin_unlock_bh(&ar->data_lock);
+ 
+ 	ar->free_vdev_map |= 1 << (arvif->vdev_id);
++	list_del(&arvif->list);
+ 
+ 	if (arvif->vdev_type == WMI_VDEV_TYPE_AP) {
+ 		ret = ath10k_peer_delete(arvif->ar, arvif->vdev_id, vif->addr);
+-- 
+1.7.9.5
+
