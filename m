@@ -1,45 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.jambit.com ([95.157.63.22]:55921 "EHLO mail.jambit.com"
+Received: from nbd.name ([46.4.11.11]:45334 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751558Ab3JGJJE convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Oct 2013 05:09:04 -0400
-Received: from [192.168.194.80] (port=12328 helo=exc1.jambit.com)
-	by mail.jambit.com with esmtps (TLSv1:AES128-SHA:128)
-	(Exim 4.76)
-	(envelope-from <Alexander.Mueller@jambit.com>)
-	id 1VT6oG-0003uF-09
-	for linux-wireless@vger.kernel.org; Mon, 07 Oct 2013 11:09:00 +0200
-From: =?iso-8859-1?Q?Alexander_M=FCller?= <Alexander.Mueller@jambit.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: WIFI USB-Stick for P2P
-Date: Mon, 7 Oct 2013 09:08:58 +0000
-Message-ID: <E8A6515F57A7AE4EA65BED3559D774CE1B151ABF@exc1.jambit.com> (sfid-20131007_110914_887933_6393BE9F)
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+	id S1751847Ab3JEMJn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 5 Oct 2013 08:09:43 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
+Subject: [PATCH 3.12] ath9k: fix tx queue scheduling after channel changes
+Date: Sat,  5 Oct 2013 14:09:30 +0200
+Message-Id: <1380974970-61770-1-git-send-email-nbd@openwrt.org> (sfid-20131005_140947_345629_EBF3C829)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello linux-wireless,
+Otherwise, if queues are full during a scan, tx scheduling does not
+resume after switching back to the home channel.
 
-I'm wondering if there is a list of usb wifi devices having a good and stable p2p support for wifi direct. We are currently using an AVM Fritz wifi stick that is supported by the carl9170 driver, but it is experiencing random failures and stalls which require a hardware reset. The p2p howto page at http://wireless.kernel.org/en/developers/p2p/howto suggests that there may be other devices and drivers supporting p2p, but I haven't figured out exactly which devices work best.
+Cc: stable@vger.kernel.org
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/main.c | 23 +++++++++++------------
+ 1 file changed, 11 insertions(+), 12 deletions(-)
 
-Can you give me a hint?
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index cdb3b1e..433caf4 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -208,6 +208,7 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	unsigned long flags;
++	int i;
+ 
+ 	if (ath_startrecv(sc) != 0) {
+ 		ath_err(common, "Unable to restart recv logic\n");
+@@ -235,6 +236,15 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
+ 		}
+ 	work:
+ 		ath_restart_work(sc);
++
++		for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++) {
++			if (!ATH_TXQ_SETUP(sc, i))
++				continue;
++
++			spin_lock_bh(&sc->tx.txq[i].axq_lock);
++			ath_txq_schedule(sc, &sc->tx.txq[i]);
++			spin_unlock_bh(&sc->tx.txq[i].axq_lock);
++		}
+ 	}
+ 
+ 	ieee80211_wake_queues(sc->hw);
+@@ -545,21 +555,10 @@ chip_reset:
+ 
+ static int ath_reset(struct ath_softc *sc)
+ {
+-	int i, r;
++	int r;
+ 
+ 	ath9k_ps_wakeup(sc);
+-
+ 	r = ath_reset_internal(sc, NULL);
+-
+-	for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++) {
+-		if (!ATH_TXQ_SETUP(sc, i))
+-			continue;
+-
+-		spin_lock_bh(&sc->tx.txq[i].axq_lock);
+-		ath_txq_schedule(sc, &sc->tx.txq[i]);
+-		spin_unlock_bh(&sc->tx.txq[i].axq_lock);
+-	}
+-
+ 	ath9k_ps_restore(sc);
+ 
+ 	return r;
+-- 
+1.8.0.2
 
-Regards,
-Alex
-
-________________________________
-
-Dipl.-Inf. (Univ.) Alexander Müller, Software Architect
-Phone: +49 89 45 23 47 - 224
-
-
-jambit GmbH
-Erika-Mann-Str. 63, 80636 München
-Phone: +49 89 45 23 47 - 0 Fax: +49 89 45 23 47 - 70
-
-http://www.jambit.com where innovation works
-
-Geschäftsführer: Peter F. Fellinger, Markus Hartinger
-Sitz: München; Registergericht: München, HRB 129139
