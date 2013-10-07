@@ -1,42 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:6374 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754123Ab3JPMsr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Oct 2013 08:48:47 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/7] ath10k: fix WMI atomic usage
-References: <20131015184548.14123.56949.stgit@localhost6.localdomain6>
-Date: Wed, 16 Oct 2013 15:48:42 +0300
-In-Reply-To: <20131015184548.14123.56949.stgit@localhost6.localdomain6> (Kalle
-	Valo's message of "Tue, 15 Oct 2013 21:46:37 +0300")
-Message-ID: <87fvs1755h.fsf@kamboji.qca.qualcomm.com> (sfid-20131016_144851_118583_FD313DD8)
+Received: from 220-133-188-53.HINET-IP.hinet.net ([220.133.188.53]:18989 "EHLO
+	ns.kevlo.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752474Ab3JGIAV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Oct 2013 04:00:21 -0400
+Message-ID: <525269F0.5000802@kevlo.org> (sfid-20131007_100024_399921_851FCAAB)
+Date: Mon, 07 Oct 2013 15:59:44 +0800
+From: Kevin Lo <kevlo@kevlo.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: John Linville <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: [PATCH v2] rt2x00: rt2800lib: no need to toggle RF R30 bit 7 twice
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+In rt2800_config_channel_rf3xxx(), there's no need to toggle
+RF R30 bit 7 twice.
 
-> Some WMI calls were made in atomic contex, these patches fix
-> those. Please review.
->
-> ---
->
-> Kalle Valo (2):
->       ath10k: fix ath10k_bss_assoc() to not sleep in atomic context
->       ath10k: add might_sleep() to ath10k_wmi_cmd_send()
->
-> Michal Kazior (5):
->       ath10k: use workqueue to set WEP TX key
->       ath10k: fix add_interface failure handling
->       ath10k: track vif list internally
->       ath10k: fix scheduling while atomic config bug
->       ath10k: remove unnecessary checks
+Signed-off-by: Kevin Lo <kevlo@kevlo.org>
+---
+Changes since v1:
+   - the previous patch was malformed
+---
 
-All patches applied.
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c 
+b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 25aaa5e..65b4416 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -2029,13 +2029,6 @@ static void rt2800_config_channel_rf3xxx(struct 
+rt2x00_dev *rt2x00dev,
+                           rt2x00dev->default_ant.tx_chain_num <= 2);
+         rt2800_rfcsr_write(rt2x00dev, 1, rfcsr);
 
--- 
-Kalle Valo
+-       rt2800_rfcsr_read(rt2x00dev, 30, &rfcsr);
+-       rt2x00_set_field8(&rfcsr, RFCSR30_RF_CALIBRATION, 1);
+-       rt2800_rfcsr_write(rt2x00dev, 30, rfcsr);
+-       msleep(1);
+-       rt2x00_set_field8(&rfcsr, RFCSR30_RF_CALIBRATION, 0);
+-       rt2800_rfcsr_write(rt2x00dev, 30, rfcsr);
+-
+         rt2800_rfcsr_read(rt2x00dev, 23, &rfcsr);
+         rt2x00_set_field8(&rfcsr, RFCSR23_FREQ_OFFSET, 
+rt2x00dev->freq_offset);
+         rt2800_rfcsr_write(rt2x00dev, 23, rfcsr);
+
