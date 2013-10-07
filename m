@@ -1,59 +1,25 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:50019 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755430Ab3JVWZV (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:35669 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752754Ab3JGTlk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Oct 2013 18:25:21 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Dan Carpenter <dan.carpenter@oracle.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 1/6] mwifiex: potential integer underflow in mwifiex_ret_wmm_get_status()
-Date: Tue, 22 Oct 2013 15:24:42 -0700
-Message-ID: <1382480687-12720-2-git-send-email-bzhao@marvell.com> (sfid-20131023_002527_781526_5917B3C4)
-In-Reply-To: <1382480687-12720-1-git-send-email-bzhao@marvell.com>
-References: <1382480687-12720-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 7 Oct 2013 15:41:40 -0400
+Date: Mon, 07 Oct 2013 15:41:37 -0400 (EDT)
+Message-Id: <20131007.154137.1896196408179476604.davem@davemloft.net> (sfid-20131007_214148_272308_9A021EC9)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next 2013-10-04
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20131004181607.GK3142@tuxdriver.com>
+References: <20131004181607.GK3142@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dan Carpenter <dan.carpenter@oracle.com>
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 4 Oct 2013 14:16:07 -0400
 
-Before we loop for next iteration we adjust the buffer pointer and
-"resp_len":
+> Please pull this batch of patches intended for the 3.13 stream!
 
-		curr += (tlv_len + sizeof(tlv_hdr->header));
-		resp_len -= (tlv_len + sizeof(tlv_hdr->header));
-
-If "resp_len" gets set to negative then it counts as a high positive
-value.
-
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/wmm.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
-index 5dd0ccc..13eaeed 100644
---- a/drivers/net/wireless/mwifiex/wmm.c
-+++ b/drivers/net/wireless/mwifiex/wmm.c
-@@ -722,6 +722,9 @@ int mwifiex_ret_wmm_get_status(struct mwifiex_private *priv,
- 		tlv_hdr = (struct mwifiex_ie_types_data *) curr;
- 		tlv_len = le16_to_cpu(tlv_hdr->header.len);
- 
-+		if (resp_len < tlv_len + sizeof(tlv_hdr->header))
-+			break;
-+
- 		switch (le16_to_cpu(tlv_hdr->header.type)) {
- 		case TLV_TYPE_WMMQSTATUS:
- 			tlv_wmm_qstatus =
--- 
-1.8.2.3
-
+Pulled, thanks a lot John.
