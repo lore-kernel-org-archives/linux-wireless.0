@@ -1,104 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:48763 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752660Ab3JQHmu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Oct 2013 03:42:50 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 15/21] rt2x00: rt2800pci: use separate set_state callback for SoC devices
-Date: Thu, 17 Oct 2013 09:42:29 +0200
-Message-Id: <1381995755-16471-16-git-send-email-juhosg@openwrt.org> (sfid-20131017_100807_198239_699E0011)
-In-Reply-To: <1381995755-16471-1-git-send-email-juhosg@openwrt.org>
-References: <1381995755-16471-1-git-send-email-juhosg@openwrt.org>
+Received: from s15283307.onlinehome-server.info ([87.106.208.187]:51053 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751508Ab3JGRaA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Oct 2013 13:30:00 -0400
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
+Subject: Re: [PATCH v2] bluetooth: fix variable shadow warnings
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <1381162756-18353-1-git-send-email-johannes@sipsolutions.net>
+Date: Mon, 7 Oct 2013 18:53:38 +0200
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Message-Id: <815BA104-681B-4C6B-AD03-E52EB8834904@holtmann.org> (sfid-20131007_193005_512613_5380157D)
+References: <1381162756-18353-1-git-send-email-johannes@sipsolutions.net>
+To: Johannes Berg <johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The 'rt2800pci_set_state' function uses MCU commands
-to set the device state, however these have no effect
-on SoC devices. Use a different set_state callback
-which does not use the MCU fcuntions.
+Hi Johannes,
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/rt2x00/rt2800pci.c |   43 +++++++++++++++++++++++++++++--
- 1 file changed, 41 insertions(+), 2 deletions(-)
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> Sparse points out three places where variables are shadowed,
+> rename two of the variables and remove the duplicate third.
+> 
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+> net/bluetooth/hci_event.c  | 12 +++++++-----
+> net/bluetooth/l2cap_sock.c |  2 +-
+> 2 files changed, 8 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index efc35b4..e424b7a 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -246,6 +246,7 @@ static void rt2800pci_disable_radio(struct rt2x00_dev *rt2x00dev)
- 	}
- }
- 
-+#ifdef CONFIG_PCI
- static int rt2800pci_set_state(struct rt2x00_dev *rt2x00dev,
- 			       enum dev_state state)
- {
-@@ -304,7 +305,6 @@ static int rt2800pci_set_device_state(struct rt2x00_dev *rt2x00dev,
- 	return retval;
- }
- 
--#ifdef CONFIG_PCI
- /*
-  * Device probe functions.
-  */
-@@ -480,6 +480,45 @@ MODULE_DEVICE_TABLE(pci, rt2800pci_device_table);
- MODULE_LICENSE("GPL");
- 
- #if defined(CONFIG_SOC_RT288X) || defined(CONFIG_SOC_RT305X)
-+static int rt2800soc_set_device_state(struct rt2x00_dev *rt2x00dev,
-+				      enum dev_state state)
-+{
-+	int retval = 0;
-+
-+	switch (state) {
-+	case STATE_RADIO_ON:
-+		retval = rt2800pci_enable_radio(rt2x00dev);
-+		break;
-+
-+	case STATE_RADIO_OFF:
-+		rt2800pci_disable_radio(rt2x00dev);
-+		break;
-+
-+	case STATE_RADIO_IRQ_ON:
-+	case STATE_RADIO_IRQ_OFF:
-+		rt2800mmio_toggle_irq(rt2x00dev, state);
-+		break;
-+
-+	case STATE_DEEP_SLEEP:
-+	case STATE_SLEEP:
-+	case STATE_STANDBY:
-+	case STATE_AWAKE:
-+		/* These states are not supported, but don't report an error */
-+		retval = 0;
-+		break;
-+
-+	default:
-+		retval = -ENOTSUPP;
-+		break;
-+	}
-+
-+	if (unlikely(retval))
-+		rt2x00_err(rt2x00dev, "Device failed to enter state %d (%d)\n",
-+			   state, retval);
-+
-+	return retval;
-+}
-+
- static int rt2800soc_read_eeprom(struct rt2x00_dev *rt2x00dev)
- {
- 	void __iomem *base_addr = ioremap(0x1F040000, EEPROM_SIZE);
-@@ -578,7 +617,7 @@ static const struct rt2x00lib_ops rt2800soc_rt2x00_ops = {
- 	.uninitialize		= rt2x00mmio_uninitialize,
- 	.get_entry_state	= rt2800mmio_get_entry_state,
- 	.clear_entry		= rt2800mmio_clear_entry,
--	.set_device_state	= rt2800pci_set_device_state,
-+	.set_device_state	= rt2800soc_set_device_state,
- 	.rfkill_poll		= rt2800_rfkill_poll,
- 	.link_stats		= rt2800_link_stats,
- 	.reset_tuner		= rt2800_reset_tuner,
--- 
-1.7.10
+patch has been applied to bluetooth-next tree.
+
+Regards
+
+Marcel
+
