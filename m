@@ -1,35 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx4.wp.pl ([212.77.101.8]:48919 "EHLO mx4.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754357Ab3JDOhq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Oct 2013 10:37:46 -0400
-Date: Fri, 4 Oct 2013 16:39:10 +0200
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-To: Gabor Juhos <juhosg@openwrt.org>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH v2 4/4] rt2x00: rt2800lib: fix VGC
- programming for RT3572 and RT3593
-Message-ID: <20131004143910.GD7842@localhost.localdomain> (sfid-20131004_163749_191475_9B81000A)
-References: <1380823243-11149-1-git-send-email-juhosg@openwrt.org>
- <1380823243-11149-4-git-send-email-juhosg@openwrt.org>
-MIME-Version: 1.0
+Received: from s15283307.onlinehome-server.info ([87.106.208.187]:59735 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755756Ab3JGQRX convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Oct 2013 12:17:23 -0400
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1380823243-11149-4-git-send-email-juhosg@openwrt.org>
+Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
+Subject: Re: [PATCH] bluetooth: fix variable shadow warnings
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <1381157810-15310-1-git-send-email-johannes@sipsolutions.net>
+Date: Mon, 7 Oct 2013 18:17:40 +0200
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Message-Id: <2146D6C2-0C7B-4810-AAFB-D5DC2C938EF0@holtmann.org> (sfid-20131007_181728_339605_165A5583)
+References: <1381157810-15310-1-git-send-email-johannes@sipsolutions.net>
+To: Johannes Berg <johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 03, 2013 at 08:00:43PM +0200, Gabor Juhos wrote:
-> According to the DPO_RT5572_LinuxSTA_2.6.1.3_20121022
-> reference driver, programming of the 'BBP 66' register
-> on the RT3572 and RT3593 chipsets must be done via the
-> 'rt2800_bbp_write_with_rx_chain' function. This ensures
-> that value is correclty set for all RX chains.
-> 
-> References:
->   RT35xx_ChipAGCAdjust and RT35xx_SetAGCInitValue functions
->   in chips/rt35xx.c
-> 
-> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Hi Johannes,
 
-Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
+> Sparse points out three places where variables are shadowed,
+> rename two of the variables and remove the duplicate third.
+> 
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+> net/bluetooth/hci_event.c  | 12 +++++++-----
+> net/bluetooth/l2cap_sock.c |  2 +-
+> 2 files changed, 8 insertions(+), 6 deletions(-)
+> 
+> diff --git a/net/bluetooth/hci_event.c b/net/bluetooth/hci_event.c
+> index 94aab73..b5a3736 100644
+> --- a/net/bluetooth/hci_event.c
+> +++ b/net/bluetooth/hci_event.c
+> @@ -1291,9 +1291,11 @@ static void hci_cs_remote_name_req(struct hci_dev *hdev, __u8 status)
+> 		goto unlock;
+> 
+> 	if (!test_and_set_bit(HCI_CONN_AUTH_PEND, &conn->flags)) {
+> -		struct hci_cp_auth_requested cp;
+> -		cp.handle = __cpu_to_le16(conn->handle);
+> -		hci_send_cmd(hdev, HCI_OP_AUTH_REQUESTED, sizeof(cp), &cp);
+> +		struct hci_cp_auth_requested auth_req;
+
+can you rename this to auth_cp. The code base uses cp for command parameters.
+
+> +
+> +		auth_req.handle = __cpu_to_le16(conn->handle);
+> +		hci_send_cmd(hdev, HCI_OP_AUTH_REQUESTED,
+> +			     sizeof(auth_req), &auth_req);
+> 	}
+> 
+> unlock:
+> @@ -3636,8 +3638,8 @@ void hci_event_packet(struct hci_dev *hdev, struct sk_buff *skb)
+> 	skb_pull(skb, HCI_EVENT_HDR_SIZE);
+> 
+> 	if (hdev->sent_cmd && bt_cb(hdev->sent_cmd)->req.event == event) {
+> -		struct hci_command_hdr *hdr = (void *) hdev->sent_cmd->data;
+> -		u16 opcode = __le16_to_cpu(hdr->opcode);
+> +		struct hci_command_hdr *cmd_hdr = (void *) hdev->sent_cmd->data;
+> +		u16 opcode = __le16_to_cpu(cmd_hdr->opcode);
+> 
+> 		hci_req_cmd_complete(hdev, opcode, 0);
+> 	}
+> diff --git a/net/bluetooth/l2cap_sock.c b/net/bluetooth/l2cap_sock.c
+> index 0098af8..f07e25d 100644
+> --- a/net/bluetooth/l2cap_sock.c
+> +++ b/net/bluetooth/l2cap_sock.c
+> @@ -683,7 +683,7 @@ static int l2cap_sock_setsockopt(struct socket *sock, int level, int optname,
+> 		}
+> 
+> 		if (opt == BT_FLUSHABLE_OFF) {
+> -			struct l2cap_conn *conn = chan->conn;
+> +			conn = chan->conn;
+> 			/* proceed further only when we have l2cap_conn and
+> 			   No Flush support in the LM */
+> 			if (!conn || !lmp_no_flush_capable(conn->hcon->hdev)) {
+
+I would have personally put this into part into a separate patch, but this way is fine as well.
+
+Regards
+
+Marcel
+
