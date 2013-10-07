@@ -1,61 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42056 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756734Ab3JRSAJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Oct 2013 14:00:09 -0400
-Date: Fri, 18 Oct 2013 13:58:35 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: pull-request: iwlwifi-next 2013-10-18
-Message-ID: <20131018175835.GE28130@tuxdriver.com> (sfid-20131018_200015_445812_1B6502AE)
-References: <1382106086.14393.10.camel@jlt4.sipsolutions.net>
+Received: from mout.gmx.net ([212.227.15.19]:53316 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751995Ab3JGURx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Oct 2013 16:17:53 -0400
+Received: from [192.168.2.100] ([93.218.71.155]) by mail.gmx.com (mrgmx002)
+ with ESMTPSA (Nemesis) id 0MSv6D-1VLOzy31AD-00RuC5 for
+ <linux-wireless@vger.kernel.org>; Mon, 07 Oct 2013 22:17:51 +0200
+Message-ID: <525316EF.6070102@rempel-privat.de> (sfid-20131007_221757_018196_8A02CC00)
+Date: Mon, 07 Oct 2013 22:17:51 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1382106086.14393.10.camel@jlt4.sipsolutions.net>
+To: =?UTF-8?B?QWxleGFuZGVyIE3DvGxsZXI=?= <Alexander.Mueller@jambit.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: WIFI USB-Stick for P2P
+References: <E8A6515F57A7AE4EA65BED3559D774CE1B151ABF@exc1.jambit.com>
+In-Reply-To: <E8A6515F57A7AE4EA65BED3559D774CE1B151ABF@exc1.jambit.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 18, 2013 at 04:21:26PM +0200, Johannes Berg wrote:
-> John,
+Am 07.10.2013 11:08, schrieb Alexander Müller:
+> Hello linux-wireless,
 > 
-> And for iwlwifi-next ... This is bigger. I guess -next stuff can wait
-> until after KS though. Also, I think there might be a merge conflict
-> hidden here, don't really remember.
+> I'm wondering if there is a list of usb wifi devices having a good and stable p2p support for wifi direct. We are currently using an AVM Fritz wifi stick that is supported by the carl9170 driver, but it is experiencing random failures and stalls which require a hardware reset. The p2p howto page at http://wireless.kernel.org/en/developers/p2p/howto suggests that there may be other devices and drivers supporting p2p, but I haven't figured out exactly which devices work best.
 > 
-> For this round, I have a lot of changes:
->  * power management improvements
->  * BT coexistence improvements/updates
->  * new device support
->  * VHT support
->  * IBSS support (though due to a small bug it requires new firmware)
->  * various other fixes/improvements.
-> 
-> Sorry to concentrate it all into one pull request, I was holding for a
-> small bugfix that turned out to be much more difficult than I expected,
-> but also not needed yet (so this code has a known bug with -8 firmware,
-> but we'll fix it before the driver gets updated to use that firmware.)
-> 
-> Let me know if there's any problem.
-> 
-> johannes
-> 
-> 
-> The following changes since commit e25aa82a89db9e3b09d02b5481aa375c7712a10d:
-> 
->   rt2x00: rt2800lib: fix VGC adjustment for RT3572 and RT3593 (2013-10-10 13:53:07 -0400)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git for-john
-> 
-> for you to fetch changes up to 246dd9922e859768aa522daa6c1c601785e57e0c:
-> 
->   iwlwifi: mvm: fix operator precedence (2013-10-18 16:02:38 +0200)
+> Can you give me a hint?
 
-Pulling now...
+You can try ath9k_htc based device. It should be able to support P2P,
+but right now i was not able to transfer any data. p2p_find and
+p2p_connect seems to work.
 
+If you wont to do some more testing with ath9k_htc, please contact me.
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Regards,
+Oleksij
