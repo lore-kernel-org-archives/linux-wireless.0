@@ -1,54 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f45.google.com ([209.85.215.45]:50903 "EHLO
-	mail-la0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751024Ab3JTKjt convert rfc822-to-8bit (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:56046 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752834Ab3JGHlE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Oct 2013 06:39:49 -0400
-Received: by mail-la0-f45.google.com with SMTP id hp15so69686lab.32
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Oct 2013 03:39:47 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <D19FD2B13A40CD4B8DA64DB9B8F112E9218DAF6F@nasanexd01a.na.qualcomm.com>
-References: <1381985833-31312-1-git-send-email-rajeshc@qca.qualcomm.com>
- <1382020835.14410.16.camel@jlt4.sipsolutions.net> <D19FD2B13A40CD4B8DA64DB9B8F112E9218DAD14@nasanexd01a.na.qualcomm.com>
- <1382035171.22901.13.camel@dcbw.foobar.com> <D19FD2B13A40CD4B8DA64DB9B8F112E9218DAF6F@nasanexd01a.na.qualcomm.com>
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Date: Sun, 20 Oct 2013 12:39:27 +0200
-Message-ID: <CAB=NE6UkKuSzH4x2SjkE0pRTVCVa3k7g=_ZeU_JE+t2OovRoEg@mail.gmail.com> (sfid-20131020_124003_283683_5DAA8260)
-Subject: Re: [PATCH] cfg80211/nl80211: Add support to report unsafe frequency ranges(s)
-To: "Chauhan, Rajesh" <rajeshc@qca.qualcomm.com>
-Cc: Dan Williams <dcbw@redhat.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Malinen, Jouni" <jouni@qca.qualcomm.com>,
-	"Bahini, Henri" <hbahini@qca.qualcomm.com>,
-	"Chang, Leo" <schang@qca.qualcomm.com>,
-	"Luo, Xun" <xunl@qca.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 7 Oct 2013 03:41:04 -0400
+Message-ID: <1381131658.13586.0.camel@jlt4.sipsolutions.net> (sfid-20131007_094107_889690_41CFBFEF)
+Subject: Re: NetworkManager not listing access points
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Detlev Casanova <detlev.casanova@gmail.com>
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	laurent.pinchart@ideasonboard.com
+Date: Mon, 07 Oct 2013 09:40:58 +0200
+In-Reply-To: <2916718.7t7kLXuBQV@naboo> (sfid-20131007_084842_017679_F9EA17BB)
+References: <31357461.i5mG9q5IfA@naboo> <3913713.WUui18VufC@naboo>
+	 <1380704936.13329.14.camel@jlt4.sipsolutions.net>
+	 <2916718.7t7kLXuBQV@naboo> (sfid-20131007_084842_017679_F9EA17BB)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 17, 2013 at 9:51 PM, Chauhan, Rajesh
-<rajeshc@qca.qualcomm.com> wrote:
-> Hi Dan,
->
-> Thanks for your comments.
->
-> Current patch is to report event asynchronously and that would be needed even if we have your suggested interface of client collecting that information upfront, which seems like you also kind of agree, because RF environment may change later and generating an event at that time with frequency details would help. So your suggested approach of "mechanism for the client to get this information" in itself seems like a candidate for a separate patch.
+On Mon, 2013-10-07 at 08:48 +0200, Detlev Casanova wrote:
 
-The infrastructure for this sort of thing that me, Inaky and Marcel
-had proposed in 2007 is the Frequency Broker:
+> > > Yes and the problem is most likely to be in the driver because it
+> doesn't
+> > > occur before commit 0172bb75073e11a5aa9d8a953bdaefb8709f00c8
+> ("cfg80211:
+> > > use DS or HT operation IEs to determine BSS channel")
 
-http://wireless.kernel.org/en/developers/FrequencyBroker
+[...]
 
-> On the race condition which you described - thanks!, but it is something which implementation of driver would need to take care. Similarly, user space can have implementation to cache information on receipt of the event to use it later.
+> I looked into wpa_supplicant and after an upgrade from 0.7.3 to 2.0,
+> the problem seems to be fixed.
 
-This patch is vague. Once we set something as API we have to live with
-it, I am not comfortable with this patch having enough information for
-proper usage by different drivers for the same purpose or intent. The
-only real positive argument that could be used here is where something
-like Android might have already embraced some similar API but are we
-going to always just enable API on Linux just because Android did it
-without thinking about proper long term architecture? I don't think
-so.
+Huh, that's odd. Did 0.7.3 use wext driver?
 
- Luis
+johannes
+
