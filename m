@@ -1,59 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:20880 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752854Ab3JMEtj convert rfc822-to-8bit (ORCPT
+Received: from mail-ve0-f175.google.com ([209.85.128.175]:44384 "EHLO
+	mail-ve0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752785Ab3JGU7u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Oct 2013 00:49:39 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Ben Meiselman <benmeiselman@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"Seth Forshee (seth.forshee@canonical.com)"
-	<seth.forshee@canonical.com>
-CC: Yonah Meiselman <yonah.meiselman@gmail.com>
-Subject: RE: [Ilw] trouble with wireless AC 7260 in ubuntu 13.04
-Date: Sun, 13 Oct 2013 04:49:27 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301DC1C5A@HASMSX103.ger.corp.intel.com> (sfid-20131013_064943_499387_031CE641)
-References: <CAHpj=KC=eRafrM4+bxO+nGg4UBCkV1toyei4HL_s+Svd_3BrtA@mail.gmail.com>
-In-Reply-To: <CAHpj=KC=eRafrM4+bxO+nGg4UBCkV1toyei4HL_s+Svd_3BrtA@mail.gmail.com>
-Content-Type: text/plain; charset="windows-1255"
+	Mon, 7 Oct 2013 16:59:50 -0400
+Received: by mail-ve0-f175.google.com with SMTP id jy13so4021947veb.34
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Oct 2013 13:59:49 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <CAB=NE6UToY0zeuarb7f_aExCuxqmghCcmdRkxMSWR-CgGjRk6Q@mail.gmail.com>
+References: <1380234508-3121-1-git-send-email-k.eugene.e@gmail.com>
+	<20131004234514.GA11128@garbanzo.do-not-panic.com>
+	<CAFSJ42YRmwZ-mK5yADsf=sfi7b5rEK9hFdH-waoswrubvyZddA@mail.gmail.com>
+	<CAB=NE6UToY0zeuarb7f_aExCuxqmghCcmdRkxMSWR-CgGjRk6Q@mail.gmail.com>
+Date: Mon, 7 Oct 2013 21:59:49 +0100
+Message-ID: <CAFSJ42bj6Q-O0=+3TK1kwgfct6tN6hf+wRJa_nk3WfCTskQitg@mail.gmail.com> (sfid-20131007_225953_969102_53CEB257)
+Subject: Re: [PATCH] wcn36xx: mac80211 driver for Qualcomm WCN3660/WCN3680 hardware
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	wcn36xx <wcn36xx@lists.infradead.org>,
+	wcn36xx <wcn36xx@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi Luis,
 
-First, please note that mails in any other format than plaintext won't go through the filters to the mailing list. So please, hit the plain text button in gmail.
+I looked at your patch deeper and couple of questions appeared:
 
+1) The first line in the function ath_regd_init will execute
+container_of with "struct ath_common". Do not you think we can try to
+access wrong memory area?
 
-> Hello supporters,
+2) __ath_regd_init will try to access EEPROM or at least call
+functions with eeprom related. It's a bit misleading because
+wcn36xx is not using eeprom. If possible could you please explain what
+is the connection between ath regd implementation and EEPROM?
 
-:) 
-
-> I got your email addresses from here: http://wireless.kernel.org/en/users/Drivers/iwlwifi
-> (Also copying my brother on this email.)
-
-> I installed Ubuntu 13.04 on a new machine. It has an Intel Dual Band AC 7260 wireless card. I would like to connect to a wireless network but don't know how.
-> I put iwlwifi-7260-7.ucode into /lib/firmware
-
-I am not sure if Ubuntu 13.04 supports this new device already. I'd ask Seth Forshee (CCed).
-This device is supported starting from kernel 3.10 which AFAIK is not shipped with Ubuntu 13.04. They may very well have added a backport based driver.
-
-Can you please send the output of modinfo iwlmvm?
-I also would like to see the output of dmesg.
-
-
->   *-network UNCLAIMED
->       description: Network controller
->    product: Intel Corporation
->      vendor: Intel Corporation
->       physical id: 0
->       bus info: pci@0000:03:00.0
->       version: 73
->       width: 64 bits
->       clock: 33MHz
->       capabilities: pm msi pciexpress bus_master cap_list
->       configuration: latency=0
->       resources: memory:f7c00000-f7c01fff
+On Mon, Oct 7, 2013 at 6:50 PM, Luis R. Rodriguez
+<mcgrof@do-not-panic.com> wrote:
+> On Sun, Oct 6, 2013 at 12:30 PM, Eugene Krasnikov <k.eugene.e@gmail.com> wrote:
+>>> +static void wcn_reg_notifier(struct wiphy *wiphy,
+>>> +                            struct regulatory_request *request)
+>>> +{
+>>
+>> Function should be called wcn36xx_reg_notifier not wcn_reg_notifier.
+>> Could you please change that?
+>
+> Feel free to make that change on your end :D
+>
+>   Luis
 
 
+
+-- 
+Best regards,
+Eugene
