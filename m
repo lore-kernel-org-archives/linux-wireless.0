@@ -1,145 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f179.google.com ([74.125.82.179]:59815 "EHLO
-	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751888Ab3JAO4x (ORCPT
+Received: from mail-la0-f41.google.com ([209.85.215.41]:45585 "EHLO
+	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751197Ab3JGW5S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Oct 2013 10:56:53 -0400
-Received: by mail-we0-f179.google.com with SMTP id x55so7253580wes.24
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Oct 2013 07:56:52 -0700 (PDT)
-Message-ID: <1380639408.2087.4.camel@canaries64-MCP7A> (sfid-20131001_165656_767233_44AABB43)
-Subject: [PATCH 4/8] staging: vt6656: rxtx.c parse out struct
- vnt_tx_datahead_a_fb
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 01 Oct 2013 15:56:48 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 7 Oct 2013 18:57:18 -0400
+Received: by mail-la0-f41.google.com with SMTP id ec20so6164359lab.14
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Oct 2013 15:57:16 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAFSJ42bj6Q-O0=+3TK1kwgfct6tN6hf+wRJa_nk3WfCTskQitg@mail.gmail.com>
+References: <1380234508-3121-1-git-send-email-k.eugene.e@gmail.com>
+ <20131004234514.GA11128@garbanzo.do-not-panic.com> <CAFSJ42YRmwZ-mK5yADsf=sfi7b5rEK9hFdH-waoswrubvyZddA@mail.gmail.com>
+ <CAB=NE6UToY0zeuarb7f_aExCuxqmghCcmdRkxMSWR-CgGjRk6Q@mail.gmail.com> <CAFSJ42bj6Q-O0=+3TK1kwgfct6tN6hf+wRJa_nk3WfCTskQitg@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Mon, 7 Oct 2013 15:56:56 -0700
+Message-ID: <CAB=NE6Xs=ebxpQapB4xXu7edWfMEkgZu8hTyO98zfam56og2Hg@mail.gmail.com> (sfid-20131008_005721_344914_68926AB9)
+Subject: Re: [PATCH] wcn36xx: mac80211 driver for Qualcomm WCN3660/WCN3680 hardware
+To: Eugene Krasnikov <k.eugene.e@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	wcn36xx <wcn36xx@lists.infradead.org>,
+	wcn36xx <wcn36xx@qca.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Parse struct vnt_tx_datahead_a_fb from s_uFillDataHead and
-move to struct vnt_rts_a_fb structure returning duration down
-functions.
+On Mon, Oct 7, 2013 at 1:59 PM, Eugene Krasnikov <k.eugene.e@gmail.com> wrote:
+> Hi Luis,
+>
+> I looked at your patch deeper and couple of questions appeared:
+>
+> 1) The first line in the function ath_regd_init will execute
+> container_of with "struct ath_common". Do not you think we can try to
+> access wrong memory area?
 
-This removes pvTxDataHd pointer assignment.
+Good catch, can you add an ath_common to the general wcn data
+structure and then embed the reg under it? That'd fix that.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/rxtx.c | 49 ++++++++++++++++++++++++-------------------
- drivers/staging/vt6656/rxtx.h |  1 +
- 2 files changed, 28 insertions(+), 22 deletions(-)
+> 2) __ath_regd_init will try to access EEPROM or at least call
+> functions with eeprom related.
 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index a56a49a..b2c4786 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -552,6 +552,23 @@ static u16 vnt_rxtx_datahead_g_fb(struct vnt_private *priv, u8 pkt_type,
- 	return buf->wDuration_a;
- }
- 
-+static u16 vnt_rxtx_datahead_a_fb(struct vnt_private *priv, u8 pkt_type,
-+		u16 rate, struct vnt_tx_datahead_a_fb *buf,
-+		u32 frame_len, int need_ack)
-+{
-+	/* Get SignalField,ServiceField,Length */
-+	BBvCalculateParameter(priv, frame_len, rate, pkt_type, &buf->a);
-+	/* Get Duration and TimeStampOff */
-+	buf->wDuration = s_uGetDataDuration(priv, pkt_type, need_ack);
-+
-+	buf->wDuration_f0 = s_uGetDataDuration(priv, pkt_type, need_ack);
-+	buf->wDuration_f1 = s_uGetDataDuration(priv, pkt_type, need_ack);
-+
-+	buf->wTimeStampOff = vnt_time_stamp_off(priv, rate);
-+
-+	return buf->wDuration;
-+}
-+
- static u32 s_uFillDataHead(struct vnt_private *pDevice,
- 	u8 byPktType, u16 wCurrentRate, void *pTxDataHead, u32 cbFrameLength,
- 	u32 uDMAIdx, int bNeedAck, u8 byFBOption)
-@@ -565,19 +582,9 @@ static u32 s_uFillDataHead(struct vnt_private *pDevice,
- 	if (byFBOption != AUTO_FB_NONE) {
- 		struct vnt_tx_datahead_a_fb *pBuf =
- 			(struct vnt_tx_datahead_a_fb *)pTxDataHead;
--            //Get SignalField,ServiceField,Length
--		BBvCalculateParameter(pDevice, cbFrameLength, wCurrentRate,
--			byPktType, &pBuf->a);
--            //Get Duration and TimeStampOff
--		pBuf->wDuration = s_uGetDataDuration(pDevice,
--					byPktType, bNeedAck);
--		pBuf->wDuration_f0 = s_uGetDataDuration(pDevice,
--					byPktType, bNeedAck);
--		pBuf->wDuration_f1 = s_uGetDataDuration(pDevice,
--							byPktType, bNeedAck);
--		pBuf->wTimeStampOff = vnt_time_stamp_off(pDevice,
--								wCurrentRate);
--            return (pBuf->wDuration);
-+
-+		return vnt_rxtx_datahead_a_fb(pDevice, byPktType, wCurrentRate,
-+					pBuf, cbFrameLength, bNeedAck);
-         } else {
- 		struct vnt_tx_datahead_ab *pBuf =
- 			(struct vnt_tx_datahead_ab *)pTxDataHead;
-@@ -728,7 +735,8 @@ static u16 vnt_rxtx_rts_a_fb_head(struct vnt_private *priv,
- 
- 	vnt_fill_ieee80211_rts(priv, &buf->data, eth_hdr, buf->wDuration);
- 
--	return 0;
-+	return vnt_rxtx_datahead_a_fb(priv, pkt_type, current_rate,
-+			&buf->data_head, frame_len, need_ack);
- }
- 
- static u16 s_vFillRTSHead(struct vnt_private *pDevice, u8 byPktType,
-@@ -758,7 +766,7 @@ static u16 s_vFillRTSHead(struct vnt_private *pDevice, u8 byPktType,
- 		break;
- 	case PK_TYPE_11A:
- 		if (byFBOption) {
--			vnt_rxtx_rts_a_fb_head(pDevice, &head->rts_a_fb,
-+			return vnt_rxtx_rts_a_fb_head(pDevice, &head->rts_a_fb,
- 				psEthHeader, byPktType, cbFrameLength,
- 				bNeedAck, wCurrentRate, byFBOption);
- 			break;
-@@ -1195,12 +1203,8 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
-         } else {
-             // Auto Fall Back
-             if (bRTS == true) {//RTS_need
--		pvTxDataHd = (struct vnt_tx_datahead_a_fb *)(pbyTxBufferAddr +
--			wTxBufSize + sizeof(struct vnt_rrv_time_ab) + cbMICHDR +
--					sizeof(struct vnt_rts_a_fb));
- 		cbHeaderLength = wTxBufSize + sizeof(struct vnt_rrv_time_ab) +
--			cbMICHDR + sizeof(struct vnt_rts_a_fb) +
--					sizeof(struct vnt_tx_datahead_a_fb);
-+			cbMICHDR + sizeof(struct vnt_rts_a_fb);
-             }
-             else if (bRTS == false) { //RTS_needless
- 		pvTxDataHd = (struct vnt_tx_datahead_a_fb *)(pbyTxBufferAddr +
-@@ -1228,8 +1232,9 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
- 			tx_buffer, &pMICHDR, cbMICHDR,
- 			cbFrameSize, bNeedACK, uDMAIdx, psEthHeader, bRTS);
-     //Fill DataHead
--    uDuration |= s_uFillDataHead(pDevice, byPktType, wCurrentRate, pvTxDataHd,
--		cbFrameSize, uDMAIdx, bNeedACK,	byFBOption);
-+	if (pvTxDataHd)
-+    		uDuration |= s_uFillDataHead(pDevice, byPktType, wCurrentRate,
-+		pvTxDataHd, cbFrameSize, uDMAIdx, bNeedACK, byFBOption);
-     // Generate TX MAC Header
-     s_vGenerateMACHeader(pDevice, pbyMacHdr, (u16)uDuration, psEthHeader, bNeedEncryption,
-                            byFragType, uDMAIdx, 0);
-diff --git a/drivers/staging/vt6656/rxtx.h b/drivers/staging/vt6656/rxtx.h
-index 0a022cf..3fd8507 100644
---- a/drivers/staging/vt6656/rxtx.h
-+++ b/drivers/staging/vt6656/rxtx.h
-@@ -149,6 +149,7 @@ struct vnt_rts_a_fb {
- 	u16 wRTSDuration_f0;
- 	u16 wRTSDuration_f1;
- 	struct ieee80211_rts data;
-+	struct vnt_tx_datahead_a_fb data_head;
- } __packed;
- 
- /* CTS buffer header */
--- 
-1.8.3.2
+That's inherited from the language used on the HAL code. The HAL is no
+longer a HAL and we have general "hardware code". The code in that
+file is more than anything now just database specific information, as
+such routines like ath_regd_get_eepromRD() could be renamed to reflect
+they are simply accessing regulatory information from the card.
 
+> It's a bit misleading because
+> wcn36xx is not using eeprom. If possible could you please explain what
+> is the connection between ath regd implementation and EEPROM?
 
+Indeed, agreed. The way to properly use regulatory on the wcn driver
+will be parse the nvram and populate the struct ath_regulatory
+appropriately. This then makes the EEPROM verbiage inappropriate and
+do welcome such changes reflected on regd.c but don't see them
+required for wcn to use them. This can be made as further
+clarifications once the wcn driver gets merged.
 
+  Luis
