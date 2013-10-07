@@ -1,48 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f171.google.com ([209.85.217.171]:36456 "EHLO
-	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754378Ab3JaQmw (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:56215 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754466Ab3JGIhO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Oct 2013 12:42:52 -0400
-Received: by mail-lb0-f171.google.com with SMTP id x18so2578354lbi.2
-        for <linux-wireless@vger.kernel.org>; Thu, 31 Oct 2013 09:42:50 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1383237294.14302.5.camel@jlt4.sipsolutions.net>
-References: <1382376158-25586-1-git-send-email-mcgrof@do-not-panic.com> <1383237294.14302.5.camel@jlt4.sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Thu, 31 Oct 2013 17:42:30 +0100
-Message-ID: <CAB=NE6VZSZ0Et0Y8girRSRO9-hd2H-SfnihwJC60wKfzv70PFw@mail.gmail.com> (sfid-20131031_174256_869771_5F51A682)
-Subject: Re: [PATCH 00/14] wlan: consolidate passive-scan and no-ibss flags
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	"Shete, Mihir" <smihir@qti.qualcomm.com>,
-	"Bhattacharyya, Tushnim" <tushnimb@qca.qualcomm.com>,
-	Peter Senna Tschudin <peter.senna@gmail.com>,
-	Julia Lawall <julia.lawall@lip6.fr>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 7 Oct 2013 04:37:14 -0400
+Message-ID: <1381135030.13586.12.camel@jlt4.sipsolutions.net> (sfid-20131007_103730_197948_91046B30)
+Subject: Re: [PATCH] cfg80211: Pass station supported channel and oper class
+ info to kernel
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Undekari, Sunil Dutt" <c_duttus@qti.qualcomm.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"j@w1.fi" <j@w1.fi>
+Date: Mon, 07 Oct 2013 10:37:10 +0200
+In-Reply-To: <26F3B0343EE4744AA14EEEF9E1E534511F71B55F@aphydexd01a>
+References: <1377582278-3768-1-git-send-email-c_duttus@qti.qualcomm.com>
+	 <1380704456.13329.8.camel@jlt4.sipsolutions.net>
+	 <26F3B0343EE4744AA14EEEF9E1E534511F71B55F@aphydexd01a>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 31, 2013 at 5:34 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2013-10-21 at 19:22 +0200, Luis R. Rodriguez wrote:
->> John, Johannes,
->>
->> This series addresses consolidating passive-scan and no-ibss flags.
->> Since its crosses over drivers I'll let you guys decide what tree
->> this goes into.
->
-> Alright, I've applied this, but in one single big patch, and I've redone
-> (most of) the driver updates using spatch.
->
-> There were conflicts applying the patch, so most likely John will get
-> conflicts when merging my tree. I've added the spatches to the commit
-> log so that should be easy to resolve.
+On Thu, 2013-10-03 at 07:20 +0000, Undekari, Sunil Dutt wrote:
+> Thanks Johannes for the review.
+> 
+> >It seems you should validate that the length is even, and at least 2?
+> Can I know why the check for even/ atleast 2 is? Though I would
+> validate for a non zero length and return failure in the else,
+> considering a case where the TDLS peer advertises a single channel.
+> Shouldn't it suffice?
 
-Oh I love to hear merge conflict issues are being addressed with
-Coccinelle, thanks for the update. I should have just provided the
-SmPL for it in the first place ;) -- my bad.
+Yes, if you look at the 802.11 spec you can know why. Hint: a single
+channel is advertised using 2 bytes.
 
-  Luis
+johannes
+
