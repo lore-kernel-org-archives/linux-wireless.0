@@ -1,66 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:58638 "EHLO nbd.name"
+Received: from mail.jambit.com ([95.157.63.22]:55921 "EHLO mail.jambit.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755804Ab3JNTS7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Oct 2013 15:18:59 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, thomas@net.t-labs.tu-berlin.de,
-	bvahl@net.t-labs.tu-berlin.de, ben@gowasabi.net
-Subject: [PATCH 3.12] ath5k: fix regression in tx status processing
-Date: Mon, 14 Oct 2013 21:18:48 +0200
-Message-Id: <1381778328-7684-1-git-send-email-nbd@openwrt.org> (sfid-20131014_211902_819366_F24AEAB6)
+	id S1751558Ab3JGJJE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Oct 2013 05:09:04 -0400
+Received: from [192.168.194.80] (port=12328 helo=exc1.jambit.com)
+	by mail.jambit.com with esmtps (TLSv1:AES128-SHA:128)
+	(Exim 4.76)
+	(envelope-from <Alexander.Mueller@jambit.com>)
+	id 1VT6oG-0003uF-09
+	for linux-wireless@vger.kernel.org; Mon, 07 Oct 2013 11:09:00 +0200
+From: =?iso-8859-1?Q?Alexander_M=FCller?= <Alexander.Mueller@jambit.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: WIFI USB-Stick for P2P
+Date: Mon, 7 Oct 2013 09:08:58 +0000
+Message-ID: <E8A6515F57A7AE4EA65BED3559D774CE1B151ABF@exc1.jambit.com> (sfid-20131007_110914_887933_6393BE9F)
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The regression was introduced in the following commit:
+Hello linux-wireless,
 
-0967e01e8e713ed2982fb4eba8ba13794e9a6e89
-"ath5k: make use of the new rate control API"
+I'm wondering if there is a list of usb wifi devices having a good and stable p2p support for wifi direct. We are currently using an AVM Fritz wifi stick that is supported by the carl9170 driver, but it is experiencing random failures and stalls which require a hardware reset. The p2p howto page at http://wireless.kernel.org/en/developers/p2p/howto suggests that there may be other devices and drivers supporting p2p, but I haven't figured out exactly which devices work best.
 
-ath5k_tx_frame_completed saves the intended per-rate retry counts before
-they are cleared by ieee80211_tx_info_clear_status, however at this
-point the information in info->status.rates is incomplete.
+Can you give me a hint?
 
-This causes significant throughput degradation and excessive packet loss
-on links where high bit rates don't work properly.
+Regards,
+Alex
 
-Move the copy from bf->rates a few lines up to ensure that the saved
-retry counts are updated, and that they are really cleared in
-info->status.rates after the call to ieee80211_tx_info_clear_status.
+________________________________
 
-Cc: stable@vger.kernel.org # 3.10+
-Cc: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-Cc: Benjamin Vahl <bvahl@net.t-labs.tu-berlin.de>
-Reported-by: Ben West <ben@gowasabi.net>
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath5k/base.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Dipl.-Inf. (Univ.) Alexander Müller, Software Architect
+Phone: +49 89 45 23 47 - 224
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 48161ed..69f58b0 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -1663,15 +1663,15 @@ ath5k_tx_frame_completed(struct ath5k_hw *ah, struct sk_buff *skb,
- 	ah->stats.tx_bytes_count += skb->len;
- 	info = IEEE80211_SKB_CB(skb);
- 
-+	size = min_t(int, sizeof(info->status.rates), sizeof(bf->rates));
-+	memcpy(info->status.rates, bf->rates, size);
-+
- 	tries[0] = info->status.rates[0].count;
- 	tries[1] = info->status.rates[1].count;
- 	tries[2] = info->status.rates[2].count;
- 
- 	ieee80211_tx_info_clear_status(info);
- 
--	size = min_t(int, sizeof(info->status.rates), sizeof(bf->rates));
--	memcpy(info->status.rates, bf->rates, size);
--
- 	for (i = 0; i < ts->ts_final_idx; i++) {
- 		struct ieee80211_tx_rate *r =
- 			&info->status.rates[i];
--- 
-1.8.0.2
 
+jambit GmbH
+Erika-Mann-Str. 63, 80636 München
+Phone: +49 89 45 23 47 - 0 Fax: +49 89 45 23 47 - 70
+
+http://www.jambit.com where innovation works
+
+Geschäftsführer: Peter F. Fellinger, Markus Hartinger
+Sitz: München; Registergericht: München, HRB 129139
