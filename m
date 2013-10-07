@@ -1,42 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:35002 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752299Ab3J3Lwx (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:57628 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755756Ab3JGQRF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Oct 2013 07:52:53 -0400
-Date: Wed, 30 Oct 2013 12:52:51 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
-Cc: Luciano Coelho <luca@coelho.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
+	Mon, 7 Oct 2013 12:17:05 -0400
+Message-ID: <1381162599.9005.3.camel@jlt4.sipsolutions.net> (sfid-20131007_181713_925524_15E27908)
+Subject: Re: [PATCH] mac80211: Use ERR_CAST inlined function instead of
+ ERR_PTR(PTR_ERR(...))
+From: Johannes Berg <johannes@sipsolutions.net>
+To: djduanjiong@gmail.com
+Cc: "John W. Linville" <linville@tuxdriver.com>,
 	"David S. Miller" <davem@davemloft.net>,
 	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, sre@ring0.de, joni.lapilainen@gmail.com,
-	David Gnedt <david.gnedt@davizone.at>
-Subject: Re: [PATCH 12/16] wl1251: disable retry and ACK policy for
- injected packets
-Message-ID: <20131030115251.GF8763@amd.pavel.ucw.cz> (sfid-20131030_125312_813054_5C85BB61)
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
- <1382819655-30430-13-git-send-email-pali.rohar@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1382819655-30430-13-git-send-email-pali.rohar@gmail.com>
+	Duan Jiong <duanj.fnst@cn.fujitsu.com>
+Date: Mon, 07 Oct 2013 18:16:39 +0200
+In-Reply-To: <1381190953-6362-1-git-send-email-duanj.fnst@cn.fujitsu.com> (sfid-20131007_181007_863270_C3FC10D8)
+References: <1381190953-6362-1-git-send-email-duanj.fnst@cn.fujitsu.com>
+	 (sfid-20131007_181007_863270_C3FC10D8)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat 2013-10-26 22:34:11, Pali Rohár wrote:
-> From: David Gnedt <david.gnedt@davizone.at>
-> 
-> Set the retry limit to 0 and disable the ACK policy for injected packets.
-> 
-> Signed-off-by: David Gnedt <david.gnedt@davizone.at>
+On Mon, 2013-10-07 at 17:09 -0700, djduanjiong@gmail.com wrote:
 
-Missing sign-off, otherwise ok:
+>  	if (IS_ERR(key))
+> -		return ERR_PTR(PTR_ERR(key));
+> +		return ERR_CAST(key);
 
-Reviewed-by: Pavel Machek <pavel@ucw.cz>
-									Pavel
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+I already have this patch in my tree.
+
+johannes
+
