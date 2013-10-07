@@ -1,43 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:64500 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754056Ab3JXLZb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Oct 2013 07:25:31 -0400
-Date: Thu, 24 Oct 2013 13:22:06 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Gianfranco Costamagna <costamagnagianfranco@yahoo.it>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Edimax EW-7733UnD
-Message-ID: <20131024112206.GB1677@redhat.com> (sfid-20131024_132535_067323_4AFF2FD2)
-References: <1382537927.62604.YahooMailNeo@web171801.mail.ir2.yahoo.com>
- <1382538469.7892.YahooMailNeo@web171805.mail.ir2.yahoo.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1382538469.7892.YahooMailNeo@web171805.mail.ir2.yahoo.com>
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:42823 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751331Ab3JGX2C (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Oct 2013 19:28:02 -0400
+Received: by mail-ie0-f172.google.com with SMTP id x13so17943529ief.17
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Oct 2013 16:28:02 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH] cfg80211: fix nl80211.h documentation for DFS enum states
+Date: Mon,  7 Oct 2013 16:27:55 -0700
+Message-Id: <1381188475-5195-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20131008_012807_768458_043630FB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 23, 2013 at 03:27:49PM +0100, Gianfranco Costamagna wrote:
-> Hi Kernel Wireless developers, I write here since I have an issue with this module.
-> 
-> 
-> We bought 2 of them since they are both 2.4 and 5Ghz capable, and they seem to be powerful enough for our pourposes
-> http://www.edimax.com/au/produce_detail.php?pd_id=399&pl1_id=1&pl2_id=44
-> 
-> 
-> Anyway there is a problem, that the linux kernel seems to be not supporting them
-> 
-> I tried following this guide
-> http://wikidevi.com/wiki/Edimax_EW-7733UnD
-> rt3573sta, possibly rt5572sta, and future support in rt2800usb "uhosg's patchset adding support, may be in by k3.12"
-> but at this moment it is showing an interface with one of them (I cannot connect to anything, the interface shown seems to be incorrect), with another I get a kernel anic and with the third one doesn't work at all.
-> 
-> lsusb |grep Edimax
-> 
-> Bus 002 Device 002: ID 7392:7733 Edimax Technology Co., Ltd 
+The names are prefixed incorrectly on the documentation.
 
-I have that exect device and it works ok here, but I'm using 
-wireless-testing tree. So perhaps you should try install that
-tree or use backports .
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ include/uapi/linux/nl80211.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Stanislaw
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 71b519f..6ab79ea 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -3860,11 +3860,11 @@ enum nl80211_radar_event {
+  *
+  * Channel states used by the DFS code.
+  *
+- * @IEEE80211_DFS_USABLE: The channel can be used, but channel availability
++ * @NL80211_DFS_USABLE: The channel can be used, but channel availability
+  *	check (CAC) must be performed before using it for AP or IBSS.
+- * @IEEE80211_DFS_UNAVAILABLE: A radar has been detected on this channel, it
++ * @NL80211_DFS_UNAVAILABLE: A radar has been detected on this channel, it
+  *	is therefore marked as not available.
+- * @IEEE80211_DFS_AVAILABLE: The channel has been CAC checked and is available.
++ * @NL80211_DFS_AVAILABLE: The channel has been CAC checked and is available.
+  */
+ 
+ enum nl80211_dfs_state {
+-- 
+1.8.4.rc3
+
