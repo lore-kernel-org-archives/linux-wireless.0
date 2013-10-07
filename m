@@ -1,134 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 220-133-188-53.HINET-IP.hinet.net ([220.133.188.53]:30558 "EHLO
-	ns.kevlo.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751600Ab3JDBmE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Oct 2013 21:42:04 -0400
-Message-ID: <524E1CC5.3030004@kevlo.org> (sfid-20131004_034208_499842_12800F5D)
-Date: Fri, 04 Oct 2013 09:41:25 +0800
-From: Kevin Lo <kevlo@kevlo.org>
-MIME-Version: 1.0
-To: John Linville <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: [PATCH v2] rt2x00: rt2800lib: remove duplicate rf_vals for RF3053
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from s3.sipsolutions.net ([144.76.43.152]:56096 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751796Ab3JGHuJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Oct 2013 03:50:09 -0400
+Message-ID: <1381132198.13586.1.camel@jlt4.sipsolutions.net> (sfid-20131007_095014_132067_3207FAF5)
+Subject: Re: [PATCH] wcn36xx: mac80211 driver for Qualcomm WCN3660/WCN3680
+ hardware
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: Eugene Krasnikov <k.eugene.e@gmail.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
+	wcn36xx@qca.qualcomm.com
+Date: Mon, 07 Oct 2013 09:49:58 +0200
+In-Reply-To: <20131004234514.GA11128@garbanzo.do-not-panic.com> (sfid-20131005_013509_992900_728570EE)
+References: <1380234508-3121-1-git-send-email-k.eugene.e@gmail.com>
+	 <20131004234514.GA11128@garbanzo.do-not-panic.com>
+	 (sfid-20131005_013509_992900_728570EE)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We already have rf_vals_3x with same values.  Hence rf_vals_3053 is removed
-in this patch.
+On Fri, 2013-10-04 at 16:45 -0700, Luis R. Rodriguez wrote:
 
-Signed-off-by: Kevin Lo <kevlo@kevlo.org>
-Acked-by: Paul Menzel <paulepanter@users.sourceforge.net>
----
-Changes since v1:
-   - update comment of rf_vals_3x to indicate that it also supports RF3053
-   - add Paul's Acked-by tag
----
+> Nice! I test compiled with sparse enabled and got this:
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c 
-b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 25aaa5e..78ce749 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -7224,7 +7224,7 @@ static const struct rf_channel rf_vals[] = {
+Could also consider running smatch.
 
-  /*
-   * RF value list for rt3xxx
-- * Supports: 2.4 GHz (all) & 5.2 GHz (RF3052)
-+ * Supports: 2.4 GHz (all) & 5.2 GHz (RF3052 & RF3053)
-   */
-  static const struct rf_channel rf_vals_3x[] = {
-         {1,  241, 2, 2 },
-@@ -7420,72 +7420,6 @@ static const struct rf_channel 
-rf_vals_5592_xtal40[] = {
-         {196, 83, 0, 12, 1},
-  };
-
--static const struct rf_channel rf_vals_3053[] = {
--       /* Channel, N, R, K */
--       {1, 241, 2, 2},
--       {2, 241, 2, 7},
--       {3, 242, 2, 2},
--       {4, 242, 2, 7},
--       {5, 243, 2, 2},
--       {6, 243, 2, 7},
--       {7, 244, 2, 2},
--       {8, 244, 2, 7},
--       {9, 245, 2, 2},
--       {10, 245, 2, 7},
--       {11, 246, 2, 2},
--       {12, 246, 2, 7},
--       {13, 247, 2, 2},
--       {14, 248, 2, 4},
--
--       {36, 0x56, 0, 4},
--       {38, 0x56, 0, 6},
--       {40, 0x56, 0, 8},
--       {44, 0x57, 0, 0},
--       {46, 0x57, 0, 2},
--       {48, 0x57, 0, 4},
--       {52, 0x57, 0, 8},
--       {54, 0x57, 0, 10},
--       {56, 0x58, 0, 0},
--       {60, 0x58, 0, 4},
--       {62, 0x58, 0, 6},
--       {64, 0x58, 0, 8},
--
--       {100, 0x5B, 0, 8},
--       {102, 0x5B, 0, 10},
--       {104, 0x5C, 0, 0},
--       {108, 0x5C, 0, 4},
--       {110, 0x5C, 0, 6},
--       {112, 0x5C, 0, 8},
--
--       /* NOTE: Channel 114 has been removed intentionally.
--        * The EEPROM contains no TX power values for that,
--        * and it is disabled in the vendor driver as well.
--        */
--
--       {116, 0x5D, 0, 0},
--       {118, 0x5D, 0, 2},
--       {120, 0x5D, 0, 4},
--       {124, 0x5D, 0, 8},
--       {126, 0x5D, 0, 10},
--       {128, 0x5E, 0, 0},
--       {132, 0x5E, 0, 4},
--       {134, 0x5E, 0, 6},
--       {136, 0x5E, 0, 8},
--       {140, 0x5F, 0, 0},
--
--       {149, 0x5F, 0, 9},
--       {151, 0x5F, 0, 11},
--       {153, 0x60, 0, 1},
--       {157, 0x60, 0, 5},
--       {159, 0x60, 0, 7},
--       {161, 0x60, 0, 9},
--       {165, 0x61, 0, 1},
--       {167, 0x61, 0, 3},
--       {169, 0x61, 0, 5},
--       {171, 0x61, 0, 7},
--       {173, 0x61, 0, 9},
--};
--
-  static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
-  {
-         struct hw_mode_spec *spec = &rt2x00dev->spec;
-@@ -7575,14 +7509,11 @@ static int rt2800_probe_hw_mode(struct 
-rt2x00_dev *rt2x00dev)
-                    rt2x00_rf(rt2x00dev, RF5392)) {
-                 spec->num_channels = 14;
-                 spec->channels = rf_vals_3x;
--       } else if (rt2x00_rf(rt2x00dev, RF3052)) {
-+       } else if (rt2x00_rf(rt2x00dev, RF3052) ||
-+                  rt2x00_rf(rt2x00dev, RF3053)) {
-                 spec->supported_bands |= SUPPORT_BAND_5GHZ;
-                 spec->num_channels = ARRAY_SIZE(rf_vals_3x);
-                 spec->channels = rf_vals_3x;
--       } else if (rt2x00_rf(rt2x00dev, RF3053)) {
--               spec->supported_bands |= SUPPORT_BAND_5GHZ;
--               spec->num_channels = ARRAY_SIZE(rf_vals_3053);
--               spec->channels = rf_vals_3053;
-         } else if (rt2x00_rf(rt2x00dev, RF5592)) {
-                 spec->supported_bands |= SUPPORT_BAND_5GHZ;
-
+johannes
 
