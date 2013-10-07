@@ -1,27 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.7]:37791 "EHLO mx3.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756964Ab3JHKo6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Oct 2013 06:44:58 -0400
-Date: Tue, 8 Oct 2013 12:46:20 +0200
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-To: Kevin Lo <kevlo@kevlo.org>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH v2] rt2x00: rt2800lib: no need to toggle
- RF R30 bit 7 twice
-Message-ID: <20131008104620.GA15764@localhost.localdomain> (sfid-20131008_124522_224833_92B8FB3B)
-References: <525269F0.5000802@kevlo.org>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:54912 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753016Ab3JGG4O (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Oct 2013 02:56:14 -0400
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 06/11] bcma: convert bus code to use dev_groups
+Date: Sun,  6 Oct 2013 23:55:45 -0700
+Message-Id: <1381128950-28125-7-git-send-email-gregkh@linuxfoundation.org> (sfid-20131007_085733_032868_CDD82F57)
+In-Reply-To: <1381128950-28125-1-git-send-email-gregkh@linuxfoundation.org>
+References: <1381128950-28125-1-git-send-email-gregkh@linuxfoundation.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <525269F0.5000802@kevlo.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 07, 2013 at 03:59:44PM +0800, Kevin Lo wrote:
->         rt2800_rfcsr_read(rt2x00dev, 23, &rfcsr);
->         rt2x00_set_field8(&rfcsr, RFCSR23_FREQ_OFFSET,
-> rt2x00dev->freq_offset);
->         rt2800_rfcsr_write(rt2x00dev, 23, rfcsr);
+The dev_attrs field of struct bus_type is going away soon, dev_groups
+should be used instead.  This converts the bcma bus code to use the
+correct field.
 
-NACK, still malformed
+Cc: Rafał Miłecki <zajec5@gmail.com>
+Cc: <linux-wireless@vger.kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+
+Rafał, I can take this through my driver-core tree if you like, just let
+me know what would be the easiest for you.
+
+ drivers/bcma/main.c | 23 ++++++++++++++++-------
+ 1 file changed, 16 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+index 90ee350..e15430a 100644
+--- a/drivers/bcma/main.c
++++ b/drivers/bcma/main.c
+@@ -30,28 +30,37 @@ static ssize_t manuf_show(struct device *dev, struct device_attribute *attr, cha
+ 	struct bcma_device *core = container_of(dev, struct bcma_device, dev);
+ 	return sprintf(buf, "0x%03X\n", core->id.manuf);
+ }
++static DEVICE_ATTR_RO(manuf);
++
+ static ssize_t id_show(struct device *dev, struct device_attribute *attr, char *buf)
+ {
+ 	struct bcma_device *core = container_of(dev, struct bcma_device, dev);
+ 	return sprintf(buf, "0x%03X\n", core->id.id);
+ }
++static DEVICE_ATTR_RO(id);
++
+ static ssize_t rev_show(struct device *dev, struct device_attribute *attr, char *buf)
+ {
+ 	struct bcma_device *core = container_of(dev, struct bcma_device, dev);
+ 	return sprintf(buf, "0x%02X\n", core->id.rev);
+ }
++static DEVICE_ATTR_RO(rev);
++
+ static ssize_t class_show(struct device *dev, struct device_attribute *attr, char *buf)
+ {
+ 	struct bcma_device *core = container_of(dev, struct bcma_device, dev);
+ 	return sprintf(buf, "0x%X\n", core->id.class);
+ }
+-static struct device_attribute bcma_device_attrs[] = {
+-	__ATTR_RO(manuf),
+-	__ATTR_RO(id),
+-	__ATTR_RO(rev),
+-	__ATTR_RO(class),
+-	__ATTR_NULL,
++static DEVICE_ATTR_RO(class);
++
++static struct attribute *bcma_device_attrs[] = {
++	&dev_attr_manuf.attr,
++	&dev_attr_id.attr,
++	&dev_attr_rev.attr,
++	&dev_attr_class.attr,
++	NULL,
+ };
++ATTRIBUTE_GROUPS(bcma_device);
+ 
+ static struct bus_type bcma_bus_type = {
+ 	.name		= "bcma",
+@@ -59,7 +68,7 @@ static struct bus_type bcma_bus_type = {
+ 	.probe		= bcma_device_probe,
+ 	.remove		= bcma_device_remove,
+ 	.uevent		= bcma_device_uevent,
+-	.dev_attrs	= bcma_device_attrs,
++	.dev_groups	= bcma_device_groups,
+ };
+ 
+ static u16 bcma_cc_core_id(struct bcma_bus *bus)
+-- 
+1.8.4.6.g82e253f.dirty
+
