@@ -1,42 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:27640 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756007Ab3JGQb7 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:56199 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753106Ab3JGIaJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Oct 2013 12:31:59 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 0/2] ath10k: wep & ampdu fix
-References: <to=1380292567-2363-1-git-send-email-michal.kazior@tieto.com>
-	<1380874630-14280-1-git-send-email-michal.kazior@tieto.com>
-Date: Mon, 7 Oct 2013 19:31:54 +0300
-In-Reply-To: <1380874630-14280-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Fri, 4 Oct 2013 10:17:08 +0200")
-Message-ID: <87txgtt539.fsf@kamboji.qca.qualcomm.com> (sfid-20131007_183214_172600_182AD157)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 7 Oct 2013 04:30:09 -0400
+Message-ID: <1381134605.13586.4.camel@jlt4.sipsolutions.net> (sfid-20131007_103012_908666_D3CAD0E6)
+Subject: Re: [PATCH 2/2] mac80211: implement support for configuring antenna
+ gain
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
+Date: Mon, 07 Oct 2013 10:30:05 +0200
+In-Reply-To: <1381134567.13586.3.camel@jlt4.sipsolutions.net> (sfid-20131007_102934_686779_457D9E72)
+References: <1378472763-36062-1-git-send-email-nbd@openwrt.org>
+	 <1378472763-36062-2-git-send-email-nbd@openwrt.org>
+	 <1380625512.14430.19.camel@jlt4.sipsolutions.net>
+	 <524AAE97.5020708@openwrt.org>
+	 <1380628244.14430.37.camel@jlt4.sipsolutions.net>
+	 <524FF599.5040706@openwrt.org>
+	 <1381134567.13586.3.camel@jlt4.sipsolutions.net>
+	 (sfid-20131007_102934_686779_457D9E72)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
++ wireless-regdb
 
-> Hi,
->
-> One throughput fix and one bug fix.
->
-> The bug fix addresses my oversight when reworking
-> HTC/WMI. I haven't seen the error yet but I'm
-> quite certain this should be fixed.
->
-> v2:
->  * A-MPDU patch contains a workaround for
->    Netgear/Linksys 11ac APs
->    (Kalle, can you kindly test this, please?)
+On Mon, 2013-10-07 at 10:29 +0200, Johannes Berg wrote:
+> On Sat, 2013-10-05 at 13:18 +0200, Felix Fietkau wrote:
+> 
+> > > I understand. I don't understand the pieces about "max_antenna_gain".
+> 
+> > Right now ath9k has an antenna gain value in the EEPROM, and it compares
+> > it against the channel max_antenna_gain value.
+> 
+> I just don't understand what the max means. If I connect a 5dBi gain
+> antenna, but the "max antenna gain" is 3dBi, what should happen?
+> 
+> > Let's assume we have configured the tx power to the maximum value, the
+> > regdb allows 3 dB antenna gain, and the ath9k EEPROM contains an antenna
+> > gain of 3 dB as well.
+> > If we now add another 3 dB of user-configured antenna gain, it first
+> > starts tapping into the regulatory-allowed antenna gain before reducing
+> > tx power in mac80211. The driver needs to know about this, so I put the
+> > calculated maximum antenna gain into the hw conf as well.
+> 
+> I don't think it really works this way, does it? I don't believe the
+> "regulatory-allowed antenna gain" is really something that's allowed on
+> top of the EIRP?
+> 
+> johannes
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-I quickly tested patch 1 with D-Link DIR-865L. I didn't notice any
-regressions so that part looks good. Though I didn't notice any
-improvement either. But as long as there's no regression I'm happy :)
 
--- 
-Kalle Valo
