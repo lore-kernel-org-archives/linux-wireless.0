@@ -1,85 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mo-p00-ob.rzone.de ([81.169.146.161]:61760 "EHLO
-	mo-p00-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752157Ab3JLQCV (ORCPT
+Received: from mail-lb0-f171.google.com ([209.85.217.171]:50580 "EHLO
+	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754128Ab3JHOwT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Oct 2013 12:02:21 -0400
-From: "Dr. H. Nikolaus Schaller" <hns@goldelico.com>
-Content-Type: multipart/mixed; boundary=Apple-Mail-219--440396343
-Subject: [Patch 1/1]: libertas/sdio: fix releasing memory twice.
-Date: Sat, 12 Oct 2013 18:02:09 +0200
-Message-Id: <D5BD8103-A6A6-4070-878B-99FC5883725F@goldelico.com> (sfid-20131012_180243_915894_2386843E)
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Bing Zhao <bzhao@marvell.com>,
-	"H. Nikolaus Schaller" <hns@goldelico.com>,
-	Dan Williams <dcbw@redhat.com>, Harro Haan <hrhaan@gmail.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	Belisko Marek <marek@goldelico.com>,
-	NeilBrown Brown <neilb@suse.de>
-Mime-Version: 1.0 (Apple Message framework v1085)
+	Tue, 8 Oct 2013 10:52:19 -0400
+Received: by mail-lb0-f171.google.com with SMTP id u14so6888539lbd.2
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Oct 2013 07:52:18 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1381239951.13359.13.camel@jlt4.sipsolutions.net>
+References: <1381231915-24232-1-git-send-email-ard.biesheuvel@linaro.org>
+	<1381233152.13359.10.camel@jlt4.sipsolutions.net>
+	<AE90C24D6B3A694183C094C60CF0A2F6026B737B@saturn3.aculab.com>
+	<23D74823-0DE3-4A87-9E89-310F437A328D@linaro.org>
+	<1381239908.13359.12.camel@jlt4.sipsolutions.net>
+	<1381239951.13359.13.camel@jlt4.sipsolutions.net>
+Date: Tue, 8 Oct 2013 16:52:17 +0200
+Message-ID: <CAKv+Gu8D_7d=u1PGWuxoLEETHe8uJMby3K98uQWQn7tk=t_t_w@mail.gmail.com> (sfid-20131008_165332_539746_57ED6D73)
+Subject: Re: [PATCH] mac80211: port CCMP to cryptoapi's CCM driver
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: David Laight <David.Laight@aculab.com>,
+	"<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
+	"<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
+	"<patches@linaro.org>" <patches@linaro.org>,
+	"<linville@tuxdriver.com>" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 8 October 2013 15:45, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Tue, 2013-10-08 at 15:45 +0200, Johannes Berg wrote:
+>> On Tue, 2013-10-08 at 15:41 +0200, Ard Biesheuvel wrote:
+>>
+>> > Actually, as the size is always the same, it should be feasible to
+>> > alloc a couple of request structs at init time. would one for rx and
+>> > one for tx be sufficient? or is this code more reentrant than that?
+>>
+>> TX can run concurrently on multiple (four) queues using the same key.
+>
+> And maybe even more with injection ... I wouldn't go there.
+>
 
---Apple-Mail-219--440396343
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-	charset=us-ascii
+OK, clear.
 
-While upgrading the GTA04 kernel to 3.12-rc4 we came across
-an issue with libertas/sdio referencing stale memory on ifconfig up
-when trying to load the firmware (for a second time).
+If you think this patch has any merit at all, I am happy to modify it
+so that it kmalloc()s the request struct with GFP_ATOMIC at every
+invocation.
+However, personally I don't think this should be necessary and in fact
+my patch removes a stack allocation of u8[48] (from
+ieee80211_crypto_ccmp_decrypt() and from ccmp_encrypt_skb() in wpa.c)
+so it does even out a bit.
 
-I am not at all sure if the patch is how it should be done and the right
-location, but it appears to work for us with resetting priv->helper_fw =
-to NULL
-before asynchronously loading the firmware again.
-
-
-
-
---Apple-Mail-219--440396343
-Content-Disposition: attachment;
-	filename=0001-libertas-sdio-fix-releasing-memory-twice.patch
-Content-Type: application/octet-stream;
-	name="0001-libertas-sdio-fix-releasing-memory-twice.patch"
-Content-Transfer-Encoding: quoted-printable
-
-=46rom=20f6864491ea45d2bd877a37fbb4a618e42fe03fbe=20Mon=20Sep=2017=20=
-00:00:00=202001=0AFrom:=20"H.=20Nikolaus=20Schaller"=20=
-<hns@goldelico.com>=0ADate:=20Sat,=2012=20Oct=202013=2017:49:31=20+0200=0A=
-Subject:=20[PATCH]=20libertas/sdio:=20fix=20releasing=20memory=20twice.=20=
-We=20have=20connected=0A=20a=20Wi2Wi=20W2CBW003=20to=20an=20OMAP3=20=
-using=20SDIO.=20We=20have=20seen=20an=0A=20issue=20(not=20related=20with=20=
-this=20patch)=20that=20sometimes=20power=20is=0A=20not=20turned=20off.=20=
-This=20did=20lead=20to=20a=20kernel=20Oops=20if=20an=0A=20ifconfig=20up=20=
-/=20down=20/=20up=20when=20the=20chip=20was=20not=20powered=20down.=0A=20=
-This=20leads=20to=20a=20second=20call=20to=20lbs_get_firmware_async()=0A=20=
-with=20the=20same=20priv=20data=20-=20and=20that=20tries=20to=0A=20=
-release_firmware(priv->helper_fw);=20This=20appears=20to=20be=0A=20=
-wrong,=20since=20it=20was=20alredy=20released=20in=20the=0A=20=
-if_sdio_do_prog_firmware.=0A=0ASigned-off-by:=20H.=20Nikolaus=20Schaller=20=
-<hns@goldelico.com>=0A---=0A=20drivers/net/wireless/libertas/if_sdio.c=20=
-|=20=20=2013=20+++++++++++++=0A=201=20files=20changed,=2013=20=
-insertions(+),=200=20deletions(-)=0A=0Adiff=20--git=20=
-a/drivers/net/wireless/libertas/if_sdio.c=20=
-b/drivers/net/wireless/libertas/if_sdio.c=0Aindex=204557833..a04eb41=20=
-100644=0A---=20a/drivers/net/wireless/libertas/if_sdio.c=0A+++=20=
-b/drivers/net/wireless/libertas/if_sdio.c=0A@@=20-769,6=20+769,19=20@@=20=
-static=20int=20if_sdio_prog_firmware(struct=20if_sdio_card=20*card)=0A=20=
-=09=09return=200;=0A=20=09}=0A=20=0A+=09/*=20This=20is=20missing=20in=20=
-lbs_get_firmware_async()=0A+=09=20*=20and=20therefore=20a=20second=20=
-call=20using=20the=20same=20priv=20structure=0A+=09=20*=20may=20find=20a=20=
-stale=20helper_fw=20entry=20that=20has=20already=20been=0A+=09=20*=20=
-released=20by=20release_firmware(helper)=20in=0A+=09=20*=20=
-if_sdio_do_prog_firmware().=0A+=09=20*=20Or=20doing=20that=20release=20=
-in=20if_sdio_do_prog_firmware()=0A+=09=20*=20is=20a=20duplicate=20and=20=
-should=20not=20be=20there.=0A+=09=20*=20Anyways,=20this=20can=20happen=20=
-if=20a=20ifconfig=20up=20/=20down=20/=20up=0A+=09=20*=20sequence=20is=20=
-issued.=0A+=09=20*/=0A+=0A+=09card->priv->helper_fw=20=3D=20NULL;=0A+=0A=20=
-=09ret=20=3D=20lbs_get_firmware_async(card->priv,=20&card->func->dev,=20=
-card->model,=0A=20=09=09=09=09=20=20=20=20=20fw_table,=20=
-if_sdio_do_prog_firmware);=0A=20=0A--=20=0A1.7.7.4=0A=0A=
-
---Apple-Mail-219--440396343--
+regards,
+Ard.
