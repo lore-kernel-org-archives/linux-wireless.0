@@ -1,49 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:34823 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758739Ab3JONRQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Oct 2013 09:17:16 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Subject: [PATCH 3.12 1/3] mac80211: fix honouring rate flags in low-rate transmit
-Date: Tue, 15 Oct 2013 15:17:08 +0200
-Message-Id: <1381843030-12260-1-git-send-email-johannes@sipsolutions.net> (sfid-20131015_151719_896322_452B2366)
+Received: from mx4.wp.pl ([212.77.101.8]:18638 "EHLO mx4.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756597Ab3JHKqE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Oct 2013 06:46:04 -0400
+Date: Tue, 8 Oct 2013 12:47:28 +0200
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+To: Kevin Lo <kevlo@kevlo.org>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [rt2x00-users] [PATCH v2] rt2x00: rt2800lib: no need to toggle
+ RF R30 bit 7 twice
+Message-ID: <20131008104728.GB15764@localhost.localdomain> (sfid-20131008_124608_222139_A6F0F304)
+References: <20131007080201.GA18265@ns.kevlo.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131007080201.GA18265@ns.kevlo.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+On Mon, Oct 07, 2013 at 04:02:01PM +0800, Kevin Lo wrote:
+> In rt2800_config_channel_rf3xxx(), there's no need to toggle
+> RF R30 bit 7 twice. 
+> 
+> Signed-off-by: Kevin Lo <kevlo@kevlo.org>
 
-Transmissions with the IEEE80211_TX_CTL_NO_CCK_RATE flag set
-(which can come from userspace) were no longer guaranteed to
-be transmitted with allowed rates since commit 2103dec14792b
-("mac80211: select and adjust bitrates according to channel
-mode") due to a missing rate_flags check in that commit. The
-commit also introduced the need to check the 5/10 MHz flags
-but accidentally didn't. Fix it by adding the missing check.
+This one is fine.
 
-Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/rate.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
-index e126605..7f7ce11 100644
---- a/net/mac80211/rate.c
-+++ b/net/mac80211/rate.c
-@@ -247,6 +247,9 @@ static void __rate_control_send_low(struct ieee80211_hw *hw,
- 
- 	info->control.rates[0].idx = 0;
- 	for (i = 0; i < sband->n_bitrates; i++) {
-+		if ((rate_flags & sband->bitrates[i].flags) != rate_flags)
-+			continue;
-+
- 		if (!rate_supported(sta, sband->band, i))
- 			continue;
- 
--- 
-1.8.4.rc3
+Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
 
