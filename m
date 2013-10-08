@@ -1,53 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f169.google.com ([74.125.82.169]:47019 "EHLO
-	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755041Ab3J1BxM (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:33088 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751958Ab3JHLwj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Oct 2013 21:53:12 -0400
-Received: by mail-we0-f169.google.com with SMTP id q58so6009080wes.14
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Oct 2013 18:53:11 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linux-wireless@vger.kernel.org
-Cc: wireless-regdb@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 2/6] crda: fix -pedantic gcc compilation
-Date: Mon, 28 Oct 2013 02:52:58 +0100
-Message-Id: <1382925182-7393-3-git-send-email-mcgrof@do-not-panic.com> (sfid-20131028_025317_049926_D9E296AF)
-In-Reply-To: <1382925182-7393-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1382925182-7393-1-git-send-email-mcgrof@do-not-panic.com>
+	Tue, 8 Oct 2013 07:52:39 -0400
+Message-ID: <1381233152.13359.10.camel@jlt4.sipsolutions.net> (sfid-20131008_135244_518811_DBA23334)
+Subject: Re: [PATCH] mac80211: port CCMP to cryptoapi's CCM driver
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	patches@linaro.org, linville@tuxdriver.com
+Date: Tue, 08 Oct 2013 13:52:32 +0200
+In-Reply-To: <1381231915-24232-1-git-send-email-ard.biesheuvel@linaro.org> (sfid-20131008_133333_304168_2D31449F)
+References: <1381231915-24232-1-git-send-email-ard.biesheuvel@linaro.org>
+	 (sfid-20131008_133333_304168_2D31449F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-gcc likes to complain about this, fix that as we're
-going to get a bit more anal with code here soon as
-we're moving towards making a library out of reglib.
+On Tue, 2013-10-08 at 13:31 +0200, Ard Biesheuvel wrote:
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- crda.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Hmm, thanks I guess. I'll need to review this in more detail, but I have
+a question first:
 
-diff --git a/crda.c b/crda.c
-index 2a601eb..4751a39 100644
---- a/crda.c
-+++ b/crda.c
-@@ -141,13 +141,15 @@ int main(int argc, char **argv)
- {
- 	int fd = -1;
- 	int i = 0, j, r;
--	char alpha2[3] = {}; /* NUL-terminate */
-+	char alpha2[3];
- 	char *env_country;
- 	struct nl80211_state nlstate;
- 	struct nl_cb *cb = NULL;
- 	struct nl_msg *msg;
- 	int finished = 0;
- 
-+	memset(alpha2, 0, 3);
-+
- 	struct nlattr *nl_reg_rules;
- 	const struct ieee80211_regdomain *rd = NULL;
- 
--- 
-1.8.4.rc3
+> +	/* allocate the variable sized aead_request on the stack */
+> +	int l = DIV_ROUND_UP(crypto_aead_reqsize(tfm),
+> +			     sizeof(struct aead_request));
+> +	struct aead_request req[1 + l];
+
+This looks a bit odd, why round up first and then add one? Why even
+bother using a struct array rather than some local struct like
+
+struct {
+  struct aead_request req;
+  u8 data[crypto_aed_reqsize(tfm)];
+} req_data;
+
+or so?
+
+johannes
 
