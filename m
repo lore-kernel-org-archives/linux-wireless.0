@@ -1,104 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:12884 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755374Ab3JVWZR (ORCPT
+Received: from mail-la0-f49.google.com ([209.85.215.49]:34727 "EHLO
+	mail-la0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753794Ab3JHNQt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Oct 2013 18:25:17 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Dan Carpenter <dan.carpenter@oracle.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 6/6] mwifiex: improvements in mwifiex_ret_tx_power_cfg()
-Date: Tue, 22 Oct 2013 15:24:47 -0700
-Message-ID: <1382480687-12720-7-git-send-email-bzhao@marvell.com> (sfid-20131023_002522_447527_AAF6ED6C)
-In-Reply-To: <1382480687-12720-1-git-send-email-bzhao@marvell.com>
-References: <1382480687-12720-1-git-send-email-bzhao@marvell.com>
+	Tue, 8 Oct 2013 09:16:49 -0400
+Received: by mail-la0-f49.google.com with SMTP id ev20so6687581lab.8
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Oct 2013 06:16:48 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <AE90C24D6B3A694183C094C60CF0A2F6026B737B@saturn3.aculab.com>
+References: <1381231915-24232-1-git-send-email-ard.biesheuvel@linaro.org>
+	<1381233152.13359.10.camel@jlt4.sipsolutions.net>
+	<AE90C24D6B3A694183C094C60CF0A2F6026B737B@saturn3.aculab.com>
+Date: Tue, 8 Oct 2013 15:16:48 +0200
+Message-ID: <CAKv+Gu-VZTnPGB8YN__vWySceDHEtcBZmgjbEWRzy2HL_eGM2g@mail.gmail.com> (sfid-20131008_151658_336410_63DC2EF4)
+Subject: Re: [PATCH] mac80211: port CCMP to cryptoapi's CCM driver
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+To: David Laight <David.Laight@aculab.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Patch Tracking <patches@linaro.org>,
+	John Linville <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+On 8 October 2013 15:01, David Laight <David.Laight@aculab.com> wrote:
+>> Hmm, thanks I guess. I'll need to review this in more detail, but I have
+>> a question first:
+>>
+>> > +   /* allocate the variable sized aead_request on the stack */
+>> > +   int l = DIV_ROUND_UP(crypto_aead_reqsize(tfm),
+>> > +                        sizeof(struct aead_request));
+>> > +   struct aead_request req[1 + l];
+>>
+>> This looks a bit odd, why round up first and then add one? Why even
+>> bother using a struct array rather than some local struct like
+>
+> Is it even a good idea to be allocating variable sized items
+> on the kernel stack?
+>
+> There has to be enough stack available for the maximum number
+> of entries - so there is little point in dynamically sizing it.
+>
 
-1) Move common code out of switch case handling
-2) Return from the function if number of bytes left in response buffer
-are less than tlv size
-3) Pass pg_tlv_hdr directly instead of txp_cfg to mwifiex_get_power_level()
+The result of crypto_aead_reqsize() has nothing to do with the input
+or output data, it is a property of the particular implementation of
+ccm(aes) that is being used. In the generic case (ccm.c),
+it always returns the size of this struct
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/sta_cmdresp.c | 35 ++++++++++++++----------------
- 1 file changed, 16 insertions(+), 19 deletions(-)
+struct crypto_ccm_req_priv_ctx {
+        u8 odata[16];
+        u8 idata[16];
+        u8 auth_tag[16];
+        u32 ilen;
+        u32 flags;
+        struct scatterlist src[2];
+        struct scatterlist dst[2];
+        struct ablkcipher_request abreq;
+};
 
-diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-index 2675ca7..5511946 100644
---- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
-+++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-@@ -338,8 +338,7 @@ static int mwifiex_get_power_level(struct mwifiex_private *priv, void *data_buf)
- 	if (!data_buf)
- 		return -1;
- 
--	pg_tlv_hdr = (struct mwifiex_types_power_group *)
--		((u8 *) data_buf + sizeof(struct host_cmd_ds_txpwr_cfg));
-+	pg_tlv_hdr = (struct mwifiex_types_power_group *)((u8 *)data_buf);
- 	pg = (struct mwifiex_power_group *)
- 		((u8 *) pg_tlv_hdr + sizeof(struct mwifiex_types_power_group));
- 	length = le16_to_cpu(pg_tlv_hdr->length);
-@@ -383,19 +382,25 @@ static int mwifiex_ret_tx_power_cfg(struct mwifiex_private *priv,
- 	struct mwifiex_types_power_group *pg_tlv_hdr;
- 	struct mwifiex_power_group *pg;
- 	u16 action = le16_to_cpu(txp_cfg->action);
-+	u16 tlv_buf_left;
- 
--	switch (action) {
--	case HostCmd_ACT_GEN_GET:
--		pg_tlv_hdr = (struct mwifiex_types_power_group *)
--			((u8 *) txp_cfg +
--			 sizeof(struct host_cmd_ds_txpwr_cfg));
-+	pg_tlv_hdr = (struct mwifiex_types_power_group *)
-+		((u8 *)txp_cfg +
-+		 sizeof(struct host_cmd_ds_txpwr_cfg));
- 
--		pg = (struct mwifiex_power_group *)
--			((u8 *) pg_tlv_hdr +
--			 sizeof(struct mwifiex_types_power_group));
-+	pg = (struct mwifiex_power_group *)
-+		((u8 *)pg_tlv_hdr +
-+		 sizeof(struct mwifiex_types_power_group));
- 
-+	tlv_buf_left = le16_to_cpu(resp->size) - S_DS_GEN - sizeof(*txp_cfg);
-+	if (tlv_buf_left <
-+			le16_to_cpu(pg_tlv_hdr->length) + sizeof(*pg_tlv_hdr))
-+		return 0;
-+
-+	switch (action) {
-+	case HostCmd_ACT_GEN_GET:
- 		if (adapter->hw_status == MWIFIEX_HW_STATUS_INITIALIZING)
--			mwifiex_get_power_level(priv, txp_cfg);
-+			mwifiex_get_power_level(priv, pg_tlv_hdr);
- 
- 		priv->tx_power_level = (u16) pg->power_min;
- 		break;
-@@ -404,14 +409,6 @@ static int mwifiex_ret_tx_power_cfg(struct mwifiex_private *priv,
- 		if (!le32_to_cpu(txp_cfg->mode))
- 			break;
- 
--		pg_tlv_hdr = (struct mwifiex_types_power_group *)
--			((u8 *) txp_cfg +
--			 sizeof(struct host_cmd_ds_txpwr_cfg));
--
--		pg = (struct mwifiex_power_group *)
--			((u8 *) pg_tlv_hdr +
--			 sizeof(struct mwifiex_types_power_group));
--
- 		if (pg->power_max == pg->power_min)
- 			priv->tx_power_level = (u16) pg->power_min;
- 		break;
+while the particular implementation that I am working on for ARM64
+always has size 0. Note that this is data that would otherwise be
+allocated on the stack, but in the case of aead, which supports an
+asynchronous interface (which this code does not use btw), the data is
+attached to the end of the aead_request struct instead.
+
+The alternative is to allocate it dynamically using GFP_ATOMIC and
+free it at the end of the function, but in this particular case I
+don't think that makes much sense tbh
+
 -- 
-1.8.2.3
-
+Ard.
