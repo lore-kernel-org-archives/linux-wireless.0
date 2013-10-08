@@ -1,117 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:38688 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751341Ab3JURWr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Oct 2013 13:22:47 -0400
-Received: by mail-wi0-f170.google.com with SMTP id l12so5536625wiv.1
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Oct 2013 10:22:46 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, janusz.dziedzic@tieto.com,
-	smihir@qti.qualcomm.com, tushnimb@qca.qualcomm.com,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 02/14] ath: consolidate no-ibss and passive scan to no-ir
-Date: Mon, 21 Oct 2013 19:22:26 +0200
-Message-Id: <1382376158-25586-3-git-send-email-mcgrof@do-not-panic.com> (sfid-20131021_192251_614526_4F6197D2)
-In-Reply-To: <1382376158-25586-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1382376158-25586-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from mx1.redhat.com ([209.132.183.28]:53461 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752143Ab3JHJig (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Oct 2013 05:38:36 -0400
+Date: Tue, 8 Oct 2013 11:35:13 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Kirill Tkhai <tkhai@yandex.ru>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"ivdoorn@gmail.com" <ivdoorn@gmail.com>,
+	"gwingerde@gmail.com" <gwingerde@gmail.com>,
+	"helmut.schaa@googlemail.com" <helmut.schaa@googlemail.com>
+Subject: Re: [regression] [bisected] rt2800pci doesn't work after
+ 9483f40d8d01918b399b4e24d0c1111db0afffeb
+Message-ID: <20131008093512.GA1902@redhat.com> (sfid-20131008_113839_579867_6B78B39A)
+References: <39871380943748@web17j.yandex.ru>
+ <20131007082457.GB2418@redhat.com>
+ <85301381147490@web10g.yandex.ru>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <85301381147490@web10g.yandex.ru>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cc: smihir@qti.qualcomm.com
-Cc: tushnimb@qca.qualcomm.com
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- drivers/net/wireless/ath/regd.c | 34 +++++++++++-----------------------
- 1 file changed, 11 insertions(+), 23 deletions(-)
+On Mon, Oct 07, 2013 at 04:04:50PM +0400, Kirill Tkhai wrote:
+> If sometimes you need testing the driver on device with IDs like I wrote I'm ready
+> to help with this.
 
-diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
-index 14d3614..a258283 100644
---- a/drivers/net/wireless/ath/regd.c
-+++ b/drivers/net/wireless/ath/regd.c
-@@ -37,17 +37,17 @@ static int __ath_regd_init(struct ath_regulatory *reg);
- 
- /* We enable active scan on these a case by case basis by regulatory domain */
- #define ATH9K_2GHZ_CH12_13	REG_RULE(2467-10, 2472+10, 40, 0, 20,\
--					NL80211_RRF_PASSIVE_SCAN)
-+				NL80211_RRF_NO_IR)
- #define ATH9K_2GHZ_CH14		REG_RULE(2484-10, 2484+10, 40, 0, 20,\
--				NL80211_RRF_PASSIVE_SCAN | NL80211_RRF_NO_OFDM)
-+				NL80211_RRF_NO_IR | NL80211_RRF_NO_OFDM)
- 
- /* We allow IBSS on these on a case by case basis by regulatory domain */
- #define ATH9K_5GHZ_5150_5350	REG_RULE(5150-10, 5350+10, 80, 0, 30,\
--				NL80211_RRF_PASSIVE_SCAN | NL80211_RRF_NO_IBSS)
-+				NL80211_RRF_NO_IR)
- #define ATH9K_5GHZ_5470_5850	REG_RULE(5470-10, 5850+10, 80, 0, 30,\
--				NL80211_RRF_PASSIVE_SCAN | NL80211_RRF_NO_IBSS)
-+				NL80211_RRF_NO_IR)
- #define ATH9K_5GHZ_5725_5850	REG_RULE(5725-10, 5850+10, 80, 0, 30,\
--				NL80211_RRF_PASSIVE_SCAN | NL80211_RRF_NO_IBSS)
-+				NL80211_RRF_NO_IR)
- 
- #define ATH9K_2GHZ_ALL		ATH9K_2GHZ_CH01_11, \
- 				ATH9K_2GHZ_CH12_13, \
-@@ -186,13 +186,9 @@ static void ath_force_clear_no_ir_chan(struct wiphy *wiphy,
- 	if (IS_ERR(reg_rule))
- 		return;
- 
--	if (!(reg_rule->flags & NL80211_RRF_PASSIVE_SCAN))
--		if (ch->flags & IEEE80211_CHAN_PASSIVE_SCAN)
--			ch->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
--
--	if (!(reg_rule->flags & IEEE80211_CHAN_NO_IBSS))
--		if (ch->flags & IEEE80211_CHAN_NO_IBSS)
--			ch->flags &= ~IEEE80211_CHAN_NO_IBSS;
-+	if (!(reg_rule->flags & NL80211_RRF_NO_IR))
-+		if (ch->flags & IEEE80211_CHAN_NO_IR)
-+			ch->flags &= ~IEEE80211_CHAN_NO_IR;
- }
- 
- static void ath_force_clear_no_ir_freq(struct wiphy *wiphy, u16 center_freq)
-@@ -206,12 +202,6 @@ static void ath_force_clear_no_ir_freq(struct wiphy *wiphy, u16 center_freq)
- 	ath_force_clear_no_ir_chan(wiphy, ch);
- }
- 
--static void ath_force_no_ir_chan(struct ieee80211_channel *ch)
--{
--	ch->flags |= IEEE80211_CHAN_PASSIVE_SCAN;
--	ch->flags |= IEEE80211_CHAN_NO_IBSS;
--}
--
- static void ath_force_no_ir_freq(struct wiphy *wiphy, u16 center_freq)
- {
- 	struct ieee80211_channel *ch;
-@@ -220,7 +210,7 @@ static void ath_force_no_ir_freq(struct wiphy *wiphy, u16 center_freq)
- 	if (!ch)
- 		return;
- 
--	ath_force_no_ir_chan(ch);
-+	ch->flags |= IEEE80211_CHAN_NO_IR;
- }
- 
- static void
-@@ -238,8 +228,7 @@ __ath_reg_apply_beaconing_flags(struct wiphy *wiphy,
- 		break;
- 	default:
- 		if (ch->beacon_found)
--			ch->flags &= ~(IEEE80211_CHAN_NO_IBSS |
--				       IEEE80211_CHAN_PASSIVE_SCAN);
-+			ch->flags &= ~IEEE80211_CHAN_NO_IR;
- 	}
- }
- 
-@@ -334,8 +323,7 @@ static void ath_reg_apply_radar_flags(struct wiphy *wiphy)
- 		 */
- 		if (!(ch->flags & IEEE80211_CHAN_DISABLED))
- 			ch->flags |= IEEE80211_CHAN_RADAR |
--				     IEEE80211_CHAN_NO_IBSS |
--				     IEEE80211_CHAN_PASSIVE_SCAN;
-+				     IEEE80211_CHAN_NO_IR;
- 	}
- }
- 
--- 
-1.8.4.rc3
+If you would like to do early testing of rt2x00 patches you can subscribe to: 
+http://rt2x00.serialmonkey.com/mailman/listinfo/users_rt2x00.serialmonkey.com
+Traffic on that mailing list isn't high and early detected regressions
+are always welcome. 
 
+Stanislaw
