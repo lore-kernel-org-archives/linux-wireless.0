@@ -1,42 +1,168 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f52.google.com ([209.85.219.52]:58193 "EHLO
-	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751125Ab3J2WGv (ORCPT
+Received: from mail-pb0-f51.google.com ([209.85.160.51]:47936 "EHLO
+	mail-pb0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754060Ab3JHCyW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Oct 2013 18:06:51 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
+	Mon, 7 Oct 2013 22:54:22 -0400
+Received: by mail-pb0-f51.google.com with SMTP id jt11so8129596pbb.10
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Oct 2013 19:54:22 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
 Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH NEXT] rtl8187: Increase RX queue depth
-Date: Tue, 29 Oct 2013 17:06:41 -0500
-Message-Id: <1383084401-4593-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20131029_230659_983270_F0DF0677)
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v3 2/2] ath10k: fix scheduling while atomic bug
+Date: Mon,  7 Oct 2013 19:51:58 -0700
+Message-Id: <1381200718-16271-3-git-send-email-michal.kazior@tieto.com> (sfid-20131008_045426_106556_1400161B)
+In-Reply-To: <1381200718-16271-1-git-send-email-michal.kazior@tieto.com>
+References: <1380874630-14280-1-git-send-email-michal.kazior@tieto.com>
+ <1381200718-16271-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Under heavy load, the relatively small number of RX queue entries are
-completely filled. With an increase from 16 to 32 entries, this condition
-rarely happens.
+Recent WMI/HTC changes made it possible for WMI
+commands to sleep (if there's not enough HTC TX
+credits to submit a command). TX path is in an
+atomic context so calling WMI commands in it is
+wrong.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+This simply moves WEP key index update to a worker
+and fixes the 'scheduling while atomic' bug.
+
+This still leaves multiple WEP key handling laggy,
+i.e. some frames may be TXed with an old/different
+key (although recipient should still be able to RX
+them).
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/rtl818x/rtl8187/dev.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/core.h |  4 ++-
+ drivers/net/wireless/ath/ath10k/mac.c  | 53 +++++++++++++++++++++++-----------
+ 2 files changed, 39 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/rtl818x/rtl8187/dev.c b/drivers/net/wireless/rtl818x/rtl8187/dev.c
-index 9a6edb0..ec9aa5b 100644
---- a/drivers/net/wireless/rtl818x/rtl8187/dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8187/dev.c
-@@ -416,7 +416,7 @@ static int rtl8187_init_urbs(struct ieee80211_hw *dev)
- 	struct rtl8187_rx_info *info;
- 	int ret = 0;
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index ce36daa..cef5455 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -215,8 +215,10 @@ struct ath10k_vif {
+ 	struct ath10k *ar;
+ 	struct ieee80211_vif *vif;
  
--	while (skb_queue_len(&priv->rx_queue) < 16) {
-+	while (skb_queue_len(&priv->rx_queue) < 32) {
- 		skb = __dev_alloc_skb(RTL8187_MAX_RX, GFP_KERNEL);
- 		if (!skb) {
- 			ret = -ENOMEM;
++	struct work_struct wep_key_work;
+ 	struct ieee80211_key_conf *wep_keys[WMI_MAX_KEY_INDEX + 1];
+-	u8 def_wep_key_index;
++	u8 def_wep_key_idx;
++	u8 def_wep_key_newidx;
+ 
+ 	u16 tx_seq_no;
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 049eca2..498514e 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1239,7 +1239,7 @@ static void ath10k_bss_disassoc(struct ieee80211_hw *hw,
+ 	/* FIXME: why don't we print error if wmi call fails? */
+ 	ret = ath10k_wmi_vdev_down(ar, arvif->vdev_id);
+ 
+-	arvif->def_wep_key_index = 0;
++	arvif->def_wep_key_idx = 0;
+ }
+ 
+ static int ath10k_station_assoc(struct ath10k *ar, struct ath10k_vif *arvif,
+@@ -1467,6 +1467,30 @@ static void ath10k_tx_h_qos_workaround(struct ieee80211_hw *hw,
+ 	skb_pull(skb, IEEE80211_QOS_CTL_LEN);
+ }
+ 
++static void ath10k_tx_wep_key_work(struct work_struct *work)
++{
++	struct ath10k_vif *arvif = container_of(work, struct ath10k_vif,
++						wep_key_work);
++	int ret, keyidx = arvif->def_wep_key_newidx;
++
++	if (arvif->def_wep_key_idx == keyidx)
++		return;
++
++	ath10k_dbg(ATH10K_DBG_MAC, "mac vdev %d set keyidx %d\n",
++		   arvif->vdev_id, keyidx);
++
++	ret = ath10k_wmi_vdev_set_param(arvif->ar,
++					arvif->vdev_id,
++					arvif->ar->wmi.vdev_param->def_keyid,
++					keyidx);
++	if (ret) {
++		ath10k_warn("could not update wep keyidx (%d)\n", ret);
++		return;
++	}
++
++	arvif->def_wep_key_idx = keyidx;
++}
++
+ static void ath10k_tx_h_update_wep_key(struct sk_buff *skb)
+ {
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+@@ -1475,8 +1499,6 @@ static void ath10k_tx_h_update_wep_key(struct sk_buff *skb)
+ 	struct ath10k *ar = arvif->ar;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 	struct ieee80211_key_conf *key = info->control.hw_key;
+-	u32 vdev_param;
+-	int ret;
+ 
+ 	if (!ieee80211_has_protected(hdr->frame_control))
+ 		return;
+@@ -1488,21 +1510,14 @@ static void ath10k_tx_h_update_wep_key(struct sk_buff *skb)
+ 	    key->cipher != WLAN_CIPHER_SUITE_WEP104)
+ 		return;
+ 
+-	if (key->keyidx == arvif->def_wep_key_index)
+-		return;
+-
+-	ath10k_dbg(ATH10K_DBG_MAC, "mac vdev %d keyidx %d\n",
+-		   arvif->vdev_id, key->keyidx);
+-
+-	vdev_param = ar->wmi.vdev_param->def_keyid;
+-	ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
+-					key->keyidx);
+-	if (ret) {
+-		ath10k_warn("could not update wep keyidx (%d)\n", ret);
++	if (key->keyidx == arvif->def_wep_key_idx)
+ 		return;
+-	}
+ 
+-	arvif->def_wep_key_index = key->keyidx;
++	/* FIXME: Most likely a few frames will be TXed with an old key. Simply
++	 * queueing frames until key index is updated is not an option because
++	 * sk_buff may need more processing to be done, e.g. offchannel */
++	arvif->def_wep_key_newidx = key->keyidx;
++	ieee80211_queue_work(ar->hw, &arvif->wep_key_work);
+ }
+ 
+ static void ath10k_tx_h_add_p2p_noa_ie(struct ath10k *ar, struct sk_buff *skb)
+@@ -2023,6 +2038,8 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
+ 	arvif->ar = ar;
+ 	arvif->vif = vif;
+ 
++	INIT_WORK(&arvif->wep_key_work, ath10k_tx_wep_key_work);
++
+ 	if ((vif->type == NL80211_IFTYPE_MONITOR) && ar->monitor_present) {
+ 		ath10k_warn("Only one monitor interface allowed\n");
+ 		ret = -EBUSY;
+@@ -2078,7 +2095,7 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
+ 
+ 	vdev_param = ar->wmi.vdev_param->def_keyid;
+ 	ret = ath10k_wmi_vdev_set_param(ar, 0, vdev_param,
+-					arvif->def_wep_key_index);
++					arvif->def_wep_key_idx);
+ 	if (ret)
+ 		ath10k_warn("Failed to set default keyid: %d\n", ret);
+ 
+@@ -2146,6 +2163,8 @@ static void ath10k_remove_interface(struct ieee80211_hw *hw,
+ 
+ 	mutex_lock(&ar->conf_mutex);
+ 
++	cancel_work_sync(&arvif->wep_key_work);
++
+ 	spin_lock_bh(&ar->data_lock);
+ 	if (arvif->beacon) {
+ 		dev_kfree_skb_any(arvif->beacon);
 -- 
-1.8.4
+1.8.4.rc3
 
