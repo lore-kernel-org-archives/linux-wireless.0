@@ -1,64 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:53238 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750893Ab3JDGh1 (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:36057 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753170Ab3JHCUK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Oct 2013 02:37:27 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2] ath10k: fix scheduling while atomic bug
-References: <1380292567-2363-1-git-send-email-michal.kazior@tieto.com>
-	<1380292567-2363-3-git-send-email-michal.kazior@tieto.com>
-	<8761th6ja6.fsf@kamboji.qca.qualcomm.com>
-	<CA+BoTQnjG9MnbPsLM-RtAwuGNp_ZAfbvwvR_zg1Ks0ZmUxAtrQ@mail.gmail.com>
-Date: Fri, 4 Oct 2013 09:37:18 +0300
-In-Reply-To: <CA+BoTQnjG9MnbPsLM-RtAwuGNp_ZAfbvwvR_zg1Ks0ZmUxAtrQ@mail.gmail.com>
-	(Michal Kazior's message of "Wed, 2 Oct 2013 07:35:37 +0200")
-Message-ID: <871u41y21t.fsf@kamboji.qca.qualcomm.com> (sfid-20131004_083736_851996_B6C1FDB9)
+	Mon, 7 Oct 2013 22:20:10 -0400
+Date: Mon, 7 Oct 2013 19:13:04 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linville@tuxdriver.com, Alex Dubov <oakad@yahoo.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Kay Sievers <kay.sievers@vrfy.org>
+Subject: Re: [PATCH V2] memstick: Fix memory leak in memstick_check() error
+ path
+Message-ID: <20131008021304.GB32733@kroah.com> (sfid-20131008_042027_503797_F89EACA7)
+References: <1380834798-5829-1-git-send-email-Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1380834798-5829-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+On Sun, Oct 06, 2013 at 10:21:51PM -0500, Larry Finger wrote:
+> With kernel 3.12-rc3, kmemleak reports the following leak:
+> 
+> > unreferenced object 0xffff8800ae85c190 (size 16):
+> >   comm "kworker/u4:3", pid 685, jiffies 4294916336 (age 2831.760s)
+> >   hex dump (first 16 bytes):
+> >     6d 65 6d 73 74 69 63 6b 30 00 00 00 00 00 00 00  memstick0.......
+> >   backtrace:
+> >     [<ffffffff8146a0d1>] kmemleak_alloc+0x21/0x50
+> >     [<ffffffff81160720>] __kmalloc_track_caller+0x160/0x2f0
+> >     [<ffffffff81237b9b>] kvasprintf+0x5b/0x90
+> >     [<ffffffff8122c0c1>] kobject_set_name_vargs+0x21/0x60
+> >     [<ffffffff812e7f5c>] dev_set_name+0x3c/0x40
+> >     [<ffffffffa02bf918>] memstick_check+0xb8/0x340 [memstick]
+> >     [<ffffffff81069862>] process_one_work+0x1d2/0x670
+> >     [<ffffffff8106a88a>] worker_thread+0x11a/0x370
+> >     [<ffffffff81072ea6>] kthread+0xd6/0xe0
+> >     [<ffffffff81478bbc>] ret_from_fork+0x7c/0xb0
+> 
+> This problem was introduced by commit 0252c3b "memstick: struct device -
+> replace bus_id with dev_name(), dev_set_name()" where the name is not freed
+> in the error path. The name is also leaked in memstick_free_card(). 
+> 
+> Thanks to Catalin Marinas for suggesting the fix.
+> 
+> Cc: Kay Sievers <kay.sievers@vrfy.org>
+> Cc: Alex Dubov <oakad@yahoo.com>
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+> 
+> V2 fixes the typos in the commit message, and frees the name in
+> memstick_free_card() as well as the error path in memstick_check().
 
-> On 1 October 2013 18:35, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->> Michal Kazior <michal.kazior@tieto.com> writes:
->>
->>> Recent WMI/HTC changes broke WEP with multiple
->>> keys. If WMI had no HTC TX credits to submit
->>> command for default wep index update it would
->>> trigger a bug.
->>>
->>> This simply moves the wep key index update to a
->>> worker.
->>>
->>> The key update may happen some time after first
->>> frame with a different wep key has been sent (i.e.
->>> some frames will be sent with old key). This was
->>> the case before too as WMI commands were
->>> asynchronous.
->>>
->>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->>
->> This looks problematic. Basically you just delay sending the WMI
->> command, but there's no guarantee that we actually have free credits at
->> the time of transmission. So to me it looks like this fixes the issue
->> just by luck.
->
-> One thing at a time.
->
-> This patch fixes 'scheduling while atomic' bug that was introduced
-> with recent HTC/WMI changes.
+Looking back at this, to try to figure out why the kmemleak report shows
+up, shows that this is a mess.  Why would we be erroring out _before_ we
+try to register the struct device with the driver core, yet we had
+already initialized the struct device structure?  Only set up the
+structure right before sending it to driver core, don't delay in
+allocation, only problems can happen (like here.)
 
-Ah, that's what you mean with "triggers a bug" in the commit log? Ok,
-even though I consider this very ugly I guess it's alright as a short
-term fix. But please describe the bug in more detail in the commit log,
-at least mention that we are sleeping in an atomic context (or something
-like that).
+To fix this up, will take some major work, which I can't do, sorry, but
+this patch will not work either.
 
-
--- 
-Kalle Valo
+greg k-h
