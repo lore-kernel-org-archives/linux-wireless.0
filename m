@@ -1,51 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f175.google.com ([209.85.215.175]:60250 "EHLO
-	mail-ea0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751665Ab3JKMKA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Oct 2013 08:10:00 -0400
-Received: by mail-ea0-f175.google.com with SMTP id m14so1845806eaj.34
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Oct 2013 05:09:59 -0700 (PDT)
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@qca.qualcomm.com,
-	simon.wunderlich@s2003.tu-chemnitz.de
-Subject: [PATCH v2 0/2] ath9k: spectral scan on HT40 channels
-Date: Fri, 11 Oct 2013 14:09:53 +0200
-Message-Id: <1381493395-7632-1-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20131011_141006_280496_AD4BEBE8)
+Received: from victor.provo.novell.com ([137.65.250.26]:46024 "EHLO
+	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755374Ab3JHJ5b (ORCPT
+	<rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
+	Tue, 8 Oct 2013 05:57:31 -0400
+Received: by mail-ie0-f169.google.com with SMTP id tp5so18839725ieb.14
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Oct 2013 02:57:20 -0700 (PDT)
+MIME-Version: 1.0
+Date: Tue, 8 Oct 2013 17:57:20 +0800
+Message-ID: <CALx5=V_OdHRJsourv2Hiykg-shyrisdrNnzD1qvpjAWR2iQyfg@mail.gmail.com> (sfid-20131008_115744_125352_A39E5028)
+Subject: WIFI P2P ping doesn't work.
+From: Matt Chen <machen@suse.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset add spectral scan capability on HT40 channels for
-ath9k. In particular:
-*[PATCH 1/2]: add nf parameter to ath9k_hw_getchan_noise() to compute noise
-floor for ext chains
-*[PATCH 2/2]: parse FFT samples on HT40 channels
+Hi list,
 
-Changes to the previous patchset:
-* add channel_type field in fft_sample_ht20_40 structure to indicate HT40 type
-(NL80211_CHAN_HT40MINUS or NL80211_CHAN_HT40PLUS)
-* fix some checkpatch errors
+I am running the v3.12-rc3 and using Atheros AR9485 with ath9k. My
+wpa_supplicant is from git://w1.fi/srv/git/hostap.git in master branch
+with most recent commit.
 
-Spectral scan has been tested using Simon Wunderlich's userspace program
-(https://github.com/simonwunderlich/FFT_eval) on HT20 channels and using a Qt-Qwt
-program (https://github.com/LorenzoBianconi/ath_spectral) on HT40 channels
+The my_p2p_supplicant.conf for my wpa_supplicant is :
+=======================================
+ctrl=/var/run/wpa_supplicant
+update_config=1
 
-Regards,
-Lorenzo
+device_name=HP GO
+device_type=1-0050F204-2
 
-Lorenzo Bianconi (2):
-  ath9k: add noise floor parameter to ath9k_hw_getchan_noise
-  ath9k: add HT40 spectral scan capability
+p2p_go_ht40=1
 
- drivers/net/wireless/ath/ath9k/ath9k.h |  29 +++++++
- drivers/net/wireless/ath/ath9k/calib.c |  10 +--
- drivers/net/wireless/ath/ath9k/calib.h |   3 +-
- drivers/net/wireless/ath/ath9k/hw.c    |   2 +-
- drivers/net/wireless/ath/ath9k/link.c  |   3 +-
- drivers/net/wireless/ath/ath9k/recv.c  | 146 ++++++++++++++++++++++++---------
- 6 files changed, 147 insertions(+), 46 deletions(-)
+=========================================
 
--- 
-1.8.1.2
+I run "wpa_supplicant -i wlan0 -f my_p2p_supplicant.conf -Dnl80211
+-ddt -f /var/log/wpa_supplicant -B
 
+I use wpa_cli to work on P2P. So here goes my case:
+
+M#1
+p2p_find
+p2p_stop
+p2p_peers
+p2p_connect [M#2 MAC ADDRESS] pbc go_intent=7
+
+M#2
+p2p_find
+p2p_stop
+p2p_peers
+p2p_connect [M#1 MAC ADDRESS] pbc
+
+
+Then I can find the M#1 become the P0 GO mode and M#2 become station
+mode. And each status is completed. But after that, I set each machine
+with a static IP such as 192.168.5.10 and 192.168.5.11 manually. I am
+not able to ping each IP.
+
+Is there anything I am doing wrong ?
+
+Thank you.
