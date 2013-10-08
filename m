@@ -1,32 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:34191 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756367Ab3J1OMO (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:64296 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752516Ab3JHTJ6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Oct 2013 10:12:14 -0400
-Message-ID: <1382969525.17956.16.camel@jlt4.sipsolutions.net> (sfid-20131028_151217_637292_0C3E6B8F)
-Subject: Re: [PATCH] mac80211_hwsim: Fix tracking of beaconing for multi-vif
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Date: Mon, 28 Oct 2013 15:12:05 +0100
-In-Reply-To: <20131022111117.GA9983@jouni.qca.qualcomm.com> (sfid-20131022_131126_356367_D65BE582)
-References: <20131022111117.GA9983@jouni.qca.qualcomm.com>
-	 (sfid-20131022_131126_356367_D65BE582)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 8 Oct 2013 15:09:58 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: fix station authorization
+References: <1380875428-20899-1-git-send-email-michal.kazior@tieto.com>
+	<8761t7sibr.fsf@kamboji.qca.qualcomm.com>
+Date: Tue, 8 Oct 2013 22:09:52 +0300
+In-Reply-To: <8761t7sibr.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
+	of "Tue, 8 Oct 2013 21:55:52 +0300")
+Message-ID: <87wqlnr33z.fsf@kamboji.qca.qualcomm.com> (sfid-20131008_211001_469558_C12826B5)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-10-22 at 14:11 +0300, Jouni Malinen wrote:
-> mac80211_hwsim canceled beacon_timer on any vif changing from enabled
-> to disabled beaconing. This breaks cases where there are multiple
-> beaconing vifs and only one of them is removed. Fix this by tracking
-> beaconing status per vif and disable beacon_timer only if no active vif
-> remain with beaconing enabled.
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-Applied.
+> Michal Kazior <michal.kazior@tieto.com> writes:
+>
+>> Peer authorization should be delayed until
+>> mac80211 says given station has transitioned into
+>> authorized state.
+>>
+>> The state is propagated from mac80211 for both
+>> open and protected networks.
+>>
+>> This should prevent data traffic to/from given
+>> station until authorization completes. Until now
+>> it was probably possible for unauthorized traffic
+>> to pass leading to possible security issues.
+>>
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>
+> Thanks, applied.
 
-johannes
+Actually I'll take this back. After this patch even ping doesn't work
+with D-Link DIR-865L as AP using 10.1.389 firmware. So I have to drop
+this patch.
 
+-- 
+Kalle Valo
