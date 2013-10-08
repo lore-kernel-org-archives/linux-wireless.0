@@ -1,62 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:37039 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755410Ab3JNQGI (ORCPT
+Received: from mail-lb0-f173.google.com ([209.85.217.173]:56202 "EHLO
+	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753986Ab3JHUAn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Oct 2013 12:06:08 -0400
-Received: by mail-wi0-f172.google.com with SMTP id ez12so271910wid.5
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Oct 2013 09:06:06 -0700 (PDT)
+	Tue, 8 Oct 2013 16:00:43 -0400
+Received: by mail-lb0-f173.google.com with SMTP id o14so7282920lbi.18
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Oct 2013 13:00:42 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <87fvs3etz6.fsf@kamboji.qca.qualcomm.com>
-References: <1381749381-15459-1-git-send-email-bartosz.markowski@tieto.com>
-	<87fvs3etz6.fsf@kamboji.qca.qualcomm.com>
-Date: Mon, 14 Oct 2013 18:06:06 +0200
-Message-ID: <CACKGw+HC1goQ_BdAqHkQSFhtSbZuqCLFRZTEJjgUSLQRgQ436A@mail.gmail.com> (sfid-20131014_180612_367736_602F984A)
-Subject: Re: [PATCH] ath10k: do not warn about unsupported vdev param
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k@lists.infradead.org,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1381259316.13359.17.camel@jlt4.sipsolutions.net>
+References: <1381231915-24232-1-git-send-email-ard.biesheuvel@linaro.org>
+	<1381259316.13359.17.camel@jlt4.sipsolutions.net>
+Date: Tue, 8 Oct 2013 22:00:41 +0200
+Message-ID: <CAKv+Gu_dOUnOBnGy7rwfxLx18dTUMHYeH+5owYHEtzpfCPA3qA@mail.gmail.com> (sfid-20131008_220051_897625_93900691)
+Subject: Re: [PATCH] mac80211: port CCMP to cryptoapi's CCM driver
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Patch Tracking <patches@linaro.org>, linville@tuxdriver.com
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14 October 2013 17:46, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Bartosz Markowski <bartosz.markowski@tieto.com> writes:
+On 8 October 2013 21:08, Johannes Berg <johannes@sipsolutions.net> wrote:
+> I'm not too familiar with the aead API, so here's another question:
 >
->> 10.X firmware does not support WMI_VDEV_PARAM_TX_ENCAP_TYPE.
->> It's a known limitation and we should not warn about this.
->>
->> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
->> ---
->>  drivers/net/wireless/ath/ath10k/mac.c |    4 +++-
->>  1 file changed, 3 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
->> index 049eca2..9c800f8 100644
->> --- a/drivers/net/wireless/ath/ath10k/mac.c
->> +++ b/drivers/net/wireless/ath/ath10k/mac.c
->> @@ -2085,7 +2085,9 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
->>       vdev_param = ar->wmi.vdev_param->tx_encap_type;
->>       ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
->>                                       ATH10K_HW_TXRX_NATIVE_WIFI);
->> -     if (ret)
->> +
->> +     /* 10.X firmware does not support this VDEV parameter. Do not warn */
->> +     if (ret && !test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features))
->>               ath10k_warn("Failed to set TX encap: %d\n", ret);
+>> +     sg_init_one(&pt, data, data_len);
+>> +     sg_init_one(&assoc, &aad[2], be16_to_cpup((__be16 *)aad));
+>> +     sg_init_table(ct, 2);
+>> +     sg_set_buf(&ct[0], cdata, data_len);
+>> +     sg_set_buf(&ct[1], mic, IEEE80211_CCMP_MIC_LEN);
 >
-> But why call ath10k_wmi_vdev_set_param() even if we know it won't work?
-> IMHO it's cleaner not to call it at all when ATH10K_FW_FEATURE_WMI_10X
-> is set.
+> Is it guaranteed to be allowed that the input and output are the same
+> buffer? It seems we rely on that for encrypt_one(), but is it true here
+> as well?
+>
 
-I tend to agree. Intention was to keep things generic and just hide the warning.
+Yes, the crypto layer handles all of that without issue.
 
-> Or if we want to avoid using ATH10K_FW_FEATURE_WMI_10X we could also
-> change ath10k_wmi_pdev_set_param() to return -EOPNOTSUPP and check for
-> that.
+> (Btw - why pass in data/cdata as separate pointers into the function?)
+>
 
-I like the second idea. I will send a v2 patch.
+That is just a leftover of the old implementation. I will remove that
+in v2, that will cut down the number of function args as well.
+
+>> @@ -343,7 +337,7 @@ static void ccmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *scratch,
+>>               data_len -= IEEE80211_CCMP_MIC_LEN;
+>>
+>>       /* First block, b_0 */
+>> -     b_0[0] = 0x59; /* flags: Adata: 1, M: 011, L: 001 */
+>> +     b_0[0] = 0x1; /* set L := 1, M and Adata flags are implied */
+>
+> Hmm. I don't think I understand, can you explain this to me?
+>
+
+Well M is implied by the setauthsize() in init() [M := (MIC_LEN-2)/2
+== 3], and the set_assoc() call in en/decrypt() indicates the presence
+of assoc (A) data. Instead of setting the flags here, and clearing
+them by anding with ~0x7 (as in the old implementation), this lets the
+CCM layer handle that.
 
 -- 
-Bartosz
+Ard.
