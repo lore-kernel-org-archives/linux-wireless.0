@@ -1,42 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:59562 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:33554 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753480Ab3JALJV (ORCPT
+	with ESMTP id S1754502Ab3JHNp7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Oct 2013 07:09:21 -0400
-Message-ID: <1380625757.14430.22.camel@jlt4.sipsolutions.net> (sfid-20131001_131000_689901_93D78937)
-Subject: Re: [PATCH 2/4] nl80211/cfg80211: enable DFS for IBSS mode
+	Tue, 8 Oct 2013 09:45:59 -0400
+Message-ID: <1381239951.13359.13.camel@jlt4.sipsolutions.net> (sfid-20131008_154608_666446_7DC5ACE9)
+Subject: Re: [PATCH] mac80211: port CCMP to cryptoapi's CCM driver
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Date: Tue, 01 Oct 2013 13:09:17 +0200
-In-Reply-To: <1378230201-25446-3-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1378230201-25446-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1378230201-25446-3-git-send-email-siwu@hrz.tu-chemnitz.de>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Cc: David Laight <David.Laight@ACULAB.COM>,
+	"<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
+	"<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
+	"<patches@linaro.org>" <patches@linaro.org>,
+	"<linville@tuxdriver.com>" <linville@tuxdriver.com>
+Date: Tue, 08 Oct 2013 15:45:51 +0200
+In-Reply-To: <1381239908.13359.12.camel@jlt4.sipsolutions.net> (sfid-20131008_154529_677169_EE69B46B)
+References: <1381231915-24232-1-git-send-email-ard.biesheuvel@linaro.org>
+	 <1381233152.13359.10.camel@jlt4.sipsolutions.net>
+	 <AE90C24D6B3A694183C094C60CF0A2F6026B737B@saturn3.aculab.com>
+	 <23D74823-0DE3-4A87-9E89-310F437A328D@linaro.org>
+	 (sfid-20131008_154139_954283_CE737C83) <1381239908.13359.12.camel@jlt4.sipsolutions.net>
+	 (sfid-20131008_154529_677169_EE69B46B)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-09-03 at 19:43 +0200, Simon Wunderlich wrote:
-> To use DFS in IBSS mode, userspace is required to react to radar events.
-> It can inform nl80211 that it is capable of doing so by adding a
-> NL80211_ATTR_CONTROL_PORT_DFS attribute when joining the IBSS.
+On Tue, 2013-10-08 at 15:45 +0200, Johannes Berg wrote:
+> On Tue, 2013-10-08 at 15:41 +0200, Ard Biesheuvel wrote:
+> 
+> > Actually, as the size is always the same, it should be feasible to
+> > alloc a couple of request structs at init time. would one for rx and
+> > one for tx be sufficient? or is this code more reentrant than that?
+> 
+> TX can run concurrently on multiple (four) queues using the same key.
 
-I don't like that name, it makes no sense. This has nothing to do with
-the port control (802.1X-style) at all.
-
-> If this attribute is supplied, DFS channels may be used if the driver
-> supports it. Support will be checked even if a channel without DFS will
-> be joined, as the channel might change later due to scan activity or
-> channel switch announcements.
-
-You also really should document *what* is required of userspace here.
-You're kinda saying this needs to be implemented, but not saying what
-needs to be done. I can't even tell - what does it really have to do?
-Don't you implement most of it in patches 3 and 4 anyway in the kernel?
+And maybe even more with injection ... I wouldn't go there.
 
 johannes
 
