@@ -1,57 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f42.google.com ([209.85.219.42]:60863 "EHLO
-	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752613Ab3JSBdp (ORCPT
+Received: from mail-lb0-f179.google.com ([209.85.217.179]:49633 "EHLO
+	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754541Ab3JHMUb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Oct 2013 21:33:45 -0400
-Message-ID: <5261E176.1050901@lwfinger.net> (sfid-20131019_033436_829040_8F1693B2)
-Date: Fri, 18 Oct 2013 20:33:42 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 8 Oct 2013 08:20:31 -0400
+Received: by mail-lb0-f179.google.com with SMTP id x18so6821258lbi.10
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Oct 2013 05:20:28 -0700 (PDT)
 MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>, Felipe Pena <felipensp@gmail.com>
-CC: Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi: rtl8192se: Fix wrong assignment
-References: <1382143960-4594-1-git-send-email-felipensp@gmail.com> <1382144748.2041.16.camel@joe-AO722>
-In-Reply-To: <1382144748.2041.16.camel@joe-AO722>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1381234564.13359.11.camel@jlt4.sipsolutions.net>
+References: <1381231915-24232-1-git-send-email-ard.biesheuvel@linaro.org>
+	<1381233152.13359.10.camel@jlt4.sipsolutions.net>
+	<CAKv+Gu9-ddqyuGg=NDFoWzNko+0uMG_po6WnzTc7g3DAzx=_dQ@mail.gmail.com>
+	<1381234564.13359.11.camel@jlt4.sipsolutions.net>
+Date: Tue, 8 Oct 2013 14:20:28 +0200
+Message-ID: <CAKv+Gu_9th7+tRYe7LCsk1hPhaU=MrZqsGJpTOKHX-PW+z1_BQ@mail.gmail.com> (sfid-20131008_142037_893219_984CC723)
+Subject: Re: [PATCH] mac80211: port CCMP to cryptoapi's CCM driver
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Patch Tracking <patches@linaro.org>,
+	John Linville <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/18/2013 08:05 PM, Joe Perches wrote:
-> On Fri, 2013-10-18 at 21:52 -0300, Felipe Pena wrote:
->> There is a typo in the struct member name on assignment when checking
->> rtlphy->current_chan_bw == HT_CHANNEL_WIDTH_20_40, the check uses pwrgroup_ht40
->> for bound limit and uses pwrgroup_ht20 when assigning instead.
->>
->> Signed-off-by: Felipe Pena <felipensp@gmail.com>
->> ---
->>   drivers/net/wireless/rtlwifi/rtl8192se/rf.c |    2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/rf.c b/drivers/net/wireless/rtlwifi/rtl8192se/rf.c
->> index 5061f1d..92d38ab 100644
->> --- a/drivers/net/wireless/rtlwifi/rtl8192se/rf.c
->> +++ b/drivers/net/wireless/rtlwifi/rtl8192se/rf.c
->> @@ -265,7 +265,7 @@ static void _rtl92s_get_txpower_writeval_byregulatory(struct ieee80211_hw *hw,
->>   				    rtlefuse->pwrgroup_ht40
->>   				    [RF90_PATH_A][chnl - 1]) {
->>   					pwrdiff_limit[i] =
->> -					  rtlefuse->pwrgroup_ht20
->> +					  rtlefuse->pwrgroup_ht40
->>   					  [RF90_PATH_A][chnl - 1];
->>   				}
+On 8 October 2013 14:16, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Tue, 2013-10-08 at 14:00 +0200, Ard Biesheuvel wrote:
 >
-> Using min could help minimize typos
+>> BTW I should probably have mentioned that this is fully tested code:
+>> my zd1211 works happily with it using pairwise CCMP with no
+>> regressions in performance.
 >
-> 					pwrdiff_limit[i] = min(pwrdiff_limit[i],
-> 							       rtlefuse->pwrgroup_ht40[RF90_PATH_A][chnl - 1]);
+> Good to know. Not that I think zd1211 is a good device for performance
+> tests (you'd have to measure CPU utilisation in some way), but
+> ultimately it doesn't really matter as all the high-performance devices
+> need hardware crypto anyway.
+>
 
-In the initial driver, that would have been true; however, at this point, I 
-prefer the patch as submitted. There is less churning of the source.
+I agree. I am not saying the typical performance of a zd1211 is a
+meaningful quantity, just that this particular device performs
+identically before and after applying this patch, which suggests that
+it is not creating lots of corrupted frames or messing up the
+authentication.
 
-Larry
-
-
+Regards,
+-- 
+Ard.
