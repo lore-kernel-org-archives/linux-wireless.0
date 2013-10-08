@@ -1,77 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:42165 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753403Ab3JaOuK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Oct 2013 10:50:10 -0400
-Date: Thu, 31 Oct 2013 14:49:30 +0000
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Mauro Carvalho Chehab <m.chehab@samsung.com>
-Cc: Hans Verkuil <hverkuil@xs4all.nl>, alsa-devel@alsa-project.org,
-	linux-doc@vger.kernel.org, linux-mmc@vger.kernel.org,
-	linux-fbdev@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-ide@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
-	e1000-devel@lists.sourceforge.net, b43-dev@lists.infradead.org,
-	linux-media@vger.kernel.org, devicetree@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, linux-tegra@vger.kernel.org,
-	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-	netdev@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-crypto@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	uclinux-dist-devel@blackfin.uclinux.org,
-	linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH 19/51] DMA-API: media: dt3155v4l: replace
-	dma_set_mask()+dma_set_coherent_mask() with new helper
-Message-ID: <20131031144929.GC25039@n2100.arm.linux.org.uk> (sfid-20131031_155032_396237_00AE5EE6)
-References: <20130919212235.GD12758@n2100.arm.linux.org.uk> <E1VMm13-0007hO-9l@rmk-PC.arm.linux.org.uk> <5249673B.5020705@xs4all.nl> <20131031094640.205840a2@samsung.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131031094640.205840a2@samsung.com>
+Received: from mx1.redhat.com ([209.132.183.28]:56700 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752676Ab3JHJ6S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Oct 2013 05:58:18 -0400
+Date: Tue, 8 Oct 2013 11:57:58 +0200
+From: Jesper Dangaard Brouer <brouer@redhat.com>
+To: Dave Taht <dave.taht@gmail.com>,
+	John Linville <linville@tuxdriver.com>,
+	bloat-devel@lists.bufferbloat.net
+Cc: linux-wireless@vger.kernel.org,
+	Simon Barber <simon@superduper.net>,
+	Anirudh Sivaraman <sk.anirudh@gmail.com>
+Subject: Recommend a Wireless/WiFi chip, that best address bufferbloat
+Message-ID: <20131008115758.694477b7@redhat.com> (sfid-20131008_115829_454393_D53A72F3)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 31, 2013 at 09:46:40AM -0200, Mauro Carvalho Chehab wrote:
-> Hi Russell,
-> 
-> Em Mon, 30 Sep 2013 13:57:47 +0200
-> Hans Verkuil <hverkuil@xs4all.nl> escreveu:
-> 
-> > On 09/19/2013 11:44 PM, Russell King wrote:
-> > > Replace the following sequence:
-> > > 
-> > > 	dma_set_mask(dev, mask);
-> > > 	dma_set_coherent_mask(dev, mask);
-> > > 
-> > > with a call to the new helper dma_set_mask_and_coherent().
-> > > 
-> > > Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
-> > 
-> > Acked-by: Hans Verkuil <hans.verkuil@cisco.com>
-> 
-> Somehow, I lost your original post (I got unsubscribed on a few days 
-> from all vger mailing lists at the end of september).
-> 
-> I suspect that you want to sent this via your tree, right?
+Hi All,
 
-Yes please.
+As Dave Taht repeats, we have not solved bufferbloat on Wifi, yet.
 
-> If so:
-> 
-> Acked-by: Mauro Carvalho Chehab <m.chehab@samsung.com>
+I've been approached by some embedded developers, who need to choose
+some Wifi hardware for their device, and is concerned about bufferbloat.
 
-Added, thanks.
+What do we recommend of Wifi chips?
+- Which ones are the least-bad regrading bufferbloat?
+- Which ones do we hope to solve in the near-future?
 
-> > > -	err = dma_set_mask(&pdev->dev, DMA_BIT_MASK(32));
-> > > -	if (err)
-> > > -		return -ENODEV;
-> > > -	err = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(32));
-> > > +	err = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
-> > >  	if (err)
-> > >  		return -ENODEV;
-
-One thing I've just noticed is that return should be "return err" not
-"return -ENODEV" - are you okay for me to change that in this patch?
-
-Thanks.
+-- 
+Best regards,
+  Jesper Dangaard Brouer
+  MSc.CS, Sr. Network Kernel Developer at Red Hat
+  Author of http://www.iptv-analyzer.org
+  LinkedIn: http://www.linkedin.com/in/brouer
