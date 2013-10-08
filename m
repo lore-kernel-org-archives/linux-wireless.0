@@ -1,64 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f182.google.com ([74.125.82.182]:51093 "EHLO
-	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753172Ab3JWKyp (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:47030 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753386Ab3JHS6Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Oct 2013 06:54:45 -0400
+	Tue, 8 Oct 2013 14:58:24 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v3 0/2] ath10k: wep & ampdu fix
+References: <1380874630-14280-1-git-send-email-michal.kazior@tieto.com>
+	<1381200718-16271-1-git-send-email-michal.kazior@tieto.com>
+Date: Tue, 8 Oct 2013 21:58:19 +0300
+In-Reply-To: <1381200718-16271-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Mon, 7 Oct 2013 19:51:56 -0700")
+Message-ID: <871u3vsi7o.fsf@kamboji.qca.qualcomm.com> (sfid-20131008_205827_460886_B827F22B)
 MIME-Version: 1.0
-In-Reply-To: <1382523145-2302-1-git-send-email-dhahira.thesneem@mistralsolutions.com>
-References: <1382523145-2302-1-git-send-email-dhahira.thesneem@mistralsolutions.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Wed, 23 Oct 2013 16:24:23 +0530
-Message-ID: <CABPxzYLdtA_gU87RY5pLqTxaq+NZbDyZVGwQ=vxj5HLdTz3C_w@mail.gmail.com> (sfid-20131023_125500_778236_5C688BCD)
-Subject: Re: [PATCH 1/1] mac80211:Resetting connection monitor timers in
- transmit path
-To: Dhahira Thesneem <dhahira.thesneem@mistralsolutions.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 23, 2013 at 3:42 PM, Dhahira Thesneem
-<dhahira.thesneem@mistralsolutions.com> wrote:
->
-> Reset connection monitor timers when we are able to successfully transmit data to an AP.
->
-> Signed-off-by: Dhahira Thesneem <dhahira.thesneem@mistralsolutions.com>
-> ---
->  net/mac80211/tx.c |    6 ++++--
->  1 files changed, 4 insertions(+), 2 deletions(-)
->
-> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-> index 3456c04..e7725cf 100644
-> --- a/net/mac80211/tx.c
-> +++ b/net/mac80211/tx.c
-> @@ -1700,7 +1700,8 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
->
->         ieee80211_xmit(sdata, skb, chan->band);
->         rcu_read_unlock();
-> -
-> +       /*To reset connection monitor timers, after successful transmission*/
-> +       ieee80211_sta_reset_conn_monitor(sdata);
->         return NETDEV_TX_OK;
->
->  fail_rcu:
-> @@ -2139,7 +2140,8 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
->
->         ieee80211_xmit(sdata, skb, band);
->         rcu_read_unlock();
-> -
-> +       /*To reset connection monitor timers, after successful transmission*/
-> +       ieee80211_sta_reset_conn_monitor(sdata);
->         return NETDEV_TX_OK;
->
->   fail_rcu:
-> --
-Successful data transmission should be checked in the tx_status not
-after we transmit.
-In fact its already taken care in status.c: through ieee80211_sta_tx_notify.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-NACK.
+> Hi,
+>
+> One throughput fix and one bug fix.
+>
+> The bug fix addresses my oversight when reworking
+> HTC/WMI. I haven't seen the error yet but I'm
+> quite certain this should be fixed.
+>
+> v2:
+>  * A-MPDU patch contains a workaround for
+>    Netgear/Linksys 11ac APs
+>  * patchset cover mail title changed to avoid
+>    confusion (too many patchsets named the same
+>    way..)
+>
+> v3:
+>  * fix lines over 80 chars (Kalle)
+>  * fix max() cast warning (Kalle)
+>  * rebase (Kalle)
+>  * add Tested-by (thanks Kalle!)
+>
+>
+> Michal Kazior (1):
+>   ath10k: fix scheduling while atomic bug
+
+I dropped this patch for now, need to think more about how to handle
+this.
+
+> Sujith Manoharan (1):
+>   ath10k: Fix bug in max. VHT A-MPDU size
+
+This is applied, thanks.
+
+-- 
+Kalle Valo
