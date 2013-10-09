@@ -1,70 +1,396 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:58645 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755876Ab3J1Uol (ORCPT
+Received: from mail-we0-f182.google.com ([74.125.82.182]:50367 "EHLO
+	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751942Ab3JIH6F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Oct 2013 16:44:41 -0400
-Received: by mail-wi0-f181.google.com with SMTP id ex4so1924277wid.8
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Oct 2013 13:44:40 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAMP44s0svc2MRKCrZXS5ZYRZNPoomQkcKHdC2m2BGy7di+TCyA@mail.gmail.com>
-References: <CAMP44s1XJRHV8bAX=_-TkSKMkY8Nw1=eHorqTCZ2QmtR5m8uJA@mail.gmail.com>
- <526E20EA.9090203@rempel-privat.de> <CAMP44s2Cvw9HF3c3Asuq+bTSD36Gw6PXOUVjAcCD+hf6KB_awg@mail.gmail.com>
- <CABPxzY+xJ7kst-sYwP8RJwMO_zkNYWKaYy=_LS7WQfuxquK24w@mail.gmail.com>
- <CAMP44s0087jYz5AiEaEzwt7GqH9ed8PWE1CmvMPr4Dqn3yE6rA@mail.gmail.com>
- <CABPxzYLwwyFCFw1pEt0v9Xw4kcue1C_RZx0RbTbMrUw=+MWvgQ@mail.gmail.com> <CAMP44s0svc2MRKCrZXS5ZYRZNPoomQkcKHdC2m2BGy7di+TCyA@mail.gmail.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Tue, 29 Oct 2013 02:14:20 +0530
-Message-ID: <CABPxzYL-Gzbzoc_ui+qUQ6uzoKp=Yq7yLWZvc7PoEjiH3dFczg@mail.gmail.com> (sfid-20131028_214446_690734_A1EBE605)
-Subject: Re: I always need a miracle to connect with iwlwifi
-To: Felipe Contreras <felipe.contreras@gmail.com>
-Cc: Oleksij Rempel <linux@rempel-privat.de>, ilw@linux.intel.com,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 9 Oct 2013 03:58:05 -0400
+Received: by mail-we0-f182.google.com with SMTP id t61so447997wes.41
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Oct 2013 00:58:03 -0700 (PDT)
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: patches@linaro.org, johannes@sipsolutions.net,
+	David.Laight@aculab.com, Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: [PATCH v2] mac80211: port CCMP to cryptoapi's CCM driver
+Date: Wed,  9 Oct 2013 09:56:23 +0200
+Message-Id: <1381305383-19019-1-git-send-email-ard.biesheuvel@linaro.org> (sfid-20131009_095816_310513_E8EFAC12)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 29, 2013 at 1:36 AM, Felipe Contreras
-<felipe.contreras@gmail.com> wrote:
-> On Mon, Oct 28, 2013 at 1:27 PM, Krishna Chaitanya
-> <chaitanya.mgit@gmail.com> wrote:
+Use the generic CCM aead chaining mode driver rather than a local
+implementation that sits right on top of the core AES cipher.
 
->> From the logs we can see that we have received authentication response,
->> so the association request is getting dropped somewhere? We might
->> need the mac80211 and iwlwifi trace-cmd logs to check for the drop.
->>
->> http://wireless.kernel.org/en/developers/Documentation/mac80211/tracing
->
-> There you go:
-> http://people.freedesktop.org/~felipec/wpa/trace.dat.xz
->
-Hmm.."trace-cmd report -i trace.dat" returned lots of errors, i have even
-tried with the trace-cmd from git (ubuntu). Did it worked fro you?
+This allows the use of accelerated implementations of either
+CCM as a whole or the CTR mode which it encapsulates.
 
+Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+---
 
-===
-# trace-cmd report -i trace.dat
-version = 6
-trace-cmd: No such file or directory ??????????????
-  function scsi_trace_parse_cdb not defined
-  function scsi_trace_parse_cdb not defined
-  function scsi_trace_parse_cdb not defined
-  function scsi_trace_parse_cdb not defined
-  function is_writable_pte not defined
-  function __le16_to_cpup not defined
-  function __le16_to_cpup not defined
-  function __le16_to_cpup not defined
-CPU 0 is empty
-CPU 1 is empty
-CPU 2 is empty
-CPU 3 is empty
-cpus=4
+Changes since v1:
+- use a better way to allocate the variable size aead_request struct on the
+  stack;
+- pass only a single data pointer argument as we always encrypt/decrypt in
+  place;
+- add a comment about how vector b_0 is generated.
 
+ 
+ net/mac80211/Kconfig   |   1 +
+ net/mac80211/aes_ccm.c | 169 ++++++++++++++++---------------------------------
+ net/mac80211/aes_ccm.h |  14 ++--
+ net/mac80211/key.h     |   2 +-
+ net/mac80211/wpa.c     |  41 ++++++------
+ 5 files changed, 85 insertions(+), 142 deletions(-)
 
-
+diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
+index 62535fe..dc31ec3 100644
+--- a/net/mac80211/Kconfig
++++ b/net/mac80211/Kconfig
+@@ -4,6 +4,7 @@ config MAC80211
+ 	select CRYPTO
+ 	select CRYPTO_ARC4
+ 	select CRYPTO_AES
++	select CRYPTO_CCM
+ 	select CRC32
+ 	select AVERAGE
+ 	---help---
+diff --git a/net/mac80211/aes_ccm.c b/net/mac80211/aes_ccm.c
+index be7614b9..7c7df47 100644
+--- a/net/mac80211/aes_ccm.c
++++ b/net/mac80211/aes_ccm.c
+@@ -2,6 +2,8 @@
+  * Copyright 2003-2004, Instant802 Networks, Inc.
+  * Copyright 2005-2006, Devicescape Software, Inc.
+  *
++ * Rewrite: Copyright (C) 2013 Linaro Ltd <ard.biesheuvel@linaro.org>
++ *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+  * published by the Free Software Foundation.
+@@ -17,134 +19,75 @@
+ #include "key.h"
+ #include "aes_ccm.h"
+ 
+-static void aes_ccm_prepare(struct crypto_cipher *tfm, u8 *scratch, u8 *a)
++void ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
++			       u8 *data, size_t data_len, u8 *mic)
+ {
+-	int i;
+-	u8 *b_0, *aad, *b, *s_0;
+-
+-	b_0 = scratch + 3 * AES_BLOCK_SIZE;
+-	aad = scratch + 4 * AES_BLOCK_SIZE;
+-	b = scratch;
+-	s_0 = scratch + AES_BLOCK_SIZE;
+-
+-	crypto_cipher_encrypt_one(tfm, b, b_0);
++	struct scatterlist assoc, pt, ct[2];
++	struct {
++		struct aead_request	req;
++		u8			priv[crypto_aead_reqsize(tfm)];
++	} aead_req;
+ 
+-	/* Extra Authenticate-only data (always two AES blocks) */
+-	for (i = 0; i < AES_BLOCK_SIZE; i++)
+-		aad[i] ^= b[i];
+-	crypto_cipher_encrypt_one(tfm, b, aad);
++	memset(&aead_req, 0, sizeof(aead_req));
+ 
+-	aad += AES_BLOCK_SIZE;
++	sg_init_one(&pt, data, data_len);
++	sg_init_one(&assoc, &aad[2], be16_to_cpup((__be16 *)aad));
++	sg_init_table(ct, 2);
++	sg_set_buf(&ct[0], data, data_len);
++	sg_set_buf(&ct[1], mic, IEEE80211_CCMP_MIC_LEN);
+ 
+-	for (i = 0; i < AES_BLOCK_SIZE; i++)
+-		aad[i] ^= b[i];
+-	crypto_cipher_encrypt_one(tfm, a, aad);
++	aead_request_set_tfm(&aead_req.req, tfm);
++	aead_request_set_assoc(&aead_req.req, &assoc, assoc.length);
++	aead_request_set_crypt(&aead_req.req, &pt, ct, data_len, b_0);
+ 
+-	/* Mask out bits from auth-only-b_0 */
+-	b_0[0] &= 0x07;
+-
+-	/* S_0 is used to encrypt T (= MIC) */
+-	b_0[14] = 0;
+-	b_0[15] = 0;
+-	crypto_cipher_encrypt_one(tfm, s_0, b_0);
++	crypto_aead_encrypt(&aead_req.req);
+ }
+ 
+-
+-void ieee80211_aes_ccm_encrypt(struct crypto_cipher *tfm, u8 *scratch,
+-			       u8 *data, size_t data_len,
+-			       u8 *cdata, u8 *mic)
++int ieee80211_aes_ccm_decrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
++			      u8 *data, size_t data_len, u8 *mic)
+ {
+-	int i, j, last_len, num_blocks;
+-	u8 *pos, *cpos, *b, *s_0, *e, *b_0;
+-
+-	b = scratch;
+-	s_0 = scratch + AES_BLOCK_SIZE;
+-	e = scratch + 2 * AES_BLOCK_SIZE;
+-	b_0 = scratch + 3 * AES_BLOCK_SIZE;
+-
+-	num_blocks = DIV_ROUND_UP(data_len, AES_BLOCK_SIZE);
+-	last_len = data_len % AES_BLOCK_SIZE;
+-	aes_ccm_prepare(tfm, scratch, b);
+-
+-	/* Process payload blocks */
+-	pos = data;
+-	cpos = cdata;
+-	for (j = 1; j <= num_blocks; j++) {
+-		int blen = (j == num_blocks && last_len) ?
+-			last_len : AES_BLOCK_SIZE;
+-
+-		/* Authentication followed by encryption */
+-		for (i = 0; i < blen; i++)
+-			b[i] ^= pos[i];
+-		crypto_cipher_encrypt_one(tfm, b, b);
+-
+-		b_0[14] = (j >> 8) & 0xff;
+-		b_0[15] = j & 0xff;
+-		crypto_cipher_encrypt_one(tfm, e, b_0);
+-		for (i = 0; i < blen; i++)
+-			*cpos++ = *pos++ ^ e[i];
+-	}
+-
+-	for (i = 0; i < IEEE80211_CCMP_MIC_LEN; i++)
+-		mic[i] = b[i] ^ s_0[i];
++	struct scatterlist assoc, pt, ct[2];
++	struct {
++		struct aead_request	req;
++		u8			priv[crypto_aead_reqsize(tfm)];
++	} aead_req;
++
++	memset(&aead_req, 0, sizeof(aead_req));
++
++	sg_init_one(&pt, data, data_len);
++	sg_init_one(&assoc, &aad[2], be16_to_cpup((__be16 *)aad));
++	sg_init_table(ct, 2);
++	sg_set_buf(&ct[0], data, data_len);
++	sg_set_buf(&ct[1], mic, IEEE80211_CCMP_MIC_LEN);
++
++	aead_request_set_tfm(&aead_req.req, tfm);
++	aead_request_set_assoc(&aead_req.req, &assoc, assoc.length);
++	aead_request_set_crypt(&aead_req.req, ct, &pt,
++			       data_len + IEEE80211_CCMP_MIC_LEN, b_0);
++
++	return crypto_aead_decrypt(&aead_req.req);
+ }
+ 
+-
+-int ieee80211_aes_ccm_decrypt(struct crypto_cipher *tfm, u8 *scratch,
+-			      u8 *cdata, size_t data_len, u8 *mic, u8 *data)
++struct crypto_aead *ieee80211_aes_key_setup_encrypt(const u8 key[])
+ {
+-	int i, j, last_len, num_blocks;
+-	u8 *pos, *cpos, *b, *s_0, *a, *b_0;
+-
+-	b = scratch;
+-	s_0 = scratch + AES_BLOCK_SIZE;
+-	a = scratch + 2 * AES_BLOCK_SIZE;
+-	b_0 = scratch + 3 * AES_BLOCK_SIZE;
+-
+-	num_blocks = DIV_ROUND_UP(data_len, AES_BLOCK_SIZE);
+-	last_len = data_len % AES_BLOCK_SIZE;
+-	aes_ccm_prepare(tfm, scratch, a);
+-
+-	/* Process payload blocks */
+-	cpos = cdata;
+-	pos = data;
+-	for (j = 1; j <= num_blocks; j++) {
+-		int blen = (j == num_blocks && last_len) ?
+-			last_len : AES_BLOCK_SIZE;
+-
+-		/* Decryption followed by authentication */
+-		b_0[14] = (j >> 8) & 0xff;
+-		b_0[15] = j & 0xff;
+-		crypto_cipher_encrypt_one(tfm, b, b_0);
+-		for (i = 0; i < blen; i++) {
+-			*pos = *cpos++ ^ b[i];
+-			a[i] ^= *pos++;
+-		}
+-		crypto_cipher_encrypt_one(tfm, a, a);
+-	}
+-
+-	for (i = 0; i < IEEE80211_CCMP_MIC_LEN; i++) {
+-		if ((mic[i] ^ s_0[i]) != a[i])
+-			return -1;
+-	}
+-
+-	return 0;
+-}
++	struct crypto_aead *tfm;
++	int err;
+ 
++	tfm = crypto_alloc_aead("ccm(aes)", 0, CRYPTO_ALG_ASYNC);
++	if (IS_ERR(tfm))
++		return tfm;
+ 
+-struct crypto_cipher *ieee80211_aes_key_setup_encrypt(const u8 key[])
+-{
+-	struct crypto_cipher *tfm;
++	err = crypto_aead_setkey(tfm, key, WLAN_KEY_LEN_CCMP);
++	if (!err)
++		err = crypto_aead_setauthsize(tfm, IEEE80211_CCMP_MIC_LEN);
++	if (!err)
++		return tfm;
+ 
+-	tfm = crypto_alloc_cipher("aes", 0, CRYPTO_ALG_ASYNC);
+-	if (!IS_ERR(tfm))
+-		crypto_cipher_setkey(tfm, key, WLAN_KEY_LEN_CCMP);
+-
+-	return tfm;
++	crypto_free_aead(tfm);
++	return ERR_PTR(err);
+ }
+ 
+-
+-void ieee80211_aes_key_free(struct crypto_cipher *tfm)
++void ieee80211_aes_key_free(struct crypto_aead *tfm)
+ {
+-	crypto_free_cipher(tfm);
++	crypto_free_aead(tfm);
+ }
+diff --git a/net/mac80211/aes_ccm.h b/net/mac80211/aes_ccm.h
+index 5b7d744..2c7ab19 100644
+--- a/net/mac80211/aes_ccm.h
++++ b/net/mac80211/aes_ccm.h
+@@ -12,13 +12,11 @@
+ 
+ #include <linux/crypto.h>
+ 
+-struct crypto_cipher *ieee80211_aes_key_setup_encrypt(const u8 key[]);
+-void ieee80211_aes_ccm_encrypt(struct crypto_cipher *tfm, u8 *scratch,
+-			       u8 *data, size_t data_len,
+-			       u8 *cdata, u8 *mic);
+-int ieee80211_aes_ccm_decrypt(struct crypto_cipher *tfm, u8 *scratch,
+-			      u8 *cdata, size_t data_len,
+-			      u8 *mic, u8 *data);
+-void ieee80211_aes_key_free(struct crypto_cipher *tfm);
++struct crypto_aead *ieee80211_aes_key_setup_encrypt(const u8 key[]);
++void ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
++			       u8 *data, size_t data_len, u8 *mic);
++int ieee80211_aes_ccm_decrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
++			      u8 *data, size_t data_len, u8 *mic);
++void ieee80211_aes_key_free(struct crypto_aead *tfm);
+ 
+ #endif /* AES_CCM_H */
+diff --git a/net/mac80211/key.h b/net/mac80211/key.h
+index 036d57e..aaae0ed 100644
+--- a/net/mac80211/key.h
++++ b/net/mac80211/key.h
+@@ -83,7 +83,7 @@ struct ieee80211_key {
+ 			 * Management frames.
+ 			 */
+ 			u8 rx_pn[IEEE80211_NUM_TIDS + 1][IEEE80211_CCMP_PN_LEN];
+-			struct crypto_cipher *tfm;
++			struct crypto_aead *tfm;
+ 			u32 replays; /* dot11RSNAStatsCCMPReplays */
+ 		} ccmp;
+ 		struct {
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index c9edfcb..62dc956 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -301,22 +301,16 @@ ieee80211_crypto_tkip_decrypt(struct ieee80211_rx_data *rx)
+ }
+ 
+ 
+-static void ccmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *scratch,
++static void ccmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *b_0, u8 *aad,
+ 				int encrypted)
+ {
+ 	__le16 mask_fc;
+ 	int a4_included, mgmt;
+ 	u8 qos_tid;
+-	u8 *b_0, *aad;
+ 	u16 data_len, len_a;
+ 	unsigned int hdrlen;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 
+-	memset(scratch, 0, 6 * AES_BLOCK_SIZE);
+-
+-	b_0 = scratch + 3 * AES_BLOCK_SIZE;
+-	aad = scratch + 4 * AES_BLOCK_SIZE;
+-
+ 	/*
+ 	 * Mask FC: zero subtype b4 b5 b6 (if not mgmt)
+ 	 * Retry, PwrMgt, MoreData; set Protected
+@@ -342,16 +336,22 @@ static void ccmp_special_blocks(struct sk_buff *skb, u8 *pn, u8 *scratch,
+ 	if (encrypted)
+ 		data_len -= IEEE80211_CCMP_MIC_LEN;
+ 
+-	/* First block, b_0 */
+-	b_0[0] = 0x59; /* flags: Adata: 1, M: 011, L: 001 */
++	/* In CCM, the initial vectors (IV) used for CTR mode encryption and CBC
++	 * mode authentication are not allowed to collide, yet both are derived
++	 * from this vector b_0. We only set L := 1 here to indicate that the
++	 * data size can be represented in (L+1) bytes, and store the size in
++	 * the top (L+1) bytes. The setting and clearing of other bits that is
++	 * required to derive the two different IVs is handled by the CCM layer.
++	 */
++	b_0[0] = 0x1;
++	put_unaligned_be16(data_len, &b_0[14]);
++
+ 	/* Nonce: Nonce Flags | A2 | PN
+ 	 * Nonce Flags: Priority (b0..b3) | Management (b4) | Reserved (b5..b7)
+ 	 */
+ 	b_0[1] = qos_tid | (mgmt << 4);
+ 	memcpy(&b_0[2], hdr->addr2, ETH_ALEN);
+ 	memcpy(&b_0[8], pn, IEEE80211_CCMP_PN_LEN);
+-	/* l(m) */
+-	put_unaligned_be16(data_len, &b_0[14]);
+ 
+ 	/* AAD (extra authenticate-only data) / masked 802.11 header
+ 	 * FC | A1 | A2 | A3 | SC | [A4] | [QC] */
+@@ -407,7 +407,8 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
+ 	u8 *pos;
+ 	u8 pn[6];
+ 	u64 pn64;
+-	u8 scratch[6 * AES_BLOCK_SIZE];
++	u8 aad[2 * AES_BLOCK_SIZE];
++	u8 b_0[AES_BLOCK_SIZE];
+ 
+ 	if (info->control.hw_key &&
+ 	    !(info->control.hw_key->flags & IEEE80211_KEY_FLAG_GENERATE_IV) &&
+@@ -460,9 +461,9 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
+ 		return 0;
+ 
+ 	pos += IEEE80211_CCMP_HDR_LEN;
+-	ccmp_special_blocks(skb, pn, scratch, 0);
+-	ieee80211_aes_ccm_encrypt(key->u.ccmp.tfm, scratch, pos, len,
+-				  pos, skb_put(skb, IEEE80211_CCMP_MIC_LEN));
++	ccmp_special_blocks(skb, pn, b_0, aad, 0);
++	ieee80211_aes_ccm_encrypt(key->u.ccmp.tfm, b_0, aad, pos, len,
++				  skb_put(skb, IEEE80211_CCMP_MIC_LEN));
+ 
+ 	return 0;
+ }
+@@ -525,16 +526,16 @@ ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx)
+ 	}
+ 
+ 	if (!(status->flag & RX_FLAG_DECRYPTED)) {
+-		u8 scratch[6 * AES_BLOCK_SIZE];
++		u8 aad[2 * AES_BLOCK_SIZE];
++		u8 b_0[AES_BLOCK_SIZE];
+ 		/* hardware didn't decrypt/verify MIC */
+-		ccmp_special_blocks(skb, pn, scratch, 1);
++		ccmp_special_blocks(skb, pn, b_0, aad, 1);
+ 
+ 		if (ieee80211_aes_ccm_decrypt(
+-			    key->u.ccmp.tfm, scratch,
++			    key->u.ccmp.tfm, b_0, aad,
+ 			    skb->data + hdrlen + IEEE80211_CCMP_HDR_LEN,
+ 			    data_len,
+-			    skb->data + skb->len - IEEE80211_CCMP_MIC_LEN,
+-			    skb->data + hdrlen + IEEE80211_CCMP_HDR_LEN))
++			    skb->data + skb->len - IEEE80211_CCMP_MIC_LEN))
+ 			return RX_DROP_UNUSABLE;
+ 	}
+ 
 -- 
-Thanks,
-Regards,
-Chaitanya T K.
-Mobile:+91-9963910010.
+1.8.1.2
+
