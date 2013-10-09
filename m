@@ -1,73 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f179.google.com ([209.85.192.179]:46412 "EHLO
-	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750783Ab3JMEcA (ORCPT
+Received: from e32.co.us.ibm.com ([32.97.110.150]:45742 "EHLO
+	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752090Ab3JIV36 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Oct 2013 00:32:00 -0400
-Received: by mail-pd0-f179.google.com with SMTP id v10so5989948pde.38
-        for <linux-wireless@vger.kernel.org>; Sat, 12 Oct 2013 21:32:00 -0700 (PDT)
-From: Mihir Shete <smihir@qti.qualcomm.com>
-To: linux-wireless@vger.kernel.org
-Cc: Mihir Shete <smihir@qti.qualcomm.com>,
-	Henri Bahini <hbahini@qca.qualcomm.com>,
-	Tushnim Bhattacharyya <tushnimb@qca.qualcomm.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH v2 2/2] cfg80211: add an option to disable processing country IEs
-Date: Sun, 13 Oct 2013 10:01:37 +0530
-Message-Id: <1381638697-2641-3-git-send-email-smihir@qti.qualcomm.com> (sfid-20131013_063206_474510_4B66317E)
-In-Reply-To: <1381638697-2641-1-git-send-email-smihir@qti.qualcomm.com>
-References: <1381638697-2641-1-git-send-email-smihir@qti.qualcomm.com>
+	Wed, 9 Oct 2013 17:29:58 -0400
+Received: from /spool/local
+	by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-wireless@vger.kernel.org> from <paulmck@linux.vnet.ibm.com>;
+	Wed, 9 Oct 2013 15:29:57 -0600
+From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+To: linux-kernel@vger.kernel.org
+Cc: mingo@kernel.org, laijs@cn.fujitsu.com, dipankar@in.ibm.com,
+	akpm@linux-foundation.org, mathieu.desnoyers@efficios.com,
+	josh@joshtriplett.org, niv@us.ibm.com, tglx@linutronix.de,
+	peterz@infradead.org, rostedt@goodmis.org, dhowells@redhat.com,
+	edumazet@google.com, darren@dvhart.com, fweisbec@gmail.com,
+	sbw@mit.edu, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH v2 tip/core/rcu 10/13] mac80211: Apply rcu_access_pointer() to avoid sparse false positive
+Date: Wed,  9 Oct 2013 14:29:43 -0700
+Message-Id: <1381354186-16285-10-git-send-email-paulmck@linux.vnet.ibm.com> (sfid-20131009_233336_912133_0987DAAC)
+In-Reply-To: <1381354186-16285-1-git-send-email-paulmck@linux.vnet.ibm.com>
+References: <20131009212920.GA15413@linux.vnet.ibm.com>
+ <1381354186-16285-1-git-send-email-paulmck@linux.vnet.ibm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Certain vendors may want to disable the processing of
-country IEs so that they can continue using the regulatory
-domain the driver or user has set.  Currently there is no
-way to stop the core from processing country IEs, so add
-support to the core to ignore country IE hints.
+From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
 
-Cc: Henri Bahini <hbahini@qca.qualcomm.com>
-Cc: Tushnim Bhattacharyya <tushnimb@qca.qualcomm.com>
-Cc: Luis R. Rodriguez <mcgrof@do-not-panic.com>
-Signed-off-by: Mihir Shete <smihir@qti.qualcomm.com>
+The sparse checking for rcu_assign_pointer() was recently upgraded
+to reject non-__kernel address spaces.  This also rejects __rcu,
+which is almost always the right thing to do.  However, the uses in
+sta_info_hash_del() are legitimate: They are assigning a pointer to an
+element from an RCU-protected list, and all elements of this list are
+already visible to caller.
+
+This commit therefore silences this false positive by laundering the
+pointer using rcu_access_pointer() as suggested by Josh Triplett.
+
+Reported-by: kbuild test robot <fengguang.wu@intel.com>
+Signed-off-by: Paul E. McKenney <paulmck@linux.vnet.ibm.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
 ---
- include/uapi/linux/nl80211.h | 5 +++++
- net/wireless/reg.c           | 3 +++
- 2 files changed, 8 insertions(+)
+ net/mac80211/sta_info.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 6e574ce..9746f55 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2343,9 +2343,14 @@ enum nl80211_reg_type {
-  *	domain. The regulatory domain used will be based on the
-  *	ISO3166-alpha2 from country IE provided through
-  *	regulatory_hint_country_ie()
-+ * @NL80211_COUNTRY_IE_IGNORE_CORE - for devices that have a preference to
-+ *	to ignore all country IE information processed by the core. This will
-+ *	override %NL80211_COUNTRY_IE_FOLLOW_POWER if the country IE hint is
-+ *	issued by the core
-  */
- enum nl80211_country_ie_pref {
- 	NL80211_COUNTRY_IE_FOLLOW_POWER	= 1<<0,
-+	NL80211_COUNTRY_IE_IGNORE_CORE	= 1<<1,
- };
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index aeb967a0aeed..d18ab89a5725 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -75,7 +75,7 @@ static int sta_info_hash_del(struct ieee80211_local *local,
+ 		return -ENOENT;
+ 	if (s == sta) {
+ 		rcu_assign_pointer(local->sta_hash[STA_HASH(sta->sta.addr)],
+-				   s->hnext);
++				   rcu_access_pointer(s->hnext));
+ 		return 0;
+ 	}
  
- /**
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 87b4ee3..699c4dc 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1322,6 +1322,9 @@ get_reg_request_treatment(struct wiphy *wiphy,
- 	case NL80211_REGDOM_SET_BY_CORE:
- 		return REG_REQ_OK;
- 	case NL80211_REGDOM_SET_BY_COUNTRY_IE:
-+		if (wiphy->country_ie_pref & NL80211_COUNTRY_IE_IGNORE_CORE)
-+			return REG_REQ_IGNORE;
-+
- 		if (reg_request_cell_base(lr)) {
- 			/* Trust a Cell base station over the AP's country IE */
- 			if (regdom_changes(pending_request->alpha2))
+@@ -84,7 +84,7 @@ static int sta_info_hash_del(struct ieee80211_local *local,
+ 		s = rcu_dereference_protected(s->hnext,
+ 					lockdep_is_held(&local->sta_mtx));
+ 	if (rcu_access_pointer(s->hnext)) {
+-		rcu_assign_pointer(s->hnext, sta->hnext);
++		rcu_assign_pointer(s->hnext, rcu_access_pointer(sta->hnext));
+ 		return 0;
+ 	}
+ 
 -- 
-1.8.2.1
+1.8.1.5
 
