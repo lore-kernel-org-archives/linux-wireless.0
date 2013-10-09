@@ -1,31 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:61563 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751579Ab3J2XLL (ORCPT
+Received: from smtprelay0127.hostedemail.com ([216.40.44.127]:48909 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754751Ab3JIQDQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Oct 2013 19:11:11 -0400
-Received: by mail-la0-f46.google.com with SMTP id hp15so465289lab.33
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Oct 2013 16:11:09 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1383087091.12439.33.camel@joe-AO722>
-References: <1383086346-2096-1-git-send-email-mcgrof@do-not-panic.com>
- <1383086346-2096-4-git-send-email-mcgrof@do-not-panic.com> <1383087091.12439.33.camel@joe-AO722>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Wed, 30 Oct 2013 00:10:49 +0100
-Message-ID: <CAB=NE6UeP4CvR+rwGvrLXcy6a-y=dYq915Pqz_Dw7tDHPYXB2Q@mail.gmail.com> (sfid-20131030_001129_358488_8A0FDC77)
-Subject: Re: [PATCH 3/3] ath: fix dynamic user regulatory domain support
-To: Joe Perches <joe@perches.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 9 Oct 2013 12:03:16 -0400
+Message-ID: <1381334592.2050.14.camel@joe-AO722> (sfid-20131009_180322_468601_35EE71D7)
+Subject: Re: [PATCH] wcn36xx: mac80211 driver for Qualcomm WCN3660/WCN3680
+ hardware
+From: Joe Perches <joe@perches.com>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	wcn36xx@lists.infradead.org
+Date: Wed, 09 Oct 2013 09:03:12 -0700
+In-Reply-To: <CAFSJ42Y_QE9_ep6iArNDkUffmi-kMkU_Y8AeEN8tJXyuAZ1y4Q@mail.gmail.com>
+References: <CAB=NE6Xs=ebxpQapB4xXu7edWfMEkgZu8hTyO98zfam56og2Hg@mail.gmail.com>
+	 <1381263958-14846-1-git-send-email-k.eugene.e@gmail.com>
+	 <1381265688.23020.11.camel@joe-AO722>
+	 <CAFSJ42Y_QE9_ep6iArNDkUffmi-kMkU_Y8AeEN8tJXyuAZ1y4Q@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 29, 2013 at 11:51 PM, Joe Perches <joe@perches.com> wrote:
-> Missing break?
+On Wed, 2013-10-09 at 16:59 +0100, Eugene Krasnikov wrote:
+> Hi Joe,
 
-Bug, that's what I get for working until midnight, I should know
-better to balance my work.... damn it. Thanks for the review.
+Hi Eugene.
 
-  Luis
+> Thanx for you comments. Would you mind if we fix those trivias  after
+> wcn36xx is merged?
+
+Not at all.
+
