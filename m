@@ -1,57 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:36109 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750974Ab3J2GQw (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:43408 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751424Ab3JIJOK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Oct 2013 02:16:52 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath9k: Add SERDES initvals for AR9462 2.1
-Date: Tue, 29 Oct 2013 11:42:25 +0530
-Message-Id: <1383027145-10425-1-git-send-email-sujith@msujith.org> (sfid-20131029_071654_617103_AC672A97)
+	Wed, 9 Oct 2013 05:14:10 -0400
+From: "Undekari, Sunil Dutt" <c_duttus@qti.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "j@w1.fi.com" <j@w1.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH] cfg80211: Pass station supported channel and oper class
+ info to kernel
+Date: Wed, 9 Oct 2013 09:13:53 +0000
+Message-ID: <26F3B0343EE4744AA14EEEF9E1E534511F7251E7@aphydexd01a> (sfid-20131009_111414_955025_2E9CE406)
+References: <1381150309-27293-1-git-send-email-c_duttus@qti.qualcomm.com>
+	 <1381222569.13359.3.camel@jlt4.sipsolutions.net>
+	 <26F3B0343EE4744AA14EEEF9E1E534511F725129@aphydexd01a>
+ <1381307517.14186.5.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1381307517.14186.5.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_hw.c           | 4 ++++
- drivers/net/wireless/ath/ath9k/ar9462_2p1_initvals.h | 7 +++++++
- 2 files changed, 11 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-index b07f164..a6e06a1 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-@@ -223,6 +223,10 @@ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
- 			       ar9462_2p1_modes_fast_clock);
- 		INIT_INI_ARRAY(&ah->iniCckfirJapan2484,
- 			       ar9462_2p1_baseband_core_txfir_coeff_japan_2484);
-+		INIT_INI_ARRAY(&ah->iniPcieSerdes,
-+			       ar9462_2p1_pciephy_clkreq_disable_L1);
-+		INIT_INI_ARRAY(&ah->iniPcieSerdesLowPower,
-+			       ar9462_2p1_pciephy_clkreq_disable_L1);
- 	} else if (AR_SREV_9462_20(ah)) {
- 
- 		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_CORE], ar9462_2p0_mac_core);
-diff --git a/drivers/net/wireless/ath/ath9k/ar9462_2p1_initvals.h b/drivers/net/wireless/ath/ath9k/ar9462_2p1_initvals.h
-index 4dbc294..bec18bf 100644
---- a/drivers/net/wireless/ath/ath9k/ar9462_2p1_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9462_2p1_initvals.h
-@@ -1771,4 +1771,11 @@ static const u32 ar9462_2p1_baseband_core_txfir_coeff_japan_2484[][2] = {
- 	{0x0000a3a0, 0xca9228ee},
- };
- 
-+static const u32 ar9462_2p1_pciephy_clkreq_disable_L1[][2] = {
-+	/* Addr      allmodes  */
-+	{0x00018c00, 0x18213ede},
-+	{0x00018c04, 0x000801d8},
-+	{0x00018c08, 0x0003780c},
-+};
-+
- #endif /* INITVALS_9462_2P1_H */
--- 
-1.8.4.1
-
+PiBJdCdzIGp1c3QgYSBxdWVzdGlvbiBvZiB3aGVyZSB0byBhZGRyZXNzIHRoaXMgLSBpbiB0aGUg
+a2VybmVsIG9yIHRoZSBzdXBwbGljYW50LiBJbiBhIHdheSwgSSdkIHJhdGhlciBoYXZlIHRoZSBr
+ZXJuZWwgcmVqZWN0IGl0IGFuZCBkbyB0aGUgcG9saWN5IG9mIGlnbm9yaW5nIGludmFsaWQgc3R1
+ZmYgaW4gdGhlIHN1cHBsaWNhbnQuDQpUaGUgYWJvdmUgc3RhdGVtZW50IGZyb20geW91IG1hZGUg
+bWUgdG8gcmV0aGluayBmb3IgdGhlIGZvbGxvd2luZyBjaGVjayBpbiB0aGUgcGF0Y2ggc2VudC4g
+IA0KDQorICAgICAgICAgICAgICAgaWYgKHBhcmFtcy0+c3VwcG9ydGVkX29wZXJfY2xhc3Nlc19s
+ZW4gPCAyIHx8DQorICAgICAgICAgICAgICAgICAgIHBhcmFtcy0+c3VwcG9ydGVkX29wZXJfY2xh
+c3Nlc19sZW4gPiAyNTMpDQorICAgICAgICAgICAgICAgICAgICAgICByZXR1cm4gLUVJTlZBTDsN
+Cg0KQXJlIHlvdSBmaW5lIHRvIHJldHVybiBhIGZhaWx1cmUgZm9yIHRoZSBpbnZhbGlkIGxlbmd0
+aCBmb3IgdGhlIHN1cHBvcnRlZF9vcGVyX2NsYXNzZXNfbGVuPyBJZiB5ZXMsIHRoZW4gc2hvdWxk
+bid0IHdlIGFsc28gZG8gdGhlIHNpbWlsYXIgY2hlY2sgZm9yIGludmFsaWQgc3VwcG9ydGVkX2No
+YW5uZWxzX2xlbiAoIDwgMiApLg0KDQpSZWdhcmRzLA0KU3VuaWwNCg0KLS0tLS1PcmlnaW5hbCBN
+ZXNzYWdlLS0tLS0NCkZyb206IEpvaGFubmVzIEJlcmcgW21haWx0bzpqb2hhbm5lc0BzaXBzb2x1
+dGlvbnMubmV0XSANClNlbnQ6IFdlZG5lc2RheSwgT2N0b2JlciAwOSwgMjAxMyAyOjAyIFBNDQpU
+bzogVW5kZWthcmksIFN1bmlsIER1dHQNCkNjOiBqQHcxLmZpLmNvbTsgbGludXgtd2lyZWxlc3NA
+dmdlci5rZXJuZWwub3JnDQpTdWJqZWN0OiBSZTogW1BBVENIXSBjZmc4MDIxMTogUGFzcyBzdGF0
+aW9uIHN1cHBvcnRlZCBjaGFubmVsIGFuZCBvcGVyIGNsYXNzIGluZm8gdG8ga2VybmVsDQoNCk9u
+IFdlZCwgMjAxMy0xMC0wOSBhdCAwODoxOSArMDAwMCwgVW5kZWthcmksIFN1bmlsIER1dHQgd3Jv
+dGU6DQo+IEhpIEpvaGFubmVzLA0KPiANCj4gPkkgZ3Vlc3MgdGhlbiB3cGFfc3VwcGxpY2FudCB3
+b3VsZCBoYXZlIHRvIHJlbW92ZSB0aGUgaW5mbyAtIG1heWJlIHRoZSBmYWlsdXJlIGNhc2Ugc2hv
+dWxkbid0IGJlIHF1aXRlIGFzIGRyYWNvbmljPyBNYXliZSBtYWtlIGl0IGlnbm9yZSBhbnkgZXh0
+cmEgdHJhaWxpbmcgYnl0ZT8NCj4gVGhhbmtzIGZvciB5b3VyIHBvaW50LiANCj4gSSBzdXBwb3Nl
+LCByZXR1cm5pbmcgYSBmYWlsdXJlIGZvciB0aGUgbGVuZ3RoIGJlaW5nIGxlc3MgdGhhbiAyIGV2
+ZW4gYWZ0ZXIgaWdub3JpbmcgdGhlIHRyYWlsaW5nIGJ5dGUgaXMgbm90IHJlcXVpcmVkIGZvciB0
+aGUgcmVhc29uIHRoYXQgdGhlIHN1cHBvcnRlZCBjaGFubmVscyBpcyBub3QgYSBtYW5kYXRvcnkg
+ZmllbGQgKGF0IGxlYXN0IHcuci50IFRETFMpLiBJdCBzaG91bGQgYmUgZmluZSB0byBqdXN0IHBh
+c3MgdGhlIGxlbmd0aCBhcyAwIHRvIHRoZSBob3N0IGRyaXZlci4gUGxlYXNlIGNvcnJlY3QgbWUu
+DQoNCkl0J3MganVzdCBhIHF1ZXN0aW9uIG9mIHdoZXJlIHRvIGFkZHJlc3MgdGhpcyAtIGluIHRo
+ZSBrZXJuZWwgb3IgdGhlIHN1cHBsaWNhbnQuIEluIGEgd2F5LCBJJ2QgcmF0aGVyIGhhdmUgdGhl
+IGtlcm5lbCByZWplY3QgaXQgYW5kIGRvIHRoZSBwb2xpY3kgb2YgaWdub3JpbmcgaW52YWxpZCBz
+dHVmZiBpbiB0aGUgc3VwcGxpY2FudC4NCg0Kam9oYW5uZXMNCg0K
