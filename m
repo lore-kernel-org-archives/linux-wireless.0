@@ -1,102 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f177.google.com ([209.85.220.177]:40542 "EHLO
-	mail-vc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752618Ab3JLTRv (ORCPT
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:33451 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752077Ab3JITTG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Oct 2013 15:17:51 -0400
-Received: by mail-vc0-f177.google.com with SMTP id hv10so3695762vcb.8
-        for <linux-wireless@vger.kernel.org>; Sat, 12 Oct 2013 12:17:50 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1381602356.14243.4.camel@jlt4.sipsolutions.net>
-References: <525720d0.6xVLGLwuRrqxqOBI%fengguang.wu@intel.com>
-	<20131011014733.GD11191@localhost>
-	<CAFSJ42aa_-DTHDxkRDM+0bm9052ree__K54CRm749SeQPDHwRw@mail.gmail.com>
-	<1381476265.14293.0.camel@jlt4.sipsolutions.net>
-	<CAFSJ42Y3x9bzKO8jo-n8Vn7ei38FkYVqW5Gog+_pa_j83ZUXhw@mail.gmail.com>
-	<1381602356.14243.4.camel@jlt4.sipsolutions.net>
-Date: Sat, 12 Oct 2013 20:17:49 +0100
-Message-ID: <CAFSJ42Z2E8ivgjm8jw4xJ8pvp=NViNDOaMKy4yR7qKGjEVioSQ@mail.gmail.com> (sfid-20131012_211807_174925_06571DF2)
-Subject: Re: [wireless-next:master 82/98] drivers/net/wireless/ath/wcn36xx/wcn36xx.h:88:24:
- sparse: incorrect type in assignment (different base types)
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Fengguang Wu <fengguang.wu@intel.com>, kbuild-all@01.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	wcn36xx <wcn36xx@lists.infradead.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 9 Oct 2013 15:19:06 -0400
+Received: by mail-wg0-f46.google.com with SMTP id k14so1343720wgh.25
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Oct 2013 12:19:05 -0700 (PDT)
+Message-ID: <1381346334.5568.6.camel@canaries64-MCP7A> (sfid-20131009_211911_343734_F6A1962C)
+Subject: [PATCH] staging: vt6656: make pControlURB available life time of
+ driver.
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 09 Oct 2013 20:18:54 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> $ sparse --version
-> v0.4.4-133-g5449cfb
+There is no need remove and add the control urb in device open/close.
 
-My is: sparse --version
-v0.4.5-rc1
+Move to the probe and disconnect. This make the USB control in/out
+functions always available to driver.
 
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/main_usb.c | 23 ++++++++++-------------
+ 1 file changed, 10 insertions(+), 13 deletions(-)
 
-> Hard to believe - did you pass the CF= on the command line? I suggest
->
-> ccflags-y += -D__CHECK_ENDIAN__
-
-Agree that it's not a version difference :) Yes , i set check endian.
-Weird, will try to modify makefile and see if that helps.
-
-
-> Also, code might be fine, but buff_to_be() is still not a good idea
-> since it breaks all endian annotation.
-
-Could you please explain in more details how does buff_to_be break
-endian annotation?
-
-
-> Also, I suggested to run smatch, I guess you never did:
-
-I ran it and even fixed some of the errors. These errors i might just
-missed because of the output is flooded with messages like:
-drivers/net/wireless/ath/wcn36xx/main.c:24 (null)() info: ignoring
-unreachable code.
-
-Thanx for pointing to these warnings.
-
-On Sat, Oct 12, 2013 at 7:25 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Fri, 2013-10-11 at 21:39 +0100, Eugene Krasnikov wrote:
->
->> Do you see the same warning?
->
-> Yes
->
->> With the latest sparse i do not see this
->> warning.
->
-> $ sparse --version
-> v0.4.4-133-g5449cfb
->
->> I assume this warning depends on sparse version since with my
->> environment it does not pop up. Also from code perspective it looks
->> fine. Any ideas?:)
->
-> Hard to believe - did you pass the CF= on the command line? I suggest
->
-> ccflags-y += -D__CHECK_ENDIAN__
->
-> in your Makefile.
->
-> Also, code might be fine, but buff_to_be() is still not a good idea
-> since it breaks all endian annotation.
->
-> Also, I suggested to run smatch, I guess you never did:
-> drivers/net/wireless/ath/wcn36xx/smd.c:1314 wcn36xx_smd_send_beacon() warn: inconsistent returns mutex:&wcn->hal_mutex: locked (1289 [(-12)]) unlocked (1314 [0], 1314 [s32min-(-1),1-s32max])
-> drivers/net/wireless/ath/wcn36xx/smd.c:1357 wcn36xx_smd_update_proberesp_tmpl() warn: inconsistent returns mutex:&wcn->hal_mutex: locked (1330 [(-7)]) unlocked (1357 [0], 1357 [s32min-(-1),1-s32max])
-> drivers/net/wireless/ath/wcn36xx/smd.c:1626 wcn36xx_smd_keep_alive_req() warn: inconsistent returns mutex:&wcn->hal_mutex: locked (1609 [(-22)]) unlocked (1626 [0], 1626 [s32min-(-1),1-s32max])
-> drivers/net/wireless/ath/wcn36xx/smd.c:2041 wcn36xx_smd_rsp_process() error: potential null dereference 'msg_ind'.  (kmalloc returns null)
->
-> johannes
->
-
-
-
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index e5add18..0de2156 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -707,6 +707,12 @@ vt6656_probe(struct usb_interface *intf, const struct usb_device_id *id)
+ 	INIT_WORK(&pDevice->read_work_item, RXvWorkItem);
+ 	INIT_WORK(&pDevice->rx_mng_work_item, RXvMngWorkItem);
+ 
++	pDevice->pControlURB = usb_alloc_urb(0, GFP_ATOMIC);
++	if (!pDevice->pControlURB) {
++		DBG_PRT(MSG_LEVEL_ERR, KERN_ERR"Failed to alloc control urb\n");
++		goto err_nomem;
++	}
++
+ 	pDevice->tx_80211 = device_dma0_tx_80211;
+ 	pDevice->vnt_mgmt.pAdapter = (void *) pDevice;
+ 
+@@ -853,23 +859,15 @@ static bool device_alloc_bufs(struct vnt_private *pDevice)
+         pRCB++;
+     }
+ 
+-	pDevice->pControlURB = usb_alloc_urb(0, GFP_ATOMIC);
+-	if (pDevice->pControlURB == NULL) {
+-	    DBG_PRT(MSG_LEVEL_ERR,KERN_ERR"Failed to alloc control urb\n");
+-	    goto free_rx_tx;
+-	}
+-
+ 	pDevice->pInterruptURB = usb_alloc_urb(0, GFP_ATOMIC);
+ 	if (pDevice->pInterruptURB == NULL) {
+ 	    DBG_PRT(MSG_LEVEL_ERR,KERN_ERR"Failed to alloc int urb\n");
+-	    usb_free_urb(pDevice->pControlURB);
+ 	    goto free_rx_tx;
+ 	}
+ 
+     pDevice->intBuf.pDataBuf = kmalloc(MAX_INTERRUPT_SIZE, GFP_KERNEL);
+ 	if (pDevice->intBuf.pDataBuf == NULL) {
+ 	    DBG_PRT(MSG_LEVEL_ERR,KERN_ERR"Failed to alloc int buf\n");
+-	    usb_free_urb(pDevice->pControlURB);
+ 	    usb_free_urb(pDevice->pInterruptURB);
+ 	    goto free_rx_tx;
+ 	}
+@@ -1040,9 +1038,7 @@ free_rx_tx:
+     device_free_rx_bufs(pDevice);
+     device_free_tx_bufs(pDevice);
+     device_free_int_bufs(pDevice);
+-	usb_kill_urb(pDevice->pControlURB);
+ 	usb_kill_urb(pDevice->pInterruptURB);
+-    usb_free_urb(pDevice->pControlURB);
+     usb_free_urb(pDevice->pInterruptURB);
+ 
+     DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO "device_open fail.. \n");
+@@ -1113,9 +1109,7 @@ static int device_close(struct net_device *dev)
+     device_free_int_bufs(pDevice);
+     device_free_frag_bufs(pDevice);
+ 
+-	usb_kill_urb(pDevice->pControlURB);
+ 	usb_kill_urb(pDevice->pInterruptURB);
+-    usb_free_urb(pDevice->pControlURB);
+     usb_free_urb(pDevice->pInterruptURB);
+ 
+     BSSvClearNodeDBTable(pDevice, 0);
+@@ -1139,9 +1133,12 @@ static void vt6656_disconnect(struct usb_interface *intf)
+ 
+ 	if (device->dev) {
+ 		unregister_netdev(device->dev);
++
++		usb_kill_urb(device->pControlURB);
++		usb_free_urb(device->pControlURB);
++
+ 		free_netdev(device->dev);
+ 	}
+-
+ }
+ 
+ static int device_dma0_tx_80211(struct sk_buff *skb, struct net_device *dev)
 -- 
-Best regards,
-Eugene
+1.8.3.2
+
