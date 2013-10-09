@@ -1,104 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:34699 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752300Ab3J3Llp (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:36929 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756877Ab3JIJRq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Oct 2013 07:41:45 -0400
-Date: Wed, 30 Oct 2013 12:41:44 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
-Cc: Luciano Coelho <luca@coelho.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, sre@ring0.de, joni.lapilainen@gmail.com,
-	David Gnedt <david.gnedt@davizone.at>
-Subject: Re: [PATCH 08/16] wl1251: implement multicast address filtering
-Message-ID: <20131030114144.GB8763@amd.pavel.ucw.cz> (sfid-20131030_124206_158408_36AF70B5)
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
- <1382819655-30430-9-git-send-email-pali.rohar@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1382819655-30430-9-git-send-email-pali.rohar@gmail.com>
+	Wed, 9 Oct 2013 05:17:46 -0400
+Message-ID: <1381310259.14186.6.camel@jlt4.sipsolutions.net> (sfid-20131009_111750_061320_4C488CFB)
+Subject: Re: [PATCH] cfg80211: Pass station supported channel and oper class
+ info to kernel
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Undekari, Sunil Dutt" <c_duttus@qti.qualcomm.com>
+Cc: "j@w1.fi.com" <j@w1.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 09 Oct 2013 11:17:39 +0200
+In-Reply-To: <26F3B0343EE4744AA14EEEF9E1E534511F7251E7@aphydexd01a>
+References: <1381150309-27293-1-git-send-email-c_duttus@qti.qualcomm.com>
+	 <1381222569.13359.3.camel@jlt4.sipsolutions.net>
+	 <26F3B0343EE4744AA14EEEF9E1E534511F725129@aphydexd01a>
+	 <1381307517.14186.5.camel@jlt4.sipsolutions.net>
+	 <26F3B0343EE4744AA14EEEF9E1E534511F7251E7@aphydexd01a>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+On Wed, 2013-10-09 at 09:13 +0000, Undekari, Sunil Dutt wrote:
+> > It's just a question of where to address this - in the kernel or the supplicant. In a way, I'd rather have the kernel reject it and do the policy of ignoring invalid stuff in the supplicant.
+> The above statement from you made me to rethink for the following check in the patch sent.  
+> 
+> +               if (params->supported_oper_classes_len < 2 ||
+> +                   params->supported_oper_classes_len > 253)
+> +                       return -EINVAL;
+> 
+> Are you fine to return a failure for the invalid length for the supported_oper_classes_len? If yes, then shouldn't we also do the similar check for invalid supported_channels_len ( < 2 ).
 
-> Port multicast address filtering from wl1271 driver.
-> It sets up the hardware multicast address filter in configure_filter() with
-> addresses supplied through prepare_multicast().
+Certainly works for me - but there should also be something like % 2 I
+guess
 
-> +static u64 wl1251_op_prepare_multicast(struct ieee80211_hw *hw,
-> +				       struct netdev_hw_addr_list *mc_list)
-> +{
-> +	struct wl1251_filter_params *fp;
-> +	struct netdev_hw_addr *ha;
-> +	struct wl1251 *wl = hw->priv;
-> +
-> +	if (unlikely(wl->state == WL1251_STATE_OFF))
-> +		return 0;
-> +
-> +	fp = kzalloc(sizeof(*fp), GFP_ATOMIC);
-> +	if (!fp) {
-> +		wl1251_error("Out of memory setting filters.");
-> +		return 0;
-> +	}
+johannes
 
-So if there's not enough memory, we return 0.
-
-> +	/* update multicast filtering parameters */
-> +	fp->mc_list_length = 0;
-> +	if (netdev_hw_addr_list_count(mc_list) > ACX_MC_ADDRESS_GROUP_MAX) {
-> +		fp->enabled = false;
-> +	} else {
-> +		fp->enabled = true;
-> +		netdev_hw_addr_list_for_each(ha, mc_list) {
-> +			memcpy(fp->mc_list[fp->mc_list_length],
-> +					ha->addr, ETH_ALEN);
-> +			fp->mc_list_length++;
-> +		}
-> +	}
-> +
-> +	return (u64)(unsigned long)fp;
-> +}
-
-Hiding pointers into u64 is not exactly nice, but I guess that's how
-interface is designed? :-(.
-
-> @@ -737,6 +779,15 @@ static void wl1251_op_configure_filter(struct ieee80211_hw *hw,
->  	if (ret < 0)
->  		goto out;
->  
-> +	if (*total & FIF_ALLMULTI || *total & FIF_PROMISC_IN_BSS)
-> +		ret = wl1251_acx_group_address_tbl(wl, false, NULL, 0);
-> +	else if (fp)
-> +		ret = wl1251_acx_group_address_tbl(wl, fp->enabled,
-> +						   fp->mc_list,
-> +						     	fp->mc_list_length);
-
-Is it correct not to call anything in !fp case (for example because we
-were out of memory?)
-
-> +	if (ret < 0)
-> +		goto out;
-> +
->  	/* send filters to firmware */
->  	wl1251_acx_rx_config(wl, wl->rx_config, wl->rx_filter);
->  
-> @@ -744,6 +795,7 @@ static void wl1251_op_configure_filter(struct ieee80211_hw *hw,
->  
->  out:
->  	mutex_unlock(&wl->mutex);
-> +	kfree(fp);
->  }
-
-Umm, this is interesting. Who frees the memory in the success case?
-
-Thanks,
-									Pavel
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
