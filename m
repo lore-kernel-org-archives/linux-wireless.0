@@ -1,55 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from canardo.mork.no ([148.122.252.1]:48476 "EHLO canardo.mork.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752290Ab3J2O2Z convert rfc822-to-8bit (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:36659 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751508Ab3JIHsh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Oct 2013 10:28:25 -0400
-From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
-To: Ben Hutchings <bhutchings@solarflare.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>, <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Mark Cave-Ayland" <mark.cave-ayland@ilande.co.uk>,
-	<netdev@vger.kernel.org>, Stable <stable@vger.kernel.org>
-Subject: Re: [PATCH NEXT] rtlwifi: Fix endian error in extracting packet type
-References: <1383002903-8746-1-git-send-email-Larry.Finger@lwfinger.net>
-	<1383005246.3779.61.camel@bwh-desktop.uk.level5networks.com>
-Date: Tue, 29 Oct 2013 15:27:41 +0100
-In-Reply-To: <1383005246.3779.61.camel@bwh-desktop.uk.level5networks.com> (Ben
-	Hutchings's message of "Tue, 29 Oct 2013 00:07:26 +0000")
-Message-ID: <87y55cf8yq.fsf@nemi.mork.no> (sfid-20131029_152832_715704_222657E1)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Wed, 9 Oct 2013 03:48:37 -0400
+Message-ID: <1381304913.14186.3.camel@jlt4.sipsolutions.net> (sfid-20131009_094843_476316_61CAEA37)
+Subject: Re: [PATCHv2 1/3] nl80211/cfg80211: enable DFS for IBSS mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Date: Wed, 09 Oct 2013 09:48:33 +0200
+In-Reply-To: <1381164067-4830-2-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1381164067-4830-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <1381164067-4830-2-git-send-email-siwu@hrz.tu-chemnitz.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Hutchings <bhutchings@solarflare.com> writes:
+On Mon, 2013-10-07 at 18:41 +0200, Simon Wunderlich wrote:
+> To use DFS in IBSS mode, userspace is required to react to radar events.
+> It can inform nl80211 that it is capable of doing so by adding a
+> NL80211_ATTR_DFS_CAPABLE attribute when joining the IBSS.
+> 
+> This attribute is supplied to let the kernelspace know that the
+> userspace application can and will handle radar events, e.g. by
+> intiating channel switches to a valid channel. DFS channels may
+> only be used if this attribute is supplied and the driver supports
+> it. Driver support will be checked even if a channel without DFS
+> will be initially joined, as a DFS channel may be chosen later.
 
->> @@ -1077,8 +1077,8 @@ u8 rtl_is_special_data(struct ieee80211_hw *hw, struct sk_buff *skb, u8 is_tx)
->>  
->>  	ip = (struct iphdr *)((u8 *) skb->data + mac_hdr_len +
->>  			      SNAP_SIZE + PROTOC_TYPE_SIZE);
->> -	ether_type = *(u16 *) ((u8 *) skb->data + mac_hdr_len + SNAP_SIZE);
->> -	/*	ether_type = ntohs(ether_type); */
->> +	ether_type = be16_to_cpu(*(__be16 *)((u8 *)skb->data + mac_hdr_len +
->> +					     SNAP_SIZE));
->>  
->>  	if (ETH_P_IP == ether_type) {
->>  		if (IPPROTO_UDP == ip->protocol) {
->
-> This crazy function also says that *all* IPv6 frames are special, which
-> apparently means that on TX they should get sent at the lowest possible
-> bit rate.  So I think this is going to cause a regression for IPv6
-> throughput unless you remove that case.
->
-> The DHCP case is also not validating IP and UDP header lengths against
-> the packet length, though this may be harmless in practice.
+Applied, fixed the attribute name above.
 
-It's not validating the upper 8 bits of the port numbers either, so it
-will hit random UDP traffic in addition to DHCP. 
+johannes
 
-But it was good to see this function now. I was wondering how to support
-some buggy 3G modem firmware without ugly hacks. Seems there will always
-be worse hacks in drivers/net, no matter what I do :-)
-
-
-Bjørn
