@@ -1,116 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f182.google.com ([209.85.220.182]:62740 "EHLO
-	mail-vc0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750842Ab3JDHzh (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:52176 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752524Ab3JIOPi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Oct 2013 03:55:37 -0400
-Received: by mail-vc0-f182.google.com with SMTP id hf12so1616604vcb.13
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Oct 2013 00:55:36 -0700 (PDT)
+	Wed, 9 Oct 2013 10:15:38 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: fix ath10k_debug_start() locking
+References: <20131008184525.32604.64051.stgit@localhost6.localdomain6>
+Date: Wed, 9 Oct 2013 17:15:32 +0300
+In-Reply-To: <20131008184525.32604.64051.stgit@localhost6.localdomain6> (Kalle
+	Valo's message of "Tue, 08 Oct 2013 21:45:25 +0300")
+Message-ID: <87k3hmo7i3.fsf@kamboji.qca.qualcomm.com> (sfid-20131009_161541_968313_35BC6C6F)
 MIME-Version: 1.0
-In-Reply-To: <524E72B7.5000102@broadcom.com>
-References: <1380234106-12802-1-git-send-email-k.eugene.e@gmail.com>
-	<CAFSJ42bybEGtkzJ99fZHrcPs=gTnvJVHxM7d8anJvn1VOs7V7A@mail.gmail.com>
-	<20131003205710.GH3142@tuxdriver.com>
-	<CAFSJ42ZwJzd46UXE2crzuaMVRLzre9SVm_vFcQ-KAVY6Q9c3QQ@mail.gmail.com>
-	<524E72B7.5000102@broadcom.com>
-Date: Fri, 4 Oct 2013 08:55:36 +0100
-Message-ID: <CAFSJ42Ydrput-ojxtf0unZj13euZHCePZByN=AB3HemY-XgTMw@mail.gmail.com> (sfid-20131004_095541_014295_302D8A78)
-Subject: Re: [PATCH] wcn36xx: mac80211 driver for Qualcomm WCN3660/WCN3680 hardware
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	wcn36xx@lists.infradead.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-Yes, i am building it as a module. Let me try to build it into the
-kernel, may be that is the reason why build fails.
+> ath10k_debug_start() was not called with conf_mutex, fix that. Also there was a
+> deadlock in ath10k_debug_stop(), rename it to ath10k_debug_destroy() and call
+> it only when the device is destroyed.
+>
+> Reported-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-2013/10/4 Arend van Spriel <arend@broadcom.com>:
-> On 10/03/2013 11:22 PM, Eugene Krasnikov wrote:
->>
->> Hm, weird... do not see this problem myself. Let me try to sync latest
->> wireless-next and will try to apply latest patch from this mailthread
->> on top.
->
->
-> Hi Eugene,
->
-> Do you build the driver as module. John is building it built-in then kernel.
->
-> Gr. AvS
->
->
->> P.S. If somebody esle can try to apply this patch and build that would
->> be useful to know if problem is visible on others PCs as well.
->>
->> 2013/10/3 John W. Linville <linville@tuxdriver.com>:
->>>
->>> On Thu, Sep 26, 2013 at 11:25:18PM +0100, Eugene Krasnikov wrote:
->>>>
->>>> Hi John,
->>>>
->>>> This is the latest version of wcn36xx driver on top of current
->>>> wireless-next tree. Please let me know if you have any problems with
->>>> applying it.
->>>>
->>>> 2013/9/26 Eugene Krasnikov <k.eugene.e@gmail.com>:
->>>>>
->>>>> This is a mac80211 driver for Qualcomm WCN3660/WCN3680 devices. So
->>>>> far WCN3660/WCN3680 is available only on MSM platform.
->>>>>
->>>>> Firmware can be found here:
->>>>>
->>>>> https://www.codeaurora.org/cgit/external/hisense/platform/vendor/qcom-opensource/wlan/prima/tree/firmware_bin?h=8130_CS
->>>>>
->>>>> Wiki page is available here:
->>>>> http://wireless.kernel.org/en/users/Drivers/wcn36xx
->>>>>
->>>>> A lot people made a contribution to this driver. Here is the list in
->>>>> alphabetical order:
->>>>>
->>>>> Eugene Krasnikov <k.eugene.e@gmail.com>
->>>>> Kalle Valo <kvalo@qca.qualcomm.com>
->>>>> Olof Johansson <dev@skyshaper.net>
->>>>> Pontus Fuchs <pontus.fuchs@gmail.com>
->>>>> Yanbo Li <yanbol@qti.qualcomm.com>
->>>>>
->>>>> Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
->>>
->>>
->>> 'make allyesconfig' yield this:
->>>
->>>    LD      drivers/net/wireless/ath/ath.o
->>>    LD      drivers/net/wireless/ath/built-in.o
->>> drivers/net/wireless/ath/wcn36xx/built-in.o: In function
->>> `_GLOBAL__sub_I_65535_0_wcn36xx_set_default_rates':
->>>
->>> /home/linville/git/wireless-next/drivers/net/wireless/ath/wcn36xx/main.c:302:
->>> multiple definition of `debug_mask'
->>>
->>> drivers/net/wireless/ath/ath6kl/built-in.o:/home/linville/git/wireless-next/drivers/net/wireless/ath/ath6kl/cfg80211.c:1208:
->>> first defined here
->>> make[2]: *** [drivers/net/wireless/ath/built-in.o] Error 1
->>> make[1]: *** [drivers/net/wireless/ath] Error 2
->>> make: *** [drivers/net/wireless/] Error 2
->>>
->>> --
->>> John W. Linville                Someday the world will need a hero, and
->>> you
->>> linville@tuxdriver.com                  might be all we have.  Be ready.
->>
->>
->>
->>
->
->
-
-
+Applied.
 
 -- 
-Best regards,
-Eugene
+Kalle Valo
