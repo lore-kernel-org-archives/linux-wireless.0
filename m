@@ -1,122 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:48678 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754180Ab3JPQkF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Oct 2013 12:40:05 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1VWU8h-0000yb-6v
-	for linux-wireless@vger.kernel.org; Wed, 16 Oct 2013 18:40:03 +0200
-Received: from 46.165.200.49 ([46.165.200.49])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Oct 2013 18:40:03 +0200
-Received: from rezobezandron by 46.165.200.49 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Oct 2013 18:40:03 +0200
+Received: from mail-lb0-f177.google.com ([209.85.217.177]:51382 "EHLO
+	mail-lb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750998Ab3JIE30 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Oct 2013 00:29:26 -0400
+Received: by mail-lb0-f177.google.com with SMTP id w7so300763lbi.22
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Oct 2013 21:29:24 -0700 (PDT)
+MIME-Version: 1.0
+Date: Tue, 8 Oct 2013 21:29:24 -0700
+Message-ID: <CAJqaZwy4priN+Zjnejvj2bbpBm6wN_smSZZi5FBSNrbDaLgiGw@mail.gmail.com> (sfid-20131009_062929_417301_263CBB27)
+Subject: [mac80211] connection drop up to 20x/hour at office
+From: ASIC Felix <ic.felix@gmail.com>
 To: linux-wireless@vger.kernel.org
-From: Andrey <rezobezandron@gmail.com>
-Subject: Re: p54usb raspberry pi no wlan0 device
-Date: Wed, 16 Oct 2013 16:35:26 +0000 (UTC)
-Message-ID: <loom.20131016T182908-234@post.gmane.org> (sfid-20131016_184010_546945_B6B590F4)
-References: <trinity-4366d417-bdc3-4e3b-a613-25b1af7a51a7-1379880343916@3capp-gmx-bs34>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I get this connection drop several times an hour, at office up to
+20x/hour, with current Ubuntu Kernel + Backports wifi even at home,
+before only at the office. Wifi connection recovers eventually, but
+breaks VM and often even VPN connections.
 
- 
+Does anyone else see this? Further info needed?
 
-<the_force@...> writes:
+Ubuntu:                  12-04 LTS
+Kernel:                   3.2.0-54-generic #82-Ubuntu SMP x86_64
+Backports:              v3.11-rc3-1-0-g4e81a94
+make menuconfig:   [ ]   enable powersave by default
 
-> 
-> 
-> Hi Folks,
->  
-> i want to use an Corega WLUSB2GTST USB adapter on my Raspberry Pi linux 
-device. I used fwextract utility with
-> the driver file (Windows 2000 driver, nobyteswap option). So i got these 
-2 files:
->  
-> cgwlusb200.arm
-> cgwlusb201.arm
->  
-> I have copied these files (i tried cgwlusb200.arm also cgwlusb201.arm) to 
-the following location on my
-> Raspberry Pi:
->  
-> /lib/firmware/isl3887usb
-> /lib/modules/3.6.11+/kernel/drivers/net/wireless/isl3887usb
->  
-> After doing a modprobe p54usb, the module seems to load fine:
-> 
-> root <at> pinulldrei:/lib/firmware# lsmod
-> ModuleSize Used by
-> p54usb 11627 0
-> p54common 30229 1 p54usb
-> crc_ccitt 1530 1 p54common
-> mac80211 273979 2 p54common,p54usb
-> cfg80211 184390 2 mac80211,p54common
-> rfkill 18298 1 cfg80211
-> tun 14995 2
-> snd_bcm2835 16432 0
-> snd_pcm 77728 1 snd_bcm2835
-> snd_seq 53482 0
-> snd_timer 20110 2 snd_pcm,snd_seq
-> snd_seq_device 6462 1 snd_seq
-> snd 58744 5 snd_bcm2835,snd_timer,snd_pcm,snd_seq,snd_seq_device
-> snd_page_alloc 5169 1 snd_pcm
-> leds_gpio 2243   0
-> led_class 3570  2 leds_gpio,p54common
-> root <at> pinulldrei:/lib/firmware#
-> 
-> dmesg says:
-> [1031466.099404] usb 1-1.2.1: new high-speed USB device number 10 using 
-dwc_otg
-> [1031466.202908] usb 1-1.2.1: New USB device found, idVendor=07aa, 
-idProduct=0020
-> [1031466.202939] usb 1-1.2.1: New USB device strings: Mfr=1, Product=2, 
-SerialNumber=3
-> [1031554.700433] cfg80211: Calling CRDA to update world regulatory domain
-> [1031554.755865] usbcore: registered new interface driver p54usb
-> 
-> /var/log/messages says:
-> Sep 22 21:33:08 pinulldrei kernel: [1031466.099404] usb 1-1.2.1: new high-
-speed USB device number 10
-> using dwc_otg
-> Sep 22 21:33:09 pinulldrei kernel: [1031466.202908] usb 1-1.2.1: New USB 
-device found, idVendor=07aa, idProduct=0020
-> Sep 22 21:33:09 pinulldrei kernel: [1031466.202939] usb 1-1.2.1: New USB 
-device strings: Mfr=1,
-> Product=2, SerialNumber=3
-> Sep 22 21:34:37 pinulldrei kernel: [1031554.700433] cfg80211: Calling 
-CRDA to update world regulatory domain
-> Sep 22 21:34:37 pinulldrei kernel: [1031554.755865] usbcore: registered 
-new interface driver p54usb
-> 
-> Everything looks fine - but no wlan0 device will be created  The led on 
-the stick will not turn on, so i think
-> i have a driver problem.
-> 
-> How can i debug / solve this problem?!?
-> 
-> Greetings from Germany,
-> Jörg
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" 
-in
-> the body of a message to majordomo@...
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+[ 1955.984833] wlan0: Aggregation is on for 00:24:01:45:51:41 tid 0
+[ 1961.168180] wlan0: tx session timer expired on 00:24:01:45:51:41 tid 0
+[ 1961.168259] wlan0: Tx BA session stop requested for 00:24:01:45:51:41 tid 0
+[ 1968.356133] wlan0: Stopping Tx BA session for 00:24:01:45:51:41 tid 0
+[ 1969.919269] wlan0: Rx BA session stop requested for
+00:24:01:45:51:41 tid 1 recipient reason: 36
+[ 1969.921269] wlan0: moving STA 00:24:01:45:51:41 to state 3
+[ 1969.921280] wlan0: moving STA 00:24:01:45:51:41 to state 2
+[ 1969.921289] wlan0: moving STA 00:24:01:45:51:41 to state 1
+[ 1969.921294] wlan0: Removed STA 00:24:01:45:51:41
+[ 1969.994841] wlan0: Destroyed STA 00:24:01:45:51:41
+[ 1969.994901] cfg80211: Calling CRDA to update world regulatory domain
+[ 1970.007475] cfg80211: World regulatory domain updated:
+[ 1970.007483] cfg80211:   (start_freq - end_freq @ bandwidth),
+(max_antenna_gain, max_eirp)
+[ 1970.007491] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz),
+(300 mBi, 2000 mBm)
+[ 1970.007497] cfg80211:   (2457000 KHz - 2482000 KHz @ 20000 KHz),
+(300 mBi, 2000 mBm)
+[ 1970.007503] cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz),
+(300 mBi, 2000 mBm)
+[ 1970.007509] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz),
+(300 mBi, 2000 mBm)
+[ 1970.007515] cfg80211:   (5735000 KHz - 5835000 KHz @ 40000 KHz),
+(300 mBi, 2000 mBm)
+[ 1973.450965] wlan0: authenticate with 00:24:01:45:51:41
+[ 1973.450986] wlan0: Allocated STA 00:24:01:45:51:41
+[ 1973.463343] wlan0: Inserted STA 00:24:01:45:51:41
+[ 1973.463352] wlan0: send auth to 00:24:01:45:51:41 (try 1/3)
+[ 1973.573146] wlan0: send auth to 00:24:01:45:51:41 (try 2/3)
+[ 1973.753188] wlan0: authentication with 00:24:01:45:51:41 timed out
+[ 1973.757595] wlan0: Removed STA 00:24:01:45:51:41
+
+Driver / Wifi module etc:
+
+ Loading modules backported from Linux version v3.11-rc3-0-g5ae90d8
+ Backport generated by backports.git v3.11-rc3-1-0-g4e81a94
+ cfg80211: Calling CRDA to update world regulatory domain
+ cfg80211: World regulatory domain updated:
+ cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+ cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+ cfg80211:   (2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+ cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+ cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+ cfg80211:   (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+ ath9k 0000:0d:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
+ ath9k 0000:0d:00.0: setting latency timer to 64
+ ath: phy0: ASPM enabled: 0x42
+ ath: EEPROM regdomain: 0x6a
+ ath: EEPROM indicates we should expect a direct regpair map
+ ath: Country alpha2 being used: 00
+ ath: Regpair used: 0x6a
+ ieee80211 phy0: Selected rate control algorithm 'minstrel_ht'
+ Registered led device: ath9k-phy0
+ ieee80211 phy0: Atheros AR9300 Rev:3 mem=0xffffc900118c0000, irq=18
 
 
-The same shit, it seems like p54usb doesn't provide support for this Corega 
-wi-fi stick. If you'd have done modinfo p54usb you could see that there's 
-no corega's vendor and device code among available aliases, the only one 
-Corega device listed is 07aa:001C (your Corega WLUSB2GTST has device id 
-07aa:0020), but it uses different ISL chip. 
-
-
-
+Felix
