@@ -1,69 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:42939 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752529Ab3JOCIw (ORCPT
+Received: from 162-17-110-37-static.hfc.comcastbusiness.net ([162.17.110.37]:47151
+	"EHLO stuffed.shaftnet.org" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1754467Ab3JIQPQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Oct 2013 22:08:52 -0400
-Received: by mail-pa0-f47.google.com with SMTP id kp14so8274669pab.6
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Oct 2013 19:08:51 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+	Wed, 9 Oct 2013 12:15:16 -0400
+From: Solomon Peachy <pizza@shaftnet.org>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	devel@lists.open80211s.org, distro11s@cozybit.com,
-	Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-Subject: [PATCH v5 0/5]  Add Mesh Channel Switch Support
-Date: Mon, 14 Oct 2013 19:08:26 -0700
-Message-Id: <1381802911-3921-1-git-send-email-yeohchunyeow@cozybit.com> (sfid-20131015_040907_592076_7CA2F911)
+Cc: Solomon Peachy <pizza@shaftnet.org>, stable@vger.kernel.org,
+	David Mosberger <davidm@egauge.net>
+Subject: [PATCH] wireless: cw1200: acquire hwbus lock around cw1200_irq_handler() call.
+Date: Wed,  9 Oct 2013 12:15:11 -0400
+Message-Id: <1381335311-20842-1-git-send-email-pizza@shaftnet.org> (sfid-20131009_181520_714499_CD3D28BF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These are the patches required to support Mesh Basic Service Set (MBSS)
-channel switch.
+This fixes "lost interrupt" problems that occurred on SPI-based systems.
+cw1200_irq_handler() expects the hwbus to be locked, but on the
+SPI-path, that lock wasn't taken (unlike in the SDIO-path, where the
+generic SDIO-code takes care of acquiring the lock).
 
-The design is more or less same with the IBSS. Additional procedures
-or elements that are required for mesh operation are as follow:
- * Add additional information element (IE) known as Mesh Channel Switch
-   Parameters (MCSP) required in CSA action, beacon and probe response
-   frames.
- * Forwarding of CSA frame if the conditions defined in the standard
-   are met.
+Cc: stable@vger.kernel.org
+Signed-off-by: David Mosberger <davidm@egauge.net>
+Signed-off-by: Solomon Peachy <pizza@shaftnet.org>
+---
+Please consider this for 3.12-rc if it's not too late!
 
-Limitations:
- * Channel switch is only allowed for the same band and also same channel
-   width from the previous setting.
+ drivers/net/wireless/cw1200/cw1200_spi.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-These patches are reviewed and commented by Bob Copeland, Thomas Pedersen
-and Johannes Berg. Jean-Pierre has also commented on typos error. Any
-further comments are welcomed.
-
-These patches also include refactoring the ieee80211_parse_ch_switch_ie to
-reduce the number of function parameters.
-
-Testing:
-The patches are tested using ath9k.
-
-Chun-Yeow Yeoh (5):
-  mac80211: process the CSA frame for mesh accordingly
-  {nl,cfg,mac}80211: enable the triggering of CSA frame in mesh
-  mac80211: refactor the parsing of chan switch ie
-  {nl,cfg,mac}80211: implement mesh channel switch userspace API
-  mac80211: process mesh channel switching using beacon
-
- include/linux/ieee80211.h  |   20 +++
- net/mac80211/Kconfig       |   11 ++
- net/mac80211/cfg.c         |   24 ++++
- net/mac80211/debug.h       |   10 ++
- net/mac80211/ibss.c        |   67 ++--------
- net/mac80211/ieee80211_i.h |   34 +++++-
- net/mac80211/mesh.c        |  292 +++++++++++++++++++++++++++++++++++++++++++-
- net/mac80211/mlme.c        |   32 +++--
- net/mac80211/rx.c          |    5 +-
- net/mac80211/spectmgmt.c   |   33 +++--
- net/mac80211/tx.c          |   16 +++
- net/mac80211/util.c        |   96 +++++++++++++++
- net/wireless/nl80211.c     |    4 +-
- 13 files changed, 544 insertions(+), 100 deletions(-)
-
+diff --git a/drivers/net/wireless/cw1200/cw1200_spi.c b/drivers/net/wireless/cw1200/cw1200_spi.c
+index 899cad3..755a0c8 100644
+--- a/drivers/net/wireless/cw1200/cw1200_spi.c
++++ b/drivers/net/wireless/cw1200/cw1200_spi.c
+@@ -237,7 +237,9 @@ static irqreturn_t cw1200_spi_irq_handler(int irq, void *dev_id)
+ 	struct hwbus_priv *self = dev_id;
+ 
+ 	if (self->core) {
++		cw1200_spi_lock(self);
+ 		cw1200_irq_handler(self->core);
++		cw1200_spi_unlock(self);
+ 		return IRQ_HANDLED;
+ 	} else {
+ 		return IRQ_NONE;
 -- 
-1.7.9.5
+1.8.3.1
 
