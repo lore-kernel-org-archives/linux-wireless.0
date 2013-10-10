@@ -1,36 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:36343 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754279Ab3JCSUm convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Oct 2013 14:20:42 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-CC: "linux-bluetooth@vger.kernel.org" <linux-bluetooth@vger.kernel.org>,
-	Gustavo Padovan <gustavo@padovan.org>,
-	Johan Hedberg <johan.hedberg@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Mike Frysinger <vapier@chromium.org>,
-	Hyuckjoo Lee <hyuckjoo.lee@samsung.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Date: Thu, 3 Oct 2013 11:20:32 -0700
-Subject: RE: [PATCH v6 0/4] Bluetooth: btmrvl cal data downloading
-Message-ID: <477F20668A386D41ADCC57781B1F70430F451FB1F1@SC-VEXCH1.marvell.com> (sfid-20131003_202047_465536_3EB5419B)
-References: <1380655155-10007-1-git-send-email-bzhao@marvell.com>
- <1EB87650-8518-47BE-B0D7-4F78E09F8691@holtmann.org>
-In-Reply-To: <1EB87650-8518-47BE-B0D7-4F78E09F8691@holtmann.org>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mout.gmx.net ([212.227.15.19]:51986 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755430Ab3JJTEM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Oct 2013 15:04:12 -0400
+Received: from [192.168.2.100] ([93.218.71.155]) by mail.gmx.com (mrgmx103)
+ with ESMTPSA (Nemesis) id 0MCL6r-1VdO4R01Gz-009BHb for
+ <linux-wireless@vger.kernel.org>; Thu, 10 Oct 2013 21:04:10 +0200
+Message-ID: <5256FA29.9010307@rempel-privat.de> (sfid-20131010_210415_101583_F11E29C7)
+Date: Thu, 10 Oct 2013 21:04:09 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
 MIME-Version: 1.0
+To: Cedric VONCKEN <cedric.voncken@acksys.fr>,
+	linux-wireless@vger.kernel.org
+Subject: Re: ATH9K: CST interrupt issue
+References: <773DB8A82AB6A046AE0195C68612A3190164B494@sbs2003.acksys.local>
+In-Reply-To: <773DB8A82AB6A046AE0195C68612A3190164B494@sbs2003.acksys.local>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Marcel,
+Am 10.10.2013 17:49, schrieb Cedric VONCKEN:
+> I using the DNMA-H5 from unex and compat 2013-04-16. 
+> 
+> If the equipment with this card is placed in 30°C environment, with iperf I can send 150 Mbit/s.
+>  
+> If the equipment with this card is placed in 0°C environment my throughput is not stable and is around 40Mbit/s.
+> In this condition, I receive some CST interrupt burst. If I correctly understand the ATH9K driver code, when this interruption occur the driver only increase the interrupt counter.
+> 
+> Have you any information on this interrupt ? I googled but I don't found any information.
 
-> I have decided to apply all 4 patches to bluetooth-next. However please send a follow up patch that
-> changes the code to operate on 16-bit opcodes and not the OGC/OCF and its packing.
+CST - Carrier Sense Timeout.
 
-I will send the follow-up patch shortly.
+> Do you know if the driver need a specific action to handle it ? If yes, could you give me some pointer to do that ?
 
-Thanks,
-Bing
+I do not know. May be some body else knows.
 
+> How I can increase the timeout Value ?  
+
+See AR_CST_TIMEOUT_LIMIT, it should be in useconds.
+
+> If I tried with other Wireless card (DNMA-83 from unex for example) I have not this problem.
+> 
+> Any help will be appreciated.
+
+
+-- 
+Regards,
+Oleksij
