@@ -1,179 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f170.google.com ([209.85.192.170]:60234 "EHLO
-	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753077Ab3JMDbD (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:50955 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756586Ab3JJSRR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Oct 2013 23:31:03 -0400
-Received: by mail-pd0-f170.google.com with SMTP id x10so6010887pdj.29
-        for <linux-wireless@vger.kernel.org>; Sat, 12 Oct 2013 20:31:02 -0700 (PDT)
-From: Mihir Shete <smihir@qti.qualcomm.com>
-To: linux-wireless@vger.kernel.org
-Cc: Mihir Shete <smihir@qti.qualcomm.com>,
-	Henri Bahini <hbahini@qca.qualcomm.com>,
-	Tushnim Bhattacharyya <tushnimb@qca.qualcomm.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 1/2] cfg80211: add flags to define country IE processing rules
-Date: Sun, 13 Oct 2013 09:00:45 +0530
-Message-Id: <1381635046-15123-2-git-send-email-smihir@qti.qualcomm.com> (sfid-20131013_053116_762126_16506F4E)
-In-Reply-To: <1381635046-15123-1-git-send-email-smihir@qti.qualcomm.com>
-References: <1381635046-15123-1-git-send-email-smihir@qti.qualcomm.com>
+	Thu, 10 Oct 2013 14:17:17 -0400
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	Fabio Estevam <festevam@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	ldv-project@linuxtesting.org
+Subject: Re: [PATCH] carl9170: fix leaks at failure path in carl9170_usb_probe()
+Date: Thu, 10 Oct 2013 20:17:09 +0200
+Message-ID: <9668029.9aMApUIsT2@blech> (sfid-20131010_201755_644323_4EF8F17B)
+In-Reply-To: <20131010175952.GG2691@tuxdriver.com>
+References: <1380340311-4630-1-git-send-email-khoroshilov@ispras.ru> <52466624.4040106@ispras.ru> <20131010175952.GG2691@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-802.11 cards may have different country IE parsing behavioural
-preferences and vendors may want to support these. These preferences
-were managed by the WIPHY_FLAG_CUSTOM_REGULATORY and the
-WIPHY_FLAG_STRICT_REGULATORY flags and their combination.
-Instead of using this existing notation, split out the country
-IE behavioural preferences to a new flag. This will allow
-us to add more customizations easily and make the code more
-maintainable
+On Thursday, October 10, 2013 01:59:52 PM John W. Linville wrote:
+> On Sat, Sep 28, 2013 at 01:16:20AM -0400, Alexey Khoroshilov wrote:
+> > On 28.09.2013 00:17, Fabio Estevam wrote:
+> > >On Sat, Sep 28, 2013 at 12:51 AM, Alexey Khoroshilov
+> > ><khoroshilov@ispras.ru> wrote:
+> > >
+> > >>-       return request_firmware_nowait(THIS_MODULE, 1, CARL9170FW_NAME,
+> > >>+       err = request_firmware_nowait(THIS_MODULE, 1, CARL9170FW_NAME,
+> > >>                 &ar->udev->dev, GFP_KERNEL, ar, carl9170_usb_firmware_step2);
+> > >>+       if (err) {
+> > >>+               usb_put_dev(udev);
+> > >>+               usb_put_dev(udev);
+> > >You are doing the same free twice.
+> > Yes, because it was get twice.
+> > >I guess you meant to also free: usb_put_dev(ar->udev)
+> > udev and ar->udev are equal, so technically the patch is correct.
+> > 
+> > I agree that there is some inconsistency, but I would prefer to fix
+> > it at usb_get_dev() side with a comment about reasons for the double
+> > get.
+> 
+> What is the reason for the double get?
 
-Cc: Henri Bahini <hbahini@qca.qualcomm.com>
-Cc: Tushnim Bhattacharyya <tushnimb@qca.qualcomm.com>
-Cc: Luis R. Rodriguez <mcgrof@do-not-panic.com>
-Signed-off-by: Mihir Shete <smihir@qti.qualcomm.com>
----
- drivers/net/wireless/ath/regd.c |  1 +
- include/net/cfg80211.h          | 36 +++++++++++++++++++++++-------------
- include/uapi/linux/nl80211.h    | 29 +++++++++++++++++++++++++++++
- net/wireless/reg.c              |  8 +++-----
- 4 files changed, 56 insertions(+), 18 deletions(-)
+The idea is:
+One (extra) reference protects the asynchronous firmware loader callback
+from disappearing "udev".
 
-diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
-index 7d077c7..cbf074c 100644
---- a/drivers/net/wireless/ath/regd.c
-+++ b/drivers/net/wireless/ath/regd.c
-@@ -513,6 +513,7 @@ ath_regd_init_wiphy(struct ath_regulatory *reg,
- 		 */
- 		regd = ath_world_regdomain(reg);
- 		wiphy->flags |= WIPHY_FLAG_CUSTOM_REGULATORY;
-+		wiphy->country_ie_pref = NL80211_COUNTRY_IE_FOLLOW_POWER;
- 	} else {
- 		/*
- 		 * This gets applied in the case of the absence of CRDA,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 45f6bf5..9dd71f2 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2430,19 +2430,25 @@ struct cfg80211_ops {
-  * 	has its own custom regulatory domain and cannot identify the
-  * 	ISO / IEC 3166 alpha2 it belongs to. When this is enabled
-  * 	we will disregard the first regulatory hint (when the
-- * 	initiator is %REGDOM_SET_BY_CORE).
-- * @WIPHY_FLAG_STRICT_REGULATORY: tells us the driver for this device will
-- *	ignore regulatory domain settings until it gets its own regulatory
-- *	domain via its regulatory_hint() unless the regulatory hint is
-- *	from a country IE. After its gets its own regulatory domain it will
-- *	only allow further regulatory domain settings to further enhance
-- *	compliance. For example if channel 13 and 14 are disabled by this
-- *	regulatory domain no user regulatory domain can enable these channels
-- *	at a later time. This can be used for devices which do not have
-- *	calibration information guaranteed for frequencies or settings
-- *	outside of its regulatory domain. If used in combination with
-- *	WIPHY_FLAG_CUSTOM_REGULATORY the inspected country IE power settings
-- *	will be followed.
-+ * 	initiator is %REGDOM_SET_BY_CORE). wiphys can set the custom
-+ * 	regulatory domain using wiphy_apply_custom_regulatory()
-+ * 	prior to wiphy registration.
-+ * @WIPHY_FLAG_STRICT_REGULATORY: tells us that the wiphy for this device
-+ * 	has regulatory domain that it wishes to be considered as the
-+ * 	superset for regulatory rules. After this device gets its regulatory
-+ * 	domain programmed further regulatory hints shall only be considered
-+ * 	for this device to enhance regulatory compliance, forcing the
-+ * 	device to only possibly use subsets of the original regulatory
-+ * 	rules. For example if channel 13 and 14 are disabled by this
-+ * 	device's regulatory domain no user specified regulatory hint which
-+ * 	has these channels enabled would enable them for this wiphy,
-+ * 	the device's original regulatory domain will be trusted as the
-+ * 	base. You can program the superset of regulatory rules for this
-+ * 	wiphy with regulatory_hint() for cards programmed with an
-+ * 	ISO3166-alpha2 country code. wiphys that use regulatory_hint()
-+ * 	will have their wiphy->regd programmed once the regulatory
-+ * 	domain is set, and all other regulatory hints will be ignored
-+ * 	until their own regulatory domain gets programmed.
-  * @WIPHY_FLAG_DISABLE_BEACON_HINTS: enable this if your driver needs to ensure
-  *	that passive scan flags and beaconing flags may not be lifted by
-  *	cfg80211 due to regulatory beacon hints. For more information on beacon
-@@ -2773,6 +2779,8 @@ struct wiphy_coalesce_support {
-  *	802.11-2012 8.4.2.29 for the defined fields.
-  * @extended_capabilities_mask: mask of the valid values
-  * @extended_capabilities_len: length of the extended capabilities
-+ * @country_ie_pref: country IE processing preferences specified
-+ *	by enum nl80211_country_ie_pref
-  * @coalesce: packet coalescing support information
-  */
- struct wiphy {
-@@ -2844,6 +2852,8 @@ struct wiphy {
- 	const u8 *extended_capabilities, *extended_capabilities_mask;
- 	u8 extended_capabilities_len;
+Regards,
+Chr
  
-+	u8 country_ie_pref;
-+
- 	/* If multiple wiphys are registered and you're handed e.g.
- 	 * a regular netdev with assigned ieee80211_ptr, you won't
- 	 * know whether it points to a wiphy your driver has registered
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index fde2c02..977c487 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2321,6 +2321,35 @@ enum nl80211_reg_type {
- };
  
- /**
-+ * enum nl80211_country_ie_pref - country IE processing preferences
-+ *
-+ * enumerates the different preferences an 802.11 card can advertize
-+ * for parsing the country IEs. As per the current implementation
-+ * country IEs are only used to derive the ISO3166-apha2, the
-+ * information for power settings that comes with the country IE is
-+ * ignored and we use the power settings from regdb.
-+ *
-+ * @NL80211_COUNTRY_IE_FOLLOW_CORE - This is the default behaviour
-+ *	for drivers that do not advertize any preference to handle
-+ *	the country IE. It allows the core to update channel flags
-+ *	according to the ISO3166-alpha2 in the country IE.
-+ *	The applied power is -
-+ *	MIN(power specified by custom domain, power obtained from regdb)
-+ * @NL80211_COUNTRY_IE_FOLLOW_POWER - for devices that have a
-+ *	preference that even though they may have programmed their own
-+ *	custom power setting prior to wiphy registration, they want
-+ *	to ensure their channel power settings are updated for this
-+ *	connection with the power settings derived from the regulatory
-+ *	domain. The regulatory domain used will be based on the
-+ *	ISO3166-alpha2 from country IE provided through
-+ *	regulatory_hint_country_ie()
-+ */
-+enum nl80211_country_ie_pref {
-+	NL80211_COUNTRY_IE_FOLLOW_CORE,
-+	NL80211_COUNTRY_IE_FOLLOW_POWER = BIT(0),
-+};
-+
-+/**
-  * enum nl80211_reg_rule_attr - regulatory rule attributes
-  * @__NL80211_REG_RULE_ATTR_INVALID: attribute number 0 is reserved
-  * @NL80211_ATTR_REG_RULE_FLAGS: a set of flags which specify additional
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index d62cb1e..87b4ee3 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -898,13 +898,11 @@ static void handle_channel(struct wiphy *wiphy,
- 	chan->max_reg_power = (int) MBM_TO_DBM(power_rule->max_eirp);
- 	if (chan->orig_mpwr) {
- 		/*
--		 * Devices that have their own custom regulatory domain
--		 * but also use WIPHY_FLAG_STRICT_REGULATORY will follow the
--		 * passed country IE power settings.
-+		 * Devices that use NL80211_COUNTRY_IE_FOLLOW_POWER will always
-+		 * follow the passed country IE power settings.
- 		 */
- 		if (initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE &&
--		    wiphy->flags & WIPHY_FLAG_CUSTOM_REGULATORY &&
--		    wiphy->flags & WIPHY_FLAG_STRICT_REGULATORY)
-+		    wiphy->country_ie_pref & NL80211_COUNTRY_IE_FOLLOW_POWER)
- 			chan->max_power = chan->max_reg_power;
- 		else
- 			chan->max_power = min(chan->orig_mpwr,
--- 
-1.8.2.1
-
