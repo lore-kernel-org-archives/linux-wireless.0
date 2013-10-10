@@ -1,39 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f178.google.com ([209.85.214.178]:49908 "EHLO
-	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756932Ab3JNRRb (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42441 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755032Ab3JJSAJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Oct 2013 13:17:31 -0400
-Received: by mail-ob0-f178.google.com with SMTP id uz6so4963400obc.37
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Oct 2013 10:17:30 -0700 (PDT)
+	Thu, 10 Oct 2013 14:00:09 -0400
+Date: Thu, 10 Oct 2013 13:48:47 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Kevin Lo <kevlo@kevlo.org>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH v2] rt2x00: rt2800lib: remove duplicate rf_vals for RF3053
+Message-ID: <20131010174847.GF2691@tuxdriver.com> (sfid-20131010_200014_548301_DE3EE1F1)
+References: <524E1CC5.3030004@kevlo.org>
 MIME-Version: 1.0
-In-Reply-To: <1381760529.13092.17.camel@jlt4.sipsolutions.net>
-References: <1381516190-23918-1-git-send-email-yeohchunyeow@cozybit.com>
-	<1381516190-23918-6-git-send-email-yeohchunyeow@cozybit.com>
-	<1381760529.13092.17.camel@jlt4.sipsolutions.net>
-Date: Tue, 15 Oct 2013 01:17:30 +0800
-Message-ID: <CAHS2MGOuq3zaZeAE8rtpS+W9QLVHkhY_w8YrZtNFCX70ycCrxg@mail.gmail.com> (sfid-20131014_191734_426709_3349A00C)
-Subject: Re: [PATCH v4 5/6] {nl,cfg,mac}80211: finalizing mesh channel switching
-From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	devel@lists.open80211s.org,
-	"distro11s@cozybit.com" <distro11s@cozybit.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <524E1CC5.3030004@kevlo.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> subject should read "finalize" or something I guess? Though it really
-> isn't clear to me why you split up the patches as is and didn't just put
-> 3/5 together as "implement mesh channel switch userspace API" or so?
-I split the patches because I would like the CSA to work without even
-the beacon involvement, only CSA action frame. But I will take a look
-on this again.
+This patch is corrupt...
 
-> I don't think this belongs here, it's certainly not needed for the API.
-> Maybe you need a wrapper struct or so?
-Alright, will do so.
+On Fri, Oct 04, 2013 at 09:41:25AM +0800, Kevin Lo wrote:
+> We already have rf_vals_3x with same values.  Hence rf_vals_3053 is removed
+> in this patch.
+> 
+> Signed-off-by: Kevin Lo <kevlo@kevlo.org>
+> Acked-by: Paul Menzel <paulepanter@users.sourceforge.net>
+> ---
+> Changes since v1:
+>   - update comment of rf_vals_3x to indicate that it also supports RF3053
+>   - add Paul's Acked-by tag
+> ---
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c
+> b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index 25aaa5e..78ce749 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -7224,7 +7224,7 @@ static const struct rf_channel rf_vals[] = {
+> 
+>  /*
+>   * RF value list for rt3xxx
+> - * Supports: 2.4 GHz (all) & 5.2 GHz (RF3052)
+> + * Supports: 2.4 GHz (all) & 5.2 GHz (RF3052 & RF3053)
+>   */
+>  static const struct rf_channel rf_vals_3x[] = {
+>         {1,  241, 2, 2 },
+> @@ -7420,72 +7420,6 @@ static const struct rf_channel
+> rf_vals_5592_xtal40[] = {
+>         {196, 83, 0, 12, 1},
+>  };
+> 
+> -static const struct rf_channel rf_vals_3053[] = {
+> -       /* Channel, N, R, K */
+> -       {1, 241, 2, 2},
+> -       {2, 241, 2, 7},
+> -       {3, 242, 2, 2},
+> -       {4, 242, 2, 7},
+> -       {5, 243, 2, 2},
+> -       {6, 243, 2, 7},
+> -       {7, 244, 2, 2},
+> -       {8, 244, 2, 7},
+> -       {9, 245, 2, 2},
+> -       {10, 245, 2, 7},
+> -       {11, 246, 2, 2},
+> -       {12, 246, 2, 7},
+> -       {13, 247, 2, 2},
+> -       {14, 248, 2, 4},
+> -
+> -       {36, 0x56, 0, 4},
+> -       {38, 0x56, 0, 6},
+> -       {40, 0x56, 0, 8},
+> -       {44, 0x57, 0, 0},
+> -       {46, 0x57, 0, 2},
+> -       {48, 0x57, 0, 4},
+> -       {52, 0x57, 0, 8},
+> -       {54, 0x57, 0, 10},
+> -       {56, 0x58, 0, 0},
+> -       {60, 0x58, 0, 4},
+> -       {62, 0x58, 0, 6},
+> -       {64, 0x58, 0, 8},
+> -
+> -       {100, 0x5B, 0, 8},
+> -       {102, 0x5B, 0, 10},
+> -       {104, 0x5C, 0, 0},
+> -       {108, 0x5C, 0, 4},
+> -       {110, 0x5C, 0, 6},
+> -       {112, 0x5C, 0, 8},
+> -
+> -       /* NOTE: Channel 114 has been removed intentionally.
+> -        * The EEPROM contains no TX power values for that,
+> -        * and it is disabled in the vendor driver as well.
+> -        */
+> -
+> -       {116, 0x5D, 0, 0},
+> -       {118, 0x5D, 0, 2},
+> -       {120, 0x5D, 0, 4},
+> -       {124, 0x5D, 0, 8},
+> -       {126, 0x5D, 0, 10},
+> -       {128, 0x5E, 0, 0},
+> -       {132, 0x5E, 0, 4},
+> -       {134, 0x5E, 0, 6},
+> -       {136, 0x5E, 0, 8},
+> -       {140, 0x5F, 0, 0},
+> -
+> -       {149, 0x5F, 0, 9},
+> -       {151, 0x5F, 0, 11},
+> -       {153, 0x60, 0, 1},
+> -       {157, 0x60, 0, 5},
+> -       {159, 0x60, 0, 7},
+> -       {161, 0x60, 0, 9},
+> -       {165, 0x61, 0, 1},
+> -       {167, 0x61, 0, 3},
+> -       {169, 0x61, 0, 5},
+> -       {171, 0x61, 0, 7},
+> -       {173, 0x61, 0, 9},
+> -};
+> -
+>  static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+>  {
+>         struct hw_mode_spec *spec = &rt2x00dev->spec;
+> @@ -7575,14 +7509,11 @@ static int rt2800_probe_hw_mode(struct
+> rt2x00_dev *rt2x00dev)
+>                    rt2x00_rf(rt2x00dev, RF5392)) {
+>                 spec->num_channels = 14;
+>                 spec->channels = rf_vals_3x;
+> -       } else if (rt2x00_rf(rt2x00dev, RF3052)) {
+> +       } else if (rt2x00_rf(rt2x00dev, RF3052) ||
+> +                  rt2x00_rf(rt2x00dev, RF3053)) {
+>                 spec->supported_bands |= SUPPORT_BAND_5GHZ;
+>                 spec->num_channels = ARRAY_SIZE(rf_vals_3x);
+>                 spec->channels = rf_vals_3x;
+> -       } else if (rt2x00_rf(rt2x00dev, RF3053)) {
+> -               spec->supported_bands |= SUPPORT_BAND_5GHZ;
+> -               spec->num_channels = ARRAY_SIZE(rf_vals_3053);
+> -               spec->channels = rf_vals_3053;
+>         } else if (rt2x00_rf(rt2x00dev, RF5592)) {
+>                 spec->supported_bands |= SUPPORT_BAND_5GHZ;
+> 
+> 
+> 
 
-----
-Chun-Yeow
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
