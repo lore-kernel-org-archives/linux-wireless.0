@@ -1,44 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f178.google.com ([209.85.192.178]:39519 "EHLO
-	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752768Ab3JOAmb (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42447 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756101Ab3JJSAR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Oct 2013 20:42:31 -0400
-Received: by mail-pd0-f178.google.com with SMTP id w10so8149152pde.9
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Oct 2013 17:42:31 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 3/6] ath: split user and driver reguluatory hint parsing
-Date: Mon, 14 Oct 2013 17:42:08 -0700
-Message-Id: <1381797731-2454-4-git-send-email-mcgrof@do-not-panic.com> (sfid-20131015_024234_026627_53B531F3)
-In-Reply-To: <1381797731-2454-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1381797731-2454-1-git-send-email-mcgrof@do-not-panic.com>
+	Thu, 10 Oct 2013 14:00:17 -0400
+Date: Thu, 10 Oct 2013 13:59:52 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Alexey Khoroshilov <khoroshilov@ispras.ru>
+Cc: Fabio Estevam <festevam@gmail.com>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless@vger.kernel.org,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	ldv-project@linuxtesting.org
+Subject: Re: [PATCH] carl9170: fix leaks at failure path in
+ carl9170_usb_probe()
+Message-ID: <20131010175952.GG2691@tuxdriver.com> (sfid-20131010_200036_802541_475CD035)
+References: <1380340311-4630-1-git-send-email-khoroshilov@ispras.ru>
+ <CAOMZO5DE0OdXhWNEr2HAswvgryBqP8VNk3+vanwsi38L6pL9OA@mail.gmail.com>
+ <52466624.4040106@ispras.ru>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <52466624.4040106@ispras.ru>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On the regulatory notifier split up the parsing of the
-hints coming from drivers or user. We'll treat these
-separately.
+On Sat, Sep 28, 2013 at 01:16:20AM -0400, Alexey Khoroshilov wrote:
+> On 28.09.2013 00:17, Fabio Estevam wrote:
+> >On Sat, Sep 28, 2013 at 12:51 AM, Alexey Khoroshilov
+> ><khoroshilov@ispras.ru> wrote:
+> >
+> >>-       return request_firmware_nowait(THIS_MODULE, 1, CARL9170FW_NAME,
+> >>+       err = request_firmware_nowait(THIS_MODULE, 1, CARL9170FW_NAME,
+> >>                 &ar->udev->dev, GFP_KERNEL, ar, carl9170_usb_firmware_step2);
+> >>+       if (err) {
+> >>+               usb_put_dev(udev);
+> >>+               usb_put_dev(udev);
+> >You are doing the same free twice.
+> Yes, because it was get twice.
+> >I guess you meant to also free: usb_put_dev(ar->udev)
+> udev and ar->udev are equal, so technically the patch is correct.
+> 
+> I agree that there is some inconsistency, but I would prefer to fix
+> it at usb_get_dev() side with a comment about reasons for the double
+> get.
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- drivers/net/wireless/ath/regd.c | 1 +
- 1 file changed, 1 insertion(+)
+What is the reason for the double get?
 
-diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
-index 8373650..7222eeb 100644
---- a/drivers/net/wireless/ath/regd.c
-+++ b/drivers/net/wireless/ath/regd.c
-@@ -422,6 +422,7 @@ void ath_reg_notifier_apply(struct wiphy *wiphy,
- 		       sizeof(struct ath_regulatory));
- 		break;
- 	case NL80211_REGDOM_SET_BY_DRIVER:
-+		break;
- 	case NL80211_REGDOM_SET_BY_USER:
- 		break;
- 	case NL80211_REGDOM_SET_BY_COUNTRY_IE:
 -- 
-1.8.4.rc3
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
