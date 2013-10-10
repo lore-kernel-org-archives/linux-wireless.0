@@ -1,53 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:34080 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932111Ab3J1Nz3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Oct 2013 09:55:29 -0400
-Message-ID: <1382968522.17956.11.camel@jlt4.sipsolutions.net> (sfid-20131028_145549_200525_F87B5862)
-Subject: Re: [PATCH 16/16] wl1251: Add sysfs file address for setting
- permanent mac address
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pali =?ISO-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
-Cc: Luciano Coelho <luca@coelho.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
-	joni.lapilainen@gmail.com
-Date: Mon, 28 Oct 2013 14:55:22 +0100
-In-Reply-To: <201310281449.58170@pali> (sfid-20131028_145001_437329_9A106CBF)
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
-	 <1382819655-30430-17-git-send-email-pali.rohar@gmail.com>
-	 <1382967905.17956.8.camel@jlt4.sipsolutions.net> <201310281449.58170@pali>
-	 (sfid-20131028_145001_437329_9A106CBF)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:51403 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751919Ab3JJVfk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Oct 2013 17:35:40 -0400
+Message-ID: <52571DAA.60502@openwrt.org> (sfid-20131010_233543_462500_083CD511)
+Date: Thu, 10 Oct 2013 23:35:38 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Regression in commit 0d528d8
+References: <52571723.5020000@lwfinger.net>
+In-Reply-To: <52571723.5020000@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-10-28 at 14:49 +0100, Pali Rohár wrote:
-> On Monday 28 October 2013 14:45:05 Johannes Berg wrote:
-> > On Sat, 2013-10-26 at 22:34 +0200, Pali Rohár wrote:
-> > > Driver wl1251 generating mac address randomly at startup and
-> > > there is no way to set permanent mac address via
-> > > SET_IEEE80211_PERM_ADDR. This patch export sysfs file which
-> > > can set permanent mac address by userspace helper program.
-> > > Patch is needed for devices which do not store mac address
-> > > in internal wl1251 eeprom.
-> > 
-> > This doesn't really seem like a good idea since you can also
-> > just use 'ip' or whatever to set the MAC address.
-> > 
-> > johannes
+On 2013-10-10 11:07 PM, Larry Finger wrote:
+> Commit 0d528d8 by Felix Fietkau, entitled "mac80211: improve the rate control 
+> API", causes the rtlwifi-family of drivers to be unable to connect to an 802.11g 
+> network. A bisection led to this commit, which was confirmed by reversing the patch.
 > 
-> AFAIK you cannot set permanent address (show by ethtool -P wlan0) 
-> via ip/ifconfig.
+> The drivers can connect to a 802.11n networks, which is why the problem has gone 
+> undetected from kernel 3.10 till now.
+> 
+> These drivers use the rate-control mechanism in their firmware. I suspect that 
+> this is causing the problem. What actions do the drivers need to take that were 
+> not required before this patch?
+I don't recall any necessary extra actions introduced by this patch.
+Please compare the rate selection info passed to the driver before and
+after this patch, by dumping info->control.rates.
 
-You probably can't, but that address also doesn't matter at all and
-isn't really used anywhere.
-
-johannes
-
-
+- Felix
