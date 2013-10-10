@@ -1,32 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:47961 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760437Ab3JPIwb (ORCPT
+Received: from smtp-out06.msg.oleane.net ([62.161.7.4]:37724 "EHLO
+	smtp-out06.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755334Ab3JJQJd convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Oct 2013 04:52:31 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Bartosz Markowski <bartosz.markowski@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/2] ath10k: rename WMI_CMD_UNDEFINED
-References: <1381823732-10128-1-git-send-email-bartosz.markowski@tieto.com>
-Date: Wed, 16 Oct 2013 11:52:25 +0300
-In-Reply-To: <1381823732-10128-1-git-send-email-bartosz.markowski@tieto.com>
-	(Bartosz Markowski's message of "Tue, 15 Oct 2013 09:55:31 +0200")
-Message-ID: <871u3l8unq.fsf@kamboji.qca.qualcomm.com> (sfid-20131016_105235_477580_D3D94C60)
+	Thu, 10 Oct 2013 12:09:33 -0400
+Received: from smtp03.msg.oleane.net (smtp03.mail.priv [172.17.20.112])
+	by smtp-out06.msg.oleane.net with ESMTP id r9AG9VTQ007376
+	for <linux-wireless@vger.kernel.org>; Thu, 10 Oct 2013 18:09:31 +0200
+Received: from acksys.fr ([195.6.104.67]) (authenticated)
+	by smtp03.msg.oleane.net (MTA) with ESMTP id r9AFn1Lo006088
+	for <linux-wireless@vger.kernel.org>; Thu, 10 Oct 2013 17:49:02 +0200
+Subject: ATH9K: CST interrupt issue
+Date: Thu, 10 Oct 2013 17:49:00 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Message-ID: <773DB8A82AB6A046AE0195C68612A3190164B494@sbs2003.acksys.local> (sfid-20131010_180942_600576_E328D43E)
+Content-Type: text/plain;
+	charset="iso-8859-1"
+From: "Cedric VONCKEN" <cedric.voncken@acksys.fr>
+To: <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bartosz Markowski <bartosz.markowski@tieto.com> writes:
+I using the DNMA-H5 from unex and compat 2013-04-16. 
 
-> Rename WMI_CMD_UNDEFINED to WMI_CMD_UNSUPPORTED. This is more
-> accurate here. Also return -EOPNOTSUPP instead of -EINVAL in
-> wmi_cmd_send().
->
-> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+If the equipment with this card is placed in 30°C environment, with iperf I can send 150 Mbit/s.
+ 
+If the equipment with this card is placed in 0°C environment my throughput is not stable and is around 40Mbit/s.
+In this condition, I receive some CST interrupt burst. If I correctly understand the ATH9K driver code, when this interruption occur the driver only increase the interrupt counter.
 
-Thanks, both patches applied.
+Have you any information on this interrupt ? I googled but I don't found any information.
+Do you know if the driver need a specific action to handle it ? If yes, could you give me some pointer to do that ?
 
--- 
-Kalle Valo
+How I can increase the timeout Value ?  
+
+If I tried with other Wireless card (DNMA-83 from unex for example) I have not this problem.
+
+Any help will be appreciated.
+
+Best regards.
+Cedric Voncken 
+
