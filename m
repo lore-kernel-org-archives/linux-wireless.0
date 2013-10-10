@@ -1,74 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42443 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755979Ab3JJSAK (ORCPT
+Received: from mail-lb0-f172.google.com ([209.85.217.172]:64041 "EHLO
+	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754523Ab3JJCGY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Oct 2013 14:00:10 -0400
-Date: Thu, 10 Oct 2013 13:45:35 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Kevin Lo <kevlo@kevlo.org>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [PATCH] rt2x00: rt2800lib: fix RF registers for RT5390/RT5392
-Message-ID: <20131010174535.GE2691@tuxdriver.com> (sfid-20131010_200016_956325_F112BD2C)
-References: <524BEB7A.8040508@kevlo.org>
+	Wed, 9 Oct 2013 22:06:24 -0400
+Received: by mail-lb0-f172.google.com with SMTP id x18so1530479lbi.31
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Oct 2013 19:06:22 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <524BEB7A.8040508@kevlo.org>
+In-Reply-To: <52556024.20302@rempel-privat.de>
+References: <CAJqaZwy4priN+Zjnejvj2bbpBm6wN_smSZZi5FBSNrbDaLgiGw@mail.gmail.com>
+	<52556024.20302@rempel-privat.de>
+Date: Wed, 9 Oct 2013 19:06:22 -0700
+Message-ID: <CAJqaZwybHqWohkJu-=0FwWGk0Vkam9-8vbdG=uG0xRVxkLA+ww@mail.gmail.com> (sfid-20131010_040628_091008_2E527689)
+Subject: Re: [mac80211] connection drop up to 20x/hour at office
+From: ASIC Felix <ic.felix@gmail.com>
+To: Oleksij Rempel <linux@rempel-privat.de>
+Cc: linux-wireless@vger.kernel.org,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch is corrupt...
+On Wed, Oct 9, 2013 at 6:54 AM, Oleksij Rempel <linux@rempel-privat.de> wrote:
+> Am 09.10.2013 06:29, schrieb ASIC Felix:
+>> I get this connection drop several times an hour, at office up to
+>> 20x/hour, with current Ubuntu Kernel + Backports wifi even at home,
+>> before only at the office. Wifi connection recovers eventually, but
+>> breaks VM and often even VPN connections.
+>
+> 20x per hour? it mean each 3 mints. Hmm... looks like scan interval of
+> wpa_supplicant.
+> Is it possible to change time to live setting of access point?
 
-On Wed, Oct 02, 2013 at 05:46:34PM +0800, Kevin Lo wrote:
-> Update rf registers to use the same values that the MediaTek/Ralink
-> reference driver DPO_RT5572_LinuxSTA_2.6.1.3_20121022 uses.
-> 
-> References:
->   RF5390RegTable in chips/rt5390.c
->   RF5392RegTable in chips/rt5390.c
-> 
-> Tested on TP-Link TL-WN727N and D-Link DWA-140 Rev.b3 usb wifi dongles.
-> 
-> Signed-off-by: Kevin Lo <kevlo@kevlo.org>
-> ---
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c
-> b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index f414978..0bbd1b5 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -6449,7 +6449,7 @@ static void rt2800_init_rfcsr_5390(struct
-> rt2x00_dev *rt2x00dev)
->         rt2800_rfcsr_write(rt2x00dev, 28, 0x00);
->         rt2800_rfcsr_write(rt2x00dev, 29, 0x10);
-> 
-> -       rt2800_rfcsr_write(rt2x00dev, 30, 0x00);
-> +       rt2800_rfcsr_write(rt2x00dev, 30, 0x10);
->         rt2800_rfcsr_write(rt2x00dev, 31, 0x80);
->         rt2800_rfcsr_write(rt2x00dev, 32, 0x80);
->         rt2800_rfcsr_write(rt2x00dev, 33, 0x00);
-> @@ -6487,7 +6487,7 @@ static void rt2800_init_rfcsr_5390(struct
-> rt2x00_dev *rt2x00dev)
->         rt2800_rfcsr_write(rt2x00dev, 56, 0x22);
->         rt2800_rfcsr_write(rt2x00dev, 57, 0x80);
->         rt2800_rfcsr_write(rt2x00dev, 58, 0x7f);
-> -       rt2800_rfcsr_write(rt2x00dev, 59, 0x63);
-> +       rt2800_rfcsr_write(rt2x00dev, 59, 0x8f);
-> 
->         rt2800_rfcsr_write(rt2x00dev, 60, 0x45);
->         if (rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5390F))
-> @@ -6507,7 +6507,6 @@ static void rt2800_init_rfcsr_5392(struct
-> rt2x00_dev *rt2x00dev)
->         rt2800_rf_init_calibration(rt2x00dev, 2);
-> 
->         rt2800_rfcsr_write(rt2x00dev, 1, 0x17);
-> -       rt2800_rfcsr_write(rt2x00dev, 2, 0x80);
->         rt2800_rfcsr_write(rt2x00dev, 3, 0x88);
->         rt2800_rfcsr_write(rt2x00dev, 5, 0x10);
->         rt2800_rfcsr_write(rt2x00dev, 6, 0xe0);
-> 
-> 
+I'm the only one with an issue, everyone else uses windoz with intel
+wifi and their connection remains solid.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Felix
