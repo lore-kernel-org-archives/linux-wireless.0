@@ -1,67 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f181.google.com ([209.85.215.181]:50689 "EHLO
-	mail-ea0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756004Ab3J1NuC (ORCPT
+Received: from mail-oa0-f52.google.com ([209.85.219.52]:60312 "EHLO
+	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755235Ab3JJIIS convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Oct 2013 09:50:02 -0400
-From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 16/16] wl1251: Add sysfs file address for setting permanent mac address
-Date: Mon, 28 Oct 2013 14:49:57 +0100
-Cc: Luciano Coelho <luca@coelho.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
-	joni.lapilainen@gmail.com
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com> <1382819655-30430-17-git-send-email-pali.rohar@gmail.com> <1382967905.17956.8.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1382967905.17956.8.camel@jlt4.sipsolutions.net>
+	Thu, 10 Oct 2013 04:08:18 -0400
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1996909.omHDmAVbmR";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <201310281449.58170@pali> (sfid-20131028_145036_778245_0E005EDC)
+In-Reply-To: <20131009151330.GC14381@tuxdriver.com>
+References: <1381128950-28125-1-git-send-email-gregkh@linuxfoundation.org>
+	<1381128950-28125-7-git-send-email-gregkh@linuxfoundation.org>
+	<20131009151330.GC14381@tuxdriver.com>
+Date: Thu, 10 Oct 2013 10:08:18 +0200
+Message-ID: <CACna6ryxcfZyObtBAd3a6R7rvgpfw2dtHYaGUwYUrcRL0wGRnQ@mail.gmail.com> (sfid-20131010_100846_466586_683EE561)
+Subject: Re: [PATCH 06/11] bcma: convert bus code to use dev_groups
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1996909.omHDmAVbmR
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+2013/10/9 John W. Linville <linville@tuxdriver.com>:
+> On Sun, Oct 06, 2013 at 11:55:45PM -0700, Greg Kroah-Hartman wrote:
+>> The dev_attrs field of struct bus_type is going away soon, dev_groups
+>> should be used instead.  This converts the bcma bus code to use the
+>> correct field.
+>>
+>> Cc: Rafał Miłecki <zajec5@gmail.com>
+>> Cc: <linux-wireless@vger.kernel.org>
+>> Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+>> ---
+>>
+>> Rafał, I can take this through my driver-core tree if you like, just let
+>> me know what would be the easiest for you.
+>
+> Makes sense to me...
 
-On Monday 28 October 2013 14:45:05 Johannes Berg wrote:
-> On Sat, 2013-10-26 at 22:34 +0200, Pali Roh=C3=A1r wrote:
-> > Driver wl1251 generating mac address randomly at startup and
-> > there is no way to set permanent mac address via
-> > SET_IEEE80211_PERM_ADDR. This patch export sysfs file which
-> > can set permanent mac address by userspace helper program.
-> > Patch is needed for devices which do not store mac address
-> > in internal wl1251 eeprom.
->=20
-> This doesn't really seem like a good idea since you can also
-> just use 'ip' or whatever to set the MAC address.
->=20
-> johannes
-
-AFAIK you cannot set permanent address (show by ethtool -P wlan0)=20
-via ip/ifconfig.
-
-=2D-=20
-Pali Roh=C3=A1r
-pali.rohar@gmail.com
-
---nextPart1996909.omHDmAVbmR
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEABECAAYFAlJua4YACgkQi/DJPQPkQ1JbmACgngFKM192sHlcxzpWCh9/YeQD
-rM8An1PkzO/OblkbtvxanYq8noy7WwGN
-=ZZHU
------END PGP SIGNATURE-----
-
---nextPart1996909.omHDmAVbmR--
+Oops, sorry, missed that. I'll just agree with John :)
