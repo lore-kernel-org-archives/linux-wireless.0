@@ -1,63 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f49.google.com ([74.125.83.49]:56652 "EHLO
-	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752826Ab3J3LpO (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:45766 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750799Ab3JKVky (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Oct 2013 07:45:14 -0400
-Received: by mail-ee0-f49.google.com with SMTP id e52so569347eek.22
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Oct 2013 04:45:12 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH/RFT 04/12] ath10k: rename function to match it's role
-Date: Wed, 30 Oct 2013 12:42:18 +0100
-Message-Id: <1383133346-8135-5-git-send-email-michal.kazior@tieto.com> (sfid-20131030_124606_286054_2CB52435)
-In-Reply-To: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com>
-References: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com>
+	Fri, 11 Oct 2013 17:40:54 -0400
+Message-ID: <52587062.9060405@candelatech.com> (sfid-20131011_234057_695853_B92D42F3)
+Date: Fri, 11 Oct 2013 14:40:50 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Felix Fietkau <nbd@openwrt.org>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211:  Add rate-control name to station debugfs.
+References: <1381525471-23655-1-git-send-email-greearb@candelatech.com> <52586DA9.5050204@openwrt.org>
+In-Reply-To: <52586DA9.5050204@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-What the function does is to actually wait for the
-firmware indication bit to be set. Prerequisite
-for this is having interrupts registered.
+On 10/11/2013 02:29 PM, Felix Fietkau wrote:
+> On 2013-10-11 11:04 PM, greearb@candelatech.com wrote:
+>> From: Ben Greear <greearb@candelatech.com>
+>>
+>> Nice to see what algorithm it's actually using.
+> No need for that, you can use this:
+> # cat /sys/kernel/debug/ieee80211/phy0/rc/name
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/pci.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Ok, that should work for me.  But, is there any reason we cannot
+have a different rate control alg for different stations on same
+phy?
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index d9467e5..1e430d0 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -53,7 +53,7 @@ static int ath10k_pci_post_rx_pipe(struct ath10k_pci_pipe *pipe_info,
- static void ath10k_pci_rx_pipe_cleanup(struct ath10k_pci_pipe *pipe_info);
- static void ath10k_pci_stop_ce(struct ath10k *ar);
- static void ath10k_pci_device_reset(struct ath10k *ar);
--static int ath10k_pci_reset_target(struct ath10k *ar);
-+static int ath10k_pci_wait_for_target_init(struct ath10k *ar);
- static int ath10k_pci_start_intr(struct ath10k *ar);
- static void ath10k_pci_stop_intr(struct ath10k *ar);
- 
-@@ -1857,7 +1857,7 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar)
- 	 */
- 	ath10k_pci_device_reset(ar);
- 
--	ret = ath10k_pci_reset_target(ar);
-+	ret = ath10k_pci_wait_for_target_init(ar);
- 	if (ret)
- 		goto err_irq;
- 
-@@ -2257,7 +2257,7 @@ static void ath10k_pci_stop_intr(struct ath10k *ar)
- 		pci_disable_msi(ar_pci->pdev);
- }
- 
--static int ath10k_pci_reset_target(struct ath10k *ar)
-+static int ath10k_pci_wait_for_target_init(struct ath10k *ar)
- {
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	int wait_limit = 300; /* 3 sec */
+I am thinking of allowing such configuration if possible...the
+better to compare various rate ctrl algorithms...
+
+Thanks,
+Ben
+
+>
+> - Felix
+>
+
+
 -- 
-1.8.4.rc3
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
