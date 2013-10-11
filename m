@@ -1,37 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f43.google.com ([209.85.219.43]:37301 "EHLO
-	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752010Ab3JAWjC (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60574 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751543Ab3JKUpR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Oct 2013 18:39:02 -0400
-Received: by mail-oa0-f43.google.com with SMTP id f4so8500oah.2
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Oct 2013 15:39:01 -0700 (PDT)
+	Fri, 11 Oct 2013 16:45:17 -0400
+Date: Fri, 11 Oct 2013 16:39:01 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: wireless-regdb@lists.infradead.org
+Subject: Re: [ANN] wireless-regdb: master-2013-10-11
+Message-ID: <20131011203901.GA23477@tuxdriver.com> (sfid-20131011_224527_078779_FDB88BDB)
+References: <20131011202459.GF14329@tuxdriver.com>
 MIME-Version: 1.0
-In-Reply-To: <1380626731.14430.29.camel@jlt4.sipsolutions.net>
-References: <1379115372-28426-1-git-send-email-yeohchunyeow@cozybit.com>
-	<1379115372-28426-4-git-send-email-yeohchunyeow@cozybit.com>
-	<1380626731.14430.29.camel@jlt4.sipsolutions.net>
-Date: Wed, 2 Oct 2013 06:39:01 +0800
-Message-ID: <CAHS2MGNToRrmrH5qoyd9442ne5=S7GR-eRmEcDB9YROQzG1ycg@mail.gmail.com> (sfid-20131002_003905_657645_1657282E)
-Subject: Re: [PATCH 3/5] mac80211: adding the CSA and MCSP elements in mesh beaconing
-From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	devel@lists.open80211s.org,
-	"distro11s@cozybit.com" <distro11s@cozybit.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131011202459.GF14329@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Should this patch be before the other one so userspace can't trigger an
-> invalid CSA thing inbetween the two patches?
-Nope, this is related to add the new CSA IE elements to beacon. With
-the first two patches, the userspace is already able to generate a
-valid CSA action frame to trigger channel switch attempt on the mesh
-network.
+On Fri, Oct 11, 2013 at 04:24:59PM -0400, John W. Linville wrote:
+> (Cutting the short log, since the original version got classified as
+> SPAM on vger.kernel.org...??)
+> 
+> A new release of wireless-regdb (master-2013-10-11) is available at:
+> 
+> http://www.kernel.org/pub/software/network/wireless-regdb/wireless-regdb-2013.10.11.tar.gz
+> 
+> Here is the short log of the changes included since the 2013-02-13
+> release:
+> 
+> SNIP -- you'll have to check it yourself:
+> 
+> 	git log master-2013-02-13..master-2013-10-11 | git shortlog
 
-> Why is that csa_settings access not racy?
-I will take a look on this.
+FYI -- I've purged my folders of all other old/pending wireless-regdb
+stuff.  If you have a change that you still want to propose to the
+regulatory database, please send it as a _patch_ at your leisure.
 
---- Chun-Yeow
+Thanks,
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
