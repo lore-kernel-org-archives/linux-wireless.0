@@ -1,57 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:6365 "EHLO
-	hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753873Ab3JPQNi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Oct 2013 12:13:38 -0400
-Message-ID: <525EBB30.5030602@nvidia.com> (sfid-20131016_181347_715850_3679BCAE)
-Date: Wed, 16 Oct 2013 12:13:36 -0400
-From: Rhyland Klein <rklein@nvidia.com>
-MIME-Version: 1.0
-To: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [PATCH 0/5] rfkill-gpio: ACPI support
-References: <1381920823-15403-1-git-send-email-heikki.krogerus@linux.intel.com>
-In-Reply-To: <1381920823-15403-1-git-send-email-heikki.krogerus@linux.intel.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from nbd.name ([46.4.11.11]:55821 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755483Ab3JKVbK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Oct 2013 17:31:10 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
+Subject: [PATCH v2 04/10] ath9k_hw: remove IS_CHAN_OFDM()
+Date: Fri, 11 Oct 2013 23:30:55 +0200
+Message-Id: <1381527061-43758-4-git-send-email-nbd@openwrt.org> (sfid-20131011_233132_333236_CB23DE83)
+In-Reply-To: <1381527061-43758-1-git-send-email-nbd@openwrt.org>
+References: <1381527061-43758-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/16/2013 6:53 AM, Heikki Krogerus wrote:
-> Hi,
-> 
-> The first patches prepare the driver for the support. The last patch
-> can then add the support quite easily. With these patches, adding DT
-> support later will be quite straight forward if someone needs it.
-> 
-> 
-> Heikki Krogerus (5):
->   net: rfkill: gpio: convert to resource managed allocation
->   net: rfkill: gpio: clean up clock handling
->   net: rfkill: gpio: spinlock-safe GPIO access
->   net: rfkill: gpio: prepare for DT and ACPI support
->   net: rfkill: gpio: add ACPI support
-> 
->  net/rfkill/Kconfig       |   2 +-
->  net/rfkill/rfkill-gpio.c | 211 ++++++++++++++++++++++-------------------------
->  2 files changed, 99 insertions(+), 114 deletions(-)
-> 
+The hardware is always configured with OFDM support enabled
 
-Strictly speaking, duplicating the pdata fields into the
-rfkill_gpio_data structure isn't really necessary. Many drivers simply
-have the dt parsing or in this case ACPI parsing generate a
-platform_data structure which would then be saved in the
-rfkill_gpio_data structure.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/hw.c | 8 ++------
+ drivers/net/wireless/ath/ath9k/hw.h | 1 -
+ 2 files changed, 2 insertions(+), 7 deletions(-)
 
-In this case, since it is only a few fields, I am not too worried and I
-am fine either way.
-
-Acked-by: Rhyland Klein <rklein@nvidia.com>
-
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 34c8e2e..40a1132 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1544,9 +1544,7 @@ static bool ath9k_hw_channel_change(struct ath_hw *ah,
+ 	ath9k_hw_set_clockrate(ah);
+ 	ath9k_hw_apply_txpower(ah, chan, false);
+ 
+-	if (IS_CHAN_OFDM(chan) || IS_CHAN_HT(chan))
+-		ath9k_hw_set_delta_slope(ah, chan);
+-
++	ath9k_hw_set_delta_slope(ah, chan);
+ 	ath9k_hw_spur_mitigate_freq(ah, chan);
+ 
+ 	if (band_switch || ini_reloaded)
+@@ -1981,9 +1979,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 
+ 	ath9k_hw_init_mfp(ah);
+ 
+-	if (IS_CHAN_OFDM(chan) || IS_CHAN_HT(chan))
+-		ath9k_hw_set_delta_slope(ah, chan);
+-
++	ath9k_hw_set_delta_slope(ah, chan);
+ 	ath9k_hw_spur_mitigate_freq(ah, chan);
+ 	ah->eep_ops->set_board_values(ah, chan);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index eaaf98b..0e44693 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -445,7 +445,6 @@ struct ath9k_channel {
+        (((_c)->channelFlags & CHANNEL_G_HT20) == CHANNEL_G_HT20) || \
+        (((_c)->channelFlags & CHANNEL_G_HT40PLUS) == CHANNEL_G_HT40PLUS) || \
+        (((_c)->channelFlags & CHANNEL_G_HT40MINUS) == CHANNEL_G_HT40MINUS))
+-#define IS_CHAN_OFDM(_c) (((_c)->channelFlags & CHANNEL_OFDM) != 0)
+ #define IS_CHAN_5GHZ(_c) (((_c)->channelFlags & CHANNEL_5GHZ) != 0)
+ #define IS_CHAN_2GHZ(_c) (((_c)->channelFlags & CHANNEL_2GHZ) != 0)
+ #define IS_CHAN_HALF_RATE(_c) (((_c)->channelFlags & CHANNEL_HALF) != 0)
 -- 
-nvpublic
+1.8.0.2
+
