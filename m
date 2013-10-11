@@ -1,79 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f179.google.com ([209.85.220.179]:47766 "EHLO
-	mail-vc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752004Ab3JHKeE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Oct 2013 06:34:04 -0400
-Received: by mail-vc0-f179.google.com with SMTP id ht10so3453627vcb.24
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Oct 2013 03:34:04 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1381222401-21999-1-git-send-email-johannes@sipsolutions.net>
-References: <1381222401-21999-1-git-send-email-johannes@sipsolutions.net>
-Date: Tue, 8 Oct 2013 12:34:03 +0200
-Message-ID: <CAB3XZEe+vVezWHBkOt_M4pfqCu--c78EuyMEmGD2oqcpP9=c-w@mail.gmail.com> (sfid-20131008_123408_827750_14BC03F5)
-Subject: Re: [PATCH] nl80211: vendor command support
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes.berg@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from arrakis.dune.hu ([78.24.191.176]:42270 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932175Ab3JKLTV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Oct 2013 07:19:21 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 5/5] rt2x00: rt73usb: use rt2x00_has_cap_* helpers
+Date: Fri, 11 Oct 2013 13:18:44 +0200
+Message-Id: <1381490324-14746-5-git-send-email-juhosg@openwrt.org> (sfid-20131011_131926_685876_EAD11A20)
+In-Reply-To: <1381490324-14746-1-git-send-email-juhosg@openwrt.org>
+References: <1381490324-14746-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 8, 2013 at 11:53 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> Add support for vendor-specific commands to nl80211. This is
-> intended to be used for really vendor-specific functionality
-> that can't be implemented in a generic fashion for any reason.
-> It's *NOT* intended to be used for any normal/generic feature
-> or any optimisations that could be implemented across drivers.
->
-> Currently, only vendor commands (with replies) are supported,
-> no dump operations or vendor-specific notifications.
->
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
-[...]
+Use the appropriate helper functions instead of
+directly accessing the rt2x00dev->cap_flags field
+to check device capability flags.
 
->
->  #ifdef CONFIG_NL80211_TESTMODE
->  static struct genl_multicast_group nl80211_testmode_mcgrp = {
-> @@ -6633,11 +6686,11 @@ static int nl80211_testmode_do(struct sk_buff *skb, struct genl_info *info)
->         if (!info->attrs[NL80211_ATTR_TESTDATA])
->                 return -EINVAL;
->
-> -       rdev->testmode_info = info;
-> +       rdev->cur_cmd_info = info;
->         err = rdev_testmode_cmd(rdev, wdev,
->                                 nla_data(info->attrs[NL80211_ATTR_TESTDATA]),
->                                 nla_len(info->attrs[NL80211_ATTR_TESTDATA]));
-> -       rdev->testmode_info = NULL;
-> +       rdev->cur_cmd_info = NULL;
->
->         return err;
->  }
+This improves readability of the code a bit.
 
-[...]
+Compile tested only.
 
-> +
-> +int cfg80211_vendor_cmd_reply(struct sk_buff *skb)
-> +{
-> +       struct cfg80211_registered_device *rdev = ((void **)skb->cb)[0];
-> +       void *hdr = ((void **)skb->cb)[1];
-> +       struct nlattr *data = ((void **)skb->cb)[2];
-> +
-> +       if (WARN_ON(!rdev->cur_cmd_info)) {
-> +               kfree_skb(skb);
-> +               return -EINVAL;
-> +       }
-> +
-> +       nla_nest_end(skb, data);
-> +       genlmsg_end(skb, hdr);
-> +       return genlmsg_reply(skb, rdev->cur_cmd_info);
-> +}
-don't you miss the rdev->cur_cmd_info initialization in case of
-vendor_cmd (like it's being done in testmode)?
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/rt2x00/rt73usb.c |   18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-Eliad.
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index 1d3880e..1baf9c8 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -595,8 +595,8 @@ static void rt73usb_config_antenna_5x(struct rt2x00_dev *rt2x00dev,
+ 	switch (ant->rx) {
+ 	case ANTENNA_HW_DIVERSITY:
+ 		rt2x00_set_field8(&r4, BBP_R4_RX_ANTENNA_CONTROL, 2);
+-		temp = !test_bit(CAPABILITY_FRAME_TYPE, &rt2x00dev->cap_flags)
+-		       && (rt2x00dev->curr_band != IEEE80211_BAND_5GHZ);
++		temp = !rt2x00_has_cap_frame_type(rt2x00dev) &&
++		       (rt2x00dev->curr_band != IEEE80211_BAND_5GHZ);
+ 		rt2x00_set_field8(&r4, BBP_R4_RX_FRAME_END, temp);
+ 		break;
+ 	case ANTENNA_A:
+@@ -636,7 +636,7 @@ static void rt73usb_config_antenna_2x(struct rt2x00_dev *rt2x00dev,
+ 
+ 	rt2x00_set_field8(&r3, BBP_R3_SMART_MODE, 0);
+ 	rt2x00_set_field8(&r4, BBP_R4_RX_FRAME_END,
+-			  !test_bit(CAPABILITY_FRAME_TYPE, &rt2x00dev->cap_flags));
++			  !rt2x00_has_cap_frame_type(rt2x00dev));
+ 
+ 	/*
+ 	 * Configure the RX antenna.
+@@ -709,10 +709,10 @@ static void rt73usb_config_ant(struct rt2x00_dev *rt2x00dev,
+ 
+ 	if (rt2x00dev->curr_band == IEEE80211_BAND_5GHZ) {
+ 		sel = antenna_sel_a;
+-		lna = test_bit(CAPABILITY_EXTERNAL_LNA_A, &rt2x00dev->cap_flags);
++		lna = rt2x00_has_cap_external_lna_a(rt2x00dev);
+ 	} else {
+ 		sel = antenna_sel_bg;
+-		lna = test_bit(CAPABILITY_EXTERNAL_LNA_BG, &rt2x00dev->cap_flags);
++		lna = rt2x00_has_cap_external_lna_bg(rt2x00dev);
+ 	}
+ 
+ 	for (i = 0; i < ARRAY_SIZE(antenna_sel_a); i++)
+@@ -740,7 +740,7 @@ static void rt73usb_config_lna_gain(struct rt2x00_dev *rt2x00dev,
+ 	short lna_gain = 0;
+ 
+ 	if (libconf->conf->chandef.chan->band == IEEE80211_BAND_2GHZ) {
+-		if (test_bit(CAPABILITY_EXTERNAL_LNA_BG, &rt2x00dev->cap_flags))
++		if (rt2x00_has_cap_external_lna_bg(rt2x00dev))
+ 			lna_gain += 14;
+ 
+ 		rt2x00_eeprom_read(rt2x00dev, EEPROM_RSSI_OFFSET_BG, &eeprom);
+@@ -930,7 +930,7 @@ static void rt73usb_link_tuner(struct rt2x00_dev *rt2x00dev,
+ 		low_bound = 0x28;
+ 		up_bound = 0x48;
+ 
+-		if (test_bit(CAPABILITY_EXTERNAL_LNA_A, &rt2x00dev->cap_flags)) {
++		if (rt2x00_has_cap_external_lna_a(rt2x00dev)) {
+ 			low_bound += 0x10;
+ 			up_bound += 0x10;
+ 		}
+@@ -946,7 +946,7 @@ static void rt73usb_link_tuner(struct rt2x00_dev *rt2x00dev,
+ 			up_bound = 0x1c;
+ 		}
+ 
+-		if (test_bit(CAPABILITY_EXTERNAL_LNA_BG, &rt2x00dev->cap_flags)) {
++		if (rt2x00_has_cap_external_lna_bg(rt2x00dev)) {
+ 			low_bound += 0x14;
+ 			up_bound += 0x10;
+ 		}
+@@ -1661,7 +1661,7 @@ static int rt73usb_agc_to_rssi(struct rt2x00_dev *rt2x00dev, int rxd_w1)
+ 	}
+ 
+ 	if (rt2x00dev->curr_band == IEEE80211_BAND_5GHZ) {
+-		if (test_bit(CAPABILITY_EXTERNAL_LNA_A, &rt2x00dev->cap_flags)) {
++		if (rt2x00_has_cap_external_lna_a(rt2x00dev)) {
+ 			if (lna == 3 || lna == 2)
+ 				offset += 10;
+ 		} else {
+-- 
+1.7.10
