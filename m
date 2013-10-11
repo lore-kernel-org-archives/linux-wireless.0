@@ -1,45 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:51960 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755150Ab3JPP5Z (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Oct 2013 11:57:25 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 7/8] ath10k: fix device initialization routine
-References: <20131016134503.25095.8044.stgit@localhost6.localdomain6>
-	<20131016134617.25095.10581.stgit@localhost6.localdomain6>
-	<CA+BoTQkqkuf-=a4giyJHeYdXZ2T3deU7nmuQOxpFcKSzWjGb3Q@mail.gmail.com>
-Date: Wed, 16 Oct 2013 18:57:20 +0300
-In-Reply-To: <CA+BoTQkqkuf-=a4giyJHeYdXZ2T3deU7nmuQOxpFcKSzWjGb3Q@mail.gmail.com>
-	(Michal Kazior's message of "Wed, 16 Oct 2013 08:44:32 -0700")
-Message-ID: <87ppr55hun.fsf@kamboji.qca.qualcomm.com> (sfid-20131016_175729_028616_E301F3EA)
+Received: from canardo.mork.no ([148.122.252.1]:56160 "EHLO canardo.mork.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752071Ab3JKX2Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Oct 2013 19:28:25 -0400
+From: =?UTF-8?q?Bj=C3=B8rn=20Mork?= <bjorn@mork.no>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	=?UTF-8?q?Bj=C3=B8rn=20Mork?= <bjorn@mork.no>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH] wireless-regdb: NO, Norway - enable VHT80
+Date: Sat, 12 Oct 2013 01:27:22 +0200
+Message-Id: <1381534042-28273-1-git-send-email-bjorn@mork.no> (sfid-20131012_012828_396545_80FD6F0F)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+This enables 80 MHz bandwidth usage on all 5 GHz
+frequencies.
 
->> +       /* disable pending irqs */
->> +       ath10k_pci_core_write32(ar, PCIE_INTR_ENABLE_ADDRESS, 0);
->> +       ath10k_pci_core_write32(ar, PCIE_INTR_CLR_ADDRESS, ~0);
->
-> These use SOC_CORE_BASE_ADDRESS as the suffix, not the RTC_SOC_BASE_ADDRESS.
+This is a country that belongs to CEPT [0] and an available
+regulatory source is ECC/DEC/(04)08 [1].
 
-But I am using SOC_CORE_BASE_ADDRESS, right?
+Quoting:
 
-static inline u32 ath10k_pci_core_read32(struct ath10k *ar, u32 addr)
-{
-	return ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS + addr);
-}
+considering [...]
+   e. that the systems covered by this ECC Decision operate
+   typically in a 20 MHz channel bandwidth, other values for
+   the channel bandwidth are also feasible provided they
+   comply with the relevant maximum mean e.i.r.p. and the
+   corresponding maximum mean e.i.r.p. density limits;
 
-static inline void ath10k_pci_core_write32(struct ath10k *ar, u32 addr, u32 val)
-{
-	ath10k_pci_write32(ar, SOC_CORE_BASE_ADDRESS + addr, val);
-}
+[0] https://en.wikipedia.org/wiki/European_Conference_of_Postal_and_Telecommunications_Administrations
+[1] http://www.erodocdb.dk/Docs/doc98/official/pdf/ECCDEC0408.PDF
 
+Cc: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Signed-off-by: Bjørn Mork <bjorn@mork.no>
+---
+I have no idea why this was left out of the big CEPT VHT80 batch...
+
+ db.txt |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index d0d1a3f..8c61b14 100644
+--- a/db.txt
++++ b/db.txt
+@@ -569,9 +569,9 @@ country NL: DFS-ETSI
+ 
+ country NO: DFS-ETSI
+ 	(2402 - 2482 @ 40), (N/A, 20)
+-	(5170 - 5250 @ 40), (N/A, 20)
+-	(5250 - 5330 @ 40), (N/A, 20), DFS
+-	(5490 - 5710 @ 40), (N/A, 27), DFS
++	(5170 - 5250 @ 80), (N/A, 20)
++	(5250 - 5330 @ 80), (N/A, 20), DFS
++	(5490 - 5710 @ 80), (N/A, 27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
+ 
 -- 
-Kalle Valo
+1.7.10.4
+
