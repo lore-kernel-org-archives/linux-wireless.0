@@ -1,46 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f44.google.com ([74.125.83.44]:43656 "EHLO
-	mail-ee0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753766Ab3J3LpT (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:46734 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758074Ab3JKN1h (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Oct 2013 07:45:19 -0400
-Received: by mail-ee0-f44.google.com with SMTP id c4so571974eek.31
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Oct 2013 04:45:16 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH/RFT 07/12] ath10k: remove meaningless check
-Date: Wed, 30 Oct 2013 12:42:21 +0100
-Message-Id: <1383133346-8135-8-git-send-email-michal.kazior@tieto.com> (sfid-20131030_124555_682829_ED13D8F7)
-In-Reply-To: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com>
-References: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com>
+	Fri, 11 Oct 2013 09:27:37 -0400
+Message-ID: <1381498047.14293.15.camel@jlt4.sipsolutions.net> (sfid-20131011_152744_993455_612B807B)
+Subject: Re: [PATCH] cfg80211: Pass station supported channel and oper class
+ info to kernel
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sunil Dutt <c_duttus@qti.qualcomm.com>
+Cc: j@w1.fi, linux-wireless@vger.kernel.org
+Date: Fri, 11 Oct 2013 15:27:27 +0200
+In-Reply-To: <1381331721-12324-1-git-send-email-c_duttus@qti.qualcomm.com>
+References: <1381331721-12324-1-git-send-email-c_duttus@qti.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The check doesn't make much sense. If the address
-were to be 0x0000 the check would fail. In this
-case a 0 address isn't wrong.
+On Wed, 2013-10-09 at 20:45 +0530, Sunil Dutt wrote:
+> The information of the peer's supported channels and supported operating
+> classes are required for the driver to perform TDLS off channel
+> operations. This commit enhances the function nl80211_(new)set_station
+> to pass this information of the peer to the driver.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/pci.c | 3 ---
- 1 file changed, 3 deletions(-)
+Applied, but I made it return an error for %2 case. Please adjust your
+wpa_s changes accordingly.
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 1e430d0..5a1ac9e 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -2307,9 +2307,6 @@ static void ath10k_pci_device_reset(struct ath10k *ar)
- 	int i;
- 	u32 val;
- 
--	if (!SOC_GLOBAL_RESET_ADDRESS)
--		return;
--
- 	ath10k_pci_reg_write32(ar, PCIE_SOC_WAKE_ADDRESS,
- 			       PCIE_SOC_WAKE_V_MASK);
- 	for (i = 0; i < ATH_PCI_RESET_WAIT_MAX; i++) {
--- 
-1.8.4.rc3
+johannes
 
