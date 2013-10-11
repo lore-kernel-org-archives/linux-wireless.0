@@ -1,158 +1,190 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mo-p05-ob.rzone.de ([81.169.146.181]:43451 "EHLO
-	mo-p05-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750811Ab3JSXyK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Oct 2013 19:54:10 -0400
-From: "Stefan Lippers-Hollmann" <s.L-H@gmx.de>
-To: Yannik =?utf-8?q?V=C3=B6lker?= <yannikv@yahoo.de>
-Subject: Re: ar5523 Gigaset USB Adapter 108 issue
-Date: Sat, 19 Oct 2013 23:53:53 +0000
-Cc: Oleksij Rempel <linux@rempel-privat.de>,
-	Pontus Fuchs <pontus.fuchs@gmail.com>,
-	linux-wireless@vger.kernel.org
-References: <Pine.LNX.4.44L0.1310181041080.1164-100000@iolanthe.rowland.org> <52616CD0.2000203@rempel-privat.de> <5262789D.8030704@yahoo.de>
-In-Reply-To: <5262789D.8030704@yahoo.de>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201310192354.04352.s.L-H@gmx.de> (sfid-20131020_015425_314660_2C931A26)
+Received: from nbd.name ([46.4.11.11]:55811 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754683Ab3JKVbK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Oct 2013 17:31:10 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
+Subject: [PATCH v2 10/10] ath9k_hw: remove references to hw->conf
+Date: Fri, 11 Oct 2013 23:31:01 +0200
+Message-Id: <1381527061-43758-10-git-send-email-nbd@openwrt.org> (sfid-20131011_233118_155886_5DD46B7F)
+In-Reply-To: <1381527061-43758-1-git-send-email-nbd@openwrt.org>
+References: <1381527061-43758-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+Accessing it to get the current operating channel is racy and in the way
+of further channel handling related changes
 
-On Saturday 19 October 2013, Yannik Völker wrote:
-[…]
-> [  708.193488] cfg80211: Calling CRDA to update world regulatory domain 
-> [  708.492120] usbcore: registered new interface driver ar5523
-> [  708.509819] cfg80211: World regulatory domain updated:
-> [  708.509822] cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-> [  708.509823] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-> [  708.509824] cfg80211:   (2457000 KHz - 2482000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-> [  708.509825] cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
-> [  708.509826] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-> [  708.509827] cfg80211:   (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-> [  720.232697] usb 3-14: USB disconnect, device number 8
-> [  721.721980] usb 3-14: new high-speed USB device number 9 using xhci_hcd
-> [  721.739153] usb 3-14: New USB device found, idVendor=129b, idProduct=160c
-> [  721.739163] usb 3-14: New USB device strings: Mfr=1, Product=2, SerialNumber=3
-> [  721.739168] usb 3-14: Product: AR5523
-> [  721.739174] usb 3-14: Manufacturer: Atheros Communications Inc
-> [  721.739178] usb 3-14: SerialNumber: 1.0
-> mtp-probe: checking bus 3, device 9:
-> "/sys/devices/pci0000:00/0000:00:14.0/usb3/3-14"
-> mtp-probe: bus: 3, device: 9 was not an MTP device
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ar5008_phy.c |  2 +-
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c |  2 +-
+ drivers/net/wireless/ath/ath9k/calib.c      |  8 +++-----
+ drivers/net/wireless/ath/ath9k/hw.c         | 21 +++++++++------------
+ drivers/net/wireless/ath/ath9k/hw.h         |  2 +-
+ 5 files changed, 15 insertions(+), 20 deletions(-)
 
-Like Oleksij Rempel mentioned, working with arbitrarily cut kernel 
-messages is pretty futile, but I would first recommend to confirm that
-your firmware is really correct:
+diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+index b197bf2..ff415e8 100644
+--- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+@@ -672,7 +672,7 @@ static void ar5008_hw_set_channel_regs(struct ath_hw *ah,
+ 	}
+ 	REG_WRITE(ah, AR_PHY_TURBO, phymode);
+ 
+-	ath9k_hw_set11nmac2040(ah);
++	ath9k_hw_set11nmac2040(ah, chan);
+ 
+ 	ENABLE_REGWRITE_BUFFER(ah);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index 312c868..f3adafd 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -564,7 +564,7 @@ static void ar9003_hw_set_channel_regs(struct ath_hw *ah,
+ 	REG_WRITE(ah, AR_PHY_GEN_CTRL, phymode);
+ 
+ 	/* Configure MAC for 20/40 operation */
+-	ath9k_hw_set11nmac2040(ah);
++	ath9k_hw_set11nmac2040(ah, chan);
+ 
+ 	/* global transmit timeout (25 TUs default)*/
+ 	REG_WRITE(ah, AR_GTXTO, 25 << AR_GTXTO_TIMEOUT_LIMIT_S);
+diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
+index fe23026..d8db74b 100644
+--- a/drivers/net/wireless/ath/ath9k/calib.c
++++ b/drivers/net/wireless/ath/ath9k/calib.c
+@@ -186,7 +186,6 @@ void ath9k_hw_reset_calibration(struct ath_hw *ah,
+ bool ath9k_hw_reset_calvalid(struct ath_hw *ah)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+-	struct ieee80211_conf *conf = &common->hw->conf;
+ 	struct ath9k_cal_list *currCal = ah->cal_list_curr;
+ 
+ 	if (!ah->caldata)
+@@ -208,7 +207,7 @@ bool ath9k_hw_reset_calvalid(struct ath_hw *ah)
+ 		return true;
+ 
+ 	ath_dbg(common, CALIBRATE, "Resetting Cal %d state for channel %u\n",
+-		currCal->calData->calType, conf->chandef.chan->center_freq);
++		currCal->calData->calType, ah->curchan->chan->center_freq);
+ 
+ 	ah->caldata->CalValid &= ~currCal->calData->calType;
+ 	currCal->calState = CAL_WAITING;
+@@ -242,7 +241,6 @@ void ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
+ 	int32_t val;
+ 	u8 chainmask = (ah->rxchainmask << 3) | ah->rxchainmask;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+-	struct ieee80211_conf *conf = &common->hw->conf;
+ 	s16 default_nf = ath9k_hw_get_default_nf(ah, chan);
+ 
+ 	if (ah->caldata)
+@@ -252,7 +250,7 @@ void ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
+ 		if (chainmask & (1 << i)) {
+ 			s16 nfval;
+ 
+-			if ((i >= AR5416_MAX_CHAINS) && !conf_is_ht40(conf))
++			if ((i >= AR5416_MAX_CHAINS) && !IS_CHAN_HT40(chan))
+ 				continue;
+ 
+ 			if (h)
+@@ -314,7 +312,7 @@ void ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
+ 	ENABLE_REGWRITE_BUFFER(ah);
+ 	for (i = 0; i < NUM_NF_READINGS; i++) {
+ 		if (chainmask & (1 << i)) {
+-			if ((i >= AR5416_MAX_CHAINS) && !conf_is_ht40(conf))
++			if ((i >= AR5416_MAX_CHAINS) && !IS_CHAN_HT40(chan))
+ 				continue;
+ 
+ 			val = REG_READ(ah, ah->nf_regs[i]);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index bc7382f..dcdbab4 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -130,29 +130,29 @@ void ath9k_debug_sync_cause(struct ath_common *common, u32 sync_cause)
+ 
+ static void ath9k_hw_set_clockrate(struct ath_hw *ah)
+ {
+-	struct ieee80211_conf *conf = &ath9k_hw_common(ah)->hw->conf;
+ 	struct ath_common *common = ath9k_hw_common(ah);
++	struct ath9k_channel *chan = ah->curchan;
+ 	unsigned int clockrate;
+ 
+ 	/* AR9287 v1.3+ uses async FIFO and runs the MAC at 117 MHz */
+ 	if (AR_SREV_9287(ah) && AR_SREV_9287_13_OR_LATER(ah))
+ 		clockrate = 117;
+-	else if (!ah->curchan) /* should really check for CCK instead */
++	else if (!chan) /* should really check for CCK instead */
+ 		clockrate = ATH9K_CLOCK_RATE_CCK;
+-	else if (conf->chandef.chan->band == IEEE80211_BAND_2GHZ)
++	else if (IS_CHAN_2GHZ(chan))
+ 		clockrate = ATH9K_CLOCK_RATE_2GHZ_OFDM;
+ 	else if (ah->caps.hw_caps & ATH9K_HW_CAP_FASTCLOCK)
+ 		clockrate = ATH9K_CLOCK_FAST_RATE_5GHZ_OFDM;
+ 	else
+ 		clockrate = ATH9K_CLOCK_RATE_5GHZ_OFDM;
+ 
+-	if (conf_is_ht40(conf))
++	if (IS_CHAN_HT40(chan))
+ 		clockrate *= 2;
+ 
+ 	if (ah->curchan) {
+-		if (IS_CHAN_HALF_RATE(ah->curchan))
++		if (IS_CHAN_HALF_RATE(chan))
+ 			clockrate /= 2;
+-		if (IS_CHAN_QUARTER_RATE(ah->curchan))
++		if (IS_CHAN_QUARTER_RATE(chan))
+ 			clockrate /= 4;
+ 	}
+ 
+@@ -1038,7 +1038,6 @@ static bool ath9k_hw_set_global_txtimeout(struct ath_hw *ah, u32 tu)
+ void ath9k_hw_init_global_settings(struct ath_hw *ah)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+-	struct ieee80211_conf *conf = &common->hw->conf;
+ 	const struct ath9k_channel *chan = ah->curchan;
+ 	int acktimeout, ctstimeout, ack_offset = 0;
+ 	int slottime;
+@@ -1113,8 +1112,7 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
+ 	 * BA frames in some implementations, but it has been found to fix ACK
+ 	 * timeout issues in other cases as well.
+ 	 */
+-	if (conf->chandef.chan &&
+-	    conf->chandef.chan->band == IEEE80211_BAND_2GHZ &&
++	if (IS_CHAN_2GHZ(chan) &&
+ 	    !IS_CHAN_HALF_RATE(chan) && !IS_CHAN_QUARTER_RATE(chan)) {
+ 		acktimeout += 64 - sifstime - ah->slottime;
+ 		ctstimeout += 48 - sifstime - ah->slottime;
+@@ -2946,12 +2944,11 @@ void ath9k_hw_set_tsfadjust(struct ath_hw *ah, bool set)
+ }
+ EXPORT_SYMBOL(ath9k_hw_set_tsfadjust);
+ 
+-void ath9k_hw_set11nmac2040(struct ath_hw *ah)
++void ath9k_hw_set11nmac2040(struct ath_hw *ah, struct ath9k_channel *chan)
+ {
+-	struct ieee80211_conf *conf = &ath9k_hw_common(ah)->hw->conf;
+ 	u32 macmode;
+ 
+-	if (conf_is_ht40(conf) && !ah->config.cwm_ignore_extcca)
++	if (IS_CHAN_HT40(chan) && !ah->config.cwm_ignore_extcca)
+ 		macmode = AR_2040_JOINED_RX_CLEAR;
+ 	else
+ 		macmode = 0;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 9d04d67..81fcbc7 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -1003,7 +1003,7 @@ void ath9k_hw_reset_tsf(struct ath_hw *ah);
+ void ath9k_hw_set_tsfadjust(struct ath_hw *ah, bool set);
+ void ath9k_hw_init_global_settings(struct ath_hw *ah);
+ u32 ar9003_get_pll_sqsum_dvc(struct ath_hw *ah);
+-void ath9k_hw_set11nmac2040(struct ath_hw *ah);
++void ath9k_hw_set11nmac2040(struct ath_hw *ah, struct ath9k_channel *chan);
+ void ath9k_hw_beaconinit(struct ath_hw *ah, u32 next_beacon, u32 beacon_period);
+ void ath9k_hw_set_sta_beacon_timers(struct ath_hw *ah,
+ 				    const struct ath9k_beacon_state *bs);
+-- 
+1.8.0.2
 
-	$ md5sum -b /lib/firmware/ar5523.bin
-	78fe4478dca9134c028e7507421b3f6a */lib/firmware/ar5523.bin
-
-ar5523 behaves in a slightly uncommon way, when you first connect your 
-USB wlan card, it flags 0x129b, 0x160c (let's at least use this 
-example) as its USB IDs. ar5523.ko binds to this USB and starts the 
-firmware upload, once the firmware is uploaded to the device, a USB bus
-reset is triggered and the firmware makes the device now flag a 
-different USB, decremented by 1 - so ending up with 0x129b, 0x160b this
-time, only now after this modeswitch the module can actually load. 
-
-In the past - before ar5523 was ever merged into linux, there was (at 
-least) one faulty firmware version which incremented the USB ID, rather
-than decrementing it, which would be one explanation for your problem.
-
-Another quite likely problem would be a side effect of your previous
-ndiswrapper installation, which -in order to function- takes over the
-USB IDs for itself, so also make sure to get rid of all traces of it,
-in particular its overrides in /etc/modprobe.d/*.conf.
-
-But in order to do anything, we really need full logs - at least from 
-the moment on you plug in your USB card. What your log should look like
-is something like this:
-
-[ 4826.812663] usb 3-1.6: new high-speed USB device number 6 using ehci-pci
-[ 4826.899085] usb 3-1.6: New USB device found, idVendor=1385, idProduct=4251
-[ 4826.899090] usb 3-1.6: New USB device strings: Mfr=1, Product=2, SerialNumber=3
-[ 4826.899092] usb 3-1.6: Product: WG111T
-[ 4826.899103] usb 3-1.6: Manufacturer: Atheros Communications Inc
-[ 4826.899105] usb 3-1.6: SerialNumber: 1.0
-[ 4827.004173] usbcore: registered new interface driver ar5523
-[ 4827.325368] usb 3-1.6: USB disconnect, device number 6
-[ 4827.502257] usb 3-1.6: new high-speed USB device number 7 using ehci-pci
-[ 4827.588323] usb 3-1.6: New USB device found, idVendor=1385, idProduct=4250
-[ 4827.588328] usb 3-1.6: New USB device strings: Mfr=1, Product=2, SerialNumber=3
-[ 4827.588331] usb 3-1.6: Product: WG111T
-[ 4827.588333] usb 3-1.6: Manufacturer: Atheros Communications Inc
-[ 4827.588335] usb 3-1.6: SerialNumber: 1.0
-[ 4827.637048] usb 3-1.6: Cap: CAP_TARGET_VERSION=0x00000006
-[ 4827.637432] usb 3-1.6: Cap: CAP_TARGET_REVISION=0x00000001
-[ 4827.637800] usb 3-1.6: Cap: CAP_MAC_VERSION=0x00000008
-[ 4827.638176] usb 3-1.6: Cap: CAP_MAC_REVISION=0x00000001
-[ 4827.638520] usb 3-1.6: Cap: CAP_PHY_REVISION=0x00000046
-[ 4827.638889] usb 3-1.6: Cap: CAP_ANALOG_5GHz_REVISION=0x00000046
-[ 4827.639138] usb 3-1.6: Cap: CAP_ANALOG_2GHz_REVISION=0x00000000
-[ 4827.639525] usb 3-1.6: Cap: CAP_REG_DOMAIN=0x00000000
-[ 4827.639885] usb 3-1.6: Cap: CAP_REG_CAP_BITS=0x00000000
-[ 4827.640147] usb 3-1.6: Cap: CAP_WIRELESS_MODES=0x00000000
-[ 4827.640534] usb 3-1.6: Cap: CAP_CHAN_SPREAD_SUPPORT=0x0000001c
-[ 4827.640885] usb 3-1.6: Cap: CAP_COMPRESS_SUPPORT=0x00000001
-[ 4827.641151] usb 3-1.6: Cap: CAP_BURST_SUPPORT=0x00000001
-[ 4827.641527] usb 3-1.6: Cap: CAP_FAST_FRAMES_SUPPORT=0x00000001
-[ 4827.641884] usb 3-1.6: Cap: CAP_CHAP_TUNING_SUPPORT=0x00000001
-[ 4827.642133] usb 3-1.6: Cap: CAP_TURBOG_SUPPORT=0x00000001
-[ 4827.642508] usb 3-1.6: Cap: CAP_TURBO_PRIME_SUPPORT=0x00000001
-[ 4827.642761] usb 3-1.6: Cap: CAP_DEVICE_TYPE=0x00000001
-[ 4827.643132] usb 3-1.6: Cap: CAP_WME_SUPPORT=0x00000001
-[ 4827.643383] usb 3-1.6: Cap: CAP_TOTAL_QUEUES=0x00000001
-[ 4827.643757] usb 3-1.6: Cap: CAP_CONNECTION_ID_MAX=0x0000000a
-[ 4827.644013] usb 3-1.6: Cap: CAP_LOW_5GHZ_CHAN=0x00000004
-[ 4827.644382] usb 3-1.6: Cap: CAP_HIGH_5GHZ_CHAN=0x00001338
-[ 4827.644756] usb 3-1.6: Cap: CAP_LOW_2GHZ_CHAN=0x000017d4
-[ 4827.645008] usb 3-1.6: Cap: CAP_HIGH_2GHZ_CHAN=0x00000908
-[ 4827.645390] usb 3-1.6: Cap: CAP_TWICE_ANTENNAGAIN_5G=0x00000001
-[ 4827.645659] usb 3-1.6: Cap: CAP_TWICE_ANTENNAGAIN_2G=0x00000004
-[ 4827.646014] usb 3-1.6: Cap: CAP_CIPHER_AES_CCM=0x00000001
-[ 4827.646276] usb 3-1.6: Cap: CAP_CIPHER_TKIP=0x00000000
-[ 4827.646649] usb 3-1.6: Cap: CAP_MIC_TKIP=0x00000000
-[ 4827.647409] usb 3-1.6: MAC/BBP AR5523, RF AR2112
-[ 4827.647676] usb 3-1.6: Found and initialized AR5523 device
-
-only then, afterwards when you actually up your interface, the calls to
-wpa_supplicant and crda will happen, like:
-
-[29068.766731] IPv6: ADDRCONF(NETDEV_UP): wlan1: link is not ready
-[29092.453104] NET: Registered protocol family 17
-[29093.421812] wlan1: authenticate with 01:23:45:67:89:ab
-[29093.431498] wlan1: send auth to 01:23:45:67:89:ab (try 1/3)
-[29093.434232] wlan1: authenticated
-[29093.435348] wlan1: associate with 01:23:45:67:89:ab (try 1/3)
-[29093.438360] wlan1: RX AssocResp from 01:23:45:67:89:ab (capab=0x431 status=0 aid=1)
-[29093.439215] wlan1: associated
-[29093.439243] IPv6: ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
-[29093.439332] cfg80211: Calling CRDA for country: DE
-[29093.443332] cfg80211: Regulatory domain changed to country: DE
-[29093.443335] cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-[29093.443337] cfg80211:   (2400000 KHz - 2483500 KHz @ 40000 KHz), (N/A, 2000 mBm)
-[29093.443339] cfg80211:   (5150000 KHz - 5250000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-[29093.443341] cfg80211:   (5250000 KHz - 5350000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-[29093.443342] cfg80211:   (5470000 KHz - 5725000 KHz @ 40000 KHz), (N/A, 2698 mBm)
-[29093.443344] cfg80211:   (57240000 KHz - 65880000 KHz @ 2160000 KHz), (N/A, 4000 mBm)
-
-We'd need the debugging information for all of these messages, 
-especially the early ones about the mode switch.
-
-Personally I'm rather confident that the existing USB IDs are correct,
-namely 0x129b, 0x160c without firmware loaded and 0x129b, 0x160b after
-the firmware upload has executed its modeswitch, which would be 
-reminiscence of your earlier games with ndiswrapper (which -surprise-
-also uploads a(n eventually broken, see above) firmware). In order to
-make sure to remove different firmwares from your device's RAM, you 
-need to physically disconnect your USB device for a moment (or power
-down your whole system), unloading ndiswrapper and loading ar5523.ko
-or just warmrebooting is not enough (as this won't make the device
-forget its firmware).
-
-Regards
-	Stefan Lippers-Hollmann
