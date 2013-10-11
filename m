@@ -1,75 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f171.google.com ([209.85.217.171]:39076 "EHLO
-	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755870Ab3J1UGH (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:46636 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756819Ab3JKMxI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Oct 2013 16:06:07 -0400
-Received: by mail-lb0-f171.google.com with SMTP id x18so3273405lbi.2
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Oct 2013 13:06:04 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CABPxzYLwwyFCFw1pEt0v9Xw4kcue1C_RZx0RbTbMrUw=+MWvgQ@mail.gmail.com>
-References: <CAMP44s1XJRHV8bAX=_-TkSKMkY8Nw1=eHorqTCZ2QmtR5m8uJA@mail.gmail.com>
-	<526E20EA.9090203@rempel-privat.de>
-	<CAMP44s2Cvw9HF3c3Asuq+bTSD36Gw6PXOUVjAcCD+hf6KB_awg@mail.gmail.com>
-	<CABPxzY+xJ7kst-sYwP8RJwMO_zkNYWKaYy=_LS7WQfuxquK24w@mail.gmail.com>
-	<CAMP44s0087jYz5AiEaEzwt7GqH9ed8PWE1CmvMPr4Dqn3yE6rA@mail.gmail.com>
-	<CABPxzYLwwyFCFw1pEt0v9Xw4kcue1C_RZx0RbTbMrUw=+MWvgQ@mail.gmail.com>
-Date: Mon, 28 Oct 2013 14:06:04 -0600
-Message-ID: <CAMP44s0svc2MRKCrZXS5ZYRZNPoomQkcKHdC2m2BGy7di+TCyA@mail.gmail.com> (sfid-20131028_210614_523062_33500ECB)
-Subject: Re: I always need a miracle to connect with iwlwifi
-From: Felipe Contreras <felipe.contreras@gmail.com>
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Cc: Oleksij Rempel <linux@rempel-privat.de>, ilw@linux.intel.com,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 11 Oct 2013 08:53:08 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] wireless: radiotap: fix parsing buffer overrun
+Date: Fri, 11 Oct 2013 14:53:02 +0200
+Message-Id: <1381495982-28486-1-git-send-email-johannes@sipsolutions.net> (sfid-20131011_145313_711958_FED82D6C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 28, 2013 at 1:27 PM, Krishna Chaitanya
-<chaitanya.mgit@gmail.com> wrote:
-> On Tue, Oct 29, 2013 at 12:13 AM, Felipe Contreras
-> <felipe.contreras@gmail.com> wrote:
->> On Mon, Oct 28, 2013 at 12:28 PM, Krishna Chaitanya
->> <chaitanya.mgit@gmail.com> wrote:
->>> On Mon, Oct 28, 2013 at 11:30 PM, Felipe Contreras
->>> <felipe.contreras@gmail.com> wrote:
->>>
->>>> The authentication response does come back in both cases though, it's
->>>> just the acknowledgement that is missing. Unfortunately I cannot
->>>> figure out for which message it's the ack.
->>>>
->>>> Also, I notice the sequence number received from the router doesn't
->>>> seem to change. All the authentication requests received have the same
->>>> number (256). Another peculiar thing is that in the failed case the SN
->>>> we send starts with 0.
->>>>
->>>> I suppose since the authentication ack never arrives, the next steps
->>>> are never completed.
->>>>
->>>> Does that help?
->>> From the supplicant logs we have successfully received the
->>> authentication response
->>> and sent out the association request. So are you referring to not receiving ACK
->>> for association request??
->>
->> No, from the capture there's no association request in the bad case,
->> only in the good one.
->>
->>> It would be nice to get the capture without any filters?
->>
->> http://people.freedesktop.org/~felipec/wpa/wpa-bad.pcapng
->> http://people.freedesktop.org/~felipec/wpa/wpa-good.pcapng
->>
->
-> From the logs we can see that we have received authentication response,
-> so the association request is getting dropped somewhere? We might
-> need the mac80211 and iwlwifi trace-cmd logs to check for the drop.
->
-> http://wireless.kernel.org/en/developers/Documentation/mac80211/tracing
+From: Johannes Berg <johannes.berg@intel.com>
 
-There you go:
-http://people.freedesktop.org/~felipec/wpa/trace.dat.xz
+When parsing an invalid radiotap header, the parser can overrun
+the buffer that is passed in because it doesn't correctly check
+ 1) the minimum radiotap header size
+ 2) the space for extended bitmaps
 
+The first issue doesn't affect any in-kernel user as they all
+check the minimum size before calling the radiotap function.
+The second issue could potentially affect the kernel if an skb
+is passed in that consists only of the radiotap header with a
+lot of extended bitmaps that extend past the SKB. In that case
+a read-only buffer overrun by at most 4 bytes is possible.
+
+Fix this by adding the appropriate checks to the parser.
+
+Cc: stable@vger.kernel.org
+Reported-by: Evan Huus <eapache@gmail.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/radiotap.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/net/wireless/radiotap.c b/net/wireless/radiotap.c
+index 7d604c0..6c67926 100644
+--- a/net/wireless/radiotap.c
++++ b/net/wireless/radiotap.c
+@@ -102,6 +102,8 @@ int ieee80211_radiotap_iterator_init(
+ 		return -EINVAL;
+ 
+ 	/* sanity check for allowed length and radiotap length field */
++	if (max_length < sizeof(struct ieee80211_radiotap_header))
++		return -EINVAL;
+ 	if (max_length < get_unaligned_le16(&radiotap_header->it_len))
+ 		return -EINVAL;
+ 
+@@ -131,7 +133,8 @@ int ieee80211_radiotap_iterator_init(
+ 			 */
+ 
+ 			if ((unsigned long)iterator->_arg -
+-			    (unsigned long)iterator->_rtheader >
++			    (unsigned long)iterator->_rtheader +
++			    sizeof(uint32_t >
+ 			    (unsigned long)iterator->_max_length)
+ 				return -EINVAL;
+ 		}
 -- 
-Felipe Contreras
+1.8.4.rc3
+
