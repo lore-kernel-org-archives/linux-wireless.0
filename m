@@ -1,65 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f50.google.com ([74.125.83.50]:62130 "EHLO
-	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752972Ab3J3LpO (ORCPT
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:54700 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752058Ab3JKQoF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Oct 2013 07:45:14 -0400
-Received: by mail-ee0-f50.google.com with SMTP id l10so574752eei.9
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Oct 2013 04:45:13 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH/RFT 05/12] ath10k: make sure to mask all CE irqs
-Date: Wed, 30 Oct 2013 12:42:19 +0100
-Message-Id: <1383133346-8135-6-git-send-email-michal.kazior@tieto.com> (sfid-20131030_124607_856865_1F038DA9)
-In-Reply-To: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com>
-References: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com>
+	Fri, 11 Oct 2013 12:44:05 -0400
+Received: by mail-ob0-f175.google.com with SMTP id uz6so2942773obc.20
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Oct 2013 09:44:05 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1381498511.14293.17.camel@jlt4.sipsolutions.net>
+References: <1380760429-26100-1-git-send-email-yeohchunyeow@cozybit.com>
+	<1380760429-26100-6-git-send-email-yeohchunyeow@cozybit.com>
+	<1381498511.14293.17.camel@jlt4.sipsolutions.net>
+Date: Fri, 11 Oct 2013 09:44:04 -0700
+Message-ID: <CAHS2MGPNTS02O-iWDbVyoDyuBFte==fP_iTOvi-inr24bH3pUg@mail.gmail.com> (sfid-20131011_184410_648233_E6978FF1)
+Subject: Re: [PATCH v3 5/6] {nl,cfg,mac}80211: finalizing mesh channel switching
+From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	devel@lists.open80211s.org,
+	"distro11s@cozybit.com" <distro11s@cozybit.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-CE error interrupts were not disabled. This could
-lead to invalid memory accesses / memory
-corruption.
+> This looks broken without kfree_rcu() or synchronize_rcu(), if it's OK
+> then at least add a comment? I think it's not OK though.
+Ok, we fix this soon.
 
-Also make sure CE watermark interrupts are also
-disabled.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/ath/ath10k/ce.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
-index 2b99bd4..7a49cde 100644
---- a/drivers/net/wireless/ath/ath10k/ce.c
-+++ b/drivers/net/wireless/ath/ath10k/ce.c
-@@ -243,6 +243,16 @@ static inline void ath10k_ce_error_intr_enable(struct ath10k *ar,
- 			   misc_ie_addr | CE_ERROR_MASK);
- }
- 
-+static inline void ath10k_ce_error_intr_disable(struct ath10k *ar,
-+						u32 ce_ctrl_addr)
-+{
-+	u32 misc_ie_addr = ath10k_pci_read32(ar,
-+					     ce_ctrl_addr + MISC_IE_ADDRESS);
-+
-+	ath10k_pci_write32(ar, ce_ctrl_addr + MISC_IE_ADDRESS,
-+			   misc_ie_addr & ~CE_ERROR_MASK);
-+}
-+
- static inline void ath10k_ce_engine_int_status_clear(struct ath10k *ar,
- 						     u32 ce_ctrl_addr,
- 						     unsigned int mask)
-@@ -794,6 +804,8 @@ void ath10k_ce_disable_interrupts(struct ath10k *ar)
- 		u32 ctrl_addr = ath10k_ce_base_address(ce_id);
- 
- 		ath10k_ce_copy_complete_intr_disable(ar, ctrl_addr);
-+		ath10k_ce_error_intr_disable(ar, ctrl_addr);
-+		ath10k_ce_watermark_intr_disable(ar, ctrl_addr);
- 	}
- 	ath10k_pci_sleep(ar);
- }
--- 
-1.8.4.rc3
-
+Chun-Yeow
