@@ -1,35 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:36713 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753385Ab3JBQU2 (ORCPT
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:48860 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753042Ab3JKS37 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Oct 2013 12:20:28 -0400
-Message-ID: <1380730816.13329.28.camel@jlt4.sipsolutions.net> (sfid-20131002_182031_229873_D6EE9781)
-Subject: Re: [PATCH v2] mac80211: implement STA CSA for drivers using
- channel contexts
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 02 Oct 2013 18:20:16 +0200
-In-Reply-To: <1378044951-13682-1-git-send-email-arik@wizery.com> (sfid-20130901_161614_768170_0FA669D7)
-References: <1378044951-13682-1-git-send-email-arik@wizery.com>
-	 (sfid-20130901_161614_768170_0FA669D7)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 11 Oct 2013 14:29:59 -0400
+Received: by mail-pa0-f49.google.com with SMTP id ld10so4766329pab.36
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Oct 2013 11:29:58 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	devel@lists.open80211s.org, distro11s@cozybit.com,
+	Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+Subject: [PATCH v4 0/6] Add Mesh Channel Switch Support
+Date: Fri, 11 Oct 2013 11:29:44 -0700
+Message-Id: <1381516190-23918-1-git-send-email-yeohchunyeow@cozybit.com> (sfid-20131011_203005_577343_8086740B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2013-09-01 at 17:15 +0300, Arik Nemtsov wrote:
-> Limit the current implementation to a single channel context used by
-> a single vif, thereby avoiding multi-vif/channel complexities.
-> 
-> Reuse the main function from AP CSA code, but move a portion out in
-> order to fit the STA scenario.
-> 
-> Add a new mac80211 HW flag so we don't break devices that don't support
-> channel switch with channel-contexts. The new behavior will be opt-in.
+These are the patches required to support Mesh Basic Service Set (MBSS)
+channel switch.
 
-Applied, sorry for the delay.
+The design is more or less same with the IBSS. Additional procedures
+or elements that are required for mesh operation are as follow:
+ * Add additional information element (IE) known as Mesh Channel Switch
+   Parameters (MCSP) required in CSA action, beacon and probe response
+   frames.
+ * Forwarding of CSA frame if the conditions defined in the standard
+   are met.
 
-johannes
+Limitations:
+ * Channel switch is only allowed for the same band and also same channel
+   width from the previous setting.
+
+These patches are reviewed and commented by Bob Copeland, Thomas Pedersen
+and Johannes Berg. Jean-Pierre has also commented on typos error. Any 
+further comments are welcomed.
+
+Add separate patch for refactoring the ieee80211_parse_ch_switch_ie to
+reduce the number of function parameters.
+
+Testing:
+The patches are tested using ath9k.
+
+Chun-Yeow Yeoh (6):
+  mac80211: process the CSA frame for mesh accordingly
+  {nl,cfg,mac}80211: enable the triggering of CSA frame in mesh
+  mac80211: add the CSA and MCSP elements in mesh beaconing
+  mac80211: refactor the parsing of chan switch ie
+  {nl,cfg,mac}80211: finalizing mesh channel switching
+  mac80211: process mesh channel switching using beacon
+
+ include/linux/ieee80211.h  |   20 +++
+ net/mac80211/Kconfig       |   11 ++
+ net/mac80211/cfg.c         |   24 ++++
+ net/mac80211/debug.h       |   10 ++
+ net/mac80211/ibss.c        |   67 ++--------
+ net/mac80211/ieee80211_i.h |   29 ++++-
+ net/mac80211/mesh.c        |  293 +++++++++++++++++++++++++++++++++++++++++++-
+ net/mac80211/mlme.c        |   32 +++--
+ net/mac80211/rx.c          |    5 +-
+ net/mac80211/spectmgmt.c   |   33 +++--
+ net/mac80211/tx.c          |   16 +++
+ net/mac80211/util.c        |   96 +++++++++++++++
+ net/wireless/nl80211.c     |    4 +-
+ 13 files changed, 540 insertions(+), 100 deletions(-)
+
+-- 
+1.7.9.5
 
