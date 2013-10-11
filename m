@@ -1,100 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:51951 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752562Ab3JBAQb (ORCPT
+Received: from mail-ee0-f52.google.com ([74.125.83.52]:41469 "EHLO
+	mail-ee0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751665Ab3JKMKB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Oct 2013 20:16:31 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@venema.h4ckr.net, Ben Greear <greearb@candelatech.com>
-Subject: [RFC] ath9k:  Don't let rx tasklet run forever.
-Date: Tue,  1 Oct 2013 17:15:52 -0700
-Message-Id: <1380672952-5749-1-git-send-email-greearb@candelatech.com> (sfid-20131002_021644_800334_4D60495B)
+	Fri, 11 Oct 2013 08:10:01 -0400
+Received: by mail-ee0-f52.google.com with SMTP id c41so1828245eek.39
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Oct 2013 05:10:00 -0700 (PDT)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@qca.qualcomm.com,
+	simon.wunderlich@s2003.tu-chemnitz.de
+Subject: [PATCH v2 1/2] ath9k: add noise floor parameter to ath9k_hw_getchan_noise
+Date: Fri, 11 Oct 2013 14:09:54 +0200
+Message-Id: <1381493395-7632-2-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20131011_141008_682819_E7601EB1)
+In-Reply-To: <1381493395-7632-1-git-send-email-lorenzo.bianconi83@gmail.com>
+References: <1381493395-7632-1-git-send-email-lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Add nf parameter to ath9k_hw_getchan_noise() in order to compute NF for EXT
+chains with the same scale of noise floor calculated on CTL chains.
+ath9k_hw_getchan_noise() will be used in ath_process_fft() for spectral scan on
+HT40 channels
 
-I saw this splat below on a 3.9.11+ kernel system configured to receive
-a UDP flood using wpa2 encryption and software-crypt.  This patch attempts
-to fix this by returning after processing a max of 1000 packets.
-
-BUG: soft lockup - CPU#0 stuck for 22s! [btserver:32646]
-Modules linked in: nfsv4 auth_rpcgss nfs fscache nf_nat_ipv4 nf_nat 8021q garp stp mrp llc macvlan wanlink(O) pktgen lockd sunrpc f71882fg snd_hda_codec_hdmi
-snd_hda_codec_realtek snd_hda_intel snd_hda_codec snd_hwdep cdc_acm joydev snd_seq snd_seq_device snd_pcm coretemp ath9k hwmon ath9k_common mperf ath9k_hw
-intel_powerclamp ath kvm_intel mac80211 kvm cfg80211 iTCO_wdt microcode iTCO_vendor_support snd_page_alloc e1000e i2c_i801 snd_timer mos7840 pcspkr serio_raw
-snd soundcore ptp pps_core lpc_ich uinput ipv6 i915 video i2c_algo_bit drm_kms_helper drm i2c_core [last unloaded: iptable_nat]
-CPU 0
-Pid: 32646, comm: btserver Tainted: G         C O 3.9.11+ #126 To be filled by O.E.M. To be filled by O.E.M./HURONRIVER
-RIP: 0010:[<ffffffff81017e1d>]  [<ffffffff81017e1d>] __kernel_fpu_begin+0x48/0x8b
-RSP: 0000:ffff88021fa03918  EFLAGS: 00000286
-RAX: 00000000ffffffff RBX: ffffffff81549567 RCX: ffff88020bc48000
-RDX: 00000000ffffffff RSI: ffff88021fa03a28 RDI: ffff88020f8d5a00
-RBP: ffff88021fa03918 R08: ffff8801b54a1978 R09: 0000000000000010
-R10: ffff88020c5cb490 R11: 0000000000000200 R12: ffff88021fa03888
-R13: ffffffff815d235d R14: ffff88021fa03918 R15: ffff88020c5cb400
-FS:  00007f02f9605740(0000) GS:ffff88021fa00000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00000000023b4c60 CR3: 000000020b754000 CR4: 00000000000407f0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-Process btserver (pid: 32646, threadinfo ffff880210666000, task ffff88020bc48000)
-Stack:
-  ffff88021fa03928 ffffffff8108b1f2 ffff88021fa03958 ffffffff8108c05d
-  ffff88021fa03a28 ffff88021fa03a28 ffff88020c5c9c00 ffff88021fa03a08
-  ffff88021fa039d8 ffffffffa05be460 ffff880200000010 ffff8801b54a1978
-Call Trace:
-  <IRQ>
-  [<ffffffff8108b1f2>] kernel_fpu_begin+0x42/0x44
-  [<ffffffff8108c05d>] aes_encrypt+0x46/0x62
-  [<ffffffffa05be460>] ieee80211_aes_ccm_decrypt+0xcf/0x108 [mac80211]
-  [<ffffffffa05b1e0f>] ieee80211_crypto_ccmp_decrypt+0x1c7/0x247 [mac80211]
-  [<ffffffffa05c530d>] ieee80211_rx_handlers+0x305/0x18c9 [mac80211]
-  [<ffffffff815d235d>] ? apic_timer_interrupt+0x6d/0x80
-  [<ffffffffa05c71cf>] ieee80211_prepare_and_rx_handle+0x8fe/0x96a [mac80211]
-  [<ffffffffa05c79c4>] ieee80211_rx+0x6e9/0x759 [mac80211]
-  [<ffffffffa08f5f99>] ath_rx_tasklet+0xff8/0x10d1 [ath9k]
-  [<ffffffffa08f43a1>] ath9k_tasklet+0xf9/0x150 [ath9k]
-  [<ffffffff8109d5af>] tasklet_action+0x7d/0xcc
-  [<ffffffff8109da08>] __do_softirq+0x114/0x254
-  [<ffffffff815caf51>] ? _raw_spin_unlock_irqrestore+0x31/0x3c
-  [<ffffffff815caf15>] ? _raw_spin_unlock+0x24/0x2f
-  [<ffffffff8109dbda>] irq_exit+0x4b/0xa8
-  [<ffffffff815d33dd>] do_IRQ+0x9d/0xb4
-  [<ffffffff815cb4ad>] common_interrupt+0x6d/0x6d
-  <EOI>
-Code: 4c 05 00 00 00 00 00 00 65 48 c7 04 25 b0 c6 00 00 00 00 00 00 b0 01 84 c0 48 8b b9 50 05 00 00 74 1b 83 c8 ff 89 c2 48 0f ae 37 <48> 8b 81 50 05 00 00 f6
-80 00 02 00 00 01 75 06 eb 2f 48 0f ae
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/recv.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/calib.c | 10 +++++-----
+ drivers/net/wireless/ath/ath9k/calib.h |  3 ++-
+ drivers/net/wireless/ath/ath9k/hw.c    |  2 +-
+ drivers/net/wireless/ath/ath9k/link.c  |  3 ++-
+ 4 files changed, 10 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index a1b0ec2..b3511c8 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -1162,6 +1162,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 	u64 tsf = 0;
- 	u32 tsf_lower = 0;
- 	unsigned long flags;
-+	int max_per_round = 1000; /* max of 1000 per call if not flushing */
+diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
+index d438a03..698d91a 100644
+--- a/drivers/net/wireless/ath/ath9k/calib.c
++++ b/drivers/net/wireless/ath/ath9k/calib.c
+@@ -63,13 +63,13 @@ static s16 ath9k_hw_get_default_nf(struct ath_hw *ah,
+ 	return ath9k_hw_get_nf_limits(ah, chan)->nominal;
+ }
  
- 	if (edma)
- 		dma_type = DMA_BIDIRECTIONAL;
-@@ -1176,6 +1177,11 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 	do {
- 		bool decrypt_error = false;
+-s16 ath9k_hw_getchan_noise(struct ath_hw *ah, struct ath9k_channel *chan)
++s16 ath9k_hw_getchan_noise(struct ath_hw *ah, struct ath9k_channel *chan,
++			   s16 nf)
+ {
+ 	s8 noise = ATH_DEFAULT_NOISE_FLOOR;
  
-+		if (!flush) {
-+			if (--max_per_round == 0)
-+				break;
-+		}
-+
- 		memset(&rs, 0, sizeof(rs));
- 		if (edma)
- 			bf = ath_edma_get_next_rx_buf(sc, &rs, qtype);
+-	if (chan && chan->noisefloor) {
+-		s8 delta = chan->noisefloor -
+-			   ATH9K_NF_CAL_NOISE_THRESH -
++	if (nf) {
++		s8 delta = nf - ATH9K_NF_CAL_NOISE_THRESH -
+ 			   ath9k_hw_get_default_nf(ah, chan);
+ 		if (delta > 0)
+ 			noise += delta;
+@@ -394,7 +394,7 @@ bool ath9k_hw_getnf(struct ath_hw *ah, struct ath9k_channel *chan)
+ 	clear_bit(NFCAL_PENDING, &caldata->cal_flags);
+ 	ath9k_hw_update_nfcal_hist_buffer(ah, caldata, nfarray);
+ 	chan->noisefloor = h[0].privNF;
+-	ah->noise = ath9k_hw_getchan_noise(ah, chan);
++	ah->noise = ath9k_hw_getchan_noise(ah, chan, chan->noisefloor);
+ 	return true;
+ }
+ EXPORT_SYMBOL(ath9k_hw_getnf);
+diff --git a/drivers/net/wireless/ath/ath9k/calib.h b/drivers/net/wireless/ath/ath9k/calib.h
+index 3d70b8c..b8ed95e 100644
+--- a/drivers/net/wireless/ath/ath9k/calib.h
++++ b/drivers/net/wireless/ath/ath9k/calib.h
+@@ -116,7 +116,8 @@ void ath9k_init_nfcal_hist_buffer(struct ath_hw *ah,
+ void ath9k_hw_bstuck_nfcal(struct ath_hw *ah);
+ void ath9k_hw_reset_calibration(struct ath_hw *ah,
+ 				struct ath9k_cal_list *currCal);
+-s16 ath9k_hw_getchan_noise(struct ath_hw *ah, struct ath9k_channel *chan);
++s16 ath9k_hw_getchan_noise(struct ath_hw *ah, struct ath9k_channel *chan,
++			   s16 nf);
+ 
+ 
+ #endif /* CALIB_H */
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index f11e838..79b766f 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1907,7 +1907,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	} else if (caldata) {
+ 		clear_bit(PAPRD_PACKET_SENT, &caldata->cal_flags);
+ 	}
+-	ah->noise = ath9k_hw_getchan_noise(ah, chan);
++	ah->noise = ath9k_hw_getchan_noise(ah, chan, chan->noisefloor);
+ 
+ 	if (fastcc) {
+ 		r = ath9k_hw_do_fastcc(ah, chan);
+diff --git a/drivers/net/wireless/ath/ath9k/link.c b/drivers/net/wireless/ath/ath9k/link.c
+index 84a6064..b797519 100644
+--- a/drivers/net/wireless/ath/ath9k/link.c
++++ b/drivers/net/wireless/ath/ath9k/link.c
+@@ -518,7 +518,8 @@ void ath_update_survey_nf(struct ath_softc *sc, int channel)
+ 
+ 	if (chan->noisefloor) {
+ 		survey->filled |= SURVEY_INFO_NOISE_DBM;
+-		survey->noise = ath9k_hw_getchan_noise(ah, chan);
++		survey->noise = ath9k_hw_getchan_noise(ah, chan,
++						       chan->noisefloor);
+ 	}
+ }
+ 
 -- 
-1.7.3.4
+1.8.1.2
 
