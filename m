@@ -1,111 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52915 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752599Ab3JIPPN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Oct 2013 11:15:13 -0400
-Date: Wed, 9 Oct 2013 11:13:30 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-kernel@vger.kernel.org,
-	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 06/11] bcma: convert bus code to use dev_groups
-Message-ID: <20131009151330.GC14381@tuxdriver.com> (sfid-20131009_171517_423662_E5C79773)
-References: <1381128950-28125-1-git-send-email-gregkh@linuxfoundation.org>
- <1381128950-28125-7-git-send-email-gregkh@linuxfoundation.org>
+Received: from nbd.name ([46.4.11.11]:55694 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753372Ab3JKV3S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Oct 2013 17:29:18 -0400
+Message-ID: <52586DA9.5050204@openwrt.org> (sfid-20131011_232928_874772_026F149F)
+Date: Fri, 11 Oct 2013 23:29:13 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1381128950-28125-7-git-send-email-gregkh@linuxfoundation.org>
+To: greearb@candelatech.com
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211:  Add rate-control name to station debugfs.
+References: <1381525471-23655-1-git-send-email-greearb@candelatech.com>
+In-Reply-To: <1381525471-23655-1-git-send-email-greearb@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Oct 06, 2013 at 11:55:45PM -0700, Greg Kroah-Hartman wrote:
-> The dev_attrs field of struct bus_type is going away soon, dev_groups
-> should be used instead.  This converts the bcma bus code to use the
-> correct field.
+On 2013-10-11 11:04 PM, greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
 > 
-> Cc: Rafał Miłecki <zajec5@gmail.com>
-> Cc: <linux-wireless@vger.kernel.org>
-> Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> ---
-> 
-> Rafał, I can take this through my driver-core tree if you like, just let
-> me know what would be the easiest for you.
+> Nice to see what algorithm it's actually using.
+No need for that, you can use this:
+# cat /sys/kernel/debug/ieee80211/phy0/rc/name
 
-Makes sense to me...
+- Felix
 
-> 
->  drivers/bcma/main.c | 23 ++++++++++++++++-------
->  1 file changed, 16 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-> index 90ee350..e15430a 100644
-> --- a/drivers/bcma/main.c
-> +++ b/drivers/bcma/main.c
-> @@ -30,28 +30,37 @@ static ssize_t manuf_show(struct device *dev, struct device_attribute *attr, cha
->  	struct bcma_device *core = container_of(dev, struct bcma_device, dev);
->  	return sprintf(buf, "0x%03X\n", core->id.manuf);
->  }
-> +static DEVICE_ATTR_RO(manuf);
-> +
->  static ssize_t id_show(struct device *dev, struct device_attribute *attr, char *buf)
->  {
->  	struct bcma_device *core = container_of(dev, struct bcma_device, dev);
->  	return sprintf(buf, "0x%03X\n", core->id.id);
->  }
-> +static DEVICE_ATTR_RO(id);
-> +
->  static ssize_t rev_show(struct device *dev, struct device_attribute *attr, char *buf)
->  {
->  	struct bcma_device *core = container_of(dev, struct bcma_device, dev);
->  	return sprintf(buf, "0x%02X\n", core->id.rev);
->  }
-> +static DEVICE_ATTR_RO(rev);
-> +
->  static ssize_t class_show(struct device *dev, struct device_attribute *attr, char *buf)
->  {
->  	struct bcma_device *core = container_of(dev, struct bcma_device, dev);
->  	return sprintf(buf, "0x%X\n", core->id.class);
->  }
-> -static struct device_attribute bcma_device_attrs[] = {
-> -	__ATTR_RO(manuf),
-> -	__ATTR_RO(id),
-> -	__ATTR_RO(rev),
-> -	__ATTR_RO(class),
-> -	__ATTR_NULL,
-> +static DEVICE_ATTR_RO(class);
-> +
-> +static struct attribute *bcma_device_attrs[] = {
-> +	&dev_attr_manuf.attr,
-> +	&dev_attr_id.attr,
-> +	&dev_attr_rev.attr,
-> +	&dev_attr_class.attr,
-> +	NULL,
->  };
-> +ATTRIBUTE_GROUPS(bcma_device);
->  
->  static struct bus_type bcma_bus_type = {
->  	.name		= "bcma",
-> @@ -59,7 +68,7 @@ static struct bus_type bcma_bus_type = {
->  	.probe		= bcma_device_probe,
->  	.remove		= bcma_device_remove,
->  	.uevent		= bcma_device_uevent,
-> -	.dev_attrs	= bcma_device_attrs,
-> +	.dev_groups	= bcma_device_groups,
->  };
->  
->  static u16 bcma_cc_core_id(struct bcma_bus *bus)
-> -- 
-> 1.8.4.6.g82e253f.dirty
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
-
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
