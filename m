@@ -1,60 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51441 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757737Ab3J1XUL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Oct 2013 19:20:11 -0400
-Message-ID: <1383002394.28991.18.camel@dcbw.foobar.com> (sfid-20131029_002016_303242_5E061A84)
-Subject: Re: Linksys AE3000 iw tool issues
-From: Dan Williams <dcbw@redhat.com>
-To: Richard Wang <rpw@andrew.cmu.edu>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 28 Oct 2013 18:19:54 -0500
-In-Reply-To: <526ED703.6020901@andrew.cmu.edu>
-References: <526ED703.6020901@andrew.cmu.edu>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-la0-f48.google.com ([209.85.215.48]:57454 "EHLO
+	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752110Ab3JKKLk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Oct 2013 06:11:40 -0400
+Received: by mail-la0-f48.google.com with SMTP id er20so3103322lab.7
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Oct 2013 03:11:39 -0700 (PDT)
+Message-ID: <5257CED4.4020406@gmail.com> (sfid-20131011_121143_890846_4A7C3FAA)
+Date: Fri, 11 Oct 2013 12:11:32 +0200
+From: Thomas Lindroth <thomas.lindroth@gmail.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Kernel panic in ieee80211_calculate_rx_timestamp
+References: <523B3BEA.9000100@gmail.com>  (sfid-20130919_200122_426878_A0C53351) <1380551237.14467.12.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1380551237.14467.12.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-10-28 at 17:28 -0400, Richard Wang wrote:
-> Hi,
+On 09/30/2013 04:27 PM, Johannes Berg wrote:
+> On Thu, 2013-09-19 at 20:01 +0200, Thomas Lindroth wrote:
+>> I recently got a ath9k_htc based dongle and running kismet for a few
+>> hours results in a kernel panic (divide error) in
+>> ieee80211_calculate_rx_timestamp with kernel 3.11.0.
+>>
+>> The problem seems to occur when the call to cfg80211_calculate_bitrate
+>> returns 0. I've used this patch to temporarily works around the problem.
 > 
-> I currently have a Linksys AE3000 Wifi USB dongle, which has the 
-> RalinkRT3573 chipset.
+> Seems fair, but maybe it should print out the rate info so you can see
+> what was actually received - most likely this is a driver bug though.
 > 
-> I am able currently able to connect to surrounding APs by installing 
-> Ralink proprietary drivers as outlined here 
-> (http://geekniggle.blogspot.com/2012/07/cisco-linksys-ae3000-wifi-usb-dongle.html). 
-> Ifconfig and iwconfig both recognize the device using the interface ra0. 
-> Unfortunately, the "iw" tool is having some issues. One machine running 
-> Lucid Ubuntu 10.04 with the following command "iw dev ra0 info" returns 
-> "command failed: No such device (-19)". Another machine machine with 
-> xubuntu on command "iw list" returns "nl80211 not found."
+> If you submit a patch that can be applied with signed-off-by etc. I can
+> apply it.
 
-The proprietary ralink drivers do not appear to support the kernel's
-nl80211 API. In the first case (no such device) that's what is
-happening.  IN the second case (nl80211 not found) the nl80211 module is
-either not compiled into the kernel, or is not loaded.  And since the
-wifi driver doesn't use nl80211, that's probably why it's not loaded.
+Sorry for the late reply. My first post was mostly meant as a bug
+report. I don't have the insight needed for a proper fix but that patch
+should point a developer in the right direction.
 
->  From what I have read so far, it appears that the current driver may 
-> not support iw operations. As a result, I looked into installing 
-
-Correct, that proprietary driver does not use nl80211.
-
-> rt2800usb driver that a few other threads appear to have working 
-> successfully. As stated on wikidevi 
-> (http://wikidevi.com/wiki/Linksys_AE3000), one of the more recent 
-> patches appears to support the RT3573 chipset. I tried to install the 
-> latest developmental release. After rebooting and loading the rt2800usb 
-> driver, "modprobe rt2800usb", I get dmesg errors like "rt2x00lib: 
-> disagrees about version of... ieee80211....".
-> 
-> Any suggestions to get the "iw" tool working would be much appreciated.
-
-Getting "iw" working would basically involve adding RT3573 support to
-rt2800usb, so you're really asking "how can we get RT3573 chips properly
-supported in Linux?".  If that's done, "iw" comes for free.
-
-Dan
-
+/Thomas Lindroth
