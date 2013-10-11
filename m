@@ -1,57 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f47.google.com ([209.85.219.47]:53132 "EHLO
-	mail-oa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754602Ab3JSBgB (ORCPT
+Received: from mail-vb0-f43.google.com ([209.85.212.43]:48355 "EHLO
+	mail-vb0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756490Ab3JKUoW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Oct 2013 21:36:01 -0400
-Message-ID: <5261E1FE.2030304@lwfinger.net> (sfid-20131019_033625_698309_2FCD8D53)
-Date: Fri, 18 Oct 2013 20:35:58 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 11 Oct 2013 16:44:22 -0400
+Received: by mail-vb0-f43.google.com with SMTP id h11so3141064vbh.2
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Oct 2013 13:44:21 -0700 (PDT)
 MIME-Version: 1.0
-To: Felipe Pena <felipensp@gmail.com>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi: rtl8192se: Fix wrong assignment
-References: <1382143960-4594-1-git-send-email-felipensp@gmail.com>
-In-Reply-To: <1382143960-4594-1-git-send-email-felipensp@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <20131011153026.GA13099@localhost>
+References: <20131011153026.GA13099@localhost>
+Date: Fri, 11 Oct 2013 21:44:20 +0100
+Message-ID: <CAFSJ42Z3fpBbr3j5X1q7T1iQ8a0KZtw0jHnAO+_DBaKuXtLZ9Q@mail.gmail.com> (sfid-20131011_224429_218022_295B6B3F)
+Subject: Re: [wireless-next:master 82/98] drivers/net/wireless/ath/wcn36xx/smd.c:1330:2-8:
+ preceding lock on line 1324
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: Fengguang Wu <fengguang.wu@intel.com>
+Cc: kbuild-all@01.org, "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	wcn36xx <wcn36xx@lists.infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/18/2013 07:52 PM, Felipe Pena wrote:
-> There is a typo in the struct member name on assignment when checking
-> rtlphy->current_chan_bw == HT_CHANNEL_WIDTH_20_40, the check uses pwrgroup_ht40
-> for bound limit and uses pwrgroup_ht20 when assigning instead.
+Good patch, thanx!
+
+On Fri, Oct 11, 2013 at 4:30 PM, Fengguang Wu <fengguang.wu@intel.com> wrote:
 >
-> Signed-off-by: Felipe Pena <felipensp@gmail.com>
-> ---
->   drivers/net/wireless/rtlwifi/rtl8192se/rf.c |    2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
+> Hi Eugene,
 >
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/rf.c b/drivers/net/wireless/rtlwifi/rtl8192se/rf.c
-> index 5061f1d..92d38ab 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192se/rf.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192se/rf.c
-> @@ -265,7 +265,7 @@ static void _rtl92s_get_txpower_writeval_byregulatory(struct ieee80211_hw *hw,
->   				    rtlefuse->pwrgroup_ht40
->   				    [RF90_PATH_A][chnl - 1]) {
->   					pwrdiff_limit[i] =
-> -					  rtlefuse->pwrgroup_ht20
-> +					  rtlefuse->pwrgroup_ht40
->   					  [RF90_PATH_A][chnl - 1];
->   				}
->   			} else {
+> FYI, there are coccinelle warnings in
+>
+> tree:   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next.git master
+> head:   e25aa82a89db9e3b09d02b5481aa375c7712a10d
+> commit: 8e84c25821698bdef73c0329fb2022a4673b7adc [82/98] wcn36xx: mac80211 driver for Qualcomm WCN3660/WCN3680 hardware
+>
+>>> drivers/net/wireless/ath/wcn36xx/smd.c:1330:2-8: preceding lock on line 1324
 > --
+>>> drivers/net/wireless/ath/wcn36xx/debug.c:27:11-31: WARNING opportunity for simple_open, see also structure on line 106
+>>> drivers/net/wireless/ath/wcn36xx/debug.c:27:11-31: WARNING opportunity for simple_open, see also structure on line 148
+>
+> Please consider folding the attached diff :-)
+>
+> ---
+> 0-DAY kernel build testing backend              Open Source Technology Center
+> http://lists.01.org/mailman/listinfo/kbuild                 Intel Corporation
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
-
-John: I forgot to mention this earlier, but when you add your s-o-b, please add 
-a Cc for Stable [3.0 +].
-
-Thanks,
-
-Larry
 
 
+-- 
+Best regards,
+Eugene
