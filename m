@@ -1,96 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:63506 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754376Ab3J1JwH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Oct 2013 05:52:07 -0400
-Received: from [192.168.1.100] ([93.218.124.130]) by mail.gmx.com (mrgmx103)
- with ESMTPSA (Nemesis) id 0M8MyE-1VwMqc2IyI-00vthV for
- <linux-wireless@vger.kernel.org>; Mon, 28 Oct 2013 10:52:05 +0100
-Message-ID: <526E33C3.60302@rempel-privat.de> (sfid-20131028_105211_603845_2D14A4A6)
-Date: Mon, 28 Oct 2013 10:52:03 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
-MIME-Version: 1.0
-To: Felipe Contreras <felipe.contreras@gmail.com>
-CC: linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	ilw@linux.intel.com,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>
-Subject: Re: I always need a miracle to connect with iwlwifi
-References: <CAMP44s1XJRHV8bAX=_-TkSKMkY8Nw1=eHorqTCZ2QmtR5m8uJA@mail.gmail.com>	<526E20EA.9090203@rempel-privat.de> <CAMP44s0ypeV5JeoF=KWPM-VqZbyR_joJ-4Xg5icKqp2QiNN=Tw@mail.gmail.com>
-In-Reply-To: <CAMP44s0ypeV5JeoF=KWPM-VqZbyR_joJ-4Xg5icKqp2QiNN=Tw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([144.76.43.152]:45617 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757038Ab3JKHYk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Oct 2013 03:24:40 -0400
+Message-ID: <1381476265.14293.0.camel@jlt4.sipsolutions.net> (sfid-20131011_092443_153943_77307F17)
+Subject: Re: [wireless-next:master 82/98]
+ drivers/net/wireless/ath/wcn36xx/wcn36xx.h:88:24: sparse: incorrect type in
+ assignment (different base types)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>
+Cc: Fengguang Wu <fengguang.wu@intel.com>, kbuild-all@01.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	wcn36xx <wcn36xx@lists.infradead.org>
+Date: Fri, 11 Oct 2013 09:24:25 +0200
+In-Reply-To: <CAFSJ42aa_-DTHDxkRDM+0bm9052ree__K54CRm749SeQPDHwRw@mail.gmail.com> (sfid-20131011_091951_879185_187DCB17)
+References: <525720d0.6xVLGLwuRrqxqOBI%fengguang.wu@intel.com>
+	 <20131011014733.GD11191@localhost>
+	 <CAFSJ42aa_-DTHDxkRDM+0bm9052ree__K54CRm749SeQPDHwRw@mail.gmail.com>
+	 (sfid-20131011_091951_879185_187DCB17)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 28.10.2013 10:38, schrieb Felipe Contreras:
-> On Mon, Oct 28, 2013 at 2:31 AM, Oleksij Rempel <linux@rempel-privat.de> wrote:
->> Am 28.10.2013 07:24, schrieb Felipe Contreras:
->>> Hi,
->>>
->>> I already reported this problem [1] and I got no feedback whatsoever
->>> at all. The issue keeps happening and I've tried many things.
->>>
->>> First of all, when Linux is failing, my phone connects fine, other
->>> computers connect fine, and this machine with Windows 7 as well. I've
->>> tried reloading the driver, rebooting, different module parameters,
->>> nothing works.
->>>
->>> I logged a session [2] where I waited 30 minutes for the link to come
->>> up, but it never did. You can see the same thing happening over and
->>> over:
->>>
->>> 1382936199.582861: nl80211: Association request send successfully
->>> 1382936199.797063: nl80211: Event message available
->>> 1382936199.797097: nl80211: Delete station e0:1d:3b:46:82:a0
->>> 1382936199.797881: nl80211: Event message available
->>> 1382936199.797905: nl80211: MLME event 38; timeout with e0:1d:3b:46:82:a0
->>> 1382936199.797915: wlan0: Event ASSOC_TIMED_OUT (15) received
->>> 1382936199.797920: wlan0: SME: Association timed out
->>> 1382936199.797924: Added BSSID e0:1d:3b:46:82:a0 into blacklist
->>>
->>> If I reboot the router, it works immediately, another thing that works
->>> is connecting with ad-hoc mode (mode=1), and then back to normal mode
->>> (mode=0).
->>>
->>> Here's a log [3] where I tried reloading the module multiple times and
->>> finally tried ad-hoc mode, after which the link came up.
->>>
->>> Clearly the Linux kernel has a bug. Can somebody point out what needs
->>> to be done to get this fixed?
->>>
->>> Cheers.
->>>
->>> [1] http://article.gmane.org/gmane.linux.kernel.wireless.general/108004
->>> [2] http://people.freedesktop.org/~felipec/wpa/wpa-bad-30-min-wait.log
->>> [3] http://people.freedesktop.org/~felipec/wpa/wpa-good-nothing-worked-except-mode-switch.log
->>>
->>
->> Heh... this logs look like miracle :)
->> My first assumption would be buggy router. There is no answer in
->> wpa_supplicant log.
-> 
-> Yeah, I bet the router is buggy, which router isn't? But why Windows 7
-> connects fine?
+On Fri, 2013-10-11 at 08:19 +0100, Eugene Krasnikov wrote:
+> Hm.. weird. I was sure that i fixed all sparse warnings before
+> contribution. My sparse does not show this warning. Let me try to
+> reproduce this error and come back to you. Thanx for you feedback.
 
-May be it includes some workaround?
-You do not need to fight with devs, i think they are agree that some
-thing is wrong. But believe me, there are so many access points, which
-make problems or wear things. If you have a bug, does not mean other
-user have it.
-If it depends on some AP option, it would be good to know which one.
-Then it will be easier to find some fix.
+> > reproduce: make C=1 CF=-D__CHECK_ENDIAN__
 
-Beside, how many clients use this AP? How big is the distance? What do
-you configure in AdHock mode?
 
->> Take wireshark and capture working and not working associational request.
-> 
-> I'll try that. If only it was that easy to get a working association.
 
-Compare it with windows.
-
-and please read this, it will help to provide more information.
-http://wireless.kernel.org/en/users/Documentation/Reporting_bugs
-
--- 
-Regards,
-Oleksij
