@@ -1,70 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f173.google.com ([209.85.215.173]:37735 "EHLO
-	mail-ea0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752313Ab3JWLFZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Oct 2013 07:05:25 -0400
-Received: by mail-ea0-f173.google.com with SMTP id g10so336416eak.18
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Oct 2013 04:05:24 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 3/3] ath10k: respect power_level values
-Date: Wed, 23 Oct 2013 04:02:15 -0700
-Message-Id: <1382526135-3215-4-git-send-email-michal.kazior@tieto.com> (sfid-20131023_130530_549577_2DD09D3A)
-In-Reply-To: <1382526135-3215-1-git-send-email-michal.kazior@tieto.com>
-References: <1382526135-3215-1-git-send-email-michal.kazior@tieto.com>
+Received: from 220-133-188-53.HINET-IP.hinet.net ([220.133.188.53]:42965 "EHLO
+	ns.kevlo.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752034Ab3JLPaK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 Oct 2013 11:30:10 -0400
+Date: Sat, 12 Oct 2013 23:25:23 +0800
+From: Kevin Lo <kevlo@kevlo.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: [PATCH v2] rt2x00: rt2800lib: fix RF registers for RT5390/RT5392
+Message-ID: <20131012152523.GA4156@ns.kevlo.org> (sfid-20131012_173015_037455_EFFA07B8)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This allows txpower limits other than regulatory
-to be applied (e.g. user txpower limit provided
-via iw/nl80211).
+Update rf registers to use the same values that the MediaTek/Ralink
+reference driver DPO_RT5572_LinuxSTA_2.6.1.3_20121022 uses.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+References:
+  RF5390RegTable in chips/rt5390.c
+  RF5392RegTable in chips/rt5390.c
+
+Tested on TP-Link TL-WN727N and D-Link DWA-140 Rev.b3 usb wifi dongles.
+
+Signed-off-by: Kevin Lo <kevlo@kevlo.org>
+Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+Changes since v1:
+  - the previous patch was malformed
+  - add Stanislaw's Acked-by tag
+--- 
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 1d91201..643518d 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2013,6 +2013,7 @@ static int ath10k_config(struct ieee80211_hw *hw, u32 changed)
- 	struct ath10k *ar = hw->priv;
- 	struct ieee80211_conf *conf = &hw->conf;
- 	int ret = 0;
-+	u32 param;
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index a114cab..373efde 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -6476,7 +6476,7 @@ static void rt2800_init_rfcsr_5390(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_rfcsr_write(rt2x00dev, 28, 0x00);
+ 	rt2800_rfcsr_write(rt2x00dev, 29, 0x10);
  
- 	mutex_lock(&ar->conf_mutex);
+-	rt2800_rfcsr_write(rt2x00dev, 30, 0x00);
++	rt2800_rfcsr_write(rt2x00dev, 30, 0x10);
+ 	rt2800_rfcsr_write(rt2x00dev, 31, 0x80);
+ 	rt2800_rfcsr_write(rt2x00dev, 32, 0x80);
+ 	rt2800_rfcsr_write(rt2x00dev, 33, 0x00);
+@@ -6514,7 +6514,7 @@ static void rt2800_init_rfcsr_5390(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_rfcsr_write(rt2x00dev, 56, 0x22);
+ 	rt2800_rfcsr_write(rt2x00dev, 57, 0x80);
+ 	rt2800_rfcsr_write(rt2x00dev, 58, 0x7f);
+-	rt2800_rfcsr_write(rt2x00dev, 59, 0x63);
++	rt2800_rfcsr_write(rt2x00dev, 59, 0x8f);
  
-@@ -2024,6 +2025,25 @@ static int ath10k_config(struct ieee80211_hw *hw, u32 changed)
- 		spin_unlock_bh(&ar->data_lock);
- 	}
+ 	rt2800_rfcsr_write(rt2x00dev, 60, 0x45);
+ 	if (rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5390F))
+@@ -6534,7 +6534,6 @@ static void rt2800_init_rfcsr_5392(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_rf_init_calibration(rt2x00dev, 2);
  
-+	if (changed & IEEE80211_CONF_CHANGE_POWER) {
-+		ath10k_dbg(ATH10K_DBG_MAC, "mac config power %d\n",
-+			   hw->conf.power_level);
-+
-+		param = ar->wmi.pdev_param->txpower_limit2g;
-+		ret = ath10k_wmi_pdev_set_param(ar, param,
-+						hw->conf.power_level * 2);
-+		if (ret)
-+			ath10k_warn("mac failed to set 2g txpower %d (%d)\n",
-+				    hw->conf.power_level, ret);
-+
-+		param = ar->wmi.pdev_param->txpower_limit5g;
-+		ret = ath10k_wmi_pdev_set_param(ar, param,
-+						hw->conf.power_level * 2);
-+		if (ret)
-+			ath10k_warn("mac failed to set 5g txpower %d (%d)\n",
-+				    hw->conf.power_level, ret);
-+	}
-+
- 	if (changed & IEEE80211_CONF_CHANGE_PS)
- 		ath10k_config_ps(ar);
- 
--- 
-1.8.4.rc3
-
+ 	rt2800_rfcsr_write(rt2x00dev, 1, 0x17);
+-	rt2800_rfcsr_write(rt2x00dev, 2, 0x80);
+ 	rt2800_rfcsr_write(rt2x00dev, 3, 0x88);
+ 	rt2800_rfcsr_write(rt2x00dev, 5, 0x10);
+ 	rt2800_rfcsr_write(rt2x00dev, 6, 0xe0);
