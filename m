@@ -1,169 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:56824 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752016Ab3JAOuh (ORCPT
+Received: from mo-p00-ob.rzone.de ([81.169.146.161]:61760 "EHLO
+	mo-p00-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752157Ab3JLQCV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Oct 2013 10:50:37 -0400
-Received: by mail-wg0-f44.google.com with SMTP id b13so7503206wgh.35
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Oct 2013 07:50:36 -0700 (PDT)
-Message-ID: <1380639024.2087.1.camel@canaries64-MCP7A> (sfid-20131001_165041_622475_E620E562)
-Subject: [PATCH 1/8] staging: vt6656: rxtx.c change  tx functions to return
- u16
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 01 Oct 2013 15:50:24 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 12 Oct 2013 12:02:21 -0400
+From: "Dr. H. Nikolaus Schaller" <hns@goldelico.com>
+Content-Type: multipart/mixed; boundary=Apple-Mail-219--440396343
+Subject: [Patch 1/1]: libertas/sdio: fix releasing memory twice.
+Date: Sat, 12 Oct 2013 18:02:09 +0200
+Message-Id: <D5BD8103-A6A6-4070-878B-99FC5883725F@goldelico.com> (sfid-20131012_180243_915894_2386843E)
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Bing Zhao <bzhao@marvell.com>,
+	"H. Nikolaus Schaller" <hns@goldelico.com>,
+	Dan Williams <dcbw@redhat.com>, Harro Haan <hrhaan@gmail.com>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	Belisko Marek <marek@goldelico.com>,
+	NeilBrown Brown <neilb@suse.de>
+Mime-Version: 1.0 (Apple Message framework v1085)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-s_vGenerateTxParameter, s_vFillCTSHead, s_vFillRTSHead, vnt_rxtx_rts* functions
-to return u16
 
-Initially this is the duration_id field for ieee80211_hdr
+--Apple-Mail-219--440396343
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=us-ascii
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/rxtx.c | 32 +++++++++++++++++++-------------
- 1 file changed, 19 insertions(+), 13 deletions(-)
+While upgrading the GTA04 kernel to 3.12-rc4 we came across
+an issue with libertas/sdio referencing stale memory on ifconfig up
+when trying to load the firmware (for a second time).
 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 791144a..ff40255 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -98,7 +98,7 @@ static void s_vSaveTxPktInfo(struct vnt_private *pDevice, u8 byPktNum,
- 
- static void *s_vGetFreeContext(struct vnt_private *pDevice);
- 
--static void s_vGenerateTxParameter(struct vnt_private *pDevice,
-+static u16 s_vGenerateTxParameter(struct vnt_private *pDevice,
- 	u8 byPktType, u16 wCurrentRate,	struct vnt_tx_buffer *tx_buffer,
- 	struct vnt_mic_hdr **mic_hdr, u32 need_mic, u32 cbFrameSize,
- 	int bNeedACK, u32 uDMAIdx, struct ethhdr *psEthHeader, bool need_rts);
-@@ -124,11 +124,11 @@ static unsigned int s_uGetTxRsvTime(struct vnt_private *pDevice, u8 byPktType,
- static u16 s_uGetRTSCTSRsvTime(struct vnt_private *pDevice, u8 byRTSRsvType,
- 	u8 byPktType, u32 cbFrameLength, u16 wCurrentRate);
- 
--static void s_vFillCTSHead(struct vnt_private *pDevice, u32 uDMAIdx,
-+static u16 s_vFillCTSHead(struct vnt_private *pDevice, u32 uDMAIdx,
- 	u8 byPktType, union vnt_tx_data_head *head, u32 cbFrameLength,
- 	int bNeedAck, u16 wCurrentRate, u8 byFBOption);
- 
--static void s_vFillRTSHead(struct vnt_private *pDevice, u8 byPktType,
-+static u16 s_vFillRTSHead(struct vnt_private *pDevice, u8 byPktType,
- 	union vnt_tx_data_head *head, u32 cbFrameLength, int bNeedAck,
- 	struct ethhdr *psEthHeader, u16 wCurrentRate, u8 byFBOption);
- 
-@@ -630,7 +630,7 @@ static int vnt_fill_ieee80211_rts(struct vnt_private *priv,
- 	return 0;
- }
- 
--static int vnt_rxtx_rts_g_head(struct vnt_private *priv,
-+static u16 vnt_rxtx_rts_g_head(struct vnt_private *priv,
- 	struct vnt_rts_g *buf, struct ethhdr *eth_hdr,
- 	u8 pkt_type, u32 frame_len, int need_ack,
- 	u16 current_rate, u8 fb_option)
-@@ -654,7 +654,7 @@ static int vnt_rxtx_rts_g_head(struct vnt_private *priv,
- 	return 0;
- }
- 
--static int vnt_rxtx_rts_g_fb_head(struct vnt_private *priv,
-+static u16 vnt_rxtx_rts_g_fb_head(struct vnt_private *priv,
- 	struct vnt_rts_g_fb *buf, struct ethhdr *eth_hdr,
- 	u8 pkt_type, u32 frame_len, int need_ack,
- 	u16 current_rate, u8 fb_option)
-@@ -689,7 +689,7 @@ static int vnt_rxtx_rts_g_fb_head(struct vnt_private *priv,
- 	return 0;
- }
- 
--static int vnt_rxtx_rts_ab_head(struct vnt_private *priv,
-+static u16 vnt_rxtx_rts_ab_head(struct vnt_private *priv,
- 	struct vnt_rts_ab *buf, struct ethhdr *eth_hdr,
- 	u8 pkt_type, u32 frame_len, int need_ack,
- 	u16 current_rate, u8 fb_option)
-@@ -707,7 +707,7 @@ static int vnt_rxtx_rts_ab_head(struct vnt_private *priv,
- 	return 0;
- }
- 
--static int vnt_rxtx_rts_a_fb_head(struct vnt_private *priv,
-+static u16 vnt_rxtx_rts_a_fb_head(struct vnt_private *priv,
- 	struct vnt_rts_a_fb *buf, struct ethhdr *eth_hdr,
- 	u8 pkt_type, u32 frame_len, int need_ack,
- 	u16 current_rate, u8 fb_option)
-@@ -731,13 +731,13 @@ static int vnt_rxtx_rts_a_fb_head(struct vnt_private *priv,
- 	return 0;
- }
- 
--static void s_vFillRTSHead(struct vnt_private *pDevice, u8 byPktType,
-+static u16 s_vFillRTSHead(struct vnt_private *pDevice, u8 byPktType,
- 	union vnt_tx_data_head *head, u32 cbFrameLength, int bNeedAck,
- 	struct ethhdr *psEthHeader, u16 wCurrentRate, u8 byFBOption)
- {
- 
- 	if (!head)
--		return;
-+		return 0;
- 
- 	/* Note: So far RTSHead doesn't appear in ATIM
- 	*	& Beacom DMA, so we don't need to take them
-@@ -768,16 +768,18 @@ static void s_vFillRTSHead(struct vnt_private *pDevice, u8 byPktType,
- 			psEthHeader, byPktType, cbFrameLength,
- 			bNeedAck, wCurrentRate, byFBOption);
- 	}
-+
-+	return 0;
- }
- 
--static void s_vFillCTSHead(struct vnt_private *pDevice, u32 uDMAIdx,
-+static u16 s_vFillCTSHead(struct vnt_private *pDevice, u32 uDMAIdx,
- 	u8 byPktType, union vnt_tx_data_head *head, u32 cbFrameLength,
- 	int bNeedAck, u16 wCurrentRate, u8 byFBOption)
- {
- 	u32 uCTSFrameLen = 14;
- 
- 	if (!head)
--		return;
-+		return 0;
- 
- 	if (byFBOption != AUTO_FB_NONE) {
- 		/* Auto Fall back */
-@@ -814,6 +816,8 @@ static void s_vFillCTSHead(struct vnt_private *pDevice, u32 uDMAIdx,
- 		pBuf->data.frame_control = TYPE_CTL_CTS;
- 		memcpy(pBuf->data.ra, pDevice->abyCurrentNetAddr, ETH_ALEN);
-         }
-+
-+	return 0;
- }
- 
- /*+
-@@ -839,7 +843,7 @@ static void s_vFillCTSHead(struct vnt_private *pDevice, u32 uDMAIdx,
-  *
- -*/
- 
--static void s_vGenerateTxParameter(struct vnt_private *pDevice,
-+static u16 s_vGenerateTxParameter(struct vnt_private *pDevice,
- 	u8 byPktType, u16 wCurrentRate,	struct vnt_tx_buffer *tx_buffer,
- 	struct vnt_mic_hdr **mic_hdr, u32 need_mic, u32 cbFrameSize,
- 	int bNeedACK, u32 uDMAIdx, struct ethhdr *psEthHeader, bool need_rts)
-@@ -862,7 +866,7 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
-     }
- 
- 	if (!pFifoHead)
--		return;
-+		return 0;
- 
-     if (pDevice->bLongHeader)
-         cbMACHdLen = WLAN_HDR_ADDR3_LEN + 6;
-@@ -983,6 +987,8 @@ static void s_vGenerateTxParameter(struct vnt_private *pDevice,
-         }
-     }
-     //DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"s_vGenerateTxParameter END.\n");
-+
-+	return 0;
- }
- /*
-     u8 * pbyBuffer,//point to pTxBufHead
--- 
-1.8.3.2
+I am not at all sure if the patch is how it should be done and the right
+location, but it appears to work for us with resetting priv->helper_fw =
+to NULL
+before asynchronously loading the firmware again.
 
+
+
+
+--Apple-Mail-219--440396343
+Content-Disposition: attachment;
+	filename=0001-libertas-sdio-fix-releasing-memory-twice.patch
+Content-Type: application/octet-stream;
+	name="0001-libertas-sdio-fix-releasing-memory-twice.patch"
+Content-Transfer-Encoding: quoted-printable
+
+=46rom=20f6864491ea45d2bd877a37fbb4a618e42fe03fbe=20Mon=20Sep=2017=20=
+00:00:00=202001=0AFrom:=20"H.=20Nikolaus=20Schaller"=20=
+<hns@goldelico.com>=0ADate:=20Sat,=2012=20Oct=202013=2017:49:31=20+0200=0A=
+Subject:=20[PATCH]=20libertas/sdio:=20fix=20releasing=20memory=20twice.=20=
+We=20have=20connected=0A=20a=20Wi2Wi=20W2CBW003=20to=20an=20OMAP3=20=
+using=20SDIO.=20We=20have=20seen=20an=0A=20issue=20(not=20related=20with=20=
+this=20patch)=20that=20sometimes=20power=20is=0A=20not=20turned=20off.=20=
+This=20did=20lead=20to=20a=20kernel=20Oops=20if=20an=0A=20ifconfig=20up=20=
+/=20down=20/=20up=20when=20the=20chip=20was=20not=20powered=20down.=0A=20=
+This=20leads=20to=20a=20second=20call=20to=20lbs_get_firmware_async()=0A=20=
+with=20the=20same=20priv=20data=20-=20and=20that=20tries=20to=0A=20=
+release_firmware(priv->helper_fw);=20This=20appears=20to=20be=0A=20=
+wrong,=20since=20it=20was=20alredy=20released=20in=20the=0A=20=
+if_sdio_do_prog_firmware.=0A=0ASigned-off-by:=20H.=20Nikolaus=20Schaller=20=
+<hns@goldelico.com>=0A---=0A=20drivers/net/wireless/libertas/if_sdio.c=20=
+|=20=20=2013=20+++++++++++++=0A=201=20files=20changed,=2013=20=
+insertions(+),=200=20deletions(-)=0A=0Adiff=20--git=20=
+a/drivers/net/wireless/libertas/if_sdio.c=20=
+b/drivers/net/wireless/libertas/if_sdio.c=0Aindex=204557833..a04eb41=20=
+100644=0A---=20a/drivers/net/wireless/libertas/if_sdio.c=0A+++=20=
+b/drivers/net/wireless/libertas/if_sdio.c=0A@@=20-769,6=20+769,19=20@@=20=
+static=20int=20if_sdio_prog_firmware(struct=20if_sdio_card=20*card)=0A=20=
+=09=09return=200;=0A=20=09}=0A=20=0A+=09/*=20This=20is=20missing=20in=20=
+lbs_get_firmware_async()=0A+=09=20*=20and=20therefore=20a=20second=20=
+call=20using=20the=20same=20priv=20structure=0A+=09=20*=20may=20find=20a=20=
+stale=20helper_fw=20entry=20that=20has=20already=20been=0A+=09=20*=20=
+released=20by=20release_firmware(helper)=20in=0A+=09=20*=20=
+if_sdio_do_prog_firmware().=0A+=09=20*=20Or=20doing=20that=20release=20=
+in=20if_sdio_do_prog_firmware()=0A+=09=20*=20is=20a=20duplicate=20and=20=
+should=20not=20be=20there.=0A+=09=20*=20Anyways,=20this=20can=20happen=20=
+if=20a=20ifconfig=20up=20/=20down=20/=20up=0A+=09=20*=20sequence=20is=20=
+issued.=0A+=09=20*/=0A+=0A+=09card->priv->helper_fw=20=3D=20NULL;=0A+=0A=20=
+=09ret=20=3D=20lbs_get_firmware_async(card->priv,=20&card->func->dev,=20=
+card->model,=0A=20=09=09=09=09=20=20=20=20=20fw_table,=20=
+if_sdio_do_prog_firmware);=0A=20=0A--=20=0A1.7.7.4=0A=0A=
+
+--Apple-Mail-219--440396343--
