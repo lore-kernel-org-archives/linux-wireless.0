@@ -1,92 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:44943 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751396Ab3J2G1z (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:55635 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752110Ab3JLBcF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Oct 2013 02:27:55 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath9k: Remove pcieSerDesWrite
-Date: Tue, 29 Oct 2013 11:53:35 +0530
-Message-Id: <1383027815-2050-1-git-send-email-sujith@msujith.org> (sfid-20131029_072758_491232_A42E266E)
+	Fri, 11 Oct 2013 21:32:05 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3.12 1/2] mwifiex: inform cfg80211 about disconnect if device is removed
+Date: Fri, 11 Oct 2013 18:31:31 -0700
+Message-ID: <1381541492-28226-1-git-send-email-bzhao@marvell.com> (sfid-20131012_033214_088222_98DD3C0B)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+From: Avinash Patil <patila@marvell.com>
 
-This HW config option is always set to true and is not needed.
+If device is surprise removed, commands sent to FW including
+deauthenticate command fail as bus writes fail.
+We update our media_connected status to false and inform cfg80211
+about disconnection only when command is successful. Since cfg80211
+assumes device is still connected, it results into following
+WARN_ON during unload:
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+WARNING: CPU: 0 PID: 18245 at net/wireless/core.c:937
+         cfg80211_netdev_notifier_call+0x175/0x4d0 [cfg80211]()
+
+Avoid this by emitting cfg80211_disconnected event even if the
+deauthenticate command fails.
+
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_hw.c | 20 +++++++++-----------
- drivers/net/wireless/ath/ath9k/hw.c        |  1 -
- drivers/net/wireless/ath/ath9k/hw.h        |  1 -
- 3 files changed, 9 insertions(+), 13 deletions(-)
+ drivers/net/wireless/mwifiex/join.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-index a6e06a1..42daea5 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-@@ -754,6 +754,9 @@ static void ar9003_hw_init_mode_gain_regs(struct ath_hw *ah)
- static void ar9003_hw_configpcipowersave(struct ath_hw *ah,
- 					 bool power_off)
+diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
+index 717fbe2..4e4686e 100644
+--- a/drivers/net/wireless/mwifiex/join.c
++++ b/drivers/net/wireless/mwifiex/join.c
+@@ -1422,13 +1422,19 @@ static int mwifiex_deauthenticate_infra(struct mwifiex_private *priv, u8 *mac)
+  */
+ int mwifiex_deauthenticate(struct mwifiex_private *priv, u8 *mac)
  {
-+	unsigned int i;
-+	struct ar5416IniArray *array;
++	int ret = 0;
 +
- 	/*
- 	 * Increase L1 Entry Latency. Some WB222 boards don't have
- 	 * this change in eeprom/OTP.
-@@ -779,18 +782,13 @@ static void ar9003_hw_configpcipowersave(struct ath_hw *ah,
- 	 * Configire PCIE after Ini init. SERDES values now come from ini file
- 	 * This enables PCIe low power mode.
- 	 */
--	if (ah->config.pcieSerDesWrite) {
--		unsigned int i;
--		struct ar5416IniArray *array;
--
--		array = power_off ? &ah->iniPcieSerdes :
--				    &ah->iniPcieSerdesLowPower;
-+	array = power_off ? &ah->iniPcieSerdes :
-+		&ah->iniPcieSerdesLowPower;
+ 	if (!priv->media_connected)
+ 		return 0;
  
--		for (i = 0; i < array->ia_rows; i++) {
--			REG_WRITE(ah,
--				  INI_RA(array, i, 0),
--				  INI_RA(array, i, 1));
--		}
-+	for (i = 0; i < array->ia_rows; i++) {
-+		REG_WRITE(ah,
-+			  INI_RA(array, i, 0),
-+			  INI_RA(array, i, 1));
+ 	switch (priv->bss_mode) {
+ 	case NL80211_IFTYPE_STATION:
+ 	case NL80211_IFTYPE_P2P_CLIENT:
+-		return mwifiex_deauthenticate_infra(priv, mac);
++		ret = mwifiex_deauthenticate_infra(priv, mac);
++		if (ret)
++			cfg80211_disconnected(priv->netdev, 0, NULL, 0,
++					      GFP_KERNEL);
++		break;
+ 	case NL80211_IFTYPE_ADHOC:
+ 		return mwifiex_send_cmd_sync(priv,
+ 					     HostCmd_CMD_802_11_AD_HOC_STOP,
+@@ -1440,7 +1446,7 @@ int mwifiex_deauthenticate(struct mwifiex_private *priv, u8 *mac)
+ 		break;
  	}
+ 
+-	return 0;
++	return ret;
  }
+ EXPORT_SYMBOL_GPL(mwifiex_deauthenticate);
  
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 54b0415..381fbe1 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -454,7 +454,6 @@ static void ath9k_hw_init_config(struct ath_hw *ah)
- 	}
- 
- 	ah->config.rx_intr_mitigation = true;
--	ah->config.pcieSerDesWrite = true;
- 
- 	/*
- 	 * We need this for PCI devices only (Cardbus, PCI, miniPCI)
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 69542c1..289e5ce 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -283,7 +283,6 @@ struct ath9k_ops_config {
- 	int additional_swba_backoff;
- 	int ack_6mb;
- 	u32 cwm_ignore_extcca;
--	bool pcieSerDesWrite;
- 	u8 pcie_clock_req;
- 	u32 pcie_waen;
- 	u8 analog_shiftreg;
 -- 
-1.8.4.1
+1.8.2.3
 
