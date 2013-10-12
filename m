@@ -1,64 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f51.google.com ([209.85.214.51]:37190 "EHLO
-	mail-bk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751390Ab3JWHmS convert rfc822-to-8bit (ORCPT
+Received: from mail-vc0-f177.google.com ([209.85.220.177]:40542 "EHLO
+	mail-vc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752618Ab3JLTRv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Oct 2013 03:42:18 -0400
-Received: by mail-bk0-f51.google.com with SMTP id mx10so133349bkb.38
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Oct 2013 00:42:17 -0700 (PDT)
+	Sat, 12 Oct 2013 15:17:51 -0400
+Received: by mail-vc0-f177.google.com with SMTP id hv10so3695762vcb.8
+        for <linux-wireless@vger.kernel.org>; Sat, 12 Oct 2013 12:17:50 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <5266FAAD.3010800@candelatech.com>
-References: <5266C321.7000103@candelatech.com>
-	<5266FAAD.3010800@candelatech.com>
-Date: Wed, 23 Oct 2013 09:42:16 +0200
-Message-ID: <CA+BoTQmomxywSjUB9nrniMT+HeZeBD=L3m2K8c=m6ehGcSp7eQ@mail.gmail.com> (sfid-20131023_094222_194570_04555AFE)
-Subject: Re: ath10k hits warning in sta_info.c:839.
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: ath10k@lists.infradead.org,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1381602356.14243.4.camel@jlt4.sipsolutions.net>
+References: <525720d0.6xVLGLwuRrqxqOBI%fengguang.wu@intel.com>
+	<20131011014733.GD11191@localhost>
+	<CAFSJ42aa_-DTHDxkRDM+0bm9052ree__K54CRm749SeQPDHwRw@mail.gmail.com>
+	<1381476265.14293.0.camel@jlt4.sipsolutions.net>
+	<CAFSJ42Y3x9bzKO8jo-n8Vn7ei38FkYVqW5Gog+_pa_j83ZUXhw@mail.gmail.com>
+	<1381602356.14243.4.camel@jlt4.sipsolutions.net>
+Date: Sat, 12 Oct 2013 20:17:49 +0100
+Message-ID: <CAFSJ42Z2E8ivgjm8jw4xJ8pvp=NViNDOaMKy4yR7qKGjEVioSQ@mail.gmail.com> (sfid-20131012_211807_174925_06571DF2)
+Subject: Re: [wireless-next:master 82/98] drivers/net/wireless/ath/wcn36xx/wcn36xx.h:88:24:
+ sparse: incorrect type in assignment (different base types)
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Fengguang Wu <fengguang.wu@intel.com>, kbuild-all@01.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	wcn36xx <wcn36xx@lists.infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 23 October 2013 00:22, Ben Greear <greearb@candelatech.com> wrote:
-> On 10/22/2013 11:25 AM, Ben Greear wrote:
->> Kernel is stock 'ath' tree, with small printk to debug an ath10k
->> crash.
->>
->> This is FYI for now...will be looking at other ath10k crash bugs
->> before digging into this tone.
->>
->> Setup is 2 stations trying to associate to same AP, which causes
->> endless failures and firmware crashes.  Good for chasing bugs :)
->>
->>
->> DMAR:[fault reason 05] PTE Write access is not set
->> dmar: DRHD: handling fault status reg 3
->> dmar: DMAR:[DMA Write] Request device [05:00.0] fault addr ffd52000
->> DMAR:[fault reason 05] PTE Write access is not set
->> dmar: DRHD: handling fault status reg 3
->> dmar: DMAR:[DMA Write] Request device [05:00.0] fault addr ffd52000
->> DMAR:[fault reason 05] PTE Write access is not set
->>
->> sta300: authentication with 00:03:83:3d:30:aa timed out
->> [root@ct523-9292 ~]# ath10k: Failed to delete peer: 00:03:83:3d:30:aa for VDEV: 1
->> ath10k: WMI vdev stop failed: ret -108
->
->> ------------[ cut here ]------------
->> WARNING: CPU: 1 PID: 6 at /mnt/sda/home/greearb/git/ath/net/mac80211/sta_info.c:839 __sta_info_destroy+0x12)
->> Modules linked in: nf_nat_ipv4 nf_nat veth 8021q garp stp mrp llc macvlan pktgen lockd f71882fg coretemp hw]
->
-> I think this may be a result of whatever bug or limitation
-> caused the firmware to error and/or crash when adding a second
-> station VIF and trying to associate it to the same AP.
->
-> Probably not a problem with the rest of the wifi stacks.
+> $ sparse --version
+> v0.4.4-133-g5449cfb
 
-Yup. This originates from the firmware limitation. It's unable to
-handle two peer nodes with same mac addr on different vdevs. That's
-why it's impossible to associate 2 (or more) station interfaces to the
-same BSS.
+My is: sparse --version
+v0.4.5-rc1
 
 
-Michał
+> Hard to believe - did you pass the CF= on the command line? I suggest
+>
+> ccflags-y += -D__CHECK_ENDIAN__
+
+Agree that it's not a version difference :) Yes , i set check endian.
+Weird, will try to modify makefile and see if that helps.
+
+
+> Also, code might be fine, but buff_to_be() is still not a good idea
+> since it breaks all endian annotation.
+
+Could you please explain in more details how does buff_to_be break
+endian annotation?
+
+
+> Also, I suggested to run smatch, I guess you never did:
+
+I ran it and even fixed some of the errors. These errors i might just
+missed because of the output is flooded with messages like:
+drivers/net/wireless/ath/wcn36xx/main.c:24 (null)() info: ignoring
+unreachable code.
+
+Thanx for pointing to these warnings.
+
+On Sat, Oct 12, 2013 at 7:25 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 2013-10-11 at 21:39 +0100, Eugene Krasnikov wrote:
+>
+>> Do you see the same warning?
+>
+> Yes
+>
+>> With the latest sparse i do not see this
+>> warning.
+>
+> $ sparse --version
+> v0.4.4-133-g5449cfb
+>
+>> I assume this warning depends on sparse version since with my
+>> environment it does not pop up. Also from code perspective it looks
+>> fine. Any ideas?:)
+>
+> Hard to believe - did you pass the CF= on the command line? I suggest
+>
+> ccflags-y += -D__CHECK_ENDIAN__
+>
+> in your Makefile.
+>
+> Also, code might be fine, but buff_to_be() is still not a good idea
+> since it breaks all endian annotation.
+>
+> Also, I suggested to run smatch, I guess you never did:
+> drivers/net/wireless/ath/wcn36xx/smd.c:1314 wcn36xx_smd_send_beacon() warn: inconsistent returns mutex:&wcn->hal_mutex: locked (1289 [(-12)]) unlocked (1314 [0], 1314 [s32min-(-1),1-s32max])
+> drivers/net/wireless/ath/wcn36xx/smd.c:1357 wcn36xx_smd_update_proberesp_tmpl() warn: inconsistent returns mutex:&wcn->hal_mutex: locked (1330 [(-7)]) unlocked (1357 [0], 1357 [s32min-(-1),1-s32max])
+> drivers/net/wireless/ath/wcn36xx/smd.c:1626 wcn36xx_smd_keep_alive_req() warn: inconsistent returns mutex:&wcn->hal_mutex: locked (1609 [(-22)]) unlocked (1626 [0], 1626 [s32min-(-1),1-s32max])
+> drivers/net/wireless/ath/wcn36xx/smd.c:2041 wcn36xx_smd_rsp_process() error: potential null dereference 'msg_ind'.  (kmalloc returns null)
+>
+> johannes
+>
+
+
+
+-- 
+Best regards,
+Eugene
