@@ -1,135 +1,294 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f176.google.com ([209.85.215.176]:49879 "EHLO
-	mail-ea0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756362Ab3JNRvb (ORCPT
+Received: from mo-p00-ob.rzone.de ([81.169.146.160]:42600 "EHLO
+	mo-p00-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753781Ab3JMHKD convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Oct 2013 13:51:31 -0400
-Received: by mail-ea0-f176.google.com with SMTP id q16so3486448ead.7
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Oct 2013 10:51:30 -0700 (PDT)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH] mac80211_hwsim: Add iface comb for DFS
-Date: Mon, 14 Oct 2013 19:51:18 +0200
-Message-Id: <1381773079-2678-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131014_195135_973970_61B866A6)
+	Sun, 13 Oct 2013 03:10:03 -0400
+Subject: Re: [Patch 1/1]: libertas/sdio: fix releasing memory twice.
+Mime-Version: 1.0 (Apple Message framework v1085)
+Content-Type: text/plain; charset=us-ascii
+From: "Dr. H. Nikolaus Schaller" <hns@goldelico.com>
+In-Reply-To: <1381607911.21655.7.camel@dcbw.foobar.com>
+Date: Sun, 13 Oct 2013 09:09:55 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Bing Zhao <bzhao@marvell.com>, Harro Haan <hrhaan@gmail.com>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	Belisko Marek <marek@goldelico.com>,
+	NeilBrown Brown <neilb@suse.de>
+Message-Id: <47ACD120-9393-41EA-BF8A-4E5E316A0C79@goldelico.com> (sfid-20131013_091101_595612_2840F87C)
+References: <D5BD8103-A6A6-4070-878B-99FC5883725F@goldelico.com> <1381607911.21655.7.camel@dcbw.foobar.com>
+To: Dan Williams <dcbw@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add iface combination that allow DFS support.
-Add also debugfs dfs_simulate_radar file that
-can be used to simulate radar event.
-This could be usefull for mac80211/cfg80211/
-regulatory/hostap code testing without real HW.
+Hi Dan,
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- drivers/net/wireless/mac80211_hwsim.c |   51 +++++++++++++++++++++++++++------
- 1 file changed, 43 insertions(+), 8 deletions(-)
+Am 12.10.2013 um 21:58 schrieb Dan Williams:
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 2cd3f54..1a4eca0 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -370,6 +370,8 @@ struct mac80211_hwsim_data {
- 	s64 bcn_delta;
- 	/* absolute beacon transmission time. Used to cover up "tx" delay. */
- 	u64 abs_bcn_ts;
-+
-+	struct dentry *debugfs_radar;
- };
- 
- 
-@@ -1714,6 +1716,7 @@ static void mac80211_hwsim_free(void)
- 
- 	list_for_each_entry_safe(data, tmpdata, &tmplist, list) {
- 		debugfs_remove(data->debugfs_group);
-+		debugfs_remove(data->debugfs_radar);
- 		debugfs_remove(data->debugfs_ps);
- 		debugfs_remove(data->debugfs);
- 		ieee80211_unregister_hw(data->hw);
-@@ -1872,6 +1875,17 @@ static int hwsim_fops_ps_write(void *dat, u64 val)
- DEFINE_SIMPLE_ATTRIBUTE(hwsim_fops_ps, hwsim_fops_ps_read, hwsim_fops_ps_write,
- 			"%llu\n");
- 
-+static int hwsim_write_simulate_radar(void *dat, u64 val)
-+{
-+	struct mac80211_hwsim_data *data = dat;
-+
-+	ieee80211_radar_detected(data->hw);
-+
-+	return 0;
-+}
-+
-+DEFINE_SIMPLE_ATTRIBUTE(hwsim_simulate_radar, NULL,
-+			hwsim_write_simulate_radar, "%llu\n");
- 
- static int hwsim_fops_group_read(void *dat, u64 *val)
- {
-@@ -2173,11 +2187,28 @@ static const struct ieee80211_iface_limit hwsim_if_limits[] = {
- 	{ .max = 1, .types = BIT(NL80211_IFTYPE_P2P_DEVICE) },
- };
- 
--static struct ieee80211_iface_combination hwsim_if_comb = {
--	.limits = hwsim_if_limits,
--	.n_limits = ARRAY_SIZE(hwsim_if_limits),
--	.max_interfaces = 2048,
--	.num_different_channels = 1,
-+static const struct ieee80211_iface_limit hwsim_if_dfs_limits[] = {
-+	{ .max = 8, .types = BIT(NL80211_IFTYPE_AP) },
-+};
-+
-+static struct ieee80211_iface_combination hwsim_if_comb[] = {
-+	{
-+		.limits = hwsim_if_limits,
-+		.n_limits = ARRAY_SIZE(hwsim_if_limits),
-+		.max_interfaces = 2048,
-+		.num_different_channels = 1,
-+	},
-+	{
-+		.limits = hwsim_if_dfs_limits,
-+		.n_limits = ARRAY_SIZE(hwsim_if_dfs_limits),
-+		.max_interfaces = 8,
-+		.num_different_channels = 1,
-+		.radar_detect_widths = BIT(NL80211_CHAN_WIDTH_20_NOHT) |
-+				       BIT(NL80211_CHAN_WIDTH_20) |
-+				       BIT(NL80211_CHAN_WIDTH_40) |
-+				       BIT(NL80211_CHAN_WIDTH_80) |
-+				       BIT(NL80211_CHAN_WIDTH_160),
-+	}
- };
- 
- static int __init init_mac80211_hwsim(void)
-@@ -2195,7 +2226,7 @@ static int __init init_mac80211_hwsim(void)
- 		return -EINVAL;
- 
- 	if (channels > 1) {
--		hwsim_if_comb.num_different_channels = channels;
-+		hwsim_if_comb[0].num_different_channels = channels;
- 		mac80211_hwsim_ops.hw_scan = mac80211_hwsim_hw_scan;
- 		mac80211_hwsim_ops.cancel_hw_scan =
- 			mac80211_hwsim_cancel_hw_scan;
-@@ -2275,8 +2306,8 @@ static int __init init_mac80211_hwsim(void)
- 		hw->wiphy->n_addresses = 2;
- 		hw->wiphy->addresses = data->addresses;
- 
--		hw->wiphy->iface_combinations = &hwsim_if_comb;
--		hw->wiphy->n_iface_combinations = 1;
-+		hw->wiphy->iface_combinations = hwsim_if_comb;
-+		hw->wiphy->n_iface_combinations = ARRAY_SIZE(hwsim_if_comb);
- 
- 		if (channels > 1) {
- 			hw->wiphy->max_scan_ssids = 255;
-@@ -2519,6 +2550,10 @@ static int __init init_mac80211_hwsim(void)
- 		data->debugfs_group = debugfs_create_file("group", 0666,
- 							data->debugfs, data,
- 							&hwsim_fops_group);
-+		data->debugfs_radar = debugfs_create_file("dfs_simulate_radar",
-+							 0222, data->debugfs,
-+							 data,
-+							 &hwsim_simulate_radar);
- 
- 		tasklet_hrtimer_init(&data->beacon_timer,
- 				     mac80211_hwsim_beacon,
--- 
-1.7.9.5
+> On Sat, 2013-10-12 at 18:02 +0200, Dr. H. Nikolaus Schaller wrote:
+>> While upgrading the GTA04 kernel to 3.12-rc4 we came across
+>> an issue with libertas/sdio referencing stale memory on ifconfig up
+>> when trying to load the firmware (for a second time).
+>> 
+>> I am not at all sure if the patch is how it should be done and the right
+>> location, but it appears to work for us with resetting priv->helper_fw to NULL
+>> before asynchronously loading the firmware again.
+> 
+> How about we go even simpler?  helper_fw is *only* used inside
+> firmware.c anyway, and that's probably where its lifetime should be
+> handled.  Same for the main firmware.  I have no idea why the bus code
+> is responsible for releasing the firmware anyway, when it originates
+> from firmware.c and control returns back there after the firmware loaded
+> callback is done.  Does the following patch fix your problem too?
+
+Yes, it works!
+
+I think your approach is much better from software architecture point
+of view than our hack.
+
+Thank you,
+Nikolaus
+
+> 
+> Dan
+> 
+> ---
+> diff --git a/drivers/net/wireless/libertas/firmware.c b/drivers/net/wireless/libertas/firmware.c
+> index c0f9e7e..51b92b5 100644
+> --- a/drivers/net/wireless/libertas/firmware.c
+> +++ b/drivers/net/wireless/libertas/firmware.c
+> @@ -49,14 +49,19 @@ static void main_firmware_cb(const struct firmware *firmware, void *context)
+> 		/* Failed to find firmware: try next table entry */
+> 		load_next_firmware_from_table(priv);
+> 		return;
+> 	}
+> 
+> 	/* Firmware found! */
+> 	lbs_fw_loaded(priv, 0, priv->helper_fw, firmware);
+> +	if (priv->helper_fw) {
+> +		release_firmware (priv->helper_fw);
+> +		priv->helper_fw = NULL;
+> +	}
+> +	release_firmware (firmware);
+> }
+> 
+> static void helper_firmware_cb(const struct firmware *firmware, void *context)
+> {
+> 	struct lbs_private *priv = context;
+> 
+> 	if (!firmware) {
+> diff --git a/drivers/net/wireless/libertas/if_cs.c b/drivers/net/wireless/libertas/if_cs.c
+> index c94dd68..ef8c98e 100644
+> --- a/drivers/net/wireless/libertas/if_cs.c
+> +++ b/drivers/net/wireless/libertas/if_cs.c
+> @@ -750,22 +750,22 @@ static void if_cs_prog_firmware(struct lbs_private *priv, int ret,
+> 	}
+> 
+> 	/* Load the firmware */
+> 	ret = if_cs_prog_helper(card, helper);
+> 	if (ret == 0 && (card->model != MODEL_8305))
+> 		ret = if_cs_prog_real(card, mainfw);
+> 	if (ret)
+> -		goto out;
+> +		return;
+> 
+> 	/* Now actually get the IRQ */
+> 	ret = request_irq(card->p_dev->irq, if_cs_interrupt,
+> 		IRQF_SHARED, DRV_NAME, card);
+> 	if (ret) {
+> 		pr_err("error in request_irq\n");
+> -		goto out;
+> +		return;
+> 	}
+> 
+> 	/*
+> 	 * Clear any interrupt cause that happened while sending
+> 	 * firmware/initializing card
+> 	 */
+> 	if_cs_write16(card, IF_CS_CARD_INT_CAUSE, IF_CS_BIT_MASK);
+> @@ -773,18 +773,14 @@ static void if_cs_prog_firmware(struct lbs_private *priv, int ret,
+> 
+> 	/* And finally bring the card up */
+> 	priv->fw_ready = 1;
+> 	if (lbs_start_card(priv) != 0) {
+> 		pr_err("could not activate card\n");
+> 		free_irq(card->p_dev->irq, card);
+> 	}
+> -
+> -out:
+> -	release_firmware(helper);
+> -	release_firmware(mainfw);
+> }
+> 
+> 
+> /********************************************************************/
+> /* Callback functions for libertas.ko                               */
+> /********************************************************************/
+> 
+> diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
+> index 4557833..991238a 100644
+> --- a/drivers/net/wireless/libertas/if_sdio.c
+> +++ b/drivers/net/wireless/libertas/if_sdio.c
+> @@ -704,28 +704,24 @@ static void if_sdio_do_prog_firmware(struct lbs_private *priv, int ret,
+> 	if (ret) {
+> 		pr_err("failed to find firmware (%d)\n", ret);
+> 		return;
+> 	}
+> 
+> 	ret = if_sdio_prog_helper(card, helper);
+> 	if (ret)
+> -		goto out;
+> +		return;
+> 
+> 	lbs_deb_sdio("Helper firmware loaded\n");
+> 
+> 	ret = if_sdio_prog_real(card, mainfw);
+> 	if (ret)
+> -		goto out;
+> +		return;
+> 
+> 	lbs_deb_sdio("Firmware loaded\n");
+> 	if_sdio_finish_power_on(card);
+> -
+> -out:
+> -	release_firmware(helper);
+> -	release_firmware(mainfw);
+> }
+> 
+> static int if_sdio_prog_firmware(struct if_sdio_card *card)
+> {
+> 	int ret;
+> 	u16 scratch;
+> 
+> diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
+> index 4bb6574..87ff0ca 100644
+> --- a/drivers/net/wireless/libertas/if_spi.c
+> +++ b/drivers/net/wireless/libertas/if_spi.c
+> @@ -1090,19 +1090,15 @@ static int if_spi_init_card(struct if_spi_card *card)
+> 	}
+> 
+> 	err = spu_set_interrupt_mode(card, 0, 1);
+> 	if (err)
+> 		goto out;
+> 
+> out:
+> -	release_firmware(helper);
+> -	release_firmware(mainfw);
+> -
+> 	lbs_deb_leave_args(LBS_DEB_SPI, "err %d\n", err);
+> -
+> 	return err;
+> }
+> 
+> static void if_spi_resume_worker(struct work_struct *work)
+> {
+> 	struct if_spi_card *card;
+> 
+> diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+> index 2798077..dff08a2 100644
+> --- a/drivers/net/wireless/libertas/if_usb.c
+> +++ b/drivers/net/wireless/libertas/if_usb.c
+> @@ -840,15 +840,15 @@ static void if_usb_prog_firmware(struct lbs_private *priv, int ret,
+> 		pr_err("failed to find firmware (%d)\n", ret);
+> 		goto done;
+> 	}
+> 
+> 	cardp->fw = fw;
+> 	if (check_fwfile_format(cardp->fw->data, cardp->fw->size)) {
+> 		ret = -EINVAL;
+> -		goto release_fw;
+> +		goto done;
+> 	}
+> 
+> 	/* Cancel any pending usb business */
+> 	usb_kill_urb(cardp->rx_urb);
+> 	usb_kill_urb(cardp->tx_urb);
+> 
+> 	cardp->fwlastblksent = 0;
+> @@ -857,15 +857,15 @@ static void if_usb_prog_firmware(struct lbs_private *priv, int ret,
+> 	cardp->fwfinalblk = 0;
+> 	cardp->bootcmdresp = 0;
+> 
+> restart:
+> 	if (if_usb_submit_rx_urb_fwload(cardp) < 0) {
+> 		lbs_deb_usbd(&cardp->udev->dev, "URB submission is failed\n");
+> 		ret = -EIO;
+> -		goto release_fw;
+> +		goto done;
+> 	}
+> 
+> 	cardp->bootcmdresp = 0;
+> 	do {
+> 		int j = 0;
+> 		i++;
+> 		if_usb_issue_boot_command(cardp, BOOT_CMD_FW_BY_USB);
+> @@ -879,22 +879,22 @@ restart:
+> 	if (cardp->bootcmdresp == BOOT_CMD_RESP_NOT_SUPPORTED) {
+> 		/* Return to normal operation */
+> 		ret = -EOPNOTSUPP;
+> 		usb_kill_urb(cardp->rx_urb);
+> 		usb_kill_urb(cardp->tx_urb);
+> 		if (if_usb_submit_rx_urb(cardp) < 0)
+> 			ret = -EIO;
+> -		goto release_fw;
+> +		goto done;
+> 	} else if (cardp->bootcmdresp <= 0) {
+> 		if (--reset_count >= 0) {
+> 			if_usb_reset_device(cardp);
+> 			goto restart;
+> 		}
+> 		ret = -EIO;
+> -		goto release_fw;
+> +		goto done;
+> 	}
+> 
+> 	i = 0;
+> 
+> 	cardp->totalbytes = 0;
+> 	cardp->fwlastblksent = 0;
+> 	cardp->CRC_OK = 1;
+> @@ -917,37 +917,34 @@ restart:
+> 		if (--reset_count >= 0) {
+> 			if_usb_reset_device(cardp);
+> 			goto restart;
+> 		}
+> 
+> 		pr_info("FW download failure, time = %d ms\n", i * 100);
+> 		ret = -EIO;
+> -		goto release_fw;
+> +		goto done;
+> 	}
+> 
+> 	cardp->priv->fw_ready = 1;
+> 	if_usb_submit_rx_urb(cardp);
+> 
+> 	if (lbs_start_card(priv))
+> -		goto release_fw;
+> +		goto done;
+> 
+> 	if_usb_setup_firmware(priv);
+> 
+> 	/*
+> 	 * EHS_REMOVE_WAKEUP is not supported on all versions of the firmware.
+> 	 */
+> 	priv->wol_criteria = EHS_REMOVE_WAKEUP;
+> 	if (lbs_host_sleep_cfg(priv, priv->wol_criteria, NULL))
+> 		priv->ehs_remove_supported = false;
+> 
+> - release_fw:
+> -	release_firmware(cardp->fw);
+> -	cardp->fw = NULL;
+> -
+>  done:
+> +	cardp->fw = NULL;
+> 	lbs_deb_leave(LBS_DEB_USB);
+> }
+> 
+> 
+> #ifdef CONFIG_PM
+> static int if_usb_suspend(struct usb_interface *intf, pm_message_t message)
+> {
+> 
+> 
 
