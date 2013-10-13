@@ -1,80 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f43.google.com ([209.85.160.43]:42719 "EHLO
-	mail-pb0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752080Ab3JHCyU (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:46057 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755056Ab3JMUGR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Oct 2013 22:54:20 -0400
-Received: by mail-pb0-f43.google.com with SMTP id md4so7938431pbc.16
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Oct 2013 19:54:20 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v3 1/2] ath10k: Fix bug in max. VHT A-MPDU size
-Date: Mon,  7 Oct 2013 19:51:57 -0700
-Message-Id: <1381200718-16271-2-git-send-email-michal.kazior@tieto.com> (sfid-20131008_045424_311498_924D44C1)
-In-Reply-To: <1381200718-16271-1-git-send-email-michal.kazior@tieto.com>
-References: <1380874630-14280-1-git-send-email-michal.kazior@tieto.com>
- <1381200718-16271-1-git-send-email-michal.kazior@tieto.com>
+	Sun, 13 Oct 2013 16:06:17 -0400
+Message-ID: <1381694770.1301.93.camel@deadeye.wl.decadent.org.uk> (sfid-20131013_220621_096662_8E781ED7)
+Subject: Re: [PATCH 0/4] brcm: rename firmware files and add new files
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>
+Date: Sun, 13 Oct 2013 21:06:10 +0100
+In-Reply-To: <1380617590-5120-1-git-send-email-arend@broadcom.com>
+References: <1380617590-5120-1-git-send-email-arend@broadcom.com>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-WZKg30HhX5wBG90iWPjS"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-For VHT peers, the maximum A-MPDU size has to be calculated
-from the VHT capabilities element and not the HT-cap. The formula
-is the same, but a higher value is used in VHT, allowing larger
-aggregates to be transmitted.
+--=-WZKg30HhX5wBG90iWPjS
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-The patch contains a workaround for some Netgear/Linksys APs that
-report Rx A-MPDU factor incorrectly.
+On Tue, 2013-10-01 at 10:53 +0200, Arend van Spriel wrote:
+> This series renames the firmware files to match the required filenames in
+> the brcmfmac driver. Previously, these files needed to be copied/linked t=
+o
+> a generic name that was used in the driver. So for older kernels this is =
+still
+> needed.
+>=20
+> Also included are new firmware files for BCM43241 and BCM4335. The brcmfm=
+ac
+> driver lists some more firmware files, but firmware is not yet released f=
+or
+> those chips.
+>=20
+> Arend van Spriel (4):
+>   brcm: rename firmware names expressing host interface type
+>   brcm: add firmware file for BCM43241 SDIO chipset
+>   brcm: add firmware for newer version of BCM43241 SDIO chipset
+>   brcm: add firmware file for the BCM4335 SDIO chipset
+>=20
+>  WHENCE                                           |    9 ++++++---
+>  brcm/brcmfmac43241b0-sdio.bin                    |  Bin 0 -> 455745 byte=
+s
+>  brcm/brcmfmac43241b4-sdio.bin                    |  Bin 0 -> 403855 byte=
+s
+>  brcm/{brcmfmac4329.bin =3D> brcmfmac4329-sdio.bin} |  Bin 253748 -> 2537=
+48 bytes
+>  brcm/{brcmfmac4330.bin =3D> brcmfmac4330-sdio.bin} |  Bin 222126 -> 2221=
+26 bytes
+>  brcm/{brcmfmac4334.bin =3D> brcmfmac4334-sdio.bin} |  Bin 451566 -> 4515=
+66 bytes
+>  brcm/brcmfmac4335-sdio.bin                       |  Bin 0 -> 569291 byte=
+s
+>  7 files changed, 6 insertions(+), 3 deletions(-)
+>  create mode 100644 brcm/brcmfmac43241b0-sdio.bin
+>  create mode 100644 brcm/brcmfmac43241b4-sdio.bin
+>  rename brcm/{brcmfmac4329.bin =3D> brcmfmac4329-sdio.bin} (100%)
+>  rename brcm/{brcmfmac4330.bin =3D> brcmfmac4330-sdio.bin} (100%)
+>  rename brcm/{brcmfmac4334.bin =3D> brcmfmac4334-sdio.bin} (100%)
+>  create mode 100644 brcm/brcmfmac4335-sdio.bin
 
-Tested-by: Kalle Valo <kvalo@qca.qualcomm.com>
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
-v3:
- * fix lines over 80 chars (Kalle)
- * fix max() cast warning (Kalle)
- * add Tested-by
+I've applied all of these, thanks.
 
- drivers/net/wireless/ath/ath10k/mac.c | 15 ++++++++++++++-
- 1 file changed, 14 insertions(+), 1 deletion(-)
+Ben.
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 4b7c949..049eca2 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -1033,14 +1033,27 @@ static void ath10k_peer_assoc_h_vht(struct ath10k *ar,
- 				    struct wmi_peer_assoc_complete_arg *arg)
- {
- 	const struct ieee80211_sta_vht_cap *vht_cap = &sta->vht_cap;
-+	u8 ampdu_factor;
- 
- 	if (!vht_cap->vht_supported)
- 		return;
- 
- 	arg->peer_flags |= WMI_PEER_VHT;
--
- 	arg->peer_vht_caps = vht_cap->cap;
- 
-+
-+	ampdu_factor = (vht_cap->cap &
-+			IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK) >>
-+		       IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_SHIFT;
-+
-+	/* Workaround: Some Netgear/Linksys 11ac APs set Rx A-MPDU factor to
-+	 * zero in VHT IE. Using it would result in degraded throughput.
-+	 * arg->peer_max_mpdu at this point contains HT max_mpdu so keep
-+	 * it if VHT max_mpdu is smaller. */
-+	arg->peer_max_mpdu = max(arg->peer_max_mpdu,
-+				 (1U << (IEEE80211_HT_MAX_AMPDU_FACTOR +
-+					ampdu_factor)) - 1);
-+
- 	if (sta->bandwidth == IEEE80211_STA_RX_BW_80)
- 		arg->peer_flags |= WMI_PEER_80MHZ;
- 
--- 
-1.8.4.rc3
+--=20
+Ben Hutchings
+Beware of bugs in the above code;
+I have only proved it correct, not tried it. - Donald Knuth
 
+--=-WZKg30HhX5wBG90iWPjS
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+
+iQIVAwUAUlr9Mue/yOyVhhEJAQoKYA/+IOcoYt5VZICR/Qh9t52EQlJJ66ULy1KC
+t5SUUg/qpEFBXw9KTMctHypFlBw6g6An18kgRGGIS/rOUABjcEgAQtsiksHgD4Ak
+Iwa8neS4gth1Z46vcCCY/YpHdCU0LIC/6QHIYd0cz/SPN2whgH9Ht/bIR6a2/nEM
+faJSIr647sWB6dPMkoSNMvsGZit/EuisALQtvYUsFesNsZeWV8eFIEd47azorwp4
+OzfLbZiHkD+zoVvG96I85VuWSXChwgAoRangolE7il9wRfZF4wn5Qwa3GRgzWBVq
+rka6ECZYQNqZvkKNMC5O26n5Nf8oK9o7OkP6nE/ciHEio3r83XawfYcDk6OEH7K4
+m7iXDe0fhUzSQ2qZvOli8goVThX445OXjFhvv8+s/KLMcfZvHX2HiMv4MWHPSl+/
+ERtgfOjyt3F2axvcV9cPcMVlKgDLdbNeIfrDiWd5aJc7XxVgb0HRK1NTGp/MC0D6
+DJfuvkeBRbvUVCqnJfWZWDgciRfXlWxRrjsMzK4dffCgO1+FDd/2JQkDDDCKLseJ
+8GhQUJENKsNgcun2vnYX4fjEom7DM5GGL6QE6mvMBW81ww9Ta3Go7jnQnfKmrCqk
+mBc09Vpt97d9vV6O31idlcfpogwPqOwlzQTWZNmIVIiq2uBZD3zXpBd8abRlQeB4
+vq2K/QwS5rA=
+=QoDc
+-----END PGP SIGNATURE-----
+
+--=-WZKg30HhX5wBG90iWPjS--
