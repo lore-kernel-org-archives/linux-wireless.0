@@ -1,34 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48093 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752437Ab3JGI2W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Oct 2013 04:28:22 -0400
-Date: Mon, 7 Oct 2013 10:24:58 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Kirill Tkhai <tkhai@yandex.ru>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	ivdoorn@gmail.com, gwingerde@gmail.com, helmut.schaa@googlemail.com
-Subject: Re: [regression] [bisected] rt2800pci doesn't work after
- 9483f40d8d01918b399b4e24d0c1111db0afffeb
-Message-ID: <20131007082457.GB2418@redhat.com> (sfid-20131007_102835_865448_27970C1B)
-References: <39871380943748@web17j.yandex.ru>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <39871380943748@web17j.yandex.ru>
+Received: from mail-pd0-f179.google.com ([209.85.192.179]:55543 "EHLO
+	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753077Ab3JMDa4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 Oct 2013 23:30:56 -0400
+Received: by mail-pd0-f179.google.com with SMTP id v10so5958910pde.38
+        for <linux-wireless@vger.kernel.org>; Sat, 12 Oct 2013 20:30:55 -0700 (PDT)
+From: Mihir Shete <smihir@qti.qualcomm.com>
+To: linux-wireless@vger.kernel.org
+Cc: Mihir Shete <smihir@qti.qualcomm.com>
+Subject: [PATCH 0/2] cfg80211: changes to add the country IE preferences
+Date: Sun, 13 Oct 2013 09:00:44 +0530
+Message-Id: <1381635046-15123-1-git-send-email-smihir@qti.qualcomm.com> (sfid-20131013_053114_626939_9984BF4B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Oct 05, 2013 at 07:29:08AM +0400, Kirill Tkhai wrote:
-> GIt bisect says the first bad commit is 9483f40d8d01918b399b4e24d0c1111db0afffeb:
-> 
->         Author: Jakub Kicinski <kubakici@wp.pl>
->         Date:   Tue May 7 00:28:50 2013 +0200
-> 
->             rt2x00pci: Use PCI MSIs whenever possible
-> 
->             All PCIe devices must support MSIs, make use of them.
+802.11 cards may have different country IE parsing preferences
+and vendors have to support these. We currently provide support
+for country IE behavioural preferences by using the flags
+WIPHY_FLAG_STRICT_REGULATORY, WIPHY_FLAG_CUSTOM_REGULATORY and
+their combination.
 
-I posted revert of that patch some time ago, it's on the way
-upstream/stable ...
+Instead of extending the definition by using the existing
+regulatory flags, split out the desired behaviours into a new
+wiphy flag. This will allow us to add more customizations in a
+more easily maintainable fashion.
 
-Stanislaw
+Mihir Shete (2):
+  cfg80211: add flags to define country IE processing rules
+  cfg80211: add an option to disable processing country IEs
+
+ drivers/net/wireless/ath/regd.c |  1 +
+ include/net/cfg80211.h          | 36 +++++++++++++++++++++++-------------
+ include/uapi/linux/nl80211.h    | 34 ++++++++++++++++++++++++++++++++++
+ net/wireless/reg.c              | 11 ++++++-----
+ 4 files changed, 64 insertions(+), 18 deletions(-)
+
+-- 
+1.8.2.1
+
