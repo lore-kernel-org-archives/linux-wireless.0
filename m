@@ -1,50 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:55814 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755629Ab3JKVbK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Oct 2013 17:31:10 -0400
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-pd0-f180.google.com ([209.85.192.180]:37350 "EHLO
+	mail-pd0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750747Ab3JMEbq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 13 Oct 2013 00:31:46 -0400
+Received: by mail-pd0-f180.google.com with SMTP id y10so5976208pdj.39
+        for <linux-wireless@vger.kernel.org>; Sat, 12 Oct 2013 21:31:45 -0700 (PDT)
+From: Mihir Shete <smihir@qti.qualcomm.com>
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Subject: [PATCH v2 09/10] ath9k: make ath9k_uses_beacons static
-Date: Fri, 11 Oct 2013 23:31:00 +0200
-Message-Id: <1381527061-43758-9-git-send-email-nbd@openwrt.org> (sfid-20131011_233135_158227_97826C39)
-In-Reply-To: <1381527061-43758-1-git-send-email-nbd@openwrt.org>
-References: <1381527061-43758-1-git-send-email-nbd@openwrt.org>
+Cc: Mihir Shete <smihir@qti.qualcomm.com>
+Subject: [PATCH v2 0/2] cfg80211: changes to add the country IE preferences
+Date: Sun, 13 Oct 2013 10:01:35 +0530
+Message-Id: <1381638697-2641-1-git-send-email-smihir@qti.qualcomm.com> (sfid-20131013_063204_327666_42686531)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ath9k.h | 1 -
- drivers/net/wireless/ath/ath9k/main.c  | 2 +-
- 2 files changed, 1 insertion(+), 2 deletions(-)
+802.11 cards may have different country IE parsing preferences
+and vendors have to support these. We currently provide support
+for country IE behavioural preferences by using the flags
+WIPHY_FLAG_STRICT_REGULATORY, WIPHY_FLAG_CUSTOM_REGULATORY and
+their combination.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index d03b85e..5492a0c 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -933,7 +933,6 @@ void ath9k_deinit_device(struct ath_softc *sc);
- void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw);
- void ath9k_reload_chainmask_settings(struct ath_softc *sc);
- 
--bool ath9k_uses_beacons(int type);
- void ath9k_spectral_scan_trigger(struct ieee80211_hw *hw);
- int ath9k_spectral_scan_config(struct ieee80211_hw *hw,
- 			       enum spectral_mode spectral_mode);
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index bc89823..20a2fbc 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -896,7 +896,7 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 	ath_dbg(common, CONFIG, "Driver halt\n");
- }
- 
--bool ath9k_uses_beacons(int type)
-+static bool ath9k_uses_beacons(int type)
- {
- 	switch (type) {
- 	case NL80211_IFTYPE_AP:
+Instead of extending the definition by using the existing
+regulatory flags, split out the desired behaviours into a new
+wiphy flag. This will allow us to add more customizations in a
+more easily maintainable fashion.
+
+Mihir Shete (2):
+  cfg80211: add flags to define country IE processing rules
+  cfg80211: add an option to disable processing country IEs
+
+ drivers/net/wireless/ath/regd.c |  1 +
+ include/net/cfg80211.h          | 36 +++++++++++++++++++++++-------------
+ include/uapi/linux/nl80211.h    | 33 +++++++++++++++++++++++++++++++++
+ net/wireless/reg.c              | 11 ++++++-----
+ 4 files changed, 63 insertions(+), 18 deletions(-)
+
 -- 
-1.8.0.2
+1.8.2.1
 
