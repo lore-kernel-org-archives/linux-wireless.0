@@ -1,84 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f51.google.com ([74.125.83.51]:41840 "EHLO
-	mail-ee0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756441Ab3J1OA1 (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:45940 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754947Ab3JMTLR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Oct 2013 10:00:27 -0400
-From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 16/16] wl1251: Add sysfs file address for setting permanent mac address
-Date: Mon, 28 Oct 2013 15:00:24 +0100
-Cc: Luciano Coelho <luca@coelho.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
-	joni.lapilainen@gmail.com
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com> <201310281449.58170@pali> <1382968522.17956.11.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1382968522.17956.11.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart345760620.OzhjffakOm";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <201310281500.24159@pali> (sfid-20131028_150049_031861_F68D85AF)
+	Sun, 13 Oct 2013 15:11:17 -0400
+Message-ID: <1381691458.1301.63.camel@deadeye.wl.decadent.org.uk> (sfid-20131013_211120_876105_9F08FB8A)
+Subject: Re: [PATCH] rtlwifi: Add new firmware files for rtl8192cu
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: dwmw2@infradead.org, linux-wireless@vger.kernel.org
+Date: Sun, 13 Oct 2013 20:10:58 +0100
+In-Reply-To: <52541E22.2040904@lwfinger.net>
+References: <1380234392-31062-1-git-send-email-Larry.Finger@lwfinger.net>
+	 <52541E22.2040904@lwfinger.net>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-ORaI+EEwE7bvq/YlWzXh"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart345760620.OzhjffakOm
-Content-Type: Text/Plain;
-  charset="utf-8"
+
+--=-ORaI+EEwE7bvq/YlWzXh
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Monday 28 October 2013 14:55:22 Johannes Berg wrote:
-> On Mon, 2013-10-28 at 14:49 +0100, Pali Roh=C3=A1r wrote:
-> > On Monday 28 October 2013 14:45:05 Johannes Berg wrote:
-> > > On Sat, 2013-10-26 at 22:34 +0200, Pali Roh=C3=A1r wrote:
-> > > > Driver wl1251 generating mac address randomly at startup
-> > > > and there is no way to set permanent mac address via
-> > > > SET_IEEE80211_PERM_ADDR. This patch export sysfs file
-> > > > which can set permanent mac address by userspace helper
-> > > > program. Patch is needed for devices which do not store
-> > > > mac address in internal wl1251 eeprom.
-> > >=20
-> > > This doesn't really seem like a good idea since you can
-> > > also just use 'ip' or whatever to set the MAC address.
-> > >=20
-> > > johannes
-> >=20
-> > AFAIK you cannot set permanent address (show by ethtool -P
-> > wlan0) via ip/ifconfig.
+On Tue, 2013-10-08 at 10:00 -0500, Larry Finger wrote:
+> On 09/26/2013 05:26 PM, Larry Finger wrote:
+> > The vendor driver rtl8188C_8192C_8192D_usb_linux_v3.4.2_3727.20120404
+> > includes new firmware files. These were extracted from data statements
+> > in that driver to form these files.
+> >
+> > Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> > ---
+> >   WHENCE                       |   3 +++
+> >   rtlwifi/rtl8192cufw_A.bin    | Bin 0 -> 16116 bytes
+> >   rtlwifi/rtl8192cufw_B.bin    | Bin 0 -> 16096 bytes
+> >   rtlwifi/rtl8192cufw_TMSC.bin | Bin 0 -> 16116 bytes
+> >   4 files changed, 3 insertions(+)
+> >   create mode 100644 rtlwifi/rtl8192cufw_A.bin
+> >   create mode 100644 rtlwifi/rtl8192cufw_B.bin
+> >   create mode 100644 rtlwifi/rtl8192cufw_TMSC.bin
 >=20
-> You probably can't, but that address also doesn't matter at
-> all and isn't really used anywhere.
->=20
-> johannes
+> I understand that you probably have too much to do, but I am inquiring ab=
+out the=20
+> status of this submission and "[PATCH] rtlwifi: Add new firmware files fo=
+r=20
+> rtl8188eu" that I sent on 09/27/2013.
+[...]
 
-There are some (proprietary) applications which using permanent=20
-address for something...
+I don't seem to have received them, but I assume the patches you sent
+after this are the same again.
 
-And also more important: some network managing tools using it.=20
-NetworkManager resetting current MAC address to permanent one=20
-before starting configuring interface.
+Ben.
 
-So this will lead to never use correct MAC address (but random=20
-permanent one) assigned for that wl1251 wireless card...
+--=20
+Ben Hutchings
+Beware of bugs in the above code;
+I have only proved it correct, not tried it. - Donald Knuth
 
-=2D-=20
-Pali Roh=C3=A1r
-pali.rohar@gmail.com
-
---nextPart345760620.OzhjffakOm
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+--=-ORaI+EEwE7bvq/YlWzXh
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
+Version: GnuPG v1.4.14 (GNU/Linux)
 
-iEYEABECAAYFAlJubfgACgkQi/DJPQPkQ1JkVgCePETpdDNGvuSuoZV7u+ya1GhY
-dq8Anja0MntOATEspX7Bvjqs640xJ85L
-=kxw3
+iQIVAwUAUlrwQue/yOyVhhEJAQqj1g/8DYhYUNgMTRIPfXun+nVBs9HHl8DNZkKv
+1M2thaWQlV7v+JmoUERCKprAecCq14ISkLmrppRl4Mz+fawz0F/nUP5WKdgHhAZp
+eCrKGV5+Hh6+LHX8LlP8bFGCy2c9JP8Pn6gfBWgtUPfDd9Zn/J9CntH2vwMgq0ah
+xsjLZ1Qjiq5Vubqbt8AVV3un/IajUUFOgheBUe8M6u8RkV91D603ALW1O2G0ZfKn
+ny3Ap5sk9bjUS1z42tyJPM6w0fQ04AjqPTp14I8lD0pv45n/OUSBgVb7g3C6nMuS
+r3+VxN5UhWA8AeO5cJ76Kw8+dR7ZDqcEd17Iu+wvyDYRk2r3KC6QwpLJcieFCqpo
+kOQEmLwP8D6uIpqnhZuFpRp4tzWku8fD4DoPQT59F+fqZFvqQUlzKJsnxRCKgw96
+lSS/qx1nT0nOazP+KROWy0Ico3RwihVkhh7+qYI4FCB9YEIjShOMjpPXn2b2EQVg
+YjgVG/52riAvbQHmTldlxRcfcEoSj64WCEVd3H+mQUtXgcWXeAdPlJQbU+NqGy3N
+EZ5eFMRu2ezQwXKrHVELsZBxIhWusOL+zzQ+CPINuQ+Osyi3RE/2fBKKBjpP6bBm
+leenM2oEp1DmeuTMgezqFV2uwSstczC/Gci1Hvpxi0wooVDtVeK/d9FW3RLbYJ1f
+STW7hMqCoi4=
+=m9Ib
 -----END PGP SIGNATURE-----
 
---nextPart345760620.OzhjffakOm--
+--=-ORaI+EEwE7bvq/YlWzXh--
