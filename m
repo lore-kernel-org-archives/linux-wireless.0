@@ -1,74 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f53.google.com ([209.85.160.53]:46070 "EHLO
-	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753077Ab3JMDbN (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:46060 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755096Ab3JMUG6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Oct 2013 23:31:13 -0400
-Received: by mail-pb0-f53.google.com with SMTP id up15so5896700pbc.26
-        for <linux-wireless@vger.kernel.org>; Sat, 12 Oct 2013 20:31:13 -0700 (PDT)
-From: Mihir Shete <smihir@qti.qualcomm.com>
-To: linux-wireless@vger.kernel.org
-Cc: Mihir Shete <smihir@qti.qualcomm.com>,
-	Henri Bahini <hbahini@qca.qualcomm.com>,
-	Tushnim Bhattacharyya <tushnimb@qca.qualcomm.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 2/2] cfg80211: add an option to disable processing country IEs
-Date: Sun, 13 Oct 2013 09:00:46 +0530
-Message-Id: <1381635046-15123-3-git-send-email-smihir@qti.qualcomm.com> (sfid-20131013_053118_671993_84CB4B14)
-In-Reply-To: <1381635046-15123-1-git-send-email-smihir@qti.qualcomm.com>
-References: <1381635046-15123-1-git-send-email-smihir@qti.qualcomm.com>
+	Sun, 13 Oct 2013 16:06:58 -0400
+Message-ID: <1381694812.1301.94.camel@deadeye.wl.decadent.org.uk> (sfid-20131013_220701_118145_00AD2AB9)
+Subject: Re: [PATCH] rtlwifi: Add new firmware files for rtl8192cu
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: dwmw2@infradead.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Sun, 13 Oct 2013 21:06:52 +0100
+In-Reply-To: <525494DB.2060301@lwfinger.net>
+References: <525494DB.2060301@lwfinger.net>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-+yirvjXNNy2N54ByYvVs"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Certain vendors may want to disable the processing of
-country IEs so that they can continue using the regulatory
-domain the driver or user has set.  Currently there is no
-way to stop the core from processing country IEs, so add
-support to the core to ignore country IE hints.
 
-Cc: Henri Bahini <hbahini@qca.qualcomm.com>
-Cc: Tushnim Bhattacharyya <tushnimb@qca.qualcomm.com>
-Cc: Luis R. Rodriguez <mcgrof@do-not-panic.com>
-Signed-off-by: Mihir Shete <smihir@qti.qualcomm.com>
----
- include/uapi/linux/nl80211.h | 5 +++++
- net/wireless/reg.c           | 3 +++
- 2 files changed, 8 insertions(+)
+--=-+yirvjXNNy2N54ByYvVs
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 977c487..2a6ba5c 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2343,10 +2343,15 @@ enum nl80211_reg_type {
-  *	domain. The regulatory domain used will be based on the
-  *	ISO3166-alpha2 from country IE provided through
-  *	regulatory_hint_country_ie()
-+ * @NL80211_COUNTRY_IE_IGNORE_CORE - for devices that have a preference to
-+ *	to ignore all country IE information processed by the core. This will
-+ *	override %NL80211_COUNTRY_IE_FOLLOW_POWER if the country IE hint is
-+ *	issued by the core
-  */
- enum nl80211_country_ie_pref {
- 	NL80211_COUNTRY_IE_FOLLOW_CORE,
- 	NL80211_COUNTRY_IE_FOLLOW_POWER = BIT(0),
-+	NL80211_COUNTRY_IE_IGNORE_CORE = BIT(1),
- };
- 
- /**
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 87b4ee3..699c4dc 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1322,6 +1322,9 @@ get_reg_request_treatment(struct wiphy *wiphy,
- 	case NL80211_REGDOM_SET_BY_CORE:
- 		return REG_REQ_OK;
- 	case NL80211_REGDOM_SET_BY_COUNTRY_IE:
-+		if (wiphy->country_ie_pref & NL80211_COUNTRY_IE_IGNORE_CORE)
-+			return REG_REQ_IGNORE;
-+
- 		if (reg_request_cell_base(lr)) {
- 			/* Trust a Cell base station over the AP's country IE */
- 			if (regdom_changes(pending_request->alpha2))
--- 
-1.8.2.1
+On Tue, 2013-10-08 at 18:27 -0500, Larry Finger wrote:
+> The vendor driver rtl8188C_8192C_8192D_usb_linux_v3.4.2_3727.20120404
+> includes new firmware files. These were extracted from data statements
+> in that driver to form these files.
+>=20
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+>   WHENCE                       |   3 +++
+>   rtlwifi/rtl8192cufw_A.bin    | Bin 0 -> 16116 bytes
+>   rtlwifi/rtl8192cufw_B.bin    | Bin 0 -> 16096 bytes
+>   rtlwifi/rtl8192cufw_TMSC.bin | Bin 0 -> 16116 bytes
+>   4 files changed, 3 insertions(+)
+>   create mode 100644 rtlwifi/rtl8192cufw_A.bin
+>   create mode 100644 rtlwifi/rtl8192cufw_B.bin
+>   create mode 100644 rtlwifi/rtl8192cufw_TMSC.bin
+[...]
 
+Applied, thanks.
+
+Ben.
+
+--=20
+Ben Hutchings
+Beware of bugs in the above code;
+I have only proved it correct, not tried it. - Donald Knuth
+
+--=-+yirvjXNNy2N54ByYvVs
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+
+iQIVAwUAUlr9XOe/yOyVhhEJAQq/ZhAAjc/0Ed0hmNYpG2V5tziUz1i5DQh0U5TM
+rFGnctlre4Uj5De/ss+2ubBP+IvLFIE0OfFq7K9KdygAci7tsW/ZSbrKriFpIep8
+IrGs+mkeOm3ahQOKUIug2iKgahwTtFKhr/rZOMUpV1TalKSbWZg0EE2cUaI1rWak
+CPaYbYTtDdpf2OC0svEmCgcTQ+rYHSETfBWiDpUrL8PwOytIRpSSndVKNMLPD2L8
+N/v72/dV6hmQUQV3vHbf1Aw995UXSmjTxO8LR5meZl6QLi5sRjytbZFBLUelWj/K
+f6h7ufzL7qdw8bVzBZdPoHkDAJOpNeEzsBuyiHUGinXrjHLB74UnsEEIahIRxZCI
+eQ4h1eoBNcfwkR3pTRdrcMPDYiZvDoJlEtR87h64LdNo/cPHGaXHkVvEHIG0QR7r
+4f0yASfcJotlPOgqf+/sAx+rd5tmIIb2fFAlj6yC83xcSXMBcWxVq05Ze9tSPxlR
+KojUsaXGuGbhaPLgBGU3Lz+v9bGll2wLqS+f75h7T4wa0wBbTe96+1KbEbtAilw+
+zpPcLY5fYGzzMxmb00xRu44FzavgBbrVnBJlvIyhnc90zkk9CexKR5C+C8kqgwBN
+O9Mvsgyf1/8We2tssz0MX/TsdtpJxjxCE5XsyJL4ucfcg9rgIeAEBV0aR6WsOP9g
+Hb3G9kXwJ/I=
+=VH9X
+-----END PGP SIGNATURE-----
+
+--=-+yirvjXNNy2N54ByYvVs--
