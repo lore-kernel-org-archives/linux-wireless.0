@@ -1,75 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f45.google.com ([74.125.83.45]:60652 "EHLO
-	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753302Ab3J3LpQ (ORCPT
+Received: from mail-pd0-f179.google.com ([209.85.192.179]:46412 "EHLO
+	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750783Ab3JMEcA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Oct 2013 07:45:16 -0400
-Received: by mail-ee0-f45.google.com with SMTP id e50so571778eek.32
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Oct 2013 04:45:15 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH/RFT 06/12] ath10k: fix ath10k_ce_init() failpath
-Date: Wed, 30 Oct 2013 12:42:20 +0100
-Message-Id: <1383133346-8135-7-git-send-email-michal.kazior@tieto.com> (sfid-20131030_124527_223021_8005E69B)
-In-Reply-To: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com>
-References: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com>
+	Sun, 13 Oct 2013 00:32:00 -0400
+Received: by mail-pd0-f179.google.com with SMTP id v10so5989948pde.38
+        for <linux-wireless@vger.kernel.org>; Sat, 12 Oct 2013 21:32:00 -0700 (PDT)
+From: Mihir Shete <smihir@qti.qualcomm.com>
+To: linux-wireless@vger.kernel.org
+Cc: Mihir Shete <smihir@qti.qualcomm.com>,
+	Henri Bahini <hbahini@qca.qualcomm.com>,
+	Tushnim Bhattacharyya <tushnimb@qca.qualcomm.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH v2 2/2] cfg80211: add an option to disable processing country IEs
+Date: Sun, 13 Oct 2013 10:01:37 +0530
+Message-Id: <1381638697-2641-3-git-send-email-smihir@qti.qualcomm.com> (sfid-20131013_063206_474510_4B66317E)
+In-Reply-To: <1381638697-2641-1-git-send-email-smihir@qti.qualcomm.com>
+References: <1381638697-2641-1-git-send-email-smihir@qti.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make sure to put target back to sleep. This was a
-minor issue as it didn't really matter if we put
-target back to sleep at this point. It just looked
-wrong.
+Certain vendors may want to disable the processing of
+country IEs so that they can continue using the regulatory
+domain the driver or user has set.  Currently there is no
+way to stop the core from processing country IEs, so add
+support to the core to ignore country IE hints.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Cc: Henri Bahini <hbahini@qca.qualcomm.com>
+Cc: Tushnim Bhattacharyya <tushnimb@qca.qualcomm.com>
+Cc: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Signed-off-by: Mihir Shete <smihir@qti.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath10k/ce.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ include/uapi/linux/nl80211.h | 5 +++++
+ net/wireless/reg.c           | 3 +++
+ 2 files changed, 8 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
-index 7a49cde..657e8f2 100644
---- a/drivers/net/wireless/ath/ath10k/ce.c
-+++ b/drivers/net/wireless/ath/ath10k/ce.c
-@@ -1077,7 +1077,7 @@ struct ath10k_ce_pipe *ath10k_ce_init(struct ath10k *ar,
- 	ce_state = ath10k_ce_init_state(ar, ce_id, attr);
- 	if (!ce_state) {
- 		ath10k_err("Failed to initialize CE state for ID: %d\n", ce_id);
--		return NULL;
-+		goto out;
- 	}
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 6e574ce..9746f55 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2343,9 +2343,14 @@ enum nl80211_reg_type {
+  *	domain. The regulatory domain used will be based on the
+  *	ISO3166-alpha2 from country IE provided through
+  *	regulatory_hint_country_ie()
++ * @NL80211_COUNTRY_IE_IGNORE_CORE - for devices that have a preference to
++ *	to ignore all country IE information processed by the core. This will
++ *	override %NL80211_COUNTRY_IE_FOLLOW_POWER if the country IE hint is
++ *	issued by the core
+  */
+ enum nl80211_country_ie_pref {
+ 	NL80211_COUNTRY_IE_FOLLOW_POWER	= 1<<0,
++	NL80211_COUNTRY_IE_IGNORE_CORE	= 1<<1,
+ };
  
- 	if (attr->src_nentries) {
-@@ -1086,7 +1086,8 @@ struct ath10k_ce_pipe *ath10k_ce_init(struct ath10k *ar,
- 			ath10k_err("Failed to initialize CE src ring for ID: %d (%d)\n",
- 				   ce_id, ret);
- 			ath10k_ce_deinit(ce_state);
--			return NULL;
-+			ce_state = NULL;
-+			goto out;
- 		}
- 	}
- 
-@@ -1096,15 +1097,16 @@ struct ath10k_ce_pipe *ath10k_ce_init(struct ath10k *ar,
- 			ath10k_err("Failed to initialize CE dest ring for ID: %d (%d)\n",
- 				   ce_id, ret);
- 			ath10k_ce_deinit(ce_state);
--			return NULL;
-+			ce_state = NULL;
-+			goto out;
- 		}
- 	}
- 
- 	/* Enable CE error interrupts */
- 	ath10k_ce_error_intr_enable(ar, ctrl_addr);
- 
-+out:
- 	ath10k_pci_sleep(ar);
--
- 	return ce_state;
- }
- 
+ /**
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 87b4ee3..699c4dc 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1322,6 +1322,9 @@ get_reg_request_treatment(struct wiphy *wiphy,
+ 	case NL80211_REGDOM_SET_BY_CORE:
+ 		return REG_REQ_OK;
+ 	case NL80211_REGDOM_SET_BY_COUNTRY_IE:
++		if (wiphy->country_ie_pref & NL80211_COUNTRY_IE_IGNORE_CORE)
++			return REG_REQ_IGNORE;
++
+ 		if (reg_request_cell_base(lr)) {
+ 			/* Trust a Cell base station over the AP's country IE */
+ 			if (regdom_changes(pending_request->alpha2))
 -- 
-1.8.4.rc3
+1.8.2.1
 
