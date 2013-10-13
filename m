@@ -1,167 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:44519 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754499Ab3JIPP6 (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:46078 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755096Ab3JMUMj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Oct 2013 11:15:58 -0400
-From: Sunil Dutt <c_duttus@qti.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <j@w1.fi>, <linux-wireless@vger.kernel.org>,
-	<c_duttus@qti.qualcomm.com>
-Subject: [PATCH] cfg80211: Pass station supported channel and oper class info to kernel
-Date: Wed, 9 Oct 2013 20:45:21 +0530
-Message-ID: <1381331721-12324-1-git-send-email-c_duttus@qti.qualcomm.com> (sfid-20131009_171601_828296_0A4249DC)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 13 Oct 2013 16:12:39 -0400
+Message-ID: <1381695143.1301.96.camel@deadeye.wl.decadent.org.uk> (sfid-20131013_221311_071798_1003CD82)
+Subject: Re: [GIT PULL] firmware: wl1251 firmware binary
+From: Ben Hutchings <ben@decadent.org.uk>
+To: balbi@ti.com
+Cc: dwmw2@infradead.org, Luca Coelho <luca@coelho.fi>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, Pavel Machek <pavel@denx.de>
+Date: Sun, 13 Oct 2013 21:12:23 +0100
+In-Reply-To: <20131002125535.GL1476@radagast>
+References: <1380033894-5007-1-git-send-email-balbi@ti.com>
+	 <1380107096.4503.8.camel@porter.coelho.fi>
+	 <1380107278.4503.9.camel@porter.coelho.fi>
+	 <20130925132359.GE10746@radagast>
+	 <1380116535.4503.19.camel@porter.coelho.fi>
+	 <20130925135943.GI10746@radagast> <20131002125535.GL1476@radagast>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-DBu59udU/X2je7iwaB8D"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The information of the peer's supported channels and supported operating
-classes are required for the driver to perform TDLS off channel
-operations. This commit enhances the function nl80211_(new)set_station
-to pass this information of the peer to the driver.
 
-Signed-off-by: Sunil Dutt <c_duttus@qti.qualcomm.com>
----
- include/net/cfg80211.h       |  8 ++++++++
- include/uapi/linux/nl80211.h |  9 +++++++++
- net/wireless/nl80211.c       | 46 ++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 63 insertions(+)
+--=-DBu59udU/X2je7iwaB8D
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index cb71091..b1cfc93 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -735,6 +735,10 @@ enum station_parameters_apply_mask {
-  * @capability: station capability
-  * @ext_capab: extended capabilities of the station
-  * @ext_capab_len: number of extended capabilities
-+ * @supported_channels: supported channels in IEEE 802.11 format
-+ * @supported_channels_len: number of supported channels
-+ * @supported_oper_classes: supported oper classes in IEEE 802.11 format
-+ * @supported_oper_classes_len: number of supported operating classes
-  */
- struct station_parameters {
- 	const u8 *supported_rates;
-@@ -754,6 +758,10 @@ struct station_parameters {
- 	u16 capability;
- 	const u8 *ext_capab;
- 	u8 ext_capab_len;
-+	const u8 *supported_channels;
-+	u8 supported_channels_len;
-+	const u8 *supported_oper_classes;
-+	u8 supported_oper_classes_len;
- };
- 
- /**
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index fde2c02..aec9a8a 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1496,6 +1496,11 @@ enum nl80211_commands {
-  * @NL80211_ATTR_RXMGMT_FLAGS: flags for nl80211_send_mgmt(), u32.
-  *	As specified in the &enum nl80211_rxmgmt_flags.
-  *
-+ * @NL80211_ATTR_STA_SUPPORTED_CHANNELS: array of supported channels.
-+ *
-+ * @NL80211_ATTR_STA_SUPPORTED_OPER_CLASSES: array of supported
-+ *      supported operating classes.
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1806,6 +1811,10 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_RXMGMT_FLAGS,
- 
-+	NL80211_ATTR_STA_SUPPORTED_CHANNELS,
-+
-+	NL80211_ATTR_STA_SUPPORTED_OPER_CLASSES,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 626dc3b..dca1e8f 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -354,6 +354,8 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 	[NL80211_ATTR_CSA_IES] = { .type = NLA_NESTED },
- 	[NL80211_ATTR_CSA_C_OFF_BEACON] = { .type = NLA_U16 },
- 	[NL80211_ATTR_CSA_C_OFF_PRESP] = { .type = NLA_U16 },
-+	[NL80211_ATTR_STA_SUPPORTED_CHANNELS] = { .type = NLA_BINARY },
-+	[NL80211_ATTR_STA_SUPPORTED_OPER_CLASSES] = { .type = NLA_BINARY },
- };
- 
- /* policy for the key attributes */
-@@ -3896,9 +3898,45 @@ static int nl80211_parse_sta_wme(struct genl_info *info,
- 	return 0;
- }
- 
-+static int nl80211_parse_sta_channel_info(struct genl_info *info,
-+				      struct station_parameters *params)
-+{
-+	if (info->attrs[NL80211_ATTR_STA_SUPPORTED_CHANNELS]) {
-+		params->supported_channels =
-+		     nla_data(info->attrs[NL80211_ATTR_STA_SUPPORTED_CHANNELS]);
-+		params->supported_channels_len =
-+		     nla_len(info->attrs[NL80211_ATTR_STA_SUPPORTED_CHANNELS]);
-+		/*
-+		 * Need to include at least One (first channel, number of
-+		 * channels) tuple for each subband.
-+		 */
-+		if (params->supported_channels_len < 2)
-+			return -EINVAL;
-+		 /* Ignore any trailing byte signifying an invalid Tuple.*/
-+		if (params->supported_channels_len % 2)
-+			params->supported_channels_len -= 1;
-+	}
-+
-+	if (info->attrs[NL80211_ATTR_STA_SUPPORTED_OPER_CLASSES]) {
-+		params->supported_oper_classes =
-+		 nla_data(info->attrs[NL80211_ATTR_STA_SUPPORTED_OPER_CLASSES]);
-+		params->supported_oper_classes_len =
-+		  nla_len(info->attrs[NL80211_ATTR_STA_SUPPORTED_OPER_CLASSES]);
-+		/*
-+		 * The value of the Length field of the Supported Operating
-+		 * Classes element is between 2 and 253.
-+		 */
-+		if (params->supported_oper_classes_len < 2 ||
-+		    params->supported_oper_classes_len > 253)
-+			return -EINVAL;
-+	}
-+	return 0;
-+}
-+
- static int nl80211_set_station_tdls(struct genl_info *info,
- 				    struct station_parameters *params)
- {
-+	int err;
- 	/* Dummy STA entry gets updated once the peer capabilities are known */
- 	if (info->attrs[NL80211_ATTR_PEER_AID])
- 		params->aid = nla_get_u16(info->attrs[NL80211_ATTR_PEER_AID]);
-@@ -3909,6 +3947,10 @@ static int nl80211_set_station_tdls(struct genl_info *info,
- 		params->vht_capa =
- 			nla_data(info->attrs[NL80211_ATTR_VHT_CAPABILITY]);
- 
-+	err = nl80211_parse_sta_channel_info(info, params);
-+	if (err)
-+		return err;
-+
- 	return nl80211_parse_sta_wme(info, params);
- }
- 
-@@ -4089,6 +4131,10 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 			return -EINVAL;
- 	}
- 
-+	err = nl80211_parse_sta_channel_info(info, &params);
-+	if (err)
-+		return err;
-+
- 	err = nl80211_parse_sta_wme(info, &params);
- 	if (err)
- 		return err;
--- 
-1.8.2.1
+On Wed, 2013-10-02 at 07:55 -0500, Felipe Balbi wrote:
+> Hi,
+>=20
+> here's a pull request for wl4 firmware. I'll send a patch for wl1251
+> driver updating firmware load path.
+>=20
+> The following changes since commit b8ac7c7e27dcd13fa3c843aaf62457e9c57ea4=
+db:
+>=20
+>   linux-firmware: Add Brocade FC/FCOE Adapter firmware files (2013-09-30 =
+04:53:32 +0100)
+>=20
+> are available in the git repository at:
+>=20
+>   git://git.kernel.org/pub/scm/linux/kernel/git/balbi/linux-firmware.git =
+wilink4
+>=20
+> for you to fetch changes up to d726804dbc8dad88587b6be17716714cd91ed86c:
+>=20
+>   ti-connectivity: add wl1251 firmware and license (2013-10-02 06:55:39 -=
+0500)
+>=20
+> ----------------------------------------------------------------
+> Felipe Balbi (1):
+>       ti-connectivity: add wl1251 firmware and license
+>=20
+>  LICENCE.wl1251                 |  59 +++++++++++++++++++++++++++++++++++=
+++++++
+>  WHENCE                         |  18 +++++++++++++
+>  ti-connectivity/wl1251-fw.bin  | Bin 0 -> 194180 bytes
+>  ti-connectivity/wl1251-nvs.bin | Bin 0 -> 752 bytes
+>  4 files changed, 77 insertions(+)
+>  create mode 100644 LICENCE.wl1251
+>  create mode 100644 ti-connectivity/wl1251-fw.bin
+>  create mode 100644 ti-connectivity/wl1251-nvs.bin
 
+Pulled, thanks.
+
+Ben.
+
+--=20
+Ben Hutchings
+Beware of bugs in the above code;
+I have only proved it correct, not tried it. - Donald Knuth
+
+--=-DBu59udU/X2je7iwaB8D
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+
+iQIVAwUAUlr+p+e/yOyVhhEJAQp9zA/5ASDBSdmJ1UepzrtukikLusUFRMOTZ7Pd
+V/tYpwhMCn7ODZd1VjP/Zeb7sZViOKMBdleiiI0zBRyLK4IX9Fpf0jIhSm+4TxEc
++Ls7pLid3BptfGi+m4Qbars/v4Fh3BVZ5OKAovQ4aZbYFDJevTLEMEUGHpEk+tkK
+AJLV6C/dLYjVXklQGkNvfp9dBMhnXUbHZSt01XkHwJg8W8mdgb2KsczcVtYDKlpz
+bJeRW49zOnkLW7LZVzE536f1EayQ0/a4ODUflxILkUdNHHsHoxE6gP1tLAPDZx3I
+AjK2aFnbxnyqU4vqkBNbUKrNOVQjdXO4EsbqRYKShJNMywiA38Pmrj5cehy1AKlu
+bqUWflabEDqOeNdv+VhPRBvds6mrHlDEY2uKRWmRUwIoFH7OZ0z8ZNe/gIQj253s
+Y29LX2rqD/pVIzXkXhsj/RssksnPHdHLxRCu0+KrVclFRFRB0aU7desX9Md5AuOn
+5uqPsc6n3l8cpOLXMbz9np2tn1QOa7zI0gZn8M3NrqnCLS3YvjpiGKjqn58Ioxq1
+qkQbA/KuzSsg9hu00jNmsgbSVx+bLrPzMfkGfZIWoA6XR/VJ/z5E0UrbYetqQfL7
++zUcdXmkfcWHpDArwiMl052FGU8NrqSdB1B3a2rVSTehzQ8CqYevjQVPBdNO9wic
+wQA2ekfAsnc=
+=E/CI
+-----END PGP SIGNATURE-----
+
+--=-DBu59udU/X2je7iwaB8D--
