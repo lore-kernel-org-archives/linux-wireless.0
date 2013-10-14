@@ -1,68 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:40748 "EHLO purkki.adurom.net"
+Received: from nbd.name ([46.4.11.11]:58638 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754858Ab3J2Nfc convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Oct 2013 09:35:32 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: Luca Coelho <luca@coelho.fi>
-Cc: Ben Hutchings <bhutchings@solarflare.com>,
-	Pali =?utf-8?Q?Roh=C3=A1r?= <pali.rohar@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
-	joni.lapilainen@gmail.com, David Gnedt <david.gnedt@davizone.at>
-Subject: Re: [PATCH 03/16] wl1251: add sysfs interface for bluetooth coexistence mode configuration
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
-	<1382819655-30430-4-git-send-email-pali.rohar@gmail.com>
-	<1383003587.3779.49.camel@bwh-desktop.uk.level5networks.com>
-	<1383030565.21526.92.camel@porter.coelho.fi>
-Date: Tue, 29 Oct 2013 15:35:20 +0200
-In-Reply-To: <1383030565.21526.92.camel@porter.coelho.fi> (Luca Coelho's
-	message of "Tue, 29 Oct 2013 09:09:25 +0200")
-Message-ID: <878uxctd2f.fsf@purkki.adurom.net> (sfid-20131029_143552_441231_6B402FE5)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	id S1755804Ab3JNTS7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Oct 2013 15:18:59 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, thomas@net.t-labs.tu-berlin.de,
+	bvahl@net.t-labs.tu-berlin.de, ben@gowasabi.net
+Subject: [PATCH 3.12] ath5k: fix regression in tx status processing
+Date: Mon, 14 Oct 2013 21:18:48 +0200
+Message-Id: <1381778328-7684-1-git-send-email-nbd@openwrt.org> (sfid-20131014_211902_819366_F24AEAB6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+The regression was introduced in the following commit:
 
-> On Mon, 2013-10-28 at 23:39 +0000, Ben Hutchings wrote:
->> On Sat, 2013-10-26 at 22:34 +0200, Pali Rohár wrote:
->> > From: David Gnedt <david.gnedt@davizone.at>
->> > 
->> > Port the bt_coex_mode sysfs interface from wl1251 driver version included
->> > in the Maemo Fremantle kernel to allow bt-coexistence mode configuration.
->> > This enables userspace applications to set one of the modes
->> > WL1251_BT_COEX_OFF, WL1251_BT_COEX_ENABLE and WL1251_BT_COEX_MONOAUDIO.
->> > The default mode is WL1251_BT_COEX_OFF.
->> > It should be noted that this driver always enabled bt-coexistence before
->> > and enabled bt-coexistence directly affects the receiving performance,
->> > rendering it unusable in some low-signal situations. Especially monitor
->> > mode is affected very badly with bt-coexistence enabled.
->> [...]
->> 
->> This should be implemented consistently with other drivers:
->> 
->> drivers/net/wireless/ath/ath9k/htc_drv_init.c:module_param_named(btcoex_enable, ath9k_htc_btcoex_enable, int, 0444);
->> drivers/net/wireless/ath/ath9k/init.c:module_param_named(btcoex_enable, ath9k_btcoex_enable, int, 0444);
->> drivers/net/wireless/b43/main.c:module_param_named(btcoex, modparam_btcoex, int, 0444);
->> drivers/net/wireless/ipw2x00/ipw2200.c:module_param(bt_coexist, int, 0444);
->> drivers/net/wireless/iwlegacy/common.c:module_param(bt_coex_active, bool, S_IRUGO);
->> drivers/net/wireless/iwlwifi/iwl-drv.c:module_param_named(bt_coex_active, iwlwifi_mod_params.bt_coex_active,
->> drivers/net/wireless/ti/wlcore/sysfs.c:static DEVICE_ATTR(bt_coex_state, S_IRUGO | S_IWUSR,
->> 
->> Oh, hmm, I see a problem here.
->
-> With so many drivers doing the same thing, isn't it about time to add
-> this to nl80211?
+0967e01e8e713ed2982fb4eba8ba13794e9a6e89
+"ath5k: make use of the new rate control API"
 
-Yes, this really needs to be in nl80211. I even suggested this years ago
-but was turned down at the time. Can't remember the reason anymore.
+ath5k_tx_frame_completed saves the intended per-rate retry counts before
+they are cleared by ieee80211_tx_info_clear_status, however at this
+point the information in info->status.rates is incomplete.
 
+This causes significant throughput degradation and excessive packet loss
+on links where high bit rates don't work properly.
+
+Move the copy from bf->rates a few lines up to ensure that the saved
+retry counts are updated, and that they are really cleared in
+info->status.rates after the call to ieee80211_tx_info_clear_status.
+
+Cc: stable@vger.kernel.org # 3.10+
+Cc: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+Cc: Benjamin Vahl <bvahl@net.t-labs.tu-berlin.de>
+Reported-by: Ben West <ben@gowasabi.net>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath5k/base.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 48161ed..69f58b0 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -1663,15 +1663,15 @@ ath5k_tx_frame_completed(struct ath5k_hw *ah, struct sk_buff *skb,
+ 	ah->stats.tx_bytes_count += skb->len;
+ 	info = IEEE80211_SKB_CB(skb);
+ 
++	size = min_t(int, sizeof(info->status.rates), sizeof(bf->rates));
++	memcpy(info->status.rates, bf->rates, size);
++
+ 	tries[0] = info->status.rates[0].count;
+ 	tries[1] = info->status.rates[1].count;
+ 	tries[2] = info->status.rates[2].count;
+ 
+ 	ieee80211_tx_info_clear_status(info);
+ 
+-	size = min_t(int, sizeof(info->status.rates), sizeof(bf->rates));
+-	memcpy(info->status.rates, bf->rates, size);
+-
+ 	for (i = 0; i < ts->ts_final_idx; i++) {
+ 		struct ieee80211_tx_rate *r =
+ 			&info->status.rates[i];
 -- 
-Kalle Valo
+1.8.0.2
+
