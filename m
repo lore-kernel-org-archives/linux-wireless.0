@@ -1,59 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f175.google.com ([209.85.215.175]:46425 "EHLO
-	mail-ea0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756583Ab3J1S1U (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:57825 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753186Ab3JNHvT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Oct 2013 14:27:20 -0400
-Received: by mail-ea0-f175.google.com with SMTP id l15so1919369eak.20
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Oct 2013 11:27:19 -0700 (PDT)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH 2/5] mac80211: DFS setup chandef for radar_event correctly
-Date: Mon, 28 Oct 2013 19:27:01 +0100
-Message-Id: <1382984824-3729-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131028_192723_834138_5059DBBB)
-In-Reply-To: <1382984824-3729-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1382984824-3729-1-git-send-email-janusz.dziedzic@tieto.com>
+	Mon, 14 Oct 2013 03:51:19 -0400
+Message-ID: <1381736981.13092.4.camel@jlt4.sipsolutions.net> (sfid-20131014_095122_449124_D157F3B8)
+Subject: pull-request: mac80211 2013-10-14
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: multipart/signed; micalg="pgp-sha256"; protocol="application/pgp-signature"; boundary="=-WgJottQPnmSbhr+B+HBE"
+Date: Mon, 14 Oct 2013 09:49:45 +0200
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Setup chandef for radar event correctly, before we
-will clear this in ieee80211_dfs_cac_cancel() function.
 
-Without this patch mac80211 will report wrong channel
-width in case we will get radar event during active CAC.
+--=-WgJottQPnmSbhr+B+HBE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Reviewed-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- net/mac80211/util.c |    6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+John,
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index f704415..c286d9b 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -2275,17 +2275,15 @@ void ieee80211_dfs_radar_detected_work(struct work_struct *work)
- {
- 	struct ieee80211_local *local =
- 		container_of(work, struct ieee80211_local, radar_detected_work);
--	struct cfg80211_chan_def chandef;
-+	struct cfg80211_chan_def chandef = local->hw.conf.chandef;
- 
- 	ieee80211_dfs_cac_cancel(local);
- 
- 	if (local->use_chanctx)
- 		/* currently not handled */
- 		WARN_ON(1);
--	else {
--		chandef = local->hw.conf.chandef;
-+	else
- 		cfg80211_radar_event(local->hw.wiphy, &chandef, GFP_KERNEL);
--	}
- }
- 
- void ieee80211_radar_detected(struct ieee80211_hw *hw)
--- 
-1.7.9.5
+I know it's getting later in the game (rc5 is out) and my last pull
+request hasn't even made it into Linus's tree, but we still have some
+fixes ...
+
+This time I have two fixes from Emmanuel for RF-kill issues, and fixed
+two issues reported by Evan Huus and Thomas Lindroth respectively.
+
+Let me know if there's any problem.
+
+johannes
+
+The following changes since commit 22c4ceed0184318ec5a6182c6d75d398452c2e39=
+:
+
+  mac80211: Run deferred scan if last roc_list item is not started (2013-09=
+-30 12:36:56 +0200)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
+
+for you to fetch changes up to d86aa4f8ca58898ec6a94c0635da20b948171ed7:
+
+  mac80211: fix crash if bitrate calculation goes wrong (2013-10-14 09:47:0=
+8 +0200)
+
+----------------------------------------------------------------
+Emmanuel Grumbach (2):
+      mac80211: correctly close cancelled scans
+      cfg80211: don't add p2p device while in RFKILL
+
+Johannes Berg (2):
+      wireless: radiotap: fix parsing buffer overrun
+      mac80211: fix crash if bitrate calculation goes wrong
+
+ net/mac80211/ieee80211_i.h |  3 +++
+ net/mac80211/scan.c        | 19 +++++++++++++++++++
+ net/mac80211/util.c        |  4 ++++
+ net/wireless/core.c        |  2 --
+ net/wireless/core.h        |  3 +++
+ net/wireless/radiotap.c    |  7 ++++++-
+ 6 files changed, 35 insertions(+), 3 deletions(-)
+
+
+--=-WgJottQPnmSbhr+B+HBE
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJSW6IVAAoJEDBSmw7B7bqr9HsQAIxBRswUx129K4ZFgsJfYowb
+aUaaPb6mLyn0aj9GLIK4Pgu9V/qjaXmrtn3ma3rII3pvahSJo0UIPNIpu1u5hKZV
+nPNr3CxJvAlsQucBlvS9/ORtzuj4dXLnFBzRKiTqYVC8E/Je5IevSmTAfs25cGCq
+WqMZ9anfrs9m5+W82VsbkB0cVAV5zV5yigYsLXqt7XLioj3DJTjG+HQoEMXZnjvb
+IETJ48kPXUxYY1TzKYd5Gt9QICkJ4JlcmFQFELZkiok33qm+CP38EeFvsQ8nkGUH
+lyUOWzevKNEg+u734Tl4ezVTgoc8ARGDYjM97i3DQlRtbQInAdj8HtArn4IrLsUX
+8/KfVDV/uFWgO92fUjJqpfjuWiYgTl1QI7tHQtmtJBNU1D5Qp9uisL798JFxNVbJ
+LXdwGGubcRiahCfQ69AFfDlB97vakjsa/cRFnWh58q3PwNeO2z9WHCrWqO1lMqdr
+ACzKNlY8jePmcpSshg6qlwgAcZBB0zibkfZSRzzBhk2fU80rIKpYpzc6lyNACZ7t
+UaWy6VnsqHLlsRuGhWWEmFRVZnpR5RQfnhn/lhZqtrkdkvIeZIan5nVSR6LF4OXZ
+gGuN94l9++sC59WAcwnDUXvfIFHYWmqHW1kI/rzSf+dT1L4kEqHKFuVZLVzXKLZp
+CuHHjudR6Q+LkG70ypxC
+=H1Js
+-----END PGP SIGNATURE-----
+
+--=-WgJottQPnmSbhr+B+HBE--
 
