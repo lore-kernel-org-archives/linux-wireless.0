@@ -1,52 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from tur.go2.pl ([193.17.41.50]:51896 "EHLO tur.go2.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751855Ab3JYIhN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Oct 2013 04:37:13 -0400
-Received: from moh1-ve3.go2.pl (moh1-ve3.go2.pl [193.17.41.134])
-	by tur.go2.pl (Postfix) with ESMTP id 813046989D9
-	for <linux-wireless@vger.kernel.org>; Fri, 25 Oct 2013 10:03:10 +0200 (CEST)
-Received: from moh1-ve3.go2.pl (unknown [10.0.0.134])
-	by moh1-ve3.go2.pl (Postfix) with ESMTP id 23335664B23
-	for <linux-wireless@vger.kernel.org>; Fri, 25 Oct 2013 10:02:27 +0200 (CEST)
-Received: from unknown (unknown [10.0.0.74])
-	by moh1-ve3.go2.pl (Postfix) with SMTP
-	for <linux-wireless@vger.kernel.org>; Fri, 25 Oct 2013 10:02:27 +0200 (CEST)
-Message-ID: <526A2593.6050001@o2.pl> (sfid-20131025_103719_120308_9EC4E299)
-Date: Fri, 25 Oct 2013 10:02:27 +0200
-From: Piotr Kaczorek <kacz0r1984@o2.pl>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Monitor mode stopped working after kernel upgrade
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from s3.sipsolutions.net ([144.76.43.152]:59542 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756862Ab3JNRph (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Oct 2013 13:45:37 -0400
+Message-ID: <1381772716.13092.21.camel@jlt4.sipsolutions.net> (sfid-20131014_194540_026284_47FE2AD3)
+Subject: Re: [PATCH v4 3/6] mac80211: add the CSA and MCSP elements in mesh
+ beaconing
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	devel@lists.open80211s.org,
+	"distro11s@cozybit.com" <distro11s@cozybit.com>
+Date: Mon, 14 Oct 2013 19:45:16 +0200
+In-Reply-To: <CAHS2MGMONy37xZedzRhx10Mes9MCUMfiEjmWjprVOEQY_brw9Q@mail.gmail.com> (sfid-20131014_191519_154649_CCA765BB)
+References: <1381516190-23918-1-git-send-email-yeohchunyeow@cozybit.com>
+	 <1381516190-23918-4-git-send-email-yeohchunyeow@cozybit.com>
+	 <1381760191.13092.13.camel@jlt4.sipsolutions.net>
+	 <CAHS2MGMONy37xZedzRhx10Mes9MCUMfiEjmWjprVOEQY_brw9Q@mail.gmail.com>
+	 (sfid-20131014_191519_154649_CCA765BB)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Tue, 2013-10-15 at 01:15 +0800, Chun-Yeow Yeoh wrote:
 
-So far I was using monitor mode on my Debian Lenny with custom 3.2.24 
-kernel.
-I needed support for new hardware so I've compiled a new kernel version 
-(3.10.12).
-I've used the config from old kernel version and set up new kernel 
-modules (mostly default).
+> > Does this even make sense here - it can't ever be non-NULL in this
+> > patch?
+> Actually, the NULL and non-NULL situation should occur here. Whenever
+> the node triggers the channel switching period, it will append CSA and
+> MCSP elements in the beacon.
 
-After recompiling the kernel and installing it the monitor mode stopped 
-returning packets that I got before.
-I can see only Beacons, Probe Requests and Probe Responses now (no Data 
-packets etc...).
-The monitor mode is created with airmon-ng start wlan0 (I know there is 
-already mon.wlan0 at start but I need also the extra headers which the 
-airmon-ng enables).
-Anyway - on both interfaces (mon.wlan0 and mon0) I don't see the 
-required packets anymore.
-The WiFi cards I tried are based on Atheros 2413 (ath5k) or Prism 
-(p54pci) chipsets.
-Both worked before upgrade, none of them works after upgrade.
+It occurs after later patches only though, and this patch introduces an
+RCU warning. I'd suggest to roll this into patch 5 or so since there
+it's really only used?
 
-Any ideas what have changed ?
-Maybe I've chosen wrong option in case of one of the new kernel 
-modules/options ?
+johannes
 
-Regards,
-Piotr
