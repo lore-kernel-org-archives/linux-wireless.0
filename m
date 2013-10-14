@@ -1,87 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:5526 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932585Ab3JOL6h (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:37039 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755410Ab3JNQGI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Oct 2013 07:58:37 -0400
-From: Kefeng Wang <wangkefeng.wang@huawei.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Pablo Neira Ayuso <pablo@netfilter.org>,
-	"Stephen Hemminger" <stephen@networkplumber.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Francois Romieu <romieu@fr.zoreil.com>,
-	"Ben Hutchings" <bhutchings@solarflare.com>,
-	Chas Williams <chas@cmf.nrl.navy.mil>,
-	Marc Kleine-Budde <mkl@pengutronix.de>,
-	Samuel Ortiz <samuel@sortiz.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Oliver Neukum <oneukum@suse.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	"Boris Ostrovsky" <boris.ostrovsky@oracle.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	"Michael S. Tsirkin" <mst@redhat.com>, <netfilter@vger.kernel.org>,
-	<netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	<guohanjun@huawei.com>
-Subject: [PATCH 10/18] net: peak_usb: use wrapper functions of net_ratelimit() to simplify code
-Date: Tue, 15 Oct 2013 19:45:06 +0800
-Message-ID: <1381837514-50660-11-git-send-email-wangkefeng.wang@huawei.com> (sfid-20131015_140017_612263_5E42FE65)
-In-Reply-To: <1381837514-50660-1-git-send-email-wangkefeng.wang@huawei.com>
-References: <1381837514-50660-1-git-send-email-wangkefeng.wang@huawei.com>
+	Mon, 14 Oct 2013 12:06:08 -0400
+Received: by mail-wi0-f172.google.com with SMTP id ez12so271910wid.5
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Oct 2013 09:06:06 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <87fvs3etz6.fsf@kamboji.qca.qualcomm.com>
+References: <1381749381-15459-1-git-send-email-bartosz.markowski@tieto.com>
+	<87fvs3etz6.fsf@kamboji.qca.qualcomm.com>
+Date: Mon, 14 Oct 2013 18:06:06 +0200
+Message-ID: <CACKGw+HC1goQ_BdAqHkQSFhtSbZuqCLFRZTEJjgUSLQRgQ436A@mail.gmail.com> (sfid-20131014_180612_367736_602F984A)
+Subject: Re: [PATCH] ath10k: do not warn about unsupported vdev param
+From: Bartosz Markowski <bartosz.markowski@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath10k@lists.infradead.org,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-net_ratelimited_function() is called to simplify code.
+On 14 October 2013 17:46, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Bartosz Markowski <bartosz.markowski@tieto.com> writes:
+>
+>> 10.X firmware does not support WMI_VDEV_PARAM_TX_ENCAP_TYPE.
+>> It's a known limitation and we should not warn about this.
+>>
+>> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+>> ---
+>>  drivers/net/wireless/ath/ath10k/mac.c |    4 +++-
+>>  1 file changed, 3 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+>> index 049eca2..9c800f8 100644
+>> --- a/drivers/net/wireless/ath/ath10k/mac.c
+>> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+>> @@ -2085,7 +2085,9 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
+>>       vdev_param = ar->wmi.vdev_param->tx_encap_type;
+>>       ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
+>>                                       ATH10K_HW_TXRX_NATIVE_WIFI);
+>> -     if (ret)
+>> +
+>> +     /* 10.X firmware does not support this VDEV parameter. Do not warn */
+>> +     if (ret && !test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features))
+>>               ath10k_warn("Failed to set TX encap: %d\n", ret);
+>
+> But why call ath10k_wmi_vdev_set_param() even if we know it won't work?
+> IMHO it's cleaner not to call it at all when ATH10K_FW_FEATURE_WMI_10X
+> is set.
 
-Signed-off-by: Kefeng Wang <wangkefeng.wang@huawei.com>
----
- drivers/net/can/usb/peak_usb/pcan_usb_core.c | 11 ++++-------
- 1 file changed, 4 insertions(+), 7 deletions(-)
+I tend to agree. Intention was to keep things generic and just hide the warning.
 
-diff --git a/drivers/net/can/usb/peak_usb/pcan_usb_core.c b/drivers/net/can/usb/peak_usb/pcan_usb_core.c
-index 0b7a4c3..5166a1f 100644
---- a/drivers/net/can/usb/peak_usb/pcan_usb_core.c
-+++ b/drivers/net/can/usb/peak_usb/pcan_usb_core.c
-@@ -191,8 +191,7 @@ static void peak_usb_read_bulk_callback(struct urb *urb)
- 		return;
- 
- 	default:
--		if (net_ratelimit())
--			netdev_err(netdev,
-+		net_ratelimited_function(netdev_err, netdev,
- 				   "Rx urb aborted (%d)\n", urb->status);
- 		goto resubmit_urb;
- 	}
-@@ -260,9 +259,8 @@ static void peak_usb_write_bulk_callback(struct urb *urb)
- 		break;
- 
- 	default:
--		if (net_ratelimit())
--			netdev_err(netdev, "Tx urb aborted (%d)\n",
--				   urb->status);
-+		net_ratelimited_function(netdev_err, netdev,
-+			"Tx urb aborted (%d)\n", urb->status);
- 	case -EPROTO:
- 	case -ENOENT:
- 	case -ECONNRESET:
-@@ -314,8 +312,7 @@ static netdev_tx_t peak_usb_ndo_start_xmit(struct sk_buff *skb,
- 
- 	err = dev->adapter->dev_encode_msg(dev, skb, obuf, &size);
- 	if (err) {
--		if (net_ratelimit())
--			netdev_err(netdev, "packet dropped\n");
-+		net_ratelimited_function(netdev_err, netdev, "packet dropped\n");
- 		dev_kfree_skb(skb);
- 		stats->tx_dropped++;
- 		return NETDEV_TX_OK;
+> Or if we want to avoid using ATH10K_FW_FEATURE_WMI_10X we could also
+> change ath10k_wmi_pdev_set_param() to return -EOPNOTSUPP and check for
+> that.
+
+I like the second idea. I will send a v2 patch.
+
 -- 
-1.8.2.1
-
-
+Bartosz
