@@ -1,55 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f53.google.com ([209.85.215.53]:61054 "EHLO
-	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932165Ab3J1SAT (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:58933 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750843Ab3JNOSF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Oct 2013 14:00:19 -0400
-Received: by mail-la0-f53.google.com with SMTP id eo20so5448936lab.26
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Oct 2013 11:00:17 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <526E20EA.9090203@rempel-privat.de>
-References: <CAMP44s1XJRHV8bAX=_-TkSKMkY8Nw1=eHorqTCZ2QmtR5m8uJA@mail.gmail.com>
-	<526E20EA.9090203@rempel-privat.de>
-Date: Mon, 28 Oct 2013 12:00:17 -0600
-Message-ID: <CAMP44s2Cvw9HF3c3Asuq+bTSD36Gw6PXOUVjAcCD+hf6KB_awg@mail.gmail.com> (sfid-20131028_190032_423389_E4848D8D)
-Subject: Re: I always need a miracle to connect with iwlwifi
-From: Felipe Contreras <felipe.contreras@gmail.com>
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	ilw@linux.intel.com,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 14 Oct 2013 10:18:05 -0400
+Message-ID: <1381760281.13092.14.camel@jlt4.sipsolutions.net> (sfid-20131014_161809_487564_86BD912F)
+Subject: Re: [PATCH v4 3/6] mac80211: add the CSA and MCSP elements in mesh
+ beaconing
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	devel@lists.open80211s.org, distro11s@cozybit.com
+Date: Mon, 14 Oct 2013 16:18:01 +0200
+In-Reply-To: <1381516190-23918-4-git-send-email-yeohchunyeow@cozybit.com> (sfid-20131011_203007_916657_AD660D4F)
+References: <1381516190-23918-1-git-send-email-yeohchunyeow@cozybit.com>
+	 <1381516190-23918-4-git-send-email-yeohchunyeow@cozybit.com>
+	 (sfid-20131011_203007_916657_AD660D4F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 28, 2013 at 2:31 AM, Oleksij Rempel <linux@rempel-privat.de> wrote:
+On Fri, 2013-10-11 at 11:29 -0700, Chun-Yeow Yeoh wrote:
+> Support the adding of CSA and MCSP elements while building the beacon
+> for mesh if necessary. This is defined in the IEEE Std 802.11-2012
+> section 10.9.8.4.3 that both CSA and MCSP elements must be included
+> in beacon and probe response frames until the intended channel
+> switch time.
 
-> Take wireshark and capture working and not working associational request.
+I also get
 
-All right, so what I did is take a working and non-working on the same
-Linux machine. I have never done that, and didn't find much
-information about how to do that so I used kismet.
+net/mac80211/mesh.c:673:42: warning: symbol 'ifmsh' shadows an earlier
+one
+net/mac80211/mesh.c:606:29: originally declared here
 
-I don't know exactly how I should export these logs for you to browse
-them but I gave a shot at interpreting them.
 
-What I can see is that in both cases the authentication request is
-exactly the same, except for the sequence number. Yet in good case
-there's an acknowledgement, and in the bad case there isn't.
+with this patch
 
-The authentication response does come back in both cases though, it's
-just the acknowledgement that is missing. Unfortunately I cannot
-figure out for which message it's the ack.
-
-Also, I notice the sequence number received from the router doesn't
-seem to change. All the authentication requests received have the same
-number (256). Another peculiar thing is that in the failed case the SN
-we send starts with 0.
-
-I suppose since the authentication ack never arrives, the next steps
-are never completed.
-
-Does that help?
-
--- 
-Felipe Contreras
