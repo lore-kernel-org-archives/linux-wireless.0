@@ -1,49 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:62823 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751727Ab3JURO3 (ORCPT
+Received: from mail-ob0-f178.google.com ([209.85.214.178]:49908 "EHLO
+	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756932Ab3JNRRb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Oct 2013 13:14:29 -0400
-Received: by mail-wi0-f173.google.com with SMTP id ey11so4313288wid.6
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Oct 2013 10:14:28 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, janusz.dziedzic@tieto.com,
-	smihir@qti.qualcomm.com, tushnimb@qca.qualcomm.com,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 0/5] ath: simplify radar / beaconing flag settings
-Date: Mon, 21 Oct 2013 19:14:19 +0200
-Message-Id: <1382375664-25417-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20131021_191433_155031_284C3B3E)
+	Mon, 14 Oct 2013 13:17:31 -0400
+Received: by mail-ob0-f178.google.com with SMTP id uz6so4963400obc.37
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Oct 2013 10:17:30 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1381760529.13092.17.camel@jlt4.sipsolutions.net>
+References: <1381516190-23918-1-git-send-email-yeohchunyeow@cozybit.com>
+	<1381516190-23918-6-git-send-email-yeohchunyeow@cozybit.com>
+	<1381760529.13092.17.camel@jlt4.sipsolutions.net>
+Date: Tue, 15 Oct 2013 01:17:30 +0800
+Message-ID: <CAHS2MGOuq3zaZeAE8rtpS+W9QLVHkhY_w8YrZtNFCX70ycCrxg@mail.gmail.com> (sfid-20131014_191734_426709_3349A00C)
+Subject: Re: [PATCH v4 5/6] {nl,cfg,mac}80211: finalizing mesh channel switching
+From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	devel@lists.open80211s.org,
+	"distro11s@cozybit.com" <distro11s@cozybit.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John, Johannes,
+> subject should read "finalize" or something I guess? Though it really
+> isn't clear to me why you split up the patches as is and didn't just put
+> 3/5 together as "implement mesh channel switch userspace API" or so?
+I split the patches because I would like the CSA to work without even
+the beacon involvement, only CSA action frame. But I will take a look
+on this again.
 
-these patches start cleaning up the flag usage through the reg-notifier
-but the main motiviation here as to help clarify the case in which
-DFS is supported and we don't need to apply some paranoid flags. I've
-determined its best to clean this up on cfg80211 (unifying flags)
-and deal with the DFS case in cfg80211 as well (I add the documentation,
-but expect Januz to send a respective change later for DFS).
+> I don't think this belongs here, it's certainly not needed for the API.
+> Maybe you need a wrapper struct or so?
+Alright, will do so.
 
-Given that the later patches cfg80211 / other drivers I'll let you
-guys decide what tree these bubble up through.
-
-This series simplifies the flag application setup. Just a heads up I
-noticed that broadcom and rtl drivers share a lot of this code so
-eventually we may want to just export these and share them somehow.
-
-Luis R. Rodriguez (5):
-  ath: fix logic on ath_reg_apply_active_scan_flags()
-  ath: clean up ath_reg_apply_active_scan_flags()
-  ath: rename ath_reg_apply_active_scan_flags() to
-    ath_reg_apply_ir_flags()
-  ath: simplify ath_reg_apply_beaconing_flags()
-  ath: move the channel for ath_reg_apply_beaconing_flags() into helper
-
- drivers/net/wireless/ath/regd.c | 174 ++++++++++++++++++++++------------------
- 1 file changed, 94 insertions(+), 80 deletions(-)
-
--- 
-1.8.4.rc3
-
+----
+Chun-Yeow
