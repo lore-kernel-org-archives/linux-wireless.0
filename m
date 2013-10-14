@@ -1,78 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:36960 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751105Ab3J2WjO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Oct 2013 18:39:14 -0400
-Received: by mail-wi0-f170.google.com with SMTP id ex4so3338557wid.1
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Oct 2013 15:39:13 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 2/3] ath: dynamic user allow check helper to the top
-Date: Tue, 29 Oct 2013 23:39:05 +0100
-Message-Id: <1383086346-2096-3-git-send-email-mcgrof@do-not-panic.com> (sfid-20131029_233917_976860_1B29AA7F)
-In-Reply-To: <1383086346-2096-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1383086346-2096-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from lizzard.sbs.de ([194.138.37.39]:20754 "EHLO lizzard.sbs.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756409Ab3JNMTl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Oct 2013 08:19:41 -0400
+Message-ID: <1381752976.3711.14.camel@djensen-laptop> (sfid-20131014_141950_097165_99ED430D)
+Subject: Re: [PATCH] cfg80211: fix channel to frequency mapping in 5.9GHz
+ range
+From: Dennis H Jensen <dennis.h.jensen@siemens.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Date: Mon, 14 Oct 2013 14:16:16 +0200
+In-Reply-To: <1381752176.13092.10.camel@jlt4.sipsolutions.net>
+References: <1381492780-3068-1-git-send-email-dennis.h.jensen@siemens.com>
+	 <1381499778.14293.21.camel@jlt4.sipsolutions.net>
+	 <1381506302.3711.10.camel@djensen-laptop>
+	 <1381752176.13092.10.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This will be used later.
+On Mon, 2013-10-14 at 14:02 +0200, Johannes Berg wrote:
+> On Fri, 2013-10-11 at 17:45 +0200, Dennis H Jensen wrote:
+> 
+> > > > +		else if (chan > 196)
+> > > > +			return 5000 + (chan - 15) * 5;
+> > > 
+> > > Where does the +/- 15 come from? I can't find any evidence for this in
+> > > Annex E.
+> > 
+> > I didn't double check Annex E. I just wanted to recover the lost
+> > frequencies that the 15 channels (182 - 196), map into 4.9 GHz.
+> 
+> "Recover"? When did they work? What broke them?
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- drivers/net/wireless/ath/regd.c | 23 +++++++++++------------
- 1 file changed, 11 insertions(+), 12 deletions(-)
+The commit 59eb21a6504731fc16db4cf9463065dd61093e08 moved those channels
+to 4.9 GHz but left a hole in the 5.9 Ghz range.
 
-diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
-index e27027c..5790aa2 100644
---- a/drivers/net/wireless/ath/regd.c
-+++ b/drivers/net/wireless/ath/regd.c
-@@ -185,6 +185,15 @@ static bool dynamic_country_user_possible(struct ath_regulatory *reg)
- 	return true;
- }
- 
-+static bool ath_reg_dyn_country_user_allow(struct ath_regulatory *reg)
-+{
-+	if (!config_enabled(CONFIG_ATH_REG_DYNAMIC_USER_REG_HINTS))
-+		return false;
-+	if (!dynamic_country_user_possible(reg))
-+		return false;
-+	return true;
-+}
-+
- static inline bool is_wwr_sku(u16 regd)
- {
- 	return ((regd & COUNTRY_ERD_FLAG) != COUNTRY_ERD_FLAG) &&
-@@ -466,17 +475,6 @@ static void ath_reg_dyn_country(struct wiphy *wiphy,
- 	       reg_initiator_name(request->initiator));
- }
- 
--static void ath_reg_dyn_country_user(struct wiphy *wiphy,
--				     struct ath_regulatory *reg,
--				     struct regulatory_request *request)
--{
--	if (!config_enabled(CONFIG_ATH_REG_DYNAMIC_USER_REG_HINTS))
--		return;
--	if (!dynamic_country_user_possible(reg))
--		return;
--	ath_reg_dyn_country(wiphy, reg, request);
--}
--
- void ath_reg_notifier_apply(struct wiphy *wiphy,
- 			    struct regulatory_request *request,
- 			    struct ath_regulatory *reg)
-@@ -509,7 +507,8 @@ void ath_reg_notifier_apply(struct wiphy *wiphy,
- 	case NL80211_REGDOM_SET_BY_DRIVER:
- 		break;
- 	case NL80211_REGDOM_SET_BY_USER:
--		ath_reg_dyn_country_user(wiphy, reg, request);
-+		if (ath_reg_dyn_country_user_allow(reg))
-+			ath_reg_dyn_country(wiphy, reg, request);
- 		break;
- 	case NL80211_REGDOM_SET_BY_COUNTRY_IE:
- 		ath_reg_dyn_country(wiphy, reg, request);
--- 
-1.8.4.rc3
+//Dennis
 
