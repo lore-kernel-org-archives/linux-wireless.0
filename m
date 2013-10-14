@@ -1,50 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:4119 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751971Ab3JaPWc (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:63088 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753455Ab3JNS6c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Oct 2013 11:22:32 -0400
-From: "Undekari, Sunil Dutt" <usdutt@qti.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"j@w1.fi" <j@w1.fi>
-Subject: RE: [PATCH] cfg80211: Introduce critical protocol indication for
- p2p connection.
-Date: Thu, 31 Oct 2013 15:22:25 +0000
-Message-ID: <26F3B0343EE4744AA14EEEF9E1E534511F7A65CC@aphydexd01a> (sfid-20131031_162236_345337_6890478A)
-References: <1383230452-12608-1-git-send-email-usdutt@qti.qualcomm.com>
-	 (sfid-20131031_154108_037102_6F3E1A6D)
- <1383230593.14302.1.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1383230593.14302.1.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Mon, 14 Oct 2013 14:58:32 -0400
+Received: by mail-wg0-f44.google.com with SMTP id n12so6533165wgh.23
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Oct 2013 11:58:30 -0700 (PDT)
+Message-ID: <1381777092.2470.7.camel@canaries32-MCP7A> (sfid-20131014_205835_787911_5F0CC5D1)
+Subject: [PATCH] staging: vt6656: main_usb.c correct pDevice->pControlURB
+ goto
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 14 Oct 2013 19:58:12 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBUaGF0J3Mgbm90IHdoYXQgdGhlIGNyaXRpY2FsIHByb3RvY29sIHN0dWZmIHdhcyBkZXNpZ25l
-ZCBmb3IsIHNvIG5vLg0KSSB3b3VsZCBjb25zaWRlciB0aGUgUDJQIGNvbm5lY3Rpb24gcGhhc2Ug
-KFAyUCtXUFMrV1BBKSB0byBiZSBjcml0aWNhbCANCmFuZCBhbnkgb2ZmIGNoYW5uZWwgb3BlcmF0
-aW9ucyAoc2NhbikgdHJpZ2dlcmVkIGJ5IHRoZSBob3N0IGRyaXZlciB3b3VsZCByZXN1bHQgaW4g
-DQp0aGUgZGVsYXllZCAvIGZhaWxlZCBQMlAgY29ubmVjdGlvbiBhdHRlbXB0Lg0KSSBzdXBwb3Nl
-IHRoZXJlIHNob3VsZCBiZSBhbiBpbmRpY2F0aW9uIHRvIHRoZSBob3N0IGRyaXZlciB3LnIudCBw
-MnAgY29ubmVjdGlvbiANCmF0dGVtcHQgc28gdGhhdCBhbnkgb2ZmIGxvYWQgb3BlcmF0aW9ucyBv
-biBhbnkgb3RoZXIgaW50ZXJmYWNlIHNoYXJpbmcgdGhlIHNhbWUgcmFkaW8gDQp3b3VsZCBiZSBh
-dm9pZGVkIGJ5IHRoZSBkcml2ZXIuDQpTaW5jZSB0aGVyZSBpcyBhbHJlYWR5IGFuIGV4aXN0aW5n
-IGludGVyZmFjZSB0aHJvdWdoIHRoZSBjcml0aWNhbCBwcm90b2NvbCBpbmRpY2F0aW9uLCBJIA0K
-dGhvdWdodCBvZiBleHRlbmRpbmcgaXQgdG8gYWxzbyBpbmNsdWRlIGEgUDJQIHByb3RvY29sL2Nv
-bm5lY3Rpb24uIFRoaXMgbmV3IHByb3RvIGlkIA0Kd291bGQgYmUgYW4gaW5kaWNhdGlvbiB0byB0
-aGUgZHJpdmVycyB0byBhbGxvdyB0aGUgc2NhbiBvbiB0aGUgY3VycmVudCBpbnRlcmZhY2UgDQph
-bmQgYXZvaWQgYW55IHNjYW5zIG9uIGFub3RoZXIgY29uc2lkZXJpbmcgdGhlIGZhY3QgdGhhdCBh
-IHAycCBjb25uZWN0aW9uIHJlcXVpcmVzIGEgIA0Kc2Nhbi4NCkRvIHlvdSBwcm9wb3NlIGFuIGFs
-dGVybmF0aXZlIChhIG5ldyBpbnRlcmZhY2U/KSB0byBhY2hpZXZlIHRoZSBzYW1lPw0KDQpSZWdh
-cmRzLA0KU3VuaWwNCg0KDQoNCg0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTog
-Sm9oYW5uZXMgQmVyZyBbbWFpbHRvOmpvaGFubmVzQHNpcHNvbHV0aW9ucy5uZXRdIA0KU2VudDog
-VGh1cnNkYXksIE9jdG9iZXIgMzEsIDIwMTMgODoxMyBQTQ0KVG86IFVuZGVrYXJpLCBTdW5pbCBE
-dXR0DQpDYzogbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnOyBqQHcxLmZpDQpTdWJqZWN0
-OiBSZTogW1BBVENIXSBjZmc4MDIxMTogSW50cm9kdWNlIGNyaXRpY2FsIHByb3RvY29sIGluZGlj
-YXRpb24gZm9yIHAycCBjb25uZWN0aW9uLg0KDQpPbiBUaHUsIDIwMTMtMTAtMzEgYXQgMjA6MTAg
-KzA1MzAsIFN1bmlsIER1dHQgVW5kZWthcmkgd3JvdGU6DQo+IEEgcmVsaWFibGUgUDJQIGNvbm5l
-Y3Rpb24gbmVlZHMgdG8gYXZvaWQgYW55IG9mZmxvYWQgb2ZmIGNoYW5uZWwgDQo+IG9wZXJhdGlv
-bnMgdHJpZ2dlcmVkIGJ5IHRoZSBob3N0IGRyaXZlci4NCg0KVGhhdCdzIG5vdCB3aGF0IHRoZSBj
-cml0aWNhbCBwcm90b2NvbCBzdHVmZiB3YXMgZGVzaWduZWQgZm9yLCBzbyBuby4NCg0Kam9oYW5u
-ZXMNCg0K
+Correct goto of patch
+staging: vt6656: make pControlURB available life time of driver.
+
+Which should free_netdev.
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/main_usb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index 412a776..5e4a5d0 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -710,7 +710,7 @@ vt6656_probe(struct usb_interface *intf, const struct usb_device_id *id)
+ 	pDevice->pControlURB = usb_alloc_urb(0, GFP_ATOMIC);
+ 	if (!pDevice->pControlURB) {
+ 		DBG_PRT(MSG_LEVEL_ERR, KERN_ERR"Failed to alloc control urb\n");
+-		goto err_nomem;
++		goto err_netdev;
+ 	}
+ 
+ 	pDevice->tx_80211 = device_dma0_tx_80211;
+-- 
+1.8.3.2
+
