@@ -1,54 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:50100 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754174Ab3JCSAt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Oct 2013 14:00:49 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v2 3/4] rt2x00: rt2800lib: fix default VGC values for RT3593
-Date: Thu,  3 Oct 2013 20:00:42 +0200
-Message-Id: <1380823243-11149-3-git-send-email-juhosg@openwrt.org> (sfid-20131003_200101_802340_9D4DDCF7)
-In-Reply-To: <1380823243-11149-1-git-send-email-juhosg@openwrt.org>
-References: <1380823243-11149-1-git-send-email-juhosg@openwrt.org>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:55333 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756161Ab3JNRpY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Oct 2013 13:45:24 -0400
+Date: Mon, 14 Oct 2013 13:34:38 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211 2013-10-14
+Message-ID: <20131014173438.GA17149@tuxdriver.com> (sfid-20131014_194527_652350_EC8E6AE5)
+References: <1381736981.13092.4.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1381736981.13092.4.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update the rt2800_get_default_vgc function to use the same VGC
-values that the DPO_RT5572_LinuxSTA_2.6.1.3_20121022 reference
-driver uses.
+On Mon, Oct 14, 2013 at 09:49:45AM +0200, Johannes Berg wrote:
+> John,
+> 
+> I know it's getting later in the game (rc5 is out) and my last pull
+> request hasn't even made it into Linus's tree, but we still have some
+> fixes ...
+> 
+> This time I have two fixes from Emmanuel for RF-kill issues, and fixed
+> two issues reported by Evan Huus and Thomas Lindroth respectively.
+> 
+> Let me know if there's any problem.
+> 
+> johannes
+> 
+> The following changes since commit 22c4ceed0184318ec5a6182c6d75d398452c2e39:
+> 
+>   mac80211: Run deferred scan if last roc_list item is not started (2013-09-30 12:36:56 +0200)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
+> 
+> for you to fetch changes up to d86aa4f8ca58898ec6a94c0635da20b948171ed7:
+> 
+>   mac80211: fix crash if bitrate calculation goes wrong (2013-10-14 09:47:08 +0200)
 
-References:
-  RT35xx_ChipAGCAdjust in chips/rt35xx.c
-  RT3593_R66_MID_LOW_SENS_GET macro in include/chip/rt3593.h
-  RT3593_R66_NON_MID_LOW_SEMS_GET macro in include/chips/rt3593.h
+Pulling now...
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |    3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index a619f2c..55b421f 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -4413,6 +4413,7 @@ static u8 rt2800_get_default_vgc(struct rt2x00_dev *rt2x00dev)
- 		    rt2x00_rt(rt2x00dev, RT3290) ||
- 		    rt2x00_rt(rt2x00dev, RT3390) ||
- 		    rt2x00_rt(rt2x00dev, RT3572) ||
-+		    rt2x00_rt(rt2x00dev, RT3593) ||
- 		    rt2x00_rt(rt2x00dev, RT5390) ||
- 		    rt2x00_rt(rt2x00dev, RT5392) ||
- 		    rt2x00_rt(rt2x00dev, RT5592))
-@@ -4422,6 +4423,8 @@ static u8 rt2800_get_default_vgc(struct rt2x00_dev *rt2x00dev)
- 	} else { /* 5GHZ band */
- 		if (rt2x00_rt(rt2x00dev, RT3572))
- 			vgc = 0x22 + (rt2x00dev->lna_gain * 5) / 3;
-+		else if (rt2x00_rt(rt2x00dev, RT3593))
-+			vgc = 0x20 + (rt2x00dev->lna_gain * 5) / 3;
- 		else if (rt2x00_rt(rt2x00dev, RT5592))
- 			vgc = 0x24 + (2 * rt2x00dev->lna_gain);
- 		else {
 -- 
-1.7.10
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
