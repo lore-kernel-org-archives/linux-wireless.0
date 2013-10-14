@@ -1,49 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:48762 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752809Ab3JQHmx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Oct 2013 03:42:53 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 21/21] rt2x00: rt2800pci: use module_pci_driver macro
-Date: Thu, 17 Oct 2013 09:42:35 +0200
-Message-Id: <1381995755-16471-22-git-send-email-juhosg@openwrt.org> (sfid-20131017_094259_845749_4FDDFAC3)
-In-Reply-To: <1381995755-16471-1-git-send-email-juhosg@openwrt.org>
-References: <1381995755-16471-1-git-send-email-juhosg@openwrt.org>
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:42842 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756893Ab3JNSoW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Oct 2013 14:44:22 -0400
+Received: by mail-wi0-f177.google.com with SMTP id ey11so2229102wid.16
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Oct 2013 11:44:21 -0700 (PDT)
+Message-ID: <1381776253.2470.1.camel@canaries32-MCP7A> (sfid-20131014_204425_200751_CD82C6D2)
+Subject: [PATCH] staging: vt6656: return if pControlURB->hcpriv not NULL
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 14 Oct 2013 19:44:13 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the module_pci_driver() macro to make the code simpler
-by eliminating module_init and module_exit calls.
+Fixes occasional urb submitted while active.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Even thought the fMP_CONTROL_WRITES/fMP_CONTROL_READS flags
+are cleared in the return context urb->hcpriv is not NULL.
+
+check for hcpriv and return STATUS_FAILURE if not NULL.
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/rt2x00/rt2800pci.c |   14 +-------------
- 1 file changed, 1 insertion(+), 13 deletions(-)
+ drivers/staging/vt6656/usbpipe.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 260d2fd..b504455 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -470,16 +470,4 @@ static struct pci_driver rt2800pci_driver = {
- 	.resume		= rt2x00pci_resume,
- };
+diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
+index 3a03f1d..37bcb18 100644
+--- a/drivers/staging/vt6656/usbpipe.c
++++ b/drivers/staging/vt6656/usbpipe.c
+@@ -118,6 +118,9 @@ int PIPEnsControlOut(struct vnt_private *pDevice, u8 byRequest, u16 wValue,
+ 	if (pDevice->Flags & fMP_CONTROL_READS)
+ 		return STATUS_FAILURE;
  
--
--static int __init rt2800pci_init(void)
--{
--	return pci_register_driver(&rt2800pci_driver);
--}
--
--static void __exit rt2800pci_exit(void)
--{
--	pci_unregister_driver(&rt2800pci_driver);
--}
--
--module_init(rt2800pci_init);
--module_exit(rt2800pci_exit);
-+module_pci_driver(rt2800pci_driver);
++	if (pDevice->pControlURB->hcpriv)
++		return STATUS_FAILURE;
++
+ 	MP_SET_FLAG(pDevice, fMP_CONTROL_WRITES);
+ 
+ 	pDevice->sUsbCtlRequest.bRequestType = 0x40;
+@@ -177,6 +180,9 @@ int PIPEnsControlIn(struct vnt_private *pDevice, u8 byRequest, u16 wValue,
+ 	if (pDevice->Flags & fMP_CONTROL_WRITES)
+ 		return STATUS_FAILURE;
+ 
++	if (pDevice->pControlURB->hcpriv)
++		return STATUS_FAILURE;
++
+ 	MP_SET_FLAG(pDevice, fMP_CONTROL_READS);
+ 
+ 	pDevice->sUsbCtlRequest.bRequestType = 0xC0;
 -- 
-1.7.10
+1.8.3.2
+
