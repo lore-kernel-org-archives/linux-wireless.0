@@ -1,96 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qe0-f51.google.com ([209.85.128.51]:34231 "EHLO
-	mail-qe0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755100Ab3J1MmU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Oct 2013 08:42:20 -0400
-Received: by mail-qe0-f51.google.com with SMTP id q19so3945578qeb.10
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Oct 2013 05:42:20 -0700 (PDT)
-Message-ID: <526E5C93.6040706@gmail.com> (sfid-20131028_134224_034619_EB3B398A)
-Date: Mon, 28 Oct 2013 08:46:11 -0400
-From: Rick Farina <sidhayn@gmail.com>
-MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>,
-	Ben Hutchings <ben@decadent.org.uk>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [RFC] carl9170: new firmware for linux-firmware.git
-References: <1542665.mhS5oZO9DU@debian64>
-In-Reply-To: <1542665.mhS5oZO9DU@debian64>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from arrakis.dune.hu ([78.24.191.176]:53676 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756083Ab3JNUAI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Oct 2013 16:00:08 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 1/3] rt2x00: rt2800lib: use {tx,rx}_chain_num to avoid superfluous EEPROM access
+Date: Mon, 14 Oct 2013 21:59:50 +0200
+Message-Id: <1381780792-28894-1-git-send-email-juhosg@openwrt.org> (sfid-20131014_220015_507469_BCF13027)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The {rx,tx}_chain_num fields of rt2x00dev->default_ant
+contains the number of RX and TX chains already when the
+rt2800_probe_hw_mode() function runs. Use those values
+instead of parsing the EEPROM configuration values again.
 
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   16 ++++++----------
+ 1 file changed, 6 insertions(+), 10 deletions(-)
 
-On 10/25/2013 07:15 PM, Christian Lamparter wrote:
-> Hi Ben,
-> 
-> I'm currently updating the carl9170 firmware to the latest
-> version (1.9.9). I've already pushed out the sources and
-> updated the binaries over at our wiki (for the last time,
-> all future update will be via linux-firmware.git).
-> 
-> Now, the last item on my check off list is:
-> [ ]     new firmware for linux-firmware.git
-> 
-> Last time - when this topic came up - we had a short brainstorm
-> about how to handle updates in the future: 
-> <http://marc.info/?l=linux-wireless&m=136115736909708>
-> 
-> So, I've now prepared some options: 
-> 
-> 1. Reorganize carl9170 by creating a new subdirectory "carl9170"
->    and move everything in it.
->    * A carl9170fw-x.y.z.tar.xz with the source is generated for
->      each release and placed under carl9170/source/.
-> 
->    * new firmware binaries are placed in carl9170/.
->      (The firmware file name will include the version e.g. 
->      carl9170-1.9.9.fw, it won't clash with a previous release.)
-> 
->    * A symlink from the linux-firmware.git root to the latest 
->      carl9170-1.fw in the carl9170 subfolder is added/updated for
->      each release.
-
-Why do we need multiple files at all?  Why do they all need to be named
-carl9170-1.fw?  imho if the files are compatible then we only need one,
-and if they are not compatible then it is insane that they are all
-recognized as "carl9170-1.fw" as that makes it impossible for a user to
-know "which carl9170-1.fw" they need for a given kernel.
-
-Thanks,
-Zero
-> 
->    For a preview see: [1]
->    116 files changed, 3 insertions(+), 26313 deletions(-)
->    
-> 2. Simply replace code and firmware binary
->    * The code is simply dumped from the carl9170 firmware repository
->      into the existing carl9170fw directory.
-> 
->    * The old firmware binary "carl9170-1.fw" file is replaced by the
->      new version.
-> 
->    For a preview see: [2]
->    70 files changed, 2479 insertions(+), 4560 deletions(-)
-> 
-> I would prefer to go with option 1 and move everything into a carl9170
-> subdirectory. This way has the advantage that we can have multiple 
-> firmware binaries and sources coexisting in one place. However, I'm 
-> also aware of the additional "space and bandwidth" cost in this case. 
-> 
-> Please tell me which option you like best or if it should be done
-> differently. I've prepared a few RFCs (see links), but once we 
-> settled for the process, I'll make a proper announcement + patches.
-> 
-> Regards
-> 
-> Christian
-> 
-> [1] <https://drive.google.com/folderview?id=0BwOU1CguSZuBdGYxVVlTWnpXSm8>
-> [2] <https://drive.google.com/folderview?id=0BwOU1CguSZuBT1V2V0s2Smp0UmM>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index aa87894..3ca0d3e 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -7450,7 +7450,6 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ 	char *default_power2;
+ 	char *default_power3;
+ 	unsigned int i;
+-	u16 eeprom;
+ 	u32 reg;
+ 
+ 	/*
+@@ -7499,8 +7498,6 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00dev->hw->max_report_rates = 7;
+ 	rt2x00dev->hw->max_rate_tries = 1;
+ 
+-	rt2800_eeprom_read(rt2x00dev, EEPROM_NIC_CONF0, &eeprom);
+-
+ 	/*
+ 	 * Initialize hw_mode information.
+ 	 */
+@@ -7566,22 +7563,21 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ 	    IEEE80211_HT_CAP_SGI_20 |
+ 	    IEEE80211_HT_CAP_SGI_40;
+ 
+-	if (rt2x00_get_field16(eeprom, EEPROM_NIC_CONF0_TXPATH) >= 2)
++	if (rt2x00dev->default_ant.tx_chain_num >= 2)
+ 		spec->ht.cap |= IEEE80211_HT_CAP_TX_STBC;
+ 
+-	spec->ht.cap |=
+-	    rt2x00_get_field16(eeprom, EEPROM_NIC_CONF0_RXPATH) <<
+-		IEEE80211_HT_CAP_RX_STBC_SHIFT;
++	spec->ht.cap |= rt2x00dev->default_ant.rx_chain_num <<
++			IEEE80211_HT_CAP_RX_STBC_SHIFT;
+ 
+ 	spec->ht.ampdu_factor = 3;
+ 	spec->ht.ampdu_density = 4;
+ 	spec->ht.mcs.tx_params =
+ 	    IEEE80211_HT_MCS_TX_DEFINED |
+ 	    IEEE80211_HT_MCS_TX_RX_DIFF |
+-	    ((rt2x00_get_field16(eeprom, EEPROM_NIC_CONF0_TXPATH) - 1) <<
+-		IEEE80211_HT_MCS_TX_MAX_STREAMS_SHIFT);
++	    ((rt2x00dev->default_ant.tx_chain_num - 1) <<
++	     IEEE80211_HT_MCS_TX_MAX_STREAMS_SHIFT);
+ 
+-	switch (rt2x00_get_field16(eeprom, EEPROM_NIC_CONF0_RXPATH)) {
++	switch (rt2x00dev->default_ant.rx_chain_num) {
+ 	case 3:
+ 		spec->ht.mcs.rx_mask[2] = 0xff;
+ 	case 2:
+-- 
+1.7.10
