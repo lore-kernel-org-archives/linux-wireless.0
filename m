@@ -1,62 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:34166 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756629Ab3J1OIb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Oct 2013 10:08:31 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 4/4] mac80211: remove useless tests for array
-Date: Mon, 28 Oct 2013 15:08:24 +0100
-Message-Id: <1382969304-25611-4-git-send-email-johannes@sipsolutions.net> (sfid-20131028_150838_935469_7591CEB4)
-In-Reply-To: <1382969304-25611-1-git-send-email-johannes@sipsolutions.net>
-References: <1382969304-25611-1-git-send-email-johannes@sipsolutions.net>
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:33471 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932149Ab3JNUYO convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Oct 2013 16:24:14 -0400
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
+Subject: Re: [PATCH 3.12] ath5k: fix regression in tx status processing
+From: =?iso-8859-1?Q?Thomas_H=FChn?= <thomas@net.t-labs.tu-berlin.de>
+In-Reply-To: <1381778328-7684-1-git-send-email-nbd@openwrt.org>
+Date: Mon, 14 Oct 2013 22:16:41 +0200
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	bvahl@net.t-labs.tu-berlin.de, ben@gowasabi.net
+Message-Id: <301C8A59-A435-4A5A-8BEB-7C3E726342ED@net.t-labs.tu-berlin.de> (sfid-20131014_222421_600569_0916ED6F)
+References: <1381778328-7684-1-git-send-email-nbd@openwrt.org>
+To: Felix Fietkau <nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-Coverity points out that checking assoc_data->ie is
-completely useless since it's an array in the struct
-and can't be NULL - remove the useless checks.
+On 14.10.2013, at 21:18, Felix Fietkau <nbd@openwrt.org> wrote:
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/mlme.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+> The regression was introduced in the following commit:
+> 
+> 0967e01e8e713ed2982fb4eba8ba13794e9a6e89
+> "ath5k: make use of the new rate control API"
+> 
+> ath5k_tx_frame_completed saves the intended per-rate retry counts before
+> they are cleared by ieee80211_tx_info_clear_status, however at this
+> point the information in info->status.rates is incomplete.
+> 
+> This causes significant throughput degradation and excessive packet loss
+> on links where high bit rates don't work properly.
+> 
+> Move the copy from bf->rates a few lines up to ensure that the saved
+> retry counts are updated, and that they are really cleared in
+> info->status.rates after the call to ieee80211_tx_info_clear_status.
+> 
+> Cc: stable@vger.kernel.org # 3.10+
+> Cc: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+> Cc: Benjamin Vahl <bvahl@net.t-labs.tu-berlin.de>
+> Reported-by: Ben West <ben@gowasabi.net>
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 1305ff9..5b2b0a1 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -714,7 +714,7 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
- 	}
- 
- 	/* if present, add any custom IEs that go before HT */
--	if (assoc_data->ie_len && assoc_data->ie) {
-+	if (assoc_data->ie_len) {
- 		static const u8 before_ht[] = {
- 			WLAN_EID_SSID,
- 			WLAN_EID_SUPP_RATES,
-@@ -748,7 +748,7 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
- 				     &assoc_data->ap_vht_cap);
- 
- 	/* if present, add any custom non-vendor IEs that go after HT */
--	if (assoc_data->ie_len && assoc_data->ie) {
-+	if (assoc_data->ie_len) {
- 		noffset = ieee80211_ie_split_vendor(assoc_data->ie,
- 						    assoc_data->ie_len,
- 						    offset);
-@@ -779,7 +779,7 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
- 	}
- 
- 	/* add any remaining custom (i.e. vendor specific here) IEs */
--	if (assoc_data->ie_len && assoc_data->ie) {
-+	if (assoc_data->ie_len) {
- 		noffset = assoc_data->ie_len;
- 		pos = skb_put(skb, noffset - offset);
- 		memcpy(pos, assoc_data->ie + offset, noffset - offset);
--- 
-1.8.4.rc3
+Good catch !
+
+Acked-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+
+
+> ---
+> drivers/net/wireless/ath/ath5k/base.c | 6 +++---
+> 1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+> index 48161ed..69f58b0 100644
+> --- a/drivers/net/wireless/ath/ath5k/base.c
+> +++ b/drivers/net/wireless/ath/ath5k/base.c
+> @@ -1663,15 +1663,15 @@ ath5k_tx_frame_completed(struct ath5k_hw *ah, struct sk_buff *skb,
+> 	ah->stats.tx_bytes_count += skb->len;
+> 	info = IEEE80211_SKB_CB(skb);
+> 
+> +	size = min_t(int, sizeof(info->status.rates), sizeof(bf->rates));
+> +	memcpy(info->status.rates, bf->rates, size);
+> +
+> 	tries[0] = info->status.rates[0].count;
+> 	tries[1] = info->status.rates[1].count;
+> 	tries[2] = info->status.rates[2].count;
+> 
+> 	ieee80211_tx_info_clear_status(info);
+> 
+> -	size = min_t(int, sizeof(info->status.rates), sizeof(bf->rates));
+> -	memcpy(info->status.rates, bf->rates, size);
+> -
+> 	for (i = 0; i < ts->ts_final_idx; i++) {
+> 		struct ieee80211_tx_rate *r =
+> 			&info->status.rates[i];
+> -- 
+> 1.8.0.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
