@@ -1,120 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:46180 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751105Ab3J2WjQ (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:57824 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752418Ab3JNHvP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Oct 2013 18:39:16 -0400
-Received: by mail-wi0-f175.google.com with SMTP id hm4so5984322wib.8
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Oct 2013 15:39:15 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 3/3] ath: fix dynamic user regulatory domain support
-Date: Tue, 29 Oct 2013 23:39:06 +0100
-Message-Id: <1383086346-2096-4-git-send-email-mcgrof@do-not-panic.com> (sfid-20131029_233919_642342_15BE7640)
-In-Reply-To: <1383086346-2096-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1383086346-2096-1-git-send-email-mcgrof@do-not-panic.com>
+	Mon, 14 Oct 2013 03:51:15 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_CAMELLIA_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1VVcvq-00080M-A4
+	for linux-wireless@vger.kernel.org; Mon, 14 Oct 2013 09:51:14 +0200
+Message-ID: <1381736727.13092.1.camel@jlt4.sipsolutions.net> (sfid-20131014_095118_578427_BA133E55)
+Subject: Re: [PATCH] wireless: radiotap: fix parsing buffer overrun
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+In-Reply-To: <1381495982-28486-1-git-send-email-johannes@sipsolutions.net> (sfid-20131011_145313_711958_FED82D6C)
+References: <1381495982-28486-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20131011_145313_711958_FED82D6C)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 14 Oct 2013 09:45:27 +0200
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As it stands dynamic user regulatory domain support is
-only possible for a few programmed regulatory domains as
-a few countries do not allow for this.
+On Fri, 2013-10-11 at 14:53 +0200, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> When parsing an invalid radiotap header, the parser can overrun
+> the buffer that is passed in because it doesn't correctly check
+>  1) the minimum radiotap header size
+>  2) the space for extended bitmaps
+> 
+> The first issue doesn't affect any in-kernel user as they all
+> check the minimum size before calling the radiotap function.
+> The second issue could potentially affect the kernel if an skb
+> is passed in that consists only of the radiotap header with a
+> lot of extended bitmaps that extend past the SKB. In that case
+> a read-only buffer overrun by at most 4 bytes is possible.
+> 
+> Fix this by adding the appropriate checks to the parser.
 
-The existing code however only would take advantage of
-the feature if a custom world regulatory domain is used
-though as that's when we clear beconing flags. We need
-to lift this restriction as otherwise this feature is
-pointless.
+Applied (with another fix pointed out by Evan)
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- drivers/net/wireless/ath/regd.c | 26 ++++++++++++++++++++------
- 1 file changed, 20 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
-index 5790aa2..b2c5e41 100644
---- a/drivers/net/wireless/ath/regd.c
-+++ b/drivers/net/wireless/ath/regd.c
-@@ -296,6 +296,7 @@ static void ath_force_no_ir_freq(struct wiphy *wiphy, u16 center_freq)
- 
- static void
- __ath_reg_apply_beaconing_flags(struct wiphy *wiphy,
-+				struct ath_regulatory *reg,
- 				enum nl80211_reg_initiator initiator,
- 				struct ieee80211_channel *ch)
- {
-@@ -307,6 +308,9 @@ __ath_reg_apply_beaconing_flags(struct wiphy *wiphy,
- 	case NL80211_REGDOM_SET_BY_COUNTRY_IE:
- 		ath_force_clear_no_ir_chan(wiphy, ch);
- 		break;
-+	case NL80211_REGDOM_SET_BY_USER:
-+		if (ath_reg_dyn_country_user_allow(reg))
-+			ath_force_clear_no_ir_chan(wiphy, ch);
- 	default:
- 		if (ch->beacon_found)
- 			ch->flags &= ~IEEE80211_CHAN_NO_IR;
-@@ -322,6 +326,7 @@ __ath_reg_apply_beaconing_flags(struct wiphy *wiphy,
-  */
- static void
- ath_reg_apply_beaconing_flags(struct wiphy *wiphy,
-+			      struct ath_regulatory *reg,
- 			      enum nl80211_reg_initiator initiator)
- {
- 	enum ieee80211_band band;
-@@ -335,8 +340,8 @@ ath_reg_apply_beaconing_flags(struct wiphy *wiphy,
- 		sband = wiphy->bands[band];
- 		for (i = 0; i < sband->n_channels; i++) {
- 			ch = &sband->channels[i];
--			__ath_reg_apply_beaconing_flags(wiphy, initiator, ch);
--
-+			__ath_reg_apply_beaconing_flags(wiphy, reg,
-+							initiator, ch);
- 		}
- 	}
- }
-@@ -357,7 +362,8 @@ ath_reg_apply_beaconing_flags(struct wiphy *wiphy,
-  */
- static void
- ath_reg_apply_ir_flags(struct wiphy *wiphy,
--				enum nl80211_reg_initiator initiator)
-+		       struct ath_regulatory *reg,
-+		       enum nl80211_reg_initiator initiator)
- {
- 	struct ieee80211_supported_band *sband;
- 
-@@ -370,6 +376,11 @@ ath_reg_apply_ir_flags(struct wiphy *wiphy,
- 		ath_force_clear_no_ir_freq(wiphy, 2467);
- 		ath_force_clear_no_ir_freq(wiphy, 2472);
- 		break;
-+	case NL80211_REGDOM_SET_BY_USER:
-+		if (!ath_reg_dyn_country_user_allow(reg))
-+			break;
-+		ath_force_clear_no_ir_freq(wiphy, 2467);
-+		ath_force_clear_no_ir_freq(wiphy, 2472);
- 	default:
- 		ath_force_no_ir_freq(wiphy, 2467);
- 		ath_force_no_ir_freq(wiphy, 2472);
-@@ -418,12 +429,15 @@ static void ath_reg_apply_world_flags(struct wiphy *wiphy,
- 	case 0x66:
- 	case 0x67:
- 	case 0x6C:
--		ath_reg_apply_beaconing_flags(wiphy, initiator);
-+		ath_reg_apply_beaconing_flags(wiphy, reg, initiator);
- 		break;
- 	case 0x68:
--		ath_reg_apply_beaconing_flags(wiphy, initiator);
--		ath_reg_apply_ir_flags(wiphy, initiator);
-+		ath_reg_apply_beaconing_flags(wiphy, reg, initiator);
-+		ath_reg_apply_ir_flags(wiphy, reg, initiator);
- 		break;
-+	default:
-+		if (ath_reg_dyn_country_user_allow(reg))
-+			ath_reg_apply_beaconing_flags(wiphy, reg, initiator);
- 	}
- }
- 
--- 
-1.8.4.rc3
+johannes
 
