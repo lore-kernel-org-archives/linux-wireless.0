@@ -1,178 +1,274 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f51.google.com ([209.85.160.51]:36622 "EHLO
-	mail-pb0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750747Ab3JMEb4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Oct 2013 00:31:56 -0400
-Received: by mail-pb0-f51.google.com with SMTP id jt11so6000884pbb.10
-        for <linux-wireless@vger.kernel.org>; Sat, 12 Oct 2013 21:31:55 -0700 (PDT)
-From: Mihir Shete <smihir@qti.qualcomm.com>
-To: linux-wireless@vger.kernel.org
-Cc: Mihir Shete <smihir@qti.qualcomm.com>,
-	Henri Bahini <hbahini@qca.qualcomm.com>,
-	Tushnim Bhattacharyya <tushnimb@qca.qualcomm.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH v2 1/2] cfg80211: add flags to define country IE processing rules
-Date: Sun, 13 Oct 2013 10:01:36 +0530
-Message-Id: <1381638697-2641-2-git-send-email-smihir@qti.qualcomm.com> (sfid-20131013_063205_048348_568E0EC6)
-In-Reply-To: <1381638697-2641-1-git-send-email-smihir@qti.qualcomm.com>
-References: <1381638697-2641-1-git-send-email-smihir@qti.qualcomm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:12859 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757199Ab3JNWqx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Oct 2013 18:46:53 -0400
+Message-ID: <1381791115.20491.8.camel@dcbw.foobar.com> (sfid-20131015_004716_929318_374A87B9)
+Subject: [PATCH] libertas: move firmware lifetime handling to firmware.c
+From: Dan Williams <dcbw@redhat.com>
+To: "Dr. H. Nikolaus Schaller" <hns@goldelico.com>
+Cc: libertas-dev@lists.infradead.org, NeilBrown Brown <neilb@suse.de>,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Harro Haan <hrhaan@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Belisko Marek <marek@goldelico.com>,
+	LKML <linux-kernel@vger.kernel.org>
+Date: Mon, 14 Oct 2013 17:51:55 -0500
+In-Reply-To: <47ACD120-9393-41EA-BF8A-4E5E316A0C79@goldelico.com>
+References: <D5BD8103-A6A6-4070-878B-99FC5883725F@goldelico.com>
+	 <1381607911.21655.7.camel@dcbw.foobar.com>
+	 <47ACD120-9393-41EA-BF8A-4E5E316A0C79@goldelico.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-802.11 cards may have different country IE parsing behavioural
-preferences and vendors may want to support these. These preferences
-were managed by the WIPHY_FLAG_CUSTOM_REGULATORY and the
-WIPHY_FLAG_STRICT_REGULATORY flags and their combination.
-Instead of using this existing notation, split out the country
-IE behavioural preferences to a new flag. This will allow
-us to add more customizations easily and make the code more
-maintainable
+Previously, each bus type was responsible for freeing the firmware
+structure, but some did that badly.  Move responsibility for freeing
+firmware into firmware.c so that it's done once and correctly, instead
+of happening in multiple places in bus-specific code.
 
-Cc: Henri Bahini <hbahini@qca.qualcomm.com>
-Cc: Tushnim Bhattacharyya <tushnimb@qca.qualcomm.com>
-Cc: Luis R. Rodriguez <mcgrof@do-not-panic.com>
-Signed-off-by: Mihir Shete <smihir@qti.qualcomm.com>
+This fixes a use-after-free bug found by Dr. H. Nikolaus Schaller where
+the SDIO code forgot to NULL priv->helper_fw after freeing it.
+
+Signed-off-by: Dan Williams <dcbw@redhat.com>
 ---
- drivers/net/wireless/ath/regd.c |  1 +
- include/net/cfg80211.h          | 36 +++++++++++++++++++++++-------------
- include/uapi/linux/nl80211.h    | 28 ++++++++++++++++++++++++++++
- net/wireless/reg.c              |  8 +++-----
- 4 files changed, 55 insertions(+), 18 deletions(-)
+Tested firmware loading on USB (8388), CS (8385), and SDIO (8686).
 
-diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
-index 7d077c7..cbf074c 100644
---- a/drivers/net/wireless/ath/regd.c
-+++ b/drivers/net/wireless/ath/regd.c
-@@ -513,6 +513,7 @@ ath_regd_init_wiphy(struct ath_regulatory *reg,
- 		 */
- 		regd = ath_world_regdomain(reg);
- 		wiphy->flags |= WIPHY_FLAG_CUSTOM_REGULATORY;
-+		wiphy->country_ie_pref = NL80211_COUNTRY_IE_FOLLOW_POWER;
- 	} else {
- 		/*
- 		 * This gets applied in the case of the absence of CRDA,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 45f6bf5..9dd71f2 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2430,19 +2430,25 @@ struct cfg80211_ops {
-  * 	has its own custom regulatory domain and cannot identify the
-  * 	ISO / IEC 3166 alpha2 it belongs to. When this is enabled
-  * 	we will disregard the first regulatory hint (when the
-- * 	initiator is %REGDOM_SET_BY_CORE).
-- * @WIPHY_FLAG_STRICT_REGULATORY: tells us the driver for this device will
-- *	ignore regulatory domain settings until it gets its own regulatory
-- *	domain via its regulatory_hint() unless the regulatory hint is
-- *	from a country IE. After its gets its own regulatory domain it will
-- *	only allow further regulatory domain settings to further enhance
-- *	compliance. For example if channel 13 and 14 are disabled by this
-- *	regulatory domain no user regulatory domain can enable these channels
-- *	at a later time. This can be used for devices which do not have
-- *	calibration information guaranteed for frequencies or settings
-- *	outside of its regulatory domain. If used in combination with
-- *	WIPHY_FLAG_CUSTOM_REGULATORY the inspected country IE power settings
-- *	will be followed.
-+ * 	initiator is %REGDOM_SET_BY_CORE). wiphys can set the custom
-+ * 	regulatory domain using wiphy_apply_custom_regulatory()
-+ * 	prior to wiphy registration.
-+ * @WIPHY_FLAG_STRICT_REGULATORY: tells us that the wiphy for this device
-+ * 	has regulatory domain that it wishes to be considered as the
-+ * 	superset for regulatory rules. After this device gets its regulatory
-+ * 	domain programmed further regulatory hints shall only be considered
-+ * 	for this device to enhance regulatory compliance, forcing the
-+ * 	device to only possibly use subsets of the original regulatory
-+ * 	rules. For example if channel 13 and 14 are disabled by this
-+ * 	device's regulatory domain no user specified regulatory hint which
-+ * 	has these channels enabled would enable them for this wiphy,
-+ * 	the device's original regulatory domain will be trusted as the
-+ * 	base. You can program the superset of regulatory rules for this
-+ * 	wiphy with regulatory_hint() for cards programmed with an
-+ * 	ISO3166-alpha2 country code. wiphys that use regulatory_hint()
-+ * 	will have their wiphy->regd programmed once the regulatory
-+ * 	domain is set, and all other regulatory hints will be ignored
-+ * 	until their own regulatory domain gets programmed.
-  * @WIPHY_FLAG_DISABLE_BEACON_HINTS: enable this if your driver needs to ensure
-  *	that passive scan flags and beaconing flags may not be lifted by
-  *	cfg80211 due to regulatory beacon hints. For more information on beacon
-@@ -2773,6 +2779,8 @@ struct wiphy_coalesce_support {
-  *	802.11-2012 8.4.2.29 for the defined fields.
-  * @extended_capabilities_mask: mask of the valid values
-  * @extended_capabilities_len: length of the extended capabilities
-+ * @country_ie_pref: country IE processing preferences specified
-+ *	by enum nl80211_country_ie_pref
-  * @coalesce: packet coalescing support information
-  */
- struct wiphy {
-@@ -2844,6 +2852,8 @@ struct wiphy {
- 	const u8 *extended_capabilities, *extended_capabilities_mask;
- 	u8 extended_capabilities_len;
+diff --git a/drivers/net/wireless/libertas/firmware.c b/drivers/net/wireless/libertas/firmware.c
+index c0f9e7e..51b92b5 100644
+--- a/drivers/net/wireless/libertas/firmware.c
++++ b/drivers/net/wireless/libertas/firmware.c
+@@ -49,14 +49,19 @@ static void main_firmware_cb(const struct firmware *firmware, void *context)
+ 		/* Failed to find firmware: try next table entry */
+ 		load_next_firmware_from_table(priv);
+ 		return;
+ 	}
  
-+	u8 country_ie_pref;
-+
- 	/* If multiple wiphys are registered and you're handed e.g.
- 	 * a regular netdev with assigned ieee80211_ptr, you won't
- 	 * know whether it points to a wiphy your driver has registered
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index fde2c02..6e574ce 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2321,6 +2321,34 @@ enum nl80211_reg_type {
- };
+ 	/* Firmware found! */
+ 	lbs_fw_loaded(priv, 0, priv->helper_fw, firmware);
++	if (priv->helper_fw) {
++		release_firmware (priv->helper_fw);
++		priv->helper_fw = NULL;
++	}
++	release_firmware (firmware);
+ }
  
- /**
-+ * enum nl80211_country_ie_pref - country IE processing preferences
-+ *
-+ * enumerates the different preferences an 802.11 card can advertize
-+ * for parsing the country IEs. As per the current implementation
-+ * country IEs are only used to derive the ISO3166-apha2, the
-+ * information for power settings that comes with the country IE is
-+ * ignored and we use the power settings from regdb.
-+ *
-+ *	The default behaviour for drivers that do not advertize any
-+ *	preference to handle the country IE is to allow the core to
-+ *	update channel flags according to the ISO3166-alpha2 in
-+ *	the country IE. The applied power is -
-+ *	MIN(power specified by custom domain, power obtained from regdb)
-+ *
-+ * @NL80211_COUNTRY_IE_FOLLOW_POWER - for devices that have a
-+ *	preference that even though they may have programmed their own
-+ *	custom power setting prior to wiphy registration, they want
-+ *	to ensure their channel power settings are updated for this
-+ *	connection with the power settings derived from the regulatory
-+ *	domain. The regulatory domain used will be based on the
-+ *	ISO3166-alpha2 from country IE provided through
-+ *	regulatory_hint_country_ie()
-+ */
-+enum nl80211_country_ie_pref {
-+	NL80211_COUNTRY_IE_FOLLOW_POWER	= 1<<0,
-+};
-+
-+/**
-  * enum nl80211_reg_rule_attr - regulatory rule attributes
-  * @__NL80211_REG_RULE_ATTR_INVALID: attribute number 0 is reserved
-  * @NL80211_ATTR_REG_RULE_FLAGS: a set of flags which specify additional
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index d62cb1e..87b4ee3 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -898,13 +898,11 @@ static void handle_channel(struct wiphy *wiphy,
- 	chan->max_reg_power = (int) MBM_TO_DBM(power_rule->max_eirp);
- 	if (chan->orig_mpwr) {
- 		/*
--		 * Devices that have their own custom regulatory domain
--		 * but also use WIPHY_FLAG_STRICT_REGULATORY will follow the
--		 * passed country IE power settings.
-+		 * Devices that use NL80211_COUNTRY_IE_FOLLOW_POWER will always
-+		 * follow the passed country IE power settings.
- 		 */
- 		if (initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE &&
--		    wiphy->flags & WIPHY_FLAG_CUSTOM_REGULATORY &&
--		    wiphy->flags & WIPHY_FLAG_STRICT_REGULATORY)
-+		    wiphy->country_ie_pref & NL80211_COUNTRY_IE_FOLLOW_POWER)
- 			chan->max_power = chan->max_reg_power;
- 		else
- 			chan->max_power = min(chan->orig_mpwr,
--- 
-1.8.2.1
+ static void helper_firmware_cb(const struct firmware *firmware, void *context)
+ {
+ 	struct lbs_private *priv = context;
+ 
+ 	if (!firmware) {
+diff --git a/drivers/net/wireless/libertas/if_cs.c b/drivers/net/wireless/libertas/if_cs.c
+index c94dd68..ef8c98e 100644
+--- a/drivers/net/wireless/libertas/if_cs.c
++++ b/drivers/net/wireless/libertas/if_cs.c
+@@ -750,22 +750,22 @@ static void if_cs_prog_firmware(struct lbs_private *priv, int ret,
+ 	}
+ 
+ 	/* Load the firmware */
+ 	ret = if_cs_prog_helper(card, helper);
+ 	if (ret == 0 && (card->model != MODEL_8305))
+ 		ret = if_cs_prog_real(card, mainfw);
+ 	if (ret)
+-		goto out;
++		return;
+ 
+ 	/* Now actually get the IRQ */
+ 	ret = request_irq(card->p_dev->irq, if_cs_interrupt,
+ 		IRQF_SHARED, DRV_NAME, card);
+ 	if (ret) {
+ 		pr_err("error in request_irq\n");
+-		goto out;
++		return;
+ 	}
+ 
+ 	/*
+ 	 * Clear any interrupt cause that happened while sending
+ 	 * firmware/initializing card
+ 	 */
+ 	if_cs_write16(card, IF_CS_CARD_INT_CAUSE, IF_CS_BIT_MASK);
+@@ -773,18 +773,14 @@ static void if_cs_prog_firmware(struct lbs_private *priv, int ret,
+ 
+ 	/* And finally bring the card up */
+ 	priv->fw_ready = 1;
+ 	if (lbs_start_card(priv) != 0) {
+ 		pr_err("could not activate card\n");
+ 		free_irq(card->p_dev->irq, card);
+ 	}
+-
+-out:
+-	release_firmware(helper);
+-	release_firmware(mainfw);
+ }
+ 
+ 
+ /********************************************************************/
+ /* Callback functions for libertas.ko                               */
+ /********************************************************************/
+ 
+diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
+index 4557833..991238a 100644
+--- a/drivers/net/wireless/libertas/if_sdio.c
++++ b/drivers/net/wireless/libertas/if_sdio.c
+@@ -704,28 +704,24 @@ static void if_sdio_do_prog_firmware(struct lbs_private *priv, int ret,
+ 	if (ret) {
+ 		pr_err("failed to find firmware (%d)\n", ret);
+ 		return;
+ 	}
+ 
+ 	ret = if_sdio_prog_helper(card, helper);
+ 	if (ret)
+-		goto out;
++		return;
+ 
+ 	lbs_deb_sdio("Helper firmware loaded\n");
+ 
+ 	ret = if_sdio_prog_real(card, mainfw);
+ 	if (ret)
+-		goto out;
++		return;
+ 
+ 	lbs_deb_sdio("Firmware loaded\n");
+ 	if_sdio_finish_power_on(card);
+-
+-out:
+-	release_firmware(helper);
+-	release_firmware(mainfw);
+ }
+ 
+ static int if_sdio_prog_firmware(struct if_sdio_card *card)
+ {
+ 	int ret;
+ 	u16 scratch;
+ 
+diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
+index 4bb6574..87ff0ca 100644
+--- a/drivers/net/wireless/libertas/if_spi.c
++++ b/drivers/net/wireless/libertas/if_spi.c
+@@ -1090,19 +1090,15 @@ static int if_spi_init_card(struct if_spi_card *card)
+ 	}
+ 
+ 	err = spu_set_interrupt_mode(card, 0, 1);
+ 	if (err)
+ 		goto out;
+ 
+ out:
+-	release_firmware(helper);
+-	release_firmware(mainfw);
+-
+ 	lbs_deb_leave_args(LBS_DEB_SPI, "err %d\n", err);
+-
+ 	return err;
+ }
+ 
+ static void if_spi_resume_worker(struct work_struct *work)
+ {
+ 	struct if_spi_card *card;
+ 
+diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+index 2798077..dff08a2 100644
+--- a/drivers/net/wireless/libertas/if_usb.c
++++ b/drivers/net/wireless/libertas/if_usb.c
+@@ -840,15 +840,15 @@ static void if_usb_prog_firmware(struct lbs_private *priv, int ret,
+ 		pr_err("failed to find firmware (%d)\n", ret);
+ 		goto done;
+ 	}
+ 
+ 	cardp->fw = fw;
+ 	if (check_fwfile_format(cardp->fw->data, cardp->fw->size)) {
+ 		ret = -EINVAL;
+-		goto release_fw;
++		goto done;
+ 	}
+ 
+ 	/* Cancel any pending usb business */
+ 	usb_kill_urb(cardp->rx_urb);
+ 	usb_kill_urb(cardp->tx_urb);
+ 
+ 	cardp->fwlastblksent = 0;
+@@ -857,15 +857,15 @@ static void if_usb_prog_firmware(struct lbs_private *priv, int ret,
+ 	cardp->fwfinalblk = 0;
+ 	cardp->bootcmdresp = 0;
+ 
+ restart:
+ 	if (if_usb_submit_rx_urb_fwload(cardp) < 0) {
+ 		lbs_deb_usbd(&cardp->udev->dev, "URB submission is failed\n");
+ 		ret = -EIO;
+-		goto release_fw;
++		goto done;
+ 	}
+ 
+ 	cardp->bootcmdresp = 0;
+ 	do {
+ 		int j = 0;
+ 		i++;
+ 		if_usb_issue_boot_command(cardp, BOOT_CMD_FW_BY_USB);
+@@ -879,22 +879,22 @@ restart:
+ 	if (cardp->bootcmdresp == BOOT_CMD_RESP_NOT_SUPPORTED) {
+ 		/* Return to normal operation */
+ 		ret = -EOPNOTSUPP;
+ 		usb_kill_urb(cardp->rx_urb);
+ 		usb_kill_urb(cardp->tx_urb);
+ 		if (if_usb_submit_rx_urb(cardp) < 0)
+ 			ret = -EIO;
+-		goto release_fw;
++		goto done;
+ 	} else if (cardp->bootcmdresp <= 0) {
+ 		if (--reset_count >= 0) {
+ 			if_usb_reset_device(cardp);
+ 			goto restart;
+ 		}
+ 		ret = -EIO;
+-		goto release_fw;
++		goto done;
+ 	}
+ 
+ 	i = 0;
+ 
+ 	cardp->totalbytes = 0;
+ 	cardp->fwlastblksent = 0;
+ 	cardp->CRC_OK = 1;
+@@ -917,37 +917,34 @@ restart:
+ 		if (--reset_count >= 0) {
+ 			if_usb_reset_device(cardp);
+ 			goto restart;
+ 		}
+ 
+ 		pr_info("FW download failure, time = %d ms\n", i * 100);
+ 		ret = -EIO;
+-		goto release_fw;
++		goto done;
+ 	}
+ 
+ 	cardp->priv->fw_ready = 1;
+ 	if_usb_submit_rx_urb(cardp);
+ 
+ 	if (lbs_start_card(priv))
+-		goto release_fw;
++		goto done;
+ 
+ 	if_usb_setup_firmware(priv);
+ 
+ 	/*
+ 	 * EHS_REMOVE_WAKEUP is not supported on all versions of the firmware.
+ 	 */
+ 	priv->wol_criteria = EHS_REMOVE_WAKEUP;
+ 	if (lbs_host_sleep_cfg(priv, priv->wol_criteria, NULL))
+ 		priv->ehs_remove_supported = false;
+ 
+- release_fw:
+-	release_firmware(cardp->fw);
+-	cardp->fw = NULL;
+-
+  done:
++	cardp->fw = NULL;
+ 	lbs_deb_leave(LBS_DEB_USB);
+ }
+ 
+ 
+ #ifdef CONFIG_PM
+ static int if_usb_suspend(struct usb_interface *intf, pm_message_t message)
+ {
+
 
