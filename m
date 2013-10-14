@@ -1,40 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:59435 "EHLO purkki.adurom.net"
+Received: from lizzard.sbs.de ([194.138.37.39]:25311 "EHLO lizzard.sbs.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751657Ab3J1Fxx convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Oct 2013 01:53:53 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: Pali =?utf-8?Q?Roh=C3=A1r?= <pali.rohar@gmail.com>
-Cc: Luciano Coelho <luca@coelho.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
-	joni.lapilainen@gmail.com, David Gnedt <david.gnedt@davizone.at>
-Subject: Re: [PATCH 01/16] mac80211: fix TX device statistics for monitor interfaces
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
-	<1382819655-30430-2-git-send-email-pali.rohar@gmail.com>
-Date: Mon, 28 Oct 2013 07:53:45 +0200
-In-Reply-To: <1382819655-30430-2-git-send-email-pali.rohar@gmail.com> ("Pali
-	=?utf-8?Q?Roh=C3=A1r=22's?= message of "Sat, 26 Oct 2013 22:34:00 +0200")
-Message-ID: <87iowiszyu.fsf@purkki.adurom.net> (sfid-20131028_065415_930913_2F2294F1)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	id S1750837Ab3JNPBa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Oct 2013 11:01:30 -0400
+Message-ID: <1381762681.3711.36.camel@djensen-laptop> (sfid-20131014_170132_794613_C73511EA)
+Subject: Re: [PATCH] cfg80211: fix channel to frequency mapping in 5.9GHz
+ range
+From: Dennis H Jensen <dennis.h.jensen@siemens.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Date: Mon, 14 Oct 2013 16:58:01 +0200
+In-Reply-To: <1381759370.13092.11.camel@jlt4.sipsolutions.net>
+References: <1381492780-3068-1-git-send-email-dennis.h.jensen@siemens.com>
+	 <1381499778.14293.21.camel@jlt4.sipsolutions.net>
+	 <1381506302.3711.10.camel@djensen-laptop>
+	 <1381752176.13092.10.camel@jlt4.sipsolutions.net>
+	 <1381752976.3711.14.camel@djensen-laptop>
+	 <1381759370.13092.11.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pali Rohár <pali.rohar@gmail.com> writes:
+On Mon, 2013-10-14 at 16:02 +0200, Johannes Berg wrote:
+> On Mon, 2013-10-14 at 14:16 +0200, Dennis H Jensen wrote:
+> > On Mon, 2013-10-14 at 14:02 +0200, Johannes Berg wrote:
+> > > On Fri, 2013-10-11 at 17:45 +0200, Dennis H Jensen wrote:
+> > > 
+> > > > > > +		else if (chan > 196)
+> > > > > > +			return 5000 + (chan - 15) * 5;
+> > > > > 
+> > > > > Where does the +/- 15 come from? I can't find any evidence for this in
+> > > > > Annex E.
+> > > > 
+> > > > I didn't double check Annex E. I just wanted to recover the lost
+> > > > frequencies that the 15 channels (182 - 196), map into 4.9 GHz.
+> > > 
+> > > "Recover"? When did they work? What broke them?
+> > 
+> > The commit 59eb21a6504731fc16db4cf9463065dd61093e08 moved those channels
+> > to 4.9 GHz but left a hole in the 5.9 Ghz range.
+> 
+> But there was no +/- 15 before, so what gives?
 
-> From: David Gnedt <david.gnedt@davizone.at>
->
-> Count TX packets and bytes also for monitor interfaces.
->
-> Signed-of-by: David Gnedt <david.gnedt@davizone.at>
+Well no :) but there also wasn't a special case for that particular
+channel set (182 - 196).
 
-You should send mac80211 patches separately, not inside a wl1251 patchset.
+So now, when you configure the frequency 5910, it is mapped to channel
+182 which is mapped back to 4910 and nothing works, at least let the
+functions be the inverse of the other.
 
--- 
-Kalle Valo
+In case that doesn't do it. What is needed to get channel 182 to be 5910
+MHz as Annex E defines for the US and Europe? Channel to frequency
+mapping based on operating class?
+
+//Dennis
+
