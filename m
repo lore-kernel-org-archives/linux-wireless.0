@@ -1,39 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f42.google.com ([209.85.215.42]:53333 "EHLO
-	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751148Ab3JFFCY (ORCPT
+Received: from szxga03-in.huawei.com ([119.145.14.66]:62891 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932408Ab3JOL6K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Oct 2013 01:02:24 -0400
-Received: by mail-la0-f42.google.com with SMTP id ep20so4511114lab.15
-        for <linux-wireless@vger.kernel.org>; Sat, 05 Oct 2013 22:02:23 -0700 (PDT)
+	Tue, 15 Oct 2013 07:58:10 -0400
+From: Kefeng Wang <wangkefeng.wang@huawei.com>
+To: <linux-kernel@vger.kernel.org>
+CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Pablo Neira Ayuso <pablo@netfilter.org>,
+	"Stephen Hemminger" <stephen@networkplumber.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Francois Romieu <romieu@fr.zoreil.com>,
+	"Ben Hutchings" <bhutchings@solarflare.com>,
+	Chas Williams <chas@cmf.nrl.navy.mil>,
+	Marc Kleine-Budde <mkl@pengutronix.de>,
+	Samuel Ortiz <samuel@sortiz.org>,
+	Paul Mackerras <paulus@samba.org>,
+	Oliver Neukum <oneukum@suse.de>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	"Boris Ostrovsky" <boris.ostrovsky@oracle.com>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	"Michael S. Tsirkin" <mst@redhat.com>, <netfilter@vger.kernel.org>,
+	<netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	<guohanjun@huawei.com>
+Subject: [PATCH 18/18] net: wimax: use wrapper functions of net_ratelimit() to simplify code
+Date: Tue, 15 Oct 2013 19:45:14 +0800
+Message-ID: <1381837514-50660-19-git-send-email-wangkefeng.wang@huawei.com> (sfid-20131015_140249_288071_4F03A51E)
+In-Reply-To: <1381837514-50660-1-git-send-email-wangkefeng.wang@huawei.com>
+References: <1381837514-50660-1-git-send-email-wangkefeng.wang@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <CAOAOC6YT=ek4S=s0YNqejD2iCdPYng6FnJ1ROegwWhmcVZhyOg@mail.gmail.com>
-References: <CAOAOC6YT=ek4S=s0YNqejD2iCdPYng6FnJ1ROegwWhmcVZhyOg@mail.gmail.com>
-Date: Sun, 6 Oct 2013 08:02:23 +0300
-Message-ID: <CANUX_P25P2LwMwA3HRaxGBCkPsDTs6cOymkM5P+t7B8132CExA@mail.gmail.com> (sfid-20131006_070240_121173_73B853E5)
-Subject: Re: pci-half-mini 7206 ac/bluetooth issues
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Tim Nelson <tim.l.nelson@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Oct 6, 2013 at 4:49 AM, Tim Nelson <tim.l.nelson@gmail.com> wrote:
-> If I use both the wifi and the bluetooth at the same time on the
-> adapter eventually wifi dies.
->
-> Here is a complete log from my syslog, I rmmod'd the iwlmvm and then
-> modprobed it to resolve the issue.  This only happens when using
-> wifi/bluetooth at the same time.
->
+net_ratelimited_function() is called to simplify code.
 
-can you please try this:
+Signed-off-by: Kefeng Wang <wangkefeng.wang@huawei.com>
+---
+ drivers/net/wimax/i2400m/netdev.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-modprobe bt_coex_active=0
+diff --git a/drivers/net/wimax/i2400m/netdev.c b/drivers/net/wimax/i2400m/netdev.c
+index 4889613..678717a 100644
+--- a/drivers/net/wimax/i2400m/netdev.c
++++ b/drivers/net/wimax/i2400m/netdev.c
+@@ -305,8 +305,7 @@ int i2400m_net_wake_tx(struct i2400m *i2400m, struct net_device *net_dev,
+ 		 * queue -- blame the queue disciplines that
+ 		 * queue without looking -- I guess there is a reason
+ 		 * for that. */
+-		if (net_ratelimit())
+-			d_printf(1, dev, "NETTX: device exiting idle, "
++		net_ratelimited_function(d_printf, 1, dev, "NETTX: device exiting idle, "
+ 				 "dropping skb %p, queue running %d\n",
+ 				 skb, netif_queue_stopped(net_dev));
+ 		result = -EBUSY;
+-- 
+1.8.2.1
 
-and also (in a different test), can you please disable power save - add:
-options iwlmvm power_scheme=1
-to /etc/modprobe.d/iwlwifi.conf or something like that?
 
-Thanks
