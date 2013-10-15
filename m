@@ -1,58 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:42842 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756893Ab3JNSoW (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:34828 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932312Ab3JONS6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Oct 2013 14:44:22 -0400
-Received: by mail-wi0-f177.google.com with SMTP id ey11so2229102wid.16
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Oct 2013 11:44:21 -0700 (PDT)
-Message-ID: <1381776253.2470.1.camel@canaries32-MCP7A> (sfid-20131014_204425_200751_CD82C6D2)
-Subject: [PATCH] staging: vt6656: return if pControlURB->hcpriv not NULL
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 14 Oct 2013 19:44:13 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 15 Oct 2013 09:18:58 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3.12 3/3] mac80211: sanity check WMM/QoS parameters
+Date: Tue, 15 Oct 2013 15:17:10 +0200
+Message-Id: <1381843030-12260-3-git-send-email-johannes@sipsolutions.net> (sfid-20131015_151903_954538_B0C1D1CC)
+In-Reply-To: <1381843030-12260-1-git-send-email-johannes@sipsolutions.net>
+References: <1381843030-12260-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixes occasional urb submitted while active.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Even thought the fMP_CONTROL_WRITES/fMP_CONTROL_READS flags
-are cleared in the return context urb->hcpriv is not NULL.
+Check for invalid WMM parameters (AIFSN < 2 or CWmax < CWmin)
+and try to set them to usable values in this case.
 
-check for hcpriv and return STATUS_FAILURE if not NULL.
+Notably the Sitecom WL-153 v1 with firmware 1.45 is sending
+AIFSN, ECWmin and ECWmax as all zero.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Reported-and-tested-by: Antonio Quartulli <antonio@meshcoding.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/staging/vt6656/usbpipe.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ net/mac80211/mlme.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
-index 3a03f1d..37bcb18 100644
---- a/drivers/staging/vt6656/usbpipe.c
-+++ b/drivers/staging/vt6656/usbpipe.c
-@@ -118,6 +118,9 @@ int PIPEnsControlOut(struct vnt_private *pDevice, u8 byRequest, u16 wValue,
- 	if (pDevice->Flags & fMP_CONTROL_READS)
- 		return STATUS_FAILURE;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 86e4ad5..058ae1c 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1598,6 +1598,7 @@ static bool ieee80211_sta_wmm_params(struct ieee80211_local *local,
+ 	int count;
+ 	const u8 *pos;
+ 	u8 uapsd_queues = 0;
++	static const u8 default_aifs[] = { 2, 2, 3, 7 };
  
-+	if (pDevice->pControlURB->hcpriv)
-+		return STATUS_FAILURE;
-+
- 	MP_SET_FLAG(pDevice, fMP_CONTROL_WRITES);
+ 	if (!local->ops->conf_tx)
+ 		return false;
+@@ -1664,8 +1665,12 @@ static bool ieee80211_sta_wmm_params(struct ieee80211_local *local,
+ 		}
  
- 	pDevice->sUsbCtlRequest.bRequestType = 0x40;
-@@ -177,6 +180,9 @@ int PIPEnsControlIn(struct vnt_private *pDevice, u8 byRequest, u16 wValue,
- 	if (pDevice->Flags & fMP_CONTROL_WRITES)
- 		return STATUS_FAILURE;
- 
-+	if (pDevice->pControlURB->hcpriv)
-+		return STATUS_FAILURE;
-+
- 	MP_SET_FLAG(pDevice, fMP_CONTROL_READS);
- 
- 	pDevice->sUsbCtlRequest.bRequestType = 0xC0;
+ 		params.aifs = pos[0] & 0x0f;
++		if (params.aifs < 2)
++			params.aifs = default_aifs[queue];
+ 		params.cw_max = ecw2cw((pos[1] & 0xf0) >> 4);
+ 		params.cw_min = ecw2cw(pos[1] & 0x0f);
++		if (params.cw_max < params.cw_min)
++			params.cw_max = params.cw_min;
+ 		params.txop = get_unaligned_le16(pos + 2);
+ 		params.acm = acm;
+ 		params.uapsd = uapsd;
 -- 
-1.8.3.2
+1.8.4.rc3
 
