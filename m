@@ -1,329 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:42573 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756196Ab3JOCI5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Oct 2013 22:08:57 -0400
-Received: by mail-pb0-f46.google.com with SMTP id rq2so8144552pbb.33
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Oct 2013 19:08:57 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+Received: from mx3.wp.pl ([212.77.101.7]:27470 "EHLO mx3.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932270Ab3JOM3p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Oct 2013 08:29:45 -0400
+Received: from ip-94-112-189-223.net.upcbroadband.cz (HELO localhost) (stf_xl@wp.pl@[94.112.189.223])
+          (envelope-sender <stf_xl@wp.pl>)
+          by smtp.wp.pl (WP-SMTPD) with AES128-SHA encrypted SMTP
+          for <linux-wireless@vger.kernel.org>; 15 Oct 2013 14:29:41 +0200
+Date: Tue, 15 Oct 2013 14:31:12 +0200
+From: Stanislaw Gruszka <stf_xl@wp.pl>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	devel@lists.open80211s.org, distro11s@cozybit.com,
-	Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-Subject: [PATCH v5 4/5] {nl,cfg,mac}80211: implement mesh channel switch userspace API
-Date: Mon, 14 Oct 2013 19:08:30 -0700
-Message-Id: <1381802911-3921-5-git-send-email-yeohchunyeow@cozybit.com> (sfid-20131015_040912_112515_C8E2FAFF)
-In-Reply-To: <1381802911-3921-1-git-send-email-yeohchunyeow@cozybit.com>
-References: <1381802911-3921-1-git-send-email-yeohchunyeow@cozybit.com>
+Cc: users@rt2x00.serialmonkey.com
+Subject: [PATCH 3.12] rt2x00: check if device is still available on
+ rt2x00mac_flush()
+Message-ID: <20131015123112.GB6417@localhost.localdomain> (sfid-20131015_142948_735412_D35A566B)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Implement the required procedures for mesh channel switching as defined
-in the IEEE Std 802.11-2012 section 10.9.8.4.3 and also handle the CSA
-and MCSP elements as followed:
- * Add the function for updating the beacon and probe response frames
-   with CSA and MCSP elements during the period of switching to the new
-   channel. Both CSA and MCSP elements must be included in beacon and
-   probe response frames until the intended channel switch time.
- * The ifmsh->csa_settings is set to NULL and the CSA and MCSP elements
-   will then be removed from the beacon or probe response frames once the
-   new channel is switched to.
+Fix random kernel panic with below messages when remove dongle.
 
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+[ 2212.355447] BUG: unable to handle kernel NULL pointer dereference at 0000000000000250
+[ 2212.355527] IP: [<ffffffffa02667f2>] rt2x00usb_kick_tx_entry+0x12/0x160 [rt2x00usb]
+[ 2212.355599] PGD 0
+[ 2212.355626] Oops: 0000 [#1] SMP
+[ 2212.355664] Modules linked in: rt2800usb rt2x00usb rt2800lib crc_ccitt rt2x00lib mac80211 cfg80211 tun arc4 fuse rfcomm bnep snd_hda_codec_realtek snd_hda_intel snd_hda_codec btusb uvcvideo bluetooth snd_hwdep x86_pkg_temp_thermal snd_seq coretemp aesni_intel aes_x86_64 snd_seq_device glue_helper snd_pcm ablk_helper videobuf2_vmalloc sdhci_pci videobuf2_memops videobuf2_core sdhci videodev mmc_core serio_raw snd_page_alloc microcode i2c_i801 snd_timer hid_multitouch thinkpad_acpi lpc_ich mfd_core snd tpm_tis wmi tpm tpm_bios soundcore acpi_cpufreq i915 i2c_algo_bit drm_kms_helper drm i2c_core video [last unloaded: cfg80211]
+[ 2212.356224] CPU: 0 PID: 34 Comm: khubd Not tainted 3.12.0-rc3-wl+ #3
+[ 2212.356268] Hardware name: LENOVO 3444CUU/3444CUU, BIOS G6ET93WW (2.53 ) 02/04/2013
+[ 2212.356319] task: ffff880212f687c0 ti: ffff880212f66000 task.ti: ffff880212f66000
+[ 2212.356392] RIP: 0010:[<ffffffffa02667f2>]  [<ffffffffa02667f2>] rt2x00usb_kick_tx_entry+0x12/0x160 [rt2x00usb]
+[ 2212.356481] RSP: 0018:ffff880212f67750  EFLAGS: 00010202
+[ 2212.356519] RAX: 000000000000000c RBX: 000000000000000c RCX: 0000000000000293
+[ 2212.356568] RDX: ffff8801f4dc219a RSI: 0000000000000000 RDI: 0000000000000240
+[ 2212.356617] RBP: ffff880212f67778 R08: ffffffffa02667e0 R09: 0000000000000002
+[ 2212.356665] R10: 0001f95254ab4b40 R11: ffff880212f675be R12: ffff8801f4dc2150
+[ 2212.356712] R13: 0000000000000000 R14: ffffffffa02667e0 R15: 000000000000000d
+[ 2212.356761] FS:  0000000000000000(0000) GS:ffff88021e200000(0000) knlGS:0000000000000000
+[ 2212.356813] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[ 2212.356852] CR2: 0000000000000250 CR3: 0000000001a0c000 CR4: 00000000001407f0
+[ 2212.356899] Stack:
+[ 2212.356917]  000000000000000c ffff8801f4dc2150 0000000000000000 ffffffffa02667e0
+[ 2212.356980]  000000000000000d ffff880212f677b8 ffffffffa03a31ad ffff8801f4dc219a
+[ 2212.357038]  ffff8801f4dc2150 0000000000000000 ffff8800b93217a0 ffff8801f49bc800
+[ 2212.357099] Call Trace:
+[ 2212.357122]  [<ffffffffa02667e0>] ? rt2x00usb_interrupt_txdone+0x90/0x90 [rt2x00usb]
+[ 2212.357174]  [<ffffffffa03a31ad>] rt2x00queue_for_each_entry+0xed/0x170 [rt2x00lib]
+[ 2212.357244]  [<ffffffffa026701c>] rt2x00usb_kick_queue+0x5c/0x60 [rt2x00usb]
+[ 2212.357314]  [<ffffffffa03a3682>] rt2x00queue_flush_queue+0x62/0xa0 [rt2x00lib]
+[ 2212.357386]  [<ffffffffa03a2930>] rt2x00mac_flush+0x30/0x70 [rt2x00lib]
+[ 2212.357470]  [<ffffffffa04edded>] ieee80211_flush_queues+0xbd/0x140 [mac80211]
+[ 2212.357555]  [<ffffffffa0502e52>] ieee80211_set_disassoc+0x2d2/0x3d0 [mac80211]
+[ 2212.357645]  [<ffffffffa0506da3>] ieee80211_mgd_deauth+0x1d3/0x240 [mac80211]
+[ 2212.357718]  [<ffffffff8108b17c>] ? try_to_wake_up+0xec/0x290
+[ 2212.357788]  [<ffffffffa04dbd18>] ieee80211_deauth+0x18/0x20 [mac80211]
+[ 2212.357872]  [<ffffffffa0418ddc>] cfg80211_mlme_deauth+0x9c/0x140 [cfg80211]
+[ 2212.357913]  [<ffffffffa041907c>] cfg80211_mlme_down+0x5c/0x60 [cfg80211]
+[ 2212.357962]  [<ffffffffa041cd18>] cfg80211_disconnect+0x188/0x1a0 [cfg80211]
+[ 2212.358014]  [<ffffffffa04013bc>] ? __cfg80211_stop_sched_scan+0x1c/0x130 [cfg80211]
+[ 2212.358067]  [<ffffffffa03f8954>] cfg80211_leave+0xc4/0xe0 [cfg80211]
+[ 2212.358124]  [<ffffffffa03f8d1b>] cfg80211_netdev_notifier_call+0x3ab/0x5e0 [cfg80211]
+[ 2212.358177]  [<ffffffff815140f8>] ? inetdev_event+0x38/0x510
+[ 2212.358217]  [<ffffffff81085a94>] ? __wake_up+0x44/0x50
+[ 2212.358254]  [<ffffffff8155995c>] notifier_call_chain+0x4c/0x70
+[ 2212.358293]  [<ffffffff81081156>] raw_notifier_call_chain+0x16/0x20
+[ 2212.358361]  [<ffffffff814b6dd5>] call_netdevice_notifiers_info+0x35/0x60
+[ 2212.358429]  [<ffffffff814b6ec9>] __dev_close_many+0x49/0xd0
+[ 2212.358487]  [<ffffffff814b7028>] dev_close_many+0x88/0x100
+[ 2212.358546]  [<ffffffff814b8150>] rollback_registered_many+0xb0/0x220
+[ 2212.358612]  [<ffffffff814b8319>] unregister_netdevice_many+0x19/0x60
+[ 2212.358694]  [<ffffffffa04d8eb2>] ieee80211_remove_interfaces+0x112/0x190 [mac80211]
+[ 2212.358791]  [<ffffffffa04c585f>] ieee80211_unregister_hw+0x4f/0x100 [mac80211]
+[ 2212.361994]  [<ffffffffa03a1221>] rt2x00lib_remove_dev+0x161/0x1a0 [rt2x00lib]
+[ 2212.365240]  [<ffffffffa0266e2e>] rt2x00usb_disconnect+0x2e/0x70 [rt2x00usb]
+[ 2212.368470]  [<ffffffff81419ce4>] usb_unbind_interface+0x64/0x1c0
+[ 2212.371734]  [<ffffffff813b446f>] __device_release_driver+0x7f/0xf0
+[ 2212.374999]  [<ffffffff813b4503>] device_release_driver+0x23/0x30
+[ 2212.378131]  [<ffffffff813b3c98>] bus_remove_device+0x108/0x180
+[ 2212.381358]  [<ffffffff813b0565>] device_del+0x135/0x1d0
+[ 2212.384454]  [<ffffffff81417760>] usb_disable_device+0xb0/0x270
+[ 2212.387451]  [<ffffffff8140d9cd>] usb_disconnect+0xad/0x1d0
+[ 2212.390294]  [<ffffffff8140f6cd>] hub_thread+0x63d/0x1660
+[ 2212.393034]  [<ffffffff8107c860>] ? wake_up_atomic_t+0x30/0x30
+[ 2212.395728]  [<ffffffff8140f090>] ? hub_port_debounce+0x130/0x130
+[ 2212.398412]  [<ffffffff8107baa0>] kthread+0xc0/0xd0
+[ 2212.401058]  [<ffffffff8107b9e0>] ? insert_kthread_work+0x40/0x40
+[ 2212.403639]  [<ffffffff8155de3c>] ret_from_fork+0x7c/0xb0
+[ 2212.406193]  [<ffffffff8107b9e0>] ? insert_kthread_work+0x40/0x40
+[ 2212.408732] Code: 24 58 08 00 00 bf 80 00 00 00 e8 3a c3 e0 e0 5b 41 5c 5d c3 0f 1f 44 00 00 0f 1f 44 00 00 55 48 89 e5 41 57 41 56 41 55 41 54 53 <48> 8b 47 10 48 89 fb 4c 8b 6f 28 4c 8b 20 49 8b 04 24 4c 8b 30
+[ 2212.414671] RIP  [<ffffffffa02667f2>] rt2x00usb_kick_tx_entry+0x12/0x160 [rt2x00usb]
+[ 2212.417646]  RSP <ffff880212f67750>
+[ 2212.420547] CR2: 0000000000000250
+[ 2212.441024] ---[ end trace 5442918f33832bce ]---
+
+Cc: stable@vger.kernel.org
+Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
 ---
-v2: fix typo mistake, commit message and return value (Johannes Berg)
-v3: use RCU to protect csa_settings for beaconing (Johannes Berg)
-v4: fix broken kfree with kree_rcu (Johannes Berg)
-v5: introduce wrapper struct for rcu purpose and fix sparse warning 
-    on symbol 'ifmsh' warning(Johannes Berg)
+ drivers/net/wireless/rt2x00/rt2x00mac.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
- net/mac80211/cfg.c         |    7 +++-
- net/mac80211/ieee80211_i.h |   11 ++++++
- net/mac80211/mesh.c        |   93 ++++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/rx.c          |    5 ++-
- net/mac80211/tx.c          |   16 ++++++++
- net/wireless/nl80211.c     |    3 +-
- 6 files changed, 132 insertions(+), 3 deletions(-)
-
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 438c689..a0b41d7 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2887,6 +2887,11 @@ void ieee80211_csa_finalize_work(struct work_struct *work)
- 	case NL80211_IFTYPE_ADHOC:
- 		ieee80211_ibss_finish_csa(sdata);
- 		break;
-+	case NL80211_IFTYPE_MESH_POINT:
-+		err = ieee80211_mesh_finish_csa(sdata);
-+		if (err < 0)
-+			return;
-+		break;
- 	default:
- 		WARN_ON(1);
- 		return;
-@@ -3005,7 +3010,7 @@ static int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 		    params->chandef.chan->band)
- 			return -EINVAL;
+diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+index 51f17cf..7c15785 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+@@ -754,6 +754,9 @@ void rt2x00mac_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
+ 	struct rt2x00_dev *rt2x00dev = hw->priv;
+ 	struct data_queue *queue;
  
--		err = ieee80211_send_action_csa(sdata, params);
-+		err = ieee80211_mesh_csa_beacon(sdata, params, true);
- 		if (err < 0)
- 			return err;
- 		break;
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 3a6d2e7..2c0b477 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -538,6 +538,11 @@ struct ieee80211_mesh_sync_ops {
- 	/* add other framework functions here */
- };
- 
-+struct mesh_csa_settings {
-+	struct rcu_head rcu_head;
-+	struct cfg80211_csa_settings settings;
-+};
++	if (!test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
++		return;
 +
- struct ieee80211_if_mesh {
- 	struct timer_list housekeeping_timer;
- 	struct timer_list mesh_path_timer;
-@@ -599,7 +604,9 @@ struct ieee80211_if_mesh {
- 	int ps_peers_deep_sleep;
- 	struct ps_data ps;
- 	/* Channel Switching Support */
-+	struct mesh_csa_settings __rcu *csa;
- 	bool chsw_init;
-+	u8 chsw_ttl;
- 	u16 pre_value;
- };
- 
-@@ -1351,6 +1358,10 @@ void ieee80211_ibss_stop(struct ieee80211_sub_if_data *sdata);
- void ieee80211_mesh_work(struct ieee80211_sub_if_data *sdata);
- void ieee80211_mesh_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
- 				   struct sk_buff *skb);
-+int ieee80211_mesh_csa_beacon(struct ieee80211_sub_if_data *sdata,
-+			      struct cfg80211_csa_settings *csa_settings,
-+			      bool csa_action);
-+int ieee80211_mesh_finish_csa(struct ieee80211_sub_if_data *sdata);
- 
- /* scan/BSS handling */
- void ieee80211_scan_work(struct work_struct *work);
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 0a3ccaa..50b1863 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -12,6 +12,7 @@
- #include <asm/unaligned.h>
- #include "ieee80211_i.h"
- #include "mesh.h"
-+#include "driver-ops.h"
- 
- static int mesh_allocated;
- static struct kmem_cache *rm_cache;
-@@ -610,6 +611,7 @@ ieee80211_mesh_build_beacon(struct ieee80211_if_mesh *ifmsh)
- 	struct sk_buff *skb;
- 	struct ieee80211_mgmt *mgmt;
- 	struct ieee80211_chanctx_conf *chanctx_conf;
-+	struct mesh_csa_settings *csa;
- 	enum ieee80211_band band;
- 	u8 *pos;
- 	struct ieee80211_sub_if_data *sdata;
-@@ -624,6 +626,10 @@ ieee80211_mesh_build_beacon(struct ieee80211_if_mesh *ifmsh)
- 
- 	head_len = hdr_len +
- 		   2 + /* NULL SSID */
-+		   /* Channel Switch Announcement */
-+		   2 + sizeof(struct ieee80211_channel_sw_ie) +
-+		   /* Mesh Channel Swith Parameters */
-+		   2 + sizeof(struct ieee80211_mesh_chansw_params_ie) +
- 		   2 + 8 + /* supported rates */
- 		   2 + 3; /* DS params */
- 	tail_len = 2 + (IEEE80211_MAX_SUPP_RATES - 8) +
-@@ -665,6 +671,38 @@ ieee80211_mesh_build_beacon(struct ieee80211_if_mesh *ifmsh)
- 	*pos++ = WLAN_EID_SSID;
- 	*pos++ = 0x0;
- 
-+	rcu_read_lock();
-+	csa = rcu_dereference(ifmsh->csa);
-+	if (csa) {
-+		__le16 pre_value;
-+
-+		pos = skb_put(skb, 13);
-+		memset(pos, 0, 13);
-+		*pos++ = WLAN_EID_CHANNEL_SWITCH;
-+		*pos++ = 3;
-+		*pos++ = 0x0;
-+		*pos++ = ieee80211_frequency_to_channel(
-+				csa->settings.chandef.chan->center_freq);
-+		sdata->csa_counter_offset_beacon = hdr_len + 6;
-+		*pos++ = csa->settings.count;
-+		*pos++ = WLAN_EID_CHAN_SWITCH_PARAM;
-+		*pos++ = 6;
-+		if (ifmsh->chsw_init) {
-+			*pos++ = ifmsh->mshcfg.dot11MeshTTL;
-+			*pos |= WLAN_EID_CHAN_SWITCH_PARAM_INITIATOR;
-+		} else {
-+			*pos++ = ifmsh->chsw_ttl;
-+		}
-+		*pos++ |= csa->settings.block_tx ?
-+			  WLAN_EID_CHAN_SWITCH_PARAM_TX_RESTRICT : 0x00;
-+		put_unaligned_le16(WLAN_REASON_MESH_CHAN, pos);
-+		pos += 2;
-+		pre_value = cpu_to_le16(ifmsh->pre_value);
-+		memcpy(pos, &pre_value, 2);
-+		pos += 2;
-+	}
-+	rcu_read_unlock();
-+
- 	if (ieee80211_add_srates_ie(sdata, skb, true, band) ||
- 	    mesh_add_ds_params_ie(sdata, skb))
- 		goto out_free;
-@@ -920,6 +958,60 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
- 			stype, mgmt, &elems, rx_status);
+ 	tx_queue_for_each(rt2x00dev, queue)
+ 		rt2x00queue_flush_queue(queue, drop);
  }
- 
-+int ieee80211_mesh_finish_csa(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
-+	struct mesh_csa_settings *tmp_csa_settings;
-+	int ret = 0;
-+
-+	/* Remove the CSA and MCSP elements from the beacon */
-+	tmp_csa_settings = rcu_dereference(ifmsh->csa);
-+	rcu_assign_pointer(ifmsh->csa, NULL);
-+	kfree_rcu(tmp_csa_settings, rcu_head);
-+	ret = ieee80211_mesh_rebuild_beacon(sdata);
-+	if (ret)
-+		return -EINVAL;
-+
-+	/* Reset the TTL value and Initiator flag */
-+	ifmsh->chsw_init = false;
-+	ifmsh->chsw_ttl = 0;
-+
-+	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
-+
-+	mcsa_dbg(sdata, "complete switching to center freq %d MHz",
-+		 sdata->vif.bss_conf.chandef.chan->center_freq);
-+	return 0;
-+}
-+
-+int ieee80211_mesh_csa_beacon(struct ieee80211_sub_if_data *sdata,
-+			      struct cfg80211_csa_settings *csa_settings,
-+			      bool csa_action)
-+{
-+	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
-+	struct mesh_csa_settings *tmp_csa_settings;
-+	int ret = 0;
-+
-+	if (csa_action)
-+		ieee80211_send_action_csa(sdata, csa_settings);
-+
-+	tmp_csa_settings = kmalloc(sizeof(*tmp_csa_settings),
-+				   GFP_ATOMIC);
-+	if (!tmp_csa_settings)
-+		return -ENOMEM;
-+
-+	memcpy(&tmp_csa_settings->settings, csa_settings,
-+	       sizeof(struct cfg80211_csa_settings));
-+
-+	rcu_assign_pointer(ifmsh->csa, tmp_csa_settings);
-+
-+	ret = ieee80211_mesh_rebuild_beacon(sdata);
-+	if (ret)
-+		return -EINVAL;
-+
-+	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
-+	return 0;
-+}
-+
- static int mesh_fwd_csa_frame(struct ieee80211_sub_if_data *sdata,
- 			       struct ieee80211_mgmt *mgmt, size_t len)
- {
-@@ -942,6 +1034,7 @@ static int mesh_fwd_csa_frame(struct ieee80211_sub_if_data *sdata,
- 	offset_ttl = (len < 42) ? 7 : 10;
- 	*(pos + offset_ttl) -= 1;
- 	*(pos + offset_ttl + 1) &= ~WLAN_EID_CHAN_SWITCH_PARAM_INITIATOR;
-+	sdata->u.mesh.chsw_ttl = *(pos + offset_ttl);
- 
- 	memcpy(mgmt_fwd, mgmt, len);
- 	eth_broadcast_addr(mgmt_fwd->da);
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 8e908e1..0ba1fad 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2592,13 +2592,16 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
- 				break;
- 
- 			if (sdata->vif.type != NL80211_IFTYPE_STATION &&
--			    sdata->vif.type != NL80211_IFTYPE_ADHOC)
-+			    sdata->vif.type != NL80211_IFTYPE_ADHOC &&
-+			    sdata->vif.type != NL80211_IFTYPE_MESH_POINT)
- 				break;
- 
- 			if (sdata->vif.type == NL80211_IFTYPE_STATION)
- 				bssid = sdata->u.mgd.bssid;
- 			else if (sdata->vif.type == NL80211_IFTYPE_ADHOC)
- 				bssid = sdata->u.ibss.bssid;
-+			else if (sdata->vif.type == NL80211_IFTYPE_MESH_POINT)
-+				bssid = mgmt->sa;
- 			else
- 				break;
- 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 4fcbf63..80b9a57 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2369,6 +2369,10 @@ static void ieee80211_update_csa(struct ieee80211_sub_if_data *sdata,
- 		beacon_data = beacon->head;
- 		beacon_data_len = beacon->head_len;
- 		break;
-+	case NL80211_IFTYPE_MESH_POINT:
-+		beacon_data = beacon->head;
-+		beacon_data_len = beacon->head_len;
-+		break;
- 	default:
- 		return;
- 	}
-@@ -2425,6 +2429,15 @@ bool ieee80211_csa_is_complete(struct ieee80211_vif *vif)
- 
- 		beacon_data = beacon->head;
- 		beacon_data_len = beacon->head_len;
-+	} else if (vif->type == NL80211_IFTYPE_MESH_POINT) {
-+		struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
-+
-+		beacon = rcu_dereference(ifmsh->beacon);
-+		if (!beacon)
-+			goto out;
-+
-+		beacon_data = beacon->head;
-+		beacon_data_len = beacon->head_len;
- 	} else {
- 		WARN_ON(1);
- 		goto out;
-@@ -2530,6 +2543,9 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
- 		if (!bcn)
- 			goto out;
- 
-+		if (sdata->vif.csa_active)
-+			ieee80211_update_csa(sdata, bcn);
-+
- 		if (ifmsh->sync_ops)
- 			ifmsh->sync_ops->adjust_tbtt(
- 						sdata);
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 7bb5aca..be844d4 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -10760,7 +10760,8 @@ void cfg80211_ch_switch_notify(struct net_device *dev,
- 
- 	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_AP &&
- 		    wdev->iftype != NL80211_IFTYPE_P2P_GO &&
--		    wdev->iftype != NL80211_IFTYPE_ADHOC))
-+		    wdev->iftype != NL80211_IFTYPE_ADHOC &&
-+		    wdev->iftype != NL80211_IFTYPE_MESH_POINT))
- 		goto out;
- 
- 	wdev->channel = chandef->chan;
 -- 
-1.7.9.5
+1.7.4.4
 
