@@ -1,89 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f46.google.com ([74.125.82.46]:59335 "EHLO
-	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933687Ab3JOUlp (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:24985 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759579Ab3JOSz6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Oct 2013 16:41:45 -0400
-Received: by mail-wg0-f46.google.com with SMTP id m15so2778009wgh.1
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Oct 2013 13:41:44 -0700 (PDT)
-Message-ID: <1381869698.5100.40.camel@canaries32-MCP7A> (sfid-20131015_224151_440628_5303AE61)
-Subject: [PATCH 1/2] staging: vt6656: rxtx.c s_vFillTxKey replace u8 *pbyBuf.
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 15 Oct 2013 21:41:38 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 15 Oct 2013 14:55:58 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/7] ath10k: fixes 2013-10-15
+References: <1381858196-17000-1-git-send-email-michal.kazior@tieto.com>
+Date: Tue, 15 Oct 2013 21:55:53 +0300
+In-Reply-To: <1381858196-17000-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Tue, 15 Oct 2013 10:29:49 -0700")
+Message-ID: <8761sybbye.fsf@kamboji.qca.qualcomm.com> (sfid-20131015_205601_919271_D580E81A)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replace with struct vnt_tx_fifo_head and attach pbyBuf to
-adwTxKey[0]
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/rxtx.c | 19 +++++++++++--------
- 1 file changed, 11 insertions(+), 8 deletions(-)
+> This is a bunch of fixes I've had queued up for
+> some time now. I was reluctant to send them
+> without some additional checks and because some of
+> the fixes are not ideal. At least we can get a
+> discussion going if anything raises any serious
+> concern.
+>
+>
+> Michal Kazior (7):
+>   ath10k: prevent starting monitor without a vdev
+>   ath10k: add sanity checks for monitor management
+>   ath10k: fix endianess in prints
+>   ath10k: fix NSS reporting in RX
+>   ath10k: fix NULL deref upon early FW crash
+>   ath10k: fix device initialization routine
+>   ath10k: fix FW crashes on heavy TX on 10.1.389 AP FW
 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 0c1c46f..35a3ddb 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -107,8 +107,9 @@ static void s_vGenerateMACHeader(struct vnt_private *pDevice,
- 	u8 *pbyBufferAddr, u16 wDuration, struct ethhdr *psEthHeader,
- 	int bNeedEncrypt, u16 wFragType, u32 uDMAIdx, u32 uFragIdx);
- 
--static void s_vFillTxKey(struct vnt_private *pDevice, u8 *pbyBuf,
--	u8 *pbyIVHead, PSKeyItem pTransmitKey, u8 *pbyHdrBuf, u16 wPayloadLen,
-+static void s_vFillTxKey(struct vnt_private *pDevice,
-+	struct vnt_tx_fifo_head *fifo_head, u8 *pbyIVHead,
-+	PSKeyItem pTransmitKey, u8 *pbyHdrBuf, u16 wPayloadLen,
- 	struct vnt_mic_hdr *mic_hdr);
- 
- static void s_vSWencryption(struct vnt_private *pDevice,
-@@ -179,10 +180,12 @@ static void s_vSaveTxPktInfo(struct vnt_private *pDevice, u8 byPktNum,
- 	   ETH_ALEN);
- }
- 
--static void s_vFillTxKey(struct vnt_private *pDevice, u8 *pbyBuf,
--	u8 *pbyIVHead, PSKeyItem pTransmitKey, u8 *pbyHdrBuf,
--	u16 wPayloadLen, struct vnt_mic_hdr *mic_hdr)
-+static void s_vFillTxKey(struct vnt_private *pDevice,
-+	struct vnt_tx_fifo_head *fifo_head, u8 *pbyIVHead,
-+	PSKeyItem pTransmitKey, u8 *pbyHdrBuf, u16 wPayloadLen,
-+	struct vnt_mic_hdr *mic_hdr)
- {
-+	u8 *pbyBuf = (u8 *)&fifo_head->adwTxKey[0];
- 	u32 *pdwIV = (u32 *)pbyIVHead;
- 	u32 *pdwExtIV = (u32 *)((u8 *)pbyIVHead + 4);
- 	struct ieee80211_hdr *pMACHeader = (struct ieee80211_hdr *)pbyHdrBuf;
-@@ -1171,7 +1174,7 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
- 
-     if (bNeedEncryption == true) {
-         //Fill TXKEY
--        s_vFillTxKey(pDevice, (u8 *)(pTxBufHead->adwTxKey), pbyIVHead, pTransmitKey,
-+	s_vFillTxKey(pDevice, pTxBufHead, pbyIVHead, pTransmitKey,
- 		pbyMacHdr, (u16)cbFrameBodySize, pMICHDR);
- 
-         if (pDevice->bEnableHostWEP) {
-@@ -1591,7 +1594,7 @@ CMD_STATUS csMgmt_xmit(struct vnt_private *pDevice,
-             }
-         } while(false);
-         //Fill TXKEY
--        s_vFillTxKey(pDevice, (u8 *)(pTxBufHead->adwTxKey), pbyIVHead, pTransmitKey,
-+	s_vFillTxKey(pDevice, pTxBufHead, pbyIVHead, pTransmitKey,
-                      (u8 *)pMACHeader, (u16)cbFrameBodySize, NULL);
- 
-         memcpy(pMACHeader, pPacket->p80211Header, cbMacHdLen);
-@@ -2034,7 +2037,7 @@ void vDMA0_tx_80211(struct vnt_private *pDevice, struct sk_buff *skb)
- 
-         }
- 
--        s_vFillTxKey(pDevice, (u8 *)(pTxBufHead->adwTxKey), pbyIVHead, pTransmitKey,
-+	s_vFillTxKey(pDevice, pTxBufHead, pbyIVHead, pTransmitKey,
- 		pbyMacHdr, (u16)cbFrameBodySize, pMICHDR);
- 
-         if (pDevice->bEnableHostWEP) {
+I get few long line warnings:
+
+drivers/net/wireless/ath/ath10k/pci.c:1842: WARNING: line over 80 characters
+drivers/net/wireless/ath/ath10k/pci.c:1844: WARNING: line over 80 characters
+drivers/net/wireless/ath/ath10k/pci.c:1847: WARNING: line over 80 characters
+drivers/net/wireless/ath/ath10k/pci.c:1848: WARNING: line over 80 characters
+drivers/net/wireless/ath/ath10k/pci.c:1856: WARNING: line over 80 characters
+drivers/net/wireless/ath/ath10k/pci.c:1875: WARNING: line over 80 characters
+drivers/net/wireless/ath/ath10k/pci.c:1877: WARNING: line over 80 characters
+drivers/net/wireless/ath/ath10k/pci.c:1883: WARNING: line over 80 characters
+drivers/net/wireless/ath/ath10k/mac.c:2284: WARNING: line over 80 characters
+
 -- 
-1.8.3.2
-
+Kalle Valo
