@@ -1,85 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cassiel.sirena.org.uk ([80.68.93.111]:47024 "EHLO
-	cassiel.sirena.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756824Ab3J2BeO (ORCPT
+Received: from mail-lb0-f173.google.com ([209.85.217.173]:37316 "EHLO
+	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757504Ab3JOTHJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Oct 2013 21:34:14 -0400
-Date: Mon, 28 Oct 2013 18:33:18 -0700
-From: Mark Brown <broonie@kernel.org>
-To: Grazvydas Ignotas <notasas@gmail.com>,
-	Alexander Shiyan <shc_work@mail.ru>,
-	Luciano Coelho <luca@coelho.fi>,
-	Mark Rutland <mark.rutland@arm.com>,
-	devicetree@vger.kernel.org, Russell King <linux@arm.linux.org.uk>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Tony Lindgren <tony@atomide.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-doc@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Rob Herring <rob.herring@calxeda.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Sachin Kamat <sachin.kamat@linaro.org>,
-	Bill Pemberton <wfp5p@virginia.edu>,
-	Felipe Balbi <balbi@ti.com>, Rob Landley <rob@landley.net>,
-	netdev@vger.kernel.org,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Message-ID: <20131029013318.GC16686@sirena.org.uk> (sfid-20131029_023437_120934_84361B7C)
-References: <1382890469-25286-1-git-send-email-sre@debian.org>
- <1382890469-25286-3-git-send-email-sre@debian.org>
- <1382891056.102746625@f315.i.mail.ru>
- <20131027201218.GA4414@earth.universe>
- <CANOLnONKcC1i19ypb4rh2Rff3WsVhhuUhNvZvYwDV2-ZNtjVxQ@mail.gmail.com>
- <20131028192354.GA18208@sirena.org.uk>
- <20131028232624.GA950@earth.universe>
+	Tue, 15 Oct 2013 15:07:09 -0400
+Received: by mail-lb0-f173.google.com with SMTP id o14so7193740lbi.18
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Oct 2013 12:07:08 -0700 (PDT)
+Message-ID: <525D921C.2030709@cogentembedded.com> (sfid-20131015_210741_911733_2F3AF04C)
+Date: Tue, 15 Oct 2013 23:06:04 +0400
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="WfZ7S8PLGjBY9Voh"
-In-Reply-To: <20131028232624.GA950@earth.universe>
-Subject: Re: [PATCH 2/4] wl1251: move power GPIO handling into the driver
+To: Kefeng Wang <wangkefeng.wang@huawei.com>
+CC: linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Pablo Neira Ayuso <pablo@netfilter.org>,
+	Stephen Hemminger <stephen@networkplumber.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Francois Romieu <romieu@fr.zoreil.com>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	Chas Williams <chas@cmf.nrl.navy.mil>,
+	Marc Kleine-Budde <mkl@pengutronix.de>,
+	Samuel Ortiz <samuel@sortiz.org>,
+	Paul Mackerras <paulus@samba.org>,
+	Oliver Neukum <oneukum@suse.de>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	"Michael S. Tsirkin" <mst@redhat.com>, netfilter@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	guohanjun@huawei.com
+Subject: Re: [PATCH 14/18] net: usb: use wrapper functions of net_ratelimit()
+ to simplify code
+References: <1381837514-50660-1-git-send-email-wangkefeng.wang@huawei.com> <1381837514-50660-15-git-send-email-wangkefeng.wang@huawei.com>
+In-Reply-To: <1381837514-50660-15-git-send-email-wangkefeng.wang@huawei.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello.
 
---WfZ7S8PLGjBY9Voh
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+On 10/15/2013 03:45 PM, Kefeng Wang wrote:
 
-On Tue, Oct 29, 2013 at 12:26:26AM +0100, Sebastian Reichel wrote:
+> net_ratelimited_function() is called to simplify code.
 
-> 1. The pin is named PMEN in the Nokia N900 schematics
-> 2. PMEN is described as "Power management enable - system shutdown"
->    in a crippled datasheet of the wl1253, which I found in the internet.
+> Signed-off-by: Kefeng Wang <wangkefeng.wang@huawei.com>
+> ---
+>   drivers/net/usb/usbnet.c | 4 ++--
+>   1 file changed, 2 insertions(+), 2 deletions(-)
 
-> I don't think this is supposed to be handled by the regulator API.
+> diff --git a/drivers/net/usb/usbnet.c b/drivers/net/usb/usbnet.c
+> index bf94e10..edf81de 100644
+> --- a/drivers/net/usb/usbnet.c
+> +++ b/drivers/net/usb/usbnet.c
+> @@ -450,8 +450,8 @@ void usbnet_defer_kevent (struct usbnet *dev, int work)
+>   {
+>   	set_bit (work, &dev->flags);
+>   	if (!schedule_work (&dev->kevent)) {
+> -		if (net_ratelimit())
+> -			netdev_err(dev->net, "kevent %d may have been dropped\n", work);
+> +		net_ratelimited_function(netdev_err, dev->net,
+> +			"kevent %d may have been dropped\n", work);
 
-I agree, this sounds like a GPIO that the driver should be understanding
-directly to me.
+    The continuation line should start under 'netdev_err'. Same about the 
+other patches where you didn't change the indentation of the continuation 
+lines though you should have.
 
---WfZ7S8PLGjBY9Voh
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+WBR, Sergei
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIcBAEBAgAGBQJSbxBWAAoJELSic+t+oim9OnIQAILP4+u0yOy43NV8KK9USROC
-7wUy2+YEkaMlbhhXvevCaK7dhqFAmmj9RZPWKcOfZn2IAIQGqkalKfizqgEVvCi7
-CH9VrZ92LlFgp0Nlln4xI17IOzki5pILLGWx2dJZzCnXLCqyH8IYgdXM7sooHSVS
-xLhu9JF6nqx5mRU3TuGBkZddW+JBzPnOwGAuTS+tZdI2RrBLJbLeCjJKpYQnizRP
-ok+PjAQl1gduS8ycLDLhgy0a0vr6uW0ER8jUFC2uFxDn4APusi7Z1VSfg72ugpw5
-/R3Z3Bfaj2uVS8phCbASyQu2k0BsocF2G45LSGrMM/dUvtaR5AGriuqWc24diJur
-/xvzS70IFWkMzwuGTkO67kPQySkMZSwaQ56pzoqE51tV1R2yrBzPo2qWdtzXcrQX
-JEP2L4144SmjlkkDOYVME5ccFSG5kpI7qlssjG6dz52ik9sKOtIKvr19ap0PukYg
-Jm6WFoqNyco3sibEdJI9lfOXSHTemfTVNoLnRsARHoA20RDkxBxAqr+CKVi0axJF
-QkFMyQQg4jyUIFp7m4RVM3t04hrJjw2o5juPh0tqUIYtE1iU0SAxNJ6gCKpTva2N
-TDwdQUBf5rd/ln6NsJYqpCCUe9+kxB6jgCYx8PPqp+C+tfjbCvt1qnFX8pJJ+P1k
-8vCuursNrJWXmYEfx8L4
-=V5WW
------END PGP SIGNATURE-----
-
---WfZ7S8PLGjBY9Voh--
