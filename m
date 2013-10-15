@@ -1,41 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:34361 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754368Ab3JHS2J (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Oct 2013 14:28:09 -0400
-Message-ID: <1381256865.13359.14.camel@jlt4.sipsolutions.net> (sfid-20131008_202814_304347_0F2381C7)
-Subject: Re: [PATCH] mac80211: port CCMP to cryptoapi's CCM driver
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Cc: David Laight <David.Laight@aculab.com>,
-	"<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
-	"<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
-	"<patches@linaro.org>" <patches@linaro.org>,
-	"<linville@tuxdriver.com>" <linville@tuxdriver.com>
-Date: Tue, 08 Oct 2013 20:27:45 +0200
-In-Reply-To: <CAKv+Gu8D_7d=u1PGWuxoLEETHe8uJMby3K98uQWQn7tk=t_t_w@mail.gmail.com> (sfid-20131008_165219_112466_04B623B7)
-References: <1381231915-24232-1-git-send-email-ard.biesheuvel@linaro.org>
-	 <1381233152.13359.10.camel@jlt4.sipsolutions.net>
-	 <AE90C24D6B3A694183C094C60CF0A2F6026B737B@saturn3.aculab.com>
-	 <23D74823-0DE3-4A87-9E89-310F437A328D@linaro.org>
-	 <1381239908.13359.12.camel@jlt4.sipsolutions.net>
-	 <1381239951.13359.13.camel@jlt4.sipsolutions.net>
-	 <CAKv+Gu8D_7d=u1PGWuxoLEETHe8uJMby3K98uQWQn7tk=t_t_w@mail.gmail.com>
-	 (sfid-20131008_165219_112466_04B623B7)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms3.broadcom.com ([216.31.210.19]:3863 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758799Ab3JONpM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Oct 2013 09:45:12 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 01/12] brcmfmac: store address in trace_brcmf_hexdump()
+Date: Tue, 15 Oct 2013 15:44:46 +0200
+Message-ID: <1381844697-24881-2-git-send-email-arend@broadcom.com> (sfid-20131015_154527_443026_892D2E63)
+In-Reply-To: <1381844697-24881-1-git-send-email-arend@broadcom.com>
+References: <1381844697-24881-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-10-08 at 16:52 +0200, Ard Biesheuvel wrote:
+The trace function trace_brcmf_hexdump() stores the length, but
+having the address of the buffer being dumped helps putting it
+in context.
 
-> However, personally I don't think this should be necessary and in fact
-> my patch removes a stack allocation of u8[48] (from
-> ieee80211_crypto_ccmp_decrypt() and from ccmp_encrypt_skb() in wpa.c)
-> so it does even out a bit.
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/tracepoint.h |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-I tend to agree.
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/tracepoint.h b/drivers/net/wireless/brcm80211/brcmfmac/tracepoint.h
+index bc29171..4605a1d 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/tracepoint.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/tracepoint.h
+@@ -78,13 +78,15 @@ TRACE_EVENT(brcmf_hexdump,
+ 	TP_ARGS(data, len),
+ 	TP_STRUCT__entry(
+ 		__field(unsigned long, len)
++		__field(unsigned long, addr)
+ 		__dynamic_array(u8, hdata, len)
+ 	),
+ 	TP_fast_assign(
+ 		__entry->len = len;
++		__entry->addr = (unsigned long)data;
+ 		memcpy(__get_dynamic_array(hdata), data, len);
+ 	),
+-	TP_printk("hexdump [length=%lu]", __entry->len)
++	TP_printk("hexdump [addr=%lx, length=%lu]", __entry->addr, __entry->len)
+ );
+ 
+ TRACE_EVENT(brcmf_bdchdr,
+-- 
+1.7.10.4
 
-johannes
 
