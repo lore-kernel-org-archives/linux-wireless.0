@@ -1,56 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 220-133-188-53.HINET-IP.hinet.net ([220.133.188.53]:60755 "EHLO
-	ns.kevlo.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752364Ab3JUHnh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Oct 2013 03:43:37 -0400
-Date: Mon, 21 Oct 2013 15:38:31 +0800
-From: Kevin Lo <kevlo@kevlo.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: [PATCH] rt2x00: rt2800lib: Update BBP register initialization for
- RT53xx
-Message-ID: <20131021073831.GA87643@ns.kevlo.org> (sfid-20131021_094353_259125_42A23A14)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:60073 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752768Ab3JOAmZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Oct 2013 20:42:25 -0400
+Received: by mail-pa0-f51.google.com with SMTP id kp14so8201991pab.24
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Oct 2013 17:42:25 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 2/6] ath: move common dynamic regulatory domain setting to a helper
+Date: Mon, 14 Oct 2013 17:42:07 -0700
+Message-Id: <1381797731-2454-3-git-send-email-mcgrof@do-not-panic.com> (sfid-20131015_024228_429158_CB199A0F)
+In-Reply-To: <1381797731-2454-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1381797731-2454-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update bbp register initialization for RT53xx chips to match with the
-latest MediaTek/Ralink driver.
+This moves the dynamic regulatory domain selection code into
+a helper.
 
-Based on: NICInitRT5390BbpRegisters()
-From: DPO_RT5572_LinuxSTA_2.6.1.3_20121022/chips/rt5390.c
-
-Signed-off-by: Kevin Lo <kevlo.org>
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
+ drivers/net/wireless/ath/regd.c | 55 +++++++++++++++++++++++++++--------------
+ 1 file changed, 37 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index c5738f1..eae635a 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -5462,15 +5462,14 @@ static void rt2800_init_bbp_53xx(struct rt2x00_dev *rt2x00dev)
+diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
+index 7d077c7..8373650 100644
+--- a/drivers/net/wireless/ath/regd.c
++++ b/drivers/net/wireless/ath/regd.c
+@@ -356,14 +356,48 @@ static u16 ath_regd_find_country_by_name(char *alpha2)
+ 	return -1;
+ }
  
- 	rt2800_bbp_write(rt2x00dev, 68, 0x0b);
- 
--	rt2800_bbp_write(rt2x00dev, 69, 0x12);
-+	rt2800_bbp_write(rt2x00dev, 69, 0x0d);
-+	rt2800_bbp_write(rt2x00dev, 70, 0x06);
- 	rt2800_bbp_write(rt2x00dev, 73, 0x13);
- 	rt2800_bbp_write(rt2x00dev, 75, 0x46);
- 	rt2800_bbp_write(rt2x00dev, 76, 0x28);
- 
- 	rt2800_bbp_write(rt2x00dev, 77, 0x59);
- 
--	rt2800_bbp_write(rt2x00dev, 70, 0x0a);
++static int __ath_reg_dyn_country(struct wiphy *wiphy,
++				 struct ath_regulatory *reg,
++				 struct regulatory_request *request)
++{
++	u16 country_code;
++
++	if (!ath_is_world_regd(reg))
++		return -EINVAL;
++
++	country_code = ath_regd_find_country_by_name(request->alpha2);
++	if (country_code == (u16) -1)
++		return -EINVAL;
++
++	reg->current_rd = COUNTRY_ERD_FLAG;
++	reg->current_rd |= country_code;
++
++	__ath_regd_init(reg);
++
++	ath_reg_apply_world_flags(wiphy, request->initiator, reg);
++
++	return 0;
++}
++
++static void ath_reg_dyn_country(struct wiphy *wiphy,
++				struct ath_regulatory *reg,
++				struct regulatory_request *request)
++{
++	if (__ath_reg_dyn_country(wiphy, reg, request))
++		return;
++
++	printk(KERN_DEBUG "ath: regdomain 0x%0x "
++			  "dynamically updated by %s\n",
++	       reg->current_rd,
++	       reg_initiator_name(request->initiator));
++}
++
+ void ath_reg_notifier_apply(struct wiphy *wiphy,
+ 			    struct regulatory_request *request,
+ 			    struct ath_regulatory *reg)
+ {
+ 	struct ath_common *common = container_of(reg, struct ath_common,
+ 						 regulatory);
+-	u16 country_code;
 -
- 	rt2800_bbp_write(rt2x00dev, 79, 0x13);
- 	rt2800_bbp_write(rt2x00dev, 80, 0x05);
- 	rt2800_bbp_write(rt2x00dev, 81, 0x33);
-@@ -5513,6 +5512,7 @@ static void rt2800_init_bbp_53xx(struct rt2x00_dev *rt2x00dev)
- 	if (rt2x00_rt(rt2x00dev, RT5392)) {
- 		rt2800_bbp_write(rt2x00dev, 134, 0xd0);
- 		rt2800_bbp_write(rt2x00dev, 135, 0xf6);
-+		rt2800_bbp_write(rt2x00dev, 148, 0x84);
- 	}
+ 	/* We always apply this */
+ 	ath_reg_apply_radar_flags(wiphy);
  
- 	rt2800_disable_unused_dac_adc(rt2x00dev);
+@@ -391,22 +425,7 @@ void ath_reg_notifier_apply(struct wiphy *wiphy,
+ 	case NL80211_REGDOM_SET_BY_USER:
+ 		break;
+ 	case NL80211_REGDOM_SET_BY_COUNTRY_IE:
+-		if (!ath_is_world_regd(reg))
+-			break;
+-
+-		country_code = ath_regd_find_country_by_name(request->alpha2);
+-		if (country_code == (u16) -1)
+-			break;
+-
+-		reg->current_rd = COUNTRY_ERD_FLAG;
+-		reg->current_rd |= country_code;
+-
+-		printk(KERN_DEBUG "ath: regdomain 0x%0x updated by CountryIE\n",
+-			reg->current_rd);
+-		__ath_regd_init(reg);
+-
+-		ath_reg_apply_world_flags(wiphy, request->initiator, reg);
+-
++		ath_reg_dyn_country(wiphy, reg, request);
+ 		break;
+ 	}
+ }
+-- 
+1.8.4.rc3
+
