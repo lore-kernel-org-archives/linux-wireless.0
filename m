@@ -1,62 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:18215 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753817Ab3J2QTY convert rfc822-to-8bit (ORCPT
+Received: from szxga01-in.huawei.com ([119.145.14.64]:5453 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932408Ab3JOL6V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Oct 2013 12:19:24 -0400
-From: "Shete, Mihir" <smihir@qti.qualcomm.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"janusz.dziedzic@tieto.com" <janusz.dziedzic@tieto.com>,
-	"Bhattacharyya, Tushnim" <tushnimb@qca.qualcomm.com>
-Subject: RE: [PATCH 2/5] ath: clean up ath_reg_apply_active_scan_flags()
-Date: Tue, 29 Oct 2013 16:19:18 +0000
-Message-ID: <5311DA48427A8F44AF96B64A3AF0074D06DCDF69@aphydexd01a> (sfid-20131029_171927_327703_B5178E61)
-References: <1382375691-25476-1-git-send-email-mcgrof@do-not-panic.com>
- <1382375691-25476-3-git-send-email-mcgrof@do-not-panic.com>
-In-Reply-To: <1382375691-25476-3-git-send-email-mcgrof@do-not-panic.com>
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 15 Oct 2013 07:58:21 -0400
+From: Kefeng Wang <wangkefeng.wang@huawei.com>
+To: <linux-kernel@vger.kernel.org>
+CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Pablo Neira Ayuso <pablo@netfilter.org>,
+	"Stephen Hemminger" <stephen@networkplumber.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Francois Romieu <romieu@fr.zoreil.com>,
+	"Ben Hutchings" <bhutchings@solarflare.com>,
+	Chas Williams <chas@cmf.nrl.navy.mil>,
+	Marc Kleine-Budde <mkl@pengutronix.de>,
+	Samuel Ortiz <samuel@sortiz.org>,
+	Paul Mackerras <paulus@samba.org>,
+	Oliver Neukum <oneukum@suse.de>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	"Boris Ostrovsky" <boris.ostrovsky@oracle.com>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	"Michael S. Tsirkin" <mst@redhat.com>, <netfilter@vger.kernel.org>,
+	<netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	<guohanjun@huawei.com>
+Subject: [PATCH 16/18] net: virtio: use wrapper functions of net_ratelimit() to simplify code
+Date: Tue, 15 Oct 2013 19:45:12 +0800
+Message-ID: <1381837514-50660-17-git-send-email-wangkefeng.wang@huawei.com> (sfid-20131015_140124_178110_3BE0C2CE)
+In-Reply-To: <1381837514-50660-1-git-send-email-wangkefeng.wang@huawei.com>
+References: <1381837514-50660-1-git-send-email-wangkefeng.wang@huawei.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+net_ratelimited_function() is called to simplify code.
+
+Signed-off-by: Kefeng Wang <wangkefeng.wang@huawei.com>
+---
+ drivers/net/virtio_net.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/net/virtio_net.c b/drivers/net/virtio_net.c
+index defec2b..4f63c12 100644
+--- a/drivers/net/virtio_net.c
++++ b/drivers/net/virtio_net.c
+@@ -753,8 +753,7 @@ static netdev_tx_t start_xmit(struct sk_buff *skb, struct net_device *dev)
+ 	/* This should not happen! */
+ 	if (unlikely(err)) {
+ 		dev->stats.tx_fifo_errors++;
+-		if (net_ratelimit())
+-			dev_warn(&dev->dev,
++		net_ratelimited_function(dev_warn, &dev->dev,
+ 				 "Unexpected TXQ (%d) queue failure: %d\n", qnum, err);
+ 		dev->stats.tx_dropped++;
+ 		kfree_skb(skb);
+-- 
+1.8.2.1
 
 
-> -----Original Message-----
-> From: Luis R. Rodriguez [mailto:mcgrof@gmail.com] On Behalf Of Luis R.
-> Rodriguez
-> Sent: Monday, October 21, 2013 10:45 PM
-> To: linville@tuxdriver.com; johannes@sipsolutions.net
-> Cc: linux-wireless@vger.kernel.org; janusz.dziedzic@tieto.com; Shete, Mihir;
-> Bhattacharyya, Tushnim; Luis R. Rodriguez
-> Subject: [PATCH 2/5] ath: clean up ath_reg_apply_active_scan_flags()
-> 
-> The routine ath_reg_apply_active_scan_flags() can be a bit hard to read, this
-> cleans it up by adding helpers for the two cases of clearing IR flags or adding
-> them. This approach also makes no assumptions on the index of channels 12
-> and 13 so it should be portable accross different drivers.
-> 
-> Cc: smihir@qti.qualcomm.com
-> Cc: tushnimb@qca.qualcomm.com
-> Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
-> ---
->  drivers/net/wireless/ath/regd.c | 101 +++++++++++++++++++++++++-------
-> --------
->  1 file changed, 63 insertions(+), 38 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/regd.c
-> b/drivers/net/wireless/ath/regd.c index 1b4a532..48e2368 100644
-> --- a/drivers/net/wireless/ath/regd.c
-> +++ b/drivers/net/wireless/ath/regd.c
-> @@ -177,6 +177,47 @@ static bool ath_is_radar_freq(u16 center_freq)
->  	return (center_freq >= 5260 && center_freq <= 5700);  }
-> 
-> +static void ath_force_clear_no_ir_chan(struct wiphy *wiphy,
-> +				       struct ieee80211_channel *ch) {
-> +	const struct ieee80211_reg_rule *reg_rule;
-> +
-> +	reg_rule = freq_reg_info(wiphy, ch->center_freq);
-
-Do we not require to provide the frequency in KHZ here?
