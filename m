@@ -1,28 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:39218 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752707Ab3JWPB7 (ORCPT
+Received: from mail-pb0-f54.google.com ([209.85.160.54]:50685 "EHLO
+	mail-pb0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932555Ab3JORc0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Oct 2013 11:01:59 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21095.58324.375248.315193@gargle.gargle.HOWL> (sfid-20131023_170224_775492_4149D9A9)
-Date: Wed, 23 Oct 2013 20:27:24 +0530
-To: "voncken" <cedric.voncken@acksys.fr>
-Cc: "'John Linville'" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH] ath9k: Identify Killer Wireless cards
-In-Reply-To: <014d01cecff7$ce744080$6b5cc180$@acksys.fr>
-References: <1382519771-11170-1-git-send-email-sujith@msujith.org>
-	<014d01cecff7$ce744080$6b5cc180$@acksys.fr>
+	Tue, 15 Oct 2013 13:32:26 -0400
+Received: by mail-pb0-f54.google.com with SMTP id ro12so9098214pbb.41
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Oct 2013 10:32:26 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 0/7] ath10k: fixes 2013-10-15
+Date: Tue, 15 Oct 2013 10:29:49 -0700
+Message-Id: <1381858196-17000-1-git-send-email-michal.kazior@tieto.com> (sfid-20131015_193230_191539_23A89085)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-voncken wrote:
-> 	What is a PCI killer ?
+Hi,
 
-http://www.killergaming.com/solutions/Wireless
-http://www.qca.qualcomm.com/networking/feature.php?feature=32
+This is a bunch of fixes I've had queued up for
+some time now. I was reluctant to send them
+without some additional checks and because some of
+the fixes are not ideal. At least we can get a
+discussion going if anything raises any serious
+concern.
 
-Sujith
+
+Michal Kazior (7):
+  ath10k: prevent starting monitor without a vdev
+  ath10k: add sanity checks for monitor management
+  ath10k: fix endianess in prints
+  ath10k: fix NSS reporting in RX
+  ath10k: fix NULL deref upon early FW crash
+  ath10k: fix device initialization routine
+  ath10k: fix FW crashes on heavy TX on 10.1.389 AP FW
+
+ drivers/net/wireless/ath/ath10k/ce.c     |  11 +++
+ drivers/net/wireless/ath/ath10k/core.c   |   3 +-
+ drivers/net/wireless/ath/ath10k/htt_tx.c |  11 +--
+ drivers/net/wireless/ath/ath10k/hw.h     |   7 ++
+ drivers/net/wireless/ath/ath10k/mac.c    |  24 +++++-
+ drivers/net/wireless/ath/ath10k/pci.c    | 130 +++++++++++++++++++------------
+ drivers/net/wireless/ath/ath10k/txrx.c   |   2 +-
+ drivers/net/wireless/ath/ath10k/wmi.c    |  16 ++--
+ 8 files changed, 134 insertions(+), 70 deletions(-)
+
+-- 
+1.8.4.rc3
+
