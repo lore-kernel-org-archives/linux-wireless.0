@@ -1,46 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:58854 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756104Ab3JNODH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Oct 2013 10:03:07 -0400
-Message-ID: <1381759370.13092.11.camel@jlt4.sipsolutions.net> (sfid-20131014_160325_414695_62B46F91)
-Subject: Re: [PATCH] cfg80211: fix channel to frequency mapping in 5.9GHz
- range
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dennis H Jensen <dennis.h.jensen@siemens.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Date: Mon, 14 Oct 2013 16:02:50 +0200
-In-Reply-To: <1381752976.3711.14.camel@djensen-laptop>
-References: <1381492780-3068-1-git-send-email-dennis.h.jensen@siemens.com>
-	 <1381499778.14293.21.camel@jlt4.sipsolutions.net>
-	 <1381506302.3711.10.camel@djensen-laptop>
-	 <1381752176.13092.10.camel@jlt4.sipsolutions.net>
-	 <1381752976.3711.14.camel@djensen-laptop>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms1.broadcom.com ([216.31.210.17]:4382 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759254Ab3JONpN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Oct 2013 09:45:13 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 09/12] brcmfmac: remove stale code from
+ brcmf_sdcard_recv_chain()
+Date: Tue, 15 Oct 2013 15:44:54 +0200
+Message-ID: <1381844697-24881-10-git-send-email-arend@broadcom.com> (sfid-20131015_154540_949417_F7255239)
+In-Reply-To: <1381844697-24881-1-git-send-email-arend@broadcom.com>
+References: <1381844697-24881-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-10-14 at 14:16 +0200, Dennis H Jensen wrote:
-> On Mon, 2013-10-14 at 14:02 +0200, Johannes Berg wrote:
-> > On Fri, 2013-10-11 at 17:45 +0200, Dennis H Jensen wrote:
-> > 
-> > > > > +		else if (chan > 196)
-> > > > > +			return 5000 + (chan - 15) * 5;
-> > > > 
-> > > > Where does the +/- 15 come from? I can't find any evidence for this in
-> > > > Annex E.
-> > > 
-> > > I didn't double check Annex E. I just wanted to recover the lost
-> > > frequencies that the 15 channels (182 - 196), map into 4.9 GHz.
-> > 
-> > "Recover"? When did they work? What broke them?
-> 
-> The commit 59eb21a6504731fc16db4cf9463065dd61093e08 moved those channels
-> to 4.9 GHz but left a hole in the 5.9 Ghz range.
+The function brcmf_sdcard_recv_chain() has been reworked with
+commit "brcmfmac: add sdio sg list support", but the incr_fix
+variable is only assigned but not used so removing it now.
 
-But there was no +/- 15 before, so what gives?
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |    2 --
+ 1 file changed, 2 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+index c88e267..92818d79 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+@@ -571,7 +571,6 @@ done:
+ int brcmf_sdcard_recv_chain(struct brcmf_sdio_dev *sdiodev, u32 addr, uint fn,
+ 			    uint flags, struct sk_buff_head *pktq)
+ {
+-	uint incr_fix;
+ 	uint width;
+ 	int err = 0;
+ 
+@@ -583,7 +582,6 @@ int brcmf_sdcard_recv_chain(struct brcmf_sdio_dev *sdiodev, u32 addr, uint fn,
+ 	if (err)
+ 		goto done;
+ 
+-	incr_fix = (flags & SDIO_REQ_FIXED) ? SDIOH_DATA_FIX : SDIOH_DATA_INC;
+ 	err = brcmf_sdio_sglist_rw(sdiodev, fn, false, addr, pktq);
+ 
+ done:
+-- 
+1.7.10.4
+
 
