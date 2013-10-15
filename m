@@ -1,112 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:34333 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751683Ab3J3L24 (ORCPT
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:59150 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932647Ab3JOSrK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Oct 2013 07:28:56 -0400
-Date: Wed, 30 Oct 2013 12:28:54 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
-Cc: Luciano Coelho <luca@coelho.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, sre@ring0.de, joni.lapilainen@gmail.com,
-	David Gnedt <david.gnedt@davizone.at>
-Subject: Re: [PATCH 05/16] wl1251: implement hardware ARP filtering
-Message-ID: <20131030112854.GB8204@amd.pavel.ucw.cz> (sfid-20131030_122919_736969_A264E5E0)
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
- <1382819655-30430-6-git-send-email-pali.rohar@gmail.com>
+	Tue, 15 Oct 2013 14:47:10 -0400
+Subject: [PATCH 5/7] ath10k: remove unnecessary checks
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 15 Oct 2013 21:47:08 +0300
+Message-ID: <20131015184708.14123.49715.stgit@localhost6.localdomain6> (sfid-20131015_204713_728296_2D3C3363)
+In-Reply-To: <20131015184548.14123.56949.stgit@localhost6.localdomain6>
+References: <20131015184548.14123.56949.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1382819655-30430-6-git-send-email-pali.rohar@gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+From: Michal Kazior <michal.kazior@tieto.com>
 
-> Update hardware ARP filter configuration on BSS_CHANGED_ARP_FILTER
-> notification from mac80211.
-> Ported from wl1271 driver.
-> 
-> Signed-off-by: David Gnedt <david.gnedt@davizone.at>
-> ---
->  drivers/net/wireless/ti/wl1251/acx.c  |   31 +++++++++++++++++++++++++++++++
->  drivers/net/wireless/ti/wl1251/acx.h  |   15 +++++++++++++++
->  drivers/net/wireless/ti/wl1251/main.c |   13 +++++++++++++
->  3 files changed, 59 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/ti/wl1251/acx.c b/drivers/net/wireless/ti/wl1251/acx.c
-> index cce50e2..9295090 100644
-> --- a/drivers/net/wireless/ti/wl1251/acx.c
-> +++ b/drivers/net/wireless/ti/wl1251/acx.c
-> @@ -1062,6 +1062,37 @@ out:
->  	return ret;
->  }
->  
-> +int wl1251_acx_arp_ip_filter(struct wl1251 *wl, bool enable, __be32 address)
-> +{
-> +	struct wl1251_acx_arp_filter *acx;
-> +	int ret;
-> +
-> +	wl1251_debug(DEBUG_ACX, "acx arp ip filter, enable: %d", enable);
-> +
-> +	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
-> +	if (!acx) {
-> +		ret = -ENOMEM;
-> +		goto out;
-> +	}
+mac80211 interface iteration functions that were
+used originally iterated over interfaces that
+weren't re-added to the driver during recovery.
 
-I'd do "return -ENOMEM;" here. Trying to free NULL pointer is
-unneccessary complication.
+Since internal vif list is now used it's safe to
+remove the safe-guard as internal vif list is
+based on add/remove_interface function which
+guarantees that vdev is created in FW before it is
+iterated over.
 
-> +	acx->version = ACX_IPV4_VERSION;
-> +	acx->enable = enable;
-> +
-> +	if (enable == true)
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c |   21 ---------------------
+ 1 file changed, 21 deletions(-)
 
-if (enable) would be C way of writing stuff.
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index bd42a14..4273eef 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1964,13 +1964,6 @@ static int ath10k_config_ps(struct ath10k *ar)
+ 
+ 	lockdep_assert_held(&ar->conf_mutex);
+ 
+-	/* During HW reconfiguration mac80211 reports all interfaces that were
+-	 * running until reconfiguration was started. Since FW doesn't have any
+-	 * vdevs at this point we must not iterate over this interface list.
+-	 * This setting will be updated upon add_interface(). */
+-	if (ar->state == ATH10K_STATE_RESTARTED)
+-		return 0;
+-
+ 	list_for_each_entry(arvif, &ar->arvifs, list) {
+ 		ret = ath10k_mac_vif_setup_ps(arvif);
+ 		if (ret) {
+@@ -2888,13 +2881,6 @@ static int ath10k_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
+ 	struct ath10k_vif *arvif;
+ 	int ret = 0;
+ 
+-	/* During HW reconfiguration mac80211 reports all interfaces that were
+-	 * running until reconfiguration was started. Since FW doesn't have any
+-	 * vdevs at this point we must not iterate over this interface list.
+-	 * This setting will be updated upon add_interface(). */
+-	if (ar->state == ATH10K_STATE_RESTARTED)
+-		return 0;
+-
+ 	mutex_lock(&ar->conf_mutex);
+ 	list_for_each_entry(arvif, &ar->arvifs, list) {
+ 		ath10k_dbg(ATH10K_DBG_MAC, "mac vdev %d rts threshold %d\n",
+@@ -2918,13 +2904,6 @@ static int ath10k_set_frag_threshold(struct ieee80211_hw *hw, u32 value)
+ 	struct ath10k_vif *arvif;
+ 	int ret = 0;
+ 
+-	/* During HW reconfiguration mac80211 reports all interfaces that were
+-	 * running until reconfiguration was started. Since FW doesn't have any
+-	 * vdevs at this point we must not iterate over this interface list.
+-	 * This setting will be updated upon add_interface(). */
+-	if (ar->state == ATH10K_STATE_RESTARTED)
+-		return 0;
+-
+ 	mutex_lock(&ar->conf_mutex);
+ 	list_for_each_entry(arvif, &ar->arvifs, list) {
+ 		ath10k_dbg(ATH10K_DBG_MAC, "mac vdev %d fragmentation threshold %d\n",
 
-> +		memcpy(acx->address, &address, ACX_IPV4_ADDR_SIZE);
-> +
-> +	ret = wl1251_cmd_configure(wl, ACX_ARP_IP_FILTER,
-> +				   acx, sizeof(*acx));
-> +	if (ret < 0) {
-> +		wl1251_warning("failed to set arp ip filter: %d", ret);
-> +		goto out;
-> +	}
-> +
-> +out:
-
-No need for the out label now.
-
-> diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
-> index 46a2494..9752745 100644
-> --- a/drivers/net/wireless/ti/wl1251/main.c
-> +++ b/drivers/net/wireless/ti/wl1251/main.c
-> @@ -1078,6 +1078,19 @@ static void wl1251_op_bss_info_changed(struct ieee80211_hw *hw,
->  		}
->  	}
->  
-> +	if (changed & BSS_CHANGED_ARP_FILTER) {
-> +		__be32 addr = bss_conf->arp_addr_list[0];
-> +		WARN_ON(wl->bss_type != BSS_TYPE_STA_BSS);
-> +
-> +		if (bss_conf->arp_addr_cnt == 1 && bss_conf->assoc)
-> +			ret = wl1251_acx_arp_ip_filter(wl, true, addr);
-> +		else
-> +			ret = wl1251_acx_arp_ip_filter(wl, false, addr);
-
-
-  		enable = bss_conf->arp_addr_cnt == 1 && bss_conf->assoc;
-		ret = wl1251_acx_arp_ip_filter(wl, enable, addr);
-
-?
-
-Thanks,
-									Pavel
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
