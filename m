@@ -1,160 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:42345 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753791Ab3JCNMj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Oct 2013 09:12:39 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH/RFT 1/3] ath10k: fix add_interface failure handling
-Date: Thu, 3 Oct 2013 15:09:23 +0200
-Message-ID: <1380805765-31521-2-git-send-email-michal.kazior@tieto.com> (sfid-20131003_151243_868297_24475657)
-In-Reply-To: <1380805765-31521-1-git-send-email-michal.kazior@tieto.com>
-References: <1380805765-31521-1-git-send-email-michal.kazior@tieto.com>
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:60123 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758936Ab3JOSqr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Oct 2013 14:46:47 -0400
+Subject: [PATCH 1/7] ath10k: use workqueue to set WEP TX key
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 15 Oct 2013 21:46:44 +0300
+Message-ID: <20131015184644.14123.424.stgit@localhost6.localdomain6> (sfid-20131015_204650_278083_54FE5FEB)
+In-Reply-To: <20131015184548.14123.56949.stgit@localhost6.localdomain6>
+References: <20131015184548.14123.56949.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If something failed along add_interface() setup it
-was possible to leak a vdev id, vdev and peer.
+From: Michal Kazior <michal.kazior@tieto.com>
 
-This could end up with leaked FW state or FW crash
-(assuming add_interface() failure wasn't a result of
-a crash).
+Recent WMI/HTC changes made it possible for WMI
+commands to sleep (if there's not enough HTC TX
+credits to submit a command). TX path is in an
+atomic context so calling WMI commands in it is
+wrong.
+
+This simply moves WEP key index update to a worker
+and fixes the 'scheduling while atomic' bug.
+
+This still leaves multiple WEP key handling laggy,
+i.e. some frames may be TXed with an old/different
+key (although recipient should still be able to RX
+them).
+
+kvalo: changed the title
 
 Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c |   50 ++++++++++++++++++++++++---------
- 1 file changed, 37 insertions(+), 13 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.h |    4 ++
+ drivers/net/wireless/ath/ath10k/mac.c  |   53 ++++++++++++++++++++++----------
+ 2 files changed, 39 insertions(+), 18 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index ce36daa..cef5455 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -215,8 +215,10 @@ struct ath10k_vif {
+ 	struct ath10k *ar;
+ 	struct ieee80211_vif *vif;
+ 
++	struct work_struct wep_key_work;
+ 	struct ieee80211_key_conf *wep_keys[WMI_MAX_KEY_INDEX + 1];
+-	u8 def_wep_key_index;
++	u8 def_wep_key_idx;
++	u8 def_wep_key_newidx;
+ 
+ 	u16 tx_seq_no;
+ 
 diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 8684e03..7f8b258 100644
+index 97d7111..bc0e17b 100644
 --- a/drivers/net/wireless/ath/ath10k/mac.c
 +++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2001,18 +2001,17 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
+@@ -1239,7 +1239,7 @@ static void ath10k_bss_disassoc(struct ieee80211_hw *hw,
+ 	/* FIXME: why don't we print error if wmi call fails? */
+ 	ret = ath10k_wmi_vdev_down(ar, arvif->vdev_id);
+ 
+-	arvif->def_wep_key_index = 0;
++	arvif->def_wep_key_idx = 0;
+ }
+ 
+ static int ath10k_station_assoc(struct ath10k *ar, struct ath10k_vif *arvif,
+@@ -1467,6 +1467,30 @@ static void ath10k_tx_h_qos_workaround(struct ieee80211_hw *hw,
+ 	skb_pull(skb, IEEE80211_QOS_CTL_LEN);
+ }
+ 
++static void ath10k_tx_wep_key_work(struct work_struct *work)
++{
++	struct ath10k_vif *arvif = container_of(work, struct ath10k_vif,
++						wep_key_work);
++	int ret, keyidx = arvif->def_wep_key_newidx;
++
++	if (arvif->def_wep_key_idx == keyidx)
++		return;
++
++	ath10k_dbg(ATH10K_DBG_MAC, "mac vdev %d set keyidx %d\n",
++		   arvif->vdev_id, keyidx);
++
++	ret = ath10k_wmi_vdev_set_param(arvif->ar,
++					arvif->vdev_id,
++					arvif->ar->wmi.vdev_param->def_keyid,
++					keyidx);
++	if (ret) {
++		ath10k_warn("could not update wep keyidx (%d)\n", ret);
++		return;
++	}
++
++	arvif->def_wep_key_idx = keyidx;
++}
++
+ static void ath10k_tx_h_update_wep_key(struct sk_buff *skb)
+ {
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+@@ -1475,8 +1499,6 @@ static void ath10k_tx_h_update_wep_key(struct sk_buff *skb)
+ 	struct ath10k *ar = arvif->ar;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 	struct ieee80211_key_conf *key = info->control.hw_key;
+-	u32 vdev_param;
+-	int ret;
+ 
+ 	if (!ieee80211_has_protected(hdr->frame_control))
+ 		return;
+@@ -1488,21 +1510,14 @@ static void ath10k_tx_h_update_wep_key(struct sk_buff *skb)
+ 	    key->cipher != WLAN_CIPHER_SUITE_WEP104)
+ 		return;
+ 
+-	if (key->keyidx == arvif->def_wep_key_index)
+-		return;
+-
+-	ath10k_dbg(ATH10K_DBG_MAC, "mac vdev %d keyidx %d\n",
+-		   arvif->vdev_id, key->keyidx);
+-
+-	vdev_param = ar->wmi.vdev_param->def_keyid;
+-	ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
+-					key->keyidx);
+-	if (ret) {
+-		ath10k_warn("could not update wep keyidx (%d)\n", ret);
++	if (key->keyidx == arvif->def_wep_key_idx)
+ 		return;
+-	}
+ 
+-	arvif->def_wep_key_index = key->keyidx;
++	/* FIXME: Most likely a few frames will be TXed with an old key. Simply
++	 * queueing frames until key index is updated is not an option because
++	 * sk_buff may need more processing to be done, e.g. offchannel */
++	arvif->def_wep_key_newidx = key->keyidx;
++	ieee80211_queue_work(ar->hw, &arvif->wep_key_work);
+ }
+ 
+ static void ath10k_tx_h_add_p2p_noa_ie(struct ath10k *ar, struct sk_buff *skb)
+@@ -2023,6 +2038,8 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
+ 	arvif->ar = ar;
+ 	arvif->vif = vif;
+ 
++	INIT_WORK(&arvif->wep_key_work, ath10k_tx_wep_key_work);
++
  	if ((vif->type == NL80211_IFTYPE_MONITOR) && ar->monitor_present) {
  		ath10k_warn("Only one monitor interface allowed\n");
  		ret = -EBUSY;
--		goto exit;
-+		goto err;
- 	}
+@@ -2078,7 +2095,7 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
  
- 	bit = ffs(ar->free_vdev_map);
- 	if (bit == 0) {
- 		ret = -EBUSY;
--		goto exit;
-+		goto err;
- 	}
- 
- 	arvif->vdev_id = bit - 1;
- 	arvif->vdev_subtype = WMI_VDEV_SUBTYPE_NONE;
--	ar->free_vdev_map &= ~(1 << arvif->vdev_id);
- 
- 	if (ar->p2p)
- 		arvif->vdev_subtype = WMI_VDEV_SUBTYPE_P2P_DEVICE;
-@@ -2048,26 +2047,32 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 				     arvif->vdev_subtype, vif->addr);
- 	if (ret) {
- 		ath10k_warn("WMI vdev create failed: ret %d\n", ret);
--		goto exit;
-+		goto err;
- 	}
- 
-+	ar->free_vdev_map &= ~BIT(arvif->vdev_id);
-+
  	vdev_param = ar->wmi.vdev_param->def_keyid;
  	ret = ath10k_wmi_vdev_set_param(ar, 0, vdev_param,
- 					arvif->def_wep_key_index);
--	if (ret)
-+	if (ret) {
+-					arvif->def_wep_key_index);
++					arvif->def_wep_key_idx);
+ 	if (ret)
  		ath10k_warn("Failed to set default keyid: %d\n", ret);
-+		goto err_vdev_delete;
-+	}
  
- 	vdev_param = ar->wmi.vdev_param->tx_encap_type;
- 	ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
- 					ATH10K_HW_TXRX_NATIVE_WIFI);
--	if (ret)
-+	if (ret) {
- 		ath10k_warn("Failed to set TX encap: %d\n", ret);
-+		goto err_vdev_delete;
-+	}
+@@ -2147,6 +2164,8 @@ static void ath10k_remove_interface(struct ieee80211_hw *hw,
  
- 	if (arvif->vdev_type == WMI_VDEV_TYPE_AP) {
- 		ret = ath10k_peer_create(ar, arvif->vdev_id, vif->addr);
- 		if (ret) {
- 			ath10k_warn("Failed to create peer for AP: %d\n", ret);
--			goto exit;
-+			goto err_vdev_delete;
- 		}
- 	}
+ 	mutex_lock(&ar->conf_mutex);
  
-@@ -2076,38 +2081,57 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 		value = WMI_STA_PS_RX_WAKE_POLICY_WAKE;
- 		ret = ath10k_wmi_set_sta_ps_param(ar, arvif->vdev_id,
- 						  param, value);
--		if (ret)
-+		if (ret) {
- 			ath10k_warn("Failed to set RX wake policy: %d\n", ret);
-+			goto err_peer_delete;
-+		}
- 
- 		param = WMI_STA_PS_PARAM_TX_WAKE_THRESHOLD;
- 		value = WMI_STA_PS_TX_WAKE_THRESHOLD_ALWAYS;
- 		ret = ath10k_wmi_set_sta_ps_param(ar, arvif->vdev_id,
- 						  param, value);
--		if (ret)
-+		if (ret) {
- 			ath10k_warn("Failed to set TX wake thresh: %d\n", ret);
-+			goto err_peer_delete;
-+		}
- 
- 		param = WMI_STA_PS_PARAM_PSPOLL_COUNT;
- 		value = WMI_STA_PS_PSPOLL_COUNT_NO_MAX;
- 		ret = ath10k_wmi_set_sta_ps_param(ar, arvif->vdev_id,
- 						  param, value);
--		if (ret)
-+		if (ret) {
- 			ath10k_warn("Failed to set PSPOLL count: %d\n", ret);
-+			goto err_peer_delete;
-+		}
- 	}
- 
- 	ret = ath10k_mac_set_rts(arvif, ar->hw->wiphy->rts_threshold);
--	if (ret)
-+	if (ret) {
- 		ath10k_warn("failed to set rts threshold for vdev %d (%d)\n",
- 			    arvif->vdev_id, ret);
-+		goto err_peer_delete;
-+	}
- 
- 	ret = ath10k_mac_set_frag(arvif, ar->hw->wiphy->frag_threshold);
--	if (ret)
-+	if (ret) {
- 		ath10k_warn("failed to set frag threshold for vdev %d (%d)\n",
- 			    arvif->vdev_id, ret);
-+		goto err_peer_delete;
-+	}
- 
- 	if (arvif->vdev_type == WMI_VDEV_TYPE_MONITOR)
- 		ar->monitor_present = true;
- 
--exit:
-+	mutex_unlock(&ar->conf_mutex);
-+	return 0;
++	cancel_work_sync(&arvif->wep_key_work);
 +
-+err_peer_delete:
-+	if (arvif->vdev_type == WMI_VDEV_TYPE_AP)
-+		ath10k_wmi_peer_delete(ar, arvif->vdev_id, vif->addr);
-+err_vdev_delete:
-+	ath10k_wmi_vdev_delete(ar, arvif->vdev_id);
-+	ar->free_vdev_map &= ~BIT(arvif->vdev_id);
-+err:
- 	mutex_unlock(&ar->conf_mutex);
- 	return ret;
- }
--- 
-1.7.9.5
+ 	spin_lock_bh(&ar->data_lock);
+ 	if (arvif->beacon) {
+ 		dev_kfree_skb_any(arvif->beacon);
 
