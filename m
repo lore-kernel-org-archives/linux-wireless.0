@@ -1,76 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.neomailbox.net ([178.209.62.157]:23834 "EHLO
-	s3.neomailbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756187Ab3JQOs4 (ORCPT
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:57669 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757291Ab3JOUED (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Oct 2013 10:48:56 -0400
-Date: Thu, 17 Oct 2013 16:48:24 +0200
-From: Antonio Quartulli <antonio@meshcoding.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Antonio Quartulli <antonio@open-mesh.com>
-Subject: Re: [PATCH 2/2] mac80211: store the channel in wdev upon ibss_join
-Message-ID: <20131017144824.GH2596@neomailbox.net> (sfid-20131017_164859_007858_CBE9053B)
-References: <1381790282-1146-1-git-send-email-antonio@meshcoding.com>
- <1381790282-1146-2-git-send-email-antonio@meshcoding.com>
- <1382020588.14410.12.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="bFsKbPszpzYNtEU6"
-In-Reply-To: <1382020588.14410.12.camel@jlt4.sipsolutions.net>
+	Tue, 15 Oct 2013 16:04:03 -0400
+Received: by mail-wg0-f43.google.com with SMTP id b13so5042484wgh.34
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Oct 2013 13:04:02 -0700 (PDT)
+Message-ID: <1381867433.5100.20.camel@canaries32-MCP7A> (sfid-20131015_220417_303690_F489A81C)
+Subject: [PATCH 2/3] staging: vt6656: rxtx.c s_uGetRTSCTSDuration allow
+ fall-through duplicates
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 15 Oct 2013 21:03:53 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Allow switch fall-through of duplicate case.
 
---bFsKbPszpzYNtEU6
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/rxtx.c | 35 +++--------------------------------
+ 1 file changed, 3 insertions(+), 32 deletions(-)
 
-On Thu, Oct 17, 2013 at 04:36:28PM +0200, Johannes Berg wrote:
-> On Tue, 2013-10-15 at 00:38 +0200, Antonio Quartulli wrote:
-> > From: Antonio Quartulli <antonio@open-mesh.com>
-> >=20
-> > To allow cfg80211 to use the real channel to pick up the
-> > proper (i)bss object, store the used channel in
-> > wdev->channel during ibss_join
->=20
-> WTF? No, mac80211 can't just randomly modify cfg80211-owned data.
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 3404730..9cf5b08 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -430,53 +430,24 @@ static u16 s_uGetRTSCTSDuration(struct vnt_private *pDevice, u8 byDurType,
+     switch (byDurType) {
+ 
+     case RTSDUR_BB:    //RTSDuration_bb
+-        uCTSTime = BBuGetFrameTime(pDevice->byPreambleType, byPktType, 14, pDevice->byTopCCKBasicRate);
+-        uDurTime = uCTSTime + 2*pDevice->uSIFS + s_uGetTxRsvTime(pDevice, byPktType, cbFrameLength, wRate, bNeedAck);
+-        break;
+-
+     case RTSDUR_BA:    //RTSDuration_ba
+-        uCTSTime = BBuGetFrameTime(pDevice->byPreambleType, byPktType, 14, pDevice->byTopCCKBasicRate);
+-        uDurTime = uCTSTime + 2*pDevice->uSIFS + s_uGetTxRsvTime(pDevice, byPktType, cbFrameLength, wRate, bNeedAck);
+-        break;
+-
+-    case RTSDUR_AA:    //RTSDuration_aa
+-        uCTSTime = BBuGetFrameTime(pDevice->byPreambleType, byPktType, 14, pDevice->byTopOFDMBasicRate);
+-        uDurTime = uCTSTime + 2*pDevice->uSIFS + s_uGetTxRsvTime(pDevice, byPktType, cbFrameLength, wRate, bNeedAck);
+-        break;
+-
+-    case CTSDUR_BA:    //CTSDuration_ba
+-        uDurTime = pDevice->uSIFS + s_uGetTxRsvTime(pDevice, byPktType, cbFrameLength, wRate, bNeedAck);
+-        break;
+-
+     case RTSDUR_BA_F0: //RTSDuration_ba_f0
+-        uCTSTime = BBuGetFrameTime(pDevice->byPreambleType, byPktType, 14, pDevice->byTopCCKBasicRate);
+-	uDurTime = uCTSTime + 2 * pDevice->uSIFS + s_uGetTxRsvTime(pDevice,
+-			byPktType, cbFrameLength, wRate, bNeedAck);
+-        break;
+-
+-    case RTSDUR_AA_F0: //RTSDuration_aa_f0
+-        uCTSTime = BBuGetFrameTime(pDevice->byPreambleType, byPktType, 14, pDevice->byTopOFDMBasicRate);
+-	uDurTime = uCTSTime + 2 * pDevice->uSIFS + s_uGetTxRsvTime(pDevice,
+-			byPktType, cbFrameLength, wRate, bNeedAck);
+-        break;
+-
+     case RTSDUR_BA_F1: //RTSDuration_ba_f1
+         uCTSTime = BBuGetFrameTime(pDevice->byPreambleType, byPktType, 14, pDevice->byTopCCKBasicRate);
+ 	uDurTime = uCTSTime + 2 * pDevice->uSIFS + s_uGetTxRsvTime(pDevice,
+ 		byPktType, cbFrameLength, wRate, bNeedAck);
+         break;
+ 
++    case RTSDUR_AA:
++    case RTSDUR_AA_F0:
+     case RTSDUR_AA_F1: //RTSDuration_aa_f1
+         uCTSTime = BBuGetFrameTime(pDevice->byPreambleType, byPktType, 14, pDevice->byTopOFDMBasicRate);
+ 	uDurTime = uCTSTime + 2 * pDevice->uSIFS + s_uGetTxRsvTime(pDevice,
+ 				byPktType, cbFrameLength, wRate, bNeedAck);
+ 	break;
+ 
++    case CTSDUR_BA:
+     case CTSDUR_BA_F0: //CTSDuration_ba_f0
+-	uDurTime = pDevice->uSIFS + s_uGetTxRsvTime(pDevice,
+-				byPktType, cbFrameLength, wRate, bNeedAck);
+-	break;
+-
+     case CTSDUR_BA_F1: //CTSDuration_ba_f1
+ 	uDurTime = pDevice->uSIFS + s_uGetTxRsvTime(pDevice,
+ 				byPktType, cbFrameLength, wRate, bNeedAck);
+-- 
+1.8.3.2
 
-Mh, ok. :)
 
-What about setting wdev->channel in __cfg80211_join_ibss() right after havi=
-ng
-set wdev->ssid ?
-This way we leave mac80211 out and we totally handle this thing in cfg80211
-only.
-
-
-(I think with this change patch 1/2 makes more sense?)
-
---=20
-Antonio Quartulli
-
---bFsKbPszpzYNtEU6
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIcBAEBCAAGBQJSX/i4AAoJEADl0hg6qKeOKdMQALIauUMP5s4m+aK1r6/VlwTf
-LNILPe/xzBAy/EroJ/+/cor/Z4npGsdRDCiOl1OSRd+1+i/7n9dxpDuBms7zNDwN
-bq05u/7/7Qv7O/XpK58X7MxlpQODuQRbDoWpqK7w44aVNawmNWRYjMFMx/hfxoVJ
-LJ2nKrfE+QzSlOI4wo+abTg7vP9jOfSyzm/Kbr5L2a3hL91v6zptKsMp2z7ZjmiQ
-i8H7QA13kUu3KAFgAN3/zX0gWgfVZSyyUM+HJnJeGwZQYS5Z5GOwCoSvwR2w9scl
-b9l2Ye0hKDZJKC/fDEaql2L5W5dVsrMuzfljwNSeNbaqVa/R1jfoinS7tM0gN+QN
-PcL6cLsc8ZRoD9pRcmjtvFVJ6O+cHUGmXsM/k8gmbwDO9dyNK4m2hH6nHF+EgpUP
-20eODHheSogVrDQ3vs5jPaTokvBBokkJ6A/DN2k9x42PWFYD+FSLgLrC3pwelY2w
-lMhyNUQFVla/1qf0+3sQWi7+jQ1kRkmsUvKxLBvBBAva/vqM7nlCI9IUflH7l125
-z9iglUSDkZR6fA2qXi8lxdjzURpGx63j6DJKPR1Nvzaqf1OLOGiEDsc1uZErxJcA
-tZ50ld+xZOvBHmulv01H+WQgA239fYVQ4L0YSvXM2TnLZ37rwu+GaBOPGmQCgR5h
-JmIVb6KbSA7rRj3Ia5rN
-=lf3y
------END PGP SIGNATURE-----
-
---bFsKbPszpzYNtEU6--
