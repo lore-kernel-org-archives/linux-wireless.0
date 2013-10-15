@@ -1,309 +1,263 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:57661 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758227Ab3JQSaM (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:45331 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754652Ab3JOCIy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Oct 2013 14:30:12 -0400
-Date: Thu, 17 Oct 2013 14:23:40 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: pull request: wireless-next 2013-10-17
-Message-ID: <20131017182339.GC1812@tuxdriver.com> (sfid-20131017_203025_234067_00764408)
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="y0ulUmNC+osPPQO6"
+	Mon, 14 Oct 2013 22:08:54 -0400
+Received: by mail-pb0-f46.google.com with SMTP id rq2so8050463pbb.5
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Oct 2013 19:08:54 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	devel@lists.open80211s.org, distro11s@cozybit.com,
+	Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+Subject: [PATCH v5 2/5] {nl,cfg,mac}80211: enable the triggering of CSA frame in mesh
+Date: Mon, 14 Oct 2013 19:08:28 -0700
+Message-Id: <1381802911-3921-3-git-send-email-yeohchunyeow@cozybit.com> (sfid-20131015_040909_448945_C1FB76B1)
+In-Reply-To: <1381802911-3921-1-git-send-email-yeohchunyeow@cozybit.com>
+References: <1381802911-3921-1-git-send-email-yeohchunyeow@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Allow the triggering of CSA frame using mesh interface. The
+rules are more or less same with IBSS, such as not allowed to
+change between the band and channel width has to be same from
+the previous mode. Also, move the ieee80211_send_action_csa
+to a common space so that it can be re-used by mesh interface.
 
---y0ulUmNC+osPPQO6
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-Dave,
-
-This is a batch of updates intended for the 3.13 stream...
-
-The biggest item of interest in here is wcn36xx, the new mac80211
-driver for Qualcomm WCN3660/WCN3680 hardware.
-
-Regarding the mac80211 bits, Johannes says:
-
-"We have an assortment of cleanups and new features, of which the
-biggest one is probably the channel-switch support in IBSS. Nothing
-else really stands out much."
-
-On top of that, the ath9k and rt2x00 get a lot of update action from
-Felix Fietkau and Gabor Juhos, respectively.  There are a handful of
-updates to other drivers here and there as well.
-
-Please let me know if there are problems!
-
-Thanks,
-
-John
-
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
 ---
+v2: fix return value and others (Johannes Berg)
 
-The following changes since commit ccdbb6e96beca362db876d820ac1e560ff6d9579:
+ net/mac80211/cfg.c         |   19 ++++++++++
+ net/mac80211/ibss.c        |   54 ---------------------------
+ net/mac80211/ieee80211_i.h |    2 +
+ net/mac80211/util.c        |   87 ++++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/nl80211.c     |    1 +
+ 5 files changed, 109 insertions(+), 54 deletions(-)
 
-  tcp: tcp_transmit_skb() optimizations (2013-10-11 17:48:18 -0400)
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index b455e72..438c689 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2907,6 +2907,7 @@ static int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_chanctx_conf *chanctx_conf;
+ 	struct ieee80211_chanctx *chanctx;
++	struct ieee80211_if_mesh *ifmsh;
+ 	int err, num_chanctx;
+ 
+ 	if (!list_empty(&local->roc_list) || local->scanning)
+@@ -2990,6 +2991,24 @@ static int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 		if (err < 0)
+ 			return err;
+ 		break;
++	case NL80211_IFTYPE_MESH_POINT:
++		ifmsh = &sdata->u.mesh;
++
++		if (!ifmsh->mesh_id)
++			return -EINVAL;
++
++		if (params->chandef.width != sdata->vif.bss_conf.chandef.width)
++			return -EINVAL;
++
++		/* changes into another band are not supported */
++		if (sdata->vif.bss_conf.chandef.chan->band !=
++		    params->chandef.chan->band)
++			return -EINVAL;
++
++		err = ieee80211_send_action_csa(sdata, params);
++		if (err < 0)
++			return err;
++		break;
+ 	default:
+ 		return -EOPNOTSUPP;
+ 	}
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 5ea9b3a..017e206 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -428,60 +428,6 @@ static void ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 				  tsf, false);
+ }
+ 
+-static int ieee80211_send_action_csa(struct ieee80211_sub_if_data *sdata,
+-				     struct cfg80211_csa_settings *csa_settings)
+-{
+-	struct sk_buff *skb;
+-	struct ieee80211_mgmt *mgmt;
+-	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
+-	struct ieee80211_local *local = sdata->local;
+-	int freq;
+-	int hdr_len = offsetof(struct ieee80211_mgmt, u.action.u.chan_switch) +
+-		      sizeof(mgmt->u.action.u.chan_switch);
+-	u8 *pos;
+-
+-	skb = dev_alloc_skb(local->tx_headroom + hdr_len +
+-			    5 +	/* channel switch announcement element */
+-			    3);	/* secondary channel offset element */
+-	if (!skb)
+-		return -1;
+-
+-	skb_reserve(skb, local->tx_headroom);
+-	mgmt = (struct ieee80211_mgmt *)skb_put(skb, hdr_len);
+-	memset(mgmt, 0, hdr_len);
+-	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
+-					  IEEE80211_STYPE_ACTION);
+-
+-	eth_broadcast_addr(mgmt->da);
+-	memcpy(mgmt->sa, sdata->vif.addr, ETH_ALEN);
+-	memcpy(mgmt->bssid, ifibss->bssid, ETH_ALEN);
+-	mgmt->u.action.category = WLAN_CATEGORY_SPECTRUM_MGMT;
+-	mgmt->u.action.u.chan_switch.action_code = WLAN_ACTION_SPCT_CHL_SWITCH;
+-	pos = skb_put(skb, 5);
+-	*pos++ = WLAN_EID_CHANNEL_SWITCH;			/* EID */
+-	*pos++ = 3;						/* IE length */
+-	*pos++ = csa_settings->block_tx ? 1 : 0;		/* CSA mode */
+-	freq = csa_settings->chandef.chan->center_freq;
+-	*pos++ = ieee80211_frequency_to_channel(freq);		/* channel */
+-	*pos++ = csa_settings->count;				/* count */
+-
+-	if (csa_settings->chandef.width == NL80211_CHAN_WIDTH_40) {
+-		enum nl80211_channel_type ch_type;
+-
+-		skb_put(skb, 3);
+-		*pos++ = WLAN_EID_SECONDARY_CHANNEL_OFFSET;	/* EID */
+-		*pos++ = 1;					/* IE length */
+-		ch_type = cfg80211_get_chandef_type(&csa_settings->chandef);
+-		if (ch_type == NL80211_CHAN_HT40PLUS)
+-			*pos++ = IEEE80211_HT_PARAM_CHA_SEC_ABOVE;
+-		else
+-			*pos++ = IEEE80211_HT_PARAM_CHA_SEC_BELOW;
+-	}
+-
+-	ieee80211_tx_skb(sdata, skb);
+-	return 0;
+-}
+-
+ int ieee80211_ibss_csa_beacon(struct ieee80211_sub_if_data *sdata,
+ 			      struct cfg80211_csa_settings *csa_settings)
+ {
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 7f13b65..829ff7e 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1714,6 +1714,8 @@ void ieee80211_dfs_cac_timer(unsigned long data);
+ void ieee80211_dfs_cac_timer_work(struct work_struct *work);
+ void ieee80211_dfs_cac_cancel(struct ieee80211_local *local);
+ void ieee80211_dfs_radar_detected_work(struct work_struct *work);
++int ieee80211_send_action_csa(struct ieee80211_sub_if_data *sdata,
++			      struct cfg80211_csa_settings *csa_settings);
+ 
+ #ifdef CONFIG_MAC80211_NOINLINE
+ #define debug_noinline noinline
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 133667c..5d12440 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2361,3 +2361,90 @@ u32 ieee80211_chandef_downgrade(struct cfg80211_chan_def *c)
+ 
+ 	return ret;
+ }
++
++int ieee80211_send_action_csa(struct ieee80211_sub_if_data *sdata,
++			      struct cfg80211_csa_settings *csa_settings)
++{
++	struct sk_buff *skb;
++	struct ieee80211_mgmt *mgmt;
++	struct ieee80211_local *local = sdata->local;
++	int freq;
++	int hdr_len = offsetof(struct ieee80211_mgmt, u.action.u.chan_switch) +
++			       sizeof(mgmt->u.action.u.chan_switch);
++	u8 *pos;
++
++	if (sdata->vif.type != NL80211_IFTYPE_ADHOC &&
++	    sdata->vif.type != NL80211_IFTYPE_MESH_POINT)
++		return -EOPNOTSUPP;
++
++	skb = dev_alloc_skb(local->tx_headroom + hdr_len +
++			    5 + /* channel switch announcement element */
++			    3 + /* secondary channel offset element */
++			    8); /* mesh channel switch parameters element */
++	if (!skb)
++		return -ENOMEM;
++
++	skb_reserve(skb, local->tx_headroom);
++	mgmt = (struct ieee80211_mgmt *)skb_put(skb, hdr_len);
++	memset(mgmt, 0, hdr_len);
++	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
++					  IEEE80211_STYPE_ACTION);
++
++	eth_broadcast_addr(mgmt->da);
++	memcpy(mgmt->sa, sdata->vif.addr, ETH_ALEN);
++	if (ieee80211_vif_is_mesh(&sdata->vif)) {
++		memcpy(mgmt->bssid, sdata->vif.addr, ETH_ALEN);
++	} else {
++		struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
++		memcpy(mgmt->bssid, ifibss->bssid, ETH_ALEN);
++	}
++	mgmt->u.action.category = WLAN_CATEGORY_SPECTRUM_MGMT;
++	mgmt->u.action.u.chan_switch.action_code = WLAN_ACTION_SPCT_CHL_SWITCH;
++	pos = skb_put(skb, 5);
++	*pos++ = WLAN_EID_CHANNEL_SWITCH;			/* EID */
++	*pos++ = 3;						/* IE length */
++	*pos++ = csa_settings->block_tx ? 1 : 0;		/* CSA mode */
++	freq = csa_settings->chandef.chan->center_freq;
++	*pos++ = ieee80211_frequency_to_channel(freq);		/* channel */
++	*pos++ = csa_settings->count;				/* count */
++
++	if (csa_settings->chandef.width == NL80211_CHAN_WIDTH_40) {
++		enum nl80211_channel_type ch_type;
++
++		skb_put(skb, 3);
++		*pos++ = WLAN_EID_SECONDARY_CHANNEL_OFFSET;	/* EID */
++		*pos++ = 1;					/* IE length */
++		ch_type = cfg80211_get_chandef_type(&csa_settings->chandef);
++		if (ch_type == NL80211_CHAN_HT40PLUS)
++			*pos++ = IEEE80211_HT_PARAM_CHA_SEC_ABOVE;
++		else
++			*pos++ = IEEE80211_HT_PARAM_CHA_SEC_BELOW;
++	}
++
++	if (ieee80211_vif_is_mesh(&sdata->vif)) {
++		struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
++		__le16 pre_value;
++
++		skb_put(skb, 8);
++		*pos++ = WLAN_EID_CHAN_SWITCH_PARAM;		/* EID */
++		*pos++ = 6;					/* IE length */
++		*pos++ = sdata->u.mesh.mshcfg.dot11MeshTTL;	/* Mesh TTL */
++		*pos = 0x00;	/* Mesh Flag: Tx Restrict, Initiator, Reason */
++		*pos |= WLAN_EID_CHAN_SWITCH_PARAM_INITIATOR;
++		*pos++ |= csa_settings->block_tx ?
++			  WLAN_EID_CHAN_SWITCH_PARAM_TX_RESTRICT : 0x00;
++		put_unaligned_le16(WLAN_REASON_MESH_CHAN, pos); /* Reason Cd */
++		pos += 2;
++		if (!ifmsh->pre_value)
++			ifmsh->pre_value = 1;
++		else
++			ifmsh->pre_value++;
++		pre_value = cpu_to_le16(ifmsh->pre_value);
++		memcpy(pos, &pre_value, 2);		/* Precedence Value */
++		pos += 2;
++		ifmsh->chsw_init = true;
++	}
++
++	ieee80211_tx_skb(sdata, skb);
++	return 0;
++}
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index da8de5b..7bb5aca 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5650,6 +5650,7 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
+ 			return -EINVAL;
+ 		break;
+ 	case NL80211_IFTYPE_ADHOC:
++	case NL80211_IFTYPE_MESH_POINT:
+ 		break;
+ 	default:
+ 		return -EOPNOTSUPP;
+-- 
+1.7.9.5
 
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next.git =
-for-davem
-
-for you to fetch changes up to 9f96da4dd2ccf685b506a21104cb13b1aadd907a:
-
-  Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/li=
-nville/wireless-next into for-davem (2013-10-17 14:02:07 -0400)
-
-----------------------------------------------------------------
-
-Amitkumar Karwar (1):
-      mwifiex: use alloc_workqueue() function
-
-Arik Nemtsov (1):
-      mac80211: implement STA CSA for drivers using channel contexts
-
-Eliad Peller (2):
-      mac80211: fix some snprintf misuses
-      ieee80211: fix vht cap definitions
-
-Eugene Krasnikov (1):
-      wcn36xx: mac80211 driver for Qualcomm WCN3660/WCN3680 hardware
-
-Felipe Balbi (1):
-      net: wireless: wl1251: update firmware path
-
-Felix Fietkau (10):
-      ath9k: use a separate data structure for rx buffers
-      ath9k_hw: remove direct accesses to channel mode flags
-      ath9k_hw: remove IS_CHAN_B()
-      ath9k_hw: remove IS_CHAN_OFDM()
-      ath9k_hw: simplify channel flags
-      ath9k: make ath9k_cmn_update_ichannel static
-      ath9k: move channel change code to ath_set_channel
-      ath9k: remove sc->config.cabqReadyTime
-      ath9k: make ath9k_uses_beacons static
-      ath9k_hw: remove references to hw->conf
-
-Fengguang Wu (1):
-      wcn36xx: fix coccinelle warnings
-
-Fred Zhou (2):
-      mac80211: use exact-size allocation for authentication frame
-      mac80211: improve default WMM parameter setting
-
-Gabor Juhos (14):
-      rt2x00: rt2800lib: remove TXMIXER_GAIN entries from the extended EEPR=
-OM map
-      rt2x00: rt2800lib: remove TXPOWER_DELTA entry from extended EEPROM map
-      rt2x00: rt2800lib: fix default VGC values for RT3593
-      rt2x00: rt2800lib: fix VGC programming for RT3572 and RT3593
-      rt2x00: rt2800lib: fix default VGC values for RT3572 for the 5GHz band
-      rt2x00: use generic EWMA functions for average RSSI calculations
-      rt2x00: rt2800lib: fix VGC adjustment for RT5592
-      rt2x00: rt2800lib: fix VGC adjustment for RT3572 and RT3593
-      rt2x00: cleanup indentation in rt2800.h
-      rt2x00: add rt2x00_has_cap_* helpers
-      rt2x00: rt2x00lib: use rt2x00_has_cap_* helpers
-      rt2x00: rt2800lib: use rt2x00_has_cap_* helpers
-      rt2x00: rt61pci: use rt2x00_has_cap_* helpers
-      rt2x00: rt73usb: use rt2x00_has_cap_* helpers
-
-Hauke Mehrtens (3):
-      bcma: reject PCI cards in bcma.
-      bcma: add PCI id 0x4313
-      brcmsmac: add support for a BCM4313 with PCI id 0x4313
-
-Janusz Dziedzic (1):
-      cfg80211: parse dfs region for internal regdb option
-
-Johannes Berg (4):
-      mac80211: add ieee80211_iterate_active_interfaces_rtnl()
-      mac80211: use ERR_CAST()
-      mac80211: add explicit IBSS driver operations
-      regulatory: enable channels 52-64 and 100-144 for world roaming
-
-John W. Linville (2):
-      Merge branch 'for-john' of git://git.kernel.org/.../jberg/mac80211-ne=
-xt
-      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-n=
-ext into for-davem
-
-Kevin Lo (3):
-      rt2x00: rt2800lib: no need to toggle RF R30 bit 7 twice
-      rt2x00: rt2800lib: fix RF registers for RT5390/RT5392
-      rt2x00: rt2800lib: remove duplicate rf_vals for RF3053
-
-Kirill Tkhai (1):
-      rt2x00_pci: Fix interrupt handler name (visible at /proc/interrupts)
-
-Lorenzo Bianconi (2):
-      mac80211: add fixed_rate management to minstrel rc
-      mac80211: do not override fixed_rate_idx in minstrel_ht_update_stats
-
-Michael Opdenacker (1):
-      net: p54spi: remove deprecated IRQF_DISABLED
-
-Michal Kazior (1):
-      mac80211: support reporting A-MSDU subframes individually
-
-Peter Senna Tschudin (1):
-      mwifiex: Change variable type to bool
-
-Sergey Ryazanov (1):
-      mac80211: Remove superfluous is_multicast_ether_addr() call
-
-Simon Wunderlich (7):
-      cfg80211: export cfg80211_chandef_dfs_required
-      mac80211: split off channel switch parsing function
-      mac80211: split off ibss disconnect
-      mac80211: add support for CSA in IBSS mode
-      mac80211: send a CSA action frame when changing channel
-      nl80211: enable IBSS support for channel switch announcements
-      nl80211: allow CAC only if no operation is going on
-
-Stanislaw Gruszka (2):
-      mac80211: change beacon/connection polling
-      rt2x00: do not pause queue on flush
-
-cedric Voncken (1):
-      cfg80211: vlan priority handling in WMM
-
- MAINTAINERS                                    |    8 +
- drivers/bcma/host_pci.c                        |    8 +-
- drivers/net/wireless/ath/Kconfig               |    1 +
- drivers/net/wireless/ath/Makefile              |    1 +
- drivers/net/wireless/ath/ath9k/ani.c           |    6 +-
- drivers/net/wireless/ath/ath9k/ar5008_phy.c    |   43 +-
- drivers/net/wireless/ath/ath9k/ar9002_calib.c  |    7 +-
- drivers/net/wireless/ath/ath9k/ar9002_hw.c     |   26 +-
- drivers/net/wireless/ath/ath9k/ar9003_phy.c    |  113 +-
- drivers/net/wireless/ath/ath9k/ath9k.h         |   12 +-
- drivers/net/wireless/ath/ath9k/calib.c         |    9 +-
- drivers/net/wireless/ath/ath9k/common.c        |   91 +-
- drivers/net/wireless/ath/ath9k/common.h        |    7 +-
- drivers/net/wireless/ath/ath9k/htc_drv_main.c  |   32 +-
- drivers/net/wireless/ath/ath9k/hw.c            |   67 +-
- drivers/net/wireless/ath/ath9k/hw.h            |   82 +-
- drivers/net/wireless/ath/ath9k/init.c          |   87 +-
- drivers/net/wireless/ath/ath9k/mac.c           |    6 +-
- drivers/net/wireless/ath/ath9k/mac.h           |    2 -
- drivers/net/wireless/ath/ath9k/main.c          |  157 +-
- drivers/net/wireless/ath/ath9k/mci.c           |    8 +-
- drivers/net/wireless/ath/ath9k/recv.c          |   48 +-
- drivers/net/wireless/ath/ath9k/xmit.c          |   12 +-
- drivers/net/wireless/ath/wcn36xx/Kconfig       |   16 +
- drivers/net/wireless/ath/wcn36xx/Makefile      |    7 +
- drivers/net/wireless/ath/wcn36xx/debug.c       |  181 +
- drivers/net/wireless/ath/wcn36xx/debug.h       |   49 +
- drivers/net/wireless/ath/wcn36xx/dxe.c         |  805 ++++
- drivers/net/wireless/ath/wcn36xx/dxe.h         |  284 ++
- drivers/net/wireless/ath/wcn36xx/hal.h         | 4657 ++++++++++++++++++++=
-++++
- drivers/net/wireless/ath/wcn36xx/main.c        | 1036 ++++++
- drivers/net/wireless/ath/wcn36xx/pmc.c         |   62 +
- drivers/net/wireless/ath/wcn36xx/pmc.h         |   33 +
- drivers/net/wireless/ath/wcn36xx/smd.c         | 2126 +++++++++++
- drivers/net/wireless/ath/wcn36xx/smd.h         |  127 +
- drivers/net/wireless/ath/wcn36xx/txrx.c        |  284 ++
- drivers/net/wireless/ath/wcn36xx/txrx.h        |  160 +
- drivers/net/wireless/ath/wcn36xx/wcn36xx.h     |  238 ++
- drivers/net/wireless/brcm80211/brcmsmac/main.c |    2 +-
- drivers/net/wireless/mwifiex/cmdevt.c          |    2 +-
- drivers/net/wireless/mwifiex/join.c            |    2 +-
- drivers/net/wireless/mwifiex/main.c            |    4 +-
- drivers/net/wireless/mwifiex/sta_cmd.c         |    2 +-
- drivers/net/wireless/mwifiex/wmm.c             |    2 +-
- drivers/net/wireless/p54/p54spi.c              |    2 +-
- drivers/net/wireless/rt2x00/Kconfig            |    1 +
- drivers/net/wireless/rt2x00/rt2800.h           |   42 +-
- drivers/net/wireless/rt2x00/rt2800lib.c        |  173 +-
- drivers/net/wireless/rt2x00/rt2x00.h           |  103 +-
- drivers/net/wireless/rt2x00/rt2x00crypto.c     |    4 +-
- drivers/net/wireless/rt2x00/rt2x00debug.c      |    2 +-
- drivers/net/wireless/rt2x00/rt2x00dev.c        |    8 +-
- drivers/net/wireless/rt2x00/rt2x00link.c       |   74 +-
- drivers/net/wireless/rt2x00/rt2x00mac.c        |    6 +-
- drivers/net/wireless/rt2x00/rt2x00pci.c        |    2 +-
- drivers/net/wireless/rt2x00/rt2x00queue.c      |   39 +-
- drivers/net/wireless/rt2x00/rt2x00usb.c        |    2 +
- drivers/net/wireless/rt2x00/rt61pci.c          |   20 +-
- drivers/net/wireless/rt2x00/rt73usb.c          |   18 +-
- drivers/net/wireless/ti/wl1251/wl1251.h        |    4 +-
- include/linux/ieee80211.h                      |    4 +-
- include/net/cfg80211.h                         |    9 +
- include/net/mac80211.h                         |   42 +
- net/mac80211/cfg.c                             |   92 +-
- net/mac80211/chan.c                            |    5 -
- net/mac80211/debugfs.c                         |   55 +-
- net/mac80211/driver-ops.h                      |   27 +
- net/mac80211/ibss.c                            |  608 +++-
- net/mac80211/ieee80211_i.h                     |   30 +-
- net/mac80211/iface.c                           |    4 +
- net/mac80211/key.c                             |    2 +-
- net/mac80211/mlme.c                            |  334 +-
- net/mac80211/rc80211_minstrel.c                |   14 +
- net/mac80211/rc80211_minstrel_ht.c             |   23 +-
- net/mac80211/rc80211_pid_debugfs.c             |   26 +-
- net/mac80211/rx.c                              |   39 +-
- net/mac80211/scan.c                            |    3 +-
- net/mac80211/spectmgmt.c                       |  162 +
- net/mac80211/trace.h                           |   35 +
- net/mac80211/tx.c                              |   39 +-
- net/mac80211/util.c                            |  162 +-
- net/mac80211/vht.c                             |    4 +-
- net/wireless/chan.c                            |    1 +
- net/wireless/core.h                            |    9 -
- net/wireless/debugfs.c                         |   24 +-
- net/wireless/genregdb.awk                      |    6 +
- net/wireless/nl80211.c                         |   52 +-
- net/wireless/reg.c                             |   14 +-
- net/wireless/util.c                            |    9 +
- 89 files changed, 11937 insertions(+), 1309 deletions(-)
- create mode 100644 drivers/net/wireless/ath/wcn36xx/Kconfig
- create mode 100644 drivers/net/wireless/ath/wcn36xx/Makefile
- create mode 100644 drivers/net/wireless/ath/wcn36xx/debug.c
- create mode 100644 drivers/net/wireless/ath/wcn36xx/debug.h
- create mode 100644 drivers/net/wireless/ath/wcn36xx/dxe.c
- create mode 100644 drivers/net/wireless/ath/wcn36xx/dxe.h
- create mode 100644 drivers/net/wireless/ath/wcn36xx/hal.h
- create mode 100644 drivers/net/wireless/ath/wcn36xx/main.c
- create mode 100644 drivers/net/wireless/ath/wcn36xx/pmc.c
- create mode 100644 drivers/net/wireless/ath/wcn36xx/pmc.h
- create mode 100644 drivers/net/wireless/ath/wcn36xx/smd.c
- create mode 100644 drivers/net/wireless/ath/wcn36xx/smd.h
- create mode 100644 drivers/net/wireless/ath/wcn36xx/txrx.c
- create mode 100644 drivers/net/wireless/ath/wcn36xx/txrx.h
- create mode 100644 drivers/net/wireless/ath/wcn36xx/wcn36xx.h
---=20
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
-
---y0ulUmNC+osPPQO6
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.14 (GNU/Linux)
-
-iQIcBAEBAgAGBQJSYCsrAAoJEJctW/TcYTgGIGgP/iO6jMWytA0sMLCD7GeBhvdp
-j5vyjZ9j0v+Fpq4s9g6ALygnAEa2lILu+fI1pVafH0i9f1HtzNkFZNTIknEB/3CP
-zBJUcNMB9B0UrZ2vuyqgUMLIiWWoqFuMtO2DGrSFTT9DFaQVX6Ubfw7wqDa4dsmS
-LsfZ0yPuKdifGjjGvNT7N6+6woq1zV0DwUPOX+x0jzCREwJ3uefbn3ylm2bowdbB
-n1AZB9Qj01wS7jzEiUQ/p8xba4i62woaF2dHFH+YNRWxyGOR7ZjDGkrtvYDHeEvc
-hL+NkrtFPk+HzcMfRvhn1zoE7ljGmKIm49QBs6wGg181ZaXr/9FpGC3KuICqP06v
-6fijML13hDzRohVPGTpjxNPpMnnR8Iyqq5uE8aLd3AL++ke87Az6DCBOmLp313Uf
-OkWR7awNTVlU2Jj6ziSULPL0k6fwdiJ7abVGZTLH0+Rl4CgGMwAPi2aDBzwh0ejV
-/bMOWkg9zz8Inn43wUANzODKQacFW6ZIM3iXV9kgV/63F6wrG+7bV0EM21s4RS1h
-JBJrImjESkVvv0m6Iej3O8g0XH3AkofkEUK6vgNQWEIVOQ+nPCkzPiex8kxJh9wv
-unekNRyHiTihY4tfFaYqVKYXX+vrgi8RWNvh9qog3Md+P4glOeGhj1B+GDo8uktl
-VP8veovW34Dh7k7d0TGn
-=j+Lp
------END PGP SIGNATURE-----
-
---y0ulUmNC+osPPQO6--
