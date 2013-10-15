@@ -1,52 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:60926 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751079Ab3JASD2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Oct 2013 14:03:28 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 1/3] rt2x00: rt2800lib: fix default VGC values for RT3593
-Date: Tue,  1 Oct 2013 20:03:14 +0200
-Message-Id: <1380650596-18659-1-git-send-email-juhosg@openwrt.org> (sfid-20131001_200340_587678_A8FD0400)
+Received: from szxga01-in.huawei.com ([119.145.14.64]:5109 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754203Ab3JOL6E (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Oct 2013 07:58:04 -0400
+From: Kefeng Wang <wangkefeng.wang@huawei.com>
+To: <linux-kernel@vger.kernel.org>
+CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Pablo Neira Ayuso <pablo@netfilter.org>,
+	"Stephen Hemminger" <stephen@networkplumber.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Francois Romieu <romieu@fr.zoreil.com>,
+	"Ben Hutchings" <bhutchings@solarflare.com>,
+	Chas Williams <chas@cmf.nrl.navy.mil>,
+	Marc Kleine-Budde <mkl@pengutronix.de>,
+	Samuel Ortiz <samuel@sortiz.org>,
+	Paul Mackerras <paulus@samba.org>,
+	Oliver Neukum <oneukum@suse.de>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	"Boris Ostrovsky" <boris.ostrovsky@oracle.com>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	"Michael S. Tsirkin" <mst@redhat.com>, <netfilter@vger.kernel.org>,
+	<netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	<guohanjun@huawei.com>
+Subject: [PATCH 09/18] block: aoe: use wrapper functions of net_ratelimit() to simplify code
+Date: Tue, 15 Oct 2013 19:45:05 +0800
+Message-ID: <1381837514-50660-10-git-send-email-wangkefeng.wang@huawei.com> (sfid-20131015_140445_690569_EE6675F2)
+In-Reply-To: <1381837514-50660-1-git-send-email-wangkefeng.wang@huawei.com>
+References: <1381837514-50660-1-git-send-email-wangkefeng.wang@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update the rt2800_get_default_vgc function to use the same VGC
-values that the DPO_RT5572_LinuxSTA_2.6.1.3_20121022 reference
-driver uses.
+net_err_ratelimited() is called to simplify code.
 
-References:
-  RT35xx_ChipAGCAdjust in chips/rt35xx.c
-  RT3593_R66_MID_LOW_SENS_GET macro in include/chip/rt3593.h
-  RT3593_R66_NON_MID_LOW_SEMS_GET macro in include/chips/rt3593.h
-
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Kefeng Wang <wangkefeng.wang@huawei.com>
 ---
- drivers/net/wireless/rt2x00/rt2800lib.c |    3 +++
- 1 file changed, 3 insertions(+)
+ drivers/block/aoe/aoenet.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index f414978..25c550a 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -4413,6 +4413,7 @@ static u8 rt2800_get_default_vgc(struct rt2x00_dev *rt2x00dev)
- 		    rt2x00_rt(rt2x00dev, RT3290) ||
- 		    rt2x00_rt(rt2x00dev, RT3390) ||
- 		    rt2x00_rt(rt2x00dev, RT3572) ||
-+		    rt2x00_rt(rt2x00dev, RT3593) ||
- 		    rt2x00_rt(rt2x00dev, RT5390) ||
- 		    rt2x00_rt(rt2x00dev, RT5392) ||
- 		    rt2x00_rt(rt2x00dev, RT5592))
-@@ -4422,6 +4423,8 @@ static u8 rt2800_get_default_vgc(struct rt2x00_dev *rt2x00dev)
- 	} else { /* 5GHZ band */
- 		if (rt2x00_rt(rt2x00dev, RT3572))
- 			vgc = 0x22 + (rt2x00dev->lna_gain * 5) / 3;
-+		else if (rt2x00_rt(rt2x00dev, RT3593))
-+			vgc = 0x20 + (rt2x00dev->lna_gain * 5) / 3;
- 		else if (rt2x00_rt(rt2x00dev, RT5592))
- 			vgc = 0x24 + (2 * rt2x00dev->lna_gain);
- 		else {
+diff --git a/drivers/block/aoe/aoenet.c b/drivers/block/aoe/aoenet.c
+index 63773a9..25e8764 100644
+--- a/drivers/block/aoe/aoenet.c
++++ b/drivers/block/aoe/aoenet.c
+@@ -159,9 +159,7 @@ aoenet_rcv(struct sk_buff *skb, struct net_device *ifp, struct packet_type *pt,
+ 		n = h->err;
+ 		if (n > NECODES)
+ 			n = 0;
+-		if (net_ratelimit())
+-			printk(KERN_ERR
+-				"%s%d.%d@%s; ecode=%d '%s'\n",
++		net_err_ratelimited("%s%d.%d@%s; ecode=%d '%s'\n",
+ 				"aoe: error packet from ",
+ 				get_unaligned_be16(&h->major),
+ 				h->minor, skb->dev->name,
 -- 
-1.7.10
+1.8.2.1
+
+
