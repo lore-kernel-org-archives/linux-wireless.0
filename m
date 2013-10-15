@@ -1,58 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:48757 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751323Ab3JQHmn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Oct 2013 03:42:43 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 00/21] rt2x00: separate rt2800 PCI and SoC driver
-Date: Thu, 17 Oct 2013 09:42:14 +0200
-Message-Id: <1381995755-16471-1-git-send-email-juhosg@openwrt.org> (sfid-20131017_094250_348242_1DDDB116)
+Received: from szxga02-in.huawei.com ([119.145.14.65]:24290 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932181Ab3JOL57 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Oct 2013 07:57:59 -0400
+From: Kefeng Wang <wangkefeng.wang@huawei.com>
+To: <linux-kernel@vger.kernel.org>
+CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Pablo Neira Ayuso <pablo@netfilter.org>,
+	"Stephen Hemminger" <stephen@networkplumber.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Francois Romieu <romieu@fr.zoreil.com>,
+	"Ben Hutchings" <bhutchings@solarflare.com>,
+	Chas Williams <chas@cmf.nrl.navy.mil>,
+	Marc Kleine-Budde <mkl@pengutronix.de>,
+	Samuel Ortiz <samuel@sortiz.org>,
+	Paul Mackerras <paulus@samba.org>,
+	Oliver Neukum <oneukum@suse.de>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	"Boris Ostrovsky" <boris.ostrovsky@oracle.com>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	"Michael S. Tsirkin" <mst@redhat.com>, <netfilter@vger.kernel.org>,
+	<netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	<guohanjun@huawei.com>
+Subject: [PATCH 11/18] net: hamradio: use wrapper functions of net_ratelimit() to simplify code
+Date: Tue, 15 Oct 2013 19:45:07 +0800
+Message-ID: <1381837514-50660-12-git-send-email-wangkefeng.wang@huawei.com> (sfid-20131015_140606_226387_DAB992A9)
+In-Reply-To: <1381837514-50660-1-git-send-email-wangkefeng.wang@huawei.com>
+References: <1381837514-50660-1-git-send-email-wangkefeng.wang@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The rt2800pci driver supports both PCI and SoC device. To achieve
-this, the code uses several ifdef statements which makes the code
-quite ugly. The patch set introduces a shared module, and moves the
-SoC driver into a separate module to get rid of the mess.
+net_XXX_ratelimited() is called to simplify code.
+
+Signed-off-by: Kefeng Wang <wangkefeng.wang@huawei.com>
+---
+ drivers/net/hamradio/6pack.c    | 3 +--
+ drivers/net/hamradio/bpqether.c | 3 +--
+ 2 files changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/hamradio/6pack.c b/drivers/net/hamradio/6pack.c
+index 1450e33..9e97eba 100644
+--- a/drivers/net/hamradio/6pack.c
++++ b/drivers/net/hamradio/6pack.c
+@@ -237,8 +237,7 @@ static void sp_encaps(struct sixpack *sp, unsigned char *icp, int len)
+ out_drop:
+ 	sp->dev->stats.tx_dropped++;
+ 	netif_start_queue(sp->dev);
+-	if (net_ratelimit())
+-		printk(KERN_DEBUG "%s: %s - dropped.\n", sp->dev->name, msg);
++	net_dbg_ratelimited("%s: %s - dropped.\n", sp->dev->name, msg);
+ }
+ 
+ /* Encapsulate an IP datagram and kick it into a TTY queue. */
+diff --git a/drivers/net/hamradio/bpqether.c b/drivers/net/hamradio/bpqether.c
+index f91bf0d..1522b4a 100644
+--- a/drivers/net/hamradio/bpqether.c
++++ b/drivers/net/hamradio/bpqether.c
+@@ -269,8 +269,7 @@ static netdev_tx_t bpq_xmit(struct sk_buff *skb, struct net_device *dev)
+ 	 * space for the BPQ headers.
+ 	 */
+ 	if (skb_cow(skb, AX25_BPQ_HEADER_LEN)) {
+-		if (net_ratelimit())
+-			pr_err("bpqether: out of memory\n");
++		net_err_ratelimited("pqether: out of memory\n");
+ 		kfree_skb(skb);
+ 
+ 		return NETDEV_TX_OK;
+-- 
+1.8.2.1
 
 
-Gabor Juhos (21):
-  rt2x00: create a new module for rt2800 MMIO code
-  rt2x00: rt2800pci: use rt2800mmio prefix for TX descriptor functions
-  rt2x00: rt2800pci: move TX descriptor functions to the rt2800mmio module
-  rt2x00: rt2800pci: use rt2800mmio prefix for RX control handler functions
-  rt2x00: rt2800pci: move RX control handler functions to the rt2800mmio module
-  rt2x00: rt2800pci: use rt2800mmio prefix for interrupt functions
-  rt2x00: rt2800pci: move interrupt functions to the rt2800mmio module
-  rt2x00: rt2800pci: use rt2800mmio prefix for queue functions
-  rt2x00: rt2800pci: move queue functions to the rt2800mmio module
-  rt2x00: rt2800pci: use rt2800mmio prefix for initialization functions
-  rt2x00: rt2800pci: move initialization functions to the rt2800mmio module
-  rt2x00: rt2800pci: use separate ops for the SoC driver
-  rt2x00: rt2800pci: use separate read_eeprom callback for SoC devices
-  rt2x00: rt2800pci: use separate firmware callbacks for SoC devices
-  rt2x00: rt2800pci: use separate set_state callback for SoC devices
-  rt2x00: rt2800pci: rename rt2800pci_disable_radio function
-  rt2x00: rt2800pci: split rt2800pci_enable_radio function
-  rt2x00: rt2800pci: move rt2800mmio_enable_radio function to another module
-  rt2x00: rt2800pci: use separate hwcrypt_disabled callback for SoC devices
-  rt2x00: rt2800pci: move SoC specific code into a separate module
-  rt2x00: rt2800pci: use module_pci_driver macro
-
- drivers/net/wireless/rt2x00/Kconfig      |   27 +-
- drivers/net/wireless/rt2x00/Makefile     |    2 +
- drivers/net/wireless/rt2x00/rt2800mmio.c |  873 +++++++++++++++++++++++++++
- drivers/net/wireless/rt2x00/rt2800mmio.h |  165 ++++++
- drivers/net/wireless/rt2x00/rt2800pci.c  |  951 +-----------------------------
- drivers/net/wireless/rt2x00/rt2800pci.h  |   97 ---
- drivers/net/wireless/rt2x00/rt2800soc.c  |  263 +++++++++
- 7 files changed, 1348 insertions(+), 1030 deletions(-)
- create mode 100644 drivers/net/wireless/rt2x00/rt2800mmio.c
- create mode 100644 drivers/net/wireless/rt2x00/rt2800mmio.h
- create mode 100644 drivers/net/wireless/rt2x00/rt2800soc.c
-
---
-1.7.10
