@@ -1,157 +1,218 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:27549 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932994Ab3JOQTW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Oct 2013 12:19:22 -0400
-Date: Tue, 15 Oct 2013 18:19:17 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-	Linux NFC <linux-nfc@lists.01.org>
-Subject: [GIT] [3.13] NFC updates
-Message-ID: <20131015161917.GF30191@zurbaran> (sfid-20131015_181925_821217_32C7AFB0)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-pd0-f177.google.com ([209.85.192.177]:59555 "EHLO
+	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756223Ab3JOCI6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Oct 2013 22:08:58 -0400
+Received: by mail-pd0-f177.google.com with SMTP id y10so8160970pdj.36
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Oct 2013 19:08:58 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	devel@lists.open80211s.org, distro11s@cozybit.com,
+	Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+Subject: [PATCH v5 5/5] mac80211: process mesh channel switching using beacon
+Date: Mon, 14 Oct 2013 19:08:31 -0700
+Message-Id: <1381802911-3921-6-git-send-email-yeohchunyeow@cozybit.com> (sfid-20131015_040913_909133_2F89CFAF)
+In-Reply-To: <1381802911-3921-1-git-send-email-yeohchunyeow@cozybit.com>
+References: <1381802911-3921-1-git-send-email-yeohchunyeow@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Trigger the mesh channel switching procedure if the mesh STA
+happens to miss the CSA action frame but able to receive the
+beacon containing the CSA and MCSP elements from its peer
+mesh STAs.
 
-This is the first NFC pull request for the 3.13 kernel.
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+---
+v2: fix return value (Johannes Berg)
 
-It's a fairly big one, with the following highlights:
+ net/mac80211/mesh.c      |  132 +++++++++++++++++++++++++++++++++++++++++++---
+ net/mac80211/spectmgmt.c |    6 +++
+ 2 files changed, 130 insertions(+), 8 deletions(-)
 
-- NFC digital layer implementation: Most NFC chipsets implement the NFC
-  digital layer in firmware, but others have more basic functionalities
-  and expect the host to implement the digital layer. This layer sits
-  below the NFC core.
-
-- Sony's port100 support: This is "soft" NFC USB dongle that expects the
-  digital layer to be implemented on the host. This is the first user of
-  our NFC digital stack implementation.
-
-- Secure element API: We now provide a netlink API for enabling,
-  disabling and discovering NFC attached (embedded or UICC ones) secure
-  elements. With some userspace help, this allows us to support NFC
-  payments.
-  Only the pn544 driver currently supports that API.
-
-- NCI SPI fixes and improvements: In order to support NCI devices over
-  SPI, we fixed and improved our NCI/SPI implementation. The currently
-  most deployed NFC NCI chipset, Broadcom's bcm2079x, supports that mode
-  and we're planning to use our NCI/SPI framework to implement a
-  driver for it.
-
-- pn533 fragmentation support in target mode: This was the only missing
-  feature from our pn533 impementation. We now support fragmentation in
-  both Tx and Rx modes, in target mode.
-
-The following changes since commit b75ff5e84bb6c2d43a8ec39b240c80f0543821f0:
-
-  Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net (2013-09-19 13:57:28 -0500)
-
-are available in the git repository at:
-
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-next.git tags/nfc-next-3.13-1
-
-for you to fetch changes up to ddc1a70b5f2a07a932ed31f989d63937bb813439:
-
-  NFC: Fix SE API related sparse warning (2013-10-07 14:18:44 +0200)
-
-----------------------------------------------------------------
-Arron Wang (3):
-      NFC: pn544: Add SE discover operation
-      NFC: Export nfc_find_se()
-      NFC: pn544: Add SE enable/disable operation
-
-Eric Lapuyade (8):
-      NFC: NCI: Fix wrong allocation size in nci_spi_allocate_device()
-      NFC: NCI: Rename spi ndev -> nsdev and nci_dev -> ndev for consistency
-      NFC: Move struct nfc_phy_ops out of HCI up to nfc core level
-      NFC: NCI: Simplify NCI SPI to become a simple framing/checking layer
-      NFC: NCI: Store the spi device pointer from the spi instance
-      NFC: NCI: zero struct spi_transfer variables before usage
-      NFC: NCI: nci_spi_recv_frame() now returns (not forward) the read frame
-      NFC: NCI: Modify NCI SPI to implement CS/INT handshake per the spec
-
-Fengguang Wu (1):
-      NFC: digital: digital_tg_send_sensf_res() can be static
-
-Joe Perches (3):
-      NFC: Replace nfc_dev_dbg with dev_dbg
-      NFC: Convert nfc_dev_info and nfc_dev_err to nfc_<level>
-      NFC: Standardize logging style
-
-Olivier Guiter (3):
-      NFC: pn533: Add MI/TG bits only when in Initiator mode
-      NFC: pn533: Add support for incoming fragmented frame in target mode
-      NFC: pn533: Target mode Tx fragmentation support
-
-Sachin Kamat (2):
-      NFC: nfcwilink: Remove redundant dev_set_drvdata
-      NFC: pn533: Staticize local symbols
-
-Samuel Ortiz (9):
-      NFC: Set active target upon DEP up event reception
-      NFC: pn533: Send ATR_REQ directly for active device detection
-      NFC: pn533: Start listen timer from start_poll
-      NFC: digital: Remove PR_ERR and PR_DBG macros
-      NFC: digital: Add newline to pr_* calls
-      NFC: Document NFC targets sens_res field
-      NFC: Define secure element IO API and commands
-      NFC: netlink: SE API implementation
-      NFC: Fix SE API related sparse warning
-
-Thierry Escande (12):
-      NFC: Digital Protocol stack implementation
-      NFC Digital: Implement driver commands mechanism
-      NFC Digital: Add NFC-A technology support
-      NFC Digital: Add NFC-F technology support
-      NFC Digital: Add initiator NFC-DEP support
-      NFC Digital: Add target NFC-DEP support
-      NFC: rawsock: Fix a memory leak
-      NFC: digital: Fix sens_res endiannes handling
-      NFC: Sony Port-100 Series driver
-      NFC: port100: Commands mechanism implementation
-      NFC: port100: Add initiator mode support
-      NFC: port100: Add target mode support
-
- drivers/nfc/Kconfig               |   10 +
- drivers/nfc/Makefile              |    1 +
- drivers/nfc/mei_phy.c             |    6 +-
- drivers/nfc/microread/i2c.c       |   32 +-
- drivers/nfc/microread/mei.c       |    4 +-
- drivers/nfc/microread/microread.c |    7 +-
- drivers/nfc/nfcsim.c              |   38 +-
- drivers/nfc/nfcwilink.c           |   97 +--
- drivers/nfc/pn533.c               |  604 ++++++++++-----
- drivers/nfc/pn544/i2c.c           |   42 +-
- drivers/nfc/pn544/pn544.c         |  129 +++-
- drivers/nfc/port100.c             | 1529 +++++++++++++++++++++++++++++++++++++
- include/net/nfc/digital.h         |  227 ++++++
- include/net/nfc/hci.h             |    6 -
- include/net/nfc/nci.h             |    4 +
- include/net/nfc/nci_core.h        |   46 +-
- include/net/nfc/nfc.h             |   25 +-
- include/uapi/linux/nfc.h          |    4 +
- net/nfc/Kconfig                   |   14 +
- net/nfc/Makefile                  |    2 +
- net/nfc/core.c                    |   22 +-
- net/nfc/digital.h                 |  170 +++++
- net/nfc/digital_core.c            |  737 ++++++++++++++++++
- net/nfc/digital_dep.c             |  729 ++++++++++++++++++
- net/nfc/digital_technology.c      |  770 +++++++++++++++++++
- net/nfc/nci/spi.c                 |  239 +++---
- net/nfc/netlink.c                 |   91 +++
- net/nfc/rawsock.c                 |    7 +-
- 28 files changed, 5065 insertions(+), 527 deletions(-)
- create mode 100644 drivers/nfc/port100.c
- create mode 100644 include/net/nfc/digital.h
- create mode 100644 net/nfc/digital.h
- create mode 100644 net/nfc/digital_core.c
- create mode 100644 net/nfc/digital_dep.c
- create mode 100644 net/nfc/digital_technology.c
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 50b1863..35c4147 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -850,6 +850,124 @@ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
+ 	ieee80211_configure_filter(local);
+ }
+ 
++static bool
++ieee80211_mesh_process_chnswitch(struct ieee80211_sub_if_data *sdata,
++				 struct ieee802_11_elems *elems, bool beacon)
++{
++	struct cfg80211_csa_settings params;
++	struct ieee80211_csa_ie csa_ie;
++	struct ieee80211_chanctx_conf *chanctx_conf;
++	struct ieee80211_chanctx *chanctx;
++	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
++	enum ieee80211_band band = ieee80211_get_sdata_band(sdata);
++	int err, num_chanctx;
++	u32 sta_flags;
++
++	if (sdata->vif.csa_active)
++		return true;
++
++	if (!ifmsh->mesh_id)
++		return false;
++
++	sta_flags = IEEE80211_STA_DISABLE_VHT;
++	switch (sdata->vif.bss_conf.chandef.width) {
++	case NL80211_CHAN_WIDTH_20_NOHT:
++		sta_flags |= IEEE80211_STA_DISABLE_HT;
++	case NL80211_CHAN_WIDTH_20:
++		sta_flags |= IEEE80211_STA_DISABLE_40MHZ;
++		break;
++	default:
++		break;
++	}
++
++	memset(&params, 0, sizeof(params));
++	memset(&csa_ie, 0, sizeof(csa_ie));
++	err = ieee80211_parse_ch_switch_ie(sdata, elems, beacon, band,
++					   sta_flags, sdata->vif.addr,
++					   &csa_ie);
++	if (err < 0)
++		return false;
++	if (err)
++		return false;
++
++	params.chandef = csa_ie.chandef;
++	params.count = csa_ie.count;
++
++	if (sdata->vif.bss_conf.chandef.chan->band !=
++	    params.chandef.chan->band)
++		return false;
++
++	if (!cfg80211_chandef_usable(sdata->local->hw.wiphy, &params.chandef,
++				     IEEE80211_CHAN_DISABLED)) {
++		sdata_info(sdata,
++			   "mesh STA %pM switches to unsupported channel (%d MHz, width:%d, CF1/2: %d/%d MHz), aborting\n",
++			   sdata->vif.addr,
++			   params.chandef.chan->center_freq,
++			   params.chandef.width,
++			   params.chandef.center_freq1,
++			   params.chandef.center_freq2);
++		return false;
++	}
++
++	err = cfg80211_chandef_dfs_required(sdata->local->hw.wiphy,
++					    &params.chandef);
++	if (err < 0)
++		return false;
++	if (err) {
++		params.radar_required = true;
++		/* TODO: DFS not (yet) supported */
++		return false;
++	}
++
++	rcu_read_lock();
++	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
++	if (!chanctx_conf)
++		goto failed_chswitch;
++
++	/* don't handle for multi-VIF cases */
++	chanctx = container_of(chanctx_conf, struct ieee80211_chanctx, conf);
++	if (chanctx->refcount > 1)
++		goto failed_chswitch;
++
++	num_chanctx = 0;
++	list_for_each_entry_rcu(chanctx, &sdata->local->chanctx_list, list)
++		num_chanctx++;
++
++	if (num_chanctx > 1)
++		goto failed_chswitch;
++
++	rcu_read_unlock();
++
++	mcsa_dbg(sdata,
++		 "received channel switch announcement to go to channel %d MHz\n",
++		 params.chandef.chan->center_freq);
++
++	params.block_tx = csa_ie.mode & WLAN_EID_CHAN_SWITCH_PARAM_TX_RESTRICT;
++	if (beacon)
++		ifmsh->chsw_ttl = csa_ie.ttl - 1;
++
++	if (ifmsh->chsw_ttl > 0)
++		ieee80211_mesh_csa_beacon(sdata, &params, false);
++
++	sdata->csa_radar_required = params.radar_required;
++
++	if (params.block_tx)
++		ieee80211_stop_queues_by_reason(&sdata->local->hw,
++				IEEE80211_MAX_QUEUE_MAP,
++				IEEE80211_QUEUE_STOP_REASON_CSA);
++
++	sdata->local->csa_chandef = params.chandef;
++	sdata->vif.csa_active = true;
++
++	ieee80211_bss_info_change_notify(sdata, err);
++	drv_channel_switch_beacon(sdata, &params.chandef);
++
++	return true;
++failed_chswitch:
++	rcu_read_unlock();
++	return false;
++}
++
+ static void
+ ieee80211_mesh_rx_probe_req(struct ieee80211_sub_if_data *sdata,
+ 			    struct ieee80211_mgmt *mgmt, size_t len)
+@@ -956,6 +1074,9 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
+ 	if (ifmsh->sync_ops)
+ 		ifmsh->sync_ops->rx_bcn_presp(sdata,
+ 			stype, mgmt, &elems, rx_status);
++
++	if (!ifmsh->chsw_init)
++		ieee80211_mesh_process_chnswitch(sdata, &elems, true);
+ }
+ 
+ int ieee80211_mesh_finish_csa(struct ieee80211_sub_if_data *sdata)
+@@ -1051,7 +1172,7 @@ static void mesh_rx_csa_frame(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 	struct ieee802_11_elems elems;
+ 	u16 pre_value;
+-	bool block_tx, fwd_csa = true;
++	bool fwd_csa = true;
+ 	size_t baselen;
+ 	u8 *pos, ttl;
+ 
+@@ -1080,13 +1201,8 @@ static void mesh_rx_csa_frame(struct ieee80211_sub_if_data *sdata,
+ 			mcsa_dbg(sdata, "Failed to forward the CSA frame");
+ 	}
+ 
+-	/* block the Tx only after forwarding the CSA frame if required */
+-	block_tx = elems.mesh_chansw_params_ie->mesh_flags &
+-		   WLAN_EID_CHAN_SWITCH_PARAM_TX_RESTRICT;
+-	if (block_tx)
+-		ieee80211_stop_queues_by_reason(&sdata->local->hw,
+-				IEEE80211_MAX_QUEUE_MAP,
+-				IEEE80211_QUEUE_STOP_REASON_CSA);
++	if (!ieee80211_mesh_process_chnswitch(sdata, &elems, false))
++		mcsa_dbg(sdata, "Failed to process CSA action frame");
+ }
+ 
+ static void ieee80211_mesh_rx_mgmt_action(struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/spectmgmt.c b/net/mac80211/spectmgmt.c
+index a298e12..a40da20 100644
+--- a/net/mac80211/spectmgmt.c
++++ b/net/mac80211/spectmgmt.c
+@@ -74,6 +74,12 @@ int ieee80211_parse_ch_switch_ie(struct ieee80211_sub_if_data *sdata,
+ 		return 1;
+ 	}
+ 
++	/* Mesh Channel Switch Parameters Element */
++	if (elems->mesh_chansw_params_ie) {
++		csa_ie->ttl = elems->mesh_chansw_params_ie->mesh_ttl;
++		csa_ie->mode = elems->mesh_chansw_params_ie->mesh_flags;
++	}
++
+ 	new_freq = ieee80211_channel_to_frequency(new_chan_no, new_band);
+ 	new_chan = ieee80211_get_channel(sdata->local->hw.wiphy, new_freq);
+ 	if (!new_chan || new_chan->flags & IEEE80211_CHAN_DISABLED) {
 -- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+1.7.9.5
+
