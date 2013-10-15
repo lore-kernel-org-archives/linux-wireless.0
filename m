@@ -1,62 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from victor.provo.novell.com ([137.65.250.26]:46024 "EHLO
-	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755374Ab3JHJ5b (ORCPT
-	<rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
-	Tue, 8 Oct 2013 05:57:31 -0400
-Received: by mail-ie0-f169.google.com with SMTP id tp5so18839725ieb.14
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Oct 2013 02:57:20 -0700 (PDT)
+Received: from szxga01-in.huawei.com ([119.145.14.64]:4971 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758858Ab3JOL56 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Oct 2013 07:57:58 -0400
+From: Kefeng Wang <wangkefeng.wang@huawei.com>
+To: <linux-kernel@vger.kernel.org>
+CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Pablo Neira Ayuso <pablo@netfilter.org>,
+	"Stephen Hemminger" <stephen@networkplumber.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Francois Romieu <romieu@fr.zoreil.com>,
+	"Ben Hutchings" <bhutchings@solarflare.com>,
+	Chas Williams <chas@cmf.nrl.navy.mil>,
+	Marc Kleine-Budde <mkl@pengutronix.de>,
+	Samuel Ortiz <samuel@sortiz.org>,
+	Paul Mackerras <paulus@samba.org>,
+	Oliver Neukum <oneukum@suse.de>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	"Boris Ostrovsky" <boris.ostrovsky@oracle.com>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	"Michael S. Tsirkin" <mst@redhat.com>, <netfilter@vger.kernel.org>,
+	<netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	<guohanjun@huawei.com>
+Subject: [PATCH 01/18] netfilter: cleanup: delete Macro PRINTR
+Date: Tue, 15 Oct 2013 19:44:57 +0800
+Message-ID: <1381837514-50660-2-git-send-email-wangkefeng.wang@huawei.com> (sfid-20131015_140546_045014_ED543CE5)
+In-Reply-To: <1381837514-50660-1-git-send-email-wangkefeng.wang@huawei.com>
+References: <1381837514-50660-1-git-send-email-wangkefeng.wang@huawei.com>
 MIME-Version: 1.0
-Date: Tue, 8 Oct 2013 17:57:20 +0800
-Message-ID: <CALx5=V_OdHRJsourv2Hiykg-shyrisdrNnzD1qvpjAWR2iQyfg@mail.gmail.com> (sfid-20131008_115744_125352_A39E5028)
-Subject: WIFI P2P ping doesn't work.
-From: Matt Chen <machen@suse.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi list,
+Macro PRINTR is only used once in nfnetlink_log.c, so it can be
+replaced by helper function net_err_ratelimited().
 
-I am running the v3.12-rc3 and using Atheros AR9485 with ath9k. My
-wpa_supplicant is from git://w1.fi/srv/git/hostap.git in master branch
-with most recent commit.
+Signed-off-by: Kefeng Wang <wangkefeng.wang@huawei.com>
+---
+ net/netfilter/nfnetlink_log.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-The my_p2p_supplicant.conf for my wpa_supplicant is :
-=======================================
-ctrl=/var/run/wpa_supplicant
-update_config=1
-
-device_name=HP GO
-device_type=1-0050F204-2
-
-p2p_go_ht40=1
-
-=========================================
-
-I run "wpa_supplicant -i wlan0 -f my_p2p_supplicant.conf -Dnl80211
--ddt -f /var/log/wpa_supplicant -B
-
-I use wpa_cli to work on P2P. So here goes my case:
-
-M#1
-p2p_find
-p2p_stop
-p2p_peers
-p2p_connect [M#2 MAC ADDRESS] pbc go_intent=7
-
-M#2
-p2p_find
-p2p_stop
-p2p_peers
-p2p_connect [M#1 MAC ADDRESS] pbc
+diff --git a/net/netfilter/nfnetlink_log.c b/net/netfilter/nfnetlink_log.c
+index d92cc31..8713111 100644
+--- a/net/netfilter/nfnetlink_log.c
++++ b/net/netfilter/nfnetlink_log.c
+@@ -47,9 +47,6 @@
+ #define NFULNL_QTHRESH_DEFAULT 	100	/* 100 packets */
+ #define NFULNL_COPY_RANGE_MAX	0xFFFF	/* max packet size is limited by 16-bit struct nfattr nfa_len field */
+ 
+-#define PRINTR(x, args...)	do { if (net_ratelimit()) \
+-				     printk(x, ## args); } while (0);
+-
+ struct nfulnl_instance {
+ 	struct hlist_node hlist;	/* global list of instances */
+ 	spinlock_t lock;
+@@ -587,7 +584,7 @@ __build_packet_message(struct nfnl_log_net *log,
+ 	return 0;
+ 
+ nla_put_failure:
+-	PRINTR(KERN_ERR "nfnetlink_log: error creating log nlmsg\n");
++	net_err_ratelimited("nfnetlink_log: error creating log nlmsg\n");
+ 	return -1;
+ }
+ 
+-- 
+1.8.2.1
 
 
-Then I can find the M#1 become the P0 GO mode and M#2 become station
-mode. And each status is completed. But after that, I set each machine
-with a static IP such as 192.168.5.10 and 192.168.5.11 manually. I am
-not able to ping each IP.
-
-Is there anything I am doing wrong ?
-
-Thank you.
