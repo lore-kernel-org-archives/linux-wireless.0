@@ -1,41 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:33749 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751101Ab3JWHIL (ORCPT
+Received: from szxga01-in.huawei.com ([119.145.14.64]:5526 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932585Ab3JOL6h (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Oct 2013 03:08:11 -0400
-Message-ID: <1382512029.21526.14.camel@porter.coelho.fi> (sfid-20131023_090814_839152_5E4AA322)
-Subject: Re: [PATCH 01/13] wl18xx: default config alignment with phy defaults
-From: Luca Coelho <luca@coelho.fi>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 23 Oct 2013 10:07:09 +0300
-In-Reply-To: <1378718684-14430-1-git-send-email-eliad@wizery.com>
-References: <1378718684-14430-1-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 15 Oct 2013 07:58:37 -0400
+From: Kefeng Wang <wangkefeng.wang@huawei.com>
+To: <linux-kernel@vger.kernel.org>
+CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Pablo Neira Ayuso <pablo@netfilter.org>,
+	"Stephen Hemminger" <stephen@networkplumber.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Francois Romieu <romieu@fr.zoreil.com>,
+	"Ben Hutchings" <bhutchings@solarflare.com>,
+	Chas Williams <chas@cmf.nrl.navy.mil>,
+	Marc Kleine-Budde <mkl@pengutronix.de>,
+	Samuel Ortiz <samuel@sortiz.org>,
+	Paul Mackerras <paulus@samba.org>,
+	Oliver Neukum <oneukum@suse.de>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	"Boris Ostrovsky" <boris.ostrovsky@oracle.com>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	"Michael S. Tsirkin" <mst@redhat.com>, <netfilter@vger.kernel.org>,
+	<netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	<guohanjun@huawei.com>
+Subject: [PATCH 10/18] net: peak_usb: use wrapper functions of net_ratelimit() to simplify code
+Date: Tue, 15 Oct 2013 19:45:06 +0800
+Message-ID: <1381837514-50660-11-git-send-email-wangkefeng.wang@huawei.com> (sfid-20131015_140017_612263_5E42FE65)
+In-Reply-To: <1381837514-50660-1-git-send-email-wangkefeng.wang@huawei.com>
+References: <1381837514-50660-1-git-send-email-wangkefeng.wang@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-09-09 at 12:24 +0300, Eliad Peller wrote:
-> From: Igal Chernobelsky <igalc@ti.com>
-> 
-> Driver default config is aligned with phy default parameters.
-> 
-> Now that RDL1_3 has 2 antennas defined by default we need to explicitly
-> define ht.mode to HT_MODE_WIDE to have SISO40 as default.
-> 
-> Signed-off-by: Yair Shapira <yair.shapira@ti.com>
-> Signed-off-by: Igal Chernobelsky <igalc@ti.com>
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> ---
+net_ratelimited_function() is called to simplify code.
 
-Applied the whole series except for 11/13 due to a sparse warning.
+Signed-off-by: Kefeng Wang <wangkefeng.wang@huawei.com>
+---
+ drivers/net/can/usb/peak_usb/pcan_usb_core.c | 11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
 
-Sorry for the huge delay, at least I found the time to do it before the
-merge window opened. ;)
+diff --git a/drivers/net/can/usb/peak_usb/pcan_usb_core.c b/drivers/net/can/usb/peak_usb/pcan_usb_core.c
+index 0b7a4c3..5166a1f 100644
+--- a/drivers/net/can/usb/peak_usb/pcan_usb_core.c
++++ b/drivers/net/can/usb/peak_usb/pcan_usb_core.c
+@@ -191,8 +191,7 @@ static void peak_usb_read_bulk_callback(struct urb *urb)
+ 		return;
+ 
+ 	default:
+-		if (net_ratelimit())
+-			netdev_err(netdev,
++		net_ratelimited_function(netdev_err, netdev,
+ 				   "Rx urb aborted (%d)\n", urb->status);
+ 		goto resubmit_urb;
+ 	}
+@@ -260,9 +259,8 @@ static void peak_usb_write_bulk_callback(struct urb *urb)
+ 		break;
+ 
+ 	default:
+-		if (net_ratelimit())
+-			netdev_err(netdev, "Tx urb aborted (%d)\n",
+-				   urb->status);
++		net_ratelimited_function(netdev_err, netdev,
++			"Tx urb aborted (%d)\n", urb->status);
+ 	case -EPROTO:
+ 	case -ENOENT:
+ 	case -ECONNRESET:
+@@ -314,8 +312,7 @@ static netdev_tx_t peak_usb_ndo_start_xmit(struct sk_buff *skb,
+ 
+ 	err = dev->adapter->dev_encode_msg(dev, skb, obuf, &size);
+ 	if (err) {
+-		if (net_ratelimit())
+-			netdev_err(netdev, "packet dropped\n");
++		net_ratelimited_function(netdev_err, netdev, "packet dropped\n");
+ 		dev_kfree_skb(skb);
+ 		stats->tx_dropped++;
+ 		return NETDEV_TX_OK;
+-- 
+1.8.2.1
 
---
-Cheers,
-Luca.
 
