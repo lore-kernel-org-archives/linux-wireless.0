@@ -1,30 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:32847 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754095Ab3JHKlY (ORCPT
+Received: from szxga03-in.huawei.com ([119.145.14.66]:62885 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758858Ab3JOL6D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Oct 2013 06:41:24 -0400
-Message-ID: <1381228880.13359.5.camel@jlt4.sipsolutions.net> (sfid-20131008_124132_062234_079A8C9A)
-Subject: Re: [PATCH] nl80211: vendor command support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Tue, 08 Oct 2013 12:41:20 +0200
-In-Reply-To: <CAB3XZEe+vVezWHBkOt_M4pfqCu--c78EuyMEmGD2oqcpP9=c-w@mail.gmail.com> (sfid-20131008_123406_100836_D0A76060)
-References: <1381222401-21999-1-git-send-email-johannes@sipsolutions.net>
-	 <CAB3XZEe+vVezWHBkOt_M4pfqCu--c78EuyMEmGD2oqcpP9=c-w@mail.gmail.com>
-	 (sfid-20131008_123406_100836_D0A76060)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 15 Oct 2013 07:58:03 -0400
+From: Kefeng Wang <wangkefeng.wang@huawei.com>
+To: <linux-kernel@vger.kernel.org>
+CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Pablo Neira Ayuso <pablo@netfilter.org>,
+	"Stephen Hemminger" <stephen@networkplumber.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Francois Romieu <romieu@fr.zoreil.com>,
+	"Ben Hutchings" <bhutchings@solarflare.com>,
+	Chas Williams <chas@cmf.nrl.navy.mil>,
+	Marc Kleine-Budde <mkl@pengutronix.de>,
+	Samuel Ortiz <samuel@sortiz.org>,
+	Paul Mackerras <paulus@samba.org>,
+	Oliver Neukum <oneukum@suse.de>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	"Boris Ostrovsky" <boris.ostrovsky@oracle.com>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	"Michael S. Tsirkin" <mst@redhat.com>, <netfilter@vger.kernel.org>,
+	<netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	<guohanjun@huawei.com>
+Subject: [PATCH 14/18] net: usb: use wrapper functions of net_ratelimit() to simplify code
+Date: Tue, 15 Oct 2013 19:45:10 +0800
+Message-ID: <1381837514-50660-15-git-send-email-wangkefeng.wang@huawei.com> (sfid-20131015_140403_354603_167E2C16)
+In-Reply-To: <1381837514-50660-1-git-send-email-wangkefeng.wang@huawei.com>
+References: <1381837514-50660-1-git-send-email-wangkefeng.wang@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-10-08 at 12:34 +0200, Eliad Peller wrote:
+net_ratelimited_function() is called to simplify code.
 
-> don't you miss the rdev->cur_cmd_info initialization in case of
-> vendor_cmd (like it's being done in testmode)?
+Signed-off-by: Kefeng Wang <wangkefeng.wang@huawei.com>
+---
+ drivers/net/usb/usbnet.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Indeed, I missed that. Need to test it anyway :)
+diff --git a/drivers/net/usb/usbnet.c b/drivers/net/usb/usbnet.c
+index bf94e10..edf81de 100644
+--- a/drivers/net/usb/usbnet.c
++++ b/drivers/net/usb/usbnet.c
+@@ -450,8 +450,8 @@ void usbnet_defer_kevent (struct usbnet *dev, int work)
+ {
+ 	set_bit (work, &dev->flags);
+ 	if (!schedule_work (&dev->kevent)) {
+-		if (net_ratelimit())
+-			netdev_err(dev->net, "kevent %d may have been dropped\n", work);
++		net_ratelimited_function(netdev_err, dev->net,
++			"kevent %d may have been dropped\n", work);
+ 	} else {
+ 		netdev_dbg(dev->net, "kevent %d scheduled\n", work);
+ 	}
+-- 
+1.8.2.1
 
-johannes
 
