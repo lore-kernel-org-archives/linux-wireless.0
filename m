@@ -1,64 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:59015 "EHLO mout.gmx.net"
+Received: from nbd.name ([46.4.11.11]:35323 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753954Ab3JRQRA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Oct 2013 12:17:00 -0400
-Received: from [192.168.0.103] ([93.218.112.150]) by mail.gmx.com (mrgmx003)
- with ESMTPSA (Nemesis) id 0MSMP5-1V9Eie1TX1-00TT2h for
- <linux-wireless@vger.kernel.org>; Fri, 18 Oct 2013 18:16:59 +0200
-Message-ID: <52615EFA.80902@rempel-privat.de> (sfid-20131018_181705_050323_149B0969)
-Date: Fri, 18 Oct 2013 18:16:58 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
+	id S1758567Ab3JON3p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Oct 2013 09:29:45 -0400
+Message-ID: <525D4347.5020902@openwrt.org> (sfid-20131015_152948_084230_8AEB4E6B)
+Date: Tue, 15 Oct 2013 15:29:43 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: =?UTF-8?B?WWFubmlrIFbDtmxrZXI=?= <yannikv@yahoo.de>
-CC: Pontus Fuchs <pontus.fuchs@gmail.com>,
+To: Floris Van den Abeele <floris.vandenabeele@intec.ugent.be>,
 	linux-wireless@vger.kernel.org
-Subject: Re: ar5523 Gigaset USB Adapter 108 issue
-References: <Pine.LNX.4.44L0.1310181041080.1164-100000@iolanthe.rowland.org> <52614E9B.6040400@rempel-privat.de> <526155ED.1090007@yahoo.de>
-In-Reply-To: <526155ED.1090007@yahoo.de>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: Lower throughput in Ad-hoc than in Infrastructure mode?
+References: <525CEE98.3010300@intec.ugent.be>
+In-Reply-To: <525CEE98.3010300@intec.ugent.be>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 18.10.2013 17:38, schrieb Yannik Völker:
-> Am 18.10.2013 17:07, schrieb Oleksij Rempel:
->> Am 18.10.2013 16:49, schrieb Alan Stern:
->>> Yannik, you should always use Reply-To-All so that your messages
->>> get sent to the mailing list and not just to me.
->>>
->>> On Thu, 17 Oct 2013, Yannik Völker wrote:
->>>
->>>> Am 07.08.2013 19:34, schrieb Alan Stern:
->>>>> Please post two usbmon traces, one showing the failure on
->>>>> your current system and the other showing the adapter running
->>>>> correctly under a 32-bit kernel.  Instructions for usbmon are
->>>>> in the kernel source file Documentation/usb/usbmon.txt.
->>>> I never got it to work under a 32-bit kernel, i was just able
->>>> to utilize a windows32 driver using ndiswrapper.
->>>>
->>>> Now i got it to "work". I randomly found out that the ar5523
->>>> driver actually works when you load it after you unload
->>>> ndiswrapper so the following steps make it work: 1. modprobe
->>>> ndiswrapper 2. plug in device 3. connect to wlan using
->>>> ndiswrapper and disconnect again (might be optional) 4.
->>>> modprobe -r ndiswrapper 5. modprobe ar5523 6. connect to wlan 
->>>> log for that is attatched as wlanthennative2.log
+On 2013-10-15 9:28 AM, Floris Van den Abeele wrote:
+> While running throughput experiments using iperf I noticed that UDP
+> throughput in ad-hoc mode was considerably lower than in Infrastructure
+> mode. The setups I'm comparing is a 802.11a ad-hoc network consisting of
+> two clients vs a 802.11a infrastructure network consisting of an access
+> point and a client (11a because the tests were run in the 5GHz band).
 > 
+> For ad-hoc mode I'm consistenly seeing a lower throughput than for
+> infrastructure mode: i.e. 22.4 Mbits/sec vs 28.2 Mbits/sec. Note that
+> while sniffing the medium radiotap headers report a PHY data rate of
+> 54Mbit/s in both cases. There is no other traffic on the Wi-Fi channel
+> in question (44). Considering the medium access for both setups is
+> similair I would expect to find similair throughputs. Is this a known
+> issue with the linux wireless/mac80211/ath9k driver stack or is this
+> behaviour conform the 802.11 standard (based on my knowledge I would say
+> no to the latter)? My test specs are below.
 > 
->> It sounds like linux driver didn't recognised usb id and didn't
->> uploaded firmware, or there was no firmware to upload.
-> there is firmware (/lib/firmware/ar5523.bin exists) but it does not
-> even get touched (i renamed the file and the error did not change at all)
+> For testing I'm using Sparklan WPEA-111N NIC's (AR9280). The nodes are
+> running OpenWrt attitude adjusment on r32482 (from 2012-06-21) with the
+> REGD patch enabled. I believe that this build of OpenWRT uses the
+> compat-wireless-2012-06-14.tar.bz2 drivers.
+I'd suggest that you try a recent version of OpenWrt before
+investigating further.
 
-find first usbid of your adapter (it will be changed after firmware
-upload). And try to force driver to use this id:
-modprobe -v ar5523
-echo 07d1 3a0d > /sys/bus/usb/drivers/ar5523/new_id
+- Felix
 
-instead of "07d1 3a0d" use your id.
-
-Besidy, what kernel version are you using? May be it is too old..
-
--- 
-Regards,
-Oleksij
