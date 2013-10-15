@@ -1,52 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f177.google.com ([209.85.217.177]:48850 "EHLO
-	mail-lb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756004Ab3J1PyF (ORCPT
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:54408 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933496Ab3JORcg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Oct 2013 11:54:05 -0400
-Received: by mail-lb0-f177.google.com with SMTP id u14so2940011lbd.8
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Oct 2013 08:54:03 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CABPxzYLUG-X=p5z4fJusH63EvtuOy=EKfeQPScHDwGDpAJoFYg@mail.gmail.com>
-References: <CAMP44s1XJRHV8bAX=_-TkSKMkY8Nw1=eHorqTCZ2QmtR5m8uJA@mail.gmail.com>
-	<526E20EA.9090203@rempel-privat.de>
-	<CABPxzYJ8HpdwOYZ4hA40m3MOo_r7CwktzzpM9g6SLdPf6Rkqjg@mail.gmail.com>
-	<CAMP44s2G63ptScncpPE0ercLY0fT7q0RAvSO6ROyMxm_jLRYXA@mail.gmail.com>
-	<CABPxzYLUG-X=p5z4fJusH63EvtuOy=EKfeQPScHDwGDpAJoFYg@mail.gmail.com>
-Date: Mon, 28 Oct 2013 09:54:03 -0600
-Message-ID: <CAMP44s0HUgitdq0x56Qk+23yhaRc2Ly-JWbeHL9T6D4D=z74Gw@mail.gmail.com> (sfid-20131028_165409_744878_7A2DA506)
-Subject: Re: I always need a miracle to connect with iwlwifi
-From: Felipe Contreras <felipe.contreras@gmail.com>
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Cc: Oleksij Rempel <linux@rempel-privat.de>,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	ilw@linux.intel.com,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 15 Oct 2013 13:32:36 -0400
+Received: by mail-pa0-f50.google.com with SMTP id fb1so9278031pad.23
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Oct 2013 10:32:35 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 5/7] ath10k: fix NULL deref upon early FW crash
+Date: Tue, 15 Oct 2013 10:29:54 -0700
+Message-Id: <1381858196-17000-6-git-send-email-michal.kazior@tieto.com> (sfid-20131015_193240_125432_DFC95677)
+In-Reply-To: <1381858196-17000-1-git-send-email-michal.kazior@tieto.com>
+References: <1381858196-17000-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 28, 2013 at 5:00 AM, Krishna Chaitanya
-<chaitanya.mgit@gmail.com> wrote:
-> On Mon, Oct 28, 2013 at 3:07 PM, Felipe Contreras
-> <felipe.contreras@gmail.com> wrote:
+If firmware crashes during FW probing it would try
+to perform FW recovery which uses mac80211
+workqueue before registering to mac80211.
 
->> Then why am I able to connect from my phone, other machines, and in
->> this machine with Windows 7?
->>
-> So lets say "max clients=5" and first all of your devices except the
-> linux connec
-> to the AP, then they have no issues connecting. Now if the linux is
-> the 6th device
-> then it might have trouble connecting to the AP?? Its possible.
+Using internal workqueue solves the problem.
 
-Yeah, but if max-clients = 5, and clients = 5, nothing would change
-when I reboot to Windows and it works. Also, if it's working on Linux,
-I reboot my machine, and then I cannot connect again. Plus, I
-disconnect my phone, I try to connect in Linux, it keeps failing, I
-connect my phone, and my phone works.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c | 3 ++-
+ drivers/net/wireless/ath/ath10k/pci.c  | 2 +-
+ 2 files changed, 3 insertions(+), 2 deletions(-)
 
-I don't think this theory matches the evidence at all.
-
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index c5561a9..3f6cbe7 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -664,7 +664,8 @@ static void ath10k_core_restart(struct work_struct *work)
+ 		ieee80211_restart_hw(ar->hw);
+ 		break;
+ 	case ATH10K_STATE_OFF:
+-		/* this can happen if driver is being unloaded */
++		/* this can happen if driver is being unloaded
++		 * or if the crash happens during FW probing */
+ 		ath10k_warn("cannot restart a device that hasn't been started\n");
+ 		break;
+ 	case ATH10K_STATE_RESTARTING:
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index f8d59c7..d09f8a2 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -777,7 +777,7 @@ static void ath10k_pci_hif_dump_area(struct ath10k *ar)
+ 			   reg_dump_values[i + 2],
+ 			   reg_dump_values[i + 3]);
+ 
+-	ieee80211_queue_work(ar->hw, &ar->restart_work);
++	queue_work(ar->workqueue, &ar->restart_work);
+ }
+ 
+ static void ath10k_pci_hif_send_complete_check(struct ath10k *ar, u8 pipe,
 -- 
-Felipe Contreras
+1.8.4.rc3
+
