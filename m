@@ -1,37 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx4.wp.pl ([212.77.101.8]:33121 "EHLO mx4.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754024Ab3JDOFV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Oct 2013 10:05:21 -0400
-Date: Fri, 4 Oct 2013 16:06:44 +0200
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-To: Gabor Juhos <juhosg@openwrt.org>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Paul Menzel <paulepanter@users.sourceforge.net>
-Subject: Re: [rt2x00-users] [PATCH v2 1/2] rt2x00: rt2800lib: remove
- TXMIXER_GAIN entries from the extended EEPROM map
-Message-ID: <20131004140644.GC32428@localhost.localdomain> (sfid-20131004_160525_226004_F435719D)
-References: <1380802022-28646-1-git-send-email-juhosg@openwrt.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1380802022-28646-1-git-send-email-juhosg@openwrt.org>
+Received: from smtprelay0189.hostedemail.com ([216.40.44.189]:35909 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S932283Ab3JOQYd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Oct 2013 12:24:33 -0400
+Message-ID: <1381854263.22110.19.camel@joe-AO722> (sfid-20131015_182459_576016_9B0AE92D)
+Subject: Re: [PATCH 02/18] net: use wrapper functions of net_ratelimit() to
+ simplify code
+From: Joe Perches <joe@perches.com>
+To: Kefeng Wang <wangkefeng.wang@huawei.com>
+Cc: linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Pablo Neira Ayuso <pablo@netfilter.org>,
+	Stephen Hemminger <stephen@networkplumber.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Francois Romieu <romieu@fr.zoreil.com>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	Chas Williams <chas@cmf.nrl.navy.mil>,
+	Marc Kleine-Budde <mkl@pengutronix.de>,
+	Samuel Ortiz <samuel@sortiz.org>,
+	Paul Mackerras <paulus@samba.org>,
+	Oliver Neukum <oneukum@suse.de>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	"Michael S. Tsirkin" <mst@redhat.com>, netfilter@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	guohanjun@huawei.com
+Date: Tue, 15 Oct 2013 09:24:23 -0700
+In-Reply-To: <1381837514-50660-3-git-send-email-wangkefeng.wang@huawei.com>
+References: <1381837514-50660-1-git-send-email-wangkefeng.wang@huawei.com>
+	 <1381837514-50660-3-git-send-email-wangkefeng.wang@huawei.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 03, 2013 at 02:07:01PM +0200, Gabor Juhos wrote:
-> The comments are indicating that the TXMIXER_GAIN_BG
-> and TXMIXED_GAIN_A entries are overlapping with the
-> RSSI_BG2 and RSSI_A2 entries in the extended EEPROM
-> map. This is not correct, because the upper byte of
-> the RSSI_BG2 and RSSI_A2 entries are reserved. There
-> are no TX mixer gain values are stored at all in the
-> extended EEPROM.
-> 
-> Remove the initialization of these entries from the
-> extended EEPROM map to reflect this.
-> 
-> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-> Acked-by: Paul Menzel <paulepanter@users.sourceforge.net>
+On Tue, 2013-10-15 at 19:44 +0800, Kefeng Wang wrote:
+> Wrapper functions net_ratelimited_function() and net_XXX_ratelimited()
+> are called to simplify code.
+[]
+> diff --git a/net/bridge/br_fdb.c b/net/bridge/br_fdb.c
+[]
+> @@ -465,10 +465,8 @@ void br_fdb_update(struct net_bridge *br, struct net_bridge_port *source,
+>  	if (likely(fdb)) {
+>  		/* attempt to update an entry for a local interface */
+>  		if (unlikely(fdb->is_local)) {
+> -			if (net_ratelimit())
+> -				br_warn(br, "received packet on %s with "
+> -					"own address as source address\n",
+> -					source->dev->name);
+> +			net_ratelimited_function(br_warn, br, "received packet on %s "
+> +				"with own address as source address\n", source->dev->name);
 
-Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
+Hello Kefeng.
+
+When these types of lines are changed, please coalesce the
+fragmented format pieces into a single string.
+
+It makes grep a bit easier and 80 columns limits don't
+apply to formats.
+
+I think using net_ratelimited_function is not particularly
+clarifying here.
+
+Maybe net_ratelimited_function should be removed instead
+of its use sites expanded.
+
+Perhaps adding macros like #define br_warn_ratelimited()
+would be better.
+
+This comment applies to the whole series.
+
