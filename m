@@ -1,48 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 162-17-110-37-static.hfc.comcastbusiness.net ([162.17.110.37]:34578
-	"EHLO stuffed.shaftnet.org" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752749Ab3JYWPr (ORCPT
+Received: from mail-bk0-f43.google.com ([209.85.214.43]:39783 "EHLO
+	mail-bk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759690Ab3JOTho convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Oct 2013 18:15:47 -0400
-From: Solomon Peachy <pizza@shaftnet.org>
-To: linux-wireless@vger.kernel.org
-Cc: Solomon Peachy <pizza@shaftnet.org>
-Subject: [PATCH -next 2/2] wireless: cw1200: Use consistent internal  locking conventions
-Date: Fri, 25 Oct 2013 18:15:43 -0400
-Message-Id: <1382739343-5727-2-git-send-email-pizza@shaftnet.org> (sfid-20131026_001551_491142_F8A3FCFA)
-In-Reply-To: <1382739343-5727-1-git-send-email-pizza@shaftnet.org>
-References: <1382739343-5727-1-git-send-email-pizza@shaftnet.org>
+	Tue, 15 Oct 2013 15:37:44 -0400
+Received: by mail-bk0-f43.google.com with SMTP id mz13so3307296bkb.2
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Oct 2013 12:37:42 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87a9iabc9c.fsf@kamboji.qca.qualcomm.com>
+References: <20131015184548.14123.56949.stgit@localhost6.localdomain6>
+	<20131015184656.14123.70575.stgit@localhost6.localdomain6>
+	<87a9iabc9c.fsf@kamboji.qca.qualcomm.com>
+Date: Tue, 15 Oct 2013 12:37:42 -0700
+Message-ID: <CA+BoTQ=CqXN24Y-tb=r_ruUUNR_imcztULnoTScAvScvbPDbdA@mail.gmail.com> (sfid-20131015_213747_282630_D5AE48F8)
+Subject: Re: [PATCH 3/7] ath10k: track vif list internally
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath10k@lists.infradead.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The cw1200_irq_handler() function expects the hwbus lock to be held when
-it is called.  On the SDIO platform, this lock is implemented in terms
-of sdio_claim_host/sdio_release_host.
+On 15 October 2013 11:49, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Kalle Valo <kvalo@qca.qualcomm.com> writes:
+>
+>> From: Michal Kazior <michal.kazior@tieto.com>
+>>
+>> mac80211 interface interations functions have
+>> peculiar locking issues. This patch introduces
+>> internal (to ath10k) vif list that will be used
+>> for vif iteration purposes.
+>>
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+>
+> [...]
+>
+>> --- a/drivers/net/wireless/ath/ath10k/core.c
+>> +++ b/drivers/net/wireless/ath/ath10k/core.c
+>> @@ -713,6 +713,7 @@ struct ath10k *ath10k_core_create(void *hif_priv, struct device *dev,
+>>       mutex_init(&ar->conf_mutex);
+>>       spin_lock_init(&ar->data_lock);
+>>
+>> +     INIT_LIST_HEAD(&ar->arvifs);
+>>       INIT_LIST_HEAD(&ar->peers);
+>>       init_waitqueue_head(&ar->peer_mapping_wq);
+>>
+>> @@ -824,6 +825,7 @@ int ath10k_core_start(struct ath10k *ar)
+>>               goto err_disconnect_htc;
+>>
+>>       ar->free_vdev_map = (1 << TARGET_NUM_VDEVS) - 1;
+>> +     INIT_LIST_HEAD(&ar->arvifs);
+>>
+>>       return 0;
+>
+> Michal, why do the INIT_LIST_HEAD() twice? Isn't it enough to do it
+> core_start()?
 
-This trivial patch makes it explicit that we are performing the hwbus
-lock rather than something SDIO-specific.
+Ah, good point. It's most likely okay to just do it in
+ath10k_core_start(). The one in ath10k_core_create() isn't required.
 
-Signed-off-by: Solomon Peachy <pizza@shaftnet.org>
----
- drivers/net/wireless/cw1200/cw1200_sdio.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/cw1200/cw1200_sdio.c b/drivers/net/wireless/cw1200/cw1200_sdio.c
-index ebdcdf4..d3acc85 100644
---- a/drivers/net/wireless/cw1200/cw1200_sdio.c
-+++ b/drivers/net/wireless/cw1200/cw1200_sdio.c
-@@ -108,9 +108,9 @@ static irqreturn_t cw1200_gpio_irq(int irq, void *dev_id)
- 	struct hwbus_priv *self = dev_id;
- 
- 	if (self->core) {
--		sdio_claim_host(self->func);
-+		cw1200_sdio_lock(self);
- 		cw1200_irq_handler(self->core);
--		sdio_release_host(self->func);
-+		cw1200_sdio_unlock(self);
- 		return IRQ_HANDLED;
- 	} else {
- 		return IRQ_NONE;
--- 
-1.8.3.1
-
+Michał
