@@ -1,77 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:53676 "EHLO arrakis.dune.hu"
+Received: from mx4.wp.pl ([212.77.101.8]:40185 "EHLO mx4.wp.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756083Ab3JNUAI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Oct 2013 16:00:08 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 1/3] rt2x00: rt2800lib: use {tx,rx}_chain_num to avoid superfluous EEPROM access
-Date: Mon, 14 Oct 2013 21:59:50 +0200
-Message-Id: <1381780792-28894-1-git-send-email-juhosg@openwrt.org> (sfid-20131014_220015_507469_BCF13027)
+	id S932270Ab3JOM1V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Oct 2013 08:27:21 -0400
+Received: from ip-94-112-189-223.net.upcbroadband.cz (HELO localhost) (stf_xl@wp.pl@[94.112.189.223])
+          (envelope-sender <stf_xl@wp.pl>)
+          by smtp.wp.pl (WP-SMTPD) with AES128-SHA encrypted SMTP
+          for <linux-wireless@vger.kernel.org>; 15 Oct 2013 14:27:16 +0200
+Date: Tue, 15 Oct 2013 14:28:48 +0200
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+To: linux-wireless@vger.kernel.org
+Cc: users@rt2x00.serialmonkey.com
+Subject: [PATCH 3.12] rt2400pci: fix RSSI read
+Message-ID: <20131015122848.GA6417@localhost.localdomain> (sfid-20131015_142724_520205_B8A9FE25)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The {rx,tx}_chain_num fields of rt2x00dev->default_ant
-contains the number of RX and TX chains already when the
-rt2800_probe_hw_mode() function runs. Use those values
-instead of parsing the EEPROM configuration values again.
+RSSI value is provided on word3 not on word2.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Cc: stable@vger.kernel.org
+Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
 ---
- drivers/net/wireless/rt2x00/rt2800lib.c |   16 ++++++----------
- 1 file changed, 6 insertions(+), 10 deletions(-)
+ drivers/net/wireless/rt2x00/rt2400pci.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index aa87894..3ca0d3e 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -7450,7 +7450,6 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 	char *default_power2;
- 	char *default_power3;
- 	unsigned int i;
--	u16 eeprom;
- 	u32 reg;
- 
- 	/*
-@@ -7499,8 +7498,6 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 	rt2x00dev->hw->max_report_rates = 7;
- 	rt2x00dev->hw->max_rate_tries = 1;
- 
--	rt2800_eeprom_read(rt2x00dev, EEPROM_NIC_CONF0, &eeprom);
--
- 	/*
- 	 * Initialize hw_mode information.
+diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
+index 3d53a09..38ed9a3 100644
+--- a/drivers/net/wireless/rt2x00/rt2400pci.c
++++ b/drivers/net/wireless/rt2x00/rt2400pci.c
+@@ -1261,7 +1261,7 @@ static void rt2400pci_fill_rxdone(struct queue_entry *entry,
  	 */
-@@ -7566,22 +7563,21 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 	    IEEE80211_HT_CAP_SGI_20 |
- 	    IEEE80211_HT_CAP_SGI_40;
+ 	rxdesc->timestamp = ((u64)rx_high << 32) | rx_low;
+ 	rxdesc->signal = rt2x00_get_field32(word2, RXD_W2_SIGNAL) & ~0x08;
+-	rxdesc->rssi = rt2x00_get_field32(word2, RXD_W3_RSSI) -
++	rxdesc->rssi = rt2x00_get_field32(word3, RXD_W3_RSSI) -
+ 	    entry->queue->rt2x00dev->rssi_offset;
+ 	rxdesc->size = rt2x00_get_field32(word0, RXD_W0_DATABYTE_COUNT);
  
--	if (rt2x00_get_field16(eeprom, EEPROM_NIC_CONF0_TXPATH) >= 2)
-+	if (rt2x00dev->default_ant.tx_chain_num >= 2)
- 		spec->ht.cap |= IEEE80211_HT_CAP_TX_STBC;
- 
--	spec->ht.cap |=
--	    rt2x00_get_field16(eeprom, EEPROM_NIC_CONF0_RXPATH) <<
--		IEEE80211_HT_CAP_RX_STBC_SHIFT;
-+	spec->ht.cap |= rt2x00dev->default_ant.rx_chain_num <<
-+			IEEE80211_HT_CAP_RX_STBC_SHIFT;
- 
- 	spec->ht.ampdu_factor = 3;
- 	spec->ht.ampdu_density = 4;
- 	spec->ht.mcs.tx_params =
- 	    IEEE80211_HT_MCS_TX_DEFINED |
- 	    IEEE80211_HT_MCS_TX_RX_DIFF |
--	    ((rt2x00_get_field16(eeprom, EEPROM_NIC_CONF0_TXPATH) - 1) <<
--		IEEE80211_HT_MCS_TX_MAX_STREAMS_SHIFT);
-+	    ((rt2x00dev->default_ant.tx_chain_num - 1) <<
-+	     IEEE80211_HT_MCS_TX_MAX_STREAMS_SHIFT);
- 
--	switch (rt2x00_get_field16(eeprom, EEPROM_NIC_CONF0_RXPATH)) {
-+	switch (rt2x00dev->default_ant.rx_chain_num) {
- 	case 3:
- 		spec->ht.mcs.rx_mask[2] = 0xff;
- 	case 2:
 -- 
-1.7.10
+1.7.4.4
+
