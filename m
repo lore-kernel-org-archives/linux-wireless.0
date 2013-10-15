@@ -1,54 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:35008 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755604Ab3JRW1j (ORCPT
+Received: from mga11.intel.com ([192.55.52.93]:50165 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757896Ab3JOKwI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Oct 2013 18:27:39 -0400
-Message-ID: <5261B5D6.2020002@lwfinger.net> (sfid-20131019_002800_590256_D52D3562)
-Date: Fri, 18 Oct 2013 17:27:34 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 15 Oct 2013 06:52:08 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Sander Eikelenboom <linux@eikelenboom.it>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>
+CC: "ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [Ilw] drivers/net/wireless/iwlwifi/dvm/tx.c:456
+	iwlagn_tx_skb+0x6c5/0x883()
+Date: Tue, 15 Oct 2013 10:52:04 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301DC46E5@HASMSX103.ger.corp.intel.com> (sfid-20131015_125211_956166_4285EF34)
+References: <9010061839.20131015123940@eikelenboom.it>
+In-Reply-To: <9010061839.20131015123940@eikelenboom.it>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: Felipe Pena <felipensp@gmail.com>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/1] drivers: net: wireless: rtlwifi: Fix wrong assignment
-References: <1382134538-3719-1-git-send-email-felipensp@gmail.com>
-In-Reply-To: <1382134538-3719-1-git-send-email-felipensp@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/18/2013 05:15 PM, Felipe Pena wrote:
-> There is a typo in the struct member name on assignment when checking
-> rtlphy->current_chan_bw == HT_CHANNEL_WIDTH_20_40, the check uses pwrgroup_ht40
-> for bound limit and uses pwrgroup_ht20 when assigning instead.
->
-> Signed-off-by: Felipe Pena <felipensp@gmail.com>
-> ---
->   drivers/net/wireless/rtlwifi/rtl8192se/rf.c |    2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/rf.c b/drivers/net/wireless/rtlwifi/rtl8192se/rf.c
-> index 5061f1d..92d38ab 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192se/rf.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192se/rf.c
-> @@ -265,7 +265,7 @@ static void _rtl92s_get_txpower_writeval_byregulatory(struct ieee80211_hw *hw,
->   				    rtlefuse->pwrgroup_ht40
->   				    [RF90_PATH_A][chnl - 1]) {
->   					pwrdiff_limit[i] =
-> -					  rtlefuse->pwrgroup_ht20
-> +					  rtlefuse->pwrgroup_ht40
->   					  [RF90_PATH_A][chnl - 1];
->   				}
->   			} else {
+> 
+> Hi,
+> 
+> I'm having a:
+> 
+> 02:00.0 Network controller: Intel Corporation Centrino Advanced-N 6235 (rev
+> 24)
+> 
+> And i'm running into this warning on boot with a 3.11.2 and 3.12-rc5 kernel.
+> 
+> [   23.904950] ------------[ cut here ]------------
+> [   23.904957] WARNING: CPU: 0 PID: 2531 at
+> drivers/net/wireless/iwlwifi/dvm/tx.c:456 iwlagn_tx_skb+0x6c5/0x883()
 
-Good catch. There is only one problem - by convention we skip 
-drivers/net/wireless in the subject. That would probably be OK, but you are 
-missing the rtl8192se part, which needs to be there. I suggest that you use the 
-subject "rtlwifi: rtl8192de: Fix wrong assignment".
+Can you reproduce easily?
+If yes, please reproduce with debug parameters:
+modprobe iwlwifi debug=0xC0800000
 
-Larry
+Also, please enable MAC80211_HT_DEBUG
 
+Thanks
 
