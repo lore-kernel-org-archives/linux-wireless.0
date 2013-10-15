@@ -1,39 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:35004 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760342Ab3JPKxx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Oct 2013 06:53:53 -0400
-From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Rhyland Klein <rklein@nvidia.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	linux-acpi@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: [PATCH 0/5] rfkill-gpio: ACPI support
-Date: Wed, 16 Oct 2013 13:53:38 +0300
-Message-Id: <1381920823-15403-1-git-send-email-heikki.krogerus@linux.intel.com> (sfid-20131016_125455_239628_D25933C5)
+Received: from vserver.eikelenboom.it ([84.200.39.61]:57134 "EHLO
+	smtp.eikelenboom.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759945Ab3JOUTZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Oct 2013 16:19:25 -0400
+Date: Tue, 15 Oct 2013 22:19:18 +0200
+From: Sander Eikelenboom <linux@eikelenboom.it>
+Message-ID: <1701086355.20131015221918@eikelenboom.it> (sfid-20131015_221932_676181_3467B467)
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [Ilw] drivers/net/wireless/iwlwifi/dvm/tx.c:456 iwlagn_tx_skb+0x6c5/0x883()
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB301DC4E24@HASMSX103.ger.corp.intel.com>
+References: <9010061839.20131015123940@eikelenboom.it> <0BA3FCBA62E2DC44AF3030971E174FB301DC46E5@HASMSX103.ger.corp.intel.com> <1127865420.20131015151054@eikelenboom.it> <0BA3FCBA62E2DC44AF3030971E174FB301DC4AB7@HASMSX103.ger.corp.intel.com> <1764863131.20131015210406@eikelenboom.it> <0BA3FCBA62E2DC44AF3030971E174FB301DC4E24@HASMSX103.ger.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
 
-The first patches prepare the driver for the support. The last patch
-can then add the support quite easily. With these patches, adding DT
-support later will be quite straight forward if someone needs it.
+Tuesday, October 15, 2013, 9:11:36 PM, you wrote:
+
+>> > Please apply this:
+>> > diff --git a/drivers/net/wireless/iwlwifi/dvm/tx.c
+>> b/drivers/net/wireless/iwlwifi/dvm/tx.c
+>> > index d131f85..5968f19 100644
+>> > --- a/drivers/net/wireless/iwlwifi/dvm/tx.c
+>> > +++ b/drivers/net/wireless/iwlwifi/dvm/tx.c
+>> > @@ -457,8 +457,8 @@ int iwlagn_tx_skb(struct iwl_priv *priv,
+>> >         WARN_ON_ONCE(is_agg &&
+>> >                      priv->queue_to_mac80211[txq_id] != info->hw_queue);
+>> >
+>> > -       IWL_DEBUG_TX(priv, "TX to [%d|%d] Q:%d - seq: 0x%x\n", sta_id, tid,
+>> > -                    txq_id, seq_number);
+>> > +       IWL_DEBUG_TX(priv, "TX to [%d|%d] Q:%d info Q %d - seq: 0x%x\n",
+>> sta_id, tid,
+>> > +                    txq_id, info->hw_queue, seq_number);
+>> >
+>> >         if (iwl_trans_tx(priv->trans, skb, dev_cmd, txq_id))
+>> >                 goto drop_unlock_sta;
+>> 
+>> > and send the output back to me
+>> 
+>> > Thanks.
+>> 
+
+> Can you please apply the patch attached (and remove the previous change)?
+> Thanks.
 
 
-Heikki Krogerus (5):
-  net: rfkill: gpio: convert to resource managed allocation
-  net: rfkill: gpio: clean up clock handling
-  net: rfkill: gpio: spinlock-safe GPIO access
-  net: rfkill: gpio: prepare for DT and ACPI support
-  net: rfkill: gpio: add ACPI support
+That seems to make the warning go away :-)
 
- net/rfkill/Kconfig       |   2 +-
- net/rfkill/rfkill-gpio.c | 211 ++++++++++++++++++++++-------------------------
- 2 files changed, 99 insertions(+), 114 deletions(-)
-
--- 
-1.8.4.rc3
+[    7.306696] iwlwifi 0000:02:00.0: L1 Disabled; Enabling L0S
+[    7.315790] iwlwifi 0000:02:00.0: Radio type=0x2-0x1-0x0
+[    7.362212] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 9 on FIFO 7 WrPtr: 0
+[    7.364973] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 0 on FIFO 3 WrPtr: 0
+[    7.365090] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 1 on FIFO 2 WrPtr: 0
+[    7.365208] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 2 on FIFO 1 WrPtr: 0
+[    7.365324] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 3 on FIFO 0 WrPtr: 0
+[    7.365440] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 4 on FIFO 0 WrPtr: 0
+[    7.365556] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 5 on FIFO 4 WrPtr: 0
+[    7.365672] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 6 on FIFO 2 WrPtr: 0
+[    7.365789] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 7 on FIFO 5 WrPtr: 0
+[    7.365905] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 8 on FIFO 4 WrPtr: 0
+[    7.366034] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 10 on FIFO 5 WrPtr: 0
+[    7.602726] iwlwifi 0000:02:00.0: L1 Disabled; Enabling L0S
+[    7.612133] iwlwifi 0000:02:00.0: Radio type=0x2-0x1-0x0
+[    7.658168] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 9 on FIFO 7 WrPtr: 0
+[    7.661021] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 0 on FIFO 3 WrPtr: 0
+[    7.663693] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 1 on FIFO 2 WrPtr: 0
+[    7.666341] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 2 on FIFO 1 WrPtr: 0
+[    7.668914] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 3 on FIFO 0 WrPtr: 0
+[    7.671464] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 4 on FIFO 0 WrPtr: 0
+[    7.673057] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 5 on FIFO 4 WrPtr: 0
+[    7.674631] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 6 on FIFO 2 WrPtr: 0
+[    7.676174] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 7 on FIFO 5 WrPtr: 0
+[    7.677657] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 8 on FIFO 4 WrPtr: 0
+[    7.679133] iwlwifi 0000:02:00.0: U iwl_trans_pcie_txq_enable Activate queue 10 on FIFO 5 WrPtr: 0
+[    7.730037] device wlan0 entered promiscuous mode
+[    7.732390] xen_bridge: port 2(wlan0) entered forwarding state
+[    7.733984] xen_bridge: port 2(wlan0) entered forwarding state
+[    7.735692] cfg80211: Pending regulatory request, waiting for it to be processed...
+[    7.743541] iwlwifi 0000:02:00.0: I iwlagn_tx_skb TX to [14|8] Q:8 - seq: 0x0
+[    7.745347] device wlan0 left promiscuous mode
+[    7.747088] xen_bridge: port 2(wlan0) entered disabled state
+[    7.748034] iwlwifi 0000:02:00.0: I iwl_trans_pcie_reclaim [Q 8] 0 -> 1 (1)
+[    7.748039] iwlwifi 0000:02:00.0: I iwlagn_rx_reply_tx TXQ 8 status SUCCESS (0x00000201)
+[    7.748042] iwlwifi 0000:02:00.0: I iwlagn_rx_reply_tx                               initial_rate 0x820a retries 0, idx=0 ssn=1 seq_ctl=0x0
+[    7.769963] iwlwifi 0000:02:00.0: I iwl_pcie_txq_inc_wr_ptr Q:9 WR: 0x23
+[    7.821813] iwlwifi 0000:02:00.0: I iwl_pcie_txq_inc_wr_ptr Q:9 WR: 0x24
+[    7.824914] iwlwifi 0000:02:00.0: I iwl_pcie_txq_inc_wr_ptr Q:9 WR: 0x25
+[    7.828033] iwlwifi 0000:02:00.0: I iwl_pcie_txq_inc_wr_ptr Q:9 WR: 0x26
+[    7.831078] iwlwifi 0000:02:00.0: I iwl_pcie_txq_inc_wr_ptr Q:9 WR: 0x27
+[    7.834005] iwlwifi 0000:02:00.0: I iwl_pcie_txq_inc_wr_ptr Q:9 WR: 0x28
+[    7.836087] iwlwifi 0000:02:00.0: I iwl_pcie_txq_unmap Q 9 Free 39
 
