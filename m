@@ -1,48 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:54971 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754502Ab3JHPAy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Oct 2013 11:00:54 -0400
-Received: by mail-ob0-f182.google.com with SMTP id wn1so571793obc.27
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Oct 2013 08:00:54 -0700 (PDT)
-Message-ID: <52541E22.2040904@lwfinger.net> (sfid-20131008_170058_232235_C15FFC5F)
-Date: Tue, 08 Oct 2013 10:00:50 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: dwmw2@infradead.org, Ben Hutchings <ben@decadent.org.uk>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi: Add new firmware files for rtl8192cu
-References: <1380234392-31062-1-git-send-email-Larry.Finger@lwfinger.net>
-In-Reply-To: <1380234392-31062-1-git-send-email-Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga02.intel.com ([134.134.136.20]:35004 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760494Ab3JPKx5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Oct 2013 06:53:57 -0400
+From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Rhyland Klein <rklein@nvidia.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	linux-acpi@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: [PATCH 3/5] net: rfkill: gpio: spinlock-safe GPIO access
+Date: Wed, 16 Oct 2013 13:53:41 +0300
+Message-Id: <1381920823-15403-4-git-send-email-heikki.krogerus@linux.intel.com> (sfid-20131016_125459_623537_53A952AF)
+In-Reply-To: <1381920823-15403-1-git-send-email-heikki.krogerus@linux.intel.com>
+References: <1381920823-15403-1-git-send-email-heikki.krogerus@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/26/2013 05:26 PM, Larry Finger wrote:
-> The vendor driver rtl8188C_8192C_8192D_usb_linux_v3.4.2_3727.20120404
-> includes new firmware files. These were extracted from data statements
-> in that driver to form these files.
->
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
->   WHENCE                       |   3 +++
->   rtlwifi/rtl8192cufw_A.bin    | Bin 0 -> 16116 bytes
->   rtlwifi/rtl8192cufw_B.bin    | Bin 0 -> 16096 bytes
->   rtlwifi/rtl8192cufw_TMSC.bin | Bin 0 -> 16116 bytes
->   4 files changed, 3 insertions(+)
->   create mode 100644 rtlwifi/rtl8192cufw_A.bin
->   create mode 100644 rtlwifi/rtl8192cufw_B.bin
->   create mode 100644 rtlwifi/rtl8192cufw_TMSC.bin
+This sets the direction of the gpio once when it's requested,
+and uses the spinlock-safe gpio_set_state() to change the
+state.
 
-I understand that you probably have too much to do, but I am inquiring about the 
-status of this submission and "[PATCH] rtlwifi: Add new firmware files for 
-rtl8188eu" that I sent on 09/27/2013. I have several patches that depend on 
-these firmware files, and I would prefer that those driver patches are submitted 
-in time to make the 3.13 kernel.
+Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+---
+ net/rfkill/rfkill-gpio.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-Thanks,
-
-Larry
-
+diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+index 1d104e7..aa4ac10 100644
+--- a/net/rfkill/rfkill-gpio.c
++++ b/net/rfkill/rfkill-gpio.c
+@@ -42,18 +42,18 @@ static int rfkill_gpio_set_power(void *data, bool blocked)
+ 
+ 	if (blocked) {
+ 		if (gpio_is_valid(rfkill->pdata->shutdown_gpio))
+-			gpio_direction_output(rfkill->pdata->shutdown_gpio, 0);
++			gpio_set_value(rfkill->pdata->shutdown_gpio, 0);
+ 		if (gpio_is_valid(rfkill->pdata->reset_gpio))
+-			gpio_direction_output(rfkill->pdata->reset_gpio, 0);
++			gpio_set_value(rfkill->pdata->reset_gpio, 0);
+ 		if (!IS_ERR(rfkill->clk) && rfkill->clk_enabled)
+ 			clk_disable(rfkill->clk);
+ 	} else {
+ 		if (!IS_ERR(rfkill->clk) && !rfkill->clk_enabled)
+ 			clk_enable(rfkill->clk);
+ 		if (gpio_is_valid(rfkill->pdata->reset_gpio))
+-			gpio_direction_output(rfkill->pdata->reset_gpio, 1);
++			gpio_set_value(rfkill->pdata->reset_gpio, 1);
+ 		if (gpio_is_valid(rfkill->pdata->shutdown_gpio))
+-			gpio_direction_output(rfkill->pdata->shutdown_gpio, 1);
++			gpio_set_value(rfkill->pdata->shutdown_gpio, 1);
+ 	}
+ 
+ 	rfkill->clk_enabled = blocked;
+@@ -114,8 +114,8 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+ 	rfkill->clk = devm_clk_get(&pdev->dev, pdata->power_clk_name);
+ 
+ 	if (gpio_is_valid(pdata->reset_gpio)) {
+-		ret = devm_gpio_request(&pdev->dev, pdata->reset_gpio,
+-					rfkill->reset_name);
++		ret = devm_gpio_request_one(&pdev->dev, pdata->reset_gpio,
++					    0, rfkill->reset_name);
+ 		if (ret) {
+ 			pr_warn("%s: failed to get reset gpio.\n", __func__);
+ 			return ret;
+@@ -123,8 +123,8 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+ 	}
+ 
+ 	if (gpio_is_valid(pdata->shutdown_gpio)) {
+-		ret = devm_gpio_request(&pdev->dev, pdata->shutdown_gpio,
+-					rfkill->shutdown_name);
++		ret = devm_gpio_request_one(&pdev->dev, pdata->shutdown_gpio,
++					    0, rfkill->shutdown_name);
+ 		if (ret) {
+ 			pr_warn("%s: failed to get shutdown gpio.\n", __func__);
+ 			return ret;
+-- 
+1.8.4.rc3
 
