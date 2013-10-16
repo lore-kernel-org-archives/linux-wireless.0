@@ -1,75 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:4971 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758858Ab3JOL56 (ORCPT
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:42544 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934197Ab3JPNpt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Oct 2013 07:57:58 -0400
-From: Kefeng Wang <wangkefeng.wang@huawei.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Pablo Neira Ayuso <pablo@netfilter.org>,
-	"Stephen Hemminger" <stephen@networkplumber.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Francois Romieu <romieu@fr.zoreil.com>,
-	"Ben Hutchings" <bhutchings@solarflare.com>,
-	Chas Williams <chas@cmf.nrl.navy.mil>,
-	Marc Kleine-Budde <mkl@pengutronix.de>,
-	Samuel Ortiz <samuel@sortiz.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Oliver Neukum <oneukum@suse.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	"Boris Ostrovsky" <boris.ostrovsky@oracle.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	"Michael S. Tsirkin" <mst@redhat.com>, <netfilter@vger.kernel.org>,
-	<netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	<guohanjun@huawei.com>
-Subject: [PATCH 01/18] netfilter: cleanup: delete Macro PRINTR
-Date: Tue, 15 Oct 2013 19:44:57 +0800
-Message-ID: <1381837514-50660-2-git-send-email-wangkefeng.wang@huawei.com> (sfid-20131015_140546_045014_ED543CE5)
-In-Reply-To: <1381837514-50660-1-git-send-email-wangkefeng.wang@huawei.com>
-References: <1381837514-50660-1-git-send-email-wangkefeng.wang@huawei.com>
+	Wed, 16 Oct 2013 09:45:49 -0400
+Subject: [PATCH v2 2/8] ath10k: add sanity checks for monitor management
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 16 Oct 2013 16:45:48 +0300
+Message-ID: <20131016134548.25095.6014.stgit@localhost6.localdomain6> (sfid-20131016_154552_067251_5408C3A5)
+In-Reply-To: <20131016134503.25095.8044.stgit@localhost6.localdomain6>
+References: <20131016134503.25095.8044.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Macro PRINTR is only used once in nfnetlink_log.c, so it can be
-replaced by helper function net_err_ratelimited().
+From: Michal Kazior <michal.kazior@tieto.com>
 
-Signed-off-by: Kefeng Wang <wangkefeng.wang@huawei.com>
+Add a few checks and warnings to make it easier to
+track any kind of monitor vdev mismanagement.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- net/netfilter/nfnetlink_log.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath10k/mac.c |   15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-diff --git a/net/netfilter/nfnetlink_log.c b/net/netfilter/nfnetlink_log.c
-index d92cc31..8713111 100644
---- a/net/netfilter/nfnetlink_log.c
-+++ b/net/netfilter/nfnetlink_log.c
-@@ -47,9 +47,6 @@
- #define NFULNL_QTHRESH_DEFAULT 	100	/* 100 packets */
- #define NFULNL_COPY_RANGE_MAX	0xFFFF	/* max packet size is limited by 16-bit struct nfattr nfa_len field */
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 527343d..da23c3f 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -516,6 +516,11 @@ static int ath10k_monitor_start(struct ath10k *ar, int vdev_id)
  
--#define PRINTR(x, args...)	do { if (net_ratelimit()) \
--				     printk(x, ## args); } while (0);
--
- struct nfulnl_instance {
- 	struct hlist_node hlist;	/* global list of instances */
- 	spinlock_t lock;
-@@ -587,7 +584,7 @@ __build_packet_message(struct nfnl_log_net *log,
- 	return 0;
+ 	lockdep_assert_held(&ar->conf_mutex);
  
- nla_put_failure:
--	PRINTR(KERN_ERR "nfnetlink_log: error creating log nlmsg\n");
-+	net_err_ratelimited("nfnetlink_log: error creating log nlmsg\n");
- 	return -1;
- }
++	if (!ar->monitor_present) {
++		ath10k_warn("mac montor stop -- monitor is not present\n");
++		return -EINVAL;
++	}
++
+ 	arg.vdev_id = vdev_id;
+ 	arg.channel.freq = channel->center_freq;
+ 	arg.channel.band_center_freq1 = ar->hw->conf.chandef.center_freq1;
+@@ -566,6 +571,16 @@ static int ath10k_monitor_stop(struct ath10k *ar)
  
--- 
-1.8.2.1
-
+ 	lockdep_assert_held(&ar->conf_mutex);
+ 
++	if (!ar->monitor_present) {
++		ath10k_warn("mac montor stop -- monitor is not present\n");
++		return -EINVAL;
++	}
++
++	if (!ar->monitor_enabled) {
++		ath10k_warn("mac montor stop -- monitor is not enabled\n");
++		return -EINVAL;
++	}
++
+ 	ret = ath10k_wmi_vdev_down(ar, ar->monitor_vdev_id);
+ 	if (ret)
+ 		ath10k_warn("Monitor vdev down failed: %d\n", ret);
 
