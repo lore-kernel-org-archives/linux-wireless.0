@@ -1,105 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:42270 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932175Ab3JKLTV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Oct 2013 07:19:21 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 5/5] rt2x00: rt73usb: use rt2x00_has_cap_* helpers
-Date: Fri, 11 Oct 2013 13:18:44 +0200
-Message-Id: <1381490324-14746-5-git-send-email-juhosg@openwrt.org> (sfid-20131011_131926_685876_EAD11A20)
-In-Reply-To: <1381490324-14746-1-git-send-email-juhosg@openwrt.org>
-References: <1381490324-14746-1-git-send-email-juhosg@openwrt.org>
+Received: from mail-bk0-f51.google.com ([209.85.214.51]:32921 "EHLO
+	mail-bk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934637Ab3JPOF6 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Oct 2013 10:05:58 -0400
+Received: by mail-bk0-f51.google.com with SMTP id mx10so294330bkb.10
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Oct 2013 07:05:57 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87bo2p74sp.fsf@kamboji.qca.qualcomm.com>
+References: <1381858196-17000-1-git-send-email-michal.kazior@tieto.com>
+	<8761sybbye.fsf@kamboji.qca.qualcomm.com>
+	<87bo2p74sp.fsf@kamboji.qca.qualcomm.com>
+Date: Wed, 16 Oct 2013 07:05:56 -0700
+Message-ID: <CA+BoTQ=wpEWF3sWavKSfKy4s6qW097amCt_VqbapZg-ECWOE=g@mail.gmail.com> (sfid-20131016_160619_500761_1B42ABF7)
+Subject: Re: [PATCH 0/7] ath10k: fixes 2013-10-15
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath10k@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the appropriate helper functions instead of
-directly accessing the rt2x00dev->cap_flags field
-to check device capability flags.
+On 16 October 2013 05:56, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Kalle Valo <kvalo@qca.qualcomm.com> writes:
+>
+>> Michal Kazior <michal.kazior@tieto.com> writes:
+>>
+>>> This is a bunch of fixes I've had queued up for
+>>> some time now. I was reluctant to send them
+>>> without some additional checks and because some of
+>>> the fixes are not ideal. At least we can get a
+>>> discussion going if anything raises any serious
+>>> concern.
+>>>
+>>>
+>>> Michal Kazior (7):
+>>>   ath10k: prevent starting monitor without a vdev
+>>>   ath10k: add sanity checks for monitor management
+>>>   ath10k: fix endianess in prints
+>>>   ath10k: fix NSS reporting in RX
+>>>   ath10k: fix NULL deref upon early FW crash
+>>>   ath10k: fix device initialization routine
+>>>   ath10k: fix FW crashes on heavy TX on 10.1.389 AP FW
+>>
+>> I get few long line warnings:
+>>
+>> drivers/net/wireless/ath/ath10k/pci.c:1842: WARNING: line over 80 characters
+>> drivers/net/wireless/ath/ath10k/pci.c:1844: WARNING: line over 80 characters
+>> drivers/net/wireless/ath/ath10k/pci.c:1847: WARNING: line over 80 characters
+>> drivers/net/wireless/ath/ath10k/pci.c:1848: WARNING: line over 80 characters
+>> drivers/net/wireless/ath/ath10k/pci.c:1856: WARNING: line over 80 characters
+>> drivers/net/wireless/ath/ath10k/pci.c:1875: WARNING: line over 80 characters
+>> drivers/net/wireless/ath/ath10k/pci.c:1877: WARNING: line over 80 characters
+>> drivers/net/wireless/ath/ath10k/pci.c:1883: WARNING: line over 80 characters
+>> drivers/net/wireless/ath/ath10k/mac.c:2284: WARNING: line over 80 characters
+>
+> Michal, if it's ok for you I'll submit v2 of this patchset. I'll fix the
+> long line warnings and also I do small cleanup to the warm reset code.
 
-This improves readability of the code a bit.
+I am totally okay with this. Thank you for your trouble.
 
-Compile tested only.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/rt2x00/rt73usb.c |   18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index 1d3880e..1baf9c8 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -595,8 +595,8 @@ static void rt73usb_config_antenna_5x(struct rt2x00_dev *rt2x00dev,
- 	switch (ant->rx) {
- 	case ANTENNA_HW_DIVERSITY:
- 		rt2x00_set_field8(&r4, BBP_R4_RX_ANTENNA_CONTROL, 2);
--		temp = !test_bit(CAPABILITY_FRAME_TYPE, &rt2x00dev->cap_flags)
--		       && (rt2x00dev->curr_band != IEEE80211_BAND_5GHZ);
-+		temp = !rt2x00_has_cap_frame_type(rt2x00dev) &&
-+		       (rt2x00dev->curr_band != IEEE80211_BAND_5GHZ);
- 		rt2x00_set_field8(&r4, BBP_R4_RX_FRAME_END, temp);
- 		break;
- 	case ANTENNA_A:
-@@ -636,7 +636,7 @@ static void rt73usb_config_antenna_2x(struct rt2x00_dev *rt2x00dev,
- 
- 	rt2x00_set_field8(&r3, BBP_R3_SMART_MODE, 0);
- 	rt2x00_set_field8(&r4, BBP_R4_RX_FRAME_END,
--			  !test_bit(CAPABILITY_FRAME_TYPE, &rt2x00dev->cap_flags));
-+			  !rt2x00_has_cap_frame_type(rt2x00dev));
- 
- 	/*
- 	 * Configure the RX antenna.
-@@ -709,10 +709,10 @@ static void rt73usb_config_ant(struct rt2x00_dev *rt2x00dev,
- 
- 	if (rt2x00dev->curr_band == IEEE80211_BAND_5GHZ) {
- 		sel = antenna_sel_a;
--		lna = test_bit(CAPABILITY_EXTERNAL_LNA_A, &rt2x00dev->cap_flags);
-+		lna = rt2x00_has_cap_external_lna_a(rt2x00dev);
- 	} else {
- 		sel = antenna_sel_bg;
--		lna = test_bit(CAPABILITY_EXTERNAL_LNA_BG, &rt2x00dev->cap_flags);
-+		lna = rt2x00_has_cap_external_lna_bg(rt2x00dev);
- 	}
- 
- 	for (i = 0; i < ARRAY_SIZE(antenna_sel_a); i++)
-@@ -740,7 +740,7 @@ static void rt73usb_config_lna_gain(struct rt2x00_dev *rt2x00dev,
- 	short lna_gain = 0;
- 
- 	if (libconf->conf->chandef.chan->band == IEEE80211_BAND_2GHZ) {
--		if (test_bit(CAPABILITY_EXTERNAL_LNA_BG, &rt2x00dev->cap_flags))
-+		if (rt2x00_has_cap_external_lna_bg(rt2x00dev))
- 			lna_gain += 14;
- 
- 		rt2x00_eeprom_read(rt2x00dev, EEPROM_RSSI_OFFSET_BG, &eeprom);
-@@ -930,7 +930,7 @@ static void rt73usb_link_tuner(struct rt2x00_dev *rt2x00dev,
- 		low_bound = 0x28;
- 		up_bound = 0x48;
- 
--		if (test_bit(CAPABILITY_EXTERNAL_LNA_A, &rt2x00dev->cap_flags)) {
-+		if (rt2x00_has_cap_external_lna_a(rt2x00dev)) {
- 			low_bound += 0x10;
- 			up_bound += 0x10;
- 		}
-@@ -946,7 +946,7 @@ static void rt73usb_link_tuner(struct rt2x00_dev *rt2x00dev,
- 			up_bound = 0x1c;
- 		}
- 
--		if (test_bit(CAPABILITY_EXTERNAL_LNA_BG, &rt2x00dev->cap_flags)) {
-+		if (rt2x00_has_cap_external_lna_bg(rt2x00dev)) {
- 			low_bound += 0x14;
- 			up_bound += 0x10;
- 		}
-@@ -1661,7 +1661,7 @@ static int rt73usb_agc_to_rssi(struct rt2x00_dev *rt2x00dev, int rxd_w1)
- 	}
- 
- 	if (rt2x00dev->curr_band == IEEE80211_BAND_5GHZ) {
--		if (test_bit(CAPABILITY_EXTERNAL_LNA_A, &rt2x00dev->cap_flags)) {
-+		if (rt2x00_has_cap_external_lna_a(rt2x00dev)) {
- 			if (lna == 3 || lna == 2)
- 				offset += 10;
- 		} else {
--- 
-1.7.10
+Micał
