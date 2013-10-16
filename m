@@ -1,37 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:33062 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752964Ab3JALOg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Oct 2013 07:14:36 -0400
-Message-ID: <524AAE97.5020708@openwrt.org> (sfid-20131001_131448_930474_FBB609FC)
-Date: Tue, 01 Oct 2013 13:14:31 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-lb0-f172.google.com ([209.85.217.172]:63951 "EHLO
+	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760230Ab3JPJvU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Oct 2013 05:51:20 -0400
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] mac80211: implement support for configuring antenna
- gain
-References: <1378472763-36062-1-git-send-email-nbd@openwrt.org>  <1378472763-36062-2-git-send-email-nbd@openwrt.org> <1380625512.14430.19.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1380625512.14430.19.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <577936357.20131016104505@eikelenboom.it>
+References: <577936357.20131016104505@eikelenboom.it>
+Date: Wed, 16 Oct 2013 12:51:18 +0300
+Message-ID: <CANUX_P0xkcm=WhRcBeaFZvn6HLE+MLXvFxVpmeQGHUMF1-MMOw@mail.gmail.com> (sfid-20131016_115128_662738_4A76B8FC)
+Subject: Re: iwlwifi Centrino Advanced-N 6235, setting regulatory domain with
+ iw reg set XX doesn't work.
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Sander Eikelenboom <linux@eikelenboom.it>
+Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@frijolero.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-10-01 1:05 PM, Johannes Berg wrote:
-> On Fri, 2013-09-06 at 15:06 +0200, Felix Fietkau wrote:
->> Report the maximum allowable extra antenna gain to the driver to allow
->> it to reduce the tx power even further based on internal data
-> 
-> I don't quite understand the maximum thing here - what's a user to do
-> who has an antenna that goes over? Is that then intended to not be
-> supported? That seems odd. A very high gain antenna might just result in
-> signal distortions, but what's the reason for limiting it this way?
-Very high gain antennas are useful for long distance links.
-The signal is not distorted, but focused directionally, which can easily
-make it exceed regulatory EIRP limits, unless tx power is reduced
-appropriately.
-If the user explicitly configures the gain of the directional antenna
-using this patch, mac80211 will reduce the maximum allowed tx power
-setting to stay within the legal limit.
+> Hi
+>
+> I seem to have to take a second hurdle in using my Centrino Advanced-N 6235 with linux.
+>
+> I'm trying to set the regulatory domain (currenly world domain (00))
+> But a "iw reg set US" or "iw reg set NL" does not succeed.
+>
+> # iw reg get
+> country 00:
+>         (2402 - 2472 @ 40), (6, 20)
+>         (2457 - 2482 @ 40), (6, 20), PASSIVE-SCAN, NO-IBSS
+>         (2474 - 2494 @ 20), (6, 20), NO-OFDM, PASSIVE-SCAN, NO-IBSS
+>         (5170 - 5250 @ 80), (6, 20), PASSIVE-SCAN, NO-IBSS
+>         (5735 - 5835 @ 80), (6, 20), PASSIVE-SCAN, NO-IBSS
+>         (57240 - 63720 @ 2160), (N/A, 0)
+>
+> # iw reg set US
+>
+> # iw reg get
+> country 00:
+>         (2402 - 2472 @ 40), (6, 20)
+>         (2457 - 2482 @ 40), (6, 20), PASSIVE-SCAN, NO-IBSS
+>         (2474 - 2494 @ 20), (6, 20), NO-OFDM, PASSIVE-SCAN, NO-IBSS
+>         (5170 - 5250 @ 80), (6, 20), PASSIVE-SCAN, NO-IBSS
+>         (5735 - 5835 @ 80), (6, 20), PASSIVE-SCAN, NO-IBSS
+>         (57240 - 63720 @ 2160), (N/A, 0)
+>
+>
+> The only thing is this message in dmesg:
+> "cfg80211: Pending regulatory request, waiting for it to be processed...".
+>
+> I did enable some of the kernel wifi debug options, but there is no error or more informatie.
+> But it doesn't get set as you can see above.
+>
 
-- Felix
+This is most probably not related to the device itself.
+Luis?
