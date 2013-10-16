@@ -1,56 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gw90.de ([188.40.100.199]:49007 "EHLO mail.gw90.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753921Ab3JCJPI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Oct 2013 05:15:08 -0400
-Message-ID: <1380789747.8125.9.camel@mattotaupa> (sfid-20131003_111516_049835_A8D60FCC)
-Subject: Re: [rt2x00-users] [PATCH] rt2x00: rt2800lib: remove duplicate
- rf_vals for RF3053.
-From: Paul Menzel <paulepanter@users.sourceforge.net>
-To: Kevin Lo <kevlo@kevlo.org>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Date: Thu, 03 Oct 2013 10:42:27 +0200
-In-Reply-To: <524D2139.4000608@kevlo.org>
-References: <524D2139.4000608@kevlo.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
-	boundary="=-0T5UB44Zm1SqrS5HVlOW"
-Mime-Version: 1.0
+Received: from v094114.home.net.pl ([79.96.170.134]:62074 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S933219Ab3JPUnL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Oct 2013 16:43:11 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Rhyland Klein <rklein@nvidia.com>, linux-acpi@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: [PATCH 5/5] net: rfkill: gpio: add ACPI support
+Date: Wed, 16 Oct 2013 22:55:01 +0200
+Message-ID: <2878506.7lf24R85t6@vostro.rjw.lan> (sfid-20131016_224319_644830_778D2628)
+In-Reply-To: <1381920823-15403-6-git-send-email-heikki.krogerus@linux.intel.com>
+References: <1381920823-15403-1-git-send-email-heikki.krogerus@linux.intel.com> <1381920823-15403-6-git-send-email-heikki.krogerus@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-0T5UB44Zm1SqrS5HVlOW
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-Am Donnerstag, den 03.10.2013, 15:48 +0800 schrieb Kevin Lo:
-> We already have rf_vals_3x with same values.  Hence rf_vals_3053 is remov=
-ed
-> in this patch.
->=20
-> Signed-off-by: Kevin Lo <kevlo@kevlo.org>
+On Wednesday, October 16, 2013 01:53:43 PM Heikki Krogerus wrote:
+> Including ACPI ID for Broadcom GPS receiver BCM4752.
+> 
+> Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
 > ---
->=20
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c=20
-> b/drivers/net/wireless/rt2x00/rt2800lib.c
+>  net/rfkill/rfkill-gpio.c | 31 ++++++++++++++++++++++++++++++-
+>  1 file changed, 30 insertions(+), 1 deletion(-)
+> 
+> diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+> index 2dd78c6..5620d3c 100644
+> --- a/net/rfkill/rfkill-gpio.c
+> +++ b/net/rfkill/rfkill-gpio.c
+> @@ -24,6 +24,8 @@
+>  #include <linux/platform_device.h>
+>  #include <linux/clk.h>
+>  #include <linux/slab.h>
+> +#include <linux/acpi.h>
+> +#include <linux/acpi_gpio.h>
+>  
+>  #include <linux/rfkill-gpio.h>
+>  
+> @@ -70,6 +72,23 @@ static const struct rfkill_ops rfkill_gpio_ops = {
+>  	.set_block = rfkill_gpio_set_power,
+>  };
+>  
+> +static int rfkill_gpio_acpi_probe(struct device *dev,
+> +				  struct rfkill_gpio_data *rfkill)
+> +{
+> +	const struct acpi_device_id *id;
+> +
+> +	id = acpi_match_device(dev->driver->acpi_match_table, dev);
+> +	if (!id)
+> +		return -ENODEV;
+> +
+> +	rfkill->name = dev_name(dev);
+> +	rfkill->type = (unsigned)id->driver_data;
+> +	rfkill->reset_gpio = acpi_get_gpio_by_index(dev, 0, NULL);
+> +	rfkill->shutdown_gpio = acpi_get_gpio_by_index(dev, 1, NULL);
+> +
+> +	return 0;
+> +}
+> +
+>  static int rfkill_gpio_probe(struct platform_device *pdev)
+>  {
+>  	struct rfkill_gpio_platform_data *pdata = pdev->dev.platform_data;
+> @@ -82,7 +101,11 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+>  	if (!rfkill)
+>  		return -ENOMEM;
+>  
+> -	if (pdata) {
+> +	if (ACPI_HANDLE(&pdev->dev)) {
+> +		ret = rfkill_gpio_acpi_probe(&pdev->dev, rfkill);
+> +		if (ret)
+> +			return ret;
+> +	} else if (pdata) {
+>  		clk_name = pdata->power_clk_name;
+>  		rfkill->name = pdata->name;
+>  		rfkill->type = pdata->type;
+> @@ -170,12 +193,18 @@ static int rfkill_gpio_remove(struct platform_device *pdev)
+>  	return 0;
+>  }
+>  
+> +static const struct acpi_device_id rfkill_acpi_match[] = {
+> +	{ "BCM4752", RFKILL_TYPE_GPS },
+> +	{ },
+> +};
+> +
+>  static struct platform_driver rfkill_gpio_driver = {
+>  	.probe = rfkill_gpio_probe,
+>  	.remove = rfkill_gpio_remove,
+>  	.driver = {
+>  		.name = "rfkill_gpio",
+>  		.owner = THIS_MODULE,
+> +		.acpi_match_table = ACPI_PTR(rfkill_acpi_match),
+>  	},
+>  };
 
-[=E2=80=A6]
+Looks good to me.
 
-Acked-by: Paul Menzel <paulepanter@users.sourceforge.net>
+Has Mika seen this?
 
---=-0T5UB44Zm1SqrS5HVlOW
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.14 (GNU/Linux)
-
-iEYEABECAAYFAlJNLfMACgkQPX1aK2wOHVjnRACfeOJzbv5X4mfOdpNGsKTx3t6S
-e/IAnRu8YPzlLYJOkwEwq9RNCIU4uwTb
-=sE4Y
------END PGP SIGNATURE-----
-
---=-0T5UB44Zm1SqrS5HVlOW--
-
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
