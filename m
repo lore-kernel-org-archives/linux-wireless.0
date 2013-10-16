@@ -1,44 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f54.google.com ([209.85.214.54]:38314 "EHLO
-	mail-bk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750709Ab3J3FWf (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:31462 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932406Ab3JPMrU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Oct 2013 01:22:35 -0400
-Received: by mail-bk0-f54.google.com with SMTP id 6so274319bkj.13
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Oct 2013 22:22:34 -0700 (PDT)
+	Wed, 16 Oct 2013 08:47:20 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	<ath10k@lists.infradead.org>
+Subject: Re: [PATCH 3/7] ath10k: track vif list internally
+References: <20131015184548.14123.56949.stgit@localhost6.localdomain6>
+	<20131015184656.14123.70575.stgit@localhost6.localdomain6>
+	<87a9iabc9c.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQ=CqXN24Y-tb=r_ruUUNR_imcztULnoTScAvScvbPDbdA@mail.gmail.com>
+Date: Wed, 16 Oct 2013 15:47:15 +0300
+In-Reply-To: <CA+BoTQ=CqXN24Y-tb=r_ruUUNR_imcztULnoTScAvScvbPDbdA@mail.gmail.com>
+	(Michal Kazior's message of "Tue, 15 Oct 2013 12:37:42 -0700")
+Message-ID: <87k3hd757w.fsf@kamboji.qca.qualcomm.com> (sfid-20131016_144729_091789_BD206C64)
 MIME-Version: 1.0
-Date: Wed, 30 Oct 2013 13:22:34 +0800
-Message-ID: <CAPgLHd9nCFPvSWMtrinySm=9bESiKXpYZgZYj6fhzUQKVJFkhw@mail.gmail.com> (sfid-20131030_062239_384396_BAA4ECA8)
-Subject: [PATCH -next] libertas: fix error return code in if_cs_probe()
-From: Wei Yongjun <weiyj.lk@gmail.com>
-To: linville@tuxdriver.com, hsweeten@visionengravers.com,
-	gregkh@linuxfoundation.org, dcbw@redhat.com
-Cc: yongjun_wei@trendmicro.com.cn, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Fix to return -ENODEV in the unknown model error handling
-case instead of 0, as done elsewhere in this function.
+> On 15 October 2013 11:49, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>> Kalle Valo <kvalo@qca.qualcomm.com> writes:
+>>
+>>> From: Michal Kazior <michal.kazior@tieto.com>
+>>>
+>>> mac80211 interface interations functions have
+>>> peculiar locking issues. This patch introduces
+>>> internal (to ath10k) vif list that will be used
+>>> for vif iteration purposes.
+>>>
+>>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>>> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+>>
+>> [...]
+>>
+>> Michal, why do the INIT_LIST_HEAD() twice? Isn't it enough to do it
+>> core_start()?
+>
+> Ah, good point. It's most likely okay to just do it in
+> ath10k_core_start(). The one in ath10k_core_create() isn't required.
 
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
----
- drivers/net/wireless/libertas/if_cs.c | 1 +
- 1 file changed, 1 insertion(+)
+Ok, I removed the one from ath10k_core_create() before I commited this.
 
-diff --git a/drivers/net/wireless/libertas/if_cs.c b/drivers/net/wireless/libertas/if_cs.c
-index ef8c98e..f499efc 100644
---- a/drivers/net/wireless/libertas/if_cs.c
-+++ b/drivers/net/wireless/libertas/if_cs.c
-@@ -902,6 +902,7 @@ static int if_cs_probe(struct pcmcia_device *p_dev)
- 	if (card->model == MODEL_UNKNOWN) {
- 		pr_err("unsupported manf_id 0x%04x / card_id 0x%04x\n",
- 		       p_dev->manf_id, p_dev->card_id);
-+		ret = -ENODEV;
- 		goto out2;
- 	}
- 
-
+-- 
+Kalle Valo
