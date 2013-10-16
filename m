@@ -1,52 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:61565 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753618Ab3JUOTH (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:49765 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934197Ab3JPNqC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Oct 2013 10:19:07 -0400
+	Wed, 16 Oct 2013 09:46:02 -0400
+Subject: [PATCH v2 4/8] ath10k: fix NSS reporting in RX
+To: ath10k@lists.infradead.org
 From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: add error handling to ath10k_pci_wait()
-References: <20131017083615.31028.25088.stgit@localhost6.localdomain6>
-Date: Mon, 21 Oct 2013 17:19:02 +0300
-In-Reply-To: <20131017083615.31028.25088.stgit@localhost6.localdomain6> (Kalle
-	Valo's message of "Thu, 17 Oct 2013 11:36:15 +0300")
-Message-ID: <87vc0qso4p.fsf@kamboji.qca.qualcomm.com> (sfid-20131021_161937_290690_70EAEBED)
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 16 Oct 2013 16:45:59 +0300
+Message-ID: <20131016134559.25095.62038.stgit@localhost6.localdomain6> (sfid-20131016_154605_514280_2B0A7686)
+In-Reply-To: <20131016134503.25095.8044.stgit@localhost6.localdomain6>
+References: <20131016134503.25095.8044.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+From: Michal Kazior <michal.kazior@tieto.com>
 
-> ath10k_pci_wait() didn't notify any errors to callers, it
-> just printed a warning so add proper error handling.
->
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+NSTS values reported in the VHT-SIG-A1 are 0
+through 7 but they actually describe number of
+streams 1 through 8.
 
-Applied, I just changed the commit log to this:
+1SS frames were dropped. This patch fixes this.
 
-commit f3782744c9b50edf94d28e37a937ff84f267dfab
-Author: Kalle Valo <kvalo@qca.qualcomm.com>
-Date:   Thu Oct 17 11:36:15 2013 +0300
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/txrx.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-    ath10k: add error handling to ath10k_pci_wait()
-    
-    ath10k_pci_wait() didn't notify any errors to callers, it
-    just printed a warning so add proper error handling. This fixes
-    a crash Ben reported:
-    
-    ath10k: MSI-X interrupt handling (8 intrs)
-    ath10k: Unable to wakeup target
-    ath10k: target took longer 5000 us to wake up (awake count 1)
-    ath10k: Failed to get pcie state addr: -16
-    ath10k: early firmware event indicated
-    BUG: unable to handle kernel NULL pointer dereference at 0000000000000004
-    IP: [<ffffffffa06ae46c>] ath10k_ce_completed_send_next+0x47/0x122 [ath10k_pci]
-    
-    Reported-by: Ben Greear <greearb@candelatech.com>
-    Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
+index 5ae373a..c511f91 100644
+--- a/drivers/net/wireless/ath/ath10k/txrx.c
++++ b/drivers/net/wireless/ath/ath10k/txrx.c
+@@ -183,7 +183,7 @@ static void process_rx_rates(struct ath10k *ar, struct htt_rx_info *info,
+ 		/* VHT-SIG-A1 in info 1, VHT-SIG-A2 in info2
+ 		   TODO check this */
+ 		mcs = (info2 >> 4) & 0x0F;
+-		nss = (info1 >> 10) & 0x07;
++		nss = ((info1 >> 10) & 0x07) + 1;
+ 		bw = info1 & 3;
+ 		sgi = info2 & 1;
+ 
 
--- 
-Kalle Valo
