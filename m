@@ -1,94 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4378 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758756Ab3JONpI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Oct 2013 09:45:08 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 05/12] brcmfmac: rework scatter-gather code in
- brcmf_sdio_buffrw()
-Date: Tue, 15 Oct 2013 15:44:50 +0200
-Message-ID: <1381844697-24881-6-git-send-email-arend@broadcom.com> (sfid-20131015_154650_891416_E7823FC7)
-In-Reply-To: <1381844697-24881-1-git-send-email-arend@broadcom.com>
-References: <1381844697-24881-1-git-send-email-arend@broadcom.com>
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:42563 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934197Ab3JPNqH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Oct 2013 09:46:07 -0400
+Subject: [PATCH v2 5/8] ath10k: fix NULL deref upon early FW crash
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 16 Oct 2013 16:46:05 +0300
+Message-ID: <20131016134605.25095.65863.stgit@localhost6.localdomain6> (sfid-20131016_154610_861782_189B0587)
+In-Reply-To: <20131016134503.25095.8044.stgit@localhost6.localdomain6>
+References: <20131016134503.25095.8044.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Moving a number of assignments outside of the loop as they are
-the same for each request.
+From: Michal Kazior <michal.kazior@tieto.com>
 
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+If firmware crashes during FW probing it would try
+to perform FW recovery which uses mac80211
+workqueue before registering to mac80211.
+
+Using internal workqueue solves the problem.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |   34 ++++++++++++----------
- 1 file changed, 19 insertions(+), 15 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.c |    3 ++-
+ drivers/net/wireless/ath/ath10k/pci.c  |    2 +-
+ 2 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-index 8c4b506..ea716a4 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-@@ -409,12 +409,26 @@ static int brcmf_sdio_buffrw(struct brcmf_sdio_dev *sdiodev, uint fn,
- 		goto exit;
- 	}
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 1129994..2a360ca 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -664,7 +664,8 @@ static void ath10k_core_restart(struct work_struct *work)
+ 		ieee80211_restart_hw(ar->hw);
+ 		break;
+ 	case ATH10K_STATE_OFF:
+-		/* this can happen if driver is being unloaded */
++		/* this can happen if driver is being unloaded
++		 * or if the crash happens during FW probing */
+ 		ath10k_warn("cannot restart a device that hasn't been started\n");
+ 		break;
+ 	case ATH10K_STATE_RESTARTING:
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index f8d59c7..d09f8a2 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -777,7 +777,7 @@ static void ath10k_pci_hif_dump_area(struct ath10k *ar)
+ 			   reg_dump_values[i + 2],
+ 			   reg_dump_values[i + 3]);
  
-+	memset(&mmc_req, 0, sizeof(struct mmc_request));
-+	memset(&mmc_cmd, 0, sizeof(struct mmc_command));
-+	memset(&mmc_dat, 0, sizeof(struct mmc_data));
-+
-+	mmc_dat.sg = st.sgl;
-+	mmc_dat.blksz = func_blk_sz;
-+	mmc_dat.flags = write ? MMC_DATA_WRITE : MMC_DATA_READ;
-+	mmc_cmd.opcode = SD_IO_RW_EXTENDED;
-+	mmc_cmd.arg = write ? 1<<31 : 0;	/* write flag  */
-+	mmc_cmd.arg |= (fn & 0x7) << 28;	/* SDIO func num */
-+	mmc_cmd.arg |= 1<<27;			/* block mode */
-+	/* for function 1 the addr will be incremented */
-+	mmc_cmd.arg |= (fn == 1) ? 1<<26 : 0;
-+	mmc_cmd.flags = MMC_RSP_SPI_R5 | MMC_RSP_R5 | MMC_CMD_ADTC;
-+	mmc_req.cmd = &mmc_cmd;
-+	mmc_req.data = &mmc_dat;
-+
- 	while (seg_sz) {
- 		req_sz = 0;
- 		sg_cnt = 0;
--		memset(&mmc_req, 0, sizeof(struct mmc_request));
--		memset(&mmc_cmd, 0, sizeof(struct mmc_command));
--		memset(&mmc_dat, 0, sizeof(struct mmc_data));
- 		sgl = st.sgl;
- 		/* prep sg table */
- 		while (pkt_next != (struct sk_buff *)target_list) {
-@@ -447,22 +461,12 @@ static int brcmf_sdio_buffrw(struct brcmf_sdio_dev *sdiodev, uint fn,
- 			ret = -ENOTBLK;
- 			goto exit;
- 		}
--		mmc_dat.sg = st.sgl;
-+
- 		mmc_dat.sg_len = sg_cnt;
--		mmc_dat.blksz = func_blk_sz;
- 		mmc_dat.blocks = req_sz / func_blk_sz;
--		mmc_dat.flags = write ? MMC_DATA_WRITE : MMC_DATA_READ;
--		mmc_cmd.opcode = SD_IO_RW_EXTENDED;
--		mmc_cmd.arg = write ? 1<<31 : 0;	/* write flag  */
--		mmc_cmd.arg |= (fn & 0x7) << 28;	/* SDIO func num */
--		mmc_cmd.arg |= 1<<27;			/* block mode */
--		/* incrementing addr for function 1 */
--		mmc_cmd.arg |= (fn == 1) ? 1<<26 : 0;
- 		mmc_cmd.arg |= (addr & 0x1FFFF) << 9;	/* address */
- 		mmc_cmd.arg |= mmc_dat.blocks & 0x1FF;	/* block count */
--		mmc_cmd.flags = MMC_RSP_SPI_R5 | MMC_RSP_R5 | MMC_CMD_ADTC;
--		mmc_req.cmd = &mmc_cmd;
--		mmc_req.data = &mmc_dat;
-+		/* incrementing addr for function 1 */
- 		if (fn == 1)
- 			addr += req_sz;
+-	ieee80211_queue_work(ar->hw, &ar->restart_work);
++	queue_work(ar->workqueue, &ar->restart_work);
+ }
  
--- 
-1.7.10.4
-
+ static void ath10k_pci_hif_send_complete_check(struct ath10k *ar, u8 pipe,
 
