@@ -1,54 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out03.msg.oleane.net ([62.161.7.1]:40078 "EHLO
-	smtp-out03.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753449Ab3JUP2o convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:56478 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755513Ab3JPM41 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Oct 2013 11:28:44 -0400
-From: "Jean-Pierre Tosoni" <jp.tosoni@acksys.fr>
-To: <linux-wireless@vger.kernel.org>,
-	<wireless-regdb@lists.infradead.org>
-Subject: French regulatory domain change request
-Date: Mon, 21 Oct 2013 17:05:51 +0200
-Message-ID: <000901cece6f$081ca5f0$1855f1d0$@acksys.fr> (sfid-20131021_172847_913584_0745CC74)
+	Wed, 16 Oct 2013 08:56:27 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH 0/7] ath10k: fixes 2013-10-15
+References: <1381858196-17000-1-git-send-email-michal.kazior@tieto.com>
+	<8761sybbye.fsf@kamboji.qca.qualcomm.com>
+Date: Wed, 16 Oct 2013 15:56:22 +0300
+In-Reply-To: <8761sybbye.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
+	of "Tue, 15 Oct 2013 21:55:53 +0300")
+Message-ID: <87bo2p74sp.fsf@kamboji.qca.qualcomm.com> (sfid-20131016_145631_048927_9D6F6A11)
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello all,
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-The current description for France in regdb.txt is :
-country FR: DFS-ETSI
-	(2402 - 2482 @ 40), (N/A, 20)
-	(5170 - 5250 @ 80), (N/A, 20)
-	(5250 - 5330 @ 80), (N/A, 20), DFS
-	(5490 - 5710 @ 80), (N/A, 27), DFS
-	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
+> Michal Kazior <michal.kazior@tieto.com> writes:
+>
+>> This is a bunch of fixes I've had queued up for
+>> some time now. I was reluctant to send them
+>> without some additional checks and because some of
+>> the fixes are not ideal. At least we can get a
+>> discussion going if anything raises any serious
+>> concern.
+>>
+>>
+>> Michal Kazior (7):
+>>   ath10k: prevent starting monitor without a vdev
+>>   ath10k: add sanity checks for monitor management
+>>   ath10k: fix endianess in prints
+>>   ath10k: fix NSS reporting in RX
+>>   ath10k: fix NULL deref upon early FW crash
+>>   ath10k: fix device initialization routine
+>>   ath10k: fix FW crashes on heavy TX on 10.1.389 AP FW
+>
+> I get few long line warnings:
+>
+> drivers/net/wireless/ath/ath10k/pci.c:1842: WARNING: line over 80 characters
+> drivers/net/wireless/ath/ath10k/pci.c:1844: WARNING: line over 80 characters
+> drivers/net/wireless/ath/ath10k/pci.c:1847: WARNING: line over 80 characters
+> drivers/net/wireless/ath/ath10k/pci.c:1848: WARNING: line over 80 characters
+> drivers/net/wireless/ath/ath10k/pci.c:1856: WARNING: line over 80 characters
+> drivers/net/wireless/ath/ath10k/pci.c:1875: WARNING: line over 80 characters
+> drivers/net/wireless/ath/ath10k/pci.c:1877: WARNING: line over 80 characters
+> drivers/net/wireless/ath/ath10k/pci.c:1883: WARNING: line over 80 characters
+> drivers/net/wireless/ath/ath10k/mac.c:2284: WARNING: line over 80 characters
 
-Following this paper http://www.arcep.fr/uploads/tx_gsavis/08-0568.pdf 
-" Décision n° 2008-0568" issued by the ARCEP (French Electronic
-communications and Postoffice Regulation Authority) in the year 2008,
-1) the frequencies 5150-5350 MHz are limited to INDOOR use.
- (see page 5: "Dans la bande de fréquences*5150-5350* MHz, les WAS/RLAN sont
-limités à une *utilisation intérieure* ...")
-2) the limits of the frequency band is ~20MHz greater for all frequency
-values (5150 vs. 5170, 5350 vs. 5330, 5470 vs. 5490, 5725 vs. 5710)
+Michal, if it's ok for you I'll submit v2 of this patchset. I'll fix the
+long line warnings and also I do small cleanup to the warm reset code.
 
-So IMHO the description for France should read: 
-country FR: DFS-ETSI
-	(2402 - 2482 @ 40), (N/A, 20)
-	# ref: ARCEP 08-0568
-http://www.arcep.fr/uploads/tx_gsavis/08-0568.pdf
-	(5150 - 5250 @ 80), (N/A, 20), NO-OUTDOOR
-	(5250 - 5350 @ 80), (N/A, 20), NO-OUTDOOR, DFS
-	(5470 - 5725 @ 80), (N/A, 27), DFS
-	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
-
-By the way, this looks very like the description for Germany (DE) now!
-
-Regards,
-Jean-Pierre
-
+-- 
+Kalle Valo
