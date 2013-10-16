@@ -1,135 +1,218 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:39768 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932647Ab3JOSrQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Oct 2013 14:47:16 -0400
-Subject: [PATCH 6/7] ath10k: fix ath10k_bss_assoc() to not sleep in atomic
- context
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 15 Oct 2013 21:47:14 +0300
-Message-ID: <20131015184714.14123.32890.stgit@localhost6.localdomain6> (sfid-20131015_204718_821341_9E1A9BA5)
-In-Reply-To: <20131015184548.14123.56949.stgit@localhost6.localdomain6>
-References: <20131015184548.14123.56949.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mga02.intel.com ([134.134.136.20]:35004 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760680Ab3JPKx7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Oct 2013 06:53:59 -0400
+From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Rhyland Klein <rklein@nvidia.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	linux-acpi@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: [PATCH 4/5] net: rfkill: gpio: prepare for DT and ACPI support
+Date: Wed, 16 Oct 2013 13:53:42 +0300
+Message-Id: <1381920823-15403-5-git-send-email-heikki.krogerus@linux.intel.com> (sfid-20131016_125416_676770_65596A6C)
+In-Reply-To: <1381920823-15403-1-git-send-email-heikki.krogerus@linux.intel.com>
+References: <1381920823-15403-1-git-send-email-heikki.krogerus@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath10k_bss_assoc() was calling ath10k_peer_assoc(), which can sleep, under
-atomic rcu_read_lock() and causing scheduing while atomic errors. Workaround
-that by delaying the call to ath10k_wmi_peer_assoc().
+This will add the relevant values like the gpios and the
+type in rfkill_gpio_platform_data to the rfkill_gpio_data
+structure. It will allow those values to be easily picked
+from DT and ACPI tables later.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c |   56 ++++++++++++++++++++++-----------
- 1 file changed, 37 insertions(+), 19 deletions(-)
+ net/rfkill/rfkill-gpio.c | 92 +++++++++++++++++++++++++++---------------------
+ 1 file changed, 51 insertions(+), 41 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 4273eef..0b1cc51 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -1137,26 +1137,25 @@ static void ath10k_peer_assoc_h_phymode(struct ath10k *ar,
- 	WARN_ON(phymode == MODE_UNKNOWN);
- }
+diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+index aa4ac10..2dd78c6 100644
+--- a/net/rfkill/rfkill-gpio.c
++++ b/net/rfkill/rfkill-gpio.c
+@@ -28,12 +28,17 @@
+ #include <linux/rfkill-gpio.h>
  
--static int ath10k_peer_assoc(struct ath10k *ar,
--			     struct ath10k_vif *arvif,
--			     struct ieee80211_sta *sta,
--			     struct ieee80211_bss_conf *bss_conf)
-+static int ath10k_peer_assoc_prepare(struct ath10k *ar,
-+				     struct ath10k_vif *arvif,
-+				     struct ieee80211_sta *sta,
-+				     struct ieee80211_bss_conf *bss_conf,
-+				     struct wmi_peer_assoc_complete_arg *arg)
- {
--	struct wmi_peer_assoc_complete_arg arg;
--
- 	lockdep_assert_held(&ar->conf_mutex);
- 
--	memset(&arg, 0, sizeof(struct wmi_peer_assoc_complete_arg));
-+	memset(arg, 0, sizeof(*arg));
- 
--	ath10k_peer_assoc_h_basic(ar, arvif, sta, bss_conf, &arg);
--	ath10k_peer_assoc_h_crypto(ar, arvif, &arg);
--	ath10k_peer_assoc_h_rates(ar, sta, &arg);
--	ath10k_peer_assoc_h_ht(ar, sta, &arg);
--	ath10k_peer_assoc_h_vht(ar, sta, &arg);
--	ath10k_peer_assoc_h_qos(ar, arvif, sta, bss_conf, &arg);
--	ath10k_peer_assoc_h_phymode(ar, arvif, sta, &arg);
-+	ath10k_peer_assoc_h_basic(ar, arvif, sta, bss_conf, arg);
-+	ath10k_peer_assoc_h_crypto(ar, arvif, arg);
-+	ath10k_peer_assoc_h_rates(ar, sta, arg);
-+	ath10k_peer_assoc_h_ht(ar, sta, arg);
-+	ath10k_peer_assoc_h_vht(ar, sta, arg);
-+	ath10k_peer_assoc_h_qos(ar, arvif, sta, bss_conf, arg);
-+	ath10k_peer_assoc_h_phymode(ar, arvif, sta, arg);
- 
--	return ath10k_wmi_peer_assoc(ar, &arg);
-+	return 0;
- }
- 
- /* can be called only in mac80211 callbacks due to `key_count` usage */
-@@ -1166,6 +1165,7 @@ static void ath10k_bss_assoc(struct ieee80211_hw *hw,
- {
- 	struct ath10k *ar = hw->priv;
- 	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
-+	struct wmi_peer_assoc_complete_arg peer_arg;
- 	struct ieee80211_sta *ap_sta;
- 	int ret;
- 
-@@ -1181,15 +1181,24 @@ static void ath10k_bss_assoc(struct ieee80211_hw *hw,
- 		return;
- 	}
- 
--	ret = ath10k_peer_assoc(ar, arvif, ap_sta, bss_conf);
-+	ret = ath10k_peer_assoc_prepare(ar, arvif, ap_sta,
-+					bss_conf, &peer_arg);
- 	if (ret) {
--		ath10k_warn("Peer assoc failed for %pM\n", bss_conf->bssid);
-+		ath10k_warn("Peer assoc prepare failed for %pM\n: %d",
-+			    bss_conf->bssid, ret);
- 		rcu_read_unlock();
- 		return;
- 	}
- 
- 	rcu_read_unlock();
- 
-+	ret = ath10k_wmi_peer_assoc(ar, &peer_arg);
-+	if (ret) {
-+		ath10k_warn("Peer assoc failed for %pM\n: %d",
-+			    bss_conf->bssid, ret);
-+		return;
-+	}
+ struct rfkill_gpio_data {
+-	struct rfkill_gpio_platform_data	*pdata;
+-	struct rfkill				*rfkill_dev;
+-	char					*reset_name;
+-	char					*shutdown_name;
+-	struct clk				*clk;
+-	bool					clk_enabled;
++	const char		*name;
++	enum rfkill_type	type;
++	int			reset_gpio;
++	int			shutdown_gpio;
 +
- 	ath10k_dbg(ATH10K_DBG_MAC,
- 		   "mac vdev %d up (associated) bssid %pM aid %d\n",
- 		   arvif->vdev_id, bss_conf->bssid, bss_conf->aid);
-@@ -1243,13 +1252,22 @@ static void ath10k_bss_disassoc(struct ieee80211_hw *hw,
- static int ath10k_station_assoc(struct ath10k *ar, struct ath10k_vif *arvif,
- 				struct ieee80211_sta *sta)
++	struct rfkill		*rfkill_dev;
++	char			*reset_name;
++	char			*shutdown_name;
++	struct clk		*clk;
++
++	bool			clk_enabled;
+ };
+ 
+ static int rfkill_gpio_set_power(void *data, bool blocked)
+@@ -41,19 +46,19 @@ static int rfkill_gpio_set_power(void *data, bool blocked)
+ 	struct rfkill_gpio_data *rfkill = data;
+ 
+ 	if (blocked) {
+-		if (gpio_is_valid(rfkill->pdata->shutdown_gpio))
+-			gpio_set_value(rfkill->pdata->shutdown_gpio, 0);
+-		if (gpio_is_valid(rfkill->pdata->reset_gpio))
+-			gpio_set_value(rfkill->pdata->reset_gpio, 0);
++		if (gpio_is_valid(rfkill->shutdown_gpio))
++			gpio_set_value(rfkill->shutdown_gpio, 0);
++		if (gpio_is_valid(rfkill->reset_gpio))
++			gpio_set_value(rfkill->reset_gpio, 0);
+ 		if (!IS_ERR(rfkill->clk) && rfkill->clk_enabled)
+ 			clk_disable(rfkill->clk);
+ 	} else {
+ 		if (!IS_ERR(rfkill->clk) && !rfkill->clk_enabled)
+ 			clk_enable(rfkill->clk);
+-		if (gpio_is_valid(rfkill->pdata->reset_gpio))
+-			gpio_set_value(rfkill->pdata->reset_gpio, 1);
+-		if (gpio_is_valid(rfkill->pdata->shutdown_gpio))
+-			gpio_set_value(rfkill->pdata->shutdown_gpio, 1);
++		if (gpio_is_valid(rfkill->reset_gpio))
++			gpio_set_value(rfkill->reset_gpio, 1);
++		if (gpio_is_valid(rfkill->shutdown_gpio))
++			gpio_set_value(rfkill->shutdown_gpio, 1);
+ 	}
+ 
+ 	rfkill->clk_enabled = blocked;
+@@ -67,29 +72,35 @@ static const struct rfkill_ops rfkill_gpio_ops = {
+ 
+ static int rfkill_gpio_probe(struct platform_device *pdev)
  {
-+	struct wmi_peer_assoc_complete_arg peer_arg;
+-	struct rfkill_gpio_data *rfkill;
+ 	struct rfkill_gpio_platform_data *pdata = pdev->dev.platform_data;
++	struct rfkill_gpio_data *rfkill;
++	const char *clk_name = NULL;
  	int ret = 0;
+ 	int len = 0;
  
- 	lockdep_assert_held(&ar->conf_mutex);
- 
--	ret = ath10k_peer_assoc(ar, arvif, sta, NULL);
-+	ret = ath10k_peer_assoc_prepare(ar, arvif, sta, NULL, &peer_arg);
-+	if (ret) {
-+		ath10k_warn("WMI peer assoc prepare failed for %pM\n",
-+			    sta->addr);
-+		return ret;
-+	}
+-	if (!pdata) {
+-		pr_warn("%s: No platform data specified\n", __func__);
+-		return -EINVAL;
++	rfkill = devm_kzalloc(&pdev->dev, sizeof(*rfkill), GFP_KERNEL);
++	if (!rfkill)
++		return -ENOMEM;
 +
-+	ret = ath10k_wmi_peer_assoc(ar, &peer_arg);
- 	if (ret) {
--		ath10k_warn("WMI peer assoc failed for %pM\n", sta->addr);
-+		ath10k_warn("Peer assoc failed for STA %pM\n: %d",
-+			    sta->addr, ret);
- 		return ret;
++	if (pdata) {
++		clk_name = pdata->power_clk_name;
++		rfkill->name = pdata->name;
++		rfkill->type = pdata->type;
++		rfkill->reset_gpio = pdata->reset_gpio;
++		rfkill->shutdown_gpio = pdata->shutdown_gpio;
++	} else {
++		return -ENODEV;
  	}
  
+ 	/* make sure at-least one of the GPIO is defined and that
+ 	 * a name is specified for this instance */
+-	if (!pdata->name || (!gpio_is_valid(pdata->reset_gpio) &&
+-		!gpio_is_valid(pdata->shutdown_gpio))) {
++	if ((!gpio_is_valid(rfkill->reset_gpio) &&
++	     !gpio_is_valid(rfkill->shutdown_gpio)) || !rfkill->name) {
+ 		pr_warn("%s: invalid platform data\n", __func__);
+ 		return -EINVAL;
+ 	}
+ 
+-	rfkill = devm_kzalloc(&pdev->dev, sizeof(*rfkill), GFP_KERNEL);
+-	if (!rfkill)
+-		return -ENOMEM;
+-
+-	if (pdata->gpio_runtime_setup) {
++	if (pdata && pdata->gpio_runtime_setup) {
+ 		ret = pdata->gpio_runtime_setup(pdev);
+ 		if (ret) {
+ 			pr_warn("%s: can't set up gpio\n", __func__);
+@@ -97,9 +108,7 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+ 		}
+ 	}
+ 
+-	rfkill->pdata = pdata;
+-
+-	len = strlen(pdata->name);
++	len = strlen(rfkill->name);
+ 	rfkill->reset_name = devm_kzalloc(&pdev->dev, len + 7, GFP_KERNEL);
+ 	if (!rfkill->reset_name)
+ 		return -ENOMEM;
+@@ -108,13 +117,13 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+ 	if (!rfkill->shutdown_name)
+ 		return -ENOMEM;
+ 
+-	snprintf(rfkill->reset_name, len + 6 , "%s_reset", pdata->name);
+-	snprintf(rfkill->shutdown_name, len + 9, "%s_shutdown", pdata->name);
++	snprintf(rfkill->reset_name, len + 6 , "%s_reset", rfkill->name);
++	snprintf(rfkill->shutdown_name, len + 9, "%s_shutdown", rfkill->name);
+ 
+-	rfkill->clk = devm_clk_get(&pdev->dev, pdata->power_clk_name);
++	rfkill->clk = devm_clk_get(&pdev->dev, clk_name);
+ 
+-	if (gpio_is_valid(pdata->reset_gpio)) {
+-		ret = devm_gpio_request_one(&pdev->dev, pdata->reset_gpio,
++	if (gpio_is_valid(rfkill->reset_gpio)) {
++		ret = devm_gpio_request_one(&pdev->dev, rfkill->reset_gpio,
+ 					    0, rfkill->reset_name);
+ 		if (ret) {
+ 			pr_warn("%s: failed to get reset gpio.\n", __func__);
+@@ -122,8 +131,8 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+ 		}
+ 	}
+ 
+-	if (gpio_is_valid(pdata->shutdown_gpio)) {
+-		ret = devm_gpio_request_one(&pdev->dev, pdata->shutdown_gpio,
++	if (gpio_is_valid(rfkill->shutdown_gpio)) {
++		ret = devm_gpio_request_one(&pdev->dev, rfkill->shutdown_gpio,
+ 					    0, rfkill->shutdown_name);
+ 		if (ret) {
+ 			pr_warn("%s: failed to get shutdown gpio.\n", __func__);
+@@ -131,8 +140,9 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+ 		}
+ 	}
+ 
+-	rfkill->rfkill_dev = rfkill_alloc(pdata->name, &pdev->dev, pdata->type,
+-					  &rfkill_gpio_ops, rfkill);
++	rfkill->rfkill_dev = rfkill_alloc(rfkill->name, &pdev->dev,
++					  rfkill->type, &rfkill_gpio_ops,
++					  rfkill);
+ 	if (!rfkill->rfkill_dev)
+ 		return -ENOMEM;
+ 
+@@ -142,7 +152,7 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+ 
+ 	platform_set_drvdata(pdev, rfkill);
+ 
+-	dev_info(&pdev->dev, "%s device registered.\n", pdata->name);
++	dev_info(&pdev->dev, "%s device registered.\n", rfkill->name);
+ 
+ 	return 0;
+ }
+@@ -152,7 +162,7 @@ static int rfkill_gpio_remove(struct platform_device *pdev)
+ 	struct rfkill_gpio_data *rfkill = platform_get_drvdata(pdev);
+ 	struct rfkill_gpio_platform_data *pdata = pdev->dev.platform_data;
+ 
+-	if (pdata->gpio_runtime_close)
++	if (pdata && pdata->gpio_runtime_close)
+ 		pdata->gpio_runtime_close(pdev);
+ 	rfkill_unregister(rfkill->rfkill_dev);
+ 	rfkill_destroy(rfkill->rfkill_dev);
+@@ -164,8 +174,8 @@ static struct platform_driver rfkill_gpio_driver = {
+ 	.probe = rfkill_gpio_probe,
+ 	.remove = rfkill_gpio_remove,
+ 	.driver = {
+-		   .name = "rfkill_gpio",
+-		   .owner = THIS_MODULE,
++		.name = "rfkill_gpio",
++		.owner = THIS_MODULE,
+ 	},
+ };
+ 
+-- 
+1.8.4.rc3
 
