@@ -1,41 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f179.google.com ([209.85.192.179]:55543 "EHLO
-	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753077Ab3JMDa4 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:64301 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760239Ab3JPIus (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Oct 2013 23:30:56 -0400
-Received: by mail-pd0-f179.google.com with SMTP id v10so5958910pde.38
-        for <linux-wireless@vger.kernel.org>; Sat, 12 Oct 2013 20:30:55 -0700 (PDT)
-From: Mihir Shete <smihir@qti.qualcomm.com>
-To: linux-wireless@vger.kernel.org
-Cc: Mihir Shete <smihir@qti.qualcomm.com>
-Subject: [PATCH 0/2] cfg80211: changes to add the country IE preferences
-Date: Sun, 13 Oct 2013 09:00:44 +0530
-Message-Id: <1381635046-15123-1-git-send-email-smihir@qti.qualcomm.com> (sfid-20131013_053114_626939_9984BF4B)
+	Wed, 16 Oct 2013 04:50:48 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Bartosz Markowski <bartosz.markowski@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] ath10k: do not warn about unsupported vdev param
+References: <1381821980-7966-1-git-send-email-bartosz.markowski@tieto.com>
+Date: Wed, 16 Oct 2013 11:50:42 +0300
+In-Reply-To: <1381821980-7966-1-git-send-email-bartosz.markowski@tieto.com>
+	(Bartosz Markowski's message of "Tue, 15 Oct 2013 09:26:20 +0200")
+Message-ID: <8761sx8uql.fsf@kamboji.qca.qualcomm.com> (sfid-20131016_105055_743513_B957AD55)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-802.11 cards may have different country IE parsing preferences
-and vendors have to support these. We currently provide support
-for country IE behavioural preferences by using the flags
-WIPHY_FLAG_STRICT_REGULATORY, WIPHY_FLAG_CUSTOM_REGULATORY and
-their combination.
+Bartosz Markowski <bartosz.markowski@tieto.com> writes:
 
-Instead of extending the definition by using the existing
-regulatory flags, split out the desired behaviours into a new
-wiphy flag. This will allow us to add more customizations in a
-more easily maintainable fashion.
+> 10.X firmware does not support WMI_VDEV_PARAM_TX_ENCAP_TYPE.
+> It's a known limitation and we should not warn about this.
+>
+> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
 
-Mihir Shete (2):
-  cfg80211: add flags to define country IE processing rules
-  cfg80211: add an option to disable processing country IEs
-
- drivers/net/wireless/ath/regd.c |  1 +
- include/net/cfg80211.h          | 36 +++++++++++++++++++++++-------------
- include/uapi/linux/nl80211.h    | 34 ++++++++++++++++++++++++++++++++++
- net/wireless/reg.c              | 11 ++++++-----
- 4 files changed, 64 insertions(+), 18 deletions(-)
+Thanks, applied.
 
 -- 
-1.8.2.1
-
+Kalle Valo
