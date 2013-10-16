@@ -1,74 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f173.google.com ([209.85.217.173]:37316 "EHLO
-	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757504Ab3JOTHJ (ORCPT
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:57004 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754346Ab3JPVZS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Oct 2013 15:07:09 -0400
-Received: by mail-lb0-f173.google.com with SMTP id o14so7193740lbi.18
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Oct 2013 12:07:08 -0700 (PDT)
-Message-ID: <525D921C.2030709@cogentembedded.com> (sfid-20131015_210741_911733_2F3AF04C)
-Date: Tue, 15 Oct 2013 23:06:04 +0400
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+	Wed, 16 Oct 2013 17:25:18 -0400
+Received: by mail-wg0-f52.google.com with SMTP id f12so1363194wgh.7
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Oct 2013 14:25:17 -0700 (PDT)
+Message-ID: <525F0437.4080207@gmail.com> (sfid-20131016_232524_122993_8CA92A06)
+Date: Wed, 16 Oct 2013 22:25:11 +0100
+From: Malcolm <tvboxspy@gmail.com>
 MIME-Version: 1.0
-To: Kefeng Wang <wangkefeng.wang@huawei.com>
-CC: linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Pablo Neira Ayuso <pablo@netfilter.org>,
-	Stephen Hemminger <stephen@networkplumber.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Francois Romieu <romieu@fr.zoreil.com>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	Chas Williams <chas@cmf.nrl.navy.mil>,
-	Marc Kleine-Budde <mkl@pengutronix.de>,
-	Samuel Ortiz <samuel@sortiz.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Oliver Neukum <oneukum@suse.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	"Michael S. Tsirkin" <mst@redhat.com>, netfilter@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	guohanjun@huawei.com
-Subject: Re: [PATCH 14/18] net: usb: use wrapper functions of net_ratelimit()
- to simplify code
-References: <1381837514-50660-1-git-send-email-wangkefeng.wang@huawei.com> <1381837514-50660-15-git-send-email-wangkefeng.wang@huawei.com>
-In-Reply-To: <1381837514-50660-15-git-send-email-wangkefeng.wang@huawei.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] staging: vt6656: rxtx change u32 [4] aWTxKey to u8[16]
+ tx_key
+References: <1381870009.5100.45.camel@canaries32-MCP7A> <20131016194638.GA25749@kroah.com>
+In-Reply-To: <20131016194638.GA25749@kroah.com>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello.
 
-On 10/15/2013 03:45 PM, Kefeng Wang wrote:
+On 16/10/13 20:46, Greg KH wrote:
+> On Tue, Oct 15, 2013 at 09:46:49PM +0100, Malcolm Priestley wrote:
+>> Replace 4 x u32 aWTxKey with u8 array of 16 bytes tx_key.
+>>
+>> Replaces pbyBuf in s_vFillTxKey and connects pbyTxBufferAddr
+>> directly to tx_key without a cast elsewhere in structure.
+>>
+>> Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+> This patch causes a bunch of compiler warnings to get spit out by the
+> compiler, so I can't take it.
+>
+> Please fix them up and resend.
+hmm for some reason I am not getting them on gcc 4.8.1
 
-> net_ratelimited_function() is called to simplify code.
+Anyway, I will drop this patch for now. It requires changes elsewhere.
 
-> Signed-off-by: Kefeng Wang <wangkefeng.wang@huawei.com>
-> ---
->   drivers/net/usb/usbnet.c | 4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
-
-> diff --git a/drivers/net/usb/usbnet.c b/drivers/net/usb/usbnet.c
-> index bf94e10..edf81de 100644
-> --- a/drivers/net/usb/usbnet.c
-> +++ b/drivers/net/usb/usbnet.c
-> @@ -450,8 +450,8 @@ void usbnet_defer_kevent (struct usbnet *dev, int work)
->   {
->   	set_bit (work, &dev->flags);
->   	if (!schedule_work (&dev->kevent)) {
-> -		if (net_ratelimit())
-> -			netdev_err(dev->net, "kevent %d may have been dropped\n", work);
-> +		net_ratelimited_function(netdev_err, dev->net,
-> +			"kevent %d may have been dropped\n", work);
-
-    The continuation line should start under 'netdev_err'. Same about the 
-other patches where you didn't change the indentation of the continuation 
-lines though you should have.
-
-WBR, Sergei
-
+Malcolm
