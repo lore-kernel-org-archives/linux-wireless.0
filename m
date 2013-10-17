@@ -1,75 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm10-vm1.bullet.mail.ird.yahoo.com ([77.238.189.93]:29196 "EHLO
-	nm10-vm1.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756336Ab3JRPiY (ORCPT
+Received: from mail-ob0-f172.google.com ([209.85.214.172]:40617 "EHLO
+	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756358Ab3JQOjL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Oct 2013 11:38:24 -0400
-Message-ID: <526155ED.1090007@yahoo.de> (sfid-20131018_173829_130028_C8338B84)
-Date: Fri, 18 Oct 2013 17:38:21 +0200
-From: =?UTF-8?B?WWFubmlrIFbDtmxrZXI=?= <yannikv@yahoo.de>
+	Thu, 17 Oct 2013 10:39:11 -0400
+Received: by mail-ob0-f172.google.com with SMTP id vb8so1943721obc.31
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Oct 2013 07:39:10 -0700 (PDT)
+Message-ID: <525FF68A.8030806@lwfinger.net> (sfid-20131017_163913_944180_02F23A3E)
+Date: Thu, 17 Oct 2013 09:39:06 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Oleksij Rempel <linux@rempel-privat.de>
-CC: Pontus Fuchs <pontus.fuchs@gmail.com>,
+To: Stanislaw Gruszka <sgruszka@redhat.com>,
 	linux-wireless@vger.kernel.org
-Subject: Re: ar5523 Gigaset USB Adapter 108 issue
-References: <Pine.LNX.4.44L0.1310181041080.1164-100000@iolanthe.rowland.org> <52614E9B.6040400@rempel-privat.de>
-In-Reply-To: <52614E9B.6040400@rempel-privat.de>
-Content-Type: text/plain; charset=UTF-8
+CC: users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH 3.12] rt2800usb: slow down TX status polling
+References: <20131017100431.GA9603@redhat.com>
+In-Reply-To: <20131017100431.GA9603@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+On 10/17/2013 05:04 AM, Stanislaw Gruszka wrote:
+> Polling TX statuses too frequently has two negative effects. First is
+> randomly peek CPU usage, causing overall system functioning delays.
+> Second bad effect is that device is not able to fill TX statuses in
+> H/W register on some workloads and we get lot of timeouts like below:
+>
+> ieee80211 phy4: rt2800usb_entry_txstatus_timeout: Warning - TX status timeout for entry 7 in queue 2
+> ieee80211 phy4: rt2800usb_entry_txstatus_timeout: Warning - TX status timeout for entry 7 in queue 2
+> ieee80211 phy4: rt2800usb_txdone: Warning - Got TX status for an empty queue 2, dropping
+>
+> This not only cause flood of messages in dmesg, but also bad throughput,
+> since rate scaling algorithm can not work optimally.
+>
+> In the future, we should probably make polling interval be adjusted
+> automatically, but for now just increase values, this make mentioned
+> problems gone.
+>
+> Resolve:
+> https://bugzilla.kernel.org/show_bug.cgi?id=62781
+>
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> ---
+>   drivers/net/wireless/rt2x00/rt2800usb.c | 8 ++++----
+>   1 file changed, 4 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+> index 96677ce5..e095e61 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+> @@ -176,8 +176,8 @@ static bool rt2800usb_tx_sta_fifo_read_completed(struct rt2x00_dev *rt2x00dev,
+>   		queue_work(rt2x00dev->workqueue, &rt2x00dev->txdone_work);
+>
+>   	if (rt2800usb_txstatus_pending(rt2x00dev)) {
+> -		/* Read register after 250 us */
+> -		hrtimer_start(&rt2x00dev->txstatus_timer, ktime_set(0, 250000),
+> +		/* Read register after 1 ms */
+> +		hrtimer_start(&rt2x00dev->txstatus_timer, ktime_set(0, 1000000),
+>   			      HRTIMER_MODE_REL);
+>   		return false;
+>   	}
+> @@ -202,8 +202,8 @@ static void rt2800usb_async_read_tx_status(struct rt2x00_dev *rt2x00dev)
+>   	if (test_and_set_bit(TX_STATUS_READING, &rt2x00dev->flags))
+>   		return;
+>
+> -	/* Read TX_STA_FIFO register after 500 us */
+> -	hrtimer_start(&rt2x00dev->txstatus_timer, ktime_set(0, 500000),
+> +	/* Read TX_STA_FIFO register after 2 ms */
+> +	hrtimer_start(&rt2x00dev->txstatus_timer, ktime_set(0, 2000000),
+>   		      HRTIMER_MODE_REL);
+>   }
 
-Am 18.10.2013 17:07, schrieb Oleksij Rempel:
-> Am 18.10.2013 16:49, schrieb Alan Stern:
->> Yannik, you should always use Reply-To-All so that your messages
->> get sent to the mailing list and not just to me.
->> 
->> On Thu, 17 Oct 2013, Yannik Völker wrote:
->> 
->>> Am 07.08.2013 19:34, schrieb Alan Stern:
->>>> Please post two usbmon traces, one showing the failure on
->>>> your current system and the other showing the adapter running
->>>> correctly under a 32-bit kernel.  Instructions for usbmon are
->>>> in the kernel source file Documentation/usb/usbmon.txt.
->>> I never got it to work under a 32-bit kernel, i was just able
->>> to utilize a windows32 driver using ndiswrapper.
->>> 
->>> Now i got it to "work". I randomly found out that the ar5523
->>> driver actually works when you load it after you unload
->>> ndiswrapper so the following steps make it work: 1. modprobe
->>> ndiswrapper 2. plug in device 3. connect to wlan using
->>> ndiswrapper and disconnect again (might be optional) 4.
->>> modprobe -r ndiswrapper 5. modprobe ar5523 6. connect to wlan 
->>> log for that is attatched as wlanthennative2.log
-> 
-> 
-> It sounds like linux driver didn't recognised usb id and didn't
-> uploaded firmware, or there was no firmware to upload.
-there is firmware (/lib/firmware/ar5523.bin exists) but it does not
-even get touched (i renamed the file and the error did not change at all)
+I suggest getting rid of the magic numbers as long as you are making this 
+change. A single define could handle the delay time for the two cases.
 
-> thas is probably other issue.  Let's start with thirst issue.
-Ok, instructions?
+Larry
 
-
-- -- 
-Yannik Völker
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.14 (GNU/Linux)
-
-iQIcBAEBAgAGBQJSYVXtAAoJEDqk81AiCyXKm3AP/jBgoxUZVAftnT/wasdo3gTe
-Tooh1P/Kg0F6pAxzEdZ4C2XAlBdZnU4IPBPdBSxYwSYP4tAN6PW9fkdxHYIVUYNr
-G09dsjXOKW2+Ax5M9T2bGw+IV/mYMjXTlFG0uWw087q+LhvYH/SX9BGOJWGQf0e3
-xQWilxQ5NwooAd5ofkOzZ3yplRZQXU5WmwKzjieH/iGj/JKPN2cvY5PJ029NSwXT
-DNj4zuT5o1M6QGS0NH5A3Wsmw8iFDNSU1/ezVPbwLCoiAcVL77Wi5cHPn7NIPab7
-qgXkySAiByehH+8KeHWRXqv/sp0RMLjbg4sbMYrz4t2GCsqkCR88y+Nexz4XavjG
-LdBoILmXpTJoTvm3b2EQdjCPzwJJ3nUVB6rtqbUgCsGTVfTX1oz2EFSEFJtiJWW2
-1qvF/vqb1/Cn5k9gxNaDdmmUaN6zY4mIPPyBspoCYnExU+fXOHreAhcHsN4xBdDw
-jjZWFrWTWKvNbFUNgukHb2dCqjBCn5E8F5G3ROUVRygN5ewdThg1lI3xKH3aOLTy
-ZghSbi+yipyHD5NOdd2Z+rayGd+wD2Vk9i2X2GXwR6QPLgOe3OxQUoJu8vx7/E9S
-I//0D1RVdhrma3kUELEy6xcn9nLMQohE2LPn8yLjYkRAPzR/46xTR8LYFdC2SKyC
-/T+2qtvM4oJfTrhiTThf
-=y5hR
------END PGP SIGNATURE-----
