@@ -1,107 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:62074 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S933219Ab3JPUnL (ORCPT
+Received: from mail-vb0-f44.google.com ([209.85.212.44]:36558 "EHLO
+	mail-vb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760618Ab3JQAjt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Oct 2013 16:43:11 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Rhyland Klein <rklein@nvidia.com>, linux-acpi@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [PATCH 5/5] net: rfkill: gpio: add ACPI support
-Date: Wed, 16 Oct 2013 22:55:01 +0200
-Message-ID: <2878506.7lf24R85t6@vostro.rjw.lan> (sfid-20131016_224319_644830_778D2628)
-In-Reply-To: <1381920823-15403-6-git-send-email-heikki.krogerus@linux.intel.com>
-References: <1381920823-15403-1-git-send-email-heikki.krogerus@linux.intel.com> <1381920823-15403-6-git-send-email-heikki.krogerus@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Wed, 16 Oct 2013 20:39:49 -0400
+From: Felipe Pena <felipensp@gmail.com>
+To: Stefano Brivio <stefano.brivio@polimi.it>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Felipe Pena <felipensp@gmail.com>
+Subject: [PATCH] drivers: net: wireless: b43: Fix possible NULL ptr dereference
+Date: Wed, 16 Oct 2013 21:40:24 -0300
+Message-Id: <1381970424-4709-1-git-send-email-felipensp@gmail.com> (sfid-20131017_024017_070534_C82C6F38)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, October 16, 2013 01:53:43 PM Heikki Krogerus wrote:
-> Including ACPI ID for Broadcom GPS receiver BCM4752.
-> 
-> Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-> ---
->  net/rfkill/rfkill-gpio.c | 31 ++++++++++++++++++++++++++++++-
->  1 file changed, 30 insertions(+), 1 deletion(-)
-> 
-> diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
-> index 2dd78c6..5620d3c 100644
-> --- a/net/rfkill/rfkill-gpio.c
-> +++ b/net/rfkill/rfkill-gpio.c
-> @@ -24,6 +24,8 @@
->  #include <linux/platform_device.h>
->  #include <linux/clk.h>
->  #include <linux/slab.h>
-> +#include <linux/acpi.h>
-> +#include <linux/acpi_gpio.h>
->  
->  #include <linux/rfkill-gpio.h>
->  
-> @@ -70,6 +72,23 @@ static const struct rfkill_ops rfkill_gpio_ops = {
->  	.set_block = rfkill_gpio_set_power,
->  };
->  
-> +static int rfkill_gpio_acpi_probe(struct device *dev,
-> +				  struct rfkill_gpio_data *rfkill)
-> +{
-> +	const struct acpi_device_id *id;
-> +
-> +	id = acpi_match_device(dev->driver->acpi_match_table, dev);
-> +	if (!id)
-> +		return -ENODEV;
-> +
-> +	rfkill->name = dev_name(dev);
-> +	rfkill->type = (unsigned)id->driver_data;
-> +	rfkill->reset_gpio = acpi_get_gpio_by_index(dev, 0, NULL);
-> +	rfkill->shutdown_gpio = acpi_get_gpio_by_index(dev, 1, NULL);
-> +
-> +	return 0;
-> +}
-> +
->  static int rfkill_gpio_probe(struct platform_device *pdev)
->  {
->  	struct rfkill_gpio_platform_data *pdata = pdev->dev.platform_data;
-> @@ -82,7 +101,11 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
->  	if (!rfkill)
->  		return -ENOMEM;
->  
-> -	if (pdata) {
-> +	if (ACPI_HANDLE(&pdev->dev)) {
-> +		ret = rfkill_gpio_acpi_probe(&pdev->dev, rfkill);
-> +		if (ret)
-> +			return ret;
-> +	} else if (pdata) {
->  		clk_name = pdata->power_clk_name;
->  		rfkill->name = pdata->name;
->  		rfkill->type = pdata->type;
-> @@ -170,12 +193,18 @@ static int rfkill_gpio_remove(struct platform_device *pdev)
->  	return 0;
->  }
->  
-> +static const struct acpi_device_id rfkill_acpi_match[] = {
-> +	{ "BCM4752", RFKILL_TYPE_GPS },
-> +	{ },
-> +};
-> +
->  static struct platform_driver rfkill_gpio_driver = {
->  	.probe = rfkill_gpio_probe,
->  	.remove = rfkill_gpio_remove,
->  	.driver = {
->  		.name = "rfkill_gpio",
->  		.owner = THIS_MODULE,
-> +		.acpi_match_table = ACPI_PTR(rfkill_acpi_match),
->  	},
->  };
+On the ternary expression the 'e' variable could be NULL dereferenced,
+when b43_nphy_get_rf_ctl_over_rev7 function returns NULL.
 
-Looks good to me.
+Signed-off-by: Felipe Pena <felipensp@gmail.com>
+---
+ drivers/net/wireless/b43/phy_n.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Has Mika seen this?
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 7c970d3..05ee7f1 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -164,7 +164,8 @@ static void b43_nphy_rf_ctl_override_rev7(struct b43_wldev *dev, u16 field,
+ 		}
+ 		en_addr = en_addrs[override][i];
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+-		val_addr = (i == 0) ? e->val_addr_core0 : e->val_addr_core1;
++		if (e)
++			val_addr = (i == 0) ? e->val_addr_core0 : e->val_addr_core1;
+
+ 		if (off) {
+ 			b43_phy_mask(dev, en_addr, ~en_mask);
+--
+1.7.10.4
+
