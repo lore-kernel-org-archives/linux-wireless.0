@@ -1,96 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f48.google.com ([209.85.219.48]:52632 "EHLO
-	mail-oa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756643Ab3J1R3x convert rfc822-to-8bit (ORCPT
+Received: from v094114.home.net.pl ([79.96.170.134]:61048 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753592Ab3JQLgn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Oct 2013 13:29:53 -0400
-MIME-Version: 1.0
-In-Reply-To: <20131027201218.GA4414@earth.universe>
-References: <1382890469-25286-1-git-send-email-sre@debian.org>
-	<1382890469-25286-3-git-send-email-sre@debian.org>
-	<1382891056.102746625@f315.i.mail.ru>
-	<20131027201218.GA4414@earth.universe>
-Date: Mon, 28 Oct 2013 19:29:52 +0200
-Message-ID: <CANOLnONKcC1i19ypb4rh2Rff3WsVhhuUhNvZvYwDV2-ZNtjVxQ@mail.gmail.com> (sfid-20131028_183050_324110_4D9800CD)
-Subject: Re: [PATCH 2/4] wl1251: move power GPIO handling into the driver
-From: Grazvydas Ignotas <notasas@gmail.com>
-To: Alexander Shiyan <shc_work@mail.ru>,
-	Luciano Coelho <luca@coelho.fi>,
-	Mark Rutland <mark.rutland@arm.com>,
-	devicetree@vger.kernel.org, Russell King <linux@arm.linux.org.uk>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Tony Lindgren <tony@atomide.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-doc@vger.kernel.org,
+	Thu, 17 Oct 2013 07:36:43 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Heikki Krogerus <heikki.krogerus@linux.intel.com>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	Rob Herring <rob.herring@calxeda.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Sachin Kamat <sachin.kamat@linaro.org>,
-	Bill Pemberton <wfp5p@virginia.edu>,
-	Felipe Balbi <balbi@ti.com>, Rob Landley <rob@landley.net>,
-	netdev@vger.kernel.org,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Mark Brown <broonie@kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Johannes Berg <johannes@sipsolutions.net>,
+	Rhyland Klein <rklein@nvidia.com>, linux-acpi@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 5/5] net: rfkill: gpio: add ACPI support
+Date: Thu, 17 Oct 2013 13:48:34 +0200
+Message-ID: <1525130.mPhAo5k18y@vostro.rjw.lan> (sfid-20131017_133653_064030_DDAA979C)
+In-Reply-To: <20131017074426.GG3521@intel.com>
+References: <1381920823-15403-1-git-send-email-heikki.krogerus@linux.intel.com> <2878506.7lf24R85t6@vostro.rjw.lan> <20131017074426.GG3521@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Oct 27, 2013 at 10:12 PM, Sebastian Reichel <sre@debian.org> wrote:
-> On Sun, Oct 27, 2013 at 08:24:16PM +0400, Alexander Shiyan wrote:
->> > Move the power GPIO handling from the board code into
->> > the driver. This is a dependency for device tree support.
->> >
->> > Signed-off-by: Sebastian Reichel <sre@debian.org>
->> > ---
->> >  arch/arm/mach-omap2/board-omap3pandora.c     |  2 ++
->> >  arch/arm/mach-omap2/board-rx51-peripherals.c | 11 ++--------
->> >  drivers/net/wireless/ti/wl1251/sdio.c        | 21 +++++++++++++-----
->> >  drivers/net/wireless/ti/wl1251/spi.c         | 33 ++++++++++++++++++----------
->> >  drivers/net/wireless/ti/wl1251/wl1251.h      |  2 +-
->> >  include/linux/wl12xx.h                       |  2 +-
->> >  6 files changed, 43 insertions(+), 28 deletions(-)
->> ...
->> > diff --git a/include/linux/wl12xx.h b/include/linux/wl12xx.h
->> > index b516b4f..a9c723b 100644
->> > --- a/include/linux/wl12xx.h
->> > +++ b/include/linux/wl12xx.h
->> > @@ -49,7 +49,7 @@ enum {
->> >  };
->> >
->> >  struct wl1251_platform_data {
->> > -   void (*set_power)(bool enable);
->> > +   int power_gpio;
->> >     /* SDIO only: IRQ number if WLAN_IRQ line is used, 0 for SDIO IRQs */
->> >     int irq;
->> >     bool use_eeprom;
->> > --
->>
->> What a reason for not using regulator API here with GPIO-based
->> regulator?
->
-> I think this pin is not used as power supply, but like an enable pin
-> for low power states. Of course the regulator API could still be
-> (mis?)used for this, but I think it would be the first linux device
-> driver doing this.
->
-> Note: I don't have wl1251 documentation.
+On Thursday, October 17, 2013 10:44:26 AM Mika Westerberg wrote:
+> On Wed, Oct 16, 2013 at 10:55:01PM +0200, Rafael J. Wysocki wrote:
+> > On Wednesday, October 16, 2013 01:53:43 PM Heikki Krogerus wrote:
+> > > Including ACPI ID for Broadcom GPS receiver BCM4752.
+> > > 
+> > > Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+> > > ---
+> > >  net/rfkill/rfkill-gpio.c | 31 ++++++++++++++++++++++++++++++-
+> > >  1 file changed, 30 insertions(+), 1 deletion(-)
+> > > 
+> > > diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+> > > index 2dd78c6..5620d3c 100644
+> > > --- a/net/rfkill/rfkill-gpio.c
+> > > +++ b/net/rfkill/rfkill-gpio.c
+> > > @@ -24,6 +24,8 @@
+> > >  #include <linux/platform_device.h>
+> > >  #include <linux/clk.h>
+> > >  #include <linux/slab.h>
+> > > +#include <linux/acpi.h>
+> > > +#include <linux/acpi_gpio.h>
+> > >  
+> > >  #include <linux/rfkill-gpio.h>
+> > >  
+> > > @@ -70,6 +72,23 @@ static const struct rfkill_ops rfkill_gpio_ops = {
+> > >  	.set_block = rfkill_gpio_set_power,
+> > >  };
+> > >  
+> > > +static int rfkill_gpio_acpi_probe(struct device *dev,
+> > > +				  struct rfkill_gpio_data *rfkill)
+> > > +{
+> > > +	const struct acpi_device_id *id;
+> > > +
+> > > +	id = acpi_match_device(dev->driver->acpi_match_table, dev);
+> > > +	if (!id)
+> > > +		return -ENODEV;
+> > > +
+> > > +	rfkill->name = dev_name(dev);
+> > > +	rfkill->type = (unsigned)id->driver_data;
+> > > +	rfkill->reset_gpio = acpi_get_gpio_by_index(dev, 0, NULL);
+> > > +	rfkill->shutdown_gpio = acpi_get_gpio_by_index(dev, 1, NULL);
+> > > +
+> > > +	return 0;
+> > > +}
+> > > +
+> > >  static int rfkill_gpio_probe(struct platform_device *pdev)
+> > >  {
+> > >  	struct rfkill_gpio_platform_data *pdata = pdev->dev.platform_data;
+> > > @@ -82,7 +101,11 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+> > >  	if (!rfkill)
+> > >  		return -ENOMEM;
+> > >  
+> > > -	if (pdata) {
+> > > +	if (ACPI_HANDLE(&pdev->dev)) {
+> > > +		ret = rfkill_gpio_acpi_probe(&pdev->dev, rfkill);
+> > > +		if (ret)
+> > > +			return ret;
+> > > +	} else if (pdata) {
+> > >  		clk_name = pdata->power_clk_name;
+> > >  		rfkill->name = pdata->name;
+> > >  		rfkill->type = pdata->type;
+> > > @@ -170,12 +193,18 @@ static int rfkill_gpio_remove(struct platform_device *pdev)
+> > >  	return 0;
+> > >  }
+> > >  
+> > > +static const struct acpi_device_id rfkill_acpi_match[] = {
+> > > +	{ "BCM4752", RFKILL_TYPE_GPS },
+> > > +	{ },
+> > > +};
+> > > +
+> > >  static struct platform_driver rfkill_gpio_driver = {
+> > >  	.probe = rfkill_gpio_probe,
+> > >  	.remove = rfkill_gpio_remove,
+> > >  	.driver = {
+> > >  		.name = "rfkill_gpio",
+> > >  		.owner = THIS_MODULE,
+> > > +		.acpi_match_table = ACPI_PTR(rfkill_acpi_match),
+> > >  	},
+> > >  };
+> > 
+> > Looks good to me.
+> > 
+> > Has Mika seen this?
+> 
+> Yes, saw it now and looks good to me as well.
+> 
+> Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> 
+> for the whole series, for what it's worth.
 
-When wl12xx family of chips is connected through SDIO, we already have
-that pin set up as a regulator controlled with the help of mmc
-subsystem. When time comes to communicate with the chip, mmc subsystem
-sees this as yet another SD card and looks for associated regulator
-for it, and the board file has that set up as a fixed regulator
-controlling that pin (see pandora_vmmc3 in
-arch/arm/mach-omap2/board-omap3pandora.c). To prevent poweroff after
-first SDIO communications are over, pm_runtime calls are used in
-drivers/net/wireless/ti/wl1251/sdio.c .
+OK, so
 
-I don't know if something similar can be done done in SPI case, but
-I'm sure this is not the first your-so-called regulator misuse.
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Gražvydas
+for the ACPI-related changes.
+
+Thanks!
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
