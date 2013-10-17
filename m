@@ -1,60 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f177.google.com ([209.85.223.177]:60332 "EHLO
-	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751896Ab3JHU2l (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:44003 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756081Ab3JQO2V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Oct 2013 16:28:41 -0400
-Received: by mail-ie0-f177.google.com with SMTP id qd12so19687505ieb.8
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Oct 2013 13:28:40 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1381260511.2081.250.camel@joe-AO722>
-References: <20131008184815.3778.52129.stgit@localhost6.localdomain6>
-	<1381260511.2081.250.camel@joe-AO722>
-Date: Tue, 8 Oct 2013 14:28:40 -0600
-Message-ID: <CAErSpo66rdt7F6sem0G0dz7ieRbeJG2P98WNhQBKacF0TWuvFA@mail.gmail.com> (sfid-20131008_222844_393424_E64400DD)
-Subject: Re: remove unneeded semicolons
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Joe Perches <joe@perches.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>, ath10k@lists.infradead.org,
-	Fengguang Wu <fengguang.wu@intel.com>,
-	linux-wireless@vger.kernel.org,
-	Julia Lawall <julia.lawall@lip6.fr>,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 17 Oct 2013 10:28:21 -0400
+Message-ID: <1382020097.14410.6.camel@jlt4.sipsolutions.net> (sfid-20131017_162824_920932_4ED00AF7)
+Subject: Re: [PATCH] mac80211: Remove check for offchannel state when waking
+ netdev queues
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Seth Forshee <seth.forshee@canonical.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 17 Oct 2013 16:28:17 +0200
+In-Reply-To: <1381871781-29128-1-git-send-email-seth.forshee@canonical.com> (sfid-20131015_231626_156971_C2E5A2F9)
+References: <1381871781-29128-1-git-send-email-seth.forshee@canonical.com>
+	 (sfid-20131015_231626_156971_C2E5A2F9)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks, Joe.  I picked up the drivers/pci changes below and will merge
-them in the v3.13 merge window if nobody else does it first.
+On Tue, 2013-10-15 at 16:16 -0500, Seth Forshee wrote:
+> 6c17b77b67587b9f9e3070fb89fe98cef3187131 ensures that a device's
+> mac80211 queues will remain stopped while offchannel. Since the
+> vif can no longer be offchannel when the queues wake it's not
+> necessary to check for this before waking its netdev queues.
 
-Bjorn
+Applied.
 
+johannes
 
-diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
-index cdc7836..46d1378 100644
---- a/drivers/pci/proc.c
-+++ b/drivers/pci/proc.c
-@@ -222,7 +222,7 @@ static long proc_bus_pci_ioctl(struct file *file,
-unsigned int cmd,
-        default:
-                ret = -EINVAL;
-                break;
--       };
-+       }
-
-        return ret;
- }
-diff --git a/drivers/pci/syscall.c b/drivers/pci/syscall.c
-index e1c1ec5..24750a1 100644
---- a/drivers/pci/syscall.c
-+++ b/drivers/pci/syscall.c
-@@ -44,7 +44,7 @@ SYSCALL_DEFINE5(pciconfig_read, unsigned long, bus,
-unsigned long, dfn,
-        default:
-                err = -EINVAL;
-                goto error;
--       };
-+       }
-
-        err = -EIO;
-        if (cfg_ret != PCIBIOS_SUCCESSFUL)
