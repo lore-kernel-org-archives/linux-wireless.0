@@ -1,49 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42058 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756734Ab3JRSAP (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:60170 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762214Ab3JQRqW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Oct 2013 14:00:15 -0400
-Date: Fri, 18 Oct 2013 13:56:43 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Gustavo Padovan <gustavo@padovan.org>,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: bluetooth-next 2013-10-14
-Message-ID: <20131018175642.GC28130@tuxdriver.com> (sfid-20131018_200034_796462_55947276)
-References: <20131014235218.GE2305@joana>
+	Thu, 17 Oct 2013 13:46:22 -0400
+From: "Chauhan, Rajesh" <rajeshc@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Rodriguez, Luis" <rodrigue@qca.qualcomm.com>,
+	"Malinen, Jouni" <jouni@qca.qualcomm.com>,
+	"Bahini, Henri" <hbahini@qca.qualcomm.com>,
+	"Chang, Leo" <schang@qca.qualcomm.com>,
+	"Luo, Xun" <xunl@qca.qualcomm.com>,
+	"Chauhan, Rajesh" <rajeshc@qca.qualcomm.com>
+Subject: RE: [PATCH] cfg80211/nl80211: Add support to report unsafe
+ frequency ranges(s)
+Date: Thu, 17 Oct 2013 17:46:20 +0000
+Message-ID: <D19FD2B13A40CD4B8DA64DB9B8F112E9218DAD14@nasanexd01a.na.qualcomm.com> (sfid-20131017_194636_004811_4E9A1171)
+References: <1381985833-31312-1-git-send-email-rajeshc@qca.qualcomm.com>
+ <1382020835.14410.16.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131014235218.GE2305@joana>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 14, 2013 at 08:52:18PM -0300, Gustavo Padovan wrote:
-> Hi John,
-> 
-> More patches for 3.12, busy times for Bluetooth. More than a 100 commits since
-> the last pull. The bulk of work comes from Johan and Marcel, they are doing
-> fixes and improvements all over the Bluetooth subsystem, as the diffstat can
-> show.
-> 
-> Please pull or let me know of any problems! Thanks.
-> 
-> 	Gustavo
-> --
-> The following changes since commit 4f3e219d95a3c31b916dcd5e2631c4e440736f79:
-> 
->   Bluetooth: Only one command per L2CAP LE signalling is supported (2013-10-03 16:09:59 +0300)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next for-upstream
-> 
-> for you to fetch changes up to 4b836f393bd8ed111857a6ee1865e44627266ec6:
-> 
->   Bluetooth: Read current IAC LAP on controller setup (2013-10-14 19:31:18 -0300)
-
-Pulling now...
-
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+SGkgSm9oYW5uZXMsDQoNCkxldCBtZSBhbHNvIHJlcGxhY2UgU0FQIHdpdGggU29mdEFQLg0KDQpT
+byBub3cgY29tbWl0IHRleHQgd291bGQgYmU6DQoNCmNmZzgwMjExL25sODAyMTE6IEFkZCBBUEkg
+dG8gcmVwb3J0IGZyZXF1ZW5jeSByYW5nZShzKSB0byBiZSBhdm9pZGVkDQoNCkFkZCBzdXBwb3J0
+IGZvciBXTEFOIGRyaXZlciB0byByZXBvcnQgZnJlcXVlbmN5IHJhbmdlKHMpIHRvIGJlIGF2b2lk
+ZWQgYmVjYXVzZSBvZiBpbnRlcmZlcmVuY2UuIElmIFNvZnRBUC9QMlAtR08gaXMgb3BlcmF0aW5n
+IG9uIGludGVyZmVyaW5nIGZyZXF1ZW5jeSB0aGVuIHVzZXIgc3BhY2Ugc2hvdWxkIHN0b3AgYW5k
+IHJlc3RhcnQgdGhlbSBhdm9pZGluZyBpbnRlcmZlcmluZyBmcmVxdWVuY3kgcmFuZ2UocykuIFVz
+ZXIgc3BhY2UgbWF5IGRlY2lkZSB0byBjb250aW51ZSBvcGVyYXRpb24gb24gaW50ZXJmZXJpbmcg
+ZnJlcXVlbmN5LCBidXQgaW4gc3VjaCBjYXNlLCB0aGVyZSBtaWdodCBiZSBpbXBhY3Qgb24gcGVy
+Zm9ybWFuY2UuDQoNClJlZ2FyZHMsDQpSYWplc2ggQ2hhdWhhbg0KDQoNCi0tLS0tT3JpZ2luYWwg
+TWVzc2FnZS0tLS0tDQpGcm9tOiBDaGF1aGFuLCBSYWplc2ggDQpTZW50OiBUaHVyc2RheSwgT2N0
+b2JlciAxNywgMjAxMyAxMDoyMCBBTQ0KVG86ICdKb2hhbm5lcyBCZXJnJw0KQ2M6IGxpbnV4LXdp
+cmVsZXNzQHZnZXIua2VybmVsLm9yZzsgUm9kcmlndWV6LCBMdWlzOyBNYWxpbmVuLCBKb3VuaTsg
+QmFoaW5pLCBIZW5yaTsgQ2hhbmcsIExlbzsgTHVvLCBYdW47IENoYXVoYW4sIFJhamVzaA0KU3Vi
+amVjdDogUkU6IFtQQVRDSF0gY2ZnODAyMTEvbmw4MDIxMTogQWRkIHN1cHBvcnQgdG8gcmVwb3J0
+IHVuc2FmZSBmcmVxdWVuY3kgcmFuZ2VzKHMpDQoNCkhpIEpvaGFubmVzLA0KDQpUaGFua3MgZm9y
+IHlvdXIgY29tbWVudC4gUHVycG9zZSBvZiB0aGlzIHBhdGNoIGlzIHRvIGFkZCBhbiBBUEkgZm9y
+IFdMQU4gZHJpdmVyIHRvIHJlcG9ydCBmcmVxdWVuY3kgcmFuZ2VzIHdoaWNoIHNob3VsZCBiZSBh
+dm9pZGVkIGZvciBTQVAvUDJQLUdPIGJlY2F1c2Ugb2YgaW50ZXJmZXJlbmNlLg0KDQpIb3cgYWJv
+dXQgaWYgSSByZXdvcmQgY29tbWl0IHRlc3QgYXMgYmVsb3c/DQoNCmNmZzgwMjExL25sODAyMTE6
+IEFkZCBBUEkgdG8gcmVwb3J0IGZyZXF1ZW5jeSByYW5nZShzKSB0byBiZSBhdm9pZGVkDQoNCkFk
+ZCBzdXBwb3J0IGZvciBXTEFOIGRyaXZlciB0byByZXBvcnQgZnJlcXVlbmN5IHJhbmdlKHMpIHRv
+IGJlIGF2b2lkZWQgYmVjYXVzZSBvZiBpbnRlcmZlcmVuY2UuIElmIFNBUC9QMlAtR08gaXMgb3Bl
+cmF0aW5nIG9uIGludGVyZmVyaW5nIGZyZXF1ZW5jeSB0aGVuIHVzZXIgc3BhY2Ugc2hvdWxkIHN0
+b3AgYW5kIHJlc3RhcnQgdGhlbSBhdm9pZGluZyBpbnRlcmZlcmluZyBmcmVxdWVuY3kgcmFuZ2Uo
+cykuIFVzZXIgc3BhY2UgbWF5IGRlY2lkZSB0byBjb250aW51ZSBvcGVyYXRpb24gb24gaW50ZXJm
+ZXJpbmcgZnJlcXVlbmN5LCBidXQgaW4gc3VjaCBjYXNlLCB0aGVyZSBtaWdodCBiZSBpbXBhY3Qg
+b24gcGVyZm9ybWFuY2UuDQoNClJlZ2FyZHMsDQpSYWplc2ggQ2hhdWhhbg0KDQoNCi0tLS0tT3Jp
+Z2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBKb2hhbm5lcyBCZXJnIFttYWlsdG86am9oYW5uZXNA
+c2lwc29sdXRpb25zLm5ldF0NClNlbnQ6IFRodXJzZGF5LCBPY3RvYmVyIDE3LCAyMDEzIDc6NDEg
+QU0NClRvOiBDaGF1aGFuLCBSYWplc2gNCkNjOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5v
+cmc7IFJvZHJpZ3VleiwgTHVpczsgTWFsaW5lbiwgSm91bmkNClN1YmplY3Q6IFJlOiBbUEFUQ0hd
+IGNmZzgwMjExL25sODAyMTE6IEFkZCBzdXBwb3J0IHRvIHJlcG9ydCB1bnNhZmUgZnJlcXVlbmN5
+IHJhbmdlcyhzKQ0KDQpPbiBXZWQsIDIwMTMtMTAtMTYgYXQgMjE6NTcgLTA3MDAsIFJhamVzaCBD
+aGF1aGFuIHdyb3RlOg0KPiBBZGQgc3VwcG9ydCBmb3IgV0xBTiBkcml2ZXIgdG8gcmVwb3J0IHVu
+c2FmZSBmcmVxdWVuY3kgcmFuZ2UocykuIA0KDQpXaHk/DQoNCj4gVXNlcg0KPiBzcGFjZSBzaG91
+bGQgbW92ZSBTQVAvUDJQLUdPIG91dCBvZiB0aG9zZSB1bnNhZmUgZnJlcXVlbmN5IHJhbmdlKHMp
+Lg0KPiBVc2VyIHNwYWNlIG1heSBkZWNpZGUgdG8gY29udGludWUgb3BlcmF0aW9uIG9uIHVuc2Fm
+ZSBmcmVxdWVuY3kgYnV0IGluIA0KPiBzdWNoIGNhc2UgdGhlcmUgbWlnaHQgYmUgaW1wYWN0IG9u
+IHBlcmZvcm1hbmNlIGJlY2F1c2Ugb2YgaW50ZXJmZXJlbmNlLg0KDQpTQVA/IEkgZG9uJ3QgdGhp
+bmsgU0FQIHdpbGwgbW92ZSAtIHRoZXkncmUgcHJldHR5IHN0dWNrIGluIFdhbGxkb3JmIDpQDQoN
+ClRoaXMgaXMgcHJldHR5IHN0cmFuZ2UgcGF0Y2gsIGFuZCB2ZXJ5IGxpdHRsZSBqdXN0aWZpY2F0
+aW9uLg0KDQoiVW5zYWZlIiBpcyBhbHNvIGEgcmVhbGx5IGJhZCB3b3JkLg0KDQpqb2hhbm5lcw0K
+DQo=
