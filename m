@@ -1,50 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f175.google.com ([74.125.82.175]:62379 "EHLO
-	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751341Ab3JURWu (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:44040 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756358Ab3JQOi6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Oct 2013 13:22:50 -0400
-Received: by mail-we0-f175.google.com with SMTP id t61so6766765wes.6
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Oct 2013 10:22:49 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, janusz.dziedzic@tieto.com,
-	smihir@qti.qualcomm.com, tushnimb@qca.qualcomm.com,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Subject: [PATCH 03/14] ath10k: consolidate no-ibss and passive scan to no-ir
-Date: Mon, 21 Oct 2013 19:22:27 +0200
-Message-Id: <1382376158-25586-4-git-send-email-mcgrof@do-not-panic.com> (sfid-20131021_192253_294493_D32537ED)
-In-Reply-To: <1382376158-25586-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1382376158-25586-1-git-send-email-mcgrof@do-not-panic.com>
+	Thu, 17 Oct 2013 10:38:58 -0400
+Message-ID: <1382020735.14410.14.camel@jlt4.sipsolutions.net> (sfid-20131017_163901_652600_A561DA9F)
+Subject: Re: NetworkManager not listing access points
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Detlev Casanova <detlev.casanova@gmail.com>
+Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
+	laurent.pinchart@ideasonboard.com
+Date: Thu, 17 Oct 2013 16:38:55 +0200
+In-Reply-To: <3301062.MLBKDh0Ksv@naboo> (sfid-20131011_174257_646312_6E07DE10)
+References: <31357461.i5mG9q5IfA@naboo> <2916718.7t7kLXuBQV@naboo>
+	 <1381131658.13586.0.camel@jlt4.sipsolutions.net> <3301062.MLBKDh0Ksv@naboo>
+	 (sfid-20131011_174257_646312_6E07DE10)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+On Fri, 2013-10-11 at 17:43 +0200, Detlev Casanova wrote:
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 0b1cc51..f23d61f 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -1351,12 +1351,12 @@ static int ath10k_update_channel_list(struct ath10k *ar)
- 			ch->allow_vht = true;
- 
- 			ch->allow_ibss =
--				!(channel->flags & IEEE80211_CHAN_NO_IBSS);
-+				!(channel->flags & IEEE80211_CHAN_NO_IR);
- 
- 			ch->ht40plus =
- 				!(channel->flags & IEEE80211_CHAN_NO_HT40PLUS);
- 
--			passive = channel->flags & IEEE80211_CHAN_PASSIVE_SCAN;
-+			passive = channel->flags & IEEE80211_CHAN_NO_IR;
- 			ch->passive = passive;
- 
- 			ch->freq = channel->center_freq;
--- 
-1.8.4.rc3
+> > > > > occur before commit 0172bb75073e11a5aa9d8a953bdaefb8709f00c8
+> > > 
+> > > ("cfg80211:
+> > > > > use DS or HT operation IEs to determine BSS channel")
+> > 
+> > [...]
+> > 
+> > > I looked into wpa_supplicant and after an upgrade from 0.7.3 to 2.0,
+> > > the problem seems to be fixed.
+> > 
+> > Huh, that's odd. Did 0.7.3 use wext driver?
+> 
+> Yes it did.
+
+Hmm. Even taking that into account though I don't really see any
+difference.
+
+Maybe you could check if there's any difference in iwlist scan output
+before/after the patch (for the affected AP)?
+
+johannes
+
 
