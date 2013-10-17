@@ -1,148 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:48557 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753399Ab3JBJDy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Oct 2013 05:03:54 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 4/4] ath10k: remove num_sends_allowed
-Date: Wed, 2 Oct 2013 11:03:41 +0200
-Message-ID: <1380704621-4670-5-git-send-email-michal.kazior@tieto.com> (sfid-20131002_110359_131574_C5CDC9D8)
-In-Reply-To: <1380704621-4670-1-git-send-email-michal.kazior@tieto.com>
-References: <1380292706-3609-1-git-send-email-michal.kazior@tieto.com>
- <1380704621-4670-1-git-send-email-michal.kazior@tieto.com>
+Received: from s3.neomailbox.net ([178.209.62.157]:8647 "EHLO
+	s3.neomailbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756813Ab3JQO6Q (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Oct 2013 10:58:16 -0400
+Date: Thu, 17 Oct 2013 16:57:44 +0200
+From: Antonio Quartulli <antonio@meshcoding.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Antonio Quartulli <antonio@open-mesh.com>
+Subject: Re: [PATCH 2/2] mac80211: store the channel in wdev upon ibss_join
+Message-ID: <20131017145744.GI2596@neomailbox.net> (sfid-20131017_165819_378953_07890120)
+References: <1381790282-1146-1-git-send-email-antonio@meshcoding.com>
+ <1381790282-1146-2-git-send-email-antonio@meshcoding.com>
+ <1382020588.14410.12.camel@jlt4.sipsolutions.net>
+ <20131017144824.GH2596@neomailbox.net>
+ <1382021488.14410.17.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="dDnEQgWzhgf+8aPe"
+In-Reply-To: <1382021488.14410.17.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The value provided by num_sends_allowed is now
-derived from CE source ringbuffer state.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/ce.c  |   17 ++++++++++++++++-
- drivers/net/wireless/ath/ath10k/ce.h  |    1 +
- drivers/net/wireless/ath/ath10k/pci.c |   21 +--------------------
- drivers/net/wireless/ath/ath10k/pci.h |    3 ---
- 4 files changed, 18 insertions(+), 24 deletions(-)
+--dDnEQgWzhgf+8aPe
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
-index 9e6daa9..e46951b 100644
---- a/drivers/net/wireless/ath/ath10k/ce.c
-+++ b/drivers/net/wireless/ath/ath10k/ce.c
-@@ -283,7 +283,7 @@ static int ath10k_ce_send_nolock(struct ath10k_ce_pipe *ce_state,
- 
- 	if (unlikely(CE_RING_DELTA(nentries_mask,
- 				   write_index, sw_index - 1) <= 0)) {
--		ret = -EIO;
-+		ret = -ENOSR;
- 		goto exit;
- 	}
- 
-@@ -338,6 +338,21 @@ int ath10k_ce_send(struct ath10k_ce_pipe *ce_state,
- 	return ret;
- }
- 
-+int ath10k_ce_num_free_src_entries(struct ath10k_ce_pipe *pipe)
-+{
-+	struct ath10k *ar = pipe->ar;
-+	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
-+	int delta;
-+
-+	spin_lock_bh(&ar_pci->ce_lock);
-+	delta = CE_RING_DELTA(pipe->src_ring->nentries_mask,
-+			      pipe->src_ring->write_index,
-+			      pipe->src_ring->sw_index - 1);
-+	spin_unlock_bh(&ar_pci->ce_lock);
-+
-+	return delta;
-+}
-+
- int ath10k_ce_recv_buf_enqueue(struct ath10k_ce_pipe *ce_state,
- 			       void *per_recv_context,
- 			       u32 buffer)
-diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
-index 949b174..15d45b5 100644
---- a/drivers/net/wireless/ath/ath10k/ce.h
-+++ b/drivers/net/wireless/ath/ath10k/ce.h
-@@ -156,6 +156,7 @@ void ath10k_ce_send_cb_register(struct ath10k_ce_pipe *ce_state,
- 				void (*send_cb)(struct ath10k_ce_pipe *),
- 				int disable_interrupts);
- 
-+int ath10k_ce_num_free_src_entries(struct ath10k_ce_pipe *pipe);
- 
- /*==================Recv=======================*/
- 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 4f6a978..f8d59c7 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -720,16 +720,6 @@ static int ath10k_pci_hif_send_head(struct ath10k *ar, u8 pipe_id,
- 			"ath10k tx: data: ",
- 			nbuf->data, nbuf->len);
- 
--	/* Make sure we have resources to handle this request */
--	spin_lock_bh(&pipe_info->pipe_lock);
--	if (!pipe_info->num_sends_allowed) {
--		ath10k_warn("Pipe: %d is full\n", pipe_id);
--		spin_unlock_bh(&pipe_info->pipe_lock);
--		return -ENOSR;
--	}
--	pipe_info->num_sends_allowed--;
--	spin_unlock_bh(&pipe_info->pipe_lock);
--
- 	ret = ath10k_ce_send(ce_hdl, nbuf, skb_cb->paddr, len, transfer_id,
- 			     flags);
- 	if (ret)
-@@ -741,14 +731,7 @@ static int ath10k_pci_hif_send_head(struct ath10k *ar, u8 pipe_id,
- static u16 ath10k_pci_hif_get_free_queue_number(struct ath10k *ar, u8 pipe)
- {
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
--	struct ath10k_pci_pipe *pipe_info = &(ar_pci->pipe_info[pipe]);
--	int ret;
--
--	spin_lock_bh(&pipe_info->pipe_lock);
--	ret = pipe_info->num_sends_allowed;
--	spin_unlock_bh(&pipe_info->pipe_lock);
--
--	return ret;
-+	return ath10k_ce_num_free_src_entries(ar_pci->pipe_info[pipe].ce_hdl);
- }
- 
- static void ath10k_pci_hif_dump_area(struct ath10k *ar)
-@@ -863,7 +846,6 @@ static int ath10k_pci_start_ce(struct ath10k *ar)
- 						   ath10k_pci_ce_send_done,
- 						   disable_interrupts);
- 			completions += attr->src_nentries;
--			pipe_info->num_sends_allowed = attr->src_nentries - 1;
- 		}
- 
- 		if (attr->dest_nentries) {
-@@ -1033,7 +1015,6 @@ static void ath10k_pci_process_ce(struct ath10k *ar)
- 		 */
- 		spin_lock_bh(&compl->pipe_info->pipe_lock);
- 		list_add_tail(&compl->list, &compl->pipe_info->compl_free);
--		compl->pipe_info->num_sends_allowed += send_done;
- 		spin_unlock_bh(&compl->pipe_info->pipe_lock);
- 	}
- 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.h b/drivers/net/wireless/ath/ath10k/pci.h
-index 7c49f6f..52fb7b9 100644
---- a/drivers/net/wireless/ath/ath10k/pci.h
-+++ b/drivers/net/wireless/ath/ath10k/pci.h
-@@ -178,9 +178,6 @@ struct ath10k_pci_pipe {
- 	/* List of free CE completion slots */
- 	struct list_head compl_free;
- 
--	/* Limit the number of outstanding send requests. */
--	int num_sends_allowed;
--
- 	struct ath10k_pci *ar_pci;
- 	struct tasklet_struct intr;
- };
--- 
-1.7.9.5
+On Thu, Oct 17, 2013 at 04:51:28PM +0200, Johannes Berg wrote:
+> On Thu, 2013-10-17 at 16:48 +0200, Antonio Quartulli wrote:
+> > On Thu, Oct 17, 2013 at 04:36:28PM +0200, Johannes Berg wrote:
+> > > On Tue, 2013-10-15 at 00:38 +0200, Antonio Quartulli wrote:
+> > > > From: Antonio Quartulli <antonio@open-mesh.com>
+> > > >=20
+> > > > To allow cfg80211 to use the real channel to pick up the
+> > > > proper (i)bss object, store the used channel in
+> > > > wdev->channel during ibss_join
+> > >=20
+> > > WTF? No, mac80211 can't just randomly modify cfg80211-owned data.
+> >=20
+> > Mh, ok. :)
+> >=20
+> > What about setting wdev->channel in __cfg80211_join_ibss() right after =
+having
+> > set wdev->ssid ?
+> > This way we leave mac80211 out and we totally handle this thing in cfg8=
+0211
+> > only.
+>=20
+> Locking might be problematic though. I also don't know where else the
+> channel might be used?
 
+
+I don't think it is used elsewhere in IBSS mode
+
+
+--=20
+Antonio Quartulli
+
+--dDnEQgWzhgf+8aPe
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIcBAEBCAAGBQJSX/roAAoJEADl0hg6qKeObowP/ivCnOkyjDlaiMK7zDeIwnxK
+l00KskKpiJfPIJb3zD6XEu0nefR7I+A1LPGWcWv8XURfpY1jvUTZ2cknSiNUp+QJ
+01VZw9+xzaUNqPJrUNd+IPhsZrKCSYrChUqQQIuQ/1/I9WYjLbgBDpHY0pyhIcAi
+5HpBJf3NmYq3bIRQKJUyJY91yox2cvn2S3rGdZWNni9k5GEGnS+C6AhXnSTdiMp6
+YDWSFzJHDpw1gQQgljKdjAgJ8/MT9xTuoTXEmMEnjfHmZLsHqfq+e5C4tJBp1gZR
+MgYj4CGMDg/vpWXMyivkYG8p+9VD3t2VhyRolZsqmTHmRoJ7u9R6k/5lqg7XPAiw
+Q+D6KWLT1yCpidyC2hme9wYwgCJ3HqjMPwj0WFzrg74vxX02fjW54/k4c80ThdBs
+TBJhXUMJgzjbTk98rv8whj9WRico7WFlT2JpJJ77gm3jtkB0Fqs483cR8IXjBMWS
+BwlW0gJtMBBXB3T5thXuSvSQHUKsfom0MN7CaUvtgHuJYdwyeScOyoSWC671TFT3
+5u8xipcpteFkogWK0hn6L2RYDZzAQLQSS6DXQZQHxT2yGiVQ7bnVklLe0QxxgVVx
+c8KHtVo49YdHYBn+xhRGrZ/p7WWBEz9B8r5CqmrL61sSf9tjKDRqP6J68SDHufB3
+5otintcVGNRztcnFoQtU
+=7ANS
+-----END PGP SIGNATURE-----
+
+--dDnEQgWzhgf+8aPe--
