@@ -1,70 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4655 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750880Ab3J3JLG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Oct 2013 05:11:06 -0400
-Message-ID: <5270CCF2.70407@broadcom.com> (sfid-20131030_101113_771452_135C6B60)
-Date: Wed, 30 Oct 2013 10:10:10 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:50046 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757423Ab3JQRTn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Oct 2013 13:19:43 -0400
+From: "Chauhan, Rajesh" <rajeshc@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Rodriguez, Luis" <rodrigue@qca.qualcomm.com>,
+	"Malinen, Jouni" <jouni@qca.qualcomm.com>,
+	"Bahini, Henri" <hbahini@qca.qualcomm.com>,
+	"Chang, Leo" <schang@qca.qualcomm.com>,
+	"Luo, Xun" <xunl@qca.qualcomm.com>,
+	"Chauhan, Rajesh" <rajeshc@qca.qualcomm.com>
+Subject: RE: [PATCH] cfg80211/nl80211: Add support to report unsafe
+ frequency ranges(s)
+Date: Thu, 17 Oct 2013 17:19:41 +0000
+Message-ID: <D19FD2B13A40CD4B8DA64DB9B8F112E9218DAC92@nasanexd01a.na.qualcomm.com> (sfid-20131017_191947_050792_D5846548)
+References: <1381985833-31312-1-git-send-email-rajeshc@qca.qualcomm.com>
+ <1382020835.14410.16.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1382020835.14410.16.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	linville@tuxdriver.com, johannes@sipsolutions.net
-cc: linux-wireless@vger.kernel.org,
-	"Julia Lawall" <julia.lawall@lip6.fr>,
-	"Peter Senna Tschudin" <peter.senna@gmail.com>,
-	"Seth Forshee" <seth.forshee@canonical.com>
-Subject: Re: [PATCH 2/3] brcm80211: fix usage of freq_reg_info()
-References: <1383071666-26817-1-git-send-email-mcgrof@do-not-panic.com>
- <1383071666-26817-3-git-send-email-mcgrof@do-not-panic.com>
-In-Reply-To: <1383071666-26817-3-git-send-email-mcgrof@do-not-panic.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/29/2013 07:34 PM, Luis R. Rodriguez wrote:
-> freq_reg_info() expects KHz and not MHz, fix this. In
-> this case we'll now be getting the no-ir flags cleared
-> on channels for any channel when the country IE trusts
-> that channel.
->
-> @@
-> struct ieee80211_channel *ch;
-> struct wiphy *wiphy;
-> const struct ieee80211_reg_rule *rule;
-> @@
->
-> -rule = freq_reg_info(wiphy, ch->center_freq);
-> +rule = freq_reg_info(wiphy, MHZ_TO_KHZ(ch->center_freq));
->
-> Generated-by: Coccinelle SmPL
-> Cc: Julia Lawall <julia.lawall@lip6.fr>
-> Cc: Peter Senna Tschudin <peter.senna@gmail.com>
-> Cc: Seth Forshee <seth.forshee@canonical.com>
-
-Acked-by: Arend van Spriel <arend@broadcom.com>
-
-> Reported-by: Mihir Shete <smihir@qti.qualcomm.com>
-> Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
-> ---
->   drivers/net/wireless/brcm80211/brcmsmac/channel.c | 3 ++-
->   1 file changed, 2 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/channel.c b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-> index c99364f..8272570 100644
-> --- a/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-> +++ b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-> @@ -678,7 +678,8 @@ brcms_reg_apply_beaconing_flags(struct wiphy *wiphy,
->   				continue;
->
->   			if (initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE) {
-> -				rule = freq_reg_info(wiphy, ch->center_freq);
-> +				rule = freq_reg_info(wiphy,
-> +						     MHZ_TO_KHZ(ch->center_freq));
->   				if (IS_ERR(rule))
->   					continue;
->
->
-
-
+SGkgSm9oYW5uZXMsDQoNClRoYW5rcyBmb3IgeW91ciBjb21tZW50LiBQdXJwb3NlIG9mIHRoaXMg
+cGF0Y2ggaXMgdG8gYWRkIGFuIEFQSSBmb3IgV0xBTiBkcml2ZXIgdG8gcmVwb3J0IGZyZXF1ZW5j
+eSByYW5nZXMgd2hpY2ggc2hvdWxkIGJlIGF2b2lkZWQgZm9yIFNBUC9QMlAtR08gYmVjYXVzZSBv
+ZiBpbnRlcmZlcmVuY2UuDQoNCkhvdyBhYm91dCBpZiBJIHJld29yZCBjb21taXQgdGVzdCBhcyBi
+ZWxvdz8NCg0KY2ZnODAyMTEvbmw4MDIxMTogQWRkIEFQSSB0byByZXBvcnQgZnJlcXVlbmN5IHJh
+bmdlKHMpIHRvIGJlIGF2b2lkZWQNCg0KQWRkIHN1cHBvcnQgZm9yIFdMQU4gZHJpdmVyIHRvIHJl
+cG9ydCBmcmVxdWVuY3kgcmFuZ2UocykgdG8gYmUgYXZvaWRlZCBiZWNhdXNlIG9mIGludGVyZmVy
+ZW5jZS4gSWYgU0FQL1AyUC1HTyBpcyBvcGVyYXRpbmcgb24gaW50ZXJmZXJpbmcgZnJlcXVlbmN5
+IHRoZW4gdXNlciBzcGFjZSBzaG91bGQgc3RvcCBhbmQgcmVzdGFydCB0aGVtIGF2b2lkaW5nIGlu
+dGVyZmVyaW5nIGZyZXF1ZW5jeSByYW5nZShzKS4gVXNlciBzcGFjZSBtYXkgZGVjaWRlIHRvIGNv
+bnRpbnVlIG9wZXJhdGlvbiBvbiBpbnRlcmZlcmluZyBmcmVxdWVuY3ksIGJ1dCBpbiBzdWNoIGNh
+c2UsIHRoZXJlIG1pZ2h0IGJlIGltcGFjdCBvbiBwZXJmb3JtYW5jZS4NCg0KUmVnYXJkcywNClJh
+amVzaCBDaGF1aGFuDQoNCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEpvaGFu
+bmVzIEJlcmcgW21haWx0bzpqb2hhbm5lc0BzaXBzb2x1dGlvbnMubmV0XSANClNlbnQ6IFRodXJz
+ZGF5LCBPY3RvYmVyIDE3LCAyMDEzIDc6NDEgQU0NClRvOiBDaGF1aGFuLCBSYWplc2gNCkNjOiBs
+aW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IFJvZHJpZ3VleiwgTHVpczsgTWFsaW5lbiwg
+Sm91bmkNClN1YmplY3Q6IFJlOiBbUEFUQ0hdIGNmZzgwMjExL25sODAyMTE6IEFkZCBzdXBwb3J0
+IHRvIHJlcG9ydCB1bnNhZmUgZnJlcXVlbmN5IHJhbmdlcyhzKQ0KDQpPbiBXZWQsIDIwMTMtMTAt
+MTYgYXQgMjE6NTcgLTA3MDAsIFJhamVzaCBDaGF1aGFuIHdyb3RlOg0KPiBBZGQgc3VwcG9ydCBm
+b3IgV0xBTiBkcml2ZXIgdG8gcmVwb3J0IHVuc2FmZSBmcmVxdWVuY3kgcmFuZ2UocykuIA0KDQpX
+aHk/DQoNCj4gVXNlcg0KPiBzcGFjZSBzaG91bGQgbW92ZSBTQVAvUDJQLUdPIG91dCBvZiB0aG9z
+ZSB1bnNhZmUgZnJlcXVlbmN5IHJhbmdlKHMpLg0KPiBVc2VyIHNwYWNlIG1heSBkZWNpZGUgdG8g
+Y29udGludWUgb3BlcmF0aW9uIG9uIHVuc2FmZSBmcmVxdWVuY3kgYnV0IGluIA0KPiBzdWNoIGNh
+c2UgdGhlcmUgbWlnaHQgYmUgaW1wYWN0IG9uIHBlcmZvcm1hbmNlIGJlY2F1c2Ugb2YgaW50ZXJm
+ZXJlbmNlLg0KDQpTQVA/IEkgZG9uJ3QgdGhpbmsgU0FQIHdpbGwgbW92ZSAtIHRoZXkncmUgcHJl
+dHR5IHN0dWNrIGluIFdhbGxkb3JmIDpQDQoNClRoaXMgaXMgcHJldHR5IHN0cmFuZ2UgcGF0Y2gs
+IGFuZCB2ZXJ5IGxpdHRsZSBqdXN0aWZpY2F0aW9uLg0KDQoiVW5zYWZlIiBpcyBhbHNvIGEgcmVh
+bGx5IGJhZCB3b3JkLg0KDQpqb2hhbm5lcw0KDQo=
