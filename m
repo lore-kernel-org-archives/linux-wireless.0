@@ -1,51 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:59062 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755476Ab3JNPGn (ORCPT
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:56385 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751099Ab3JQIgT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Oct 2013 11:06:43 -0400
-Message-ID: <1381763193.13092.19.camel@jlt4.sipsolutions.net> (sfid-20131014_170647_083761_6586A114)
-Subject: Re: [PATCH] cfg80211: fix channel to frequency mapping in 5.9GHz
- range
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dennis H Jensen <dennis.h.jensen@siemens.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Date: Mon, 14 Oct 2013 17:06:33 +0200
-In-Reply-To: <1381762681.3711.36.camel@djensen-laptop>
-References: <1381492780-3068-1-git-send-email-dennis.h.jensen@siemens.com>
-	 <1381499778.14293.21.camel@jlt4.sipsolutions.net>
-	 <1381506302.3711.10.camel@djensen-laptop>
-	 <1381752176.13092.10.camel@jlt4.sipsolutions.net>
-	 <1381752976.3711.14.camel@djensen-laptop>
-	 <1381759370.13092.11.camel@jlt4.sipsolutions.net>
-	 <1381762681.3711.36.camel@djensen-laptop>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 17 Oct 2013 04:36:19 -0400
+Subject: [PATCH] ath10k: add error handling to ath10k_pci_wait()
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 17 Oct 2013 11:36:15 +0300
+Message-ID: <20131017083615.31028.25088.stgit@localhost6.localdomain6> (sfid-20131017_103623_781430_CB9AC62E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-10-14 at 16:58 +0200, Dennis H Jensen wrote:
+ath10k_pci_wait() didn't notify any errors to callers, it
+just printed a warning so add proper error handling.
 
-> > > The commit 59eb21a6504731fc16db4cf9463065dd61093e08 moved those channels
-> > > to 4.9 GHz but left a hole in the 5.9 Ghz range.
-> > 
-> > But there was no +/- 15 before, so what gives?
-> 
-> Well no :) but there also wasn't a special case for that particular
-> channel set (182 - 196).
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c |   28 ++++++++++++++++++++++++----
+ 1 file changed, 24 insertions(+), 4 deletions(-)
 
-Yes, but then before 5910 would have been channel 182. Now you're making
-it channel 197. That doesn't really make sense at all.
-
-> So now, when you configure the frequency 5910, it is mapped to channel
-> 182 which is mapped back to 4910 and nothing works, at least let the
-> functions be the inverse of the other.
-> 
-> In case that doesn't do it. What is needed to get channel 182 to be 5910
-> MHz as Annex E defines for the US and Europe? Channel to frequency
-> mapping based on operating class?
-
-Annex E is the 802.11 spec, to get something into that ...
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 1e9cfcc9..92759cd 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -525,15 +525,19 @@ static bool ath10k_pci_target_is_awake(struct ath10k *ar)
+ 	return (RTC_STATE_V_GET(val) == RTC_STATE_V_ON);
+ }
+ 
+-static void ath10k_pci_wait(struct ath10k *ar)
++static int ath10k_pci_wait(struct ath10k *ar)
+ {
+ 	int n = 100;
+ 
+ 	while (n-- && !ath10k_pci_target_is_awake(ar))
+ 		msleep(10);
+ 
+-	if (n < 0)
++	if (n < 0) {
+ 		ath10k_warn("Unable to wakeup target\n");
++		return -ETIMEDOUT;
++	}
++
++	return 0;
+ }
+ 
+ int ath10k_do_pci_wake(struct ath10k *ar)
+@@ -2227,7 +2231,13 @@ static int ath10k_pci_start_intr_legacy(struct ath10k *ar)
+ 		  ar_pci->mem + PCIE_LOCAL_BASE_ADDRESS +
+ 		  PCIE_SOC_WAKE_ADDRESS);
+ 
+-	ath10k_pci_wait(ar);
++	ret = ath10k_pci_wait(ar);
++	if (ret) {
++		ath10k_warn("Failed to enable legacy interrupt, target did not wake up: %d\n",
++			    ret);
++		free_irq(ar_pci->pdev->irq, ar);
++		return ret;
++	}
+ 
+ 	/*
+ 	 * A potential race occurs here: The CORE_BASE write
+@@ -2290,6 +2300,10 @@ static int ath10k_pci_start_intr(struct ath10k *ar)
+ 	}
+ 
+ 	ret = ath10k_pci_start_intr_legacy(ar);
++	if (ret) {
++		ath10k_warn("Failed to start legacy interrupts: %d\n", ret);
++		return ret;
++	}
+ 
+ exit:
+ 	ar_pci->num_msi_intrs = num;
+@@ -2315,13 +2329,19 @@ static int ath10k_pci_reset_target(struct ath10k *ar)
+ {
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 	int wait_limit = 300; /* 3 sec */
++	int ret;
+ 
+ 	/* Wait for Target to finish initialization before we proceed. */
+ 	iowrite32(PCIE_SOC_WAKE_V_MASK,
+ 		  ar_pci->mem + PCIE_LOCAL_BASE_ADDRESS +
+ 		  PCIE_SOC_WAKE_ADDRESS);
+ 
+-	ath10k_pci_wait(ar);
++	ret = ath10k_pci_wait(ar);
++	if (ret) {
++		ath10k_warn("Failed to reset target, target did not wake up: %d\n",
++			    ret);
++		return ret;
++	}
+ 
+ 	while (wait_limit-- &&
+ 	       !(ioread32(ar_pci->mem + FW_INDICATOR_ADDRESS) &
 
