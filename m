@@ -1,37 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f42.google.com ([209.85.160.42]:63861 "EHLO
-	mail-pb0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752642Ab3JSWT6 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:44029 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755999Ab3JQOgC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Oct 2013 18:19:58 -0400
-From: Salil Kapur <salilkapur93@gmail.com>
-To: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-	sameo@linux.intel.com, linux-wireless@vger.kernel.org,
-	linux-nfc@lists.01.org, linux-kernel@vger.kernel.org
-Cc: Salil Kapur <salilkapur93@gmail.com>
-Subject: [PATCH] using kfree_skb() instead of kfree() to free sk_buff
-Date: Sun, 20 Oct 2013 03:49:40 +0530
-Message-Id: <1382221180-14223-1-git-send-email-salilkapur93@gmail.com> (sfid-20131020_002054_163045_8186C559)
+	Thu, 17 Oct 2013 10:36:02 -0400
+Message-ID: <1382020558.14410.11.camel@jlt4.sipsolutions.net> (sfid-20131017_163606_692194_1958770D)
+Subject: Re: [PATCH 1/2] cfg80211: on ibss_joined use the channel to get the
+ proper bss object
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Antonio Quartulli <antonio@meshcoding.com>
+Cc: linux-wireless@vger.kernel.org,
+	Antonio Quartulli <antonio@open-mesh.com>
+Date: Thu, 17 Oct 2013 16:35:58 +0200
+In-Reply-To: <1381790282-1146-1-git-send-email-antonio@meshcoding.com>
+References: <1381790282-1146-1-git-send-email-antonio@meshcoding.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
----
- drivers/nfc/mei_phy.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Tue, 2013-10-15 at 00:38 +0200, Antonio Quartulli wrote:
+> From: Antonio Quartulli <antonio@open-mesh.com>
+> 
+> It may be the case that the same IBSS (same bssid and essid)
+> exists on two different channels (i.e. two IBSSes created
+> with different but fixed freq) and therefore the latter must
+> be also used to distinguish them.
+> 
+> Fix wdev->current_bss assignment by passing the channel to
+> cfg80211_get_bss() on ibss_joined.
+> This ensures that cfg80211_get_bss() picks up the proper bss
+> object.
 
-diff --git a/drivers/nfc/mei_phy.c b/drivers/nfc/mei_phy.c
-index 606bf55..bc30081 100644
---- a/drivers/nfc/mei_phy.c
-+++ b/drivers/nfc/mei_phy.c
-@@ -127,7 +127,7 @@ void nfc_mei_event_cb(struct mei_cl_device *device, u32 events, void *context)
- 
- 		reply_size = mei_cl_recv(device, skb->data, MEI_NFC_MAX_READ);
- 		if (reply_size < MEI_NFC_HEADER_SIZE) {
--			kfree(skb);
-+			kfree_skb(skb);
- 			return;
- 		}
- 
--- 
-1.8.1.2
+This makes no sense, wdev->channel should always be NULL (unless the
+same wdev was in AP or mesh mode first and that somehow leaked out?)
+
+johannes
 
