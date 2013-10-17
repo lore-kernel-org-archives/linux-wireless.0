@@ -1,54 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3863 "EHLO mms3.broadcom.com"
+Received: from mga14.intel.com ([143.182.124.37]:27597 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758799Ab3JONpM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Oct 2013 09:45:12 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 01/12] brcmfmac: store address in trace_brcmf_hexdump()
-Date: Tue, 15 Oct 2013 15:44:46 +0200
-Message-ID: <1381844697-24881-2-git-send-email-arend@broadcom.com> (sfid-20131015_154527_443026_892D2E63)
-In-Reply-To: <1381844697-24881-1-git-send-email-arend@broadcom.com>
-References: <1381844697-24881-1-git-send-email-arend@broadcom.com>
+	id S1751056Ab3JQHjB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Oct 2013 03:39:01 -0400
+Date: Thu, 17 Oct 2013 10:44:26 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Rhyland Klein <rklein@nvidia.com>, linux-acpi@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 5/5] net: rfkill: gpio: add ACPI support
+Message-ID: <20131017074426.GG3521@intel.com> (sfid-20131017_093915_728339_188B62CB)
+References: <1381920823-15403-1-git-send-email-heikki.krogerus@linux.intel.com>
+ <1381920823-15403-6-git-send-email-heikki.krogerus@linux.intel.com>
+ <2878506.7lf24R85t6@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2878506.7lf24R85t6@vostro.rjw.lan>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The trace function trace_brcmf_hexdump() stores the length, but
-having the address of the buffer being dumped helps putting it
-in context.
+On Wed, Oct 16, 2013 at 10:55:01PM +0200, Rafael J. Wysocki wrote:
+> On Wednesday, October 16, 2013 01:53:43 PM Heikki Krogerus wrote:
+> > Including ACPI ID for Broadcom GPS receiver BCM4752.
+> > 
+> > Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+> > ---
+> >  net/rfkill/rfkill-gpio.c | 31 ++++++++++++++++++++++++++++++-
+> >  1 file changed, 30 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+> > index 2dd78c6..5620d3c 100644
+> > --- a/net/rfkill/rfkill-gpio.c
+> > +++ b/net/rfkill/rfkill-gpio.c
+> > @@ -24,6 +24,8 @@
+> >  #include <linux/platform_device.h>
+> >  #include <linux/clk.h>
+> >  #include <linux/slab.h>
+> > +#include <linux/acpi.h>
+> > +#include <linux/acpi_gpio.h>
+> >  
+> >  #include <linux/rfkill-gpio.h>
+> >  
+> > @@ -70,6 +72,23 @@ static const struct rfkill_ops rfkill_gpio_ops = {
+> >  	.set_block = rfkill_gpio_set_power,
+> >  };
+> >  
+> > +static int rfkill_gpio_acpi_probe(struct device *dev,
+> > +				  struct rfkill_gpio_data *rfkill)
+> > +{
+> > +	const struct acpi_device_id *id;
+> > +
+> > +	id = acpi_match_device(dev->driver->acpi_match_table, dev);
+> > +	if (!id)
+> > +		return -ENODEV;
+> > +
+> > +	rfkill->name = dev_name(dev);
+> > +	rfkill->type = (unsigned)id->driver_data;
+> > +	rfkill->reset_gpio = acpi_get_gpio_by_index(dev, 0, NULL);
+> > +	rfkill->shutdown_gpio = acpi_get_gpio_by_index(dev, 1, NULL);
+> > +
+> > +	return 0;
+> > +}
+> > +
+> >  static int rfkill_gpio_probe(struct platform_device *pdev)
+> >  {
+> >  	struct rfkill_gpio_platform_data *pdata = pdev->dev.platform_data;
+> > @@ -82,7 +101,11 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+> >  	if (!rfkill)
+> >  		return -ENOMEM;
+> >  
+> > -	if (pdata) {
+> > +	if (ACPI_HANDLE(&pdev->dev)) {
+> > +		ret = rfkill_gpio_acpi_probe(&pdev->dev, rfkill);
+> > +		if (ret)
+> > +			return ret;
+> > +	} else if (pdata) {
+> >  		clk_name = pdata->power_clk_name;
+> >  		rfkill->name = pdata->name;
+> >  		rfkill->type = pdata->type;
+> > @@ -170,12 +193,18 @@ static int rfkill_gpio_remove(struct platform_device *pdev)
+> >  	return 0;
+> >  }
+> >  
+> > +static const struct acpi_device_id rfkill_acpi_match[] = {
+> > +	{ "BCM4752", RFKILL_TYPE_GPS },
+> > +	{ },
+> > +};
+> > +
+> >  static struct platform_driver rfkill_gpio_driver = {
+> >  	.probe = rfkill_gpio_probe,
+> >  	.remove = rfkill_gpio_remove,
+> >  	.driver = {
+> >  		.name = "rfkill_gpio",
+> >  		.owner = THIS_MODULE,
+> > +		.acpi_match_table = ACPI_PTR(rfkill_acpi_match),
+> >  	},
+> >  };
+> 
+> Looks good to me.
+> 
+> Has Mika seen this?
 
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/tracepoint.h |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Yes, saw it now and looks good to me as well.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/tracepoint.h b/drivers/net/wireless/brcm80211/brcmfmac/tracepoint.h
-index bc29171..4605a1d 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/tracepoint.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/tracepoint.h
-@@ -78,13 +78,15 @@ TRACE_EVENT(brcmf_hexdump,
- 	TP_ARGS(data, len),
- 	TP_STRUCT__entry(
- 		__field(unsigned long, len)
-+		__field(unsigned long, addr)
- 		__dynamic_array(u8, hdata, len)
- 	),
- 	TP_fast_assign(
- 		__entry->len = len;
-+		__entry->addr = (unsigned long)data;
- 		memcpy(__get_dynamic_array(hdata), data, len);
- 	),
--	TP_printk("hexdump [length=%lu]", __entry->len)
-+	TP_printk("hexdump [addr=%lx, length=%lu]", __entry->addr, __entry->len)
- );
- 
- TRACE_EVENT(brcmf_bdchdr,
--- 
-1.7.10.4
+Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 
-
+for the whole series, for what it's worth.
