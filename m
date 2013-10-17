@@ -1,54 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:21318 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752040Ab3J3RQd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Oct 2013 13:16:33 -0400
-Date: Wed, 30 Oct 2013 20:12:51 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
+Received: from arrakis.dune.hu ([78.24.191.176]:48762 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752643Ab3JQHmt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Oct 2013 03:42:49 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	kernel-janitors@vger.kernel.org
-Subject: [patch v2] libertas: potential oops in debugfs
-Message-ID: <20131030171251.GA4130@longonot.mountain> (sfid-20131030_181653_457778_7AAF1F27)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131025144452.GA28451@ngolde.de>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 13/21] rt2x00: rt2800pci: use separate read_eeprom callback for SoC devices
+Date: Thu, 17 Oct 2013 09:42:27 +0200
+Message-Id: <1381995755-16471-14-git-send-email-juhosg@openwrt.org> (sfid-20131017_100807_299972_BBF07CED)
+In-Reply-To: <1381995755-16471-1-git-send-email-juhosg@openwrt.org>
+References: <1381995755-16471-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If we do a zero size allocation then it will oops.  Also we can't be
-sure the user passes us a NUL terminated string so I've added a
-terminator.
+Rename the 'rt2800pci_read_eeprom_soc function' to
+'rt2800soc_read_eeprom' and use that directly in the
+SoC specific 'rt2800_ops' structure. Also move the
+'rt2800pci_eeprom_read' function into an 'ifdef PCI'
+section and remove the 'rt2800pci_read_eeprom_soc'
+call from that.
 
-This code can only be triggered by root.
+Additionally, remove the dummy inline eeprom functions.
+Those are not used anymore.
 
-Reported-by: Nico Golde <nico@ngolde.de>
-Reported-by: Fabian Yamaguchi <fabs@goesec.de>
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/rt2x00/rt2800pci.c |   56 +++++++++----------------------
+ 1 file changed, 16 insertions(+), 40 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/debugfs.c b/drivers/net/wireless/libertas/debugfs.c
-index 668dd27..1917348 100644
---- a/drivers/net/wireless/libertas/debugfs.c
-+++ b/drivers/net/wireless/libertas/debugfs.c
-@@ -913,7 +913,10 @@ static ssize_t lbs_debugfs_write(struct file *f, const char __user *buf,
- 	char *p2;
- 	struct debug_data *d = f->private_data;
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index 344a73d..afd422f 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -91,26 +91,6 @@ static void rt2800pci_mcu_status(struct rt2x00_dev *rt2x00dev, const u8 token)
+ 	rt2x00mmio_register_write(rt2x00dev, H2M_MAILBOX_CID, ~0);
+ }
  
--	pdata = kmalloc(cnt, GFP_KERNEL);
-+	if (cnt == 0)
-+		return 0;
+-#if defined(CONFIG_SOC_RT288X) || defined(CONFIG_SOC_RT305X)
+-static int rt2800pci_read_eeprom_soc(struct rt2x00_dev *rt2x00dev)
+-{
+-	void __iomem *base_addr = ioremap(0x1F040000, EEPROM_SIZE);
+-
+-	if (!base_addr)
+-		return -ENOMEM;
+-
+-	memcpy_fromio(rt2x00dev->eeprom, base_addr, EEPROM_SIZE);
+-
+-	iounmap(base_addr);
+-	return 0;
+-}
+-#else
+-static inline int rt2800pci_read_eeprom_soc(struct rt2x00_dev *rt2x00dev)
+-{
+-	return -ENOMEM;
+-}
+-#endif /* CONFIG_SOC_RT288X || CONFIG_SOC_RT305X */
+-
+ #ifdef CONFIG_PCI
+ static void rt2800pci_eepromregister_read(struct eeprom_93cx6 *eeprom)
+ {
+@@ -184,21 +164,6 @@ static inline int rt2800pci_read_eeprom_efuse(struct rt2x00_dev *rt2x00dev)
+ {
+ 	return rt2800_read_eeprom_efuse(rt2x00dev);
+ }
+-#else
+-static inline int rt2800pci_read_eeprom_pci(struct rt2x00_dev *rt2x00dev)
+-{
+-	return -EOPNOTSUPP;
+-}
+-
+-static inline int rt2800pci_efuse_detect(struct rt2x00_dev *rt2x00dev)
+-{
+-	return 0;
+-}
+-
+-static inline int rt2800pci_read_eeprom_efuse(struct rt2x00_dev *rt2x00dev)
+-{
+-	return -EOPNOTSUPP;
+-}
+ #endif /* CONFIG_PCI */
+ 
+ /*
+@@ -339,6 +304,7 @@ static int rt2800pci_set_device_state(struct rt2x00_dev *rt2x00dev,
+ 	return retval;
+ }
+ 
++#ifdef CONFIG_PCI
+ /*
+  * Device probe functions.
+  */
+@@ -346,9 +312,7 @@ static int rt2800pci_read_eeprom(struct rt2x00_dev *rt2x00dev)
+ {
+ 	int retval;
+ 
+-	if (rt2x00_is_soc(rt2x00dev))
+-		retval = rt2800pci_read_eeprom_soc(rt2x00dev);
+-	else if (rt2800pci_efuse_detect(rt2x00dev))
++	if (rt2800pci_efuse_detect(rt2x00dev))
+ 		retval = rt2800pci_read_eeprom_efuse(rt2x00dev);
+ 	else
+ 		retval = rt2800pci_read_eeprom_pci(rt2x00dev);
+@@ -356,7 +320,6 @@ static int rt2800pci_read_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	return retval;
+ }
+ 
+-#ifdef CONFIG_PCI
+ static const struct ieee80211_ops rt2800pci_mac80211_ops = {
+ 	.tx			= rt2x00mac_tx,
+ 	.start			= rt2x00mac_start,
+@@ -517,6 +480,19 @@ MODULE_DEVICE_TABLE(pci, rt2800pci_device_table);
+ MODULE_LICENSE("GPL");
+ 
+ #if defined(CONFIG_SOC_RT288X) || defined(CONFIG_SOC_RT305X)
++static int rt2800soc_read_eeprom(struct rt2x00_dev *rt2x00dev)
++{
++	void __iomem *base_addr = ioremap(0x1F040000, EEPROM_SIZE);
 +
-+	pdata = kmalloc(cnt + 1, GFP_KERNEL);
- 	if (pdata == NULL)
- 		return 0;
- 
-@@ -922,6 +925,7 @@ static ssize_t lbs_debugfs_write(struct file *f, const char __user *buf,
- 		kfree(pdata);
- 		return 0;
- 	}
-+	pdata[cnt] = '\0';
- 
- 	p0 = pdata;
- 	for (i = 0; i < num_of_items; i++) {
++	if (!base_addr)
++		return -ENOMEM;
++
++	memcpy_fromio(rt2x00dev->eeprom, base_addr, EEPROM_SIZE);
++
++	iounmap(base_addr);
++	return 0;
++}
++
+ static const struct ieee80211_ops rt2800soc_mac80211_ops = {
+ 	.tx			= rt2x00mac_tx,
+ 	.start			= rt2x00mac_start,
+@@ -552,7 +528,7 @@ static const struct rt2800_ops rt2800soc_rt2800_ops = {
+ 	.register_multiread	= rt2x00mmio_register_multiread,
+ 	.register_multiwrite	= rt2x00mmio_register_multiwrite,
+ 	.regbusy_read		= rt2x00mmio_regbusy_read,
+-	.read_eeprom		= rt2800pci_read_eeprom,
++	.read_eeprom		= rt2800soc_read_eeprom,
+ 	.hwcrypt_disabled	= rt2800pci_hwcrypt_disabled,
+ 	.drv_write_firmware	= rt2800pci_write_firmware,
+ 	.drv_init_registers	= rt2800mmio_init_registers,
+-- 
+1.7.10
