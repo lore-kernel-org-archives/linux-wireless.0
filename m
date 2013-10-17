@@ -1,132 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:37292 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753426Ab3J2I2l convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Oct 2013 04:28:41 -0400
-Subject: Re: [PATCH 4/4] wl1251: spi: add device tree support
-Mime-Version: 1.0 (Apple Message framework v1283)
-Content-Type: text/plain; charset=us-ascii
-From: Kumar Gala <galak@codeaurora.org>
-In-Reply-To: <4893578.SBstXOAcJY@flatron>
-Date: Tue, 29 Oct 2013 03:28:39 -0500
-Cc: linux-arm-kernel@lists.infradead.org,
-	Sebastian Reichel <sre@debian.org>,
-	Mark Rutland <mark.rutland@arm.com>, linux-doc@vger.kernel.org,
-	Tony Lindgren <tony@atomide.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Sachin Kamat <sachin.kamat@linaro.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Sebastian Reichel <sre@ring0.de>,
-	Luciano Coelho <luca@coelho.fi>, devicetree@vger.kernel.org,
-	Pawel Moll <pawel.moll@arm.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Bill Pemberton <wfp5p@virginia.edu>,
-	linux-omap@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Felipe Balbi <balbi@ti.com>, Rob Landley <rob@landley.net>,
-	netdev@vger.kernel.org
-Message-Id: <11FD245D-02A1-4E29-A23A-66A1D64210DC@codeaurora.org> (sfid-20131029_092938_476158_2F623967)
-References: <1382890469-25286-1-git-send-email-sre@debian.org> <1382890469-25286-5-git-send-email-sre@debian.org> <FF34C626-4A49-43B1-B0AD-DC6146ABBB11@codeaurora.org> <4893578.SBstXOAcJY@flatron>
-To: Tomasz Figa <tomasz.figa@gmail.com>
+Received: from arrakis.dune.hu ([78.24.191.176]:48757 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751323Ab3JQHmn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Oct 2013 03:42:43 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 00/21] rt2x00: separate rt2800 PCI and SoC driver
+Date: Thu, 17 Oct 2013 09:42:14 +0200
+Message-Id: <1381995755-16471-1-git-send-email-juhosg@openwrt.org> (sfid-20131017_094250_348242_1DDDB116)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The rt2800pci driver supports both PCI and SoC device. To achieve
+this, the code uses several ifdef statements which makes the code
+quite ugly. The patch set introduces a shared module, and moves the
+SoC driver into a separate module to get rid of the mess.
 
-On Oct 28, 2013, at 5:38 PM, Tomasz Figa wrote:
 
-> On Monday 28 of October 2013 01:37:34 Kumar Gala wrote:
->> On Oct 27, 2013, at 11:14 AM, Sebastian Reichel wrote:
->>> Add device tree support for the spi variant of wl1251
->>> and document the binding.
->>> 
->>> Signed-off-by: Sebastian Reichel <sre@debian.org>
->>> ---
->>> .../devicetree/bindings/net/wireless/ti,wl1251.txt | 36
->>> ++++++++++++++++++++++ drivers/net/wireless/ti/wl1251/spi.c          
->>>    | 23 ++++++++++---- 2 files changed, 53 insertions(+), 6
->>> deletions(-)
->>> create mode 100644
->>> Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt
->>> 
->>> diff --git
->>> a/Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt
->>> b/Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt new
->>> file mode 100644
->>> index 0000000..5f8a154
->>> --- /dev/null
->>> +++ b/Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt
->>> @@ -0,0 +1,36 @@
->>> +* Texas Instruments wl1251 controller
->>> +
->>> +The wl1251 chip can be connected via SPI or via SDIO. The linux
->>> +kernel currently only supports device tree for the SPI variant.
->>> +
->> 
->> From the binding I have no idea what this chip actually does, also we
->> don't normally reference linux kernel support in bindings specs (so
->> please remove it).
->> 
->> However, what would expect the SDIO binding to look like?  Or more
->> specifically, how would you distinguish the SPI vs SDIO
->> binding/connection?  I'm wondering if the compatible should be
->> something like "ti,wl1251-spi" and than the sdio can be
->> "ti,wl1251-sdio"
-> 
-> Well, you can easily distinguish an SDIO device from an SPI device by its 
-> parent node, but...
-> 
-> The binding for SDIO might require different set of properties (other than 
-> ones inherited from generic SDIO or SPI bindings) than one for SPI. So 
-> probably different compatible values might be justified.
-> 
-> Did we already have such case before? (maybe some I2C + SPI devices?)
-> 
->>> +Required properties:
->>> +- compatible : Should be "ti,wl1251"
->> 
->> reg is not listed as a required prop.
-> 
-> It is implied by SPI bindings, but it might be a good idea to have this 
-> stated here as well.
-> 
->> 
->>> +- interrupts : Should contain interrupt line
->>> +- interrupt-parent : Should be the phandle for the interrupt
->>> +  controller that services interrupts for this device
->>> +- vio-supply : phandle to regulator providing VIO
->>> +- power-gpio : GPIO connected to chip's PMEN pin
->> 
->> should be vendor prefixed: ti,power-gpio
-> 
-> Hmm, out of curiosity, is it a rule for this kind of properties? I can see 
-> both cases with and without prefixes when grepping for "-gpios" in 
-> Documentation/devicetree/bindings. We should really have such things 
-> written down somewhere.
+Gabor Juhos (21):
+  rt2x00: create a new module for rt2800 MMIO code
+  rt2x00: rt2800pci: use rt2800mmio prefix for TX descriptor functions
+  rt2x00: rt2800pci: move TX descriptor functions to the rt2800mmio module
+  rt2x00: rt2800pci: use rt2800mmio prefix for RX control handler functions
+  rt2x00: rt2800pci: move RX control handler functions to the rt2800mmio module
+  rt2x00: rt2800pci: use rt2800mmio prefix for interrupt functions
+  rt2x00: rt2800pci: move interrupt functions to the rt2800mmio module
+  rt2x00: rt2800pci: use rt2800mmio prefix for queue functions
+  rt2x00: rt2800pci: move queue functions to the rt2800mmio module
+  rt2x00: rt2800pci: use rt2800mmio prefix for initialization functions
+  rt2x00: rt2800pci: move initialization functions to the rt2800mmio module
+  rt2x00: rt2800pci: use separate ops for the SoC driver
+  rt2x00: rt2800pci: use separate read_eeprom callback for SoC devices
+  rt2x00: rt2800pci: use separate firmware callbacks for SoC devices
+  rt2x00: rt2800pci: use separate set_state callback for SoC devices
+  rt2x00: rt2800pci: rename rt2800pci_disable_radio function
+  rt2x00: rt2800pci: split rt2800pci_enable_radio function
+  rt2x00: rt2800pci: move rt2800mmio_enable_radio function to another module
+  rt2x00: rt2800pci: use separate hwcrypt_disabled callback for SoC devices
+  rt2x00: rt2800pci: move SoC specific code into a separate module
+  rt2x00: rt2800pci: use module_pci_driver macro
 
-Agreed, it should be part of the various docs we are suppose to produce for review and binding creation guidelines.
+ drivers/net/wireless/rt2x00/Kconfig      |   27 +-
+ drivers/net/wireless/rt2x00/Makefile     |    2 +
+ drivers/net/wireless/rt2x00/rt2800mmio.c |  873 +++++++++++++++++++++++++++
+ drivers/net/wireless/rt2x00/rt2800mmio.h |  165 ++++++
+ drivers/net/wireless/rt2x00/rt2800pci.c  |  951 +-----------------------------
+ drivers/net/wireless/rt2x00/rt2800pci.h  |   97 ---
+ drivers/net/wireless/rt2x00/rt2800soc.c  |  263 +++++++++
+ 7 files changed, 1348 insertions(+), 1030 deletions(-)
+ create mode 100644 drivers/net/wireless/rt2x00/rt2800mmio.c
+ create mode 100644 drivers/net/wireless/rt2x00/rt2800mmio.h
+ create mode 100644 drivers/net/wireless/rt2x00/rt2800soc.c
 
->>> +- For additional required properties on SPI, please consult
->>> +  Documentation/devicetree/bindings/spi/spi-bus.txt
->>> +
->>> +Optional properties:
->>> +- ti,use-eeprom : If found, configuration will be loaded from eeprom.
->> 
->> can you be a bit more specific on what cfg will be loaded.  Also, is
->> this property a boolean, if so how do I know which eeprom the cfg is
->> loaded from (is it one that is directly connected to the wl1251?
-> 
-> Maybe one from ti,has-eeprom or ti,config-eeprom would be better name for 
-> this property?
-
-Probably, ti,wl1251-has-eeprom or something like that would be better.  However, I'm not going to get too caught up on names of properties.
-
-- k
-
--- 
-Employee of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
-
+--
+1.7.10
