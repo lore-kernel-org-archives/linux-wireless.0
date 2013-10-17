@@ -1,171 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f49.google.com ([74.125.83.49]:43385 "EHLO
-	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752300Ab3J3LpL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Oct 2013 07:45:11 -0400
-Received: by mail-ee0-f49.google.com with SMTP id e52so559604eek.8
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Oct 2013 04:45:10 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH/RFT 01/12] ath10k: remove ar_pci->ce_count
-Date: Wed, 30 Oct 2013 12:42:15 +0100
-Message-Id: <1383133346-8135-2-git-send-email-michal.kazior@tieto.com> (sfid-20131030_124520_211089_CA1BDA57)
-In-Reply-To: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com>
-References: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com>
+Received: from arrakis.dune.hu ([78.24.191.176]:48763 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752597Ab3JQHmt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Oct 2013 03:42:49 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 12/21] rt2x00: rt2800pci: use separate ops for the SoC driver
+Date: Thu, 17 Oct 2013 09:42:26 +0200
+Message-Id: <1381995755-16471-13-git-send-email-juhosg@openwrt.org> (sfid-20131017_100808_273553_74D88E0B)
+In-Reply-To: <1381995755-16471-1-git-send-email-juhosg@openwrt.org>
+References: <1381995755-16471-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It wasn't really useful to have it to begin with.
-This makes it a little simpler to re-arrange PCI
-init code as some function depended on
-ar_pci->ce_count being set.
+This makes it possible to use different callback
+functions for PCI and SoC devices which will allow
+to move the SoC driver into a separate module.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- drivers/net/wireless/ath/ath10k/ce.c  |  9 +++------
- drivers/net/wireless/ath/ath10k/pci.c | 18 ++++++++----------
- drivers/net/wireless/ath/ath10k/pci.h |  3 ---
- 3 files changed, 11 insertions(+), 19 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800pci.c |  104 ++++++++++++++++++++++++++++++-
+ 1 file changed, 102 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
-index d243f28..2b99bd4 100644
---- a/drivers/net/wireless/ath/ath10k/ce.c
-+++ b/drivers/net/wireless/ath/ath10k/ce.c
-@@ -731,7 +731,6 @@ void ath10k_ce_per_engine_service(struct ath10k *ar, unsigned int ce_id)
- 
- void ath10k_ce_per_engine_service_any(struct ath10k *ar)
- {
--	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	int ce_id, ret;
- 	u32 intr_summary;
- 
-@@ -741,7 +740,7 @@ void ath10k_ce_per_engine_service_any(struct ath10k *ar)
- 
- 	intr_summary = CE_INTERRUPT_SUMMARY(ar);
- 
--	for (ce_id = 0; intr_summary && (ce_id < ar_pci->ce_count); ce_id++) {
-+	for (ce_id = 0; intr_summary && (ce_id < CE_COUNT); ce_id++) {
- 		if (intr_summary & (1 << ce_id))
- 			intr_summary &= ~(1 << ce_id);
- 		else
-@@ -785,16 +784,14 @@ static void ath10k_ce_per_engine_handler_adjust(struct ath10k_ce_pipe *ce_state,
- 
- void ath10k_ce_disable_interrupts(struct ath10k *ar)
- {
--	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	int ce_id, ret;
- 
- 	ret = ath10k_pci_wake(ar);
- 	if (ret)
- 		return;
- 
--	for (ce_id = 0; ce_id < ar_pci->ce_count; ce_id++) {
--		struct ath10k_ce_pipe *ce_state = &ar_pci->ce_states[ce_id];
--		u32 ctrl_addr = ce_state->ctrl_addr;
-+	for (ce_id = 0; ce_id < CE_COUNT; ce_id++) {
-+		u32 ctrl_addr = ath10k_ce_base_address(ce_id);
- 
- 		ath10k_ce_copy_complete_intr_disable(ar, ctrl_addr);
- 	}
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 42d2473..05cdbf0 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -831,7 +831,7 @@ static int ath10k_pci_start_ce(struct ath10k *ar)
- 	spin_lock_init(&ar_pci->compl_lock);
- 	INIT_LIST_HEAD(&ar_pci->compl_process);
- 
--	for (pipe_num = 0; pipe_num < ar_pci->ce_count; pipe_num++) {
-+	for (pipe_num = 0; pipe_num < CE_COUNT; pipe_num++) {
- 		pipe_info = &ar_pci->pipe_info[pipe_num];
- 
- 		spin_lock_init(&pipe_info->pipe_lock);
-@@ -924,7 +924,7 @@ static void ath10k_pci_cleanup_ce(struct ath10k *ar)
- 	spin_unlock_bh(&ar_pci->compl_lock);
- 
- 	/* Free unused completions for each pipe. */
--	for (pipe_num = 0; pipe_num < ar_pci->ce_count; pipe_num++) {
-+	for (pipe_num = 0; pipe_num < CE_COUNT; pipe_num++) {
- 		pipe_info = &ar_pci->pipe_info[pipe_num];
- 
- 		spin_lock_bh(&pipe_info->pipe_lock);
-@@ -1166,7 +1166,7 @@ static int ath10k_pci_post_rx(struct ath10k *ar)
- 	const struct ce_attr *attr;
- 	int pipe_num, ret = 0;
- 
--	for (pipe_num = 0; pipe_num < ar_pci->ce_count; pipe_num++) {
-+	for (pipe_num = 0; pipe_num < CE_COUNT; pipe_num++) {
- 		pipe_info = &ar_pci->pipe_info[pipe_num];
- 		attr = &host_ce_config_wlan[pipe_num];
- 
-@@ -1295,7 +1295,7 @@ static void ath10k_pci_buffer_cleanup(struct ath10k *ar)
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	int pipe_num;
- 
--	for (pipe_num = 0; pipe_num < ar_pci->ce_count; pipe_num++) {
-+	for (pipe_num = 0; pipe_num < CE_COUNT; pipe_num++) {
- 		struct ath10k_pci_pipe *pipe_info;
- 
- 		pipe_info = &ar_pci->pipe_info[pipe_num];
-@@ -1310,7 +1310,7 @@ static void ath10k_pci_ce_deinit(struct ath10k *ar)
- 	struct ath10k_pci_pipe *pipe_info;
- 	int pipe_num;
- 
--	for (pipe_num = 0; pipe_num < ar_pci->ce_count; pipe_num++) {
-+	for (pipe_num = 0; pipe_num < CE_COUNT; pipe_num++) {
- 		pipe_info = &ar_pci->pipe_info[pipe_num];
- 		if (pipe_info->ce_hdl) {
- 			ath10k_ce_deinit(pipe_info->ce_hdl);
-@@ -1755,7 +1755,7 @@ static int ath10k_pci_ce_init(struct ath10k *ar)
- 	const struct ce_attr *attr;
- 	int pipe_num;
- 
--	for (pipe_num = 0; pipe_num < ar_pci->ce_count; pipe_num++) {
-+	for (pipe_num = 0; pipe_num < CE_COUNT; pipe_num++) {
- 		pipe_info = &ar_pci->pipe_info[pipe_num];
- 		pipe_info->pipe_num = pipe_num;
- 		pipe_info->hif_ce_state = ar;
-@@ -1772,13 +1772,12 @@ static int ath10k_pci_ce_init(struct ath10k *ar)
- 			return -1;
- 		}
- 
--		if (pipe_num == ar_pci->ce_count - 1) {
-+		if (pipe_num == CE_COUNT - 1) {
- 			/*
- 			 * Reserve the ultimate CE for
- 			 * diagnostic Window support
- 			 */
--			ar_pci->ce_diag =
--			ar_pci->pipe_info[ar_pci->ce_count - 1].ce_hdl;
-+			ar_pci->ce_diag = pipe_info->ce_hdl;
- 			continue;
- 		}
- 
-@@ -2235,7 +2234,6 @@ static int ath10k_pci_start_intr(struct ath10k *ar)
- 
- exit:
- 	ar_pci->num_msi_intrs = num;
--	ar_pci->ce_count = CE_COUNT;
- 	return ret;
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index 5ae90df6..344a73d 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -356,6 +356,7 @@ static int rt2800pci_read_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	return retval;
  }
  
-diff --git a/drivers/net/wireless/ath/ath10k/pci.h b/drivers/net/wireless/ath/ath10k/pci.h
-index a304c33..73a3d4e 100644
---- a/drivers/net/wireless/ath/ath10k/pci.h
-+++ b/drivers/net/wireless/ath/ath10k/pci.h
-@@ -199,9 +199,6 @@ struct ath10k_pci {
- 	struct tasklet_struct intr_tq;
- 	struct tasklet_struct msi_fw_err;
++#ifdef CONFIG_PCI
+ static const struct ieee80211_ops rt2800pci_mac80211_ops = {
+ 	.tx			= rt2x00mac_tx,
+ 	.start			= rt2x00mac_start,
+@@ -459,7 +460,6 @@ static const struct rt2x00_ops rt2800pci_ops = {
+ /*
+  * RT2800pci module information.
+  */
+-#ifdef CONFIG_PCI
+ static DEFINE_PCI_DEVICE_TABLE(rt2800pci_device_table) = {
+ 	{ PCI_DEVICE(0x1814, 0x0601) },
+ 	{ PCI_DEVICE(0x1814, 0x0681) },
+@@ -517,9 +517,109 @@ MODULE_DEVICE_TABLE(pci, rt2800pci_device_table);
+ MODULE_LICENSE("GPL");
  
--	/* Number of Copy Engines supported */
--	unsigned int ce_count;
--
- 	int started;
+ #if defined(CONFIG_SOC_RT288X) || defined(CONFIG_SOC_RT305X)
++static const struct ieee80211_ops rt2800soc_mac80211_ops = {
++	.tx			= rt2x00mac_tx,
++	.start			= rt2x00mac_start,
++	.stop			= rt2x00mac_stop,
++	.add_interface		= rt2x00mac_add_interface,
++	.remove_interface	= rt2x00mac_remove_interface,
++	.config			= rt2x00mac_config,
++	.configure_filter	= rt2x00mac_configure_filter,
++	.set_key		= rt2x00mac_set_key,
++	.sw_scan_start		= rt2x00mac_sw_scan_start,
++	.sw_scan_complete	= rt2x00mac_sw_scan_complete,
++	.get_stats		= rt2x00mac_get_stats,
++	.get_tkip_seq		= rt2800_get_tkip_seq,
++	.set_rts_threshold	= rt2800_set_rts_threshold,
++	.sta_add		= rt2x00mac_sta_add,
++	.sta_remove		= rt2x00mac_sta_remove,
++	.bss_info_changed	= rt2x00mac_bss_info_changed,
++	.conf_tx		= rt2800_conf_tx,
++	.get_tsf		= rt2800_get_tsf,
++	.rfkill_poll		= rt2x00mac_rfkill_poll,
++	.ampdu_action		= rt2800_ampdu_action,
++	.flush			= rt2x00mac_flush,
++	.get_survey		= rt2800_get_survey,
++	.get_ringparam		= rt2x00mac_get_ringparam,
++	.tx_frames_pending	= rt2x00mac_tx_frames_pending,
++};
++
++static const struct rt2800_ops rt2800soc_rt2800_ops = {
++	.register_read		= rt2x00mmio_register_read,
++	.register_read_lock	= rt2x00mmio_register_read, /* same for SoCs */
++	.register_write		= rt2x00mmio_register_write,
++	.register_write_lock	= rt2x00mmio_register_write, /* same for SoCs */
++	.register_multiread	= rt2x00mmio_register_multiread,
++	.register_multiwrite	= rt2x00mmio_register_multiwrite,
++	.regbusy_read		= rt2x00mmio_regbusy_read,
++	.read_eeprom		= rt2800pci_read_eeprom,
++	.hwcrypt_disabled	= rt2800pci_hwcrypt_disabled,
++	.drv_write_firmware	= rt2800pci_write_firmware,
++	.drv_init_registers	= rt2800mmio_init_registers,
++	.drv_get_txwi		= rt2800mmio_get_txwi,
++};
++
++static const struct rt2x00lib_ops rt2800soc_rt2x00_ops = {
++	.irq_handler		= rt2800mmio_interrupt,
++	.txstatus_tasklet	= rt2800mmio_txstatus_tasklet,
++	.pretbtt_tasklet	= rt2800mmio_pretbtt_tasklet,
++	.tbtt_tasklet		= rt2800mmio_tbtt_tasklet,
++	.rxdone_tasklet		= rt2800mmio_rxdone_tasklet,
++	.autowake_tasklet	= rt2800mmio_autowake_tasklet,
++	.probe_hw		= rt2800_probe_hw,
++	.get_firmware_name	= rt2800pci_get_firmware_name,
++	.check_firmware		= rt2800_check_firmware,
++	.load_firmware		= rt2800_load_firmware,
++	.initialize		= rt2x00mmio_initialize,
++	.uninitialize		= rt2x00mmio_uninitialize,
++	.get_entry_state	= rt2800mmio_get_entry_state,
++	.clear_entry		= rt2800mmio_clear_entry,
++	.set_device_state	= rt2800pci_set_device_state,
++	.rfkill_poll		= rt2800_rfkill_poll,
++	.link_stats		= rt2800_link_stats,
++	.reset_tuner		= rt2800_reset_tuner,
++	.link_tuner		= rt2800_link_tuner,
++	.gain_calibration	= rt2800_gain_calibration,
++	.vco_calibration	= rt2800_vco_calibration,
++	.start_queue		= rt2800mmio_start_queue,
++	.kick_queue		= rt2800mmio_kick_queue,
++	.stop_queue		= rt2800mmio_stop_queue,
++	.flush_queue		= rt2x00mmio_flush_queue,
++	.write_tx_desc		= rt2800mmio_write_tx_desc,
++	.write_tx_data		= rt2800_write_tx_data,
++	.write_beacon		= rt2800_write_beacon,
++	.clear_beacon		= rt2800_clear_beacon,
++	.fill_rxdone		= rt2800mmio_fill_rxdone,
++	.config_shared_key	= rt2800_config_shared_key,
++	.config_pairwise_key	= rt2800_config_pairwise_key,
++	.config_filter		= rt2800_config_filter,
++	.config_intf		= rt2800_config_intf,
++	.config_erp		= rt2800_config_erp,
++	.config_ant		= rt2800_config_ant,
++	.config			= rt2800_config,
++	.sta_add		= rt2800_sta_add,
++	.sta_remove		= rt2800_sta_remove,
++};
++
++static const struct rt2x00_ops rt2800soc_ops = {
++	.name			= KBUILD_MODNAME,
++	.drv_data_size		= sizeof(struct rt2800_drv_data),
++	.max_ap_intf		= 8,
++	.eeprom_size		= EEPROM_SIZE,
++	.rf_size		= RF_SIZE,
++	.tx_queues		= NUM_TX_QUEUES,
++	.queue_init		= rt2800mmio_queue_init,
++	.lib			= &rt2800soc_rt2x00_ops,
++	.drv			= &rt2800soc_rt2800_ops,
++	.hw			= &rt2800soc_mac80211_ops,
++#ifdef CONFIG_RT2X00_LIB_DEBUGFS
++	.debugfs		= &rt2800_rt2x00debug,
++#endif /* CONFIG_RT2X00_LIB_DEBUGFS */
++};
++
+ static int rt2800soc_probe(struct platform_device *pdev)
+ {
+-	return rt2x00soc_probe(pdev, &rt2800pci_ops);
++	return rt2x00soc_probe(pdev, &rt2800soc_ops);
+ }
  
- 	atomic_t keep_awake_count;
+ static struct platform_driver rt2800soc_driver = {
 -- 
-1.8.4.rc3
-
+1.7.10
