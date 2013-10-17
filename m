@@ -1,149 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.22]:49484 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751258Ab3JSPaS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Oct 2013 11:30:18 -0400
-Received: from [192.168.0.103] ([93.218.112.150]) by mail.gmx.com (mrgmx003)
- with ESMTPSA (Nemesis) id 0MCLx3-1VOzm50Wdl-009B4H for
- <linux-wireless@vger.kernel.org>; Sat, 19 Oct 2013 17:30:16 +0200
-Message-ID: <5262A585.90607@rempel-privat.de> (sfid-20131019_173021_899634_DFAB970F)
-Date: Sat, 19 Oct 2013 17:30:13 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
-MIME-Version: 1.0
-To: =?UTF-8?B?WWFubmlrIFbDtmxrZXI=?= <yannikv@yahoo.de>
-CC: Pontus Fuchs <pontus.fuchs@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: ar5523 Gigaset USB Adapter 108 issue
-References: <Pine.LNX.4.44L0.1310181041080.1164-100000@iolanthe.rowland.org> <52614E9B.6040400@rempel-privat.de> <526155ED.1090007@yahoo.de> <52615EFA.80902@rempel-privat.de> <526162ED.8030901@yahoo.de> <52616CD0.2000203@rempel-privat.de> <5262789D.8030704@yahoo.de>
-In-Reply-To: <5262789D.8030704@yahoo.de>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([144.76.43.152]:44018 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756164Ab3JQOdV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Oct 2013 10:33:21 -0400
+Message-ID: <1382020397.14410.9.camel@jlt4.sipsolutions.net> (sfid-20131017_163328_835511_47D2022F)
+Subject: Re: [PATCH] cfg80211: fix channel to frequency mapping in 5.9GHz
+ range
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dennis H Jensen <dennis.h.jensen@siemens.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Date: Thu, 17 Oct 2013 16:33:17 +0200
+In-Reply-To: <1381830012.3711.50.camel@djensen-laptop>
+References: <1381492780-3068-1-git-send-email-dennis.h.jensen@siemens.com>
+	 <1381499778.14293.21.camel@jlt4.sipsolutions.net>
+	 <1381506302.3711.10.camel@djensen-laptop>
+	 <1381752176.13092.10.camel@jlt4.sipsolutions.net>
+	 <1381752976.3711.14.camel@djensen-laptop>
+	 <1381759370.13092.11.camel@jlt4.sipsolutions.net>
+	 <1381762681.3711.36.camel@djensen-laptop>
+	 <1381763193.13092.19.camel@jlt4.sipsolutions.net>
+	 <1381830012.3711.50.camel@djensen-laptop>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 19.10.2013 14:18, schrieb Yannik Völker:
-> Am 18.10.2013 19:16, schrieb Oleksij Rempel:
->> Am 18.10.2013 18:33, schrieb Yannik Völker:
->>> Am 18.10.2013 18:16, schrieb Oleksij Rempel:
->>>> Am 18.10.2013 17:38, schrieb Yannik Völker:
->>>>> Am 18.10.2013 17:07, schrieb Oleksij Rempel:
->>>>>> Am 18.10.2013 16:49, schrieb Alan Stern:
->>>>>>> Yannik, you should always use Reply-To-All so that your
->>>>>>> messages get sent to the mailing list and not just to
->>>>>>> me.
->>>>>>>
->>>>>>> On Thu, 17 Oct 2013, Yannik Völker wrote:
->>>>>>>
->>>>>>>> Am 07.08.2013 19:34, schrieb Alan Stern:
->>>>>>>>> Please post two usbmon traces, one showing the
->>>>>>>>> failure on your current system and the other showing
->>>>>>>>> the adapter running correctly under a 32-bit kernel.
->>>>>>>>> Instructions for usbmon are in the kernel source
->>>>>>>>> file Documentation/usb/usbmon.txt.
->>>>>>>> I never got it to work under a 32-bit kernel, i was
->>>>>>>> just able to utilize a windows32 driver using
->>>>>>>> ndiswrapper.
->>>>>>>>
->>>>>>>> Now i got it to "work". I randomly found out that the
->>>>>>>> ar5523 driver actually works when you load it after
->>>>>>>> you unload ndiswrapper so the following steps make it
->>>>>>>> work: 1. modprobe ndiswrapper 2. plug in device 3.
->>>>>>>> connect to wlan using ndiswrapper and disconnect again
->>>>>>>> (might be optional) 4. modprobe -r ndiswrapper 5.
->>>>>>>> modprobe ar5523 6. connect to wlan log for that is
->>>>>>>> attatched as wlanthennative2.log
->>>>>
->>>>>
->>>>>> It sounds like linux driver didn't recognised usb id and
->>>>>> didn't uploaded firmware, or there was no firmware to
->>>>>> upload.
->>>>> there is firmware (/lib/firmware/ar5523.bin exists) but it
->>>>> does not even get touched (i renamed the file and the error
->>>>> did not change at all)
->>>
->>>> find first usbid of your adapter (it will be changed after
->>>> firmware upload). And try to force driver to use this id:
->>>> modprobe -v ar5523 echo 07d1 3a0d >
->>>> /sys/bus/usb/drivers/ar5523/new_id
->>>
->>>> instead of "07d1 3a0d" use your id.
->>>
->>>
->>> # lsusb … Bus 003 Device 011: ID 129b:160c CyberTAN Technology
->>> Siemens S30853-S1038-R351 802.11g Wireless Adapter [Atheros
->>> AR5523] …
->>>
->>> # modprobe ar5523 # echo 129b 160c >
->>> /sys/bus/usb/drivers/ar5523/new_id <plugging device in> syslog:
->>> Oct 18 18:27:47 yannik-desktop kernel: [ 8751.447784] usbcore:
->>> registered new interface driver ar5523 Oct 18 18:28:25
->>> yannik-desktop kernel: [ 8789.036912] usb 3-14: new high-speed
->>> USB device number 12 using xhci_hcd Oct 18 18:28:25
->>> yannik-desktop kernel: [ 8789.053995] usb 3-14: New USB device
->>> found, idVendor=129b, idProduct=160c Oct 18 18:28:25
->>> yannik-desktop kernel: [ 8789.054005] usb 3-14: New USB device
->>> strings: Mfr=1, Product=2, SerialNumber=3 Oct 18 18:28:25
->>> yannik-desktop kernel: [ 8789.054010] usb 3-14: Product: AR5523
->>> Oct 18 18:28:25 yannik-desktop kernel: [ 8789.054015] usb 3-14:
->>> Manufacturer: Atheros Communications Inc Oct 18 18:28:25
->>> yannik-desktop kernel: [ 8789.054019] usb 3-14: SerialNumber:
->>> 1.0 Oct 18 18:28:27 yannik-desktop kernel: [ 8791.052313] usb
->>> 3-14: timeout waiting for command 01 reply Oct 18 18:28:27
->>> yannik-desktop kernel: [ 8791.052323] usb 3-14: could not
->>> initialize adapter Oct 18 18:28:27 yannik-desktop kernel: [
->>> 8791.052359] usb 3-14: RX USB error -2. Oct 18 18:28:27
->>> yannik-desktop kernel: [ 8791.052378] usb 3-14: error -1 when
->>> submitting rx urb Oct 18 18:28:27 yannik-desktop kernel: [
->>> 8791.052504] ar5523: probe of 3-14:1.0 failed with error -110
->>>
->>>> Besidy, what kernel version are you using? May be it is too
->>>> old..
->>>
->>> 3.11.0-12-generic it is my understanding that the ar5523 driver
->>> was included from 3.8 on.
-> 
->> please test attached patch.
-> Stopped the error from appearing but it looks like it would not even try
-> to upload the firmware to me:
-> 
-> [  708.193488] cfg80211: Calling CRDA to update world regulatory domain
-> 
-> 
-> [  708.492120] usbcore: registered new interface driver ar5523
-> 
-> 
-> [  708.509819] cfg80211: World regulatory domain updated:
-> 
-> 
-> [  708.509822] cfg80211:   (start_freq - end_freq @ bandwidth),
-> (max_antenna_gain, max_eirp)
-> 
-> [  708.509823] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz), (300
-> mBi, 2000 mBm)
-> [  708.509824] cfg80211:   (2457000 KHz - 2482000 KHz @ 40000 KHz), (300
-> mBi, 2000 mBm)
-> [  708.509825] cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz), (300
-> mBi, 2000 mBm)
-> [  708.509826] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz), (300
-> mBi, 2000 mBm)
-> [  708.509827] cfg80211:   (5735000 KHz - 5835000 KHz @ 40000 KHz), (300
-> mBi, 2000 mBm)
-> [  720.232697] usb 3-14: USB disconnect, device number 8
-> [  721.721980] usb 3-14: new high-speed USB device number 9 using xhci_hcd
-> [  721.739153] usb 3-14: New USB device found, idVendor=129b,
-> idProduct=160c
-> [  721.739163] usb 3-14: New USB device strings: Mfr=1, Product=2,
-> SerialNumber=3
-> [  721.739168] usb 3-14: Product: AR5523
-> [  721.739174] usb 3-14: Manufacturer: Atheros Communications Inc
-> [  721.739178] usb 3-14: SerialNumber: 1.0
-> mtp-probe: checking bus 3, device 9:
-> "/sys/devices/pci0000:00/0000:00:14.0/usb3/3-14"
-> mtp-probe: bus: 3, device: 9 was not an MTP device
-> 
-> also it did not load the module on plugging in.
+On Tue, 2013-10-15 at 11:40 +0200, Dennis H Jensen wrote:
 
-does not looks like it is complete log. Please attach your dmesg.
+> > Yes, but then before 5910 would have been channel 182. Now you're making
+> > it channel 197. That doesn't really make sense at all.
+> 
+> OK, fair enough, but the fact is that there is a hole in the frequencies
+> that were added in 802.11p.
 
--- 
-Regards,
-Oleksij
+802.11p ... yeah, that's an issue.
+
+> > > In case that doesn't do it. What is needed to get channel 182 to be 5910
+> > > MHz as Annex E defines for the US and Europe? Channel to frequency
+> > > mapping based on operating class?
+> > 
+> > Annex E is the 802.11 spec, to get something into that ...
+> 
+> You misunderstood me; the European operating class 14, for example,
+> states that channel 182 is to be 5910.
+
+That's a 10MHz channel only.
+
+In any case, I don't see a good way out. Pretending that the channel
+number is something else like you did in this patch is clearly wrong and
+will obviously lead to interoperability issues.
+
+I think we need to actually start taking the operating class (or maybe
+just the starting frequency) into account in the kernel. How we do that
+I don't really know.
+
+johannes
+
