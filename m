@@ -1,53 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:24985 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759579Ab3JOSz6 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:44035 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756779Ab3JQOh3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Oct 2013 14:55:58 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/7] ath10k: fixes 2013-10-15
-References: <1381858196-17000-1-git-send-email-michal.kazior@tieto.com>
-Date: Tue, 15 Oct 2013 21:55:53 +0300
-In-Reply-To: <1381858196-17000-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Tue, 15 Oct 2013 10:29:49 -0700")
-Message-ID: <8761sybbye.fsf@kamboji.qca.qualcomm.com> (sfid-20131015_205601_919271_D580E81A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 17 Oct 2013 10:37:29 -0400
+Message-ID: <1382020646.14410.13.camel@jlt4.sipsolutions.net> (sfid-20131017_163831_102512_B2BA2B5D)
+Subject: Re: [PATCH] mac80211: add ieee80211_tx_prepare_skb() helper function
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 17 Oct 2013 16:37:26 +0200
+In-Reply-To: <1381766460-84515-1-git-send-email-nbd@openwrt.org>
+References: <1381766460-84515-1-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+On Mon, 2013-10-14 at 18:01 +0200, Felix Fietkau wrote:
+> This can be used by a driver to prepare skbs for transmission, which were
+> obtained via functions such as ieee80211_probereq_get or
+> ieee80211_nullfunc_get.
+> 
+> This is useful for drivers that want to send those frames directly, but
+> need rate control information to be prepared first.
 
-> This is a bunch of fixes I've had queued up for
-> some time now. I was reluctant to send them
-> without some additional checks and because some of
-> the fixes are not ideal. At least we can get a
-> discussion going if anything raises any serious
-> concern.
->
->
-> Michal Kazior (7):
->   ath10k: prevent starting monitor without a vdev
->   ath10k: add sanity checks for monitor management
->   ath10k: fix endianess in prints
->   ath10k: fix NSS reporting in RX
->   ath10k: fix NULL deref upon early FW crash
->   ath10k: fix device initialization routine
->   ath10k: fix FW crashes on heavy TX on 10.1.389 AP FW
+Applied.
 
-I get few long line warnings:
+johannes
 
-drivers/net/wireless/ath/ath10k/pci.c:1842: WARNING: line over 80 characters
-drivers/net/wireless/ath/ath10k/pci.c:1844: WARNING: line over 80 characters
-drivers/net/wireless/ath/ath10k/pci.c:1847: WARNING: line over 80 characters
-drivers/net/wireless/ath/ath10k/pci.c:1848: WARNING: line over 80 characters
-drivers/net/wireless/ath/ath10k/pci.c:1856: WARNING: line over 80 characters
-drivers/net/wireless/ath/ath10k/pci.c:1875: WARNING: line over 80 characters
-drivers/net/wireless/ath/ath10k/pci.c:1877: WARNING: line over 80 characters
-drivers/net/wireless/ath/ath10k/pci.c:1883: WARNING: line over 80 characters
-drivers/net/wireless/ath/ath10k/mac.c:2284: WARNING: line over 80 characters
-
--- 
-Kalle Valo
