@@ -1,187 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:62771 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758195Ab3JOL5w (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:3476 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750829Ab3JQFdN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Oct 2013 07:57:52 -0400
-From: Kefeng Wang <wangkefeng.wang@huawei.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Pablo Neira Ayuso <pablo@netfilter.org>,
-	"Stephen Hemminger" <stephen@networkplumber.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Francois Romieu <romieu@fr.zoreil.com>,
-	"Ben Hutchings" <bhutchings@solarflare.com>,
-	Chas Williams <chas@cmf.nrl.navy.mil>,
-	Marc Kleine-Budde <mkl@pengutronix.de>,
-	Samuel Ortiz <samuel@sortiz.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Oliver Neukum <oneukum@suse.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	"Boris Ostrovsky" <boris.ostrovsky@oracle.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	"Michael S. Tsirkin" <mst@redhat.com>, <netfilter@vger.kernel.org>,
-	<netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	<guohanjun@huawei.com>
-Subject: [PATCH 04/18] rt18192e: use wrapper functions of net_ratelimit() to simplify code
-Date: Tue, 15 Oct 2013 19:45:00 +0800
-Message-ID: <1381837514-50660-5-git-send-email-wangkefeng.wang@huawei.com> (sfid-20131015_140747_220070_E5B4B315)
-In-Reply-To: <1381837514-50660-1-git-send-email-wangkefeng.wang@huawei.com>
-References: <1381837514-50660-1-git-send-email-wangkefeng.wang@huawei.com>
+	Thu, 17 Oct 2013 01:33:13 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 7/8] ath10k: fix device initialization routine
+References: <20131016134503.25095.8044.stgit@localhost6.localdomain6>
+	<20131016134617.25095.10581.stgit@localhost6.localdomain6>
+	<CA+BoTQkqkuf-=a4giyJHeYdXZ2T3deU7nmuQOxpFcKSzWjGb3Q@mail.gmail.com>
+	<87ppr55hun.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQ=9cEwB7PY8VMGv1SmEPsH6WGmDEBgujmo9G=Cby82uyg@mail.gmail.com>
+Date: Thu, 17 Oct 2013 08:33:07 +0300
+In-Reply-To: <CA+BoTQ=9cEwB7PY8VMGv1SmEPsH6WGmDEBgujmo9G=Cby82uyg@mail.gmail.com>
+	(Michal Kazior's message of "Wed, 16 Oct 2013 09:01:52 -0700")
+Message-ID: <87zjq84g30.fsf@kamboji.qca.qualcomm.com> (sfid-20131017_073320_482917_C6E83767)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wrapper functions net_ratelimited_function() and net_XXX_ratelimited()
-are called to simplify code.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Signed-off-by: Kefeng Wang <wangkefeng.wang@huawei.com>
----
- drivers/staging/rtl8192e/rtllib_crypt_ccmp.c | 13 +++----------
- drivers/staging/rtl8192e/rtllib_crypt_tkip.c | 21 +++++----------------
- drivers/staging/rtl8192e/rtllib_rx.c         |  6 ++----
- 3 files changed, 10 insertions(+), 30 deletions(-)
+> On 16 October 2013 08:57, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>> Michal Kazior <michal.kazior@tieto.com> writes:
+>>
+>>>> +       /* disable pending irqs */
+>>>> +       ath10k_pci_core_write32(ar, PCIE_INTR_ENABLE_ADDRESS, 0);
+>>>> +       ath10k_pci_core_write32(ar, PCIE_INTR_CLR_ADDRESS, ~0);
+>>>
+>>> These use SOC_CORE_BASE_ADDRESS as the suffix, not the RTC_SOC_BASE_ADDRESS.
+>>
+>> But I am using SOC_CORE_BASE_ADDRESS, right?
+>
+> Ah, right. Sorry. My eyesight failed me :) Those function names seem a
+> little confusing (_core_ for SOC_CORE and _soc_ for RTC_SOC)
 
-diff --git a/drivers/staging/rtl8192e/rtllib_crypt_ccmp.c b/drivers/staging/rtl8192e/rtllib_crypt_ccmp.c
-index e51cb49..0d089c1 100644
---- a/drivers/staging/rtl8192e/rtllib_crypt_ccmp.c
-+++ b/drivers/staging/rtl8192e/rtllib_crypt_ccmp.c
-@@ -275,10 +275,8 @@ static int rtllib_ccmp_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 	pos = skb->data + hdr_len;
- 	keyidx = pos[3];
- 	if (!(keyidx & (1 << 5))) {
--		if (net_ratelimit()) {
--			printk(KERN_DEBUG "CCMP: received packet without ExtIV"
-+		net_dbg_ratelimited("CCMP: received packet without ExtIV"
- 			       " flag from %pM\n", hdr->addr2);
--		}
- 		key->dot11RSNAStatsCCMPFormatErrors++;
- 		return -2;
- 	}
-@@ -289,11 +287,9 @@ static int rtllib_ccmp_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 		return -6;
- 	}
- 	if (!key->key_set) {
--		if (net_ratelimit()) {
--			printk(KERN_DEBUG "CCMP: received packet from %pM"
-+		net_dbg_ratelimited("CCMP: received packet from %pM"
- 			       " with keyid=%d that does not have a configured"
- 			       " key\n", hdr->addr2, keyidx);
--		}
- 		return -3;
- 	}
- 
-@@ -338,10 +334,7 @@ static int rtllib_ccmp_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 		}
- 
- 		if (memcmp(mic, a, CCMP_MIC_LEN) != 0) {
--			if (net_ratelimit()) {
--				printk(KERN_DEBUG "CCMP: decrypt failed: STA="
--				" %pM\n", hdr->addr2);
--			}
-+			net_dbg_ratelimited("CCMP: decrypt failed: STA= %pM\n", hdr->addr2);
- 			key->dot11RSNAStatsCCMPDecryptErrors++;
- 			return -5;
- 		}
-diff --git a/drivers/staging/rtl8192e/rtllib_crypt_tkip.c b/drivers/staging/rtl8192e/rtllib_crypt_tkip.c
-index 5cfd73b..c1f7683 100644
---- a/drivers/staging/rtl8192e/rtllib_crypt_tkip.c
-+++ b/drivers/staging/rtl8192e/rtllib_crypt_tkip.c
-@@ -396,10 +396,8 @@ static int rtllib_tkip_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 	pos = skb->data + hdr_len;
- 	keyidx = pos[3];
- 	if (!(keyidx & (1 << 5))) {
--		if (net_ratelimit()) {
--			printk(KERN_DEBUG "TKIP: received packet without ExtIV"
-+		net_dbg_ratelimited("TKIP: received packet without ExtIV"
- 			       " flag from %pM\n", hdr->addr2);
--		}
- 		return -2;
- 	}
- 	keyidx >>= 6;
-@@ -409,11 +407,9 @@ static int rtllib_tkip_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 		return -6;
- 	}
- 	if (!tkey->key_set) {
--		if (net_ratelimit()) {
--			printk(KERN_DEBUG "TKIP: received packet from %pM"
-+		net_dbg_ratelimited("TKIP: received packet from %pM"
- 			       " with keyid=%d that does not have a configured"
- 			       " key\n", hdr->addr2, keyidx);
--		}
- 		return -3;
- 	}
- 	iv16 = (pos[0] << 8) | pos[2];
-@@ -424,12 +420,10 @@ static int rtllib_tkip_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 		if ((iv32 < tkey->rx_iv32 ||
- 		    (iv32 == tkey->rx_iv32 && iv16 <= tkey->rx_iv16)) &&
- 		    tkey->initialized) {
--			if (net_ratelimit()) {
--				printk(KERN_DEBUG "TKIP: replay detected: STA="
-+			net_dbg_ratelimited("TKIP: replay detected: STA="
- 				       " %pM previous TSC %08x%04x received "
- 				      "TSC %08x%04x\n",hdr->addr2,
- 				      tkey->rx_iv32, tkey->rx_iv16, iv32, iv16);
--			}
- 			tkey->dot11RSNAStatsTKIPReplays++;
- 			return -4;
- 		}
-@@ -448,11 +442,9 @@ static int rtllib_tkip_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 
- 		crypto_blkcipher_setkey(tkey->rx_tfm_arc4, rc4key, 16);
- 		if (crypto_blkcipher_decrypt(&desc, &sg, &sg, plen + 4)) {
--			if (net_ratelimit()) {
--				printk(KERN_DEBUG ": TKIP: failed to decrypt "
-+			net_dbg_ratelimited(": TKIP: failed to decrypt "
- 				       "received packet from %pM\n",
- 				       hdr->addr2);
--			}
- 			return -7;
- 		}
- 
-@@ -469,10 +461,7 @@ static int rtllib_tkip_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 				 * next packet. */
- 				tkey->rx_phase1_done = 0;
- 			}
--			if (net_ratelimit()) {
--				printk(KERN_DEBUG "TKIP: ICV error detected: STA="
--				" %pM\n", hdr->addr2);
--			}
-+			net_dbg_ratelimited("TKIP: ICV error detected: STA= %pM\n", hdr->addr2);
- 			tkey->dot11RSNAStatsTKIPICVErrors++;
- 			return -5;
- 		}
-diff --git a/drivers/staging/rtl8192e/rtllib_rx.c b/drivers/staging/rtl8192e/rtllib_rx.c
-index 8aeaed5..4335611 100644
---- a/drivers/staging/rtl8192e/rtllib_rx.c
-+++ b/drivers/staging/rtl8192e/rtllib_rx.c
-@@ -870,8 +870,7 @@ static size_t rtllib_rx_get_hdrlen(struct rtllib_device *ieee,
- 
- 	hdrlen = rtllib_get_hdrlen(fc);
- 	if (HTCCheck(ieee, skb->data)) {
--		if (net_ratelimit())
--			printk(KERN_INFO "%s: find HTCControl!\n", __func__);
-+		net_info_ratelimited("%s: find HTCControl!\n", __func__);
- 		hdrlen += 4;
- 		rx_stats->bContainHTC = 1;
- 	}
-@@ -1439,8 +1438,7 @@ static int rtllib_rx_Monitor(struct rtllib_device *ieee, struct sk_buff *skb,
- 	}
- 
- 	if (HTCCheck(ieee, skb->data)) {
--		if (net_ratelimit())
--			printk(KERN_INFO "%s: Find HTCControl!\n", __func__);
-+		net_info_ratelimited("%s: Find HTCControl!\n", __func__);
- 		hdrlen += 4;
- 	}
- 
+Yeah, I agree. I didn't research what RTC_SOC stands for, I just assumed
+it contains registers for controlling the whole SOC state. That's why I
+used "_soc_" here. And CORE registers control just one part of SOC.
+
 -- 
-1.8.2.1
-
-
+Kalle Valo
