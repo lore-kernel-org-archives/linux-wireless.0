@@ -1,62 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f49.google.com ([209.85.215.49]:43567 "EHLO
-	mail-la0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754853Ab3J2NOG (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:43362 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752427Ab3JQLfN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Oct 2013 09:14:06 -0400
-Received: by mail-la0-f49.google.com with SMTP id eh20so6296845lab.22
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Oct 2013 06:14:04 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1383048716-5886-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1383048716-5886-1-git-send-email-janusz.dziedzic@tieto.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Tue, 29 Oct 2013 14:13:44 +0100
-Message-ID: <CAB=NE6Vd6Kq5ezW2J6vV-c5tt3gqxfz5otgnKrgWAaV2Q4gcWQ@mail.gmail.com> (sfid-20131029_141410_557617_C06DC467)
-Subject: Re: [PATCH v2 1/2] cfg80211: handle correctly prohibited flags
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 17 Oct 2013 07:35:13 -0400
+Message-ID: <1382009704.14410.0.camel@jlt4.sipsolutions.net> (sfid-20131017_133520_526415_8B6C364F)
+Subject: Re: [PATCH 3.12 1/3] mac80211: fix honouring rate flags in low-rate
+ transmit
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Date: Thu, 17 Oct 2013 13:35:04 +0200
+In-Reply-To: <1381843030-12260-1-git-send-email-johannes@sipsolutions.net> (sfid-20131015_151719_896322_452B2366)
+References: <1381843030-12260-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20131015_151719_896322_452B2366)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 29, 2013 at 1:11 PM, Janusz Dziedzic
-<janusz.dziedzic@tieto.com> wrote:
-> Handle correctly prohibited flags in cfg80211_secondary_chans_ok()
-> function. Before, we ignore IEEE80211_CHAN_RADAR flag even
-> caller put the flag as prohibited one.
->
-> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-> ---
->  net/wireless/chan.c |   11 +----------
->  1 file changed, 1 insertion(+), 10 deletions(-)
->
-> diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-> index a6f5c4c..6f2be48 100644
-> --- a/net/wireless/chan.c
-> +++ b/net/wireless/chan.c
-> @@ -438,16 +438,7 @@ static bool cfg80211_secondary_chans_ok(struct wiphy *wiphy,
->
->         for (freq = start_freq; freq <= end_freq; freq += 20) {
->                 c = ieee80211_get_channel(wiphy, freq);
-> -               if (!c)
-> -                       return false;
-> -
-> -               /* check for radar flags */
-> -               if ((prohibited_flags & c->flags & IEEE80211_CHAN_RADAR) &&
-> -                   (c->dfs_state != NL80211_DFS_AVAILABLE))
-> -                       return false;
-> -
-> -               /* check for the other flags */
-> -               if (c->flags & prohibited_flags & ~IEEE80211_CHAN_RADAR)
-> +               if (!c || c->flags & prohibited_flags)
->                         return false;
->         }
+On Tue, 2013-10-15 at 15:17 +0200, Johannes Berg wrote:
+> From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+> 
+> Transmissions with the IEEE80211_TX_CTL_NO_CCK_RATE flag set
+> (which can come from userspace) were no longer guaranteed to
+> be transmitted with allowed rates since commit 2103dec14792b
+> ("mac80211: select and adjust bitrates according to channel
+> mode") due to a missing rate_flags check in that commit. The
+> commit also introduced the need to check the 5/10 MHz flags
+> but accidentally didn't. Fix it by adding the missing check.
 
-NACK
+Applied 1 and 2.
 
-Although you do something that looks good here you are breaking this
-check atomically for this commit and introducing a regression here,
-you want to merge the two patches together.
+johannes
 
-  Luis
