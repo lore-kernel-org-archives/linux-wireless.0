@@ -1,68 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f182.google.com ([209.85.192.182]:45000 "EHLO
-	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750762Ab3JaGGe (ORCPT
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:51443 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754115Ab3JQJl5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Oct 2013 02:06:34 -0400
-Received: by mail-pd0-f182.google.com with SMTP id q10so1918556pdj.13
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Oct 2013 23:06:34 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: k.eugene.e@gmail.com, linville@tuxdriver.com,
-	wcn36xx@lists.infradead.org,
-	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
-	Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-Subject: [PATCH] wcn36xx: enable the beaconing in mesh mode
-Date: Thu, 31 Oct 2013 14:04:09 +0800
-Message-Id: <1383199449-18310-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20131031_070638_442727_083C4DB0)
+	Thu, 17 Oct 2013 05:41:57 -0400
+Received: by mail-ie0-f178.google.com with SMTP id to1so4639476ieb.9
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Oct 2013 02:41:56 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1381995881-16935-1-git-send-email-johannes@sipsolutions.net>
+References: <1381995881-16935-1-git-send-email-johannes@sipsolutions.net>
+Date: Thu, 17 Oct 2013 11:41:56 +0200
+Message-ID: <CAB3XZEff+Xguf_Bk7p4S2N3j03dT1tB0u1u8enP4cd8NtD2jnA@mail.gmail.com> (sfid-20131017_114241_308372_54F46914)
+Subject: Re: [PATCH 3.12] mac80211: disable WMM with invalid parameters
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Antonio Quartulli <antonio@meshcoding.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Enable the beaconing in wnc36xx by tweaking the tim offset and
-force the use of AP-style beaconing. Otherwise, beaconing is not
-working. The tim offset is set to 256. Otherwise, this will
-overwrite mesh beacon submitted by mac80211.
+On Thu, Oct 17, 2013 at 10:44 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> Some APs (notably a Sitecom WL-153 v1 with firmware 1.45) are sending
+> invalid WMM parameters setting AIFSN, ECWmin and ECWmax to zero. The
+> spec mandates that the value of AIFSN is at least 2, and some cards
+> (e.g. Intel with the iwldvm driver) can't transmit when the invalid
+> QoS parameters are actually uploaded to the firmware.
+>
+> Since there's little chance of being able to guess the values that
+> the AP actually meant, disable WMM if such an invalid case is found.
+> Since ECWmin/ECWmax are allowed to be zero, only verify AIFSN >= 2
+> and ECWmin <= ECWmax.
+>
+> Reported-by: Antonio Quartulli <antonio@meshcoding.com>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+[...]
 
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
----
- drivers/net/wireless/ath/wcn36xx/smd.c |   12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
+> @@ -4192,9 +4231,36 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+>         }
+>
+>         /* prepare assoc data */
+> -
+> +
+>         ifmgd->beacon_crc_valid = false;
+>
+> +       assoc_data->wmm = bss->wmm_used &&
+> +                         (local->hw.queues >= IEEE80211_NUM_ACS);
+> +       if (assoc_data->wmm) {
+> +               /* try to check validity of WMM params IE */
+> +               const struct cfg80211_bss_ies *ies;
+> +               const u8 *wp, *start;
+> +               int len;
+> +
+> +               rcu_read_lock();
+> +               ies = rcu_dereference(req->bss->ies);
+> +               start = ies->data;
+> +               len = ies->len;
+> +
+> +               do {
+> +                       wp = cfg80211_find_vendor_ie(0x0050F2, 2, start, len);
+> +                       start = wp;
+> +                       len -= wp[1];
+you might NULL deref here.
+but i don't really see how this calculation makes sense anyway (you
+should probably increase start and take care of the  ie's id+len (i.e.
+wp[1] + 2) as well)?
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index f8c3a10..19f43de 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -1134,14 +1134,14 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
- 		/* STA */
- 		bss->oper_mode = 1;
- 		bss->wcn36xx_hal_persona = WCN36XX_HAL_STA_MODE;
--	} else if (vif->type == NL80211_IFTYPE_AP) {
-+	} else if (vif->type == NL80211_IFTYPE_AP ||
-+		   vif->type == NL80211_IFTYPE_MESH_POINT) {
- 		bss->bss_type = WCN36XX_HAL_INFRA_AP_MODE;
- 
- 		/* AP */
- 		bss->oper_mode = 0;
- 		bss->wcn36xx_hal_persona = WCN36XX_HAL_STA_SAP_MODE;
--	} else if (vif->type == NL80211_IFTYPE_ADHOC ||
--		   vif->type == NL80211_IFTYPE_MESH_POINT) {
-+	} else if (vif->type == NL80211_IFTYPE_ADHOC) {
- 		bss->bss_type = WCN36XX_HAL_IBSS_MODE;
- 
- 		/* STA */
-@@ -1291,7 +1291,11 @@ int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct ieee80211_vif *vif,
- 	memcpy(msg_body.bssid, vif->addr, ETH_ALEN);
- 
- 	/* TODO need to find out why this is needed? */
--	msg_body.tim_ie_offset = tim_off+4;
-+	if (vif->type == NL80211_IFTYPE_MESH_POINT)
-+		/* mesh beacon don't need this, so push further down */
-+		msg_body.tim_ie_offset = 256;
-+	else
-+		msg_body.tim_ie_offset = tim_off+4;
- 	msg_body.p2p_ie_offset = p2p_off;
- 	PREPARE_HAL_BUF(wcn->hal_buf, msg_body);
- 
--- 
-1.7.9.5
-
+Eliad.
