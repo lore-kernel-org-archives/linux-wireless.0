@@ -1,92 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.telexis.nl ([87.213.113.58]:22492 "EHLO mail.telexis.nl"
+Received: from arrakis.dune.hu ([78.24.191.176]:48766 "EHLO arrakis.dune.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750988Ab3JVIbq convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Oct 2013 04:31:46 -0400
-From: Bastiaan de Groot <bastiaan.de.groot@telexis.nl>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-Subject: =?iso-8859-1?Q?RE:_Intel=AE_Centrino=AE_Advanced-N_6235_-_iwlwifi-6000g2b?=
- =?iso-8859-1?Q?-6.ucode_not_reconnecting_issue?=
-Date: Tue, 22 Oct 2013 08:31:42 +0000
-Message-ID: <2027E41A9379094181F2CA441442CE1D279B7AC3@RSWKA02MXS.telexis.nl> (sfid-20131022_103151_558448_AB212DFE)
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+	id S1752645Ab3JQHmv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Oct 2013 03:42:51 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 17/21] rt2x00: rt2800pci: split rt2800pci_enable_radio function
+Date: Thu, 17 Oct 2013 09:42:31 +0200
+Message-Id: <1381995755-16471-18-git-send-email-juhosg@openwrt.org> (sfid-20131017_100807_874722_B9B1945A)
+In-Reply-To: <1381995755-16471-1-git-send-email-juhosg@openwrt.org>
+References: <1381995755-16471-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear community,
+The function is called for PCI and SoC devices
+however the MCU related part of the function
+has no effect on SoC devices. Move the common
+part of the function into a separate helper and
+use that for the SoC devices.
 
-I have a "Intel® Centrino® Advanced-N 6235" wificard.
-Running Debian 7.0 "wheezy"
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/rt2x00/rt2800pci.c |   19 ++++++++++++-------
+ 1 file changed, 12 insertions(+), 7 deletions(-)
 
-Firmware: Iwlwifi-6000g2b-6.ucode
-
-Using:
-Kernel 3.2.0-4-686-pae
-
-It connects but when wpa_supplicant is trying to re-connect I get:
-
-[83667.904059] iwlwifi 0000:05:00.0: iwl_hcmd_queue_reclaim: Read index for DMA queue txq id (9), index 157 is out of range [0-256] 0 0.
-[83667.904276] iwlwifi 0000:05:00.0: HCMD_ACTIVE already clear for command POWER_TABLE_CMD
-[83667.904289] iwlwifi 0000:05:00.0: iwl_hcmd_queue_reclaim: Read index for DMA queue txq id (9), index 156 is out of range [0-256] 0 0.
-[83667.904493] iwlwifi 0000:05:00.0: HCMD_ACTIVE already clear for command REPLY_RXON_ASSOC
-[83667.904516] iwlwifi 0000:05:00.0: iwl_hcmd_queue_reclaim: Read index for DMA queue txq id (9), index 143 is out of range [0-256] 0 0.
-[83667.904722] iwlwifi 0000:05:00.0: HCMD_ACTIVE already clear for command REPLY_RXON
-[83667.904732] iwlwifi 0000:05:00.0: iwl_hcmd_queue_reclaim: Read index for DMA queue txq id (9), index 139 is out of range [0-256] 0 0.
-[83667.904935] iwlwifi 0000:05:00.0: HCMD_ACTIVE already clear for command REPLY_TX_LINK_QUALITY_CMD
-[83667.904998] iwlwifi 0000:05:00.0: iwl_hcmd_queue_reclaim: Read index for DMA queue txq id (9), index 172 is out of range [0-256] 0 0.
-[83667.905200] iwlwifi 0000:05:00.0: HCMD_ACTIVE already clear for command REPLY_LEDS_CMD
-[83667.905212] iwlwifi 0000:05:00.0: iwl_hcmd_queue_reclaim: Read index for DMA queue txq id (9), index 165 is out of range [0-256] 0 0.
-[83667.908013] iwlwifi 0000:05:00.0: HCMD_ACTIVE already clear for command POWER_TABLE_CMD
-[83667.920999] iwlwifi 0000:05:00.0: iwl_hcmd_queue_reclaim: Read index for DMA queue txq id (9), index 162 is out of range [0-256] 0 0.
-[83667.924978] iwlwifi 0000:05:00.0: HCMD_ACTIVE already clear for command REPLY_TX_LINK_QUALITY_CMD
-[83667.937183] iwlwifi 0000:05:00.0: iwl_hcmd_queue_reclaim: Read index for DMA queue txq id (9), index 158 is out of range [0-256] 0 0.
-[83667.941157] iwlwifi 0000:05:00.0: HCMD_ACTIVE already clear for command REPLY_RXON
-[83667.953377] iwlwifi 0000:05:00.0: iwl_hcmd_queue_reclaim: Read index for DMA queue txq id (9), index 171 is out of range [0-256] 0 0.
-[83667.957319] iwlwifi 0000:05:00.0: HCMD_ACTIVE already clear for command REPLY_TX_LINK_QUALITY_CMD
-[83668.896034] iwlwifi 0000:05:00.0: Failed to start RT ucode: -110
-[83668.904290] iwlwifi 0000:05:00.0: Unable to initialize device.
-
-The issue looks similar like this one:
-
-http://ubuntuforums.org/showthread.php?t=2178006&s=9157c353cd4a322c2a3b2a6dc693d243
-
-Can you please give me advice on how to resolve this issue?
-
-Thanks in advance!
-Bastiaan
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Met vriendelijke groet,
-
-Bastiaan de Groot
-
-
-
-
-Laan van Zuid Hoorn 55
-2289 DC Rijswijk
-The Netherlands
-
-Telephone         +31 (0)70 319 39 38
-Operations        +31 (0)70 319 23 47
-Fax                   +31 (0)70 319 17 59
-Mobile               +31 (0)6 211 92 911
-E-mail               bastiaan.de.groot@telexis.nl
-Website             www.telexis.nl
-
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index 4cfd8f7..88dd242 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -61,6 +61,7 @@ static bool rt2800pci_hwcrypt_disabled(struct rt2x00_dev *rt2x00dev)
+ 	return modparam_nohwcrypt;
+ }
+ 
++#ifdef CONFIG_PCI
+ static void rt2800pci_mcu_status(struct rt2x00_dev *rt2x00dev, const u8 token)
+ {
+ 	unsigned int i;
+@@ -91,7 +92,6 @@ static void rt2800pci_mcu_status(struct rt2x00_dev *rt2x00dev, const u8 token)
+ 	rt2x00mmio_register_write(rt2x00dev, H2M_MAILBOX_CID, ~0);
+ }
+ 
+-#ifdef CONFIG_PCI
+ static void rt2800pci_eepromregister_read(struct eeprom_93cx6 *eeprom)
+ {
+ 	struct rt2x00_dev *rt2x00dev = eeprom->data;
+@@ -210,17 +210,23 @@ static int rt2800pci_write_firmware(struct rt2x00_dev *rt2x00dev,
+ /*
+  * Device state switch handlers.
+  */
+-static int rt2800pci_enable_radio(struct rt2x00_dev *rt2x00dev)
++static int rt2800mmio_enable_radio(struct rt2x00_dev *rt2x00dev)
+ {
+-	int retval;
+-
+ 	/* Wait for DMA, ignore error until we initialize queues. */
+ 	rt2800_wait_wpdma_ready(rt2x00dev);
+ 
+ 	if (unlikely(rt2800mmio_init_queues(rt2x00dev)))
+ 		return -EIO;
+ 
+-	retval = rt2800_enable_radio(rt2x00dev);
++	return rt2800_enable_radio(rt2x00dev);
++}
++
++#ifdef CONFIG_PCI
++static int rt2800pci_enable_radio(struct rt2x00_dev *rt2x00dev)
++{
++	int retval;
++
++	retval = rt2800mmio_enable_radio(rt2x00dev);
+ 	if (retval)
+ 		return retval;
+ 
+@@ -237,7 +243,6 @@ static int rt2800pci_enable_radio(struct rt2x00_dev *rt2x00dev)
+ 	return retval;
+ }
+ 
+-#ifdef CONFIG_PCI
+ static int rt2800pci_set_state(struct rt2x00_dev *rt2x00dev,
+ 			       enum dev_state state)
+ {
+@@ -484,7 +489,7 @@ static int rt2800soc_set_device_state(struct rt2x00_dev *rt2x00dev,
+ 
+ 	switch (state) {
+ 	case STATE_RADIO_ON:
+-		retval = rt2800pci_enable_radio(rt2x00dev);
++		retval = rt2800mmio_enable_radio(rt2x00dev);
+ 		break;
+ 
+ 	case STATE_RADIO_OFF:
+-- 
+1.7.10
