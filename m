@@ -1,49 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f179.google.com ([209.85.215.179]:48713 "EHLO
-	mail-ea0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752311Ab3J3RJj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Oct 2013 13:09:39 -0400
-Received: by mail-ea0-f179.google.com with SMTP id b10so810084eae.38
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Oct 2013 10:09:38 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH] nl80211: better document NL80211_CMD_TDLS_MGMT
-Date: Wed, 30 Oct 2013 19:09:34 +0200
-Message-Id: <1383152974-13097-1-git-send-email-arik@wizery.com> (sfid-20131030_180942_598206_17F58F87)
+Received: from arrakis.dune.hu ([78.24.191.176]:48748 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751808Ab3JQHmn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Oct 2013 03:42:43 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 02/21] rt2x00: rt2800pci: use rt2800mmio prefix for TX descriptor functions
+Date: Thu, 17 Oct 2013 09:42:16 +0200
+Message-Id: <1381995755-16471-3-git-send-email-juhosg@openwrt.org> (sfid-20131017_100808_491512_2F73F1C8)
+In-Reply-To: <1381995755-16471-1-git-send-email-juhosg@openwrt.org>
+References: <1381995755-16471-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This command has different semantics depending on the action code sent.
-Document this fact and detail the supported action codes.
+The functions are used for devices with memory
+mapped I/O and contain no PCI specific code at
+all. Use rt2800mmio prefix instead of rt2800pci
+in the function names to reflect that.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+The patch contains no functional changes.
+
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- include/uapi/linux/nl80211.h | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+ drivers/net/wireless/rt2x00/rt2800pci.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index f752e98..877c048 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -581,7 +581,14 @@
-  *	operation, %NL80211_ATTR_MAC contains the peer MAC address, and
-  *	%NL80211_ATTR_REASON_CODE the reason code to be used (only with
-  *	%NL80211_TDLS_TEARDOWN).
-- * @NL80211_CMD_TDLS_MGMT: Send a TDLS management frame.
-+ * @NL80211_CMD_TDLS_MGMT: Send a TDLS management frame. The
-+ *	%NL80211_ATTR_TDLS_ACTION attribute determines the typ of frame to be
-+ *	sent. Public Action codes (802.11-2012 8.1.5.1) will be sent as
-+ *	802.11 management frames, while TDLS action codes (802.11-2012
-+ *	8.5.13.1) will be encapsulated and sent as data frames. The currently
-+ *	supported Public Action code is %WLAN_PUB_ACTION_TDLS_DISCOVER_RES
-+ *	and the currently supported TDLS actions codes are given in
-+ *	&enum ieee80211_tdls_actioncode.
-  *
-  * @NL80211_CMD_UNEXPECTED_FRAME: Used by an application controlling an AP
-  *	(or GO) interface (i.e. hostapd) to ask for unexpected frames to
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index f8f2abb..ddc6a42 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -629,13 +629,13 @@ static int rt2800pci_set_device_state(struct rt2x00_dev *rt2x00dev,
+ /*
+  * TX descriptor initialization
+  */
+-static __le32 *rt2800pci_get_txwi(struct queue_entry *entry)
++static __le32 *rt2800mmio_get_txwi(struct queue_entry *entry)
+ {
+ 	return (__le32 *) entry->skb->data;
+ }
+ 
+-static void rt2800pci_write_tx_desc(struct queue_entry *entry,
+-				    struct txentry_desc *txdesc)
++static void rt2800mmio_write_tx_desc(struct queue_entry *entry,
++				     struct txentry_desc *txdesc)
+ {
+ 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
+ 	struct queue_entry_priv_mmio *entry_priv = entry->priv_data;
+@@ -826,7 +826,7 @@ static bool rt2800pci_txdone_release_entries(struct queue_entry *entry,
+ {
+ 	if (test_bit(ENTRY_DATA_STATUS_SET, &entry->flags)) {
+ 		rt2800_txdone_entry(entry, entry->status,
+-				    rt2800pci_get_txwi(entry));
++				    rt2800mmio_get_txwi(entry));
+ 		return false;
+ 	}
+ 
+@@ -1146,7 +1146,7 @@ static const struct rt2800_ops rt2800pci_rt2800_ops = {
+ 	.hwcrypt_disabled	= rt2800pci_hwcrypt_disabled,
+ 	.drv_write_firmware	= rt2800pci_write_firmware,
+ 	.drv_init_registers	= rt2800pci_init_registers,
+-	.drv_get_txwi		= rt2800pci_get_txwi,
++	.drv_get_txwi		= rt2800mmio_get_txwi,
+ };
+ 
+ static const struct rt2x00lib_ops rt2800pci_rt2x00_ops = {
+@@ -1175,7 +1175,7 @@ static const struct rt2x00lib_ops rt2800pci_rt2x00_ops = {
+ 	.kick_queue		= rt2800pci_kick_queue,
+ 	.stop_queue		= rt2800pci_stop_queue,
+ 	.flush_queue		= rt2x00mmio_flush_queue,
+-	.write_tx_desc		= rt2800pci_write_tx_desc,
++	.write_tx_desc		= rt2800mmio_write_tx_desc,
+ 	.write_tx_data		= rt2800_write_tx_data,
+ 	.write_beacon		= rt2800_write_beacon,
+ 	.clear_beacon		= rt2800_clear_beacon,
 -- 
-1.8.1.2
-
+1.7.10
