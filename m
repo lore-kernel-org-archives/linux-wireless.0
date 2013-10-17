@@ -1,44 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:60574 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751543Ab3JKUpR (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:46878 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758245Ab3JQUPH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Oct 2013 16:45:17 -0400
-Date: Fri, 11 Oct 2013 16:39:01 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: wireless-regdb@lists.infradead.org
-Subject: Re: [ANN] wireless-regdb: master-2013-10-11
-Message-ID: <20131011203901.GA23477@tuxdriver.com> (sfid-20131011_224527_078779_FDB88BDB)
-References: <20131011202459.GF14329@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131011202459.GF14329@tuxdriver.com>
+	Thu, 17 Oct 2013 16:15:07 -0400
+Date: Thu, 17 Oct 2013 16:15:05 -0400 (EDT)
+Message-Id: <20131017.161505.2278932043612781921.davem@davemloft.net> (sfid-20131017_221518_010448_5B3AEADF)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next 2013-10-17
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20131017182339.GC1812@tuxdriver.com>
+References: <20131017182339.GC1812@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 11, 2013 at 04:24:59PM -0400, John W. Linville wrote:
-> (Cutting the short log, since the original version got classified as
-> SPAM on vger.kernel.org...??)
-> 
-> A new release of wireless-regdb (master-2013-10-11) is available at:
-> 
-> http://www.kernel.org/pub/software/network/wireless-regdb/wireless-regdb-2013.10.11.tar.gz
-> 
-> Here is the short log of the changes included since the 2013-02-13
-> release:
-> 
-> SNIP -- you'll have to check it yourself:
-> 
-> 	git log master-2013-02-13..master-2013-10-11 | git shortlog
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Thu, 17 Oct 2013 14:23:40 -0400
 
-FYI -- I've purged my folders of all other old/pending wireless-regdb
-stuff.  If you have a change that you still want to propose to the
-regulatory database, please send it as a _patch_ at your leisure.
+> This is a batch of updates intended for the 3.13 stream...
+> 
+> The biggest item of interest in here is wcn36xx, the new mac80211
+> driver for Qualcomm WCN3660/WCN3680 hardware.
+> 
+> Regarding the mac80211 bits, Johannes says:
+> 
+> "We have an assortment of cleanups and new features, of which the
+> biggest one is probably the channel-switch support in IBSS. Nothing
+> else really stands out much."
+> 
+> On top of that, the ath9k and rt2x00 get a lot of update action from
+> Felix Fietkau and Gabor Juhos, respectively.  There are a handful of
+> updates to other drivers here and there as well.
+> 
+> Please let me know if there are problems!
 
-Thanks,
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Pulled, thanks John.
