@@ -1,55 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f169.google.com ([74.125.82.169]:52333 "EHLO
-	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751825Ab3J1S3O (ORCPT
+Received: from mail-ob0-f182.google.com ([209.85.214.182]:62129 "EHLO
+	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755326Ab3JQPwH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Oct 2013 14:29:14 -0400
-Received: by mail-we0-f169.google.com with SMTP id q58so7157660wes.28
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Oct 2013 11:29:13 -0700 (PDT)
+	Thu, 17 Oct 2013 11:52:07 -0400
+Received: by mail-ob0-f182.google.com with SMTP id va2so2024255obc.41
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Oct 2013 08:52:06 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAMP44s2Cvw9HF3c3Asuq+bTSD36Gw6PXOUVjAcCD+hf6KB_awg@mail.gmail.com>
-References: <CAMP44s1XJRHV8bAX=_-TkSKMkY8Nw1=eHorqTCZ2QmtR5m8uJA@mail.gmail.com>
- <526E20EA.9090203@rempel-privat.de> <CAMP44s2Cvw9HF3c3Asuq+bTSD36Gw6PXOUVjAcCD+hf6KB_awg@mail.gmail.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Mon, 28 Oct 2013 23:58:52 +0530
-Message-ID: <CABPxzY+xJ7kst-sYwP8RJwMO_zkNYWKaYy=_LS7WQfuxquK24w@mail.gmail.com> (sfid-20131028_192919_839201_85944DC6)
-Subject: Re: I always need a miracle to connect with iwlwifi
-To: Felipe Contreras <felipe.contreras@gmail.com>
-Cc: Oleksij Rempel <linux@rempel-privat.de>, ilw@linux.intel.com,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>
+In-Reply-To: <1382022683.14410.18.camel@jlt4.sipsolutions.net>
+References: <1381802911-3921-1-git-send-email-yeohchunyeow@cozybit.com>
+	<1381802911-3921-5-git-send-email-yeohchunyeow@cozybit.com>
+	<1382022683.14410.18.camel@jlt4.sipsolutions.net>
+Date: Thu, 17 Oct 2013 23:52:06 +0800
+Message-ID: <CAHS2MGMgTp9homs-moVXTVfyFtcuYPPbHBiiW0XD9kBYJ0hb5w@mail.gmail.com> (sfid-20131017_175211_606674_11A36EC8)
+Subject: Re: [PATCH v5 4/5] {nl,cfg,mac}80211: implement mesh channel switch
+ userspace API
+From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	devel@lists.open80211s.org,
+	"distro11s@cozybit.com" <distro11s@cozybit.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 28, 2013 at 11:30 PM, Felipe Contreras
-<felipe.contreras@gmail.com> wrote:
+> If this fails, do we leak the CSA settings?
+If failed, beacon won't include the CSA settings. But If there is any
+other calling mesh_rebuild_beacon and succeed, the it will be included
+up if the channel switch count is not expired. At the same time, CSA
+action frame is also transmitted, so others may use this to start the
+CSA process.
 
-> The authentication response does come back in both cases though, it's
-> just the acknowledgement that is missing. Unfortunately I cannot
-> figure out for which message it's the ack.
->
-> Also, I notice the sequence number received from the router doesn't
-> seem to change. All the authentication requests received have the same
-> number (256). Another peculiar thing is that in the failed case the SN
-> we send starts with 0.
->
-> I suppose since the authentication ack never arrives, the next steps
-> are never completed.
->
-> Does that help?
->From the supplicant logs we have successfully received the
-authentication response
-and sent out the association request. So are you referring to not receiving ACK
-for association request??
+Am I answer your question?
 
-It would be nice to get the capture without any filters?
-
-
-
-
--- 
-Thanks,
-Regards,
-Chaitanya T K.
-Mobile:+91-9963910010.
+----
+Chun-Yeow
