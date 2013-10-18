@@ -1,27 +1,23 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f171.google.com ([209.85.220.171]:41655 "EHLO
-	mail-vc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752242Ab3JaUax (ORCPT
+Received: from mxgw5.sdu.dk ([130.225.156.17]:42428 "EHLO mxgw5.sdu.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753282Ab3JRMDi convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Oct 2013 16:30:53 -0400
-Received: by mail-vc0-f171.google.com with SMTP id ik5so2378837vcb.30
-        for <linux-wireless@vger.kernel.org>; Thu, 31 Oct 2013 13:30:53 -0700 (PDT)
+	Fri, 18 Oct 2013 08:03:38 -0400
+From: Daniel Wrede <dawre12@student.sdu.dk>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "sgruszka@redhat.com" <sgruszka@redhat.com>
+Subject: regarding Linux Wifi driver
+Date: Fri, 18 Oct 2013 11:35:22 +0000
+Message-ID: <6F561AC697923E43A7559754DA2EE97C3201BFF0@ADM-EXMBX10D.adm.c.sdu.dk> (sfid-20131018_140341_691040_397FF48E)
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1383199449-18310-1-git-send-email-yeohchunyeow@gmail.com>
-References: <1383199449-18310-1-git-send-email-yeohchunyeow@gmail.com>
-Date: Thu, 31 Oct 2013 20:30:52 +0000
-Message-ID: <CAFSJ42b4Og8LttAzTkzH924W=0yKqu35khvr4vB6bzLnbLHjcA@mail.gmail.com> (sfid-20131031_213059_346682_2B28D52E)
-Subject: Re: [PATCH] wcn36xx: enable the beaconing in mesh mode
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	wcn36xx <wcn36xx@lists.infradead.org>,
-	Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> +               msg_body.tim_ie_offset = 256;
-
-Does not look like correct value. Why 256?
+Hello,
+I do have a question regarding the drivers on http://wireless.kernel.org/en/users/Drivers/iwlegacy
+My kernel version is 3.8.0-19-generic. Which driver should I use for the  WiFi Link 4965AGN? I am a little confused by the numbering.
+Thank you very much. 
+Best regards,
+Daniel Wrede
