@@ -1,47 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:34563 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752257Ab3J3LfE (ORCPT
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:37194 "EHLO
+	mail.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751107Ab3JRH5R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Oct 2013 07:35:04 -0400
-Date: Wed, 30 Oct 2013 12:35:02 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
-Cc: Luciano Coelho <luca@coelho.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, sre@ring0.de, joni.lapilainen@gmail.com,
-	David Gnedt <david.gnedt@davizone.at>
-Subject: Re: [PATCH 07/16] wl1251: configure hardware en-/decryption for
- monitor mode
-Message-ID: <20131030113502.GA8763@amd.pavel.ucw.cz> (sfid-20131030_123537_592439_1F169D71)
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
- <1382819655-30430-8-git-send-email-pali.rohar@gmail.com>
+	Fri, 18 Oct 2013 03:57:17 -0400
+Message-ID: <5260E9F4.2070204@openwrt.org> (sfid-20131018_095720_827969_98EA0966)
+Date: Fri, 18 Oct 2013 09:57:40 +0200
+From: Gabor Juhos <juhosg@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1382819655-30430-8-git-send-email-pali.rohar@gmail.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>
+Subject: Re: [PATCH 00/21] rt2x00: separate rt2800 PCI and SoC driver
+References: <1381995755-16471-1-git-send-email-juhosg@openwrt.org> <CAGXE3d_HZZrEspONsjoqGrynGKYN9pisX-jgRZdV760uuVq5cQ@mail.gmail.com>
+In-Reply-To: <CAGXE3d_HZZrEspONsjoqGrynGKYN9pisX-jgRZdV760uuVq5cQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat 2013-10-26 22:34:06, Pali Rohár wrote:
-> From: David Gnedt <david.gnedt@davizone.at>
+Hi Helmut,
+
+> On Thu, Oct 17, 2013 at 9:42 AM, Gabor Juhos <juhosg@openwrt.org> wrote:
+>> The rt2800pci driver supports both PCI and SoC device. To achieve
+>> this, the code uses several ifdef statements which makes the code
+>> quite ugly. The patch set introduces a shared module, and moves the
+>> SoC driver into a separate module to get rid of the mess.
 > 
-> Disable hardware encryption (DF_ENCRYPTION_DISABLE) and decryption
-> (DF_SNIFF_MODE_ENABLE) via wl1251_acx_feature_cfg while monitor interface is
-> present.
-> 
-> Signed-off-by: David Gnedt <david.gnedt@davizone.at>
+> Nice series. Does this also reduce module size on when building for
+> SoC without PCI support?
 
-You need to sign off the patch, otherwise looks ok.
+Nope. On the contrary, there is a small increase due to the new rt2800mmio
+module (compiled for RT305x SoCs):
 
-Reviewed-by: Pavel Machek <pavel@ucw.cz>
+before:
+   text    data     bss     dec     hex filename
+   7232      96      16    7344    1cb0 rt2800pci.o
 
-Thanks,
-									Pavel
+after:
+   text    data     bss     dec     hex filename
+   1934     100      16    2050     802 rt2800soc.o
+   5664       0       0    5664    1620 rt2800mmio.o
 
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+delta:
+   +366      +4       0    +370
+
+-Gabor
+
