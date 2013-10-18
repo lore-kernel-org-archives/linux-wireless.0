@@ -1,187 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm9-vm0.bullet.mail.ird.yahoo.com ([77.238.189.197]:28762 "EHLO
-	nm9-vm0.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754595Ab3JaPh4 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Oct 2013 11:37:56 -0400
-References: <1382537927.62604.YahooMailNeo@web171801.mail.ir2.yahoo.com> <1382538469.7892.YahooMailNeo@web171805.mail.ir2.yahoo.com> <20131024112206.GB1677@redhat.com> <1382614336.89589.YahooMailNeo@web171804.mail.ir2.yahoo.com> <20131024113748.GD1677@redhat.com> <1383227814.41997.YahooMailNeo@web171801.mail.ir2.yahoo.com> <527264F6.2030001@hauke-m.de>
-Message-ID: <1383233873.6949.YahooMailNeo@web171806.mail.ir2.yahoo.com> (sfid-20131031_163824_344358_04BAD2CF)
-Date: Thu, 31 Oct 2013 15:37:53 +0000 (GMT)
-From: Gianfranco Costamagna <costamagnagianfranco@yahoo.it>
-Reply-To: Gianfranco Costamagna <costamagnagianfranco@yahoo.it>
-Subject: Re: Edimax EW-7733UnD
-To: Hauke Mehrtens <hauke@hauke-m.de>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <527264F6.2030001@hauke-m.de>
+Received: from nm10-vm1.bullet.mail.ird.yahoo.com ([77.238.189.93]:29196 "EHLO
+	nm10-vm1.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756336Ab3JRPiY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Oct 2013 11:38:24 -0400
+Message-ID: <526155ED.1090007@yahoo.de> (sfid-20131018_173829_130028_C8338B84)
+Date: Fri, 18 Oct 2013 17:38:21 +0200
+From: =?UTF-8?B?WWFubmlrIFbDtmxrZXI=?= <yannikv@yahoo.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+To: Oleksij Rempel <linux@rempel-privat.de>
+CC: Pontus Fuchs <pontus.fuchs@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: ar5523 Gigaset USB Adapter 108 issue
+References: <Pine.LNX.4.44L0.1310181041080.1164-100000@iolanthe.rowland.org> <52614E9B.6040400@rempel-privat.de>
+In-Reply-To: <52614E9B.6040400@rempel-privat.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
->Aren't you trying to get a RT3573 card to work? You should activate 
->CONFIG_RT2800USB_RT3573.
-
-
-I'm rebuilding the kernel with this module, but I don't think this is my chip
-http://www.edimax.com/au/produce_detail.php?pd_id=399&pl1_id=1&pl2_id=44
-
-is it?
-
-Thanks
-
-Gianfranco
-
-
-> Il Giovedì 31 Ottobre 2013 15:11, Hauke Mehrtens <hauke@hauke-m.de> ha scritto:
-> > On 10/31/2013 02:56 PM, Gianfranco Costamagna wrote:
+Am 18.10.2013 17:07, schrieb Oleksij Rempel:
+> Am 18.10.2013 16:49, schrieb Alan Stern:
+>> Yannik, you should always use Reply-To-All so that your messages
+>> get sent to the mailing list and not just to me.
 >> 
+>> On Thu, 17 Oct 2013, Yannik VÃ¶lker wrote:
 >> 
->>>  Il Giovedì 24 Ottobre 2013 13:41, Stanislaw Gruszka 
-> <sgruszka@redhat.com> ha scritto:
->>>>  On Thu, Oct 24, 2013 at 12:32:16PM +0100, Gianfranco Costamagna 
-> wrote:
->>>> 
->>>> 
->>>>   Il Giovedì 24 Ottobre 2013 13:25, Stanislaw Gruszka 
->>>  <sgruszka@redhat.com> ha scritto:
->>>> 
->>>>   On Wed, Oct 23, 2013 at 03:27:49PM +0100, Gianfranco Costamagna 
-> wrote:
->>>>   >
->>>>   >> Hi Kernel Wireless developers, I write here since I have 
-> an issue 
->>>  with this module.
->>>>   >> 
->>>>   >> 
->>>>   >> We bought 2 of them since they are both 2.4 and 5Ghz 
-> capable, and 
->>>  they seem to be powerful enough for our pourposes
->>>>   >> 
+>>> Am 07.08.2013 19:34, schrieb Alan Stern:
+>>>> Please post two usbmon traces, one showing the failure on
+>>>> your current system and the other showing the adapter running
+>>>> correctly under a 32-bit kernel.  Instructions for usbmon are
+>>>> in the kernel source file Documentation/usb/usbmon.txt.
+>>> I never got it to work under a 32-bit kernel, i was just able
+>>> to utilize a windows32 driver using ndiswrapper.
 >>> 
-> http://www.edimax.com/au/produce_detail.php?pd_id=399&pl1_id=1&pl2_id=44
->>>>   >> 
->>>>   >> 
->>>>   >> Anyway there is a problem, that the linux kernel seems to 
-> be not 
->>>  supporting them
->>>>   >> 
->>>>   >> I tried following this guide
->>>>   >> http://wikidevi.com/wiki/Edimax_EW-7733UnD
->>>>   >> rt3573sta, possibly rt5572sta, and future support in 
-> rt2800usb 
->>>  "uhosg's patchset adding support, may be in by k3.12"
->>>>   >> but at this moment it is showing an interface with one of 
-> them (I 
->>>  cannot connect to anything, the interface shown seems to be incorrect), 
-> with 
->>>  another I get a kernel anic and with the third one doesn't work at 
-> all.
->>>>   >> 
->>>>   >> lsusb |grep Edimax
->>>>   >> 
->>>>   >> Bus 002 Device 002: ID 7392:7733 Edimax Technology Co., 
-> Ltd 
->>>>   >
->>>>   >I have that exect device and it works ok here, but I'm 
-> using 
->>>>   >wireless-testing tree. So perhaps you should try install that
->>>>   >tree or use backports .
->>>> 
->>>> 
->>>>   Wonderful! I don't really understand what do you mean with 
-> backports, 
->>>  are you referring to "linux kernel backports" right?
->>> 
->>>  Yes.
->>> 
->>>>   So I can choose the backport source or to checkout and build the 
->>>  wireless-testing tree.
->>>> 
->>>>   Just as information, how long will it take to have it into the 
-> stable 
->>>  mainline?
->>> 
->>>  Current wireless-testing content will be available on 3.13 ,
->>>  though I think that device should also work on 3.12 .
->>> 
->> 
->>  Ok I built a custom kernel but I still have some issues
->>  Ubuntu 13.10 x64
->>  git clone 
-> http://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
->>  cd wireless-testing
->>  copied my config from this kernel 
-> http://kernel.ubuntu.com/~kernel-ppa/mainline/v3.12-rc7-saucy/
->> 
->>  make oldconfig
->>  (a tail of my .config file after the make)
->>  CONFIG_RT2800PCI=m
->>  CONFIG_RT2800PCI_RT33XX=y
->>  CONFIG_RT2800PCI_RT35XX=y
->>  CONFIG_RT2800PCI_RT53XX=y
->>  CONFIG_RT2800PCI_RT3290=y
->>  CONFIG_RT2500USB=m
->>  CONFIG_RT73USB=m
->>  CONFIG_RT2800USB=m
->>  CONFIG_RT2800USB_RT33XX=y
->>  CONFIG_RT2800USB_RT35XX=y
->>  # CONFIG_RT2800USB_RT3573 is not set
+>>> Now i got it to "work". I randomly found out that the ar5523
+>>> driver actually works when you load it after you unload
+>>> ndiswrapper so the following steps make it work: 1. modprobe
+>>> ndiswrapper 2. plug in device 3. connect to wlan using
+>>> ndiswrapper and disconnect again (might be optional) 4.
+>>> modprobe -r ndiswrapper 5. modprobe ar5523 6. connect to wlan 
+>>> log for that is attatched as wlanthennative2.log
 > 
-> Aren't you trying to get a RT3573 card to work? You should activate
 > 
-> CONFIG_RT2800USB_RT3573.
-> 
->>  CONFIG_RT2800USB_RT53XX=y
->>  CONFIG_RT2800USB_RT55XX=y
->>  CONFIG_RT2800USB_UNKNOWN=y
->>  CONFIG_RT2800_LIB=m
->>  CONFIG_RT2800_LIB_MMIO=m
->>  CONFIG_RT2X00_LIB_MMIO=m
->>  CONFIG_RT2X00_LIB_PCI=m
->>  CONFIG_RT2X00_LIB_USB=m
->>  CONFIG_RT2X00_LIB=m
->>  CONFIG_RT2X00_LIB_FIRMWARE=y
->>  CONFIG_RT2X00_LIB_CRYPTO=y
->>  CONFIG_RT2X00_LIB_LEDS=y
->>  # CONFIG_RT2X00_LIB_DEBUGFS is not set
->>  # CONFIG_RT2X00_DEBUG is not set
->> 
->>  (apt-get build-dep linux)
->>  make
->>  make all
->>  sudo make modules_install
->>  sudo make install
->> 
->>  I was surprised that everything was automatically copied in /boot and grub 
-> automatically found the new kernel without manual mkinitrd anymore (so long time 
-> from my last kernel build)
->> 
->>  Reboot
->> 
->>  locutus@gianfranco-Latitude-E5520:~/wireless-testing$ uname -a
->>  Linux gianfranco-Latitude-E5520 3.12.0-rc5-wl #2 SMP Thu Oct 31 14:04:43 
-> CET 2013 x86_64 x86_64 x86_64 GNU/Linux
->> 
->> 
->>  put key in my pc
->>  [  471.585065] usb 2-1.2: new high-speed USB device number 11 using 
-> ehci-pci
->>  [  471.693762] usb 2-1.2: New USB device found, idVendor=7392, 
-> idProduct=7733
->>  [  471.693766] usb 2-1.2: New USB device strings: Mfr=1, Product=2, 
-> SerialNumber=3
->>  [  471.693768] usb 2-1.2: Product: 802.11 n WLAN
->>  [  471.693770] usb 2-1.2: Manufacturer: Ralink
->>  [  471.693771] usb 2-1.2: SerialNumber: 1.0
->> 
->>  sudo modprobe rt2800usb
->> 
->>  [  540.170899] usbcore: registered new interface driver rt2800usb
->> 
->>  nothing works...
->> 
->>  Can you please help me again?
->> 
-> 
+> It sounds like linux driver didn't recognised usb id and didn't
+> uploaded firmware, or there was no firmware to upload.
+there is firmware (/lib/firmware/ar5523.bin exists) but it does not
+even get touched (i renamed the file and the error did not change at all)
+
+> thas is probably other issue.  Let's start with thirst issue.
+Ok, instructions?
+
+
+- -- 
+Yannik VÃ¶lker
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+
+iQIcBAEBAgAGBQJSYVXtAAoJEDqk81AiCyXKm3AP/jBgoxUZVAftnT/wasdo3gTe
+Tooh1P/Kg0F6pAxzEdZ4C2XAlBdZnU4IPBPdBSxYwSYP4tAN6PW9fkdxHYIVUYNr
+G09dsjXOKW2+Ax5M9T2bGw+IV/mYMjXTlFG0uWw087q+LhvYH/SX9BGOJWGQf0e3
+xQWilxQ5NwooAd5ofkOzZ3yplRZQXU5WmwKzjieH/iGj/JKPN2cvY5PJ029NSwXT
+DNj4zuT5o1M6QGS0NH5A3Wsmw8iFDNSU1/ezVPbwLCoiAcVL77Wi5cHPn7NIPab7
+qgXkySAiByehH+8KeHWRXqv/sp0RMLjbg4sbMYrz4t2GCsqkCR88y+Nexz4XavjG
+LdBoILmXpTJoTvm3b2EQdjCPzwJJ3nUVB6rtqbUgCsGTVfTX1oz2EFSEFJtiJWW2
+1qvF/vqb1/Cn5k9gxNaDdmmUaN6zY4mIPPyBspoCYnExU+fXOHreAhcHsN4xBdDw
+jjZWFrWTWKvNbFUNgukHb2dCqjBCn5E8F5G3ROUVRygN5ewdThg1lI3xKH3aOLTy
+ZghSbi+yipyHD5NOdd2Z+rayGd+wD2Vk9i2X2GXwR6QPLgOe3OxQUoJu8vx7/E9S
+I//0D1RVdhrma3kUELEy6xcn9nLMQohE2LPn8yLjYkRAPzR/46xTR8LYFdC2SKyC
+/T+2qtvM4oJfTrhiTThf
+=y5hR
+-----END PGP SIGNATURE-----
