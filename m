@@ -1,153 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:48744 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751827Ab3JQHmn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Oct 2013 03:42:43 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 01/21] rt2x00: create a new module for rt2800 MMIO code
-Date: Thu, 17 Oct 2013 09:42:15 +0200
-Message-Id: <1381995755-16471-2-git-send-email-juhosg@openwrt.org> (sfid-20131017_100808_383487_6CF418CE)
-In-Reply-To: <1381995755-16471-1-git-send-email-juhosg@openwrt.org>
-References: <1381995755-16471-1-git-send-email-juhosg@openwrt.org>
+Received: from s3.sipsolutions.net ([144.76.43.152]:48382 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754789Ab3JROb7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Oct 2013 10:31:59 -0400
+Message-ID: <1382106708.14393.15.camel@jlt4.sipsolutions.net> (sfid-20131018_163205_790982_A7FB5088)
+Subject: pull-request: mac80211-next 2013-10-18
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 18 Oct 2013 16:31:48 +0200
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-imhUhaIgUV0exQUiiqp6"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Create a new module for common code which can be used
-for rt2800 device with memory mapped I/O. It is an empty
-module for now, but it will be populated by subsequent
-patches.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/rt2x00/Kconfig      |    4 +++
- drivers/net/wireless/rt2x00/Makefile     |    1 +
- drivers/net/wireless/rt2x00/rt2800mmio.c |   39 ++++++++++++++++++++++++++++++
- drivers/net/wireless/rt2x00/rt2800mmio.h |   34 ++++++++++++++++++++++++++
- 4 files changed, 78 insertions(+)
- create mode 100644 drivers/net/wireless/rt2x00/rt2800mmio.c
- create mode 100644 drivers/net/wireless/rt2x00/rt2800mmio.h
+--=-imhUhaIgUV0exQUiiqp6
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
-index a18b005..2232b11 100644
---- a/drivers/net/wireless/rt2x00/Kconfig
-+++ b/drivers/net/wireless/rt2x00/Kconfig
-@@ -60,6 +60,7 @@ config RT2800PCI
- 	tristate "Ralink rt27xx/rt28xx/rt30xx (PCI/PCIe/PCMCIA) support"
- 	depends on PCI || SOC_RT288X || SOC_RT305X
- 	select RT2800_LIB
-+	select RT2800_LIB_MMIO
- 	select RT2X00_LIB_MMIO
- 	select RT2X00_LIB_PCI if PCI
- 	select RT2X00_LIB_SOC if SOC_RT288X || SOC_RT305X
-@@ -202,6 +203,9 @@ endif
- config RT2800_LIB
- 	tristate
- 
-+config RT2800_LIB_MMIO
-+	tristate
-+
- config RT2X00_LIB_MMIO
- 	tristate
- 
-diff --git a/drivers/net/wireless/rt2x00/Makefile b/drivers/net/wireless/rt2x00/Makefile
-index f069d8b..d11e356 100644
---- a/drivers/net/wireless/rt2x00/Makefile
-+++ b/drivers/net/wireless/rt2x00/Makefile
-@@ -14,6 +14,7 @@ obj-$(CONFIG_RT2X00_LIB_PCI)		+= rt2x00pci.o
- obj-$(CONFIG_RT2X00_LIB_SOC)		+= rt2x00soc.o
- obj-$(CONFIG_RT2X00_LIB_USB)		+= rt2x00usb.o
- obj-$(CONFIG_RT2800_LIB)		+= rt2800lib.o
-+obj-$(CONFIG_RT2800_LIB_MMIO)		+= rt2800mmio.o
- obj-$(CONFIG_RT2400PCI)			+= rt2400pci.o
- obj-$(CONFIG_RT2500PCI)			+= rt2500pci.o
- obj-$(CONFIG_RT61PCI)			+= rt61pci.o
-diff --git a/drivers/net/wireless/rt2x00/rt2800mmio.c b/drivers/net/wireless/rt2x00/rt2800mmio.c
-new file mode 100644
-index 0000000..a2b9848
---- /dev/null
-+++ b/drivers/net/wireless/rt2x00/rt2800mmio.c
-@@ -0,0 +1,39 @@
-+/*	Copyright (C) 2009 - 2010 Ivo van Doorn <IvDoorn@gmail.com>
-+ *	Copyright (C) 2009 Alban Browaeys <prahal@yahoo.com>
-+ *	Copyright (C) 2009 Felix Fietkau <nbd@openwrt.org>
-+ *	Copyright (C) 2009 Luis Correia <luis.f.correia@gmail.com>
-+ *	Copyright (C) 2009 Mattias Nissler <mattias.nissler@gmx.de>
-+ *	Copyright (C) 2009 Mark Asselstine <asselsm@gmail.com>
-+ *	Copyright (C) 2009 Xose Vazquez Perez <xose.vazquez@gmail.com>
-+ *	Copyright (C) 2009 Bart Zolnierkiewicz <bzolnier@gmail.com>
-+ *	<http://rt2x00.serialmonkey.com>
-+ *
-+ *	This program is free software; you can redistribute it and/or modify
-+ *	it under the terms of the GNU General Public License as published by
-+ *	the Free Software Foundation; either version 2 of the License, or
-+ *	(at your option) any later version.
-+ *
-+ *	This program is distributed in the hope that it will be useful,
-+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-+ *	GNU General Public License for more details.
-+ *
-+ *	You should have received a copy of the GNU General Public License
-+ *	along with this program; if not, write to the
-+ *	Free Software Foundation, Inc.,
-+ *	59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ */
-+
-+/*	Module: rt2800mmio
-+ *	Abstract: rt2800 MMIO device routines.
-+ */
-+
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+
-+#include "rt2x00.h"
-+
-+MODULE_AUTHOR(DRV_PROJECT);
-+MODULE_VERSION(DRV_VERSION);
-+MODULE_DESCRIPTION("rt2800 MMIO library");
-+MODULE_LICENSE("GPL");
-diff --git a/drivers/net/wireless/rt2x00/rt2800mmio.h b/drivers/net/wireless/rt2x00/rt2800mmio.h
-new file mode 100644
-index 0000000..32f9dcd
---- /dev/null
-+++ b/drivers/net/wireless/rt2x00/rt2800mmio.h
-@@ -0,0 +1,34 @@
-+/*	Copyright (C) 2009 - 2010 Ivo van Doorn <IvDoorn@gmail.com>
-+ *	Copyright (C) 2009 Alban Browaeys <prahal@yahoo.com>
-+ *	Copyright (C) 2009 Felix Fietkau <nbd@openwrt.org>
-+ *	Copyright (C) 2009 Luis Correia <luis.f.correia@gmail.com>
-+ *	Copyright (C) 2009 Mattias Nissler <mattias.nissler@gmx.de>
-+ *	Copyright (C) 2009 Mark Asselstine <asselsm@gmail.com>
-+ *	Copyright (C) 2009 Xose Vazquez Perez <xose.vazquez@gmail.com>
-+ *	Copyright (C) 2009 Bart Zolnierkiewicz <bzolnier@gmail.com>
-+ *	<http://rt2x00.serialmonkey.com>
-+ *
-+ *	This program is free software; you can redistribute it and/or modify
-+ *	it under the terms of the GNU General Public License as published by
-+ *	the Free Software Foundation; either version 2 of the License, or
-+ *	(at your option) any later version.
-+ *
-+ *	This program is distributed in the hope that it will be useful,
-+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-+ *	GNU General Public License for more details.
-+ *
-+ *	You should have received a copy of the GNU General Public License
-+ *	along with this program; if not, write to the
-+ *	Free Software Foundation, Inc.,
-+ *	59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ */
-+
-+/*	Module: rt2800mmio
-+ *	Abstract: forward declarations for the rt2800mmio module.
-+ */
-+
-+#ifndef RT2800MMIO_H
-+#define RT2800MMIO_H
-+
-+#endif /* RT2800MMIO_H */
--- 
-1.7.10
+John,
+
+Last one from me for today! :-)
+
+In this round for mac80211-next I have:
+ * mesh channel switch support
+ * a CCM rewrite, using potential hardware offloads
+ * SMPS for AP mode
+ * RF-kill GPIO driver updates to make it usable as an ACPI driver
+ * regulatory improvements
+ * documentation fixes
+ * DFS for IBSS mode
+ * and a few small other improvements
+
+Let me know if there's any problem.
+
+johannes
+
+
+The following changes since commit 7578d57520f51093f590d68e16965e2714e69747=
+:
+
+  mac80211: implement STA CSA for drivers using channel contexts (2013-10-0=
+2 18:18:23 +0200)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git for=
+-john
+
+for you to fetch changes up to ed31c4f96ca164294fd9e20e9de868130d0d76de:
+
+  mac80211: process mesh channel switching using beacon (2013-10-18 16:27:0=
+4 +0200)
+
+----------------------------------------------------------------
+Ard Biesheuvel (1):
+      mac80211: port CCMP to cryptoapi's CCM driver
+
+Chun-Yeow Yeoh (5):
+      mac80211: refactor the parsing of chan switch ie
+      mac80211: process the CSA frame for mesh accordingly
+      {nl,cfg,mac}80211: enable the triggering of CSA frame in mesh
+      {nl,cfg,mac}80211: implement mesh channel switch userspace API
+      mac80211: process mesh channel switching using beacon
+
+Emmanuel Grumbach (1):
+      mac80211: implement SMPS for AP
+
+Felix Fietkau (1):
+      mac80211: add ieee80211_tx_prepare_skb() helper function
+
+Heikki Krogerus (5):
+      net: rfkill: gpio: convert to resource managed allocation
+      net: rfkill: gpio: clean up clock handling
+      net: rfkill: gpio: spinlock-safe GPIO access
+      net: rfkill: gpio: prepare for DT and ACPI support
+      net: rfkill: gpio: add ACPI support
+
+Johannes Berg (2):
+      mac80211: add missing IEEE80211_HW_SUPPORTS_HT_CCK_RATES docs
+      cfg80211: fix docbook references
+
+Luis R. Rodriguez (5):
+      cfg80211: fix nl80211.h documentation for DFS enum states
+      cfg80211: rename regulatory_hint_11d() to regulatory_hint_country_ie(=
+)
+      cfg80211: enable regulatory hints for strict custom settings
+      cfg80211: simplify strict custom alpha2 regdomain check
+      cfg80211: export reg_initiator_name()
+
+Marco Porsch (1):
+      mac80211: fixes for mesh powersave logic
+
+Seth Forshee (1):
+      mac80211: Remove check for offchannel state when waking netdev queues
+
+Simon Wunderlich (2):
+      nl80211/cfg80211: enable DFS for IBSS mode
+      mac80211: enable DFS for IBSS mode
+
+Sunil Dutt (1):
+      cfg80211: pass station supported channel and oper class info
+
+ Documentation/DocBook/80211.tmpl |   4 +-
+ include/linux/ieee80211.h        |  20 +++
+ include/net/cfg80211.h           |  23 +++
+ include/net/mac80211.h           |  18 +++
+ include/uapi/linux/nl80211.h     |  27 +++-
+ net/mac80211/Kconfig             |  12 ++
+ net/mac80211/aes_ccm.c           | 169 ++++++++--------------
+ net/mac80211/aes_ccm.h           |  14 +-
+ net/mac80211/cfg.c               | 136 +++++++++++++++++-
+ net/mac80211/debug.h             |  10 ++
+ net/mac80211/debugfs_netdev.c    |  25 ++--
+ net/mac80211/ht.c                |  41 ++++--
+ net/mac80211/ibss.c              | 116 +++++++--------
+ net/mac80211/ieee80211_i.h       |  50 +++++--
+ net/mac80211/iface.c             |   2 +
+ net/mac80211/key.h               |   2 +-
+ net/mac80211/mesh.c              | 302 +++++++++++++++++++++++++++++++++++=
++++-
+ net/mac80211/mesh_plink.c        |   3 +-
+ net/mac80211/mesh_ps.c           |  33 +++--
+ net/mac80211/mlme.c              |  34 +++--
+ net/mac80211/rx.c                |   5 +-
+ net/mac80211/spectmgmt.c         |  33 +++--
+ net/mac80211/sta_info.c          |  72 ++++++++++
+ net/mac80211/sta_info.h          |   5 +
+ net/mac80211/status.c            |  31 ++--
+ net/mac80211/tx.c                |  45 ++++++
+ net/mac80211/util.c              | 124 +++++++++++++++-
+ net/mac80211/wpa.c               |  44 +++---
+ net/rfkill/Kconfig               |   2 +-
+ net/rfkill/rfkill-gpio.c         | 211 +++++++++++++--------------
+ net/wireless/chan.c              |   3 +-
+ net/wireless/ibss.c              |  24 +++-
+ net/wireless/nl80211.c           |  58 +++++++-
+ net/wireless/reg.c               |  39 +++--
+ net/wireless/reg.h               |   4 +-
+ net/wireless/sme.c               |   4 +-
+ net/wireless/util.c              |  14 +-
+ 37 files changed, 1300 insertions(+), 459 deletions(-)
+
+
+--=-imhUhaIgUV0exQUiiqp6
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJSYUZUAAoJEDBSmw7B7bqrLXgP/3Nvjuw/1jXaPocVoNBVCzw4
+u/vqNYtiWSI1anMTkAVmNCuhYqlW7IcNCvEAN/9MxKZLCdLiA2UZhDc1eH6916MC
++Gjr9JtyM3XCpFH1Ew+ojcrdyAHbbxSOTyp9YXMP3ilh43eYKpjJ7E9/aLrFU8Ht
+nmhtylPUVW0nRLI/g0eSVTpmXXi6+9kfEJl6//v+Dj901UE7T9DMRRcXtirB9BtL
+lxT6NWuavkAK0CpDD/lstISQ4pRClGQ9GUs+Zy3BQxLnBUNxeMja4ge8CVrZWMH+
+pm/FaLILM1geT1nVVyjRJUQJRSvJZj3RVt5/nSOBrEbDinmkpfVkBHLzogtd7uBk
+usPZydYRPzcRlxDKtObVQqxm/KDYUv3cDFpIJ9MR1CUDYQhamC6L29fmtfkvIEN0
+K5bn5Y9l81hDFq/GWB2RpPWPnS061EJywLYT8zQRhuZ1e3HQ4ldCKnae6lOUR13C
+rI1XgEywKSFSRN5ZoWZhih5gmtyzum1gTqgsmTxZyhHmUfosWyEF46r6t9S9njZT
+h1qgKYSboMLFqfcXEBtxFRfnEUHKsDZymW/sFBCX1FH/5bL4RYH3ygDz1nYD/b30
+HdCCvHOf32nWWbeQPWaBJn4fj6RFGtOuCiA1JHM1576hmEoXnUmZ4ujJ8g87pVrh
+1XTwxi5wxCoq+LJJPKF0
+=T8SJ
+-----END PGP SIGNATURE-----
+
+--=-imhUhaIgUV0exQUiiqp6--
+
