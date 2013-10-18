@@ -1,33 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:52176 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752524Ab3JIOPi (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42178 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756397Ab3JRSPX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Oct 2013 10:15:38 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: fix ath10k_debug_start() locking
-References: <20131008184525.32604.64051.stgit@localhost6.localdomain6>
-Date: Wed, 9 Oct 2013 17:15:32 +0300
-In-Reply-To: <20131008184525.32604.64051.stgit@localhost6.localdomain6> (Kalle
-	Valo's message of "Tue, 08 Oct 2013 21:45:25 +0300")
-Message-ID: <87k3hmo7i3.fsf@kamboji.qca.qualcomm.com> (sfid-20131009_161541_968313_35BC6C6F)
+	Fri, 18 Oct 2013 14:15:23 -0400
+Date: Fri, 18 Oct 2013 14:00:21 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+	Linux NFC <linux-nfc@ml01.01.org>
+Subject: Re: [GIT] [3.13] NFC updates
+Message-ID: <20131018180021.GF28130@tuxdriver.com> (sfid-20131018_201532_117291_01BEC430)
+References: <20131015161917.GF30191@zurbaran>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131015161917.GF30191@zurbaran>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+On Tue, Oct 15, 2013 at 06:19:17PM +0200, Samuel Ortiz wrote:
+> Hi John,
+> 
+> This is the first NFC pull request for the 3.13 kernel.
+> 
+> It's a fairly big one, with the following highlights:
+> 
+> - NFC digital layer implementation: Most NFC chipsets implement the NFC
+>   digital layer in firmware, but others have more basic functionalities
+>   and expect the host to implement the digital layer. This layer sits
+>   below the NFC core.
+> 
+> - Sony's port100 support: This is "soft" NFC USB dongle that expects the
+>   digital layer to be implemented on the host. This is the first user of
+>   our NFC digital stack implementation.
+> 
+> - Secure element API: We now provide a netlink API for enabling,
+>   disabling and discovering NFC attached (embedded or UICC ones) secure
+>   elements. With some userspace help, this allows us to support NFC
+>   payments.
+>   Only the pn544 driver currently supports that API.
+> 
+> - NCI SPI fixes and improvements: In order to support NCI devices over
+>   SPI, we fixed and improved our NCI/SPI implementation. The currently
+>   most deployed NFC NCI chipset, Broadcom's bcm2079x, supports that mode
+>   and we're planning to use our NCI/SPI framework to implement a
+>   driver for it.
+> 
+> - pn533 fragmentation support in target mode: This was the only missing
+>   feature from our pn533 impementation. We now support fragmentation in
+>   both Tx and Rx modes, in target mode.
+> 
+> The following changes since commit b75ff5e84bb6c2d43a8ec39b240c80f0543821f0:
+> 
+>   Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net (2013-09-19 13:57:28 -0500)
+> 
+> are available in the git repository at:
+> 
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-next.git tags/nfc-next-3.13-1
+> 
+> for you to fetch changes up to ddc1a70b5f2a07a932ed31f989d63937bb813439:
+> 
+>   NFC: Fix SE API related sparse warning (2013-10-07 14:18:44 +0200)
 
-> ath10k_debug_start() was not called with conf_mutex, fix that. Also there was a
-> deadlock in ath10k_debug_stop(), rename it to ath10k_debug_destroy() and call
-> it only when the device is destroyed.
->
-> Reported-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-
-Applied.
+Pulling now...
 
 -- 
-Kalle Valo
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
