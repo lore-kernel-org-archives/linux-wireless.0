@@ -1,49 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:37194 "EHLO
-	mail.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751107Ab3JRH5R (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:41853 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756783Ab3JRRpm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Oct 2013 03:57:17 -0400
-Message-ID: <5260E9F4.2070204@openwrt.org> (sfid-20131018_095720_827969_98EA0966)
-Date: Fri, 18 Oct 2013 09:57:40 +0200
-From: Gabor Juhos <juhosg@openwrt.org>
+	Fri, 18 Oct 2013 13:45:42 -0400
+Date: Fri, 18 Oct 2013 13:36:24 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211 2013-10-18
+Message-ID: <20131018173624.GB28130@tuxdriver.com> (sfid-20131018_194545_607727_ABF86381)
+References: <1382105667.14393.5.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>
-Subject: Re: [PATCH 00/21] rt2x00: separate rt2800 PCI and SoC driver
-References: <1381995755-16471-1-git-send-email-juhosg@openwrt.org> <CAGXE3d_HZZrEspONsjoqGrynGKYN9pisX-jgRZdV760uuVq5cQ@mail.gmail.com>
-In-Reply-To: <CAGXE3d_HZZrEspONsjoqGrynGKYN9pisX-jgRZdV760uuVq5cQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1382105667.14393.5.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Helmut,
-
-> On Thu, Oct 17, 2013 at 9:42 AM, Gabor Juhos <juhosg@openwrt.org> wrote:
->> The rt2800pci driver supports both PCI and SoC device. To achieve
->> this, the code uses several ifdef statements which makes the code
->> quite ugly. The patch set introduces a shared module, and moves the
->> SoC driver into a separate module to get rid of the mess.
+On Fri, Oct 18, 2013 at 04:14:27PM +0200, Johannes Berg wrote:
+> John,
 > 
-> Nice series. Does this also reduce module size on when building for
-> SoC without PCI support?
+> I'm flushing out patches ... one more for mac80211.
+> 
+> This time I have two fixes for P2P (which requires not using CCK rates)
+> and a workaround for APs with broken WMM information.
+> 
+> Let me know if there's any problem.
+> 
+> johannes
+> 
+> 
+> The following changes since commit d86aa4f8ca58898ec6a94c0635da20b948171ed7:
+> 
+>   mac80211: fix crash if bitrate calculation goes wrong (2013-10-14 09:47:08 +0200)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
+> 
+> for you to fetch changes up to 095d81cee742fc31e1218077ca6ca8f0df07c613:
+> 
+>   mac80211: disable WMM with invalid parameters (2013-10-17 15:38:22 +0200)
 
-Nope. On the contrary, there is a small increase due to the new rt2800mmio
-module (compiled for RT305x SoCs):
+Pulling now...
 
-before:
-   text    data     bss     dec     hex filename
-   7232      96      16    7344    1cb0 rt2800pci.o
-
-after:
-   text    data     bss     dec     hex filename
-   1934     100      16    2050     802 rt2800soc.o
-   5664       0       0    5664    1620 rt2800mmio.o
-
-delta:
-   +366      +4       0    +370
-
--Gabor
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
