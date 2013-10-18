@@ -1,87 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:5438 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932467Ab3JOL6O (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Oct 2013 07:58:14 -0400
-From: Kefeng Wang <wangkefeng.wang@huawei.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Pablo Neira Ayuso <pablo@netfilter.org>,
-	"Stephen Hemminger" <stephen@networkplumber.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Francois Romieu <romieu@fr.zoreil.com>,
-	"Ben Hutchings" <bhutchings@solarflare.com>,
-	Chas Williams <chas@cmf.nrl.navy.mil>,
-	Marc Kleine-Budde <mkl@pengutronix.de>,
-	Samuel Ortiz <samuel@sortiz.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Oliver Neukum <oneukum@suse.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	"Boris Ostrovsky" <boris.ostrovsky@oracle.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	"Michael S. Tsirkin" <mst@redhat.com>, <netfilter@vger.kernel.org>,
-	<netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	<guohanjun@huawei.com>
-Subject: [PATCH 13/18] net: ppp: use wrapper functions of net_ratelimit() to simplify code
-Date: Tue, 15 Oct 2013 19:45:09 +0800
-Message-ID: <1381837514-50660-14-git-send-email-wangkefeng.wang@huawei.com> (sfid-20131015_140207_521021_CB334DC2)
-In-Reply-To: <1381837514-50660-1-git-send-email-wangkefeng.wang@huawei.com>
-References: <1381837514-50660-1-git-send-email-wangkefeng.wang@huawei.com>
+Received: from mout.gmx.net ([212.227.17.20]:51397 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750797Ab3JRFaE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Oct 2013 01:30:04 -0400
+Received: from [192.168.0.100] ([93.218.112.150]) by mail.gmx.com (mrgmx003)
+ with ESMTPSA (Nemesis) id 0M4nM5-1VwQfn1M2H-00ywRt for
+ <linux-wireless@vger.kernel.org>; Fri, 18 Oct 2013 07:30:02 +0200
+Message-ID: <5260C759.6000801@rempel-privat.de> (sfid-20131018_073034_220417_9D7EA3BF)
+Date: Fri, 18 Oct 2013 07:30:01 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: =?UTF-8?B?QW5kcsOpIE1hcnRpbnM=?= <sna7e_7@hotmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RTL8723AE] Driver problems
+References: <BLU0-SMTP28669C5469915F5D8D155AF89060@phx.gbl>
+In-Reply-To: <BLU0-SMTP28669C5469915F5D8D155AF89060@phx.gbl>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-net_ratelimited_function() is called to simplify code.
+Am 18.10.2013 02:55, schrieb André Martins:
+> Hi!
+> This is a copy I've sent to Larry Finger and his bot told me to sent to
+> this e-mail address instead.
+> Basically I've bought a computer with the 8723ae card and unfortunately the
+> wireless connection is really bad. Although I'm a last year student on
+> MSc in
+> computers and telematics engineering I don't have any skills what so
+> ever on
+> kernel's source code. Thus, I want to ask you if you could help me out
+> and tell
+> me where to begin to fix this and create a great rtl8723ae driver for
+> Linux. I
+> could help you with the tests what whatever I could. The main problem
+> with this
+> card is the connection on my university, it's always dropping and
+> impossible to
+> have a stable connection. On my house I'm a few meters way of my AP and
+> the link
+> quality is either on 38/70 or 70/70.
+> Since you take the time to read this e-mail I thank you already.
+> Thanks,
+> André Martins
 
-Signed-off-by: Kefeng Wang <wangkefeng.wang@huawei.com>
----
- drivers/net/ppp/ppp_generic.c | 11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+Hi André,
 
-diff --git a/drivers/net/ppp/ppp_generic.c b/drivers/net/ppp/ppp_generic.c
-index 72ff14b..53900cd 100644
---- a/drivers/net/ppp/ppp_generic.c
-+++ b/drivers/net/ppp/ppp_generic.c
-@@ -1125,8 +1125,8 @@ pad_compress_skb(struct ppp *ppp, struct sk_buff *skb)
- 		ppp->xcomp->comp_extra + PPP_HDRLEN;
- 	new_skb = alloc_skb(new_skb_size, GFP_ATOMIC);
- 	if (!new_skb) {
--		if (net_ratelimit())
--			netdev_err(ppp->dev, "PPP: no memory (comp pkt)\n");
-+		net_ratelimited_function(netdev_err, ppp->dev,
-+			"PPP: no memory (comp pkt)\n");
- 		return NULL;
- 	}
- 	if (ppp->dev->hard_header_len > PPP_HDRLEN)
-@@ -1155,8 +1155,8 @@ pad_compress_skb(struct ppp *ppp, struct sk_buff *skb)
- 		 * the compress_proto because MPPE and MPPC share
- 		 * the same number.
- 		 */
--		if (net_ratelimit())
--			netdev_err(ppp->dev, "ppp: compressor dropped pkt\n");
-+		net_ratelimited_function(netdev_err, ppp->dev,
-+			"ppp: compressor dropped pkt\n");
- 		kfree_skb(skb);
- 		consume_skb(new_skb);
- 		new_skb = NULL;
-@@ -1251,8 +1251,7 @@ ppp_send_frame(struct ppp *ppp, struct sk_buff *skb)
- 	if ((ppp->xstate & SC_COMP_RUN) && ppp->xc_state &&
- 	    proto != PPP_LCP && proto != PPP_CCP) {
- 		if (!(ppp->flags & SC_CCP_UP) && (ppp->flags & SC_MUST_COMP)) {
--			if (net_ratelimit())
--				netdev_err(ppp->dev,
-+			net_ratelimited_function(netdev_err, ppp->dev,
- 					   "ppp: compression required but "
- 					   "down - pkt dropped.\n");
- 			goto drop;
+start with googling for "linux wlan troubleshooting".
+Use latest kernel wifi source code:
+https://git.kernel.org/cgit/linux/kernel/git/linville/wireless-next.git/
+
+If you can compile kernel by your self, then you can do some changes on
+kernel. See how driver works, add "printk("%s:%i\ņ", __func__,
+__LINE__);" every where and monitore dmesg. The driver is located here:
+linux/drivers/net/wireless/rtlwifi/rtl8723ae
+
+If you wont to help with this driver, do not fear to brake you kernel ;)
 -- 
-1.8.2.1
-
-
+Regards,
+Oleksij
