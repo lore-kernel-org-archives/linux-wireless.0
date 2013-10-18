@@ -1,91 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:56594 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751585Ab3JATTq (ORCPT
+Received: from smtprelay0205.hostedemail.com ([216.40.44.205]:41060 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750802Ab3JREL0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Oct 2013 15:19:46 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-bluetooth@vger.kernel.org>
-CC: Marcel Holtmann <marcel@holtmann.org>,
-	Gustavo Padovan <gustavo@padovan.org>,
-	Johan Hedberg <johan.hedberg@gmail.com>,
-	<linux-wireless@vger.kernel.org>,
-	Mike Frysinger <vapier@chromium.org>,
-	Hyuckjoo Lee <hyuckjoo.lee@samsung.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH v6 2/4] Bluetooth: btmrvl: get rid of struct btmrvl_cmd
-Date: Tue, 1 Oct 2013 12:19:13 -0700
-Message-ID: <1380655155-10007-3-git-send-email-bzhao@marvell.com> (sfid-20131001_211951_832280_B9C947A5)
-In-Reply-To: <1380655155-10007-1-git-send-email-bzhao@marvell.com>
-References: <1380655155-10007-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 18 Oct 2013 00:11:26 -0400
+Message-ID: <1382069482.22110.164.camel@joe-AO722> (sfid-20131018_061145_669214_AD943076)
+Subject: Re: [PATCH 00/23 v2] cleanup: introduce
+ br/netdev/netif/wiphy_<foo>_ratelimited() and use them to simplify code
+From: Joe Perches <joe@perches.com>
+To: Kefeng Wang <wangkefeng.wang@huawei.com>
+Cc: linux-kernel@vger.kernel.org, netfilter@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Date: Thu, 17 Oct 2013 21:11:22 -0700
+In-Reply-To: <1382068363-10088-1-git-send-email-wangkefeng.wang@huawei.com>
+References: <1382068363-10088-1-git-send-email-wangkefeng.wang@huawei.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+(resending to lists only because of multiple X's in the subject line)
 
-Replace this proprietary structure with the standard one
-(struct hci_command_hdr).
+On Fri, 2013-10-18 at 11:52 +0800, Kefeng Wang wrote:
+> v1-v2:
+> 
+>   Introduce macro br/netdev/netif/wiphy_XXX_ratelimited() according
+>   to Joe Perches's advice. The macros are similar to net_XXX_ratelimited()
+>   which is more clarifying than net_ratelimited_function(), then use them
+>   to simplify code.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
-v6: remove proprietary struct btmrvl_cmd
+There are some conceptual differences between these
+implementations and other <foo>_ratelimited uses.
 
- drivers/bluetooth/btmrvl_drv.h  |  6 ------
- drivers/bluetooth/btmrvl_main.c | 12 ++++++------
- 2 files changed, 6 insertions(+), 12 deletions(-)
+For every other subsystem but net, there is a per-location
+struct ratelimit_state.
 
-diff --git a/drivers/bluetooth/btmrvl_drv.h b/drivers/bluetooth/btmrvl_drv.h
-index 27068d1..42f7028 100644
---- a/drivers/bluetooth/btmrvl_drv.h
-+++ b/drivers/bluetooth/btmrvl_drv.h
-@@ -116,12 +116,6 @@ struct btmrvl_private {
- #define PS_SLEEP			0x01
- #define PS_AWAKE			0x00
- 
--struct btmrvl_cmd {
--	__le16 ocf_ogf;
--	u8 length;
--	u8 data[4];
--} __packed;
--
- struct btmrvl_event {
- 	u8 ec;		/* event counter */
- 	u8 length;
-diff --git a/drivers/bluetooth/btmrvl_main.c b/drivers/bluetooth/btmrvl_main.c
-index d9d4229..a4da7c8 100644
---- a/drivers/bluetooth/btmrvl_main.c
-+++ b/drivers/bluetooth/btmrvl_main.c
-@@ -170,20 +170,20 @@ static int btmrvl_send_sync_cmd(struct btmrvl_private *priv, u16 cmd_no,
- 				const void *param, u8 len)
- {
- 	struct sk_buff *skb;
--	struct btmrvl_cmd *cmd;
-+	struct hci_command_hdr *hdr;
- 
--	skb = bt_skb_alloc(sizeof(*cmd), GFP_ATOMIC);
-+	skb = bt_skb_alloc(HCI_COMMAND_HDR_SIZE + len, GFP_ATOMIC);
- 	if (skb == NULL) {
- 		BT_ERR("No free skb");
- 		return -ENOMEM;
- 	}
- 
--	cmd = (struct btmrvl_cmd *) skb_put(skb, sizeof(*cmd));
--	cmd->ocf_ogf = cpu_to_le16(hci_opcode_pack(OGF, cmd_no));
--	cmd->length = len;
-+	hdr = (struct hci_command_hdr *)skb_put(skb, HCI_COMMAND_HDR_SIZE);
-+	hdr->opcode = cpu_to_le16(hci_opcode_pack(OGF, cmd_no));
-+	hdr->plen = len;
- 
- 	if (len)
--		memcpy(cmd->data, param, len);
-+		memcpy(skb_put(skb, len), param, len);
- 
- 	bt_cb(skb)->pkt_type = MRVL_VENDOR_PKT;
- 
--- 
-1.8.0
+Here you've made the global net_ratelimit_state replace all
+of these individual structs so there is some new interaction.
+
+Dunno if that's good or bad.
+
+
 
