@@ -1,42 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f52.google.com ([209.85.215.52]:49044 "EHLO
-	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753347Ab3JUMvz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Oct 2013 08:51:55 -0400
-Received: by mail-la0-f52.google.com with SMTP id eh20so475182lab.25
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Oct 2013 05:51:52 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:52819 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751961Ab3JRJqR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Oct 2013 05:46:17 -0400
+Date: Fri, 18 Oct 2013 11:42:39 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH 3.12] rt2800usb: slow down TX status polling
+Message-ID: <20131018094238.GA7506@redhat.com> (sfid-20131018_114621_366974_84D42A91)
+References: <20131017100431.GA9603@redhat.com>
+ <525FF68A.8030806@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <87wql7tac9.fsf@purkki.adurom.net>
-References: <CAA2SeNJRSPB=Hus8y1bYJ-O1Hgkd=gvNhUKnF9atqwuhd2m0aA@mail.gmail.com>
- <CAB=NE6WSNZ10pNfKN5-o0cnVYkZbt4gGAzPOcO=Dtw5aUj+wGA@mail.gmail.com> <87wql7tac9.fsf@purkki.adurom.net>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Mon, 21 Oct 2013 14:51:32 +0200
-Message-ID: <CAB=NE6U94K_KvhcPUvPL+S25Nw5J1Y300ASADa7C6-J_pBEW3A@mail.gmail.com> (sfid-20131021_145158_564657_17DA4DAE)
-Subject: Re: Active scanning on DFS channels
-To: Kalle Valo <kvalo@adurom.com>
-Cc: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <525FF68A.8030806@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 21, 2013 at 8:19 AM, Kalle Valo <kvalo@adurom.com> wrote:
-> "Luis R. Rodriguez" <mcgrof@do-not-panic.com> writes:
->
->>> Should we perform
->>> passive scan on radar channel setting new state to SCAN_DECISION and
->>> not to SCAN_SEND_PROBE in ieee80211_scan_state_set_channel()?
->>
->> There's a few thing we need to do and I'm working on it.
->>
->>   1) no-ibss and passive-scan flags should be merged to a no-ir flag
->
-> For me IR always reminds of infrared, so the name no-ir is a bit vague
-> to me :)
+On Thu, Oct 17, 2013 at 09:39:06AM -0500, Larry Finger wrote:
+> I suggest getting rid of the magic numbers as long as you are making
+> this change. A single define could handle the delay time for the two
+> cases.
 
-Any recommendations? I'm just lazy.
+Thanks for sugestion Larry, though I do not see clear benefit of
+introduce define since those magic numbers are just time values
+expressed in nano seconds. Anyway patch with define added below.
+John can pick it, if he thinks it is better.
 
- Luis
+Stanislaw
+---
+>From 813e0bde7340bad7d3401c6aa2a3f8635ec49597 Mon Sep 17 00:00:00 2001
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+Date: Fri, 18 Oct 2013 11:36:54 +0200
+Subject: [PATCH] rt2800usb: slow down TX status polling
+
+Polling TX statuses too frequently has two negative effects. First is
+randomly peek CPU usage, causing overall system functioning delays.
+Second bad effect is that device is not able to fill TX statuses in
+H/W register on some workloads and we get lot of timeouts like below:
+
+ieee80211 phy4: rt2800usb_entry_txstatus_timeout: Warning - TX status timeout for entry 7 in queue 2
+ieee80211 phy4: rt2800usb_entry_txstatus_timeout: Warning - TX status timeout for entry 7 in queue 2
+ieee80211 phy4: rt2800usb_txdone: Warning - Got TX status for an empty queue 2, dropping
+
+This not only cause flood of messages in dmesg, but also bad throughput,
+since rate scaling algorithm can not work optimally.
+
+In the future, we should probably make polling interval be adjusted
+automatically, but for now just increase values, this make mentioned
+problems gone.
+
+Resolve:
+https://bugzilla.kernel.org/show_bug.cgi?id=62781
+
+Cc: stable@vger.kernel.org
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/rt2x00/rt2800usb.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index 96677ce5..997df03 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -148,6 +148,8 @@ static bool rt2800usb_txstatus_timeout(struct rt2x00_dev *rt2x00dev)
+ 	return false;
+ }
+ 
++#define TXSTATUS_READ_INTERVAL 1000000
++
+ static bool rt2800usb_tx_sta_fifo_read_completed(struct rt2x00_dev *rt2x00dev,
+ 						 int urb_status, u32 tx_status)
+ {
+@@ -176,8 +178,9 @@ static bool rt2800usb_tx_sta_fifo_read_completed(struct rt2x00_dev *rt2x00dev,
+ 		queue_work(rt2x00dev->workqueue, &rt2x00dev->txdone_work);
+ 
+ 	if (rt2800usb_txstatus_pending(rt2x00dev)) {
+-		/* Read register after 250 us */
+-		hrtimer_start(&rt2x00dev->txstatus_timer, ktime_set(0, 250000),
++		/* Read register after 1 ms */
++		hrtimer_start(&rt2x00dev->txstatus_timer,
++			      ktime_set(0, TXSTATUS_READ_INTERVAL),
+ 			      HRTIMER_MODE_REL);
+ 		return false;
+ 	}
+@@ -202,8 +205,9 @@ static void rt2800usb_async_read_tx_status(struct rt2x00_dev *rt2x00dev)
+ 	if (test_and_set_bit(TX_STATUS_READING, &rt2x00dev->flags))
+ 		return;
+ 
+-	/* Read TX_STA_FIFO register after 500 us */
+-	hrtimer_start(&rt2x00dev->txstatus_timer, ktime_set(0, 500000),
++	/* Read TX_STA_FIFO register after 2 ms */
++	hrtimer_start(&rt2x00dev->txstatus_timer,
++		      ktime_set(0, 2*TXSTATUS_READ_INTERVAL),
+ 		      HRTIMER_MODE_REL);
+ }
+ 
+-- 
+1.8.3.1
+
