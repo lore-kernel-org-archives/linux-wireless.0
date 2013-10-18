@@ -1,40 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:39746 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759586Ab3JOSql (ORCPT
+Received: from mail-yh0-f43.google.com ([209.85.213.43]:36830 "EHLO
+	mail-yh0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757226Ab3JRWUh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Oct 2013 14:46:41 -0400
-Subject: [PATCH 0/7] ath10k: fix WMI atomic usage
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 15 Oct 2013 21:46:37 +0300
-Message-ID: <20131015184548.14123.56949.stgit@localhost6.localdomain6> (sfid-20131015_204644_766595_761D2804)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Fri, 18 Oct 2013 18:20:37 -0400
+From: Felipe Pena <felipensp@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Felipe Pena <felipensp@gmail.com>
+Subject: [PATCH 1/1] drivers: net: wireless: rtlwifi: Fix wrong assignment
+Date: Fri, 18 Oct 2013 19:15:38 -0300
+Message-Id: <1382134538-3719-1-git-send-email-felipensp@gmail.com> (sfid-20131019_002057_969022_00C9AD6D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some WMI calls were made in atomic contex, these patches fix
-those. Please review.
+There is a typo in the struct member name on assignment when checking
+rtlphy->current_chan_bw == HT_CHANNEL_WIDTH_20_40, the check uses pwrgroup_ht40
+for bound limit and uses pwrgroup_ht20 when assigning instead.
 
+Signed-off-by: Felipe Pena <felipensp@gmail.com>
 ---
+ drivers/net/wireless/rtlwifi/rtl8192se/rf.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Kalle Valo (2):
-      ath10k: fix ath10k_bss_assoc() to not sleep in atomic context
-      ath10k: add might_sleep() to ath10k_wmi_cmd_send()
-
-Michal Kazior (5):
-      ath10k: use workqueue to set WEP TX key
-      ath10k: fix add_interface failure handling
-      ath10k: track vif list internally
-      ath10k: fix scheduling while atomic config bug
-      ath10k: remove unnecessary checks
-
-
- drivers/net/wireless/ath/ath10k/core.c |    2 
- drivers/net/wireless/ath/ath10k/core.h |    7 +
- drivers/net/wireless/ath/ath10k/mac.c  |  312 +++++++++++++++++---------------
- drivers/net/wireless/ath/ath10k/wmi.c  |    2 
- 4 files changed, 178 insertions(+), 145 deletions(-)
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/rf.c b/drivers/net/wireless/rtlwifi/rtl8192se/rf.c
+index 5061f1d..92d38ab 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192se/rf.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192se/rf.c
+@@ -265,7 +265,7 @@ static void _rtl92s_get_txpower_writeval_byregulatory(struct ieee80211_hw *hw,
+ 				    rtlefuse->pwrgroup_ht40
+ 				    [RF90_PATH_A][chnl - 1]) {
+ 					pwrdiff_limit[i] =
+-					  rtlefuse->pwrgroup_ht20
++					  rtlefuse->pwrgroup_ht40
+ 					  [RF90_PATH_A][chnl - 1];
+ 				}
+ 			} else {
+-- 
+1.7.10.4
 
