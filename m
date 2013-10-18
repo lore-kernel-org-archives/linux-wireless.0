@@ -1,118 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.7]:27470 "EHLO mx3.wp.pl"
+Received: from mout.gmx.net ([212.227.15.19]:58358 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932270Ab3JOM3p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Oct 2013 08:29:45 -0400
-Received: from ip-94-112-189-223.net.upcbroadband.cz (HELO localhost) (stf_xl@wp.pl@[94.112.189.223])
-          (envelope-sender <stf_xl@wp.pl>)
-          by smtp.wp.pl (WP-SMTPD) with AES128-SHA encrypted SMTP
-          for <linux-wireless@vger.kernel.org>; 15 Oct 2013 14:29:41 +0200
-Date: Tue, 15 Oct 2013 14:31:12 +0200
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-To: linux-wireless@vger.kernel.org
-Cc: users@rt2x00.serialmonkey.com
-Subject: [PATCH 3.12] rt2x00: check if device is still available on
- rt2x00mac_flush()
-Message-ID: <20131015123112.GB6417@localhost.localdomain> (sfid-20131015_142948_735412_D35A566B)
+	id S1750797Ab3JRPHK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Oct 2013 11:07:10 -0400
+Received: from [192.168.0.103] ([93.218.112.150]) by mail.gmx.com (mrgmx003)
+ with ESMTPSA (Nemesis) id 0MgtWa-1VJw6u2Prc-00M7KG for
+ <linux-wireless@vger.kernel.org>; Fri, 18 Oct 2013 17:07:08 +0200
+Message-ID: <52614E9B.6040400@rempel-privat.de> (sfid-20131018_170715_891026_4DB02EBF)
+Date: Fri, 18 Oct 2013 17:07:07 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Alan Stern <stern@rowland.harvard.edu>,
+	=?UTF-8?B?WWFubmlrIFbDtmxrZXI=?= <yannikv@yahoo.de>
+CC: Pontus Fuchs <pontus.fuchs@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: ar5523 Gigaset USB Adapter 108 issue
+References: <Pine.LNX.4.44L0.1310181041080.1164-100000@iolanthe.rowland.org>
+In-Reply-To: <Pine.LNX.4.44L0.1310181041080.1164-100000@iolanthe.rowland.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix random kernel panic with below messages when remove dongle.
+Am 18.10.2013 16:49, schrieb Alan Stern:
+> Yannik, you should always use Reply-To-All so that your messages get 
+> sent to the mailing list and not just to me.
+> 
+> On Thu, 17 Oct 2013, Yannik Völker wrote:
+> 
+>> Am 07.08.2013 19:34, schrieb Alan Stern:
+>>> Please post two usbmon traces, one showing the failure on your
+>>> current system and the other showing the adapter running correctly
+>>> under a 32-bit kernel.  Instructions for usbmon are in the kernel
+>>> source file Documentation/usb/usbmon.txt.
+>> I never got it to work under a 32-bit kernel, i was just able to utilize
+>> a windows32 driver using ndiswrapper.
+>>
+>> Now i got it to "work". I randomly found out that the ar5523 driver
+>> actually works when you load it after you unload ndiswrapper so the
+>> following steps make it work:
+>> 1. modprobe ndiswrapper
+>> 2. plug in device
+>> 3. connect to wlan using ndiswrapper and disconnect again (might be
+>> optional)
+>> 4. modprobe -r ndiswrapper
+>> 5. modprobe ar5523
+>> 6. connect to wlan
+>> log for that is attatched as wlanthennative2.log
 
-[ 2212.355447] BUG: unable to handle kernel NULL pointer dereference at 0000000000000250
-[ 2212.355527] IP: [<ffffffffa02667f2>] rt2x00usb_kick_tx_entry+0x12/0x160 [rt2x00usb]
-[ 2212.355599] PGD 0
-[ 2212.355626] Oops: 0000 [#1] SMP
-[ 2212.355664] Modules linked in: rt2800usb rt2x00usb rt2800lib crc_ccitt rt2x00lib mac80211 cfg80211 tun arc4 fuse rfcomm bnep snd_hda_codec_realtek snd_hda_intel snd_hda_codec btusb uvcvideo bluetooth snd_hwdep x86_pkg_temp_thermal snd_seq coretemp aesni_intel aes_x86_64 snd_seq_device glue_helper snd_pcm ablk_helper videobuf2_vmalloc sdhci_pci videobuf2_memops videobuf2_core sdhci videodev mmc_core serio_raw snd_page_alloc microcode i2c_i801 snd_timer hid_multitouch thinkpad_acpi lpc_ich mfd_core snd tpm_tis wmi tpm tpm_bios soundcore acpi_cpufreq i915 i2c_algo_bit drm_kms_helper drm i2c_core video [last unloaded: cfg80211]
-[ 2212.356224] CPU: 0 PID: 34 Comm: khubd Not tainted 3.12.0-rc3-wl+ #3
-[ 2212.356268] Hardware name: LENOVO 3444CUU/3444CUU, BIOS G6ET93WW (2.53 ) 02/04/2013
-[ 2212.356319] task: ffff880212f687c0 ti: ffff880212f66000 task.ti: ffff880212f66000
-[ 2212.356392] RIP: 0010:[<ffffffffa02667f2>]  [<ffffffffa02667f2>] rt2x00usb_kick_tx_entry+0x12/0x160 [rt2x00usb]
-[ 2212.356481] RSP: 0018:ffff880212f67750  EFLAGS: 00010202
-[ 2212.356519] RAX: 000000000000000c RBX: 000000000000000c RCX: 0000000000000293
-[ 2212.356568] RDX: ffff8801f4dc219a RSI: 0000000000000000 RDI: 0000000000000240
-[ 2212.356617] RBP: ffff880212f67778 R08: ffffffffa02667e0 R09: 0000000000000002
-[ 2212.356665] R10: 0001f95254ab4b40 R11: ffff880212f675be R12: ffff8801f4dc2150
-[ 2212.356712] R13: 0000000000000000 R14: ffffffffa02667e0 R15: 000000000000000d
-[ 2212.356761] FS:  0000000000000000(0000) GS:ffff88021e200000(0000) knlGS:0000000000000000
-[ 2212.356813] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[ 2212.356852] CR2: 0000000000000250 CR3: 0000000001a0c000 CR4: 00000000001407f0
-[ 2212.356899] Stack:
-[ 2212.356917]  000000000000000c ffff8801f4dc2150 0000000000000000 ffffffffa02667e0
-[ 2212.356980]  000000000000000d ffff880212f677b8 ffffffffa03a31ad ffff8801f4dc219a
-[ 2212.357038]  ffff8801f4dc2150 0000000000000000 ffff8800b93217a0 ffff8801f49bc800
-[ 2212.357099] Call Trace:
-[ 2212.357122]  [<ffffffffa02667e0>] ? rt2x00usb_interrupt_txdone+0x90/0x90 [rt2x00usb]
-[ 2212.357174]  [<ffffffffa03a31ad>] rt2x00queue_for_each_entry+0xed/0x170 [rt2x00lib]
-[ 2212.357244]  [<ffffffffa026701c>] rt2x00usb_kick_queue+0x5c/0x60 [rt2x00usb]
-[ 2212.357314]  [<ffffffffa03a3682>] rt2x00queue_flush_queue+0x62/0xa0 [rt2x00lib]
-[ 2212.357386]  [<ffffffffa03a2930>] rt2x00mac_flush+0x30/0x70 [rt2x00lib]
-[ 2212.357470]  [<ffffffffa04edded>] ieee80211_flush_queues+0xbd/0x140 [mac80211]
-[ 2212.357555]  [<ffffffffa0502e52>] ieee80211_set_disassoc+0x2d2/0x3d0 [mac80211]
-[ 2212.357645]  [<ffffffffa0506da3>] ieee80211_mgd_deauth+0x1d3/0x240 [mac80211]
-[ 2212.357718]  [<ffffffff8108b17c>] ? try_to_wake_up+0xec/0x290
-[ 2212.357788]  [<ffffffffa04dbd18>] ieee80211_deauth+0x18/0x20 [mac80211]
-[ 2212.357872]  [<ffffffffa0418ddc>] cfg80211_mlme_deauth+0x9c/0x140 [cfg80211]
-[ 2212.357913]  [<ffffffffa041907c>] cfg80211_mlme_down+0x5c/0x60 [cfg80211]
-[ 2212.357962]  [<ffffffffa041cd18>] cfg80211_disconnect+0x188/0x1a0 [cfg80211]
-[ 2212.358014]  [<ffffffffa04013bc>] ? __cfg80211_stop_sched_scan+0x1c/0x130 [cfg80211]
-[ 2212.358067]  [<ffffffffa03f8954>] cfg80211_leave+0xc4/0xe0 [cfg80211]
-[ 2212.358124]  [<ffffffffa03f8d1b>] cfg80211_netdev_notifier_call+0x3ab/0x5e0 [cfg80211]
-[ 2212.358177]  [<ffffffff815140f8>] ? inetdev_event+0x38/0x510
-[ 2212.358217]  [<ffffffff81085a94>] ? __wake_up+0x44/0x50
-[ 2212.358254]  [<ffffffff8155995c>] notifier_call_chain+0x4c/0x70
-[ 2212.358293]  [<ffffffff81081156>] raw_notifier_call_chain+0x16/0x20
-[ 2212.358361]  [<ffffffff814b6dd5>] call_netdevice_notifiers_info+0x35/0x60
-[ 2212.358429]  [<ffffffff814b6ec9>] __dev_close_many+0x49/0xd0
-[ 2212.358487]  [<ffffffff814b7028>] dev_close_many+0x88/0x100
-[ 2212.358546]  [<ffffffff814b8150>] rollback_registered_many+0xb0/0x220
-[ 2212.358612]  [<ffffffff814b8319>] unregister_netdevice_many+0x19/0x60
-[ 2212.358694]  [<ffffffffa04d8eb2>] ieee80211_remove_interfaces+0x112/0x190 [mac80211]
-[ 2212.358791]  [<ffffffffa04c585f>] ieee80211_unregister_hw+0x4f/0x100 [mac80211]
-[ 2212.361994]  [<ffffffffa03a1221>] rt2x00lib_remove_dev+0x161/0x1a0 [rt2x00lib]
-[ 2212.365240]  [<ffffffffa0266e2e>] rt2x00usb_disconnect+0x2e/0x70 [rt2x00usb]
-[ 2212.368470]  [<ffffffff81419ce4>] usb_unbind_interface+0x64/0x1c0
-[ 2212.371734]  [<ffffffff813b446f>] __device_release_driver+0x7f/0xf0
-[ 2212.374999]  [<ffffffff813b4503>] device_release_driver+0x23/0x30
-[ 2212.378131]  [<ffffffff813b3c98>] bus_remove_device+0x108/0x180
-[ 2212.381358]  [<ffffffff813b0565>] device_del+0x135/0x1d0
-[ 2212.384454]  [<ffffffff81417760>] usb_disable_device+0xb0/0x270
-[ 2212.387451]  [<ffffffff8140d9cd>] usb_disconnect+0xad/0x1d0
-[ 2212.390294]  [<ffffffff8140f6cd>] hub_thread+0x63d/0x1660
-[ 2212.393034]  [<ffffffff8107c860>] ? wake_up_atomic_t+0x30/0x30
-[ 2212.395728]  [<ffffffff8140f090>] ? hub_port_debounce+0x130/0x130
-[ 2212.398412]  [<ffffffff8107baa0>] kthread+0xc0/0xd0
-[ 2212.401058]  [<ffffffff8107b9e0>] ? insert_kthread_work+0x40/0x40
-[ 2212.403639]  [<ffffffff8155de3c>] ret_from_fork+0x7c/0xb0
-[ 2212.406193]  [<ffffffff8107b9e0>] ? insert_kthread_work+0x40/0x40
-[ 2212.408732] Code: 24 58 08 00 00 bf 80 00 00 00 e8 3a c3 e0 e0 5b 41 5c 5d c3 0f 1f 44 00 00 0f 1f 44 00 00 55 48 89 e5 41 57 41 56 41 55 41 54 53 <48> 8b 47 10 48 89 fb 4c 8b 6f 28 4c 8b 20 49 8b 04 24 4c 8b 30
-[ 2212.414671] RIP  [<ffffffffa02667f2>] rt2x00usb_kick_tx_entry+0x12/0x160 [rt2x00usb]
-[ 2212.417646]  RSP <ffff880212f67750>
-[ 2212.420547] CR2: 0000000000000250
-[ 2212.441024] ---[ end trace 5442918f33832bce ]---
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
----
- drivers/net/wireless/rt2x00/rt2x00mac.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+It sounds like linux driver didn't recognised usb id and didn't uploaded
+firmware, or there was no firmware to upload.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index 51f17cf..7c15785 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -754,6 +754,9 @@ void rt2x00mac_flush(struct ieee80211_hw *hw, u32 queues, bool drop)
- 	struct rt2x00_dev *rt2x00dev = hw->priv;
- 	struct data_queue *queue;
- 
-+	if (!test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
-+		return;
-+
- 	tx_queue_for_each(rt2x00dev, queue)
- 		rt2x00queue_flush_queue(queue, drop);
- }
+
+>>
+>> This works but is unreliable and sometimes the connection breaks down with
+>>
+>> Oct 17 19:26:46 yannik-desktop wpa_supplicant[2153]: wlan0:
+>> CTRL-EVENT-DISCONNECTED bssid=01:23:45:67:89:ab reason=3
+>> Oct 17 19:26:46 yannik-desktop kernel: [  633.005591] usb 3-14:
+>> ar5523_data_rx_cb: USB err: -71
+>> Oct 17 19:26:46 yannik-desktop kernel: [  633.005703] usb 3-14: RX USB
+>> error -71.
+>> Oct 17 19:26:46 yannik-desktop kernel: [  633.005718] usb 3-14:
+>> ar5523_data_rx_cb: USB err: -71
+>> Oct 17 19:26:46 yannik-desktop kernel: [  633.005779] usb 3-14: RX USB
+>> error -71.
+>> Oct 17 19:26:46 yannik-desktop kernel: [  633.005788] usb 3-14:
+>> ar5523_data_rx_cb: USB err: -71
+>> Oct 17 19:26:46 yannik-desktop kernel: [  633.005846] usb 3-14: USB
+>> disconnect, device number 7
+>> Oct 17 19:26:46 yannik-desktop kernel: [  633.006080] wlan0:
+>> deauthenticating from 01:23:45:67:89:ab by local choice (reason=3)
+>>
+>> unloading ar5523 and then refollowing the steps beginning with step 3
+>> usually makes it work again
+>>
+
+thas is probably other issue.  Let's start with thirst issue.
+
+>> directload.log contains what happens when you just load ar5523 after
+>> the device was plugged in.
+>>
+>> plug_ndis.log contains what sometimes happens when i have loaded and
+>> unloaded the modules some times and then try to load ndiswrapper.
+>>
+>> pluginout.log contains syslog for plugging the device in and out.
+>>
+>> Do you still need the usbmon traces?
+> 
+> In fact, I'm not the best person to work on this, since I know nothing
+> about the ar5523.  Problems with a particular driver should be brought
+> to the attention of the driver's maintainer (CC'ed).  Maybe he can
+> help.
+> 
+> It might be a good idea to post two usbmon traces: One showing what 
+> happens during steps 1-3, and another showing what happens if you 
+> modprobe ar5523 without loading ndiswrapper first.
+> 
+
+
+
 -- 
-1.7.4.4
-
+Regards,
+Oleksij
