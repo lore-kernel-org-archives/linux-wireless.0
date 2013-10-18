@@ -1,67 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0038.hostedemail.com ([216.40.44.38]:35770 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751292Ab3J2Wvm (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42058 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756734Ab3JRSAP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Oct 2013 18:51:42 -0400
-Message-ID: <1383087091.12439.33.camel@joe-AO722> (sfid-20131029_235145_637334_8F7F320B)
-Subject: Re: [PATCH 3/3] ath: fix dynamic user regulatory domain support
-From: Joe Perches <joe@perches.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-Date: Tue, 29 Oct 2013 15:51:31 -0700
-In-Reply-To: <1383086346-2096-4-git-send-email-mcgrof@do-not-panic.com>
-References: <1383086346-2096-1-git-send-email-mcgrof@do-not-panic.com>
-	 <1383086346-2096-4-git-send-email-mcgrof@do-not-panic.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Fri, 18 Oct 2013 14:00:15 -0400
+Date: Fri, 18 Oct 2013 13:56:43 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Gustavo Padovan <gustavo@padovan.org>,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: bluetooth-next 2013-10-14
+Message-ID: <20131018175642.GC28130@tuxdriver.com> (sfid-20131018_200034_796462_55947276)
+References: <20131014235218.GE2305@joana>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131014235218.GE2305@joana>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-10-29 at 23:39 +0100, Luis R. Rodriguez wrote:
-> As it stands dynamic user regulatory domain support is
-> only possible for a few programmed regulatory domains as
-> a few countries do not allow for this.
-[]
-> diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
-][
-> @@ -296,6 +296,7 @@ static void ath_force_no_ir_freq(struct wiphy *wiphy, u16 center_freq)
->  
->  static void
->  __ath_reg_apply_beaconing_flags(struct wiphy *wiphy,
-> +				struct ath_regulatory *reg,
->  				enum nl80211_reg_initiator initiator,
->  				struct ieee80211_channel *ch)
->  {
-> @@ -307,6 +308,9 @@ __ath_reg_apply_beaconing_flags(struct wiphy *wiphy,
->  	case NL80211_REGDOM_SET_BY_COUNTRY_IE:
->  		ath_force_clear_no_ir_chan(wiphy, ch);
->  		break;
-> +	case NL80211_REGDOM_SET_BY_USER:
-> +		if (ath_reg_dyn_country_user_allow(reg))
-> +			ath_force_clear_no_ir_chan(wiphy, ch);
+On Mon, Oct 14, 2013 at 08:52:18PM -0300, Gustavo Padovan wrote:
+> Hi John,
+> 
+> More patches for 3.12, busy times for Bluetooth. More than a 100 commits since
+> the last pull. The bulk of work comes from Johan and Marcel, they are doing
+> fixes and improvements all over the Bluetooth subsystem, as the diffstat can
+> show.
+> 
+> Please pull or let me know of any problems! Thanks.
+> 
+> 	Gustavo
+> --
+> The following changes since commit 4f3e219d95a3c31b916dcd5e2631c4e440736f79:
+> 
+>   Bluetooth: Only one command per L2CAP LE signalling is supported (2013-10-03 16:09:59 +0300)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next for-upstream
+> 
+> for you to fetch changes up to 4b836f393bd8ed111857a6ee1865e44627266ec6:
+> 
+>   Bluetooth: Read current IAC LAP on controller setup (2013-10-14 19:31:18 -0300)
 
-Nicer to add explicit /* fallthrough */
+Pulling now...
 
->  	default:
->  		if (ch->beacon_found)
->  			ch->flags &= ~IEEE80211_CHAN_NO_IR;
-
-> @@ -370,6 +376,11 @@ ath_reg_apply_ir_flags(struct wiphy *wiphy,
->  		ath_force_clear_no_ir_freq(wiphy, 2467);
->  		ath_force_clear_no_ir_freq(wiphy, 2472);
->  		break;
-> +	case NL80211_REGDOM_SET_BY_USER:
-> +		if (!ath_reg_dyn_country_user_allow(reg))
-> +			break;
-> +		ath_force_clear_no_ir_freq(wiphy, 2467);
-> +		ath_force_clear_no_ir_freq(wiphy, 2472);
-
-Missing break?
-
->  	default:
->  		ath_force_no_ir_freq(wiphy, 2467);
->  		ath_force_no_ir_freq(wiphy, 2472);
-
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
