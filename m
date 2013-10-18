@@ -1,41 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lizzard.sbs.de ([194.138.37.39]:20754 "EHLO lizzard.sbs.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756409Ab3JNMTl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Oct 2013 08:19:41 -0400
-Message-ID: <1381752976.3711.14.camel@djensen-laptop> (sfid-20131014_141950_097165_99ED430D)
-Subject: Re: [PATCH] cfg80211: fix channel to frequency mapping in 5.9GHz
- range
-From: Dennis H Jensen <dennis.h.jensen@siemens.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Date: Mon, 14 Oct 2013 14:16:16 +0200
-In-Reply-To: <1381752176.13092.10.camel@jlt4.sipsolutions.net>
-References: <1381492780-3068-1-git-send-email-dennis.h.jensen@siemens.com>
-	 <1381499778.14293.21.camel@jlt4.sipsolutions.net>
-	 <1381506302.3711.10.camel@djensen-laptop>
-	 <1381752176.13092.10.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42074 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756906Ab3JRSAg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Oct 2013 14:00:36 -0400
+Date: Fri, 18 Oct 2013 13:57:33 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+	ath6kl-devel@qca.qualcomm.com
+Subject: Re: Pull request: ath 20131017
+Message-ID: <20131018175732.GD28130@tuxdriver.com> (sfid-20131018_200039_644287_C9078E3B)
+References: <87mwm82rmu.fsf@kamboji.qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87mwm82rmu.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-10-14 at 14:02 +0200, Johannes Berg wrote:
-> On Fri, 2013-10-11 at 17:45 +0200, Dennis H Jensen wrote:
+On Thu, Oct 17, 2013 at 12:06:33PM +0300, Kalle Valo wrote:
+> Hi John,
 > 
-> > > > +		else if (chan > 196)
-> > > > +			return 5000 + (chan - 15) * 5;
-> > > 
-> > > Where does the +/- 15 come from? I can't find any evidence for this in
-> > > Annex E.
-> > 
-> > I didn't double check Annex E. I just wanted to recover the lost
-> > frequencies that the 15 channels (182 - 196), map into 4.9 GHz.
+> here's a pull request for ath6kl and ath10k. Notable changes:
 > 
-> "Recover"? When did they work? What broke them?
+> Bartosz added support to ath10k for our 10.x AP firmware branch, which
+> gives us AP specific features and fixes. We still support the main
+> firmware branch as well just like before, ath10k detects runtime what
+> firmware is used. Unfortunately the firmware interface in 10.x branch is
+> somewhat different so there was quite a lot of changes in ath10k for
+> this.
+> 
+> Michal and Sujith did some performance improvements in ath10k. Vladimir
+> fixed a compiler warning and Fengguang removed an extra semicolon.
+> 
+> Please let me know if there are any problems.
+> 
+> Kalle
+> 
+> The following changes since commit 6e712d427cb0542afdd5220edb6e4f4f8a5b952d:
+> 
+>   ath10k: replenish HTT RX buffers in a tasklet (2013-09-26 17:22:54 +0300)
+> 
+> are available in the git repository at:
+> 
+>   git://github.com/kvalo/ath.git for-linville
+> 
+> for you to fetch changes up to 56b84287d14aa74823a9c290d0c5839d38365110:
+> 
+>   ath10k: add might_sleep() to ath10k_wmi_cmd_send() (2013-10-16 15:44:47 +0300)
 
-The commit 59eb21a6504731fc16db4cf9463065dd61093e08 moved those channels
-to 4.9 GHz but left a hole in the 5.9 Ghz range.
+Pulling now...
 
-//Dennis
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
