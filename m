@@ -1,70 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www19.servergod.com ([64.89.16.20]:49483 "EHLO
-	www19.servergod.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757256Ab3JQQ2m (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42056 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756734Ab3JRSAJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Oct 2013 12:28:42 -0400
-Message-ID: <52600E1A.6070806@opentechinstitute.org> (sfid-20131017_182847_727682_1FA3B0EF)
-Date: Thu, 17 Oct 2013 12:19:38 -0400
-From: Will Hawkins <hawkinsw@opentechinstitute.org>
+	Fri, 18 Oct 2013 14:00:09 -0400
+Date: Fri, 18 Oct 2013 13:58:35 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: pull-request: iwlwifi-next 2013-10-18
+Message-ID: <20131018175835.GE28130@tuxdriver.com> (sfid-20131018_200015_445812_1B6502AE)
+References: <1382106086.14393.10.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Detlev Casanova <detlev.casanova@gmail.com>
-CC: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	laurent.pinchart@ideasonboard.com
-Subject: Re: NetworkManager not listing access points
-References: <31357461.i5mG9q5IfA@naboo> <2916718.7t7kLXuBQV@naboo>	 <1381131658.13586.0.camel@jlt4.sipsolutions.net> <3301062.MLBKDh0Ksv@naboo>	 (sfid-20131011_174257_646312_6E07DE10) <1382020735.14410.14.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1382020735.14410.14.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1382106086.14393.10.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On 10/17/2013 10:38 AM, Johannes Berg wrote:
-> On Fri, 2013-10-11 at 17:43 +0200, Detlev Casanova wrote:
+On Fri, Oct 18, 2013 at 04:21:26PM +0200, Johannes Berg wrote:
+> John,
 > 
->>>>>> occur before commit 0172bb75073e11a5aa9d8a953bdaefb8709f00c8
->>>>
->>>> ("cfg80211:
->>>>>> use DS or HT operation IEs to determine BSS channel")
->>>
->>> [...]
->>>
->>>> I looked into wpa_supplicant and after an upgrade from 0.7.3 to 2.0,
->>>> the problem seems to be fixed.
->>>
->>> Huh, that's odd. Did 0.7.3 use wext driver?
->>
->> Yes it did.
+> And for iwlwifi-next ... This is bigger. I guess -next stuff can wait
+> until after KS though. Also, I think there might be a merge conflict
+> hidden here, don't really remember.
 > 
-> Hmm. Even taking that into account though I don't really see any
-> difference.
+> For this round, I have a lot of changes:
+>  * power management improvements
+>  * BT coexistence improvements/updates
+>  * new device support
+>  * VHT support
+>  * IBSS support (though due to a small bug it requires new firmware)
+>  * various other fixes/improvements.
 > 
-> Maybe you could check if there's any difference in iwlist scan output
-> before/after the patch (for the affected AP)?
+> Sorry to concentrate it all into one pull request, I was holding for a
+> small bugfix that turned out to be much more difficult than I expected,
+> but also not needed yet (so this code has a known bug with -8 firmware,
+> but we'll fix it before the driver gets updated to use that firmware.)
+> 
+> Let me know if there's any problem.
 > 
 > johannes
-
-Not to clog up the channel, but I was running into exactly the same
-problem. I expected to see the problem somewhere in the kernel, etc. I
-turned on debugging and kernel tracing and saw nothing. The fix for me
-is almost identical to the fix that Detlev first described.
-
-However, the problem for me was somewhere else entirely. The access
-point was sending out malformed beacon messages that kept it from
-showing up.
-
-I *hope* that this helps. However, I hope, at least, this was not a
-waste of bits. :-)
-
-Will
-
-
 > 
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> The following changes since commit e25aa82a89db9e3b09d02b5481aa375c7712a10d:
 > 
+>   rt2x00: rt2800lib: fix VGC adjustment for RT3572 and RT3593 (2013-10-10 13:53:07 -0400)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git for-john
+> 
+> for you to fetch changes up to 246dd9922e859768aa522daa6c1c601785e57e0c:
+> 
+>   iwlwifi: mvm: fix operator precedence (2013-10-18 16:02:38 +0200)
+
+Pulling now...
+
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
