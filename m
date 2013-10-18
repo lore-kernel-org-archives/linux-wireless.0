@@ -1,263 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:45331 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754652Ab3JOCIy (ORCPT
+Received: from iolanthe.rowland.org ([192.131.102.54]:44702 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755551Ab3JROtK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Oct 2013 22:08:54 -0400
-Received: by mail-pb0-f46.google.com with SMTP id rq2so8050463pbb.5
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Oct 2013 19:08:54 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	devel@lists.open80211s.org, distro11s@cozybit.com,
-	Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-Subject: [PATCH v5 2/5] {nl,cfg,mac}80211: enable the triggering of CSA frame in mesh
-Date: Mon, 14 Oct 2013 19:08:28 -0700
-Message-Id: <1381802911-3921-3-git-send-email-yeohchunyeow@cozybit.com> (sfid-20131015_040909_448945_C1FB76B1)
-In-Reply-To: <1381802911-3921-1-git-send-email-yeohchunyeow@cozybit.com>
-References: <1381802911-3921-1-git-send-email-yeohchunyeow@cozybit.com>
+	Fri, 18 Oct 2013 10:49:10 -0400
+Date: Fri, 18 Oct 2013 10:49:09 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: =?UTF-8?B?WWFubmlrIFbDtmxrZXI=?= <yannikv@yahoo.de>
+cc: Pontus Fuchs <pontus.fuchs@gmail.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: ar5523 Gigaset USB Adapter 108 issue
+In-Reply-To: <526020B6.7080601@yahoo.de>
+Message-ID: <Pine.LNX.4.44L0.1310181041080.1164-100000@iolanthe.rowland.org> (sfid-20131018_164914_078212_9D92501F)
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allow the triggering of CSA frame using mesh interface. The
-rules are more or less same with IBSS, such as not allowed to
-change between the band and channel width has to be same from
-the previous mode. Also, move the ieee80211_send_action_csa
-to a common space so that it can be re-used by mesh interface.
+Yannik, you should always use Reply-To-All so that your messages get 
+sent to the mailing list and not just to me.
 
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
----
-v2: fix return value and others (Johannes Berg)
+On Thu, 17 Oct 2013, Yannik Völker wrote:
 
- net/mac80211/cfg.c         |   19 ++++++++++
- net/mac80211/ibss.c        |   54 ---------------------------
- net/mac80211/ieee80211_i.h |    2 +
- net/mac80211/util.c        |   87 ++++++++++++++++++++++++++++++++++++++++++++
- net/wireless/nl80211.c     |    1 +
- 5 files changed, 109 insertions(+), 54 deletions(-)
+> Am 07.08.2013 19:34, schrieb Alan Stern:
+> > Please post two usbmon traces, one showing the failure on your
+> > current system and the other showing the adapter running correctly
+> > under a 32-bit kernel.  Instructions for usbmon are in the kernel
+> > source file Documentation/usb/usbmon.txt.
+> I never got it to work under a 32-bit kernel, i was just able to utilize
+> a windows32 driver using ndiswrapper.
+> 
+> Now i got it to "work". I randomly found out that the ar5523 driver
+> actually works when you load it after you unload ndiswrapper so the
+> following steps make it work:
+> 1. modprobe ndiswrapper
+> 2. plug in device
+> 3. connect to wlan using ndiswrapper and disconnect again (might be
+> optional)
+> 4. modprobe -r ndiswrapper
+> 5. modprobe ar5523
+> 6. connect to wlan
+> log for that is attatched as wlanthennative2.log
+> 
+> This works but is unreliable and sometimes the connection breaks down with
+> 
+> Oct 17 19:26:46 yannik-desktop wpa_supplicant[2153]: wlan0:
+> CTRL-EVENT-DISCONNECTED bssid=01:23:45:67:89:ab reason=3
+> Oct 17 19:26:46 yannik-desktop kernel: [  633.005591] usb 3-14:
+> ar5523_data_rx_cb: USB err: -71
+> Oct 17 19:26:46 yannik-desktop kernel: [  633.005703] usb 3-14: RX USB
+> error -71.
+> Oct 17 19:26:46 yannik-desktop kernel: [  633.005718] usb 3-14:
+> ar5523_data_rx_cb: USB err: -71
+> Oct 17 19:26:46 yannik-desktop kernel: [  633.005779] usb 3-14: RX USB
+> error -71.
+> Oct 17 19:26:46 yannik-desktop kernel: [  633.005788] usb 3-14:
+> ar5523_data_rx_cb: USB err: -71
+> Oct 17 19:26:46 yannik-desktop kernel: [  633.005846] usb 3-14: USB
+> disconnect, device number 7
+> Oct 17 19:26:46 yannik-desktop kernel: [  633.006080] wlan0:
+> deauthenticating from 01:23:45:67:89:ab by local choice (reason=3)
+> 
+> unloading ar5523 and then refollowing the steps beginning with step 3
+> usually makes it work again
+> 
+> 
+> directload.log contains what happens when you just load ar5523 after
+> the device was plugged in.
+> 
+> plug_ndis.log contains what sometimes happens when i have loaded and
+> unloaded the modules some times and then try to load ndiswrapper.
+> 
+> pluginout.log contains syslog for plugging the device in and out.
+> 
+> Do you still need the usbmon traces?
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index b455e72..438c689 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2907,6 +2907,7 @@ static int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_chanctx_conf *chanctx_conf;
- 	struct ieee80211_chanctx *chanctx;
-+	struct ieee80211_if_mesh *ifmsh;
- 	int err, num_chanctx;
- 
- 	if (!list_empty(&local->roc_list) || local->scanning)
-@@ -2990,6 +2991,24 @@ static int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 		if (err < 0)
- 			return err;
- 		break;
-+	case NL80211_IFTYPE_MESH_POINT:
-+		ifmsh = &sdata->u.mesh;
-+
-+		if (!ifmsh->mesh_id)
-+			return -EINVAL;
-+
-+		if (params->chandef.width != sdata->vif.bss_conf.chandef.width)
-+			return -EINVAL;
-+
-+		/* changes into another band are not supported */
-+		if (sdata->vif.bss_conf.chandef.chan->band !=
-+		    params->chandef.chan->band)
-+			return -EINVAL;
-+
-+		err = ieee80211_send_action_csa(sdata, params);
-+		if (err < 0)
-+			return err;
-+		break;
- 	default:
- 		return -EOPNOTSUPP;
- 	}
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 5ea9b3a..017e206 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -428,60 +428,6 @@ static void ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 				  tsf, false);
- }
- 
--static int ieee80211_send_action_csa(struct ieee80211_sub_if_data *sdata,
--				     struct cfg80211_csa_settings *csa_settings)
--{
--	struct sk_buff *skb;
--	struct ieee80211_mgmt *mgmt;
--	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
--	struct ieee80211_local *local = sdata->local;
--	int freq;
--	int hdr_len = offsetof(struct ieee80211_mgmt, u.action.u.chan_switch) +
--		      sizeof(mgmt->u.action.u.chan_switch);
--	u8 *pos;
--
--	skb = dev_alloc_skb(local->tx_headroom + hdr_len +
--			    5 +	/* channel switch announcement element */
--			    3);	/* secondary channel offset element */
--	if (!skb)
--		return -1;
--
--	skb_reserve(skb, local->tx_headroom);
--	mgmt = (struct ieee80211_mgmt *)skb_put(skb, hdr_len);
--	memset(mgmt, 0, hdr_len);
--	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
--					  IEEE80211_STYPE_ACTION);
--
--	eth_broadcast_addr(mgmt->da);
--	memcpy(mgmt->sa, sdata->vif.addr, ETH_ALEN);
--	memcpy(mgmt->bssid, ifibss->bssid, ETH_ALEN);
--	mgmt->u.action.category = WLAN_CATEGORY_SPECTRUM_MGMT;
--	mgmt->u.action.u.chan_switch.action_code = WLAN_ACTION_SPCT_CHL_SWITCH;
--	pos = skb_put(skb, 5);
--	*pos++ = WLAN_EID_CHANNEL_SWITCH;			/* EID */
--	*pos++ = 3;						/* IE length */
--	*pos++ = csa_settings->block_tx ? 1 : 0;		/* CSA mode */
--	freq = csa_settings->chandef.chan->center_freq;
--	*pos++ = ieee80211_frequency_to_channel(freq);		/* channel */
--	*pos++ = csa_settings->count;				/* count */
--
--	if (csa_settings->chandef.width == NL80211_CHAN_WIDTH_40) {
--		enum nl80211_channel_type ch_type;
--
--		skb_put(skb, 3);
--		*pos++ = WLAN_EID_SECONDARY_CHANNEL_OFFSET;	/* EID */
--		*pos++ = 1;					/* IE length */
--		ch_type = cfg80211_get_chandef_type(&csa_settings->chandef);
--		if (ch_type == NL80211_CHAN_HT40PLUS)
--			*pos++ = IEEE80211_HT_PARAM_CHA_SEC_ABOVE;
--		else
--			*pos++ = IEEE80211_HT_PARAM_CHA_SEC_BELOW;
--	}
--
--	ieee80211_tx_skb(sdata, skb);
--	return 0;
--}
--
- int ieee80211_ibss_csa_beacon(struct ieee80211_sub_if_data *sdata,
- 			      struct cfg80211_csa_settings *csa_settings)
- {
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 7f13b65..829ff7e 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1714,6 +1714,8 @@ void ieee80211_dfs_cac_timer(unsigned long data);
- void ieee80211_dfs_cac_timer_work(struct work_struct *work);
- void ieee80211_dfs_cac_cancel(struct ieee80211_local *local);
- void ieee80211_dfs_radar_detected_work(struct work_struct *work);
-+int ieee80211_send_action_csa(struct ieee80211_sub_if_data *sdata,
-+			      struct cfg80211_csa_settings *csa_settings);
- 
- #ifdef CONFIG_MAC80211_NOINLINE
- #define debug_noinline noinline
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 133667c..5d12440 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -2361,3 +2361,90 @@ u32 ieee80211_chandef_downgrade(struct cfg80211_chan_def *c)
- 
- 	return ret;
- }
-+
-+int ieee80211_send_action_csa(struct ieee80211_sub_if_data *sdata,
-+			      struct cfg80211_csa_settings *csa_settings)
-+{
-+	struct sk_buff *skb;
-+	struct ieee80211_mgmt *mgmt;
-+	struct ieee80211_local *local = sdata->local;
-+	int freq;
-+	int hdr_len = offsetof(struct ieee80211_mgmt, u.action.u.chan_switch) +
-+			       sizeof(mgmt->u.action.u.chan_switch);
-+	u8 *pos;
-+
-+	if (sdata->vif.type != NL80211_IFTYPE_ADHOC &&
-+	    sdata->vif.type != NL80211_IFTYPE_MESH_POINT)
-+		return -EOPNOTSUPP;
-+
-+	skb = dev_alloc_skb(local->tx_headroom + hdr_len +
-+			    5 + /* channel switch announcement element */
-+			    3 + /* secondary channel offset element */
-+			    8); /* mesh channel switch parameters element */
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	skb_reserve(skb, local->tx_headroom);
-+	mgmt = (struct ieee80211_mgmt *)skb_put(skb, hdr_len);
-+	memset(mgmt, 0, hdr_len);
-+	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
-+					  IEEE80211_STYPE_ACTION);
-+
-+	eth_broadcast_addr(mgmt->da);
-+	memcpy(mgmt->sa, sdata->vif.addr, ETH_ALEN);
-+	if (ieee80211_vif_is_mesh(&sdata->vif)) {
-+		memcpy(mgmt->bssid, sdata->vif.addr, ETH_ALEN);
-+	} else {
-+		struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
-+		memcpy(mgmt->bssid, ifibss->bssid, ETH_ALEN);
-+	}
-+	mgmt->u.action.category = WLAN_CATEGORY_SPECTRUM_MGMT;
-+	mgmt->u.action.u.chan_switch.action_code = WLAN_ACTION_SPCT_CHL_SWITCH;
-+	pos = skb_put(skb, 5);
-+	*pos++ = WLAN_EID_CHANNEL_SWITCH;			/* EID */
-+	*pos++ = 3;						/* IE length */
-+	*pos++ = csa_settings->block_tx ? 1 : 0;		/* CSA mode */
-+	freq = csa_settings->chandef.chan->center_freq;
-+	*pos++ = ieee80211_frequency_to_channel(freq);		/* channel */
-+	*pos++ = csa_settings->count;				/* count */
-+
-+	if (csa_settings->chandef.width == NL80211_CHAN_WIDTH_40) {
-+		enum nl80211_channel_type ch_type;
-+
-+		skb_put(skb, 3);
-+		*pos++ = WLAN_EID_SECONDARY_CHANNEL_OFFSET;	/* EID */
-+		*pos++ = 1;					/* IE length */
-+		ch_type = cfg80211_get_chandef_type(&csa_settings->chandef);
-+		if (ch_type == NL80211_CHAN_HT40PLUS)
-+			*pos++ = IEEE80211_HT_PARAM_CHA_SEC_ABOVE;
-+		else
-+			*pos++ = IEEE80211_HT_PARAM_CHA_SEC_BELOW;
-+	}
-+
-+	if (ieee80211_vif_is_mesh(&sdata->vif)) {
-+		struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
-+		__le16 pre_value;
-+
-+		skb_put(skb, 8);
-+		*pos++ = WLAN_EID_CHAN_SWITCH_PARAM;		/* EID */
-+		*pos++ = 6;					/* IE length */
-+		*pos++ = sdata->u.mesh.mshcfg.dot11MeshTTL;	/* Mesh TTL */
-+		*pos = 0x00;	/* Mesh Flag: Tx Restrict, Initiator, Reason */
-+		*pos |= WLAN_EID_CHAN_SWITCH_PARAM_INITIATOR;
-+		*pos++ |= csa_settings->block_tx ?
-+			  WLAN_EID_CHAN_SWITCH_PARAM_TX_RESTRICT : 0x00;
-+		put_unaligned_le16(WLAN_REASON_MESH_CHAN, pos); /* Reason Cd */
-+		pos += 2;
-+		if (!ifmsh->pre_value)
-+			ifmsh->pre_value = 1;
-+		else
-+			ifmsh->pre_value++;
-+		pre_value = cpu_to_le16(ifmsh->pre_value);
-+		memcpy(pos, &pre_value, 2);		/* Precedence Value */
-+		pos += 2;
-+		ifmsh->chsw_init = true;
-+	}
-+
-+	ieee80211_tx_skb(sdata, skb);
-+	return 0;
-+}
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index da8de5b..7bb5aca 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5650,6 +5650,7 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
- 			return -EINVAL;
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
-+	case NL80211_IFTYPE_MESH_POINT:
- 		break;
- 	default:
- 		return -EOPNOTSUPP;
--- 
-1.7.9.5
+In fact, I'm not the best person to work on this, since I know nothing
+about the ar5523.  Problems with a particular driver should be brought
+to the attention of the driver's maintainer (CC'ed).  Maybe he can
+help.
+
+It might be a good idea to post two usbmon traces: One showing what 
+happens during steps 1-3, and another showing what happens if you 
+modprobe ar5523 without loading ndiswrapper first.
+
+Alan Stern
 
