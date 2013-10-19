@@ -1,279 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34551 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752701Ab3JLTxj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Oct 2013 15:53:39 -0400
-Message-ID: <1381607911.21655.7.camel@dcbw.foobar.com> (sfid-20131012_215359_062377_C076B1B3)
-Subject: Re: [Patch 1/1]: libertas/sdio: fix releasing memory twice.
-From: Dan Williams <dcbw@redhat.com>
-To: "Dr. H. Nikolaus Schaller" <hns@goldelico.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Bing Zhao <bzhao@marvell.com>, Harro Haan <hrhaan@gmail.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	Belisko Marek <marek@goldelico.com>,
-	NeilBrown Brown <neilb@suse.de>
-Date: Sat, 12 Oct 2013 14:58:31 -0500
-In-Reply-To: <D5BD8103-A6A6-4070-878B-99FC5883725F@goldelico.com>
-References: <D5BD8103-A6A6-4070-878B-99FC5883725F@goldelico.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oa0-f42.google.com ([209.85.219.42]:60863 "EHLO
+	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752613Ab3JSBdp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Oct 2013 21:33:45 -0400
+Message-ID: <5261E176.1050901@lwfinger.net> (sfid-20131019_033436_829040_8F1693B2)
+Date: Fri, 18 Oct 2013 20:33:42 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Joe Perches <joe@perches.com>, Felipe Pena <felipensp@gmail.com>
+CC: Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] rtlwifi: rtl8192se: Fix wrong assignment
+References: <1382143960-4594-1-git-send-email-felipensp@gmail.com> <1382144748.2041.16.camel@joe-AO722>
+In-Reply-To: <1382144748.2041.16.camel@joe-AO722>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2013-10-12 at 18:02 +0200, Dr. H. Nikolaus Schaller wrote:
-> While upgrading the GTA04 kernel to 3.12-rc4 we came across
-> an issue with libertas/sdio referencing stale memory on ifconfig up
-> when trying to load the firmware (for a second time).
-> 
-> I am not at all sure if the patch is how it should be done and the right
-> location, but it appears to work for us with resetting priv->helper_fw to NULL
-> before asynchronously loading the firmware again.
+On 10/18/2013 08:05 PM, Joe Perches wrote:
+> On Fri, 2013-10-18 at 21:52 -0300, Felipe Pena wrote:
+>> There is a typo in the struct member name on assignment when checking
+>> rtlphy->current_chan_bw == HT_CHANNEL_WIDTH_20_40, the check uses pwrgroup_ht40
+>> for bound limit and uses pwrgroup_ht20 when assigning instead.
+>>
+>> Signed-off-by: Felipe Pena <felipensp@gmail.com>
+>> ---
+>>   drivers/net/wireless/rtlwifi/rtl8192se/rf.c |    2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/rf.c b/drivers/net/wireless/rtlwifi/rtl8192se/rf.c
+>> index 5061f1d..92d38ab 100644
+>> --- a/drivers/net/wireless/rtlwifi/rtl8192se/rf.c
+>> +++ b/drivers/net/wireless/rtlwifi/rtl8192se/rf.c
+>> @@ -265,7 +265,7 @@ static void _rtl92s_get_txpower_writeval_byregulatory(struct ieee80211_hw *hw,
+>>   				    rtlefuse->pwrgroup_ht40
+>>   				    [RF90_PATH_A][chnl - 1]) {
+>>   					pwrdiff_limit[i] =
+>> -					  rtlefuse->pwrgroup_ht20
+>> +					  rtlefuse->pwrgroup_ht40
+>>   					  [RF90_PATH_A][chnl - 1];
+>>   				}
+>
+> Using min could help minimize typos
+>
+> 					pwrdiff_limit[i] = min(pwrdiff_limit[i],
+> 							       rtlefuse->pwrgroup_ht40[RF90_PATH_A][chnl - 1]);
 
-How about we go even simpler?  helper_fw is *only* used inside
-firmware.c anyway, and that's probably where its lifetime should be
-handled.  Same for the main firmware.  I have no idea why the bus code
-is responsible for releasing the firmware anyway, when it originates
-from firmware.c and control returns back there after the firmware loaded
-callback is done.  Does the following patch fix your problem too?
+In the initial driver, that would have been true; however, at this point, I 
+prefer the patch as submitted. There is less churning of the source.
 
-Dan
-
----
-diff --git a/drivers/net/wireless/libertas/firmware.c b/drivers/net/wireless/libertas/firmware.c
-index c0f9e7e..51b92b5 100644
---- a/drivers/net/wireless/libertas/firmware.c
-+++ b/drivers/net/wireless/libertas/firmware.c
-@@ -49,14 +49,19 @@ static void main_firmware_cb(const struct firmware *firmware, void *context)
- 		/* Failed to find firmware: try next table entry */
- 		load_next_firmware_from_table(priv);
- 		return;
- 	}
- 
- 	/* Firmware found! */
- 	lbs_fw_loaded(priv, 0, priv->helper_fw, firmware);
-+	if (priv->helper_fw) {
-+		release_firmware (priv->helper_fw);
-+		priv->helper_fw = NULL;
-+	}
-+	release_firmware (firmware);
- }
- 
- static void helper_firmware_cb(const struct firmware *firmware, void *context)
- {
- 	struct lbs_private *priv = context;
- 
- 	if (!firmware) {
-diff --git a/drivers/net/wireless/libertas/if_cs.c b/drivers/net/wireless/libertas/if_cs.c
-index c94dd68..ef8c98e 100644
---- a/drivers/net/wireless/libertas/if_cs.c
-+++ b/drivers/net/wireless/libertas/if_cs.c
-@@ -750,22 +750,22 @@ static void if_cs_prog_firmware(struct lbs_private *priv, int ret,
- 	}
- 
- 	/* Load the firmware */
- 	ret = if_cs_prog_helper(card, helper);
- 	if (ret == 0 && (card->model != MODEL_8305))
- 		ret = if_cs_prog_real(card, mainfw);
- 	if (ret)
--		goto out;
-+		return;
- 
- 	/* Now actually get the IRQ */
- 	ret = request_irq(card->p_dev->irq, if_cs_interrupt,
- 		IRQF_SHARED, DRV_NAME, card);
- 	if (ret) {
- 		pr_err("error in request_irq\n");
--		goto out;
-+		return;
- 	}
- 
- 	/*
- 	 * Clear any interrupt cause that happened while sending
- 	 * firmware/initializing card
- 	 */
- 	if_cs_write16(card, IF_CS_CARD_INT_CAUSE, IF_CS_BIT_MASK);
-@@ -773,18 +773,14 @@ static void if_cs_prog_firmware(struct lbs_private *priv, int ret,
- 
- 	/* And finally bring the card up */
- 	priv->fw_ready = 1;
- 	if (lbs_start_card(priv) != 0) {
- 		pr_err("could not activate card\n");
- 		free_irq(card->p_dev->irq, card);
- 	}
--
--out:
--	release_firmware(helper);
--	release_firmware(mainfw);
- }
- 
- 
- /********************************************************************/
- /* Callback functions for libertas.ko                               */
- /********************************************************************/
- 
-diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
-index 4557833..991238a 100644
---- a/drivers/net/wireless/libertas/if_sdio.c
-+++ b/drivers/net/wireless/libertas/if_sdio.c
-@@ -704,28 +704,24 @@ static void if_sdio_do_prog_firmware(struct lbs_private *priv, int ret,
- 	if (ret) {
- 		pr_err("failed to find firmware (%d)\n", ret);
- 		return;
- 	}
- 
- 	ret = if_sdio_prog_helper(card, helper);
- 	if (ret)
--		goto out;
-+		return;
- 
- 	lbs_deb_sdio("Helper firmware loaded\n");
- 
- 	ret = if_sdio_prog_real(card, mainfw);
- 	if (ret)
--		goto out;
-+		return;
- 
- 	lbs_deb_sdio("Firmware loaded\n");
- 	if_sdio_finish_power_on(card);
--
--out:
--	release_firmware(helper);
--	release_firmware(mainfw);
- }
- 
- static int if_sdio_prog_firmware(struct if_sdio_card *card)
- {
- 	int ret;
- 	u16 scratch;
- 
-diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
-index 4bb6574..87ff0ca 100644
---- a/drivers/net/wireless/libertas/if_spi.c
-+++ b/drivers/net/wireless/libertas/if_spi.c
-@@ -1090,19 +1090,15 @@ static int if_spi_init_card(struct if_spi_card *card)
- 	}
- 
- 	err = spu_set_interrupt_mode(card, 0, 1);
- 	if (err)
- 		goto out;
- 
- out:
--	release_firmware(helper);
--	release_firmware(mainfw);
--
- 	lbs_deb_leave_args(LBS_DEB_SPI, "err %d\n", err);
--
- 	return err;
- }
- 
- static void if_spi_resume_worker(struct work_struct *work)
- {
- 	struct if_spi_card *card;
- 
-diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
-index 2798077..dff08a2 100644
---- a/drivers/net/wireless/libertas/if_usb.c
-+++ b/drivers/net/wireless/libertas/if_usb.c
-@@ -840,15 +840,15 @@ static void if_usb_prog_firmware(struct lbs_private *priv, int ret,
- 		pr_err("failed to find firmware (%d)\n", ret);
- 		goto done;
- 	}
- 
- 	cardp->fw = fw;
- 	if (check_fwfile_format(cardp->fw->data, cardp->fw->size)) {
- 		ret = -EINVAL;
--		goto release_fw;
-+		goto done;
- 	}
- 
- 	/* Cancel any pending usb business */
- 	usb_kill_urb(cardp->rx_urb);
- 	usb_kill_urb(cardp->tx_urb);
- 
- 	cardp->fwlastblksent = 0;
-@@ -857,15 +857,15 @@ static void if_usb_prog_firmware(struct lbs_private *priv, int ret,
- 	cardp->fwfinalblk = 0;
- 	cardp->bootcmdresp = 0;
- 
- restart:
- 	if (if_usb_submit_rx_urb_fwload(cardp) < 0) {
- 		lbs_deb_usbd(&cardp->udev->dev, "URB submission is failed\n");
- 		ret = -EIO;
--		goto release_fw;
-+		goto done;
- 	}
- 
- 	cardp->bootcmdresp = 0;
- 	do {
- 		int j = 0;
- 		i++;
- 		if_usb_issue_boot_command(cardp, BOOT_CMD_FW_BY_USB);
-@@ -879,22 +879,22 @@ restart:
- 	if (cardp->bootcmdresp == BOOT_CMD_RESP_NOT_SUPPORTED) {
- 		/* Return to normal operation */
- 		ret = -EOPNOTSUPP;
- 		usb_kill_urb(cardp->rx_urb);
- 		usb_kill_urb(cardp->tx_urb);
- 		if (if_usb_submit_rx_urb(cardp) < 0)
- 			ret = -EIO;
--		goto release_fw;
-+		goto done;
- 	} else if (cardp->bootcmdresp <= 0) {
- 		if (--reset_count >= 0) {
- 			if_usb_reset_device(cardp);
- 			goto restart;
- 		}
- 		ret = -EIO;
--		goto release_fw;
-+		goto done;
- 	}
- 
- 	i = 0;
- 
- 	cardp->totalbytes = 0;
- 	cardp->fwlastblksent = 0;
- 	cardp->CRC_OK = 1;
-@@ -917,37 +917,34 @@ restart:
- 		if (--reset_count >= 0) {
- 			if_usb_reset_device(cardp);
- 			goto restart;
- 		}
- 
- 		pr_info("FW download failure, time = %d ms\n", i * 100);
- 		ret = -EIO;
--		goto release_fw;
-+		goto done;
- 	}
- 
- 	cardp->priv->fw_ready = 1;
- 	if_usb_submit_rx_urb(cardp);
- 
- 	if (lbs_start_card(priv))
--		goto release_fw;
-+		goto done;
- 
- 	if_usb_setup_firmware(priv);
- 
- 	/*
- 	 * EHS_REMOVE_WAKEUP is not supported on all versions of the firmware.
- 	 */
- 	priv->wol_criteria = EHS_REMOVE_WAKEUP;
- 	if (lbs_host_sleep_cfg(priv, priv->wol_criteria, NULL))
- 		priv->ehs_remove_supported = false;
- 
-- release_fw:
--	release_firmware(cardp->fw);
--	cardp->fw = NULL;
--
-  done:
-+	cardp->fw = NULL;
- 	lbs_deb_leave(LBS_DEB_USB);
- }
- 
- 
- #ifdef CONFIG_PM
- static int if_usb_suspend(struct usb_interface *intf, pm_message_t message)
- {
+Larry
 
 
