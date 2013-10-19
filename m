@@ -1,169 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:60123 "EHLO
-	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758936Ab3JOSqr (ORCPT
+Received: from nm11.bullet.mail.ird.yahoo.com ([77.238.189.64]:38157 "HELO
+	nm11.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752309Ab3JSMSk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Oct 2013 14:46:47 -0400
-Subject: [PATCH 1/7] ath10k: use workqueue to set WEP TX key
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 15 Oct 2013 21:46:44 +0300
-Message-ID: <20131015184644.14123.424.stgit@localhost6.localdomain6> (sfid-20131015_204650_278083_54FE5FEB)
-In-Reply-To: <20131015184548.14123.56949.stgit@localhost6.localdomain6>
-References: <20131015184548.14123.56949.stgit@localhost6.localdomain6>
+	Sat, 19 Oct 2013 08:18:40 -0400
+Message-ID: <5262789D.8030704@yahoo.de> (sfid-20131019_141844_266304_2424B7B5)
+Date: Sat, 19 Oct 2013 14:18:37 +0200
+From: =?UTF-8?B?WWFubmlrIFbDtmxrZXI=?= <yannikv@yahoo.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Oleksij Rempel <linux@rempel-privat.de>
+CC: Pontus Fuchs <pontus.fuchs@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: ar5523 Gigaset USB Adapter 108 issue
+References: <Pine.LNX.4.44L0.1310181041080.1164-100000@iolanthe.rowland.org> <52614E9B.6040400@rempel-privat.de> <526155ED.1090007@yahoo.de> <52615EFA.80902@rempel-privat.de> <526162ED.8030901@yahoo.de> <52616CD0.2000203@rempel-privat.de>
+In-Reply-To: <52616CD0.2000203@rempel-privat.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michal Kazior <michal.kazior@tieto.com>
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-Recent WMI/HTC changes made it possible for WMI
-commands to sleep (if there's not enough HTC TX
-credits to submit a command). TX path is in an
-atomic context so calling WMI commands in it is
-wrong.
+Am 18.10.2013 19:16, schrieb Oleksij Rempel:
+> Am 18.10.2013 18:33, schrieb Yannik Völker:
+>> Am 18.10.2013 18:16, schrieb Oleksij Rempel:
+>>> Am 18.10.2013 17:38, schrieb Yannik Völker:
+>>>> Am 18.10.2013 17:07, schrieb Oleksij Rempel:
+>>>>> Am 18.10.2013 16:49, schrieb Alan Stern:
+>>>>>> Yannik, you should always use Reply-To-All so that your 
+>>>>>> messages get sent to the mailing list and not just to
+>>>>>> me.
+>>>>>> 
+>>>>>> On Thu, 17 Oct 2013, Yannik Völker wrote:
+>>>>>> 
+>>>>>>> Am 07.08.2013 19:34, schrieb Alan Stern:
+>>>>>>>> Please post two usbmon traces, one showing the
+>>>>>>>> failure on your current system and the other showing
+>>>>>>>> the adapter running correctly under a 32-bit kernel.
+>>>>>>>> Instructions for usbmon are in the kernel source
+>>>>>>>> file Documentation/usb/usbmon.txt.
+>>>>>>> I never got it to work under a 32-bit kernel, i was
+>>>>>>> just able to utilize a windows32 driver using
+>>>>>>> ndiswrapper.
+>>>>>>> 
+>>>>>>> Now i got it to "work". I randomly found out that the 
+>>>>>>> ar5523 driver actually works when you load it after
+>>>>>>> you unload ndiswrapper so the following steps make it
+>>>>>>> work: 1. modprobe ndiswrapper 2. plug in device 3.
+>>>>>>> connect to wlan using ndiswrapper and disconnect again
+>>>>>>> (might be optional) 4. modprobe -r ndiswrapper 5.
+>>>>>>> modprobe ar5523 6. connect to wlan log for that is
+>>>>>>> attatched as wlanthennative2.log
+>>>> 
+>>>> 
+>>>>> It sounds like linux driver didn't recognised usb id and 
+>>>>> didn't uploaded firmware, or there was no firmware to
+>>>>> upload.
+>>>> there is firmware (/lib/firmware/ar5523.bin exists) but it
+>>>> does not even get touched (i renamed the file and the error
+>>>> did not change at all)
+>> 
+>>> find first usbid of your adapter (it will be changed after 
+>>> firmware upload). And try to force driver to use this id:
+>>> modprobe -v ar5523 echo 07d1 3a0d >
+>>> /sys/bus/usb/drivers/ar5523/new_id
+>> 
+>>> instead of "07d1 3a0d" use your id.
+>> 
+>> 
+>> # lsusb … Bus 003 Device 011: ID 129b:160c CyberTAN Technology
+>> Siemens S30853-S1038-R351 802.11g Wireless Adapter [Atheros
+>> AR5523] …
+>> 
+>> # modprobe ar5523 # echo 129b 160c >
+>> /sys/bus/usb/drivers/ar5523/new_id <plugging device in> syslog: 
+>> Oct 18 18:27:47 yannik-desktop kernel: [ 8751.447784] usbcore: 
+>> registered new interface driver ar5523 Oct 18 18:28:25
+>> yannik-desktop kernel: [ 8789.036912] usb 3-14: new high-speed
+>> USB device number 12 using xhci_hcd Oct 18 18:28:25
+>> yannik-desktop kernel: [ 8789.053995] usb 3-14: New USB device
+>> found, idVendor=129b, idProduct=160c Oct 18 18:28:25
+>> yannik-desktop kernel: [ 8789.054005] usb 3-14: New USB device
+>> strings: Mfr=1, Product=2, SerialNumber=3 Oct 18 18:28:25
+>> yannik-desktop kernel: [ 8789.054010] usb 3-14: Product: AR5523 
+>> Oct 18 18:28:25 yannik-desktop kernel: [ 8789.054015] usb 3-14: 
+>> Manufacturer: Atheros Communications Inc Oct 18 18:28:25
+>> yannik-desktop kernel: [ 8789.054019] usb 3-14: SerialNumber:
+>> 1.0 Oct 18 18:28:27 yannik-desktop kernel: [ 8791.052313] usb
+>> 3-14: timeout waiting for command 01 reply Oct 18 18:28:27
+>> yannik-desktop kernel: [ 8791.052323] usb 3-14: could not
+>> initialize adapter Oct 18 18:28:27 yannik-desktop kernel: [
+>> 8791.052359] usb 3-14: RX USB error -2. Oct 18 18:28:27
+>> yannik-desktop kernel: [ 8791.052378] usb 3-14: error -1 when
+>> submitting rx urb Oct 18 18:28:27 yannik-desktop kernel: [
+>> 8791.052504] ar5523: probe of 3-14:1.0 failed with error -110
+>> 
+>>> Besidy, what kernel version are you using? May be it is too
+>>> old..
+>> 
+>> 3.11.0-12-generic it is my understanding that the ar5523 driver
+>> was included from 3.8 on.
+> 
+> please test attached patch.
+Stopped the error from appearing but it looks like it would not even try
+to upload the firmware to me:
 
-This simply moves WEP key index update to a worker
-and fixes the 'scheduling while atomic' bug.
+[  708.193488] cfg80211: Calling CRDA to update world regulatory domain
 
-This still leaves multiple WEP key handling laggy,
-i.e. some frames may be TXed with an old/different
-key (although recipient should still be able to RX
-them).
 
-kvalo: changed the title
+[  708.492120] usbcore: registered new interface driver ar5523
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.h |    4 ++
- drivers/net/wireless/ath/ath10k/mac.c  |   53 ++++++++++++++++++++++----------
- 2 files changed, 39 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index ce36daa..cef5455 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -215,8 +215,10 @@ struct ath10k_vif {
- 	struct ath10k *ar;
- 	struct ieee80211_vif *vif;
- 
-+	struct work_struct wep_key_work;
- 	struct ieee80211_key_conf *wep_keys[WMI_MAX_KEY_INDEX + 1];
--	u8 def_wep_key_index;
-+	u8 def_wep_key_idx;
-+	u8 def_wep_key_newidx;
- 
- 	u16 tx_seq_no;
- 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 97d7111..bc0e17b 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -1239,7 +1239,7 @@ static void ath10k_bss_disassoc(struct ieee80211_hw *hw,
- 	/* FIXME: why don't we print error if wmi call fails? */
- 	ret = ath10k_wmi_vdev_down(ar, arvif->vdev_id);
- 
--	arvif->def_wep_key_index = 0;
-+	arvif->def_wep_key_idx = 0;
- }
- 
- static int ath10k_station_assoc(struct ath10k *ar, struct ath10k_vif *arvif,
-@@ -1467,6 +1467,30 @@ static void ath10k_tx_h_qos_workaround(struct ieee80211_hw *hw,
- 	skb_pull(skb, IEEE80211_QOS_CTL_LEN);
- }
- 
-+static void ath10k_tx_wep_key_work(struct work_struct *work)
-+{
-+	struct ath10k_vif *arvif = container_of(work, struct ath10k_vif,
-+						wep_key_work);
-+	int ret, keyidx = arvif->def_wep_key_newidx;
-+
-+	if (arvif->def_wep_key_idx == keyidx)
-+		return;
-+
-+	ath10k_dbg(ATH10K_DBG_MAC, "mac vdev %d set keyidx %d\n",
-+		   arvif->vdev_id, keyidx);
-+
-+	ret = ath10k_wmi_vdev_set_param(arvif->ar,
-+					arvif->vdev_id,
-+					arvif->ar->wmi.vdev_param->def_keyid,
-+					keyidx);
-+	if (ret) {
-+		ath10k_warn("could not update wep keyidx (%d)\n", ret);
-+		return;
-+	}
-+
-+	arvif->def_wep_key_idx = keyidx;
-+}
-+
- static void ath10k_tx_h_update_wep_key(struct sk_buff *skb)
- {
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-@@ -1475,8 +1499,6 @@ static void ath10k_tx_h_update_wep_key(struct sk_buff *skb)
- 	struct ath10k *ar = arvif->ar;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 	struct ieee80211_key_conf *key = info->control.hw_key;
--	u32 vdev_param;
--	int ret;
- 
- 	if (!ieee80211_has_protected(hdr->frame_control))
- 		return;
-@@ -1488,21 +1510,14 @@ static void ath10k_tx_h_update_wep_key(struct sk_buff *skb)
- 	    key->cipher != WLAN_CIPHER_SUITE_WEP104)
- 		return;
- 
--	if (key->keyidx == arvif->def_wep_key_index)
--		return;
--
--	ath10k_dbg(ATH10K_DBG_MAC, "mac vdev %d keyidx %d\n",
--		   arvif->vdev_id, key->keyidx);
--
--	vdev_param = ar->wmi.vdev_param->def_keyid;
--	ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
--					key->keyidx);
--	if (ret) {
--		ath10k_warn("could not update wep keyidx (%d)\n", ret);
-+	if (key->keyidx == arvif->def_wep_key_idx)
- 		return;
--	}
- 
--	arvif->def_wep_key_index = key->keyidx;
-+	/* FIXME: Most likely a few frames will be TXed with an old key. Simply
-+	 * queueing frames until key index is updated is not an option because
-+	 * sk_buff may need more processing to be done, e.g. offchannel */
-+	arvif->def_wep_key_newidx = key->keyidx;
-+	ieee80211_queue_work(ar->hw, &arvif->wep_key_work);
- }
- 
- static void ath10k_tx_h_add_p2p_noa_ie(struct ath10k *ar, struct sk_buff *skb)
-@@ -2023,6 +2038,8 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 	arvif->ar = ar;
- 	arvif->vif = vif;
- 
-+	INIT_WORK(&arvif->wep_key_work, ath10k_tx_wep_key_work);
-+
- 	if ((vif->type == NL80211_IFTYPE_MONITOR) && ar->monitor_present) {
- 		ath10k_warn("Only one monitor interface allowed\n");
- 		ret = -EBUSY;
-@@ -2078,7 +2095,7 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 
- 	vdev_param = ar->wmi.vdev_param->def_keyid;
- 	ret = ath10k_wmi_vdev_set_param(ar, 0, vdev_param,
--					arvif->def_wep_key_index);
-+					arvif->def_wep_key_idx);
- 	if (ret)
- 		ath10k_warn("Failed to set default keyid: %d\n", ret);
- 
-@@ -2147,6 +2164,8 @@ static void ath10k_remove_interface(struct ieee80211_hw *hw,
- 
- 	mutex_lock(&ar->conf_mutex);
- 
-+	cancel_work_sync(&arvif->wep_key_work);
-+
- 	spin_lock_bh(&ar->data_lock);
- 	if (arvif->beacon) {
- 		dev_kfree_skb_any(arvif->beacon);
+[  708.509819] cfg80211: World regulatory domain updated:
 
+
+[  708.509822] cfg80211:   (start_freq - end_freq @ bandwidth),
+(max_antenna_gain, max_eirp)
+
+[  708.509823] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz), (300
+mBi, 2000 mBm)
+[  708.509824] cfg80211:   (2457000 KHz - 2482000 KHz @ 40000 KHz), (300
+mBi, 2000 mBm)
+[  708.509825] cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz), (300
+mBi, 2000 mBm)
+[  708.509826] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz), (300
+mBi, 2000 mBm)
+[  708.509827] cfg80211:   (5735000 KHz - 5835000 KHz @ 40000 KHz), (300
+mBi, 2000 mBm)
+[  720.232697] usb 3-14: USB disconnect, device number 8
+[  721.721980] usb 3-14: new high-speed USB device number 9 using xhci_hcd
+[  721.739153] usb 3-14: New USB device found, idVendor=129b,
+idProduct=160c
+[  721.739163] usb 3-14: New USB device strings: Mfr=1, Product=2,
+SerialNumber=3
+[  721.739168] usb 3-14: Product: AR5523
+[  721.739174] usb 3-14: Manufacturer: Atheros Communications Inc
+[  721.739178] usb 3-14: SerialNumber: 1.0
+mtp-probe: checking bus 3, device 9:
+"/sys/devices/pci0000:00/0000:00:14.0/usb3/3-14"
+mtp-probe: bus: 3, device: 9 was not an MTP device
+
+also it did not load the module on plugging in.
+
+- -- 
+Yannik Völker
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+
+iQIcBAEBAgAGBQJSYnidAAoJEDqk81AiCyXKT1cP/3U/UvcXmhIHrxioZsM+WDcA
+eEbC6zyEdGeLR10kkD9bnsTa0pwk4Bvj7ciuNKYYRn1kDpt+KIgmJoam0ljbF0Gb
+jE/hG6ZzVdZEHWbEy2yz1+ns8hyQ7hCcc96zHI+5LQsPvqajRFgiclIOK9J1TbR4
+Vc6xV0mJAAhLpokUZ+lD7cPlmBcpmMVkJrWRkyZW7W/jp4myitxmnROJrEVhZM51
+sdglrDWq0tsEWgL8T5M10ZVwbBRZo94qYGWr3CVcDqEdAzx+vujtST7XWzmv1p85
+6C9P+CmcEIS8GiCeZrQmPu74L2nXl5fT8xkrI9XrYd71q9HArl9Arr6w268nYw4N
+urheXF88bg/Os4L/npm5yy9SGl+Iz/LJcsayrDP3MrwgNGZ8WGQ82mlxkk25X+l1
+igu6A2OhB7fGfGoAuWpfRl1WBG33A1IuYyA1GWr5OrVShD831g8PLv8cFOBBHeFC
+SLfh4hKPtctQk5NOlhe623wtOGI4lN2wXnRJIKABCdnIlzIkem7ZK1rmT4oXzNj3
+cKzMf1mFOt5G1ow4iE0JDuH0RyUbkOa0CweyrXaJnyh1mQ6j3Y9XI6QMjk+dbt1f
+E4RYKpL8IhTL2aWTDjSkyrbRNDpvtGa8h3yDvpZ3MartwOokUE6TTirxz3WfvLC0
+8Poh/Wb6C2znRN/kfY6Q
+=+njK
+-----END PGP SIGNATURE-----
