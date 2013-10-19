@@ -1,47 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:49765 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934197Ab3JPNqC (ORCPT
+Received: from mail-oa0-f47.google.com ([209.85.219.47]:53132 "EHLO
+	mail-oa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754602Ab3JSBgB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Oct 2013 09:46:02 -0400
-Subject: [PATCH v2 4/8] ath10k: fix NSS reporting in RX
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 16 Oct 2013 16:45:59 +0300
-Message-ID: <20131016134559.25095.62038.stgit@localhost6.localdomain6> (sfid-20131016_154605_514280_2B0A7686)
-In-Reply-To: <20131016134503.25095.8044.stgit@localhost6.localdomain6>
-References: <20131016134503.25095.8044.stgit@localhost6.localdomain6>
+	Fri, 18 Oct 2013 21:36:01 -0400
+Message-ID: <5261E1FE.2030304@lwfinger.net> (sfid-20131019_033625_698309_2FCD8D53)
+Date: Fri, 18 Oct 2013 20:35:58 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Felipe Pena <felipensp@gmail.com>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] rtlwifi: rtl8192se: Fix wrong assignment
+References: <1382143960-4594-1-git-send-email-felipensp@gmail.com>
+In-Reply-To: <1382143960-4594-1-git-send-email-felipensp@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michal Kazior <michal.kazior@tieto.com>
+On 10/18/2013 07:52 PM, Felipe Pena wrote:
+> There is a typo in the struct member name on assignment when checking
+> rtlphy->current_chan_bw == HT_CHANNEL_WIDTH_20_40, the check uses pwrgroup_ht40
+> for bound limit and uses pwrgroup_ht20 when assigning instead.
+>
+> Signed-off-by: Felipe Pena <felipensp@gmail.com>
+> ---
+>   drivers/net/wireless/rtlwifi/rtl8192se/rf.c |    2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/rf.c b/drivers/net/wireless/rtlwifi/rtl8192se/rf.c
+> index 5061f1d..92d38ab 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192se/rf.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192se/rf.c
+> @@ -265,7 +265,7 @@ static void _rtl92s_get_txpower_writeval_byregulatory(struct ieee80211_hw *hw,
+>   				    rtlefuse->pwrgroup_ht40
+>   				    [RF90_PATH_A][chnl - 1]) {
+>   					pwrdiff_limit[i] =
+> -					  rtlefuse->pwrgroup_ht20
+> +					  rtlefuse->pwrgroup_ht40
+>   					  [RF90_PATH_A][chnl - 1];
+>   				}
+>   			} else {
+> --
 
-NSTS values reported in the VHT-SIG-A1 are 0
-through 7 but they actually describe number of
-streams 1 through 8.
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-1SS frames were dropped. This patch fixes this.
+John: I forgot to mention this earlier, but when you add your s-o-b, please add 
+a Cc for Stable [3.0 +].
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/txrx.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Thanks,
 
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
-index 5ae373a..c511f91 100644
---- a/drivers/net/wireless/ath/ath10k/txrx.c
-+++ b/drivers/net/wireless/ath/ath10k/txrx.c
-@@ -183,7 +183,7 @@ static void process_rx_rates(struct ath10k *ar, struct htt_rx_info *info,
- 		/* VHT-SIG-A1 in info 1, VHT-SIG-A2 in info2
- 		   TODO check this */
- 		mcs = (info2 >> 4) & 0x0F;
--		nss = (info1 >> 10) & 0x07;
-+		nss = ((info1 >> 10) & 0x07) + 1;
- 		bw = info1 & 3;
- 		sgi = info2 & 1;
- 
+Larry
+
 
