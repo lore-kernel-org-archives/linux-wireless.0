@@ -1,27 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:49901 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754653Ab3I0VDd (ORCPT
+Received: from mail-ea0-f178.google.com ([209.85.215.178]:56692 "EHLO
+	mail-ea0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754262Ab3JSAwP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Sep 2013 17:03:33 -0400
-Date: Fri, 27 Sep 2013 17:03:31 -0400 (EDT)
-Message-Id: <20130927.170331.51526037504942244.davem@davemloft.net> (sfid-20130927_230338_501063_AAAE4369)
-To: linville@tuxdriver.com
+	Fri, 18 Oct 2013 20:52:15 -0400
+From: Felipe Pena <felipensp@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2013-09-27
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20130927180549.GB10994@tuxdriver.com>
-References: <20130927180549.GB10994@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	linux-kernel@vger.kernel.org, Felipe Pena <felipensp@gmail.com>
+Subject: [PATCH] rtlwifi: rtl8192se: Fix wrong assignment
+Date: Fri, 18 Oct 2013 21:52:40 -0300
+Message-Id: <1382143960-4594-1-git-send-email-felipensp@gmail.com> (sfid-20131019_025237_216852_836E07F0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Fri, 27 Sep 2013 14:05:49 -0400
+There is a typo in the struct member name on assignment when checking
+rtlphy->current_chan_bw == HT_CHANNEL_WIDTH_20_40, the check uses pwrgroup_ht40
+for bound limit and uses pwrgroup_ht20 when assigning instead.
 
-> Please pull this batch of fixes intended for the 3.12 stream!
+Signed-off-by: Felipe Pena <felipensp@gmail.com>
+---
+ drivers/net/wireless/rtlwifi/rtl8192se/rf.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Pulled, thanks a lot John.
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/rf.c b/drivers/net/wireless/rtlwifi/rtl8192se/rf.c
+index 5061f1d..92d38ab 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192se/rf.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192se/rf.c
+@@ -265,7 +265,7 @@ static void _rtl92s_get_txpower_writeval_byregulatory(struct ieee80211_hw *hw,
+ 				    rtlefuse->pwrgroup_ht40
+ 				    [RF90_PATH_A][chnl - 1]) {
+ 					pwrdiff_limit[i] =
+-					  rtlefuse->pwrgroup_ht20
++					  rtlefuse->pwrgroup_ht40
+ 					  [RF90_PATH_A][chnl - 1];
+ 				}
+ 			} else {
+--
+1.7.10.4
 
