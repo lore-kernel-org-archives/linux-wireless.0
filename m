@@ -1,40 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:57004 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754346Ab3JPVZS (ORCPT
+Received: from mail-ee0-f52.google.com ([74.125.83.52]:58839 "EHLO
+	mail-ee0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753435Ab3JSAUr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Oct 2013 17:25:18 -0400
-Received: by mail-wg0-f52.google.com with SMTP id f12so1363194wgh.7
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Oct 2013 14:25:17 -0700 (PDT)
-Message-ID: <525F0437.4080207@gmail.com> (sfid-20131016_232524_122993_8CA92A06)
-Date: Wed, 16 Oct 2013 22:25:11 +0100
-From: Malcolm <tvboxspy@gmail.com>
-MIME-Version: 1.0
-To: Greg KH <gregkh@linuxfoundation.org>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] staging: vt6656: rxtx change u32 [4] aWTxKey to u8[16]
- tx_key
-References: <1381870009.5100.45.camel@canaries32-MCP7A> <20131016194638.GA25749@kroah.com>
-In-Reply-To: <20131016194638.GA25749@kroah.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Fri, 18 Oct 2013 20:20:47 -0400
+From: Felipe Pena <felipensp@gmail.com>
+To: Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Felipe Pena <felipensp@gmail.com>
+Subject: [PATCH] wireless: rt2800lib: Fix typo on checking
+Date: Fri, 18 Oct 2013 21:20:42 -0300
+Message-Id: <1382142042-4463-1-git-send-email-felipensp@gmail.com> (sfid-20131019_022108_177835_1B65A27E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On rt2800_config_channel_rf53xx function the member default_power1 is checked
+for bound limit, but default_power2 is used instead.
 
-On 16/10/13 20:46, Greg KH wrote:
-> On Tue, Oct 15, 2013 at 09:46:49PM +0100, Malcolm Priestley wrote:
->> Replace 4 x u32 aWTxKey with u8 array of 16 bytes tx_key.
->>
->> Replaces pbyBuf in s_vFillTxKey and connects pbyTxBufferAddr
->> directly to tx_key without a cast elsewhere in structure.
->>
->> Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
-> This patch causes a bunch of compiler warnings to get spit out by the
-> compiler, so I can't take it.
->
-> Please fix them up and resend.
-hmm for some reason I am not getting them on gcc 4.8.1
+Signed-off-by: Felipe Pena <felipensp@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Anyway, I will drop this patch for now. It requires changes elsewhere.
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 88ce656..1c2ce93 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -2650,7 +2650,7 @@ static void rt2800_config_channel_rf53xx(struct rt2x00_dev *rt2x00dev,
 
-Malcolm
+ 	if (rt2x00_rt(rt2x00dev, RT5392)) {
+ 		rt2800_rfcsr_read(rt2x00dev, 50, &rfcsr);
+-		if (info->default_power1 > POWER_BOUND)
++		if (info->default_power2 > POWER_BOUND)
+ 			rt2x00_set_field8(&rfcsr, RFCSR50_TX, POWER_BOUND);
+ 		else
+ 			rt2x00_set_field8(&rfcsr, RFCSR50_TX,
+--
+1.7.10.4
+
