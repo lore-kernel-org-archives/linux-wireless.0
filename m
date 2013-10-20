@@ -1,52 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:42345 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751628Ab3JCNMf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Oct 2013 09:12:35 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH/RFT 0/3] ath10k: fixes
-Date: Thu, 3 Oct 2013 15:09:22 +0200
-Message-ID: <1380805765-31521-1-git-send-email-michal.kazior@tieto.com> (sfid-20131003_151240_085112_312B43BA)
+Received: from mail-lb0-f175.google.com ([209.85.217.175]:32902 "EHLO
+	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750999Ab3JTJxt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 Oct 2013 05:53:49 -0400
+Received: by mail-lb0-f175.google.com with SMTP id y6so4464805lbh.20
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Oct 2013 02:53:47 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAA2SeNJRSPB=Hus8y1bYJ-O1Hgkd=gvNhUKnF9atqwuhd2m0aA@mail.gmail.com>
+References: <CAA2SeNJRSPB=Hus8y1bYJ-O1Hgkd=gvNhUKnF9atqwuhd2m0aA@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Sun, 20 Oct 2013 11:53:27 +0200
+Message-ID: <CAB=NE6WSNZ10pNfKN5-o0cnVYkZbt4gGAzPOcO=Dtw5aUj+wGA@mail.gmail.com> (sfid-20131020_115410_242413_7B3D886C)
+Subject: Re: Active scanning on DFS channels
+To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Fri, Oct 18, 2013 at 5:53 PM, Lorenzo Bianconi
+<lorenzo.bianconi83@gmail.com> wrote:
+> Hi all,
+>
+> According to regdb.txt, DFS channels are not marked with passive scan flag:
+>
+> country US: DFS-FCC
+>         (2402 - 2472 @ 40), (3, 27)
+>         (5170 - 5250 @ 80), (3, 17)
+>         (5250 - 5330 @ 80), (3, 20), DFS
+>         (5490 - 5600 @ 80), (3, 20), DFS
+>         (5650 - 5710 @ 40), (3, 20), DFS
+>         (5735 - 5835 @ 80), (3, 30)
+>
+> Therefore STA device will perform active scanning on DFS channels even
+> if the channel is not CAC checked and available yet.
 
-This patchset addresses recently spotted issue
-with (yet another) scheduling while atomic bug
-(the other being WEP key index setting). This one
-is related to hw_config() and powersave settings.
-This comes from recent changes I've do to HTC/WMI.
-WMI commands can now block so it's illegal to call
-them in an atomic context anymore.
+This is certainly an issue, at least for the atheros drivers the ath
+module ensures to alway set the passive-scan and no-ibss flags for DFS
+frequencies, but we should at this point just standardize on this.
 
-ath10k needs to setup some settings per-vdev (i.e.
-per-interface) such as powersave, rts, fragmentation.
-Until now mac80211 iteration functions were used.
-However using non-atomic iteration function variant
-doesn't solve the problem as it introduces an
-issue with iflist_mtx deadlock in some cases.
+> Should we perform
+> passive scan on radar channel setting new state to SCAN_DECISION and
+> not to SCAN_SEND_PROBE in ieee80211_scan_state_set_channel()?
 
-I briefly tried to reproduce the issue Kalle
-reported but was unsuccessful thus the "/RFT".
+There's a few thing we need to do and I'm working on it.
 
+  1) no-ibss and passive-scan flags should be merged to a no-ir flag
 
+  2) beaconing should not be allowed if you have no-ir flag or radar
+flag set but your device doesn't support DFS. If your wiphy supports
+DFS and if CAC was cleared you can use that channel. If you had an AP
+and a STA on the same wiphy and if the AP had DFS support and cleared
+a CAC on a channel, the STA can resuse that information to do an
+active scan, but it doesn't make sense to share CAC information across
+different radios on the same system as we technically have no
+guarantee they are on the same location, you never know.
 
-Michal Kazior (3):
-  ath10k: fix add_interface failure handling
-  ath10k: track vif list internally
-  ath10k: fix scheduling while atomic config bug
+I'm working on 1) right now.
 
- drivers/net/wireless/ath/ath10k/core.c |    2 +
- drivers/net/wireless/ath/ath10k/core.h |    3 +
- drivers/net/wireless/ath/ath10k/mac.c  |  199 ++++++++++++++++----------------
- 3 files changed, 107 insertions(+), 97 deletions(-)
-
--- 
-1.7.9.5
-
+  Luis
