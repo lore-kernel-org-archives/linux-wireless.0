@@ -1,55 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f47.google.com ([74.125.83.47]:49516 "EHLO
-	mail-ee0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751786Ab3J3LpK (ORCPT
+Received: from top.free-electrons.com ([176.31.233.9]:33467 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750824Ab3JTFBf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Oct 2013 07:45:10 -0400
-Received: by mail-ee0-f47.google.com with SMTP id c13so566222eek.6
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Oct 2013 04:45:08 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH/RFT 00/12] ath10k: pci fixes 2013-10-30
-Date: Wed, 30 Oct 2013 12:42:14 +0100
-Message-Id: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com> (sfid-20131030_124514_566187_95BFB833)
+	Sun, 20 Oct 2013 01:01:35 -0400
+From: Michael Opdenacker <michael.opdenacker@free-electrons.com>
+To: johannes.berg@intel.com, emmanuel.grumbach@intel.com,
+	ilw@linux.intel.com, linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Michael Opdenacker <michael.opdenacker@free-electrons.com>
+Subject: [PATCH] iwlwifi: remove duplicate includes
+Date: Sun, 20 Oct 2013 07:01:00 +0200
+Message-Id: <1382245260-19065-1-git-send-email-michael.opdenacker@free-electrons.com> (sfid-20131020_070222_464651_03480BA0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Reported by "make includecheck"
 
-This patchset contains a slew of PCI/CE cleanups
-and fixes. The aim of the patchset is to deal with
-CE null dereference bugs Ben has been reporting on
-the mailing list for some time now.
+Tested that the corresponding sources still compile well on x86
 
-I've done some brief testing and don't see any
-major regressions. I wasn't able to reproduce the
-reported bugs though. @Ben: Could you perhaps test
-this, please?
+Signed-off-by: Michael Opdenacker <michael.opdenacker@free-electrons.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-io.c  | 1 -
+ drivers/net/wireless/iwlwifi/mvm/mvm.h | 1 -
+ 2 files changed, 2 deletions(-)
 
-
-Michal Kazior (12):
-  ath10k: remove ar_pci->ce_count
-  ath10k: don't forget to kill fw error tasklet
-  ath10k: split tasklet killing function
-  ath10k: rename function to match it's role
-  ath10k: make sure to mask all CE irqs
-  ath10k: fix ath10k_ce_init() failpath
-  ath10k: remove meaningless check
-  ath10k: use ath10k_do_pci_wake/sleep
-  ath10k: propagate ath10k_ce_disable_interrupts() errors
-  ath10k: guard against CE corruption from firmware
-  ath10k: re-arrange PCI init code
-  ath10k: add some debug prints
-
- drivers/net/wireless/ath/ath10k/ce.c  |  56 ++++++---
- drivers/net/wireless/ath/ath10k/ce.h  |   3 +-
- drivers/net/wireless/ath/ath10k/htc.c |   5 +
- drivers/net/wireless/ath/ath10k/pci.c | 221 ++++++++++++++++++----------------
- drivers/net/wireless/ath/ath10k/pci.h |   3 -
- 5 files changed, 161 insertions(+), 127 deletions(-)
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-io.c b/drivers/net/wireless/iwlwifi/iwl-io.c
+index dfa4d2e..ad8e19a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-io.c
++++ b/drivers/net/wireless/iwlwifi/iwl-io.c
+@@ -34,7 +34,6 @@
+ #include "iwl-csr.h"
+ #include "iwl-debug.h"
+ #include "iwl-fh.h"
+-#include "iwl-csr.h"
+ 
+ #define IWL_POLL_INTERVAL 10	/* microseconds */
+ 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index b038927..bd80865 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -73,7 +73,6 @@
+ #include "iwl-trans.h"
+ #include "iwl-notif-wait.h"
+ #include "iwl-eeprom-parse.h"
+-#include "iwl-trans.h"
+ #include "sta.h"
+ #include "fw-api.h"
+ #include "constants.h"
 -- 
-1.8.4.rc3
+1.8.1.2
 
