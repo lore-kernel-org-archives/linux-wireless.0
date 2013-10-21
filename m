@@ -1,88 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from services.gouders.net ([141.101.32.176]:48664 "EHLO
-	services.gouders.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751008Ab3JWFzF (ORCPT
+Received: from mail-we0-f177.google.com ([74.125.82.177]:38448 "EHLO
+	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751383Ab3JURO7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Oct 2013 01:55:05 -0400
-From: Dirk Gouders <dirk@gouders.net>
-To: Simon Wunderlich <sw@simonwunderlich.de>
-Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH 3.12] cfg80211: fix ibss wext chandef creation
-In-Reply-To: <1382472166-19563-1-git-send-email-sw@simonwunderlich.de> (Simon
-	Wunderlich's message of "Tue, 22 Oct 2013 22:02:46 +0200")
-References: <1382472166-19563-1-git-send-email-sw@simonwunderlich.de>
-Date: Wed, 23 Oct 2013 07:46:04 +0200
-Message-ID: <ghr4bcpmjn.fsf@lena.gouders.net> (sfid-20131023_075511_171366_FFF1037C)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 21 Oct 2013 13:14:59 -0400
+Received: by mail-we0-f177.google.com with SMTP id x55so6833691wes.36
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Oct 2013 10:14:58 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, janusz.dziedzic@tieto.com,
+	smihir@qti.qualcomm.com, tushnimb@qca.qualcomm.com,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 2/5] ath: clean up ath_reg_apply_active_scan_flags()
+Date: Mon, 21 Oct 2013 19:14:48 +0200
+Message-Id: <1382375691-25476-3-git-send-email-mcgrof@do-not-panic.com> (sfid-20131021_191502_296152_47C22768)
+In-Reply-To: <1382375691-25476-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1382375691-25476-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Simon Wunderlich <sw@simonwunderlich.de> writes:
+The routine ath_reg_apply_active_scan_flags() can be a bit
+hard to read, this cleans it up by adding helpers for the
+two cases of clearing IR flags or adding them. This approach
+also makes no assumptions on the index of channels 12 and 13
+so it should be portable accross different drivers.
 
-> The wext internal chandefs for ibss should be created using the
-> cfg80211_chandef_create() functions. Otherwise the center_freq1 field
-> will not be set and cfg80211_chandef_valid() will spit a warning and
-> report the chandef as invalid when it should be used.
+Cc: smihir@qti.qualcomm.com
+Cc: tushnimb@qca.qualcomm.com
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ drivers/net/wireless/ath/regd.c | 101 +++++++++++++++++++++++++---------------
+ 1 file changed, 63 insertions(+), 38 deletions(-)
 
-Thanks a lot, Simon, I don't see anymore traces here.
+diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
+index 1b4a532..48e2368 100644
+--- a/drivers/net/wireless/ath/regd.c
++++ b/drivers/net/wireless/ath/regd.c
+@@ -177,6 +177,47 @@ static bool ath_is_radar_freq(u16 center_freq)
+ 	return (center_freq >= 5260 && center_freq <= 5700);
+ }
+ 
++static void ath_force_clear_no_ir_chan(struct wiphy *wiphy,
++				       struct ieee80211_channel *ch)
++{
++	const struct ieee80211_reg_rule *reg_rule;
++
++	reg_rule = freq_reg_info(wiphy, ch->center_freq);
++	if (IS_ERR(reg_rule))
++		return;
++
++	if (!(reg_rule->flags & NL80211_RRF_PASSIVE_SCAN))
++		if (ch->flags & IEEE80211_CHAN_PASSIVE_SCAN)
++			ch->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
++}
++
++static void ath_force_clear_no_ir_freq(struct wiphy *wiphy, u16 center_freq)
++{
++	struct ieee80211_channel *ch;
++
++	ch = ieee80211_get_channel(wiphy, center_freq);
++	if (!ch)
++		return;
++
++	ath_force_clear_no_ir_chan(wiphy, ch);
++}
++
++static void ath_force_no_ir_chan(struct ieee80211_channel *ch)
++{
++	ch->flags |= IEEE80211_CHAN_PASSIVE_SCAN;
++}
++
++static void ath_force_no_ir_freq(struct wiphy *wiphy, u16 center_freq)
++{
++	struct ieee80211_channel *ch;
++
++	ch = ieee80211_get_channel(wiphy, center_freq);
++	if (!ch)
++		return;
++
++	ath_force_no_ir_chan(ch);
++}
++
+ /*
+  * N.B: These exception rules do not apply radar freqs.
+  *
+@@ -241,54 +282,38 @@ ath_reg_apply_beaconing_flags(struct wiphy *wiphy,
+ 
+ }
+ 
+-/* Allows active scan scan on Ch 12 and 13 */
++/**
++ * ath_reg_apply_active_scan_flags()
++ * @wiphy: the wiphy to use
++ * @initiator: the regulatory hint initiator
++ *
++ * If no country IE has been received always enable passive scan
++ * and no-ibss on these channels. This is only done for specific
++ * regulatory SKUs.
++ *
++ * If a country IE has been received check its rule for this
++ * channel first before enabling active scan. The passive scan
++ * would have been enforced by the initial processing of our
++ * custom regulatory domain.
++ */
+ static void
+ ath_reg_apply_active_scan_flags(struct wiphy *wiphy,
+ 				enum nl80211_reg_initiator initiator)
+ {
+ 	struct ieee80211_supported_band *sband;
+-	struct ieee80211_channel *ch;
+-	const struct ieee80211_reg_rule *reg_rule;
+ 
+ 	sband = wiphy->bands[IEEE80211_BAND_2GHZ];
+ 	if (!sband)
+ 		return;
+ 
+-	/*
+-	 * If no country IE has been received always enable passive scan
+-	 * and no-ibss on these channels. This is only done for specific
+-	 * regulatory SKUs.
+-	 */
+-	if (initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE) {
+-		ch = &sband->channels[11]; /* CH 12 */
+-		ch->flags |= IEEE80211_CHAN_PASSIVE_SCAN;
+-
+-		ch = &sband->channels[12]; /* CH 13 */
+-		ch->flags |= IEEE80211_CHAN_PASSIVE_SCAN;
+-		return;
+-	}
+-
+-	/*
+-	 * If a country IE has been received check its rule for this
+-	 * channel first before enabling active scan. The passive scan
+-	 * would have been enforced by the initial processing of our
+-	 * custom regulatory domain.
+-	 */
+-
+-	ch = &sband->channels[11]; /* CH 12 */
+-	reg_rule = freq_reg_info(wiphy, ch->center_freq);
+-	if (!IS_ERR(reg_rule)) {
+-		if (!(reg_rule->flags & NL80211_RRF_PASSIVE_SCAN))
+-			if (ch->flags & IEEE80211_CHAN_PASSIVE_SCAN)
+-				ch->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
+-	}
+-
+-	ch = &sband->channels[12]; /* CH 13 */
+-	reg_rule = freq_reg_info(wiphy, ch->center_freq);
+-	if (!IS_ERR(reg_rule)) {
+-		if (!(reg_rule->flags & NL80211_RRF_PASSIVE_SCAN))
+-			if (ch->flags & IEEE80211_CHAN_PASSIVE_SCAN)
+-				ch->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
++	switch(initiator) {
++	case NL80211_REGDOM_SET_BY_COUNTRY_IE:
++		ath_force_clear_no_ir_freq(wiphy, 2467);
++		ath_force_clear_no_ir_freq(wiphy, 2472);
++		break;
++	default:
++		ath_force_no_ir_freq(wiphy, 2467);
++		ath_force_no_ir_freq(wiphy, 2472);
+ 	}
+ }
+ 
+-- 
+1.8.4.rc3
 
-Tested-by: Dirk Gouders <dirk@gouders.net>
-
-> Reported-by: Dirk Gouders <dirk@gouders.net>
-> Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
-> Cc: Johannes Berg <johannes.berg@intel.com>
-> ---
->  net/wireless/ibss.c |   15 +++++++++------
->  1 file changed, 9 insertions(+), 6 deletions(-)
->
-> diff --git a/net/wireless/ibss.c b/net/wireless/ibss.c
-> index 39bff7d..a710019 100644
-> --- a/net/wireless/ibss.c
-> +++ b/net/wireless/ibss.c
-> @@ -246,7 +246,7 @@ int cfg80211_ibss_wext_join(struct cfg80211_registered_device *rdev,
->  
->  	/* try to find an IBSS channel if none requested ... */
->  	if (!wdev->wext.ibss.chandef.chan) {
-> -		wdev->wext.ibss.chandef.width = NL80211_CHAN_WIDTH_20_NOHT;
-> +		struct ieee80211_channel *new_chan = NULL;
->  
->  		for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
->  			struct ieee80211_supported_band *sband;
-> @@ -262,16 +262,19 @@ int cfg80211_ibss_wext_join(struct cfg80211_registered_device *rdev,
->  					continue;
->  				if (chan->flags & IEEE80211_CHAN_DISABLED)
->  					continue;
-> -				wdev->wext.ibss.chandef.chan = chan;
-> +				new_chan = chan;
->  				break;
->  			}
->  
-> -			if (wdev->wext.ibss.chandef.chan)
-> +			if (new_chan)
->  				break;
->  		}
->  
-> -		if (!wdev->wext.ibss.chandef.chan)
-> +		if (!new_chan)
->  			return -EINVAL;
-> +
-> +		cfg80211_chandef_create(&wdev->wext.ibss.chandef, new_chan,
-> +					NL80211_CHAN_NO_HT);
->  	}
->  
->  	/* don't join -- SSID is not there */
-> @@ -345,8 +348,8 @@ int cfg80211_ibss_wext_siwfreq(struct net_device *dev,
->  		return err;
->  
->  	if (chan) {
-> -		wdev->wext.ibss.chandef.chan = chan;
-> -		wdev->wext.ibss.chandef.width = NL80211_CHAN_WIDTH_20_NOHT;
-> +		cfg80211_chandef_create(&wdev->wext.ibss.chandef, chan,
-> +					NL80211_CHAN_NO_HT);
->  		wdev->wext.ibss.channel_fixed = true;
->  	} else {
->  		/* cfg80211_ibss_wext_join will pick one if needed */
