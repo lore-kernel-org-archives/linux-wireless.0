@@ -1,235 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:63517 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750958Ab3JQE6H (ORCPT
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:42561 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751383Ab3JURO5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Oct 2013 00:58:07 -0400
-From: Rajesh Chauhan <rajeshc@qca.qualcomm.com>
-To: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	rodrigue@qca.qualcomm.com, jouni@qca.qualcomm.com
-Cc: rajeshc@qca.qualcomm.com
-Subject: [PATCH] cfg80211/nl80211: Add support to report unsafe frequency ranges(s)
-Date: Wed, 16 Oct 2013 21:57:13 -0700
-Message-Id: <1381985833-31312-1-git-send-email-rajeshc@qca.qualcomm.com> (sfid-20131017_065812_396456_9DBD3C4E)
+	Mon, 21 Oct 2013 13:14:57 -0400
+Received: by mail-wg0-f43.google.com with SMTP id b13so6749960wgh.34
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Oct 2013 10:14:56 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, janusz.dziedzic@tieto.com,
+	smihir@qti.qualcomm.com, tushnimb@qca.qualcomm.com,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 1/5] ath: fix logic on ath_reg_apply_active_scan_flags()
+Date: Mon, 21 Oct 2013 19:14:47 +0200
+Message-Id: <1382375691-25476-2-git-send-email-mcgrof@do-not-panic.com> (sfid-20131021_191459_718003_D41113F4)
+In-Reply-To: <1382375691-25476-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1382375691-25476-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add support for WLAN driver to report unsafe frequency range(s). User
-space should move SAP/P2P-GO out of those unsafe frequency range(s).
-User space may decide to continue operation on unsafe frequency but in
-such case there might be impact on performance because of interference.
+The existing logic removes the passive scan flag from
+channels 12 and 13 when a regulatory hint coming from
+something other than a country IE has been passed. This
+is incorrect, the original intention was to ensure we
+always have passive scan enabled for these two channels
+for a specific set of custom world regulatory domains.
 
-Signed-off-by: Rajesh Chauhan <rajeshc@qca.qualcomm.com>
+Cc: smihir@qti.qualcomm.com
+Cc: tushnimb@qca.qualcomm.com
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- include/net/cfg80211.h       | 30 +++++++++++++++++++
- include/uapi/linux/nl80211.h | 31 ++++++++++++++++++++
- net/wireless/nl80211.c       | 68 ++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 129 insertions(+)
+ drivers/net/wireless/ath/regd.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 45f6bf5..25b54dc 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1933,6 +1933,24 @@ struct cfg80211_update_ft_ies_params {
- };
+diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
+index c00687e..1b4a532 100644
+--- a/drivers/net/wireless/ath/regd.c
++++ b/drivers/net/wireless/ath/regd.c
+@@ -255,16 +255,16 @@ ath_reg_apply_active_scan_flags(struct wiphy *wiphy,
+ 		return;
  
- /**
-+ * struct cfg80211_avoid_frequency_range - frequency range(s) to avoid
-+ *
-+ * This structure provides frequency range(s) that should be avoided
-+ *
-+ * @start_freq: start of frequency (KHz)
-+ * @end_freq: end of frequency (KHz)
-+ */
-+struct cfg80211_avoid_frequency_range {
-+	unsigned int start_freq;
-+	unsigned int end_freq;
-+};
+ 	/*
+-	 * If no country IE has been received always enable active scan
+-	 * on these channels. This is only done for specific regulatory SKUs
++	 * If no country IE has been received always enable passive scan
++	 * and no-ibss on these channels. This is only done for specific
++	 * regulatory SKUs.
+ 	 */
+ 	if (initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE) {
+ 		ch = &sband->channels[11]; /* CH 12 */
+-		if (ch->flags & IEEE80211_CHAN_PASSIVE_SCAN)
+-			ch->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
++		ch->flags |= IEEE80211_CHAN_PASSIVE_SCAN;
 +
-+struct cfg80211_avoid_frequency_list {
-+	unsigned int n_freq_ranges;
-+	struct cfg80211_avoid_frequency_range *freq_range[0];
-+};
-+
-+/**
-  * struct cfg80211_ops - backend description for wireless configuration
-  *
-  * This struct is registered by fullmac card drivers and/or wireless stacks
-@@ -4340,6 +4358,18 @@ void cfg80211_ft_event(struct net_device *netdev,
- 		       struct cfg80211_ft_event_params *ft_event);
+ 		ch = &sband->channels[12]; /* CH 13 */
+-		if (ch->flags & IEEE80211_CHAN_PASSIVE_SCAN)
+-			ch->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
++		ch->flags |= IEEE80211_CHAN_PASSIVE_SCAN;
+ 		return;
+ 	}
  
- /**
-+ * cfg80211_avoid_frequency_event - notify userspace about frequency range(s)
-+ * @netdev: network device
-+ * @freq_list: frequency range(s) information
-+ * @gfp: allocation flags
-+ *
-+ * WLAN driver calls this function to notify userspace about frequency
-+ * range(s) that should be avoided.
-+ */
-+void cfg80211_avoid_frequency_event(struct net_device *netdev,
-+		   struct cfg80211_avoid_frequency_list *freq_list, gfp_t gfp);
-+
-+/**
-  * cfg80211_get_p2p_attr - find and copy a P2P attribute from IE buffer
-  * @ies: the input IE buffer
-  * @len: the input length
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index fde2c02..457fd67 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -686,6 +686,13 @@
-  *	other station that transmission must be blocked until the channel
-  *	switch is complete.
-  *
-+ * @NL80211_CMD_AVOID_FREQUENCIES_EVENT: Send range(s) of frequencies that
-+ *	should be avoided, from the WLAN driver to the user space. WLAN driver
-+ *	may send unsafe frequencies to avoid interference. User space should
-+ *	move SAP/P2P-GO out of those unsafe frequency ranges. User space may
-+ *	decide to continue operation on unsafe frequency but in such case,
-+ *	performance might get impact.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -853,6 +860,8 @@ enum nl80211_commands {
- 
- 	NL80211_CMD_CHANNEL_SWITCH,
- 
-+	NL80211_CMD_AVOID_FREQUENCIES_EVENT,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-@@ -1496,6 +1505,8 @@ enum nl80211_commands {
-  * @NL80211_ATTR_RXMGMT_FLAGS: flags for nl80211_send_mgmt(), u32.
-  *	As specified in the &enum nl80211_rxmgmt_flags.
-  *
-+ * @NL80211_ATTR_AVOID_FREQUENCIES: Avoid frequencies container information
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1806,6 +1817,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_RXMGMT_FLAGS,
- 
-+	NL80211_ATTR_AVOID_FREQUENCIES,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -2255,6 +2268,24 @@ enum nl80211_frequency_attr {
- #define NL80211_FREQUENCY_ATTR_MAX_TX_POWER NL80211_FREQUENCY_ATTR_MAX_TX_POWER
- 
- /**
-+ * enum nl80211_avoid_frequency_attr - avoid frequency attributes
-+ * @__NL80211_FREQUENCY_ATTR_INVALID: attribute number 0 is reserved
-+ * @NL80211_AVOID_FREQUENCY_ATTR_START_FREQ: Start of frequency (KHz) range
-+ * @NL80211_AVOID_FREQUENCY_ATTR_END_FREQ: End of frequency (KHz) range
-+ * @__NL80211_FREQUENCY_ATTR_AFTER_LAST: internal use
-+ */
-+enum nl80211_avoid_frequency_attr {
-+	__NL80211_AVOID_FREQUENCY_ATTR_INVALID,
-+	NL80211_AVOID_FREQUENCY_ATTR_START_FREQ,
-+	NL80211_AVOID_FREQUENCY_ATTR_END_FREQ,
-+
-+	/* keep last */
-+	__NL80211_AVOID_FREQUENCY_ATTR_AFTER_LAST,
-+	NL80211_AVOID_FREQUENCY_ATTR_MAX =
-+		__NL80211_AVOID_FREQUENCY_ATTR_AFTER_LAST - 1
-+};
-+
-+/**
-  * enum nl80211_bitrate_attr - bitrate attributes
-  * @__NL80211_BITRATE_ATTR_INVALID: attribute number 0 is reserved
-  * @NL80211_BITRATE_ATTR_RATE: Bitrate in units of 100 kbps
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index cbbef88..dc3443a 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -354,6 +354,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 	[NL80211_ATTR_CSA_IES] = { .type = NLA_NESTED },
- 	[NL80211_ATTR_CSA_C_OFF_BEACON] = { .type = NLA_U16 },
- 	[NL80211_ATTR_CSA_C_OFF_PRESP] = { .type = NLA_U16 },
-+	[NL80211_ATTR_AVOID_FREQUENCIES] = { .type = NLA_NESTED },
- };
- 
- /* policy for the key attributes */
-@@ -11234,6 +11235,73 @@ void cfg80211_ft_event(struct net_device *netdev,
- }
- EXPORT_SYMBOL(cfg80211_ft_event);
- 
-+void cfg80211_avoid_frequency_event(struct net_device *netdev,
-+		struct cfg80211_avoid_frequency_list *freq_list, gfp_t gfp)
-+{
-+	struct wiphy *wiphy;
-+	struct cfg80211_registered_device *rdev;
-+	struct sk_buff *msg;
-+	void *hdr;
-+	struct nlattr *nl_ranges, *nl_range;
-+	int err = -EINVAL;
-+	unsigned int i;
-+
-+	if (!netdev || !netdev->ieee80211_ptr ||
-+		   !netdev->ieee80211_ptr->wiphy || !freq_list)
-+		return;
-+
-+	wiphy = netdev->ieee80211_ptr->wiphy;
-+	rdev = wiphy_to_dev(wiphy);
-+
-+	if (!rdev)
-+		return;
-+
-+	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, gfp);
-+	if (!msg)
-+		return;
-+
-+	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_AVOID_FREQUENCIES_EVENT);
-+	if (!hdr) {
-+		nlmsg_free(msg);
-+		return;
-+	}
-+
-+	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
-+	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex))
-+		goto nla_put_failure;
-+
-+	nl_ranges = nla_nest_start(msg, NL80211_ATTR_AVOID_FREQUENCIES);
-+	if (!nl_ranges)
-+		goto nla_put_failure;
-+
-+	for (i = 0; i < freq_list->n_freq_ranges; i++) {
-+		nl_range = nla_nest_start(msg, i);
-+		if (!nl_range)
-+			goto nla_put_failure;
-+
-+		if (nla_put_u32(msg, NL80211_AVOID_FREQUENCY_ATTR_START_FREQ,
-+				    freq_list->freq_range[i]->start_freq) ||
-+		    nla_put_u32(msg, NL80211_AVOID_FREQUENCY_ATTR_END_FREQ,
-+				    freq_list->freq_range[i]->end_freq))
-+			goto nla_put_failure;
-+		nla_nest_end(msg, nl_range);
-+	}
-+	nla_nest_end(msg, nl_ranges);
-+
-+	err = genlmsg_end(msg, hdr);
-+	if (err < 0)
-+		goto nla_put_failure;
-+
-+	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
-+				nl80211_mlme_mcgrp.id, gfp);
-+	return;
-+
-+nla_put_failure:
-+	genlmsg_cancel(msg, hdr);
-+	nlmsg_free(msg);
-+}
-+EXPORT_SYMBOL(cfg80211_avoid_frequency_event);
-+
- void cfg80211_crit_proto_stopped(struct wireless_dev *wdev, gfp_t gfp)
- {
- 	struct cfg80211_registered_device *rdev;
 -- 
-1.8.4
+1.8.4.rc3
 
