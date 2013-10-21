@@ -1,98 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:46057 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755056Ab3JMUGR (ORCPT
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:42584 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751516Ab3JURXH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Oct 2013 16:06:17 -0400
-Message-ID: <1381694770.1301.93.camel@deadeye.wl.decadent.org.uk> (sfid-20131013_220621_096662_8E781ED7)
-Subject: Re: [PATCH 0/4] brcm: rename firmware files and add new files
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>
-Date: Sun, 13 Oct 2013 21:06:10 +0100
-In-Reply-To: <1380617590-5120-1-git-send-email-arend@broadcom.com>
-References: <1380617590-5120-1-git-send-email-arend@broadcom.com>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-WZKg30HhX5wBG90iWPjS"
-Mime-Version: 1.0
+	Mon, 21 Oct 2013 13:23:07 -0400
+Received: by mail-wi0-f173.google.com with SMTP id ey11so4330125wid.0
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Oct 2013 10:23:06 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, janusz.dziedzic@tieto.com,
+	smihir@qti.qualcomm.com, tushnimb@qca.qualcomm.com,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 10/14] mac80211: consolidate no-ibss and passive scan to no-ir
+Date: Mon, 21 Oct 2013 19:22:34 +0200
+Message-Id: <1382376158-25586-11-git-send-email-mcgrof@do-not-panic.com> (sfid-20131021_193807_170367_6AF40030)
+In-Reply-To: <1382376158-25586-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1382376158-25586-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ net/mac80211/scan.c | 10 +++++-----
+ net/mac80211/tx.c   |  3 +--
+ 2 files changed, 6 insertions(+), 7 deletions(-)
 
---=-WZKg30HhX5wBG90iWPjS
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 5ad66a8..c22cbb5 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -526,7 +526,7 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+ 		ieee80211_hw_config(local, 0);
+ 
+ 		if ((req->channels[0]->flags &
+-		     IEEE80211_CHAN_PASSIVE_SCAN) ||
++		     IEEE80211_CHAN_NO_IR) ||
+ 		    !local->scan_req->n_ssids) {
+ 			next_delay = IEEE80211_PASSIVE_CHANNEL_TIME;
+ 		} else {
+@@ -572,7 +572,7 @@ ieee80211_scan_get_channel_time(struct ieee80211_channel *chan)
+ 	 * TODO: channel switching also consumes quite some time,
+ 	 * add that delay as well to get a better estimation
+ 	 */
+-	if (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN)
++	if (chan->flags & IEEE80211_CHAN_NO_IR)
+ 		return IEEE80211_PASSIVE_CHANNEL_TIME;
+ 	return IEEE80211_PROBE_DELAY + IEEE80211_CHANNEL_TIME;
+ }
+@@ -696,7 +696,7 @@ static void ieee80211_scan_state_set_channel(struct ieee80211_local *local,
+ 	 *
+ 	 * In any case, it is not necessary for a passive scan.
+ 	 */
+-	if (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN ||
++	if (chan->flags & IEEE80211_CHAN_NO_IR ||
+ 	    !local->scan_req->n_ssids) {
+ 		*next_delay = IEEE80211_PASSIVE_CHANNEL_TIME;
+ 		local->next_scan_state = SCAN_DECISION;
+@@ -881,7 +881,7 @@ int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
+ 				struct ieee80211_channel *tmp_ch =
+ 				    &local->hw.wiphy->bands[band]->channels[i];
+ 
+-				if (tmp_ch->flags & (IEEE80211_CHAN_NO_IBSS |
++				if (tmp_ch->flags & (IEEE80211_CHAN_NO_IR |
+ 						     IEEE80211_CHAN_DISABLED))
+ 					continue;
+ 
+@@ -895,7 +895,7 @@ int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
+ 
+ 		local->int_scan_req->n_channels = n_ch;
+ 	} else {
+-		if (WARN_ON_ONCE(chan->flags & (IEEE80211_CHAN_NO_IBSS |
++		if (WARN_ON_ONCE(chan->flags & (IEEE80211_CHAN_NO_IR |
+ 						IEEE80211_CHAN_DISABLED)))
+ 			goto unlock;
+ 
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 9993fcb..ff1ebbf 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1695,8 +1695,7 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
+ 	 * radar detection by itself. We can do that later by adding a
+ 	 * monitor flag interfaces used for AP support.
+ 	 */
+-	if ((chan->flags & (IEEE80211_CHAN_NO_IBSS | IEEE80211_CHAN_RADAR |
+-			    IEEE80211_CHAN_PASSIVE_SCAN)))
++	if ((chan->flags & (IEEE80211_CHAN_NO_IR | IEEE80211_CHAN_RADAR)))
+ 		goto fail_rcu;
+ 
+ 	ieee80211_xmit(sdata, skb, chan->band);
+-- 
+1.8.4.rc3
 
-On Tue, 2013-10-01 at 10:53 +0200, Arend van Spriel wrote:
-> This series renames the firmware files to match the required filenames in
-> the brcmfmac driver. Previously, these files needed to be copied/linked t=
-o
-> a generic name that was used in the driver. So for older kernels this is =
-still
-> needed.
->=20
-> Also included are new firmware files for BCM43241 and BCM4335. The brcmfm=
-ac
-> driver lists some more firmware files, but firmware is not yet released f=
-or
-> those chips.
->=20
-> Arend van Spriel (4):
->   brcm: rename firmware names expressing host interface type
->   brcm: add firmware file for BCM43241 SDIO chipset
->   brcm: add firmware for newer version of BCM43241 SDIO chipset
->   brcm: add firmware file for the BCM4335 SDIO chipset
->=20
->  WHENCE                                           |    9 ++++++---
->  brcm/brcmfmac43241b0-sdio.bin                    |  Bin 0 -> 455745 byte=
-s
->  brcm/brcmfmac43241b4-sdio.bin                    |  Bin 0 -> 403855 byte=
-s
->  brcm/{brcmfmac4329.bin =3D> brcmfmac4329-sdio.bin} |  Bin 253748 -> 2537=
-48 bytes
->  brcm/{brcmfmac4330.bin =3D> brcmfmac4330-sdio.bin} |  Bin 222126 -> 2221=
-26 bytes
->  brcm/{brcmfmac4334.bin =3D> brcmfmac4334-sdio.bin} |  Bin 451566 -> 4515=
-66 bytes
->  brcm/brcmfmac4335-sdio.bin                       |  Bin 0 -> 569291 byte=
-s
->  7 files changed, 6 insertions(+), 3 deletions(-)
->  create mode 100644 brcm/brcmfmac43241b0-sdio.bin
->  create mode 100644 brcm/brcmfmac43241b4-sdio.bin
->  rename brcm/{brcmfmac4329.bin =3D> brcmfmac4329-sdio.bin} (100%)
->  rename brcm/{brcmfmac4330.bin =3D> brcmfmac4330-sdio.bin} (100%)
->  rename brcm/{brcmfmac4334.bin =3D> brcmfmac4334-sdio.bin} (100%)
->  create mode 100644 brcm/brcmfmac4335-sdio.bin
-
-I've applied all of these, thanks.
-
-Ben.
-
---=20
-Ben Hutchings
-Beware of bugs in the above code;
-I have only proved it correct, not tried it. - Donald Knuth
-
---=-WZKg30HhX5wBG90iWPjS
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.14 (GNU/Linux)
-
-iQIVAwUAUlr9Mue/yOyVhhEJAQoKYA/+IOcoYt5VZICR/Qh9t52EQlJJ66ULy1KC
-t5SUUg/qpEFBXw9KTMctHypFlBw6g6An18kgRGGIS/rOUABjcEgAQtsiksHgD4Ak
-Iwa8neS4gth1Z46vcCCY/YpHdCU0LIC/6QHIYd0cz/SPN2whgH9Ht/bIR6a2/nEM
-faJSIr647sWB6dPMkoSNMvsGZit/EuisALQtvYUsFesNsZeWV8eFIEd47azorwp4
-OzfLbZiHkD+zoVvG96I85VuWSXChwgAoRangolE7il9wRfZF4wn5Qwa3GRgzWBVq
-rka6ECZYQNqZvkKNMC5O26n5Nf8oK9o7OkP6nE/ciHEio3r83XawfYcDk6OEH7K4
-m7iXDe0fhUzSQ2qZvOli8goVThX445OXjFhvv8+s/KLMcfZvHX2HiMv4MWHPSl+/
-ERtgfOjyt3F2axvcV9cPcMVlKgDLdbNeIfrDiWd5aJc7XxVgb0HRK1NTGp/MC0D6
-DJfuvkeBRbvUVCqnJfWZWDgciRfXlWxRrjsMzK4dffCgO1+FDd/2JQkDDDCKLseJ
-8GhQUJENKsNgcun2vnYX4fjEom7DM5GGL6QE6mvMBW81ww9Ta3Go7jnQnfKmrCqk
-mBc09Vpt97d9vV6O31idlcfpogwPqOwlzQTWZNmIVIiq2uBZD3zXpBd8abRlQeB4
-vq2K/QwS5rA=
-=QoDc
------END PGP SIGNATURE-----
-
---=-WZKg30HhX5wBG90iWPjS--
