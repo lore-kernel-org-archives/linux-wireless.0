@@ -1,52 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:60320 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751292Ab3J3XmW (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:45247 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750820Ab3JUGvt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Oct 2013 19:42:22 -0400
-Message-ID: <5271993E.5010103@candelatech.com> (sfid-20131031_004225_490435_4A1B0FF6)
-Date: Wed, 30 Oct 2013 16:41:50 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 21 Oct 2013 02:51:49 -0400
+Received: by mail-wi0-f180.google.com with SMTP id ey11so3456072wid.13
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Oct 2013 23:51:47 -0700 (PDT)
 MIME-Version: 1.0
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH/RFT 00/12] ath10k: pci fixes 2013-10-30
-References: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com>
-In-Reply-To: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com>
+In-Reply-To: <87iowruocz.fsf@kamboji.qca.qualcomm.com>
+References: <1382090878-22216-1-git-send-email-bartosz.markowski@tieto.com>
+	<1382090878-22216-2-git-send-email-bartosz.markowski@tieto.com>
+	<87iowruocz.fsf@kamboji.qca.qualcomm.com>
+Date: Mon, 21 Oct 2013 08:51:47 +0200
+Message-ID: <CACKGw+EKg_5FQMvGPHxpvgt9wukyU5HD1jx++WkyYNLA3bBFSg@mail.gmail.com> (sfid-20131021_085152_259617_894C88B2)
+Subject: Re: [PATCH 2/2] ath10k: extend number of AP interfaces for 10.X firmware
+From: Bartosz Markowski <bartosz.markowski@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath10k@lists.infradead.org,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/30/2013 04:42 AM, Michal Kazior wrote:
-> Hi,
-> 
-> This patchset contains a slew of PCI/CE cleanups
-> and fixes. The aim of the patchset is to deal with
-> CE null dereference bugs Ben has been reporting on
-> the mailing list for some time now.
-> 
-> I've done some brief testing and don't see any
-> major regressions. I wasn't able to reproduce the
-> reported bugs though. @Ben: Could you perhaps test
-> this, please?
+On 21 October 2013 08:31, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Bartosz Markowski <bartosz.markowski@tieto.com> writes:
+>
+>> This firmware can support up to 8 AP interfaces.
+>>
+>> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+>> ---
+>>  drivers/net/wireless/ath/ath10k/mac.c |    2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+>> index af046c4..dc65dcd 100644
+>> --- a/drivers/net/wireless/ath/ath10k/mac.c
+>> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+>> @@ -3255,7 +3255,7 @@ static const struct ieee80211_iface_limit ath10k_10x_if_limits[] = {
+>>       .types  = BIT(NL80211_IFTYPE_STATION)
+>>       },
+>>       {
+>> -     .max    = 7,
+>> +     .max    = 8,
+>>       .types  = BIT(NL80211_IFTYPE_AP)
+>>       },
+>>  };
+>
+> Why only with 10.x firmware branch? Doesn't the main branch support 8
+> interfaces?
 
-I have done a bit of testing on this.  First, I did see
-a total machine lockup, but I have been seeing those fairly
-often on module reloads, so probably that was nothing new
-in your patches.
-
-I am also still running the crash avoidance patches I posted
-recently.
-
-And good news for me at least...with some modified firmware,
-I am getting two stations to associate to the same AP and
-pass traffic to each other (no encryption..that probably
-doesn't work yet) :)
-
-Thanks,
-Ben
+With .636 there's a firmware crash when we try to create interface 8 (ap mode).
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Bartosz
