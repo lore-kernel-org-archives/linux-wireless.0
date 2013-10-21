@@ -1,44 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f52.google.com ([74.125.83.52]:58839 "EHLO
-	mail-ee0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753435Ab3JSAUr (ORCPT
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:32854 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751597Ab3JURXP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Oct 2013 20:20:47 -0400
-From: Felipe Pena <felipensp@gmail.com>
-To: Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Felipe Pena <felipensp@gmail.com>
-Subject: [PATCH] wireless: rt2800lib: Fix typo on checking
-Date: Fri, 18 Oct 2013 21:20:42 -0300
-Message-Id: <1382142042-4463-1-git-send-email-felipensp@gmail.com> (sfid-20131019_022108_177835_1B65A27E)
+	Mon, 21 Oct 2013 13:23:15 -0400
+Received: by mail-wi0-f176.google.com with SMTP id l12so4328327wiv.9
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Oct 2013 10:23:14 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, janusz.dziedzic@tieto.com,
+	smihir@qti.qualcomm.com, tushnimb@qca.qualcomm.com,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 14/14] cfg80211: remove internal passive-scan and no-ibss guards
+Date: Mon, 21 Oct 2013 19:22:38 +0200
+Message-Id: <1382376158-25586-15-git-send-email-mcgrof@do-not-panic.com> (sfid-20131021_193806_993218_1B70CACC)
+In-Reply-To: <1382376158-25586-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1382376158-25586-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On rt2800_config_channel_rf53xx function the member default_power1 is checked
-for bound limit, but default_power2 is used instead.
+The internal guards for no-ibss and passive-scan flags were
+left in case drivers were still using them. All drivers
+have now been converted so remove these guards.
 
-Signed-off-by: Felipe Pena <felipensp@gmail.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- drivers/net/wireless/rt2x00/rt2800lib.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/net/cfg80211.h | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 88ce656..1c2ce93 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -2650,7 +2650,7 @@ static void rt2800_config_channel_rf53xx(struct rt2x00_dev *rt2x00dev,
-
- 	if (rt2x00_rt(rt2x00dev, RT5392)) {
- 		rt2800_rfcsr_read(rt2x00dev, 50, &rfcsr);
--		if (info->default_power1 > POWER_BOUND)
-+		if (info->default_power2 > POWER_BOUND)
- 			rt2x00_set_field8(&rfcsr, RFCSR50_TX, POWER_BOUND);
- 		else
- 			rt2x00_set_field8(&rfcsr, RFCSR50_TX,
---
-1.7.10.4
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 45eb9aa..54cc9f8 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -122,9 +122,6 @@ enum ieee80211_channel_flags {
+ 	IEEE80211_CHAN_NO_160MHZ	= 1<<8,
+ };
+ 
+-#define IEEE80211_CHAN_PASSIVE_SCAN	IEEE80211_CHAN_NO_IR
+-#define IEEE80211_CHAN_NO_IBSS		IEEE80211_CHAN_NO_IR
+-
+ #define IEEE80211_CHAN_NO_HT40 \
+ 	(IEEE80211_CHAN_NO_HT40PLUS | IEEE80211_CHAN_NO_HT40MINUS)
+ 
+-- 
+1.8.4.rc3
 
