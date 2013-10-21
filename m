@@ -1,51 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:14338 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760562Ab3JPJTP (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:25580 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752238Ab3JUGaM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Oct 2013 05:19:15 -0400
+	Mon, 21 Oct 2013 02:30:12 -0400
 From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
+To: Bartosz Markowski <bartosz.markowski@tieto.com>
 CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/7] ath10k: add sanity checks for monitor management
-References: <1381858196-17000-1-git-send-email-michal.kazior@tieto.com>
-	<1381858196-17000-3-git-send-email-michal.kazior@tieto.com>
-Date: Wed, 16 Oct 2013 12:19:09 +0300
-In-Reply-To: <1381858196-17000-3-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Tue, 15 Oct 2013 10:29:51 -0700")
-Message-ID: <87siw17euq.fsf@kamboji.qca.qualcomm.com> (sfid-20131016_111927_582650_2629427B)
+Subject: Re: [PATCH 1/2] ath10k: remove P2P from supported interface modes for 10.X FW
+References: <1382090878-22216-1-git-send-email-bartosz.markowski@tieto.com>
+Date: Mon, 21 Oct 2013 09:30:06 +0300
+In-Reply-To: <1382090878-22216-1-git-send-email-bartosz.markowski@tieto.com>
+	(Bartosz Markowski's message of "Fri, 18 Oct 2013 12:07:57 +0200")
+Message-ID: <87mwm3uoep.fsf@kamboji.qca.qualcomm.com> (sfid-20131021_083032_790521_48368974)
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Bartosz Markowski <bartosz.markowski@tieto.com> writes:
 
-> Add a few checks and warnings to make it easier to
-> track any kind of monitor vdev mismanagement.
+> FW 10.X does not support P2P, stop advertising it to mac80211.
 >
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
 
 [...]
 
-> +	if (!ar->monitor_present) {
-> +		ath10k_warn("mac montor stop -- monitor is not present\n");
-> +		return -EINVAL;
-> +	}
+> @@ -3478,7 +3504,11 @@ int ath10k_mac_register(struct ath10k *ar)
+>  	 */
+>  	ar->hw->queues = 4;
+>  
+> -	ar->hw->wiphy->iface_combinations = &ath10k_if_comb;
+> +	if (test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features))
+> +		ar->hw->wiphy->iface_combinations = &ath10k_10x_if_comb;
+> +	else
+> +		ar->hw->wiphy->iface_combinations = &ath10k_if_comb;
 
-[...]
-
-> +	if (!ar->monitor_present) {
-> +		ath10k_warn("mac montor stop -- monitor is not present\n");
-> +		return -EINVAL;
-> +	}
-> +
-> +	if (!ar->monitor_enabled) {
-> +		ath10k_warn("mac montor stop -- monitor is not enabled\n");
-> +		return -EINVAL;
-> +	}
-
-s/montor/monitor/
+I think it would be better to have a separate feature flag for this,
+like NO_P2P or something like that. Just in case we want to disable P2P
+in other firmware branches.
 
 -- 
 Kalle Valo
