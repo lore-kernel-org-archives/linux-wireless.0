@@ -1,84 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:44555 "EHLO ebb06.tieto.com"
+Received: from purkki.adurom.net ([80.68.90.206]:46005 "EHLO purkki.adurom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751284Ab3JDFnw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Oct 2013 01:43:52 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH/RFT v2 4/4] ath10k: remove unnecessary checks
-Date: Fri, 4 Oct 2013 07:43:45 +0200
-Message-ID: <1380865425-3791-5-git-send-email-michal.kazior@tieto.com> (sfid-20131004_074400_705393_76E54F6F)
-In-Reply-To: <1380865425-3791-1-git-send-email-michal.kazior@tieto.com>
-References: <1380805765-31521-1-git-send-email-michal.kazior@tieto.com>
- <1380865425-3791-1-git-send-email-michal.kazior@tieto.com>
+	id S1752094Ab3JUGTV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Oct 2013 02:19:21 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Subject: Re: Active scanning on DFS channels
+References: <CAA2SeNJRSPB=Hus8y1bYJ-O1Hgkd=gvNhUKnF9atqwuhd2m0aA@mail.gmail.com>
+	<CAB=NE6WSNZ10pNfKN5-o0cnVYkZbt4gGAzPOcO=Dtw5aUj+wGA@mail.gmail.com>
+Date: Mon, 21 Oct 2013 09:19:18 +0300
+In-Reply-To: <CAB=NE6WSNZ10pNfKN5-o0cnVYkZbt4gGAzPOcO=Dtw5aUj+wGA@mail.gmail.com>
+	(Luis R. Rodriguez's message of "Sun, 20 Oct 2013 11:53:27 +0200")
+Message-ID: <87wql7tac9.fsf@purkki.adurom.net> (sfid-20131021_081924_438659_5DE32987)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mac80211 interface iteration functions that were
-used originally iterated over interfaces that
-weren't re-added to the driver during recovery.
+"Luis R. Rodriguez" <mcgrof@do-not-panic.com> writes:
 
-Since internal vif list is now used it's safe to
-remove the safe-guard as internal vif list is
-based on add/remove_interface function which
-guarantees that vdev is created in FW before it is
-iterated over.
+>> Should we perform
+>> passive scan on radar channel setting new state to SCAN_DECISION and
+>> not to SCAN_SEND_PROBE in ieee80211_scan_state_set_channel()?
+>
+> There's a few thing we need to do and I'm working on it.
+>
+>   1) no-ibss and passive-scan flags should be merged to a no-ir flag
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/mac.c |   21 ---------------------
- 1 file changed, 21 deletions(-)
+For me IR always reminds of infrared, so the name no-ir is a bit vague
+to me :)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 583f065..7567db0 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -1924,13 +1924,6 @@ static int ath10k_config_ps(struct ath10k *ar)
- 
- 	lockdep_assert_held(&ar->conf_mutex);
- 
--	/* During HW reconfiguration mac80211 reports all interfaces that were
--	 * running until reconfiguration was started. Since FW doesn't have any
--	 * vdevs at this point we must not iterate over this interface list.
--	 * This setting will be updated upon add_interface(). */
--	if (ar->state == ATH10K_STATE_RESTARTED)
--		return 0;
--
- 	list_for_each_entry(arvif, &ar->arvifs, list) {
- 		ret = ath10k_mac_vif_setup_ps(arvif);
- 		if (ret) {
-@@ -2840,13 +2833,6 @@ static int ath10k_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
- 	struct ath10k_vif *arvif;
- 	int ret = 0;
- 
--	/* During HW reconfiguration mac80211 reports all interfaces that were
--	 * running until reconfiguration was started. Since FW doesn't have any
--	 * vdevs at this point we must not iterate over this interface list.
--	 * This setting will be updated upon add_interface(). */
--	if (ar->state == ATH10K_STATE_RESTARTED)
--		return 0;
--
- 	mutex_lock(&ar->conf_mutex);
- 	list_for_each_entry(arvif, &ar->arvifs, list) {
- 		ath10k_dbg(ATH10K_DBG_MAC, "mac vdev %d rts threshold %d\n",
-@@ -2870,13 +2856,6 @@ static int ath10k_set_frag_threshold(struct ieee80211_hw *hw, u32 value)
- 	struct ath10k_vif *arvif;
- 	int ret = 0;
- 
--	/* During HW reconfiguration mac80211 reports all interfaces that were
--	 * running until reconfiguration was started. Since FW doesn't have any
--	 * vdevs at this point we must not iterate over this interface list.
--	 * This setting will be updated upon add_interface(). */
--	if (ar->state == ATH10K_STATE_RESTARTED)
--		return 0;
--
- 	mutex_lock(&ar->conf_mutex);
- 	list_for_each_entry(arvif, &ar->arvifs, list) {
- 		ath10k_dbg(ATH10K_DBG_MAC, "mac vdev %d fragmentation threshold %d\n",
 -- 
-1.7.9.5
-
+Kalle Valo
