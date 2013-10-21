@@ -1,39 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:58928 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751180Ab3JNOQf (ORCPT
+Received: from mail-we0-f175.google.com ([74.125.82.175]:62379 "EHLO
+	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751341Ab3JURWu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Oct 2013 10:16:35 -0400
-Message-ID: <1381760191.13092.13.camel@jlt4.sipsolutions.net> (sfid-20131014_161638_446948_025B4830)
-Subject: Re: [PATCH v4 3/6] mac80211: add the CSA and MCSP elements in mesh
- beaconing
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	devel@lists.open80211s.org, distro11s@cozybit.com
-Date: Mon, 14 Oct 2013 16:16:31 +0200
-In-Reply-To: <1381516190-23918-4-git-send-email-yeohchunyeow@cozybit.com> (sfid-20131011_203007_916657_AD660D4F)
-References: <1381516190-23918-1-git-send-email-yeohchunyeow@cozybit.com>
-	 <1381516190-23918-4-git-send-email-yeohchunyeow@cozybit.com>
-	 (sfid-20131011_203007_916657_AD660D4F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 21 Oct 2013 13:22:50 -0400
+Received: by mail-we0-f175.google.com with SMTP id t61so6766765wes.6
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Oct 2013 10:22:49 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, janusz.dziedzic@tieto.com,
+	smihir@qti.qualcomm.com, tushnimb@qca.qualcomm.com,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>
+Subject: [PATCH 03/14] ath10k: consolidate no-ibss and passive scan to no-ir
+Date: Mon, 21 Oct 2013 19:22:27 +0200
+Message-Id: <1382376158-25586-4-git-send-email-mcgrof@do-not-panic.com> (sfid-20131021_192253_294493_D32537ED)
+In-Reply-To: <1382376158-25586-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1382376158-25586-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-10-11 at 11:29 -0700, Chun-Yeow Yeoh wrote:
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
->  	/* Channel Switching Support */
-> +	struct cfg80211_csa_settings *csa_settings;
-
-That should have an __rcu annotation now, I believe?
-
-> +	if (ifmsh->csa_settings) {
-
-In which case this will result in a sparse warning.
-
-Does this even make sense here - it can't ever be non-NULL in this
-patch?
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 0b1cc51..f23d61f 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1351,12 +1351,12 @@ static int ath10k_update_channel_list(struct ath10k *ar)
+ 			ch->allow_vht = true;
+ 
+ 			ch->allow_ibss =
+-				!(channel->flags & IEEE80211_CHAN_NO_IBSS);
++				!(channel->flags & IEEE80211_CHAN_NO_IR);
+ 
+ 			ch->ht40plus =
+ 				!(channel->flags & IEEE80211_CHAN_NO_HT40PLUS);
+ 
+-			passive = channel->flags & IEEE80211_CHAN_PASSIVE_SCAN;
++			passive = channel->flags & IEEE80211_CHAN_NO_IR;
+ 			ch->passive = passive;
+ 
+ 			ch->freq = channel->center_freq;
+-- 
+1.8.4.rc3
 
