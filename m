@@ -1,60 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.20]:51397 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750797Ab3JRFaE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Oct 2013 01:30:04 -0400
-Received: from [192.168.0.100] ([93.218.112.150]) by mail.gmx.com (mrgmx003)
- with ESMTPSA (Nemesis) id 0M4nM5-1VwQfn1M2H-00ywRt for
- <linux-wireless@vger.kernel.org>; Fri, 18 Oct 2013 07:30:02 +0200
-Message-ID: <5260C759.6000801@rempel-privat.de> (sfid-20131018_073034_220417_9D7EA3BF)
-Date: Fri, 18 Oct 2013 07:30:01 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
-MIME-Version: 1.0
-To: =?UTF-8?B?QW5kcsOpIE1hcnRpbnM=?= <sna7e_7@hotmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RTL8723AE] Driver problems
-References: <BLU0-SMTP28669C5469915F5D8D155AF89060@phx.gbl>
-In-Reply-To: <BLU0-SMTP28669C5469915F5D8D155AF89060@phx.gbl>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:40187 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751383Ab3JUROz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Oct 2013 13:14:55 -0400
+Received: by mail-wg0-f51.google.com with SMTP id l18so6925842wgh.30
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Oct 2013 10:14:54 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, janusz.dziedzic@tieto.com,
+	smihir@qti.qualcomm.com, tushnimb@qca.qualcomm.com,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 0/5] ath: simplify radar / beaconing flag settings
+Date: Mon, 21 Oct 2013 19:14:46 +0200
+Message-Id: <1382375691-25476-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20131021_191458_053225_D6364D29)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 18.10.2013 02:55, schrieb André Martins:
-> Hi!
-> This is a copy I've sent to Larry Finger and his bot told me to sent to
-> this e-mail address instead.
-> Basically I've bought a computer with the 8723ae card and unfortunately the
-> wireless connection is really bad. Although I'm a last year student on
-> MSc in
-> computers and telematics engineering I don't have any skills what so
-> ever on
-> kernel's source code. Thus, I want to ask you if you could help me out
-> and tell
-> me where to begin to fix this and create a great rtl8723ae driver for
-> Linux. I
-> could help you with the tests what whatever I could. The main problem
-> with this
-> card is the connection on my university, it's always dropping and
-> impossible to
-> have a stable connection. On my house I'm a few meters way of my AP and
-> the link
-> quality is either on 38/70 or 70/70.
-> Since you take the time to read this e-mail I thank you already.
-> Thanks,
-> André Martins
+John, Johannes,
 
-Hi André,
+these patches start cleaning up the flag usage through the reg-notifier
+but the main motiviation here as to help clarify the case in which
+DFS is supported and we don't need to apply some paranoid flags. I've
+determined its best to clean this up on cfg80211 (unifying flags)
+and deal with the DFS case in cfg80211 as well (I add the documentation,
+but expect Januz to send a respective change later for DFS).
 
-start with googling for "linux wlan troubleshooting".
-Use latest kernel wifi source code:
-https://git.kernel.org/cgit/linux/kernel/git/linville/wireless-next.git/
+Given that the later patches cfg80211 / other drivers I'll let you
+guys decide what tree these bubble up through.
 
-If you can compile kernel by your self, then you can do some changes on
-kernel. See how driver works, add "printk("%s:%i\ņ", __func__,
-__LINE__);" every where and monitore dmesg. The driver is located here:
-linux/drivers/net/wireless/rtlwifi/rtl8723ae
+This series simplifies the flag application setup. Just a heads up I
+noticed that broadcom and rtl drivers share a lot of this code so
+eventually we may want to just export these and share them somehow.
 
-If you wont to help with this driver, do not fear to brake you kernel ;)
+Luis R. Rodriguez (5):
+  ath: fix logic on ath_reg_apply_active_scan_flags()
+  ath: clean up ath_reg_apply_active_scan_flags()
+  ath: rename ath_reg_apply_active_scan_flags() to
+    ath_reg_apply_ir_flags()
+  ath: simplify ath_reg_apply_beaconing_flags()
+  ath: move the channel for ath_reg_apply_beaconing_flags() into helper
+
+ drivers/net/wireless/ath/regd.c | 174 ++++++++++++++++++++++------------------
+ 1 file changed, 94 insertions(+), 80 deletions(-)
+
 -- 
-Regards,
-Oleksij
+1.8.4.rc3
+
