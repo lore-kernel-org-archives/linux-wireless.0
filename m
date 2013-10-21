@@ -1,75 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:35486 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751834Ab3JASOa (ORCPT
+Received: from mail-we0-f181.google.com ([74.125.82.181]:35395 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751454Ab3JURXA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Oct 2013 14:14:30 -0400
-Message-ID: <524B10F8.9080301@candelatech.com> (sfid-20131001_201448_039470_51BA034A)
-Date: Tue, 01 Oct 2013 11:14:16 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>
-Subject: Softlockup warnings on 3.9.11+, software crypt, wpa2, UDP.
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 21 Oct 2013 13:23:00 -0400
+Received: by mail-we0-f181.google.com with SMTP id t60so6727949wes.26
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Oct 2013 10:22:59 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, janusz.dziedzic@tieto.com,
+	smihir@qti.qualcomm.com, tushnimb@qca.qualcomm.com,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 07/14] mwifiex: consolidate no-ibss and passive scan to no-ir
+Date: Mon, 21 Oct 2013 19:22:31 +0200
+Message-Id: <1382376158-25586-8-git-send-email-mcgrof@do-not-panic.com> (sfid-20131021_192305_000746_6E43E989)
+In-Reply-To: <1382376158-25586-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1382376158-25586-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm doing some performance tests with UDP download, using WPA2 encryption.
-I'm using software crypt since I'm using multiple VIFs.
+Cc: Amitkumar Karwar <akarwar@marvell.com>
+Cc: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c | 14 +++++++-------
+ drivers/net/wireless/mwifiex/scan.c     |  4 ++--
+ 2 files changed, 9 insertions(+), 9 deletions(-)
 
-The receiving side sees lots of these warnings.  Do we need
-some bail-out logic somewhere so that it doesn't get stuck
-receiving packets for so long?
-
-BUG: soft lockup - CPU#0 stuck for 22s! [btserver:32646]
-Modules linked in: nfsv4 auth_rpcgss nfs fscache nf_nat_ipv4 nf_nat 8021q garp stp mrp llc macvlan wanlink(O) pktgen lockd sunrpc f71882fg snd_hda_codec_hdmi 
-snd_hda_codec_realtek snd_hda_intel snd_hda_codec snd_hwdep cdc_acm joydev snd_seq snd_seq_device snd_pcm coretemp ath9k hwmon ath9k_common mperf ath9k_hw 
-intel_powerclamp ath kvm_intel mac80211 kvm cfg80211 iTCO_wdt microcode iTCO_vendor_support snd_page_alloc e1000e i2c_i801 snd_timer mos7840 pcspkr serio_raw 
-snd soundcore ptp pps_core lpc_ich uinput ipv6 i915 video i2c_algo_bit drm_kms_helper drm i2c_core [last unloaded: iptable_nat]
-CPU 0
-Pid: 32646, comm: btserver Tainted: G         C O 3.9.11+ #126 To be filled by O.E.M. To be filled by O.E.M./HURONRIVER
-RIP: 0010:[<ffffffff81017e1d>]  [<ffffffff81017e1d>] __kernel_fpu_begin+0x48/0x8b
-RSP: 0000:ffff88021fa03918  EFLAGS: 00000286
-RAX: 00000000ffffffff RBX: ffffffff81549567 RCX: ffff88020bc48000
-RDX: 00000000ffffffff RSI: ffff88021fa03a28 RDI: ffff88020f8d5a00
-RBP: ffff88021fa03918 R08: ffff8801b54a1978 R09: 0000000000000010
-R10: ffff88020c5cb490 R11: 0000000000000200 R12: ffff88021fa03888
-R13: ffffffff815d235d R14: ffff88021fa03918 R15: ffff88020c5cb400
-FS:  00007f02f9605740(0000) GS:ffff88021fa00000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00000000023b4c60 CR3: 000000020b754000 CR4: 00000000000407f0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-Process btserver (pid: 32646, threadinfo ffff880210666000, task ffff88020bc48000)
-Stack:
-  ffff88021fa03928 ffffffff8108b1f2 ffff88021fa03958 ffffffff8108c05d
-  ffff88021fa03a28 ffff88021fa03a28 ffff88020c5c9c00 ffff88021fa03a08
-  ffff88021fa039d8 ffffffffa05be460 ffff880200000010 ffff8801b54a1978
-Call Trace:
-  <IRQ>
-  [<ffffffff8108b1f2>] kernel_fpu_begin+0x42/0x44
-  [<ffffffff8108c05d>] aes_encrypt+0x46/0x62
-  [<ffffffffa05be460>] ieee80211_aes_ccm_decrypt+0xcf/0x108 [mac80211]
-  [<ffffffffa05b1e0f>] ieee80211_crypto_ccmp_decrypt+0x1c7/0x247 [mac80211]
-  [<ffffffffa05c530d>] ieee80211_rx_handlers+0x305/0x18c9 [mac80211]
-  [<ffffffff815d235d>] ? apic_timer_interrupt+0x6d/0x80
-  [<ffffffffa05c71cf>] ieee80211_prepare_and_rx_handle+0x8fe/0x96a [mac80211]
-  [<ffffffffa05c79c4>] ieee80211_rx+0x6e9/0x759 [mac80211]
-  [<ffffffffa08f5f99>] ath_rx_tasklet+0xff8/0x10d1 [ath9k]
-  [<ffffffffa08f43a1>] ath9k_tasklet+0xf9/0x150 [ath9k]
-  [<ffffffff8109d5af>] tasklet_action+0x7d/0xcc
-  [<ffffffff8109da08>] __do_softirq+0x114/0x254
-  [<ffffffff815caf51>] ? _raw_spin_unlock_irqrestore+0x31/0x3c
-  [<ffffffff815caf15>] ? _raw_spin_unlock+0x24/0x2f
-  [<ffffffff8109dbda>] irq_exit+0x4b/0xa8
-  [<ffffffff815d33dd>] do_IRQ+0x9d/0xb4
-  [<ffffffff815cb4ad>] common_interrupt+0x6d/0x6d
-  <EOI>
-Code: 4c 05 00 00 00 00 00 00 65 48 c7 04 25 b0 c6 00 00 00 00 00 00 b0 01 84 c0 48 8b b9 50 05 00 00 74 1b 83 c8 ff 89 c2 48 0f ae 37 <48> 8b 81 50 05 00 00 f6 
-80 00 02 00 00 01 75 06 eb 2f 48 0f ae
-
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index fbad00a..7f68943 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -50,24 +50,24 @@ static const struct ieee80211_regdomain mwifiex_world_regdom_custom = {
+ 		REG_RULE(2412-10, 2462+10, 40, 3, 20, 0),
+ 		/* Channel 12 - 13 */
+ 		REG_RULE(2467-10, 2472+10, 20, 3, 20,
+-			 NL80211_RRF_PASSIVE_SCAN | NL80211_RRF_NO_IBSS),
++			 NL80211_RRF_NO_IR),
+ 		/* Channel 14 */
+ 		REG_RULE(2484-10, 2484+10, 20, 3, 20,
+-			 NL80211_RRF_PASSIVE_SCAN | NL80211_RRF_NO_IBSS |
++			 NL80211_RRF_NO_IR |
+ 			 NL80211_RRF_NO_OFDM),
+ 		/* Channel 36 - 48 */
+ 		REG_RULE(5180-10, 5240+10, 40, 3, 20,
+-			 NL80211_RRF_PASSIVE_SCAN | NL80211_RRF_NO_IBSS),
++			 NL80211_RRF_NO_IR),
+ 		/* Channel 149 - 165 */
+ 		REG_RULE(5745-10, 5825+10, 40, 3, 20,
+-			 NL80211_RRF_PASSIVE_SCAN | NL80211_RRF_NO_IBSS),
++			 NL80211_RRF_NO_IR),
+ 		/* Channel 52 - 64 */
+ 		REG_RULE(5260-10, 5320+10, 40, 3, 30,
+-			 NL80211_RRF_PASSIVE_SCAN | NL80211_RRF_NO_IBSS |
++			 NL80211_RRF_NO_IR |
+ 			 NL80211_RRF_DFS),
+ 		/* Channel 100 - 140 */
+ 		REG_RULE(5500-10, 5700+10, 40, 3, 30,
+-			 NL80211_RRF_PASSIVE_SCAN | NL80211_RRF_NO_IBSS |
++			 NL80211_RRF_NO_IR |
+ 			 NL80211_RRF_DFS),
+ 	}
+ };
+@@ -1968,7 +1968,7 @@ mwifiex_cfg80211_scan(struct wiphy *wiphy,
+ 		user_scan_cfg->chan_list[i].chan_number = chan->hw_value;
+ 		user_scan_cfg->chan_list[i].radio_type = chan->band;
+ 
+-		if (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN)
++		if (chan->flags & IEEE80211_CHAN_NO_IR)
+ 			user_scan_cfg->chan_list[i].scan_type =
+ 						MWIFIEX_SCAN_TYPE_PASSIVE;
+ 		else
+diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
+index 8cf7d50..0ed0664 100644
+--- a/drivers/net/wireless/mwifiex/scan.c
++++ b/drivers/net/wireless/mwifiex/scan.c
+@@ -515,14 +515,14 @@ mwifiex_scan_create_channel_list(struct mwifiex_private *priv,
+ 				scan_chan_list[chan_idx].max_scan_time =
+ 					cpu_to_le16((u16) user_scan_in->
+ 					chan_list[0].scan_time);
+-			else if (ch->flags & IEEE80211_CHAN_PASSIVE_SCAN)
++			else if (ch->flags & IEEE80211_CHAN_NO_IR)
+ 				scan_chan_list[chan_idx].max_scan_time =
+ 					cpu_to_le16(adapter->passive_scan_time);
+ 			else
+ 				scan_chan_list[chan_idx].max_scan_time =
+ 					cpu_to_le16(adapter->active_scan_time);
+ 
+-			if (ch->flags & IEEE80211_CHAN_PASSIVE_SCAN)
++			if (ch->flags & IEEE80211_CHAN_NO_IR)
+ 				scan_chan_list[chan_idx].chan_scan_mode_bitmap
+ 					|= MWIFIEX_PASSIVE_SCAN;
+ 			else
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.8.4.rc3
 
