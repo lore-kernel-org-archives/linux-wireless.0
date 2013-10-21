@@ -1,45 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:63736 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752431Ab3JaGIa (ORCPT
+Received: from smtp-out03.msg.oleane.net ([62.161.7.1]:40078 "EHLO
+	smtp-out03.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753449Ab3JUP2o convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Oct 2013 02:08:30 -0400
-Received: by mail-pa0-f47.google.com with SMTP id lf10so2030112pab.34
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Oct 2013 23:08:29 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: k.eugene.e@gmail.com, linville@tuxdriver.com,
-	wcn36xx@lists.infradead.org,
-	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
-	Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-Subject: [PATCH] wcn36xx: enable beacon change using BSS_CHANGED_BEACON
-Date: Thu, 31 Oct 2013 14:07:45 +0800
-Message-Id: <1383199665-18377-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20131031_070832_864288_7715049B)
+	Mon, 21 Oct 2013 11:28:44 -0400
+From: "Jean-Pierre Tosoni" <jp.tosoni@acksys.fr>
+To: <linux-wireless@vger.kernel.org>,
+	<wireless-regdb@lists.infradead.org>
+Subject: French regulatory domain change request
+Date: Mon, 21 Oct 2013 17:05:51 +0200
+Message-ID: <000901cece6f$081ca5f0$1855f1d0$@acksys.fr> (sfid-20131021_172847_913584_0745CC74)
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Enable the beacon changed using BSS_CHANGED_BEACON. This is
-especially useful for mesh mode.
+Hello all,
 
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
----
- drivers/net/wireless/ath/wcn36xx/main.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+The current description for France in regdb.txt is :
+country FR: DFS-ETSI
+	(2402 - 2482 @ 40), (N/A, 20)
+	(5170 - 5250 @ 80), (N/A, 20)
+	(5250 - 5330 @ 80), (N/A, 20), DFS
+	(5490 - 5710 @ 80), (N/A, 27), DFS
+	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index 7839b31..e64a678 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -641,7 +641,8 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
- 		dev_kfree_skb(skb);
- 	}
- 
--	if (changed & BSS_CHANGED_BEACON_ENABLED) {
-+	if (changed & BSS_CHANGED_BEACON_ENABLED ||
-+	    changed & BSS_CHANGED_BEACON) {
- 		wcn36xx_dbg(WCN36XX_DBG_MAC,
- 			    "mac bss changed beacon enabled %d\n",
- 			    bss_conf->enable_beacon);
--- 
-1.7.9.5
+Following this paper http://www.arcep.fr/uploads/tx_gsavis/08-0568.pdf 
+" Décision n° 2008-0568" issued by the ARCEP (French Electronic
+communications and Postoffice Regulation Authority) in the year 2008,
+1) the frequencies 5150-5350 MHz are limited to INDOOR use.
+ (see page 5: "Dans la bande de fréquences*5150-5350* MHz, les WAS/RLAN sont
+limités à une *utilisation intérieure* ...")
+2) the limits of the frequency band is ~20MHz greater for all frequency
+values (5150 vs. 5170, 5350 vs. 5330, 5470 vs. 5490, 5725 vs. 5710)
+
+So IMHO the description for France should read: 
+country FR: DFS-ETSI
+	(2402 - 2482 @ 40), (N/A, 20)
+	# ref: ARCEP 08-0568
+http://www.arcep.fr/uploads/tx_gsavis/08-0568.pdf
+	(5150 - 5250 @ 80), (N/A, 20), NO-OUTDOOR
+	(5250 - 5350 @ 80), (N/A, 20), NO-OUTDOOR, DFS
+	(5470 - 5725 @ 80), (N/A, 27), DFS
+	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+	(57240 - 65880 @ 2160), (N/A, 40), NO-OUTDOOR
+
+By the way, this looks very like the description for Germany (DE) now!
+
+Regards,
+Jean-Pierre
 
