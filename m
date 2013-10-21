@@ -1,47 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:52217 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751519Ab3JGM0m (ORCPT
+Received: from szxga03-in.huawei.com ([119.145.14.66]:20813 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753230Ab3JUL0b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Oct 2013 08:26:42 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Bartosz Markowski <bartosz.markowski@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/2] ath10k: advestise 10.X fw support on wmi_attach
-References: <1380696532-4147-1-git-send-email-bartosz.markowski@tieto.com>
-Date: Mon, 7 Oct 2013 15:26:36 +0300
-In-Reply-To: <1380696532-4147-1-git-send-email-bartosz.markowski@tieto.com>
-	(Bartosz Markowski's message of "Wed, 2 Oct 2013 08:48:51 +0200")
-Message-ID: <8738oduv0j.fsf@kamboji.qca.qualcomm.com> (sfid-20131007_142645_917533_C60A1628)
+	Mon, 21 Oct 2013 07:26:31 -0400
+Message-ID: <52650F60.5080402@huawei.com> (sfid-20131021_132659_294651_FC025A6A)
+Date: Mon, 21 Oct 2013 19:26:24 +0800
+From: Kefeng Wang <wangkefeng.wang@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Joe Perches <joe@perches.com>
+CC: <linux-kernel@vger.kernel.org>, <netfilter@vger.kernel.org>,
+	<netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 00/23 v2] cleanup: introduce br/netdev/netif/wiphy_<foo>_ratelimited()
+ and use them to simplify code
+References: <1382068363-10088-1-git-send-email-wangkefeng.wang@huawei.com> <1382069482.22110.164.camel@joe-AO722>
+In-Reply-To: <1382069482.22110.164.camel@joe-AO722>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bartosz Markowski <bartosz.markowski@tieto.com> writes:
+On 10/18 12:11, Joe Perches wrote:
+> (resending to lists only because of multiple X's in the subject line)
+> 
+> On Fri, 2013-10-18 at 11:52 +0800, Kefeng Wang wrote:
+>> v1-v2:
+>>
+>>   Introduce macro br/netdev/netif/wiphy_XXX_ratelimited() according
+>>   to Joe Perches's advice. The macros are similar to net_XXX_ratelimited()
+>>   which is more clarifying than net_ratelimited_function(), then use them
+>>   to simplify code.
+> 
+> There are some conceptual differences between these
+> implementations and other <foo>_ratelimited uses.
+> 
+> For every other subsystem but net, there is a per-location
+> struct ratelimit_state.
 
-> Since the WMI API has been added and we can detect from the
-> FW IEs what firmware variant we deal with, turn on 10.X support.
->
-> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+yes, but I think I just changed net subsystem. Macro DEFINE_RATELIMIT_STATE used
+DEFAULT_RATELIMIT_INTERVAL and DEFAULT_RATELIMIT_BURST, so what do you think?
+Could anyone give me some advises ?
 
-Thanks, both patches applied. For patch 1 I changed the commit log a bit
-as we don't really advertise anything to user space:
+> Here you've made the global net_ratelimit_state replace all
+> of these individual structs so there is some new interaction.
+> 
+> Dunno if that's good or bad.
+> 
+> 
+> 
+> 
+> 
 
-commit 8acd3c97ff9ea803513c55f89d3f1832481b5b76
-Author: Bartosz Markowski <bartosz.markowski@tieto.com>
-Date:   Wed Oct 2 08:48:51 2013 +0200
 
-    ath10k: enable 10.x firmware branch support
-    
-    Since the WMI API has been added and we can detect from the
-    FW IEs what firmware variant we deal with, turn on support
-    for 10.x firmware branch in ath10k_wmi_attach().
-    
-    kvalo: improve the commit log
-    
-    Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
-    Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-
--- 
-Kalle Valo
