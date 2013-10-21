@@ -1,59 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:23309 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754278Ab3J0Pzg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Oct 2013 11:55:36 -0400
-From: Vladimir Kondratiev <qca_vkondrat@qti.qualcomm.com>
-Cc: Vladimir Kondratiev <qca_vkondrat@qti.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH] nl80211: introduce NL80211_SCAN_FLAG_DISCOVERY_MODE
-Date: Sun, 27 Oct 2013 17:54:41 +0200
-Message-ID: <1382889282-12880-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20131027_165540_326592_28499FB3)
+Received: from 220-133-188-53.HINET-IP.hinet.net ([220.133.188.53]:60755 "EHLO
+	ns.kevlo.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752364Ab3JUHnh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Oct 2013 03:43:37 -0400
+Date: Mon, 21 Oct 2013 15:38:31 +0800
+From: Kevin Lo <kevlo@kevlo.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: [PATCH] rt2x00: rt2800lib: Update BBP register initialization for
+ RT53xx
+Message-ID: <20131021073831.GA87643@ns.kevlo.org> (sfid-20131021_094353_259125_42A23A14)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-for the DMG (60GHz) networks, there is new scan parameter added in the 802.11 spec -
-DiscoveryMode.  This parameter defines whether station performing active scan shall
-generate special form of DMG beacons. In particular, this flag used in the P2P
-discovery.
+Update bbp register initialization for RT53xx chips to match with the
+latest MediaTek/Ralink driver.
 
-Introduce flag to support this feature.
+Based on: NICInitRT5390BbpRegisters()
+From: DPO_RT5572_LinuxSTA_2.6.1.3_20121022/chips/rt5390.c
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Kevin Lo <kevlo.org>
 ---
- include/uapi/linux/nl80211.h | 7 +++++++
- 1 file changed, 7 insertions(+)
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index fde2c02..469ed2b 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -3808,11 +3808,18 @@ enum nl80211_connect_failed_reason {
-  *	dangerous because will destroy stations performance as a lot of frames
-  *	will be lost while scanning off-channel, therefore it must be used only
-  *	when really needed
-+ * @NL80211_SCAN_FLAG_DISCOVERY_MODE: scan to use discovery mode, as in
-+ *	802.11 spec for DMG (60GHz) networks in clause:
-+ *	10.1.3.4 DMG Beacon generation before network initialization
-+ *	If set, station should transmit special form of DMG beacons when
-+ *	performing active scan. In 60GHz networks, this feature used
-+ *	in the P2P discovery procedure.
-  */
- enum nl80211_scan_flags {
- 	NL80211_SCAN_FLAG_LOW_PRIORITY			= 1<<0,
- 	NL80211_SCAN_FLAG_FLUSH				= 1<<1,
- 	NL80211_SCAN_FLAG_AP				= 1<<2,
-+	NL80211_SCAN_FLAG_DISCOVERY_MODE		= 1<<3,
- };
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index c5738f1..eae635a 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -5462,15 +5462,14 @@ static void rt2800_init_bbp_53xx(struct rt2x00_dev *rt2x00dev)
  
- /**
--- 
-1.8.3.2
-
+ 	rt2800_bbp_write(rt2x00dev, 68, 0x0b);
+ 
+-	rt2800_bbp_write(rt2x00dev, 69, 0x12);
++	rt2800_bbp_write(rt2x00dev, 69, 0x0d);
++	rt2800_bbp_write(rt2x00dev, 70, 0x06);
+ 	rt2800_bbp_write(rt2x00dev, 73, 0x13);
+ 	rt2800_bbp_write(rt2x00dev, 75, 0x46);
+ 	rt2800_bbp_write(rt2x00dev, 76, 0x28);
+ 
+ 	rt2800_bbp_write(rt2x00dev, 77, 0x59);
+ 
+-	rt2800_bbp_write(rt2x00dev, 70, 0x0a);
+-
+ 	rt2800_bbp_write(rt2x00dev, 79, 0x13);
+ 	rt2800_bbp_write(rt2x00dev, 80, 0x05);
+ 	rt2800_bbp_write(rt2x00dev, 81, 0x33);
+@@ -5513,6 +5512,7 @@ static void rt2800_init_bbp_53xx(struct rt2x00_dev *rt2x00dev)
+ 	if (rt2x00_rt(rt2x00dev, RT5392)) {
+ 		rt2800_bbp_write(rt2x00dev, 134, 0xd0);
+ 		rt2800_bbp_write(rt2x00dev, 135, 0xf6);
++		rt2800_bbp_write(rt2x00dev, 148, 0x84);
+ 	}
+ 
+ 	rt2800_disable_unused_dac_adc(rt2x00dev);
