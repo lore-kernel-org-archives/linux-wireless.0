@@ -1,80 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([83.151.30.3]:51973 "EHLO m25s01.vlinux.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754702Ab3JVUL6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Oct 2013 16:11:58 -0400
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: linux-wireless@vger.kernel.org
-Cc: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Dirk Gouders <dirk@gouders.net>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Simon Wunderlich <sw@simonwunderlich.de>
-Subject: [PATCH 3.12] cfg80211: fix ibss wext chandef creation
-Date: Tue, 22 Oct 2013 22:02:46 +0200
-Message-Id: <1382472166-19563-1-git-send-email-sw@simonwunderlich.de> (sfid-20131022_221235_343937_76CC3A81)
+Received: from mail-we0-f175.google.com ([74.125.82.175]:53615 "EHLO
+	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751454Ab3JURXD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Oct 2013 13:23:03 -0400
+Received: by mail-we0-f175.google.com with SMTP id t61so6969135wes.34
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Oct 2013 10:23:01 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, janusz.dziedzic@tieto.com,
+	smihir@qti.qualcomm.com, tushnimb@qca.qualcomm.com,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 08/14] iwlegacy: consolidate no-ibss and passive scan to no-ir
+Date: Mon, 21 Oct 2013 19:22:32 +0200
+Message-Id: <1382376158-25586-9-git-send-email-mcgrof@do-not-panic.com> (sfid-20131021_192307_505858_11A342CB)
+In-Reply-To: <1382376158-25586-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1382376158-25586-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The wext internal chandefs for ibss should be created using the
-cfg80211_chandef_create() functions. Otherwise the center_freq1 field
-will not be set and cfg80211_chandef_valid() will spit a warning and
-report the chandef as invalid when it should be used.
-
-Reported-by: Dirk Gouders <dirk@gouders.net>
-Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
-Cc: Johannes Berg <johannes.berg@intel.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- net/wireless/ibss.c |   15 +++++++++------
- 1 file changed, 9 insertions(+), 6 deletions(-)
+ drivers/net/wireless/iwlegacy/3945-mac.c | 2 +-
+ drivers/net/wireless/iwlegacy/4965-mac.c | 2 +-
+ drivers/net/wireless/iwlegacy/common.c   | 4 ++--
+ drivers/net/wireless/iwlegacy/debug.c    | 8 ++++----
+ 4 files changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/net/wireless/ibss.c b/net/wireless/ibss.c
-index 39bff7d..a710019 100644
---- a/net/wireless/ibss.c
-+++ b/net/wireless/ibss.c
-@@ -246,7 +246,7 @@ int cfg80211_ibss_wext_join(struct cfg80211_registered_device *rdev,
- 
- 	/* try to find an IBSS channel if none requested ... */
- 	if (!wdev->wext.ibss.chandef.chan) {
--		wdev->wext.ibss.chandef.width = NL80211_CHAN_WIDTH_20_NOHT;
-+		struct ieee80211_channel *new_chan = NULL;
- 
- 		for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
- 			struct ieee80211_supported_band *sband;
-@@ -262,16 +262,19 @@ int cfg80211_ibss_wext_join(struct cfg80211_registered_device *rdev,
- 					continue;
- 				if (chan->flags & IEEE80211_CHAN_DISABLED)
- 					continue;
--				wdev->wext.ibss.chandef.chan = chan;
-+				new_chan = chan;
- 				break;
- 			}
- 
--			if (wdev->wext.ibss.chandef.chan)
-+			if (new_chan)
- 				break;
+diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
+index dea3b50..5a66595 100644
+--- a/drivers/net/wireless/iwlegacy/3945-mac.c
++++ b/drivers/net/wireless/iwlegacy/3945-mac.c
+@@ -1595,7 +1595,7 @@ il3945_get_channels_for_scan(struct il_priv *il, enum ieee80211_band band,
+ 		 *  and use long active_dwell time.
+ 		 */
+ 		if (!is_active || il_is_channel_passive(ch_info) ||
+-		    (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN)) {
++		    (chan->flags & IEEE80211_CHAN_NO_IR)) {
+ 			scan_ch->type = 0;	/* passive */
+ 			if (IL_UCODE_API(il->ucode_ver) == 1)
+ 				scan_ch->active_dwell =
+diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
+index 3982ab7..1c5f8cd 100644
+--- a/drivers/net/wireless/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/iwlegacy/4965-mac.c
+@@ -805,7 +805,7 @@ il4965_get_channels_for_scan(struct il_priv *il, struct ieee80211_vif *vif,
  		}
  
--		if (!wdev->wext.ibss.chandef.chan)
-+		if (!new_chan)
- 			return -EINVAL;
-+
-+		cfg80211_chandef_create(&wdev->wext.ibss.chandef, new_chan,
-+					NL80211_CHAN_NO_HT);
+ 		if (!is_active || il_is_channel_passive(ch_info) ||
+-		    (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN))
++		    (chan->flags & IEEE80211_CHAN_NO_IR))
+ 			scan_ch->type = SCAN_CHANNEL_TYPE_PASSIVE;
+ 		else
+ 			scan_ch->type = SCAN_CHANNEL_TYPE_ACTIVE;
+diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
+index b03e22e..a27b14c 100644
+--- a/drivers/net/wireless/iwlegacy/common.c
++++ b/drivers/net/wireless/iwlegacy/common.c
+@@ -3445,10 +3445,10 @@ il_init_geos(struct il_priv *il)
+ 
+ 		if (il_is_channel_valid(ch)) {
+ 			if (!(ch->flags & EEPROM_CHANNEL_IBSS))
+-				geo_ch->flags |= IEEE80211_CHAN_NO_IBSS;
++				geo_ch->flags |= IEEE80211_CHAN_NO_IR;
+ 
+ 			if (!(ch->flags & EEPROM_CHANNEL_ACTIVE))
+-				geo_ch->flags |= IEEE80211_CHAN_PASSIVE_SCAN;
++				geo_ch->flags |= IEEE80211_CHAN_NO_IR;
+ 
+ 			if (ch->flags & EEPROM_CHANNEL_RADAR)
+ 				geo_ch->flags |= IEEE80211_CHAN_RADAR;
+diff --git a/drivers/net/wireless/iwlegacy/debug.c b/drivers/net/wireless/iwlegacy/debug.c
+index eff2650..3a487a3 100644
+--- a/drivers/net/wireless/iwlegacy/debug.c
++++ b/drivers/net/wireless/iwlegacy/debug.c
+@@ -567,12 +567,12 @@ il_dbgfs_channels_read(struct file *file, char __user *user_buf, size_t count,
+ 				      flags & IEEE80211_CHAN_RADAR ?
+ 				      " (IEEE 802.11h required)" : "",
+ 				      ((channels[i].
+-					flags & IEEE80211_CHAN_NO_IBSS) ||
++					flags & IEEE80211_CHAN_NO_IR) ||
+ 				       (channels[i].
+ 					flags & IEEE80211_CHAN_RADAR)) ? "" :
+ 				      ", IBSS",
+ 				      channels[i].
+-				      flags & IEEE80211_CHAN_PASSIVE_SCAN ?
++				      flags & IEEE80211_CHAN_NO_IR ?
+ 				      "passive only" : "active/passive");
  	}
- 
- 	/* don't join -- SSID is not there */
-@@ -345,8 +348,8 @@ int cfg80211_ibss_wext_siwfreq(struct net_device *dev,
- 		return err;
- 
- 	if (chan) {
--		wdev->wext.ibss.chandef.chan = chan;
--		wdev->wext.ibss.chandef.width = NL80211_CHAN_WIDTH_20_NOHT;
-+		cfg80211_chandef_create(&wdev->wext.ibss.chandef, chan,
-+					NL80211_CHAN_NO_HT);
- 		wdev->wext.ibss.channel_fixed = true;
- 	} else {
- 		/* cfg80211_ibss_wext_join will pick one if needed */
+ 	supp_band = il_get_hw_mode(il, IEEE80211_BAND_5GHZ);
+@@ -594,12 +594,12 @@ il_dbgfs_channels_read(struct file *file, char __user *user_buf, size_t count,
+ 				      flags & IEEE80211_CHAN_RADAR ?
+ 				      " (IEEE 802.11h required)" : "",
+ 				      ((channels[i].
+-					flags & IEEE80211_CHAN_NO_IBSS) ||
++					flags & IEEE80211_CHAN_NO_IR) ||
+ 				       (channels[i].
+ 					flags & IEEE80211_CHAN_RADAR)) ? "" :
+ 				      ", IBSS",
+ 				      channels[i].
+-				      flags & IEEE80211_CHAN_PASSIVE_SCAN ?
++				      flags & IEEE80211_CHAN_NO_IR ?
+ 				      "passive only" : "active/passive");
+ 	}
+ 	ret = simple_read_from_buffer(user_buf, count, ppos, buf, pos);
 -- 
-1.7.10.4
+1.8.4.rc3
 
