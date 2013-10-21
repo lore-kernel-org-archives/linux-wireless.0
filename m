@@ -1,153 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f49.google.com ([209.85.214.49]:38192 "EHLO
-	mail-bk0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758265Ab3JOK3s (ORCPT
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:45903 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751111Ab3JURWn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Oct 2013 06:29:48 -0400
-Received: by mail-bk0-f49.google.com with SMTP id w14so63991bkz.36
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Oct 2013 03:29:47 -0700 (PDT)
-From: Marco Porsch <marco@cozybit.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	Marco Porsch <marco@cozybit.com>
-Subject: [PATCH] mac80211: fixes for mesh powersave logic
-Date: Tue, 15 Oct 2013 12:29:24 +0200
-Message-Id: <1381832964-3684-1-git-send-email-marco@cozybit.com> (sfid-20131015_122952_414896_D4FBE8A3)
+	Mon, 21 Oct 2013 13:22:43 -0400
+Received: by mail-wg0-f49.google.com with SMTP id x12so6788244wgg.4
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Oct 2013 10:22:42 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, janusz.dziedzic@tieto.com,
+	smihir@qti.qualcomm.com, tushnimb@qca.qualcomm.com,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 00/14] wlan: consolidate passive-scan and no-ibss flags
+Date: Mon, 21 Oct 2013 19:22:24 +0200
+Message-Id: <1382376158-25586-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20131021_192245_566467_D29A993F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes errors in the mesh powersave logic which
-cause that remote peers do not get peer power mode change
-notifications and mesh peer service periods (MPSPs) got
-stuck.
+John, Johannes,
 
-When closing a peer link, set the (now invalid) peer-specific
-power mode to 'unknown'.
+This series addresses consolidating passive-scan and no-ibss flags.
+Since its crosses over drivers I'll let you guys decide what tree
+this goes into.
 
-Avoid overhead when local power mode is unchanged.
+Luis R. Rodriguez (14):
+  cfg80211: consolidate passive-scan and no-ibss flags
+  ath: consolidate no-ibss and passive scan to no-ir
+  ath10k: consolidate no-ibss and passive scan to no-ir
+  brcm80211: consolidate no-ibss and passive scan to no-ir
+  ipw2x00: consolidate no-ibss and passive scan to no-ir
+  mac80211_hwsim: consolidate no-ibss and passive scan to no-ir
+  mwifiex: consolidate no-ibss and passive scan to no-ir
+  iwlegacy: consolidate no-ibss and passive scan to no-ir
+  rtlwifi: consolidate no-ibss and passive scan to no-ir
+  mac80211: consolidate no-ibss and passive scan to no-ir
+  ti: consolidate no-ibss and passive scan to no-ir
+  cw1200: consolidate no-ibss and passive scan to no-ir
+  iwlwifi: consolidate no-ibss and passive scan to no-ir
+  cfg80211: remove internal passive-scan and no-ibss guards
 
-Reliably clear MPSP flags on peering status update.
+ Documentation/networking/regulatory.txt            |  4 +-
+ drivers/net/wireless/ath/ath10k/mac.c              |  4 +-
+ drivers/net/wireless/ath/regd.c                    | 34 ++++-------
+ drivers/net/wireless/brcm80211/brcmfmac/p2p.c      |  2 +-
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |  6 +-
+ drivers/net/wireless/brcm80211/brcmsmac/channel.c  | 33 ++++-------
+ .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  | 66 +++++++++++-----------
+ drivers/net/wireless/cw1200/scan.c                 | 10 ++--
+ drivers/net/wireless/ipw2x00/ipw2100.c             |  8 +--
+ drivers/net/wireless/ipw2x00/ipw2200.c             | 16 ++----
+ drivers/net/wireless/iwlegacy/3945-mac.c           |  2 +-
+ drivers/net/wireless/iwlegacy/4965-mac.c           |  2 +-
+ drivers/net/wireless/iwlegacy/common.c             |  4 +-
+ drivers/net/wireless/iwlegacy/debug.c              |  8 +--
+ drivers/net/wireless/iwlwifi/dvm/debugfs.c         |  8 +--
+ drivers/net/wireless/iwlwifi/dvm/scan.c            |  2 +-
+ drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c    |  4 +-
+ drivers/net/wireless/iwlwifi/iwl-nvm-parse.c       |  4 +-
+ drivers/net/wireless/iwlwifi/mvm/scan.c            |  4 +-
+ drivers/net/wireless/mac80211_hwsim.c              |  4 +-
+ drivers/net/wireless/mwifiex/cfg80211.c            | 14 ++---
+ drivers/net/wireless/mwifiex/scan.c                |  4 +-
+ drivers/net/wireless/rtlwifi/regd.c                | 48 +++++++---------
+ drivers/net/wireless/ti/wl12xx/scan.c              |  2 +-
+ drivers/net/wireless/ti/wlcore/cmd.c               |  2 +-
+ drivers/net/wireless/ti/wlcore/main.c              |  3 +-
+ drivers/net/wireless/ti/wlcore/scan.c              |  8 +--
+ include/net/cfg80211.h                             |  9 ++-
+ include/uapi/linux/nl80211.h                       | 30 ++++++----
+ net/mac80211/scan.c                                | 10 ++--
+ net/mac80211/tx.c                                  |  3 +-
+ net/wireless/chan.c                                |  3 +-
+ net/wireless/genregdb.awk                          |  7 ++-
+ net/wireless/ibss.c                                |  4 +-
+ net/wireless/mesh.c                                |  3 +-
+ net/wireless/nl80211.c                             | 12 ++--
+ net/wireless/reg.c                                 | 33 ++++-------
+ 37 files changed, 189 insertions(+), 231 deletions(-)
 
-Avoid MPSP flags getting stuck by not requesting a further
-MPSP ownership if we already are an MPSP owner.
-
-Signed-off-by: Marco Porsch <marco@cozybit.com>
----
- net/mac80211/cfg.c        |  4 ++--
- net/mac80211/mesh_plink.c |  3 ++-
- net/mac80211/mesh_ps.c    | 33 ++++++++++++++++++---------------
- 3 files changed, 22 insertions(+), 18 deletions(-)
-
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index b0a651c..f1e1944 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1342,8 +1342,8 @@ static int sta_apply_parameters(struct ieee80211_local *local,
- 				sta->plink_state = params->plink_state;
- 
- 				ieee80211_mps_sta_status_update(sta);
--				changed |=
--				      ieee80211_mps_local_status_update(sdata);
-+				changed |= ieee80211_mps_set_sta_local_pm(sta,
-+						NL80211_MESH_POWER_UNKNOWN);
- 				break;
- 			default:
- 				/*  nothing  */
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 6b65d50..4301aa5 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -222,7 +222,8 @@ static u32 __mesh_plink_deactivate(struct sta_info *sta)
- 	mesh_path_flush_by_nexthop(sta);
- 
- 	ieee80211_mps_sta_status_update(sta);
--	changed |= ieee80211_mps_local_status_update(sdata);
-+	changed |= ieee80211_mps_set_sta_local_pm(sta,
-+			NL80211_MESH_POWER_UNKNOWN);
- 
- 	return changed;
- }
-diff --git a/net/mac80211/mesh_ps.c b/net/mac80211/mesh_ps.c
-index 22290a9..0f79b78 100644
---- a/net/mac80211/mesh_ps.c
-+++ b/net/mac80211/mesh_ps.c
-@@ -152,6 +152,9 @@ u32 ieee80211_mps_set_sta_local_pm(struct sta_info *sta,
- {
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
- 
-+	if (sta->local_pm == pm)
-+		return 0;
-+
- 	mps_dbg(sdata, "local STA operates in mode %d with %pM\n",
- 		pm, sta->sta.addr);
- 
-@@ -245,6 +248,14 @@ void ieee80211_mps_sta_status_update(struct sta_info *sta)
- 
- 	do_buffer = (pm != NL80211_MESH_POWER_ACTIVE);
- 
-+	/* clear the MPSP flags for non-peers or active STA */
-+	if (sta->plink_state != NL80211_PLINK_ESTAB) {
-+		clear_sta_flag(sta, WLAN_STA_MPSP_OWNER);
-+		clear_sta_flag(sta, WLAN_STA_MPSP_RECIPIENT);
-+	} else if (!do_buffer) {
-+		clear_sta_flag(sta, WLAN_STA_MPSP_OWNER);
-+	}
-+
- 	/* Don't let the same PS state be set twice */
- 	if (test_sta_flag(sta, WLAN_STA_PS_STA) == do_buffer)
- 		return;
-@@ -257,14 +268,6 @@ void ieee80211_mps_sta_status_update(struct sta_info *sta)
- 	} else {
- 		ieee80211_sta_ps_deliver_wakeup(sta);
- 	}
--
--	/* clear the MPSP flags for non-peers or active STA */
--	if (sta->plink_state != NL80211_PLINK_ESTAB) {
--		clear_sta_flag(sta, WLAN_STA_MPSP_OWNER);
--		clear_sta_flag(sta, WLAN_STA_MPSP_RECIPIENT);
--	} else if (!do_buffer) {
--		clear_sta_flag(sta, WLAN_STA_MPSP_OWNER);
--	}
- }
- 
- static void mps_set_sta_peer_pm(struct sta_info *sta,
-@@ -444,8 +447,7 @@ static void mpsp_qos_null_append(struct sta_info *sta,
-  */
- static void mps_frame_deliver(struct sta_info *sta, int n_frames)
- {
--	struct ieee80211_sub_if_data *sdata = sta->sdata;
--	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_local *local = sta->sdata->local;
- 	int ac;
- 	struct sk_buff_head frames;
- 	struct sk_buff *skb;
-@@ -558,10 +560,10 @@ void ieee80211_mpsp_trigger_process(u8 *qc, struct sta_info *sta,
- }
- 
- /**
-- * ieee80211_mps_frame_release - release buffered frames in response to beacon
-+ * ieee80211_mps_frame_release - release frames buffered due to mesh power save
-  *
-  * @sta: mesh STA
-- * @elems: beacon IEs
-+ * @elems: IEs of beacon or probe response
-  *
-  * For peers if we have individually-addressed frames buffered or the peer
-  * indicates buffered frames, send a corresponding MPSP trigger frame. Since
-@@ -588,9 +590,10 @@ void ieee80211_mps_frame_release(struct sta_info *sta,
- 	    (!elems->awake_window || !le16_to_cpu(*elems->awake_window)))
- 		return;
- 
--	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++)
--		buffer_local += skb_queue_len(&sta->ps_tx_buf[ac]) +
--				skb_queue_len(&sta->tx_filtered[ac]);
-+	if (!test_sta_flag(sta, WLAN_STA_MPSP_OWNER))
-+		for (ac = 0; ac < IEEE80211_NUM_ACS; ac++)
-+			buffer_local += skb_queue_len(&sta->ps_tx_buf[ac]) +
-+					skb_queue_len(&sta->tx_filtered[ac]);
- 
- 	if (!has_buffered && !buffer_local)
- 		return;
 -- 
-1.8.1.2
+1.8.4.rc3
 
