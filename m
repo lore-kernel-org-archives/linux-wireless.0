@@ -1,85 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:55005 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754248Ab3JBMkK (ORCPT
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:50427 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751490Ab3JURXF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Oct 2013 08:40:10 -0400
-Date: Wed, 2 Oct 2013 14:40:06 +0200
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: Re: [PATCH 2/4] nl80211/cfg80211: enable DFS for IBSS mode
-Message-ID: <20131002124006.GA23903@pandem0nium> (sfid-20131002_144018_312927_1C9D3834)
-References: <1378230201-25446-1-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1378230201-25446-3-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1380625757.14430.22.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="XsQoSWH+UP9D9v3l"
-In-Reply-To: <1380625757.14430.22.camel@jlt4.sipsolutions.net>
+	Mon, 21 Oct 2013 13:23:05 -0400
+Received: by mail-wi0-f176.google.com with SMTP id l12so4327465wiv.15
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Oct 2013 10:23:04 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, janusz.dziedzic@tieto.com,
+	smihir@qti.qualcomm.com, tushnimb@qca.qualcomm.com,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 09/14] rtlwifi: consolidate no-ibss and passive scan to no-ir
+Date: Mon, 21 Oct 2013 19:22:33 +0200
+Message-Id: <1382376158-25586-10-git-send-email-mcgrof@do-not-panic.com> (sfid-20131021_193807_685627_4D2F34BD)
+In-Reply-To: <1382376158-25586-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1382376158-25586-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ drivers/net/wireless/rtlwifi/regd.c | 48 ++++++++++++++++---------------------
+ 1 file changed, 20 insertions(+), 28 deletions(-)
 
---XsQoSWH+UP9D9v3l
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+diff --git a/drivers/net/wireless/rtlwifi/regd.c b/drivers/net/wireless/rtlwifi/regd.c
+index d7d0d49..2e1642c 100644
+--- a/drivers/net/wireless/rtlwifi/regd.c
++++ b/drivers/net/wireless/rtlwifi/regd.c
+@@ -59,30 +59,27 @@ static struct country_code_to_enum_rd allCountries[] = {
+  */
+ #define RTL819x_2GHZ_CH12_13	\
+ 	REG_RULE(2467-10, 2472+10, 40, 0, 20,\
+-	NL80211_RRF_PASSIVE_SCAN)
++	NL80211_RRF_NO_IR)
+ 
+ #define RTL819x_2GHZ_CH14	\
+ 	REG_RULE(2484-10, 2484+10, 40, 0, 20, \
+-	NL80211_RRF_PASSIVE_SCAN | \
++	NL80211_RRF_NO_IR | \
+ 	NL80211_RRF_NO_OFDM)
+ 
+ /* 5G chan 36 - chan 64*/
+ #define RTL819x_5GHZ_5150_5350	\
+ 	REG_RULE(5150-10, 5350+10, 40, 0, 30, \
+-	NL80211_RRF_PASSIVE_SCAN | \
+-	NL80211_RRF_NO_IBSS)
++	NL80211_RRF_NO_IR)
+ 
+ /* 5G chan 100 - chan 165*/
+ #define RTL819x_5GHZ_5470_5850	\
+ 	REG_RULE(5470-10, 5850+10, 40, 0, 30, \
+-	NL80211_RRF_PASSIVE_SCAN | \
+-	NL80211_RRF_NO_IBSS)
++	NL80211_RRF_NO_IR)
+ 
+ /* 5G chan 149 - chan 165*/
+ #define RTL819x_5GHZ_5725_5850	\
+ 	REG_RULE(5725-10, 5850+10, 40, 0, 30, \
+-	NL80211_RRF_PASSIVE_SCAN | \
+-	NL80211_RRF_NO_IBSS)
++	NL80211_RRF_NO_IR)
+ 
+ #define RTL819x_5GHZ_ALL	\
+ 	(RTL819x_5GHZ_5150_5350, RTL819x_5GHZ_5470_5850)
+@@ -185,16 +182,12 @@ static void _rtl_reg_apply_beaconing_flags(struct wiphy *wiphy,
+ 				 *regulatory_hint().
+ 				 */
+ 
+-				if (!(reg_rule->flags & NL80211_RRF_NO_IBSS))
+-					ch->flags &= ~IEEE80211_CHAN_NO_IBSS;
+-				if (!(reg_rule->
+-				     flags & NL80211_RRF_PASSIVE_SCAN))
+-					ch->flags &=
+-					    ~IEEE80211_CHAN_PASSIVE_SCAN;
++				if (!(reg_rule->flags & NL80211_RRF_NO_IR))
++					ch->flags &= ~IEEE80211_CHAN_NO_IR;
+ 			} else {
+ 				if (ch->beacon_found)
+-					ch->flags &= ~(IEEE80211_CHAN_NO_IBSS |
+-						  IEEE80211_CHAN_PASSIVE_SCAN);
++					ch->flags &= ~(IEEE80211_CHAN_NO_IR |
++						  IEEE80211_CHAN_NO_IR);
+ 			}
+ 		}
+ 	}
+@@ -219,11 +212,11 @@ static void _rtl_reg_apply_active_scan_flags(struct wiphy *wiphy,
+ 	 */
+ 	if (initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE) {
+ 		ch = &sband->channels[11];	/* CH 12 */
+-		if (ch->flags & IEEE80211_CHAN_PASSIVE_SCAN)
+-			ch->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
++		if (ch->flags & IEEE80211_CHAN_NO_IR)
++			ch->flags &= ~IEEE80211_CHAN_NO_IR;
+ 		ch = &sband->channels[12];	/* CH 13 */
+-		if (ch->flags & IEEE80211_CHAN_PASSIVE_SCAN)
+-			ch->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
++		if (ch->flags & IEEE80211_CHAN_NO_IR)
++			ch->flags &= ~IEEE80211_CHAN_NO_IR;
+ 		return;
+ 	}
+ 
+@@ -237,17 +230,17 @@ static void _rtl_reg_apply_active_scan_flags(struct wiphy *wiphy,
+ 	ch = &sband->channels[11];	/* CH 12 */
+ 	reg_rule = freq_reg_info(wiphy, ch->center_freq);
+ 	if (!IS_ERR(reg_rule)) {
+-		if (!(reg_rule->flags & NL80211_RRF_PASSIVE_SCAN))
+-			if (ch->flags & IEEE80211_CHAN_PASSIVE_SCAN)
+-				ch->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
++		if (!(reg_rule->flags & NL80211_RRF_NO_IR))
++			if (ch->flags & IEEE80211_CHAN_NO_IR)
++				ch->flags &= ~IEEE80211_CHAN_NO_IR;
+ 	}
+ 
+ 	ch = &sband->channels[12];	/* CH 13 */
+ 	reg_rule = freq_reg_info(wiphy, ch->center_freq);
+ 	if (!IS_ERR(reg_rule)) {
+-		if (!(reg_rule->flags & NL80211_RRF_PASSIVE_SCAN))
+-			if (ch->flags & IEEE80211_CHAN_PASSIVE_SCAN)
+-				ch->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
++		if (!(reg_rule->flags & NL80211_RRF_NO_IR))
++			if (ch->flags & IEEE80211_CHAN_NO_IR)
++				ch->flags &= ~IEEE80211_CHAN_NO_IR;
+ 	}
+ }
+ 
+@@ -284,8 +277,7 @@ static void _rtl_reg_apply_radar_flags(struct wiphy *wiphy)
+ 		 */
+ 		if (!(ch->flags & IEEE80211_CHAN_DISABLED))
+ 			ch->flags |= IEEE80211_CHAN_RADAR |
+-			    IEEE80211_CHAN_NO_IBSS |
+-			    IEEE80211_CHAN_PASSIVE_SCAN;
++			    IEEE80211_CHAN_NO_IR;
+ 	}
+ }
+ 
+-- 
+1.8.4.rc3
 
-On Tue, Oct 01, 2013 at 01:09:17PM +0200, Johannes Berg wrote:
-> On Tue, 2013-09-03 at 19:43 +0200, Simon Wunderlich wrote:
-> > To use DFS in IBSS mode, userspace is required to react to radar events.
-> > It can inform nl80211 that it is capable of doing so by adding a
-> > NL80211_ATTR_CONTROL_PORT_DFS attribute when joining the IBSS.
->=20
-> I don't like that name, it makes no sense. This has nothing to do with
-> the port control (802.1X-style) at all.
->=20
-
-How about NL80211_ATTR_DFS_CAPABLE instead?
-
-
-> > If this attribute is supplied, DFS channels may be used if the driver
-> > supports it. Support will be checked even if a channel without DFS will
-> > be joined, as the channel might change later due to scan activity or
-> > channel switch announcements.
->=20
-> You also really should document *what* is required of userspace here.
-> You're kinda saying this needs to be implemented, but not saying what
-> needs to be done. I can't even tell - what does it really have to do?
-
-Yeah, I should document this a little more: Userspace should react to
-radar events and apprioately switch the channel when this happens. As
-non-capable tools (like wpa_supplicant in it's current state) do not
-react on radar events but might select DFS channels when available, there
-might be non-conforming behaviour. Therefore I'm introducing this flag.
-
-Userspace programs are supposed to set this flag when they have channel
-management and radar avoidance/channel change functionality is implemented
-to unlock DFS channels.
-
-> Don't you implement most of it in patches 3 and 4 anyway in the kernel?
-
-Nope, I don't.
-
-I can resend the patchset with some more documentation on this.
-
-Thanks,
-	Simon
-
---XsQoSWH+UP9D9v3l
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEARECAAYFAlJMFCYACgkQrzg/fFk7axZPnQCg5fw/1QPkRQjVdM3cTqniPaVB
-wzUAnR0+n8JiTBytxvMOduHOOKP49PzZ
-=IgOH
------END PGP SIGNATURE-----
-
---XsQoSWH+UP9D9v3l--
