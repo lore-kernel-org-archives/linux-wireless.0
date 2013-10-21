@@ -1,97 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from victor.provo.novell.com ([137.65.250.26]:57746 "EHLO
-	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751732Ab3JHQDb (ORCPT
-	<rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
-	Tue, 8 Oct 2013 12:03:31 -0400
-Received: by mail-ie0-f171.google.com with SMTP id at1so19606588iec.2
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Oct 2013 09:03:21 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <52542B3B.1020703@rempel-privat.de>
-References: <CALx5=V_OdHRJsourv2Hiykg-shyrisdrNnzD1qvpjAWR2iQyfg@mail.gmail.com>
-	<CALx5=V8AJr5FTWkbT+s79kbPX2NftmbC74HgH3V5TEUj0gvdpA@mail.gmail.com>
-	<52542B3B.1020703@rempel-privat.de>
-Date: Wed, 9 Oct 2013 00:03:21 +0800
-Message-ID: <CALx5=V_6fXBxE2z3wOu2DYnNKkA7sHOeqz6bxUWw9RGEQEJsnw@mail.gmail.com> (sfid-20131008_180335_201093_60A3611D)
-Subject: Re: WIFI P2P ping doesn't work.
-From: Matt Chen <machen@suse.com>
-To: Oleksij Rempel <linux@rempel-privat.de>
+Received: from s3.sipsolutions.net ([144.76.43.152]:60507 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751015Ab3JUNKi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Oct 2013 09:10:38 -0400
+Message-ID: <1382361031.14310.51.camel@jlt4.sipsolutions.net> (sfid-20131021_151040_383778_47BBD146)
+Subject: pull-request: mac80211 2013-10-21
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
 Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Date: Mon, 21 Oct 2013 15:10:31 +0200
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-YoDWc5/cqgrFUAGEeCHn"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Oleksij,
 
-Thanks for the info anyway. :)
+--=-YoDWc5/cqgrFUAGEeCHn
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-2013/10/8 Oleksij Rempel <linux@rempel-privat.de>:
-> Hi Matt,
->
-> no suggestions. I was able to reproduce same issue yesterday on
-> ath9k_htc. But currently no time to digg in it.
->
->
-> Am 08.10.2013 17:41, schrieb Matt Chen:
->> No one has any suggestion and comment ?
->>
->> 2013/10/8 Matt Chen <machen@suse.com>:
->>> Hi list,
->>>
->>> I am running the v3.12-rc3 and using Atheros AR9485 with ath9k. My
->>> wpa_supplicant is from git://w1.fi/srv/git/hostap.git in master branch
->>> with most recent commit.
->>>
->>> The my_p2p_supplicant.conf for my wpa_supplicant is :
->>> =======================================
->>> ctrl=/var/run/wpa_supplicant
->>> update_config=1
->>>
->>> device_name=HP GO
->>> device_type=1-0050F204-2
->>>
->>> p2p_go_ht40=1
->>>
->>> =========================================
->>>
->>> I run "wpa_supplicant -i wlan0 -f my_p2p_supplicant.conf -Dnl80211
->>> -ddt -f /var/log/wpa_supplicant -B
->>>
->>> I use wpa_cli to work on P2P. So here goes my case:
->>>
->>> M#1
->>> p2p_find
->>> p2p_stop
->>> p2p_peers
->>> p2p_connect [M#2 MAC ADDRESS] pbc go_intent=7
->>>
->>> M#2
->>> p2p_find
->>> p2p_stop
->>> p2p_peers
->>> p2p_connect [M#1 MAC ADDRESS] pbc
->>>
->>>
->>> Then I can find the M#1 become the P0 GO mode and M#2 become station
->>> mode. And each status is completed. But after that, I set each machine
->>> with a static IP such as 192.168.5.10 and 192.168.5.11 manually. I am
->>> not able to ping each IP.
->>>
->>> Is there anything I am doing wrong ?
->>>
->>> Thank you.
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
->
-> --
-> Regards,
-> Oleksij
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+John,
+
+Unfortunately we have yet more fixes for mac80211.
+
+I have two DFS fixes (ath9k already supports DFS) and a fix for a
+pointer race.
+
+Let me know if there's any problem.
+
+johannes
+
+The following changes since commit 095d81cee742fc31e1218077ca6ca8f0df07c613=
+:
+
+  mac80211: disable WMM with invalid parameters (2013-10-17 15:38:22 +0200)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
+
+for you to fetch changes up to bbe09bbcf4454e826e3fb08e87d81f32c0030658:
+
+  cfg80211: update dfs_state_entered upon dfs_state change (2013-10-21 14:5=
+0:27 +0200)
+
+----------------------------------------------------------------
+Johannes Berg (1):
+      cfg80211: fix scheduled scan pointer access
+
+Michal Kazior (2):
+      cfg80211: fix DFS channel recovery timeout
+      cfg80211: update dfs_state_entered upon dfs_state change
+
+ net/wireless/mlme.c | 6 ++++--
+ net/wireless/scan.c | 4 ++--
+ 2 files changed, 6 insertions(+), 4 deletions(-)
+
+
+--=-YoDWc5/cqgrFUAGEeCHn
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJSZSfHAAoJEDBSmw7B7bqrLuYP/0VTSJK+YZY2wqX6OXvTaXZd
+tHaXYENv0glI/ruZnrvbCqHasvdGNV5rFeLR680b21jyxZfur5QjZQr3cg9UdTG+
+qwTUONUmKWP3ZxaOPwXE9HTNziVC3bgubIhl5A8Ip/g5FLv88Xo5LbEqdGJbaoS7
+sHqbayyc8uj8J2uIe5bKkC+9E/Dulm0YBu3H0UHfPYBbEW2nO/o7maA1chEKW30e
+xHmig5ZtlTUdG64qwvqlib+pYadXar9jikyuL5bRtmb0vmqcCJgoPO78clnqqolT
+XcFTAweCNwBM8UR5IBgAwmRZbj80tio32X+T0bX8eSDn4tXcNhFojk2W6dk8GdKn
+4i4dP2n++beIx+yM+jbICQrharAaQ+LqLqyfv2mLtf5bmRfr53aDF4CTOpTfSfj0
+EYzjD0xQ0j/HIDo+gCsFlmilWOtyy/s3LOOGdyONU6HNm2aDQjeJIzYah+52o7CK
+rXXPh2nUd7rOyXdx24ZgemruP9OsD8oWM9BHwOIt9GU8wOhv9XNGlg7aO7y5LzUC
+smTWU7384GouT4OZzjMUVbe54S+1ZEF3fSVngqCMhaKUVjIGMC5wy/BuKI+9uRB9
+kUo47DMLHEcYolTfBTVJkZwHmsO5R61zJ/FAtDQyC9JWHpTYjnK50Ncv09atpe9f
+McFQexY5TQa8DxwGNX0a
+=kUVk
+-----END PGP SIGNATURE-----
+
+--=-YoDWc5/cqgrFUAGEeCHn--
+
