@@ -1,33 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:57822 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752418Ab3JNHvO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Oct 2013 03:51:14 -0400
-Message-ID: <1381736749.13092.2.camel@jlt4.sipsolutions.net> (sfid-20131014_095117_498933_76C9498C)
-Subject: Re: [PATCH] mac80211: fix crash if bitrate calculation goes wrong
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Thomas Lindroth <thomas.lindroth@gmail.com>
-In-Reply-To: <1381499323-6502-1-git-send-email-johannes@sipsolutions.net> (sfid-20131011_154850_844212_E7EE972C)
-References: <1381499323-6502-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20131011_154850_844212_E7EE972C)
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 14 Oct 2013 09:45:49 +0200
-Mime-Version: 1.0
+Received: from [157.55.1.155] ([157.55.1.155]:33646 "EHLO
+	dub0-omc2-s16.dub0.hotmail.com" rhost-flags-FAIL-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753149Ab3JULVb convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Oct 2013 07:21:31 -0400
+Message-ID: <DUB119-W4825EB1294BF48BA2BAAB39E010@phx.gbl> (sfid-20131021_132135_013742_0D7D5F5F)
+From: Mark Moes <mark_moes@live.nl>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: rtl8187 AP/Master mode
+Date: Mon, 21 Oct 2013 13:21:09 +0200
+In-Reply-To: <DUB119-W4654D1E1A8377FA92B6E049E010@phx.gbl>
+References: <DUB119-W4654D1E1A8377FA92B6E049E010@phx.gbl>
+Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-10-11 at 15:48 +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> If a frame's timestamp is calculated, and the bitrate
-> calculation goes wrong and returns zero, the system
-> will attempt to divide by zero and crash. Catch this
-> case and print the rate information that the driver
-> reported when this happens.
+Hi,
 
-Applied.
 
-johannes
+I was wondering if there's any work being done on the AP/Master mode implementation of the rtl8187 chip as listed here: http://wireless.kernel.org/en/users/Drivers/rtl8187
 
+If not, could anyone give a guesstimate of how much work is needed to write the code for this functionality?
+
+
+Mark 		 	   		  
