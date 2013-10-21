@@ -1,49 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f53.google.com ([74.125.83.53]:50909 "EHLO
-	mail-ee0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753797Ab3JNH5t (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:25387 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752274Ab3JUOPi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Oct 2013 03:57:49 -0400
-Received: by mail-ee0-f53.google.com with SMTP id b15so3201585eek.40
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Oct 2013 00:57:48 -0700 (PDT)
-Message-ID: <525BA3F9.5070900@gmail.com> (sfid-20131014_095752_949025_BCE83BA5)
-Date: Mon, 14 Oct 2013 09:57:45 +0200
-From: Hans de Jonge <j.dejonge@gmail.com>
+	Mon, 21 Oct 2013 10:15:38 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 0/8] ath10k: fixes 2013-10-15
+References: <20131016134503.25095.8044.stgit@localhost6.localdomain6>
+Date: Mon, 21 Oct 2013 17:15:27 +0300
+In-Reply-To: <20131016134503.25095.8044.stgit@localhost6.localdomain6> (Kalle
+	Valo's message of "Wed, 16 Oct 2013 16:45:35 +0300")
+Message-ID: <8738nuu2v4.fsf@kamboji.qca.qualcomm.com> (sfid-20131021_161542_286020_FAC5B983)
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Getting the Sitecom WLA-2102 running with the rtl8192cu driver? (add
- its USB ID)
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi list,
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-In the course of this year I acquired a Sitecom N300 (WLA-2102) USB Wifi 
-adapter with a USB vendor,device ID:
-0x0DF6,0x0070
+> This is Michal's patchset which he said:
+>
+>   This is a bunch of fixes I've had queued up for
+>   some time now. I was reluctant to send them without some additional checks
+>   and because some of the fixes are not ideal. At least we can get a discussion
+>   going if anything raises any serious concern.
+>
+> For v2 I added one patch myself, modified "ath10k: fix device initialization
+> routine" to use ath10k_pci_write32() style of wrappers and fixed long line warnings
+> from checkpatch.
+>
+> ---
+>
+> Kalle Valo (1):
+>       ath10k: implement ath10k_pci_soc_read/write32()
+>
+> Michal Kazior (7):
+>       ath10k: prevent starting monitor without a vdev
+>       ath10k: add sanity checks for monitor management
+>       ath10k: fix endianess in prints
+>       ath10k: fix NSS reporting in RX
+>       ath10k: fix NULL deref upon early FW crash
+>       ath10k: fix FW crashes on heavy TX on 10.1.389 AP FW
 
-According to a post on a german site, it is claimed that  the device can 
-be set  to run through the Realtek 8192CU driver and that this can be 
-achieved by adding the id at the appropriate place in the source code, 
-which I recognise as "the
-same list as where the device with ID= 0x0DF6,0x0061 is added.
+These patches applied.
 
-In the latest stable kernel source (3.11.4) I was able to identify this 
-to be situated in the file:
-linux-3.11.4/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+>       ath10k: fix device initialization routine
 
-Hence I my question whether it is possible to add the id as suggested in 
-the german post
-(http://forum.ubuntuusers.de/topic/wi-fi-usb-adapter-n300-wla-2102-8192cu/)
-in order get the device running in the next kernel version?
+I dropped this patch for now, because of some of the warm reset issues.
+We need to investigate more.
 
-Since I myself stopped compiling my own custom kernels a few years ago. 
-(In favour of (automagically updated) Debian testing distribution 
-kernels), I have not yet tried to implement the modification in a 
-home-brewn kernel, but given clear indication on how to rebuild a 
-distribution kernel image package with just that one modification, I 
-would love to give that a try and test it.
-
-Yours,
-Hans de Jonge
+-- 
+Kalle Valo
