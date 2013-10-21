@@ -1,93 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:36276 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751804Ab3J2MG5 (ORCPT
+Received: from mail-la0-f52.google.com ([209.85.215.52]:49044 "EHLO
+	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753347Ab3JUMvz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Oct 2013 08:06:57 -0400
-Received: by mail-ee0-f46.google.com with SMTP id c1so4062700eek.19
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Oct 2013 05:06:56 -0700 (PDT)
-From: Marek Puzyniak <marek.puzyniak@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Marek Puzyniak <marek.puzyniak@tieto.com>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 3/3] ath10k: add debugfs file to control radar events blocking
-Date: Tue, 29 Oct 2013 13:06:34 +0100
-Message-Id: <1383048394-15256-3-git-send-email-marek.puzyniak@tieto.com> (sfid-20131029_130700_153282_943315AA)
-In-Reply-To: <1383048394-15256-1-git-send-email-marek.puzyniak@tieto.com>
-References: <1383048394-15256-1-git-send-email-marek.puzyniak@tieto.com>
+	Mon, 21 Oct 2013 08:51:55 -0400
+Received: by mail-la0-f52.google.com with SMTP id eh20so475182lab.25
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Oct 2013 05:51:52 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87wql7tac9.fsf@purkki.adurom.net>
+References: <CAA2SeNJRSPB=Hus8y1bYJ-O1Hgkd=gvNhUKnF9atqwuhd2m0aA@mail.gmail.com>
+ <CAB=NE6WSNZ10pNfKN5-o0cnVYkZbt4gGAzPOcO=Dtw5aUj+wGA@mail.gmail.com> <87wql7tac9.fsf@purkki.adurom.net>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Mon, 21 Oct 2013 14:51:32 +0200
+Message-ID: <CAB=NE6U94K_KvhcPUvPL+S25Nw5J1Y300ASADa7C6-J_pBEW3A@mail.gmail.com> (sfid-20131021_145158_564657_17DA4DAE)
+Subject: Re: Active scanning on DFS channels
+To: Kalle Valo <kvalo@adurom.com>
+Cc: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sometimes for DFS testing is required to stay on current channel even after
-radar detected. This patch allows to enable/disable radar detected event to be
-passed to mac80211.
+On Mon, Oct 21, 2013 at 8:19 AM, Kalle Valo <kvalo@adurom.com> wrote:
+> "Luis R. Rodriguez" <mcgrof@do-not-panic.com> writes:
+>
+>>> Should we perform
+>>> passive scan on radar channel setting new state to SCAN_DECISION and
+>>> not to SCAN_SEND_PROBE in ieee80211_scan_state_set_channel()?
+>>
+>> There's a few thing we need to do and I'm working on it.
+>>
+>>   1) no-ibss and passive-scan flags should be merged to a no-ir flag
+>
+> For me IR always reminds of infrared, so the name no-ir is a bit vague
+> to me :)
 
-By default radar detected event in not blocked.
+Any recommendations? I'm just lazy.
 
-To block it:
-echo 1 > /sys/kernel/debug/ieee80211/phyX/ath10k/dfs_block_radar_events
-
-To unblock again:
-echo 0 > /sys/kernel/debug/ieee80211/phyX/ath10k/dfs_block_radar_events
-
-Inform about blocking radar detected event even when logs are disabled
-for throughput/performance reasons.
-
-Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/core.h  | 1 +
- drivers/net/wireless/ath/ath10k/debug.c | 4 ++++
- drivers/net/wireless/ath/ath10k/wmi.c   | 8 ++++++++
- 3 files changed, 13 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index d5fd74b..cdedcbf 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -409,6 +409,7 @@ struct ath10k {
- 	bool monitor_present;
- 	unsigned int filter_flags;
- 	unsigned long dev_flags;
-+	u32 dfs_block_radar_events;
- 
- 	struct wmi_pdev_set_wmm_params_arg wmm_params;
- 	struct completion install_key_done;
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index d4d0cdd..2cfe96b 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -749,6 +749,10 @@ int ath10k_debug_create(struct ath10k *ar)
- 				    ar->debug.debugfs_phy, ar,
- 				    &fops_simulate_radar);
- 
-+		debugfs_create_bool("dfs_block_radar_events", S_IWUSR,
-+				    ar->debug.debugfs_phy,
-+				    &ar->dfs_block_radar_events);
-+
- 		debugfs_create_file("dfs_stats", S_IRUSR,
- 				    ar->debug.debugfs_phy, ar,
- 				    &fops_dfs_stats);
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 8a7ebcc..8600465 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -1456,6 +1456,14 @@ static void ath10k_dfs_radar_report(struct ath10k *ar,
- 
- 	ath10k_dbg(ATH10K_DBG_REGULATORY, "dfs radar detected\n");
- 	ATH10K_DFS_STAT_INC(ar, radar_detected);
-+
-+	/* Control radar events reporting in debugfs file
-+	   dfs_block_radar_events */
-+	if (ar->dfs_block_radar_events) {
-+		ath10k_info("DFS Radar detected, but ignored as requested\n");
-+		return;
-+	}
-+
- 	ieee80211_radar_detected(ar->hw);
- }
- 
--- 
-1.8.1.2
-
+ Luis
