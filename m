@@ -1,37 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0.aculab.com ([213.249.233.131]:57875 "HELO mx0.aculab.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751804Ab3JHNDT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Oct 2013 09:03:19 -0400
-Received: from mx0.aculab.com ([127.0.0.1])
- by localhost (mx0.aculab.com [127.0.0.1]) (amavisd-new, port 10024) with SMTP
- id 17479-03 for <linux-wireless@vger.kernel.org>;
- Tue,  8 Oct 2013 14:03:15 +0100 (BST)
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:61565 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753618Ab3JUOTH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Oct 2013 10:19:07 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: add error handling to ath10k_pci_wait()
+References: <20131017083615.31028.25088.stgit@localhost6.localdomain6>
+Date: Mon, 21 Oct 2013 17:19:02 +0300
+In-Reply-To: <20131017083615.31028.25088.stgit@localhost6.localdomain6> (Kalle
+	Valo's message of "Thu, 17 Oct 2013 11:36:15 +0300")
+Message-ID: <87vc0qso4p.fsf@kamboji.qca.qualcomm.com> (sfid-20131021_161937_290690_70EAEBED)
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Subject: RE: [PATCH] mac80211: port CCMP to cryptoapi's CCM driver
-Date: Tue, 8 Oct 2013 14:01:36 +0100
-Message-ID: <AE90C24D6B3A694183C094C60CF0A2F6026B737B@saturn3.aculab.com> (sfid-20131008_150322_457426_CDD68F64)
-In-Reply-To: <1381233152.13359.10.camel@jlt4.sipsolutions.net>
-References: <1381231915-24232-1-git-send-email-ard.biesheuvel@linaro.org> (sfid-20131008_133333_304168_2D31449F) <1381233152.13359.10.camel@jlt4.sipsolutions.net>
-From: "David Laight" <David.Laight@ACULAB.COM>
-To: "Johannes Berg" <johannes@sipsolutions.net>,
-	"Ard Biesheuvel" <ard.biesheuvel@linaro.org>
-Cc: <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-	<patches@linaro.org>, <linville@tuxdriver.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBIbW0sIHRoYW5rcyBJIGd1ZXNzLiBJJ2xsIG5lZWQgdG8gcmV2aWV3IHRoaXMgaW4gbW9yZSBk
-ZXRhaWwsIGJ1dCBJIGhhdmUNCj4gYSBxdWVzdGlvbiBmaXJzdDoNCj4gDQo+ID4gKwkvKiBhbGxv
-Y2F0ZSB0aGUgdmFyaWFibGUgc2l6ZWQgYWVhZF9yZXF1ZXN0IG9uIHRoZSBzdGFjayAqLw0KPiA+
-ICsJaW50IGwgPSBESVZfUk9VTkRfVVAoY3J5cHRvX2FlYWRfcmVxc2l6ZSh0Zm0pLA0KPiA+ICsJ
-CQkgICAgIHNpemVvZihzdHJ1Y3QgYWVhZF9yZXF1ZXN0KSk7DQo+ID4gKwlzdHJ1Y3QgYWVhZF9y
-ZXF1ZXN0IHJlcVsxICsgbF07DQo+IA0KPiBUaGlzIGxvb2tzIGEgYml0IG9kZCwgd2h5IHJvdW5k
-IHVwIGZpcnN0IGFuZCB0aGVuIGFkZCBvbmU/IFdoeSBldmVuDQo+IGJvdGhlciB1c2luZyBhIHN0
-cnVjdCBhcnJheSByYXRoZXIgdGhhbiBzb21lIGxvY2FsIHN0cnVjdCBsaWtlDQoNCklzIGl0IGV2
-ZW4gYSBnb29kIGlkZWEgdG8gYmUgYWxsb2NhdGluZyB2YXJpYWJsZSBzaXplZCBpdGVtcw0Kb24g
-dGhlIGtlcm5lbCBzdGFjaz8NCg0KVGhlcmUgaGFzIHRvIGJlIGVub3VnaCBzdGFjayBhdmFpbGFi
-bGUgZm9yIHRoZSBtYXhpbXVtIG51bWJlcg0Kb2YgZW50cmllcyAtIHNvIHRoZXJlIGlzIGxpdHRs
-ZSBwb2ludCBpbiBkeW5hbWljYWxseSBzaXppbmcgaXQuDQoNCglEYXZpZA0KDQo=
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
+
+> ath10k_pci_wait() didn't notify any errors to callers, it
+> just printed a warning so add proper error handling.
+>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+
+Applied, I just changed the commit log to this:
+
+commit f3782744c9b50edf94d28e37a937ff84f267dfab
+Author: Kalle Valo <kvalo@qca.qualcomm.com>
+Date:   Thu Oct 17 11:36:15 2013 +0300
+
+    ath10k: add error handling to ath10k_pci_wait()
+    
+    ath10k_pci_wait() didn't notify any errors to callers, it
+    just printed a warning so add proper error handling. This fixes
+    a crash Ben reported:
+    
+    ath10k: MSI-X interrupt handling (8 intrs)
+    ath10k: Unable to wakeup target
+    ath10k: target took longer 5000 us to wake up (awake count 1)
+    ath10k: Failed to get pcie state addr: -16
+    ath10k: early firmware event indicated
+    BUG: unable to handle kernel NULL pointer dereference at 0000000000000004
+    IP: [<ffffffffa06ae46c>] ath10k_ce_completed_send_next+0x47/0x122 [ath10k_pci]
+    
+    Reported-by: Ben Greear <greearb@candelatech.com>
+    Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+
+-- 
+Kalle Valo
