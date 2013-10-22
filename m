@@ -1,88 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2410 "EHLO mms2.broadcom.com"
+Received: from packetmixer.de ([83.151.30.3]:51973 "EHLO m25s01.vlinux.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750728Ab3JDHsV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Oct 2013 03:48:21 -0400
-Message-ID: <524E72B7.5000102@broadcom.com> (sfid-20131004_094833_632277_2F1C67E2)
-Date: Fri, 4 Oct 2013 09:48:07 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Eugene Krasnikov" <k.eugene.e@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	wcn36xx@lists.infradead.org
-Subject: Re: [PATCH] wcn36xx: mac80211 driver for Qualcomm
- WCN3660/WCN3680 hardware
-References: <1380234106-12802-1-git-send-email-k.eugene.e@gmail.com>
- <CAFSJ42bybEGtkzJ99fZHrcPs=gTnvJVHxM7d8anJvn1VOs7V7A@mail.gmail.com>
- <20131003205710.GH3142@tuxdriver.com>
- <CAFSJ42ZwJzd46UXE2crzuaMVRLzre9SVm_vFcQ-KAVY6Q9c3QQ@mail.gmail.com>
-In-Reply-To: <CAFSJ42ZwJzd46UXE2crzuaMVRLzre9SVm_vFcQ-KAVY6Q9c3QQ@mail.gmail.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+	id S1754702Ab3JVUL6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Oct 2013 16:11:58 -0400
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: linux-wireless@vger.kernel.org
+Cc: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	Dirk Gouders <dirk@gouders.net>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Simon Wunderlich <sw@simonwunderlich.de>
+Subject: [PATCH 3.12] cfg80211: fix ibss wext chandef creation
+Date: Tue, 22 Oct 2013 22:02:46 +0200
+Message-Id: <1382472166-19563-1-git-send-email-sw@simonwunderlich.de> (sfid-20131022_221235_343937_76CC3A81)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/03/2013 11:22 PM, Eugene Krasnikov wrote:
-> Hm, weird... do not see this problem myself. Let me try to sync latest
-> wireless-next and will try to apply latest patch from this mailthread
-> on top.
+The wext internal chandefs for ibss should be created using the
+cfg80211_chandef_create() functions. Otherwise the center_freq1 field
+will not be set and cfg80211_chandef_valid() will spit a warning and
+report the chandef as invalid when it should be used.
 
-Hi Eugene,
+Reported-by: Dirk Gouders <dirk@gouders.net>
+Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+Cc: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/ibss.c |   15 +++++++++------
+ 1 file changed, 9 insertions(+), 6 deletions(-)
 
-Do you build the driver as module. John is building it built-in then kernel.
-
-Gr. AvS
-
-> P.S. If somebody esle can try to apply this patch and build that would
-> be useful to know if problem is visible on others PCs as well.
->
-> 2013/10/3 John W. Linville <linville@tuxdriver.com>:
->> On Thu, Sep 26, 2013 at 11:25:18PM +0100, Eugene Krasnikov wrote:
->>> Hi John,
->>>
->>> This is the latest version of wcn36xx driver on top of current
->>> wireless-next tree. Please let me know if you have any problems with
->>> applying it.
->>>
->>> 2013/9/26 Eugene Krasnikov <k.eugene.e@gmail.com>:
->>>> This is a mac80211 driver for Qualcomm WCN3660/WCN3680 devices. So
->>>> far WCN3660/WCN3680 is available only on MSM platform.
->>>>
->>>> Firmware can be found here:
->>>> https://www.codeaurora.org/cgit/external/hisense/platform/vendor/qcom-opensource/wlan/prima/tree/firmware_bin?h=8130_CS
->>>>
->>>> Wiki page is available here:
->>>> http://wireless.kernel.org/en/users/Drivers/wcn36xx
->>>>
->>>> A lot people made a contribution to this driver. Here is the list in
->>>> alphabetical order:
->>>>
->>>> Eugene Krasnikov <k.eugene.e@gmail.com>
->>>> Kalle Valo <kvalo@qca.qualcomm.com>
->>>> Olof Johansson <dev@skyshaper.net>
->>>> Pontus Fuchs <pontus.fuchs@gmail.com>
->>>> Yanbo Li <yanbol@qti.qualcomm.com>
->>>>
->>>> Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
->>
->> 'make allyesconfig' yield this:
->>
->>    LD      drivers/net/wireless/ath/ath.o
->>    LD      drivers/net/wireless/ath/built-in.o
->> drivers/net/wireless/ath/wcn36xx/built-in.o: In function `_GLOBAL__sub_I_65535_0_wcn36xx_set_default_rates':
->> /home/linville/git/wireless-next/drivers/net/wireless/ath/wcn36xx/main.c:302: multiple definition of `debug_mask'
->> drivers/net/wireless/ath/ath6kl/built-in.o:/home/linville/git/wireless-next/drivers/net/wireless/ath/ath6kl/cfg80211.c:1208: first defined here
->> make[2]: *** [drivers/net/wireless/ath/built-in.o] Error 1
->> make[1]: *** [drivers/net/wireless/ath] Error 2
->> make: *** [drivers/net/wireless/] Error 2
->>
->> --
->> John W. Linville                Someday the world will need a hero, and you
->> linville@tuxdriver.com                  might be all we have.  Be ready.
->
->
->
-
+diff --git a/net/wireless/ibss.c b/net/wireless/ibss.c
+index 39bff7d..a710019 100644
+--- a/net/wireless/ibss.c
++++ b/net/wireless/ibss.c
+@@ -246,7 +246,7 @@ int cfg80211_ibss_wext_join(struct cfg80211_registered_device *rdev,
+ 
+ 	/* try to find an IBSS channel if none requested ... */
+ 	if (!wdev->wext.ibss.chandef.chan) {
+-		wdev->wext.ibss.chandef.width = NL80211_CHAN_WIDTH_20_NOHT;
++		struct ieee80211_channel *new_chan = NULL;
+ 
+ 		for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
+ 			struct ieee80211_supported_band *sband;
+@@ -262,16 +262,19 @@ int cfg80211_ibss_wext_join(struct cfg80211_registered_device *rdev,
+ 					continue;
+ 				if (chan->flags & IEEE80211_CHAN_DISABLED)
+ 					continue;
+-				wdev->wext.ibss.chandef.chan = chan;
++				new_chan = chan;
+ 				break;
+ 			}
+ 
+-			if (wdev->wext.ibss.chandef.chan)
++			if (new_chan)
+ 				break;
+ 		}
+ 
+-		if (!wdev->wext.ibss.chandef.chan)
++		if (!new_chan)
+ 			return -EINVAL;
++
++		cfg80211_chandef_create(&wdev->wext.ibss.chandef, new_chan,
++					NL80211_CHAN_NO_HT);
+ 	}
+ 
+ 	/* don't join -- SSID is not there */
+@@ -345,8 +348,8 @@ int cfg80211_ibss_wext_siwfreq(struct net_device *dev,
+ 		return err;
+ 
+ 	if (chan) {
+-		wdev->wext.ibss.chandef.chan = chan;
+-		wdev->wext.ibss.chandef.width = NL80211_CHAN_WIDTH_20_NOHT;
++		cfg80211_chandef_create(&wdev->wext.ibss.chandef, chan,
++					NL80211_CHAN_NO_HT);
+ 		wdev->wext.ibss.channel_fixed = true;
+ 	} else {
+ 		/* cfg80211_ibss_wext_join will pick one if needed */
+-- 
+1.7.10.4
 
