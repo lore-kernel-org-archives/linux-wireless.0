@@ -1,52 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:55580 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751742Ab3JLBbz (ORCPT
+Received: from mail-we0-f180.google.com ([74.125.82.180]:42821 "EHLO
+	mail-we0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753900Ab3JVTA2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Oct 2013 21:31:55 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3.12 2/2] mwifiex: inform cfg80211 about disconnect for P2P client interface
-Date: Fri, 11 Oct 2013 18:31:32 -0700
-Message-ID: <1381541492-28226-2-git-send-email-bzhao@marvell.com> (sfid-20131012_033212_545838_36F57C2E)
-In-Reply-To: <1381541492-28226-1-git-send-email-bzhao@marvell.com>
-References: <1381541492-28226-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 22 Oct 2013 15:00:28 -0400
+Received: by mail-we0-f180.google.com with SMTP id q59so8487988wes.25
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Oct 2013 12:00:26 -0700 (PDT)
+Message-ID: <1382468422.6472.8.camel@canaries64-MCP7A> (sfid-20131022_210031_342998_1BE49995)
+Subject: [PATCH] staging: vt6656: call usb_device_reset before netdev
+ registration
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 22 Oct 2013 20:00:22 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+The USB reset occurs after netdev registration if network manager
+calls device_open too fast causing USB fails in main_usb.c: device_init_registers.
 
-This patch adds missing cfg80211_disconnected event for P2P client
-interface upon successful deauthenticate command, deauthenticate
-event or disassociate event from FW.
+Move the usb reset to before register_netdev.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/mwifiex/sta_event.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/staging/vt6656/main_usb.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/sta_event.c b/drivers/net/wireless/mwifiex/sta_event.c
-index 8b05752..8c351f7 100644
---- a/drivers/net/wireless/mwifiex/sta_event.c
-+++ b/drivers/net/wireless/mwifiex/sta_event.c
-@@ -118,7 +118,8 @@ mwifiex_reset_connect_state(struct mwifiex_private *priv, u16 reason_code)
- 	dev_dbg(adapter->dev,
- 		"info: successfully disconnected from %pM: reason code %d\n",
- 		priv->cfg_bssid, reason_code);
--	if (priv->bss_mode == NL80211_IFTYPE_STATION) {
-+	if (priv->bss_mode == NL80211_IFTYPE_STATION ||
-+	    priv->bss_mode == NL80211_IFTYPE_P2P_CLIENT) {
- 		cfg80211_disconnected(priv->netdev, reason_code, NULL, 0,
- 				      GFP_KERNEL);
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index 5e4a5d0..aae228c 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -723,14 +723,15 @@ vt6656_probe(struct usb_interface *intf, const struct usb_device_id *id)
+ 	usb_set_intfdata(intf, pDevice);
+ 	SET_NETDEV_DEV(netdev, &intf->dev);
+ 	memcpy(pDevice->dev->dev_addr, fake_mac, ETH_ALEN);
++
++	usb_device_reset(pDevice);
++
+ 	rc = register_netdev(netdev);
+ 	if (rc) {
+ 		printk(KERN_ERR DEVICE_NAME " Failed to register netdev\n");
+ 		goto err_netdev;
  	}
+ 
+-	usb_device_reset(pDevice);
+-
+ 	return 0;
+ 
+ err_netdev:
 -- 
-1.8.2.3
+1.8.3.2
 
