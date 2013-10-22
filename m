@@ -1,107 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f178.google.com ([209.85.217.178]:39879 "EHLO
-	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751339Ab3J2Kia (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Oct 2013 06:38:30 -0400
-Received: by mail-lb0-f178.google.com with SMTP id o14so3789403lbi.23
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Oct 2013 03:38:29 -0700 (PDT)
+Received: from mout.gmx.net ([212.227.17.21]:50073 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753393Ab3JVSpW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Oct 2013 14:45:22 -0400
+Received: from [192.168.0.100] ([93.218.117.40]) by mail.gmx.com (mrgmx101)
+ with ESMTPSA (Nemesis) id 0Ld4xA-1VyzEO1kC8-00iF9K for
+ <linux-wireless@vger.kernel.org>; Tue, 22 Oct 2013 20:45:20 +0200
+Message-ID: <5266C7BF.20503@rempel-privat.de> (sfid-20131022_204527_918685_C66178F9)
+Date: Tue, 22 Oct 2013 20:45:19 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
 MIME-Version: 1.0
-Date: Tue, 29 Oct 2013 11:38:29 +0100
-Message-ID: <CAEk6gTD-PkwaRNDs0b9wkE3s91pOPGr1P-+yQyTny3PqjjjFCg@mail.gmail.com> (sfid-20131029_113834_579685_D6C1F992)
-Subject: ath6kl USB driver loading problem
-From: Drasko DRASKOVIC <drasko.draskovic@gmail.com>
-To: linux-wireless@vger.kernel.org, ath6kl-devel@qualcomm.com
-Content-Type: text/plain; charset=ISO-8859-1
+To: =?UTF-8?B?WWFubmlrIFbDtmxrZXI=?= <yannikv@yahoo.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	pontus.fuchs@gmail.com
+Subject: Re: ar5523 Gigaset USB Adapter 108 issue
+References: <Pine.LNX.4.44L0.1310181041080.1164-100000@iolanthe.rowland.org> <52614E9B.6040400@rempel-privat.de> <526155ED.1090007@yahoo.de> <52615EFA.80902@rempel-privat.de> <526162ED.8030901@yahoo.de> <52616CD0.2000203@rempel-privat.de> <5262789D.8030704@yahoo.de> <5262BA7A.2050803@rempel-privat.de> <5266C4C1.80408@yahoo.de>
+In-Reply-To: <5266C4C1.80408@yahoo.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
-I have a USB dongle that uses ath6kl driver. I have a Cyclone5 Altera
-socfpga Linux, kernel version 3.8, and during the boot I am facing
-following problem:
-usb 1-1: new high-speed USB device number 2 using dwc_otg
-INFO: rcu_sched self-detected stall on CPU { 0}  (t=2100 jiffies
-g=4294967038 c=4294967037 q=12)
-[<800154f4>] (unwind_backtrace+0x0/0xf8) from [<80080044>]
-(rcu_check_callbacks+0x388/0x860)
-[<80080044>] (rcu_check_callbacks+0x388/0x860) from [<80031ea0>]
-(update_process_times+0x38/0x68)
-[<80031ea0>] (update_process_times+0x38/0x68) from [<80063000>]
-(tick_sched_timer+0x5c/0x1f0)
-[<80063000>] (tick_sched_timer+0x5c/0x1f0) from [<80046b14>]
-(__run_hrtimer+0x84/0x1b4)
-[<80046b14>] (__run_hrtimer+0x84/0x1b4) from [<80047480>]
-(hrtimer_interrupt+0x108/0x2d4)
-[<80047480>] (hrtimer_interrupt+0x108/0x2d4) from [<80014458>]
-(twd_handler+0x40/0x4c)
-[<80014458>] (twd_handler+0x40/0x4c) from [<8007a148>]
-(handle_percpu_devid_irq+0x5c/0x144)
-[<8007a148>] (handle_percpu_devid_irq+0x5c/0x144) from [<800773a0>]
-(generic_handle_irq+0x20/0x30)
-[<800773a0>] (generic_handle_irq+0x20/0x30) from [<8000f294>]
-(handle_IRQ+0x38/0x94)
-[<8000f294>] (handle_IRQ+0x38/0x94) from [<80081a78>]
-(__ipipe_do_sync_stage+0x218/0x22c)
-[<80081a78>] (__ipipe_do_sync_stage+0x218/0x22c) from [<80081be8>]
-(ipipe_unstall_root+0x38/0x40)
-[<80081be8>] (ipipe_unstall_root+0x38/0x40) from [<8002a5c8>]
-(__do_softirq+0x7c/0x224)
-[<8002a5c8>] (__do_softirq+0x7c/0x224) from [<8002aa44>] (irq_exit+0x4c/0x54)
-[<8002aa44>] (irq_exit+0x4c/0x54) from [<8000f298>] (handle_IRQ+0x3c/0x94)
-[<8000f298>] (handle_IRQ+0x3c/0x94) from [<80081a78>]
-(__ipipe_do_sync_stage+0x218/0x22c)
-[<80081a78>] (__ipipe_do_sync_stage+0x218/0x22c) from [<80081be8>]
-(ipipe_unstall_root+0x38/0x40)
-[<80081be8>] (ipipe_unstall_root+0x38/0x40) from [<803e2530>]
-(__netdev_alloc_frag+0x110/0x154)
-[<803e2530>] (__netdev_alloc_frag+0x110/0x154) from [<803e4c80>]
-(__netdev_alloc_skb+0x40/0xe0)
-[<803e4c80>] (__netdev_alloc_skb+0x40/0xe0) from [<8036824c>]
-(ath6kl_usb_post_recv_transfers.constprop.6+0x1c/0x118)
-[<8036824c>] (ath6kl_usb_post_recv_transfers.constprop.6+0x1c/0x118)
-from [<80368468>] (ath6kl_usb_power_on+0x1c/0x40)
-[<80368468>] (ath6kl_usb_power_on+0x1c/0x40) from [<80366de4>]
-(ath6kl_core_init+0xa0/0x42c)
-[<80366de4>] (ath6kl_core_init+0xa0/0x42c) from [<80367f6c>]
-(ath6kl_usb_probe+0x478/0x5a8)
-[<80367f6c>] (ath6kl_usb_probe+0x478/0x5a8) from [<803766b8>]
-(usb_probe_interface+0xc8/0x190)
-[<803766b8>] (usb_probe_interface+0xc8/0x190) from [<802bd8c4>]
-(driver_probe_device+0x6c/0x1f8)
-[<802bd8c4>] (driver_probe_device+0x6c/0x1f8) from [<802bc000>]
-(bus_for_each_drv+0x44/0x8c)
-[<802bc000>] (bus_for_each_drv+0x44/0x8c) from [<802bd82c>]
-(device_attach+0x74/0x80)
-[<802bd82c>] (device_attach+0x74/0x80) from [<802bcebc>]
-(bus_probe_device+0x84/0xa8)
-[<802bcebc>] (bus_probe_device+0x84/0xa8) from [<802bb710>]
-(device_add+0x4c0/0x58c)
-[<802bb710>] (device_add+0x4c0/0x58c) from [<80375554>]
-(usb_set_configuration+0x550/0x774)
-[<80375554>] (usb_set_configuration+0x550/0x774) from [<8037d320>]
-(generic_probe+0x2c/0x70)
-[<8037d320>] (generic_probe+0x2c/0x70) from [<80375834>]
-(usb_probe_device+0x14/0x18)
-[<80375834>] (usb_probe_device+0x14/0x18) from [<802bd8c4>]
-(driver_probe_device+0x6c/0x1f8)
-[<802bd8c4>] (driver_probe_device+0x6c/0x1f8) from [<802bc000>]
-(bus_for_each_drv+0x44/0x8c)
-[<802bc000>] (bus_for_each_drv+0x44/0x8c) from [<802bd82c>]
-(device_attach+0x74/0x80)
-[<802bd82c>] (device_attach+0x74/0x80) from [<802bcebc>]
-(bus_probe_device+0x84/0xa8)
-[<802bcebc>] (bus_probe_device+0x84/0xa8) from [<802bb710>]
-(device_add+0x4c0/0x58c)
-[<802bb710>] (device_add+0x4c0/0x58c) from [<8036e8d0>]
-(usb_new_device+0x11c/0x17c)
-[<8036e8d0>] (usb_new_device+0x11c/0x17c) from [<8036f41c>]
-(hub_thread+0xaec/0x1208)
-[<8036f41c>] (hub_thread+0xaec/0x1208) from [<80042a94>] (kthread+0xa4/0xb0)
-[<80042a94>] (kthread+0xa4/0xb0) from [<8000e400>] (ret_from_fork+0x18/0x38)
+Am 22.10.2013 20:32, schrieb Yannik Völker:
+> Am 19.10.2013 18:59, schrieb Oleksij Rempel:
+>> Am 19.10.2013 14:18, schrieb Yannik Völker:
+>>> Am 18.10.2013 19:16, schrieb Oleksij Rempel:
+>>>> Am 18.10.2013 18:33, schrieb Yannik Völker:
+>>>>> Am 18.10.2013 18:16, schrieb Oleksij Rempel:
+>>>>>> Am 18.10.2013 17:38, schrieb Yannik Völker:
+>>>>>>> Am 18.10.2013 17:07, schrieb Oleksij Rempel:
+>>>>>>>> Am 18.10.2013 16:49, schrieb Alan Stern:
+>>>>>>>>> Yannik, you should always use Reply-To-All so that 
+>>>>>>>>> your messages get sent to the mailing list and not 
+>>>>>>>>> just to me.
+>>>>>>>>> 
+>>>>>>>>> On Thu, 17 Oct 2013, Yannik Völker wrote:
+>>>>>>>>> 
+>>>>>>>>>> Am 07.08.2013 19:34, schrieb Alan Stern:
+>>>>>>>>>>> Please post two usbmon traces, one showing the
+>>>>>>>>>>>  failure on your current system and the other 
+>>>>>>>>>>> showing the adapter running correctly under a 
+>>>>>>>>>>> 32-bit kernel. Instructions for usbmon are in
+>>>>>>>>>>> the kernel source file
+>>>>>>>>>>> Documentation/usb/usbmon.txt.
+>>>>>>>>>> I never got it to work under a 32-bit kernel, i 
+>>>>>>>>>> was just able to utilize a windows32 driver using
+>>>>>>>>>>  ndiswrapper.
+>>>>>>>>>> 
+>>>>>>>>>> Now i got it to "work". I randomly found out
+>>>>>>>>>> that the ar5523 driver actually works when you
+>>>>>>>>>> load it after you unload ndiswrapper so the
+>>>>>>>>>> following steps make it work: 1. modprobe
+>>>>>>>>>> ndiswrapper 2. plug in device 3. connect to wlan
+>>>>>>>>>> using ndiswrapper and disconnect again (might be
+>>>>>>>>>> optional) 4. modprobe -r ndiswrapper 5. modprobe
+>>>>>>>>>> ar5523 6. connect to wlan log for that is
+>>>>>>>>>> attatched as wlanthennative2.log
+>>>>>>> 
+>>>>>>> 
+>>>>>>>> It sounds like linux driver didn't recognised usb id 
+>>>>>>>> and didn't uploaded firmware, or there was no
+>>>>>>>> firmware to upload.
+>>>>>>> there is firmware (/lib/firmware/ar5523.bin exists)
+>>>>>>> but it does not even get touched (i renamed the file
+>>>>>>> and the error did not change at all)
+>>>>> 
+>>>>>> find first usbid of your adapter (it will be changed
+>>>>>> after firmware upload). And try to force driver to use
+>>>>>> this id: modprobe -v ar5523 echo 07d1 3a0d > 
+>>>>>> /sys/bus/usb/drivers/ar5523/new_id
+>>>>> 
+>>>>>> instead of "07d1 3a0d" use your id.
+>>>>> 
+>>>>> 
+>>>>> # lsusb … Bus 003 Device 011: ID 129b:160c CyberTAN 
+>>>>> Technology Siemens S30853-S1038-R351 802.11g Wireless
+>>>>> Adapter [Atheros AR5523] …
+>>>>> 
+>>>>> # modprobe ar5523 # echo 129b 160c > 
+>>>>> /sys/bus/usb/drivers/ar5523/new_id <plugging device in> 
+>>>>> syslog: Oct 18 18:27:47 yannik-desktop kernel: [
+>>>>> 8751.447784] usbcore: registered new interface driver
+>>>>> ar5523 Oct 18 18:28:25 yannik-desktop kernel: [
+>>>>> 8789.036912] usb 3-14: new high-speed USB device number 12
+>>>>> using xhci_hcd Oct 18 18:28:25 yannik-desktop kernel: [
+>>>>> 8789.053995] usb 3-14: New USB device found, idVendor=129b,
+>>>>> idProduct=160c Oct 18 18:28:25 yannik-desktop kernel: [
+>>>>> 8789.054005] usb 3-14: New USB device strings: Mfr=1,
+>>>>> Product=2, SerialNumber=3 Oct 18 18:28:25 yannik-desktop
+>>>>> kernel: [ 8789.054010] usb 3-14: Product: AR5523 Oct 18
+>>>>> 18:28:25 yannik-desktop kernel: [ 8789.054015] usb 3-14:
+>>>>> Manufacturer: Atheros Communications Inc Oct 18 18:28:25
+>>>>> yannik-desktop kernel: [ 8789.054019] usb 3-14:
+>>>>> SerialNumber: 1.0 Oct 18 18:28:27 yannik-desktop kernel: [
+>>>>> 8791.052313] usb 3-14: timeout waiting for command 01 reply
+>>>>> Oct 18 18:28:27 yannik-desktop kernel: [ 8791.052323] usb
+>>>>> 3-14: could not initialize adapter Oct 18 18:28:27
+>>>>> yannik-desktop kernel: [ 8791.052359] usb 3-14: RX USB
+>>>>> error -2. Oct 18 18:28:27 yannik-desktop kernel: [ 
+>>>>> 8791.052378] usb 3-14: error -1 when submitting rx urb Oct
+>>>>> 18 18:28:27 yannik-desktop kernel: [ 8791.052504] ar5523:
+>>>>> probe of 3-14:1.0 failed with error -110
+>>>>> 
+>>>>>> Besidy, what kernel version are you using? May be it is 
+>>>>>> too old..
+>>>>> 
+>>>>> 3.11.0-12-generic it is my understanding that the ar5523 
+>>>>> driver was included from 3.8 on.
+>>> 
+>>>> please test attached patch.
+>>> Stopped the error from appearing but it looks like it would
+>>> not even try to upload the firmware to me:
+> 
+>> Hi Yannik,
+> 
+>> please use this patch instead of previous. It will provide some 
+>> more info. And send me complete dmesg.
+> 
+> I have to correct myself: I got the sources via apt-get source (as
+> opposed to git) this time. applied patch, worked.
 
 
-Any idea why it come to this?
+Thank you for update. Can you please send us dmesg with working result.
 
-Best regards,
-Drasko
+
+-- 
+Regards,
+Oleksij
