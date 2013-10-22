@@ -1,84 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out06.msg.oleane.net ([62.161.7.4]:52908 "EHLO
-	smtp-out06.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752050Ab3JHLcF convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:43724 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753582Ab3JVS0B (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Oct 2013 07:32:05 -0400
-Received: from smtp06.msg.oleane.net (smtp06.mail.priv [172.17.20.115])
-	by smtp-out06.msg.oleane.net with ESMTP id r9889qux008000
-	for <linux-wireless@vger.kernel.org>; Tue, 8 Oct 2013 10:09:53 +0200
-From: "Jean-Pierre Tosoni" <jp.tosoni@acksys.fr>
-To: <devel@lists.open80211s.org>, <linux-wireless@vger.kernel.org>,
-	<yeohchunyeow@cozybit.com>
-References: <1380760429-26100-1-git-send-email-yeohchunyeow@cozybit.com>
-In-Reply-To: <1380760429-26100-1-git-send-email-yeohchunyeow@cozybit.com>
-Subject: RE: [PATCH v3 0/6] Add Mesh Channel Switch Support
-Date: Tue, 8 Oct 2013 09:49:14 +0200
-Message-ID: <003101cec3fa$e2c1e000$a845a000$@acksys.fr> (sfid-20131008_133210_195663_E64D4187)
+	Tue, 22 Oct 2013 14:26:01 -0400
+Message-ID: <5266C321.7000103@candelatech.com> (sfid-20131022_202610_828811_F5522976)
+Date: Tue, 22 Oct 2013 11:25:37 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+To: ath10k@lists.infradead.org,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: ath10k hits warning in sta_info.c:839.
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, see some typos below.
-Jean-Pierre
+Kernel is stock 'ath' tree, with small printk to debug an ath10k
+crash.
 
-> -----Message d'origine-----
-> De : devel-bounces@lists.open80211s.org [mailto:devel-
-> bounces@lists.open80211s.org] De la part de Chun-Yeow Yeoh
-> Envoyé : jeudi 3 octobre 2013 02:34
-> 
-> Limitations:
->  * Channel switch is only allow for the same band and also same channel
->    width from the previous setting.
+This is FYI for now...will be looking at other ath10k crash bugs
+before digging into this tone.
 
-Allow -> allowed
-settings
+Setup is 2 stations trying to associate to same AP, which causes
+endless failures and firmware crashes.  Good for chasing bugs :)
 
-> 
-> These patches are reviewed and commented by Bob Copeland, Thomas
-> Pedersen
-> and Johannes Berg. Any further comments are welcomed.
-> 
-> Add seperate patch for refactoring the ieee80211_parse_ch_switch_ie to
 
-Seperate -> separate
+DMAR:[fault reason 05] PTE Write access is not set
+dmar: DRHD: handling fault status reg 3
+dmar: DMAR:[DMA Write] Request device [05:00.0] fault addr ffd52000
+DMAR:[fault reason 05] PTE Write access is not set
+dmar: DRHD: handling fault status reg 3
+dmar: DMAR:[DMA Write] Request device [05:00.0] fault addr ffd52000
+DMAR:[fault reason 05] PTE Write access is not set
 
-> reduce the number of function paramaters.
+sta300: authentication with 00:03:83:3d:30:aa timed out
+[root@ct523-9292 ~]# ath10k: Failed to delete peer: 00:03:83:3d:30:aa for VDEV: 1
+ath10k: WMI vdev stop failed: ret -108
+------------[ cut here ]------------
+WARNING: CPU: 1 PID: 6 at /mnt/sda/home/greearb/git/ath/net/mac80211/sta_info.c:839 __sta_info_destroy+0x12)
+Modules linked in: nf_nat_ipv4 nf_nat veth 8021q garp stp mrp llc macvlan pktgen lockd f71882fg coretemp hw]
+CPU: 1 PID: 6 Comm: kworker/u8:0 Tainted: G        WC   3.12.0-rc5-wl+ #1
+Hardware name: To be filled by O.E.M. To be filled by O.E.M./HURONRIVER, BIOS 4.6.5 05/02/2012
+Workqueue: phy0 ieee80211_iface_work [mac80211]
+ 0000000000000009 ffff8802160d3c28 ffffffff81566b46 ffff88021fa8ec78
+ 0000000000000000 ffff8802160d3c68 ffffffff8109e0a2 ffff8802160d3c78
+ ffffffffa03ceff2 ffff880215b63800 ffff8800d81505c0 ffff88020dc647c0
+Call Trace:
+ [<ffffffff81566b46>] dump_stack+0x55/0x86
+ [<ffffffff8109e0a2>] warn_slowpath_common+0x77/0x91
+ [<ffffffffa03ceff2>] ? __sta_info_destroy+0x122/0x1d6 [mac80211]
+ [<ffffffff8109e0d1>] warn_slowpath_null+0x15/0x17
+dmar: DRHD: handling fault status reg 3
+dmar: DMAR:[DMA Write] Request device [05:00.0] fault addr ffd51000
+DMAR:[fault reason 05] PTE Write access is not set
+dmar: DRHD: handling fault status reg 3
+dmar: DMAR:[DMA Write] Request device [05:00.0] fault addr ffd51000
+DMAR:[fault reason 05] PTE Write access is not set
+ [<ffffffffa03ceff2>] __sta_info_destroy+0x122/0x1d6 [mac80211]
+ [<ffffffffa03cf27a>] sta_info_destroy_addr+0x37/0x59 [mac80211]
+ [<ffffffffa03edbcc>] ieee80211_destroy_auth_data+0x2a/0x8c [mac80211]
+ [<ffffffffa03f1543>] ieee80211_sta_work+0x159/0xb2c [mac80211]
+ [<ffffffffa03ea936>] ? ieee80211_wake_queues_by_reason+0x78/0x87 [mac80211]
+ [<ffffffff8156cc88>] ? _raw_spin_unlock_irqrestore+0x27/0x32
+ [<ffffffffa03d86bf>] ieee80211_iface_work+0x29f/0x2c2 [mac80211]
+ [<ffffffffa03edc3b>] ? sdata_unlock+0xd/0xf [mac80211]
+ [<ffffffff810afdc1>] ? pwq_activate_delayed_work+0x23/0x31
+ [<ffffffff810b1846>] process_one_work+0x162/0x217
+ [<ffffffff810b1cbb>] worker_thread+0x12e/0x1fb
+ [<ffffffff810b1b8d>] ? rescuer_thread+0x268/0x268
+ [<ffffffff810b6a8e>] kthread+0x88/0x90
+ [<ffffffff810b6a06>] ? __kthread_parkme+0x60/0x60
+ [<ffffffff8157160c>] ret_from_fork+0x7c/0xb0
+ [<ffffffff810b6a06>] ? __kthread_parkme+0x60/0x60
+---[ end trace 402f96cbcf4a3d3e ]---
+sta300: deauthenticating from 00:03:83:3d:30:aa by local choice (reason=3)
+ath10k: MSI-X interrupt handling (8 intrs)
+ath10k: UART prints disabled
+ath10k: firmware 999.999.0.636 booted
+ath10k: htt target version 2.1
+ath10k: device successfully recovered
+ath10k: firmware crashed!
 
-Parameters
 
-> 
-> Chun-Yeow Yeoh (6):
->   mac80211: process the CSA frame for mesh accordingly
->   {nl,cfg,mac}80211: enable the triggering of CSA frame in mesh
->   mac80211: add the CSA and MCSP elements in mesh beaconing
->   mac80211: refactor the parsing of chan switch ie
->   {nl,cfg,mac}80211: finalizing mesh channel switching
->   mac80211: process mesh channel switching using beacon
-> 
->  include/linux/ieee80211.h  |   20 +++
->  net/mac80211/Kconfig       |   11 ++
->  net/mac80211/cfg.c         |   24 ++++
->  net/mac80211/debug.h       |   10 ++
->  net/mac80211/ibss.c        |   67 ++--------
->  net/mac80211/ieee80211_i.h |   29 ++++-
->  net/mac80211/mesh.c        |  293
-> +++++++++++++++++++++++++++++++++++++++++++-
->  net/mac80211/mlme.c        |   32 +++--
->  net/mac80211/rx.c          |    5 +-
->  net/mac80211/spectmgmt.c   |   33 +++--
->  net/mac80211/tx.c          |   16 +++
->  net/mac80211/util.c        |   96 +++++++++++++++
->  net/wireless/nl80211.c     |    4 +-
->  13 files changed, 540 insertions(+), 100 deletions(-)
-> 
-> --
-> 1.7.9.5
-> 
-> _______________________________________________
-> Devel mailing list
-> Devel@lists.open80211s.org
-> http://lists.open80211s.org/cgi-bin/mailman/listinfo/devel
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
