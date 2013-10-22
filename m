@@ -1,56 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:57989 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754583Ab3JNIxh (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:12884 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755374Ab3JVWZR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Oct 2013 04:53:37 -0400
-Message-ID: <1381740813.13092.9.camel@jlt4.sipsolutions.net> (sfid-20131014_105340_663211_7FD43339)
-Subject: Re: [PATCH v2 1/2] cfg80211: add flags to define country IE
- processing rules
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mihir Shete <smihir@qti.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org,
-	Henri Bahini <hbahini@qca.qualcomm.com>,
-	Tushnim Bhattacharyya <tushnimb@qca.qualcomm.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Mon, 14 Oct 2013 10:53:33 +0200
-In-Reply-To: <1381638697-2641-2-git-send-email-smihir@qti.qualcomm.com> (sfid-20131013_063205_048348_568E0EC6)
-References: <1381638697-2641-1-git-send-email-smihir@qti.qualcomm.com>
-	 <1381638697-2641-2-git-send-email-smihir@qti.qualcomm.com>
-	 (sfid-20131013_063205_048348_568E0EC6)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 22 Oct 2013 18:25:17 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Dan Carpenter <dan.carpenter@oracle.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 6/6] mwifiex: improvements in mwifiex_ret_tx_power_cfg()
+Date: Tue, 22 Oct 2013 15:24:47 -0700
+Message-ID: <1382480687-12720-7-git-send-email-bzhao@marvell.com> (sfid-20131023_002522_447527_AAF6ED6C)
+In-Reply-To: <1382480687-12720-1-git-send-email-bzhao@marvell.com>
+References: <1382480687-12720-1-git-send-email-bzhao@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2013-10-13 at 10:01 +0530, Mihir Shete wrote:
-> 802.11 cards may have different country IE parsing behavioural
-> preferences and vendors may want to support these. These preferences
-> were managed by the WIPHY_FLAG_CUSTOM_REGULATORY and the
-> WIPHY_FLAG_STRICT_REGULATORY flags and their combination.
-> Instead of using this existing notation, split out the country
-> IE behavioural preferences to a new flag. This will allow
-> us to add more customizations easily and make the code more
-> maintainable
+From: Amitkumar Karwar <akarwar@marvell.com>
 
->  		regd = ath_world_regdomain(reg);
->  		wiphy->flags |= WIPHY_FLAG_CUSTOM_REGULATORY;
-> +		wiphy->country_ie_pref = NL80211_COUNTRY_IE_FOLLOW_POWER;
+1) Move common code out of switch case handling
+2) Return from the function if number of bytes left in response buffer
+are less than tlv size
+3) Pass pg_tlv_hdr directly instead of txp_cfg to mwifiex_get_power_level()
 
-That seems pretty weird - maybe you should have a first patch that moves
-the existing regulatory flags into some new field, and then adds the
-country IE flags there? Adding a new flags field for just the country IE
-seems odd and less useful for the future.
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/sta_cmdresp.c | 35 ++++++++++++++----------------
+ 1 file changed, 16 insertions(+), 19 deletions(-)
 
-> + * @country_ie_pref: country IE processing preferences specified
-> + *	by enum nl80211_country_ie_pref
-
-That implies you're exporting it to userspace - why?
-
->  /**
-> + * enum nl80211_country_ie_pref - country IE processing preferences
-
-Why is this userspace API if it's not used anywhere as such?
-
-johannes
+diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+index 2675ca7..5511946 100644
+--- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
++++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+@@ -338,8 +338,7 @@ static int mwifiex_get_power_level(struct mwifiex_private *priv, void *data_buf)
+ 	if (!data_buf)
+ 		return -1;
+ 
+-	pg_tlv_hdr = (struct mwifiex_types_power_group *)
+-		((u8 *) data_buf + sizeof(struct host_cmd_ds_txpwr_cfg));
++	pg_tlv_hdr = (struct mwifiex_types_power_group *)((u8 *)data_buf);
+ 	pg = (struct mwifiex_power_group *)
+ 		((u8 *) pg_tlv_hdr + sizeof(struct mwifiex_types_power_group));
+ 	length = le16_to_cpu(pg_tlv_hdr->length);
+@@ -383,19 +382,25 @@ static int mwifiex_ret_tx_power_cfg(struct mwifiex_private *priv,
+ 	struct mwifiex_types_power_group *pg_tlv_hdr;
+ 	struct mwifiex_power_group *pg;
+ 	u16 action = le16_to_cpu(txp_cfg->action);
++	u16 tlv_buf_left;
+ 
+-	switch (action) {
+-	case HostCmd_ACT_GEN_GET:
+-		pg_tlv_hdr = (struct mwifiex_types_power_group *)
+-			((u8 *) txp_cfg +
+-			 sizeof(struct host_cmd_ds_txpwr_cfg));
++	pg_tlv_hdr = (struct mwifiex_types_power_group *)
++		((u8 *)txp_cfg +
++		 sizeof(struct host_cmd_ds_txpwr_cfg));
+ 
+-		pg = (struct mwifiex_power_group *)
+-			((u8 *) pg_tlv_hdr +
+-			 sizeof(struct mwifiex_types_power_group));
++	pg = (struct mwifiex_power_group *)
++		((u8 *)pg_tlv_hdr +
++		 sizeof(struct mwifiex_types_power_group));
+ 
++	tlv_buf_left = le16_to_cpu(resp->size) - S_DS_GEN - sizeof(*txp_cfg);
++	if (tlv_buf_left <
++			le16_to_cpu(pg_tlv_hdr->length) + sizeof(*pg_tlv_hdr))
++		return 0;
++
++	switch (action) {
++	case HostCmd_ACT_GEN_GET:
+ 		if (adapter->hw_status == MWIFIEX_HW_STATUS_INITIALIZING)
+-			mwifiex_get_power_level(priv, txp_cfg);
++			mwifiex_get_power_level(priv, pg_tlv_hdr);
+ 
+ 		priv->tx_power_level = (u16) pg->power_min;
+ 		break;
+@@ -404,14 +409,6 @@ static int mwifiex_ret_tx_power_cfg(struct mwifiex_private *priv,
+ 		if (!le32_to_cpu(txp_cfg->mode))
+ 			break;
+ 
+-		pg_tlv_hdr = (struct mwifiex_types_power_group *)
+-			((u8 *) txp_cfg +
+-			 sizeof(struct host_cmd_ds_txpwr_cfg));
+-
+-		pg = (struct mwifiex_power_group *)
+-			((u8 *) pg_tlv_hdr +
+-			 sizeof(struct mwifiex_types_power_group));
+-
+ 		if (pg->power_max == pg->power_min)
+ 			priv->tx_power_level = (u16) pg->power_min;
+ 		break;
+-- 
+1.8.2.3
 
