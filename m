@@ -1,43 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39299 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755423Ab3JCUaR (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:43814 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753748Ab3JVWXA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Oct 2013 16:30:17 -0400
-Date: Thu, 3 Oct 2013 16:21:01 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/7] brcmfmac: cleanup and new device support
-Message-ID: <20131003202101.GG3142@tuxdriver.com> (sfid-20131003_223026_174712_3406140C)
-References: <1380107146-24026-1-git-send-email-arend@broadcom.com>
- <524D543B.7010906@broadcom.com>
+	Tue, 22 Oct 2013 18:23:00 -0400
+Message-ID: <5266FAAD.3010800@candelatech.com> (sfid-20131023_002304_111253_9D6467EC)
+Date: Tue, 22 Oct 2013 15:22:37 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <524D543B.7010906@broadcom.com>
+To: ath10k@lists.infradead.org,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath10k hits warning in sta_info.c:839.
+References: <5266C321.7000103@candelatech.com>
+In-Reply-To: <5266C321.7000103@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 03, 2013 at 01:25:47PM +0200, Arend van Spriel wrote:
-> On 09/25/2013 01:05 PM, Arend van Spriel wrote:
-> >This series has a few cleanup patches fixing a sparse error, cleaning
-> >up the rx path and also changing the firmware filename approach after
-> >getting feedback on this by Stephen Warren. The remaining patches are
-> >adding support for the BCM4339 SDIO chipset.
-> >
-> >This series is intended for v3.13 kernel and applies to the master
-> >branch of the wireless-next repository.
+On 10/22/2013 11:25 AM, Ben Greear wrote:
+> Kernel is stock 'ath' tree, with small printk to debug an ath10k
+> crash.
 > 
-> Hi John,
+> This is FYI for now...will be looking at other ath10k crash bugs
+> before digging into this tone.
 > 
-> Did you miss this series from last week?
+> Setup is 2 stations trying to associate to same AP, which causes
+> endless failures and firmware crashes.  Good for chasing bugs :)
 > 
-> Regards,
-> Arend
+> 
+> DMAR:[fault reason 05] PTE Write access is not set
+> dmar: DRHD: handling fault status reg 3
+> dmar: DMAR:[DMA Write] Request device [05:00.0] fault addr ffd52000
+> DMAR:[fault reason 05] PTE Write access is not set
+> dmar: DRHD: handling fault status reg 3
+> dmar: DMAR:[DMA Write] Request device [05:00.0] fault addr ffd52000
+> DMAR:[fault reason 05] PTE Write access is not set
+> 
+> sta300: authentication with 00:03:83:3d:30:aa timed out
+> [root@ct523-9292 ~]# ath10k: Failed to delete peer: 00:03:83:3d:30:aa for VDEV: 1
+> ath10k: WMI vdev stop failed: ret -108
 
-No, just haven't merged everything yet... :-(
+> ------------[ cut here ]------------
+> WARNING: CPU: 1 PID: 6 at /mnt/sda/home/greearb/git/ath/net/mac80211/sta_info.c:839 __sta_info_destroy+0x12)
+> Modules linked in: nf_nat_ipv4 nf_nat veth 8021q garp stp mrp llc macvlan pktgen lockd f71882fg coretemp hw]
 
-John
+I think this may be a result of whatever bug or limitation
+caused the firmware to error and/or crash when adding a second
+station VIF and trying to associate it to the same AP.
+
+Probably not a problem with the rest of the wifi stacks.
+
+Thanks,
+Ben
+
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
