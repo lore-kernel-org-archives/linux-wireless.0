@@ -1,129 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve0-f175.google.com ([209.85.128.175]:39504 "EHLO
-	mail-ve0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751325Ab3JDLLk (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:55632 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755374Ab3JVWZH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Oct 2013 07:11:40 -0400
-Received: by mail-ve0-f175.google.com with SMTP id jy13so2348629veb.20
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Oct 2013 04:11:39 -0700 (PDT)
+	Tue, 22 Oct 2013 18:25:07 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Dan Carpenter <dan.carpenter@oracle.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 2/6] mwifiex: replace u16 with __le16 in struct mwifiex_types_power_group
+Date: Tue, 22 Oct 2013 15:24:43 -0700
+Message-ID: <1382480687-12720-3-git-send-email-bzhao@marvell.com> (sfid-20131023_002513_375079_54D8107E)
+In-Reply-To: <1382480687-12720-1-git-send-email-bzhao@marvell.com>
+References: <1382480687-12720-1-git-send-email-bzhao@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <CAFSJ42Ydrput-ojxtf0unZj13euZHCePZByN=AB3HemY-XgTMw@mail.gmail.com>
-References: <1380234106-12802-1-git-send-email-k.eugene.e@gmail.com>
-	<CAFSJ42bybEGtkzJ99fZHrcPs=gTnvJVHxM7d8anJvn1VOs7V7A@mail.gmail.com>
-	<20131003205710.GH3142@tuxdriver.com>
-	<CAFSJ42ZwJzd46UXE2crzuaMVRLzre9SVm_vFcQ-KAVY6Q9c3QQ@mail.gmail.com>
-	<524E72B7.5000102@broadcom.com>
-	<CAFSJ42Ydrput-ojxtf0unZj13euZHCePZByN=AB3HemY-XgTMw@mail.gmail.com>
-Date: Fri, 4 Oct 2013 12:11:38 +0100
-Message-ID: <CAFSJ42Y+1=yvBpC7+H49FgPSdqcu0YJo8kw4h67_zXOMQ-GYpA@mail.gmail.com> (sfid-20131004_131152_076923_2EE5CA3D)
-Subject: Re: [PATCH] wcn36xx: mac80211 driver for Qualcomm WCN3660/WCN3680 hardware
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	wcn36xx@lists.infradead.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Sorry for inconvenience!
-I managed to reproduce this error, will fix and send a new patch later on today.
+__le16 to u16 conversion is missing for "pg_tlv_hdr->length"
+in mwifiex_get_power_level(). This creates a problem on big
+endian machines.
+It is resolved by changing definition of the structure
+and making required endianness changes.
 
-2013/10/4 Eugene Krasnikov <k.eugene.e@gmail.com>:
-> Hi Arend,
->
-> Yes, i am building it as a module. Let me try to build it into the
-> kernel, may be that is the reason why build fails.
->
-> 2013/10/4 Arend van Spriel <arend@broadcom.com>:
->> On 10/03/2013 11:22 PM, Eugene Krasnikov wrote:
->>>
->>> Hm, weird... do not see this problem myself. Let me try to sync latest
->>> wireless-next and will try to apply latest patch from this mailthread
->>> on top.
->>
->>
->> Hi Eugene,
->>
->> Do you build the driver as module. John is building it built-in then kernel.
->>
->> Gr. AvS
->>
->>
->>> P.S. If somebody esle can try to apply this patch and build that would
->>> be useful to know if problem is visible on others PCs as well.
->>>
->>> 2013/10/3 John W. Linville <linville@tuxdriver.com>:
->>>>
->>>> On Thu, Sep 26, 2013 at 11:25:18PM +0100, Eugene Krasnikov wrote:
->>>>>
->>>>> Hi John,
->>>>>
->>>>> This is the latest version of wcn36xx driver on top of current
->>>>> wireless-next tree. Please let me know if you have any problems with
->>>>> applying it.
->>>>>
->>>>> 2013/9/26 Eugene Krasnikov <k.eugene.e@gmail.com>:
->>>>>>
->>>>>> This is a mac80211 driver for Qualcomm WCN3660/WCN3680 devices. So
->>>>>> far WCN3660/WCN3680 is available only on MSM platform.
->>>>>>
->>>>>> Firmware can be found here:
->>>>>>
->>>>>> https://www.codeaurora.org/cgit/external/hisense/platform/vendor/qcom-opensource/wlan/prima/tree/firmware_bin?h=8130_CS
->>>>>>
->>>>>> Wiki page is available here:
->>>>>> http://wireless.kernel.org/en/users/Drivers/wcn36xx
->>>>>>
->>>>>> A lot people made a contribution to this driver. Here is the list in
->>>>>> alphabetical order:
->>>>>>
->>>>>> Eugene Krasnikov <k.eugene.e@gmail.com>
->>>>>> Kalle Valo <kvalo@qca.qualcomm.com>
->>>>>> Olof Johansson <dev@skyshaper.net>
->>>>>> Pontus Fuchs <pontus.fuchs@gmail.com>
->>>>>> Yanbo Li <yanbol@qti.qualcomm.com>
->>>>>>
->>>>>> Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
->>>>
->>>>
->>>> 'make allyesconfig' yield this:
->>>>
->>>>    LD      drivers/net/wireless/ath/ath.o
->>>>    LD      drivers/net/wireless/ath/built-in.o
->>>> drivers/net/wireless/ath/wcn36xx/built-in.o: In function
->>>> `_GLOBAL__sub_I_65535_0_wcn36xx_set_default_rates':
->>>>
->>>> /home/linville/git/wireless-next/drivers/net/wireless/ath/wcn36xx/main.c:302:
->>>> multiple definition of `debug_mask'
->>>>
->>>> drivers/net/wireless/ath/ath6kl/built-in.o:/home/linville/git/wireless-next/drivers/net/wireless/ath/ath6kl/cfg80211.c:1208:
->>>> first defined here
->>>> make[2]: *** [drivers/net/wireless/ath/built-in.o] Error 1
->>>> make[1]: *** [drivers/net/wireless/ath] Error 2
->>>> make: *** [drivers/net/wireless/] Error 2
->>>>
->>>> --
->>>> John W. Linville                Someday the world will need a hero, and
->>>> you
->>>> linville@tuxdriver.com                  might be all we have.  Be ready.
->>>
->>>
->>>
->>>
->>
->>
->
->
->
-> --
-> Best regards,
-> Eugene
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/fw.h          | 4 ++--
+ drivers/net/wireless/mwifiex/sta_cmd.c     | 4 ++--
+ drivers/net/wireless/mwifiex/sta_cmdresp.c | 4 ++--
+ drivers/net/wireless/mwifiex/sta_ioctl.c   | 5 +++--
+ 4 files changed, 9 insertions(+), 8 deletions(-)
 
-
-
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index f80f30b..c8385ec 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -1020,8 +1020,8 @@ struct mwifiex_power_group {
+ } __packed;
+ 
+ struct mwifiex_types_power_group {
+-	u16 type;
+-	u16 length;
++	__le16 type;
++	__le16 length;
+ } __packed;
+ 
+ struct host_cmd_ds_txpwr_cfg {
+diff --git a/drivers/net/wireless/mwifiex/sta_cmd.c b/drivers/net/wireless/mwifiex/sta_cmd.c
+index 7d66018..2181ee2 100644
+--- a/drivers/net/wireless/mwifiex/sta_cmd.c
++++ b/drivers/net/wireless/mwifiex/sta_cmd.c
+@@ -239,14 +239,14 @@ static int mwifiex_cmd_tx_power_cfg(struct host_cmd_ds_command *cmd,
+ 			memmove(cmd_txp_cfg, txp,
+ 				sizeof(struct host_cmd_ds_txpwr_cfg) +
+ 				sizeof(struct mwifiex_types_power_group) +
+-				pg_tlv->length);
++				le16_to_cpu(pg_tlv->length));
+ 
+ 			pg_tlv = (struct mwifiex_types_power_group *) ((u8 *)
+ 				  cmd_txp_cfg +
+ 				  sizeof(struct host_cmd_ds_txpwr_cfg));
+ 			cmd->size = cpu_to_le16(le16_to_cpu(cmd->size) +
+ 				  sizeof(struct mwifiex_types_power_group) +
+-				  pg_tlv->length);
++				  le16_to_cpu(pg_tlv->length));
+ 		} else {
+ 			memmove(cmd_txp_cfg, txp, sizeof(*txp));
+ 		}
+diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+index 58a6013..bdf50fd 100644
+--- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
++++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+@@ -340,7 +340,7 @@ static int mwifiex_get_power_level(struct mwifiex_private *priv, void *data_buf)
+ 		((u8 *) data_buf + sizeof(struct host_cmd_ds_txpwr_cfg));
+ 	pg = (struct mwifiex_power_group *)
+ 		((u8 *) pg_tlv_hdr + sizeof(struct mwifiex_types_power_group));
+-	length = pg_tlv_hdr->length;
++	length = le16_to_cpu(pg_tlv_hdr->length);
+ 	if (length > 0) {
+ 		max_power = pg->power_max;
+ 		min_power = pg->power_min;
+@@ -356,7 +356,7 @@ static int mwifiex_get_power_level(struct mwifiex_private *priv, void *data_buf)
+ 
+ 		length -= sizeof(struct mwifiex_power_group);
+ 	}
+-	if (pg_tlv_hdr->length > 0) {
++	if (le16_to_cpu(pg_tlv_hdr->length) > 0) {
+ 		priv->min_tx_power_level = (u8) min_power;
+ 		priv->max_tx_power_level = (u8) max_power;
+ 	}
+diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+index f084412..c8e029d 100644
+--- a/drivers/net/wireless/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+@@ -638,8 +638,9 @@ int mwifiex_set_tx_power(struct mwifiex_private *priv,
+ 		txp_cfg->mode = cpu_to_le32(1);
+ 		pg_tlv = (struct mwifiex_types_power_group *)
+ 			 (buf + sizeof(struct host_cmd_ds_txpwr_cfg));
+-		pg_tlv->type = TLV_TYPE_POWER_GROUP;
+-		pg_tlv->length = 4 * sizeof(struct mwifiex_power_group);
++		pg_tlv->type = cpu_to_le16(TLV_TYPE_POWER_GROUP);
++		pg_tlv->length =
++			cpu_to_le16(4 * sizeof(struct mwifiex_power_group));
+ 		pg = (struct mwifiex_power_group *)
+ 		     (buf + sizeof(struct host_cmd_ds_txpwr_cfg)
+ 		      + sizeof(struct mwifiex_types_power_group));
 -- 
-Best regards,
-Eugene
+1.8.2.3
+
