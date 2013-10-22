@@ -1,43 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:34271 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756536Ab3J1OVS (ORCPT
+Received: from linux-libre.fsfla.org ([208.118.235.54]:35414 "EHLO
+	linux-libre.fsfla.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750932Ab3JVEQj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Oct 2013 10:21:18 -0400
-Message-ID: <1382970069.17956.23.camel@jlt4.sipsolutions.net> (sfid-20131028_152135_459063_1311A6E2)
-Subject: Re: [PATCH 3.12] cfg80211: fix ibss wext chandef creation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <sw@simonwunderlich.de>
-Cc: linux-wireless@vger.kernel.org,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
-	Dirk Gouders <dirk@gouders.net>,
-	Linux Kernel <linux-kernel@vger.kernel.org>
-Date: Mon, 28 Oct 2013 15:21:09 +0100
-In-Reply-To: <1382472166-19563-1-git-send-email-sw@simonwunderlich.de> (sfid-20131022_221235_343937_76CC3A81)
-References: <1382472166-19563-1-git-send-email-sw@simonwunderlich.de>
-	 (sfid-20131022_221235_343937_76CC3A81)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 22 Oct 2013 00:16:39 -0400
+Received: from freie.home (home.lxoliva.fsfla.org [172.31.160.22])
+	by linux-libre.fsfla.org (8.14.4/8.14.4/Debian-2ubuntu2) with ESMTP id r9M47aem018102
+	for <linux-wireless@vger.kernel.org>; Tue, 22 Oct 2013 04:07:37 GMT
+From: Alexandre Oliva <oliva@gnu.org>
+To: linux-wireless@vger.kernel.org
+Subject: RTL8187B is racy
+Date: Tue, 22 Oct 2013 02:07:29 -0200
+Message-ID: <or61sq3q4e.fsf@livre.home> (sfid-20131022_061643_809201_2792208A)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-10-22 at 22:02 +0200, Simon Wunderlich wrote:
-> The wext internal chandefs for ibss should be created using the
-> cfg80211_chandef_create() functions. Otherwise the center_freq1 field
-> will not be set and cfg80211_chandef_valid() will spit a warning and
-> report the chandef as invalid when it should be used.
+It's been at least a year since I first noticed that, on WiFi-busy
+environments such as airports, hotels and Free Software conferences, my
+Yeeloong laptop with a RTL8187B WiFi card will freeze or oops shortly
+after I enable WiFi.  This problem doesn't seem to happen when I'm at
+home, probably because of the low WiFi traffic.  The problem occurs
+while running 3.11.* and 3.10.* kernels, but not 3.4.* or 3.0.*.
 
-I think
+I couldn't find any changes to the rtl8187 module that explain this
+misbehavior, so I suspect it's some new source of parallelism in the
+mac80211 layer that has exposed the lack of synchronization in uses of
+rx_queue and b_tx_status.queue.  Indeed, I found many uses of these
+queues that don't take locks to ensure consistency.  Unfortunately,
+adding spin locks around all uses causes harder freezes and/or complains
+about scheduling in atomic contexts, depending on which race I hit
+first.  Without any changes, the problem I get most often is a crash
+within rtl8187b_status_cb, when skb_unlink attempts to dereference a
+NULL pointer.  Testing skb->prev and skb->next before entering the
+branch where the skb is removed seemed to make the error a little bit
+less frequent, but surely not enough for the machine to remain up for
+very long while WiFi is enabled.
 
-commit f478f33a93f9353dcd1fe55445343d76b1c3f84a
-Author: Bruno Randolf <br1@einfach.org>
-Date:   Thu Sep 26 16:55:28 2013 +0100
+Is this a known problem?  Any suggestions on what I could try next to
+fix the problem?
 
-    cfg80211: fix warning when using WEXT for IBSS
+Thanks in advance,
 
-
-already fixed this. Your patch doesn't apply, but feel free to send me a
-new one (for -next) converting to the creation helpers.
-
-johannes
-
+-- 
+Alexandre Oliva, freedom fighter    http://FSFLA.org/~lxoliva/
+You must be the change you wish to see in the world. -- Gandhi
+Be Free! -- http://FSFLA.org/   FSF Latin America board member
+Free Software Evangelist      Red Hat Brazil Compiler Engineer
