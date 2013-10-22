@@ -1,56 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4382 "EHLO mms1.broadcom.com"
+Received: from mail.telexis.nl ([87.213.113.58]:22492 "EHLO mail.telexis.nl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759254Ab3JONpN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Oct 2013 09:45:13 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 09/12] brcmfmac: remove stale code from
- brcmf_sdcard_recv_chain()
-Date: Tue, 15 Oct 2013 15:44:54 +0200
-Message-ID: <1381844697-24881-10-git-send-email-arend@broadcom.com> (sfid-20131015_154540_949417_F7255239)
-In-Reply-To: <1381844697-24881-1-git-send-email-arend@broadcom.com>
-References: <1381844697-24881-1-git-send-email-arend@broadcom.com>
+	id S1750988Ab3JVIbq convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Oct 2013 04:31:46 -0400
+From: Bastiaan de Groot <bastiaan.de.groot@telexis.nl>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>
+Subject: =?iso-8859-1?Q?RE:_Intel=AE_Centrino=AE_Advanced-N_6235_-_iwlwifi-6000g2b?=
+ =?iso-8859-1?Q?-6.ucode_not_reconnecting_issue?=
+Date: Tue, 22 Oct 2013 08:31:42 +0000
+Message-ID: <2027E41A9379094181F2CA441442CE1D279B7AC3@RSWKA02MXS.telexis.nl> (sfid-20131022_103151_558448_AB212DFE)
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function brcmf_sdcard_recv_chain() has been reworked with
-commit "brcmfmac: add sdio sg list support", but the incr_fix
-variable is only assigned but not used so removing it now.
+Dear community,
 
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |    2 --
- 1 file changed, 2 deletions(-)
+I have a "Intel® Centrino® Advanced-N 6235" wificard.
+Running Debian 7.0 "wheezy"
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-index c88e267..92818d79 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-@@ -571,7 +571,6 @@ done:
- int brcmf_sdcard_recv_chain(struct brcmf_sdio_dev *sdiodev, u32 addr, uint fn,
- 			    uint flags, struct sk_buff_head *pktq)
- {
--	uint incr_fix;
- 	uint width;
- 	int err = 0;
- 
-@@ -583,7 +582,6 @@ int brcmf_sdcard_recv_chain(struct brcmf_sdio_dev *sdiodev, u32 addr, uint fn,
- 	if (err)
- 		goto done;
- 
--	incr_fix = (flags & SDIO_REQ_FIXED) ? SDIOH_DATA_FIX : SDIOH_DATA_INC;
- 	err = brcmf_sdio_sglist_rw(sdiodev, fn, false, addr, pktq);
- 
- done:
--- 
-1.7.10.4
+Firmware: Iwlwifi-6000g2b-6.ucode
 
+Using:
+Kernel 3.2.0-4-686-pae
+
+It connects but when wpa_supplicant is trying to re-connect I get:
+
+[83667.904059] iwlwifi 0000:05:00.0: iwl_hcmd_queue_reclaim: Read index for DMA queue txq id (9), index 157 is out of range [0-256] 0 0.
+[83667.904276] iwlwifi 0000:05:00.0: HCMD_ACTIVE already clear for command POWER_TABLE_CMD
+[83667.904289] iwlwifi 0000:05:00.0: iwl_hcmd_queue_reclaim: Read index for DMA queue txq id (9), index 156 is out of range [0-256] 0 0.
+[83667.904493] iwlwifi 0000:05:00.0: HCMD_ACTIVE already clear for command REPLY_RXON_ASSOC
+[83667.904516] iwlwifi 0000:05:00.0: iwl_hcmd_queue_reclaim: Read index for DMA queue txq id (9), index 143 is out of range [0-256] 0 0.
+[83667.904722] iwlwifi 0000:05:00.0: HCMD_ACTIVE already clear for command REPLY_RXON
+[83667.904732] iwlwifi 0000:05:00.0: iwl_hcmd_queue_reclaim: Read index for DMA queue txq id (9), index 139 is out of range [0-256] 0 0.
+[83667.904935] iwlwifi 0000:05:00.0: HCMD_ACTIVE already clear for command REPLY_TX_LINK_QUALITY_CMD
+[83667.904998] iwlwifi 0000:05:00.0: iwl_hcmd_queue_reclaim: Read index for DMA queue txq id (9), index 172 is out of range [0-256] 0 0.
+[83667.905200] iwlwifi 0000:05:00.0: HCMD_ACTIVE already clear for command REPLY_LEDS_CMD
+[83667.905212] iwlwifi 0000:05:00.0: iwl_hcmd_queue_reclaim: Read index for DMA queue txq id (9), index 165 is out of range [0-256] 0 0.
+[83667.908013] iwlwifi 0000:05:00.0: HCMD_ACTIVE already clear for command POWER_TABLE_CMD
+[83667.920999] iwlwifi 0000:05:00.0: iwl_hcmd_queue_reclaim: Read index for DMA queue txq id (9), index 162 is out of range [0-256] 0 0.
+[83667.924978] iwlwifi 0000:05:00.0: HCMD_ACTIVE already clear for command REPLY_TX_LINK_QUALITY_CMD
+[83667.937183] iwlwifi 0000:05:00.0: iwl_hcmd_queue_reclaim: Read index for DMA queue txq id (9), index 158 is out of range [0-256] 0 0.
+[83667.941157] iwlwifi 0000:05:00.0: HCMD_ACTIVE already clear for command REPLY_RXON
+[83667.953377] iwlwifi 0000:05:00.0: iwl_hcmd_queue_reclaim: Read index for DMA queue txq id (9), index 171 is out of range [0-256] 0 0.
+[83667.957319] iwlwifi 0000:05:00.0: HCMD_ACTIVE already clear for command REPLY_TX_LINK_QUALITY_CMD
+[83668.896034] iwlwifi 0000:05:00.0: Failed to start RT ucode: -110
+[83668.904290] iwlwifi 0000:05:00.0: Unable to initialize device.
+
+The issue looks similar like this one:
+
+http://ubuntuforums.org/showthread.php?t=2178006&s=9157c353cd4a322c2a3b2a6dc693d243
+
+Can you please give me advice on how to resolve this issue?
+
+Thanks in advance!
+Bastiaan
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Met vriendelijke groet,
+
+Bastiaan de Groot
+
+
+
+
+Laan van Zuid Hoorn 55
+2289 DC Rijswijk
+The Netherlands
+
+Telephone         +31 (0)70 319 39 38
+Operations        +31 (0)70 319 23 47
+Fax                   +31 (0)70 319 17 59
+Mobile               +31 (0)6 211 92 911
+E-mail               bastiaan.de.groot@telexis.nl
+Website             www.telexis.nl
 
