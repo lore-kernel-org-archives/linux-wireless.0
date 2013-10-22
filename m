@@ -1,55 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:45247 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750820Ab3JUGvt (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:50019 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755430Ab3JVWZV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Oct 2013 02:51:49 -0400
-Received: by mail-wi0-f180.google.com with SMTP id ey11so3456072wid.13
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Oct 2013 23:51:47 -0700 (PDT)
+	Tue, 22 Oct 2013 18:25:21 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Dan Carpenter <dan.carpenter@oracle.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 1/6] mwifiex: potential integer underflow in mwifiex_ret_wmm_get_status()
+Date: Tue, 22 Oct 2013 15:24:42 -0700
+Message-ID: <1382480687-12720-2-git-send-email-bzhao@marvell.com> (sfid-20131023_002527_781526_5917B3C4)
+In-Reply-To: <1382480687-12720-1-git-send-email-bzhao@marvell.com>
+References: <1382480687-12720-1-git-send-email-bzhao@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <87iowruocz.fsf@kamboji.qca.qualcomm.com>
-References: <1382090878-22216-1-git-send-email-bartosz.markowski@tieto.com>
-	<1382090878-22216-2-git-send-email-bartosz.markowski@tieto.com>
-	<87iowruocz.fsf@kamboji.qca.qualcomm.com>
-Date: Mon, 21 Oct 2013 08:51:47 +0200
-Message-ID: <CACKGw+EKg_5FQMvGPHxpvgt9wukyU5HD1jx++WkyYNLA3bBFSg@mail.gmail.com> (sfid-20131021_085152_259617_894C88B2)
-Subject: Re: [PATCH 2/2] ath10k: extend number of AP interfaces for 10.X firmware
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k@lists.infradead.org,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 21 October 2013 08:31, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Bartosz Markowski <bartosz.markowski@tieto.com> writes:
->
->> This firmware can support up to 8 AP interfaces.
->>
->> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
->> ---
->>  drivers/net/wireless/ath/ath10k/mac.c |    2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
->> index af046c4..dc65dcd 100644
->> --- a/drivers/net/wireless/ath/ath10k/mac.c
->> +++ b/drivers/net/wireless/ath/ath10k/mac.c
->> @@ -3255,7 +3255,7 @@ static const struct ieee80211_iface_limit ath10k_10x_if_limits[] = {
->>       .types  = BIT(NL80211_IFTYPE_STATION)
->>       },
->>       {
->> -     .max    = 7,
->> +     .max    = 8,
->>       .types  = BIT(NL80211_IFTYPE_AP)
->>       },
->>  };
->
-> Why only with 10.x firmware branch? Doesn't the main branch support 8
-> interfaces?
+From: Dan Carpenter <dan.carpenter@oracle.com>
 
-With .636 there's a firmware crash when we try to create interface 8 (ap mode).
+Before we loop for next iteration we adjust the buffer pointer and
+"resp_len":
 
+		curr += (tlv_len + sizeof(tlv_hdr->header));
+		resp_len -= (tlv_len + sizeof(tlv_hdr->header));
+
+If "resp_len" gets set to negative then it counts as a high positive
+value.
+
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/wmm.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
+index 5dd0ccc..13eaeed 100644
+--- a/drivers/net/wireless/mwifiex/wmm.c
++++ b/drivers/net/wireless/mwifiex/wmm.c
+@@ -722,6 +722,9 @@ int mwifiex_ret_wmm_get_status(struct mwifiex_private *priv,
+ 		tlv_hdr = (struct mwifiex_ie_types_data *) curr;
+ 		tlv_len = le16_to_cpu(tlv_hdr->header.len);
+ 
++		if (resp_len < tlv_len + sizeof(tlv_hdr->header))
++			break;
++
+ 		switch (le16_to_cpu(tlv_hdr->header.type)) {
+ 		case TLV_TYPE_WMMQSTATUS:
+ 			tlv_wmm_qstatus =
 -- 
-Bartosz
+1.8.2.3
+
