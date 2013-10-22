@@ -1,47 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0010.hostedemail.com ([216.40.44.10]:49593 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755129Ab3JXWqg (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:8016 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755430Ab3JVWZS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Oct 2013 18:46:36 -0400
-Message-ID: <1382654793.22433.91.camel@joe-AO722> (sfid-20131025_004639_608604_D0117567)
-Subject: Re: [Patch v2 1/3] net: wireless: replace printk with netdev_warn
- in adm8211.c
-From: Joe Perches <joe@perches.com>
-To: Georgiana Rodica Chelu <georgiana.chelu93@gmail.com>
-Cc: opw-kernel@googlegroups.com, linux-wireless@vger.kernel.org
-Date: Thu, 24 Oct 2013 15:46:33 -0700
-In-Reply-To: <20131024213026.GA3569@fireworks>
-References: <20131024213026.GA3569@fireworks>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Tue, 22 Oct 2013 18:25:18 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Dan Carpenter <dan.carpenter@oracle.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 5/6] mwifiex: fix invalid memory access in mwifiex_update_autoindex_ies()
+Date: Tue, 22 Oct 2013 15:24:46 -0700
+Message-ID: <1382480687-12720-6-git-send-email-bzhao@marvell.com> (sfid-20131023_002524_451905_CE2EE87A)
+In-Reply-To: <1382480687-12720-1-git-send-email-bzhao@marvell.com>
+References: <1382480687-12720-1-git-send-email-bzhao@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-10-25 at 00:30 +0300, Georgiana Rodica Chelu wrote:
-> WARNING: Prefer netdev_warn(netdev, ... then dev_warn(dev, ... then pr_warn(...
-> to printk(KERN_WARNING ...
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Hi Georgiana.
+While parsing TLVs, return failure if number of remaining bytes
+are less than current tlv length. This avoids invalid memory
+access.
 
-Please compile and test your patches before submitting them.
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/ie.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
 
-> diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
-
-> @@ -151,8 +151,9 @@ static int adm8211_read_eeprom(struct ieee80211_hw *dev)
->  		else
->  			priv->rf_type = ADM8211_TYPE_AIROHA;
->  
-> -		printk(KERN_WARNING "%s (adm8211): Unknown RFtype %d\n",
-> -		       pci_name(priv->pdev), (cr49 >> 3) & 0x7);
-> +		netdev_warn(priv->pdev, "(adm8211): Unknown RFtype %d\n",
-> +			    pci_name(priv->pdev), (cr49 >> 3) & 0x7);
-> +
->  	}
->  
->  	priv->bbp_type = cr49 & 0x7;
-
-netdev_warn 1st arg is a struct net_device *
-priv->pdev is a struct pci_dev *
-
+diff --git a/drivers/net/wireless/mwifiex/ie.c b/drivers/net/wireless/mwifiex/ie.c
+index 220af4f..81ac001 100644
+--- a/drivers/net/wireless/mwifiex/ie.c
++++ b/drivers/net/wireless/mwifiex/ie.c
+@@ -82,7 +82,7 @@ mwifiex_update_autoindex_ies(struct mwifiex_private *priv,
+ 			     struct mwifiex_ie_list *ie_list)
+ {
+ 	u16 travel_len, index, mask;
+-	s16 input_len;
++	s16 input_len, tlv_len;
+ 	struct mwifiex_ie *ie;
+ 	u8 *tmp;
+ 
+@@ -91,11 +91,13 @@ mwifiex_update_autoindex_ies(struct mwifiex_private *priv,
+ 
+ 	ie_list->len = 0;
+ 
+-	while (input_len > 0) {
++	while (input_len >= sizeof(struct mwifiex_ie_types_header)) {
+ 		ie = (struct mwifiex_ie *)(((u8 *)ie_list) + travel_len);
+-		input_len -= le16_to_cpu(ie->ie_length) + MWIFIEX_IE_HDR_SIZE;
+-		travel_len += le16_to_cpu(ie->ie_length) + MWIFIEX_IE_HDR_SIZE;
++		tlv_len = le16_to_cpu(ie->ie_length);
++		travel_len += tlv_len + MWIFIEX_IE_HDR_SIZE;
+ 
++		if (input_len < tlv_len + MWIFIEX_IE_HDR_SIZE)
++			return -1;
+ 		index = le16_to_cpu(ie->ie_index);
+ 		mask = le16_to_cpu(ie->mgmt_subtype_mask);
+ 
+@@ -132,6 +134,7 @@ mwifiex_update_autoindex_ies(struct mwifiex_private *priv,
+ 		le16_add_cpu(&ie_list->len,
+ 			     le16_to_cpu(priv->mgmt_ie[index].ie_length) +
+ 			     MWIFIEX_IE_HDR_SIZE);
++		input_len -= tlv_len + MWIFIEX_IE_HDR_SIZE;
+ 	}
+ 
+ 	if (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_UAP)
+-- 
+1.8.2.3
 
