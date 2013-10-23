@@ -1,113 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f174.google.com ([209.85.215.174]:54173 "EHLO
-	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751425Ab3JSIdI (ORCPT
+Received: from smtp-out03.msg.oleane.net ([62.161.7.1]:54338 "EHLO
+	smtp-out03.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750936Ab3JWOSZ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Oct 2013 04:33:08 -0400
-Received: by mail-ea0-f174.google.com with SMTP id z15so2472549ead.19
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Oct 2013 01:33:07 -0700 (PDT)
-Message-ID: <526243C2.7090607@gmail.com> (sfid-20131019_103313_846732_6F5D8C85)
-Date: Sat, 19 Oct 2013 10:33:06 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+	Wed, 23 Oct 2013 10:18:25 -0400
+Received: from smtp04.msg.oleane.net (smtp04.mail.priv [172.17.20.113])
+	by smtp-out03.msg.oleane.net with ESMTP id r9NEI4IO012564
+	for <linux-wireless@vger.kernel.org>; Wed, 23 Oct 2013 16:18:23 +0200
+From: "voncken" <cedric.voncken@acksys.fr>
+To: "'Sujith Manoharan'" <sujith@msujith.org>,
+	"'John Linville'" <linville@tuxdriver.com>
+Cc: <linux-wireless@vger.kernel.org>
+References: <1382519771-11170-1-git-send-email-sujith@msujith.org>
+In-Reply-To: <1382519771-11170-1-git-send-email-sujith@msujith.org>
+Subject: RE: [PATCH] ath9k: Identify Killer Wireless cards
+Date: Wed, 23 Oct 2013 15:57:26 +0200
+Message-ID: <014d01cecff7$ce744080$6b5cc180$@acksys.fr> (sfid-20131023_161833_158859_D989B296)
 MIME-Version: 1.0
-To: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-CC: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [PATCH 3.12] rt2800usb: slow down TX status polling
-References: <20131017100431.GA9603@redhat.com> <525FF68A.8030806@lwfinger.net> <20131018094238.GA7506@redhat.com>
-In-Reply-To: <20131018094238.GA7506@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/18/13 11:42, Stanislaw Gruszka wrote:
-> On Thu, Oct 17, 2013 at 09:39:06AM -0500, Larry Finger wrote:
->> I suggest getting rid of the magic numbers as long as you are making
->> this change. A single define could handle the delay time for the two
->> cases.
+	What is a PCI killer ?
+
+Cedric Voncken 
+
+
+> -----Message d'origine-----
+> De : linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
+> owner@vger.kernel.org] De la part de Sujith Manoharan
+> Envoyé : mercredi 23 octobre 2013 11:16
+> À : John Linville
+> Cc : linux-wireless@vger.kernel.org
+> Objet : [PATCH] ath9k: Identify Killer Wireless cards
 > 
-> Thanks for sugestion Larry, though I do not see clear benefit of
-> introduce define since those magic numbers are just time values
-> expressed in nano seconds. Anyway patch with define added below.
-> John can pick it, if he thinks it is better.
+> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 > 
-> Stanislaw
+> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 > ---
-> From 813e0bde7340bad7d3401c6aa2a3f8635ec49597 Mon Sep 17 00:00:00 2001
-> From: Stanislaw Gruszka <sgruszka@redhat.com>
-> Date: Fri, 18 Oct 2013 11:36:54 +0200
-> Subject: [PATCH] rt2800usb: slow down TX status polling
+>  drivers/net/wireless/ath/ath9k/ath9k.h |  1 +
+> drivers/net/wireless/ath/ath9k/init.c  |  3 +++
+>  drivers/net/wireless/ath/ath9k/pci.c   | 20 ++++++++++++++++++++
+>  3 files changed, 24 insertions(+)
 > 
-> Polling TX statuses too frequently has two negative effects. First is
-> randomly peek CPU usage, causing overall system functioning delays.
-> Second bad effect is that device is not able to fill TX statuses in
-> H/W register on some workloads and we get lot of timeouts like below:
+> diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h
+> b/drivers/net/wireless/ath/ath9k/ath9k.h
+> index 4c3bbe4..f48cfe8 100644
+> --- a/drivers/net/wireless/ath/ath9k/ath9k.h
+> +++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+> @@ -641,6 +641,7 @@ void ath_ant_comb_scan(struct ath_softc *sc, struct
+> ath_rx_status *rs);
+>  #define ATH9K_PCI_D3_L1_WAR   0x0040
+>  #define ATH9K_PCI_AR9565_1ANT 0x0080
+>  #define ATH9K_PCI_AR9565_2ANT 0x0100
+> +#define ATH9K_PCI_KILLER      0x0200
 > 
-> ieee80211 phy4: rt2800usb_entry_txstatus_timeout: Warning - TX status timeout for entry 7 in queue 2
-> ieee80211 phy4: rt2800usb_entry_txstatus_timeout: Warning - TX status timeout for entry 7 in queue 2
-> ieee80211 phy4: rt2800usb_txdone: Warning - Got TX status for an empty queue 2, dropping
+>  /*
+>   * Default cache line size, in bytes.
+> diff --git a/drivers/net/wireless/ath/ath9k/init.c
+> b/drivers/net/wireless/ath/ath9k/init.c
+> index e89db64..17502b4 100644
+> --- a/drivers/net/wireless/ath/ath9k/init.c
+> +++ b/drivers/net/wireless/ath/ath9k/init.c
+> @@ -589,6 +589,9 @@ static void ath9k_init_platform(struct ath_softc *sc)
+>  	if (sc->driver_data & ATH9K_PCI_AR9565_2ANT)
+>  		ath_info(common, "WB335 2-ANT card detected\n");
 > 
-> This not only cause flood of messages in dmesg, but also bad throughput,
-> since rate scaling algorithm can not work optimally.
-> 
-> In the future, we should probably make polling interval be adjusted
-> automatically, but for now just increase values, this make mentioned
-> problems gone.
-> 
-> Resolve:
-> https://bugzilla.kernel.org/show_bug.cgi?id=62781
-> 
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-
-I don't care which version gets picked. In both cases:
-
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-
-> ---
->  drivers/net/wireless/rt2x00/rt2800usb.c | 12 ++++++++----
->  1 file changed, 8 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-> index 96677ce5..997df03 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-> @@ -148,6 +148,8 @@ static bool rt2800usb_txstatus_timeout(struct rt2x00_dev *rt2x00dev)
->  	return false;
->  }
->  
-> +#define TXSTATUS_READ_INTERVAL 1000000
+> +	if (sc->driver_data & ATH9K_PCI_KILLER)
+> +		ath_info(common, "Killer Wireless card detected\n");
 > +
->  static bool rt2800usb_tx_sta_fifo_read_completed(struct rt2x00_dev *rt2x00dev,
->  						 int urb_status, u32 tx_status)
->  {
-> @@ -176,8 +178,9 @@ static bool rt2800usb_tx_sta_fifo_read_completed(struct rt2x00_dev *rt2x00dev,
->  		queue_work(rt2x00dev->workqueue, &rt2x00dev->txdone_work);
->  
->  	if (rt2800usb_txstatus_pending(rt2x00dev)) {
-> -		/* Read register after 250 us */
-> -		hrtimer_start(&rt2x00dev->txstatus_timer, ktime_set(0, 250000),
-> +		/* Read register after 1 ms */
-> +		hrtimer_start(&rt2x00dev->txstatus_timer,
-> +			      ktime_set(0, TXSTATUS_READ_INTERVAL),
->  			      HRTIMER_MODE_REL);
->  		return false;
->  	}
-> @@ -202,8 +205,9 @@ static void rt2800usb_async_read_tx_status(struct rt2x00_dev *rt2x00dev)
->  	if (test_and_set_bit(TX_STATUS_READING, &rt2x00dev->flags))
->  		return;
->  
-> -	/* Read TX_STA_FIFO register after 500 us */
-> -	hrtimer_start(&rt2x00dev->txstatus_timer, ktime_set(0, 500000),
-> +	/* Read TX_STA_FIFO register after 2 ms */
-> +	hrtimer_start(&rt2x00dev->txstatus_timer,
-> +		      ktime_set(0, 2*TXSTATUS_READ_INTERVAL),
->  		      HRTIMER_MODE_REL);
->  }
->  
+>  	/*
+>  	 * Some WB335 cards do not support antenna diversity. Since
+>  	 * we use a hardcoded value for AR9565 instead of using the diff
+--git
+> a/drivers/net/wireless/ath/ath9k/pci.c
+> b/drivers/net/wireless/ath/ath9k/pci.c
+> index 04e6507..4a7a456 100644
+> --- a/drivers/net/wireless/ath/ath9k/pci.c
+> +++ b/drivers/net/wireless/ath/ath9k/pci.c
+> @@ -87,6 +87,19 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) =
+> {
+>  	{ PCI_VDEVICE(ATHEROS, 0x002C) }, /* PCI-E 802.11n bonded out */
+>  	{ PCI_VDEVICE(ATHEROS, 0x002D) }, /* PCI   */
+>  	{ PCI_VDEVICE(ATHEROS, 0x002E) }, /* PCI-E */
+> +
+> +	/* Killer Wireless (3x3) */
+> +	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+> +			 0x0030,
+> +			 0x1A56,
+> +			 0x2000),
+> +	  .driver_data = ATH9K_PCI_KILLER },
+> +	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+> +			 0x0030,
+> +			 0x1A56,
+> +			 0x2001),
+> +	  .driver_data = ATH9K_PCI_KILLER },
+> +
+>  	{ PCI_VDEVICE(ATHEROS, 0x0030) }, /* PCI-E  AR9300 */
 > 
+>  	/* PCI-E CUS198 */
+> @@ -267,6 +280,13 @@ static
+> DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
+>  			 0x1783),
+>  	  .driver_data = ATH9K_PCI_WOW },
+> 
+> +	/* Killer Wireless (2x2) */
+> +	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+> +			 0x0030,
+> +			 0x1A56,
+> +			 0x2003),
+> +	  .driver_data = ATH9K_PCI_KILLER },
+> +
+>  	{ PCI_VDEVICE(ATHEROS, 0x0034) }, /* PCI-E  AR9462 */
+>  	{ PCI_VDEVICE(ATHEROS, 0x0037) }, /* PCI-E  AR1111/AR9485 */
+> 
+> --
+> 1.8.4.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+in the
+> body of a message to majordomo@vger.kernel.org More majordomo info at
+> http://vger.kernel.org/majordomo-info.html
 
-
--- 
----
-Gertjan
