@@ -1,53 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:41841 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756783Ab3JRRpc (ORCPT
+Received: from server75.greatnet.de ([83.133.96.62]:59564 "EHLO
+	server75.greatnet.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750936Ab3JWJfL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Oct 2013 13:45:32 -0400
-Date: Fri, 18 Oct 2013 13:35:13 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: pull-request: iwlwifi-fixes 2013-10-18
-Message-ID: <20131018173513.GA28130@tuxdriver.com> (sfid-20131018_194535_676555_B2042BBC)
-References: <1382105527.14393.3.camel@jlt4.sipsolutions.net>
+	Wed, 23 Oct 2013 05:35:11 -0400
+Received: from [192.168.0.11] (i577B2BBD.versanet.de [87.123.43.189])
+	by server75.greatnet.de (Postfix) with ESMTPA id D634A22AC470
+	for <linux-wireless@vger.kernel.org>; Wed, 23 Oct 2013 11:24:49 +0200 (CEST)
+Message-ID: <526795E1.90701@crlf.de> (sfid-20131023_113516_301445_D45C2C1C)
+Date: Wed, 23 Oct 2013 11:24:49 +0200
+From: Dietmar Rudolph <dietmar@crlf.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1382105527.14393.3.camel@jlt4.sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: iwl3945 filling kern.log when HW switch is off
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 18, 2013 at 04:12:07PM +0200, Johannes Berg wrote:
-> John,
-> 
-> Before you travel to Edinburgh, I hope to get in another pull request.
-> Or maybe when you are there? :-)
-> 
-> I have a few fixes for warnings/issues: one from Alex, fixing scan
-> timings, one from Emmanuel fixing a WARN_ON in the DVM driver, one from
-> Stanislaw removing a trigger-happy WARN_ON in the MVM driver and a
-> change from myself to try to recover when the device isn't processing
-> commands quickly.
-> 
-> Please let me know if there's any issue.
-> 
-> johannes
-> 
-> 
-> The following changes since commit 5a3e9f7f8c8768b5f7df81100c684e4cd00a6eb5:
-> 
->   iwlwifi: mvm: call ieee80211_scan_completed when needed (2013-10-02 11:25:50 +0200)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git for-john
-> 
-> for you to fetch changes up to f6b129527ca15bae29ffb9417ddaa1c9d99ffc5d:
-> 
->   iwlwifi: dvm: don't override mac80211's queue setting (2013-10-18 16:03:14 +0200)
+Hello, I hope this is the correct place to put a bug report in. I do 
+not subscribe to this mailing list, but feel free to send PM in case 
+you need additional info. You shoudn't :-)
 
-Pulling now...
+After installing Ubuntu 13.10, I noticed kern.log growing faster 
+than you could look at. Within a few working hours, kern.log was >6GB!
+
+The reason is that I intentionally disabled WiFi on this laptop by 
+turning the HW switch off. However, this makes iwl3945 write a log 
+entry into kern.log every few microseconds!
+
+The workaround is to turn the HW switch on. The bug fix would be to 
+write just a single line to kern.log.
+
+Regards
+Dietmar
+
+- - - from kern.log:
+
+Oct 22 18:28:52 C50 kernel: [  141.144085] iwl3945 0000:02:00.0: 
+Radio disabled by HW RF Kill switch
+Oct 22 18:28:52 C50 kernel: [  141.144214] iwl3945 0000:02:00.0: 
+Radio disabled by HW RF Kill switch
+Oct 22 18:28:52 C50 kernel: [  141.145167] iwl3945 0000:02:00.0: 
+Radio disabled by HW RF Kill switch
+Oct 22 18:28:52 C50 kernel: [  141.145304] iwl3945 0000:02:00.0: 
+Radio disabled by HW RF Kill switch
+Oct 22 18:28:52 C50 kernel: [  141.146184] iwl3945 0000:02:00.0: 
+Radio disabled by HW RF Kill switch
+Oct 22 18:28:52 C50 kernel: [  141.146315] iwl3945 0000:02:00.0: 
+Radio disabled by HW RF Kill switch
+Oct 22 18:28:52 C50 kernel: [  141.147164] iwl3945 0000:02:00.0: 
+Radio disabled by HW RF Kill switch
+Oct 22 18:28:52 C50 kernel: [  141.147304] iwl3945 0000:02:00.0: 
+Radio disabled by HW RF Kill switch
+Oct 22 18:28:52 C50 kernel: [  141.148254] iwl3945 0000:02:00.0: 
+Radio disabled by HW RF Kill switch
+Oct 22 18:28:52 C50 kernel: [  141.148387] iwl3945 0000:02:00.0: 
+Radio disabled by HW RF Kill switch
+Oct 22 18:28:52 C50 kernel: [  141.149217] iwl3945 0000:02:00.0: 
+Radio disabled by HW RF Kill switch
+Oct 22 18:28:52 C50 kernel: [  141.149347] iwl3945 0000:02:00.0: 
+Radio disabled by HW RF Kill switch
+Oct 22 18:28:52 C50 kernel: [  141.150165] iwl3945 0000:02:00.0: 
+Radio disabled by HW RF Kill switch
+Oct 22 18:28:52 C50 kernel: [  141.150294] iwl3945 0000:02:00.0: 
+Radio disabled by HW RF Kill switch
+Oct 22 18:28:52 C50 kernel: [  141.151113] iwl3945 0000:02:00.0: 
+Radio disabled by HW RF Kill switch
+Oct 22 18:28:52 C50 kernel: [  141.151243] iwl3945 0000:02:00.0: 
+Radio disabled by HW RF Kill switch
+Oct 22 18:28:52 C50 kernel: [  141.152097] iwl3945 0000:02:00.0: 
+Radio disabled by HW RF Kill switch
+Oct 22 18:28:52 C50 kernel: [  141.152227] iwl3945 0000:02:00.0: 
+Radio disabled by HW RF Kill switch
+
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Dietmar Rudolph
+Geschäftsführer/President
+
+CR/LF GmbH
+Obere Fuhr 27, 45136 Essen, Germany
+phone: ++49 201 254566
+mailto: dietmar@crlf.de, http://www.crlf.de
+
+CR/LF Beratungsgesellschaft für EDV-Anwendungen mbH
+Essen HRB 7016 - GF: Dipl.-Math. Dietmar Rudolph
