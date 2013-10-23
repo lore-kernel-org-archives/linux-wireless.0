@@ -1,140 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:36573 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752239Ab3JDTnf (ORCPT
+Received: from mail-oa0-f50.google.com ([209.85.219.50]:61380 "EHLO
+	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751238Ab3JWPJW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Oct 2013 15:43:35 -0400
-Message-ID: <1380915828.30424.0.camel@porter.coelho.fi> (sfid-20131004_214352_355145_6F1193F7)
-Subject: Re: [GIT PULL] firmware: wl1251 firmware binary
-From: Luca Coelho <luca@coelho.fi>
-To: balbi@ti.com
-Cc: dwmw2@infradead.org, ben@decadent.org.uk,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org, Pavel Machek <pavel@denx.de>
-Date: Fri, 04 Oct 2013 22:43:48 +0300
-In-Reply-To: <20131004153246.GJ16059@radagast>
-References: <1380033894-5007-1-git-send-email-balbi@ti.com>
-	 <1380107096.4503.8.camel@porter.coelho.fi>
-	 <1380107278.4503.9.camel@porter.coelho.fi>
-	 <20130925132359.GE10746@radagast>
-	 <1380116535.4503.19.camel@porter.coelho.fi>
-	 <20130925135943.GI10746@radagast> <20131002125535.GL1476@radagast>
-	 <1380862901.4265.33.camel@porter.coelho.fi>
-	 <20131004153246.GJ16059@radagast>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 23 Oct 2013 11:09:22 -0400
+Received: by mail-oa0-f50.google.com with SMTP id j6so295955oag.37
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Oct 2013 08:09:21 -0700 (PDT)
+Message-ID: <5267E69F.70804@lwfinger.net> (sfid-20131023_170926_230685_1CE821DF)
+Date: Wed, 23 Oct 2013 10:09:19 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Gianfranco Costamagna <costamagnagianfranco@yahoo.it>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Edimax EW-7733UnD
+References: <1382537927.62604.YahooMailNeo@web171801.mail.ir2.yahoo.com> <1382538469.7892.YahooMailNeo@web171805.mail.ir2.yahoo.com>
+In-Reply-To: <1382538469.7892.YahooMailNeo@web171805.mail.ir2.yahoo.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-10-04 at 10:32 -0500, Felipe Balbi wrote:
-> diff --git a/LICENCE.wl1251 b/LICENCE.wl1251
-> new file mode 100644
-> index 0000000..bd0f5f1
-> --- /dev/null
-> +++ b/LICENCE.wl1251
-> @@ -0,0 +1,59 @@
-> +Copyright (c) 2000 – 2013 Texas Instruments Incorporated
-> +
-> +All rights reserved not granted herein.
-> +
-> +Limited License.
-> +
-> +Texas Instruments Incorporated grants a world-wide, royalty-free, non-exclusive
-> +license under copyrights and patents it now or hereafter owns or controls to
-> +make, have made, use, import, offer to sell and sell ("Utilize") this software
-> +subject to the terms herein.  With respect to the foregoing patent license,
-> +such license is granted  solely to the extent that any such patent is necessary
-> +to Utilize the software alone.  The patent license shall not apply to any
-> +combinations which include this software, other than combinations with devices
-> +manufactured by or for TI (“TI Devices”).  No hardware patent is licensed
-> +hereunder.
-> +
-> +Redistributions must preserve existing copyright notices and reproduce this
-> +license (including the above copyright notice and the disclaimer and (if
-> +applicable) source code license limitations below) in the documentation and/or
-> +other materials provided with the distribution
-> +
-> +Redistribution and use in binary form, without modification, are permitted
-> +provided that the following conditions are met:
-> +
-> +*	No reverse engineering, decompilation, or disassembly of this software
-> +	is permitted with respect to any software provided in binary form.
-> +
-> +*	any redistribution and use are licensed by TI for use only with TI
-> +	Devices.
-> +
-> +*	Nothing shall obligate TI to provide you with source code for the
-> +	software licensed and provided to you in object code.
-> +
-> +If software source code is provided to you, modification and redistribution of
-> +the source code are permitted provided that the following conditions are met:
-> +
-> +*	any redistribution and use of the source code, including any resulting
-> +	derivative works, are licensed by TI for use only with TI Devices.
-> +
-> +*	any redistribution and use of any object code compiled from the source
-> +	code and any resulting derivative works, are licensed by TI for use
-> +	only with TI Devices.
-> +
-> +Neither the name of Texas Instruments Incorporated nor the names of its
-> +suppliers may be used to endorse or promote products derived from this software
-> +without specific prior written permission.
-> +
-> +DISCLAIMER.
-> +
-> +THIS SOFTWARE IS PROVIDED BY TI AND TI’S LICENSORS "AS IS" AND ANY EXPRESS OR
-> +IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-> +MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-> +EVENT SHALL TI AND TI’S LICENSORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-> +INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-> +LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-> +PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-> +LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
-> +OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
-> +ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-> diff --git a/WHENCE b/WHENCE
-> index aac3ba9..3a35670 100644
-> --- a/WHENCE
-> +++ b/WHENCE
-> @@ -1712,6 +1712,24 @@ Licence: Redistributable. See LICENCE.tda7706-firmware.txt for details.
->  
->  --------------------------------------------------------------------------
->  
-> +Driver: wl1251 - Texas Instruments 802.11 WLAN driver for WiLink4 chips
-> +
-> +File: ti-connectivity/wl1251-fw.bin
-> +Version: 4.0.4.3.7
-> +
-> +File: ti-connectivity/wl1251-nvs.bin
-> +
-> +Licence: See LICENCE.wl1251 for details.
-> +
-> +The published NVS files are for testing only.  Every device needs to
-> +have a unique NVS which is properly calibrated for best results.
-> +
-> +The driver expects to find the firmwares under a ti-connectivity subdirectory.
-> +So if your system looks for firmwares in /lib/firmware, the firmwares for
-> +wl12xx chips must be located in /lib/firmware/ti-connectivity/.
-> +
-> +--------------------------------------------------------------------------
-> +
->  Driver: wl12xx - Texas Instruments 802.11 WLAN driver for WiLink6/7 chips
->  
->  File: ti-connectivity/wl1271-fw.bin
-> diff --git a/ti-connectivity/wl1251-fw.bin b/ti-connectivity/wl1251-fw.bin
-> new file mode 100644
-> index 0000000..f89c983
-> Binary files /dev/null and b/ti-connectivity/wl1251-fw.bin differ
-> diff --git a/ti-connectivity/wl1251-nvs.bin b/ti-connectivity/wl1251-nvs.bin
-> new file mode 100644
-> index 0000000..2bf9c50
-> Binary files /dev/null and b/ti-connectivity/wl1251-nvs.bin differ
-> 
+On 10/23/2013 09:27 AM, Gianfranco Costamagna wrote:
+> Hi Kernel Wireless developers, I write here since I have an issue with this module.
+>
+>
+> We bought 2 of them since they are both 2.4 and 5Ghz capable, and they seem to be powerful enough for our pourposes
+> http://www.edimax.com/au/produce_detail.php?pd_id=399&pl1_id=1&pl2_id=44
+>
+>
+> Anyway there is a problem, that the linux kernel seems to be not supporting them
+>
+> I tried following this guide
+> http://wikidevi.com/wiki/Edimax_EW-7733UnD
+> rt3573sta, possibly rt5572sta, and future support in rt2800usb "uhosg's patchset adding support, may be in by k3.12"
+> but at this moment it is showing an interface with one of them (I cannot connect to anything, the interface shown seems to be incorrect), with another I get a kernel anic and with the third one doesn't work at all.
+>
+> lsusb |grep Edimax
+>
+> Bus 002 Device 002: ID 7392:7733 Edimax Technology Co., Ltd
+>
+> Are you guys working on it? How can I make it work? I'm open to patches, suggestions or whatever can help me in using them
 
-Looks good to me:
+That device was added to the kernel version of rt2800usb in July of 2013, and it 
+is in version 3.12-rc6. You can either generate that kernel for your system, or 
+you could get the latest backports source and build it.
 
-Acked-by: Luciano Coelho <luca@coelho.fi>
+I am not an expert on the rt2x00 drivers, and I have no idea if it works.
 
---
-Luca.
+Larry
+
+
 
