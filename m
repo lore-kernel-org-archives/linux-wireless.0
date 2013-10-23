@@ -1,117 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx4.wp.pl ([212.77.101.8]:20877 "EHLO mx4.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752084Ab3JEQOK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Oct 2013 12:14:10 -0400
-Received: from ip-78-102-117-145.net.upcbroadband.cz (HELO localhost) (stf_xl@wp.pl@[78.102.117.145])
-          (envelope-sender <stf_xl@wp.pl>)
-          by smtp.wp.pl (WP-SMTPD) with AES128-SHA encrypted SMTP
-          for <linux-wireless@vger.kernel.org>; 5 Oct 2013 18:14:06 +0200
-Date: Sat, 5 Oct 2013 18:15:33 +0200
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-To: linux-wireless@vger.kernel.org
-Cc: users@rt2x00.serialmonkey.com
-Subject: [PATCH] rt2x00: do not pause queue on flush
-Message-ID: <20131005161533.GA3696@localhost.localdomain> (sfid-20131005_181414_936458_D2B5A3CA)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:60910 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750820Ab3JWFY7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Oct 2013 01:24:59 -0400
+Message-ID: <1382505837.21526.12.camel@porter.coelho.fi> (sfid-20131023_072528_447293_AE73207D)
+Subject: Re: [PATCH 11/13] wlcore: memset wl->rx_filter_enabled to zero
+ after recovery
+From: Luca Coelho <luca@coelho.fi>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 23 Oct 2013 08:23:57 +0300
+In-Reply-To: <1378718684-14430-11-git-send-email-eliad@wizery.com>
+References: <1378718684-14430-1-git-send-email-eliad@wizery.com>
+	 <1378718684-14430-11-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pausing queue on flush make no sense since txdone procedure un-pause
-queue. Before flush procedure we have to assure queue is stopped,
-i.e. on receive path h/w RX is disabled, on transmit path queue is
-disabled in mac80211. That conditions are true except one function:
-rt2x00usb_watchdog_tx_dma(), so add stop/start queue there.
+On Mon, 2013-09-09 at 12:24 +0300, Eliad Peller wrote:
+> From: Nadim Zubidat <nadimz@ti.com>
+> 
+> zero rx_filter_enabled array after recovery to avoid
+> cases were the driver will keep trying to clear a
+> filter which is not configured in FW.
+> 
+> Such case will cause consecutive recoveries due to
+> command execution failures.
+> 
+> Signed-off-by: Nadim Zubidat <nadimz@ti.com>
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> ---
+>  drivers/net/wireless/ti/wlcore/main.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+> index 60b2113..acb3502 100644
+> --- a/drivers/net/wireless/ti/wlcore/main.c
+> +++ b/drivers/net/wireless/ti/wlcore/main.c
+> @@ -1915,6 +1915,7 @@ static void wlcore_op_stop_locked(struct wl1271 *wl)
+>  	memset(wl->links_map, 0, sizeof(wl->links_map));
+>  	memset(wl->roc_map, 0, sizeof(wl->roc_map));
+>  	memset(wl->session_ids, 0, sizeof(wl->session_ids));
+> +	memset(wl->rx_filter_enabled, 0, sizeof(wl->rx_filter_enabled));
+>  	wl->active_sta_count = 0;
+>  	wl->active_link_count = 0;
 
-Note stop/start queue can be racy if we do this from multiple paths,
-but currently we stop TX queues only on rt2x00lib_disable_radio(),
-which also stop/sync watchdog, hance we have no race condition.
+This causes a sparse warning:
 
-Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
----
- drivers/net/wireless/rt2x00/rt2x00queue.c |   37 ++++------------------------
- drivers/net/wireless/rt2x00/rt2x00usb.c   |    2 +
- 2 files changed, 8 insertions(+), 31 deletions(-)
+drivers/net/wireless/ti/wlcore/main.c:1918:42: error: cannot size expression
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index 6c8a33b..218e320 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -1033,38 +1033,21 @@ EXPORT_SYMBOL_GPL(rt2x00queue_stop_queue);
- 
- void rt2x00queue_flush_queue(struct data_queue *queue, bool drop)
- {
--	bool started;
- 	bool tx_queue =
- 		(queue->qid == QID_AC_VO) ||
- 		(queue->qid == QID_AC_VI) ||
- 		(queue->qid == QID_AC_BE) ||
- 		(queue->qid == QID_AC_BK);
- 
--	mutex_lock(&queue->status_lock);
- 
- 	/*
--	 * If the queue has been started, we must stop it temporarily
--	 * to prevent any new frames to be queued on the device. If
--	 * we are not dropping the pending frames, the queue must
--	 * only be stopped in the software and not the hardware,
--	 * otherwise the queue will never become empty on its own.
-+	 * If we are not supposed to drop any pending
-+	 * frames, this means we must force a start (=kick)
-+	 * to the queue to make sure the hardware will
-+	 * start transmitting.
- 	 */
--	started = test_bit(QUEUE_STARTED, &queue->flags);
--	if (started) {
--		/*
--		 * Pause the queue
--		 */
--		rt2x00queue_pause_queue(queue);
--
--		/*
--		 * If we are not supposed to drop any pending
--		 * frames, this means we must force a start (=kick)
--		 * to the queue to make sure the hardware will
--		 * start transmitting.
--		 */
--		if (!drop && tx_queue)
--			queue->rt2x00dev->ops->lib->kick_queue(queue);
--	}
-+	if (!drop && tx_queue)
-+		queue->rt2x00dev->ops->lib->kick_queue(queue);
- 
- 	/*
- 	 * Check if driver supports flushing, if that is the case we can
-@@ -1080,14 +1063,6 @@ void rt2x00queue_flush_queue(struct data_queue *queue, bool drop)
- 	if (unlikely(!rt2x00queue_empty(queue)))
- 		rt2x00_warn(queue->rt2x00dev, "Queue %d failed to flush\n",
- 			    queue->qid);
--
--	/*
--	 * Restore the queue to the previous status
--	 */
--	if (started)
--		rt2x00queue_unpause_queue(queue);
--
--	mutex_unlock(&queue->status_lock);
- }
- EXPORT_SYMBOL_GPL(rt2x00queue_flush_queue);
- 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
-index 8828987..4e12162 100644
---- a/drivers/net/wireless/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
-@@ -523,7 +523,9 @@ static void rt2x00usb_watchdog_tx_dma(struct data_queue *queue)
- 	rt2x00_warn(queue->rt2x00dev, "TX queue %d DMA timed out, invoke forced forced reset\n",
- 		    queue->qid);
- 
-+	rt2x00queue_stop_queue(queue);
- 	rt2x00queue_flush_queue(queue, true);
-+	rt2x00queue_start_queue(queue);
- }
- 
- static int rt2x00usb_dma_timeout(struct data_queue *queue)
--- 
-1.7.4.4
+Booleans cannot be sized. :(
+
+I won't apply this patch.
+
+--
+Luca.
+
+
 
