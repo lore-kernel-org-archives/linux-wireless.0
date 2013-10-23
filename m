@@ -1,100 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:48762 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752561Ab3JQHmr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Oct 2013 03:42:47 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 10/21] rt2x00: rt2800pci: use rt2800mmio prefix for initialization functions
-Date: Thu, 17 Oct 2013 09:42:24 +0200
-Message-Id: <1381995755-16471-11-git-send-email-juhosg@openwrt.org> (sfid-20131017_094255_233031_EE686100)
-In-Reply-To: <1381995755-16471-1-git-send-email-juhosg@openwrt.org>
-References: <1381995755-16471-1-git-send-email-juhosg@openwrt.org>
+Received: from mail-we0-f182.google.com ([74.125.82.182]:51093 "EHLO
+	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753172Ab3JWKyp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Oct 2013 06:54:45 -0400
+MIME-Version: 1.0
+In-Reply-To: <1382523145-2302-1-git-send-email-dhahira.thesneem@mistralsolutions.com>
+References: <1382523145-2302-1-git-send-email-dhahira.thesneem@mistralsolutions.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Wed, 23 Oct 2013 16:24:23 +0530
+Message-ID: <CABPxzYLdtA_gU87RY5pLqTxaq+NZbDyZVGwQ=vxj5HLdTz3C_w@mail.gmail.com> (sfid-20131023_125500_778236_5C688BCD)
+Subject: Re: [PATCH 1/1] mac80211:Resetting connection monitor timers in
+ transmit path
+To: Dhahira Thesneem <dhahira.thesneem@mistralsolutions.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The functions are used for devices with memory
-mapped I/O and contain no PCI specific code at
-all. Use rt2800mmio prefix instead of rt2800pci
-in the function names to reflect that.
+On Wed, Oct 23, 2013 at 3:42 PM, Dhahira Thesneem
+<dhahira.thesneem@mistralsolutions.com> wrote:
+>
+> Reset connection monitor timers when we are able to successfully transmit data to an AP.
+>
+> Signed-off-by: Dhahira Thesneem <dhahira.thesneem@mistralsolutions.com>
+> ---
+>  net/mac80211/tx.c |    6 ++++--
+>  1 files changed, 4 insertions(+), 2 deletions(-)
+>
+> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> index 3456c04..e7725cf 100644
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> @@ -1700,7 +1700,8 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
+>
+>         ieee80211_xmit(sdata, skb, chan->band);
+>         rcu_read_unlock();
+> -
+> +       /*To reset connection monitor timers, after successful transmission*/
+> +       ieee80211_sta_reset_conn_monitor(sdata);
+>         return NETDEV_TX_OK;
+>
+>  fail_rcu:
+> @@ -2139,7 +2140,8 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+>
+>         ieee80211_xmit(sdata, skb, band);
+>         rcu_read_unlock();
+> -
+> +       /*To reset connection monitor timers, after successful transmission*/
+> +       ieee80211_sta_reset_conn_monitor(sdata);
+>         return NETDEV_TX_OK;
+>
+>   fail_rcu:
+> --
+Successful data transmission should be checked in the tx_status not
+after we transmit.
+In fact its already taken care in status.c: through ieee80211_sta_tx_notify.
 
-The patch contains no functional changes.
-
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/rt2x00/rt2800pci.c |   16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index d0e4ec5..7770471 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -245,7 +245,7 @@ static int rt2800pci_write_firmware(struct rt2x00_dev *rt2x00dev,
- /*
-  * Initialization functions.
-  */
--static bool rt2800pci_get_entry_state(struct queue_entry *entry)
-+static bool rt2800mmio_get_entry_state(struct queue_entry *entry)
- {
- 	struct queue_entry_priv_mmio *entry_priv = entry->priv_data;
- 	u32 word;
-@@ -261,7 +261,7 @@ static bool rt2800pci_get_entry_state(struct queue_entry *entry)
- 	}
- }
- 
--static void rt2800pci_clear_entry(struct queue_entry *entry)
-+static void rt2800mmio_clear_entry(struct queue_entry *entry)
- {
- 	struct queue_entry_priv_mmio *entry_priv = entry->priv_data;
- 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
-@@ -290,7 +290,7 @@ static void rt2800pci_clear_entry(struct queue_entry *entry)
- 	}
- }
- 
--static int rt2800pci_init_queues(struct rt2x00_dev *rt2x00dev)
-+static int rt2800mmio_init_queues(struct rt2x00_dev *rt2x00dev)
- {
- 	struct queue_entry_priv_mmio *entry_priv;
- 
-@@ -358,7 +358,7 @@ static int rt2800pci_init_queues(struct rt2x00_dev *rt2x00dev)
- /*
-  * Device state switch handlers.
-  */
--static int rt2800pci_init_registers(struct rt2x00_dev *rt2x00dev)
-+static int rt2800mmio_init_registers(struct rt2x00_dev *rt2x00dev)
- {
- 	u32 reg;
- 
-@@ -411,7 +411,7 @@ static int rt2800pci_enable_radio(struct rt2x00_dev *rt2x00dev)
- 	/* Wait for DMA, ignore error until we initialize queues. */
- 	rt2800_wait_wpdma_ready(rt2x00dev);
- 
--	if (unlikely(rt2800pci_init_queues(rt2x00dev)))
-+	if (unlikely(rt2800mmio_init_queues(rt2x00dev)))
- 		return -EIO;
- 
- 	retval = rt2800_enable_radio(rt2x00dev);
-@@ -553,7 +553,7 @@ static const struct rt2800_ops rt2800pci_rt2800_ops = {
- 	.read_eeprom		= rt2800pci_read_eeprom,
- 	.hwcrypt_disabled	= rt2800pci_hwcrypt_disabled,
- 	.drv_write_firmware	= rt2800pci_write_firmware,
--	.drv_init_registers	= rt2800pci_init_registers,
-+	.drv_init_registers	= rt2800mmio_init_registers,
- 	.drv_get_txwi		= rt2800mmio_get_txwi,
- };
- 
-@@ -570,8 +570,8 @@ static const struct rt2x00lib_ops rt2800pci_rt2x00_ops = {
- 	.load_firmware		= rt2800_load_firmware,
- 	.initialize		= rt2x00mmio_initialize,
- 	.uninitialize		= rt2x00mmio_uninitialize,
--	.get_entry_state	= rt2800pci_get_entry_state,
--	.clear_entry		= rt2800pci_clear_entry,
-+	.get_entry_state	= rt2800mmio_get_entry_state,
-+	.clear_entry		= rt2800mmio_clear_entry,
- 	.set_device_state	= rt2800pci_set_device_state,
- 	.rfkill_poll		= rt2800_rfkill_poll,
- 	.link_stats		= rt2800_link_stats,
--- 
-1.7.10
+NACK.
