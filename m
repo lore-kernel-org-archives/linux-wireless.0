@@ -1,45 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39295 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755362Ab3JCUaP (ORCPT
+Received: from mail-bk0-f51.google.com ([209.85.214.51]:37190 "EHLO
+	mail-bk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751390Ab3JWHmS convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Oct 2013 16:30:15 -0400
-Date: Thu, 3 Oct 2013 16:16:04 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>
-Subject: Re: pull request: TI wireless drivers 2013-09-30 (for 3.13)
-Message-ID: <20131003201604.GD3142@tuxdriver.com> (sfid-20131003_223023_928431_8F42293B)
-References: <1380567110.4185.4.camel@porter.coelho.fi>
+	Wed, 23 Oct 2013 03:42:18 -0400
+Received: by mail-bk0-f51.google.com with SMTP id mx10so133349bkb.38
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Oct 2013 00:42:17 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1380567110.4185.4.camel@porter.coelho.fi>
+In-Reply-To: <5266FAAD.3010800@candelatech.com>
+References: <5266C321.7000103@candelatech.com>
+	<5266FAAD.3010800@candelatech.com>
+Date: Wed, 23 Oct 2013 09:42:16 +0200
+Message-ID: <CA+BoTQmomxywSjUB9nrniMT+HeZeBD=L3m2K8c=m6ehGcSp7eQ@mail.gmail.com> (sfid-20131023_094222_194570_04555AFE)
+Subject: Re: ath10k hits warning in sta_info.c:839.
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: ath10k@lists.infradead.org,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 30, 2013 at 09:51:50PM +0300, Luca Coelho wrote:
-> Hi John,
-> 
-> Here are some patches intended for 3.13.  Eliad is upstreaming a bunch
-> of patches that have been pending in the internal tree.  Mostly bugfixes
-> and other small improvements.
-> 
-> Please let me know if you have any problems with it!
-> 
-> The following changes since commit 772eb433357704ec3d6e0daa727d9ec3e85f50c1:
-> 
->   rt2x00: Fix rf register for RT3070 (2013-09-26 15:17:30 -0400)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git for-linville
-> 
-> for you to fetch changes up to f2cede49ae7b9f51a6fe97ada16c27e4d03d05a3:
-> 
->   wlcore: always register dummy hardirq (2013-09-30 21:12:22 +0300)
+On 23 October 2013 00:22, Ben Greear <greearb@candelatech.com> wrote:
+> On 10/22/2013 11:25 AM, Ben Greear wrote:
+>> Kernel is stock 'ath' tree, with small printk to debug an ath10k
+>> crash.
+>>
+>> This is FYI for now...will be looking at other ath10k crash bugs
+>> before digging into this tone.
+>>
+>> Setup is 2 stations trying to associate to same AP, which causes
+>> endless failures and firmware crashes.  Good for chasing bugs :)
+>>
+>>
+>> DMAR:[fault reason 05] PTE Write access is not set
+>> dmar: DRHD: handling fault status reg 3
+>> dmar: DMAR:[DMA Write] Request device [05:00.0] fault addr ffd52000
+>> DMAR:[fault reason 05] PTE Write access is not set
+>> dmar: DRHD: handling fault status reg 3
+>> dmar: DMAR:[DMA Write] Request device [05:00.0] fault addr ffd52000
+>> DMAR:[fault reason 05] PTE Write access is not set
+>>
+>> sta300: authentication with 00:03:83:3d:30:aa timed out
+>> [root@ct523-9292 ~]# ath10k: Failed to delete peer: 00:03:83:3d:30:aa for VDEV: 1
+>> ath10k: WMI vdev stop failed: ret -108
+>
+>> ------------[ cut here ]------------
+>> WARNING: CPU: 1 PID: 6 at /mnt/sda/home/greearb/git/ath/net/mac80211/sta_info.c:839 __sta_info_destroy+0x12)
+>> Modules linked in: nf_nat_ipv4 nf_nat veth 8021q garp stp mrp llc macvlan pktgen lockd f71882fg coretemp hw]
+>
+> I think this may be a result of whatever bug or limitation
+> caused the firmware to error and/or crash when adding a second
+> station VIF and trying to associate it to the same AP.
+>
+> Probably not a problem with the rest of the wifi stacks.
 
-Pulling now...
+Yup. This originates from the firmware limitation. It's unable to
+handle two peer nodes with same mac addr on different vdevs. That's
+why it's impossible to associate 2 (or more) station interfaces to the
+same BSS.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+
+Michał
