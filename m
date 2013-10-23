@@ -1,61 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:42910 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751257Ab3JDGN1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Oct 2013 02:13:27 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 2/2] ath10k: fix possible memory leak in new FW loading
-Date: Fri, 4 Oct 2013 08:13:20 +0200
-Message-ID: <1380867200-19714-3-git-send-email-michal.kazior@tieto.com> (sfid-20131004_081332_377961_CFDB7B6C)
-In-Reply-To: <1380867200-19714-1-git-send-email-michal.kazior@tieto.com>
-References: <1380867200-19714-1-git-send-email-michal.kazior@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:33749 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751101Ab3JWHIL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Oct 2013 03:08:11 -0400
+Message-ID: <1382512029.21526.14.camel@porter.coelho.fi> (sfid-20131023_090814_839152_5E4AA322)
+Subject: Re: [PATCH 01/13] wl18xx: default config alignment with phy defaults
+From: Luca Coelho <luca@coelho.fi>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 23 Oct 2013 10:07:09 +0300
+In-Reply-To: <1378718684-14430-1-git-send-email-eliad@wizery.com>
+References: <1378718684-14430-1-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some failpaths did `return` instead of a `goto`
-leaking requested firmware.
+On Mon, 2013-09-09 at 12:24 +0300, Eliad Peller wrote:
+> From: Igal Chernobelsky <igalc@ti.com>
+> 
+> Driver default config is aligned with phy default parameters.
+> 
+> Now that RDL1_3 has 2 antennas defined by default we need to explicitly
+> define ht.mode to HT_MODE_WIDE to have SISO40 as default.
+> 
+> Signed-off-by: Yair Shapira <yair.shapira@ti.com>
+> Signed-off-by: Igal Chernobelsky <igalc@ti.com>
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> ---
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/core.c |    9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+Applied the whole series except for 11/13 due to a sparse warning.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index bf85d34..5acb404 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -404,12 +404,14 @@ static int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name)
- 	if (len < magic_len) {
- 		ath10k_err("firmware image too small to contain magic: %zu\n",
- 			   len);
--		return -EINVAL;
-+		ret = -EINVAL;
-+		goto err;
- 	}
- 
- 	if (memcmp(data, ATH10K_FIRMWARE_MAGIC, magic_len) != 0) {
- 		ath10k_err("Invalid firmware magic\n");
--		return -EINVAL;
-+		ret = -EINVAL;
-+		goto err;
- 	}
- 
- 	/* jump over the padding */
-@@ -431,7 +433,8 @@ static int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name)
- 		if (len < ie_len) {
- 			ath10k_err("Invalid length for FW IE %d (%zu < %zu)\n",
- 				   ie_id, len, ie_len);
--			return -EINVAL;
-+			ret = -EINVAL;
-+			goto err;
- 		}
- 
- 		switch (ie_id) {
--- 
-1.7.9.5
+Sorry for the huge delay, at least I found the time to do it before the
+merge window opened. ;)
+
+--
+Cheers,
+Luca.
 
