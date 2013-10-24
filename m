@@ -1,65 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:5453 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932408Ab3JOL6V (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Oct 2013 07:58:21 -0400
-From: Kefeng Wang <wangkefeng.wang@huawei.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Pablo Neira Ayuso <pablo@netfilter.org>,
-	"Stephen Hemminger" <stephen@networkplumber.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Francois Romieu <romieu@fr.zoreil.com>,
-	"Ben Hutchings" <bhutchings@solarflare.com>,
-	Chas Williams <chas@cmf.nrl.navy.mil>,
-	Marc Kleine-Budde <mkl@pengutronix.de>,
-	Samuel Ortiz <samuel@sortiz.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Oliver Neukum <oneukum@suse.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	"Boris Ostrovsky" <boris.ostrovsky@oracle.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	"Michael S. Tsirkin" <mst@redhat.com>, <netfilter@vger.kernel.org>,
-	<netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	<guohanjun@huawei.com>
-Subject: [PATCH 16/18] net: virtio: use wrapper functions of net_ratelimit() to simplify code
-Date: Tue, 15 Oct 2013 19:45:12 +0800
-Message-ID: <1381837514-50660-17-git-send-email-wangkefeng.wang@huawei.com> (sfid-20131015_140124_178110_3BE0C2CE)
-In-Reply-To: <1381837514-50660-1-git-send-email-wangkefeng.wang@huawei.com>
-References: <1381837514-50660-1-git-send-email-wangkefeng.wang@huawei.com>
+Received: from mout3.freenet.de ([195.4.92.93]:41672 "EHLO mout3.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755261Ab3JXRHZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Oct 2013 13:07:25 -0400
+Received: from [195.4.92.141] (helo=mjail1.freenet.de)
+	by mout3.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.80.1 #4)
+	id 1VZO01-0007fa-E9
+	for linux-wireless@vger.kernel.org; Thu, 24 Oct 2013 18:43:05 +0200
+Received: from localhost ([::1]:50479 helo=mjail1.freenet.de)
+	by mjail1.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.80.1 #4)
+	id 1VZO01-0007Pa-8u
+	for linux-wireless@vger.kernel.org; Thu, 24 Oct 2013 18:43:05 +0200
+Received: from mx8.freenet.de ([195.4.92.18]:59050)
+	by mjail1.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.80.1 #4)
+	id 1VZNxx-0005eJ-DV
+	for linux-wireless@vger.kernel.org; Thu, 24 Oct 2013 18:40:57 +0200
+Received: from p4fde085b.dip0.t-ipconnect.de ([79.222.8.91]:60448 helo=mail.maya.org)
+	by mx8.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1.2:DHE-RSA-AES256-GCM-SHA384:256) (port 25) (Exim 4.80.1 #4)
+	id 1VZNxx-0002y2-4Y
+	for linux-wireless@vger.kernel.org; Thu, 24 Oct 2013 18:40:57 +0200
+Message-ID: <52694D8B.1030308@01019freenet.de> (sfid-20131024_190729_209695_6D00864A)
+Date: Thu, 24 Oct 2013 18:40:43 +0200
+From: Andreas Hartmann <andihartmann@01019freenet.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Kevin Lo <kevlo@kevlo.org>, John Linville <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [rt2x00-users] [PATCH] rt2x00: rt2800lib: update RF registers
+ for RT5390
+References: <20131024052408.GA7828@ns.kevlo.org>
+In-Reply-To: <20131024052408.GA7828@ns.kevlo.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-net_ratelimited_function() is called to simplify code.
+Hi Kevin,
 
-Signed-off-by: Kefeng Wang <wangkefeng.wang@huawei.com>
----
- drivers/net/virtio_net.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+Kevin Lo wrote:
+> Mirror the latest MediaTek/Ralink driver with respect to RT5390 RF register
+> programming.  The PCI and USB devices use different init values.
 
-diff --git a/drivers/net/virtio_net.c b/drivers/net/virtio_net.c
-index defec2b..4f63c12 100644
---- a/drivers/net/virtio_net.c
-+++ b/drivers/net/virtio_net.c
-@@ -753,8 +753,7 @@ static netdev_tx_t start_xmit(struct sk_buff *skb, struct net_device *dev)
- 	/* This should not happen! */
- 	if (unlikely(err)) {
- 		dev->stats.tx_fifo_errors++;
--		if (net_ratelimit())
--			dev_warn(&dev->dev,
-+		net_ratelimited_function(dev_warn, &dev->dev,
- 				 "Unexpected TXQ (%d) queue failure: %d\n", qnum, err);
- 		dev->stats.tx_dropped++;
- 		kfree_skb(skb);
--- 
-1.8.2.1
+If you (and others here) really want to improve anything for rt2800usb,
+change your development system and use a raspberry pi (PI).
+
+Why PI? Because the PI doesn't cover any broken code / concept / driver
+architecture with hardware resources.
+
+You want to have an example?
+
+This device[1] achieves 140 MBit/s (data receiving) on the PI, measured
+with netperf and rt5572sta compared to rt2800usb, which achieves very
+very very poor 30 MBit/s(! - even w/ best radio conditions can't be
+achieved any more) but an extremely high CPU load at the same time!
+
+If you compare the basic behaviour of rt5572sta and rt2800usb, you will
+see, that rt5572sta uses a completely different usb handling, which
+doesn't need that much CPU resources as the one used by rt2800usb.
+
+Therefore: If you really want to improve rt2800usb, at first take a
+serious look at how usb is handled by rt5572sta and how to save CPU
+resources.
+
+In a nutshell: Use a few, but big USB packets instead of a lot of small
+ones, which needs a lot of interrupts / s and therefore needs a lot of
+CPU resources - which aren't available on the PI at all.
 
 
+Kind regards,
+Andreas
+
+
+
+[1] http://wikidevi.com/wiki/Linksys_AE3000
