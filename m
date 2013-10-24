@@ -1,140 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f180.google.com ([209.85.215.180]:34154 "EHLO
-	mail-ea0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753793Ab3JZUkb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Oct 2013 16:40:31 -0400
-From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Luciano Coelho <luca@coelho.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
-	joni.lapilainen@gmail.com, pali.rohar@gmail.com,
-	David Gnedt <david.gnedt@davizone.at>
-Subject: [PATCH 06/16] wl1251: split RX and TX data path initialisation
-Date: Sat, 26 Oct 2013 22:34:05 +0200
-Message-Id: <1382819655-30430-7-git-send-email-pali.rohar@gmail.com> (sfid-20131026_224309_060613_325FE462)
-In-Reply-To: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:52680 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751860Ab3JXLbS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Oct 2013 07:31:18 -0400
+Date: Thu, 24 Oct 2013 13:27:51 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Dietmar Rudolph <dietmar@crlf.de>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: iwl3945 filling kern.log when HW switch is off
+Message-ID: <20131024112750.GC1677@redhat.com> (sfid-20131024_133135_197044_A2BC3B60)
+References: <526795E1.90701@crlf.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <526795E1.90701@crlf.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Gnedt <david.gnedt@davizone.at>
+On Wed, Oct 23, 2013 at 11:24:49AM +0200, Dietmar Rudolph wrote:
+> Hello, I hope this is the correct place to put a bug report in. I do
+> not subscribe to this mailing list, but feel free to send PM in case
+> you need additional info. You shoudn't :-)
+> 
+> After installing Ubuntu 13.10, I noticed kern.log growing faster
+> than you could look at. Within a few working hours, kern.log was
+> >6GB!
+> 
+> The reason is that I intentionally disabled WiFi on this laptop by
+> turning the HW switch off. However, this makes iwl3945 write a log
+> entry into kern.log every few microseconds!
+> 
+> The workaround is to turn the HW switch on. The bug fix would be to
+> write just a single line to kern.log.
 
-Split up data path initialisation into RX and TX data path initialisation
-functions. This change is required for channel switching in monitor mode.
+This message is printed when someone try to UP device when RF kill
+switch is on. Either you did not compile kernel with CONFIG_RFKILL or
+your user space network management software does not handle rfkill .
 
-Signed-off-by: David Gnedt <david.gnedt@davizone.at>
----
- drivers/net/wireless/ti/wl1251/cmd.c  |   37 ++++++++++++++++++++++++++-------
- drivers/net/wireless/ti/wl1251/cmd.h  |    3 ++-
- drivers/net/wireless/ti/wl1251/init.c |    9 ++++++--
- 3 files changed, 39 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/net/wireless/ti/wl1251/cmd.c b/drivers/net/wireless/ti/wl1251/cmd.c
-index 16b6479..055924c 100644
---- a/drivers/net/wireless/ti/wl1251/cmd.c
-+++ b/drivers/net/wireless/ti/wl1251/cmd.c
-@@ -204,11 +204,11 @@ out:
- 	return ret;
- }
- 
--int wl1251_cmd_data_path(struct wl1251 *wl, u8 channel, bool enable)
-+int wl1251_cmd_data_path_rx(struct wl1251 *wl, u8 channel, bool enable)
- {
- 	struct cmd_enabledisable_path *cmd;
- 	int ret;
--	u16 cmd_rx, cmd_tx;
-+	u16 cmd_rx;
- 
- 	wl1251_debug(DEBUG_CMD, "cmd data path");
- 
-@@ -220,13 +220,10 @@ int wl1251_cmd_data_path(struct wl1251 *wl, u8 channel, bool enable)
- 
- 	cmd->channel = channel;
- 
--	if (enable) {
-+	if (enable)
- 		cmd_rx = CMD_ENABLE_RX;
--		cmd_tx = CMD_ENABLE_TX;
--	} else {
-+	else
- 		cmd_rx = CMD_DISABLE_RX;
--		cmd_tx = CMD_DISABLE_TX;
--	}
- 
- 	ret = wl1251_cmd_send(wl, cmd_rx, cmd, sizeof(*cmd));
- 	if (ret < 0) {
-@@ -238,6 +235,32 @@ int wl1251_cmd_data_path(struct wl1251 *wl, u8 channel, bool enable)
- 	wl1251_debug(DEBUG_BOOT, "rx %s cmd channel %d",
- 		     enable ? "start" : "stop", channel);
- 
-+out:
-+	kfree(cmd);
-+	return ret;
-+}
-+
-+int wl1251_cmd_data_path_tx(struct wl1251 *wl, u8 channel, bool enable)
-+{
-+	struct cmd_enabledisable_path *cmd;
-+	int ret;
-+	u16 cmd_tx;
-+
-+	wl1251_debug(DEBUG_CMD, "cmd data path");
-+
-+	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
-+	if (!cmd) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+
-+	cmd->channel = channel;
-+
-+	if (enable)
-+		cmd_tx = CMD_ENABLE_TX;
-+	else
-+		cmd_tx = CMD_DISABLE_TX;
-+
- 	ret = wl1251_cmd_send(wl, cmd_tx, cmd, sizeof(*cmd));
- 	if (ret < 0) {
- 		wl1251_error("tx %s cmd for channel %d failed",
-diff --git a/drivers/net/wireless/ti/wl1251/cmd.h b/drivers/net/wireless/ti/wl1251/cmd.h
-index 126f273..d824ff9 100644
---- a/drivers/net/wireless/ti/wl1251/cmd.h
-+++ b/drivers/net/wireless/ti/wl1251/cmd.h
-@@ -35,7 +35,8 @@ int wl1251_cmd_interrogate(struct wl1251 *wl, u16 id, void *buf, size_t len);
- int wl1251_cmd_configure(struct wl1251 *wl, u16 id, void *buf, size_t len);
- int wl1251_cmd_vbm(struct wl1251 *wl, u8 identity,
- 		   void *bitmap, u16 bitmap_len, u8 bitmap_control);
--int wl1251_cmd_data_path(struct wl1251 *wl, u8 channel, bool enable);
-+int wl1251_cmd_data_path_rx(struct wl1251 *wl, u8 channel, bool enable);
-+int wl1251_cmd_data_path_tx(struct wl1251 *wl, u8 channel, bool enable);
- int wl1251_cmd_join(struct wl1251 *wl, u8 bss_type, u8 channel,
- 		    u16 beacon_interval, u8 dtim_interval);
- int wl1251_cmd_ps_mode(struct wl1251 *wl, u8 ps_mode);
-diff --git a/drivers/net/wireless/ti/wl1251/init.c b/drivers/net/wireless/ti/wl1251/init.c
-index a6ad223..424ce01 100644
---- a/drivers/net/wireless/ti/wl1251/init.c
-+++ b/drivers/net/wireless/ti/wl1251/init.c
-@@ -390,8 +390,13 @@ int wl1251_hw_init(struct wl1251 *wl)
- 	if (ret < 0)
- 		goto out_free_data_path;
- 
--	/* Enable data path */
--	ret = wl1251_cmd_data_path(wl, wl->channel, 1);
-+	/* Enable rx data path */
-+	ret = wl1251_cmd_data_path_rx(wl, wl->channel, 1);
-+	if (ret < 0)
-+		goto out_free_data_path;
-+
-+	/* Enable tx data path */
-+	ret = wl1251_cmd_data_path_tx(wl, wl->channel, 1);
- 	if (ret < 0)
- 		goto out_free_data_path;
- 
--- 
-1.7.10.4
+Stanislaw
 
