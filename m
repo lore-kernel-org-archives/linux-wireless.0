@@ -1,82 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:60449 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752612Ab3JWJUA (ORCPT
+Received: from mail-ee0-f48.google.com ([74.125.83.48]:44411 "EHLO
+	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752501Ab3JXVaa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Oct 2013 05:20:00 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
+	Thu, 24 Oct 2013 17:30:30 -0400
+Received: by mail-ee0-f48.google.com with SMTP id e50so1404506eek.7
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Oct 2013 14:30:28 -0700 (PDT)
+Date: Fri, 25 Oct 2013 00:30:26 +0300
+From: Georgiana Rodica Chelu <georgiana.chelu93@gmail.com>
+To: opw-kernel@googlegroups.com
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath9k: Add WB335 PCI IDs
-Date: Wed, 23 Oct 2013 14:45:40 +0530
-Message-Id: <1382519740-10119-1-git-send-email-sujith@msujith.org> (sfid-20131023_112005_693097_91D7542E)
+Subject: [Patch v2 1/3] net: wireless: replace printk with netdev_warn in
+ adm8211.c
+Message-ID: <20131024213026.GA3569@fireworks> (sfid-20131024_233033_437584_F664DB03)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+WARNING: Prefer netdev_warn(netdev, ... then dev_warn(dev, ... then pr_warn(...
+to printk(KERN_WARNING ...
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Georgiana Rodica Chelu <georgiana.chelu93@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/pci.c | 25 +++++++++++++++++++++++++
- 1 file changed, 25 insertions(+)
+ drivers/net/wireless/adm8211.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index 7e4c252..04e6507 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -361,6 +361,11 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
- 	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
- 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
- 			 0x0036,
-+			 0x11AD, /* LITEON */
-+			 0x0682),
-+	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0036,
- 			 PCI_VENDOR_ID_AZWAVE,
- 			 0x213A),
- 	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
-@@ -371,6 +376,11 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
- 	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
- 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
- 			 0x0036,
-+			 PCI_VENDOR_ID_LENOVO,
-+			 0x4026),
-+	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0036,
- 			 PCI_VENDOR_ID_HP,
- 			 0x18E3),
- 	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
-@@ -381,6 +391,11 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
- 	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
- 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
- 			 0x0036,
-+			 PCI_VENDOR_ID_HP,
-+			 0x2005),
-+	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0036,
- 			 PCI_VENDOR_ID_DELL,
- 			 0x020E),
- 	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
-@@ -458,6 +473,16 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
- 			 0x185F, /* WNC */
- 			 0x3027),
- 	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0036,
-+			 0x185F, /* WNC */
-+			 0xA120),
-+	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0036,
-+			 PCI_VENDOR_ID_FOXCONN,
-+			 0xE07F),
-+	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
+diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
+index f9a24e5..0d0dcba 100644
+--- a/drivers/net/wireless/adm8211.c
++++ b/drivers/net/wireless/adm8211.c
+@@ -151,8 +151,9 @@ static int adm8211_read_eeprom(struct ieee80211_hw *dev)
+ 		else
+ 			priv->rf_type = ADM8211_TYPE_AIROHA;
  
- 	/* PCI-E AR9565 (WB335) */
- 	{ PCI_VDEVICE(ATHEROS, 0x0036),
+-		printk(KERN_WARNING "%s (adm8211): Unknown RFtype %d\n",
+-		       pci_name(priv->pdev), (cr49 >> 3) & 0x7);
++		netdev_warn(priv->pdev, "(adm8211): Unknown RFtype %d\n",
++			    pci_name(priv->pdev), (cr49 >> 3) & 0x7);
++
+ 	}
+ 
+ 	priv->bbp_type = cr49 & 0x7;
 -- 
-1.8.4.1
+1.8.1.2
 
