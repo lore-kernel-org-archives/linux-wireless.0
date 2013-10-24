@@ -1,59 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve0-f175.google.com ([209.85.128.175]:44384 "EHLO
-	mail-ve0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752785Ab3JGU7u (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Oct 2013 16:59:50 -0400
-Received: by mail-ve0-f175.google.com with SMTP id jy13so4021947veb.34
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Oct 2013 13:59:49 -0700 (PDT)
+Received: from nm32-vm1.bullet.mail.ir2.yahoo.com ([212.82.97.97]:41681 "EHLO
+	nm32-vm1.bullet.mail.ir2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752760Ab3JXLcT convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Oct 2013 07:32:19 -0400
+References: <1382537927.62604.YahooMailNeo@web171801.mail.ir2.yahoo.com> <1382538469.7892.YahooMailNeo@web171805.mail.ir2.yahoo.com> <20131024112206.GB1677@redhat.com>
+Message-ID: <1382614336.89589.YahooMailNeo@web171804.mail.ir2.yahoo.com> (sfid-20131024_133222_240534_45E2654F)
+Date: Thu, 24 Oct 2013 12:32:16 +0100 (BST)
+From: Gianfranco Costamagna <costamagnagianfranco@yahoo.it>
+Reply-To: Gianfranco Costamagna <costamagnagianfranco@yahoo.it>
+Subject: Re: Edimax EW-7733UnD
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20131024112206.GB1677@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <CAB=NE6UToY0zeuarb7f_aExCuxqmghCcmdRkxMSWR-CgGjRk6Q@mail.gmail.com>
-References: <1380234508-3121-1-git-send-email-k.eugene.e@gmail.com>
-	<20131004234514.GA11128@garbanzo.do-not-panic.com>
-	<CAFSJ42YRmwZ-mK5yADsf=sfi7b5rEK9hFdH-waoswrubvyZddA@mail.gmail.com>
-	<CAB=NE6UToY0zeuarb7f_aExCuxqmghCcmdRkxMSWR-CgGjRk6Q@mail.gmail.com>
-Date: Mon, 7 Oct 2013 21:59:49 +0100
-Message-ID: <CAFSJ42bj6Q-O0=+3TK1kwgfct6tN6hf+wRJa_nk3WfCTskQitg@mail.gmail.com> (sfid-20131007_225953_969102_53CEB257)
-Subject: Re: [PATCH] wcn36xx: mac80211 driver for Qualcomm WCN3660/WCN3680 hardware
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	wcn36xx <wcn36xx@lists.infradead.org>,
-	wcn36xx <wcn36xx@qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
 
-I looked at your patch deeper and couple of questions appeared:
 
-1) The first line in the function ath_regd_init will execute
-container_of with "struct ath_common". Do not you think we can try to
-access wrong memory area?
+Il Giovedì 24 Ottobre 2013 13:25, Stanislaw Gruszka <sgruszka@redhat.com> ha scritto:
 
-2) __ath_regd_init will try to access EEPROM or at least call
-functions with eeprom related. It's a bit misleading because
-wcn36xx is not using eeprom. If possible could you please explain what
-is the connection between ath regd implementation and EEPROM?
-
-On Mon, Oct 7, 2013 at 6:50 PM, Luis R. Rodriguez
-<mcgrof@do-not-panic.com> wrote:
-> On Sun, Oct 6, 2013 at 12:30 PM, Eugene Krasnikov <k.eugene.e@gmail.com> wrote:
->>> +static void wcn_reg_notifier(struct wiphy *wiphy,
->>> +                            struct regulatory_request *request)
->>> +{
->>
->> Function should be called wcn36xx_reg_notifier not wcn_reg_notifier.
->> Could you please change that?
+On Wed, Oct 23, 2013 at 03:27:49PM +0100, Gianfranco Costamagna wrote:
 >
-> Feel free to make that change on your end :D
+>> Hi Kernel Wireless developers, I write here since I have an issue with this module.
+>> 
+>> 
+>> We bought 2 of them since they are both 2.4 and 5Ghz capable, and they seem to be powerful enough for our pourposes
+>> http://www.edimax.com/au/produce_detail.php?pd_id=399&pl1_id=1&pl2_id=44
+>> 
+>> 
+>> Anyway there is a problem, that the linux kernel seems to be not supporting them
+>> 
+>> I tried following this guide
+>> http://wikidevi.com/wiki/Edimax_EW-7733UnD
+>> rt3573sta, possibly rt5572sta, and future support in rt2800usb "uhosg's patchset adding support, may be in by k3.12"
+>> but at this moment it is showing an interface with one of them (I cannot connect to anything, the interface shown seems to be incorrect), with another I get a kernel anic and with the third one doesn't work at all.
+>> 
+>> lsusb |grep Edimax
+>> 
+>> Bus 002 Device 002: ID 7392:7733 Edimax Technology Co., Ltd 
 >
->   Luis
+>I have that exect device and it works ok here, but I'm using 
+>wireless-testing tree. So perhaps you should try install that
+>tree or use backports .
 
 
+Wonderful! I don't really understand what do you mean with backports, are you referring to "linux kernel backports" right?
 
--- 
-Best regards,
-Eugene
+So I can choose the backport source or to checkout and build the wireless-testing tree.
+
+Just as information, how long will it take to have it into the stable mainline?
+
+How does the merge works?
+(just because I don't want to build a custom kernel if not really needed I use the rc kernels packaged by ubuntu team
+http://kernel.ubuntu.com/~kernel-ppa/mainline/ )
+
+
+many thanks
+
+Gianfranco
+
+
+>
+>Stanislaw
+>
+>
+>
+>
