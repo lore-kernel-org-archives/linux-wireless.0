@@ -1,57 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:48204 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754512Ab3JAAnS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Sep 2013 20:43:18 -0400
-Message-ID: <a6a968ed9a6ea34fc3e0da4a548f8046.squirrel@www.codeaurora.org> (sfid-20131001_024322_411842_9B3DF8AD)
-In-Reply-To: <20130926110934.GA5070@w1.fi>
-References: <1379446296-22236-1-git-send-email-clanctot@codeaurora.org>
-    <20130926110934.GA5070@w1.fi>
-Date: Tue, 1 Oct 2013 00:43:14 -0000
-Subject: Re: [PATCH 0/2] nl80211/cfg80211: Support PMF on drivers with
- integrated AP SME
-From: clanctot@codeaurora.org
-To: "Jouni Malinen" <j@w1.fi>
-Cc: "Chet Lanctot" <clanctot@codeaurora.org>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org,
-	"Johannes Berg" <johannes@sipsolutions.net>
+Received: from mx1.redhat.com ([209.132.183.28]:31325 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754573Ab3JXLlM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Oct 2013 07:41:12 -0400
+Date: Thu, 24 Oct 2013 13:37:48 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Gianfranco Costamagna <costamagnagianfranco@yahoo.it>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Edimax EW-7733UnD
+Message-ID: <20131024113748.GD1677@redhat.com> (sfid-20131024_134115_575667_0F147178)
+References: <1382537927.62604.YahooMailNeo@web171801.mail.ir2.yahoo.com>
+ <1382538469.7892.YahooMailNeo@web171805.mail.ir2.yahoo.com>
+ <20131024112206.GB1677@redhat.com>
+ <1382614336.89589.YahooMailNeo@web171804.mail.ir2.yahoo.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1382614336.89589.YahooMailNeo@web171804.mail.ir2.yahoo.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Tue, Sep 17, 2013 at 12:31:34PM -0700, Chet Lanctot wrote:
->> These patches represent a small number of changes to the
->> nl80211/cfg80211 interface to support Protected Management Frames
->> (PMF, 802.11w) on an AP.  Specifically, these changes are needed for
->> drivers that have the AP SME integrated.
->>
->> Support is added for drivers that do not implement the SA Query
->> procedure
->> that is part of PMF.  Instead, the need for upper layer software to
->> do this procedure is advertised.  And support is added so that  whether
->> PMF should be used for station connections is communicated to the
->> driver.
->
-> The patches here have some issues in not compiling and formatting
-> (trailing whitespace) and as such, cannot be applied as-is. I'd expect a
-> new version to be posted to address those issues.
->
-> That said, if there is any feedback on the general direction used here,
-> that would obviously be welcome even before the updated patches are
-> posted.
->
-> --
-> Jouni Malinen                                            PGP id EFC895FA
->
+On Thu, Oct 24, 2013 at 12:32:16PM +0100, Gianfranco Costamagna wrote:
+> 
+> 
+> Il Giovedì 24 Ottobre 2013 13:25, Stanislaw Gruszka <sgruszka@redhat.com> ha scritto:
+> 
+> On Wed, Oct 23, 2013 at 03:27:49PM +0100, Gianfranco Costamagna wrote:
+> >
+> >> Hi Kernel Wireless developers, I write here since I have an issue with this module.
+> >> 
+> >> 
+> >> We bought 2 of them since they are both 2.4 and 5Ghz capable, and they seem to be powerful enough for our pourposes
+> >> http://www.edimax.com/au/produce_detail.php?pd_id=399&pl1_id=1&pl2_id=44
+> >> 
+> >> 
+> >> Anyway there is a problem, that the linux kernel seems to be not supporting them
+> >> 
+> >> I tried following this guide
+> >> http://wikidevi.com/wiki/Edimax_EW-7733UnD
+> >> rt3573sta, possibly rt5572sta, and future support in rt2800usb "uhosg's patchset adding support, may be in by k3.12"
+> >> but at this moment it is showing an interface with one of them (I cannot connect to anything, the interface shown seems to be incorrect), with another I get a kernel anic and with the third one doesn't work at all.
+> >> 
+> >> lsusb |grep Edimax
+> >> 
+> >> Bus 002 Device 002: ID 7392:7733 Edimax Technology Co., Ltd 
+> >
+> >I have that exect device and it works ok here, but I'm using 
+> >wireless-testing tree. So perhaps you should try install that
+> >tree or use backports .
+> 
+> 
+> Wonderful! I don't really understand what do you mean with backports, are you referring to "linux kernel backports" right?
 
-Thank you Jouni for your comments.
+Yes.
 
-You are correct, a new version of the patches will be sent out that
-address the compiling and formatting issues.  I am also getting feedback
-from others, and I will incorporate that feedback as well before sending
-out the updated patches.
+> So I can choose the backport source or to checkout and build the wireless-testing tree.
+> 
+> Just as information, how long will it take to have it into the stable mainline?
 
-   - Chet Lanctot
+Current wireless-testing content will be available on 3.13 ,
+though I think that device should also work on 3.12 .
 
+Stanislaw  
