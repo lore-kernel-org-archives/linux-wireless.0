@@ -1,193 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:42679 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751123Ab3JQHov (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Oct 2013 03:44:51 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Antonio Quartulli <antonio@meshcoding.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3.12] mac80211: disable WMM with invalid parameters
-Date: Thu, 17 Oct 2013 09:44:41 +0200
-Message-Id: <1381995881-16935-1-git-send-email-johannes@sipsolutions.net> (sfid-20131017_100807_627538_36C9C531)
+Received: from 220-135-115-6.HINET-IP.hinet.net ([220.135.115.6]:51885 "EHLO
+	ns.kevlo.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751203Ab3JXFrQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Oct 2013 01:47:16 -0400
+Date: Thu, 24 Oct 2013 13:24:08 +0800
+From: Kevin Lo <kevlo@kevlo.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: [PATCH] rt2x00: rt2800lib: update RF registers for RT5390
+Message-ID: <20131024052408.GA7828@ns.kevlo.org> (sfid-20131024_074719_644874_0AEC96F2)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Mirror the latest MediaTek/Ralink driver with respect to RT5390 RF register
+programming.  The PCI and USB devices use different init values.
 
-Some APs (notably a Sitecom WL-153 v1 with firmware 1.45) are sending
-invalid WMM parameters setting AIFSN, ECWmin and ECWmax to zero. The
-spec mandates that the value of AIFSN is at least 2, and some cards
-(e.g. Intel with the iwldvm driver) can't transmit when the invalid
-QoS parameters are actually uploaded to the firmware.
-
-Since there's little chance of being able to guess the values that
-the AP actually meant, disable WMM if such an invalid case is found.
-Since ECWmin/ECWmax are allowed to be zero, only verify AIFSN >= 2
-and ECWmin <= ECWmax.
-
-Reported-by: Antonio Quartulli <antonio@meshcoding.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Kevin Lo <kevlo@kevlo.org>
 ---
- net/mac80211/ieee80211_i.h |  1 +
- net/mac80211/mlme.c        | 86 +++++++++++++++++++++++++++++++++++++++++-----
- 2 files changed, 78 insertions(+), 9 deletions(-)
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 611abfc..0764095 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -335,6 +335,7 @@ enum ieee80211_sta_flags {
- 	IEEE80211_STA_DISABLE_VHT	= BIT(11),
- 	IEEE80211_STA_DISABLE_80P80MHZ	= BIT(12),
- 	IEEE80211_STA_DISABLE_160MHZ	= BIT(13),
-+	IEEE80211_STA_DISABLE_WMM	= BIT(14),
- };
- 
- struct ieee80211_mgd_auth_data {
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 86e4ad5..9c47060 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2717,7 +2717,7 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
- 	 */
- 	ifmgd->wmm_last_param_set = -1;
- 
--	if (elems.wmm_param)
-+	if (!(ifmgd->flags & IEEE80211_STA_DISABLE_WMM) && elems.wmm_param)
- 		ieee80211_sta_wmm_params(local, sdata, elems.wmm_param,
- 					 elems.wmm_param_len);
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index c5738f1..2c4e436 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -6453,7 +6453,7 @@ static void rt2800_init_rfcsr_5390(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_rfcsr_write(rt2x00dev, 7, 0x00);
+ 	rt2800_rfcsr_write(rt2x00dev, 10, 0x53);
+ 	rt2800_rfcsr_write(rt2x00dev, 11, 0x4a);
+-	rt2800_rfcsr_write(rt2x00dev, 12, 0xc6);
++	rt2800_rfcsr_write(rt2x00dev, 12, 0x46);
+ 	rt2800_rfcsr_write(rt2x00dev, 13, 0x9f);
+ 	rt2800_rfcsr_write(rt2x00dev, 14, 0x00);
+ 	rt2800_rfcsr_write(rt2x00dev, 15, 0x00);
+@@ -6466,7 +6466,8 @@ static void rt2800_init_rfcsr_5390(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_rfcsr_write(rt2x00dev, 22, 0x20);
+ 	rt2800_rfcsr_write(rt2x00dev, 23, 0x00);
+ 	rt2800_rfcsr_write(rt2x00dev, 24, 0x00);
+-	if (rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5390F))
++	if (rt2x00_is_usb(rt2x00dev) &&
++	    rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5390F))
+ 		rt2800_rfcsr_write(rt2x00dev, 25, 0x80);
  	else
-@@ -3152,7 +3152,8 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_sta_process_chanswitch(sdata, rx_status->mactime,
- 					 &elems, true);
+ 		rt2800_rfcsr_write(rt2x00dev, 25, 0xc0);
+@@ -6486,10 +6487,7 @@ static void rt2800_init_rfcsr_5390(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_rfcsr_write(rt2x00dev, 38, 0x85);
+ 	rt2800_rfcsr_write(rt2x00dev, 39, 0x1b);
  
--	if (ieee80211_sta_wmm_params(local, sdata, elems.wmm_param,
-+	if (!(ifmgd->flags & IEEE80211_STA_DISABLE_WMM) &&
-+	    ieee80211_sta_wmm_params(local, sdata, elems.wmm_param,
- 				     elems.wmm_param_len))
- 		changed |= BSS_CHANGED_QOS;
+-	if (rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5390F))
+-		rt2800_rfcsr_write(rt2x00dev, 40, 0x0b);
+-	else
+-		rt2800_rfcsr_write(rt2x00dev, 40, 0x4b);
++	rt2800_rfcsr_write(rt2x00dev, 40, 0x0b);
+ 	rt2800_rfcsr_write(rt2x00dev, 41, 0xbb);
+ 	rt2800_rfcsr_write(rt2x00dev, 42, 0xd2);
+ 	rt2800_rfcsr_write(rt2x00dev, 43, 0x9a);
+@@ -6510,16 +6508,26 @@ static void rt2800_init_rfcsr_5390(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_rfcsr_write(rt2x00dev, 53, 0x84);
+ 	rt2800_rfcsr_write(rt2x00dev, 54, 0x78);
+ 	rt2800_rfcsr_write(rt2x00dev, 55, 0x44);
+-	rt2800_rfcsr_write(rt2x00dev, 56, 0x22);
++	if (rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5390F))
++		rt2800_rfcsr_write(rt2x00dev, 56, 0x42);
++	else
++		rt2800_rfcsr_write(rt2x00dev, 56, 0x22);
+ 	rt2800_rfcsr_write(rt2x00dev, 57, 0x80);
+ 	rt2800_rfcsr_write(rt2x00dev, 58, 0x7f);
+ 	rt2800_rfcsr_write(rt2x00dev, 59, 0x8f);
  
-@@ -4135,6 +4136,44 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
- 	return err;
- }
- 
-+static bool ieee80211_usable_wmm_params(struct ieee80211_sub_if_data *sdata,
-+					const u8 *wmm_param, int len)
-+{
-+	const u8 *pos;
-+	size_t left;
-+
-+	if (len < 8)
-+		return false;
-+
-+	if (wmm_param[5] != 1 /* version */)
-+		return false;
-+
-+	pos = wmm_param + 8;
-+	left = len - 8;
-+
-+	for (; left >= 4; left -= 4, pos += 4) {
-+		u8 aifsn = pos[0] & 0x0f;
-+		u8 ecwmin = pos[1] & 0x0f;
-+		u8 ecwmax = (pos[1] & 0xf0) >> 4;
-+		int aci = (pos[0] >> 5) & 0x03;
-+
-+		if (aifsn < 2) {
-+			sdata_info(sdata,
-+				   "AP has invalid WMM params (AIFSN=%d for ACI %d), disabling WMM\n",
-+				   aifsn, aci);
-+			return false;
-+		}
-+		if (ecwmin > ecwmax) {
-+			sdata_info(sdata,
-+				   "AP has invalid WMM params (ECWmin/max=%d/%d for ACI %d), disabling WMM\n",
-+				   ecwmin, ecwmax, aci);
-+			return false;
-+		}
+ 	rt2800_rfcsr_write(rt2x00dev, 60, 0x45);
+-	if (rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5390F))
+-		rt2800_rfcsr_write(rt2x00dev, 61, 0xd1);
+-	else
+-		rt2800_rfcsr_write(rt2x00dev, 61, 0xdd);
++	if (rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5390F)) {
++		if (rt2x00_is_usb(rt2x00dev))
++			rt2800_rfcsr_write(rt2x00dev, 61, 0xd1);
++		else
++			rt2800_rfcsr_write(rt2x00dev, 61, 0xd5);
++	} else {
++		if (rt2x00_is_usb(rt2x00dev))
++			rt2800_rfcsr_write(rt2x00dev, 61, 0xdd);
++		else
++			rt2800_rfcsr_write(rt2x00dev, 61, 0xb5);
 +	}
-+
-+	return true;
-+}
-+
- int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 			struct cfg80211_assoc_request *req)
- {
-@@ -4192,9 +4231,36 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 	}
+ 	rt2800_rfcsr_write(rt2x00dev, 62, 0x00);
+ 	rt2800_rfcsr_write(rt2x00dev, 63, 0x00);
  
- 	/* prepare assoc data */
--	
-+
- 	ifmgd->beacon_crc_valid = false;
- 
-+	assoc_data->wmm = bss->wmm_used &&
-+			  (local->hw.queues >= IEEE80211_NUM_ACS);
-+	if (assoc_data->wmm) {
-+		/* try to check validity of WMM params IE */
-+		const struct cfg80211_bss_ies *ies;
-+		const u8 *wp, *start;
-+		int len;
-+
-+		rcu_read_lock();
-+		ies = rcu_dereference(req->bss->ies);
-+		start = ies->data;
-+		len = ies->len;
-+
-+		do {
-+			wp = cfg80211_find_vendor_ie(0x0050F2, 2, start, len);
-+			start = wp;
-+			len -= wp[1];
-+		} while (wp && wp[1] > 6 && wp[6] != 1);
-+
-+		if (!wp || !ieee80211_usable_wmm_params(sdata, wp + 2,
-+							wp[1] - 2)) {
-+			assoc_data->wmm = false;
-+			ifmgd->flags |= IEEE80211_STA_DISABLE_WMM;
-+		}
-+		rcu_read_unlock();
-+	}
-+
- 	/*
- 	 * IEEE802.11n does not allow TKIP/WEP as pairwise ciphers in HT mode.
- 	 * We still associate in non-HT mode (11a/b/g) if any one of these
-@@ -4224,18 +4290,22 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 	/* Also disable HT if we don't support it or the AP doesn't use WMM */
- 	sband = local->hw.wiphy->bands[req->bss->channel->band];
- 	if (!sband->ht_cap.ht_supported ||
--	    local->hw.queues < IEEE80211_NUM_ACS || !bss->wmm_used) {
-+	    local->hw.queues < IEEE80211_NUM_ACS || !bss->wmm_used ||
-+	    ifmgd->flags & IEEE80211_STA_DISABLE_WMM) {
- 		ifmgd->flags |= IEEE80211_STA_DISABLE_HT;
--		if (!bss->wmm_used)
-+		if (!bss->wmm_used &&
-+		    !(ifmgd->flags & IEEE80211_STA_DISABLE_WMM))
- 			netdev_info(sdata->dev,
- 				    "disabling HT as WMM/QoS is not supported by the AP\n");
- 	}
- 
- 	/* disable VHT if we don't support it or the AP doesn't use WMM */
- 	if (!sband->vht_cap.vht_supported ||
--	    local->hw.queues < IEEE80211_NUM_ACS || !bss->wmm_used) {
-+	    local->hw.queues < IEEE80211_NUM_ACS || !bss->wmm_used ||
-+	    ifmgd->flags & IEEE80211_STA_DISABLE_WMM) {
- 		ifmgd->flags |= IEEE80211_STA_DISABLE_VHT;
--		if (!bss->wmm_used)
-+		if (!bss->wmm_used &&
-+		    !(ifmgd->flags & IEEE80211_STA_DISABLE_WMM))
- 			netdev_info(sdata->dev,
- 				    "disabling VHT as WMM/QoS is not supported by the AP\n");
- 	}
-@@ -4264,8 +4334,6 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 		sdata->smps_mode = ifmgd->req_smps;
- 
- 	assoc_data->capability = req->bss->capability;
--	assoc_data->wmm = bss->wmm_used &&
--			  (local->hw.queues >= IEEE80211_NUM_ACS);
- 	assoc_data->supp_rates = bss->supp_rates;
- 	assoc_data->supp_rates_len = bss->supp_rates_len;
- 
--- 
-1.8.4.rc3
-
