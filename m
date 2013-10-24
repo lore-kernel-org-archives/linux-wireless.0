@@ -1,147 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ring0.de ([91.143.88.219]:59034 "EHLO smtp.ring0.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754587Ab3J0QOx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Oct 2013 12:14:53 -0400
-From: Sebastian Reichel <sre@debian.org>
-To: Sebastian Reichel <sre@ring0.de>, Luciano Coelho <luca@coelho.fi>
-Cc: Rob Herring <rob.herring@calxeda.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Rob Landley <rob@landley.net>,
-	Tony Lindgren <tony@atomide.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Felipe Balbi <balbi@ti.com>,
-	Sachin Kamat <sachin.kamat@linaro.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bill Pemberton <wfp5p@virginia.edu>,
-	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Sebastian Reichel <sre@debian.org>
-Subject: [PATCH 4/4] wl1251: spi: add device tree support
-Date: Sun, 27 Oct 2013 17:14:29 +0100
-Message-Id: <1382890469-25286-5-git-send-email-sre@debian.org> (sfid-20131027_171702_039118_4FDEF889)
-In-Reply-To: <1382890469-25286-1-git-send-email-sre@debian.org>
-References: <1382890469-25286-1-git-send-email-sre@debian.org>
+Received: from mail-ea0-f172.google.com ([209.85.215.172]:54428 "EHLO
+	mail-ea0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753934Ab3JXWRP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Oct 2013 18:17:15 -0400
+Received: by mail-ea0-f172.google.com with SMTP id r16so90523ead.31
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Oct 2013 15:17:14 -0700 (PDT)
+Date: Fri, 25 Oct 2013 01:17:12 +0300
+From: Georgiana Rodica Chelu <georgiana.chelu93@gmail.com>
+To: opw-kernel@googlegroups.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [Patch v2 2/3] net: wireless: replace printk with netdev_warn in
+ adm8211.c
+Message-ID: <20131024221712.GA4175@fireworks> (sfid-20131025_001722_027918_6BFA8F56)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add device tree support for the spi variant of wl1251
-and document the binding.
+WARNING: Prefer netdev_warn(netdev, ... then dev_warn(dev, ... then pr_warn(...
+to printk(KERN_WARNING ...
 
-Signed-off-by: Sebastian Reichel <sre@debian.org>
+Signed-off-by: Georgiana Rodica Chelu <georgiana.chelu93@gmail.com>
 ---
- .../devicetree/bindings/net/wireless/ti,wl1251.txt | 36 ++++++++++++++++++++++
- drivers/net/wireless/ti/wl1251/spi.c               | 23 ++++++++++----
- 2 files changed, 53 insertions(+), 6 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt
+ drivers/net/wireless/adm8211.c | 19 +++++++++++--------
+ 1 file changed, 11 insertions(+), 8 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt b/Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt
-new file mode 100644
-index 0000000..5f8a154
---- /dev/null
-+++ b/Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt
-@@ -0,0 +1,36 @@
-+* Texas Instruments wl1251 controller
-+
-+The wl1251 chip can be connected via SPI or via SDIO. The linux
-+kernel currently only supports device tree for the SPI variant.
-+
-+Required properties:
-+- compatible : Should be "ti,wl1251"
-+- interrupts : Should contain interrupt line
-+- interrupt-parent : Should be the phandle for the interrupt
-+  controller that services interrupts for this device
-+- vio-supply : phandle to regulator providing VIO
-+- power-gpio : GPIO connected to chip's PMEN pin
-+- For additional required properties on SPI, please consult
-+  Documentation/devicetree/bindings/spi/spi-bus.txt
-+
-+Optional properties:
-+- ti,use-eeprom : If found, configuration will be loaded from eeprom.
-+
-+Examples:
-+
-+&spi1 {
-+	wl1251_spi@0 {
-+		compatible = "ti,wl1251";
-+
-+		reg = <0>;
-+		spi-max-frequency = <48000000>;
-+		spi-cpol;
-+		spi-cpha;
-+
-+		interrupt-parent = <&gpio2>;
-+		interrupts = <10 IRQ_TYPE_NONE>; /* gpio line 42 */
-+
-+		vio-supply = <&vio>;
-+		power-gpio = <&gpio3 23 GPIO_ACTIVE_HIGH>; /* 87 */
-+	};
-+};
-diff --git a/drivers/net/wireless/ti/wl1251/spi.c b/drivers/net/wireless/ti/wl1251/spi.c
-index efea57a..ee6ce4c 100644
---- a/drivers/net/wireless/ti/wl1251/spi.c
-+++ b/drivers/net/wireless/ti/wl1251/spi.c
-@@ -27,6 +27,8 @@
- #include <linux/spi/spi.h>
- #include <linux/wl12xx.h>
- #include <linux/gpio.h>
-+#include <linux/of.h>
-+#include <linux/of_gpio.h>
- #include <linux/regulator/consumer.h>
+diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
+index 0d0dcba..1910ea7 100644
+--- a/drivers/net/wireless/adm8211.c
++++ b/drivers/net/wireless/adm8211.c
+@@ -170,13 +170,14 @@ static int adm8211_read_eeprom(struct ieee80211_hw *dev)
+ 		else
+ 			priv->bbp_type = ADM8211_TYPE_ADMTEK;
  
- #include "wl1251.h"
-@@ -240,13 +242,13 @@ static const struct wl1251_if_operations wl1251_spi_ops = {
- 
- static int wl1251_spi_probe(struct spi_device *spi)
- {
--	struct wl1251_platform_data *pdata;
-+	struct wl1251_platform_data *pdata = spi->dev.platform_data;
-+	struct device_node *np = spi->dev.of_node;
- 	struct ieee80211_hw *hw;
- 	struct wl1251 *wl;
- 	int ret;
- 
--	pdata = spi->dev.platform_data;
--	if (!pdata) {
-+	if (!np && !pdata) {
- 		wl1251_error("no platform data");
- 		return -ENODEV;
- 	}
-@@ -273,7 +275,18 @@ static int wl1251_spi_probe(struct spi_device *spi)
- 		goto out_free;
+-		printk(KERN_WARNING "%s (adm8211): Unknown BBPtype: %d\n",
+-		       pci_name(priv->pdev), cr49 >> 3);
++		netdev_warn(priv->pdev, "(adm8211): Unknown BBPtype: %d\n",
++			    pci_name(priv->pdev), cr49 >> 3);
  	}
  
--	wl->power_gpio = pdata->power_gpio;
-+	if (np) {
-+		wl->use_eeprom = of_property_read_bool(np, "ti,use-eeprom");
-+		wl->power_gpio = of_get_named_gpio(np, "power-gpio", 0);
-+	} else if (pdata) {
-+		wl->power_gpio = pdata->power_gpio;
-+		wl->use_eeprom = pdata->use_eeprom;
-+	}
-+
-+	if (wl->power_gpio == -EPROBE_DEFER) {
-+		ret = -EPROBE_DEFER;
-+		goto out_free;
-+	}
+ 	if (priv->eeprom->country_code >= ARRAY_SIZE(cranges)) {
+-		printk(KERN_WARNING "%s (adm8211): Invalid country code (%d)\n",
+-		       pci_name(priv->pdev), priv->eeprom->country_code);
++		netdev_warn(priv->eeprom, "(adm8211): Invalid country code ",
++			    "(%d)\n", pci_name(priv->pdev),
++			    priv->eeprom->country_code);
  
- 	if (gpio_is_valid(wl->power_gpio)) {
- 		ret = devm_gpio_request_one(&spi->dev, wl->power_gpio,
-@@ -295,8 +308,6 @@ static int wl1251_spi_probe(struct spi_device *spi)
- 		goto out_free;
+ 		chan_range = cranges[2];
+ 	} else
+@@ -210,8 +211,9 @@ static int adm8211_read_eeprom(struct ieee80211_hw *dev)
+ 		else
+ 			priv->specific_bbptype = ADM8211_BBP_ADM8011;
+ 
+-		printk(KERN_WARNING "%s (adm8211): Unknown specific BBP: %d\n",
+-		       pci_name(priv->pdev), priv->eeprom->specific_bbptype);
++		netdev_warn(priv->pdev, "(adm8211): Unknown specific BBP: %d",
++			    "\n", pci_name(priv->pdev),
++			    priv->eeprom->specific_bbptype);
  	}
  
--	wl->use_eeprom = pdata->use_eeprom;
--
- 	irq_set_status_flags(wl->irq, IRQ_NOAUTOEN);
- 	ret = devm_request_irq(&spi->dev, wl->irq, wl1251_irq, 0,
- 							DRIVER_NAME, wl);
+ 	switch (priv->eeprom->specific_rftype) {
+@@ -231,8 +233,9 @@ static int adm8211_read_eeprom(struct ieee80211_hw *dev)
+ 		else if (priv->pdev->revision == ADM8211_REV_AB)
+ 			priv->transceiver_type = ADM8211_RFMD2948;
+ 
+-		printk(KERN_WARNING "%s (adm8211): Unknown transceiver: %d\n",
+-		       pci_name(priv->pdev), priv->eeprom->specific_rftype);
++		netdev_warn(priv->pdev, "(adm8211): Unknown transceiver: %d\n",
++			    pci_name(priv->pdev),
++			    priv->eeprom->specific_rftype);
+ 
+ 		break;
+ 	}
 -- 
-1.8.4.rc3
+1.8.1.2
 
