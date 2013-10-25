@@ -1,70 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from webmail.solarflare.com ([12.187.104.25]:26905 "EHLO
-	webmail.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753546Ab3J2AHa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Oct 2013 20:07:30 -0400
-Message-ID: <1383005246.3779.61.camel@bwh-desktop.uk.level5networks.com> (sfid-20131029_010740_690137_9601FF6A)
-Subject: Re: [PATCH NEXT] rtlwifi: Fix endian error in extracting packet type
-From: Ben Hutchings <bhutchings@solarflare.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	"Mark Cave-Ayland" <mark.cave-ayland@ilande.co.uk>,
-	<netdev@vger.kernel.org>, Stable <stable@vger.kernel.org>
-Date: Tue, 29 Oct 2013 00:07:26 +0000
-In-Reply-To: <1383002903-8746-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1383002903-8746-1-git-send-email-Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset="UTF-8"
+Received: from ozlabs.org ([203.10.76.45]:35907 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753807Ab3JYBUV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Oct 2013 21:20:21 -0400
+From: Rusty Russell <rusty@rustcorp.com.au>
+To: Georgiana Rodica Chelu <georgiana.chelu93@gmail.com>,
+	opw-kernel@googlegroups.com
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [OPW kernel] [Patch v2 2/3] net: wireless: replace printk with netdev_warn in adm8211.c
+In-Reply-To: <20131024221712.GA4175@fireworks>
+References: <20131024221712.GA4175@fireworks>
+Date: Fri, 25 Oct 2013 11:48:06 +1030
+Message-ID: <87hac687xt.fsf@rustcorp.com.au> (sfid-20131025_032024_499000_B3A47A95)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-10-28 at 18:28 -0500, Larry Finger wrote:
-> From: Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>
-> 
-> All of the rtlwifi drivers have an error in the routine that tests if
-> the received data is "special". The 16-bit quantity is big-endian, but
-> was being extracted in native CPU mode. One of the effects of this bug
-> is to inhibit association under some conditions.
-> 
-> A statement that would have made the code correct had been changed to
-> a comment. Rather than just reinstating that code, the fix here passes
-> sparse tests.
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>
-> Cc: Stable <stable@vger.kernel.org> [2.6.38+]
+Georgiana Rodica Chelu <georgiana.chelu93@gmail.com> writes:
+> WARNING: Prefer netdev_warn(netdev, ... then dev_warn(dev, ... then pr_warn(...
+> to printk(KERN_WARNING ...
+>
+> Signed-off-by: Georgiana Rodica Chelu <georgiana.chelu93@gmail.com>
+
+I don't think this will compile.
+
+Please test your patches,
+Rusty.
+
 > ---
->  drivers/net/wireless/rtlwifi/base.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> diff --git a/drivers/net/wireless/rtlwifi/base.c b/drivers/net/wireless/rtlwifi/base.c
-> index 9a78e3d..1efde7f 100644
-> --- a/drivers/net/wireless/rtlwifi/base.c
-> +++ b/drivers/net/wireless/rtlwifi/base.c
-> @@ -1077,8 +1077,8 @@ u8 rtl_is_special_data(struct ieee80211_hw *hw, struct sk_buff *skb, u8 is_tx)
+>  drivers/net/wireless/adm8211.c | 19 +++++++++++--------
+>  1 file changed, 11 insertions(+), 8 deletions(-)
+>
+> diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
+> index 0d0dcba..1910ea7 100644
+> --- a/drivers/net/wireless/adm8211.c
+> +++ b/drivers/net/wireless/adm8211.c
+> @@ -170,13 +170,14 @@ static int adm8211_read_eeprom(struct ieee80211_hw *dev)
+>  		else
+>  			priv->bbp_type = ADM8211_TYPE_ADMTEK;
 >  
->  	ip = (struct iphdr *)((u8 *) skb->data + mac_hdr_len +
->  			      SNAP_SIZE + PROTOC_TYPE_SIZE);
-> -	ether_type = *(u16 *) ((u8 *) skb->data + mac_hdr_len + SNAP_SIZE);
-> -	/*	ether_type = ntohs(ether_type); */
-> +	ether_type = be16_to_cpu(*(__be16 *)((u8 *)skb->data + mac_hdr_len +
-> +					     SNAP_SIZE));
+> -		printk(KERN_WARNING "%s (adm8211): Unknown BBPtype: %d\n",
+> -		       pci_name(priv->pdev), cr49 >> 3);
+> +		netdev_warn(priv->pdev, "(adm8211): Unknown BBPtype: %d\n",
+> +			    pci_name(priv->pdev), cr49 >> 3);
+>  	}
 >  
->  	if (ETH_P_IP == ether_type) {
->  		if (IPPROTO_UDP == ip->protocol) {
-
-This crazy function also says that *all* IPv6 frames are special, which
-apparently means that on TX they should get sent at the lowest possible
-bit rate.  So I think this is going to cause a regression for IPv6
-throughput unless you remove that case.
-
-The DHCP case is also not validating IP and UDP header lengths against
-the packet length, though this may be harmless in practice.
-
-Ben.
-
--- 
-Ben Hutchings, Staff Engineer, Solarflare
-Not speaking for my employer; that's the marketing department's job.
-They asked us to note that Solarflare product names are trademarked.
-
+>  	if (priv->eeprom->country_code >= ARRAY_SIZE(cranges)) {
+> -		printk(KERN_WARNING "%s (adm8211): Invalid country code (%d)\n",
+> -		       pci_name(priv->pdev), priv->eeprom->country_code);
+> +		netdev_warn(priv->eeprom, "(adm8211): Invalid country code ",
+> +			    "(%d)\n", pci_name(priv->pdev),
+> +			    priv->eeprom->country_code);
+>  
+>  		chan_range = cranges[2];
+>  	} else
+> @@ -210,8 +211,9 @@ static int adm8211_read_eeprom(struct ieee80211_hw *dev)
+>  		else
+>  			priv->specific_bbptype = ADM8211_BBP_ADM8011;
+>  
+> -		printk(KERN_WARNING "%s (adm8211): Unknown specific BBP: %d\n",
+> -		       pci_name(priv->pdev), priv->eeprom->specific_bbptype);
+> +		netdev_warn(priv->pdev, "(adm8211): Unknown specific BBP: %d",
+> +			    "\n", pci_name(priv->pdev),
+> +			    priv->eeprom->specific_bbptype);
+>  	}
+>  
+>  	switch (priv->eeprom->specific_rftype) {
+> @@ -231,8 +233,9 @@ static int adm8211_read_eeprom(struct ieee80211_hw *dev)
+>  		else if (priv->pdev->revision == ADM8211_REV_AB)
+>  			priv->transceiver_type = ADM8211_RFMD2948;
+>  
+> -		printk(KERN_WARNING "%s (adm8211): Unknown transceiver: %d\n",
+> -		       pci_name(priv->pdev), priv->eeprom->specific_rftype);
+> +		netdev_warn(priv->pdev, "(adm8211): Unknown transceiver: %d\n",
+> +			    pci_name(priv->pdev),
+> +			    priv->eeprom->specific_rftype);
+>  
+>  		break;
+>  	}
+> -- 
+> 1.8.1.2
+>
+> -- 
+> You received this message because you are subscribed to the Google Groups "opw-kernel" group.
+> To unsubscribe from this group and stop receiving emails from it, send an email to opw-kernel+unsubscribe@googlegroups.com.
+> For more options, visit https://groups.google.com/groups/opt_out.
