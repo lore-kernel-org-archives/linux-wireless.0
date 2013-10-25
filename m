@@ -1,42 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f172.google.com ([74.125.82.172]:35706 "EHLO
-	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751412Ab3JWSyZ (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:49547 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751788Ab3JYLSI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Oct 2013 14:54:25 -0400
-Received: by mail-we0-f172.google.com with SMTP id q58so1272277wes.17
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Oct 2013 11:54:24 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linux-wireless@vger.kernel.org
-Cc: wireless-regdb@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [RFC] crda: remove antenna gain
-Date: Wed, 23 Oct 2013 20:54:21 +0200
-Message-Id: <1382554461-27746-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20131023_205428_120298_241296A8)
+	Fri, 25 Oct 2013 07:18:08 -0400
+Message-ID: <1382699879.12755.0.camel@jlt4.sipsolutions.net> (sfid-20131025_131812_339797_93A5160C)
+Subject: Re: [PATCH] iwl3945: do not print RFKILL message
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org, Dietmar Rudolph <dietmar@crlf.de>
+Date: Fri, 25 Oct 2013 13:17:59 +0200
+In-Reply-To: <20131025103751.GB16384@redhat.com> (sfid-20131025_124130_652554_7E7D6F5E)
+References: <20131025103751.GB16384@redhat.com>
+	 (sfid-20131025_124130_652554_7E7D6F5E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- reglib.c | 5 -----
- 1 file changed, 5 deletions(-)
+On Fri, 2013-10-25 at 12:37 +0200, Stanislaw Gruszka wrote:
+> We can mess logs if user space try to open device again and again if
+> RFKILL switch is on. Do not print message and return ERFKILL error
+> instead to indicate where the problem is.
 
-diff --git a/reglib.c b/reglib.c
-index fa6efe0..b0c61e5 100644
---- a/reglib.c
-+++ b/reglib.c
-@@ -673,11 +673,6 @@ static void print_reg_rule(const struct ieee80211_reg_rule *rule)
- 
- 	printf("(");
- 
--	if (power->max_antenna_gain)
--		printf("%.2f, ", ((float)(power->max_antenna_gain)/100.0));
--	else
--		printf("N/A, ");
--
- 	if (power->max_eirp)
- 		printf("%.2f)", ((float)(power->max_eirp)/100.0));
- 	else
--- 
-1.8.4.rc3
+Are you maybe not calling wiphy_rfkill_set_hw_state() in the right
+places?
+
+johannes
 
