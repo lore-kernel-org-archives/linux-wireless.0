@@ -1,35 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 220-133-188-53.HINET-IP.hinet.net ([220.133.188.53]:24763 "EHLO
-	ns.kevlo.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751600Ab3JDBmO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Oct 2013 21:42:14 -0400
-Message-ID: <524E1CB8.3040004@kevlo.org> (sfid-20131004_034220_570537_CB21BBD4)
-Date: Fri, 04 Oct 2013 09:41:12 +0800
-From: Kevin Lo <kevlo@kevlo.org>
+Received: from mx1.redhat.com ([209.132.183.28]:18562 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752476Ab3JYKl1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Oct 2013 06:41:27 -0400
+Date: Fri, 25 Oct 2013 12:37:54 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Dietmar Rudolph <dietmar@crlf.de>
+Subject: [PATCH] iwl3945: do not print RFKILL message
+Message-ID: <20131025103751.GB16384@redhat.com> (sfid-20131025_124130_652554_7E7D6F5E)
 MIME-Version: 1.0
-To: Gabor Juhos <juhosg@openwrt.org>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [PATCH] rt2x00: rt2800lib: remove duplicate rf_vals for RF3053.
-References: <524D2139.4000608@kevlo.org> <524D5DCE.80601@openwrt.org>
-In-Reply-To: <524D5DCE.80601@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Gabor Juhos wrote:
-> 2013.10.03. 9:48 keltezéssel, Kevin Lo írta:
->> We already have rf_vals_3x with same values.  Hence rf_vals_3053 is removed
->> in this patch.
->>
->> Signed-off-by: Kevin Lo <kevlo@kevlo.org>
-> For completeness, the comment of rf_vals_3x should be updated to indicate that
-> it also supports RF3053. Otherwise the patch is fine.
+We can mess logs if user space try to open device again and again if
+RFKILL switch is on. Do not print message and return ERFKILL error
+instead to indicate where the problem is.
 
-Ok, I'll send an updated patch, thanks.
+Note that iwl4965 handle this problem differently, it allows to open
+device when radio is disabled.
 
->
-> -Gabor
->
+Reported-by: Dietmar Rudolph <dietmar@crlf.de>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlegacy/3945-mac.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-     Kevin
+diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
+index dea3b50..f7c2145 100644
+--- a/drivers/net/wireless/iwlegacy/3945-mac.c
++++ b/drivers/net/wireless/iwlegacy/3945-mac.c
+@@ -2396,8 +2396,7 @@ __il3945_up(struct il_priv *il)
+ 		clear_bit(S_RFKILL, &il->status);
+ 	else {
+ 		set_bit(S_RFKILL, &il->status);
+-		IL_WARN("Radio disabled by HW RF Kill switch\n");
+-		return -ENODEV;
++		return -ERFKILL;
+ 	}
+ 
+ 	_il_wr(il, CSR_INT, 0xFFFFFFFF);
+-- 
+1.8.3.1
+
