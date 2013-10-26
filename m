@@ -1,39 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s15283307.onlinehome-server.info ([87.106.208.187]:51053 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751508Ab3JGRaA (ORCPT
+Received: from mail-ee0-f45.google.com ([74.125.83.45]:37075 "EHLO
+	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753120Ab3JZTo6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Oct 2013 13:30:00 -0400
+	Sat, 26 Oct 2013 15:44:58 -0400
+Received: by mail-ee0-f45.google.com with SMTP id c50so3421333eek.4
+        for <linux-wireless@vger.kernel.org>; Sat, 26 Oct 2013 12:44:57 -0700 (PDT)
+Date: Sat, 26 Oct 2013 22:44:53 +0300
+From: Georgiana Rodica Chelu <georgiana.chelu93@gmail.com>
+To: opw-kernel@googlegroups.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [Patch v3 2/3] net: wireless: replace printk with pr_warn in
+ adm8211.c
+Message-ID: <20131026194453.GA11494@fireworks> (sfid-20131026_214528_347661_448C1758)
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
-Subject: Re: [PATCH v2] bluetooth: fix variable shadow warnings
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <1381162756-18353-1-git-send-email-johannes@sipsolutions.net>
-Date: Mon, 7 Oct 2013 18:53:38 +0200
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Message-Id: <815BA104-681B-4C6B-AD03-E52EB8834904@holtmann.org> (sfid-20131007_193005_512613_5380157D)
-References: <1381162756-18353-1-git-send-email-johannes@sipsolutions.net>
-To: Johannes Berg <johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+WARNING: Prefer netdev_warn(netdev, ... then dev_warn(dev, ... then pr_warn(...
+to printk(KERN_WARNING ...
 
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> Sparse points out three places where variables are shadowed,
-> rename two of the variables and remove the duplicate third.
-> 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
-> net/bluetooth/hci_event.c  | 12 +++++++-----
-> net/bluetooth/l2cap_sock.c |  2 +-
-> 2 files changed, 8 insertions(+), 6 deletions(-)
+Signed-off-by: Georgiana Rodica Chelu <georgiana.chelu93@gmail.com>
+---
+ drivers/net/wireless/adm8211.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-patch has been applied to bluetooth-next tree.
-
-Regards
-
-Marcel
+diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
+index e36d54d..0392b52 100644
+--- a/drivers/net/wireless/adm8211.c
++++ b/drivers/net/wireless/adm8211.c
+@@ -169,13 +169,13 @@ static int adm8211_read_eeprom(struct ieee80211_hw *dev)
+ 		else
+ 			priv->bbp_type = ADM8211_TYPE_ADMTEK;
+ 
+-		printk(KERN_WARNING "%s (adm8211): Unknown BBPtype: %d\n",
+-		       pci_name(priv->pdev), cr49 >> 3);
++		pr_warn("%s (adm8211): Unknown BBPtype: %d\n",
++			pci_name(priv->pdev), cr49 >> 3);
+ 	}
+ 
+ 	if (priv->eeprom->country_code >= ARRAY_SIZE(cranges)) {
+-		printk(KERN_WARNING "%s (adm8211): Invalid country code (%d)\n",
+-		       pci_name(priv->pdev), priv->eeprom->country_code);
++		pr_warn("%s (adm8211): Invalid country code (%d)\n",
++			pci_name(priv->pdev), priv->eeprom->country_code);
+ 
+ 		chan_range = cranges[2];
+ 	} else
+@@ -209,8 +209,8 @@ static int adm8211_read_eeprom(struct ieee80211_hw *dev)
+ 		else
+ 			priv->specific_bbptype = ADM8211_BBP_ADM8011;
+ 
+-		printk(KERN_WARNING "%s (adm8211): Unknown specific BBP: %d\n",
+-		       pci_name(priv->pdev), priv->eeprom->specific_bbptype);
++		pr_warn("%s (adm8211): Unknown specific BBP: %d\n",
++			pci_name(priv->pdev), priv->eeprom->specific_bbptype);
+ 	}
+ 
+ 	switch (priv->eeprom->specific_rftype) {
+@@ -230,8 +230,8 @@ static int adm8211_read_eeprom(struct ieee80211_hw *dev)
+ 		else if (priv->pdev->revision == ADM8211_REV_AB)
+ 			priv->transceiver_type = ADM8211_RFMD2948;
+ 
+-		printk(KERN_WARNING "%s (adm8211): Unknown transceiver: %d\n",
+-		       pci_name(priv->pdev), priv->eeprom->specific_rftype);
++		pr_warn("%s (adm8211): Unknown transceiver: %d\n",
++			pci_name(priv->pdev), priv->eeprom->specific_rftype);
+ 
+ 		break;
+ 	}
+-- 
+1.8.1.2
 
