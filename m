@@ -1,116 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:4744 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752343Ab3J3UcJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Oct 2013 16:32:09 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Alexander Bondar <alexander.bondar@intel.com>,
-	David Spinadel <david.spinadel@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 1/9] iwlwifi: mvm: update UAPSD support TLV bits
-Date: Wed, 30 Oct 2013 22:31:29 +0200
-Message-Id: <1383165097-4445-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20131030_213213_547571_C82DB327)
-In-Reply-To: <527143AA.5070900@gmail.com>
-References: <527143AA.5070900@gmail.com>
+Received: from mail-ea0-f171.google.com ([209.85.215.171]:62880 "EHLO
+	mail-ea0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753983Ab3JZUkl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 Oct 2013 16:40:41 -0400
+From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
+To: Luciano Coelho <luca@coelho.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
+	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
+	joni.lapilainen@gmail.com, pali.rohar@gmail.com
+Subject: [PATCH 16/16] wl1251: Add sysfs file address for setting permanent mac address
+Date: Sat, 26 Oct 2013 22:34:15 +0200
+Message-Id: <1382819655-30430-17-git-send-email-pali.rohar@gmail.com> (sfid-20131026_224105_360569_F7FC04D3)
+In-Reply-To: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Alexander Bondar <alexander.bondar@intel.com>
+Driver wl1251 generating mac address randomly at startup and there is no way to
+set permanent mac address via SET_IEEE80211_PERM_ADDR. This patch export sysfs
+file which can set permanent mac address by userspace helper program. Patch is
+needed for devices which do not store mac address in internal wl1251 eeprom.
 
-Change old UAPSD bit to PM_CMD_SUPPORT, and add a new bit to indicate
-real UAPSD support.
-Don't use UAPSD when the firmware doesn't support it.
-
-Signed-off-by: David Spinadel <david.spinadel@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-fw.h       |  3 ++-
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 14 +++++++++-----
- drivers/net/wireless/iwlwifi/mvm/ops.c      |  2 +-
- 3 files changed, 12 insertions(+), 7 deletions(-)
+ drivers/net/wireless/ti/wl1251/main.c |   52 +++++++++++++++++++++++++++++++++
+ 1 file changed, 52 insertions(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fw.h b/drivers/net/wireless/iwlwifi/iwl-fw.h
-index 87b66a8..75db0871 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fw.h
-@@ -100,7 +100,7 @@ enum iwl_ucode_tlv_flag {
- 	IWL_UCODE_TLV_FLAGS_P2P			= BIT(3),
- 	IWL_UCODE_TLV_FLAGS_DW_BC_TABLE		= BIT(4),
- 	IWL_UCODE_TLV_FLAGS_NEWBT_COEX		= BIT(5),
--	IWL_UCODE_TLV_FLAGS_UAPSD		= BIT(6),
-+	IWL_UCODE_TLV_FLAGS_PM_CMD_SUPPORT	= BIT(6),
- 	IWL_UCODE_TLV_FLAGS_SHORT_BL		= BIT(7),
- 	IWL_UCODE_TLV_FLAGS_RX_ENERGY_API	= BIT(8),
- 	IWL_UCODE_TLV_FLAGS_TIME_EVENT_API_V2	= BIT(9),
-@@ -113,6 +113,7 @@ enum iwl_ucode_tlv_flag {
- 	IWL_UCODE_TLV_FLAGS_SCHED_SCAN		= BIT(17),
- 	IWL_UCODE_TLV_FLAGS_STA_KEY_CMD		= BIT(19),
- 	IWL_UCODE_TLV_FLAGS_DEVICE_PS_CMD	= BIT(20),
-+	IWL_UCODE_TLV_FLAGS_UAPSD_SUPPORT	= BIT(24),
+diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
+index 29625c2..91a009c 100644
+--- a/drivers/net/wireless/ti/wl1251/main.c
++++ b/drivers/net/wireless/ti/wl1251/main.c
+@@ -1375,6 +1375,46 @@ static const struct ieee80211_ops wl1251_ops = {
+ 	.get_survey = wl1251_op_get_survey,
  };
  
- /* The default calibrate table size if not specified by firmware file */
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index f40685c..74bc2c8 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -164,8 +164,7 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
- 		    IEEE80211_HW_TIMING_BEACON_ONLY |
- 		    IEEE80211_HW_CONNECTION_MONITOR |
- 		    IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS |
--		    IEEE80211_HW_SUPPORTS_STATIC_SMPS |
--		    IEEE80211_HW_SUPPORTS_UAPSD;
-+		    IEEE80211_HW_SUPPORTS_STATIC_SMPS;
++static ssize_t wl1251_sysfs_show_address(struct device *dev,
++					 struct device_attribute *attr,
++					 char *buf)
++{
++	struct wl1251 *wl = dev_get_drvdata(dev);
++	ssize_t len;
++
++	/* FIXME: what's the maximum length of buf? page size?*/
++	len = 500;
++
++	len = snprintf(buf, len, "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x\n",
++		       wl->mac_addr[0], wl->mac_addr[1], wl->mac_addr[2],
++		       wl->mac_addr[3], wl->mac_addr[4], wl->mac_addr[5]);
++
++	return len;
++}
++
++static ssize_t wl1251_sysfs_store_address(struct device *dev,
++					  struct device_attribute *attr,
++					  const char *buf, size_t count)
++{
++	struct wl1251 *wl = dev_get_drvdata(dev);
++	unsigned int addr[6];
++	int ret, i;
++
++	ret = sscanf(buf, "%2x:%2x:%2x:%2x:%2x:%2x\n",
++			&addr[0], &addr[1], &addr[2],
++			&addr[3], &addr[4], &addr[5]);
++
++	if (ret != 6)
++		return -EINVAL;
++
++	for (i = 0; i < 6; i++)
++		wl->mac_addr[i] = addr[i] & 0xff;
++
++	SET_IEEE80211_PERM_ADDR(wl->hw, wl->mac_addr);
++
++	return count;
++}
++
+ static ssize_t wl1251_sysfs_show_tx_mgmt_frm_rate(struct device *dev,
+ 						  struct device_attribute *attr,
+ 						  char *buf)
+@@ -1584,6 +1624,10 @@ out:
+ 	return count;
+ }
  
- 	hw->queues = mvm->first_agg_queue;
- 	hw->offchannel_tx_hw_queue = IWL_MVM_OFFCHANNEL_QUEUE;
-@@ -180,6 +179,12 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
- 	    !iwlwifi_mod_params.sw_crypto)
- 		hw->flags |= IEEE80211_HW_MFP_CAPABLE;
++static DEVICE_ATTR(address, S_IRUGO | S_IWUSR,
++		   wl1251_sysfs_show_address,
++		   wl1251_sysfs_store_address);
++
+ static DEVICE_ATTR(tx_mgmt_frm_rate, S_IRUGO | S_IWUSR,
+ 		   wl1251_sysfs_show_tx_mgmt_frm_rate,
+ 		   wl1251_sysfs_store_tx_mgmt_frm_rate);
+@@ -1728,6 +1772,14 @@ int wl1251_init_ieee80211(struct wl1251 *wl)
+ 	}
+ 	dev_set_drvdata(&wl1251_device.dev, wl);
  
-+	if (mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_UAPSD_SUPPORT) {
-+		hw->flags |= IEEE80211_HW_SUPPORTS_UAPSD;
-+		hw->uapsd_queues = IWL_UAPSD_AC_INFO;
-+		hw->uapsd_max_sp_len = IWL_UAPSD_MAX_SP;
++	/* Create sysfs file address */
++	ret = device_create_file(&wl1251_device.dev,
++				 &dev_attr_address);
++	if (ret < 0) {
++		wl1251_error("failed to create sysfs file address");
++		goto out;
 +	}
 +
- 	hw->sta_data_size = sizeof(struct iwl_mvm_sta);
- 	hw->vif_data_size = sizeof(struct iwl_mvm_vif);
- 	hw->chanctx_data_size = sizeof(u16);
-@@ -204,8 +209,6 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
- 
- 	hw->wiphy->max_remain_on_channel_duration = 10000;
- 	hw->max_listen_interval = IWL_CONN_MAX_LISTEN_INTERVAL;
--	hw->uapsd_queues = IWL_UAPSD_AC_INFO;
--	hw->uapsd_max_sp_len = IWL_UAPSD_MAX_SP;
- 
- 	/* Extract MAC address */
- 	memcpy(mvm->addresses[0].addr, mvm->nvm_data->hw_addr, ETH_ALEN);
-@@ -861,7 +864,8 @@ static void iwl_mvm_bss_info_changed_station(struct iwl_mvm *mvm,
- 		/* reset rssi values */
- 		mvmvif->bf_data.ave_beacon_signal = 0;
- 
--		if (!(mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_UAPSD)) {
-+		if (!(mvm->fw->ucode_capa.flags &
-+					IWL_UCODE_TLV_FLAGS_PM_CMD_SUPPORT)) {
- 			/* Workaround for FW bug, otherwise FW disables device
- 			 * power save upon disassociation
- 			 */
-diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
-index 59b7cb3..d86083c 100644
---- a/drivers/net/wireless/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
-@@ -459,7 +459,7 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 	if (err)
- 		goto out_unregister;
- 
--	if (mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_UAPSD)
-+	if (mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_PM_CMD_SUPPORT)
- 		mvm->pm_ops = &pm_mac_ops;
- 	else
- 		mvm->pm_ops = &pm_legacy_ops;
+ 	/* Create sysfs file tx_mgmt_frm_rate */
+ 	ret = device_create_file(&wl1251_device.dev,
+ 				 &dev_attr_tx_mgmt_frm_rate);
 -- 
-1.8.3.2
+1.7.10.4
 
