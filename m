@@ -1,41 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f173.google.com ([74.125.82.173]:40070 "EHLO
-	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756745Ab3JKPm6 convert rfc822-to-8bit (ORCPT
+Received: from mail-ea0-f182.google.com ([209.85.215.182]:38885 "EHLO
+	mail-ea0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753150Ab3JZTU5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Oct 2013 11:42:58 -0400
-Received: by mail-we0-f173.google.com with SMTP id u57so4432977wes.32
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Oct 2013 08:42:56 -0700 (PDT)
-From: Detlev Casanova <detlev.casanova@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	laurent.pinchart@ideasonboard.com
-Subject: Re: NetworkManager not listing access points
-Date: Fri, 11 Oct 2013 17:43:22 +0200
-Message-ID: <3301062.MLBKDh0Ksv@naboo> (sfid-20131011_174301_577602_C059F93F)
-In-Reply-To: <1381131658.13586.0.camel@jlt4.sipsolutions.net>
-References: <31357461.i5mG9q5IfA@naboo> <2916718.7t7kLXuBQV@naboo> <1381131658.13586.0.camel@jlt4.sipsolutions.net>
+	Sat, 26 Oct 2013 15:20:57 -0400
+Received: by mail-ea0-f182.google.com with SMTP id o10so1404652eaj.27
+        for <linux-wireless@vger.kernel.org>; Sat, 26 Oct 2013 12:20:56 -0700 (PDT)
+Date: Sat, 26 Oct 2013 22:20:53 +0300
+From: Georgiana Rodica Chelu <georgiana.chelu93@gmail.com>
+To: opw-kernel@googlegroups.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [Patch v3 1/3] net: wireless: replace printk with pr_warn in
+ adm8211.c
+Message-ID: <20131026192053.GA10494@fireworks> (sfid-20131026_212100_739944_3DFF4EBB)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le lundi 7 octobre 2013 09:40:58 Johannes Berg a écrit :
-> On Mon, 2013-10-07 at 08:48 +0200, Detlev Casanova wrote:
-> > > > Yes and the problem is most likely to be in the driver because it
-> > 
-> > doesn't
-> > 
-> > > > occur before commit 0172bb75073e11a5aa9d8a953bdaefb8709f00c8
-> > 
-> > ("cfg80211:
-> > > > use DS or HT operation IEs to determine BSS channel")
-> 
-> [...]
-> 
-> > I looked into wpa_supplicant and after an upgrade from 0.7.3 to 2.0,
-> > the problem seems to be fixed.
-> 
-> Huh, that's odd. Did 0.7.3 use wext driver?
+WARNING: Prefer netdev_warn(netdev, ... then dev_warn(dev, ... then pr_warn(...
+to printk(KERN_WARNING ...
 
-Yes it did.
+Signed-off-by: Georgiana Rodica Chelu <georgiana.chelu93@gmail.com>
+---
+ drivers/net/wireless/adm8211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
+index f9a24e5..e36d54d 100644
+--- a/drivers/net/wireless/adm8211.c
++++ b/drivers/net/wireless/adm8211.c
+@@ -151,7 +151,7 @@ static int adm8211_read_eeprom(struct ieee80211_hw *dev)
+ 		else
+ 			priv->rf_type = ADM8211_TYPE_AIROHA;
+ 
+-		printk(KERN_WARNING "%s (adm8211): Unknown RFtype %d\n",
++		pr_warn("%s (adm8211): Unknown RFtype %d\n",
+ 		       pci_name(priv->pdev), (cr49 >> 3) & 0x7);
+ 	}
+ 
+-- 
+1.8.1.2
+
