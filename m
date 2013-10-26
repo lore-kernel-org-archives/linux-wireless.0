@@ -1,39 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f48.google.com ([209.85.219.48]:63857 "EHLO
-	mail-oa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751583Ab3J2UQi (ORCPT
+Received: from mail-ee0-f42.google.com ([74.125.83.42]:40566 "EHLO
+	mail-ee0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753975Ab3JZUkj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Oct 2013 16:16:38 -0400
-Message-ID: <527017A3.9020109@lwfinger.net> (sfid-20131029_211642_591271_9CF7A4F4)
-Date: Tue, 29 Oct 2013 15:16:35 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sat, 26 Oct 2013 16:40:39 -0400
+From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
+To: Luciano Coelho <luca@coelho.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
+	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
+	joni.lapilainen@gmail.com, pali.rohar@gmail.com
+Subject: [PATCH 14/16] wl1251: add nvs file name to module firmware list
+Date: Sat, 26 Oct 2013 22:34:13 +0200
+Message-Id: <1382819655-30430-15-git-send-email-pali.rohar@gmail.com> (sfid-20131026_224146_296152_DF811E3B)
+In-Reply-To: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
 MIME-Version: 1.0
-To: =?UTF-8?B?QmrDuHJuIE1vcms=?= <bjorn@mork.no>,
-	Ben Hutchings <bhutchings@solarflare.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>,
-	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
-Subject: Re: [PATCH NEXT] rtlwifi: Fix endian error in extracting packet type
-References: <1383002903-8746-1-git-send-email-Larry.Finger@lwfinger.net>	<1383005246.3779.61.camel@bwh-desktop.uk.level5networks.com> <87y55cf8yq.fsf@nemi.mork.no>
-In-Reply-To: <87y55cf8yq.fsf@nemi.mork.no>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/29/2013 09:27 AM, Bjørn Mork wrote:
->
-> It's not validating the upper 8 bits of the port numbers either, so it
-> will hit random UDP traffic in addition to DHCP.
->
-> But it was good to see this function now. I was wondering how to support
-> some buggy 3G modem firmware without ugly hacks. Seems there will always
-> be worse hacks in drivers/net, no matter what I do :-)
+Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
+---
+ drivers/net/wireless/ti/wl1251/main.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-I'm happy that Realtek and I could make your day. The next version is checking 
-the full 16-bit port numbers.
-
-Thanks,
-
-Larry
-
+diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
+index f054741..7b9efc8 100644
+--- a/drivers/net/wireless/ti/wl1251/main.c
++++ b/drivers/net/wireless/ti/wl1251/main.c
+@@ -1709,3 +1709,4 @@ MODULE_DESCRIPTION("TI wl1251 Wireles LAN Driver Core");
+ MODULE_LICENSE("GPL");
+ MODULE_AUTHOR("Kalle Valo <kvalo@adurom.com>");
+ MODULE_FIRMWARE(WL1251_FW_NAME);
++MODULE_FIRMWARE(WL1251_NVS_NAME);
+-- 
+1.7.10.4
 
