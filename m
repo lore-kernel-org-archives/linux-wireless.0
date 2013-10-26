@@ -1,57 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:27305 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755323Ab3J1VLw (ORCPT
+Received: from mail-ee0-f45.google.com ([74.125.83.45]:34005 "EHLO
+	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753756Ab3JZUk2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Oct 2013 17:11:52 -0400
-Message-ID: <526ED316.7090205@qca.qualcomm.com> (sfid-20131028_221155_409318_F4E04BFD)
-Date: Mon, 28 Oct 2013 14:11:50 -0700
-From: Jeffrey Johnson <jjohnson@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Dan Williams <dcbw@redhat.com>
-CC: "Chauhan, Rajesh" <rajeshc@qca.qualcomm.com>,
-	"Rodriguez, Luis" <rodrigue@qca.qualcomm.com>,
+	Sat, 26 Oct 2013 16:40:28 -0400
+From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
+To: Luciano Coelho <luca@coelho.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
 	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Malinen, Jouni" <jouni@qca.qualcomm.com>,
-	"Bahini, Henri" <hbahini@qca.qualcomm.com>,
-	"Chang, Leo" <schang@qca.qualcomm.com>,
-	"Luo, Xun" <xunl@qca.qualcomm.com>
-Subject: Re: [PATCH] cfg80211/nl80211: Add support to report unsafe frequency
- ranges(s)
-References: <1381985833-31312-1-git-send-email-rajeshc@qca.qualcomm.com>  <1382020835.14410.16.camel@jlt4.sipsolutions.net>  <D19FD2B13A40CD4B8DA64DB9B8F112E9218DAD14@nasanexd01a.na.qualcomm.com>  <1382035171.22901.13.camel@dcbw.foobar.com>  <D19FD2B13A40CD4B8DA64DB9B8F112E9218DAF6F@nasanexd01a.na.qualcomm.com>  <CAB=NE6UkKuSzH4x2SjkE0pRTVCVa3k7g=_ZeU_JE+t2OovRoEg@mail.gmail.com>  <D19FD2B13A40CD4B8DA64DB9B8F112E9218E461D@nasanexd01a.na.qualcomm.com> <1382986906.7298.10.camel@dcbw.foobar.com>
-In-Reply-To: <1382986906.7298.10.camel@dcbw.foobar.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+	"David S. Miller" <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
+	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
+	joni.lapilainen@gmail.com, pali.rohar@gmail.com,
+	David Gnedt <david.gnedt@davizone.at>
+Subject: [PATCH 04/16] wl1251: retry power save entry
+Date: Sat, 26 Oct 2013 22:34:03 +0200
+Message-Id: <1382819655-30430-5-git-send-email-pali.rohar@gmail.com> (sfid-20131026_224613_053135_CE26FEE5)
+In-Reply-To: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/28/2013 12:01 PM, Dan Williams wrote:
-> On Mon, 2013-10-28 at 18:08 +0000, Chauhan, Rajesh wrote:
->> Hi Luis,
->>
->> For "enough information for proper usage" - how about if I add an attribute for the source of interference (say, for example, "cellular") for each of those frequency range?
-> When you say "cellular" here, do mean a WWAN card in the same machine,
-> sharing the antenna (or using a very very nearby antenna) with the WiFi
-> card?  Or do you mean a close-by phone, or a tower itself?  How is this
-> different from BT coexistence or WiMAX coexistence?
->
-One use case would be a colocated WWAN card sharing an antenna or using 
-a very very nearby antenna.  There could be other use cases. I would say 
-this is complimentary to coexistence.  The idea is to tell userspace 
-which frequencies have know sources of interference so that they can be 
-avoided, and hence coexistence would not be required.  If userspace 
-chooses to use an "unsafe" frequency, the the driver's coexistence logic 
-would then be utilized, but the user experience could suffer compared to 
-if a "safe" frequency had been selected.
+From: David Gnedt <david.gnedt@davizone.at>
 
-The issue that has been debated internally is whether or not userspace 
-needs to know the source of the interference.  In other words, if we 
-have an enumerated set of interference sources, would userspace behave 
-differently based upon the source?
+Port of the power save entry retry code from wl1251 driver version included
+in the Maemo Fremantle kernel.
+This tries to enable power save mode up to 3 times before failing.
 
-This is, after all, just meant to be a hint to userspace to give it more 
-information to use when selected a channel to be used in a master mode 
-of operation.
+Signed-off-by: David Gnedt <david.gnedt@davizone.at>
+---
+ drivers/net/wireless/ti/wl1251/boot.c   |    3 ++-
+ drivers/net/wireless/ti/wl1251/event.c  |   44 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/ti/wl1251/event.h  |    7 +++++
+ drivers/net/wireless/ti/wl1251/main.c   |    2 ++
+ drivers/net/wireless/ti/wl1251/wl1251.h |    3 +++
+ 5 files changed, 58 insertions(+), 1 deletion(-)
 
-
+diff --git a/drivers/net/wireless/ti/wl1251/boot.c b/drivers/net/wireless/ti/wl1251/boot.c
+index a2e5241..2000cd5 100644
+--- a/drivers/net/wireless/ti/wl1251/boot.c
++++ b/drivers/net/wireless/ti/wl1251/boot.c
+@@ -299,7 +299,8 @@ int wl1251_boot_run_firmware(struct wl1251 *wl)
+ 		ROAMING_TRIGGER_LOW_RSSI_EVENT_ID |
+ 		ROAMING_TRIGGER_REGAINED_RSSI_EVENT_ID |
+ 		REGAINED_BSS_EVENT_ID | BT_PTA_SENSE_EVENT_ID |
+-		BT_PTA_PREDICTION_EVENT_ID | JOIN_EVENT_COMPLETE_ID;
++		BT_PTA_PREDICTION_EVENT_ID | JOIN_EVENT_COMPLETE_ID |
++		PS_REPORT_EVENT_ID;
+ 
+ 	ret = wl1251_event_unmask(wl);
+ 	if (ret < 0) {
+diff --git a/drivers/net/wireless/ti/wl1251/event.c b/drivers/net/wireless/ti/wl1251/event.c
+index 74ae8e1..192cebd 100644
+--- a/drivers/net/wireless/ti/wl1251/event.c
++++ b/drivers/net/wireless/ti/wl1251/event.c
+@@ -46,6 +46,43 @@ static int wl1251_event_scan_complete(struct wl1251 *wl,
+ 	return ret;
+ }
+ 
++#define WL1251_PSM_ENTRY_RETRIES  3
++static int wl1251_event_ps_report(struct wl1251 *wl,
++				  struct event_mailbox *mbox)
++{
++	int ret = 0;
++
++	wl1251_debug(DEBUG_EVENT, "ps status: %x", mbox->ps_status);
++
++	switch (mbox->ps_status) {
++	case EVENT_ENTER_POWER_SAVE_FAIL:
++		wl1251_debug(DEBUG_PSM, "PSM entry failed");
++
++		if (wl->station_mode != STATION_POWER_SAVE_MODE) {
++			/* remain in active mode */
++			wl->psm_entry_retry = 0;
++			break;
++		}
++
++		if (wl->psm_entry_retry < WL1251_PSM_ENTRY_RETRIES) {
++			wl->psm_entry_retry++;
++			ret = wl1251_ps_set_mode(wl, STATION_POWER_SAVE_MODE);
++		} else {
++			wl1251_error("Power save entry failed, giving up");
++			wl->psm_entry_retry = 0;
++		}
++		break;
++	case EVENT_ENTER_POWER_SAVE_SUCCESS:
++	case EVENT_EXIT_POWER_SAVE_FAIL:
++	case EVENT_EXIT_POWER_SAVE_SUCCESS:
++	default:
++		wl->psm_entry_retry = 0;
++		break;
++	}
++
++	return 0;
++}
++
+ static void wl1251_event_mbox_dump(struct event_mailbox *mbox)
+ {
+ 	wl1251_debug(DEBUG_EVENT, "MBOX DUMP:");
+@@ -80,6 +117,13 @@ static int wl1251_event_process(struct wl1251 *wl, struct event_mailbox *mbox)
+ 		}
+ 	}
+ 
++	if (vector & PS_REPORT_EVENT_ID) {
++		wl1251_debug(DEBUG_EVENT, "PS_REPORT_EVENT");
++		ret = wl1251_event_ps_report(wl, mbox);
++		if (ret < 0)
++			return ret;
++	}
++
+ 	if (vector & SYNCHRONIZATION_TIMEOUT_EVENT_ID) {
+ 		wl1251_debug(DEBUG_EVENT, "SYNCHRONIZATION_TIMEOUT_EVENT");
+ 
+diff --git a/drivers/net/wireless/ti/wl1251/event.h b/drivers/net/wireless/ti/wl1251/event.h
+index 30eb5d1..88570a5 100644
+--- a/drivers/net/wireless/ti/wl1251/event.h
++++ b/drivers/net/wireless/ti/wl1251/event.h
+@@ -112,6 +112,13 @@ struct event_mailbox {
+ 	u8 padding[19];
+ } __packed;
+ 
++enum {
++	EVENT_ENTER_POWER_SAVE_FAIL = 0,
++	EVENT_ENTER_POWER_SAVE_SUCCESS,
++	EVENT_EXIT_POWER_SAVE_FAIL,
++	EVENT_EXIT_POWER_SAVE_SUCCESS,
++};
++
+ int wl1251_event_unmask(struct wl1251 *wl);
+ void wl1251_event_mbox_config(struct wl1251 *wl);
+ int wl1251_event_handle(struct wl1251 *wl, u8 mbox);
+diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
+index ad2fd18..46a2494 100644
+--- a/drivers/net/wireless/ti/wl1251/main.c
++++ b/drivers/net/wireless/ti/wl1251/main.c
+@@ -480,6 +480,7 @@ static void wl1251_op_stop(struct ieee80211_hw *hw)
+ 	wl->next_tx_complete = 0;
+ 	wl->elp = false;
+ 	wl->station_mode = STATION_ACTIVE_MODE;
++	wl->psm_entry_retry = 0;
+ 	wl->tx_queue_stopped = false;
+ 	wl->power_level = WL1251_DEFAULT_POWER_LEVEL;
+ 	wl->rssi_thold = 0;
+@@ -1519,6 +1520,7 @@ struct ieee80211_hw *wl1251_alloc_hw(void)
+ 	wl->elp = false;
+ 	wl->station_mode = STATION_ACTIVE_MODE;
+ 	wl->psm_requested = false;
++	wl->psm_entry_retry = 0;
+ 	wl->tx_queue_stopped = false;
+ 	wl->power_level = WL1251_DEFAULT_POWER_LEVEL;
+ 	wl->rssi_thold = 0;
+diff --git a/drivers/net/wireless/ti/wl1251/wl1251.h b/drivers/net/wireless/ti/wl1251/wl1251.h
+index 724c9f9..7cd1bac 100644
+--- a/drivers/net/wireless/ti/wl1251/wl1251.h
++++ b/drivers/net/wireless/ti/wl1251/wl1251.h
+@@ -374,6 +374,9 @@ struct wl1251 {
+ 	/* PSM mode requested */
+ 	bool psm_requested;
+ 
++	/* retry counter for PSM entries */
++	u8 psm_entry_retry;
++
+ 	u16 beacon_int;
+ 	u8 dtim_period;
+ 
+-- 
+1.7.10.4
 
