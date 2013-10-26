@@ -1,122 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:29452 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759409Ab3JQTvO (ORCPT
+Received: from mail-ee0-f54.google.com ([74.125.83.54]:42523 "EHLO
+	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753921Ab3JZUkh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Oct 2013 15:51:14 -0400
-From: "Chauhan, Rajesh" <rajeshc@qca.qualcomm.com>
-To: Dan Williams <dcbw@redhat.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Rodriguez, Luis" <rodrigue@qca.qualcomm.com>,
-	"Malinen, Jouni" <jouni@qca.qualcomm.com>,
-	"Bahini, Henri" <hbahini@qca.qualcomm.com>,
-	"Chang, Leo" <schang@qca.qualcomm.com>,
-	"Luo, Xun" <xunl@qca.qualcomm.com>,
-	"Chauhan, Rajesh" <rajeshc@qca.qualcomm.com>
-Subject: RE: [PATCH] cfg80211/nl80211: Add support to report unsafe
- frequency ranges(s)
-Date: Thu, 17 Oct 2013 19:51:03 +0000
-Message-ID: <D19FD2B13A40CD4B8DA64DB9B8F112E9218DAF6F@nasanexd01a.na.qualcomm.com> (sfid-20131017_215118_656206_445BE6B8)
-References: <1381985833-31312-1-git-send-email-rajeshc@qca.qualcomm.com>
-	 <1382020835.14410.16.camel@jlt4.sipsolutions.net>
-	  <D19FD2B13A40CD4B8DA64DB9B8F112E9218DAD14@nasanexd01a.na.qualcomm.com>
- <1382035171.22901.13.camel@dcbw.foobar.com>
-In-Reply-To: <1382035171.22901.13.camel@dcbw.foobar.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Sat, 26 Oct 2013 16:40:37 -0400
+From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
+To: Luciano Coelho <luca@coelho.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
+	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
+	joni.lapilainen@gmail.com, pali.rohar@gmail.com,
+	David Gnedt <david.gnedt@davizone.at>
+Subject: [PATCH 12/16] wl1251: disable retry and ACK policy for injected packets
+Date: Sat, 26 Oct 2013 22:34:11 +0200
+Message-Id: <1382819655-30430-13-git-send-email-pali.rohar@gmail.com> (sfid-20131026_224231_030370_C22F5AC8)
+In-Reply-To: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgRGFuLA0KDQpUaGFua3MgZm9yIHlvdXIgY29tbWVudHMuDQoNCkN1cnJlbnQgcGF0Y2ggaXMg
-dG8gcmVwb3J0IGV2ZW50IGFzeW5jaHJvbm91c2x5IGFuZCB0aGF0IHdvdWxkIGJlIG5lZWRlZCBl
-dmVuIGlmIHdlIGhhdmUgeW91ciBzdWdnZXN0ZWQgaW50ZXJmYWNlIG9mIGNsaWVudCBjb2xsZWN0
-aW5nIHRoYXQgaW5mb3JtYXRpb24gdXBmcm9udCwgd2hpY2ggc2VlbXMgbGlrZSB5b3UgYWxzbyBr
-aW5kIG9mIGFncmVlLCBiZWNhdXNlIFJGIGVudmlyb25tZW50IG1heSBjaGFuZ2UgbGF0ZXIgYW5k
-IGdlbmVyYXRpbmcgYW4gZXZlbnQgYXQgdGhhdCB0aW1lIHdpdGggZnJlcXVlbmN5IGRldGFpbHMg
-d291bGQgaGVscC4gU28geW91ciBzdWdnZXN0ZWQgYXBwcm9hY2ggb2YgIm1lY2hhbmlzbSBmb3Ig
-dGhlIGNsaWVudCB0byBnZXQgdGhpcyBpbmZvcm1hdGlvbiIgaW4gaXRzZWxmIHNlZW1zIGxpa2Ug
-YSBjYW5kaWRhdGUgZm9yIGEgc2VwYXJhdGUgcGF0Y2guDQoNCk9uIHRoZSByYWNlIGNvbmRpdGlv
-biB3aGljaCB5b3UgZGVzY3JpYmVkIC0gdGhhbmtzISwgYnV0IGl0IGlzIHNvbWV0aGluZyB3aGlj
-aCBpbXBsZW1lbnRhdGlvbiBvZiBkcml2ZXIgd291bGQgbmVlZCB0byB0YWtlIGNhcmUuIFNpbWls
-YXJseSwgdXNlciBzcGFjZSBjYW4gaGF2ZSBpbXBsZW1lbnRhdGlvbiB0byBjYWNoZSBpbmZvcm1h
-dGlvbiBvbiByZWNlaXB0IG9mIHRoZSBldmVudCB0byB1c2UgaXQgbGF0ZXIuDQoNClJlZ2FyZHMs
-DQpSYWplc2ggQ2hhdWhhbg0KDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBE
-YW4gV2lsbGlhbXMgW21haWx0bzpkY2J3QHJlZGhhdC5jb21dIA0KU2VudDogVGh1cnNkYXksIE9j
-dG9iZXIgMTcsIDIwMTMgMTE6NDAgQU0NClRvOiBDaGF1aGFuLCBSYWplc2gNCkNjOiBKb2hhbm5l
-cyBCZXJnOyBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IFJvZHJpZ3VleiwgTHVpczsg
-TWFsaW5lbiwgSm91bmk7IEJhaGluaSwgSGVucmk7IENoYW5nLCBMZW87IEx1bywgWHVuDQpTdWJq
-ZWN0OiBSZTogW1BBVENIXSBjZmc4MDIxMS9ubDgwMjExOiBBZGQgc3VwcG9ydCB0byByZXBvcnQg
-dW5zYWZlIGZyZXF1ZW5jeSByYW5nZXMocykNCg0KT24gVGh1LCAyMDEzLTEwLTE3IGF0IDE3OjQ2
-ICswMDAwLCBDaGF1aGFuLCBSYWplc2ggd3JvdGU6DQo+IEhpIEpvaGFubmVzLA0KPiANCj4gTGV0
-IG1lIGFsc28gcmVwbGFjZSBTQVAgd2l0aCBTb2Z0QVAuDQo+IA0KPiBTbyBub3cgY29tbWl0IHRl
-eHQgd291bGQgYmU6DQo+IA0KPiBjZmc4MDIxMS9ubDgwMjExOiBBZGQgQVBJIHRvIHJlcG9ydCBm
-cmVxdWVuY3kgcmFuZ2UocykgdG8gYmUgYXZvaWRlZA0KPiANCj4gQWRkIHN1cHBvcnQgZm9yIFdM
-QU4gZHJpdmVyIHRvIHJlcG9ydCBmcmVxdWVuY3kgcmFuZ2UocykgdG8gYmUgYXZvaWRlZCBiZWNh
-dXNlIG9mIGludGVyZmVyZW5jZS4gSWYgU29mdEFQL1AyUC1HTyBpcyBvcGVyYXRpbmcgb24gaW50
-ZXJmZXJpbmcgZnJlcXVlbmN5IHRoZW4gdXNlciBzcGFjZSBzaG91bGQgc3RvcCBhbmQgcmVzdGFy
-dCB0aGVtIGF2b2lkaW5nIGludGVyZmVyaW5nIGZyZXF1ZW5jeSByYW5nZShzKS4gVXNlciBzcGFj
-ZSBtYXkgZGVjaWRlIHRvIGNvbnRpbnVlIG9wZXJhdGlvbiBvbiBpbnRlcmZlcmluZyBmcmVxdWVu
-Y3ksIGJ1dCBpbiBzdWNoIGNhc2UsIHRoZXJlIG1pZ2h0IGJlIGltcGFjdCBvbiBwZXJmb3JtYW5j
-ZS4NCg0KV291bGRuJ3QgYSBiZXR0ZXIgaW50ZXJmYWNlIGJlIHRvOg0KDQphKSBwcm92aWRlIGEg
-bGlzdCBvZiB1bmRlc2lyYWJsZSBmcmVxdWVuY2llcyBhdCBhbGwgdGltZXMsIGluc3RlYWQgb2Yg
-YW4gZXZlbnQsIHNvIHRoYXQgdXNlcnNwYWNlIGNhbiBkZWNpZGUgKmJlZm9yZSogY3JlYXRpbmcg
-YSBTb2Z0IEFQIG9yIFAyUCB3aGljaCBpcyB0aGUgYmVzdCBjaGFubmVsIHRvIHVzZSwgaWYgaXQg
-d2FudHMuICBQb3NzaWJseSB0aHJvdWdoIHRoZSBzYW1lIG1lY2hhbmlzbXMgdGhhdCBpdCdzIG90
-aGVyIGNhcGFiaWxpdGllcyBhcmUgZXhwb3NlZCB0aHJvdWdoIChsaWtlIHRoZSBmdWxsIGxpc3Qg
-b2Ygc3VwcG9ydGVkIGZyZXF1ZW5jaWVzLCBlZyAiaXcgcGh5IHBoeTAgaW5mbyIpLg0KDQpEcml2
-ZXIgY2FuIHVwZGF0ZSB0aGlzIGxpc3QgYXQgYW55IHRpbWUgaWYgaXQgbm90aWNlcyBjaGFuZ2Vz
-IHRvIHRoZSBSRiBlbnZpcm9ubWVudC4NCg0KYikgaWYgdGhlIGN1cnJlbnQgb3BlcmF0aW5nIGNo
-YW5uZWwgZm9yIHNvbWUgU29mdCBBUCBvciBQMlAgaW50ZXJmYWNlIGJlY29tZXMgdW5kZXNpcmFi
-bGUsIGVtaXQgYW4gZXZlbnQgaW5kaWNhdGluZyB0aGF0IHRoaXMgY2hhbm5lbCBpcyB1bmRlc2ly
-YWJsZS4gIFVzZXJzcGFjZSBjYW4gdGhlbiBkZWNpZGUgdG8gY29udGludWUgb3BlcmF0aW5nIG9u
-IHRoYXQgY2hhbm5lbCwgb3IgaXQgY2FuIGNoZWNrIHRoZSBsaXN0IG9mICJ1bmRlc2lyYWJsZSIg
-Y2hhbm5lbHMgZnJvbSAoYSkgYW5kIHBpY2sgYSBkaWZmZXJlbnQgb25lLCBhbmQgbW92ZSB0byBp
-dC4gIFRoaXMgaXMgZXNzZW50aWFsbHkgeW91ciBjdXJyZW50IHBhdGNoLCBidXQgdGhlIGV2ZW50
-IG5lZWQgbm90IGNhcnJ5IHRoZSBjaGFubmVsIGxpc3QsIHNpbmNlIHRoYXQncyBleHBvc2VkIGJ5
-IChhKSBhbHJlYWR5Lg0KDQpUaGVyZSBpcyBhIHNtYWxsIHJhY2UgYmV0d2VlbiBhIGNsaWVudCBy
-ZWFkaW5nIChhKSBhbmQgYSBjbGllbnQgY3JlYXRpbmcgdGhlIFNvZnRBUC9QMlAgaW50ZXJmYWNl
-LCBzbyBpdCB3b3VsZCBhbHNvIGJlIHVzZWZ1bCB0aGF0IGlmIHRoZSBjaGFubmVsIGEgY2xpZW50
-IGlzIGNyZWF0aW5nIHRoZSBTb2Z0QVAvUDJQIG9uIGlzIHVuZGVzaXJhYmxlIHRoZSBldmVudCBn
-ZXRzIGVtaXR0ZWQgaW1tZWRpYXRlbHkgYWZ0ZXIgY3JlYXRpb24uDQoNCk15IGlzc3VlIHdpdGgg
-dGhlIG9yaWdpbmFsIHBhdGNoIGlzIHRoYXQgaXQgb25seSBkZWZpbmVzIHRoZSBldmVudCwgaXQg
-ZG9lc24ndCBkZWZpbmUgYSBtZWNoYW5pc20gZm9yIHRoZSBjbGllbnQgdG8gZ2V0IHRoaXMgaW5m
-b3JtYXRpb24NCipiZWZvcmUqIGRvaW5nIHRoZSBvcGVyYXRpb24gdGhhdCBtYXkgYmUgdW5kZXNp
-cmFibGUuDQoNCkRhbg0KDQo+IFJlZ2FyZHMsDQo+IFJhamVzaCBDaGF1aGFuDQo+IA0KPiANCj4g
-LS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQ2hhdWhhbiwgUmFqZXNoDQo+IFNl
-bnQ6IFRodXJzZGF5LCBPY3RvYmVyIDE3LCAyMDEzIDEwOjIwIEFNDQo+IFRvOiAnSm9oYW5uZXMg
-QmVyZycNCj4gQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZzsgUm9kcmlndWV6LCBM
-dWlzOyBNYWxpbmVuLCBKb3VuaTsgDQo+IEJhaGluaSwgSGVucmk7IENoYW5nLCBMZW87IEx1bywg
-WHVuOyBDaGF1aGFuLCBSYWplc2gNCj4gU3ViamVjdDogUkU6IFtQQVRDSF0gY2ZnODAyMTEvbmw4
-MDIxMTogQWRkIHN1cHBvcnQgdG8gcmVwb3J0IHVuc2FmZSANCj4gZnJlcXVlbmN5IHJhbmdlcyhz
-KQ0KPiANCj4gSGkgSm9oYW5uZXMsDQo+IA0KPiBUaGFua3MgZm9yIHlvdXIgY29tbWVudC4gUHVy
-cG9zZSBvZiB0aGlzIHBhdGNoIGlzIHRvIGFkZCBhbiBBUEkgZm9yIFdMQU4gZHJpdmVyIHRvIHJl
-cG9ydCBmcmVxdWVuY3kgcmFuZ2VzIHdoaWNoIHNob3VsZCBiZSBhdm9pZGVkIGZvciBTQVAvUDJQ
-LUdPIGJlY2F1c2Ugb2YgaW50ZXJmZXJlbmNlLg0KPiANCj4gSG93IGFib3V0IGlmIEkgcmV3b3Jk
-IGNvbW1pdCB0ZXN0IGFzIGJlbG93Pw0KPiANCj4gY2ZnODAyMTEvbmw4MDIxMTogQWRkIEFQSSB0
-byByZXBvcnQgZnJlcXVlbmN5IHJhbmdlKHMpIHRvIGJlIGF2b2lkZWQNCj4gDQo+IEFkZCBzdXBw
-b3J0IGZvciBXTEFOIGRyaXZlciB0byByZXBvcnQgZnJlcXVlbmN5IHJhbmdlKHMpIHRvIGJlIGF2
-b2lkZWQgYmVjYXVzZSBvZiBpbnRlcmZlcmVuY2UuIElmIFNBUC9QMlAtR08gaXMgb3BlcmF0aW5n
-IG9uIGludGVyZmVyaW5nIGZyZXF1ZW5jeSB0aGVuIHVzZXIgc3BhY2Ugc2hvdWxkIHN0b3AgYW5k
-IHJlc3RhcnQgdGhlbSBhdm9pZGluZyBpbnRlcmZlcmluZyBmcmVxdWVuY3kgcmFuZ2UocykuIFVz
-ZXIgc3BhY2UgbWF5IGRlY2lkZSB0byBjb250aW51ZSBvcGVyYXRpb24gb24gaW50ZXJmZXJpbmcg
-ZnJlcXVlbmN5LCBidXQgaW4gc3VjaCBjYXNlLCB0aGVyZSBtaWdodCBiZSBpbXBhY3Qgb24gcGVy
-Zm9ybWFuY2UuDQo+IA0KPiBSZWdhcmRzLA0KPiBSYWplc2ggQ2hhdWhhbg0KPiANCj4gDQo+IC0t
-LS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEpvaGFubmVzIEJlcmcgW21haWx0bzpq
-b2hhbm5lc0BzaXBzb2x1dGlvbnMubmV0XQ0KPiBTZW50OiBUaHVyc2RheSwgT2N0b2JlciAxNywg
-MjAxMyA3OjQxIEFNDQo+IFRvOiBDaGF1aGFuLCBSYWplc2gNCj4gQ2M6IGxpbnV4LXdpcmVsZXNz
-QHZnZXIua2VybmVsLm9yZzsgUm9kcmlndWV6LCBMdWlzOyBNYWxpbmVuLCBKb3VuaQ0KPiBTdWJq
-ZWN0OiBSZTogW1BBVENIXSBjZmc4MDIxMS9ubDgwMjExOiBBZGQgc3VwcG9ydCB0byByZXBvcnQg
-dW5zYWZlIA0KPiBmcmVxdWVuY3kgcmFuZ2VzKHMpDQo+IA0KPiBPbiBXZWQsIDIwMTMtMTAtMTYg
-YXQgMjE6NTcgLTA3MDAsIFJhamVzaCBDaGF1aGFuIHdyb3RlOg0KPiA+IEFkZCBzdXBwb3J0IGZv
-ciBXTEFOIGRyaXZlciB0byByZXBvcnQgdW5zYWZlIGZyZXF1ZW5jeSByYW5nZShzKS4gDQo+IA0K
-PiBXaHk/DQo+IA0KPiA+IFVzZXINCj4gPiBzcGFjZSBzaG91bGQgbW92ZSBTQVAvUDJQLUdPIG91
-dCBvZiB0aG9zZSB1bnNhZmUgZnJlcXVlbmN5IHJhbmdlKHMpLg0KPiA+IFVzZXIgc3BhY2UgbWF5
-IGRlY2lkZSB0byBjb250aW51ZSBvcGVyYXRpb24gb24gdW5zYWZlIGZyZXF1ZW5jeSBidXQgDQo+
-ID4gaW4gc3VjaCBjYXNlIHRoZXJlIG1pZ2h0IGJlIGltcGFjdCBvbiBwZXJmb3JtYW5jZSBiZWNh
-dXNlIG9mIGludGVyZmVyZW5jZS4NCj4gDQo+IFNBUD8gSSBkb24ndCB0aGluayBTQVAgd2lsbCBt
-b3ZlIC0gdGhleSdyZSBwcmV0dHkgc3R1Y2sgaW4gV2FsbGRvcmYgOlANCj4gDQo+IFRoaXMgaXMg
-cHJldHR5IHN0cmFuZ2UgcGF0Y2gsIGFuZCB2ZXJ5IGxpdHRsZSBqdXN0aWZpY2F0aW9uLg0KPiAN
-Cj4gIlVuc2FmZSIgaXMgYWxzbyBhIHJlYWxseSBiYWQgd29yZC4NCj4gDQo+IGpvaGFubmVzDQo+
-IA0KPiBOcnliWMendl4p3rp7Lm4reyrelSx7YXkdyofamSxqIGZoeh53DQpqOit2d2ptIHpaK92i
-aiIhDQoNCg0K
+From: David Gnedt <david.gnedt@davizone.at>
+
+Set the retry limit to 0 and disable the ACK policy for injected packets.
+
+Signed-off-by: David Gnedt <david.gnedt@davizone.at>
+---
+ drivers/net/wireless/ti/wl1251/acx.c |    8 +++++++-
+ drivers/net/wireless/ti/wl1251/tx.c  |    7 ++++++-
+ 2 files changed, 13 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ti/wl1251/acx.c b/drivers/net/wireless/ti/wl1251/acx.c
+index 14da6de..f98d46f 100644
+--- a/drivers/net/wireless/ti/wl1251/acx.c
++++ b/drivers/net/wireless/ti/wl1251/acx.c
+@@ -943,12 +943,18 @@ int wl1251_acx_rate_policies(struct wl1251 *wl)
+ 	}
+ 
+ 	/* configure one default (one-size-fits-all) rate class */
+-	acx->rate_class_cnt = 1;
++	acx->rate_class_cnt = 2;
+ 	acx->rate_class[0].enabled_rates = ACX_RATE_MASK_UNSPECIFIED;
+ 	acx->rate_class[0].short_retry_limit = ACX_RATE_RETRY_LIMIT;
+ 	acx->rate_class[0].long_retry_limit = ACX_RATE_RETRY_LIMIT;
+ 	acx->rate_class[0].aflags = 0;
+ 
++	/* no-retry rate class */
++	acx->rate_class[1].enabled_rates = ACX_RATE_MASK_UNSPECIFIED;
++	acx->rate_class[1].short_retry_limit = 0;
++	acx->rate_class[1].long_retry_limit = 0;
++	acx->rate_class[1].aflags = 0;
++
+ 	ret = wl1251_cmd_configure(wl, ACX_RATE_POLICY, acx, sizeof(*acx));
+ 	if (ret < 0) {
+ 		wl1251_warning("Setting of rate policies failed: %d", ret);
+diff --git a/drivers/net/wireless/ti/wl1251/tx.c b/drivers/net/wireless/ti/wl1251/tx.c
+index 1de4ccb..e559bc4 100644
+--- a/drivers/net/wireless/ti/wl1251/tx.c
++++ b/drivers/net/wireless/ti/wl1251/tx.c
+@@ -90,8 +90,12 @@ static void wl1251_tx_control(struct tx_double_buffer_desc *tx_hdr,
+ 	/* 802.11 packets */
+ 	tx_hdr->control.packet_type = 0;
+ 
+-	if (control->flags & IEEE80211_TX_CTL_NO_ACK)
++	/* Also disable retry and ACK policy for injected packets */
++	if ((control->flags & IEEE80211_TX_CTL_NO_ACK) ||
++	    (control->flags & IEEE80211_TX_CTL_INJECTED)) {
++		tx_hdr->control.rate_policy = 1;
+ 		tx_hdr->control.ack_policy = 1;
++	}
+ 
+ 	tx_hdr->control.tx_complete = 1;
+ 
+@@ -414,6 +418,7 @@ static void wl1251_tx_packet_cb(struct wl1251 *wl,
+ 	info = IEEE80211_SKB_CB(skb);
+ 
+ 	if (!(info->flags & IEEE80211_TX_CTL_NO_ACK) &&
++	    !(info->flags & IEEE80211_TX_CTL_INJECTED) &&
+ 	    (result->status == TX_SUCCESS))
+ 		info->flags |= IEEE80211_TX_STAT_ACK;
+ 
+-- 
+1.7.10.4
+
