@@ -1,170 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:35004 "EHLO mga02.intel.com"
+Received: from ring0.de ([91.143.88.219]:59072 "EHLO smtp.ring0.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760596Ab3JPKxy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Oct 2013 06:53:54 -0400
-From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Rhyland Klein <rklein@nvidia.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	linux-acpi@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: [PATCH 1/5] net: rfkill: gpio: convert to resource managed allocation
-Date: Wed, 16 Oct 2013 13:53:39 +0300
-Message-Id: <1381920823-15403-2-git-send-email-heikki.krogerus@linux.intel.com> (sfid-20131016_125447_996737_3CF166DC)
-In-Reply-To: <1381920823-15403-1-git-send-email-heikki.krogerus@linux.intel.com>
-References: <1381920823-15403-1-git-send-email-heikki.krogerus@linux.intel.com>
+	id S1754844Ab3J0QO6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 Oct 2013 12:14:58 -0400
+From: Sebastian Reichel <sre@debian.org>
+To: Sebastian Reichel <sre@ring0.de>, Luciano Coelho <luca@coelho.fi>
+Cc: Rob Herring <rob.herring@calxeda.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Rob Landley <rob@landley.net>,
+	Tony Lindgren <tony@atomide.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Felipe Balbi <balbi@ti.com>,
+	Sachin Kamat <sachin.kamat@linaro.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bill Pemberton <wfp5p@virginia.edu>,
+	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Sebastian Reichel <sre@debian.org>
+Subject: [PATCH 0/4] wl1251 device tree support
+Date: Sun, 27 Oct 2013 17:14:25 +0100
+Message-Id: <1382890469-25286-1-git-send-email-sre@debian.org> (sfid-20131027_171645_251941_1A942C8F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-And remove now unneeded resource freeing.
+Hi,
 
-Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
----
- net/rfkill/rfkill-gpio.c | 75 +++++++++++++-----------------------------------
- 1 file changed, 20 insertions(+), 55 deletions(-)
+The following patchset adds device tree support to
+the spi variant of the wl1251 driver.
 
-diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
-index fb076cd..0705806 100644
---- a/net/rfkill/rfkill-gpio.c
-+++ b/net/rfkill/rfkill-gpio.c
-@@ -97,7 +97,7 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
- 		return -EINVAL;
- 	}
- 
--	rfkill = kzalloc(sizeof(*rfkill), GFP_KERNEL);
-+	rfkill = devm_kzalloc(&pdev->dev, sizeof(*rfkill), GFP_KERNEL);
- 	if (!rfkill)
- 		return -ENOMEM;
- 
-@@ -105,89 +105,65 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
- 		ret = pdata->gpio_runtime_setup(pdev);
- 		if (ret) {
- 			pr_warn("%s: can't set up gpio\n", __func__);
--			goto fail_alloc;
-+			return ret;
- 		}
- 	}
- 
- 	rfkill->pdata = pdata;
- 
- 	len = strlen(pdata->name);
--	rfkill->reset_name = kzalloc(len + 7, GFP_KERNEL);
--	if (!rfkill->reset_name) {
--		ret = -ENOMEM;
--		goto fail_alloc;
--	}
-+	rfkill->reset_name = devm_kzalloc(&pdev->dev, len + 7, GFP_KERNEL);
-+	if (!rfkill->reset_name)
-+		return -ENOMEM;
- 
--	rfkill->shutdown_name = kzalloc(len + 10, GFP_KERNEL);
--	if (!rfkill->shutdown_name) {
--		ret = -ENOMEM;
--		goto fail_reset_name;
--	}
-+	rfkill->shutdown_name = devm_kzalloc(&pdev->dev, len + 10, GFP_KERNEL);
-+	if (!rfkill->shutdown_name)
-+		return -ENOMEM;
- 
- 	snprintf(rfkill->reset_name, len + 6 , "%s_reset", pdata->name);
- 	snprintf(rfkill->shutdown_name, len + 9, "%s_shutdown", pdata->name);
- 
- 	if (pdata->power_clk_name) {
--		rfkill->pwr_clk = clk_get(&pdev->dev, pdata->power_clk_name);
-+		rfkill->pwr_clk = devm_clk_get(&pdev->dev,
-+						pdata->power_clk_name);
- 		if (IS_ERR(rfkill->pwr_clk)) {
- 			pr_warn("%s: can't find pwr_clk.\n", __func__);
--			ret = PTR_ERR(rfkill->pwr_clk);
--			goto fail_shutdown_name;
-+			return PTR_ERR(rfkill->pwr_clk);
- 		}
- 	}
- 
- 	if (gpio_is_valid(pdata->reset_gpio)) {
--		ret = gpio_request(pdata->reset_gpio, rfkill->reset_name);
-+		ret = devm_gpio_request(&pdev->dev, pdata->reset_gpio,
-+					rfkill->reset_name);
- 		if (ret) {
- 			pr_warn("%s: failed to get reset gpio.\n", __func__);
--			goto fail_clock;
-+			return ret;
- 		}
- 	}
- 
- 	if (gpio_is_valid(pdata->shutdown_gpio)) {
--		ret = gpio_request(pdata->shutdown_gpio, rfkill->shutdown_name);
-+		ret = devm_gpio_request(&pdev->dev, pdata->shutdown_gpio,
-+					rfkill->shutdown_name);
- 		if (ret) {
- 			pr_warn("%s: failed to get shutdown gpio.\n", __func__);
--			goto fail_reset;
-+			return ret;
- 		}
- 	}
- 
- 	rfkill->rfkill_dev = rfkill_alloc(pdata->name, &pdev->dev, pdata->type,
- 					  &rfkill_gpio_ops, rfkill);
--	if (!rfkill->rfkill_dev) {
--		ret = -ENOMEM;
--		goto fail_shutdown;
--	}
-+	if (!rfkill->rfkill_dev)
-+		return -ENOMEM;
- 
- 	ret = rfkill_register(rfkill->rfkill_dev);
- 	if (ret < 0)
--		goto fail_rfkill;
-+		return ret;
- 
- 	platform_set_drvdata(pdev, rfkill);
- 
- 	dev_info(&pdev->dev, "%s device registered.\n", pdata->name);
- 
- 	return 0;
--
--fail_rfkill:
--	rfkill_destroy(rfkill->rfkill_dev);
--fail_shutdown:
--	if (gpio_is_valid(pdata->shutdown_gpio))
--		gpio_free(pdata->shutdown_gpio);
--fail_reset:
--	if (gpio_is_valid(pdata->reset_gpio))
--		gpio_free(pdata->reset_gpio);
--fail_clock:
--	if (rfkill->pwr_clk)
--		clk_put(rfkill->pwr_clk);
--fail_shutdown_name:
--	kfree(rfkill->shutdown_name);
--fail_reset_name:
--	kfree(rfkill->reset_name);
--fail_alloc:
--	kfree(rfkill);
--
--	return ret;
- }
- 
- static int rfkill_gpio_remove(struct platform_device *pdev)
-@@ -199,17 +175,6 @@ static int rfkill_gpio_remove(struct platform_device *pdev)
- 		pdata->gpio_runtime_close(pdev);
- 	rfkill_unregister(rfkill->rfkill_dev);
- 	rfkill_destroy(rfkill->rfkill_dev);
--	if (gpio_is_valid(rfkill->pdata->shutdown_gpio))
--		gpio_free(rfkill->pdata->shutdown_gpio);
--	if (gpio_is_valid(rfkill->pdata->reset_gpio))
--		gpio_free(rfkill->pdata->reset_gpio);
--	if (rfkill->pwr_clk && PWR_CLK_ENABLED(rfkill))
--		clk_disable(rfkill->pwr_clk);
--	if (rfkill->pwr_clk)
--		clk_put(rfkill->pwr_clk);
--	kfree(rfkill->shutdown_name);
--	kfree(rfkill->reset_name);
--	kfree(rfkill);
- 
- 	return 0;
- }
+Some notes:
+
+The first patch is from Luciano's wilink DT support
+patchset [0].
+
+The third patch (vio regulator support) is optional. N900's
+wifi also worked without this patch, but its probably cleaner
+to have it.
+
+The patchset has been tested using DT boot with the Nokia N900
+and connecting to my wlan access point.
+
+[0] https://lkml.org/lkml/2013/7/3/333
+
+-- Sebastian
+
+Luciano Coelho (1):
+  wl1251: split wl251 platform data to a separate structure
+
+Sebastian Reichel (3):
+  wl1251: move power GPIO handling into the driver
+  wl1251: spi: add vio regulator support
+  wl1251: spi: add device tree support
+
+ .../devicetree/bindings/net/wireless/ti,wl1251.txt | 36 +++++++++++
+ arch/arm/mach-omap2/board-omap3pandora.c           |  6 +-
+ arch/arm/mach-omap2/board-rx51-peripherals.c       | 15 ++---
+ drivers/net/wireless/ti/wilink_platform_data.c     | 37 +++++++++--
+ drivers/net/wireless/ti/wl1251/sdio.c              | 31 +++++++---
+ drivers/net/wireless/ti/wl1251/spi.c               | 71 ++++++++++++++++------
+ drivers/net/wireless/ti/wl1251/wl1251.h            |  4 +-
+ include/linux/wl12xx.h                             | 24 +++++++-
+ 8 files changed, 175 insertions(+), 49 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt
+
 -- 
 1.8.4.rc3
 
