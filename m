@@ -1,47 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:38013 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933495Ab3JORce (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Oct 2013 13:32:34 -0400
-Received: by mail-pa0-f44.google.com with SMTP id lf10so9393122pab.17
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Oct 2013 10:32:33 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 4/7] ath10k: fix NSS reporting in RX
-Date: Tue, 15 Oct 2013 10:29:53 -0700
-Message-Id: <1381858196-17000-5-git-send-email-michal.kazior@tieto.com> (sfid-20131015_193237_945085_F1BF0F78)
-In-Reply-To: <1381858196-17000-1-git-send-email-michal.kazior@tieto.com>
-References: <1381858196-17000-1-git-send-email-michal.kazior@tieto.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:50249 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752141Ab3J0TdG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 Oct 2013 15:33:06 -0400
+Message-ID: <526D6A5E.5000100@hauke-m.de> (sfid-20131027_203327_178152_50BFD966)
+Date: Sun, 27 Oct 2013 20:32:46 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: "backports@vger.kernel.org" <backports@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+Subject: [ANN] backports-20131025 released
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-NSTS values reported in the VHT-SIG-A1 are 0
-through 7 but they actually describe number of
-streams 1 through 8.
+Finally backports is in sync with linux-next again, we just did the
+backports-20131025 release which is based on linux-next next-20131025.
 
-1SS frames were dropped. This patch fixes this.
+The release can be found here:
+https://www.kernel.org/pub/linux/kernel/projects/backports/2013/10/25/backports-20131025.tar.bz2
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/txrx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+There are also older releases based on older linux-next releases.
 
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
-index 5ae373a..c511f91 100644
---- a/drivers/net/wireless/ath/ath10k/txrx.c
-+++ b/drivers/net/wireless/ath/ath10k/txrx.c
-@@ -183,7 +183,7 @@ static void process_rx_rates(struct ath10k *ar, struct htt_rx_info *info,
- 		/* VHT-SIG-A1 in info 1, VHT-SIG-A2 in info2
- 		   TODO check this */
- 		mcs = (info2 >> 4) & 0x0F;
--		nss = (info1 >> 10) & 0x07;
-+		nss = ((info1 >> 10) & 0x07) + 1;
- 		bw = info1 & 3;
- 		sgi = info2 & 1;
- 
--- 
-1.8.4.rc3
+The source code can temporary be found here:
+https://github.com/hauke/backports
 
+Currently Stephen Rothwell, the original author of the linux-next tree,
+is on vacation, but Thierry Reding took over [1] and backports is based
+on his releases [2] now.
+
+Now getting new stable releases based on kernel 3.10, 3.11 and 3.12 is
+the next goal.
+
+This release and further releases will not contain any GPU drivers any
+more, it was too much work to backport them to older kernel versions and
+it looked like that code did not had any users.
+
+More information can be found in our wiki:
+https://backports.wiki.kernel.org/index.php/Main_Page
+
+Hauke
+
+[1]: https://lkml.org/lkml/2013/9/30/179
+[2]: git://gitorious.org/thierryreding/linux-next.git
