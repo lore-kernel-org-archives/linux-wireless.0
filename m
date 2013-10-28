@@ -1,650 +1,448 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:48826 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752561Ab3JQHmx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Oct 2013 03:42:53 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 20/21] rt2x00: rt2800pci: move SoC specific code into a separate module
-Date: Thu, 17 Oct 2013 09:42:34 +0200
-Message-Id: <1381995755-16471-21-git-send-email-juhosg@openwrt.org> (sfid-20131017_094259_182301_581C0CE7)
-In-Reply-To: <1381995755-16471-1-git-send-email-juhosg@openwrt.org>
-References: <1381995755-16471-1-git-send-email-juhosg@openwrt.org>
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:62158 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754935Ab3J1BxT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 Oct 2013 21:53:19 -0400
+Received: by mail-wg0-f47.google.com with SMTP id c11so5839677wgh.26
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Oct 2013 18:53:18 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linux-wireless@vger.kernel.org
+Cc: wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 4/6] crda: add regulatory domain optimizer
+Date: Mon, 28 Oct 2013 02:53:00 +0100
+Message-Id: <1382925182-7393-5-git-send-email-mcgrof@do-not-panic.com> (sfid-20131028_025321_911941_00ECC4D0)
+In-Reply-To: <1382925182-7393-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1382925182-7393-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The PCI and SoC specific drivers are using separate
-code now so it is not reasonable to use the same
-module for both drivers anymore.
+This adds a regulatory domain optimizer which can be
+used with information of a regulatory domain in db.txt
+format in stdin. It makes use of the new shiny regulatory
+domain stream parser.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+The way this works is it iterates over the regulatory domain
+computing unions between each frequency, starting from each
+frequency as a pivot. If a union leads to a valid regulatory
+rule we verify that the pivot and othre frequency rules that
+provided that valid union can fit into that union regulatory
+rule by computing an intersection. If an intersection is
+possible it means two rules can be optimized out. We do
+this repetitively.
+
+Screenshot:
+
+mcgrof@frijol ~/devel/crda (git::master)$ cat us
+country US: DFS-FCC
+        (5170 - 5190 @ 20), (17)
+        (5190 - 5210 @ 20), (17)
+        (5210 - 5230 @ 20), (17)
+        (5230 - 5250 @ 20), (17)
+        (5250 - 5270 @ 20), (23), DFS
+        (5270 - 5290 @ 20), (23), DFS
+        (5290 - 5310 @ 20), (23), DFS
+        (5310 - 5330 @ 20), (23), DFS
+        (5735 - 5755 @ 20), (30)
+        (5755 - 5775 @ 20), (30)
+        (5775 - 5795 @ 20), (30)
+        (5795 - 5815 @ 20), (30)
+        (5815 - 5835 @ 20), (30)
+        (5170 - 5210 @ 40), (17)
+        (5210 - 5250 @ 40), (17)
+        (5250 - 5290 @ 40), (23), DFS
+        (5290 - 5330 @ 40), (23), DFS
+        (5735 - 5775 @ 40), (30)
+        (5775 - 5815 @ 40), (30)
+        (5170 - 5250 @ 80), (17)
+        (5250 - 5330 @ 80), (23), DFS
+        (5735 - 5815 @ 80), (30)
+
+mcgrof@frijol ~/devel/crda (git::master)$ cat us | ./optimize
+country US: DFS-UNSET
+        (5170.000 - 5250.000 @ 80.000), (17.00)
+        (5250.000 - 5330.000 @ 80.000), (23.00), DFS
+        (5735.000 - 5835.000 @ 80.000), (30.00)
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- drivers/net/wireless/rt2x00/Kconfig     |   21 ++-
- drivers/net/wireless/rt2x00/Makefile    |    1 +
- drivers/net/wireless/rt2x00/rt2800pci.c |  244 +---------------------------
- drivers/net/wireless/rt2x00/rt2800soc.c |  263 +++++++++++++++++++++++++++++++
- 4 files changed, 284 insertions(+), 245 deletions(-)
- create mode 100644 drivers/net/wireless/rt2x00/rt2800soc.c
+ Makefile   |   8 +-
+ optimize.c |  38 ++++++++++
+ reglib.c   | 251 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ reglib.h   |  16 ++++
+ 4 files changed, 311 insertions(+), 2 deletions(-)
+ create mode 100644 optimize.c
 
-diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
-index e863249..006b8bc 100644
---- a/drivers/net/wireless/rt2x00/Kconfig
-+++ b/drivers/net/wireless/rt2x00/Kconfig
-@@ -58,12 +58,11 @@ config RT61PCI
+diff --git a/Makefile b/Makefile
+index bd9c220..9e37ccd 100644
+--- a/Makefile
++++ b/Makefile
+@@ -28,7 +28,7 @@ LDLIBS += -lm
  
- config RT2800PCI
- 	tristate "Ralink rt27xx/rt28xx/rt30xx (PCI/PCIe/PCMCIA) support"
--	depends on PCI || SOC_RT288X || SOC_RT305X
-+	depends on PCI
- 	select RT2800_LIB
- 	select RT2800_LIB_MMIO
- 	select RT2X00_LIB_MMIO
--	select RT2X00_LIB_PCI if PCI
--	select RT2X00_LIB_SOC if SOC_RT288X || SOC_RT305X
-+	select RT2X00_LIB_PCI
- 	select RT2X00_LIB_FIRMWARE
- 	select RT2X00_LIB_CRYPTO
- 	select CRC_CCITT
-@@ -200,6 +199,22 @@ config RT2800USB_UNKNOWN
+ all: all_noverify verify
  
- endif
+-all_noverify: crda intersect regdbdump db2rd
++all_noverify: crda intersect regdbdump db2rd optimize
  
-+config RT2800SOC
-+	tristate "Ralink WiSoC support"
-+	depends on SOC_RT288X || SOC_RT305X
-+	select RT2X00_LIB_SOC
-+	select RT2X00_LIB_MMIO
-+	select RT2X00_LIB_CRYPTO
-+	select RT2X00_LIB_FIRMWARE
-+	select RT2800_LIB
-+	select RT2800_LIB_MMIO
-+	---help---
-+	  This adds support for Ralink WiSoC devices.
-+	  Supported chips: RT2880, RT3050, RT3052, RT3350, RT3352.
+ ifeq ($(USE_OPENSSL),1)
+ CFLAGS += -DUSE_OPENSSL -DPUBKEY_DIR=\"$(RUNTIME_PUBKEY_DIR)\" `pkg-config --cflags openssl`
+@@ -126,6 +126,10 @@ db2rd: reglib.o db2rd.o
+ 	$(NQ) '  LD  ' $@
+ 	$(Q)$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+ 
++optimize: reglib.o optimize.o
++	$(NQ) '  LD  ' $@
++	$(Q)$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 +
-+	  When compiled as a module, this driver will be called rt2800soc.
-+
-+
- config RT2800_LIB
- 	tristate
+ verify: $(REG_BIN) regdbdump
+ 	$(NQ) '  CHK  $(REG_BIN)'
+ 	$(Q)./regdbdump $(REG_BIN) >/dev/null
+@@ -157,6 +161,6 @@ install: crda crda.8.gz regdbdump.8.gz
+ 	$(Q)$(INSTALL) -m 644 -t $(DESTDIR)/$(MANDIR)/man8/ regdbdump.8.gz
  
-diff --git a/drivers/net/wireless/rt2x00/Makefile b/drivers/net/wireless/rt2x00/Makefile
-index d11e356..24a6601 100644
---- a/drivers/net/wireless/rt2x00/Makefile
-+++ b/drivers/net/wireless/rt2x00/Makefile
-@@ -22,3 +22,4 @@ obj-$(CONFIG_RT2800PCI)			+= rt2800pci.o
- obj-$(CONFIG_RT2500USB)			+= rt2500usb.o
- obj-$(CONFIG_RT73USB)			+= rt73usb.o
- obj-$(CONFIG_RT2800USB)			+= rt2800usb.o
-+obj-$(CONFIG_RT2800SOC)			+= rt2800soc.o
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 488d1c4..260d2fd 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -37,13 +37,11 @@
- #include <linux/kernel.h>
- #include <linux/module.h>
- #include <linux/pci.h>
--#include <linux/platform_device.h>
- #include <linux/eeprom_93cx6.h>
- 
- #include "rt2x00.h"
- #include "rt2x00mmio.h"
- #include "rt2x00pci.h"
--#include "rt2x00soc.h"
- #include "rt2800lib.h"
- #include "rt2800mmio.h"
- #include "rt2800.h"
-@@ -56,7 +54,6 @@ static bool modparam_nohwcrypt = false;
- module_param_named(nohwcrypt, modparam_nohwcrypt, bool, S_IRUGO);
- MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption.");
- 
--#ifdef CONFIG_PCI
- static bool rt2800pci_hwcrypt_disabled(struct rt2x00_dev *rt2x00dev)
- {
- 	return modparam_nohwcrypt;
-@@ -449,230 +446,15 @@ static DEFINE_PCI_DEVICE_TABLE(rt2800pci_device_table) = {
- #endif
- 	{ 0, }
- };
--#endif /* CONFIG_PCI */
- 
- MODULE_AUTHOR(DRV_PROJECT);
- MODULE_VERSION(DRV_VERSION);
- MODULE_DESCRIPTION("Ralink RT2800 PCI & PCMCIA Wireless LAN driver.");
- MODULE_SUPPORTED_DEVICE("Ralink RT2860 PCI & PCMCIA chipset based cards");
--#ifdef CONFIG_PCI
- MODULE_FIRMWARE(FIRMWARE_RT2860);
- MODULE_DEVICE_TABLE(pci, rt2800pci_device_table);
--#endif /* CONFIG_PCI */
- MODULE_LICENSE("GPL");
- 
--#if defined(CONFIG_SOC_RT288X) || defined(CONFIG_SOC_RT305X)
--static bool rt2800soc_hwcrypt_disabled(struct rt2x00_dev *rt2x00dev)
--{
--	return modparam_nohwcrypt;
--}
--
--static void rt2800soc_disable_radio(struct rt2x00_dev *rt2x00dev)
--{
--	rt2800_disable_radio(rt2x00dev);
--	rt2x00mmio_register_write(rt2x00dev, PWR_PIN_CFG, 0);
--	rt2x00mmio_register_write(rt2x00dev, TX_PIN_CFG, 0);
--}
--
--static int rt2800soc_set_device_state(struct rt2x00_dev *rt2x00dev,
--				      enum dev_state state)
--{
--	int retval = 0;
--
--	switch (state) {
--	case STATE_RADIO_ON:
--		retval = rt2800mmio_enable_radio(rt2x00dev);
--		break;
--
--	case STATE_RADIO_OFF:
--		rt2800soc_disable_radio(rt2x00dev);
--		break;
--
--	case STATE_RADIO_IRQ_ON:
--	case STATE_RADIO_IRQ_OFF:
--		rt2800mmio_toggle_irq(rt2x00dev, state);
--		break;
--
--	case STATE_DEEP_SLEEP:
--	case STATE_SLEEP:
--	case STATE_STANDBY:
--	case STATE_AWAKE:
--		/* These states are not supported, but don't report an error */
--		retval = 0;
--		break;
--
--	default:
--		retval = -ENOTSUPP;
--		break;
--	}
--
--	if (unlikely(retval))
--		rt2x00_err(rt2x00dev, "Device failed to enter state %d (%d)\n",
--			   state, retval);
--
--	return retval;
--}
--
--static int rt2800soc_read_eeprom(struct rt2x00_dev *rt2x00dev)
--{
--	void __iomem *base_addr = ioremap(0x1F040000, EEPROM_SIZE);
--
--	if (!base_addr)
--		return -ENOMEM;
--
--	memcpy_fromio(rt2x00dev->eeprom, base_addr, EEPROM_SIZE);
--
--	iounmap(base_addr);
--	return 0;
--}
--
--/* Firmware functions */
--static char *rt2800soc_get_firmware_name(struct rt2x00_dev *rt2x00dev)
--{
--	WARN_ON_ONCE(1);
--	return NULL;
--}
--
--static int rt2800soc_load_firmware(struct rt2x00_dev *rt2x00dev,
--				   const u8 *data, const size_t len)
--{
--	WARN_ON_ONCE(1);
--	return 0;
--}
--
--static int rt2800soc_check_firmware(struct rt2x00_dev *rt2x00dev,
--				    const u8 *data, const size_t len)
--{
--	WARN_ON_ONCE(1);
--	return 0;
--}
--
--static int rt2800soc_write_firmware(struct rt2x00_dev *rt2x00dev,
--				    const u8 *data, const size_t len)
--{
--	WARN_ON_ONCE(1);
--	return 0;
--}
--
--static const struct ieee80211_ops rt2800soc_mac80211_ops = {
--	.tx			= rt2x00mac_tx,
--	.start			= rt2x00mac_start,
--	.stop			= rt2x00mac_stop,
--	.add_interface		= rt2x00mac_add_interface,
--	.remove_interface	= rt2x00mac_remove_interface,
--	.config			= rt2x00mac_config,
--	.configure_filter	= rt2x00mac_configure_filter,
--	.set_key		= rt2x00mac_set_key,
--	.sw_scan_start		= rt2x00mac_sw_scan_start,
--	.sw_scan_complete	= rt2x00mac_sw_scan_complete,
--	.get_stats		= rt2x00mac_get_stats,
--	.get_tkip_seq		= rt2800_get_tkip_seq,
--	.set_rts_threshold	= rt2800_set_rts_threshold,
--	.sta_add		= rt2x00mac_sta_add,
--	.sta_remove		= rt2x00mac_sta_remove,
--	.bss_info_changed	= rt2x00mac_bss_info_changed,
--	.conf_tx		= rt2800_conf_tx,
--	.get_tsf		= rt2800_get_tsf,
--	.rfkill_poll		= rt2x00mac_rfkill_poll,
--	.ampdu_action		= rt2800_ampdu_action,
--	.flush			= rt2x00mac_flush,
--	.get_survey		= rt2800_get_survey,
--	.get_ringparam		= rt2x00mac_get_ringparam,
--	.tx_frames_pending	= rt2x00mac_tx_frames_pending,
--};
--
--static const struct rt2800_ops rt2800soc_rt2800_ops = {
--	.register_read		= rt2x00mmio_register_read,
--	.register_read_lock	= rt2x00mmio_register_read, /* same for SoCs */
--	.register_write		= rt2x00mmio_register_write,
--	.register_write_lock	= rt2x00mmio_register_write, /* same for SoCs */
--	.register_multiread	= rt2x00mmio_register_multiread,
--	.register_multiwrite	= rt2x00mmio_register_multiwrite,
--	.regbusy_read		= rt2x00mmio_regbusy_read,
--	.read_eeprom		= rt2800soc_read_eeprom,
--	.hwcrypt_disabled	= rt2800soc_hwcrypt_disabled,
--	.drv_write_firmware	= rt2800soc_write_firmware,
--	.drv_init_registers	= rt2800mmio_init_registers,
--	.drv_get_txwi		= rt2800mmio_get_txwi,
--};
--
--static const struct rt2x00lib_ops rt2800soc_rt2x00_ops = {
--	.irq_handler		= rt2800mmio_interrupt,
--	.txstatus_tasklet	= rt2800mmio_txstatus_tasklet,
--	.pretbtt_tasklet	= rt2800mmio_pretbtt_tasklet,
--	.tbtt_tasklet		= rt2800mmio_tbtt_tasklet,
--	.rxdone_tasklet		= rt2800mmio_rxdone_tasklet,
--	.autowake_tasklet	= rt2800mmio_autowake_tasklet,
--	.probe_hw		= rt2800_probe_hw,
--	.get_firmware_name	= rt2800soc_get_firmware_name,
--	.check_firmware		= rt2800soc_check_firmware,
--	.load_firmware		= rt2800soc_load_firmware,
--	.initialize		= rt2x00mmio_initialize,
--	.uninitialize		= rt2x00mmio_uninitialize,
--	.get_entry_state	= rt2800mmio_get_entry_state,
--	.clear_entry		= rt2800mmio_clear_entry,
--	.set_device_state	= rt2800soc_set_device_state,
--	.rfkill_poll		= rt2800_rfkill_poll,
--	.link_stats		= rt2800_link_stats,
--	.reset_tuner		= rt2800_reset_tuner,
--	.link_tuner		= rt2800_link_tuner,
--	.gain_calibration	= rt2800_gain_calibration,
--	.vco_calibration	= rt2800_vco_calibration,
--	.start_queue		= rt2800mmio_start_queue,
--	.kick_queue		= rt2800mmio_kick_queue,
--	.stop_queue		= rt2800mmio_stop_queue,
--	.flush_queue		= rt2x00mmio_flush_queue,
--	.write_tx_desc		= rt2800mmio_write_tx_desc,
--	.write_tx_data		= rt2800_write_tx_data,
--	.write_beacon		= rt2800_write_beacon,
--	.clear_beacon		= rt2800_clear_beacon,
--	.fill_rxdone		= rt2800mmio_fill_rxdone,
--	.config_shared_key	= rt2800_config_shared_key,
--	.config_pairwise_key	= rt2800_config_pairwise_key,
--	.config_filter		= rt2800_config_filter,
--	.config_intf		= rt2800_config_intf,
--	.config_erp		= rt2800_config_erp,
--	.config_ant		= rt2800_config_ant,
--	.config			= rt2800_config,
--	.sta_add		= rt2800_sta_add,
--	.sta_remove		= rt2800_sta_remove,
--};
--
--static const struct rt2x00_ops rt2800soc_ops = {
--	.name			= KBUILD_MODNAME,
--	.drv_data_size		= sizeof(struct rt2800_drv_data),
--	.max_ap_intf		= 8,
--	.eeprom_size		= EEPROM_SIZE,
--	.rf_size		= RF_SIZE,
--	.tx_queues		= NUM_TX_QUEUES,
--	.queue_init		= rt2800mmio_queue_init,
--	.lib			= &rt2800soc_rt2x00_ops,
--	.drv			= &rt2800soc_rt2800_ops,
--	.hw			= &rt2800soc_mac80211_ops,
--#ifdef CONFIG_RT2X00_LIB_DEBUGFS
--	.debugfs		= &rt2800_rt2x00debug,
--#endif /* CONFIG_RT2X00_LIB_DEBUGFS */
--};
--
--static int rt2800soc_probe(struct platform_device *pdev)
--{
--	return rt2x00soc_probe(pdev, &rt2800soc_ops);
--}
--
--static struct platform_driver rt2800soc_driver = {
--	.driver		= {
--		.name		= "rt2800_wmac",
--		.owner		= THIS_MODULE,
--		.mod_name	= KBUILD_MODNAME,
--	},
--	.probe		= rt2800soc_probe,
--	.remove		= rt2x00soc_remove,
--	.suspend	= rt2x00soc_suspend,
--	.resume		= rt2x00soc_resume,
--};
--#endif /* CONFIG_SOC_RT288X || CONFIG_SOC_RT305X */
--
--#ifdef CONFIG_PCI
- static int rt2800pci_probe(struct pci_dev *pci_dev,
- 			   const struct pci_device_id *id)
- {
-@@ -687,38 +469,16 @@ static struct pci_driver rt2800pci_driver = {
- 	.suspend	= rt2x00pci_suspend,
- 	.resume		= rt2x00pci_resume,
- };
--#endif /* CONFIG_PCI */
-+
- 
- static int __init rt2800pci_init(void)
- {
--	int ret = 0;
--
--#if defined(CONFIG_SOC_RT288X) || defined(CONFIG_SOC_RT305X)
--	ret = platform_driver_register(&rt2800soc_driver);
--	if (ret)
--		return ret;
--#endif
--#ifdef CONFIG_PCI
--	ret = pci_register_driver(&rt2800pci_driver);
--	if (ret) {
--#if defined(CONFIG_SOC_RT288X) || defined(CONFIG_SOC_RT305X)
--		platform_driver_unregister(&rt2800soc_driver);
--#endif
--		return ret;
--	}
--#endif
--
--	return ret;
-+	return pci_register_driver(&rt2800pci_driver);
- }
- 
- static void __exit rt2800pci_exit(void)
- {
--#ifdef CONFIG_PCI
- 	pci_unregister_driver(&rt2800pci_driver);
--#endif
--#if defined(CONFIG_SOC_RT288X) || defined(CONFIG_SOC_RT305X)
--	platform_driver_unregister(&rt2800soc_driver);
--#endif
- }
- 
- module_init(rt2800pci_init);
-diff --git a/drivers/net/wireless/rt2x00/rt2800soc.c b/drivers/net/wireless/rt2x00/rt2800soc.c
+ clean:
+-	$(Q)rm -f crda regdbdump intersect db2rd \
++	$(Q)rm -f crda regdbdump intersect db2rd optimize \
+ 		*.o *~ *.pyc keys-*.c *.gz \
+ 	udev/$(UDEV_LEVEL)regulatory.rules udev/regulatory.rules.parsed
+diff --git a/optimize.c b/optimize.c
 new file mode 100644
-index 0000000..1359227
+index 0000000..c87371d
 --- /dev/null
-+++ b/drivers/net/wireless/rt2x00/rt2800soc.c
-@@ -0,0 +1,263 @@
-+/*	Copyright (C) 2009 - 2010 Ivo van Doorn <IvDoorn@gmail.com>
-+ *	Copyright (C) 2009 Alban Browaeys <prahal@yahoo.com>
-+ *	Copyright (C) 2009 Felix Fietkau <nbd@openwrt.org>
-+ *	Copyright (C) 2009 Luis Correia <luis.f.correia@gmail.com>
-+ *	Copyright (C) 2009 Mattias Nissler <mattias.nissler@gmx.de>
-+ *	Copyright (C) 2009 Mark Asselstine <asselsm@gmail.com>
-+ *	Copyright (C) 2009 Xose Vazquez Perez <xose.vazquez@gmail.com>
-+ *	Copyright (C) 2009 Bart Zolnierkiewicz <bzolnier@gmail.com>
-+ *	<http://rt2x00.serialmonkey.com>
-+ *
-+ *	This program is free software; you can redistribute it and/or modify
-+ *	it under the terms of the GNU General Public License as published by
-+ *	the Free Software Foundation; either version 2 of the License, or
-+ *	(at your option) any later version.
-+ *
-+ *	This program is distributed in the hope that it will be useful,
-+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-+ *	GNU General Public License for more details.
-+ *
-+ *	You should have received a copy of the GNU General Public License
-+ *	along with this program; if not, write to the
-+ *	Free Software Foundation, Inc.,
-+ *	59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ */
++++ b/optimize.c
+@@ -0,0 +1,38 @@
++#include <errno.h>
++#include <stdlib.h>
++#include <stdio.h>
++#include <arpa/inet.h> /* ntohl */
++#include <string.h>
 +
-+/*	Module: rt2800soc
-+ *	Abstract: rt2800 WiSoC specific routines.
-+ */
++#include "nl80211.h"
++#include "reglib.h"
 +
-+#include <linux/etherdevice.h>
-+#include <linux/init.h>
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/platform_device.h>
-+
-+#include "rt2x00.h"
-+#include "rt2x00mmio.h"
-+#include "rt2x00soc.h"
-+#include "rt2800.h"
-+#include "rt2800lib.h"
-+#include "rt2800mmio.h"
-+
-+/* Allow hardware encryption to be disabled. */
-+static bool modparam_nohwcrypt;
-+module_param_named(nohwcrypt, modparam_nohwcrypt, bool, S_IRUGO);
-+MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption.");
-+
-+static bool rt2800soc_hwcrypt_disabled(struct rt2x00_dev *rt2x00dev)
++int main(int argc, char **argv)
 +{
-+	return modparam_nohwcrypt;
-+}
++	struct ieee80211_regdomain *rd = NULL, *rd_opt = NULL;
++	FILE *fp;
 +
-+static void rt2800soc_disable_radio(struct rt2x00_dev *rt2x00dev)
-+{
-+	rt2800_disable_radio(rt2x00dev);
-+	rt2x00mmio_register_write(rt2x00dev, PWR_PIN_CFG, 0);
-+	rt2x00mmio_register_write(rt2x00dev, TX_PIN_CFG, 0);
-+}
-+
-+static int rt2800soc_set_device_state(struct rt2x00_dev *rt2x00dev,
-+				      enum dev_state state)
-+{
-+	int retval = 0;
-+
-+	switch (state) {
-+	case STATE_RADIO_ON:
-+		retval = rt2800mmio_enable_radio(rt2x00dev);
-+		break;
-+
-+	case STATE_RADIO_OFF:
-+		rt2800soc_disable_radio(rt2x00dev);
-+		break;
-+
-+	case STATE_RADIO_IRQ_ON:
-+	case STATE_RADIO_IRQ_OFF:
-+		rt2800mmio_toggle_irq(rt2x00dev, state);
-+		break;
-+
-+	case STATE_DEEP_SLEEP:
-+	case STATE_SLEEP:
-+	case STATE_STANDBY:
-+	case STATE_AWAKE:
-+		/* These states are not supported, but don't report an error */
-+		retval = 0;
-+		break;
-+
-+	default:
-+		retval = -ENOTSUPP;
-+		break;
++	if (argc != 1) {
++		fprintf(stderr, "Usage: cat db.txt | %s\n", argv[0]);
++		return -EINVAL;
 +	}
 +
-+	if (unlikely(retval))
-+		rt2x00_err(rt2x00dev, "Device failed to enter state %d (%d)\n",
-+			   state, retval);
++	fp = reglib_create_parse_stream(stdin);
 +
-+	return retval;
++	reglib_for_each_country_stream(fp, rd) {
++		rd_opt = reglib_optimize_regdom(rd);
++		if (!rd_opt){
++			fprintf(stderr, "Unable to optimize %c%c\n",
++				rd->alpha2[0],
++				rd->alpha2[1]);
++			free(rd);
++			continue;
++		}
++		reglib_print_regdom(rd_opt);
++		free(rd);
++		free(rd_opt);
++	}
++
++	fclose(fp);
++	return 0;
 +}
-+
-+static int rt2800soc_read_eeprom(struct rt2x00_dev *rt2x00dev)
+diff --git a/reglib.c b/reglib.c
+index 0793fab..ae4b017 100644
+--- a/reglib.c
++++ b/reglib.c
+@@ -459,6 +459,43 @@ int reglib_is_valid_rd(const struct ieee80211_regdomain *rd)
+ 	return 1;
+ }
+ 
++static int reg_rules_union(const struct ieee80211_reg_rule *rule1,
++			   const struct ieee80211_reg_rule *rule2,
++			   struct ieee80211_reg_rule *union_rule)
 +{
-+	void __iomem *base_addr = ioremap(0x1F040000, EEPROM_SIZE);
++	const struct ieee80211_freq_range *freq_range1, *freq_range2;
++	struct ieee80211_freq_range *freq_range;
++	const struct ieee80211_power_rule *power_rule1, *power_rule2;
++	struct ieee80211_power_rule *power_rule;
 +
-+	if (!base_addr)
-+		return -ENOMEM;
++	freq_range1 = &rule1->freq_range;
++	freq_range2 = &rule2->freq_range;
++	freq_range = &union_rule->freq_range;
 +
-+	memcpy_fromio(rt2x00dev->eeprom, base_addr, EEPROM_SIZE);
++	power_rule1 = &rule1->power_rule;
++	power_rule2 = &rule2->power_rule;
++	power_rule = &union_rule->power_rule;
 +
-+	iounmap(base_addr);
++	freq_range->start_freq_khz = reglib_min(freq_range1->start_freq_khz,
++					 freq_range2->start_freq_khz);
++	freq_range->end_freq_khz = reglib_max(freq_range1->end_freq_khz,
++				       freq_range2->end_freq_khz);
++	freq_range->max_bandwidth_khz = reglib_max(freq_range1->max_bandwidth_khz,
++					    freq_range2->max_bandwidth_khz);
++
++	power_rule->max_eirp = reglib_max(power_rule1->max_eirp,
++		power_rule2->max_eirp);
++	power_rule->max_antenna_gain = reglib_max(power_rule1->max_antenna_gain,
++		power_rule2->max_antenna_gain);
++
++	union_rule->flags = rule1->flags | rule2->flags;
++
++	if (!is_valid_reg_rule(union_rule))
++		return -EINVAL;
++
 +	return 0;
 +}
 +
-+/* Firmware functions */
-+static char *rt2800soc_get_firmware_name(struct rt2x00_dev *rt2x00dev)
+ /*
+  * Helper for reglib_intersect_rds(), this does the real
+  * mathematical intersection fun
+@@ -1246,3 +1283,217 @@ FILE *reglib_create_parse_stream(FILE *f)
+ 
+ 	return fp;
+ }
++
++/*
++ * The idea behind a rule key is that if two rule keys share the
++ * same key they can be merged together if their frequencies overlap.
++ */
++static uint64_t reglib_rule_key(struct ieee80211_reg_rule *reg_rule)
 +{
-+	WARN_ON_ONCE(1);
-+	return NULL;
++	struct ieee80211_power_rule *power_rule;
++	uint32_t key;
++
++	power_rule = &reg_rule->power_rule;
++
++	key = ((power_rule->max_eirp ^ 0) << 0) ^
++	      ((reg_rule->flags      ^ 8) << 8);
++
++	return key;
 +}
 +
-+static int rt2800soc_load_firmware(struct rt2x00_dev *rt2x00dev,
-+				   const u8 *data, const size_t len)
++/* XXX: cannot support > 32 rules */
++struct reglib_optimize_map {
++	bool optimized[32];
++	uint32_t keys[32];
++};
++
++/* Does the provided rule suffice both of the other two */
++static int reglib_opt_rule_fit(struct ieee80211_reg_rule *rule1,
++			       struct ieee80211_reg_rule *rule2,
++			       struct ieee80211_reg_rule *opt_rule)
 +{
-+	WARN_ON_ONCE(1);
++	struct ieee80211_reg_rule interesected_rule;
++	struct ieee80211_reg_rule *int_rule;
++	int r;
++
++	memset(&interesected_rule, 0, sizeof(struct ieee80211_reg_rule));
++	int_rule = &interesected_rule;
++
++	r = reg_rules_intersect(rule1, opt_rule, int_rule);
++	if (r != 0)
++		return r;
++	r = reg_rules_intersect(rule2, opt_rule, int_rule);
++	if (r != 0)
++		return r;
++
 +	return 0;
 +}
 +
-+static int rt2800soc_check_firmware(struct rt2x00_dev *rt2x00dev,
-+				    const u8 *data, const size_t len)
++static int reg_rule_optimize(struct ieee80211_reg_rule *rule1,
++			     struct ieee80211_reg_rule *rule2,
++			     struct ieee80211_reg_rule *opt_rule)
 +{
-+	WARN_ON_ONCE(1);
++	int r;
++
++	r = reg_rules_union(rule1, rule2, opt_rule);
++	if (r != 0)
++		return r;
++	r = reglib_opt_rule_fit(rule1, rule2, opt_rule);
++	if (r != 0)
++		return r;
++
 +	return 0;
 +}
 +
-+static int rt2800soc_write_firmware(struct rt2x00_dev *rt2x00dev,
-+				    const u8 *data, const size_t len)
++/*
++ * Here's the math explanation:
++ *
++ * This takes each pivot frequency on the regulatory domain, computes
++ * the union between it each regulatory rule on the regulatory domain
++ * sequentially, and after that it tries to verify that the pivot frequency
++ * fits on it by computing an intersection between it and the union, if
++ * a rule exist as a possible intersection then we know the rule can be
++ * subset of the combination of the two frequency ranges (union) computed.
++ */
++static unsigned int reg_rule_optimize_rd(struct ieee80211_regdomain *rd,
++					 unsigned int rule_idx,
++					 struct ieee80211_reg_rule *opt_rule,
++					 struct reglib_optimize_map *opt_map)
 +{
-+	WARN_ON_ONCE(1);
-+	return 0;
++	unsigned int i;
++	struct ieee80211_reg_rule *rule1;
++	struct ieee80211_reg_rule *rule2;
++
++	struct ieee80211_reg_rule tmp_optimized_rule;
++	struct ieee80211_reg_rule *tmp_opt_rule;
++
++	struct ieee80211_reg_rule *target_rule;
++
++	unsigned int optimized = 0;
++	int r;
++
++	if (rule_idx > rd->n_reg_rules)
++		return 0;
++
++	rule1 = &rd->reg_rules[rule_idx];
++
++	memset(&tmp_optimized_rule, 0, sizeof(struct ieee80211_reg_rule));
++	tmp_opt_rule = &tmp_optimized_rule;
++
++	memset(opt_rule, 0, sizeof(*opt_rule));
++
++	for (i = 0; i < rd->n_reg_rules; i++) {
++		if (rule_idx == i)
++			continue;
++		rule2 = &rd->reg_rules[i];
++		if (opt_map->keys[rule_idx] != opt_map->keys[i])
++			continue;
++
++		target_rule = optimized ? opt_rule : rule1;
++		r = reg_rule_optimize(target_rule, rule2, tmp_opt_rule);
++		if (r != 0)
++			continue;
++		memcpy(opt_rule, tmp_opt_rule, sizeof(*tmp_opt_rule));
++
++		if (!opt_map->optimized[i]) {
++			opt_map->optimized[i] = true;
++			optimized++;
++		}
++		if (!opt_map->optimized[rule_idx]) {
++			opt_map->optimized[rule_idx] = true;
++			optimized++;
++		}
++	}
++	return optimized;
 +}
 +
-+static const struct ieee80211_ops rt2800soc_mac80211_ops = {
-+	.tx			= rt2x00mac_tx,
-+	.start			= rt2x00mac_start,
-+	.stop			= rt2x00mac_stop,
-+	.add_interface		= rt2x00mac_add_interface,
-+	.remove_interface	= rt2x00mac_remove_interface,
-+	.config			= rt2x00mac_config,
-+	.configure_filter	= rt2x00mac_configure_filter,
-+	.set_key		= rt2x00mac_set_key,
-+	.sw_scan_start		= rt2x00mac_sw_scan_start,
-+	.sw_scan_complete	= rt2x00mac_sw_scan_complete,
-+	.get_stats		= rt2x00mac_get_stats,
-+	.get_tkip_seq		= rt2800_get_tkip_seq,
-+	.set_rts_threshold	= rt2800_set_rts_threshold,
-+	.sta_add		= rt2x00mac_sta_add,
-+	.sta_remove		= rt2x00mac_sta_remove,
-+	.bss_info_changed	= rt2x00mac_bss_info_changed,
-+	.conf_tx		= rt2800_conf_tx,
-+	.get_tsf		= rt2800_get_tsf,
-+	.rfkill_poll		= rt2x00mac_rfkill_poll,
-+	.ampdu_action		= rt2800_ampdu_action,
-+	.flush			= rt2x00mac_flush,
-+	.get_survey		= rt2800_get_survey,
-+	.get_ringparam		= rt2x00mac_get_ringparam,
-+	.tx_frames_pending	= rt2x00mac_tx_frames_pending,
-+};
-+
-+static const struct rt2800_ops rt2800soc_rt2800_ops = {
-+	.register_read		= rt2x00mmio_register_read,
-+	.register_read_lock	= rt2x00mmio_register_read, /* same for SoCs */
-+	.register_write		= rt2x00mmio_register_write,
-+	.register_write_lock	= rt2x00mmio_register_write, /* same for SoCs */
-+	.register_multiread	= rt2x00mmio_register_multiread,
-+	.register_multiwrite	= rt2x00mmio_register_multiwrite,
-+	.regbusy_read		= rt2x00mmio_regbusy_read,
-+	.read_eeprom		= rt2800soc_read_eeprom,
-+	.hwcrypt_disabled	= rt2800soc_hwcrypt_disabled,
-+	.drv_write_firmware	= rt2800soc_write_firmware,
-+	.drv_init_registers	= rt2800mmio_init_registers,
-+	.drv_get_txwi		= rt2800mmio_get_txwi,
-+};
-+
-+static const struct rt2x00lib_ops rt2800soc_rt2x00_ops = {
-+	.irq_handler		= rt2800mmio_interrupt,
-+	.txstatus_tasklet	= rt2800mmio_txstatus_tasklet,
-+	.pretbtt_tasklet	= rt2800mmio_pretbtt_tasklet,
-+	.tbtt_tasklet		= rt2800mmio_tbtt_tasklet,
-+	.rxdone_tasklet		= rt2800mmio_rxdone_tasklet,
-+	.autowake_tasklet	= rt2800mmio_autowake_tasklet,
-+	.probe_hw		= rt2800_probe_hw,
-+	.get_firmware_name	= rt2800soc_get_firmware_name,
-+	.check_firmware		= rt2800soc_check_firmware,
-+	.load_firmware		= rt2800soc_load_firmware,
-+	.initialize		= rt2x00mmio_initialize,
-+	.uninitialize		= rt2x00mmio_uninitialize,
-+	.get_entry_state	= rt2800mmio_get_entry_state,
-+	.clear_entry		= rt2800mmio_clear_entry,
-+	.set_device_state	= rt2800soc_set_device_state,
-+	.rfkill_poll		= rt2800_rfkill_poll,
-+	.link_stats		= rt2800_link_stats,
-+	.reset_tuner		= rt2800_reset_tuner,
-+	.link_tuner		= rt2800_link_tuner,
-+	.gain_calibration	= rt2800_gain_calibration,
-+	.vco_calibration	= rt2800_vco_calibration,
-+	.start_queue		= rt2800mmio_start_queue,
-+	.kick_queue		= rt2800mmio_kick_queue,
-+	.stop_queue		= rt2800mmio_stop_queue,
-+	.flush_queue		= rt2x00mmio_flush_queue,
-+	.write_tx_desc		= rt2800mmio_write_tx_desc,
-+	.write_tx_data		= rt2800_write_tx_data,
-+	.write_beacon		= rt2800_write_beacon,
-+	.clear_beacon		= rt2800_clear_beacon,
-+	.fill_rxdone		= rt2800mmio_fill_rxdone,
-+	.config_shared_key	= rt2800_config_shared_key,
-+	.config_pairwise_key	= rt2800_config_pairwise_key,
-+	.config_filter		= rt2800_config_filter,
-+	.config_intf		= rt2800_config_intf,
-+	.config_erp		= rt2800_config_erp,
-+	.config_ant		= rt2800_config_ant,
-+	.config			= rt2800_config,
-+	.sta_add		= rt2800_sta_add,
-+	.sta_remove		= rt2800_sta_remove,
-+};
-+
-+static const struct rt2x00_ops rt2800soc_ops = {
-+	.name			= KBUILD_MODNAME,
-+	.drv_data_size		= sizeof(struct rt2800_drv_data),
-+	.max_ap_intf		= 8,
-+	.eeprom_size		= EEPROM_SIZE,
-+	.rf_size		= RF_SIZE,
-+	.tx_queues		= NUM_TX_QUEUES,
-+	.queue_init		= rt2800mmio_queue_init,
-+	.lib			= &rt2800soc_rt2x00_ops,
-+	.drv			= &rt2800soc_rt2800_ops,
-+	.hw			= &rt2800soc_mac80211_ops,
-+#ifdef CONFIG_RT2X00_LIB_DEBUGFS
-+	.debugfs		= &rt2800_rt2x00debug,
-+#endif /* CONFIG_RT2X00_LIB_DEBUGFS */
-+};
-+
-+static int rt2800soc_probe(struct platform_device *pdev)
++struct ieee80211_regdomain *
++reglib_optimize_regdom(struct ieee80211_regdomain *rd)
 +{
-+	return rt2x00soc_probe(pdev, &rt2800soc_ops);
++	struct ieee80211_regdomain *opt_rd = NULL;
++	struct ieee80211_reg_rule *reg_rule;
++	struct ieee80211_reg_rule *reg_rule_dst;
++	struct ieee80211_reg_rule optimized_reg_rule;
++	struct ieee80211_reg_rule *opt_reg_rule;
++	struct reglib_optimize_map opt_map;
++	unsigned int i, idx = 0, non_opt = 0, opt = 0;
++	size_t num_rules, size_of_regd;
++	unsigned int num_opts = 0;
++
++	memset(&opt_map, 0, sizeof(struct reglib_optimize_map));
++	memset(&optimized_reg_rule, 0, sizeof(struct ieee80211_reg_rule));
++
++	opt_reg_rule = &optimized_reg_rule;
++
++	for (i = 0; i < rd->n_reg_rules; i++) {
++		reg_rule = &rd->reg_rules[i];
++		opt_map.keys[i] = reglib_rule_key(reg_rule);
++	}
++	for (i = 0; i < rd->n_reg_rules; i++) {
++		reg_rule = &rd->reg_rules[i];
++		if (opt_map.optimized[i])
++			continue;
++		num_opts = reg_rule_optimize_rd(rd, i, opt_reg_rule, &opt_map);
++		if (!num_opts)
++			non_opt++;
++		else
++			opt += (num_opts ? 1 : 0);
++	}
++
++	num_rules = non_opt + opt;
++
++	if (num_rules > rd->n_reg_rules)
++		return NULL;
++
++	size_of_regd = reglib_array_len(sizeof(struct ieee80211_regdomain),
++					num_rules + 1,
++					sizeof(struct ieee80211_reg_rule));
++
++	opt_rd = malloc(size_of_regd);
++	if (!opt_rd)
++		return NULL;
++	memset(opt_rd, 0, size_of_regd);
++
++	opt_rd->n_reg_rules = num_rules;
++	opt_rd->alpha2[0] = rd->alpha2[0];
++	opt_rd->alpha2[1] = rd->alpha2[1];
++	opt_rd->dfs_region = rd->dfs_region;
++
++	memset(&opt_map, 0, sizeof(struct reglib_optimize_map));
++	memset(&optimized_reg_rule, 0, sizeof(struct ieee80211_reg_rule));
++
++	opt_reg_rule = &optimized_reg_rule;
++
++	for (i = 0; i < rd->n_reg_rules; i++) {
++		reg_rule = &rd->reg_rules[i];
++		opt_map.keys[i] = reglib_rule_key(reg_rule);
++	}
++
++	for (i = 0; i < rd->n_reg_rules; i++) {
++		reg_rule = &rd->reg_rules[i];
++		reg_rule_dst = &opt_rd->reg_rules[idx];
++		if (opt_map.optimized[i])
++			continue;
++		num_opts = reg_rule_optimize_rd(rd, i, opt_reg_rule, &opt_map);
++		if (!num_opts)
++			memcpy(reg_rule_dst, reg_rule, sizeof(struct ieee80211_reg_rule));
++		else
++			memcpy(reg_rule_dst, opt_reg_rule, sizeof(struct ieee80211_reg_rule));
++		idx++;
++	}
++
++	if (idx != num_rules) {
++		free(opt_rd);
++		return NULL;
++	}
++
++	for (i = 0; i < opt_rd->n_reg_rules; i++) {
++		reg_rule = &opt_rd->reg_rules[i];
++		if (!is_valid_reg_rule(reg_rule)) {
++			free(opt_rd);
++			return NULL;
++		}
++	}
++
++	return opt_rd;
 +}
+diff --git a/reglib.h b/reglib.h
+index 885792e..d570c36 100644
+--- a/reglib.h
++++ b/reglib.h
+@@ -219,6 +219,22 @@ FILE *reglib_create_parse_stream(FILE *fp);
+  */
+ struct ieee80211_regdomain *reglib_parse_country(FILE *fp);
+ 
++/**
++ * @reglib_optimize_regdom - optimize a regulatory domain
++ *
++ * @rd: a regulatory domain to be optimized
++ *
++ * A regulatory domain may exist without optimal expressions
++ * over its rules. This will look for regulatory rules that can
++ * be combined together to reduce the size of the regulatory
++ * domain and its expression.
++ *
++ * Regulatory rules will be combined if their max allowed
++ * bandwidth, max EIRP, and flags all match.
++ */
++struct ieee80211_regdomain *
++reglib_optimize_regdom(struct ieee80211_regdomain *rd);
 +
-+static struct platform_driver rt2800soc_driver = {
-+	.driver		= {
-+		.name		= "rt2800_wmac",
-+		.owner		= THIS_MODULE,
-+		.mod_name	= KBUILD_MODNAME,
-+	},
-+	.probe		= rt2800soc_probe,
-+	.remove		= rt2x00soc_remove,
-+	.suspend	= rt2x00soc_suspend,
-+	.resume		= rt2x00soc_resume,
-+};
-+
-+module_platform_driver(rt2800soc_driver);
-+
-+MODULE_AUTHOR(DRV_PROJECT);
-+MODULE_VERSION(DRV_VERSION);
-+MODULE_DESCRIPTION("Ralink WiSoC Wireless LAN driver.");
-+MODULE_LICENSE("GPL");
+ #define reglib_for_each_country_stream(__fp, __rd)		\
+ 	for (__rd = reglib_parse_country(__fp);			\
+ 	     __rd != NULL;					\
 -- 
-1.7.10
+1.8.4.rc3
+
