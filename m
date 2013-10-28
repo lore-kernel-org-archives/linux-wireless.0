@@ -1,298 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f45.google.com ([209.85.160.45]:50566 "EHLO
-	mail-pb0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756158Ab3JOCI5 (ORCPT
+Received: from SMTP.ANDREW.CMU.EDU ([128.2.11.61]:53950 "EHLO
+	smtp.andrew.cmu.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757883Ab3J1Xso (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Oct 2013 22:08:57 -0400
-Received: by mail-pb0-f45.google.com with SMTP id mc17so8114812pbc.32
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Oct 2013 19:08:56 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	devel@lists.open80211s.org, distro11s@cozybit.com,
-	Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-Subject: [PATCH v5 1/5] mac80211: process the CSA frame for mesh accordingly
-Date: Mon, 14 Oct 2013 19:08:27 -0700
-Message-Id: <1381802911-3921-2-git-send-email-yeohchunyeow@cozybit.com> (sfid-20131015_040916_405200_C0E52CB6)
-In-Reply-To: <1381802911-3921-1-git-send-email-yeohchunyeow@cozybit.com>
-References: <1381802911-3921-1-git-send-email-yeohchunyeow@cozybit.com>
+	Mon, 28 Oct 2013 19:48:44 -0400
+Message-ID: <526EF7D6.2060102@andrew.cmu.edu> (sfid-20131029_004851_099495_0F3E27AB)
+Date: Mon, 28 Oct 2013 19:48:38 -0400
+From: Richard Wang <rpw@andrew.cmu.edu>
+MIME-Version: 1.0
+To: Dan Williams <dcbw@redhat.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Linksys AE3000 iw tool issues
+References: <526ED703.6020901@andrew.cmu.edu> <1383002394.28991.18.camel@dcbw.foobar.com>
+In-Reply-To: <1383002394.28991.18.camel@dcbw.foobar.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Process the CSA frame according to the procedures define in IEEE Std
-802.11-2012 section 10.9.8.4.3 as follow:
-* The mesh channel switch parameters element (MCSP) must be availabe.
-* If the MCSP's TTL is 1, drop the frame but still process the CSA.
-* If the MCSP's precedence value is less than or equal to the current
-  precedence value, drop the frame and do not process the CSA.
-* The CSA frame is forwarded after TTL is decremented by 1 and the
-  initiator field is set to 0. Transmit restrict field and others
-  are maintained as is.
-* No beacon or probe response frame are handled here.
+On 10/28/2013 7:19 PM, Dan Williams wrote:
+> On Mon, 2013-10-28 at 17:28 -0400, Richard Wang wrote:
+>> Hi,
+>>
+>> I currently have a Linksys AE3000 Wifi USB dongle, which has the
+>> RalinkRT3573 chipset.
+>>
+>> I am able currently able to connect to surrounding APs by installing
+>> Ralink proprietary drivers as outlined here
+>> (http://geekniggle.blogspot.com/2012/07/cisco-linksys-ae3000-wifi-usb-dongle.html).
+>> Ifconfig and iwconfig both recognize the device using the interface ra0.
+>> Unfortunately, the "iw" tool is having some issues. One machine running
+>> Lucid Ubuntu 10.04 with the following command "iw dev ra0 info" returns
+>> "command failed: No such device (-19)". Another machine machine with
+>> xubuntu on command "iw list" returns "nl80211 not found."
+> The proprietary ralink drivers do not appear to support the kernel's
+> nl80211 API. In the first case (no such device) that's what is
+> happening.  IN the second case (nl80211 not found) the nl80211 module is
+> either not compiled into the kernel, or is not loaded.  And since the
+> wifi driver doesn't use nl80211, that's probably why it's not loaded.
+>
+>>   From what I have read so far, it appears that the current driver may
+>> not support iw operations. As a result, I looked into installing
+> Correct, that proprietary driver does not use nl80211.
+>
+>> rt2800usb driver that a few other threads appear to have working
+>> successfully. As stated on wikidevi
+>> (http://wikidevi.com/wiki/Linksys_AE3000), one of the more recent
+>> patches appears to support the RT3573 chipset. I tried to install the
+>> latest developmental release. After rebooting and loading the rt2800usb
+>> driver, "modprobe rt2800usb", I get dmesg errors like "rt2x00lib:
+>> disagrees about version of... ieee80211....".
+>>
+>> Any suggestions to get the "iw" tool working would be much appreciated.
+> Getting "iw" working would basically involve adding RT3573 support to
+> rt2800usb, so you're really asking "how can we get RT3573 chips properly
+> supported in Linux?".  If that's done, "iw" comes for free.
+>
+> Dan
+>
+Hi Dan,
 
-Also, introduce the debug message used for mesh CSA purpose.
+Thanks for the response and that's exactly my question stated much more 
+succinctly. Based on other threads, it appeared as if there might be 
+support for rt2800usb for rt3573 chips in experimental versions 
+(http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2013-July/006283.html). 
+I tried to install the latest development version of backports hoping 
+that this patch would be part of it but it didn't seem to work. I'm 
+hoping to see if anyone happens to have a working patch for rt3573 chips.
 
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
----
-v2: fix return value, typo and others (Johannes Berg)
-
- include/linux/ieee80211.h  |   20 +++++++++++
- net/mac80211/Kconfig       |   11 ++++++
- net/mac80211/debug.h       |   10 ++++++
- net/mac80211/ieee80211_i.h |    4 +++
- net/mac80211/mesh.c        |   83 ++++++++++++++++++++++++++++++++++++++++++--
- net/mac80211/util.c        |    9 +++++
- 6 files changed, 134 insertions(+), 3 deletions(-)
-
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 23a8877..f117427 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -696,6 +696,18 @@ struct ieee80211_sec_chan_offs_ie {
- } __packed;
- 
- /**
-+ * struct ieee80211_mesh_chansw_params_ie - mesh channel switch parameters IE
-+ *
-+ * This structure represents the "Mesh Channel Switch Paramters element"
-+ */
-+struct ieee80211_mesh_chansw_params_ie {
-+	u8 mesh_ttl;
-+	u8 mesh_flags;
-+	__le16 mesh_reason;
-+	__le16 mesh_pre_value;
-+} __packed;
-+
-+/**
-  * struct ieee80211_wide_bw_chansw_ie - wide bandwidth channel switch IE
-  */
- struct ieee80211_wide_bw_chansw_ie {
-@@ -750,6 +762,14 @@ enum mesh_config_capab_flags {
- };
- 
- /**
-+ * mesh channel switch parameters element's flag indicator
-+ *
-+ */
-+#define WLAN_EID_CHAN_SWITCH_PARAM_TX_RESTRICT BIT(0)
-+#define WLAN_EID_CHAN_SWITCH_PARAM_INITIATOR BIT(1)
-+#define WLAN_EID_CHAN_SWITCH_PARAM_REASON BIT(2)
-+
-+/**
-  * struct ieee80211_rann_ie
-  *
-  * This structure refers to "Root Announcement information element"
-diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
-index 62535fe..bf1871e 100644
---- a/net/mac80211/Kconfig
-+++ b/net/mac80211/Kconfig
-@@ -258,6 +258,17 @@ config MAC80211_MESH_SYNC_DEBUG
- 
- 	  Do not select this option.
- 
-+config MAC80211_MESH_CSA_DEBUG
-+	bool "Verbose mesh channel switch debugging"
-+	depends on MAC80211_DEBUG_MENU
-+	depends on MAC80211_MESH
-+	---help---
-+	  Selecting this option causes mac80211 to print out very verbose mesh
-+	  channel switch debugging messages (when mac80211 is taking part in a
-+	  mesh network).
-+
-+	  Do not select this option.
-+
- config MAC80211_MESH_PS_DEBUG
- 	bool "Verbose mesh powersave debugging"
- 	depends on MAC80211_DEBUG_MENU
-diff --git a/net/mac80211/debug.h b/net/mac80211/debug.h
-index 4ccc5ed..493d680 100644
---- a/net/mac80211/debug.h
-+++ b/net/mac80211/debug.h
-@@ -44,6 +44,12 @@
- #define MAC80211_MESH_SYNC_DEBUG 0
- #endif
- 
-+#ifdef CONFIG_MAC80211_MESH_CSA_DEBUG
-+#define MAC80211_MESH_CSA_DEBUG 1
-+#else
-+#define MAC80211_MESH_CSA_DEBUG 0
-+#endif
-+
- #ifdef CONFIG_MAC80211_MESH_PS_DEBUG
- #define MAC80211_MESH_PS_DEBUG 1
- #else
-@@ -157,6 +163,10 @@ do {									\
- 	_sdata_dbg(MAC80211_MESH_SYNC_DEBUG,				\
- 		   sdata, fmt, ##__VA_ARGS__)
- 
-+#define mcsa_dbg(sdata, fmt, ...)					\
-+	_sdata_dbg(MAC80211_MESH_CSA_DEBUG,				\
-+		   sdata, fmt, ##__VA_ARGS__)
-+
- #define mps_dbg(sdata, fmt, ...)					\
- 	_sdata_dbg(MAC80211_MESH_PS_DEBUG,				\
- 		   sdata, fmt, ##__VA_ARGS__)
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 3a87c89..7f13b65 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -598,6 +598,9 @@ struct ieee80211_if_mesh {
- 	int ps_peers_light_sleep;
- 	int ps_peers_deep_sleep;
- 	struct ps_data ps;
-+	/* Channel Switching Support */
-+	bool chsw_init;
-+	u16 pre_value;
- };
- 
- #ifdef CONFIG_MAC80211_MESH
-@@ -1239,6 +1242,7 @@ struct ieee802_11_elems {
- 	const struct ieee80211_timeout_interval_ie *timeout_int;
- 	const u8 *opmode_notif;
- 	const struct ieee80211_sec_chan_offs_ie *sec_chan_offs;
-+	const struct ieee80211_mesh_chansw_params_ie *mesh_chansw_params_ie;
- 
- 	/* length of them, respectively */
- 	u8 ssid_len;
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 707ac61..0a3ccaa 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -920,6 +920,82 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
- 			stype, mgmt, &elems, rx_status);
- }
- 
-+static int mesh_fwd_csa_frame(struct ieee80211_sub_if_data *sdata,
-+			       struct ieee80211_mgmt *mgmt, size_t len)
-+{
-+	struct ieee80211_mgmt *mgmt_fwd;
-+	struct sk_buff *skb;
-+	struct ieee80211_local *local = sdata->local;
-+	u8 *pos = mgmt->u.action.u.chan_switch.variable;
-+	size_t offset_ttl;
-+
-+	skb = dev_alloc_skb(local->tx_headroom + len);
-+	if (!skb)
-+		return -ENOMEM;
-+	skb_reserve(skb, local->tx_headroom);
-+	mgmt_fwd = (struct ieee80211_mgmt *) skb_put(skb, len);
-+
-+	/* offset_ttl is based on whether the secondary channel
-+	 * offset is available or not. Substract 1 from the mesh TTL
-+	 * and disable the initiator flag before forwarding.
-+	 */
-+	offset_ttl = (len < 42) ? 7 : 10;
-+	*(pos + offset_ttl) -= 1;
-+	*(pos + offset_ttl + 1) &= ~WLAN_EID_CHAN_SWITCH_PARAM_INITIATOR;
-+
-+	memcpy(mgmt_fwd, mgmt, len);
-+	eth_broadcast_addr(mgmt_fwd->da);
-+	memcpy(mgmt_fwd->sa, sdata->vif.addr, ETH_ALEN);
-+	memcpy(mgmt_fwd->bssid, sdata->vif.addr, ETH_ALEN);
-+
-+	ieee80211_tx_skb(sdata, skb);
-+	return 0;
-+}
-+
-+static void mesh_rx_csa_frame(struct ieee80211_sub_if_data *sdata,
-+			      struct ieee80211_mgmt *mgmt, size_t len)
-+{
-+	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
-+	struct ieee802_11_elems elems;
-+	u16 pre_value;
-+	bool block_tx, fwd_csa = true;
-+	size_t baselen;
-+	u8 *pos, ttl;
-+
-+	if (mgmt->u.action.u.measurement.action_code !=
-+	    WLAN_ACTION_SPCT_CHL_SWITCH)
-+		return;
-+
-+	pos = mgmt->u.action.u.chan_switch.variable;
-+	baselen = offsetof(struct ieee80211_mgmt,
-+			   u.action.u.chan_switch.variable);
-+	ieee802_11_parse_elems(pos, len - baselen, false, &elems);
-+
-+	ttl = elems.mesh_chansw_params_ie->mesh_ttl;
-+	if (!--ttl)
-+		fwd_csa = false;
-+
-+	pre_value = le16_to_cpu(elems.mesh_chansw_params_ie->mesh_pre_value);
-+	if (ifmsh->pre_value >= pre_value)
-+		return;
-+
-+	ifmsh->pre_value = pre_value;
-+
-+	/* forward or re-broadcast the CSA frame */
-+	if (fwd_csa) {
-+		if (mesh_fwd_csa_frame(sdata, mgmt, len) < 0)
-+			mcsa_dbg(sdata, "Failed to forward the CSA frame");
-+	}
-+
-+	/* block the Tx only after forwarding the CSA frame if required */
-+	block_tx = elems.mesh_chansw_params_ie->mesh_flags &
-+		   WLAN_EID_CHAN_SWITCH_PARAM_TX_RESTRICT;
-+	if (block_tx)
-+		ieee80211_stop_queues_by_reason(&sdata->local->hw,
-+				IEEE80211_MAX_QUEUE_MAP,
-+				IEEE80211_QUEUE_STOP_REASON_CSA);
-+}
-+
- static void ieee80211_mesh_rx_mgmt_action(struct ieee80211_sub_if_data *sdata,
- 					  struct ieee80211_mgmt *mgmt,
- 					  size_t len,
-@@ -939,6 +1015,9 @@ static void ieee80211_mesh_rx_mgmt_action(struct ieee80211_sub_if_data *sdata,
- 		if (mesh_action_is_path_sel(mgmt))
- 			mesh_rx_path_sel_frame(sdata, mgmt, len);
- 		break;
-+	case WLAN_CATEGORY_SPECTRUM_MGMT:
-+		mesh_rx_csa_frame(sdata, mgmt, len);
-+		break;
- 	}
- }
- 
-@@ -1056,13 +1135,11 @@ void ieee80211_mesh_init_sdata(struct ieee80211_sub_if_data *sdata)
- 		    (unsigned long) sdata);
- 
- 	ifmsh->accepting_plinks = true;
--	ifmsh->preq_id = 0;
--	ifmsh->sn = 0;
--	ifmsh->num_gates = 0;
- 	atomic_set(&ifmsh->mpaths, 0);
- 	mesh_rmc_init(sdata);
- 	ifmsh->last_preq = jiffies;
- 	ifmsh->next_perr = jiffies;
-+	ifmsh->chsw_init = false;
- 	/* Allocate all mesh structures when creating the first mesh interface. */
- 	if (!mesh_allocated)
- 		ieee80211s_init();
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 3c8283b..133667c 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -743,6 +743,7 @@ u32 ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
- 		case WLAN_EID_TIMEOUT_INTERVAL:
- 		case WLAN_EID_SECONDARY_CHANNEL_OFFSET:
- 		case WLAN_EID_WIDE_BW_CHANNEL_SWITCH:
-+		case WLAN_EID_CHAN_SWITCH_PARAM:
- 		/*
- 		 * not listing WLAN_EID_CHANNEL_SWITCH_WRAPPER -- it seems possible
- 		 * that if the content gets bigger it might be needed more than once
-@@ -908,6 +909,14 @@ u32 ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
- 			}
- 			elems->sec_chan_offs = (void *)pos;
- 			break;
-+		case WLAN_EID_CHAN_SWITCH_PARAM:
-+			if (elen !=
-+			    sizeof(*elems->mesh_chansw_params_ie)) {
-+				elem_parse_failed = true;
-+				break;
-+			}
-+			elems->mesh_chansw_params_ie = (void *)pos;
-+			break;
- 		case WLAN_EID_WIDE_BW_CHANNEL_SWITCH:
- 			if (!action ||
- 			    elen != sizeof(*elems->wide_bw_chansw_ie)) {
--- 
-1.7.9.5
-
+RIchard
