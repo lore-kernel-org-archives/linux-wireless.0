@@ -1,63 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:63652 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753668Ab3JHTUb (ORCPT
+Received: from mail-wg0-f53.google.com ([74.125.82.53]:43337 "EHLO
+	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755041Ab3J1CTy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Oct 2013 15:20:31 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	<ath10k@lists.infradead.org>
-Subject: Re: [PATCH/RFT v2 1/4] ath10k: fix add_interface failure handling
-References: <1380805765-31521-1-git-send-email-michal.kazior@tieto.com>
-	<1380865425-3791-1-git-send-email-michal.kazior@tieto.com>
-	<1380865425-3791-2-git-send-email-michal.kazior@tieto.com>
-	<87mwmjsz2k.fsf@kamboji.qca.qualcomm.com>
-	<CA+BoTQ=qep+rKEyLKrNjNP6K1q+FHKpvkscwXuRMR_45YnRvHA@mail.gmail.com>
-Date: Tue, 8 Oct 2013 22:16:51 +0300
-In-Reply-To: <CA+BoTQ=qep+rKEyLKrNjNP6K1q+FHKpvkscwXuRMR_45YnRvHA@mail.gmail.com>
-	(Michal Kazior's message of "Tue, 8 Oct 2013 09:49:59 -0700")
-Message-ID: <87siwbr2sc.fsf@kamboji.qca.qualcomm.com> (sfid-20131008_212048_511597_FC5266A0)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Sun, 27 Oct 2013 22:19:54 -0400
+Received: by mail-wg0-f53.google.com with SMTP id y10so6000296wgg.20
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Oct 2013 19:19:52 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linux-wireless@vger.kernel.org
+Cc: wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 1/2] cfg80211: add function helpers to genregdb.awk
+Date: Mon, 28 Oct 2013 03:19:45 +0100
+Message-Id: <1382926786-7904-2-git-send-email-mcgrof@do-not-panic.com> (sfid-20131028_031957_852866_1B0B052C)
+In-Reply-To: <1382926786-7904-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1382926786-7904-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+This has no functional change, this just lets us reuse
+helpers at a later time.
 
-> On 8 October 2013 05:54, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->> Michal Kazior <michal.kazior@tieto.com> writes:
->>
->>> If something failed along add_interface() setup it
->>> was possible to leak a vdev id, vdev and peer.
->>>
->>> This could end up with leaked FW state or FW crash
->>> (assuming add_interface() failure wasn't a result of
->>> a crash).
->>>
->>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->>
->> Then I apply this patch on top of current ath.git master branch (commit
->> 18fe0b53e76) interface up fails on the managed mode:
->>
->> $ sudo ip link set wlan1 up
->> RTNETLINK answers: Invalid argument
->>
->> Logs don't have anything special (the TX encap error was already
->> before):
->>
->> [ 1259.818863] ath10k: MSI-X didn't succeed (1), trying MSI
->> [ 1259.819298] ath10k_pci 0000:02:00.0: irq 49 for MSI/MSI-X
->> [ 1259.820055] ath10k: MSI interrupt handling
->> [ 1260.747877] ath10k: UART prints disabled
->> [ 1260.828219] ath10k: firmware 10.1.389 booted
->> [ 1260.837585] ath10k: htt target version 2.1
->> [ 1260.838498] ath10k: Failed to set TX encap: -22
->
-> Ah. Right. I've tested this patch with main FW branch which supports
-> TX encap command. The TX encap issue should be dealth with first.
+Cc: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ net/wireless/genregdb.awk | 36 +++++++++++++++++++++++++-----------
+ 1 file changed, 25 insertions(+), 11 deletions(-)
 
-What do you mean? Did I miss a patch?
-
+diff --git a/net/wireless/genregdb.awk b/net/wireless/genregdb.awk
+index 3e241e4e..95baf61 100755
+--- a/net/wireless/genregdb.awk
++++ b/net/wireless/genregdb.awk
+@@ -33,15 +33,7 @@ BEGIN {
+ 	regdb = "const struct ieee80211_regdomain *reg_regdb[] = {\n"
+ }
+ 
+-/^[ \t]*#/ {
+-	# Ignore
+-}
+-
+-!active && /^[ \t]*$/ {
+-	# Ignore
+-}
+-
+-!active && /country/ {
++function parse_country_head() {
+ 	country=$2
+ 	sub(/:/, "", country)
+ 	printf "static const struct ieee80211_regdomain regdom_%s = {\n", country
+@@ -57,7 +49,8 @@ BEGIN {
+ 	regdb = regdb "\t&regdom_" country ",\n"
+ }
+ 
+-active && /^[ \t]*\(/ {
++function parse_reg_rule()
++{
+ 	start = $1
+ 	sub(/\(/, "", start)
+ 	end = $3
+@@ -117,7 +110,8 @@ active && /^[ \t]*\(/ {
+ 	rules++
+ }
+ 
+-active && /^[ \t]*$/ {
++function print_tail_country()
++{
+ 	active = 0
+ 	printf "\t},\n"
+ 	printf "\t.n_reg_rules = %d\n", rules
+@@ -125,6 +119,26 @@ active && /^[ \t]*$/ {
+ 	rules = 0;
+ }
+ 
++/^[ \t]*#/ {
++	# Ignore
++}
++
++!active && /^[ \t]*$/ {
++	# Ignore
++}
++
++!active && /country/ {
++	parse_country_head()
++}
++
++active && /^[ \t]*\(/ {
++	parse_reg_rule()
++}
++
++active && /^[ \t]*$/ {
++	print_tail_country()
++}
++
+ END {
+ 	print regdb "};"
+ 	print ""
 -- 
-Kalle Valo
+1.8.4.rc3
+
