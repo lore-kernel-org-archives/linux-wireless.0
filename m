@@ -1,60 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:43814 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753748Ab3JVWXA (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:53502 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753541Ab3J1VaR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Oct 2013 18:23:00 -0400
-Message-ID: <5266FAAD.3010800@candelatech.com> (sfid-20131023_002304_111253_9D6467EC)
-Date: Tue, 22 Oct 2013 15:22:37 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 28 Oct 2013 17:30:17 -0400
+Date: Mon, 28 Oct 2013 14:30:15 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Georgiana Rodica Chelu <georgiana.chelu93@gmail.com>
+Cc: opw-kernel@googlegroups.com, linux-wireless@vger.kernel.org
+Subject: Re: [OPW kernel] [Patch v3 1/3] net: wireless: replace printk with
+ pr_warn in adm8211.c
+Message-ID: <20131028213015.GA31597@kroah.com> (sfid-20131028_223021_992450_72EE2742)
+References: <20131026192053.GA10494@fireworks>
 MIME-Version: 1.0
-To: ath10k@lists.infradead.org,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ath10k hits warning in sta_info.c:839.
-References: <5266C321.7000103@candelatech.com>
-In-Reply-To: <5266C321.7000103@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131026192053.GA10494@fireworks>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/22/2013 11:25 AM, Ben Greear wrote:
-> Kernel is stock 'ath' tree, with small printk to debug an ath10k
-> crash.
+On Sat, Oct 26, 2013 at 10:20:53PM +0300, Georgiana Rodica Chelu wrote:
+> WARNING: Prefer netdev_warn(netdev, ... then dev_warn(dev, ... then pr_warn(...
+> to printk(KERN_WARNING ...
 > 
-> This is FYI for now...will be looking at other ath10k crash bugs
-> before digging into this tone.
-> 
-> Setup is 2 stations trying to associate to same AP, which causes
-> endless failures and firmware crashes.  Good for chasing bugs :)
-> 
-> 
-> DMAR:[fault reason 05] PTE Write access is not set
-> dmar: DRHD: handling fault status reg 3
-> dmar: DMAR:[DMA Write] Request device [05:00.0] fault addr ffd52000
-> DMAR:[fault reason 05] PTE Write access is not set
-> dmar: DRHD: handling fault status reg 3
-> dmar: DMAR:[DMA Write] Request device [05:00.0] fault addr ffd52000
-> DMAR:[fault reason 05] PTE Write access is not set
-> 
-> sta300: authentication with 00:03:83:3d:30:aa timed out
-> [root@ct523-9292 ~]# ath10k: Failed to delete peer: 00:03:83:3d:30:aa for VDEV: 1
-> ath10k: WMI vdev stop failed: ret -108
+> Signed-off-by: Georgiana Rodica Chelu <georgiana.chelu93@gmail.com>
+> ---
+>  drivers/net/wireless/adm8211.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 
-> ------------[ cut here ]------------
-> WARNING: CPU: 1 PID: 6 at /mnt/sda/home/greearb/git/ath/net/mac80211/sta_info.c:839 __sta_info_destroy+0x12)
-> Modules linked in: nf_nat_ipv4 nf_nat veth 8021q garp stp mrp llc macvlan pktgen lockd f71882fg coretemp hw]
+Like Sarah said, we can't take these as they are not against the staging
+tree.
 
-I think this may be a result of whatever bug or limitation
-caused the firmware to error and/or crash when adding a second
-station VIF and trying to associate it to the same AP.
+And even if they were:
 
-Probably not a problem with the rest of the wifi stacks.
+> diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
+> index f9a24e5..e36d54d 100644
+> --- a/drivers/net/wireless/adm8211.c
+> +++ b/drivers/net/wireless/adm8211.c
+> @@ -151,7 +151,7 @@ static int adm8211_read_eeprom(struct ieee80211_hw *dev)
+>  		else
+>  			priv->rf_type = ADM8211_TYPE_AIROHA;
+>  
+> -		printk(KERN_WARNING "%s (adm8211): Unknown RFtype %d\n",
+> +		pr_warn("%s (adm8211): Unknown RFtype %d\n",
 
-Thanks,
-Ben
+You didn't read the message that sparse was telling you, why didn't you
+convert this to netdev_warn() instead?
 
+thanks,
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+greg k-h
