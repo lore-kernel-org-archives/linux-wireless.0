@@ -1,284 +1,194 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f49.google.com ([209.85.160.49]:54928 "EHLO
-	mail-pb0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753469Ab3JCAeP (ORCPT
+Received: from mail-ee0-f42.google.com ([74.125.83.42]:62590 "EHLO
+	mail-ee0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756788Ab3J1S1V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Oct 2013 20:34:15 -0400
-Received: by mail-pb0-f49.google.com with SMTP id xb4so1656107pbc.22
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Oct 2013 17:34:14 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+	Mon, 28 Oct 2013 14:27:21 -0400
+Received: by mail-ee0-f42.google.com with SMTP id b45so4773841eek.1
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Oct 2013 11:27:18 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	devel@lists.open80211s.org, distro11s@cozybit.com,
-	Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-Subject: [PATCH v3 5/6] {nl,cfg,mac}80211: finalizing mesh channel switching
-Date: Wed,  2 Oct 2013 17:33:47 -0700
-Message-Id: <1380760429-26100-6-git-send-email-yeohchunyeow@cozybit.com> (sfid-20131003_023424_349360_2CAFF0FA)
-In-Reply-To: <1380760429-26100-1-git-send-email-yeohchunyeow@cozybit.com>
-References: <1380760429-26100-1-git-send-email-yeohchunyeow@cozybit.com>
+Cc: johannes@sipsolutions.net,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH 1/5] cfg80211/mac80211: DFS setup chandef for cac event
+Date: Mon, 28 Oct 2013 19:27:00 +0100
+Message-Id: <1382984824-3729-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131028_192725_906992_64288BF1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Finalizing the required procedures for channel switching completion based
-on the procedures  defined in the IEEE Std 802.11-2012 section 10.9.8.4.3:
- * Add the function for updating the beacon and probe response frames
-   with CSA and MCSP elements during the period of switching to the new
-   channel.
- * The ifmsh->csa_settings is set to NULL and the CSA and MCSP elements
-   will then be removed from the beacon or probe response frames once the
-   new channel is switched to.
+To report channel width correctly we have
+to send correct channel parameters from
+mac80211 when calling cfg80211_cac_event().
 
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+This is required in case of using channel width
+higher than 20MHz and we have to set correct
+dfs channel state after CAC (NL80211_DFS_AVAILABLE).
+
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Reviewed-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
-v2: fix typo mistake, commit message and return value (Johannes Berg)
-v3: use RCU to protect csa_settings for beaconing (Johannes Berg)
+ include/net/cfg80211.h |    2 ++
+ net/mac80211/cfg.c     |    5 ++++-
+ net/mac80211/iface.c   |    5 ++++-
+ net/mac80211/mlme.c    |    6 ++++--
+ net/mac80211/util.c    |    3 +++
+ net/wireless/mlme.c    |    8 +++-----
+ 6 files changed, 20 insertions(+), 9 deletions(-)
 
- net/mac80211/cfg.c         |    7 ++++-
- net/mac80211/ieee80211_i.h |    4 +++
- net/mac80211/mesh.c        |   67 +++++++++++++++++++++++++++++++++++++++++---
- net/mac80211/rx.c          |    5 +++-
- net/mac80211/tx.c          |   16 +++++++++++
- net/wireless/nl80211.c     |    3 +-
- 6 files changed, 95 insertions(+), 7 deletions(-)
-
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 45f6bf5..8b52fcb 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -4123,6 +4123,7 @@ void cfg80211_radar_event(struct wiphy *wiphy,
+ /**
+  * cfg80211_cac_event - Channel availability check (CAC) event
+  * @netdev: network device
++ * @chandef: chandef for the current channel
+  * @event: type of event
+  * @gfp: context flags
+  *
+@@ -4131,6 +4132,7 @@ void cfg80211_radar_event(struct wiphy *wiphy,
+  * also by full-MAC drivers.
+  */
+ void cfg80211_cac_event(struct net_device *netdev,
++			struct cfg80211_chan_def *chandef,
+ 			enum nl80211_radar_event event, gfp_t gfp);
+ 
+ 
 diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 438c689..a0b41d7 100644
+index 7501497..5690d21 100644
 --- a/net/mac80211/cfg.c
 +++ b/net/mac80211/cfg.c
-@@ -2887,6 +2887,11 @@ void ieee80211_csa_finalize_work(struct work_struct *work)
- 	case NL80211_IFTYPE_ADHOC:
- 		ieee80211_ibss_finish_csa(sdata);
- 		break;
-+	case NL80211_IFTYPE_MESH_POINT:
-+		err = ieee80211_mesh_finish_csa(sdata);
-+		if (err < 0)
-+			return;
-+		break;
- 	default:
- 		WARN_ON(1);
- 		return;
-@@ -3005,7 +3010,7 @@ static int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 		    params->chandef.chan->band)
- 			return -EINVAL;
+@@ -1050,6 +1050,7 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct beacon_data *old_beacon;
+ 	struct probe_resp *old_probe_resp;
++	struct cfg80211_chan_def chandef;
  
--		err = ieee80211_send_action_csa(sdata, params);
-+		err = ieee80211_mesh_csa_beacon(sdata, params, true);
- 		if (err < 0)
- 			return err;
- 		break;
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 963a592..227e3cc 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1353,6 +1353,10 @@ void ieee80211_ibss_stop(struct ieee80211_sub_if_data *sdata);
- void ieee80211_mesh_work(struct ieee80211_sub_if_data *sdata);
- void ieee80211_mesh_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
- 				   struct sk_buff *skb);
-+int ieee80211_mesh_csa_beacon(struct ieee80211_sub_if_data *sdata,
-+			      struct cfg80211_csa_settings *csa_settings,
-+			      bool csa_action);
-+int ieee80211_mesh_finish_csa(struct ieee80211_sub_if_data *sdata);
+ 	old_beacon = rtnl_dereference(sdata->u.ap.beacon);
+ 	if (!old_beacon)
+@@ -1090,8 +1091,10 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
+ 	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON_ENABLED);
  
- /* scan/BSS handling */
- void ieee80211_scan_work(struct work_struct *work);
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index f849153..21723ba 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -12,6 +12,7 @@
- #include <asm/unaligned.h>
- #include "ieee80211_i.h"
- #include "mesh.h"
-+#include "driver-ops.h"
- 
- static int mesh_allocated;
- static struct kmem_cache *rm_cache;
-@@ -610,6 +611,7 @@ ieee80211_mesh_build_beacon(struct ieee80211_if_mesh *ifmsh)
- 	struct sk_buff *skb;
- 	struct ieee80211_mgmt *mgmt;
- 	struct ieee80211_chanctx_conf *chanctx_conf;
-+	struct cfg80211_csa_settings *csa;
- 	enum ieee80211_band band;
- 	u8 *pos;
- 	struct ieee80211_sub_if_data *sdata;
-@@ -669,7 +671,9 @@ ieee80211_mesh_build_beacon(struct ieee80211_if_mesh *ifmsh)
- 	*pos++ = WLAN_EID_SSID;
- 	*pos++ = 0x0;
- 
--	if (ifmsh->csa_settings) {
-+	rcu_read_lock();
-+	csa = rcu_dereference(ifmsh->csa_settings);
-+	if (csa) {
- 		struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
- 		__le16 pre_value;
- 
-@@ -679,9 +683,9 @@ ieee80211_mesh_build_beacon(struct ieee80211_if_mesh *ifmsh)
- 		*pos++ = 3;
- 		*pos++ = 0x0;
- 		*pos++ = ieee80211_frequency_to_channel(
--				ifmsh->csa_settings->chandef.chan->center_freq);
-+				csa->chandef.chan->center_freq);
- 		sdata->csa_counter_offset_beacon = hdr_len + 6;
--		*pos++ = ifmsh->csa_settings->count;
-+		*pos++ = csa->count;
- 		*pos++ = WLAN_EID_CHAN_SWITCH_PARAM;
- 		*pos++ = 6;
- 		if (ifmsh->chsw_init) {
-@@ -690,7 +694,7 @@ ieee80211_mesh_build_beacon(struct ieee80211_if_mesh *ifmsh)
- 		} else {
- 			*pos++ = ifmsh->chsw_ttl;
- 		}
--		*pos++ |= ifmsh->csa_settings->block_tx ?
-+		*pos++ |= csa->block_tx ?
- 			  WLAN_EID_CHAN_SWITCH_PARAM_TX_RESTRICT : 0x00;
- 		put_unaligned_le16(WLAN_REASON_MESH_CHAN, pos);
- 		pos += 2;
-@@ -698,6 +702,7 @@ ieee80211_mesh_build_beacon(struct ieee80211_if_mesh *ifmsh)
- 		memcpy(pos, &pre_value, 2);
- 		pos += 2;
+ 	if (sdata->wdev.cac_started) {
++		chandef = sdata->vif.bss_conf.chandef;
+ 		cancel_delayed_work_sync(&sdata->dfs_cac_timer_work);
+-		cfg80211_cac_event(sdata->dev, NL80211_RADAR_CAC_ABORTED,
++		cfg80211_cac_event(sdata->dev, &chandef,
++				   NL80211_RADAR_CAC_ABORTED,
+ 				   GFP_KERNEL);
  	}
-+	rcu_read_unlock();
  
- 	if (ieee80211_add_srates_ie(sdata, skb, true, band) ||
- 	    mesh_add_ds_params_ie(sdata, skb))
-@@ -954,6 +959,60 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
- 			stype, mgmt, &elems, rx_status);
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index e48f103..cb5e339 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -749,6 +749,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 	u32 hw_reconf_flags = 0;
+ 	int i, flushed;
+ 	struct ps_data *ps;
++	struct cfg80211_chan_def chandef;
+ 
+ 	clear_bit(SDATA_STATE_RUNNING, &sdata->state);
+ 
+@@ -823,11 +824,13 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 	cancel_delayed_work_sync(&sdata->dfs_cac_timer_work);
+ 
+ 	if (sdata->wdev.cac_started) {
++		chandef = sdata->vif.bss_conf.chandef;
+ 		WARN_ON(local->suspended);
+ 		mutex_lock(&local->iflist_mtx);
+ 		ieee80211_vif_release_channel(sdata);
+ 		mutex_unlock(&local->iflist_mtx);
+-		cfg80211_cac_event(sdata->dev, NL80211_RADAR_CAC_ABORTED,
++		cfg80211_cac_event(sdata->dev, &chandef,
++				   NL80211_RADAR_CAC_ABORTED,
+ 				   GFP_KERNEL);
+ 	}
+ 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 91cc828..a2487da 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1400,10 +1400,12 @@ void ieee80211_dfs_cac_timer_work(struct work_struct *work)
+ 	struct ieee80211_sub_if_data *sdata =
+ 		container_of(delayed_work, struct ieee80211_sub_if_data,
+ 			     dfs_cac_timer_work);
++	struct cfg80211_chan_def chandef = sdata->vif.bss_conf.chandef;
+ 
+ 	ieee80211_vif_release_channel(sdata);
+-
+-	cfg80211_cac_event(sdata->dev, NL80211_RADAR_CAC_FINISHED, GFP_KERNEL);
++	cfg80211_cac_event(sdata->dev, &chandef,
++			   NL80211_RADAR_CAC_FINISHED,
++			   GFP_KERNEL);
  }
  
-+int ieee80211_mesh_finish_csa(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
-+	struct cfg80211_csa_settings *tmp_csa_settings;
-+	int ret = 0;
-+
-+	/* Remove the CSA and MCSP elements from the beacon */
-+	tmp_csa_settings = rcu_dereference(ifmsh->csa_settings);
-+	rcu_assign_pointer(ifmsh->csa_settings, NULL);
-+	kfree(tmp_csa_settings);
-+	ret = ieee80211_mesh_rebuild_beacon(sdata);
-+	if (ret)
-+		return -EINVAL;
-+
-+	/* Reset the TTL value and Initiator flag */
-+	ifmsh->chsw_init = false;
-+	ifmsh->chsw_ttl = 0;
-+
-+	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
-+
-+	mcsa_dbg(sdata, "complete switching to center freq %d MHz",
-+		 sdata->vif.bss_conf.chandef.chan->center_freq);
-+	return 0;
-+}
-+
-+int ieee80211_mesh_csa_beacon(struct ieee80211_sub_if_data *sdata,
-+			      struct cfg80211_csa_settings *csa_settings,
-+			      bool csa_action)
-+{
-+	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
-+	struct cfg80211_csa_settings *tmp_csa_settings;
-+	int ret = 0;
-+
-+	if (csa_action)
-+		ieee80211_send_action_csa(sdata, csa_settings);
-+
-+	tmp_csa_settings = kmalloc(sizeof(struct cfg80211_csa_settings),
-+				   GFP_ATOMIC);
-+	if (!tmp_csa_settings)
-+		return -ENOMEM;
-+
-+	memcpy(tmp_csa_settings, csa_settings,
-+	       sizeof(struct cfg80211_csa_settings));
-+
-+	rcu_assign_pointer(ifmsh->csa_settings, tmp_csa_settings);
-+
-+	ret = ieee80211_mesh_rebuild_beacon(sdata);
-+	if (ret)
-+		return -EINVAL;
-+
-+	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
-+	return 0;
-+}
-+
- static int mesh_fwd_csa_frame(struct ieee80211_sub_if_data *sdata,
- 			       struct ieee80211_mgmt *mgmt, size_t len)
+ /* MLME */
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index aefb9d5..f704415 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2253,14 +2253,17 @@ u64 ieee80211_calculate_rx_timestamp(struct ieee80211_local *local,
+ void ieee80211_dfs_cac_cancel(struct ieee80211_local *local)
  {
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 8e908e1..0ba1fad 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2592,13 +2592,16 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
- 				break;
+ 	struct ieee80211_sub_if_data *sdata;
++	struct cfg80211_chan_def chandef;
  
- 			if (sdata->vif.type != NL80211_IFTYPE_STATION &&
--			    sdata->vif.type != NL80211_IFTYPE_ADHOC)
-+			    sdata->vif.type != NL80211_IFTYPE_ADHOC &&
-+			    sdata->vif.type != NL80211_IFTYPE_MESH_POINT)
- 				break;
+ 	mutex_lock(&local->iflist_mtx);
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
+ 		cancel_delayed_work_sync(&sdata->dfs_cac_timer_work);
  
- 			if (sdata->vif.type == NL80211_IFTYPE_STATION)
- 				bssid = sdata->u.mgd.bssid;
- 			else if (sdata->vif.type == NL80211_IFTYPE_ADHOC)
- 				bssid = sdata->u.ibss.bssid;
-+			else if (sdata->vif.type == NL80211_IFTYPE_MESH_POINT)
-+				bssid = mgmt->sa;
- 			else
- 				break;
+ 		if (sdata->wdev.cac_started) {
++			chandef = sdata->vif.bss_conf.chandef;
+ 			ieee80211_vif_release_channel(sdata);
+ 			cfg80211_cac_event(sdata->dev,
++					   &chandef,
+ 					   NL80211_RADAR_CAC_ABORTED,
+ 					   GFP_KERNEL);
+ 		}
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index 6a6b1c8..a50c27b 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -763,12 +763,12 @@ void cfg80211_radar_event(struct wiphy *wiphy,
+ EXPORT_SYMBOL(cfg80211_radar_event);
  
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 4fcbf63..80b9a57 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2369,6 +2369,10 @@ static void ieee80211_update_csa(struct ieee80211_sub_if_data *sdata,
- 		beacon_data = beacon->head;
- 		beacon_data_len = beacon->head_len;
- 		break;
-+	case NL80211_IFTYPE_MESH_POINT:
-+		beacon_data = beacon->head;
-+		beacon_data_len = beacon->head_len;
-+		break;
- 	default:
+ void cfg80211_cac_event(struct net_device *netdev,
++			struct cfg80211_chan_def *chandef,
+ 			enum nl80211_radar_event event, gfp_t gfp)
+ {
+ 	struct wireless_dev *wdev = netdev->ieee80211_ptr;
+ 	struct wiphy *wiphy = wdev->wiphy;
+ 	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
+-	struct cfg80211_chan_def chandef;
+ 	unsigned long timeout;
+ 
+ 	trace_cfg80211_cac_event(netdev, event);
+@@ -779,14 +779,12 @@ void cfg80211_cac_event(struct net_device *netdev,
+ 	if (WARN_ON(!wdev->channel))
  		return;
+ 
+-	cfg80211_chandef_create(&chandef, wdev->channel, NL80211_CHAN_NO_HT);
+-
+ 	switch (event) {
+ 	case NL80211_RADAR_CAC_FINISHED:
+ 		timeout = wdev->cac_start_time +
+ 			  msecs_to_jiffies(IEEE80211_DFS_MIN_CAC_TIME_MS);
+ 		WARN_ON(!time_after_eq(jiffies, timeout));
+-		cfg80211_set_dfs_state(wiphy, &chandef, NL80211_DFS_AVAILABLE);
++		cfg80211_set_dfs_state(wiphy, chandef, NL80211_DFS_AVAILABLE);
+ 		break;
+ 	case NL80211_RADAR_CAC_ABORTED:
+ 		break;
+@@ -796,6 +794,6 @@ void cfg80211_cac_event(struct net_device *netdev,
  	}
-@@ -2425,6 +2429,15 @@ bool ieee80211_csa_is_complete(struct ieee80211_vif *vif)
+ 	wdev->cac_started = false;
  
- 		beacon_data = beacon->head;
- 		beacon_data_len = beacon->head_len;
-+	} else if (vif->type == NL80211_IFTYPE_MESH_POINT) {
-+		struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
-+
-+		beacon = rcu_dereference(ifmsh->beacon);
-+		if (!beacon)
-+			goto out;
-+
-+		beacon_data = beacon->head;
-+		beacon_data_len = beacon->head_len;
- 	} else {
- 		WARN_ON(1);
- 		goto out;
-@@ -2530,6 +2543,9 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
- 		if (!bcn)
- 			goto out;
- 
-+		if (sdata->vif.csa_active)
-+			ieee80211_update_csa(sdata, bcn);
-+
- 		if (ifmsh->sync_ops)
- 			ifmsh->sync_ops->adjust_tbtt(
- 						sdata);
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 7bb5aca..be844d4 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -10760,7 +10760,8 @@ void cfg80211_ch_switch_notify(struct net_device *dev,
- 
- 	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_AP &&
- 		    wdev->iftype != NL80211_IFTYPE_P2P_GO &&
--		    wdev->iftype != NL80211_IFTYPE_ADHOC))
-+		    wdev->iftype != NL80211_IFTYPE_ADHOC &&
-+		    wdev->iftype != NL80211_IFTYPE_MESH_POINT))
- 		goto out;
- 
- 	wdev->channel = chandef->chan;
+-	nl80211_radar_notify(rdev, &chandef, event, netdev, gfp);
++	nl80211_radar_notify(rdev, chandef, event, netdev, gfp);
+ }
+ EXPORT_SYMBOL(cfg80211_cac_event);
 -- 
 1.7.9.5
 
