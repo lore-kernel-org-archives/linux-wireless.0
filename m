@@ -1,38 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f180.google.com ([209.85.217.180]:59744 "EHLO
-	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753211Ab3JZUyK (ORCPT
+Received: from mail-ea0-f179.google.com ([209.85.215.179]:41632 "EHLO
+	mail-ea0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757681Ab3J1Wik (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Oct 2013 16:54:10 -0400
-Received: by mail-lb0-f180.google.com with SMTP id y6so1708227lbh.25
-        for <linux-wireless@vger.kernel.org>; Sat, 26 Oct 2013 13:54:09 -0700 (PDT)
+	Mon, 28 Oct 2013 18:38:40 -0400
+From: Tomasz Figa <tomasz.figa@gmail.com>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Kumar Gala <galak@codeaurora.org>,
+	Sebastian Reichel <sre@debian.org>,
+	Mark Rutland <mark.rutland@arm.com>, linux-doc@vger.kernel.org,
+	Tony Lindgren <tony@atomide.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Sachin Kamat <sachin.kamat@linaro.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Sebastian Reichel <sre@ring0.de>,
+	Luciano Coelho <luca@coelho.fi>, devicetree@vger.kernel.org,
+	Pawel Moll <pawel.moll@arm.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Bill Pemberton <wfp5p@virginia.edu>,
+	linux-omap@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Felipe Balbi <balbi@ti.com>, Rob Landley <rob@landley.net>,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH 4/4] wl1251: spi: add device tree support
+Date: Mon, 28 Oct 2013 23:38:36 +0100
+Message-ID: <4893578.SBstXOAcJY@flatron> (sfid-20131028_233908_026758_44F743B9)
+In-Reply-To: <FF34C626-4A49-43B1-B0AD-DC6146ABBB11@codeaurora.org>
+References: <1382890469-25286-1-git-send-email-sre@debian.org> <1382890469-25286-5-git-send-email-sre@debian.org> <FF34C626-4A49-43B1-B0AD-DC6146ABBB11@codeaurora.org>
 MIME-Version: 1.0
-Date: Sun, 27 Oct 2013 02:24:09 +0530
-Message-ID: <CA+fH8T-QQKzhH4yHv1wqg5f0PXqYAg3amXctQOCG8zwqrDEM1w@mail.gmail.com> (sfid-20131026_225418_700735_99758F4A)
-Subject: BRCM 4324 Help
-From: Hiemanshu Sharma <hiemanshu@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hey,
+On Monday 28 of October 2013 01:37:34 Kumar Gala wrote:
+> On Oct 27, 2013, at 11:14 AM, Sebastian Reichel wrote:
+> > Add device tree support for the spi variant of wl1251
+> > and document the binding.
+> > 
+> > Signed-off-by: Sebastian Reichel <sre@debian.org>
+> > ---
+> > .../devicetree/bindings/net/wireless/ti,wl1251.txt | 36
+> > ++++++++++++++++++++++ drivers/net/wireless/ti/wl1251/spi.c          
+> >     | 23 ++++++++++---- 2 files changed, 53 insertions(+), 6
+> > deletions(-)
+> > create mode 100644
+> > Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt
+> > 
+> > diff --git
+> > a/Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt
+> > b/Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt new
+> > file mode 100644
+> > index 0000000..5f8a154
+> > --- /dev/null
+> > +++ b/Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt
+> > @@ -0,0 +1,36 @@
+> > +* Texas Instruments wl1251 controller
+> > +
+> > +The wl1251 chip can be connected via SPI or via SDIO. The linux
+> > +kernel currently only supports device tree for the SPI variant.
+> > +
+> 
+> From the binding I have no idea what this chip actually does, also we
+> don't normally reference linux kernel support in bindings specs (so
+> please remove it).
+> 
+> However, what would expect the SDIO binding to look like?  Or more
+> specifically, how would you distinguish the SPI vs SDIO
+> binding/connection?  I'm wondering if the compatible should be
+> something like "ti,wl1251-spi" and than the sdio can be
+> "ti,wl1251-sdio"
 
-Trying to follow the instructions at
-http://wireless.kernel.org/en/users/Drivers/brcm80211 I need a
-brcmfmac-sdio.txt with the nvram values but I am not able to find out
-where to get the file from. I've tried google a lot but there doesn't
-seem to be a lot of help out there.
+Well, you can easily distinguish an SDIO device from an SPI device by its 
+parent node, but...
 
-dmesg says :
+The binding for SDIO might require different set of properties (other than 
+ones inherited from generic SDIO or SPI bindings) than one for SPI. So 
+probably different compatible values might be justified.
 
-brcmfam: brcmf_sdbrcm_download_nvram : Fail to request nvram -2
-brcmfmac: _brcmf_sdbrcm_download_firmware: dongle nvram file download failed
+Did we already have such case before? (maybe some I2C + SPI devices?)
 
+> > +Required properties:
+> > +- compatible : Should be "ti,wl1251"
+> 
+> reg is not listed as a required prop.
 
-I've used firmware from the git, and the message for missing firmware
-is not shown anymore.
+It is implied by SPI bindings, but it might be a good idea to have this 
+stated here as well.
 
-Regards,
+> 
+> > +- interrupts : Should contain interrupt line
+> > +- interrupt-parent : Should be the phandle for the interrupt
+> > +  controller that services interrupts for this device
+> > +- vio-supply : phandle to regulator providing VIO
+> > +- power-gpio : GPIO connected to chip's PMEN pin
+> 
+> should be vendor prefixed: ti,power-gpio
 
-Hiemanshu Sharma.
+Hmm, out of curiosity, is it a rule for this kind of properties? I can see 
+both cases with and without prefixes when grepping for "-gpios" in 
+Documentation/devicetree/bindings. We should really have such things 
+written down somewhere.
+
+> 
+> > +- For additional required properties on SPI, please consult
+> > +  Documentation/devicetree/bindings/spi/spi-bus.txt
+> > +
+> > +Optional properties:
+> > +- ti,use-eeprom : If found, configuration will be loaded from eeprom.
+> 
+> can you be a bit more specific on what cfg will be loaded.  Also, is
+> this property a boolean, if so how do I know which eeprom the cfg is
+> loaded from (is it one that is directly connected to the wl1251?
+
+Maybe one from ti,has-eeprom or ti,config-eeprom would be better name for 
+this property?
+
+Best regards,
+Tomasz
+
