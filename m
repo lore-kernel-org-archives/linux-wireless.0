@@ -1,44 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:35323 "EHLO nbd.name"
+Received: from ring0.de ([91.143.88.219]:37532 "EHLO smtp.ring0.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758567Ab3JON3p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Oct 2013 09:29:45 -0400
-Message-ID: <525D4347.5020902@openwrt.org> (sfid-20131015_152948_084230_8AEB4E6B)
-Date: Tue, 15 Oct 2013 15:29:43 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+	id S1757623Ab3J1X0i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Oct 2013 19:26:38 -0400
+Date: Tue, 29 Oct 2013 00:26:26 +0100
+From: Sebastian Reichel <sre@ring0.de>
+To: Mark Brown <broonie@kernel.org>
+Cc: Grazvydas Ignotas <notasas@gmail.com>,
+	Alexander Shiyan <shc_work@mail.ru>,
+	Luciano Coelho <luca@coelho.fi>,
+	Mark Rutland <mark.rutland@arm.com>,
+	devicetree@vger.kernel.org, Russell King <linux@arm.linux.org.uk>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Tony Lindgren <tony@atomide.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-doc@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Rob Herring <rob.herring@calxeda.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Sachin Kamat <sachin.kamat@linaro.org>,
+	Bill Pemberton <wfp5p@virginia.edu>,
+	Felipe Balbi <balbi@ti.com>, Rob Landley <rob@landley.net>,
+	netdev@vger.kernel.org,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH 2/4] wl1251: move power GPIO handling into the driver
+Message-ID: <20131028232624.GA950@earth.universe> (sfid-20131029_002703_486179_860D7BD2)
+References: <1382890469-25286-1-git-send-email-sre@debian.org>
+ <1382890469-25286-3-git-send-email-sre@debian.org>
+ <1382891056.102746625@f315.i.mail.ru>
+ <20131027201218.GA4414@earth.universe>
+ <CANOLnONKcC1i19ypb4rh2Rff3WsVhhuUhNvZvYwDV2-ZNtjVxQ@mail.gmail.com>
+ <20131028192354.GA18208@sirena.org.uk>
 MIME-Version: 1.0
-To: Floris Van den Abeele <floris.vandenabeele@intec.ugent.be>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Lower throughput in Ad-hoc than in Infrastructure mode?
-References: <525CEE98.3010300@intec.ugent.be>
-In-Reply-To: <525CEE98.3010300@intec.ugent.be>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="uAKRQypu60I7Lcqm"
+In-Reply-To: <20131028192354.GA18208@sirena.org.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-10-15 9:28 AM, Floris Van den Abeele wrote:
-> While running throughput experiments using iperf I noticed that UDP
-> throughput in ad-hoc mode was considerably lower than in Infrastructure
-> mode. The setups I'm comparing is a 802.11a ad-hoc network consisting of
-> two clients vs a 802.11a infrastructure network consisting of an access
-> point and a client (11a because the tests were run in the 5GHz band).
-> 
-> For ad-hoc mode I'm consistenly seeing a lower throughput than for
-> infrastructure mode: i.e. 22.4 Mbits/sec vs 28.2 Mbits/sec. Note that
-> while sniffing the medium radiotap headers report a PHY data rate of
-> 54Mbit/s in both cases. There is no other traffic on the Wi-Fi channel
-> in question (44). Considering the medium access for both setups is
-> similair I would expect to find similair throughputs. Is this a known
-> issue with the linux wireless/mac80211/ath9k driver stack or is this
-> behaviour conform the 802.11 standard (based on my knowledge I would say
-> no to the latter)? My test specs are below.
-> 
-> For testing I'm using Sparklan WPEA-111N NIC's (AR9280). The nodes are
-> running OpenWrt attitude adjusment on r32482 (from 2012-06-21) with the
-> REGD patch enabled. I believe that this build of OpenWRT uses the
-> compat-wireless-2012-06-14.tar.bz2 drivers.
-I'd suggest that you try a recent version of OpenWrt before
-investigating further.
 
-- Felix
+--uAKRQypu60I7Lcqm
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
+Hi,
+
+On Mon, Oct 28, 2013 at 12:23:54PM -0700, Mark Brown wrote:
+> On Mon, Oct 28, 2013 at 07:29:52PM +0200, Grazvydas Ignotas wrote:
+>=20
+> > When wl12xx family of chips is connected through SDIO, we already have
+> > that pin set up as a regulator controlled with the help of mmc
+> > subsystem. When time comes to communicate with the chip, mmc subsystem
+> > sees this as yet another SD card and looks for associated regulator
+> > for it, and the board file has that set up as a fixed regulator
+> > controlling that pin (see pandora_vmmc3 in
+> > arch/arm/mach-omap2/board-omap3pandora.c). To prevent poweroff after
+> > first SDIO communications are over, pm_runtime calls are used in
+> > drivers/net/wireless/ti/wl1251/sdio.c .
+>=20
+> Is this actually controlling VMMC though, or is it some other control?
+> If it's not controlling VMMC then it shouldn't say that it is.
+>=20
+> > I don't know if something similar can be done done in SPI case, but
+> > I'm sure this is not the first your-so-called regulator misuse.
+>=20
+> It's not the first but that doesn't make controlling something other
+> than a regulator through the regulator API any less broken.
+
+I gave it a second try to find out details for this pin:
+
+1. The pin is named PMEN in the Nokia N900 schematics
+2. PMEN is described as "Power management enable - system shutdown"
+   in a crippled datasheet of the wl1253, which I found in the internet.
+
+I don't think this is supposed to be handled by the regulator API.
+
+-- Sebastian
+
+--uAKRQypu60I7Lcqm
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.15 (GNU/Linux)
+
+iQIcBAEBCAAGBQJSbvKgAAoJENju1/PIO/qa9/4P/3bgI8we1v7yHBUBlbrUZ/qn
+9aIlsdohRsCHxuW5eTOTIEV3zXuEczUy//fijue0OK0nMXg3OI2xk7YPyj5Lncuh
+IiV1dYLfy0vQN9iMersFJJDdeR21t07jn8x9Cq+X+lA8SJsMMLIVYqaX+PyTE8+U
+ERNEjWsOuTfAmOxZXysFJPWF/xJ1gN1TygZ9WfncDxD4dZlBd6PMmWYSWbvpa4nr
+yOSSCuThLpQfwTYad/PqLZlwKwdS/V0zG56Lf9jyAPv2Qx7JmrSl+KvIi8aGsD03
+NXnjTOv0P8EeVXy9NVwpoT50qyOVq0qE9PNkuVMqkwgk20MDrE5YpSgha8BYn9E4
+Ia8RLEUCY86h4/EuxuUhDbio80HlYpjcVC72/dPWO66ZJ8BvkP9vbwm7wR04R607
+vcPjlHgxCUJSVTMoszstNOrO+JBq4IO3w1VTrE3cMF0Ge17pvj+x5/mt1aYzIC3R
+z2s9XCjh0AiHI1DpBUi8iBwHNRYK2EnrJNW560C5FKf70PTUwvP+K83H/2tBUn79
+M762U1cxOkb8ikgoeSsmdPDf/H5tsRRbUW4/4IX8yf8VPKLAGz9u2G6XFt4JDAQO
+2g2yh6MeAOq6T8DPFv3DnUEmyXK9Hn00dMs3VowgdIhmCh/Vamn1HXY5f9bnVMD6
+u+xk0uvWdCm39RJFUJQD
+=uEvP
+-----END PGP SIGNATURE-----
+
+--uAKRQypu60I7Lcqm--
