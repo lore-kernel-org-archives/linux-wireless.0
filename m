@@ -1,212 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f53.google.com ([74.125.83.53]:51141 "EHLO
-	mail-ee0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753793Ab3JZUkk (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:34401 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756454Ab3J1On2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Oct 2013 16:40:40 -0400
-From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Luciano Coelho <luca@coelho.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
-	joni.lapilainen@gmail.com, pali.rohar@gmail.com
-Subject: [PATCH 15/16] wl1251: Add sysfs file tx_mgmt_frm_rate for setting rate
-Date: Sat, 26 Oct 2013 22:34:14 +0200
-Message-Id: <1382819655-30430-16-git-send-email-pali.rohar@gmail.com> (sfid-20131026_224202_976086_F05AAE10)
-In-Reply-To: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Mon, 28 Oct 2013 10:43:28 -0400
+Message-ID: <1382971400.17956.28.camel@jlt4.sipsolutions.net> (sfid-20131028_154334_521801_92C7CC5E)
+Subject: Re: [PATCH] cfg80211: clarify DFS / CAC case for the new NO-IR flag
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	janusz.dziedzic@tieto.com, smihir@qti.qualcomm.com,
+	tushnimb@qca.qualcomm.com
+Date: Mon, 28 Oct 2013 15:43:20 +0100
+In-Reply-To: <1382376440-25838-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20131021_192725_639430_71EBE1FD)
+References: <1382376440-25838-1-git-send-email-mcgrof@do-not-panic.com>
+	 (sfid-20131021_192725_639430_71EBE1FD)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch was extracted from Maemo 2.6.28 kernel
+On Mon, 2013-10-21 at 19:27 +0200, Luis R. Rodriguez wrote:
+> Now that the no-ibss and passive-scan flags are bundled
+> together its a lot easier to deal with the case of when
+> we support DFS. If DFS is supported on the wiphy and if
+> the Channel availability check (CAC) has been cleared on
+> the channel (dfs_state is NL80211_DFS_AVAILABLE) we can
+> ignore the no-ir flag.
+> 
+> This simplifies the paranoid requirement of bundling
+> together DFS and NO-IR cases by placing onus on the
+> DFS implementation. If code paths also want to reuse
+> knowledge from DFS state machines they must also ensure
+> that they always look at and monitor the dfs_state.
 
-Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
----
- drivers/net/wireless/ti/wl1251/main.c |  152 +++++++++++++++++++++++++++++++++
- 1 file changed, 152 insertions(+)
+Please resend this as part of the other series when my comment there is
+sorted out. (Unless nothing is needed, in which case just remind me to
+pick this up if I forget)
 
-diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
-index 7b9efc8..29625c2 100644
---- a/drivers/net/wireless/ti/wl1251/main.c
-+++ b/drivers/net/wireless/ti/wl1251/main.c
-@@ -1375,6 +1375,147 @@ static const struct ieee80211_ops wl1251_ops = {
- 	.get_survey = wl1251_op_get_survey,
- };
- 
-+static ssize_t wl1251_sysfs_show_tx_mgmt_frm_rate(struct device *dev,
-+						  struct device_attribute *attr,
-+						  char *buf)
-+{
-+	struct wl1251 *wl = dev_get_drvdata(dev);
-+	ssize_t len;
-+	int val;
-+
-+	/* FIXME: what's the maximum length of buf? page size?*/
-+	len = 500;
-+
-+	switch (wl->tx_mgmt_frm_rate) {
-+		/* skip 1 and 12 Mbps because they have same value 0x0a */
-+	case RATE_2MBPS:
-+		val = 20;
-+		break;
-+	case RATE_5_5MBPS:
-+		val = 55;
-+		break;
-+	case RATE_11MBPS:
-+		val = 110;
-+		break;
-+	case RATE_6MBPS:
-+		val = 60;
-+		break;
-+	case RATE_9MBPS:
-+		val = 90;
-+		break;
-+	case RATE_12MBPS:
-+		val = 120;
-+		break;
-+	case RATE_18MBPS:
-+		val = 180;
-+		break;
-+	case RATE_24MBPS:
-+		val = 240;
-+		break;
-+	case RATE_36MBPS:
-+		val = 360;
-+		break;
-+	case RATE_48MBPS:
-+		val = 480;
-+		break;
-+	case RATE_54MBPS:
-+		val = 540;
-+		break;
-+	default:
-+		val = 10;
-+	}
-+
-+	/* for 1 and 12 Mbps we have to check the modulation */
-+	if (wl->tx_mgmt_frm_rate == RATE_1MBPS) {
-+		switch (wl->tx_mgmt_frm_rate) {
-+		case CCK_LONG:
-+			val = 10;
-+			break;
-+		case OFDM:
-+			val = 120;
-+			break;
-+		default:
-+			val = 10;
-+			break;
-+		}
-+	}
-+	len = snprintf(buf, len, "%d", val);
-+
-+	return len;
-+}
-+
-+static ssize_t wl1251_sysfs_store_tx_mgmt_frm_rate(struct device *dev,
-+					struct device_attribute *attr,
-+					const char *buf, size_t count)
-+{
-+	struct wl1251 *wl = dev_get_drvdata(dev);
-+	unsigned long res;
-+	int ret;
-+
-+	ret = strict_strtoul(buf, 10, &res);
-+
-+	if (ret < 0) {
-+		wl1251_warning("incorrect value written to tx_mgmt_frm_rate");
-+		return 0;
-+	}
-+
-+	switch (res) {
-+	case 10:
-+		wl->tx_mgmt_frm_rate = RATE_1MBPS;
-+		wl->tx_mgmt_frm_mod = CCK_LONG;
-+		break;
-+	case 20:
-+		wl->tx_mgmt_frm_rate = RATE_2MBPS;
-+		wl->tx_mgmt_frm_mod = CCK_LONG;
-+		break;
-+	case 55:
-+		wl->tx_mgmt_frm_rate = RATE_5_5MBPS;
-+		wl->tx_mgmt_frm_mod = CCK_LONG;
-+		break;
-+	case 110:
-+		wl->tx_mgmt_frm_rate = RATE_11MBPS;
-+		wl->tx_mgmt_frm_mod = CCK_LONG;
-+		break;
-+	case 60:
-+		wl->tx_mgmt_frm_rate = RATE_6MBPS;
-+		wl->tx_mgmt_frm_mod = OFDM;
-+		break;
-+	case 90:
-+		wl->tx_mgmt_frm_rate = RATE_9MBPS;
-+		wl->tx_mgmt_frm_mod = OFDM;
-+		break;
-+	case 120:
-+		wl->tx_mgmt_frm_rate = RATE_12MBPS;
-+		wl->tx_mgmt_frm_mod = OFDM;
-+		break;
-+	case 180:
-+		wl->tx_mgmt_frm_rate = RATE_18MBPS;
-+		wl->tx_mgmt_frm_mod = OFDM;
-+		break;
-+	case 240:
-+		wl->tx_mgmt_frm_rate = RATE_24MBPS;
-+		wl->tx_mgmt_frm_mod = OFDM;
-+		break;
-+	case 360:
-+		wl->tx_mgmt_frm_rate = RATE_36MBPS;
-+		wl->tx_mgmt_frm_mod = OFDM;
-+		break;
-+	case 480:
-+		wl->tx_mgmt_frm_rate = RATE_48MBPS;
-+		wl->tx_mgmt_frm_mod = OFDM;
-+		break;
-+	case 540:
-+		wl->tx_mgmt_frm_rate = RATE_54MBPS;
-+		wl->tx_mgmt_frm_mod = OFDM;
-+		break;
-+	default:
-+		wl1251_warning("incorrect value written to tx_mgmt_frm_rate");
-+		return 0;
-+	}
-+
-+	return count;
-+}
-+
- static ssize_t wl1251_sysfs_show_bt_coex_mode(struct device *dev,
- 					      struct device_attribute *attr,
- 					      char *buf)
-@@ -1443,6 +1584,10 @@ out:
- 	return count;
- }
- 
-+static DEVICE_ATTR(tx_mgmt_frm_rate, S_IRUGO | S_IWUSR,
-+		   wl1251_sysfs_show_tx_mgmt_frm_rate,
-+		   wl1251_sysfs_store_tx_mgmt_frm_rate);
-+
- static DEVICE_ATTR(bt_coex_mode, S_IRUGO | S_IWUSR,
- 		   wl1251_sysfs_show_bt_coex_mode,
- 		   wl1251_sysfs_store_bt_coex_mode);
-@@ -1583,6 +1728,13 @@ int wl1251_init_ieee80211(struct wl1251 *wl)
- 	}
- 	dev_set_drvdata(&wl1251_device.dev, wl);
- 
-+	/* Create sysfs file tx_mgmt_frm_rate */
-+	ret = device_create_file(&wl1251_device.dev,
-+				 &dev_attr_tx_mgmt_frm_rate);
-+	if (ret < 0) {
-+		wl1251_error("failed to create sysfs file tx_mgmt_frm_rate");
-+		goto out;
-+	}
- 
- 	/* Create sysfs file to control bt coex state */
- 	ret = device_create_file(&wl1251_device.dev, &dev_attr_bt_coex_mode);
--- 
-1.7.10.4
+johannes
 
