@@ -1,76 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:60604 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755100Ab3JGDWT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Oct 2013 23:22:19 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com, Alex Dubov <oakad@yahoo.com>
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-kernel@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH V2] memstick: Fix memory leak in memstick_check() error path
-Date: Sun,  6 Oct 2013 22:21:51 -0500
-Message-Id: <1380834798-5829-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20131007_052235_409300_C2762671)
+Received: from mout.gmx.net ([212.227.15.19]:63506 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754376Ab3J1JwH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Oct 2013 05:52:07 -0400
+Received: from [192.168.1.100] ([93.218.124.130]) by mail.gmx.com (mrgmx103)
+ with ESMTPSA (Nemesis) id 0M8MyE-1VwMqc2IyI-00vthV for
+ <linux-wireless@vger.kernel.org>; Mon, 28 Oct 2013 10:52:05 +0100
+Message-ID: <526E33C3.60302@rempel-privat.de> (sfid-20131028_105211_603845_2D14A4A6)
+Date: Mon, 28 Oct 2013 10:52:03 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
+MIME-Version: 1.0
+To: Felipe Contreras <felipe.contreras@gmail.com>
+CC: linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	ilw@linux.intel.com,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>
+Subject: Re: I always need a miracle to connect with iwlwifi
+References: <CAMP44s1XJRHV8bAX=_-TkSKMkY8Nw1=eHorqTCZ2QmtR5m8uJA@mail.gmail.com>	<526E20EA.9090203@rempel-privat.de> <CAMP44s0ypeV5JeoF=KWPM-VqZbyR_joJ-4Xg5icKqp2QiNN=Tw@mail.gmail.com>
+In-Reply-To: <CAMP44s0ypeV5JeoF=KWPM-VqZbyR_joJ-4Xg5icKqp2QiNN=Tw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With kernel 3.12-rc3, kmemleak reports the following leak:
+Am 28.10.2013 10:38, schrieb Felipe Contreras:
+> On Mon, Oct 28, 2013 at 2:31 AM, Oleksij Rempel <linux@rempel-privat.de> wrote:
+>> Am 28.10.2013 07:24, schrieb Felipe Contreras:
+>>> Hi,
+>>>
+>>> I already reported this problem [1] and I got no feedback whatsoever
+>>> at all. The issue keeps happening and I've tried many things.
+>>>
+>>> First of all, when Linux is failing, my phone connects fine, other
+>>> computers connect fine, and this machine with Windows 7 as well. I've
+>>> tried reloading the driver, rebooting, different module parameters,
+>>> nothing works.
+>>>
+>>> I logged a session [2] where I waited 30 minutes for the link to come
+>>> up, but it never did. You can see the same thing happening over and
+>>> over:
+>>>
+>>> 1382936199.582861: nl80211: Association request send successfully
+>>> 1382936199.797063: nl80211: Event message available
+>>> 1382936199.797097: nl80211: Delete station e0:1d:3b:46:82:a0
+>>> 1382936199.797881: nl80211: Event message available
+>>> 1382936199.797905: nl80211: MLME event 38; timeout with e0:1d:3b:46:82:a0
+>>> 1382936199.797915: wlan0: Event ASSOC_TIMED_OUT (15) received
+>>> 1382936199.797920: wlan0: SME: Association timed out
+>>> 1382936199.797924: Added BSSID e0:1d:3b:46:82:a0 into blacklist
+>>>
+>>> If I reboot the router, it works immediately, another thing that works
+>>> is connecting with ad-hoc mode (mode=1), and then back to normal mode
+>>> (mode=0).
+>>>
+>>> Here's a log [3] where I tried reloading the module multiple times and
+>>> finally tried ad-hoc mode, after which the link came up.
+>>>
+>>> Clearly the Linux kernel has a bug. Can somebody point out what needs
+>>> to be done to get this fixed?
+>>>
+>>> Cheers.
+>>>
+>>> [1] http://article.gmane.org/gmane.linux.kernel.wireless.general/108004
+>>> [2] http://people.freedesktop.org/~felipec/wpa/wpa-bad-30-min-wait.log
+>>> [3] http://people.freedesktop.org/~felipec/wpa/wpa-good-nothing-worked-except-mode-switch.log
+>>>
+>>
+>> Heh... this logs look like miracle :)
+>> My first assumption would be buggy router. There is no answer in
+>> wpa_supplicant log.
+> 
+> Yeah, I bet the router is buggy, which router isn't? But why Windows 7
+> connects fine?
 
-> unreferenced object 0xffff8800ae85c190 (size 16):
->   comm "kworker/u4:3", pid 685, jiffies 4294916336 (age 2831.760s)
->   hex dump (first 16 bytes):
->     6d 65 6d 73 74 69 63 6b 30 00 00 00 00 00 00 00  memstick0.......
->   backtrace:
->     [<ffffffff8146a0d1>] kmemleak_alloc+0x21/0x50
->     [<ffffffff81160720>] __kmalloc_track_caller+0x160/0x2f0
->     [<ffffffff81237b9b>] kvasprintf+0x5b/0x90
->     [<ffffffff8122c0c1>] kobject_set_name_vargs+0x21/0x60
->     [<ffffffff812e7f5c>] dev_set_name+0x3c/0x40
->     [<ffffffffa02bf918>] memstick_check+0xb8/0x340 [memstick]
->     [<ffffffff81069862>] process_one_work+0x1d2/0x670
->     [<ffffffff8106a88a>] worker_thread+0x11a/0x370
->     [<ffffffff81072ea6>] kthread+0xd6/0xe0
->     [<ffffffff81478bbc>] ret_from_fork+0x7c/0xb0
+May be it includes some workaround?
+You do not need to fight with devs, i think they are agree that some
+thing is wrong. But believe me, there are so many access points, which
+make problems or wear things. If you have a bug, does not mean other
+user have it.
+If it depends on some AP option, it would be good to know which one.
+Then it will be easier to find some fix.
 
-This problem was introduced by commit 0252c3b "memstick: struct device -
-replace bus_id with dev_name(), dev_set_name()" where the name is not freed
-in the error path. The name is also leaked in memstick_free_card(). 
+Beside, how many clients use this AP? How big is the distance? What do
+you configure in AdHock mode?
 
-Thanks to Catalin Marinas for suggesting the fix.
+>> Take wireshark and capture working and not working associational request.
+> 
+> I'll try that. If only it was that easy to get a working association.
 
-Cc: Kay Sievers <kay.sievers@vrfy.org>
-Cc: Alex Dubov <oakad@yahoo.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+Compare it with windows.
 
-V2 fixes the typos in the commit message, and frees the name in
-memstick_free_card() as well as the error path in memstick_check().
+and please read this, it will help to provide more information.
+http://wireless.kernel.org/en/users/Documentation/Reporting_bugs
 
-Larry
----
- drivers/memstick/core/memstick.c | 2 ++
- 1 file changed, 2 insertion(+)
-
-Index: wireless-testing-save/drivers/memstick/core/memstick.c
-===================================================================
---- wireless-testing-save.orig/drivers/memstick/core/memstick.c
-+++ wireless-testing-save/drivers/memstick/core/memstick.c
-@@ -195,6 +195,7 @@ static void memstick_free_card(struct de
- {
- 	struct memstick_dev *card = container_of(dev, struct memstick_dev,
- 						 dev);
-+	kfree(card->dev.kobj.name);
- 	kfree(card);
- }
- 
-@@ -415,6 +416,7 @@ static struct memstick_dev *memstick_all
- 	return card;
- err_out:
- 	host->card = old_card;
-+	kfree(card->dev.kobj.name);
- 	kfree(card);
- 	return NULL;
- }
+-- 
+Regards,
+Oleksij
