@@ -1,207 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:37380 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754627Ab3JJMPV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Oct 2013 08:15:21 -0400
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-we0-f178.google.com ([74.125.82.178]:51922 "EHLO
+	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751456Ab3J1QmT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Oct 2013 12:42:19 -0400
+Received: by mail-we0-f178.google.com with SMTP id q59so6961325wes.9
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Oct 2013 09:42:17 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Subject: [PATCH 07/10] ath9k: move channel change code to ath_set_channel
-Date: Thu, 10 Oct 2013 14:15:09 +0200
-Message-Id: <1381407312-72719-7-git-send-email-nbd@openwrt.org> (sfid-20131010_141532_683906_1DD87AAB)
-In-Reply-To: <1381407312-72719-1-git-send-email-nbd@openwrt.org>
-References: <1381407312-72719-1-git-send-email-nbd@openwrt.org>
+Cc: wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH v2 0/6] crda: few more updates
+Date: Mon, 28 Oct 2013 17:42:00 +0100
+Message-Id: <1382978526-23929-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20131028_174222_344863_80C9858A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Preparation for adding the scanning state machine to ath9k
+Here's a second spin, after quite a bit more testing I ran
+into a few small issues with the parser and library. This
+has these additional fixes / enhancements:
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/main.c | 150 ++++++++++++++++++----------------
- 1 file changed, 78 insertions(+), 72 deletions(-)
+  * Lifts the restriction on 32 rules, although the kernel
+    is limited by this we don't adhere to this limit on our
+    stream parser or optimizer
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 2a86047..bc89823 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -312,17 +312,91 @@ out:
-  * by reseting the chip.  To accomplish this we must first cleanup any pending
-  * DMA, then restart stuff.
- */
--static int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
--		    struct ath9k_channel *hchan)
-+static int ath_set_channel(struct ath_softc *sc, struct cfg80211_chan_def *chandef)
- {
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	struct ieee80211_hw *hw = sc->hw;
-+	struct ath9k_channel *hchan;
-+	struct ieee80211_channel *chan = chandef->chan;
-+	unsigned long flags;
-+	bool offchannel;
-+	int pos = chan->hw_value;
-+	int old_pos = -1;
- 	int r;
- 
- 	if (test_bit(SC_OP_INVALID, &sc->sc_flags))
- 		return -EIO;
- 
-+	offchannel = !!(hw->conf.flags & IEEE80211_CONF_OFFCHANNEL);
-+
-+	if (ah->curchan)
-+		old_pos = ah->curchan - &ah->channels[0];
-+
-+	ath_dbg(common, CONFIG, "Set channel: %d MHz width: %d\n",
-+		chan->center_freq, chandef->width);
-+
-+	/* update survey stats for the old channel before switching */
-+	spin_lock_irqsave(&common->cc_lock, flags);
-+	ath_update_survey_stats(sc);
-+	spin_unlock_irqrestore(&common->cc_lock, flags);
-+
-+	ath9k_cmn_get_channel(hw, ah, chandef);
-+
-+	/*
-+	 * If the operating channel changes, change the survey in-use flags
-+	 * along with it.
-+	 * Reset the survey data for the new channel, unless we're switching
-+	 * back to the operating channel from an off-channel operation.
-+	 */
-+	if (!offchannel && sc->cur_survey != &sc->survey[pos]) {
-+		if (sc->cur_survey)
-+			sc->cur_survey->filled &= ~SURVEY_INFO_IN_USE;
-+
-+		sc->cur_survey = &sc->survey[pos];
-+
-+		memset(sc->cur_survey, 0, sizeof(struct survey_info));
-+		sc->cur_survey->filled |= SURVEY_INFO_IN_USE;
-+	} else if (!(sc->survey[pos].filled & SURVEY_INFO_IN_USE)) {
-+		memset(&sc->survey[pos], 0, sizeof(struct survey_info));
-+	}
-+
-+	hchan = &sc->sc_ah->channels[pos];
- 	r = ath_reset_internal(sc, hchan);
-+	if (r)
-+		return r;
- 
--	return r;
-+	/*
-+	 * The most recent snapshot of channel->noisefloor for the old
-+	 * channel is only available after the hardware reset. Copy it to
-+	 * the survey stats now.
-+	 */
-+	if (old_pos >= 0)
-+		ath_update_survey_nf(sc, old_pos);
-+
-+	/*
-+	 * Enable radar pulse detection if on a DFS channel. Spectral
-+	 * scanning and radar detection can not be used concurrently.
-+	 */
-+	if (hw->conf.radar_enabled) {
-+		u32 rxfilter;
-+
-+		/* set HW specific DFS configuration */
-+		ath9k_hw_set_radar_params(ah);
-+		rxfilter = ath9k_hw_getrxfilter(ah);
-+		rxfilter |= ATH9K_RX_FILTER_PHYRADAR |
-+				ATH9K_RX_FILTER_PHYERR;
-+		ath9k_hw_setrxfilter(ah, rxfilter);
-+		ath_dbg(common, DFS, "DFS enabled at freq %d\n",
-+			chan->center_freq);
-+	} else {
-+		/* perform spectral scan if requested. */
-+		if (test_bit(SC_OP_SCANNING, &sc->sc_flags) &&
-+			sc->spectral_mode == SPECTRAL_CHANSCAN)
-+			ath9k_spectral_scan_trigger(hw);
-+	}
-+
-+	return 0;
- }
- 
- static void ath_node_attach(struct ath_softc *sc, struct ieee80211_sta *sta,
-@@ -1207,80 +1281,12 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
- 	}
- 
- 	if ((changed & IEEE80211_CONF_CHANGE_CHANNEL) || reset_channel) {
--		struct ieee80211_channel *curchan = hw->conf.chandef.chan;
--		int pos = curchan->hw_value;
--		int old_pos = -1;
--		unsigned long flags;
--
--		if (ah->curchan)
--			old_pos = ah->curchan - &ah->channels[0];
--
--		ath_dbg(common, CONFIG, "Set channel: %d MHz width: %d\n",
--			curchan->center_freq, hw->conf.chandef.width);
--
--		/* update survey stats for the old channel before switching */
--		spin_lock_irqsave(&common->cc_lock, flags);
--		ath_update_survey_stats(sc);
--		spin_unlock_irqrestore(&common->cc_lock, flags);
--
--		ath9k_cmn_get_channel(hw, ah, &conf->chandef);
--
--		/*
--		 * If the operating channel changes, change the survey in-use flags
--		 * along with it.
--		 * Reset the survey data for the new channel, unless we're switching
--		 * back to the operating channel from an off-channel operation.
--		 */
--		if (!(hw->conf.flags & IEEE80211_CONF_OFFCHANNEL) &&
--		    sc->cur_survey != &sc->survey[pos]) {
--
--			if (sc->cur_survey)
--				sc->cur_survey->filled &= ~SURVEY_INFO_IN_USE;
--
--			sc->cur_survey = &sc->survey[pos];
--
--			memset(sc->cur_survey, 0, sizeof(struct survey_info));
--			sc->cur_survey->filled |= SURVEY_INFO_IN_USE;
--		} else if (!(sc->survey[pos].filled & SURVEY_INFO_IN_USE)) {
--			memset(&sc->survey[pos], 0, sizeof(struct survey_info));
--		}
--
--		if (ath_set_channel(sc, hw, &sc->sc_ah->channels[pos]) < 0) {
-+		if (ath_set_channel(sc, &hw->conf.chandef) < 0) {
- 			ath_err(common, "Unable to set channel\n");
- 			mutex_unlock(&sc->mutex);
- 			ath9k_ps_restore(sc);
- 			return -EINVAL;
- 		}
--
--		/*
--		 * The most recent snapshot of channel->noisefloor for the old
--		 * channel is only available after the hardware reset. Copy it to
--		 * the survey stats now.
--		 */
--		if (old_pos >= 0)
--			ath_update_survey_nf(sc, old_pos);
--
--		/*
--		 * Enable radar pulse detection if on a DFS channel. Spectral
--		 * scanning and radar detection can not be used concurrently.
--		 */
--		if (hw->conf.radar_enabled) {
--			u32 rxfilter;
--
--			/* set HW specific DFS configuration */
--			ath9k_hw_set_radar_params(ah);
--			rxfilter = ath9k_hw_getrxfilter(ah);
--			rxfilter |= ATH9K_RX_FILTER_PHYRADAR |
--				    ATH9K_RX_FILTER_PHYERR;
--			ath9k_hw_setrxfilter(ah, rxfilter);
--			ath_dbg(common, DFS, "DFS enabled at freq %d\n",
--				curchan->center_freq);
--		} else {
--			/* perform spectral scan if requested. */
--			if (test_bit(SC_OP_SCANNING, &sc->sc_flags) &&
--			    sc->spectral_mode == SPECTRAL_CHANSCAN)
--				ath9k_spectral_scan_trigger(hw);
--		}
- 	}
- 
- 	if (changed & IEEE80211_CONF_CHANGE_POWER) {
+  * The union code got updated to address two cases that are
+    invalid for unions
+
+  * A few fixes on db2rd and optimizer on using the stream
+    parser, if its NULL, bail, we weren't checking for it
+
+  * The optimizer was not considering band differences as
+    part of its key broker (when it decides it can use
+    two rules for optimization), to address this we deduce
+    the band and add that to the key mixing. Note that this
+    will need to be updated upon new frequency band additions.
+    This limits the scope of optimizations between their own
+    respective bands.
+
+I've also gone ahead and tested this with a huge fluffy
+non optimized regulatory domain of 40 rules, and also with
+the wireless-regdb db.txt. I'll send some optimizations
+based on this for wireless-regdb.
+
+The only patches that go modified are the stream parser
+and the optimizer.
+
+Luis R. Rodriguez (6):
+  crda: relicense under copyleft-next-0.3.0
+  crda: fix -pedantic gcc compilation
+  crda: add regulatory domain stream parser
+  crda: add regulatory domain optimizer
+  crda: make ssl keys include stdint.h
+  crda: make reglib a shared library
+
+ LICENSE             |  14 +-
+ Makefile            |  54 +++-
+ copyleft-next-0.3.0 | 219 ++++++++++++++
+ crda.c              |   4 +-
+ db2rd.c             |  32 ++
+ optimize.c          |  40 +++
+ reglib.c            | 839 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ reglib.h            |  60 ++++
+ utils/key2pub.py    |   2 +
+ 9 files changed, 1252 insertions(+), 12 deletions(-)
+ create mode 100644 copyleft-next-0.3.0
+ create mode 100644 db2rd.c
+ create mode 100644 optimize.c
+
 -- 
-1.8.0.2
+1.8.4.rc3
 
