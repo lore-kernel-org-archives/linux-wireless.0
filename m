@@ -1,81 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:47767 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752343Ab3J3UcS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Oct 2013 16:32:18 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 7/9] iwlwifi: warn if firmware image doesn't exist
-Date: Wed, 30 Oct 2013 22:31:35 +0200
-Message-Id: <1383165097-4445-7-git-send-email-emmanuel.grumbach@intel.com> (sfid-20131030_213222_292418_D9407E74)
-In-Reply-To: <1383165097-4445-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <527143AA.5070900@gmail.com>
- <1383165097-4445-1-git-send-email-emmanuel.grumbach@intel.com>
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:58645 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755876Ab3J1Uol (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Oct 2013 16:44:41 -0400
+Received: by mail-wi0-f181.google.com with SMTP id ex4so1924277wid.8
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Oct 2013 13:44:40 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAMP44s0svc2MRKCrZXS5ZYRZNPoomQkcKHdC2m2BGy7di+TCyA@mail.gmail.com>
+References: <CAMP44s1XJRHV8bAX=_-TkSKMkY8Nw1=eHorqTCZ2QmtR5m8uJA@mail.gmail.com>
+ <526E20EA.9090203@rempel-privat.de> <CAMP44s2Cvw9HF3c3Asuq+bTSD36Gw6PXOUVjAcCD+hf6KB_awg@mail.gmail.com>
+ <CABPxzY+xJ7kst-sYwP8RJwMO_zkNYWKaYy=_LS7WQfuxquK24w@mail.gmail.com>
+ <CAMP44s0087jYz5AiEaEzwt7GqH9ed8PWE1CmvMPr4Dqn3yE6rA@mail.gmail.com>
+ <CABPxzYLwwyFCFw1pEt0v9Xw4kcue1C_RZx0RbTbMrUw=+MWvgQ@mail.gmail.com> <CAMP44s0svc2MRKCrZXS5ZYRZNPoomQkcKHdC2m2BGy7di+TCyA@mail.gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Tue, 29 Oct 2013 02:14:20 +0530
+Message-ID: <CABPxzYL-Gzbzoc_ui+qUQ6uzoKp=Yq7yLWZvc7PoEjiH3dFczg@mail.gmail.com> (sfid-20131028_214446_690734_A1EBE605)
+Subject: Re: I always need a miracle to connect with iwlwifi
+To: Felipe Contreras <felipe.contreras@gmail.com>
+Cc: Oleksij Rempel <linux@rempel-privat.de>, ilw@linux.intel.com,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Tue, Oct 29, 2013 at 1:36 AM, Felipe Contreras
+<felipe.contreras@gmail.com> wrote:
+> On Mon, Oct 28, 2013 at 1:27 PM, Krishna Chaitanya
+> <chaitanya.mgit@gmail.com> wrote:
 
-If the firmware image that we attempt to load doesn't
-actually exist we have a broken firmware file or other
-code not checking things correctly, so warn in such a
-case. Also avoid assigning cur_ucode/ucode_loaded then.
+>> From the logs we can see that we have received authentication response,
+>> so the association request is getting dropped somewhere? We might
+>> need the mac80211 and iwlwifi trace-cmd logs to check for the drop.
+>>
+>> http://wireless.kernel.org/en/developers/Documentation/mac80211/tracing
+>
+> There you go:
+> http://people.freedesktop.org/~felipec/wpa/trace.dat.xz
+>
+Hmm.."trace-cmd report -i trace.dat" returned lots of errors, i have even
+tried with the trace-cmd from git (ubuntu). Did it worked fro you?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/dvm/ucode.c | 9 ++++-----
- drivers/net/wireless/iwlwifi/mvm/fw.c    | 8 +++-----
- 2 files changed, 7 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/dvm/ucode.c b/drivers/net/wireless/iwlwifi/dvm/ucode.c
-index 86270b6..6363794 100644
---- a/drivers/net/wireless/iwlwifi/dvm/ucode.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/ucode.c
-@@ -330,15 +330,14 @@ int iwl_load_ucode_wait_alive(struct iwl_priv *priv,
- 	enum iwl_ucode_type old_type;
- 	static const u8 alive_cmd[] = { REPLY_ALIVE };
- 
--	old_type = priv->cur_ucode;
--	priv->cur_ucode = ucode_type;
- 	fw = iwl_get_ucode_image(priv, ucode_type);
-+	if (WARN_ON(!fw))
-+		return -EINVAL;
- 
-+	old_type = priv->cur_ucode;
-+	priv->cur_ucode = ucode_type;
- 	priv->ucode_loaded = false;
- 
--	if (!fw)
--		return -EINVAL;
--
- 	iwl_init_notification_wait(&priv->notif_wait, &alive_wait,
- 				   alive_cmd, ARRAY_SIZE(alive_cmd),
- 				   iwl_alive_fn, &alive_data);
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw.c b/drivers/net/wireless/iwlwifi/mvm/fw.c
-index 83fc5ca..70e5297 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw.c
-@@ -151,13 +151,11 @@ static int iwl_mvm_load_ucode_wait_alive(struct iwl_mvm *mvm,
- 	enum iwl_ucode_type old_type = mvm->cur_ucode;
- 	static const u8 alive_cmd[] = { MVM_ALIVE };
- 
--	mvm->cur_ucode = ucode_type;
- 	fw = iwl_get_ucode_image(mvm, ucode_type);
--
--	mvm->ucode_loaded = false;
--
--	if (!fw)
-+	if (WARN_ON(!fw))
- 		return -EINVAL;
-+	mvm->cur_ucode = ucode_type;
-+	mvm->ucode_loaded = false;
- 
- 	iwl_init_notification_wait(&mvm->notif_wait, &alive_wait,
- 				   alive_cmd, ARRAY_SIZE(alive_cmd),
+===
+# trace-cmd report -i trace.dat
+version = 6
+trace-cmd: No such file or directory ??????????????
+  function scsi_trace_parse_cdb not defined
+  function scsi_trace_parse_cdb not defined
+  function scsi_trace_parse_cdb not defined
+  function scsi_trace_parse_cdb not defined
+  function is_writable_pte not defined
+  function __le16_to_cpup not defined
+  function __le16_to_cpup not defined
+  function __le16_to_cpup not defined
+CPU 0 is empty
+CPU 1 is empty
+CPU 2 is empty
+CPU 3 is empty
+cpus=4
+
+
+
 -- 
-1.8.3.2
-
+Thanks,
+Regards,
+Chaitanya T K.
+Mobile:+91-9963910010.
