@@ -1,71 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:49747 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934197Ab3JPNpo (ORCPT
+Received: from mail-ee0-f51.google.com ([74.125.83.51]:41840 "EHLO
+	mail-ee0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756441Ab3J1OA1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Oct 2013 09:45:44 -0400
-Subject: [PATCH v2 1/8] ath10k: prevent starting monitor without a vdev
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 16 Oct 2013 16:45:41 +0300
-Message-ID: <20131016134541.25095.59430.stgit@localhost6.localdomain6> (sfid-20131016_154546_873785_D1E8B332)
-In-Reply-To: <20131016134503.25095.8044.stgit@localhost6.localdomain6>
-References: <20131016134503.25095.8044.stgit@localhost6.localdomain6>
+	Mon, 28 Oct 2013 10:00:27 -0400
+From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 16/16] wl1251: Add sysfs file address for setting permanent mac address
+Date: Mon, 28 Oct 2013 15:00:24 +0100
+Cc: Luciano Coelho <luca@coelho.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
+	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
+	joni.lapilainen@gmail.com
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com> <201310281449.58170@pali> <1382968522.17956.11.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1382968522.17956.11.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: multipart/signed;
+  boundary="nextPart345760620.OzhjffakOm";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <201310281500.24159@pali> (sfid-20131028_150049_031861_F68D85AF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michal Kazior <michal.kazior@tieto.com>
+--nextPart345760620.OzhjffakOm
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 
-This fixes issue with interface bridging.
+On Monday 28 October 2013 14:55:22 Johannes Berg wrote:
+> On Mon, 2013-10-28 at 14:49 +0100, Pali Roh=C3=A1r wrote:
+> > On Monday 28 October 2013 14:45:05 Johannes Berg wrote:
+> > > On Sat, 2013-10-26 at 22:34 +0200, Pali Roh=C3=A1r wrote:
+> > > > Driver wl1251 generating mac address randomly at startup
+> > > > and there is no way to set permanent mac address via
+> > > > SET_IEEE80211_PERM_ADDR. This patch export sysfs file
+> > > > which can set permanent mac address by userspace helper
+> > > > program. Patch is needed for devices which do not store
+> > > > mac address in internal wl1251 eeprom.
+> > >=20
+> > > This doesn't really seem like a good idea since you can
+> > > also just use 'ip' or whatever to set the MAC address.
+> > >=20
+> > > johannes
+> >=20
+> > AFAIK you cannot set permanent address (show by ethtool -P
+> > wlan0) via ip/ifconfig.
+>=20
+> You probably can't, but that address also doesn't matter at
+> all and isn't really used anywhere.
+>=20
+> johannes
 
-Linux bridging sets promiscuous mode for all
-interfaces that are in a bridge. This translates
-to configure_filter() being called in a mac80211
-driver.
+There are some (proprietary) applications which using permanent=20
+address for something...
 
-Before the patch operational interface would be
-started and upped again when promiscuous mode was
-enabled causing all sorts of strange issues:
+And also more important: some network managing tools using it.=20
+NetworkManager resetting current MAC address to permanent one=20
+before starting configuring interface.
 
- * no HTT RX happening (i.e. no traffic)
- * FW crash upon driver reload/unload
+So this will lead to never use correct MAC address (but random=20
+permanent one) assigned for that wl1251 wireless card...
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/mac.c |   10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+=2D-=20
+Pali Roh=C3=A1r
+pali.rohar@gmail.com
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 0b1cc51..527343d 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2265,8 +2265,14 @@ static void ath10k_configure_filter(struct ieee80211_hw *hw,
- 	*total_flags &= SUPPORTED_FILTERS;
- 	ar->filter_flags = *total_flags;
- 
-+	/* Monitor must not be started if it wasn't created first.
-+	 * Promiscuous mode may be started on a non-monitor interface - in
-+	 * such case the monitor vdev is not created so starting the
-+	 * monitor makes no sense. Since ath10k uses no special RX filters
-+	 * (only BSS filter in STA mode) there's no need for any special
-+	 * action here. */
- 	if ((ar->filter_flags & FIF_PROMISC_IN_BSS) &&
--	    !ar->monitor_enabled) {
-+	    !ar->monitor_enabled && ar->monitor_present) {
- 		ath10k_dbg(ATH10K_DBG_MAC, "mac monitor %d start\n",
- 			   ar->monitor_vdev_id);
- 
-@@ -2274,7 +2280,7 @@ static void ath10k_configure_filter(struct ieee80211_hw *hw,
- 		if (ret)
- 			ath10k_warn("Unable to start monitor mode\n");
- 	} else if (!(ar->filter_flags & FIF_PROMISC_IN_BSS) &&
--		   ar->monitor_enabled) {
-+		   ar->monitor_enabled && ar->monitor_present) {
- 		ath10k_dbg(ATH10K_DBG_MAC, "mac monitor %d stop\n",
- 			   ar->monitor_vdev_id);
- 
+--nextPart345760620.OzhjffakOm
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEABECAAYFAlJubfgACgkQi/DJPQPkQ1JkVgCePETpdDNGvuSuoZV7u+ya1GhY
+dq8Anja0MntOATEspX7Bvjqs640xJ85L
+=kxw3
+-----END PGP SIGNATURE-----
+
+--nextPart345760620.OzhjffakOm--
