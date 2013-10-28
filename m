@@ -1,99 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:56385 "EHLO
-	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751099Ab3JQIgT (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:51911 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755497Ab3J1Hmj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Oct 2013 04:36:19 -0400
-Subject: [PATCH] ath10k: add error handling to ath10k_pci_wait()
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Mon, 28 Oct 2013 03:42:39 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-Date: Thu, 17 Oct 2013 11:36:15 +0300
-Message-ID: <20131017083615.31028.25088.stgit@localhost6.localdomain6> (sfid-20131017_103623_781430_CB9AC62E)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Subject: [PATCH 4/4] ath9k: Add an initialization routine for WoW
+Date: Mon, 28 Oct 2013 13:08:11 +0530
+Message-Id: <1382945891-12779-4-git-send-email-sujith@msujith.org> (sfid-20131028_084244_408348_C4C6F52E)
+In-Reply-To: <1382945891-12779-1-git-send-email-sujith@msujith.org>
+References: <1382945891-12779-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath10k_pci_wait() didn't notify any errors to callers, it
-just printed a warning so add proper error handling.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath10k/pci.c |   28 ++++++++++++++++++++++++----
- 1 file changed, 24 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h |  4 ++++
+ drivers/net/wireless/ath/ath9k/init.c  | 20 +-------------------
+ drivers/net/wireless/ath/ath9k/wow.c   | 20 ++++++++++++++++++++
+ 3 files changed, 25 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 1e9cfcc9..92759cd 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -525,15 +525,19 @@ static bool ath10k_pci_target_is_awake(struct ath10k *ar)
- 	return (RTC_STATE_V_GET(val) == RTC_STATE_V_ON);
- }
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 9e1b728..b351df3 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -575,11 +575,15 @@ static inline void ath_fill_led_pin(struct ath_softc *sc)
+ /************************/
  
--static void ath10k_pci_wait(struct ath10k *ar)
-+static int ath10k_pci_wait(struct ath10k *ar)
+ #ifdef CONFIG_ATH9K_WOW
++void ath9k_init_wow(struct ieee80211_hw *hw);
+ int ath9k_suspend(struct ieee80211_hw *hw,
+ 		  struct cfg80211_wowlan *wowlan);
+ int ath9k_resume(struct ieee80211_hw *hw);
+ void ath9k_set_wakeup(struct ieee80211_hw *hw, bool enabled);
+ #else
++static inline void ath9k_init_wow(struct ieee80211_hw *hw)
++{
++}
+ static inline int ath9k_suspend(struct ieee80211_hw *hw,
+ 				struct cfg80211_wowlan *wowlan)
  {
- 	int n = 100;
- 
- 	while (n-- && !ath10k_pci_target_is_awake(ar))
- 		msleep(10);
- 
--	if (n < 0)
-+	if (n < 0) {
- 		ath10k_warn("Unable to wakeup target\n");
-+		return -ETIMEDOUT;
-+	}
-+
-+	return 0;
- }
- 
- int ath10k_do_pci_wake(struct ath10k *ar)
-@@ -2227,7 +2231,13 @@ static int ath10k_pci_start_intr_legacy(struct ath10k *ar)
- 		  ar_pci->mem + PCIE_LOCAL_BASE_ADDRESS +
- 		  PCIE_SOC_WAKE_ADDRESS);
- 
--	ath10k_pci_wait(ar);
-+	ret = ath10k_pci_wait(ar);
-+	if (ret) {
-+		ath10k_warn("Failed to enable legacy interrupt, target did not wake up: %d\n",
-+			    ret);
-+		free_irq(ar_pci->pdev->irq, ar);
-+		return ret;
-+	}
- 
- 	/*
- 	 * A potential race occurs here: The CORE_BASE write
-@@ -2290,6 +2300,10 @@ static int ath10k_pci_start_intr(struct ath10k *ar)
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index ee7da65..600aa0b 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -870,15 +870,6 @@ static const struct ieee80211_iface_combination if_comb[] = {
  	}
+ };
  
- 	ret = ath10k_pci_start_intr_legacy(ar);
-+	if (ret) {
-+		ath10k_warn("Failed to start legacy interrupts: %d\n", ret);
-+		return ret;
-+	}
- 
- exit:
- 	ar_pci->num_msi_intrs = num;
-@@ -2315,13 +2329,19 @@ static int ath10k_pci_reset_target(struct ath10k *ar)
+-#ifdef CONFIG_ATH9K_WOW
+-static const struct wiphy_wowlan_support ath9k_wowlan_support = {
+-	.flags = WIPHY_WOWLAN_MAGIC_PKT | WIPHY_WOWLAN_DISCONNECT,
+-	.n_patterns = MAX_NUM_USER_PATTERN,
+-	.pattern_min_len = 1,
+-	.pattern_max_len = MAX_PATTERN_SIZE,
+-};
+-#endif
+-
+ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
  {
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	int wait_limit = 300; /* 3 sec */
-+	int ret;
+ 	struct ath_hw *ah = sc->sc_ah;
+@@ -928,16 +919,6 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_5_10_MHZ;
+ 	hw->wiphy->flags |= WIPHY_FLAG_HAS_CHANNEL_SWITCH;
  
- 	/* Wait for Target to finish initialization before we proceed. */
- 	iowrite32(PCIE_SOC_WAKE_V_MASK,
- 		  ar_pci->mem + PCIE_LOCAL_BASE_ADDRESS +
- 		  PCIE_SOC_WAKE_ADDRESS);
+-#ifdef CONFIG_ATH9K_WOW
+-	if ((ah->caps.hw_caps & ATH9K_HW_WOW_DEVICE_CAPABLE) &&
+-	    (sc->driver_data & ATH9K_PCI_WOW) &&
+-	    device_can_wakeup(sc->dev))
+-		hw->wiphy->wowlan = &ath9k_wowlan_support;
+-
+-	atomic_set(&sc->wow_sleep_proc_intr, -1);
+-	atomic_set(&sc->wow_got_bmiss_intr, -1);
+-#endif
+-
+ 	hw->queues = 4;
+ 	hw->max_rates = 4;
+ 	hw->channel_change_time = 5000;
+@@ -963,6 +944,7 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 		hw->wiphy->bands[IEEE80211_BAND_5GHZ] =
+ 			&sc->sbands[IEEE80211_BAND_5GHZ];
  
--	ath10k_pci_wait(ar);
-+	ret = ath10k_pci_wait(ar);
-+	if (ret) {
-+		ath10k_warn("Failed to reset target, target did not wake up: %d\n",
-+			    ret);
-+		return ret;
-+	}
++	ath9k_init_wow(hw);
+ 	ath9k_reload_chainmask_settings(sc);
  
- 	while (wait_limit-- &&
- 	       !(ioread32(ar_pci->mem + FW_INDICATOR_ADDRESS) &
+ 	SET_IEEE80211_PERM_ADDR(hw, common->macaddr);
+diff --git a/drivers/net/wireless/ath/ath9k/wow.c b/drivers/net/wireless/ath/ath9k/wow.c
+index e161bbc..f1cde81 100644
+--- a/drivers/net/wireless/ath/ath9k/wow.c
++++ b/drivers/net/wireless/ath/ath9k/wow.c
+@@ -16,6 +16,13 @@
+ 
+ #include "ath9k.h"
+ 
++static const struct wiphy_wowlan_support ath9k_wowlan_support = {
++	.flags = WIPHY_WOWLAN_MAGIC_PKT | WIPHY_WOWLAN_DISCONNECT,
++	.n_patterns = MAX_NUM_USER_PATTERN,
++	.pattern_min_len = 1,
++	.pattern_max_len = MAX_PATTERN_SIZE,
++};
++
+ static void ath9k_wow_map_triggers(struct ath_softc *sc,
+ 				   struct cfg80211_wowlan *wowlan,
+ 				   u32 *wow_triggers)
+@@ -339,3 +346,16 @@ void ath9k_set_wakeup(struct ieee80211_hw *hw, bool enabled)
+ 	device_set_wakeup_enable(sc->dev, enabled);
+ 	mutex_unlock(&sc->mutex);
+ }
++
++void ath9k_init_wow(struct ieee80211_hw *hw)
++{
++	struct ath_softc *sc = hw->priv;
++
++	if ((sc->sc_ah->caps.hw_caps & ATH9K_HW_WOW_DEVICE_CAPABLE) &&
++	    (sc->driver_data & ATH9K_PCI_WOW) &&
++	    device_can_wakeup(sc->dev))
++		hw->wiphy->wowlan = &ath9k_wowlan_support;
++
++	atomic_set(&sc->wow_sleep_proc_intr, -1);
++	atomic_set(&sc->wow_got_bmiss_intr, -1);
++}
+-- 
+1.8.4.1
 
