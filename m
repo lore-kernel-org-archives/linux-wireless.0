@@ -1,54 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:42531 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934197Ab3JPNpi (ORCPT
+Received: from mail-la0-f54.google.com ([209.85.215.54]:53972 "EHLO
+	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754764Ab3J1JhF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Oct 2013 09:45:38 -0400
-Subject: [PATCH v2 0/8] ath10k: fixes 2013-10-15
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 16 Oct 2013 16:45:35 +0300
-Message-ID: <20131016134503.25095.8044.stgit@localhost6.localdomain6> (sfid-20131016_154541_707152_83398692)
+	Mon, 28 Oct 2013 05:37:05 -0400
+Received: by mail-la0-f54.google.com with SMTP id gx14so4891701lab.41
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Oct 2013 02:37:03 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <CABPxzYJ8HpdwOYZ4hA40m3MOo_r7CwktzzpM9g6SLdPf6Rkqjg@mail.gmail.com>
+References: <CAMP44s1XJRHV8bAX=_-TkSKMkY8Nw1=eHorqTCZ2QmtR5m8uJA@mail.gmail.com>
+	<526E20EA.9090203@rempel-privat.de>
+	<CABPxzYJ8HpdwOYZ4hA40m3MOo_r7CwktzzpM9g6SLdPf6Rkqjg@mail.gmail.com>
+Date: Mon, 28 Oct 2013 03:37:03 -0600
+Message-ID: <CAMP44s2G63ptScncpPE0ercLY0fT7q0RAvSO6ROyMxm_jLRYXA@mail.gmail.com> (sfid-20131028_103710_074287_4199ADEB)
+Subject: Re: I always need a miracle to connect with iwlwifi
+From: Felipe Contreras <felipe.contreras@gmail.com>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Cc: Oleksij Rempel <linux@rempel-privat.de>,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	ilw@linux.intel.com,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is Michal's patchset which he said:
+On Mon, Oct 28, 2013 at 3:23 AM, Krishna Chaitanya
+<chaitanya.mgit@gmail.com> wrote:
+> On Mon, Oct 28, 2013 at 2:01 PM, Oleksij Rempel <linux@rempel-privat.de> wrote:
+>>> I logged a session [2] where I waited 30 minutes for the link to come
+>>> up, but it never did. You can see the same thing happening over and
+>>> over:
+>>>
+>>> 1382936199.582861: nl80211: Association request send successfully
+>>> 1382936199.797063: nl80211: Event message available
+>>> 1382936199.797097: nl80211: Delete station e0:1d:3b:46:82:a0
+>>> 1382936199.797881: nl80211: Event message available
+>>> 1382936199.797905: nl80211: MLME event 38; timeout with e0:1d:3b:46:82:a0
+>>> 1382936199.797915: wlan0: Event ASSOC_TIMED_OUT (15) received
+>>> 1382936199.797920: wlan0: SME: Association timed out
+>>> 1382936199.797924: Added BSSID e0:1d:3b:46:82:a0 into blacklist
+>>>
+>>> If I reboot the router, it works immediately, another thing that works
+>>> is connecting with ad-hoc mode (mode=1), and then back to normal mode
+>>> (mode=0).
+>>>
+> Looks like there is "maximum clients" feature is enabled in the AP, most AP's
+> send deauth for Auth/Assoc Request but some AP's silently discard the
+> Assoc Request.
+>
+> That explains why it works after reboot/adhoc mode. Try increasing the
+> number if thats the case.
 
-  This is a bunch of fixes I've had queued up for
-  some time now. I was reluctant to send them without some additional checks
-  and because some of the fixes are not ideal. At least we can get a discussion
-  going if anything raises any serious concern.
+Then why am I able to connect from my phone, other machines, and in
+this machine with Windows 7?
 
-For v2 I added one patch myself, modified "ath10k: fix device initialization
-routine" to use ath10k_pci_write32() style of wrappers and fixed long line warnings
-from checkpatch.
-
----
-
-Kalle Valo (1):
-      ath10k: implement ath10k_pci_soc_read/write32()
-
-Michal Kazior (7):
-      ath10k: prevent starting monitor without a vdev
-      ath10k: add sanity checks for monitor management
-      ath10k: fix endianess in prints
-      ath10k: fix NSS reporting in RX
-      ath10k: fix NULL deref upon early FW crash
-      ath10k: fix device initialization routine
-      ath10k: fix FW crashes on heavy TX on 10.1.389 AP FW
-
-
- drivers/net/wireless/ath/ath10k/ce.c     |   11 ++
- drivers/net/wireless/ath/ath10k/core.c   |    3 -
- drivers/net/wireless/ath/ath10k/htt_tx.c |   11 +-
- drivers/net/wireless/ath/ath10k/hw.h     |    7 ++
- drivers/net/wireless/ath/ath10k/mac.c    |   25 +++++-
- drivers/net/wireless/ath/ath10k/pci.c    |  135 ++++++++++++++++++------------
- drivers/net/wireless/ath/ath10k/pci.h    |   20 ++++
- drivers/net/wireless/ath/ath10k/txrx.c   |    2 
- drivers/net/wireless/ath/ath10k/wmi.c    |   16 ++--
- 9 files changed, 158 insertions(+), 72 deletions(-)
-
+-- 
+Felipe Contreras
