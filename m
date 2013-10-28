@@ -1,70 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:48860 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753042Ab3JKS37 (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:43594 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754546Ab3J1CTv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Oct 2013 14:29:59 -0400
-Received: by mail-pa0-f49.google.com with SMTP id ld10so4766329pab.36
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Oct 2013 11:29:58 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+	Sun, 27 Oct 2013 22:19:51 -0400
+Received: by mail-wi0-f171.google.com with SMTP id h11so3203611wiv.16
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Oct 2013 19:19:50 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	devel@lists.open80211s.org, distro11s@cozybit.com,
-	Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-Subject: [PATCH v4 0/6] Add Mesh Channel Switch Support
-Date: Fri, 11 Oct 2013 11:29:44 -0700
-Message-Id: <1381516190-23918-1-git-send-email-yeohchunyeow@cozybit.com> (sfid-20131011_203005_577343_8086740B)
+Cc: wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 0/2] cfg80211: a few genregdb.awk updates
+Date: Mon, 28 Oct 2013 03:19:44 +0100
+Message-Id: <1382926786-7904-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20131028_031957_213221_A0C78DB8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These are the patches required to support Mesh Basic Service Set (MBSS)
-channel switch.
+A few updates while toying with genregdb.awk for small
+regulatory domains. This depends on the antenna gain removal
+patch.
 
-The design is more or less same with the IBSS. Additional procedures
-or elements that are required for mesh operation are as follow:
- * Add additional information element (IE) known as Mesh Channel Switch
-   Parameters (MCSP) required in CSA action, beacon and probe response
-   frames.
- * Forwarding of CSA frame if the conditions defined in the standard
-   are met.
+Luis R. Rodriguez (2):
+  cfg80211: add function helpers to genregdb.awk
+  cfg80211: fix parsing when db.txt ends on a rule
 
-Limitations:
- * Channel switch is only allowed for the same band and also same channel
-   width from the previous setting.
-
-These patches are reviewed and commented by Bob Copeland, Thomas Pedersen
-and Johannes Berg. Jean-Pierre has also commented on typos error. Any 
-further comments are welcomed.
-
-Add separate patch for refactoring the ieee80211_parse_ch_switch_ie to
-reduce the number of function parameters.
-
-Testing:
-The patches are tested using ath9k.
-
-Chun-Yeow Yeoh (6):
-  mac80211: process the CSA frame for mesh accordingly
-  {nl,cfg,mac}80211: enable the triggering of CSA frame in mesh
-  mac80211: add the CSA and MCSP elements in mesh beaconing
-  mac80211: refactor the parsing of chan switch ie
-  {nl,cfg,mac}80211: finalizing mesh channel switching
-  mac80211: process mesh channel switching using beacon
-
- include/linux/ieee80211.h  |   20 +++
- net/mac80211/Kconfig       |   11 ++
- net/mac80211/cfg.c         |   24 ++++
- net/mac80211/debug.h       |   10 ++
- net/mac80211/ibss.c        |   67 ++--------
- net/mac80211/ieee80211_i.h |   29 ++++-
- net/mac80211/mesh.c        |  293 +++++++++++++++++++++++++++++++++++++++++++-
- net/mac80211/mlme.c        |   32 +++--
- net/mac80211/rx.c          |    5 +-
- net/mac80211/spectmgmt.c   |   33 +++--
- net/mac80211/tx.c          |   16 +++
- net/mac80211/util.c        |   96 +++++++++++++++
- net/wireless/nl80211.c     |    4 +-
- 13 files changed, 540 insertions(+), 100 deletions(-)
+ net/wireless/genregdb.awk | 38 +++++++++++++++++++++++++++-----------
+ 1 file changed, 27 insertions(+), 11 deletions(-)
 
 -- 
-1.7.9.5
+1.8.4.rc3
 
