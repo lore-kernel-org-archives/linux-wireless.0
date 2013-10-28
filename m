@@ -1,38 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f52.google.com ([209.85.215.52]:41427 "EHLO
-	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752871Ab3JVKvO convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:47679 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756963Ab3J1Qmb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Oct 2013 06:51:14 -0400
-Received: by mail-la0-f52.google.com with SMTP id eh20so1595601lab.39
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Oct 2013 03:51:13 -0700 (PDT)
-MIME-Version: 1.0
-Date: Tue, 22 Oct 2013 13:51:12 +0300
-Message-ID: <CANUX_P0yTq2v5jWyeHob_QnES878Zw-aZDhWFSmBcxg=CYMHgA@mail.gmail.com> (sfid-20131022_125123_898190_2AA53E24)
-Subject: Re: Intel(R) Centrino(R) Advanced-N 6235 - iwlwifi-6000g2b-6.ucode
- not reconnecting issue
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Bastiaan de Groot <bastiaan.de.groot@telexis.nl>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 28 Oct 2013 12:42:31 -0400
+Received: by mail-wi0-f175.google.com with SMTP id hm4so4151566wib.14
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Oct 2013 09:42:30 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linux-wireless@vger.kernel.org
+Cc: wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH v2 5/6] crda: make ssl keys include stdint.h
+Date: Mon, 28 Oct 2013 17:42:05 +0100
+Message-Id: <1382978526-23929-6-git-send-email-mcgrof@do-not-panic.com> (sfid-20131028_174236_702832_30A102E2)
+In-Reply-To: <1382978526-23929-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1382978526-23929-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 22, 2013 at 11:31 AM, Bastiaan de Groot
-<bastiaan.de.groot@telexis.nl> wrote:
-> Dear community,
->
-> I have a "Intel® Centrino® Advanced-N 6235" wificard.
-> Running Debian 7.0 "wheezy"
->
-> Firmware: Iwlwifi-6000g2b-6.ucode
->
-> Using:
-> Kernel 3.2.0-4-686-pae
->
-> It connects but when wpa_supplicant is trying to re-connect I get:
->
-> [83667.904059] iwlwifi 0000:05:00.0: iwl_hcmd_queue_reclaim: Read index for DMA queue txq id (9), index 157 is out of range [0-256] 0 0.
+This is required to fix compilation if we
+move reglig to its own library.
 
-Did you have anything before that?
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ utils/key2pub.py | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/utils/key2pub.py b/utils/key2pub.py
+index 4d85369..3e84cd2 100755
+--- a/utils/key2pub.py
++++ b/utils/key2pub.py
+@@ -59,6 +59,7 @@ def print_ssl_32(output, name, val):
+ 
+ def print_ssl(output, name, val):
+     import struct
++    output.write('#include <stdint.h>\n')
+     if len(struct.pack('@L', 0)) == 8:
+         return print_ssl_64(output, name, val)
+     else:
+@@ -85,6 +86,7 @@ static struct pubkey keys[] = {
+     pass
+ 
+ def print_gcrypt(output, name, val):
++    output.write('#include <stdint.h>\n')
+     while val[0] == '\0':
+         val = val[1:]
+     output.write('static const uint8_t %s[%d] = {\n' % (name, len(val)))
+-- 
+1.8.4.rc3
+
