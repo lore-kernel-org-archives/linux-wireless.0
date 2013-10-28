@@ -1,49 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from postler.einfach.org ([91.250.116.113]:37573 "EHLO
-	postler.einfach.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754084Ab3JCRFn (ORCPT
+Received: from purkki.adurom.net ([80.68.90.206]:59435 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751657Ab3J1Fxx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Oct 2013 13:05:43 -0400
-Message-ID: <524DA3DC.6060806@einfach.org> (sfid-20131003_190547_221799_31ABC0BE)
-Date: Thu, 03 Oct 2013 18:05:32 +0100
-From: Bruno Randolf <br1@einfach.org>
+	Mon, 28 Oct 2013 01:53:53 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: Pali =?utf-8?Q?Roh=C3=A1r?= <pali.rohar@gmail.com>
+Cc: Luciano Coelho <luca@coelho.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
+	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
+	joni.lapilainen@gmail.com, David Gnedt <david.gnedt@davizone.at>
+Subject: Re: [PATCH 01/16] mac80211: fix TX device statistics for monitor interfaces
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+	<1382819655-30430-2-git-send-email-pali.rohar@gmail.com>
+Date: Mon, 28 Oct 2013 07:53:45 +0200
+In-Reply-To: <1382819655-30430-2-git-send-email-pali.rohar@gmail.com> ("Pali
+	=?utf-8?Q?Roh=C3=A1r=22's?= message of "Sat, 26 Oct 2013 22:34:00 +0200")
+Message-ID: <87iowiszyu.fsf@purkki.adurom.net> (sfid-20131028_065415_930913_2F2294F1)
 MIME-Version: 1.0
-To: Bruno Randolf <br1@einfach.org>,
-	Oleksij Rempel <linux@rempel-privat.de>,
-	linux-wireless@vger.kernel.org, nbd@openwrt.org, sujith@msujith.org
-CC: Ingo Randolf <ingo.randolf@qupik.com>
-Subject: Re: ath9k AR9287 status?
-References: <52492FB0.3010201@einfach.org> <5249443E.3080700@rempel-privat.de> <524954BE.8060603@einfach.org> <52497C2E.1060406@rempel-privat.de> <5249A2F7.5090908@einfach.org>
-In-Reply-To: <5249A2F7.5090908@einfach.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/30/2013 05:12 PM, Bruno Randolf wrote:
-> On 09/30/2013 02:27 PM, Oleksij Rempel wrote:
->>>> Check:
->>>> - PCIe related power managment - ASPM.
+Pali Rohár <pali.rohar@gmail.com> writes:
+
+> From: David Gnedt <david.gnedt@davizone.at>
 >
-> Hmm, disabling ASPM in the BIOS and per kernel command line
-> (pcie_aspm=off) did not help.
+> Count TX packets and bytes also for monitor interfaces.
 >
->> I use 3.11 right now. In case of PCIe issue, backport wont help you.
->> Test completely new kernel.
->
-> I'll try 3.11 later.
+> Signed-of-by: David Gnedt <david.gnedt@davizone.at>
 
-I just tried current wireless-testing (3.12.0-rc3-wl) and it shows the 
-same problems.
+You should send mac80211 patches separately, not inside a wl1251 patchset.
 
-For reference:
-
-Card:  Unex DNXA-97 (AR9287) http://unex.com.tw/product/dnxa-97
-Board: Advantech MIO-2261N (Atom N260)
-
-ASPM is disabled in the BIOS and by pcie_aspm=off. Scanning seems to 
-work, but when I start up hostapd (v2.0, simple AP config) nothing 
-happens (no AP is found by clients). When I stop hostapd the system 
-freezes with "BUG: soft lockup - CPU#3 stuck for 23s! (hostapd:2250)"
-
-bruno
-
+-- 
+Kalle Valo
