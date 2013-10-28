@@ -1,49 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:59925 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753051Ab3JUJ7k (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:50467 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756498Ab3J1M6S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Oct 2013 05:59:40 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3.12] cfg80211: fix scheduled scan pointer access
-Date: Mon, 21 Oct 2013 11:59:32 +0200
-Message-Id: <1382349572-22287-1-git-send-email-johannes@sipsolutions.net> (sfid-20131021_115943_677401_9D47C26B)
+	Mon, 28 Oct 2013 08:58:18 -0400
+From: Colin King <colin.king@canonical.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] rtlwifi: fix null dereference on efuse_word on kmalloc fail  returns NULL
+Date: Mon, 28 Oct 2013 12:58:12 +0000
+Message-Id: <1382965092-12556-1-git-send-email-colin.king@canonical.com> (sfid-20131028_135822_173197_35F7A773)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Colin Ian King <colin.king@canonical.com>
 
-Since rdev->sched_scan_req is dereferenced outside the
-lock protecting it, this might be done at the wrong
-time, causing crashes. Move the dereference to where
-it should be - inside the RTNL locked section.
+kmalloc on efuse_word can return null, leading to free'ing of
+elements in efuse_word on the error exit path even though it has not
+been allocated.  Instead, don't free the elements of efuse_word if
+kmalloc failed.
 
-Cc: stable@vger.kernel.org [3.8+]
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Also, kmalloc of any of the arrays in efuse_word[] can also fail,
+leading to undefined contents in the remaining elements leading to
+problems when free'ing these elements later on.  So kzalloc efuse_word
+to ensure the kfree on the remaining elements won't cause breakage.
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- net/wireless/scan.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/rtlwifi/efuse.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index eeb7148..d4397eb 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -254,10 +254,10 @@ void __cfg80211_sched_scan_results(struct work_struct *wk)
- 	rdev = container_of(wk, struct cfg80211_registered_device,
- 			    sched_scan_results_wk);
+diff --git a/drivers/net/wireless/rtlwifi/efuse.c b/drivers/net/wireless/rtlwifi/efuse.c
+index 838a1ed..66f0b2d 100644
+--- a/drivers/net/wireless/rtlwifi/efuse.c
++++ b/drivers/net/wireless/rtlwifi/efuse.c
+@@ -262,9 +262,9 @@ void read_efuse(struct ieee80211_hw *hw, u16 _offset, u16 _size_byte, u8 *pbuf)
+ 			    sizeof(u8), GFP_ATOMIC);
+ 	if (!efuse_tbl)
+ 		return;
+-	efuse_word = kmalloc(EFUSE_MAX_WORD_UNIT * sizeof(u16 *), GFP_ATOMIC);
++	efuse_word = kzalloc(EFUSE_MAX_WORD_UNIT * sizeof(u16 *), GFP_ATOMIC);
+ 	if (!efuse_word)
+-		goto done;
++		goto out;
+ 	for (i = 0; i < EFUSE_MAX_WORD_UNIT; i++) {
+ 		efuse_word[i] = kmalloc(efuse_max_section * sizeof(u16),
+ 					GFP_ATOMIC);
+@@ -378,6 +378,7 @@ done:
+ 	for (i = 0; i < EFUSE_MAX_WORD_UNIT; i++)
+ 		kfree(efuse_word[i]);
+ 	kfree(efuse_word);
++out:
+ 	kfree(efuse_tbl);
+ }
  
--	request = rdev->sched_scan_req;
--
- 	rtnl_lock();
- 
-+	request = rdev->sched_scan_req;
-+
- 	/* we don't have sched_scan_req anymore if the scan is stopping */
- 	if (request) {
- 		if (request->flags & NL80211_SCAN_FLAG_FLUSH) {
 -- 
-1.8.4.rc3
+1.8.3.2
 
