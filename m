@@ -1,38 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f45.google.com ([209.85.219.45]:37435 "EHLO
-	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752837Ab3JAWi1 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:47110 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757339Ab3J1Tas convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Oct 2013 18:38:27 -0400
-Received: by mail-oa0-f45.google.com with SMTP id o17so6833oag.4
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Oct 2013 15:38:26 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1380626514.14430.25.camel@jlt4.sipsolutions.net>
-References: <1379115372-28426-1-git-send-email-yeohchunyeow@cozybit.com>
-	<1379115372-28426-2-git-send-email-yeohchunyeow@cozybit.com>
-	<1380626514.14430.25.camel@jlt4.sipsolutions.net>
-Date: Wed, 2 Oct 2013 06:38:26 +0800
-Message-ID: <CAHS2MGOd7TGyuHpnYkDR7d636nZqddmUJfvD6LRy_y=7QO7+xA@mail.gmail.com> (sfid-20131002_003830_673018_39CB7169)
-Subject: Re: [PATCH 1/5] mac80211: process the CSA frame for mesh accordingly
-From: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	devel@lists.open80211s.org,
-	"distro11s@cozybit.com" <distro11s@cozybit.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 28 Oct 2013 15:30:48 -0400
+Subject: Re: [PATCH 4/4] wl1251: spi: add device tree support
+Mime-Version: 1.0 (Apple Message framework v1283)
+Content-Type: text/plain; charset=windows-1252
+From: Kumar Gala <galak@codeaurora.org>
+In-Reply-To: <CANOLnOP=antQDwQLxWhuB8+-kZh9x-JJXrXmOz3FH67fM2Lang@mail.gmail.com>
+Date: Mon, 28 Oct 2013 14:30:45 -0500
+Cc: Sebastian Reichel <sre@debian.org>,
+	Mark Rutland <mark.rutland@arm.com>, linux-doc@vger.kernel.org,
+	Tony Lindgren <tony@atomide.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Sachin Kamat <sachin.kamat@linaro.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Sebastian Reichel <sre@ring0.de>,
+	Luciano Coelho <luca@coelho.fi>, devicetree@vger.kernel.org,
+	Pawel Moll <pawel.moll@arm.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Bill Pemberton <wfp5p@virginia.edu>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Felipe Balbi <balbi@ti.com>, Rob Landley <rob@landley.net>,
+	netdev@vger.kernel.org
+Message-Id: <3381D0FB-2AAD-446D-8650-E4BE5F22A2E3@codeaurora.org> (sfid-20131028_203113_881763_0E97F153)
+References: <1382890469-25286-1-git-send-email-sre@debian.org> <1382890469-25286-5-git-send-email-sre@debian.org> <FF34C626-4A49-43B1-B0AD-DC6146ABBB11@codeaurora.org> <CANOLnOP=antQDwQLxWhuB8+-kZh9x-JJXrXmOz3FH67fM2Lang@mail.gmail.com>
+To: Grazvydas Ignotas <notasas@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> -ENOMEM ?
-Yes.
 
-> That's somewhat ugly, is there no better way to express that? Maybe with
-> different structs or something? I guess I can live with it, just asking
-> though.
-It's uglier before Bob commenting on this. Hope that this works fine.
+On Oct 28, 2013, at 12:15 PM, Grazvydas Ignotas wrote:
 
-> No need for !! with bool variables
-Noted.
+> On Mon, Oct 28, 2013 at 8:37 AM, Kumar Gala <galak@codeaurora.org> wrote:
+>> On Oct 27, 2013, at 11:14 AM, Sebastian Reichel wrote:
+>>> +++ b/Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt
+>>> @@ -0,0 +1,36 @@
+>>> +* Texas Instruments wl1251 controller
+>>> +
+>>> +The wl1251 chip can be connected via SPI or via SDIO. The linux
+>>> +kernel currently only supports device tree for the SPI variant.
+>>> +
+>> 
+>> From the binding I have no idea what this chip actually does, also we don't normally reference linux kernel support in bindings specs (so please remove it).
+>> 
+>> However, what would expect the SDIO binding to look like?  Or more specifically, how would you distinguish the SPI vs SDIO binding/connection?  I'm wondering if the compatible should be something like "ti,wl1251-spi" and than the sdio can be "ti,wl1251-sdio"
+> 
+> When connected to SDIO, it doesn't act as standard SDIO device and
+> can't be probed (standard SDIO registers missing), so information has
+> to come some other way. That used to partially come through
+> platform_data and partially through a callback from mmc subsystem (see
+> pandora_wl1251_init_card() in
+> arch/arm/mach-omap2/board-omap3pandora.c). I don't know much about DT,
+> but maybe the information that comes from SDIO registers on "normal"
+> SDIO devices should come through DT in this case too? I don't really
+> know how that should be integrated with mmc subsystem though..
 
-Chun-Yeow
+Ok, my point is still valid that we can use a different compatible for the SDIO case even if its no standard SDIO vs the SPI case.
+
+> 
+>>> +Required properties:
+>>> +- compatible : Should be "ti,wl1251"
+>> 
+>> reg is not listed as a required prop.
+>> 
+>>> +- interrupts : Should contain interrupt line
+>>> +- interrupt-parent : Should be the phandle for the interrupt
+>>> +  controller that services interrupts for this device
+>>> +- vio-supply : phandle to regulator providing VIO
+>>> +- power-gpio : GPIO connected to chip's PMEN pin
+>> 
+>> should be vendor prefixed: ti,power-gpio
+>> 
+>>> +- For additional required properties on SPI, please consult
+>>> +  Documentation/devicetree/bindings/spi/spi-bus.txt
+>>> +
+>>> +Optional properties:
+>>> +- ti,use-eeprom : If found, configuration will be loaded from eeprom.
+>> 
+>> can you be a bit more specific on what cfg will be loaded.  Also, is this property a boolean, if so how do I know which eeprom the cfg is loaded from (is it one that is directly connected to the wl1251?
+> 
+> wl1251 is a wifi chip that can have an optional eeprom connected to it
+> to store things like calibration stuff and MAC address, and that
+> eeprom is usually inside a single module with some additional radio
+> related chips. If the eeprom is connected (like the module on pandora
+> board has), the driver can issue command to the firmware running on
+> chip to load that data on it's startup, alternatively the driver can
+> load calibration from other storage (like it happens on N900).
+
+So sounds like a boolean.  I think just adding that its a boolean and maybe something like "configuration (calibration data, MAC addr, etc..)"
+
+- k
+
+> 
+> 
+> Gražvydas
+> --
+> To unsubscribe from this list: send the line "unsubscribe devicetree" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Employee of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+
