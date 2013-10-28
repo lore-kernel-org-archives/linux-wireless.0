@@ -1,66 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:5109 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754203Ab3JOL6E (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:34336 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754442Ab3J1OhL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Oct 2013 07:58:04 -0400
-From: Kefeng Wang <wangkefeng.wang@huawei.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Pablo Neira Ayuso <pablo@netfilter.org>,
-	"Stephen Hemminger" <stephen@networkplumber.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Francois Romieu <romieu@fr.zoreil.com>,
-	"Ben Hutchings" <bhutchings@solarflare.com>,
-	Chas Williams <chas@cmf.nrl.navy.mil>,
-	Marc Kleine-Budde <mkl@pengutronix.de>,
-	Samuel Ortiz <samuel@sortiz.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Oliver Neukum <oneukum@suse.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	"Boris Ostrovsky" <boris.ostrovsky@oracle.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	"Michael S. Tsirkin" <mst@redhat.com>, <netfilter@vger.kernel.org>,
-	<netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	<guohanjun@huawei.com>
-Subject: [PATCH 09/18] block: aoe: use wrapper functions of net_ratelimit() to simplify code
-Date: Tue, 15 Oct 2013 19:45:05 +0800
-Message-ID: <1381837514-50660-10-git-send-email-wangkefeng.wang@huawei.com> (sfid-20131015_140445_690569_EE6675F2)
-In-Reply-To: <1381837514-50660-1-git-send-email-wangkefeng.wang@huawei.com>
-References: <1381837514-50660-1-git-send-email-wangkefeng.wang@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 28 Oct 2013 10:37:11 -0400
+Message-ID: <1382971021.17956.25.camel@jlt4.sipsolutions.net> (sfid-20131028_153716_103618_218A746E)
+Subject: Re: [PATCH] nl80211: introduce NL80211_SCAN_FLAG_DISCOVERY_MODE
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vladimir Kondratiev <qca_vkondrat@qti.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+Date: Mon, 28 Oct 2013 15:37:01 +0100
+In-Reply-To: <1382889282-12880-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1382889282-12880-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-net_err_ratelimited() is called to simplify code.
+On Sun, 2013-10-27 at 17:54 +0200, Vladimir Kondratiev wrote:
+> for the DMG (60GHz) networks, there is new scan parameter added in the 802.11 spec -
+> DiscoveryMode.  This parameter defines whether station performing active scan shall
+> generate special form of DMG beacons. In particular, this flag used in the P2P
+> discovery.
 
-Signed-off-by: Kefeng Wang <wangkefeng.wang@huawei.com>
----
- drivers/block/aoe/aoenet.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+Max 72 chars per line please.
 
-diff --git a/drivers/block/aoe/aoenet.c b/drivers/block/aoe/aoenet.c
-index 63773a9..25e8764 100644
---- a/drivers/block/aoe/aoenet.c
-+++ b/drivers/block/aoe/aoenet.c
-@@ -159,9 +159,7 @@ aoenet_rcv(struct sk_buff *skb, struct net_device *ifp, struct packet_type *pt,
- 		n = h->err;
- 		if (n > NECODES)
- 			n = 0;
--		if (net_ratelimit())
--			printk(KERN_ERR
--				"%s%d.%d@%s; ecode=%d '%s'\n",
-+		net_err_ratelimited("%s%d.%d@%s; ecode=%d '%s'\n",
- 				"aoe: error packet from ",
- 				get_unaligned_be16(&h->major),
- 				h->minor, skb->dev->name,
--- 
-1.8.2.1
+> + * @NL80211_SCAN_FLAG_DISCOVERY_MODE: scan to use discovery mode, as in
 
+"scan to use" - did you mean "scan using"?
+
+Also what about a feature flag? Though I suppose this should be
+supported by all 60GHz devices (and only those)?
+
+johannes
 
