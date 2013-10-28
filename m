@@ -1,46 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f48.google.com ([74.125.83.48]:35201 "EHLO
-	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753120Ab3JZTu3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Oct 2013 15:50:29 -0400
-Received: by mail-ee0-f48.google.com with SMTP id e50so2642717eek.21
-        for <linux-wireless@vger.kernel.org>; Sat, 26 Oct 2013 12:50:28 -0700 (PDT)
-Date: Sat, 26 Oct 2013 22:50:24 +0300
-From: Georgiana Rodica Chelu <georgiana.chelu93@gmail.com>
-To: opw-kernel@googlegroups.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [Patch v3 3/3] net: wireless: replace printk with pr_warn in
- adm8211.c
-Message-ID: <20131026195024.GA12235@fireworks> (sfid-20131026_215032_417350_7965FE18)
+Received: from mout.gmx.net ([212.227.15.15]:64087 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757074Ab3J1Q2G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Oct 2013 12:28:06 -0400
+Received: from [192.168.1.138] ([93.218.124.130]) by mail.gmx.com (mrgmx102)
+ with ESMTPSA (Nemesis) id 0MSY2q-1V9RSq0xd6-00RXkW for
+ <linux-wireless@vger.kernel.org>; Mon, 28 Oct 2013 17:28:05 +0100
+Message-ID: <526E9093.6020409@rempel-privat.de> (sfid-20131028_172820_367673_083D4450)
+Date: Mon, 28 Oct 2013 17:28:03 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Felipe Contreras <felipe.contreras@gmail.com>
+CC: linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	ilw@linux.intel.com,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>
+Subject: Re: I always need a miracle to connect with iwlwifi
+References: <CAMP44s1XJRHV8bAX=_-TkSKMkY8Nw1=eHorqTCZ2QmtR5m8uJA@mail.gmail.com>	<526E20EA.9090203@rempel-privat.de>	<CAMP44s0ypeV5JeoF=KWPM-VqZbyR_joJ-4Xg5icKqp2QiNN=Tw@mail.gmail.com>	<526E33C3.60302@rempel-privat.de> <CAMP44s05-NRskvWHNqzVxTRiB_2DeRsPwQGAZZ3saM-VC=ZyQA@mail.gmail.com>
+In-Reply-To: <CAMP44s05-NRskvWHNqzVxTRiB_2DeRsPwQGAZZ3saM-VC=ZyQA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-WARNING: Prefer netdev_warn(netdev, ... then dev_warn(dev, ... then pr_warn(...
-to printk(KERN_WARNING ...
+Am 28.10.2013 16:44, schrieb Felipe Contreras:
+> On Mon, Oct 28, 2013 at 3:52 AM, Oleksij Rempel <linux@rempel-privat.de> wrote:
+>> Am 28.10.2013 10:38, schrieb Felipe Contreras:
+>>> On Mon, Oct 28, 2013 at 2:31 AM, Oleksij Rempel <linux@rempel-privat.de> wrote:
+> 
+>>>> Heh... this logs look like miracle :)
+>>>> My first assumption would be buggy router. There is no answer in
+>>>> wpa_supplicant log.
+>>>
+>>> Yeah, I bet the router is buggy, which router isn't? But why Windows 7
+>>> connects fine?
+>>
+>> May be it includes some workaround?
+> 
+>> You do not need to fight with devs, i think they are agree that some
+>> thing is wrong. But believe me, there are so many access points, which
+>> make problems or wear things. If you have a bug, does not mean other
+>> user have it.
+> 
+> I understand the problems of making wireless drivers work on different
+> kinds of access points, and I'm not fighting with devs, I'm just
+> saying that if it works in all other devices the problem is most
+> likely on this one.
+> 
+> And BTW, the devices we are talking about are very varied: Wii U,
+> Windows 7, Windows 8.1, Nokia N9, Android phone, iPhone, iMac, Amazon
+> Kindle. Yet the only device that seems to have a problem is my Linux
+> machine, I think it's pretty clear where the problem is.
 
-Signed-off-by: Georgiana Rodica Chelu <georgiana.chelu93@gmail.com>
----
- drivers/net/wireless/adm8211.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Do any of listed devices use mac80211? If not, you still have fallowing
+options: wpa_supplicant, mac80211, iwlwifi driver, iwlwifi firmware. In
+you arguments you even didn't tried to eliminate any of them. So, no. It
+is not clear where problem is.
 
-diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
-index 0392b52..00a1221 100644
---- a/drivers/net/wireless/adm8211.c
-+++ b/drivers/net/wireless/adm8211.c
-@@ -1855,8 +1855,8 @@ static int adm8211_probe(struct pci_dev *pdev,
- 		cpu_to_le16(ADM8211_CSR_READ(PAR1) & 0xFFFF);
- 
- 	if (!is_valid_ether_addr(perm_addr)) {
--		printk(KERN_WARNING "%s (adm8211): Invalid hwaddr in EEPROM!\n",
--		       pci_name(pdev));
-+		pr_warn("%s (adm8211): Invalid hwaddr in EEPROM!\n",
-+			pci_name(pdev));
- 		eth_random_addr(perm_addr);
- 	}
- 	SET_IEEE80211_PERM_ADDR(dev, perm_addr);
+> And sure, it does not necessarily means that other people have the
+> same problem, but it is very unlikely that I'm the only one.
+
+what is your hardware? Did you tired to disable power save mode?
+
+I have "Intel Centrino Advanced-N 6235", it use same driver and works
+with three of my APs. I say just to show, that list of working hardware
+is not helpful.
+
+what is you AP? Mode it is running? Do changing settings of this AP
+makes some difference? -- No, changing settings of you AP is not the way
+to get you off.
+
+>> Beside, how many clients use this AP?
+> 
+> Probably around a dozen.
+> 
+>> How big is the distance?
+> 
+> Probably around 10m.
+> 
+>> What do you configure in AdHock mode?
+> 
+> Nothing, I don't think it even works, but it associates. I just add mode=1.
+> 
+> network={
+> ssid="AXTEL-XXX"
+> proto=WPA2
+> scan_ssid=1
+> key_mgmt=WPA-PSK
+> psk="XXX"
+> mode=1
+> }
+> 
+>>>> Take wireshark and capture working and not working associational request.
+>>>
+>>> I'll try that. If only it was that easy to get a working association.
+>>
+>> Compare it with windows.
+> 
+> Right, I forgot I can use wireshark in Windows.
+> 
+>> and please read this, it will help to provide more information.
+>> http://wireless.kernel.org/en/users/Documentation/Reporting_bugs
+> 
+> I don't understand what exactly do you need from that list. I'm using
+> 3.11.6, but as I said in the original report, the kernel version makes
+> no difference, even as far back as 3.6.0. I've put the dmesg log in
+> the original mail and there's nothing of value there. I could try
+> running with CONFIG_MAC80211_*_DEBUG stuff enabled, but do you really
+> think that will help?
+> 
+> If you really must know, this is exactly what I'm running:
+> 
+> config=$(mktemp)
+> pid="/run/wpa_supplicant_wlan0.pid"
+> 
+> cat > $config <<-EOF
+> country=MX
+> ap_scan=1
+> eapol_version=2
+> device_name=Nysa
+> device_type=1-0050F204-1
+> 
+> network={
+> ssid="AXTEL-7111"
+> proto=WPA2
+> scan_ssid=1
+> key_mgmt=WPA-PSK
+> psk="C3657111"
+> mode=0
+> }
+> EOF
+> 
+> wpa_supplicant -B -t -d -P $pid -i wlan0 -D nl80211,wext -c $config -f
+> /tmp/wpa.log
+> 
+> rm -f "$config"
+> 
+> I tried with wext, but that doesn't work at all. A curious fact is
+> that I need to enable CONFIG_CFG80211_WEXT=y for AP scanning to work,
+> even though I'm not using the wext driver.
+> 
+> I will try to get the wireshark logs.
+> 
+
+
 -- 
-1.8.1.2
-
+Regards,
+Oleksij
