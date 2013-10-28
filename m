@@ -1,31 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:60484 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:34100 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752323Ab3JUNEi (ORCPT
+	with ESMTP id S1756441Ab3J1N7B (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Oct 2013 09:04:38 -0400
-Message-ID: <1382360675.14310.46.camel@jlt4.sipsolutions.net> (sfid-20131021_150442_019482_26A943CA)
-Subject: Re: [PATCH 1/2] cfg80211: fix DFS channel recovery timeout
+	Mon, 28 Oct 2013 09:59:01 -0400
+Message-ID: <1382968735.17956.12.camel@jlt4.sipsolutions.net> (sfid-20131028_145912_714534_8109778C)
+Subject: Re: [PATCH 0/2] cfg80211: a few genregdb.awk updates
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 21 Oct 2013 15:04:35 +0200
-In-Reply-To: <1382034072-13541-1-git-send-email-michal.kazior@tieto.com> (sfid-20131017_202343_478343_163A6A5A)
-References: <1382034072-13541-1-git-send-email-michal.kazior@tieto.com>
-	 (sfid-20131017_202343_478343_163A6A5A)
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
+Date: Mon, 28 Oct 2013 14:58:55 +0100
+In-Reply-To: <1382926786-7904-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20131028_031957_213221_A0C78DB8)
+References: <1382926786-7904-1-git-send-email-mcgrof@do-not-panic.com>
+	 (sfid-20131028_031957_213221_A0C78DB8)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-10-17 at 11:21 -0700, Michal Kazior wrote:
-> The timeout was not properly converted from msecs
-> to jiffies. As a result channel transition to
-> NL80211_DFS_USABLE was delayed depending on
-> CONFIG_HZ configuration, e.g. HZ=100 would delay
-> the NOP from 30 minutes to 300 minutes.
-
-Applied both, but I think getting into 3.12 might be hard.
+I'd apply this, but would prefer John to take a look - he wrote the awk
+script and I'm not familiar with it.
 
 johannes
 
