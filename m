@@ -1,46 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:34832 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751408Ab3J3Lrk (ORCPT
+Received: from mail-ee0-f48.google.com ([74.125.83.48]:43532 "EHLO
+	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752024Ab3J1GVB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Oct 2013 07:47:40 -0400
-Date: Wed, 30 Oct 2013 12:47:38 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
-Cc: Luciano Coelho <luca@coelho.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, sre@ring0.de, joni.lapilainen@gmail.com,
-	David Gnedt <david.gnedt@davizone.at>
-Subject: Re: [PATCH 10/16] wl1251: fix channel switching in monitor mode
-Message-ID: <20131030114738.GD8763@amd.pavel.ucw.cz> (sfid-20131030_124758_580295_839ACBCA)
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
- <1382819655-30430-11-git-send-email-pali.rohar@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1382819655-30430-11-git-send-email-pali.rohar@gmail.com>
+	Mon, 28 Oct 2013 02:21:01 -0400
+Received: by mail-ee0-f48.google.com with SMTP id e50so3160924eek.35
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Oct 2013 23:21:00 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 1/2] ath10k: plug memory leak in wmi mgmt tx worker
+Date: Mon, 28 Oct 2013 07:18:13 +0100
+Message-Id: <1382941094-3291-2-git-send-email-michal.kazior@tieto.com> (sfid-20131028_072110_233535_C4D3D2A9)
+In-Reply-To: <1382941094-3291-1-git-send-email-michal.kazior@tieto.com>
+References: <1382941094-3291-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat 2013-10-26 22:34:09, Pali Rohár wrote:
-> From: David Gnedt <david.gnedt@davizone.at>
-> 
-> Use the ENABLE_RX command for channel switching when no interface is present
-> (monitor mode only).
-> The advantage of ENABLE_RX is that it leaves the tx data path disabled in
-> firmware, whereas the usual JOIN command seems to transmit some frames at
-> firmware level.
-> 
-> Signed-off-by: David Gnedt <david.gnedt@davizone.at>
+sk_buff was not freed in some cases. The patch
+unifies the msdu freeing.
 
-Missing signoff, otherwise
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 4 +++-
+ drivers/net/wireless/ath/ath10k/wmi.c | 4 +---
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-Reviewed-by: Pavel Machek <pavel@ucw.cz>
-								Pavel
-
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index bbb0efa..f45eca0 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1729,8 +1729,10 @@ void ath10k_mgmt_over_wmi_tx_work(struct work_struct *work)
+ 			break;
+ 
+ 		ret = ath10k_wmi_mgmt_tx(ar, skb);
+-		if (ret)
++		if (ret) {
+ 			ath10k_warn("wmi mgmt_tx failed (%d)\n", ret);
++			ieee80211_free_txskb(ar->hw, skb);
++		}
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index a796d0b..8db9db2 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -674,10 +674,8 @@ int ath10k_wmi_mgmt_tx(struct ath10k *ar, struct sk_buff *skb)
+ 
+ 	/* Send the management frame buffer to the target */
+ 	ret = ath10k_wmi_cmd_send(ar, wmi_skb, ar->wmi.cmd->mgmt_tx_cmdid);
+-	if (ret) {
+-		dev_kfree_skb_any(skb);
++	if (ret)
+ 		return ret;
+-	}
+ 
+ 	/* TODO: report tx status to mac80211 - temporary just ACK */
+ 	info->flags |= IEEE80211_TX_STAT_ACK;
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+1.8.4.rc3
+
