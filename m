@@ -1,85 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:57234 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751383Ab3JURPD (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:34164 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756625Ab3J1OIb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Oct 2013 13:15:03 -0400
-Received: by mail-wi0-f172.google.com with SMTP id ez12so4311871wid.11
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Oct 2013 10:15:01 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, janusz.dziedzic@tieto.com,
-	smihir@qti.qualcomm.com, tushnimb@qca.qualcomm.com,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 3/5] ath: rename ath_reg_apply_active_scan_flags() to ath_reg_apply_ir_flags()
-Date: Mon, 21 Oct 2013 19:14:49 +0200
-Message-Id: <1382375691-25476-4-git-send-email-mcgrof@do-not-panic.com> (sfid-20131021_191507_026126_38EFF1BB)
-In-Reply-To: <1382375691-25476-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1382375691-25476-1-git-send-email-mcgrof@do-not-panic.com>
+	Mon, 28 Oct 2013 10:08:31 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3/4] nl80211: check nla_nest_start() return value
+Date: Mon, 28 Oct 2013 15:08:23 +0100
+Message-Id: <1382969304-25611-3-git-send-email-johannes@sipsolutions.net> (sfid-20131028_150835_733455_BF321ADE)
+In-Reply-To: <1382969304-25611-1-git-send-email-johannes@sipsolutions.net>
+References: <1382969304-25611-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This also applies the no-ibss flag to the channels or clears it.
-The idea here is to clarify no initiated radiation should be
-allowed on these channels.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Cc: smihir@qti.qualcomm.com
-Cc: tushnimb@qca.qualcomm.com
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Coverity pointed out that we might dereference NULL later
+if nla_nest_start() returns a failure. This isn't really
+true since we'd bomb out before, but we should check the
+return value directly, so do that.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/regd.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
+ net/wireless/nl80211.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
-index 48e2368..2188fdd 100644
---- a/drivers/net/wireless/ath/regd.c
-+++ b/drivers/net/wireless/ath/regd.c
-@@ -189,6 +189,10 @@ static void ath_force_clear_no_ir_chan(struct wiphy *wiphy,
- 	if (!(reg_rule->flags & NL80211_RRF_PASSIVE_SCAN))
- 		if (ch->flags & IEEE80211_CHAN_PASSIVE_SCAN)
- 			ch->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
-+
-+	if (!(reg_rule->flags & IEEE80211_CHAN_NO_IBSS))
-+		if (ch->flags & IEEE80211_CHAN_NO_IBSS)
-+			ch->flags &= ~IEEE80211_CHAN_NO_IBSS;
- }
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 22df144..99dc3f3 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -11094,6 +11094,8 @@ void cfg80211_report_wowlan_wakeup(struct wireless_dev *wdev,
+ 		struct nlattr *reasons;
  
- static void ath_force_clear_no_ir_freq(struct wiphy *wiphy, u16 center_freq)
-@@ -205,6 +209,7 @@ static void ath_force_clear_no_ir_freq(struct wiphy *wiphy, u16 center_freq)
- static void ath_force_no_ir_chan(struct ieee80211_channel *ch)
- {
- 	ch->flags |= IEEE80211_CHAN_PASSIVE_SCAN;
-+	ch->flags |= IEEE80211_CHAN_NO_IBSS;
- }
+ 		reasons = nla_nest_start(msg, NL80211_ATTR_WOWLAN_TRIGGERS);
++		if (!reasons)
++			goto free_msg;
  
- static void ath_force_no_ir_freq(struct wiphy *wiphy, u16 center_freq)
-@@ -283,7 +288,7 @@ ath_reg_apply_beaconing_flags(struct wiphy *wiphy,
- }
- 
- /**
-- * ath_reg_apply_active_scan_flags()
-+ * ath_reg_apply_ir_flags()
-  * @wiphy: the wiphy to use
-  * @initiator: the regulatory hint initiator
-  *
-@@ -297,7 +302,7 @@ ath_reg_apply_beaconing_flags(struct wiphy *wiphy,
-  * custom regulatory domain.
-  */
- static void
--ath_reg_apply_active_scan_flags(struct wiphy *wiphy,
-+ath_reg_apply_ir_flags(struct wiphy *wiphy,
- 				enum nl80211_reg_initiator initiator)
- {
- 	struct ieee80211_supported_band *sband;
-@@ -364,7 +369,7 @@ static void ath_reg_apply_world_flags(struct wiphy *wiphy,
- 		break;
- 	case 0x68:
- 		ath_reg_apply_beaconing_flags(wiphy, initiator);
--		ath_reg_apply_active_scan_flags(wiphy, initiator);
-+		ath_reg_apply_ir_flags(wiphy, initiator);
- 		break;
- 	}
- }
+ 		if (wakeup->disconnect &&
+ 		    nla_put_flag(msg, NL80211_WOWLAN_TRIG_DISCONNECT))
 -- 
 1.8.4.rc3
 
