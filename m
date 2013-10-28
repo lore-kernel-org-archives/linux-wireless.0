@@ -1,69 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:60373 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751140Ab3JURly (ORCPT
+Received: from mail-we0-f177.google.com ([74.125.82.177]:49740 "EHLO
+	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755350Ab3J1LA7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Oct 2013 13:41:54 -0400
-Received: by mail-wi0-f173.google.com with SMTP id ey11so4353146wid.6
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Oct 2013 10:41:53 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, janusz.dziedzic@tieto.com,
-	smihir@qti.qualcomm.com, tushnimb@qca.qualcomm.com,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH] wireless-regdb: consolidate passive-scan and no-ibss flags
-Date: Mon, 21 Oct 2013 19:41:49 +0200
-Message-Id: <1382377309-26349-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20131021_194208_666220_D59906AC)
+	Mon, 28 Oct 2013 07:00:59 -0400
+Received: by mail-we0-f177.google.com with SMTP id x55so6170006wes.8
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Oct 2013 04:00:58 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAMP44s2G63ptScncpPE0ercLY0fT7q0RAvSO6ROyMxm_jLRYXA@mail.gmail.com>
+References: <CAMP44s1XJRHV8bAX=_-TkSKMkY8Nw1=eHorqTCZ2QmtR5m8uJA@mail.gmail.com>
+ <526E20EA.9090203@rempel-privat.de> <CABPxzYJ8HpdwOYZ4hA40m3MOo_r7CwktzzpM9g6SLdPf6Rkqjg@mail.gmail.com>
+ <CAMP44s2G63ptScncpPE0ercLY0fT7q0RAvSO6ROyMxm_jLRYXA@mail.gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Mon, 28 Oct 2013 16:30:38 +0530
+Message-ID: <CABPxzYLUG-X=p5z4fJusH63EvtuOy=EKfeQPScHDwGDpAJoFYg@mail.gmail.com> (sfid-20131028_120104_099135_6780DBF1)
+Subject: Re: I always need a miracle to connect with iwlwifi
+To: Felipe Contreras <felipe.contreras@gmail.com>
+Cc: Oleksij Rempel <linux@rempel-privat.de>,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	ilw@linux.intel.com,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These are used interchangeably so just do away
-with the redundancy.
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt     | 8 ++++----
- dbparse.py | 4 ++--
- 2 files changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/db.txt b/db.txt
-index d0d1a3f..b8ddb1b 100644
---- a/db.txt
-+++ b/db.txt
-@@ -2,14 +2,14 @@
- country 00:
- 	(2402 - 2472 @ 40), (3, 20)
- 	# Channel 12 - 13.
--	(2457 - 2482 @ 40), (3, 20), PASSIVE-SCAN, NO-IBSS
-+	(2457 - 2482 @ 40), (3, 20), NO-IR
- 	# Channel 14. Only JP enables this and for 802.11b only
--	(2474 - 2494 @ 20), (3, 20), PASSIVE-SCAN, NO-IBSS, NO-OFDM
-+	(2474 - 2494 @ 20), (3, 20), NO-IR, NO-OFDM
- 	# Channel 36 - 48
--	(5170 - 5250 @ 80), (3, 20), PASSIVE-SCAN, NO-IBSS
-+	(5170 - 5250 @ 80), (3, 20), NO-IR
- 	# NB: 5260 MHz - 5700 MHz requies DFS
- 	# Channel 149 - 165
--	(5735 - 5835 @ 80), (3, 20), PASSIVE-SCAN, NO-IBSS
-+	(5735 - 5835 @ 80), (3, 20), NO-IR
- 	# IEEE 802.11ad (60GHz), channels 1..3
- 	(57240 - 63720 @ 2160), (N/A, 0)
- 
-diff --git a/dbparse.py b/dbparse.py
-index 32cbce9..29eb9d6 100755
---- a/dbparse.py
-+++ b/dbparse.py
-@@ -12,8 +12,8 @@ flag_definitions = {
-     'DFS':		1<<4,
-     'PTP-ONLY':		1<<5,
-     'PTMP-ONLY':	1<<6,
--    'PASSIVE-SCAN':	1<<7,
--    'NO-IBSS':		1<<8,
-+    'NO-IR':	        1<<7,
-+    # hole at bit 8
-     # hole at bit 9. FIXME: Where is NO-HT40 defined?
-     'NO-HT40':		1<<10,
- }
--- 
-1.8.4.rc3
-
+On Mon, Oct 28, 2013 at 3:07 PM, Felipe Contreras
+<felipe.contreras@gmail.com> wrote:
+>> Looks like there is "maximum clients" feature is enabled in the AP, most AP's
+>> send deauth for Auth/Assoc Request but some AP's silently discard the
+>> Assoc Request.
+>>
+>> That explains why it works after reboot/adhoc mode. Try increasing the
+>> number if thats the case.
+>
+> Then why am I able to connect from my phone, other machines, and in
+> this machine with Windows 7?
+>
+So lets say "max clients=5" and first all of your devices except the
+linux connec
+to the AP, then they have no issues connecting. Now if the linux is
+the 6th device
+then it might have trouble connecting to the AP?? Its possible.
