@@ -1,35 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:47849 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753205Ab3JaQrC (ORCPT
+Received: from mail-wg0-f54.google.com ([74.125.82.54]:40392 "EHLO
+	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756812Ab3J1QmX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Oct 2013 12:47:02 -0400
-Message-ID: <1383238019.14302.8.camel@jlt4.sipsolutions.net> (sfid-20131031_174706_465342_6052D9F3)
-Subject: Re: [PATCH 5/5] cfg80211: fix dfs channel state after stopping AP
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org,
-	Marek Puzyniak <marek.puzyniak@tieto.com>
-Date: Thu, 31 Oct 2013 17:46:59 +0100
-In-Reply-To: <1382984824-3729-5-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131028_192723_623319_18641FCD)
-References: <1382984824-3729-1-git-send-email-janusz.dziedzic@tieto.com>
-	 <1382984824-3729-5-git-send-email-janusz.dziedzic@tieto.com>
-	 (sfid-20131028_192723_623319_18641FCD)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 28 Oct 2013 12:42:23 -0400
+Received: by mail-wg0-f54.google.com with SMTP id c11so6889029wgh.33
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Oct 2013 09:42:22 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linux-wireless@vger.kernel.org
+Cc: wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH v2 2/6] crda: fix -pedantic gcc compilation
+Date: Mon, 28 Oct 2013 17:42:02 +0100
+Message-Id: <1382978526-23929-3-git-send-email-mcgrof@do-not-panic.com> (sfid-20131028_174227_384081_6546DB0D)
+In-Reply-To: <1382978526-23929-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1382978526-23929-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-10-28 at 19:27 +0100, Janusz Dziedzic wrote:
+gcc likes to complain about this, fix that as we're
+going to get a bit more anal with code here soon as
+we're moving towards making a library out of reglib.
 
-> +	} else if (sdata->radar_required) {
-> +		/*
-> +		 * AP stopped on DFS channel so change that channel state
-> +		 * to NL80211_DFS_USABLE again.
-> +		 */
-> +		cfg80211_leave_dfs_channel(wiphy, &sdata->vif.bss_conf.chandef);
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ crda.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Would it make sense to just do this in cfg80211?
-
-johannes
+diff --git a/crda.c b/crda.c
+index 2a601eb..4751a39 100644
+--- a/crda.c
++++ b/crda.c
+@@ -141,13 +141,15 @@ int main(int argc, char **argv)
+ {
+ 	int fd = -1;
+ 	int i = 0, j, r;
+-	char alpha2[3] = {}; /* NUL-terminate */
++	char alpha2[3];
+ 	char *env_country;
+ 	struct nl80211_state nlstate;
+ 	struct nl_cb *cb = NULL;
+ 	struct nl_msg *msg;
+ 	int finished = 0;
+ 
++	memset(alpha2, 0, 3);
++
+ 	struct nlattr *nl_reg_rules;
+ 	const struct ieee80211_regdomain *rd = NULL;
+ 
+-- 
+1.8.4.rc3
 
