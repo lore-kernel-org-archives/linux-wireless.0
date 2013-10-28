@@ -1,44 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:39928 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755830Ab3JQCMP (ORCPT
+Received: from mail-wg0-f53.google.com ([74.125.82.53]:45947 "EHLO
+	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756153Ab3J1T1p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Oct 2013 22:12:15 -0400
-From: Sujith Manoharan <sujith@msujith.org>
+	Mon, 28 Oct 2013 15:27:45 -0400
+Received: by mail-wg0-f53.google.com with SMTP id y10so7318859wgg.32
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Oct 2013 12:27:44 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21087.18050.72635.617321@gargle.gargle.HOWL> (sfid-20131017_041224_238420_1CAB1A54)
-Date: Thu, 17 Oct 2013 07:38:02 +0530
-To: Bruno Randolf <br1@einfach.org>
-Cc: Oleksij Rempel <linux@rempel-privat.de>,
-	linux-wireless@vger.kernel.org, nbd@openwrt.org,
-	Ingo Randolf <ingo.randolf@qupik.com>
-Subject: Re: ath9k AR9287 status?
-In-Reply-To: <524DA3DC.6060806@einfach.org>
-References: <52492FB0.3010201@einfach.org>
-	<5249443E.3080700@rempel-privat.de>
-	<524954BE.8060603@einfach.org>
-	<52497C2E.1060406@rempel-privat.de>
-	<5249A2F7.5090908@einfach.org>
-	<524DA3DC.6060806@einfach.org>
+In-Reply-To: <CAMP44s0087jYz5AiEaEzwt7GqH9ed8PWE1CmvMPr4Dqn3yE6rA@mail.gmail.com>
+References: <CAMP44s1XJRHV8bAX=_-TkSKMkY8Nw1=eHorqTCZ2QmtR5m8uJA@mail.gmail.com>
+ <526E20EA.9090203@rempel-privat.de> <CAMP44s2Cvw9HF3c3Asuq+bTSD36Gw6PXOUVjAcCD+hf6KB_awg@mail.gmail.com>
+ <CABPxzY+xJ7kst-sYwP8RJwMO_zkNYWKaYy=_LS7WQfuxquK24w@mail.gmail.com> <CAMP44s0087jYz5AiEaEzwt7GqH9ed8PWE1CmvMPr4Dqn3yE6rA@mail.gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Tue, 29 Oct 2013 00:57:23 +0530
+Message-ID: <CABPxzYLwwyFCFw1pEt0v9Xw4kcue1C_RZx0RbTbMrUw=+MWvgQ@mail.gmail.com> (sfid-20131028_202748_469801_9A398B03)
+Subject: Re: I always need a miracle to connect with iwlwifi
+To: Felipe Contreras <felipe.contreras@gmail.com>
+Cc: Oleksij Rempel <linux@rempel-privat.de>, ilw@linux.intel.com,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bruno Randolf wrote:
-> I just tried current wireless-testing (3.12.0-rc3-wl) and it shows the 
-> same problems.
-> 
-> For reference:
-> 
-> Card:  Unex DNXA-97 (AR9287) http://unex.com.tw/product/dnxa-97
-> Board: Advantech MIO-2261N (Atom N260)
-> 
-> ASPM is disabled in the BIOS and by pcie_aspm=off. Scanning seems to 
-> work, but when I start up hostapd (v2.0, simple AP config) nothing 
-> happens (no AP is found by clients). When I stop hostapd the system 
-> freezes with "BUG: soft lockup - CPU#3 stuck for 23s! (hostapd:2250)"
+On Tue, Oct 29, 2013 at 12:13 AM, Felipe Contreras
+<felipe.contreras@gmail.com> wrote:
+> On Mon, Oct 28, 2013 at 12:28 PM, Krishna Chaitanya
+> <chaitanya.mgit@gmail.com> wrote:
+>> On Mon, Oct 28, 2013 at 11:30 PM, Felipe Contreras
+>> <felipe.contreras@gmail.com> wrote:
+>>
+>>> The authentication response does come back in both cases though, it's
+>>> just the acknowledgement that is missing. Unfortunately I cannot
+>>> figure out for which message it's the ack.
+>>>
+>>> Also, I notice the sequence number received from the router doesn't
+>>> seem to change. All the authentication requests received have the same
+>>> number (256). Another peculiar thing is that in the failed case the SN
+>>> we send starts with 0.
+>>>
+>>> I suppose since the authentication ack never arrives, the next steps
+>>> are never completed.
+>>>
+>>> Does that help?
+>> From the supplicant logs we have successfully received the
+>> authentication response
+>> and sent out the association request. So are you referring to not receiving ACK
+>> for association request??
+>
+> No, from the capture there's no association request in the bad case,
+> only in the good one.
+>
+>> It would be nice to get the capture without any filters?
+>
+> http://people.freedesktop.org/~felipec/wpa/wpa-bad.pcapng
+> http://people.freedesktop.org/~felipec/wpa/wpa-good.pcapng
+>
 
-Can you post the kernel log with latest wireless-testing ?
-Please load the driver with debug=0x8f49.
+>From the logs we can see that we have received authentication response,
+so the association request is getting dropped somewhere? We might
+need the mac80211 and iwlwifi trace-cmd logs to check for the drop.
 
-Sujith
+http://wireless.kernel.org/en/developers/Documentation/mac80211/tracing
+
+Another side porint? Also all the beacons from that AP are malformed
+but probe responses are fine, weird??
