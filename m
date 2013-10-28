@@ -1,47 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:53959 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753893Ab3JCS1E (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:34161 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756609Ab3J1OI3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Oct 2013 14:27:04 -0400
-Message-ID: <524DB6F6.6020405@candelatech.com> (sfid-20131003_202712_972237_DD36761C)
-Date: Thu, 03 Oct 2013 11:27:02 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: netdev <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Ideas on why using WPA2 encryption speeds up many TCP connections?
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 28 Oct 2013 10:08:29 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 1/4] nl80211: check nla_put_* return values
+Date: Mon, 28 Oct 2013 15:08:21 +0100
+Message-Id: <1382969304-25611-1-git-send-email-johannes@sipsolutions.net> (sfid-20131028_150831_591764_43492672)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm seeing something a bit strange and wondering if anyone had an opinion on why...
+From: Johannes Berg <johannes.berg@intel.com>
 
-I am testing up to 200 wifi station systems, each with a TCP connection running
-on them (download only, from VAP to stations).
+Coverity pointed out that in a few functions we don't
+check the return value of the nla_put_*() calls. Most
+of these are fairly harmless because the input isn't
+very dynamic and controlled by the kernel, but the
+pattern is simply wrong, so fix this.
 
-Without encryption (ie, open network), I see total throughput go from
-about 108Mbps down to 69Mbps as I add more stations (I add 25 at a time,
-so the 108Mbps is with 25 active, and 69Mbps is with 200 active).
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/nl80211.c | 52 +++++++++++++++++++++++++++++---------------------
+ 1 file changed, 30 insertions(+), 22 deletions(-)
 
-However, if I enable encryption, the throughput is actually higher
-(111Mbps to 71Mbps).  I'm doing encryption in software, so it adds a fair
-bit of CPU load in this test.  The numbers bounce around since this is
-wifi after all, but in general encryption tends to win reliably in this
-test.
-
-When testing with a single station (and 5 tcp streams with jacked up snd/rcv buffers)
-the open networks perform significantly better at total throughput:  263Mbps vs 246Mbps.
-
-Maybe the extra delay for decryption increases odds that GRO will take
-affect for the many, slower streams (and maybe that will decrease ACK traffic?)
-
-Any other ideas?
-
-Thanks,
-Ben
-
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 8ced6bc..1fef427 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -9633,8 +9633,9 @@ static int nl80211_add_scan_req(struct sk_buff *msg,
+ 	    nla_put(msg, NL80211_ATTR_IE, req->ie_len, req->ie))
+ 		goto nla_put_failure;
+ 
+-	if (req->flags)
+-		nla_put_u32(msg, NL80211_ATTR_SCAN_FLAGS, req->flags);
++	if (req->flags &&
++	    nla_put_u32(msg, NL80211_ATTR_SCAN_FLAGS, req->flags))
++		goto nla_put_failure;
+ 
+ 	return 0;
+  nla_put_failure:
+@@ -11118,16 +11119,18 @@ void cfg80211_report_wowlan_wakeup(struct wireless_dev *wdev,
+ 				wakeup->pattern_idx))
+ 			goto free_msg;
+ 
+-		if (wakeup->tcp_match)
+-			nla_put_flag(msg, NL80211_WOWLAN_TRIG_WAKEUP_TCP_MATCH);
++		if (wakeup->tcp_match &&
++		    nla_put_flag(msg, NL80211_WOWLAN_TRIG_WAKEUP_TCP_MATCH))
++			goto free_msg;
+ 
+-		if (wakeup->tcp_connlost)
+-			nla_put_flag(msg,
+-				     NL80211_WOWLAN_TRIG_WAKEUP_TCP_CONNLOST);
++		if (wakeup->tcp_connlost &&
++		    nla_put_flag(msg, NL80211_WOWLAN_TRIG_WAKEUP_TCP_CONNLOST))
++			goto free_msg;
+ 
+-		if (wakeup->tcp_nomoretokens)
+-			nla_put_flag(msg,
+-				NL80211_WOWLAN_TRIG_WAKEUP_TCP_NOMORETOKENS);
++		if (wakeup->tcp_nomoretokens &&
++		    nla_put_flag(msg,
++				 NL80211_WOWLAN_TRIG_WAKEUP_TCP_NOMORETOKENS))
++			goto free_msg;
+ 
+ 		if (wakeup->packet) {
+ 			u32 pkt_attr = NL80211_WOWLAN_TRIG_WAKEUP_PKT_80211;
+@@ -11263,24 +11266,29 @@ void cfg80211_ft_event(struct net_device *netdev,
+ 		return;
+ 
+ 	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_FT_EVENT);
+-	if (!hdr) {
+-		nlmsg_free(msg);
+-		return;
+-	}
++	if (!hdr)
++		goto out;
++
++	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
++	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex) ||
++	    nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, ft_event->target_ap))
++		goto out;
+ 
+-	nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx);
+-	nla_put_u32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex);
+-	nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, ft_event->target_ap);
+-	if (ft_event->ies)
+-		nla_put(msg, NL80211_ATTR_IE, ft_event->ies_len, ft_event->ies);
+-	if (ft_event->ric_ies)
+-		nla_put(msg, NL80211_ATTR_IE_RIC, ft_event->ric_ies_len,
+-			ft_event->ric_ies);
++	if (ft_event->ies &&
++	    nla_put(msg, NL80211_ATTR_IE, ft_event->ies_len, ft_event->ies))
++		goto out;
++	if (ft_event->ric_ies &&
++	    nla_put(msg, NL80211_ATTR_IE_RIC, ft_event->ric_ies_len,
++		    ft_event->ric_ies))
++		goto out;
+ 
+ 	genlmsg_end(msg, hdr);
+ 
+ 	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
+ 				nl80211_mlme_mcgrp.id, GFP_KERNEL);
++	return;
++ out:
++	nlmsg_free(msg);
+ }
+ EXPORT_SYMBOL(cfg80211_ft_event);
+ 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.8.4.rc3
 
