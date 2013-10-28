@@ -1,52 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f172.google.com ([74.125.82.172]:47059 "EHLO
-	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751326Ab3JUGwz (ORCPT
+Received: from cassiel.sirena.org.uk ([80.68.93.111]:60812 "EHLO
+	cassiel.sirena.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755810Ab3J1TYj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Oct 2013 02:52:55 -0400
-Received: by mail-we0-f172.google.com with SMTP id q58so6156439wes.3
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Oct 2013 23:52:54 -0700 (PDT)
+	Mon, 28 Oct 2013 15:24:39 -0400
+Date: Mon, 28 Oct 2013 12:23:54 -0700
+From: Mark Brown <broonie@kernel.org>
+To: Grazvydas Ignotas <notasas@gmail.com>
+Cc: Alexander Shiyan <shc_work@mail.ru>,
+	Luciano Coelho <luca@coelho.fi>,
+	Mark Rutland <mark.rutland@arm.com>,
+	devicetree@vger.kernel.org, Russell King <linux@arm.linux.org.uk>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Tony Lindgren <tony@atomide.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-doc@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Rob Herring <rob.herring@calxeda.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Sachin Kamat <sachin.kamat@linaro.org>,
+	Bill Pemberton <wfp5p@virginia.edu>,
+	Felipe Balbi <balbi@ti.com>, Rob Landley <rob@landley.net>,
+	netdev@vger.kernel.org,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Message-ID: <20131028192354.GA18208@sirena.org.uk> (sfid-20131028_202508_107277_85138A1C)
+References: <1382890469-25286-1-git-send-email-sre@debian.org>
+ <1382890469-25286-3-git-send-email-sre@debian.org>
+ <1382891056.102746625@f315.i.mail.ru>
+ <20131027201218.GA4414@earth.universe>
+ <CANOLnONKcC1i19ypb4rh2Rff3WsVhhuUhNvZvYwDV2-ZNtjVxQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <87mwm3uoep.fsf@kamboji.qca.qualcomm.com>
-References: <1382090878-22216-1-git-send-email-bartosz.markowski@tieto.com>
-	<87mwm3uoep.fsf@kamboji.qca.qualcomm.com>
-Date: Mon, 21 Oct 2013 08:52:54 +0200
-Message-ID: <CACKGw+GgYwu-oQ12LjPm3FLKQ5PDG+KUVgoEM=KGH8q+SWvmBQ@mail.gmail.com> (sfid-20131021_085259_133422_29B68A21)
-Subject: Re: [PATCH 1/2] ath10k: remove P2P from supported interface modes for
- 10.X FW
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k@lists.infradead.org,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="vkogqOf2sHV7VnPd"
+In-Reply-To: <CANOLnONKcC1i19ypb4rh2Rff3WsVhhuUhNvZvYwDV2-ZNtjVxQ@mail.gmail.com>
+Subject: Re: [PATCH 2/4] wl1251: move power GPIO handling into the driver
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 21 October 2013 08:30, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Bartosz Markowski <bartosz.markowski@tieto.com> writes:
->
->> FW 10.X does not support P2P, stop advertising it to mac80211.
->>
->> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
->
-> [...]
->
->> @@ -3478,7 +3504,11 @@ int ath10k_mac_register(struct ath10k *ar)
->>        */
->>       ar->hw->queues = 4;
->>
->> -     ar->hw->wiphy->iface_combinations = &ath10k_if_comb;
->> +     if (test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features))
->> +             ar->hw->wiphy->iface_combinations = &ath10k_10x_if_comb;
->> +     else
->> +             ar->hw->wiphy->iface_combinations = &ath10k_if_comb;
->
-> I think it would be better to have a separate feature flag for this,
-> like NO_P2P or something like that. Just in case we want to disable P2P
-> in other firmware branches.
 
-Make sense. I will change this.
+--vkogqOf2sHV7VnPd
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
+On Mon, Oct 28, 2013 at 07:29:52PM +0200, Grazvydas Ignotas wrote:
 
--- 
-Bartosz
+> When wl12xx family of chips is connected through SDIO, we already have
+> that pin set up as a regulator controlled with the help of mmc
+> subsystem. When time comes to communicate with the chip, mmc subsystem
+> sees this as yet another SD card and looks for associated regulator
+> for it, and the board file has that set up as a fixed regulator
+> controlling that pin (see pandora_vmmc3 in
+> arch/arm/mach-omap2/board-omap3pandora.c). To prevent poweroff after
+> first SDIO communications are over, pm_runtime calls are used in
+> drivers/net/wireless/ti/wl1251/sdio.c .
+
+Is this actually controlling VMMC though, or is it some other control?
+If it's not controlling VMMC then it shouldn't say that it is.
+
+> I don't know if something similar can be done done in SPI case, but
+> I'm sure this is not the first your-so-called regulator misuse.
+
+It's not the first but that doesn't make controlling something other
+than a regulator through the regulator API any less broken.
+
+--vkogqOf2sHV7VnPd
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIcBAEBAgAGBQJSbrnBAAoJELSic+t+oim9zIwQAIvaD4m/WxkD0sxXd8pb5lKQ
+Y88rGx5PwOI7AnVd1e+dHdv/EUrdhYQd7GpUC3YQ5aARR5BqKJhkw4woTuhKAdTl
+vOMq2FFzXIEeLpwt7zoSu4naXGz+X2WYlSPOs8itze448Y5m5abFWI1433IEAD2C
+MdMkaL6C+rLpzFYk5dGRsgK0efCc0jWgoJUmLnhCQH2UDOvCAVqL0HMzbe3TvnOE
+BDrnyvti2XH/B708MVxRWjsNdxwcwD6PvjSSviSL/x57fjgs97NG3qDfuICSy4Vl
+zcimUlnIaJXkLvA7tS+c5CcNS2MsJAoi3FiufQVmRAtK42CKLMrDEudKkeacSvmn
+wd6yAZUh9MqHsLJj48OeWPzD4EMq3MVhlDUsHeCiI6OcEdoPTgEu2rQiPYN4Ihd2
+UawXig1687VV6SgCkERjrW4oPA8GIu0lR/y4T/Po34UhhthVBGBE1xkc4ER8JDrt
+WxxVQXKwFLke2J7qbMd1ngGyHCShLaw2aKhwuxJyOl+J09LgXtY4WH8vpp/ruY8m
+0Ncsy88BKliO6AXnYqW648oP2axHnt/2uiw10wLjmk33RT0a4qrxeQsGF4YK0I4e
+yrytIfz+kzLO1i/fdtvonRJvbLMLFG4514s6NTwa6l5olSzDc719BZsY4Q33u6kk
+V+RxybJIeUSgZ5Zfb8Pa
+=YWan
+-----END PGP SIGNATURE-----
+
+--vkogqOf2sHV7VnPd--
