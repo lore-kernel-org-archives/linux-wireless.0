@@ -1,65 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:5530 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932408Ab3JOL6g (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:34550 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932669Ab3J1PAa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Oct 2013 07:58:36 -0400
-From: Kefeng Wang <wangkefeng.wang@huawei.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Pablo Neira Ayuso <pablo@netfilter.org>,
-	"Stephen Hemminger" <stephen@networkplumber.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Francois Romieu <romieu@fr.zoreil.com>,
-	"Ben Hutchings" <bhutchings@solarflare.com>,
-	Chas Williams <chas@cmf.nrl.navy.mil>,
-	Marc Kleine-Budde <mkl@pengutronix.de>,
-	Samuel Ortiz <samuel@sortiz.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Oliver Neukum <oneukum@suse.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	"Boris Ostrovsky" <boris.ostrovsky@oracle.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	"Michael S. Tsirkin" <mst@redhat.com>, <netfilter@vger.kernel.org>,
-	<netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	<guohanjun@huawei.com>
-Subject: [PATCH 17/18] net: vxlan: use wrapper functions of net_ratelimit() to simplify code
-Date: Tue, 15 Oct 2013 19:45:13 +0800
-Message-ID: <1381837514-50660-18-git-send-email-wangkefeng.wang@huawei.com> (sfid-20131015_140041_576444_536C04DD)
-In-Reply-To: <1381837514-50660-1-git-send-email-wangkefeng.wang@huawei.com>
-References: <1381837514-50660-1-git-send-email-wangkefeng.wang@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 28 Oct 2013 11:00:30 -0400
+Message-ID: <1382972426.17956.32.camel@jlt4.sipsolutions.net> (sfid-20131028_160045_461377_DE3E0A33)
+Subject: Re: [PATCH] nl80211: introduce NL80211_SCAN_FLAG_DISCOVERY_MODE
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vladimir Kondratiev <qca_vkondrat@qti.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R . Rodriguez" <rodrigue@qca.qualcomm.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+Date: Mon, 28 Oct 2013 16:00:26 +0100
+In-Reply-To: <1382971021.17956.25.camel@jlt4.sipsolutions.net> (sfid-20131028_153716_103618_218A746E)
+References: <1382889282-12880-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	 <1382971021.17956.25.camel@jlt4.sipsolutions.net>
+	 (sfid-20131028_153716_103618_218A746E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-net_ratelimited_function() is called to simplify code.
+Ok, so you can't even get your own email address right - I'll ignore you
+for a few weeks until you maybe get it right.
 
-Signed-off-by: Kefeng Wang <wangkefeng.wang@huawei.com>
----
- drivers/net/vxlan.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/drivers/net/vxlan.c b/drivers/net/vxlan.c
-index 2ef5b62..56583ab 100644
---- a/drivers/net/vxlan.c
-+++ b/drivers/net/vxlan.c
-@@ -893,8 +893,7 @@ static bool vxlan_snoop(struct net_device *dev,
- 		if (f->state & NUD_NOARP)
- 			return true;
- 
--		if (net_ratelimit())
--			netdev_info(dev,
-+		net_ratelimited_function(netdev_info, dev,
- 				    "%pM migrated from %pIS to %pIS\n",
- 				    src_mac, &rdst->remote_ip, &src_ip);
- 
--- 
-1.8.2.1
-
+johannes
 
