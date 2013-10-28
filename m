@@ -1,64 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f48.google.com ([74.125.83.48]:43532 "EHLO
-	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752024Ab3J1GVB (ORCPT
+Received: from mail-ea0-f181.google.com ([209.85.215.181]:50689 "EHLO
+	mail-ea0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756004Ab3J1NuC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Oct 2013 02:21:01 -0400
-Received: by mail-ee0-f48.google.com with SMTP id e50so3160924eek.35
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Oct 2013 23:21:00 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 1/2] ath10k: plug memory leak in wmi mgmt tx worker
-Date: Mon, 28 Oct 2013 07:18:13 +0100
-Message-Id: <1382941094-3291-2-git-send-email-michal.kazior@tieto.com> (sfid-20131028_072110_233535_C4D3D2A9)
-In-Reply-To: <1382941094-3291-1-git-send-email-michal.kazior@tieto.com>
-References: <1382941094-3291-1-git-send-email-michal.kazior@tieto.com>
+	Mon, 28 Oct 2013 09:50:02 -0400
+From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 16/16] wl1251: Add sysfs file address for setting permanent mac address
+Date: Mon, 28 Oct 2013 14:49:57 +0100
+Cc: Luciano Coelho <luca@coelho.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
+	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
+	joni.lapilainen@gmail.com
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com> <1382819655-30430-17-git-send-email-pali.rohar@gmail.com> <1382967905.17956.8.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1382967905.17956.8.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1996909.omHDmAVbmR";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <201310281449.58170@pali> (sfid-20131028_145036_778245_0E005EDC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-sk_buff was not freed in some cases. The patch
-unifies the msdu freeing.
+--nextPart1996909.omHDmAVbmR
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 4 +++-
- drivers/net/wireless/ath/ath10k/wmi.c | 4 +---
- 2 files changed, 4 insertions(+), 4 deletions(-)
+On Monday 28 October 2013 14:45:05 Johannes Berg wrote:
+> On Sat, 2013-10-26 at 22:34 +0200, Pali Roh=C3=A1r wrote:
+> > Driver wl1251 generating mac address randomly at startup and
+> > there is no way to set permanent mac address via
+> > SET_IEEE80211_PERM_ADDR. This patch export sysfs file which
+> > can set permanent mac address by userspace helper program.
+> > Patch is needed for devices which do not store mac address
+> > in internal wl1251 eeprom.
+>=20
+> This doesn't really seem like a good idea since you can also
+> just use 'ip' or whatever to set the MAC address.
+>=20
+> johannes
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index bbb0efa..f45eca0 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -1729,8 +1729,10 @@ void ath10k_mgmt_over_wmi_tx_work(struct work_struct *work)
- 			break;
- 
- 		ret = ath10k_wmi_mgmt_tx(ar, skb);
--		if (ret)
-+		if (ret) {
- 			ath10k_warn("wmi mgmt_tx failed (%d)\n", ret);
-+			ieee80211_free_txskb(ar->hw, skb);
-+		}
- 	}
- }
- 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index a796d0b..8db9db2 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -674,10 +674,8 @@ int ath10k_wmi_mgmt_tx(struct ath10k *ar, struct sk_buff *skb)
- 
- 	/* Send the management frame buffer to the target */
- 	ret = ath10k_wmi_cmd_send(ar, wmi_skb, ar->wmi.cmd->mgmt_tx_cmdid);
--	if (ret) {
--		dev_kfree_skb_any(skb);
-+	if (ret)
- 		return ret;
--	}
- 
- 	/* TODO: report tx status to mac80211 - temporary just ACK */
- 	info->flags |= IEEE80211_TX_STAT_ACK;
--- 
-1.8.4.rc3
+AFAIK you cannot set permanent address (show by ethtool -P wlan0)=20
+via ip/ifconfig.
 
+=2D-=20
+Pali Roh=C3=A1r
+pali.rohar@gmail.com
+
+--nextPart1996909.omHDmAVbmR
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEABECAAYFAlJua4YACgkQi/DJPQPkQ1JbmACgngFKM192sHlcxzpWCh9/YeQD
+rM8An1PkzO/OblkbtvxanYq8noy7WwGN
+=ZZHU
+-----END PGP SIGNATURE-----
+
+--nextPart1996909.omHDmAVbmR--
