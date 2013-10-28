@@ -1,106 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:50714 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751044Ab3JINyu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Oct 2013 09:54:50 -0400
-Received: from [192.168.2.100] ([93.218.71.155]) by mail.gmx.com (mrgmx001)
- with ESMTPSA (Nemesis) id 0McVGq-1VCEqb1mhU-00Hhb1 for
- <linux-wireless@vger.kernel.org>; Wed, 09 Oct 2013 15:54:48 +0200
-Message-ID: <52556024.20302@rempel-privat.de> (sfid-20131009_155453_487320_6B8A8428)
-Date: Wed, 09 Oct 2013 15:54:44 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
-MIME-Version: 1.0
-To: ASIC Felix <ic.felix@gmail.com>, linux-wireless@vger.kernel.org,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
-Subject: Re: [mac80211] connection drop up to 20x/hour at office
-References: <CAJqaZwy4priN+Zjnejvj2bbpBm6wN_smSZZi5FBSNrbDaLgiGw@mail.gmail.com>
-In-Reply-To: <CAJqaZwy4priN+Zjnejvj2bbpBm6wN_smSZZi5FBSNrbDaLgiGw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-we0-f169.google.com ([74.125.82.169]:47019 "EHLO
+	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755041Ab3J1BxM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 Oct 2013 21:53:12 -0400
+Received: by mail-we0-f169.google.com with SMTP id q58so6009080wes.14
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Oct 2013 18:53:11 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linux-wireless@vger.kernel.org
+Cc: wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 2/6] crda: fix -pedantic gcc compilation
+Date: Mon, 28 Oct 2013 02:52:58 +0100
+Message-Id: <1382925182-7393-3-git-send-email-mcgrof@do-not-panic.com> (sfid-20131028_025317_049926_D9E296AF)
+In-Reply-To: <1382925182-7393-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1382925182-7393-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 09.10.2013 06:29, schrieb ASIC Felix:
-> I get this connection drop several times an hour, at office up to
-> 20x/hour, with current Ubuntu Kernel + Backports wifi even at home,
-> before only at the office. Wifi connection recovers eventually, but
-> breaks VM and often even VPN connections.
+gcc likes to complain about this, fix that as we're
+going to get a bit more anal with code here soon as
+we're moving towards making a library out of reglib.
 
-20x per hour? it mean each 3 mints. Hmm... looks like scan interval of
-wpa_supplicant.
-Is it possible to change time to live setting of access point?
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ crda.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-> Does anyone else see this? Further info needed?
-> 
-> Ubuntu:                  12-04 LTS
-> Kernel:                   3.2.0-54-generic #82-Ubuntu SMP x86_64
-> Backports:              v3.11-rc3-1-0-g4e81a94
-> make menuconfig:   [ ]   enable powersave by default
-> 
-> [ 1955.984833] wlan0: Aggregation is on for 00:24:01:45:51:41 tid 0
-> [ 1961.168180] wlan0: tx session timer expired on 00:24:01:45:51:41 tid 0
-> [ 1961.168259] wlan0: Tx BA session stop requested for 00:24:01:45:51:41 tid 0
-> [ 1968.356133] wlan0: Stopping Tx BA session for 00:24:01:45:51:41 tid 0
-> [ 1969.919269] wlan0: Rx BA session stop requested for
-> 00:24:01:45:51:41 tid 1 recipient reason: 36
-> [ 1969.921269] wlan0: moving STA 00:24:01:45:51:41 to state 3
-> [ 1969.921280] wlan0: moving STA 00:24:01:45:51:41 to state 2
-> [ 1969.921289] wlan0: moving STA 00:24:01:45:51:41 to state 1
-> [ 1969.921294] wlan0: Removed STA 00:24:01:45:51:41
-> [ 1969.994841] wlan0: Destroyed STA 00:24:01:45:51:41
-> [ 1969.994901] cfg80211: Calling CRDA to update world regulatory domain
-> [ 1970.007475] cfg80211: World regulatory domain updated:
-> [ 1970.007483] cfg80211:   (start_freq - end_freq @ bandwidth),
-> (max_antenna_gain, max_eirp)
-> [ 1970.007491] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz),
-> (300 mBi, 2000 mBm)
-> [ 1970.007497] cfg80211:   (2457000 KHz - 2482000 KHz @ 20000 KHz),
-> (300 mBi, 2000 mBm)
-> [ 1970.007503] cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz),
-> (300 mBi, 2000 mBm)
-> [ 1970.007509] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz),
-> (300 mBi, 2000 mBm)
-> [ 1970.007515] cfg80211:   (5735000 KHz - 5835000 KHz @ 40000 KHz),
-> (300 mBi, 2000 mBm)
-> [ 1973.450965] wlan0: authenticate with 00:24:01:45:51:41
-> [ 1973.450986] wlan0: Allocated STA 00:24:01:45:51:41
-> [ 1973.463343] wlan0: Inserted STA 00:24:01:45:51:41
-> [ 1973.463352] wlan0: send auth to 00:24:01:45:51:41 (try 1/3)
-> [ 1973.573146] wlan0: send auth to 00:24:01:45:51:41 (try 2/3)
-> [ 1973.753188] wlan0: authentication with 00:24:01:45:51:41 timed out
-> [ 1973.757595] wlan0: Removed STA 00:24:01:45:51:41
-> 
-> Driver / Wifi module etc:
-> 
->  Loading modules backported from Linux version v3.11-rc3-0-g5ae90d8
->  Backport generated by backports.git v3.11-rc3-1-0-g4e81a94
->  cfg80211: Calling CRDA to update world regulatory domain
->  cfg80211: World regulatory domain updated:
->  cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
->  cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
->  cfg80211:   (2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
->  cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
->  cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
->  cfg80211:   (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
->  ath9k 0000:0d:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
->  ath9k 0000:0d:00.0: setting latency timer to 64
->  ath: phy0: ASPM enabled: 0x42
->  ath: EEPROM regdomain: 0x6a
->  ath: EEPROM indicates we should expect a direct regpair map
->  ath: Country alpha2 being used: 00
->  ath: Regpair used: 0x6a
->  ieee80211 phy0: Selected rate control algorithm 'minstrel_ht'
->  Registered led device: ath9k-phy0
->  ieee80211 phy0: Atheros AR9300 Rev:3 mem=0xffffc900118c0000, irq=18
-> 
-> 
-> Felix
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
-
+diff --git a/crda.c b/crda.c
+index 2a601eb..4751a39 100644
+--- a/crda.c
++++ b/crda.c
+@@ -141,13 +141,15 @@ int main(int argc, char **argv)
+ {
+ 	int fd = -1;
+ 	int i = 0, j, r;
+-	char alpha2[3] = {}; /* NUL-terminate */
++	char alpha2[3];
+ 	char *env_country;
+ 	struct nl80211_state nlstate;
+ 	struct nl_cb *cb = NULL;
+ 	struct nl_msg *msg;
+ 	int finished = 0;
+ 
++	memset(alpha2, 0, 3);
++
+ 	struct nlattr *nl_reg_rules;
+ 	const struct ieee80211_regdomain *rd = NULL;
+ 
 -- 
-Regards,
-Oleksij
+1.8.4.rc3
+
