@@ -1,126 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out03.msg.oleane.net ([62.161.7.1]:54338 "EHLO
-	smtp-out03.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750936Ab3JWOSZ convert rfc822-to-8bit (ORCPT
+Received: from mail-la0-f53.google.com ([209.85.215.53]:61054 "EHLO
+	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932165Ab3J1SAT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Oct 2013 10:18:25 -0400
-Received: from smtp04.msg.oleane.net (smtp04.mail.priv [172.17.20.113])
-	by smtp-out03.msg.oleane.net with ESMTP id r9NEI4IO012564
-	for <linux-wireless@vger.kernel.org>; Wed, 23 Oct 2013 16:18:23 +0200
-From: "voncken" <cedric.voncken@acksys.fr>
-To: "'Sujith Manoharan'" <sujith@msujith.org>,
-	"'John Linville'" <linville@tuxdriver.com>
-Cc: <linux-wireless@vger.kernel.org>
-References: <1382519771-11170-1-git-send-email-sujith@msujith.org>
-In-Reply-To: <1382519771-11170-1-git-send-email-sujith@msujith.org>
-Subject: RE: [PATCH] ath9k: Identify Killer Wireless cards
-Date: Wed, 23 Oct 2013 15:57:26 +0200
-Message-ID: <014d01cecff7$ce744080$6b5cc180$@acksys.fr> (sfid-20131023_161833_158859_D989B296)
+	Mon, 28 Oct 2013 14:00:19 -0400
+Received: by mail-la0-f53.google.com with SMTP id eo20so5448936lab.26
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Oct 2013 11:00:17 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+In-Reply-To: <526E20EA.9090203@rempel-privat.de>
+References: <CAMP44s1XJRHV8bAX=_-TkSKMkY8Nw1=eHorqTCZ2QmtR5m8uJA@mail.gmail.com>
+	<526E20EA.9090203@rempel-privat.de>
+Date: Mon, 28 Oct 2013 12:00:17 -0600
+Message-ID: <CAMP44s2Cvw9HF3c3Asuq+bTSD36Gw6PXOUVjAcCD+hf6KB_awg@mail.gmail.com> (sfid-20131028_190032_423389_E4848D8D)
+Subject: Re: I always need a miracle to connect with iwlwifi
+From: Felipe Contreras <felipe.contreras@gmail.com>
+To: Oleksij Rempel <linux@rempel-privat.de>
+Cc: linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	ilw@linux.intel.com,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-	What is a PCI killer ?
+On Mon, Oct 28, 2013 at 2:31 AM, Oleksij Rempel <linux@rempel-privat.de> wrote:
 
-Cedric Voncken 
+> Take wireshark and capture working and not working associational request.
 
+All right, so what I did is take a working and non-working on the same
+Linux machine. I have never done that, and didn't find much
+information about how to do that so I used kismet.
 
-> -----Message d'origine-----
-> De : linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
-> owner@vger.kernel.org] De la part de Sujith Manoharan
-> Envoyé : mercredi 23 octobre 2013 11:16
-> À : John Linville
-> Cc : linux-wireless@vger.kernel.org
-> Objet : [PATCH] ath9k: Identify Killer Wireless cards
-> 
-> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-> 
-> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath9k/ath9k.h |  1 +
-> drivers/net/wireless/ath/ath9k/init.c  |  3 +++
->  drivers/net/wireless/ath/ath9k/pci.c   | 20 ++++++++++++++++++++
->  3 files changed, 24 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h
-> b/drivers/net/wireless/ath/ath9k/ath9k.h
-> index 4c3bbe4..f48cfe8 100644
-> --- a/drivers/net/wireless/ath/ath9k/ath9k.h
-> +++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-> @@ -641,6 +641,7 @@ void ath_ant_comb_scan(struct ath_softc *sc, struct
-> ath_rx_status *rs);
->  #define ATH9K_PCI_D3_L1_WAR   0x0040
->  #define ATH9K_PCI_AR9565_1ANT 0x0080
->  #define ATH9K_PCI_AR9565_2ANT 0x0100
-> +#define ATH9K_PCI_KILLER      0x0200
-> 
->  /*
->   * Default cache line size, in bytes.
-> diff --git a/drivers/net/wireless/ath/ath9k/init.c
-> b/drivers/net/wireless/ath/ath9k/init.c
-> index e89db64..17502b4 100644
-> --- a/drivers/net/wireless/ath/ath9k/init.c
-> +++ b/drivers/net/wireless/ath/ath9k/init.c
-> @@ -589,6 +589,9 @@ static void ath9k_init_platform(struct ath_softc *sc)
->  	if (sc->driver_data & ATH9K_PCI_AR9565_2ANT)
->  		ath_info(common, "WB335 2-ANT card detected\n");
-> 
-> +	if (sc->driver_data & ATH9K_PCI_KILLER)
-> +		ath_info(common, "Killer Wireless card detected\n");
-> +
->  	/*
->  	 * Some WB335 cards do not support antenna diversity. Since
->  	 * we use a hardcoded value for AR9565 instead of using the diff
---git
-> a/drivers/net/wireless/ath/ath9k/pci.c
-> b/drivers/net/wireless/ath/ath9k/pci.c
-> index 04e6507..4a7a456 100644
-> --- a/drivers/net/wireless/ath/ath9k/pci.c
-> +++ b/drivers/net/wireless/ath/ath9k/pci.c
-> @@ -87,6 +87,19 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) =
-> {
->  	{ PCI_VDEVICE(ATHEROS, 0x002C) }, /* PCI-E 802.11n bonded out */
->  	{ PCI_VDEVICE(ATHEROS, 0x002D) }, /* PCI   */
->  	{ PCI_VDEVICE(ATHEROS, 0x002E) }, /* PCI-E */
-> +
-> +	/* Killer Wireless (3x3) */
-> +	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-> +			 0x0030,
-> +			 0x1A56,
-> +			 0x2000),
-> +	  .driver_data = ATH9K_PCI_KILLER },
-> +	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-> +			 0x0030,
-> +			 0x1A56,
-> +			 0x2001),
-> +	  .driver_data = ATH9K_PCI_KILLER },
-> +
->  	{ PCI_VDEVICE(ATHEROS, 0x0030) }, /* PCI-E  AR9300 */
-> 
->  	/* PCI-E CUS198 */
-> @@ -267,6 +280,13 @@ static
-> DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
->  			 0x1783),
->  	  .driver_data = ATH9K_PCI_WOW },
-> 
-> +	/* Killer Wireless (2x2) */
-> +	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-> +			 0x0030,
-> +			 0x1A56,
-> +			 0x2003),
-> +	  .driver_data = ATH9K_PCI_KILLER },
-> +
->  	{ PCI_VDEVICE(ATHEROS, 0x0034) }, /* PCI-E  AR9462 */
->  	{ PCI_VDEVICE(ATHEROS, 0x0037) }, /* PCI-E  AR1111/AR9485 */
-> 
-> --
-> 1.8.4.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
-in the
-> body of a message to majordomo@vger.kernel.org More majordomo info at
-> http://vger.kernel.org/majordomo-info.html
+I don't know exactly how I should export these logs for you to browse
+them but I gave a shot at interpreting them.
 
+What I can see is that in both cases the authentication request is
+exactly the same, except for the sequence number. Yet in good case
+there's an acknowledgement, and in the bad case there isn't.
+
+The authentication response does come back in both cases though, it's
+just the acknowledgement that is missing. Unfortunately I cannot
+figure out for which message it's the ack.
+
+Also, I notice the sequence number received from the router doesn't
+seem to change. All the authentication requests received have the same
+number (256). Another peculiar thing is that in the failed case the SN
+we send starts with 0.
+
+I suppose since the authentication ack never arrives, the next steps
+are never completed.
+
+Does that help?
+
+-- 
+Felipe Contreras
