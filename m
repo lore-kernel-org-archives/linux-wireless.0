@@ -1,66 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f53.google.com ([209.85.215.53]:48576 "EHLO
-	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757603Ab3JRWoM (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:34028 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756032Ab3J1Nrr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Oct 2013 18:44:12 -0400
-MIME-Version: 1.0
-In-Reply-To: <5261B5D6.2020002@lwfinger.net>
-References: <1382134538-3719-1-git-send-email-felipensp@gmail.com> <5261B5D6.2020002@lwfinger.net>
-From: Felipe Pena <felipensp@gmail.com>
-Date: Fri, 18 Oct 2013 19:43:50 -0300
-Message-ID: <CA+5g0SK1Sr-3k1i+vfL8vXcT36XZBF-_GwCFYmrmca3dsE6iww@mail.gmail.com> (sfid-20131019_004436_522231_4A4CCE73)
-Subject: Re: [PATCH 1/1] drivers: net: wireless: rtlwifi: Fix wrong assignment
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
+	Mon, 28 Oct 2013 09:47:47 -0400
+Message-ID: <1382968061.17956.10.camel@jlt4.sipsolutions.net> (sfid-20131028_144809_213779_4C437069)
+Subject: Re: [PATCH 01/16] mac80211: fix TX device statistics for monitor
+ interfaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pali =?ISO-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
+Cc: Luciano Coelho <luca@coelho.fi>,
 	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
 	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
+	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
+	joni.lapilainen@gmail.com, David Gnedt <david.gnedt@davizone.at>
+Date: Mon, 28 Oct 2013 14:47:41 +0100
+In-Reply-To: <1382819655-30430-2-git-send-email-pali.rohar@gmail.com> (sfid-20131026_224024_753066_57DA03E7)
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+	 <1382819655-30430-2-git-send-email-pali.rohar@gmail.com>
+	 (sfid-20131026_224024_753066_57DA03E7)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 18, 2013 at 7:27 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> On 10/18/2013 05:15 PM, Felipe Pena wrote:
->>
->> There is a typo in the struct member name on assignment when checking
->> rtlphy->current_chan_bw == HT_CHANNEL_WIDTH_20_40, the check uses
->> pwrgroup_ht40
->> for bound limit and uses pwrgroup_ht20 when assigning instead.
->>
->> Signed-off-by: Felipe Pena <felipensp@gmail.com>
->> ---
->>   drivers/net/wireless/rtlwifi/rtl8192se/rf.c |    2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/rf.c
->> b/drivers/net/wireless/rtlwifi/rtl8192se/rf.c
->> index 5061f1d..92d38ab 100644
->> --- a/drivers/net/wireless/rtlwifi/rtl8192se/rf.c
->> +++ b/drivers/net/wireless/rtlwifi/rtl8192se/rf.c
->> @@ -265,7 +265,7 @@ static void
->> _rtl92s_get_txpower_writeval_byregulatory(struct ieee80211_hw *hw,
->>                                     rtlefuse->pwrgroup_ht40
->>                                     [RF90_PATH_A][chnl - 1]) {
->>                                         pwrdiff_limit[i] =
->> -                                         rtlefuse->pwrgroup_ht20
->> +                                         rtlefuse->pwrgroup_ht40
->>                                           [RF90_PATH_A][chnl - 1];
->>                                 }
->>                         } else {
->
->
-> Good catch. There is only one problem - by convention we skip
-> drivers/net/wireless in the subject. That would probably be OK, but you are
-> missing the rtl8192se part, which needs to be there. I suggest that you use
-> the subject "rtlwifi: rtl8192de: Fix wrong assignment".
->
-> Larry
->
->
+On Sat, 2013-10-26 at 22:34 +0200, Pali Rohár wrote:
 
-Thanks for the reply. I'll re-send it with the suggested subject.
+> +	dev->stats.tx_packets++;
+> +	dev->stats.tx_bytes += skb->len;
 
--- 
-Regards,
-Felipe Pena
+We can still easily drop the packet after this - we can't guarantee
+it'll go out but maybe we shouldn't do it here?
+
+johannes
+
