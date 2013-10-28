@@ -1,43 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yh0-f43.google.com ([209.85.213.43]:36830 "EHLO
-	mail-yh0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757226Ab3JRWUh (ORCPT
+Received: from mail-ee0-f43.google.com ([74.125.83.43]:65362 "EHLO
+	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932116Ab3J1QV3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Oct 2013 18:20:37 -0400
-From: Felipe Pena <felipensp@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Felipe Pena <felipensp@gmail.com>
-Subject: [PATCH 1/1] drivers: net: wireless: rtlwifi: Fix wrong assignment
-Date: Fri, 18 Oct 2013 19:15:38 -0300
-Message-Id: <1382134538-3719-1-git-send-email-felipensp@gmail.com> (sfid-20131019_002057_969022_00C9AD6D)
+	Mon, 28 Oct 2013 12:21:29 -0400
+From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
+To: Dan Williams <dcbw@redhat.com>
+Subject: Re: [PATCH 16/16] wl1251: Add sysfs file address for setting permanent mac address
+Date: Mon, 28 Oct 2013 17:21:25 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Luciano Coelho <luca@coelho.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
+	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
+	joni.lapilainen@gmail.com
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com> <201310281604.48542@pali> <1382974161.1542.18.camel@dcbw.foobar.com>
+In-Reply-To: <1382974161.1542.18.camel@dcbw.foobar.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1574068.VmWX2z1Tuz";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <201310281721.25182@pali> (sfid-20131028_172149_586213_060F5323)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is a typo in the struct member name on assignment when checking
-rtlphy->current_chan_bw == HT_CHANNEL_WIDTH_20_40, the check uses pwrgroup_ht40
-for bound limit and uses pwrgroup_ht20 when assigning instead.
+--nextPart1574068.VmWX2z1Tuz
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Felipe Pena <felipensp@gmail.com>
----
- drivers/net/wireless/rtlwifi/rtl8192se/rf.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Monday 28 October 2013 16:29:21 Dan Williams wrote:
+> On Mon, 2013-10-28 at 16:04 +0100, Pali Roh=C3=A1r wrote:
+> > On Monday 28 October 2013 15:56:55 Johannes Berg wrote:
+> > > On Mon, 2013-10-28 at 09:46 -0500, Dan Williams wrote:
+> > > > If the device doesn't actually *have* a permanent MAC
+> > > > address, then it shouldn't be returning one via ethtool,
+> > > > and should return an error for ETHTOOL_GPERMADDR.
+> > >=20
+> > > There's currently no provision for that, but I agree it
+> > > would be better to do so.
+> > >=20
+> > > johannes
+> >=20
+> > So what to do with devices which has MAC address stored in
+> > some obscure place and there is userspace binary which can
+> > read it?
+> >=20
+> > I think that there should be some way to tell kernel that
+> > *this* is the permanent address and it should use it.
+> >=20
+> > This is reason why I proposed patch which adding sysfs entry
+> > for setting permanent address from userspace in wl1251
+> > driver.
+>=20
+> Ok, so the N900's MAC is stored in the "cal partition", which
+> is a region of flash exposed to the OS as /dev/mtd1.  That
+> also stores the regulatory domain.  Typically userspace
+> binaries are used to pull out this and other data (see
+> https://dev.openwrt.org/browser/packages/utils/calvaria/files/
+> src/calvaria.c ) which is then used to initialize the device.
+>=20
+> Any idea what kernel driver is used to expose the CAL
+> partition as /dev/mtd1?  If it's nothing special maybe a
+> small EEPROM-style driver could be written to read the
+> relevant areas (and since they don't ever change, don't need
+> to worry about something else writing at the same time).
+>=20
+> Dan
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/rf.c b/drivers/net/wireless/rtlwifi/rtl8192se/rf.c
-index 5061f1d..92d38ab 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192se/rf.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192se/rf.c
-@@ -265,7 +265,7 @@ static void _rtl92s_get_txpower_writeval_byregulatory(struct ieee80211_hw *hw,
- 				    rtlefuse->pwrgroup_ht40
- 				    [RF90_PATH_A][chnl - 1]) {
- 					pwrdiff_limit[i] =
--					  rtlefuse->pwrgroup_ht20
-+					  rtlefuse->pwrgroup_ht40
- 					  [RF90_PATH_A][chnl - 1];
- 				}
- 			} else {
--- 
-1.7.10.4
+/dev/mtd1 is second (0 is first) OneNand partition. Nothing=20
+special. Kernel driver for OnaNand is already in mainline kernel.
 
+That partition also has NVS device data for wl1251 chip.
+
+And you are right calvaria has GPL v2 code for parsing data in=20
+that partition.
+
+=2D-=20
+Pali Roh=C3=A1r
+pali.rohar@gmail.com
+
+--nextPart1574068.VmWX2z1Tuz
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEABECAAYFAlJujwUACgkQi/DJPQPkQ1LX5ACfcrgQRff2KxGg5oOgjLQ9+nqu
+cjQAoK/SFpSUsV5jVdqdfNCN+yBkWdi0
+=49Dn
+-----END PGP SIGNATURE-----
+
+--nextPart1574068.VmWX2z1Tuz--
