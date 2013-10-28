@@ -1,110 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:58670 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752002Ab3J1Ghh convert rfc822-to-8bit (ORCPT
+Received: from mail-ea0-f175.google.com ([209.85.215.175]:46425 "EHLO
+	mail-ea0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756583Ab3J1S1U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Oct 2013 02:37:37 -0400
-Subject: Re: [PATCH 4/4] wl1251: spi: add device tree support
-Mime-Version: 1.0 (Apple Message framework v1283)
-Content-Type: text/plain; charset=us-ascii
-From: Kumar Gala <galak@codeaurora.org>
-In-Reply-To: <1382890469-25286-5-git-send-email-sre@debian.org>
-Date: Mon, 28 Oct 2013 01:37:34 -0500
-Cc: Sebastian Reichel <sre@ring0.de>, Luciano Coelho <luca@coelho.fi>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Rob Landley <rob@landley.net>,
-	Tony Lindgren <tony@atomide.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Felipe Balbi <balbi@ti.com>,
-	Sachin Kamat <sachin.kamat@linaro.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bill Pemberton <wfp5p@virginia.edu>,
-	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Message-Id: <FF34C626-4A49-43B1-B0AD-DC6146ABBB11@codeaurora.org> (sfid-20131028_073755_817057_02A5C900)
-References: <1382890469-25286-1-git-send-email-sre@debian.org> <1382890469-25286-5-git-send-email-sre@debian.org>
-To: Sebastian Reichel <sre@debian.org>
+	Mon, 28 Oct 2013 14:27:20 -0400
+Received: by mail-ea0-f175.google.com with SMTP id l15so1919369eak.20
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Oct 2013 11:27:19 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH 2/5] mac80211: DFS setup chandef for radar_event correctly
+Date: Mon, 28 Oct 2013 19:27:01 +0100
+Message-Id: <1382984824-3729-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131028_192723_834138_5059DBBB)
+In-Reply-To: <1382984824-3729-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1382984824-3729-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Setup chandef for radar event correctly, before we
+will clear this in ieee80211_dfs_cac_cancel() function.
 
-On Oct 27, 2013, at 11:14 AM, Sebastian Reichel wrote:
+Without this patch mac80211 will report wrong channel
+width in case we will get radar event during active CAC.
 
-> Add device tree support for the spi variant of wl1251
-> and document the binding.
-> 
-> Signed-off-by: Sebastian Reichel <sre@debian.org>
-> ---
-> .../devicetree/bindings/net/wireless/ti,wl1251.txt | 36 ++++++++++++++++++++++
-> drivers/net/wireless/ti/wl1251/spi.c               | 23 ++++++++++----
-> 2 files changed, 53 insertions(+), 6 deletions(-)
-> create mode 100644 Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt
-> 
-> diff --git a/Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt b/Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt
-> new file mode 100644
-> index 0000000..5f8a154
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt
-> @@ -0,0 +1,36 @@
-> +* Texas Instruments wl1251 controller
-> +
-> +The wl1251 chip can be connected via SPI or via SDIO. The linux
-> +kernel currently only supports device tree for the SPI variant.
-> +
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Reviewed-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ net/mac80211/util.c |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
->From the binding I have no idea what this chip actually does, also we don't normally reference linux kernel support in bindings specs (so please remove it).
-
-However, what would expect the SDIO binding to look like?  Or more specifically, how would you distinguish the SPI vs SDIO binding/connection?  I'm wondering if the compatible should be something like "ti,wl1251-spi" and than the sdio can be "ti,wl1251-sdio"
-
-> +Required properties:
-> +- compatible : Should be "ti,wl1251"
-
-reg is not listed as a required prop.
-
-> +- interrupts : Should contain interrupt line
-> +- interrupt-parent : Should be the phandle for the interrupt
-> +  controller that services interrupts for this device
-> +- vio-supply : phandle to regulator providing VIO
-> +- power-gpio : GPIO connected to chip's PMEN pin
-
-should be vendor prefixed: ti,power-gpio
-
-> +- For additional required properties on SPI, please consult
-> +  Documentation/devicetree/bindings/spi/spi-bus.txt
-> +
-> +Optional properties:
-> +- ti,use-eeprom : If found, configuration will be loaded from eeprom.
-
-can you be a bit more specific on what cfg will be loaded.  Also, is this property a boolean, if so how do I know which eeprom the cfg is loaded from (is it one that is directly connected to the wl1251?
-
-> +
-> +Examples:
-> +
-> +&spi1 {
-> +	wl1251_spi@0 {
-> +		compatible = "ti,wl1251";
-> +
-> +		reg = <0>;
-> +		spi-max-frequency = <48000000>;
-> +		spi-cpol;
-> +		spi-cpha;
-> +
-> +		interrupt-parent = <&gpio2>;
-> +		interrupts = <10 IRQ_TYPE_NONE>; /* gpio line 42 */
-> +
-> +		vio-supply = <&vio>;
-> +		power-gpio = <&gpio3 23 GPIO_ACTIVE_HIGH>; /* 87 */
-> +	};
-> +};
-
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index f704415..c286d9b 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2275,17 +2275,15 @@ void ieee80211_dfs_radar_detected_work(struct work_struct *work)
+ {
+ 	struct ieee80211_local *local =
+ 		container_of(work, struct ieee80211_local, radar_detected_work);
+-	struct cfg80211_chan_def chandef;
++	struct cfg80211_chan_def chandef = local->hw.conf.chandef;
+ 
+ 	ieee80211_dfs_cac_cancel(local);
+ 
+ 	if (local->use_chanctx)
+ 		/* currently not handled */
+ 		WARN_ON(1);
+-	else {
+-		chandef = local->hw.conf.chandef;
++	else
+ 		cfg80211_radar_event(local->hw.wiphy, &chandef, GFP_KERNEL);
+-	}
+ }
+ 
+ void ieee80211_radar_detected(struct ieee80211_hw *hw)
 -- 
-Employee of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+1.7.9.5
 
