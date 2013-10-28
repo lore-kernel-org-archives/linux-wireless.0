@@ -1,108 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:20465 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753170Ab3JIN00 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Oct 2013 09:26:26 -0400
-Date: Wed, 9 Oct 2013 15:24:30 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: ilw@linux.intel.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] iwlwifi: don't WARN on bad firmware state
-Message-ID: <20131009132429.GA1265@redhat.com> (sfid-20131009_152630_515790_A7BF840B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-oa0-f42.google.com ([209.85.219.42]:41069 "EHLO
+	mail-oa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757491Ab3J1X2c (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Oct 2013 19:28:32 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>,
+	netdev@vger.kernel.org, Larry Finger <Larry.Finger@lwfinger.net>,
+	Stable <stable@vger.kernel.org>
+Subject: [PATCH NEXT] rtlwifi: Fix endian error in extracting packet type
+Date: Mon, 28 Oct 2013 18:28:23 -0500
+Message-Id: <1383002903-8746-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20131029_002837_456718_6300B8DE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When we restart firmware and it is marked as not alive, we can still get
-calls from mac80211. Don't WARN on in this situation as this triggers
-automatic bug reports with no valuable information.
+From: Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>
 
-This continuation of:
+All of the rtlwifi drivers have an error in the routine that tests if
+the received data is "special". The 16-bit quantity is big-endian, but
+was being extracted in native CPU mode. One of the effects of this bug
+is to inhibit association under some conditions.
 
-commit 8ca95995e64f5d270889badb3e449dca91106a2b
-Author: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Date:   Sun Sep 15 11:37:17 2013 +0300
+A statement that would have made the code correct had been changed to
+a comment. Rather than just reinstating that code, the fix here passes
+sparse tests.
 
-    iwlwifi: don't WARN on host commands sent when firmware is dead
-
-which remove WARN_ONCE from one place, but those warnings are also
-triggered from other functions.
-
-Patch also adds unlikely() statement.
-
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>
+Cc: Stable <stable@vger.kernel.org> [2.6.38+]
 ---
- drivers/net/wireless/iwlwifi/iwl-trans.h |   22 +++++++++++-----------
- 1 files changed, 11 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index 80b4750..c6bac7c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -601,7 +601,7 @@ static inline int iwl_trans_send_cmd(struct iwl_trans *trans,
- {
- 	int ret;
+ drivers/net/wireless/rtlwifi/base.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+diff --git a/drivers/net/wireless/rtlwifi/base.c b/drivers/net/wireless/rtlwifi/base.c
+index 9a78e3d..1efde7f 100644
+--- a/drivers/net/wireless/rtlwifi/base.c
++++ b/drivers/net/wireless/rtlwifi/base.c
+@@ -1077,8 +1077,8 @@ u8 rtl_is_special_data(struct ieee80211_hw *hw, struct sk_buff *skb, u8 is_tx)
  
--	if (trans->state != IWL_TRANS_FW_ALIVE) {
-+	if (unlikely(trans->state != IWL_TRANS_FW_ALIVE)) {
- 		IWL_ERR(trans, "%s bad state = %d", __func__, trans->state);
- 		return -EIO;
- 	}
-@@ -640,8 +640,8 @@ static inline void iwl_trans_free_tx_cmd(struct iwl_trans *trans,
- static inline int iwl_trans_tx(struct iwl_trans *trans, struct sk_buff *skb,
- 			       struct iwl_device_cmd *dev_cmd, int queue)
- {
--	WARN_ONCE(trans->state != IWL_TRANS_FW_ALIVE,
--		  "%s bad state = %d", __func__, trans->state);
-+	if (unlikely(trans->state != IWL_TRANS_FW_ALIVE))
-+		IWL_ERR(trans, "%s bad state = %d", __func__, trans->state);
+ 	ip = (struct iphdr *)((u8 *) skb->data + mac_hdr_len +
+ 			      SNAP_SIZE + PROTOC_TYPE_SIZE);
+-	ether_type = *(u16 *) ((u8 *) skb->data + mac_hdr_len + SNAP_SIZE);
+-	/*	ether_type = ntohs(ether_type); */
++	ether_type = be16_to_cpu(*(__be16 *)((u8 *)skb->data + mac_hdr_len +
++					     SNAP_SIZE));
  
- 	return trans->ops->tx(trans, skb, dev_cmd, queue);
- }
-@@ -649,16 +649,16 @@ static inline int iwl_trans_tx(struct iwl_trans *trans, struct sk_buff *skb,
- static inline void iwl_trans_reclaim(struct iwl_trans *trans, int queue,
- 				     int ssn, struct sk_buff_head *skbs)
- {
--	WARN_ONCE(trans->state != IWL_TRANS_FW_ALIVE,
--		  "%s bad state = %d", __func__, trans->state);
-+	if (unlikely(trans->state != IWL_TRANS_FW_ALIVE))
-+		IWL_ERR(trans, "%s bad state = %d", __func__, trans->state);
- 
- 	trans->ops->reclaim(trans, queue, ssn, skbs);
- }
- 
- static inline void iwl_trans_txq_disable(struct iwl_trans *trans, int queue)
- {
--	WARN_ONCE(trans->state != IWL_TRANS_FW_ALIVE,
--		  "%s bad state = %d", __func__, trans->state);
-+	if (unlikely(trans->state != IWL_TRANS_FW_ALIVE))
-+		IWL_ERR(trans, "%s bad state = %d", __func__, trans->state);
- 
- 	trans->ops->txq_disable(trans, queue);
- }
-@@ -669,8 +669,8 @@ static inline void iwl_trans_txq_enable(struct iwl_trans *trans, int queue,
- {
- 	might_sleep();
- 
--	WARN_ONCE(trans->state != IWL_TRANS_FW_ALIVE,
--		  "%s bad state = %d", __func__, trans->state);
-+	if (unlikely((trans->state != IWL_TRANS_FW_ALIVE)))
-+		IWL_ERR(trans, "%s bad state = %d", __func__, trans->state);
- 
- 	trans->ops->txq_enable(trans, queue, fifo, sta_id, tid,
- 				 frame_limit, ssn);
-@@ -685,8 +685,8 @@ static inline void iwl_trans_ac_txq_enable(struct iwl_trans *trans, int queue,
- 
- static inline int iwl_trans_wait_tx_queue_empty(struct iwl_trans *trans)
- {
--	WARN_ONCE(trans->state != IWL_TRANS_FW_ALIVE,
--		  "%s bad state = %d", __func__, trans->state);
-+	if (unlikely(trans->state != IWL_TRANS_FW_ALIVE))
-+		IWL_ERR(trans, "%s bad state = %d", __func__, trans->state);
- 
- 	return trans->ops->wait_tx_queue_empty(trans);
- }
+ 	if (ETH_P_IP == ether_type) {
+ 		if (IPPROTO_UDP == ip->protocol) {
 -- 
-1.7.1
+1.8.4
 
