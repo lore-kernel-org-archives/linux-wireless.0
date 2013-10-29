@@ -1,70 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f53.google.com ([74.125.83.53]:36736 "EHLO
-	mail-ee0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932122Ab3J1PEw (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:37758 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751554Ab3J2JCi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Oct 2013 11:04:52 -0400
-From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 16/16] wl1251: Add sysfs file address for setting permanent mac address
-Date: Mon, 28 Oct 2013 16:04:48 +0100
-Cc: Dan Williams <dcbw@redhat.com>, Luciano Coelho <luca@coelho.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
-	joni.lapilainen@gmail.com
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com> <1382971562.1542.6.camel@dcbw.foobar.com> <1382972215.17956.30.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1382972215.17956.30.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart2778838.sUdns2WpWe";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <201310281604.48542@pali> (sfid-20131028_160514_309416_5AECAB02)
+	Tue, 29 Oct 2013 05:02:38 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: verify ieee80211_key_replace() arguments
+Date: Tue, 29 Oct 2013 10:02:31 +0100
+Message-Id: <1383037351-18687-1-git-send-email-johannes@sipsolutions.net> (sfid-20131029_100242_424137_47FDCB81)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart2778838.sUdns2WpWe
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+From: Johannes Berg <johannes.berg@intel.com>
 
-On Monday 28 October 2013 15:56:55 Johannes Berg wrote:
-> On Mon, 2013-10-28 at 09:46 -0500, Dan Williams wrote:
-> > If the device doesn't actually *have* a permanent MAC
-> > address, then it shouldn't be returning one via ethtool,
-> > and should return an error for ETHTOOL_GPERMADDR.
->=20
-> There's currently no provision for that, but I agree it would
-> be better to do so.
->=20
-> johannes
+There's no code calling ieee80211_key_replace() with both
+arguments NULL and it wouldn't make sense, but in the
+interest of maintainability add a warning for it. As a
+side effect, this also shuts up a smatch warning.
 
-So what to do with devices which has MAC address stored in some=20
-obscure place and there is userspace binary which can read it?
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/key.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-I think that there should be some way to tell kernel that *this*=20
-is the permanent address and it should use it.
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index 3e51dd7..ab84680 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -260,6 +260,10 @@ static void ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
+ 	int idx;
+ 	bool defunikey, defmultikey, defmgmtkey;
+ 
++	/* caller must provide at least one old/new */
++	if (WARN_ON(!new && !old))
++		return;
++
+ 	if (new)
+ 		list_add_tail(&new->list, &sdata->key_list);
+ 
+-- 
+1.8.4.rc3
 
-This is reason why I proposed patch which adding sysfs entry for=20
-setting permanent address from userspace in wl1251 driver.
-
-=2D-=20
-Pali Roh=C3=A1r
-pali.rohar@gmail.com
-
---nextPart2778838.sUdns2WpWe
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEABECAAYFAlJufRAACgkQi/DJPQPkQ1KECACeNMxT+Rq5qW4t1CA69hwHLEkd
-FdMAn0+XsNTX/OUaWrQLU8u6fOgFtY88
-=TAVc
------END PGP SIGNATURE-----
-
---nextPart2778838.sUdns2WpWe--
