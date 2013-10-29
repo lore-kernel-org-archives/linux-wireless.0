@@ -1,50 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:49158 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754439Ab3JaOlE (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:37594 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751288Ab3J2IDr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Oct 2013 10:41:04 -0400
-From: Sunil Dutt Undekari <usdutt@qti.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <j@w1.fi>, <usdutt@qti.qualcomm.com>
-Subject: [PATCH] cfg80211: Introduce critical protocol indication for p2p connection.
-Date: Thu, 31 Oct 2013 20:10:52 +0530
-Message-ID: <1383230452-12608-1-git-send-email-usdutt@qti.qualcomm.com> (sfid-20131031_154108_037102_6F3E1A6D)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 29 Oct 2013 04:03:47 -0400
+Message-ID: <1383033823.14377.1.camel@jlt4.sipsolutions.net> (sfid-20131029_090354_403437_B70F68A3)
+Subject: Re: iwlegacy (4965) - what would 0x8000 as the completed TX rate
+ indicate?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 29 Oct 2013 09:03:43 +0100
+In-Reply-To: <CAJ-Vmomsv52xc6-rwaBy9aZUsN3BaPeRTDBu8+bn2ov_Asb=1A@mail.gmail.com> (sfid-20131028_202445_048613_6F806293)
+References: <CAJ-Vmok4rDn1Q5qCU2Oz=CVsqkJvYC0D+CmQL+WpwU+9qKHzrw@mail.gmail.com>
+	 <1382968966.17956.15.camel@jlt4.sipsolutions.net>
+	 <CAJ-Vmomsv52xc6-rwaBy9aZUsN3BaPeRTDBu8+bn2ov_Asb=1A@mail.gmail.com>
+	 (sfid-20131028_202445_048613_6F806293)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A reliable P2P connection needs to avoid any offload off channel
-operations triggered by the host driver.Thus, indicate such
-attempts to the host driver by including a new protocol id,
-signifying the p2p connection.
+On Mon, 2013-10-28 at 12:24 -0700, Adrian Chadd wrote:
 
-Signed-off-by: Sunil Dutt <usdutt@qti.qualcomm.com>
----
- include/uapi/linux/nl80211.h | 2 ++
- 1 file changed, 2 insertions(+)
+> >> So, any ideas what that 0x8000 rate in the rate completion means?
+> >
+> > I think that just means it used the other antenna and rate 0, since the
+> > bits 0x1c000 contain the antenna bitmap that was used (up to three can
+> > be used for each transmission)
+> 
+> Well, what's rate=0 mean?
+> 
+> And 0x8000 is bit 11 set, which is HT40. I definitely don't have HT40 enabled.
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 8f01961..cae07aa 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -3894,6 +3894,7 @@ enum nl80211_protocol_features {
-  * @NL80211_CRIT_PROTO_DHCP: BOOTP or DHCPv6 protocol.
-  * @NL80211_CRIT_PROTO_EAPOL: EAPOL protocol.
-  * @NL80211_CRIT_PROTO_APIPA: APIPA protocol.
-+ * @NL80211_CRIT_PROTO_P2P: P2P protocol.
-  * @NUM_NL80211_CRIT_PROTO: must be kept last.
-  */
- enum nl80211_crit_proto_id {
-@@ -3901,6 +3902,7 @@ enum nl80211_crit_proto_id {
- 	NL80211_CRIT_PROTO_DHCP,
- 	NL80211_CRIT_PROTO_EAPOL,
- 	NL80211_CRIT_PROTO_APIPA,
-+	NL80211_CRIT_PROTO_P2P,
- 	/* add other protocols before this one */
- 	NUM_NL80211_CRIT_PROTO
- };
--- 
-1.8.2.1
+0x8000 is bit 15 set, which means "antenna B", I think?
+
+But then I can't seem to figure out what rate=0 means either. Should be
+an OFDM rate (bit 9 not set) but 0 isn't a valid OFDM rate value. Hmm.
+
+johannes
 
