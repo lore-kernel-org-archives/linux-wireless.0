@@ -1,56 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:63853 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753669Ab3JOH02 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Oct 2013 03:26:28 -0400
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Bartosz Markowski <bartosz.markowski@tieto.com>
-Subject: [PATCH v2] ath10k: do not warn about unsupported vdev param
-Date: Tue, 15 Oct 2013 09:26:20 +0200
-Message-ID: <1381821980-7966-1-git-send-email-bartosz.markowski@tieto.com> (sfid-20131015_092631_548627_D930E4C0)
+Received: from mail-oa0-f47.google.com ([209.85.219.47]:58834 "EHLO
+	mail-oa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751305Ab3J2S4Y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Oct 2013 14:56:24 -0400
+Received: by mail-oa0-f47.google.com with SMTP id i1so348469oag.20
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Oct 2013 11:56:23 -0700 (PDT)
+Message-ID: <527004D5.8050009@lwfinger.net> (sfid-20131029_195627_744665_8C9E8A5D)
+Date: Tue, 29 Oct 2013 13:56:21 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	linville@tuxdriver.com, johannes@sipsolutions.net
+CC: linux-wireless@vger.kernel.org,
+	Julia Lawall <julia.lawall@lip6.fr>,
+	Peter Senna Tschudin <peter.senna@gmail.com>
+Subject: Re: [PATCH 3/3] rtlwifi: fix usage of freq_reg_info()
+References: <1383071666-26817-1-git-send-email-mcgrof@do-not-panic.com> <1383071666-26817-4-git-send-email-mcgrof@do-not-panic.com>
+In-Reply-To: <1383071666-26817-4-git-send-email-mcgrof@do-not-panic.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-10.X firmware does not support WMI_VDEV_PARAM_TX_ENCAP_TYPE.
-It's a known limitation and we should not warn about this.
+On 10/29/2013 01:34 PM, Luis R. Rodriguez wrote:
+> freq_reg_info() expects KHz and not MHz, fix this. In
+> this case we'll now be getting the no-ir flags cleared
+> on channels for any channel when the country IE trusts
+> that channel.
+>
+> @@
+> struct ieee80211_channel *ch;
+> struct wiphy *wiphy;
+> const struct ieee80211_reg_rule *rule;
+> @@
+>
+> -rule = freq_reg_info(wiphy, ch->center_freq);
+> +rule = freq_reg_info(wiphy, MHZ_TO_KHZ(ch->center_freq));
+>
+> Generated-by: Coccinelle SmPL
+> Cc: Julia Lawall <julia.lawall@lip6.fr>
+> Cc: Peter Senna Tschudin <peter.senna@gmail.com>
+> Cc: Larry Finger <Larry.Finger@lwfinger.net>
+> Reported-by: Mihir Shete <smihir@qti.qualcomm.com>
+> Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+> ---
 
-Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
----
- drivers/net/wireless/ath/ath10k/mac.c |    3 ++-
- drivers/net/wireless/ath/ath10k/wmi.c |    2 +-
- 2 files changed, 3 insertions(+), 2 deletions(-)
+This patch got some fuzz on my system in hunks 2 & 3 and failed "git am". With 
+patch, it yielded correct code despite the fuzz.
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 049eca2..97d7111 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2085,7 +2085,8 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 	vdev_param = ar->wmi.vdev_param->tx_encap_type;
- 	ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
- 					ATH10K_HW_TXRX_NATIVE_WIFI);
--	if (ret)
-+	/* 10.X firmware does not support this VDEV parameter. Do not warn */
-+	if (ret && ret != -EOPNOTSUPP)
- 		ath10k_warn("Failed to set TX encap: %d\n", ret);
- 
- 	if (arvif->vdev_type == WMI_VDEV_TYPE_AP) {
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index f9766fa..fa07388 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -2763,7 +2763,7 @@ int ath10k_wmi_vdev_set_param(struct ath10k *ar, u32 vdev_id,
- 		ath10k_dbg(ATH10K_DBG_WMI,
- 			   "vdev param %d not supported by firmware\n",
- 			    param_id);
--		return -EINVAL;
-+		return -EOPNOTSUPP;
- 	}
- 
- 	skb = ath10k_wmi_alloc_skb(sizeof(*cmd));
--- 
-1.7.10
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+
+Larry
+
+>   drivers/net/wireless/rtlwifi/regd.c | 7 ++++---
+>   1 file changed, 4 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rtlwifi/regd.c b/drivers/net/wireless/rtlwifi/regd.c
+> index 2e1642c..29d2813 100644
+> --- a/drivers/net/wireless/rtlwifi/regd.c
+> +++ b/drivers/net/wireless/rtlwifi/regd.c
+> @@ -169,7 +169,8 @@ static void _rtl_reg_apply_beaconing_flags(struct wiphy *wiphy,
+>   			    (ch->flags & IEEE80211_CHAN_RADAR))
+>   				continue;
+>   			if (initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE) {
+> -				reg_rule = freq_reg_info(wiphy, ch->center_freq);
+> +				reg_rule = freq_reg_info(wiphy,
+> +							 MHZ_TO_KHZ(ch->center_freq));
+>   				if (IS_ERR(reg_rule))
+>   					continue;
+>
+> @@ -228,7 +229,7 @@ static void _rtl_reg_apply_active_scan_flags(struct wiphy *wiphy,
+>   	 */
+>
+>   	ch = &sband->channels[11];	/* CH 12 */
+> -	reg_rule = freq_reg_info(wiphy, ch->center_freq);
+> +	reg_rule = freq_reg_info(wiphy, MHZ_TO_KHZ(ch->center_freq));
+>   	if (!IS_ERR(reg_rule)) {
+>   		if (!(reg_rule->flags & NL80211_RRF_NO_IR))
+>   			if (ch->flags & IEEE80211_CHAN_NO_IR)
+> @@ -236,7 +237,7 @@ static void _rtl_reg_apply_active_scan_flags(struct wiphy *wiphy,
+>   	}
+>
+>   	ch = &sband->channels[12];	/* CH 13 */
+> -	reg_rule = freq_reg_info(wiphy, ch->center_freq);
+> +	reg_rule = freq_reg_info(wiphy, MHZ_TO_KHZ(ch->center_freq));
+>   	if (!IS_ERR(reg_rule)) {
+>   		if (!(reg_rule->flags & NL80211_RRF_NO_IR))
+>   			if (ch->flags & IEEE80211_CHAN_NO_IR)
+>
 
