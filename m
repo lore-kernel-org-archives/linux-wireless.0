@@ -1,40 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:46878 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758245Ab3JQUPH (ORCPT
+Received: from smtprelay0038.hostedemail.com ([216.40.44.38]:35770 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751292Ab3J2Wvm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Oct 2013 16:15:07 -0400
-Date: Thu, 17 Oct 2013 16:15:05 -0400 (EDT)
-Message-Id: <20131017.161505.2278932043612781921.davem@davemloft.net> (sfid-20131017_221518_010448_5B3AEADF)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next 2013-10-17
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20131017182339.GC1812@tuxdriver.com>
-References: <20131017182339.GC1812@tuxdriver.com>
+	Tue, 29 Oct 2013 18:51:42 -0400
+Message-ID: <1383087091.12439.33.camel@joe-AO722> (sfid-20131029_235145_637334_8F7F320B)
+Subject: Re: [PATCH 3/3] ath: fix dynamic user regulatory domain support
+From: Joe Perches <joe@perches.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Date: Tue, 29 Oct 2013 15:51:31 -0700
+In-Reply-To: <1383086346-2096-4-git-send-email-mcgrof@do-not-panic.com>
+References: <1383086346-2096-1-git-send-email-mcgrof@do-not-panic.com>
+	 <1383086346-2096-4-git-send-email-mcgrof@do-not-panic.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Thu, 17 Oct 2013 14:23:40 -0400
+On Tue, 2013-10-29 at 23:39 +0100, Luis R. Rodriguez wrote:
+> As it stands dynamic user regulatory domain support is
+> only possible for a few programmed regulatory domains as
+> a few countries do not allow for this.
+[]
+> diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
+][
+> @@ -296,6 +296,7 @@ static void ath_force_no_ir_freq(struct wiphy *wiphy, u16 center_freq)
+>  
+>  static void
+>  __ath_reg_apply_beaconing_flags(struct wiphy *wiphy,
+> +				struct ath_regulatory *reg,
+>  				enum nl80211_reg_initiator initiator,
+>  				struct ieee80211_channel *ch)
+>  {
+> @@ -307,6 +308,9 @@ __ath_reg_apply_beaconing_flags(struct wiphy *wiphy,
+>  	case NL80211_REGDOM_SET_BY_COUNTRY_IE:
+>  		ath_force_clear_no_ir_chan(wiphy, ch);
+>  		break;
+> +	case NL80211_REGDOM_SET_BY_USER:
+> +		if (ath_reg_dyn_country_user_allow(reg))
+> +			ath_force_clear_no_ir_chan(wiphy, ch);
 
-> This is a batch of updates intended for the 3.13 stream...
-> 
-> The biggest item of interest in here is wcn36xx, the new mac80211
-> driver for Qualcomm WCN3660/WCN3680 hardware.
-> 
-> Regarding the mac80211 bits, Johannes says:
-> 
-> "We have an assortment of cleanups and new features, of which the
-> biggest one is probably the channel-switch support in IBSS. Nothing
-> else really stands out much."
-> 
-> On top of that, the ath9k and rt2x00 get a lot of update action from
-> Felix Fietkau and Gabor Juhos, respectively.  There are a handful of
-> updates to other drivers here and there as well.
-> 
-> Please let me know if there are problems!
+Nicer to add explicit /* fallthrough */
 
-Pulled, thanks John.
+>  	default:
+>  		if (ch->beacon_found)
+>  			ch->flags &= ~IEEE80211_CHAN_NO_IR;
+
+> @@ -370,6 +376,11 @@ ath_reg_apply_ir_flags(struct wiphy *wiphy,
+>  		ath_force_clear_no_ir_freq(wiphy, 2467);
+>  		ath_force_clear_no_ir_freq(wiphy, 2472);
+>  		break;
+> +	case NL80211_REGDOM_SET_BY_USER:
+> +		if (!ath_reg_dyn_country_user_allow(reg))
+> +			break;
+> +		ath_force_clear_no_ir_freq(wiphy, 2467);
+> +		ath_force_clear_no_ir_freq(wiphy, 2472);
+
+Missing break?
+
+>  	default:
+>  		ath_force_no_ir_freq(wiphy, 2467);
+>  		ath_force_no_ir_freq(wiphy, 2472);
+
+
