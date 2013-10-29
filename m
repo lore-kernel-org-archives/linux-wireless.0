@@ -1,39 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:58933 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750843Ab3JNOSF (ORCPT
+Received: from mail-la0-f51.google.com ([209.85.215.51]:45554 "EHLO
+	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754425Ab3J2KZs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Oct 2013 10:18:05 -0400
-Message-ID: <1381760281.13092.14.camel@jlt4.sipsolutions.net> (sfid-20131014_161809_487564_86BD912F)
-Subject: Re: [PATCH v4 3/6] mac80211: add the CSA and MCSP elements in mesh
- beaconing
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	devel@lists.open80211s.org, distro11s@cozybit.com
-Date: Mon, 14 Oct 2013 16:18:01 +0200
-In-Reply-To: <1381516190-23918-4-git-send-email-yeohchunyeow@cozybit.com> (sfid-20131011_203007_916657_AD660D4F)
-References: <1381516190-23918-1-git-send-email-yeohchunyeow@cozybit.com>
-	 <1381516190-23918-4-git-send-email-yeohchunyeow@cozybit.com>
-	 (sfid-20131011_203007_916657_AD660D4F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 29 Oct 2013 06:25:48 -0400
+Received: by mail-la0-f51.google.com with SMTP id ea20so6110060lab.24
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Oct 2013 03:25:47 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1383027326-2635-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1383027326-2635-1-git-send-email-janusz.dziedzic@tieto.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Tue, 29 Oct 2013 11:25:27 +0100
+Message-ID: <CAB=NE6W53b=uOkaVUFfKcszXPikS=ax6k_G+7Wmb7g_acpSTsA@mail.gmail.com> (sfid-20131029_112610_102406_9CB7379B)
+Subject: Re: [PATCH] cfg80211: allow beaconing after CAC
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-10-11 at 11:29 -0700, Chun-Yeow Yeoh wrote:
-> Support the adding of CSA and MCSP elements while building the beacon
-> for mesh if necessary. This is defined in the IEEE Std 802.11-2012
-> section 10.9.8.4.3 that both CSA and MCSP elements must be included
-> in beacon and probe response frames until the intended channel
-> switch time.
+On Tue, Oct 29, 2013 at 7:15 AM, Janusz Dziedzic
+<janusz.dziedzic@tieto.com> wrote:
+> After going throught the Channel Availability Check (CAC)
+> required by DFS enable beaconing. Channels that have gone
+> through a CAC will be in the NL80211_DFS_AVAILABLE.
+> Without this change APs don't start beaconing after
+> successful CAC.
+>
+> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+> ---
+> One flag could be used in the future IEEE80211_CHAN_NO_IR.
+>
+>  net/wireless/chan.c |   20 ++++++++++++++++----
+>  1 file changed, 16 insertions(+), 4 deletions(-)
+>
+> diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+> index a6f5c4c..205acf2 100644
+> --- a/net/wireless/chan.c
+> +++ b/net/wireless/chan.c
+> @@ -432,6 +432,7 @@ static bool cfg80211_secondary_chans_ok(struct wiphy *wiphy,
+>  {
+>         struct ieee80211_channel *c;
+>         u32 freq, start_freq, end_freq;
+> +       u32 ignore_flags;
+>
+>         start_freq = cfg80211_get_start_freq(center_freq, bandwidth);
+>         end_freq = cfg80211_get_end_freq(center_freq, bandwidth);
+> @@ -441,13 +442,24 @@ static bool cfg80211_secondary_chans_ok(struct wiphy *wiphy,
+>                 if (!c)
+>                         return false;
+>
+> +               ignore_flags = IEEE80211_CHAN_RADAR;
+> +
+>                 /* check for radar flags */
+> -               if ((prohibited_flags & c->flags & IEEE80211_CHAN_RADAR) &&
+> -                   (c->dfs_state != NL80211_DFS_AVAILABLE))
+> -                       return false;
+> +               if (prohibited_flags & c->flags & IEEE80211_CHAN_RADAR) {
+> +                       if (c->dfs_state != NL80211_DFS_AVAILABLE)
+> +                               return false;
+> +                       /*
+> +                        * If DFS is required we should check only
+> +                        * c->dfs_state == NL80211_DFS_AVAILABLE and
+> +                        * ignore IEEE80211_CHAN_NO_IBSS and
+> +                        * IEEE80211_CHAN_PASSIVE_SCAN flags
+> +                        */
+> +                       ignore_flags |= IEEE80211_CHAN_NO_IBSS |
+> +                                       IEEE80211_CHAN_PASSIVE_SCAN;
+> +               }
+>
+>                 /* check for the other flags */
+> -               if (c->flags & prohibited_flags & ~IEEE80211_CHAN_RADAR)
+> +               if (c->flags & prohibited_flags & ~ignore_flags)
+>                         return false;
+>         }
 
-I also get
+How do we know that prohibited_flags won't have IEEE80211_CHAN_RADAR
+or IEEE80211_CHAN_NO_IBSS set?
 
-net/mac80211/mesh.c:673:42: warning: symbol 'ifmsh' shadows an earlier
-one
-net/mac80211/mesh.c:606:29: originally declared here
+Also why is IEEE80211_CHAN_NO_IBSS used and not IEEE80211_CHAN_NO_IR
+instead? I sent patches to help clarify this situation around usage of
+both no-ibss and active scan flags, by merging them to no-ir. I'm not
+sure of the status of those patches going in.
 
-
-with this patch
-
+  Luis
