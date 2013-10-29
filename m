@@ -1,24 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:43451 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751498Ab3J3Q1N (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:24889 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751040Ab3J2TKY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Oct 2013 12:27:13 -0400
-Message-ID: <1383150429.13488.9.camel@jlt4.sipsolutions.net> (sfid-20131030_172716_269254_D51C89F0)
-Subject: Re: [PATCH v2] hwsim tests: use argparse module
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: j@w1.fi
-Date: Wed, 30 Oct 2013 17:27:09 +0100
-In-Reply-To: <1383150313-4155-1-git-send-email-johannes@sipsolutions.net> (sfid-20131030_172521_552346_2306CF4D)
-References: <1383150313-4155-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20131030_172521_552346_2306CF4D)
-Content-Type: text/plain
-Mime-Version: 1.0
+	Tue, 29 Oct 2013 15:10:24 -0400
+Date: Tue, 29 Oct 2013 22:06:41 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, security@kernel.org,
+	Nico Golde <nico@ngolde.de>, Fabian Yamaguchi <fabs@goesec.de>
+Subject: [patch] libertas: potential oops in debugfs
+Message-ID: <20131029190641.GB21820@longonot.mountain> (sfid-20131029_201031_608345_9A5DEFDC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131025144452.GA28451@ngolde.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Err, this went to the wrong list, sorry.
+If we do a zero size write then it will oops.  This can only be
+triggered by root.
 
-johannes
+Reported-by: Nico Golde <nico@ngolde.de>
+Reported-by: Fabian Yamaguchi <fabs@goesec.de>
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
+diff --git a/drivers/net/wireless/libertas/debugfs.c b/drivers/net/wireless/libertas/debugfs.c
+index 668dd27..a148f14 100644
+--- a/drivers/net/wireless/libertas/debugfs.c
++++ b/drivers/net/wireless/libertas/debugfs.c
+@@ -913,6 +913,9 @@ static ssize_t lbs_debugfs_write(struct file *f, const char __user *buf,
+ 	char *p2;
+ 	struct debug_data *d = f->private_data;
+ 
++	if (cnt == 0)
++		return 0;
++
+ 	pdata = kmalloc(cnt, GFP_KERNEL);
+ 	if (pdata == NULL)
+ 		return 0;
