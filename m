@@ -1,32 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:49401 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758647Ab3JKTrs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Oct 2013 15:47:48 -0400
-Message-ID: <525855E1.1010207@openwrt.org> (sfid-20131011_214801_223590_71AD4FDE)
-Date: Fri, 11 Oct 2013 21:47:45 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Regression in commit 0d528d8
-References: <52571723.5020000@lwfinger.net> <52571DAA.60502@openwrt.org> <525854AD.5020607@lwfinger.net>
-In-Reply-To: <525854AD.5020607@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-oa0-f52.google.com ([209.85.219.52]:58193 "EHLO
+	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751125Ab3J2WGv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Oct 2013 18:06:51 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH NEXT] rtl8187: Increase RX queue depth
+Date: Tue, 29 Oct 2013 17:06:41 -0500
+Message-Id: <1383084401-4593-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20131029_230659_983270_F0DF0677)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-10-11 9:42 PM, Larry Finger wrote:
-> On 10/10/2013 04:35 PM, Felix Fietkau wrote:
->> I don't recall any necessary extra actions introduced by this patch.
->> Please compare the rate selection info passed to the driver before and
->> after this patch, by dumping info->control.rates.
-> 
-> I dumped the structure returned by ieee80211_get_tx_rate(hw, info) and found the 
-> same values for the case that worked and the one that failed. The values were: 
-> flags 0xc, bitrate 0xa, hw_value 0x0, and hw_value_short 0x0.
-I guess then we need to take another look at what exactly happens when
-the connection fails, I have no idea how that commit can affect rtlwifi.
+Under heavy load, the relatively small number of RX queue entries are
+completely filled. With an increase from 16 to 32 entries, this condition
+rarely happens.
 
-- Felix
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtl818x/rtl8187/dev.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/rtl818x/rtl8187/dev.c b/drivers/net/wireless/rtl818x/rtl8187/dev.c
+index 9a6edb0..ec9aa5b 100644
+--- a/drivers/net/wireless/rtl818x/rtl8187/dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8187/dev.c
+@@ -416,7 +416,7 @@ static int rtl8187_init_urbs(struct ieee80211_hw *dev)
+ 	struct rtl8187_rx_info *info;
+ 	int ret = 0;
+ 
+-	while (skb_queue_len(&priv->rx_queue) < 16) {
++	while (skb_queue_len(&priv->rx_queue) < 32) {
+ 		skb = __dev_alloc_skb(RTL8187_MAX_RX, GFP_KERNEL);
+ 		if (!skb) {
+ 			ret = -ENOMEM;
+-- 
+1.8.4
+
