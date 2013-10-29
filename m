@@ -1,206 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:39787 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752195Ab3J3VpS (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:37292 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753426Ab3J2I2l convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Oct 2013 17:45:18 -0400
-Received: by mail-wg0-f48.google.com with SMTP id b13so1933378wgh.15
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Oct 2013 14:45:16 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 2/7] wireless-regdb: add DFS ETSI regions
-Date: Wed, 30 Oct 2013 22:45:04 +0100
-Message-Id: <1383169509-22619-3-git-send-email-mcgrof@do-not-panic.com> (sfid-20131030_224527_714873_5428FC47)
-In-Reply-To: <1383169509-22619-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1383169509-22619-1-git-send-email-mcgrof@do-not-panic.com>
+	Tue, 29 Oct 2013 04:28:41 -0400
+Subject: Re: [PATCH 4/4] wl1251: spi: add device tree support
+Mime-Version: 1.0 (Apple Message framework v1283)
+Content-Type: text/plain; charset=us-ascii
+From: Kumar Gala <galak@codeaurora.org>
+In-Reply-To: <4893578.SBstXOAcJY@flatron>
+Date: Tue, 29 Oct 2013 03:28:39 -0500
+Cc: linux-arm-kernel@lists.infradead.org,
+	Sebastian Reichel <sre@debian.org>,
+	Mark Rutland <mark.rutland@arm.com>, linux-doc@vger.kernel.org,
+	Tony Lindgren <tony@atomide.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Sachin Kamat <sachin.kamat@linaro.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Sebastian Reichel <sre@ring0.de>,
+	Luciano Coelho <luca@coelho.fi>, devicetree@vger.kernel.org,
+	Pawel Moll <pawel.moll@arm.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Bill Pemberton <wfp5p@virginia.edu>,
+	linux-omap@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Felipe Balbi <balbi@ti.com>, Rob Landley <rob@landley.net>,
+	netdev@vger.kernel.org
+Message-Id: <11FD245D-02A1-4E29-A23A-66A1D64210DC@codeaurora.org> (sfid-20131029_092938_476158_2F623967)
+References: <1382890469-25286-1-git-send-email-sre@debian.org> <1382890469-25286-5-git-send-email-sre@debian.org> <FF34C626-4A49-43B1-B0AD-DC6146ABBB11@codeaurora.org> <4893578.SBstXOAcJY@flatron>
+To: Tomasz Figa <tomasz.figa@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This associates the following countries to the
-DFS ETSI region:
 
-	AL, AM, AN, AW, AZ, BY, EG, GE, HT,
-	IL, KH, KW, MA, OM, RS, RU, SA, TN,
-	UA, ZA, ZW
+On Oct 28, 2013, at 5:38 PM, Tomasz Figa wrote:
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt | 40 ++++++++++++++++++++--------------------
- 1 file changed, 20 insertions(+), 20 deletions(-)
+> On Monday 28 of October 2013 01:37:34 Kumar Gala wrote:
+>> On Oct 27, 2013, at 11:14 AM, Sebastian Reichel wrote:
+>>> Add device tree support for the spi variant of wl1251
+>>> and document the binding.
+>>> 
+>>> Signed-off-by: Sebastian Reichel <sre@debian.org>
+>>> ---
+>>> .../devicetree/bindings/net/wireless/ti,wl1251.txt | 36
+>>> ++++++++++++++++++++++ drivers/net/wireless/ti/wl1251/spi.c          
+>>>    | 23 ++++++++++---- 2 files changed, 53 insertions(+), 6
+>>> deletions(-)
+>>> create mode 100644
+>>> Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt
+>>> 
+>>> diff --git
+>>> a/Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt
+>>> b/Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt new
+>>> file mode 100644
+>>> index 0000000..5f8a154
+>>> --- /dev/null
+>>> +++ b/Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt
+>>> @@ -0,0 +1,36 @@
+>>> +* Texas Instruments wl1251 controller
+>>> +
+>>> +The wl1251 chip can be connected via SPI or via SDIO. The linux
+>>> +kernel currently only supports device tree for the SPI variant.
+>>> +
+>> 
+>> From the binding I have no idea what this chip actually does, also we
+>> don't normally reference linux kernel support in bindings specs (so
+>> please remove it).
+>> 
+>> However, what would expect the SDIO binding to look like?  Or more
+>> specifically, how would you distinguish the SPI vs SDIO
+>> binding/connection?  I'm wondering if the compatible should be
+>> something like "ti,wl1251-spi" and than the sdio can be
+>> "ti,wl1251-sdio"
+> 
+> Well, you can easily distinguish an SDIO device from an SPI device by its 
+> parent node, but...
+> 
+> The binding for SDIO might require different set of properties (other than 
+> ones inherited from generic SDIO or SPI bindings) than one for SPI. So 
+> probably different compatible values might be justified.
+> 
+> Did we already have such case before? (maybe some I2C + SPI devices?)
+> 
+>>> +Required properties:
+>>> +- compatible : Should be "ti,wl1251"
+>> 
+>> reg is not listed as a required prop.
+> 
+> It is implied by SPI bindings, but it might be a good idea to have this 
+> stated here as well.
+> 
+>> 
+>>> +- interrupts : Should contain interrupt line
+>>> +- interrupt-parent : Should be the phandle for the interrupt
+>>> +  controller that services interrupts for this device
+>>> +- vio-supply : phandle to regulator providing VIO
+>>> +- power-gpio : GPIO connected to chip's PMEN pin
+>> 
+>> should be vendor prefixed: ti,power-gpio
+> 
+> Hmm, out of curiosity, is it a rule for this kind of properties? I can see 
+> both cases with and without prefixes when grepping for "-gpios" in 
+> Documentation/devicetree/bindings. We should really have such things 
+> written down somewhere.
 
-diff --git a/db.txt b/db.txt
-index 94da96a..1c20be2 100644
---- a/db.txt
-+++ b/db.txt
-@@ -25,15 +25,15 @@ country AE: DFS-FCC
- 	(5490 - 5710 @ 80), (24), DFS
- 	(5735 - 5835 @ 80), (30)
- 
--country AL:
-+country AL: DFS-ETSI
- 	(2402 - 2482 @ 20), (20)
- 
--country AM:
-+country AM: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 20), (18)
- 	(5250 - 5330 @ 20), (18), DFS
- 
--country AN:
-+country AN: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 40), (20)
- 	(5250 - 5330 @ 40), (20), DFS
-@@ -61,13 +61,13 @@ country AU:
- 	(5490 - 5710 @ 80), (24), DFS
- 	(5735 - 5835 @ 80), (30)
- 
--country AW:
-+country AW: DFS-ETSI/
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 40), (20)
- 	(5250 - 5330 @ 40), (20), DFS
- 	(5490 - 5710 @ 40), (27), DFS
- 
--country AZ:
-+country AZ: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 40), (18)
- 	(5250 - 5330 @ 40), (18), DFS
-@@ -133,7 +133,7 @@ country BR: DFS-FCC
- 	(5490 - 5710 @ 80), (24), DFS
- 	(5735 - 5835 @ 80), (30)
- 
--country BY:
-+country BY: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 40), (20)
- 	(5250 - 5330 @ 40), (20), DFS
-@@ -263,7 +263,7 @@ country EE: DFS-ETSI
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
- 
--country EG:
-+country EG: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 20), (20)
- 	(5250 - 5330 @ 20), (20), DFS
-@@ -292,7 +292,7 @@ country FR: DFS-ETSI
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
- 
--country GE:
-+country GE: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 40), (18)
- 	(5250 - 5330 @ 40), (18), DFS
-@@ -363,7 +363,7 @@ country HR: DFS-ETSI
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
- 
--country HT:
-+country HT: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 40), (20)
- 	(5250 - 5330 @ 40), (20), DFS
-@@ -390,7 +390,7 @@ country IE: DFS-ETSI
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
- 
--country IL:
-+country IL: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5150 - 5250 @ 80), (200 mW), NO-OUTDOOR
- 	(5250 - 5350 @ 80), (200 mW), NO-OUTDOOR
-@@ -445,7 +445,7 @@ country KE:
- 	(2402 - 2482 @ 40), (20)
- 	(5735 - 5835 @ 40), (30)
- 
--country KH:
-+country KH: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 40), (20)
- 	(5250 - 5330 @ 40), (20), DFS
-@@ -519,7 +519,7 @@ country MC: DFS-ETSI
- 	(5170 - 5250 @ 40), (18)
- 	(5250 - 5330 @ 40), (18), DFS
- 
--country MA:
-+country MA: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 80), (23)
- 	(5735 - 5835 @ 80), (23)
-@@ -586,7 +586,7 @@ country NZ: DFS-FCC
- 	(5490 - 5710 @ 80), (24), DFS
- 	(5735 - 5835 @ 80), (30)
- 
--country OM:
-+country OM: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 40), (17)
- 	(5250 - 5330 @ 40), (20), DFS
-@@ -661,14 +661,14 @@ country RO: DFS-ETSI
- 
- # Source:
- # http://www.ratel.rs/upload/documents/Plan_namene/Plan_namene-sl_glasnik.pdf
--country RS:
-+country RS: DFS-ETSI
- 	(2400 - 2483.5 @ 40), (100 mW)
- 	(5150 - 5350 @ 40), (200 mW), NO-OUTDOOR
- 	(5470 - 5725 @ 20), (1000 mW), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
- 
--country RU:
-+country RU: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5330 @ 40), (20)
- 	(5650 - 5710 @ 40), (30)
-@@ -678,7 +678,7 @@ country RW: DFS-FCC
- 	(2402 - 2482 @ 40), (20)
- 	(5735 - 5835 @ 40), (30)
- 
--country SA:
-+country SA: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 80), (17)
- 	(5250 - 5330 @ 80), (24), DFS
-@@ -745,7 +745,7 @@ country TT: DFS-FCC
- 	(5490 - 5710 @ 40), (20), DFS
- 	(5735 - 5835 @ 40), (30)
- 
--country TN:
-+country TN: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 20), (20)
- 	(5250 - 5330 @ 20), (20), DFS
-@@ -765,7 +765,7 @@ country TR: DFS-ETSI
- # Listed 5GHz range is a lowest common denominator for all related
- # rules in the referenced laws. Such a range is used because of
- # disputable definitions there.
--country UA:
-+country UA: DFS-ETSI
- 	(2400 - 2483.5 @ 40), (20), NO-OUTDOOR
- 	(5150 - 5350 @ 40), (20), NO-OUTDOOR
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-@@ -811,13 +811,13 @@ country VN: DFS-FCC
- country YE:
- 	(2402 - 2482 @ 40), (20)
- 
--country ZA:
-+country ZA: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 80), (17)
- 	(5250 - 5330 @ 80), (24), DFS
- 	(5490 - 5710 @ 80), (24), DFS
- 	(5735 - 5835 @ 80), (30)
- 
--country ZW:
-+country ZW: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 
+Agreed, it should be part of the various docs we are suppose to produce for review and binding creation guidelines.
+
+>>> +- For additional required properties on SPI, please consult
+>>> +  Documentation/devicetree/bindings/spi/spi-bus.txt
+>>> +
+>>> +Optional properties:
+>>> +- ti,use-eeprom : If found, configuration will be loaded from eeprom.
+>> 
+>> can you be a bit more specific on what cfg will be loaded.  Also, is
+>> this property a boolean, if so how do I know which eeprom the cfg is
+>> loaded from (is it one that is directly connected to the wl1251?
+> 
+> Maybe one from ti,has-eeprom or ti,config-eeprom would be better name for 
+> this property?
+
+Probably, ti,wl1251-has-eeprom or something like that would be better.  However, I'm not going to get too caught up on names of properties.
+
+- k
+
 -- 
-1.8.4.rc3
+Employee of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
 
