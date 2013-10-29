@@ -1,69 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f53.google.com ([74.125.83.53]:50165 "EHLO
-	mail-ee0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753150Ab3JZUkY (ORCPT
+Received: from cassiel.sirena.org.uk ([80.68.93.111]:47024 "EHLO
+	cassiel.sirena.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756824Ab3J2BeO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Oct 2013 16:40:24 -0400
-From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Luciano Coelho <luca@coelho.fi>,
+	Mon, 28 Oct 2013 21:34:14 -0400
+Date: Mon, 28 Oct 2013 18:33:18 -0700
+From: Mark Brown <broonie@kernel.org>
+To: Grazvydas Ignotas <notasas@gmail.com>,
+	Alexander Shiyan <shc_work@mail.ru>,
+	Luciano Coelho <luca@coelho.fi>,
+	Mark Rutland <mark.rutland@arm.com>,
+	devicetree@vger.kernel.org, Russell King <linux@arm.linux.org.uk>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Tony Lindgren <tony@atomide.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-doc@vger.kernel.org,
 	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
-	joni.lapilainen@gmail.com, pali.rohar@gmail.com
-Subject: [PATCH 00/16] wl1251 patches from linux-n900 tree
-Date: Sat, 26 Oct 2013 22:33:59 +0200
-Message-Id: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com> (sfid-20131026_224629_960897_01CAB209)
+	Rob Herring <rob.herring@calxeda.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Sachin Kamat <sachin.kamat@linaro.org>,
+	Bill Pemberton <wfp5p@virginia.edu>,
+	Felipe Balbi <balbi@ti.com>, Rob Landley <rob@landley.net>,
+	netdev@vger.kernel.org,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Message-ID: <20131029013318.GC16686@sirena.org.uk> (sfid-20131029_023437_120934_84361B7C)
+References: <1382890469-25286-1-git-send-email-sre@debian.org>
+ <1382890469-25286-3-git-send-email-sre@debian.org>
+ <1382891056.102746625@f315.i.mail.ru>
+ <20131027201218.GA4414@earth.universe>
+ <CANOLnONKcC1i19ypb4rh2Rff3WsVhhuUhNvZvYwDV2-ZNtjVxQ@mail.gmail.com>
+ <20131028192354.GA18208@sirena.org.uk>
+ <20131028232624.GA950@earth.universe>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="WfZ7S8PLGjBY9Voh"
+In-Reply-To: <20131028232624.GA950@earth.universe>
+Subject: Re: [PATCH 2/4] wl1251: move power GPIO handling into the driver
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello, I'm sending wl1251 patches from linux-n900 tree [1] for comments. More
-patches come from David's monitor & packet injection work. Patches are tested
-with 3.12 rc5 kernel on Nokia N900.
 
-[1] - https://gitorious.org/linux-n900/linux-n900
+--WfZ7S8PLGjBY9Voh
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-David Gnedt (13):
-  mac80211: fix TX device statistics for monitor interfaces
-  wl1251: fix scan behaviour while not associated
-  wl1251: add sysfs interface for bluetooth coexistence mode
-    configuration
-  wl1251: retry power save entry
-  wl1251: implement hardware ARP filtering
-  wl1251: split RX and TX data path initialisation
-  wl1251: configure hardware en-/decryption for monitor mode
-  wl1251: implement multicast address filtering
-  wl1251: disable power saving in monitor mode
-  wl1251: fix channel switching in monitor mode
-  wl1251: enable tx path in monitor mode if necessary for packet
-    injection
-  wl1251: disable retry and ACK policy for injected packets
-  wl1251: enforce changed hw encryption support on monitor state change
+On Tue, Oct 29, 2013 at 12:26:26AM +0100, Sebastian Reichel wrote:
 
-Pali Rohár (3):
-  wl1251: add nvs file name to module firmware list
-  wl1251: Add sysfs file tx_mgmt_frm_rate for setting rate
-  wl1251: Add sysfs file address for setting permanent mac address
+> 1. The pin is named PMEN in the Nokia N900 schematics
+> 2. PMEN is described as "Power management enable - system shutdown"
+>    in a crippled datasheet of the wl1253, which I found in the internet.
 
- drivers/net/wireless/ti/wl1251/acx.c    |   97 ++++++-
- drivers/net/wireless/ti/wl1251/acx.h    |   34 ++-
- drivers/net/wireless/ti/wl1251/boot.c   |    3 +-
- drivers/net/wireless/ti/wl1251/cmd.c    |   50 +++-
- drivers/net/wireless/ti/wl1251/cmd.h    |    8 +-
- drivers/net/wireless/ti/wl1251/event.c  |   44 +++
- drivers/net/wireless/ti/wl1251/event.h  |    7 +
- drivers/net/wireless/ti/wl1251/init.c   |   19 +-
- drivers/net/wireless/ti/wl1251/main.c   |  460 ++++++++++++++++++++++++++++++-
- drivers/net/wireless/ti/wl1251/rx.c     |    2 +-
- drivers/net/wireless/ti/wl1251/tx.c     |   27 +-
- drivers/net/wireless/ti/wl1251/wl1251.h |   14 +
- net/mac80211/tx.c                       |    3 +
- 13 files changed, 715 insertions(+), 53 deletions(-)
+> I don't think this is supposed to be handled by the regulator API.
 
--- 
-1.7.10.4
+I agree, this sounds like a GPIO that the driver should be understanding
+directly to me.
 
+--WfZ7S8PLGjBY9Voh
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIcBAEBAgAGBQJSbxBWAAoJELSic+t+oim9OnIQAILP4+u0yOy43NV8KK9USROC
+7wUy2+YEkaMlbhhXvevCaK7dhqFAmmj9RZPWKcOfZn2IAIQGqkalKfizqgEVvCi7
+CH9VrZ92LlFgp0Nlln4xI17IOzki5pILLGWx2dJZzCnXLCqyH8IYgdXM7sooHSVS
+xLhu9JF6nqx5mRU3TuGBkZddW+JBzPnOwGAuTS+tZdI2RrBLJbLeCjJKpYQnizRP
+ok+PjAQl1gduS8ycLDLhgy0a0vr6uW0ER8jUFC2uFxDn4APusi7Z1VSfg72ugpw5
+/R3Z3Bfaj2uVS8phCbASyQu2k0BsocF2G45LSGrMM/dUvtaR5AGriuqWc24diJur
+/xvzS70IFWkMzwuGTkO67kPQySkMZSwaQ56pzoqE51tV1R2yrBzPo2qWdtzXcrQX
+JEP2L4144SmjlkkDOYVME5ccFSG5kpI7qlssjG6dz52ik9sKOtIKvr19ap0PukYg
+Jm6WFoqNyco3sibEdJI9lfOXSHTemfTVNoLnRsARHoA20RDkxBxAqr+CKVi0axJF
+QkFMyQQg4jyUIFp7m4RVM3t04hrJjw2o5juPh0tqUIYtE1iU0SAxNJ6gCKpTva2N
+TDwdQUBf5rd/ln6NsJYqpCCUe9+kxB6jgCYx8PPqp+C+tfjbCvt1qnFX8pJJ+P1k
+8vCuursNrJWXmYEfx8L4
+=V5WW
+-----END PGP SIGNATURE-----
+
+--WfZ7S8PLGjBY9Voh--
