@@ -1,88 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:37382 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754728Ab3JJMPV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Oct 2013 08:15:21 -0400
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-ea0-f177.google.com ([209.85.215.177]:36017 "EHLO
+	mail-ea0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752503Ab3J2MMI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Oct 2013 08:12:08 -0400
+Received: by mail-ea0-f177.google.com with SMTP id f15so2821671eak.8
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Oct 2013 05:12:07 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Subject: [PATCH 08/10] ath9k: remove sc->config.cabqReadyTime
-Date: Thu, 10 Oct 2013 14:15:10 +0200
-Message-Id: <1381407312-72719-8-git-send-email-nbd@openwrt.org> (sfid-20131010_141525_971574_FEB108A9)
-In-Reply-To: <1381407312-72719-1-git-send-email-nbd@openwrt.org>
-References: <1381407312-72719-1-git-send-email-nbd@openwrt.org>
+Cc: johannes@sipsolutions.net, mcgrof@do-not-panic.com,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH v2 1/2] cfg80211: handle correctly prohibited flags
+Date: Tue, 29 Oct 2013 13:11:55 +0100
+Message-Id: <1383048716-5886-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131029_131212_600108_2E0E36A0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It is not exposed as a configuration option anyway
+Handle correctly prohibited flags in cfg80211_secondary_chans_ok()
+function. Before, we ignore IEEE80211_CHAN_RADAR flag even
+caller put the flag as prohibited one.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h | 1 -
- drivers/net/wireless/ath/ath9k/init.c  | 1 -
- drivers/net/wireless/ath/ath9k/mac.h   | 2 --
- drivers/net/wireless/ath/ath9k/xmit.c  | 9 +--------
- 4 files changed, 1 insertion(+), 12 deletions(-)
+ net/wireless/chan.c |   11 +----------
+ 1 file changed, 1 insertion(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 83c0455..d03b85e 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -64,7 +64,6 @@ struct ath_node;
+diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+index a6f5c4c..6f2be48 100644
+--- a/net/wireless/chan.c
++++ b/net/wireless/chan.c
+@@ -438,16 +438,7 @@ static bool cfg80211_secondary_chans_ok(struct wiphy *wiphy,
  
- struct ath_config {
- 	u16 txpowlimit;
--	u8 cabqReadytime;
- };
+ 	for (freq = start_freq; freq <= end_freq; freq += 20) {
+ 		c = ieee80211_get_channel(wiphy, freq);
+-		if (!c)
+-			return false;
+-
+-		/* check for radar flags */
+-		if ((prohibited_flags & c->flags & IEEE80211_CHAN_RADAR) &&
+-		    (c->dfs_state != NL80211_DFS_AVAILABLE))
+-			return false;
+-
+-		/* check for the other flags */
+-		if (c->flags & prohibited_flags & ~IEEE80211_CHAN_RADAR)
++		if (!c || c->flags & prohibited_flags)
+ 			return false;
+ 	}
  
- /*************************/
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index c8748c0..b3f9597 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -437,7 +437,6 @@ static int ath9k_init_queues(struct ath_softc *sc)
- 	sc->beacon.beaconq = ath9k_hw_beaconq_setup(sc->sc_ah);
- 	sc->beacon.cabq = ath_txq_setup(sc, ATH9K_TX_QUEUE_CAB, 0);
- 
--	sc->config.cabqReadytime = ATH_CABQ_READY_TIME;
- 	ath_cabq_update(sc);
- 
- 	sc->tx.uapsdq = ath_txq_setup(sc, ATH9K_TX_QUEUE_UAPSD, 0);
-diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
-index bfccace..e3eed81 100644
---- a/drivers/net/wireless/ath/ath9k/mac.h
-+++ b/drivers/net/wireless/ath/ath9k/mac.h
-@@ -603,8 +603,6 @@ enum ath9k_tx_queue_flags {
- #define ATH9K_TXQ_USE_LOCKOUT_BKOFF_DIS 0x00000001
- 
- #define ATH9K_DECOMP_MASK_SIZE     128
--#define ATH9K_READY_TIME_LO_BOUND  50
--#define ATH9K_READY_TIME_HI_BOUND  96
- 
- enum ath9k_pkt_type {
- 	ATH9K_PKT_TYPE_NORMAL = 0,
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 08ba590..47696d2 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1704,16 +1704,9 @@ int ath_cabq_update(struct ath_softc *sc)
- 	int qnum = sc->beacon.cabq->axq_qnum;
- 
- 	ath9k_hw_get_txq_props(sc->sc_ah, qnum, &qi);
--	/*
--	 * Ensure the readytime % is within the bounds.
--	 */
--	if (sc->config.cabqReadytime < ATH9K_READY_TIME_LO_BOUND)
--		sc->config.cabqReadytime = ATH9K_READY_TIME_LO_BOUND;
--	else if (sc->config.cabqReadytime > ATH9K_READY_TIME_HI_BOUND)
--		sc->config.cabqReadytime = ATH9K_READY_TIME_HI_BOUND;
- 
- 	qi.tqi_readyTime = (cur_conf->beacon_interval *
--			    sc->config.cabqReadytime) / 100;
-+			    ATH_CABQ_READY_TIME) / 100;
- 	ath_txq_update(sc, qnum, &qi);
- 
- 	return 0;
 -- 
-1.8.0.2
+1.7.9.5
 
