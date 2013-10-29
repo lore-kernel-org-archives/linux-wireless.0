@@ -1,58 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:49461 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759558Ab3JOStY (ORCPT
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:45943 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751502Ab3J2HKW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Oct 2013 14:49:24 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 3/7] ath10k: track vif list internally
-References: <20131015184548.14123.56949.stgit@localhost6.localdomain6>
-	<20131015184656.14123.70575.stgit@localhost6.localdomain6>
-Date: Tue, 15 Oct 2013 21:49:19 +0300
-In-Reply-To: <20131015184656.14123.70575.stgit@localhost6.localdomain6> (Kalle
-	Valo's message of "Tue, 15 Oct 2013 21:46:56 +0300")
-Message-ID: <87a9iabc9c.fsf@kamboji.qca.qualcomm.com> (sfid-20131015_204930_213870_4AA1A5B9)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 29 Oct 2013 03:10:22 -0400
+Message-ID: <1383030565.21526.92.camel@porter.coelho.fi> (sfid-20131029_081038_742849_C086F4BA)
+Subject: Re: [PATCH 03/16] wl1251: add sysfs interface for bluetooth
+ coexistence mode configuration
+From: Luca Coelho <luca@coelho.fi>
+To: Ben Hutchings <bhutchings@solarflare.com>
+Cc: Pali =?ISO-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
+	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
+	joni.lapilainen@gmail.com, David Gnedt <david.gnedt@davizone.at>
+Date: Tue, 29 Oct 2013 09:09:25 +0200
+In-Reply-To: <1383003587.3779.49.camel@bwh-desktop.uk.level5networks.com>
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+	 <1382819655-30430-4-git-send-email-pali.rohar@gmail.com>
+	 <1383003587.3779.49.camel@bwh-desktop.uk.level5networks.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+On Mon, 2013-10-28 at 23:39 +0000, Ben Hutchings wrote:
+> On Sat, 2013-10-26 at 22:34 +0200, Pali Rohár wrote:
+> > From: David Gnedt <david.gnedt@davizone.at>
+> > 
+> > Port the bt_coex_mode sysfs interface from wl1251 driver version included
+> > in the Maemo Fremantle kernel to allow bt-coexistence mode configuration.
+> > This enables userspace applications to set one of the modes
+> > WL1251_BT_COEX_OFF, WL1251_BT_COEX_ENABLE and WL1251_BT_COEX_MONOAUDIO.
+> > The default mode is WL1251_BT_COEX_OFF.
+> > It should be noted that this driver always enabled bt-coexistence before
+> > and enabled bt-coexistence directly affects the receiving performance,
+> > rendering it unusable in some low-signal situations. Especially monitor
+> > mode is affected very badly with bt-coexistence enabled.
+> [...]
+> 
+> This should be implemented consistently with other drivers:
+> 
+> drivers/net/wireless/ath/ath9k/htc_drv_init.c:module_param_named(btcoex_enable, ath9k_htc_btcoex_enable, int, 0444);
+> drivers/net/wireless/ath/ath9k/init.c:module_param_named(btcoex_enable, ath9k_btcoex_enable, int, 0444);
+> drivers/net/wireless/b43/main.c:module_param_named(btcoex, modparam_btcoex, int, 0444);
+> drivers/net/wireless/ipw2x00/ipw2200.c:module_param(bt_coexist, int, 0444);
+> drivers/net/wireless/iwlegacy/common.c:module_param(bt_coex_active, bool, S_IRUGO);
+> drivers/net/wireless/iwlwifi/iwl-drv.c:module_param_named(bt_coex_active, iwlwifi_mod_params.bt_coex_active,
+> drivers/net/wireless/ti/wlcore/sysfs.c:static DEVICE_ATTR(bt_coex_state, S_IRUGO | S_IWUSR,
+> 
+> Oh, hmm, I see a problem here.
 
-> From: Michal Kazior <michal.kazior@tieto.com>
->
-> mac80211 interface interations functions have
-> peculiar locking issues. This patch introduces
-> internal (to ath10k) vif list that will be used
-> for vif iteration purposes.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+With so many drivers doing the same thing, isn't it about time to add
+this to nl80211?
 
-[...]
+--
+Luca.
 
-> --- a/drivers/net/wireless/ath/ath10k/core.c
-> +++ b/drivers/net/wireless/ath/ath10k/core.c
-> @@ -713,6 +713,7 @@ struct ath10k *ath10k_core_create(void *hif_priv, struct device *dev,
->  	mutex_init(&ar->conf_mutex);
->  	spin_lock_init(&ar->data_lock);
->  
-> +	INIT_LIST_HEAD(&ar->arvifs);
->  	INIT_LIST_HEAD(&ar->peers);
->  	init_waitqueue_head(&ar->peer_mapping_wq);
->  
-> @@ -824,6 +825,7 @@ int ath10k_core_start(struct ath10k *ar)
->  		goto err_disconnect_htc;
->  
->  	ar->free_vdev_map = (1 << TARGET_NUM_VDEVS) - 1;
-> +	INIT_LIST_HEAD(&ar->arvifs);
->  
->  	return 0;
-
-Michal, why do the INIT_LIST_HEAD() twice? Isn't it enough to do it
-core_start()?
-
--- 
-Kalle Valo
