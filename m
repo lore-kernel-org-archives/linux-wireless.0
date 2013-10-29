@@ -1,55 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:39427 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752080Ab3JHCyS (ORCPT
+Received: from mail-ea0-f172.google.com ([209.85.215.172]:57225 "EHLO
+	mail-ea0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751349Ab3J2JfH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Oct 2013 22:54:18 -0400
-Received: by mail-pa0-f53.google.com with SMTP id kq14so8135639pab.40
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Oct 2013 19:54:18 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v3 0/2] ath10k: wep & ampdu fix
-Date: Mon,  7 Oct 2013 19:51:56 -0700
-Message-Id: <1381200718-16271-1-git-send-email-michal.kazior@tieto.com> (sfid-20131008_045422_414653_354714A3)
-In-Reply-To: <1380874630-14280-1-git-send-email-michal.kazior@tieto.com>
-References: <1380874630-14280-1-git-send-email-michal.kazior@tieto.com>
+	Tue, 29 Oct 2013 05:35:07 -0400
+Received: by mail-ea0-f172.google.com with SMTP id r16so2787095ead.17
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Oct 2013 02:35:06 -0700 (PDT)
+Message-ID: <526F8146.4080405@gmail.com> (sfid-20131029_103512_478234_79BABB1C)
+Date: Tue, 29 Oct 2013 10:35:02 +0100
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+MIME-Version: 1.0
+To: "Richard Wang rpw"@andrew.cmu.edu,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+Subject: Re: Linksys AE3000 iw tool issues
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Richard Wang wrote:
 
-One throughput fix and one bug fix.
+> succinctly. Based on other threads, it appeared as if there might be 
+> support for rt2800usb for rt3573 chips in experimental versions 
+> (http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2013-July/006283.html). 
+> I tried to install the latest development version of backports hoping 
+> that this patch would be part of it but it didn't seem to work. I'm 
+> hoping to see if anyone happens to have a working patch for rt3573 chips.
 
-The bug fix addresses my oversight when reworking
-HTC/WMI. I haven't seen the error yet but I'm
-quite certain this should be fixed.
-
-v2:
- * A-MPDU patch contains a workaround for
-   Netgear/Linksys 11ac APs
- * patchset cover mail title changed to avoid
-   confusion (too many patchsets named the same
-   way..)
-
-v3:
- * fix lines over 80 chars (Kalle)
- * fix max() cast warning (Kalle)
- * rebase (Kalle)
- * add Tested-by (thanks Kalle!)
-
-
-Michal Kazior (1):
-  ath10k: fix scheduling while atomic bug
-
-Sujith Manoharan (1):
-  ath10k: Fix bug in max. VHT A-MPDU size
-
- drivers/net/wireless/ath/ath10k/core.h |  4 +-
- drivers/net/wireless/ath/ath10k/mac.c  | 68 +++++++++++++++++++++++++---------
- 2 files changed, 53 insertions(+), 19 deletions(-)
-
--- 
-1.8.4.rc3
+Support for RT3573 was added recently, you should use wireless-next:
+http://git.kernel.org/cgit/linux/kernel/git/linville/wireless-next.git
+or latest backports:
+http://www.kernel.org/pub/linux/kernel/projects/backports/2013/10/25/backports-20131025.tar.bz2
 
