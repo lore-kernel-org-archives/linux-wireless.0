@@ -1,73 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f178.google.com ([74.125.82.178]:51922 "EHLO
-	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751456Ab3J1QmT (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:36276 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751804Ab3J2MG5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Oct 2013 12:42:19 -0400
-Received: by mail-we0-f178.google.com with SMTP id q59so6961325wes.9
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Oct 2013 09:42:17 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linux-wireless@vger.kernel.org
-Cc: wireless-regdb@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH v2 0/6] crda: few more updates
-Date: Mon, 28 Oct 2013 17:42:00 +0100
-Message-Id: <1382978526-23929-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20131028_174222_344863_80C9858A)
+	Tue, 29 Oct 2013 08:06:57 -0400
+Received: by mail-ee0-f46.google.com with SMTP id c1so4062700eek.19
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Oct 2013 05:06:56 -0700 (PDT)
+From: Marek Puzyniak <marek.puzyniak@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Marek Puzyniak <marek.puzyniak@tieto.com>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 3/3] ath10k: add debugfs file to control radar events blocking
+Date: Tue, 29 Oct 2013 13:06:34 +0100
+Message-Id: <1383048394-15256-3-git-send-email-marek.puzyniak@tieto.com> (sfid-20131029_130700_153282_943315AA)
+In-Reply-To: <1383048394-15256-1-git-send-email-marek.puzyniak@tieto.com>
+References: <1383048394-15256-1-git-send-email-marek.puzyniak@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here's a second spin, after quite a bit more testing I ran
-into a few small issues with the parser and library. This
-has these additional fixes / enhancements:
+Sometimes for DFS testing is required to stay on current channel even after
+radar detected. This patch allows to enable/disable radar detected event to be
+passed to mac80211.
 
-  * Lifts the restriction on 32 rules, although the kernel
-    is limited by this we don't adhere to this limit on our
-    stream parser or optimizer
+By default radar detected event in not blocked.
 
-  * The union code got updated to address two cases that are
-    invalid for unions
+To block it:
+echo 1 > /sys/kernel/debug/ieee80211/phyX/ath10k/dfs_block_radar_events
 
-  * A few fixes on db2rd and optimizer on using the stream
-    parser, if its NULL, bail, we weren't checking for it
+To unblock again:
+echo 0 > /sys/kernel/debug/ieee80211/phyX/ath10k/dfs_block_radar_events
 
-  * The optimizer was not considering band differences as
-    part of its key broker (when it decides it can use
-    two rules for optimization), to address this we deduce
-    the band and add that to the key mixing. Note that this
-    will need to be updated upon new frequency band additions.
-    This limits the scope of optimizations between their own
-    respective bands.
+Inform about blocking radar detected event even when logs are disabled
+for throughput/performance reasons.
 
-I've also gone ahead and tested this with a huge fluffy
-non optimized regulatory domain of 40 rules, and also with
-the wireless-regdb db.txt. I'll send some optimizations
-based on this for wireless-regdb.
+Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/core.h  | 1 +
+ drivers/net/wireless/ath/ath10k/debug.c | 4 ++++
+ drivers/net/wireless/ath/ath10k/wmi.c   | 8 ++++++++
+ 3 files changed, 13 insertions(+)
 
-The only patches that go modified are the stream parser
-and the optimizer.
-
-Luis R. Rodriguez (6):
-  crda: relicense under copyleft-next-0.3.0
-  crda: fix -pedantic gcc compilation
-  crda: add regulatory domain stream parser
-  crda: add regulatory domain optimizer
-  crda: make ssl keys include stdint.h
-  crda: make reglib a shared library
-
- LICENSE             |  14 +-
- Makefile            |  54 +++-
- copyleft-next-0.3.0 | 219 ++++++++++++++
- crda.c              |   4 +-
- db2rd.c             |  32 ++
- optimize.c          |  40 +++
- reglib.c            | 839 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- reglib.h            |  60 ++++
- utils/key2pub.py    |   2 +
- 9 files changed, 1252 insertions(+), 12 deletions(-)
- create mode 100644 copyleft-next-0.3.0
- create mode 100644 db2rd.c
- create mode 100644 optimize.c
-
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index d5fd74b..cdedcbf 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -409,6 +409,7 @@ struct ath10k {
+ 	bool monitor_present;
+ 	unsigned int filter_flags;
+ 	unsigned long dev_flags;
++	u32 dfs_block_radar_events;
+ 
+ 	struct wmi_pdev_set_wmm_params_arg wmm_params;
+ 	struct completion install_key_done;
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index d4d0cdd..2cfe96b 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -749,6 +749,10 @@ int ath10k_debug_create(struct ath10k *ar)
+ 				    ar->debug.debugfs_phy, ar,
+ 				    &fops_simulate_radar);
+ 
++		debugfs_create_bool("dfs_block_radar_events", S_IWUSR,
++				    ar->debug.debugfs_phy,
++				    &ar->dfs_block_radar_events);
++
+ 		debugfs_create_file("dfs_stats", S_IRUSR,
+ 				    ar->debug.debugfs_phy, ar,
+ 				    &fops_dfs_stats);
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 8a7ebcc..8600465 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -1456,6 +1456,14 @@ static void ath10k_dfs_radar_report(struct ath10k *ar,
+ 
+ 	ath10k_dbg(ATH10K_DBG_REGULATORY, "dfs radar detected\n");
+ 	ATH10K_DFS_STAT_INC(ar, radar_detected);
++
++	/* Control radar events reporting in debugfs file
++	   dfs_block_radar_events */
++	if (ar->dfs_block_radar_events) {
++		ath10k_info("DFS Radar detected, but ignored as requested\n");
++		return;
++	}
++
+ 	ieee80211_radar_detected(ar->hw);
+ }
+ 
 -- 
-1.8.4.rc3
+1.8.1.2
 
