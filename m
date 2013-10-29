@@ -1,93 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cassiel.sirena.org.uk ([80.68.93.111]:60812 "EHLO
-	cassiel.sirena.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755810Ab3J1TYj (ORCPT
+Received: from mail-we0-f180.google.com ([74.125.82.180]:50870 "EHLO
+	mail-we0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751935Ab3J2Sen (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Oct 2013 15:24:39 -0400
-Date: Mon, 28 Oct 2013 12:23:54 -0700
-From: Mark Brown <broonie@kernel.org>
-To: Grazvydas Ignotas <notasas@gmail.com>
-Cc: Alexander Shiyan <shc_work@mail.ru>,
-	Luciano Coelho <luca@coelho.fi>,
-	Mark Rutland <mark.rutland@arm.com>,
-	devicetree@vger.kernel.org, Russell King <linux@arm.linux.org.uk>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Tony Lindgren <tony@atomide.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-doc@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Rob Herring <rob.herring@calxeda.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Sachin Kamat <sachin.kamat@linaro.org>,
-	Bill Pemberton <wfp5p@virginia.edu>,
-	Felipe Balbi <balbi@ti.com>, Rob Landley <rob@landley.net>,
-	netdev@vger.kernel.org,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Message-ID: <20131028192354.GA18208@sirena.org.uk> (sfid-20131028_202508_107277_85138A1C)
-References: <1382890469-25286-1-git-send-email-sre@debian.org>
- <1382890469-25286-3-git-send-email-sre@debian.org>
- <1382891056.102746625@f315.i.mail.ru>
- <20131027201218.GA4414@earth.universe>
- <CANOLnONKcC1i19ypb4rh2Rff3WsVhhuUhNvZvYwDV2-ZNtjVxQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="vkogqOf2sHV7VnPd"
-In-Reply-To: <CANOLnONKcC1i19ypb4rh2Rff3WsVhhuUhNvZvYwDV2-ZNtjVxQ@mail.gmail.com>
-Subject: Re: [PATCH 2/4] wl1251: move power GPIO handling into the driver
+	Tue, 29 Oct 2013 14:34:43 -0400
+Received: by mail-we0-f180.google.com with SMTP id q59so254735wes.39
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Oct 2013 11:34:42 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Julia Lawall <julia.lawall@lip6.fr>,
+	Peter Senna Tschudin <peter.senna@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 3/3] rtlwifi: fix usage of freq_reg_info()
+Date: Tue, 29 Oct 2013 19:34:26 +0100
+Message-Id: <1383071666-26817-4-git-send-email-mcgrof@do-not-panic.com> (sfid-20131029_193446_222643_5B8F04A5)
+In-Reply-To: <1383071666-26817-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383071666-26817-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+freq_reg_info() expects KHz and not MHz, fix this. In
+this case we'll now be getting the no-ir flags cleared
+on channels for any channel when the country IE trusts
+that channel.
 
---vkogqOf2sHV7VnPd
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+@@
+struct ieee80211_channel *ch;
+struct wiphy *wiphy;
+const struct ieee80211_reg_rule *rule;
+@@
 
-On Mon, Oct 28, 2013 at 07:29:52PM +0200, Grazvydas Ignotas wrote:
+-rule = freq_reg_info(wiphy, ch->center_freq);
++rule = freq_reg_info(wiphy, MHZ_TO_KHZ(ch->center_freq));
 
-> When wl12xx family of chips is connected through SDIO, we already have
-> that pin set up as a regulator controlled with the help of mmc
-> subsystem. When time comes to communicate with the chip, mmc subsystem
-> sees this as yet another SD card and looks for associated regulator
-> for it, and the board file has that set up as a fixed regulator
-> controlling that pin (see pandora_vmmc3 in
-> arch/arm/mach-omap2/board-omap3pandora.c). To prevent poweroff after
-> first SDIO communications are over, pm_runtime calls are used in
-> drivers/net/wireless/ti/wl1251/sdio.c .
+Generated-by: Coccinelle SmPL
+Cc: Julia Lawall <julia.lawall@lip6.fr>
+Cc: Peter Senna Tschudin <peter.senna@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
+Reported-by: Mihir Shete <smihir@qti.qualcomm.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ drivers/net/wireless/rtlwifi/regd.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-Is this actually controlling VMMC though, or is it some other control?
-If it's not controlling VMMC then it shouldn't say that it is.
+diff --git a/drivers/net/wireless/rtlwifi/regd.c b/drivers/net/wireless/rtlwifi/regd.c
+index 2e1642c..29d2813 100644
+--- a/drivers/net/wireless/rtlwifi/regd.c
++++ b/drivers/net/wireless/rtlwifi/regd.c
+@@ -169,7 +169,8 @@ static void _rtl_reg_apply_beaconing_flags(struct wiphy *wiphy,
+ 			    (ch->flags & IEEE80211_CHAN_RADAR))
+ 				continue;
+ 			if (initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE) {
+-				reg_rule = freq_reg_info(wiphy, ch->center_freq);
++				reg_rule = freq_reg_info(wiphy,
++							 MHZ_TO_KHZ(ch->center_freq));
+ 				if (IS_ERR(reg_rule))
+ 					continue;
+ 
+@@ -228,7 +229,7 @@ static void _rtl_reg_apply_active_scan_flags(struct wiphy *wiphy,
+ 	 */
+ 
+ 	ch = &sband->channels[11];	/* CH 12 */
+-	reg_rule = freq_reg_info(wiphy, ch->center_freq);
++	reg_rule = freq_reg_info(wiphy, MHZ_TO_KHZ(ch->center_freq));
+ 	if (!IS_ERR(reg_rule)) {
+ 		if (!(reg_rule->flags & NL80211_RRF_NO_IR))
+ 			if (ch->flags & IEEE80211_CHAN_NO_IR)
+@@ -236,7 +237,7 @@ static void _rtl_reg_apply_active_scan_flags(struct wiphy *wiphy,
+ 	}
+ 
+ 	ch = &sband->channels[12];	/* CH 13 */
+-	reg_rule = freq_reg_info(wiphy, ch->center_freq);
++	reg_rule = freq_reg_info(wiphy, MHZ_TO_KHZ(ch->center_freq));
+ 	if (!IS_ERR(reg_rule)) {
+ 		if (!(reg_rule->flags & NL80211_RRF_NO_IR))
+ 			if (ch->flags & IEEE80211_CHAN_NO_IR)
+-- 
+1.8.4.rc3
 
-> I don't know if something similar can be done done in SPI case, but
-> I'm sure this is not the first your-so-called regulator misuse.
-
-It's not the first but that doesn't make controlling something other
-than a regulator through the regulator API any less broken.
-
---vkogqOf2sHV7VnPd
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIcBAEBAgAGBQJSbrnBAAoJELSic+t+oim9zIwQAIvaD4m/WxkD0sxXd8pb5lKQ
-Y88rGx5PwOI7AnVd1e+dHdv/EUrdhYQd7GpUC3YQ5aARR5BqKJhkw4woTuhKAdTl
-vOMq2FFzXIEeLpwt7zoSu4naXGz+X2WYlSPOs8itze448Y5m5abFWI1433IEAD2C
-MdMkaL6C+rLpzFYk5dGRsgK0efCc0jWgoJUmLnhCQH2UDOvCAVqL0HMzbe3TvnOE
-BDrnyvti2XH/B708MVxRWjsNdxwcwD6PvjSSviSL/x57fjgs97NG3qDfuICSy4Vl
-zcimUlnIaJXkLvA7tS+c5CcNS2MsJAoi3FiufQVmRAtK42CKLMrDEudKkeacSvmn
-wd6yAZUh9MqHsLJj48OeWPzD4EMq3MVhlDUsHeCiI6OcEdoPTgEu2rQiPYN4Ihd2
-UawXig1687VV6SgCkERjrW4oPA8GIu0lR/y4T/Po34UhhthVBGBE1xkc4ER8JDrt
-WxxVQXKwFLke2J7qbMd1ngGyHCShLaw2aKhwuxJyOl+J09LgXtY4WH8vpp/ruY8m
-0Ncsy88BKliO6AXnYqW648oP2axHnt/2uiw10wLjmk33RT0a4qrxeQsGF4YK0I4e
-yrytIfz+kzLO1i/fdtvonRJvbLMLFG4514s6NTwa6l5olSzDc719BZsY4Q33u6kk
-V+RxybJIeUSgZ5Zfb8Pa
-=YWan
------END PGP SIGNATURE-----
-
---vkogqOf2sHV7VnPd--
