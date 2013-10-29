@@ -1,1063 +1,415 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:37948 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751265Ab3J2KDJ (ORCPT
+Received: from mail-ea0-f173.google.com ([209.85.215.173]:61999 "EHLO
+	mail-ea0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751804Ab3J2MGy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Oct 2013 06:03:09 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: j@w1.fi, Max Stepanov <Max.Stepanov@intel.com>
-Subject: [RFC] mac80211: add generic cipher scheme support
-Date: Tue, 29 Oct 2013 11:03:04 +0100
-Message-Id: <1383040984-26552-1-git-send-email-johannes@sipsolutions.net> (sfid-20131029_110323_061873_35DF7F38)
+	Tue, 29 Oct 2013 08:06:54 -0400
+Received: by mail-ea0-f173.google.com with SMTP id g10so2885278eak.4
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Oct 2013 05:06:53 -0700 (PDT)
+From: Marek Puzyniak <marek.puzyniak@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Marek Puzyniak <marek.puzyniak@tieto.com>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 2/3] ath10k: introduce DFS implementation
+Date: Tue, 29 Oct 2013 13:06:33 +0100
+Message-Id: <1383048394-15256-2-git-send-email-marek.puzyniak@tieto.com> (sfid-20131029_130658_255459_F9F13CCC)
+In-Reply-To: <1383048394-15256-1-git-send-email-marek.puzyniak@tieto.com>
+References: <1383048394-15256-1-git-send-email-marek.puzyniak@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Max Stepanov <Max.Stepanov@intel.com>
+Configure interface combination for AP running on channels
+where radar detection is required. It allows only one type
+of interface - AP on DFS channel and limits number of AP
+interfaces to 8. Setup WMI channel flags accordingly to mac
+channel configuration. CAC based on additional monitor vdev
+is started if required for current channel.
 
-This adds generic cipher scheme support to mac80211, such schemes
-are fully under control by the driver. On hw registration drivers
-may specify additional HW ciphers with a scheme how these ciphers
-have to be handled by mac80211 TX/RR. A cipher scheme specifies a
-cipher suite value, a size of the security header to be added to
-or stripped from frames and how the PN is to be verified on RX.
-
-Signed-off-by: Max Stepanov <Max.Stepanov@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- include/net/mac80211.h     |  36 +++++++++++
- net/mac80211/cfg.c         |  31 ++++++++--
- net/mac80211/ieee80211_i.h |  10 ++++
- net/mac80211/iface.c       |   5 ++
- net/mac80211/key.c         |  58 +++++++++++-------
- net/mac80211/key.h         |  13 +++-
- net/mac80211/main.c        | 145 +++++++++++++++++++++++++++++++--------------
- net/mac80211/mesh_hwmp.c   |   4 +-
- net/mac80211/mlme.c        |   4 ++
- net/mac80211/rx.c          |  65 +++++++++++++++-----
- net/mac80211/sta_info.h    |  10 +++-
- net/mac80211/tx.c          |  14 +++--
- net/mac80211/util.c        |  68 +++++++++++++++++++++
- net/mac80211/wpa.c         | 116 ++++++++++++++++++++++++++++++++++++
- net/mac80211/wpa.h         |   2 +
- 15 files changed, 480 insertions(+), 101 deletions(-)
+ drivers/net/wireless/ath/ath10k/Kconfig  |   7 ++
+ drivers/net/wireless/ath/ath10k/core.h   |   6 ++
+ drivers/net/wireless/ath/ath10k/htt_rx.c |   5 +
+ drivers/net/wireless/ath/ath10k/mac.c    | 156 +++++++++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath10k/wmi.c    |  23 ++++-
+ drivers/net/wireless/ath/ath10k/wmi.h    |   1 +
+ 6 files changed, 185 insertions(+), 13 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 7ceed99..cca02b2 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1229,6 +1229,36 @@ struct ieee80211_key_conf {
+diff --git a/drivers/net/wireless/ath/ath10k/Kconfig b/drivers/net/wireless/ath/ath10k/Kconfig
+index 82e8088..f51b8e9 100644
+--- a/drivers/net/wireless/ath/ath10k/Kconfig
++++ b/drivers/net/wireless/ath/ath10k/Kconfig
+@@ -37,3 +37,10 @@ config ATH10K_TRACING
+ 	---help---
+ 	  Select this to ath10k use tracing infrastructure.
+ 
++config ATH10K_DFS_CERTIFIED
++	bool "Atheros DFS support for certified platforms"
++	depends on ATH10K && CFG80211_CERTIFICATION_ONUS
++	default n
++	---help---
++	  This option enables DFS support for initiating radiation on
++	  ath10k.
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 671dbe3..d5fd74b 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -310,6 +310,11 @@ enum ath10k_fw_features {
+ 	ATH10K_FW_FEATURE_COUNT,
  };
  
- /**
-+ * struct ieee80211_cipher_scheme - cipher scheme
-+ *
-+ * This structure contains a cipher scheme information defining
-+ * the secure packet crypto handling.
-+ *
-+ * @cipher: a cipher suite selector
-+ * @iftype: a cipher iftype bit mask indicating an allowed cipher usage
-+ * @hdr_len: a length of a security header used the cipher
-+ * @pn_len: a length of a packet number in the security header
-+ * @pn_off: an offset of pn from the beginning of the security header
-+ * @key_idx_off: an offset of key index byte in the security header
-+ * @key_idx_mask: a bit mask of key_idx bits
-+ * @key_idx_shift: a bit shift needed to get key_idx
-+ *     key_idx value calculation:
-+ *      (sec_header_base[key_idx_off] & key_idx_mask) >> key_idx_shift
-+ * @mic_len: a mic length in bytes
-+ */
-+struct ieee80211_cipher_scheme {
-+	u32 cipher;
-+	u16 iftype;
-+	u8 hdr_len;
-+	u8 pn_len;
-+	u8 pn_off;
-+	u8 key_idx_off;
-+	u8 key_idx_mask;
-+	u8 key_idx_shift;
-+	u8 mic_len;
++enum ath10k_dev_flags {
++	/* Indicates that ath10k device is during CAC phase of DFS */
++	ATH10K_CAC_RUNNING,
 +};
 +
-+/**
-  * enum set_key_cmd - key command
-  *
-  * Used with the set_key() callback in &struct ieee80211_ops, this
-@@ -1636,6 +1666,10 @@ enum ieee80211_hw_flags {
-  * @uapsd_max_sp_len: maximum number of total buffered frames the WMM AP may
-  *	deliver to a WMM STA during any Service Period triggered by the WMM STA.
-  *	Use IEEE80211_WMM_IE_STA_QOSINFO_SP_* for correct values.
-+ *
-+ * @n_cipher_schemes: a size of an array of cipher schemes definitions.
-+ * @cipher_schemes: a pointer to an array of cipher scheme definitions
-+ *	supported by HW.
-  */
- struct ieee80211_hw {
- 	struct ieee80211_conf conf;
-@@ -1663,6 +1697,8 @@ struct ieee80211_hw {
- 	netdev_features_t netdev_features;
- 	u8 uapsd_queues;
- 	u8 uapsd_max_sp_len;
-+	u8 n_cipher_schemes;
-+	const struct ieee80211_cipher_scheme *cipher_schemes;
- };
+ struct ath10k {
+ 	struct ath_common ath_common;
+ 	struct ieee80211_hw *hw;
+@@ -403,6 +408,7 @@ struct ath10k {
+ 	bool monitor_enabled;
+ 	bool monitor_present;
+ 	unsigned int filter_flags;
++	unsigned long dev_flags;
  
- /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index ed1e9a8..f2bbe3d 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -133,7 +133,9 @@ static int ieee80211_add_key(struct wiphy *wiphy, struct net_device *dev,
- 			     struct key_params *params)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta = NULL;
-+	const struct ieee80211_cipher_scheme *cs = NULL;
- 	struct ieee80211_key *key;
- 	int err;
+ 	struct wmi_pdev_set_wmm_params_arg wmm_params;
+ 	struct completion install_key_done;
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 90d4f74..d619291 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -959,6 +959,11 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+ 				continue;
+ 			}
  
-@@ -145,22 +147,28 @@ static int ieee80211_add_key(struct wiphy *wiphy, struct net_device *dev,
- 	case WLAN_CIPHER_SUITE_WEP40:
- 	case WLAN_CIPHER_SUITE_TKIP:
- 	case WLAN_CIPHER_SUITE_WEP104:
--		if (IS_ERR(sdata->local->wep_tx_tfm))
-+		if (IS_ERR(local->wep_tx_tfm))
- 			return -EINVAL;
- 		break;
-+	case WLAN_CIPHER_SUITE_CCMP:
-+	case WLAN_CIPHER_SUITE_AES_CMAC:
-+	case WLAN_CIPHER_SUITE_GCMP:
-+		break;
- 	default:
-+		cs = ieee80211_cs_get(local, params->cipher, sdata->vif.type);
- 		break;
- 	}
- 
- 	key = ieee80211_key_alloc(params->cipher, key_idx, params->key_len,
--				  params->key, params->seq_len, params->seq);
-+				  params->key, params->seq_len, params->seq,
-+				  cs);
- 	if (IS_ERR(key))
- 		return PTR_ERR(key);
- 
- 	if (pairwise)
- 		key->conf.flags |= IEEE80211_KEY_FLAG_PAIRWISE;
- 
--	mutex_lock(&sdata->local->sta_mtx);
-+	mutex_lock(&local->sta_mtx);
- 
- 	if (mac_addr) {
- 		if (ieee80211_vif_is_mesh(&sdata->vif))
-@@ -216,10 +224,13 @@ static int ieee80211_add_key(struct wiphy *wiphy, struct net_device *dev,
- 		break;
- 	}
- 
-+	if (sta)
-+		sta->cipher_scheme = cs;
-+
- 	err = ieee80211_key_link(key, sdata, sta);
- 
-  out_unlock:
--	mutex_unlock(&sdata->local->sta_mtx);
-+	mutex_unlock(&local->sta_mtx);
- 
- 	return err;
- }
-@@ -244,7 +255,7 @@ static int ieee80211_del_key(struct wiphy *wiphy, struct net_device *dev,
- 			goto out_unlock;
- 
- 		if (pairwise)
--			key = key_mtx_dereference(local, sta->ptk);
-+			key = key_mtx_dereference(local, sta->ptk[key_idx]);
- 		else
- 			key = key_mtx_dereference(local, sta->gtk[key_idx]);
- 	} else
-@@ -291,7 +302,7 @@ static int ieee80211_get_key(struct wiphy *wiphy, struct net_device *dev,
- 			goto out;
- 
- 		if (pairwise)
--			key = rcu_dereference(sta->ptk);
-+			key = rcu_dereference(sta->ptk[key_idx]);
- 		else if (key_idx < NUM_DEFAULT_KEYS)
- 			key = rcu_dereference(sta->gtk[key_idx]);
- 	} else
-@@ -968,11 +979,19 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 	 */
- 	sdata->control_port_protocol = params->crypto.control_port_ethertype;
- 	sdata->control_port_no_encrypt = params->crypto.control_port_no_encrypt;
-+	sdata->encrypt_headroom = ieee80211_cs_headroom(sdata->local,
-+							&params->crypto,
-+							sdata->vif.type);
-+
- 	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list) {
- 		vlan->control_port_protocol =
- 			params->crypto.control_port_ethertype;
- 		vlan->control_port_no_encrypt =
- 			params->crypto.control_port_no_encrypt;
-+		vlan->encrypt_headroom =
-+			ieee80211_cs_headroom(sdata->local,
-+					      &params->crypto,
-+					      vlan->vif.type);
- 	}
- 
- 	sdata->vif.bss_conf.beacon_int = params->beacon_interval;
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 5cfa160..de1bb78 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -727,6 +727,7 @@ struct ieee80211_sub_if_data {
- 	u16 sequence_number;
- 	__be16 control_port_protocol;
- 	bool control_port_no_encrypt;
-+	int encrypt_headroom;
- 
- 	struct ieee80211_tx_queue_params tx_conf[IEEE80211_NUM_ACS];
- 
-@@ -1745,6 +1746,15 @@ void ieee80211_dfs_radar_detected_work(struct work_struct *work);
- int ieee80211_send_action_csa(struct ieee80211_sub_if_data *sdata,
- 			      struct cfg80211_csa_settings *csa_settings);
- 
-+bool ieee80211_cs_valid(const struct ieee80211_cipher_scheme *cs);
-+bool ieee80211_cs_list_valid(const struct ieee80211_cipher_scheme *cs, int n);
-+const struct ieee80211_cipher_scheme *
-+ieee80211_cs_get(struct ieee80211_local *local, u32 cipher,
-+		 enum nl80211_iftype iftype);
-+int ieee80211_cs_headroom(struct ieee80211_local *local,
-+			  struct cfg80211_crypto_settings *crypto,
-+			  enum nl80211_iftype iftype);
-+
- #ifdef CONFIG_MAC80211_NOINLINE
- #define debug_noinline noinline
- #else
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index ff101ea..ad28e3d 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -401,6 +401,8 @@ int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
- 	snprintf(sdata->name, IFNAMSIZ, "%s-monitor",
- 		 wiphy_name(local->hw.wiphy));
- 
-+	sdata->encrypt_headroom = IEEE80211_ENCRYPT_HEADROOM;
-+
- 	ieee80211_set_default_queues(sdata);
- 
- 	ret = drv_add_interface(local, sdata);
-@@ -1270,6 +1272,7 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
- 
- 	sdata->control_port_protocol = cpu_to_be16(ETH_P_PAE);
- 	sdata->control_port_no_encrypt = false;
-+	sdata->encrypt_headroom = IEEE80211_ENCRYPT_HEADROOM;
- 
- 	sdata->noack_map = 0;
- 
-@@ -1686,6 +1689,8 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
- 	sdata->ap_power_level = IEEE80211_UNSET_POWER_LEVEL;
- 	sdata->user_power_level = local->user_power_level;
- 
-+	sdata->encrypt_headroom = IEEE80211_ENCRYPT_HEADROOM;
-+
- 	/* setup type-dependent data */
- 	ieee80211_setup_sdata(sdata, type);
- 
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index ab84680..e568d98 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -267,22 +267,22 @@ static void ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
- 	if (new)
- 		list_add_tail(&new->list, &sdata->key_list);
- 
--	if (sta && pairwise) {
--		rcu_assign_pointer(sta->ptk, new);
--	} else if (sta) {
--		if (old)
--			idx = old->conf.keyidx;
--		else
--			idx = new->conf.keyidx;
--		rcu_assign_pointer(sta->gtk[idx], new);
--	} else {
--		WARN_ON(new && old && new->conf.keyidx != old->conf.keyidx);
-+	WARN_ON(new && old && new->conf.keyidx != old->conf.keyidx);
- 
--		if (old)
--			idx = old->conf.keyidx;
--		else
--			idx = new->conf.keyidx;
-+	if (old)
-+		idx = old->conf.keyidx;
-+	else
-+		idx = new->conf.keyidx;
- 
-+	if (sta) {
-+		if (pairwise) {
-+			rcu_assign_pointer(sta->ptk[idx], new);
-+			sta->ptk_idx = idx;
-+		} else {
-+			rcu_assign_pointer(sta->gtk[idx], new);
-+			sta->gtk_idx = idx;
-+		}
-+	} else {
- 		defunikey = old &&
- 			old == key_mtx_dereference(sdata->local,
- 						sdata->default_unicast_key);
-@@ -316,9 +316,11 @@ static void ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
- 		list_del(&old->list);
- }
- 
--struct ieee80211_key *ieee80211_key_alloc(u32 cipher, int idx, size_t key_len,
--					  const u8 *key_data,
--					  size_t seq_len, const u8 *seq)
-+struct ieee80211_key *
-+ieee80211_key_alloc(u32 cipher, int idx, size_t key_len,
-+		    const u8 *key_data,
-+		    size_t seq_len, const u8 *seq,
-+		    const struct ieee80211_cipher_scheme *cs)
- {
- 	struct ieee80211_key *key;
- 	int i, j, err;
-@@ -397,6 +399,18 @@ struct ieee80211_key *ieee80211_key_alloc(u32 cipher, int idx, size_t key_len,
- 			return ERR_PTR(err);
- 		}
- 		break;
-+	default:
-+		if (cs) {
-+			size_t len = (seq_len > MAX_PN_LEN) ?
-+						MAX_PN_LEN : seq_len;
-+
-+			key->conf.iv_len = cs->hdr_len;
-+			key->conf.icv_len = cs->mic_len;
-+			for (i = 0; i < IEEE80211_NUM_TIDS + 1; i++)
-+				for (j = 0; j < len; j++)
-+					key->u.gen.rx_pn[i][j] =
-+							seq[len - j - 1];
-+		}
- 	}
- 	memcpy(key->conf.key, key_data, key_len);
- 	INIT_LIST_HEAD(&key->list);
-@@ -479,7 +493,7 @@ int ieee80211_key_link(struct ieee80211_key *key,
- 	mutex_lock(&sdata->local->key_mtx);
- 
- 	if (sta && pairwise)
--		old_key = key_mtx_dereference(sdata->local, sta->ptk);
-+		old_key = key_mtx_dereference(sdata->local, sta->ptk[idx]);
- 	else if (sta)
- 		old_key = key_mtx_dereference(sdata->local, sta->gtk[idx]);
- 	else
-@@ -629,8 +643,10 @@ void ieee80211_free_sta_keys(struct ieee80211_local *local,
- 		list_add(&key->list, &keys);
- 	}
- 
--	key = key_mtx_dereference(local, sta->ptk);
--	if (key) {
-+	for (i = 0; i < NUM_DEFAULT_KEYS; i++) {
-+		key = key_mtx_dereference(local, sta->ptk[i]);
-+		if (!key)
-+			continue;
- 		ieee80211_key_replace(key->sdata, key->sta,
- 				key->conf.flags & IEEE80211_KEY_FLAG_PAIRWISE,
- 				key, NULL);
-@@ -881,7 +897,7 @@ ieee80211_gtk_rekey_add(struct ieee80211_vif *vif,
- 
- 	key = ieee80211_key_alloc(keyconf->cipher, keyconf->keyidx,
- 				  keyconf->keylen, keyconf->key,
--				  0, NULL);
-+				  0, NULL, NULL);
- 	if (IS_ERR(key))
- 		return ERR_CAST(key);
- 
-diff --git a/net/mac80211/key.h b/net/mac80211/key.h
-index aaae0ed..0aebb88 100644
---- a/net/mac80211/key.h
-+++ b/net/mac80211/key.h
-@@ -18,6 +18,7 @@
- 
- #define NUM_DEFAULT_KEYS 4
- #define NUM_DEFAULT_MGMT_KEYS 2
-+#define MAX_PN_LEN 16
- 
- struct ieee80211_local;
- struct ieee80211_sub_if_data;
-@@ -93,6 +94,10 @@ struct ieee80211_key {
- 			u32 replays; /* dot11RSNAStatsCMACReplays */
- 			u32 icverrors; /* dot11RSNAStatsCMACICVErrors */
- 		} aes_cmac;
-+		struct {
-+			/* generic cipher scheme */
-+			u8 rx_pn[IEEE80211_NUM_TIDS + 1][MAX_PN_LEN];
-+		} gen;
- 	} u;
- 
- 	/* number of times this key has been used */
-@@ -113,9 +118,11 @@ struct ieee80211_key {
- 	struct ieee80211_key_conf conf;
- };
- 
--struct ieee80211_key *ieee80211_key_alloc(u32 cipher, int idx, size_t key_len,
--					  const u8 *key_data,
--					  size_t seq_len, const u8 *seq);
-+struct ieee80211_key *
-+ieee80211_key_alloc(u32 cipher, int idx, size_t key_len,
-+		    const u8 *key_data,
-+		    size_t seq_len, const u8 *seq,
-+		    const struct ieee80211_cipher_scheme *cs);
- /*
-  * Insert a key into data structures (sdata, sta if necessary)
-  * to make it used, free old key. On failure, also free the new key.
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 21d5d44..bdb0b6c 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -651,15 +651,14 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
- }
- EXPORT_SYMBOL(ieee80211_alloc_hw);
- 
--int ieee80211_register_hw(struct ieee80211_hw *hw)
-+static int ieee80211_init_cipher_suites(struct ieee80211_local *local)
- {
--	struct ieee80211_local *local = hw_to_local(hw);
--	int result, i;
--	enum ieee80211_band band;
--	int channels, max_bitrates;
--	bool supp_ht, supp_vht;
--	netdev_features_t feature_whitelist;
--	struct cfg80211_chan_def dflt_chandef = {};
-+	bool have_wep = !(IS_ERR(local->wep_tx_tfm) ||
-+			  IS_ERR(local->wep_rx_tfm));
-+	bool have_mfp = local->hw.flags & IEEE80211_HW_MFP_CAPABLE;
-+	const struct ieee80211_cipher_scheme *cs = local->hw.cipher_schemes;
-+	int n_suites = 0, r = 0, w = 0;
-+	u32 *suites;
- 	static const u32 cipher_suites[] = {
- 		/* keep WEP first, it may be removed below */
- 		WLAN_CIPHER_SUITE_WEP40,
-@@ -671,6 +670,93 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 		WLAN_CIPHER_SUITE_AES_CMAC
- 	};
- 
-+	/* Driver specifies the ciphers, we have nothing to do... */
-+	if (local->hw.wiphy->cipher_suites && have_wep)
-+		return 0;
-+
-+	/* Set up cipher suites if driver relies on mac80211 cipher defs */
-+	if (!local->hw.wiphy->cipher_suites && !cs) {
-+		local->hw.wiphy->cipher_suites = cipher_suites;
-+		local->hw.wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
-+
-+		if (!have_mfp)
-+			local->hw.wiphy->n_cipher_suites--;
-+
-+		if (!have_wep) {
-+			local->hw.wiphy->cipher_suites += 2;
-+			local->hw.wiphy->n_cipher_suites -= 2;
-+		}
-+
-+		return 0;
-+	}
-+
-+	if (!local->hw.wiphy->cipher_suites) {
-+		/*
-+		 * Driver specifies cipher schemes only
-+		 * We start counting ciphers defined by schemes, TKIP and CCMP
-+		 */
-+		n_suites = local->hw.n_cipher_schemes + 2;
-+
-+		/* check if we have WEP40 and WEP104 */
-+		if (have_wep)
-+			n_suites += 2;
-+
-+		/* check if we have AES_CMAC */
-+		if (have_mfp)
-+			n_suites++;
-+
-+		suites = kmalloc(sizeof(u32) * n_suites, GFP_KERNEL);
-+		if (!suites)
-+			return -ENOMEM;
-+
-+		suites[w++] = WLAN_CIPHER_SUITE_CCMP;
-+		suites[w++] = WLAN_CIPHER_SUITE_TKIP;
-+
-+		if (have_wep) {
-+			suites[w++] = WLAN_CIPHER_SUITE_WEP40;
-+			suites[w++] = WLAN_CIPHER_SUITE_WEP104;
-+		}
-+
-+		if (have_mfp)
-+			suites[w++] = WLAN_CIPHER_SUITE_AES_CMAC;
-+
-+		for (r = 0; r < local->hw.n_cipher_schemes; r++)
-+			suites[w++] = cs[r].cipher;
-+	} else {
-+		/* Driver provides cipher suites, but we need to exclude WEP */
-+		suites = kmemdup(local->hw.wiphy->cipher_suites,
-+				 sizeof(u32) * local->hw.wiphy->n_cipher_suites,
-+				 GFP_KERNEL);
-+		if (!suites)
-+			return -ENOMEM;
-+
-+		for (r = 0; r < local->hw.wiphy->n_cipher_suites; r++) {
-+			u32 suite = local->hw.wiphy->cipher_suites[r];
-+
-+			if (suite == WLAN_CIPHER_SUITE_WEP40 ||
-+			    suite == WLAN_CIPHER_SUITE_WEP104)
++			if (test_bit(ATH10K_CAC_RUNNING, &htt->ar->dev_flags)) {
++				ath10k_htt_rx_free_msdu_chain(msdu_head);
 +				continue;
-+			suites[w++] = suite;
-+		}
++			}
++
+ 			/* FIXME: we do not support chaining yet.
+ 			 * this needs investigation */
+ 			if (msdu_chaining) {
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 79f8bfd..4c62201 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -459,6 +459,10 @@ static int ath10k_vdev_start(struct ath10k_vif *arvif)
+ 		arg.ssid = arvif->u.ap.ssid;
+ 		arg.ssid_len = arvif->u.ap.ssid_len;
+ 		arg.hidden_ssid = arvif->u.ap.hidden_ssid;
++
++		/* For now allow DFS for AP mode */
++		arg.channel.chan_radar =
++			!!(channel->flags & IEEE80211_CHAN_RADAR);
+ 	} else if (arvif->vdev_type == WMI_VDEV_TYPE_IBSS) {
+ 		arg.ssid = arvif->vif->bss_conf.ssid;
+ 		arg.ssid_len = arvif->vif->bss_conf.ssid_len;
+@@ -528,6 +532,8 @@ static int ath10k_monitor_start(struct ath10k *ar, int vdev_id)
+ 	/* TODO setup this dynamically, what in case we
+ 	   don't have any vifs? */
+ 	arg.channel.mode = chan_to_phymode(&ar->hw->conf.chandef);
++	arg.channel.chan_radar =
++			!!(channel->flags & IEEE80211_CHAN_RADAR);
+ 
+ 	arg.channel.min_power = 0;
+ 	arg.channel.max_power = channel->max_power * 2;
+@@ -662,6 +668,107 @@ static int ath10k_monitor_destroy(struct ath10k *ar)
+ 	return ret;
+ }
+ 
++static int ath10k_start_cac(struct ath10k *ar)
++{
++	int ret;
++
++	lockdep_assert_held(&ar->conf_mutex);
++
++	set_bit(ATH10K_CAC_RUNNING, &ar->dev_flags);
++
++	ret = ath10k_monitor_create(ar);
++	if (ret) {
++		clear_bit(ATH10K_CAC_RUNNING, &ar->dev_flags);
++		return ret;
 +	}
 +
-+	local->hw.wiphy->cipher_suites = suites;
-+	local->hw.wiphy->n_cipher_suites = w;
-+	local->wiphy_ciphers_allocated = true;
++	ret = ath10k_monitor_start(ar, ar->monitor_vdev_id);
++	if (ret) {
++		clear_bit(ATH10K_CAC_RUNNING, &ar->dev_flags);
++		ath10k_monitor_destroy(ar);
++		return ret;
++	}
++
++	ath10k_dbg(ATH10K_DBG_MAC, "mac cac start monitor vdev %d\n",
++		   ar->monitor_vdev_id);
 +
 +	return 0;
 +}
 +
-+int ieee80211_register_hw(struct ieee80211_hw *hw)
++static int ath10k_stop_cac(struct ath10k *ar)
 +{
-+	struct ieee80211_local *local = hw_to_local(hw);
-+	int result, i;
-+	enum ieee80211_band band;
-+	int channels, max_bitrates;
-+	bool supp_ht, supp_vht;
-+	netdev_features_t feature_whitelist;
-+	struct cfg80211_chan_def dflt_chandef = {};
++	lockdep_assert_held(&ar->conf_mutex);
 +
- 	if (hw->flags & IEEE80211_HW_QUEUE_CONTROL &&
- 	    (local->hw.offchannel_tx_hw_queue == IEEE80211_INVAL_HW_QUEUE ||
- 	     local->hw.offchannel_tx_hw_queue >= local->hw.queues))
-@@ -851,43 +937,12 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 	if (local->hw.wiphy->max_scan_ie_len)
- 		local->hw.wiphy->max_scan_ie_len -= local->scan_ies_len;
- 
--	/* Set up cipher suites unless driver already did */
--	if (!local->hw.wiphy->cipher_suites) {
--		local->hw.wiphy->cipher_suites = cipher_suites;
--		local->hw.wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
--		if (!(local->hw.flags & IEEE80211_HW_MFP_CAPABLE))
--			local->hw.wiphy->n_cipher_suites--;
--	}
--	if (IS_ERR(local->wep_tx_tfm) || IS_ERR(local->wep_rx_tfm)) {
--		if (local->hw.wiphy->cipher_suites == cipher_suites) {
--			local->hw.wiphy->cipher_suites += 2;
--			local->hw.wiphy->n_cipher_suites -= 2;
--		} else {
--			u32 *suites;
--			int r, w = 0;
--
--			/* Filter out WEP */
--
--			suites = kmemdup(
--				local->hw.wiphy->cipher_suites,
--				sizeof(u32) * local->hw.wiphy->n_cipher_suites,
--				GFP_KERNEL);
--			if (!suites) {
--				result = -ENOMEM;
--				goto fail_wiphy_register;
--			}
--			for (r = 0; r < local->hw.wiphy->n_cipher_suites; r++) {
--				u32 suite = local->hw.wiphy->cipher_suites[r];
--				if (suite == WLAN_CIPHER_SUITE_WEP40 ||
--				    suite == WLAN_CIPHER_SUITE_WEP104)
--					continue;
--				suites[w++] = suite;
--			}
--			local->hw.wiphy->cipher_suites = suites;
--			local->hw.wiphy->n_cipher_suites = w;
--			local->wiphy_ciphers_allocated = true;
--		}
--	}
-+	WARN_ON(!ieee80211_cs_list_valid(local->hw.cipher_schemes,
-+					 local->hw.n_cipher_schemes));
++	/* CAC is not running - do nothing */
++	if (!test_bit(ATH10K_CAC_RUNNING, &ar->dev_flags))
++		return 0;
 +
-+	result = ieee80211_init_cipher_suites(local);
-+	if (result < 0)
-+		goto fail_wiphy_register;
- 
- 	if (!local->ops->remain_on_channel)
- 		local->hw.wiphy->max_remain_on_channel_duration = 5000;
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 486819c..56e0c072 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -254,13 +254,13 @@ int mesh_path_error_tx(struct ieee80211_sub_if_data *sdata,
- 		return -EAGAIN;
- 
- 	skb = dev_alloc_skb(local->tx_headroom +
--			    IEEE80211_ENCRYPT_HEADROOM +
-+			    sdata->encrypt_headroom +
- 			    IEEE80211_ENCRYPT_TAILROOM +
- 			    hdr_len +
- 			    2 + 15 /* PERR IE */);
- 	if (!skb)
- 		return -1;
--	skb_reserve(skb, local->tx_headroom + IEEE80211_ENCRYPT_HEADROOM);
-+	skb_reserve(skb, local->tx_headroom + sdata->encrypt_headroom);
- 	mgmt = (struct ieee80211_mgmt *) skb_put(skb, hdr_len);
- 	memset(mgmt, 0, hdr_len);
- 	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 5b2b0a1..98d6d1e 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1745,6 +1745,8 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 
- 	ifmgd->flags = 0;
- 	ieee80211_vif_release_channel(sdata);
++	ath10k_monitor_stop(ar);
++	ath10k_monitor_destroy(ar);
++	clear_bit(ATH10K_CAC_RUNNING, &ar->dev_flags);
 +
-+	sdata->encrypt_headroom = IEEE80211_ENCRYPT_HEADROOM;
- }
- 
- void ieee80211_sta_rx_notify(struct ieee80211_sub_if_data *sdata,
-@@ -4112,6 +4114,8 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 
- 	sdata->control_port_protocol = req->crypto.control_port_ethertype;
- 	sdata->control_port_no_encrypt = req->crypto.control_port_no_encrypt;
-+	sdata->encrypt_headroom = ieee80211_cs_headroom(local, &req->crypto,
-+							sdata->vif.type);
- 
- 	/* kick off associate process */
- 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 23f49e8..e1b71d8 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -638,6 +638,27 @@ static int ieee80211_get_mmie_keyidx(struct sk_buff *skb)
- 	return le16_to_cpu(mmie->key_id);
- }
- 
-+static int iwl80211_get_cs_keyid(const struct ieee80211_cipher_scheme *cs,
-+				 struct sk_buff *skb)
-+{
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-+	__le16 fc;
-+	int hdrlen;
-+	u8 keyid;
++	ath10k_dbg(ATH10K_DBG_MAC, "mac cac finished\n");
 +
-+	fc = hdr->frame_control;
-+	hdrlen = ieee80211_hdrlen(fc);
-+
-+	if (skb->len < hdrlen + cs->hdr_len)
-+		return -EINVAL;
-+
-+	skb_copy_bits(skb, hdrlen + cs->key_idx_off, &keyid, 1);
-+	keyid &= cs->key_idx_mask;
-+	keyid >>= cs->key_idx_shift;
-+
-+	return keyid;
++	return 0;
 +}
 +
- static ieee80211_rx_result ieee80211_rx_mesh_check(struct ieee80211_rx_data *rx)
- {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)rx->skb->data;
-@@ -1368,6 +1389,7 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
- 	struct ieee80211_key *sta_ptk = NULL;
- 	int mmie_keyidx = -1;
- 	__le16 fc;
-+	const struct ieee80211_cipher_scheme *cs = NULL;
- 
- 	/*
- 	 * Key selection 101
-@@ -1405,11 +1427,19 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
- 
- 	/* start without a key */
- 	rx->key = NULL;
-+	fc = hdr->frame_control;
- 
--	if (rx->sta)
--		sta_ptk = rcu_dereference(rx->sta->ptk);
-+	if (rx->sta) {
-+		int keyid = rx->sta->ptk_idx;
- 
--	fc = hdr->frame_control;
-+		if (ieee80211_has_protected(fc) && rx->sta->cipher_scheme) {
-+			cs = rx->sta->cipher_scheme;
-+			keyid = iwl80211_get_cs_keyid(cs, rx->skb);
-+			if (unlikely(keyid < 0))
-+				return RX_DROP_UNUSABLE;
-+		}
-+		sta_ptk = rcu_dereference(rx->sta->ptk[keyid]);
++static const char *ath10k_dfs_state(enum nl80211_dfs_state dfs_state)
++{
++	switch (dfs_state) {
++	case NL80211_DFS_USABLE:
++		return "USABLE";
++	case NL80211_DFS_UNAVAILABLE:
++		return "UNAVAILABLE";
++	case NL80211_DFS_AVAILABLE:
++		return "AVAILABLE";
++	default:
++		WARN_ON(1);
++		return "bug";
 +	}
- 
- 	if (!ieee80211_has_protected(fc))
- 		mmie_keyidx = ieee80211_get_mmie_keyidx(rx->skb);
-@@ -1471,6 +1501,7 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
- 		return RX_CONTINUE;
- 	} else {
- 		u8 keyid;
++}
 +
- 		/*
- 		 * The device doesn't give us the IV so we won't be
- 		 * able to look up the key. That's ok though, we
-@@ -1486,15 +1517,21 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
++static void ath10k_config_radar_detection(struct ath10k *ar)
++{
++	struct ieee80211_channel *chan = ar->hw->conf.chandef.chan;
++	bool radar = ar->hw->conf.radar_enabled;
++	bool chan_radar = !!(chan->flags & IEEE80211_CHAN_RADAR);
++	enum nl80211_dfs_state dfs_state = chan->dfs_state;
++	int ret;
++
++	lockdep_assert_held(&ar->conf_mutex);
++
++	ath10k_dbg(ATH10K_DBG_MAC,
++		   "mac radar config update: chan %dMHz radar %d chan radar %d chan state %s\n",
++		   chan->center_freq, radar, chan_radar,
++		   ath10k_dfs_state(dfs_state));
++
++	/*
++	 * It's safe to call it even if CAC is not started.
++	 * This call here guarantees changing channel, etc. will stop CAC.
++	 */
++	ath10k_stop_cac(ar);
++
++	if (!radar)
++		return;
++
++	if (!chan_radar)
++		return;
++
++	if (dfs_state != NL80211_DFS_USABLE)
++		return;
++
++	ret = ath10k_start_cac(ar);
++	if (ret) {
++		/*
++		 * Not possible to start CAC on current channel so starting
++		 * radiation is not allowed, make this channel DFS_UNAVAILABLE
++		 * by indicating that radar was detected.
++		 */
++		ath10k_warn("failed to start CAC (%d)\n", ret);
++		ieee80211_radar_detected(ar->hw);
++	}
++}
++
+ static void ath10k_control_beaconing(struct ath10k_vif *arvif,
+ 				struct ieee80211_bss_conf *info)
+ {
+@@ -1371,6 +1478,9 @@ static int ath10k_update_channel_list(struct ath10k *ar)
+ 			ch->ht40plus =
+ 				!(channel->flags & IEEE80211_CHAN_NO_HT40PLUS);
  
- 		hdrlen = ieee80211_hdrlen(fc);
++			ch->chan_radar =
++				!!(channel->flags & IEEE80211_CHAN_RADAR);
++
+ 			passive = channel->flags & IEEE80211_CHAN_PASSIVE_SCAN;
+ 			ch->passive = passive;
  
--		if (rx->skb->len < 8 + hdrlen)
--			return RX_DROP_UNUSABLE; /* TODO: count this? */
-+		if (cs) {
-+			keyidx = iwl80211_get_cs_keyid(cs, rx->skb);
+@@ -1915,6 +2025,7 @@ void ath10k_halt(struct ath10k *ar)
+ {
+ 	lockdep_assert_held(&ar->conf_mutex);
  
--		/*
--		 * no need to call ieee80211_wep_get_keyidx,
--		 * it verifies a bunch of things we've done already
--		 */
--		skb_copy_bits(rx->skb, hdrlen + 3, &keyid, 1);
--		keyidx = keyid >> 6;
-+			if (unlikely(keyidx < 0))
-+				return RX_DROP_UNUSABLE;
-+		} else {
-+			if (rx->skb->len < 8 + hdrlen)
-+				return RX_DROP_UNUSABLE; /* TODO: count this? */
-+			/*
-+			 * no need to call ieee80211_wep_get_keyidx,
-+			 * it verifies a bunch of things we've done already
-+			 */
-+			skb_copy_bits(rx->skb, hdrlen + 3, &keyid, 1);
-+			keyidx = keyid >> 6;
-+		}
++	ath10k_stop_cac(ar);
+ 	del_timer_sync(&ar->scan.timeout);
+ 	ath10k_offchan_tx_purge(ar);
+ 	ath10k_mgmt_over_wmi_tx_purge(ar);
+@@ -2029,11 +2140,16 @@ static int ath10k_config(struct ieee80211_hw *hw, u32 changed)
+ 	mutex_lock(&ar->conf_mutex);
  
- 		/* check per-station GTK first, if multicast packet */
- 		if (is_multicast_ether_addr(hdr->addr1) && rx->sta)
-@@ -1542,11 +1579,7 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
- 		result = ieee80211_crypto_aes_cmac_decrypt(rx);
- 		break;
- 	default:
--		/*
--		 * We can reach here only with HW-only algorithms
--		 * but why didn't it decrypt the frame?!
--		 */
--		return RX_DROP_UNUSABLE;
-+		result = ieee80211_crypto_hw_decrypt(rx);
+ 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
+-		ath10k_dbg(ATH10K_DBG_MAC, "mac config channel %d mhz\n",
+-			   conf->chandef.chan->center_freq);
++		ath10k_dbg(ATH10K_DBG_MAC,
++			   "mac config channel %d mhz flags 0x%x\n",
++			   conf->chandef.chan->center_freq,
++			   conf->chandef.chan->flags);
++
+ 		spin_lock_bh(&ar->data_lock);
+ 		ar->rx_channel = conf->chandef.chan;
+ 		spin_unlock_bh(&ar->data_lock);
++
++		ath10k_config_radar_detection(ar);
  	}
  
- 	/* the hdr variable is invalid after the decrypt handlers */
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 3ef06a2..6b0d6c2 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -231,8 +231,10 @@ struct sta_ampdu_mlme {
-  * @hnext: hash table linked list pointer
-  * @local: pointer to the global information
-  * @sdata: virtual interface this station belongs to
-- * @ptk: peer key negotiated with this station, if any
-+ * @ptk: peer keys negotiated with this station, if any
-+ * @ptk_idx: last installed peer key index
-  * @gtk: group keys negotiated with this station, if any
-+ * @gtk_idx: last installed group key index
-  * @rate_ctrl: rate control algorithm reference
-  * @rate_ctrl_priv: rate control private per-STA pointer
-  * @last_tx_rate: rate used for last transmit, to report to userspace as
-@@ -303,6 +305,7 @@ struct sta_ampdu_mlme {
-  * @chain_signal_avg: signal average (per chain)
-  * @known_smps_mode: the smps_mode the client thinks we are in. Relevant for
-  *	AP only.
-+ * @cipher_scheme: optional cipher scheme for this station
-  */
- struct sta_info {
- 	/* General information, mostly static */
-@@ -312,7 +315,9 @@ struct sta_info {
- 	struct ieee80211_local *local;
- 	struct ieee80211_sub_if_data *sdata;
- 	struct ieee80211_key __rcu *gtk[NUM_DEFAULT_KEYS + NUM_DEFAULT_MGMT_KEYS];
--	struct ieee80211_key __rcu *ptk;
-+	struct ieee80211_key __rcu *ptk[NUM_DEFAULT_KEYS];
-+	u8 gtk_idx;
-+	u8 ptk_idx;
- 	struct rate_control_ref *rate_ctrl;
- 	void *rate_ctrl_priv;
- 	spinlock_t lock;
-@@ -414,6 +419,7 @@ struct sta_info {
- 	unsigned int beacon_loss_count;
+ 	if (changed & IEEE80211_CONF_CHANGE_POWER) {
+@@ -3302,12 +3418,32 @@ static const struct ieee80211_iface_limit ath10k_if_limits[] = {
+ 	},
+ };
  
- 	enum ieee80211_smps_mode known_smps_mode;
-+	const struct ieee80211_cipher_scheme *cipher_scheme;
- 
- 	/* keep last! */
- 	struct ieee80211_sta sta;
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 9868cb7..e84627f 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -557,7 +557,8 @@ ieee80211_tx_h_select_key(struct ieee80211_tx_data *tx)
- 
- 	if (unlikely(info->flags & IEEE80211_TX_INTFL_DONT_ENCRYPT))
- 		tx->key = NULL;
--	else if (tx->sta && (key = rcu_dereference(tx->sta->ptk)))
-+	else if (tx->sta &&
-+		 (key = rcu_dereference(tx->sta->ptk[tx->sta->ptk_idx])))
- 		tx->key = key;
- 	else if (ieee80211_is_mgmt(hdr->frame_control) &&
- 		 is_multicast_ether_addr(hdr->addr1) &&
-@@ -840,15 +841,16 @@ static int ieee80211_fragment(struct ieee80211_tx_data *tx,
- 		rem -= fraglen;
- 		tmp = dev_alloc_skb(local->tx_headroom +
- 				    frag_threshold +
--				    IEEE80211_ENCRYPT_HEADROOM +
-+				    tx->sdata->encrypt_headroom +
- 				    IEEE80211_ENCRYPT_TAILROOM);
- 		if (!tmp)
- 			return -ENOMEM;
- 
- 		__skb_queue_tail(&tx->skbs, tmp);
- 
--		skb_reserve(tmp, local->tx_headroom +
--				 IEEE80211_ENCRYPT_HEADROOM);
-+		skb_reserve(tmp,
-+			    local->tx_headroom + tx->sdata->encrypt_headroom);
+-static const struct ieee80211_iface_combination ath10k_if_comb = {
+-	.limits = ath10k_if_limits,
+-	.n_limits = ARRAY_SIZE(ath10k_if_limits),
+-	.max_interfaces = 8,
+-	.num_different_channels = 1,
+-	.beacon_int_infra_match = true,
++static const struct ieee80211_iface_limit ath10k_if_dfs_limits[] = {
++	{
++	.max	= 8,
++	.types	= BIT(NL80211_IFTYPE_AP)
++	},
++};
 +
- 		/* copy control information */
- 		memcpy(tmp->cb, skb->cb, sizeof(tmp->cb));
++static const struct ieee80211_iface_combination ath10k_if_comb[] = {
++	{
++		.limits = ath10k_if_limits,
++		.n_limits = ARRAY_SIZE(ath10k_if_limits),
++		.max_interfaces = 8,
++		.num_different_channels = 1,
++		.beacon_int_infra_match = true,
++	},
++	{
++		.limits = ath10k_if_dfs_limits,
++		.n_limits = ARRAY_SIZE(ath10k_if_dfs_limits),
++		.max_interfaces = 8,
++		.num_different_channels = 1,
++		.beacon_int_infra_match = true,
++		.radar_detect_widths =	BIT(NL80211_CHAN_WIDTH_20_NOHT) |
++					BIT(NL80211_CHAN_WIDTH_20) |
++					BIT(NL80211_CHAN_WIDTH_40) |
++					BIT(NL80211_CHAN_WIDTH_80),
++	}
+ };
  
-@@ -1484,7 +1486,7 @@ void ieee80211_xmit(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb,
- 
- 	headroom = local->tx_headroom;
- 	if (may_encrypt)
--		headroom += IEEE80211_ENCRYPT_HEADROOM;
-+		headroom += sdata->encrypt_headroom;
- 	headroom -= skb_headroom(skb);
- 	headroom = max_t(int, 0, headroom);
- 
-@@ -2108,7 +2110,7 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+ static struct ieee80211_sta_vht_cap ath10k_create_vht_cap(struct ath10k *ar)
+@@ -3531,8 +3667,8 @@ int ath10k_mac_register(struct ath10k *ar)
  	 */
+ 	ar->hw->queues = 4;
  
- 	if (head_need > 0 || skb_cloned(skb)) {
--		head_need += IEEE80211_ENCRYPT_HEADROOM;
-+		head_need += sdata->encrypt_headroom;
- 		head_need += local->tx_headroom;
- 		head_need = max_t(int, 0, head_need);
- 		if (ieee80211_skb_resize(sdata, skb, head_need, true)) {
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index a38d582..17a12cd 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -2471,3 +2471,71 @@ int ieee80211_send_action_csa(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_tx_skb(sdata, skb);
- 	return 0;
- }
-+
-+bool ieee80211_cs_valid(const struct ieee80211_cipher_scheme *cs)
-+{
-+	return !(cs == NULL || cs->cipher == 0 ||
-+		 cs->hdr_len < cs->pn_len + cs->pn_off ||
-+		 cs->hdr_len <= cs->key_idx_off ||
-+		 cs->key_idx_shift > 7 ||
-+		 cs->key_idx_mask == 0);
-+}
-+
-+bool ieee80211_cs_list_valid(const struct ieee80211_cipher_scheme *cs, int n)
-+{
-+	int i;
-+
-+	/* Ensure we have enough iftype bitmap space for all iftype values */
-+	WARN_ON((NUM_NL80211_IFTYPES / 8 + 1) > sizeof(cs[0].iftype));
-+
-+	for (i = 0; i < n; i++)
-+		if (!ieee80211_cs_valid(&cs[i]))
-+			return false;
-+
-+	return true;
-+}
-+
-+const struct ieee80211_cipher_scheme *
-+ieee80211_cs_get(struct ieee80211_local *local, u32 cipher,
-+		 enum nl80211_iftype iftype)
-+{
-+	const struct ieee80211_cipher_scheme *l = local->hw.cipher_schemes;
-+	int n = local->hw.n_cipher_schemes;
-+	int i;
-+	const struct ieee80211_cipher_scheme *cs = NULL;
-+
-+	for (i = 0; i < n; i++) {
-+		if (l[i].cipher == cipher) {
-+			cs = &l[i];
-+			break;
-+		}
-+	}
-+
-+	if (!cs || !(cs->iftype & BIT(iftype)))
-+		return NULL;
-+
-+	return cs;
-+}
-+
-+int ieee80211_cs_headroom(struct ieee80211_local *local,
-+			  struct cfg80211_crypto_settings *crypto,
-+			  enum nl80211_iftype iftype)
-+{
-+	const struct ieee80211_cipher_scheme *cs;
-+	int headroom = IEEE80211_ENCRYPT_HEADROOM;
-+	int i;
-+
-+	for (i = 0; i < crypto->n_ciphers_pairwise; i++) {
-+		cs = ieee80211_cs_get(local, crypto->ciphers_pairwise[i],
-+				      iftype);
-+
-+		if (cs && headroom < cs->hdr_len)
-+			headroom = cs->hdr_len;
-+	}
-+
-+	cs = ieee80211_cs_get(local, crypto->cipher_group, iftype);
-+	if (cs && headroom < cs->hdr_len)
-+		headroom = cs->hdr_len;
-+
-+	return headroom;
-+}
-diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
-index d657282..7313d37 100644
---- a/net/mac80211/wpa.c
-+++ b/net/mac80211/wpa.c
-@@ -545,6 +545,106 @@ ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx)
- 	return RX_CONTINUE;
- }
+-	ar->hw->wiphy->iface_combinations = &ath10k_if_comb;
+-	ar->hw->wiphy->n_iface_combinations = 1;
++	ar->hw->wiphy->iface_combinations = ath10k_if_comb;
++	ar->hw->wiphy->n_iface_combinations = ARRAY_SIZE(ath10k_if_comb);
  
-+static ieee80211_tx_result
-+ieee80211_crypto_cs_encrypt(struct ieee80211_tx_data *tx,
-+			    struct sk_buff *skb)
-+{
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-+	struct ieee80211_key *key = tx->key;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	const struct ieee80211_cipher_scheme *cs = key->sta->cipher_scheme;
-+	int hdrlen;
-+	u8 *pos;
-+
-+	if (info->control.hw_key &&
-+	    !(info->control.hw_key->flags & IEEE80211_KEY_FLAG_PUT_IV_SPACE)) {
-+		/* hwaccel has no need for preallocated head room */
-+		return TX_CONTINUE;
-+	}
-+
-+	if (unlikely(skb_headroom(skb) < cs->hdr_len &&
-+		     pskb_expand_head(skb, cs->hdr_len, 0, GFP_ATOMIC)))
-+		return TX_DROP;
-+
-+	hdrlen = ieee80211_hdrlen(hdr->frame_control);
-+
-+	pos = skb_push(skb, cs->hdr_len);
-+	memmove(pos, pos + cs->hdr_len, hdrlen);
-+	skb_set_network_header(skb, skb_network_offset(skb) + cs->hdr_len);
-+
-+	return TX_CONTINUE;
-+}
-+
-+static inline int ieee80211_crypto_cs_pn_compare(u8 *pn1, u8 *pn2, int len)
-+{
-+	int i;
-+
-+	/* pn is little endian */
-+	for (i = len - 1; i >= 0; i--) {
-+		if (pn1[i] < pn2[i])
-+			return -1;
-+		else if (pn1[i] > pn2[i])
-+			return 1;
-+	}
-+
-+	return 0;
-+}
-+
-+static ieee80211_rx_result
-+ieee80211_crypto_cs_decrypt(struct ieee80211_rx_data *rx)
-+{
-+	struct ieee80211_key *key = rx->key;
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)rx->skb->data;
-+	const struct ieee80211_cipher_scheme *cs = NULL;
-+	int hdrlen = ieee80211_hdrlen(hdr->frame_control);
-+	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(rx->skb);
-+	int data_len;
-+	u8 *rx_pn;
-+	u8 *skb_pn;
-+	u8 qos_tid;
-+
-+	if (!rx->sta || !rx->sta->cipher_scheme ||
-+	    !(status->flag & RX_FLAG_DECRYPTED))
-+		return RX_DROP_UNUSABLE;
-+
-+	if (!ieee80211_is_data(hdr->frame_control))
-+		return RX_CONTINUE;
-+
-+	cs = rx->sta->cipher_scheme;
-+
-+	data_len = rx->skb->len - hdrlen - cs->hdr_len;
-+
-+	if (data_len < 0)
-+		return RX_DROP_UNUSABLE;
-+
-+	if (ieee80211_is_data_qos(hdr->frame_control))
-+		qos_tid = *ieee80211_get_qos_ctl(hdr) &
-+				IEEE80211_QOS_CTL_TID_MASK;
-+	else
-+		qos_tid = 0;
-+
-+	if (skb_linearize(rx->skb))
-+		return RX_DROP_UNUSABLE;
-+
-+	hdr = (struct ieee80211_hdr *)rx->skb->data;
-+
-+	rx_pn = key->u.gen.rx_pn[qos_tid];
-+	skb_pn = rx->skb->data + hdrlen + cs->pn_off;
-+
-+	if (ieee80211_crypto_cs_pn_compare(skb_pn, rx_pn, cs->pn_len) <= 0)
-+		return RX_DROP_UNUSABLE;
-+
-+	memcpy(rx_pn, skb_pn, cs->pn_len);
-+
-+	/* remove security header and MIC */
-+	if (pskb_trim(rx->skb, rx->skb->len - cs->mic_len))
-+		return RX_DROP_UNUSABLE;
-+
-+	memmove(rx->skb->data + cs->hdr_len, rx->skb->data, hdrlen);
-+	skb_pull(rx->skb, cs->hdr_len);
-+
-+	return RX_CONTINUE;
-+}
+ 	ar->hw->netdev_features = NETIF_F_HW_CSUM;
  
- static void bip_aad(struct sk_buff *skb, u8 *aad)
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index b7dcdce..8a7ebcc 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -909,6 +909,11 @@ static int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
+ 	ath10k_dbg(ATH10K_DBG_MGMT,
+ 		   "event mgmt rx status %08x\n", rx_status);
+ 
++	if (test_bit(ATH10K_CAC_RUNNING, &ar->dev_flags)) {
++		dev_kfree_skb(skb);
++		return 0;
++	}
++
+ 	if (rx_status & WMI_RX_STATUS_ERR_DECRYPT) {
+ 		dev_kfree_skb(skb);
+ 		return 0;
+@@ -2304,6 +2309,7 @@ int ath10k_wmi_pdev_set_channel(struct ath10k *ar,
  {
-@@ -685,6 +785,7 @@ ieee80211_crypto_hw_encrypt(struct ieee80211_tx_data *tx)
- {
+ 	struct wmi_set_channel_cmd *cmd;
  	struct sk_buff *skb;
- 	struct ieee80211_tx_info *info = NULL;
-+	ieee80211_tx_result res;
++	u32 ch_flags = 0;
  
- 	skb_queue_walk(&tx->skbs, skb) {
- 		info  = IEEE80211_SKB_CB(skb);
-@@ -692,9 +793,24 @@ ieee80211_crypto_hw_encrypt(struct ieee80211_tx_data *tx)
- 		/* handle hw-only algorithm */
- 		if (!info->control.hw_key)
- 			return TX_DROP;
+ 	if (arg->passive)
+ 		return -EINVAL;
+@@ -2312,10 +2318,14 @@ int ath10k_wmi_pdev_set_channel(struct ath10k *ar,
+ 	if (!skb)
+ 		return -ENOMEM;
+ 
++	if (arg->chan_radar)
++		ch_flags |= WMI_CHAN_FLAG_DFS;
 +
-+		if (tx->key->sta->cipher_scheme) {
-+			res = ieee80211_crypto_cs_encrypt(tx, skb);
-+			if (res != TX_CONTINUE)
-+				return res;
-+		}
- 	}
+ 	cmd = (struct wmi_set_channel_cmd *)skb->data;
+ 	cmd->chan.mhz               = __cpu_to_le32(arg->freq);
+ 	cmd->chan.band_center_freq1 = __cpu_to_le32(arg->freq);
+ 	cmd->chan.mode              = arg->mode;
++	cmd->chan.flags		   |= __cpu_to_le32(ch_flags);
+ 	cmd->chan.min_power         = arg->min_power;
+ 	cmd->chan.max_power         = arg->max_power;
+ 	cmd->chan.reg_power         = arg->max_reg_power;
+@@ -2864,6 +2874,7 @@ static int ath10k_wmi_vdev_start_restart(struct ath10k *ar,
+ 	struct sk_buff *skb;
+ 	const char *cmdname;
+ 	u32 flags = 0;
++	u32 ch_flags = 0;
  
- 	ieee80211_tx_set_protected(tx);
+ 	if (cmd_id != ar->wmi.cmd->vdev_start_request_cmdid &&
+ 	    cmd_id != ar->wmi.cmd->vdev_restart_request_cmdid)
+@@ -2890,6 +2901,8 @@ static int ath10k_wmi_vdev_start_restart(struct ath10k *ar,
+ 		flags |= WMI_VDEV_START_HIDDEN_SSID;
+ 	if (arg->pmf_enabled)
+ 		flags |= WMI_VDEV_START_PMF_ENABLED;
++	if (arg->channel.chan_radar)
++		ch_flags |= WMI_CHAN_FLAG_DFS;
  
- 	return TX_CONTINUE;
+ 	cmd = (struct wmi_vdev_start_request_cmd *)skb->data;
+ 	cmd->vdev_id         = __cpu_to_le32(arg->vdev_id);
+@@ -2911,6 +2924,7 @@ static int ath10k_wmi_vdev_start_restart(struct ath10k *ar,
+ 		__cpu_to_le32(arg->channel.band_center_freq1);
+ 
+ 	cmd->chan.mode = arg->channel.mode;
++	cmd->chan.flags |= __cpu_to_le32(ch_flags);
+ 	cmd->chan.min_power = arg->channel.min_power;
+ 	cmd->chan.max_power = arg->channel.max_power;
+ 	cmd->chan.reg_power = arg->channel.max_reg_power;
+@@ -2918,9 +2932,10 @@ static int ath10k_wmi_vdev_start_restart(struct ath10k *ar,
+ 	cmd->chan.antenna_max = arg->channel.max_antenna_gain;
+ 
+ 	ath10k_dbg(ATH10K_DBG_WMI,
+-		   "wmi vdev %s id 0x%x freq %d, mode %d, ch_flags: 0x%0X,"
+-		   "max_power: %d\n", cmdname, arg->vdev_id, arg->channel.freq,
+-		   arg->channel.mode, flags, arg->channel.max_power);
++		   "wmi vdev %s id 0x%x flags: 0x%0X, freq %d, mode %d, "
++		   "ch_flags: 0x%0X, max_power: %d\n", cmdname, arg->vdev_id,
++		   flags, arg->channel.freq, arg->channel.mode,
++		   cmd->chan.flags, arg->channel.max_power);
+ 
+ 	return ath10k_wmi_cmd_send(ar, skb, cmd_id);
  }
-+
-+ieee80211_rx_result
-+ieee80211_crypto_hw_decrypt(struct ieee80211_rx_data *rx)
-+{
-+	if (rx->sta->cipher_scheme)
-+		return ieee80211_crypto_cs_decrypt(rx);
-+
-+	return RX_DROP_UNUSABLE;
-+}
-diff --git a/net/mac80211/wpa.h b/net/mac80211/wpa.h
-index 07e33f8..62e5a12 100644
---- a/net/mac80211/wpa.h
-+++ b/net/mac80211/wpa.h
-@@ -34,5 +34,7 @@ ieee80211_rx_result
- ieee80211_crypto_aes_cmac_decrypt(struct ieee80211_rx_data *rx);
- ieee80211_tx_result
- ieee80211_crypto_hw_encrypt(struct ieee80211_tx_data *tx);
-+ieee80211_rx_result
-+ieee80211_crypto_hw_decrypt(struct ieee80211_rx_data *rx);
+@@ -3254,6 +3269,8 @@ int ath10k_wmi_scan_chan_list(struct ath10k *ar,
+ 			flags |= WMI_CHAN_FLAG_ALLOW_VHT;
+ 		if (ch->ht40plus)
+ 			flags |= WMI_CHAN_FLAG_HT40_PLUS;
++		if (ch->chan_radar)
++			flags |= WMI_CHAN_FLAG_DFS;
  
- #endif /* WPA_H */
+ 		ci->mhz               = __cpu_to_le32(ch->freq);
+ 		ci->band_center_freq1 = __cpu_to_le32(ch->freq);
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index ad53333..b47a301 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -916,6 +916,7 @@ struct wmi_channel_arg {
+ 	bool allow_ht;
+ 	bool allow_vht;
+ 	bool ht40plus;
++	bool chan_radar;
+ 	/* note: power unit is 0.5 dBm */
+ 	u32 min_power;
+ 	u32 max_power;
 -- 
-1.8.4.rc3
+1.8.1.2
 
