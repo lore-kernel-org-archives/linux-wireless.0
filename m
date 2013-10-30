@@ -1,197 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4375 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759246Ab3JONpN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Oct 2013 09:45:13 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 07/12] brcmfmac: rework single packet transfers
-Date: Tue, 15 Oct 2013 15:44:52 +0200
-Message-ID: <1381844697-24881-8-git-send-email-arend@broadcom.com> (sfid-20131015_154536_208378_C6705EE7)
-In-Reply-To: <1381844697-24881-1-git-send-email-arend@broadcom.com>
-References: <1381844697-24881-1-git-send-email-arend@broadcom.com>
+Received: from mail-la0-f41.google.com ([209.85.215.41]:39889 "EHLO
+	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754029Ab3J3TFS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Oct 2013 15:05:18 -0400
+Received: by mail-la0-f41.google.com with SMTP id el20so1500367lab.0
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Oct 2013 12:05:16 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+Date: Wed, 30 Oct 2013 20:05:16 +0100
+Message-ID: <CAEk6gTB2as8XccgY3E9MBTXRCmKwLk9+9KzNx5YFqEz0L3A3tw@mail.gmail.com> (sfid-20131030_200526_642325_B627B551)
+Subject: AP mode with hostapd
+From: Drasko DRASKOVIC <drasko.draskovic@gmail.com>
+To: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function brcmf_sdio_sglist_rw() does a different code path
-when packet queue length is 1. Move this to a separate function
-reducing overhead in the calling context.
+HI all,
+I have AR6004 USB dongle connected to Linux kernel 3.10, and am
+testing latest hostapd.
 
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |   81 +++++++++++-----------
- 1 file changed, 40 insertions(+), 41 deletions(-)
+I noticed that I was able to put the dongle in the AP mode only for
+not-n mode (a or g).
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-index 344b2d2..da02816 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-@@ -314,6 +314,34 @@ void brcmf_sdio_regwl(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 		*ret = retval;
- }
- 
-+static int brcmf_sdio_buffrw(struct brcmf_sdio_dev *sdiodev, uint fn,
-+			     bool write, u32 addr, struct sk_buff *pkt)
-+{
-+	unsigned int req_sz;
-+
-+	brcmf_pm_resume_wait(sdiodev, &sdiodev->request_buffer_wait);
-+	if (brcmf_pm_resume_error(sdiodev))
-+		return -EIO;
-+
-+	/* Single skb use the standard mmc interface */
-+	req_sz = pkt->len + 3;
-+	req_sz &= (uint)~3;
-+
-+	if (write)
-+		return sdio_memcpy_toio(sdiodev->func[fn], addr,
-+					((u8 *)(pkt->data)),
-+					req_sz);
-+	else if (fn == 1)
-+		return sdio_memcpy_fromio(sdiodev->func[fn],
-+					  ((u8 *)(pkt->data)),
-+					  addr, req_sz);
-+	else
-+		/* function 2 read is FIFO operation */
-+		return sdio_readsb(sdiodev->func[fn],
-+				   ((u8 *)(pkt->data)), addr,
-+				   req_sz);
-+}
-+
- /**
-  * brcmf_sdio_sglist_rw - SDIO interface function for block data access
-  * @sdiodev: brcmfmac sdio device
-@@ -350,27 +378,6 @@ static int brcmf_sdio_sglist_rw(struct brcmf_sdio_dev *sdiodev, uint fn,
- 	if (brcmf_pm_resume_error(sdiodev))
- 		return -EIO;
- 
--	/* Single skb use the standard mmc interface */
--	if (pktlist->qlen == 1) {
--		pkt_next = pktlist->next;
--		req_sz = pkt_next->len + 3;
--		req_sz &= (uint)~3;
--
--		if (write)
--			return sdio_memcpy_toio(sdiodev->func[fn], addr,
--						((u8 *)(pkt_next->data)),
--						req_sz);
--		else if (fn == 1)
--			return sdio_memcpy_fromio(sdiodev->func[fn],
--						  ((u8 *)(pkt_next->data)),
--						  addr, req_sz);
--		else
--			/* function 2 read is FIFO operation */
--			return sdio_readsb(sdiodev->func[fn],
--					   ((u8 *)(pkt_next->data)), addr,
--					   req_sz);
--	}
--
- 	target_list = pktlist;
- 	/* for host with broken sg support, prepare a page aligned list */
- 	__skb_queue_head_init(&local_list);
-@@ -543,7 +550,6 @@ brcmf_sdcard_recv_pkt(struct brcmf_sdio_dev *sdiodev, u32 addr, uint fn,
- {
- 	uint width;
- 	int err = 0;
--	struct sk_buff_head pkt_list;
- 
- 	brcmf_dbg(SDIO, "fun = %d, addr = 0x%x, size = %d\n",
- 		  fn, addr, pkt->len);
-@@ -553,10 +559,7 @@ brcmf_sdcard_recv_pkt(struct brcmf_sdio_dev *sdiodev, u32 addr, uint fn,
- 	if (err)
- 		goto done;
- 
--	skb_queue_head_init(&pkt_list);
--	skb_queue_tail(&pkt_list, pkt);
--	err = brcmf_sdio_sglist_rw(sdiodev, fn, false, addr, &pkt_list);
--	skb_dequeue_tail(&pkt_list);
-+	err = brcmf_sdio_buffrw(sdiodev, fn, false, addr, pkt);
- 
- done:
- 	return err;
-@@ -589,7 +592,7 @@ brcmf_sdcard_send_buf(struct brcmf_sdio_dev *sdiodev, u32 addr, uint fn,
- 		      uint flags, u8 *buf, uint nbytes)
- {
- 	struct sk_buff *mypkt;
--	struct sk_buff_head pktq;
-+	uint width;
- 	int err;
- 
- 	mypkt = brcmu_pkt_buf_get_skb(nbytes);
-@@ -600,10 +603,11 @@ brcmf_sdcard_send_buf(struct brcmf_sdio_dev *sdiodev, u32 addr, uint fn,
- 	}
- 
- 	memcpy(mypkt->data, buf, nbytes);
--	__skb_queue_head_init(&pktq);
--	__skb_queue_tail(&pktq, mypkt);
--	err = brcmf_sdcard_send_pkt(sdiodev, addr, fn, flags, &pktq);
--	__skb_dequeue_tail(&pktq);
-+
-+	width = (flags & SDIO_REQ_4BYTE) ? 4 : 2;
-+	brcmf_sdio_addrprep(sdiodev, width, &addr);
-+
-+	err = brcmf_sdio_buffrw(sdiodev, fn, true, addr, mypkt);
- 
- 	brcmu_pkt_buf_free_skb(mypkt);
- 	return err;
-@@ -615,7 +619,6 @@ brcmf_sdcard_send_pkt(struct brcmf_sdio_dev *sdiodev, u32 addr, uint fn,
- 		      uint flags, struct sk_buff_head *pktq)
- {
- 	uint width;
--	int err = 0;
- 
- 	brcmf_dbg(SDIO, "fun = %d, addr = 0x%x, size = %d\n",
- 		  fn, addr, pktq->qlen);
-@@ -623,9 +626,9 @@ brcmf_sdcard_send_pkt(struct brcmf_sdio_dev *sdiodev, u32 addr, uint fn,
- 	width = (flags & SDIO_REQ_4BYTE) ? 4 : 2;
- 	brcmf_sdio_addrprep(sdiodev, width, &addr);
- 
--	err = brcmf_sdio_sglist_rw(sdiodev, fn, true, addr, pktq);
--
--	return err;
-+	if (pktq->qlen == 1)
-+		return brcmf_sdio_buffrw(sdiodev, fn, true, addr, pktq->next);
-+	return brcmf_sdio_sglist_rw(sdiodev, fn, true, addr, pktq);
- }
- 
- int
-@@ -636,7 +639,6 @@ brcmf_sdio_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
- 	struct sk_buff *pkt;
- 	u32 sdaddr;
- 	uint dsize;
--	struct sk_buff_head pkt_list;
- 
- 	dsize = min_t(uint, SBSDIO_SB_OFT_ADDR_LIMIT, size);
- 	pkt = dev_alloc_skb(dsize);
-@@ -645,7 +647,6 @@ brcmf_sdio_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
- 		return -EIO;
- 	}
- 	pkt->priority = 0;
--	skb_queue_head_init(&pkt_list);
- 
- 	/* Determine initial transfer parameters */
- 	sdaddr = address & SBSDIO_SB_OFT_ADDR_MASK;
-@@ -673,10 +674,8 @@ brcmf_sdio_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
- 		skb_put(pkt, dsize);
- 		if (write)
- 			memcpy(pkt->data, data, dsize);
--		skb_queue_tail(&pkt_list, pkt);
--		bcmerror = brcmf_sdio_sglist_rw(sdiodev, SDIO_FUNC_1, write,
--						sdaddr, &pkt_list);
--		skb_dequeue_tail(&pkt_list);
-+		bcmerror = brcmf_sdio_buffrw(sdiodev, SDIO_FUNC_1, write,
-+					     sdaddr, pkt);
- 		if (bcmerror) {
- 			brcmf_err("membytes transfer failed\n");
- 			break;
--- 
-1.7.10.4
+Enabling both of these options:
+hw_mode=g
+ieee80211n=1
+
+gives an error like this on starting:
+
+random: Trying to read entropy from /dev/random
+Configuration file: /home/drasko/hostapd.conf
+HT (IEEE 802.11n) with WPA/WPA2 requires CCMP/GCMP to be enabled,
+disabling HT capabilities
+rfkill: initial event: idx=0 type=1 op=0 soft=0 hard=0
+rfkill: initial event: idx=1 type=1 op=0 soft=0 hard=0
+rfkill: initial event: idx=2 type=2 op=0 soft=0 hard=0
+rfkill: initial event: idx=5 type=1 op=0 soft=0 hard=0
+nl80211: Using driver-based roaming
+nl80211: Supports Probe Response offload in AP mode
+nl80211: Disable use_monitor with device_ap_sme since no monitor mode
+support detected
+nl80211: interface wlan3 in phy phy3
+nl80211: Add own interface ifindex 6
+nl80211: Set mode ifindex 6 iftype 3 (AP)
+nl80211: Setup AP - device_ap_sme=1 use_monitor=0
+nl80211: Subscribe to mgmt frames with AP handle 0x1441480 (device SME)
+nl80211: Register frame type=0xd0 nl_handle=0x1441480
+nl80211: Register frame match - hexdump(len=0): [NULL]
+nl80211: Enable Probe Request reporting nl_preq=0x14414c0
+nl80211: Register frame type=0x40 nl_handle=0x14414c0
+nl80211: Register frame match - hexdump(len=0): [NULL]
+BSS count 1, BSSID mask 00:00:00:00:00:00 (0 bits)
+nl80211: Regulatory information - country=FR
+nl80211: 2402-2482 @ 40 MHz
+nl80211: 2402-2482 @ 20 mBm
+nl80211: 5170-5250 @ 40 MHz
+nl80211: 5170-5250 @ 20 mBm
+nl80211: 5250-5330 @ 40 MHz
+nl80211: 5250-5330 @ 20 mBm
+nl80211: 5490-5710 @ 40 MHz
+nl80211: 5490-5710 @ 27 mBm
+nl80211: 57240-65880 @ 2160 MHz
+nl80211: 57240-65880 @ 40 mBm
+nl80211: Added 802.11b mode based on 802.11g information
+Completing interface initialization
+Mode: IEEE 802.11g  Channel: 7  Frequency: 2442 MHz
+DFS 0 channels required radar detection
+nl80211: Set freq 2442 (ht_enabled=1, vht_enabled=0, bandwidth=20 MHz,
+cf1=2442 MHz, cf2=0 MHz)
+nl80211: Failed to set channel (freq=2442): -22 (Invalid argument)
+Could not set channel for kernel driver
+wlan3: Unable to setup interface.
+wlan3: Flushing old station entries
+nl80211: flush -> DEL_STATION wlan3 (all)
+wlan3: Deauthenticate all stations
+nl80211: sta_remove -> DEL_STATION wlan3 ff:ff:ff:ff:ff:ff --> 0 (Success)
+wpa_driver_nl80211_set_key: ifindex=6 (wlan3) alg=0 addr=(nil)
+key_idx=0 set_tx=0 seq_len=0 key_len=0
+wpa_driver_nl80211_set_key: ifindex=6 (wlan3) alg=0 addr=(nil)
+key_idx=1 set_tx=0 seq_len=0 key_len=0
+wpa_driver_nl80211_set_key: ifindex=6 (wlan3) alg=0 addr=(nil)
+key_idx=2 set_tx=0 seq_len=0 key_len=0
+wpa_driver_nl80211_set_key: ifindex=6 (wlan3) alg=0 addr=(nil)
+key_idx=3 set_tx=0 seq_len=0 key_len=0
+nl80211: Skip disabling of Probe Request reporting
+nl_preq=0x8888888889cc9c49 while in AP mode
+netlink: Operstate: linkmode=0, operstate=6
+nl80211: Set mode ifindex 6 iftype 2 (STATION)
+nl80211: Disable Probe Request reporting nl_preq=0x8888888889cc9c49
+nl80211: Unsubscribe mgmt frames handle 0x8888888889cc9c09 (AP
+teardown (dev SME))
+Failed to initialize interface
+
+I have tried several channels - all were rejected with the same message.
+
+Any idea where these error messages come from?
 
 
+Best regards,
+Drasko
