@@ -1,55 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f51.google.com ([209.85.160.51]:53759 "EHLO
-	mail-pb0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751723Ab3JWKMh (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:34415 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753612Ab3J3Lba (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Oct 2013 06:12:37 -0400
-Received: by mail-pb0-f51.google.com with SMTP id wz7so586399pbc.24
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Oct 2013 03:12:36 -0700 (PDT)
-From: Dhahira Thesneem <dhahira.thesneem@mistralsolutions.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
+	Wed, 30 Oct 2013 07:31:30 -0400
+Date: Wed, 30 Oct 2013 12:31:29 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
+Cc: Luciano Coelho <luca@coelho.fi>,
 	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
 	"David S. Miller" <davem@davemloft.net>,
 	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Dhahira Thesneem <dhahira.thesneem@mistralsolutions.com>
-Subject: [PATCH 1/1] mac80211:Resetting connection monitor timers in transmit path
-Date: Wed, 23 Oct 2013 15:42:25 +0530
-Message-Id: <1382523145-2302-1-git-send-email-dhahira.thesneem@mistralsolutions.com> (sfid-20131023_121240_677818_8751C6F2)
+	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
+	aaro.koskinen@iki.fi, sre@ring0.de, joni.lapilainen@gmail.com,
+	David Gnedt <david.gnedt@davizone.at>
+Subject: Re: [PATCH 06/16] wl1251: split RX and TX data path initialisation
+Message-ID: <20131030113129.GC8204@amd.pavel.ucw.cz> (sfid-20131030_123152_078179_93E7FBD5)
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+ <1382819655-30430-7-git-send-email-pali.rohar@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1382819655-30430-7-git-send-email-pali.rohar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reset connection monitor timers when we are able to successfully transmit data to an AP.
+Hi!
 
-Signed-off-by: Dhahira Thesneem <dhahira.thesneem@mistralsolutions.com>
----
- net/mac80211/tx.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+> Split up data path initialisation into RX and TX data path initialisation
+> functions. This change is required for channel switching in monitor mode.
+> 
+> Signed-off-by: David Gnedt <david.gnedt@davizone.at>
+> ---
+>  drivers/net/wireless/ti/wl1251/cmd.c  |   37 ++++++++++++++++++++++++++-------
+>  drivers/net/wireless/ti/wl1251/cmd.h  |    3 ++-
+>  drivers/net/wireless/ti/wl1251/init.c |    9 ++++++--
+>  3 files changed, 39 insertions(+), 10 deletions(-)
+> 
+> @@ -238,6 +235,32 @@ int wl1251_cmd_data_path(struct wl1251 *wl, u8 channel, bool enable)
+>  	wl1251_debug(DEBUG_BOOT, "rx %s cmd channel %d",
+>  		     enable ? "start" : "stop", channel);
+>  
+> +out:
+> +	kfree(cmd);
+> +	return ret;
+> +}
+> +
+> +int wl1251_cmd_data_path_tx(struct wl1251 *wl, u8 channel, bool enable)
+> +{
+> +	struct cmd_enabledisable_path *cmd;
+> +	int ret;
+> +	u16 cmd_tx;
+> +
+> +	wl1251_debug(DEBUG_CMD, "cmd data path");
+> +
+> +	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
+> +	if (!cmd) {
+> +		ret = -ENOMEM;
+> +		goto out;
+> +	}
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 3456c04..e7725cf 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1700,7 +1700,8 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
- 
- 	ieee80211_xmit(sdata, skb, chan->band);
- 	rcu_read_unlock();
--
-+	/*To reset connection monitor timers, after successful transmission*/
-+	ieee80211_sta_reset_conn_monitor(sdata);
- 	return NETDEV_TX_OK;
- 
- fail_rcu:
-@@ -2139,7 +2140,8 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
- 
- 	ieee80211_xmit(sdata, skb, band);
- 	rcu_read_unlock();
--
-+	/*To reset connection monitor timers, after successful transmission*/
-+	ieee80211_sta_reset_conn_monitor(sdata);
- 	return NETDEV_TX_OK;
- 
-  fail_rcu:
+Again, doing jump just to kfree(NULL)... is probably not worth
+it.
+
+Thanks,
+									Pavel
 -- 
-1.7.5.4
-
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
