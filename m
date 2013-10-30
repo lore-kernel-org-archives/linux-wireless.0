@@ -1,220 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:24277 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758567Ab3JOL5z (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Oct 2013 07:57:55 -0400
-From: Kefeng Wang <wangkefeng.wang@huawei.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Pablo Neira Ayuso <pablo@netfilter.org>,
-	"Stephen Hemminger" <stephen@networkplumber.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
+Received: from mga03.intel.com ([143.182.124.21]:4744 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754809Ab3J3UcN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Oct 2013 16:32:13 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
 	Johannes Berg <johannes.berg@intel.com>,
-	Francois Romieu <romieu@fr.zoreil.com>,
-	"Ben Hutchings" <bhutchings@solarflare.com>,
-	Chas Williams <chas@cmf.nrl.navy.mil>,
-	Marc Kleine-Budde <mkl@pengutronix.de>,
-	Samuel Ortiz <samuel@sortiz.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Oliver Neukum <oneukum@suse.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	"Boris Ostrovsky" <boris.ostrovsky@oracle.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	"Michael S. Tsirkin" <mst@redhat.com>, <netfilter@vger.kernel.org>,
-	<netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	<guohanjun@huawei.com>
-Subject: [PATCH 05/18] rt18192u: use wrapper functions of net_ratelimit() to simplify code
-Date: Tue, 15 Oct 2013 19:45:01 +0800
-Message-ID: <1381837514-50660-6-git-send-email-wangkefeng.wang@huawei.com> (sfid-20131015_140720_534774_284B42C8)
-In-Reply-To: <1381837514-50660-1-git-send-email-wangkefeng.wang@huawei.com>
-References: <1381837514-50660-1-git-send-email-wangkefeng.wang@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 4/9] iwlwifi: pcie: move warning message into warning
+Date: Wed, 30 Oct 2013 22:31:32 +0200
+Message-Id: <1383165097-4445-4-git-send-email-emmanuel.grumbach@intel.com> (sfid-20131030_213216_883367_F3E7C46C)
+In-Reply-To: <1383165097-4445-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <527143AA.5070900@gmail.com>
+ <1383165097-4445-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-net_XXX_ratelimited() is called to simplify code.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Kefeng Wang <wangkefeng.wang@huawei.com>
+Having a WARN_ON() followed by a printed message is
+less useful than having the message in the warning
+so move the message.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- .../rtl8192u/ieee80211/ieee80211_crypt_ccmp.c      | 17 ++++-------------
- .../rtl8192u/ieee80211/ieee80211_crypt_tkip.c      | 22 +++++-----------------
- drivers/staging/rtl8192u/ieee80211/ieee80211_rx.c  |  7 ++-----
- drivers/staging/rtl8192u/ieee80211/ieee80211_tx.c  |  4 +---
- 4 files changed, 12 insertions(+), 38 deletions(-)
+ drivers/net/wireless/iwlwifi/pcie/tx.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/staging/rtl8192u/ieee80211/ieee80211_crypt_ccmp.c b/drivers/staging/rtl8192u/ieee80211/ieee80211_crypt_ccmp.c
-index f2b1677..534f0a4 100644
---- a/drivers/staging/rtl8192u/ieee80211/ieee80211_crypt_ccmp.c
-+++ b/drivers/staging/rtl8192u/ieee80211/ieee80211_crypt_ccmp.c
-@@ -284,10 +284,8 @@ static int ieee80211_ccmp_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 	pos = skb->data + hdr_len;
- 	keyidx = pos[3];
- 	if (!(keyidx & (1 << 5))) {
--		if (net_ratelimit()) {
--			printk(KERN_DEBUG "CCMP: received packet without ExtIV"
-+		net_dbg_ratelimited("CCMP: received packet without ExtIV"
- 			       " flag from %pM\n", hdr->addr2);
--		}
- 		key->dot11RSNAStatsCCMPFormatErrors++;
- 		return -2;
- 	}
-@@ -298,11 +296,9 @@ static int ieee80211_ccmp_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 		return -6;
- 	}
- 	if (!key->key_set) {
--		if (net_ratelimit()) {
--			printk(KERN_DEBUG "CCMP: received packet from %pM"
-+		net_dbg_ratelimited("CCMP: received packet from %pM"
- 			       " with keyid=%d that does not have a configured"
- 			       " key\n", hdr->addr2, keyidx);
--		}
- 		return -3;
- 	}
+diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
+index b416841..cc18440 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
+@@ -1495,12 +1495,11 @@ static int iwl_pcie_send_hcmd_sync(struct iwl_trans *trans,
+ 	IWL_DEBUG_INFO(trans, "Attempting to send sync command %s\n",
+ 		       get_cmd_string(trans_pcie, cmd->id));
  
-@@ -315,11 +311,9 @@ static int ieee80211_ccmp_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 	pos += 8;
+-	if (WARN_ON(test_and_set_bit(STATUS_HCMD_ACTIVE,
+-				     &trans_pcie->status))) {
+-		IWL_ERR(trans, "Command %s: a command is already active!\n",
+-			get_cmd_string(trans_pcie, cmd->id));
++	if (WARN(test_and_set_bit(STATUS_HCMD_ACTIVE,
++				  &trans_pcie->status),
++		 "Command %s: a command is already active!\n",
++		 get_cmd_string(trans_pcie, cmd->id)))
+ 		return -EIO;
+-	}
  
- 	if (memcmp(pn, key->rx_pn, CCMP_PN_LEN) <= 0) {
--		if (net_ratelimit()) {
--			printk(KERN_DEBUG "CCMP: replay detected: STA=%pM"
-+		net_dbg_ratelimited("CCMP: replay detected: STA=%pM"
- 			       " previous PN %pm received PN %pm\n",
- 			       hdr->addr2, key->rx_pn, pn);
--		}
- 		key->dot11RSNAStatsCCMPReplays++;
- 		return -4;
- 	}
-@@ -353,10 +347,7 @@ static int ieee80211_ccmp_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 		}
- 
- 		if (memcmp(mic, a, CCMP_MIC_LEN) != 0) {
--			if (net_ratelimit()) {
--				printk(KERN_DEBUG "CCMP: decrypt failed: STA="
--				"%pM\n", hdr->addr2);
--			}
-+			net_dbg_ratelimited("CCMP: decrypt failed: STA=%pM\n", hdr->addr2);
- 			key->dot11RSNAStatsCCMPDecryptErrors++;
- 			return -5;
- 		}
-diff --git a/drivers/staging/rtl8192u/ieee80211/ieee80211_crypt_tkip.c b/drivers/staging/rtl8192u/ieee80211/ieee80211_crypt_tkip.c
-index 93121b4..7bb5a96 100644
---- a/drivers/staging/rtl8192u/ieee80211/ieee80211_crypt_tkip.c
-+++ b/drivers/staging/rtl8192u/ieee80211/ieee80211_crypt_tkip.c
-@@ -406,10 +406,8 @@ static int ieee80211_tkip_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 	pos = skb->data + hdr_len;
- 	keyidx = pos[3];
- 	if (!(keyidx & (1 << 5))) {
--		if (net_ratelimit()) {
--			printk(KERN_DEBUG "TKIP: received packet without ExtIV"
-+		net_dbg_ratelimited("TKIP: received packet without ExtIV"
- 			       " flag from %pM\n", hdr->addr2);
--		}
- 		return -2;
- 	}
- 	keyidx >>= 6;
-@@ -419,11 +417,9 @@ static int ieee80211_tkip_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 		return -6;
- 	}
- 	if (!tkey->key_set) {
--		if (net_ratelimit()) {
--			printk(KERN_DEBUG "TKIP: received packet from %pM"
-+		net_dbg_ratelimited("TKIP: received packet from %pM"
- 			       " with keyid=%d that does not have a configured"
- 			       " key\n", hdr->addr2, keyidx);
--		}
- 		return -3;
- 	}
- 	iv16 = (pos[0] << 8) | pos[2];
-@@ -434,12 +430,10 @@ static int ieee80211_tkip_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 	{
- 		if (iv32 < tkey->rx_iv32 ||
- 		(iv32 == tkey->rx_iv32 && iv16 <= tkey->rx_iv16)) {
--			if (net_ratelimit()) {
--				printk(KERN_DEBUG "TKIP: replay detected: STA=%pM"
-+			net_dbg_ratelimited("TKIP: replay detected: STA=%pM"
- 				" previous TSC %08x%04x received TSC "
- 				"%08x%04x\n", hdr->addr2,
- 				tkey->rx_iv32, tkey->rx_iv16, iv32, iv16);
--			}
- 			tkey->dot11RSNAStatsTKIPReplays++;
- 			return -4;
- 		}
-@@ -456,11 +450,8 @@ static int ieee80211_tkip_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 		sg_init_one(&sg, pos, plen+4);
- 
- 		if (crypto_blkcipher_decrypt(&desc, &sg, &sg, plen + 4)) {
--			if (net_ratelimit()) {
--				printk(KERN_DEBUG ": TKIP: failed to decrypt "
--						"received packet from %pM\n",
-+			net_dbg_ratelimited("TKIP: failed to decrypt received packet from %pM\n",
- 						hdr->addr2);
--			}
- 			return -7;
- 		}
- 
-@@ -476,10 +467,7 @@ static int ieee80211_tkip_decrypt(struct sk_buff *skb, int hdr_len, void *priv)
- 				* it needs to be recalculated for the next packet. */
- 				tkey->rx_phase1_done = 0;
- 			}
--			if (net_ratelimit()) {
--				printk(KERN_DEBUG "TKIP: ICV error detected: STA="
--				"%pM\n", hdr->addr2);
--			}
-+			net_dbg_ratelimited("TKIP: ICV error detected: STA=%pM\n", hdr->addr2);
- 			tkey->dot11RSNAStatsTKIPICVErrors++;
- 			return -5;
- 		}
-diff --git a/drivers/staging/rtl8192u/ieee80211/ieee80211_rx.c b/drivers/staging/rtl8192u/ieee80211/ieee80211_rx.c
-index 59900bf..5e6c1eb 100644
---- a/drivers/staging/rtl8192u/ieee80211/ieee80211_rx.c
-+++ b/drivers/staging/rtl8192u/ieee80211/ieee80211_rx.c
-@@ -355,11 +355,9 @@ ieee80211_rx_frame_decrypt(struct ieee80211_device *ieee, struct sk_buff *skb,
- #ifdef CONFIG_IEEE80211_CRYPT_TKIP
- 	if (ieee->tkip_countermeasures &&
- 	    strcmp(crypt->ops->name, "TKIP") == 0) {
--		if (net_ratelimit()) {
--			printk(KERN_DEBUG "%s: TKIP countermeasures: dropped "
-+		net_dbg_ratelimited("%s: TKIP countermeasures: dropped "
- 			       "received packet from %pM\n",
- 			       ieee->dev->name, hdr->addr2);
--		}
- 		return -1;
- 	}
- #endif
-@@ -946,8 +944,7 @@ int ieee80211_rx(struct ieee80211_device *ieee, struct sk_buff *skb,
- 
- 	if(HTCCheck(ieee, skb->data))
- 	{
--		if(net_ratelimit())
--		printk("find HTCControl\n");
-+		net_info_ratelimited("find HTCControl\n");
- 		hdrlen += 4;
- 		rx_stats->bContainHTC = 1;
- 	}
-diff --git a/drivers/staging/rtl8192u/ieee80211/ieee80211_tx.c b/drivers/staging/rtl8192u/ieee80211/ieee80211_tx.c
-index a7bcc64f..55c24d7 100644
---- a/drivers/staging/rtl8192u/ieee80211/ieee80211_tx.c
-+++ b/drivers/staging/rtl8192u/ieee80211/ieee80211_tx.c
-@@ -197,11 +197,9 @@ int ieee80211_encrypt_fragment(
- 	if (ieee->tkip_countermeasures &&
- 	    crypt && crypt->ops && strcmp(crypt->ops->name, "TKIP") == 0) {
- 		header = (struct ieee80211_hdr *) frag->data;
--		if (net_ratelimit()) {
--			printk(KERN_DEBUG "%s: TKIP countermeasures: dropped "
-+		net_dbg_ratelimited("%s: TKIP countermeasures: dropped "
- 			       "TX packet to %pM\n",
- 			       ieee->dev->name, header->addr1);
--		}
- 		return -1;
- 	}
- #endif
+ 	IWL_DEBUG_INFO(trans, "Setting HCMD_ACTIVE for command %s\n",
+ 		       get_cmd_string(trans_pcie, cmd->id));
 -- 
-1.8.2.1
-
+1.8.3.2
 
