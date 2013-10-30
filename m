@@ -1,35 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0127.hostedemail.com ([216.40.44.127]:48909 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754751Ab3JIQDQ (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:35068 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752374Ab3J3LzG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Oct 2013 12:03:16 -0400
-Message-ID: <1381334592.2050.14.camel@joe-AO722> (sfid-20131009_180322_468601_35EE71D7)
-Subject: Re: [PATCH] wcn36xx: mac80211 driver for Qualcomm WCN3660/WCN3680
- hardware
-From: Joe Perches <joe@perches.com>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	wcn36xx@lists.infradead.org
-Date: Wed, 09 Oct 2013 09:03:12 -0700
-In-Reply-To: <CAFSJ42Y_QE9_ep6iArNDkUffmi-kMkU_Y8AeEN8tJXyuAZ1y4Q@mail.gmail.com>
-References: <CAB=NE6Xs=ebxpQapB4xXu7edWfMEkgZu8hTyO98zfam56og2Hg@mail.gmail.com>
-	 <1381263958-14846-1-git-send-email-k.eugene.e@gmail.com>
-	 <1381265688.23020.11.camel@joe-AO722>
-	 <CAFSJ42Y_QE9_ep6iArNDkUffmi-kMkU_Y8AeEN8tJXyuAZ1y4Q@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Wed, 30 Oct 2013 07:55:06 -0400
+Date: Wed, 30 Oct 2013 12:55:04 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
+Cc: Luciano Coelho <luca@coelho.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
+	aaro.koskinen@iki.fi, sre@ring0.de, joni.lapilainen@gmail.com,
+	David Gnedt <david.gnedt@davizone.at>
+Subject: Re: [PATCH 13/16] wl1251: enforce changed hw encryption support on
+ monitor state change
+Message-ID: <20131030115504.GG8763@amd.pavel.ucw.cz> (sfid-20131030_125536_308290_7A36F98A)
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+ <1382819655-30430-14-git-send-email-pali.rohar@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1382819655-30430-14-git-send-email-pali.rohar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-10-09 at 16:59 +0100, Eugene Krasnikov wrote:
-> Hi Joe,
+On Sat 2013-10-26 22:34:12, Pali Rohár wrote:
+> From: David Gnedt <david.gnedt@davizone.at>
+> 
+> The firmware doesn't support per packet encryption selection, so disable hw
+> encryption support completly while a monitor interface is present to support
 
-Hi Eugene.
+"completely".
 
-> Thanx for you comments. Would you mind if we fix those trivias  after
-> wcn36xx is merged?
+> injection of packets (which shouldn't get encrypted by hw).
+> To enforce the changed hw encryption support force a disassociation on
+> non-monitor interfaces.
+> For disassociation a workaround using hw connection monitor is employed,
+> which temporary enables hw connection manager flag.
+> 
+> Signed-off-by: David Gnedt <david.gnedt@davizone.at>
 
-Not at all.
+Missing sign-off.
 
+> index 174f403..f054741 100644
+> --- a/drivers/net/wireless/ti/wl1251/main.c
+> +++ b/drivers/net/wireless/ti/wl1251/main.c
+> @@ -685,6 +685,16 @@ static int wl1251_op_config(struct ieee80211_hw *hw, u32 changed)
+>  		wl->power_level = conf->power_level;
+>  	}
+>  
+> +	/*
+> +	 * Tell stack that connection is lost because hw encryption isn't
+> +	 * supported in monitor mode.
+> +	 * XXX This requires temporary enabling the hw connection monitor flag
+> +	 */
+
+"of the" and I guess you can remove the XXX? This way it looks like
+workaround is not complete.
+
+Thanks,
+									Pavel
+
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
