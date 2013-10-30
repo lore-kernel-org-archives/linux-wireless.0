@@ -1,61 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:42680 "EHLO
-	mail.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752558Ab3JLQTy (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:34699 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752300Ab3J3Llp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Oct 2013 12:19:54 -0400
-Message-ID: <525976CD.5040004@openwrt.org> (sfid-20131012_181957_468179_433F1F98)
-Date: Sat, 12 Oct 2013 18:20:29 +0200
-From: Gabor Juhos <juhosg@openwrt.org>
+	Wed, 30 Oct 2013 07:41:45 -0400
+Date: Wed, 30 Oct 2013 12:41:44 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
+Cc: Luciano Coelho <luca@coelho.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
+	aaro.koskinen@iki.fi, sre@ring0.de, joni.lapilainen@gmail.com,
+	David Gnedt <david.gnedt@davizone.at>
+Subject: Re: [PATCH 08/16] wl1251: implement multicast address filtering
+Message-ID: <20131030114144.GB8763@amd.pavel.ucw.cz> (sfid-20131030_124206_158408_36AF70B5)
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+ <1382819655-30430-9-git-send-email-pali.rohar@gmail.com>
 MIME-Version: 1.0
-To: Kevin Lo <kevlo@kevlo.org>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [PATCH v3] rt2x00: rt2800lib: remove duplicate rf_vals for RF3053
-References: <20131012152735.GB4156@ns.kevlo.org>
-In-Reply-To: <20131012152735.GB4156@ns.kevlo.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1382819655-30430-9-git-send-email-pali.rohar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013.10.12. 17:27 keltezéssel, Kevin Lo írta:
-> We already have rf_vals_3x with same values.  Hence rf_vals_3053 is removed
-> in this patch.
-> 
-> Signed-off-by: Kevin Lo <kevlo@kevlo.org>
-> Acked-by: Paul Menzel <paulepanter@users.sourceforge.net>
-> Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
-> ---
-> Changes since v1:
->   - update comment of rf_vals_3x to indicate that it also supports RF3053
->   - add Paul's Acked-by tag
-> ---
-> Changes since v2:
->  - the previous patch was malformed
->  - add Stanislaw's Acked-by tag
-> ---
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+Hi!
 
-<...>
+> Port multicast address filtering from wl1271 driver.
+> It sets up the hardware multicast address filter in configure_filter() with
+> addresses supplied through prepare_multicast().
 
->  	struct hw_mode_spec *spec = &rt2x00dev->spec;
-> @@ -7599,14 +7533,11 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
->  		   rt2x00_rf(rt2x00dev, RF5392)) {
->  		spec->num_channels = 14;
->  		spec->channels = rf_vals_3x;
-> -	} else if (rt2x00_rf(rt2x00dev, RF3052)) {
-> +	} else if (rt2x00_rf(rt2x00dev, RF3052) ||
-> +		   rt2x00_rf(rt2x00dev, RF3053)) { 
+> +static u64 wl1251_op_prepare_multicast(struct ieee80211_hw *hw,
+> +				       struct netdev_hw_addr_list *mc_list)
+> +{
+> +	struct wl1251_filter_params *fp;
+> +	struct netdev_hw_addr *ha;
+> +	struct wl1251 *wl = hw->priv;
+> +
+> +	if (unlikely(wl->state == WL1251_STATE_OFF))
+> +		return 0;
+> +
+> +	fp = kzalloc(sizeof(*fp), GFP_ATOMIC);
+> +	if (!fp) {
+> +		wl1251_error("Out of memory setting filters.");
+> +		return 0;
+> +	}
 
-checpatch.pl says this:
+So if there's not enough memory, we return 0.
 
-ERROR: trailing whitespace
-#127: FILE: drivers/net/wireless/rt2x00/rt2800lib.c:7537:
-+^I^I   rt2x00_rf(rt2x00dev, RF3053)) { $
+> +	/* update multicast filtering parameters */
+> +	fp->mc_list_length = 0;
+> +	if (netdev_hw_addr_list_count(mc_list) > ACX_MC_ADDRESS_GROUP_MAX) {
+> +		fp->enabled = false;
+> +	} else {
+> +		fp->enabled = true;
+> +		netdev_hw_addr_list_for_each(ha, mc_list) {
+> +			memcpy(fp->mc_list[fp->mc_list_length],
+> +					ha->addr, ETH_ALEN);
+> +			fp->mc_list_length++;
+> +		}
+> +	}
+> +
+> +	return (u64)(unsigned long)fp;
+> +}
 
-total: 1 errors, 0 warnings, 96 lines checked
+Hiding pointers into u64 is not exactly nice, but I guess that's how
+interface is designed? :-(.
 
-Otherwise the patch is ok.
+> @@ -737,6 +779,15 @@ static void wl1251_op_configure_filter(struct ieee80211_hw *hw,
+>  	if (ret < 0)
+>  		goto out;
+>  
+> +	if (*total & FIF_ALLMULTI || *total & FIF_PROMISC_IN_BSS)
+> +		ret = wl1251_acx_group_address_tbl(wl, false, NULL, 0);
+> +	else if (fp)
+> +		ret = wl1251_acx_group_address_tbl(wl, fp->enabled,
+> +						   fp->mc_list,
+> +						     	fp->mc_list_length);
 
--Gabor
+Is it correct not to call anything in !fp case (for example because we
+were out of memory?)
+
+> +	if (ret < 0)
+> +		goto out;
+> +
+>  	/* send filters to firmware */
+>  	wl1251_acx_rx_config(wl, wl->rx_config, wl->rx_filter);
+>  
+> @@ -744,6 +795,7 @@ static void wl1251_op_configure_filter(struct ieee80211_hw *hw,
+>  
+>  out:
+>  	mutex_unlock(&wl->mutex);
+> +	kfree(fp);
+>  }
+
+Umm, this is interesting. Who frees the memory in the success case?
+
+Thanks,
+									Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
