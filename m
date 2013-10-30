@@ -1,51 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2875 "EHLO mms3.broadcom.com"
+Received: from mx1.redhat.com ([209.132.183.28]:33303 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752837Ab3JAIx2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Oct 2013 04:53:28 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "Ben Hutchings" <ben@decadent.org.uk>
-cc: "Linux Wireless" <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 0/4] brcm: rename firmware files and add new files
-Date: Tue, 1 Oct 2013 10:53:06 +0200
-Message-ID: <1380617590-5120-1-git-send-email-arend@broadcom.com> (sfid-20131001_105333_405343_C7899B9F)
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1752973Ab3J3Omr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Oct 2013 10:42:47 -0400
+Message-ID: <1383144122.21123.1.camel@dcbw.foobar.com> (sfid-20131030_154250_758944_FFD1152A)
+Subject: Re: [PATCH -next] libertas: fix error return code in if_cs_probe()
+From: Dan Williams <dcbw@redhat.com>
+To: Wei Yongjun <weiyj.lk@gmail.com>
+Cc: linville@tuxdriver.com, hsweeten@visionengravers.com,
+	gregkh@linuxfoundation.org, yongjun_wei@trendmicro.com.cn,
+	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+Date: Wed, 30 Oct 2013 09:42:02 -0500
+In-Reply-To: <CAPgLHd9nCFPvSWMtrinySm=9bESiKXpYZgZYj6fhzUQKVJFkhw@mail.gmail.com>
+References: <CAPgLHd9nCFPvSWMtrinySm=9bESiKXpYZgZYj6fhzUQKVJFkhw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series renames the firmware files to match the required filenames in
-the brcmfmac driver. Previously, these files needed to be copied/linked to
-a generic name that was used in the driver. So for older kernels this is still
-needed.
+On Wed, 2013-10-30 at 13:22 +0800, Wei Yongjun wrote:
+> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+> 
+> Fix to return -ENODEV in the unknown model error handling
+> case instead of 0, as done elsewhere in this function.
+> 
+> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-Also included are new firmware files for BCM43241 and BCM4335. The brcmfmac
-driver lists some more firmware files, but firmware is not yet released for
-those chips.
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-Arend van Spriel (4):
-  brcm: rename firmware names expressing host interface type
-  brcm: add firmware file for BCM43241 SDIO chipset
-  brcm: add firmware for newer version of BCM43241 SDIO chipset
-  brcm: add firmware file for the BCM4335 SDIO chipset
-
- WHENCE                                           |    9 ++++++---
- brcm/brcmfmac43241b0-sdio.bin                    |  Bin 0 -> 455745 bytes
- brcm/brcmfmac43241b4-sdio.bin                    |  Bin 0 -> 403855 bytes
- brcm/{brcmfmac4329.bin => brcmfmac4329-sdio.bin} |  Bin 253748 -> 253748 bytes
- brcm/{brcmfmac4330.bin => brcmfmac4330-sdio.bin} |  Bin 222126 -> 222126 bytes
- brcm/{brcmfmac4334.bin => brcmfmac4334-sdio.bin} |  Bin 451566 -> 451566 bytes
- brcm/brcmfmac4335-sdio.bin                       |  Bin 0 -> 569291 bytes
- 7 files changed, 6 insertions(+), 3 deletions(-)
- create mode 100644 brcm/brcmfmac43241b0-sdio.bin
- create mode 100644 brcm/brcmfmac43241b4-sdio.bin
- rename brcm/{brcmfmac4329.bin => brcmfmac4329-sdio.bin} (100%)
- rename brcm/{brcmfmac4330.bin => brcmfmac4330-sdio.bin} (100%)
- rename brcm/{brcmfmac4334.bin => brcmfmac4334-sdio.bin} (100%)
- create mode 100644 brcm/brcmfmac4335-sdio.bin
-
--- 
-1.7.10.4
+> ---
+>  drivers/net/wireless/libertas/if_cs.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/net/wireless/libertas/if_cs.c b/drivers/net/wireless/libertas/if_cs.c
+> index ef8c98e..f499efc 100644
+> --- a/drivers/net/wireless/libertas/if_cs.c
+> +++ b/drivers/net/wireless/libertas/if_cs.c
+> @@ -902,6 +902,7 @@ static int if_cs_probe(struct pcmcia_device *p_dev)
+>  	if (card->model == MODEL_UNKNOWN) {
+>  		pr_err("unsupported manf_id 0x%04x / card_id 0x%04x\n",
+>  		       p_dev->manf_id, p_dev->card_id);
+> +		ret = -ENODEV;
+>  		goto out2;
+>  	}
+>  
+> 
+> 
+> _______________________________________________
+> libertas-dev mailing list
+> libertas-dev@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/libertas-dev
 
 
