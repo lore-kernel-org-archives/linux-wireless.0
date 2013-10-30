@@ -1,41 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f48.google.com ([209.85.215.48]:57454 "EHLO
-	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752110Ab3JKKLk (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:34223 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752374Ab3J3LYH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Oct 2013 06:11:40 -0400
-Received: by mail-la0-f48.google.com with SMTP id er20so3103322lab.7
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Oct 2013 03:11:39 -0700 (PDT)
-Message-ID: <5257CED4.4020406@gmail.com> (sfid-20131011_121143_890846_4A7C3FAA)
-Date: Fri, 11 Oct 2013 12:11:32 +0200
-From: Thomas Lindroth <thomas.lindroth@gmail.com>
+	Wed, 30 Oct 2013 07:24:07 -0400
+Date: Wed, 30 Oct 2013 12:24:05 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
+Cc: Luciano Coelho <luca@coelho.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
+	aaro.koskinen@iki.fi, sre@ring0.de, joni.lapilainen@gmail.com,
+	David Gnedt <david.gnedt@davizone.at>
+Subject: Re: [PATCH 02/16] wl1251: fix scan behaviour while not associated
+Message-ID: <20131030112405.GA8204@amd.pavel.ucw.cz> (sfid-20131030_122432_198113_D7C205FA)
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+ <1382819655-30430-3-git-send-email-pali.rohar@gmail.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Kernel panic in ieee80211_calculate_rx_timestamp
-References: <523B3BEA.9000100@gmail.com>  (sfid-20130919_200122_426878_A0C53351) <1380551237.14467.12.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1380551237.14467.12.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1382819655-30430-3-git-send-email-pali.rohar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/30/2013 04:27 PM, Johannes Berg wrote:
-> On Thu, 2013-09-19 at 20:01 +0200, Thomas Lindroth wrote:
->> I recently got a ath9k_htc based dongle and running kismet for a few
->> hours results in a kernel panic (divide error) in
->> ieee80211_calculate_rx_timestamp with kernel 3.11.0.
->>
->> The problem seems to occur when the call to cfg80211_calculate_bitrate
->> returns 0. I've used this patch to temporarily works around the problem.
+On Sat 2013-10-26 22:34:01, Pali Rohár wrote:
+> From: David Gnedt <david.gnedt@davizone.at>
 > 
-> Seems fair, but maybe it should print out the rate info so you can see
-> what was actually received - most likely this is a driver bug though.
+> With a dissacociated card I often encoutered very long scan delays.
 > 
-> If you submit a patch that can be applied with signed-off-by etc. I can
-> apply it.
+> My guess is that it has something to do with the cards DTIM handling and
+> another firmware bug mentioned in the TI WLAN driver, which is described as
+> the card may never end scanning if the channel is overloaded because it
+> can't send probe requests. I think the firmware somehow also tries to
+> receive DTIM messages when the BSSID is not set. Therefore most of the time
+> it waits for DTIM messages and can't do scanning work.
+> 
+> Anyway we can workaround this misbehaviour by setting the HIGH_PRIORITY
+> bit for scans in disassociated state.
+> 
+> Signed-off-by: David Gnedt <david.gnedt@davizone.at>
 
-Sorry for the late reply. My first post was mostly meant as a bug
-report. I don't have the insight needed for a proper fix but that patch
-should point a developer in the right direction.
+I guess you should add your Signed-off-by: here (as you are sending
+the patch forward).
 
-/Thomas Lindroth
+Other than that:
+
+Reviewed-by: Pavel Machek <pavel@ucw.cz>
+
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
