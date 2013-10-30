@@ -1,49 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:46798 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758393Ab3JQUGW (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:41169 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751057Ab3J3RGn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Oct 2013 16:06:22 -0400
-Date: Thu, 17 Oct 2013 16:06:20 -0400 (EDT)
-Message-Id: <20131017.160620.433147354971362075.davem@davemloft.net> (sfid-20131017_220625_645272_3F830C2C)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2013-10-15
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20131015175611.GA15706@tuxdriver.com>
-References: <20131015175611.GA15706@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 30 Oct 2013 13:06:43 -0400
+Message-ID: <52713C85.6070607@candelatech.com> (sfid-20131030_180646_656324_167756AD)
+Date: Wed, 30 Oct 2013 10:06:13 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH/RFT 00/12] ath10k: pci fixes 2013-10-30
+References: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com>
+In-Reply-To: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Tue, 15 Oct 2013 13:56:12 -0400
+On 10/30/2013 04:42 AM, Michal Kazior wrote:
+> Hi,
+> 
+> This patchset contains a slew of PCI/CE cleanups
+> and fixes. The aim of the patchset is to deal with
+> CE null dereference bugs Ben has been reporting on
+> the mailing list for some time now.
+> 
+> I've done some brief testing and don't see any
+> major regressions. I wasn't able to reproduce the
+> reported bugs though. @Ben: Could you perhaps test
+> this, please?
 
-> Please pull this batch of fixes intended for the 3.12 stream!
-> 
-> For the mac80211 bits, Johannes says:
-> 
-> "Jouni fixes a remain-on-channel vs. scan bug, and Felix fixes client TX
-> probing on VLANs."
-> 
-> And also:
-> 
-> "This time I have two fixes from Emmanuel for RF-kill issues, and fixed
-> two issues reported by Evan Huus and Thomas Lindroth respectively."
-> 
-> On top of those...
-> 
-> Avinash Patil adds a couple of mwifiex fixes to properly inform cfg80211
-> about some different types of disconnects, avoiding WARNINGs.
-> 
-> Mark Cave-Ayland corrects a pointer arithmetic problem in rtlwifi,
-> avoiding incorrect automatic gain calculations.
-> 
-> Solomon Peachy sends a cw1200 fix for locking around calls to
-> cw1200_irq_handler, addressing "lost interrupt" problems.
-> 
-> Please let me know if there are problems!
+I'll test these later today, thanks!
 
-Pulled, thanks a lot John.
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
