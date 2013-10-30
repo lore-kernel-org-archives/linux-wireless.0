@@ -1,66 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f181.google.com ([209.85.215.181]:49032 "EHLO
-	mail-ea0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755089Ab3JCUeM (ORCPT
+Received: from mail-ee0-f45.google.com ([74.125.83.45]:60652 "EHLO
+	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753302Ab3J3LpQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Oct 2013 16:34:12 -0400
-Received: by mail-ea0-f181.google.com with SMTP id d10so1387054eaj.12
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Oct 2013 13:34:11 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1380824600-13655-1-git-send-email-bzhao@marvell.com>
-References: <1380824600-13655-1-git-send-email-bzhao@marvell.com>
-Date: Thu, 3 Oct 2013 16:34:11 -0400
-Message-ID: <CAJdJm_N1=a7URKmU8xOsOzOaYHKQdNXiR7VryeOc4+i2uf7RqQ@mail.gmail.com> (sfid-20131003_223416_088224_1741422B)
-Subject: Re: [PATCH] Bluetooth: btmrvl: operate on 16-bit opcodes instead of ogf/ocf
-From: Anderson Lizardo <anderson.lizardo@openbossa.org>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: BlueZ development <linux-bluetooth@vger.kernel.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Gustavo Padovan <gustavo@padovan.org>,
-	Johan Hedberg <johan.hedberg@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	Amitkumar Karwar <akarwar@marvell.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 30 Oct 2013 07:45:16 -0400
+Received: by mail-ee0-f45.google.com with SMTP id e50so571778eek.32
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Oct 2013 04:45:15 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH/RFT 06/12] ath10k: fix ath10k_ce_init() failpath
+Date: Wed, 30 Oct 2013 12:42:20 +0100
+Message-Id: <1383133346-8135-7-git-send-email-michal.kazior@tieto.com> (sfid-20131030_124527_223021_8005E69B)
+In-Reply-To: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com>
+References: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Bing,
+Make sure to put target back to sleep. This was a
+minor issue as it didn't really matter if we put
+target back to sleep at this point. It just looked
+wrong.
 
-On Thu, Oct 3, 2013 at 2:23 PM, Bing Zhao <bzhao@marvell.com> wrote:
-> @@ -63,9 +61,8 @@ bool btmrvl_check_evtpkt(struct btmrvl_private *priv, struct sk_buff *skb)
->                         wake_up_interruptible(&priv->adapter->cmd_wait_q);
->                 }
->
-> -               if (ogf == OGF) {
-> -                       BT_DBG("vendor event skipped: ogf 0x%4.4x ocf 0x%4.4x",
-> -                              ogf, ocf);
-> +               if ((opcode & 0xfc00) == 0xfc00) {
-> +                       BT_DBG("vendor event skipped: opcode=%#4.4x", opcode);
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/ce.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-I think you could use "if (hci_opcode_ogf(opcode) == 0x3F)" to make it
-more readable.
-
-> @@ -166,7 +163,7 @@ exit:
->  }
->  EXPORT_SYMBOL_GPL(btmrvl_process_event);
->
-> -static int btmrvl_send_sync_cmd(struct btmrvl_private *priv, u16 cmd_no,
-> +static int btmrvl_send_sync_cmd(struct btmrvl_private *priv, u16 opcode,
->                                 const void *param, u8 len)
->  {
->         struct sk_buff *skb;
-> @@ -179,7 +176,7 @@ static int btmrvl_send_sync_cmd(struct btmrvl_private *priv, u16 cmd_no,
->         }
->
->         hdr = (struct hci_command_hdr *)skb_put(skb, HCI_COMMAND_HDR_SIZE);
-> -       hdr->opcode = cpu_to_le16(hci_opcode_pack(OGF, cmd_no));
-> +       hdr->opcode = cpu_to_le16(opcode);
-
-Are you sure the callers of btmrvl_send_sync_cmd() do not need to be
-changed to pass an opcode instead of just the OCF?
-
-Best Regards,
+diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
+index 7a49cde..657e8f2 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.c
++++ b/drivers/net/wireless/ath/ath10k/ce.c
+@@ -1077,7 +1077,7 @@ struct ath10k_ce_pipe *ath10k_ce_init(struct ath10k *ar,
+ 	ce_state = ath10k_ce_init_state(ar, ce_id, attr);
+ 	if (!ce_state) {
+ 		ath10k_err("Failed to initialize CE state for ID: %d\n", ce_id);
+-		return NULL;
++		goto out;
+ 	}
+ 
+ 	if (attr->src_nentries) {
+@@ -1086,7 +1086,8 @@ struct ath10k_ce_pipe *ath10k_ce_init(struct ath10k *ar,
+ 			ath10k_err("Failed to initialize CE src ring for ID: %d (%d)\n",
+ 				   ce_id, ret);
+ 			ath10k_ce_deinit(ce_state);
+-			return NULL;
++			ce_state = NULL;
++			goto out;
+ 		}
+ 	}
+ 
+@@ -1096,15 +1097,16 @@ struct ath10k_ce_pipe *ath10k_ce_init(struct ath10k *ar,
+ 			ath10k_err("Failed to initialize CE dest ring for ID: %d (%d)\n",
+ 				   ce_id, ret);
+ 			ath10k_ce_deinit(ce_state);
+-			return NULL;
++			ce_state = NULL;
++			goto out;
+ 		}
+ 	}
+ 
+ 	/* Enable CE error interrupts */
+ 	ath10k_ce_error_intr_enable(ar, ctrl_addr);
+ 
++out:
+ 	ath10k_pci_sleep(ar);
+-
+ 	return ce_state;
+ }
+ 
 -- 
-Anderson Lizardo
-Instituto Nokia de Tecnologia - INdT
-Manaus - Brazil
+1.8.4.rc3
+
