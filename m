@@ -1,66 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f54.google.com ([74.125.83.54]:62544 "EHLO
-	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753881Ab3JZUkf (ORCPT
+Received: from mail-ea0-f180.google.com ([209.85.215.180]:45568 "EHLO
+	mail-ea0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753849Ab3J3LpU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Oct 2013 16:40:35 -0400
-From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Luciano Coelho <luca@coelho.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
-	joni.lapilainen@gmail.com, pali.rohar@gmail.com,
-	David Gnedt <david.gnedt@davizone.at>
-Subject: [PATCH 10/16] wl1251: fix channel switching in monitor mode
-Date: Sat, 26 Oct 2013 22:34:09 +0200
-Message-Id: <1382819655-30430-11-git-send-email-pali.rohar@gmail.com> (sfid-20131026_224329_306909_B45464DA)
-In-Reply-To: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+	Wed, 30 Oct 2013 07:45:20 -0400
+Received: by mail-ea0-f180.google.com with SMTP id l9so491280eaj.11
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Oct 2013 04:45:19 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH/RFT 10/12] ath10k: guard against CE corruption from firmware
+Date: Wed, 30 Oct 2013 12:42:24 +0100
+Message-Id: <1383133346-8135-11-git-send-email-michal.kazior@tieto.com> (sfid-20131030_124529_709296_7F9807AD)
+In-Reply-To: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com>
+References: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Gnedt <david.gnedt@davizone.at>
+In case firmware crashes it may report CE
+completions for entries that were never
+submitted/filled with meaningful data. This in
+turn led to NULL dereferences.
 
-Use the ENABLE_RX command for channel switching when no interface is present
-(monitor mode only).
-The advantage of ENABLE_RX is that it leaves the tx data path disabled in
-firmware, whereas the usual JOIN command seems to transmit some frames at
-firmware level.
-
-Signed-off-by: David Gnedt <david.gnedt@davizone.at>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/ti/wl1251/main.c |   15 +++++++++++++--
- 1 file changed, 13 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath10k/htc.c | 5 +++++
+ drivers/net/wireless/ath/ath10k/pci.c | 7 +++++++
+ 2 files changed, 12 insertions(+)
 
-diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
-index 62cb374..7e6b6d1 100644
---- a/drivers/net/wireless/ti/wl1251/main.c
-+++ b/drivers/net/wireless/ti/wl1251/main.c
-@@ -611,8 +611,19 @@ static int wl1251_op_config(struct ieee80211_hw *hw, u32 changed)
- 	if (channel != wl->channel) {
- 		wl->channel = channel;
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index 3118d75..c59f5b4 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -191,6 +191,11 @@ static int ath10k_htc_tx_completion_handler(struct ath10k *ar,
+ 	struct ath10k_htc *htc = &ar->htc;
+ 	struct ath10k_htc_ep *ep = &htc->endpoint[eid];
  
--		ret = wl1251_join(wl, wl->bss_type, wl->channel,
--				  wl->beacon_int, wl->dtim_period);
-+		/*
-+		 * Use ENABLE_RX command for channel switching when no
-+		 * interface is present (monitor mode only).
-+		 * This leaves the tx path disabled in firmware, whereas
-+		 * the usual JOIN command seems to transmit some frames
-+		 * at firmware level.
-+		 */
-+		if (wl->vif == NULL) {
-+			ret = wl1251_cmd_data_path_rx(wl, wl->channel, 1);
-+		} else {
-+			ret = wl1251_join(wl, wl->bss_type, wl->channel,
-+					  wl->beacon_int, wl->dtim_period);
++	if (!skb) {
++		ath10k_warn("invalid sk_buff completion - NULL pointer. firmware crashed?");
++		return 0;
++	}
++
+ 	ath10k_htc_notify_tx_completion(ep, skb);
+ 	/* the skb now belongs to the completion handler */
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 63ad250..43cdc35 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1270,6 +1270,13 @@ static void ath10k_pci_tx_pipe_cleanup(struct ath10k_pci_pipe *pipe_info)
+ 		 * Indicate the completion to higer layer to free
+ 		 * the buffer
+ 		 */
++
++		if (!netbuf) {
++			ath10k_warn("invalid sk_buff on CE %d - NULL pointer. firmware crashed?",
++				    ce_hdl->id);
++			continue;
 +		}
- 		if (ret < 0)
- 			goto out_sleep;
- 	}
++
+ 		ATH10K_SKB_CB(netbuf)->is_aborted = true;
+ 		ar_pci->msg_callbacks_current.tx_completion(ar,
+ 							    netbuf,
 -- 
-1.7.10.4
+1.8.4.rc3
 
