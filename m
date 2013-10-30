@@ -1,58 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:47030 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753386Ab3JHS6Y (ORCPT
+Received: from smtprelay0099.hostedemail.com ([216.40.44.99]:51109 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752040Ab3J3RQs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Oct 2013 14:58:24 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Wed, 30 Oct 2013 13:16:48 -0400
+Message-ID: <1383153399.9435.33.camel@joe-AO722> (sfid-20131030_181654_093339_2AD6DD26)
+Subject: Re: [PATCH/RFT 12/12] ath10k: add some debug prints
+From: Joe Perches <joe@perches.com>
 To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3 0/2] ath10k: wep & ampdu fix
-References: <1380874630-14280-1-git-send-email-michal.kazior@tieto.com>
-	<1381200718-16271-1-git-send-email-michal.kazior@tieto.com>
-Date: Tue, 8 Oct 2013 21:58:19 +0300
-In-Reply-To: <1381200718-16271-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Mon, 7 Oct 2013 19:51:56 -0700")
-Message-ID: <871u3vsi7o.fsf@kamboji.qca.qualcomm.com> (sfid-20131008_205827_460886_B827F22B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+	greearb@candelatech.com
+Date: Wed, 30 Oct 2013 10:16:39 -0700
+In-Reply-To: <1383133346-8135-13-git-send-email-michal.kazior@tieto.com>
+References: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com>
+	 <1383133346-8135-13-git-send-email-michal.kazior@tieto.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+On Wed, 2013-10-30 at 12:42 +0100, Michal Kazior wrote:
+> Some errors were handled too silently.
 
-> Hi,
->
-> One throughput fix and one bug fix.
->
-> The bug fix addresses my oversight when reworking
-> HTC/WMI. I haven't seen the error yet but I'm
-> quite certain this should be fixed.
->
-> v2:
->  * A-MPDU patch contains a workaround for
->    Netgear/Linksys 11ac APs
->  * patchset cover mail title changed to avoid
->    confusion (too many patchsets named the same
->    way..)
->
-> v3:
->  * fix lines over 80 chars (Kalle)
->  * fix max() cast warning (Kalle)
->  * rebase (Kalle)
->  * add Tested-by (thanks Kalle!)
->
->
-> Michal Kazior (1):
->   ath10k: fix scheduling while atomic bug
+These aren't really debug prints.
 
-I dropped this patch for now, need to think more about how to handle
-this.
+> diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+[]
+> @@ -1860,8 +1862,10 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar)
+>  		ath10k_do_pci_wake(ar);
+>  
+>  	ret = ath10k_pci_ce_init(ar);
+> -	if (ret)
+> +	if (ret) {
+> +		ath10k_err("could not initialize CE (%d)\n", ret);
 
-> Sujith Manoharan (1):
->   ath10k: Fix bug in max. VHT A-MPDU size
+Rather than try to reinterpret the function name,
+perhaps it's better to simply emit the function name
+as is done most other places like:
 
-This is applied, thanks.
+		ath10k_err("ath10k_pci_ce_init failed: (%d)\n", ret);
 
--- 
-Kalle Valo
+
+> @@ -1876,16 +1880,22 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar)
+>  	}
+>  
+>  	ret = ath10k_pci_wait_for_target_init(ar);
+> -	if (ret)
+> +	if (ret) {
+> +		ath10k_err("failed to wait for target to init (%d)\n", ret);
+>  		goto err_irq;
+> +	}
+
+Like this one, because the function did wait,
+but the init was unsuccessful.
+
+
