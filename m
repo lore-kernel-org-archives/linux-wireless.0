@@ -1,147 +1,206 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:64087 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757074Ab3J1Q2G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Oct 2013 12:28:06 -0400
-Received: from [192.168.1.138] ([93.218.124.130]) by mail.gmx.com (mrgmx102)
- with ESMTPSA (Nemesis) id 0MSY2q-1V9RSq0xd6-00RXkW for
- <linux-wireless@vger.kernel.org>; Mon, 28 Oct 2013 17:28:05 +0100
-Message-ID: <526E9093.6020409@rempel-privat.de> (sfid-20131028_172820_367673_083D4450)
-Date: Mon, 28 Oct 2013 17:28:03 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
-MIME-Version: 1.0
-To: Felipe Contreras <felipe.contreras@gmail.com>
-CC: linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	ilw@linux.intel.com,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>
-Subject: Re: I always need a miracle to connect with iwlwifi
-References: <CAMP44s1XJRHV8bAX=_-TkSKMkY8Nw1=eHorqTCZ2QmtR5m8uJA@mail.gmail.com>	<526E20EA.9090203@rempel-privat.de>	<CAMP44s0ypeV5JeoF=KWPM-VqZbyR_joJ-4Xg5icKqp2QiNN=Tw@mail.gmail.com>	<526E33C3.60302@rempel-privat.de> <CAMP44s05-NRskvWHNqzVxTRiB_2DeRsPwQGAZZ3saM-VC=ZyQA@mail.gmail.com>
-In-Reply-To: <CAMP44s05-NRskvWHNqzVxTRiB_2DeRsPwQGAZZ3saM-VC=ZyQA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:39787 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752195Ab3J3VpS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Oct 2013 17:45:18 -0400
+Received: by mail-wg0-f48.google.com with SMTP id b13so1933378wgh.15
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Oct 2013 14:45:16 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 2/7] wireless-regdb: add DFS ETSI regions
+Date: Wed, 30 Oct 2013 22:45:04 +0100
+Message-Id: <1383169509-22619-3-git-send-email-mcgrof@do-not-panic.com> (sfid-20131030_224527_714873_5428FC47)
+In-Reply-To: <1383169509-22619-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383169509-22619-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 28.10.2013 16:44, schrieb Felipe Contreras:
-> On Mon, Oct 28, 2013 at 3:52 AM, Oleksij Rempel <linux@rempel-privat.de> wrote:
->> Am 28.10.2013 10:38, schrieb Felipe Contreras:
->>> On Mon, Oct 28, 2013 at 2:31 AM, Oleksij Rempel <linux@rempel-privat.de> wrote:
-> 
->>>> Heh... this logs look like miracle :)
->>>> My first assumption would be buggy router. There is no answer in
->>>> wpa_supplicant log.
->>>
->>> Yeah, I bet the router is buggy, which router isn't? But why Windows 7
->>> connects fine?
->>
->> May be it includes some workaround?
-> 
->> You do not need to fight with devs, i think they are agree that some
->> thing is wrong. But believe me, there are so many access points, which
->> make problems or wear things. If you have a bug, does not mean other
->> user have it.
-> 
-> I understand the problems of making wireless drivers work on different
-> kinds of access points, and I'm not fighting with devs, I'm just
-> saying that if it works in all other devices the problem is most
-> likely on this one.
-> 
-> And BTW, the devices we are talking about are very varied: Wii U,
-> Windows 7, Windows 8.1, Nokia N9, Android phone, iPhone, iMac, Amazon
-> Kindle. Yet the only device that seems to have a problem is my Linux
-> machine, I think it's pretty clear where the problem is.
+This associates the following countries to the
+DFS ETSI region:
 
-Do any of listed devices use mac80211? If not, you still have fallowing
-options: wpa_supplicant, mac80211, iwlwifi driver, iwlwifi firmware. In
-you arguments you even didn't tried to eliminate any of them. So, no. It
-is not clear where problem is.
+	AL, AM, AN, AW, AZ, BY, EG, GE, HT,
+	IL, KH, KW, MA, OM, RS, RU, SA, TN,
+	UA, ZA, ZW
 
-> And sure, it does not necessarily means that other people have the
-> same problem, but it is very unlikely that I'm the only one.
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt | 40 ++++++++++++++++++++--------------------
+ 1 file changed, 20 insertions(+), 20 deletions(-)
 
-what is your hardware? Did you tired to disable power save mode?
-
-I have "Intel Centrino Advanced-N 6235", it use same driver and works
-with three of my APs. I say just to show, that list of working hardware
-is not helpful.
-
-what is you AP? Mode it is running? Do changing settings of this AP
-makes some difference? -- No, changing settings of you AP is not the way
-to get you off.
-
->> Beside, how many clients use this AP?
-> 
-> Probably around a dozen.
-> 
->> How big is the distance?
-> 
-> Probably around 10m.
-> 
->> What do you configure in AdHock mode?
-> 
-> Nothing, I don't think it even works, but it associates. I just add mode=1.
-> 
-> network={
-> ssid="AXTEL-XXX"
-> proto=WPA2
-> scan_ssid=1
-> key_mgmt=WPA-PSK
-> psk="XXX"
-> mode=1
-> }
-> 
->>>> Take wireshark and capture working and not working associational request.
->>>
->>> I'll try that. If only it was that easy to get a working association.
->>
->> Compare it with windows.
-> 
-> Right, I forgot I can use wireshark in Windows.
-> 
->> and please read this, it will help to provide more information.
->> http://wireless.kernel.org/en/users/Documentation/Reporting_bugs
-> 
-> I don't understand what exactly do you need from that list. I'm using
-> 3.11.6, but as I said in the original report, the kernel version makes
-> no difference, even as far back as 3.6.0. I've put the dmesg log in
-> the original mail and there's nothing of value there. I could try
-> running with CONFIG_MAC80211_*_DEBUG stuff enabled, but do you really
-> think that will help?
-> 
-> If you really must know, this is exactly what I'm running:
-> 
-> config=$(mktemp)
-> pid="/run/wpa_supplicant_wlan0.pid"
-> 
-> cat > $config <<-EOF
-> country=MX
-> ap_scan=1
-> eapol_version=2
-> device_name=Nysa
-> device_type=1-0050F204-1
-> 
-> network={
-> ssid="AXTEL-7111"
-> proto=WPA2
-> scan_ssid=1
-> key_mgmt=WPA-PSK
-> psk="C3657111"
-> mode=0
-> }
-> EOF
-> 
-> wpa_supplicant -B -t -d -P $pid -i wlan0 -D nl80211,wext -c $config -f
-> /tmp/wpa.log
-> 
-> rm -f "$config"
-> 
-> I tried with wext, but that doesn't work at all. A curious fact is
-> that I need to enable CONFIG_CFG80211_WEXT=y for AP scanning to work,
-> even though I'm not using the wext driver.
-> 
-> I will try to get the wireshark logs.
-> 
-
-
+diff --git a/db.txt b/db.txt
+index 94da96a..1c20be2 100644
+--- a/db.txt
++++ b/db.txt
+@@ -25,15 +25,15 @@ country AE: DFS-FCC
+ 	(5490 - 5710 @ 80), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+-country AL:
++country AL: DFS-ETSI
+ 	(2402 - 2482 @ 20), (20)
+ 
+-country AM:
++country AM: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 20), (18)
+ 	(5250 - 5330 @ 20), (18), DFS
+ 
+-country AN:
++country AN: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 40), (20)
+ 	(5250 - 5330 @ 40), (20), DFS
+@@ -61,13 +61,13 @@ country AU:
+ 	(5490 - 5710 @ 80), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+-country AW:
++country AW: DFS-ETSI/
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 40), (20)
+ 	(5250 - 5330 @ 40), (20), DFS
+ 	(5490 - 5710 @ 40), (27), DFS
+ 
+-country AZ:
++country AZ: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 40), (18)
+ 	(5250 - 5330 @ 40), (18), DFS
+@@ -133,7 +133,7 @@ country BR: DFS-FCC
+ 	(5490 - 5710 @ 80), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+-country BY:
++country BY: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 40), (20)
+ 	(5250 - 5330 @ 40), (20), DFS
+@@ -263,7 +263,7 @@ country EE: DFS-ETSI
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+-country EG:
++country EG: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 20), (20)
+ 	(5250 - 5330 @ 20), (20), DFS
+@@ -292,7 +292,7 @@ country FR: DFS-ETSI
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+-country GE:
++country GE: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 40), (18)
+ 	(5250 - 5330 @ 40), (18), DFS
+@@ -363,7 +363,7 @@ country HR: DFS-ETSI
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+-country HT:
++country HT: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 40), (20)
+ 	(5250 - 5330 @ 40), (20), DFS
+@@ -390,7 +390,7 @@ country IE: DFS-ETSI
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+-country IL:
++country IL: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5150 - 5250 @ 80), (200 mW), NO-OUTDOOR
+ 	(5250 - 5350 @ 80), (200 mW), NO-OUTDOOR
+@@ -445,7 +445,7 @@ country KE:
+ 	(2402 - 2482 @ 40), (20)
+ 	(5735 - 5835 @ 40), (30)
+ 
+-country KH:
++country KH: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 40), (20)
+ 	(5250 - 5330 @ 40), (20), DFS
+@@ -519,7 +519,7 @@ country MC: DFS-ETSI
+ 	(5170 - 5250 @ 40), (18)
+ 	(5250 - 5330 @ 40), (18), DFS
+ 
+-country MA:
++country MA: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 80), (23)
+ 	(5735 - 5835 @ 80), (23)
+@@ -586,7 +586,7 @@ country NZ: DFS-FCC
+ 	(5490 - 5710 @ 80), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+-country OM:
++country OM: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 40), (17)
+ 	(5250 - 5330 @ 40), (20), DFS
+@@ -661,14 +661,14 @@ country RO: DFS-ETSI
+ 
+ # Source:
+ # http://www.ratel.rs/upload/documents/Plan_namene/Plan_namene-sl_glasnik.pdf
+-country RS:
++country RS: DFS-ETSI
+ 	(2400 - 2483.5 @ 40), (100 mW)
+ 	(5150 - 5350 @ 40), (200 mW), NO-OUTDOOR
+ 	(5470 - 5725 @ 20), (1000 mW), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+-country RU:
++country RU: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5330 @ 40), (20)
+ 	(5650 - 5710 @ 40), (30)
+@@ -678,7 +678,7 @@ country RW: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+ 	(5735 - 5835 @ 40), (30)
+ 
+-country SA:
++country SA: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 80), (17)
+ 	(5250 - 5330 @ 80), (24), DFS
+@@ -745,7 +745,7 @@ country TT: DFS-FCC
+ 	(5490 - 5710 @ 40), (20), DFS
+ 	(5735 - 5835 @ 40), (30)
+ 
+-country TN:
++country TN: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 20), (20)
+ 	(5250 - 5330 @ 20), (20), DFS
+@@ -765,7 +765,7 @@ country TR: DFS-ETSI
+ # Listed 5GHz range is a lowest common denominator for all related
+ # rules in the referenced laws. Such a range is used because of
+ # disputable definitions there.
+-country UA:
++country UA: DFS-ETSI
+ 	(2400 - 2483.5 @ 40), (20), NO-OUTDOOR
+ 	(5150 - 5350 @ 40), (20), NO-OUTDOOR
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+@@ -811,13 +811,13 @@ country VN: DFS-FCC
+ country YE:
+ 	(2402 - 2482 @ 40), (20)
+ 
+-country ZA:
++country ZA: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 80), (17)
+ 	(5250 - 5330 @ 80), (24), DFS
+ 	(5490 - 5710 @ 80), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+-country ZW:
++country ZW: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 
 -- 
-Regards,
-Oleksij
+1.8.4.rc3
+
