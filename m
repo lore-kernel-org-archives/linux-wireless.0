@@ -1,69 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:39711 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756857Ab3JKVGF (ORCPT
+Received: from mail-bk0-f54.google.com ([209.85.214.54]:38314 "EHLO
+	mail-bk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750709Ab3J3FWf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Oct 2013 17:06:05 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] mac80211:  Add rate-control name to station debugfs.
-Date: Fri, 11 Oct 2013 14:04:31 -0700
-Message-Id: <1381525471-23655-1-git-send-email-greearb@candelatech.com> (sfid-20131011_230611_813270_5076835C)
+	Wed, 30 Oct 2013 01:22:35 -0400
+Received: by mail-bk0-f54.google.com with SMTP id 6so274319bkj.13
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Oct 2013 22:22:34 -0700 (PDT)
+MIME-Version: 1.0
+Date: Wed, 30 Oct 2013 13:22:34 +0800
+Message-ID: <CAPgLHd9nCFPvSWMtrinySm=9bESiKXpYZgZYj6fhzUQKVJFkhw@mail.gmail.com> (sfid-20131030_062239_384396_BAA4ECA8)
+Subject: [PATCH -next] libertas: fix error return code in if_cs_probe()
+From: Wei Yongjun <weiyj.lk@gmail.com>
+To: linville@tuxdriver.com, hsweeten@visionengravers.com,
+	gregkh@linuxfoundation.org, dcbw@redhat.com
+Cc: yongjun_wei@trendmicro.com.cn, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-Nice to see what algorithm it's actually using.
+Fix to return -ENODEV in the unknown model error handling
+case instead of 0, as done elsewhere in this function.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 ---
- net/mac80211/debugfs_sta.c |   17 +++++++++++++++++
- 1 files changed, 17 insertions(+), 0 deletions(-)
+ drivers/net/wireless/libertas/if_cs.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
-index 19c54a4..472f544 100644
---- a/net/mac80211/debugfs_sta.c
-+++ b/net/mac80211/debugfs_sta.c
-@@ -15,6 +15,7 @@
- #include "debugfs_sta.h"
- #include "sta_info.h"
- #include "driver-ops.h"
-+#include "rate.h"
+diff --git a/drivers/net/wireless/libertas/if_cs.c b/drivers/net/wireless/libertas/if_cs.c
+index ef8c98e..f499efc 100644
+--- a/drivers/net/wireless/libertas/if_cs.c
++++ b/drivers/net/wireless/libertas/if_cs.c
+@@ -902,6 +902,7 @@ static int if_cs_probe(struct pcmcia_device *p_dev)
+ 	if (card->model == MODEL_UNKNOWN) {
+ 		pr_err("unsupported manf_id 0x%04x / card_id 0x%04x\n",
+ 		       p_dev->manf_id, p_dev->card_id);
++		ret = -ENODEV;
+ 		goto out2;
+ 	}
  
- /* sta attributtes */
- 
-@@ -371,6 +372,21 @@ static ssize_t sta_current_tx_rate_read(struct file *file, char __user *userbuf,
- }
- STA_OPS(current_tx_rate);
- 
-+static ssize_t sta_rc_name_read(struct file *file, char __user *userbuf,
-+				size_t count, loff_t *ppos)
-+{
-+	struct sta_info *sta = file->private_data;
-+	struct rate_control_ref *ref = sta->rate_ctrl;
-+	if (ref && ref->ops && ref->ops->name)
-+		return mac80211_format_buffer(userbuf, count, ppos,
-+					      "%s\n",
-+					      ref->ops->name);
-+	else
-+		return mac80211_format_buffer(userbuf, count, ppos,
-+					      "Unknown\n");
-+}
-+STA_OPS(rc_name);
-+
- static ssize_t sta_last_rx_rate_read(struct file *file, char __user *userbuf,
- 				     size_t count, loff_t *ppos)
- {
-@@ -441,6 +457,7 @@ void ieee80211_sta_debugfs_add(struct sta_info *sta)
- 	DEBUGFS_ADD(last_ack_signal);
- 	DEBUGFS_ADD(current_tx_rate);
- 	DEBUGFS_ADD(last_rx_rate);
-+	DEBUGFS_ADD(rc_name);
- 
- 	DEBUGFS_ADD_COUNTER(rx_packets, rx_packets);
- 	DEBUGFS_ADD_COUNTER(tx_packets, tx_packets);
--- 
-1.7.3.4
 
