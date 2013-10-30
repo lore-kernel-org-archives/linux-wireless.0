@@ -1,51 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39294 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755360Ab3JCUaP (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:21318 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752040Ab3J3RQd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Oct 2013 16:30:15 -0400
-Date: Thu, 3 Oct 2013 16:19:35 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Gustavo Padovan <gustavo@padovan.org>,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: bluetooth-next 2013-10-03
-Message-ID: <20131003201935.GF3142@tuxdriver.com> (sfid-20131003_223040_359050_91A37072)
-References: <20131003174524.GA22728@joana>
+	Wed, 30 Oct 2013 13:16:33 -0400
+Date: Wed, 30 Oct 2013 20:12:51 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org
+Subject: [patch v2] libertas: potential oops in debugfs
+Message-ID: <20131030171251.GA4130@longonot.mountain> (sfid-20131030_181653_457778_7AAF1F27)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131003174524.GA22728@joana>
+In-Reply-To: <20131025144452.GA28451@ngolde.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 03, 2013 at 02:45:24PM -0300, Gustavo Padovan wrote:
-> Hi John,
-> 
-> A series of patches for 3.12. The big work here is from Marcel and Johan. They
-> did a lot of work in the L2CAP, HCI and MGMT layers. The most important ones
-> are the addition of a new MGMT command to enable/disable LE advertisement and
-> the introduction of the HCI user channel to allow applications to get directly
-> and exclusive access to Bluetooth devices.
-> 
-> Please pull, or let me know of any issues. Thanks!
-> 
-> 	Gustavo
-> 
-> --
-> The following changes since commit f4e1a4d3ecbb9e42bdf8e7869ee8a4ebfa27fb20:
-> 
->   rt2800: change initialization sequence to fix system freeze (2013-09-09 14:44:34 -0400)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next for-upstream
-> 
-> for you to fetch changes up to 4f3e219d95a3c31b916dcd5e2631c4e440736f79:
-> 
->   Bluetooth: Only one command per L2CAP LE signalling is supported (2013-10-03 16:09:59 +0300)
+If we do a zero size allocation then it will oops.  Also we can't be
+sure the user passes us a NUL terminated string so I've added a
+terminator.
 
-Pulling now...
+This code can only be triggered by root.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Reported-by: Nico Golde <nico@ngolde.de>
+Reported-by: Fabian Yamaguchi <fabs@goesec.de>
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+
+diff --git a/drivers/net/wireless/libertas/debugfs.c b/drivers/net/wireless/libertas/debugfs.c
+index 668dd27..1917348 100644
+--- a/drivers/net/wireless/libertas/debugfs.c
++++ b/drivers/net/wireless/libertas/debugfs.c
+@@ -913,7 +913,10 @@ static ssize_t lbs_debugfs_write(struct file *f, const char __user *buf,
+ 	char *p2;
+ 	struct debug_data *d = f->private_data;
+ 
+-	pdata = kmalloc(cnt, GFP_KERNEL);
++	if (cnt == 0)
++		return 0;
++
++	pdata = kmalloc(cnt + 1, GFP_KERNEL);
+ 	if (pdata == NULL)
+ 		return 0;
+ 
+@@ -922,6 +925,7 @@ static ssize_t lbs_debugfs_write(struct file *f, const char __user *buf,
+ 		kfree(pdata);
+ 		return 0;
+ 	}
++	pdata[cnt] = '\0';
+ 
+ 	p0 = pdata;
+ 	for (i = 0; i < num_of_items; i++) {
