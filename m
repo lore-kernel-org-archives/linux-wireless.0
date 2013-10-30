@@ -1,77 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:46119 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751806Ab3JHDMH (ORCPT
+Received: from mail-bk0-f44.google.com ([209.85.214.44]:55557 "EHLO
+	mail-bk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752012Ab3J3FaI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Oct 2013 23:12:07 -0400
-Message-ID: <52537803.8010709@lwfinger.net> (sfid-20131008_051233_543535_EDF6CB7D)
-Date: Mon, 07 Oct 2013 22:12:03 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 30 Oct 2013 01:30:08 -0400
+Received: by mail-bk0-f44.google.com with SMTP id mx11so277905bkb.31
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Oct 2013 22:30:07 -0700 (PDT)
 MIME-Version: 1.0
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: linville@tuxdriver.com, Alex Dubov <oakad@yahoo.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Kay Sievers <kay.sievers@vrfy.org>
-Subject: Re: [PATCH V2] memstick: Fix memory leak in memstick_check() error
- path
-References: <1380834798-5829-1-git-send-email-Larry.Finger@lwfinger.net> <20131008021304.GB32733@kroah.com>
-In-Reply-To: <20131008021304.GB32733@kroah.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Date: Wed, 30 Oct 2013 13:30:07 +0800
+Message-ID: <CAPgLHd9HRb_o+hac5_RjKhK1K-jJFtQmrv9P2iy7zegQv=WOcw@mail.gmail.com> (sfid-20131030_063013_236699_A37F72DE)
+Subject: [PATCH -next] wcn36xx: fix missing unlock on error in wcn36xx_smd_update_proberesp_tmpl()
+From: Wei Yongjun <weiyj.lk@gmail.com>
+To: k.eugene.e@gmail.com, linville@tuxdriver.com
+Cc: yongjun_wei@trendmicro.com.cn, wcn36xx@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/07/2013 09:13 PM, Greg Kroah-Hartman wrote:
-> On Sun, Oct 06, 2013 at 10:21:51PM -0500, Larry Finger wrote:
->> With kernel 3.12-rc3, kmemleak reports the following leak:
->>
->>> unreferenced object 0xffff8800ae85c190 (size 16):
->>>    comm "kworker/u4:3", pid 685, jiffies 4294916336 (age 2831.760s)
->>>    hex dump (first 16 bytes):
->>>      6d 65 6d 73 74 69 63 6b 30 00 00 00 00 00 00 00  memstick0.......
->>>    backtrace:
->>>      [<ffffffff8146a0d1>] kmemleak_alloc+0x21/0x50
->>>      [<ffffffff81160720>] __kmalloc_track_caller+0x160/0x2f0
->>>      [<ffffffff81237b9b>] kvasprintf+0x5b/0x90
->>>      [<ffffffff8122c0c1>] kobject_set_name_vargs+0x21/0x60
->>>      [<ffffffff812e7f5c>] dev_set_name+0x3c/0x40
->>>      [<ffffffffa02bf918>] memstick_check+0xb8/0x340 [memstick]
->>>      [<ffffffff81069862>] process_one_work+0x1d2/0x670
->>>      [<ffffffff8106a88a>] worker_thread+0x11a/0x370
->>>      [<ffffffff81072ea6>] kthread+0xd6/0xe0
->>>      [<ffffffff81478bbc>] ret_from_fork+0x7c/0xb0
->>
->> This problem was introduced by commit 0252c3b "memstick: struct device -
->> replace bus_id with dev_name(), dev_set_name()" where the name is not freed
->> in the error path. The name is also leaked in memstick_free_card().
->>
->> Thanks to Catalin Marinas for suggesting the fix.
->>
->> Cc: Kay Sievers <kay.sievers@vrfy.org>
->> Cc: Alex Dubov <oakad@yahoo.com>
->> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
->> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->> ---
->>
->> V2 fixes the typos in the commit message, and frees the name in
->> memstick_free_card() as well as the error path in memstick_check().
->
-> Looking back at this, to try to figure out why the kmemleak report shows
-> up, shows that this is a mess.  Why would we be erroring out _before_ we
-> try to register the struct device with the driver core, yet we had
-> already initialized the struct device structure?  Only set up the
-> structure right before sending it to driver core, don't delay in
-> allocation, only problems can happen (like here.)
->
-> To fix this up, will take some major work, which I can't do, sorry, but
-> this patch will not work either.
+From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-Thanks for the analysis. My interest is getting rid of memory leaks from other 
-sources so that the leaks from my drivers are more obvious.
+Add the missing unlock before return from function
+wcn36xx_smd_update_proberesp_tmpl() in the error
+handling case.
 
-Perhaps Alex will pick this up and do the rewrite.
+Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+---
+ drivers/net/wireless/ath/wcn36xx/smd.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Please drop both patches.
-
-Larry
-
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index f8c3a10..04df70b 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -1327,7 +1327,8 @@ int wcn36xx_smd_update_proberesp_tmpl(struct wcn36xx *wcn,
+ 	if (skb->len > BEACON_TEMPLATE_SIZE) {
+ 		wcn36xx_warn("probe response template is too big: %d\n",
+ 			     skb->len);
+-		return -E2BIG;
++		ret = -E2BIG;
++		goto out;
+ 	}
+ 
+ 	msg.probe_resp_template_len = skb->len;
 
