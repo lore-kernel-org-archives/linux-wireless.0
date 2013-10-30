@@ -1,78 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:10027 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751343Ab3JFGA7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Oct 2013 02:00:59 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-	Thomas Meyer <thomas@m3y3r.de>
-CC: "linux-rt-users@vger.kernel.org" <linux-rt-users@vger.kernel.org>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"tglx@linutronix.de" <tglx@linutronix.de>
-Subject: RE: [Ilw] Re: Kernel panic in 3.10.10-rt7 (iwlwifi)
-Date: Sun, 6 Oct 2013 06:00:54 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301DBC098@HASMSX103.ger.corp.intel.com> (sfid-20131006_080105_556992_1338D928)
-References: <2CD18B42-2489-4DF7-98D6-4D002329DC63@m3y3r.de>
- <20131004101216.GA17043@linutronix.de>
-In-Reply-To: <20131004101216.GA17043@linutronix.de>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail-ee0-f45.google.com ([74.125.83.45]:60743 "EHLO
+	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752374Ab3J3LpM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Oct 2013 07:45:12 -0400
+Received: by mail-ee0-f45.google.com with SMTP id e50so573721eek.18
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Oct 2013 04:45:11 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH/RFT 03/12] ath10k: split tasklet killing function
+Date: Wed, 30 Oct 2013 12:42:17 +0100
+Message-Id: <1383133346-8135-4-git-send-email-michal.kazior@tieto.com> (sfid-20131030_124518_066841_8758D945)
+In-Reply-To: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com>
+References: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiA+TXkgc3lzdGVtIGRpZCBsb2NrdXAgYWZ0ZXIgc2hvcnQgdGltZSBvZiB1c2FnZS4gSSB3YXMg
-b25seSBhYmxlIHRvIGNhcHR1cmUNCj4gdGhpcyBzY3JlZW5zaG90Og0KPiA+DQo+ID5BbnkgaWRl
-YXM/DQo+IA0KPiB0aGUgcHJvYmxlbSBzZWVtcyB0byBiZSB0aGF0IHRoZXkgdXNlIHNsZWVwaW5n
-IGxvY2tzIGluIHRoZSBwcmltYXJ5IGlycQ0KPiBoYW5kbGVyLg0KPiANCj4gaXdsX3BjaWVfcnhf
-cmVwbGVuaXNoKCkgdGFrZXMgdGhlIHNhbWUgbG9jayAoLT5pcnFfbG9jaykgYW5kIGFkZGl0aW9u
-YWx5DQo+IC0+bG9jayBzbyBJIHRoaW5rIHR1bnJuaW5nIGV2ZXJ5dGhpbmcgaW50byByYXcgbG9j
-a3MgaXNuJ3QgdmVyeSB3aXNlIGZvcg0KPiB0aGUgbGF0ZW5jeS4NCj4gDQo+IFRoZSB0aHJlYWRl
-ZCBoYW5kbGVyIHRha2VzIGZvciBhIHZlcnkgc2hvcnQgdGltZSBpcnFfbG9jayBsb2NrLiBJdCBh
-bHNvIHRha2VzDQo+IHRoZSAtPmxvY2sgdmlhIChpd2xfcGNpZV9yeHFfaW5jX3dyX3B0cigpKSB3
-aXRoIGlycXMgb2ZmICh0aGF0IG9uZSBsb29rcyBzaG9ydCwNCj4gdG9vKSBhbmQgb3RoZXJzIGZv
-ciBpbnN0YW5jZSB2aWEgaXdsX3BjaWVfcnhfaGFuZGxlKCkuDQo+IElkZWFsbHkgdGhlIGRyaXZl
-ciBzaG91bGQgaG9sZCBvbmUgc3BpbmxvY2sgdG8gc3luY2hyb25pemUgdGhlIHByaW1hcnkgYW5k
-DQo+IHRocmVhZGVkIGlycSBoYW5kbGVyIHdoaWxlIGRpc2FibGluZyB0aGUgaW50ZXJydXB0IGlu
-IHRoZSBpd2wgaGFyZHdhcmUuDQo+IEV2ZXJ5dGhpbmcgZWxzZSB3b3VsZCB0aGVuIGhvbGQgb25l
-IG9yIHR3byBtdXRleChlcykgYW5kIGNvdWxkIGV2ZW4NCj4gYWxsb2NhdGUgbWVtb3J5IHdpdGgg
-R0ZQX0tFUk5FTC4NCg0KV2UgaGF2ZSBhIHBhdGNoIGludGVybmFsbHkgdGhhdCBnb2VzIGludG8g
-dGhhdCBkaXJlY3Rpb24sIGJ1dCBvbmUgdGhpbmcgdGhvdWdoLiBJZiB5b3Ugc3RpbGwgaGF2ZSBh
-IHNwaW5sb2NrIGluIHRoZSBwcmltYXJ5IGhhbmRsZXIsIHdvdWxkbid0IHRoYXQgc2xlZXAgaW4g
-YSBub24tc2xlZXBhYmxlIGNvbnRleHQ/IEZvcmdpdmUgbXkgLXJ0IGlnbm9yYW5jZSwgYnV0IEkg
-dW5kZXJzdG9vZCB0aGF0IGluIC1ydCwgYWxsIHRoZSBzcGlubG9jayBnbyB0byBzbGVlcCB3aGlj
-aCBiYXNpY2FsbHkgbWVhbiB0aGF0IHdlIGNhbid0IHRha2UgYW55IHNwaW5sb2NrIGluIHRoZSBw
-cmltYXJ5IGlycSBoYW5kbGVyIHNvIEkgYW0gYSBiaXQgY29uZnVzZWQgaGVyZS4NCg0KPiANCj4g
-Rm9yIG5vdyBJIHRoaW5rIHRoZSBzaW1wbHkgdGhpbmcgd291bGQgYmUganVzdCB0byBsZXQgYm90
-aCBoYW5kbGVycyBydW4gaW4gdGhlDQo+IHRocmVhZC4gRG9lcyB0aGlzIHBhdGNoIHNvbHZlIHlv
-dXIgcHJvYmxlbT8NCj4gDQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3
-aWZpL3BjaWUvdHJhbnMuYw0KPiBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvcGNpZS90
-cmFucy5jDQo+IGluZGV4IGFlYjcwZTEuLjQyNTY3ZmMgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMv
-bmV0L3dpcmVsZXNzL2l3bHdpZmkvcGNpZS90cmFucy5jDQo+ICsrKyBiL2RyaXZlcnMvbmV0L3dp
-cmVsZXNzL2l3bHdpZmkvcGNpZS90cmFucy5jDQo+IEBAIC0xNDU2LDYgKzE0NTYsMjAgQEAgc3Rh
-dGljIGNvbnN0IHN0cnVjdCBpd2xfdHJhbnNfb3BzIHRyYW5zX29wc19wY2llID0NCj4gew0KPiAg
-CS5zZXRfYml0c19tYXNrID0gaXdsX3RyYW5zX3BjaWVfc2V0X2JpdHNfbWFzaywgIH07DQo+IA0K
-PiArI2lmZGVmIENPTkZJR19QUkVFTVBUX1JUX0JBU0UNCj4gK3N0YXRpYyBpcnFyZXR1cm5fdCBp
-d2xfcnRfaXJxX2hhbmRsZXIoaW50IGlycSwgdm9pZCAqZGV2X2lkKSB7DQo+ICsJaXJxcmV0dXJu
-X3QgcmV0Ow0KPiArDQo+ICsJbG9jYWxfYmhfZGlzYWJsZSgpOw0KPiArCXJldCA9IGl3bF9wY2ll
-X2lzcl9pY3QoaXJxLCBkZXZfaWQpOw0KPiArCWxvY2FsX2JoX2VuYWJsZSgpOw0KPiArCWlmIChy
-ZXQgPT0gSVJRX1dBS0VfVEhSRUFEKQ0KPiArCQlyZXQgPSBpd2xfcGNpZV9pcnFfaGFuZGxlcihp
-cnEsIGRldl9pZCk7DQo+ICsJcmV0dXJuIHJldDsNCj4gK30NCj4gKyNlbmRpZg0KPiArDQo+ICBz
-dHJ1Y3QgaXdsX3RyYW5zICppd2xfdHJhbnNfcGNpZV9hbGxvYyhzdHJ1Y3QgcGNpX2RldiAqcGRl
-diwNCj4gIAkJCQkgICAgICAgY29uc3Qgc3RydWN0IHBjaV9kZXZpY2VfaWQgKmVudCwNCj4gIAkJ
-CQkgICAgICAgY29uc3Qgc3RydWN0IGl3bF9jZmcgKmNmZykNCj4gQEAgLTE1NjYsOSArMTU4MCwx
-NCBAQCBzdHJ1Y3QgaXdsX3RyYW5zICppd2xfdHJhbnNfcGNpZV9hbGxvYyhzdHJ1Y3QNCj4gcGNp
-X2RldiAqcGRldiwNCj4gIAlpZiAoaXdsX3BjaWVfYWxsb2NfaWN0KHRyYW5zKSkNCj4gIAkJZ290
-byBvdXRfZnJlZV9jbWRfcG9vbDsNCj4gDQo+ICsjaWZkZWYgQ09ORklHX1BSRUVNUFRfUlRfQkFT
-RQ0KPiArCWlmIChyZXF1ZXN0X3RocmVhZGVkX2lycShwZGV2LT5pcnEsIE5VTEwsIGl3bF9ydF9p
-cnFfaGFuZGxlciwNCj4gKwkJCQkgSVJRRl9TSEFSRUQgfCBJUlFGX09ORVNIT1QsDQo+IERSVl9O
-QU1FLCB0cmFucykpIHsgI2Vsc2UNCj4gIAlpZiAocmVxdWVzdF90aHJlYWRlZF9pcnEocGRldi0+
-aXJxLCBpd2xfcGNpZV9pc3JfaWN0LA0KPiAgCQkJCSBpd2xfcGNpZV9pcnFfaGFuZGxlciwNCj4g
-IAkJCQkgSVJRRl9TSEFSRUQsIERSVl9OQU1FLCB0cmFucykpIHsNCj4gKyNlbmRpZg0KPiAgCQlJ
-V0xfRVJSKHRyYW5zLCAiRXJyb3IgYWxsb2NhdGluZyBJUlEgJWRcbiIsIHBkZXYtPmlycSk7DQo+
-ICAJCWdvdG8gb3V0X2ZyZWVfaWN0Ow0KPiAgCX0NCj4gLS0NCj4gMS44LjQucmMzDQo+IA0KPiAN
-Cj4gPldpdGgga2luZCByZWdhcmRzDQo+ID5UaG9tYXMNCj4gDQo+IFNlYmFzdGlhbg0KPiANCj4g
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18NCj4gaWx3IG1h
-aWxpbmcgbGlzdA0KPiBpbHdAbGludXguaW50ZWwuY29tDQo+IGh0dHA6Ly9saW51eC5pbnRlbC5j
-b20vbWFpbG1hbi9saXN0aW5mby9pbHcNCg==
+The function will soon be called from more than 1
+place.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c | 17 +++++++++++------
+ 1 file changed, 11 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index aa43466..d9467e5 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -877,21 +877,26 @@ static int ath10k_pci_start_ce(struct ath10k *ar)
+ 	return 0;
+ }
+ 
+-static void ath10k_pci_stop_ce(struct ath10k *ar)
++static void ath10k_pci_kill_tasklet(struct ath10k *ar)
+ {
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+-	struct ath10k_pci_compl *compl;
+-	struct sk_buff *skb;
+ 	int i;
+ 
+-	ath10k_ce_disable_interrupts(ar);
+-
+-	/* Cancel the pending tasklet */
+ 	tasklet_kill(&ar_pci->intr_tq);
+ 	tasklet_kill(&ar_pci->msi_fw_err);
+ 
+ 	for (i = 0; i < CE_COUNT; i++)
+ 		tasklet_kill(&ar_pci->pipe_info[i].intr);
++}
++
++static void ath10k_pci_stop_ce(struct ath10k *ar)
++{
++	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
++	struct ath10k_pci_compl *compl;
++	struct sk_buff *skb;
++
++	ath10k_ce_disable_interrupts(ar);
++	ath10k_pci_kill_tasklet(ar);
+ 
+ 	/* Mark pending completions as aborted, so that upper layers free up
+ 	 * their associated resources */
+-- 
+1.8.4.rc3
+
