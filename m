@@ -1,66 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:53077 "EHLO
-	mail.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752920Ab3JCMFh (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:34785 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754021Ab3J3Lq3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Oct 2013 08:05:37 -0400
-Message-ID: <524D5DA5.3090702@openwrt.org> (sfid-20131003_140550_986018_CEDB0E89)
-Date: Thu, 03 Oct 2013 14:05:57 +0200
-From: Gabor Juhos <juhosg@openwrt.org>
+	Wed, 30 Oct 2013 07:46:29 -0400
+Date: Wed, 30 Oct 2013 12:46:27 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
+Cc: Luciano Coelho <luca@coelho.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
+	aaro.koskinen@iki.fi, sre@ring0.de, joni.lapilainen@gmail.com,
+	David Gnedt <david.gnedt@davizone.at>
+Subject: Re: [PATCH 09/16] wl1251: disable power saving in monitor mode
+Message-ID: <20131030114627.GC8763@amd.pavel.ucw.cz> (sfid-20131030_124715_866141_F676F494)
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+ <1382819655-30430-10-git-send-email-pali.rohar@gmail.com>
 MIME-Version: 1.0
-To: Paul Menzel <paulepanter@users.sourceforge.net>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH 1/2] rt2x00: rt2800lib: remove TXMIXER_GAIN
- entries from the extended EEPROM map
-References: <1380742914-22486-1-git-send-email-juhosg@openwrt.org> <1380789509.8125.6.camel@mattotaupa>
-In-Reply-To: <1380789509.8125.6.camel@mattotaupa>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1382819655-30430-10-git-send-email-pali.rohar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear Paul,
-
-<...>
-
->> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
->> index c706ddc..c979bb7 100644
->> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
->> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
->> @@ -280,10 +280,8 @@ static const unsigned int rt2800_eeprom_map_ext[EEPROM_WORD_COUNT] = {
->>  	[EEPROM_RSSI_BG]		= 0x0028,
->>  	[EEPROM_TXPOWER_DELTA]		= 0x0028, /* Overlaps with RSSI_BG */
->>  	[EEPROM_RSSI_BG2]		= 0x0029,
->> -	[EEPROM_TXMIXER_GAIN_BG]	= 0x0029, /* Overlaps with RSSI_BG2 */
->>  	[EEPROM_RSSI_A]			= 0x002a,
->>  	[EEPROM_RSSI_A2]		= 0x002b,
->> -	[EEPROM_TXMIXER_GAIN_A]		= 0x002b, /* Overlaps with RSSI_A2 */
->>  	[EEPROM_TXPOWER_BG1]		= 0x0030,
->>  	[EEPROM_TXPOWER_BG2]		= 0x0037,
->>  	[EEPROM_EXT_TXPOWER_BG3]	= 0x003e,
+On Sat 2013-10-26 22:34:08, Pali Rohár wrote:
+> From: David Gnedt <david.gnedt@davizone.at>
 > 
-> Do you know if this fixes any problems and should be backported to
-> stable?
-
-This is a cleanup patch, it does not fix any problem. The removed entries are
-not used by the code at all.
-
-> If any testing can be done on
+> Force power saving off while monitor interface is present.
 > 
->         idVendor           0x148f Ralink Technology, Corp.
->         idProduct          0x2870 RT2870 Wireless Adapter
+> Signed-off-by: David Gnedt <david.gnedt@davizone.at>
+> ---
+>  drivers/net/wireless/ti/wl1251/main.c |    7 ++++---
+>  1 file changed, 4 insertions(+), 3 deletions(-)
 > 
-> please tell me.
+> diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
+> index 727f2ee..62cb374 100644
+> --- a/drivers/net/wireless/ti/wl1251/main.c
+> +++ b/drivers/net/wireless/ti/wl1251/main.c
+> @@ -617,7 +617,8 @@ static int wl1251_op_config(struct ieee80211_hw *hw, u32 changed)
+>  			goto out_sleep;
+>  	}
+>  
+> -	if (conf->flags & IEEE80211_CONF_PS && !wl->psm_requested) {
+> +	if (conf->flags & IEEE80211_CONF_PS && !wl->psm_requested &&
+> +	    !wl->monitor_present) {
+>  		wl1251_debug(DEBUG_PSM, "psm enabled");
+>  
+>  		wl->psm_requested = true;
+> @@ -633,8 +634,8 @@ static int wl1251_op_config(struct ieee80211_hw *hw, u32 changed)
+>  		ret = wl1251_ps_set_mode(wl, STATION_POWER_SAVE_MODE);
+>  		if (ret < 0)
+>  			goto out_sleep;
+> -	} else if (!(conf->flags & IEEE80211_CONF_PS) &&
+> -		   wl->psm_requested) {
+> +	} else if ((!(conf->flags & IEEE80211_CONF_PS) || wl->monitor_present)
+> +		   && wl->psm_requested) {
+>  		wl1251_debug(DEBUG_PSM, "psm disabled");
+>  
 
-The extended EEPROM map is used only for the RT3593 chipset, it does not affect
-RT2870 in any way.
+These boolean expressions make my head spin. Introduce helper function 
 
-> 
-> With the fixes above,
-> 
-> Acked-by: Paul Menzel <paulepanter@users.sourceforge.net>
+can_do_pm()... return (conf->flags & IEEE80211_CONF_PS) &&
+!wl->monitor_present
 
-Thank you for the review! I will send an updated version.
+?
 
-
--Gabor
+Thanks,
+									Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
