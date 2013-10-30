@@ -1,50 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42030 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753647Ab3JJRaP (ORCPT
+Received: from server75.greatnet.de ([83.133.96.62]:53949 "EHLO
+	server75.greatnet.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750703Ab3J3Ivz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Oct 2013 13:30:15 -0400
-Date: Thu, 10 Oct 2013 13:26:33 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-Subject: Re: [patch] mwifiex: potential integer underflow in
- mwifiex_ret_wmm_get_status()
-Message-ID: <20131010172633.GC2691@tuxdriver.com> (sfid-20131010_193024_406770_1EA848DA)
-References: <20130925085729.GC6661@elgon.mountain>
- <477F20668A386D41ADCC57781B1F70430F45077CDA@SC-VEXCH1.marvell.com>
- <20130925182359.GV6247@mwanda>
- <477F20668A386D41ADCC57781B1F70430F45077E52@SC-VEXCH1.marvell.com>
- <477F20668A386D41ADCC57781B1F70430F45078155@SC-VEXCH1.marvell.com>
- <20130926210703.GE6247@mwanda>
- <477F20668A386D41ADCC57781B1F70430F4507819C@SC-VEXCH1.marvell.com>
+	Wed, 30 Oct 2013 04:51:55 -0400
+Message-ID: <5270C8A9.4050206@crlf.de> (sfid-20131030_095202_288732_2FFAC46C)
+Date: Wed, 30 Oct 2013 09:51:53 +0100
+From: Dietmar Rudolph <dietmar@crlf.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <477F20668A386D41ADCC57781B1F70430F4507819C@SC-VEXCH1.marvell.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org,
+	Pedro Francisco <pedrogfrancisco@gmail.com>
+Subject: Re: [PATCH] iwl3945: do not print RFKILL message
+References: <20131025103751.GB16384@redhat.com> <1382699879.12755.0.camel@jlt4.sipsolutions.net> <20131030083432.GA1478@redhat.com>
+In-Reply-To: <20131030083432.GA1478@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 26, 2013 at 02:57:21PM -0700, Bing Zhao wrote:
-> Hi Dan,
-> 
-> > There are several other similar functions as well.  For example, the
-> > while loops in mwifiex_ret_tx_rate_cfg() and mwifiex_get_power_level().
-> 
-> Thanks for pointing it out. We will have them fixed.
-> 
-> Regards,
-> Bing
+> Dietmar or Pedro, could you test attached patch (my old laptop with 3945
+> does not work any longer). It is alternative to previous patch posted
+> before, does rfkill work ok with it?
 
-OK, I'm confused by this thread...I'm dropping it.
+Stanislaw,
 
-Dan & Bing,
+I'm sorry a cannot be any help here as I don't have the time nor the 
+environment to compile and test your patch.
 
-Please repost as a series of patches that I don't have to piece
-together from a series of replies...
+In regard to this, I'm just a plain end user who installed Ubuntu 
+out of the box. I had nticed the problem of the ever growing kernel 
+log and found this mailing list to be the right spot to post a bug 
+report. And I noticed your immediate reaction. Keep up the great work.
 
-John
+Kind regards
+Dietmar
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Dietmar Rudolph
+Geschäftsführer/President
+
+CR/LF GmbH
+Obere Fuhr 27, 45136 Essen, Germany
+phone: ++49 201 254566
+mailto: dietmar@crlf.de, http://www.crlf.de
+
+CR/LF Beratungsgesellschaft für EDV-Anwendungen mbH
+Essen HRB 7016 - GF: Dipl.-Math. Dietmar Rudolph
