@@ -1,80 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:50224 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755727Ab3JCVWW (ORCPT
+Received: from mail-bk0-f44.google.com ([209.85.214.44]:32951 "EHLO
+	mail-bk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750732Ab3J3F0x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Oct 2013 17:22:22 -0400
-Received: by mail-vc0-f174.google.com with SMTP id gd11so1310163vcb.5
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Oct 2013 14:22:22 -0700 (PDT)
+	Wed, 30 Oct 2013 01:26:53 -0400
+Received: by mail-bk0-f44.google.com with SMTP id mx11so270266bkb.17
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Oct 2013 22:26:52 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20131003205710.GH3142@tuxdriver.com>
-References: <1380234106-12802-1-git-send-email-k.eugene.e@gmail.com>
-	<CAFSJ42bybEGtkzJ99fZHrcPs=gTnvJVHxM7d8anJvn1VOs7V7A@mail.gmail.com>
-	<20131003205710.GH3142@tuxdriver.com>
-Date: Thu, 3 Oct 2013 23:22:21 +0200
-Message-ID: <CAFSJ42ZwJzd46UXE2crzuaMVRLzre9SVm_vFcQ-KAVY6Q9c3QQ@mail.gmail.com> (sfid-20131003_232225_891606_566A2DA4)
-Subject: Re: [PATCH] wcn36xx: mac80211 driver for Qualcomm WCN3660/WCN3680 hardware
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	wcn36xx@lists.infradead.org
+Date: Wed, 30 Oct 2013 13:26:52 +0800
+Message-ID: <CAPgLHd9HeKEN6HjFhLgo2oogGKie5Dy++09kcr6E89LnrMc=+w@mail.gmail.com> (sfid-20131030_062656_241944_5A7FBECA)
+Subject: [PATCH -next] NFC: port100: convert to use le16_add_cpu()
+From: Wei Yongjun <weiyj.lk@gmail.com>
+To: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+	sameo@linux.intel.com
+Cc: yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org,
+	linux-nfc@lists.01.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hm, weird... do not see this problem myself. Let me try to sync latest
-wireless-next and will try to apply latest patch from this mailthread
-on top.
+From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-P.S. If somebody esle can try to apply this patch and build that would
-be useful to know if problem is visible on others PCs as well.
+Convert cpu_to_le16(le16_to_cpu(E1) + E2) to use le16_add_cpu().
 
-2013/10/3 John W. Linville <linville@tuxdriver.com>:
-> On Thu, Sep 26, 2013 at 11:25:18PM +0100, Eugene Krasnikov wrote:
->> Hi John,
->>
->> This is the latest version of wcn36xx driver on top of current
->> wireless-next tree. Please let me know if you have any problems with
->> applying it.
->>
->> 2013/9/26 Eugene Krasnikov <k.eugene.e@gmail.com>:
->> > This is a mac80211 driver for Qualcomm WCN3660/WCN3680 devices. So
->> > far WCN3660/WCN3680 is available only on MSM platform.
->> >
->> > Firmware can be found here:
->> > https://www.codeaurora.org/cgit/external/hisense/platform/vendor/qcom-opensource/wlan/prima/tree/firmware_bin?h=8130_CS
->> >
->> > Wiki page is available here:
->> > http://wireless.kernel.org/en/users/Drivers/wcn36xx
->> >
->> > A lot people made a contribution to this driver. Here is the list in
->> > alphabetical order:
->> >
->> > Eugene Krasnikov <k.eugene.e@gmail.com>
->> > Kalle Valo <kvalo@qca.qualcomm.com>
->> > Olof Johansson <dev@skyshaper.net>
->> > Pontus Fuchs <pontus.fuchs@gmail.com>
->> > Yanbo Li <yanbol@qti.qualcomm.com>
->> >
->> > Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
->
-> 'make allyesconfig' yield this:
->
->   LD      drivers/net/wireless/ath/ath.o
->   LD      drivers/net/wireless/ath/built-in.o
-> drivers/net/wireless/ath/wcn36xx/built-in.o: In function `_GLOBAL__sub_I_65535_0_wcn36xx_set_default_rates':
-> /home/linville/git/wireless-next/drivers/net/wireless/ath/wcn36xx/main.c:302: multiple definition of `debug_mask'
-> drivers/net/wireless/ath/ath6kl/built-in.o:/home/linville/git/wireless-next/drivers/net/wireless/ath/ath6kl/cfg80211.c:1208: first defined here
-> make[2]: *** [drivers/net/wireless/ath/built-in.o] Error 1
-> make[1]: *** [drivers/net/wireless/ath] Error 2
-> make: *** [drivers/net/wireless/] Error 2
->
-> --
-> John W. Linville                Someday the world will need a hero, and you
-> linville@tuxdriver.com                  might be all we have.  Be ready.
+Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+---
+ drivers/nfc/port100.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/nfc/port100.c b/drivers/nfc/port100.c
+index 8a0571e..ab7afe3 100644
+--- a/drivers/nfc/port100.c
++++ b/drivers/nfc/port100.c
+@@ -493,7 +493,7 @@ static void port100_tx_update_payload_len(void *_frame, int len)
+ {
+ 	struct port100_frame *frame = _frame;
+ 
+-	frame->datalen = cpu_to_le16(le16_to_cpu(frame->datalen) + len);
++	le16_add_cpu(&frame->datalen, len);
+ }
+ 
+ static bool port100_rx_frame_is_valid(void *_frame)
 
-
--- 
-Best regards,
-Eugene
