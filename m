@@ -1,30 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx4.wp.pl ([212.77.101.8]:18638 "EHLO mx4.wp.pl"
+Received: from mga03.intel.com ([143.182.124.21]:47767 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756597Ab3JHKqE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Oct 2013 06:46:04 -0400
-Date: Tue, 8 Oct 2013 12:47:28 +0200
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-To: Kevin Lo <kevlo@kevlo.org>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH v2] rt2x00: rt2800lib: no need to toggle
- RF R30 bit 7 twice
-Message-ID: <20131008104728.GB15764@localhost.localdomain> (sfid-20131008_124608_222139_A6F0F304)
-References: <20131007080201.GA18265@ns.kevlo.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131007080201.GA18265@ns.kevlo.org>
+	id S1752343Ab3J3UcR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Oct 2013 16:32:17 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 6/9] iwlwifi: mvm: add missing break in debugfs
+Date: Wed, 30 Oct 2013 22:31:34 +0200
+Message-Id: <1383165097-4445-6-git-send-email-emmanuel.grumbach@intel.com> (sfid-20131030_213221_082039_E4BD51FD)
+In-Reply-To: <1383165097-4445-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <527143AA.5070900@gmail.com>
+ <1383165097-4445-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 07, 2013 at 04:02:01PM +0800, Kevin Lo wrote:
-> In rt2800_config_channel_rf3xxx(), there's no need to toggle
-> RF R30 bit 7 twice. 
-> 
-> Signed-off-by: Kevin Lo <kevlo@kevlo.org>
+From: Johannes Berg <johannes.berg@intel.com>
 
-This one is fine.
+When writing the disable_power_off value, the LPRX
+enable value also gets written unintentionally, so
+fix that by adding the missing break statement.
 
-Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/debugfs.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
+index 0675f0c..9864d71 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
+@@ -342,6 +342,7 @@ static void iwl_dbgfs_update_pm(struct iwl_mvm *mvm,
+ 	case MVM_DEBUGFS_PM_DISABLE_POWER_OFF:
+ 		IWL_DEBUG_POWER(mvm, "disable_power_off=%d\n", val);
+ 		dbgfs_pm->disable_power_off = val;
++		break;
+ 	case MVM_DEBUGFS_PM_LPRX_ENA:
+ 		IWL_DEBUG_POWER(mvm, "lprx %s\n", val ? "enabled" : "disabled");
+ 		dbgfs_pm->lprx_ena = val;
+-- 
+1.8.3.2
 
