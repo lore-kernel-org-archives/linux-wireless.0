@@ -1,40 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:36929 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756877Ab3JIJRq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Oct 2013 05:17:46 -0400
-Message-ID: <1381310259.14186.6.camel@jlt4.sipsolutions.net> (sfid-20131009_111750_061320_4C488CFB)
-Subject: Re: [PATCH] cfg80211: Pass station supported channel and oper class
- info to kernel
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Undekari, Sunil Dutt" <c_duttus@qti.qualcomm.com>
-Cc: "j@w1.fi.com" <j@w1.fi>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 09 Oct 2013 11:17:39 +0200
-In-Reply-To: <26F3B0343EE4744AA14EEEF9E1E534511F7251E7@aphydexd01a>
-References: <1381150309-27293-1-git-send-email-c_duttus@qti.qualcomm.com>
-	 <1381222569.13359.3.camel@jlt4.sipsolutions.net>
-	 <26F3B0343EE4744AA14EEEF9E1E534511F725129@aphydexd01a>
-	 <1381307517.14186.5.camel@jlt4.sipsolutions.net>
-	 <26F3B0343EE4744AA14EEEF9E1E534511F7251E7@aphydexd01a>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from packetmixer.de ([83.151.30.3]:40100 "EHLO m25s01.vlinux.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751911Ab3J3PJp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Oct 2013 11:09:45 -0400
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: linux-wireless@vger.kernel.org
+Cc: Simon Wunderlich <sw@simonwunderlich.de>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH-mac80211] cfg80211: fix ibss wext chandef creation
+Date: Wed, 30 Oct 2013 16:09:33 +0100
+Message-Id: <1383145773-17165-1-git-send-email-sw@simonwunderlich.de> (sfid-20131030_160948_396653_797B5B7A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-10-09 at 09:13 +0000, Undekari, Sunil Dutt wrote:
-> > It's just a question of where to address this - in the kernel or the supplicant. In a way, I'd rather have the kernel reject it and do the policy of ignoring invalid stuff in the supplicant.
-> The above statement from you made me to rethink for the following check in the patch sent.  
-> 
-> +               if (params->supported_oper_classes_len < 2 ||
-> +                   params->supported_oper_classes_len > 253)
-> +                       return -EINVAL;
-> 
-> Are you fine to return a failure for the invalid length for the supported_oper_classes_len? If yes, then shouldn't we also do the similar check for invalid supported_channels_len ( < 2 ).
+The wext internal chandefs for ibss should be created using the
+cfg80211_chandef_create() functions. Initializing fields manually is
+error-prone.
 
-Certainly works for me - but there should also be something like % 2 I
-guess
+Reported-by: Dirk Gouders <dirk@gouders.net>
+Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+Cc: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/ibss.c |   18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-johannes
+diff --git a/net/wireless/ibss.c b/net/wireless/ibss.c
+index 403fe29..a710019 100644
+--- a/net/wireless/ibss.c
++++ b/net/wireless/ibss.c
+@@ -246,7 +246,7 @@ int cfg80211_ibss_wext_join(struct cfg80211_registered_device *rdev,
+ 
+ 	/* try to find an IBSS channel if none requested ... */
+ 	if (!wdev->wext.ibss.chandef.chan) {
+-		wdev->wext.ibss.chandef.width = NL80211_CHAN_WIDTH_20_NOHT;
++		struct ieee80211_channel *new_chan = NULL;
+ 
+ 		for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
+ 			struct ieee80211_supported_band *sband;
+@@ -262,18 +262,19 @@ int cfg80211_ibss_wext_join(struct cfg80211_registered_device *rdev,
+ 					continue;
+ 				if (chan->flags & IEEE80211_CHAN_DISABLED)
+ 					continue;
+-				wdev->wext.ibss.chandef.chan = chan;
+-				wdev->wext.ibss.chandef.center_freq1 =
+-					chan->center_freq;
++				new_chan = chan;
+ 				break;
+ 			}
+ 
+-			if (wdev->wext.ibss.chandef.chan)
++			if (new_chan)
+ 				break;
+ 		}
+ 
+-		if (!wdev->wext.ibss.chandef.chan)
++		if (!new_chan)
+ 			return -EINVAL;
++
++		cfg80211_chandef_create(&wdev->wext.ibss.chandef, new_chan,
++					NL80211_CHAN_NO_HT);
+ 	}
+ 
+ 	/* don't join -- SSID is not there */
+@@ -347,9 +348,8 @@ int cfg80211_ibss_wext_siwfreq(struct net_device *dev,
+ 		return err;
+ 
+ 	if (chan) {
+-		wdev->wext.ibss.chandef.chan = chan;
+-		wdev->wext.ibss.chandef.width = NL80211_CHAN_WIDTH_20_NOHT;
+-		wdev->wext.ibss.chandef.center_freq1 = freq;
++		cfg80211_chandef_create(&wdev->wext.ibss.chandef, chan,
++					NL80211_CHAN_NO_HT);
+ 		wdev->wext.ibss.channel_fixed = true;
+ 	} else {
+ 		/* cfg80211_ibss_wext_join will pick one if needed */
+-- 
+1.7.10.4
 
