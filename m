@@ -1,47 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:64296 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752516Ab3JHTJ6 (ORCPT
+Received: from mail-ee0-f47.google.com ([74.125.83.47]:49516 "EHLO
+	mail-ee0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751786Ab3J3LpK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Oct 2013 15:09:58 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: Re: [PATCH] ath10k: fix station authorization
-References: <1380875428-20899-1-git-send-email-michal.kazior@tieto.com>
-	<8761t7sibr.fsf@kamboji.qca.qualcomm.com>
-Date: Tue, 8 Oct 2013 22:09:52 +0300
-In-Reply-To: <8761t7sibr.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-	of "Tue, 8 Oct 2013 21:55:52 +0300")
-Message-ID: <87wqlnr33z.fsf@kamboji.qca.qualcomm.com> (sfid-20131008_211001_469558_C12826B5)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 30 Oct 2013 07:45:10 -0400
+Received: by mail-ee0-f47.google.com with SMTP id c13so566222eek.6
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Oct 2013 04:45:08 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH/RFT 00/12] ath10k: pci fixes 2013-10-30
+Date: Wed, 30 Oct 2013 12:42:14 +0100
+Message-Id: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com> (sfid-20131030_124514_566187_95BFB833)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+Hi,
 
-> Michal Kazior <michal.kazior@tieto.com> writes:
->
->> Peer authorization should be delayed until
->> mac80211 says given station has transitioned into
->> authorized state.
->>
->> The state is propagated from mac80211 for both
->> open and protected networks.
->>
->> This should prevent data traffic to/from given
->> station until authorization completes. Until now
->> it was probably possible for unauthorized traffic
->> to pass leading to possible security issues.
->>
->> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->
-> Thanks, applied.
+This patchset contains a slew of PCI/CE cleanups
+and fixes. The aim of the patchset is to deal with
+CE null dereference bugs Ben has been reporting on
+the mailing list for some time now.
 
-Actually I'll take this back. After this patch even ping doesn't work
-with D-Link DIR-865L as AP using 10.1.389 firmware. So I have to drop
-this patch.
+I've done some brief testing and don't see any
+major regressions. I wasn't able to reproduce the
+reported bugs though. @Ben: Could you perhaps test
+this, please?
+
+
+Michal Kazior (12):
+  ath10k: remove ar_pci->ce_count
+  ath10k: don't forget to kill fw error tasklet
+  ath10k: split tasklet killing function
+  ath10k: rename function to match it's role
+  ath10k: make sure to mask all CE irqs
+  ath10k: fix ath10k_ce_init() failpath
+  ath10k: remove meaningless check
+  ath10k: use ath10k_do_pci_wake/sleep
+  ath10k: propagate ath10k_ce_disable_interrupts() errors
+  ath10k: guard against CE corruption from firmware
+  ath10k: re-arrange PCI init code
+  ath10k: add some debug prints
+
+ drivers/net/wireless/ath/ath10k/ce.c  |  56 ++++++---
+ drivers/net/wireless/ath/ath10k/ce.h  |   3 +-
+ drivers/net/wireless/ath/ath10k/htc.c |   5 +
+ drivers/net/wireless/ath/ath10k/pci.c | 221 ++++++++++++++++++----------------
+ drivers/net/wireless/ath/ath10k/pci.h |   3 -
+ 5 files changed, 161 insertions(+), 127 deletions(-)
 
 -- 
-Kalle Valo
+1.8.4.rc3
+
