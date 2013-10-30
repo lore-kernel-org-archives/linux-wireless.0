@@ -1,73 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:48815 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752597Ab3JQHmw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Oct 2013 03:42:52 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 19/21] rt2x00: rt2800pci: use separate hwcrypt_disabled callback for SoC devices
-Date: Thu, 17 Oct 2013 09:42:33 +0200
-Message-Id: <1381995755-16471-20-git-send-email-juhosg@openwrt.org> (sfid-20131017_094257_301344_1BD6BDF5)
-In-Reply-To: <1381995755-16471-1-git-send-email-juhosg@openwrt.org>
-References: <1381995755-16471-1-git-send-email-juhosg@openwrt.org>
+Received: from mail-ee0-f50.google.com ([74.125.83.50]:62130 "EHLO
+	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752972Ab3J3LpO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Oct 2013 07:45:14 -0400
+Received: by mail-ee0-f50.google.com with SMTP id l10so574752eei.9
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Oct 2013 04:45:13 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH/RFT 05/12] ath10k: make sure to mask all CE irqs
+Date: Wed, 30 Oct 2013 12:42:19 +0100
+Message-Id: <1383133346-8135-6-git-send-email-michal.kazior@tieto.com> (sfid-20131030_124607_856865_1F038DA9)
+In-Reply-To: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com>
+References: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The 'rt2800pci_hwcrypt_disabled' function is the
-only PCI specific callback which is used by the
-SoC driver. Create a clone of that to get rid of
-the dependency.
+CE error interrupts were not disabled. This could
+lead to invalid memory accesses / memory
+corruption.
 
-Even though the two functions are using the same
-variable, but the SoC specific code will be moved
-into a separate module which will have its own
-'modparam_nohwcrypt' variable.
+Also make sure CE watermark interrupts are also
+disabled.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/rt2x00/rt2800pci.c |    9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath10k/ce.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 77ddd1a..488d1c4 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -56,12 +56,12 @@ static bool modparam_nohwcrypt = false;
- module_param_named(nohwcrypt, modparam_nohwcrypt, bool, S_IRUGO);
- MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption.");
- 
-+#ifdef CONFIG_PCI
- static bool rt2800pci_hwcrypt_disabled(struct rt2x00_dev *rt2x00dev)
- {
- 	return modparam_nohwcrypt;
+diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
+index 2b99bd4..7a49cde 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.c
++++ b/drivers/net/wireless/ath/ath10k/ce.c
+@@ -243,6 +243,16 @@ static inline void ath10k_ce_error_intr_enable(struct ath10k *ar,
+ 			   misc_ie_addr | CE_ERROR_MASK);
  }
  
--#ifdef CONFIG_PCI
- static void rt2800pci_mcu_status(struct rt2x00_dev *rt2x00dev, const u8 token)
- {
- 	unsigned int i;
-@@ -462,6 +462,11 @@ MODULE_DEVICE_TABLE(pci, rt2800pci_device_table);
- MODULE_LICENSE("GPL");
- 
- #if defined(CONFIG_SOC_RT288X) || defined(CONFIG_SOC_RT305X)
-+static bool rt2800soc_hwcrypt_disabled(struct rt2x00_dev *rt2x00dev)
++static inline void ath10k_ce_error_intr_disable(struct ath10k *ar,
++						u32 ce_ctrl_addr)
 +{
-+	return modparam_nohwcrypt;
++	u32 misc_ie_addr = ath10k_pci_read32(ar,
++					     ce_ctrl_addr + MISC_IE_ADDRESS);
++
++	ath10k_pci_write32(ar, ce_ctrl_addr + MISC_IE_ADDRESS,
++			   misc_ie_addr & ~CE_ERROR_MASK);
 +}
 +
- static void rt2800soc_disable_radio(struct rt2x00_dev *rt2x00dev)
- {
- 	rt2800_disable_radio(rt2x00dev);
-@@ -585,7 +590,7 @@ static const struct rt2800_ops rt2800soc_rt2800_ops = {
- 	.register_multiwrite	= rt2x00mmio_register_multiwrite,
- 	.regbusy_read		= rt2x00mmio_regbusy_read,
- 	.read_eeprom		= rt2800soc_read_eeprom,
--	.hwcrypt_disabled	= rt2800pci_hwcrypt_disabled,
-+	.hwcrypt_disabled	= rt2800soc_hwcrypt_disabled,
- 	.drv_write_firmware	= rt2800soc_write_firmware,
- 	.drv_init_registers	= rt2800mmio_init_registers,
- 	.drv_get_txwi		= rt2800mmio_get_txwi,
+ static inline void ath10k_ce_engine_int_status_clear(struct ath10k *ar,
+ 						     u32 ce_ctrl_addr,
+ 						     unsigned int mask)
+@@ -794,6 +804,8 @@ void ath10k_ce_disable_interrupts(struct ath10k *ar)
+ 		u32 ctrl_addr = ath10k_ce_base_address(ce_id);
+ 
+ 		ath10k_ce_copy_complete_intr_disable(ar, ctrl_addr);
++		ath10k_ce_error_intr_disable(ar, ctrl_addr);
++		ath10k_ce_watermark_intr_disable(ar, ctrl_addr);
+ 	}
+ 	ath10k_pci_sleep(ar);
+ }
 -- 
-1.7.10
+1.8.4.rc3
+
