@@ -1,43 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f44.google.com ([209.85.212.44]:36558 "EHLO
-	mail-vb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760618Ab3JQAjt (ORCPT
+Received: from mail-ee0-f51.google.com ([74.125.83.51]:60226 "EHLO
+	mail-ee0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753772Ab3J3LpT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Oct 2013 20:39:49 -0400
-From: Felipe Pena <felipensp@gmail.com>
-To: Stefano Brivio <stefano.brivio@polimi.it>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Felipe Pena <felipensp@gmail.com>
-Subject: [PATCH] drivers: net: wireless: b43: Fix possible NULL ptr dereference
-Date: Wed, 16 Oct 2013 21:40:24 -0300
-Message-Id: <1381970424-4709-1-git-send-email-felipensp@gmail.com> (sfid-20131017_024017_070534_C82C6F38)
+	Wed, 30 Oct 2013 07:45:19 -0400
+Received: by mail-ee0-f51.google.com with SMTP id d41so577873eek.10
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Oct 2013 04:45:18 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH/RFT 09/12] ath10k: propagate ath10k_ce_disable_interrupts() errors
+Date: Wed, 30 Oct 2013 12:42:23 +0100
+Message-Id: <1383133346-8135-10-git-send-email-michal.kazior@tieto.com> (sfid-20131030_124558_002430_35F138BC)
+In-Reply-To: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com>
+References: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On the ternary expression the 'e' variable could be NULL dereferenced,
-when b43_nphy_get_rf_ctl_over_rev7 function returns NULL.
+This shouldn't be silenced. This will be necessary
+for PCI init code reordering.
 
-Signed-off-by: Felipe Pena <felipensp@gmail.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/b43/phy_n.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/ce.c  | 6 ++++--
+ drivers/net/wireless/ath/ath10k/ce.h  | 2 +-
+ drivers/net/wireless/ath/ath10k/pci.c | 6 +++++-
+ 3 files changed, 10 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 7c970d3..05ee7f1 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -164,7 +164,8 @@ static void b43_nphy_rf_ctl_override_rev7(struct b43_wldev *dev, u16 field,
- 		}
- 		en_addr = en_addrs[override][i];
-
--		val_addr = (i == 0) ? e->val_addr_core0 : e->val_addr_core1;
-+		if (e)
-+			val_addr = (i == 0) ? e->val_addr_core0 : e->val_addr_core1;
-
- 		if (off) {
- 			b43_phy_mask(dev, en_addr, ~en_mask);
---
-1.7.10.4
+diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
+index 657e8f2..3e8395d 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.c
++++ b/drivers/net/wireless/ath/ath10k/ce.c
+@@ -792,13 +792,13 @@ static void ath10k_ce_per_engine_handler_adjust(struct ath10k_ce_pipe *ce_state,
+ 	ath10k_pci_sleep(ar);
+ }
+ 
+-void ath10k_ce_disable_interrupts(struct ath10k *ar)
++int ath10k_ce_disable_interrupts(struct ath10k *ar)
+ {
+ 	int ce_id, ret;
+ 
+ 	ret = ath10k_pci_wake(ar);
+ 	if (ret)
+-		return;
++		return ret;
+ 
+ 	for (ce_id = 0; ce_id < CE_COUNT; ce_id++) {
+ 		u32 ctrl_addr = ath10k_ce_base_address(ce_id);
+@@ -807,7 +807,9 @@ void ath10k_ce_disable_interrupts(struct ath10k *ar)
+ 		ath10k_ce_error_intr_disable(ar, ctrl_addr);
+ 		ath10k_ce_watermark_intr_disable(ar, ctrl_addr);
+ 	}
++
+ 	ath10k_pci_sleep(ar);
++	return ret;
+ }
+ 
+ void ath10k_ce_send_cb_register(struct ath10k_ce_pipe *ce_state,
+diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
+index 15d45b5..67dbde6 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.h
++++ b/drivers/net/wireless/ath/ath10k/ce.h
+@@ -234,7 +234,7 @@ void ath10k_ce_deinit(struct ath10k_ce_pipe *ce_state);
+ /*==================CE Interrupt Handlers====================*/
+ void ath10k_ce_per_engine_service_any(struct ath10k *ar);
+ void ath10k_ce_per_engine_service(struct ath10k *ar, unsigned int ce_id);
+-void ath10k_ce_disable_interrupts(struct ath10k *ar);
++int ath10k_ce_disable_interrupts(struct ath10k *ar);
+ 
+ /* ce_attr.flags values */
+ /* Use NonSnooping PCIe accesses? */
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index ffc63cc..63ad250 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -879,8 +879,12 @@ static void ath10k_pci_stop_ce(struct ath10k *ar)
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 	struct ath10k_pci_compl *compl;
+ 	struct sk_buff *skb;
++	int ret;
++
++	ret = ath10k_ce_disable_interrupts(ar);
++	if (ret)
++		ath10k_warn("failed to disable CE interrupts (%d)\n", ret);
+ 
+-	ath10k_ce_disable_interrupts(ar);
+ 	ath10k_pci_kill_tasklet(ar);
+ 
+ 	/* Mark pending completions as aborted, so that upper layers free up
+-- 
+1.8.4.rc3
 
