@@ -1,54 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f53.google.com ([209.85.219.53]:52027 "EHLO
-	mail-oa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753449Ab3JBMwy (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:49158 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754439Ab3JaOlE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Oct 2013 08:52:54 -0400
-Received: by mail-oa0-f53.google.com with SMTP id i7so694605oag.40
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Oct 2013 05:52:54 -0700 (PDT)
+	Thu, 31 Oct 2013 10:41:04 -0400
+From: Sunil Dutt Undekari <usdutt@qti.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <j@w1.fi>, <usdutt@qti.qualcomm.com>
+Subject: [PATCH] cfg80211: Introduce critical protocol indication for p2p connection.
+Date: Thu, 31 Oct 2013 20:10:52 +0530
+Message-ID: <1383230452-12608-1-git-send-email-usdutt@qti.qualcomm.com> (sfid-20131031_154108_037102_6F3E1A6D)
 MIME-Version: 1.0
-In-Reply-To: <1380708715.13329.16.camel@jlt4.sipsolutions.net>
-References: <1380545557-25103-1-git-send-email-lorenzo.bianconi83@gmail.com>
-	<1380704100.13329.6.camel@jlt4.sipsolutions.net>
-	<CAA2SeN+nhLU7vGDNLJCD=UrNRSFm5hT6HGEEhUqr1kAcMF3O-A@mail.gmail.com>
-	<1380708715.13329.16.camel@jlt4.sipsolutions.net>
-Date: Wed, 2 Oct 2013 14:52:54 +0200
-Message-ID: <CAA2SeNLFSN0tAyABk=MoFDxS6purc6Tgx6R-U5xhuRJZRCZ6ig@mail.gmail.com> (sfid-20131002_145257_840784_1217ABC7)
-Subject: Re: [PATCH] mac80211: allow mgmt frame transmission on DFS channels
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am not using latest mac80211/hostapd (in particular
-compat-wireless-2013-04-16/hostapd-20130807) because I have to port
-some personal stuff. In this scenario I was not able to establish an
-AP/STA connection on DFS channel. Anyway I will update these packages.
+A reliable P2P connection needs to avoid any offload off channel
+operations triggered by the host driver.Thus, indicate such
+attempts to the host driver by including a new protocol id,
+signifying the p2p connection.
 
-Lorenzo
+Signed-off-by: Sunil Dutt <usdutt@qti.qualcomm.com>
+---
+ include/uapi/linux/nl80211.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-2013/10/2 Johannes Berg <johannes@sipsolutions.net>:
-> On Wed, 2013-10-02 at 12:07 +0200, Lorenzo Bianconi wrote:
->> Before start beaconing cfg80211_reg_can_beacon() verifies the channel
->> is CAC checked and available calling cfg80211_secondary_chans_ok().
->> Although the channel is marked NL80211_DFS_AVAILABLE after a CAC
->> period, ieee80211_monitor_start_xmit() does not allow to inject mgmt
->> frames on DFS channels causing association failures.
->
-> I don't see how this can cause association failures? Please explain.
-> DFS-capable hostapd doesn't use monitor interfaces with mac80211 any
-> more.
->
-> johannes
->
-
-
-
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 8f01961..cae07aa 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -3894,6 +3894,7 @@ enum nl80211_protocol_features {
+  * @NL80211_CRIT_PROTO_DHCP: BOOTP or DHCPv6 protocol.
+  * @NL80211_CRIT_PROTO_EAPOL: EAPOL protocol.
+  * @NL80211_CRIT_PROTO_APIPA: APIPA protocol.
++ * @NL80211_CRIT_PROTO_P2P: P2P protocol.
+  * @NUM_NL80211_CRIT_PROTO: must be kept last.
+  */
+ enum nl80211_crit_proto_id {
+@@ -3901,6 +3902,7 @@ enum nl80211_crit_proto_id {
+ 	NL80211_CRIT_PROTO_DHCP,
+ 	NL80211_CRIT_PROTO_EAPOL,
+ 	NL80211_CRIT_PROTO_APIPA,
++	NL80211_CRIT_PROTO_P2P,
+ 	/* add other protocols before this one */
+ 	NUM_NL80211_CRIT_PROTO
+ };
 -- 
-UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
-unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
-umount; make clean; sleep
+1.8.2.1
+
