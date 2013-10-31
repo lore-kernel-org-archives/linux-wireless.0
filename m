@@ -1,103 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:42345 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753940Ab3JCNMh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Oct 2013 09:12:37 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH/RFT 2/3] ath10k: track vif list internally
-Date: Thu, 3 Oct 2013 15:09:24 +0200
-Message-ID: <1380805765-31521-3-git-send-email-michal.kazior@tieto.com> (sfid-20131003_151240_682527_F8B9D0AA)
-In-Reply-To: <1380805765-31521-1-git-send-email-michal.kazior@tieto.com>
-References: <1380805765-31521-1-git-send-email-michal.kazior@tieto.com>
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:4119 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751971Ab3JaPWc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Oct 2013 11:22:32 -0400
+From: "Undekari, Sunil Dutt" <usdutt@qti.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"j@w1.fi" <j@w1.fi>
+Subject: RE: [PATCH] cfg80211: Introduce critical protocol indication for
+ p2p connection.
+Date: Thu, 31 Oct 2013 15:22:25 +0000
+Message-ID: <26F3B0343EE4744AA14EEEF9E1E534511F7A65CC@aphydexd01a> (sfid-20131031_162236_345337_6890478A)
+References: <1383230452-12608-1-git-send-email-usdutt@qti.qualcomm.com>
+	 (sfid-20131031_154108_037102_6F3E1A6D)
+ <1383230593.14302.1.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1383230593.14302.1.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mac80211 interface interations functions have
-peculiar locking issues. This patch introduces
-internal (to ath10k) vif list that will be used
-for vif iteration purposes.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/core.c |    2 ++
- drivers/net/wireless/ath/ath10k/core.h |    3 +++
- drivers/net/wireless/ath/ath10k/mac.c  |    3 +++
- 3 files changed, 8 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 7b5dd09..4d04dc8 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -710,6 +710,7 @@ struct ath10k *ath10k_core_create(void *hif_priv, struct device *dev,
- 	mutex_init(&ar->conf_mutex);
- 	spin_lock_init(&ar->data_lock);
- 
-+	INIT_LIST_HEAD(&ar->arvifs);
- 	INIT_LIST_HEAD(&ar->peers);
- 	init_waitqueue_head(&ar->peer_mapping_wq);
- 
-@@ -817,6 +818,7 @@ int ath10k_core_start(struct ath10k *ar)
- 		goto err_disconnect_htc;
- 
- 	ar->free_vdev_map = (1 << TARGET_NUM_VDEVS) - 1;
-+	INIT_LIST_HEAD(&ar->arvifs);
- 
- 	return 0;
- 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index ce36daa..de20ac0 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -205,6 +205,8 @@ struct ath10k_peer {
- #define ATH10K_VDEV_SETUP_TIMEOUT_HZ (5*HZ)
- 
- struct ath10k_vif {
-+	struct list_head list;
-+
- 	u32 vdev_id;
- 	enum wmi_vdev_type vdev_type;
- 	enum wmi_vdev_subtype vdev_subtype;
-@@ -402,6 +404,7 @@ struct ath10k {
- 	/* protects shared structure data */
- 	spinlock_t data_lock;
- 
-+	struct list_head arvifs;
- 	struct list_head peers;
- 	wait_queue_head_t peer_mapping_wq;
- 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 7f8b258..292e5cd 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2051,6 +2051,7 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 	}
- 
- 	ar->free_vdev_map &= ~BIT(arvif->vdev_id);
-+	list_add(&arvif->list, &ar->arvifs);
- 
- 	vdev_param = ar->wmi.vdev_param->def_keyid;
- 	ret = ath10k_wmi_vdev_set_param(ar, 0, vdev_param,
-@@ -2131,6 +2132,7 @@ err_peer_delete:
- err_vdev_delete:
- 	ath10k_wmi_vdev_delete(ar, arvif->vdev_id);
- 	ar->free_vdev_map &= ~BIT(arvif->vdev_id);
-+	list_del(&arvif->list);
- err:
- 	mutex_unlock(&ar->conf_mutex);
- 	return ret;
-@@ -2153,6 +2155,7 @@ static void ath10k_remove_interface(struct ieee80211_hw *hw,
- 	spin_unlock_bh(&ar->data_lock);
- 
- 	ar->free_vdev_map |= 1 << (arvif->vdev_id);
-+	list_del(&arvif->list);
- 
- 	if (arvif->vdev_type == WMI_VDEV_TYPE_AP) {
- 		ret = ath10k_peer_delete(arvif->ar, arvif->vdev_id, vif->addr);
--- 
-1.7.9.5
-
+PiBUaGF0J3Mgbm90IHdoYXQgdGhlIGNyaXRpY2FsIHByb3RvY29sIHN0dWZmIHdhcyBkZXNpZ25l
+ZCBmb3IsIHNvIG5vLg0KSSB3b3VsZCBjb25zaWRlciB0aGUgUDJQIGNvbm5lY3Rpb24gcGhhc2Ug
+KFAyUCtXUFMrV1BBKSB0byBiZSBjcml0aWNhbCANCmFuZCBhbnkgb2ZmIGNoYW5uZWwgb3BlcmF0
+aW9ucyAoc2NhbikgdHJpZ2dlcmVkIGJ5IHRoZSBob3N0IGRyaXZlciB3b3VsZCByZXN1bHQgaW4g
+DQp0aGUgZGVsYXllZCAvIGZhaWxlZCBQMlAgY29ubmVjdGlvbiBhdHRlbXB0Lg0KSSBzdXBwb3Nl
+IHRoZXJlIHNob3VsZCBiZSBhbiBpbmRpY2F0aW9uIHRvIHRoZSBob3N0IGRyaXZlciB3LnIudCBw
+MnAgY29ubmVjdGlvbiANCmF0dGVtcHQgc28gdGhhdCBhbnkgb2ZmIGxvYWQgb3BlcmF0aW9ucyBv
+biBhbnkgb3RoZXIgaW50ZXJmYWNlIHNoYXJpbmcgdGhlIHNhbWUgcmFkaW8gDQp3b3VsZCBiZSBh
+dm9pZGVkIGJ5IHRoZSBkcml2ZXIuDQpTaW5jZSB0aGVyZSBpcyBhbHJlYWR5IGFuIGV4aXN0aW5n
+IGludGVyZmFjZSB0aHJvdWdoIHRoZSBjcml0aWNhbCBwcm90b2NvbCBpbmRpY2F0aW9uLCBJIA0K
+dGhvdWdodCBvZiBleHRlbmRpbmcgaXQgdG8gYWxzbyBpbmNsdWRlIGEgUDJQIHByb3RvY29sL2Nv
+bm5lY3Rpb24uIFRoaXMgbmV3IHByb3RvIGlkIA0Kd291bGQgYmUgYW4gaW5kaWNhdGlvbiB0byB0
+aGUgZHJpdmVycyB0byBhbGxvdyB0aGUgc2NhbiBvbiB0aGUgY3VycmVudCBpbnRlcmZhY2UgDQph
+bmQgYXZvaWQgYW55IHNjYW5zIG9uIGFub3RoZXIgY29uc2lkZXJpbmcgdGhlIGZhY3QgdGhhdCBh
+IHAycCBjb25uZWN0aW9uIHJlcXVpcmVzIGEgIA0Kc2Nhbi4NCkRvIHlvdSBwcm9wb3NlIGFuIGFs
+dGVybmF0aXZlIChhIG5ldyBpbnRlcmZhY2U/KSB0byBhY2hpZXZlIHRoZSBzYW1lPw0KDQpSZWdh
+cmRzLA0KU3VuaWwNCg0KDQoNCg0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTog
+Sm9oYW5uZXMgQmVyZyBbbWFpbHRvOmpvaGFubmVzQHNpcHNvbHV0aW9ucy5uZXRdIA0KU2VudDog
+VGh1cnNkYXksIE9jdG9iZXIgMzEsIDIwMTMgODoxMyBQTQ0KVG86IFVuZGVrYXJpLCBTdW5pbCBE
+dXR0DQpDYzogbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnOyBqQHcxLmZpDQpTdWJqZWN0
+OiBSZTogW1BBVENIXSBjZmc4MDIxMTogSW50cm9kdWNlIGNyaXRpY2FsIHByb3RvY29sIGluZGlj
+YXRpb24gZm9yIHAycCBjb25uZWN0aW9uLg0KDQpPbiBUaHUsIDIwMTMtMTAtMzEgYXQgMjA6MTAg
+KzA1MzAsIFN1bmlsIER1dHQgVW5kZWthcmkgd3JvdGU6DQo+IEEgcmVsaWFibGUgUDJQIGNvbm5l
+Y3Rpb24gbmVlZHMgdG8gYXZvaWQgYW55IG9mZmxvYWQgb2ZmIGNoYW5uZWwgDQo+IG9wZXJhdGlv
+bnMgdHJpZ2dlcmVkIGJ5IHRoZSBob3N0IGRyaXZlci4NCg0KVGhhdCdzIG5vdCB3aGF0IHRoZSBj
+cml0aWNhbCBwcm90b2NvbCBzdHVmZiB3YXMgZGVzaWduZWQgZm9yLCBzbyBuby4NCg0Kam9oYW5u
+ZXMNCg0K
