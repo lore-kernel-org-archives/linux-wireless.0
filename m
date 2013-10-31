@@ -1,54 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:62624 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755695Ab3JQO12 (ORCPT
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:50434 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751609Ab3JaPtD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Oct 2013 10:27:28 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: add error handling to ath10k_pci_wait()
-References: <20131017083615.31028.25088.stgit@localhost6.localdomain6>
-	<CA+BoTQ=x+KJxXtcdMYKEGGjfF3oryTXgA2N+4OAa+6fcSAK4uw@mail.gmail.com>
-Date: Thu, 17 Oct 2013 17:27:22 +0300
-In-Reply-To: <CA+BoTQ=x+KJxXtcdMYKEGGjfF3oryTXgA2N+4OAa+6fcSAK4uw@mail.gmail.com>
-	(Michal Kazior's message of "Thu, 17 Oct 2013 07:24:07 -0700")
-Message-ID: <87a9i82cs5.fsf@kamboji.qca.qualcomm.com> (sfid-20131017_162731_438682_32329122)
+	Thu, 31 Oct 2013 11:49:03 -0400
+Received: by mail-ie0-f174.google.com with SMTP id qd12so5273897ieb.5
+        for <linux-wireless@vger.kernel.org>; Thu, 31 Oct 2013 08:49:02 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1383233873.6949.YahooMailNeo@web171806.mail.ir2.yahoo.com>
+References: <1382537927.62604.YahooMailNeo@web171801.mail.ir2.yahoo.com>
+	<1382538469.7892.YahooMailNeo@web171805.mail.ir2.yahoo.com>
+	<20131024112206.GB1677@redhat.com>
+	<1382614336.89589.YahooMailNeo@web171804.mail.ir2.yahoo.com>
+	<20131024113748.GD1677@redhat.com>
+	<1383227814.41997.YahooMailNeo@web171801.mail.ir2.yahoo.com>
+	<527264F6.2030001@hauke-m.de>
+	<1383233873.6949.YahooMailNeo@web171806.mail.ir2.yahoo.com>
+Date: Thu, 31 Oct 2013 16:49:01 +0100
+Message-ID: <CAL1gcdNyW-Z7YkQYsbpbxr+zdoXnoE9KcZi9E1q0SoVOV6LQ_A@mail.gmail.com> (sfid-20131031_164910_153640_E7C7FEB7)
+Subject: Re: Edimax EW-7733UnD
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: Gianfranco Costamagna <costamagnagianfranco@yahoo.it>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
-
-> On 17 October 2013 01:36, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->> ath10k_pci_wait() didn't notify any errors to callers, it
->> just printed a warning so add proper error handling.
->>
->> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-
-[...]
-
->> @@ -2227,7 +2231,13 @@ static int ath10k_pci_start_intr_legacy(struct ath10k *ar)
->>                   ar_pci->mem + PCIE_LOCAL_BASE_ADDRESS +
->>                   PCIE_SOC_WAKE_ADDRESS);
->>
->> -       ath10k_pci_wait(ar);
->> +       ret = ath10k_pci_wait(ar);
->> +       if (ret) {
->> +               ath10k_warn("Failed to enable legacy interrupt, target did not wake up: %d\n",
->> +                           ret);
->> +               free_irq(ar_pci->pdev->irq, ar);
->> +               return ret;
->> +       }
+On Thu, Oct 31, 2013 at 4:37 PM, Gianfranco Costamagna
+<costamagnagianfranco@yahoo.it> wrote:
 >
-> I think we could actually use ath10k_do_pci_wake/sleep() here (see
-> above iowrite). It does basically the same thing - sets the wake
-> register and waits until HW wakes up. I think ath10k_pci_wait() could
-> even go away.
+>>Aren't you trying to get a RT3573 card to work? You should activate
+>>CONFIG_RT2800USB_RT3573.
+>
+>
+> I'm rebuilding the kernel with this module, but I don't think this is my chip
+> http://www.edimax.com/au/produce_detail.php?pd_id=399&pl1_id=1&pl2_id=44
+>
+> is it?
+>
 
-That would be nice, I'll take a look. Thanks for the review.
+It should be, as it is the only Ralink chipset that supports 3x3
+operation (i.e. 450 Mbps).
+Also, the USB id of the device is listed in the driver under that
+configuration option, so I'm pretty sure you
+have to enable that configuration option ;-)
 
 -- 
-Kalle Valo
+---
+Gertjan
