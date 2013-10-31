@@ -1,65 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:38195 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751812Ab3JVAGI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Oct 2013 20:06:08 -0400
-Received: from [192.168.100.236] (firewall.candelatech.com [70.89.124.249])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id r9M067pB004682
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Mon, 21 Oct 2013 17:06:07 -0700
-Message-ID: <5265C16F.1080508@candelatech.com> (sfid-20131022_020612_862533_E248CCF5)
-Date: Mon, 21 Oct 2013 17:06:07 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from nm11.bullet.mail.ird.yahoo.com ([77.238.189.64]:38238 "HELO
+	nm11.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753853Ab3JaN44 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Oct 2013 09:56:56 -0400
+References: <1382537927.62604.YahooMailNeo@web171801.mail.ir2.yahoo.com> <1382538469.7892.YahooMailNeo@web171805.mail.ir2.yahoo.com> <20131024112206.GB1677@redhat.com> <1382614336.89589.YahooMailNeo@web171804.mail.ir2.yahoo.com> <20131024113748.GD1677@redhat.com>
+Message-ID: <1383227814.41997.YahooMailNeo@web171801.mail.ir2.yahoo.com> (sfid-20131031_145700_224967_743B6B4D)
+Date: Thu, 31 Oct 2013 13:56:54 +0000 (GMT)
+From: Gianfranco Costamagna <costamagnagianfranco@yahoo.it>
+Reply-To: Gianfranco Costamagna <costamagnagianfranco@yahoo.it>
+Subject: Re: Edimax EW-7733UnD
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20131024113748.GD1677@redhat.com>
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Splat in 3.12.0-rc5 (ath tree)
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm not sure how important this is...but here it be.
 
 
-------------[ cut here ]------------
-WARNING: CPU: 2 PID: 1523 at /mnt/sda/home/greearb/git/ath/net/wireless/util.c:1066 cfg80211_calculate_bitr)
-Modules linked in: nf_nat_ipv4 nf_nat veth 8021q garp stp mrp llc macvlan pktgen lockd f71882fg coretemp hw]
-CPU: 0 PID: 1523 Comm: btserver Tainted: G         C   3.12.0-rc5-wl+ #1
-Hardware name: To be filled by O.E.M. To be filled by O.E.M./HURONRIVER, BIOS 4.6.5 05/02/2012
- 0000000000000009 ffff8800d9ea1b48 ffffffff81566b46 ffff88021fa0ec78
- 0000000000000000 ffff8800d9ea1b88 ffffffff8109e0a2 ffff8802156367c0
- ffffffffa0213471 ffff8800cf479e40 ffff880215636000 ffff8802155785c0
-Call Trace:
- [<ffffffff81566b46>] dump_stack+0x55/0x86
- [<ffffffff8109e0a2>] warn_slowpath_common+0x77/0x91
- [<ffffffffa0213471>] ? cfg80211_calculate_bitrate+0xfa/0x18e [cfg80211]
- [<ffffffff8109e0d1>] warn_slowpath_null+0x15/0x17
- [<ffffffffa0213471>] cfg80211_calculate_bitrate+0xfa/0x18e [cfg80211]
- [<ffffffffa03a8e87>] ieee80211_get_et_stats+0xa7/0x44e [mac80211]
- [<ffffffff812170d3>] ? find_revoke_record+0x82/0x8e
- [<ffffffff812175e8>] ? jbd2_journal_cancel_revoke+0x118/0x160
- [<ffffffffa022bb14>] cfg80211_get_stats+0x44/0x4c [cfg80211]
- [<ffffffff814c3382>] dev_ethtool+0xbb1/0x1463
- [<ffffffff814bb91c>] ? dev_name_hash.isra.66+0x24/0x3a
- [<ffffffff814bba30>] ? dev_get_by_name_rcu+0x34/0x56
- [<ffffffff814cef6c>] dev_ioctl+0x487/0x5a3
- [<ffffffff814aa442>] sock_do_ioctl+0x36/0x41
- [<ffffffff814aa859>] sock_ioctl+0x1fe/0x20b
- [<ffffffff8117481d>] vfs_ioctl+0x21/0x34
- [<ffffffff81175076>] do_vfs_ioctl+0x3b8/0x3fb
- [<ffffffff810bee73>] ? should_resched+0x9/0x28
- [<ffffffff8156b960>] ? _cond_resched+0x9/0x1d
- [<ffffffff8117cb0b>] ? fget_light+0x39/0x99
- [<ffffffff8117510b>] SyS_ioctl+0x52/0x7f
- [<ffffffff810e070e>] ? current_kernel_time+0xd/0x31
- [<ffffffff815716bd>] system_call_fastpath+0x1a/0x1f
----[ end trace b61c38f55596de59 ]---
+> Il Giovedì 24 Ottobre 2013 13:41, Stanislaw Gruszka <sgruszka@redhat.com> ha scritto:
+> > On Thu, Oct 24, 2013 at 12:32:16PM +0100, Gianfranco Costamagna wrote:
+>> 
+>> 
+>>  Il Giovedì 24 Ottobre 2013 13:25, Stanislaw Gruszka 
+> <sgruszka@redhat.com> ha scritto:
+>> 
+>>  On Wed, Oct 23, 2013 at 03:27:49PM +0100, Gianfranco Costamagna wrote:
+>>  >
+>>  >> Hi Kernel Wireless developers, I write here since I have an issue 
+> with this module.
+>>  >> 
+>>  >> 
+>>  >> We bought 2 of them since they are both 2.4 and 5Ghz capable, and 
+> they seem to be powerful enough for our pourposes
+>>  >> 
+> http://www.edimax.com/au/produce_detail.php?pd_id=399&pl1_id=1&pl2_id=44
+>>  >> 
+>>  >> 
+>>  >> Anyway there is a problem, that the linux kernel seems to be not 
+> supporting them
+>>  >> 
+>>  >> I tried following this guide
+>>  >> http://wikidevi.com/wiki/Edimax_EW-7733UnD
+>>  >> rt3573sta, possibly rt5572sta, and future support in rt2800usb 
+> "uhosg's patchset adding support, may be in by k3.12"
+>>  >> but at this moment it is showing an interface with one of them (I 
+> cannot connect to anything, the interface shown seems to be incorrect), with 
+> another I get a kernel anic and with the third one doesn't work at all.
+>>  >> 
+>>  >> lsusb |grep Edimax
+>>  >> 
+>>  >> Bus 002 Device 002: ID 7392:7733 Edimax Technology Co., Ltd 
+>>  >
+>>  >I have that exect device and it works ok here, but I'm using 
+>>  >wireless-testing tree. So perhaps you should try install that
+>>  >tree or use backports .
+>> 
+>> 
+>>  Wonderful! I don't really understand what do you mean with backports, 
+> are you referring to "linux kernel backports" right?
+> 
+> Yes.
+> 
+>>  So I can choose the backport source or to checkout and build the 
+> wireless-testing tree.
+>> 
+>>  Just as information, how long will it take to have it into the stable 
+> mainline?
+> 
+> Current wireless-testing content will be available on 3.13 ,
+> though I think that device should also work on 3.12 .
+> 
 
-Thanks,
-Ben
+Ok I built a custom kernel but I still have some issues
+Ubuntu 13.10 x64
+git clone http://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+cd wireless-testing
+copied my config from this kernel http://kernel.ubuntu.com/~kernel-ppa/mainline/v3.12-rc7-saucy/
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+make oldconfig
+(a tail of my .config file after the make)
+CONFIG_RT2800PCI=m
+CONFIG_RT2800PCI_RT33XX=y
+CONFIG_RT2800PCI_RT35XX=y
+CONFIG_RT2800PCI_RT53XX=y
+CONFIG_RT2800PCI_RT3290=y
+CONFIG_RT2500USB=m
+CONFIG_RT73USB=m
+CONFIG_RT2800USB=m
+CONFIG_RT2800USB_RT33XX=y
+CONFIG_RT2800USB_RT35XX=y
+# CONFIG_RT2800USB_RT3573 is not set
+CONFIG_RT2800USB_RT53XX=y
+CONFIG_RT2800USB_RT55XX=y
+CONFIG_RT2800USB_UNKNOWN=y
+CONFIG_RT2800_LIB=m
+CONFIG_RT2800_LIB_MMIO=m
+CONFIG_RT2X00_LIB_MMIO=m
+CONFIG_RT2X00_LIB_PCI=m
+CONFIG_RT2X00_LIB_USB=m
+CONFIG_RT2X00_LIB=m
+CONFIG_RT2X00_LIB_FIRMWARE=y
+CONFIG_RT2X00_LIB_CRYPTO=y
+CONFIG_RT2X00_LIB_LEDS=y
+# CONFIG_RT2X00_LIB_DEBUGFS is not set
+# CONFIG_RT2X00_DEBUG is not set
 
+(apt-get build-dep linux)
+make
+make all
+sudo make modules_install
+sudo make install
+
+I was surprised that everything was automatically copied in /boot and grub automatically found the new kernel without manual mkinitrd anymore (so long time from my last kernel build)
+
+Reboot
+
+locutus@gianfranco-Latitude-E5520:~/wireless-testing$ uname -a
+Linux gianfranco-Latitude-E5520 3.12.0-rc5-wl #2 SMP Thu Oct 31 14:04:43 CET 2013 x86_64 x86_64 x86_64 GNU/Linux
+
+
+put key in my pc
+[  471.585065] usb 2-1.2: new high-speed USB device number 11 using ehci-pci
+[  471.693762] usb 2-1.2: New USB device found, idVendor=7392, idProduct=7733
+[  471.693766] usb 2-1.2: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+[  471.693768] usb 2-1.2: Product: 802.11 n WLAN
+[  471.693770] usb 2-1.2: Manufacturer: Ralink
+[  471.693771] usb 2-1.2: SerialNumber: 1.0
+
+sudo modprobe rt2800usb
+
+[  540.170899] usbcore: registered new interface driver rt2800usb
+
+nothing works...
+
+Can you please help me again?
+
+Many thanks
+
+have a nice day,
+
+Gianfranco
+
+> 
+> Stanislaw  
+> 
