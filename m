@@ -1,59 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f41.google.com ([209.85.214.41]:38233 "EHLO
-	mail-bk0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755289Ab3JHQuB convert rfc822-to-8bit (ORCPT
+Received: from mail-we0-f181.google.com ([74.125.82.181]:55478 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753883Ab3JaPHn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Oct 2013 12:50:01 -0400
-Received: by mail-bk0-f41.google.com with SMTP id na10so3364069bkb.14
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Oct 2013 09:49:59 -0700 (PDT)
+	Thu, 31 Oct 2013 11:07:43 -0400
+Received: by mail-we0-f181.google.com with SMTP id t60so2795914wes.40
+        for <linux-wireless@vger.kernel.org>; Thu, 31 Oct 2013 08:07:42 -0700 (PDT)
+Message-ID: <5272723B.4090006@gmail.com> (sfid-20131031_160747_350939_AFACB8F8)
+Date: Thu, 31 Oct 2013 16:07:39 +0100
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <87mwmjsz2k.fsf@kamboji.qca.qualcomm.com>
-References: <1380805765-31521-1-git-send-email-michal.kazior@tieto.com>
-	<1380865425-3791-1-git-send-email-michal.kazior@tieto.com>
-	<1380865425-3791-2-git-send-email-michal.kazior@tieto.com>
-	<87mwmjsz2k.fsf@kamboji.qca.qualcomm.com>
-Date: Tue, 8 Oct 2013 09:49:59 -0700
-Message-ID: <CA+BoTQ=qep+rKEyLKrNjNP6K1q+FHKpvkscwXuRMR_45YnRvHA@mail.gmail.com> (sfid-20131008_185037_077521_D4A56B31)
-Subject: Re: [PATCH/RFT v2 1/4] ath10k: fix add_interface failure handling
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
+To: wireless-regdb@lists.infradead.org
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 5/7] wireless-regdb: optimize two of ES's rules
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8 October 2013 05:54, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Michal Kazior <michal.kazior@tieto.com> writes:
->
->> If something failed along add_interface() setup it
->> was possible to leak a vdev id, vdev and peer.
->>
->> This could end up with leaked FW state or FW crash
->> (assuming add_interface() failure wasn't a result of
->> a crash).
->>
->> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->
-> Then I apply this patch on top of current ath.git master branch (commit
-> 18fe0b53e76) interface up fails on the managed mode:
->
-> $ sudo ip link set wlan1 up
-> RTNETLINK answers: Invalid argument
->
-> Logs don't have anything special (the TX encap error was already
-> before):
->
-> [ 1259.818863] ath10k: MSI-X didn't succeed (1), trying MSI
-> [ 1259.819298] ath10k_pci 0000:02:00.0: irq 49 for MSI/MSI-X
-> [ 1259.820055] ath10k: MSI interrupt handling
-> [ 1260.747877] ath10k: UART prints disabled
-> [ 1260.828219] ath10k: firmware 10.1.389 booted
-> [ 1260.837585] ath10k: htt target version 2.1
-> [ 1260.838498] ath10k: Failed to set TX encap: -22
+hi Luis,
 
-Ah. Right. I've tested this patch with main FW branch which supports
-TX encap command. The TX encap issue should be dealth with first.
+This patch is incompatible with my ("pending")patch:
+http://lists.infradead.org/pipermail/wireless-regdb/2013-February/000136.html
 
+thanks,
 
-Michał
+---cortamorena---
+Subject: [PATCH] wireless-regdb: change Max_EIRP in 5150-5250 for ES (Spain)
+
+I did cut&paste from DE rules, but DE lowers the limit
+in 5150-5250 to 100mW for "neighborhood reasons" [1].
+Even when 200mW is completely legal in DE.
+
+put 200mW, as Spanish law says:
+
+Banda 5150 – 5350 MHz: En esta banda el uso por el servicio móvil en sistemas de
+acceso inalámbrico incluyendo comunicaciones electrónicas y redes de área local, se
+restringe para su utilización únicamente en el interior de recintos. La potencia isotrópica
+radiada equivalente máxima será de 200 mW (p.i.r.e.), siendo la densidad máxima de
+p.i.r.e. media de 10 mW/MHz en cualquier banda de 1 MHz. Este valor se refiere a la
+potencia promediada sobre una ráfaga de transmisión ajustada a la máxima potencia
+
+Orden ITC/332/2010, de 12 de febrero, por la que se aprueba el cuadro
+nacional de atribución de frecuencias (CNAF):
+https://www.boe.es/diario_boe/txt.php?id=BOE-A-2010-2719
+https://www.boe.es/boe/dias/2010/02/19/pdfs/BOE-A-2010-2719.pdf
+
+search for:
+ UN - 85 RLANs y datos en 2400 a 2483,5 MHz (pag. 213)
+ UN - 128 RLANs en 5 GHz (pag. 232)
+
+more info at "Cuadro nacional de atribución de frecuencias (CNAF)":
+http://www.minetur.gob.es/telecomunicaciones/espectro/paginas/cnaf.aspx
+
+[1] http://marc.info/?l=linux-wireless&m=127429049514439
+
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: Luis R. Rodriguez <mcgrof@frijolero.org>
+Cc: wireless-regdb@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+---
+ db.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/db.txt b/db.txt
+index c5861b8..6f618c0 100644
+--- a/db.txt
++++ b/db.txt
+@@ -269,7 +269,7 @@ country EG:
+  country ES: DFS-ETSI
+ 	(2400 - 2483.5 @ 40), (N/A, 100 mW)
+-	(5150 - 5250 @ 40), (N/A, 100 mW), NO-OUTDOOR
++	(5150 - 5250 @ 40), (N/A, 200 mW), NO-OUTDOOR
+ 	(5250 - 5350 @ 40), (N/A, 100 mW), NO-OUTDOOR, DFS
+ 	(5470 - 5725 @ 40), (N/A, 500 mW), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+-- 
+1.7.11.7
+---end---
+
