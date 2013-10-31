@@ -1,44 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f44.google.com ([209.85.214.44]:32951 "EHLO
-	mail-bk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750732Ab3J3F0x (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:47581 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754611Ab3JaPZV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Oct 2013 01:26:53 -0400
-Received: by mail-bk0-f44.google.com with SMTP id mx11so270266bkb.17
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Oct 2013 22:26:52 -0700 (PDT)
-MIME-Version: 1.0
-Date: Wed, 30 Oct 2013 13:26:52 +0800
-Message-ID: <CAPgLHd9HeKEN6HjFhLgo2oogGKie5Dy++09kcr6E89LnrMc=+w@mail.gmail.com> (sfid-20131030_062656_241944_5A7FBECA)
-Subject: [PATCH -next] NFC: port100: convert to use le16_add_cpu()
-From: Wei Yongjun <weiyj.lk@gmail.com>
-To: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-	sameo@linux.intel.com
-Cc: yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org,
-	linux-nfc@lists.01.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 31 Oct 2013 11:25:21 -0400
+Message-ID: <1383233115.14302.2.camel@jlt4.sipsolutions.net> (sfid-20131031_162524_594902_E7739A17)
+Subject: Re: [PATCH] cfg80211: Introduce critical protocol indication for
+ p2p connection.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Undekari, Sunil Dutt" <usdutt@qti.qualcomm.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"j@w1.fi" <j@w1.fi>
+Date: Thu, 31 Oct 2013 16:25:15 +0100
+In-Reply-To: <26F3B0343EE4744AA14EEEF9E1E534511F7A65CC@aphydexd01a>
+References: <1383230452-12608-1-git-send-email-usdutt@qti.qualcomm.com>
+	 (sfid-20131031_154108_037102_6F3E1A6D) <1383230593.14302.1.camel@jlt4.sipsolutions.net>
+	 <26F3B0343EE4744AA14EEEF9E1E534511F7A65CC@aphydexd01a>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+On Thu, 2013-10-31 at 15:22 +0000, Undekari, Sunil Dutt wrote:
+> > That's not what the critical protocol stuff was designed for, so no.
+> I would consider the P2P connection phase (P2P+WPS+WPA) to be critical 
+> and any off channel operations (scan) triggered by the host driver would result in 
+> the delayed / failed P2P connection attempt.
+> I suppose there should be an indication to the host driver w.r.t p2p connection 
+> attempt so that any off load operations on any other interface sharing the same radio 
+> would be avoided by the driver.
+> Since there is already an existing interface through the critical protocol indication, I 
+> thought of extending it to also include a P2P protocol/connection. This new proto id 
+> would be an indication to the drivers to allow the scan on the current interface 
+> and avoid any scans on another considering the fact that a p2p connection requires a  
+> scan.
+> Do you propose an alternative (a new interface?) to achieve the same?
 
-Convert cpu_to_le16(le16_to_cpu(E1) + E2) to use le16_add_cpu().
+Just do it in the supplicant - that has full control over what's going
+on with a given device.
 
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
----
- drivers/nfc/port100.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Trying to have the kernel manage multiple things that may or may not be
+exclusive and are all done in userspace is going to be a futile
+exercise.
 
-diff --git a/drivers/nfc/port100.c b/drivers/nfc/port100.c
-index 8a0571e..ab7afe3 100644
---- a/drivers/nfc/port100.c
-+++ b/drivers/nfc/port100.c
-@@ -493,7 +493,7 @@ static void port100_tx_update_payload_len(void *_frame, int len)
- {
- 	struct port100_frame *frame = _frame;
- 
--	frame->datalen = cpu_to_le16(le16_to_cpu(frame->datalen) + len);
-+	le16_add_cpu(&frame->datalen, len);
- }
- 
- static bool port100_rx_frame_is_valid(void *_frame)
+johannes
 
