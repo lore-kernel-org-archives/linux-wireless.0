@@ -1,69 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:12342 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756339Ab3J1SIt (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:47805 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754118Ab3JaQmM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Oct 2013 14:08:49 -0400
-From: "Chauhan, Rajesh" <rajeshc@qca.qualcomm.com>
-To: "Rodriguez, Luis" <rodrigue@qca.qualcomm.com>
-CC: Dan Williams <dcbw@redhat.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Malinen, Jouni" <jouni@qca.qualcomm.com>,
-	"Bahini, Henri" <hbahini@qca.qualcomm.com>,
-	"Chang, Leo" <schang@qca.qualcomm.com>,
-	"Luo, Xun" <xunl@qca.qualcomm.com>,
-	"Chauhan, Rajesh" <rajeshc@qca.qualcomm.com>
-Subject: RE: [PATCH] cfg80211/nl80211: Add support to report unsafe
- frequency ranges(s)
-Date: Mon, 28 Oct 2013 18:08:48 +0000
-Message-ID: <D19FD2B13A40CD4B8DA64DB9B8F112E9218E461D@nasanexd01a.na.qualcomm.com> (sfid-20131028_190853_432203_0E6626E8)
-References: <1381985833-31312-1-git-send-email-rajeshc@qca.qualcomm.com>
- <1382020835.14410.16.camel@jlt4.sipsolutions.net>
- <D19FD2B13A40CD4B8DA64DB9B8F112E9218DAD14@nasanexd01a.na.qualcomm.com>
- <1382035171.22901.13.camel@dcbw.foobar.com>
- <D19FD2B13A40CD4B8DA64DB9B8F112E9218DAF6F@nasanexd01a.na.qualcomm.com>
- <CAB=NE6UkKuSzH4x2SjkE0pRTVCVa3k7g=_ZeU_JE+t2OovRoEg@mail.gmail.com>
-In-Reply-To: <CAB=NE6UkKuSzH4x2SjkE0pRTVCVa3k7g=_ZeU_JE+t2OovRoEg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Thu, 31 Oct 2013 12:42:12 -0400
+Message-ID: <1383237729.14302.6.camel@jlt4.sipsolutions.net> (sfid-20131031_174215_783589_6B35A030)
+Subject: Re: [PATCH] mac80211: do not compute offset from ssn in Rx AMPDU
+ reordering buffer
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Karl Beldan <karl.beldan@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Date: Thu, 31 Oct 2013 17:42:09 +0100
+In-Reply-To: <1382622812-18253-1-git-send-email-karl.beldan@gmail.com> (sfid-20131024_155324_357056_05CCCAE4)
+References: <1382622812-18253-1-git-send-email-karl.beldan@gmail.com>
+	 (sfid-20131024_155324_357056_05CCCAE4)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgTHVpcywNCg0KRm9yICJlbm91Z2ggaW5mb3JtYXRpb24gZm9yIHByb3BlciB1c2FnZSIgLSBo
-b3cgYWJvdXQgaWYgSSBhZGQgYW4gYXR0cmlidXRlIGZvciB0aGUgc291cmNlIG9mIGludGVyZmVy
-ZW5jZSAoc2F5LCBmb3IgZXhhbXBsZSwgImNlbGx1bGFyIikgZm9yIGVhY2ggb2YgdGhvc2UgZnJl
-cXVlbmN5IHJhbmdlPw0KDQpSZWdhcmRzLA0KUmFqZXNoIENoYXVoYW4NCg0KLS0tLS1PcmlnaW5h
-bCBNZXNzYWdlLS0tLS0NCkZyb206IG1jZ3JvZkBnbWFpbC5jb20gW21haWx0bzptY2dyb2ZAZ21h
-aWwuY29tXSBPbiBCZWhhbGYgT2YgTHVpcyBSLiBSb2RyaWd1ZXoNClNlbnQ6IFN1bmRheSwgT2N0
-b2JlciAyMCwgMjAxMyAzOjM5IEFNDQpUbzogQ2hhdWhhbiwgUmFqZXNoDQpDYzogRGFuIFdpbGxp
-YW1zOyBKb2hhbm5lcyBCZXJnOyBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IE1hbGlu
-ZW4sIEpvdW5pOyBCYWhpbmksIEhlbnJpOyBDaGFuZywgTGVvOyBMdW8sIFh1bg0KU3ViamVjdDog
-UmU6IFtQQVRDSF0gY2ZnODAyMTEvbmw4MDIxMTogQWRkIHN1cHBvcnQgdG8gcmVwb3J0IHVuc2Fm
-ZSBmcmVxdWVuY3kgcmFuZ2VzKHMpDQoNCk9uIFRodSwgT2N0IDE3LCAyMDEzIGF0IDk6NTEgUE0s
-IENoYXVoYW4sIFJhamVzaCA8cmFqZXNoY0BxY2EucXVhbGNvbW0uY29tPiB3cm90ZToNCj4gSGkg
-RGFuLA0KPg0KPiBUaGFua3MgZm9yIHlvdXIgY29tbWVudHMuDQo+DQo+IEN1cnJlbnQgcGF0Y2gg
-aXMgdG8gcmVwb3J0IGV2ZW50IGFzeW5jaHJvbm91c2x5IGFuZCB0aGF0IHdvdWxkIGJlIG5lZWRl
-ZCBldmVuIGlmIHdlIGhhdmUgeW91ciBzdWdnZXN0ZWQgaW50ZXJmYWNlIG9mIGNsaWVudCBjb2xs
-ZWN0aW5nIHRoYXQgaW5mb3JtYXRpb24gdXBmcm9udCwgd2hpY2ggc2VlbXMgbGlrZSB5b3UgYWxz
-byBraW5kIG9mIGFncmVlLCBiZWNhdXNlIFJGIGVudmlyb25tZW50IG1heSBjaGFuZ2UgbGF0ZXIg
-YW5kIGdlbmVyYXRpbmcgYW4gZXZlbnQgYXQgdGhhdCB0aW1lIHdpdGggZnJlcXVlbmN5IGRldGFp
-bHMgd291bGQgaGVscC4gU28geW91ciBzdWdnZXN0ZWQgYXBwcm9hY2ggb2YgIm1lY2hhbmlzbSBm
-b3IgdGhlIGNsaWVudCB0byBnZXQgdGhpcyBpbmZvcm1hdGlvbiIgaW4gaXRzZWxmIHNlZW1zIGxp
-a2UgYSBjYW5kaWRhdGUgZm9yIGEgc2VwYXJhdGUgcGF0Y2guDQoNClRoZSBpbmZyYXN0cnVjdHVy
-ZSBmb3IgdGhpcyBzb3J0IG9mIHRoaW5nIHRoYXQgbWUsIEluYWt5IGFuZCBNYXJjZWwgaGFkIHBy
-b3Bvc2VkIGluIDIwMDcgaXMgdGhlIEZyZXF1ZW5jeSBCcm9rZXI6DQoNCmh0dHA6Ly93aXJlbGVz
-cy5rZXJuZWwub3JnL2VuL2RldmVsb3BlcnMvRnJlcXVlbmN5QnJva2VyDQoNCj4gT24gdGhlIHJh
-Y2UgY29uZGl0aW9uIHdoaWNoIHlvdSBkZXNjcmliZWQgLSB0aGFua3MhLCBidXQgaXQgaXMgc29t
-ZXRoaW5nIHdoaWNoIGltcGxlbWVudGF0aW9uIG9mIGRyaXZlciB3b3VsZCBuZWVkIHRvIHRha2Ug
-Y2FyZS4gU2ltaWxhcmx5LCB1c2VyIHNwYWNlIGNhbiBoYXZlIGltcGxlbWVudGF0aW9uIHRvIGNh
-Y2hlIGluZm9ybWF0aW9uIG9uIHJlY2VpcHQgb2YgdGhlIGV2ZW50IHRvIHVzZSBpdCBsYXRlci4N
-Cg0KVGhpcyBwYXRjaCBpcyB2YWd1ZS4gT25jZSB3ZSBzZXQgc29tZXRoaW5nIGFzIEFQSSB3ZSBo
-YXZlIHRvIGxpdmUgd2l0aCBpdCwgSSBhbSBub3QgY29tZm9ydGFibGUgd2l0aCB0aGlzIHBhdGNo
-IGhhdmluZyBlbm91Z2ggaW5mb3JtYXRpb24gZm9yIHByb3BlciB1c2FnZSBieSBkaWZmZXJlbnQg
-ZHJpdmVycyBmb3IgdGhlIHNhbWUgcHVycG9zZSBvciBpbnRlbnQuIFRoZSBvbmx5IHJlYWwgcG9z
-aXRpdmUgYXJndW1lbnQgdGhhdCBjb3VsZCBiZSB1c2VkIGhlcmUgaXMgd2hlcmUgc29tZXRoaW5n
-IGxpa2UgQW5kcm9pZCBtaWdodCBoYXZlIGFscmVhZHkgZW1icmFjZWQgc29tZSBzaW1pbGFyIEFQ
-SSBidXQgYXJlIHdlIGdvaW5nIHRvIGFsd2F5cyBqdXN0IGVuYWJsZSBBUEkgb24gTGludXgganVz
-dCBiZWNhdXNlIEFuZHJvaWQgZGlkIGl0IHdpdGhvdXQgdGhpbmtpbmcgYWJvdXQgcHJvcGVyIGxv
-bmcgdGVybSBhcmNoaXRlY3R1cmU/IEkgZG9uJ3QgdGhpbmsgc28uDQoNCiBMdWlzDQo=
+On Thu, 2013-10-24 at 15:53 +0200, Karl Beldan wrote:
+> From: Karl Beldan <karl.beldan@rivierawaves.com>
+> 
+> ATM, frames with SN sn are mapped into the sta reordering buffer
+> sta->ampdu_mlme->tid_rx->reorder_buf at index
+> ieee80211_sn_sub(sn, tid_rx->ssn) % tid_rx->buf_size.
+> This offset calculation is useless, and this change replaces the index
+> with sn % tid_rx->buf_size.
+
+Applied.
+
+johannes
+
