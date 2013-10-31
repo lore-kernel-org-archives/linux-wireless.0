@@ -1,91 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:54715 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751509Ab3JWJU0 (ORCPT
+Received: from mail-lb0-f171.google.com ([209.85.217.171]:36456 "EHLO
+	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754378Ab3JaQmw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Oct 2013 05:20:26 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath9k: Identify Killer Wireless cards
-Date: Wed, 23 Oct 2013 14:46:11 +0530
-Message-Id: <1382519771-11170-1-git-send-email-sujith@msujith.org> (sfid-20131023_112029_323527_457FF2AD)
+	Thu, 31 Oct 2013 12:42:52 -0400
+Received: by mail-lb0-f171.google.com with SMTP id x18so2578354lbi.2
+        for <linux-wireless@vger.kernel.org>; Thu, 31 Oct 2013 09:42:50 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1383237294.14302.5.camel@jlt4.sipsolutions.net>
+References: <1382376158-25586-1-git-send-email-mcgrof@do-not-panic.com> <1383237294.14302.5.camel@jlt4.sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Thu, 31 Oct 2013 17:42:30 +0100
+Message-ID: <CAB=NE6VZSZ0Et0Y8girRSRO9-hd2H-SfnihwJC60wKfzv70PFw@mail.gmail.com> (sfid-20131031_174256_869771_5F51A682)
+Subject: Re: [PATCH 00/14] wlan: consolidate passive-scan and no-ibss flags
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	"Shete, Mihir" <smihir@qti.qualcomm.com>,
+	"Bhattacharyya, Tushnim" <tushnimb@qca.qualcomm.com>,
+	Peter Senna Tschudin <peter.senna@gmail.com>,
+	Julia Lawall <julia.lawall@lip6.fr>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Thu, Oct 31, 2013 at 5:34 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2013-10-21 at 19:22 +0200, Luis R. Rodriguez wrote:
+>> John, Johannes,
+>>
+>> This series addresses consolidating passive-scan and no-ibss flags.
+>> Since its crosses over drivers I'll let you guys decide what tree
+>> this goes into.
+>
+> Alright, I've applied this, but in one single big patch, and I've redone
+> (most of) the driver updates using spatch.
+>
+> There were conflicts applying the patch, so most likely John will get
+> conflicts when merging my tree. I've added the spatches to the commit
+> log so that should be easy to resolve.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |  1 +
- drivers/net/wireless/ath/ath9k/init.c  |  3 +++
- drivers/net/wireless/ath/ath9k/pci.c   | 20 ++++++++++++++++++++
- 3 files changed, 24 insertions(+)
+Oh I love to hear merge conflict issues are being addressed with
+Coccinelle, thanks for the update. I should have just provided the
+SmPL for it in the first place ;) -- my bad.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 4c3bbe4..f48cfe8 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -641,6 +641,7 @@ void ath_ant_comb_scan(struct ath_softc *sc, struct ath_rx_status *rs);
- #define ATH9K_PCI_D3_L1_WAR   0x0040
- #define ATH9K_PCI_AR9565_1ANT 0x0080
- #define ATH9K_PCI_AR9565_2ANT 0x0100
-+#define ATH9K_PCI_KILLER      0x0200
- 
- /*
-  * Default cache line size, in bytes.
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index e89db64..17502b4 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -589,6 +589,9 @@ static void ath9k_init_platform(struct ath_softc *sc)
- 	if (sc->driver_data & ATH9K_PCI_AR9565_2ANT)
- 		ath_info(common, "WB335 2-ANT card detected\n");
- 
-+	if (sc->driver_data & ATH9K_PCI_KILLER)
-+		ath_info(common, "Killer Wireless card detected\n");
-+
- 	/*
- 	 * Some WB335 cards do not support antenna diversity. Since
- 	 * we use a hardcoded value for AR9565 instead of using the
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index 04e6507..4a7a456 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -87,6 +87,19 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
- 	{ PCI_VDEVICE(ATHEROS, 0x002C) }, /* PCI-E 802.11n bonded out */
- 	{ PCI_VDEVICE(ATHEROS, 0x002D) }, /* PCI   */
- 	{ PCI_VDEVICE(ATHEROS, 0x002E) }, /* PCI-E */
-+
-+	/* Killer Wireless (3x3) */
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0030,
-+			 0x1A56,
-+			 0x2000),
-+	  .driver_data = ATH9K_PCI_KILLER },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0030,
-+			 0x1A56,
-+			 0x2001),
-+	  .driver_data = ATH9K_PCI_KILLER },
-+
- 	{ PCI_VDEVICE(ATHEROS, 0x0030) }, /* PCI-E  AR9300 */
- 
- 	/* PCI-E CUS198 */
-@@ -267,6 +280,13 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
- 			 0x1783),
- 	  .driver_data = ATH9K_PCI_WOW },
- 
-+	/* Killer Wireless (2x2) */
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0030,
-+			 0x1A56,
-+			 0x2003),
-+	  .driver_data = ATH9K_PCI_KILLER },
-+
- 	{ PCI_VDEVICE(ATHEROS, 0x0034) }, /* PCI-E  AR9462 */
- 	{ PCI_VDEVICE(ATHEROS, 0x0037) }, /* PCI-E  AR1111/AR9485 */
- 
--- 
-1.8.4.1
-
+  Luis
