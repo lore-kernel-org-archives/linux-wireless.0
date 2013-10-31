@@ -1,59 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:50091 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754116Ab3JCSAt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Oct 2013 14:00:49 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Gabor Juhos <juhosg@openwrt.org>, stable@vger.kernel.org
-Subject: [PATCH v2 1/4] rt2x00: rt2800lib: fix VGC adjustment for RT5592
-Date: Thu,  3 Oct 2013 20:00:40 +0200
-Message-Id: <1380823243-11149-1-git-send-email-juhosg@openwrt.org> (sfid-20131003_200058_978127_D28FCB88)
+Received: from s3.sipsolutions.net ([144.76.43.152]:47433 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753403Ab3JaOnT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Oct 2013 10:43:19 -0400
+Message-ID: <1383230593.14302.1.camel@jlt4.sipsolutions.net> (sfid-20131031_154322_036090_3BAB0814)
+Subject: Re: [PATCH] cfg80211: Introduce critical protocol indication for
+ p2p connection.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sunil Dutt Undekari <usdutt@qti.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, j@w1.fi
+Date: Thu, 31 Oct 2013 15:43:13 +0100
+In-Reply-To: <1383230452-12608-1-git-send-email-usdutt@qti.qualcomm.com> (sfid-20131031_154108_037102_6F3E1A6D)
+References: <1383230452-12608-1-git-send-email-usdutt@qti.qualcomm.com>
+	 (sfid-20131031_154108_037102_6F3E1A6D)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In commit 3d81535ea5940446510a8a5cee1c6ad23c90c753
-(rt2800: 5592: add chip specific vgc calculations)
-the rt2800_link_tuner function has been modified to
-adjust VGC level for the RT5592 chipset.
+On Thu, 2013-10-31 at 20:10 +0530, Sunil Dutt Undekari wrote:
+> A reliable P2P connection needs to avoid any offload off channel
+> operations triggered by the host driver.
 
-On the RT5592 chipset, the VGC level must be adjusted
-only if rssi is greater than -65. However the current
-code adjusts the VGC value by 0x10 regardless of the
-actual chipset if the rssi value is between -80 and
--65.
+That's not what the critical protocol stuff was designed for, so no.
 
-Fix the broken behaviour by reordering the if-else
-statements.
+johannes
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |   11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index f414978..2690081 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -4469,10 +4469,13 @@ void rt2800_link_tuner(struct rt2x00_dev *rt2x00dev, struct link_qual *qual,
- 
- 	vgc = rt2800_get_default_vgc(rt2x00dev);
- 
--	if (rt2x00_rt(rt2x00dev, RT5592) && qual->rssi > -65)
--		vgc += 0x20;
--	else if (qual->rssi > -80)
--		vgc += 0x10;
-+	if (rt2x00_rt(rt2x00dev, RT5592)) {
-+		if (qual->rssi > -65)
-+			vgc += 0x20;
-+	} else {
-+		if (qual->rssi > -80)
-+			vgc += 0x10;
-+	}
- 
- 	rt2800_set_vgc(rt2x00dev, qual, vgc);
- }
--- 
-1.7.10
