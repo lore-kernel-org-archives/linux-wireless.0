@@ -1,52 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42447 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756101Ab3JJSAR (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:47787 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751932Ab3JaQfB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Oct 2013 14:00:17 -0400
-Date: Thu, 10 Oct 2013 13:59:52 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Alexey Khoroshilov <khoroshilov@ispras.ru>
-Cc: Fabio Estevam <festevam@gmail.com>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	ldv-project@linuxtesting.org
-Subject: Re: [PATCH] carl9170: fix leaks at failure path in
- carl9170_usb_probe()
-Message-ID: <20131010175952.GG2691@tuxdriver.com> (sfid-20131010_200036_802541_475CD035)
-References: <1380340311-4630-1-git-send-email-khoroshilov@ispras.ru>
- <CAOMZO5DE0OdXhWNEr2HAswvgryBqP8VNk3+vanwsi38L6pL9OA@mail.gmail.com>
- <52466624.4040106@ispras.ru>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <52466624.4040106@ispras.ru>
+	Thu, 31 Oct 2013 12:35:01 -0400
+Message-ID: <1383237294.14302.5.camel@jlt4.sipsolutions.net> (sfid-20131031_173506_944889_85033697)
+Subject: Re: [PATCH 00/14] wlan: consolidate passive-scan and no-ibss flags
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	janusz.dziedzic@tieto.com, smihir@qti.qualcomm.com,
+	tushnimb@qca.qualcomm.com
+Date: Thu, 31 Oct 2013 17:34:54 +0100
+In-Reply-To: <1382376158-25586-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20131021_192242_751436_1500AA56)
+References: <1382376158-25586-1-git-send-email-mcgrof@do-not-panic.com>
+	 (sfid-20131021_192242_751436_1500AA56)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Sep 28, 2013 at 01:16:20AM -0400, Alexey Khoroshilov wrote:
-> On 28.09.2013 00:17, Fabio Estevam wrote:
-> >On Sat, Sep 28, 2013 at 12:51 AM, Alexey Khoroshilov
-> ><khoroshilov@ispras.ru> wrote:
-> >
-> >>-       return request_firmware_nowait(THIS_MODULE, 1, CARL9170FW_NAME,
-> >>+       err = request_firmware_nowait(THIS_MODULE, 1, CARL9170FW_NAME,
-> >>                 &ar->udev->dev, GFP_KERNEL, ar, carl9170_usb_firmware_step2);
-> >>+       if (err) {
-> >>+               usb_put_dev(udev);
-> >>+               usb_put_dev(udev);
-> >You are doing the same free twice.
-> Yes, because it was get twice.
-> >I guess you meant to also free: usb_put_dev(ar->udev)
-> udev and ar->udev are equal, so technically the patch is correct.
+On Mon, 2013-10-21 at 19:22 +0200, Luis R. Rodriguez wrote:
+> John, Johannes,
 > 
-> I agree that there is some inconsistency, but I would prefer to fix
-> it at usb_get_dev() side with a comment about reasons for the double
-> get.
+> This series addresses consolidating passive-scan and no-ibss flags.
+> Since its crosses over drivers I'll let you guys decide what tree
+> this goes into.
 
-What is the reason for the double get?
+Alright, I've applied this, but in one single big patch, and I've redone
+(most of) the driver updates using spatch.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+There were conflicts applying the patch, so most likely John will get
+conflicts when merging my tree. I've added the spatches to the commit
+log so that should be easy to resolve.
+
+johannes
+
