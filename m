@@ -1,30 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:60001 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753168Ab3JUKWv (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:46192 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753492Ab3JaPzD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Oct 2013 06:22:51 -0400
-Message-ID: <1382350961.14310.42.camel@jlt4.sipsolutions.net> (sfid-20131021_122254_549130_1F091FD6)
-Subject: Re: [PATCH] mac80211: document IEEE80211_HW_SUPPORTS_HT_CCK_RATES
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Opdenacker <michael.opdenacker@free-electrons.com>
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Mon, 21 Oct 2013 12:22:41 +0200
-In-Reply-To: <1382251529-22540-1-git-send-email-michael.opdenacker@free-electrons.com>
-References: <1382251529-22540-1-git-send-email-michael.opdenacker@free-electrons.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 31 Oct 2013 11:55:03 -0400
+From: "Undekari, Sunil Dutt" <usdutt@qti.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"j@w1.fi" <j@w1.fi>
+Subject: RE: [PATCH] cfg80211: Introduce critical protocol indication for
+ p2p connection.
+Date: Thu, 31 Oct 2013 15:54:58 +0000
+Message-ID: <26F3B0343EE4744AA14EEEF9E1E534511F7A6606@aphydexd01a> (sfid-20131031_165508_711159_DCEF4904)
+References: <1383230452-12608-1-git-send-email-usdutt@qti.qualcomm.com>
+	 (sfid-20131031_154108_037102_6F3E1A6D)
+ <1383230593.14302.1.camel@jlt4.sipsolutions.net>
+	 <26F3B0343EE4744AA14EEEF9E1E534511F7A65CC@aphydexd01a>
+ <1383233115.14302.2.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1383233115.14302.2.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2013-10-20 at 08:45 +0200, Michael Opdenacker wrote:
-> This patch documents the IEEE80211_HW_SUPPORTS_HT_CCK_RATES flag
-> in ieee80211_hw_flags.
-> 
-> Without this, you get countless warnings in "make htmldocs".
-
-I already have an equivalent patch with correct documentation :)
-
-johannes
-
+Pkp1c3QgZG8gaXQgaW4gdGhlIHN1cHBsaWNhbnQgLSB0aGF0IGhhcyBmdWxsIGNvbnRyb2wgb3Zl
+ciB3aGF0J3MgZ29pbmcgb24gd2l0aCBhIGdpdmVuIGRldmljZS4NCj5UcnlpbmcgdG8gaGF2ZSB0
+aGUga2VybmVsIG1hbmFnZSBtdWx0aXBsZSB0aGluZ3MgdGhhdCBtYXkgb3IgbWF5IG5vdCBiZSBl
+eGNsdXNpdmUgYW5kIGFyZSBhbGwgZG9uZSBpbiB1c2Vyc3BhY2UgaXMgZ29pbmcgdG8gYmUgYSBm
+dXRpbGUgZXhlcmNpc2UuDQpQbGVhc2Ugbm90ZSB0aGF0IHRoZSBzY2FucyB0aGF0IGFyZSBtZW50
+aW9uZWQgYnkgbWUgaW4gdGhpcyBjb250ZXh0IGFyZSBub3QgdHJpZ2dlcmVkIGJ5IHRoZSBzdXBw
+bGljYW50LCByYXRoZXIgdGhlIGhvc3QgZHJpdmVyIHdvdWxkIGluaXRpYXRlIHRoZW0uDQpUaGUg
+ZHJpdmVyIC8gZmlybXdhcmUgd291bGQgZG8gc3VjaCBzY2FucyBmb3IgYSBiZXR0ZXIgcm9hbSBw
+ZXJmb3JtYW5jZS4NCkkgd291bGQgc2F5LCBzb21lIGhhbmRzaGFrZSBiZXR3ZWVuIHRoZSBzdXBw
+bGljYW50IGFuZCB0aGUgZHJpdmVyIHdvdWxkIGJlIG5lZWRlZCBmb3IgYSBiZXR0ZXIgdW5kZXJz
+dGFuZGluZyBvbiB0aGUgb3BlcmF0aW9ucy4NClBsZWFzZSBoYXZlIHlvdXIgc2F5Lg0KUmVnYXJk
+cywNClN1bmlsDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBKb2hhbm5lcyBC
+ZXJnIFttYWlsdG86am9oYW5uZXNAc2lwc29sdXRpb25zLm5ldF0gDQpTZW50OiBUaHVyc2RheSwg
+T2N0b2JlciAzMSwgMjAxMyA4OjU1IFBNDQpUbzogVW5kZWthcmksIFN1bmlsIER1dHQNCkNjOiBs
+aW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IGpAdzEuZmkNClN1YmplY3Q6IFJlOiBbUEFU
+Q0hdIGNmZzgwMjExOiBJbnRyb2R1Y2UgY3JpdGljYWwgcHJvdG9jb2wgaW5kaWNhdGlvbiBmb3Ig
+cDJwIGNvbm5lY3Rpb24uDQoNCk9uIFRodSwgMjAxMy0xMC0zMSBhdCAxNToyMiArMDAwMCwgVW5k
+ZWthcmksIFN1bmlsIER1dHQgd3JvdGU6DQo+ID4gVGhhdCdzIG5vdCB3aGF0IHRoZSBjcml0aWNh
+bCBwcm90b2NvbCBzdHVmZiB3YXMgZGVzaWduZWQgZm9yLCBzbyBuby4NCj4gSSB3b3VsZCBjb25z
+aWRlciB0aGUgUDJQIGNvbm5lY3Rpb24gcGhhc2UgKFAyUCtXUFMrV1BBKSB0byBiZSBjcml0aWNh
+bCANCj4gYW5kIGFueSBvZmYgY2hhbm5lbCBvcGVyYXRpb25zIChzY2FuKSB0cmlnZ2VyZWQgYnkg
+dGhlIGhvc3QgZHJpdmVyIA0KPiB3b3VsZCByZXN1bHQgaW4gdGhlIGRlbGF5ZWQgLyBmYWlsZWQg
+UDJQIGNvbm5lY3Rpb24gYXR0ZW1wdC4NCj4gSSBzdXBwb3NlIHRoZXJlIHNob3VsZCBiZSBhbiBp
+bmRpY2F0aW9uIHRvIHRoZSBob3N0IGRyaXZlciB3LnIudCBwMnAgDQo+IGNvbm5lY3Rpb24gYXR0
+ZW1wdCBzbyB0aGF0IGFueSBvZmYgbG9hZCBvcGVyYXRpb25zIG9uIGFueSBvdGhlciANCj4gaW50
+ZXJmYWNlIHNoYXJpbmcgdGhlIHNhbWUgcmFkaW8gd291bGQgYmUgYXZvaWRlZCBieSB0aGUgZHJp
+dmVyLg0KPiBTaW5jZSB0aGVyZSBpcyBhbHJlYWR5IGFuIGV4aXN0aW5nIGludGVyZmFjZSB0aHJv
+dWdoIHRoZSBjcml0aWNhbCANCj4gcHJvdG9jb2wgaW5kaWNhdGlvbiwgSSB0aG91Z2h0IG9mIGV4
+dGVuZGluZyBpdCB0byBhbHNvIGluY2x1ZGUgYSBQMlAgDQo+IHByb3RvY29sL2Nvbm5lY3Rpb24u
+IFRoaXMgbmV3IHByb3RvIGlkIHdvdWxkIGJlIGFuIGluZGljYXRpb24gdG8gdGhlIA0KPiBkcml2
+ZXJzIHRvIGFsbG93IHRoZSBzY2FuIG9uIHRoZSBjdXJyZW50IGludGVyZmFjZSBhbmQgYXZvaWQg
+YW55IHNjYW5zIA0KPiBvbiBhbm90aGVyIGNvbnNpZGVyaW5nIHRoZSBmYWN0IHRoYXQgYSBwMnAg
+Y29ubmVjdGlvbiByZXF1aXJlcyBhIHNjYW4uDQo+IERvIHlvdSBwcm9wb3NlIGFuIGFsdGVybmF0
+aXZlIChhIG5ldyBpbnRlcmZhY2U/KSB0byBhY2hpZXZlIHRoZSBzYW1lPw0KDQpKdXN0IGRvIGl0
+IGluIHRoZSBzdXBwbGljYW50IC0gdGhhdCBoYXMgZnVsbCBjb250cm9sIG92ZXIgd2hhdCdzIGdv
+aW5nIG9uIHdpdGggYSBnaXZlbiBkZXZpY2UuDQoNClRyeWluZyB0byBoYXZlIHRoZSBrZXJuZWwg
+bWFuYWdlIG11bHRpcGxlIHRoaW5ncyB0aGF0IG1heSBvciBtYXkgbm90IGJlIGV4Y2x1c2l2ZSBh
+bmQgYXJlIGFsbCBkb25lIGluIHVzZXJzcGFjZSBpcyBnb2luZyB0byBiZSBhIGZ1dGlsZSBleGVy
+Y2lzZS4NCg0Kam9oYW5uZXMNCg0K
