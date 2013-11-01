@@ -1,31 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:47408 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755482Ab3KFSBB (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:48020 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753910Ab3KAN6r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Nov 2013 13:01:01 -0500
-Received: by mail-lb0-f174.google.com with SMTP id q8so8607lbi.5
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Nov 2013 10:00:58 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1383743340.14307.45.camel@jlt4.sipsolutions.net>
-References: <1383742553-28149-1-git-send-email-janusz.dziedzic@tieto.com>
-	<1383743340.14307.45.camel@jlt4.sipsolutions.net>
-Date: Wed, 6 Nov 2013 19:00:58 +0100
-Message-ID: <CALhHN=pbt6_EERwObz3uqnGFhs9uzo8rA-S1hv-H_vdCTqdiJg@mail.gmail.com> (sfid-20131106_190115_597447_893D5416)
-Subject: Re: [PATCH v3 1/3] cfg80211/mac80211: DFS setup chandef for cac event
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 1 Nov 2013 09:58:47 -0400
+Received: by mail-wi0-f171.google.com with SMTP id f4so1110734wiw.4
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:58:46 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 21/65] wireless-regdb: enable VHT80 for GL
+Date: Fri,  1 Nov 2013 14:57:11 +0100
+Message-Id: <1383314275-20960-22-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_150807_175584_AAA47B4D)
+In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 6 November 2013 14:09, Johannes Berg <johannes@sipsolutions.net> wrote:
-> Thanks. I had patch 2 in mac80211.git already, hope that's right. I've
-> applied the other two patches. Did we miss anything now?
->
-No. Everything seems OK.
-Thanks.
+Source is QCA's regulatory team's efforts.
 
-BR
-Janusz
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index cabf2d8..ec9abb2 100644
+--- a/db.txt
++++ b/db.txt
+@@ -322,9 +322,9 @@ country GR: DFS-ETSI
+ 
+ country GL: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 20), (20)
+-	(5250 - 5330 @ 20), (20), DFS
+-	(5490 - 5710 @ 20), (27), DFS
++	(5170 - 5250 @ 80), (20)
++	(5250 - 5330 @ 80), (20), DFS
++	(5490 - 5710 @ 80), (27), DFS
+ 
+ country GT: DFS-FCC
+ 	(2402 - 2472 @ 40), (27)
+-- 
+1.8.4.rc3
+
