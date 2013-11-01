@@ -1,78 +1,202 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:45706 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751430Ab3K0Kh1 (ORCPT
+Received: from mail-we0-f170.google.com ([74.125.82.170]:61303 "EHLO
+	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752288Ab3KANzr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Nov 2013 05:37:27 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21141.51790.303263.385517@gargle.gargle.HOWL> (sfid-20131127_113730_651367_D1F4A333)
-Date: Wed, 27 Nov 2013 16:02:46 +0530
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: ath9k pending patches
-In-Reply-To: <1385547828-4330-1-git-send-email-sujith@msujith.org>
-References: <1385547828-4330-1-git-send-email-sujith@msujith.org>
+	Fri, 1 Nov 2013 09:55:47 -0400
+Received: by mail-we0-f170.google.com with SMTP id u57so4052009wes.1
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:55:45 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 5/8] wireless-regdb: add DFS JP regions
+Date: Fri,  1 Nov 2013 14:55:28 +0100
+Message-Id: <1383314131-20774-6-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_145549_937205_81D5E5D0)
+In-Reply-To: <1383314131-20774-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383314131-20774-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+This associates the following countries to the
+DFS JP region:
 
-There are lots of pending patches for ath9k and all of
-them are here, rebased over -wl master:
+	BD, BH, BN, BO, BZ, CL, DZ, ID, IN, IR
+	JP, JO, KE, KP, KR, NP, PK, QA, TW
 
-http://msujith.org/dir/patches/wl/Nov-27-2013/
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt | 38 +++++++++++++++++++-------------------
+ 1 file changed, 19 insertions(+), 19 deletions(-)
 
-Sujith
+diff --git a/db.txt b/db.txt
+index beb94fd..ec3bee6 100644
+--- a/db.txt
++++ b/db.txt
+@@ -86,7 +86,7 @@ country BB: DFS-FCC
+ 	(5250 - 5330 @ 40), (23), DFS
+ 	(5735 - 5835 @ 40), (30)
+ 
+-country BD:
++country BD: DFS-JP
+ 	(2402 - 2482 @ 40), (20)
+ 
+ country BE: DFS-ETSI
+@@ -105,7 +105,7 @@ country BG: DFS-ETSI
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+-country BH:
++country BH: DFS-JP
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 20), (20)
+ 	(5250 - 5330 @ 20), (20), DFS
+@@ -116,13 +116,13 @@ country BL:
+ 	(5170 - 5250 @ 40), (18)
+ 	(5250 - 5330 @ 40), (18), DFS
+ 
+-country BN:
++country BN: DFS-JP
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 40), (20)
+ 	(5250 - 5330 @ 40), (20), DFS
+ 	(5735 - 5835 @ 40), (30)
+ 
+-country BO:
++country BO: DFS-JP
+ 	(2402 - 2482 @ 40), (30)
+ 	(5735 - 5835 @ 40), (30)
+ 
+@@ -139,7 +139,7 @@ country BY: DFS-ETSI
+ 	(5250 - 5330 @ 40), (20), DFS
+ 	(5490 - 5710 @ 40), (27), DFS
+ 
+-country BZ:
++country BZ: DFS-JP
+ 	(2402 - 2482 @ 40), (30)
+ 	(5735 - 5835 @ 40), (30)
+ 
+@@ -158,7 +158,7 @@ country CH: DFS-ETSI
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+-country CL:
++country CL: DFS-JP
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 40), (20)
+ 	(5250 - 5330 @ 40), (20), DFS
+@@ -245,7 +245,7 @@ country DO: DFS-FCC
+ 	(5250 - 5330 @ 40), (23), DFS
+ 	(5735 - 5835 @ 40), (30)
+ 
+-country DZ:
++country DZ: DFS-JP
+ 	(2402 - 2482 @ 40), (20)
+ 
+ country EC: DFS-FCC
+@@ -377,7 +377,7 @@ country HU: DFS-ETSI
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+-country ID:
++country ID: DFS-JP
+ 	# ref: http://www.postel.go.id/content/ID/regulasi/standardisasi/kepdir/bwa%205,8%20ghz.pdf
+ 	(2402 - 2482 @ 40), (20)
+ 	(5735 - 5815 @ 80), (20)
+@@ -395,7 +395,7 @@ country IL: DFS-ETSI
+ 	(5150 - 5250 @ 80), (200 mW), NO-OUTDOOR
+ 	(5250 - 5350 @ 80), (200 mW), NO-OUTDOOR
+ 
+-country IN:
++country IN: DFS-JP
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 40), (20)
+ 	(5250 - 5330 @ 40), (20), DFS
+@@ -409,7 +409,7 @@ country IS: DFS-ETSI
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+-country IR:
++country IR: DFS-JP
+ 	(2402 - 2482 @ 40), (20)
+ 	(5735 - 5835 @ 40), (30)
+ 
+@@ -428,7 +428,7 @@ country JM: DFS-FCC
+ 	(5490 - 5710 @ 40), (20), DFS
+ 	(5735 - 5835 @ 40), (30)
+ 
+-country JP:
++country JP: DFS-JP
+ 	(2402 - 2482 @ 40), (20)
+ 	(2474 - 2494 @ 20), (20), NO-OFDM
+ 	(4910 - 4990 @ 40), (23)
+@@ -437,11 +437,11 @@ country JP:
+ 	(5250 - 5330 @ 80), (20), DFS
+ 	(5490 - 5710 @ 160), (23), DFS
+ 
+-country JO:
++country JO: DFS-JP
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 40), (18)
+ 
+-country KE:
++country KE: DFS-JP
+ 	(2402 - 2482 @ 40), (20)
+ 	(5735 - 5835 @ 40), (30)
+ 
+@@ -451,14 +451,14 @@ country KH: DFS-ETSI
+ 	(5250 - 5330 @ 40), (20), DFS
+ 	(5490 - 5710 @ 40), (27), DFS
+ 
+-country KP:
++country KP: DFS-JP
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5330 @ 40), (20)
+ 	(5160 - 5250 @ 40), (20), DFS
+ 	(5490 - 5630 @ 40), (30), DFS
+ 	(5735 - 5815 @ 40), (30)
+ 
+-country KR:
++country KR: DFS-JP
+ 	(2402 - 2482 @ 20), (20)
+ 	(5170 - 5250 @ 80), (20)
+ 	(5250 - 5330 @ 80), (20), DFS
+@@ -575,7 +575,7 @@ country NO: DFS-ETSI
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+-country NP:
++country NP: DFS-JP
+ 	(2402 - 2482 @ 40), (20)
+ 	(5735 - 5835 @ 40), (30)
+ 
+@@ -619,7 +619,7 @@ country PH: DFS-FCC
+ 	(5490 - 5710 @ 80), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+-country PK:
++country PK: DFS-JP
+ 	(2402 - 2482 @ 40), (20)
+ 	(5735 - 5835 @ 40), (30)
+ 
+@@ -646,7 +646,7 @@ country PR: DFS-FCC
+ 	(5490 - 5710 @ 80), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+-country QA:
++country QA: DFS-JP
+ 	(2402 - 2482 @ 40), (20)
+ 	(5735 - 5835 @ 40), (30)
+ 
+@@ -725,7 +725,7 @@ country SV: DFS-FCC
+ country SY:
+ 	(2402 - 2482 @ 40), (20)
+ 
+-country TW:
++country TW: DFS-JP
+ 	(2402 - 2472 @ 40), (27)
+ 	(5270 - 5330 @ 40), (17), DFS
+ 	(5490 - 5710 @ 80), (30), DFS
+-- 
+1.8.4.rc3
 
-Sujith Manoharan wrote:
-> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-> 
-> These two patches update the initvals for
-> AR9300 2.2 and AR9580 1.0
-> 
-> After these patches, there are still a few differences between the
-> INI files from the internal driver and ath9k. From verify_checksum:
-> 
-> ar9003-2p2     96a13663004d71b5ffa4fe9efc6b41dcfaf5a327 fail
-> +c8dc777b012068116cd5282aade8eb460f397d20        ar9300_2p2_mac_postamble
-> +5542c7d650feeb530de2775003931a00f992c09a        ar9300Modes_high_power_tx_gain_table_2p2
-> 
-> ar9580-1p0     40e08925d7d8daa4c9841ee807fa25b0fd3f725b fail
-> +c8dc777b012068116cd5282aade8eb460f397d20        ar9580_1p0_mac_postamble
-> +07f9922af110bf9d72a7534a30eefcf9bacd0d7e        ar9580_1p0_baseband_core
-> +8e30343d20745791d5c2e7de968f0e81403761d5        ar9580_1p0_baseband_postamble
-> 
-> Differences:
-> 
-> * In both chips, "mac_postamble" needs an update - the "ALWAYS_PERFORM_KEY_SEARCH"
->   bit has to enabled. This is required to address key cache corruption, which
->   needs a bigger change in the driver.
-> 
-> * The ar9300Modes_high_power_tx_gain_table_2p2 array has been left as such
->   since it is required for certain Buffalo devices.
-> 
-> * ar9580_1p0_baseband_core and ar9580_1p0_baseband_postamble require updates
->   to handle DFS issues. This will be done in a separate commit.
-> 
-> All initval tool changes have been pushed to:
-> https://github.com/sujith/qca-swiss-army-knife/commits/master
-> 
-> Sujith
-> 
-> Sujith Manoharan (2):
->   ath9k: Update initvals for AR9300 v2.2
->   ath9k: Update initvals for AR9580 v1.0
-> 
->  .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   |  24 +-
->  .../net/wireless/ath/ath9k/ar9580_1p0_initvals.h   | 559 ++++++++++++++-------
->  2 files changed, 398 insertions(+), 185 deletions(-)
-> 
-> -- 
-> 1.8.4.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
