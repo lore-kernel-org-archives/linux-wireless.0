@@ -1,57 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:43275 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756221Ab3KFLbw (ORCPT
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:35851 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753786Ab3KAN6N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Nov 2013 06:31:52 -0500
-Message-ID: <1383737505.14307.37.camel@jlt4.sipsolutions.net> (sfid-20131106_123155_095813_77312458)
-Subject: Re: [RFC v2 2/2] mac80211: only set CSA beacon when at least one
- beacon must be transmitted
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Coelho, Luciano" <luciano.coelho@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"sw@simonwunderlich.de" <sw@simonwunderlich.de>
-Date: Wed, 06 Nov 2013 12:31:45 +0100
-In-Reply-To: <1383737255.4256.34.camel@porter.coelho.fi>
-References: <1383684854-21663-1-git-send-email-luciano.coelho@intel.com>
-	 <1383684854-21663-2-git-send-email-luciano.coelho@intel.com>
-	 <1383735101.14307.25.camel@jlt4.sipsolutions.net>
-	 <1383737255.4256.34.camel@porter.coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 1 Nov 2013 09:58:13 -0400
+Received: by mail-wg0-f50.google.com with SMTP id n12so4074743wgh.17
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:58:12 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 06/65] wireless-regdb: enable VHT80 for BA
+Date: Fri,  1 Nov 2013 14:56:56 +0100
+Message-Id: <1383314275-20960-7-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_145818_779867_1C28C06B)
+In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-11-06 at 11:28 +0000, Coelho, Luciano wrote:
+Source is QCA's regulatory team's efforts.
 
-> In terms of the order of calls, the difference is that in the past we
-> had this:
-> 
-> 1. Set CSA beacon;
-> 2. When count reaches 1, the driver calls ieee80211_csa_finish();
-> 3. We call drv_change_chanctx();
-> 4. Set new channel beacon.
-> 
-> (This continues to be the case with my patch when count > 1)
-> 
-> With my patch, if count <= 1, we do this instead:
-> 
-> 1. Call drv_change_chanctx();
-> 2. Set new channel beacon.
-> 
-> The main problem without my patch is that the driver shouldn't beacon
-> with the CSA element when the count starts <= 1, so it won't have a
-> chance to check if the count reached 1 to call ieee80211_csa_finish().
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-I think the other difference is that one calls
-drv_channel_switch_beacon()? The driver might do some channel
-preparations there, though I guess you can audit all the drivers (well,
-one ...) :)
-
-But that'd need some more documentation, otherwise I'd guess people
-would start to rely on drv_channel_switch_beacon() and it would mostly
-work - hence my question of whether it makes sense to refuse it at all
-in the case of <=1.
-
-johannes
+diff --git a/db.txt b/db.txt
+index 2f62549..11060e3 100644
+--- a/db.txt
++++ b/db.txt
+@@ -74,9 +74,9 @@ country AZ: DFS-ETSI
+ 
+ country BA: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 40), (20)
+-	(5250 - 5330 @ 40), (20), DFS
+-	(5490 - 5710 @ 40), (27), DFS
++	(5170 - 5250 @ 80), (20)
++	(5250 - 5330 @ 80), (20), DFS
++	(5490 - 5710 @ 80), (27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+-- 
+1.8.4.rc3
 
