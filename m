@@ -1,62 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:53841 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755560Ab3KODKx (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:2071 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755940Ab3KALZ4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Nov 2013 22:10:53 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Ujjal Roy <royujjal@gmail.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3.13 3/6] mwifiex: fix NULL pointer dereference in mwifiex_fw_dpc
-Date: Thu, 14 Nov 2013 19:10:39 -0800
-Message-ID: <1384485042-7083-3-git-send-email-bzhao@marvell.com> (sfid-20131115_041055_770789_292CF6DA)
-In-Reply-To: <1384485042-7083-1-git-send-email-bzhao@marvell.com>
-References: <1384485042-7083-1-git-send-email-bzhao@marvell.com>
+	Fri, 1 Nov 2013 07:25:56 -0400
+From: "Undekari, Sunil Dutt" <usdutt@qti.qualcomm.com>
+To: Arend van Spriel <arend@broadcom.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"j@w1.fi" <j@w1.fi>
+Subject: RE: [PATCH] cfg80211: Introduce critical protocol indication for
+ p2p connection.
+Date: Fri, 1 Nov 2013 11:25:50 +0000
+Message-ID: <26F3B0343EE4744AA14EEEF9E1E534511F7A8160@aphydexd01a> (sfid-20131101_122606_141100_DD1D80CE)
+References: <1383230452-12608-1-git-send-email-usdutt@qti.qualcomm.com>
+ (sfid-20131031_154108_037102_6F3E1A6D)
+ <1383230593.14302.1.camel@jlt4.sipsolutions.net>
+ <26F3B0343EE4744AA14EEEF9E1E534511F7A65CC@aphydexd01a>
+ <1383233115.14302.2.camel@jlt4.sipsolutions.net>
+ <26F3B0343EE4744AA14EEEF9E1E534511F7A6606@aphydexd01a>
+ <52729681.5020004@broadcom.com>
+In-Reply-To: <52729681.5020004@broadcom.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
-
-We don't need to free/unregister wiphy when
-mwifiex_register_cfg80211() fails. The routine internally takes
-care of it. This redundant code can cause NULL pointer dereference,
-for adapter->wiphy.
-
-Reported-by: Ujjal Roy <royujjal@gmail.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/main.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index 9236b42..42d9a68 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -470,7 +470,7 @@ static void mwifiex_fw_dpc(const struct firmware *firmware, void *context)
- 	priv = adapter->priv[MWIFIEX_BSS_ROLE_STA];
- 	if (mwifiex_register_cfg80211(adapter)) {
- 		dev_err(adapter->dev, "cannot register with cfg80211\n");
--		goto err_register_cfg80211;
-+		goto err_init_fw;
- 	}
- 
- 	rtnl_lock();
-@@ -489,7 +489,6 @@ static void mwifiex_fw_dpc(const struct firmware *firmware, void *context)
- 	goto done;
- 
- err_add_intf:
--err_register_cfg80211:
- 	wiphy_unregister(adapter->wiphy);
- 	wiphy_free(adapter->wiphy);
- err_init_fw:
--- 
-1.8.2.3
-
+SGkgQXJlbmQsDQoNCj5TbyBob3cgd291bGQgdGhlIHNjZW5hcmlvIGxvb2sgbGlrZS4gVGhlIGhv
+c3QgZHJpdmVyIHdpbGwgZ2V0IGludm9sdmVkIGluIHNldHRpbmcgdXAgdGhlIFAyUCBjb25uZWN0
+aW9uIHNvIHRoYXQga25vd2xlZGdlIGlzIGFscmVhZHkgYXZhaWxhYmxlIHRvIGRlZmVyIHRoZSBz
+Y2FucyBvciBhbSBJIG1pc3Npbmcgc29tZXRoaW5nLg0KVGhlIGhvc3QgZHJpdmVyIHNoYWxsIHBl
+cmZvcm0gdGhlIHNjYW4ncyB0byBmaW5kIGEgYmV0dGVyIEJTUyBpbiB0aGUgDQpUaGUgaG9zdCBk
+cml2ZXIgLyBmaXJtd2FyZSBwZXJmb3JtcyAoaW5pdGlhdGVzKSBhIHNjYW4gb24gdGhlIFNUQSBp
+bnRlcmZhY2UgaW4gdGhlIHByb2Nlc3Mgb2YgZmluZGluZyBhIGJldHRlciBCU1MgdG8gcm9hbS4g
+VGhpcyBzY2FuIGlzIG9mZmxvYWRlZCB0byB0aGUgZHJpdmVyIC8gZmlybXdhcmUgZm9yIGEgYmV0
+dGVyIHJvYW0gZXhwZXJpZW5jZS4NClRoaXMgc2NhbnMgd291bGQgZGVmaW5pdGVseSBhZmZlY3Qg
+dGhlIHAycCBjb25uZWN0aW9uIHRyaWdnZXJlZCBieSB0aGUgc3VwcGxpY2FudC4NClRodXMsIEkg
+d2FzIHN1Z2dlc3RpbmcgYSB3YXkgdG8gZXh0ZW5kIHRoZSBhbHJlYWR5IGV4aXN0aW5nIGNyaXRp
+Y2FsIHByb3RvY29sIGluZGljYXRpb25zIHRvIGFsc28gaW5jbHVkZSBwMnAgcHJvdG9jb2wvY29u
+bmVjdGlvbnMsIHNvIHRoYXQgZHJpdmVycyBjYW4gZGVmZXIgdGhlIHNjYW4ncyAoYW55IG9mZiBj
+aGFubmVsIG9wZXJhdGlvbnMgZm9yIHRoYXQgbWF0dGVyKSBvbiBhbnkgb3RoZXIgaW50ZXJmYWNl
+IGR1cmluZyB0aGlzIHBlcmlvZC4NClJlZ2FyZHMsDQpTdW5pbC4NCiAgDQoNCg0KLS0tLS1Pcmln
+aW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEFyZW5kIHZhbiBTcHJpZWwgW21haWx0bzphcmVuZEBi
+cm9hZGNvbS5jb21dIA0KU2VudDogVGh1cnNkYXksIE9jdG9iZXIgMzEsIDIwMTMgMTE6MTIgUE0N
+ClRvOiBVbmRla2FyaSwgU3VuaWwgRHV0dA0KQ2M6IEpvaGFubmVzIEJlcmc7IGxpbnV4LXdpcmVs
+ZXNzQHZnZXIua2VybmVsLm9yZzsgakB3MS5maQ0KU3ViamVjdDogUmU6IFtQQVRDSF0gY2ZnODAy
+MTE6IEludHJvZHVjZSBjcml0aWNhbCBwcm90b2NvbCBpbmRpY2F0aW9uIGZvciBwMnAgY29ubmVj
+dGlvbi4NCg0KT24gMTAvMzEvMTMgMTY6NTQsIFVuZGVrYXJpLCBTdW5pbCBEdXR0IHdyb3RlOg0K
+Pj4gSnVzdCBkbyBpdCBpbiB0aGUgc3VwcGxpY2FudCAtIHRoYXQgaGFzIGZ1bGwgY29udHJvbCBv
+dmVyIHdoYXQncyBnb2luZyBvbiB3aXRoIGEgZ2l2ZW4gZGV2aWNlLg0KPj4gVHJ5aW5nIHRvIGhh
+dmUgdGhlIGtlcm5lbCBtYW5hZ2UgbXVsdGlwbGUgdGhpbmdzIHRoYXQgbWF5IG9yIG1heSBub3Qg
+YmUgZXhjbHVzaXZlIGFuZCBhcmUgYWxsIGRvbmUgaW4gdXNlcnNwYWNlIGlzIGdvaW5nIHRvIGJl
+IGEgZnV0aWxlIGV4ZXJjaXNlLg0KPiBQbGVhc2Ugbm90ZSB0aGF0IHRoZSBzY2FucyB0aGF0IGFy
+ZSBtZW50aW9uZWQgYnkgbWUgaW4gdGhpcyBjb250ZXh0IGFyZSBub3QgdHJpZ2dlcmVkIGJ5IHRo
+ZSBzdXBwbGljYW50LCByYXRoZXIgdGhlIGhvc3QgZHJpdmVyIHdvdWxkIGluaXRpYXRlIHRoZW0u
+DQoNClNvIGhvdyB3b3VsZCB0aGUgc2NlbmFyaW8gbG9vayBsaWtlLiBUaGUgaG9zdCBkcml2ZXIg
+d2lsbCBnZXQgaW52b2x2ZWQgaW4gc2V0dGluZyB1cCB0aGUgUDJQIGNvbm5lY3Rpb24gc28gdGhh
+dCBrbm93bGVkZ2UgaXMgYWxyZWFkeSBhdmFpbGFibGUgdG8gZGVmZXIgdGhlIHNjYW5zIG9yIGFt
+IEkgbWlzc2luZyBzb21ldGhpbmcuDQoNClJlZ2FyZHMsDQpBcmVuZA0KDQo+IFRoZSBkcml2ZXIg
+LyBmaXJtd2FyZSB3b3VsZCBkbyBzdWNoIHNjYW5zIGZvciBhIGJldHRlciByb2FtIHBlcmZvcm1h
+bmNlLg0KPiBJIHdvdWxkIHNheSwgc29tZSBoYW5kc2hha2UgYmV0d2VlbiB0aGUgc3VwcGxpY2Fu
+dCBhbmQgdGhlIGRyaXZlciB3b3VsZCBiZSBuZWVkZWQgZm9yIGEgYmV0dGVyIHVuZGVyc3RhbmRp
+bmcgb24gdGhlIG9wZXJhdGlvbnMuDQo+IFBsZWFzZSBoYXZlIHlvdXIgc2F5Lg0KPiBSZWdhcmRz
+LA0KPiBTdW5pbA0KPg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBKb2hh
+bm5lcyBCZXJnIFttYWlsdG86am9oYW5uZXNAc2lwc29sdXRpb25zLm5ldF0NCj4gU2VudDogVGh1
+cnNkYXksIE9jdG9iZXIgMzEsIDIwMTMgODo1NSBQTQ0KPiBUbzogVW5kZWthcmksIFN1bmlsIER1
+dHQNCj4gQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZzsgakB3MS5maQ0KPiBTdWJq
+ZWN0OiBSZTogW1BBVENIXSBjZmc4MDIxMTogSW50cm9kdWNlIGNyaXRpY2FsIHByb3RvY29sIGlu
+ZGljYXRpb24gZm9yIHAycCBjb25uZWN0aW9uLg0KPg0KPiBPbiBUaHUsIDIwMTMtMTAtMzEgYXQg
+MTU6MjIgKzAwMDAsIFVuZGVrYXJpLCBTdW5pbCBEdXR0IHdyb3RlOg0KPj4+IFRoYXQncyBub3Qg
+d2hhdCB0aGUgY3JpdGljYWwgcHJvdG9jb2wgc3R1ZmYgd2FzIGRlc2lnbmVkIGZvciwgc28gbm8u
+DQo+PiBJIHdvdWxkIGNvbnNpZGVyIHRoZSBQMlAgY29ubmVjdGlvbiBwaGFzZSAoUDJQK1dQUytX
+UEEpIHRvIGJlIA0KPj4gY3JpdGljYWwgYW5kIGFueSBvZmYgY2hhbm5lbCBvcGVyYXRpb25zIChz
+Y2FuKSB0cmlnZ2VyZWQgYnkgdGhlIGhvc3QgDQo+PiBkcml2ZXIgd291bGQgcmVzdWx0IGluIHRo
+ZSBkZWxheWVkIC8gZmFpbGVkIFAyUCBjb25uZWN0aW9uIGF0dGVtcHQuDQo+PiBJIHN1cHBvc2Ug
+dGhlcmUgc2hvdWxkIGJlIGFuIGluZGljYXRpb24gdG8gdGhlIGhvc3QgZHJpdmVyIHcuci50IHAy
+cCANCj4+IGNvbm5lY3Rpb24gYXR0ZW1wdCBzbyB0aGF0IGFueSBvZmYgbG9hZCBvcGVyYXRpb25z
+IG9uIGFueSBvdGhlciANCj4+IGludGVyZmFjZSBzaGFyaW5nIHRoZSBzYW1lIHJhZGlvIHdvdWxk
+IGJlIGF2b2lkZWQgYnkgdGhlIGRyaXZlci4NCj4+IFNpbmNlIHRoZXJlIGlzIGFscmVhZHkgYW4g
+ZXhpc3RpbmcgaW50ZXJmYWNlIHRocm91Z2ggdGhlIGNyaXRpY2FsIA0KPj4gcHJvdG9jb2wgaW5k
+aWNhdGlvbiwgSSB0aG91Z2h0IG9mIGV4dGVuZGluZyBpdCB0byBhbHNvIGluY2x1ZGUgYSBQMlAg
+DQo+PiBwcm90b2NvbC9jb25uZWN0aW9uLiBUaGlzIG5ldyBwcm90byBpZCB3b3VsZCBiZSBhbiBp
+bmRpY2F0aW9uIHRvIHRoZSANCj4+IGRyaXZlcnMgdG8gYWxsb3cgdGhlIHNjYW4gb24gdGhlIGN1
+cnJlbnQgaW50ZXJmYWNlIGFuZCBhdm9pZCBhbnkgDQo+PiBzY2FucyBvbiBhbm90aGVyIGNvbnNp
+ZGVyaW5nIHRoZSBmYWN0IHRoYXQgYSBwMnAgY29ubmVjdGlvbiByZXF1aXJlcyBhIHNjYW4uDQo+
+PiBEbyB5b3UgcHJvcG9zZSBhbiBhbHRlcm5hdGl2ZSAoYSBuZXcgaW50ZXJmYWNlPykgdG8gYWNo
+aWV2ZSB0aGUgc2FtZT8NCj4NCj4gSnVzdCBkbyBpdCBpbiB0aGUgc3VwcGxpY2FudCAtIHRoYXQg
+aGFzIGZ1bGwgY29udHJvbCBvdmVyIHdoYXQncyBnb2luZyBvbiB3aXRoIGEgZ2l2ZW4gZGV2aWNl
+Lg0KPg0KPiBUcnlpbmcgdG8gaGF2ZSB0aGUga2VybmVsIG1hbmFnZSBtdWx0aXBsZSB0aGluZ3Mg
+dGhhdCBtYXkgb3IgbWF5IG5vdCBiZSBleGNsdXNpdmUgYW5kIGFyZSBhbGwgZG9uZSBpbiB1c2Vy
+c3BhY2UgaXMgZ29pbmcgdG8gYmUgYSBmdXRpbGUgZXhlcmNpc2UuDQo+DQo+IGpvaGFubmVzDQo+
+DQo+IE4gICAgIHIgIHkgICBiIFggIMendiBeICneunsubiArICAgIHsgICrelSAsIHtheSAdyofa
+mSAsaiANCj4gICBmICAgaCAgIHogHiB3ICAgDQogICBqOit2ICAgdyBqIG0gICAgICAgICB6Wisg
+ICAgIN2iaiIgICEgaQ0KDQoNCg==
