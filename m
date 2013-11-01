@@ -1,171 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:61987 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756878Ab3KMOQF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Nov 2013 09:16:05 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Bj?rn Mork <bjorn@mork.no>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>,
-	wzyboy <wzyboy@wzyboy.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [Ilw] Intel Wireless 7260 hardware timed out randomly
-Date: Wed, 13 Nov 2013 14:16:00 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301E004BC@HASMSX103.ger.corp.intel.com> (sfid-20131113_151611_065835_CBCA5077)
-References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
-	<CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
-	<527A8166.6000701@gmail.com>
-	<CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
-	<CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
-	<CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
-	<CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
-	<20131111224439.GA30638@google.com>
-	<CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com>
-	<CALkVjQaXEBpbwu9Qy3+17Eg-nSg-k7iin8G3f1RsTLkCOB-2XQ@mail.gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB301DF044C@HASMSX103.ger.corp.intel.com>
-	<CAErSpo5iU15AoSVL9WmLp4gNCiNmt6pFZuTsd-Vui4SCrSc_Hw@mail.gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB301DF0865@HASMSX103.ger.corp.intel.com>
-	<CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
-	<52828364.6080103@gmail.com>
-	<CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB301E00262@HASMSX103.ger.corp.intel.com>
- <87k3gco1k3.fsf@nemi.mork.no>
-In-Reply-To: <87k3gco1k3.fsf@nemi.mork.no>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail-oa0-f43.google.com ([209.85.219.43]:60073 "EHLO
+	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752397Ab3KAAoK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Oct 2013 20:44:10 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>,
+	netdev@vger.kernel.org, Larry Finger <Larry.Finger@lwfinger.net>,
+	Stable <stable@vger.kernel.org>
+Subject: [PATCH NEXT V2] rtlwifi: Fix endian error in extracting packet type
+Date: Thu, 31 Oct 2013 19:43:58 -0500
+Message-Id: <1383266638-4813-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20131101_014421_761757_AA723EE6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiANCj4gIkdydW1iYWNoLCBFbW1hbnVlbCIgPGVtbWFudWVsLmdydW1iYWNoQGludGVsLmNvbT4g
-d3JpdGVzOg0KPiANCj4gPiBPayAtIHNvIEkgaGF2ZSBub3cgdGhlIGNvbXBsZXRlIHBpY3R1cmUu
-DQo+IA0KPiA+IFRoaXMgZGV2aWNlIHdhcyBkZXNpZ25lZCBiZWZvcmUgUENJLVNJRyBnYXZlIGFu
-IElEIHRvIEwxIFBNIFN1YnN0YXRlcywNCj4gPiBzbyBJbnRlbCBoYWQgdG8gdXNlIHRoZSBMMSBQ
-TSBTdWJzdGF0ZSBhcyBhIFZlbmRvciBEZWZpbmUgd2hvc2UgSUQgaXMNCj4gPiAweENBRkUuIExh
-eW91dCBpcyB0aGUgc2FtZSBhcyBkZWZpbmVkIG5vdyBpbiBQQ0ktU0lHIChwYWdlIDIxIGluDQo+
-ID4NCj4gaHR0cDovL3d3dy5wY2lzaWcuY29tL3NwZWNpZmljYXRpb25zL3BjaWV4cHJlc3Mvc3Bl
-Y2lmaWNhdGlvbnMvRUNOX0wxX1BNDQo+IF9TdWJzdGF0ZXNfd2l0aF9DTEtSRVFfMzFfTWF5XzIw
-MTNfUmV2MTBhLnBkZikuDQo+ID4NCj4gPiBTbzoNCj4gPiAxNTA6IDAzIDEwIDAzIDEwIDBiIDAw
-IDAxIDAwIGZlIGNhIDQxIDAxIDFmIDFlIGYwIDAwDQo+ID4gMTYwOiAwZiAwMCBhMCA0MCBmMCAw
-MCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMA0KPiA+DQo+ID4gV2UgY2FuIHNlZSB0aGF0
-IEwxIFBNIFN1YnN0YXRlICppcyogZW5hYmxlZDoNCj4gPiAwMDRoID0gNDEgMDEgMWYgMWUNCj4g
-PiAwMDhoID0gMGYgMDAgZjAgMDANCj4gPiAwMENoID0gYTAgNDAgZjAgMDANCj4gDQo+IFdvdyEg
-IFRoYXQncyBleHRyZW1lbHkgdXNlZnVsLg0KPiANCj4gQnV0IEkgZG8gaGF2ZSBzb21lIHByb2Js
-ZW1zIHBsYWNpbmcgdGhlIGluZGl2aWRpdWFsIGJpdHMgcmlnaHQgaW4gdGhlc2UgTEUNCj4gcmVn
-aXN0ZXJzLiAgQW5kIHNvIGhhdmUgeW91LCBJIGJlbGlldmUuLi4gIFlvdSBhcmUgMiBieXRlcyBv
-ZmYuDQo+ICI0MSAwMSIgaXMgcGFydCBvZiB0aGUgdmVuZG9yIHNwZWNpZmljIGhlYWRlciAoMTIg
-Yml0cyBsZW5ndGggPT0gMHgwMTQgYW5kIDQNCj4gYml0cyB2ZXJzaW9uID09IDB4MS4NCj4gDQoN
-CnllYWggLSBpdCBzZWVtZWQgYXdrd2FyZCB0byBtZSB0aGF0IHRoZSBoZWFkZXIgaXNuJ3QgNC1i
-eXRlcyBhbGlnbmVkLCBidXQgc29tZSBiaXRzIHNlZW1lZCAuLi4gc3RyYW5nZSB0aGVuLiBTbyBJ
-IG9wdGVkIHRvIHRoZSB0aGF0ICh3cm9uZykgcGFyc2luZy4NCk15IHBvb3IgYnJhaW4gaGFzIGFs
-d2F5cyBpc3N1ZXMgcGFyc2luZyB0aGlzIGtpbmQgb2YgdGhpbmdzIGFuZCB0YWtlIGluIGNvdW50
-IHRoZSBlbmRpYW5pdHkgZXRjLi4gOikNCg0KPiBTbyBJIG1hZGUgYSBzaW1wbGUgcGF0Y2ggZm9y
-IGxzcGNpIGJhc2VkIG9uIHlvdXIgaW5mby4gIFNlZW1zIHRvIHdvcmsgZm9yIG1lOg0KPiANCj4g
-DQo+IDAzOjAwLjAgTmV0d29yayBjb250cm9sbGVyIFswMjgwXTogSW50ZWwgQ29ycG9yYXRpb24g
-V2lyZWxlc3MgNzI2MA0KPiBbODA4NjowOGIxXSAocmV2IDYzKQ0KPiAJU3Vic3lzdGVtOiBJbnRl
-bCBDb3Jwb3JhdGlvbiBEdWFsIEJhbmQgV2lyZWxlc3MtQUMgNzI2MA0KPiBbODA4Njo0MDcwXQ0K
-PiAJUGh5c2ljYWwgU2xvdDogMQ0KPiAJQ29udHJvbDogSS9PLSBNZW0rIEJ1c01hc3RlcisgU3Bl
-Y0N5Y2xlLSBNZW1XSU5WLSBWR0FTbm9vcC0NCj4gUGFyRXJyLSBTdGVwcGluZy0gU0VSUisgRmFz
-dEIyQi0gRGlzSU5UeCsNCj4gCVN0YXR1czogQ2FwKyA2Nk1Iei0gVURGLSBGYXN0QjJCLSBQYXJF
-cnItIERFVlNFTD1mYXN0ID5UQWJvcnQtDQo+IDxUQWJvcnQtIDxNQWJvcnQtID5TRVJSLSA8UEVS
-Ui0gSU5UeC0NCj4gCUxhdGVuY3k6IDAsIENhY2hlIExpbmUgU2l6ZTogNjQgYnl0ZXMNCj4gCUlu
-dGVycnVwdDogcGluIEEgcm91dGVkIHRvIElSUSA0NQ0KPiAJUmVnaW9uIDA6IE1lbW9yeSBhdCBm
-MDUwMDAwMCAoNjQtYml0LCBub24tcHJlZmV0Y2hhYmxlKSBbc2l6ZT04S10NCj4gCUNhcGFiaWxp
-dGllczogW2M4XSBQb3dlciBNYW5hZ2VtZW50IHZlcnNpb24gMw0KPiAJCUZsYWdzOiBQTUVDbGst
-IERTSSsgRDEtIEQyLSBBdXhDdXJyZW50PTBtQSBQTUUoRDArLEQxLQ0KPiAsRDItLEQzaG90KyxE
-M2NvbGQrKQ0KPiAJCVN0YXR1czogRDAgTm9Tb2Z0UnN0LSBQTUUtRW5hYmxlLSBEU2VsPTAgRFNj
-YWxlPTAgUE1FLQ0KPiAJQ2FwYWJpbGl0aWVzOiBbZDBdIE1TSTogRW5hYmxlKyBDb3VudD0xLzEg
-TWFza2FibGUtIDY0Yml0Kw0KPiAJCUFkZHJlc3M6IDAwMDAwMDAwZmVlMDEwMGMgIERhdGE6IDQx
-NTINCj4gCUNhcGFiaWxpdGllczogWzQwXSBFeHByZXNzICh2MikgRW5kcG9pbnQsIE1TSSAwMA0K
-PiAJCURldkNhcDoJTWF4UGF5bG9hZCAxMjggYnl0ZXMsIFBoYW50RnVuYyAwLCBMYXRlbmN5DQo+
-IEwwcyA8NTEybnMsIEwxIHVubGltaXRlZA0KPiAJCQlFeHRUYWctIEF0dG5CdG4tIEF0dG5JbmQt
-IFB3ckluZC0gUkJFKyBGTFJlc2V0Kw0KPiAJCURldkN0bDoJUmVwb3J0IGVycm9yczogQ29ycmVj
-dGFibGUtIE5vbi1GYXRhbC0gRmF0YWwtDQo+IFVuc3VwcG9ydGVkLQ0KPiAJCQlSbHhkT3JkKyBF
-eHRUYWctIFBoYW50RnVuYy0gQXV4UHdyKyBOb1Nub29wKw0KPiBGTFJlc2V0LQ0KPiAJCQlNYXhQ
-YXlsb2FkIDEyOCBieXRlcywgTWF4UmVhZFJlcSAxMjggYnl0ZXMNCj4gCQlEZXZTdGE6CUNvcnJF
-cnIrIFVuY29yckVyci0gRmF0YWxFcnItIFVuc3VwcFJlcS0NCj4gQXV4UHdyKyBUcmFuc1BlbmQt
-DQo+IAkJTG5rQ2FwOglQb3J0ICMwLCBTcGVlZCAyLjVHVC9zLCBXaWR0aCB4MSwgQVNQTSBMMHMN
-Cj4gTDEsIEV4aXQgTGF0ZW5jeSBMMHMgPDR1cywgTDEgPDMydXMNCj4gCQkJQ2xvY2tQTSsgU3Vy
-cHJpc2UtIExMQWN0UmVwLSBCd05vdC0NCj4gCQlMbmtDdGw6CUFTUE0gTDEgRW5hYmxlZDsgUkNC
-IDY0IGJ5dGVzIERpc2FibGVkLSBDb21tQ2xrKw0KPiAJCQlFeHRTeW5jaC0gQ2xvY2tQTSsgQXV0
-V2lkRGlzLSBCV0ludC0gQXV0QldJbnQtDQo+IAkJTG5rU3RhOglTcGVlZCAyLjVHVC9zLCBXaWR0
-aCB4MSwgVHJFcnItIFRyYWluLSBTbG90Q2xrKw0KPiBETEFjdGl2ZS0gQldNZ210LSBBQldNZ210
-LQ0KPiAJCURldkNhcDI6IENvbXBsZXRpb24gVGltZW91dDogUmFuZ2UgQiwgVGltZW91dERpcyss
-IExUUissDQo+IE9CRkYgVmlhIFdBS0UjDQo+IAkJRGV2Q3RsMjogQ29tcGxldGlvbiBUaW1lb3V0
-OiAxNm1zIHRvIDU1bXMsIFRpbWVvdXREaXMtLA0KPiBMVFItLCBPQkZGIERpc2FibGVkDQo+IAkJ
-TG5rQ3RsMjogVGFyZ2V0IExpbmsgU3BlZWQ6IDIuNUdUL3MsIEVudGVyQ29tcGxpYW5jZS0NCj4g
-U3BlZWREaXMtDQo+IAkJCSBUcmFuc21pdCBNYXJnaW46IE5vcm1hbCBPcGVyYXRpbmcgUmFuZ2Us
-DQo+IEVudGVyTW9kaWZpZWRDb21wbGlhbmNlLSBDb21wbGlhbmNlU09TLQ0KPiAJCQkgQ29tcGxp
-YW5jZSBEZS1lbXBoYXNpczogLTZkQg0KPiAJCUxua1N0YTI6IEN1cnJlbnQgRGUtZW1waGFzaXMg
-TGV2ZWw6IC0zLjVkQiwNCj4gRXF1YWxpemF0aW9uQ29tcGxldGUtLCBFcXVhbGl6YXRpb25QaGFz
-ZTEtDQo+IAkJCSBFcXVhbGl6YXRpb25QaGFzZTItLCBFcXVhbGl6YXRpb25QaGFzZTMtLA0KPiBM
-aW5rRXF1YWxpemF0aW9uUmVxdWVzdC0NCj4gCUNhcGFiaWxpdGllczogWzEwMCB2MV0gQWR2YW5j
-ZWQgRXJyb3IgUmVwb3J0aW5nDQo+IAkJVUVTdGE6CURMUC0gU0RFUy0gVExQLSBGQ1AtIENtcGx0
-VE8tIENtcGx0QWJydC0NCj4gVW54Q21wbHQtIFJ4T0YtIE1hbGZUTFAtIEVDUkMtIFVuc3VwUmVx
-LSBBQ1NWaW9sLQ0KPiAJCVVFTXNrOglETFAtIFNERVMtIFRMUC0gRkNQLSBDbXBsdFRPLSBDbXBs
-dEFicnQtDQo+IFVueENtcGx0LSBSeE9GLSBNYWxmVExQLSBFQ1JDLSBVbnN1cFJlcS0gQUNTVmlv
-bC0NCj4gCQlVRVN2cnQ6CURMUCsgU0RFUysgVExQLSBGQ1ArIENtcGx0VE8tIENtcGx0QWJydC0N
-Cj4gVW54Q21wbHQtIFJ4T0YrIE1hbGZUTFArIEVDUkMtIFVuc3VwUmVxLSBBQ1NWaW9sLQ0KPiAJ
-CUNFU3RhOglSeEVyci0gQmFkVExQKyBCYWRETExQLSBSb2xsb3Zlci0gVGltZW91dC0NCj4gTm9u
-RmF0YWxFcnIrDQo+IAkJQ0VNc2s6CVJ4RXJyLSBCYWRUTFAtIEJhZERMTFAtIFJvbGxvdmVyLSBU
-aW1lb3V0LQ0KPiBOb25GYXRhbEVycisNCj4gCQlBRVJDYXA6CUZpcnN0IEVycm9yIFBvaW50ZXI6
-IDAwLCBHZW5DYXAtIENHZW5Fbi0NCj4gQ2hrQ2FwLSBDaGtFbi0NCj4gCUNhcGFiaWxpdGllczog
-WzE0MCB2MV0gRGV2aWNlIFNlcmlhbCBOdW1iZXIgMGMtOGItZmQtZmYtZmYtMDgtMDktNzENCj4g
-CUNhcGFiaWxpdGllczogWzE0YyB2MV0gTGF0ZW5jeSBUb2xlcmFuY2UgUmVwb3J0aW5nDQo+IAkJ
-TWF4IHNub29wIGxhdGVuY3k6IDBucw0KPiAJCU1heCBubyBzbm9vcCBsYXRlbmN5OiAwbnMNCj4g
-CUNhcGFiaWxpdGllczogWzE1NCB2MV0gVmVuZG9yIFNwZWNpZmljIEluZm9ybWF0aW9uOiBJRD1j
-YWZlIFJldj0xDQo+IExlbj0wMTQgTDEgUE0gU3Vic3RhdGVzDQo+IAkJTDFTdWJDYXA6IFBDSS1Q
-TV9MMS4yKyBQQ0ktUE1fTDEuMSsgQVNQTV9MMS4yKw0KPiBBU1BNX0wxLjErIEwxX1BNX1N1YnN0
-YXRlcysNCj4gCQkJICBQb3J0Q29tbW9uTW9kZVJlc3RvcmVUaW1lPTMwdXMNCj4gUG9ydFRQb3dl
-ck9uVGltZT02MHVzDQo+IAlLZXJuZWwgZHJpdmVyIGluIHVzZTogaXdsd2lmaQ0KPiAwMDogODYg
-ODAgYjEgMDggMDYgMDUgMTAgMDAgNjMgMDAgODAgMDIgMTAgMDAgMDAgMDANCj4gMTA6IDA0IDAw
-IDUwIGYwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwDQo+IDIwOiAwMCAwMCAw
-MCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCA4NiA4MCA3MCA0MA0KPiAzMDogMDAgMDAgMDAg
-MDAgYzggMDAgMDAgMDAgMDAgMDAgMDAgMDAgMGIgMDEgMDAgMDANCj4gNDA6IDEwIDAwIDAyIDAw
-IGMwIDhlIDAwIDEwIDEwIDBjIDExIDAwIDExIGVjIDA2IDAwDQo+IDUwOiA0MiAwMSAxMSAxMCAw
-MCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMA0KPiA2MDogMDAgMDAgMDAgMDAgMTIg
-MDggMDggMDAgMDUgMDAgMDAgMDAgMDAgMDAgMDAgMDANCj4gNzA6IDAxIDAwIDAxIDAwIDAwIDAw
-IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwDQo+IDgwOiAwMCAwMCAwMCAwMCAwMCAwMCAw
-MCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMA0KPiA5MDogMDAgMDAgMDAgMDAgMDAgMDAgMDAg
-MDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDANCj4gYTA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
-IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwDQo+IGIwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
-MCAwMCAwMCAwMCAwMCAwMCAwMCAwMA0KPiBjMDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDEg
-ZDAgMjMgYzggMDAgMDAgMDAgMGQNCj4gZDA6IDA1IDQwIDgxIDAwIDBjIDEwIGUwIGZlIDAwIDAw
-IDAwIDAwIDUyIDQxIDAwIDAwDQo+IGUwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
-MCAwMCAwMCAwMCAwMCAwMA0KPiBmMDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAg
-MDAgMDAgMDAgMDAgMDANCj4gMTAwOiAwMSAwMCAwMSAxNCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
-MCAzMSAyMCA0NiAwMA0KPiAxMTA6IDQwIDIwIDAwIDAwIDAwIDIwIDAwIDAwIDAwIDAwIDAwIDAw
-IDAwIDAwIDAwIDAwDQo+IDEyMDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAg
-MDAgMDAgMDAgMDANCj4gMTMwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
-MCAwMCAwMCAwMA0KPiAxNDA6IDAzIDAwIGMxIDE0IDcxIDA5IDA4IGZmIGZmIGZkIDhiIDBjIDE4
-IDAwIDQxIDE1DQo+IDE1MDogMDAgMDAgMDAgMDAgMGIgMDAgMDEgMDAgZmUgY2EgNDEgMDEgMWYg
-MWUgZjAgMDANCj4gMTYwOiAwMCAwMCAwMCAwMCAyOCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
-MCAwMCAwMA0KPiAxNzA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
-IDAwIDAwDQo+IDE4MDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAg
-MDAgMDANCj4gMTkwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
-MCAwMA0KPiAxYTA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
-IDAwDQo+IDFiMDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAg
-MDANCj4gMWMwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
-MA0KPiAxZDA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
-DQo+IDFlMDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAN
-Cj4gMWYwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMA0K
-PiAyMDA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwDQo+
-IDIxMDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDANCj4g
-MjIwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMA0KPiAy
-MzA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwDQo+IDI0
-MDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgW3NuaXBw
-ZWQgdGhlIHJlbWFpbmcgMDANCj4gYnl0ZXNdDQo+IA0KPiANCj4gPiBJIG1heSBoYXZlIG1lc3Nl
-ZCB1cCB0aGluZ3MgaGVyZS4uLg0KPiA+DQo+ID4gQWNjb3JkaW5nIHRvIFN5c3RlbSAvIEhXLCBp
-dCBpcyB1bnNhZmUgdG8gZGlzYWJsZSBMMSBQTSBTdWJzdGF0ZSB1c2luZw0KPiBzZXRwY2ksIGV2
-ZW4gaWYgd2UgZGlzYWJsZSBpdCBmcm9tIGJvdGggc2lkZXMgKGRldmljZSBhbmQgYnJpZGdlKS4g
-VGhpcyBraW5kIG9mDQo+IHNldHRpbmdzIHNob3VsZCBiZSBkb25lIGJ5IEJJT1Mgb25seS4NCj4g
-PiBTbyB3ZSBoYXZlIDIgb3B0aW9ucyBoZXJlIChhc3N1bWluZyB0aGF0IHdlIGNhbid0IGRpc2Fi
-bGUgdGhhdCBpbiBCSU9TKToNCj4gPiAqIGVpdGhlciB3ZSB0cnkgdG8gZGlzYWJsZSBMMSBQTSBT
-dWJzdGF0ZSBldmVuIG15IGNvbGxlYWd1ZXMgdGhpbmsgaXQNCj4gPiBpcyBub3Qgc2FmZQ0KPiA+
-ICogZWl0aGVyIHdlIGp1c3QgZGlzYWJsZSBMMSBhbHRvZ2V0aGVyDQo+IA0KPiBIb3cgYWJvdXQg
-Zm9yY2luZyBBU1BNIGV2ZW4gaWYgdGhlIEJJT1Mgc2F5cyBpdCdzIHVuc3VwcG9ydGVkPyAgSGFz
-IHRoYXQNCj4gYmVlbiB0ZXN0ZWQ/DQo+IA0KDQpXZWxsLi4uIE5vLi4uIEF0IGxlYXN0IG5vdCBi
-eSBtZS4gUGVvcGxlIHVzdWFsbHkgY2FyZSBtb3JlIGFib3V0IGNvbm5lY3Rpdml0eSB0aGFuIHNh
-dmluZyBwb3dlciA6KQ0K
+From: Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>
+
+All of the rtlwifi drivers have an error in the routine that tests if
+the data is "special". If it is, the subsequant transmission will be
+at the lowest rate to enhance reliability. The 16-bit quantity is
+big-endian, but was being extracted in native CPU mode. One of the
+effects of this bug is to inhibit association under some conditions
+as the TX rate is too high.
+
+A statement that would have made the code correct had been changed to
+a comment. Rather than just reinstating that code, the fix here passes
+sparse tests. A side effect of fixing this problem would have been to force
+all IPv6 frames to run at the lowest rate. The test for that frame type
+is removed.
+
+The original code only checked the lower-order byte of UDP ports for BOOTP
+protocol. That is extended to the full 16-bit source and destination ports.
+
+One of the local headers contained duplicates of some of the ETH_P_XXX
+definitions. These are deleted.
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>
+Cc: Stable <stable@vger.kernel.org> [2.6.38+]
+---
+
+V2 - Addresses comments by Ben Hutchings and Bjorn Mork.
+
+ drivers/net/wireless/rtlwifi/base.c |   15 ++++++---------
+ drivers/net/wireless/rtlwifi/wifi.h |    6 +-----
+ 2 files changed, 7 insertions(+), 14 deletions(-)
+Index: wireless-testing-save/drivers/net/wireless/rtlwifi/base.c
+===================================================================
+--- wireless-testing-save.orig/drivers/net/wireless/rtlwifi/base.c
++++ wireless-testing-save/drivers/net/wireless/rtlwifi/base.c
+@@ -1077,17 +1077,17 @@ u8 rtl_is_special_data(struct ieee80211_
+ 
+ 	ip = (struct iphdr *)((u8 *) skb->data + mac_hdr_len +
+ 			      SNAP_SIZE + PROTOC_TYPE_SIZE);
+-	ether_type = *(u16 *) ((u8 *) skb->data + mac_hdr_len + SNAP_SIZE);
+-	/*	ether_type = ntohs(ether_type); */
++	ether_type = be16_to_cpu(*(__be16 *)((u8 *)skb->data + mac_hdr_len +
++					     SNAP_SIZE));
+ 
+ 	if (ETH_P_IP == ether_type) {
+ 		if (IPPROTO_UDP == ip->protocol) {
+ 			struct udphdr *udp = (struct udphdr *)((u8 *) ip +
+ 							       (ip->ihl << 2));
+-			if (((((u8 *) udp)[1] == 68) &&
+-			     (((u8 *) udp)[3] == 67)) ||
+-			    ((((u8 *) udp)[1] == 67) &&
+-			     (((u8 *) udp)[3] == 68))) {
++			if (((((u16 *) udp)[0] == 68) &&
++			     (((u16 *) udp)[2] == 67)) ||
++			    ((((u16 *) udp)[0] == 67) &&
++			     (((u16 *) udp)[2] == 68))) {
+ 				/*
+ 				 * 68 : UDP BOOTP client
+ 				 * 67 : UDP BOOTP server
+@@ -1126,9 +1126,6 @@ u8 rtl_is_special_data(struct ieee80211_
+ 		}
+ 
+ 		return true;
+-	} else if (ETH_P_IPV6 == ether_type) {
+-		/* IPv6 */
+-		return true;
+ 	}
+ 
+ 	return false;
+Index: wireless-testing-save/drivers/net/wireless/rtlwifi/wifi.h
+===================================================================
+--- wireless-testing-save.orig/drivers/net/wireless/rtlwifi/wifi.h
++++ wireless-testing-save/drivers/net/wireless/rtlwifi/wifi.h
+@@ -77,11 +77,7 @@
+ #define RTL_SLOT_TIME_9				9
+ #define RTL_SLOT_TIME_20			20
+ 
+-/*related with tcp/ip. */
+-/*if_ehther.h*/
+-#define ETH_P_PAE		0x888E	/*Port Access Entity (IEEE 802.1X) */
+-#define ETH_P_IP		0x0800	/*Internet Protocol packet */
+-#define ETH_P_ARP		0x0806	/*Address Resolution packet */
++/*related to tcp/ip. */
+ #define SNAP_SIZE		6
+ #define PROTOC_TYPE_SIZE	2
+ 
