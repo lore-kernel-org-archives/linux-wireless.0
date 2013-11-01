@@ -1,55 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f181.google.com ([209.85.192.181]:52678 "EHLO
-	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750901Ab3K0Evg (ORCPT
+Received: from mail-ee0-f49.google.com ([74.125.83.49]:37719 "EHLO
+	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752537Ab3KATkR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Nov 2013 23:51:36 -0500
-Message-ID: <52957ADA.2080704@gmail.com> (sfid-20131127_055211_558798_A7DF5684)
-Date: Wed, 27 Nov 2013 12:53:46 +0800
-From: Chen Gang <gang.chen.5i5j@gmail.com>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: rkuo <rkuo@codeaurora.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	David Miller <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
-Subject: [PATCH] net: mac80211: tx.c: be sure of 'sdata->vif.type' must be
- NL80211_IFTYPE_AP when be in NL80211_IFTYPE_AP case
-References: <528AEFB7.4060301@gmail.com> <20131125011938.GB18921@codeaurora.org> <5292B845.3010404@gmail.com> <5292B8A0.7020409@gmail.com> <5294255E.7040105@gmail.com>
-In-Reply-To: <5294255E.7040105@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 1 Nov 2013 15:40:17 -0400
+Received: by mail-ee0-f49.google.com with SMTP id e52so2174810eek.22
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 12:40:16 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH] ath9k: DFS radar use correct width enum
+Date: Fri,  1 Nov 2013 20:39:49 +0100
+Message-Id: <1383334789-12022-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131101_204022_718520_3D26FB29)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In next-20131122 tree, if "sdata->vif.type != NL80211_IFTYPE_AP",
-'chanctx_conf' will be not initialized, so need check it. Related
-warning (with allmodconfig under hexagon):
+Use correct width enums when setup
+radar_detect_widths for DFS.
 
-    CC [M]  net/mac80211/tx.o
-  net/mac80211/tx.c: In function 'ieee80211_subif_start_xmit':
-  net/mac80211/tx.c:1827:27: warning: 'chanctx_conf' may be used uninitialized in this function [-Wuninitialized]
-
-
-Signed-off-by: Chen Gang <gang.chen.5i5j@gmail.com>
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
- net/mac80211/tx.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/init.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index c558b24..f3245d6 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1814,8 +1814,9 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
- 			break;
- 		/* fall through */
- 	case NL80211_IFTYPE_AP:
--		if (sdata->vif.type == NL80211_IFTYPE_AP)
--			chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
-+		if (sdata->vif.type != NL80211_IFTYPE_AP)
-+			goto fail_rcu;
-+		chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
- 		if (!chanctx_conf)
- 			goto fail_rcu;
- 		fc |= cpu_to_le16(IEEE80211_FCTL_FROMDS);
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index eac8f6d..beeb8d4 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -776,8 +776,8 @@ static const struct ieee80211_iface_combination if_comb[] = {
+ 		.max_interfaces = 1,
+ 		.num_different_channels = 1,
+ 		.beacon_int_infra_match = true,
+-		.radar_detect_widths =	BIT(NL80211_CHAN_NO_HT) |
+-					BIT(NL80211_CHAN_HT20),
++		.radar_detect_widths =	BIT(NL80211_CHAN_WIDTH_20_NOHT) |
++					BIT(NL80211_CHAN_WIDTH_20),
+ 	}
+ };
+ 
 -- 
-1.7.7.6
+1.7.9.5
+
