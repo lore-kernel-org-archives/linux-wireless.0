@@ -1,51 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:30453 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751206Ab3KJLlM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Nov 2013 06:41:12 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: wzyboy <wzyboy@wzyboy.org>, Emmanuel Grumbach <egrumbach@gmail.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [Ilw] Intel Wireless 7260 hardware timed out randomly
-Date: Sun, 10 Nov 2013 11:41:07 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301DEDB31@HASMSX103.ger.corp.intel.com> (sfid-20131110_124116_614374_20E273DB)
-References: <5276134B.8070808@wzyboy.org>
- <CALkVjQYh-SUte4S6LdqOc3KSc3_pDU6jz1KXp+Jsd5_RFPXSqA@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DE8338@HASMSX103.ger.corp.intel.com>
- <CALkVjQb7fCMFpqhdUs8w-Mx_Y0RtAYYFtKxXkqyrCQ39UFGxKg@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DE960E@HASMSX103.ger.corp.intel.com>
- <CALkVjQbW8FeiEh8pBZ=KQFD9+8AdjgT0G_RG7qJe0MRdBvMD-A@mail.gmail.com>
- <CALkVjQaLx2spaOqUPcs_EwMkU7npMki1Reo1MeZwxB7m=c24=g@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DE9FC6@HASMSX103.ger.corp.intel.com>
- <CALkVjQZDNSgUUFyi94Y8da_NDzW61rCvaMrZpUugFKW_LRNFFA@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
- <CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
- <CALkVjQY7r=YKhsgDKR0mnYVtZy5BAdj83nY2jL0VFaiew6ha7A@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
- <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
- <527A8166.6000701@gmail.com>
- <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
- <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
- <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
- <CAErSpo6ry6cUaVngozS8-P44=LPJN6cbsZ_mfWkJv9Rn85YXUQ@mail.gmail.com>
- <CALkVjQZEs1CqMEVApDDGZ6FDugPZ+-F5wzvE45+jB5Xrhv_N2A@mail.gmail.com>
- <CANUX_P33UqkCsfHrJW+gx-ZbEQduJ1EZ59fpx6T6wQWOLufSqg@mail.gmail.com>
- <CALkVjQYNPXpTjUpR9NZU6MTJhUmYeO1jXWvOOxk8-Pm=xdKZLg@mail.gmail.com>
-In-Reply-To: <CALkVjQYNPXpTjUpR9NZU6MTJhUmYeO1jXWvOOxk8-Pm=xdKZLg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:52420 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753452Ab3KAN7w (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Nov 2013 09:59:52 -0400
+Received: by mail-wg0-f45.google.com with SMTP id z12so4082593wgg.0
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:59:51 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 50/65] wireless-regdb: add VHT80 rules for UA
+Date: Fri,  1 Nov 2013 14:57:40 +0100
+Message-Id: <1383314275-20960-51-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_145956_876649_B97D139B)
+In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiANCj4gMjAxMy8xMS8xMCBFbW1hbnVlbCBHcnVtYmFjaCA8ZWdydW1iYWNoQGdtYWlsLmNvbT46
-DQo+ID4gSFcgcGVvcGxlIHNlZW0gdG8gd2FudCB0byBrbm93IHdoYXQgaGFwcGVucyBpbiB5b3Ug
-ZGlzYWJsZSBMMQ0KPiBzdWJzdGF0ZXMuDQo+ID4gQ2FuIHlvdSBlbnRlciB5b3UgQklPUyBhbmQg
-Y2hlY2sgaWYgeW91IGhhdmUgc3VjaCBhbiBvcHRpb24gaW4geW91ciBCSU9TPw0KPiANCj4gDQo+
-IENvdWxkIHlvdSBiZSBtb3JlIHNwZWNpZmljIHdoYXQgdGhlIG9wdGlvbiBuYW1lIGxvb2sgbGlr
-ZT8gT3IgSSBjb3VsZCB0YWtlDQo+IHBob3RvcyBmb3IgZWFjaCB0YWIgaW4gQklPUyBhbmQgYXR0
-YWNoIHRoZSBwaG90b3MgaGVyZS4NCj4gDQoNCkl0IGlzIHJlYWxseSBjYWxsZWQgTDEgUE0gU3Vi
-c3RhdGUuDQpJIGRvbid0IHJlYWxseSBrbm93IHRoZSBCSU9TIG9mIFRoaW5rUGFkLi4uIEJ1dCB3
-ZSBjYW4gdHJ5Li4uDQoNCg==
+Source is QCA's regulatory team's efforts.
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/db.txt b/db.txt
+index 4ce2017..aa92c37 100644
+--- a/db.txt
++++ b/db.txt
+@@ -774,6 +774,8 @@ country TR: DFS-ETSI
+ country UA: DFS-ETSI
+ 	(2400 - 2483.5 @ 40), (20), NO-OUTDOOR
+ 	(5150 - 5350 @ 40), (20), NO-OUTDOOR
++	(5490 - 5670 @ 80), (20), DFS
++	(5735 - 5835 @ 80), (20)
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+-- 
+1.8.4.rc3
+
