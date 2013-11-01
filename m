@@ -1,41 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:51768 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751904Ab3KKVYB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Nov 2013 16:24:01 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Subject: [PATCH 2/3] ath9k: optimize ath_drain_all_txq
-Date: Mon, 11 Nov 2013 22:23:34 +0100
-Message-Id: <1384205015-68622-2-git-send-email-nbd@openwrt.org> (sfid-20131111_222408_381987_1953AF67)
-In-Reply-To: <1384205015-68622-1-git-send-email-nbd@openwrt.org>
-References: <1384205015-68622-1-git-send-email-nbd@openwrt.org>
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:64904 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754391Ab3KAN7P (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Nov 2013 09:59:15 -0400
+Received: by mail-wg0-f46.google.com with SMTP id m15so4015478wgh.13
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:59:14 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 34/65] wireless-regdb: enable VHT80 for PK
+Date: Fri,  1 Nov 2013 14:57:24 +0100
+Message-Id: <1383314275-20960-35-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_145922_592710_A67D8599)
+In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the software has processed all packets, checking the hardware queue
-is unnecessary.
+Source is QCA's regulatory team's efforts.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- drivers/net/wireless/ath/ath9k/xmit.c | 3 +++
- 1 file changed, 3 insertions(+)
+ db.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 09cdbcd..babb513 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1786,6 +1786,9 @@ bool ath_drain_all_txq(struct ath_softc *sc)
- 		if (!ATH_TXQ_SETUP(sc, i))
- 			continue;
+diff --git a/db.txt b/db.txt
+index 186bcb0..ecdec07 100644
+--- a/db.txt
++++ b/db.txt
+@@ -618,7 +618,7 @@ country PH: DFS-FCC
  
-+		if (!sc->tx.txq[i].axq_depth)
-+			continue;
-+
- 		if (ath9k_hw_numtxpending(ah, sc->tx.txq[i].axq_qnum))
- 			npend |= BIT(i);
- 	}
+ country PK: DFS-JP
+ 	(2402 - 2482 @ 40), (20)
+-	(5735 - 5835 @ 40), (30)
++	(5735 - 5835 @ 80), (30)
+ 
+ country PL: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
 -- 
-1.8.3.4 (Apple Git-47)
+1.8.4.rc3
 
