@@ -1,57 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4313 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753273Ab3K2LZk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Nov 2013 06:25:40 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Hante Meuleman" <meuleman@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 06/19] brcmfmac: rename dhd_cdc to bcdc
-Date: Fri, 29 Nov 2013 12:25:11 +0100
-Message-ID: <1385724324-6361-7-git-send-email-arend@broadcom.com> (sfid-20131129_123807_881741_721EB1CB)
-In-Reply-To: <1385724324-6361-1-git-send-email-arend@broadcom.com>
-References: <1385724324-6361-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-we0-f179.google.com ([74.125.82.179]:47416 "EHLO
+	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751485Ab3KAODj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Nov 2013 10:03:39 -0400
+Received: by mail-we0-f179.google.com with SMTP id w61so4064100wes.10
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 07:03:38 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 03/23] wireless-regdb: update KE's 5 GHz rules
+Date: Fri,  1 Nov 2013 15:02:58 +0100
+Message-Id: <1383314598-21240-4-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_150342_967715_62492F53)
+In-Reply-To: <1383314598-21240-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383314598-21240-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+This:
 
-dhd_cdc is renamed to bcdc. This is a step in cleaning and
-restructuring protocol layer. This is done so new protocols can
-be added in the future. This step only renames the source files.
+  o Shrinks the existing 5 GHz band by 60 MHz
+    and decreases its max EIRP from 30 dBm to
+    23 dBm
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+  o Adds new 5 GHz frequency ranges with VHT80
+    support
+
+Source is QCA's regulatory team's efforts.
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/Makefile              |    2 +-
- drivers/net/wireless/brcm80211/brcmfmac/{dhd_cdc.c => bcdc.c} |    0
- 2 files changed, 1 insertion(+), 1 deletion(-)
- rename drivers/net/wireless/brcm80211/brcmfmac/{dhd_cdc.c => bcdc.c} (100%)
+ db.txt | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/Makefile b/drivers/net/wireless/brcm80211/brcmfmac/Makefile
-index 8e9b122..e15b61c 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/Makefile
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/Makefile
-@@ -28,7 +28,7 @@ brcmfmac-objs += \
- 		fweh.o \
- 		fwsignal.o \
- 		p2p.o \
--		dhd_cdc.o \
-+		bcdc.o \
- 		dhd_common.o \
- 		dhd_linux.o \
- 		btcoex.o
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c b/drivers/net/wireless/brcm80211/brcmfmac/bcdc.c
-similarity index 100%
-rename from drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
-rename to drivers/net/wireless/brcm80211/brcmfmac/bcdc.c
+diff --git a/db.txt b/db.txt
+index 16c4865..80a394a 100644
+--- a/db.txt
++++ b/db.txt
+@@ -450,7 +450,9 @@ country JO: DFS-JP
+ 
+ country KE: DFS-JP
+ 	(2402 - 2482 @ 40), (20)
+-	(5735 - 5835 @ 40), (30)
++	(5170 - 5250 @ 80), (23)
++	(5490 - 5570 @ 80), (30), DFS
++	(5735 - 5775 @ 40), (23)
+ 
+ country KH: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
 -- 
-1.7.10.4
-
+1.8.4.rc3
 
