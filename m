@@ -1,50 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45318 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750855Ab3KYVAN (ORCPT
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:62144 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752233Ab3KAN7V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Nov 2013 16:00:13 -0500
-Date: Mon, 25 Nov 2013 15:57:02 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: pull-request: mac80211 2013-11-25
-Message-ID: <20131125205702.GD8228@tuxdriver.com> (sfid-20131125_220023_597092_A9850994)
-References: <1385408827.4443.61.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1385408827.4443.61.camel@jlt4.sipsolutions.net>
+	Fri, 1 Nov 2013 09:59:21 -0400
+Received: by mail-wg0-f50.google.com with SMTP id n12so4111715wgh.5
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:59:21 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 37/65] wireless-regdb: enable VHT80 for SI
+Date: Fri,  1 Nov 2013 14:57:27 +0100
+Message-Id: <1383314275-20960-38-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_145927_558759_739E368B)
+In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 25, 2013 at 08:47:07PM +0100, Johannes Berg wrote:
-> John,
-> 
-> First pull request from me - it took me a while to get my trees in
-> order.
-> 
-> For now I have various fixes all over, mostly for issues introduced in
-> relatively recent patches. There's no real pattern to it. Some of the
-> issues like go back longer, but still seemed 3.13 material.
-> 
-> Let me know if there's any problem.
-> 
-> johannes
-> 
-> The following changes since commit 91398a0992c8aa18eb7749060b75761ece5ddc57:
-> 
->   genetlink: fix genl_set_err() group ID (2013-11-21 13:09:43 -0500)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
-> 
-> for you to fetch changes up to 24d47300d118c5909a51b7270276d749cce150a2:
-> 
->   mac80211: set hw initial idle state (2013-11-25 16:56:54 +0100)
+Source is QCA's regulatory team's efforts.
 
-Pulling now...
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
+diff --git a/db.txt b/db.txt
+index f5d6121..b64d7a7 100644
+--- a/db.txt
++++ b/db.txt
+@@ -699,9 +699,9 @@ country SG: DFS-FCC
+ 
+ country SI: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 40), (20)
+-	(5250 - 5330 @ 40), (20), DFS
+-	(5490 - 5710 @ 40), (27), DFS
++	(5170 - 5250 @ 80), (20)
++	(5250 - 5330 @ 80), (20), DFS
++	(5490 - 5710 @ 80), (27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.8.4.rc3
+
