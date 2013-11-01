@@ -1,50 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:62638 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753061Ab3KYCLQ (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:64572 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753075Ab3KANzi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Nov 2013 21:11:16 -0500
-Received: from epcpsbgr2.samsung.com
- (u142.gpu120.samsung.co.kr [203.254.230.142])
- by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MWS00I7WRER7NE0@mailout4.samsung.com> for
- linux-wireless@vger.kernel.org; Mon, 25 Nov 2013 11:11:15 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: "'John W. Linville'" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>,
-	'Dan Williams' <dcbw@redhat.com>,
-	libertas-dev@lists.infradead.org
-Subject: [PATCH] wireless: libertas: remove unnecessary spi_set_drvdata()
-Date: Mon, 25 Nov 2013 11:11:15 +0900
-Message-id: <001a01cee983$9eb1c0c0$dc154240$%han@samsung.com> (sfid-20131125_031123_866755_35A80BB1)
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+	Fri, 1 Nov 2013 09:55:38 -0400
+Received: by mail-we0-f174.google.com with SMTP id u56so4026531wes.33
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:55:36 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 1/8] wireless-regdb: consolidate passive-scan and no-ibss flags
+Date: Fri,  1 Nov 2013 14:55:24 +0100
+Message-Id: <1383314131-20774-2-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_145541_128985_525A7150)
+In-Reply-To: <1383314131-20774-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383314131-20774-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver core clears the driver data to NULL after device_release
-or on probe failure. Thus, it is not needed to manually clear the
-device driver data to NULL.
+These are used interchangeably so just do away
+with the redundancy.
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- drivers/net/wireless/libertas/if_spi.c |    1 -
- 1 file changed, 1 deletion(-)
+ db.txt     | 8 ++++----
+ dbparse.py | 4 ++--
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
-index 8366915..f11728a 100644
---- a/drivers/net/wireless/libertas/if_spi.c
-+++ b/drivers/net/wireless/libertas/if_spi.c
-@@ -93,7 +93,6 @@ static void free_if_spi_card(struct if_spi_card *card)
- 		list_del(&packet->list);
- 		kfree(packet);
- 	}
--	spi_set_drvdata(card->spi, NULL);
- 	kfree(card);
- }
+diff --git a/db.txt b/db.txt
+index d0d1a3f..b8ddb1b 100644
+--- a/db.txt
++++ b/db.txt
+@@ -2,14 +2,14 @@
+ country 00:
+ 	(2402 - 2472 @ 40), (3, 20)
+ 	# Channel 12 - 13.
+-	(2457 - 2482 @ 40), (3, 20), PASSIVE-SCAN, NO-IBSS
++	(2457 - 2482 @ 40), (3, 20), NO-IR
+ 	# Channel 14. Only JP enables this and for 802.11b only
+-	(2474 - 2494 @ 20), (3, 20), PASSIVE-SCAN, NO-IBSS, NO-OFDM
++	(2474 - 2494 @ 20), (3, 20), NO-IR, NO-OFDM
+ 	# Channel 36 - 48
+-	(5170 - 5250 @ 80), (3, 20), PASSIVE-SCAN, NO-IBSS
++	(5170 - 5250 @ 80), (3, 20), NO-IR
+ 	# NB: 5260 MHz - 5700 MHz requies DFS
+ 	# Channel 149 - 165
+-	(5735 - 5835 @ 80), (3, 20), PASSIVE-SCAN, NO-IBSS
++	(5735 - 5835 @ 80), (3, 20), NO-IR
+ 	# IEEE 802.11ad (60GHz), channels 1..3
+ 	(57240 - 63720 @ 2160), (N/A, 0)
  
+diff --git a/dbparse.py b/dbparse.py
+index 32cbce9..29eb9d6 100755
+--- a/dbparse.py
++++ b/dbparse.py
+@@ -12,8 +12,8 @@ flag_definitions = {
+     'DFS':		1<<4,
+     'PTP-ONLY':		1<<5,
+     'PTMP-ONLY':	1<<6,
+-    'PASSIVE-SCAN':	1<<7,
+-    'NO-IBSS':		1<<8,
++    'NO-IR':	        1<<7,
++    # hole at bit 8
+     # hole at bit 9. FIXME: Where is NO-HT40 defined?
+     'NO-HT40':		1<<10,
+ }
 -- 
-1.7.10.4
-
+1.8.4.rc3
 
