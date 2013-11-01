@@ -1,39 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:56870 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754083Ab3KTSkv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Nov 2013 13:40:51 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH 3.13] cfg80211: ignore supported rates for nonexistant bands on scan
-Date: Wed, 20 Nov 2013 19:40:41 +0100
-Message-Id: <1384972841-34929-1-git-send-email-nbd@openwrt.org> (sfid-20131120_194054_550906_33972D59)
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:33538 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751485Ab3KAOEM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Nov 2013 10:04:12 -0400
+Received: by mail-wg0-f52.google.com with SMTP id k14so4069033wgh.31
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 07:04:12 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 16/23] wireless-regdb: update CO's regulatory rules
+Date: Fri,  1 Nov 2013 15:03:11 +0100
+Message-Id: <1383314598-21240-17-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_150809_779160_F7406826)
+In-Reply-To: <1383314598-21240-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383314598-21240-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixes wpa_supplicant p2p_find on 5GHz-only devices
+This extends CO's coverage by 10 MHz but reduces its
+max EIRP from 27 dBm to 20 dBm. This also increases
+the 5 GHz DFS frequency range.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Source is QCA's regulatory team's efforts.
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- net/wireless/nl80211.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ db.txt | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index a7f4e79..b94ab6f 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5330,6 +5330,10 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
- 				err = -EINVAL;
- 				goto out_free;
- 			}
-+
-+			if (!wiphy->bands[band])
-+				continue;
-+
- 			err = ieee80211_get_ratemask(wiphy->bands[band],
- 						     nla_data(attr),
- 						     nla_len(attr),
+diff --git a/db.txt b/db.txt
+index f26fd1d..50c81ce 100644
+--- a/db.txt
++++ b/db.txt
+@@ -180,10 +180,10 @@ country CN: DFS-FCC
+ 	(63720 - 65880 @ 2160), (28)
+ 
+ country CO: DFS-FCC
+-	(2402 - 2472 @ 40), (27)
++	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 80), (17)
+ 	(5250 - 5330 @ 80), (24), DFS
+-	(5490 - 5710 @ 80), (24), DFS
++	(5490 - 5730 @ 80), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+ country CR: DFS-FCC
 -- 
-1.8.3.4 (Apple Git-47)
+1.8.4.rc3
 
