@@ -1,56 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f44.google.com ([209.85.214.44]:36871 "EHLO
-	mail-bk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757045Ab3KNUE1 (ORCPT
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:64165 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753197Ab3KAOAH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Nov 2013 15:04:27 -0500
-Received: by mail-bk0-f44.google.com with SMTP id d7so1298789bkh.3
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Nov 2013 12:04:25 -0800 (PST)
-Message-ID: <52852CC7.4080909@gmail.com> (sfid-20131114_210439_145764_098258E3)
-Date: Thu, 14 Nov 2013 22:04:23 +0200
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-MIME-Version: 1.0
-To: Federico Tomassetti <f.tomassetti@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Iwlwifi crashing with microcode error - Intel 7260 N
-References: <CAFux1qFNMwOKEOQ-46xev9LHPanV5NxPXW3UjKGY1od-+6KDCA@mail.gmail.com>	<528523EA.80600@gmail.com> <CAFux1qFFY6=6X0+zXr++gJK=zyU=HF24C2gFVtUishLG+4MZEg@mail.gmail.com>
-In-Reply-To: <CAFux1qFFY6=6X0+zXr++gJK=zyU=HF24C2gFVtUishLG+4MZEg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 1 Nov 2013 10:00:07 -0400
+Received: by mail-wi0-f175.google.com with SMTP id hm4so1109561wib.14
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 07:00:06 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 56/65] wireless-regdb: extend 5 GHz range for CR
+Date: Fri,  1 Nov 2013 14:57:46 +0100
+Message-Id: <1383314275-20960-57-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_150019_271532_665CD1B3)
+In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This extends the 5 GHz DFS frequency range.
 
+Source is QCA's regulatory team's efforts.
 
-On 11/14/2013 09:27 PM, Federico Tomassetti wrote:
-> No, I am just using it to connet to my wireless router and navigate from home,
-> 
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-ok - please send the output of:
-iw reg get
-iw list
+diff --git a/db.txt b/db.txt
+index 6d20e1f..3eb782c 100644
+--- a/db.txt
++++ b/db.txt
+@@ -190,7 +190,7 @@ country CR: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 80), (17)
+ 	(5250 - 5330 @ 80), (24), DFS
+-	(5490 - 5710 @ 80), (24), DFS
++	(5490 - 5730 @ 80), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+ country CY: DFS-ETSI
+-- 
+1.8.4.rc3
 
-I also would like to see your syslog.
-What is the channel your AP is working on?
-
-
-> Federico
-> 
-> On Thu, Nov 14, 2013 at 8:26 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
->>
->>
->> On 11/14/2013 09:12 PM, Federico Tomassetti wrote:
->>> Hi,
->>> I tried with different kernel, right now I am using the wireless
->>> testing kernel and still I get this error.
->>>
->>> uname -a:
->>> Linux normandy 3.12.0-wl+ #1 SMP Wed Nov 13 19:42:50 CET 2013 x86_64
->>> Intel(R) Core(TM) i7-4700MQ CPU @ 2.40GHz GenuineIntel GNU/Linux
->>>
->>> How can I help you working on this bug?
->>>
->>
->> You are using it as an AP, right?
-> 
-> 
-> 
