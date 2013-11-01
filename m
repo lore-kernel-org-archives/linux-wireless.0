@@ -1,31 +1,215 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:47790 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751011Ab3KMWLo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Nov 2013 17:11:44 -0500
-Message-ID: <5283F91D.3070205@openwrt.org> (sfid-20131113_231147_149008_3DD5EDBF)
-Date: Wed, 13 Nov 2013 23:11:41 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Karl Beldan <karl.beldan@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>
-Subject: Re: [PATCH v2] mac80211: minstrel_ht: fix rates selection
-References: <5283ED31.1050606@openwrt.org> <1384380427-12950-1-git-send-email-karl.beldan@gmail.com>
-In-Reply-To: <1384380427-12950-1-git-send-email-karl.beldan@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:41313 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753075Ab3KANzo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Nov 2013 09:55:44 -0400
+Received: by mail-wg0-f41.google.com with SMTP id b13so1062148wgh.0
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:55:43 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 4/8] wireless-regdb: add DFS ETSI regions
+Date: Fri,  1 Nov 2013 14:55:27 +0100
+Message-Id: <1383314131-20774-5-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_145548_682332_9284CCC0)
+In-Reply-To: <1383314131-20774-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383314131-20774-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-11-13 23:07, Karl Beldan wrote:
-> From: Karl Beldan <karl.beldan@rivierawaves.com>
-> 
-> When initializing rates selections starting indexes upon stats update,
-> the minstrel_sta->max_* rates should be 'group * MCS_GROUP_RATES + i'
-> not 'i'. This affects settings where one of the peers does not support
-> any of the rates of the group 0 (i.e. when ht_cap.mcs.rx_mask[0] == 0).
-> 
-> Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
-Acked-by: Felix Fietkau <nbd@openwrt.org>
+This associates the following countries to the
+DFS ETSI region:
+
+	AL, AM, AN, AW, AZ, BY, EG, GE, HT,
+	IL, KH, KW, MA, OM, RS, RU, SA, TN,
+	UA, ZA, ZW
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt | 42 +++++++++++++++++++++---------------------
+ 1 file changed, 21 insertions(+), 21 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index 94da96a..beb94fd 100644
+--- a/db.txt
++++ b/db.txt
+@@ -25,15 +25,15 @@ country AE: DFS-FCC
+ 	(5490 - 5710 @ 80), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+-country AL:
++country AL: DFS-ETSI
+ 	(2402 - 2482 @ 20), (20)
+ 
+-country AM:
++country AM: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 20), (18)
+ 	(5250 - 5330 @ 20), (18), DFS
+ 
+-country AN:
++country AN: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 40), (20)
+ 	(5250 - 5330 @ 40), (20), DFS
+@@ -61,13 +61,13 @@ country AU:
+ 	(5490 - 5710 @ 80), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+-country AW:
++country AW: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 40), (20)
+ 	(5250 - 5330 @ 40), (20), DFS
+ 	(5490 - 5710 @ 40), (27), DFS
+ 
+-country AZ:
++country AZ: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 40), (18)
+ 	(5250 - 5330 @ 40), (18), DFS
+@@ -133,7 +133,7 @@ country BR: DFS-FCC
+ 	(5490 - 5710 @ 80), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+-country BY:
++country BY: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 40), (20)
+ 	(5250 - 5330 @ 40), (20), DFS
+@@ -263,7 +263,7 @@ country EE: DFS-ETSI
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+-country EG:
++country EG: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 20), (20)
+ 	(5250 - 5330 @ 20), (20), DFS
+@@ -292,7 +292,7 @@ country FR: DFS-ETSI
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+-country GE:
++country GE: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 40), (18)
+ 	(5250 - 5330 @ 40), (18), DFS
+@@ -363,7 +363,7 @@ country HR: DFS-ETSI
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+-country HT:
++country HT: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 40), (20)
+ 	(5250 - 5330 @ 40), (20), DFS
+@@ -390,7 +390,7 @@ country IE: DFS-ETSI
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+-country IL:
++country IL: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5150 - 5250 @ 80), (200 mW), NO-OUTDOOR
+ 	(5250 - 5350 @ 80), (200 mW), NO-OUTDOOR
+@@ -445,7 +445,7 @@ country KE:
+ 	(2402 - 2482 @ 40), (20)
+ 	(5735 - 5835 @ 40), (30)
+ 
+-country KH:
++country KH: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 40), (20)
+ 	(5250 - 5330 @ 40), (20), DFS
+@@ -465,7 +465,7 @@ country KR:
+ 	(5490 - 5630 @ 80), (30), DFS
+ 	(5735 - 5815 @ 80), (30)
+ 
+-country KW:
++country KW: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 80), (20)
+ 	(5250 - 5330 @ 80), (20), DFS
+@@ -519,7 +519,7 @@ country MC: DFS-ETSI
+ 	(5170 - 5250 @ 40), (18)
+ 	(5250 - 5330 @ 40), (18), DFS
+ 
+-country MA:
++country MA: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 80), (23)
+ 	(5735 - 5835 @ 80), (23)
+@@ -586,7 +586,7 @@ country NZ: DFS-FCC
+ 	(5490 - 5710 @ 80), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+-country OM:
++country OM: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 40), (17)
+ 	(5250 - 5330 @ 40), (20), DFS
+@@ -661,14 +661,14 @@ country RO: DFS-ETSI
+ 
+ # Source:
+ # http://www.ratel.rs/upload/documents/Plan_namene/Plan_namene-sl_glasnik.pdf
+-country RS:
++country RS: DFS-ETSI
+ 	(2400 - 2483.5 @ 40), (100 mW)
+ 	(5150 - 5350 @ 40), (200 mW), NO-OUTDOOR
+ 	(5470 - 5725 @ 20), (1000 mW), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+-country RU:
++country RU: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5330 @ 40), (20)
+ 	(5650 - 5710 @ 40), (30)
+@@ -678,7 +678,7 @@ country RW: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+ 	(5735 - 5835 @ 40), (30)
+ 
+-country SA:
++country SA: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 80), (17)
+ 	(5250 - 5330 @ 80), (24), DFS
+@@ -745,7 +745,7 @@ country TT: DFS-FCC
+ 	(5490 - 5710 @ 40), (20), DFS
+ 	(5735 - 5835 @ 40), (30)
+ 
+-country TN:
++country TN: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 20), (20)
+ 	(5250 - 5330 @ 20), (20), DFS
+@@ -765,7 +765,7 @@ country TR: DFS-ETSI
+ # Listed 5GHz range is a lowest common denominator for all related
+ # rules in the referenced laws. Such a range is used because of
+ # disputable definitions there.
+-country UA:
++country UA: DFS-ETSI
+ 	(2400 - 2483.5 @ 40), (20), NO-OUTDOOR
+ 	(5150 - 5350 @ 40), (20), NO-OUTDOOR
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+@@ -811,13 +811,13 @@ country VN: DFS-FCC
+ country YE:
+ 	(2402 - 2482 @ 40), (20)
+ 
+-country ZA:
++country ZA: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 80), (17)
+ 	(5250 - 5330 @ 80), (24), DFS
+ 	(5490 - 5710 @ 80), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+-country ZW:
++country ZW: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 
+-- 
+1.8.4.rc3
 
