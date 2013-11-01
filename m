@@ -1,36 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:36563 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753904Ab3KKPpt (ORCPT
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:37279 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752603Ab3KAOE3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Nov 2013 10:45:49 -0500
-Message-ID: <1384184745.14334.32.camel@jlt4.sipsolutions.net> (sfid-20131111_164556_239627_08A61034)
-Subject: Re: [PATCH 1/2] mac80211: minstrels: spare numerous useless calls
- to get_random_bytes
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Karl Beldan <karl.beldan@gmail.com>
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>
-Date: Mon, 11 Nov 2013 16:45:45 +0100
-In-Reply-To: <1383928473-798-1-git-send-email-karl.beldan@gmail.com> (sfid-20131108_173457_501914_FE444774)
-References: <1383928473-798-1-git-send-email-karl.beldan@gmail.com>
-	 (sfid-20131108_173457_501914_FE444774)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 1 Nov 2013 10:04:29 -0400
+Received: by mail-wg0-f45.google.com with SMTP id z12so4141377wgg.24
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 07:04:28 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 20/23] wireless-regdb: update MX's regulatory rules
+Date: Fri,  1 Nov 2013 15:03:15 +0100
+Message-Id: <1383314598-21240-21-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_150812_099991_71FC89F0)
+In-Reply-To: <1383314598-21240-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383314598-21240-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-11-08 at 17:34 +0100, Karl Beldan wrote:
-> From: Karl Beldan <karl.beldan@rivierawaves.com>
-> 
-> These are called to init the sample tables.
-> This occurs once in minstrel_ht upon its registration (since it uses one
-> single common sample table for all STAs), and once per sta addition in
-> minstrel.
+This:
 
-This commit log is suboptimal, it doesn't even seem to describe a change
-but rather the behaviour after (or before?) the change?
+  o increases the 2.4 GHz frequency range but with the
+    compromise of reducing the max EIRP from 27 dBm to
+    20 dBm
 
-johannes
+  o extends the second 5 GHz DFS frequency range
+
+Source is QCA's regulatory team's efforts.
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index 9158448..40a64d7 100644
+--- a/db.txt
++++ b/db.txt
+@@ -567,10 +567,10 @@ country MY: DFS-FCC
+ 	(5735 - 5835 @ 80), (30)
+ 
+ country MX: DFS-FCC
+-	(2402 - 2472 @ 40), (27)
++	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 80), (17)
+ 	(5250 - 5330 @ 80), (24), DFS
+-	(5490 - 5710 @ 80), (24), DFS
++	(5490 - 5730 @ 80), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+ country NL: DFS-ETSI
+-- 
+1.8.4.rc3
 
