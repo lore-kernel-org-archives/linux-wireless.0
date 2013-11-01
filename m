@@ -1,96 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:38414 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757388Ab3KLWJf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Nov 2013 17:09:35 -0500
-Received: by mail-ie0-f182.google.com with SMTP id e14so562580iej.41
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Nov 2013 14:09:35 -0800 (PST)
+Received: from mms2.broadcom.com ([216.31.210.18]:4616 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752200Ab3KARyH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Nov 2013 13:54:07 -0400
+Message-ID: <5273EAAE.9020005@broadcom.com> (sfid-20131101_185412_344129_EB90E974)
+Date: Fri, 1 Nov 2013 18:53:50 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <52828364.6080103@gmail.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
- <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
- <527A8166.6000701@gmail.com> <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
- <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
- <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
- <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
- <20131111224439.GA30638@google.com> <CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com>
- <CALkVjQaXEBpbwu9Qy3+17Eg-nSg-k7iin8G3f1RsTLkCOB-2XQ@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DF044C@HASMSX103.ger.corp.intel.com>
- <CAErSpo5iU15AoSVL9WmLp4gNCiNmt6pFZuTsd-Vui4SCrSc_Hw@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DF0865@HASMSX103.ger.corp.intel.com>
- <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com> <52828364.6080103@gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 12 Nov 2013 15:09:14 -0700
-Message-ID: <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com> (sfid-20131112_230950_439051_2919591F)
-Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	wzyboy <wzyboy@wzyboy.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Ruben De Smet" <ruben.de.smet@telenet.be>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>,
+	b43-dev@lists.infradead.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list@broadcom.com
+Subject: Re: BCM43228
+References: <52737A9C.3020404@telenet.be>
+ <5273C948.9060409@lwfinger.net> <5273D018.7080607@telenet.be>
+In-Reply-To: <5273D018.7080607@telenet.be>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 12, 2013 at 12:37 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
-> On 11/12/2013 09:14 PM, Bjorn Helgaas wrote:
->> On Tue, Nov 12, 2013 at 11:25 AM, Grumbach, Emmanuel
->> <emmanuel.grumbach@intel.com> wrote:
->>
->>> Right - I remember the discussion we had on that.
->>> On this device (7260 that has an issue with ASPM), we don't call pci_disable_link_state, because we know it is supposed to work...
->>
->> If ASPM is supposed to work as far as the hardware is concerned, I
->> guess you're saying this must be an iwlwifi driver issue.  Right?
+On 11/01/2013 05:00 PM, Ruben De Smet wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA1
 >
-> ASPM is supposed to work as far as the hardware is concerned.
-> We might very well have an issue in iwlwifi - and I am checking this
-> internally with our System guys.
-> It can be a PCI core problem too, and it could also be a platform / BIOS
-> / Lenovo issue.
-> Of course, I have no clue which of these is the culprit here.
-> Our System folks seemed to say that this new device uses L1 substates
-> which can be enabled in Haswell platform which the user owns.
-> Now - L1 substates is a new feature and might introduce issues
-> (apparently) - and this is why they (System folks) wanted the try
-> without L1 substates. But disabling L1 substates doesn't seem trivial
-> with the production BIOS of Lenovo. So I am pretty stuck here.
+>
+>
+> On 11/01/2013 04:31 PM, Larry Finger wrote:
+>>> Hi folks,
+>>>
+>>> I'm currently running Broamcoms prorietary wl drivers, which
+>>> were running fine until I found a bug in the bluetooth part of
+>>> it, which panics the kernel at a certain position. I don't know
+>>> if it's a part in the GPL part of the kernel which panics, or if
+>>> it's in the Broadcom part, as the kernel is tainted by the
+>>> wireless driver and cannot be debugged that way.
+>>>
+>>> lspci shows me this: 03:00.0 Network controller: Broadcom
+>>> Corporation BCM43228 802.11a/b/g/n
+>>>
+>>> My question: will b43 ever support this chip? If so, I'd be able
+>>> to give someone access to this computer for debugging purposes.
+>>> I'd give any help possible, though kernels and modules aren't my
+>>> domain yet.
+>>
+>> The short answer is "probably not". The reverse engineering process
+>> is very time consuming and boring. What seems to work best is to
+>> find a MIPS driver and disassemble it to form the kind of "specs"
+>> that are seen at http://bcm-v4.sipsolutions.net/. Next a different
+>> person needs to take that prescription and turn it into code. To
+>> preserve the clean-room setting, those two parts must be done by
+>> separate people. The process worked reasonably well for 802.11g
+>> devices, but  the code gets very complicated for 802.11n. Further
+>> complicating the issue is that at least one of two BCM43228 units
+>> has an LCNXN PHY, and we have done little with that although the
+>> web site shows WIP for that PHY with a BCM43227. The 2.4 GHz part
+>> of the 227 probably matches that of the 228. Note that b43 has
+>> never worked well with the 5 GHz radio in any of the chips.
+>>
+>> Of course, if the RE is done perfectly, then you end up with all
+>> the bugs of wl. :)
+>>
+>> One other possibility is that the device might eventually be
+>> supported by brcmsmac. That set of authors has the advantage of
+>> having access to the Broadcom documentation and the wl sources. In
+>> case that is a possibility, I added the linux-wireless mailing list
+>> to this reply.
+>>
+>> As shown at
+>> http://wireless.kernel.org/en/users/Drivers/b43#Supported_devices,
+>> there are two different PCI IDs that are called BCM43228. When you
+>> ask this kind of question, you should include the output of 'lspci
+>> -nn' so that the ID is listed.
+>>
+>> Larry
+>>
+>
+> AFAIK, broadcom only offers it's drivers for intel x86 and x64_86; I
+> guess by MIPS, you mean the architecture? (why wouldn't the intel
+> driver work? Pretty unknown on the subject ;) )
+>
+> I read the WIP mail about the 227 chip, I could possibly wait for that
+> one to be released and test it out on mine?
+>
+> For the record: the issue I'm having is as follows: when connecting
+> via the bluetooth part of the chip to my phone and using DUN to
+> connect to the internet, everything works fine until I shut down the
+> connection. Then my kernel panics. (Another issue of course is the
+> fact that wl is the only closed source thing in my kernel running atm
+> on my notebook...)
+>
+> On brcmsmac: is linux-wireless the right mailinglist to post to then?
+> I see that the range of supported devices is more close to my chip
+> than b43 is ;)
+> I added brcm80211-dev-list@broadcom.com to this mail too, which looks
+> like the more appropriate mailinglist to post the issue to.
 
-For debugging purposes, we could configure L1 substates with setpci,
-as we did for ASPM.  The Linux kernel knows nothing about L1
-substates, so the PCI core isn't doing anything with them.  It's
-possible the driver itself could muck with L1 substate configuration,
-but that would be discouraged, and I don't see anything in iwlwifi
-that is doing that.
+Let me chime in on this. We always keep taps on linux-wireless so you 
+are always right to post there. I created the brcm80211-dev-list so 
+people can post their issues there regardless changes in the dev team. 
+So address brcm80211 issues to brcm80211-dev-list and Cc the 
+linux-wireless list. As a bonus that assures they are publicly archived.
 
-The lspci output in
-https://bugzilla.kernel.org/attachment.cgi?id=114061 shows an L1 PM
-Substates extended capability (capability ID 0x1e) for the Root Port
-leading to the 7260 device, but not for the 7260 device itself:
+Regards,
+Arend
 
-  00:1c.1 PCI bridge: Intel Corporation Lynx Point-LP PCI Express Root
-Port 3 (rev e4) (prog-if 00 [Normal decode])
-    Capabilities: [200 v1] #1e
+> R
+>
+> PS. snippet of the output of 'lspci -nn':
+>
+> 03:00.0 Network controller [0280]: Broadcom Corporation BCM43228
+> 802.11a/b/g/n [14e4:4359]
+>
+> Other information on request, will try to answer asap.
+> -----BEGIN PGP SIGNATURE-----
+> Version: GnuPG v2.0.22 (GNU/Linux)
+> Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+>
+> iQEcBAEBAgAGBQJSc9AYAAoJEPgmWogSE9wQIGYIAM34w5YzEW3njtkOX0STZf/m
+> 2nDYgORLDgksjQGf7XbSLIn+M7W0u9HMVQXT/aBBxejnSidD/WYIfNLuJddjrGZm
+> pCl3vO/Z7Px/PI/TBa58MIlV9zZOR/T2dLJmijm7u466AFE23PXT1mJemYzlDNdE
+> LLykV+Gp6of8uYLzj2GdqVwHEOztdO9x2q5PGVlDiBfIMkqnt1xn6VqFDZdp75Di
+> viC03tE4HPkN4IIxJbPmZUzBo4L47eRLLJxXAHsVst/sD+YnHkhvEk0yIvSvF3b4
+> 0kZ1jSsDGjryquZ2f4Bvkw8prKS/LyNmPIn8+SaCZ516+C8uUX1e2Z1em2v5DiI=
+> =Z3eG
+> -----END PGP SIGNATURE-----
+>
 
-Per sec 5.5.4 of the ECN for L1 PM Substates (15 Aug 2012), I think L1
-substates must be configured on both ends of the link, and if the 7260
-device doesn't have that capability, I don't see how it could be
-enabled.
 
-The lspci version wzyboy has doesn't decode the L1 PM Substates
-capability, but there is a newer version at
-git://git.kernel.org/pub/scm/utils/pciutils/pciutils.git that should
-decode it.  Also, "lspci -vvxxx" didn't hexdump this capability, which
-should be at offset 0x200.  Using "lspci -xxxx" (four "x"s) should
-dump it, and we can decode it manually.
-
-wzyboy, can you run these commands before the bug occurs and before
-using the "setpci" workaround:
-
-  lspci -vvxxxx -s00:1c.1
-  lspci -vvxxxx -s03:00.0
-
-Bjorn
