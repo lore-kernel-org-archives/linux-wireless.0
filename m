@@ -1,37 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:45787 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750895Ab3KMVWY (ORCPT
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:38295 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750708Ab3KAN6V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Nov 2013 16:22:24 -0500
-Message-ID: <1384377738.28806.15.camel@jlt4.sipsolutions.net> (sfid-20131113_222226_477912_CFC7A179)
-Subject: Re: [RFC 3/5] cfg80211: add regulatory quiescing support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: janusz.dziedzic@tieto.com, j@w1.fi, sunitb@qca.qualcomm.com,
-	rsunki@qca.qualcomm.com, linux-wireless@vger.kernel.org
-Date: Wed, 13 Nov 2013 22:22:18 +0100
-In-Reply-To: <1384366379-25301-4-git-send-email-mcgrof@do-not-panic.com> (sfid-20131113_191310_064803_1FC4A1A3)
-References: <1384366379-25301-1-git-send-email-mcgrof@do-not-panic.com>
-	 <1384366379-25301-4-git-send-email-mcgrof@do-not-panic.com>
-	 (sfid-20131113_191310_064803_1FC4A1A3)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 1 Nov 2013 09:58:21 -0400
+Received: by mail-wi0-f173.google.com with SMTP id ey11so1118137wid.0
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:58:19 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 09/65] wireless-regdb: enable VHT80 for BO
+Date: Fri,  1 Nov 2013 14:56:59 +0100
+Message-Id: <1383314275-20960-10-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_150812_374707_863A8FA1)
+In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-11-13 at 19:12 +0100, Luis R. Rodriguez wrote:
-> This quiesces devices when appropriate to ensure that
-> regulatory domain updates take effect and avoid having
-> devices initiate radiation when they should not.
+Source is QCA's regulatory team's efforts.
 
-I'm not really sure this makes sense.
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-If we're staying connected, how can we be moving far enough to go
-through regulatory domains to have totally different rules?
-
-(Also, probably best to squash patches 2 and 3, 2 is pointless by itself
-and the code move is obvious with this patch)
-
-johannes
+diff --git a/db.txt b/db.txt
+index ef0a155..572d34f 100644
+--- a/db.txt
++++ b/db.txt
+@@ -124,7 +124,7 @@ country BN: DFS-JP
+ 
+ country BO: DFS-JP
+ 	(2402 - 2482 @ 40), (30)
+-	(5735 - 5835 @ 40), (30)
++	(5735 - 5835 @ 80), (30)
+ 
+ country BR: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+-- 
+1.8.4.rc3
 
