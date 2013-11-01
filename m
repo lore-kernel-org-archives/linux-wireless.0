@@ -1,41 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:62023 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755688Ab3KLOrV (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:49928 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752622Ab3KAN6G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Nov 2013 09:47:21 -0500
-Received: by mail-wi0-f174.google.com with SMTP id cb5so3784110wib.1
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Nov 2013 06:47:20 -0800 (PST)
-Date: Tue, 12 Nov 2013 15:46:58 +0100
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>
-Subject: Re: [RFC 1/2] mac80211: minstrel_ht: add basic support for VHT rates
- <= 80MHz
-Message-ID: <20131112144658.GC22775@magnum.frso.rivierawaves.com> (sfid-20131112_154745_149751_8AD7DE0C)
-References: <1384266625-22431-1-git-send-email-karl.beldan@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1384266625-22431-1-git-send-email-karl.beldan@gmail.com>
+	Fri, 1 Nov 2013 09:58:06 -0400
+Received: by mail-wg0-f44.google.com with SMTP id n12so4068747wgh.35
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:58:06 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 03/65] wireless-regdb: enable VHT80 for AN
+Date: Fri,  1 Nov 2013 14:56:53 +0100
+Message-Id: <1383314275-20960-4-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_145812_458766_760EDE1B)
+In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 12, 2013 at 03:30:24PM +0100, Karl Beldan wrote:
-> From: Karl Beldan <karl.beldan@rivierawaves.com>
-> 
-> Helps feel current minstrel and stack rate-control API limits.
-> Helped trigger some bugs in vht tx code path in the past.
-> Some ppl were interested in checking that out.
-> some TODOs:
-> - Optimize rate-indexes loops and sampling holes
-> - The txinfo flags for vht STAs
-> 
-> VHT rates support depends on a new CONFIG_MAC80211_RC_MINSTREL_VHT.
-> 
-This relies on
-[mac80211: minstrel_ht: replace some occurences of MCS_GROUP_RATES]
-http://marc.info/?l=linux-wireless&m=138418939213230&w=2
+Source is QCA's regulatory team's efforts.
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index d08281f..5ef95ee 100644
+--- a/db.txt
++++ b/db.txt
+@@ -35,9 +35,9 @@ country AM: DFS-ETSI
  
-Karl
+ country AN: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 40), (20)
+-	(5250 - 5330 @ 40), (20), DFS
+-	(5490 - 5710 @ 40), (27), DFS
++	(5170 - 5250 @ 80), (20)
++	(5250 - 5330 @ 80), (20), DFS
++	(5490 - 5710 @ 80), (27), DFS
+ 
+ country AR: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+-- 
+1.8.4.rc3
+
