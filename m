@@ -1,70 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:38843 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751674Ab3KRO5T convert rfc822-to-8bit (ORCPT
+Received: from outrelay01.libero.it ([212.52.84.101]:34550 "EHLO
+	outrelay01.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750976Ab3KANSA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Nov 2013 09:57:19 -0500
-From: Sujith Manoharan <sujith@msujith.org>
+	Fri, 1 Nov 2013 09:18:00 -0400
+Message-ID: <376684294.1810371383311879389.JavaMail.defaultUser@defaultHost> (sfid-20131101_141808_225307_799A419D)
+Date: Fri, 1 Nov 2013 14:17:59 +0100 (CET)
+From: Fabio Rossi <rossi.f@inwind.it>
+Reply-To: Fabio Rossi <rossi.f@inwind.it>
+To: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
+Subject: BUG in rfcomm_sock_getsockopt+0x128/0x200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-ID: <21130.10685.758161.252763@gargle.gargle.HOWL> (sfid-20131118_155722_988904_42BCBBB6)
-Date: Mon, 18 Nov 2013 20:22:45 +0530
-To: Matthias May <matthias.may@neratec.com>
-Cc: Sven Eckelmann <sven@open-mesh.com>,
-	OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Simon Wunderlich <simon@open-mesh.com>,
-	"ath9k-devel\@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>
-Subject: Re: [ath9k-devel] [OpenWrt-Devel] ath9k: Deaf QCA9558 when setting
- rxchainmask
-In-Reply-To: <528A0F79.1040807@neratec.com>
-References: <19772470.YgPhAz9cYD@bentobox>
-	<87B8D697-4540-4D0E-975B-125531E6833B@net.t-labs.tu-berlin.de>
-	<CAJ-VmombLQqJsN50nndqCioFEOy=9cp_-34onQnWnpMoX6360w@mail.gmail.com>
-	<2985619.kldLYNDlSX@bentobox>
-	<21120.58000.344447.562435@gargle.gargle.HOWL>
-	<528A0F79.1040807@neratec.com>
+Content-Type: text/plain;charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Matthias May wrote:
-> I'm in the position where i want to use a 9390 as 2x2 instead of 3x3.
-> I use backports-3.12-1.
-> I've set the rx and tx mask in eeprom to 0x5.
+I'm using the latest wireless-testing.git and I have found a problem, I get the 
+following kernel trace:
 
-0x5 is not a valid chainmask on AR9390. The official statement is:
+BUG: unable to handle kernel paging request at 
+00000009dd50350a                                                                                                                     
+IP: [<ffffffff815b6768>] 
+rfcomm_sock_getsockopt+0x128/0x200                                                                                                                         
+PGD 
+0                                                                                                                                                                               
+Oops: 0000 [#1] SMP 
+Modules linked in: vboxpci(O) vboxnetadp(O) vboxnetflt(O) vboxdrv(O) fglrx(PO) 
+ath5k ath mac80211 cfg80211
+CPU: 2 PID: 1475 Comm: bluetoothd Tainted: P           O 3.12.0-rc5-wl #4
+Hardware name: System manufacturer System Product Name/P6T DELUXE V2, BIOS 
+1202    12/22/2010
+task: ffff88032e9ce360 ti: ffff880330654000 task.ti: ffff880330654000
+RIP: 0010:[<ffffffff815b6768>]  [<ffffffff815b6768>] 
+rfcomm_sock_getsockopt+0x128/0x200
+RSP: 0018:ffff880330655ed8  EFLAGS: 00010246
+RAX: 00000009dd503502 RBX: 0000000000000003 RCX: 00007fff7b30e298
+RDX: 0000000000000003 RSI: 0000000000000012 RDI: ffff8800bad88f00
+RBP: ffff880330655f28 R08: 00007fff7b30e29c R09: ffff8803306734d8
+R10: 00007fff7b30e298 R11: 0000000000000202 R12: ffff8800ba83ec00
+R13: 00007fff7b30e298 R14: 0000000000000003 R15: 00007fff7b30e29c
+FS:  00007f31c1d9d700(0000) GS:ffff88033fc80000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00000009dd50350a CR3: 000000033048a000 CR4: 00000000000007e0
+Stack:
+ ffff880330655f28 ffffffff815b5e2f ffff880330655f18 0002ffff81107bb6
+ 0000000600000000 ffff8800bad88f00 0000000000000012 00007fff7b30e298
+ 0000000000000003 00007fff7b30e29c ffff880330655f78 ffffffff814c6260
+Call Trace:
+ [<ffffffff815b5e2f>] ? rfcomm_sock_setsockopt+0x5f/0x190
+ [<ffffffff814c6260>] SyS_getsockopt+0x60/0xb0
+ [<ffffffff815e5ba2>] system_call_fastpath+0x16/0x1b
+Code: 02 00 00 00 0f 47 d0 4c 89 ef e8 94 f0 cc ff 83 f8 01 19 c9 f7 d1 83 e1 
+f2 e9 4b ff ff ff 0f 1f 44 00 00 49 8b 84 24 70 02 00 00 <4c> 8b 70 08 4c 89 c0 
+e8 4c f6 cc ff 85 c0 49 89 d7 b9 f2 ff ff 
+RIP  [<ffffffff815b6768>] rfcomm_sock_getsockopt+0x128/0x200
+ RSP <ffff880330655ed8>
+CR2: 00000009dd50350a
+---[ end trace 6e62d73375e99d69 ]---
 
-"We intentionally didn’t productize the chain mask of 0x5 on AR9380/AR9580
-because of the complexities of register addressing and getting through the ASIC
-self-calibrations in this configuration."
+After bisecting the problem I found the following bad commit:
 
-I think for 2x2 operation, 0x3 is the only option. The problem with Chain-1
-(which was mentioned in http://www.spinics.net/lists/linux-wireless/msg114607.html)
-is probably for a specific board. So maybe you can just set 0x3 using iw and
-see if things are okay.
+commit 94a86df01082557e2de45865e538d7fb6c46231c
+Author: Marcel Holtmann <marcel@holtmann.org>
+Date:   Sun Oct 13 10:34:02 2013 -0700
 
-> Nov 18 13:39:45 CHD500279 kernel: [16510.563694] ath: phy11: NF calibrated [ctl] [chain 0] is -105
-> Nov 18 13:39:45 CHD500279 kernel: [16510.563698] ath: phy11: NF calibrated [ctl] [chain 2] is -50
-> Nov 18 13:39:45 CHD500279 kernel: [16510.563701] ath: phy11: NF[2] (-50) > MAX (-100), correcting to MAX
-> Nov 18 13:39:45 CHD500279 kernel: [16510.563705] ath: phy11: NF calibrated [ext] [chain 0] is -105
-> Nov 18 13:39:45 CHD500279 kernel: [16510.563708] ath: phy11: NF calibrated [ext] [chain 2] is -50
-> Nov 18 13:39:45 CHD500279 kernel: [16510.563712] ath: phy11: NF[5] (-50) > MAX (-100), correcting to MAX
+    Bluetooth: Store RFCOMM address information in its own socket structure
+    
+    The address information of RFCOMM sockets should be stored in its
+    own socket structure. Trying to generalize them is not helpful since
+    different transports have different address types.
+    
+    Signed-off-by: Marcel Holtmann <marcel@holtmann.org>
+    Signed-off-by: Johan Hedberg <johan.hedberg@intel.com>
 
-Again, this is the side effect of using the unsupported mask, 0x5.
-
-But, this is also a bug in ath9k. Right now the CCA registers assigned
-in ar9003_hw_attach_phy_ops() are used in a sequential manner.
-
-But, as per our systems engineers:
-
-AR_PHY_CCA_0 - for 1st active chain, (value always valid).
-AR_PHY_CCA_1 - for 2nd active chain, (value should be ignored except for chain mask 3,5,7).
-AR_PHY_CCA_2 - for 3rd active chain, (value should be ignored except for chain mask 7).
-
-So, if 0x5 is used, AR_PHY_CCA_0 and AR_PHY_CCA_1 should be used.
-But, ath9k currently uses AR_PHY_CCA_0 and AR_PHY_CCA_2 for 0x5
-(in ar9003_hw_do_getnf).
-
-In any case, I don't think this needs to be fixed, since 0x5 is invalid.
-
-Sujith
+Fabio
