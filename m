@@ -1,38 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f51.google.com ([209.85.215.51]:42366 "EHLO
-	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757411Ab3K1Htg (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:58454 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751685Ab3KAOAa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Nov 2013 02:49:36 -0500
-Received: by mail-la0-f51.google.com with SMTP id ec20so5756115lab.38
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Nov 2013 23:49:35 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAKnB8xir_AHH+e9CuTSOSAiu9vcKMQ26SDYL2E1YAW+OXE=ing@mail.gmail.com>
-References: <CAKnB8xgAVp+Ti597RN4_kgPLgXpW1JCr4SQaqfqCzy5A4=o3Ow@mail.gmail.com>
-	<CAKnB8xh6tWFdiL4kBQ5r3J_YgiiwhHhvQEqC+9F7c=3eAsrYbg@mail.gmail.com>
-	<5294E46C.40102@erley.org>
-	<1385490243.7838.16.camel@dcbw.foobar.com>
-	<CAEk6gTAXXNFbRTqVNGZWnVBpNSW=HKz3qztdZ1t1vMZLe530Hg@mail.gmail.com>
-	<CAKnB8xiEoAch9dpm5hRzW76PO8tt3cKFxB2jUvdCNrJaf5tWrg@mail.gmail.com>
-	<52951195.2030206@erley.org>
-	<CAKnB8xg1zgKWg1x57OmnjkUgtWU_5KRCb0zV+X4E=YFMqrhLDg@mail.gmail.com>
-	<CAKnB8xir_AHH+e9CuTSOSAiu9vcKMQ26SDYL2E1YAW+OXE=ing@mail.gmail.com>
-Date: Thu, 28 Nov 2013 09:49:35 +0200
-Message-ID: <CANUX_P2_OD4zvSMYwY1goki-5_D86JcZOw69oPoGfyabtbDzeg@mail.gmail.com> (sfid-20131128_084942_925756_BEB17370)
-Subject: Re: Fwd: Intel 7260
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: matt emery <matt@x204.com>
-Cc: Pat Erley <pat-lkml@erley.org>,
-	Drasko DRASKOVIC <drasko.draskovic@gmail.com>,
-	Dan Williams <dcbw@redhat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 1 Nov 2013 10:00:30 -0400
+Received: by mail-wi0-f171.google.com with SMTP id f4so1106260wiw.16
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 07:00:29 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 63/65] wireless-regdb: extend 5 GHz range for SG
+Date: Fri,  1 Nov 2013 14:57:53 +0100
+Message-Id: <1383314275-20960-64-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_150807_652318_951D5053)
+In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 26, 2013 at 11:50 PM, matt emery <matt@x204.com> wrote:
->
-> That worked but it's killed my bluetooth !
+Source is QCA's regulatory team's efforts.
 
-That should be fixed with latest code and the firmware that is not
-released yet...
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/db.txt b/db.txt
+index 17e679b..b641f1b 100644
+--- a/db.txt
++++ b/db.txt
+@@ -706,7 +706,7 @@ country SG: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 80), (17)
+ 	(5250 - 5330 @ 80), (24), DFS
+-	(5490 - 5710 @ 80), (24), DFS
++	(5490 - 5730 @ 80), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+ country SI: DFS-ETSI
+-- 
+1.8.4.rc3
+
