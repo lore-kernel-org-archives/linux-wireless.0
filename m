@@ -1,42 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:45540 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753009Ab3KKMaI (ORCPT
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:57521 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751872Ab3KAN7I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Nov 2013 07:30:08 -0500
-Received: by mail-wg0-f47.google.com with SMTP id y10so936546wgg.2
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Nov 2013 04:30:07 -0800 (PST)
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>
-Subject: [PATCH] mac80211_hwsim: claim CCK support for HT clients
-Date: Mon, 11 Nov 2013 13:29:33 +0100
-Message-Id: <1384172973-21638-1-git-send-email-karl.beldan@gmail.com> (sfid-20131111_133012_120022_69FA3EF2)
+	Fri, 1 Nov 2013 09:59:08 -0400
+Received: by mail-wg0-f52.google.com with SMTP id k14so4089468wgh.19
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:59:07 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 31/65] wireless-regdb: enable VHT80 for MK
+Date: Fri,  1 Nov 2013 14:57:21 +0100
+Message-Id: <1383314275-20960-32-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_145914_480089_6BB1C469)
+In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karl Beldan <karl.beldan@rivierawaves.com>
+Source is QCA's regulatory team's efforts.
 
-Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- drivers/net/wireless/mac80211_hwsim.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ db.txt | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 2cd3f54..bb737bb 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -2305,7 +2305,8 @@ static int __init init_mac80211_hwsim(void)
- 			    IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS |
- 			    IEEE80211_HW_AMPDU_AGGREGATION |
- 			    IEEE80211_HW_WANT_MONITOR_VIF |
--			    IEEE80211_HW_QUEUE_CONTROL;
-+			    IEEE80211_HW_QUEUE_CONTROL |
-+			    IEEE80211_HW_SUPPORTS_HT_CCK_RATES;
- 		if (rctbl)
- 			hw->flags |= IEEE80211_HW_SUPPORTS_RC_TABLE;
+diff --git a/db.txt b/db.txt
+index d537298..478329c 100644
+--- a/db.txt
++++ b/db.txt
+@@ -530,9 +530,9 @@ country MO:
+ 
+ country MK: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 40), (20)
+-	(5250 - 5330 @ 40), (20), DFS
+-	(5490 - 5710 @ 40), (27), DFS
++	(5170 - 5250 @ 80), (20)
++	(5250 - 5330 @ 80), (20), DFS
++	(5490 - 5710 @ 80), (27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
  
 -- 
-1.8.2
+1.8.4.rc3
 
