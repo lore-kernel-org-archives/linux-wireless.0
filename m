@@ -1,57 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:33209 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752309Ab3KSUwX (ORCPT
+Received: from mail-we0-f175.google.com ([74.125.82.175]:65174 "EHLO
+	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753734Ab3KAN6b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Nov 2013 15:52:23 -0500
-Received: by mail-wi0-f170.google.com with SMTP id f4so7199566wiw.3
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Nov 2013 12:52:22 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 5/7] iwlwifi: mvm: BT Coex fix another NULL pointer dereference
-Date: Tue, 19 Nov 2013 22:52:04 +0200
-Message-Id: <1384894326-24676-5-git-send-email-egrumbach@gmail.com> (sfid-20131119_215230_048017_169184F4)
-In-Reply-To: <528BCEDB.8010703@gmail.com>
-References: <528BCEDB.8010703@gmail.com>
+	Fri, 1 Nov 2013 09:58:31 -0400
+Received: by mail-we0-f175.google.com with SMTP id t61so3931582wes.6
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:58:30 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 14/65] wireless-regdb: enable VHT80 for EE
+Date: Fri,  1 Nov 2013 14:57:04 +0100
+Message-Id: <1383314275-20960-15-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_150811_457922_4681F306)
+In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Source is QCA's regulatory team's efforts.
 
-This patch is very similar to a previous fix: 22cba0c0852f
-
-When we disassociate, mac80211 removes the station and
-then, it sets the bss it unsets the assoc bool in bss_info.
-
-Since the firwmware wants it the opposite (first set the
-MAC context as unassoc, and only then, remove the STA of
-the API), we have a small period of time in which the STA
-in firmware doesn't have a valid ieee80211_sta pointer.
-During that time, iwl_mvm_vif->ap_sta_id, is still set
-to the STA in firmware that represent the AP.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/bt-coex.c |    5 +++++
- 1 file changed, 5 insertions(+)
+ db.txt | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/bt-coex.c b/drivers/net/wireless/iwlwifi/mvm/bt-coex.c
-index b647147..75b72a9 100644
---- a/drivers/net/wireless/iwlwifi/mvm/bt-coex.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/bt-coex.c
-@@ -841,6 +841,11 @@ static void iwl_mvm_bt_rssi_iterator(void *_data, u8 *mac,
+diff --git a/db.txt b/db.txt
+index b77fc0b..8019df0 100644
+--- a/db.txt
++++ b/db.txt
+@@ -255,9 +255,9 @@ country EC: DFS-FCC
  
- 	sta = rcu_dereference_protected(mvm->fw_id_to_mac_id[mvmvif->ap_sta_id],
- 					lockdep_is_held(&mvm->mutex));
-+
-+	/* This can happen if the station has been removed right now */
-+	if (IS_ERR_OR_NULL(sta))
-+		return;
-+
- 	mvmsta = (void *)sta->drv_priv;
+ country EE: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 40), (20)
+-	(5250 - 5330 @ 40), (20), DFS
+-	(5490 - 5710 @ 40), (27), DFS
++	(5170 - 5250 @ 80), (20)
++	(5250 - 5330 @ 80), (20), DFS
++	(5490 - 5710 @ 80), (27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
  
- 	data->num_bss_ifaces++;
 -- 
-1.7.9.5
+1.8.4.rc3
 
