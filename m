@@ -1,106 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f50.google.com ([74.125.83.50]:35227 "EHLO
-	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752069Ab3KVNIr (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:50139 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751485Ab3KAODw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Nov 2013 08:08:47 -0500
-Received: by mail-ee0-f50.google.com with SMTP id e53so608090eek.23
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Nov 2013 05:08:46 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 8/8] ath10k: allow explicit MSI/MSI-X disabling
-Date: Fri, 22 Nov 2013 14:05:18 +0100
-Message-Id: <1385125518-13461-9-git-send-email-michal.kazior@tieto.com> (sfid-20131122_140853_582265_D7BFE460)
-In-Reply-To: <1385125518-13461-1-git-send-email-michal.kazior@tieto.com>
-References: <1385125518-13461-1-git-send-email-michal.kazior@tieto.com>
+	Fri, 1 Nov 2013 10:03:52 -0400
+Received: by mail-wi0-f180.google.com with SMTP id ey11so1116829wid.13
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 07:03:52 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 09/23] wireless-regdb: update PG's 5 GHz rules
+Date: Fri,  1 Nov 2013 15:03:04 +0100
+Message-Id: <1383314598-21240-10-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_150356_057860_41F6062E)
+In-Reply-To: <1383314598-21240-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383314598-21240-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This can be useful for testing and debugging.
+This:
 
-Two new ath10k_pci module options are now available:
+  o enables VHT80 on all 5 GHz frequency rules
+  o adds a new DFS 5 GHz frequency range
+  o increases max EIRP on the 5 GHZ DFS frequency
+    range from 23 dBm to 24 dBm
 
- disable_msix - disable just MSI-X
- disable_msi - disable MSI (along with MSI-X)
+Source is QCA's regulatory team's efforts.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- drivers/net/wireless/ath/ath10k/pci.c | 43 +++++++++++++++++++++++------------
- 1 file changed, 29 insertions(+), 14 deletions(-)
+ db.txt | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 47d9b6e..b89fd7b 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -34,9 +34,18 @@
- #include "pci.h"
+diff --git a/db.txt b/db.txt
+index 8366b3b..a1eafa4 100644
+--- a/db.txt
++++ b/db.txt
+@@ -621,9 +621,10 @@ country PE: DFS-FCC
  
- static unsigned int ath10k_target_ps;
-+static bool ath10k_disable_msix;
-+static bool ath10k_disable_msi;
-+
- module_param(ath10k_target_ps, uint, 0644);
- MODULE_PARM_DESC(ath10k_target_ps, "Enable ath10k Target (SoC) PS option");
+ country PG: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 40), (17)
+-	(5250 - 5330 @ 40), (23), DFS
+-	(5735 - 5835 @ 40), (30)
++	(5170 - 5250 @ 80), (17)
++	(5250 - 5330 @ 80), (24), DFS
++	(5490 - 5730 @ 80), (24), DFS
++	(5735 - 5835 @ 80), (30)
  
-+module_param_named(disable_msix, ath10k_disable_msix, bool, 0644);
-+MODULE_PARM_DESC(disable_msix, "Disable MSI-X support");
-+
-+module_param_named(disable_msi, ath10k_disable_msi, bool, 0644);
-+MODULE_PARM_DESC(disable_msi, "Disable MSI support");
-+
- #define QCA988X_2_0_DEVICE_ID	(0x003c)
- 
- static DEFINE_PCI_DEVICE_TABLE(ath10k_pci_id_table) = {
-@@ -2367,27 +2376,33 @@ static void ath10k_pci_init_irq_tasklets(struct ath10k *ar)
- static int ath10k_pci_init_irq(struct ath10k *ar)
- {
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
-+	bool msix_supported = test_bit(ATH10K_PCI_FEATURE_MSI_X,
-+				       ar_pci->features);
- 	int ret;
- 
- 	ath10k_pci_init_irq_tasklets(ar);
- 
--	if (!test_bit(ATH10K_PCI_FEATURE_MSI_X, ar_pci->features))
--		goto msi;
--
- 	/* Try MSI-X */
--	ar_pci->num_msi_intrs = MSI_NUM_REQUEST;
--	ret = pci_enable_msi_block(ar_pci->pdev, ar_pci->num_msi_intrs);
--	if (ret == 0)
--		return 0;
--	if (ret > 0)
--		pci_disable_msi(ar_pci->pdev);
-+	if (msix_supported && !ath10k_disable_msix && !ath10k_disable_msi) {
-+		ar_pci->num_msi_intrs = MSI_NUM_REQUEST;
-+		ret = pci_enable_msi_block(ar_pci->pdev, ar_pci->num_msi_intrs);
-+		if (ret == 0)
-+			return 0;
-+		if (ret > 0)
-+			pci_disable_msi(ar_pci->pdev);
-+
-+		/* fall-through */
-+	}
- 
--msi:
- 	/* Try MSI */
--	ar_pci->num_msi_intrs = 1;
--	ret = pci_enable_msi(ar_pci->pdev);
--	if (ret == 0)
--		return 0;
-+	if (!ath10k_disable_msi) {
-+		ar_pci->num_msi_intrs = 1;
-+		ret = pci_enable_msi(ar_pci->pdev);
-+		if (ret == 0)
-+			return 0;
-+
-+		/* fall-through */
-+	}
- 
- 	/* Try legacy irq
- 	 *
+ country PH: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
 -- 
 1.8.4.rc3
 
