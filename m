@@ -1,52 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f49.google.com ([209.85.216.49]:63442 "EHLO
-	mail-qa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751848Ab3KZDeP (ORCPT
+Received: from mail-we0-f179.google.com ([74.125.82.179]:47701 "EHLO
+	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752603Ab3KAOEl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Nov 2013 22:34:15 -0500
-Received: by mail-qa0-f49.google.com with SMTP id ii20so7207188qab.1
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Nov 2013 19:34:13 -0800 (PST)
-Received: from xps9000.cristianrodriguez.net (pc-237-108-74-200.cm.vtr.net. [200.74.108.237])
-        by mx.google.com with ESMTPSA id ki4sm25118596qeb.0.2013.11.25.19.34.11
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1.2 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
-        Mon, 25 Nov 2013 19:34:13 -0800 (PST)
-Message-ID: <529416B2.4050908@opensuse.org> (sfid-20131126_043421_258017_C48388F6)
-Date: Tue, 26 Nov 2013 00:34:10 -0300
-From: =?ISO-8859-1?Q?Cristian_Rodr=EDguez?= <crrodriguez@opensuse.org>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: wireless-regdb tarballs invalid contents
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 1 Nov 2013 10:04:41 -0400
+Received: by mail-we0-f179.google.com with SMTP id w61so3922502wes.24
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 07:04:40 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 23/23] wireless-regdb: update US'  regulatory rules
+Date: Fri,  1 Nov 2013 15:03:18 +0100
+Message-Id: <1383314598-21240-24-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_150807_889301_2B913093)
+In-Reply-To: <1383314598-21240-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383314598-21240-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi:
+This:
 
-It seems the released tarballs of wireless-regdb are incorrect..
+  o Increases the max EIRP on the 2.4 GHz band from
+    27 dBm to 30 dBm
 
-How to reproduce
+  o Decreases the max EIRP for the first DFS frequency
+    range by 1 dBm
 
-# wget
-https://www.kernel.org/pub/software/network/wireless-regdb/wireless-regdb-2013.10.11.tar.xz
+  o Removes the two lower 5 GHz DFS frequency ranges
 
-# tar xf wireless-regdb-2013.10.11.tar.xz
+Source is QCA's regulatory team's efforts.
 
-# cd wireless-regdb-2013.10.11
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-# sha1sum -c sha1sum.txt
-db.txt: FAILED
-sha1sum: WARNING: 1 computed checksum did NOT match
-
-# /usr/sbin/regdbdump regulatory.bin
-Database signature verification failed.
-
-Regulatory bin from
-http://wireless.kernel.org/download/wireless-regdb/regulatory.bins/latest-regulatory.bin
- are however ok.
-
-
-Will be cool if someone can fix that..
-
-
+diff --git a/db.txt b/db.txt
+index e45991f..752dfc9 100644
+--- a/db.txt
++++ b/db.txt
+@@ -793,11 +793,9 @@ country UA: DFS-ETSI
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+ country US: DFS-FCC
+-	(2402 - 2472 @ 40), (27)
++	(2402 - 2472 @ 40), (30)
+ 	(5170 - 5250 @ 80), (17)
+-	(5250 - 5330 @ 80), (24), DFS
+-	(5490 - 5600 @ 80), (24), DFS
+-	(5650 - 5710 @ 40), (24), DFS
++	(5250 - 5330 @ 80), (23), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 	# 60g band
+ 	# reference: http://cfr.regstoday.com/47cfr15.aspx#47_CFR_15p255
+-- 
+1.8.4.rc3
 
