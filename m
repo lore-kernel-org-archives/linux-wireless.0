@@ -1,56 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:54684 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758402Ab3K0XQE (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:62828 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754330Ab3KAN7A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Nov 2013 18:16:04 -0500
-Message-ID: <0db5ff864c71203a67854092705eca0f.squirrel@www.codeaurora.org> (sfid-20131128_001609_331437_D7353FD6)
-In-Reply-To: <1380194160.14806.3.camel@jlt4.sipsolutions.net>
-References: <1379446296-22236-1-git-send-email-clanctot@codeaurora.org>
-    <1379446296-22236-3-git-send-email-clanctot@codeaurora.org>
-    <1380194160.14806.3.camel@jlt4.sipsolutions.net>
-Date: Wed, 27 Nov 2013 23:16:03 -0000
-Subject: Re: [PATCH 2/2] nl80211/cfg80211: PMF Requirement communicated to
- driver with AP SME
-From: clanctot@codeaurora.org
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Cc: "Chet Lanctot" <clanctot@codeaurora.org>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Fri, 1 Nov 2013 09:59:00 -0400
+Received: by mail-wi0-f178.google.com with SMTP id hn9so1111807wib.5
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:58:59 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 27/65] wireless-regdb: enable VHT80 for LI
+Date: Fri,  1 Nov 2013 14:57:17 +0100
+Message-Id: <1383314275-20960-28-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_145904_940649_DBEDC934)
+In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Tue, 2013-09-17 at 12:31 -0700, Chet Lanctot wrote:
->> Needed for drivers that have AP SME integrated.  Whether PMF (Protected
->> Management Frames, 802.11w) should be used for station connections
->> is communicated from upper layer software through nl80211/cfg80211.
->
-> This is a bit unclear, what's expected of the driver?
->
+Source is QCA's regulatory team's efforts.
 
-Johannes,
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Thank you for your feedback.
-
-I will expand the commit text to make it clearer that is expected of the
-driver.
-
->
->> +	if (info->attrs[NL80211_ATTR_USE_MFP]) {
->> +		params.mfp = nla_get_u32(info->attrs[NL80211_ATTR_USE_MFP]);
->> +		if (params.mfp != NL80211_MFP_REQUIRED &&
->> +		    params.mfp != NL80211_MFP_OPTIONAL &&
->> +		    params.mfp != NL80211_MFP_NO)
->> +			return -EINVAL;
->> +	} else
->> +		params.mfp = NL80211_MFP_NO;
->> +
->
-> checkpatch.
->
-> johannes
->
->
-
+diff --git a/db.txt b/db.txt
+index ed3edc4..3f6753a 100644
+--- a/db.txt
++++ b/db.txt
+@@ -477,9 +477,9 @@ country LB: DFS-FCC
+ 
+ country LI: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 40), (20)
+-	(5250 - 5330 @ 40), (20), DFS
+-	(5490 - 5710 @ 40), (27), DFS
++	(5170 - 5250 @ 80), (20)
++	(5250 - 5330 @ 80), (20), DFS
++	(5490 - 5710 @ 80), (27), DFS
+ 
+ country LK: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+-- 
+1.8.4.rc3
 
