@@ -1,35 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f177.google.com ([209.85.217.177]:47216 "EHLO
-	mail-lb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752383Ab3KAQEk (ORCPT
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:61930 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752334Ab3KAN6S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 12:04:40 -0400
-Received: by mail-lb0-f177.google.com with SMTP id u14so3539152lbd.8
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 09:04:39 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1383314131-20774-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1383314131-20774-1-git-send-email-mcgrof@do-not-panic.com>
+	Fri, 1 Nov 2013 09:58:18 -0400
+Received: by mail-wg0-f52.google.com with SMTP id k14so4108865wgh.7
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:58:17 -0700 (PDT)
 From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Fri, 1 Nov 2013 17:04:19 +0100
-Message-ID: <CAB=NE6Wg7CwS0Uw37KUH4-jmv2rDS2OL4h0SrXoWTe4QOfpD8g@mail.gmail.com> (sfid-20131101_170443_773863_BA878C27)
-Subject: Re: [PATCH 0/8] wireless-regdb: General updates
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>,
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
 	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Content-Type: text/plain; charset=UTF-8
+Subject: [PATCH 08/65] wireless-regdb: enable VHT80 for BH
+Date: Fri,  1 Nov 2013 14:56:58 +0100
+Message-Id: <1383314275-20960-9-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_145823_393313_5C67D78D)
+In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 1, 2013 at 2:55 PM, Luis R. Rodriguez
-<mcgrof@do-not-panic.com> wrote:
-> The entire delta can be obtained via either a single patch [0]
-> or my git tree [1].
+Source is QCA's regulatory team's efforts.
 
-Since I provided a patch update fix I pushed the changes to the git
-tree and provided a new v2 all-in-one patch [2] as well.
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-[2] http://drvbp1.linux-foundation.org/~mcgrof/patches/2013/11/01/pending-wireless-regdb-2013-11-01-v2.patch
+diff --git a/db.txt b/db.txt
+index f49d8f4..ef0a155 100644
+--- a/db.txt
++++ b/db.txt
+@@ -107,9 +107,9 @@ country BG: DFS-ETSI
+ 
+ country BH: DFS-JP
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 20), (20)
+-	(5250 - 5330 @ 20), (20), DFS
+-	(5735 - 5835 @ 20), (20)
++	(5170 - 5250 @ 80), (20)
++	(5250 - 5330 @ 80), (20), DFS
++	(5735 - 5835 @ 80), (20)
+ 
+ country BL:
+ 	(2402 - 2482 @ 40), (20)
+-- 
+1.8.4.rc3
 
-  Luis
