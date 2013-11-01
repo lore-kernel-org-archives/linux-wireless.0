@@ -1,41 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:52565 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751795Ab3KATlp (ORCPT
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:35268 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753452Ab3KAN74 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 15:41:45 -0400
-Message-ID: <1383334899.14379.2.camel@jlt4.sipsolutions.net> (sfid-20131101_204148_347266_CF6C739C)
-Subject: Re: [PATCH 6/8] wireless-regdb: optimize two of DE's rules
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	wireless-regdb@lists.infradead.org
-Date: Fri, 01 Nov 2013 20:41:39 +0100
-In-Reply-To: <1383314131-20774-7-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_145552_151746_60973670)
-References: <1383314131-20774-1-git-send-email-mcgrof@do-not-panic.com>
-	 <1383314131-20774-7-git-send-email-mcgrof@do-not-panic.com>
-	 (sfid-20131101_145552_151746_60973670)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 1 Nov 2013 09:59:56 -0400
+Received: by mail-wi0-f169.google.com with SMTP id cb5so1203219wib.0
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:59:56 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 52/65] wireless-regdb: add VHT80 rules for ZW
+Date: Fri,  1 Nov 2013 14:57:42 +0100
+Message-Id: <1383314275-20960-53-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_150004_392340_55E830DC)
+In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-11-01 at 14:55 +0100, Luis R. Rodriguez wrote:
+Source is QCA's regulatory team's efforts.
 
-> -	# entry 303005
-> -	(5150 - 5250 @ 80), (100 mW), NO-OUTDOOR
-> -	# entries 304002 and 305002
-> -	(5250 - 5350 @ 80), (100 mW), NO-OUTDOOR
-> +	# entry 303005, 304002 and 305002
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt | 3 +++
+ 1 file changed, 3 insertions(+)
 
-should probably say entries :)
-
-Btw, according to the formal definition that the kernel uses, having two
-versus one rule actually *is* different. Having two stops you from using
-a channel that crosses the boundary. In practice, this kind of
-interpretation is actually cumbersome and error-prone, which I've
-pointed out long ago together with my suggestion to actually change it,
-but I wanted to point it out anyway.
-
-johannes
+diff --git a/db.txt b/db.txt
+index 82219e5..91e8871 100644
+--- a/db.txt
++++ b/db.txt
+@@ -833,4 +833,7 @@ country ZA: DFS-ETSI
+ 
+ country ZW: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
++	(5170 - 5250 @ 80), (20)
++	(5250 - 5330 @ 80), (20), DFS
++	(5490 - 5710 @ 80), (27), DFS
+ 
+-- 
+1.8.4.rc3
 
