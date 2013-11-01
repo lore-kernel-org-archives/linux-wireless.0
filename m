@@ -1,77 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([83.151.30.3]:54854 "EHLO m25s01.vlinux.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752018Ab3KDNgx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Nov 2013 08:36:53 -0500
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: Luciano Coelho <luciano.coelho@intel.com>
-Subject: Re: [RFC] mac80211: don't transmit beacon with CSA count 0
-Date: Mon, 4 Nov 2013 14:36:51 +0100
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-References: <1383569955-13236-1-git-send-email-luciano.coelho@intel.com>
-In-Reply-To: <1383569955-13236-1-git-send-email-luciano.coelho@intel.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201311041436.51673.sw@simonwunderlich.de> (sfid-20131104_143657_328515_976A692D)
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:43369 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754330Ab3KAN66 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Nov 2013 09:58:58 -0400
+Received: by mail-wi0-f180.google.com with SMTP id ey11so1108268wid.7
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:58:57 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 26/65] wireless-regdb: enable VHT80 for JO
+Date: Fri,  1 Nov 2013 14:57:16 +0100
+Message-Id: <1383314275-20960-27-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_150811_985276_1D943F0A)
+In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hey Luca,
+This also adds a new 5 GHz frequency range for JO,
+as well as increase the max EIRP on the existing 5 GHz
+frequency range from 18 dBm to 23 dBm.
 
-> A beacon should never have a Channel Switch Announcement information
-> element with a count of 0, because a count of 1 means switch just
-> before the next beacon.  So, if a count of 0 was valid in a beacon, it
-> would have been transmitted in the next channel already, which is
-> useless.  A CSA count equal to zero is only meaningful in action
-> frames or probe_responses.
-> 
-> Fix the ieee80211_csa_is_complete() and ieee80211_update_csa()
-> functions accordingly.
-> 
-> Cc: Simon Wunderlich <sw@simonwunderlich.de>
-> Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
-> ---
-> 
-> Hi Simon (et al),
-> 
-> I identified this issue while playing around with CSA.  I noticed that
-> we are sending a CSA beaon with count == 0, which should not happen.
-> The last beacon visible in the current channel (ie. before the switch)
-> contains a CSA IE with count == 1.
-> 
-> I wanted to check with you if my proposed change would have any
-> side-effects, especially with the ath9k driver, which is the only user
-> of this code in the mainline at the moment.
-> 
-> The potential danger here is if you don't check
-> ieee80211_csa_is_complete() before you send the first CSA beacon out.
-> With the previous code, there would always be a beacon with CSA (count
-> == 0), but now, if the count starts with 1, there won't be any.  If
-> you don't check, my patch will probably introduce a WARN when the
-> ath9k driver tries to get the beacon without checking for CSA
-> completion..
-> 
-> Any other comments or a sanity check would also be appreciated.
+Source is QCA's regulatory team's efforts.
 
-Thanks for checking back - I've read the part in the spec again [1], and 
-appearently you are right.
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-With your proposed change, shouldn't we also change the behaviour if the 
-userspace requests a channel switch with count = 0? I guess we should 
-immediately change the channel then without waiting for beacons? I don't see 
-the point in changing the beacons if we don't send them, after all. Currently, 
-ath9k calls the csa_finish() after checking whether beacon sending was complete 
-... so this would have to be changed.
+diff --git a/db.txt b/db.txt
+index 1d8c0b5..ed3edc4 100644
+--- a/db.txt
++++ b/db.txt
+@@ -436,7 +436,8 @@ country JP: DFS-JP
+ 
+ country JO: DFS-JP
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 40), (18)
++	(5170 - 5250 @ 80), (23)
++	(5735 - 5835 @ 80), (23)
+ 
+ country KE: DFS-JP
+ 	(2402 - 2482 @ 40), (20)
+-- 
+1.8.4.rc3
 
-Cheers,
-    Simon
-
-
-[1] IEEE 802.11-2012, 8.4.2.21 
-For nonmesh STAs, the Channel Switch Count field either is set to the number of 
-TBTTs until the STA sending the Channel Switch Announcement element switches 
-to the new channel or is set to 0. A value of 1 indicates that the switch 
-occurs immediately before the next TBTT. A value of 0 indicates that the  
-switch occurs at any time after the frame containing the element is 
-transmitted.
