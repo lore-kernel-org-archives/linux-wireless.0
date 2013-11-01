@@ -1,54 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f53.google.com ([74.125.83.53]:39902 "EHLO
-	mail-ee0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751491Ab3KUN2s (ORCPT
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:43538 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751485Ab3KAODm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Nov 2013 08:28:48 -0500
-Received: by mail-ee0-f53.google.com with SMTP id b57so4676002eek.40
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Nov 2013 05:28:47 -0800 (PST)
-From: Marek Kwaczynski <marek.kwaczynski@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	Marek Kwaczynski <marek.kwaczynski@tieto.com>
-Subject: [PATCH 2/2] mac80211: Update opmode  during adding new station
-Date: Thu, 21 Nov 2013 14:28:15 +0100
-Message-Id: <1385040495-13482-2-git-send-email-marek.kwaczynski@tieto.com> (sfid-20131121_142857_619255_B55556DC)
-In-Reply-To: <1385040495-13482-1-git-send-email-marek.kwaczynski@tieto.com>
-References: <1385040495-13482-1-git-send-email-marek.kwaczynski@tieto.com>
+	Fri, 1 Nov 2013 10:03:42 -0400
+Received: by mail-wi0-f182.google.com with SMTP id ez12so1124722wid.3
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 07:03:41 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 04/23] wireless-regdb: update KP's 5 GHz rules
+Date: Fri,  1 Nov 2013 15:02:59 +0100
+Message-Id: <1383314598-21240-5-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_150344_816611_03970EBF)
+In-Reply-To: <1383314598-21240-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383314598-21240-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update Operating mode is needed when User Space received Assoc
-Request contains Operating mode notification element.
----
- net/mac80211/cfg.c |    7 +++++++
- 1 file changed, 7 insertions(+)
+This:
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 95667b0..710b5d7 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1383,6 +1383,7 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
- 	struct ieee80211_sub_if_data *sdata;
- 	int err;
- 	int layer2_update;
-+	enum ieee80211_band band;
+  o splits the first 5 GHz frequency ranges into
+    two frequency ranges, one with DFS requirement and
+    one without
+  o enables VHT80 for all 5 GHz frequency ranges
+
+Source is QCA's regulatory team's efforts.
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index 80a394a..c788681 100644
+--- a/db.txt
++++ b/db.txt
+@@ -462,10 +462,10 @@ country KH: DFS-ETSI
  
- 	if (params->vlan) {
- 		sdata = IEEE80211_DEV_TO_SUB_IF(params->vlan);
-@@ -1425,6 +1426,12 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
- 	if (!test_sta_flag(sta, WLAN_STA_TDLS_PEER))
- 		rate_control_rate_init(sta);
+ country KP: DFS-JP
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5330 @ 40), (20)
+-	(5160 - 5250 @ 40), (20), DFS
+-	(5490 - 5630 @ 40), (30), DFS
+-	(5735 - 5815 @ 40), (30)
++	(5170 - 5250 @ 80), (20)
++	(5250 - 5330 @ 80), (20), DFS
++	(5490 - 5630 @ 80), (30), DFS
++	(5735 - 5815 @ 80), (30)
  
-+	if (params->vht_opmode_used) {
-+		band = ieee80211_get_sdata_band(sdata);
-+		ieee80211_vht_handle_opmode(sdata, sta, params->vht_opmode,
-+					    band, 0);
-+	}
-+
- 	layer2_update = sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
- 		sdata->vif.type == NL80211_IFTYPE_AP;
- 
+ country KR: DFS-JP
+ 	(2402 - 2482 @ 20), (20)
 -- 
-1.7.9.5
+1.8.4.rc3
 
