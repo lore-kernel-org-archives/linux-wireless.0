@@ -1,59 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f180.google.com ([74.125.82.180]:48943 "EHLO
-	mail-we0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756212Ab3KFKQM (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:34950 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750976Ab3KAOEY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Nov 2013 05:16:12 -0500
-Received: by mail-we0-f180.google.com with SMTP id q59so4735423wes.11
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Nov 2013 02:16:10 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1383724794.14307.2.camel@jlt4.sipsolutions.net>
-References: <CABPxzY++gCivs1u8nDtAeB5=p+ZkGHXmOnqud1hkh=TWB5Xprg@mail.gmail.com>
- <1383724794.14307.2.camel@jlt4.sipsolutions.net>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Wed, 6 Nov 2013 15:45:50 +0530
-Message-ID: <CABPxzYLYZ=M=a7of-0HyNnJb_g9jP2wNXp378RN5ai-BjngQOw@mail.gmail.com> (sfid-20131106_111623_188907_4E2F642C)
-Subject: Re: [Query] Decryption and Monitor Mode
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: radiotap@netbsd.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 1 Nov 2013 10:04:24 -0400
+Received: by mail-wi0-f171.google.com with SMTP id f4so1111876wiw.16
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 07:04:23 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 19/23] wireless-regdb: update KR's regulatory rules
+Date: Fri,  1 Nov 2013 15:03:14 +0100
+Message-Id: <1383314598-21240-20-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_150811_848615_B1C8B5BB)
+In-Reply-To: <1383314598-21240-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383314598-21240-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 6, 2013 at 1:29 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Wed, 2013-11-06 at 01:22 +0530, Krishna Chaitanya wrote:
->
->> With this wireshark is not able to decode the packets, even thought
->> they are decrypted. I propose 2 solutions
->
-> Well, you can say "ignore protected bit (with IV)" in the settings of
-> wireshark. But I agree that this is cumbersome, and previously floated
-> the idea of addings bits to radiotap to make this auto-detected.
->
+This:
 
-yeah, that piece of code looks messy.
+  o enables HT40 for the 2.4 GHz frequency range
+  o extends the 5 GHz DFS frequency range
 
->> Radiotap and Wireshark:
->>
->> 1) Add 2 flags to the radiotap RX Flags (HW Decrypted the packet,
->> Packet has security Header (for some chipsets which consume the
->> security header as well..??).)
->>
->> Based on these the wireshark dissector decodes the packet accordingly.
->>
->> mac80211:
->>
->> 2) Remove the security header information in the monitor path as well
->> based on the existing RX_FLAGS.
->>
->>
->> Solutions 2 looks more elegant and simple, any comments?
->
-> Solution 2 drops information and makes the kernel code more expensive,
-> so I don't think we want that.
->
-> I think the radiotap bits would be better.
->
-Ok, then i will proceed and add those 2 flags to the RX Flags (we have
-enough bits to use).
+Source is QCA's regulatory team's efforts.
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/db.txt b/db.txt
+index b54ebd8..9158448 100644
+--- a/db.txt
++++ b/db.txt
+@@ -469,9 +469,10 @@ country KP: DFS-JP
+ 
+ country KR: DFS-JP
+ 	(2402 - 2482 @ 20), (20)
++	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 80), (20)
+ 	(5250 - 5330 @ 80), (20), DFS
+-	(5490 - 5630 @ 80), (30), DFS
++	(5490 - 5710 @ 80), (30), DFS
+ 	(5735 - 5815 @ 80), (30)
+ 
+ country KW: DFS-ETSI
+-- 
+1.8.4.rc3
+
