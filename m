@@ -1,51 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:65511 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753286Ab3KKVz5 (ORCPT
+Received: from mail-we0-f178.google.com ([74.125.82.178]:37024 "EHLO
+	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752622Ab3KAN6D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Nov 2013 16:55:57 -0500
-Received: by mail-ie0-f173.google.com with SMTP id x13so5960363ief.18
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Nov 2013 13:55:57 -0800 (PST)
-Date: Mon, 11 Nov 2013 14:55:53 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: wzyboy <wzyboy@wzyboy.org>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
-Message-ID: <20131111215553.GA30509@google.com> (sfid-20131111_225610_821324_DD578655)
-References: <CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
- <CALkVjQY7r=YKhsgDKR0mnYVtZy5BAdj83nY2jL0VFaiew6ha7A@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
- <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
- <527A8166.6000701@gmail.com>
- <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
- <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
- <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
- <CAErSpo6ry6cUaVngozS8-P44=LPJN6cbsZ_mfWkJv9Rn85YXUQ@mail.gmail.com>
- <CALkVjQZEs1CqMEVApDDGZ6FDugPZ+-F5wzvE45+jB5Xrhv_N2A@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CALkVjQZEs1CqMEVApDDGZ6FDugPZ+-F5wzvE45+jB5Xrhv_N2A@mail.gmail.com>
+	Fri, 1 Nov 2013 09:58:03 -0400
+Received: by mail-we0-f178.google.com with SMTP id q59so4067991wes.9
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:58:01 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 01/65] wireless-regdb: enable HT40  for AL on 2.4 GHz
+Date: Fri,  1 Nov 2013 14:56:51 +0100
+Message-Id: <1383314275-20960-2-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_145806_924115_63E0E98D)
+In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 10, 2013 at 06:19:58PM +0800, wzyboy wrote:
-> 2013/11/9 Bjorn Helgaas <bhelgaas@google.com>:
-> > it might
-> > be interesting to do "echo on >
-> > /sys/bus/pci/devices/0000:03:00.0/power/control" and see whether it
-> > makes a difference.
-> 
-> Hi, should I run this command after the bug? I just ran this after the
-> bug occurs, but there is no output in dmesg, and "ip link set wlan0
-> up" still returns same error ("RTNETLINK answers: Connection timed
-> out").
+Source is QCA's regulatory team's efforts.
 
-Run the command before the bug occurs.  The idea is to disable run-time
-power management.  If the problem is that we're turning off power to
-the device, disabling power management might make a difference.
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Bjorn
+diff --git a/db.txt b/db.txt
+index 11e0cb8..4c22199 100644
+--- a/db.txt
++++ b/db.txt
+@@ -26,7 +26,7 @@ country AE: DFS-FCC
+ 	(5735 - 5835 @ 80), (30)
+ 
+ country AL: DFS-ETSI
+-	(2402 - 2482 @ 20), (20)
++	(2402 - 2482 @ 40), (20)
+ 
+ country AM: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-- 
+1.8.4.rc3
+
