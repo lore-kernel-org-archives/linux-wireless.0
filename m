@@ -1,47 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:64667 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751940Ab3KTSOa (ORCPT
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:41418 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754599Ab3KAOAC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Nov 2013 13:14:30 -0500
-Received: by mail-wg0-f44.google.com with SMTP id k14so9312637wgh.11
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Nov 2013 10:14:29 -0800 (PST)
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v2] mac80211: use capped prob when computing throughputs
-Date: Wed, 20 Nov 2013 19:13:35 +0100
-Message-Id: <1384971215-16302-1-git-send-email-karl.beldan@gmail.com> (sfid-20131120_191433_549119_8D3DFF8E)
+	Fri, 1 Nov 2013 10:00:02 -0400
+Received: by mail-wi0-f169.google.com with SMTP id cb5so1198209wib.2
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 07:00:01 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 54/65] wireless-regdb: extend 5 GHz range for AR
+Date: Fri,  1 Nov 2013 14:57:44 +0100
+Message-Id: <1383314275-20960-55-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_150010_926624_0D8CC337)
+In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karl Beldan <karl.beldan@rivierawaves.com>
+Source is QCA's regulatory team's efforts.
 
-Commit 3e8b1eb "mac80211/minstrel_ht: improve rate selection stability"
-introduced a local capped prob in minstrel_ht_calc_tp but omitted to use
-it to compute the per rate throughput.
-
-Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
-Cc: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- net/mac80211/rc80211_minstrel_ht.c | 2 +-
+ db.txt | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 9702d88..7817a23 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -333,7 +333,7 @@ minstrel_ht_calc_tp(struct minstrel_ht_sta *mi, int group, int rate)
- 		nsecs = 1000 * mi->overhead / MINSTREL_TRUNC(mi->avg_ampdu_len);
+diff --git a/db.txt b/db.txt
+index 10a7194..70b0b9d 100644
+--- a/db.txt
++++ b/db.txt
+@@ -46,7 +46,7 @@ country AR: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 80), (17)
+ 	(5250 - 5330 @ 80), (24), DFS
+-	(5490 - 5710 @ 80), (24), DFS
++	(5490 - 5730 @ 80), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
  
- 	nsecs += minstrel_mcs_groups[group].duration[rate];
--	tp = 1000000 * ((mr->probability * 1000) / nsecs);
-+	tp = 1000000 * ((prob * 1000) / nsecs);
- 
- 	mr->cur_tp = MINSTREL_TRUNC(tp);
- }
+ country AT: DFS-ETSI
 -- 
-1.8.2
+1.8.4.rc3
 
