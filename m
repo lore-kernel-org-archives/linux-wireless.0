@@ -1,41 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:38326 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752135Ab3KCJX4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Nov 2013 04:23:56 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: wzyboy <wzyboy@wzyboy.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [Ilw] Intel Wireless 7260 hardware timed out randomly
-Date: Sun, 3 Nov 2013 09:23:51 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301DE75AE@HASMSX103.ger.corp.intel.com> (sfid-20131103_102402_287829_CC2E9006)
-References: <5276134B.8070808@wzyboy.org>
-In-Reply-To: <5276134B.8070808@wzyboy.org>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail-we0-f176.google.com ([74.125.82.176]:51661 "EHLO
+	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754488Ab3KAN7j (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Nov 2013 09:59:39 -0400
+Received: by mail-we0-f176.google.com with SMTP id w62so3961041wes.21
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:59:38 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 44/65] wireless-regdb: enable VHT80 for VE
+Date: Fri,  1 Nov 2013 14:57:34 +0100
+Message-Id: <1383314275-20960-45-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_145949_706246_333120A7)
+In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiANCj4gSGksIHRoZXJlLg0KPiANCj4gSSBhbSBlbmNvdW50ZXJpbmcgc29tZSBidWdzIHdpdGgg
-aXdsd2lmaS5rbyBpbiBMaW51eCAzLjExLjYuDQo+IA0KPiBNeSBsYXB0b3AgaXMgYSBUaGlua1Bh
-ZCBYMjQwcyB3aXRoIE5ldHdvcmsgY29udHJvbGxlciBJbnRlbCBDb3Jwb3JhdGlvbg0KPiBXaXJl
-bGVzcyA3MjYwIChyZXYgNmIpLiBJIGhhdmUgQXJjaCBMaW51eCB3aXRoIGtlcm5lbCAzLjExLjYg
-aW5zdGFsbGVkIG9uIGl0LiBUaGUNCj4gd2lyZWxlc3Mgd29ya3Mgb3V0LW9mLWJveCwgdGhhbmtz
-IGZvciB5b3VyIHdvcmshDQo+IA0KPiBIb3dldmVyLCBhZnRlciB1c2luZyB3aXJlbGVzcyBmb3Ig
-c29tZSB0aW1lIChjb3VsZCBiZSBlaXRoZXIgYW4gaG91ciB3aXRoDQo+IG5vcm1hbCB3ZWIgcGFn
-ZSBicm93c2luZywgb3Igc2V2ZXJhbCBob3VycyB3aXRoIGhlYXZ5IEludGVybmV0DQo+IGRvd25s
-b2FkaW5nKSwgdGhlIHdpcmVsZXNzIHdvcmtzIGFibm9ybWFsbHkuIFRoZSBzeW1wdG9uIGlzIHRo
-YXQgZXZlcnkNCj4gY29ubmVjdGlvbiBnZXQgbG9zdCwgYW5kIHRoZSBoYXJkd2FyZSAidGltZWQg
-b3V0IiB3aGVuIEkgdHJ5IHRvIHRha2UgZG93bg0KPiBvciB0YWtlIHVwIHRoZSBpbnRlcmZhY2Ug
-d2l0aCBgaXAgbGluayBzZXQgd2xhbjAgZG93bicgb3IgYGlwIGxpbmsgc2V0IHdsYW4wIHVwJy4N
-Cj4gV2hlbiB0aGlzIGJ1ZyBvY2N1cnMsIGV2ZW4gcmVsb2FkaW5nIHRoZSBrZXJuZWwgbW9kdWxl
-cyAod2l0aCBgbW9kcHJvYmUnKQ0KPiBjb3VsZCBub3QgYnJpbmcgdGhlIHdpcmVsZXNzIGJhY2sg
-YWxpdmUuIFdoYXQgSSBjb3VsZCBvbmx5IGRvIGlzIHRvIHJlYm9vdCB0aGUNCj4gbGFwdG9wLg0K
-PiANCj4gQWZ0ZXIgZW5jb3VudGVyaW5nIHRoaXMgYnVnIGZvciBzZXZlcmFsIHRpbWVzLCBJIGZv
-dW5kIHNvbWV0aGluZyB1c2VmdWwgaW4NCj4gYGRtZXNnJywgYXMgSSd2ZSBhdHRhY2hlZC4gUGxl
-YXNlIHRha2UgYSBsb29rIGF0IHRoZSBsb2cgYW5kIGZpbmQgb3V0IHRoZW4NCj4gc3F1YXNoIHRo
-aXMgYnVnLg0KPiANCg0KSG93IGVhc2lseSBjYW4geW91IHJlcHJvZHVjZSB0aGUgYnVnPw0KQ2Fu
-IHlvdSBwbGVhc2UgdHJ5IHRvIHNlZSBpZiB0aGlzIHdvcmsgYXJvdW5kIGNhbiBoZWxwPw0KQWRk
-DQpvcHRpb25zIGl3bG12bSBwb3dlcl9zY2hlbWU9MQ0KDQppbiBhIC5jb25mIGZpbGUgdW5kZXIg
-L2V0Yy9tb2Rwcm9iZS5kLw0KDQpUaGFua3MuDQoNCg==
+This adds two new 5 GHz frequency ranges with VHT80 support
+and extends the existing 5 GHz band by 20 MHz, and enabling
+VHT80 support.
+
+Source is QCA's regulatory team's efforts.
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/db.txt b/db.txt
+index b423b77..cbbbe18 100644
+--- a/db.txt
++++ b/db.txt
+@@ -796,7 +796,9 @@ country UZ: DFS-FCC
+ 
+ country VE: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+-	(5735 - 5815 @ 40), (23)
++	(5170 - 5250 @ 80), (17)
++	(5250 - 5330 @ 80), (23), DFS
++	(5735 - 5835 @ 80), (30)
+ 
+ country VN: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+-- 
+1.8.4.rc3
+
