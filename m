@@ -1,43 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f177.google.com ([209.85.214.177]:63591 "EHLO
-	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751254Ab3KRRLs (ORCPT
+Received: from mail-we0-f172.google.com ([74.125.82.172]:49542 "EHLO
+	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751637Ab3KAOES (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Nov 2013 12:11:48 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 1 Nov 2013 10:04:18 -0400
+Received: by mail-we0-f172.google.com with SMTP id q58so4036752wes.31
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 07:04:17 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
-Subject: [PATCH 01/12 NEXT] rtlwifi: rtl8192c: Prevent reconnect attempts if not connected
-Date: Mon, 18 Nov 2013 11:11:25 -0600
-Message-Id: <1384794696-20314-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20131118_181158_018258_8D70E006)
-In-Reply-To: <1384794696-20314-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1384794696-20314-1-git-send-email-Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 17/23] wireless-regdb: update GE's regulatory rules
+Date: Fri,  1 Nov 2013 15:03:12 +0100
+Message-Id: <1383314598-21240-18-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_150812_609525_94D84607)
+In-Reply-To: <1383314598-21240-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383314598-21240-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This driver has a watchdog timer that attempts to reconnect when beacon frames
-are not seen for 6 seconds. This patch disables that reconnect whenever the
-device has never been connected.
+This:
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>
+  o increases the max EIRP for 2.4 GHz from 27 dBm to 30 dBm.
+  o Enables VHT80 on 5 GHz
+  o Increases max EIRP from 20 dBm to 24 dBm on 5 GHz DFS freqs
+
+Source is QCA's regulatory team's efforts.
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- drivers/net/wireless/rtlwifi/base.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ db.txt | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-Index: wireless-testing/drivers/net/wireless/rtlwifi/base.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/base.c
-+++ wireless-testing/drivers/net/wireless/rtlwifi/base.c
-@@ -1437,7 +1437,8 @@ void rtl_watchdog_wq_callback(void *data
- 			/* if we can't recv beacon for 6s, we should
- 			 * reconnect this AP
- 			 */
--			if (rtlpriv->link_info.roam_times >= 3) {
-+			if ((rtlpriv->link_info.roam_times >= 3) &&
-+			    !is_zero_ether_addr(rtlpriv->mac80211.bssid)) {
- 				RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
- 					 "AP off, try to reconnect now\n");
- 				rtlpriv->link_info.roam_times = 0;
+diff --git a/db.txt b/db.txt
+index 50c81ce..e9d1540 100644
+--- a/db.txt
++++ b/db.txt
+@@ -315,11 +315,11 @@ country GB: DFS-ETSI
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+ 
+ country GD: DFS-FCC
+-	(2402 - 2472 @ 40), (27)
+-	(5170 - 5250 @ 40), (17)
+-	(5250 - 5330 @ 40), (20), DFS
+-	(5490 - 5710 @ 40), (20), DFS
+-	(5735 - 5835 @ 40), (30)
++	(2402 - 2472 @ 40), (30)
++	(5170 - 5250 @ 80), (17)
++	(5250 - 5330 @ 80), (24), DFS
++	(5490 - 5730 @ 80), (24), DFS
++	(5735 - 5835 @ 80), (30)
+ 
+ country GR: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-- 
+1.8.4.rc3
+
