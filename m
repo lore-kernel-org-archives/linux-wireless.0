@@ -1,52 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:38919 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753758Ab3KYSgR (ORCPT
+Received: from mail-we0-f169.google.com ([74.125.82.169]:39115 "EHLO
+	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751485Ab3KAODo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Nov 2013 13:36:17 -0500
-Message-ID: <1385404573.4443.58.camel@jlt4.sipsolutions.net> (sfid-20131125_193620_931203_39C06AD5)
-Subject: Re: Roaming with libertas and wpa_supplicant not working
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Troels Nilsson <nilsson.troels@gmail.com>,
-	linux-wireless@vger.kernel.org
-Date: Mon, 25 Nov 2013 19:36:13 +0100
-In-Reply-To: <1385399816.8710.16.camel@dcbw.foobar.com>
-References: <loom.20131118T143002-687@post.gmane.org>
-	 (sfid-20131118_145509_206573_37D8C413) <1385396191.4443.44.camel@jlt4.sipsolutions.net>
-	 <1385399816.8710.16.camel@dcbw.foobar.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 1 Nov 2013 10:03:44 -0400
+Received: by mail-we0-f169.google.com with SMTP id q58so4064717wes.14
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 07:03:43 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 05/23] wireless-regdb: update MC's 5 GHz rules
+Date: Fri,  1 Nov 2013 15:03:00 +0100
+Message-Id: <1383314598-21240-6-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_150347_457825_77D98B34)
+In-Reply-To: <1383314598-21240-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383314598-21240-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-11-25 at 11:16 -0600, Dan Williams wrote:
-> On Mon, 2013-11-25 at 17:16 +0100, Johannes Berg wrote:
-> > On Mon, 2013-11-18 at 13:50 +0000, Troels Nilsson wrote:
-> > > Hi,
-> > > 
-> > > We are having a problem with a custom device which uses the libertas wifi
-> > > driver (on kernel 3.4.24) together with wpa_supplicant (0.7.3). More
-> > > specifically, whenever wpa_supplicant attempts to roam to a different access
-> > > point it gets a EALREADY error.
-> > > 
-> > > I have tracked down the problem to this check in sme.c:
-> > > 
-> > >         if (wdev->sme_state != CFG80211_SME_IDLE)
-> > >                 return -EALREADY;
-> > 
-> > This no longer exists - please try a newer kernel.
-> 
-> Yeah, though the code there hasn't changed much in cfg80211 in the
-> "connect" case from what he's using.  It seems that
-> supplicant-controlled roaming simply won't work with "connect" devices
-> unless a disconnect is done first?  Libertas is kinda different here
-> since it does allow userspace roaming control.
+This:
 
-I believe the code *does* in fact allow connect() while connected right
-now, though arguably that's a bug and shouldn't be done. It would make
-some more sense to allow NL80211_CMD_ROAM to be used for something like
-that, but ...
+  o increase the max EIRP from 18 dBm to 20 dBm
+    on the existing 5 GHz frequency ranges
+  o enables VHT80
+  o adds a new 5 GHz DFS frequency range
 
-johannes
+Source is QCA's regulatory team's efforts.
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index c788681..b8aa9d9 100644
+--- a/db.txt
++++ b/db.txt
+@@ -528,8 +528,9 @@ country LV: DFS-ETSI
+ 
+ country MC: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 40), (18)
+-	(5250 - 5330 @ 40), (18), DFS
++	(5170 - 5250 @ 80), (20)
++	(5250 - 5330 @ 80), (20), DFS
++	(5490 - 5710 @ 80), (27), DFS
+ 
+ country MA: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-- 
+1.8.4.rc3
 
