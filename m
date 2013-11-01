@@ -1,47 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f170.google.com ([74.125.82.170]:47114 "EHLO
-	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751958Ab3KQNN1 (ORCPT
+Received: from mail-we0-f176.google.com ([74.125.82.176]:63597 "EHLO
+	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754603Ab3KAOAE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Nov 2013 08:13:27 -0500
-Received: by mail-we0-f170.google.com with SMTP id w61so1511249wes.29
-        for <linux-wireless@vger.kernel.org>; Sun, 17 Nov 2013 05:13:26 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1384679792.14795.9.camel@jlt4.sipsolutions.net>
-References: <CABPxzYJAct6KtwqZY-DOgjf1wueSmeOU=iLku+gGeZ6ZVE6n9Q@mail.gmail.com>
- <1384679792.14795.9.camel@jlt4.sipsolutions.net>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Sun, 17 Nov 2013 18:43:06 +0530
-Message-ID: <CABPxzY+XHXCFpKxU1NPZzb4eXP7x8i0-89eE+7uxWqGKnNsePw@mail.gmail.com> (sfid-20131117_142604_913940_4A169748)
-Subject: Re: [Query] Update mac80211 BSS info from cfg8011_bss_inform_frame
- when hw_scan is enabled
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 1 Nov 2013 10:00:04 -0400
+Received: by mail-we0-f176.google.com with SMTP id w62so3934751wes.7
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 07:00:04 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 55/65] wireless-regdb: extend 5 GHz range for BR
+Date: Fri,  1 Nov 2013 14:57:45 +0100
+Message-Id: <1383314275-20960-56-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_150014_184536_7DFD24A9)
+In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 17, 2013 at 2:46 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sat, 2013-11-16 at 01:19 +0530, Krishna Chaitanya wrote:
->
->> In those scenarios, the rate control module minstrel_ht called from
->> prep_connection throws a warning (in rate_control_send_low)
->> because "supp_rates" is not set, since scan results are updated
->>  through "cfg8011_bss_inform_frame" which doesn't call
->> "ieee80211_bss_info_update'.
->>
->> How do we handle such scenarios? Does the cfg80211 need to
->> update the bss information in mac80211?
->
-> No. What are you smoking?
->
-> You're not supposed to even call cfg80211_bss_inform_frame() from a
-> mac80211-based driver. Just report the RX frame properly.
->
-Ours is a partial Full MAC driver which still uses mac80211 but mostly with
-offloads to HW.
+Source is QCA's regulatory team's efforts.
 
-With mac80211 + hw_scan if we just report the RX frames, then we are just
-eliminating the SCAN SM from mac80211, is this just to reduce the host
-cycles? (apart from speeding up the channel switch)
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/db.txt b/db.txt
+index 70b0b9d..6d20e1f 100644
+--- a/db.txt
++++ b/db.txt
+@@ -134,7 +134,7 @@ country BR: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 80), (17)
+ 	(5250 - 5330 @ 80), (24), DFS
+-	(5490 - 5710 @ 80), (24), DFS
++	(5490 - 5730 @ 80), (24), DFS
+ 	(5735 - 5835 @ 80), (30)
+ 
+ country BY: DFS-ETSI
+-- 
+1.8.4.rc3
+
