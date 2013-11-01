@@ -1,230 +1,183 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:52512 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753192Ab3KNMKM (ORCPT
+Received: from outrelay01.libero.it ([212.52.84.101]:44259 "EHLO
+	outrelay01.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752344Ab3KAPWH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Nov 2013 07:10:12 -0500
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
-	johannes@sipsolutions.net, yeohchunyeow@gmail.com
-Cc: yeohchunyeow@cozybit.com
-Subject: [PATCH v5 3/5] mac80211: refactor ieee80211_mesh_process_chanswitch()
-Date: Thu, 14 Nov 2013 14:09:34 +0200
-Message-Id: <1384430976-13708-3-git-send-email-luciano.coelho@intel.com> (sfid-20131114_131022_129907_5B56178A)
-In-Reply-To: <1384430976-13708-1-git-send-email-luciano.coelho@intel.com>
-References: <1384430976-13708-1-git-send-email-luciano.coelho@intel.com>
+	Fri, 1 Nov 2013 11:22:07 -0400
+Message-ID: <607082335.2055771383319324985.JavaMail.defaultUser@defaultHost> (sfid-20131101_162213_427223_1F4990CA)
+Date: Fri, 1 Nov 2013 16:22:04 +0100 (CET)
+From: Fabio Rossi <rossi.f@inwind.it>
+Reply-To: Fabio Rossi <rossi.f@inwind.it>
+To: <marcel@holtmann.org>
+Subject: Re: BUG in rfcomm_sock_getsockopt+0x128/0x200
+Cc: "linux-wireless@vger.kernel.org Wireless"
+	<linux-wireless@vger.kernel.org>,
+	"linux-bluetooth@vger.kernel.org development"
+	<linux-bluetooth@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain;charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Refactor ieee80211_mesh_process_chanswitch() to use
-ieee80211_channel_switch() and avoid code duplication.
+>what socket option is your client program setting? Do you happen to know that. 
+Would make it a lot easier to track this down.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
-In v5:
+Hi Marcel,
+I'm using the bluetoothd daemon at startup and it crashes as soon as the 
+dongle is inserted. To test the behaviour I removed the dongle and restart the 
+daemon with
 
-* combine chsw_init and csa_repeater into a single csa_role enumeration;
+# bluetoothd -n -d
 
-* rebased on top of mac80211, so no need to apply Chun-Yeow's patch
-  manually (it's already applied);
+bluetoothd[4450]: Bluetooth daemon 4.101
+bluetoothd[4450]: src/main.c:parse_config() parsing main.conf
+bluetoothd[4450]: src/main.c:parse_config() discovto=0
+bluetoothd[4450]: src/main.c:parse_config() pairto=0
+bluetoothd[4450]: src/main.c:parse_config() pageto=8192
+bluetoothd[4450]: src/main.c:parse_config() auto_to=60
+bluetoothd[4450]: src/main.c:parse_config() name=%h-%d
+bluetoothd[4450]: src/main.c:parse_config() class=0x000100
+bluetoothd[4450]: src/main.c:parse_config() Key file does not have key 
+'DeviceID'
+bluetoothd[4450]: Starting SDP server
+bluetoothd[4450]: src/plugin.c:plugin_init() Loading builtin plugins
+bluetoothd[4450]: src/plugin.c:add_plugin() Loading pnat plugin
+bluetoothd[4450]: src/plugin.c:add_plugin() Loading audio plugin
+bluetoothd[4450]: src/plugin.c:add_plugin() Loading input plugin
+bluetoothd[4450]: src/plugin.c:add_plugin() Loading serial plugin
+bluetoothd[4450]: src/plugin.c:add_plugin() Loading network plugin
+bluetoothd[4450]: src/plugin.c:add_plugin() Loading service plugin
+bluetoothd[4450]: src/plugin.c:add_plugin() Loading health plugin
+bluetoothd[4450]: src/plugin.c:add_plugin() Loading hciops plugin
+bluetoothd[4450]: src/plugin.c:add_plugin() Loading mgmtops plugin
+bluetoothd[4450]: src/plugin.c:add_plugin() Loading formfactor plugin
+bluetoothd[4450]: src/plugin.c:add_plugin() Loading storage plugin
+bluetoothd[4450]: src/plugin.c:add_plugin() Loading adaptername plugin
+bluetoothd[4450]: src/plugin.c:add_plugin() Loading wiimote plugin
+bluetoothd[4450]: src/plugin.c:add_plugin() Loading maemo6 plugin
+bluetoothd[4450]: src/plugin.c:plugin_init() Loading plugins 
+/usr/lib64/bluetooth/plugins
+bluetoothd[4450]: plugins/service.c:register_interface() path 
+/org/bluez/4450/any
+bluetoothd[4450]: plugins/service.c:register_interface() Registered interface 
+org.bluez.Service on path /org/bluez/4450/any
+bluetoothd[4450]: plugins/maemo6.c:maemo6_init() init maemo6 plugin
+bluetoothd[4450]: health/hdp.c:hdp_manager_start() Starting Health manager
+bluetoothd[4450]: network/manager.c:read_config() /etc/bluetooth/network.conf: 
+Key file does not have key 'DisableSecurity'
+bluetoothd[4450]: network/manager.c:read_config() Config options: 
+Security=true
+bluetoothd[4450]: input/manager.c:input_manager_init() input.conf: Key file 
+does not have key 'IdleTimeout'
+bluetoothd[4450]: audio/manager.c:audio_manager_init() audio.conf: Key file 
+does not have key 'AutoConnect'
+bluetoothd[4450]: plugins/pnat.c:pnat_init() Setup Phonet AT (DUN) plugin
+bluetoothd[4450]: plugins/hciops.c:hciops_init() 
+bluetoothd[4450]: Bluetooth Management interface initialized
+bluetoothd[4450]: Failed to open RFKILL control device
+bluetoothd[4450]: src/main.c:main() Entering main loop
+bluetoothd[4450]: plugins/mgmtops.c:mgmt_event() cond 1
+bluetoothd[4450]: plugins/mgmtops.c:mgmt_event() Received 12 bytes from 
+management socket
+bluetoothd[4450]: plugins/mgmtops.c:mgmt_cmd_complete() 
+bluetoothd[4450]: plugins/mgmtops.c:read_version_complete() version 1 revision 
+4
+bluetoothd[4450]: plugins/mgmtops.c:mgmt_event() cond 1
+bluetoothd[4450]: plugins/mgmtops.c:mgmt_event() Received 11 bytes from 
+management socket
+bluetoothd[4450]: plugins/mgmtops.c:mgmt_cmd_complete() 
 
- net/mac80211/cfg.c         | 17 +++++++-----
- net/mac80211/ieee80211_i.h |  6 +++-
- net/mac80211/mesh.c        | 69 +++++++++-------------------------------------
- 3 files changed, 28 insertions(+), 64 deletions(-)
+then I insert the dongle
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index a98dc6b..a5aa766 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3141,15 +3141,18 @@ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 		    params->chandef.chan->band)
- 			return -EINVAL;
- 
--		ifmsh->chsw_init = true;
--		if (!ifmsh->pre_value)
--			ifmsh->pre_value = 1;
--		else
--			ifmsh->pre_value++;
-+		if (ifmsh->csa_role == IEEE80211_MESH_CSA_ROLE_NONE) {
-+			ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_INIT;
-+			if (!ifmsh->pre_value)
-+				ifmsh->pre_value = 1;
-+			else
-+				ifmsh->pre_value++;
-+		}
- 
--		err = ieee80211_mesh_csa_beacon(sdata, params, true);
-+		err = ieee80211_mesh_csa_beacon(sdata, params,
-+			(ifmsh->csa_role == IEEE80211_MESH_CSA_ROLE_INIT));
- 		if (err < 0) {
--			ifmsh->chsw_init = false;
-+			ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_NONE;
- 			return err;
- 		}
- 		break;
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 3a77ed1..15c9c39 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -610,7 +610,11 @@ struct ieee80211_if_mesh {
- 	struct ps_data ps;
- 	/* Channel Switching Support */
- 	struct mesh_csa_settings __rcu *csa;
--	bool chsw_init;
-+	enum {
-+		IEEE80211_MESH_CSA_ROLE_NONE,
-+		IEEE80211_MESH_CSA_ROLE_INIT,
-+		IEEE80211_MESH_CSA_ROLE_REPEATER,
-+	} csa_role;
- 	u8 chsw_ttl;
- 	u16 pre_value;
- };
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 89df62b..5852080 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -685,7 +685,7 @@ ieee80211_mesh_build_beacon(struct ieee80211_if_mesh *ifmsh)
- 		*pos++ = csa->settings.count;
- 		*pos++ = WLAN_EID_CHAN_SWITCH_PARAM;
- 		*pos++ = 6;
--		if (ifmsh->chsw_init) {
-+		if (ifmsh->csa_role == IEEE80211_MESH_CSA_ROLE_INIT) {
- 			*pos++ = ifmsh->mshcfg.dot11MeshTTL;
- 			*pos |= WLAN_EID_CHAN_SWITCH_PARAM_INITIATOR;
- 		} else {
-@@ -853,19 +853,11 @@ ieee80211_mesh_process_chnswitch(struct ieee80211_sub_if_data *sdata,
- {
- 	struct cfg80211_csa_settings params;
- 	struct ieee80211_csa_ie csa_ie;
--	struct ieee80211_chanctx_conf *chanctx_conf;
--	struct ieee80211_chanctx *chanctx;
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
- 	enum ieee80211_band band = ieee80211_get_sdata_band(sdata);
--	int err, num_chanctx;
-+	int err;
- 	u32 sta_flags;
- 
--	if (sdata->vif.csa_active)
--		return true;
--
--	if (!ifmsh->mesh_id)
--		return false;
--
- 	sta_flags = IEEE80211_STA_DISABLE_VHT;
- 	switch (sdata->vif.bss_conf.chandef.width) {
- 	case NL80211_CHAN_WIDTH_20_NOHT:
-@@ -890,10 +882,6 @@ ieee80211_mesh_process_chnswitch(struct ieee80211_sub_if_data *sdata,
- 	params.chandef = csa_ie.chandef;
- 	params.count = csa_ie.count;
- 
--	if (sdata->vif.bss_conf.chandef.chan->band !=
--	    params.chandef.chan->band)
--		return false;
--
- 	if (!cfg80211_chandef_usable(sdata->local->hw.wiphy, &params.chandef,
- 				     IEEE80211_CHAN_DISABLED)) {
- 		sdata_info(sdata,
-@@ -916,25 +904,6 @@ ieee80211_mesh_process_chnswitch(struct ieee80211_sub_if_data *sdata,
- 		return false;
- 	}
- 
--	rcu_read_lock();
--	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
--	if (!chanctx_conf)
--		goto failed_chswitch;
--
--	/* don't handle for multi-VIF cases */
--	chanctx = container_of(chanctx_conf, struct ieee80211_chanctx, conf);
--	if (chanctx->refcount > 1)
--		goto failed_chswitch;
--
--	num_chanctx = 0;
--	list_for_each_entry_rcu(chanctx, &sdata->local->chanctx_list, list)
--		num_chanctx++;
--
--	if (num_chanctx > 1)
--		goto failed_chswitch;
--
--	rcu_read_unlock();
--
- 	mcsa_dbg(sdata,
- 		 "received channel switch announcement to go to channel %d MHz\n",
- 		 params.chandef.chan->center_freq);
-@@ -947,30 +916,16 @@ ieee80211_mesh_process_chnswitch(struct ieee80211_sub_if_data *sdata,
- 		ifmsh->pre_value = csa_ie.pre_value;
- 	}
- 
--	if (ifmsh->chsw_ttl < ifmsh->mshcfg.dot11MeshTTL) {
--		if (ieee80211_mesh_csa_beacon(sdata, &params, false) < 0)
--			return false;
--	} else {
-+	if (ifmsh->chsw_ttl >= ifmsh->mshcfg.dot11MeshTTL)
- 		return false;
--	}
--
--	sdata->csa_radar_required = params.radar_required;
--
--	if (params.block_tx)
--		ieee80211_stop_queues_by_reason(&sdata->local->hw,
--				IEEE80211_MAX_QUEUE_MAP,
--				IEEE80211_QUEUE_STOP_REASON_CSA);
- 
--	sdata->csa_chandef = params.chandef;
--	sdata->vif.csa_active = true;
-+	ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_REPEATER;
- 
--	ieee80211_bss_info_change_notify(sdata, err);
--	drv_channel_switch_beacon(sdata, &params.chandef);
-+	if (ieee80211_channel_switch(sdata->local->hw.wiphy, sdata->dev,
-+				     &params) < 0)
-+		return false;
- 
- 	return true;
--failed_chswitch:
--	rcu_read_unlock();
--	return false;
- }
- 
- static void
-@@ -1080,7 +1035,8 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
- 		ifmsh->sync_ops->rx_bcn_presp(sdata,
- 			stype, mgmt, &elems, rx_status);
- 
--	if (!ifmsh->chsw_init)
-+	if (ifmsh->csa_role != IEEE80211_MESH_CSA_ROLE_INIT &&
-+	    !sdata->vif.csa_active)
- 		ieee80211_mesh_process_chnswitch(sdata, &elems, true);
- }
- 
-@@ -1091,7 +1047,7 @@ int ieee80211_mesh_finish_csa(struct ieee80211_sub_if_data *sdata)
- 	int ret = 0;
- 
- 	/* Reset the TTL value and Initiator flag */
--	ifmsh->chsw_init = false;
-+	ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_NONE;
- 	ifmsh->chsw_ttl = 0;
- 
- 	/* Remove the CSA and MCSP elements from the beacon */
-@@ -1204,7 +1160,8 @@ static void mesh_rx_csa_frame(struct ieee80211_sub_if_data *sdata,
- 
- 	ifmsh->pre_value = pre_value;
- 
--	if (!ieee80211_mesh_process_chnswitch(sdata, &elems, false)) {
-+	if (!sdata->vif.csa_active &&
-+	    !ieee80211_mesh_process_chnswitch(sdata, &elems, false)) {
- 		mcsa_dbg(sdata, "Failed to process CSA action frame");
- 		return;
- 	}
-@@ -1359,7 +1316,7 @@ void ieee80211_mesh_init_sdata(struct ieee80211_sub_if_data *sdata)
- 	mesh_rmc_init(sdata);
- 	ifmsh->last_preq = jiffies;
- 	ifmsh->next_perr = jiffies;
--	ifmsh->chsw_init = false;
-+	ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_NONE;
- 	/* Allocate all mesh structures when creating the first mesh interface. */
- 	if (!mesh_allocated)
- 		ieee80211s_init();
--- 
-1.8.4.rc3
+bluetoothd[4450]: plugins/mgmtops.c:mgmt_event() cond 1
+bluetoothd[4450]: plugins/mgmtops.c:mgmt_event() Received 6 bytes from 
+management socket
+bluetoothd[4450]: plugins/mgmtops.c:add_controller() Added controller 0
+bluetoothd[4450]: plugins/mgmtops.c:mgmt_event() cond 1
+bluetoothd[4450]: plugins/mgmtops.c:mgmt_event() Received 289 bytes from 
+management socket
+bluetoothd[4450]: plugins/mgmtops.c:mgmt_cmd_complete() 
+bluetoothd[4450]: plugins/mgmtops.c:read_info_complete() hci0 addr 00:09:DD:XX:
+XX:XX version 3 manufacturer 10 class 0x000000
+bluetoothd[4450]: plugins/mgmtops.c:read_info_complete() hci0 settings
+bluetoothd[4450]: plugins/mgmtops.c:read_info_complete() hci0 name CSR - bc4
+bluetoothd[4450]: plugins/mgmtops.c:read_info_complete() hci0 short name 
+bluetoothd[4450]: plugins/mgmtops.c:mgmt_remove_uuid() index 0
+bluetoothd[4450]: src/adapter.c:btd_adapter_ref() 0x7f6c1794a800: ref=1
+bluetoothd[4450]: plugins/mgmtops.c:mgmt_read_bdaddr() index 0 addr 00:09:DD:
+XX:XX:XX
+bluetoothd[4450]: src/sdpd-database.c:sdp_init_services_list() 
+bluetoothd[4450]: plugins/mgmtops.c:mgmt_add_uuid() index 0
+bluetoothd[4450]: plugins/mgmtops.c:mgmt_add_uuid() index 0
+bluetoothd[4450]: plugins/service.c:register_interface() path 
+/org/bluez/4450/hci0
+bluetoothd[4450]: plugins/service.c:register_interface() Registered interface 
+org.bluez.Service on path /org/bluez/4450/hci0
+bluetoothd[4450]: plugins/maemo6.c:mce_probe() path /org/bluez/4450/hci0
+bluetoothd[4450]: src/adapter.c:btd_adapter_ref() 0x7f6c1794a800: ref=2
+bluetoothd[4450]: network/manager.c:network_server_probe() path 
+/org/bluez/4450/hci0
+bluetoothd[4450]: src/adapter.c:btd_adapter_ref() 0x7f6c1794a800: ref=3
+bluetoothd[4450]: network/server.c:server_register() Registered interface org.
+bluez.NetworkServer on path /org/bluez/4450/hci0
+bluetoothd[4450]: serial/manager.c:proxy_probe() path /org/bluez/4450/hci0
+bluetoothd[4450]: src/adapter.c:btd_adapter_ref() 0x7f6c1794a800: ref=4
+bluetoothd[4450]: serial/proxy.c:proxy_register() Registered interface org.
+bluez.SerialProxyManager on path /org/bluez/4450/hci0
+bluetoothd[4450]: src/adapter.c:btd_adapter_ref() 0x7f6c1794a800: ref=5
+bluetoothd[4450]: audio/manager.c:media_server_probe() path 
+/org/bluez/4450/hci0
+bluetoothd[4450]: src/adapter.c:btd_adapter_ref() 0x7f6c1794a800: ref=6
+bluetoothd[4450]: audio/manager.c:audio_adapter_ref() 0x7f6c1794b2b0: ref=1
+bluetoothd[4450]: audio/manager.c:headset_server_probe() path 
+/org/bluez/4450/hci0
+bluetoothd[4450]: audio/manager.c:audio_adapter_ref() 0x7f6c1794b2b0: ref=2
+bluetoothd[4450]: audio/manager.c:headset_server_init() audio.conf: Key file 
+does not have key 'Master'
+Killed
 
+and I get the crash previously reported. If I use a working kernel the 
+bluetooth daemon continues its startup and the next lines are
+
+bluetoothd[2322]: src/sdpd-service.c:add_record_to_server() Adding record with 
+handle 0x10000             
+bluetoothd[2322]: plugins/mgmtops.c:mgmt_add_uuid() index 
+0                                               
+bluetoothd[2322]: src/sdpd-service.c:add_record_to_server() Record pattern 
+UUID 00000003-0000-1000-8000-00805f9
+bluetoothd[2322]: src/sdpd-service.c:add_record_to_server() Record pattern 
+UUID 00000100-0000-1000-8000-00805f9
+bluetoothd[2322]: src/sdpd-service.c:add_record_to_server() Record pattern 
+UUID 00001002-0000-1000-8000-00805f9
+bluetoothd[2322]: src/sdpd-service.c:add_record_to_server() Record pattern 
+UUID 00001108-0000-1000-8000-00805f9
+bluetoothd[2322]: src/sdpd-service.c:add_record_to_server() Record pattern 
+UUID 00001112-0000-1000-8000-00805f9
+bluetoothd[2322]: src/sdpd-service.c:add_record_to_server() Record pattern 
+UUID 00001203-0000-1000-8000-00805f9
+... [ omitted ] ...
+
+Furthermore, comparing bluetoothd logs (working vs not working kernel) I have 
+noticed the following difference:
+
+bluetoothd[4450]: plugins/mgmtops.c:read_info_complete() hci0 addr 00:09:DD:XX:
+XX:XX version 3 manufacturer 10 class 0x000000 
+bluetoothd[2322]: plugins/mgmtops.c:read_info_complete() hci0 addr 00:09:DD:XX:
+XX:XX version 3 manufacturer 10 class 0x5a0100
+
+so it seems the class is not properly initialized.
+
+The kernel is configured with
+
+CONFIG_BT=y
+CONFIG_BT_RFCOMM=y
+CONFIG_BT_RFCOMM_TTY=y
+CONFIG_BT_BNEP=y
+CONFIG_BT_HIDP=y
+CONFIG_BT_HCIBTUSB=y
+CONFIG_BT_HCIUART=y
+
+Let me know if I can help providing more info.
+
+Best regards,
+Fabio
