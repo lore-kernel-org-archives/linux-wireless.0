@@ -1,81 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:36789 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753747Ab3KKRBP (ORCPT
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:45913 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751485Ab3KAODs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Nov 2013 12:01:15 -0500
-Message-ID: <1384189271.14334.49.camel@jlt4.sipsolutions.net> (sfid-20131111_180123_077152_4ABE90F5)
-Subject: Re: [PATCH v2] mac80211: add assoc beacon timeout logic
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felipe Contreras <felipe.contreras@gmail.com>
-Cc: linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>
-Date: Mon, 11 Nov 2013 18:01:11 +0100
-In-Reply-To: <CAMP44s0Lsd2qMf3a-Vx4=HTd_UxzLVC6q1bAGPr+t6anubNknA@mail.gmail.com> (sfid-20131111_175658_138899_90A747C6)
-References: <1384119945-31213-1-git-send-email-felipe.contreras@gmail.com>
-	 <1384160932.14334.6.camel@jlt4.sipsolutions.net>
-	 <CAMP44s3TFSgWuR8gVoFBznNP+t9mz+to===9i1PAnra4ogKu9w@mail.gmail.com>
-	 <1384184624.14334.31.camel@jlt4.sipsolutions.net>
-	 <CAMP44s2cVVe4-yW214B9hJu7n6M1onZpZaPCj5N0Fi1JWDKKsw@mail.gmail.com>
-	 <1384188067.14334.45.camel@jlt4.sipsolutions.net>
-	 <CAMP44s3nkj2wZYCPve7EhyeD7sEFmpUN=-h015dOP68PcNSTug@mail.gmail.com>
-	 <CAMP44s0Lsd2qMf3a-Vx4=HTd_UxzLVC6q1bAGPr+t6anubNknA@mail.gmail.com>
-	 (sfid-20131111_175658_138899_90A747C6)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 1 Nov 2013 10:03:48 -0400
+Received: by mail-wg0-f48.google.com with SMTP id b13so4090201wgh.27
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 07:03:47 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 07/23] wireless-regdb: update NP's 5 GHz rules
+Date: Fri,  1 Nov 2013 15:03:02 +0100
+Message-Id: <1383314598-21240-8-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_150351_589000_DC4B1FD1)
+In-Reply-To: <1383314598-21240-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383314598-21240-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-11-11 at 10:56 -0600, Felipe Contreras wrote:
-> On Mon, Nov 11, 2013 at 10:53 AM, Felipe Contreras
-> <felipe.contreras@gmail.com> wrote:
-> > On Mon, Nov 11, 2013 at 10:41 AM, Johannes Berg
-> > <johannes@sipsolutions.net> wrote:
-> >> On Mon, 2013-11-11 at 10:23 -0600, Felipe Contreras wrote:
-> 
-> >>> > This isn't really true like I said above - the kernel can only drop the
-> >>> > association, if userspace *insists* then it will try again and again.
-> >>>
-> >>> But it's not doing this:
-> >>>
-> >>>   ieee80211_destroy_assoc_data(sdata, false);
-> >>>   cfg80211_assoc_timeout(sdata->dev, bss);
-> >>>
-> >>> Which is what causes the association to stop for me.
-> >>>
-> >>> So where exactly in the code is the association being "dropped"?
-> >>
-> >> This does get called in my setup.
-> >
-> > Yes, because your setup is receiving beacons.
-> >
-> > Check the code:
-> >
-> > if ((ifmgd->assoc_data->need_beacon && !ifmgd->have_beacon) ||
-> >    ieee80211_do_assoc(sdata)) {
-> > struct cfg80211_bss *bss = ifmgd->assoc_data->bss;
-> >
-> > ieee80211_destroy_assoc_data(sdata, false);
-> > cfg80211_assoc_timeout(sdata->dev, bss);
-> > }
-> >
-> > If there's no beacon, cfg80211_assoc_timeout() is not called.
-> >
-> > I'm sure if you don't call ieee80211_rx_mgmt_beacon() at all you will
-> > see the same behavior I see.
-> 
-> My bad, actually the code that is not being called is:
-> 
->   cfg80211_unlink_bss(local->hw.wiphy, assoc_data->bss);
-> 
-> In ieee80211_do_assoc().
+This:
 
-That's not really interesting though, it just deletes the scan entry. If
-it was deleted, then the supplicant would just scan again and probably
-retry the connection.
+  o enables VHT80 on its existing 5 GHz frequency range
+    but makes a compromise and reduces the max EIRP from
+    30 dBm to 20 dBm
 
-johannes
+  o adds two new VHT80 capable frequency ranges
 
+Source is QCA's regulatory team's efforts.
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/db.txt b/db.txt
+index db20fd0..e2740a6 100644
+--- a/db.txt
++++ b/db.txt
+@@ -589,7 +589,9 @@ country NO: DFS-ETSI
+ 
+ country NP: DFS-JP
+ 	(2402 - 2482 @ 40), (20)
+-	(5735 - 5835 @ 40), (30)
++	(5170 - 5250 @ 80), (20)
++	(5250 - 5330 @ 80), (20), DFS
++	(5735 - 5835 @ 80), (20)
+ 
+ country NZ: DFS-FCC
+ 	(2402 - 2482 @ 40), (30)
+-- 
+1.8.4.rc3
 
