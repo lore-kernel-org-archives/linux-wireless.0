@@ -1,169 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:50339 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753310Ab3KXUHW (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:21396 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751459Ab3KAKaH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Nov 2013 15:07:22 -0500
-Received: by mail-wi0-f176.google.com with SMTP id hq4so2729912wib.3
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Nov 2013 12:07:21 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Haim Dreyfuss <haim.dreyfuss@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 25/29] iwlwifi: mvm: Implement low-priority scan
-Date: Sun, 24 Nov 2013 22:06:42 +0200
-Message-Id: <1385323606-3603-25-git-send-email-egrumbach@gmail.com> (sfid-20131124_210809_259097_B53FAA14)
-In-Reply-To: <52925BE7.4050406@gmail.com>
-References: <52925BE7.4050406@gmail.com>
+	Fri, 1 Nov 2013 06:30:07 -0400
+Date: Fri, 1 Nov 2013 13:27:02 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: emmanuel.grumbach@intel.com
+Cc: linux-wireless@vger.kernel.org
+Subject: re: iwlwifi: mvm: new BT Coex API
+Message-ID: <20131101102702.GH29795@longonot.mountain> (sfid-20131101_113013_102488_B99B80F8)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Haim Dreyfuss <haim.dreyfuss@intel.com>
+Hello Emmanuel Grumbach,
 
-Advertise driver's support for low priority scan.
-Notice that this overwrites current setting by mac80211 which depends
-only on hw scan support.
-This scan priority  can be configured by user space application
-and it affects scan continuity, low priority scan
-will be more fragmented scan.
+This is a semi-automatic email about new static checker warnings.
 
-Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mac80211.c |    3 +-
- drivers/net/wireless/iwlwifi/mvm/scan.c     |   52 ++++++++++++++++++++-------
- 2 files changed, 41 insertions(+), 14 deletions(-)
+The patch dac94da8dba3: "iwlwifi: mvm: new BT Coex API" from Jun 18, 
+2013, leads to the following Smatch complaint:
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index e25aa23..37fa559 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -256,7 +256,8 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
- 	}
- 
- 	hw->wiphy->features |= NL80211_FEATURE_P2P_GO_CTWIN |
--			       NL80211_FEATURE_P2P_GO_OPPPS;
-+			       NL80211_FEATURE_P2P_GO_OPPPS |
-+			       NL80211_FEATURE_LOW_PRIORITY_SCAN;
- 
- 	mvm->rts_threshold = IEEE80211_MAX_RTS_THRESHOLD;
- 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
-index 5972266..f3713f2 100644
---- a/drivers/net/wireless/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
-@@ -70,6 +70,9 @@
- 
- #define IWL_PLCP_QUIET_THRESH 1
- #define IWL_ACTIVE_QUIET_TIME 10
-+#define LONG_OUT_TIME_PERIOD 600
-+#define SHORT_OUT_TIME_PERIOD 200
-+#define SUSPEND_TIME_PERIOD 100
- 
- static inline __le16 iwl_mvm_scan_rx_chain(struct iwl_mvm *mvm)
- {
-@@ -87,20 +90,22 @@ static inline __le16 iwl_mvm_scan_rx_chain(struct iwl_mvm *mvm)
- 	return cpu_to_le16(rx_chain);
- }
- 
--static inline __le32 iwl_mvm_scan_max_out_time(struct ieee80211_vif *vif)
-+static inline __le32 iwl_mvm_scan_max_out_time(struct ieee80211_vif *vif,
-+					       u32 flags, bool is_assoc)
- {
--	if (vif->bss_conf.assoc)
--		return cpu_to_le32(200 * 1024);
--	else
-+	if (!is_assoc)
- 		return 0;
-+	if (flags & NL80211_SCAN_FLAG_LOW_PRIORITY)
-+		return cpu_to_le32(ieee80211_tu_to_usec(SHORT_OUT_TIME_PERIOD));
-+	return cpu_to_le32(ieee80211_tu_to_usec(LONG_OUT_TIME_PERIOD));
- }
- 
--static inline __le32 iwl_mvm_scan_suspend_time(struct ieee80211_vif *vif)
-+static inline __le32 iwl_mvm_scan_suspend_time(struct ieee80211_vif *vif,
-+					       bool is_assoc)
- {
--	if (!vif->bss_conf.assoc)
-+	if (!is_assoc)
- 		return 0;
--
--	return cpu_to_le32(ieee80211_tu_to_usec(vif->bss_conf.beacon_int));
-+	return cpu_to_le32(ieee80211_tu_to_usec(SUSPEND_TIME_PERIOD));
- }
- 
- static inline __le32
-@@ -262,6 +267,15 @@ static u16 iwl_mvm_fill_probe_req(struct ieee80211_mgmt *frame, const u8 *ta,
- 	return (u16)len;
- }
- 
-+static void iwl_mvm_vif_assoc_iterator(void *data, u8 *mac,
-+				       struct ieee80211_vif *vif)
-+{
-+	bool *is_assoc = data;
-+
-+	if (vif->bss_conf.assoc)
-+		*is_assoc = true;
-+}
-+
- int iwl_mvm_scan_request(struct iwl_mvm *mvm,
- 			 struct ieee80211_vif *vif,
- 			 struct cfg80211_scan_request *req)
-@@ -274,6 +288,7 @@ int iwl_mvm_scan_request(struct iwl_mvm *mvm,
- 		.dataflags = { IWL_HCMD_DFL_NOCOPY, },
- 	};
- 	struct iwl_scan_cmd *cmd = mvm->scan_cmd;
-+	bool is_assoc = false;
- 	int ret;
- 	u32 status;
- 	int ssid_len = 0;
-@@ -289,13 +304,17 @@ int iwl_mvm_scan_request(struct iwl_mvm *mvm,
- 	memset(cmd, 0, sizeof(struct iwl_scan_cmd) +
- 	       mvm->fw->ucode_capa.max_probe_length +
- 	       (MAX_NUM_SCAN_CHANNELS * sizeof(struct iwl_scan_channel)));
--
-+	ieee80211_iterate_active_interfaces_atomic(mvm->hw,
-+					    IEEE80211_IFACE_ITER_NORMAL,
-+					    iwl_mvm_vif_assoc_iterator,
-+					    &is_assoc);
- 	cmd->channel_count = (u8)req->n_channels;
- 	cmd->quiet_time = cpu_to_le16(IWL_ACTIVE_QUIET_TIME);
- 	cmd->quiet_plcp_th = cpu_to_le16(IWL_PLCP_QUIET_THRESH);
- 	cmd->rxchain_sel_flags = iwl_mvm_scan_rx_chain(mvm);
--	cmd->max_out_time = iwl_mvm_scan_max_out_time(vif);
--	cmd->suspend_time = iwl_mvm_scan_suspend_time(vif);
-+	cmd->max_out_time = iwl_mvm_scan_max_out_time(vif, req->flags,
-+						      is_assoc);
-+	cmd->suspend_time = iwl_mvm_scan_suspend_time(vif, is_assoc);
- 	cmd->rxon_flags = iwl_mvm_scan_rxon_flags(req);
- 	cmd->filter_flags = cpu_to_le32(MAC_FILTER_ACCEPT_GRP |
- 					MAC_FILTER_IN_BEACON);
-@@ -522,6 +541,12 @@ static void iwl_build_scan_cmd(struct iwl_mvm *mvm,
- 			       struct cfg80211_sched_scan_request *req,
- 			       struct iwl_scan_offload_cmd *scan)
- {
-+	bool is_assoc = false;
-+
-+	ieee80211_iterate_active_interfaces_atomic(mvm->hw,
-+					    IEEE80211_IFACE_ITER_NORMAL,
-+					    iwl_mvm_vif_assoc_iterator,
-+					    &is_assoc);
- 	scan->channel_count =
- 		mvm->nvm_data->bands[IEEE80211_BAND_2GHZ].n_channels +
- 		mvm->nvm_data->bands[IEEE80211_BAND_5GHZ].n_channels;
-@@ -529,8 +554,9 @@ static void iwl_build_scan_cmd(struct iwl_mvm *mvm,
- 	scan->quiet_plcp_th = cpu_to_le16(IWL_PLCP_QUIET_THRESH);
- 	scan->good_CRC_th = IWL_GOOD_CRC_TH_DEFAULT;
- 	scan->rx_chain = iwl_mvm_scan_rx_chain(mvm);
--	scan->max_out_time = cpu_to_le32(200 * 1024);
--	scan->suspend_time = iwl_mvm_scan_suspend_time(vif);
-+	scan->max_out_time = iwl_mvm_scan_max_out_time(vif, req->flags,
-+						       is_assoc);
-+	scan->suspend_time = iwl_mvm_scan_suspend_time(vif, is_assoc);
- 	scan->filter_flags |= cpu_to_le32(MAC_FILTER_ACCEPT_GRP |
- 					  MAC_FILTER_IN_BEACON);
- 	scan->scan_type = cpu_to_le32(SCAN_TYPE_BACKGROUND);
--- 
-1.7.9.5
+drivers/net/wireless/iwlwifi/mvm/bt-coex.c:754 iwl_mvm_bt_coex_notif_handle()
+	 error: we previously assumed 'data.primary' could be null (see line 709)
 
+drivers/net/wireless/iwlwifi/mvm/bt-coex.c
+   708	
+   709		if (data.primary) {
+                    ^^^^^^^^^^^^
+Patch introcudes a NULL check.
+
+   710			struct ieee80211_chanctx_conf *chan = data.primary;
+   711			if (WARN_ON(!chan->def.chan)) {
+   712				rcu_read_unlock();
+   713				return;
+   714			}
+   715	
+   716			if (chan->def.width < NL80211_CHAN_WIDTH_40) {
+   717				ci_bw_idx = 0;
+   718				cmd.co_run_bw_primary = 0;
+   719			} else {
+   720				cmd.co_run_bw_primary = 1;
+   721				if (chan->def.center_freq1 >
+   722				    chan->def.chan->center_freq)
+   723					ci_bw_idx = 2;
+   724				else
+   725					ci_bw_idx = 1;
+   726			}
+   727	
+   728			cmd.bt_primary_ci =
+   729				iwl_ci_mask[chan->def.chan->hw_value][ci_bw_idx];
+   730			cmd.primary_ch_phy_id = *((u16 *)data.primary->drv_priv);
+   731		}
+   732	
+   733		if (data.secondary) {
+   734			struct ieee80211_chanctx_conf *chan = data.secondary;
+   735			if (WARN_ON(!data.secondary->def.chan)) {
+   736				rcu_read_unlock();
+   737				return;
+   738			}
+   739	
+   740			if (chan->def.width < NL80211_CHAN_WIDTH_40) {
+   741				ci_bw_idx = 0;
+   742				cmd.co_run_bw_secondary = 0;
+   743			} else {
+   744				cmd.co_run_bw_secondary = 1;
+   745				if (chan->def.center_freq1 >
+   746				    chan->def.chan->center_freq)
+   747					ci_bw_idx = 2;
+   748				else
+   749					ci_bw_idx = 1;
+   750			}
+   751	
+   752			cmd.bt_secondary_ci =
+   753				iwl_ci_mask[chan->def.chan->hw_value][ci_bw_idx];
+   754			cmd.secondary_ch_phy_id = *((u16 *)data.primary->drv_priv);
+                                                           ^^^^^^^^^^^^^^^^^^^^^^
+Patch introduces unchecked dereference.
+
+   755		}
+   756	
+
+It's possible that a non-null data.secondary implies data.primary is
+non-null.  If so please disregard this one-time email.
+
+regards,
+dan carpenter
