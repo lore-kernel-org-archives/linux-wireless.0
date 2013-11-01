@@ -1,18 +1,18 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f179.google.com ([74.125.82.179]:42626 "EHLO
-	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751685Ab3KAN7p (ORCPT
+Received: from mail-we0-f173.google.com ([74.125.82.173]:62258 "EHLO
+	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751872Ab3KAN7L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 09:59:45 -0400
-Received: by mail-we0-f179.google.com with SMTP id w61so3916071wes.24
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:59:44 -0700 (PDT)
+	Fri, 1 Nov 2013 09:59:11 -0400
+Received: by mail-we0-f173.google.com with SMTP id u57so3969476wes.4
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:59:10 -0700 (PDT)
 From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
 	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 47/65] wireless-regdb: add VHT80 rules for BD
-Date: Fri,  1 Nov 2013 14:57:37 +0100
-Message-Id: <1383314275-20960-48-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_150810_290651_2245D50B)
+Subject: [PATCH 32/65] wireless-regdb: enable VHT80 for MT
+Date: Fri,  1 Nov 2013 14:57:22 +0100
+Message-Id: <1383314275-20960-33-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_145916_316039_C9CB7D8E)
 In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
 References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
@@ -22,21 +22,26 @@ Source is QCA's regulatory team's efforts.
 
 Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- db.txt | 1 +
- 1 file changed, 1 insertion(+)
+ db.txt | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/db.txt b/db.txt
-index 68e896c..f63565c 100644
+index 478329c..27975b2 100644
 --- a/db.txt
 +++ b/db.txt
-@@ -91,6 +91,7 @@ country BB: DFS-FCC
+@@ -538,9 +538,9 @@ country MK: DFS-ETSI
  
- country BD: DFS-JP
+ country MT: DFS-ETSI
  	(2402 - 2482 @ 40), (20)
-+	(5735 - 5835 @ 80), (30)
+-	(5170 - 5250 @ 40), (20)
+-	(5250 - 5330 @ 40), (20), DFS
+-	(5490 - 5710 @ 40), (27), DFS
++	(5170 - 5250 @ 80), (20)
++	(5250 - 5330 @ 80), (20), DFS
++	(5490 - 5710 @ 80), (27), DFS
+ 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
+ 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
  
- country BE: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
 -- 
 1.8.4.rc3
 
