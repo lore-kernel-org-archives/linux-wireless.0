@@ -1,39 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51211 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753953Ab3KTQaP (ORCPT
+Received: from mail-lb0-f177.google.com ([209.85.217.177]:47216 "EHLO
+	mail-lb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752383Ab3KAQEk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Nov 2013 11:30:15 -0500
-Date: Wed, 20 Nov 2013 11:29:46 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 0/7] brcm80211: cleanup fixes and out-of-order fix
-Message-ID: <20131120162946.GC2220@tuxdriver.com> (sfid-20131120_173020_488630_E718A2BA)
-References: <1383775642-647-1-git-send-email-arend@broadcom.com>
- <528C82A6.4000500@broadcom.com>
+	Fri, 1 Nov 2013 12:04:40 -0400
+Received: by mail-lb0-f177.google.com with SMTP id u14so3539152lbd.8
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 09:04:39 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <528C82A6.4000500@broadcom.com>
+In-Reply-To: <1383314131-20774-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383314131-20774-1-git-send-email-mcgrof@do-not-panic.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Fri, 1 Nov 2013 17:04:19 +0100
+Message-ID: <CAB=NE6Wg7CwS0Uw37KUH4-jmv2rDS2OL4h0SrXoWTe4QOfpD8g@mail.gmail.com> (sfid-20131101_170443_773863_BA878C27)
+Subject: Re: [PATCH 0/8] wireless-regdb: General updates
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 20, 2013 at 10:36:38AM +0100, Arend van Spriel wrote:
-> On 11/06/2013 11:07 PM, Arend van Spriel wrote:
-> >This series contains a couple of small cleanup fixes and one fix
-> >from Hante to get rid of out-of-order transmit seen doing UDP iperf.
-> >
-> >This series is intended for 3.13 if the merge window has not yet
-> >opened. It applies to the master branch of the wireless-next
-> >repository.
-> 
-> This series was sent two weeks ago, but did not pop up in your
-> repos. Is it put in 3.14 queue?
+On Fri, Nov 1, 2013 at 2:55 PM, Luis R. Rodriguez
+<mcgrof@do-not-panic.com> wrote:
+> The entire delta can be obtained via either a single patch [0]
+> or my git tree [1].
 
-I still have the series.  The wireless-next tree is inactive until
-after -rc1 gets released.
+Since I provided a patch update fix I pushed the changes to the git
+tree and provided a new v2 all-in-one patch [2] as well.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+[2] http://drvbp1.linux-foundation.org/~mcgrof/patches/2013/11/01/pending-wireless-regdb-2013-11-01-v2.patch
+
+  Luis
