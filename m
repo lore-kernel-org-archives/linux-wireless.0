@@ -1,52 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:52017 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751056Ab3K3SYL (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:41385 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750787Ab3KANzv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Nov 2013 13:24:11 -0500
-Received: by mail-we0-f174.google.com with SMTP id q58so10505256wes.33
-        for <linux-wireless@vger.kernel.org>; Sat, 30 Nov 2013 10:24:10 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1980481.3p2Oa8Hyrn@debian64>
-References: <CAHdPZaN6GusQbpmNHt=4cHkUKsJTOrGuc0oBF7O8e0oL0neoPQ@mail.gmail.com>
-	<1980481.3p2Oa8Hyrn@debian64>
-Date: Sat, 30 Nov 2013 13:24:10 -0500
-Message-ID: <CAHdPZaPACfFrvXyszwLpT1-iLCrGs_mCh7dR4-_tW=W5V8e1oA@mail.gmail.com> (sfid-20131130_192414_093607_C77C0D5E)
-Subject: Re: unable to set iwlwifi master mode
-From: "devendra.aaru" <devendra.aaru@gmail.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 1 Nov 2013 09:55:51 -0400
+Received: by mail-wi0-f179.google.com with SMTP id hm4so1106576wib.6
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:55:50 -0700 (PDT)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 7/8] wireless-regdb: optimize two of IL's rules
+Date: Fri,  1 Nov 2013 14:55:30 +0100
+Message-Id: <1383314131-20774-8-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_145554_696615_E2EF1844)
+In-Reply-To: <1383314131-20774-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383314131-20774-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Nov 30, 2013 at 1:20 PM, Christian Lamparter
-<chunkeey@googlemail.com> wrote:
-> Hi,
->
-> On Saturday 30 November 2013 12:26:11 devendra.aaru wrote:
->> I was trying to use my intel wireless device as an AP.
->>
->> It seem to be that i couldn't able to get it working.
->>
->> in case:
->>
->> 03:00.0 Network controller: Intel Corporation Centrino Wireless-N 1000
->
->
->> What could be the possible mistake?
-> Well, The latest version I found for the IWL 1000 was/is v39.31.5.1 Build
-> 35138. It looks like this version doesn't "support" AP or P2P mode... and
-> it looks like it won't be coming.
->
-> You probably want to look for a replacement card. However, if you are using
-> a laptop, this might be difficult. Some vendor bios' have a wifi whitelist
-> and you have to ask your laptop vendor for the list first or "get creative".
->
-> Regards,
->
-> Christian
+There's no reason not to merge these two rules.
+This as picked up by the new CRDA optimizer.
 
-I am using a laptop, so it won't work out for me. Does this version
-you are talking
-is about the firmware? If so changing it might help out?
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ db.txt | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index 22b6561..ddfbc04 100644
+--- a/db.txt
++++ b/db.txt
+@@ -390,8 +390,7 @@ country IE: DFS-ETSI
+ 
+ country IL: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-	(5150 - 5250 @ 80), (200 mW), NO-OUTDOOR
+-	(5250 - 5350 @ 80), (200 mW), NO-OUTDOOR
++	(5150 - 5350 @ 80), (200 mW), NO-OUTDOOR
+ 
+ country IN: DFS-JP
+ 	(2402 - 2482 @ 40), (20)
+-- 
+1.8.4.rc3
+
