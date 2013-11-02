@@ -1,73 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f44.google.com ([209.85.215.44]:41112 "EHLO
-	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754444Ab3KTS7q (ORCPT
+Received: from outrelay01.libero.it ([212.52.84.101]:43593 "EHLO
+	outrelay01.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751977Ab3KBMGW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Nov 2013 13:59:46 -0500
-Received: by mail-la0-f44.google.com with SMTP id ep20so7812679lab.31
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Nov 2013 10:59:45 -0800 (PST)
+	Sat, 2 Nov 2013 08:06:22 -0400
+Message-ID: <1150558629.1978061383393978285.JavaMail.defaultUser@defaultHost> (sfid-20131102_130639_305972_35C94CEF)
+Date: Sat, 2 Nov 2013 13:06:18 +0100 (CET)
+From: Fabio Rossi <rossi.f@inwind.it>
+Reply-To: Fabio Rossi <rossi.f@inwind.it>
+To: <marcel@holtmann.org>
+Subject: Re: BUG in rfcomm_sock_getsockopt+0x128/0x200
+Cc: "linux-wireless@vger.kernel.org Wireless"
+	<linux-wireless@vger.kernel.org>,
+	"linux-bluetooth@vger.kernel.org development"
+	<linux-bluetooth@vger.kernel.org>
 MIME-Version: 1.0
-Date: Wed, 20 Nov 2013 19:59:45 +0100
-Message-ID: <CAEk6gTD66duJkKrWNh_5e+3XdfD82JUaBW2zimj-ncSXZYQqvA@mail.gmail.com> (sfid-20131120_195959_075940_7A7F23F6)
-Subject: ath6kl AP in 802.11n not possible: ATH6KL_FW_CAPABILITY_RSN_CAP_OVERRIDE
- not set in (latest) linux-firmware
-From: Drasko DRASKOVIC <drasko.draskovic@gmail.com>
-To: linux-wireless@vger.kernel.org, ath6kl-devel@qualcomm.com,
-	kvalo@qca.qualcomm.com, vthiagar@qca.qualcomm.com,
-	raychen@qca.qualcomm.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
-I have spend several days debugging ath6kl driver to work well in AP
-mode for 802.11n (i.e. when ieee80211n=1 in hostapd.conf). With this
-setting hostapd was constantly failing with: nl80211: Failed to set
-channel (freq=2442): -22 (Invalid argument), please refer to the
-http://www.spinics.net/lists/linux-wireless/msg113987.html
+Hi Marcel,
 
-I am using AR9374 based USB dongle, UB134 reference design (AR6004
-firmware, i.e. hw1.3,
-http://git.kernel.org/cgit/linux/kernel/git/firmware/linux-firmware.git/tree/ath6k/AR6004/hw1.3).
-On fw load driver outputs the message: ath6kl: ar6004 hw 1.3 usb fw
-3.5.0.2356 api 3.
+>I finally managed to reproduce it. It does not always happen. And strangely 
+enough I can only trigger it when enabling experimental features of bluetoothd 
+with -E command line switch.
+>
+>But I have no idea why your bisecting points to that specific commit. And 
+more important it used to work just fine (see below). However I can tell you 
+what makes the code crash.
+>
+>0x1313 is in rfcomm_sock_getsockopt (net/bluetooth/rfcomm/sock.c:743).
+>738	
+>739	static int rfcomm_sock_getsockopt_old(struct socket *sock, int optname, 
+char __user *optval, int __user *optlen)
+>740	{
+>741		struct sock *sk = sock->sk;
+>742		struct rfcomm_conninfo cinfo;
+>743		struct l2cap_conn *conn = l2cap_pi(sk)->chan->conn;
+>744		int len, err = 0;
+>745		u32 opt;
+>746	
+>747		BT_DBG("sk %p", sk);
+>
+>The l2cap_pi(sk) is fully broken. That is an rfcomm_pi(sk). The commit that 
+broke this is actually from an earlier time. I have this one:
+>
+>commit 8c1d787be4b62d2d1b6f04953eca4bcf7c839d44
+>Author: Gustavo F. Padovan <padovan@profusion.mobi>
+>Date:   Wed Apr 13 20:23:55 2011 -0300
+>
+>    Bluetooth: Move conn to struct l2cap_chan
+>
+>diff --git a/net/bluetooth/rfcomm/sock.c b/net/bluetooth/rfcomm/sock.c
+>index 66cc1f0c3df8..386cfaffd4b7 100644
+>--- a/net/bluetooth/rfcomm/sock.c
+>+++ b/net/bluetooth/rfcomm/sock.c
+>@@ -743,6 +743,7 @@ static int rfcomm_sock_getsockopt_old(struct socket 
+*sock, int optname, char __u
+>        struct sock *sk = sock->sk;
+>        struct sock *l2cap_sk;
+>        struct rfcomm_conninfo cinfo;
+>+       struct l2cap_conn *conn = l2cap_pi(sk)->chan->conn;
+>        int len, err = 0;
+>        u32 opt;
+> 
+>@@ -787,8 +788,8 @@ static int rfcomm_sock_getsockopt_old(struct socket 
+*sock, int optname, char __u
+> 
+>                l2cap_sk = rfcomm_pi(sk)->dlc->session->sock->sk;
+> 
+>-               cinfo.hci_handle = l2cap_pi(l2cap_sk)->conn->hcon->handle;
+>-               memcpy(cinfo.dev_class, l2cap_pi(l2cap_sk)->conn->hcon-
+>dev_class, 3);
+>+               cinfo.hci_handle = conn->hcon->handle;
+>+               memcpy(cinfo.dev_class, conn->hcon->dev_class, 3);
+>
+>The conversion is clearly wrong since we used to have a l2cap_sk that was 
+pointing to the right socket.
+>
+>This should have blown up month ago and not just with the latest changes we 
+have done to the L2CAP layer. Anyhow, you can try this small change and see if 
+it fixes things for you.
+>
+>diff --git a/net/bluetooth/rfcomm/sock.c b/net/bluetooth/rfcomm/sock.c
+>index c4d3d423f89b..0be7619c5e5e 100644
+>--- a/net/bluetooth/rfcomm/sock.c
+>+++ b/net/bluetooth/rfcomm/sock.c
+>@@ -739,8 +739,9 @@ static int rfcomm_sock_setsockopt(struct socket *sock, 
+int level, int optname, c
+> static int rfcomm_sock_getsockopt_old(struct socket *sock, int optname, char 
+__user *optval, int __user *optlen)
+> {
+>        struct sock *sk = sock->sk;
+>+       struct sock *l2cap_sk;
+>+       struct l2cap_conn *conn;
+>        struct rfcomm_conninfo cinfo;
+>-       struct l2cap_conn *conn = l2cap_pi(sk)->chan->conn;
+>        int len, err = 0;
+>        u32 opt;
+> 
+>@@ -783,6 +784,9 @@ static int rfcomm_sock_getsockopt_old(struct socket 
+*sock, int optname, char __u
+>                        break;
+>                }
+> 
+>+               l2cap_sk = rfcomm_pi(sk)->dlc->session->sock->sk;
+>+               conn = l2cap_pi(l2cap_sk)->chan->conn;
+>+
+>                memset(&cinfo, 0, sizeof(cinfo));
+>                cinfo.hci_handle = conn->hcon->handle;
+>                memcpy(cinfo.dev_class, conn->hcon->dev_class, 3);
+>
+>Regards
 
-Ftrace in the kernel lead me to the cfg80211_chandef_usable()
-(http://lxr.free-electrons.com/source/net/wireless/chan.c#L47), which
-was failing on the checks of ht_cap->ht_supported. For some reasons
-these were FALSE, even that they should be present. Further inspection
-leads to ath6kl_cfg80211_init(), and especially this check of
-ATH6KL_FW_CAPABILITY_RSN_CAP_OVERRIDE:
-https://github.com/kvalo/ath/blob/master/drivers/net/wireless/ath/ath6kl/cfg80211.c#L3767
-which fails, and thus HT is not supported anymore, breaking hostapd
-and making it impossible to put the dongle in the AP 802.11n mode.
-Previous to this check, ht was set to TRUE on WMI_11AGN_CAP case
-(https://github.com/kvalo/ath/blob/master/drivers/net/wireless/ath/ath6kl/cfg80211.c#L3750),
-which I verified with printk.
+This patch solves the issue, I don't see the crash anymore.
 
-Googling aroud led me to these patches:
-http://permalink.gmane.org/gmane.linux.kernel.wireless.general/89741
-http://www.spinics.net/lists/linux-wireless/msg87931.html
+Thanks,
+Fabio
 
-Commenting out these checks I was able to put the dongle in both
-802.11gn and 802.11an in AP mode without encryption and with WPAm but
-not without WPA2 (probably because of 4-way handshaking mentioned in
-the comments).
-
-Can we characterize this behavior like a bug in the firmware, or is
-this limitation is intentional (which I doubt)?
-
-
-Bug summary: ATH6KL_FW_CAPABILITY_RSN_CAP_OVERRIDE not set in latest
-linux-firmware, AP mode in 802.11n not possible, breaks hostapd when
-ieee80211n=1
-ATH chipset: AR9374 based USB dongle, UB134 reference design
-FW: ar6004 hw 1.3 usb fw 3.5.0.2356 api 3
-hostpad: latest stable, hostapd-2.0
-linux-firmware: latest from the
-http://git.kernel.org/cgit/linux/kernel/git/firmware/linux-firmware.git
-(git hash 7d0c7a8cfd78388d90cc784a185b19dcbdbce824)
-
-
-Best regards,
-Drasko
