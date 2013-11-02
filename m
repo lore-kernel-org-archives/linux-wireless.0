@@ -1,51 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:39287 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751132Ab3KNGUx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Nov 2013 01:20:53 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: wzyboy <wzyboy@wzyboy.org>, Bjorn Helgaas <bhelgaas@google.com>
-CC: Emmanuel Grumbach <egrumbach@gmail.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bj?rn Mork <bjorn@mork.no>
-Subject: RE: [Ilw] Intel Wireless 7260 hardware timed out randomly
-Date: Thu, 14 Nov 2013 06:20:48 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301E02E49@HASMSX103.ger.corp.intel.com> (sfid-20131114_072057_866609_3B3E5C06)
-References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
- <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
- <527A8166.6000701@gmail.com>
- <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
- <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
- <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
- <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
- <20131111224439.GA30638@google.com>
- <CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com>
- <CALkVjQaXEBpbwu9Qy3+17Eg-nSg-k7iin8G3f1RsTLkCOB-2XQ@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DF044C@HASMSX103.ger.corp.intel.com>
- <CAErSpo5iU15AoSVL9WmLp4gNCiNmt6pFZuTsd-Vui4SCrSc_Hw@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DF0865@HASMSX103.ger.corp.intel.com>
- <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
- <52828364.6080103@gmail.com>
- <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
- <CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
- <CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
- <CALkVjQaTnocYnV4GM=LHuYwMRZ=sOZnSrtna4C6anNAWr4O7=A@mail.gmail.com>
-In-Reply-To: <CALkVjQaTnocYnV4GM=LHuYwMRZ=sOZnSrtna4C6anNAWr4O7=A@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-we0-f170.google.com ([74.125.82.170]:45549 "EHLO
+	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751951Ab3KBQ6F (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Nov 2013 12:58:05 -0400
+Received: by mail-we0-f170.google.com with SMTP id u57so650083wes.29
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Nov 2013 09:58:02 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <CAMP44s1NOS2p9pKeMLhR7616CzHeHJVJEzcF1tP6tsKfcPhSOQ@mail.gmail.com>
+References: <CAMP44s1XJRHV8bAX=_-TkSKMkY8Nw1=eHorqTCZ2QmtR5m8uJA@mail.gmail.com>
+ <526E20EA.9090203@rempel-privat.de> <CAMP44s2Cvw9HF3c3Asuq+bTSD36Gw6PXOUVjAcCD+hf6KB_awg@mail.gmail.com>
+ <CABPxzY+xJ7kst-sYwP8RJwMO_zkNYWKaYy=_LS7WQfuxquK24w@mail.gmail.com>
+ <CAMP44s0087jYz5AiEaEzwt7GqH9ed8PWE1CmvMPr4Dqn3yE6rA@mail.gmail.com>
+ <CABPxzYLwwyFCFw1pEt0v9Xw4kcue1C_RZx0RbTbMrUw=+MWvgQ@mail.gmail.com>
+ <CAMP44s0svc2MRKCrZXS5ZYRZNPoomQkcKHdC2m2BGy7di+TCyA@mail.gmail.com>
+ <CABPxzYL-Gzbzoc_ui+qUQ6uzoKp=Yq7yLWZvc7PoEjiH3dFczg@mail.gmail.com>
+ <CAMP44s3uRF=jNn5ZHZ=QOcvuMoXxsfkxU=VOq3K02Q0qOspEdA@mail.gmail.com>
+ <CABPxzYJbNjAwymwUq0pN=YyuCBGy2qz_BKafatHTWK+yH8PbkA@mail.gmail.com> <CAMP44s1NOS2p9pKeMLhR7616CzHeHJVJEzcF1tP6tsKfcPhSOQ@mail.gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Sat, 2 Nov 2013 22:27:42 +0530
+Message-ID: <CABPxzY+RL+ikbSff3a7qb20ExxcSTx6U2xcL5CFr-BgVSOr61A@mail.gmail.com> (sfid-20131102_175823_170114_7958BA4F)
+Subject: Re: I always need a miracle to connect with iwlwifi
+To: Felipe Contreras <felipe.contreras@gmail.com>
+Cc: Oleksij Rempel <linux@rempel-privat.de>, ilw@linux.intel.com,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiANCj4gMjAxMy8xMS8xNCBCam9ybiBIZWxnYWFzIDxiaGVsZ2Fhc0Bnb29nbGUuY29tPjoNCj4g
-PiBUaGFua3MuICBBcmUgeW91IDEwMCUgc3VyZSB0aGUgbHNwY2kgb3V0cHV0IGlzIGJlZm9yZSB0
-aGUgc2V0cGNpDQo+ID4gd29ya2Fyb3VuZD8NCj4gDQo+IA0KPiBUbyBlbnN1cmUgdGhhdCwgSSBk
-aWQgaXQgYWdhaW46DQo+IA0KPiBib290IHVwIGxhcHRvcCAtPiBjb25uZWN0IHRvIGRvbWl0b3J5
-J3MgV2lGaSAtPiBydW4gbHNwY2kgLT4gcnVuIHNldHBjaSAtPiBydW4NCj4gZG1lc2cuDQo+IA0K
-PiBIZXJlIGFyZSB0aGUgb3V0cHV0cy4NCg0KQ2FuIHlvdSBwbGVhc2UgdHJ5IHRoZSBmb2xsb3dp
-bmc6DQoqIEJvb3Qgd2l0aG91dCBhbnkgY2hhbmdlcw0KKiBzZXRwY2kgLXMwMzowMC4wIDB4MTYw
-LkI9MHgwMA0KKiBzZXRwY2kgLXMwMDoxYy4xIDB4MjA0LkI9MHgxMA0KbHNwY2kgLXZ2DQoNCmFu
-ZCB0ZWxsIG1lIGlmIFdpRmkgd29ya3MgdGhlbi4NCih0aGlzIHJlcGxhY2VzIHRoZSBwcmV2aW91
-cyBzZXRwY2kgY29tbWFuZHMpDQoNCg0KVGhhbmsgeW91DQo=
+On Sat, Nov 2, 2013 at 11:16 AM, Felipe Contreras
+<felipe.contreras@gmail.com> wrote:
+>
+> On Tue, Oct 29, 2013 at 8:23 AM, Krishna Chaitanya
+> <chaitanya.mgit@gmail.com> wrote:
+> > On Tue, Oct 29, 2013 at 3:02 AM, Felipe Contreras
+> > <felipe.contreras@gmail.com> wrote:
+>
+> >> Yes, but maybe I overrode the file. I've pushed a new one again. The
+> >> sha-1 is 36c260d8d8c171a24eb1aa7b2ea736b06c9b55b7.
+> >>
+> > Thanks, able to decode now. I am not familiar with the
+> > iwlwifi code, but let me give it a try.
+>
+> Did you find anything?
+
+Not Much, i could see the below pattern repeating
+
+  wpa_supplicant-6915  [003]  5610.786592: drv_return_void:      phy1
+  wpa_supplicant-6915  [003]  5610.786594: drv_sta_state:        phy1
+vif:wlan0(2) sta:e0:1d:3b:46:82:a0 state: 0->1
+  wpa_supplicant-6915  [003]  5610.786597: iwlwifi_dev_hcmd:
+[0000:02:00.0] hcmd 0x18 (sync)
+  irq/44-iwlwifi-6803  [001]  5610.786632: iwlwifi_dev_rx:
+[0000:02:00.0] RX cmd 0x18
+  wpa_supplicant-6915  [003]  5610.786639: drv_return_int:       phy1 - 0
+  wpa_supplicant-6915  [003]  5610.786645: drv_mgd_prepare_tx:   phy1
+vif:wlan0(2)
+  wpa_supplicant-6915  [003]  5610.786645: drv_return_void:      phy1
+  wpa_supplicant-6915  [003]  5610.786663: iwlwifi_dev_tx:
+[0000:02:00.0] TX 1c (90 bytes)
+  irq/44-iwlwifi-6803  [001]  5610.788677: iwlwifi_dev_rx:
+[0000:02:00.0] RX cmd 0x1c
+  irq/44-iwlwifi-6803  [001]  5610.788709: iwlwifi_dev_rx:
+[0000:02:00.0] RX cmd 0xc0
+  irq/44-iwlwifi-6803  [001]  5610.788710: iwlwifi_dev_rx:
+[0000:02:00.0] RX cmd 0xc1
+    kworker/u8:0-1459  [003]  5610.788730: drv_sta_state:        phy1
+vif:wlan0(2) sta:e0:1d:3b:46:82:a0 state: 1->2
+    kworker/u8:0-1459  [003]  5610.788732: drv_return_int:       phy1 - 0
+    kworker/u8:0-1459  [003]  5610.999549: drv_sta_state:        phy1
+vif:wlan0(2) sta:e0:1d:3b:46:82:a0 state: 2->1
+    kworker/u8:0-1459  [003]  5610.999553: drv_return_int:       phy1 - 0
+    kworker/u8:0-1459  [003]  5610.999553: drv_sta_state:        phy1
+vif:wlan0(2) sta:e0:1d:3b:46:82:a0 state: 1->0
+    kworker/u8:0-1459  [003]  5610.999554: drv_return_int:       phy1 - 0
+
+So We move from NONE to AUTH and then AUTH to NONE. iwlwifi_dev_tx is
+transmistting 90 bytes packets
+but auth request is only 43 bytes, could that be association request??
+If yes where is that getting dropped.
+
+So my guess is that we are sending the association request (CMD_TX),
+but its never seen OTA, its lost some where in between.
+Ball goes to the FW :-).
