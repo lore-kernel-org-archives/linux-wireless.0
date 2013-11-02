@@ -1,54 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f177.google.com ([74.125.82.177]:33196 "EHLO
-	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751637Ab3KAOEU (ORCPT
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:54478 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751738Ab3KBUTS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 10:04:20 -0400
-Received: by mail-we0-f177.google.com with SMTP id x55so3965948wes.22
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 07:04:19 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 18/23] wireless-regdb: update PR's regulatory rules
-Date: Fri,  1 Nov 2013 15:03:13 +0100
-Message-Id: <1383314598-21240-19-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_150810_976887_6F82CB9C)
-In-Reply-To: <1383314598-21240-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1383314598-21240-1-git-send-email-mcgrof@do-not-panic.com>
+	Sat, 2 Nov 2013 16:19:18 -0400
+Received: by mail-ie0-f178.google.com with SMTP id x13so9705183ief.23
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Nov 2013 13:19:18 -0700 (PDT)
+Received: from [10.0.0.237] (198-91-147-132.cpe.distributel.net. [198.91.147.132])
+        by mx.google.com with ESMTPSA id w4sm11071105igb.5.2013.11.02.13.19.17
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
+        Sat, 02 Nov 2013 13:19:17 -0700 (PDT)
+Message-ID: <52755E44.1060501@gmail.com> (sfid-20131102_211937_578753_3834F5A1)
+Date: Sat, 02 Nov 2013 16:19:16 -0400
+From: Alexandre Demers <alexandre.f.demers@gmail.com>
+Reply-To: alexandre.f.demers@gmail.com
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: r92su: status and will it be merged anytime soon?
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This:
+Good afternoon,
 
-  o Increases max EIRP from 27 dBm to 30 dBm on the
-    2.4 GHz frequency range
+I was playing in r8712u because I wanted to send a patch to 
+conditionally silence a flooding netdev_info(). But then I found out on 
+http://wireless.kernel.org/en/users/Drivers/rtl819x that r8712u was to 
+be replaced by r92su.
 
-  o Extends the 5 GHz DFS frequency range by 20 MHz
+ From its git tree, it seems no commit were added since 4 months ago. 
+Could someone tell me in what shape is this new driver? Is there any 
+plan to merge it (under staging I suppose) soon?
 
-Source is QCA's regulatory team's efforts.
+Thank you,
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/db.txt b/db.txt
-index e9d1540..b54ebd8 100644
---- a/db.txt
-+++ b/db.txt
-@@ -654,10 +654,10 @@ country PT: DFS-ETSI
- 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
- 
- country PR: DFS-FCC
--	(2402 - 2472 @ 40), (27)
-+	(2402 - 2472 @ 40), (30)
- 	(5170 - 5250 @ 80), (17)
- 	(5250 - 5330 @ 80), (24), DFS
--	(5490 - 5710 @ 80), (24), DFS
-+	(5490 - 5730 @ 80), (24), DFS
- 	(5735 - 5835 @ 80), (30)
- 
- country QA: DFS-JP
 -- 
-1.8.4.rc3
+Alexandre Demers
 
