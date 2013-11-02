@@ -1,41 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:38567 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754145Ab3KYQnL (ORCPT
+Received: from mail-pd0-f181.google.com ([209.85.192.181]:33231 "EHLO
+	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753048Ab3KBNs2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Nov 2013 11:43:11 -0500
-Message-ID: <1385397787.4443.54.camel@jlt4.sipsolutions.net> (sfid-20131125_174315_237280_26765460)
-Subject: Re: [PATCH v2 4/4] cfg80211: DFS use 10 minutes CAC when weather
- channels
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Mon, 25 Nov 2013 17:43:07 +0100
-In-Reply-To: <1384940517-6154-4-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131120_104224_778593_81B2F202)
-References: <1384940517-6154-1-git-send-email-janusz.dziedzic@tieto.com>
-	 <1384940517-6154-4-git-send-email-janusz.dziedzic@tieto.com>
-	 (sfid-20131120_104224_778593_81B2F202)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 2 Nov 2013 09:48:28 -0400
+From: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
+To: davem@davemloft.net, gregkh@linuxfoundation.org,
+	linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
+	schwidefsky@de.ibm.com, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	IvDoorn@gmail.com, sbhatewara@vmware.com, samuel@sortiz.org,
+	chas@cmf.nrl.navy.mil, roland@kernel.org, isdn@linux-pingi.de,
+	jcliburn@gmail.com, benve@cisco.com, ssujith@cisco.com,
+	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
+	shahed.shaikh@qlogic.com, joe@perches.com, apw@canonical.com
+Cc: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
+Subject: [PATCH net-next 04/13] driver: staging: remove unnecessary skb NULL check before calling dev_kfree_skb_irq
+Date: Sat,  2 Nov 2013 19:17:45 +0530
+Message-Id: <1383400074-30555-5-git-send-email-govindarajulu90@gmail.com> (sfid-20131102_145209_615708_A2F64A1F)
+In-Reply-To: <1383400074-30555-1-git-send-email-govindarajulu90@gmail.com>
+References: <1383400074-30555-1-git-send-email-govindarajulu90@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-11-20 at 10:41 +0100, Janusz Dziedzic wrote:
-> When nominal bandwidth falls completely or partly
-> within the band 5600MHz to 5650MHz the CAC time shall
-> be 10 minutes.
+dev_kfree_skb_irq is protected from NULL. No need to check for NULL while
+calling this function.
 
-I wonder if those 10 minutes should come from the regdb somehow? You had
-a TODO there somewhere but maybe it should just be the timeout rather
-than a flag?
+Signed-off-by: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
+---
+ drivers/staging/slicoss/slicoss.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-> +       start_freq = cfg80211_get_start_freq(center_freq, bandwidth) -
-> 10;
-> +       end_freq = cfg80211_get_end_freq(center_freq, bandwidth) + 10;
-
-That seems wrong for wider channels - didn't we just add support for
-that?
-
-johannes
+diff --git a/drivers/staging/slicoss/slicoss.c b/drivers/staging/slicoss/slicoss.c
+index 869dcd3..1073880 100644
+--- a/drivers/staging/slicoss/slicoss.c
++++ b/drivers/staging/slicoss/slicoss.c
+@@ -2616,8 +2616,7 @@ static void slic_xmit_complete(struct adapter *adapter)
+ 									address;
+ /*      hcmd = (struct slic_hostcmd *) rspbuf->hosthandle; */
+ 		if (hcmd->type == SLIC_CMD_DUMB) {
+-			if (hcmd->skb)
+-				dev_kfree_skb_irq(hcmd->skb);
++			dev_kfree_skb_irq(hcmd->skb);
+ 			slic_cmdq_putdone_irq(adapter, hcmd);
+ 		}
+ 		rspbuf->status = 0;
+-- 
+1.8.4.2
 
