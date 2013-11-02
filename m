@@ -1,171 +1,222 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:48636 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752306Ab3KEEZD (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:42844 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754042Ab3KBTWm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Nov 2013 23:25:03 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Michael Larson <mlarson@qce.qualcomm.com>,
-	Stephen Collmeyer <scollmey@qce.qualcomm.com>
-Subject: [PATCH] ath9k: Apply CUS227 specific TX gain values
-Date: Tue,  5 Nov 2013 09:50:32 +0530
-Message-Id: <1383625232-358-1-git-send-email-sujith@msujith.org> (sfid-20131105_052511_935476_95C680C8)
+	Sat, 2 Nov 2013 15:22:42 -0400
+Message-ID: <527550FF.4080506@lwfinger.net> (sfid-20131102_202251_448300_3843E721)
+Date: Sat, 02 Nov 2013 14:22:39 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Joe Perches <joe@perches.com>,
+	Ben Hutchings <bhutchings@solarflare.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>,
+	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
+Subject: Re: [PATCH NEXT V2] rtlwifi: Fix endian error in extracting packet
+ type
+References: <1383266638-4813-1-git-send-email-Larry.Finger@lwfinger.net>	 <1383267769.1583.8.camel@bwh-desktop.uk.level5networks.com> <1383270515.2769.15.camel@joe-AO722>
+In-Reply-To: <1383270515.2769.15.camel@joe-AO722>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On 10/31/2013 08:48 PM, Joe Perches wrote:
+> On Fri, 2013-11-01 at 01:02 +0000, Ben Hutchings wrote:
+>> On Thu, 2013-10-31 at 19:43 -0500, Larry Finger wrote:
+>>> From: Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>
+>>>
+>>> All of the rtlwifi drivers have an error in the routine that tests if
+>>> the data is "special". If it is, the subsequant transmission will be
+>>> at the lowest rate to enhance reliability. The 16-bit quantity is
+>>> big-endian, but was being extracted in native CPU mode. One of the
+>>> effects of this bug is to inhibit association under some conditions
+>>> as the TX rate is too high.
+>>>
+>>> A statement that would have made the code correct had been changed to
+>>> a comment. Rather than just reinstating that code, the fix here passes
+>>> sparse tests. A side effect of fixing this problem would have been to force
+>>> all IPv6 frames to run at the lowest rate. The test for that frame type
+>>> is removed.
+>>>
+>>> The original code only checked the lower-order byte of UDP ports for BOOTP
+>>> protocol. That is extended to the full 16-bit source and destination ports.
+>>>
+>>> One of the local headers contained duplicates of some of the ETH_P_XXX
+>>> definitions. These are deleted.
+>>>
+>>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>>> Cc: Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>
+>>> Cc: Stable <stable@vger.kernel.org> [2.6.38+]
+>>> ---
+>>>
+>>> V2 - Addresses comments by Ben Hutchings and Bjorn Mork.
+>>>
+>>>   drivers/net/wireless/rtlwifi/base.c |   15 ++++++---------
+>>>   drivers/net/wireless/rtlwifi/wifi.h |    6 +-----
+>>>   2 files changed, 7 insertions(+), 14 deletions(-)
+>>> Index: wireless-testing-save/drivers/net/wireless/rtlwifi/base.c
+>>> ===================================================================
+>>> --- wireless-testing-save.orig/drivers/net/wireless/rtlwifi/base.c
+>>> +++ wireless-testing-save/drivers/net/wireless/rtlwifi/base.c
+>>> @@ -1077,17 +1077,17 @@ u8 rtl_is_special_data(struct ieee80211_
+>>>
+>>>   	ip = (struct iphdr *)((u8 *) skb->data + mac_hdr_len +
+>>>   			      SNAP_SIZE + PROTOC_TYPE_SIZE);
+>>> -	ether_type = *(u16 *) ((u8 *) skb->data + mac_hdr_len + SNAP_SIZE);
+>>> -	/*	ether_type = ntohs(ether_type); */
+>>> +	ether_type = be16_to_cpu(*(__be16 *)((u8 *)skb->data + mac_hdr_len +
+>>> +					     SNAP_SIZE));
+>>>
+>>>   	if (ETH_P_IP == ether_type) {
+>>>   		if (IPPROTO_UDP == ip->protocol) {
+>>>   			struct udphdr *udp = (struct udphdr *)((u8 *) ip +
+>>>   							       (ip->ihl << 2));
+>>> -			if (((((u8 *) udp)[1] == 68) &&
+>>> -			     (((u8 *) udp)[3] == 67)) ||
+>>> -			    ((((u8 *) udp)[1] == 67) &&
+>>> -			     (((u8 *) udp)[3] == 68))) {
+>>> +			if (((((u16 *) udp)[0] == 68) &&
+>>> +			     (((u16 *) udp)[2] == 67)) ||
+>>> +			    ((((u16 *) udp)[0] == 67) &&
+>>> +			     (((u16 *) udp)[2] == 68))) {
+>> [...]
+>>
+>> Now you're missing byte-swapping here, and using the wrong offset for
+>> the dest port (4 bytes rather than 2).
+>>
+>> If you really think this is necessary then use something like:
+>> 			if ((udp->source == htons(68) &&
+>> 			     udp->dest == htons(67)) ||
+>> 			     ...
+>
+> Or maybe something like this?
+> ---
+>   drivers/net/wireless/rtlwifi/base.c | 91 +++++++++++++++++--------------------
+>   1 file changed, 41 insertions(+), 50 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rtlwifi/base.c b/drivers/net/wireless/rtlwifi/base.c
+> index 9a78e3d..7e9df65 100644
+> --- a/drivers/net/wireless/rtlwifi/base.c
+> +++ b/drivers/net/wireless/rtlwifi/base.c
+> @@ -37,6 +37,7 @@
+>
+>   #include <linux/ip.h>
+>   #include <linux/module.h>
+> +#include <linux/udp.h>
+>
+>   /*
+>    *NOTICE!!!: This file will be very big, we should
+> @@ -1074,64 +1075,54 @@ u8 rtl_is_special_data(struct ieee80211_hw *hw, struct sk_buff *skb, u8 is_tx)
+>   	if (!ieee80211_is_data(fc))
+>   		return false;
+>
+> +	ip = (const struct iphdr *)(skb->data + mac_hdr_len +
+> +				    SNAP_SIZE + PROTOC_TYPE_SIZE);
+> +	ether_type = be16_to_cpup((__be16 *)
+> +				  (skb->data + mac_hdr_len + SNAP_SIZE));
+>
+> -	ip = (struct iphdr *)((u8 *) skb->data + mac_hdr_len +
+> -			      SNAP_SIZE + PROTOC_TYPE_SIZE);
+> -	ether_type = *(u16 *) ((u8 *) skb->data + mac_hdr_len + SNAP_SIZE);
+> -	/*	ether_type = ntohs(ether_type); */
+> -
+> -	if (ETH_P_IP == ether_type) {
+> -		if (IPPROTO_UDP == ip->protocol) {
+> -			struct udphdr *udp = (struct udphdr *)((u8 *) ip +
+> -							       (ip->ihl << 2));
+> -			if (((((u8 *) udp)[1] == 68) &&
+> -			     (((u8 *) udp)[3] == 67)) ||
+> -			    ((((u8 *) udp)[1] == 67) &&
+> -			     (((u8 *) udp)[3] == 68))) {
+> -				/*
+> -				 * 68 : UDP BOOTP client
+> -				 * 67 : UDP BOOTP server
+> -				 */
+> -				RT_TRACE(rtlpriv, (COMP_SEND | COMP_RECV),
+> -					 DBG_DMESG, "dhcp %s !!\n",
+> -					 is_tx ? "Tx" : "Rx");
+> -
+> -				if (is_tx) {
+> -					rtlpriv->enter_ps = false;
+> -					schedule_work(&rtlpriv->
+> -						      works.lps_change_work);
+> -					ppsc->last_delaylps_stamp_jiffies =
+> -					    jiffies;
+> -				}
+> +	switch (ether_type) {
+> +	case ETH_P_IP: {
+> +		struct udphdr *udp;
+> +		u16 src;
+> +		u16 dst;
+>
+> -				return true;
+> -			}
+> -		}
+> -	} else if (ETH_P_ARP == ether_type) {
+> -		if (is_tx) {
+> -			rtlpriv->enter_ps = false;
+> -			schedule_work(&rtlpriv->works.lps_change_work);
+> -			ppsc->last_delaylps_stamp_jiffies = jiffies;
+> -		}
+> +		if (ip->protocol != IPPROTO_UDP)
+> +			return false;
+>
+> -		return true;
+> -	} else if (ETH_P_PAE == ether_type) {
+> -		RT_TRACE(rtlpriv, (COMP_SEND | COMP_RECV), DBG_DMESG,
+> -			 "802.1X %s EAPOL pkt!!\n", is_tx ? "Tx" : "Rx");
+> +		udp = (struct udphdr *)((u8 *)ip + (ip->ihl << 2));
+> +		src = be16_to_cpu(udp->source) >> 8;
+> +		dst = be16_to_cpu(udp->dest) >> 8;
+>
+> -		if (is_tx) {
+> -			rtlpriv->enter_ps = false;
+> -			schedule_work(&rtlpriv->works.lps_change_work);
+> -			ppsc->last_delaylps_stamp_jiffies = jiffies;
+> -		}
+> +		/*
+> +		 * 68 : UDP BOOTP client
+> +		 * 67 : UDP BOOTP server
+> +		 */
+> +		if (!((src == 68 && dst == 67) || (src == 67 && dst == 68)))
+> +			return false;
+>
+> +		RT_TRACE(rtlpriv, (COMP_SEND | COMP_RECV), DBG_DMESG,
+> +			 "dhcp %s !!\n", is_tx ? "Tx" : "Rx");
+> +		break;
+> +	}
+> +	case ETH_P_ARP:
+> +		break;
+> +	case ETH_P_PAE:
+> +		RT_TRACE(rtlpriv, (COMP_SEND | COMP_RECV), DBG_DMESG,
+> +			 "802.1X %s EAPOL pkt!!\n", is_tx ? "Tx" : "Rx");
+> +		break;
+> +	case ETH_P_IPV6:
+>   		return true;
+> -	} else if (ETH_P_IPV6 == ether_type) {
+> -		/* IPv6 */
+> -		return true;
+> +	default:
+> +		return false;
+>   	}
+>
+> -	return false;
+> +	if (is_tx) {
+> +		rtlpriv->enter_ps = false;
+> +		schedule_work(&rtlpriv->works.lps_change_work);
+> +		ppsc->last_delaylps_stamp_jiffies = jiffies;
+> +	}
+> +
+> +	return true;
+>   }
+>   EXPORT_SYMBOL_GPL(rtl_is_special_data);
 
-CUS227, which is an AR9340 based card used in Qualcomm's
-Allplay platforms requires a custom TX gain array, based
-on the index 7. Add suport for this.
+Joe,
 
-Cc: Michael Larson <mlarson@qce.qualcomm.com>
-Cc: Stephen Collmeyer <scollmey@qce.qualcomm.com>
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_hw.c       |   8 ++
- drivers/net/wireless/ath/ath9k/ar9340_initvals.h | 102 +++++++++++++++++++++++
- 2 files changed, 110 insertions(+)
+Thanks for this. I have rewritten the function somewhat along these lines. It is 
+much cleaner this way.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-index b054dee..d35f3f0 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-@@ -578,6 +578,13 @@ static void ar9003_tx_gain_table_mode6(struct ath_hw *ah)
- 			ar9580_1p0_type6_tx_gain_table);
- }
- 
-+static void ar9003_tx_gain_table_mode7(struct ath_hw *ah)
-+{
-+	if (AR_SREV_9340(ah))
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			       ar9340_cus227_tx_gain_table_1p0);
-+}
-+
- typedef void (*ath_txgain_tab)(struct ath_hw *ah);
- 
- static void ar9003_tx_gain_table_apply(struct ath_hw *ah)
-@@ -590,6 +597,7 @@ static void ar9003_tx_gain_table_apply(struct ath_hw *ah)
- 		ar9003_tx_gain_table_mode4,
- 		ar9003_tx_gain_table_mode5,
- 		ar9003_tx_gain_table_mode6,
-+		ar9003_tx_gain_table_mode7,
- 	};
- 	int idx = ar9003_hw_get_tx_gain_idx(ah);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9340_initvals.h b/drivers/net/wireless/ath/ath9k/ar9340_initvals.h
-index 25db921..182bf90 100644
---- a/drivers/net/wireless/ath/ath9k/ar9340_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9340_initvals.h
-@@ -1447,4 +1447,106 @@ static const u32 ar9340_1p0_soc_preamble[][2] = {
- 	{0x00007038, 0x000004c2},
- };
- 
-+static const u32 ar9340_cus227_tx_gain_table_1p0[][5] = {
-+	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
-+	{0x0000a2dc, 0x0380c7fc, 0x0380c7fc, 0x03aaa352, 0x03aaa352},
-+	{0x0000a2e0, 0x0000f800, 0x0000f800, 0x03ccc584, 0x03ccc584},
-+	{0x0000a2e4, 0x03ff0000, 0x03ff0000, 0x03f0f800, 0x03f0f800},
-+	{0x0000a2e8, 0x00000000, 0x00000000, 0x03ff0000, 0x03ff0000},
-+	{0x0000a410, 0x000050d9, 0x000050d9, 0x000050d9, 0x000050d9},
-+	{0x0000a500, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-+	{0x0000a504, 0x06000003, 0x06000003, 0x04000002, 0x04000002},
-+	{0x0000a508, 0x0a000020, 0x0a000020, 0x08000004, 0x08000004},
-+	{0x0000a50c, 0x10000023, 0x10000023, 0x0b000200, 0x0b000200},
-+	{0x0000a510, 0x16000220, 0x16000220, 0x0f000202, 0x0f000202},
-+	{0x0000a514, 0x1c000223, 0x1c000223, 0x11000400, 0x11000400},
-+	{0x0000a518, 0x21002220, 0x21002220, 0x15000402, 0x15000402},
-+	{0x0000a51c, 0x27002223, 0x27002223, 0x19000404, 0x19000404},
-+	{0x0000a520, 0x2c022220, 0x2c022220, 0x1b000603, 0x1b000603},
-+	{0x0000a524, 0x30022222, 0x30022222, 0x1f000a02, 0x1f000a02},
-+	{0x0000a528, 0x35022225, 0x35022225, 0x23000a04, 0x23000a04},
-+	{0x0000a52c, 0x3b02222a, 0x3b02222a, 0x26000a20, 0x26000a20},
-+	{0x0000a530, 0x3f02222c, 0x3f02222c, 0x2a000e20, 0x2a000e20},
-+	{0x0000a534, 0x4202242a, 0x4202242a, 0x2e000e22, 0x2e000e22},
-+	{0x0000a538, 0x4702244a, 0x4702244a, 0x31000e24, 0x31000e24},
-+	{0x0000a53c, 0x4b02244c, 0x4b02244c, 0x34001640, 0x34001640},
-+	{0x0000a540, 0x4e02246c, 0x4e02246c, 0x38001660, 0x38001660},
-+	{0x0000a544, 0x5302266c, 0x5302266c, 0x3b001861, 0x3b001861},
-+	{0x0000a548, 0x5702286c, 0x5702286c, 0x3e001a81, 0x3e001a81},
-+	{0x0000a54c, 0x5c02486b, 0x5c02486b, 0x42001a83, 0x42001a83},
-+	{0x0000a550, 0x61024a6c, 0x61024a6c, 0x44001c84, 0x44001c84},
-+	{0x0000a554, 0x66026a6c, 0x66026a6c, 0x48001ce3, 0x48001ce3},
-+	{0x0000a558, 0x6b026e6c, 0x6b026e6c, 0x4c001ce5, 0x4c001ce5},
-+	{0x0000a55c, 0x7002708c, 0x7002708c, 0x50001ce9, 0x50001ce9},
-+	{0x0000a560, 0x7302b08a, 0x7302b08a, 0x54001ceb, 0x54001ceb},
-+	{0x0000a564, 0x7702b08c, 0x7702b08c, 0x56001eec, 0x56001eec},
-+	{0x0000a568, 0x7702b08c, 0x7702b08c, 0x56001eec, 0x56001eec},
-+	{0x0000a56c, 0x7702b08c, 0x7702b08c, 0x56001eec, 0x56001eec},
-+	{0x0000a570, 0x7702b08c, 0x7702b08c, 0x56001eec, 0x56001eec},
-+	{0x0000a574, 0x7702b08c, 0x7702b08c, 0x56001eec, 0x56001eec},
-+	{0x0000a578, 0x7702b08c, 0x7702b08c, 0x56001eec, 0x56001eec},
-+	{0x0000a57c, 0x7702b08c, 0x7702b08c, 0x56001eec, 0x56001eec},
-+	{0x0000a580, 0x00800000, 0x00800000, 0x00800000, 0x00800000},
-+	{0x0000a584, 0x06800003, 0x06800003, 0x04800002, 0x04800002},
-+	{0x0000a588, 0x0a800020, 0x0a800020, 0x08800004, 0x08800004},
-+	{0x0000a58c, 0x10800023, 0x10800023, 0x0b800200, 0x0b800200},
-+	{0x0000a590, 0x16800220, 0x16800220, 0x0f800202, 0x0f800202},
-+	{0x0000a594, 0x1c800223, 0x1c800223, 0x11800400, 0x11800400},
-+	{0x0000a598, 0x21820220, 0x21820220, 0x15800402, 0x15800402},
-+	{0x0000a59c, 0x27820223, 0x27820223, 0x19800404, 0x19800404},
-+	{0x0000a5a0, 0x2b822220, 0x2b822220, 0x1b800603, 0x1b800603},
-+	{0x0000a5a4, 0x2f822222, 0x2f822222, 0x1f800a02, 0x1f800a02},
-+	{0x0000a5a8, 0x34822225, 0x34822225, 0x23800a04, 0x23800a04},
-+	{0x0000a5ac, 0x3a82222a, 0x3a82222a, 0x26800a20, 0x26800a20},
-+	{0x0000a5b0, 0x3e82222c, 0x3e82222c, 0x2a800e20, 0x2a800e20},
-+	{0x0000a5b4, 0x4282242a, 0x4282242a, 0x2e800e22, 0x2e800e22},
-+	{0x0000a5b8, 0x4782244a, 0x4782244a, 0x31800e24, 0x31800e24},
-+	{0x0000a5bc, 0x4b82244c, 0x4b82244c, 0x34801640, 0x34801640},
-+	{0x0000a5c0, 0x4e82246c, 0x4e82246c, 0x38801660, 0x38801660},
-+	{0x0000a5c4, 0x5382266c, 0x5382266c, 0x3b801861, 0x3b801861},
-+	{0x0000a5c8, 0x5782286c, 0x5782286c, 0x3e801a81, 0x3e801a81},
-+	{0x0000a5cc, 0x5c84286b, 0x5c84286b, 0x42801a83, 0x42801a83},
-+	{0x0000a5d0, 0x61842a6c, 0x61842a6c, 0x44801c84, 0x44801c84},
-+	{0x0000a5d4, 0x66862a6c, 0x66862a6c, 0x48801ce3, 0x48801ce3},
-+	{0x0000a5d8, 0x6b862e6c, 0x6b862e6c, 0x4c801ce5, 0x4c801ce5},
-+	{0x0000a5dc, 0x7086308c, 0x7086308c, 0x50801ce9, 0x50801ce9},
-+	{0x0000a5e0, 0x738a308a, 0x738a308a, 0x54801ceb, 0x54801ceb},
-+	{0x0000a5e4, 0x778a308c, 0x778a308c, 0x56801eec, 0x56801eec},
-+	{0x0000a5e8, 0x778a308c, 0x778a308c, 0x56801eec, 0x56801eec},
-+	{0x0000a5ec, 0x778a308c, 0x778a308c, 0x56801eec, 0x56801eec},
-+	{0x0000a5f0, 0x778a308c, 0x778a308c, 0x56801eec, 0x56801eec},
-+	{0x0000a5f4, 0x778a308c, 0x778a308c, 0x56801eec, 0x56801eec},
-+	{0x0000a5f8, 0x778a308c, 0x778a308c, 0x56801eec, 0x56801eec},
-+	{0x0000a5fc, 0x778a308c, 0x778a308c, 0x56801eec, 0x56801eec},
-+	{0x0000a600, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-+	{0x0000a604, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-+	{0x0000a608, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-+	{0x0000a60c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-+	{0x0000a610, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-+	{0x0000a614, 0x01404000, 0x01404000, 0x01404000, 0x01404000},
-+	{0x0000a618, 0x01404501, 0x01404501, 0x01404501, 0x01404501},
-+	{0x0000a61c, 0x02008802, 0x02008802, 0x02008501, 0x02008501},
-+	{0x0000a620, 0x0300cc03, 0x0300cc03, 0x0280ca03, 0x0280ca03},
-+	{0x0000a624, 0x0300cc03, 0x0300cc03, 0x03010c04, 0x03010c04},
-+	{0x0000a628, 0x0300cc03, 0x0300cc03, 0x04014c04, 0x04014c04},
-+	{0x0000a62c, 0x03810c03, 0x03810c03, 0x04015005, 0x04015005},
-+	{0x0000a630, 0x03810e04, 0x03810e04, 0x04015005, 0x04015005},
-+	{0x0000a634, 0x03810e04, 0x03810e04, 0x04015005, 0x04015005},
-+	{0x0000a638, 0x03810e04, 0x03810e04, 0x04015005, 0x04015005},
-+	{0x0000a63c, 0x03810e04, 0x03810e04, 0x04015005, 0x04015005},
-+	{0x0000b2dc, 0x0380c7fc, 0x0380c7fc, 0x03aaa352, 0x03aaa352},
-+	{0x0000b2e0, 0x0000f800, 0x0000f800, 0x03ccc584, 0x03ccc584},
-+	{0x0000b2e4, 0x03ff0000, 0x03ff0000, 0x03f0f800, 0x03f0f800},
-+	{0x0000b2e8, 0x00000000, 0x00000000, 0x03ff0000, 0x03ff0000},
-+	{0x00016044, 0x056db2db, 0x056db2db, 0x03b6d2e4, 0x03b6d2e4},
-+	{0x00016048, 0x24925666, 0x24925666, 0x8e481266, 0x8e481266},
-+	{0x00016280, 0x01000015, 0x01000015, 0x01001015, 0x01001015},
-+	{0x00016288, 0x30318000, 0x30318000, 0x00318000, 0x00318000},
-+	{0x00016444, 0x056db2db, 0x056db2db, 0x03b6d2e4, 0x03b6d2e4},
-+	{0x00016448, 0x24925666, 0x24925666, 0x8e481266, 0x8e481266},
-+	{0x0000a3a4, 0x00000011, 0x00000011, 0x00000011, 0x00000011},
-+	{0x0000a3a8, 0x3c3c3c3c, 0x3c3c3c3c, 0x3c3c3c3c, 0x3c3c3c3c},
-+	{0x0000a3ac, 0x30303030, 0x30303030, 0x30303030, 0x30303030},
-+};
-+
- #endif /* INITVALS_9340_H */
--- 
-1.8.4.2
+Larry
+
 
