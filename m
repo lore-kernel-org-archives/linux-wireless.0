@@ -1,77 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4317 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753154Ab3K2LZk convert rfc822-to-8bit (ORCPT
+Received: from mail-pb0-f52.google.com ([209.85.160.52]:48622 "EHLO
+	mail-pb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754076Ab3KBNtG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Nov 2013 06:25:40 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 03/19] brcmfmac: fix driver build issue when
- CONFIG_BRCMDBG is not set
-Date: Fri, 29 Nov 2013 12:25:08 +0100
-Message-ID: <1385724324-6361-4-git-send-email-arend@broadcom.com> (sfid-20131129_123808_329182_C3BD58E3)
-In-Reply-To: <1385724324-6361-1-git-send-email-arend@broadcom.com>
-References: <1385724324-6361-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
+	Sat, 2 Nov 2013 09:49:06 -0400
+From: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
+To: davem@davemloft.net, gregkh@linuxfoundation.org,
+	linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
+	schwidefsky@de.ibm.com, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	IvDoorn@gmail.com, sbhatewara@vmware.com, samuel@sortiz.org,
+	chas@cmf.nrl.navy.mil, roland@kernel.org, isdn@linux-pingi.de,
+	jcliburn@gmail.com, benve@cisco.com, ssujith@cisco.com,
+	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
+	shahed.shaikh@qlogic.com, joe@perches.com, apw@canonical.com
+Cc: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
+Subject: [PATCH net-next 09/13] driver: s390: remove unnecessary NULL check before dev_kfree_skb_any
+Date: Sat,  2 Nov 2013 19:17:50 +0530
+Message-Id: <1383400074-30555-10-git-send-email-govindarajulu90@gmail.com> (sfid-20131102_145103_270910_34780615)
+In-Reply-To: <1383400074-30555-1-git-send-email-govindarajulu90@gmail.com>
+References: <1383400074-30555-1-git-send-email-govindarajulu90@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When CONFIG_BRCMDBG is not set we get the following build issue:
-  CC [M]  drivers/net/wireless/brcm80211/brcmfmac/fwsignal.o
-drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c:
-    In function ‘brcmf_fws_hdrpush’:
-	drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c:852:18:
-	error: ‘BRCMF_FWS_TYPE_SEQ_LEN’ undeclared
+dev_kfree_skb_any is protected from NULL. No need to check for NULL
+while calling this function.
 
-The define BRCMF_FWS_TYPE_SEQ_LEN was introduced by:
-
-    commit 6918f38e4ed4e0493a90a4331e0033bdfc806e00
-    Author: Hante Meuleman <meuleman@broadcom.com>
-    Date:   Wed Oct 23 14:58:51 2013 +0200
-
-        brcmfmac: Update fwsignal to fix out of order tx.
-
-Unfortunately, it was put in conditional part of the source
-file under #ifdef DEBUG.
-
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |    8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ drivers/s390/net/claw.c           | 6 ++----
+ drivers/s390/net/ctcm_mpc.c       | 6 ++----
+ drivers/s390/net/qeth_core_main.c | 6 ++----
+ 3 files changed, 6 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-index 784cf94..296dbf1 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-@@ -105,8 +105,6 @@ static struct {
- };
- #undef BRCMF_FWS_TLV_DEF
+diff --git a/drivers/s390/net/claw.c b/drivers/s390/net/claw.c
+index fd7b3bd..66c0b14 100644
+--- a/drivers/s390/net/claw.c
++++ b/drivers/s390/net/claw.c
+@@ -834,10 +834,8 @@ claw_release(struct net_device *dev)
+                         ccw_check_return_code(privptr->channel[i].cdev, rc);
+                 }
+         }
+-	if (privptr->pk_skb != NULL) {
+-		dev_kfree_skb_any(privptr->pk_skb);
+-		privptr->pk_skb = NULL;
+-	}
++	dev_kfree_skb_any(privptr->pk_skb);
++	privptr->pk_skb = NULL;
+ 	if(privptr->buffs_alloc != 1) {
+ 		CLAW_DBF_TEXT(4, trace, "none2fre");
+ 		return 0;
+diff --git a/drivers/s390/net/ctcm_mpc.c b/drivers/s390/net/ctcm_mpc.c
+index 2dbc77b..2dd53a6 100644
+--- a/drivers/s390/net/ctcm_mpc.c
++++ b/drivers/s390/net/ctcm_mpc.c
+@@ -964,8 +964,7 @@ void mpc_channel_action(struct channel *ch, int direction, int action)
+ 		grp->outstanding_xid2++;
+ 		ch->in_mpcgroup = 1;
  
--#define BRCMF_FWS_TYPE_SEQ_LEN				2
--
+-		if (ch->xid_skb != NULL)
+-			dev_kfree_skb_any(ch->xid_skb);
++		dev_kfree_skb_any(ch->xid_skb);
  
- static const char *brcmf_fws_get_tlv_name(enum brcmf_fws_tlv_type id)
- {
-@@ -126,6 +124,12 @@ static const char *brcmf_fws_get_tlv_name(enum brcmf_fws_tlv_type id)
- #endif /* DEBUG */
+ 		ch->xid_skb = __dev_alloc_skb(MPC_BUFSIZE_DEFAULT,
+ 					GFP_ATOMIC | GFP_DMA);
+@@ -1017,8 +1016,7 @@ void mpc_channel_action(struct channel *ch, int direction, int action)
+ 		grp->num_channel_paths--;
+ 		grp->active_channels[direction]--;
  
- /*
-+ * The PKTTAG tlv has additional bytes when firmware-signalling
-+ * mode has REUSESEQ flag set.
-+ */
-+#define BRCMF_FWS_TYPE_SEQ_LEN				2
-+
-+/*
-  * flags used to enable tlv signalling from firmware.
-  */
- #define BRCMF_FWS_FLAGS_RSSI_SIGNALS			0x0001
+-		if (ch->xid_skb != NULL)
+-			dev_kfree_skb_any(ch->xid_skb);
++		dev_kfree_skb_any(ch->xid_skb);
+ 		ch->xid_skb = NULL;
+ 
+ 		if (grp->channels_terminating)
+diff --git a/drivers/s390/net/qeth_core_main.c b/drivers/s390/net/qeth_core_main.c
+index 0a328d0..7d33b94 100644
+--- a/drivers/s390/net/qeth_core_main.c
++++ b/drivers/s390/net/qeth_core_main.c
+@@ -1282,10 +1282,8 @@ static void qeth_free_qdio_buffers(struct qeth_card *card)
+ 
+ 	qeth_free_cq(card);
+ 	cancel_delayed_work_sync(&card->buffer_reclaim_work);
+-	for (j = 0; j < QDIO_MAX_BUFFERS_PER_Q; ++j) {
+-		if (card->qdio.in_q->bufs[j].rx_skb)
+-			dev_kfree_skb_any(card->qdio.in_q->bufs[j].rx_skb);
+-	}
++	for (j = 0; j < QDIO_MAX_BUFFERS_PER_Q; ++j)
++		dev_kfree_skb_any(card->qdio.in_q->bufs[j].rx_skb);
+ 	kfree(card->qdio.in_q);
+ 	card->qdio.in_q = NULL;
+ 	/* inbound buffer pool */
 -- 
-1.7.10.4
-
+1.8.4.2
 
