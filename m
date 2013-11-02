@@ -1,25 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:43681 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758185Ab3KMJoH (ORCPT
+Received: from mail-pb0-f45.google.com ([209.85.160.45]:58535 "EHLO
+	mail-pb0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754076Ab3KBNtO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Nov 2013 04:44:07 -0500
-Message-ID: <1384335842.14578.2.camel@jlt4.sipsolutions.net> (sfid-20131113_104411_740299_C1A00ACB)
-Subject: Re: [PATCH] cfg80211: fix regulatory flags kdoc
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 13 Nov 2013 10:44:02 +0100
-In-Reply-To: <1384335428-24112-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20131113_103712_088337_F71C520A)
-References: <1384335428-24112-1-git-send-email-mcgrof@do-not-panic.com>
-	 (sfid-20131113_103712_088337_F71C520A)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 2 Nov 2013 09:49:14 -0400
+From: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
+To: davem@davemloft.net, gregkh@linuxfoundation.org,
+	linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
+	schwidefsky@de.ibm.com, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	IvDoorn@gmail.com, sbhatewara@vmware.com, samuel@sortiz.org,
+	chas@cmf.nrl.navy.mil, roland@kernel.org, isdn@linux-pingi.de,
+	jcliburn@gmail.com, benve@cisco.com, ssujith@cisco.com,
+	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
+	shahed.shaikh@qlogic.com, joe@perches.com, apw@canonical.com
+Cc: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
+Subject: [PATCH net-next 10/13] driver: infiniband: remove unnecessary NULL check before dev_kfree_skb_any
+Date: Sat,  2 Nov 2013 19:17:51 +0530
+Message-Id: <1383400074-30555-11-git-send-email-govindarajulu90@gmail.com> (sfid-20131102_145048_729027_8FC83C1A)
+In-Reply-To: <1383400074-30555-1-git-send-email-govindarajulu90@gmail.com>
+References: <1383400074-30555-1-git-send-email-govindarajulu90@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-11-13 at 10:37 +0100, Luis R. Rodriguez wrote:
-> Remove the _FLAG prefix as it was not used.
+dev_kfree_skb_any is protected from NULL. No need to check for NULL
+while calling this function.
 
-I'll add this to the right patch
+Signed-off-by: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
+---
+ drivers/infiniband/hw/amso1100/c2.c | 6 ++----
+ drivers/infiniband/hw/nes/nes_hw.c  | 3 +--
+ 2 files changed, 3 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/infiniband/hw/amso1100/c2.c b/drivers/infiniband/hw/amso1100/c2.c
+index d53cf51..30c4d00 100644
+--- a/drivers/infiniband/hw/amso1100/c2.c
++++ b/drivers/infiniband/hw/amso1100/c2.c
+@@ -312,10 +312,8 @@ static inline int c2_tx_free(struct c2_dev *c2dev, struct c2_element *elem)
+ 	pci_unmap_single(c2dev->pcidev, elem->mapaddr, elem->maplen,
+ 			 PCI_DMA_TODEVICE);
+ 
+-	if (elem->skb) {
+-		dev_kfree_skb_any(elem->skb);
+-		elem->skb = NULL;
+-	}
++	dev_kfree_skb_any(elem->skb);
++	elem->skb = NULL;
+ 
+ 	return 0;
+ }
+diff --git a/drivers/infiniband/hw/nes/nes_hw.c b/drivers/infiniband/hw/nes/nes_hw.c
+index 9020024..2275a8e 100644
+--- a/drivers/infiniband/hw/nes/nes_hw.c
++++ b/drivers/infiniband/hw/nes/nes_hw.c
+@@ -2856,8 +2856,7 @@ void nes_nic_ce_handler(struct nes_device *nesdev, struct nes_hw_nic_cq *cq)
+ 							break;
+ 					}
+ 				}
+-				if (skb)
+-					dev_kfree_skb_any(skb);
++				dev_kfree_skb_any(skb);
+ 				nesnic->sq_tail++;
+ 				nesnic->sq_tail &= nesnic->sq_size-1;
+ 				if (sq_cqes > 128) {
+-- 
+1.8.4.2
 
