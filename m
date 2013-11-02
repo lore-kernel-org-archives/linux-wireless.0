@@ -1,48 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46432 "EHLO mx1.redhat.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:2590 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751245Ab3KOSp0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Nov 2013 13:45:26 -0500
-Date: Fri, 15 Nov 2013 13:45:10 -0500
-From: Dave Jones <davej@redhat.com>
-To: Kees Cook <keescook@chromium.org>
-Cc: "Theodore Ts'o" <tytso@mit.edu>,
-	Daniel Borkmann <dborkman@redhat.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	shemminger@networkplumber.org, Florian Weimer <fweimer@redhat.com>,
-	netdev@vger.kernel.org, Eric Dumazet <eric.dumazet@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] random: seed random_int_secret at least poorly at
- core_initcall time
-Message-ID: <20131115184510.GA911@redhat.com> (sfid-20131115_194532_028390_BA45111B)
-References: <cover.1384160397.git.dborkman@redhat.com>
- <2ea03f60bb65429cbe5d74a6d356fde3eefcf06c.1384160397.git.dborkman@redhat.com>
- <20131111134357.GC10104@thunk.org>
- <20131112000307.GB14929@order.stressinduktion.org>
- <20131112115350.GA14077@thunk.org>
- <20131112131627.GD14929@order.stressinduktion.org>
- <20131112134603.GE14929@order.stressinduktion.org>
- <20131114025448.GB31602@thunk.org>
- <CAGXu5j+ySEdQBXKkspYC=svfekBja2Z_2tcWSAOEbvyiMLf=aA@mail.gmail.com>
+	id S1751847Ab3KBKhg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Nov 2013 06:37:36 -0400
+Message-ID: <5274D5DC.1090508@broadcom.com> (sfid-20131102_113757_745407_E17BA289)
+Date: Sat, 2 Nov 2013 11:37:16 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAGXu5j+ySEdQBXKkspYC=svfekBja2Z_2tcWSAOEbvyiMLf=aA@mail.gmail.com>
+To: "Jouni Malinen" <j@w1.fi>
+cc: "Undekari, Sunil Dutt" <usdutt@qti.qualcomm.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Dan Williams" <dcbw@redhat.com>
+Subject: Re: [PATCH] cfg80211: Introduce critical protocol indication
+ for p2p connection.
+References: <1383230452-12608-1-git-send-email-usdutt@qti.qualcomm.com>
+ <1383230593.14302.1.camel@jlt4.sipsolutions.net>
+ <26F3B0343EE4744AA14EEEF9E1E534511F7A65CC@aphydexd01a>
+ <1383233115.14302.2.camel@jlt4.sipsolutions.net>
+ <26F3B0343EE4744AA14EEEF9E1E534511F7A6606@aphydexd01a>
+ <52729681.5020004@broadcom.com>
+ <26F3B0343EE4744AA14EEEF9E1E534511F7A8160@aphydexd01a>
+ <5273A784.4040900@broadcom.com> <20131102073319.GA3507@w1.fi>
+In-Reply-To: <20131102073319.GA3507@w1.fi>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 15, 2013 at 10:33:04AM -0800, Kees Cook wrote:
- 
- > Ingo wanted even more
- > unpredictability, in the face of total failure from these more dynamic
- > sources, so x86 also "seeds" itself with the build string and the
- > boot_params. These last two are hardly high entropy, but they should
- > at least make 2 different systems not have _identical_ entropy at the
- > start. It's far from cryptographically secure, but it's something, I
- > hope.
+On 11/02/13 08:33, Jouni Malinen wrote:
+> On Fri, Nov 01, 2013 at 02:07:16PM +0100, Arend van Spriel wrote:
+>> On 11/01/2013 12:25 PM, Undekari, Sunil Dutt wrote:
+>>> The host driver / firmware performs (initiates) a scan on the STA interface in the process of finding a better BSS to roam. This scan is offloaded to the driver / firmware for a better roam experience.
+>>> This scans would definitely affect the p2p connection triggered by the supplicant.
+>>> Thus, I was suggesting a way to extend the already existing critical protocol indications to also include p2p protocol/connections, so that drivers can defer the scan's (any off channel operations for that matter) on any other interface during this period.
+>>
+>> I got that. What I meant to say is that you can defer the roaming
+>> related scans when cfg80211 does a .add_virtual_intf() call to the
+>> driver and recommence upon .del_virtual_intf(). I guess this
+>> effectively disables roaming, right?
+>
+> That sounds quite excessive. The case here is a multi-channel
+> concurrency capable device which has a station connection and
+> wpa_supplicant is about to go through P2P group formation. I see no
+> reason to disable roaming, but it would sound useful to avoid doing the
+> background scans for that at the exact time of the group formation
+> (couple of seconds in most cases).
 
-Those are both likely to be the same on some configurations.
-On x86, we could maybe hash the dmi tables ? Vendor stupidity aside,
-things like serial numbers in those tables _should_ be different.
- 
-	Dave
+This is why I was asking for a more detailed usage scenario. Sunil only 
+mentioned the term "P2P connection" which seemed to coarse for this API. 
+So if we are talking about P2P group formation it makes sense.
+
+> Currently, there is no way for wpa_supplicant to clearly indicate to the
+> driver that it is about to run through number of quick operations
+> (offchannel Action frame exchange for GO Negotiation, single channel
+> scan, WPS association + EAPOL exchange, data connection association +
+> 4-way handshake). The driver can guess that this is happening (or could
+> use really ugly hacks to see what Action frames are exchanged and
+> determine next likely operation based on that) and as such, would not
+> know how to configure the firmware to avoid background scans for the
+> station interface during this full sequence.
+
+I wanted this API primarily to avoid drivers doing that kind of hacks so 
+I agree. It was intended to avoid extra latencies during IP connection 
+setup, which is probably happening right after the group formation. So I 
+recommend the connection managers to use this API. I think Dan Williams 
+did some initial implementation testing in NetworkManager and had some 
+concerns. I forgot about them completely so not sure how that ended.
+
+> While the background scan should in most cases not completely break the
+> process even with inconvenient timing (or well, hitting one in middle of
+> the three frame GO Negotiation would have potential to time out that
+> exchange), it would be nice if this common sequence could be optimized
+> to avoid extra latencies and to be more robust in general since there is
+> a 15 second timeout for group formation and quite a bit shorter timeouts
+> in practice for the individual operations within the sequence.
+
+I guess the decision is for Johannes to take, but I see your point.
+
+Regards,
+Arend
 
