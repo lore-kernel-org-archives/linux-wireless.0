@@ -1,41 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:48866 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753293Ab3KNPFc (ORCPT
+Received: from mail-pb0-f51.google.com ([209.85.160.51]:48402 "EHLO
+	mail-pb0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753048Ab3KBNsg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Nov 2013 10:05:32 -0500
-Message-ID: <1384441523.13941.35.camel@jlt4.sipsolutions.net> (sfid-20131114_160535_792925_454BF773)
-Subject: Re: [RFC 1/5] cfg80211: pass the wdev on the country IE regulatory
- hint
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: janusz.dziedzic@tieto.com, j@w1.fi, sunitb@qca.qualcomm.com,
-	rsunki@qca.qualcomm.com, linux-wireless@vger.kernel.org
-Date: Thu, 14 Nov 2013 16:05:23 +0100
-In-Reply-To: <20131114151159.GA29954@garbanzo.do-not-panic.com> (sfid-20131114_160125_849382_647DC657)
-References: <1384366379-25301-1-git-send-email-mcgrof@do-not-panic.com>
-	 <1384366379-25301-2-git-send-email-mcgrof@do-not-panic.com>
-	 <1384377637.28806.14.camel@jlt4.sipsolutions.net>
-	 <20131114140505.GA19070@garbanzo.do-not-panic.com>
-	 <1384437774.13941.25.camel@jlt4.sipsolutions.net>
-	 <20131114151159.GA29954@garbanzo.do-not-panic.com>
-	 (sfid-20131114_160125_849382_647DC657)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 2 Nov 2013 09:48:36 -0400
+From: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
+To: davem@davemloft.net, gregkh@linuxfoundation.org,
+	linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
+	schwidefsky@de.ibm.com, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	IvDoorn@gmail.com, sbhatewara@vmware.com, samuel@sortiz.org,
+	chas@cmf.nrl.navy.mil, roland@kernel.org, isdn@linux-pingi.de,
+	jcliburn@gmail.com, benve@cisco.com, ssujith@cisco.com,
+	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
+	shahed.shaikh@qlogic.com, joe@perches.com, apw@canonical.com
+Cc: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
+Subject: [PATCH net-next 05/13] driver: usb/gadget: remove unnecessary skb NULL check before calling dev_kfree_skb_irq
+Date: Sat,  2 Nov 2013 19:17:46 +0530
+Message-Id: <1383400074-30555-6-git-send-email-govindarajulu90@gmail.com> (sfid-20131102_144853_129683_9B1A5765)
+In-Reply-To: <1383400074-30555-1-git-send-email-govindarajulu90@gmail.com>
+References: <1383400074-30555-1-git-send-email-govindarajulu90@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-11-14 at 07:12 -0800, Luis R. Rodriguez wrote:
+dev_kfree_skb_irq is protected from NULL. No need to check for NULL
+while calling this function.
 
-> > But that's kinda unsafe. Might also be worth just making it a
-> > void* to avoid people trying to use it.
-> 
-> OK. I can see the cookie in theory race against the allocator
-> releasing and creating a new wdev and it magically being
-> the same pointer, but chances are really low of that.
+Signed-off-by: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
+---
+ drivers/usb/gadget/f_phonet.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-Hmm, good point, maybe it'd be better to clean it up on netdev
-unregistration.
-
-johannes
+diff --git a/drivers/usb/gadget/f_phonet.c b/drivers/usb/gadget/f_phonet.c
+index eb3aa81..9e220b6 100644
+--- a/drivers/usb/gadget/f_phonet.c
++++ b/drivers/usb/gadget/f_phonet.c
+@@ -393,10 +393,8 @@ static void __pn_reset(struct usb_function *f)
+ 
+ 	usb_ep_disable(fp->out_ep);
+ 	usb_ep_disable(fp->in_ep);
+-	if (fp->rx.skb) {
+-		dev_kfree_skb_irq(fp->rx.skb);
+-		fp->rx.skb = NULL;
+-	}
++	dev_kfree_skb_irq(fp->rx.skb);
++	fp->rx.skb = NULL;
+ }
+ 
+ static int pn_set_alt(struct usb_function *f, unsigned intf, unsigned alt)
+-- 
+1.8.4.2
 
