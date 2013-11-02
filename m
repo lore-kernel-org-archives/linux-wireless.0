@@ -1,61 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:52477 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751030Ab3KRJKH (ORCPT
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:41667 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751096Ab3KBTNg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Nov 2013 04:10:07 -0500
-Message-ID: <1384765780.22010.42.camel@porter.coelho.fi> (sfid-20131118_101013_090166_E14FC8C0)
-Subject: Re: WL12xx support for WL1270 and ti-connectivity firmware
-From: Luca Coelho <luca@coelho.fi>
-To: Jaya Kumar <jayakumar.lkml@gmail.com>
-Cc: linux-wireless@vger.kernel.org, coelho@ti.com
-Date: Mon, 18 Nov 2013 11:09:40 +0200
-In-Reply-To: <CADqH6VygZFB4HEgcSesZB0cAhB4OvGnST+9mvTjw_QEAD_6QnQ@mail.gmail.com>
-References: <CADqH6VygZFB4HEgcSesZB0cAhB4OvGnST+9mvTjw_QEAD_6QnQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 2 Nov 2013 15:13:36 -0400
+Received: by mail-wi0-f177.google.com with SMTP id f4so2301428wiw.16
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Nov 2013 12:13:35 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAMP44s384vOcMc4vE82gAdVf37YUZfegmPHUSeobPO=gK6ErAw@mail.gmail.com>
+References: <CAMP44s1XJRHV8bAX=_-TkSKMkY8Nw1=eHorqTCZ2QmtR5m8uJA@mail.gmail.com>
+ <526E20EA.9090203@rempel-privat.de> <CAMP44s2Cvw9HF3c3Asuq+bTSD36Gw6PXOUVjAcCD+hf6KB_awg@mail.gmail.com>
+ <CABPxzY+xJ7kst-sYwP8RJwMO_zkNYWKaYy=_LS7WQfuxquK24w@mail.gmail.com>
+ <CAMP44s0087jYz5AiEaEzwt7GqH9ed8PWE1CmvMPr4Dqn3yE6rA@mail.gmail.com>
+ <CABPxzYLwwyFCFw1pEt0v9Xw4kcue1C_RZx0RbTbMrUw=+MWvgQ@mail.gmail.com>
+ <CAMP44s0svc2MRKCrZXS5ZYRZNPoomQkcKHdC2m2BGy7di+TCyA@mail.gmail.com>
+ <CABPxzYL-Gzbzoc_ui+qUQ6uzoKp=Yq7yLWZvc7PoEjiH3dFczg@mail.gmail.com>
+ <CAMP44s3uRF=jNn5ZHZ=QOcvuMoXxsfkxU=VOq3K02Q0qOspEdA@mail.gmail.com>
+ <CABPxzYJbNjAwymwUq0pN=YyuCBGy2qz_BKafatHTWK+yH8PbkA@mail.gmail.com>
+ <CAMP44s1NOS2p9pKeMLhR7616CzHeHJVJEzcF1tP6tsKfcPhSOQ@mail.gmail.com>
+ <CABPxzY+RL+ikbSff3a7qb20ExxcSTx6U2xcL5CFr-BgVSOr61A@mail.gmail.com> <CAMP44s384vOcMc4vE82gAdVf37YUZfegmPHUSeobPO=gK6ErAw@mail.gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Sun, 3 Nov 2013 00:43:14 +0530
+Message-ID: <CABPxzYLDHP5gyeTL8HR=6uJDLptaUGEnNGSFLMkxKqi-JaBVYQ@mail.gmail.com> (sfid-20131102_201339_587318_B50C7620)
+Subject: Re: I always need a miracle to connect with iwlwifi
+To: Felipe Contreras <felipe.contreras@gmail.com>
+Cc: Oleksij Rempel <linux@rempel-privat.de>, ilw@linux.intel.com,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2013-11-17 at 11:56 +0800, Jaya Kumar wrote:
-> Hi friends,
-> 
-> I searched through the mailing list archives to see if there's any
-> conclusive answer about this but didn't find any. I'm planning on
-> using the wl12xx driver in 3.0.35 for i.mx6 board with a murata
-> LBWA19XSLZ chip (TI WL1270 transceiver) and am checking if this might
-> work.
-> 
-> a) does wl12xx support wl1270?
-> I'm not certain whether or not the wl12xx driver supports wl1270. The
-> code does not mention wl1270. The defines/ops are prefixed with
-> wl1271. Eg:
-> linux-3.0.35$ egrep ieee80211_ops drivers/net/wireless/wl12xx/*.c
-> drivers/net/wireless/wl12xx/main.c:static const struct ieee80211_ops
-> wl1271_ops = {
-> 
-> Can I conclude that I should not expect this to work for wl1270? Or is
-> it just that wl1271 and wl1270 share compatible ops?
+On Sat, Nov 2, 2013 at 10:36 PM, Felipe Contreras
+<felipe.contreras@gmail.com> wrote:
+> Sorry for the crappy format (laptop is stuck).
+>
+> If the problem is the firmware why does it start working when I
+> restart the router?
 
-I have never heard of wl1270 while working at TI.  My only guess is that
-this is a chip based on wl1271 (since the Murata specs only say b/g/n
-and no "a" which is the 5GHz support in wl1273).  Maybe it's a cheaper
-chip without Bluetooth? To be sure, you should ask TI.
+I was referring FW on iwlwifi, not the AP's. May be restarting the router
+triggered some kind of event like Beacon Loss which might have
+helped the STA to connect. Just guessing.
 
+> Plus, I should be seeing this problem with other APs.
+> And what could Windows be doing differently that doesn't exhibit this problem?
 
-> b) is there specific firmware I will need for the wl1270?
-> I see that wl1271 gets its firmware from ti-connectivity which has:
-> https://github.com/shaharlevi/linux-firmware-ti-connectivity/tree/ti-connectivity/ti-connectivity
-> wl1271-fw.binlinux-firmware: wl12xx-update STA FW supports 11n BA sessions
-> wl127x-fw-3.binlinux-firmware: wl12xx: Updated STA & AP FW for wl12xx-fw-3
-> 
-> I'm wondering if that wl127x includes wl1270 support.
-
-Same as above... If this wl1270 is indeed based on the wl1271, it should
-probably work.  With the driver you may need to add some new SDIO IDs
-for it to be recognized though.
-
---
-Luca.
-
-
+Without knowing the root cause it tough to comment these questions :-)
