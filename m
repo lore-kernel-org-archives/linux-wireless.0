@@ -1,54 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f178.google.com ([74.125.82.178]:53567 "EHLO
-	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752970Ab3KETwm (ORCPT
+Received: from mail-pd0-f172.google.com ([209.85.192.172]:43867 "EHLO
+	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753961Ab3KBNs7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Nov 2013 14:52:42 -0500
-Received: by mail-we0-f178.google.com with SMTP id q59so3918192wes.37
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Nov 2013 11:52:41 -0800 (PST)
-MIME-Version: 1.0
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Wed, 6 Nov 2013 01:22:20 +0530
-Message-ID: <CABPxzY++gCivs1u8nDtAeB5=p+ZkGHXmOnqud1hkh=TWB5Xprg@mail.gmail.com> (sfid-20131105_205248_293310_9940CD69)
-Subject: [Query] Decryption and Monitor Mode
-To: radiotap@netbsd.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 2 Nov 2013 09:48:59 -0400
+From: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
+To: davem@davemloft.net, gregkh@linuxfoundation.org,
+	linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
+	schwidefsky@de.ibm.com, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	IvDoorn@gmail.com, sbhatewara@vmware.com, samuel@sortiz.org,
+	chas@cmf.nrl.navy.mil, roland@kernel.org, isdn@linux-pingi.de,
+	jcliburn@gmail.com, benve@cisco.com, ssujith@cisco.com,
+	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
+	shahed.shaikh@qlogic.com, joe@perches.com, apw@canonical.com
+Cc: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
+Subject: [PATCH net-next 08/13] driver: isdn: remove unnecessary NULL check before dev_kfree_skb_any
+Date: Sat,  2 Nov 2013 19:17:49 +0530
+Message-Id: <1383400074-30555-9-git-send-email-govindarajulu90@gmail.com> (sfid-20131102_145119_640204_D8B2941A)
+In-Reply-To: <1383400074-30555-1-git-send-email-govindarajulu90@gmail.com>
+References: <1383400074-30555-1-git-send-email-govindarajulu90@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+dev_kfree_skb_any is protected from NULL. No need to check for NULL
+while calling this function.
 
-In our internal tests we make use of monitor mode heavily for all the
-debugging, especially with security related issues (as packets are
-already decrypted).
+Signed-off-by: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
+---
+ drivers/isdn/gigaset/ser-gigaset.c | 3 +--
+ drivers/isdn/hisax/hfc_usb.c       | 6 ++----
+ drivers/isdn/hisax/icc.c           | 6 ++----
+ drivers/isdn/hisax/ipacx.c         | 6 ++----
+ drivers/isdn/hisax/isac.c          | 6 ++----
+ drivers/isdn/hisax/st5481_b.c      | 6 ++----
+ drivers/isdn/hisax/w6692.c         | 6 ++----
+ 7 files changed, 13 insertions(+), 26 deletions(-)
 
-But as the decryption is done in HW (most cases), the HW decrypts the
-packet but still retains the Security Header and sends to the host (at
-least in our solution), we remove that header while giving the packet
-to network stack but while giving it to the monitor mode we do not
-strip off that and also protection=1.
-
-With this wireshark is not able to decode the packets, even thought
-they are decrypted. I propose 2 solutions
-
-Radiotap and Wireshark:
-
-1) Add 2 flags to the radiotap RX Flags (HW Decrypted the packet,
-Packet has security Header (for some chipsets which consume the
-security header as well..??).)
-
-Based on these the wireshark dissector decodes the packet accordingly.
-
-mac80211:
-
-2) Remove the security header information in the monitor path as well
-based on the existing RX_FLAGS.
-
-
-Solutions 2 looks more elegant and simple, any comments?
-
+diff --git a/drivers/isdn/gigaset/ser-gigaset.c b/drivers/isdn/gigaset/ser-gigaset.c
+index 8c91fd5..9128526 100644
+--- a/drivers/isdn/gigaset/ser-gigaset.c
++++ b/drivers/isdn/gigaset/ser-gigaset.c
+@@ -221,8 +221,7 @@ static void flush_send_queue(struct cardstate *cs)
+ 	spin_unlock_irqrestore(&cs->cmdlock, flags);
+ 
+ 	/* data queue */
+-	if (cs->bcs->tx_skb)
+-		dev_kfree_skb_any(cs->bcs->tx_skb);
++	dev_kfree_skb_any(cs->bcs->tx_skb);
+ 	while ((skb = skb_dequeue(&cs->bcs->squeue)) != NULL)
+ 		dev_kfree_skb_any(skb);
+ }
+diff --git a/drivers/isdn/hisax/hfc_usb.c b/drivers/isdn/hisax/hfc_usb.c
+index 849a807..a1f8380 100644
+--- a/drivers/isdn/hisax/hfc_usb.c
++++ b/drivers/isdn/hisax/hfc_usb.c
+@@ -864,10 +864,8 @@ rx_int_complete(struct urb *urb)
+ 		    fifon, urb->status);
+ 
+ 		fifo->urb->interval = 0;	/* cancel automatic rescheduling */
+-		if (fifo->skbuff) {
+-			dev_kfree_skb_any(fifo->skbuff);
+-			fifo->skbuff = NULL;
+-		}
++		dev_kfree_skb_any(fifo->skbuff);
++		fifo->skbuff = NULL;
+ 		return;
+ 	}
+ 	len = urb->actual_length;
+diff --git a/drivers/isdn/hisax/icc.c b/drivers/isdn/hisax/icc.c
+index 51dae91..2c52996 100644
+--- a/drivers/isdn/hisax/icc.c
++++ b/drivers/isdn/hisax/icc.c
+@@ -549,10 +549,8 @@ ICC_l1hw(struct PStack *st, int pr, void *arg)
+ 	case (HW_DEACTIVATE | RESPONSE):
+ 		skb_queue_purge(&cs->rq);
+ 		skb_queue_purge(&cs->sq);
+-		if (cs->tx_skb) {
+-			dev_kfree_skb_any(cs->tx_skb);
+-			cs->tx_skb = NULL;
+-		}
++		dev_kfree_skb_any(cs->tx_skb);
++		cs->tx_skb = NULL;
+ 		if (test_and_clear_bit(FLG_DBUSY_TIMER, &cs->HW_Flags))
+ 			del_timer(&cs->dbusytimer);
+ 		if (test_and_clear_bit(FLG_L1_DBUSY, &cs->HW_Flags))
+diff --git a/drivers/isdn/hisax/ipacx.c b/drivers/isdn/hisax/ipacx.c
+index 5faa5de..55192a4 100644
+--- a/drivers/isdn/hisax/ipacx.c
++++ b/drivers/isdn/hisax/ipacx.c
+@@ -181,10 +181,8 @@ dch_l2l1(struct PStack *st, int pr, void *arg)
+ 	case (HW_DEACTIVATE | RESPONSE):
+ 		skb_queue_purge(&cs->rq);
+ 		skb_queue_purge(&cs->sq);
+-		if (cs->tx_skb) {
+-			dev_kfree_skb_any(cs->tx_skb);
+-			cs->tx_skb = NULL;
+-		}
++		dev_kfree_skb_any(cs->tx_skb);
++		cs->tx_skb = NULL;
+ 		if (test_and_clear_bit(FLG_DBUSY_TIMER, &cs->HW_Flags))
+ 			del_timer(&cs->dbusytimer);
+ 		break;
+diff --git a/drivers/isdn/hisax/isac.c b/drivers/isdn/hisax/isac.c
+index 7fdf78f..d0895f2 100644
+--- a/drivers/isdn/hisax/isac.c
++++ b/drivers/isdn/hisax/isac.c
+@@ -547,10 +547,8 @@ ISAC_l1hw(struct PStack *st, int pr, void *arg)
+ 	case (HW_DEACTIVATE | RESPONSE):
+ 		skb_queue_purge(&cs->rq);
+ 		skb_queue_purge(&cs->sq);
+-		if (cs->tx_skb) {
+-			dev_kfree_skb_any(cs->tx_skb);
+-			cs->tx_skb = NULL;
+-		}
++		dev_kfree_skb_any(cs->tx_skb);
++		cs->tx_skb = NULL;
+ 		if (test_and_clear_bit(FLG_DBUSY_TIMER, &cs->HW_Flags))
+ 			del_timer(&cs->dbusytimer);
+ 		if (test_and_clear_bit(FLG_L1_DBUSY, &cs->HW_Flags))
+diff --git a/drivers/isdn/hisax/st5481_b.c b/drivers/isdn/hisax/st5481_b.c
+index 4098491..b753aca 100644
+--- a/drivers/isdn/hisax/st5481_b.c
++++ b/drivers/isdn/hisax/st5481_b.c
+@@ -254,10 +254,8 @@ static void st5481B_mode(struct st5481_bcs *bcs, int mode)
+ 		} else {
+ 			st5481_usb_device_ctrl_msg(adapter, GPIO_OUT, adapter->leds, NULL, NULL);
+ 		}
+-		if (b_out->tx_skb) {
+-			dev_kfree_skb_any(b_out->tx_skb);
+-			b_out->tx_skb = NULL;
+-		}
++		dev_kfree_skb_any(b_out->tx_skb);
++		b_out->tx_skb = NULL;
+ 
+ 	}
+ }
+diff --git a/drivers/isdn/hisax/w6692.c b/drivers/isdn/hisax/w6692.c
+index a858955..dd1fbf4 100644
+--- a/drivers/isdn/hisax/w6692.c
++++ b/drivers/isdn/hisax/w6692.c
+@@ -653,10 +653,8 @@ W6692_l1hw(struct PStack *st, int pr, void *arg)
+ 	case (HW_DEACTIVATE | RESPONSE):
+ 		skb_queue_purge(&cs->rq);
+ 		skb_queue_purge(&cs->sq);
+-		if (cs->tx_skb) {
+-			dev_kfree_skb_any(cs->tx_skb);
+-			cs->tx_skb = NULL;
+-		}
++		dev_kfree_skb_any(cs->tx_skb);
++		cs->tx_skb = NULL;
+ 		if (test_and_clear_bit(FLG_DBUSY_TIMER, &cs->HW_Flags))
+ 			del_timer(&cs->dbusytimer);
+ 		if (test_and_clear_bit(FLG_L1_DBUSY, &cs->HW_Flags))
 -- 
-Thanks,
-Regards,
-Chaitanya T K.
+1.8.4.2
+
