@@ -1,52 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:41187 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757541Ab3KHRi2 (ORCPT
+Received: from mail-pa0-f53.google.com ([209.85.220.53]:51240 "EHLO
+	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754076Ab3KBNt3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Nov 2013 12:38:28 -0500
-Received: by mail-ie0-f180.google.com with SMTP id e14so3675962iej.39
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Nov 2013 09:38:27 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
-References: <5276134B.8070808@wzyboy.org> <CALkVjQYh-SUte4S6LdqOc3KSc3_pDU6jz1KXp+Jsd5_RFPXSqA@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DE8338@HASMSX103.ger.corp.intel.com>
- <CALkVjQb7fCMFpqhdUs8w-Mx_Y0RtAYYFtKxXkqyrCQ39UFGxKg@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DE960E@HASMSX103.ger.corp.intel.com>
- <CALkVjQbW8FeiEh8pBZ=KQFD9+8AdjgT0G_RG7qJe0MRdBvMD-A@mail.gmail.com>
- <CALkVjQaLx2spaOqUPcs_EwMkU7npMki1Reo1MeZwxB7m=c24=g@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DE9FC6@HASMSX103.ger.corp.intel.com>
- <CALkVjQZDNSgUUFyi94Y8da_NDzW61rCvaMrZpUugFKW_LRNFFA@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
- <CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
- <CALkVjQY7r=YKhsgDKR0mnYVtZy5BAdj83nY2jL0VFaiew6ha7A@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
- <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
- <527A8166.6000701@gmail.com> <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
- <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com> <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 8 Nov 2013 10:38:07 -0700
-Message-ID: <CAErSpo6ry6cUaVngozS8-P44=LPJN6cbsZ_mfWkJv9Rn85YXUQ@mail.gmail.com> (sfid-20131108_183841_435688_F69D7C48)
-Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
-To: wzyboy <wzyboy@wzyboy.org>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 2 Nov 2013 09:49:29 -0400
+From: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
+To: davem@davemloft.net, gregkh@linuxfoundation.org,
+	linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
+	schwidefsky@de.ibm.com, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	IvDoorn@gmail.com, sbhatewara@vmware.com, samuel@sortiz.org,
+	chas@cmf.nrl.navy.mil, roland@kernel.org, isdn@linux-pingi.de,
+	jcliburn@gmail.com, benve@cisco.com, ssujith@cisco.com,
+	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
+	shahed.shaikh@qlogic.com, joe@perches.com, apw@canonical.com
+Cc: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
+Subject: [PATCH net-next 12/13] driver: net: fix space before '(' and remove extra variable
+Date: Sat,  2 Nov 2013 19:17:53 +0530
+Message-Id: <1383400074-30555-13-git-send-email-govindarajulu90@gmail.com> (sfid-20131102_145015_314439_218FF125)
+In-Reply-To: <1383400074-30555-1-git-send-email-govindarajulu90@gmail.com>
+References: <1383400074-30555-1-git-send-email-govindarajulu90@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 8, 2013 at 10:20 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> My only guess is that there's something wrong with the ASPM
-> configuration and the device just stops responding to config accesses
-> (and probably MMIO accesses, too, based on the errors in your dmesg
-> log).  Or maybe the device got powered off somehow.
+Signed-off-by: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
+---
+ drivers/net/ethernet/sgi/ioc3-eth.c | 4 +---
+ drivers/net/usb/usbnet.c            | 2 +-
+ 2 files changed, 2 insertions(+), 4 deletions(-)
 
-If you've figured out a way to reproduce this more reliably, it might
-be interesting to do "echo on >
-/sys/bus/pci/devices/0000:03:00.0/power/control" and see whether it
-makes a difference.  That should prevent us from using runtime power
-management for the iwlwifi device.
+diff --git a/drivers/net/ethernet/sgi/ioc3-eth.c b/drivers/net/ethernet/sgi/ioc3-eth.c
+index 6bd90f2..80dcfd9 100644
+--- a/drivers/net/ethernet/sgi/ioc3-eth.c
++++ b/drivers/net/ethernet/sgi/ioc3-eth.c
+@@ -851,13 +851,11 @@ static inline void ioc3_clean_rx_ring(struct ioc3_private *ip)
+ 
+ static inline void ioc3_clean_tx_ring(struct ioc3_private *ip)
+ {
+-	struct sk_buff *skb;
+ 	int i;
+ 
+ 	for (i=0; i < 128; i++) {
+-		skb = ip->tx_skbs[i];
++		dev_kfree_skb_any(ip->tx_skbs[i]);
+ 		ip->tx_skbs[i] = NULL;
+-		dev_kfree_skb_any(skb);
+ 		ip->txr[i].cmd = 0;
+ 	}
+ 	ip->tx_pi = 0;
+diff --git a/drivers/net/usb/usbnet.c b/drivers/net/usb/usbnet.c
+index b37f812..bd18155 100644
+--- a/drivers/net/usb/usbnet.c
++++ b/drivers/net/usb/usbnet.c
+@@ -1377,7 +1377,7 @@ netdev_tx_t usbnet_start_xmit (struct sk_buff *skb,
+ drop:
+ 		dev->net->stats.tx_dropped++;
+ not_drop:
+-		dev_kfree_skb_any (skb);
++		dev_kfree_skb_any(skb);
+ 		if (urb) {
+ 			kfree(urb->sg);
+ 			usb_free_urb(urb);
+-- 
+1.8.4.2
 
-Bjorn
