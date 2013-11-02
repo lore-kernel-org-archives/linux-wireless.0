@@ -1,107 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:46075 "EHLO
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:35682 "EHLO
 	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751503Ab3KRRLt (ORCPT
+	with ESMTP id S1752142Ab3KBVxi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Nov 2013 12:11:49 -0500
+	Sat, 2 Nov 2013 17:53:38 -0400
+Received: by mail-ob0-f175.google.com with SMTP id wm4so5779256obc.6
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Nov 2013 14:53:38 -0700 (PDT)
+Message-ID: <5275745F.9080002@lwfinger.net> (sfid-20131102_225345_298029_B08FF0CD)
+Date: Sat, 02 Nov 2013 16:53:35 -0500
 From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
-Subject: [PATCH 02/12 NEXT] rtlwifi: rtl8192cu: Add new firmware
-Date: Mon, 18 Nov 2013 11:11:26 -0600
-Message-Id: <1384794696-20314-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20131118_181205_370168_5EC1A137)
-In-Reply-To: <1384794696-20314-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1384794696-20314-1-git-send-email-Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: alexandre.f.demers@gmail.com, linux-wireless@vger.kernel.org
+Subject: Re: r92su: status and will it be merged anytime soon?
+References: <52755E44.1060501@gmail.com>
+In-Reply-To: <52755E44.1060501@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vendor driver rtl8188C_8192C_8192D_usb_linux_v3.4.2_3727.20120404 introduced
-new firmware for these chips. The code try for the new file, and fall back to
-the original firmware if the new file is not available.
+On 11/02/2013 03:19 PM, Alexandre Demers wrote:
+> Good afternoon,
+>
+> I was playing in r8712u because I wanted to send a patch to conditionally
+> silence a flooding netdev_info(). But then I found out on
+> http://wireless.kernel.org/en/users/Drivers/rtl819x that r8712u was to be
+> replaced by r92su.
+>
+>  From its git tree, it seems no commit were added since 4 months ago. Could
+> someone tell me in what shape is this new driver? Is there any plan to merge it
+> (under staging I suppose) soon?
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>
----
- drivers/net/wireless/rtlwifi/core.c         | 10 ++++++++++
- drivers/net/wireless/rtlwifi/rtl8192cu/sw.c | 16 +++++++++++++---
- drivers/net/wireless/rtlwifi/wifi.h         |  1 +
- 3 files changed, 24 insertions(+), 3 deletions(-)
+As nothing has happened with that GitHub account for several months, my guess is 
+that it will not be merged any time soon.
 
-Index: wireless-testing/drivers/net/wireless/rtlwifi/core.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/core.c
-+++ wireless-testing/drivers/net/wireless/rtlwifi/core.c
-@@ -46,10 +46,20 @@ void rtl_fw_cb(const struct firmware *fi
- 			 "Firmware callback routine entered!\n");
- 	complete(&rtlpriv->firmware_loading_complete);
- 	if (!firmware) {
-+		if (rtlpriv->cfg->alt_fw_name) {
-+			err = request_firmware(&firmware,
-+					       rtlpriv->cfg->alt_fw_name,
-+					       rtlpriv->io.dev);
-+			pr_info("Loading alternative firmware %s\n",
-+				rtlpriv->cfg->alt_fw_name);
-+			if (!err)
-+				goto found_alt;
-+		}
- 		pr_err("Firmware %s not available\n", rtlpriv->cfg->fw_name);
- 		rtlpriv->max_fw_size = 0;
- 		return;
- 	}
-+found_alt:
- 	if (firmware->size > rtlpriv->max_fw_size) {
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
- 			 "Firmware is too big!\n");
-Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-+++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-@@ -50,6 +50,9 @@ MODULE_AUTHOR("Larry Finger	<Larry.Finge
- MODULE_LICENSE("GPL");
- MODULE_DESCRIPTION("Realtek 8192C/8188C 802.11n USB wireless");
- MODULE_FIRMWARE("rtlwifi/rtl8192cufw.bin");
-+MODULE_FIRMWARE("rtlwifi/rtl8192cufw_A.bin");
-+MODULE_FIRMWARE("rtlwifi/rtl8192cufw_B.bin");
-+MODULE_FIRMWARE("rtlwifi/rtl8192cufw_TMSC.bin");
- 
- static int rtl92cu_init_sw_vars(struct ieee80211_hw *hw)
- {
-@@ -69,14 +72,21 @@ static int rtl92cu_init_sw_vars(struct i
- 			 "Can't alloc buffer for fw\n");
- 		return 1;
- 	}
--
-+	if (IS_VENDOR_UMC_A_CUT(rtlpriv->rtlhal.version) &&
-+	    !IS_92C_SERIAL(rtlpriv->rtlhal.version)) {
-+		rtlpriv->cfg->fw_name = "rtlwifi/rtl8192cufw_A.bin";
-+	} else if (IS_81xxC_VENDOR_UMC_B_CUT(rtlpriv->rtlhal.version)) {
-+		rtlpriv->cfg->fw_name = "rtlwifi/rtl8192cufw_B.bin";
-+	} else {
-+		rtlpriv->cfg->fw_name = "rtlwifi/rtl8192cufw_TMSC.bin";
-+	}
-+	/* provide name of alternative file */
-+	rtlpriv->cfg->alt_fw_name = "rtlwifi/rtl8192cufw.bin";
- 	pr_info("Loading firmware %s\n", rtlpriv->cfg->fw_name);
- 	rtlpriv->max_fw_size = 0x4000;
- 	err = request_firmware_nowait(THIS_MODULE, 1,
- 				      rtlpriv->cfg->fw_name, rtlpriv->io.dev,
- 				      GFP_KERNEL, hw, rtl_fw_cb);
--
--
- 	return err;
- }
- 
-Index: wireless-testing/drivers/net/wireless/rtlwifi/wifi.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/wifi.h
-+++ wireless-testing/drivers/net/wireless/rtlwifi/wifi.h
-@@ -1804,6 +1804,7 @@ struct rtl_hal_cfg {
- 	bool write_readback;
- 	char *name;
- 	char *fw_name;
-+	char *alt_fw_name;
- 	struct rtl_hal_ops *ops;
- 	struct rtl_mod_params *mod_params;
- 	struct rtl_hal_usbint_cfg *usb_interface_cfg;
+It would make little sense to replace one staging driver (r8712u) with a 
+different one. The only thing that makes sense is for it to use mac80211 and be 
+merged in the regular drivers/net/wireless/rtlwifi tree.
+
+Larry
+
+
