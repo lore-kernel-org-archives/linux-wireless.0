@@ -1,48 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f176.google.com ([74.125.82.176]:48612 "EHLO
-	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752922Ab3KXREm (ORCPT
+Received: from mail-ea0-f179.google.com ([209.85.215.179]:49517 "EHLO
+	mail-ea0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754648Ab3KBVyG convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Nov 2013 12:04:42 -0500
-Received: by mail-we0-f176.google.com with SMTP id t61so2891602wes.21
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Nov 2013 09:04:40 -0800 (PST)
-Message-ID: <529231A4.5010503@gmail.com> (sfid-20131124_180445_246118_BF8D453D)
-Date: Sun, 24 Nov 2013 19:04:36 +0200
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+	Sat, 2 Nov 2013 17:54:06 -0400
+Received: by mail-ea0-f179.google.com with SMTP id b10so2648526eae.24
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Nov 2013 14:54:04 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: alexandre.f.demers@gmail.com
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: r92su: status and will it be merged anytime soon?
+Date: Sat, 02 Nov 2013 22:50:22 +0100
+Message-ID: <1549404.FOHYIQhGu0@debian64> (sfid-20131102_225411_020029_04FC2B24)
+In-Reply-To: <52755E44.1060501@gmail.com>
+References: <52755E44.1060501@gmail.com>
 MIME-Version: 1.0
-To: John Linville <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: pull request: iwlwifi 2013-11-19
-References: <528BCEDB.8010703@gmail.com>
-In-Reply-To: <528BCEDB.8010703@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello,
 
+On Saturday 02 November 2013 16:19:16 Alexandre Demers wrote:
+> I was playing in r8712u because I wanted to send a patch to 
+> conditionally silence a flooding netdev_info(). But then I found out on 
+> http://wireless.kernel.org/en/users/Drivers/rtl819x that r8712u was to 
+> be replaced by r92su.
+> 
+>  From its git tree, it seems no commit were added since 4 months ago. 
+> Could someone tell me in what shape is this new driver? Is there any 
+> plan to merge it (under staging I suppose) soon?
 
-On 11/19/2013 10:49 PM, Emmanuel Grumbach wrote:
-> Hi John,
-> 
-> This is a pull request for 3.13.
-> 
-> I have here a few fixes for BT Coex. One of them is a NULL pointer
-> dereference. Another one avoids to enable a feature that can make the
-> firmware unhappy since the firmware isn't ready for it yet. WE also
-> avoid a WARNING that can be triggered upon association in not-so-bad
-> cases even if the association succeeded. We add support for new NICs
-> (not yet on the market) and bump the API so that 3.13 will be able to
-> work with the new firmware that will be out soon hopefully.
-> I also have a boundary check from Johannes.
-> 
-> I reset my tree to wireless/master as the time of this writing. I did
-> that mainly because I needed the changes that were in -next before 3.12
-> went out even if 3.13-rc1 isn't out yet. I plan to rebase my tree on
-> 3.13-rc2 (or 3.13-rc1 if this pull request makes it to 3.13-rc1 but that
-> seems unlikely).
-> Tell me if you have any issues.
-> 
-> 
+That's the story:
 
-FWIW - since 3.13-rc1 is already out and you haven't pulled yet, I
-rebased this pull request --onto v3.13-rc1.
+"Yes, r8712u has been in staging for a long time; however, it is not a
+matter of improving it. For a new wireless driver to be included in the
+main wireless directories, it must use mac80211."
+
+<http://www.spinics.net/lists/linux-wireless/msg105633.html>
+
+r92su is "just a nice" rewrite of r8712u with a cfg80211 interface.
+However, this is due to the firmware interface shortcomings. For 
+instance the r8712u firmware won't allow a driver initialize the PHY.
+It's true that there's a command to set the phy to a specified 
+channel, however it's not possible to define the channel mode.
+(whenever it is supposed to be legacy, HT20, HT40+ or HT40-.)
+
+The issue with r92su is: The driver is ready, but it's fundamentally
+incompatible with the rtlwifi framework and mac80211.
+
+...
+
+However, 
+
+José Vázquez discovered that Realtek has produced two linux drivers
+for these devices. The other driver (and more importantly: the firmware)
+can be the base for a rtl8192su+rtlwifi driver 
+(which could even support a proper AP mode!)
+
+If you want to take a look:
+<http://www.edimax.com/images/Image/OpenSourceCode/Wireless/Router/AR-7284WnA/AR-7284WnA&B_SDK_6222.tar.zip>
+
+The driver is located in:
+  Edimax/src/kernel/linux-2.6.18.8/drivers/usb/net/8192su
+
+The firmware + phy values:
+  Edimax/src/kernel/linux-2.6.18.8/usr/ramfs/usr/rtl8192su
+
+So, it's back to the drawing board.
+
+...
+
+I hope this answers your question, if not... let me know ;).
+
+Regards
+
+Christian
