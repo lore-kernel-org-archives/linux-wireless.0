@@ -1,56 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:52788 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751697Ab3KNKAA (ORCPT
+Received: from mail-pd0-f169.google.com ([209.85.192.169]:60408 "EHLO
+	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754076Ab3KBNtW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Nov 2013 05:00:00 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath9k: Update AR9462 2.1 initvals
-Date: Thu, 14 Nov 2013 15:25:23 +0530
-Message-Id: <1384422923-9078-1-git-send-email-sujith@msujith.org> (sfid-20131114_110004_126271_551826E8)
+	Sat, 2 Nov 2013 09:49:22 -0400
+From: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
+To: davem@davemloft.net, gregkh@linuxfoundation.org,
+	linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
+	schwidefsky@de.ibm.com, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	IvDoorn@gmail.com, sbhatewara@vmware.com, samuel@sortiz.org,
+	chas@cmf.nrl.navy.mil, roland@kernel.org, isdn@linux-pingi.de,
+	jcliburn@gmail.com, benve@cisco.com, ssujith@cisco.com,
+	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
+	shahed.shaikh@qlogic.com, joe@perches.com, apw@canonical.com
+Cc: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
+Subject: [PATCH net-next 11/13] driver: usb: remove unnecessary NULL check before dev_kfree_skb_any
+Date: Sat,  2 Nov 2013 19:17:52 +0530
+Message-Id: <1383400074-30555-12-git-send-email-govindarajulu90@gmail.com> (sfid-20131102_145030_687592_CA65059E)
+In-Reply-To: <1383400074-30555-1-git-send-email-govindarajulu90@gmail.com>
+References: <1383400074-30555-1-git-send-email-govindarajulu90@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+dev_kfree_skb_any is protected from NULL. No need to check for NULL
+while calling this function.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9462_2p1_initvals.h | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/usb/gadget/u_ether.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9462_2p1_initvals.h b/drivers/net/wireless/ath/ath9k/ar9462_2p1_initvals.h
-index bec18bf..0fcce07 100644
---- a/drivers/net/wireless/ath/ath9k/ar9462_2p1_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9462_2p1_initvals.h
-@@ -361,7 +361,7 @@ static const u32 ar9462_2p1_baseband_postamble[][5] = {
- 	{0x00009e14, 0x37b95d5e, 0x37b9605e, 0x3236605e, 0x32365a5e},
- 	{0x00009e18, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
- 	{0x00009e1c, 0x0001cf9c, 0x0001cf9c, 0x00021f9c, 0x00021f9c},
--	{0x00009e20, 0x000003b5, 0x000003b5, 0x000003ce, 0x000003ce},
-+	{0x00009e20, 0x000003a5, 0x000003a5, 0x000003a5, 0x000003a5},
- 	{0x00009e2c, 0x0000001c, 0x0000001c, 0x00000021, 0x00000021},
- 	{0x00009e3c, 0xcf946220, 0xcf946220, 0xcfd5c782, 0xcfd5c282},
- 	{0x00009e44, 0x62321e27, 0x62321e27, 0xfe291e27, 0xfe291e27},
-@@ -400,7 +400,7 @@ static const u32 ar9462_2p1_baseband_postamble[][5] = {
- 	{0x0000ae04, 0x001c0000, 0x001c0000, 0x001c0000, 0x00100000},
- 	{0x0000ae18, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
- 	{0x0000ae1c, 0x0000019c, 0x0000019c, 0x0000019c, 0x0000019c},
--	{0x0000ae20, 0x000001b5, 0x000001b5, 0x000001ce, 0x000001ce},
-+	{0x0000ae20, 0x000001a6, 0x000001a6, 0x000001aa, 0x000001aa},
- 	{0x0000b284, 0x00000000, 0x00000000, 0x00000550, 0x00000550},
- };
+diff --git a/drivers/usb/gadget/u_ether.c b/drivers/usb/gadget/u_ether.c
+index 2aae0d6..3b61ac6 100644
+--- a/drivers/usb/gadget/u_ether.c
++++ b/drivers/usb/gadget/u_ether.c
+@@ -251,8 +251,7 @@ enomem:
+ 		defer_kevent(dev, WORK_RX_MEMORY);
+ 	if (retval) {
+ 		DBG(dev, "rx submit --> %d\n", retval);
+-		if (skb)
+-			dev_kfree_skb_any(skb);
++		dev_kfree_skb_any(skb);
+ 		spin_lock_irqsave(&dev->req_lock, flags);
+ 		list_add(&req->list, &dev->rx_reqs);
+ 		spin_unlock_irqrestore(&dev->req_lock, flags);
+@@ -339,8 +338,7 @@ quiesce:
+ 		break;
+ 	}
  
-@@ -472,7 +472,7 @@ static const u32 ar9462_2p1_radio_postamble[][5] = {
- 
- static const u32 ar9462_2p1_soc_preamble[][2] = {
- 	/* Addr      allmodes  */
--	{0x000040a4, 0x00a0c1c9},
-+	{0x000040a4, 0x00a0c9c9},
- 	{0x00007020, 0x00000000},
- 	{0x00007034, 0x00000002},
- 	{0x00007038, 0x000004c2},
+-	if (skb)
+-		dev_kfree_skb_any(skb);
++	dev_kfree_skb_any(skb);
+ 	if (!netif_running(dev->net)) {
+ clean:
+ 		spin_lock(&dev->req_lock);
 -- 
 1.8.4.2
 
