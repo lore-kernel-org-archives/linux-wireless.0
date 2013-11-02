@@ -1,48 +1,179 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f54.google.com ([74.125.82.54]:56180 "EHLO
-	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751787Ab3KANzt (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:55528 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751096Ab3KBT2j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 09:55:49 -0400
-Received: by mail-wg0-f54.google.com with SMTP id c11so4134273wgh.9
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:55:48 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+	Sat, 2 Nov 2013 15:28:39 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 6/8] wireless-regdb: optimize two of DE's rules
-Date: Fri,  1 Nov 2013 14:55:29 +0100
-Message-Id: <1383314131-20774-7-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_145552_151746_60973670)
-In-Reply-To: <1383314131-20774-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1383314131-20774-1-git-send-email-mcgrof@do-not-panic.com>
+Cc: linux-wireless@vger.kernel.org,
+	Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>,
+	netdev@vger.kernel.org, Larry Finger <Larry.Finger@lwfinger.net>,
+	Stable <stable@vger.kernel.org>
+Subject: [PATCH NEXT V3] rtlwifi: Fix endian error in extracting packet type
+Date: Sat,  2 Nov 2013 14:28:35 -0500
+Message-Id: <1383420515-13168-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20131102_202849_023291_B32651B0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There's no reason not to merge these two rules.
-This as picked up by the new CRDA optimizer.
+From: Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+All of the rtlwifi drivers have an error in the routine that tests if
+the data is "special". If it is, the subsequant transmission will be
+at the lowest rate to enhance reliability. The 16-bit quantity is
+big-endian, but was being extracted in native CPU mode. One of the
+effects of this bug is to inhibit association under some conditions
+as the TX rate is too high.
+
+Based on suggestions by Joe Perches, the entire routine is rewritten.
+
+One of the local headers contained duplicates of some of the ETH_P_XXX
+definitions. These are deleted.
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>
+Cc: Stable <stable@vger.kernel.org> [2.6.38+]
 ---
- db.txt | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/db.txt b/db.txt
-index ec3bee6..22b6561 100644
---- a/db.txt
-+++ b/db.txt
-@@ -222,10 +222,8 @@ country CZ: DFS-ETSI
- country DE: DFS-ETSI
- 	# entries 279004 and 280006
- 	(2400 - 2483.5 @ 40), (100 mW)
--	# entry 303005
--	(5150 - 5250 @ 80), (100 mW), NO-OUTDOOR
--	# entries 304002 and 305002
--	(5250 - 5350 @ 80), (100 mW), NO-OUTDOOR
-+	# entry 303005, 304002 and 305002
-+	(5150 - 5350 @ 80), (100 mW), NO-OUTDOOR
- 	# entries 308002, 309001 and 310003
- 	(5470 - 5725 @ 80), (500 mW), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
--- 
-1.8.4.rc3
+V2 - Addresses comments by Ben Hutchings and Bjorn Mork.
+V3 - Rewrite of rtl_is_special_data()
 
+ drivers/net/wireless/rtlwifi/base.c |   15 ++++++---------
+ drivers/net/wireless/rtlwifi/wifi.h |    6 +-----
+ 2 files changed, 7 insertions(+), 14 deletions(-)
+Index: wireless-testing/drivers/net/wireless/rtlwifi/base.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/base.c
++++ wireless-testing/drivers/net/wireless/rtlwifi/base.c
+@@ -37,6 +37,7 @@
+ 
+ #include <linux/ip.h>
+ #include <linux/module.h>
++#include <linux/udp.h>
+ 
+ /*
+  *NOTICE!!!: This file will be very big, we should
+@@ -1074,64 +1075,52 @@ u8 rtl_is_special_data(struct ieee80211_
+ 	if (!ieee80211_is_data(fc))
+ 		return false;
+ 
++	ip = (const struct iphdr *)(skb->data + mac_hdr_len +
++				    SNAP_SIZE + PROTOC_TYPE_SIZE);
++	ether_type = be16_to_cpup((__be16 *)
++				  (skb->data + mac_hdr_len + SNAP_SIZE));
++
++	switch (ether_type) {
++	case ETH_P_IP: {
++		struct udphdr *udp;
++		u16 src;
++		u16 dst;
++
++		if (ip->protocol != IPPROTO_UDP)
++			return false;
++		udp = (struct udphdr *)((u8 *)ip + (ip->ihl << 2));
++		src = be16_to_cpu(udp->source);
++		dst = be16_to_cpu(udp->dest);
++
++		/* If this case involves port 68 (UDP BOOTP client) connecting
++		 * with port 67 (UDP BOOTP server), then return true so that
++		 * the lowest speed is used.
++		 */
++		if (!((src == 68 && dst == 67) || (src == 67 && dst == 68)))
++			return false;
+ 
+-	ip = (struct iphdr *)((u8 *) skb->data + mac_hdr_len +
+-			      SNAP_SIZE + PROTOC_TYPE_SIZE);
+-	ether_type = *(u16 *) ((u8 *) skb->data + mac_hdr_len + SNAP_SIZE);
+-	/*	ether_type = ntohs(ether_type); */
+-
+-	if (ETH_P_IP == ether_type) {
+-		if (IPPROTO_UDP == ip->protocol) {
+-			struct udphdr *udp = (struct udphdr *)((u8 *) ip +
+-							       (ip->ihl << 2));
+-			if (((((u8 *) udp)[1] == 68) &&
+-			     (((u8 *) udp)[3] == 67)) ||
+-			    ((((u8 *) udp)[1] == 67) &&
+-			     (((u8 *) udp)[3] == 68))) {
+-				/*
+-				 * 68 : UDP BOOTP client
+-				 * 67 : UDP BOOTP server
+-				 */
+-				RT_TRACE(rtlpriv, (COMP_SEND | COMP_RECV),
+-					 DBG_DMESG, "dhcp %s !!\n",
+-					 is_tx ? "Tx" : "Rx");
+-
+-				if (is_tx) {
+-					rtlpriv->enter_ps = false;
+-					schedule_work(&rtlpriv->
+-						      works.lps_change_work);
+-					ppsc->last_delaylps_stamp_jiffies =
+-					    jiffies;
+-				}
+-
+-				return true;
+-			}
+-		}
+-	} else if (ETH_P_ARP == ether_type) {
+-		if (is_tx) {
+-			rtlpriv->enter_ps = false;
+-			schedule_work(&rtlpriv->works.lps_change_work);
+-			ppsc->last_delaylps_stamp_jiffies = jiffies;
+-		}
+-
+-		return true;
+-	} else if (ETH_P_PAE == ether_type) {
++		RT_TRACE(rtlpriv, (COMP_SEND | COMP_RECV), DBG_DMESG,
++			 "dhcp %s !!\n", is_tx ? "Tx" : "Rx");
++		break;
++	}
++	case ETH_P_ARP:
++		break;
++	case ETH_P_PAE:
+ 		RT_TRACE(rtlpriv, (COMP_SEND | COMP_RECV), DBG_DMESG,
+ 			 "802.1X %s EAPOL pkt!!\n", is_tx ? "Tx" : "Rx");
+-
+-		if (is_tx) {
+-			rtlpriv->enter_ps = false;
+-			schedule_work(&rtlpriv->works.lps_change_work);
+-			ppsc->last_delaylps_stamp_jiffies = jiffies;
+-		}
+-
+-		return true;
+-	} else if (ETH_P_IPV6 == ether_type) {
+-		/* IPv6 */
+-		return true;
++		break;
++	case ETH_P_IPV6:
++		/* TODO: Is this right? */
++		return false;
++	default:
++		return false;
+ 	}
+-
+-	return false;
++	if (is_tx) {
++		rtlpriv->enter_ps = false;
++		schedule_work(&rtlpriv->works.lps_change_work);
++		ppsc->last_delaylps_stamp_jiffies = jiffies;
++	}
++	return true;
+ }
+ EXPORT_SYMBOL_GPL(rtl_is_special_data);
+ 
+Index: wireless-testing/drivers/net/wireless/rtlwifi/wifi.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/wifi.h
++++ wireless-testing/drivers/net/wireless/rtlwifi/wifi.h
+@@ -77,11 +77,7 @@
+ #define RTL_SLOT_TIME_9				9
+ #define RTL_SLOT_TIME_20			20
+ 
+-/*related with tcp/ip. */
+-/*if_ehther.h*/
+-#define ETH_P_PAE		0x888E	/*Port Access Entity (IEEE 802.1X) */
+-#define ETH_P_IP		0x0800	/*Internet Protocol packet */
+-#define ETH_P_ARP		0x0806	/*Address Resolution packet */
++/*related to tcp/ip. */
+ #define SNAP_SIZE		6
+ #define PROTOC_TYPE_SIZE	2
+ 
