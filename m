@@ -1,347 +1,192 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:38840 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756020Ab3KFVFL (ORCPT
+Received: from mail-pd0-f171.google.com ([209.85.192.171]:65328 "EHLO
+	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753822Ab3KBNsv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Nov 2013 16:05:11 -0500
-Date: Wed, 6 Nov 2013 13:05:04 -0800
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, stefani@seibold.net,
-	Gabor Juhos <juhosg@openwrt.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux-Next <linux-next@vger.kernel.org>
-Subject: Re: wrong merge of rt2x00/rt2800pci.c in linux-next
-Message-Id: <20131106130504.123c2229ab899c9fabf0e2ef@linux-foundation.org> (sfid-20131106_220517_570438_29193B4F)
-In-Reply-To: <20131107074126.c1ce0eb0a4449d1f902d3a29@canb.auug.org.au>
-References: <527A86D6.1030807@hauke-m.de>
-	<20131107074126.c1ce0eb0a4449d1f902d3a29@canb.auug.org.au>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Sat, 2 Nov 2013 09:48:51 -0400
+From: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
+To: davem@davemloft.net, gregkh@linuxfoundation.org,
+	linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
+	schwidefsky@de.ibm.com, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	IvDoorn@gmail.com, sbhatewara@vmware.com, samuel@sortiz.org,
+	chas@cmf.nrl.navy.mil, roland@kernel.org, isdn@linux-pingi.de,
+	jcliburn@gmail.com, benve@cisco.com, ssujith@cisco.com,
+	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
+	shahed.shaikh@qlogic.com, joe@perches.com, apw@canonical.com
+Cc: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
+Subject: [PATCH net-next 07/13] driver: staging: remove unnecessary NULL check before dev_kfree_skb_any
+Date: Sat,  2 Nov 2013 19:17:48 +0530
+Message-Id: <1383400074-30555-8-git-send-email-govindarajulu90@gmail.com> (sfid-20131102_145152_861831_3DB3F954)
+In-Reply-To: <1383400074-30555-1-git-send-email-govindarajulu90@gmail.com>
+References: <1383400074-30555-1-git-send-email-govindarajulu90@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 7 Nov 2013 07:41:26 +1100 Stephen Rothwell <sfr@canb.auug.org.au> wrote:
+dev_kfree_skb_any is protected from NULL. No need to check for NULL while
+calling this function.
 
-> Hi,
-> 
-> On Wed, 06 Nov 2013 19:13:42 +0100 Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> >
-> > I was looking at linux-next-20131106 and the conflict in
-> > drivers/net/wireless/rt2x00/rt2800pci.c was solved wrong. The function
-> > rt2800pci_txstatus_interrupt() was moved from rt2800pci.c to
-> > rt2800mmio_txstatus_interrupt() in rt2800mmio.c in commit
-> > 8d03e77218ff4bc59e4645438acbd3c5c7e0f654 , the change done in
-> > 3bbfe1d952cd4d2e29bfcb31f109b5d74d1aa847 should be done there.
-> > 
-> > This should be added to the merge 749550cb657ae5fb896b3b33070ae48f37813d13:
-> 
-> Thanks for that, I will add this as a merge fix patch today.
-> 
-> Andrew, 3bbfe1d952cd4d2e29bfcb31f109b5d74d1aa847 is "kfifo API type
-> safety" from your series.  I am not sure how that merge conflict got by
-> me - I have no memory of it.
-
-OK, thanks.  I fixed that up and restaged the patch as post-linux-next.
-
-
-From: Stefani Seibold <stefani@seibold.net>
-Subject: kfifo API type safety
-
-This patch enhances the type safety for the kfifo API.  It is now safe to
-put const data into a non const FIFO and the API will now generate a
-compiler warning when reading from the fifo where the destination address
-is pointing to a const variable.
-
-As a side effect the kfifo_put() does now expect the value of an element
-instead a pointer to the element.  This was suggested Russell King.  It
-make the handling of the kfifo_put easier since there is no need to create
-a helper variable for getting the address of a pointer or to pass integers
-of different sizes.
-
-IMHO the API break is okay, since there are currently only six users of
-kfifo_put().
-
-The code is also cleaner by kicking out the "if (0)" expressions.
-
-Signed-off-by: Stefani Seibold <stefani@seibold.net>
-Cc: Russell King <rmk@arm.linux.org.uk>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+Signed-off-by: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
 ---
+ drivers/staging/rtl8187se/ieee80211/ieee80211_rx.c |  3 +--
+ drivers/staging/rtl8187se/ieee80211/ieee80211_tx.c |  3 +--
+ drivers/staging/rtl8188eu/core/rtw_recv.c          |  6 ++----
+ drivers/staging/rtl8192e/rtllib_rx.c               |  3 +--
+ drivers/staging/rtl8192u/ieee80211/ieee80211_rx.c  |  3 +--
+ drivers/staging/rtl8712/recv_linux.c               |  3 +--
+ drivers/staging/rtl8712/rtl8712_recv.c             |  6 ++----
+ drivers/staging/rtl8712/xmit_linux.c               |  3 +--
+ drivers/staging/sbe-2t3e3/dc.c                     | 12 ++++--------
+ 9 files changed, 14 insertions(+), 28 deletions(-)
 
- drivers/gpu/drm/drm_flip_work.c         |    2 
- drivers/iio/industrialio-event.c        |    2 
- drivers/net/wireless/rt2x00/rt2800usb.c |    2 
- drivers/pci/pcie/aer/aerdrv_core.c      |    2 
- include/linux/kfifo.h                   |   47 ++++++----------------
- mm/memory-failure.c                     |    2 
- samples/kfifo/bytestream-example.c      |    4 -
- samples/kfifo/dma-example.c             |    2 
- samples/kfifo/inttype-example.c         |    4 -
- 9 files changed, 24 insertions(+), 43 deletions(-)
-
-diff -puN drivers/gpu/drm/drm_flip_work.c~kfifo-api-type-safety drivers/gpu/drm/drm_flip_work.c
---- a/drivers/gpu/drm/drm_flip_work.c~kfifo-api-type-safety
-+++ a/drivers/gpu/drm/drm_flip_work.c
-@@ -34,7 +34,7 @@
-  */
- void drm_flip_work_queue(struct drm_flip_work *work, void *val)
+diff --git a/drivers/staging/rtl8187se/ieee80211/ieee80211_rx.c b/drivers/staging/rtl8187se/ieee80211/ieee80211_rx.c
+index 10b2210..bbafdcc 100644
+--- a/drivers/staging/rtl8187se/ieee80211/ieee80211_rx.c
++++ b/drivers/staging/rtl8187se/ieee80211/ieee80211_rx.c
+@@ -138,8 +138,7 @@ ieee80211_frag_cache_get(struct ieee80211_device *ieee,
+ 		if (ieee->frag_next_idx[tid] >= IEEE80211_FRAG_CACHE_LEN)
+ 			ieee->frag_next_idx[tid] = 0;
+ 
+-		if (entry->skb != NULL)
+-			dev_kfree_skb_any(entry->skb);
++		dev_kfree_skb_any(entry->skb);
+ 
+ 		entry->first_frag_time = jiffies;
+ 		entry->seq = seq;
+diff --git a/drivers/staging/rtl8187se/ieee80211/ieee80211_tx.c b/drivers/staging/rtl8187se/ieee80211/ieee80211_tx.c
+index b346653..fe747b1 100644
+--- a/drivers/staging/rtl8187se/ieee80211/ieee80211_tx.c
++++ b/drivers/staging/rtl8187se/ieee80211/ieee80211_tx.c
+@@ -234,8 +234,7 @@ void ieee80211_txb_free(struct ieee80211_txb *txb) {
+ 	if (unlikely(!txb))
+ 		return;
+ 	for (i = 0; i < txb->nr_frags; i++)
+-		if (txb->fragments[i])
+-			dev_kfree_skb_any(txb->fragments[i]);
++		dev_kfree_skb_any(txb->fragments[i]);
+ 	kfree(txb);
+ }
+ 
+diff --git a/drivers/staging/rtl8188eu/core/rtw_recv.c b/drivers/staging/rtl8188eu/core/rtw_recv.c
+index 2011657..93fb9ed 100644
+--- a/drivers/staging/rtl8188eu/core/rtw_recv.c
++++ b/drivers/staging/rtl8188eu/core/rtw_recv.c
+@@ -209,10 +209,8 @@ int rtw_free_recvframe(union recv_frame *precvframe, struct __queue *pfree_recv_
+ 
+ _func_enter_;
+ 
+-	if (precvframe->u.hdr.pkt) {
+-		dev_kfree_skb_any(precvframe->u.hdr.pkt);/* free skb by driver */
+-		precvframe->u.hdr.pkt = NULL;
+-	}
++	dev_kfree_skb_any(precvframe->u.hdr.pkt);/* free skb by driver */
++	precvframe->u.hdr.pkt = NULL;
+ 
+ 	_enter_critical_bh(&pfree_recv_queue->lock, &irqL);
+ 
+diff --git a/drivers/staging/rtl8192e/rtllib_rx.c b/drivers/staging/rtl8192e/rtllib_rx.c
+index 8aeaed5..0118854 100644
+--- a/drivers/staging/rtl8192e/rtllib_rx.c
++++ b/drivers/staging/rtl8192e/rtllib_rx.c
+@@ -133,8 +133,7 @@ rtllib_frag_cache_get(struct rtllib_device *ieee,
+ 		if (ieee->frag_next_idx[tid] >= RTLLIB_FRAG_CACHE_LEN)
+ 			ieee->frag_next_idx[tid] = 0;
+ 
+-		if (entry->skb != NULL)
+-			dev_kfree_skb_any(entry->skb);
++		dev_kfree_skb_any(entry->skb);
+ 
+ 		entry->first_frag_time = jiffies;
+ 		entry->seq = seq;
+diff --git a/drivers/staging/rtl8192u/ieee80211/ieee80211_rx.c b/drivers/staging/rtl8192u/ieee80211/ieee80211_rx.c
+index 59900bf..70bf7a4 100644
+--- a/drivers/staging/rtl8192u/ieee80211/ieee80211_rx.c
++++ b/drivers/staging/rtl8192u/ieee80211/ieee80211_rx.c
+@@ -138,8 +138,7 @@ ieee80211_frag_cache_get(struct ieee80211_device *ieee,
+ 		if (ieee->frag_next_idx[tid] >= IEEE80211_FRAG_CACHE_LEN)
+ 			ieee->frag_next_idx[tid] = 0;
+ 
+-		if (entry->skb != NULL)
+-			dev_kfree_skb_any(entry->skb);
++		dev_kfree_skb_any(entry->skb);
+ 
+ 		entry->first_frag_time = jiffies;
+ 		entry->seq = seq;
+diff --git a/drivers/staging/rtl8712/recv_linux.c b/drivers/staging/rtl8712/recv_linux.c
+index 495ee12..c422d1f 100644
+--- a/drivers/staging/rtl8712/recv_linux.c
++++ b/drivers/staging/rtl8712/recv_linux.c
+@@ -75,8 +75,7 @@ int r8712_os_recvbuf_resource_alloc(struct _adapter *padapter,
+ int r8712_os_recvbuf_resource_free(struct _adapter *padapter,
+ 			     struct recv_buf *precvbuf)
  {
--	if (kfifo_put(&work->fifo, (const void **)&val)) {
-+	if (kfifo_put(&work->fifo, val)) {
- 		atomic_inc(&work->pending);
- 	} else {
- 		DRM_ERROR("%s fifo full!\n", work->name);
-diff -puN drivers/iio/industrialio-event.c~kfifo-api-type-safety drivers/iio/industrialio-event.c
---- a/drivers/iio/industrialio-event.c~kfifo-api-type-safety
-+++ a/drivers/iio/industrialio-event.c
-@@ -56,7 +56,7 @@ int iio_push_event(struct iio_dev *indio
- 		ev.id = ev_code;
- 		ev.timestamp = timestamp;
+-	if (precvbuf->pskb)
+-		dev_kfree_skb_any(precvbuf->pskb);
++	dev_kfree_skb_any(precvbuf->pskb);
+ 	if (precvbuf->purb) {
+ 		usb_kill_urb(precvbuf->purb);
+ 		usb_free_urb(precvbuf->purb);
+diff --git a/drivers/staging/rtl8712/rtl8712_recv.c b/drivers/staging/rtl8712/rtl8712_recv.c
+index d59a74a..9a4e87c 100644
+--- a/drivers/staging/rtl8712/rtl8712_recv.c
++++ b/drivers/staging/rtl8712/rtl8712_recv.c
+@@ -145,10 +145,8 @@ int r8712_free_recvframe(union recv_frame *precvframe,
+ 	struct _adapter *padapter = precvframe->u.hdr.adapter;
+ 	struct recv_priv *precvpriv = &padapter->recvpriv;
  
--		copied = kfifo_put(&ev_int->det_events, &ev);
-+		copied = kfifo_put(&ev_int->det_events, ev);
- 		if (copied != 0)
- 			wake_up_locked_poll(&ev_int->wait, POLLIN);
+-	if (precvframe->u.hdr.pkt) {
+-		dev_kfree_skb_any(precvframe->u.hdr.pkt);/*free skb by driver*/
+-		precvframe->u.hdr.pkt = NULL;
+-	}
++	dev_kfree_skb_any(precvframe->u.hdr.pkt);/*free skb by driver*/
++	precvframe->u.hdr.pkt = NULL;
+ 	spin_lock_irqsave(&pfree_recv_queue->lock, irqL);
+ 	list_delete(&(precvframe->u.hdr.list));
+ 	list_insert_tail(&(precvframe->u.hdr.list),
+diff --git a/drivers/staging/rtl8712/xmit_linux.c b/drivers/staging/rtl8712/xmit_linux.c
+index 4d22bb7..13bb27a 100644
+--- a/drivers/staging/rtl8712/xmit_linux.c
++++ b/drivers/staging/rtl8712/xmit_linux.c
+@@ -156,8 +156,7 @@ void r8712_xmit_resource_free(struct _adapter *padapter,
+ 
+ void r8712_xmit_complete(struct _adapter *padapter, struct xmit_frame *pxframe)
+ {
+-	if (pxframe->pkt)
+-		dev_kfree_skb_any(pxframe->pkt);
++	dev_kfree_skb_any(pxframe->pkt);
+ 	pxframe->pkt = NULL;
+ }
+ 
+diff --git a/drivers/staging/sbe-2t3e3/dc.c b/drivers/staging/sbe-2t3e3/dc.c
+index f207b9e..d8c9464 100644
+--- a/drivers/staging/sbe-2t3e3/dc.c
++++ b/drivers/staging/sbe-2t3e3/dc.c
+@@ -403,10 +403,8 @@ void dc_clear_descriptor_list(struct channel *sc)
+ 
+ 	/* free all data buffers on TX ring */
+ 	for (i = 0; i < SBE_2T3E3_TX_DESC_RING_SIZE; i++) {
+-		if (sc->ether.tx_data[i] != NULL) {
+-			dev_kfree_skb_any(sc->ether.tx_data[i]);
+-			sc->ether.tx_data[i] = NULL;
+-		}
++		dev_kfree_skb_any(sc->ether.tx_data[i]);
++		sc->ether.tx_data[i] = NULL;
  	}
-diff -puN drivers/net/wireless/rt2x00/rt2800pci.c~kfifo-api-type-safety drivers/net/wireless/rt2x00/rt2800pci.c
-diff -puN drivers/net/wireless/rt2x00/rt2800usb.c~kfifo-api-type-safety drivers/net/wireless/rt2x00/rt2800usb.c
---- a/drivers/net/wireless/rt2x00/rt2800usb.c~kfifo-api-type-safety
-+++ a/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -164,7 +164,7 @@ static bool rt2800usb_tx_sta_fifo_read_c
+ }
  
- 	valid = rt2x00_get_field32(tx_status, TX_STA_FIFO_VALID);
- 	if (valid) {
--		if (!kfifo_put(&rt2x00dev->txstatus_fifo, &tx_status))
-+		if (!kfifo_put(&rt2x00dev->txstatus_fifo, tx_status))
- 			rt2x00_warn(rt2x00dev, "TX status FIFO overrun\n");
+@@ -418,10 +416,8 @@ void dc_drop_descriptor_list(struct channel *sc)
  
- 		queue_work(rt2x00dev->workqueue, &rt2x00dev->txdone_work);
-diff -puN drivers/pci/pcie/aer/aerdrv_core.c~kfifo-api-type-safety drivers/pci/pcie/aer/aerdrv_core.c
---- a/drivers/pci/pcie/aer/aerdrv_core.c~kfifo-api-type-safety
-+++ a/drivers/pci/pcie/aer/aerdrv_core.c
-@@ -574,7 +574,7 @@ void aer_recover_queue(int domain, unsig
- 	};
- 
- 	spin_lock_irqsave(&aer_recover_ring_lock, flags);
--	if (kfifo_put(&aer_recover_ring, &entry))
-+	if (kfifo_put(&aer_recover_ring, entry))
- 		schedule_work(&aer_recover_work);
- 	else
- 		pr_err("AER recover: Buffer overflow when recovering AER for %04x:%02x:%02x:%x\n",
-diff -puN include/linux/kfifo.h~kfifo-api-type-safety include/linux/kfifo.h
---- a/include/linux/kfifo.h~kfifo-api-type-safety
-+++ a/include/linux/kfifo.h
-@@ -1,7 +1,7 @@
- /*
-  * A generic kernel FIFO implementation
-  *
-- * Copyright (C) 2009/2010 Stefani Seibold <stefani@seibold.net>
-+ * Copyright (C) 2013 Stefani Seibold <stefani@seibold.net>
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
-@@ -67,9 +67,10 @@ struct __kfifo {
- 	union { \
- 		struct __kfifo	kfifo; \
- 		datatype	*type; \
-+		const datatype	*const_type; \
- 		char		(*rectype)[recsize]; \
- 		ptrtype		*ptr; \
--		const ptrtype	*ptr_const; \
-+		ptrtype const	*ptr_const; \
+ 	/* free all data buffers on RX ring */
+ 	for (i = 0; i < SBE_2T3E3_RX_DESC_RING_SIZE; i++) {
+-		if (sc->ether.rx_data[i] != NULL) {
+-			dev_kfree_skb_any(sc->ether.rx_data[i]);
+-			sc->ether.rx_data[i] = NULL;
+-		}
++		dev_kfree_skb_any(sc->ether.rx_data[i]);
++		sc->ether.rx_data[i] = NULL;
  	}
  
- #define __STRUCT_KFIFO(type, size, recsize, ptrtype) \
-@@ -386,16 +387,12 @@ __kfifo_int_must_check_helper( \
- #define	kfifo_put(fifo, val) \
- ({ \
- 	typeof((fifo) + 1) __tmp = (fifo); \
--	typeof((val) + 1) __val = (val); \
-+	typeof(*__tmp->const_type) __val = (val); \
- 	unsigned int __ret; \
--	const size_t __recsize = sizeof(*__tmp->rectype); \
-+	size_t __recsize = sizeof(*__tmp->rectype); \
- 	struct __kfifo *__kfifo = &__tmp->kfifo; \
--	if (0) { \
--		typeof(__tmp->ptr_const) __dummy __attribute__ ((unused)); \
--		__dummy = (typeof(__val))NULL; \
--	} \
- 	if (__recsize) \
--		__ret = __kfifo_in_r(__kfifo, __val, sizeof(*__val), \
-+		__ret = __kfifo_in_r(__kfifo, &__val, sizeof(__val), \
- 			__recsize); \
- 	else { \
- 		__ret = !kfifo_is_full(__tmp); \
-@@ -404,7 +401,7 @@ __kfifo_int_must_check_helper( \
- 			((typeof(__tmp->type))__kfifo->data) : \
- 			(__tmp->buf) \
- 			)[__kfifo->in & __tmp->kfifo.mask] = \
--				*(typeof(__tmp->type))__val; \
-+				(typeof(*__tmp->type))__val; \
- 			smp_wmb(); \
- 			__kfifo->in++; \
- 		} \
-@@ -415,7 +412,7 @@ __kfifo_int_must_check_helper( \
- /**
-  * kfifo_get - get data from the fifo
-  * @fifo: address of the fifo to be used
-- * @val: the var where to store the data to be added
-+ * @val: address where to store the data
-  *
-  * This macro reads the data from the fifo.
-  * It returns 0 if the fifo was empty. Otherwise it returns the number
-@@ -428,12 +425,10 @@ __kfifo_int_must_check_helper( \
- __kfifo_uint_must_check_helper( \
- ({ \
- 	typeof((fifo) + 1) __tmp = (fifo); \
--	typeof((val) + 1) __val = (val); \
-+	typeof(__tmp->ptr) __val = (val); \
- 	unsigned int __ret; \
- 	const size_t __recsize = sizeof(*__tmp->rectype); \
- 	struct __kfifo *__kfifo = &__tmp->kfifo; \
--	if (0) \
--		__val = (typeof(__tmp->ptr))0; \
- 	if (__recsize) \
- 		__ret = __kfifo_out_r(__kfifo, __val, sizeof(*__val), \
- 			__recsize); \
-@@ -456,7 +451,7 @@ __kfifo_uint_must_check_helper( \
- /**
-  * kfifo_peek - get data from the fifo without removing
-  * @fifo: address of the fifo to be used
-- * @val: the var where to store the data to be added
-+ * @val: address where to store the data
-  *
-  * This reads the data from the fifo without removing it from the fifo.
-  * It returns 0 if the fifo was empty. Otherwise it returns the number
-@@ -469,12 +464,10 @@ __kfifo_uint_must_check_helper( \
- __kfifo_uint_must_check_helper( \
- ({ \
- 	typeof((fifo) + 1) __tmp = (fifo); \
--	typeof((val) + 1) __val = (val); \
-+	typeof(__tmp->ptr) __val = (val); \
- 	unsigned int __ret; \
- 	const size_t __recsize = sizeof(*__tmp->rectype); \
- 	struct __kfifo *__kfifo = &__tmp->kfifo; \
--	if (0) \
--		__val = (typeof(__tmp->ptr))NULL; \
- 	if (__recsize) \
- 		__ret = __kfifo_out_peek_r(__kfifo, __val, sizeof(*__val), \
- 			__recsize); \
-@@ -508,14 +501,10 @@ __kfifo_uint_must_check_helper( \
- #define	kfifo_in(fifo, buf, n) \
- ({ \
- 	typeof((fifo) + 1) __tmp = (fifo); \
--	typeof((buf) + 1) __buf = (buf); \
-+ 	typeof(__tmp->ptr_const) __buf = (buf); \
- 	unsigned long __n = (n); \
- 	const size_t __recsize = sizeof(*__tmp->rectype); \
- 	struct __kfifo *__kfifo = &__tmp->kfifo; \
--	if (0) { \
--		typeof(__tmp->ptr_const) __dummy __attribute__ ((unused)); \
--		__dummy = (typeof(__buf))NULL; \
--	} \
- 	(__recsize) ?\
- 	__kfifo_in_r(__kfifo, __buf, __n, __recsize) : \
- 	__kfifo_in(__kfifo, __buf, __n); \
-@@ -561,14 +550,10 @@ __kfifo_uint_must_check_helper( \
- __kfifo_uint_must_check_helper( \
- ({ \
- 	typeof((fifo) + 1) __tmp = (fifo); \
--	typeof((buf) + 1) __buf = (buf); \
-+	typeof(__tmp->ptr) __buf = (buf); \
- 	unsigned long __n = (n); \
- 	const size_t __recsize = sizeof(*__tmp->rectype); \
- 	struct __kfifo *__kfifo = &__tmp->kfifo; \
--	if (0) { \
--		typeof(__tmp->ptr) __dummy = NULL; \
--		__buf = __dummy; \
--	} \
- 	(__recsize) ?\
- 	__kfifo_out_r(__kfifo, __buf, __n, __recsize) : \
- 	__kfifo_out(__kfifo, __buf, __n); \
-@@ -773,14 +758,10 @@ __kfifo_uint_must_check_helper( \
- __kfifo_uint_must_check_helper( \
- ({ \
- 	typeof((fifo) + 1) __tmp = (fifo); \
--	typeof((buf) + 1) __buf = (buf); \
-+	typeof(__tmp->ptr) __buf = (buf); \
- 	unsigned long __n = (n); \
- 	const size_t __recsize = sizeof(*__tmp->rectype); \
- 	struct __kfifo *__kfifo = &__tmp->kfifo; \
--	if (0) { \
--		typeof(__tmp->ptr) __dummy __attribute__ ((unused)) = NULL; \
--		__buf = __dummy; \
--	} \
- 	(__recsize) ? \
- 	__kfifo_out_peek_r(__kfifo, __buf, __n, __recsize) : \
- 	__kfifo_out_peek(__kfifo, __buf, __n); \
-diff -puN mm/memory-failure.c~kfifo-api-type-safety mm/memory-failure.c
---- a/mm/memory-failure.c~kfifo-api-type-safety
-+++ a/mm/memory-failure.c
-@@ -1269,7 +1269,7 @@ void memory_failure_queue(unsigned long
- 
- 	mf_cpu = &get_cpu_var(memory_failure_cpu);
- 	spin_lock_irqsave(&mf_cpu->lock, proc_flags);
--	if (kfifo_put(&mf_cpu->fifo, &entry))
-+	if (kfifo_put(&mf_cpu->fifo, entry))
- 		schedule_work_on(smp_processor_id(), &mf_cpu->work);
- 	else
- 		pr_err("Memory failure: buffer overflow when queuing memory failure at %#lx\n",
-diff -puN samples/kfifo/bytestream-example.c~kfifo-api-type-safety samples/kfifo/bytestream-example.c
---- a/samples/kfifo/bytestream-example.c~kfifo-api-type-safety
-+++ a/samples/kfifo/bytestream-example.c
-@@ -64,7 +64,7 @@ static int __init testfunc(void)
- 
- 	/* put values into the fifo */
- 	for (i = 0; i != 10; i++)
--		kfifo_put(&test, &i);
-+		kfifo_put(&test, i);
- 
- 	/* show the number of used elements */
- 	printk(KERN_INFO "fifo len: %u\n", kfifo_len(&test));
-@@ -85,7 +85,7 @@ static int __init testfunc(void)
- 	kfifo_skip(&test);
- 
- 	/* put values into the fifo until is full */
--	for (i = 20; kfifo_put(&test, &i); i++)
-+	for (i = 20; kfifo_put(&test, i); i++)
- 		;
- 
- 	printk(KERN_INFO "queue len: %u\n", kfifo_len(&test));
-diff -puN samples/kfifo/dma-example.c~kfifo-api-type-safety samples/kfifo/dma-example.c
---- a/samples/kfifo/dma-example.c~kfifo-api-type-safety
-+++ a/samples/kfifo/dma-example.c
-@@ -39,7 +39,7 @@ static int __init example_init(void)
- 	kfifo_in(&fifo, "test", 4);
- 
- 	for (i = 0; i != 9; i++)
--		kfifo_put(&fifo, &i);
-+		kfifo_put(&fifo, i);
- 
- 	/* kick away first byte */
- 	kfifo_skip(&fifo);
-diff -puN samples/kfifo/inttype-example.c~kfifo-api-type-safety samples/kfifo/inttype-example.c
---- a/samples/kfifo/inttype-example.c~kfifo-api-type-safety
-+++ a/samples/kfifo/inttype-example.c
-@@ -61,7 +61,7 @@ static int __init testfunc(void)
- 
- 	/* put values into the fifo */
- 	for (i = 0; i != 10; i++)
--		kfifo_put(&test, &i);
-+		kfifo_put(&test, i);
- 
- 	/* show the number of used elements */
- 	printk(KERN_INFO "fifo len: %u\n", kfifo_len(&test));
-@@ -78,7 +78,7 @@ static int __init testfunc(void)
- 	kfifo_skip(&test);
- 
- 	/* put values into the fifo until is full */
--	for (i = 20; kfifo_put(&test, &i); i++)
-+	for (i = 20; kfifo_put(&test, i); i++)
- 		;
- 
- 	printk(KERN_INFO "queue len: %u\n", kfifo_len(&test));
-_
+ 	kfree(sc->ether.rx_ring);
+-- 
+1.8.4.2
 
