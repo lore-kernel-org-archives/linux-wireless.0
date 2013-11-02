@@ -1,86 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 162-17-110-37-static.hfc.comcastbusiness.net ([162.17.110.37]:39076
-	"EHLO stuffed.shaftnet.org" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752648Ab3KGS5m (ORCPT
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:38923 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751738Ab3KBUGA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Nov 2013 13:57:42 -0500
-Date: Thu, 7 Nov 2013 13:57:14 -0500
-From: Solomon Peachy <pizza@shaftnet.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: future of prism2_usb (aka wlan-ng) in staging tree
-Message-ID: <20131107185714.GD12612@shaftnet.org> (sfid-20131107_195748_127355_E3852869)
-References: <20131107160522.GA12612@shaftnet.org>
- <527BC04F.2080000@lwfinger.net>
- <20131107163719.GC12612@shaftnet.org>
- <20131107175201.GA2002@tuxdriver.com>
+	Sat, 2 Nov 2013 16:06:00 -0400
+Received: by mail-wi0-f173.google.com with SMTP id ey11so2343097wid.6
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Nov 2013 13:05:59 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="Y5rl02BVI9TCfPar"
-In-Reply-To: <20131107175201.GA2002@tuxdriver.com>
+In-Reply-To: <CABPxzYLDHP5gyeTL8HR=6uJDLptaUGEnNGSFLMkxKqi-JaBVYQ@mail.gmail.com>
+References: <CAMP44s1XJRHV8bAX=_-TkSKMkY8Nw1=eHorqTCZ2QmtR5m8uJA@mail.gmail.com>
+ <526E20EA.9090203@rempel-privat.de> <CAMP44s2Cvw9HF3c3Asuq+bTSD36Gw6PXOUVjAcCD+hf6KB_awg@mail.gmail.com>
+ <CABPxzY+xJ7kst-sYwP8RJwMO_zkNYWKaYy=_LS7WQfuxquK24w@mail.gmail.com>
+ <CAMP44s0087jYz5AiEaEzwt7GqH9ed8PWE1CmvMPr4Dqn3yE6rA@mail.gmail.com>
+ <CABPxzYLwwyFCFw1pEt0v9Xw4kcue1C_RZx0RbTbMrUw=+MWvgQ@mail.gmail.com>
+ <CAMP44s0svc2MRKCrZXS5ZYRZNPoomQkcKHdC2m2BGy7di+TCyA@mail.gmail.com>
+ <CABPxzYL-Gzbzoc_ui+qUQ6uzoKp=Yq7yLWZvc7PoEjiH3dFczg@mail.gmail.com>
+ <CAMP44s3uRF=jNn5ZHZ=QOcvuMoXxsfkxU=VOq3K02Q0qOspEdA@mail.gmail.com>
+ <CABPxzYJbNjAwymwUq0pN=YyuCBGy2qz_BKafatHTWK+yH8PbkA@mail.gmail.com>
+ <CAMP44s1NOS2p9pKeMLhR7616CzHeHJVJEzcF1tP6tsKfcPhSOQ@mail.gmail.com>
+ <CABPxzY+RL+ikbSff3a7qb20ExxcSTx6U2xcL5CFr-BgVSOr61A@mail.gmail.com>
+ <CAMP44s384vOcMc4vE82gAdVf37YUZfegmPHUSeobPO=gK6ErAw@mail.gmail.com> <CABPxzYLDHP5gyeTL8HR=6uJDLptaUGEnNGSFLMkxKqi-JaBVYQ@mail.gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Sun, 3 Nov 2013 01:35:39 +0530
+Message-ID: <CABPxzYJTuV0vGLnhgcQcXbg_9szSm2hH7_vCeP4TOKNxZQx_Gg@mail.gmail.com> (sfid-20131102_210619_771482_0ACBEB34)
+Subject: Re: I always need a miracle to connect with iwlwifi
+To: Felipe Contreras <felipe.contreras@gmail.com>
+Cc: Oleksij Rempel <linux@rempel-privat.de>, ilw@linux.intel.com,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, Nov 3, 2013 at 12:43 AM, Krishna Chaitanya
+<chaitanya.mgit@gmail.com> wrote:
+> On Sat, Nov 2, 2013 at 10:36 PM, Felipe Contreras
+> <felipe.contreras@gmail.com> wrote:
+>> Sorry for the crappy format (laptop is stuck).
+>>
+>> If the problem is the firmware why does it start working when I
+>> restart the router?
+>
+> I was referring FW on iwlwifi, not the AP's. May be restarting the router
+> triggered some kind of event like Beacon Loss which might have
+> helped the STA to connect. Just guessing.
+>
+>> Plus, I should be seeing this problem with other APs.
+>> And what could Windows be doing differently that doesn't exhibit this problem?
+>
+> Without knowing the root cause it tough to comment these questions :-)
 
---Y5rl02BVI9TCfPar
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Almost forgot, as mentioned previously if we can figure out why all the
+beacons are corrupted (but probes are fine) then that might throw us some
+light.
 
-On Thu, Nov 07, 2013 at 12:52:02PM -0500, John W. Linville wrote:
-> I haven't looked at the driver in question in a long time.  Are there
-> actually any users?
+Its messed up in the Extended supported rates and Length of  OBSS Scan
+params. Other stations might not have a problem but linux might have it.
 
-I honestly don't know who all uses it these days, since it's=20
-802.11b-only and being USB, eminantly replacable with something more=20
-modern.
+Can you also capture the beacons using some other wireless card
+just to make sure corruption is not happening on the AP side?
 
-Still, the driver and hardware works, and it's no more obsolete than the=20
-likes of hostap, orinoco, aironet, zd1201, and others -- All of which=20
-live on under net/wireless even though they still lack cfg80211 support.
+Failure Case:
 
-BTW, this is my current WIP diffstat:
+As we can see in the Link#1, in the first case we haven't received a beacon
+so association didn't went through (need_beacon =1)
 
- drivers/staging/wlan-ng/Makefile           |    2
- drivers/staging/wlan-ng/hfa384x.h          |    2=20
- drivers/staging/wlan-ng/hfa384x_usb.c      |   67 ++----
- drivers/staging/wlan-ng/p80211conv.c       |   70 ------
- drivers/staging/wlan-ng/p80211metadef.h    |    3=20
- drivers/staging/wlan-ng/p80211metastruct.h |    9=20
- drivers/staging/wlan-ng/p80211netdev.c     |   79 +++----
- drivers/staging/wlan-ng/p80211netdev.h     |   35 ---
- drivers/staging/wlan-ng/prism2fw.c         |   86 +++----
- drivers/staging/wlan-ng/prism2mgmt.c       |  126 ++++-------
- drivers/staging/wlan-ng/prism2mib.c        |   64 ++---
- drivers/staging/wlan-ng/prism2sta.c        |  118 ++++------
- drivers/staging/wlan-ng/p80211ioctl.h      |   89 -------
- drivers/staging/wlan-ng/p80211req.c        |  251 ----------------------
- drivers/staging/wlan-ng/p80211req.h        |   53 ----
- drivers/staging/wlan-ng/p80211wep.c        |  301 ------------------------=
----
- 16 files changed, 248 insertions(+), 1107 deletions(-)
+Successful Case:
 
-Aside from fixing up a boatload of checkpatch warnings, I've been=20
-stripping out more legacy cruft (eg custom ioctl, host-side WEP, more=20
-plumbing) that's not relevant any longer.
+but after associating with IBSS and disconnecting we started Rx beacons
+ (even though they are corrupted) the connection went through.
+(need_beacon =0 and have_beacon=1)
 
- - Solomon
---=20
-Solomon Peachy        		       pizza at shaftnet dot org
-Delray Beach, FL                          ^^ (email/xmpp) ^^
-Quidquid latine dictum sit, altum viditur.
+The problems appears to be with reception of the beacons which in turn
+ might depend on the corruption issue.
 
---Y5rl02BVI9TCfPar
-Content-Type: application/pgp-signature
+If they are no beacons Rx after auth and before assoc we return with
+association timeout.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.14 (GNU/Linux)
+    if (ifmgd->assoc_data && ifmgd->assoc_data->timeout_started &&
+        time_after(jiffies, ifmgd->assoc_data->timeout)) {
+        if ((ifmgd->assoc_data->need_beacon &&
+             !ifmgd->assoc_data->have_beacon) ||
+            ieee80211_do_assoc(sdata)) {
+            u8 bssid[ETH_ALEN];
 
-iD8DBQFSe+KKPuLgii2759ARAq18AKDEKKn4H+M3Sjzzhf0HvaD6tIsDvwCdGHGj
-cgEuoBKdsymr61tcmXGZ1PM=
-=x8Qg
------END PGP SIGNATURE-----
+            memcpy(bssid, ifmgd->assoc_data->bss->bssid, ETH_ALEN);
 
---Y5rl02BVI9TCfPar--
+            ieee80211_destroy_assoc_data(sdata, false);
+
+            mutex_unlock(&ifmgd->mtx);
+            cfg80211_send_assoc_timeout(sdata->dev, bssid);
+            mutex_lock(&ifmgd->mtx);
+        }
+    }
+
+
+Also one more thing you said N900 uses mac80211 and it has no issues, but as
+its a embedded device it might running an older kernel where the
+handling might be
+different, so we need to try with the same kernel you are facing an
+issue with the
+a driver which advertises IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC.
+
+(or) if you a have a compilation environment try commenting the advertisement of
+IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC in the iwlwifi DVM driver and
+try to reproduce the issue.
+
+Lets see what results you get :-).
