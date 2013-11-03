@@ -1,78 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f42.google.com ([209.85.214.42]:59285 "EHLO
-	mail-bk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754872Ab3KERRQ (ORCPT
+Received: from fallback7.mail.ru ([94.100.176.135]:42282 "EHLO
+	fallback7.mail.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752544Ab3KCNCD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Nov 2013 12:17:16 -0500
-Received: by mail-bk0-f42.google.com with SMTP id w16so1265478bkz.1
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Nov 2013 09:17:15 -0800 (PST)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 02/19] cfg80211: force WIPHY_FLAG_CUSTOM_REGULATORY on wiphy_apply_custom_regulatory()
-Date: Tue,  5 Nov 2013 09:18:00 -0800
-Message-Id: <1383671897-7746-3-git-send-email-mcgrof@do-not-panic.com> (sfid-20131105_181721_592190_C41B8C9D)
-In-Reply-To: <1383671897-7746-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1383671897-7746-1-git-send-email-mcgrof@do-not-panic.com>
+	Sun, 3 Nov 2013 08:02:03 -0500
+Received: from smtp20.mail.ru (smtp20.mail.ru [94.100.176.173])
+	by fallback7.mail.ru (mPOP.Fallback_MX) with ESMTP id 6676DEA730CC
+	for <linux-wireless@vger.kernel.org>; Sun,  3 Nov 2013 17:01:41 +0400 (MSK)
+Received: from [37.204.187.134] (port=39174 helo=[192.168.1.108])
+	by smtp20.mail.ru with esmtpa (envelope-from <fenixk19@mail.ru>)
+	id 1VcxIt-0006Gp-Pk
+	for linux-wireless@vger.kernel.org; Sun, 03 Nov 2013 17:01:19 +0400
+Message-ID: <5276491F.20207@mail.ru> (sfid-20131103_140223_405106_5D1CCB44)
+Date: Sun, 03 Nov 2013 17:01:19 +0400
+From: Alexander Varnin <fenixk19@mail.ru>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: mwifiex_sdio on chromebook
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wiphy_apply_custom_regulatory() implies WIPHY_FLAG_CUSTOM_REGULATORY
-but we never enforced it, do that now and warn if the driver
-didn't set it. All drivers should be following this today already.
+Hello.
+I am trying to debug the issue with incorrect initialization of WiFi
+chip on Samsung ARM Chromebook. And I search for assistance. I have
+posted my investigation results on launchpad.net (bug #1247512). Here is
+copy:
 
-Having WIPHY_FLAG_CUSTOM_REGULATORY does not however mean you will
-use wiphy_apply_custom_regulatory() though, you may have your own
-_orig value set up tools / helpers. The intel drivers are examples
-of this type of driver.
+Marvell SDIO WiFi chip doesn't get initialized correctly on Chromebook.
+After some research I have managed to find that when Linux is doing
+initialization, it tries setting clock and power to SDIO controller for
+that chip. It is trying frequences hardcoded in
+linux/drivers/mmc/core/core.c: 400000, 300000, 200000, 100000 Hz.
+Opposed to that, chrome os kernel tries other frequences: 784314Hz and
+50000000Hz. The last is staying as working frequency. I don't know, if
+it is matter for card what frequency does the host tries to gate.
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- include/net/cfg80211.h | 7 ++++++-
- net/wireless/reg.c     | 4 ++++
- 2 files changed, 10 insertions(+), 1 deletion(-)
+When mainline kernel runs mmc_attach_sdio function it should get correct
+answer from card and so process card as SDIO. However it fails with
+timeout in that function.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index b5cee04..638fd67 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2433,7 +2433,9 @@ struct cfg80211_ops {
-  * 	has its own custom regulatory domain and cannot identify the
-  * 	ISO / IEC 3166 alpha2 it belongs to. When this is enabled
-  * 	we will disregard the first regulatory hint (when the
-- * 	initiator is %REGDOM_SET_BY_CORE).
-+ * 	initiator is %REGDOM_SET_BY_CORE). Drivers that use
-+ * 	wiphy_apply_custom_regulatory() should have this flag set
-+ * 	or the regulatory core will set it for wiphy.
-  * @WIPHY_FLAG_STRICT_REGULATORY: tells us the driver for this device will
-  *	ignore regulatory domain settings until it gets its own regulatory
-  *	domain via its regulatory_hint() unless the regulatory hint is
-@@ -3461,6 +3463,9 @@ int regulatory_hint(struct wiphy *wiphy, const char *alpha2);
-  * custom regulatory domain will be trusted completely and as such previous
-  * default channel settings will be disregarded. If no rule is found for a
-  * channel on the regulatory domain the channel will be disabled.
-+ * Drivers using this for a wiphy should also set the wiphy flag
-+ * WIPHY_FLAG_CUSTOM_REGULATORY or cfg80211 will set it for the wiphy
-+ * that called this helper.
-  */
- void wiphy_apply_custom_regulatory(struct wiphy *wiphy,
- 				   const struct ieee80211_regdomain *regd);
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 999b4bb7..6183c90 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1303,6 +1303,10 @@ void wiphy_apply_custom_regulatory(struct wiphy *wiphy,
- 	enum ieee80211_band band;
- 	unsigned int bands_set = 0;
- 
-+	WARN(!(wiphy->flags & WIPHY_FLAG_CUSTOM_REGULATORY),
-+	     "wiphy should have WIPHY_FLAG_CUSTOM_REGULATORY\n");
-+	wiphy->flags |= WIPHY_FLAG_CUSTOM_REGULATORY;
-+
- 	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
- 		if (!wiphy->bands[band])
- 			continue;
--- 
-1.8.4.rc3
+I wonder if this depends on firmware loading. I see, that chrome os 3.4
+kernel requires firmware. And mainline is probably simply doesn't load
+it by default. Currently, I don't know how to check it and how to
+configure kernel to load firmware for mwifiex_sdio.
+
+I am ready to do further research, but I need some assistance.
+
+Is there any manual on marvell chip?
+
 
