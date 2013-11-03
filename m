@@ -1,86 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0066.hostedemail.com ([216.40.44.66]:47785 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751692Ab3KGTkR (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:18022 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754181Ab3KCWJ7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Nov 2013 14:40:17 -0500
-Message-ID: <1383853221.9263.14.camel@joe-AO722> (sfid-20131107_204038_516516_E3A64AF3)
-Subject: Re: [PATCH] wcn36xx: Fix logging macro with unnecessary semicolon
-From: Joe Perches <joe@perches.com>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	wcn36xx <wcn36xx@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	ath5k-devel@lists.ath5k.org,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>,
-	ath10k@lists.infradead.org, Kalle Valo <kvalo@qca.qualcomm.com>,
-	wil6210@qca.qualcomm.com
-Date: Thu, 07 Nov 2013 11:40:21 -0800
-In-Reply-To: <CAFSJ42Y-3BZqj+JRNa8wdxjnm1fguD8ToH5Oj0m56yT5NexdVQ@mail.gmail.com>
-References: <1383684000.4387.42.camel@joe-AO722>
-	 <CAFSJ42YQy96Sko8CuG9BGjHzTV7TkRp2=NVt036APxSKpPB=Ag@mail.gmail.com>
-	 <1383760556.7940.28.camel@joe-AO722>
-	 <CAFSJ42Y-3BZqj+JRNa8wdxjnm1fguD8ToH5Oj0m56yT5NexdVQ@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Sun, 3 Nov 2013 17:09:59 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: Alexander Varnin <fenixk19@mail.ru>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>
+Date: Sun, 3 Nov 2013 14:10:07 -0800
+Subject: RE: mwifiex_sdio on chromebook
+Message-ID: <477F20668A386D41ADCC57781B1F70430F45757E63@SC-VEXCH1.marvell.com> (sfid-20131103_231026_102020_E96A7991)
+References: <5276491F.20207@mail.ru>
+In-Reply-To: <5276491F.20207@mail.ru>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-11-07 at 07:32 +0000, Eugene Krasnikov wrote:
-> Hi Joe,
-
-Hi Eugene.
-
-> I personally like the idea of making some kind of framework on top of
-> printing because all ath drivers are using the same printing approach
-> and combining all that code in one place will reduce amount of code in
-> each particular driver. As a true engineer i like when it's less code
-> = less work to do = less bugs:)
-> 
-> Suggestion is to send a patch with semicolon fix only
-
-It's a one line fix, and pretty trivial to do yourself if you
-want it.
-
-I do think though the slightly odd wcn36xx_<level> uses of:
-
--#define wcn36xx_err(fmt, arg...)                               \
--       printk(KERN_ERR pr_fmt("ERROR " fmt), ##arg);
--
--#define wcn36xx_warn(fmt, arg...)                              \
--       printk(KERN_WARNING pr_fmt("WARNING " fmt), ##arg)
--
--#define wcn36xx_info(fmt, arg...)              \
--       printk(KERN_INFO pr_fmt(fmt), ##arg)
--
-[]
-+#define wcn36xx_err(fmt, ...)                                  \
-+       pr_err("ERROR " fmt, ##__VA_ARGS__)
-+#define wcn36xx_warn(fmt, ...)                                 \
-+       pr_warn("WARNING " fmt, ##__VA_ARGS__)
-+#define wcn36xx_info(fmt, ...)                                 \
-+       pr_info(fmt, ##__VA_ARGS__)
-
-should still be converted to more normal pr_<level> like I did.
-
-I don't believe that prefixing of "ERROR " and "WARNING " to
-pr_err and pr_warn actually gain anything as the same level
-information can be got already with dmesg -r via the "<3>" and
-"<4>" prefixes or dmesg -l3 -l4
-
-> have a
-> second round of convincing ath guys to change printing code. How does
-> that sound?
-
-Luis?  Kalle?  Other Qualcomm/Atheros folk?
-
-One of the nominal benefits of separating the ath_<level>
-macros by subsystem was perf/tracing.  I believe some of the
-ath subsystems have integrated the dmesg and tracing code.
-
-I'm not sure how separable those may be here or if it's even
-desirable to separate them.  I'd guess not.
-
+Q0M6IGxpbnV4LW1tYw0KDQpIaSBBbGV4YW5kZXIsDQoNCj4gSGVsbG8uDQo+IEkgYW0gdHJ5aW5n
+IHRvIGRlYnVnIHRoZSBpc3N1ZSB3aXRoIGluY29ycmVjdCBpbml0aWFsaXphdGlvbiBvZiBXaUZp
+IGNoaXAgb24NCj4gU2Ftc3VuZyBBUk0gQ2hyb21lYm9vay4gQW5kIEkgc2VhcmNoIGZvciBhc3Np
+c3RhbmNlLiBJIGhhdmUgcG9zdGVkIG15DQo+IGludmVzdGlnYXRpb24gcmVzdWx0cyBvbiBsYXVu
+Y2hwYWQubmV0IChidWcgIzEyNDc1MTIpLiBIZXJlIGlzDQo+IGNvcHk6DQo+IA0KPiBNYXJ2ZWxs
+IFNESU8gV2lGaSBjaGlwIGRvZXNuJ3QgZ2V0IGluaXRpYWxpemVkIGNvcnJlY3RseSBvbiBDaHJv
+bWVib29rLg0KPiBBZnRlciBzb21lIHJlc2VhcmNoIEkgaGF2ZSBtYW5hZ2VkIHRvIGZpbmQgdGhh
+dCB3aGVuIExpbnV4IGlzIGRvaW5nDQo+IGluaXRpYWxpemF0aW9uLCBpdCB0cmllcyBzZXR0aW5n
+IGNsb2NrIGFuZCBwb3dlciB0byBTRElPIGNvbnRyb2xsZXIgZm9yIHRoYXQgY2hpcC4gSXQNCj4g
+aXMgdHJ5aW5nIGZyZXF1ZW5jZXMgaGFyZGNvZGVkIGluDQo+IGxpbnV4L2RyaXZlcnMvbW1jL2Nv
+cmUvY29yZS5jOiA0MDAwMDAsIDMwMDAwMCwgMjAwMDAwLCAxMDAwMDAgSHouDQo+IE9wcG9zZWQg
+dG8gdGhhdCwgY2hyb21lIG9zIGtlcm5lbCB0cmllcyBvdGhlciBmcmVxdWVuY2VzOiA3ODQzMTRI
+eiBhbmQNCj4gNTAwMDAwMDBIei4gVGhlIGxhc3QgaXMgc3RheWluZyBhcyB3b3JraW5nIGZyZXF1
+ZW5jeS4gSSBkb24ndCBrbm93LCBpZiBpdCBpcw0KPiBtYXR0ZXIgZm9yIGNhcmQgd2hhdCBmcmVx
+dWVuY3kgZG9lcyB0aGUgaG9zdCB0cmllcyB0byBnYXRlLg0KDQpZb3VyIENocm9tZWJvb2sgc3Vw
+cG9ydHMgU0RJTyBoaWdoIHNwZWVkIG1vZGUgKFNESU8gMi4wIHNwZWMpLiBTbyA1ME1IeiBpcyBj
+b3JyZWN0Lg0KDQo+IA0KPiBXaGVuIG1haW5saW5lIGtlcm5lbCBydW5zIG1tY19hdHRhY2hfc2Rp
+byBmdW5jdGlvbiBpdCBzaG91bGQgZ2V0IGNvcnJlY3QNCj4gYW5zd2VyIGZyb20gY2FyZCBhbmQg
+c28gcHJvY2VzcyBjYXJkIGFzIFNESU8uIEhvd2V2ZXIgaXQgZmFpbHMgd2l0aCB0aW1lb3V0DQo+
+IGluIHRoYXQgZnVuY3Rpb24uDQoNCldoYXQgYXJlIHlvdSB0cnlpbmcgdG8gZG8gaGVyZT8gQXJl
+IHlvdSB0cnlpbmcgdG8gcnVuIGEgbWFpbmxpbmUga2VybmVsIG9uIHlvdXIgQ2hyb21lYm9vaz8N
+Cg0KPiANCj4gSSB3b25kZXIgaWYgdGhpcyBkZXBlbmRzIG9uIGZpcm13YXJlIGxvYWRpbmcuIEkg
+c2VlLCB0aGF0IGNocm9tZSBvcyAzLjQNCj4ga2VybmVsIHJlcXVpcmVzIGZpcm13YXJlLiBBbmQg
+bWFpbmxpbmUgaXMgcHJvYmFibHkgc2ltcGx5IGRvZXNuJ3QgbG9hZCBpdCBieQ0KPiBkZWZhdWx0
+LiBDdXJyZW50bHksIEkgZG9uJ3Qga25vdyBob3cgdG8gY2hlY2sgaXQgYW5kIGhvdyB0byBjb25m
+aWd1cmUga2VybmVsDQo+IHRvIGxvYWQgZmlybXdhcmUgZm9yIG13aWZpZXhfc2Rpby4NCg0KWW91
+IHNhaWQgbW1jX2F0dGFjaF9zZGlvIGZ1bmN0aW9uIGZhaWxzLiBUaGUgbXdpZmlleF9zZGlvIGRy
+aXZlciBhbmQgdGhlIGZpcm13YXJlIHdpbGwgbm90IGJlIGxvYWRlZCBhdCBhbGwuDQoNCj4gDQo+
+IEkgYW0gcmVhZHkgdG8gZG8gZnVydGhlciByZXNlYXJjaCwgYnV0IEkgbmVlZCBzb21lIGFzc2lz
+dGFuY2UuDQoNCkNPTkZJR19NTUNfREVCVUc9eSwgYW5kIGNvbGxlY3QgdGhlIGRlYnVnIGxvZ3Mu
+DQoNClJlZ2FyZHMsDQpCaW5nDQo=
