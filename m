@@ -1,53 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:34527 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754892Ab3KEVAY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Nov 2013 16:00:24 -0500
-Date: Tue, 5 Nov 2013 15:47:34 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211-next 2013-10-21
-Message-ID: <20131105204733.GC8264@tuxdriver.com> (sfid-20131105_220028_104672_D981010C)
-References: <1382360937.14310.49.camel@jlt4.sipsolutions.net>
+Received: from mga02.intel.com ([134.134.136.20]:38326 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752135Ab3KCJX4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 Nov 2013 04:23:56 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: wzyboy <wzyboy@wzyboy.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [Ilw] Intel Wireless 7260 hardware timed out randomly
+Date: Sun, 3 Nov 2013 09:23:51 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301DE75AE@HASMSX103.ger.corp.intel.com> (sfid-20131103_102402_287829_CC2E9006)
+References: <5276134B.8070808@wzyboy.org>
+In-Reply-To: <5276134B.8070808@wzyboy.org>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1382360937.14310.49.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 21, 2013 at 03:08:57PM +0200, Johannes Berg wrote:
-> Now with build fixes for !MESH and a channel switch parsing fix.
-> 
-> In this round for mac80211-next I have:
->  * mesh channel switch support
->  * a CCM rewrite, using potential hardware offloads
->  * SMPS for AP mode
->  * RF-kill GPIO driver updates to make it usable as an ACPI driver
->  * regulatory improvements
->  * documentation fixes
->  * DFS for IBSS mode
->  * and a few small other fixes/improvements
-> 
-> Let me know if there's any problem.
-> 
-> johannes
-> 
-> The following changes since commit 7578d57520f51093f590d68e16965e2714e69747:
-> 
->   mac80211: implement STA CSA for drivers using channel contexts (2013-10-02 18:18:23 +0200)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git for-john
-> 
-> for you to fetch changes up to cf867bc30d9af3c2cdbf876224f400a81606eebe:
-> 
->   nl80211: fix channel switch parsing (2013-10-21 14:36:56 +0200)
-
-Pulling now...
-
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+PiANCj4gSGksIHRoZXJlLg0KPiANCj4gSSBhbSBlbmNvdW50ZXJpbmcgc29tZSBidWdzIHdpdGgg
+aXdsd2lmaS5rbyBpbiBMaW51eCAzLjExLjYuDQo+IA0KPiBNeSBsYXB0b3AgaXMgYSBUaGlua1Bh
+ZCBYMjQwcyB3aXRoIE5ldHdvcmsgY29udHJvbGxlciBJbnRlbCBDb3Jwb3JhdGlvbg0KPiBXaXJl
+bGVzcyA3MjYwIChyZXYgNmIpLiBJIGhhdmUgQXJjaCBMaW51eCB3aXRoIGtlcm5lbCAzLjExLjYg
+aW5zdGFsbGVkIG9uIGl0LiBUaGUNCj4gd2lyZWxlc3Mgd29ya3Mgb3V0LW9mLWJveCwgdGhhbmtz
+IGZvciB5b3VyIHdvcmshDQo+IA0KPiBIb3dldmVyLCBhZnRlciB1c2luZyB3aXJlbGVzcyBmb3Ig
+c29tZSB0aW1lIChjb3VsZCBiZSBlaXRoZXIgYW4gaG91ciB3aXRoDQo+IG5vcm1hbCB3ZWIgcGFn
+ZSBicm93c2luZywgb3Igc2V2ZXJhbCBob3VycyB3aXRoIGhlYXZ5IEludGVybmV0DQo+IGRvd25s
+b2FkaW5nKSwgdGhlIHdpcmVsZXNzIHdvcmtzIGFibm9ybWFsbHkuIFRoZSBzeW1wdG9uIGlzIHRo
+YXQgZXZlcnkNCj4gY29ubmVjdGlvbiBnZXQgbG9zdCwgYW5kIHRoZSBoYXJkd2FyZSAidGltZWQg
+b3V0IiB3aGVuIEkgdHJ5IHRvIHRha2UgZG93bg0KPiBvciB0YWtlIHVwIHRoZSBpbnRlcmZhY2Ug
+d2l0aCBgaXAgbGluayBzZXQgd2xhbjAgZG93bicgb3IgYGlwIGxpbmsgc2V0IHdsYW4wIHVwJy4N
+Cj4gV2hlbiB0aGlzIGJ1ZyBvY2N1cnMsIGV2ZW4gcmVsb2FkaW5nIHRoZSBrZXJuZWwgbW9kdWxl
+cyAod2l0aCBgbW9kcHJvYmUnKQ0KPiBjb3VsZCBub3QgYnJpbmcgdGhlIHdpcmVsZXNzIGJhY2sg
+YWxpdmUuIFdoYXQgSSBjb3VsZCBvbmx5IGRvIGlzIHRvIHJlYm9vdCB0aGUNCj4gbGFwdG9wLg0K
+PiANCj4gQWZ0ZXIgZW5jb3VudGVyaW5nIHRoaXMgYnVnIGZvciBzZXZlcmFsIHRpbWVzLCBJIGZv
+dW5kIHNvbWV0aGluZyB1c2VmdWwgaW4NCj4gYGRtZXNnJywgYXMgSSd2ZSBhdHRhY2hlZC4gUGxl
+YXNlIHRha2UgYSBsb29rIGF0IHRoZSBsb2cgYW5kIGZpbmQgb3V0IHRoZW4NCj4gc3F1YXNoIHRo
+aXMgYnVnLg0KPiANCg0KSG93IGVhc2lseSBjYW4geW91IHJlcHJvZHVjZSB0aGUgYnVnPw0KQ2Fu
+IHlvdSBwbGVhc2UgdHJ5IHRvIHNlZSBpZiB0aGlzIHdvcmsgYXJvdW5kIGNhbiBoZWxwPw0KQWRk
+DQpvcHRpb25zIGl3bG12bSBwb3dlcl9zY2hlbWU9MQ0KDQppbiBhIC5jb25mIGZpbGUgdW5kZXIg
+L2V0Yy9tb2Rwcm9iZS5kLw0KDQpUaGFua3MuDQoNCg==
