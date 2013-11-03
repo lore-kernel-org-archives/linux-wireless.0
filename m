@@ -1,112 +1,338 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:36784 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752065Ab3KTK32 (ORCPT
+Received: from mail-we0-f169.google.com ([74.125.82.169]:49865 "EHLO
+	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753355Ab3KCRw2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Nov 2013 05:29:28 -0500
-Date: Wed, 20 Nov 2013 12:29:22 +0200
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Kyeyoon Park <kyeyoonp@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/2] mac80211: Add support for QoS mapping
-Message-ID: <20131120102922.GA26188@jouni.qca.qualcomm.com> (sfid-20131120_112932_755307_6859FFC6)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Sun, 3 Nov 2013 12:52:28 -0500
+Received: by mail-we0-f169.google.com with SMTP id q58so1296902wes.14
+        for <linux-wireless@vger.kernel.org>; Sun, 03 Nov 2013 09:52:27 -0800 (PST)
+Message-ID: <1383501135.3758.29.camel@canaries32-MCP7A> (sfid-20131103_185231_805153_828D1E1B)
+Subject: [PATCH 5/5] staging: vt6656: cleanup device_init_registers
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Sun, 03 Nov 2013 17:52:15 +0000
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kyeyoon Park <kyeyoonp@qca.qualcomm.com>
+White space and formatting clean up.
 
-Implement set_qos_map() handler for mac80211 to enable QoS mapping
-functionality.
-
-Signed-off-by: Kyeyoon Park <kyeyoonp@qca.qualcomm.com>
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- net/mac80211/cfg.c         |   12 ++++++++++++
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/iface.c       |    2 ++
- net/mac80211/wme.c         |    3 ++-
- 4 files changed, 17 insertions(+), 1 deletion(-)
+ drivers/staging/vt6656/main_usb.c | 227 +++++++++++++++++++-------------------
+ 1 file changed, 116 insertions(+), 111 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 95667b0..37fc6ff 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3785,6 +3785,17 @@ static void ieee80211_set_wakeup(struct wiphy *wiphy, bool enabled)
- }
- #endif
- 
-+static int ieee80211_set_qos_map(struct wiphy *wiphy,
-+				 struct net_device *dev,
-+				 struct cfg80211_qos_map *qos_map)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+
-+	memcpy(&sdata->qos_map, qos_map, sizeof(struct cfg80211_qos_map));
-+
-+	return 0;
-+}
-+
- struct cfg80211_ops mac80211_config_ops = {
- 	.add_virtual_intf = ieee80211_add_iface,
- 	.del_virtual_intf = ieee80211_del_iface,
-@@ -3864,4 +3875,5 @@ struct cfg80211_ops mac80211_config_ops = {
- 	.get_channel = ieee80211_cfg_get_channel,
- 	.start_radar_detection = ieee80211_start_radar_detection,
- 	.channel_switch = ieee80211_channel_switch,
-+	.set_qos_map = ieee80211_set_qos_map,
- };
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 29dc505..7bb5914 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -730,6 +730,7 @@ struct ieee80211_sub_if_data {
- 	bool control_port_no_encrypt;
- 
- 	struct ieee80211_tx_queue_params tx_conf[IEEE80211_NUM_ACS];
-+	struct cfg80211_qos_map qos_map;
- 
- 	struct work_struct csa_finalize_work;
- 	int csa_counter_offset_beacon;
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index ff101ea..bd43217 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -636,6 +636,8 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
- 		ieee80211_set_wmm_default(sdata, true);
- 	}
- 
-+	sdata->qos_map.valid = false;
-+
- 	set_bit(SDATA_STATE_RUNNING, &sdata->state);
- 
- 	if (sdata->vif.type == NL80211_IFTYPE_WDS) {
-diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
-index faa9d8e..eb87ec5 100644
---- a/net/mac80211/wme.c
-+++ b/net/mac80211/wme.c
-@@ -103,6 +103,7 @@ u16 ieee80211_select_queue(struct ieee80211_sub_if_data *sdata,
- 			   struct sk_buff *skb)
+diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
+index ba39aaa..21805c6 100644
+--- a/drivers/staging/vt6656/main_usb.c
++++ b/drivers/staging/vt6656/main_usb.c
+@@ -294,7 +294,6 @@ static void device_init_diversity_timer(struct vnt_private *pDevice)
+ /*
+  * initialization of MAC & BBP registers
+  */
+-
+ static int device_init_registers(struct vnt_private *pDevice)
  {
- 	struct ieee80211_local *local = sdata->local;
-+	struct cfg80211_qos_map *qos_map = &sdata->qos_map;
- 	struct sta_info *sta = NULL;
- 	const u8 *ra = NULL;
- 	bool qos = false;
-@@ -155,7 +156,7 @@ u16 ieee80211_select_queue(struct ieee80211_sub_if_data *sdata,
+ 	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
+@@ -317,30 +316,29 @@ static int device_init_registers(struct vnt_private *pDevice)
  
- 	/* use the data classifier to determine what 802.1d tag the
- 	 * data frame has */
--	skb->priority = cfg80211_classify8021d(skb, NULL);
-+	skb->priority = cfg80211_classify8021d(skb, qos_map);
+ 	memcpy(pDevice->abyBroadcastAddr, abyBroadcastAddr, ETH_ALEN);
+ 	memcpy(pDevice->abySNAP_RFC1042, abySNAP_RFC1042, ETH_ALEN);
+-	memcpy(pDevice->abySNAP_Bridgetunnel,
+-		       abySNAP_Bridgetunnel,
+-		       ETH_ALEN);
+-
+-        if ( !FIRMWAREbCheckVersion(pDevice) ) {
+-            if (FIRMWAREbDownload(pDevice) == true) {
+-                if (FIRMWAREbBrach2Sram(pDevice) == false) {
+-                    DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO" FIRMWAREbBrach2Sram fail \n");
+-                  	spin_unlock_irq(&pDevice->lock);
+-                    return false;
+-                }
+-            } else {
+-
+-                DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO" FIRMWAREbDownload fail \n");
+-                spin_unlock_irq(&pDevice->lock);
+-                return false;
+-            }
+-        }
++	memcpy(pDevice->abySNAP_Bridgetunnel, abySNAP_Bridgetunnel, ETH_ALEN);
++
++	if (!FIRMWAREbCheckVersion(pDevice)) {
++		if (FIRMWAREbDownload(pDevice) == true) {
++			if (FIRMWAREbBrach2Sram(pDevice) == false) {
++				DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
++					" FIRMWAREbBrach2Sram fail\n");
++				spin_unlock_irq(&pDevice->lock);
++				return false;
++			}
++		} else {
++			DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
++				" FIRMWAREbDownload fail\n");
++			spin_unlock_irq(&pDevice->lock);
++			return false;
++		}
++	}
  
- 	return ieee80211_downgrade_queue(sdata, skb);
+-        if ( !BBbVT3184Init(pDevice) ) {
+-            DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO" BBbVT3184Init fail \n");
+-            spin_unlock_irq(&pDevice->lock);
+-            return false;
+-        }
++	if (!BBbVT3184Init(pDevice)) {
++		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO" BBbVT3184Init fail\n");
++		spin_unlock_irq(&pDevice->lock);
++		return false;
++	}
+ 
+ 	init_cmd->init_class = DEVICE_INIT_COLD;
+ 	init_cmd->exist_sw_net_addr = (u8) pDevice->bExistSWNetAddr;
+@@ -353,12 +351,11 @@ static int device_init_registers(struct vnt_private *pDevice)
+ 	ntStatus = CONTROLnsRequestOut(pDevice,
+ 		MESSAGE_TYPE_CARDINIT, 0, 0,
+ 		sizeof(struct vnt_cmd_card_init), (u8 *)init_cmd);
+-
+-    if ( ntStatus != STATUS_SUCCESS ) {
+-        DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO" Issue Card init fail \n");
+-        spin_unlock_irq(&pDevice->lock);
+-        return false;
+-    }
++	if (ntStatus != STATUS_SUCCESS) {
++		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO" Issue Card init fail\n");
++		spin_unlock_irq(&pDevice->lock);
++		return false;
++	}
+ 
+ 	ntStatus = CONTROLnsRequestIn(pDevice, MESSAGE_TYPE_INIT_RSP, 0, 0,
+ 		sizeof(struct vnt_rsp_card_init), (u8 *)init_rsp);
+@@ -500,30 +497,30 @@ static int device_init_registers(struct vnt_private *pDevice)
+ 	pDevice->byTMax3 = 64;
+ 
+ 	/* get Auto Fall Back type */
+-        pDevice->byAutoFBCtrl = AUTO_FB_0;
++	pDevice->byAutoFBCtrl = AUTO_FB_0;
+ 
+ 	/* set SCAN Time */
+-        pDevice->uScanTime = WLAN_SCAN_MINITIME;
++	pDevice->uScanTime = WLAN_SCAN_MINITIME;
+ 
+ 	/* default Auto Mode */
+ 	/* pDevice->NetworkType = Ndis802_11Automode; */
+-        pDevice->eConfigPHYMode = PHY_TYPE_AUTO;
+-        pDevice->byBBType = BB_TYPE_11G;
++	pDevice->eConfigPHYMode = PHY_TYPE_AUTO;
++	pDevice->byBBType = BB_TYPE_11G;
+ 
+ 	/* initialize BBP registers */
+-        pDevice->ulTxPower = 25;
++	pDevice->ulTxPower = 25;
+ 
+ 	/* get channel range */
+-        pDevice->byMinChannel = 1;
+-        pDevice->byMaxChannel = CB_MAX_CHANNEL;
++	pDevice->byMinChannel = 1;
++	pDevice->byMaxChannel = CB_MAX_CHANNEL;
+ 
+ 	/* get RFType */
+ 	pDevice->byRFType = init_rsp->rf_type;
+ 
+-        if ((pDevice->byRFType & RF_EMU) != 0) {
++	if ((pDevice->byRFType & RF_EMU) != 0) {
+ 		/* force change RevID for VT3253 emu */
+ 		pDevice->byRevId = 0x80;
+-        }
++	}
+ 
+ 	/* load vt3266 calibration parameters in EEPROM */
+ 	if (pDevice->byRFType == RF_VT3226D0) {
+@@ -536,105 +533,113 @@ static int device_init_registers(struct vnt_private *pDevice)
+ 			if (byCalibTXIQ || byCalibTXDC || byCalibRXIQ) {
+ 			/* CR255, enable TX/RX IQ and DC compensation mode */
+ 				ControlvWriteByte(pDevice,
+-					  MESSAGE_REQUEST_BBREG,
+-					  0xFF,
+-					  0x03);
++					MESSAGE_REQUEST_BBREG,
++					0xff,
++					0x03);
+ 			/* CR251, TX I/Q Imbalance Calibration */
+ 				ControlvWriteByte(pDevice,
+-					  MESSAGE_REQUEST_BBREG,
+-					  0xFB,
+-					  byCalibTXIQ);
++					MESSAGE_REQUEST_BBREG,
++					0xfb,
++					byCalibTXIQ);
+ 			/* CR252, TX DC-Offset Calibration */
+ 				ControlvWriteByte(pDevice,
+-					  MESSAGE_REQUEST_BBREG,
+-					  0xFC,
+-					  byCalibTXDC);
++					MESSAGE_REQUEST_BBREG,
++					0xfC,
++					byCalibTXDC);
+ 			/* CR253, RX I/Q Imbalance Calibration */
+ 				ControlvWriteByte(pDevice,
+-					  MESSAGE_REQUEST_BBREG,
+-					  0xFD,
+-					  byCalibRXIQ);
++					MESSAGE_REQUEST_BBREG,
++					0xfd,
++					byCalibRXIQ);
+ 			} else {
+ 			/* CR255, turn off BB Calibration compensation */
+ 				ControlvWriteByte(pDevice,
+-					  MESSAGE_REQUEST_BBREG,
+-					  0xFF,
+-					  0x0);
++					MESSAGE_REQUEST_BBREG,
++					0xff,
++					0x0);
+ 			}
+ 		}
+ 	}
+-        pMgmt->eScanType = WMAC_SCAN_PASSIVE;
+-        pMgmt->uCurrChannel = pDevice->uChannel;
+-        pMgmt->uIBSSChannel = pDevice->uChannel;
+-        CARDbSetMediaChannel(pDevice, pMgmt->uCurrChannel);
++
++	pMgmt->eScanType = WMAC_SCAN_PASSIVE;
++	pMgmt->uCurrChannel = pDevice->uChannel;
++	pMgmt->uIBSSChannel = pDevice->uChannel;
++	CARDbSetMediaChannel(pDevice, pMgmt->uCurrChannel);
+ 
+ 	/* get permanent network address */
+ 	memcpy(pDevice->abyPermanentNetAddr, init_rsp->net_addr, 6);
+ 	memcpy(pDevice->abyCurrentNetAddr,
+-	       pDevice->abyPermanentNetAddr,
+-	       ETH_ALEN);
++				pDevice->abyPermanentNetAddr, ETH_ALEN);
+ 
+ 	/* if exist SW network address, use it */
+ 	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"Network address = %pM\n",
+ 		pDevice->abyCurrentNetAddr);
+ 
+-    /*
+-     * set BB and packet type at the same time
+-     * set Short Slot Time, xIFS, and RSPINF
+-     */
+-    if (pDevice->byBBType == BB_TYPE_11A) {
+-        CARDbAddBasicRate(pDevice, RATE_6M);
+-        pDevice->bShortSlotTime = true;
+-    } else {
+-        CARDbAddBasicRate(pDevice, RATE_1M);
+-        pDevice->bShortSlotTime = false;
+-    }
+-    BBvSetShortSlotTime(pDevice);
+-    CARDvSetBSSMode(pDevice);
++	/*
++	* set BB and packet type at the same time
++	* set Short Slot Time, xIFS, and RSPINF
++	*/
++	if (pDevice->byBBType == BB_TYPE_11A) {
++		CARDbAddBasicRate(pDevice, RATE_6M);
++		pDevice->bShortSlotTime = true;
++	} else {
++		CARDbAddBasicRate(pDevice, RATE_1M);
++		pDevice->bShortSlotTime = false;
++	}
+ 
+-    if (pDevice->bUpdateBBVGA) {
+-        pDevice->byBBVGACurrent = pDevice->abyBBVGA[0];
+-        pDevice->byBBVGANew = pDevice->byBBVGACurrent;
+-        BBvSetVGAGainOffset(pDevice, pDevice->abyBBVGA[0]);
+-    }
++	BBvSetShortSlotTime(pDevice);
++	CARDvSetBSSMode(pDevice);
+ 
+-    pDevice->byRadioCtl = pDevice->abyEEPROM[EEP_OFS_RADIOCTL];
+-    pDevice->bHWRadioOff = false;
+-    if ( (pDevice->byRadioCtl & EEP_RADIOCTL_ENABLE) != 0 ) {
+-        ntStatus = CONTROLnsRequestIn(pDevice,
+-                                    MESSAGE_TYPE_READ,
+-                                    MAC_REG_GPIOCTL1,
+-                                    MESSAGE_REQUEST_MACREG,
+-                                    1,
+-                                    &byTmp);
+-
+-        if ( ntStatus != STATUS_SUCCESS ) {
+-            spin_unlock_irq(&pDevice->lock);
+-            return false;
+-        }
+-        if ( (byTmp & GPIO3_DATA) == 0 ) {
+-            pDevice->bHWRadioOff = true;
+-            MACvRegBitsOn(pDevice,MAC_REG_GPIOCTL1,GPIO3_INTMD);
+-        } else {
+-            MACvRegBitsOff(pDevice,MAC_REG_GPIOCTL1,GPIO3_INTMD);
+-            pDevice->bHWRadioOff = false;
+-        }
++	if (pDevice->bUpdateBBVGA) {
++		pDevice->byBBVGACurrent = pDevice->abyBBVGA[0];
++		pDevice->byBBVGANew = pDevice->byBBVGACurrent;
+ 
+-    }
++		BBvSetVGAGainOffset(pDevice, pDevice->abyBBVGA[0]);
++	}
+ 
+-    ControlvMaskByte(pDevice,MESSAGE_REQUEST_MACREG,MAC_REG_PAPEDELAY,LEDSTS_TMLEN,0x38);
+-    ControlvMaskByte(pDevice,MESSAGE_REQUEST_MACREG,MAC_REG_PAPEDELAY,LEDSTS_STS,LEDSTS_SLOW);
+-    MACvRegBitsOn(pDevice,MAC_REG_GPIOCTL0,0x01);
++	pDevice->byRadioCtl = pDevice->abyEEPROM[EEP_OFS_RADIOCTL];
++	pDevice->bHWRadioOff = false;
+ 
+-    if ((pDevice->bHWRadioOff == true) || (pDevice->bRadioControlOff == true)) {
+-        CARDbRadioPowerOff(pDevice);
+-    } else {
+-        CARDbRadioPowerOn(pDevice);
+-    }
++	if ((pDevice->byRadioCtl & EEP_RADIOCTL_ENABLE) != 0) {
++		ntStatus = CONTROLnsRequestIn(pDevice, MESSAGE_TYPE_READ,
++			MAC_REG_GPIOCTL1, MESSAGE_REQUEST_MACREG, 1, &byTmp);
+ 
+-    spin_unlock_irq(&pDevice->lock);
+-    DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"<----INIbInitAdapter Exit\n");
+-    return true;
++		if (ntStatus != STATUS_SUCCESS) {
++			spin_unlock_irq(&pDevice->lock);
++			return false;
++		}
++
++		if ((byTmp & GPIO3_DATA) == 0) {
++			pDevice->bHWRadioOff = true;
++			MACvRegBitsOn(pDevice, MAC_REG_GPIOCTL1, GPIO3_INTMD);
++		} else {
++			MACvRegBitsOff(pDevice, MAC_REG_GPIOCTL1, GPIO3_INTMD);
++			pDevice->bHWRadioOff = false;
++		}
++
++	}
++
++	ControlvMaskByte(pDevice, MESSAGE_REQUEST_MACREG,
++				MAC_REG_PAPEDELAY, LEDSTS_TMLEN, 0x38);
++
++	ControlvMaskByte(pDevice, MESSAGE_REQUEST_MACREG,
++				MAC_REG_PAPEDELAY, LEDSTS_STS, LEDSTS_SLOW);
++
++	MACvRegBitsOn(pDevice, MAC_REG_GPIOCTL0, 0x01);
++
++	if ((pDevice->bHWRadioOff == true) ||
++				(pDevice->bRadioControlOff == true)) {
++		CARDbRadioPowerOff(pDevice);
++	} else {
++		CARDbRadioPowerOn(pDevice);
++	}
++
++
++	spin_unlock_irq(&pDevice->lock);
++
++	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"<----INIbInitAdapter Exit\n");
++
++	return true;
  }
+ 
+ #ifdef CONFIG_PM	/* Minimal support for suspend and resume */
 -- 
-1.7.9.5
+1.8.3.2
 
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
