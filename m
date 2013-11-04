@@ -1,69 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1377 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752776Ab3K2Lqm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Nov 2013 06:46:42 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Hante Meuleman" <meuleman@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH V2 06/19] brcmfmac: rename dhd_cdc to bcdc
-Date: Fri, 29 Nov 2013 12:46:29 +0100
-Message-ID: <1385725589-17155-1-git-send-email-arend@broadcom.com> (sfid-20131129_124656_674926_1E5ECAF1)
-In-Reply-To: <1385724324-6361-7-git-send-email-arend@broadcom.com>
-References: <1385724324-6361-7-git-send-email-arend@broadcom.com>
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:46071 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750719Ab3KDTKq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Nov 2013 14:10:46 -0500
+Received: by mail-pa0-f51.google.com with SMTP id ld10so7263575pab.24
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Nov 2013 11:10:46 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1383589965.14295.18.camel@jlt4.sipsolutions.net>
+References: <5277AC85.5050104@gmail.com>
+	<2241712.PWvD8zsTbX@blech>
+	<1383581060.14295.16.camel@jlt4.sipsolutions.net>
+	<8287832.vyseD3v7Cm@blech>
+	<1383589965.14295.18.camel@jlt4.sipsolutions.net>
+Date: Mon, 4 Nov 2013 14:10:46 -0500
+Message-ID: <CAPEhTTHmNH5rMfnwULE+1e_koSw-p0DmV=Up_Dvf3bcXuL0kew@mail.gmail.com> (sfid-20131104_201049_909283_B89921E2)
+Subject: Re: r92su: status and will it be merged anytime soon?
+From: Alexandre Demers <alexandre.f.demers@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linville@tuxdriver.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+As I understand it, there is a will to replace r8712u with r92su. I
+was thinking about it this weekend and if it is saner and nearer to
+where the community wants to bring the driver, why not go with it?
+Could we think about merging it in the staging drivers for kernel 3.13
+and tag r8712u as deprecated? One could always build it or try r92su
+instead, which would give a better overlook about its shape and
+performance, don't you think?
 
-dhd_cdc is renamed to bcdc. This is a step in cleaning and
-restructuring protocol layer. This is done so new protocols can
-be added in the future. This step only renames the source files.
+Alexandre
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-[arend@broadcom.com: use 'git mv' to do the rename]
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
-Hi John,
-
-Observed that the original patch did not use a git move.
-
-This reworked patch replaces the patch with Message-ID:
-
-<1385724324-6361-7-git-send-email-arend@broadcom.com>
-
-Regards,
-Arend
----
- drivers/net/wireless/brcm80211/brcmfmac/Makefile              |    2 +-
- drivers/net/wireless/brcm80211/brcmfmac/{dhd_cdc.c => bcdc.c} |    0
- 2 files changed, 1 insertion(+), 1 deletion(-)
- rename drivers/net/wireless/brcm80211/brcmfmac/{dhd_cdc.c => bcdc.c} (100%)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/Makefile b/drivers/net/wireless/brcm80211/brcmfmac/Makefile
-index 8e9b122..e15b61c 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/Makefile
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/Makefile
-@@ -28,7 +28,7 @@ brcmfmac-objs += \
- 		fweh.o \
- 		fwsignal.o \
- 		p2p.o \
--		dhd_cdc.o \
-+		bcdc.o \
- 		dhd_common.o \
- 		dhd_linux.o \
- 		btcoex.o
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c b/drivers/net/wireless/brcm80211/brcmfmac/bcdc.c
-similarity index 100%
-rename from drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
-rename to drivers/net/wireless/brcm80211/brcmfmac/bcdc.c
--- 
-1.7.10.4
-
-
+On Mon, Nov 4, 2013 at 1:32 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Mon, 2013-11-04 at 17:19 +0100, Christian Lamparter wrote:
+>
+>> Yes, there is even more duplicated code if you factor in the (de-)fragmentation
+>> and deaggregation code from mac80211. Furthermore r92su could be sharing a bit
+>> of infrastructure with rtlwifi.
+>
+> Yeah, that some of that seems to be duplicated in mwifiex too. I think
+> there'd be some benefit in trying to share more. Maybe moving some to
+> cfg80211? Or some new module?
+>
+>> I didn't include lib80211 since it reports mic failures via WEXT:
+>> wireless_send_event(dev, IWEVMICHAELMICFAILURE, &wrqu, (char *)&ev);
+>> (And I don't think this can be changed easily without touching ipw2200
+>> and hostap-driver).
+>
+> Yeah that'd be tricky, though I guess you could pass a wdev pointer and
+> allow it to be NULL or so.
+>
+> johannes
+>
