@@ -1,53 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f51.google.com ([209.85.160.51]:48402 "EHLO
-	mail-pb0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753048Ab3KBNsg (ORCPT
+Received: from mail-qc0-f180.google.com ([209.85.216.180]:54653 "EHLO
+	mail-qc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751888Ab3KDKxd convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Nov 2013 09:48:36 -0400
-From: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
-To: davem@davemloft.net, gregkh@linuxfoundation.org,
-	linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
-	schwidefsky@de.ibm.com, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	IvDoorn@gmail.com, sbhatewara@vmware.com, samuel@sortiz.org,
-	chas@cmf.nrl.navy.mil, roland@kernel.org, isdn@linux-pingi.de,
-	jcliburn@gmail.com, benve@cisco.com, ssujith@cisco.com,
-	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
-	shahed.shaikh@qlogic.com, joe@perches.com, apw@canonical.com
-Cc: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
-Subject: [PATCH net-next 05/13] driver: usb/gadget: remove unnecessary skb NULL check before calling dev_kfree_skb_irq
-Date: Sat,  2 Nov 2013 19:17:46 +0530
-Message-Id: <1383400074-30555-6-git-send-email-govindarajulu90@gmail.com> (sfid-20131102_144853_129683_9B1A5765)
-In-Reply-To: <1383400074-30555-1-git-send-email-govindarajulu90@gmail.com>
-References: <1383400074-30555-1-git-send-email-govindarajulu90@gmail.com>
+	Mon, 4 Nov 2013 05:53:33 -0500
+Received: by mail-qc0-f180.google.com with SMTP id e9so3770170qcy.25
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Nov 2013 02:53:32 -0800 (PST)
+MIME-Version: 1.0
+Reply-To: zaphod@berentweb.com
+Date: Mon, 4 Nov 2013 12:53:32 +0200
+Message-ID: <CAPSTskvByfGWTyDmq9WeX7Em1N0DAAZ3eKDV5eV6qfkH2gDzdA@mail.gmail.com> (sfid-20131104_115336_885246_120FC16D)
+Subject: orinoco (Lucent/Agere 9.48) unable to connect
+From: Beeblebrox <zaphod@berentweb.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-dev_kfree_skb_irq is protected from NULL. No need to check for NULL
-while calling this function.
+I have an old laptop that has Wifi card as stated in subject. The card
+can scan and show SSID's, but cannot connect in any circumstances,
+including open/unencrypted broadcast.
+System: i386-pIII, running ubuntu 13.04 (driver ver: 3.8.0-32-generic
+Dmesg lines for orinoco:
+Fİrmware determined as Lucent/Agere  6.14
+Fİrmware determined as Lucent/Agere  9.48
+Wep supported, 104-bit key,  WPA-PSK supported
 
-Signed-off-by: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
----
- drivers/usb/gadget/f_phonet.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+The log files don't give much info as to the connection error. What
+method can I use to get full debug from the connection process, in
+order to determine the origin of the problem (hardware, driver, etc)
 
-diff --git a/drivers/usb/gadget/f_phonet.c b/drivers/usb/gadget/f_phonet.c
-index eb3aa81..9e220b6 100644
---- a/drivers/usb/gadget/f_phonet.c
-+++ b/drivers/usb/gadget/f_phonet.c
-@@ -393,10 +393,8 @@ static void __pn_reset(struct usb_function *f)
- 
- 	usb_ep_disable(fp->out_ep);
- 	usb_ep_disable(fp->in_ep);
--	if (fp->rx.skb) {
--		dev_kfree_skb_irq(fp->rx.skb);
--		fp->rx.skb = NULL;
--	}
-+	dev_kfree_skb_irq(fp->rx.skb);
-+	fp->rx.skb = NULL;
- }
- 
- static int pn_set_alt(struct usb_function *f, unsigned intf, unsigned alt)
--- 
-1.8.4.2
-
+Thanks and Regards.
