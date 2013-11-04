@@ -1,51 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f177.google.com ([74.125.82.177]:37153 "EHLO
-	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754190Ab3KAN7a (ORCPT
+Received: from mail-qe0-f50.google.com ([209.85.128.50]:50795 "EHLO
+	mail-qe0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750800Ab3KDSms (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 09:59:30 -0400
-Received: by mail-we0-f177.google.com with SMTP id x55so3901914wes.8
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:59:30 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 41/65] wireless-regdb: enable VHT80 for DO
-Date: Fri,  1 Nov 2013 14:57:31 +0100
-Message-Id: <1383314275-20960-42-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_150807_291038_7CD617C3)
-In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+	Mon, 4 Nov 2013 13:42:48 -0500
+Received: by mail-qe0-f50.google.com with SMTP id 1so4356607qee.37
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Nov 2013 10:42:47 -0800 (PST)
+MIME-Version: 1.0
+Reply-To: zaphod@berentweb.com
+In-Reply-To: <1383581905.17589.0.camel@dcbw.foobar.com>
+References: <CAPSTskvByfGWTyDmq9WeX7Em1N0DAAZ3eKDV5eV6qfkH2gDzdA@mail.gmail.com>
+	<1383581905.17589.0.camel@dcbw.foobar.com>
+Date: Mon, 4 Nov 2013 20:42:47 +0200
+Message-ID: <CAPSTskvZALnaNYfBxCx_fFhYuTPW8AOVkyN9DTBeErfO67hQBw@mail.gmail.com> (sfid-20131104_194252_999427_D9669617)
+Subject: Re: orinoco (Lucent/Agere 9.48) unable to connect
+From: Beeblebrox <zaphod@berentweb.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Also increase the 2.4 GHz max EIRP.
+> What kind of access point are you trying to connect to?  These devices
+> only support 802.11b, so if the access point is newer and is using
+> 802.11n, there are some 11n configurations that simply don't support
+> connections from 11b clients.
+> Dan
 
-Source is QCA's regulatory team's efforts.
+Hi Dan, thanks for your answer.
+The test A/P is a USR-5451-maxG with ddwrt as OS. A/P is on mixed mode
+(B+G), but after your mail I tried B-Only mode, which failed also.
+While observing the connection process, I got the feeling that the
+orinoco card (eth1) is unable to set an IP. I have tried static and
+dhclient, with same effect. Shortly after the connection process
+starts, the card status shows as connected, but does not finalize .
+Process then terminates (assuming because no IP is agreed on with AP).
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/db.txt b/db.txt
-index db1b850..26c5900 100644
---- a/db.txt
-+++ b/db.txt
-@@ -238,10 +238,10 @@ country DK: DFS-ETSI
- 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
- 
- country DO: DFS-FCC
--	(2402 - 2472 @ 40), (27)
--	(5170 - 5250 @ 40), (17)
--	(5250 - 5330 @ 40), (23), DFS
--	(5735 - 5835 @ 40), (30)
-+	(2402 - 2472 @ 40), (30)
-+	(5170 - 5250 @ 80), (17)
-+	(5250 - 5330 @ 80), (23), DFS
-+	(5735 - 5835 @ 80), (30)
- 
- country DZ: DFS-JP
- 	(2402 - 2482 @ 40), (20)
--- 
-1.8.4.rc3
-
+Please advise what other info/test I can try.
+Regards.
