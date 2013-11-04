@@ -1,56 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:38497 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756505Ab3KYQOc (ORCPT
+Received: from smtprelay0234.hostedemail.com ([216.40.44.234]:45420 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753407Ab3KDOXD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Nov 2013 11:14:32 -0500
-Message-ID: <1385396070.4443.43.camel@jlt4.sipsolutions.net> (sfid-20131125_171453_478767_4384C4D3)
-Subject: Re: [PATCH 2/2] mac80211: Update opmode  during adding new station
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marek Kwaczynski <marek.kwaczynski@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 25 Nov 2013 17:14:30 +0100
-In-Reply-To: <1385040495-13482-2-git-send-email-marek.kwaczynski@tieto.com> (sfid-20131121_142847_841092_54CEEC02)
-References: <1385040495-13482-1-git-send-email-marek.kwaczynski@tieto.com>
-	 <1385040495-13482-2-git-send-email-marek.kwaczynski@tieto.com>
-	 (sfid-20131121_142847_841092_54CEEC02)
-Content-Type: text/plain; charset="UTF-8"
+	Mon, 4 Nov 2013 09:23:03 -0500
+Message-ID: <1383525449.3042.27.camel@joe-AO722> (sfid-20131104_152341_121926_B1A85B37)
+Subject: Re: [PATCH net-next 13/13] scripts/checkpatch.pl: Add
+ dev_kfree_skb*(NULL) check to checkpatch
+From: Joe Perches <joe@perches.com>
+To: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
+Cc: davem@davemloft.net, gregkh@linuxfoundation.org,
+	linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
+	schwidefsky@de.ibm.com, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	IvDoorn@gmail.com, sbhatewara@vmware.com, samuel@sortiz.org,
+	chas@cmf.nrl.navy.mil, roland@kernel.org, isdn@linux-pingi.de,
+	jcliburn@gmail.com, benve@cisco.com, ssujith@cisco.com,
+	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
+	shahed.shaikh@qlogic.com, apw@canonical.com
+In-Reply-To: <1383400074-30555-14-git-send-email-govindarajulu90@gmail.com>
+References: <1383400074-30555-1-git-send-email-govindarajulu90@gmail.com>
+	 <1383400074-30555-14-git-send-email-govindarajulu90@gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Date: Sun, 03 Nov 2013 16:37:29 -0800
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-11-21 at 14:28 +0100, Marek Kwaczynski wrote:
-> Update Operating mode is needed when User Space received Assoc
-> Request contains Operating mode notification element.
-> ---
+On Sat, 2013-11-02 at 19:17 +0530, Govindarajulu Varadarajan wrote:
+> Signed-off-by: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
+[]
+> diff --git a/scripts/checkpatch.pl b/scripts/checkpatch.pl
+[]
+> @@ -3719,7 +3719,7 @@ sub process {
+>  # check for needless "if (<foo>) fn(<foo>)" uses
+>  		if ($prevline =~ /\bif\s*\(\s*($Lval)\s*\)/) {
+>  			my $expr = '\s*\(\s*' . quotemeta($1) . '\s*\)\s*;';
+> -			if ($line =~ /\b(kfree|usb_free_urb|debugfs_remove(?:_recursive)?)$expr/) {
+> +			if ($line =~ /\b(kfree|dev_kfree_skb|dev_kfree_skb_any|dev_kfree_skb_irq|usb_free_urb|debugfs_remove(?:_recursive)?)$expr/) {
+>  				WARN('NEEDLESS_IF',
+>  				     "$1(NULL) is safe this check is probably not required\n" . $hereprev);
+>  			}
 
-Need signed-off-by, there are two spaces in the subject where it should
-only be one.
+OK, but I think this is easier to read as
 
-> +++ b/net/mac80211/cfg.c
-> @@ -1383,6 +1383,7 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
->  	struct ieee80211_sub_if_data *sdata;
->  	int err;
->  	int layer2_update;
-> +	enum ieee80211_band band;
->  
->  	if (params->vlan) {
->  		sdata = IEEE80211_DEV_TO_SUB_IF(params->vlan);
-> @@ -1425,6 +1426,12 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
->  	if (!test_sta_flag(sta, WLAN_STA_TDLS_PEER))
->  		rate_control_rate_init(sta);
->  
-> +	if (params->vht_opmode_used) {
-> +		band = ieee80211_get_sdata_band(sdata);
+	dev_kfree_skb(?:_skb|_any|_irq)?
 
-could declare band right here?
-
-> +		ieee80211_vht_handle_opmode(sdata, sta, params->vht_opmode,
-> +					    band, 0);
-> +	}
-
-Are you sure this should be at this place and not before moving the
-station to ASSOC/initialising rate control?
-
-johannes
 
