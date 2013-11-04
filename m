@@ -1,102 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:47382 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752197Ab3KXUG6 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:35972 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753875Ab3KDScz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Nov 2013 15:06:58 -0500
-Received: by mail-wi0-f170.google.com with SMTP id hq4so3020325wib.3
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Nov 2013 12:06:57 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eyal Shapira <eyal@wizery.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 06/29] iwlwifi: mvm: refactor iwl_mvm_rs_rate_init
-Date: Sun, 24 Nov 2013 22:06:23 +0200
-Message-Id: <1385323606-3603-6-git-send-email-egrumbach@gmail.com> (sfid-20131124_210707_837060_9E05AEA4)
-In-Reply-To: <52925BE7.4050406@gmail.com>
-References: <52925BE7.4050406@gmail.com>
+	Mon, 4 Nov 2013 13:32:55 -0500
+Message-ID: <1383589965.14295.18.camel@jlt4.sipsolutions.net> (sfid-20131104_193300_551157_2A07512F)
+Subject: Re: r92su: status and will it be merged anytime soon?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	alexandre.f.demers@gmail.com, linville@tuxdriver.com
+Date: Mon, 04 Nov 2013 19:32:45 +0100
+In-Reply-To: <8287832.vyseD3v7Cm@blech> (sfid-20131104_171958_354595_246E4CB6)
+References: <5277AC85.5050104@gmail.com> <2241712.PWvD8zsTbX@blech>
+	 <1383581060.14295.16.camel@jlt4.sipsolutions.net>
+	 <8287832.vyseD3v7Cm@blech> (sfid-20131104_171958_354595_246E4CB6)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+On Mon, 2013-11-04 at 17:19 +0100, Christian Lamparter wrote:
 
-Refactor setting of VHT enabled rates in preparation of adding
-some more logic there.
+> Yes, there is even more duplicated code if you factor in the (de-)fragmentation
+> and deaggregation code from mac80211. Furthermore r92su could be sharing a bit 
+> of infrastructure with rtlwifi.
 
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/rs.c |   49 +++++++++++++++++++--------------
- 1 file changed, 28 insertions(+), 21 deletions(-)
+Yeah, that some of that seems to be duplicated in mwifiex too. I think
+there'd be some benefit in trying to share more. Maybe moving some to
+cfg80211? Or some new module?
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
-index 0a64089..e49bf44 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
-@@ -2242,6 +2242,33 @@ static int rs_vht_highest_rx_mcs_index(struct ieee80211_sta_vht_cap *vht_cap,
- 	return -1;
- }
- 
-+static void rs_vht_set_enabled_rates(struct ieee80211_sta *sta,
-+				     struct ieee80211_sta_vht_cap *vht_cap,
-+				     struct iwl_lq_sta *lq_sta)
-+{
-+	int i;
-+	int highest_mcs = rs_vht_highest_rx_mcs_index(vht_cap, 1);
-+
-+	if (highest_mcs >= IWL_RATE_MCS_0_INDEX) {
-+		for (i = IWL_RATE_MCS_0_INDEX; i <= highest_mcs; i++) {
-+			if (i == IWL_RATE_9M_INDEX)
-+				continue;
-+
-+			lq_sta->active_siso_rate |= BIT(i);
-+		}
-+	}
-+
-+	highest_mcs = rs_vht_highest_rx_mcs_index(vht_cap, 2);
-+	if (highest_mcs >= IWL_RATE_MCS_0_INDEX) {
-+		for (i = IWL_RATE_MCS_0_INDEX; i <= highest_mcs; i++) {
-+			if (i == IWL_RATE_9M_INDEX)
-+				continue;
-+
-+			lq_sta->active_mimo2_rate |= BIT(i);
-+		}
-+	}
-+}
-+
- /*
-  * Called after adding a new station to initialize rate scaling
-  */
-@@ -2308,27 +2335,7 @@ void iwl_mvm_rs_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 
- 		lq_sta->is_vht = false;
- 	} else {
--		int highest_mcs = rs_vht_highest_rx_mcs_index(vht_cap, 1);
--		if (highest_mcs >= IWL_RATE_MCS_0_INDEX) {
--			for (i = IWL_RATE_MCS_0_INDEX; i <= highest_mcs; i++) {
--				if (i == IWL_RATE_9M_INDEX)
--					continue;
--
--				lq_sta->active_siso_rate |= BIT(i);
--			}
--		}
--
--		highest_mcs = rs_vht_highest_rx_mcs_index(vht_cap, 2);
--		if (highest_mcs >= IWL_RATE_MCS_0_INDEX) {
--			for (i = IWL_RATE_MCS_0_INDEX; i <= highest_mcs; i++) {
--				if (i == IWL_RATE_9M_INDEX)
--					continue;
--
--				lq_sta->active_mimo2_rate |= BIT(i);
--			}
--		}
--
--		/* TODO: avoid MCS9 in 20Mhz which isn't valid for 11ac */
-+		rs_vht_set_enabled_rates(sta, vht_cap, lq_sta);
- 		lq_sta->is_vht = true;
- 	}
- 
--- 
-1.7.9.5
+> I didn't include lib80211 since it reports mic failures via WEXT: 
+> wireless_send_event(dev, IWEVMICHAELMICFAILURE, &wrqu, (char *)&ev);
+> (And I don't think this can be changed easily without touching ipw2200
+> and hostap-driver).
+
+Yeah that'd be tricky, though I guess you could pass a wdev pointer and
+allow it to be NULL or so.
+
+johannes
 
