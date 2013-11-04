@@ -1,39 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:33982 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757628Ab3KHQbr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Nov 2013 11:31:47 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH] mac80211: fix crash when using AP VLAN interfaces
-Date: Fri,  8 Nov 2013 17:31:37 +0100
-Message-Id: <1383928297-25206-1-git-send-email-nbd@openwrt.org> (sfid-20131108_173151_474891_DCE1E36B)
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:49220 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750979Ab3KDTaN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Nov 2013 14:30:13 -0500
+Date: Mon, 4 Nov 2013 14:18:50 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Thomas =?iso-8859-1?Q?B=E4chler?= <thomas@archlinux.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [ANN] wireless-regdb: master-2013-10-11
+Message-ID: <20131104191850.GA1989@tuxdriver.com> (sfid-20131104_203017_639783_EA8A745D)
+References: <20131011202459.GF14329@tuxdriver.com>
+ <5272E897.8060606@archlinux.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <5272E897.8060606@archlinux.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit "mac80211: implement SMPS for AP" applies to AP_VLAN as well.
-It assumes that sta->sdata->vif.bss_conf.bssid is present, which did not
-get set for AP_VLAN.
-Initialize it to sdata->vif.addr like for other interface types.
+On Fri, Nov 01, 2013 at 12:32:39AM +0100, Thomas Bächler wrote:
+> Am 11.10.2013 22:24, schrieb John W. Linville:
+> > (Cutting the short log, since the original version got classified as
+> > SPAM on vger.kernel.org...??)
+> > 
+> > A new release of wireless-regdb (master-2013-10-11) is available at:
+> > 
+> > http://www.kernel.org/pub/software/network/wireless-regdb/wireless-regdb-2013.10.11.tar.gz
+> > 
+> > Here is the short log of the changes included since the 2013-02-13
+> > release:
+> > 
+> > SNIP -- you'll have to check it yourself:
+> 
+> We can't use the database file:
+> 
+> $ regdbdump regulatory.bin
+> Database signature verification failed.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- net/mac80211/iface.c | 1 -
- 1 file changed, 1 deletion(-)
+OK, I probably screwed-up something.  I'll investigate, but it may
+take few days while I recover from some extended travel...
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index ff101ea..36c3a4c 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1325,7 +1325,6 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
- 		sdata->vif.bss_conf.bssid = NULL;
- 		break;
- 	case NL80211_IFTYPE_AP_VLAN:
--		break;
- 	case NL80211_IFTYPE_P2P_DEVICE:
- 		sdata->vif.bss_conf.bssid = sdata->vif.addr;
- 		break;
 -- 
-1.8.3.4 (Apple Git-47)
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
