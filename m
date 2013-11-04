@@ -1,51 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mantis.wzyboy.im ([199.83.51.51]:38153 "EHLO mantis.wzyboy.im"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750944Ab3KJKUP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Nov 2013 05:20:15 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo6ry6cUaVngozS8-P44=LPJN6cbsZ_mfWkJv9Rn85YXUQ@mail.gmail.com>
-References: <5276134B.8070808@wzyboy.org> <CALkVjQYh-SUte4S6LdqOc3KSc3_pDU6jz1KXp+Jsd5_RFPXSqA@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DE8338@HASMSX103.ger.corp.intel.com>
- <CALkVjQb7fCMFpqhdUs8w-Mx_Y0RtAYYFtKxXkqyrCQ39UFGxKg@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DE960E@HASMSX103.ger.corp.intel.com>
- <CALkVjQbW8FeiEh8pBZ=KQFD9+8AdjgT0G_RG7qJe0MRdBvMD-A@mail.gmail.com>
- <CALkVjQaLx2spaOqUPcs_EwMkU7npMki1Reo1MeZwxB7m=c24=g@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DE9FC6@HASMSX103.ger.corp.intel.com>
- <CALkVjQZDNSgUUFyi94Y8da_NDzW61rCvaMrZpUugFKW_LRNFFA@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
- <CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
- <CALkVjQY7r=YKhsgDKR0mnYVtZy5BAdj83nY2jL0VFaiew6ha7A@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
- <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
- <527A8166.6000701@gmail.com> <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
- <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
- <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com> <CAErSpo6ry6cUaVngozS8-P44=LPJN6cbsZ_mfWkJv9Rn85YXUQ@mail.gmail.com>
-From: wzyboy <wzyboy@wzyboy.org>
-Date: Sun, 10 Nov 2013 18:19:58 +0800
-Message-ID: <CALkVjQZEs1CqMEVApDDGZ6FDugPZ+-F5wzvE45+jB5Xrhv_N2A@mail.gmail.com> (sfid-20131110_112020_709767_14D38937)
-Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:34761 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752937Ab3KDNKb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Nov 2013 08:10:31 -0500
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: linux-wireless@vger.kernel.org, sw@simonwunderlich.de
+Cc: johannes@sipsolutions.net
+Subject: [RFC] mac80211: don't transmit beacon with CSA count 0
+Date: Mon,  4 Nov 2013 14:59:15 +0200
+Message-Id: <1383569955-13236-1-git-send-email-luciano.coelho@intel.com> (sfid-20131104_141034_505075_1E90A867)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/11/9 Bjorn Helgaas <bhelgaas@google.com>:
-> it might
-> be interesting to do "echo on >
-> /sys/bus/pci/devices/0000:03:00.0/power/control" and see whether it
-> makes a difference.
+A beacon should never have a Channel Switch Announcement information
+element with a count of 0, because a count of 1 means switch just
+before the next beacon.  So, if a count of 0 was valid in a beacon, it
+would have been transmitted in the next channel already, which is
+useless.  A CSA count equal to zero is only meaningful in action
+frames or probe_responses.
+
+Fix the ieee80211_csa_is_complete() and ieee80211_update_csa()
+functions accordingly.
+
+Cc: Simon Wunderlich <sw@simonwunderlich.de>
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+
+Hi Simon (et al),
+
+I identified this issue while playing around with CSA.  I noticed that
+we are sending a CSA beaon with count == 0, which should not happen.
+The last beacon visible in the current channel (ie. before the switch)
+contains a CSA IE with count == 1.
+
+I wanted to check with you if my proposed change would have any
+side-effects, especially with the ath9k driver, which is the only user
+of this code in the mainline at the moment.
+
+The potential danger here is if you don't check
+ieee80211_csa_is_complete() before you send the first CSA beacon out.
+With the previous code, there would always be a beacon with CSA (count
+== 0), but now, if the count starts with 1, there won't be any.  If
+you don't check, my patch will probably introduce a WARN when the
+ath9k driver tries to get the beacon without checking for CSA
+completion..
+
+Any other comments or a sanity check would also be appreciated.
+
+--
+Cheers,
+Luca.
 
 
-Hi, should I run this command after the bug? I just ran this after the
-bug occurs, but there is no output in dmesg, and "ip link set wlan0
-up" still returns same error ("RTNETLINK answers: Connection timed
-out").
+ net/mac80211/tx.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 9993fcb..1e0d40f 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2376,8 +2376,12 @@ static void ieee80211_update_csa(struct ieee80211_sub_if_data *sdata,
+ 	if (WARN_ON(counter_offset_beacon >= beacon_data_len))
+ 		return;
+ 
+-	/* warn if the driver did not check for/react to csa completeness */
+-	if (WARN_ON(beacon_data[counter_offset_beacon] == 0))
++	/* Warn if the driver did not check for/react to csa
++	 * completeness.  A beacon with CSA counter set to 0 should
++	 * never occur, because a counter of 1 means switch just
++	 * before the next beacon.
++	 */
++	if (WARN_ON(beacon_data[counter_offset_beacon] == 1))
+ 		return;
+ 
+ 	beacon_data[counter_offset_beacon]--;
+@@ -2434,7 +2438,7 @@ bool ieee80211_csa_is_complete(struct ieee80211_vif *vif)
+ 	if (WARN_ON(counter_beacon > beacon_data_len))
+ 		goto out;
+ 
+-	if (beacon_data[counter_beacon] == 0)
++	if (beacon_data[counter_beacon] == 1)
+ 		ret = true;
+  out:
+ 	rcu_read_unlock();
 -- 
-wzyboy
+1.8.4.rc3
+
