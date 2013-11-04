@@ -1,244 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hermes2.cs.kuleuven.be ([134.58.40.2]:59459 "EHLO
-	hermes2.cs.kuleuven.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751069Ab3K0NME (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:37526 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751632Ab3KDNHu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Nov 2013 08:12:04 -0500
-Received: from hermes2.cs.kuleuven.be. (localhost [127.0.0.1])
-	by hermes2.cs.kuleuven.be.  with ESMTP id rARDC1cN029582
-	for <linux-wireless@vger.kernel.org>; Wed, 27 Nov 2013 14:12:01 +0100
-Received: (from defang@localhost)
-	by hermes2.cs.kuleuven.be. (8.14.4/8.14.4/Submit) id rARDAhnC029556
-	for <linux-wireless@vger.kernel.org>; Wed, 27 Nov 2013 14:10:43 +0100
-Message-ID: <5295EF41.8040709@cs.kuleuven.be> (sfid-20131127_141209_764781_E163528D)
-Date: Wed, 27 Nov 2013 14:10:25 +0100
-From: Mathy Vanhoef <mathy.vanhoef@cs.kuleuven.be>
+	Mon, 4 Nov 2013 08:07:50 -0500
+Date: Mon, 4 Nov 2013 16:07:28 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org
+Subject: Re: How to get BRCM to work?
+Message-ID: <20131104130728.GA20521@mwanda> (sfid-20131104_140753_824430_827D5C29)
+References: <20131104115111.GM26669@mwanda>
+ <52778D30.6030605@hauke-m.de>
 MIME-Version: 1.0
-To: Oleksij Rempel <linux@rempel-privat.de>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
-	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com
-Subject: Re: [PATCH] ath9k_htc: properly set MAC address and BSSID mask
-References: <5294E4C5.4050301@cs.kuleuven.be> <52950812.20001@rempel-privat.de>
-In-Reply-To: <52950812.20001@rempel-privat.de>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <52778D30.6030605@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Oleksij,
-
-It appears something went wrong with tabs/spaces when sending the patch over mail. It should work this time.
-
---
-From: "Mathy Vanhoef" <Mathy.Vanhoef@cs.kuleuven.be>
-
-Pick the MAC address of the first virtual interface as the new hardware MAC
-address. Set BSSID mask according to this MAC address. This fixes CVE-2013-4579.
-
-Signed-off-by: Mathy Vanhoef <Mathy.Vanhoef@cs.kuleuven.be>
----
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index d441045..84359c3 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -147,21 +147,26 @@ static void ath9k_htc_bssid_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
- 	struct ath9k_vif_iter_data *iter_data = data;
- 	int i;
- 
--	for (i = 0; i < ETH_ALEN; i++)
--		iter_data->mask[i] &= ~(iter_data->hw_macaddr[i] ^ mac[i]);
-+	if (iter_data->hw_macaddr != NULL) {
-+		for (i = 0; i < ETH_ALEN; i++)
-+			iter_data->mask[i] &= ~(iter_data->hw_macaddr[i] ^ mac[i]);
-+	} else {
-+		iter_data->hw_macaddr = mac;
-+	}
- }
- 
--static void ath9k_htc_set_bssid_mask(struct ath9k_htc_priv *priv,
-+static void ath9k_htc_set_mac_bssid_mask(struct ath9k_htc_priv *priv,
- 				     struct ieee80211_vif *vif)
- {
- 	struct ath_common *common = ath9k_hw_common(priv->ah);
- 	struct ath9k_vif_iter_data iter_data;
- 
- 	/*
--	 * Use the hardware MAC address as reference, the hardware uses it
--	 * together with the BSSID mask when matching addresses.
-+	 * Pick the MAC address of the first interface as the new hardware
-+	 * MAC address. The hardware will use it together with the BSSID mask
-+	 * when matching addresses.
- 	 */
--	iter_data.hw_macaddr = common->macaddr;
-+	iter_data.hw_macaddr = NULL;
- 	memset(&iter_data.mask, 0xff, ETH_ALEN);
- 
- 	if (vif)
-@@ -173,6 +178,10 @@ static void ath9k_htc_set_bssid_mask(struct ath9k_htc_priv *priv,
- 		ath9k_htc_bssid_iter, &iter_data);
- 
- 	memcpy(common->bssidmask, iter_data.mask, ETH_ALEN);
-+
-+	if (iter_data.hw_macaddr)
-+		memcpy(common->macaddr, iter_data.hw_macaddr, ETH_ALEN);
-+
- 	ath_hw_setbssidmask(common);
- }
- 
-@@ -1083,7 +1092,7 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
- 		goto out;
- 	}
- 
--	ath9k_htc_set_bssid_mask(priv, vif);
-+	ath9k_htc_set_mac_bssid_mask(priv, vif);
- 
- 	priv->vif_slot |= (1 << avp->index);
- 	priv->nvifs++;
-@@ -1148,7 +1157,7 @@ static void ath9k_htc_remove_interface(struct ieee80211_hw *hw,
- 
- 	ath9k_htc_set_opmode(priv);
- 
--	ath9k_htc_set_bssid_mask(priv, vif);
-+	ath9k_htc_set_mac_bssid_mask(priv, vif);
- 
- 	/*
- 	 * Stop ANI only if there are no associated station interfaces.
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index b6aad69..99ab0aa 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -885,8 +885,9 @@ void ath9k_calculate_iter_data(struct ieee80211_hw *hw,
- 	struct ath_common *common = ath9k_hw_common(ah);
- 
- 	/*
--	 * Use the hardware MAC address as reference, the hardware uses it
--	 * together with the BSSID mask when matching addresses.
-+	 * Pick the MAC address of the first interface as the new hardware
-+	 * MAC address. The hardware will use it together with the BSSID mask
-+	 * when matching addresses.
- 	 */
- 	memset(iter_data, 0, sizeof(*iter_data));
- 	memset(&iter_data->mask, 0xff, ETH_ALEN);
-
-
-
-On 26/11/2013 21:44, Oleksij Rempel wrote:
-> Hi Mathy,
+On Mon, Nov 04, 2013 at 01:04:00PM +0100, Hauke Mehrtens wrote:
+> On 11/04/2013 12:51 PM, Dan Carpenter wrote:
+> > I've been trying to remember the trick to get BRCM to work and I can't
+> > remember at all.  I'm using BCM4313.  I've enabled everything with BCMA
+> > or BRCM in the config name.
+> > 
+> > The module loads and the device shows up if I type "ifconfig wlan0" but
+> > network manager doesn't see it and wicd doesn't see it.  (These are old
+> > versions of nm and wicd).
+> > 
+> > This used to work under 3.8 but I didn't save my .config...  :(
 > 
-> thank you for your work!
-> suddenly this patch do not apply on top of
->  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
-> 
-> can you please update it.
-> 
-> 
-> Am 26.11.2013 19:13, schrieb Mathy Vanhoef:
->> From: "Mathy Vanhoef" <Mathy.Vanhoef@cs.kuleuven.be>
->>
->> Pick the MAC address of the first virtual interface as the new hardware MAC
->> address. Set BSSID mask according to this MAC address. This fixes
->> CVE-2013-4579.
->>
->> Signed-off-by: Mathy Vanhoef <Mathy.Vanhoef@cs.kuleuven.be>
->> ---
->> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
->> b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
->> index d441045..84359c3 100644
->> --- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
->> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
->> @@ -147,21 +147,26 @@ static void ath9k_htc_bssid_iter(void *data, u8
->> *mac, struct ieee80211_vif *vif)
->>      struct ath9k_vif_iter_data *iter_data = data;
->>      int i;
->>  
->> -    for (i = 0; i < ETH_ALEN; i++)
->> -        iter_data->mask[i] &= ~(iter_data->hw_macaddr[i] ^ mac[i]);
->> +    if (iter_data->hw_macaddr != NULL) {
->> +        for (i = 0; i < ETH_ALEN; i++)
->> +            iter_data->mask[i] &= ~(iter_data->hw_macaddr[i] ^ mac[i]);
->> +    } else {
->> +        iter_data->hw_macaddr = mac;
->> +    }
->>  }
->>  
->> -static void ath9k_htc_set_bssid_mask(struct ath9k_htc_priv *priv,
->> +static void ath9k_htc_set_mac_bssid_mask(struct ath9k_htc_priv *priv,
->>                       struct ieee80211_vif *vif)
->>  {
->>      struct ath_common *common = ath9k_hw_common(priv->ah);
->>      struct ath9k_vif_iter_data iter_data;
->>  
->>      /*
->> -     * Use the hardware MAC address as reference, the hardware uses it
->> -     * together with the BSSID mask when matching addresses.
->> +     * Pick the MAC address of the first interface as the new hardware
->> +     * MAC address. The hardware will use it together with the BSSID mask
->> +     * when matching addresses.
->>       */
->> -    iter_data.hw_macaddr = common->macaddr;
->> +    iter_data.hw_macaddr = NULL;
->>      memset(&iter_data.mask, 0xff, ETH_ALEN);
->>  
->>      if (vif)
->> @@ -173,6 +178,10 @@ static void ath9k_htc_set_bssid_mask(struct
->> ath9k_htc_priv *priv,
->>          ath9k_htc_bssid_iter, &iter_data);
->>  
->>      memcpy(common->bssidmask, iter_data.mask, ETH_ALEN);
->> +
->> +    if (iter_data.hw_macaddr)
->> +        memcpy(common->macaddr, iter_data.hw_macaddr, ETH_ALEN);
->> +
->>      ath_hw_setbssidmask(common);
->>  }
->>  
->> @@ -1083,7 +1092,7 @@ static int ath9k_htc_add_interface(struct
->> ieee80211_hw *hw,
->>          goto out;
->>      }
->>  
->> -    ath9k_htc_set_bssid_mask(priv, vif);
->> +    ath9k_htc_set_mac_bssid_mask(priv, vif);
->>  
->>      priv->vif_slot |= (1 << avp->index);
->>      priv->nvifs++;
->> @@ -1148,7 +1157,7 @@ static void ath9k_htc_remove_interface(struct
->> ieee80211_hw *hw,
->>  
->>      ath9k_htc_set_opmode(priv);
->>  
->> -    ath9k_htc_set_bssid_mask(priv, vif);
->> +    ath9k_htc_set_mac_bssid_mask(priv, vif);
->>  
->>      /*
->>       * Stop ANI only if there are no associated station interfaces.
->> diff --git a/drivers/net/wireless/ath/ath9k/main.c
->> b/drivers/net/wireless/ath/ath9k/main.c
->> index b6aad69..99ab0aa 100644
->> --- a/drivers/net/wireless/ath/ath9k/main.c
->> +++ b/drivers/net/wireless/ath/ath9k/main.c
->> @@ -885,8 +885,9 @@ void ath9k_calculate_iter_data(struct ieee80211_hw *hw,
->>      struct ath_common *common = ath9k_hw_common(ah);
->>  
->>      /*
->> -     * Use the hardware MAC address as reference, the hardware uses it
->> -     * together with the BSSID mask when matching addresses.
->> +     * Pick the MAC address of the first interface as the new hardware
->> +     * MAC address. The hardware will use it together with the BSSID mask
->> +     * when matching addresses.
->>       */
->>      memset(iter_data, 0, sizeof(*iter_data));
->>      memset(&iter_data->mask, 0xff, ETH_ALEN);
->>
->>
->> Disclaimer: http://www.kuleuven.be/cwis/email_disclaimer.htm
->> -- 
->> To unsubscribe from this list: send the line "unsubscribe
->> linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> Are these old versions of nm and wicd only supporting the deprecated
+> WEXT interface? If this is the case you have to set
+> CONFIG_CFG80211_WEXT=y in your config.
 > 
 
+I have that enabled.
 
-Disclaimer: http://www.kuleuven.be/cwis/email_disclaimer.htm
+> You also need a firmware for this device /lib/firmware/brcm/bcm43xx-0.fw
+> and /lib/firmware/brcm/bcm43xx_hdr-0.fw are needed.
+
+I have the firmware.
+
+> 
+> When the device gets detected by brcmsmac, it is probably not a problem
+> in the Broadcom driver.
+> 
+> > I've done a google search and it seems like the broadcom driver is still
+> > a complete mess and you need to black list modules and hack everything
+> > yourself on a per system basis?  Is that right?  Why can't we fix this
+> > so it works?
+> 
+> When you want to use the property closed source Broadcom driver then you
+> have to blacklist the in kernel drivers. When you want to use the in
+> kernel drivers, BCM4313 should get detected and the modules should get
+> loaded like it is done for every other PCIe device.
+
+I don't have the closed source driver.
+
+I'll do some more testing and get back on this.
+
+regards,
+dan carpenter
+
