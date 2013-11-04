@@ -1,38 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:43170 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756180Ab3KFK6K (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:45811 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750975Ab3KDMA5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Nov 2013 05:58:10 -0500
-Message-ID: <1383735487.14307.29.camel@jlt4.sipsolutions.net> (sfid-20131106_115814_251610_D4434F58)
-Subject: Re: [PATCH] mac80211: fix scheduled scan rtnl deadlock
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Eliad Peller <eliadx.peller@intel.com>
-Date: Wed, 06 Nov 2013 11:58:07 +0100
-In-Reply-To: <1383730993-18259-1-git-send-email-johannes@sipsolutions.net> (sfid-20131106_104320_884172_2DC34946)
-References: <1383730993-18259-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20131106_104320_884172_2DC34946)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 4 Nov 2013 07:00:57 -0500
+Date: Mon, 4 Nov 2013 15:00:46 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: brcm80211-dev-list@broadcom.com
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: How to get BRCM to work?
+Message-ID: <20131104120046.GX20521@mwanda> (sfid-20131104_130102_557333_8DBF3AAA)
+References: <20131104115111.GM26669@mwanda>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131104115111.GM26669@mwanda>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-11-06 at 10:43 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> When changing cfg80211 to use RTNL locking, this caused a
-> deadlock in mac80211 as it calls cfg80211_sched_scan_stopped()
-> from a work item that's on a workqueue that is flushed with
-> the RTNL held.
-> 
-> Fix this by simply using schedule_work(), the work only needs
-> to finish running before the wiphy is unregistered, no other
-> synchronisation (e.g. with suspend) is really required since
-> for suspend userspace is already blocked anyway when we flush
-> the workqueue so will only pick up the event after resume.
+On Mon, Nov 04, 2013 at 02:51:11PM +0300, Dan Carpenter wrote:
+> I've been trying to remember the trick to get BRCM to work and I can't
+> remember at all.  I'm using BCM4313.  I've enabled everything with BCMA
+> or BRCM in the config name.
 
-Applied.
+Can we make BRCM select BCMA instead of depending on it?  No one wants
+BCMA, they just want their wifi to work.  There is no reason that users
+should have to grovel through Kconfig files to figure out how to compile
+the broadcom driver instead of just using menuconfig like everyone else
+does.
 
-johannes
+regards,
+dan carpenter
 
