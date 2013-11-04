@@ -1,193 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f45.google.com ([74.125.83.45]:53100 "EHLO
-	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754738Ab3KVNIp (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:2896 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751263Ab3KDTqc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Nov 2013 08:08:45 -0500
-Received: by mail-ee0-f45.google.com with SMTP id d49so622359eek.32
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Nov 2013 05:08:44 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 5/8] ath10k: defer irq registration until hif start()
-Date: Fri, 22 Nov 2013 14:05:15 +0100
-Message-Id: <1385125518-13461-6-git-send-email-michal.kazior@tieto.com> (sfid-20131122_140858_581371_FFAB2F28)
-In-Reply-To: <1385125518-13461-1-git-send-email-michal.kazior@tieto.com>
-References: <1385125518-13461-1-git-send-email-michal.kazior@tieto.com>
+	Mon, 4 Nov 2013 14:46:32 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: Alexander Varnin <fenixk19@mail.ru>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>
+Date: Mon, 4 Nov 2013 11:46:19 -0800
+Subject: RE: mwifiex_sdio on chromebook
+Message-ID: <477F20668A386D41ADCC57781B1F70430F45758053@SC-VEXCH1.marvell.com> (sfid-20131104_204636_108203_FEDC0F7D)
+References: <5276491F.20207@mail.ru>
+ <477F20668A386D41ADCC57781B1F70430F45757E63@SC-VEXCH1.marvell.com>
+ <527703E6.8040504@mail.ru>
+In-Reply-To: <527703E6.8040504@mail.ru>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It's impossible to rely on disable_irq() and/or CE
-interrupt masking with legacy shared interrupts.
-Other devices sharing the same irq line may assert
-it while ath10k is doing something that requires
-no interrupts.
-
-Irq handlers are now registered after all
-preparations are complete so spurious/foreign
-interrupts won't do any harm. The handlers are
-unregistered when no interrupts are required (i.e.
-during driver teardown).
-
-This also removes the ability to receive FW early
-indication (since interrupts are not registered
-until early boot is complete). This is not mission
-critical (it's more of a hint that early boot
-failed due to unexpected FW crash) and will be
-re-added in a follow up patch.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/pci.c | 62 +++++++++++++++--------------------
- 1 file changed, 26 insertions(+), 36 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 1b12db8..fa1162e 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -886,13 +886,6 @@ static void ath10k_pci_stop_ce(struct ath10k *ar)
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	struct ath10k_pci_compl *compl;
- 	struct sk_buff *skb;
--	int ret;
--
--	ret = ath10k_ce_disable_interrupts(ar);
--	if (ret)
--		ath10k_warn("failed to disable CE interrupts: %d\n", ret);
--
--	ath10k_pci_kill_tasklet(ar);
- 
- 	/* Mark pending completions as aborted, so that upper layers free up
- 	 * their associated resources */
-@@ -1203,17 +1196,30 @@ static int ath10k_pci_hif_start(struct ath10k *ar)
- 		return ret;
- 	}
- 
-+	ret = ath10k_pci_request_irq(ar);
-+	if (ret) {
-+		ath10k_warn("failed to post RX buffers for all pipes: %d\n",
-+			    ret);
-+		goto err_stop_ce;
-+	}
-+
- 	/* Post buffers once to start things off. */
- 	ret = ath10k_pci_post_rx(ar);
- 	if (ret) {
- 		ath10k_warn("failed to post RX buffers for all pipes: %d\n",
- 			    ret);
--		ath10k_pci_stop_ce(ar);
--		return ret;
-+		goto err_free_irq;
- 	}
- 
- 	ar_pci->started = 1;
- 	return 0;
-+
-+err_free_irq:
-+	ath10k_pci_free_irq(ar);
-+	ath10k_pci_kill_tasklet(ar);
-+err_stop_ce:
-+	ath10k_pci_stop_ce(ar);
-+	return ret;
- }
- 
- static void ath10k_pci_rx_pipe_cleanup(struct ath10k_pci_pipe *pipe_info)
-@@ -1331,25 +1337,19 @@ static void ath10k_pci_ce_deinit(struct ath10k *ar)
- 	}
- }
- 
--static void ath10k_pci_disable_irqs(struct ath10k *ar)
--{
--	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
--	int i;
--
--	for (i = 0; i < max(1, ar_pci->num_msi_intrs); i++)
--		disable_irq(ar_pci->pdev->irq + i);
--}
--
- static void ath10k_pci_hif_stop(struct ath10k *ar)
- {
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
-+	int ret;
- 
- 	ath10k_dbg(ATH10K_DBG_PCI, "%s\n", __func__);
- 
--	/* Irqs are never explicitly re-enabled. They are implicitly re-enabled
--	 * by upon power_up. */
--	ath10k_pci_disable_irqs(ar);
-+	ret = ath10k_ce_disable_interrupts(ar);
-+	if (ret)
-+		ath10k_warn("failed to disable CE interrupts: %d\n", ret);
- 
-+	ath10k_pci_free_irq(ar);
-+	ath10k_pci_kill_tasklet(ar);
- 	ath10k_pci_stop_ce(ar);
- 
- 	/* At this point, asynchronous threads are stopped, the target should
-@@ -1900,34 +1900,28 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar)
- 		goto err_ce;
- 	}
- 
--	ret = ath10k_pci_request_irq(ar);
--	if (ret) {
--		ath10k_err("failed to request irqs: %d\n", ret);
--		goto err_deinit_irq;
--	}
--
- 	ret = ath10k_pci_wait_for_target_init(ar);
- 	if (ret) {
- 		ath10k_err("failed to wait for target to init: %d\n", ret);
--		goto err_free_irq;
-+		goto err_deinit_irq;
- 	}
- 
- 	ret = ath10k_ce_enable_err_irq(ar);
- 	if (ret) {
- 		ath10k_err("failed to enable CE error irq: %d\n", ret);
--		goto err_free_irq;
-+		goto err_deinit_irq;
- 	}
- 
- 	ret = ath10k_pci_init_config(ar);
- 	if (ret) {
- 		ath10k_err("failed to setup init config: %d\n", ret);
--		goto err_free_irq;
-+		goto err_deinit_irq;
- 	}
- 
- 	ret = ath10k_pci_wake_target_cpu(ar);
- 	if (ret) {
- 		ath10k_err("could not wake up target CPU: %d\n", ret);
--		goto err_free_irq;
-+		goto err_deinit_irq;
- 	}
- 
- 	if (ar_pci->num_msi_intrs > 1)
-@@ -1942,14 +1936,11 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar)
- 
- 	return 0;
- 
--err_free_irq:
--	ath10k_pci_free_irq(ar);
--	ath10k_pci_kill_tasklet(ar);
--	ath10k_pci_device_reset(ar);
- err_deinit_irq:
- 	ath10k_pci_deinit_irq(ar);
- err_ce:
- 	ath10k_pci_ce_deinit(ar);
-+	ath10k_pci_device_reset(ar);
- err_ps:
- 	if (!test_bit(ATH10K_PCI_FEATURE_SOC_POWER_SAVE, ar_pci->features))
- 		ath10k_do_pci_sleep(ar);
-@@ -1961,7 +1952,6 @@ static void ath10k_pci_hif_power_down(struct ath10k *ar)
- {
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 
--	ath10k_pci_free_irq(ar);
- 	ath10k_pci_deinit_irq(ar);
- 	ath10k_pci_device_reset(ar);
- 
--- 
-1.8.4.rc3
-
+SGkgQWxleGFuZGVyLA0KDQo+ID4gWW91ciBDaHJvbWVib29rIHN1cHBvcnRzIFNESU8gaGlnaCBz
+cGVlZCBtb2RlIChTRElPIDIuMCBzcGVjKS4gU28NCj4gPiA1ME1IeiBpcyBjb3JyZWN0Lg0KPiAN
+Cj4gT2ssIGJ1dCBtYWlubGluZSBrZXJuZWwgZG9lc24ndCB0cnkgdGhpcyBmcmVxdWVuY3kuIEl0
+IHRyaWVzIDQwMGtIeiBhdA0KPiBtb3N0Lg0KPiANCj4gPiBXaGF0IGFyZSB5b3UgdHJ5aW5nIHRv
+IGRvIGhlcmU/IEFyZSB5b3UgdHJ5aW5nIHRvIHJ1biBhIG1haW5saW5lIGtlcm5lbCBvbiB5b3Vy
+IENocm9tZWJvb2s/DQo+IA0KPiBZZXMuIEkndmUgZ290IGtlcm5lbCAzLjQgZnJvbSBHb29nbGUg
+Q2hyb21lIE9TLiBJdCB3b3JrcyBvayBmb3INCj4gbXdpZmlleF9zZGlvLiBCdXQgSSB3YW50IHRv
+IHJ1biBtYWlubGluZSBrZXJuZWwuIEFzIG9mIDMuMTEgaXQgaXMgYWJsZQ0KPiB0byBib290IG9u
+IENocm9tZWJvb2ssIGJ1dCBXaUZpIGRvZXNuJ3Qgd29yay4NCg0KSSBkb24ndCBrbm93IHdoeSB5
+b3Ugd2FudCB0byBkbyB0aGF0LCBidXQgdGhlIG1haW5saW5lIGtlcm5lbCB3b24ndCB3b3JrIG9u
+IHlvdXIgQ2hyb21lYm9vayB1bmxlc3MgeW91IHBvcnQgYWxsIHBsYXRmb3JtIHNwZWNpZmljIGNo
+YW5nZXMgb3ZlciBmcm9tIGNocm9tZW9zLTMuNCB0cmVlLg0KDQo+IA0KPiA+IFlvdSBzYWlkIG1t
+Y19hdHRhY2hfc2RpbyBmdW5jdGlvbiBmYWlscy4gVGhlIG13aWZpZXhfc2RpbyBkcml2ZXIgYW5k
+DQo+ID4gdGhlIGZpcm13YXJlIHdpbGwgbm90IGJlIGxvYWRlZCBhdCBhbGwuDQo+IA0KPiBPaywg
+dGhhdCBpcyBjbGVhci4NCj4gDQo+ID4gQ09ORklHX01NQ19ERUJVRz15LCBhbmQgY29sbGVjdCB0
+aGUgZGVidWcgbG9ncy4NCj4gDQo+IFRoaXMgd2F5IHNlZW1zIG5vdCB2ZXJ5IHVzZWZ1bCwgYmVj
+YXVzZSB0aGVyZSBpcyBhbHNvIGludGVybmFsIGFuZA0KPiBleHRlcm5hbCBzdG9yYWdlIG9uIG1t
+YyBidXMsIHNvIGxvZyBxdWlja2x5IGdldCBnYXJiYWdlZCB3aXRoIGl0LiBEbWVzZw0KPiBzZWVt
+cyB0byBiZSBvdmVyZmxvd2VkIGFuZCBmb3JnZXRzIGVhcmx5IGluaXRpYWxpemF0aW9uLiBJIGhh
+dmUgbWFkZSBhDQo+IGRpcnR5IGhhY2sgdG8gY29sbGVjdCBzb21lIHVzZWZ1bCBpbmZvIGFib3V0
+IGluaXRpYWxpemF0aW9uLiBJIGFtDQo+IGF0dGFjaGluZyBpdC4gUGxlYXNlIGNoZWNrLCBpZiBJ
+IG5lZWQgdG8gYWRkIHNvbWV0aGluZy4gV2lsbCBpdCBiZQ0KPiB1c2VmdWwgdGhpcyB3YXk/DQoN
+CkFzIHNhaWQgYWJvdmUsIHRoaXMgd29u4oCZdCB3b3JrIGJlY2F1c2UgdGhlIENocm9tZWJvb2sg
+c3BlY2lmaWMgY2hhbmdlcyBhcmVuJ3QgcHJlc2VudCBpbiBtYWlubGluZSBrZXJuZWwuIEFueXdh
+eSB5b3UgY2FuIHRha2UgYSBsb29rIGF0IHRoZSBjaHJvbWl1bSBPUyBkZXZlbG9wZXIgZ3VpZGUu
+DQoNCmh0dHA6Ly93d3cuY2hyb21pdW0ub3JnL2Nocm9taXVtLW9zL2RldmVsb3Blci1ndWlkZQ0K
+DQpUaGFua3MsDQpCaW5nDQoNCg==
