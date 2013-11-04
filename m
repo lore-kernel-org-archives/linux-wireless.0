@@ -1,43 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f49.google.com ([74.125.83.49]:37719 "EHLO
-	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752537Ab3KATkR (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:35208 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753477Ab3KDOVT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 15:40:17 -0400
-Received: by mail-ee0-f49.google.com with SMTP id e52so2174810eek.22
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 12:40:16 -0700 (PDT)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH] ath9k: DFS radar use correct width enum
-Date: Fri,  1 Nov 2013 20:39:49 +0100
-Message-Id: <1383334789-12022-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131101_204022_718520_3D26FB29)
+	Mon, 4 Nov 2013 09:21:19 -0500
+Message-ID: <1383574873.14295.15.camel@jlt4.sipsolutions.net> (sfid-20131104_152122_556103_ADDB84B4)
+Subject: Re: r92su: status and will it be merged anytime soon?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	alexandre.f.demers@gmail.com, linville@tuxdriver.com
+Date: Mon, 04 Nov 2013 15:21:13 +0100
+In-Reply-To: <5277AC85.5050104@gmail.com> (sfid-20131104_151755_644672_48AB42A5)
+References: <5277AC85.5050104@gmail.com>
+	 (sfid-20131104_151755_644672_48AB42A5)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use correct width enums when setup
-radar_detect_widths for DFS.
+On Mon, 2013-11-04 at 15:17 +0100, Xose Vazquez Perez wrote:
+> Christian Lamparter wrote:
+> 
+> > The issue with r92su is: The driver is ready, but it's fundamentally
+>                                       ^^^^^^^^
+> > incompatible with the rtlwifi framework and mac80211.
+> 
+> _anything_ is better than a staging driver.
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- drivers/net/wireless/ath/ath9k/init.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+That's still only staging quality though.
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index eac8f6d..beeb8d4 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -776,8 +776,8 @@ static const struct ieee80211_iface_combination if_comb[] = {
- 		.max_interfaces = 1,
- 		.num_different_channels = 1,
- 		.beacon_int_infra_match = true,
--		.radar_detect_widths =	BIT(NL80211_CHAN_NO_HT) |
--					BIT(NL80211_CHAN_HT20),
-+		.radar_detect_widths =	BIT(NL80211_CHAN_WIDTH_20_NOHT) |
-+					BIT(NL80211_CHAN_WIDTH_20),
- 	}
- };
- 
--- 
-1.7.9.5
+johannes
 
