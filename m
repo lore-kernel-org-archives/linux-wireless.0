@@ -1,74 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:54506 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752219Ab3KXUGy (ORCPT
+Received: from mail-bk0-f41.google.com ([209.85.214.41]:54270 "EHLO
+	mail-bk0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751707Ab3KDQGd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Nov 2013 15:06:54 -0500
-Received: by mail-wi0-f170.google.com with SMTP id hq4so3027047wib.1
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Nov 2013 12:06:52 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 01/29] iwlwifi: remove TX_CMD id from transport layer
-Date: Sun, 24 Nov 2013 22:06:18 +0200
-Message-Id: <1385323606-3603-1-git-send-email-egrumbach@gmail.com> (sfid-20131124_210706_214258_6D858896)
-In-Reply-To: <52925BE7.4050406@gmail.com>
-References: <52925BE7.4050406@gmail.com>
+	Mon, 4 Nov 2013 11:06:33 -0500
+Received: by mail-bk0-f41.google.com with SMTP id na10so3092047bkb.28
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Nov 2013 08:06:31 -0800 (PST)
+Message-ID: <5277C604.1050604@gmail.com> (sfid-20131104_170637_030148_43C1B395)
+Date: Mon, 04 Nov 2013 17:06:28 +0100
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+MIME-Version: 1.0
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	alexandre.f.demers@gmail.com, linville@tuxdriver.com
+Subject: Re: r92su: status and will it be merged anytime soon?
+References: <5277AC85.5050104@gmail.com> <5277BE84.7020808@lwfinger.net>
+In-Reply-To: <5277BE84.7020808@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On 11/04/2013 04:34 PM, Larry Finger wrote:
 
-The transport layer doesn't need to know the TX_CMD id.
-It can be set by the op_mode.
-The transport layer still needs to know the layout of the
-Tx command because of alignment issues and because of the
-scratch pointer.
+>> _anything_ is better than a staging driver.
+>>
+>> There are distributions that don't build staging drivers.
+> 
+> As a result, they force their users to build out-of-tree drivers!
 
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/dvm/tx.c  |    1 +
- drivers/net/wireless/iwlwifi/mvm/tx.c  |    1 +
- drivers/net/wireless/iwlwifi/pcie/tx.c |    1 -
- 3 files changed, 2 insertions(+), 1 deletion(-)
+reformulating: As a result, they force their users to _have a stable kernel_
 
-diff --git a/drivers/net/wireless/iwlwifi/dvm/tx.c b/drivers/net/wireless/iwlwifi/dvm/tx.c
-index 1fef524..e12b1a6 100644
---- a/drivers/net/wireless/iwlwifi/dvm/tx.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/tx.c
-@@ -368,6 +368,7 @@ int iwlagn_tx_skb(struct iwl_priv *priv,
- 		goto drop_unlock_priv;
- 
- 	memset(dev_cmd, 0, sizeof(*dev_cmd));
-+	dev_cmd->hdr.cmd = REPLY_TX;
- 	tx_cmd = (struct iwl_tx_cmd *) dev_cmd->payload;
- 
- 	/* Total # bytes to be transmitted */
-diff --git a/drivers/net/wireless/iwlwifi/mvm/tx.c b/drivers/net/wireless/iwlwifi/mvm/tx.c
-index 43d97c3..1f19458 100644
---- a/drivers/net/wireless/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/tx.c
-@@ -276,6 +276,7 @@ iwl_mvm_set_tx_params(struct iwl_mvm *mvm, struct sk_buff *skb,
- 		return NULL;
- 
- 	memset(dev_cmd, 0, sizeof(*dev_cmd));
-+	dev_cmd->hdr.cmd = TX_CMD;
- 	tx_cmd = (struct iwl_tx_cmd *)dev_cmd->payload;
- 
- 	if (info->control.hw_key)
-diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
-index 059c5ac..487a517 100644
---- a/drivers/net/wireless/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
-@@ -1674,7 +1674,6 @@ int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
- 	txq->entries[q->write_ptr].skb = skb;
- 	txq->entries[q->write_ptr].cmd = dev_cmd;
- 
--	dev_cmd->hdr.cmd = REPLY_TX;
- 	dev_cmd->hdr.sequence =
- 		cpu_to_le16((u16)(QUEUE_TO_SEQ(txq_id) |
- 			    INDEX_TO_SEQ(q->write_ptr)));
--- 
-1.7.9.5
+Staging is only a working area. And the rtl8712-TODO is unreal:
+- merge Realtek's bugfixes and new features into the driver
+- switch to use LIB80211
+- switch to use MAC80211
+- checkpatch.pl fixes - only a few remain
 
+>> So, please, replace and delete staging/rtl8712 with r92su.
+> 
+> You seem not to understand. Any new wireless driver that does not
+> use mac80211 *must* go into staging. AFAIK, that rule is absolute,
+                                              ^^^^^^^^^^^^^^^^^^^^^
+> and r92su cannot go into the regular wireless tree.
+
+Who said that ? Then replace staging/rtl8712 with staging/r92su
+
+Anyway, r92su is a _linux_ driver with a cfg80211 interface.
+staging/rtl8712 is crap?
+
+1152k    drivers/staging/rtl8712/
+340k     r92su/
+
+> If you do not like having drivers for RTL8192SU in staging, then
+> write one that uses mac80211. You have access to as much information
+> about the chips as anyone outside Realtek. They have no interest
+> in doing the mac80211 version, and I have many other tasks with
+> higher priority.
+
+Nobody said that you have to write a rtl8712-mac80211.
+But right now there is a better alternative, and it should be used.
