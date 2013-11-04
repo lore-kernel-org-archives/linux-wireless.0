@@ -1,34 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qe0-f51.google.com ([209.85.128.51]:38575 "EHLO
-	mail-qe0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750975Ab3K3TsG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Nov 2013 14:48:06 -0500
-Received: by mail-qe0-f51.google.com with SMTP id 1so9361300qee.38
-        for <linux-wireless@vger.kernel.org>; Sat, 30 Nov 2013 11:48:03 -0800 (PST)
+Received: from packetmixer.de ([83.151.30.3]:54854 "EHLO m25s01.vlinux.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752018Ab3KDNgx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Nov 2013 08:36:53 -0500
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: Luciano Coelho <luciano.coelho@intel.com>
+Subject: Re: [RFC] mac80211: don't transmit beacon with CSA count 0
+Date: Mon, 4 Nov 2013 14:36:51 +0100
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+References: <1383569955-13236-1-git-send-email-luciano.coelho@intel.com>
+In-Reply-To: <1383569955-13236-1-git-send-email-luciano.coelho@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <529A3F9B.6070306@rempel-privat.de>
-References: <1385838681.2566.6.camel@adam.happyassassin.net>
-	<529A3F9B.6070306@rempel-privat.de>
-Date: Sat, 30 Nov 2013 11:48:03 -0800
-Message-ID: <CAJ-Vmona5j5AFLzOxSBbx0KcZteSiGph8scMZjqtw9ZacP=aAQ@mail.gmail.com> (sfid-20131130_204811_367990_6BBC0CAB)
-Subject: Re: Support for Atheros chipset with SDIO ID 0271:0418 ?
-From: Adrian Chadd <adrian@freebsd.org>
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: Adam Williamson <awilliam@redhat.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath6kl-devel <ath6kl-devel@qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201311041436.51673.sw@simonwunderlich.de> (sfid-20131104_143657_328515_976A692D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Well, the problem is twofold:
+Hey Luca,
 
-* what weird variants are required, command wise, and
-* what firmware/patches are required for the unit?
+> A beacon should never have a Channel Switch Announcement information
+> element with a count of 0, because a count of 1 means switch just
+> before the next beacon.  So, if a count of 0 was valid in a beacon, it
+> would have been transmitted in the next channel already, which is
+> useless.  A CSA count equal to zero is only meaningful in action
+> frames or probe_responses.
+> 
+> Fix the ieee80211_csa_is_complete() and ieee80211_update_csa()
+> functions accordingly.
+> 
+> Cc: Simon Wunderlich <sw@simonwunderlich.de>
+> Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+> ---
+> 
+> Hi Simon (et al),
+> 
+> I identified this issue while playing around with CSA.  I noticed that
+> we are sending a CSA beaon with count == 0, which should not happen.
+> The last beacon visible in the current channel (ie. before the switch)
+> contains a CSA IE with count == 1.
+> 
+> I wanted to check with you if my proposed change would have any
+> side-effects, especially with the ath9k driver, which is the only user
+> of this code in the mainline at the moment.
+> 
+> The potential danger here is if you don't check
+> ieee80211_csa_is_complete() before you send the first CSA beacon out.
+> With the previous code, there would always be a beacon with CSA (count
+> == 0), but now, if the count starts with 1, there won't be any.  If
+> you don't check, my patch will probably introduce a WARN when the
+> ath9k driver tries to get the beacon without checking for CSA
+> completion..
+> 
+> Any other comments or a sanity check would also be appreciated.
 
-I'll ask Kalle when he's back.
+Thanks for checking back - I've read the part in the spec again [1], and 
+appearently you are right.
+
+With your proposed change, shouldn't we also change the behaviour if the 
+userspace requests a channel switch with count = 0? I guess we should 
+immediately change the channel then without waiting for beacons? I don't see 
+the point in changing the beacons if we don't send them, after all. Currently, 
+ath9k calls the csa_finish() after checking whether beacon sending was complete 
+... so this would have to be changed.
+
+Cheers,
+    Simon
 
 
-
--adrian
+[1] IEEE 802.11-2012, 8.4.2.21 
+For nonmesh STAs, the Channel Switch Count field either is set to the number of 
+TBTTs until the STA sending the Channel Switch Announcement element switches 
+to the new channel or is set to 0. A value of 1 indicates that the switch 
+occurs immediately before the next TBTT. A value of 0 indicates that the  
+switch occurs at any time after the frame containing the element is 
+transmitted.
