@@ -1,62 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f41.google.com ([209.85.214.41]:54270 "EHLO
-	mail-bk0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751707Ab3KDQGd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Nov 2013 11:06:33 -0500
-Received: by mail-bk0-f41.google.com with SMTP id na10so3092047bkb.28
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Nov 2013 08:06:31 -0800 (PST)
-Message-ID: <5277C604.1050604@gmail.com> (sfid-20131104_170637_030148_43C1B395)
-Date: Mon, 04 Nov 2013 17:06:28 +0100
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:3684 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753401Ab3KDPF1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Nov 2013 10:05:27 -0500
+Message-ID: <5277B7AD.6000309@broadcom.com> (sfid-20131104_160530_714668_4533C884)
+Date: Mon, 4 Nov 2013 16:05:17 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	alexandre.f.demers@gmail.com, linville@tuxdriver.com
-Subject: Re: r92su: status and will it be merged anytime soon?
-References: <5277AC85.5050104@gmail.com> <5277BE84.7020808@lwfinger.net>
-In-Reply-To: <5277BE84.7020808@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8
+To: "Dan Carpenter" <dan.carpenter@oracle.com>,
+	"Hauke Mehrtens" <hauke@hauke-m.de>
+cc: brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org
+Subject: Re: How to get BRCM to work?
+References: <20131104115111.GM26669@mwanda>
+ <52778D30.6030605@hauke-m.de> <20131104130728.GA20521@mwanda>
+In-Reply-To: <20131104130728.GA20521@mwanda>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/04/2013 04:34 PM, Larry Finger wrote:
-
->> _anything_ is better than a staging driver.
+On 11/04/2013 02:07 PM, Dan Carpenter wrote:
+> On Mon, Nov 04, 2013 at 01:04:00PM +0100, Hauke Mehrtens wrote:
+>> On 11/04/2013 12:51 PM, Dan Carpenter wrote:
+>>> I've been trying to remember the trick to get BRCM to work and I can't
+>>> remember at all.  I'm using BCM4313.  I've enabled everything with BCMA
+>>> or BRCM in the config name.
+>>>
+>>> The module loads and the device shows up if I type "ifconfig wlan0" but
+>>> network manager doesn't see it and wicd doesn't see it.  (These are old
+>>> versions of nm and wicd).
+>>>
+>>> This used to work under 3.8 but I didn't save my .config...  :(
 >>
->> There are distributions that don't build staging drivers.
-> 
-> As a result, they force their users to build out-of-tree drivers!
+>> Are these old versions of nm and wicd only supporting the deprecated
+>> WEXT interface? If this is the case you have to set
+>> CONFIG_CFG80211_WEXT=y in your config.
+>>
+>
+> I have that enabled.
+>
+>> You also need a firmware for this device /lib/firmware/brcm/bcm43xx-0.fw
+>> and /lib/firmware/brcm/bcm43xx_hdr-0.fw are needed.
+>
+> I have the firmware.
+>
+>>
+>> When the device gets detected by brcmsmac, it is probably not a problem
+>> in the Broadcom driver.
+>>
+>>> I've done a google search and it seems like the broadcom driver is still
+>>> a complete mess and you need to black list modules and hack everything
+>>> yourself on a per system basis?  Is that right?  Why can't we fix this
+>>> so it works?
 
-reformulating: As a result, they force their users to _have a stable kernel_
+There used to be a Kconfig item which would b43 claim the same device as 
+brcmsmac. That was changed to a b43 module parameter. So the only issue 
+could be if you previously had the proprietary broadcom-wl driver in 
+use, because that adds blacklist entries for both b43 and brcmsmac and 
+it does not get cleaned up when uninstalling.
 
-Staging is only a working area. And the rtl8712-TODO is unreal:
-- merge Realtek's bugfixes and new features into the driver
-- switch to use LIB80211
-- switch to use MAC80211
-- checkpatch.pl fixes - only a few remain
+If you never used the proprietary driver, there should be no issue with 
+it and I would not recommend going there (I am biased). As you obviously 
+do have a problem at hand, lets dive in. Can you send me a system and/or 
+kernel log.
 
->> So, please, replace and delete staging/rtl8712 with r92su.
-> 
-> You seem not to understand. Any new wireless driver that does not
-> use mac80211 *must* go into staging. AFAIK, that rule is absolute,
-                                              ^^^^^^^^^^^^^^^^^^^^^
-> and r92su cannot go into the regular wireless tree.
+Gr. AvS
 
-Who said that ? Then replace staging/rtl8712 with staging/r92su
-
-Anyway, r92su is a _linux_ driver with a cfg80211 interface.
-staging/rtl8712 is crap?
-
-1152k    drivers/staging/rtl8712/
-340k     r92su/
-
-> If you do not like having drivers for RTL8192SU in staging, then
-> write one that uses mac80211. You have access to as much information
-> about the chips as anyone outside Realtek. They have no interest
-> in doing the mac80211 version, and I have many other tasks with
-> higher priority.
-
-Nobody said that you have to write a rtl8712-mac80211.
-But right now there is a better alternative, and it should be used.
