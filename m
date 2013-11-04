@@ -1,261 +1,402 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f50.google.com ([74.125.83.50]:59726 "EHLO
-	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753166Ab3KHHEy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Nov 2013 02:04:54 -0500
-Received: by mail-ee0-f50.google.com with SMTP id b45so770947eek.23
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Nov 2013 23:04:52 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCHv2 11/13] ath10k: re-arrange PCI init code
-Date: Fri,  8 Nov 2013 08:01:33 +0100
-Message-Id: <1383894095-27998-12-git-send-email-michal.kazior@tieto.com> (sfid-20131108_080807_257194_A16EB88B)
-In-Reply-To: <1383894095-27998-1-git-send-email-michal.kazior@tieto.com>
-References: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com>
- <1383894095-27998-1-git-send-email-michal.kazior@tieto.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:3191 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753255Ab3KDJoT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Nov 2013 04:44:19 -0500
+Message-ID: <52776C67.8080608@broadcom.com> (sfid-20131104_104424_480954_0F91FF3E)
+Date: Mon, 4 Nov 2013 10:44:07 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Dong Aisheng" <dongas86@gmail.com>
+cc: linux-wireless@vger.kernel.org, frankyl@broadcom.com,
+	brcm80211-dev-list@broadcom.com
+Subject: Re: brcmfmac driver does not work with a BCM4335 WiFi module
+References: <CAA+hA=TSonWMWm9gf+n4T9+HxWT=pvJG9jnkdoUyZUNjPpnJfg@mail.gmail.com>
+ <5273840F.40808@broadcom.com>
+ <CAA+hA=QB3S6nv1sjtiWQxwrzT3qivoWtaz_noLgVpA-5jBhjiw@mail.gmail.com>
+ <5273ABAC.1090109@broadcom.com>
+ <CAA+hA=TafyyKy3a4i8Kq11DdqnNv6+7LJmHC5=HVFc+qCd5byg@mail.gmail.com>
+ <CAA+hA=RHbqQN3Z624A_SxfYO3CgetZvvKxyMNEt3Y+T0HTAapA@mail.gmail.com>
+In-Reply-To: <CAA+hA=RHbqQN3Z624A_SxfYO3CgetZvvKxyMNEt3Y+T0HTAapA@mail.gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch moves irq registering after necessary
-structures have been allocated and initialized.
-This should prevent interrupts from causing
-tasklet access invalid memory pointers.
+On 11/04/2013 09:13 AM, Dong Aisheng wrote:
+> Hi Arend,
+>
+> On Mon, Nov 4, 2013 at 11:44 AM, Dong Aisheng <dongas86@gmail.com> wrote:
+>> Hi Arend,
+>>
+>> On Fri, Nov 1, 2013 at 9:25 PM, Arend van Spriel <arend@broadcom.com> wrote:
+>>> On 11/01/2013 01:21 PM, Dong Aisheng wrote:
+>>>>
+>>>> Hi Arend,
+>>>>
+>>>> On Fri, Nov 1, 2013 at 6:35 PM, Arend van Spriel <arend@broadcom.com>
+>>>> wrote:
+>>>>>
+>>>>> On 11/01/2013 07:22 AM, Dong Aisheng wrote:
+>>>>>>
+>>>>>>
+>>>>>> Hi ALL,
+>>>>>>
+>>>>>> I'm verifying BCM4335 WiFi module on i.MX6SL EVK board.
+>>>>>> The kernel i ran is latest from:
+>>>>>> git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git
+>>>>>>
+>>>>>> The firmware is used is from:
+>>>>>>
+>>>>>> git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
+>>>>>>
+>>>>>> NVRAM file is got from the vendor which should work for the module.
+>>>>>>
+>>>>>> But i ran into the following issues, hope somebody can give me some
+>>>>>> hints.
+>>>>>>
+>>>>>> First, i met error when module is auto loaded, but seems the driver is
+>>>>>> still loaded successfully since i found the new WiFi interface with
+>>>>>> ifconfig.
+>>>>>> But it can not work after run rfkill unblock wlan and a lot error
+>>>>>> messages comes out.
+>>>>>>
+>>>>>> I'm wondering if this driver can support bcm4335 well, can anybody
+>>>>>> provide some help?
+>>>>>
+>>>>>
+>>>>>
+>>>>> I can try. I have used the bcm4335 with a SDIO3.0 controller on a x86 PC.
+>>>>> Looking at an issue right now, but your log does not show that so you
+>>>>> have a
+>>>>> different issue. Could you load the module with parameter 'debug=0x146'.
+>>>>>
+>>>>
+>>>> Thanks for the help.
+>>>> So that means the brcmfmac driver should support bcm4335 module well,
+>>>> right?
+>>>> The difference is that i'm using a ARM platform.
+>>>> Below is log with 'debug=0x146'.
+>>>> It only includes driver probe log.
+>>>
+>>>
+>>> That log actually looks fine. Just not sure why software rfkill was enabled.
+>>> Is that still the case? What distro is running on your platform?
+>>>
+>>
+>> Do you  mean the error message during probe is also fine?
+>> root@imx6slevk:~# mmc0: queuing unknown CIS tuple 0x91 (3 bytes)
+>> mmc0: new high speed SDIO card at address 0001
+>> brcmfmac: brcmf_sdioh_request_word: Failed to read word, Err: 0xffffffac
+>> brcmfmac: brcmf_sdioh_request_word: Failed to read word, Err: 0xffffffac
+>> brcmfmac: brcmf_sdioh_request_word: Failed to read word, Err: 0xffffffac
+>> brcmfmac: brcmf_sdio_regrw_helper: failed with -84     <--- error message
+>> brcmfmac: brcmf_sdio_chip_
+>> drivestrengthinit: No SDIO Drive strength
+>> init done for chip 4335 rev 1 pmurev 18
+>> brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0: Mar 24 2013
+>> 20:36:01 version 6.30.171.24.20 (B0 Station/P2P)
+>> brcmfmac: brcmf_fil_cmd_data: Failed err=-23              <---- error message
+>>
+>> I'm using yocto rootfs, seems rfkill is always enabled by default.
+>> I could try another rootfs without rfkill.
+>> But i don't think rfkill should block WiFi driver to work properly.
+>>
+>
+> I tried another rootfs without rfkill, met the same issue when doing
+> ifconfig wlan0 up, just like 'rfkill unblock wlan'.
+>
+> root@freescale ~$ mmc0: mmc_rescan_try_freq: trying to init card at 400000 Hz
+> mmc0: queuing unknown CIS tuple 0x91 (3 bytes)
+> mmc0: new high speed SDIO card at address 0001
+> brcmfmac: brcmf_sdioh_request_word: Failed to read word, Err: 0xffffffac
+> brcmfmac: brcmf_sdioh_request_word: Failed to read word, Err: 0xffffffac
+> brcmfmac: brcmf_sdioh_request_word: Failed to read word, Err: 0xffffffac
+> brcmfmac: brcmf_sdio_regrw_helper: failed with -84
+> brcmfmac: brcmf_sdio_chip_drivestrengthinit: No SDIO Drive strength
+> init done for chip 4335 rev 1 pmurev 18
+> brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0: Mar 24 2013
+> 20:36:01 version 6.30.171.24.20 (B0 Station/P2P)
+> brcmfmac: brcmf_fil_cmd_data: Failed err=-23
+>
+> root@freescale ~$
+> root@freescale ~$
+> root@freescale ~$ ifconfig -a
+> ......
+>
+> wlan0     Link encap:Ethernet  HWaddr 00:90:4C:C5:12:38
+>            BROADCAST MULTICAST  MTU:1500  Metric:1
+>            RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+>            TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+>            collisions:0 txqueuelen:1000
+>            RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+>
+> root@freescale ~$ ifconfig wlan0 up
+> brcmfmac: brcmf_sdbrcm_bus_rxctl: resumed on timeout
+> brcmfmac: brcmf_add_if: ERROR: netdev:wlan0 already exists
+> brcmfmac: brcmf_add_if: ignore IF event
+> brcmfmac: brcmf_fil_cmd_data: Failed err=-110
+>
+> brcmfmac: brcmf_fil_cmd_data: Failed err=-23
+> root@freescale ~$
+> root@freescale ~$
+> root@freescale ~$ brcmfmac: brcmf_sdioh_request_byte: Failed to write
+> byte F1:@0x1001f=01, Err: -110
+> brcmfmac: brcmf_sdioh_request_byte: Failed to read byte
+> F1:@0x1001f=ff, Err: -110
+> brcmfmac: brcmf_sdioh_request_byte: Failed to read byte
+> F1:@0x1001f=ff, Err: -110
+>
+> root@freescale ~$ brcmfmac: brcmf_sdioh_request_byte: Failed to write
+> byte F1:@0x1001f=01, Err: -110
+> brcmfmac: brcmf_sdioh_request_byte: Failed to read byte
+> F1:@0x1001f=ff, Err: -110
+> brcmfmac: brcmf_sdioh_request_byte: Failed to read byte
+> F1:@0x1001f=ff, Err: -110
+> brcmfmac: brcmf_sdioh_request_byte: Failed to write byte
+> F1:@0x1001f=01, Err: -110
+> brcmfmac: brcmf_sdioh_request_byte: Failed to read byte
+> F1:@0x1001f=ff, Err: -110
+> brcmfmac: brcmf_sdioh_request_byte: Failed to read byte
+> F1:@0x1001f=ff, Err: -110
+>
+> I looked into a bit more about the error and found there's CMD timeout
+> on the bus during SDIO
+> command transfer.
+> ---------------------------------------
+> brcmutil: RxHdr:
+> 00000000: 20 00 df ff 19 00 00 0c 00 35 00 00               ........5..
+> brcmfmac: brcmf_sdbrcm_read_control Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> mmc0: starting CMD52 arg 92001400 flags 00000195
+> sdhci [sdhci_irq()]: *** mmc0 got interrupt: 0x00010000
+> mmc0: req done (CMD52): -110: 00000000 00000000 00000000 00000000
+> brcmfmac: brcmf_sdioh_request_byte: Failed to write byte
+> F1:@0x1000a=00, Err: -110
+> ------------------------------------------
+> I'm not sure how this happened, whether caused by host side or wifi driver side.
+> But for the host, i tried this host driver with another WiFi
+> card(Atheros AR6103) with same kernel,
+> and it worked well. So the host driver seems more like ok to me.
+>
+> Since i'm not familar with the WiFi driver, i wonder if you could
+> provide suggestion
+> from WiFi driver layer to see what the issue could be.
+>
+> Below is the detailed log when run 'ifconfig wlan0 up'
+>
+> root@freescale ~$ ifconfig wlan0 up
+> brcmfmac: brcmf_netdev_open Enter, idx=0
+> brcmfmac: brcmf_sdbrcm_bus_txctl Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_kso_control Enter
+> brcmutil: TxHdr:
+> 00000000: 2f 00 d0 ff 10 00 00 14 00 00 00 00 00 00 00 00  /...............
+> brcmfmac: brcmf_sdio_ib_irqhandler IB intr triggered
+> brcmfmac: brcmf_sdbrcm_isr Enter
+> brcmfmac: brcmf_sdbrcm_dpc Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_dpc Dongle reports CHIPACTIVE
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_kso_control Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_bus_rxctl Enter
+>
+> brcmfmac: brcmf_sdbrcm_bus_rxctl: resumed on timeout
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_kso_control Enter
+> brcmfmac: brcmf_sdio_ib_irqhandler IB intr triggered
+> brcmfmac: brcmf_sdbrcm_isr Enter
+> brcmfmac: brcmf_sdbrcm_dpc Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdio_readframes Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_kso_control Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_checkdied firmware not built with -assert
+> brcmfmac: brcmf_fil_cmd_data: Failed err=-110
+> brcmutil: RxHdr:
+> 00000000: 27 00 d8 ff 12 00 00 0c 00 26 00 00              '........&..
+> brcmfmac: brcmf_sdbrcm_read_control Enter
+> brcmfmac: brcmf_sdbrcm_bus_txctl Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_kso_control Enter
+> brcmutil: TxHdr:
+> 00000000: 28 00 d7 ff 11 00 00 14 00 00 00 00 00 00 00 00  (...............
+> brcmfmac: brcmf_sdio_ib_irqhandler IB intr triggered
+> brcmfmac: brcmf_sdbrcm_isr Enter
+> brcmutil: RxHdr:
+> 00000000: 00 00 00 00 00 00 00 00 00 00 00 00              ............
+> brcmfmac: brcmf_sdbrcm_dpc Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_bus_rxctl Enter
+> brcmfmac: brcmf_sdbrcm_bus_rxctl Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_dpc Dongle reports CHIPACTIVE
+> brcmfmac: brcmf_sdbrcm_dpc Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_kso_control Enter
+> brcmfmac: brcmf_sdio_ib_irqhandler IB intr triggered
+> brcmfmac: brcmf_sdbrcm_isr Enter
+> brcmfmac: brcmf_sdbrcm_dpc Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_kso_control Enter
+> brcmfmac: brcmf_sdio_readframes Enter
+> brcmutil: RxHdr:
+> 00000000: 20 00 df ff 13 00 00 0c 00 32 00 00               ........2..
+> brcmfmac: brcmf_sdbrcm_read_control Enter
+> brcmfmac: brcmf_sdbrcm_bus_txctl Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmutil: TxHdr:
+> 00000000: 28 00 d7 ff 12 00 00 14 00 00 00 00 00 00 00 00  (...............
+> brcmutil: RxHdr:
+> 00000000: 10 00 ef ff 14 83 0f 0c 00 32 00 00              .........2..
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_kso_control Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_fws_hdrpull enter: ifidx 0, skblen 88, sig 8
+> brcmfmac: brcmf_fws_hdrpull tlv type=TRANS_ID (18), len=6 (6)
+> brcmfmac: brcmf_fws_hdrpull enter: ifidx 0, skblen 87, sig 8
+> brcmfmac: brcmf_fws_hdrpull tlv type=TRANS_ID (18), len=6 (6)
+> brcmfmac: brcmf_fws_notify_credit_map enter: credits 09:27:12:09:09:02
+> brcmfmac: brcmf_add_if Enter, idx=0, ifidx=0
+> brcmfmac: brcmf_add_if: ERROR: netdev:wlan0 already exists
+> brcmfmac: brcmf_add_if: ignore IF event
+> brcmfmac: brcmf_sdbrcm_bus_rxctl Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmutil: RxHdr:
+> 00000000: 20 00 df ff 17 00 00 0c 00 33 00 00               ........3..
+> brcmfmac: brcmf_sdbrcm_read_control Enter
+> brcmfmac: brcmf_sdio_ib_irqhandler IB intr triggered
+> brcmfmac: brcmf_sdbrcm_isr Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_bus_txctl Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_kso_control Enter
+> brcmutil: TxHdr:
+> 00000000: 28 00 d7 ff 13 00 00 14 00 00 00 00 00 00 00 00  (...............
+> brcmutil: RxHdr:
+> 00000000: 00 00 00 00 00 00 00 00 00 00 00 00              ............
+> brcmfmac: brcmf_sdbrcm_dpc Enter
+> brcmfmac: brcmf_sdbrcm_bus_rxctl Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdio_readframes Enter
+> brcmutil: RxHdr:
+> 00000000: 20 00 df ff 18 00 00 0c 00 34 00 00               ........4..
+> brcmfmac: brcmf_sdbrcm_read_control Enter
+> brcmfmac: brcmf_sdio_ib_irqhandler IB intr triggered
+> brcmfmac: brcmf_sdbrcm_isr Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_bus_txctl Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmutil: TxHdr:
+> 00000000: 28 00 d7 ff 14 00 00 14 00 00 00 00 00 00 00 00  (...............
+> brcmutil: RxHdr:
+> 00000000: 00 00 00 00 00 00 00 00 00 00 00 00              ............
+> brcmfmac: brcmf_sdbrcm_dpc Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdio_readframes Enter
+> brcmutil: RxHdr:
+> 00000000: 00 00 00 00 00 00 00 00 00 00 00 00              ............
+> brcmfmac: brcmf_sdbrcm_dpc Enter
+> brcmfmac: brcmf_sdbrcm_bus_rxctl Enter
+> brcmfmac: brcmf_sdio_ib_irqhandler IB intr triggered
+> brcmfmac: brcmf_sdbrcm_isr Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdio_readframes Enter
+> brcmutil: RxHdr:
+> 00000000: 20 00 df ff 19 00 00 0c 00 35 00 00               ........5..
+> brcmfmac: brcmf_sdbrcm_read_control Enter
+> brcmfmac: brcmf_sdbrcm_bus_txctl Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmutil: TxHdr:
+> 00000000: 28 00 d7 ff 15 00 00 14 00 00 00 00 00 00 00 00  (...............
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_kso_control Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmutil: RxHdr:
+> 00000000: 00 00 00 00 00 00 00 00 00 00 00 00              ............
+> brcmfmac: brcmf_sdbrcm_dpc Enter
+> brcmfmac: brcmf_sdbrcm_bus_rxctl Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_kso_control Enter
+> brcmfmac: brcmf_sdbrcm_dpc Enter
+> brcmfmac: brcmf_sdio_ib_irqhandler IB intr triggered
+> brcmfmac: brcmf_sdbrcm_isr Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdio_readframes Enter
+> brcmutil: RxHdr:
+> 00000000: 20 00 df ff 1a 00 00 0c 00 36 00 00               ........6..
+> brcmfmac: brcmf_sdbrcm_read_control Enter
+> brcmfmac: brcmf_config_dongle power save set to enabled
+> brcmfmac: brcmf_dongle_roam Internal Roaming = On
 
-Reported-By: Ben Greear <greearb@candelatech.com>
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/ce.c  | 19 ++++++--
- drivers/net/wireless/ath/ath10k/ce.h  |  1 +
- drivers/net/wireless/ath/ath10k/pci.c | 87 ++++++++++++++++++++++-------------
- 3 files changed, 71 insertions(+), 36 deletions(-)
+It seem this is the last command being sent. Could you provide file 
+contents in /sys/kernel/debug/brcmfmac/mmc*/
 
-diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
-index ab22d14..476928f 100644
---- a/drivers/net/wireless/ath/ath10k/ce.c
-+++ b/drivers/net/wireless/ath/ath10k/ce.c
-@@ -792,6 +792,21 @@ static void ath10k_ce_per_engine_handler_adjust(struct ath10k_ce_pipe *ce_state,
- 	ath10k_pci_sleep(ar);
- }
- 
-+int ath10k_ce_enable_err_irq(struct ath10k *ar)
-+{
-+	int i, ret;
-+
-+	ret = ath10k_pci_wake(ar);
-+	if (ret)
-+		return ret;
-+
-+	for (i = 0; i < CE_COUNT; i++)
-+		ath10k_ce_error_intr_enable(ar, ath10k_ce_base_address(i));
-+
-+	ath10k_pci_sleep(ar);
-+	return 0;
-+}
-+
- int ath10k_ce_disable_interrupts(struct ath10k *ar)
- {
- 	int ce_id, ret;
-@@ -1059,7 +1074,6 @@ struct ath10k_ce_pipe *ath10k_ce_init(struct ath10k *ar,
- 				const struct ce_attr *attr)
- {
- 	struct ath10k_ce_pipe *ce_state;
--	u32 ctrl_addr = ath10k_ce_base_address(ce_id);
- 	int ret;
- 
- 	/*
-@@ -1105,9 +1119,6 @@ struct ath10k_ce_pipe *ath10k_ce_init(struct ath10k *ar,
- 		}
- 	}
- 
--	/* Enable CE error interrupts */
--	ath10k_ce_error_intr_enable(ar, ctrl_addr);
--
- out:
- 	ath10k_pci_sleep(ar);
- 	return ce_state;
-diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
-index 67dbde6..8a58bac 100644
---- a/drivers/net/wireless/ath/ath10k/ce.h
-+++ b/drivers/net/wireless/ath/ath10k/ce.h
-@@ -235,6 +235,7 @@ void ath10k_ce_deinit(struct ath10k_ce_pipe *ce_state);
- void ath10k_ce_per_engine_service_any(struct ath10k *ar);
- void ath10k_ce_per_engine_service(struct ath10k *ar, unsigned int ce_id);
- int ath10k_ce_disable_interrupts(struct ath10k *ar);
-+int ath10k_ce_enable_err_irq(struct ath10k *ar);
- 
- /* ce_attr.flags values */
- /* Use NonSnooping PCIe accesses? */
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 0b89726..e552770 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1786,18 +1786,6 @@ static int ath10k_pci_ce_init(struct ath10k *ar)
- 		pipe_info->buf_sz = (size_t) (attr->src_sz_max);
- 	}
- 
--	/*
--	 * Initially, establish CE completion handlers for use with BMI.
--	 * These are overwritten with generic handlers after we exit BMI phase.
--	 */
--	pipe_info = &ar_pci->pipe_info[BMI_CE_NUM_TO_TARG];
--	ath10k_ce_send_cb_register(pipe_info->ce_hdl,
--				   ath10k_pci_bmi_send_done, 0);
--
--	pipe_info = &ar_pci->pipe_info[BMI_CE_NUM_TO_HOST];
--	ath10k_ce_recv_cb_register(pipe_info->ce_hdl,
--				   ath10k_pci_bmi_recv_data);
--
- 	return 0;
- }
- 
-@@ -1830,17 +1818,27 @@ static void ath10k_pci_fw_interrupt_handler(struct ath10k *ar)
- 	ath10k_pci_sleep(ar);
- }
- 
-+static void ath10k_pci_start_bmi(struct ath10k *ar)
-+{
-+	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
-+	struct ath10k_pci_pipe *pipe;
-+
-+	/*
-+	 * Initially, establish CE completion handlers for use with BMI.
-+	 * These are overwritten with generic handlers after we exit BMI phase.
-+	 */
-+	pipe = &ar_pci->pipe_info[BMI_CE_NUM_TO_TARG];
-+	ath10k_ce_send_cb_register(pipe->ce_hdl, ath10k_pci_bmi_send_done, 0);
-+
-+	pipe = &ar_pci->pipe_info[BMI_CE_NUM_TO_HOST];
-+	ath10k_ce_recv_cb_register(pipe->ce_hdl, ath10k_pci_bmi_recv_data);
-+}
-+
- static int ath10k_pci_hif_power_up(struct ath10k *ar)
- {
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	int ret;
- 
--	ret = ath10k_pci_start_intr(ar);
--	if (ret) {
--		ath10k_err("could not start interrupt handling (%d)\n", ret);
--		goto err;
--	}
--
- 	/*
- 	 * Bring the target up cleanly.
- 	 *
-@@ -1854,13 +1852,9 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar)
- 	ret = ath10k_pci_device_reset(ar);
- 	if (ret) {
- 		ath10k_err("failed to reset target: %d\n", ret);
--		goto err_irq;
-+		goto err;
- 	}
- 
--	ret = ath10k_pci_wait_for_target_init(ar);
--	if (ret)
--		goto err_irq;
--
- 	if (!test_bit(ATH10K_PCI_FEATURE_SOC_POWER_SAVE, ar_pci->features))
- 		/* Force AWAKE forever */
- 		ath10k_do_pci_wake(ar);
-@@ -1869,25 +1863,54 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar)
- 	if (ret)
- 		goto err_ps;
- 
--	ret = ath10k_pci_init_config(ar);
--	if (ret)
-+	ret = ath10k_ce_disable_interrupts(ar);
-+	if (ret) {
-+		ath10k_err("failed to disable CE interrupts: %d\n", ret);
-+		goto err_ce;
-+	}
-+
-+	ret = ath10k_pci_start_intr(ar);
-+	if (ret) {
-+		ath10k_err("failed to start interrupt handling: %d\n", ret);
- 		goto err_ce;
-+	}
-+
-+	ret = ath10k_pci_wait_for_target_init(ar);
-+	if (ret) {
-+		ath10k_err("failed to wait for target to init: %d\n", ret);
-+		goto err_irq;
-+	}
-+
-+	ret = ath10k_ce_enable_err_irq(ar);
-+	if (ret) {
-+		ath10k_err("failed to enable CE error irq: %d\n", ret);
-+		goto err_irq;
-+	}
-+
-+	ret = ath10k_pci_init_config(ar);
-+	if (ret) {
-+		ath10k_err("failed to setup init config: %d\n", ret);
-+		goto err_irq;
-+	}
- 
- 	ret = ath10k_pci_wake_target_cpu(ar);
- 	if (ret) {
- 		ath10k_err("could not wake up target CPU (%d)\n", ret);
--		goto err_ce;
-+		goto err_irq;
- 	}
- 
-+	ath10k_pci_start_bmi(ar);
- 	return 0;
- 
-+err_irq:
-+	ath10k_ce_disable_interrupts(ar);
-+	ath10k_pci_stop_intr(ar);
-+	ath10k_pci_kill_tasklet(ar);
- err_ce:
- 	ath10k_pci_ce_deinit(ar);
- err_ps:
- 	if (!test_bit(ATH10K_PCI_FEATURE_SOC_POWER_SAVE, ar_pci->features))
- 		ath10k_do_pci_sleep(ar);
--err_irq:
--	ath10k_pci_stop_intr(ar);
- err:
- 	return ret;
- }
-@@ -2156,7 +2179,7 @@ static int ath10k_pci_start_intr_legacy(struct ath10k *ar)
- 	if (ret < 0)
- 		return ret;
- 
--	ret = ath10k_do_pci_wake(ar);
-+	ret = ath10k_pci_wake(ar);
- 	if (ret) {
- 		free_irq(ar_pci->pdev->irq, ar);
- 		ath10k_err("failed to wake up target: %d\n", ret);
-@@ -2176,7 +2199,7 @@ static int ath10k_pci_start_intr_legacy(struct ath10k *ar)
- 		  ar_pci->mem + (SOC_CORE_BASE_ADDRESS |
- 				 PCIE_INTR_ENABLE_ADDRESS));
- 
--	ath10k_do_pci_sleep(ar);
-+	ath10k_pci_sleep(ar);
- 	ath10k_info("legacy interrupt handling\n");
- 	return 0;
- }
-@@ -2252,7 +2275,7 @@ static int ath10k_pci_wait_for_target_init(struct ath10k *ar)
- 	int wait_limit = 300; /* 3 sec */
- 	int ret;
- 
--	ret = ath10k_do_pci_wake(ar);
-+	ret = ath10k_pci_wake(ar);
- 	if (ret) {
- 		ath10k_err("failed to wake up target: %d\n", ret);
- 		return ret;
-@@ -2277,7 +2300,7 @@ static int ath10k_pci_wait_for_target_init(struct ath10k *ar)
- 	}
- 
- out:
--	ath10k_do_pci_sleep(ar);
-+	ath10k_pci_sleep(ar);
- 	return ret;
- }
- 
--- 
-1.8.4.rc3
+Not sure if Yocto mounts debugfs on /sys/kernel/debug. Otherwise you can do:
+
+# mkdir /tmp/debugfs
+# mount -t debugfs none /tmp/debugfs
+
+Regards,
+Arend
+
+> brcmfmac: brcmf_sdbrcm_bus_txctl Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_kso_control Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmutil: RxHdr:
+> 00000000: 00 00 00 00 00 00 00 00 00 00 00 00              ............
+> brcmfmac: brcmf_sdbrcm_dpc Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_kso_control Enter
+> brcmutil: TxHdr:
+> 00000000: 31 00 ce ff 16 00 00 14 00 00 00 00 00 00 00 00  1...............
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_kso_control Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_kso_control Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_kso_control Enter
+> brcmfmac: brcmf_sdbrcm_bus_rxctl Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+>
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+> brcmfmac: brcmf_sdbrcm_bus_sleep Enter        <-- the driver loops
+> here by running this function
+> .................
+>
+>
+> Regards
+> Dong Aisheng
+>
+
 
