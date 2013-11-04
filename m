@@ -1,41 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:48197 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752483Ab3KXVED (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Nov 2013 16:04:03 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: arend@broadcom.com, brcm80211-dev-list@broadcom.com,
-	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] brcmsmac: remove dependency on CRC8 and CRC_CCITT
-Date: Sun, 24 Nov 2013 22:03:41 +0100
-Message-Id: <1385327021-26851-1-git-send-email-hauke@hauke-m.de> (sfid-20131124_220407_349810_D695C0A2)
+Received: from relay2.gtri.gatech.edu ([130.207.199.168]:56681 "EHLO
+	relay2.gtri.gatech.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753697Ab3KDQcb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Nov 2013 11:32:31 -0500
+Message-ID: <5277C837.1080203@gtri.gatech.edu> (sfid-20131104_173234_763255_BECC206C)
+Date: Mon, 4 Nov 2013 11:15:51 -0500
+From: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Christian Lamparter <chunkeey@googlemail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	<alexandre.f.demers@gmail.com>, <linville@tuxdriver.com>
+Subject: Re: r92su: status and will it be merged anytime soon?
+References: <5277AC85.5050104@gmail.com> <5277BE84.7020808@lwfinger.net>  <2241712.PWvD8zsTbX@blech> (sfid-20131104_164804_181538_4F8FA020) <1383581060.14295.16.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1383581060.14295.16.camel@jlt4.sipsolutions.net>
+Content-Type: multipart/signed; protocol="application/pkcs7-signature";
+	micalg=sha1; boundary="------------ms020707030005000404020404"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is no code in brcmsmac that uses a function from CRC8 or
-CRC_CCITT any more. Building brcmsmac with these two disabled works
-without any problems. This was probably only used by the bus code which
-was replaced by bcma some time ago.
+--------------ms020707030005000404020404
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/net/wireless/brcm80211/Kconfig |    2 --
- 1 file changed, 2 deletions(-)
+On 11/04/2013 11:04 AM, Johannes Berg wrote:
+> On Mon, 2013-11-04 at 16:47 +0100, Christian Lamparter wrote:
+>
+>> Be careful ;-). mac80211 is great for softmac/umac/halfmac/semimac dev=
+ices.
+>> However the rtl8712 firmware interface is fullmac-like, so it needs cf=
+g80211.
+>> ... and r92su uses cfg80211 exclusively. There's no more WEXT or realt=
+ek ioctl
+>> legacy API support.
+>
+> still seems there's duplicate stuff in there like the michael MIC, at
+> least lib80211 has that? OTOH, that's not all that much code.
+>
+> johannes
+>
 
-diff --git a/drivers/net/wireless/brcm80211/Kconfig b/drivers/net/wireless/brcm80211/Kconfig
-index b00a7e9..ce0add3 100644
---- a/drivers/net/wireless/brcm80211/Kconfig
-+++ b/drivers/net/wireless/brcm80211/Kconfig
-@@ -7,8 +7,6 @@ config BRCMSMAC
- 	depends on BCMA
- 	select BRCMUTIL
- 	select FW_LOADER
--	select CRC_CCITT
--	select CRC8
- 	select CORDIC
- 	---help---
- 	  This module adds support for PCIe wireless adapters based on Broadcom
--- 
-1.7.10.4
+FWIW I separately wrote a "rtlfmac" cfg80211 driver that, after all was=20
+said and done, looked a lot like a barebones r92su.  I have been using=20
+my driver for a few weeks now and it looks like multiple people have=20
+reported success using r92su.  I believe a fullmac/cfg80211 approach is=20
+completely sufficient and far superior to the mess that is rtl8712.  I=20
+would be in favor of r92su replacing staging/rtl8712/.
 
+Josh
+
+
+
+--------------ms020707030005000404020404
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIQGjCC
+BSYwggMOoAMCAQICAgPDMA0GCSqGSIb3DQEBCwUAMGoxCzAJBgNVBAYTAlVTMRAwDgYDVQQI
+EwdHZW9yZ2lhMRAwDgYDVQQHEwdBdGxhbnRhMQ0wCwYDVQQKEwRHVFJJMQ4wDAYDVQQLEwVD
+VElTTDEYMBYGA1UEAxMPQ1RJU0wtR1RSSSBDQSAxMB4XDTEzMDQzMDIwMzc0M1oXDTE0MDQz
+MDIwMzc0M1owcjELMAkGA1UEBhMCVVMxEDAOBgNVBAgTB0dlb3JnaWExEDAOBgNVBAcTB0F0
+bGFudGExDTALBgNVBAoTBEdUUkkxDjAMBgNVBAsTBUNUSVNMMQ8wDQYDVQQLEwZQZW9wbGUx
+DzANBgNVBAMTBmpyb3lzMzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAN3kbwWl
+knpdo7s6UT20xjsG2c3D4ysydilSRY+P5xSTSy11thVXm2dUxpYlwg2WF6tAaIycdXx/rLMr
+C2f1UWAR6mtnqTnfqf5ZGt6An8y3Mo9T++7jyhwV+qmIEmGLEl1DreugCK+11aGS7bddpb9a
+o5Ca1atUxtJEnRDEGXjg7JUyrVQ4XL4j3KIqTAWBmF15A3+S/yNHQtZuqrgm2LfdzhMf76zT
+++z6/l9spx+RhqsVpjZMkKmKoUP2sNSXoo5oWlkdJeJWOHlJiaU7wZHVFu7d0qGBA+kGngST
+gv7gPX5HpPdBF747jg9BMCrQtmCsQ8aIh9pHgPUiCWGWqqECAwEAAaOBzTCByjAfBgNVHSME
+GDAWgBSSVCFs93zm2Qj+xRTs1hnpvhJMmDBQBggrBgEFBQcBAQREMEIwQAYIKwYBBQUHMAGG
+NGh0dHA6Ly9vY3NwLmN0aXNsLmd0cmkuZ2F0ZWNoLmVkdToxMTE4MC9vY3NwL2VlL29jc3Aw
+DgYDVR0PAQH/BAQDAgUgMCYGA1UdEQQfMB2BG0pvc2h1YS5Sb3lzQGd0cmkuZ2F0ZWNoLmVk
+dTAdBgNVHQ4EFgQUmdvu/oCy9ct5xJ/vbIiqFTTtbsYwDQYJKoZIhvcNAQELBQADggIBAGs8
+2mpzx49jhHAZbmJAtBrO5JuacuJrx8ssUArPv/ASnKkq4QNJBi58DtrapBGuAuYjm5/nO/dg
+lbpX4d0yHAaJ0MP20f5hBTZQXUCr7u5lYdFYjTizeuOVzLCuwDTzzXeEgqacLAaGqkjxjzC/
+owZcFUfm5QUTd67tUBWQ3zRk2D6WXC+avfXWY2Lm9GnasD8QAIt6a1EKahrQr4Xq+o54+/rv
+nyRHTkjuIHw9KuYvhMcMo7RdnKik5AjsHmwsOTLqJOYxMV9PxEoHwQwZWFq3uzoaGufMvXRe
+hcMvwd1vZ/5v6EBiIfnd97TYOFM+dnIgZCfeJKsn8V2IYOSuWem7jrHc1a8T1HRmvJGtplbI
+1QeQDtMrJvHT5/rApcHTPQTOZvXUHP1q09sk6uZhj5ffj/XDNijFf5ExiRaAVH3KdKmP1iCI
+T8vAlJkc28ZZbCTOvrxZfoIqFaJyTszo/yVGDX9/AJIuKUEva6SMqzss2g5ZwqFy+L66FixU
+J7wMWk17emRRw25JdXQJTHV9Iqoa1egFq9pMV3aUoJPjm1EGIZxWZJ8e7YdzMUYYgPxXdeos
+XYeOzBCE5vXYI552nX18BQx45OSFKowbXiEHpL84GKpYmlSgr76rsFdeBEcqp/iP7lNhqLEf
+id01p1Zp7V4qXf+wV7F3BrPxaRs8VqahMIIFJjCCAw6gAwIBAgICA8QwDQYJKoZIhvcNAQEL
+BQAwajELMAkGA1UEBhMCVVMxEDAOBgNVBAgTB0dlb3JnaWExEDAOBgNVBAcTB0F0bGFudGEx
+DTALBgNVBAoTBEdUUkkxDjAMBgNVBAsTBUNUSVNMMRgwFgYDVQQDEw9DVElTTC1HVFJJIENB
+IDEwHhcNMTMwNDMwMjAzNzQzWhcNMTQwNDMwMjAzNzQzWjByMQswCQYDVQQGEwJVUzEQMA4G
+A1UECBMHR2VvcmdpYTEQMA4GA1UEBxMHQXRsYW50YTENMAsGA1UEChMER1RSSTEOMAwGA1UE
+CxMFQ1RJU0wxDzANBgNVBAsTBlBlb3BsZTEPMA0GA1UEAxMGanJveXMzMIIBIjANBgkqhkiG
+9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoEJa4SZiDWXDtXPWE3Y9nFu5nafr6sgjamUHwsyAlj9l
+tURjoKx4ugtxsD9X4w4oFv8JfZtrCWfsdks6q+PtbdHcS8oQnYViUE7iujZkO5Ep+KawLzXP
+baEWVya8RW2x8KzAOTb6DWMEaun9hkYdIRIgt132DN1vJIo9bUgmCOhpdMqJOtWtzc+OYrRV
+qSNHuXEaabHrZ0DaKN3RP7pF21w1g64sfjhTzN7iuk1il1b5+ieJWcG2dYC/1hpSv+I+59/W
+ncGWeqO1YBWMk2V/SwpqiP4zpR08nZoxZ6EV+6/vsY/Gckvvq9/IOp9FVZOd90hF6hilhpmu
+RTwBRH5dIwIDAQABo4HNMIHKMB8GA1UdIwQYMBaAFJJUIWz3fObZCP7FFOzWGem+EkyYMFAG
+CCsGAQUFBwEBBEQwQjBABggrBgEFBQcwAYY0aHR0cDovL29jc3AuY3Rpc2wuZ3RyaS5nYXRl
+Y2guZWR1OjExMTgwL29jc3AvZWUvb2NzcDAOBgNVHQ8BAf8EBAMCB4AwJgYDVR0RBB8wHYEb
+Sm9zaHVhLlJveXNAZ3RyaS5nYXRlY2guZWR1MB0GA1UdDgQWBBQPoWETShJ4Mvhsm6apXTMN
+Fv5hfTANBgkqhkiG9w0BAQsFAAOCAgEAGovirF/F77O6eHoWV6xB7r+nRRXIN/m2XdvRpTvI
+fL4nJWJud/hcX24mayCWGjeT2ur1bDI2WF4gXDCuUQTFvLTS3VFKlLIlVj5sCnxKMnrwDVoh
+2hzih5GH4+CrXaUQOy7fSiUv6uLlnEDlOtVcbhraxt0Rt94X8JVGkpcZ8dJYfNLF1dRS1Izq
+JWIQ1yVVyRJKFPW/PUrfSUkNwi0L3QZstuIm7wrTpgxnTaJrv+GEbTJaquFrLW7tV67FRwGc
+Uqg69LZp4LnhhzIdsZs7XDKz1E8Xfvkhv6lnE6hwk+FkxqDkIuarR+DAtzQfwZ2B0dIPHdBb
+sIeyAV/yHIq+IQ/TgO9kT/ccOynCH56H4czxXUQYeEQ6X3sp1S3ezbA9+3qhsfWp80O/vtdv
+0bwr24KGYbAQtFrnZzpWMi1ON0WmlrbSXbYy8x0NeOCGwkkUuwp2gSnsZo+fLwFCGT874237
+MsWaVtSUK2UtIN0pQdBkprOV7VcmapgPHxfI9b85fK2fJvheBmhhaS5PehxR0fADdWScMVG8
+qKeZN0a+GEgiUw9PRbBQza2+xIByldBLdCKCfw6auvNyoCzKtMbQF8q4BbBGjYIoeZsjs8ur
+X/RW1E96fhGKXm0H2NynY5bT8tXWssftMNPTrIc8MVnrQLPO5dfa7RFSnY4w0y3Zj5IwggXC
+MIIDqqADAgECAggG0kwjIVFiRzANBgkqhkiG9w0BAQsFADBwMQswCQYDVQQGEwJVUzEQMA4G
+A1UECBMHR2VvcmdpYTEQMA4GA1UEBxMHQXRsYW50YTENMAsGA1UEChMER1RSSTEOMAwGA1UE
+CxMFQ1RJU0wxHjAcBgNVBAMTFUNUSVNMLUdUUkkgUEtJIFJvb3QgMTAeFw0xMTA0MjcxNzA5
+NDRaFw0yMzA0MjcxNzA5NDRaMGoxCzAJBgNVBAYTAlVTMRAwDgYDVQQIEwdHZW9yZ2lhMRAw
+DgYDVQQHEwdBdGxhbnRhMQ0wCwYDVQQKEwRHVFJJMQ4wDAYDVQQLEwVDVElTTDEYMBYGA1UE
+AxMPQ1RJU0wtR1RSSSBDQSAxMIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAsfmR
+Q/qpXynpVccOsyVUG3APEXBvNsoSNv7mQc1SA01nbsE9siNwEIicmyutvXDgmW8zBfoTO4cF
+ybtncZaSdGvC9etFobQkH2wOOczEXqRrxVLrkAPPk98bJn8jUv7nXxdkq/AEaHqESukD3wgV
+zRo4kq+8OD6ZM/eXWlVYKbde+7U51nidLLVLhqiX8f+q47m311FwExhzpfYB48IVj13dmMuF
+b49akwf+qpT1LUV/YL8QL8YjKg0e0T76VT4yqacZlkXOMKyfbgJ+DNvRyPqR/+S84kzIZlvz
+n9DA3Rc+RYaHwxmcUfEGiSu3hEq2ropbY5scjrPC8zh4FFK8LIwq6iVn0ce5xBe21TyGdTps
+hk1GZhOmz226/dAU/SV5wEO/CUrqbG6L5hoAWHwkmNJZSFmMdkBqJs4GmgwnD1Uakd7BkCWT
+H/V8zjaoTG6WHMygfb/FMfRGJrekcRbxZeCYhFTN7ROjRU9jjfFJrnnfv83wFQjruTj9LL95
+y8HYE/KAWl0c3ILIcjCxjKyMBHu8QeTqfrWzm6/LiO2yMUFdymiHau/TsV3foP7E7TslAldU
+1uSVo3AFn5rNPEZjGnjjlg//XPSxPxjxKjpakRBuJIess4rIq8sEQ6o8ovUFgM8VZfyEDzGb
+c/tMrb/+y2BxI1zBFomfNLUZ4nt62SECAwEAAaNmMGQwHwYDVR0jBBgwFoAUFxCSy/lGy2+L
+Aw+eUnto8/9ysawwHQYDVR0OBBYEFJJUIWz3fObZCP7FFOzWGem+EkyYMA4GA1UdDwEB/wQE
+AwIBhjASBgNVHRMBAf8ECDAGAQH/AgECMA0GCSqGSIb3DQEBCwUAA4ICAQBzfvU2Yrs9zwQZ
+RR9dEdHnNlMNDfgnl1cAOuw2VtVmSgCjohakhmxZEjTJQo9qj3m4uNRrIMfnf3FGC7UJmIfM
+P3JzGkB4oO38m7FKuvbYgC9vBTLZ4GQry4reblMDdYGzejkL1e822T735Q8JJSTh+Hn5jDBx
+FxrszsShs4yBQcJVUP+3JRVRDZWf6x8NVvUQiPa4gf+LeB62qhWa4mW4SkG5Yd8ze1mmUerP
+IPIPOQWQ1TPOBt/tMAuce1uy6tfqwqgPu6QEILj9lvqQ8gI1D+2aa9/f1/iw/hjE+R/KsG+A
+/PvzJBk+w0nGMPk/Tw1iuTpkra410da548AywenBq50BBiMnrxRorma/+6Adwe0ycNAE1JEk
+CaI7/S3oEBpAnUi0oAj89h/abnVdH6idkNNCvcjvXOUUvhDBbhhkcOhnJwtErZsSpdGgw7Nw
+Y3YMjaZrL8E9zjS3X/zsmPAkwxAMupO991Ug8MBboAp5MYDc3vcrU18gw2Bru0BToHiiHb0l
+TcuiKwfxqIOQitNmsi2/xYDtwKpekOMSSQ/nvfHyWEa1ei/qx2lVDJOW2jpVbRFEZAIwv/lP
+dYdilwn/YQTTwauCu4kuDZN7+dgFnNplise7CwLIln1eLWQOCIiSPctSoO4KAJg2dreS7xxs
+HSF1n491h8xZO/XPyCcfIjGCA2swggNnAgEBMHAwajELMAkGA1UEBhMCVVMxEDAOBgNVBAgT
+B0dlb3JnaWExEDAOBgNVBAcTB0F0bGFudGExDTALBgNVBAoTBEdUUkkxDjAMBgNVBAsTBUNU
+SVNMMRgwFgYDVQQDEw9DVElTTC1HVFJJIENBIDECAgPEMAkGBSsOAwIaBQCgggHQMBgGCSqG
+SIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTEzMTEwNDE2MTU1MVowIwYJ
+KoZIhvcNAQkEMRYEFP2xyunZIErzC0QJKLNUDgF3ODwCMGwGCSqGSIb3DQEJDzFfMF0wCwYJ
+YIZIAWUDBAEqMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzAOBggqhkiG9w0DAgICAIAwDQYI
+KoZIhvcNAwICAUAwBwYFKw4DAgcwDQYIKoZIhvcNAwICASgwfwYJKwYBBAGCNxAEMXIwcDBq
+MQswCQYDVQQGEwJVUzEQMA4GA1UECBMHR2VvcmdpYTEQMA4GA1UEBxMHQXRsYW50YTENMAsG
+A1UEChMER1RSSTEOMAwGA1UECxMFQ1RJU0wxGDAWBgNVBAMTD0NUSVNMLUdUUkkgQ0EgMQIC
+A8MwgYEGCyqGSIb3DQEJEAILMXKgcDBqMQswCQYDVQQGEwJVUzEQMA4GA1UECBMHR2Vvcmdp
+YTEQMA4GA1UEBxMHQXRsYW50YTENMAsGA1UEChMER1RSSTEOMAwGA1UECxMFQ1RJU0wxGDAW
+BgNVBAMTD0NUSVNMLUdUUkkgQ0EgMQICA8MwDQYJKoZIhvcNAQEBBQAEggEAiXkLXGxNvJkR
+o1/4gLgHoOYnf2KmmVq7iO8fIt85NOdzP9ZJSw3133Xj8BgsP8CUjUXIDiPJaYKFRvl5fgVd
+1j4Oozm5FEu/Yj9eq7KejVgmCeYN389JioUy5ZEMSoPAK8Zuwu9zu7j5ggxjTmxmcfOnxbeo
+4uhSoRjLdBA3d/Ip9svBpfrWcKQk5mBnqlJVJpjYsrvZHf4BVxg5ZoFCA0R2wdu1Q1TcBkgi
++Rwrogwn6pqymSnVJN+zObSh9cRCCah/6A2ohG7NAZbzNzL31lri09xptcuIIQvHCC1244qV
+lx3oFDEwUpuRinM3uvkat+tbp9yhMjaqhUd1xoPN8gAAAAAAAA==
+--------------ms020707030005000404020404--
