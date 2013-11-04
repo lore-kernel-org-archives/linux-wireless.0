@@ -1,76 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from narfation.org ([79.140.41.39]:41843 "EHLO v3-1039.vlinux.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752417Ab3KKJg4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Nov 2013 04:36:56 -0500
-From: Sven Eckelmann <sven@open-mesh.com>
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
-	Simon Wunderlich <simon@open-mesh.com>,
-	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [OpenWrt-Devel] [ath9k-devel] ath9k: Deaf QCA9558 when setting rxchainmask
-Date: Mon, 11 Nov 2013 10:36:52 +0100
-Message-ID: <2985619.kldLYNDlSX@bentobox> (sfid-20131111_103700_461520_24D9F98B)
-In-Reply-To: <CAJ-VmombLQqJsN50nndqCioFEOy=9cp_-34onQnWnpMoX6360w@mail.gmail.com>
-References: <19772470.YgPhAz9cYD@bentobox> <87B8D697-4540-4D0E-975B-125531E6833B@net.t-labs.tu-berlin.de> <CAJ-VmombLQqJsN50nndqCioFEOy=9cp_-34onQnWnpMoX6360w@mail.gmail.com>
+Received: from mail-oa0-f45.google.com ([209.85.219.45]:60655 "EHLO
+	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753831Ab3KDQXB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Nov 2013 11:23:01 -0500
+Received: by mail-oa0-f45.google.com with SMTP id i4so7375708oah.18
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Nov 2013 08:23:00 -0800 (PST)
+Message-ID: <5277C9E3.3080702@lwfinger.net> (sfid-20131104_172313_904964_F85A473D)
+Date: Mon, 04 Nov 2013 10:22:59 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart1627114.W7mjhIOlzQ"; micalg="pgp-sha512"; protocol="application/pgp-signature"
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	alexandre.f.demers@gmail.com, linville@tuxdriver.com
+Subject: Re: r92su: status and will it be merged anytime soon?
+References: <5277AC85.5050104@gmail.com> <5277BE84.7020808@lwfinger.net> <5277C604.1050604@gmail.com>
+In-Reply-To: <5277C604.1050604@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 11/04/2013 10:06 AM, Xose Vazquez Perez wrote:
+> On 11/04/2013 04:34 PM, Larry Finger wrote:
+>
+>>> _anything_ is better than a staging driver.
+>>>
+>>> There are distributions that don't build staging drivers.
+>>
+>> As a result, they force their users to build out-of-tree drivers!
+>
+> reformulating: As a result, they force their users to _have a stable kernel_
 
---nextPart1627114.W7mjhIOlzQ
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+Not all staging drivers are unstable, just as not all regular drivers are stable.
 
-On Friday 08 November 2013 18:33:19 Adrian Chadd wrote:
-> Hm, is the 0x5 chainmask triggering the ALT_CHAIN logic?
+> Staging is only a working area. And the rtl8712-TODO is unreal:
+> - merge Realtek's bugfixes and new features into the driver
+> - switch to use LIB80211
+> - switch to use MAC80211
+> - checkpatch.pl fixes - only a few remain
+>
+>>> So, please, replace and delete staging/rtl8712 with r92su.
+>>
+>> You seem not to understand. Any new wireless driver that does not
+>> use mac80211 *must* go into staging. AFAIK, that rule is absolute,
+>                                                ^^^^^^^^^^^^^^^^^^^^^
+>> and r92su cannot go into the regular wireless tree.
+>
+> Who said that ? Then replace staging/rtl8712 with staging/r92su
+>
+> Anyway, r92su is a _linux_ driver with a cfg80211 interface.
+> staging/rtl8712 is crap?
+>
+> 1152k    drivers/staging/rtl8712/
+> 340k     r92su/
+>
+>> If you do not like having drivers for RTL8192SU in staging, then
+>> write one that uses mac80211. You have access to as much information
+>> about the chips as anyone outside Realtek. They have no interest
+>> in doing the mac80211 version, and I have many other tasks with
+>> higher priority.
+>
+> Nobody said that you have to write a rtl8712-mac80211.
+> But right now there is a better alternative, and it should be used.
 
-You are talking about ar9003_phy.c -> ar9003_hw_set_chain_masks? No, the 
-device is 3x3 and ah->caps.tx_chainmask & ah->caps.rx_chainmask are 7 and not 
-5. The AR_PHY_ANALOG_SWAP := AR_PHY_SWAP_ALT_CHAIN is only done when one of 
-them would be 5. But I am not really sure what this register setting is really 
-doing. Maybe you can explain it when you think it could be related. Thanks
+Go ahead and submit it and remove r8712u. I would be more than happy to be able 
+to just bitch about bugs the way other people do! :)
 
-> What are you trying to do? Control the receive antenna config, or the
-> transmit antenna config?
+Larry
 
-I have a device which is using a QCA9558 3x3 and a AR93XX 3x3 device. Both are 
-working fine with the proprietary atheros driver and a 2x2 device as client 
-(Intel and Atheros). The used driver is a a binary blob of 9.5.3.15 
-(Atheros/multi-bss). But the download rate (AP -> Client) is relative low when 
-using ath9k and the QCA9558 for tx. It is quite good when using the AR93XX.
-
-The bad TX seems to be related to the low ewma prop for MCS14/15 in an 1-4.5m 
-test (HT20). One idea was to test the different antennas to check whether 
-there is some kind of antenna (selection) related problem. Unfortunatelly, 
-this test only caused the problem mentioned in this thread.
-
-Kind regards,
-	Sven
---nextPart1627114.W7mjhIOlzQ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIcBAABCgAGBQJSgKU0AAoJEF2HCgfBJntGR2gP/1fly2jSpSgsAogVT1mBLz0S
-/SD0Axdee/udmyrhAiqnPat+U8eIpC0QrzJF4rwwukTejBEd2wE43qVm6j9k6ZQu
-OA66sM0ZxUhtp3PtqXHjgmMNxrNF9LV+o2GRhweQOpEQQwy5L3u5XzzCiQ+vzDbr
-mnxbug3hR3SdGGCoiReGytqQ23fVeFKMDl9gnSlfqdonbW5A8ejmF7GhaWLNIDet
-HcKXkmHc9hT+HqiBg628GYfZKH1rk7nbNAWMe75mvSHu93TTQ0x6t4bOwQXplbju
-ZWZ88qjmceLCCHWJQ+Gk9CwI1r2RKtk/jXplGb21Be+Mg91fvcjqlQ7Evhh1szVt
-oy/bwhEQARd/kXTdklUDVVruumeaDnFV3Qg5r2o8xtt5mEEcCwPYEBrGra5tRUOe
-lPQnRV4WahDalGZjgA3qXi4oQmSL91STinhg7el/1s2hfgO/q5byao5+TU6jGV0R
-4yo4uHSZfY9o975MT607rsr+Db0PZ1Nafs1Hu4LeTeyCov5WBqazOvrjd74YDQxg
-Pd/tmO+XvLObmgU9ybyORYtngeut5vR3+gqVistRsG1w8dJN7Q494StmcJBNACrf
-TY4R1o373evQaeQyPDQ9a9m2ltT0IV1KomVwkF7Iz7M2vsEWhPYZSAwBUVJUx2dj
-I4Rs9vuZCQeM5XnT8xpW
-=n37t
------END PGP SIGNATURE-----
-
---nextPart1627114.W7mjhIOlzQ--
 
