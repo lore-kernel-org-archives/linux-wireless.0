@@ -1,104 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f43.google.com ([209.85.219.43]:60073 "EHLO
-	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752397Ab3KAAoK (ORCPT
+Received: from mail-oa0-f53.google.com ([209.85.219.53]:48685 "EHLO
+	mail-oa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752509Ab3KDPea (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Oct 2013 20:44:10 -0400
+	Mon, 4 Nov 2013 10:34:30 -0500
+Received: by mail-oa0-f53.google.com with SMTP id n12so7150099oag.26
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Nov 2013 07:34:29 -0800 (PST)
+Message-ID: <5277BE84.7020808@lwfinger.net> (sfid-20131104_163435_320661_22032FDD)
+Date: Mon, 04 Nov 2013 09:34:28 -0600
 From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>,
-	netdev@vger.kernel.org, Larry Finger <Larry.Finger@lwfinger.net>,
-	Stable <stable@vger.kernel.org>
-Subject: [PATCH NEXT V2] rtlwifi: Fix endian error in extracting packet type
-Date: Thu, 31 Oct 2013 19:43:58 -0500
-Message-Id: <1383266638-4813-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20131101_014421_761757_AA723EE6)
+MIME-Version: 1.0
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	alexandre.f.demers@gmail.com, linville@tuxdriver.com
+Subject: Re: r92su: status and will it be merged anytime soon?
+References: <5277AC85.5050104@gmail.com>
+In-Reply-To: <5277AC85.5050104@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>
+On 11/04/2013 08:17 AM, Xose Vazquez Perez wrote:
+> Christian Lamparter wrote:
+>
+>> The issue with r92su is: The driver is ready, but it's fundamentally
+>                                        ^^^^^^^^
+>> incompatible with the rtlwifi framework and mac80211.
+>
+> _anything_ is better than a staging driver.
+>
+> There are distributions that don't build staging drivers.
 
-All of the rtlwifi drivers have an error in the routine that tests if
-the data is "special". If it is, the subsequant transmission will be
-at the lowest rate to enhance reliability. The 16-bit quantity is
-big-endian, but was being extracted in native CPU mode. One of the
-effects of this bug is to inhibit association under some conditions
-as the TX rate is too high.
+As a result, they force their users to build out-of-tree drivers!
 
-A statement that would have made the code correct had been changed to
-a comment. Rather than just reinstating that code, the fix here passes
-sparse tests. A side effect of fixing this problem would have been to force
-all IPv6 frames to run at the lowest rate. The test for that frame type
-is removed.
+> So, please, replace and delete staging/rtl8712 with r92su.
 
-The original code only checked the lower-order byte of UDP ports for BOOTP
-protocol. That is extended to the full 16-bit source and destination ports.
+You seem not to understand. Any new wireless driver that does not use mac80211 
+*must* go into staging. AFAIK, that rule is absolute, and r92su cannot go into 
+the regular wireless tree.
 
-One of the local headers contained duplicates of some of the ETH_P_XXX
-definitions. These are deleted.
+If you do not like having drivers for RTL8192SU in staging, then write one that 
+uses mac80211. You have access to as much information about the chips as anyone 
+outside Realtek. They have no interest in doing the mac80211 version, and I have 
+many other tasks with higher priority.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>
-Cc: Stable <stable@vger.kernel.org> [2.6.38+]
----
+Larry
 
-V2 - Addresses comments by Ben Hutchings and Bjorn Mork.
 
- drivers/net/wireless/rtlwifi/base.c |   15 ++++++---------
- drivers/net/wireless/rtlwifi/wifi.h |    6 +-----
- 2 files changed, 7 insertions(+), 14 deletions(-)
-Index: wireless-testing-save/drivers/net/wireless/rtlwifi/base.c
-===================================================================
---- wireless-testing-save.orig/drivers/net/wireless/rtlwifi/base.c
-+++ wireless-testing-save/drivers/net/wireless/rtlwifi/base.c
-@@ -1077,17 +1077,17 @@ u8 rtl_is_special_data(struct ieee80211_
- 
- 	ip = (struct iphdr *)((u8 *) skb->data + mac_hdr_len +
- 			      SNAP_SIZE + PROTOC_TYPE_SIZE);
--	ether_type = *(u16 *) ((u8 *) skb->data + mac_hdr_len + SNAP_SIZE);
--	/*	ether_type = ntohs(ether_type); */
-+	ether_type = be16_to_cpu(*(__be16 *)((u8 *)skb->data + mac_hdr_len +
-+					     SNAP_SIZE));
- 
- 	if (ETH_P_IP == ether_type) {
- 		if (IPPROTO_UDP == ip->protocol) {
- 			struct udphdr *udp = (struct udphdr *)((u8 *) ip +
- 							       (ip->ihl << 2));
--			if (((((u8 *) udp)[1] == 68) &&
--			     (((u8 *) udp)[3] == 67)) ||
--			    ((((u8 *) udp)[1] == 67) &&
--			     (((u8 *) udp)[3] == 68))) {
-+			if (((((u16 *) udp)[0] == 68) &&
-+			     (((u16 *) udp)[2] == 67)) ||
-+			    ((((u16 *) udp)[0] == 67) &&
-+			     (((u16 *) udp)[2] == 68))) {
- 				/*
- 				 * 68 : UDP BOOTP client
- 				 * 67 : UDP BOOTP server
-@@ -1126,9 +1126,6 @@ u8 rtl_is_special_data(struct ieee80211_
- 		}
- 
- 		return true;
--	} else if (ETH_P_IPV6 == ether_type) {
--		/* IPv6 */
--		return true;
- 	}
- 
- 	return false;
-Index: wireless-testing-save/drivers/net/wireless/rtlwifi/wifi.h
-===================================================================
---- wireless-testing-save.orig/drivers/net/wireless/rtlwifi/wifi.h
-+++ wireless-testing-save/drivers/net/wireless/rtlwifi/wifi.h
-@@ -77,11 +77,7 @@
- #define RTL_SLOT_TIME_9				9
- #define RTL_SLOT_TIME_20			20
- 
--/*related with tcp/ip. */
--/*if_ehther.h*/
--#define ETH_P_PAE		0x888E	/*Port Access Entity (IEEE 802.1X) */
--#define ETH_P_IP		0x0800	/*Internet Protocol packet */
--#define ETH_P_ARP		0x0806	/*Address Resolution packet */
-+/*related to tcp/ip. */
- #define SNAP_SIZE		6
- #define PROTOC_TYPE_SIZE	2
- 
