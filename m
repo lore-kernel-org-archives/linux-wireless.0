@@ -1,38 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f47.google.com ([209.85.215.47]:49779 "EHLO
-	mail-la0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753476Ab3KFQkT (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34530 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755408Ab3KEVA2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Nov 2013 11:40:19 -0500
-Received: by mail-la0-f47.google.com with SMTP id er20so3498379lab.20
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Nov 2013 08:40:18 -0800 (PST)
+	Tue, 5 Nov 2013 16:00:28 -0500
+Date: Tue, 5 Nov 2013 15:50:55 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Gustavo Padovan <gustavo@padovan.org>,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: bluetooth-next 2013-10-21
+Message-ID: <20131105205055.GE8264@tuxdriver.com> (sfid-20131105_220047_510140_56827C6F)
+References: <20131021223736.GA2043@joana>
 MIME-Version: 1.0
-In-Reply-To: <1383733032.14307.21.camel@jlt4.sipsolutions.net>
-References: <1383671897-7746-1-git-send-email-mcgrof@do-not-panic.com>
- <1383671897-7746-4-git-send-email-mcgrof@do-not-panic.com> <1383733032.14307.21.camel@jlt4.sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Wed, 6 Nov 2013 08:39:58 -0800
-Message-ID: <CAB=NE6Xy6G5xLxU81jzE+3bmJ1Q-ym7qQst3XzK1umQvKxsSrg@mail.gmail.com> (sfid-20131106_174026_370706_77B75B08)
-Subject: Re: [PATCH 03/19] cfg80211: check regulatory request alpha2 early
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131021223736.GA2043@joana>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 6, 2013 at 2:17 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2013-11-05 at 09:18 -0800, Luis R. Rodriguez wrote:
->> Currently nl80211 allows userspace to send the kernel
->> a bogus regulatory domain with at most 32 rules set
->> and it won't reject it until after its allocated
->> memory. Let's be smart about it and take advantage
->> that the last_request is now available under RCU
->                                                ^^^
->
-> I think you mean RTNL?
+On Mon, Oct 21, 2013 at 08:37:36PM -0200, Gustavo Padovan wrote:
+> Hi John,
+> 
+> One more big pull request for 3.13. These are the patches we queued during
+> last week. Here you will find a lot of improvements to the HCI and L2CAP and
+> MGMT layers with the main ones being a better debugfs support and end of work
+> of splitting L2CAP into Core and Socket parts.
+> 
+> Please pull!
+> 
+> 	Gustavo
+> 
+> ---
+> The following changes since commit 4b836f393bd8ed111857a6ee1865e44627266ec6:
+> 
+>   Bluetooth: Read current IAC LAP on controller setup (2013-10-14 19:31:18 -0300)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next for-upstream
+> 
+> for you to fetch changes up to d78a32a8fcf775111ccc9ba611a08ca5c29784b6:
+> 
+>   Bluetooth: Remove sk member from struct l2cap_chan (2013-10-21 13:50:56 -0700)
 
-I meant through RCU but yes it should also say under RTNL, the routine
-already does have NL80211_FLAG_NEED_RTNL, as an internal flag set, so
-this should be OK. Care to amend the commit log or want me to do it?
+Pulling now...
 
-  Luis
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
