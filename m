@@ -1,55 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:34811 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752117Ab3KXSfg (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:60320 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754608Ab3KENLe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Nov 2013 13:35:36 -0500
-Message-ID: <1385318128.23961.0.camel@jlt4.sipsolutions.net> (sfid-20131124_193554_130494_AE4D6ACD)
-Subject: Re: [PATCH 1/3] mac80211: implement ieee80211_get_vif_by_addr
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	mcgrof@do-not-panic.com, sujith@msujith.org,
-	rmanohar@qca.qualcomm.com
-Date: Sun, 24 Nov 2013 19:35:28 +0100
-In-Reply-To: <1385312211-3119-2-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20131124_175656_328014_B79295F8)
-References: <1385312211-3119-1-git-send-email-lorenzo.bianconi83@gmail.com>
-	 <1385312211-3119-2-git-send-email-lorenzo.bianconi83@gmail.com>
-	 (sfid-20131124_175656_328014_B79295F8)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 5 Nov 2013 08:11:34 -0500
+Date: Tue, 5 Nov 2013 14:11:32 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Sebastian Reichel <sre@debian.org>
+Cc: Sebastian Reichel <sre@ring0.de>, Luciano Coelho <luca@coelho.fi>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Rob Landley <rob@landley.net>,
+	Tony Lindgren <tony@atomide.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Felipe Balbi <balbi@ti.com>,
+	Sachin Kamat <sachin.kamat@linaro.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bill Pemberton <wfp5p@virginia.edu>,
+	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 2/4] wl1251: move power GPIO handling into the driver
+Message-ID: <20131105131132.GC30670@amd.pavel.ucw.cz> (sfid-20131105_141153_711667_34733F16)
+References: <1382890469-25286-1-git-send-email-sre@debian.org>
+ <1382890469-25286-3-git-send-email-sre@debian.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1382890469-25286-3-git-send-email-sre@debian.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2013-11-24 at 17:56 +0100, Lorenzo Bianconi wrote:
-> ieee80211_get_vif_by_addr allows low level drivers to get a reference to
-> vif data structure which is not added to the driver as monitor interface.
-> ieee80211_get_vif_by_addr will be used in ath9k tx99 code
+On Sun 2013-10-27 17:14:27, Sebastian Reichel wrote:
+> Move the power GPIO handling from the board code into
+> the driver. This is a dependency for device tree support.
+> 
+> Signed-off-by: Sebastian Reichel <sre@debian.org>
 
-Is that really better than having the driver use the iteration
-functions?
+Reviewed-by: Pavel Machek <pavel@ucw.cz>
 
-> + */
-> +struct ieee80211_vif *ieee80211_get_vif_by_addr(struct ieee80211_hw *hw,
-> +						const u8 *mac)
-> +{
-> +	struct ieee80211_vif *vif = NULL;
-> +	struct ieee80211_local *local = hw_to_local(hw);
-> +	struct ieee80211_sub_if_data *sdata;
-> +
-> +	rcu_read_lock();
-> +	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
-> +		if (!compare_ether_addr(sdata->vif.addr, mac)) {
-> +			vif = &sdata->vif;
-> +			break;
-> +		}
-> +	}
-> +	rcu_read_unlock();
-> +
-> +	return vif;
-
-In any case, this is completely broken wrt. locking, so I'm not taking
-it.
-
-johannes
-
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
