@@ -1,42 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:43433 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756362Ab3KFMUY (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:34324 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754403Ab3KEUVP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Nov 2013 07:20:24 -0500
-Message-ID: <1383740420.14307.42.camel@jlt4.sipsolutions.net> (sfid-20131106_132033_477566_F7713D8C)
-Subject: Re: [PATCH v2 1/5] cfg80211/mac80211: DFS setup chandef for cac
- event
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 06 Nov 2013 13:20:20 +0100
-In-Reply-To: <CALhHN=pxo00fg6KYHJbw34FEP8k-6aiT2CMb5y7oRyVOyTzFZA@mail.gmail.com> (sfid-20131106_131026_149690_597A3878)
-References: <1383659329-11023-1-git-send-email-janusz.dziedzic@tieto.com>
-	 <1383732564.14307.16.camel@jlt4.sipsolutions.net>
-	 <CALhHN=pxo00fg6KYHJbw34FEP8k-6aiT2CMb5y7oRyVOyTzFZA@mail.gmail.com>
-	 (sfid-20131106_131026_149690_597A3878)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 5 Nov 2013 15:21:15 -0500
+Date: Tue, 5 Nov 2013 23:20:35 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
+	kernel-janitors@vger.kernel.org
+Subject: [patch] ath9k: fix SC_OP_INVALID test in ath9k_tx99_init()
+Message-ID: <20131105202034.GC3949@elgon.mountain> (sfid-20131105_212125_471524_A2A0884D)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-11-06 at 13:10 +0100, Janusz Dziedzic wrote:
-> On 6 November 2013 11:09, Johannes Berg <johannes@sipsolutions.net> wrote:
-> > On Tue, 2013-11-05 at 14:48 +0100, Janusz Dziedzic wrote:
-> >
-> >>  void cfg80211_cac_event(struct net_device *netdev,
-> >> +                     struct cfg80211_chan_def *chandef,
-> >
-> > Jouni had a patch to make a lot of these pointers const - this one
-> > probably should be as well.
-> >
-> 
-> Yes.
-> I can send this one after Jouni patch will be merged.
+SC_OP_INVALID is zero so the test is always false.  We're supposed to be
+testing the lowest bit instead.
 
-Well I don't think he even sent it yet, so you could just send this one
-with const?
+Fixes: 89f927af7f33 ('ath9k: add TX99 support')
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-johannes
-
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 74f452c..7ad4e11 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2456,7 +2456,7 @@ int ath9k_tx99_init(struct ath_softc *sc)
+ 	struct ath_tx_control txctl;
+ 	int r;
+ 
+-	if (sc->sc_flags & SC_OP_INVALID) {
++	if (test_bit(SC_OP_INVALID, &sc->sc_flags)) {
+ 		ath_err(common,
+ 			"driver is in invalid state unable to use TX99");
+ 		return -EINVAL;
