@@ -1,94 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f171.google.com ([209.85.214.171]:34241 "EHLO
-	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751299Ab3KOSm3 (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:58721 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754607Ab3KEMNz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Nov 2013 13:42:29 -0500
-Received: by mail-ob0-f171.google.com with SMTP id gq1so4270202obb.16
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Nov 2013 10:42:28 -0800 (PST)
+	Tue, 5 Nov 2013 07:13:55 -0500
+Date: Tue, 5 Nov 2013 13:13:53 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Sebastian Reichel <sre@debian.org>
+Cc: Sebastian Reichel <sre@ring0.de>, Luciano Coelho <luca@coelho.fi>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Rob Landley <rob@landley.net>,
+	Tony Lindgren <tony@atomide.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Felipe Balbi <balbi@ti.com>,
+	Sachin Kamat <sachin.kamat@linaro.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bill Pemberton <wfp5p@virginia.edu>,
+	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Luciano Coelho <coelho@ti.com>
+Subject: Re: [PATCH 1/4] wl1251: split wl251 platform data to a separate
+ structure
+Message-ID: <20131105121353.GB30670@amd.pavel.ucw.cz> (sfid-20131105_131445_726234_9DCCE333)
+References: <1382890469-25286-1-git-send-email-sre@debian.org>
+ <1382890469-25286-2-git-send-email-sre@debian.org>
 MIME-Version: 1.0
-In-Reply-To: <20131114041829.GA26901@order.stressinduktion.org>
-References: <cover.1384160397.git.dborkman@redhat.com>
-	<2ea03f60bb65429cbe5d74a6d356fde3eefcf06c.1384160397.git.dborkman@redhat.com>
-	<20131111134357.GC10104@thunk.org>
-	<20131112000307.GB14929@order.stressinduktion.org>
-	<20131112115350.GA14077@thunk.org>
-	<20131112131627.GD14929@order.stressinduktion.org>
-	<20131112134603.GE14929@order.stressinduktion.org>
-	<20131114025448.GB31602@thunk.org>
-	<20131114041829.GA26901@order.stressinduktion.org>
-Date: Fri, 15 Nov 2013 10:42:28 -0800
-Message-ID: <CAGXu5jJJtjvAqROzsekOd9Y5wbiw=G9ToNryOfP8auhQRrYORw@mail.gmail.com> (sfid-20131115_194234_729761_1BE5980A)
-Subject: Re: [PATCH] random: seed random_int_secret at least poorly at
- core_initcall time
-From: Kees Cook <keescook@chromium.org>
-To: "Theodore Ts'o" <tytso@mit.edu>,
-	Daniel Borkmann <dborkman@redhat.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	shemminger@networkplumber.org, Florian Weimer <fweimer@redhat.com>,
-	netdev@vger.kernel.org, Eric Dumazet <eric.dumazet@gmail.com>,
-	linux-wireless@vger.kernel.org, Kees Cook <keescook@chromium.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1382890469-25286-2-git-send-email-sre@debian.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 13, 2013 at 8:18 PM, Hannes Frederic Sowa
-<hannes@stressinduktion.org> wrote:
-> On Wed, Nov 13, 2013 at 09:54:48PM -0500, Theodore Ts'o wrote:
->> On Tue, Nov 12, 2013 at 02:46:03PM +0100, Hannes Frederic Sowa wrote:
->> > > It is needed by fork to set up the stack canary. And this actually gets
->> > > called before the secret is initialized.
->> >
->> > Maybe we could use this for the time being and use the seeding method
->> > of kaslr as soon as it hits the tree?
->>
->> Hmm, from what I can tell even early_initcall() is going to be early
->> enough.  The stack canary is set up by boot_init_stack_canary(), which
->> is run very, very early in start_kerne() --- way before
->> early_initcalls, or even before interrupts are enabled.  So adding
->> random_int_secret_init_early() as a core_initcall is still too late.
->
-> Actually I tried to protect the tsk->stack_canary = get_random_int()
-> in fork.c. It sets up the per-task canary.
+On Sun 2013-10-27 17:14:26, Sebastian Reichel wrote:
+> From: Luciano Coelho <coelho@ti.com>
+> 
+> Move the wl1251 part of the wl12xx platform data structure into a new
+> structure specifically for wl1251.  Change the platform data built-in
+> block and board files accordingly.
+> 
+> Cc: Tony Lindgren <tony@atomide.com>
+> Signed-off-by: Luciano Coelho <coelho@ti.com>
+> Acked-by: Tony Lindgren <tony@atomide.com>
+> Reviewed-by: Felipe Balbi <balbi@ti.com>
 
-I haven't looked closely yet at how the stack canary gets plumbed, but
-what do things outside of process context end up using?
-
->> I wonder if we need to do something in common with what Kees has been
->> considering for the kaslr code, since it's a similar issue --- we need
->> random number way earlier than we can really afford to initialize
->> /dev/random.
->
-> Definiteley. I would also propose hashing the boot arguments, often
-> enough there is a filesystem UUID in there, or even hash the multiboot
-> information we are given from grub. Maybe compile-time entropy, at least
-> a bit.
-
-Yeah, other suggestions were things ACPI tables, memory layouts, etc.
-Basically anything that might be different from system to system. Even
-just perturbing by the build strings (which has compiler version,
-build date, build host, etc etc) gets us a tiny amount of entropy
-(which is still better than 0).
-
->> P.S.  Unless I'm missing something (and I hope I am), it would appear
->> that the stack canary is going to easily predictable by an attacker on
->> non-x86 platforms that don't have RDRAND.  Has someone tested whether
->> or not the stack canary isn't constant across ARM or pre-Sandy Bridge
->> x86 systems?
->
-> In case of protection for interrupt stacks and early cmwq threads,
-> it looks pretty bad from a first look at the source (at least for the
-> first initialized CPU).
->
-> I'll try to do some tests tomorrow.
->
-> Greetings,
->
->   Hannes
->
-
--Kees
+Reviewed-by: Pavel Machek <pavel@ucw.cz>
 
 -- 
-Kees Cook
-Chrome OS Security
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
