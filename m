@@ -1,67 +1,273 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:26115 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754597Ab3KYURk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Nov 2013 15:17:40 -0500
-Message-ID: <1385410695.26827.4.camel@dcbw.foobar.com> (sfid-20131125_211745_273951_0B8A6000)
-Subject: Re: Roaming with libertas and wpa_supplicant not working
-From: Dan Williams <dcbw@redhat.com>
+Received: from mail-pd0-f182.google.com ([209.85.192.182]:35985 "EHLO
+	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755473Ab3KETXI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Nov 2013 14:23:08 -0500
+Received: by mail-pd0-f182.google.com with SMTP id q10so9037553pdj.41
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Nov 2013 11:23:07 -0800 (PST)
+From: Thomas Pedersen <thomas@cozybit.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Troels Nilsson <nilsson.troels@gmail.com>,
-	linux-wireless@vger.kernel.org
-Date: Mon, 25 Nov 2013 14:18:15 -0600
-In-Reply-To: <1385404573.4443.58.camel@jlt4.sipsolutions.net>
-References: <loom.20131118T143002-687@post.gmane.org>
-	 (sfid-20131118_145509_206573_37D8C413) <1385396191.4443.44.camel@jlt4.sipsolutions.net>
-	 <1385399816.8710.16.camel@dcbw.foobar.com>
-	 <1385404573.4443.58.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Cc: Bob Copeland <me@bobcopeland.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	open80211s <devel@lists.open80211s.org>,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH 15/17] mac80211: factor out plink event gathering
+Date: Tue,  5 Nov 2013 11:17:03 -0800
+Message-Id: <1383679025-7150-15-git-send-email-thomas@cozybit.com> (sfid-20131105_202316_534387_DB82ECAD)
+In-Reply-To: <1383679025-7150-1-git-send-email-thomas@cozybit.com>
+References: <1383679025-7150-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-11-25 at 19:36 +0100, Johannes Berg wrote:
-> On Mon, 2013-11-25 at 11:16 -0600, Dan Williams wrote:
-> > On Mon, 2013-11-25 at 17:16 +0100, Johannes Berg wrote:
-> > > On Mon, 2013-11-18 at 13:50 +0000, Troels Nilsson wrote:
-> > > > Hi,
-> > > > 
-> > > > We are having a problem with a custom device which uses the libertas wifi
-> > > > driver (on kernel 3.4.24) together with wpa_supplicant (0.7.3). More
-> > > > specifically, whenever wpa_supplicant attempts to roam to a different access
-> > > > point it gets a EALREADY error.
-> > > > 
-> > > > I have tracked down the problem to this check in sme.c:
-> > > > 
-> > > >         if (wdev->sme_state != CFG80211_SME_IDLE)
-> > > >                 return -EALREADY;
-> > > 
-> > > This no longer exists - please try a newer kernel.
-> > 
-> > Yeah, though the code there hasn't changed much in cfg80211 in the
-> > "connect" case from what he's using.  It seems that
-> > supplicant-controlled roaming simply won't work with "connect" devices
-> > unless a disconnect is done first?  Libertas is kinda different here
-> > since it does allow userspace roaming control.
-> 
-> I believe the code *does* in fact allow connect() while connected right
-> now, though arguably that's a bug and shouldn't be done. It would make
-> some more sense to allow NL80211_CMD_ROAM to be used for something like
-> that, but ...
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
+ net/mac80211/mesh_plink.c | 195 +++++++++++++++++++++++++++-------------------
+ 1 file changed, 115 insertions(+), 80 deletions(-)
 
-I think you're right in the libertas case; neither nl80211_connect() or
-cfg80211_connect() care about whether the device is associated or not.
-I was looking at cfg80211_sme_connect(), which gets run for drivers that
-do not implement connect() themselves, and that function *doesn't*
-appear to allow roaming.
-
-So if the driver does implement connect() it can allow roaming from
-connect() if it wants, but if the driver does not implement connect()
-then the stack will not allow roaming from connect().  Seems a bit
-inconsistent, so what's the best-practice for drivers here?  Disallow
-roaming from connect() and  CMD_ROAM instead?
-
-We'd have to actually implement CMD_ROAM then, I guess...
-
-Dan
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index e5d5c69..c6d0917 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -844,6 +844,111 @@ static u32 mesh_plink_fsm(struct ieee80211_sub_if_data *sdata,
+ 	return changed;
+ }
+ 
++/*
++ * mesh_plink_get_event - get correct MPM event
++ *
++ * @sdata: interface
++ * @sta: peer, leave NULL if processing a frame from a new suitable peer
++ * @elems: peering management IEs
++ * @ftype: frame type
++ * @llid: peer's peer link ID
++ * @plid: peer's local link ID
++ *
++ * Return: new peering event for @sta, but PLINK_UNDEFINED should be treated as
++ * an error.
++ */
++static enum plink_event
++mesh_plink_get_event(struct ieee80211_sub_if_data *sdata,
++		     struct sta_info *sta,
++		     struct ieee802_11_elems *elems,
++		     enum ieee80211_self_protected_actioncode ftype,
++		     __le16 llid, __le16 plid)
++{
++	enum plink_event event = PLINK_UNDEFINED;
++	u8 ie_len = elems->peering_len;
++	bool matches_local;
++
++	matches_local = (ftype == WLAN_SP_MESH_PEERING_CLOSE ||
++			 mesh_matches_local(sdata, elems));
++
++	/* deny open request from non-matching peer */
++	if (!matches_local && !sta) {
++		event = OPN_RJCT;
++		goto out;
++	}
++
++	if (!sta) {
++		if (ftype != WLAN_SP_MESH_PEERING_OPEN) {
++			mpl_dbg(sdata, "Mesh plink: cls or cnf from unknown peer\n");
++			goto out;
++		}
++		/* ftype == WLAN_SP_MESH_PEERING_OPEN */
++		if (!mesh_plink_free_count(sdata)) {
++			mpl_dbg(sdata, "Mesh plink error: no more free plinks\n");
++			goto out;
++		}
++	} else {
++		if (!test_sta_flag(sta, WLAN_STA_AUTH)) {
++			mpl_dbg(sdata, "Mesh plink: Action frame from non-authed peer\n");
++			goto out;
++		}
++		if (sta->plink_state == NL80211_PLINK_BLOCKED)
++			goto out;
++	}
++
++	/* new matching peer */
++	if (!sta) {
++		event = OPN_ACPT;
++		goto out;
++	}
++
++	switch (ftype) {
++	case WLAN_SP_MESH_PEERING_OPEN:
++		if (!matches_local)
++			event = OPN_RJCT;
++		if (!mesh_plink_free_count(sdata) ||
++		    (sta->plid && sta->plid != plid))
++			event = OPN_IGNR;
++		else
++			event = OPN_ACPT;
++		break;
++	case WLAN_SP_MESH_PEERING_CONFIRM:
++		if (!matches_local)
++			event = CNF_RJCT;
++		if (!mesh_plink_free_count(sdata) ||
++		    (sta->llid != llid || sta->plid != plid))
++			event = CNF_IGNR;
++		else
++			event = CNF_ACPT;
++		break;
++	case WLAN_SP_MESH_PEERING_CLOSE:
++		if (sta->plink_state == NL80211_PLINK_ESTAB)
++			/* Do not check for llid or plid. This does not
++			 * follow the standard but since multiple plinks
++			 * per sta are not supported, it is necessary in
++			 * order to avoid a livelock when MP A sees an
++			 * establish peer link to MP B but MP B does not
++			 * see it. This can be caused by a timeout in
++			 * B's peer link establishment or B beign
++			 * restarted.
++			 */
++			event = CLS_ACPT;
++		else if (sta->plid != plid)
++			event = CLS_IGNR;
++		else if (ie_len == 8 && sta->llid != llid)
++			event = CLS_IGNR;
++		else
++			event = CLS_ACPT;
++		break;
++	default:
++		mpl_dbg(sdata, "Mesh plink: unknown frame subtype\n");
++		break;
++	}
++
++out:
++	return event;
++}
++
+ static void
+ mesh_process_plink_frame(struct ieee80211_sub_if_data *sdata,
+ 			 struct ieee80211_mgmt *mgmt,
+@@ -853,9 +958,8 @@ mesh_process_plink_frame(struct ieee80211_sub_if_data *sdata,
+ 	struct sta_info *sta;
+ 	enum plink_event event;
+ 	enum ieee80211_self_protected_actioncode ftype;
+-	bool matches_local;
+ 	u32 changed = 0;
+-	u8 ie_len;
++	u8 ie_len = elems->peering_len;
+ 	__le16 plid, llid;
+ 
+ 	if (!elems->peering) {
+@@ -872,7 +976,6 @@ mesh_process_plink_frame(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	ftype = mgmt->u.action.u.self_prot.action_code;
+-	ie_len = elems->peering_len;
+ 	if ((ftype == WLAN_SP_MESH_PEERING_OPEN && ie_len != 4) ||
+ 	    (ftype == WLAN_SP_MESH_PEERING_CONFIRM && ie_len != 6) ||
+ 	    (ftype == WLAN_SP_MESH_PEERING_CLOSE && ie_len != 6
+@@ -901,9 +1004,6 @@ mesh_process_plink_frame(struct ieee80211_sub_if_data *sdata,
+ 
+ 	sta = sta_info_get(sdata, mgmt->sa);
+ 
+-	matches_local = (ftype == WLAN_SP_MESH_PEERING_CLOSE ||
+-			 mesh_matches_local(sdata, elems));
+-
+ 	if (ftype == WLAN_SP_MESH_PEERING_OPEN &&
+ 	    !rssi_threshold_check(sdata, sta)) {
+ 		mpl_dbg(sdata, "Mesh plink: %pM does not meet rssi threshold\n",
+@@ -911,81 +1011,8 @@ mesh_process_plink_frame(struct ieee80211_sub_if_data *sdata,
+ 		goto unlock_rcu;
+ 	}
+ 
+-	if (!sta) {
+-		if (ftype != WLAN_SP_MESH_PEERING_OPEN) {
+-			mpl_dbg(sdata, "Mesh plink: cls or cnf from unknown peer\n");
+-			goto unlock_rcu;
+-		}
+-		/* ftype == WLAN_SP_MESH_PEERING_OPEN */
+-		if (!mesh_plink_free_count(sdata)) {
+-			mpl_dbg(sdata, "Mesh plink error: no more free plinks\n");
+-			goto unlock_rcu;
+-		}
+-		/* deny open request from non-matching peer */
+-		if (!matches_local) {
+-			mesh_plink_frame_tx(sdata, WLAN_SP_MESH_PEERING_CLOSE,
+-					    mgmt->sa, 0, plid,
+-					    cpu_to_le16(WLAN_REASON_MESH_CONFIG));
+-			goto unlock_rcu;
+-		}
+-	} else {
+-		if (!test_sta_flag(sta, WLAN_STA_AUTH)) {
+-			mpl_dbg(sdata, "Mesh plink: Action frame from non-authed peer\n");
+-			goto unlock_rcu;
+-		}
+-		if (sta->plink_state == NL80211_PLINK_BLOCKED)
+-			goto unlock_rcu;
+-	}
+-
+ 	/* Now we will figure out the appropriate event... */
+-	event = PLINK_UNDEFINED;
+-
+-	if (!sta)
+-		event = OPN_ACPT;
+-	else {
+-		switch (ftype) {
+-		case WLAN_SP_MESH_PEERING_OPEN:
+-			if (!matches_local)
+-				event = OPN_RJCT;
+-			else if (!mesh_plink_free_count(sdata) ||
+-				 (sta->plid && sta->plid != plid))
+-				event = OPN_IGNR;
+-			else
+-				event = OPN_ACPT;
+-			break;
+-		case WLAN_SP_MESH_PEERING_CONFIRM:
+-			if (!matches_local)
+-				event = CNF_RJCT;
+-			else if (!mesh_plink_free_count(sdata) ||
+-				 (sta->llid != llid || sta->plid != plid))
+-				event = CNF_IGNR;
+-			else
+-				event = CNF_ACPT;
+-			break;
+-		case WLAN_SP_MESH_PEERING_CLOSE:
+-			if (sta->plink_state == NL80211_PLINK_ESTAB)
+-				/* Do not check for llid or plid. This does not
+-				 * follow the standard but since multiple plinks
+-				 * per sta are not supported, it is necessary in
+-				 * order to avoid a livelock when MP A sees an
+-				 * establish peer link to MP B but MP B does not
+-				 * see it. This can be caused by a timeout in
+-				 * B's peer link establishment or B beign
+-				 * restarted.
+-				 */
+-				event = CLS_ACPT;
+-			else if (sta->plid != plid)
+-				event = CLS_IGNR;
+-			else if (ie_len == 8 && sta->llid != llid)
+-				event = CLS_IGNR;
+-			else
+-				event = CLS_ACPT;
+-			break;
+-		default:
+-			mpl_dbg(sdata, "Mesh plink: unknown frame subtype\n");
+-			goto unlock_rcu;
+-		}
+-	}
++	event = mesh_plink_get_event(sdata, sta, elems, ftype, llid, plid);
+ 
+ 	if (event == OPN_ACPT) {
+ 		rcu_read_unlock();
+@@ -996,6 +1023,14 @@ mesh_process_plink_frame(struct ieee80211_sub_if_data *sdata,
+ 			goto unlock_rcu;
+ 		}
+ 		sta->plid = plid;
++	} else if (!sta && event == OPN_RJCT) {
++		mesh_plink_frame_tx(sdata, WLAN_SP_MESH_PEERING_CLOSE,
++				    mgmt->sa, 0, plid,
++				    cpu_to_le16(WLAN_REASON_MESH_CONFIG));
++		goto unlock_rcu;
++	} else if (!sta || event == PLINK_UNDEFINED) {
++		/* something went wrong */
++		goto unlock_rcu;
+ 	}
+ 
+ 	changed |= mesh_plink_fsm(sdata, sta, event);
+-- 
+1.8.4.rc3
 
