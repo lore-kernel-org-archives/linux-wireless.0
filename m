@@ -1,93 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f180.google.com ([209.85.215.180]:41647 "EHLO
-	mail-ea0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756675Ab3KHKlq (ORCPT
+Received: from mail-ob0-f182.google.com ([209.85.214.182]:42716 "EHLO
+	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750838Ab3KEQ01 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Nov 2013 05:41:46 -0500
-Received: by mail-ea0-f180.google.com with SMTP id b11so996750eae.11
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Nov 2013 02:41:45 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, mcgrof@do-not-panic.com,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH 2/3] cfg80211/mac80211: DFS pass CAC time as a parameter
-Date: Fri,  8 Nov 2013 11:41:26 +0100
-Message-Id: <1383907287-2925-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131108_114151_002953_7F54F54E)
-In-Reply-To: <1383907287-2925-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1383907287-2925-1-git-send-email-janusz.dziedzic@tieto.com>
+	Tue, 5 Nov 2013 11:26:27 -0500
+Received: by mail-ob0-f182.google.com with SMTP id wn1so8825099obc.13
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Nov 2013 08:26:26 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <5278B68E.5070807@mail.ru>
+References: <5276491F.20207@mail.ru>
+	<477F20668A386D41ADCC57781B1F70430F45757E63@SC-VEXCH1.marvell.com>
+	<527703E6.8040504@mail.ru>
+	<477F20668A386D41ADCC57781B1F70430F45758053@SC-VEXCH1.marvell.com>
+	<5278AE8E.9060203@mail.ru>
+	<5278B1EC.8020000@broadcom.com>
+	<5278B68E.5070807@mail.ru>
+Date: Tue, 5 Nov 2013 08:26:26 -0800
+Message-ID: <CAMcMvshB-y8uiA-cKe2_yKbUtmY4za2zBALwNXRaHqSfnTdA5w@mail.gmail.com> (sfid-20131105_172631_495670_8F2A1A1F)
+Subject: Re: mwifiex_sdio on chromebook
+From: Paul Stewart <pstew@chromium.org>
+To: Alexander Varnin <fenixk19@mail.ru>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	Bing Zhao <bzhao@marvell.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>
+Content-Type: text/plain; charset=KOI8-R
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Send Channel Availability Check time as a parameter
-of start_radar_detection() callback.
-We could have different CAC time configuration for
-Off-channel CAC and for weather channels.
+On Tue, Nov 5, 2013 at 1:12 AM, Alexander Varnin <fenixk19@mail.ru> wrote:
+> 05.11.2013 12:53, Arend van Spriel пишет:
+>>>>
+>>>
+>>> It is ported at most already and mainline kernel works good on
+>>> Chromebook. It is just peripheral problem.
+>>
+>> Not sure how chromium os architecture looks like, but you mean to say
+>> *you* ported code in chromium user-space to work with
+>> upstream/mainline kernel API's?
+>
+> No. There is work doing by somebody from google or somewhere else, by
+> making mainline kernel work on Chromebook. Kernel 3.11 is the first
+> mainline kernel, that is able to boot and work on Chromebook. Working
+> parts is MMC controller, display controller, keyboard, etc. Not working
+> is usb, wifi, rtc, temperature sensors, etc.
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- include/net/cfg80211.h |    3 ++-
- net/mac80211/cfg.c     |    8 ++++----
- net/wireless/nl80211.c |    3 ++-
- 3 files changed, 8 insertions(+), 6 deletions(-)
+There doesn't appear a lot of effort into getting 3.11 working on the Samsung
+ChromeBook yet.  There is some work on 3.8, which has more
+architectural similarities to 3.11.  Offhand, the 3.4 version used a
+"regulator" setup for controlling the GPIOs that performed power
+sequencing and setup of the part, where as in 3.8 this work was moved
+to the device tree.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 968f2ad..d43fa0a 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2412,7 +2412,8 @@ struct cfg80211_ops {
- 
- 	int	(*start_radar_detection)(struct wiphy *wiphy,
- 					 struct net_device *dev,
--					 struct cfg80211_chan_def *chandef);
-+					 struct cfg80211_chan_def *chandef,
-+					 u32 cac_time_ms);
- 	int	(*update_ft_ies)(struct wiphy *wiphy, struct net_device *dev,
- 				 struct cfg80211_update_ft_ies_params *ftie);
- 	int	(*crit_proto_start)(struct wiphy *wiphy,
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index fcdc357..7daea55 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2874,11 +2874,11 @@ static int ieee80211_cancel_remain_on_channel(struct wiphy *wiphy,
- 
- static int ieee80211_start_radar_detection(struct wiphy *wiphy,
- 					   struct net_device *dev,
--					   struct cfg80211_chan_def *chandef)
-+					   struct cfg80211_chan_def *chandef,
-+					   u32 cac_time_ms)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct ieee80211_local *local = sdata->local;
--	unsigned long timeout;
- 	int err;
- 
- 	if (!list_empty(&local->roc_list) || local->scanning)
-@@ -2896,9 +2896,9 @@ static int ieee80211_start_radar_detection(struct wiphy *wiphy,
- 	if (err)
- 		return err;
- 
--	timeout = msecs_to_jiffies(IEEE80211_DFS_MIN_CAC_TIME_MS);
- 	ieee80211_queue_delayed_work(&sdata->local->hw,
--				     &sdata->dfs_cac_timer_work, timeout);
-+				     &sdata->dfs_cac_timer_work,
-+				     msecs_to_jiffies(cac_time_ms));
- 
- 	return 0;
- }
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 635842b..689a335 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5672,7 +5672,8 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
- 	if (err)
- 		return err;
- 
--	err = rdev->ops->start_radar_detection(&rdev->wiphy, dev, &chandef);
-+	err = rdev->ops->start_radar_detection(&rdev->wiphy, dev, &chandef,
-+					       IEEE80211_DFS_MIN_CAC_TIME_MS);
- 	if (!err) {
- 		wdev->channel = chandef.chan;
- 		wdev->cac_started = true;
--- 
-1.7.9.5
+Therefore, for more insights into the changes you may have to do for
+3.11, I'd suggest that it'd be more informative for you to look at the
+differences between mainline 3.8 and the "chromeos-3.8" branch of
+https://chromium.googlesource.com/chromiumos/third_party/kernel-next
 
+> By a tradition of open source, as I am interested, and I have experience
+> in kernel development, I have decided to debug wifi issue by myself. I
+> don't know, why I should port anything. Everything that was needed is
+> already ported - there is Chromebook device tree in kernel, there is all
+> required drivers. There is just a problem with powering up Marvell wifi
+> chip. I don't see, why fixing it requires any complex porting.
+>
+> One thing worth doing is to compare 3.4 from chromeos and 3.4 mainline,
+> and find, if there any specific wifi changes. But there is possibly not.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
