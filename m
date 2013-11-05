@@ -1,36 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:15965 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751641Ab3KLIJq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Nov 2013 03:09:46 -0500
-From: "Coelho, Luciano" <luciano.coelho@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"sw@simonwunderlich.de" <sw@simonwunderlich.de>
-Subject: Re: [RFC v3 1/4] mac80211: don't transmit beacon with CSA count 0
-Date: Tue, 12 Nov 2013 08:09:10 +0000
-Message-ID: <1384243717.12583.38.camel@porter.coelho.fi> (sfid-20131112_090949_574622_A9B65818)
-References: <1383921579-22373-1-git-send-email-luciano.coelho@intel.com>
-	 <1384178360.14334.18.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1384178360.14334.18.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:60373 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754643Ab3KENMe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Nov 2013 08:12:34 -0500
+Date: Tue, 5 Nov 2013 14:12:32 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Sebastian Reichel <sre@debian.org>
+Cc: Sebastian Reichel <sre@ring0.de>, Luciano Coelho <luca@coelho.fi>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Rob Landley <rob@landley.net>,
+	Tony Lindgren <tony@atomide.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Felipe Balbi <balbi@ti.com>,
+	Sachin Kamat <sachin.kamat@linaro.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bill Pemberton <wfp5p@virginia.edu>,
+	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 3/4] wl1251: spi: add vio regulator support
+Message-ID: <20131105131232.GD30670@amd.pavel.ucw.cz> (sfid-20131105_141254_003572_2657AABE)
+References: <1382890469-25286-1-git-send-email-sre@debian.org>
+ <1382890469-25286-4-git-send-email-sre@debian.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1382890469-25286-4-git-send-email-sre@debian.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gTW9uLCAyMDEzLTExLTExIGF0IDE0OjU5ICswMTAwLCBKb2hhbm5lcyBCZXJnIHdyb3RlOg0K
-PiBPbiBGcmksIDIwMTMtMTEtMDggYXQgMTY6MzkgKzAyMDAsIEx1Y2lhbm8gQ29lbGhvIHdyb3Rl
-Og0KPiA+IEEgYmVhY29uIHNob3VsZCBuZXZlciBoYXZlIGEgQ2hhbm5lbCBTd2l0Y2ggQW5ub3Vu
-Y2VtZW50IGluZm9ybWF0aW9uDQo+ID4gZWxlbWVudCB3aXRoIGEgY291bnQgb2YgMCwgYmVjYXVz
-ZSBhIGNvdW50IG9mIDEgbWVhbnMgc3dpdGNoIGp1c3QNCj4gPiBiZWZvcmUgdGhlIG5leHQgYmVh
-Y29uLiAgU28sIGlmIGEgY291bnQgb2YgMCB3YXMgdmFsaWQgaW4gYSBiZWFjb24sIGl0DQo+ID4g
-d291bGQgaGF2ZSBiZWVuIHRyYW5zbWl0dGVkIGluIHRoZSBuZXh0IGNoYW5uZWwgYWxyZWFkeSwg
-d2hpY2ggaXMNCj4gPiB1c2VsZXNzLiAgQSBDU0EgY291bnQgZXF1YWwgdG8gemVybyBpcyBvbmx5
-IG1lYW5pbmdmdWwgaW4gYWN0aW9uDQo+ID4gZnJhbWVzIG9yIHByb2JlX3Jlc3BvbnNlcy4NCj4g
-PiANCj4gPiBGaXggdGhlIGllZWU4MDIxMV9jc2FfaXNfY29tcGxldGUoKSBhbmQgaWVlZTgwMjEx
-X3VwZGF0ZV9jc2EoKQ0KPiA+IGZ1bmN0aW9ucyBhY2NvcmRpbmdseS4NCj4gDQo+IFRoZXNlIHNl
-ZW0gZmluZSB0byBtZSAtIG1heWJlIHdlIHNob3VsZCBoYXZlIHNvbWUgQ1NBIHRlc3RzIGluIEpv
-dW5pJ3MNCj4gaHdzaW0gdGVzdCBzY3JpcHRzLCBmb3IgdGhlIHZhcmlvdXMgY2FzZXM/IDopDQoN
-CkNvb2wgdGhhdCB0aGlzIGlzIGZpbmUgd2l0aCB5b3UuICBJIGNhbiBwcm9jZWVkIG1ha2luZyB0
-aGUgZmluYWwgY2hhbmdlcw0KZm9yIHY0IHRoZW4uIDspDQoNCkknbGwgdGFrZSBhIGxvb2sgaW50
-byB0aGUgaHdzaW0gdGVzdCBzY3JpcHRzLg0KDQotLQ0KQ2hlZXJzLA0KTHVjYS4NCg==
+On Sun 2013-10-27 17:14:28, Sebastian Reichel wrote:
+> This patch adds support for requesting the regulator powering
+> the vio pin.
+> 
+> The patch also adds the regulator for the all boards using the
+> wl1251 in spi mode (only the Nokia N900).
+> 
+> Signed-off-by: Sebastian Reichel <sre@debian.org>
+
+Reviewed-by: Pavel Machek <pavel@ucw.cz>
+
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
