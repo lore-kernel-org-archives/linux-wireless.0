@@ -1,80 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f178.google.com ([74.125.82.178]:47707 "EHLO
-	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750808Ab3KVIGz (ORCPT
+Received: from mail-pd0-f169.google.com ([209.85.192.169]:65140 "EHLO
+	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755392Ab3KETXM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Nov 2013 03:06:55 -0500
-Received: by mail-we0-f178.google.com with SMTP id u56so811533wes.9
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Nov 2013 00:06:54 -0800 (PST)
-From: Karl Beldan <karl.beldan@gmail.com>
+	Tue, 5 Nov 2013 14:23:12 -0500
+Received: by mail-pd0-f169.google.com with SMTP id q10so9113400pdj.0
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Nov 2013 11:23:11 -0800 (PST)
+From: Thomas Pedersen <thomas@cozybit.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCH] mac80211_hwsim: claim CSA support for AP
-Date: Fri, 22 Nov 2013 09:05:44 +0100
-Message-Id: <1385107544-11833-1-git-send-email-karl.beldan@gmail.com> (sfid-20131122_090723_190792_AF1940F8)
+Cc: Bob Copeland <me@bobcopeland.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	open80211s <devel@lists.open80211s.org>,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH 17/17] mac80211: clean up mesh local link ID generation
+Date: Tue,  5 Nov 2013 11:17:05 -0800
+Message-Id: <1383679025-7150-17-git-send-email-thomas@cozybit.com> (sfid-20131105_202318_551048_4B9D6083)
+In-Reply-To: <1383679025-7150-1-git-send-email-thomas@cozybit.com>
+References: <1383679025-7150-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karl Beldan <karl.beldan@rivierawaves.com>
+802.11-2012 13.3.1 implicitly limits the mesh local link
+ID range to that of AID, since for mesh PS the local link
+ID must be indicated in the TIM IE, which only holds
+IEEE80211_MAX_AID bits.
 
-Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
-Cc: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Also the code was allowing a local link ID of 0, but this
+is not correct since that TIM bit is used for indicating
+buffered mcast frames.
+
+Generate a random, unique, link ID from 1 - 2007, and drop
+a modulo conversion for the local link ID, but keep it for
+the peer link ID in case he chose something > MAX_AID.
+
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
 ---
- drivers/net/wireless/mac80211_hwsim.c | 18 +++++++++++++++++-
- 1 file changed, 17 insertions(+), 1 deletion(-)
+ net/mac80211/mesh_plink.c | 40 +++++++++++++++++++++++++++++++++++-----
+ net/mac80211/mesh_ps.c    |  3 +--
+ net/mac80211/sta_info.c   |  4 ++--
+ 3 files changed, 38 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index a11dc7c..e9c6d2d 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -1058,6 +1058,9 @@ static void mac80211_hwsim_beacon_tx(void *arg, u8 *mac,
- 
- 	mac80211_hwsim_tx_frame(hw, skb,
- 				rcu_dereference(vif->chanctx_conf)->def.chan);
-+
-+	if (vif->csa_active && ieee80211_csa_is_complete(vif))
-+		ieee80211_csa_finish(vif);
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index e0528b9..4ea2f21 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -615,9 +615,40 @@ static inline void mesh_plink_timer_set(struct sta_info *sta, int timeout)
+ 	add_timer(&sta->plink_timer);
  }
  
- static enum hrtimer_restart
-@@ -1692,6 +1695,16 @@ static void mac80211_hwsim_unassign_vif_chanctx(struct ieee80211_hw *hw,
- 	hwsim_check_chanctx_magic(ctx);
- }
- 
-+static void mac80211_hwsim_channel_switch_beacon(struct ieee80211_hw *hw,
-+						 struct ieee80211_vif *vif,
-+						 struct cfg80211_chan_def *chandef)
++static bool llid_in_use(struct ieee80211_sub_if_data *sdata,
++			__le16 llid)
 +{
-+	wiphy_debug(hw->wiphy, "%s (freq=%d(%d - %d)/%s)\n", __func__,
-+		    chandef->chan->center_freq, chandef->center_freq1,
-+		    chandef->center_freq2, hwsim_chanwidths[chandef->width]);
++	struct ieee80211_local *local = sdata->local;
++	bool in_use = false;
++	struct sta_info *sta;
 +
++	rcu_read_lock();
++	list_for_each_entry_rcu(sta, &local->sta_list, list) {
++		if (!memcmp(&sta->llid, &llid, sizeof(llid))) {
++			in_use = true;
++			break;
++		}
++	}
++	rcu_read_unlock();
++
++	return in_use;
 +}
 +
- static struct ieee80211_ops mac80211_hwsim_ops =
- {
- 	.tx = mac80211_hwsim_tx,
-@@ -1716,6 +1729,7 @@ static struct ieee80211_ops mac80211_hwsim_ops =
- 	.flush = mac80211_hwsim_flush,
- 	.get_tsf = mac80211_hwsim_get_tsf,
- 	.set_tsf = mac80211_hwsim_set_tsf,
-+	.channel_switch_beacon = mac80211_hwsim_channel_switch_beacon,
- };
- 
- 
-@@ -2359,7 +2373,9 @@ static int __init init_mac80211_hwsim(void)
- 
- 		hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS |
- 				    WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL |
--				    WIPHY_FLAG_AP_UAPSD;
-+				    WIPHY_FLAG_AP_UAPSD |
-+				    WIPHY_FLAG_HAS_CHANNEL_SWITCH;
++static __le16 mesh_get_new_llid(struct ieee80211_sub_if_data *sdata)
++{
++	u16 llid;
 +
- 		hw->wiphy->features |= NL80211_FEATURE_ACTIVE_MONITOR;
++	do {
++		get_random_bytes(&llid, sizeof(llid));
++		/* for mesh PS we still only have the AID range for TIM bits */
++		llid = (llid % IEEE80211_MAX_AID) + 1;
++	} while (llid_in_use(sdata, cpu_to_le16(llid)));
++
++	return cpu_to_le16(llid);
++}
++
+ u32 mesh_plink_open(struct sta_info *sta)
+ {
+-	__le16 llid;
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
+ 	u32 changed;
  
- 		/* ask mac80211 to reserve space for magic */
+@@ -625,8 +656,7 @@ u32 mesh_plink_open(struct sta_info *sta)
+ 		return 0;
+ 
+ 	spin_lock_bh(&sta->lock);
+-	get_random_bytes(&llid, 2);
+-	sta->llid = llid;
++	sta->llid = mesh_get_new_llid(sdata);
+ 	if (sta->plink_state != NL80211_PLINK_LISTEN &&
+ 	    sta->plink_state != NL80211_PLINK_BLOCKED) {
+ 		spin_unlock_bh(&sta->lock);
+@@ -643,7 +673,7 @@ u32 mesh_plink_open(struct sta_info *sta)
+ 	changed = ieee80211_mps_local_status_update(sdata);
+ 
+ 	mesh_plink_frame_tx(sdata, WLAN_SP_MESH_PEERING_OPEN,
+-			    sta->sta.addr, llid, 0, 0);
++			    sta->sta.addr, sta->llid, 0, 0);
+ 	return changed;
+ }
+ 
+@@ -719,7 +749,7 @@ static u32 mesh_plink_fsm(struct ieee80211_sub_if_data *sdata,
+ 			break;
+ 		case OPN_ACPT:
+ 			sta->plink_state = NL80211_PLINK_OPN_RCVD;
+-			get_random_bytes(&sta->llid, 2);
++			sta->llid = mesh_get_new_llid(sdata);
+ 			mesh_plink_timer_set(sta,
+ 					     mshcfg->dot11MeshRetryTimeout);
+ 
+diff --git a/net/mac80211/mesh_ps.c b/net/mac80211/mesh_ps.c
+index 0f79b78..9493868 100644
+--- a/net/mac80211/mesh_ps.c
++++ b/net/mac80211/mesh_ps.c
+@@ -576,10 +576,9 @@ void ieee80211_mps_frame_release(struct sta_info *sta,
+ 	int ac, buffer_local = 0;
+ 	bool has_buffered = false;
+ 
+-	/* TIM map only for LLID <= IEEE80211_MAX_AID */
+ 	if (sta->plink_state == NL80211_PLINK_ESTAB)
+ 		has_buffered = ieee80211_check_tim(elems->tim, elems->tim_len,
+-				le16_to_cpu(sta->llid) % IEEE80211_MAX_AID);
++						   le16_to_cpu(sta->llid));
+ 
+ 	if (has_buffered)
+ 		mps_dbg(sta->sdata, "%pM indicates buffered frames\n",
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 1eb66e2..7a91515 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -630,8 +630,8 @@ void sta_info_recalc_tim(struct sta_info *sta)
+ #ifdef CONFIG_MAC80211_MESH
+ 	} else if (ieee80211_vif_is_mesh(&sta->sdata->vif)) {
+ 		ps = &sta->sdata->u.mesh.ps;
+-		/* TIM map only for PLID <= IEEE80211_MAX_AID */
+-		id = le16_to_cpu(sta->plid) % IEEE80211_MAX_AID;
++		/* TIM map only for 1 <= PLID <= IEEE80211_MAX_AID */
++		id = le16_to_cpu(sta->plid) % (IEEE80211_MAX_AID + 1);
+ #endif
+ 	} else {
+ 		return;
 -- 
-1.8.2
+1.8.4.rc3
 
