@@ -1,132 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4616 "EHLO mms2.broadcom.com"
+Received: from mga02.intel.com ([134.134.136.20]:40003 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752200Ab3KARyH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 13:54:07 -0400
-Message-ID: <5273EAAE.9020005@broadcom.com> (sfid-20131101_185412_344129_EB90E974)
-Date: Fri, 1 Nov 2013 18:53:50 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+	id S1751675Ab3KEKHS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Nov 2013 05:07:18 -0500
+From: "Coelho, Luciano" <luciano.coelho@intel.com>
+To: Simon Wunderlich <sw@simonwunderlich.de>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
+Subject: Re: [RFC] mac80211: don't transmit beacon with CSA count 0
+Date: Tue, 5 Nov 2013 10:06:32 +0000
+Message-ID: <1383645950.579.26.camel@porter.coelho.fi> (sfid-20131105_110731_236201_4230B9BE)
+References: <1383569955-13236-1-git-send-email-luciano.coelho@intel.com>
+	 <201311041436.51673.sw@simonwunderlich.de>
+	 <1383574023.5928.149.camel@porter.coelho.fi>
+	 <201311041531.56693.sw@simonwunderlich.de>
+	 <1383640077.579.14.camel@porter.coelho.fi>
+In-Reply-To: <1383640077.579.14.camel@porter.coelho.fi>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: "Ruben De Smet" <ruben.de.smet@telenet.be>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	b43-dev@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	brcm80211-dev-list@broadcom.com
-Subject: Re: BCM43228
-References: <52737A9C.3020404@telenet.be>
- <5273C948.9060409@lwfinger.net> <5273D018.7080607@telenet.be>
-In-Reply-To: <5273D018.7080607@telenet.be>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/01/2013 05:00 PM, Ruben De Smet wrote:
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA1
->
->
->
-> On 11/01/2013 04:31 PM, Larry Finger wrote:
->>> Hi folks,
->>>
->>> I'm currently running Broamcoms prorietary wl drivers, which
->>> were running fine until I found a bug in the bluetooth part of
->>> it, which panics the kernel at a certain position. I don't know
->>> if it's a part in the GPL part of the kernel which panics, or if
->>> it's in the Broadcom part, as the kernel is tainted by the
->>> wireless driver and cannot be debugged that way.
->>>
->>> lspci shows me this: 03:00.0 Network controller: Broadcom
->>> Corporation BCM43228 802.11a/b/g/n
->>>
->>> My question: will b43 ever support this chip? If so, I'd be able
->>> to give someone access to this computer for debugging purposes.
->>> I'd give any help possible, though kernels and modules aren't my
->>> domain yet.
->>
->> The short answer is "probably not". The reverse engineering process
->> is very time consuming and boring. What seems to work best is to
->> find a MIPS driver and disassemble it to form the kind of "specs"
->> that are seen at http://bcm-v4.sipsolutions.net/. Next a different
->> person needs to take that prescription and turn it into code. To
->> preserve the clean-room setting, those two parts must be done by
->> separate people. The process worked reasonably well for 802.11g
->> devices, but  the code gets very complicated for 802.11n. Further
->> complicating the issue is that at least one of two BCM43228 units
->> has an LCNXN PHY, and we have done little with that although the
->> web site shows WIP for that PHY with a BCM43227. The 2.4 GHz part
->> of the 227 probably matches that of the 228. Note that b43 has
->> never worked well with the 5 GHz radio in any of the chips.
->>
->> Of course, if the RE is done perfectly, then you end up with all
->> the bugs of wl. :)
->>
->> One other possibility is that the device might eventually be
->> supported by brcmsmac. That set of authors has the advantage of
->> having access to the Broadcom documentation and the wl sources. In
->> case that is a possibility, I added the linux-wireless mailing list
->> to this reply.
->>
->> As shown at
->> http://wireless.kernel.org/en/users/Drivers/b43#Supported_devices,
->> there are two different PCI IDs that are called BCM43228. When you
->> ask this kind of question, you should include the output of 'lspci
->> -nn' so that the ID is listed.
->>
->> Larry
->>
->
-> AFAIK, broadcom only offers it's drivers for intel x86 and x64_86; I
-> guess by MIPS, you mean the architecture? (why wouldn't the intel
-> driver work? Pretty unknown on the subject ;) )
->
-> I read the WIP mail about the 227 chip, I could possibly wait for that
-> one to be released and test it out on mine?
->
-> For the record: the issue I'm having is as follows: when connecting
-> via the bluetooth part of the chip to my phone and using DUN to
-> connect to the internet, everything works fine until I shut down the
-> connection. Then my kernel panics. (Another issue of course is the
-> fact that wl is the only closed source thing in my kernel running atm
-> on my notebook...)
->
-> On brcmsmac: is linux-wireless the right mailinglist to post to then?
-> I see that the range of supported devices is more close to my chip
-> than b43 is ;)
-> I added brcm80211-dev-list@broadcom.com to this mail too, which looks
-> like the more appropriate mailinglist to post the issue to.
-
-Let me chime in on this. We always keep taps on linux-wireless so you 
-are always right to post there. I created the brcm80211-dev-list so 
-people can post their issues there regardless changes in the dev team. 
-So address brcm80211 issues to brcm80211-dev-list and Cc the 
-linux-wireless list. As a bonus that assures they are publicly archived.
-
-Regards,
-Arend
-
-> R
->
-> PS. snippet of the output of 'lspci -nn':
->
-> 03:00.0 Network controller [0280]: Broadcom Corporation BCM43228
-> 802.11a/b/g/n [14e4:4359]
->
-> Other information on request, will try to answer asap.
-> -----BEGIN PGP SIGNATURE-----
-> Version: GnuPG v2.0.22 (GNU/Linux)
-> Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
->
-> iQEcBAEBAgAGBQJSc9AYAAoJEPgmWogSE9wQIGYIAM34w5YzEW3njtkOX0STZf/m
-> 2nDYgORLDgksjQGf7XbSLIn+M7W0u9HMVQXT/aBBxejnSidD/WYIfNLuJddjrGZm
-> pCl3vO/Z7Px/PI/TBa58MIlV9zZOR/T2dLJmijm7u466AFE23PXT1mJemYzlDNdE
-> LLykV+Gp6of8uYLzj2GdqVwHEOztdO9x2q5PGVlDiBfIMkqnt1xn6VqFDZdp75Di
-> viC03tE4HPkN4IIxJbPmZUzBo4L47eRLLJxXAHsVst/sD+YnHkhvEk0yIvSvF3b4
-> 0kZ1jSsDGjryquZ2f4Bvkw8prKS/LyNmPIn8+SaCZ516+C8uUX1e2Z1em2v5DiI=
-> =Z3eG
-> -----END PGP SIGNATURE-----
->
-
-
+T24gVHVlLCAyMDEzLTExLTA1IGF0IDEwOjI3ICswMjAwLCBMdWNpYW5vIENvZWxobyB3cm90ZToN
+Cj4gT24gTW9uLCAyMDEzLTExLTA0IGF0IDE1OjMxICswMTAwLCBTaW1vbiBXdW5kZXJsaWNoIHdy
+b3RlOg0KPiA+ID4gPiBUaGFua3MgZm9yIGNoZWNraW5nIGJhY2sgLSBJJ3ZlIHJlYWQgdGhlIHBh
+cnQgaW4gdGhlIHNwZWMgYWdhaW4gWzFdLCBhbmQNCj4gPiA+ID4gYXBwZWFyZW50bHkgeW91IGFy
+ZSByaWdodC4NCj4gPiA+ID4gDQo+ID4gPiA+IFdpdGggeW91ciBwcm9wb3NlZCBjaGFuZ2UsIHNo
+b3VsZG4ndCB3ZSBhbHNvIGNoYW5nZSB0aGUgYmVoYXZpb3VyIGlmIHRoZQ0KPiA+ID4gPiB1c2Vy
+c3BhY2UgcmVxdWVzdHMgYSBjaGFubmVsIHN3aXRjaCB3aXRoIGNvdW50ID0gMD8gSSBndWVzcyB3
+ZSBzaG91bGQNCj4gPiA+ID4gaW1tZWRpYXRlbHkgY2hhbmdlIHRoZSBjaGFubmVsIHRoZW4gd2l0
+aG91dCB3YWl0aW5nIGZvciBiZWFjb25zPyBJIGRvbid0DQo+ID4gPiA+IHNlZSB0aGUgcG9pbnQg
+aW4gY2hhbmdpbmcgdGhlIGJlYWNvbnMgaWYgd2UgZG9uJ3Qgc2VuZCB0aGVtLCBhZnRlciBhbGwu
+DQo+ID4gPiANCj4gPiA+IFlvdSdyZSByaWdodCwgY2hhbmdpbmcgdGhlIGJlYWNvbnMgZG9lc24n
+dCBtYWtlIHNlbnNlIGluIHRoaXMgY2FzZS4NCj4gPiA+IEknbGwgY2hhbmdlIHRoYXQgYW5kIHNl
+bmQgdjIuDQo+ID4gPiANCj4gPiA+IEFub3RoZXIgdGhpbmcgaXMgdGhhdCB3ZSBhcmUgbWlzc2lu
+ZyB0aGUgYWN0aW9uIGZyYW1lcy4gIFRoZSBpZGVhIHdpdGgNCj4gPiA+IHRoZSBjb3VudCA9PSAw
+IGlzIHRoYXQgdGhlIFNUQSdzIHNob3VsZCBzdGFydCBsaXN0ZW5pbmcgb24gdGhlIG90aGVyDQo+
+ID4gPiBjaGFubmVsIGltbWVkaWF0ZWx5IGFmdGVyIHJlY2VpdmluZyB0aGUgYWN0aW9uIGZyYW1l
+IChiZWNhdXNlIHRoZSBzd2l0Y2gNCj4gPiA+IHdpbGwgaGFwcGVuIGF0IGFueSB0aW1lKS4NCj4g
+PiA+IA0KPiA+ID4gSWYgd2UgZG9uJ3Qgc2VuZCB0aGUgYWN0aW9uIGZyYW1lLCBwYXNzaW5nIGNv
+bnRleHQgPT0gMCBmcm9tIHRoZQ0KPiA+ID4gdXNlcnNwYWNlIGRvZXNuJ3QgbXVjaCBtYWtlIHNl
+bnNlLCBiZWNhdXNlIHRoZSBjbGllbnRzIHdvbid0IGtub3cgd2UncmUNCj4gPiA+IHN3aXRjaGlu
+Zy4gIFdlbGwsIG1heWJlIGl0IG1ha2VzIGEgYml0IG9mIHNlbnNlLCBpZiB0aGVyZSBhcmUgbm8g
+Y2xpZW50cw0KPiA+ID4gY29ubmVjdGVkLCBidXQgbmV2ZXJ0aGVsZXNzLg0KPiA+IA0KPiA+IFll
+YWgsIHN3aXRjaGluZyB3aXRob3V0IGFjdGlvbmZyYW1lIGFuZCBjb3VudCA9PSAwIGlzIHByZXR0
+eSB1c2VsZXNzLg0KPiANCj4gQWN0dWFsbHksIGlmIHRoZSB1c2Vyc3BhY2UgcmVxdWVzdHMgY291
+bnQgPT0gMSwgd2Ugd29uJ3QgaGF2ZSBhbnkNCj4gYmVhY29ucyBlaXRoZXIsIGJlY2F1c2UgMSBt
+ZWFucyAianVzdCBiZWZvcmUgdGhlIG5leHQgVEJUVCIuICBTbyBmb3INCj4gY291bnQgPT0gMSAo
+Y29taW5nIGZyb20gdGhlIHVzZXJzcGFjZSkgd2Ugc2hvdWxkbid0IGNvbmZpZ3VyZSB0aGUNCj4g
+YmVhY29uLCBzaW5jZSB3ZSB3b24ndCBzZW5kIGl0LiAgV2UgbmVlZCB0aGUgYWN0aW9uIGZyYW1l
+IGZvciB0aGlzIGNhc2UNCj4gdG9vLg0KDQpIbW1tLi4uIE5vdyB0aGVyZSdzIHNvbWV0aGluZyB0
+aGF0IGlzIGEgYml0IHVuY2xlYXIgdG8gbWUgaW4gdGhlIHNwZWNzOg0KDQoiRm9yIG5vbm1lc2gg
+U1RBcywgdGhlIENoYW5uZWwgU3dpdGNoIENvdW50IGZpZWxkIGVpdGhlciBpcyBzZXQgdG8gdGhl
+DQpudW1iZXIgb2YgVEJUVHMgdW50aWwgdGhlIFNUQSBzZW5kaW5nIHRoZSBDaGFubmVsIFN3aXRj
+aCBBbm5vdW5jZW1lbnQNCmVsZW1lbnQgc3dpdGNoZXMgdG8gdGhlIG5ldyBjaGFubmVsIG9yIGlz
+IHNldCB0byAwLiINCg0KVGhlcmUncyBub3RoaW5nIHNwZWNpZnlpbmcgZXhhY3RseSB3aGVuLCBy
+ZWxhdGl2ZSB0byB0aGUgYmVhY29uLCB0aGUNCnN3aXRjaCBhY3R1YWxseSBoYXBwZW5zLiAgSnVz
+dCBiZWZvcmU/IEp1c3QgYWZ0ZXI/IElzIHRoZSBiZWFjb24gdGhhdA0KbWF0Y2hlcyB0aGF0IFRC
+VFQgdHJhbnNtaXR0ZWQgaW4gdGhlIGN1cnJlbnQgb3IgaW4gdGhlIG5leHQgY2hhbm5lbD8NCg0K
+Rm9yIGEgdmFsdWUgb2YgMSwgaXQncyBwcmV0dHkgY2xlYXI6DQoNCiJBIHZhbHVlIG9mIDEgaW5k
+aWNhdGVzIHRoYXQgdGhlIHN3aXRjaCBvY2N1cnMgaW1tZWRpYXRlbHkgYmVmb3JlIHRoZQ0KbmV4
+dCBUQlRULiINCg0KSSBkb24ndCB0aGluayB3ZSdyZSBkb2luZyB0aGF0IG5vdy4gIEF0IGxlYXN0
+IGluIHRoZSBhdGg5ayBjYXNlLCB5b3UNCnN3aXRjaCB0aGUgY2hhbm5lbCBpbW1lZGlhdGVseSBh
+ZnRlciB0aGUgYmVhY29uIHdpdGggY291bnQgPT0gMSwgYnkNCmNhbGxpbmcgaWVlZTgwMjExX2Nz
+YV9maW5pc2goKS4gIFRoZSBjb3JyZWN0IHdvdWxkIGJlIGp1c3QgYmVmb3JlIHRoZQ0KbmV4dCBi
+ZWFjb24gaXMgc2VudC4NCg0KQSB2YWx1ZSBvZiAwIGlzIGFsc28gdW5jbGVhciwgYmVjYXVzZSBp
+dCBkb2Vzbid0IHJlZmVyIHRvIGFueSBUQlRUcyBhdA0KYWxsLiAgU28gaWYgeW91IHJlYWQgaXQg
+bGl0ZXJhbGx5LCB0aGUgZm9sbG93aW5nIHdvdWxkIG1lYW4gdGhhdCBpdA0KY291bGQgYXQgKmFu
+eSogdGltZSBpbiB0aGUgZnV0dXJlOg0KDQoiQSB2YWx1ZSBvZiAwIGluZGljYXRlcyB0aGF0IHRo
+ZSBzd2l0Y2ggb2NjdXJzIGF0IGFueSB0aW1lIGFmdGVyIHRoZQ0KZnJhbWUgY29udGFpbmluZyB0
+aGUgZWxlbWVudCBpcyB0cmFuc21pdHRlZC4iDQoNCkFtIEkgbWlzc2luZyBzb21ldGhpbmc/IFdo
+YXQgZG8geW91IHRoaW5rPw0KDQotLQ0KQ2hlZXJzLA0KTHVjYS4NCg==
