@@ -1,53 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:45487 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750858Ab3KTLjv (ORCPT
+Received: from mail-we0-f178.google.com ([74.125.82.178]:53567 "EHLO
+	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752970Ab3KETwm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Nov 2013 06:39:51 -0500
-Message-ID: <1384947587.14295.6.camel@jlt4.sipsolutions.net> (sfid-20131120_123954_696076_75AF1763)
-Subject: Re: QoS Data packets causing massive packet loss in
- ieee80211_sta_manage_reorder_buf.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Karl Beldan <karl.beldan@gmail.com>
-Cc: Blaise Gassend <blaise@suitabletech.com>,
-	linux-wireless@vger.kernel.org,
-	Catalin Drula <catalin@suitabletech.com>,
-	Alap Modi <amodi@arubanetworks.com>
-Date: Wed, 20 Nov 2013 12:39:47 +0100
-In-Reply-To: <20131120112535.GC6993@magnum.frso.rivierawaves.com> (sfid-20131120_122610_761173_F299F154)
-References: <CAPvVjisu-xcZsqHgcTEKsCJFuESDFO-_0KwkgxffyejemHJZcA@mail.gmail.com>
-	 <1384937328.14295.3.camel@jlt4.sipsolutions.net>
-	 <CAPvVjiu55=nscHa-Mpff_LL-Y0v6XHEGx0K7rpCVU9nRiKfaXA@mail.gmail.com>
-	 <20131120110157.GA6993@magnum.frso.rivierawaves.com>
-	 <1384945569.14295.5.camel@jlt4.sipsolutions.net>
-	 <20131120111654.GB6993@magnum.frso.rivierawaves.com>
-	 <20131120112535.GC6993@magnum.frso.rivierawaves.com>
-	 (sfid-20131120_122610_761173_F299F154)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 5 Nov 2013 14:52:42 -0500
+Received: by mail-we0-f178.google.com with SMTP id q59so3918192wes.37
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Nov 2013 11:52:41 -0800 (PST)
+MIME-Version: 1.0
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Wed, 6 Nov 2013 01:22:20 +0530
+Message-ID: <CABPxzY++gCivs1u8nDtAeB5=p+ZkGHXmOnqud1hkh=TWB5Xprg@mail.gmail.com> (sfid-20131105_205248_293310_9940CD69)
+Subject: [Query] Decryption and Monitor Mode
+To: radiotap@netbsd.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-11-20 at 12:25 +0100, Karl Beldan wrote:
+Hi,
 
-> > > > > > http://p.sipsolutions.net/d00799dd2201676a.txt
-> > > > > 
-> > > > > This patch works like a charm for my current predicament. But is it
-> > > > > actually written somewhere that multicast packets can't be aggregated?
-> > > > > I can't find any place that says they can't, but I'm not authoritative
-> > > > > by any means.
-> > > > > 
-> > > > There's a chapter "A-MPDU aggregation of group addressed data frames" in
-> > > > the specs, however I haven't seen this yet.
-> > > 
-> > > Even then though, I don't think there would be any block-ack session,
-> > > and thus you wouldn't be able to use the reorder buffer anyway, right?
-> > > 
-> > I think so.
-> >  
-> Except maybe for 802.11aa GCR (groupcast with retries) ..
+In our internal tests we make use of monitor mode heavily for all the
+debugging, especially with security related issues (as packets are
+already decrypted).
 
-But that will probably need much more work anyway ... :)
+But as the decryption is done in HW (most cases), the HW decrypts the
+packet but still retains the Security Header and sends to the host (at
+least in our solution), we remove that header while giving the packet
+to network stack but while giving it to the monitor mode we do not
+strip off that and also protection=1.
 
-johannes
+With this wireshark is not able to decode the packets, even thought
+they are decrypted. I propose 2 solutions
 
+Radiotap and Wireshark:
+
+1) Add 2 flags to the radiotap RX Flags (HW Decrypted the packet,
+Packet has security Header (for some chipsets which consume the
+security header as well..??).)
+
+Based on these the wireshark dissector decodes the packet accordingly.
+
+mac80211:
+
+2) Remove the security header information in the monitor path as well
+based on the existing RX_FLAGS.
+
+
+Solutions 2 looks more elegant and simple, any comments?
+
+-- 
+Thanks,
+Regards,
+Chaitanya T K.
