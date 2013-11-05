@@ -1,70 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mantis.wzyboy.im ([199.83.51.51]:35494 "EHLO mantis.wzyboy.im"
+Received: from mga11.intel.com ([192.55.52.93]:10544 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751090Ab3KFGfH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Nov 2013 01:35:07 -0500
-Received: from mail-pd0-f174.google.com (mail-pd0-f174.google.com [209.85.192.174])
-	by mantis.wzyboy.im (Postfix) with ESMTPSA id 7C4288813E
-	for <linux-wireless@vger.kernel.org>; Wed,  6 Nov 2013 14:35:06 +0800 (CST)
-Received: by mail-pd0-f174.google.com with SMTP id z10so9785326pdj.33
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Nov 2013 22:35:05 -0800 (PST)
+	id S1755156Ab3KEOZe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Nov 2013 09:25:34 -0500
+From: "Coelho, Luciano" <luciano.coelho@intel.com>
+To: Simon Wunderlich <sw@simonwunderlich.de>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
+Subject: Re: [RFC] mac80211: don't transmit beacon with CSA count 0
+Date: Tue, 5 Nov 2013 14:25:31 +0000
+Message-ID: <1383661489.579.39.camel@porter.coelho.fi> (sfid-20131105_152541_962684_7CFA3BB7)
+References: <1383569955-13236-1-git-send-email-luciano.coelho@intel.com>
+	 <201311041531.56693.sw@simonwunderlich.de>
+	 <1383640077.579.14.camel@porter.coelho.fi>
+	 <201311051436.13222.sw@simonwunderlich.de>
+In-Reply-To: <201311051436.13222.sw@simonwunderlich.de>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB301DE9FC6@HASMSX103.ger.corp.intel.com>
-References: <5276134B.8070808@wzyboy.org> <0BA3FCBA62E2DC44AF3030971E174FB301DE75AE@HASMSX103.ger.corp.intel.com>
- <CALkVjQYh-SUte4S6LdqOc3KSc3_pDU6jz1KXp+Jsd5_RFPXSqA@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DE8338@HASMSX103.ger.corp.intel.com>
- <CALkVjQb7fCMFpqhdUs8w-Mx_Y0RtAYYFtKxXkqyrCQ39UFGxKg@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DE960E@HASMSX103.ger.corp.intel.com>
- <CALkVjQbW8FeiEh8pBZ=KQFD9+8AdjgT0G_RG7qJe0MRdBvMD-A@mail.gmail.com>
- <CALkVjQaLx2spaOqUPcs_EwMkU7npMki1Reo1MeZwxB7m=c24=g@mail.gmail.com> <0BA3FCBA62E2DC44AF3030971E174FB301DE9FC6@HASMSX103.ger.corp.intel.com>
-From: wzyboy <wzyboy@wzyboy.org>
-Date: Wed, 6 Nov 2013 14:34:50 +0800
-Message-ID: <CALkVjQZDNSgUUFyi94Y8da_NDzW61rCvaMrZpUugFKW_LRNFFA@mail.gmail.com> (sfid-20131106_073515_014415_7DAA00F4)
-Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/11/6 Grumbach, Emmanuel <emmanuel.grumbach@intel.com>:
->>
->> Hi, I'm back.
->>
->> This terriable bug occurs again in Linux 3.12. This time I've been prepared for
->> it and wrote down the complete process of its apperance and my reacting, as
->> attached.
->
-> Thanks - was that with power save disabled?
-
-Yes, Linux 3.12 with "options iwlmvm power_scheme=1". (I did not touch
-that .conf file after the kernel upgrade)
-
->
->>
->> IMHO they are quite similar with those errors in 3.11...
->
-> Indeed. The only difference is that you don’t have PCI complain about not being able to disable L1.
-
-I see. But I still cannot figure out what is the "trigger" of this
-bug. Today (Nov 06 UTC+8) this bug occurs twice till now (14:30), they
-were at 12:31 and 13:30. At the first time I was about to do a system
-upgrade and at the second time I was using rsync to upload photos from
-my Android phone to my laptop.
-
-Sometimes I was not even using network (the traffic was near zero)
-when the bug occurs. So this bug seems to occur no matter of network
-traffic states?
-
-Could you think of a possible "trigger" of this bug so I could try to
-avoid it (I hate rebooting) before the final fix is released? For
-example, if there is something wrong with the "modules linked in" I
-could blacklist that module...
-
-
-Sincere regards.
-
--- 
-wzyboy
+T24gVHVlLCAyMDEzLTExLTA1IGF0IDE0OjM2ICswMTAwLCBTaW1vbiBXdW5kZXJsaWNoIHdyb3Rl
+Og0KPiA+IE9uIE1vbiwgMjAxMy0xMS0wNCBhdCAxNTozMSArMDEwMCwgU2ltb24gV3VuZGVybGlj
+aCB3cm90ZToNCj4gPiA+ID4gPiBUaGFua3MgZm9yIGNoZWNraW5nIGJhY2sgLSBJJ3ZlIHJlYWQg
+dGhlIHBhcnQgaW4gdGhlIHNwZWMgYWdhaW4gWzFdLA0KPiA+ID4gPiA+IGFuZCBhcHBlYXJlbnRs
+eSB5b3UgYXJlIHJpZ2h0Lg0KPiA+ID4gPiA+IA0KPiA+ID4gPiA+IFdpdGggeW91ciBwcm9wb3Nl
+ZCBjaGFuZ2UsIHNob3VsZG4ndCB3ZSBhbHNvIGNoYW5nZSB0aGUgYmVoYXZpb3VyIGlmDQo+ID4g
+PiA+ID4gdGhlIHVzZXJzcGFjZSByZXF1ZXN0cyBhIGNoYW5uZWwgc3dpdGNoIHdpdGggY291bnQg
+PSAwPyBJIGd1ZXNzIHdlDQo+ID4gPiA+ID4gc2hvdWxkIGltbWVkaWF0ZWx5IGNoYW5nZSB0aGUg
+Y2hhbm5lbCB0aGVuIHdpdGhvdXQgd2FpdGluZyBmb3INCj4gPiA+ID4gPiBiZWFjb25zPyBJIGRv
+bid0IHNlZSB0aGUgcG9pbnQgaW4gY2hhbmdpbmcgdGhlIGJlYWNvbnMgaWYgd2UgZG9uJ3QNCj4g
+PiA+ID4gPiBzZW5kIHRoZW0sIGFmdGVyIGFsbC4NCj4gPiA+ID4gDQo+ID4gPiA+IFlvdSdyZSBy
+aWdodCwgY2hhbmdpbmcgdGhlIGJlYWNvbnMgZG9lc24ndCBtYWtlIHNlbnNlIGluIHRoaXMgY2Fz
+ZS4NCj4gPiA+ID4gSSdsbCBjaGFuZ2UgdGhhdCBhbmQgc2VuZCB2Mi4NCj4gPiA+ID4gDQo+ID4g
+PiA+IEFub3RoZXIgdGhpbmcgaXMgdGhhdCB3ZSBhcmUgbWlzc2luZyB0aGUgYWN0aW9uIGZyYW1l
+cy4gIFRoZSBpZGVhIHdpdGgNCj4gPiA+ID4gdGhlIGNvdW50ID09IDAgaXMgdGhhdCB0aGUgU1RB
+J3Mgc2hvdWxkIHN0YXJ0IGxpc3RlbmluZyBvbiB0aGUgb3RoZXINCj4gPiA+ID4gY2hhbm5lbCBp
+bW1lZGlhdGVseSBhZnRlciByZWNlaXZpbmcgdGhlIGFjdGlvbiBmcmFtZSAoYmVjYXVzZSB0aGUN
+Cj4gPiA+ID4gc3dpdGNoIHdpbGwgaGFwcGVuIGF0IGFueSB0aW1lKS4NCj4gPiA+ID4gDQo+ID4g
+PiA+IElmIHdlIGRvbid0IHNlbmQgdGhlIGFjdGlvbiBmcmFtZSwgcGFzc2luZyBjb250ZXh0ID09
+IDAgZnJvbSB0aGUNCj4gPiA+ID4gdXNlcnNwYWNlIGRvZXNuJ3QgbXVjaCBtYWtlIHNlbnNlLCBi
+ZWNhdXNlIHRoZSBjbGllbnRzIHdvbid0IGtub3cgd2UncmUNCj4gPiA+ID4gc3dpdGNoaW5nLiAg
+V2VsbCwgbWF5YmUgaXQgbWFrZXMgYSBiaXQgb2Ygc2Vuc2UsIGlmIHRoZXJlIGFyZSBubw0KPiA+
+ID4gPiBjbGllbnRzIGNvbm5lY3RlZCwgYnV0IG5ldmVydGhlbGVzcy4NCj4gPiA+IA0KPiA+ID4g
+WWVhaCwgc3dpdGNoaW5nIHdpdGhvdXQgYWN0aW9uZnJhbWUgYW5kIGNvdW50ID09IDAgaXMgcHJl
+dHR5IHVzZWxlc3MuDQo+ID4gDQo+ID4gQWN0dWFsbHksIGlmIHRoZSB1c2Vyc3BhY2UgcmVxdWVz
+dHMgY291bnQgPT0gMSwgd2Ugd29uJ3QgaGF2ZSBhbnkNCj4gPiBiZWFjb25zIGVpdGhlciwgYmVj
+YXVzZSAxIG1lYW5zICJqdXN0IGJlZm9yZSB0aGUgbmV4dCBUQlRUIi4gIFNvIGZvcg0KPiA+IGNv
+dW50ID09IDEgKGNvbWluZyBmcm9tIHRoZSB1c2Vyc3BhY2UpIHdlIHNob3VsZG4ndCBjb25maWd1
+cmUgdGhlDQo+ID4gYmVhY29uLCBzaW5jZSB3ZSB3b24ndCBzZW5kIGl0LiAgV2UgbmVlZCB0aGUg
+YWN0aW9uIGZyYW1lIGZvciB0aGlzIGNhc2UNCj4gPiB0b28uDQo+ID4gDQo+IA0KPiBIbW0sIHJp
+Z2h0LCB3ZSB3aWxsIGRlY3JlbWVudCB0aGUgY291bnRlciBiZWZvcmUgc2VuZGluZyBpdCBvdXQg
+Li4uDQoNCkkgdGhpbmsgdGhpcyB3b24ndCBiZSBhIHByb2JsZW0gYW55bW9yZSB3aGVuIEkgY2hh
+bmdlIHRoZSBjb2RlIHRvIHN3aXRjaA0KY2hhbm5lbCBpbW1lZGlhdGVseSAod2l0aG91dCBzZXR0
+aW5nIHRoZSBiZWFjb25zKSBpbiBjYXNlIG9mIGNvdW50ID09IDANCmFuZCBjb3VudCA9PSAxLg0K
+DQoNCj4gPiA+IEZvciBBUCBtb2RlLCBJIGd1ZXNzIHRoZSByaWdodCBwbGFjZSB0byBpbXBsZW1l
+bnQgdGhlIGFjdGlvbiBmcmFtZXMgd291bGQNCj4gPiA+IGJlIGhvc3RhcD8gVGhpcyB3b3VsZCBh
+dCBsZWFzdCBhbGxvdyBncmVhdCBmbGV4aWJpbGl0eSB3aXRoIENTQSwgRUNTQQ0KPiA+ID4gYW5k
+IGFsbCB0aGUgbmV3IGNoYW5uZWwgc3dpdGNoIElFcyBjb21pbmcgbm93LiBUaGUgYmVhY29ucyBh
+cmUgYWxzbw0KPiA+ID4gZ2VuZXJhdGVkIGluIHVzZXJzcGFjZSwgYWZ0ZXIgYWxsLg0KPiA+IA0K
+PiA+IFdoYXQgbmV3IGNoYW5uZWwgY2hhbm5lbCBzd2l0Y2ggSUVzPw0KPiANCj4gUmlnaHQgbm93
+IHdlIGFsc28gaGF2ZSBleHRlbmRlbmRlZCBjaGFubmVsIHN3aXRjaCBhbm5vdW5jZW1lbnRzIChF
+Q1NBKSwgYW5kIA0KPiBzZWNvbmRhcnkgY2hhbm5lbCBvZmZzZXQsIGFuZCB0aGVyZSBhcmUgbW9y
+ZSB0byBjb21lIHdpdGggODAyLjExYWMgSSB0aGluay4gSSANCj4gaGF2ZSBub3Qgc3R1ZGllZCBp
+dCB5ZXQgKGFuZCBJIGRvbid0IGhhdmUgYWNjZXNzIHRvIDgwMi4xMSBkcmFmdHMpLCBidXQgaGF2
+ZSBhIA0KPiBsb29rIGF0IHRoYXQ6DQo+IA0KPiBodHRwczovL21lbnRvci5pZWVlLm9yZy84MDIu
+MTEvZGNuLzEzLzExLTEzLTAxMDUtMDAtMDBhYy1sYjE5MC1wcm9wb3NlZC0NCj4gcmVzb2x1dGlv
+bi1vbi1jaWQtNzM2Ny1hbmQtNzM2OC5kb2N4JmVpPVRfTjRVdUhXR2NtdDRBVFFqNER3QmcmdXNn
+PUFGUWpDTkU1RS0NCj4gYnBxUkdRTTctUXdHMEw0VGlVM09PTGlnJmJ2bT1idi41NTk4MDI3Nixk
+LmJHRSZjYWQ9cmphDQo+IA0KPiAobm90IG9ubHkgdGhlIC5kb2MgZm9ybWF0IGlzIHVnbHkpDQoN
+ClllcywgeW91J3JlIHJpZ2h0LiAgSW4gMTFhYyB0aGVyZSBhcmUgYSBmZXcgbW9yZSBlbGVtZW50
+cyB0aGF0IHNob3VsZCBnbw0KaW4gdGhlIENTQSBhY3Rpb24gZnJhbWUuICBBbmQgc29tZSB3cmFw
+cGVycyBhbmQgb3RoZXIgdGhpbmdzIHRoYXQgZ28gaW4NCnRoZSBiZWFjb25zIGFuZCBwcm9iZV9y
+ZXNwcyBkdXJpbmcgQ1NBLg0KDQpCdXQgc3RpbGwsIGZvciB0aGUgYWN0aW9uIGZyYW1lcywgdGhl
+c2UgYXJlIHJhdGhlciBzdGF0aWMgYW5kIEkgZG9uJ3QNCnRoaW5rIGl0J3MgcmVhbGx5IGJhZCB0
+byBkbyBpdCBpbiBtYWM4MDIxMSBpdHNlbGYuICBCdXQgSSBkb24ndCBoYXZlIGENCnN0cm9uZyBv
+cGluaW9uIHJlZ2FyZGluZyB0aGlzLi4uDQoNCg0KPiA+IFlvdSdyZSByaWdodCB0aGF0IGl0IG1p
+Z2h0IG1ha2Ugc2Vuc2UgdG8gaW1wbGVtZW50IHRoZSBhY3Rpb24gZnJhbWVzIGluDQo+ID4gaG9z
+dGFwLiAgQnV0IE9UT0gsIHRoZSBhY3Rpb24gZnJhbWUgaXMgcXVpdGUgc2ltcGxlIGFuZCBtYWM4
+MDIxMSBzaG91bGQNCj4gPiBoYXZlIGFsbCB0aGUgaW5mb3JtYXRpb24gbmVlZGVkIHRvIHNlbmQg
+aXQgb3V0Lg0KPiA+IA0KPiA+ID4gQlRXLCBJJ3ZlIGp1c3QgY2hlY2tlZCBhbmQgdGhlIFdpRmkg
+QWxsaWFuY2UgcmVxdWlyZXMgYXQgbGVhc3QgNSBiZWFjb25zDQo+ID4gPiB3aXRoIENTQS1JRXMg
+dG8gcGFzcyB0aGUgODAyLjExaCB0ZXN0LiA6KQ0KPiA+IA0KPiA+IERvIHlvdSBtZWFuIHRoYXQg
+dGhlIHRlc3RzIG9ubHkgY2hlY2sgd2hlbiBjb3VudCBzdGFydHMgYXMgPiA1Pw0KPiA+IA0KPiAN
+Cj4gSXQgY2hlY2tzIGlmIHRoZSBsYXN0IGJlYWNvbiBoYXN0IGEgQ1NBIElFIGluIHRoZSBiZWFj
+b24sIGFuZCBhbHNvIGlmIHRoZXJlIA0KPiBhcmUgNCBiZWFjb25zIGJlZm9yZSB0aGF0IGluY2x1
+ZGluZyBhIENTQSBJRS4gSXQgZG9lcyBub3QgY2hlY2sgZm9yIHRoZSBjb3VudCANCj4gdGhvdWdo
+LCBidXQgdGhhdCdzIGltcGxpY2l0bHkgZ2l2ZW4gLi4uDQoNCk9rYXksIHNvIHdlIGp1c3QgbmVl
+ZCB0byByZW1lbWJlciB0byB1c2UgY291bnQgPj0gNiB3aGVuIHRlc3RpbmcuIDspDQoNCi0tDQpM
+dWNhLg0K
