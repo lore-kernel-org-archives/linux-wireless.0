@@ -1,79 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:48028 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753148Ab3KGCDg (ORCPT
+Received: from mail-bk0-f47.google.com ([209.85.214.47]:61993 "EHLO
+	mail-bk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754624Ab3KERRT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Nov 2013 21:03:36 -0500
-Received: by mail-pa0-f43.google.com with SMTP id hz1so532544pad.30
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Nov 2013 18:03:36 -0800 (PST)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	devel@lists.open80211s.org, distro11s@cozybit.com,
-	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Subject: [PATCH v2] mac80211: fix the mesh channel switch support
-Date: Thu,  7 Nov 2013 10:01:01 +0800
-Message-Id: <1383789661-23644-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20131107_030339_622991_35FA9E17)
+	Tue, 5 Nov 2013 12:17:19 -0500
+Received: by mail-bk0-f47.google.com with SMTP id d7so2873646bkh.34
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Nov 2013 09:17:18 -0800 (PST)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 03/19] cfg80211: check regulatory request alpha2 early
+Date: Tue,  5 Nov 2013 09:18:01 -0800
+Message-Id: <1383671897-7746-4-git-send-email-mcgrof@do-not-panic.com> (sfid-20131105_181722_193680_316D3C5A)
+In-Reply-To: <1383671897-7746-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383671897-7746-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mesh STA receiving the mesh CSA action frame is not able to trigger
-the mesh channel switch due to the incorrect handling and comparison
-of mesh channel switch parameters element (MCSP)'s TTL. Make sure
-the MCSP's TTL is updated accordingly before calling the
-ieee80211_mesh_process_chnswitch.
+Currently nl80211 allows userspace to send the kernel
+a bogus regulatory domain with at most 32 rules set
+and it won't reject it until after its allocated
+memory. Let's be smart about it and take advantage
+that the last_request is now available under RCU
+and check if the alpha2 matches an expected request
+and reject any bogus userspace requests prior to
+hitting the memory allocator.
 
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
-v2: only allow channel switch if mesh TTL less than dot11MeshTTL (Chun-Yeow)
+ net/wireless/nl80211.c | 3 +++
+ net/wireless/reg.c     | 2 +-
+ net/wireless/reg.h     | 1 +
+ 3 files changed, 5 insertions(+), 1 deletion(-)
 
- net/mac80211/mesh.c |   11 ++++-------
- 1 file changed, 4 insertions(+), 7 deletions(-)
-
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 896fe3b..98963a4 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -945,10 +945,8 @@ ieee80211_mesh_process_chnswitch(struct ieee80211_sub_if_data *sdata,
- 	params.block_tx = csa_ie.mode & WLAN_EID_CHAN_SWITCH_PARAM_TX_RESTRICT;
- 	if (beacon)
- 		ifmsh->chsw_ttl = csa_ie.ttl - 1;
--	else
--		ifmsh->chsw_ttl = 0;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index cc5d106..476d32c 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5053,6 +5053,9 @@ static int nl80211_set_reg(struct sk_buff *skb, struct genl_info *info)
+ 			return -EINVAL;
+ 	}
  
--	if (ifmsh->chsw_ttl > 0)
-+	if (ifmsh->chsw_ttl < ifmsh->mshcfg.dot11MeshTTL)
- 		if (ieee80211_mesh_csa_beacon(sdata, &params, false) < 0)
- 			return false;
++	if (!reg_is_valid_request(alpha2))
++		return -EINVAL;
++
+ 	size_of_regd = sizeof(struct ieee80211_regdomain) +
+ 		       num_rules * sizeof(struct ieee80211_reg_rule);
  
-@@ -1163,7 +1161,6 @@ static int mesh_fwd_csa_frame(struct ieee80211_sub_if_data *sdata,
- 	offset_ttl = (len < 42) ? 7 : 10;
- 	*(pos + offset_ttl) -= 1;
- 	*(pos + offset_ttl + 1) &= ~WLAN_EID_CHAN_SWITCH_PARAM_INITIATOR;
--	sdata->u.mesh.chsw_ttl = *(pos + offset_ttl);
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 6183c90..ff595d1 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -450,7 +450,7 @@ static int call_crda(const char *alpha2)
+ 	return kobject_uevent(&reg_pdev->dev.kobj, KOBJ_CHANGE);
+ }
  
- 	memcpy(mgmt_fwd, mgmt, len);
- 	eth_broadcast_addr(mgmt_fwd->da);
-@@ -1182,7 +1179,7 @@ static void mesh_rx_csa_frame(struct ieee80211_sub_if_data *sdata,
- 	u16 pre_value;
- 	bool fwd_csa = true;
- 	size_t baselen;
--	u8 *pos, ttl;
-+	u8 *pos;
+-static bool reg_is_valid_request(const char *alpha2)
++bool reg_is_valid_request(const char *alpha2)
+ {
+ 	struct regulatory_request *lr = get_last_request();
  
- 	if (mgmt->u.action.u.measurement.action_code !=
- 	    WLAN_ACTION_SPCT_CHL_SWITCH)
-@@ -1193,8 +1190,8 @@ static void mesh_rx_csa_frame(struct ieee80211_sub_if_data *sdata,
- 			   u.action.u.chan_switch.variable);
- 	ieee802_11_parse_elems(pos, len - baselen, false, &elems);
+diff --git a/net/wireless/reg.h b/net/wireless/reg.h
+index 9677e3c..b4076ba 100644
+--- a/net/wireless/reg.h
++++ b/net/wireless/reg.h
+@@ -18,6 +18,7 @@
  
--	ttl = elems.mesh_chansw_params_ie->mesh_ttl;
--	if (!--ttl)
-+	ifmsh->chsw_ttl = elems.mesh_chansw_params_ie->mesh_ttl;
-+	if (!--ifmsh->chsw_ttl)
- 		fwd_csa = false;
+ extern const struct ieee80211_regdomain __rcu *cfg80211_regdomain;
  
- 	pre_value = le16_to_cpu(elems.mesh_chansw_params_ie->mesh_pre_value);
++bool reg_is_valid_request(const char *alpha2);
+ bool is_world_regdom(const char *alpha2);
+ bool reg_supported_dfs_region(u8 dfs_region);
+ 
 -- 
-1.7.9.5
+1.8.4.rc3
 
