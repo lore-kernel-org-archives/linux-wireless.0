@@ -1,36 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:45251 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755546Ab3KMSa6 (ORCPT
+Received: from mail-bk0-f42.google.com ([209.85.214.42]:59285 "EHLO
+	mail-bk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754872Ab3KERRQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Nov 2013 13:30:58 -0500
-Message-ID: <1384367454.14578.21.camel@jlt4.sipsolutions.net> (sfid-20131113_193101_214274_031DBF2A)
-Subject: Re: [PATCH] mac80211: minstrel_ht: replace some occurences of
- MCS_GROUP_RATES
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Karl Beldan <karl.beldan@gmail.com>
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>
-Date: Wed, 13 Nov 2013 19:30:54 +0100
-In-Reply-To: <1384171975-21111-1-git-send-email-karl.beldan@gmail.com> (sfid-20131111_131318_297014_BC63A3F5)
-References: <1384171975-21111-1-git-send-email-karl.beldan@gmail.com>
-	 (sfid-20131111_131318_297014_BC63A3F5)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 5 Nov 2013 12:17:16 -0500
+Received: by mail-bk0-f42.google.com with SMTP id w16so1265478bkz.1
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Nov 2013 09:17:15 -0800 (PST)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 02/19] cfg80211: force WIPHY_FLAG_CUSTOM_REGULATORY on wiphy_apply_custom_regulatory()
+Date: Tue,  5 Nov 2013 09:18:00 -0800
+Message-Id: <1383671897-7746-3-git-send-email-mcgrof@do-not-panic.com> (sfid-20131105_181721_592190_C41B8C9D)
+In-Reply-To: <1383671897-7746-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383671897-7746-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-11-11 at 13:12 +0100, Karl Beldan wrote:
-> From: Karl Beldan <karl.beldan@rivierawaves.com>
-> 
-> Consecutive MCSes in [8*(NSS-1)->8*NSS[ have the same number NSS of
-> streams (except for MCS32 which is mishandled ATM).
-> ATM minstrel_ht uses MCS_GROUP_RATES in place of this 8 modulus.
-> This change replaces such occurences and by doing so allows for different
-> values of MCS_GROUP_RATES (e.g to cope with VHT MCS8,9).
+wiphy_apply_custom_regulatory() implies WIPHY_FLAG_CUSTOM_REGULATORY
+but we never enforced it, do that now and warn if the driver
+didn't set it. All drivers should be following this today already.
 
-Applied.
+Having WIPHY_FLAG_CUSTOM_REGULATORY does not however mean you will
+use wiphy_apply_custom_regulatory() though, you may have your own
+_orig value set up tools / helpers. The intel drivers are examples
+of this type of driver.
 
-johannes
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ include/net/cfg80211.h | 7 ++++++-
+ net/wireless/reg.c     | 4 ++++
+ 2 files changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index b5cee04..638fd67 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2433,7 +2433,9 @@ struct cfg80211_ops {
+  * 	has its own custom regulatory domain and cannot identify the
+  * 	ISO / IEC 3166 alpha2 it belongs to. When this is enabled
+  * 	we will disregard the first regulatory hint (when the
+- * 	initiator is %REGDOM_SET_BY_CORE).
++ * 	initiator is %REGDOM_SET_BY_CORE). Drivers that use
++ * 	wiphy_apply_custom_regulatory() should have this flag set
++ * 	or the regulatory core will set it for wiphy.
+  * @WIPHY_FLAG_STRICT_REGULATORY: tells us the driver for this device will
+  *	ignore regulatory domain settings until it gets its own regulatory
+  *	domain via its regulatory_hint() unless the regulatory hint is
+@@ -3461,6 +3463,9 @@ int regulatory_hint(struct wiphy *wiphy, const char *alpha2);
+  * custom regulatory domain will be trusted completely and as such previous
+  * default channel settings will be disregarded. If no rule is found for a
+  * channel on the regulatory domain the channel will be disabled.
++ * Drivers using this for a wiphy should also set the wiphy flag
++ * WIPHY_FLAG_CUSTOM_REGULATORY or cfg80211 will set it for the wiphy
++ * that called this helper.
+  */
+ void wiphy_apply_custom_regulatory(struct wiphy *wiphy,
+ 				   const struct ieee80211_regdomain *regd);
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 999b4bb7..6183c90 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1303,6 +1303,10 @@ void wiphy_apply_custom_regulatory(struct wiphy *wiphy,
+ 	enum ieee80211_band band;
+ 	unsigned int bands_set = 0;
+ 
++	WARN(!(wiphy->flags & WIPHY_FLAG_CUSTOM_REGULATORY),
++	     "wiphy should have WIPHY_FLAG_CUSTOM_REGULATORY\n");
++	wiphy->flags |= WIPHY_FLAG_CUSTOM_REGULATORY;
++
+ 	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
+ 		if (!wiphy->bands[band])
+ 			continue;
+-- 
+1.8.4.rc3
 
