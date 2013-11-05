@@ -1,54 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f178.google.com ([209.85.215.178]:39366 "EHLO
-	mail-ea0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755589Ab3KVNaT (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:15763 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755723Ab3KEXCJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Nov 2013 08:30:19 -0500
-Received: by mail-ea0-f178.google.com with SMTP id d10so522234eaj.37
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Nov 2013 05:30:18 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 1/3] ath10k: use nss provided by mac80211
-Date: Fri, 22 Nov 2013 14:26:57 +0100
-Message-Id: <1385126819-15311-2-git-send-email-michal.kazior@tieto.com> (sfid-20131122_143032_373450_32599DED)
-In-Reply-To: <1385126819-15311-1-git-send-email-michal.kazior@tieto.com>
-References: <1385126819-15311-1-git-send-email-michal.kazior@tieto.com>
+	Tue, 5 Nov 2013 18:02:09 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Ujjal Roy <royujjal@gmail.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3.13 1/2] mwifiex: correct packet length for packets from SDIO interface
+Date: Tue, 5 Nov 2013 15:01:44 -0800
+Message-ID: <1383692505-12654-1-git-send-email-bzhao@marvell.com> (sfid-20131106_000213_785471_E49A8FB5)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Calculating STA NSS just from the rateset is not
-the greatest idea. The NSS could be possibly
-influenced by other things that only mac80211
-knows about.
+From: Avinash Patil <patila@marvell.com>
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+While receiving a packet on SDIO interface, we allocate skb with
+size multiple of SDIO block size. We need to resize this skb
+after RX using packet length from RX header.
+
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/net/wireless/mwifiex/sdio.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index b70a3b2..15eda44 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -925,7 +925,7 @@ static void ath10k_peer_assoc_h_basic(struct ath10k *ar,
- 	else
- 		arg->peer_listen_intval = ar->hw->conf.listen_interval;
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index 1576104..9bf8898 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -1029,7 +1029,10 @@ static int mwifiex_decode_rx_packet(struct mwifiex_adapter *adapter,
+ 				    struct sk_buff *skb, u32 upld_typ)
+ {
+ 	u8 *cmd_buf;
++	__le16 *curr_ptr = (__le16 *)skb->data;
++	u16 pkt_len = le16_to_cpu(*curr_ptr);
  
--	arg->peer_num_spatial_streams = 1;
-+	arg->peer_num_spatial_streams = max_t(u32, 1, sta->rx_nss);
++	skb_trim(skb, pkt_len);
+ 	skb_pull(skb, INTF_HEADER_LEN);
  
- 	/*
- 	 * The assoc capabilities are available only in managed mode.
-@@ -1075,7 +1075,6 @@ static void ath10k_peer_assoc_h_ht(struct ath10k *ar,
- 			arg->peer_ht_rates.rates[n++] = i;
- 
- 	arg->peer_ht_rates.num_rates = n;
--	arg->peer_num_spatial_streams = max((n+7) / 8, 1);
- 
- 	ath10k_dbg(ATH10K_DBG_MAC, "mac ht peer %pM mcs cnt %d nss %d\n",
- 		   arg->addr,
+ 	switch (upld_typ) {
 -- 
-1.8.4.rc3
+1.8.2.3
 
