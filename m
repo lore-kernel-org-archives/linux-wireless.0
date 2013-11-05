@@ -1,98 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1064 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752498Ab3K2LZk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Nov 2013 06:25:40 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 12/19] brcmfmac: provide firmware version in ethtool
- driver info
-Date: Fri, 29 Nov 2013 12:25:17 +0100
-Message-ID: <1385724324-6361-13-git-send-email-arend@broadcom.com> (sfid-20131129_122547_719961_B102D229)
-In-Reply-To: <1385724324-6361-1-git-send-email-arend@broadcom.com>
-References: <1385724324-6361-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-bk0-f50.google.com ([209.85.214.50]:45583 "EHLO
+	mail-bk0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755281Ab3KERRf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Nov 2013 12:17:35 -0500
+Received: by mail-bk0-f50.google.com with SMTP id v15so337069bkz.37
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Nov 2013 09:17:34 -0800 (PST)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 11/19] cfg80211: add helper for kfree'ing and assigning last_request
+Date: Tue,  5 Nov 2013 09:18:09 -0800
+Message-Id: <1383671897-7746-12-git-send-email-mcgrof@do-not-panic.com> (sfid-20131105_181750_058696_196D23D0)
+In-Reply-To: <1383671897-7746-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383671897-7746-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Knowing the firmware version is pretty useful information when
-looking at issues. It is retrieved during initialization so
-store it in driver data structure to fill the ethtool driver
-info when requested.
+This enforces proper RCU APIs accross the code.
 
-Reviewed-by: Hante Meuleman <meuleman@brodcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/dhd.h        |    7 ++++++-
- drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c |    5 +++++
- drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c  |    4 ++--
- 3 files changed, 13 insertions(+), 3 deletions(-)
+ net/wireless/reg.c | 21 +++++++++++----------
+ 1 file changed, 11 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-index 4ed7a97..714194c 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-@@ -211,6 +211,11 @@
- 
- #define BRCMF_AMPDU_RX_REORDER_MAXFLOWS		256
- 
-+/* Length of firmware version string stored for
-+ * ethtool driver info which uses 32 bytes as well.
-+ */
-+#define BRCMF_DRIVER_FIRMWARE_VERSION_LEN	32
-+
- /* Pattern matching filter. Specifies an offset within received packets to
-  * start matching, the pattern to match, the size of the pattern, and a bitmask
-  * that indicates which bits within the pattern should be matched.
-@@ -544,7 +549,7 @@ struct brcmf_pub {
- 	u8 wme_dp;		/* wme discard priority */
- 
- 	/* Dongle media info */
--	unsigned long drv_version;	/* Version of dongle-resident driver */
-+	char fwver[BRCMF_DRIVER_FIRMWARE_VERSION_LEN];
- 	u8 mac[ETH_ALEN];		/* MAC address obtained from dongle */
- 
- 	/* Multicast data packets sent to dongle */
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
-index 6017633..d5811a4 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
-@@ -278,9 +278,14 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
- 	}
- 	ptr = (char *)buf;
- 	strsep(&ptr, "\n");
-+
- 	/* Print fw version info */
- 	brcmf_err("Firmware version = %s\n", buf);
- 
-+	/* locate firmware version number for ethtool */
-+	ptr = strrchr(buf, ' ') + 1;
-+	strlcpy(ifp->drvr->fwver, ptr, sizeof(ifp->drvr->fwver));
-+
- 	/*
- 	 * Setup timeout if Beacons are lost and roam is off to report
- 	 * link down
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-index 644e62e..bce0b8e 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-@@ -599,8 +599,8 @@ static void brcmf_ethtool_get_drvinfo(struct net_device *ndev,
- 	struct brcmf_pub *drvr = ifp->drvr;
- 
- 	strlcpy(info->driver, KBUILD_MODNAME, sizeof(info->driver));
--	snprintf(info->version, sizeof(info->version), "%lu",
--		 drvr->drv_version);
-+	snprintf(info->version, sizeof(info->version), "n/a");
-+	strlcpy(info->fw_version, drvr->fwver, sizeof(info->fw_version));
- 	strlcpy(info->bus_info, dev_name(drvr->bus_if->dev),
- 		sizeof(info->bus_info));
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 30e813f..ddccc9a 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -212,6 +212,12 @@ static void reg_kfree_last_request(void)
+ 		kfree_rcu(lr, rcu_head);
  }
+ 
++static void reg_update_last_request(struct regulatory_request *request)
++{
++	reg_kfree_last_request();
++	rcu_assign_pointer(last_request, request);
++}
++
+ static void reset_regdomains(bool full_reset,
+ 			     const struct ieee80211_regdomain *new_regdom)
+ {
+@@ -238,8 +244,7 @@ static void reset_regdomains(bool full_reset,
+ 	if (!full_reset)
+ 		return;
+ 
+-	reg_kfree_last_request();
+-	rcu_assign_pointer(last_request, &core_request_world);
++	reg_update_last_request(&core_request_world);
+ }
+ 
+ /*
+@@ -1364,8 +1369,7 @@ reg_process_hint_core(struct regulatory_request *core_request)
+ 	core_request->intersect = false;
+ 	core_request->processed = false;
+ 
+-	reg_kfree_last_request();
+-	rcu_assign_pointer(last_request, core_request);
++	reg_update_last_request(core_request);
+ 
+ 	if (call_crda(core_request->alpha2))
+ 		return REG_REQ_IGNORE;
+@@ -1432,8 +1436,7 @@ reg_process_hint_user(struct regulatory_request *user_request)
+ 	user_request->intersect = treatment == REG_REQ_INTERSECT;
+ 	user_request->processed = false;
+ 
+-	reg_kfree_last_request();
+-	rcu_assign_pointer(last_request, user_request);
++	reg_update_last_request(user_request);
+ 
+ 	user_alpha2[0] = user_request->alpha2[0];
+ 	user_alpha2[1] = user_request->alpha2[1];
+@@ -1505,8 +1508,7 @@ reg_process_hint_driver(struct wiphy *wiphy,
+ 	driver_request->intersect = treatment == REG_REQ_INTERSECT;
+ 	driver_request->processed = false;
+ 
+-	reg_kfree_last_request();
+-	rcu_assign_pointer(last_request, driver_request);
++	reg_update_last_request(driver_request);
+ 
+ 	/*
+ 	 * Since CRDA will not be called in this case as we already
+@@ -1604,8 +1606,7 @@ reg_process_hint_country_ie(struct wiphy *wiphy,
+ 	country_ie_request->intersect = false;
+ 	country_ie_request->processed = false;
+ 
+-	reg_kfree_last_request();
+-	rcu_assign_pointer(last_request, country_ie_request);
++	reg_update_last_request(country_ie_request);
+ 
+ 	if (call_crda(country_ie_request->alpha2))
+ 		return REG_REQ_IGNORE;
 -- 
-1.7.10.4
-
+1.8.4.rc3
 
