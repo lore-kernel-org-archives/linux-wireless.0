@@ -1,83 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f181.google.com ([209.85.215.181]:55679 "EHLO
-	mail-ea0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750915Ab3K3TH5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Nov 2013 14:07:57 -0500
-Received: by mail-ea0-f181.google.com with SMTP id m10so7725255eaj.40
-        for <linux-wireless@vger.kernel.org>; Sat, 30 Nov 2013 11:07:56 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: "devendra.aaru" <devendra.aaru@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: unable to set iwlwifi master mode
-Date: Sat, 30 Nov 2013 20:07:53 +0100
-Message-ID: <20693321.VaS1fqlGWS@debian64> (sfid-20131130_200803_238825_CF9A8962)
-In-Reply-To: <CAHdPZaPACfFrvXyszwLpT1-iLCrGs_mCh7dR4-_tW=W5V8e1oA@mail.gmail.com>
-References: <CAHdPZaN6GusQbpmNHt=4cHkUKsJTOrGuc0oBF7O8e0oL0neoPQ@mail.gmail.com> <1980481.3p2Oa8Hyrn@debian64> <CAHdPZaPACfFrvXyszwLpT1-iLCrGs_mCh7dR4-_tW=W5V8e1oA@mail.gmail.com>
+Received: from mga14.intel.com ([143.182.124.37]:16713 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753412Ab3KELE5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Nov 2013 06:04:57 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: wzyboy <wzyboy@wzyboy.org>
+CC: "ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [Ilw] Intel Wireless 7260 hardware timed out randomly
+Date: Tue, 5 Nov 2013 11:04:52 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301DE960E@HASMSX103.ger.corp.intel.com> (sfid-20131105_120501_314274_BEBE989A)
+References: <5276134B.8070808@wzyboy.org>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE75AE@HASMSX103.ger.corp.intel.com>
+ <CALkVjQYh-SUte4S6LdqOc3KSc3_pDU6jz1KXp+Jsd5_RFPXSqA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE8338@HASMSX103.ger.corp.intel.com>
+ <CALkVjQb7fCMFpqhdUs8w-Mx_Y0RtAYYFtKxXkqyrCQ39UFGxKg@mail.gmail.com>
+In-Reply-To: <CALkVjQb7fCMFpqhdUs8w-Mx_Y0RtAYYFtKxXkqyrCQ39UFGxKg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 30 November 2013 13:24:10 devendra.aaru wrote:
-> On Sat, Nov 30, 2013 at 1:20 PM, Christian Lamparter
-> <chunkeey@googlemail.com> wrote:
-> > Hi,
-> >
-> > On Saturday 30 November 2013 12:26:11 devendra.aaru wrote:
-> >> I was trying to use my intel wireless device as an AP.
-> >>
-> >> It seem to be that i couldn't able to get it working.
-> >>
-> >> in case:
-> >>
-> >> 03:00.0 Network controller: Intel Corporation Centrino Wireless-N 1000
-> >
-> >
-> >> What could be the possible mistake?
-> > Well, The latest version I found for the IWL 1000 was/is v39.31.5.1 Build
-> > 35138. It looks like this version doesn't "support" AP or P2P mode... and
-> > it looks like it won't be coming.
-> >
-> > You probably want to look for a replacement card. However, if you are using
-> > a laptop, this might be difficult. Some vendor bios' have a wifi whitelist
-> > and you have to ask your laptop vendor for the list first or "get creative".
-> >
-> > Regards,
-> >
-> > Christian
-> 
-> I am using a laptop, so it won't work out for me.
-Think about it. I can tell you from my experience: This is less of a hassle.
-
-> Does this version you are talking is about the firmware?
-Oh yes. Sorry. I must have dropped the "firmware" while editing.
-It should have said: "Well, the latest firmware version I found..."
-
-> If so changing it might help out?
-If you can find/get a firmware version for the device which supports it:
-"probably yes". You can check if a firmware supports the mode by loading
-iwlwifi/iwldvm driver and use the iw tool [0].
-
-# iw list
-
-This will produce a list of all capabilities of each (available) wifi
-device in the system. Among the print out there's an entry called
-"Supported interface modes". It should look something like this:
-
-	Supported interface modes:
-		* managed
-    	* AP <---
-		* AP/VLAN <---
-		* ...
-
-(This is from a IWL 7260).
-
-Good luck while scanning through intel's firmware repository 
-(sorry, can't help you there).
-
-Regards,
-
-Christian
-
-[0] <http://wireless.kernel.org/en/users/Documentation/iw>
+PiAyMDEzLzExLzQgR3J1bWJhY2gsIEVtbWFudWVsIDxlbW1hbnVlbC5ncnVtYmFjaEBpbnRlbC5j
+b20+Og0KPiA+IE5vdCBzdXJlIC0geW91IGNhbiB0cnkgMy4xMiBpbiB3aGljaCB5b3Ugc2hvdWxk
+bid0IHNlZSB0aGlzIG9yIHJlbW92ZQ0KPiA+ICAgICAgICAgcGNpX2Rpc2FibGVfbGlua19zdGF0
+ZShwZGV2LCBQQ0lFX0xJTktfU1RBVEVfTDBTIHwNCj4gUENJRV9MSU5LX1NUQVRFX0wxIHwNCj4g
+PiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgUENJRV9MSU5LX1NUQVRFX0NMS1BNKTsg
+ZnJvbQ0KPiA+IGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvcGNpZS90cmFucy5jDQo+ID4N
+Cj4gPiBEaWQgeW91IHNlZSBhbiBpbXByb3ZlbWVudCB3aXRob3V0IHBvd2VyIHNhdmUgZmVhdHVy
+ZT8gT3IgaXQgd2FzIGp1c3QNCj4gdGhlIHNhbWU/DQo+IA0KPiANCj4gU2luY2UgQXJjaCBMaW51
+eCdzIG9mZmljaWFsIHJlc3BvbnNpdG9yeSBoYXMgbm8gbGludXgtMy4xMiB5ZXQsIEkgY29tcGls
+ZWQgTGludXgNCj4gMy4xMiBvbiBteSBvd24uDQo+IA0KPiBVbmZvcnR1cm5hdGVseSwgdGhpcyBi
+dWcgb2NjdXJzIHR3aWNlIGR1cmluZyBteSB3Z2V0aW5nIGxpbnV4LTMuMTIuMC50YXIueHogc28N
+Cj4gSSBoYXZlIHRvIHJlYm9vdCB0d2ljZSB0byBmaW5pc2ggdGhlIGRvd25sb2FkLi4uIChTbyBk
+aXNhYmxpbmcgcG93ZXIgc2F2ZQ0KPiBmZWF0dXJlIG1ha2VzIG5vIGRpZmZlcmVuY2UgYXQgbGVh
+c3QuKQ0KPiANCg0KQXJlIHlvdSBzdXJlIGl0IGlzIHRoZSBzYW1lIHBoZW5vbWVub24/DQpTYW1l
+IFdBUk5JTkcgd2l0aCBzYW1lIHZhbHVlIGluIHJlZ2lzdGVyPw0KDQoNCj4gTmV2ZXJ0aGVsZXNz
+LCBJJ20gbm93IHVzaW5nIExpbnV4IDMuMTIuMCBhbmQgSSd2ZSBhdHRhY2hlZCB0aGUgZG1lc2cg
+bG9nLCBpbg0KPiB3aGljaCB0aGUgY29tcGxhaW4gYWJvdXQgQVNQTSBleGlzdHMgbm8gbW9yZS4N
+Cj4gDQo+IEknbGwgZm9sbG93IHVwIGlmIHRoaXMgYnVnIG9jY3VycyBpbiAzLjEyLg0KPiANCj4g
+VGhhbmtzIEVtbWFudWVsbCENCj4gDQo+IC0tDQo+IHd6eWJveQ0K
