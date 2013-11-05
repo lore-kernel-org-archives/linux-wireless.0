@@ -1,147 +1,206 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:23257 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755742Ab3KLPqh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Nov 2013 10:46:37 -0500
-From: Ilan Peer <ilan.peer@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Ilan Peer <ilan.peer@intel.com>
-Subject: [PATCH] iw: Use NL80211_FREQUENCY_ATTR_NO_IR channel attribute
-Date: Tue, 12 Nov 2013 17:46:50 +0200
-Message-Id: <1384271210-26762-1-git-send-email-ilan.peer@intel.com> (sfid-20131112_164640_986833_456571BC)
+Received: from mail-bk0-f53.google.com ([209.85.214.53]:41131 "EHLO
+	mail-bk0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755322Ab3KERRt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Nov 2013 12:17:49 -0500
+Received: by mail-bk0-f53.google.com with SMTP id w11so3005921bkz.40
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Nov 2013 09:17:48 -0800 (PST)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 18/19] cfg80211: set driver regulatory updates on its own
+Date: Tue,  5 Nov 2013 09:18:16 -0800
+Message-Id: <1383671897-7746-19-git-send-email-mcgrof@do-not-panic.com> (sfid-20131105_181754_390988_9484065C)
+In-Reply-To: <1383671897-7746-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383671897-7746-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Align iw with the change in nl80211.h where NL80211_FREQUENCY_ATTR_NO_IBSS
-and NL80211_FREQUENCY_ATTR_PASSIVE_SCAN were replaced by
-NL80211_FREQUENCY_ATTR_NO_IR.
+This splits up the driver regulatory update on its
+own, this helps simplify the reading the case.
 
-In case both NL80211_FREQUENCY_ATTR_NO_IR and __NL80211_FREQUENCY_ATTR_NO_IBSS
-are set, assume that a new kernel is used and use the NO_IR notation,
-otherwise use the previous notation.
-
-This change requires nl80211.h with the new definitions
-
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- event.c |   24 ++++++++++++++----------
- info.c  |   18 ++++++++++++------
- reg.c   |   10 ++++++++--
- 3 files changed, 34 insertions(+), 18 deletions(-)
+ net/wireless/reg.c | 123 ++++++++++++++++++++++++-----------------------------
+ 1 file changed, 56 insertions(+), 67 deletions(-)
 
-diff --git a/event.c b/event.c
-index 603b072..bfdb0fb 100644
---- a/event.c
-+++ b/event.c
-@@ -11,7 +11,7 @@ static int no_seq_check(struct nl_msg *msg, void *arg)
- 
- struct ieee80211_beacon_channel {
- 	__u16 center_freq;
--	bool passive_scan;
-+	bool no_ir;
- 	bool no_ibss;
- };
- 
-@@ -21,8 +21,8 @@ static int parse_beacon_hint_chan(struct nlattr *tb,
- 	struct nlattr *tb_freq[NL80211_FREQUENCY_ATTR_MAX + 1];
- 	static struct nla_policy beacon_freq_policy[NL80211_FREQUENCY_ATTR_MAX + 1] = {
- 		[NL80211_FREQUENCY_ATTR_FREQ] = { .type = NLA_U32 },
--		[NL80211_FREQUENCY_ATTR_PASSIVE_SCAN] = { .type = NLA_FLAG },
--		[NL80211_FREQUENCY_ATTR_NO_IBSS] = { .type = NLA_FLAG },
-+		[NL80211_FREQUENCY_ATTR_NO_IR] = { .type = NLA_FLAG },
-+		[__NL80211_FREQUENCY_ATTR_NO_IBSS] = { .type = NLA_FLAG },
- 	};
- 
- 	if (nla_parse_nested(tb_freq,
-@@ -33,9 +33,9 @@ static int parse_beacon_hint_chan(struct nlattr *tb,
- 
- 	chan->center_freq = nla_get_u32(tb_freq[NL80211_FREQUENCY_ATTR_FREQ]);
- 
--	if (tb_freq[NL80211_FREQUENCY_ATTR_PASSIVE_SCAN])
--		chan->passive_scan = true;
--	if (tb_freq[NL80211_FREQUENCY_ATTR_NO_IBSS])
-+	if (tb_freq[NL80211_FREQUENCY_ATTR_NO_IR])
-+		chan->no_ir = true;
-+	if (tb_freq[__NL80211_FREQUENCY_ATTR_NO_IBSS])
- 		chan->no_ibss = true;
- 
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index fa3bcbe..2ecb0c7 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -2229,38 +2229,19 @@ static int reg_set_rd_user(const struct ieee80211_regdomain *rd,
  	return 0;
-@@ -394,10 +394,14 @@ static int print_event(struct nl_msg *msg, void *arg)
- 		       chan_before_beacon.center_freq,
- 		       ieee80211_frequency_to_channel(chan_before_beacon.center_freq));
+ }
  
--		if (chan_before_beacon.passive_scan && !chan_after_beacon.passive_scan)
--			printf("\to active scanning enabled\n");
--		if (chan_before_beacon.no_ibss && !chan_after_beacon.no_ibss)
--			printf("\to beaconing enabled\n");
-+		if (chan_before_beacon.no_ir && !chan_after_beacon.no_ir) {
-+			if (chan_before_beacon.no_ibss && !chan_after_beacon.no_ibss)
-+				printf("\to Initiating radiation enabled\n");
-+			else
-+				printf("\to active scan enabled\n");
-+		} else if (chan_before_beacon.no_ibss && !chan_after_beacon.no_ibss) {
-+			printf("\to ibss enabled\n");
-+		}
+-/* Takes ownership of rd only if it doesn't fail */
+-static int __set_regdom(const struct ieee80211_regdomain *rd,
+-			struct regulatory_request *lr)
++static int reg_set_rd_driver(const struct ieee80211_regdomain *rd,
++			     struct regulatory_request *driver_request)
+ {
+ 	const struct ieee80211_regdomain *regd;
+ 	const struct ieee80211_regdomain *intersected_rd = NULL;
++	const struct ieee80211_regdomain *tmp;
+ 	struct wiphy *request_wiphy;
  
- 		break;
- 	case NL80211_CMD_NEW_STATION:
-diff --git a/info.c b/info.c
-index 7e61e88..b918439 100644
---- a/info.c
-+++ b/info.c
-@@ -74,8 +74,8 @@ static int print_phy_handler(struct nl_msg *msg, void *arg)
- 	static struct nla_policy freq_policy[NL80211_FREQUENCY_ATTR_MAX + 1] = {
- 		[NL80211_FREQUENCY_ATTR_FREQ] = { .type = NLA_U32 },
- 		[NL80211_FREQUENCY_ATTR_DISABLED] = { .type = NLA_FLAG },
--		[NL80211_FREQUENCY_ATTR_PASSIVE_SCAN] = { .type = NLA_FLAG },
--		[NL80211_FREQUENCY_ATTR_NO_IBSS] = { .type = NLA_FLAG },
-+		[NL80211_FREQUENCY_ATTR_NO_IR] = { .type = NLA_FLAG },
-+		[__NL80211_FREQUENCY_ATTR_NO_IBSS] = { .type = NLA_FLAG },
- 		[NL80211_FREQUENCY_ATTR_RADAR] = { .type = NLA_FLAG },
- 		[NL80211_FREQUENCY_ATTR_MAX_TX_POWER] = { .type = NLA_U32 },
- 	};
-@@ -172,10 +172,16 @@ static int print_phy_handler(struct nl_msg *msg, void *arg)
- 						print_flag("disabled", &open);
- 						goto next;
- 					}
--					if (tb_freq[NL80211_FREQUENCY_ATTR_PASSIVE_SCAN])
--						print_flag("passive scanning", &open);
--					if (tb_freq[NL80211_FREQUENCY_ATTR_NO_IBSS])
--						print_flag("no IBSS", &open);
-+
-+					/* If both flags are set assume an new kernel */
-+					if (tb_freq[NL80211_FREQUENCY_ATTR_NO_IR] && tb_freq[__NL80211_FREQUENCY_ATTR_NO_IBSS]) {
-+						print_flag("not allowed to initiate radiation", &open);
-+					} else if (tb_freq[NL80211_FREQUENCY_ATTR_PASSIVE_SCAN]) {
-+						print_flag("passive scan", &open);
-+					} else if (tb_freq[__NL80211_FREQUENCY_ATTR_NO_IBSS]){
-+						print_flag("no ibss", &open);
-+					}
-+
- 					if (tb_freq[NL80211_FREQUENCY_ATTR_RADAR])
- 						print_flag("radar detection", &open);
- next:
-diff --git a/reg.c b/reg.c
-index 9a60cec..f2481fe 100644
---- a/reg.c
-+++ b/reg.c
-@@ -193,8 +193,14 @@ static int print_reg_handler(struct nl_msg *msg, void *arg)
- 		PARSE_FLAG(NL80211_RRF_NO_OUTDOOR, "NO-OUTDOOR");
- 		PARSE_FLAG(NL80211_RRF_DFS, "DFS");
- 		PARSE_FLAG(NL80211_RRF_PTP_ONLY, "PTP-ONLY");
--		PARSE_FLAG(NL80211_RRF_PASSIVE_SCAN, "PASSIVE-SCAN");
--		PARSE_FLAG(NL80211_RRF_NO_IBSS, "NO-IBSS");
-+
-+		/* Kernels that support NO_IR always turn on both flags */
-+		if ((flags & NL80211_RRF_NO_IR) && (flags & __NL80211_RRF_NO_IBSS)) {
-+			printf(", NO-IR");
-+		} else {
-+			PARSE_FLAG(NL80211_RRF_PASSIVE_SCAN, "PASSIVE-SCAN");
-+			PARSE_FLAG(__NL80211_RRF_NO_IBSS, "NO-IBSS");
-+		}
+-	if (!is_alpha2_set(rd->alpha2) && !is_an_alpha2(rd->alpha2) &&
+-	    !is_unknown_alpha2(rd->alpha2))
++	if (is_world_regdom(rd->alpha2))
+ 		return -EINVAL;
  
- 		printf("\n");
+-	/*
+-	 * Lets only bother proceeding on the same alpha2 if the current
+-	 * rd is non static (it means CRDA was present and was used last)
+-	 * and the pending request came in from a country IE
+-	 */
+-	if (lr->initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE) {
+-		/*
+-		 * If someone else asked us to change the rd lets only bother
+-		 * checking if the alpha2 changes if CRDA was already called
+-		 */
+-		if (!regdom_changes(rd->alpha2))
+-			return -EALREADY;
+-	}
+-
+-	/*
+-	 * Now lets set the regulatory domain, update all driver channels
+-	 * and finally inform them of what we have done, in case they want
+-	 * to review or adjust their own settings based on their own
+-	 * internal EEPROM data
+-	 */
++	if (!regdom_changes(rd->alpha2))
++		return -EALREADY;
+ 
+ 	if (!is_valid_rd(rd)) {
+ 		pr_err("Invalid regulatory domain detected:\n");
+@@ -2268,29 +2249,13 @@ static int __set_regdom(const struct ieee80211_regdomain *rd,
+ 		return -EINVAL;
  	}
+ 
+-	request_wiphy = wiphy_idx_to_wiphy(lr->wiphy_idx);
+-	if (!request_wiphy &&
+-	    (lr->initiator == NL80211_REGDOM_SET_BY_DRIVER ||
+-	     lr->initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE)) {
++	request_wiphy = wiphy_idx_to_wiphy(driver_request->wiphy_idx);
++	if (!request_wiphy) {
+ 		schedule_delayed_work(&reg_timeout, 0);
+ 		return -ENODEV;
+ 	}
+ 
+-	if (!lr->intersect) {
+-		if (lr->initiator != NL80211_REGDOM_SET_BY_DRIVER) {
+-			reset_regdomains(false, rd);
+-			return 0;
+-		}
+-
+-		/*
+-		 * For a driver hint, lets copy the regulatory domain the
+-		 * driver wanted to the wiphy to deal with conflicts
+-		 */
+-
+-		/*
+-		 * Userspace could have sent two replies with only
+-		 * one kernel request.
+-		 */
++	if (!driver_request->intersect) {
+ 		if (request_wiphy->regd)
+ 			return -EALREADY;
+ 
+@@ -2303,38 +2268,60 @@ static int __set_regdom(const struct ieee80211_regdomain *rd,
+ 		return 0;
+ 	}
+ 
+-	/* Intersection requires a bit more work */
++	intersected_rd = regdom_intersect(rd, get_cfg80211_regdom());
++	if (!intersected_rd)
++		return -EINVAL;
+ 
+-	if (lr->initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE) {
+-		intersected_rd = regdom_intersect(rd, get_cfg80211_regdom());
+-		if (!intersected_rd)
+-			return -EINVAL;
++	/*
++	 * We can trash what CRDA provided now.
++	 * However if a driver requested this specific regulatory
++	 * domain we keep it for its private use
++	 */
++	tmp = get_wiphy_regdom(request_wiphy);
++	rcu_assign_pointer(request_wiphy->regd, rd);
++	rcu_free_regdom(tmp);
+ 
+-		/*
+-		 * We can trash what CRDA provided now.
+-		 * However if a driver requested this specific regulatory
+-		 * domain we keep it for its private use
+-		 */
+-		if (lr->initiator == NL80211_REGDOM_SET_BY_DRIVER) {
+-			const struct ieee80211_regdomain *tmp;
++	rd = NULL;
+ 
+-			tmp = get_wiphy_regdom(request_wiphy);
+-			rcu_assign_pointer(request_wiphy->regd, rd);
+-			rcu_free_regdom(tmp);
+-		} else {
+-			kfree(rd);
+-		}
++	reset_regdomains(false, intersected_rd);
+ 
+-		rd = NULL;
++	return 0;
++}
++
++/* Takes ownership of rd only if it doesn't fail */
++static int __set_regdom(const struct ieee80211_regdomain *rd,
++			struct regulatory_request *lr)
++{
++	struct wiphy *request_wiphy;
+ 
+-		reset_regdomains(false, intersected_rd);
++	if (!is_alpha2_set(rd->alpha2) && !is_an_alpha2(rd->alpha2) &&
++	    !is_unknown_alpha2(rd->alpha2))
++		return -EINVAL;
+ 
+-		return 0;
++	/*
++	 * Lets only bother proceeding on the same alpha2 if the current
++	 * rd is non static (it means CRDA was present and was used last)
++	 * and the pending request came in from a country IE
++	 */
++
++	if (!is_valid_rd(rd)) {
++		pr_err("Invalid regulatory domain detected:\n");
++		print_regdomain_info(rd);
++		return -EINVAL;
+ 	}
+ 
+-	return -EINVAL;
+-}
++	request_wiphy = wiphy_idx_to_wiphy(lr->wiphy_idx);
++	if (!request_wiphy) {
++		schedule_delayed_work(&reg_timeout, 0);
++		return -ENODEV;
++	}
+ 
++	if (lr->intersect)
++		return -EINVAL;
++
++	reset_regdomains(false, rd);
++	return 0;
++}
+ 
+ /*
+  * Use this call to set the current regulatory domain. Conflicts with
+@@ -2362,6 +2349,8 @@ int set_regdom(const struct ieee80211_regdomain *rd)
+ 		r = reg_set_rd_user(rd, lr);
+ 		break;
+ 	case NL80211_REGDOM_SET_BY_DRIVER:
++		r = reg_set_rd_driver(rd, lr);
++		break;
+ 	case NL80211_REGDOM_SET_BY_COUNTRY_IE:
+ 		r = __set_regdom(rd, lr);
+ 		break;
 -- 
-1.7.10.4
+1.8.4.rc3
 
