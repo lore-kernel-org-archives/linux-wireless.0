@@ -1,90 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:57264 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752072Ab3KEI2m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Nov 2013 03:28:42 -0500
-From: "Coelho, Luciano" <luciano.coelho@intel.com>
-To: Simon Wunderlich <sw@simonwunderlich.de>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
-Subject: Re: [RFC] mac80211: don't transmit beacon with CSA count 0
-Date: Tue, 5 Nov 2013 08:28:39 +0000
-Message-ID: <1383640077.579.14.camel@porter.coelho.fi> (sfid-20131105_092845_777487_0753A10A)
-References: <1383569955-13236-1-git-send-email-luciano.coelho@intel.com>
-	 <201311041436.51673.sw@simonwunderlich.de>
-	 <1383574023.5928.149.camel@porter.coelho.fi>
-	 <201311041531.56693.sw@simonwunderlich.de>
-In-Reply-To: <201311041531.56693.sw@simonwunderlich.de>
-Content-Type: text/plain; charset="utf-8"
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34524 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754726Ab3KEVAW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Nov 2013 16:00:22 -0500
+Date: Tue, 5 Nov 2013 15:49:56 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: pull-request: mac80211 2013-10-21
+Message-ID: <20131105204956.GD8264@tuxdriver.com> (sfid-20131105_220026_413525_B62AED24)
+References: <1382361031.14310.51.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1382361031.14310.51.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gTW9uLCAyMDEzLTExLTA0IGF0IDE1OjMxICswMTAwLCBTaW1vbiBXdW5kZXJsaWNoIHdyb3Rl
-Og0KPiA+ID4gVGhhbmtzIGZvciBjaGVja2luZyBiYWNrIC0gSSd2ZSByZWFkIHRoZSBwYXJ0IGlu
-IHRoZSBzcGVjIGFnYWluIFsxXSwgYW5kDQo+ID4gPiBhcHBlYXJlbnRseSB5b3UgYXJlIHJpZ2h0
-Lg0KPiA+ID4gDQo+ID4gPiBXaXRoIHlvdXIgcHJvcG9zZWQgY2hhbmdlLCBzaG91bGRuJ3Qgd2Ug
-YWxzbyBjaGFuZ2UgdGhlIGJlaGF2aW91ciBpZiB0aGUNCj4gPiA+IHVzZXJzcGFjZSByZXF1ZXN0
-cyBhIGNoYW5uZWwgc3dpdGNoIHdpdGggY291bnQgPSAwPyBJIGd1ZXNzIHdlIHNob3VsZA0KPiA+
-ID4gaW1tZWRpYXRlbHkgY2hhbmdlIHRoZSBjaGFubmVsIHRoZW4gd2l0aG91dCB3YWl0aW5nIGZv
-ciBiZWFjb25zPyBJIGRvbid0DQo+ID4gPiBzZWUgdGhlIHBvaW50IGluIGNoYW5naW5nIHRoZSBi
-ZWFjb25zIGlmIHdlIGRvbid0IHNlbmQgdGhlbSwgYWZ0ZXIgYWxsLg0KPiA+IA0KPiA+IFlvdSdy
-ZSByaWdodCwgY2hhbmdpbmcgdGhlIGJlYWNvbnMgZG9lc24ndCBtYWtlIHNlbnNlIGluIHRoaXMg
-Y2FzZS4NCj4gPiBJJ2xsIGNoYW5nZSB0aGF0IGFuZCBzZW5kIHYyLg0KPiA+IA0KPiA+IEFub3Ro
-ZXIgdGhpbmcgaXMgdGhhdCB3ZSBhcmUgbWlzc2luZyB0aGUgYWN0aW9uIGZyYW1lcy4gIFRoZSBp
-ZGVhIHdpdGgNCj4gPiB0aGUgY291bnQgPT0gMCBpcyB0aGF0IHRoZSBTVEEncyBzaG91bGQgc3Rh
-cnQgbGlzdGVuaW5nIG9uIHRoZSBvdGhlcg0KPiA+IGNoYW5uZWwgaW1tZWRpYXRlbHkgYWZ0ZXIg
-cmVjZWl2aW5nIHRoZSBhY3Rpb24gZnJhbWUgKGJlY2F1c2UgdGhlIHN3aXRjaA0KPiA+IHdpbGwg
-aGFwcGVuIGF0IGFueSB0aW1lKS4NCj4gPiANCj4gPiBJZiB3ZSBkb24ndCBzZW5kIHRoZSBhY3Rp
-b24gZnJhbWUsIHBhc3NpbmcgY29udGV4dCA9PSAwIGZyb20gdGhlDQo+ID4gdXNlcnNwYWNlIGRv
-ZXNuJ3QgbXVjaCBtYWtlIHNlbnNlLCBiZWNhdXNlIHRoZSBjbGllbnRzIHdvbid0IGtub3cgd2Un
-cmUNCj4gPiBzd2l0Y2hpbmcuICBXZWxsLCBtYXliZSBpdCBtYWtlcyBhIGJpdCBvZiBzZW5zZSwg
-aWYgdGhlcmUgYXJlIG5vIGNsaWVudHMNCj4gPiBjb25uZWN0ZWQsIGJ1dCBuZXZlcnRoZWxlc3Mu
-DQo+IA0KPiBZZWFoLCBzd2l0Y2hpbmcgd2l0aG91dCBhY3Rpb25mcmFtZSBhbmQgY291bnQgPT0g
-MCBpcyBwcmV0dHkgdXNlbGVzcy4NCg0KQWN0dWFsbHksIGlmIHRoZSB1c2Vyc3BhY2UgcmVxdWVz
-dHMgY291bnQgPT0gMSwgd2Ugd29uJ3QgaGF2ZSBhbnkNCmJlYWNvbnMgZWl0aGVyLCBiZWNhdXNl
-IDEgbWVhbnMgImp1c3QgYmVmb3JlIHRoZSBuZXh0IFRCVFQiLiAgU28gZm9yDQpjb3VudCA9PSAx
-IChjb21pbmcgZnJvbSB0aGUgdXNlcnNwYWNlKSB3ZSBzaG91bGRuJ3QgY29uZmlndXJlIHRoZQ0K
-YmVhY29uLCBzaW5jZSB3ZSB3b24ndCBzZW5kIGl0LiAgV2UgbmVlZCB0aGUgYWN0aW9uIGZyYW1l
-IGZvciB0aGlzIGNhc2UNCnRvby4NCg0KDQo+ID4gY291bnQgPT0gMCBzaG91bGQgcHJvYmFibHkg
-YmUgYXZvaWRlZCwgYmVjYXVzZSB0aGUgc3BlY3MgYXJlIG5vdCB0aGF0DQo+ID4gY2xlYXIgYWJv
-dXQgaXQuICBJbiBjYXNlIHRyYW5zbWlzc2lvbiBvbiBvdXIgY2hhbm5lbCBuZWVkcyB0byBiZSBz
-dG9wcGVkDQo+ID4gaW1tZWRpYXRlbHkgKGVnLiB3aXRoIERTUyksIHdlIGNhbiBhbHdheXMgdXNl
-IHRoZSBjaGFubmVsIHN3aXRjaCBtb2RlDQo+ID4gKGllLiBubyBUWCB1bnRpbCB0aGUgc3dpdGNo
-IGhhcHBlbnMpLg0KPiANCj4gSG1tLCB3ZSBwcm9iYWJseSBuZWVkIHRvIHJldmlldyB0aGUgSUJT
-UyBwYXJ0IHRvbyAtIHdlIGFkb3B0IHRoZSBjaGFubmVsIA0KPiBzd2l0Y2ggZnJvbSBvdGhlcnMg
-aGVyZSwgYW5kIGFkb3B0aW5nIHdpdGggY291bnQgPSAwIHdvcmtzIG5vdyBidXQgd291bGQgDQo+
-IGNyZWF0ZSBhIHdhcm5pbmcgd2l0aCB5b3VyIGNoYW5nZSAuLi4NCg0KT2theSwgSSdsbCBjaGVj
-ayBJQlNTIHRvby4NCg0KDQo+ID4gSSdsbCBwcm9iYWJseSBzdGFydCBsb29raW5nIGludG8gdGhl
-IGFjdGlvbiBmcmFtZSBpbXBsZW1lbnRhdGlvbiBzb29uLg0KPiANCj4gSSd2ZSByZWNlbnRseSBh
-ZGRlZCBDU0EgYWN0aW9uIGZyYW1lIHN1cHBvcnQgZm9yIHRoZSBJQlNTIG1vZGUsIGJlY2F1c2Ug
-dGhlIA0KPiBkaXN0cmlidXRlZCBiZWFjb25pbmcgbWF5IGxlYWQgdG8gc2xvdyBhZG9wdGlvbiBv
-ZiB0aGUgQ1NBIElFcyBpbiB0aGUgSUJTUy4gDQo+IENoZWNrIGllZWU4MDIxMV9zZW5kX2FjdGlv
-bl9jc2EoKSBmb3IgdGhhdC4NCg0KQ29vbCwgSSBoYWQgbWlzc2VkIHRoYXQuICBJIGFkbWl0IEkg
-ZGlkbid0IGxvb2sgaW50byBJQlNTIG11Y2guICBUaGF0DQp3YXMgZ29pbmcgdG8gYmUgbXkgbmV4
-dCBzdGVwLiAoSXNuJ3QgdGhhdCBhbHdheXMgYSBnb29kIGV4Y3VzZSA7KQ0KDQoNCj4gIEkgZ3Vl
-c3MgaXQgd291bGQgYmUgdXNlZnVsIHRvIHNlbmQgDQo+IGF0IGxlYXN0IHRoZSBhY3Rpb24gZnJh
-bWVzIG91dCBpZiB3ZSB3YW50IHRvIGNoYW5nZSAiZmFzdCIgKGNvdW50PTApLg0KDQpPciBjb3Vu
-dCA9PSAxLiA6KQ0KDQoNCj4gRm9yIEFQIG1vZGUsIEkgZ3Vlc3MgdGhlIHJpZ2h0IHBsYWNlIHRv
-IGltcGxlbWVudCB0aGUgYWN0aW9uIGZyYW1lcyB3b3VsZCBiZSANCj4gaG9zdGFwPyBUaGlzIHdv
-dWxkIGF0IGxlYXN0IGFsbG93IGdyZWF0IGZsZXhpYmlsaXR5IHdpdGggQ1NBLCBFQ1NBIGFuZCBh
-bGwgdGhlIA0KPiBuZXcgY2hhbm5lbCBzd2l0Y2ggSUVzIGNvbWluZyBub3cuIFRoZSBiZWFjb25z
-IGFyZSBhbHNvIGdlbmVyYXRlZCBpbiANCj4gdXNlcnNwYWNlLCBhZnRlciBhbGwuDQoNCldoYXQg
-bmV3IGNoYW5uZWwgY2hhbm5lbCBzd2l0Y2ggSUVzPw0KDQpZb3UncmUgcmlnaHQgdGhhdCBpdCBt
-aWdodCBtYWtlIHNlbnNlIHRvIGltcGxlbWVudCB0aGUgYWN0aW9uIGZyYW1lcyBpbg0KaG9zdGFw
-LiAgQnV0IE9UT0gsIHRoZSBhY3Rpb24gZnJhbWUgaXMgcXVpdGUgc2ltcGxlIGFuZCBtYWM4MDIx
-MSBzaG91bGQNCmhhdmUgYWxsIHRoZSBpbmZvcm1hdGlvbiBuZWVkZWQgdG8gc2VuZCBpdCBvdXQu
-DQoNCg0KPiBCVFcsIEkndmUganVzdCBjaGVja2VkIGFuZCB0aGUgV2lGaSBBbGxpYW5jZSByZXF1
-aXJlcyBhdCBsZWFzdCA1IGJlYWNvbnMgd2l0aCANCj4gQ1NBLUlFcyB0byBwYXNzIHRoZSA4MDIu
-MTFoIHRlc3QuIDopDQoNCkRvIHlvdSBtZWFuIHRoYXQgdGhlIHRlc3RzIG9ubHkgY2hlY2sgd2hl
-biBjb3VudCBzdGFydHMgYXMgPiA1Pw0KDQoNCj4gPiA+IEN1cnJlbnRseSwNCj4gPiA+IGF0aDlr
-IGNhbGxzIHRoZSBjc2FfZmluaXNoKCkgYWZ0ZXIgY2hlY2tpbmcgd2hldGhlciBiZWFjb24gc2Vu
-ZGluZyB3YXMNCj4gPiA+IGNvbXBsZXRlIC4uLiBzbyB0aGlzIHdvdWxkIGhhdmUgdG8gYmUgY2hh
-bmdlZC4NCj4gPiANCj4gPiBZZWFoLCB0aGF0J3Mgd2hhdCBJIHN1c3BlY3RlZCBmcm9tIG15IHZl
-cnkgcXVpY2sgbG9vayBhdCB0aGUgYXRoOWsgY29kZS4NCj4gPiBJJ2xsIHNlZSBpZiBJIGNhbiBj
-aGFuZ2UgdGhpcyBlYXNpbHkuICBJJ2xsIHByb2JhYmx5IG5lZWQgc29tZSBoZWxwIHdpdGgNCj4g
-PiB0ZXN0aW5nLCBiZWNhdXNlIEkgZG9uJ3QgaGF2ZSBhbiBhdGg5ayBkZXZpY2UuIDpcDQo+IA0K
-PiBObyBwcm9ibGVtLCBJIGNhbiB0ZXN0IGhlcmUsIGp1c3QgdGVsbCBtZSB3aGF0IHRvIHRlc3Qu
-IDopDQoNCkNvb2whIEJhc2ljYWxseSBJIGp1c3Qgd2FudCB5b3UgdG8gbWFrZSBzdXJlIHdoYXQg
-SSBkbyBzdGlsbCB3b3JrcyBhbmQgSQ0KZG9uJ3QgYnJlYWsgYW55dGhpbmcgb2Ygd2hhdCB5b3Ug
-aGF2ZSBiZWVuIGRvaW5nLiA7KQ0KDQotLQ0KQ2hlZXJzLA0KTHVjYS4NCg0K
+On Mon, Oct 21, 2013 at 03:10:31PM +0200, Johannes Berg wrote:
+> John,
+> 
+> Unfortunately we have yet more fixes for mac80211.
+> 
+> I have two DFS fixes (ath9k already supports DFS) and a fix for a
+> pointer race.
+> 
+> Let me know if there's any problem.
+> 
+> johannes
+> 
+> The following changes since commit 095d81cee742fc31e1218077ca6ca8f0df07c613:
+> 
+>   mac80211: disable WMM with invalid parameters (2013-10-17 15:38:22 +0200)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
+> 
+> for you to fetch changes up to bbe09bbcf4454e826e3fb08e87d81f32c0030658:
+> 
+>   cfg80211: update dfs_state_entered upon dfs_state change (2013-10-21 14:50:27 +0200)
+
+Pulling now...
+
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
