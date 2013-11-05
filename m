@@ -1,168 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4239 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752569Ab3K2LZk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Nov 2013 06:25:40 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 08/19] brcmfmac: determine alignment values during probe
-Date: Fri, 29 Nov 2013 12:25:13 +0100
-Message-ID: <1385724324-6361-9-git-send-email-arend@broadcom.com> (sfid-20131129_123808_964844_7F16DB0E)
-In-Reply-To: <1385724324-6361-1-git-send-email-arend@broadcom.com>
-References: <1385724324-6361-1-git-send-email-arend@broadcom.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34531 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755392Ab3KEVA2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Nov 2013 16:00:28 -0500
+Date: Tue, 5 Nov 2013 15:52:01 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>
+Subject: Re: pull request: TI wireless drivers 2013-10-23 (for 3.13)
+Message-ID: <20131105205200.GF8264@tuxdriver.com> (sfid-20131105_220046_788271_AFC6BC4B)
+References: <1382512252.21526.16.camel@porter.coelho.fi>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1382512252.21526.16.camel@porter.coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The alignment values were being determined for each transmit
-and receive depending on platform data. Instead determine
-these once during the probe.
+On Wed, Oct 23, 2013 at 10:10:52AM +0300, Luca Coelho wrote:
+> 
+> Hi John,
+> 
+> Some patches intended for 3.13.  Eliad continues upstreaming pending
+> patches from the internal tree.
+> 
+> Please let me know if you have any problems with it!
+> 
+> 
+> The following changes since commit a1b13b9ad3759dca24c6b721ee026c540a4e6564:
+> 
+>   rt2x00: rt2800pci: use module_pci_driver macro (2013-10-18 14:07:00 -0400)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git for-linville
+> 
+> for you to fetch changes up to 8d3c1fd8c3a4a4a1a319491cdd09bd7eca23ba3b:
+> 
+>   wlcore: save last regdom configuration on stop (2013-10-23 09:47:45 +0300)
 
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   48 ++++++++++----------
- 1 file changed, 24 insertions(+), 24 deletions(-)
+Pulling now...
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index f5d36506..584ffb8 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -462,6 +462,8 @@ struct brcmf_sdio {
- 	u8 tx_hdrlen;		/* sdio bus header length for tx packet */
- 	bool txglom;		/* host tx glomming enable flag */
- 	struct sk_buff *txglom_sgpad;	/* scatter-gather padding buffer */
-+	u16 head_align;		/* buffer pointer alignment */
-+	u16 sgentry_align;	/* scatter-gather buffer alignment */
- };
- 
- /* clkstate */
-@@ -1313,7 +1315,6 @@ static u8 brcmf_sdbrcm_rxglom(struct brcmf_sdio *bus, u8 rxseq)
- {
- 	u16 dlen, totlen;
- 	u8 *dptr, num = 0;
--	u32 align = 0;
- 	u16 sublen;
- 	struct sk_buff *pfirst, *pnext;
- 
-@@ -1328,11 +1329,6 @@ static u8 brcmf_sdbrcm_rxglom(struct brcmf_sdio *bus, u8 rxseq)
- 	brcmf_dbg(SDIO, "start: glomd %p glom %p\n",
- 		  bus->glomd, skb_peek(&bus->glom));
- 
--	if (bus->sdiodev->pdata)
--		align = bus->sdiodev->pdata->sd_sgentry_align;
--	if (align < 4)
--		align = 4;
--
- 	/* If there's a descriptor, generate the packet chain */
- 	if (bus->glomd) {
- 		pfirst = pnext = NULL;
-@@ -1356,9 +1352,9 @@ static u8 brcmf_sdbrcm_rxglom(struct brcmf_sdio *bus, u8 rxseq)
- 				pnext = NULL;
- 				break;
- 			}
--			if (sublen % align) {
-+			if (sublen % bus->sgentry_align) {
- 				brcmf_err("sublen %d not multiple of %d\n",
--					  sublen, align);
-+					  sublen, bus->sgentry_align);
- 			}
- 			totlen += sublen;
- 
-@@ -1371,7 +1367,7 @@ static u8 brcmf_sdbrcm_rxglom(struct brcmf_sdio *bus, u8 rxseq)
- 			}
- 
- 			/* Allocate/chain packet for next subframe */
--			pnext = brcmu_pkt_buf_get_skb(sublen + align);
-+			pnext = brcmu_pkt_buf_get_skb(sublen + bus->sgentry_align);
- 			if (pnext == NULL) {
- 				brcmf_err("bcm_pkt_buf_get_skb failed, num %d len %d\n",
- 					  num, sublen);
-@@ -1380,7 +1376,7 @@ static u8 brcmf_sdbrcm_rxglom(struct brcmf_sdio *bus, u8 rxseq)
- 			skb_queue_tail(&bus->glom, pnext);
- 
- 			/* Adhere to start alignment requirements */
--			pkt_align(pnext, sublen, align);
-+			pkt_align(pnext, sublen, bus->sgentry_align);
- 		}
- 
- 		/* If all allocations succeeded, save packet chain
-@@ -1908,18 +1904,13 @@ brcmf_sdbrcm_wait_event_wakeup(struct brcmf_sdio *bus)
- 
- static int brcmf_sdio_txpkt_hdalign(struct brcmf_sdio *bus, struct sk_buff *pkt)
- {
--	u16 head_align, head_pad;
-+	u16 head_pad;
- 	u8 *dat_buf;
- 
--	/* SDIO ADMA requires at least 32 bit alignment */
--	head_align = 4;
--	if (bus->sdiodev->pdata && bus->sdiodev->pdata->sd_head_align > 4)
--		head_align = bus->sdiodev->pdata->sd_head_align;
--
- 	dat_buf = (u8 *)(pkt->data);
- 
- 	/* Check head padding */
--	head_pad = ((unsigned long)dat_buf % head_align);
-+	head_pad = ((unsigned long)dat_buf % bus->head_align);
- 	if (head_pad) {
- 		if (skb_headroom(pkt) < head_pad) {
- 			bus->sdiodev->bus_if->tx_realloc++;
-@@ -1949,25 +1940,22 @@ static int brcmf_sdio_txpkt_prep_sg(struct brcmf_sdio *bus,
- {
- 	struct brcmf_sdio_dev *sdiodev;
- 	struct sk_buff *pkt_pad;
--	u16 tail_pad, tail_chop, sg_align, chain_pad;
-+	u16 tail_pad, tail_chop, chain_pad;
- 	unsigned int blksize;
- 	bool lastfrm;
- 	int ntail, ret;
- 
- 	sdiodev = bus->sdiodev;
- 	blksize = sdiodev->func[SDIO_FUNC_2]->cur_blksize;
--	sg_align = 4;
--	if (sdiodev->pdata && sdiodev->pdata->sd_sgentry_align > 4)
--		sg_align = sdiodev->pdata->sd_sgentry_align;
- 	/* sg entry alignment should be a divisor of block size */
--	WARN_ON(blksize % sg_align);
-+	WARN_ON(blksize % bus->sgentry_align);
- 
- 	/* Check tail padding */
- 	lastfrm = skb_queue_is_last(pktq, pkt);
- 	tail_pad = 0;
--	tail_chop = pkt->len % sg_align;
-+	tail_chop = pkt->len % bus->sgentry_align;
- 	if (tail_chop)
--		tail_pad = sg_align - tail_chop;
-+		tail_pad = bus->sgentry_align - tail_chop;
- 	chain_pad = (total_len + tail_pad) % blksize;
- 	if (lastfrm && chain_pad)
- 		tail_pad += blksize - chain_pad;
-@@ -4099,6 +4087,18 @@ void *brcmf_sdbrcm_probe(u32 regsva, struct brcmf_sdio_dev *sdiodev)
- 	bus->txminmax = BRCMF_TXMINMAX;
- 	bus->tx_seq = SDPCM_SEQ_WRAP - 1;
- 
-+	/* platform specific configuration:
-+	 *   alignments must be at least 4 bytes for ADMA
-+         */
-+	bus->head_align = ALIGNMENT;
-+	bus->sgentry_align = ALIGNMENT;
-+	if (sdiodev->pdata) {
-+		if (sdiodev->pdata->sd_head_align > ALIGNMENT)
-+			bus->head_align = sdiodev->pdata->sd_head_align;
-+		if (sdiodev->pdata->sd_sgentry_align > ALIGNMENT)
-+			bus->sgentry_align = sdiodev->pdata->sd_sgentry_align;
-+	}
-+
- 	INIT_WORK(&bus->datawork, brcmf_sdio_dataworker);
- 	bus->brcmf_wq = create_singlethread_workqueue("brcmf_wq");
- 	if (bus->brcmf_wq == NULL) {
 -- 
-1.7.10.4
-
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
