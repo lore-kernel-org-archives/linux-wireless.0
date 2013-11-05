@@ -1,57 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:32929 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754096Ab3KNOig (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Nov 2013 09:38:36 -0500
-Received: by mail-pa0-f51.google.com with SMTP id fb1so2159690pad.24
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Nov 2013 06:38:36 -0800 (PST)
-Date: Thu, 14 Nov 2013 06:49:16 -0800
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	Jouni Malinen <j@w1.fi>, sunitb <sunitb@qca.qualcomm.com>,
-	rsunki <rsunki@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC 0/5] cfg80211: regulatory quiescing and exporting DFS
- regions
-Message-ID: <20131114144914.GG19070@garbanzo.do-not-panic.com> (sfid-20131114_153857_070349_3BB006EF)
-References: <1384366379-25301-1-git-send-email-mcgrof@do-not-panic.com>
- <1384368487.14578.25.camel@jlt4.sipsolutions.net>
- <CAB=NE6VkL8L1uiJTrY3P7LUSepRHkS+paE3kmsTunUW_6n5Xvg@mail.gmail.com>
- <1384370024.28250.1.camel@jlt4.sipsolutions.net>
+Received: from mga01.intel.com ([192.55.52.88]:45778 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754184Ab3KEOfp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Nov 2013 09:35:45 -0500
+From: "Coelho, Luciano" <luciano.coelho@intel.com>
+To: Simon Wunderlich <sw@simonwunderlich.de>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
+Subject: Re: [RFC] mac80211: don't transmit beacon with CSA count 0
+Date: Tue, 5 Nov 2013 14:35:42 +0000
+Message-ID: <1383662100.579.49.camel@porter.coelho.fi> (sfid-20131105_153548_395050_406F2B7A)
+References: <1383569955-13236-1-git-send-email-luciano.coelho@intel.com>
+	 <1383640077.579.14.camel@porter.coelho.fi>
+	 <1383645950.579.26.camel@porter.coelho.fi>
+	 <201311051500.58913.sw@simonwunderlich.de>
+In-Reply-To: <201311051500.58913.sw@simonwunderlich.de>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1384370024.28250.1.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 13, 2013 at 08:13:44PM +0100, Johannes Berg wrote:
-> On Wed, 2013-11-13 at 19:57 +0100, Luis R. Rodriguez wrote:
-> > On Wed, Nov 13, 2013 at 7:48 PM, Johannes Berg
-> > <johannes@sipsolutions.net> wrote:
-> > > On Wed, 2013-11-13 at 19:12 +0100, Luis R. Rodriguez wrote:
-> > >
-> > >> Janusz, please test, and likely feel free to take on the last patch.
-> > >> We may need help from Johannes on the rtnl lock question now required
-> > >> for checks on enabling beacon operation.
-> > >
-> > > What's that rtnl thing about?
-> > 
-> > Whether or not callers of cfg80211_reg_can_beacon() have it properly
-> > held already and if not best strategy to make this simple and concise.
-> > The rtnl is required as we need to now query the cfg80211 regdom dfs
-> > region for the case where a channel requires DFS.
-> 
-> Can't you just use RCU for that part?
-
-If Janusz is right then we don't even need that patch at all :D
-The rtnl then would only be used for sending the wiphy, we'd
-just require hostapd to always check for the DFS region prior to
-starting IR for the first time, if the netdev was brought down
-(quisced), we'd have to have it check again the DFS region.
-
-This however does assume we can quiesce properly upon regulatory
-domain changes.
-
-  Luis
+T24gVHVlLCAyMDEzLTExLTA1IGF0IDE1OjAwICswMTAwLCBTaW1vbiBXdW5kZXJsaWNoIHdyb3Rl
+Og0KPiA+IE9uIFR1ZSwgMjAxMy0xMS0wNSBhdCAxMDoyNyArMDIwMCwgTHVjaWFubyBDb2VsaG8g
+d3JvdGU6DQo+ID4gPiBPbiBNb24sIDIwMTMtMTEtMDQgYXQgMTU6MzEgKzAxMDAsIFNpbW9uIFd1
+bmRlcmxpY2ggd3JvdGU6DQo+ID4gPiA+ID4gPiBUaGFua3MgZm9yIGNoZWNraW5nIGJhY2sgLSBJ
+J3ZlIHJlYWQgdGhlIHBhcnQgaW4gdGhlIHNwZWMgYWdhaW4NCj4gPiA+ID4gPiA+IFsxXSwgYW5k
+IGFwcGVhcmVudGx5IHlvdSBhcmUgcmlnaHQuDQo+ID4gPiA+ID4gPiANCj4gPiA+ID4gPiA+IFdp
+dGggeW91ciBwcm9wb3NlZCBjaGFuZ2UsIHNob3VsZG4ndCB3ZSBhbHNvIGNoYW5nZSB0aGUgYmVo
+YXZpb3VyDQo+ID4gPiA+ID4gPiBpZiB0aGUgdXNlcnNwYWNlIHJlcXVlc3RzIGEgY2hhbm5lbCBz
+d2l0Y2ggd2l0aCBjb3VudCA9IDA/IEkgZ3Vlc3MNCj4gPiA+ID4gPiA+IHdlIHNob3VsZCBpbW1l
+ZGlhdGVseSBjaGFuZ2UgdGhlIGNoYW5uZWwgdGhlbiB3aXRob3V0IHdhaXRpbmcgZm9yDQo+ID4g
+PiA+ID4gPiBiZWFjb25zPyBJIGRvbid0IHNlZSB0aGUgcG9pbnQgaW4gY2hhbmdpbmcgdGhlIGJl
+YWNvbnMgaWYgd2UgZG9uJ3QNCj4gPiA+ID4gPiA+IHNlbmQgdGhlbSwgYWZ0ZXIgYWxsLg0KPiA+
+ID4gPiA+IA0KPiA+ID4gPiA+IFlvdSdyZSByaWdodCwgY2hhbmdpbmcgdGhlIGJlYWNvbnMgZG9l
+c24ndCBtYWtlIHNlbnNlIGluIHRoaXMgY2FzZS4NCj4gPiA+ID4gPiBJJ2xsIGNoYW5nZSB0aGF0
+IGFuZCBzZW5kIHYyLg0KPiA+ID4gPiA+IA0KPiA+ID4gPiA+IEFub3RoZXIgdGhpbmcgaXMgdGhh
+dCB3ZSBhcmUgbWlzc2luZyB0aGUgYWN0aW9uIGZyYW1lcy4gIFRoZSBpZGVhDQo+ID4gPiA+ID4g
+d2l0aCB0aGUgY291bnQgPT0gMCBpcyB0aGF0IHRoZSBTVEEncyBzaG91bGQgc3RhcnQgbGlzdGVu
+aW5nIG9uIHRoZQ0KPiA+ID4gPiA+IG90aGVyIGNoYW5uZWwgaW1tZWRpYXRlbHkgYWZ0ZXIgcmVj
+ZWl2aW5nIHRoZSBhY3Rpb24gZnJhbWUgKGJlY2F1c2UNCj4gPiA+ID4gPiB0aGUgc3dpdGNoIHdp
+bGwgaGFwcGVuIGF0IGFueSB0aW1lKS4NCj4gPiA+ID4gPiANCj4gPiA+ID4gPiBJZiB3ZSBkb24n
+dCBzZW5kIHRoZSBhY3Rpb24gZnJhbWUsIHBhc3NpbmcgY29udGV4dCA9PSAwIGZyb20gdGhlDQo+
+ID4gPiA+ID4gdXNlcnNwYWNlIGRvZXNuJ3QgbXVjaCBtYWtlIHNlbnNlLCBiZWNhdXNlIHRoZSBj
+bGllbnRzIHdvbid0IGtub3cNCj4gPiA+ID4gPiB3ZSdyZSBzd2l0Y2hpbmcuICBXZWxsLCBtYXli
+ZSBpdCBtYWtlcyBhIGJpdCBvZiBzZW5zZSwgaWYgdGhlcmUgYXJlDQo+ID4gPiA+ID4gbm8gY2xp
+ZW50cyBjb25uZWN0ZWQsIGJ1dCBuZXZlcnRoZWxlc3MuDQo+ID4gPiA+IA0KPiA+ID4gPiBZZWFo
+LCBzd2l0Y2hpbmcgd2l0aG91dCBhY3Rpb25mcmFtZSBhbmQgY291bnQgPT0gMCBpcyBwcmV0dHkg
+dXNlbGVzcy4NCj4gPiA+IA0KPiA+ID4gQWN0dWFsbHksIGlmIHRoZSB1c2Vyc3BhY2UgcmVxdWVz
+dHMgY291bnQgPT0gMSwgd2Ugd29uJ3QgaGF2ZSBhbnkNCj4gPiA+IGJlYWNvbnMgZWl0aGVyLCBi
+ZWNhdXNlIDEgbWVhbnMgImp1c3QgYmVmb3JlIHRoZSBuZXh0IFRCVFQiLiAgU28gZm9yDQo+ID4g
+PiBjb3VudCA9PSAxIChjb21pbmcgZnJvbSB0aGUgdXNlcnNwYWNlKSB3ZSBzaG91bGRuJ3QgY29u
+ZmlndXJlIHRoZQ0KPiA+ID4gYmVhY29uLCBzaW5jZSB3ZSB3b24ndCBzZW5kIGl0LiAgV2UgbmVl
+ZCB0aGUgYWN0aW9uIGZyYW1lIGZvciB0aGlzIGNhc2UNCj4gPiA+IHRvby4NCj4gPiANCj4gPiBI
+bW1tLi4uIE5vdyB0aGVyZSdzIHNvbWV0aGluZyB0aGF0IGlzIGEgYml0IHVuY2xlYXIgdG8gbWUg
+aW4gdGhlIHNwZWNzOg0KPiA+IA0KPiA+ICJGb3Igbm9ubWVzaCBTVEFzLCB0aGUgQ2hhbm5lbCBT
+d2l0Y2ggQ291bnQgZmllbGQgZWl0aGVyIGlzIHNldCB0byB0aGUNCj4gPiBudW1iZXIgb2YgVEJU
+VHMgdW50aWwgdGhlIFNUQSBzZW5kaW5nIHRoZSBDaGFubmVsIFN3aXRjaCBBbm5vdW5jZW1lbnQN
+Cj4gPiBlbGVtZW50IHN3aXRjaGVzIHRvIHRoZSBuZXcgY2hhbm5lbCBvciBpcyBzZXQgdG8gMC4i
+DQo+ID4gDQo+ID4gVGhlcmUncyBub3RoaW5nIHNwZWNpZnlpbmcgZXhhY3RseSB3aGVuLCByZWxh
+dGl2ZSB0byB0aGUgYmVhY29uLCB0aGUNCj4gPiBzd2l0Y2ggYWN0dWFsbHkgaGFwcGVucy4gIEp1
+c3QgYmVmb3JlPyBKdXN0IGFmdGVyPyBJcyB0aGUgYmVhY29uIHRoYXQNCj4gPiBtYXRjaGVzIHRo
+YXQgVEJUVCB0cmFuc21pdHRlZCBpbiB0aGUgY3VycmVudCBvciBpbiB0aGUgbmV4dCBjaGFubmVs
+Pw0KPiA+IA0KPiA+IEZvciBhIHZhbHVlIG9mIDEsIGl0J3MgcHJldHR5IGNsZWFyOg0KPiA+IA0K
+PiA+ICJBIHZhbHVlIG9mIDEgaW5kaWNhdGVzIHRoYXQgdGhlIHN3aXRjaCBvY2N1cnMgaW1tZWRp
+YXRlbHkgYmVmb3JlIHRoZQ0KPiA+IG5leHQgVEJUVC4iDQo+IA0KPiBJZiBpdCBzYXlzIGZvciAx
+ICJqdXN0IGJlZm9yZSB0aGUgbmV4dCBUQlRUIiwgdGhlbiB0aGlzIHdvdWxkIG1lYW4gdGhlIG5l
+eHQgDQo+IGJlYWNvbiBpcyBvbiB0aGUgbmV4dCBjaGFubmVsLiBJJ2QgaW50ZXJwcmV0IHRoZW4g
+dGhhdCBmb3IgY291bnQ9MCwgdGhlIA0KPiBjaGFubmVsIHN3aXRjaCBoYXBwZW5zIGFzIHNvb24g
+YXMgcG9zc2libGUsIGFuZCBtYXkgaGFwcGVuIGFueSB0aW1lIGJlZm9yZSB0aGUgDQo+IG5leHQg
+VEJUVC4NCg0KSXQgc2F5cyAianVzdCBiZWZvcmUgdGhlIG5leHQgVEJUVCIgZm9yIHZhbHVlID09
+IDEsIG5vdCBmb3IgdmFsdWVzID4NCjEuIDspDQoNCkJ1dCB5ZWFoLCBteSBpbnRlcnByZXRhdGlv
+biBpcyB0aGUgc2FtZSBhcyB5b3Vycy4gIFdlIGNhbiBleHRyYXBvbGF0ZQ0KdGhpcyB0byB3aGVu
+IHZhbHVlID4gMSBhcyB3ZWxsLg0KDQogDQo+ID4gSSBkb24ndCB0aGluayB3ZSdyZSBkb2luZyB0
+aGF0IG5vdy4gIEF0IGxlYXN0IGluIHRoZSBhdGg5ayBjYXNlLCB5b3UNCj4gPiBzd2l0Y2ggdGhl
+IGNoYW5uZWwgaW1tZWRpYXRlbHkgYWZ0ZXIgdGhlIGJlYWNvbiB3aXRoIGNvdW50ID09IDEsIGJ5
+DQo+ID4gY2FsbGluZyBpZWVlODAyMTFfY3NhX2ZpbmlzaCgpLiAgVGhlIGNvcnJlY3Qgd291bGQg
+YmUganVzdCBiZWZvcmUgdGhlDQo+ID4gbmV4dCBiZWFjb24gaXMgc2VudC4NCj4gDQo+IEhtLCBJ
+IHRoaW5rIHlvdSBhcmUgcmlnaHQsIGFsdGhvdWdoIEknbSBub3Qgc3VyZSBob3cgZWFzeSB0aGF0
+IHdvdWxkIGJlIA0KPiBpbXBsZW1lbnRhdGlvbi13aXNlLg0KDQpZZXMsIEkgZ3Vlc3MgdGhpcyB3
+b3VsZCBiZSBwcmV0dHkgaGFyZCB0byBkbyBpZiB3ZSBoYXZlIGJlYWNvbg0Kb2ZmbG9hZC4uLg0K
+DQoNCj4gQlRXLCBmb3IgdGhhdCBjYXNlIEkgdGhpbmsgd2UgYWxzbyBoYXZlIHRvIGZpeCB0aGUg
+Y2xpZW50IHNpZGUsIHdoaWNoIGlzIA0KPiBjdXJyZW50bHkgc3dpdGNoaW5nIGltbWVkaWF0ZWx5
+IGZvciBjb3VudCA9IDEgYW5kIG5vdCB3YWl0aW5nIGZvciB0aGUgbmV4dCANCj4gVEJUVC4gKHNl
+ZSBlbmQgb2YgaWVlZTgwMjExX3N0YV9wcm9jZXNzX2NoYW5zd2l0Y2goKSwgdGhlIHJlc3QgYXBw
+ZWFycyBjb3JyZWN0IA0KPiB0aG91Z2gpLg0KDQpZZXMsIEkgaGF2ZSBzZWVuIHRoYXQgdG9vLiAg
+VGhlIHByb2JsZW0gaXMgdGhhdCB0aGlzICJpbW1lZGlhdGVseQ0KYmVmb3JlIiBpcyBub3Qgd2Vs
+bCBzcGVjaWZpZWQgZWl0aGVyLiAgSXQgZGVwZW5kcyBvbiBtYW55IHRoaW5ncywgbGlrZQ0KaG93
+IGxvbmcgaXQgdGFrZXMgdGhlIGhhcmR3YXJlIHRvIHBoeXNpY2FsbHkgc3dpdGNoIHRvIHRoZSBu
+ZXh0IGNoYW5uZWwNCmFuZCBzdGFydCBiZWFjb25pbmcuICBJIGd1ZXNzICB0aGUgb25seSBwcm9i
+bGVtIHdvdWxkIGJlIGEgaGljayB1cCBpbg0KdGhlIGNvbm5lY3Rpb24sIGlmIHRoZSBBUCBzd2l0
+Y2hlcyBhdCBhIGRpZmZlcmVudCB0aW1lIHRoYW4gdGhlIFNUQQ0KZG9lcy4uLg0KDQoNCj4gPiBB
+IHZhbHVlIG9mIDAgaXMgYWxzbyB1bmNsZWFyLCBiZWNhdXNlIGl0IGRvZXNuJ3QgcmVmZXIgdG8g
+YW55IFRCVFRzIGF0DQo+ID4gYWxsLiAgU28gaWYgeW91IHJlYWQgaXQgbGl0ZXJhbGx5LCB0aGUg
+Zm9sbG93aW5nIHdvdWxkIG1lYW4gdGhhdCBpdA0KPiA+IGNvdWxkIGF0ICphbnkqIHRpbWUgaW4g
+dGhlIGZ1dHVyZToNCj4gPiANCj4gPiAiQSB2YWx1ZSBvZiAwIGluZGljYXRlcyB0aGF0IHRoZSBz
+d2l0Y2ggb2NjdXJzIGF0IGFueSB0aW1lIGFmdGVyIHRoZQ0KPiA+IGZyYW1lIGNvbnRhaW5pbmcg
+dGhlIGVsZW1lbnQgaXMgdHJhbnNtaXR0ZWQuIg0KPiA+IA0KPiA+IEFtIEkgbWlzc2luZyBzb21l
+dGhpbmc/IFdoYXQgZG8geW91IHRoaW5rPw0KPiANCj4gQXMgc2FpZCBhYm92ZSwgSSdkIGludGVy
+cHJldCBpdCBhcyB0aGUgY2hhbmdlIHNob3VsZCBoYXBwZW4gYXMgc29vbiBhcyANCj4gcG9zc2li
+bGUuIElmIGNvdW50ID0gMSBtZWFucyB0aGUgY2hhbmdlIHdpbGwgaGFwcGVuICJpbW1lZGlhdGVs
+eSBiZWZvcmUgdGhlIA0KPiBuZXh0IFRCVFQiLCBJIHdvdWxkIGd1ZXNzIDAgd291bGQgbWVhbiBl
+dmVuIGJlZm9yZSB0aGF0LCBvciBhdCBsZWFzdCBub3QgYWZ0ZXIgDQo+IHRoZSAiYmVmb3JlIHRo
+ZSBuZXh0IFRCVFQiLg0KPiANCj4gSSBhZ3JlZSB0aGF0IHRoZSBzcGVjIGlzIG5vdCBwZXJmZWN0
+bHkgY2xlYXIgYWJvdXQgdGhhdCwgYnV0IEkgY3VycmVudGx5IGRvbid0IA0KPiBzZWUgYW55IG90
+aGVyIHJlYXNvbmFibGUgaW50ZXJwcmV0YXRpb24gaGVyZSAuLi4NCg0KWWVzLCBJIGFncmVlIHdp
+dGggeW91ciBpbnRlcnByZXRhdGlvbnMgdG9vLiAgSSB3YXMganVzdCBiZWluZyB0b28NCmxpdGVy
+YWwuIDspIEluIGFueSBjYXNlLCB3ZSBjYW4gb25seSBob3BlIGV2ZXJ5b25lIGludGVycHJldHMg
+aXQgaW4gdGhlDQpzYW1lIHdheS4uLg0KDQotLQ0KQ2hlZXJzLA0KTHVjYS4NCg==
