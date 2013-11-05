@@ -1,51 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:18022 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754181Ab3KCWJ7 (ORCPT
+Received: from mail-ea0-f179.google.com ([209.85.215.179]:37519 "EHLO
+	mail-ea0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754196Ab3KEMEV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Nov 2013 17:09:59 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: Alexander Varnin <fenixk19@mail.ru>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>
-Date: Sun, 3 Nov 2013 14:10:07 -0800
-Subject: RE: mwifiex_sdio on chromebook
-Message-ID: <477F20668A386D41ADCC57781B1F70430F45757E63@SC-VEXCH1.marvell.com> (sfid-20131103_231026_102020_E96A7991)
-References: <5276491F.20207@mail.ru>
-In-Reply-To: <5276491F.20207@mail.ru>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Tue, 5 Nov 2013 07:04:21 -0500
+Received: by mail-ea0-f179.google.com with SMTP id q15so483886ead.38
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Nov 2013 04:04:20 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH v3 2/3] mac80211_hwsim: Add iface comb for DFS
+Date: Tue,  5 Nov 2013 13:03:53 +0100
+Message-Id: <1383653034-6679-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131105_130424_907681_CEAEBD68)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Q0M6IGxpbnV4LW1tYw0KDQpIaSBBbGV4YW5kZXIsDQoNCj4gSGVsbG8uDQo+IEkgYW0gdHJ5aW5n
-IHRvIGRlYnVnIHRoZSBpc3N1ZSB3aXRoIGluY29ycmVjdCBpbml0aWFsaXphdGlvbiBvZiBXaUZp
-IGNoaXAgb24NCj4gU2Ftc3VuZyBBUk0gQ2hyb21lYm9vay4gQW5kIEkgc2VhcmNoIGZvciBhc3Np
-c3RhbmNlLiBJIGhhdmUgcG9zdGVkIG15DQo+IGludmVzdGlnYXRpb24gcmVzdWx0cyBvbiBsYXVu
-Y2hwYWQubmV0IChidWcgIzEyNDc1MTIpLiBIZXJlIGlzDQo+IGNvcHk6DQo+IA0KPiBNYXJ2ZWxs
-IFNESU8gV2lGaSBjaGlwIGRvZXNuJ3QgZ2V0IGluaXRpYWxpemVkIGNvcnJlY3RseSBvbiBDaHJv
-bWVib29rLg0KPiBBZnRlciBzb21lIHJlc2VhcmNoIEkgaGF2ZSBtYW5hZ2VkIHRvIGZpbmQgdGhh
-dCB3aGVuIExpbnV4IGlzIGRvaW5nDQo+IGluaXRpYWxpemF0aW9uLCBpdCB0cmllcyBzZXR0aW5n
-IGNsb2NrIGFuZCBwb3dlciB0byBTRElPIGNvbnRyb2xsZXIgZm9yIHRoYXQgY2hpcC4gSXQNCj4g
-aXMgdHJ5aW5nIGZyZXF1ZW5jZXMgaGFyZGNvZGVkIGluDQo+IGxpbnV4L2RyaXZlcnMvbW1jL2Nv
-cmUvY29yZS5jOiA0MDAwMDAsIDMwMDAwMCwgMjAwMDAwLCAxMDAwMDAgSHouDQo+IE9wcG9zZWQg
-dG8gdGhhdCwgY2hyb21lIG9zIGtlcm5lbCB0cmllcyBvdGhlciBmcmVxdWVuY2VzOiA3ODQzMTRI
-eiBhbmQNCj4gNTAwMDAwMDBIei4gVGhlIGxhc3QgaXMgc3RheWluZyBhcyB3b3JraW5nIGZyZXF1
-ZW5jeS4gSSBkb24ndCBrbm93LCBpZiBpdCBpcw0KPiBtYXR0ZXIgZm9yIGNhcmQgd2hhdCBmcmVx
-dWVuY3kgZG9lcyB0aGUgaG9zdCB0cmllcyB0byBnYXRlLg0KDQpZb3VyIENocm9tZWJvb2sgc3Vw
-cG9ydHMgU0RJTyBoaWdoIHNwZWVkIG1vZGUgKFNESU8gMi4wIHNwZWMpLiBTbyA1ME1IeiBpcyBj
-b3JyZWN0Lg0KDQo+IA0KPiBXaGVuIG1haW5saW5lIGtlcm5lbCBydW5zIG1tY19hdHRhY2hfc2Rp
-byBmdW5jdGlvbiBpdCBzaG91bGQgZ2V0IGNvcnJlY3QNCj4gYW5zd2VyIGZyb20gY2FyZCBhbmQg
-c28gcHJvY2VzcyBjYXJkIGFzIFNESU8uIEhvd2V2ZXIgaXQgZmFpbHMgd2l0aCB0aW1lb3V0DQo+
-IGluIHRoYXQgZnVuY3Rpb24uDQoNCldoYXQgYXJlIHlvdSB0cnlpbmcgdG8gZG8gaGVyZT8gQXJl
-IHlvdSB0cnlpbmcgdG8gcnVuIGEgbWFpbmxpbmUga2VybmVsIG9uIHlvdXIgQ2hyb21lYm9vaz8N
-Cg0KPiANCj4gSSB3b25kZXIgaWYgdGhpcyBkZXBlbmRzIG9uIGZpcm13YXJlIGxvYWRpbmcuIEkg
-c2VlLCB0aGF0IGNocm9tZSBvcyAzLjQNCj4ga2VybmVsIHJlcXVpcmVzIGZpcm13YXJlLiBBbmQg
-bWFpbmxpbmUgaXMgcHJvYmFibHkgc2ltcGx5IGRvZXNuJ3QgbG9hZCBpdCBieQ0KPiBkZWZhdWx0
-LiBDdXJyZW50bHksIEkgZG9uJ3Qga25vdyBob3cgdG8gY2hlY2sgaXQgYW5kIGhvdyB0byBjb25m
-aWd1cmUga2VybmVsDQo+IHRvIGxvYWQgZmlybXdhcmUgZm9yIG13aWZpZXhfc2Rpby4NCg0KWW91
-IHNhaWQgbW1jX2F0dGFjaF9zZGlvIGZ1bmN0aW9uIGZhaWxzLiBUaGUgbXdpZmlleF9zZGlvIGRy
-aXZlciBhbmQgdGhlIGZpcm13YXJlIHdpbGwgbm90IGJlIGxvYWRlZCBhdCBhbGwuDQoNCj4gDQo+
-IEkgYW0gcmVhZHkgdG8gZG8gZnVydGhlciByZXNlYXJjaCwgYnV0IEkgbmVlZCBzb21lIGFzc2lz
-dGFuY2UuDQoNCkNPTkZJR19NTUNfREVCVUc9eSwgYW5kIGNvbGxlY3QgdGhlIGRlYnVnIGxvZ3Mu
-DQoNClJlZ2FyZHMsDQpCaW5nDQo=
+Add iface combination that will allow DFS
+support. Add also debugfs dfs_simulate_radar
+file that can be used to simulate radar event.
+This could be useful for mac80211/cfg80211/
+regulatory/hostap code testing without real HW.
+
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ drivers/net/wireless/mac80211_hwsim.c |   50 +++++++++++++++++++++++++++------
+ 1 file changed, 42 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index cb6b98e..8519b13 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -1868,6 +1868,17 @@ static int hwsim_fops_ps_write(void *dat, u64 val)
+ DEFINE_SIMPLE_ATTRIBUTE(hwsim_fops_ps, hwsim_fops_ps_read, hwsim_fops_ps_write,
+ 			"%llu\n");
+ 
++static int hwsim_write_simulate_radar(void *dat, u64 val)
++{
++	struct mac80211_hwsim_data *data = dat;
++
++	ieee80211_radar_detected(data->hw);
++
++	return 0;
++}
++
++DEFINE_SIMPLE_ATTRIBUTE(hwsim_simulate_radar, NULL,
++			hwsim_write_simulate_radar, "%llu\n");
+ 
+ static int hwsim_fops_group_read(void *dat, u64 *val)
+ {
+@@ -2169,11 +2180,28 @@ static const struct ieee80211_iface_limit hwsim_if_limits[] = {
+ 	{ .max = 1, .types = BIT(NL80211_IFTYPE_P2P_DEVICE) },
+ };
+ 
+-static struct ieee80211_iface_combination hwsim_if_comb = {
+-	.limits = hwsim_if_limits,
+-	.n_limits = ARRAY_SIZE(hwsim_if_limits),
+-	.max_interfaces = 2048,
+-	.num_different_channels = 1,
++static const struct ieee80211_iface_limit hwsim_if_dfs_limits[] = {
++	{ .max = 8, .types = BIT(NL80211_IFTYPE_AP) },
++};
++
++static struct ieee80211_iface_combination hwsim_if_comb[] = {
++	{
++		.limits = hwsim_if_limits,
++		.n_limits = ARRAY_SIZE(hwsim_if_limits),
++		.max_interfaces = 2048,
++		.num_different_channels = 1,
++	},
++	{
++		.limits = hwsim_if_dfs_limits,
++		.n_limits = ARRAY_SIZE(hwsim_if_dfs_limits),
++		.max_interfaces = 8,
++		.num_different_channels = 1,
++		.radar_detect_widths = BIT(NL80211_CHAN_WIDTH_20_NOHT) |
++				       BIT(NL80211_CHAN_WIDTH_20) |
++				       BIT(NL80211_CHAN_WIDTH_40) |
++				       BIT(NL80211_CHAN_WIDTH_80) |
++				       BIT(NL80211_CHAN_WIDTH_160),
++	}
+ };
+ 
+ static int __init init_mac80211_hwsim(void)
+@@ -2191,7 +2219,7 @@ static int __init init_mac80211_hwsim(void)
+ 		return -EINVAL;
+ 
+ 	if (channels > 1) {
+-		hwsim_if_comb.num_different_channels = channels;
++		hwsim_if_comb[0].num_different_channels = channels;
+ 		mac80211_hwsim_ops.hw_scan = mac80211_hwsim_hw_scan;
+ 		mac80211_hwsim_ops.cancel_hw_scan =
+ 			mac80211_hwsim_cancel_hw_scan;
+@@ -2271,13 +2299,15 @@ static int __init init_mac80211_hwsim(void)
+ 		hw->wiphy->n_addresses = 2;
+ 		hw->wiphy->addresses = data->addresses;
+ 
+-		hw->wiphy->iface_combinations = &hwsim_if_comb;
+-		hw->wiphy->n_iface_combinations = 1;
++		hw->wiphy->iface_combinations = hwsim_if_comb;
++		hw->wiphy->n_iface_combinations = ARRAY_SIZE(hwsim_if_comb);
+ 
+ 		if (channels > 1) {
+ 			hw->wiphy->max_scan_ssids = 255;
+ 			hw->wiphy->max_scan_ie_len = IEEE80211_MAX_DATA_LEN;
+ 			hw->wiphy->max_remain_on_channel_duration = 1000;
++			/* For channels > 1 DFS is not allowed */
++			hw->wiphy->n_iface_combinations = 1;
+ 		}
+ 
+ 		INIT_DELAYED_WORK(&data->roc_done, hw_roc_done);
+@@ -2511,6 +2541,10 @@ static int __init init_mac80211_hwsim(void)
+ 				    &hwsim_fops_ps);
+ 		debugfs_create_file("group", 0666, data->debugfs, data,
+ 				    &hwsim_fops_group);
++		if (channels == 1)
++			debugfs_create_file("dfs_simulate_radar", 0222,
++					    data->debugfs,
++					    data, &hwsim_simulate_radar);
+ 
+ 		tasklet_hrtimer_init(&data->beacon_timer,
+ 				     mac80211_hwsim_beacon,
+-- 
+1.7.9.5
+
