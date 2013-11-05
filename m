@@ -1,47 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:45731 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759600Ab3KMSZB (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:48636 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752306Ab3KEEZD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Nov 2013 13:25:01 -0500
-Message-ID: <5283C3F7.4090700@candelatech.com> (sfid-20131113_192512_995146_16093F29)
-Date: Wed, 13 Nov 2013 10:24:55 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: RFC:  Add precise timing to wifi association messages?
-References: <5283BDB6.5020700@candelatech.com>  <5283BE63.8090801@candelatech.com> (sfid-20131113_190112_830842_FCA007A3) <1384366716.14578.13.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1384366716.14578.13.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 4 Nov 2013 23:25:03 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Michael Larson <mlarson@qce.qualcomm.com>,
+	Stephen Collmeyer <scollmey@qce.qualcomm.com>
+Subject: [PATCH] ath9k: Apply CUS227 specific TX gain values
+Date: Tue,  5 Nov 2013 09:50:32 +0530
+Message-Id: <1383625232-358-1-git-send-email-sujith@msujith.org> (sfid-20131105_052511_935476_95C680C8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/13/2013 10:18 AM, Johannes Berg wrote:
-> On Wed, 2013-11-13 at 10:01 -0800, Ben Greear wrote:
-> 
->> I chose a poor example here...my intention is to just add timers to existing
->> messages...
-> 
-> What does this do that printk timestamps don't?
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Sub-second precision, and the same in 'dmesg' output.
+CUS227, which is an AR9340 based card used in Qualcomm's
+Allplay platforms requires a custom TX gain array, based
+on the index 7. Add suport for this.
 
-There may be a way to get /var/log/messages to show sub-second
-precision, but at least it is not enabled by default on the systems
-I use.  dmesg has no timestamps at all from what I can tell.
+Cc: Michael Larson <mlarson@qce.qualcomm.com>
+Cc: Stephen Collmeyer <scollmey@qce.qualcomm.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c       |   8 ++
+ drivers/net/wireless/ath/ath9k/ar9340_initvals.h | 102 +++++++++++++++++++++++
+ 2 files changed, 110 insertions(+)
 
-Things like ath9k debugging typically do not go to /var/log/messages
-at all, so I was stuck using dmesg (I'll post a similar patch for ath9k
-debugging in case someone likes it.)
-
-The format I chose matches wpa_supplicant logs as well, which I found
-useful.
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+index b054dee..d35f3f0 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+@@ -578,6 +578,13 @@ static void ar9003_tx_gain_table_mode6(struct ath_hw *ah)
+ 			ar9580_1p0_type6_tx_gain_table);
+ }
+ 
++static void ar9003_tx_gain_table_mode7(struct ath_hw *ah)
++{
++	if (AR_SREV_9340(ah))
++		INIT_INI_ARRAY(&ah->iniModesTxGain,
++			       ar9340_cus227_tx_gain_table_1p0);
++}
++
+ typedef void (*ath_txgain_tab)(struct ath_hw *ah);
+ 
+ static void ar9003_tx_gain_table_apply(struct ath_hw *ah)
+@@ -590,6 +597,7 @@ static void ar9003_tx_gain_table_apply(struct ath_hw *ah)
+ 		ar9003_tx_gain_table_mode4,
+ 		ar9003_tx_gain_table_mode5,
+ 		ar9003_tx_gain_table_mode6,
++		ar9003_tx_gain_table_mode7,
+ 	};
+ 	int idx = ar9003_hw_get_tx_gain_idx(ah);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/ar9340_initvals.h b/drivers/net/wireless/ath/ath9k/ar9340_initvals.h
+index 25db921..182bf90 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9340_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9340_initvals.h
+@@ -1447,4 +1447,106 @@ static const u32 ar9340_1p0_soc_preamble[][2] = {
+ 	{0x00007038, 0x000004c2},
+ };
+ 
++static const u32 ar9340_cus227_tx_gain_table_1p0[][5] = {
++	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
++	{0x0000a2dc, 0x0380c7fc, 0x0380c7fc, 0x03aaa352, 0x03aaa352},
++	{0x0000a2e0, 0x0000f800, 0x0000f800, 0x03ccc584, 0x03ccc584},
++	{0x0000a2e4, 0x03ff0000, 0x03ff0000, 0x03f0f800, 0x03f0f800},
++	{0x0000a2e8, 0x00000000, 0x00000000, 0x03ff0000, 0x03ff0000},
++	{0x0000a410, 0x000050d9, 0x000050d9, 0x000050d9, 0x000050d9},
++	{0x0000a500, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a504, 0x06000003, 0x06000003, 0x04000002, 0x04000002},
++	{0x0000a508, 0x0a000020, 0x0a000020, 0x08000004, 0x08000004},
++	{0x0000a50c, 0x10000023, 0x10000023, 0x0b000200, 0x0b000200},
++	{0x0000a510, 0x16000220, 0x16000220, 0x0f000202, 0x0f000202},
++	{0x0000a514, 0x1c000223, 0x1c000223, 0x11000400, 0x11000400},
++	{0x0000a518, 0x21002220, 0x21002220, 0x15000402, 0x15000402},
++	{0x0000a51c, 0x27002223, 0x27002223, 0x19000404, 0x19000404},
++	{0x0000a520, 0x2c022220, 0x2c022220, 0x1b000603, 0x1b000603},
++	{0x0000a524, 0x30022222, 0x30022222, 0x1f000a02, 0x1f000a02},
++	{0x0000a528, 0x35022225, 0x35022225, 0x23000a04, 0x23000a04},
++	{0x0000a52c, 0x3b02222a, 0x3b02222a, 0x26000a20, 0x26000a20},
++	{0x0000a530, 0x3f02222c, 0x3f02222c, 0x2a000e20, 0x2a000e20},
++	{0x0000a534, 0x4202242a, 0x4202242a, 0x2e000e22, 0x2e000e22},
++	{0x0000a538, 0x4702244a, 0x4702244a, 0x31000e24, 0x31000e24},
++	{0x0000a53c, 0x4b02244c, 0x4b02244c, 0x34001640, 0x34001640},
++	{0x0000a540, 0x4e02246c, 0x4e02246c, 0x38001660, 0x38001660},
++	{0x0000a544, 0x5302266c, 0x5302266c, 0x3b001861, 0x3b001861},
++	{0x0000a548, 0x5702286c, 0x5702286c, 0x3e001a81, 0x3e001a81},
++	{0x0000a54c, 0x5c02486b, 0x5c02486b, 0x42001a83, 0x42001a83},
++	{0x0000a550, 0x61024a6c, 0x61024a6c, 0x44001c84, 0x44001c84},
++	{0x0000a554, 0x66026a6c, 0x66026a6c, 0x48001ce3, 0x48001ce3},
++	{0x0000a558, 0x6b026e6c, 0x6b026e6c, 0x4c001ce5, 0x4c001ce5},
++	{0x0000a55c, 0x7002708c, 0x7002708c, 0x50001ce9, 0x50001ce9},
++	{0x0000a560, 0x7302b08a, 0x7302b08a, 0x54001ceb, 0x54001ceb},
++	{0x0000a564, 0x7702b08c, 0x7702b08c, 0x56001eec, 0x56001eec},
++	{0x0000a568, 0x7702b08c, 0x7702b08c, 0x56001eec, 0x56001eec},
++	{0x0000a56c, 0x7702b08c, 0x7702b08c, 0x56001eec, 0x56001eec},
++	{0x0000a570, 0x7702b08c, 0x7702b08c, 0x56001eec, 0x56001eec},
++	{0x0000a574, 0x7702b08c, 0x7702b08c, 0x56001eec, 0x56001eec},
++	{0x0000a578, 0x7702b08c, 0x7702b08c, 0x56001eec, 0x56001eec},
++	{0x0000a57c, 0x7702b08c, 0x7702b08c, 0x56001eec, 0x56001eec},
++	{0x0000a580, 0x00800000, 0x00800000, 0x00800000, 0x00800000},
++	{0x0000a584, 0x06800003, 0x06800003, 0x04800002, 0x04800002},
++	{0x0000a588, 0x0a800020, 0x0a800020, 0x08800004, 0x08800004},
++	{0x0000a58c, 0x10800023, 0x10800023, 0x0b800200, 0x0b800200},
++	{0x0000a590, 0x16800220, 0x16800220, 0x0f800202, 0x0f800202},
++	{0x0000a594, 0x1c800223, 0x1c800223, 0x11800400, 0x11800400},
++	{0x0000a598, 0x21820220, 0x21820220, 0x15800402, 0x15800402},
++	{0x0000a59c, 0x27820223, 0x27820223, 0x19800404, 0x19800404},
++	{0x0000a5a0, 0x2b822220, 0x2b822220, 0x1b800603, 0x1b800603},
++	{0x0000a5a4, 0x2f822222, 0x2f822222, 0x1f800a02, 0x1f800a02},
++	{0x0000a5a8, 0x34822225, 0x34822225, 0x23800a04, 0x23800a04},
++	{0x0000a5ac, 0x3a82222a, 0x3a82222a, 0x26800a20, 0x26800a20},
++	{0x0000a5b0, 0x3e82222c, 0x3e82222c, 0x2a800e20, 0x2a800e20},
++	{0x0000a5b4, 0x4282242a, 0x4282242a, 0x2e800e22, 0x2e800e22},
++	{0x0000a5b8, 0x4782244a, 0x4782244a, 0x31800e24, 0x31800e24},
++	{0x0000a5bc, 0x4b82244c, 0x4b82244c, 0x34801640, 0x34801640},
++	{0x0000a5c0, 0x4e82246c, 0x4e82246c, 0x38801660, 0x38801660},
++	{0x0000a5c4, 0x5382266c, 0x5382266c, 0x3b801861, 0x3b801861},
++	{0x0000a5c8, 0x5782286c, 0x5782286c, 0x3e801a81, 0x3e801a81},
++	{0x0000a5cc, 0x5c84286b, 0x5c84286b, 0x42801a83, 0x42801a83},
++	{0x0000a5d0, 0x61842a6c, 0x61842a6c, 0x44801c84, 0x44801c84},
++	{0x0000a5d4, 0x66862a6c, 0x66862a6c, 0x48801ce3, 0x48801ce3},
++	{0x0000a5d8, 0x6b862e6c, 0x6b862e6c, 0x4c801ce5, 0x4c801ce5},
++	{0x0000a5dc, 0x7086308c, 0x7086308c, 0x50801ce9, 0x50801ce9},
++	{0x0000a5e0, 0x738a308a, 0x738a308a, 0x54801ceb, 0x54801ceb},
++	{0x0000a5e4, 0x778a308c, 0x778a308c, 0x56801eec, 0x56801eec},
++	{0x0000a5e8, 0x778a308c, 0x778a308c, 0x56801eec, 0x56801eec},
++	{0x0000a5ec, 0x778a308c, 0x778a308c, 0x56801eec, 0x56801eec},
++	{0x0000a5f0, 0x778a308c, 0x778a308c, 0x56801eec, 0x56801eec},
++	{0x0000a5f4, 0x778a308c, 0x778a308c, 0x56801eec, 0x56801eec},
++	{0x0000a5f8, 0x778a308c, 0x778a308c, 0x56801eec, 0x56801eec},
++	{0x0000a5fc, 0x778a308c, 0x778a308c, 0x56801eec, 0x56801eec},
++	{0x0000a600, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a604, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a608, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a60c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a610, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a614, 0x01404000, 0x01404000, 0x01404000, 0x01404000},
++	{0x0000a618, 0x01404501, 0x01404501, 0x01404501, 0x01404501},
++	{0x0000a61c, 0x02008802, 0x02008802, 0x02008501, 0x02008501},
++	{0x0000a620, 0x0300cc03, 0x0300cc03, 0x0280ca03, 0x0280ca03},
++	{0x0000a624, 0x0300cc03, 0x0300cc03, 0x03010c04, 0x03010c04},
++	{0x0000a628, 0x0300cc03, 0x0300cc03, 0x04014c04, 0x04014c04},
++	{0x0000a62c, 0x03810c03, 0x03810c03, 0x04015005, 0x04015005},
++	{0x0000a630, 0x03810e04, 0x03810e04, 0x04015005, 0x04015005},
++	{0x0000a634, 0x03810e04, 0x03810e04, 0x04015005, 0x04015005},
++	{0x0000a638, 0x03810e04, 0x03810e04, 0x04015005, 0x04015005},
++	{0x0000a63c, 0x03810e04, 0x03810e04, 0x04015005, 0x04015005},
++	{0x0000b2dc, 0x0380c7fc, 0x0380c7fc, 0x03aaa352, 0x03aaa352},
++	{0x0000b2e0, 0x0000f800, 0x0000f800, 0x03ccc584, 0x03ccc584},
++	{0x0000b2e4, 0x03ff0000, 0x03ff0000, 0x03f0f800, 0x03f0f800},
++	{0x0000b2e8, 0x00000000, 0x00000000, 0x03ff0000, 0x03ff0000},
++	{0x00016044, 0x056db2db, 0x056db2db, 0x03b6d2e4, 0x03b6d2e4},
++	{0x00016048, 0x24925666, 0x24925666, 0x8e481266, 0x8e481266},
++	{0x00016280, 0x01000015, 0x01000015, 0x01001015, 0x01001015},
++	{0x00016288, 0x30318000, 0x30318000, 0x00318000, 0x00318000},
++	{0x00016444, 0x056db2db, 0x056db2db, 0x03b6d2e4, 0x03b6d2e4},
++	{0x00016448, 0x24925666, 0x24925666, 0x8e481266, 0x8e481266},
++	{0x0000a3a4, 0x00000011, 0x00000011, 0x00000011, 0x00000011},
++	{0x0000a3a8, 0x3c3c3c3c, 0x3c3c3c3c, 0x3c3c3c3c, 0x3c3c3c3c},
++	{0x0000a3ac, 0x30303030, 0x30303030, 0x30303030, 0x30303030},
++};
++
+ #endif /* INITVALS_9340_H */
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.8.4.2
 
