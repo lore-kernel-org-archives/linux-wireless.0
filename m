@@ -1,71 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f52.google.com ([209.85.219.52]:39149 "EHLO
-	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750823Ab3KSLj0 convert rfc822-to-8bit (ORCPT
+Received: from mms3.broadcom.com ([216.31.210.19]:1203 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751006Ab3KEIxN convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Nov 2013 06:39:26 -0500
-Received: by mail-oa0-f52.google.com with SMTP id h16so2661969oag.39
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Nov 2013 03:39:25 -0800 (PST)
+	Tue, 5 Nov 2013 03:53:13 -0500
+Message-ID: <5278B1EC.8020000@broadcom.com> (sfid-20131105_095317_947875_69F4FBD2)
+Date: Tue, 5 Nov 2013 09:53:00 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <CABGE7dsTzYESpxfO8WL9JP1BR1QdrTNv5+EszuZm225R2pA=Zw@mail.gmail.com>
-References: <CABGE7dsDtL0ZPAmOTW=G=hMdA-6r=yT0DtQx_-H6Yi6cGa6Udw@mail.gmail.com>
- <CABGE7dur4pM4vLz_iLx7u-g5ohKhXkwKAOmjJ86PE62mYwGPJw@mail.gmail.com>
- <CAG6hwVOOvKfZcv-J70EMeHM3pmx-ieeAF2-6UtbrmoN3xC=SLw@mail.gmail.com> <CABGE7dsTzYESpxfO8WL9JP1BR1QdrTNv5+EszuZm225R2pA=Zw@mail.gmail.com>
-From: Gustavo Azambuja <gazambuja+hostapd@gmail.com>
-Date: Tue, 19 Nov 2013 09:39:05 -0200
-Message-ID: <CABGE7ds77Ea9YeGBLCCYYDfTFEm0MqjRA03aF=vpv9Y+=Z47oA@mail.gmail.com> (sfid-20131119_123929_838522_AAB63D82)
-Subject: Re: NL80211_CMD_NEW_STATION result: -105 (No buffer space available)
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: "Alexander Varnin" <fenixk19@mail.ru>,
+	"Bing Zhao" <bzhao@marvell.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+cc: "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>
+Subject: Re: mwifiex_sdio on chromebook
+References: <5276491F.20207@mail.ru>
+ <477F20668A386D41ADCC57781B1F70430F45757E63@SC-VEXCH1.marvell.com>
+ <527703E6.8040504@mail.ru>
+ <477F20668A386D41ADCC57781B1F70430F45758053@SC-VEXCH1.marvell.com>
+ <5278AE8E.9060203@mail.ru>
+In-Reply-To: <5278AE8E.9060203@mail.ru>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thank,
-you know where i can find one list of devices (usb dongle) with more
-ram, or without this limit (I need provide Internet at less to 30
-stations)?
+On 11/05/2013 09:38 AM, Alexander Varnin wrote:
+> 04.11.2013 23:46, Bing Zhao пишет:
+>> Hi Alexander,
+>>
+>>>> Your Chromebook supports SDIO high speed mode (SDIO 2.0 spec). So
+>>>> 50MHz is correct.
+>>> Ok, but mainline kernel doesn't try this frequency. It tries 400kHz at
+>>> most.
+>>>
+>>>> What are you trying to do here? Are you trying to run a mainline kernel on your Chromebook?
+>>> Yes. I've got kernel 3.4 from Google Chrome OS. It works ok for
+>>> mwifiex_sdio. But I want to run mainline kernel. As of 3.11 it is able
+>>> to boot on Chromebook, but WiFi doesn't work.
+>> I don't know why you want to do that, but the mainline kernel won't work on your Chromebook unless you port all platform specific changes over from chromeos-3.4 tree.
+>>
+>>>> You said mmc_attach_sdio function fails. The mwifiex_sdio driver and
+>>>> the firmware will not be loaded at all.
+>>> Ok, that is clear.
+>>>
+>>>> CONFIG_MMC_DEBUG=y, and collect the debug logs.
+>>> This way seems not very useful, because there is also internal and
+>>> external storage on mmc bus, so log quickly get garbaged with it. Dmesg
+>>> seems to be overflowed and forgets early initialization. I have made a
+>>> dirty hack to collect some useful info about initialization. I am
+>>> attaching it. Please check, if I need to add something. Will it be
+>>> useful this way?
+>> As said above, this won’t work because the Chromebook specific changes aren't present in mainline kernel. Anyway you can take a look at the chromium OS developer guide.
+>>
+>> http://www.chromium.org/chromium-os/developer-guide
+>>
+>> Thanks,
+>> Bing
+>>
+>
+> It is ported at most already and mainline kernel works good on
+> Chromebook. It is just peripheral problem.
 
-Another question, how I can find this limit in others dongles? (some
-command to know this limit)
+Not sure how chromium os architecture looks like, but you mean to say 
+*you* ported code in chromium user-space to work with upstream/mainline 
+kernel API's?
 
-On Tue, Nov 19, 2013 at 7:25 AM, Gustavo Azambuja
-<gazambuja+hostapd@gmail.com> wrote:
-> Thank,
-> you know where i can find one list of devices (usb dongle) with more ram, or
-> without this limit (I need provide Internet at less to 30 stations)?
+Regards,
+Arend
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
-> Gustavo Azambuja
->
-> El nov 19, 2013 2:12 a.m., "Thomas Pedersen" <thomas@cozybit.com> escribió:
->
->> Hi Gustavo,
->>
->> On Mon, Nov 18, 2013 at 6:20 PM, Gustavo Azambuja
->> <gazambuja+hostapd@gmail.com> wrote:
->> > Hi, I recently installed in my raspberry pi Raspbian with hostapd 1.0, I
->> > want to make my own Hotspot, but follow all tutorials, I can only get up
->> > to
->> > 6 stations connected at the same time.
->> >
->> > The next error apper with the #7 client try to connect:
->> > *NL80211_CMD_NEW_STATION result: -105 (No buffer space available)*
->> >
->> > How I can resize this and make more clients can connect to my device?
->> >
->> > Im using TL-WN722N dongle.
->>
->> That devices contains an AR9271, which uses the ath9k_htc driver. The
->> number of stations you can maintain is limited by the device RAM.
->> Luckily the AR9271 firmware is now GPL [1] so you can hack on this
->> yourself I'm not quite sure what the upper limit is, but we've raised
->> it to 16 without seeing any obvious breakage.
->>
->> Try modifying ATH9K_HTC_MAX_STA in the ath9k_htc driver and
->> ATH_NODE_MAX [2] in the firmware.
->>
->> [1] https://github.com/qca/open-ath9k-htc-firmware
->> [2]
->> https://github.com/qca/open-ath9k-htc-firmware/blob/master/target_firmware/wlan/include/wlan_hdr.h#L99
->>
->> --
->> Thomas
+
+
