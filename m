@@ -1,88 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f175.google.com ([209.85.215.175]:57797 "EHLO
-	mail-ea0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751716Ab3KFQxj (ORCPT
+Received: from mail-bk0-f47.google.com ([209.85.214.47]:53639 "EHLO
+	mail-bk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755297Ab3KERRh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Nov 2013 11:53:39 -0500
-Received: by mail-ea0-f175.google.com with SMTP id l15so4135775eak.6
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Nov 2013 08:53:37 -0800 (PST)
+	Tue, 5 Nov 2013 12:17:37 -0500
+Received: by mail-bk0-f47.google.com with SMTP id d7so2828743bkh.20
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Nov 2013 09:17:36 -0800 (PST)
 From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
 	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH v2 1/19] cfg80211: enforce disabling channels by custom or strict settings
-Date: Wed,  6 Nov 2013 17:54:44 +0100
-Message-Id: <1383756884-8556-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20131106_175342_394666_E92B433F)
+Subject: [PATCH 12/19] cfg80211: add helper for calling CRDA
+Date: Tue,  5 Nov 2013 09:18:10 -0800
+Message-Id: <1383671897-7746-13-git-send-email-mcgrof@do-not-panic.com> (sfid-20131105_181750_692966_44AF3A04)
+In-Reply-To: <1383671897-7746-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383671897-7746-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If a custom regulatory domain is passed and if a rule for a
-channel indicates it should be disabled that channel should
-always remain disabled as per its documentation and design.
-
-Likewise if WIPHY_FLAG_STRICT_REGULATORY flag is set and a
-regulatory_hint() is issued if a channel is disabled that
-channel should remain disabled.
-
-Without this change only drivers that set the _orig flags
-appropriately on their own would ensure disallowed channels
-remaind disabled. This helps drivers save code by relying on
-the APIS provided to entrust channels that should not be enabled
-be respected by only having to use wiphy_apply_custom_regulatory()
-or regulatory_hint() with the WIPHY_FLAG_STRICT_REGULATORY set.
-
-If wiphy_apply_custom_regulatory() is used together with
-WIPHY_FLAG_STRICT_REGULATORY and a regulatory_hint() issued
-later, the incoming regulatory domain can override previously
-set _orig parameters from the initial custom regulatory
-setting.
+All the regulatory request process routines use the
+same pattern.
 
 Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
-
-This v2 splits up the flag assignements into two lines
-to make things clear: we extend the _orig flags with the
-disable flag, and then just copy it over to the regular
-channel flags.
-
- net/wireless/reg.c | 17 ++++++++++++++---
- 1 file changed, 14 insertions(+), 3 deletions(-)
+ net/wireless/reg.c | 24 ++++++++++++------------
+ 1 file changed, 12 insertions(+), 12 deletions(-)
 
 diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index dccdfe3..b4b1687 100644
+index ddccc9a..4619c74 100644
 --- a/net/wireless/reg.c
 +++ b/net/wireless/reg.c
-@@ -846,8 +846,18 @@ static void handle_channel(struct wiphy *wiphy,
- 		    PTR_ERR(reg_rule) == -ERANGE)
- 			return;
+@@ -462,6 +462,14 @@ static int call_crda(const char *alpha2)
+ 	return kobject_uevent(&reg_pdev->dev.kobj, KOBJ_CHANGE);
+ }
  
--		REG_DBG_PRINT("Disabling freq %d MHz\n", chan->center_freq);
--		chan->flags |= IEEE80211_CHAN_DISABLED;
-+		if (lr->initiator == NL80211_REGDOM_SET_BY_DRIVER &&
-+		    request_wiphy && request_wiphy == wiphy &&
-+		    request_wiphy->flags & WIPHY_FLAG_STRICT_REGULATORY) {
-+			REG_DBG_PRINT("Disabling freq %d MHz for good\n",
-+				      chan->center_freq);
-+			chan->orig_flags |= IEEE80211_CHAN_DISABLED;
-+			chan->flags = chan->orig_flags;
-+		} else {
-+			REG_DBG_PRINT("Disabling freq %d MHz\n",
-+				      chan->center_freq);
-+			chan->flags |= IEEE80211_CHAN_DISABLED;
-+		}
- 		return;
++static enum reg_request_treatment
++reg_call_crda(struct regulatory_request *request)
++{
++	if (call_crda(request->alpha2))
++		return REG_REQ_IGNORE;
++	return REG_REQ_OK;
++}
++
+ bool reg_is_valid_request(const char *alpha2)
+ {
+ 	struct regulatory_request *lr = get_last_request();
+@@ -1371,9 +1379,7 @@ reg_process_hint_core(struct regulatory_request *core_request)
+ 
+ 	reg_update_last_request(core_request);
+ 
+-	if (call_crda(core_request->alpha2))
+-		return REG_REQ_IGNORE;
+-	return REG_REQ_OK;
++	return reg_call_crda(core_request);
+ }
+ 
+ static enum reg_request_treatment
+@@ -1441,9 +1447,7 @@ reg_process_hint_user(struct regulatory_request *user_request)
+ 	user_alpha2[0] = user_request->alpha2[0];
+ 	user_alpha2[1] = user_request->alpha2[1];
+ 
+-	if (call_crda(user_request->alpha2))
+-		return REG_REQ_IGNORE;
+-	return REG_REQ_OK;
++	return reg_call_crda(user_request);
+ }
+ 
+ static enum reg_request_treatment
+@@ -1521,9 +1525,7 @@ reg_process_hint_driver(struct wiphy *wiphy,
+ 		return treatment;
  	}
  
-@@ -1250,7 +1260,8 @@ static void handle_channel_custom(struct wiphy *wiphy,
- 	if (IS_ERR(reg_rule)) {
- 		REG_DBG_PRINT("Disabling freq %d MHz as custom regd has no rule that fits it\n",
- 			      chan->center_freq);
--		chan->flags = IEEE80211_CHAN_DISABLED;
-+		chan->orig_flags |= IEEE80211_CHAN_DISABLED;
-+		chan->flags = chan->orig_flags;
- 		return;
- 	}
+-	if (call_crda(driver_request->alpha2))
+-		return REG_REQ_IGNORE;
+-	return REG_REQ_OK;
++	return reg_call_crda(driver_request);
+ }
  
+ static enum reg_request_treatment
+@@ -1608,9 +1610,7 @@ reg_process_hint_country_ie(struct wiphy *wiphy,
+ 
+ 	reg_update_last_request(country_ie_request);
+ 
+-	if (call_crda(country_ie_request->alpha2))
+-		return REG_REQ_IGNORE;
+-	return REG_REQ_OK;
++	return reg_call_crda(country_ie_request);
+ }
+ 
+ /* This processes *all* regulatory hints */
 -- 
 1.8.4.rc3
 
