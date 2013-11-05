@@ -1,31 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:56594 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751126Ab3K2WOv (ORCPT
+Received: from mail-ob0-f172.google.com ([209.85.214.172]:35881 "EHLO
+	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754726Ab3KEVPs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Nov 2013 17:14:51 -0500
-Message-ID: <1385763288.5149.0.camel@jlt4.sipsolutions.net> (sfid-20131129_231454_968638_B6B9409A)
-Subject: Re: WARNING: CPU: 2 PID: 827 at net/wireless/sme.c:795
- cfg80211_roamed+0x97/0xa0 [cfg80211]()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Krzysztof Kolasa <kkolasa@winsoft.pl>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 29 Nov 2013 23:14:48 +0100
-In-Reply-To: <5298EA48.1050206@winsoft.pl> (sfid-20131129_204934_655986_57747678)
-References: <5298EA48.1050206@winsoft.pl>
-	 (sfid-20131129_204934_655986_57747678)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 5 Nov 2013 16:15:48 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
+Subject: [PATCH 1/3] rtlwifi: rtl8192se: Fix incorrect signal strength for unassociated AP
+Date: Tue,  5 Nov 2013 15:15:28 -0600
+Message-Id: <1383686130-5113-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20131105_221558_403749_F4BA37C0)
+In-Reply-To: <1383686130-5113-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1383686130-5113-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-11-29 at 20:26 +0100, Krzysztof Kolasa wrote:
+The routine that processes received frames was returning the RSSI value for the
+signal strength; however, that value is available only for associated APs. As
+a result, the strength was the absurd value of 10 dBm. As a result, scans
+return incorrect values for the strength, which causes unwanted attempts to roam.
 
-> cfg80211_roamed+0x97/0xa0 [cfg80211]
-> wl_bss_connect_done.isra.18+0xa3/0x1b0 [wl]
-> wl_notify_connect_status+0x176/0x340 [wl]
+This patch fixes https://bugzilla.kernel.org/show_bug.cgi?id=63881.
 
-Not sure why we should care about proprietary drivers ...
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Reported-by: Matthieu Baerts <matttbe@gmail.com>
+Cc: Stable <stable@vger.kernel.org> [3.0 +]
+---
+ drivers/net/wireless/rtlwifi/rtl8192se/trx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-johannes
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/trx.c b/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
+index 222d2e7..27efbcd 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192se/trx.c
+@@ -329,7 +329,7 @@ bool rtl92se_rx_query_desc(struct ieee80211_hw *hw, struct rtl_stats *stats,
+ 	}
+ 
+ 	/*rx_status->qual = stats->signal; */
+-	rx_status->signal = stats->rssi + 10;
++	rx_status->signal = stats->recvsignalpower + 10;
+ 
+ 	return true;
+ }
+-- 
+1.8.4
 
