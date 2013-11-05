@@ -1,59 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:45245 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759446Ab3KMSaa (ORCPT
+Received: from mail-bk0-f51.google.com ([209.85.214.51]:39558 "EHLO
+	mail-bk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752857Ab3KERRv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Nov 2013 13:30:30 -0500
-Message-ID: <1384367422.14578.20.camel@jlt4.sipsolutions.net> (sfid-20131113_193039_041366_8F31D645)
-Subject: Re: [PATCH v2] mac80211: add assoc beacon timeout logic
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felipe Contreras <felipe.contreras@gmail.com>
-Cc: linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>
-Date: Wed, 13 Nov 2013 19:30:22 +0100
-In-Reply-To: <CAMP44s1yJMd+9G5yu988GqafRYnAteN-y-WWDe-rJh_qQpSPkQ@mail.gmail.com> (sfid-20131111_190659_870378_D4E90928)
-References: <1384119945-31213-1-git-send-email-felipe.contreras@gmail.com>
-	 <1384160932.14334.6.camel@jlt4.sipsolutions.net>
-	 <CAMP44s3TFSgWuR8gVoFBznNP+t9mz+to===9i1PAnra4ogKu9w@mail.gmail.com>
-	 <1384184624.14334.31.camel@jlt4.sipsolutions.net>
-	 <CAMP44s2cVVe4-yW214B9hJu7n6M1onZpZaPCj5N0Fi1JWDKKsw@mail.gmail.com>
-	 <1384188067.14334.45.camel@jlt4.sipsolutions.net>
-	 <CAMP44s3nkj2wZYCPve7EhyeD7sEFmpUN=-h015dOP68PcNSTug@mail.gmail.com>
-	 <1384189227.14334.48.camel@jlt4.sipsolutions.net>
-	 <CAMP44s1yJMd+9G5yu988GqafRYnAteN-y-WWDe-rJh_qQpSPkQ@mail.gmail.com>
-	 (sfid-20131111_190659_870378_D4E90928)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 5 Nov 2013 12:17:51 -0500
+Received: by mail-bk0-f51.google.com with SMTP id my12so1759926bkb.38
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Nov 2013 09:17:50 -0800 (PST)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 19/19] cfg80211: rename __set_regdom() to reg_set_rd_country_ie()
+Date: Tue,  5 Nov 2013 09:18:17 -0800
+Message-Id: <1383671897-7746-20-git-send-email-mcgrof@do-not-panic.com> (sfid-20131105_181757_850936_D68BC3CE)
+In-Reply-To: <1383671897-7746-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1383671897-7746-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-11-11 at 12:06 -0600, Felipe Contreras wrote:
+This reflects that case is now completely separated.
 
-> > The not receiving part is a bug. I think you're probably receiving
-> > beacons once associated though?
-> 
-> Nope. Never.
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ net/wireless/reg.c | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
 
-That's odd, firmware bug? But it's still odd since windows works?
-
-> Moreover, if continuing the association without beacons has a legal a
-> problem, that problem would exist for drivers that don't have the
-> IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC flag, wouldn't it? How exactly
-> would trying to associate with need_beacon break the law, but not if
-> !need_beacon?
-
-Well, it's actually somewhat unlikely you'd break the law, although
-possible, since eventually you'd get disconnected from the AP anyway?
-
-In any case - your argumentation above isn't true because every device
-listens for beacons, and if none are received then it should eventually
-disconnect. That should be true even with your hack here.
-
-In any case, I'm not really comfortable connecting to an AP that we
-never ever receive beacons from. I can try to investigate why this
-doesn't happen on windows and what we should be doing though.
-
-johannes
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 2ecb0c7..fb9a44d 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -2288,9 +2288,8 @@ static int reg_set_rd_driver(const struct ieee80211_regdomain *rd,
+ 	return 0;
+ }
+ 
+-/* Takes ownership of rd only if it doesn't fail */
+-static int __set_regdom(const struct ieee80211_regdomain *rd,
+-			struct regulatory_request *lr)
++static int reg_set_rd_country_ie(const struct ieee80211_regdomain *rd,
++				 struct regulatory_request *country_ie_request)
+ {
+ 	struct wiphy *request_wiphy;
+ 
+@@ -2310,13 +2309,13 @@ static int __set_regdom(const struct ieee80211_regdomain *rd,
+ 		return -EINVAL;
+ 	}
+ 
+-	request_wiphy = wiphy_idx_to_wiphy(lr->wiphy_idx);
++	request_wiphy = wiphy_idx_to_wiphy(country_ie_request->wiphy_idx);
+ 	if (!request_wiphy) {
+ 		schedule_delayed_work(&reg_timeout, 0);
+ 		return -ENODEV;
+ 	}
+ 
+-	if (lr->intersect)
++	if (country_ie_request->intersect)
+ 		return -EINVAL;
+ 
+ 	reset_regdomains(false, rd);
+@@ -2352,7 +2351,7 @@ int set_regdom(const struct ieee80211_regdomain *rd)
+ 		r = reg_set_rd_driver(rd, lr);
+ 		break;
+ 	case NL80211_REGDOM_SET_BY_COUNTRY_IE:
+-		r = __set_regdom(rd, lr);
++		r = reg_set_rd_country_ie(rd, lr);
+ 		break;
+ 	}
+ 
+-- 
+1.8.4.rc3
 
