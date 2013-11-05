@@ -1,37 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:34464 "EHLO
-	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757160Ab3KZOuS (ORCPT
+Received: from mail-pd0-f169.google.com ([209.85.192.169]:48627 "EHLO
+	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755462Ab3KETXK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Nov 2013 09:50:18 -0500
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: Re: [PATCH v3 4/4] cfg80211: DFS use 10 minutes CAC when weather channels
-Date: Tue, 26 Nov 2013 15:50:14 +0100
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-References: <1385409372-4229-1-git-send-email-janusz.dziedzic@tieto.com> <1385409372-4229-4-git-send-email-janusz.dziedzic@tieto.com>
-In-Reply-To: <1385409372-4229-4-git-send-email-janusz.dziedzic@tieto.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201311261550.14953.sw@simonwunderlich.de> (sfid-20131126_155025_198829_F5D2981C)
+	Tue, 5 Nov 2013 14:23:10 -0500
+Received: by mail-pd0-f169.google.com with SMTP id q10so9020368pdj.14
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Nov 2013 11:23:09 -0800 (PST)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Bob Copeland <me@bobcopeland.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	open80211s <devel@lists.open80211s.org>,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH 16/17] mac80211: initialize llid
+Date: Tue,  5 Nov 2013 11:17:04 -0800
+Message-Id: <1383679025-7150-16-git-send-email-thomas@cozybit.com> (sfid-20131105_202320_555701_14CD361B)
+In-Reply-To: <1383679025-7150-1-git-send-email-thomas@cozybit.com>
+References: <1383679025-7150-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+If the peer doesn't have an llid for us, the event
+gathering function won't use it anyway (based on
+frametype), but initialize it so gcc and coverity don't
+complain.
 
-> When nominal bandwidth falls completely or partly
-> within the band 5600MHz to 5650MHz the CAC time shall
-> be 10 minutes.
-> This is ETSI requirement. FCC forbids weather channels usage.
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
+ net/mac80211/mesh_plink.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Although it is correct to handle that with longer times and all, I don't think 
-we should enable weather channels at all, not even for ETSI. Unlike "normal" 
-channels, it requires 99.99% detection rate in CAC, which is (I think) 
-practically impossible.
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index c6d0917..e0528b9 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -960,7 +960,7 @@ mesh_process_plink_frame(struct ieee80211_sub_if_data *sdata,
+ 	enum ieee80211_self_protected_actioncode ftype;
+ 	u32 changed = 0;
+ 	u8 ie_len = elems->peering_len;
+-	__le16 plid, llid;
++	__le16 plid, llid = 0;
+ 
+ 	if (!elems->peering) {
+ 		mpl_dbg(sdata,
+-- 
+1.8.4.rc3
 
-I guess we need ath9k (or other drivers, maybe ath10k too) to disallow CAC on 
-these channels, if we know that the drivers can do it? Although I don't think 
-it's technically possible ...
-
-Cheers,
-    Simon
