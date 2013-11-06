@@ -1,109 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:51930 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752442Ab3KXUHU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Nov 2013 15:07:20 -0500
-Received: by mail-wg0-f43.google.com with SMTP id k14so482801wgh.10
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Nov 2013 12:07:19 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 23/29] iwlwifi: mvm: dump NVM from debugfs
-Date: Sun, 24 Nov 2013 22:06:40 +0200
-Message-Id: <1385323606-3603-23-git-send-email-egrumbach@gmail.com> (sfid-20131124_210808_709910_E28D1644)
-In-Reply-To: <52925BE7.4050406@gmail.com>
-References: <52925BE7.4050406@gmail.com>
+Received: from mga02.intel.com ([134.134.136.20]:38742 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932561Ab3KFLwI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Nov 2013 06:52:08 -0500
+From: "Coelho, Luciano" <luciano.coelho@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"sw@simonwunderlich.de" <sw@simonwunderlich.de>
+Subject: Re: [RFC v2 2/2] mac80211: only set CSA beacon when at least one
+ beacon must be transmitted
+Date: Wed, 6 Nov 2013 11:52:06 +0000
+Message-ID: <1383738685.4256.50.camel@porter.coelho.fi> (sfid-20131106_125240_319150_94335141)
+References: <1383684854-21663-1-git-send-email-luciano.coelho@intel.com>
+	 <1383684854-21663-2-git-send-email-luciano.coelho@intel.com>
+	 <1383735101.14307.25.camel@jlt4.sipsolutions.net>
+	 <1383737255.4256.34.camel@porter.coelho.fi>
+	 <1383737505.14307.37.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1383737505.14307.37.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-
-This allows to see the content of the NVM the driver reads.
-Note that the output is in binary, and requires some
-external user space tool to display the data properly.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/debugfs.c |   13 +++++++++++++
- drivers/net/wireless/iwlwifi/mvm/mvm.h     |    5 +++++
- drivers/net/wireless/iwlwifi/mvm/nvm.c     |   23 +++++++++++++++++++++++
- 3 files changed, 41 insertions(+)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-index a9b2d0a..145cd72 100644
---- a/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-@@ -716,6 +716,19 @@ int iwl_mvm_dbgfs_register(struct iwl_mvm *mvm, struct dentry *dbgfs_dir)
- 		goto err;
- #endif
- 
-+	if (!debugfs_create_blob("nvm_hw", S_IRUSR,
-+				  mvm->debugfs_dir, &mvm->nvm_hw_blob))
-+		goto err;
-+	if (!debugfs_create_blob("nvm_sw", S_IRUSR,
-+				  mvm->debugfs_dir, &mvm->nvm_sw_blob))
-+		goto err;
-+	if (!debugfs_create_blob("nvm_calib", S_IRUSR,
-+				  mvm->debugfs_dir, &mvm->nvm_calib_blob))
-+		goto err;
-+	if (!debugfs_create_blob("nvm_prod", S_IRUSR,
-+				  mvm->debugfs_dir, &mvm->nvm_prod_blob))
-+		goto err;
-+
- 	/*
- 	 * Create a symlink with mac80211. It will be removed when mac80211
- 	 * exists (before the opmode exists which removes the target.)
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index e7c97cc..7dc57cf 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -494,6 +494,11 @@ struct iwl_mvm {
- 	u32 dbgfs_sram_offset, dbgfs_sram_len;
- 	bool disable_power_off;
- 	bool disable_power_off_d3;
-+
-+	struct debugfs_blob_wrapper nvm_hw_blob;
-+	struct debugfs_blob_wrapper nvm_sw_blob;
-+	struct debugfs_blob_wrapper nvm_calib_blob;
-+	struct debugfs_blob_wrapper nvm_prod_blob;
- #endif
- 
- 	struct iwl_mvm_phy_ctxt phy_ctxts[NUM_PHY_CTX];
-diff --git a/drivers/net/wireless/iwlwifi/mvm/nvm.c b/drivers/net/wireless/iwlwifi/mvm/nvm.c
-index 2beffd0..e4596c5 100644
---- a/drivers/net/wireless/iwlwifi/mvm/nvm.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/nvm.c
-@@ -443,6 +443,29 @@ int iwl_nvm_init(struct iwl_mvm *mvm)
- 			}
- 			mvm->nvm_sections[section].data = temp;
- 			mvm->nvm_sections[section].length = ret;
-+
-+#ifdef CONFIG_IWLWIFI_DEBUGFS
-+			switch (section) {
-+			case NVM_SECTION_TYPE_HW:
-+				mvm->nvm_hw_blob.data = temp;
-+				mvm->nvm_hw_blob.size = ret;
-+				break;
-+			case NVM_SECTION_TYPE_SW:
-+				mvm->nvm_sw_blob.data = temp;
-+				mvm->nvm_sw_blob.size  = ret;
-+				break;
-+			case NVM_SECTION_TYPE_CALIBRATION:
-+				mvm->nvm_calib_blob.data = temp;
-+				mvm->nvm_calib_blob.size  = ret;
-+				break;
-+			case NVM_SECTION_TYPE_PRODUCTION:
-+				mvm->nvm_prod_blob.data = temp;
-+				mvm->nvm_prod_blob.size  = ret;
-+				break;
-+			default:
-+				WARN(1, "section: %d", section);
-+			};
-+#endif
- 		}
- 		kfree(nvm_buffer);
- 		if (ret < 0)
--- 
-1.7.9.5
-
+T24gV2VkLCAyMDEzLTExLTA2IGF0IDEyOjMxICswMTAwLCBKb2hhbm5lcyBCZXJnIHdyb3RlOg0K
+PiBPbiBXZWQsIDIwMTMtMTEtMDYgYXQgMTE6MjggKzAwMDAsIENvZWxobywgTHVjaWFubyB3cm90
+ZToNCj4gDQo+ID4gSW4gdGVybXMgb2YgdGhlIG9yZGVyIG9mIGNhbGxzLCB0aGUgZGlmZmVyZW5j
+ZSBpcyB0aGF0IGluIHRoZSBwYXN0IHdlDQo+ID4gaGFkIHRoaXM6DQo+ID4gDQo+ID4gMS4gU2V0
+IENTQSBiZWFjb247DQo+ID4gMi4gV2hlbiBjb3VudCByZWFjaGVzIDEsIHRoZSBkcml2ZXIgY2Fs
+bHMgaWVlZTgwMjExX2NzYV9maW5pc2goKTsNCj4gPiAzLiBXZSBjYWxsIGRydl9jaGFuZ2VfY2hh
+bmN0eCgpOw0KPiA+IDQuIFNldCBuZXcgY2hhbm5lbCBiZWFjb24uDQo+ID4gDQo+ID4gKFRoaXMg
+Y29udGludWVzIHRvIGJlIHRoZSBjYXNlIHdpdGggbXkgcGF0Y2ggd2hlbiBjb3VudCA+IDEpDQo+
+ID4gDQo+ID4gV2l0aCBteSBwYXRjaCwgaWYgY291bnQgPD0gMSwgd2UgZG8gdGhpcyBpbnN0ZWFk
+Og0KPiA+IA0KPiA+IDEuIENhbGwgZHJ2X2NoYW5nZV9jaGFuY3R4KCk7DQo+ID4gMi4gU2V0IG5l
+dyBjaGFubmVsIGJlYWNvbi4NCj4gPiANCj4gPiBUaGUgbWFpbiBwcm9ibGVtIHdpdGhvdXQgbXkg
+cGF0Y2ggaXMgdGhhdCB0aGUgZHJpdmVyIHNob3VsZG4ndCBiZWFjb24NCj4gPiB3aXRoIHRoZSBD
+U0EgZWxlbWVudCB3aGVuIHRoZSBjb3VudCBzdGFydHMgPD0gMSwgc28gaXQgd29uJ3QgaGF2ZSBh
+DQo+ID4gY2hhbmNlIHRvIGNoZWNrIGlmIHRoZSBjb3VudCByZWFjaGVkIDEgdG8gY2FsbCBpZWVl
+ODAyMTFfY3NhX2ZpbmlzaCgpLg0KPiANCj4gSSB0aGluayB0aGUgb3RoZXIgZGlmZmVyZW5jZSBp
+cyB0aGF0IG9uZSBjYWxscw0KPiBkcnZfY2hhbm5lbF9zd2l0Y2hfYmVhY29uKCk/DQoNClJpZ2h0
+LCB0aGlzIHdhcyBwYXJ0IG9mIG15ICJTZXQgQ1NBIGJlYWNvbiIgaXRlbSwgSSBzaG91bGQgaGF2
+ZSBiZWVuDQptb3JlIGV4cGxpY2l0Lg0KDQoNCj4gVGhlIGRyaXZlciBtaWdodCBkbyBzb21lIGNo
+YW5uZWwNCj4gcHJlcGFyYXRpb25zIHRoZXJlLCB0aG91Z2ggSSBndWVzcyB5b3UgY2FuIGF1ZGl0
+IGFsbCB0aGUgZHJpdmVycyAod2VsbCwNCj4gb25lIC4uLikgOikNCg0KTHVja2lseSwgYWxsIHRo
+ZSBkcml2ZXJzIHRoYXQgdXNlIHRoaXMgKHdlbGwsIG9uZS4uLiA6UCkgZG9uJ3QgZG8NCmFueXRo
+aW5nIGZ1bmt5IHdpdGggdGhpcyBjYWxsLiAgYXRoOWsgb25seSB1c2VzIHRoaXMgY2FsbCBtYXJr
+IHRoYXQNCnRoZXJlIGlzIGFuIG9uZ29pbmcgQ1NBLCB3aGljaCBpcyBub3QgbmVlZGVkIGluIHRo
+ZSBpbW1lZGlhdGUgc3dpdGNoDQpjYXNlLg0KDQoNCj4gQnV0IHRoYXQnZCBuZWVkIHNvbWUgbW9y
+ZSBkb2N1bWVudGF0aW9uLCBvdGhlcndpc2UgSSdkIGd1ZXNzIHBlb3BsZQ0KPiB3b3VsZCBzdGFy
+dCB0byByZWx5IG9uIGRydl9jaGFubmVsX3N3aXRjaF9iZWFjb24oKSBhbmQgaXQgd291bGQgbW9z
+dGx5DQo+IHdvcmsgLSBoZW5jZSBteSBxdWVzdGlvbiBvZiB3aGV0aGVyIGl0IG1ha2VzIHNlbnNl
+IHRvIHJlZnVzZSBpdCBhdCBhbGwNCj4gaW4gdGhlIGNhc2Ugb2YgPD0xLg0KDQpSaWdodC4gIEkg
+YWN0dWFsbHkgYWRkZWQgdGhpcyB0byB0aGUgZG9jdW1lbnRhdGlvbiwgYnV0IEkgYWNjaWRlbnRh
+bGx5DQpzZW50IGl0IGFzIHBhcnQgb2YgcGF0Y2ggMS8yOg0KDQo+ICsrKyBiL2luY2x1ZGUvbmV0
+L21hYzgwMjExLmgNCj4gQEAgLTI2NzYsMTEgKzI2NzYsMTMgQEAgZW51bSBpZWVlODAyMTFfcm9j
+X3R5cGUgew0KPiAgICogQGNoYW5uZWxfc3dpdGNoX2JlYWNvbjogU3RhcnRzIGEgY2hhbm5lbCBz
+d2l0Y2ggdG8gYSBuZXcgY2hhbm5lbC4NClsuLi5dDQo+ICsgKiAgICAgSWYgdGhlIENTQSBjb3Vu
+dCBzdGFydHMgYXMgemVybyBvciAxLCB0aGlzIGZ1bmN0aW9uIHdpbGwgbm90IGJlIGNhbGxlZCwN
+Cj4gKyAqICAgICBzaW5jZSB0aGVyZSB3b24ndCBiZSBhbnkgdGltZSB0byBiZWFjb24gYmVmb3Jl
+IHRoZSBzd2l0Y2ggYW55d2F5Lg0KDQpUaGlzIGNoYW5nZSBzaG91bGQgYmUgaW4gcGF0Y2ggMi8y
+IChhY3R1YWxseSB0aGVzZSB0d28gcGF0Y2hlcyBzaG91bGQNCnByb2JhYmx5IGJlIHNxdWFzaGVk
+LCBJIGp1c3Qga2VwdCB0aGVtIHNlcGFyYXRlIHNvIHRoYXQgcmV2aWV3aW5nIG15IHYyDQp3b3Vs
+ZCBiZSBlYXNpZXIpLg0KDQpJIGNhbiBlbGFib3JhdGUgbW9yZSBpbiB0aGUgZG9jdW1lbnRhdGlv
+biBpZiB5b3UgdGhpbmsgaXQncyBuZWNlc3NhcnkuDQoNCi0tDQpDaGVlcnMsDQpMdWNhLg0K
