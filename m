@@ -1,35 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:60574 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751969Ab3KQJbO (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:52575 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756330Ab3KFMiz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Nov 2013 04:31:14 -0500
-Message-ID: <1384680671.14795.14.camel@jlt4.sipsolutions.net> (sfid-20131117_103119_857568_8ECDFAAE)
-Subject: Re: [PATCH v2] mac80211: minstrel_ht: fix rates selection
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Karl Beldan <karl.beldan@gmail.com>
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>
-Date: Sun, 17 Nov 2013 10:31:11 +0100
-In-Reply-To: <1384380427-12950-1-git-send-email-karl.beldan@gmail.com> (sfid-20131113_230744_598344_1E46DF40)
-References: <5283ED31.1050606@openwrt.org>
-	 <1384380427-12950-1-git-send-email-karl.beldan@gmail.com>
-	 (sfid-20131113_230744_598344_1E46DF40)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 6 Nov 2013 07:38:55 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <greearb@candelatech.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH/RFT 12/12] ath10k: add some debug prints
+References: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com>
+	<1383133346-8135-13-git-send-email-michal.kazior@tieto.com>
+Date: Wed, 6 Nov 2013 14:38:49 +0200
+In-Reply-To: <1383133346-8135-13-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Wed, 30 Oct 2013 12:42:26 +0100")
+Message-ID: <87eh6tso12.fsf@kamboji.qca.qualcomm.com> (sfid-20131106_133858_746883_63538CEE)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-11-13 at 23:07 +0100, Karl Beldan wrote:
-> From: Karl Beldan <karl.beldan@rivierawaves.com>
-> 
-> When initializing rates selections starting indexes upon stats update,
-> the minstrel_sta->max_* rates should be 'group * MCS_GROUP_RATES + i'
-> not 'i'. This affects settings where one of the peers does not support
-> any of the rates of the group 0 (i.e. when ht_cap.mcs.rx_mask[0] == 0).
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Applied.
+> Some errors were handled too silently. Also add a
+> print indicating BMI is booted.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-johannes
+[...]
 
+>  static int ath10k_pci_hif_power_up(struct ath10k *ar)
+> @@ -1860,8 +1862,10 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar)
+>  		ath10k_do_pci_wake(ar);
+>  
+>  	ret = ath10k_pci_ce_init(ar);
+> -	if (ret)
+> +	if (ret) {
+> +		ath10k_err("could not initialize CE (%d)\n", ret);
+
+"could not initialize CE: %d\n"
+
+That comment applies to all the error codes printed.
+
+-- 
+Kalle Valo
