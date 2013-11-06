@@ -1,79 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:42778 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751810Ab3K0PDu (ORCPT
+Received: from smtprelay0164.hostedemail.com ([216.40.44.164]:55723 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754675Ab3KFRzz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Nov 2013 10:03:50 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 2/3] ath10k: implement sta_rc_update()
-References: <1385126819-15311-1-git-send-email-michal.kazior@tieto.com>
-	<1385474260-22385-1-git-send-email-michal.kazior@tieto.com>
-	<1385474260-22385-3-git-send-email-michal.kazior@tieto.com>
-Date: Wed, 27 Nov 2013 17:03:41 +0200
-In-Reply-To: <1385474260-22385-3-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Tue, 26 Nov 2013 14:57:39 +0100")
-Message-ID: <87li09ga42.fsf@kamboji.qca.qualcomm.com> (sfid-20131127_160354_072838_81C42933)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 6 Nov 2013 12:55:55 -0500
+Message-ID: <1383760556.7940.28.camel@joe-AO722> (sfid-20131106_185615_670584_A288A8EA)
+Subject: Re: [PATCH] wcn36xx: Fix logging macro with unnecessary semicolon
+From: Joe Perches <joe@perches.com>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	wcn36xx <wcn36xx@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	ath5k-devel@lists.ath5k.org,
+	ath9k-devel <ath9k-devel@lists.ath9k.org>,
+	ath10k@lists.infradead.org
+Date: Wed, 06 Nov 2013 09:55:56 -0800
+In-Reply-To: <CAFSJ42YQy96Sko8CuG9BGjHzTV7TkRp2=NVt036APxSKpPB=Ag@mail.gmail.com>
+References: <1383684000.4387.42.camel@joe-AO722>
+	 <CAFSJ42YQy96Sko8CuG9BGjHzTV7TkRp2=NVt036APxSKpPB=Ag@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+On Wed, 2013-11-06 at 07:49 +0000, Eugene Krasnikov wrote:
+> Hm... when it comes to semicolon the patch seems to be good. When it
+> comes to dynamic debugging i think we should have a separate
+> discussion about that.
+> I personally like the whole idea about dynamic debug but if you want
+> to change it i would suggest to have some kind of framework for all
+> ath drivers(or maybe all wireless drivers). Because obviously you can
+> find common code in every driver that defines it's own debug
+> functions/debug levels and so on. Why not to make a framework with
+> standard API/levels?
 
-> This should fix possible connectivity issues upon
-> changes of channel width, number of streams or
-> SMPS on connected stations.
->
-> An example trigger would be an action frame with
-> operation mode change notification.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+You need to bring that up with the Atheros folk.
+I've tried.  The view seemed to be it was more
+trouble than it was worth.
 
-Sorry, somehow missed these on my previous review:
 
-> +	if (changed & IEEE80211_RC_BW_CHANGED) {
-> +		switch (sta->bandwidth) {
-> +		default:
-> +			ath10k_warn("unsupported STA BW: %d\n", sta->bandwidth);
-> +		case IEEE80211_STA_RX_BW_20:
-> +			chwidth = WMI_PEER_CHWIDTH_20MHZ;
-> +			break;
-> +		case IEEE80211_STA_RX_BW_40:
-> +			chwidth = WMI_PEER_CHWIDTH_40MHZ;
-> +			break;
-> +		case IEEE80211_STA_RX_BW_80:
-> +			chwidth = WMI_PEER_CHWIDTH_80MHZ;
-> +			break;
-> +		}
 
-I assume that the idea here is to use WMI_PEER_CHWIDTH_20MHZ for the
-default case. Actually I would prefer to avoid using default case
-altogether, that way the compiler will warn if there's an enum value we
-don't check. So for example you could add "case IEEE80211_STA_RX_BW_160"
-which prints a warning and uses 20 MHz.
-
-> +	if (changed & IEEE80211_RC_SMPS_CHANGED) {
-> +		smps = WMI_PEER_SMPS_PS_NONE;
-> +
-> +		switch (sta->smps_mode) {
-> +		case IEEE80211_SMPS_NUM_MODES:
-> +			ath10k_warn("invalid smps mode: %d\n", sta->smps_mode);
-> +		case IEEE80211_SMPS_AUTOMATIC:
-> +		case IEEE80211_SMPS_OFF:
-> +			smps = WMI_PEER_SMPS_PS_NONE;
-> +			break;
-> +		case IEEE80211_SMPS_STATIC:
-> +			smps = WMI_PEER_SMPS_STATIC;
-> +			break;
-> +		case IEEE80211_SMPS_DYNAMIC:
-> +			smps = WMI_PEER_SMPS_DYNAMIC;
-> +			break;
-> +		}
-
-This is better, but I think it would be clearer to have
-IEEE80211_SMPS_NUM_MODES last and not "fall through" the cases.
-
--- 
-Kalle Valo
