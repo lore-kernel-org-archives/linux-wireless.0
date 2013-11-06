@@ -1,86 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:50654 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751253Ab3KORZm (ORCPT
+Received: from mail-we0-f180.google.com ([74.125.82.180]:48943 "EHLO
+	mail-we0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756212Ab3KFKQM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Nov 2013 12:25:42 -0500
-Subject: [PATCH 3/3] ath10k: show hardware and firmware info prints only once
-To: ath10k@lists.infradead.org
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 15 Nov 2013 19:25:39 +0200
-Message-ID: <20131115172539.10646.6643.stgit@localhost6.localdomain6> (sfid-20131115_182544_700288_2224A577)
-In-Reply-To: <20131115172526.10646.35233.stgit@localhost6.localdomain6>
-References: <20131115172526.10646.35233.stgit@localhost6.localdomain6>
+	Wed, 6 Nov 2013 05:16:12 -0500
+Received: by mail-we0-f180.google.com with SMTP id q59so4735423wes.11
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Nov 2013 02:16:10 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1383724794.14307.2.camel@jlt4.sipsolutions.net>
+References: <CABPxzY++gCivs1u8nDtAeB5=p+ZkGHXmOnqud1hkh=TWB5Xprg@mail.gmail.com>
+ <1383724794.14307.2.camel@jlt4.sipsolutions.net>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Wed, 6 Nov 2013 15:45:50 +0530
+Message-ID: <CABPxzYLYZ=M=a7of-0HyNnJb_g9jP2wNXp378RN5ai-BjngQOw@mail.gmail.com> (sfid-20131106_111623_188907_4E2F642C)
+Subject: Re: [Query] Decryption and Monitor Mode
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: radiotap@netbsd.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This makes ath10k a lot less spammy by default.
+On Wed, Nov 6, 2013 at 1:29 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Wed, 2013-11-06 at 01:22 +0530, Krishna Chaitanya wrote:
+>
+>> With this wireshark is not able to decode the packets, even thought
+>> they are decrypted. I propose 2 solutions
+>
+> Well, you can say "ignore protected bit (with IV)" in the settings of
+> wireshark. But I agree that this is cumbersome, and previously floated
+> the idea of addings bits to radiotap to make this auto-detected.
+>
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c |   12 ++++++++----
- drivers/net/wireless/ath/ath10k/core.h |    1 +
- drivers/net/wireless/ath/ath10k/pci.c  |    4 +++-
- 3 files changed, 12 insertions(+), 5 deletions(-)
+yeah, that piece of code looks messy.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index e6c468b..3b59af3 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -832,10 +832,14 @@ int ath10k_core_start(struct ath10k *ar)
- 	ar->free_vdev_map = (1 << TARGET_NUM_VDEVS) - 1;
- 	INIT_LIST_HEAD(&ar->arvifs);
- 
--	ath10k_info("%s (0x%x) fw %s api %d htt %d.%d\n",
--		    ar->hw_params.name, ar->target_version,
--		    ar->hw->wiphy->fw_version, ar->fw_api,
--		    ar->htt.target_version_major, ar->htt.target_version_minor);
-+	if (!test_bit(ATH10K_FLAG_FIRST_BOOT_DONE, &ar->dev_flags))
-+		ath10k_info("%s (0x%x) fw %s api %d htt %d.%d\n",
-+			    ar->hw_params.name, ar->target_version,
-+			    ar->hw->wiphy->fw_version, ar->fw_api,
-+			    ar->htt.target_version_major,
-+			    ar->htt.target_version_minor);
-+
-+	__set_bit(ATH10K_FLAG_FIRST_BOOT_DONE, &ar->dev_flags);
- 
- 	return 0;
- 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 7721e3b..79726e0 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -313,6 +313,7 @@ enum ath10k_fw_features {
- enum ath10k_dev_flags {
- 	/* Indicates that ath10k device is during CAC phase of DFS */
- 	ATH10K_CAC_RUNNING,
-+	ATH10K_FLAG_FIRST_BOOT_DONE,
- };
- 
- struct ath10k {
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index a3cdd72..2457c8b 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -19,6 +19,7 @@
- #include <linux/module.h>
- #include <linux/interrupt.h>
- #include <linux/spinlock.h>
-+#include <linux/bitops.h>
- 
- #include "core.h"
- #include "debug.h"
-@@ -1925,7 +1926,8 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar)
- 	else
- 		irq_mode = "legacy";
- 
--	ath10k_info("pci irq %s\n", irq_mode);
-+	if (!test_bit(ATH10K_FLAG_FIRST_BOOT_DONE, &ar->dev_flags))
-+		ath10k_info("pci irq %s\n", irq_mode);
- 
- 	return 0;
- 
-
+>> Radiotap and Wireshark:
+>>
+>> 1) Add 2 flags to the radiotap RX Flags (HW Decrypted the packet,
+>> Packet has security Header (for some chipsets which consume the
+>> security header as well..??).)
+>>
+>> Based on these the wireshark dissector decodes the packet accordingly.
+>>
+>> mac80211:
+>>
+>> 2) Remove the security header information in the monitor path as well
+>> based on the existing RX_FLAGS.
+>>
+>>
+>> Solutions 2 looks more elegant and simple, any comments?
+>
+> Solution 2 drops information and makes the kernel code more expensive,
+> so I don't think we want that.
+>
+> I think the radiotap bits would be better.
+>
+Ok, then i will proceed and add those 2 flags to the RX Flags (we have
+enough bits to use).
