@@ -1,38 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:55498 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751277Ab3K3Wqr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Nov 2013 17:46:47 -0500
-Message-ID: <529A6ACA.8030402@hauke-m.de> (sfid-20131130_234650_160175_A3B0E5D6)
-Date: Sat, 30 Nov 2013 23:46:34 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: "backports@vger.kernel.org" <backports@vger.kernel.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: [ANN] backports-20131129 + v3.12.2-1 + v3.13-rc2-1 released
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from s3.sipsolutions.net ([144.76.43.152]:43483 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756402Ab3KFMgi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Nov 2013 07:36:38 -0500
+Message-ID: <1383741393.14307.43.camel@jlt4.sipsolutions.net> (sfid-20131106_133641_507207_522083E7)
+Subject: Re: [RFC v2 2/2] mac80211: only set CSA beacon when at least one
+ beacon must be transmitted
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Coelho, Luciano" <luciano.coelho@intel.com>
+Cc: Simon Wunderlich <sw@simonwunderlich.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 06 Nov 2013 13:36:33 +0100
+In-Reply-To: <1383740486.4256.65.camel@porter.coelho.fi>
+References: <1383684854-21663-1-git-send-email-luciano.coelho@intel.com>
+	 <1383684854-21663-2-git-send-email-luciano.coelho@intel.com>
+	 <201311061247.48777.sw@simonwunderlich.de>
+	 <1383739343.4256.58.camel@porter.coelho.fi>
+	 <1383739595.14307.41.camel@jlt4.sipsolutions.net>
+	 <1383740486.4256.65.camel@porter.coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-backports-20131129 was released. This is based on linux-next
-next-20131129. This version should contain all the patches posted on the
-mailing list.
+On Wed, 2013-11-06 at 12:22 +0000, Coelho, Luciano wrote:
 
-https://www.kernel.org/pub/linux/kernel/projects/backports/2013/11/29/backports-20131129.tar.bz2
+> > Well even then - the question is who would ever want to use and test
+> > count<=1?
+> 
+> I guess the reason to have this is when you must evacuate the channel
+> immediately, so you transmit the action frame and jump out.  If your
+> beacon interval is long (for whatever reason), waiting for the next TBTT
+> to announce the CSA may take longer than the time required to stop
+> transmitting.
 
+Fair point, so I guess we'd want to also test that :)
 
-In addition backports-3.12.2-1 and backports-3.13-rc2-1 based on the
-corresponding linux stables release were released.
+johannes
 
-http://www.kernel.org/pub/linux/kernel/projects/backports/stable/v3.12.2/backports-3.12.2-1.tar.bz2
-
-http://www.kernel.org/pub/linux/kernel/projects/backports/stable/v3.13-rc2/backports-3.13-rc2-1.tar.bz2
-
-
-The source code can be found here:
-https://github.com/hauke/backports
-
-All the latest releases are listed here:
-http://drvbp1.linux-foundation.org/~mcgrof/rel-html/backports/
-
-Hauke
