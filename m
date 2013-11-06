@@ -1,103 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:57067 "EHLO
-	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754777Ab3KNSvy (ORCPT
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:35577 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750755Ab3KFSdR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Nov 2013 13:51:54 -0500
-Date: Thu, 14 Nov 2013 10:51:33 -0800
-From: Tony Lindgren <tony@atomide.com>
-To: Sebastian Reichel <sre@debian.org>
-Cc: Sebastian Reichel <sre@ring0.de>, Luciano Coelho <luca@coelho.fi>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Rob Landley <rob@landley.net>,
-	Russell King <linux@arm.linux.org.uk>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Felipe Balbi <balbi@ti.com>,
-	Sachin Kamat <sachin.kamat@linaro.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bill Pemberton <wfp5p@virginia.edu>,
-	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Luciano Coelho <coelho@ti.com>
-Subject: Re: [PATCH 1/4] wl1251: split wl251 platform data to a separate
- structure
-Message-ID: <20131114185132.GQ10317@atomide.com> (sfid-20131114_195202_256169_5583502F)
-References: <1382890469-25286-1-git-send-email-sre@debian.org>
- <1382890469-25286-2-git-send-email-sre@debian.org>
+	Wed, 6 Nov 2013 13:33:17 -0500
+Received: by mail-ie0-f170.google.com with SMTP id at1so18382898iec.15
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Nov 2013 10:33:16 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1382890469-25286-2-git-send-email-sre@debian.org>
+In-Reply-To: <527A8166.6000701@gmail.com>
+References: <5276134B.8070808@wzyboy.org> <CALkVjQYh-SUte4S6LdqOc3KSc3_pDU6jz1KXp+Jsd5_RFPXSqA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE8338@HASMSX103.ger.corp.intel.com>
+ <CALkVjQb7fCMFpqhdUs8w-Mx_Y0RtAYYFtKxXkqyrCQ39UFGxKg@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE960E@HASMSX103.ger.corp.intel.com>
+ <CALkVjQbW8FeiEh8pBZ=KQFD9+8AdjgT0G_RG7qJe0MRdBvMD-A@mail.gmail.com>
+ <CALkVjQaLx2spaOqUPcs_EwMkU7npMki1Reo1MeZwxB7m=c24=g@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE9FC6@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZDNSgUUFyi94Y8da_NDzW61rCvaMrZpUugFKW_LRNFFA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
+ <CALkVjQY7r=YKhsgDKR0mnYVtZy5BAdj83nY2jL0VFaiew6ha7A@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
+ <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com> <527A8166.6000701@gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 6 Nov 2013 11:32:56 -0700
+Message-ID: <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com> (sfid-20131106_193321_190962_413AC257)
+Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: wzyboy <wzyboy@wzyboy.org>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Sebastian Reichel <sre@debian.org> [131027 09:15]:
-> From: Luciano Coelho <coelho@ti.com>
-> 
-> Move the wl1251 part of the wl12xx platform data structure into a new
-> structure specifically for wl1251.  Change the platform data built-in
-> block and board files accordingly.
-> 
-> Cc: Tony Lindgren <tony@atomide.com>
-> Signed-off-by: Luciano Coelho <coelho@ti.com>
-> Acked-by: Tony Lindgren <tony@atomide.com>
-> Reviewed-by: Felipe Balbi <balbi@ti.com>
-> ---
->  arch/arm/mach-omap2/board-omap3pandora.c       |  4 +--
->  arch/arm/mach-omap2/board-rx51-peripherals.c   |  2 +-
->  drivers/net/wireless/ti/wilink_platform_data.c | 37 +++++++++++++++++++++-----
->  drivers/net/wireless/ti/wl1251/sdio.c          | 12 ++++-----
->  drivers/net/wireless/ti/wl1251/spi.c           |  2 +-
->  include/linux/wl12xx.h                         | 22 ++++++++++++++-
->  6 files changed, 62 insertions(+), 17 deletions(-)
-> 
-> diff --git a/arch/arm/mach-omap2/board-omap3pandora.c b/arch/arm/mach-omap2/board-omap3pandora.c
-> index de1bc6b..24f3c1b 100644
-> --- a/arch/arm/mach-omap2/board-omap3pandora.c
-> +++ b/arch/arm/mach-omap2/board-omap3pandora.c
-> @@ -536,7 +536,7 @@ static struct spi_board_info omap3pandora_spi_board_info[] __initdata = {
->  
->  static void __init pandora_wl1251_init(void)
->  {
-> -	struct wl12xx_platform_data pandora_wl1251_pdata;
-> +	struct wl1251_platform_data pandora_wl1251_pdata;
->  	int ret;
->  
->  	memset(&pandora_wl1251_pdata, 0, sizeof(pandora_wl1251_pdata));
-> @@ -550,7 +550,7 @@ static void __init pandora_wl1251_init(void)
->  		goto fail_irq;
->  
->  	pandora_wl1251_pdata.use_eeprom = true;
-> -	ret = wl12xx_set_platform_data(&pandora_wl1251_pdata);
-> +	ret = wl1251_set_platform_data(&pandora_wl1251_pdata);
->  	if (ret < 0)
->  		goto fail_irq;
->  
-> diff --git a/arch/arm/mach-omap2/board-rx51-peripherals.c b/arch/arm/mach-omap2/board-rx51-peripherals.c
-> index 65e3627..0d8e7d2 100644
-> --- a/arch/arm/mach-omap2/board-rx51-peripherals.c
-> +++ b/arch/arm/mach-omap2/board-rx51-peripherals.c
-> @@ -82,7 +82,7 @@ enum {
->  	RX51_SPI_MIPID,		/* LCD panel */
->  };
->  
-> -static struct wl12xx_platform_data wl1251_pdata;
-> +static struct wl1251_platform_data wl1251_pdata;
->  static struct tsc2005_platform_data tsc2005_pdata;
->  
->  #if defined(CONFIG_SENSORS_LIS3_I2C) || defined(CONFIG_SENSORS_LIS3_I2C_MODULE)
+On Wed, Nov 6, 2013 at 10:50 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+> Hi,
+>
+> adding PCI folks.
+> Here is the story:
+>
+> * Wzyboy has a Lenovo laptop with _OSC control *not* granted
+> * L1 Active is enabled
+> * kernel: 3.12.0
+> * Nic is PCIe (Gen2 but not sure...)
+>
+> At some random point, the driver loses access to the NIC: all readl
+> operation return 0xff.
+> Even lspci returns 0xff:
+>
+> 03:00.0 Network controller: Intel Corporation Wireless 7260 (rev ff)
+> 00: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> 10: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> 20: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+> 30: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+>
+> here is the output of lspci *before* the issue hits:
+>
+> 03:00.0 Network controller: Intel Corporation Wireless 7260 (rev 6b)
+> 00: 86 80 b2 08 06 04 10 00 6b 00 80 02 10 00 00 00
+> 10: 04 00 40 f0 00 00 00 00 00 00 00 00 00 00 00 00
+> 20: 00 00 00 00 00 00 00 00 00 00 00 00 86 80 62 c2
+> 30: 00 00 00 00 c8 00 00 00 00 00 00 00 09 01 00 00
+>
+> have you any idea of what we can do to understand what it going wrong here?
 
-If this is not going into v3.13, these will cause conflicts
-with the mach-omap2/board-*.c files for v3.14.
+Do you have any more details?  Maybe open a bugzilla.kernel.org report
+and attach:
 
-So it might be best to do a minimal header patch first that
-can be merged in by both linux-omap and wireless trees.
+  - complete dmesg log
+  - lspci -vvxxx output for entire system before issue occurs
+  - lspci -vvxxx output for entire system after issue occurs
 
-Regards,
+Bjorn
 
-Tony
+> On 11/06/2013 09:12 AM, wzyboy wrote:
+>> 2013/11/6 Grumbach, Emmanuel <emmanuel.grumbach@intel.com>:
+>>> Wait - you mean that after the bug occurred before you rebooted, lspci -xxx show all 00?
+>>> I can see 0xff here.
+>>> Anyway - this is very bad... checking with HW guys...
+>>
+>>
+>> Sorry, that's my typo. They are all 0xff... (I don't know what do they
+>> mean but it look bad...)
+>>
+>> Thanks for your effort! I'm waiting for good news from you and HW guys. :-)
+>>
