@@ -1,50 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:34959 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750975Ab3KDMEJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Nov 2013 07:04:09 -0500
-Message-ID: <52778D30.6030605@hauke-m.de> (sfid-20131104_130413_091879_727538E6)
-Date: Mon, 04 Nov 2013 13:04:00 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from packetmixer.de ([83.151.30.3]:33498 "EHLO m25s01.vlinux.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756343Ab3KFLrw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Nov 2013 06:47:52 -0500
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: Luciano Coelho <luciano.coelho@intel.com>
+Subject: Re: [RFC v2 2/2] mac80211: only set CSA beacon when at least one beacon must be transmitted
+Date: Wed, 6 Nov 2013 12:47:48 +0100
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+References: <1383684854-21663-1-git-send-email-luciano.coelho@intel.com> <1383684854-21663-2-git-send-email-luciano.coelho@intel.com>
+In-Reply-To: <1383684854-21663-2-git-send-email-luciano.coelho@intel.com>
 MIME-Version: 1.0
-To: Dan Carpenter <dan.carpenter@oracle.com>
-CC: brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org
-Subject: Re: How to get BRCM to work?
-References: <20131104115111.GM26669@mwanda>
-In-Reply-To: <20131104115111.GM26669@mwanda>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201311061247.48777.sw@simonwunderlich.de> (sfid-20131106_124755_329944_B46ED0CA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/04/2013 12:51 PM, Dan Carpenter wrote:
-> I've been trying to remember the trick to get BRCM to work and I can't
-> remember at all.  I'm using BCM4313.  I've enabled everything with BCMA
-> or BRCM in the config name.
+Hey Luca,
+
+> With a CSA count of 0, we won't transmit any CSA beacons, because the
+> switch will happen before the next TBTT.  To avoid extra work and
+> potential confusion in the drivers, complete the CSA immediately,
+> instead of waiting for the driver to call ieee80211_csa_finish().
 > 
-> The module loads and the device shows up if I type "ifconfig wlan0" but
-> network manager doesn't see it and wicd doesn't see it.  (These are old
-> versions of nm and wicd).
+> To keep things simpler, we also switch immediately when the CSA count
+> is 1, while in theory we should delay the switch until just before the
+> next TBTT.
 > 
-> This used to work under 3.8 but I didn't save my .config...  :(
+> Additionally, move the ieee80211_csa_finish() function to cfg.c,
+> where it makes more sense (and since we call it from cfg.c now).
+> 
+> Cc: Simon Wunderlich <sw@simonwunderlich.de>
+> Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+> ---
+> Simon, I think with this we won't need any changes in ath9k, right?
 
-Are these old versions of nm and wicd only supporting the deprecated
-WEXT interface? If this is the case you have to set
-CONFIG_CFG80211_WEXT=y in your config.
+I think you still need to change ieee80211_ibss_process_chanswitch() which 
+also calls ieee80211_ibss_csa_beacon() and drv_channel_switch_beacon().
 
-You also need a firmware for this device /lib/firmware/brcm/bcm43xx-0.fw
-and /lib/firmware/brcm/bcm43xx_hdr-0.fw are needed.
+Also, I don't think that this is sufficient for IBSS mode - changing immediately 
+without sending any action frame will just split the IBSS network. Action 
+frames are currently set in ieee80211_ibss_csa_beacon() as well, with this 
+change we should probably move that to another position.
 
-When the device gets detected by brcmsmac, it is probably not a problem
-in the Broadcom driver.
+Even if we don't allow count <=1 from userspace as Johannes suggested, we 
+still have to fix the CSA handling from other STAs in IBSS.
 
-> I've done a google search and it seems like the broadcom driver is still
-> a complete mess and you need to black list modules and hack everything
-> yourself on a per system basis?  Is that right?  Why can't we fix this
-> so it works?
-
-When you want to use the property closed source Broadcom driver then you
-have to blacklist the in kernel drivers. When you want to use the in
-kernel drivers, BCM4313 should get detected and the modules should get
-loaded like it is done for every other PCIe device.
-
-Hauke
+Cheers,
+    Simon
