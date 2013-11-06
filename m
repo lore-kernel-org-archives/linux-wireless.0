@@ -1,55 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:46301 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751480Ab3KRTO5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Nov 2013 14:14:57 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Subject: [PATCH 2/2] ath9k_hw: allow fast channel change when only CHANNEL_HT changes
-Date: Mon, 18 Nov 2013 20:14:44 +0100
-Message-Id: <1384802084-55082-2-git-send-email-nbd@openwrt.org> (sfid-20131118_201504_653725_7278D412)
-In-Reply-To: <1384802084-55082-1-git-send-email-nbd@openwrt.org>
-References: <1384802084-55082-1-git-send-email-nbd@openwrt.org>
+Received: from s3.sipsolutions.net ([144.76.43.152]:43022 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756085Ab3KFKPY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Nov 2013 05:15:24 -0500
+Message-ID: <1383732921.14307.20.camel@jlt4.sipsolutions.net> (sfid-20131106_111527_847231_C46792F1)
+Subject: Re: [PATCH 01/19] cfg80211: enforce disabling channels by custom or
+ strict settings
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 06 Nov 2013 11:15:21 +0100
+In-Reply-To: <1383671897-7746-2-git-send-email-mcgrof@do-not-panic.com> (sfid-20131105_181714_779531_5FE770AA)
+References: <1383671897-7746-1-git-send-email-mcgrof@do-not-panic.com>
+	 <1383671897-7746-2-git-send-email-mcgrof@do-not-panic.com>
+	 (sfid-20131105_181714_779531_5FE770AA)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The CHANNEL_HT flag is insignificant for fast channel change conditions,
-since it does not affect any important part of the hardware reset /
-channel setup.
-Scanning usually runs with HT disabled, so this change will slightly
-improve scan time on many chipsets.
+On Tue, 2013-11-05 at 09:17 -0800, Luis R. Rodriguez wrote:
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/hw.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+> @@ -1251,7 +1261,7 @@ static void handle_channel_custom(struct wiphy *wiphy,
+>  	if (IS_ERR(reg_rule)) {
+>  		REG_DBG_PRINT("Disabling freq %d MHz as custom regd has no rule that fits it\n",
+>  			      chan->center_freq);
+> -		chan->flags = IEEE80211_CHAN_DISABLED;
+> +		chan->flags = chan->orig_flags |= IEEE80211_CHAN_DISABLED;
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 4046da5..94652e5 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1503,8 +1503,9 @@ static bool ath9k_hw_channel_change(struct ath_hw *ah,
- 	int r;
- 
- 	if (pCap->hw_caps & ATH9K_HW_CAP_FCC_BAND_SWITCH) {
--		band_switch = IS_CHAN_5GHZ(ah->curchan) != IS_CHAN_5GHZ(chan);
--		mode_diff = (chan->channelFlags != ah->curchan->channelFlags);
-+		u32 flags_diff = chan->channelFlags ^ ah->curchan->channelFlags;
-+		band_switch = !!(flags_diff & CHANNEL_5GHZ);
-+		mode_diff = !!(flags_diff & ~CHANNEL_HT);
- 	}
- 
- 	for (qnum = 0; qnum < AR_NUM_QCU; qnum++) {
-@@ -1816,7 +1817,7 @@ static int ath9k_hw_do_fastcc(struct ath_hw *ah, struct ath9k_channel *chan)
- 	 * If cross-band fcc is not supoprted, bail out if channelFlags differ.
- 	 */
- 	if (!(pCap->hw_caps & ATH9K_HW_CAP_FCC_BAND_SWITCH) &&
--	    chan->channelFlags != ah->curchan->channelFlags)
-+	    ((chan->channelFlags ^ ah->curchan->channelFlags) & ~CHANNEL_HT))
- 		goto fail;
- 
- 	if (!ath9k_hw_check_alive(ah))
--- 
-1.8.3.4 (Apple Git-47)
+Are you sure the |= is right?
+
+johannes
 
