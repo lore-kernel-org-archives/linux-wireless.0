@@ -1,223 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4268 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753051Ab3K2LZk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Nov 2013 06:25:40 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 10/19] brcmfmac: remove redundant ioctl handlers
-Date: Fri, 29 Nov 2013 12:25:15 +0100
-Message-ID: <1385724324-6361-11-git-send-email-arend@broadcom.com> (sfid-20131129_123808_818329_31B0552E)
-In-Reply-To: <1385724324-6361-1-git-send-email-arend@broadcom.com>
-References: <1385724324-6361-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([144.76.43.152]:42976 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755961Ab3KFKLr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Nov 2013 05:11:47 -0500
+Message-ID: <1383732704.14307.18.camel@jlt4.sipsolutions.net> (sfid-20131106_111151_069275_BE7AF41D)
+Subject: Re: [PATCH v2 5/5] cfg80211: allow beaconing after DFS CAC
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 06 Nov 2013 11:11:44 +0100
+In-Reply-To: <1383659329-11023-5-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131105_144906_140973_6384EC66)
+References: <1383659329-11023-1-git-send-email-janusz.dziedzic@tieto.com>
+	 <1383659329-11023-5-git-send-email-janusz.dziedzic@tieto.com>
+	 (sfid-20131105_144906_140973_6384EC66)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ioctl() entry points were empty except for handling SIOC_ETHTOOL
-but that has been obsoleted in favor of struct ethtool_ops. Cleaning
-up removing the ioctl() handlers.
+On Tue, 2013-11-05 at 14:48 +0100, Janusz Dziedzic wrote:
+> After going throught the Channel Availability Check (CAC)
+> required by DFS enable beaconing. Channels that have
+> gone through a CAC will be in the NL80211_DFS_AVAILABLE
+> state. Without this change APs don't start beaconing
+> after a successful CAC.
+> Change also cfg80211_secondary_chans_ok() where handle
+> prohibited_flags as prohibited.
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |  149 --------------------
- 1 file changed, 149 deletions(-)
+I can't really understand this commit message - can you please rephrase
+it?
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-index c626938..9336f6d 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-@@ -591,28 +591,6 @@ static struct net_device_stats *brcmf_netdev_get_stats(struct net_device *ndev)
- 	return &ifp->stats;
- }
- 
--/*
-- * Set current toe component enables in toe_ol iovar,
-- * and set toe global enable iovar
-- */
--static int brcmf_toe_set(struct brcmf_if *ifp, u32 toe_ol)
--{
--	s32 err;
--
--	err = brcmf_fil_iovar_int_set(ifp, "toe_ol", toe_ol);
--	if (err < 0) {
--		brcmf_err("Setting toe_ol failed, %d\n", err);
--		return err;
--	}
--
--	err = brcmf_fil_iovar_int_set(ifp, "toe", (toe_ol != 0));
--	if (err < 0)
--		brcmf_err("Setting toe failed, %d\n", err);
--
--	return err;
--
--}
--
- static void brcmf_ethtool_get_drvinfo(struct net_device *ndev,
- 				    struct ethtool_drvinfo *info)
- {
-@@ -630,124 +608,6 @@ static const struct ethtool_ops brcmf_ethtool_ops = {
- 	.get_drvinfo = brcmf_ethtool_get_drvinfo,
- };
- 
--static int brcmf_ethtool(struct brcmf_if *ifp, void __user *uaddr)
--{
--	struct brcmf_pub *drvr = ifp->drvr;
--	struct ethtool_drvinfo info;
--	char drvname[sizeof(info.driver)];
--	u32 cmd;
--	struct ethtool_value edata;
--	u32 toe_cmpnt, csum_dir;
--	int ret;
--
--	brcmf_dbg(TRACE, "Enter, idx=%d\n", ifp->bssidx);
--
--	/* all ethtool calls start with a cmd word */
--	if (copy_from_user(&cmd, uaddr, sizeof(u32)))
--		return -EFAULT;
--
--	switch (cmd) {
--	case ETHTOOL_GDRVINFO:
--		/* Copy out any request driver name */
--		if (copy_from_user(&info, uaddr, sizeof(info)))
--			return -EFAULT;
--		strncpy(drvname, info.driver, sizeof(info.driver));
--		drvname[sizeof(info.driver) - 1] = '\0';
--
--		/* clear struct for return */
--		memset(&info, 0, sizeof(info));
--		info.cmd = cmd;
--
--		/* if requested, identify ourselves */
--		if (strcmp(drvname, "?dhd") == 0) {
--			sprintf(info.driver, "dhd");
--			strcpy(info.version, BRCMF_VERSION_STR);
--		}
--		/* report dongle driver type */
--		else
--			sprintf(info.driver, "wl");
--
--		sprintf(info.version, "%lu", drvr->drv_version);
--		if (copy_to_user(uaddr, &info, sizeof(info)))
--			return -EFAULT;
--		brcmf_dbg(TRACE, "given %*s, returning %s\n",
--			  (int)sizeof(drvname), drvname, info.driver);
--		break;
--
--		/* Get toe offload components from dongle */
--	case ETHTOOL_GRXCSUM:
--	case ETHTOOL_GTXCSUM:
--		ret = brcmf_fil_iovar_int_get(ifp, "toe_ol", &toe_cmpnt);
--		if (ret < 0)
--			return ret;
--
--		csum_dir =
--		    (cmd == ETHTOOL_GTXCSUM) ? TOE_TX_CSUM_OL : TOE_RX_CSUM_OL;
--
--		edata.cmd = cmd;
--		edata.data = (toe_cmpnt & csum_dir) ? 1 : 0;
--
--		if (copy_to_user(uaddr, &edata, sizeof(edata)))
--			return -EFAULT;
--		break;
--
--		/* Set toe offload components in dongle */
--	case ETHTOOL_SRXCSUM:
--	case ETHTOOL_STXCSUM:
--		if (copy_from_user(&edata, uaddr, sizeof(edata)))
--			return -EFAULT;
--
--		/* Read the current settings, update and write back */
--		ret = brcmf_fil_iovar_int_get(ifp, "toe_ol", &toe_cmpnt);
--		if (ret < 0)
--			return ret;
--
--		csum_dir =
--		    (cmd == ETHTOOL_STXCSUM) ? TOE_TX_CSUM_OL : TOE_RX_CSUM_OL;
--
--		if (edata.data != 0)
--			toe_cmpnt |= csum_dir;
--		else
--			toe_cmpnt &= ~csum_dir;
--
--		ret = brcmf_toe_set(ifp, toe_cmpnt);
--		if (ret < 0)
--			return ret;
--
--		/* If setting TX checksum mode, tell Linux the new mode */
--		if (cmd == ETHTOOL_STXCSUM) {
--			if (edata.data)
--				ifp->ndev->features |= NETIF_F_IP_CSUM;
--			else
--				ifp->ndev->features &= ~NETIF_F_IP_CSUM;
--		}
--
--		break;
--
--	default:
--		return -EOPNOTSUPP;
--	}
--
--	return 0;
--}
--
--static int brcmf_netdev_ioctl_entry(struct net_device *ndev, struct ifreq *ifr,
--				    int cmd)
--{
--	struct brcmf_if *ifp = netdev_priv(ndev);
--	struct brcmf_pub *drvr = ifp->drvr;
--
--	brcmf_dbg(TRACE, "Enter, idx=%d, cmd=0x%04x\n", ifp->bssidx, cmd);
--
--	if (!drvr->iflist[ifp->bssidx])
--		return -1;
--
--	if (cmd == SIOCETHTOOL)
--		return brcmf_ethtool(ifp, ifr->ifr_data);
--
--	return -EOPNOTSUPP;
--}
--
- static int brcmf_netdev_stop(struct net_device *ndev)
- {
- 	struct brcmf_if *ifp = netdev_priv(ndev);
-@@ -800,7 +660,6 @@ static const struct net_device_ops brcmf_netdev_ops_pri = {
- 	.ndo_open = brcmf_netdev_open,
- 	.ndo_stop = brcmf_netdev_stop,
- 	.ndo_get_stats = brcmf_netdev_get_stats,
--	.ndo_do_ioctl = brcmf_netdev_ioctl_entry,
- 	.ndo_start_xmit = brcmf_netdev_start_xmit,
- 	.ndo_set_mac_address = brcmf_netdev_set_mac_address,
- 	.ndo_set_rx_mode = brcmf_netdev_set_multicast_list
-@@ -866,13 +725,6 @@ static int brcmf_net_p2p_stop(struct net_device *ndev)
- 	return brcmf_cfg80211_down(ndev);
- }
- 
--static int brcmf_net_p2p_do_ioctl(struct net_device *ndev,
--				  struct ifreq *ifr, int cmd)
--{
--	brcmf_dbg(TRACE, "Enter\n");
--	return 0;
--}
--
- static netdev_tx_t brcmf_net_p2p_start_xmit(struct sk_buff *skb,
- 					    struct net_device *ndev)
- {
-@@ -885,7 +737,6 @@ static netdev_tx_t brcmf_net_p2p_start_xmit(struct sk_buff *skb,
- static const struct net_device_ops brcmf_netdev_ops_p2p = {
- 	.ndo_open = brcmf_net_p2p_open,
- 	.ndo_stop = brcmf_net_p2p_stop,
--	.ndo_do_ioctl = brcmf_net_p2p_do_ioctl,
- 	.ndo_start_xmit = brcmf_net_p2p_start_xmit
- };
- 
--- 
-1.7.10.4
-
+johannes
 
