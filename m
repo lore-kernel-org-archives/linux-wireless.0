@@ -1,73 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:40003 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751675Ab3KEKHS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Nov 2013 05:07:18 -0500
-From: "Coelho, Luciano" <luciano.coelho@intel.com>
-To: Simon Wunderlich <sw@simonwunderlich.de>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
-Subject: Re: [RFC] mac80211: don't transmit beacon with CSA count 0
-Date: Tue, 5 Nov 2013 10:06:32 +0000
-Message-ID: <1383645950.579.26.camel@porter.coelho.fi> (sfid-20131105_110731_236201_4230B9BE)
-References: <1383569955-13236-1-git-send-email-luciano.coelho@intel.com>
-	 <201311041436.51673.sw@simonwunderlich.de>
-	 <1383574023.5928.149.camel@porter.coelho.fi>
-	 <201311041531.56693.sw@simonwunderlich.de>
-	 <1383640077.579.14.camel@porter.coelho.fi>
-In-Reply-To: <1383640077.579.14.camel@porter.coelho.fi>
-Content-Type: text/plain; charset="utf-8"
+Received: from userp1040.oracle.com ([156.151.31.81]:50526 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750803Ab3KFHmH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Nov 2013 02:42:07 -0500
+Date: Wed, 6 Nov 2013 10:41:28 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+	kernel-janitors@vger.kernel.org
+Subject: [patch] wcn36xx: harmless memory corruption bug in debugfs
+Message-ID: <20131106074128.GA13475@elgon.mountain> (sfid-20131106_084212_306959_3BC22A3A)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVHVlLCAyMDEzLTExLTA1IGF0IDEwOjI3ICswMjAwLCBMdWNpYW5vIENvZWxobyB3cm90ZToN
-Cj4gT24gTW9uLCAyMDEzLTExLTA0IGF0IDE1OjMxICswMTAwLCBTaW1vbiBXdW5kZXJsaWNoIHdy
-b3RlOg0KPiA+ID4gPiBUaGFua3MgZm9yIGNoZWNraW5nIGJhY2sgLSBJJ3ZlIHJlYWQgdGhlIHBh
-cnQgaW4gdGhlIHNwZWMgYWdhaW4gWzFdLCBhbmQNCj4gPiA+ID4gYXBwZWFyZW50bHkgeW91IGFy
-ZSByaWdodC4NCj4gPiA+ID4gDQo+ID4gPiA+IFdpdGggeW91ciBwcm9wb3NlZCBjaGFuZ2UsIHNo
-b3VsZG4ndCB3ZSBhbHNvIGNoYW5nZSB0aGUgYmVoYXZpb3VyIGlmIHRoZQ0KPiA+ID4gPiB1c2Vy
-c3BhY2UgcmVxdWVzdHMgYSBjaGFubmVsIHN3aXRjaCB3aXRoIGNvdW50ID0gMD8gSSBndWVzcyB3
-ZSBzaG91bGQNCj4gPiA+ID4gaW1tZWRpYXRlbHkgY2hhbmdlIHRoZSBjaGFubmVsIHRoZW4gd2l0
-aG91dCB3YWl0aW5nIGZvciBiZWFjb25zPyBJIGRvbid0DQo+ID4gPiA+IHNlZSB0aGUgcG9pbnQg
-aW4gY2hhbmdpbmcgdGhlIGJlYWNvbnMgaWYgd2UgZG9uJ3Qgc2VuZCB0aGVtLCBhZnRlciBhbGwu
-DQo+ID4gPiANCj4gPiA+IFlvdSdyZSByaWdodCwgY2hhbmdpbmcgdGhlIGJlYWNvbnMgZG9lc24n
-dCBtYWtlIHNlbnNlIGluIHRoaXMgY2FzZS4NCj4gPiA+IEknbGwgY2hhbmdlIHRoYXQgYW5kIHNl
-bmQgdjIuDQo+ID4gPiANCj4gPiA+IEFub3RoZXIgdGhpbmcgaXMgdGhhdCB3ZSBhcmUgbWlzc2lu
-ZyB0aGUgYWN0aW9uIGZyYW1lcy4gIFRoZSBpZGVhIHdpdGgNCj4gPiA+IHRoZSBjb3VudCA9PSAw
-IGlzIHRoYXQgdGhlIFNUQSdzIHNob3VsZCBzdGFydCBsaXN0ZW5pbmcgb24gdGhlIG90aGVyDQo+
-ID4gPiBjaGFubmVsIGltbWVkaWF0ZWx5IGFmdGVyIHJlY2VpdmluZyB0aGUgYWN0aW9uIGZyYW1l
-IChiZWNhdXNlIHRoZSBzd2l0Y2gNCj4gPiA+IHdpbGwgaGFwcGVuIGF0IGFueSB0aW1lKS4NCj4g
-PiA+IA0KPiA+ID4gSWYgd2UgZG9uJ3Qgc2VuZCB0aGUgYWN0aW9uIGZyYW1lLCBwYXNzaW5nIGNv
-bnRleHQgPT0gMCBmcm9tIHRoZQ0KPiA+ID4gdXNlcnNwYWNlIGRvZXNuJ3QgbXVjaCBtYWtlIHNl
-bnNlLCBiZWNhdXNlIHRoZSBjbGllbnRzIHdvbid0IGtub3cgd2UncmUNCj4gPiA+IHN3aXRjaGlu
-Zy4gIFdlbGwsIG1heWJlIGl0IG1ha2VzIGEgYml0IG9mIHNlbnNlLCBpZiB0aGVyZSBhcmUgbm8g
-Y2xpZW50cw0KPiA+ID4gY29ubmVjdGVkLCBidXQgbmV2ZXJ0aGVsZXNzLg0KPiA+IA0KPiA+IFll
-YWgsIHN3aXRjaGluZyB3aXRob3V0IGFjdGlvbmZyYW1lIGFuZCBjb3VudCA9PSAwIGlzIHByZXR0
-eSB1c2VsZXNzLg0KPiANCj4gQWN0dWFsbHksIGlmIHRoZSB1c2Vyc3BhY2UgcmVxdWVzdHMgY291
-bnQgPT0gMSwgd2Ugd29uJ3QgaGF2ZSBhbnkNCj4gYmVhY29ucyBlaXRoZXIsIGJlY2F1c2UgMSBt
-ZWFucyAianVzdCBiZWZvcmUgdGhlIG5leHQgVEJUVCIuICBTbyBmb3INCj4gY291bnQgPT0gMSAo
-Y29taW5nIGZyb20gdGhlIHVzZXJzcGFjZSkgd2Ugc2hvdWxkbid0IGNvbmZpZ3VyZSB0aGUNCj4g
-YmVhY29uLCBzaW5jZSB3ZSB3b24ndCBzZW5kIGl0LiAgV2UgbmVlZCB0aGUgYWN0aW9uIGZyYW1l
-IGZvciB0aGlzIGNhc2UNCj4gdG9vLg0KDQpIbW1tLi4uIE5vdyB0aGVyZSdzIHNvbWV0aGluZyB0
-aGF0IGlzIGEgYml0IHVuY2xlYXIgdG8gbWUgaW4gdGhlIHNwZWNzOg0KDQoiRm9yIG5vbm1lc2gg
-U1RBcywgdGhlIENoYW5uZWwgU3dpdGNoIENvdW50IGZpZWxkIGVpdGhlciBpcyBzZXQgdG8gdGhl
-DQpudW1iZXIgb2YgVEJUVHMgdW50aWwgdGhlIFNUQSBzZW5kaW5nIHRoZSBDaGFubmVsIFN3aXRj
-aCBBbm5vdW5jZW1lbnQNCmVsZW1lbnQgc3dpdGNoZXMgdG8gdGhlIG5ldyBjaGFubmVsIG9yIGlz
-IHNldCB0byAwLiINCg0KVGhlcmUncyBub3RoaW5nIHNwZWNpZnlpbmcgZXhhY3RseSB3aGVuLCBy
-ZWxhdGl2ZSB0byB0aGUgYmVhY29uLCB0aGUNCnN3aXRjaCBhY3R1YWxseSBoYXBwZW5zLiAgSnVz
-dCBiZWZvcmU/IEp1c3QgYWZ0ZXI/IElzIHRoZSBiZWFjb24gdGhhdA0KbWF0Y2hlcyB0aGF0IFRC
-VFQgdHJhbnNtaXR0ZWQgaW4gdGhlIGN1cnJlbnQgb3IgaW4gdGhlIG5leHQgY2hhbm5lbD8NCg0K
-Rm9yIGEgdmFsdWUgb2YgMSwgaXQncyBwcmV0dHkgY2xlYXI6DQoNCiJBIHZhbHVlIG9mIDEgaW5k
-aWNhdGVzIHRoYXQgdGhlIHN3aXRjaCBvY2N1cnMgaW1tZWRpYXRlbHkgYmVmb3JlIHRoZQ0KbmV4
-dCBUQlRULiINCg0KSSBkb24ndCB0aGluayB3ZSdyZSBkb2luZyB0aGF0IG5vdy4gIEF0IGxlYXN0
-IGluIHRoZSBhdGg5ayBjYXNlLCB5b3UNCnN3aXRjaCB0aGUgY2hhbm5lbCBpbW1lZGlhdGVseSBh
-ZnRlciB0aGUgYmVhY29uIHdpdGggY291bnQgPT0gMSwgYnkNCmNhbGxpbmcgaWVlZTgwMjExX2Nz
-YV9maW5pc2goKS4gIFRoZSBjb3JyZWN0IHdvdWxkIGJlIGp1c3QgYmVmb3JlIHRoZQ0KbmV4dCBi
-ZWFjb24gaXMgc2VudC4NCg0KQSB2YWx1ZSBvZiAwIGlzIGFsc28gdW5jbGVhciwgYmVjYXVzZSBp
-dCBkb2Vzbid0IHJlZmVyIHRvIGFueSBUQlRUcyBhdA0KYWxsLiAgU28gaWYgeW91IHJlYWQgaXQg
-bGl0ZXJhbGx5LCB0aGUgZm9sbG93aW5nIHdvdWxkIG1lYW4gdGhhdCBpdA0KY291bGQgYXQgKmFu
-eSogdGltZSBpbiB0aGUgZnV0dXJlOg0KDQoiQSB2YWx1ZSBvZiAwIGluZGljYXRlcyB0aGF0IHRo
-ZSBzd2l0Y2ggb2NjdXJzIGF0IGFueSB0aW1lIGFmdGVyIHRoZQ0KZnJhbWUgY29udGFpbmluZyB0
-aGUgZWxlbWVudCBpcyB0cmFuc21pdHRlZC4iDQoNCkFtIEkgbWlzc2luZyBzb21ldGhpbmc/IFdo
-YXQgZG8geW91IHRoaW5rPw0KDQotLQ0KQ2hlZXJzLA0KTHVjYS4NCg==
+On 64 bit systems we write past the end of the arg[] array.
+
+Fixes: 8e84c2582169 ('wcn36xx: mac80211 driver for Qualcomm WCN3660/WCN3680 hardware')
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+
+diff --git a/drivers/net/wireless/ath/wcn36xx/debug.c b/drivers/net/wireless/ath/wcn36xx/debug.c
+index 5b84f7a..ef44a2da 100644
+--- a/drivers/net/wireless/ath/wcn36xx/debug.c
++++ b/drivers/net/wireless/ath/wcn36xx/debug.c
+@@ -126,7 +126,7 @@ static ssize_t write_file_dump(struct file *file,
+ 		if (begin == NULL)
+ 			break;
+ 
+-		if (kstrtoul(begin, 0, (unsigned long *)(arg + i)) != 0)
++		if (kstrtou32(begin, 0, &arg[i]) != 0)
+ 			break;
+ 	}
+ 
