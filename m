@@ -1,47 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:39704 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753786Ab3KAN6Q (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 09:58:16 -0400
-Received: by mail-wg0-f47.google.com with SMTP id c11so4002968wgh.26
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:58:15 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 07/65] wireless-regdb: enable VHT80 for BB
-Date: Fri,  1 Nov 2013 14:56:57 +0100
-Message-Id: <1383314275-20960-8-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_145826_578627_256544BD)
-In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:2501 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755439Ab3KFWHd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Nov 2013 17:07:33 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 7/7] brcmsmac: select CONFIG_BCMA when possible
+Date: Wed, 6 Nov 2013 23:07:22 +0100
+Message-ID: <1383775642-647-8-git-send-email-arend@broadcom.com> (sfid-20131106_230745_734901_CB2E46AC)
+In-Reply-To: <1383775642-647-1-git-send-email-arend@broadcom.com>
+References: <1383775642-647-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Source is QCA's regulatory team's efforts.
+The brcmsmac relies BCMA functionality to access the device. This
+patch selects CONFIG_BCMA when CONFIG_BCMA_POSSIBLE is set. This
+way the user does not need to be select BCMA to make the brcmsmac
+driver show up in his menuconfig.
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- db.txt | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/brcm80211/Kconfig | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/db.txt b/db.txt
-index 11060e3..f49d8f4 100644
---- a/db.txt
-+++ b/db.txt
-@@ -82,9 +82,9 @@ country BA: DFS-ETSI
- 
- country BB: DFS-FCC
- 	(2402 - 2482 @ 40), (20)
--	(5170 - 5250 @ 40), (23)
--	(5250 - 5330 @ 40), (23), DFS
--	(5735 - 5835 @ 40), (30)
-+	(5170 - 5250 @ 80), (23)
-+	(5250 - 5330 @ 80), (23), DFS
-+	(5735 - 5835 @ 80), (30)
- 
- country BD: DFS-JP
- 	(2402 - 2482 @ 40), (20)
+diff --git a/drivers/net/wireless/brcm80211/Kconfig b/drivers/net/wireless/brcm80211/Kconfig
+index b00a7e9..d9d85e9 100644
+--- a/drivers/net/wireless/brcm80211/Kconfig
++++ b/drivers/net/wireless/brcm80211/Kconfig
+@@ -4,7 +4,8 @@ config BRCMUTIL
+ config BRCMSMAC
+ 	tristate "Broadcom IEEE802.11n PCIe SoftMAC WLAN driver"
+ 	depends on MAC80211
+-	depends on BCMA
++	depends on BCMA_POSSIBLE
++	select BCMA
+ 	select BRCMUTIL
+ 	select FW_LOADER
+ 	select CRC_CCITT
 -- 
-1.8.4.rc3
+1.8.1.3
+
 
