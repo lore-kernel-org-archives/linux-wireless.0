@@ -1,273 +1,243 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f182.google.com ([209.85.192.182]:35985 "EHLO
-	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755473Ab3KETXI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Nov 2013 14:23:08 -0500
-Received: by mail-pd0-f182.google.com with SMTP id q10so9037553pdj.41
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Nov 2013 11:23:07 -0800 (PST)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Bob Copeland <me@bobcopeland.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	open80211s <devel@lists.open80211s.org>,
-	Thomas Pedersen <thomas@cozybit.com>
-Subject: [PATCH 15/17] mac80211: factor out plink event gathering
-Date: Tue,  5 Nov 2013 11:17:03 -0800
-Message-Id: <1383679025-7150-15-git-send-email-thomas@cozybit.com> (sfid-20131105_202316_534387_DB82ECAD)
-In-Reply-To: <1383679025-7150-1-git-send-email-thomas@cozybit.com>
-References: <1383679025-7150-1-git-send-email-thomas@cozybit.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:3237 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755748Ab3KFWHj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Nov 2013 17:07:39 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 3/7] brcmfmac: replace dongle command list with
+ .preinit() callback
+Date: Wed, 6 Nov 2013 23:07:18 +0100
+Message-ID: <1383775642-647-4-git-send-email-arend@broadcom.com> (sfid-20131106_230756_916183_5F6BD9B6)
+In-Reply-To: <1383775642-647-1-git-send-email-arend@broadcom.com>
+References: <1383775642-647-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- net/mac80211/mesh_plink.c | 195 +++++++++++++++++++++++++++-------------------
- 1 file changed, 115 insertions(+), 80 deletions(-)
+The bus-specific interface allowed a list of dongle commands to be
+provided to the common driver part. However, upcoming functionality
+requires a more dynamic behaviour. Hence the list is replaced
+by a new callback function so the bus-specific driver part can
+implement this behaviour.
 
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index e5d5c69..c6d0917 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -844,6 +844,111 @@ static u32 mesh_plink_fsm(struct ieee80211_sub_if_data *sdata,
- 	return changed;
- }
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h  | 12 ++++-
+ .../net/wireless/brcm80211/brcmfmac/dhd_common.c   | 15 +-----
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    | 10 +++-
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c | 58 +++++++++++-----------
+ 4 files changed, 51 insertions(+), 44 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
+index 392fc28..dfa9bdd 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
+@@ -34,6 +34,7 @@ struct brcmf_bus_dcmd {
+ /**
+  * struct brcmf_bus_ops - bus callback operations.
+  *
++ * @preinit: execute bus/device specific dongle init commands (optional).
+  * @init: prepare for communication with dongle.
+  * @stop: clear pending frames, disable data flow.
+  * @txdata: send a data frame to the dongle. When the data
+@@ -51,6 +52,7 @@ struct brcmf_bus_dcmd {
+  * indicated otherwise these callbacks are mandatory.
+  */
+ struct brcmf_bus_ops {
++	int (*preinit)(struct device *dev);
+ 	int (*init)(struct device *dev);
+ 	void (*stop)(struct device *dev);
+ 	int (*txdata)(struct device *dev, struct sk_buff *skb);
+@@ -85,7 +87,6 @@ struct brcmf_bus {
+ 	unsigned long tx_realloc;
+ 	u32 chip;
+ 	u32 chiprev;
+-	struct list_head dcmd_list;
  
-+/*
-+ * mesh_plink_get_event - get correct MPM event
-+ *
-+ * @sdata: interface
-+ * @sta: peer, leave NULL if processing a frame from a new suitable peer
-+ * @elems: peering management IEs
-+ * @ftype: frame type
-+ * @llid: peer's peer link ID
-+ * @plid: peer's local link ID
-+ *
-+ * Return: new peering event for @sta, but PLINK_UNDEFINED should be treated as
-+ * an error.
-+ */
-+static enum plink_event
-+mesh_plink_get_event(struct ieee80211_sub_if_data *sdata,
-+		     struct sta_info *sta,
-+		     struct ieee802_11_elems *elems,
-+		     enum ieee80211_self_protected_actioncode ftype,
-+		     __le16 llid, __le16 plid)
+ 	struct brcmf_bus_ops *ops;
+ };
+@@ -93,6 +94,13 @@ struct brcmf_bus {
+ /*
+  * callback wrappers
+  */
++static inline int brcmf_bus_preinit(struct brcmf_bus *bus)
 +{
-+	enum plink_event event = PLINK_UNDEFINED;
-+	u8 ie_len = elems->peering_len;
-+	bool matches_local;
-+
-+	matches_local = (ftype == WLAN_SP_MESH_PEERING_CLOSE ||
-+			 mesh_matches_local(sdata, elems));
-+
-+	/* deny open request from non-matching peer */
-+	if (!matches_local && !sta) {
-+		event = OPN_RJCT;
-+		goto out;
-+	}
-+
-+	if (!sta) {
-+		if (ftype != WLAN_SP_MESH_PEERING_OPEN) {
-+			mpl_dbg(sdata, "Mesh plink: cls or cnf from unknown peer\n");
-+			goto out;
-+		}
-+		/* ftype == WLAN_SP_MESH_PEERING_OPEN */
-+		if (!mesh_plink_free_count(sdata)) {
-+			mpl_dbg(sdata, "Mesh plink error: no more free plinks\n");
-+			goto out;
-+		}
-+	} else {
-+		if (!test_sta_flag(sta, WLAN_STA_AUTH)) {
-+			mpl_dbg(sdata, "Mesh plink: Action frame from non-authed peer\n");
-+			goto out;
-+		}
-+		if (sta->plink_state == NL80211_PLINK_BLOCKED)
-+			goto out;
-+	}
-+
-+	/* new matching peer */
-+	if (!sta) {
-+		event = OPN_ACPT;
-+		goto out;
-+	}
-+
-+	switch (ftype) {
-+	case WLAN_SP_MESH_PEERING_OPEN:
-+		if (!matches_local)
-+			event = OPN_RJCT;
-+		if (!mesh_plink_free_count(sdata) ||
-+		    (sta->plid && sta->plid != plid))
-+			event = OPN_IGNR;
-+		else
-+			event = OPN_ACPT;
-+		break;
-+	case WLAN_SP_MESH_PEERING_CONFIRM:
-+		if (!matches_local)
-+			event = CNF_RJCT;
-+		if (!mesh_plink_free_count(sdata) ||
-+		    (sta->llid != llid || sta->plid != plid))
-+			event = CNF_IGNR;
-+		else
-+			event = CNF_ACPT;
-+		break;
-+	case WLAN_SP_MESH_PEERING_CLOSE:
-+		if (sta->plink_state == NL80211_PLINK_ESTAB)
-+			/* Do not check for llid or plid. This does not
-+			 * follow the standard but since multiple plinks
-+			 * per sta are not supported, it is necessary in
-+			 * order to avoid a livelock when MP A sees an
-+			 * establish peer link to MP B but MP B does not
-+			 * see it. This can be caused by a timeout in
-+			 * B's peer link establishment or B beign
-+			 * restarted.
-+			 */
-+			event = CLS_ACPT;
-+		else if (sta->plid != plid)
-+			event = CLS_IGNR;
-+		else if (ie_len == 8 && sta->llid != llid)
-+			event = CLS_IGNR;
-+		else
-+			event = CLS_ACPT;
-+		break;
-+	default:
-+		mpl_dbg(sdata, "Mesh plink: unknown frame subtype\n");
-+		break;
-+	}
-+
-+out:
-+	return event;
++	if (!bus->ops->preinit)
++		return 0;
++	return bus->ops->preinit(bus->dev);
 +}
 +
- static void
- mesh_process_plink_frame(struct ieee80211_sub_if_data *sdata,
- 			 struct ieee80211_mgmt *mgmt,
-@@ -853,9 +958,8 @@ mesh_process_plink_frame(struct ieee80211_sub_if_data *sdata,
- 	struct sta_info *sta;
- 	enum plink_event event;
- 	enum ieee80211_self_protected_actioncode ftype;
--	bool matches_local;
- 	u32 changed = 0;
--	u8 ie_len;
-+	u8 ie_len = elems->peering_len;
- 	__le16 plid, llid;
+ static inline int brcmf_bus_init(struct brcmf_bus *bus)
+ {
+ 	return bus->ops->init(bus->dev);
+@@ -152,6 +160,8 @@ extern void brcmf_txcomplete(struct device *dev, struct sk_buff *txp,
+ 			     bool success);
  
- 	if (!elems->peering) {
-@@ -872,7 +976,6 @@ mesh_process_plink_frame(struct ieee80211_sub_if_data *sdata,
- 	}
+ extern int brcmf_bus_start(struct device *dev);
++extern s32 brcmf_iovar_data_set(struct device *dev, char *name, void *data,
++				u32 len);
+ extern void brcmf_bus_add_txhdrlen(struct device *dev, uint len);
  
- 	ftype = mgmt->u.action.u.self_prot.action_code;
--	ie_len = elems->peering_len;
- 	if ((ftype == WLAN_SP_MESH_PEERING_OPEN && ie_len != 4) ||
- 	    (ftype == WLAN_SP_MESH_PEERING_CONFIRM && ie_len != 6) ||
- 	    (ftype == WLAN_SP_MESH_PEERING_CLOSE && ie_len != 6
-@@ -901,9 +1004,6 @@ mesh_process_plink_frame(struct ieee80211_sub_if_data *sdata,
+ #ifdef CONFIG_BRCMFMAC_SDIO
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
+index 9431af2..5c0c919 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
+@@ -257,8 +257,6 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
+ 	u8 buf[BRCMF_DCMD_SMLEN];
+ 	char *ptr;
+ 	s32 err;
+-	struct brcmf_bus_dcmd *cmdlst;
+-	struct list_head *cur, *q;
  
- 	sta = sta_info_get(sdata, mgmt->sa);
+ 	/* retreive mac address */
+ 	err = brcmf_fil_iovar_data_get(ifp, "cur_etheraddr", ifp->mac_addr,
+@@ -342,17 +340,8 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
+ 	brcmf_c_pktfilter_offload_enable(ifp, BRCMF_DEFAULT_PACKET_FILTER,
+ 					 0, true);
  
--	matches_local = (ftype == WLAN_SP_MESH_PEERING_CLOSE ||
--			 mesh_matches_local(sdata, elems));
+-	/* set bus specific command if there is any */
+-	list_for_each_safe(cur, q, &ifp->drvr->bus_if->dcmd_list) {
+-		cmdlst = list_entry(cur, struct brcmf_bus_dcmd, list);
+-		if (cmdlst->name && cmdlst->param && cmdlst->param_len) {
+-			brcmf_fil_iovar_data_set(ifp, cmdlst->name,
+-						 cmdlst->param,
+-						 cmdlst->param_len);
+-		}
+-		list_del(cur);
+-		kfree(cmdlst);
+-	}
++	/* do bus specific preinit here */
++	err = brcmf_bus_preinit(ifp->drvr->bus_if);
+ done:
+ 	return err;
+ }
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+index 0c4c230..ab207e2 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+@@ -1048,8 +1048,6 @@ int brcmf_attach(struct device *dev)
+ 	/* attach firmware event handler */
+ 	brcmf_fweh_attach(drvr);
+ 
+-	INIT_LIST_HEAD(&drvr->bus_if->dcmd_list);
 -
- 	if (ftype == WLAN_SP_MESH_PEERING_OPEN &&
- 	    !rssi_threshold_check(sdata, sta)) {
- 		mpl_dbg(sdata, "Mesh plink: %pM does not meet rssi threshold\n",
-@@ -911,81 +1011,8 @@ mesh_process_plink_frame(struct ieee80211_sub_if_data *sdata,
- 		goto unlock_rcu;
- 	}
+ 	return ret;
  
--	if (!sta) {
--		if (ftype != WLAN_SP_MESH_PEERING_OPEN) {
--			mpl_dbg(sdata, "Mesh plink: cls or cnf from unknown peer\n");
--			goto unlock_rcu;
+ fail:
+@@ -1206,6 +1204,14 @@ void brcmf_detach(struct device *dev)
+ 	kfree(drvr);
+ }
+ 
++s32 brcmf_iovar_data_set(struct device *dev, char *name, void *data, u32 len)
++{
++	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
++	struct brcmf_if *ifp = bus_if->drvr->iflist[0];
++
++	return brcmf_fil_iovar_data_set(ifp, name, data, len);
++}
++
+ static int brcmf_get_pend_8021x_cnt(struct brcmf_if *ifp)
+ {
+ 	return atomic_read(&ifp->pend_8021x_cnt);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index 928983b..2597a53 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -3425,6 +3425,35 @@ brcmf_sdbrcm_download_firmware(struct brcmf_sdio *bus)
+ 	return ret;
+ }
+ 
++static int brcmf_sdbrcm_bus_preinit(struct device *dev)
++{
++	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
++	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
++	struct brcmf_sdio *bus = sdiodev->bus;
++	u32 value;
++	u8 idx;
++	int err;
++
++	/* sdio bus core specific dcmd */
++	idx = brcmf_sdio_chip_getinfidx(bus->ci, BCMA_CORE_SDIO_DEV);
++	if (bus->ci->c_inf[idx].rev < 12) {
++		/* for sdio core rev < 12, disable txgloming */
++		value = 0;
++		err = brcmf_iovar_data_set(dev, "bus:txglom", &value,
++					   sizeof(u32));
++	} else {
++		/* otherwise, set txglomalign */
++		value = 4;
++		if (sdiodev->pdata)
++			value = sdiodev->pdata->sd_sgentry_align;
++		/* SDIO ADMA requires at least 32 bit alignment */
++		value = max_t(u32, value, 4);
++		err = brcmf_iovar_data_set(dev, "bus:txglomalign", &value,
++					   sizeof(u32));
++	}
++	return err;
++}
++
+ static int brcmf_sdbrcm_bus_init(struct device *dev)
+ {
+ 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+@@ -3905,6 +3934,7 @@ static void brcmf_sdbrcm_release(struct brcmf_sdio *bus)
+ 
+ static struct brcmf_bus_ops brcmf_sdio_bus_ops = {
+ 	.stop = brcmf_sdbrcm_bus_stop,
++	.preinit = brcmf_sdbrcm_bus_preinit,
+ 	.init = brcmf_sdbrcm_bus_init,
+ 	.txdata = brcmf_sdbrcm_bus_txdata,
+ 	.txctl = brcmf_sdbrcm_bus_txctl,
+@@ -3916,10 +3946,6 @@ void *brcmf_sdbrcm_probe(u32 regsva, struct brcmf_sdio_dev *sdiodev)
+ {
+ 	int ret;
+ 	struct brcmf_sdio *bus;
+-	struct brcmf_bus_dcmd *dlst;
+-	u32 dngl_txglom;
+-	u32 txglomalign = 0;
+-	u8 idx;
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+@@ -4003,30 +4029,6 @@ void *brcmf_sdbrcm_probe(u32 regsva, struct brcmf_sdio_dev *sdiodev)
+ 	brcmf_sdio_debugfs_create(bus);
+ 	brcmf_dbg(INFO, "completed!!\n");
+ 
+-	/* sdio bus core specific dcmd */
+-	idx = brcmf_sdio_chip_getinfidx(bus->ci, BCMA_CORE_SDIO_DEV);
+-	dlst = kzalloc(sizeof(struct brcmf_bus_dcmd), GFP_KERNEL);
+-	if (dlst) {
+-		if (bus->ci->c_inf[idx].rev < 12) {
+-			/* for sdio core rev < 12, disable txgloming */
+-			dngl_txglom = 0;
+-			dlst->name = "bus:txglom";
+-			dlst->param = (char *)&dngl_txglom;
+-			dlst->param_len = sizeof(u32);
+-		} else {
+-			/* otherwise, set txglomalign */
+-			if (sdiodev->pdata)
+-				txglomalign = sdiodev->pdata->sd_sgentry_align;
+-			/* SDIO ADMA requires at least 32 bit alignment */
+-			if (txglomalign < 4)
+-				txglomalign = 4;
+-			dlst->name = "bus:txglomalign";
+-			dlst->param = (char *)&txglomalign;
+-			dlst->param_len = sizeof(u32);
 -		}
--		/* ftype == WLAN_SP_MESH_PEERING_OPEN */
--		if (!mesh_plink_free_count(sdata)) {
--			mpl_dbg(sdata, "Mesh plink error: no more free plinks\n");
--			goto unlock_rcu;
--		}
--		/* deny open request from non-matching peer */
--		if (!matches_local) {
--			mesh_plink_frame_tx(sdata, WLAN_SP_MESH_PEERING_CLOSE,
--					    mgmt->sa, 0, plid,
--					    cpu_to_le16(WLAN_REASON_MESH_CONFIG));
--			goto unlock_rcu;
--		}
--	} else {
--		if (!test_sta_flag(sta, WLAN_STA_AUTH)) {
--			mpl_dbg(sdata, "Mesh plink: Action frame from non-authed peer\n");
--			goto unlock_rcu;
--		}
--		if (sta->plink_state == NL80211_PLINK_BLOCKED)
--			goto unlock_rcu;
+-		list_add(&dlst->list, &bus->sdiodev->bus_if->dcmd_list);
 -	}
 -
- 	/* Now we will figure out the appropriate event... */
--	event = PLINK_UNDEFINED;
--
--	if (!sta)
--		event = OPN_ACPT;
--	else {
--		switch (ftype) {
--		case WLAN_SP_MESH_PEERING_OPEN:
--			if (!matches_local)
--				event = OPN_RJCT;
--			else if (!mesh_plink_free_count(sdata) ||
--				 (sta->plid && sta->plid != plid))
--				event = OPN_IGNR;
--			else
--				event = OPN_ACPT;
--			break;
--		case WLAN_SP_MESH_PEERING_CONFIRM:
--			if (!matches_local)
--				event = CNF_RJCT;
--			else if (!mesh_plink_free_count(sdata) ||
--				 (sta->llid != llid || sta->plid != plid))
--				event = CNF_IGNR;
--			else
--				event = CNF_ACPT;
--			break;
--		case WLAN_SP_MESH_PEERING_CLOSE:
--			if (sta->plink_state == NL80211_PLINK_ESTAB)
--				/* Do not check for llid or plid. This does not
--				 * follow the standard but since multiple plinks
--				 * per sta are not supported, it is necessary in
--				 * order to avoid a livelock when MP A sees an
--				 * establish peer link to MP B but MP B does not
--				 * see it. This can be caused by a timeout in
--				 * B's peer link establishment or B beign
--				 * restarted.
--				 */
--				event = CLS_ACPT;
--			else if (sta->plid != plid)
--				event = CLS_IGNR;
--			else if (ie_len == 8 && sta->llid != llid)
--				event = CLS_IGNR;
--			else
--				event = CLS_ACPT;
--			break;
--		default:
--			mpl_dbg(sdata, "Mesh plink: unknown frame subtype\n");
--			goto unlock_rcu;
--		}
--	}
-+	event = mesh_plink_get_event(sdata, sta, elems, ftype, llid, plid);
+ 	brcmf_bus_add_txhdrlen(bus->sdiodev->dev, bus->tx_hdrlen);
  
- 	if (event == OPN_ACPT) {
- 		rcu_read_unlock();
-@@ -996,6 +1023,14 @@ mesh_process_plink_frame(struct ieee80211_sub_if_data *sdata,
- 			goto unlock_rcu;
- 		}
- 		sta->plid = plid;
-+	} else if (!sta && event == OPN_RJCT) {
-+		mesh_plink_frame_tx(sdata, WLAN_SP_MESH_PEERING_CLOSE,
-+				    mgmt->sa, 0, plid,
-+				    cpu_to_le16(WLAN_REASON_MESH_CONFIG));
-+		goto unlock_rcu;
-+	} else if (!sta || event == PLINK_UNDEFINED) {
-+		/* something went wrong */
-+		goto unlock_rcu;
- 	}
- 
- 	changed |= mesh_plink_fsm(sdata, sta, event);
+ 	/* if firmware path present try to download and bring up bus */
 -- 
-1.8.4.rc3
+1.8.1.3
+
 
