@@ -1,41 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:43483 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756402Ab3KFMgi (ORCPT
+Received: from mail-lb0-f179.google.com ([209.85.217.179]:38731 "EHLO
+	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752245Ab3KFQyu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Nov 2013 07:36:38 -0500
-Message-ID: <1383741393.14307.43.camel@jlt4.sipsolutions.net> (sfid-20131106_133641_507207_522083E7)
-Subject: Re: [RFC v2 2/2] mac80211: only set CSA beacon when at least one
- beacon must be transmitted
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Coelho, Luciano" <luciano.coelho@intel.com>
-Cc: Simon Wunderlich <sw@simonwunderlich.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 06 Nov 2013 13:36:33 +0100
-In-Reply-To: <1383740486.4256.65.camel@porter.coelho.fi>
-References: <1383684854-21663-1-git-send-email-luciano.coelho@intel.com>
-	 <1383684854-21663-2-git-send-email-luciano.coelho@intel.com>
-	 <201311061247.48777.sw@simonwunderlich.de>
-	 <1383739343.4256.58.camel@porter.coelho.fi>
-	 <1383739595.14307.41.camel@jlt4.sipsolutions.net>
-	 <1383740486.4256.65.camel@porter.coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 6 Nov 2013 11:54:50 -0500
+Received: by mail-lb0-f179.google.com with SMTP id w6so7949203lbh.38
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Nov 2013 08:54:48 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1383732921.14307.20.camel@jlt4.sipsolutions.net>
+References: <1383671897-7746-1-git-send-email-mcgrof@do-not-panic.com>
+ <1383671897-7746-2-git-send-email-mcgrof@do-not-panic.com> <1383732921.14307.20.camel@jlt4.sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Wed, 6 Nov 2013 08:54:28 -0800
+Message-ID: <CAB=NE6W+m0EkJPz90QyRxGWy8hyOXir7YZ3jGC7=Y9UH3unqLw@mail.gmail.com> (sfid-20131106_175453_167827_AFAA3ACA)
+Subject: Re: [PATCH 01/19] cfg80211: enforce disabling channels by custom or
+ strict settings
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-11-06 at 12:22 +0000, Coelho, Luciano wrote:
+On Wed, Nov 6, 2013 at 2:15 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Tue, 2013-11-05 at 09:17 -0800, Luis R. Rodriguez wrote:
+>
+>> @@ -1251,7 +1261,7 @@ static void handle_channel_custom(struct wiphy *wiphy,
+>>       if (IS_ERR(reg_rule)) {
+>>               REG_DBG_PRINT("Disabling freq %d MHz as custom regd has no rule that fits it\n",
+>>                             chan->center_freq);
+>> -             chan->flags = IEEE80211_CHAN_DISABLED;
+>> +             chan->flags = chan->orig_flags |= IEEE80211_CHAN_DISABLED;
+>
+> Are you sure the |= is right?
 
-> > Well even then - the question is who would ever want to use and test
-> > count<=1?
-> 
-> I guess the reason to have this is when you must evacuate the channel
-> immediately, so you transmit the action frame and jump out.  If your
-> beacon interval is long (for whatever reason), waiting for the next TBTT
-> to announce the CSA may take longer than the time required to stop
-> transmitting.
+It works but I think its best to split this in retrospect to make it
+clear, I'll send a v2 and I don't think the v2 would interfere with
+the series.
 
-Fair point, so I guess we'd want to also test that :)
-
-johannes
-
+  Luis
