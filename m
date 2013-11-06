@@ -1,39 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:48052 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753514Ab3KOJKE (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:43174 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756120Ab3KFK7v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Nov 2013 04:10:04 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: allow dynamic bandwidth in hw rate control
-References: <1384337110-9417-1-git-send-email-michal.kazior@tieto.com>
-Date: Fri, 15 Nov 2013 10:59:57 +0200
-In-Reply-To: <1384337110-9417-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Wed, 13 Nov 2013 11:05:10 +0100")
-Message-ID: <87r4ai3ur6.fsf@kamboji.qca.qualcomm.com> (sfid-20131115_101011_696513_48910ACE)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 6 Nov 2013 05:59:51 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1Ve0py-0002EO-Co
+	for linux-wireless@vger.kernel.org; Wed, 06 Nov 2013 11:59:50 +0100
+Message-ID: <1383735588.14307.30.camel@jlt4.sipsolutions.net> (sfid-20131106_115953_737586_A6D86F90)
+Subject: Re: [PATCH 1/4] nl80211: check nla_put_* return values
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Wed, 06 Nov 2013 11:59:48 +0100
+In-Reply-To: <1382969304-25611-1-git-send-email-johannes@sipsolutions.net> (sfid-20131028_150831_591764_43492672)
+References: <1382969304-25611-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20131028_150831_591764_43492672)
+Content-Type: text/plain
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Applied all
 
-> Frames were never retransmitted with
-> different/lower bandwidths, e.g. only 80MHz
-> bandwidth was used when dealing with a VHT80
-> peer.
->
-> Allow HW rate control to try out different
-> bandwidths when retransmitting. This increases
-> robustness.
->
-> Also, document the parameter properly.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-
-Thanks, applied.
-
--- 
-Kalle Valo
