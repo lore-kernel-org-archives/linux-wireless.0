@@ -1,43 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:52420 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753452Ab3KAN7w (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:56994 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754900Ab3KFTZX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 09:59:52 -0400
-Received: by mail-wg0-f45.google.com with SMTP id z12so4082593wgg.0
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:59:51 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 50/65] wireless-regdb: add VHT80 rules for UA
-Date: Fri,  1 Nov 2013 14:57:40 +0100
-Message-Id: <1383314275-20960-51-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_145956_876649_B97D139B)
-In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+	Wed, 6 Nov 2013 14:25:23 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: Ben Hutchings <ben@decadent.org.uk>
+CC: <linux-wireless@vger.kernel.org>,
+	<linux-bluetooth@vger.kernel.org>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: linux-firmware: pull-request Marvell mwifiex-firmware 2013-11-06
+Date: Wed, 6 Nov 2013 11:25:13 -0800
+Message-ID: <1383765913-19716-1-git-send-email-bzhao@marvell.com> (sfid-20131106_202533_576757_DE7A972F)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Source is QCA's regulatory team's efforts.
+The following changes since commit 7d0c7a8cfd78388d90cc784a185b19dcbdbce824:
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt | 2 ++
- 1 file changed, 2 insertions(+)
+  Merge branch 'wilink4' of git://git.kernel.org/pub/scm/linux/kernel/git/balbi/linux-firmware (2013-10-13 21:11:46 +0100)
 
-diff --git a/db.txt b/db.txt
-index 4ce2017..aa92c37 100644
---- a/db.txt
-+++ b/db.txt
-@@ -774,6 +774,8 @@ country TR: DFS-ETSI
- country UA: DFS-ETSI
- 	(2400 - 2483.5 @ 40), (20), NO-OUTDOOR
- 	(5150 - 5350 @ 40), (20), NO-OUTDOOR
-+	(5490 - 5670 @ 80), (20), DFS
-+	(5735 - 5835 @ 80), (20)
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
+are available in the git repository at:
+
+
+  git://git.marvell.com/mwifiex-firmware.git master
+
+for you to fetch changes up to b7c848634538ff87317acd802fb4645cfd2f9fb5:
+
+  linux-firmware: add Marvell SD8897-B0 firmware combo image (2013-11-04 16:03:34 -0800)
+
+----------------------------------------------------------------
+Bing Zhao (2):
+      linux-firmware: update Marvell PCIe/USB 8897-B0 firmware combo image
+      linux-firmware: add Marvell SD8897-B0 firmware combo image
+
+ WHENCE                   |   5 ++++-
+ mrvl/pcie8897_uapsta.bin | Bin 350244 -> 656896 bytes
+ mrvl/sd8897_uapsta.bin   | Bin 0 -> 639012 bytes
+ 3 files changed, 4 insertions(+), 1 deletion(-)
+ create mode 100644 mrvl/sd8897_uapsta.bin
+
+diff --git a/WHENCE b/WHENCE
+index 2d52804..3875e77 100644
+--- a/WHENCE
++++ b/WHENCE
+@@ -727,11 +727,14 @@ Version: 14.66.9.p96
+ File: mrvl/sd8797_uapsta.bin
+ Version: 14.66.11.p151
  
--- 
-1.8.4.rc3
-
++File: mrvl/sd8897_uapsta.bin
++Version: 15.69.2.p11
++
+ File: mrvl/usb8797_uapsta.bin
+ Version: 14.69.11.p179
+ 
+ File: mrvl/pcie8897_uapsta.bin
+-Version: 15.69.201.p52
++Version: 15.69.2.p11
+ 
+ Licence: Redistributable. See LICENCE.Marvell for details.  Originates from
+ http://git.marvell.com/?p=mwifiex-firmware.git
+diff --git a/mrvl/pcie8897_uapsta.bin b/mrvl/pcie8897_uapsta.bin
+index b067689..858c100 100644
+Binary files a/mrvl/pcie8897_uapsta.bin and b/mrvl/pcie8897_uapsta.bin differ
+diff --git a/mrvl/sd8897_uapsta.bin b/mrvl/sd8897_uapsta.bin
+new file mode 100644
+index 0000000..70732a6
+Binary files /dev/null and b/mrvl/sd8897_uapsta.bin differ
