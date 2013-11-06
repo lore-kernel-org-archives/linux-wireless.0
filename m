@@ -1,54 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:65121 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755042Ab3KNQmh (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:16304 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756292Ab3KFNI4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Nov 2013 11:42:37 -0500
-Received: by mail-wi0-f177.google.com with SMTP id hq4so2880165wib.16
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Nov 2013 08:42:35 -0800 (PST)
-Message-ID: <5284FD77.2080702@gmail.com> (sfid-20131114_174251_635464_C46FAB84)
-Date: Thu, 14 Nov 2013 17:42:31 +0100
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+	Wed, 6 Nov 2013 08:08:56 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <greearb@candelatech.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH/RFT 04/12] ath10k: rename function to match it's role
+References: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com>
+	<1383133346-8135-5-git-send-email-michal.kazior@tieto.com>
+Date: Wed, 6 Nov 2013 15:08:49 +0200
+In-Reply-To: <1383133346-8135-5-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Wed, 30 Oct 2013 12:42:18 +0100")
+Message-ID: <87wqklr82m.fsf@kamboji.qca.qualcomm.com> (sfid-20131106_140859_100905_35C26D99)
 MIME-Version: 1.0
-To: Kevin Lo <kevlo@kevlo.org>, John Linville <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH] rt2x00: rt2800lib: no need to write RF
- register 3 twice for RT5592
-References: <20131114055344.GA74271@ns.kevlo.org>
-In-Reply-To: <20131114055344.GA74271@ns.kevlo.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/14/13 06:53, Kevin Lo wrote:
-> In rt2800_init_rfcsr_5592(), there's no need to write RF register 3 twice.
-> 
-> Signed-off-by: Kevin Lo <kevlo@kevlo.org>
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> What the function does is to actually wait for the
+> firmware indication bit to be set. Prerequisite
+> for this is having interrupts registered.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-> ---
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index 776aff3..18506f8 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -6602,7 +6602,6 @@ static void rt2800_init_rfcsr_5592(struct rt2x00_dev *rt2x00dev)
->  
->  	rt2800_rfcsr_write(rt2x00dev, 1, 0x3F);
->  	rt2800_rfcsr_write(rt2x00dev, 3, 0x08);
-> -	rt2800_rfcsr_write(rt2x00dev, 3, 0x08);
->  	rt2800_rfcsr_write(rt2x00dev, 5, 0x10);
->  	rt2800_rfcsr_write(rt2x00dev, 6, 0xE4);
->  	rt2800_rfcsr_write(rt2x00dev, 7, 0x00);
-> 
-> _______________________________________________
-> users mailing list
-> users@rt2x00.serialmonkey.com
-> http://rt2x00.serialmonkey.com/mailman/listinfo/users_rt2x00.serialmonkey.com
-> 
-
+I think the title could be a bit more specific, like "ath10k: rename
+ath10k_pci_reset_target()" or something like that.
 
 -- 
----
-Gertjan
+Kalle Valo
