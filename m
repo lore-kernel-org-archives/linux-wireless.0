@@ -1,51 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:60373 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754643Ab3KENMe (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:45825 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756297Ab3KFMea (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Nov 2013 08:12:34 -0500
-Date: Tue, 5 Nov 2013 14:12:32 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Sebastian Reichel <sre@debian.org>
-Cc: Sebastian Reichel <sre@ring0.de>, Luciano Coelho <luca@coelho.fi>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Rob Landley <rob@landley.net>,
-	Tony Lindgren <tony@atomide.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Felipe Balbi <balbi@ti.com>,
-	Sachin Kamat <sachin.kamat@linaro.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bill Pemberton <wfp5p@virginia.edu>,
-	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH 3/4] wl1251: spi: add vio regulator support
-Message-ID: <20131105131232.GD30670@amd.pavel.ucw.cz> (sfid-20131105_141254_003572_2657AABE)
-References: <1382890469-25286-1-git-send-email-sre@debian.org>
- <1382890469-25286-4-git-send-email-sre@debian.org>
+	Wed, 6 Nov 2013 07:34:30 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <greearb@candelatech.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH/RFT 09/12] ath10k: propagate ath10k_ce_disable_interrupts() errors
+References: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com>
+	<1383133346-8135-10-git-send-email-michal.kazior@tieto.com>
+Date: Wed, 6 Nov 2013 14:34:24 +0200
+In-Reply-To: <1383133346-8135-10-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Wed, 30 Oct 2013 12:42:23 +0100")
+Message-ID: <87iow5so8f.fsf@kamboji.qca.qualcomm.com> (sfid-20131106_133446_638866_4861372F)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1382890469-25286-4-git-send-email-sre@debian.org>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun 2013-10-27 17:14:28, Sebastian Reichel wrote:
-> This patch adds support for requesting the regulator powering
-> the vio pin.
-> 
-> The patch also adds the regulator for the all boards using the
-> wl1251 in spi mode (only the Nokia N900).
-> 
-> Signed-off-by: Sebastian Reichel <sre@debian.org>
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Reviewed-by: Pavel Machek <pavel@ucw.cz>
+> This shouldn't be silenced. This will be necessary
+> for PCI init code reordering.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+
+[...]
+
+> -void ath10k_ce_disable_interrupts(struct ath10k *ar)
+> +int ath10k_ce_disable_interrupts(struct ath10k *ar)
+>  {
+>  	int ce_id, ret;
+>  
+>  	ret = ath10k_pci_wake(ar);
+>  	if (ret)
+> -		return;
+> +		return ret;
+>  
+>  	for (ce_id = 0; ce_id < CE_COUNT; ce_id++) {
+>  		u32 ctrl_addr = ath10k_ce_base_address(ce_id);
+> @@ -807,7 +807,9 @@ void ath10k_ce_disable_interrupts(struct ath10k *ar)
+>  		ath10k_ce_error_intr_disable(ar, ctrl_addr);
+>  		ath10k_ce_watermark_intr_disable(ar, ctrl_addr);
+>  	}
+> +
+>  	ath10k_pci_sleep(ar);
+> +	return ret;
+
+Empty line before the return. And I think 'return 0' is more clear here.
+
+> --- a/drivers/net/wireless/ath/ath10k/pci.c
+> +++ b/drivers/net/wireless/ath/ath10k/pci.c
+> @@ -879,8 +879,12 @@ static void ath10k_pci_stop_ce(struct ath10k *ar)
+>  	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+>  	struct ath10k_pci_compl *compl;
+>  	struct sk_buff *skb;
+> +	int ret;
+> +
+> +	ret = ath10k_ce_disable_interrupts(ar);
+> +	if (ret)
+> +		ath10k_warn("failed to disable CE interrupts (%d)\n", ret);
+
+"failed to disable CE interrupts: %d\n"
 
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+Kalle Valo
