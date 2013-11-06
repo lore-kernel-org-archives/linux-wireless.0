@@ -1,30 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:39432 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751507Ab3KYVKu (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:37821 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755921Ab3KFJz5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Nov 2013 16:10:50 -0500
-Message-ID: <1385413847.4443.63.camel@jlt4.sipsolutions.net> (sfid-20131125_221053_397114_7D787DF5)
-Subject: Re: [PATCHv2 2/5] mac80211: modify beacon using sdata/wdev-lock,
- not rtnl lock
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <sw@simonwunderlich.de>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 25 Nov 2013 22:10:47 +0100
-In-Reply-To: <1385054393-17238-3-git-send-email-sw@simonwunderlich.de>
-References: <1385054393-17238-1-git-send-email-sw@simonwunderlich.de>
-	 <1385054393-17238-3-git-send-email-sw@simonwunderlich.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 6 Nov 2013 04:55:57 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Marek Puzyniak <marek.puzyniak@tieto.com>
+CC: <ath10k@lists.infradead.org>,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/3] ath10k: add phyerr/dfs handling
+References: <1383048394-15256-1-git-send-email-marek.puzyniak@tieto.com>
+Date: Wed, 6 Nov 2013 11:55:48 +0200
+In-Reply-To: <1383048394-15256-1-git-send-email-marek.puzyniak@tieto.com>
+	(Marek Puzyniak's message of "Tue, 29 Oct 2013 13:06:32 +0100")
+Message-ID: <8738n9ua57.fsf@kamboji.qca.qualcomm.com> (sfid-20131106_105600_517283_30BF2E22)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-11-21 at 18:19 +0100, Simon Wunderlich wrote:
+Marek Puzyniak <marek.puzyniak@tieto.com> writes:
 
-> +#define sdata_dereference(p, sdata) \
-> +	rcu_dereference_protected(p, &sdata->wdev.mtx)
+> From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+>
+> Handle phyerr, dfs event, radar_report and fft_report.
+> Add also debugfs dfs_simulate_radar and dfs_stats files.
+> Use ath dfs pattern detector.
+>
+> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 
-This is obviously broken - I've fixed it.
+Forgot to mention that after I applied these three patches I saw two new
+checkpatch warnings:
 
-johannes
+drivers/net/wireless/ath/ath10k/debug.c:684: WARNING: line over 80 characters
+drivers/net/wireless/ath/ath10k/wmi.c:1544: WARNING: line over 80 characters
 
+-- 
+Kalle Valo
