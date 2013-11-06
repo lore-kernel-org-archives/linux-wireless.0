@@ -1,42 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:54487 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756972Ab3KHRfA (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:42593 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753354Ab3KFIAB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Nov 2013 12:35:00 -0500
-Received: by mail-wg0-f44.google.com with SMTP id k14so651459wgh.35
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Nov 2013 09:34:59 -0800 (PST)
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
-	Eugene Krasnikov <k.eugene.e@gmail.com>
-Subject: [PATCH 0/3] pull request: wcn36xx 2013-11-08
-Date: Fri,  8 Nov 2013 17:34:36 +0000
-Message-Id: <1383932079-3791-1-git-send-email-k.eugene.e@gmail.com> (sfid-20131108_183505_421552_FB1A1621)
+	Wed, 6 Nov 2013 03:00:01 -0500
+Message-ID: <1383724794.14307.2.camel@jlt4.sipsolutions.net> (sfid-20131106_090007_168391_1D6262F9)
+Subject: Re: [Query] Decryption and Monitor Mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Cc: radiotap@netbsd.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 06 Nov 2013 08:59:54 +0100
+In-Reply-To: <CABPxzY++gCivs1u8nDtAeB5=p+ZkGHXmOnqud1hkh=TWB5Xprg@mail.gmail.com>
+References: <CABPxzY++gCivs1u8nDtAeB5=p+ZkGHXmOnqud1hkh=TWB5Xprg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Wed, 2013-11-06 at 01:22 +0530, Krishna Chaitanya wrote:
 
-This is a bunch of patches for wcn36xx driver on top of current wireless-next.
-The format is just a list of patches but not a git pull request. If you prefere
-to have them as a git pull link please let me know. Also please let me know if
-there is any problem.
+> With this wireshark is not able to decode the packets, even thought
+> they are decrypted. I propose 2 solutions
 
-Dan Carpenter (1):
-  wcn36xx: missing unlocks on error paths
+Well, you can say "ignore protected bit (with IV)" in the settings of
+wireshark. But I agree that this is cumbersome, and previously floated
+the idea of addings bits to radiotap to make this auto-detected.
 
-Eugene Krasnikov (1):
-  wcn36xx: Fix logging macro with unnecessary semicolon
+> Radiotap and Wireshark:
+> 
+> 1) Add 2 flags to the radiotap RX Flags (HW Decrypted the packet,
+> Packet has security Header (for some chipsets which consume the
+> security header as well..??).)
+> 
+> Based on these the wireshark dissector decodes the packet accordingly.
+> 
+> mac80211:
+> 
+> 2) Remove the security header information in the monitor path as well
+> based on the existing RX_FLAGS.
+> 
+> 
+> Solutions 2 looks more elegant and simple, any comments?
 
-Wei Yongjun (1):
-  Add the missing unlock before return from function
-    wcn36xx_smd_update_proberesp_tmpl() in the error handling case.
+Solution 2 drops information and makes the kernel code more expensive,
+so I don't think we want that.
 
- drivers/net/wireless/ath/wcn36xx/smd.c     | 9 ++++++---
- drivers/net/wireless/ath/wcn36xx/wcn36xx.h | 2 +-
- 2 files changed, 7 insertions(+), 4 deletions(-)
+I think the radiotap bits would be better.
 
--- 
-1.8.3.2
+johannes
+
 
