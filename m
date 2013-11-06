@@ -1,60 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yh0-f41.google.com ([209.85.213.41]:50053 "EHLO
-	mail-yh0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754115Ab3KOMAR (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:49931 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756166Ab3KFIuZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Nov 2013 07:00:17 -0500
-From: "Geyslan G. Bem" <geyslan@gmail.com>
-To: geyslan@gmail.com
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	Piotr Haber <phaber@broadcom.com>,
-	linux-wireless@vger.kernel.org (open list:BROADCOM BRCM8021...),
-	brcm80211-dev-list@broadcom.com (open list:BROADCOM BRCM8021...),
-	netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH] brcmfmac: fix possible memory leak
-Date: Fri, 15 Nov 2013 08:54:17 -0300
-Message-Id: <1384516475-26589-1-git-send-email-geyslan@gmail.com> (sfid-20131115_130035_394671_94B79A7B)
+	Wed, 6 Nov 2013 03:50:25 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Wei Yongjun <weiyj.lk@gmail.com>
+CC: <linville@tuxdriver.com>, <yongjun_wei@trendmicro.com.cn>,
+	<linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH -next] ath10k: fix possible memory leak in ath10k_pci_probe()
+References: <CAPgLHd9o1oGjjM=9B2H0tB41t8Kinp_1Djp6aA=sW5Eo5M7jfA@mail.gmail.com>
+Date: Wed, 6 Nov 2013 10:50:19 +0200
+In-Reply-To: <CAPgLHd9o1oGjjM=9B2H0tB41t8Kinp_1Djp6aA=sW5Eo5M7jfA@mail.gmail.com>
+	(Wei Yongjun's message of "Wed, 30 Oct 2013 13:24:39 +0800")
+Message-ID: <87fvr9ud6c.fsf@kamboji.qca.qualcomm.com> (sfid-20131106_095031_111177_3C2912E2)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In case of error free 'chanspecs'.
+Wei Yongjun <weiyj.lk@gmail.com> writes:
 
-Signed-off-by: Geyslan G. Bem <geyslan@gmail.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/p2p.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+>
+> memory is malloced in ath10k_pci_probe() and should be freed before
+> leaving from the error handling cases, otherwise it will cause
+> memory leak.
+>
+> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-index d7a9745..aea2c2e 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-@@ -771,7 +771,7 @@ static s32 brcmf_p2p_run_escan(struct brcmf_cfg80211_info *cfg,
- 	struct brcmf_cfg80211_vif *vif;
- 	struct net_device *dev = NULL;
- 	int i, num_nodfs = 0;
--	u16 *chanspecs;
-+	u16 *chanspecs = NULL;
- 
- 	brcmf_dbg(TRACE, "enter\n");
- 
-@@ -825,8 +825,10 @@ static s32 brcmf_p2p_run_escan(struct brcmf_cfg80211_info *cfg,
- 				      action, P2PAPI_BSSCFG_DEVICE);
- 	}
- exit:
--	if (err)
-+	if (err) {
- 		brcmf_err("error (%d)\n", err);
-+		kfree(chanspecs);
-+	}
- 	return err;
- }
- 
+Thanks, applied.
+
 -- 
-1.8.4.2
-
+Kalle Valo
