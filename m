@@ -1,64 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:43853 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752589Ab3KGAQ5 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:43181 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756086Ab3KFLAd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Nov 2013 19:16:57 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 13/13] ath9k: Update MAINTAINERS
-Date: Thu,  7 Nov 2013 05:42:00 +0530
-Message-Id: <1383783120-22435-14-git-send-email-sujith@msujith.org> (sfid-20131107_013807_514056_2562E99E)
-In-Reply-To: <1383783120-22435-1-git-send-email-sujith@msujith.org>
-References: <1383783120-22435-1-git-send-email-sujith@msujith.org>
+	Wed, 6 Nov 2013 06:00:33 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1Ve0qd-0002Hl-RJ
+	for linux-wireless@vger.kernel.org; Wed, 06 Nov 2013 12:00:32 +0100
+Message-ID: <1383735629.14307.31.camel@jlt4.sipsolutions.net> (sfid-20131106_120035_348862_E2809C4E)
+Subject: Re: [PATCH] cfg80211: add missing break in cfg80211_get_chan_state()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Wed, 06 Nov 2013 12:00:29 +0100
+In-Reply-To: <1382969320-25660-1-git-send-email-johannes@sipsolutions.net> (sfid-20131028_150847_088918_561EFC7C)
+References: <1382969320-25660-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20131028_150847_088918_561EFC7C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Mon, 2013-10-28 at 15:08 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> Improve readability of the function by adding the break,
+> there's no functional impact but it's confusing to fall
+> through.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- MAINTAINERS | 19 ++++++++-----------
- 1 file changed, 8 insertions(+), 11 deletions(-)
+Applied.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 0d59670..a137b3f 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -1444,17 +1444,6 @@ T:	git git://github.com/kvalo/ath.git
- S:	Supported
- F:	drivers/net/wireless/ath/ath6kl/
- 
--ATHEROS ATH9K WIRELESS DRIVER
--M:	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
--M:	Jouni Malinen <jouni@qca.qualcomm.com>
--M:	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
--M:	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
--L:	linux-wireless@vger.kernel.org
--L:	ath9k-devel@lists.ath9k.org
--W:	http://wireless.kernel.org/en/users/Drivers/ath9k
--S:	Supported
--F:	drivers/net/wireless/ath/ath9k/
--
- WILOCITY WIL6210 WIRELESS DRIVER
- M:	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
- L:	linux-wireless@vger.kernel.org
-@@ -6849,6 +6838,14 @@ T:	git git://linuxtv.org/anttip/media_tree.git
- S:	Maintained
- F:	drivers/media/tuners/qt1010*
- 
-+QUALCOMM ATHEROS ATH9K WIRELESS DRIVER
-+M:	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
-+L:	linux-wireless@vger.kernel.org
-+L:	ath9k-devel@lists.ath9k.org
-+W:	http://wireless.kernel.org/en/users/Drivers/ath9k
-+S:	Supported
-+F:	drivers/net/wireless/ath/ath9k/
-+
- QUALCOMM ATHEROS ATH10K WIRELESS DRIVER
- M:	Kalle Valo <kvalo@qca.qualcomm.com>
- L:	ath10k@lists.infradead.org
--- 
-1.8.4.2
+johannes
 
