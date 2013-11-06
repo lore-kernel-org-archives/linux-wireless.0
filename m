@@ -1,67 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2502 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755597Ab3KFWHd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Nov 2013 17:07:33 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 6/7] brcmfmac: reduce logging noise accessing SDIO
- SleepCSR register
-Date: Wed, 6 Nov 2013 23:07:21 +0100
-Message-ID: <1383775642-647-7-git-send-email-arend@broadcom.com> (sfid-20131106_230745_100264_1CB8ADE7)
-In-Reply-To: <1383775642-647-1-git-send-email-arend@broadcom.com>
-References: <1383775642-647-1-git-send-email-arend@broadcom.com>
+Received: from s72.web-hosting.com ([198.187.29.21]:45023 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750780Ab3KFFYB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Nov 2013 00:24:01 -0500
+From: Sujith Manoharan <sujith@msujith.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21113.53593.471557.385898@gargle.gargle.HOWL> (sfid-20131106_062407_544518_3629F08E)
+Date: Wed, 6 Nov 2013 10:49:21 +0530
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
+	kernel-janitors@vger.kernel.org
+Subject: Re: [patch] ath9k: fix SC_OP_INVALID test in ath9k_tx99_init()
+In-Reply-To: <20131105202034.GC3949@elgon.mountain>
+References: <20131105202034.GC3949@elgon.mountain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The SleepCSR register is accessed to wakeup the device from the
-host side. Depending on the state of the device this may take
-multiple attempts. The failed attempt are not real failures so
-reduce the log level specifically for this register. The calling
-function will scream when the multiple attempts all failed.
+Dan Carpenter wrote:
+> SC_OP_INVALID is zero so the test is always false.  We're supposed to be
+> testing the lowest bit instead.
+> 
+> Fixes: 89f927af7f33 ('ath9k: add TX99 support')
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+> index 74f452c..7ad4e11 100644
+> --- a/drivers/net/wireless/ath/ath9k/main.c
+> +++ b/drivers/net/wireless/ath/ath9k/main.c
+> @@ -2456,7 +2456,7 @@ int ath9k_tx99_init(struct ath_softc *sc)
+>  	struct ath_tx_control txctl;
+>  	int r;
+>  
+> -	if (sc->sc_flags & SC_OP_INVALID) {
+> +	if (test_bit(SC_OP_INVALID, &sc->sc_flags)) {
+>  		ath_err(common,
+>  			"driver is in invalid state unable to use TX99");
+>  		return -EINVAL;
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c    | 19 +++++++++++++++----
- 1 file changed, 15 insertions(+), 4 deletions(-)
+Nice catch.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-index 905704e..009d2a0 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-@@ -156,10 +156,21 @@ int brcmf_sdioh_request_byte(struct brcmf_sdio_dev *sdiodev, uint rw, uint func,
- 		}
- 	}
- 
--	if (err_ret)
--		brcmf_err("Failed to %s byte F%d:@0x%05x=%02x, Err: %d\n",
--			  rw ? "write" : "read", func, regaddr, *byte, err_ret);
--
-+	if (err_ret) {
-+		/*
-+		 * SleepCSR register access can fail when
-+		 * waking up the device so reduce this noise
-+		 * in the logs.
-+		 */
-+		if (regaddr != SBSDIO_FUNC1_SLEEPCSR)
-+			brcmf_err("Failed to %s byte F%d:@0x%05x=%02x, Err: %d\n",
-+				  rw ? "write" : "read", func, regaddr, *byte,
-+				  err_ret);
-+		else
-+			brcmf_dbg(SDIO, "Failed to %s byte F%d:@0x%05x=%02x, Err: %d\n",
-+				  rw ? "write" : "read", func, regaddr, *byte,
-+				  err_ret);
-+	}
- 	return err_ret;
- }
- 
--- 
-1.8.1.3
+The tx99 code in ath9k has been moved to a separate file, is it okay if I adopt
+this patch and update it ?
 
-
+Sujith
