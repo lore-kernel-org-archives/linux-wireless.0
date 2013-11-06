@@ -1,82 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kvm.w1.fi ([128.177.28.162]:45597 "EHLO
-	jmaline2.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752806Ab3KBN6O (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:14516 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756425Ab3KFMuQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Nov 2013 09:58:14 -0400
-Date: Sat, 2 Nov 2013 15:57:36 +0200
-From: Jouni Malinen <j@w1.fi>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH] mac80211_hwsim: Fix radiotap header for ACK frames
-Message-ID: <20131102135736.GA14411@w1.fi> (sfid-20131102_145901_833460_8167ADF8)
+	Wed, 6 Nov 2013 07:50:16 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Joe Perches <joe@perches.com>
+CC: Michal Kazior <michal.kazior@tieto.com>, <greearb@candelatech.com>,
+	<linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH/RFT 12/12] ath10k: add some debug prints
+References: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com>
+	<1383133346-8135-13-git-send-email-michal.kazior@tieto.com>
+	<1383153399.9435.33.camel@joe-AO722>
+Date: Wed, 6 Nov 2013 14:43:10 +0200
+In-Reply-To: <1383153399.9435.33.camel@joe-AO722> (Joe Perches's message of
+	"Wed, 30 Oct 2013 10:16:39 -0700")
+Message-ID: <87a9hhsntt.fsf@kamboji.qca.qualcomm.com> (sfid-20131106_135020_578561_AD68E159)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The earlier addition of rt_tsft to struct hwsim_radiotap_hdr updated
-only mac80211_hwsim_monitor_tx() to fill in the new field.
-mac80211_hwsim_monitor_ack() did not set the rt_tsft field and as such,
-leaked eight bytes of kernel memory to user space. In addition, the
-resulting radiotap header is invalid since the field offsets do not
-match. Fix these issues by defining a separate radiotap header structure
-for the ACK frame case which does not use all the fields.
+Joe Perches <joe@perches.com> writes:
 
-Signed-off-by: Jouni Malinen <j@w1.fi>
----
- drivers/net/wireless/mac80211_hwsim.c |   14 +++++++++++---
- 1 file changed, 11 insertions(+), 3 deletions(-)
+> On Wed, 2013-10-30 at 12:42 +0100, Michal Kazior wrote:
+>> Some errors were handled too silently.
+>
+> These aren't really debug prints.
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 2cd3f54..ea315a1 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -382,6 +382,14 @@ struct hwsim_radiotap_hdr {
- 	__le16 rt_chbitmask;
- } __packed;
- 
-+struct hwsim_radiotap_ack_hdr {
-+	struct ieee80211_radiotap_header hdr;
-+	u8 rt_flags;
-+	u8 pad;
-+	__le16 rt_channel;
-+	__le16 rt_chbitmask;
-+} __packed;
-+
- /* MAC80211_HWSIM netlinf family */
- static struct genl_family hwsim_genl_family = {
- 	.id = GENL_ID_GENERATE,
-@@ -499,7 +507,7 @@ static void mac80211_hwsim_monitor_ack(struct ieee80211_channel *chan,
- 				       const u8 *addr)
- {
- 	struct sk_buff *skb;
--	struct hwsim_radiotap_hdr *hdr;
-+	struct hwsim_radiotap_ack_hdr *hdr;
- 	u16 flags;
- 	struct ieee80211_hdr *hdr11;
- 
-@@ -510,14 +518,14 @@ static void mac80211_hwsim_monitor_ack(struct ieee80211_channel *chan,
- 	if (skb == NULL)
- 		return;
- 
--	hdr = (struct hwsim_radiotap_hdr *) skb_put(skb, sizeof(*hdr));
-+	hdr = (struct hwsim_radiotap_ack_hdr *) skb_put(skb, sizeof(*hdr));
- 	hdr->hdr.it_version = PKTHDR_RADIOTAP_VERSION;
- 	hdr->hdr.it_pad = 0;
- 	hdr->hdr.it_len = cpu_to_le16(sizeof(*hdr));
- 	hdr->hdr.it_present = cpu_to_le32((1 << IEEE80211_RADIOTAP_FLAGS) |
- 					  (1 << IEEE80211_RADIOTAP_CHANNEL));
- 	hdr->rt_flags = 0;
--	hdr->rt_rate = 0;
-+	hdr->pad = 0;
- 	hdr->rt_channel = cpu_to_le16(chan->center_freq);
- 	flags = IEEE80211_CHAN_2GHZ;
- 	hdr->rt_chbitmask = cpu_to_le16(flags);
--- 
-1.7.9.5
+Yeah, the patch title needs work.
 
+>> diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+> []
+>> @@ -1860,8 +1862,10 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar)
+>>  		ath10k_do_pci_wake(ar);
+>>  
+>>  	ret = ath10k_pci_ce_init(ar);
+>> -	if (ret)
+>> +	if (ret) {
+>> +		ath10k_err("could not initialize CE (%d)\n", ret);
+>
+> Rather than try to reinterpret the function name,
+> perhaps it's better to simply emit the function name
+> as is done most other places like:
+>
+> 		ath10k_err("ath10k_pci_ce_init failed: (%d)\n", ret);
+
+I don't think that's any better. When function names change but people
+forget to change the error message and then it's even more confusing.
+And I prefer that a developer puts a bit more effort to the warning
+message by writing it in english instead of just copying the function
+name.
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Kalle Valo
