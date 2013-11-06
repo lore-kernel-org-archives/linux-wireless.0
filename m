@@ -1,178 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f174.google.com ([209.85.215.174]:55517 "EHLO
-	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756959Ab3KHKlt (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:43275 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756221Ab3KFLbw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Nov 2013 05:41:49 -0500
-Received: by mail-ea0-f174.google.com with SMTP id n15so809733ead.5
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Nov 2013 02:41:48 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, mcgrof@do-not-panic.com,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH 3/3] cfg80211: DFS use 10 minutes CAC when weather channels
-Date: Fri,  8 Nov 2013 11:41:27 +0100
-Message-Id: <1383907287-2925-3-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131108_114153_549124_153F9E9A)
-In-Reply-To: <1383907287-2925-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1383907287-2925-1-git-send-email-janusz.dziedzic@tieto.com>
+	Wed, 6 Nov 2013 06:31:52 -0500
+Message-ID: <1383737505.14307.37.camel@jlt4.sipsolutions.net> (sfid-20131106_123155_095813_77312458)
+Subject: Re: [RFC v2 2/2] mac80211: only set CSA beacon when at least one
+ beacon must be transmitted
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Coelho, Luciano" <luciano.coelho@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"sw@simonwunderlich.de" <sw@simonwunderlich.de>
+Date: Wed, 06 Nov 2013 12:31:45 +0100
+In-Reply-To: <1383737255.4256.34.camel@porter.coelho.fi>
+References: <1383684854-21663-1-git-send-email-luciano.coelho@intel.com>
+	 <1383684854-21663-2-git-send-email-luciano.coelho@intel.com>
+	 <1383735101.14307.25.camel@jlt4.sipsolutions.net>
+	 <1383737255.4256.34.camel@porter.coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When nominal bandwidth falls completely or partly
-within the band 5600MHz to 5650MHz the CAC time shall
-be 10 minutes.
-This is ETSI requirement. FCC forbids weather channels usage.
+On Wed, 2013-11-06 at 11:28 +0000, Coelho, Luciano wrote:
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- include/net/cfg80211.h |    5 +++-
- net/wireless/chan.c    |   73 ++++++++++++++++++++++++++++++++++++++++++++++++
- net/wireless/core.h    |    4 +++
- net/wireless/nl80211.c |    6 +++-
- 4 files changed, 86 insertions(+), 2 deletions(-)
+> In terms of the order of calls, the difference is that in the past we
+> had this:
+> 
+> 1. Set CSA beacon;
+> 2. When count reaches 1, the driver calls ieee80211_csa_finish();
+> 3. We call drv_change_chanctx();
+> 4. Set new channel beacon.
+> 
+> (This continues to be the case with my patch when count > 1)
+> 
+> With my patch, if count <= 1, we do this instead:
+> 
+> 1. Call drv_change_chanctx();
+> 2. Set new channel beacon.
+> 
+> The main problem without my patch is that the driver shouldn't beacon
+> with the CSA element when the count starts <= 1, so it won't have a
+> chance to check if the count reached 1 to call ieee80211_csa_finish().
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index d43fa0a..c40847e 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -125,9 +125,12 @@ enum ieee80211_channel_flags {
- #define IEEE80211_CHAN_NO_HT40 \
- 	(IEEE80211_CHAN_NO_HT40PLUS | IEEE80211_CHAN_NO_HT40MINUS)
- 
--#define IEEE80211_DFS_MIN_CAC_TIME_MS		60000
-+#define IEEE80211_DFS_MIN_CAC_TIME_MS		(60 * 1000)
- #define IEEE80211_DFS_MIN_NOP_TIME_MS		(30 * 60 * 1000)
- 
-+/* ETSI EN 301 893 V1.7.0 - Table D.1 */
-+#define IEEE80211_DFS_WEATHER_MIN_CAC_TIME_MS	(10 * 60 * 1000)
-+
- /**
-  * struct ieee80211_channel - channel definition
-  *
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index 78559b5..aa691d3 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -490,6 +490,79 @@ static bool cfg80211_chandef_dfs_available(struct wiphy *wiphy,
- 	return r;
- }
- 
-+static int cfg80211_get_chans_dfs_is_weather(struct wiphy *wiphy,
-+					     u32 center_freq,
-+					     u32 bandwidth)
-+{
-+	u32 start_freq, end_freq;
-+
-+	start_freq = cfg80211_get_start_freq(center_freq, bandwidth) - 10;
-+	end_freq = cfg80211_get_end_freq(center_freq, bandwidth) + 10;
-+
-+	/*
-+	 * ETSI EN 301 893 V1.7.0 Table D.1
-+	 * TODO In the future we can get this from regdb eg. channel flag
-+	 * IEEE80211_CHAN_TDWR.
-+	 */
-+	if ((start_freq >= 5600 && start_freq < 5650) ||
-+	    (end_freq > 5600 && end_freq <= 5650))
-+		return 1;
-+
-+	return 0;
-+}
-+
-+static int
-+cfg80211_chandef_dfs_is_weather(struct wiphy *wiphy,
-+				const struct cfg80211_chan_def *chandef)
-+{
-+	int width;
-+	int r;
-+
-+	if (WARN_ON(!cfg80211_chandef_valid(chandef)))
-+		return -EINVAL;
-+
-+	width = cfg80211_chandef_get_width(chandef);
-+	if (width < 0)
-+		return -EINVAL;
-+
-+	r = cfg80211_get_chans_dfs_is_weather(wiphy,
-+					      chandef->center_freq1,
-+					      width);
-+
-+	if (r)
-+		return r;
-+
-+	if (!chandef->center_freq2)
-+		return 0;
-+
-+	return cfg80211_get_chans_dfs_is_weather(wiphy,
-+						 chandef->center_freq2,
-+						 width);
-+}
-+
-+unsigned int
-+cfg80211_chandef_dfs_cac_time(struct wiphy *wiphy,
-+			      const struct cfg80211_chan_def *chandef,
-+			      u8 dfs_region)
-+{
-+	unsigned int timeout_ms = IEEE80211_DFS_MIN_CAC_TIME_MS;
-+
-+	switch (dfs_region) {
-+	case NL80211_DFS_ETSI:
-+		if (cfg80211_chandef_dfs_is_weather(wiphy, chandef))
-+			timeout_ms = IEEE80211_DFS_WEATHER_MIN_CAC_TIME_MS;
-+		break;
-+	/* TODO check JP CAC time */
-+	case NL80211_DFS_JP:
-+		break;
-+	/* FCC don't allow weather channels */
-+	case NL80211_DFS_FCC:
-+	default:
-+		break;
-+	}
-+
-+	return timeout_ms;
-+}
- 
- static bool cfg80211_secondary_chans_ok(struct wiphy *wiphy,
- 					u32 center_freq, u32 bandwidth,
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 5390aeb..67d70c1 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -401,6 +401,10 @@ void cfg80211_set_dfs_state(struct wiphy *wiphy,
- 
- void cfg80211_dfs_channels_update_work(struct work_struct *work);
- 
-+unsigned int
-+cfg80211_chandef_dfs_cac_time(struct wiphy *wiphy,
-+			      const struct cfg80211_chan_def *chandef,
-+			      u8 dfs_region);
- 
- static inline int
- cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 689a335..9421bc7 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5629,6 +5629,7 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 	struct cfg80211_chan_def chandef;
- 	const struct ieee80211_regdomain *regdom;
-+	unsigned int cac_time_ms;
- 	u8 dfs_region;
- 	int err;
- 
-@@ -5672,8 +5673,11 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
- 	if (err)
- 		return err;
- 
-+	cac_time_ms = cfg80211_chandef_dfs_cac_time(&rdev->wiphy, &chandef,
-+						    dfs_region);
-+
- 	err = rdev->ops->start_radar_detection(&rdev->wiphy, dev, &chandef,
--					       IEEE80211_DFS_MIN_CAC_TIME_MS);
-+					       cac_time_ms);
- 	if (!err) {
- 		wdev->channel = chandef.chan;
- 		wdev->cac_started = true;
--- 
-1.7.9.5
+I think the other difference is that one calls
+drv_channel_switch_beacon()? The driver might do some channel
+preparations there, though I guess you can audit all the drivers (well,
+one ...) :)
+
+But that'd need some more documentation, otherwise I'd guess people
+would start to rely on drv_channel_switch_beacon() and it would mostly
+work - hence my question of whether it makes sense to refuse it at all
+in the case of <=1.
+
+johannes
 
