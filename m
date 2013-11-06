@@ -1,47 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f178.google.com ([74.125.82.178]:42031 "EHLO
-	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751924Ab3KAN6J (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 09:58:09 -0400
-Received: by mail-we0-f178.google.com with SMTP id q59so3979662wes.37
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:58:08 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 04/65] wireless-regdb: enable VHT80 for AW
-Date: Fri,  1 Nov 2013 14:56:54 +0100
-Message-Id: <1383314275-20960-5-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_145815_108248_6D6C0648)
-In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from mga02.intel.com ([134.134.136.20]:50470 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750810Ab3KFGhW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Nov 2013 01:37:22 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: wzyboy <wzyboy@wzyboy.org>
+CC: "ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [Ilw] Intel Wireless 7260 hardware timed out randomly
+Date: Wed, 6 Nov 2013 06:37:18 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com> (sfid-20131106_073725_464263_769E8E34)
+References: <5276134B.8070808@wzyboy.org>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE75AE@HASMSX103.ger.corp.intel.com>
+ <CALkVjQYh-SUte4S6LdqOc3KSc3_pDU6jz1KXp+Jsd5_RFPXSqA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE8338@HASMSX103.ger.corp.intel.com>
+ <CALkVjQb7fCMFpqhdUs8w-Mx_Y0RtAYYFtKxXkqyrCQ39UFGxKg@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE960E@HASMSX103.ger.corp.intel.com>
+ <CALkVjQbW8FeiEh8pBZ=KQFD9+8AdjgT0G_RG7qJe0MRdBvMD-A@mail.gmail.com>
+ <CALkVjQaLx2spaOqUPcs_EwMkU7npMki1Reo1MeZwxB7m=c24=g@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE9FC6@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZDNSgUUFyi94Y8da_NDzW61rCvaMrZpUugFKW_LRNFFA@mail.gmail.com>
+In-Reply-To: <CALkVjQZDNSgUUFyi94Y8da_NDzW61rCvaMrZpUugFKW_LRNFFA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Source is QCA's regulatory team's efforts.
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/db.txt b/db.txt
-index 5ef95ee..993b8f1 100644
---- a/db.txt
-+++ b/db.txt
-@@ -63,9 +63,9 @@ country AU:
- 
- country AW: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
--	(5170 - 5250 @ 40), (20)
--	(5250 - 5330 @ 40), (20), DFS
--	(5490 - 5710 @ 40), (27), DFS
-+	(5170 - 5250 @ 80), (20)
-+	(5250 - 5330 @ 80), (20), DFS
-+	(5490 - 5710 @ 80), (27), DFS
- 
- country AZ: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
--- 
-1.8.4.rc3
-
+PiA+PiBIaSwgSSdtIGJhY2suDQo+ID4+DQo+ID4+IFRoaXMgdGVycmlhYmxlIGJ1ZyBvY2N1cnMg
+YWdhaW4gaW4gTGludXggMy4xMi4gVGhpcyB0aW1lIEkndmUgYmVlbg0KPiA+PiBwcmVwYXJlZCBm
+b3IgaXQgYW5kIHdyb3RlIGRvd24gdGhlIGNvbXBsZXRlIHByb2Nlc3Mgb2YgaXRzIGFwcGVyYW5j
+ZQ0KPiA+PiBhbmQgbXkgcmVhY3RpbmcsIGFzIGF0dGFjaGVkLg0KPiA+DQo+ID4gVGhhbmtzIC0g
+d2FzIHRoYXQgd2l0aCBwb3dlciBzYXZlIGRpc2FibGVkPw0KPiANCj4gWWVzLCBMaW51eCAzLjEy
+IHdpdGggIm9wdGlvbnMgaXdsbXZtIHBvd2VyX3NjaGVtZT0xIi4gKEkgZGlkIG5vdCB0b3VjaA0K
+PiB0aGF0IC5jb25mIGZpbGUgYWZ0ZXIgdGhlIGtlcm5lbCB1cGdyYWRlKQ0KPiANCj4gPg0KPiA+
+Pg0KPiA+PiBJTUhPIHRoZXkgYXJlIHF1aXRlIHNpbWlsYXIgd2l0aCB0aG9zZSBlcnJvcnMgaW4g
+My4xMS4uLg0KPiA+DQo+ID4gSW5kZWVkLiBUaGUgb25seSBkaWZmZXJlbmNlIGlzIHRoYXQgeW91
+IGRvbuKAmXQgaGF2ZSBQQ0kgY29tcGxhaW4gYWJvdXQgbm90DQo+IGJlaW5nIGFibGUgdG8gZGlz
+YWJsZSBMMS4NCj4gDQo+IEkgc2VlLiBCdXQgSSBzdGlsbCBjYW5ub3QgZmlndXJlIG91dCB3aGF0
+IGlzIHRoZSAidHJpZ2dlciIgb2YgdGhpcyBidWcuIFRvZGF5IChOb3YNCj4gMDYgVVRDKzgpIHRo
+aXMgYnVnIG9jY3VycyB0d2ljZSB0aWxsIG5vdyAoMTQ6MzApLCB0aGV5IHdlcmUgYXQgMTI6MzEg
+YW5kIDEzOjMwLg0KPiBBdCB0aGUgZmlyc3QgdGltZSBJIHdhcyBhYm91dCB0byBkbyBhIHN5c3Rl
+bSB1cGdyYWRlIGFuZCBhdCB0aGUgc2Vjb25kIHRpbWUgSQ0KPiB3YXMgdXNpbmcgcnN5bmMgdG8g
+dXBsb2FkIHBob3RvcyBmcm9tIG15IEFuZHJvaWQgcGhvbmUgdG8gbXkgbGFwdG9wLg0KPiANCj4g
+U29tZXRpbWVzIEkgd2FzIG5vdCBldmVuIHVzaW5nIG5ldHdvcmsgKHRoZSB0cmFmZmljIHdhcyBu
+ZWFyIHplcm8pIHdoZW4NCj4gdGhlIGJ1ZyBvY2N1cnMuIFNvIHRoaXMgYnVnIHNlZW1zIHRvIG9j
+Y3VyIG5vIG1hdHRlciBvZiBuZXR3b3JrIHRyYWZmaWMNCj4gc3RhdGVzPw0KPiANCj4gQ291bGQg
+eW91IHRoaW5rIG9mIGEgcG9zc2libGUgInRyaWdnZXIiIG9mIHRoaXMgYnVnIHNvIEkgY291bGQg
+dHJ5IHRvIGF2b2lkIGl0IChJDQo+IGhhdGUgcmVib290aW5nKSBiZWZvcmUgdGhlIGZpbmFsIGZp
+eCBpcyByZWxlYXNlZD8gRm9yIGV4YW1wbGUsIGlmIHRoZXJlIGlzDQo+IHNvbWV0aGluZyB3cm9u
+ZyB3aXRoIHRoZSAibW9kdWxlcyBsaW5rZWQgaW4iIEkgY291bGQgYmxhY2tsaXN0IHRoYXQgbW9k
+dWxlLi4uDQo+IA0KDQpJIGRvbid0IGtub3cgLSBJIGFtIHRyeWluZyB0byBjaGVjayB3aXRoIG91
+ciBIVyBndXlzIGhlcmUuDQpDYW4geW91IHBsZWFzZSBydW4gbHNwY2kgLXh4eCBiZWZvcmUgYW5k
+IGFmdGVyIGl0IGhhcHBlbnM/DQpCVFcgLSBob3cgZG8geW91IHJlY292ZXI/IFJlbG9hZGluZyB0
+aGUgbW9kdWxlIGlzIGVub3VnaD8NCg0K
