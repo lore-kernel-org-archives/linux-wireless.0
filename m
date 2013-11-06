@@ -1,55 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f170.google.com ([74.125.82.170]:51797 "EHLO
-	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751421Ab3KSQNB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Nov 2013 11:13:01 -0500
-Received: by mail-we0-f170.google.com with SMTP id w61so4264612wes.15
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Nov 2013 08:12:58 -0800 (PST)
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>
-Subject: [PATCH] mac80211: set hw initial idle state
-Date: Tue, 19 Nov 2013 17:12:05 +0100
-Message-Id: <1384877525-23221-1-git-send-email-karl.beldan@gmail.com> (sfid-20131119_171306_599800_A455B4F6)
+Received: from mms2.broadcom.com ([216.31.210.18]:2504 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755492Ab3KFWHd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Nov 2013 17:07:33 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless@vger.kernel.org,
+	"Franky Lin" <frankyl@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 5/7] brcmfmac: remove empty brcmf_proto_stop
+Date: Wed, 6 Nov 2013 23:07:20 +0100
+Message-ID: <1383775642-647-6-git-send-email-arend@broadcom.com> (sfid-20131106_230744_469971_5DABB4E7)
+In-Reply-To: <1383775642-647-1-git-send-email-arend@broadcom.com>
+References: <1383775642-647-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karl Beldan <karl.beldan@rivierawaves.com>
+From: Franky Lin <frankyl@broadcom.com>
 
-ATM, the first call of ieee80211_do_open will configure the hw as
-non-idle, even if the interface being brought up is not a monitor, and
-this leads to inconsistent sequences like:
+remove empty brcmf_proto_stop from protocol layer
 
-register_hw()
-	do_open(sta)
-		hw_config(non-idle)
-(.. sta is non-idle ..)
-scan(sta)
-	hw_config(idle) (after scan finishes)
-do_stop(sta)
-do_open(sta)
-(.. sta is idle ..)
-
-Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- net/mac80211/main.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c   | 5 -----
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c | 3 ---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_proto.h | 3 ---
+ 3 files changed, 11 deletions(-)
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index bdb0b6c..3ef7fc3 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -995,6 +995,8 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 		wiphy_debug(local->hw.wiphy, "Failed to initialize wep: %d\n",
- 			    result);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
+index dd85401..42aaf10 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
+@@ -385,8 +385,3 @@ void brcmf_proto_detach(struct brcmf_pub *drvr)
+ 	kfree(drvr->prot);
+ 	drvr->prot = NULL;
+ }
+-
+-void brcmf_proto_stop(struct brcmf_pub *drvr)
+-{
+-	/* Nothing to do for CDC */
+-}
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+index f4eeaa1..c34ca70 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+@@ -1150,9 +1150,6 @@ static void brcmf_bus_detach(struct brcmf_pub *drvr)
+ 	brcmf_dbg(TRACE, "Enter\n");
  
-+	local->hw.conf.flags = IEEE80211_CONF_IDLE;
-+
- 	ieee80211_led_init(local);
+ 	if (drvr) {
+-		/* Stop the protocol module */
+-		brcmf_proto_stop(drvr);
+-
+ 		/* Stop the bus module */
+ 		brcmf_bus_stop(drvr->bus_if);
+ 	}
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_proto.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd_proto.h
+index ef91798..0780fb7 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_proto.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_proto.h
+@@ -27,9 +27,6 @@ extern int brcmf_proto_attach(struct brcmf_pub *drvr);
+ /* Unlink, frees allocated protocol memory (including brcmf_proto) */
+ extern void brcmf_proto_detach(struct brcmf_pub *drvr);
  
- 	rtnl_lock();
+-/* Stop protocol: sync w/dongle state. */
+-extern void brcmf_proto_stop(struct brcmf_pub *drvr);
+-
+ /* Add any protocol-specific data header.
+  * Caller must reserve prot_hdrlen prepend space.
+  */
 -- 
-1.8.2
+1.8.1.3
+
 
