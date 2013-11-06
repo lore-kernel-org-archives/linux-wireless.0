@@ -1,45 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:5916 "EHLO mx1.redhat.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:3227 "EHLO mms3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754854Ab3KYRQW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Nov 2013 12:16:22 -0500
-Message-ID: <1385399816.8710.16.camel@dcbw.foobar.com> (sfid-20131125_181636_904932_46F5FE11)
-Subject: Re: Roaming with libertas and wpa_supplicant not working
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Troels Nilsson <nilsson.troels@gmail.com>,
-	linux-wireless@vger.kernel.org
-Date: Mon, 25 Nov 2013 11:16:56 -0600
-In-Reply-To: <1385396191.4443.44.camel@jlt4.sipsolutions.net>
-References: <loom.20131118T143002-687@post.gmane.org>
-	 (sfid-20131118_145509_206573_37D8C413) <1385396191.4443.44.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1755759Ab3KFWHj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Nov 2013 17:07:39 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 4/7] brcmfmac: start netif queues only when setup is
+ completed successful
+Date: Wed, 6 Nov 2013 23:07:19 +0100
+Message-ID: <1383775642-647-5-git-send-email-arend@broadcom.com> (sfid-20131106_230756_250076_5A071300)
+In-Reply-To: <1383775642-647-1-git-send-email-arend@broadcom.com>
+References: <1383775642-647-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-11-25 at 17:16 +0100, Johannes Berg wrote:
-> On Mon, 2013-11-18 at 13:50 +0000, Troels Nilsson wrote:
-> > Hi,
-> > 
-> > We are having a problem with a custom device which uses the libertas wifi
-> > driver (on kernel 3.4.24) together with wpa_supplicant (0.7.3). More
-> > specifically, whenever wpa_supplicant attempts to roam to a different access
-> > point it gets a EALREADY error.
-> > 
-> > I have tracked down the problem to this check in sme.c:
-> > 
-> >         if (wdev->sme_state != CFG80211_SME_IDLE)
-> >                 return -EALREADY;
-> 
-> This no longer exists - please try a newer kernel.
+Moving the call to netif_start_queue() after brcmf_cfg80211_up() is
+completed successful. If not return -EIO instead of -1 as that results
+in 'Operation not permitted' which can put user on wrong track.
 
-Yeah, though the code there hasn't changed much in cfg80211 in the
-"connect" case from what he's using.  It seems that
-supplicant-controlled roaming simply won't work with "connect" devices
-unless a disconnect is done first?  Libertas is kinda different here
-since it does allow userspace roaming control.
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-Dan
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+index ab207e2..f4eeaa1 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+@@ -769,7 +769,6 @@ static int brcmf_netdev_open(struct net_device *ndev)
+ 	struct brcmf_pub *drvr = ifp->drvr;
+ 	struct brcmf_bus *bus_if = drvr->bus_if;
+ 	u32 toe_ol;
+-	s32 ret = 0;
+ 
+ 	brcmf_dbg(TRACE, "Enter, idx=%d\n", ifp->bssidx);
+ 
+@@ -788,14 +787,14 @@ static int brcmf_netdev_open(struct net_device *ndev)
+ 	else
+ 		ndev->features &= ~NETIF_F_IP_CSUM;
+ 
+-	/* Allow transmit calls */
+-	netif_start_queue(ndev);
+ 	if (brcmf_cfg80211_up(ndev)) {
+ 		brcmf_err("failed to bring up cfg80211\n");
+-		return -1;
++		return -EIO;
+ 	}
+ 
+-	return ret;
++	/* Allow transmit calls */
++	netif_start_queue(ndev);
++	return 0;
+ }
+ 
+ static const struct net_device_ops brcmf_netdev_ops_pri = {
+-- 
+1.8.1.3
 
 
