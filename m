@@ -1,48 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:45884 "EHLO nbd.name"
+Received: from mms2.broadcom.com ([216.31.210.18]:2502 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751749Ab3K0QAc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Nov 2013 11:00:32 -0500
-Message-ID: <52961714.20909@openwrt.org> (sfid-20131127_170034_954081_4EF5E810)
-Date: Wed, 27 Nov 2013 17:00:20 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+	id S1755597Ab3KFWHd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Nov 2013 17:07:33 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 6/7] brcmfmac: reduce logging noise accessing SDIO
+ SleepCSR register
+Date: Wed, 6 Nov 2013 23:07:21 +0100
+Message-ID: <1383775642-647-7-git-send-email-arend@broadcom.com> (sfid-20131106_230745_100264_1CB8ADE7)
+In-Reply-To: <1383775642-647-1-git-send-email-arend@broadcom.com>
+References: <1383775642-647-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Sujith Manoharan <sujith@msujith.org>,
-	Antonio Quartulli <antonio@meshcoding.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: ath9k pending patches
-References: <1385547828-4330-1-git-send-email-sujith@msujith.org>	<21141.51790.303263.385517@gargle.gargle.HOWL>	<5295EB1D.1050604@meshcoding.com> <21142.4319.977971.553792@gargle.gargle.HOWL>
-In-Reply-To: <21142.4319.977971.553792@gargle.gargle.HOWL>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-11-27 16:33, Sujith Manoharan wrote:
-> Antonio Quartulli wrote:
->> What does this ALWAYS_PERFORM_KEY_SEARCH bit do? Is it set within the
->> initvalues?
-> 
-> Here is a patch to set ALWAYS_PERFORM_KEY_SEARCH for AR9300 2.2.
-> Since AR9331, AR9340 and AR9580 use the same array, it applies for
-> them too.
-> 
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-> index 1553395..819ecf3 100644
-> --- a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-> +++ b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-> @@ -303,7 +303,7 @@ static const u32 ar9300_2p2_mac_postamble[][5] = {
->  	{0x000010b0, 0x00000e60, 0x00001cc0, 0x00007c70, 0x00003e38},
->  	{0x00008014, 0x03e803e8, 0x07d007d0, 0x10801600, 0x08400b00},
->  	{0x0000801c, 0x128d8027, 0x128d804f, 0x12e00057, 0x12e0002b},
-> -	{0x00008120, 0x08f04800, 0x08f04800, 0x08f04810, 0x08f04810},
-> +	{0x00008120, 0x18f04800, 0x18f04800, 0x18f04810, 0x18f04810},
->  	{0x000081d0, 0x00003210, 0x00003210, 0x0000320a, 0x0000320a},
->  	{0x00008318, 0x00003e80, 0x00007d00, 0x00006880, 0x00003440},
->  };
-There's no need to patch the initvals for this issue at all. ath9k has
-enabled AR_PCU_ALWAYS_PERFORM_KEYSEARCH via ah->misc_mode for a long
-time now.
+The SleepCSR register is accessed to wakeup the device from the
+host side. Depending on the state of the device this may take
+multiple attempts. The failed attempt are not real failures so
+reduce the log level specifically for this register. The calling
+function will scream when the multiple attempts all failed.
 
-- Felix
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c    | 19 +++++++++++++++----
+ 1 file changed, 15 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+index 905704e..009d2a0 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+@@ -156,10 +156,21 @@ int brcmf_sdioh_request_byte(struct brcmf_sdio_dev *sdiodev, uint rw, uint func,
+ 		}
+ 	}
+ 
+-	if (err_ret)
+-		brcmf_err("Failed to %s byte F%d:@0x%05x=%02x, Err: %d\n",
+-			  rw ? "write" : "read", func, regaddr, *byte, err_ret);
+-
++	if (err_ret) {
++		/*
++		 * SleepCSR register access can fail when
++		 * waking up the device so reduce this noise
++		 * in the logs.
++		 */
++		if (regaddr != SBSDIO_FUNC1_SLEEPCSR)
++			brcmf_err("Failed to %s byte F%d:@0x%05x=%02x, Err: %d\n",
++				  rw ? "write" : "read", func, regaddr, *byte,
++				  err_ret);
++		else
++			brcmf_dbg(SDIO, "Failed to %s byte F%d:@0x%05x=%02x, Err: %d\n",
++				  rw ? "write" : "read", func, regaddr, *byte,
++				  err_ret);
++	}
+ 	return err_ret;
+ }
+ 
+-- 
+1.8.1.3
+
 
