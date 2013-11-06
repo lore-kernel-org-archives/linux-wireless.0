@@ -1,43 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:33735 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751322Ab3KZB4T (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Nov 2013 20:56:19 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, stable@vger.kernel.org
-Subject: [PATCH] ath9k: Fix XLNA bias strength
-Date: Tue, 26 Nov 2013 07:21:39 +0530
-Message-Id: <1385430699-26333-1-git-send-email-sujith@msujith.org> (sfid-20131126_025623_347801_46011554)
+Received: from mga03.intel.com ([143.182.124.21]:52534 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756494Ab3KFMEM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Nov 2013 07:04:12 -0500
+From: "Coelho, Luciano" <luciano.coelho@intel.com>
+To: Simon Wunderlich <sw@simonwunderlich.de>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
+Subject: Re: [RFC v2 2/2] mac80211: only set CSA beacon when at least one
+ beacon must be transmitted
+Date: Wed, 6 Nov 2013 12:03:03 +0000
+Message-ID: <1383739343.4256.58.camel@porter.coelho.fi> (sfid-20131106_130416_071830_553AB5A0)
+References: <1383684854-21663-1-git-send-email-luciano.coelho@intel.com>
+	 <1383684854-21663-2-git-send-email-luciano.coelho@intel.com>
+	 <201311061247.48777.sw@simonwunderlich.de>
+In-Reply-To: <201311061247.48777.sw@simonwunderlich.de>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-
-The EEPROM parameter to determine whether the bias
-strength values for XLNA have to be applied is part
-of the miscConfiguration field and not featureEnable.
-
-Cc: stable@vger.kernel.org
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index d96e879..130657d 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -4037,7 +4037,7 @@ static void ar9003_hw_xlna_bias_strength_apply(struct ath_hw *ah, bool is2ghz)
- 	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
- 	u8 bias;
- 
--	if (!(eep->baseEepHeader.featureEnable & 0x40))
-+	if (!(eep->baseEepHeader.miscConfiguration & 0x40))
- 		return;
- 
- 	if (!AR_SREV_9300(ah))
--- 
-1.8.4.2
-
+T24gV2VkLCAyMDEzLTExLTA2IGF0IDEyOjQ3ICswMTAwLCBTaW1vbiBXdW5kZXJsaWNoIHdyb3Rl
+Og0KPiBIZXkgTHVjYSwNCj4gDQo+ID4gV2l0aCBhIENTQSBjb3VudCBvZiAwLCB3ZSB3b24ndCB0
+cmFuc21pdCBhbnkgQ1NBIGJlYWNvbnMsIGJlY2F1c2UgdGhlDQo+ID4gc3dpdGNoIHdpbGwgaGFw
+cGVuIGJlZm9yZSB0aGUgbmV4dCBUQlRULiAgVG8gYXZvaWQgZXh0cmEgd29yayBhbmQNCj4gPiBw
+b3RlbnRpYWwgY29uZnVzaW9uIGluIHRoZSBkcml2ZXJzLCBjb21wbGV0ZSB0aGUgQ1NBIGltbWVk
+aWF0ZWx5LA0KPiA+IGluc3RlYWQgb2Ygd2FpdGluZyBmb3IgdGhlIGRyaXZlciB0byBjYWxsIGll
+ZWU4MDIxMV9jc2FfZmluaXNoKCkuDQo+ID4gDQo+ID4gVG8ga2VlcCB0aGluZ3Mgc2ltcGxlciwg
+d2UgYWxzbyBzd2l0Y2ggaW1tZWRpYXRlbHkgd2hlbiB0aGUgQ1NBIGNvdW50DQo+ID4gaXMgMSwg
+d2hpbGUgaW4gdGhlb3J5IHdlIHNob3VsZCBkZWxheSB0aGUgc3dpdGNoIHVudGlsIGp1c3QgYmVm
+b3JlIHRoZQ0KPiA+IG5leHQgVEJUVC4NCj4gPiANCj4gPiBBZGRpdGlvbmFsbHksIG1vdmUgdGhl
+IGllZWU4MDIxMV9jc2FfZmluaXNoKCkgZnVuY3Rpb24gdG8gY2ZnLmMsDQo+ID4gd2hlcmUgaXQg
+bWFrZXMgbW9yZSBzZW5zZSAoYW5kIHNpbmNlIHdlIGNhbGwgaXQgZnJvbSBjZmcuYyBub3cpLg0K
+PiA+IA0KPiA+IENjOiBTaW1vbiBXdW5kZXJsaWNoIDxzd0BzaW1vbnd1bmRlcmxpY2guZGU+DQo+
+ID4gU2lnbmVkLW9mZi1ieTogTHVjaWFubyBDb2VsaG8gPGx1Y2lhbm8uY29lbGhvQGludGVsLmNv
+bT4NCj4gPiAtLS0NCj4gPiBTaW1vbiwgSSB0aGluayB3aXRoIHRoaXMgd2Ugd29uJ3QgbmVlZCBh
+bnkgY2hhbmdlcyBpbiBhdGg5aywgcmlnaHQ/DQo+IA0KPiBJIHRoaW5rIHlvdSBzdGlsbCBuZWVk
+IHRvIGNoYW5nZSBpZWVlODAyMTFfaWJzc19wcm9jZXNzX2NoYW5zd2l0Y2goKSB3aGljaCANCj4g
+YWxzbyBjYWxscyBpZWVlODAyMTFfaWJzc19jc2FfYmVhY29uKCkgYW5kIGRydl9jaGFubmVsX3N3
+aXRjaF9iZWFjb24oKS4NCg0KT2theSwgSSBhZG1pdCBJIGRpZG4ndCBsb29rIGludG8gSUJTUyB0
+aGF0IG11Y2guLi4gKmFnYWluKi4gOiggSSBhc3N1bWVkDQp0aGF0IHNpbXBseSBub3QgY2FsbGlu
+ZyBpZWVlODAyMTFfaWJzc19jc2FfYmVhY29uKCkgd291bGQgaGF2ZSB0aGUgcmlnaHQNCmVmZmVj
+dC4NCg0KDQo+IEFsc28sIEkgZG9uJ3QgdGhpbmsgdGhhdCB0aGlzIGlzIHN1ZmZpY2llbnQgZm9y
+IElCU1MgbW9kZSAtIGNoYW5naW5nIGltbWVkaWF0ZWx5IA0KPiB3aXRob3V0IHNlbmRpbmcgYW55
+IGFjdGlvbiBmcmFtZSB3aWxsIGp1c3Qgc3BsaXQgdGhlIElCU1MgbmV0d29yay4gQWN0aW9uIA0K
+PiBmcmFtZXMgYXJlIGN1cnJlbnRseSBzZXQgaW4gaWVlZTgwMjExX2lic3NfY3NhX2JlYWNvbigp
+IGFzIHdlbGwsIHdpdGggdGhpcyANCj4gY2hhbmdlIHdlIHNob3VsZCBwcm9iYWJseSBtb3ZlIHRo
+YXQgdG8gYW5vdGhlciBwb3NpdGlvbi4NCg0KT2theSwgSSdsbCBsb29rIGludG8gdGhpcy4gIElu
+IEFQIG1vZGUsIHN3aXRjaGluZyB3aXRob3V0IHNlbmRpbmcgdGhlDQphY3Rpb24gZnJhbWUgd2ls
+bCBhbHNvIGJyZWFrIHRoZSBjb25uZWN0aW9uLCBidXQgYXQgbGVhc3QgaW4gdGhlIEFQIGNhc2UN
+CnRoZSB1c2Vyc3BhY2UgY291bGQgc2VuZCB0aGUgYWN0aW9uIGZyYW1lIGJlZm9yZSBjYWxsaW5n
+IGNoYW5uZWwgc3dpdGNoDQppbiBjZmc4MDIxMS4NCg0KDQo+IEV2ZW4gaWYgd2UgZG9uJ3QgYWxs
+b3cgY291bnQgPD0xIGZyb20gdXNlcnNwYWNlIGFzIEpvaGFubmVzIHN1Z2dlc3RlZCwNCg0KQWgs
+IEkgaGFkIG1pc3VuZGVyc3Rvb2QgSm9oYW5uZXMuICBJIHRob3VnaHQgaGUgbWVhbnQgdG8gcmVq
+ZWN0IHRoZQ0KcGF0Y2guIDpQDQoNClJlamVjdGluZyBjb3VudCA8PSAxIGNvdWxkIGJlIGEgdGVt
+cG9yYXJ5IHNvbHV0aW9uIHVudGlsIHdlIGltcGxlbWVudA0KdGhlIGFjdGlvbiBmcmFtZXMgcHJv
+cGVybHkuICBVbmxlc3Mgd2UgZGVjaWRlIHRoYXQgdGhlIGFjdGlvbiBmcmFtZXMNCnNob3VsZCBi
+ZSBoYW5kbGVkIGluIHVzZXJzcGFjZSBhcyB5b3UgcHJvcG9zZWQuDQoNCj4gd2Ugc3RpbGwgaGF2
+ZSB0byBmaXggdGhlIENTQSBoYW5kbGluZyBmcm9tIG90aGVyIFNUQXMgaW4gSUJTUy4NCg0KV2hh
+dCBkbyB5b3UgbWVhbj8gQmVjYXVzZSB0aGV5IGFyZSB3YWl0aW5nIGZvciBiZWFjb24gd2l0aCBj
+b3VudCA9PSAwDQpiZWZvcmUgc3dpdGNoaW5nPyBJIGd1ZXNzIHRoaXMgaXMgYWxzbyB3cm9uZyBp
+biBCU1MgU1RBcy4gIEknbGwgY2hlY2suDQoNCi0tDQpMdWNhLg0K
