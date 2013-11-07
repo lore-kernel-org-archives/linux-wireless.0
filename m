@@ -1,44 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f175.google.com ([74.125.82.175]:44422 "EHLO
-	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752799Ab3KGUZd (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:40985 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752488Ab3KGAQc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Nov 2013 15:25:33 -0500
-Received: by mail-we0-f175.google.com with SMTP id t61so1058630wes.20
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Nov 2013 12:25:32 -0800 (PST)
-Message-ID: <1383855924.2579.2.camel@canaries32-MCP7A> (sfid-20131107_212624_984459_D9FD139D)
-Subject: Re: [PATCH] staging: vt6656: baseband.c clean up BBbVT3184Init
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
+	Wed, 6 Nov 2013 19:16:32 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-Date: Thu, 07 Nov 2013 20:25:24 +0000
-In-Reply-To: <1383765644.3692.3.camel@canaries32-MCP7A>
-References: <1383765644.3692.3.camel@canaries32-MCP7A>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Subject: [PATCH 00/13] ath9k pending patches
+Date: Thu,  7 Nov 2013 05:41:47 +0530
+Message-Id: <1383783120-22435-1-git-send-email-sujith@msujith.org> (sfid-20131107_011635_620142_034BC31B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-11-06 at 19:20 +0000, Malcolm Priestley wrote:
-> White space clean up and remove camel case from variables.
-> 
-> pDevice-> priv
-> ntStatus -> status
-> wLength ->length
-> pbyAddr -> addr
-> pbyAgc -> agc
-> wLengthAgc ->length_agc
-> abyArray -> array
-> 
+Pending patches for ath9k, rebased over master.
+The MAINTAINERS file has also been updated with patch 13.
 
-Can you please drop this patch.
+Sujith
 
-A long standing critical bug has been found in BBbVT3184Init
-that needs to be passed back to stable.
+Sujith Manoharan (13):
+  ath9k: Add WB335 PCI IDs
+  ath9k: Identify Killer Wireless cards
+  ath9k: Fix TX99 config option usage
+  ath9k: Fix wow.c compilation
+  ath9k: Add a config option for WoW
+  ath9k: Use CONFIG_ATH9K_WOW
+  ath9k: Add an initialization routine for WoW
+  ath9k: Add SERDES initvals for AR9462 2.1
+  ath9k: Remove unused AR9462 2.0 initvals
+  ath9k: Remove pcieSerDesWrite
+  ath9k: Use correct PCIE initvals for AR9485
+  ath9k: Apply CUS227 specific TX gain values
+  ath9k: Update MAINTAINERS
 
-I will redo this patch.
+ MAINTAINERS                                        |  19 +-
+ drivers/net/wireless/ath/ath9k/Kconfig             |  10 +-
+ drivers/net/wireless/ath/ath9k/Makefile            |   8 +-
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c         |  43 +-
+ drivers/net/wireless/ath/ath9k/ar9003_wow.c        | 422 +++++++++++++++
+ drivers/net/wireless/ath/ath9k/ar9340_initvals.h   | 102 ++++
+ .../net/wireless/ath/ath9k/ar9462_2p0_initvals.h   |  14 -
+ .../net/wireless/ath/ath9k/ar9462_2p1_initvals.h   |   7 +
+ drivers/net/wireless/ath/ath9k/ar9485_initvals.h   |  35 +-
+ drivers/net/wireless/ath/ath9k/ath9k.h             |  53 +-
+ drivers/net/wireless/ath/ath9k/debug.c             | 115 +---
+ drivers/net/wireless/ath/ath9k/hw.c                |   1 -
+ drivers/net/wireless/ath/ath9k/hw.h                |   5 +-
+ drivers/net/wireless/ath/ath9k/init.c              |  23 +-
+ drivers/net/wireless/ath/ath9k/main.c              | 468 +---------------
+ drivers/net/wireless/ath/ath9k/pci.c               |  45 ++
+ drivers/net/wireless/ath/ath9k/tx99.c              | 263 +++++++++
+ drivers/net/wireless/ath/ath9k/wow.c               | 589 +++++++++------------
+ drivers/net/wireless/ath/ath9k/xmit.c              |   4 +
+ 19 files changed, 1224 insertions(+), 1002 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath9k/ar9003_wow.c
+ create mode 100644 drivers/net/wireless/ath/ath9k/tx99.c
 
-Thanks
-
-Malcolm
+-- 
+1.8.4.2
 
