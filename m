@@ -1,51 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f47.google.com ([209.85.214.47]:56850 "EHLO
-	mail-bk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751236Ab3KRRCz (ORCPT
+Received: from mail-qc0-f175.google.com ([209.85.216.175]:36261 "EHLO
+	mail-qc0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753087Ab3KGHci (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Nov 2013 12:02:55 -0500
-Received: by mail-bk0-f47.google.com with SMTP id mx12so1004490bkb.34
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Nov 2013 09:02:53 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>
-Subject: [PATCH 2/6] mac80211: fix connection polling
-Date: Mon, 18 Nov 2013 19:02:42 +0200
-Message-Id: <1384794166-10906-2-git-send-email-egrumbach@gmail.com> (sfid-20131118_180259_620134_4B5151A1)
-In-Reply-To: <1384794166-10906-1-git-send-email-egrumbach@gmail.com>
-References: <1384794166-10906-1-git-send-email-egrumbach@gmail.com>
+	Thu, 7 Nov 2013 02:32:38 -0500
+MIME-Version: 1.0
+In-Reply-To: <1383760556.7940.28.camel@joe-AO722>
+References: <1383684000.4387.42.camel@joe-AO722>
+	<CAFSJ42YQy96Sko8CuG9BGjHzTV7TkRp2=NVt036APxSKpPB=Ag@mail.gmail.com>
+	<1383760556.7940.28.camel@joe-AO722>
+Date: Thu, 7 Nov 2013 07:32:37 +0000
+Message-ID: <CAFSJ42Y-3BZqj+JRNa8wdxjnm1fguD8ToH5Oj0m56yT5NexdVQ@mail.gmail.com> (sfid-20131107_083243_252749_CE161CBD)
+Subject: Re: [PATCH] wcn36xx: Fix logging macro with unnecessary semicolon
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: Joe Perches <joe@perches.com>
+Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	wcn36xx <wcn36xx@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	ath5k-devel@lists.ath5k.org,
+	ath9k-devel <ath9k-devel@lists.ath9k.org>,
+	ath10k@lists.infradead.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+Hi Joe,
 
-Commit 392b9ff ("mac80211: change beacon/connection polling")
-removed the IEEE80211_STA_BEACON_POLL flag.
+I personally like the idea of making some kind of framework on top of
+printing because all ath drivers are using the same printing approach
+and combining all that code in one place will reduce amount of code in
+each particular driver. As a true engineer i like when it's less code
+= less work to do = less bugs:)
 
-However, it accidentally removed the setting of
-IEEE80211_STA_CONNECTION_POLL, making the connection polling
-completely useless (the flag is always clear, so the result
-is never being checked). Fix it.
+Suggestion is to send a patch with semicolon fix only and have a
+second round of convincing ath guys to change printing code. How does
+that sound?
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/mlme.c |    2 ++
- 1 file changed, 2 insertions(+)
+On Wed, Nov 6, 2013 at 5:55 PM, Joe Perches <joe@perches.com> wrote:
+> On Wed, 2013-11-06 at 07:49 +0000, Eugene Krasnikov wrote:
+>> Hm... when it comes to semicolon the patch seems to be good. When it
+>> comes to dynamic debugging i think we should have a separate
+>> discussion about that.
+>> I personally like the whole idea about dynamic debug but if you want
+>> to change it i would suggest to have some kind of framework for all
+>> ath drivers(or maybe all wireless drivers). Because obviously you can
+>> find common code in every driver that defines it's own debug
+>> functions/debug levels and so on. Why not to make a framework with
+>> standard API/levels?
+>
+> You need to bring that up with the Atheros folk.
+> I've tried.  The view seemed to be it was more
+> trouble than it was worth.
+>
+>
+>
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index d7504ab..b3a3ce3 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1910,6 +1910,8 @@ static void ieee80211_mgd_probe_ap(struct ieee80211_sub_if_data *sdata,
- 	if (ifmgd->flags & IEEE80211_STA_CONNECTION_POLL)
- 		already = true;
- 
-+	ifmgd->flags |= IEEE80211_STA_CONNECTION_POLL;
-+
- 	mutex_unlock(&sdata->local->mtx);
- 
- 	if (already)
+
+
 -- 
-1.7.9.5
-
+Best regards,
+Eugene
