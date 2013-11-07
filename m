@@ -1,90 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f172.google.com ([209.85.215.172]:61489 "EHLO
-	mail-ea0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751539Ab3KZTRG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Nov 2013 14:17:06 -0500
-Received: by mail-ea0-f172.google.com with SMTP id q10so3921020ead.31
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Nov 2013 11:17:04 -0800 (PST)
-Message-ID: <1385493419.6446.10.camel@canaries32-MCP7A> (sfid-20131126_201711_688896_1F7EFB5E)
-Subject: [PATCH 3/3] staging: vt6656: clean up s_vGetFreeContext
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 26 Nov 2013 19:16:59 +0000
+Received: from mx1.redhat.com ([209.132.183.28]:37060 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753626Ab3KGXhV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Nov 2013 18:37:21 -0500
+Message-ID: <1383867422.2391.10.camel@dcbw.foobar.com> (sfid-20131108_003734_521532_614D42CB)
+Subject: Re: future of prism2_usb (aka wlan-ng) in staging tree
+From: Dan Williams <dcbw@redhat.com>
+To: Solomon Peachy <pizza@shaftnet.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org
+Date: Thu, 07 Nov 2013 17:37:02 -0600
+In-Reply-To: <20131107230215.GF12612@shaftnet.org>
+References: <20131107160522.GA12612@shaftnet.org>
+	 <527BC04F.2080000@lwfinger.net> <20131107163719.GC12612@shaftnet.org>
+	 <20131107175201.GA2002@tuxdriver.com> <20131107185714.GD12612@shaftnet.org>
+	 <20131107191122.GD2002@tuxdriver.com> <20131107194641.GE12612@shaftnet.org>
+	 <1383863100.2391.5.camel@dcbw.foobar.com>
+	 <20131107230215.GF12612@shaftnet.org>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Camel case clean up
-pDevice -> priv
-pContext -> context
+On Thu, 2013-11-07 at 18:02 -0500, Solomon Peachy wrote:
+> On Thu, Nov 07, 2013 at 04:25:00PM -0600, Dan Williams wrote:
+> > > At this point it's a more modern driver than the ones already in the 
+> > > kernel, and I'm willing to maintain it if there's a point to doing so.
+> > 
+> > What's the delta in device support between prism2_usb and the hostap
+> > driver's USB subdriver?  Is there any overlap?
+> 
+> Given that there never was a hostap_usb, there's no overlap at all.  If 
+> you have a prism2.5/3 USB widget, you'll need prism2_usb to make it more 
+> than a lousy paperweight.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/rxtx.c | 37 +++++++++++++++++++------------------
- 1 file changed, 19 insertions(+), 18 deletions(-)
+Sorry, I see now I meant orinico_usb, not hostap...
 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 6534f75..2db03d6 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -96,8 +96,7 @@ static const u16 wFB_Opt1[2][5] = {
- static void s_vSaveTxPktInfo(struct vnt_private *pDevice, u8 byPktNum,
- 	u8 *pbyDestAddr, u16 wPktLength, u16 wFIFOCtl);
- 
--static struct vnt_usb_send_context
--		*s_vGetFreeContext(struct vnt_private *pDevice);
-+static struct vnt_usb_send_context *s_vGetFreeContext(struct vnt_private *);
- 
- static u16 s_vGenerateTxParameter(struct vnt_private *pDevice,
- 	u8 byPktType, u16 wCurrentRate,	struct vnt_tx_buffer *tx_buffer,
-@@ -138,26 +137,28 @@ static u16 s_uGetRTSCTSDuration(struct vnt_private *pDevice,
- 	int bNeedAck, u8 byFBOption);
- 
- static struct vnt_usb_send_context
--	*s_vGetFreeContext(struct vnt_private *pDevice)
-+	*s_vGetFreeContext(struct vnt_private *priv)
- {
--	struct vnt_usb_send_context *pContext = NULL;
-+	struct vnt_usb_send_context *context = NULL;
- 	int ii;
- 
--    DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"GetFreeContext()\n");
-+	DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"GetFreeContext()\n");
- 
--    for (ii = 0; ii < pDevice->cbTD; ii++) {
--	if (!pDevice->apTD[ii])
--		return NULL;
--        pContext = pDevice->apTD[ii];
--        if (pContext->bBoolInUse == false) {
--            pContext->bBoolInUse = true;
--		memset(pContext->Data, 0, MAX_TOTAL_SIZE_WITH_ALL_HEADERS);
--		return pContext;
--        }
--    }
--    if ( ii == pDevice->cbTD ) {
--        DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"No Free Tx Context\n");
--    }
-+	for (ii = 0; ii < priv->cbTD; ii++) {
-+		if (!priv->apTD[ii])
-+			return NULL;
-+
-+		context = priv->apTD[ii];
-+		if (context->bBoolInUse == false) {
-+			context->bBoolInUse = true;
-+			memset(context->Data, 0,
-+					MAX_TOTAL_SIZE_WITH_ALL_HEADERS);
-+			return context;
-+		}
-+	}
-+
-+	if (ii == priv->cbTD)
-+		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"No Free Tx Context\n");
- 
- 	return NULL;
- }
--- 
-1.8.4.4
+Dan
+
+> Way back in the day I'd advocated for doing a USB port of hostap rather 
+> than mainlining prism2_usb, strictly on a ROI basis, but the boots on 
+> the ground chose the latter.  Given that prism2_usb has slowly been 
+> improved since then and hostap has largely been ignored, IMO the right 
+> thing here is to get it out of staging by taking care of any outstanding 
+> problems.
+> 
+> On a strict feature basis, hostap has the advantage of supporting AP 
+> operation and WPA -- For the latter, prism2_usb just needs the cfg80211 
+> and crypto layer hooks since it needs to be handled in software anyway.  
+> As for AP operation -- Intersil never officially supported AP mode on 
+> the USB devices, and while it worked unofficially, it wasn't terribly 
+> stable.  The same stabilitiy problems plagued monitor operation; my 
+> theory at the time was that their USB "glue" silicon simply couldn't 
+> keep up with the load.
+> 
+>  - Solomon
+
 
