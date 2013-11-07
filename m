@@ -1,49 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:56873 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753623Ab3KAOAQ (ORCPT
+Received: from 162-17-110-37-static.hfc.comcastbusiness.net ([162.17.110.37]:55239
+	"EHLO stuffed.shaftnet.org" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1750797Ab3KGQhi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 10:00:16 -0400
-Received: by mail-wi0-f176.google.com with SMTP id ex4so1115436wid.3
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 07:00:15 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 58/65] wireless-regdb: extend 5 GHz range for GU
-Date: Fri,  1 Nov 2013 14:57:48 +0100
-Message-Id: <1383314275-20960-59-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_150808_812199_F49FD4BF)
-In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+	Thu, 7 Nov 2013 11:37:38 -0500
+Date: Thu, 7 Nov 2013 11:37:19 -0500
+From: Solomon Peachy <pizza@shaftnet.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Greg KH <gregkh@linuxfoundation.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: future of prism2_usb (aka wlan-ng) in staging tree
+Message-ID: <20131107163719.GC12612@shaftnet.org> (sfid-20131107_173758_908010_D453F0F2)
+References: <20131107160522.GA12612@shaftnet.org>
+ <527BC04F.2080000@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="gatW/ieO32f1wygP"
+In-Reply-To: <527BC04F.2080000@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Also increase the 2.4 GHz max EIRP.
 
-Source is QCA's regulatory team's efforts.
+--gatW/ieO32f1wygP
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+On Thu, Nov 07, 2013 at 10:31:11AM -0600, Larry Finger wrote:
+> This seems like a good point to clarify what it takes for a wireless
+> driver to be added to net/wireless.
+>=20
+> Is it necessary that any new softmac driver in net/wireless must use
+> mac80211, or is it sufficient that it implement cfg80211?
 
-diff --git a/db.txt b/db.txt
-index 1131900..61df4fc 100644
---- a/db.txt
-+++ b/db.txt
-@@ -342,10 +342,10 @@ country GT: DFS-FCC
- 	(5735 - 5835 @ 80), (30)
- 
- country GU: DFS-FCC
--	(2402 - 2472 @ 40), (27)
-+	(2402 - 2472 @ 40), (30)
- 	(5170 - 5250 @ 80), (17)
- 	(5250 - 5330 @ 80), (24), DFS
--	(5490 - 5710 @ 80), (24), DFS
-+	(5490 - 5730 @ 80), (24), DFS
- 	(5735 - 5835 @ 80), (30)
- 
- country HN: DFS-FCC
--- 
-1.8.4.rc3
+IMO a softmac driver should use mac80211 before being merged; there's no=20
+sense in having multiple 802.11 stacks especially with the ever-growing=20
+complexity of 802.11.
 
+But in this particular case, prism2_usb/wlan-ng is perhaps the original=20
+fullmac 802.11 device.  :)
+
+ - Solomon
+--=20
+Solomon Peachy        		       pizza at shaftnet dot org
+Delray Beach, FL                          ^^ (email/xmpp) ^^
+Quidquid latine dictum sit, altum viditur.
+
+--gatW/ieO32f1wygP
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+
+iD8DBQFSe8G/PuLgii2759ARAvvoAJoCaBn+p/WuCd36wZ1uyy0NHdUGYgCgumry
+4K6osmPbpk6Z/w97Q48m3x0=
+=r+To
+-----END PGP SIGNATURE-----
+
+--gatW/ieO32f1wygP--
