@@ -1,66 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:51686 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757684Ab3KHQyU (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:45996 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752589Ab3KGAQu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Nov 2013 11:54:20 -0500
-Received: by mail-wi0-f179.google.com with SMTP id hm2so1219263wib.6
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Nov 2013 08:54:18 -0800 (PST)
-Date: Fri, 8 Nov 2013 17:54:02 +0100
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2] mac80211: minstrel_ht: do not sample unsupported
- rates
-Message-ID: <20131108165402.GB26361@magnum.frso.rivierawaves.com> (sfid-20131108_175423_979436_D18FABC1)
-References: <1383928473-798-1-git-send-email-karl.beldan@gmail.com>
- <1383928473-798-2-git-send-email-karl.beldan@gmail.com>
- <527D14B7.3090204@openwrt.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <527D14B7.3090204@openwrt.org>
+	Wed, 6 Nov 2013 19:16:50 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 10/13] ath9k: Remove pcieSerDesWrite
+Date: Thu,  7 Nov 2013 05:41:57 +0530
+Message-Id: <1383783120-22435-11-git-send-email-sujith@msujith.org> (sfid-20131107_013807_388406_06F0DEDB)
+In-Reply-To: <1383783120-22435-1-git-send-email-sujith@msujith.org>
+References: <1383783120-22435-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 08, 2013 at 05:43:35PM +0100, Felix Fietkau wrote:
-> On 2013-11-08 17:34, Karl Beldan wrote:
-> > From: Karl Beldan <karl.beldan@rivierawaves.com>
-> > 
-> > ATM minstrel_ht does not check whether the sampling rate is supported.
-> > Unsupported rates attempts can trigger when there are holes between
-> > supported MCSes belonging to the same group (e.g many devices are
-> > capable of MCS32 without being capable of MCS33->MCS39).
-> > This change replaces an unsupported sample index with the fls of the
-> > bitfield of supported indexes.
-> > This is not a problem in minstrel which fills a per STA sample table
-> > with only supported rates (though only at init).
-> > 
-> > Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
-> > ---
-> >  net/mac80211/rc80211_minstrel_ht.c | 2 ++
-> >  1 file changed, 2 insertions(+)
-> > 
-> > diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-> > index aeec401..1b835ad 100644
-> > --- a/net/mac80211/rc80211_minstrel_ht.c
-> > +++ b/net/mac80211/rc80211_minstrel_ht.c
-> > @@ -703,6 +703,8 @@ minstrel_get_sample_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
-> >  
-> >  	mg = &mi->groups[mi->sample_group];
-> >  	sample_idx = sample_table[mg->column][mg->index];
-> > +	if (!(mg->supported & BIT(sample_idx)))
-> > +		sample_idx = fls(sample_idx) - 1;
-> You probably meant fls(mg->supported) - 1 here, however I think a better
-Arf, yes.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-> approach would be to just skip the sample attempt. If there are fewer
-> rates in a group, we can run fewer sample attempts on it.
-> 
-Agreed :)
+This HW config option is always set to true and is not needed.
 
-I was skimming through minstrel before leaving for the week-end because
-I had planned to put in shape a hack I did a while ago for vht in
-minstrel monday is a holiday here and I have absolutely nothing planned.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c | 20 +++++++++-----------
+ drivers/net/wireless/ath/ath9k/hw.c        |  1 -
+ drivers/net/wireless/ath/ath9k/hw.h        |  1 -
+ 3 files changed, 9 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+index a6e06a1..42daea5 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+@@ -754,6 +754,9 @@ static void ar9003_hw_init_mode_gain_regs(struct ath_hw *ah)
+ static void ar9003_hw_configpcipowersave(struct ath_hw *ah,
+ 					 bool power_off)
+ {
++	unsigned int i;
++	struct ar5416IniArray *array;
++
+ 	/*
+ 	 * Increase L1 Entry Latency. Some WB222 boards don't have
+ 	 * this change in eeprom/OTP.
+@@ -779,18 +782,13 @@ static void ar9003_hw_configpcipowersave(struct ath_hw *ah,
+ 	 * Configire PCIE after Ini init. SERDES values now come from ini file
+ 	 * This enables PCIe low power mode.
+ 	 */
+-	if (ah->config.pcieSerDesWrite) {
+-		unsigned int i;
+-		struct ar5416IniArray *array;
+-
+-		array = power_off ? &ah->iniPcieSerdes :
+-				    &ah->iniPcieSerdesLowPower;
++	array = power_off ? &ah->iniPcieSerdes :
++		&ah->iniPcieSerdesLowPower;
  
-Karl
+-		for (i = 0; i < array->ia_rows; i++) {
+-			REG_WRITE(ah,
+-				  INI_RA(array, i, 0),
+-				  INI_RA(array, i, 1));
+-		}
++	for (i = 0; i < array->ia_rows; i++) {
++		REG_WRITE(ah,
++			  INI_RA(array, i, 0),
++			  INI_RA(array, i, 1));
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 54b0415..381fbe1 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -454,7 +454,6 @@ static void ath9k_hw_init_config(struct ath_hw *ah)
+ 	}
+ 
+ 	ah->config.rx_intr_mitigation = true;
+-	ah->config.pcieSerDesWrite = true;
+ 
+ 	/*
+ 	 * We need this for PCI devices only (Cardbus, PCI, miniPCI)
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 69542c1..289e5ce 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -283,7 +283,6 @@ struct ath9k_ops_config {
+ 	int additional_swba_backoff;
+ 	int ack_6mb;
+ 	u32 cwm_ignore_extcca;
+-	bool pcieSerDesWrite;
+ 	u8 pcie_clock_req;
+ 	u32 pcie_waen;
+ 	u8 analog_shiftreg;
+-- 
+1.8.4.2
+
