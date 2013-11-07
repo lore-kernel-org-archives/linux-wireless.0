@@ -1,57 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mantis.wzyboy.im ([199.83.51.51]:35202 "EHLO mantis.wzyboy.im"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751123Ab3KDJyM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Nov 2013 04:54:12 -0500
-Received: from mail-pa0-f41.google.com (mail-pa0-f41.google.com [209.85.220.41])
-	by mantis.wzyboy.im (Postfix) with ESMTPSA id 1BC2B88133
-	for <linux-wireless@vger.kernel.org>; Mon,  4 Nov 2013 17:54:12 +0800 (CST)
-Received: by mail-pa0-f41.google.com with SMTP id rd3so6809837pab.28
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Nov 2013 01:54:11 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CA+icZUUZo0rh45+cbkABXdHRrRuOFC_+kmdmYQWbaOLwDp7RMg@mail.gmail.com>
-References: <5276134B.8070808@wzyboy.org> <0BA3FCBA62E2DC44AF3030971E174FB301DE75AE@HASMSX103.ger.corp.intel.com>
- <CALkVjQYh-SUte4S6LdqOc3KSc3_pDU6jz1KXp+Jsd5_RFPXSqA@mail.gmail.com>
- <CALkVjQaTvnn+boD+8eaTRrTm4bZOfMC3mx8Ng972ShoNq7EimQ@mail.gmail.com> <CA+icZUUZo0rh45+cbkABXdHRrRuOFC_+kmdmYQWbaOLwDp7RMg@mail.gmail.com>
-From: wzyboy <wzyboy@wzyboy.org>
-Date: Mon, 4 Nov 2013 17:53:56 +0800
-Message-ID: <CALkVjQbmh0Kqyg=Rj1qW75RFMOBUDLVpLKiBdzzZLNT+N-Q2_w@mail.gmail.com> (sfid-20131104_105415_958832_CA8BBE2C)
-Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
-To: sedat.dilek@gmail.com
-Cc: wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from s72.web-hosting.com ([198.187.29.21]:53172 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752589Ab3KGAQw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Nov 2013 19:16:52 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 11/13] ath9k: Use correct PCIE initvals for AR9485
+Date: Thu,  7 Nov 2013 05:41:58 +0530
+Message-Id: <1383783120-22435-12-git-send-email-sujith@msujith.org> (sfid-20131107_013807_255722_6065FE4F)
+In-Reply-To: <1383783120-22435-1-git-send-email-sujith@msujith.org>
+References: <1383783120-22435-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/11/4 Sedat Dilek <sedat.dilek@gmail.com>:
-> Hi,
->
-> Here two hints for "correct asking" on Linux-related mailing-lists:
->
-> Documentation/email-clients.txt [1] says:
->
-> "The default setting of not composing in HTML is appropriate; do not
-> enable it."
->
-> Documentation/development-process/2.Process [2] says:
->
-> "- Avoid top-posting (the practice of putting your answer above the quoted
->   text you are responding to).  It makes your response harder to read and
->   makes a poor impression."
->
-> Checkout Documentation/ directory for more help/hints.
->
-> Regards,
-> - Sedat -
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
+Currently, the PLL is turned off for AR9485 when
+switching to a low power state, but AR9485 has an issue
+where the card will become unresponsive if left idle
+for a long time without any traffic. To fix this,
+force the PLL to always be on using a different initval
+array, ar9485_1_1_pll_on_cdr_on_clkreq_disable_L1.
 
-Hi, Sedat.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c       | 11 ++------
+ drivers/net/wireless/ath/ath9k/ar9485_initvals.h | 35 +++++-------------------
+ 2 files changed, 9 insertions(+), 37 deletions(-)
 
-I am so sorry that I was in a hurry to reply in Gmail web interface
-so I forgot to set "Text-only" mode and violated the mailing lists
-etiquette.
-
-I'll keep them in mind.
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+index 42daea5..b054dee 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+@@ -187,17 +187,10 @@ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
+ 		INIT_INI_ARRAY(&ah->iniCckfirJapan2484,
+ 			       ar9485_1_1_baseband_core_txfir_coeff_japan_2484);
+ 
+-		/* Load PCIE SERDES settings from INI */
+-
+-		/* Awake Setting */
+-
+ 		INIT_INI_ARRAY(&ah->iniPcieSerdes,
+-				ar9485_1_1_pcie_phy_clkreq_disable_L1);
+-
+-		/* Sleep Setting */
+-
++			       ar9485_1_1_pll_on_cdr_on_clkreq_disable_L1);
+ 		INIT_INI_ARRAY(&ah->iniPcieSerdesLowPower,
+-				ar9485_1_1_pcie_phy_clkreq_disable_L1);
++			       ar9485_1_1_pll_on_cdr_on_clkreq_disable_L1);
+ 	} else if (AR_SREV_9462_21(ah)) {
+ 		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_CORE],
+ 			       ar9462_2p1_mac_core);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9485_initvals.h b/drivers/net/wireless/ath/ath9k/ar9485_initvals.h
+index 6f899c6..93b18ce 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9485_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9485_initvals.h
+@@ -32,13 +32,6 @@ static const u32 ar9485_1_1_mac_postamble[][5] = {
+ 	{0x00008318, 0x00003e80, 0x00007d00, 0x00006880, 0x00003440},
+ };
+ 
+-static const u32 ar9485_1_1_pcie_phy_pll_on_clkreq_disable_L1[][2] = {
+-	/* Addr      allmodes  */
+-	{0x00018c00, 0x18012e5e},
+-	{0x00018c04, 0x000801d8},
+-	{0x00018c08, 0x0000080c},
+-};
+-
+ static const u32 ar9485Common_wo_xlna_rx_gain_1_1[][2] = {
+ 	/* Addr      allmodes  */
+ 	{0x00009e00, 0x037216a0},
+@@ -1101,20 +1094,6 @@ static const u32 ar9485_common_rx_gain_1_1[][2] = {
+ 	{0x0000a1fc, 0x00000296},
+ };
+ 
+-static const u32 ar9485_1_1_pcie_phy_pll_on_clkreq_enable_L1[][2] = {
+-	/* Addr      allmodes  */
+-	{0x00018c00, 0x18052e5e},
+-	{0x00018c04, 0x000801d8},
+-	{0x00018c08, 0x0000080c},
+-};
+-
+-static const u32 ar9485_1_1_pcie_phy_clkreq_enable_L1[][2] = {
+-	/* Addr      allmodes  */
+-	{0x00018c00, 0x18053e5e},
+-	{0x00018c04, 0x000801d8},
+-	{0x00018c08, 0x0000080c},
+-};
+-
+ static const u32 ar9485_1_1_soc_preamble[][2] = {
+ 	/* Addr      allmodes  */
+ 	{0x00004014, 0xba280400},
+@@ -1173,13 +1152,6 @@ static const u32 ar9485_1_1_baseband_postamble[][5] = {
+ 	{0x0000be18, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+ };
+ 
+-static const u32 ar9485_1_1_pcie_phy_clkreq_disable_L1[][2] = {
+-	/* Addr      allmodes  */
+-	{0x00018c00, 0x18013e5e},
+-	{0x00018c04, 0x000801d8},
+-	{0x00018c08, 0x0000080c},
+-};
+-
+ static const u32 ar9485_1_1_radio_postamble[][2] = {
+ 	/* Addr      allmodes  */
+ 	{0x0001609c, 0x0b283f31},
+@@ -1358,4 +1330,11 @@ static const u32 ar9485_1_1_baseband_core_txfir_coeff_japan_2484[][2] = {
+ 	{0x0000a3a0, 0xca9228ee},
+ };
+ 
++static const u32 ar9485_1_1_pll_on_cdr_on_clkreq_disable_L1[][2] = {
++	/* Addr      allmodes  */
++	{0x00018c00, 0x1801265e},
++	{0x00018c04, 0x000801d8},
++	{0x00018c08, 0x0000080c},
++};
++
+ #endif /* INITVALS_9485_H */
 -- 
-wzyboy
+1.8.4.2
+
