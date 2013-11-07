@@ -1,30 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hetz2.bluebottle.com ([176.9.57.138]:60030 "EHLO
-	fe0.bluebottle.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755157Ab3KTUuB (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:53614 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752688Ab3KGAQi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Nov 2013 15:50:01 -0500
-Date: Wed, 20 Nov 2013 21:57:38 +0100
-From: Bastian Bittorf <bittorf@bluebottle.com>
-To: OpenWrt Development List <openwrt-devel@lists.openwrt.org>
-Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	Marek Lindner <lindner_marek@yahoo.de>, sven@narfation.org
-Subject: Re: [OpenWrt-Devel] AR9330 hornet board stops beaconing after a few
- days (0xdeadbeef)
-Message-ID: <20131120205738.GM886@medion.lan> (sfid-20131120_215006_275260_E1B60326)
-References: <20120813165340.GA10044@pandem0nium>
- <20120819220436.GA9899@pandem0nium>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120819220436.GA9899@pandem0nium>
+	Wed, 6 Nov 2013 19:16:38 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 05/13] ath9k: Add a config option for WoW
+Date: Thu,  7 Nov 2013 05:41:52 +0530
+Message-Id: <1383783120-22435-6-git-send-email-sujith@msujith.org> (sfid-20131107_011643_448185_B1005BF8)
+In-Reply-To: <1383783120-22435-1-git-send-email-sujith@msujith.org>
+References: <1383783120-22435-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de> [19.09.2012 11:25]:
-> just to bump again - isn't there anyone who can give us some hint or
-> clue regarding these 0xdeadbeef entries in the registers? Couldn't find
-> a connection to other reports deadbeef on the mailing list so far.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-it doesnt make sense to debug such an old firmware (r31729).
-first upgrade to trunk (~r38885), then report again. bye, bastian
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/Kconfig | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
+index 3ffa4ea..30d273c 100644
+--- a/drivers/net/wireless/ath/ath9k/Kconfig
++++ b/drivers/net/wireless/ath/ath9k/Kconfig
+@@ -104,6 +104,14 @@ config ATH9K_TX99
+ 	  be evaluated to meet the RF exposure limits set forth in the
+ 	  governmental SAR regulations.
+ 
++config ATH9K_WOW
++	bool "Wake on Wireless LAN support (EXPERIMENTAL)"
++	depends on ATH9K && PM
++	default n
++	---help---
++	  This option enables Wake on Wireless LAN support for certain cards.
++	  Currently, AR9462 is supported.
++
+ config ATH9K_LEGACY_RATE_CONTROL
+ 	bool "Atheros ath9k rate control"
+ 	depends on ATH9K
+-- 
+1.8.4.2
+
