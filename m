@@ -1,63 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:55930 "EHLO
-	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751226Ab3KUP4b (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Nov 2013 10:56:31 -0500
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Simon Wunderlich <sw@simonwunderlich.de>
-Subject: [PATCH 4/4] mac80211: don't leak next beacon when csa is aborted
-Date: Thu, 21 Nov 2013 16:56:23 +0100
-Message-Id: <1385049383-5617-5-git-send-email-sw@simonwunderlich.de> (sfid-20131121_165635_417627_12E49E55)
-In-Reply-To: <1385049383-5617-1-git-send-email-sw@simonwunderlich.de>
-References: <1385049383-5617-1-git-send-email-sw@simonwunderlich.de>
+Received: from mx1.redhat.com ([209.132.183.28]:6268 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752932Ab3KGWZ2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Nov 2013 17:25:28 -0500
+Message-ID: <1383863100.2391.5.camel@dcbw.foobar.com> (sfid-20131107_232532_239348_91D670BC)
+Subject: Re: future of prism2_usb (aka wlan-ng) in staging tree
+From: Dan Williams <dcbw@redhat.com>
+To: Solomon Peachy <pizza@shaftnet.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org
+Date: Thu, 07 Nov 2013 16:25:00 -0600
+In-Reply-To: <20131107194641.GE12612@shaftnet.org>
+References: <20131107160522.GA12612@shaftnet.org>
+	 <527BC04F.2080000@lwfinger.net> <20131107163719.GC12612@shaftnet.org>
+	 <20131107175201.GA2002@tuxdriver.com> <20131107185714.GD12612@shaftnet.org>
+	 <20131107191122.GD2002@tuxdriver.com> <20131107194641.GE12612@shaftnet.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
----
- net/mac80211/cfg.c   |    5 +++++
- net/mac80211/iface.c |    7 ++++++-
- 2 files changed, 11 insertions(+), 1 deletion(-)
+On Thu, 2013-11-07 at 14:46 -0500, Solomon Peachy wrote:
+> On Thu, Nov 07, 2013 at 02:11:23PM -0500, John W. Linville wrote:
+> > And all of which were nominated by someone (possibly me) to be shuffled
+> > out of the tree due to lack of users and unknown functional status...
+> 
+> Heh, fair enough!
+> 
+> > I don't want to discourage anyone from working on something that
+> > scratches their itch, especially if you have working hardware and
+> > some users.  OTOH, I'd rather not add a long term support burden to
+> > the kernel if nobody is going to use it...?
+> 
+> On an average month the linux-wlan-ng repository I still host gets 3-4K 
+> non-spider hits for the USB firmware files, so in this particular case 
+> there are still users out there.
+> 
+> At this point it's a more modern driver than the ones already in the 
+> kernel, and I'm willing to maintain it if there's a point to doing so.
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 9f19cde..8bf0cc0 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1079,7 +1079,12 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
- 	old_probe_resp = sdata_dereference(sdata->u.ap.probe_resp, sdata);
- 
- 	/* abort any running channel switch */
-+	if (sdata->vif.csa_active) {
-+		kfree(sdata->u.ap.next_beacon);
-+		sdata->u.ap.next_beacon = NULL;
-+	}
- 	sdata->vif.csa_active = false;
-+
- 	cancel_work_sync(&sdata->u.ap.request_smps_work);
- 
- 	/* turn off carrier for this interface and dependent VLANs */
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index d226751..dce4398 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -820,8 +820,13 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 	cancel_work_sync(&local->dynamic_ps_enable_work);
- 
- 	cancel_work_sync(&sdata->recalc_smps);
--	sdata->vif.csa_active = false;
- 	cancel_work_sync(&sdata->csa_finalize_work);
-+	/* free left-over next beacon if a CSA was aborted */
-+	if (sdata->vif.csa_active && sdata->vif.type == NL80211_IFTYPE_AP) {
-+		kfree(sdata->u.ap.next_beacon);
-+		sdata->u.ap.next_beacon = NULL;
-+	}
-+	sdata->vif.csa_active = false;
- 
- 	cancel_delayed_work_sync(&sdata->dfs_cac_timer_work);
- 
--- 
-1.7.10.4
+What's the delta in device support between prism2_usb and the hostap
+driver's USB subdriver?  Is there any overlap?
+
+Dan
 
