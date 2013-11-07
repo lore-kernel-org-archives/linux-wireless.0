@@ -1,70 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from outrelay03.libero.it ([212.52.84.103]:47479 "EHLO
-	outrelay03.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751894Ab3KBBMm (ORCPT
+Received: from 162-17-110-37-static.hfc.comcastbusiness.net ([162.17.110.37]:33236
+	"EHLO stuffed.shaftnet.org" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1753720Ab3KGXCd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 21:12:42 -0400
-Message-ID: <1175475492.2023361383354760278.JavaMail.defaultUser@defaultHost> (sfid-20131102_021246_656733_7464E2E8)
-Date: Sat, 2 Nov 2013 02:12:40 +0100 (CET)
-From: Fabio Rossi <rossi.f@inwind.it>
-Reply-To: Fabio Rossi <rossi.f@inwind.it>
-To: <marcel@holtmann.org>
-Subject: Re: BUG in rfcomm_sock_getsockopt+0x128/0x200
-Cc: "linux-wireless@vger.kernel.org Wireless"
-	<linux-wireless@vger.kernel.org>,
-	"linux-bluetooth@vger.kernel.org development"
-	<linux-bluetooth@vger.kernel.org>
+	Thu, 7 Nov 2013 18:02:33 -0500
+Date: Thu, 7 Nov 2013 18:02:15 -0500
+From: Solomon Peachy <pizza@shaftnet.org>
+To: Dan Williams <dcbw@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: future of prism2_usb (aka wlan-ng) in staging tree
+Message-ID: <20131107230215.GF12612@shaftnet.org> (sfid-20131108_000236_618052_CBCBE2FF)
+References: <20131107160522.GA12612@shaftnet.org>
+ <527BC04F.2080000@lwfinger.net>
+ <20131107163719.GC12612@shaftnet.org>
+ <20131107175201.GA2002@tuxdriver.com>
+ <20131107185714.GD12612@shaftnet.org>
+ <20131107191122.GD2002@tuxdriver.com>
+ <20131107194641.GE12612@shaftnet.org>
+ <1383863100.2391.5.camel@dcbw.foobar.com>
 MIME-Version: 1.0
-Content-Type: text/plain;charset="UTF-8"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="nHwqXXcoX0o6fKCv"
+In-Reply-To: <1383863100.2391.5.camel@dcbw.foobar.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->can you quickly test a kernel build from bluetooth-next tree. I would like to 
-see if that crashes as well. Since I have been running that one for weeks and 
-never saw this bug.
->
->Regards
->
->Marcel
 
-Hi Marcel,
-here is the same problem with bluetooth-next.git
+--nHwqXXcoX0o6fKCv
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-BUG: unable to handle kernel paging request at 00000009dd503502
-IP: [<ffffffff815b1868>] rfcomm_sock_getsockopt+0x128/0x200
-PGD 0
-Oops: 0000 [#1] SMP
-Modules linked in: ath5k ath mac80211 cfg80211
-CPU: 2 PID: 1459 Comm: bluetoothd Not tainted 3.11.0-133163-gcebd830 #2
-Hardware name: System manufacturer System Product Name/P6T DELUXE V2, BIOS 
-1202    12/22/2010
-task: ffff8803304106a0 ti: ffff88033046a000 task.ti: ffff88033046a000
-RIP: 0010:[<ffffffff815b1868>]  [<ffffffff815b1868>] 
-rfcomm_sock_getsockopt+0x128/0x200
-RSP: 0018:ffff88033046bed8  EFLAGS: 00010246
-RAX: 00000009dd503502 RBX: 0000000000000003 RCX: 00007fffa2ed5548
-RDX: 0000000000000003 RSI: 0000000000000012 RDI: ffff88032fd37480
-RBP: ffff88033046bf28 R08: 00007fffa2ed554c R09: ffff88032f5707d8
-R10: 00007fffa2ed5548 R11: 0000000000000202 R12: ffff880330bbd000
-R13: 00007fffa2ed5548 R14: 0000000000000003 R15: 00007fffa2ed554c
-FS:  00007fc44cfac700(0000) GS:ffff88033fc80000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00000009dd503502 CR3: 00000003304c2000 CR4: 00000000000007e0
-Stack:
- ffff88033046bf28 ffffffff815b0f2f ffff88033046bf18 0002ffff81105ef6
- 0000000600000000 ffff88032fd37480 0000000000000012 00007fffa2ed5548
- 0000000000000003 00007fffa2ed554c ffff88033046bf78 ffffffff814c0380
-Call Trace:
- [<ffffffff815b0f2f>] ? rfcomm_sock_setsockopt+0x5f/0x190
- [<ffffffff814c0380>] SyS_getsockopt+0x60/0xb0
- [<ffffffff815e0852>] system_call_fastpath+0x16/0x1b
-Code: 02 00 00 00 0f 47 d0 4c 89 ef e8 74 13 cd ff 83 f8 01 19 c9 f7 d1 83 e1 
-f2 e9 4b ff ff ff 0f 1f 44 00 00 49 8b 84 24 70 02 00 00 <4c> 8b 30 4c 89 c0 e8 
-2d 19 cd ff 85 c0 49 89 d7 b9 f2 ff ff ff
-RIP  [<ffffffff815b1868>] rfcomm_sock_getsockopt+0x128/0x200
- RSP <ffff88033046bed8>
-CR2: 00000009dd503502
----[ end trace 719ace9ee57b7a58 ]---
+On Thu, Nov 07, 2013 at 04:25:00PM -0600, Dan Williams wrote:
+> > At this point it's a more modern driver than the ones already in the=20
+> > kernel, and I'm willing to maintain it if there's a point to doing so.
+>=20
+> What's the delta in device support between prism2_usb and the hostap
+> driver's USB subdriver?  Is there any overlap?
 
-Regards,
-Fabio
+Given that there never was a hostap_usb, there's no overlap at all.  If=20
+you have a prism2.5/3 USB widget, you'll need prism2_usb to make it more=20
+than a lousy paperweight.
+
+Way back in the day I'd advocated for doing a USB port of hostap rather=20
+than mainlining prism2_usb, strictly on a ROI basis, but the boots on=20
+the ground chose the latter.  Given that prism2_usb has slowly been=20
+improved since then and hostap has largely been ignored, IMO the right=20
+thing here is to get it out of staging by taking care of any outstanding=20
+problems.
+
+On a strict feature basis, hostap has the advantage of supporting AP=20
+operation and WPA -- For the latter, prism2_usb just needs the cfg80211=20
+and crypto layer hooks since it needs to be handled in software anyway. =20
+As for AP operation -- Intersil never officially supported AP mode on=20
+the USB devices, and while it worked unofficially, it wasn't terribly=20
+stable.  The same stabilitiy problems plagued monitor operation; my=20
+theory at the time was that their USB "glue" silicon simply couldn't=20
+keep up with the load.
+
+ - Solomon
+--=20
+Solomon Peachy        		       pizza at shaftnet dot org
+Delray Beach, FL                          ^^ (email/xmpp) ^^
+Quidquid latine dictum sit, altum viditur.
+
+--nHwqXXcoX0o6fKCv
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+
+iD8DBQFSfBv3PuLgii2759ARAj1+AKCL6AFzAY0vo2aBQuKeHxhVztDBgwCg41l+
+2KzfmR2olnrfIma3d+x9114=
+=fZC5
+-----END PGP SIGNATURE-----
+
+--nHwqXXcoX0o6fKCv--
