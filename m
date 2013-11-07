@@ -1,370 +1,883 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f47.google.com ([209.85.214.47]:52123 "EHLO
-	mail-bk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751236Ab3KRRC6 (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:46894 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752688Ab3KGAQk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Nov 2013 12:02:58 -0500
-Received: by mail-bk0-f47.google.com with SMTP id mx12so1007420bkb.20
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Nov 2013 09:02:57 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Subject: [PATCH 5/6] cfg80211: Aggregate mgmt_tx parameters into a struct
-Date: Mon, 18 Nov 2013 19:02:45 +0200
-Message-Id: <1384794166-10906-5-git-send-email-egrumbach@gmail.com> (sfid-20131118_180308_048662_FBD7E99C)
-In-Reply-To: <1384794166-10906-1-git-send-email-egrumbach@gmail.com>
-References: <1384794166-10906-1-git-send-email-egrumbach@gmail.com>
+	Wed, 6 Nov 2013 19:16:40 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 06/13] ath9k: Use CONFIG_ATH9K_WOW
+Date: Thu,  7 Nov 2013 05:41:53 +0530
+Message-Id: <1383783120-22435-7-git-send-email-sujith@msujith.org> (sfid-20131107_011645_774314_F21232B9)
+In-Reply-To: <1383783120-22435-1-git-send-email-sujith@msujith.org>
+References: <1383783120-22435-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Change cfg80211 and mac80211 to use cfg80211_mgmt_tx_params
-struct to aggregate parameters for mgmt_tx functions.
-This makes the functions' signatures less clumsy and allows
-less painful parameters extension.
+Move the WoW code to wow.c and compile it conditionally
+based on CONFIG_ATH9K_WOW.
 
-Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- include/net/cfg80211.h  |   28 +++++++++++++++++++++++++---
- net/mac80211/cfg.c      |   29 +++++++++++++++--------------
- net/wireless/core.h     |    5 ++---
- net/wireless/mlme.c     |   12 ++++--------
- net/wireless/nl80211.c  |   31 +++++++++++++++----------------
- net/wireless/rdev-ops.h |   12 ++++--------
- net/wireless/trace.h    |   15 +++++++--------
- 7 files changed, 72 insertions(+), 60 deletions(-)
+ drivers/net/wireless/ath/ath9k/Makefile |   3 +-
+ drivers/net/wireless/ath/ath9k/ath9k.h  |  28 ++-
+ drivers/net/wireless/ath/ath9k/hw.h     |   4 +-
+ drivers/net/wireless/ath/ath9k/init.c   |   4 +-
+ drivers/net/wireless/ath/ath9k/main.c   | 338 +------------------------------
+ drivers/net/wireless/ath/ath9k/wow.c    | 341 ++++++++++++++++++++++++++++++++
+ 6 files changed, 381 insertions(+), 337 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath9k/wow.c
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 3eae46c..54bdded 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1945,6 +1945,29 @@ struct cfg80211_update_ft_ies_params {
+diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
+index 796686a..337c459 100644
+--- a/drivers/net/wireless/ath/ath9k/Makefile
++++ b/drivers/net/wireless/ath/ath9k/Makefile
+@@ -15,6 +15,7 @@ ath9k-$(CONFIG_ATH9K_DEBUGFS) += debug.o
+ ath9k-$(CONFIG_ATH9K_DFS_DEBUGFS) += dfs_debug.o
+ ath9k-$(CONFIG_ATH9K_DFS_CERTIFIED) += dfs.o
+ ath9k-$(CONFIG_ATH9K_TX99) += tx99.o
++ath9k-$(CONFIG_ATH9K_WOW) += wow.o
+ 
+ obj-$(CONFIG_ATH9K) += ath9k.o
+ 
+@@ -40,7 +41,7 @@ ath9k_hw-y:=	\
+ 		ar9003_eeprom.o \
+ 		ar9003_paprd.o
+ 
+-ath9k_hw-$(CONFIG_PM_SLEEP) += ar9003_wow.o
++ath9k_hw-$(CONFIG_ATH9K_WOW) += ar9003_wow.o
+ 
+ ath9k_hw-$(CONFIG_ATH9K_BTCOEX_SUPPORT) += btcoex.o \
+ 					   ar9003_mci.o
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 62f5892..9e1b728 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -570,6 +570,30 @@ static inline void ath_fill_led_pin(struct ath_softc *sc)
+ }
+ #endif
+ 
++/************************/
++/* Wake on Wireless LAN */
++/************************/
++
++#ifdef CONFIG_ATH9K_WOW
++int ath9k_suspend(struct ieee80211_hw *hw,
++		  struct cfg80211_wowlan *wowlan);
++int ath9k_resume(struct ieee80211_hw *hw);
++void ath9k_set_wakeup(struct ieee80211_hw *hw, bool enabled);
++#else
++static inline int ath9k_suspend(struct ieee80211_hw *hw,
++				struct cfg80211_wowlan *wowlan)
++{
++	return 0;
++}
++static inline int ath9k_resume(struct ieee80211_hw *hw)
++{
++	return 0;
++}
++static inline void ath9k_set_wakeup(struct ieee80211_hw *hw, bool enabled)
++{
++}
++#endif /* CONFIG_ATH9K_WOW */
++
+ /*******************************/
+ /* Antenna diversity/combining */
+ /*******************************/
+@@ -784,7 +808,7 @@ struct ath_softc {
+ 	bool tx99_state;
+ 	s16 tx99_power;
+ 
+-#ifdef CONFIG_PM_SLEEP
++#ifdef CONFIG_ATH9K_WOW
+ 	atomic_t wow_got_bmiss_intr;
+ 	atomic_t wow_sleep_proc_intr; /* in the middle of WoW sleep ? */
+ 	u32 wow_intr_before_sleep;
+@@ -983,6 +1007,8 @@ extern bool is_ath9k_unloaded;
+ u8 ath9k_parse_mpdudensity(u8 mpdudensity);
+ irqreturn_t ath_isr(int irq, void *dev);
+ int ath_reset(struct ath_softc *sc);
++void ath_cancel_work(struct ath_softc *sc);
++void ath_restart_work(struct ath_softc *sc);
+ int ath9k_init_device(u16 devid, struct ath_softc *sc,
+ 		    const struct ath_bus_ops *bus_ops);
+ void ath9k_deinit_device(struct ath_softc *sc);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 9ea24f1..69542c1 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -920,7 +920,7 @@ struct ath_hw {
+ 	/* Enterprise mode cap */
+ 	u32 ent_mode;
+ 
+-#ifdef CONFIG_PM_SLEEP
++#ifdef CONFIG_ATH9K_WOW
+ 	u32 wow_event_mask;
+ #endif
+ 	bool is_clk_25mhz;
+@@ -1126,7 +1126,7 @@ ath9k_hw_get_btcoex_scheme(struct ath_hw *ah)
+ #endif /* CONFIG_ATH9K_BTCOEX_SUPPORT */
+ 
+ 
+-#ifdef CONFIG_PM_SLEEP
++#ifdef CONFIG_ATH9K_WOW
+ const char *ath9k_hw_wow_event_to_string(u32 wow_event);
+ void ath9k_hw_wow_apply_pattern(struct ath_hw *ah, u8 *user_pattern,
+ 				u8 *user_mask, int pattern_count,
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 17502b4..ee7da65 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -870,7 +870,7 @@ static const struct ieee80211_iface_combination if_comb[] = {
+ 	}
  };
  
- /**
-+ * struct cfg80211_mgmt_tx_params - mgmt tx parameters
-+ *
-+ * This structure provides information needed to transmit a mgmt frame
-+ *
-+ * @chan: channel to use
-+ * @offchan: indicates wether off channel operation is required
-+ * @wait: duration for ROC
-+ * @buf: buffer to transmit
-+ * @len: buffer length
-+ * @no_cck: don't use cck rates for this frame
-+ * @dont_wait_for_ack: tells the low level not to wait for an ack
-+ */
-+struct cfg80211_mgmt_tx_params {
-+	struct ieee80211_channel *chan;
-+	bool offchan;
-+	unsigned int wait;
-+	const u8 *buf;
-+	size_t len;
-+	bool no_cck;
-+	bool dont_wait_for_ack;
-+};
+-#ifdef CONFIG_PM
++#ifdef CONFIG_ATH9K_WOW
+ static const struct wiphy_wowlan_support ath9k_wowlan_support = {
+ 	.flags = WIPHY_WOWLAN_MAGIC_PKT | WIPHY_WOWLAN_DISCONNECT,
+ 	.n_patterns = MAX_NUM_USER_PATTERN,
+@@ -928,7 +928,7 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_5_10_MHZ;
+ 	hw->wiphy->flags |= WIPHY_FLAG_HAS_CHANNEL_SWITCH;
+ 
+-#ifdef CONFIG_PM_SLEEP
++#ifdef CONFIG_ATH9K_WOW
+ 	if ((ah->caps.hw_caps & ATH9K_HW_WOW_DEVICE_CAPABLE) &&
+ 	    (sc->driver_data & ATH9K_PCI_WOW) &&
+ 	    device_can_wakeup(sc->dev))
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 3d17398..e54ffdd 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -163,13 +163,13 @@ static void __ath_cancel_work(struct ath_softc *sc)
+ #endif
+ }
+ 
+-static void ath_cancel_work(struct ath_softc *sc)
++void ath_cancel_work(struct ath_softc *sc)
+ {
+ 	__ath_cancel_work(sc);
+ 	cancel_work_sync(&sc->hw_reset_work);
+ }
+ 
+-static void ath_restart_work(struct ath_softc *sc)
++void ath_restart_work(struct ath_softc *sc)
+ {
+ 	ieee80211_queue_delayed_work(sc->hw, &sc->tx_complete_work, 0);
+ 
+@@ -579,7 +579,8 @@ irqreturn_t ath_isr(int irq, void *dev)
+ 
+ 		goto chip_reset;
+ 	}
+-#ifdef CONFIG_PM_SLEEP
 +
-+/**
-  * struct cfg80211_ops - backend description for wireless configuration
-  *
-  * This struct is registered by fullmac card drivers and/or wireless stacks
-@@ -2342,9 +2365,8 @@ struct cfg80211_ops {
- 					    u64 cookie);
- 
- 	int	(*mgmt_tx)(struct wiphy *wiphy, struct wireless_dev *wdev,
--			  struct ieee80211_channel *chan, bool offchan,
--			  unsigned int wait, const u8 *buf, size_t len,
--			  bool no_cck, bool dont_wait_for_ack, u64 *cookie);
-+			   struct cfg80211_mgmt_tx_params *params,
-+			   u64 *cookie);
- 	int	(*mgmt_tx_cancel_wait)(struct wiphy *wiphy,
- 				       struct wireless_dev *wdev,
- 				       u64 cookie);
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 95667b0..9442837 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3146,26 +3146,25 @@ static int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- }
- 
- static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
--			     struct ieee80211_channel *chan, bool offchan,
--			     unsigned int wait, const u8 *buf, size_t len,
--			     bool no_cck, bool dont_wait_for_ack, u64 *cookie)
-+			     struct cfg80211_mgmt_tx_params *params,
-+			     u64 *cookie)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
- 	struct ieee80211_local *local = sdata->local;
- 	struct sk_buff *skb;
- 	struct sta_info *sta;
--	const struct ieee80211_mgmt *mgmt = (void *)buf;
-+	const struct ieee80211_mgmt *mgmt = (void *)params->buf;
- 	bool need_offchan = false;
- 	u32 flags;
- 	int ret;
- 
--	if (dont_wait_for_ack)
-+	if (params->dont_wait_for_ack)
- 		flags = IEEE80211_TX_CTL_NO_ACK;
- 	else
- 		flags = IEEE80211_TX_INTFL_NL80211_FRAME_TX |
- 			IEEE80211_TX_CTL_REQ_TX_STATUS;
- 
--	if (no_cck)
-+	if (params->no_cck)
- 		flags |= IEEE80211_TX_CTL_NO_CCK_RATE;
- 
- 	switch (sdata->vif.type) {
-@@ -3213,7 +3212,7 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 	/* configurations requiring offchan cannot work if no channel has been
- 	 * specified
- 	 */
--	if (need_offchan && !chan)
-+	if (need_offchan && !params->chan)
- 		return -EINVAL;
- 
- 	mutex_lock(&local->mtx);
-@@ -3226,8 +3225,10 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 		chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
- 
- 		if (chanctx_conf) {
--			need_offchan = chan && (chan != chanctx_conf->def.chan);
--		} else if (!chan) {
-+			need_offchan = params->chan &&
-+				       (params->chan !=
-+					chanctx_conf->def.chan);
-+		} else if (!params->chan) {
- 			ret = -EINVAL;
- 			rcu_read_unlock();
- 			goto out_unlock;
-@@ -3237,19 +3238,19 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 		rcu_read_unlock();
- 	}
- 
--	if (need_offchan && !offchan) {
-+	if (need_offchan && !params->offchan) {
- 		ret = -EBUSY;
- 		goto out_unlock;
- 	}
- 
--	skb = dev_alloc_skb(local->hw.extra_tx_headroom + len);
-+	skb = dev_alloc_skb(local->hw.extra_tx_headroom + params->len);
- 	if (!skb) {
- 		ret = -ENOMEM;
- 		goto out_unlock;
- 	}
- 	skb_reserve(skb, local->hw.extra_tx_headroom);
- 
--	memcpy(skb_put(skb, len), buf, len);
-+	memcpy(skb_put(skb, params->len), params->buf, params->len);
- 
- 	IEEE80211_SKB_CB(skb)->flags = flags;
- 
-@@ -3269,8 +3270,8 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 			local->hw.offchannel_tx_hw_queue;
- 
- 	/* This will handle all kinds of coalescing and immediate TX */
--	ret = ieee80211_start_roc_work(local, sdata, chan,
--				       wait, cookie, skb,
-+	ret = ieee80211_start_roc_work(local, sdata, params->chan,
-+				       params->wait, cookie, skb,
- 				       IEEE80211_ROC_TYPE_MGMT_TX);
- 	if (ret)
- 		kfree_skb(skb);
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index eb0f7a3..bff9869 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -317,9 +317,8 @@ void cfg80211_mlme_unregister_socket(struct wireless_dev *wdev, u32 nlpid);
- void cfg80211_mlme_purge_registrations(struct wireless_dev *wdev);
- int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
- 			  struct wireless_dev *wdev,
--			  struct ieee80211_channel *chan, bool offchan,
--			  unsigned int wait, const u8 *buf, size_t len,
--			  bool no_cck, bool dont_wait_for_ack, u64 *cookie);
-+			  struct cfg80211_mgmt_tx_params *params,
-+			  u64 *cookie);
- void cfg80211_oper_and_ht_capa(struct ieee80211_ht_cap *ht_capa,
- 			       const struct ieee80211_ht_cap *ht_capa_mask);
- void cfg80211_oper_and_vht_capa(struct ieee80211_vht_cap *vht_capa,
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index 6a6b1c8..a9cecd7 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -520,9 +520,7 @@ void cfg80211_mlme_purge_registrations(struct wireless_dev *wdev)
- 
- int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
- 			  struct wireless_dev *wdev,
--			  struct ieee80211_channel *chan, bool offchan,
--			  unsigned int wait, const u8 *buf, size_t len,
--			  bool no_cck, bool dont_wait_for_ack, u64 *cookie)
-+			  struct cfg80211_mgmt_tx_params *params, u64 *cookie)
- {
- 	const struct ieee80211_mgmt *mgmt;
- 	u16 stype;
-@@ -533,10 +531,10 @@ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
- 	if (!rdev->ops->mgmt_tx)
- 		return -EOPNOTSUPP;
- 
--	if (len < 24 + 1)
-+	if (params->len < 24 + 1)
- 		return -EINVAL;
- 
--	mgmt = (const struct ieee80211_mgmt *) buf;
-+	mgmt = (const struct ieee80211_mgmt *)params->buf;
- 
- 	if (!ieee80211_is_mgmt(mgmt->frame_control))
- 		return -EINVAL;
-@@ -615,9 +613,7 @@ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
- 		return -EINVAL;
- 
- 	/* Transmit the Action frame as requested by user space */
--	return rdev_mgmt_tx(rdev, wdev, chan, offchan,
--			    wait, buf, len, no_cck, dont_wait_for_ack,
--			    cookie);
-+	return rdev_mgmt_tx(rdev, wdev, params, cookie);
- }
- 
- bool cfg80211_rx_mgmt(struct wireless_dev *wdev, int freq, int sig_mbm,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index a7f4e79..c2627ba 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -7428,10 +7428,10 @@ static int nl80211_tx_mgmt(struct sk_buff *skb, struct genl_info *info)
- 	void *hdr = NULL;
- 	u64 cookie;
- 	struct sk_buff *msg = NULL;
--	unsigned int wait = 0;
--	bool offchan, no_cck, dont_wait_for_ack;
--
--	dont_wait_for_ack = info->attrs[NL80211_ATTR_DONT_WAIT_FOR_ACK];
-+	struct cfg80211_mgmt_tx_params params = {
-+		.dont_wait_for_ack =
-+			info->attrs[NL80211_ATTR_DONT_WAIT_FOR_ACK],
-+	};
- 
- 	if (!info->attrs[NL80211_ATTR_FRAME])
- 		return -EINVAL;
-@@ -7458,24 +7458,24 @@ static int nl80211_tx_mgmt(struct sk_buff *skb, struct genl_info *info)
- 	if (info->attrs[NL80211_ATTR_DURATION]) {
- 		if (!(rdev->wiphy.flags & WIPHY_FLAG_OFFCHAN_TX))
- 			return -EINVAL;
--		wait = nla_get_u32(info->attrs[NL80211_ATTR_DURATION]);
-+		params.wait = nla_get_u32(info->attrs[NL80211_ATTR_DURATION]);
- 
- 		/*
- 		 * We should wait on the channel for at least a minimum amount
- 		 * of time (10ms) but no longer than the driver supports.
- 		 */
--		if (wait < NL80211_MIN_REMAIN_ON_CHANNEL_TIME ||
--		    wait > rdev->wiphy.max_remain_on_channel_duration)
-+		if (params.wait < NL80211_MIN_REMAIN_ON_CHANNEL_TIME ||
-+		    params.wait > rdev->wiphy.max_remain_on_channel_duration)
- 			return -EINVAL;
- 
- 	}
- 
--	offchan = info->attrs[NL80211_ATTR_OFFCHANNEL_TX_OK];
-+	params.offchan = info->attrs[NL80211_ATTR_OFFCHANNEL_TX_OK];
- 
--	if (offchan && !(rdev->wiphy.flags & WIPHY_FLAG_OFFCHAN_TX))
-+	if (params.offchan && !(rdev->wiphy.flags & WIPHY_FLAG_OFFCHAN_TX))
- 		return -EINVAL;
- 
--	no_cck = nla_get_flag(info->attrs[NL80211_ATTR_TX_NO_CCK_RATE]);
-+	params.no_cck = nla_get_flag(info->attrs[NL80211_ATTR_TX_NO_CCK_RATE]);
- 
- 	/* get the channel if any has been specified, otherwise pass NULL to
- 	 * the driver. The latter will use the current one
-@@ -7487,10 +7487,10 @@ static int nl80211_tx_mgmt(struct sk_buff *skb, struct genl_info *info)
- 			return err;
- 	}
- 
--	if (!chandef.chan && offchan)
-+	if (!chandef.chan && params.offchan)
- 		return -EINVAL;
- 
--	if (!dont_wait_for_ack) {
-+	if (!params.dont_wait_for_ack) {
- 		msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
- 		if (!msg)
- 			return -ENOMEM;
-@@ -7503,10 +7503,9 @@ static int nl80211_tx_mgmt(struct sk_buff *skb, struct genl_info *info)
++#ifdef CONFIG_ATH9K_WOW
+ 	if (status & ATH9K_INT_BMISS) {
+ 		if (atomic_read(&sc->wow_sleep_proc_intr) == 0) {
+ 			ath_dbg(common, ANY, "during WoW we got a BMISS\n");
+@@ -588,6 +589,8 @@ irqreturn_t ath_isr(int irq, void *dev)
  		}
  	}
+ #endif
++
++
+ 	if (status & ATH9K_INT_SWBA)
+ 		tasklet_schedule(&sc->bcon_tasklet);
  
--	err = cfg80211_mlme_mgmt_tx(rdev, wdev, chandef.chan, offchan, wait,
--				    nla_data(info->attrs[NL80211_ATTR_FRAME]),
--				    nla_len(info->attrs[NL80211_ATTR_FRAME]),
--				    no_cck, dont_wait_for_ack, &cookie);
-+	params.buf = nla_data(info->attrs[NL80211_ATTR_FRAME]);
-+	params.len = nla_len(info->attrs[NL80211_ATTR_FRAME]);
-+	err = cfg80211_mlme_mgmt_tx(rdev, wdev, &params, &cookie);
- 	if (err)
- 		goto free_msg;
- 
-diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
-index 37ce9fd..a6c03ab 100644
---- a/net/wireless/rdev-ops.h
-+++ b/net/wireless/rdev-ops.h
-@@ -624,16 +624,12 @@ rdev_cancel_remain_on_channel(struct cfg80211_registered_device *rdev,
- 
- static inline int rdev_mgmt_tx(struct cfg80211_registered_device *rdev,
- 			       struct wireless_dev *wdev,
--			       struct ieee80211_channel *chan, bool offchan,
--			       unsigned int wait, const u8 *buf, size_t len,
--			       bool no_cck, bool dont_wait_for_ack, u64 *cookie)
-+			       struct cfg80211_mgmt_tx_params *params,
-+			       u64 *cookie)
- {
- 	int ret;
--	trace_rdev_mgmt_tx(&rdev->wiphy, wdev, chan, offchan,
--			   wait, no_cck, dont_wait_for_ack);
--	ret = rdev->ops->mgmt_tx(&rdev->wiphy, wdev, chan, offchan,
--				  wait, buf, len, no_cck,
--				  dont_wait_for_ack, cookie);
-+	trace_rdev_mgmt_tx(&rdev->wiphy, wdev, params);
-+	ret = rdev->ops->mgmt_tx(&rdev->wiphy, wdev, params, cookie);
- 	trace_rdev_return_int_cookie(&rdev->wiphy, ret, *cookie);
- 	return ret;
+@@ -2021,333 +2024,6 @@ static int ath9k_get_antenna(struct ieee80211_hw *hw, u32 *tx_ant, u32 *rx_ant)
+ 	return 0;
  }
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index ba5f0d6..f7aa7a7 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -1653,9 +1653,8 @@ TRACE_EVENT(rdev_cancel_remain_on_channel,
  
- TRACE_EVENT(rdev_mgmt_tx,
- 	TP_PROTO(struct wiphy *wiphy, struct wireless_dev *wdev,
--		 struct ieee80211_channel *chan, bool offchan,
--		 unsigned int wait, bool no_cck, bool dont_wait_for_ack),
--	TP_ARGS(wiphy, wdev, chan, offchan, wait, no_cck, dont_wait_for_ack),
-+		 struct cfg80211_mgmt_tx_params *params),
-+	TP_ARGS(wiphy, wdev, params),
- 	TP_STRUCT__entry(
- 		WIPHY_ENTRY
- 		WDEV_ENTRY
-@@ -1668,11 +1667,11 @@ TRACE_EVENT(rdev_mgmt_tx,
- 	TP_fast_assign(
- 		WIPHY_ASSIGN;
- 		WDEV_ASSIGN;
--		CHAN_ASSIGN(chan);
--		__entry->offchan = offchan;
--		__entry->wait = wait;
--		__entry->no_cck = no_cck;
--		__entry->dont_wait_for_ack = dont_wait_for_ack;
-+		CHAN_ASSIGN(params->chan);
-+		__entry->offchan = params->offchan;
-+		__entry->wait = params->wait;
-+		__entry->no_cck = params->no_cck;
-+		__entry->dont_wait_for_ack = params->dont_wait_for_ack;
- 	),
- 	TP_printk(WIPHY_PR_FMT ", " WDEV_PR_FMT ", " CHAN_PR_FMT ", offchan: %s,"
- 		  " wait: %u, no cck: %s, dont wait for ack: %s",
+-#ifdef CONFIG_PM_SLEEP
+-
+-static void ath9k_wow_map_triggers(struct ath_softc *sc,
+-				   struct cfg80211_wowlan *wowlan,
+-				   u32 *wow_triggers)
+-{
+-	if (wowlan->disconnect)
+-		*wow_triggers |= AH_WOW_LINK_CHANGE |
+-				 AH_WOW_BEACON_MISS;
+-	if (wowlan->magic_pkt)
+-		*wow_triggers |= AH_WOW_MAGIC_PATTERN_EN;
+-
+-	if (wowlan->n_patterns)
+-		*wow_triggers |= AH_WOW_USER_PATTERN_EN;
+-
+-	sc->wow_enabled = *wow_triggers;
+-
+-}
+-
+-static void ath9k_wow_add_disassoc_deauth_pattern(struct ath_softc *sc)
+-{
+-	struct ath_hw *ah = sc->sc_ah;
+-	struct ath_common *common = ath9k_hw_common(ah);
+-	int pattern_count = 0;
+-	int i, byte_cnt;
+-	u8 dis_deauth_pattern[MAX_PATTERN_SIZE];
+-	u8 dis_deauth_mask[MAX_PATTERN_SIZE];
+-
+-	memset(dis_deauth_pattern, 0, MAX_PATTERN_SIZE);
+-	memset(dis_deauth_mask, 0, MAX_PATTERN_SIZE);
+-
+-	/*
+-	 * Create Dissassociate / Deauthenticate packet filter
+-	 *
+-	 *     2 bytes        2 byte    6 bytes   6 bytes  6 bytes
+-	 *  +--------------+----------+---------+--------+--------+----
+-	 *  + Frame Control+ Duration +   DA    +  SA    +  BSSID +
+-	 *  +--------------+----------+---------+--------+--------+----
+-	 *
+-	 * The above is the management frame format for disassociate/
+-	 * deauthenticate pattern, from this we need to match the first byte
+-	 * of 'Frame Control' and DA, SA, and BSSID fields
+-	 * (skipping 2nd byte of FC and Duration feild.
+-	 *
+-	 * Disassociate pattern
+-	 * --------------------
+-	 * Frame control = 00 00 1010
+-	 * DA, SA, BSSID = x:x:x:x:x:x
+-	 * Pattern will be A0000000 | x:x:x:x:x:x | x:x:x:x:x:x
+-	 *			    | x:x:x:x:x:x  -- 22 bytes
+-	 *
+-	 * Deauthenticate pattern
+-	 * ----------------------
+-	 * Frame control = 00 00 1100
+-	 * DA, SA, BSSID = x:x:x:x:x:x
+-	 * Pattern will be C0000000 | x:x:x:x:x:x | x:x:x:x:x:x
+-	 *			    | x:x:x:x:x:x  -- 22 bytes
+-	 */
+-
+-	/* Create Disassociate Pattern first */
+-
+-	byte_cnt = 0;
+-
+-	/* Fill out the mask with all FF's */
+-
+-	for (i = 0; i < MAX_PATTERN_MASK_SIZE; i++)
+-		dis_deauth_mask[i] = 0xff;
+-
+-	/* copy the first byte of frame control field */
+-	dis_deauth_pattern[byte_cnt] = 0xa0;
+-	byte_cnt++;
+-
+-	/* skip 2nd byte of frame control and Duration field */
+-	byte_cnt += 3;
+-
+-	/*
+-	 * need not match the destination mac address, it can be a broadcast
+-	 * mac address or an unicast to this station
+-	 */
+-	byte_cnt += 6;
+-
+-	/* copy the source mac address */
+-	memcpy((dis_deauth_pattern + byte_cnt), common->curbssid, ETH_ALEN);
+-
+-	byte_cnt += 6;
+-
+-	/* copy the bssid, its same as the source mac address */
+-
+-	memcpy((dis_deauth_pattern + byte_cnt), common->curbssid, ETH_ALEN);
+-
+-	/* Create Disassociate pattern mask */
+-
+-	dis_deauth_mask[0] = 0xfe;
+-	dis_deauth_mask[1] = 0x03;
+-	dis_deauth_mask[2] = 0xc0;
+-
+-	ath_dbg(common, WOW, "Adding disassoc/deauth patterns for WoW\n");
+-
+-	ath9k_hw_wow_apply_pattern(ah, dis_deauth_pattern, dis_deauth_mask,
+-				   pattern_count, byte_cnt);
+-
+-	pattern_count++;
+-	/*
+-	 * for de-authenticate pattern, only the first byte of the frame
+-	 * control field gets changed from 0xA0 to 0xC0
+-	 */
+-	dis_deauth_pattern[0] = 0xC0;
+-
+-	ath9k_hw_wow_apply_pattern(ah, dis_deauth_pattern, dis_deauth_mask,
+-				   pattern_count, byte_cnt);
+-
+-}
+-
+-static void ath9k_wow_add_pattern(struct ath_softc *sc,
+-				  struct cfg80211_wowlan *wowlan)
+-{
+-	struct ath_hw *ah = sc->sc_ah;
+-	struct ath9k_wow_pattern *wow_pattern = NULL;
+-	struct cfg80211_pkt_pattern *patterns = wowlan->patterns;
+-	int mask_len;
+-	s8 i = 0;
+-
+-	if (!wowlan->n_patterns)
+-		return;
+-
+-	/*
+-	 * Add the new user configured patterns
+-	 */
+-	for (i = 0; i < wowlan->n_patterns; i++) {
+-
+-		wow_pattern = kzalloc(sizeof(*wow_pattern), GFP_KERNEL);
+-
+-		if (!wow_pattern)
+-			return;
+-
+-		/*
+-		 * TODO: convert the generic user space pattern to
+-		 * appropriate chip specific/802.11 pattern.
+-		 */
+-
+-		mask_len = DIV_ROUND_UP(wowlan->patterns[i].pattern_len, 8);
+-		memset(wow_pattern->pattern_bytes, 0, MAX_PATTERN_SIZE);
+-		memset(wow_pattern->mask_bytes, 0, MAX_PATTERN_SIZE);
+-		memcpy(wow_pattern->pattern_bytes, patterns[i].pattern,
+-		       patterns[i].pattern_len);
+-		memcpy(wow_pattern->mask_bytes, patterns[i].mask, mask_len);
+-		wow_pattern->pattern_len = patterns[i].pattern_len;
+-
+-		/*
+-		 * just need to take care of deauth and disssoc pattern,
+-		 * make sure we don't overwrite them.
+-		 */
+-
+-		ath9k_hw_wow_apply_pattern(ah, wow_pattern->pattern_bytes,
+-					   wow_pattern->mask_bytes,
+-					   i + 2,
+-					   wow_pattern->pattern_len);
+-		kfree(wow_pattern);
+-
+-	}
+-
+-}
+-
+-static int ath9k_suspend(struct ieee80211_hw *hw,
+-			 struct cfg80211_wowlan *wowlan)
+-{
+-	struct ath_softc *sc = hw->priv;
+-	struct ath_hw *ah = sc->sc_ah;
+-	struct ath_common *common = ath9k_hw_common(ah);
+-	u32 wow_triggers_enabled = 0;
+-	int ret = 0;
+-
+-	mutex_lock(&sc->mutex);
+-
+-	ath_cancel_work(sc);
+-	ath_stop_ani(sc);
+-	del_timer_sync(&sc->rx_poll_timer);
+-
+-	if (test_bit(SC_OP_INVALID, &sc->sc_flags)) {
+-		ath_dbg(common, ANY, "Device not present\n");
+-		ret = -EINVAL;
+-		goto fail_wow;
+-	}
+-
+-	if (WARN_ON(!wowlan)) {
+-		ath_dbg(common, WOW, "None of the WoW triggers enabled\n");
+-		ret = -EINVAL;
+-		goto fail_wow;
+-	}
+-
+-	if (!device_can_wakeup(sc->dev)) {
+-		ath_dbg(common, WOW, "device_can_wakeup failed, WoW is not enabled\n");
+-		ret = 1;
+-		goto fail_wow;
+-	}
+-
+-	/*
+-	 * none of the sta vifs are associated
+-	 * and we are not currently handling multivif
+-	 * cases, for instance we have to seperately
+-	 * configure 'keep alive frame' for each
+-	 * STA.
+-	 */
+-
+-	if (!test_bit(SC_OP_PRIM_STA_VIF, &sc->sc_flags)) {
+-		ath_dbg(common, WOW, "None of the STA vifs are associated\n");
+-		ret = 1;
+-		goto fail_wow;
+-	}
+-
+-	if (sc->nvifs > 1) {
+-		ath_dbg(common, WOW, "WoW for multivif is not yet supported\n");
+-		ret = 1;
+-		goto fail_wow;
+-	}
+-
+-	ath9k_wow_map_triggers(sc, wowlan, &wow_triggers_enabled);
+-
+-	ath_dbg(common, WOW, "WoW triggers enabled 0x%x\n",
+-		wow_triggers_enabled);
+-
+-	ath9k_ps_wakeup(sc);
+-
+-	ath9k_stop_btcoex(sc);
+-
+-	/*
+-	 * Enable wake up on recieving disassoc/deauth
+-	 * frame by default.
+-	 */
+-	ath9k_wow_add_disassoc_deauth_pattern(sc);
+-
+-	if (wow_triggers_enabled & AH_WOW_USER_PATTERN_EN)
+-		ath9k_wow_add_pattern(sc, wowlan);
+-
+-	spin_lock_bh(&sc->sc_pcu_lock);
+-	/*
+-	 * To avoid false wake, we enable beacon miss interrupt only
+-	 * when we go to sleep. We save the current interrupt mask
+-	 * so we can restore it after the system wakes up
+-	 */
+-	sc->wow_intr_before_sleep = ah->imask;
+-	ah->imask &= ~ATH9K_INT_GLOBAL;
+-	ath9k_hw_disable_interrupts(ah);
+-	ah->imask = ATH9K_INT_BMISS | ATH9K_INT_GLOBAL;
+-	ath9k_hw_set_interrupts(ah);
+-	ath9k_hw_enable_interrupts(ah);
+-
+-	spin_unlock_bh(&sc->sc_pcu_lock);
+-
+-	/*
+-	 * we can now sync irq and kill any running tasklets, since we already
+-	 * disabled interrupts and not holding a spin lock
+-	 */
+-	synchronize_irq(sc->irq);
+-	tasklet_kill(&sc->intr_tq);
+-
+-	ath9k_hw_wow_enable(ah, wow_triggers_enabled);
+-
+-	ath9k_ps_restore(sc);
+-	ath_dbg(common, ANY, "WoW enabled in ath9k\n");
+-	atomic_inc(&sc->wow_sleep_proc_intr);
+-
+-fail_wow:
+-	mutex_unlock(&sc->mutex);
+-	return ret;
+-}
+-
+-static int ath9k_resume(struct ieee80211_hw *hw)
+-{
+-	struct ath_softc *sc = hw->priv;
+-	struct ath_hw *ah = sc->sc_ah;
+-	struct ath_common *common = ath9k_hw_common(ah);
+-	u32 wow_status;
+-
+-	mutex_lock(&sc->mutex);
+-
+-	ath9k_ps_wakeup(sc);
+-
+-	spin_lock_bh(&sc->sc_pcu_lock);
+-
+-	ath9k_hw_disable_interrupts(ah);
+-	ah->imask = sc->wow_intr_before_sleep;
+-	ath9k_hw_set_interrupts(ah);
+-	ath9k_hw_enable_interrupts(ah);
+-
+-	spin_unlock_bh(&sc->sc_pcu_lock);
+-
+-	wow_status = ath9k_hw_wow_wakeup(ah);
+-
+-	if (atomic_read(&sc->wow_got_bmiss_intr) == 0) {
+-		/*
+-		 * some devices may not pick beacon miss
+-		 * as the reason they woke up so we add
+-		 * that here for that shortcoming.
+-		 */
+-		wow_status |= AH_WOW_BEACON_MISS;
+-		atomic_dec(&sc->wow_got_bmiss_intr);
+-		ath_dbg(common, ANY, "Beacon miss interrupt picked up during WoW sleep\n");
+-	}
+-
+-	atomic_dec(&sc->wow_sleep_proc_intr);
+-
+-	if (wow_status) {
+-		ath_dbg(common, ANY, "Waking up due to WoW triggers %s with WoW status = %x\n",
+-			ath9k_hw_wow_event_to_string(wow_status), wow_status);
+-	}
+-
+-	ath_restart_work(sc);
+-	ath9k_start_btcoex(sc);
+-
+-	ath9k_ps_restore(sc);
+-	mutex_unlock(&sc->mutex);
+-
+-	return 0;
+-}
+-
+-static void ath9k_set_wakeup(struct ieee80211_hw *hw, bool enabled)
+-{
+-	struct ath_softc *sc = hw->priv;
+-
+-	mutex_lock(&sc->mutex);
+-	device_init_wakeup(sc->dev, 1);
+-	device_set_wakeup_enable(sc->dev, enabled);
+-	mutex_unlock(&sc->mutex);
+-}
+-
+-#endif
+ static void ath9k_sw_scan_start(struct ieee80211_hw *hw)
+ {
+ 	struct ath_softc *sc = hw->priv;
+@@ -2403,7 +2079,7 @@ struct ieee80211_ops ath9k_ops = {
+ 	.set_antenna	    = ath9k_set_antenna,
+ 	.get_antenna	    = ath9k_get_antenna,
+ 
+-#ifdef CONFIG_PM_SLEEP
++#ifdef CONFIG_ATH9K_WOW
+ 	.suspend	    = ath9k_suspend,
+ 	.resume		    = ath9k_resume,
+ 	.set_wakeup	    = ath9k_set_wakeup,
+diff --git a/drivers/net/wireless/ath/ath9k/wow.c b/drivers/net/wireless/ath/ath9k/wow.c
+new file mode 100644
+index 0000000..e161bbc
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath9k/wow.c
+@@ -0,0 +1,341 @@
++/*
++ * Copyright (c) 2013 Qualcomm Atheros, Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#include "ath9k.h"
++
++static void ath9k_wow_map_triggers(struct ath_softc *sc,
++				   struct cfg80211_wowlan *wowlan,
++				   u32 *wow_triggers)
++{
++	if (wowlan->disconnect)
++		*wow_triggers |= AH_WOW_LINK_CHANGE |
++				 AH_WOW_BEACON_MISS;
++	if (wowlan->magic_pkt)
++		*wow_triggers |= AH_WOW_MAGIC_PATTERN_EN;
++
++	if (wowlan->n_patterns)
++		*wow_triggers |= AH_WOW_USER_PATTERN_EN;
++
++	sc->wow_enabled = *wow_triggers;
++
++}
++
++static void ath9k_wow_add_disassoc_deauth_pattern(struct ath_softc *sc)
++{
++	struct ath_hw *ah = sc->sc_ah;
++	struct ath_common *common = ath9k_hw_common(ah);
++	int pattern_count = 0;
++	int i, byte_cnt;
++	u8 dis_deauth_pattern[MAX_PATTERN_SIZE];
++	u8 dis_deauth_mask[MAX_PATTERN_SIZE];
++
++	memset(dis_deauth_pattern, 0, MAX_PATTERN_SIZE);
++	memset(dis_deauth_mask, 0, MAX_PATTERN_SIZE);
++
++	/*
++	 * Create Dissassociate / Deauthenticate packet filter
++	 *
++	 *     2 bytes        2 byte    6 bytes   6 bytes  6 bytes
++	 *  +--------------+----------+---------+--------+--------+----
++	 *  + Frame Control+ Duration +   DA    +  SA    +  BSSID +
++	 *  +--------------+----------+---------+--------+--------+----
++	 *
++	 * The above is the management frame format for disassociate/
++	 * deauthenticate pattern, from this we need to match the first byte
++	 * of 'Frame Control' and DA, SA, and BSSID fields
++	 * (skipping 2nd byte of FC and Duration feild.
++	 *
++	 * Disassociate pattern
++	 * --------------------
++	 * Frame control = 00 00 1010
++	 * DA, SA, BSSID = x:x:x:x:x:x
++	 * Pattern will be A0000000 | x:x:x:x:x:x | x:x:x:x:x:x
++	 *			    | x:x:x:x:x:x  -- 22 bytes
++	 *
++	 * Deauthenticate pattern
++	 * ----------------------
++	 * Frame control = 00 00 1100
++	 * DA, SA, BSSID = x:x:x:x:x:x
++	 * Pattern will be C0000000 | x:x:x:x:x:x | x:x:x:x:x:x
++	 *			    | x:x:x:x:x:x  -- 22 bytes
++	 */
++
++	/* Create Disassociate Pattern first */
++
++	byte_cnt = 0;
++
++	/* Fill out the mask with all FF's */
++
++	for (i = 0; i < MAX_PATTERN_MASK_SIZE; i++)
++		dis_deauth_mask[i] = 0xff;
++
++	/* copy the first byte of frame control field */
++	dis_deauth_pattern[byte_cnt] = 0xa0;
++	byte_cnt++;
++
++	/* skip 2nd byte of frame control and Duration field */
++	byte_cnt += 3;
++
++	/*
++	 * need not match the destination mac address, it can be a broadcast
++	 * mac address or an unicast to this station
++	 */
++	byte_cnt += 6;
++
++	/* copy the source mac address */
++	memcpy((dis_deauth_pattern + byte_cnt), common->curbssid, ETH_ALEN);
++
++	byte_cnt += 6;
++
++	/* copy the bssid, its same as the source mac address */
++
++	memcpy((dis_deauth_pattern + byte_cnt), common->curbssid, ETH_ALEN);
++
++	/* Create Disassociate pattern mask */
++
++	dis_deauth_mask[0] = 0xfe;
++	dis_deauth_mask[1] = 0x03;
++	dis_deauth_mask[2] = 0xc0;
++
++	ath_dbg(common, WOW, "Adding disassoc/deauth patterns for WoW\n");
++
++	ath9k_hw_wow_apply_pattern(ah, dis_deauth_pattern, dis_deauth_mask,
++				   pattern_count, byte_cnt);
++
++	pattern_count++;
++	/*
++	 * for de-authenticate pattern, only the first byte of the frame
++	 * control field gets changed from 0xA0 to 0xC0
++	 */
++	dis_deauth_pattern[0] = 0xC0;
++
++	ath9k_hw_wow_apply_pattern(ah, dis_deauth_pattern, dis_deauth_mask,
++				   pattern_count, byte_cnt);
++
++}
++
++static void ath9k_wow_add_pattern(struct ath_softc *sc,
++				  struct cfg80211_wowlan *wowlan)
++{
++	struct ath_hw *ah = sc->sc_ah;
++	struct ath9k_wow_pattern *wow_pattern = NULL;
++	struct cfg80211_pkt_pattern *patterns = wowlan->patterns;
++	int mask_len;
++	s8 i = 0;
++
++	if (!wowlan->n_patterns)
++		return;
++
++	/*
++	 * Add the new user configured patterns
++	 */
++	for (i = 0; i < wowlan->n_patterns; i++) {
++
++		wow_pattern = kzalloc(sizeof(*wow_pattern), GFP_KERNEL);
++
++		if (!wow_pattern)
++			return;
++
++		/*
++		 * TODO: convert the generic user space pattern to
++		 * appropriate chip specific/802.11 pattern.
++		 */
++
++		mask_len = DIV_ROUND_UP(wowlan->patterns[i].pattern_len, 8);
++		memset(wow_pattern->pattern_bytes, 0, MAX_PATTERN_SIZE);
++		memset(wow_pattern->mask_bytes, 0, MAX_PATTERN_SIZE);
++		memcpy(wow_pattern->pattern_bytes, patterns[i].pattern,
++		       patterns[i].pattern_len);
++		memcpy(wow_pattern->mask_bytes, patterns[i].mask, mask_len);
++		wow_pattern->pattern_len = patterns[i].pattern_len;
++
++		/*
++		 * just need to take care of deauth and disssoc pattern,
++		 * make sure we don't overwrite them.
++		 */
++
++		ath9k_hw_wow_apply_pattern(ah, wow_pattern->pattern_bytes,
++					   wow_pattern->mask_bytes,
++					   i + 2,
++					   wow_pattern->pattern_len);
++		kfree(wow_pattern);
++
++	}
++
++}
++
++int ath9k_suspend(struct ieee80211_hw *hw,
++		  struct cfg80211_wowlan *wowlan)
++{
++	struct ath_softc *sc = hw->priv;
++	struct ath_hw *ah = sc->sc_ah;
++	struct ath_common *common = ath9k_hw_common(ah);
++	u32 wow_triggers_enabled = 0;
++	int ret = 0;
++
++	mutex_lock(&sc->mutex);
++
++	ath_cancel_work(sc);
++	ath_stop_ani(sc);
++	del_timer_sync(&sc->rx_poll_timer);
++
++	if (test_bit(SC_OP_INVALID, &sc->sc_flags)) {
++		ath_dbg(common, ANY, "Device not present\n");
++		ret = -EINVAL;
++		goto fail_wow;
++	}
++
++	if (WARN_ON(!wowlan)) {
++		ath_dbg(common, WOW, "None of the WoW triggers enabled\n");
++		ret = -EINVAL;
++		goto fail_wow;
++	}
++
++	if (!device_can_wakeup(sc->dev)) {
++		ath_dbg(common, WOW, "device_can_wakeup failed, WoW is not enabled\n");
++		ret = 1;
++		goto fail_wow;
++	}
++
++	/*
++	 * none of the sta vifs are associated
++	 * and we are not currently handling multivif
++	 * cases, for instance we have to seperately
++	 * configure 'keep alive frame' for each
++	 * STA.
++	 */
++
++	if (!test_bit(SC_OP_PRIM_STA_VIF, &sc->sc_flags)) {
++		ath_dbg(common, WOW, "None of the STA vifs are associated\n");
++		ret = 1;
++		goto fail_wow;
++	}
++
++	if (sc->nvifs > 1) {
++		ath_dbg(common, WOW, "WoW for multivif is not yet supported\n");
++		ret = 1;
++		goto fail_wow;
++	}
++
++	ath9k_wow_map_triggers(sc, wowlan, &wow_triggers_enabled);
++
++	ath_dbg(common, WOW, "WoW triggers enabled 0x%x\n",
++		wow_triggers_enabled);
++
++	ath9k_ps_wakeup(sc);
++
++	ath9k_stop_btcoex(sc);
++
++	/*
++	 * Enable wake up on recieving disassoc/deauth
++	 * frame by default.
++	 */
++	ath9k_wow_add_disassoc_deauth_pattern(sc);
++
++	if (wow_triggers_enabled & AH_WOW_USER_PATTERN_EN)
++		ath9k_wow_add_pattern(sc, wowlan);
++
++	spin_lock_bh(&sc->sc_pcu_lock);
++	/*
++	 * To avoid false wake, we enable beacon miss interrupt only
++	 * when we go to sleep. We save the current interrupt mask
++	 * so we can restore it after the system wakes up
++	 */
++	sc->wow_intr_before_sleep = ah->imask;
++	ah->imask &= ~ATH9K_INT_GLOBAL;
++	ath9k_hw_disable_interrupts(ah);
++	ah->imask = ATH9K_INT_BMISS | ATH9K_INT_GLOBAL;
++	ath9k_hw_set_interrupts(ah);
++	ath9k_hw_enable_interrupts(ah);
++
++	spin_unlock_bh(&sc->sc_pcu_lock);
++
++	/*
++	 * we can now sync irq and kill any running tasklets, since we already
++	 * disabled interrupts and not holding a spin lock
++	 */
++	synchronize_irq(sc->irq);
++	tasklet_kill(&sc->intr_tq);
++
++	ath9k_hw_wow_enable(ah, wow_triggers_enabled);
++
++	ath9k_ps_restore(sc);
++	ath_dbg(common, ANY, "WoW enabled in ath9k\n");
++	atomic_inc(&sc->wow_sleep_proc_intr);
++
++fail_wow:
++	mutex_unlock(&sc->mutex);
++	return ret;
++}
++
++int ath9k_resume(struct ieee80211_hw *hw)
++{
++	struct ath_softc *sc = hw->priv;
++	struct ath_hw *ah = sc->sc_ah;
++	struct ath_common *common = ath9k_hw_common(ah);
++	u32 wow_status;
++
++	mutex_lock(&sc->mutex);
++
++	ath9k_ps_wakeup(sc);
++
++	spin_lock_bh(&sc->sc_pcu_lock);
++
++	ath9k_hw_disable_interrupts(ah);
++	ah->imask = sc->wow_intr_before_sleep;
++	ath9k_hw_set_interrupts(ah);
++	ath9k_hw_enable_interrupts(ah);
++
++	spin_unlock_bh(&sc->sc_pcu_lock);
++
++	wow_status = ath9k_hw_wow_wakeup(ah);
++
++	if (atomic_read(&sc->wow_got_bmiss_intr) == 0) {
++		/*
++		 * some devices may not pick beacon miss
++		 * as the reason they woke up so we add
++		 * that here for that shortcoming.
++		 */
++		wow_status |= AH_WOW_BEACON_MISS;
++		atomic_dec(&sc->wow_got_bmiss_intr);
++		ath_dbg(common, ANY, "Beacon miss interrupt picked up during WoW sleep\n");
++	}
++
++	atomic_dec(&sc->wow_sleep_proc_intr);
++
++	if (wow_status) {
++		ath_dbg(common, ANY, "Waking up due to WoW triggers %s with WoW status = %x\n",
++			ath9k_hw_wow_event_to_string(wow_status), wow_status);
++	}
++
++	ath_restart_work(sc);
++	ath9k_start_btcoex(sc);
++
++	ath9k_ps_restore(sc);
++	mutex_unlock(&sc->mutex);
++
++	return 0;
++}
++
++void ath9k_set_wakeup(struct ieee80211_hw *hw, bool enabled)
++{
++	struct ath_softc *sc = hw->priv;
++
++	mutex_lock(&sc->mutex);
++	device_init_wakeup(sc->dev, 1);
++	device_set_wakeup_enable(sc->dev, enabled);
++	mutex_unlock(&sc->mutex);
++}
 -- 
-1.7.9.5
+1.8.4.2
 
