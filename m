@@ -1,51 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:52765 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754591Ab3KYQwd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Nov 2013 11:52:33 -0500
-Message-ID: <52938049.5070701@hauke-m.de> (sfid-20131125_175236_762393_CCE8A678)
-Date: Mon, 25 Nov 2013 17:52:25 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>,
-	"Luis R. Rodriguez" <mcgrof@kernel.org>
-CC: backports@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] backport: need reinit_completion() for kernel before
- v3.13
-References: <1385377676-5106-1-git-send-email-arend@broadcom.com> <52933600.4020406@hauke-m.de> <52937F77.9090701@broadcom.com>
-In-Reply-To: <52937F77.9090701@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from smtprelay0245.hostedemail.com ([216.40.44.245]:36849 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751772Ab3KGAbi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Nov 2013 19:31:38 -0500
+Message-ID: <1383784301.7940.43.camel@joe-AO722> (sfid-20131107_013140_889960_8E93423E)
+Subject: Re: [PATCH 13/13] ath9k: Update MAINTAINERS
+From: Joe Perches <joe@perches.com>
+To: Sujith Manoharan <sujith@msujith.org>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Date: Wed, 06 Nov 2013 16:31:41 -0800
+In-Reply-To: <1383783120-22435-14-git-send-email-sujith@msujith.org>
+References: <1383783120-22435-1-git-send-email-sujith@msujith.org>
+	 <1383783120-22435-14-git-send-email-sujith@msujith.org>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/25/2013 05:48 PM, Arend van Spriel wrote:
-> On 11/25/2013 12:35 PM, Hauke Mehrtens wrote:
->> On 11/25/2013 12:07 PM, Arend van Spriel wrote:
->>> The use of INIT_COMPLETION() has been replaced by reinit_completion()
->>> in v3.13-rc1. This patch backports that inline function.
->>>
->>> Cc: <linux-wireless@vger.kernel.org>
->>> Signed-off-by: Arend van Spriel <arend@broadcom.com>
->>> ---
->>>   backport/backport-include/linux/completion.h |   29
->>> ++++++++++++++++++++++++++
->>>   1 file changed, 29 insertions(+)
->>>   create mode 100644 backport/backport-include/linux/completion.h
->>>
->>
->> This was already added in this commit:
->> https://github.com/hauke/backports/commit/d9cb7a967513482c399d44e390429cea3de1d86d
->>
->>
->> You should use backports for this repository:
->> https://github.com/hauke/backports.git
+On Thu, 2013-11-07 at 05:42 +0530, Sujith Manoharan wrote:
+> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 > 
-> Ok. With my fingers crossed: Did you also solve the whole genl patch
-> series that Johannes did in net-next?
+> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+> ---
+>  MAINTAINERS | 19 ++++++++-----------
+>  1 file changed, 8 insertions(+), 11 deletions(-)
 > 
-> Gr. AvS
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 0d59670..a137b3f 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -1444,17 +1444,6 @@ T:	git git://github.com/kvalo/ath.git
+>  S:	Supported
+>  F:	drivers/net/wireless/ath/ath6kl/
+>  
+> -ATHEROS ATH9K WIRELESS DRIVER
+> -M:	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+> -M:	Jouni Malinen <jouni@qca.qualcomm.com>
+> -M:	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+> -M:	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+> -L:	linux-wireless@vger.kernel.org
+> -L:	ath9k-devel@lists.ath9k.org
+> -W:	http://wireless.kernel.org/en/users/Drivers/ath9k
+> -S:	Supported
+> -F:	drivers/net/wireless/ath/ath9k/
+> -
+>  WILOCITY WIL6210 WIRELESS DRIVER
+>  M:	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+>  L:	linux-wireless@vger.kernel.org
+> @@ -6849,6 +6838,14 @@ T:	git git://linuxtv.org/anttip/media_tree.git
+>  S:	Maintained
+>  F:	drivers/media/tuners/qt1010*
+>  
+> +QUALCOMM ATHEROS ATH9K WIRELESS DRIVER
+> +M:	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
 
-Yes, Johannes solved that already. It works with current linux-next and
-3.13-rc1.
+While I don't have a problem with this, it's
+more common to appoint a single person as a
+"lead" maintainer.
 
-Hauke
+> +L:	linux-wireless@vger.kernel.org
+> +L:	ath9k-devel@lists.ath9k.org
+> +W:	http://wireless.kernel.org/en/users/Drivers/ath9k
+> +S:	Supported
+> +F:	drivers/net/wireless/ath/ath9k/
+> +
+>  QUALCOMM ATHEROS ATH10K WIRELESS DRIVER
+>  M:	Kalle Valo <kvalo@qca.qualcomm.com>
+>  L:	ath10k@lists.infradead.org
+
+
+
