@@ -1,55 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:37167 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753335Ab3KXUHO (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:60178 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752688Ab3KGAQc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Nov 2013 15:07:14 -0500
-Received: by mail-wi0-f175.google.com with SMTP id hi5so2725969wib.2
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Nov 2013 12:07:12 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 18/29] iwlwifi: mvm: a few more SKUs for 7260 and 3160
-Date: Sun, 24 Nov 2013 22:06:35 +0200
-Message-Id: <1385323606-3603-18-git-send-email-egrumbach@gmail.com> (sfid-20131124_210807_820779_7571C237)
-In-Reply-To: <52925BE7.4050406@gmail.com>
-References: <52925BE7.4050406@gmail.com>
+	Wed, 6 Nov 2013 19:16:32 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 01/13] ath9k: Add WB335 PCI IDs
+Date: Thu,  7 Nov 2013 05:41:48 +0530
+Message-Id: <1383783120-22435-2-git-send-email-sujith@msujith.org> (sfid-20131107_011636_391703_DDC19DD8)
+In-Reply-To: <1383783120-22435-1-git-send-email-sujith@msujith.org>
+References: <1383783120-22435-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-These devices are not sold as discrete modules but are
-rather soldered down to the board.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/pcie/drv.c |    5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/net/wireless/ath/ath9k/pci.c | 25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/drv.c b/drivers/net/wireless/iwlwifi/pcie/drv.c
-index 941c0c8..c1efc03 100644
---- a/drivers/net/wireless/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/drv.c
-@@ -297,6 +297,9 @@ static DEFINE_PCI_DEVICE_TABLE(iwl_hw_card_ids) = {
- 	{IWL_PCI_DEVICE(0x08B2, 0x4370, iwl7260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x08B2, 0x4360, iwl7260_2n_cfg)},
- 	{IWL_PCI_DEVICE(0x08B1, 0x5070, iwl7260_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x08B1, 0x5072, iwl7260_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x08B1, 0x5170, iwl7260_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x08B1, 0x5770, iwl7260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x08B1, 0x4020, iwl7260_2n_cfg)},
- 	{IWL_PCI_DEVICE(0x08B1, 0x402A, iwl7260_2n_cfg)},
- 	{IWL_PCI_DEVICE(0x08B2, 0x4220, iwl7260_2n_cfg)},
-@@ -350,6 +353,8 @@ static DEFINE_PCI_DEVICE_TABLE(iwl_hw_card_ids) = {
- 	{IWL_PCI_DEVICE(0x08B4, 0x8270, iwl3160_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x08B3, 0x8470, iwl3160_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x08B3, 0x8570, iwl3160_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x08B3, 0x1070, iwl3160_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x08B3, 0x1170, iwl3160_2ac_cfg)},
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index 7e4c252..04e6507 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -361,6 +361,11 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
+ 	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x0036,
++			 0x11AD, /* LITEON */
++			 0x0682),
++	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0036,
+ 			 PCI_VENDOR_ID_AZWAVE,
+ 			 0x213A),
+ 	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
+@@ -371,6 +376,11 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
+ 	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x0036,
++			 PCI_VENDOR_ID_LENOVO,
++			 0x4026),
++	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0036,
+ 			 PCI_VENDOR_ID_HP,
+ 			 0x18E3),
+ 	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
+@@ -381,6 +391,11 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
+ 	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x0036,
++			 PCI_VENDOR_ID_HP,
++			 0x2005),
++	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0036,
+ 			 PCI_VENDOR_ID_DELL,
+ 			 0x020E),
+ 	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
+@@ -458,6 +473,16 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
+ 			 0x185F, /* WNC */
+ 			 0x3027),
+ 	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0036,
++			 0x185F, /* WNC */
++			 0xA120),
++	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0036,
++			 PCI_VENDOR_ID_FOXCONN,
++			 0xE07F),
++	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
  
- /* 7265 Series */
- 	{IWL_PCI_DEVICE(0x095A, 0x5010, iwl7265_2ac_cfg)},
+ 	/* PCI-E AR9565 (WB335) */
+ 	{ PCI_VDEVICE(ATHEROS, 0x0036),
 -- 
-1.7.9.5
+1.8.4.2
 
