@@ -1,131 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f178.google.com ([209.85.217.178]:33052 "EHLO
-	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754234Ab3KKQyA (ORCPT
+Received: from mail-pd0-f174.google.com ([209.85.192.174]:42762 "EHLO
+	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750725Ab3KGLn3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Nov 2013 11:54:00 -0500
-MIME-Version: 1.0
-In-Reply-To: <1384188067.14334.45.camel@jlt4.sipsolutions.net>
-References: <1384119945-31213-1-git-send-email-felipe.contreras@gmail.com>
-	<1384160932.14334.6.camel@jlt4.sipsolutions.net>
-	<CAMP44s3TFSgWuR8gVoFBznNP+t9mz+to===9i1PAnra4ogKu9w@mail.gmail.com>
-	<1384184624.14334.31.camel@jlt4.sipsolutions.net>
-	<CAMP44s2cVVe4-yW214B9hJu7n6M1onZpZaPCj5N0Fi1JWDKKsw@mail.gmail.com>
-	<1384188067.14334.45.camel@jlt4.sipsolutions.net>
-Date: Mon, 11 Nov 2013 10:53:59 -0600
-Message-ID: <CAMP44s3nkj2wZYCPve7EhyeD7sEFmpUN=-h015dOP68PcNSTug@mail.gmail.com> (sfid-20131111_175411_277358_CD59A3CB)
-Subject: Re: [PATCH v2] mac80211: add assoc beacon timeout logic
-From: Felipe Contreras <felipe.contreras@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 7 Nov 2013 06:43:29 -0500
+Received: by mail-pd0-f174.google.com with SMTP id z10so477372pdj.5
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Nov 2013 03:43:29 -0800 (PST)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	devel@lists.open80211s.org, distro11s@cozybit.com,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH v3] mac80211: fix the mesh channel switch support
+Date: Thu,  7 Nov 2013 19:43:16 +0800
+Message-Id: <1383824596-18816-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20131107_124333_658021_95B745D3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 11, 2013 at 10:41 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2013-11-11 at 10:23 -0600, Felipe Contreras wrote:
+Mesh STA receiving the mesh CSA action frame is not able to trigger
+the mesh channel switch due to the incorrect handling and comparison
+of mesh channel switch parameters element (MCSP)'s TTL. Make sure
+the MCSP's TTL is updated accordingly before calling the
+ieee80211_mesh_process_chnswitch. Also, we update the beacon before
+forwarding the CSA action frame, so MCSP's precedence value and
+initiator flag need to be updated prior to this.
 
->> However, I noticed that once in a very long time, sometimes it does
->> receive the corrupted frame and the association continues, and the
->> driver code detects it's a corrupted beacon frame.
->
-> So how does it treat the corruption?
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+---
+v2: only allow channel switch if mesh TTL less than dot11MeshTTL (Chun-Yeow)
+v3: set the initiator flag and precedence value prior to beacon update (Chun-Yeow)
 
-wlan0: associating with AP with corrupt beacon
+ net/mac80211/cfg.c         |   10 +++++++++-
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/mesh.c        |   17 +++++++++--------
+ net/mac80211/spectmgmt.c   |    2 ++
+ net/mac80211/util.c        |    5 -----
+ 5 files changed, 21 insertions(+), 14 deletions(-)
 
->> > The firmware still
->> > shouldn't be filtering anything since it doesn't really look at the
->> > beacon information (or maybe it filters based on the DS IE? I'm not
->> > entirely sure)
->>
->> That's what I thought, but I don't see it at all (only in monitor
->> mode, and in ad-hoc).
->
-> Yes, that part is odd - that's really the root cause.
->
-> I didn't quickly find in the threads what device and firmware you were
-> using, mind identifying it (again)?
-
-Intel Corporation Centrino Advanced-N 6235 (rev 24)
-iwlwifi 0000:02:00.0: loaded firmware version 18.168.6.1 op_mode iwldvm
-
->> Nope, it keeps trying forever.
->>
->> Oct 13 14:33:15 nysa kernel: wlan0: authenticate with e0:1d:3b:46:82:a0
->> Oct 13 14:33:15 nysa kernel: wlan0: send auth to e0:1d:3b:46:82:a0 (try 1/3)
->> Oct 13 14:33:15 nysa kernel: wlan0: authenticated
->> Oct 13 14:33:15 nysa kernel: wlan0: waiting for beacon from e0:1d:3b:46:82:a0
->> Oct 13 14:33:18 nysa kernel: wlan0: authenticate with e0:1d:3b:46:82:a0
->> Oct 13 14:33:18 nysa kernel: wlan0: send auth to e0:1d:3b:46:82:a0 (try 1/3)
->> Oct 13 14:33:18 nysa kernel: wlan0: authenticated
->> Oct 13 14:33:18 nysa kernel: wlan0: waiting for beacon from e0:1d:3b:46:82:a0
->> Oct 13 14:33:22 nysa kernel: wlan0: authenticate with e0:1d:3b:46:82:a0
->> Oct 13 14:33:22 nysa kernel: wlan0: send auth to e0:1d:3b:46:82:a0 (try 1/3)
->> Oct 13 14:33:22 nysa kernel: wlan0: authenticated
->> Oct 13 14:33:22 nysa kernel: wlan0: waiting for beacon from e0:1d:3b:46:82:a0
->> ...
->
-> I see the same behaviour - but it's the supplicant's doing, it is indeed
-> getting the event that the AP connection failed (timed out):
->
-> wlan0: Event ASSOC_TIMED_OUT (15) received
-
-Not in my setup.
-
->> > This isn't really true like I said above - the kernel can only drop the
->> > association, if userspace *insists* then it will try again and again.
->>
->> But it's not doing this:
->>
->>   ieee80211_destroy_assoc_data(sdata, false);
->>   cfg80211_assoc_timeout(sdata->dev, bss);
->>
->> Which is what causes the association to stop for me.
->>
->> So where exactly in the code is the association being "dropped"?
->
-> This does get called in my setup.
-
-Yes, because your setup is receiving beacons.
-
-Check the code:
-
-if ((ifmgd->assoc_data->need_beacon && !ifmgd->have_beacon) ||
-   ieee80211_do_assoc(sdata)) {
-struct cfg80211_bss *bss = ifmgd->assoc_data->bss;
-
-ieee80211_destroy_assoc_data(sdata, false);
-cfg80211_assoc_timeout(sdata->dev, bss);
-}
-
-If there's no beacon, cfg80211_assoc_timeout() is not called.
-
-I'm sure if you don't call ieee80211_rx_mgmt_beacon() at all you will
-see the same behavior I see.
-
->> I would rather fix the problem at the two levels, so even if the
->> firmware passes the corrupt frames correctly, the driver would still
->> somewhat work when there's no beacon frames at all.
->
-> Like I said before - trying to work with an AP without beacons at all is
-> really bad, we shouldn't be doing it.
-
-Why not? For all intents and purposes my system is not receiving any
-beacons, and I don't see any problems.
-
-What would you prefer? That nothing works at all?
-
-> We might not properly react to
-> radar events, and other things, for example.
-
-So? I don't know what that means, but it can't be worst than not being
-able to connect to the Internet whatsoever at all.
-
-Cheers.
-
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index ed1e9a8..bd007eb 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3120,9 +3120,17 @@ static int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 		    params->chandef.chan->band)
+ 			return -EINVAL;
+ 
++		ifmsh->chsw_init = true;
++		if (!ifmsh->pre_value)
++			ifmsh->pre_value = 1;
++		else
++			ifmsh->pre_value++;
++
+ 		err = ieee80211_mesh_csa_beacon(sdata, params, true);
+-		if (err < 0)
++		if (err < 0) {
++			ifmsh->chsw_init = false;
+ 			return err;
++		}
+ 		break;
+ #endif
+ 	default:
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 5cfa160..f8d6710 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1224,6 +1224,7 @@ struct ieee80211_csa_ie {
+ 	u8 mode;
+ 	u8 count;
+ 	u8 ttl;
++	u16 pre_value;
+ };
+ 
+ /* Parsed Information Elements */
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 896fe3b..efe9a18 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -943,12 +943,14 @@ ieee80211_mesh_process_chnswitch(struct ieee80211_sub_if_data *sdata,
+ 		 params.chandef.chan->center_freq);
+ 
+ 	params.block_tx = csa_ie.mode & WLAN_EID_CHAN_SWITCH_PARAM_TX_RESTRICT;
+-	if (beacon)
++	if (beacon) {
+ 		ifmsh->chsw_ttl = csa_ie.ttl - 1;
+-	else
+-		ifmsh->chsw_ttl = 0;
++		if (ifmsh->pre_value >= csa_ie.pre_value)
++			return false;
++		ifmsh->pre_value = csa_ie.pre_value;
++	}
+ 
+-	if (ifmsh->chsw_ttl > 0)
++	if (ifmsh->chsw_ttl < ifmsh->mshcfg.dot11MeshTTL)
+ 		if (ieee80211_mesh_csa_beacon(sdata, &params, false) < 0)
+ 			return false;
+ 
+@@ -1163,7 +1165,6 @@ static int mesh_fwd_csa_frame(struct ieee80211_sub_if_data *sdata,
+ 	offset_ttl = (len < 42) ? 7 : 10;
+ 	*(pos + offset_ttl) -= 1;
+ 	*(pos + offset_ttl + 1) &= ~WLAN_EID_CHAN_SWITCH_PARAM_INITIATOR;
+-	sdata->u.mesh.chsw_ttl = *(pos + offset_ttl);
+ 
+ 	memcpy(mgmt_fwd, mgmt, len);
+ 	eth_broadcast_addr(mgmt_fwd->da);
+@@ -1182,7 +1183,7 @@ static void mesh_rx_csa_frame(struct ieee80211_sub_if_data *sdata,
+ 	u16 pre_value;
+ 	bool fwd_csa = true;
+ 	size_t baselen;
+-	u8 *pos, ttl;
++	u8 *pos;
+ 
+ 	if (mgmt->u.action.u.measurement.action_code !=
+ 	    WLAN_ACTION_SPCT_CHL_SWITCH)
+@@ -1193,8 +1194,8 @@ static void mesh_rx_csa_frame(struct ieee80211_sub_if_data *sdata,
+ 			   u.action.u.chan_switch.variable);
+ 	ieee802_11_parse_elems(pos, len - baselen, false, &elems);
+ 
+-	ttl = elems.mesh_chansw_params_ie->mesh_ttl;
+-	if (!--ttl)
++	ifmsh->chsw_ttl = elems.mesh_chansw_params_ie->mesh_ttl;
++	if (!--ifmsh->chsw_ttl)
+ 		fwd_csa = false;
+ 
+ 	pre_value = le16_to_cpu(elems.mesh_chansw_params_ie->mesh_pre_value);
+diff --git a/net/mac80211/spectmgmt.c b/net/mac80211/spectmgmt.c
+index a40da20..6ab0090 100644
+--- a/net/mac80211/spectmgmt.c
++++ b/net/mac80211/spectmgmt.c
+@@ -78,6 +78,8 @@ int ieee80211_parse_ch_switch_ie(struct ieee80211_sub_if_data *sdata,
+ 	if (elems->mesh_chansw_params_ie) {
+ 		csa_ie->ttl = elems->mesh_chansw_params_ie->mesh_ttl;
+ 		csa_ie->mode = elems->mesh_chansw_params_ie->mesh_flags;
++		csa_ie->pre_value = le16_to_cpu(
++				elems->mesh_chansw_params_ie->mesh_pre_value);
+ 	}
+ 
+ 	new_freq = ieee80211_channel_to_frequency(new_chan_no, new_band);
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index a38d582..29f8ef9 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2458,14 +2458,9 @@ int ieee80211_send_action_csa(struct ieee80211_sub_if_data *sdata,
+ 			  WLAN_EID_CHAN_SWITCH_PARAM_TX_RESTRICT : 0x00;
+ 		put_unaligned_le16(WLAN_REASON_MESH_CHAN, pos); /* Reason Cd */
+ 		pos += 2;
+-		if (!ifmsh->pre_value)
+-			ifmsh->pre_value = 1;
+-		else
+-			ifmsh->pre_value++;
+ 		pre_value = cpu_to_le16(ifmsh->pre_value);
+ 		memcpy(pos, &pre_value, 2);		/* Precedence Value */
+ 		pos += 2;
+-		ifmsh->chsw_init = true;
+ 	}
+ 
+ 	ieee80211_tx_skb(sdata, skb);
 -- 
-Felipe Contreras
+1.7.9.5
+
