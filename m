@@ -1,65 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f175.google.com ([209.85.216.175]:36261 "EHLO
-	mail-qc0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753087Ab3KGHci (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:59280 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752674Ab3KGSAT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Nov 2013 02:32:38 -0500
+	Thu, 7 Nov 2013 13:00:19 -0500
+Date: Thu, 7 Nov 2013 12:52:02 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Solomon Peachy <pizza@shaftnet.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: future of prism2_usb (aka wlan-ng) in staging tree
+Message-ID: <20131107175201.GA2002@tuxdriver.com> (sfid-20131107_190023_344081_8186E7F0)
+References: <20131107160522.GA12612@shaftnet.org>
+ <527BC04F.2080000@lwfinger.net>
+ <20131107163719.GC12612@shaftnet.org>
 MIME-Version: 1.0
-In-Reply-To: <1383760556.7940.28.camel@joe-AO722>
-References: <1383684000.4387.42.camel@joe-AO722>
-	<CAFSJ42YQy96Sko8CuG9BGjHzTV7TkRp2=NVt036APxSKpPB=Ag@mail.gmail.com>
-	<1383760556.7940.28.camel@joe-AO722>
-Date: Thu, 7 Nov 2013 07:32:37 +0000
-Message-ID: <CAFSJ42Y-3BZqj+JRNa8wdxjnm1fguD8ToH5Oj0m56yT5NexdVQ@mail.gmail.com> (sfid-20131107_083243_252749_CE161CBD)
-Subject: Re: [PATCH] wcn36xx: Fix logging macro with unnecessary semicolon
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: Joe Perches <joe@perches.com>
-Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	wcn36xx <wcn36xx@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	ath5k-devel@lists.ath5k.org,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>,
-	ath10k@lists.infradead.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131107163719.GC12612@shaftnet.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Joe,
+On Thu, Nov 07, 2013 at 11:37:19AM -0500, Solomon Peachy wrote:
+> On Thu, Nov 07, 2013 at 10:31:11AM -0600, Larry Finger wrote:
+> > This seems like a good point to clarify what it takes for a wireless
+> > driver to be added to net/wireless.
+> > 
+> > Is it necessary that any new softmac driver in net/wireless must use
+> > mac80211, or is it sufficient that it implement cfg80211?
+> 
+> IMO a softmac driver should use mac80211 before being merged; there's no 
+> sense in having multiple 802.11 stacks especially with the ever-growing 
+> complexity of 802.11.
+> 
+> But in this particular case, prism2_usb/wlan-ng is perhaps the original 
+> fullmac 802.11 device.  :)
 
-I personally like the idea of making some kind of framework on top of
-printing because all ath drivers are using the same printing approach
-and combining all that code in one place will reduce amount of code in
-each particular driver. As a true engineer i like when it's less code
-= less work to do = less bugs:)
+We have long said that any softmac driver needs to be based on
+mac80211.  We have also been saying for some time that any newly
+merged drivers need to fully support cfg80211.  FWIW, I think that
+we would actively discourage anyone from implementing any support at
+all for wireless extensions -- shouldn't need that anyway with full
+cfg80211 support..
 
-Suggestion is to send a patch with semicolon fix only and have a
-second round of convincing ath guys to change printing code. How does
-that sound?
+I haven't looked at the driver in question in a long time.  Are there
+actually any users?
 
-On Wed, Nov 6, 2013 at 5:55 PM, Joe Perches <joe@perches.com> wrote:
-> On Wed, 2013-11-06 at 07:49 +0000, Eugene Krasnikov wrote:
->> Hm... when it comes to semicolon the patch seems to be good. When it
->> comes to dynamic debugging i think we should have a separate
->> discussion about that.
->> I personally like the whole idea about dynamic debug but if you want
->> to change it i would suggest to have some kind of framework for all
->> ath drivers(or maybe all wireless drivers). Because obviously you can
->> find common code in every driver that defines it's own debug
->> functions/debug levels and so on. Why not to make a framework with
->> standard API/levels?
->
-> You need to bring that up with the Atheros folk.
-> I've tried.  The view seemed to be it was more
-> trouble than it was worth.
->
->
->
-
-
-
+John
 -- 
-Best regards,
-Eugene
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
