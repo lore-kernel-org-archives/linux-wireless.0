@@ -1,73 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:55202 "EHLO
-	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751388Ab3KYKPt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Nov 2013 05:15:49 -0500
-Received: by mail-ob0-f175.google.com with SMTP id uz6so3939802obc.20
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Nov 2013 02:15:48 -0800 (PST)
+Received: from mms3.broadcom.com ([216.31.210.19]:2899 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752249Ab3KGJba (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Nov 2013 04:31:30 -0500
+Message-ID: <527B5DE8.1070706@broadcom.com> (sfid-20131107_103135_850509_D817D423)
+Date: Thu, 7 Nov 2013 10:31:20 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1385318128.23961.0.camel@jlt4.sipsolutions.net>
-References: <1385312211-3119-1-git-send-email-lorenzo.bianconi83@gmail.com>
-	<1385312211-3119-2-git-send-email-lorenzo.bianconi83@gmail.com>
-	<1385318128.23961.0.camel@jlt4.sipsolutions.net>
-Date: Mon, 25 Nov 2013 11:15:48 +0100
-Message-ID: <CAA2SeNJYAs4XGiQCnWkpekMtOEc5h4y41he3vQpxNxZiJ9ygCg@mail.gmail.com> (sfid-20131125_111552_588012_22F5E05C)
-Subject: Re: [PATCH 1/3] mac80211: implement ieee80211_get_vif_by_addr
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>, sujith@msujith.org,
-	rmanohar@qca.qualcomm.com
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Joe Perches" <joe@perches.com>
+cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 6/7] brcmfmac: reduce logging noise accessing SDIO
+ SleepCSR register
+References: <1383775642-647-1-git-send-email-arend@broadcom.com>
+ <1383775642-647-7-git-send-email-arend@broadcom.com>
+ <1383782013.7940.41.camel@joe-AO722>
+In-Reply-To: <1383782013.7940.41.camel@joe-AO722>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Sun, 2013-11-24 at 17:56 +0100, Lorenzo Bianconi wrote:
->> ieee80211_get_vif_by_addr allows low level drivers to get a reference to
->> vif data structure which is not added to the driver as monitor interface.
->> ieee80211_get_vif_by_addr will be used in ath9k tx99 code
+On 11/07/2013 12:53 AM, Joe Perches wrote:
+> On Wed, 2013-11-06 at 23:07 +0100, Arend van Spriel wrote:
+>> The SleepCSR register is accessed to wakeup the device from the
+>> host side. Depending on the state of the device this may take
+>> multiple attempts. The failed attempt are not real failures so
+>> reduce the log level specifically for this register. The calling
+>> function will scream when the multiple attempts all failed.
+> []
+>> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+> []
+>> +	if (err_ret) {
 >
-> Is that really better than having the driver use the iteration
-> functions?
-
-first two patches are not really necessary since I was using an old
-version of iw which does not allow to set monitor interface in active
-mode
-
+> Maybe better as:
 >
->> + */
->> +struct ieee80211_vif *ieee80211_get_vif_by_addr(struct ieee80211_hw *hw,
->> +                                             const u8 *mac)
->> +{
->> +     struct ieee80211_vif *vif = NULL;
->> +     struct ieee80211_local *local = hw_to_local(hw);
->> +     struct ieee80211_sub_if_data *sdata;
->> +
->> +     rcu_read_lock();
->> +     list_for_each_entry_rcu(sdata, &local->interfaces, list) {
->> +             if (!compare_ether_addr(sdata->vif.addr, mac)) {
->> +                     vif = &sdata->vif;
->> +                     break;
->> +             }
->> +     }
->> +     rcu_read_unlock();
->> +
->> +     return vif;
->
-> In any case, this is completely broken wrt. locking, so I'm not taking
-> it.
->
+> 	if (err_ret && net_ratelimit()) { ?
 
-sorry, I was wrong
+Hi Joe,
 
-> johannes
+It actually does not occur that much. It prints a few lines every 5-10 
+seconds. I guess net_ratelimit() does not kick in. To boot brcmf_err() 
+already has net_ratelimit().
+
+Regards,
+Arend
+
+>> +		/*
+>> +		 * SleepCSR register access can fail when
+>> +		 * waking up the device so reduce this noise
+>> +		 * in the logs.
+>> +		 */
+>> +		if (regaddr != SBSDIO_FUNC1_SLEEPCSR)
+>> +			brcmf_err("Failed to %s byte F%d:@0x%05x=%02x, Err: %d\n",
+>> +				  rw ? "write" : "read", func, regaddr, *byte,
+>> +				  err_ret);
+>> +		else
+>> +			brcmf_dbg(SDIO, "Failed to %s byte F%d:@0x%05x=%02x, Err: %d\n",
+>> +				  rw ? "write" : "read", func, regaddr, *byte,
+>> +				  err_ret);
+>> +	}
+>
+>
 >
 
 
-
--- 
-UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
-unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
-umount; make clean; sleep
