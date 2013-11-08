@@ -1,49 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f171.google.com ([209.85.217.171]:58719 "EHLO
-	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752289Ab3KNPfJ (ORCPT
+Received: from mail-ea0-f182.google.com ([209.85.215.182]:52135 "EHLO
+	mail-ea0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756648Ab3KHKlp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Nov 2013 10:35:09 -0500
-Received: by mail-lb0-f171.google.com with SMTP id q8so498847lbi.16
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Nov 2013 07:35:07 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1384442962.13941.36.camel@jlt4.sipsolutions.net>
-References: <1384366379-25301-1-git-send-email-mcgrof@do-not-panic.com>
- <1384366379-25301-5-git-send-email-mcgrof@do-not-panic.com>
- <1384378096.28806.20.camel@jlt4.sipsolutions.net> <20131114143126.GC19070@garbanzo.do-not-panic.com>
- <1384440519.13941.31.camel@jlt4.sipsolutions.net> <20131114153339.GB30653@garbanzo.do-not-panic.com>
- <1384442962.13941.36.camel@jlt4.sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Thu, 14 Nov 2013 16:34:47 +0100
-Message-ID: <CAB=NE6WX9JV-Lx11iiPHPinDCxy7u-Q--ucQ-9Mjy-nndKTeqQ@mail.gmail.com> (sfid-20131114_163512_849475_A0CF8D39)
-Subject: Re: [RFC 4/5] cfg80211: add DFS region capability support
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	Jouni Malinen <j@w1.fi>, sunitb@qca.qualcomm.com,
-	rsunki@qca.qualcomm.com,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 8 Nov 2013 05:41:45 -0500
+Received: by mail-ea0-f182.google.com with SMTP id o10so968306eaj.41
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Nov 2013 02:41:43 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, mcgrof@do-not-panic.com,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH 1/3] cfg80211: DFS check dfs_region before CAC
+Date: Fri,  8 Nov 2013 11:41:25 +0100
+Message-Id: <1383907287-2925-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131108_114149_556053_78DBF64A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 14, 2013 at 4:29 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2013-11-14 at 07:33 -0800, Luis R. Rodriguez wrote:
->> > Still doesn't make sense - HANDLE_DFS means "I'll react to radar
->> > detection events and will do the CSA". It has absolutely nothing to do
->> > with DFS regions. Please keep those things separate.
->>
->> How you deal with radar detection is completely dependent on the DFS
->> region, no?
->
-> You're missing *my* point :-)
->
-> Radar *detection* is region-dependent.
->
-> What happens *after* that (announce a channel switch, etc.) isn't at
-> all.
+Before we will start radar detection check
+if we have correct DFS region. Fail in case
+we don't know DFS region (don't know CAC/NOP
+timing and how to configure DFS pattern detector).
 
-Sorry, I misread the documentation then, so HANDLE_DFS *does* not mean
-userspace will implement the radar detection in userspace?
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ net/wireless/nl80211.c |   13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-  Luis
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 076ed55..635842b 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5628,8 +5628,21 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
+ 	struct net_device *dev = info->user_ptr[1];
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	struct cfg80211_chan_def chandef;
++	const struct ieee80211_regdomain *regdom;
++	u8 dfs_region;
+ 	int err;
+ 
++	if (!cfg80211_regdomain)
++		return -EINVAL;
++
++	rcu_read_lock();
++	regdom = rcu_dereference(cfg80211_regdomain);
++	dfs_region = regdom->dfs_region;
++	rcu_read_unlock();
++
++	if (dfs_region == NL80211_DFS_UNSET)
++		return -EINVAL;
++
+ 	err = nl80211_parse_chandef(rdev, info, &chandef);
+ 	if (err)
+ 		return err;
+-- 
+1.7.9.5
+
