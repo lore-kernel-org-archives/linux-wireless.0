@@ -1,96 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve0-f171.google.com ([209.85.128.171]:43300 "EHLO
-	mail-ve0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755921Ab3KFHta (ORCPT
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:38713 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752504Ab3KHRUr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Nov 2013 02:49:30 -0500
+	Fri, 8 Nov 2013 12:20:47 -0500
+Received: by mail-ie0-f173.google.com with SMTP id x13so1126888ief.32
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Nov 2013 09:20:47 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1383684000.4387.42.camel@joe-AO722>
-References: <1383684000.4387.42.camel@joe-AO722>
-Date: Wed, 6 Nov 2013 07:49:29 +0000
-Message-ID: <CAFSJ42YQy96Sko8CuG9BGjHzTV7TkRp2=NVt036APxSKpPB=Ag@mail.gmail.com> (sfid-20131106_084956_858904_73E4EC53)
-Subject: Re: [PATCH] wcn36xx: Fix logging macro with unnecessary semicolon
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: Joe Perches <joe@perches.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	wcn36xx <wcn36xx@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
+References: <5276134B.8070808@wzyboy.org> <CALkVjQYh-SUte4S6LdqOc3KSc3_pDU6jz1KXp+Jsd5_RFPXSqA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE8338@HASMSX103.ger.corp.intel.com>
+ <CALkVjQb7fCMFpqhdUs8w-Mx_Y0RtAYYFtKxXkqyrCQ39UFGxKg@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE960E@HASMSX103.ger.corp.intel.com>
+ <CALkVjQbW8FeiEh8pBZ=KQFD9+8AdjgT0G_RG7qJe0MRdBvMD-A@mail.gmail.com>
+ <CALkVjQaLx2spaOqUPcs_EwMkU7npMki1Reo1MeZwxB7m=c24=g@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE9FC6@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZDNSgUUFyi94Y8da_NDzW61rCvaMrZpUugFKW_LRNFFA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
+ <CALkVjQY7r=YKhsgDKR0mnYVtZy5BAdj83nY2jL0VFaiew6ha7A@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
+ <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
+ <527A8166.6000701@gmail.com> <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
+ <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 8 Nov 2013 10:20:27 -0700
+Message-ID: <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com> (sfid-20131108_182054_162377_436DD272)
+Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
+To: wzyboy <wzyboy@wzyboy.org>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hm... when it comes to semicolon the patch seems to be good. When it
-comes to dynamic debugging i think we should have a separate
-discussion about that.
-I personally like the whole idea about dynamic debug but if you want
-to change it i would suggest to have some kind of framework for all
-ath drivers(or maybe all wireless drivers). Because obviously you can
-find common code in every driver that defines it's own debug
-functions/debug levels and so on. Why not to make a framework with
-standard API/levels?
+On Wed, Nov 6, 2013 at 9:49 PM, wzyboy <wzyboy@wzyboy.org> wrote:
+> 2013/11/7 Bjorn Helgaas <bhelgaas@google.com>:
+>> Do you have any more details?  Maybe open a bugzilla.kernel.org report
+>> and attach:
+>>
+>>   - complete dmesg log
+>>   - lspci -vvxxx output for entire system before issue occurs
+>>   - lspci -vvxxx output for entire system after issue occurs
+>
+>
+> Hi, I have filed a bug on bugzilla:
+> https://bugzilla.kernel.org/show_bug.cgi?id=64541
+>
+> Actually I have posted some more logs before, you could find them on
+> the mailing lists archive:
+> http://thread.gmane.org/gmane.linux.kernel.wireless.general/115259
+>
+> Here is the output of lspci -vxxxx just now. I'll run this command
+> again when the bug occurs next time:
 
-On Tue, Nov 5, 2013 at 8:40 PM, Joe Perches <joe@perches.com> wrote:
-> The wcn36xx_err macro should not end in a semicolon as
-> there are 2 consecutive semicolons in the preprocessed
-> output.
->
-> Remove it.
->
-> Neaten the logging macros to use a more common style.
-> Convert to use pr_debug to enable dynamic debug.
->
-> Signed-off-by: Joe Perches <joe@perches.com>
-> ---
->  drivers/net/wireless/ath/wcn36xx/wcn36xx.h | 28 +++++++++++++---------------
->  1 file changed, 13 insertions(+), 15 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-> index 58b6383..d157bb7 100644
-> --- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-> +++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-> @@ -53,22 +53,20 @@ enum wcn36xx_debug_mask {
->         WCN36XX_DBG_ANY         = 0xffffffff,
->  };
->
-> -#define wcn36xx_err(fmt, arg...)                               \
-> -       printk(KERN_ERR pr_fmt("ERROR " fmt), ##arg);
-> -
-> -#define wcn36xx_warn(fmt, arg...)                              \
-> -       printk(KERN_WARNING pr_fmt("WARNING " fmt), ##arg)
-> -
-> -#define wcn36xx_info(fmt, arg...)              \
-> -       printk(KERN_INFO pr_fmt(fmt), ##arg)
-> -
-> -#define wcn36xx_dbg(mask, fmt, arg...) do {                    \
-> -       if (wcn36xx_dbg_mask & mask)                                    \
-> -               printk(KERN_DEBUG pr_fmt(fmt), ##arg);  \
-> +#define wcn36xx_err(fmt, ...)                                  \
-> +       pr_err("ERROR " fmt, ##__VA_ARGS__)
-> +#define wcn36xx_warn(fmt, ...)                                 \
-> +       pr_warn("WARNING " fmt, ##__VA_ARGS__)
-> +#define wcn36xx_info(fmt, ...)                                 \
-> +       pr_info(fmt, ##__VA_ARGS__)
-> +#define wcn36xx_dbg(mask, fmt, ...)                            \
-> +do {                                                           \
-> +       if (wcn36xx_dbg_mask & mask)                            \
-> +               pr_debug(fmt, ##__VA_ARGS__);                   \
->  } while (0)
-> -
-> -#define wcn36xx_dbg_dump(mask, prefix_str, buf, len) do {      \
-> -       if (wcn36xx_dbg_mask & mask)                                    \
-> +#define wcn36xx_dbg_dump(mask, prefix_str, buf, len)           \
-> +do {                                                           \
-> +       if (wcn36xx_dbg_mask & mask)                            \
->                 print_hex_dump(KERN_DEBUG, pr_fmt(prefix_str),  \
->                                DUMP_PREFIX_OFFSET, 32, 1,       \
->                                buf, len, false);                \
->
->
+Thanks.  But can you please attach the output of "lspci -vvxxx" (not
+"-vxxxx") for the entire system before the problem occurs?  All the
+info is in the "-xxxx" output, but it's really painful to decode it
+all by hand.  Using "-vv" will decode the PCIe Capability structures
+where the ASPM configuration is.  And the entire system is
+interesting, because ASPM requires configuration on upstream bridges
+as well as on the device itself.
 
+My only guess is that there's something wrong with the ASPM
+configuration and the device just stops responding to config accesses
+(and probably MMIO accesses, too, based on the errors in your dmesg
+log).  Or maybe the device got powered off somehow.
 
-
--- 
-Best regards,
-Eugene
+Bjorn
