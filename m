@@ -1,105 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f51.google.com ([209.85.214.51]:56508 "EHLO
-	mail-bk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755218Ab3KERRX (ORCPT
+Received: from mail-la0-f45.google.com ([209.85.215.45]:46061 "EHLO
+	mail-la0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751118Ab3KHOSx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Nov 2013 12:17:23 -0500
-Received: by mail-bk0-f51.google.com with SMTP id my12so1759567bkb.38
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Nov 2013 09:17:22 -0800 (PST)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 05/19] cfg80211: processing core regulatory hints on its own
-Date: Tue,  5 Nov 2013 09:18:03 -0800
-Message-Id: <1383671897-7746-6-git-send-email-mcgrof@do-not-panic.com> (sfid-20131105_181726_594181_3A8985C3)
-In-Reply-To: <1383671897-7746-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1383671897-7746-1-git-send-email-mcgrof@do-not-panic.com>
+	Fri, 8 Nov 2013 09:18:53 -0500
+Received: by mail-la0-f45.google.com with SMTP id el20so1780742lab.4
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Nov 2013 06:18:51 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CABPxzYLtbs1s-_T+hk+N1hOEuCi_Yq+CGxG7Xx0hPRmiyQM0Jg@mail.gmail.com>
+References: <CAMP44s1XJRHV8bAX=_-TkSKMkY8Nw1=eHorqTCZ2QmtR5m8uJA@mail.gmail.com>
+	<526E20EA.9090203@rempel-privat.de>
+	<CAMP44s2Cvw9HF3c3Asuq+bTSD36Gw6PXOUVjAcCD+hf6KB_awg@mail.gmail.com>
+	<CABPxzY+xJ7kst-sYwP8RJwMO_zkNYWKaYy=_LS7WQfuxquK24w@mail.gmail.com>
+	<CAMP44s0087jYz5AiEaEzwt7GqH9ed8PWE1CmvMPr4Dqn3yE6rA@mail.gmail.com>
+	<CABPxzYLwwyFCFw1pEt0v9Xw4kcue1C_RZx0RbTbMrUw=+MWvgQ@mail.gmail.com>
+	<CAMP44s0svc2MRKCrZXS5ZYRZNPoomQkcKHdC2m2BGy7di+TCyA@mail.gmail.com>
+	<CABPxzYL-Gzbzoc_ui+qUQ6uzoKp=Yq7yLWZvc7PoEjiH3dFczg@mail.gmail.com>
+	<CAMP44s3uRF=jNn5ZHZ=QOcvuMoXxsfkxU=VOq3K02Q0qOspEdA@mail.gmail.com>
+	<CABPxzYJbNjAwymwUq0pN=YyuCBGy2qz_BKafatHTWK+yH8PbkA@mail.gmail.com>
+	<CAMP44s1NOS2p9pKeMLhR7616CzHeHJVJEzcF1tP6tsKfcPhSOQ@mail.gmail.com>
+	<CABPxzY+RL+ikbSff3a7qb20ExxcSTx6U2xcL5CFr-BgVSOr61A@mail.gmail.com>
+	<CAMP44s384vOcMc4vE82gAdVf37YUZfegmPHUSeobPO=gK6ErAw@mail.gmail.com>
+	<CABPxzYLDHP5gyeTL8HR=6uJDLptaUGEnNGSFLMkxKqi-JaBVYQ@mail.gmail.com>
+	<CABPxzYJTuV0vGLnhgcQcXbg_9szSm2hH7_vCeP4TOKNxZQx_Gg@mail.gmail.com>
+	<CAMP44s3VRnqw0XJDZTZTym7wBD5-NnfOD56YHbE87OG=3Zan2w@mail.gmail.com>
+	<CAMP44s15W7gb8rXwqum5bdHOSk=A_sadX7ksvtkG0qTOu1RREg@mail.gmail.com>
+	<CABPxzYLtbs1s-_T+hk+N1hOEuCi_Yq+CGxG7Xx0hPRmiyQM0Jg@mail.gmail.com>
+Date: Fri, 8 Nov 2013 08:18:51 -0600
+Message-ID: <CAMP44s0h836BZ+g9-g_t78bKuV_m_xAuvPYRCHaFdJ58eTKthw@mail.gmail.com> (sfid-20131108_151858_192704_0B1AC6BA)
+Subject: Re: I always need a miracle to connect with iwlwifi
+From: Felipe Contreras <felipe.contreras@gmail.com>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Cc: Oleksij Rempel <linux@rempel-privat.de>, ilw@linux.intel.com,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This makes the code path easier to read for the core case.
+On Fri, Nov 8, 2013 at 8:06 AM, Krishna Chaitanya
+<chaitanya.mgit@gmail.com> wrote:
+> On Fri, Nov 8, 2013 at 6:44 PM, Felipe Contreras
+> <felipe.contreras@gmail.com> wrote:
+>> On Fri, Nov 8, 2013 at 2:35 AM, Felipe Contreras
+>> <felipe.contreras@gmail.com> wrote:
+>>> On Sat, Nov 2, 2013 at 2:05 PM, Krishna Chaitanya
+>>> <chaitanya.mgit@gmail.com> wrote:
+>>>
+>>>> Also one more thing you said N900 uses mac80211 and it has no issues, but as
+>>>> its a embedded device it might running an older kernel where the
+>>>> handling might be
+>>>> different, so we need to try with the same kernel you are facing an
+>>>> issue with the
+>>>> a driver which advertises IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC.
+>>>
+>>> Yes it was running an older kernel, but I just compiled v3.12 and ran
+>>> it on the N900, and still everything works fine.
+>>>
+>>>> (or) if you a have a compilation environment try commenting the advertisement of
+>>>> IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC in the iwlwifi DVM driver and
+>>>> try to reproduce the issue.
+>>>
+>>> After commenting that flag everything works fine :)
+>
+> Oh, great. That was just to corner the problem, that means we are not getting
+> the required beacon  before the association, but we only wait for 1 beacon here
+> may be we to wait for some number of beacons before giving up the association??
+>
+> Johannes??
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- net/wireless/reg.c | 43 +++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 41 insertions(+), 2 deletions(-)
+But we are receiving 0 beacons, waiting for more than 1 won't help.
+BTW, why NEED_DTIM_BEFORE_ASSOC if the device doesn't *need* the DTIM
+before the association?
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index dd2ff68..d242af0 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1337,7 +1337,7 @@ get_reg_request_treatment(struct wiphy *wiphy,
- 
- 	switch (pending_request->initiator) {
- 	case NL80211_REGDOM_SET_BY_CORE:
--		return REG_REQ_OK;
-+		return REG_REQ_IGNORE;
- 	case NL80211_REGDOM_SET_BY_COUNTRY_IE:
- 		if (reg_request_cell_base(lr)) {
- 			/* Trust a Cell base station over the AP's country IE */
-@@ -1443,6 +1443,33 @@ static void reg_set_request_processed(void)
- }
- 
- /**
-+ * reg_process_hint_core - process core regulatory requests
-+ * @pending_request: a pending core regulatory request
-+ *
-+ * The wireless subsystem can use this function to process
-+ * a regulatory request issued by the regulatory core.
-+ *
-+ * Returns one of the different reg request treatment values.
-+ */
-+static enum reg_request_treatment
-+reg_process_hint_core(struct regulatory_request *core_request)
-+{
-+	struct regulatory_request *lr;
+>>> What are the next steps?
+>>
+>> I tried to add some debugging to see what's going on, and indeed the
+>> beacon packets are lost, I added debugging as low in the chain as I
+>> could (iwlagn_rx_reply_rx()), and I don't see them there. However,
+>> when I enable the monitor mode, I see them. What's going on?
+>
+> In the captures you shared all the beacons are malformed, so
+> probably they failed the CRC check. iwlwifi drops all the CRC failed
+> packets. (doth MVM and DVM)
+
+Before iwlagn_rx_reply_rx()?
+
+> Not sure how you are receiving the beacons in the monitor mode.
+
+I don't know what kismet does, but I can see my debugging is printing them.
+
+> BTW did you tried capturing the beacons in other devices and see if they
+> are really malformed, or is it just iwlwifi interpreting them wrongly.?
+
+I haven't managed to do that yet.
+
+This is what I'm doing:
+
+--- a/drivers/net/wireless/iwlwifi/dvm/rx.c
++++ b/drivers/net/wireless/iwlwifi/dvm/rx.c
+@@ -919,6 +919,11 @@ static int iwlagn_rx_reply_rx(struct iwl_priv *priv,
+        ampdu_status = iwlagn_translate_rx_status(priv,
+                                                  le32_to_cpu(rx_pkt_status));
+
++       if (ieee80211_is_beacon(header->frame_control)) {
++               print_hex_dump(KERN_INFO, "iwlwifi: dump: ", DUMP_PREFIX_OFFSET,
++                               16, 1, header, len, true);
++       }
 +
-+	lr = get_last_request();
-+	if (lr != &core_request_world && lr)
-+		kfree_rcu(lr, rcu_head);
-+
-+	core_request->intersect = false;
-+	core_request->processed = false;
-+	rcu_assign_pointer(last_request, core_request);
-+
-+	if (call_crda(core_request->alpha2))
-+		return REG_REQ_IGNORE;
-+	return REG_REQ_OK;
-+}
-+
-+/**
-  * __regulatory_hint - hint to the wireless core a regulatory domain
-  * @wiphy: if the hint comes from country information from an AP, this
-  *	is required to be set to the wiphy that received the information
-@@ -1540,6 +1567,7 @@ new_request:
- static void reg_process_hint(struct regulatory_request *reg_request)
- {
- 	struct wiphy *wiphy = NULL;
-+	enum reg_request_treatment treatment;
- 
- 	if (WARN_ON(!reg_request->alpha2))
- 		return;
-@@ -1552,7 +1580,18 @@ static void reg_process_hint(struct regulatory_request *reg_request)
- 		return;
- 	}
- 
--	switch (__regulatory_hint(wiphy, reg_request)) {
-+	switch (reg_request->initiator) {
-+	case NL80211_REGDOM_SET_BY_CORE:
-+		reg_process_hint_core(reg_request);
-+		return;
-+	case NL80211_REGDOM_SET_BY_USER:
-+	case NL80211_REGDOM_SET_BY_DRIVER:
-+	case NL80211_REGDOM_SET_BY_COUNTRY_IE:
-+		treatment = __regulatory_hint(wiphy, reg_request);
-+		break;
-+	}
-+
-+	switch (treatment) {
- 	case REG_REQ_ALREADY_SET:
- 		/* This is required so that the orig_* parameters are saved */
- 		if (wiphy && wiphy->flags & WIPHY_FLAG_STRICT_REGULATORY)
+        if ((unlikely(phy_res->cfg_phy_cnt > 20))) {
+                IWL_DEBUG_DROP(priv, "dsp size out of range [0,20]: %d\n",
+                                phy_res->cfg_phy_cnt);
+
 -- 
-1.8.4.rc3
-
+Felipe Contreras
