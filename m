@@ -1,89 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([83.151.30.3]:48563 "EHLO m25s01.vlinux.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754835Ab3KENgP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Nov 2013 08:36:15 -0500
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: "Coelho, Luciano" <luciano.coelho@intel.com>
-Subject: Re: [RFC] mac80211: don't transmit beacon with CSA count 0
-Date: Tue, 5 Nov 2013 14:36:13 +0100
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
-References: <1383569955-13236-1-git-send-email-luciano.coelho@intel.com> <201311041531.56693.sw@simonwunderlich.de> <1383640077.579.14.camel@porter.coelho.fi>
-In-Reply-To: <1383640077.579.14.camel@porter.coelho.fi>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:45439 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756237Ab3KHIfh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Nov 2013 03:35:37 -0500
+Received: by mail-lb0-f174.google.com with SMTP id q8so1187434lbi.5
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Nov 2013 00:35:36 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201311051436.13222.sw@simonwunderlich.de> (sfid-20131105_143618_991472_A05BD8F6)
+In-Reply-To: <CABPxzYJTuV0vGLnhgcQcXbg_9szSm2hH7_vCeP4TOKNxZQx_Gg@mail.gmail.com>
+References: <CAMP44s1XJRHV8bAX=_-TkSKMkY8Nw1=eHorqTCZ2QmtR5m8uJA@mail.gmail.com>
+	<526E20EA.9090203@rempel-privat.de>
+	<CAMP44s2Cvw9HF3c3Asuq+bTSD36Gw6PXOUVjAcCD+hf6KB_awg@mail.gmail.com>
+	<CABPxzY+xJ7kst-sYwP8RJwMO_zkNYWKaYy=_LS7WQfuxquK24w@mail.gmail.com>
+	<CAMP44s0087jYz5AiEaEzwt7GqH9ed8PWE1CmvMPr4Dqn3yE6rA@mail.gmail.com>
+	<CABPxzYLwwyFCFw1pEt0v9Xw4kcue1C_RZx0RbTbMrUw=+MWvgQ@mail.gmail.com>
+	<CAMP44s0svc2MRKCrZXS5ZYRZNPoomQkcKHdC2m2BGy7di+TCyA@mail.gmail.com>
+	<CABPxzYL-Gzbzoc_ui+qUQ6uzoKp=Yq7yLWZvc7PoEjiH3dFczg@mail.gmail.com>
+	<CAMP44s3uRF=jNn5ZHZ=QOcvuMoXxsfkxU=VOq3K02Q0qOspEdA@mail.gmail.com>
+	<CABPxzYJbNjAwymwUq0pN=YyuCBGy2qz_BKafatHTWK+yH8PbkA@mail.gmail.com>
+	<CAMP44s1NOS2p9pKeMLhR7616CzHeHJVJEzcF1tP6tsKfcPhSOQ@mail.gmail.com>
+	<CABPxzY+RL+ikbSff3a7qb20ExxcSTx6U2xcL5CFr-BgVSOr61A@mail.gmail.com>
+	<CAMP44s384vOcMc4vE82gAdVf37YUZfegmPHUSeobPO=gK6ErAw@mail.gmail.com>
+	<CABPxzYLDHP5gyeTL8HR=6uJDLptaUGEnNGSFLMkxKqi-JaBVYQ@mail.gmail.com>
+	<CABPxzYJTuV0vGLnhgcQcXbg_9szSm2hH7_vCeP4TOKNxZQx_Gg@mail.gmail.com>
+Date: Fri, 8 Nov 2013 02:35:36 -0600
+Message-ID: <CAMP44s3VRnqw0XJDZTZTym7wBD5-NnfOD56YHbE87OG=3Zan2w@mail.gmail.com> (sfid-20131108_093541_022365_1B24DF77)
+Subject: Re: I always need a miracle to connect with iwlwifi
+From: Felipe Contreras <felipe.contreras@gmail.com>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Cc: Oleksij Rempel <linux@rempel-privat.de>, ilw@linux.intel.com,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Mon, 2013-11-04 at 15:31 +0100, Simon Wunderlich wrote:
-> > > > Thanks for checking back - I've read the part in the spec again [1],
-> > > > and appearently you are right.
-> > > > 
-> > > > With your proposed change, shouldn't we also change the behaviour if
-> > > > the userspace requests a channel switch with count = 0? I guess we
-> > > > should immediately change the channel then without waiting for
-> > > > beacons? I don't see the point in changing the beacons if we don't
-> > > > send them, after all.
-> > > 
-> > > You're right, changing the beacons doesn't make sense in this case.
-> > > I'll change that and send v2.
-> > > 
-> > > Another thing is that we are missing the action frames.  The idea with
-> > > the count == 0 is that the STA's should start listening on the other
-> > > channel immediately after receiving the action frame (because the
-> > > switch will happen at any time).
-> > > 
-> > > If we don't send the action frame, passing context == 0 from the
-> > > userspace doesn't much make sense, because the clients won't know we're
-> > > switching.  Well, maybe it makes a bit of sense, if there are no
-> > > clients connected, but nevertheless.
-> > 
-> > Yeah, switching without actionframe and count == 0 is pretty useless.
-> 
-> Actually, if the userspace requests count == 1, we won't have any
-> beacons either, because 1 means "just before the next TBTT".  So for
-> count == 1 (coming from the userspace) we shouldn't configure the
-> beacon, since we won't send it.  We need the action frame for this case
-> too.
-> 
+On Sat, Nov 2, 2013 at 2:05 PM, Krishna Chaitanya
+<chaitanya.mgit@gmail.com> wrote:
 
-Hmm, right, we will decrement the counter before sending it out ...
+> Also one more thing you said N900 uses mac80211 and it has no issues, but as
+> its a embedded device it might running an older kernel where the
+> handling might be
+> different, so we need to try with the same kernel you are facing an
+> issue with the
+> a driver which advertises IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC.
 
-> > For AP mode, I guess the right place to implement the action frames would
-> > be hostap? This would at least allow great flexibility with CSA, ECSA
-> > and all the new channel switch IEs coming now. The beacons are also
-> > generated in userspace, after all.
-> 
-> What new channel channel switch IEs?
+Yes it was running an older kernel, but I just compiled v3.12 and ran
+it on the N900, and still everything works fine.
 
-Right now we also have extendended channel switch announcements (ECSA), and 
-secondary channel offset, and there are more to come with 802.11ac I think. I 
-have not studied it yet (and I don't have access to 802.11 drafts), but have a 
-look at that:
+> (or) if you a have a compilation environment try commenting the advertisement of
+> IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC in the iwlwifi DVM driver and
+> try to reproduce the issue.
 
-https://mentor.ieee.org/802.11/dcn/13/11-13-0105-00-00ac-lb190-proposed-
-resolution-on-cid-7367-and-7368.docx&ei=T_N4UuHWGcmt4ATQj4DwBg&usg=AFQjCNE5E-
-bpqRGQM7-QwG0L4TiU3OOLig&bvm=bv.55980276,d.bGE&cad=rja
+After commenting that flag everything works fine :)
 
-(not only the .doc format is ugly)
+What are the next steps?
 
-> 
-> You're right that it might make sense to implement the action frames in
-> hostap.  But OTOH, the action frame is quite simple and mac80211 should
-> have all the information needed to send it out.
-> 
-> > BTW, I've just checked and the WiFi Alliance requires at least 5 beacons
-> > with CSA-IEs to pass the 802.11h test. :)
-> 
-> Do you mean that the tests only check when count starts as > 5?
-> 
-
-It checks if the last beacon hast a CSA IE in the beacon, and also if there 
-are 4 beacons before that including a CSA IE. It does not check for the count 
-though, but that's implicitly given ...
-
-Cheers,
-   Simon
+-- 
+Felipe Contreras
