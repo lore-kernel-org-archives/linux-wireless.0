@@ -1,151 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f182.google.com ([209.85.217.182]:62984 "EHLO
-	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752653Ab3KOJh0 (ORCPT
+Received: from mail-ee0-f44.google.com ([74.125.83.44]:44674 "EHLO
+	mail-ee0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752858Ab3KHHEr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Nov 2013 04:37:26 -0500
-Received: by mail-lb0-f182.google.com with SMTP id w7so76202lbi.27
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Nov 2013 01:37:24 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20131114144638.GF19070@garbanzo.do-not-panic.com>
-References: <1384366379-25301-1-git-send-email-mcgrof@do-not-panic.com>
-	<1384366379-25301-6-git-send-email-mcgrof@do-not-panic.com>
-	<1384378173.28806.22.camel@jlt4.sipsolutions.net>
-	<CALhHN=r4y+JDw9_i9FdKwNoHgic+bvkMJRpYwnaXoSK519Metw@mail.gmail.com>
-	<CALhHN=o-LQfXuyujFOj6A7hzE0mBbC5Q6r3ByL6APJffOx4sHQ@mail.gmail.com>
-	<20131114144638.GF19070@garbanzo.do-not-panic.com>
-Date: Fri, 15 Nov 2013 10:37:24 +0100
-Message-ID: <CALhHN=pZ_v+kupuU=wVmWLYp7_9w-uEerrJUJkXfZqh1kxiUOw@mail.gmail.com> (sfid-20131115_103734_989093_94D2F8E3)
-Subject: Re: [RFC 5/5] cfg80211: DFS check dfs_region before usage
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>, j@w1.fi,
-	sunitb <sunitb@qca.qualcomm.com>,
-	rsunki <rsunki@qca.qualcomm.com>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 8 Nov 2013 02:04:47 -0500
+Received: by mail-ee0-f44.google.com with SMTP id d41so789808eek.3
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Nov 2013 23:04:46 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCHv2 01/13] ath10k: remove ar_pci->ce_count
+Date: Fri,  8 Nov 2013 08:01:23 +0100
+Message-Id: <1383894095-27998-2-git-send-email-michal.kazior@tieto.com> (sfid-20131108_080807_533817_1A5A419C)
+In-Reply-To: <1383894095-27998-1-git-send-email-michal.kazior@tieto.com>
+References: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com>
+ <1383894095-27998-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14 November 2013 15:46, Luis R. Rodriguez <mcgrof@do-not-panic.com> wrote:
-> On Thu, Nov 14, 2013 at 12:52:26PM +0100, Janusz Dziedzic wrote:
->> On 14 November 2013 11:15, Janusz Dziedzic <janusz.dziedzic@tieto.com> wrote:
->> > On 13 November 2013 22:29, Johannes Berg <johannes@sipsolutions.net> wrote:
->> >> On Wed, 2013-11-13 at 19:12 +0100, Luis R. Rodriguez wrote:
->> >>> Check the DFS region before channel availability check
->> >>> or declaring a channel as DFS usable.
->> >>>
->> >>> Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
->> >>> ---
->> >>>  net/wireless/chan.c    | 8 ++++++++
->> >>>  net/wireless/nl80211.c | 5 +++++
->> >>>  2 files changed, 13 insertions(+)
->> >>>
->> >>> diff --git a/net/wireless/chan.c b/net/wireless/chan.c
->> >>> index 78559b5..4e6eaa0 100644
->> >>> --- a/net/wireless/chan.c
->> >>> +++ b/net/wireless/chan.c
->> >>> @@ -517,10 +517,18 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
->> >>>       struct ieee80211_sta_ht_cap *ht_cap;
->> >>>       struct ieee80211_sta_vht_cap *vht_cap;
->> >>>       u32 width, control_freq;
->> >>> +     enum nl80211_dfs_regions dfs_region;
->> >>>
->> >>>       if (WARN_ON(!cfg80211_chandef_valid(chandef)))
->> >>>               return false;
->> >>>
->> >>> +     rtnl_lock();
->> >>> +     dfs_region = reg_get_dfs_region(wiphy);
->> >>> +     rtnl_unlock();
->> >>
->> >
->> >
->> > Do we need check dfs_region in cfg80211_can_beacon() at all?
->> > We already check first if all channels NL80211_DFS_AVAILABLE.
->> > To be DFS_AVAILABLE we need pass CAC, and we will fail CAC if
->> > dfs_region == UNSET.
->> >
->> > Anyway we can do something like this in cfg80211_can_beacon()
->> >
->> >         if (cfg80211_chandef_dfs_required(wiphy, chandef) > 0 &&
->> > -           cfg80211_chandef_dfs_available(wiphy, chandef)) {
->> > +           cfg80211_chandef_dfs_available(wiphy, chandef) &&
->> > +           reg_get_dfs_region(wiphy) != NL80211_DFS_UNSET) {
->> > ...
->> > And change doc that cfg80211_can_beacon() require rtnl_lock.
->> > But I think this is not required.
->> >
->> Or if we should handle dfs_region change after we start CAC and
->> start beaconing,
->
-> Can you clarify what you mean?
->
-> Right now update_all_wiphy_regulatory() contends on the rtnl_lock(),
-> I am not sure if starting CAC and beaconing does. I also just did
-> not get what you mean here.
->
-CAC is only a request - so as I understand correctly rtnl_lock() is
-not held whole CAC time (1minute, 10 minutes)
-So we could have something like this
+It wasn't really useful to have it to begin with.
+This makes it a little simpler to re-arrange PCI
+init code as some function depended on
+ar_pci->ce_count being set.
 
-1) request CAC
-2) mac80211 will call driver radar detection (ETSI) and will start cac
-timer (60s)
-3) after 40 seconds we will change regdom and dfs_region (eg. from
-ETSI -> FCC) - tested using iw reg set US
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/ce.c  |  9 +++------
+ drivers/net/wireless/ath/ath10k/pci.c | 18 ++++++++----------
+ drivers/net/wireless/ath/ath10k/pci.h |  3 ---
+ 3 files changed, 11 insertions(+), 19 deletions(-)
 
-Currently we will not cancel CAC and will mark channels as
-DFS_AVAILABLE after 1 minute.
-So, probably we will need cancel_radar_detection() callback that will
-cancel mac80211 timer here when cac_started and regulatory_update()
-and different dfs_regions.
+diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
+index d243f28..2b99bd4 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.c
++++ b/drivers/net/wireless/ath/ath10k/ce.c
+@@ -731,7 +731,6 @@ void ath10k_ce_per_engine_service(struct ath10k *ar, unsigned int ce_id)
+ 
+ void ath10k_ce_per_engine_service_any(struct ath10k *ar)
+ {
+-	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 	int ce_id, ret;
+ 	u32 intr_summary;
+ 
+@@ -741,7 +740,7 @@ void ath10k_ce_per_engine_service_any(struct ath10k *ar)
+ 
+ 	intr_summary = CE_INTERRUPT_SUMMARY(ar);
+ 
+-	for (ce_id = 0; intr_summary && (ce_id < ar_pci->ce_count); ce_id++) {
++	for (ce_id = 0; intr_summary && (ce_id < CE_COUNT); ce_id++) {
+ 		if (intr_summary & (1 << ce_id))
+ 			intr_summary &= ~(1 << ce_id);
+ 		else
+@@ -785,16 +784,14 @@ static void ath10k_ce_per_engine_handler_adjust(struct ath10k_ce_pipe *ce_state,
+ 
+ void ath10k_ce_disable_interrupts(struct ath10k *ar)
+ {
+-	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 	int ce_id, ret;
+ 
+ 	ret = ath10k_pci_wake(ar);
+ 	if (ret)
+ 		return;
+ 
+-	for (ce_id = 0; ce_id < ar_pci->ce_count; ce_id++) {
+-		struct ath10k_ce_pipe *ce_state = &ar_pci->ce_states[ce_id];
+-		u32 ctrl_addr = ce_state->ctrl_addr;
++	for (ce_id = 0; ce_id < CE_COUNT; ce_id++) {
++		u32 ctrl_addr = ath10k_ce_base_address(ce_id);
+ 
+ 		ath10k_ce_copy_complete_intr_disable(ar, ctrl_addr);
+ 	}
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 25ed07b..f054d4c 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -831,7 +831,7 @@ static int ath10k_pci_start_ce(struct ath10k *ar)
+ 	spin_lock_init(&ar_pci->compl_lock);
+ 	INIT_LIST_HEAD(&ar_pci->compl_process);
+ 
+-	for (pipe_num = 0; pipe_num < ar_pci->ce_count; pipe_num++) {
++	for (pipe_num = 0; pipe_num < CE_COUNT; pipe_num++) {
+ 		pipe_info = &ar_pci->pipe_info[pipe_num];
+ 
+ 		spin_lock_init(&pipe_info->pipe_lock);
+@@ -924,7 +924,7 @@ static void ath10k_pci_cleanup_ce(struct ath10k *ar)
+ 	spin_unlock_bh(&ar_pci->compl_lock);
+ 
+ 	/* Free unused completions for each pipe. */
+-	for (pipe_num = 0; pipe_num < ar_pci->ce_count; pipe_num++) {
++	for (pipe_num = 0; pipe_num < CE_COUNT; pipe_num++) {
+ 		pipe_info = &ar_pci->pipe_info[pipe_num];
+ 
+ 		spin_lock_bh(&pipe_info->pipe_lock);
+@@ -1166,7 +1166,7 @@ static int ath10k_pci_post_rx(struct ath10k *ar)
+ 	const struct ce_attr *attr;
+ 	int pipe_num, ret = 0;
+ 
+-	for (pipe_num = 0; pipe_num < ar_pci->ce_count; pipe_num++) {
++	for (pipe_num = 0; pipe_num < CE_COUNT; pipe_num++) {
+ 		pipe_info = &ar_pci->pipe_info[pipe_num];
+ 		attr = &host_ce_config_wlan[pipe_num];
+ 
+@@ -1295,7 +1295,7 @@ static void ath10k_pci_buffer_cleanup(struct ath10k *ar)
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 	int pipe_num;
+ 
+-	for (pipe_num = 0; pipe_num < ar_pci->ce_count; pipe_num++) {
++	for (pipe_num = 0; pipe_num < CE_COUNT; pipe_num++) {
+ 		struct ath10k_pci_pipe *pipe_info;
+ 
+ 		pipe_info = &ar_pci->pipe_info[pipe_num];
+@@ -1310,7 +1310,7 @@ static void ath10k_pci_ce_deinit(struct ath10k *ar)
+ 	struct ath10k_pci_pipe *pipe_info;
+ 	int pipe_num;
+ 
+-	for (pipe_num = 0; pipe_num < ar_pci->ce_count; pipe_num++) {
++	for (pipe_num = 0; pipe_num < CE_COUNT; pipe_num++) {
+ 		pipe_info = &ar_pci->pipe_info[pipe_num];
+ 		if (pipe_info->ce_hdl) {
+ 			ath10k_ce_deinit(pipe_info->ce_hdl);
+@@ -1755,7 +1755,7 @@ static int ath10k_pci_ce_init(struct ath10k *ar)
+ 	const struct ce_attr *attr;
+ 	int pipe_num;
+ 
+-	for (pipe_num = 0; pipe_num < ar_pci->ce_count; pipe_num++) {
++	for (pipe_num = 0; pipe_num < CE_COUNT; pipe_num++) {
+ 		pipe_info = &ar_pci->pipe_info[pipe_num];
+ 		pipe_info->pipe_num = pipe_num;
+ 		pipe_info->hif_ce_state = ar;
+@@ -1772,13 +1772,12 @@ static int ath10k_pci_ce_init(struct ath10k *ar)
+ 			return -1;
+ 		}
+ 
+-		if (pipe_num == ar_pci->ce_count - 1) {
++		if (pipe_num == CE_COUNT - 1) {
+ 			/*
+ 			 * Reserve the ultimate CE for
+ 			 * diagnostic Window support
+ 			 */
+-			ar_pci->ce_diag =
+-			ar_pci->pipe_info[ar_pci->ce_count - 1].ce_hdl;
++			ar_pci->ce_diag = pipe_info->ce_hdl;
+ 			continue;
+ 		}
+ 
+@@ -2235,7 +2234,6 @@ static int ath10k_pci_start_intr(struct ath10k *ar)
+ 
+ exit:
+ 	ar_pci->num_msi_intrs = num;
+-	ar_pci->ce_count = CE_COUNT;
+ 	return ret;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/pci.h b/drivers/net/wireless/ath/ath10k/pci.h
+index a304c33..73a3d4e 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.h
++++ b/drivers/net/wireless/ath/ath10k/pci.h
+@@ -199,9 +199,6 @@ struct ath10k_pci {
+ 	struct tasklet_struct intr_tq;
+ 	struct tasklet_struct msi_fw_err;
+ 
+-	/* Number of Copy Engines supported */
+-	unsigned int ce_count;
+-
+ 	int started;
+ 
+ 	atomic_t keep_awake_count;
+-- 
+1.8.4.rc3
 
-4) CAC end and we set DFS_AVAILABLE state
-5) we start beaconning (even we do radar_detection for FCC only for
-about 20 seconds)
-
-This is probably rare case when we will change dfs_region between
-start_cac() and can_beacon() - so I am not sure we have to handle
-this?
-
-BR
-Janusz
-
-
->> we could add __cfg80211_can_beacon() without rtnl
->> locking and cfg80211_can_beacon() with locking.
->
-> If to use DFS we need DFS_AVAILABLE and if it is *never* set
-> if dfs region is unset I think we should be good *if* we handle
-> quiescing properly.
->
->> BTW
->> Luis should we handle dfs_region change also during CAC? Who should
->> fail CAC in case we switch eg. from ETSI to FCC? Should we handle this
->> in driver?
->
-> I gave this a lot of thought and decided to just do it in kernel
-> on cfg80211 by quescing upon regulatory domain changes where
-> appropriately (not just for DFS region change), *and* by having
-> wiphy_core_dfs_region_usable() always be checked before sending
-> to userspace the supported DFS regions. The trick here is that
-> since we are quiescing it means that userspace in theory (if
-> we do quescing properly) will always have to check query for the
-> DFS regions *anytime* it will want to start a new interface for
-> initiating radiation, ie just once upon init. If the DFS region
-> changes quescing would have turned off radiation and what I was
-> aiming for is for then userspace to have to get the DFS region
-> again and only if its set would it then again start radiation.
->
-> Doing it this way avoid us having to do anything on any driver.
-> It also allows us to not even have to deal with this in userspace,
-> which would have required userspace to provide support for handling
-> DFS region changes by monitoring the multicast regulatory group,
-> and upon a regulatory change, if a DFS region change, or any
-> regulatory change queisce itself.
->
-> Notice that upon a regulatory intersection we end up using DFS
-> unset if the DFS regions disagree, and that we now always use
-> the central cfg80211 DFS region. This ensures that DFS is tied
-> down to regulatory agreement on the system.
->
->   Luis
