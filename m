@@ -1,32 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f53.google.com ([209.85.215.53]:51659 "EHLO
-	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751807Ab3KDNcz (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:54487 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756972Ab3KHRfA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Nov 2013 08:32:55 -0500
-MIME-Version: 1.0
-In-Reply-To: <527703E6.8040504@mail.ru>
-References: <5276491F.20207@mail.ru> <477F20668A386D41ADCC57781B1F70430F45757E63@SC-VEXCH1.marvell.com>
- <527703E6.8040504@mail.ru>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Mon, 4 Nov 2013 14:32:31 +0100
-Message-ID: <CAB=NE6UB=0Wpzog1vuwF2uR_aqrrs4G4BQ9zG-i6bTz5vvcGpg@mail.gmail.com> (sfid-20131104_143259_315180_5F3B8F97)
-Subject: Re: mwifiex_sdio on chromebook
-To: Alexander Varnin <fenixk19@mail.ru>
-Cc: Bing Zhao <bzhao@marvell.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 8 Nov 2013 12:35:00 -0500
+Received: by mail-wg0-f44.google.com with SMTP id k14so651459wgh.35
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Nov 2013 09:34:59 -0800 (PST)
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
+	Eugene Krasnikov <k.eugene.e@gmail.com>
+Subject: [PATCH 0/3] pull request: wcn36xx 2013-11-08
+Date: Fri,  8 Nov 2013 17:34:36 +0000
+Message-Id: <1383932079-3791-1-git-send-email-k.eugene.e@gmail.com> (sfid-20131108_183505_421552_FB1A1621)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 4, 2013 at 3:18 AM, Alexander Varnin <fenixk19@mail.ru> wrote:
->> What are you trying to do here? Are you trying to run a mainline kernel on your Chromebook?
->
-> Yes. I've got kernel 3.4 from Google Chrome OS. It works ok for
-> mwifiex_sdio. But I want to run mainline kernel. As of 3.11 it is able
-> to boot on Chromebook, but WiFi doesn't work.
+Hi John,
 
-WTF.
+This is a bunch of patches for wcn36xx driver on top of current wireless-next.
+The format is just a list of patches but not a git pull request. If you prefere
+to have them as a git pull link please let me know. Also please let me know if
+there is any problem.
 
-  Luis
+Dan Carpenter (1):
+  wcn36xx: missing unlocks on error paths
+
+Eugene Krasnikov (1):
+  wcn36xx: Fix logging macro with unnecessary semicolon
+
+Wei Yongjun (1):
+  Add the missing unlock before return from function
+    wcn36xx_smd_update_proberesp_tmpl() in the error handling case.
+
+ drivers/net/wireless/ath/wcn36xx/smd.c     | 9 ++++++---
+ drivers/net/wireless/ath/wcn36xx/wcn36xx.h | 2 +-
+ 2 files changed, 7 insertions(+), 4 deletions(-)
+
+-- 
+1.8.3.2
+
