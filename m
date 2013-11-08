@@ -1,810 +1,403 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2631 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932092Ab3KFIaT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Nov 2013 03:30:19 -0500
-Message-ID: <5279FE10.4080804@broadcom.com> (sfid-20131106_093025_686554_039ADA5A)
-Date: Wed, 6 Nov 2013 09:30:08 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44125 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751930Ab3KHQAU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Nov 2013 11:00:20 -0500
+Date: Fri, 8 Nov 2013 10:48:03 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: wireless-next 2013-11-08
+Message-ID: <20131108154802.GG2002@tuxdriver.com> (sfid-20131108_170044_593276_18531B84)
 MIME-Version: 1.0
-To: "Dong Aisheng" <dongas86@gmail.com>
-cc: linux-wireless@vger.kernel.org, frankyl@broadcom.com,
-	brcm80211-dev-list@broadcom.com
-Subject: Re: brcmfmac driver does not work with a BCM4335 WiFi module
-References: <CAA+hA=TSonWMWm9gf+n4T9+HxWT=pvJG9jnkdoUyZUNjPpnJfg@mail.gmail.com>
- <5273840F.40808@broadcom.com>
- <CAA+hA=QB3S6nv1sjtiWQxwrzT3qivoWtaz_noLgVpA-5jBhjiw@mail.gmail.com>
- <5273ABAC.1090109@broadcom.com>
- <CAA+hA=TafyyKy3a4i8Kq11DdqnNv6+7LJmHC5=HVFc+qCd5byg@mail.gmail.com>
- <CAA+hA=RHbqQN3Z624A_SxfYO3CgetZvvKxyMNEt3Y+T0HTAapA@mail.gmail.com>
- <52776C67.8080608@broadcom.com>
- <CAA+hA=RjOsZF8JS-H0dLtcFmv_yqhwy3aA=A_nvre0nCi-vK4Q@mail.gmail.com>
- <5278ADFB.2050909@broadcom.com>
- <CAA+hA=Qr2z1OJDQ+Y5eS+gVVjS5_k2uOgSCnS2wOKA4poqxTOA@mail.gmail.com>
- <CAA+hA=R1oWrZvyeVXjYW7cvJiKL+B-nuu61s9EAOVXNJXzddUA@mail.gmail.com>
-In-Reply-To: <CAA+hA=R1oWrZvyeVXjYW7cvJiKL+B-nuu61s9EAOVXNJXzddUA@mail.gmail.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/05/2013 10:26 AM, Dong Aisheng wrote:
-> On Tue, Nov 5, 2013 at 4:57 PM, Dong Aisheng <dongas86@gmail.com> wrote:
->> On Tue, Nov 5, 2013 at 4:36 PM, Arend van Spriel <arend@broadcom.com> wrote:
->>> On 11/05/2013 03:51 AM, Dong Aisheng wrote:
->>>>
->>>> On Mon, Nov 4, 2013 at 5:44 PM, Arend van Spriel <arend@broadcom.com>
->>>> wrote:
->>>>>
->>>>> On 11/04/2013 09:13 AM, Dong Aisheng wrote:
->>>>>>
->>>>>>
->>>>>> Hi Arend,
->>>>>>
->>>>>> On Mon, Nov 4, 2013 at 11:44 AM, Dong Aisheng <dongas86@gmail.com>
->>>>>> wrote:
->>>>>>>
->>>>>>>
->>>>>>> Hi Arend,
->>>>>>>
->>>>>>> On Fri, Nov 1, 2013 at 9:25 PM, Arend van Spriel <arend@broadcom.com>
->>>>>>> wrote:
->>>>>>>>
->>>>>>>>
->>>>>>>> On 11/01/2013 01:21 PM, Dong Aisheng wrote:
->>>>>>>>>
->>>>>>>>>
->>>>>>>>>
->>>>>>>>> Hi Arend,
->>>>>>>>>
->>>>>>>>> On Fri, Nov 1, 2013 at 6:35 PM, Arend van Spriel <arend@broadcom.com>
->>>>>>>>> wrote:
->>>>>>>>>>
->>>>>>>>>>
->>>>>>>>>>
->>>>>>>>>> On 11/01/2013 07:22 AM, Dong Aisheng wrote:
->>>>>>>>>>>
->>>>>>>>>>>
->>>>>>>>>>>
->>>>>>>>>>>
->>>>>>>>>>> Hi ALL,
->>>>>>>>>>>
->>>>>>>>>>> I'm verifying BCM4335 WiFi module on i.MX6SL EVK board.
->>>>>>>>>>> The kernel i ran is latest from:
->>>>>>>>>>> git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git
->>>>>>>>>>>
->>>>>>>>>>> The firmware is used is from:
->>>>>>>>>>>
->>>>>>>>>>>
->>>>>>>>>>>
->>>>>>>>>>> git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
->>>>>>>>>>>
->>>>>>>>>>> NVRAM file is got from the vendor which should work for the module.
->>>>>>>>>>>
->>>>>>>>>>> But i ran into the following issues, hope somebody can give me some
->>>>>>>>>>> hints.
->>>>>>>>>>>
->>>>>>>>>>> First, i met error when module is auto loaded, but seems the driver
->>>>>>>>>>> is
->>>>>>>>>>> still loaded successfully since i found the new WiFi interface with
->>>>>>>>>>> ifconfig.
->>>>>>>>>>> But it can not work after run rfkill unblock wlan and a lot error
->>>>>>>>>>> messages comes out.
->>>>>>>>>>>
->>>>>>>>>>> I'm wondering if this driver can support bcm4335 well, can anybody
->>>>>>>>>>> provide some help?
->>>>>>>>>>
->>>>>>>>>>
->>>>>>>>>>
->>>>>>>>>>
->>>>>>>>>>
->>>>>>>>>> I can try. I have used the bcm4335 with a SDIO3.0 controller on a
->>>>>>>>>> x86
->>>>>>>>>> PC.
->>>>>>>>>> Looking at an issue right now, but your log does not show that so
->>>>>>>>>> you
->>>>>>>>>> have a
->>>>>>>>>> different issue. Could you load the module with parameter
->>>>>>>>>> 'debug=0x146'.
->>>>>>>>>>
->>>>>>>>>
->>>>>>>>> Thanks for the help.
->>>>>>>>> So that means the brcmfmac driver should support bcm4335 module well,
->>>>>>>>> right?
->>>>>>>>> The difference is that i'm using a ARM platform.
->>>>>>>>> Below is log with 'debug=0x146'.
->>>>>>>>> It only includes driver probe log.
->>>>>>>>
->>>>>>>>
->>>>>>>>
->>>>>>>>
->>>>>>>> That log actually looks fine. Just not sure why software rfkill was
->>>>>>>> enabled.
->>>>>>>> Is that still the case? What distro is running on your platform?
->>>>>>>>
->>>>>>>
->>>>>>> Do you  mean the error message during probe is also fine?
->>>>>>> root@imx6slevk:~# mmc0: queuing unknown CIS tuple 0x91 (3 bytes)
->>>>>>> mmc0: new high speed SDIO card at address 0001
->>>>>>> brcmfmac: brcmf_sdioh_request_word: Failed to read word, Err:
->>>>>>> 0xffffffac
->>>>>>> brcmfmac: brcmf_sdioh_request_word: Failed to read word, Err:
->>>>>>> 0xffffffac
->>>>>>> brcmfmac: brcmf_sdioh_request_word: Failed to read word, Err:
->>>>>>> 0xffffffac
->>>>>>> brcmfmac: brcmf_sdio_regrw_helper: failed with -84     <--- error
->>>>>>> message
->>>>>>> brcmfmac: brcmf_sdio_chip_
->>>>>>> drivestrengthinit: No SDIO Drive strength
->>>>>>> init done for chip 4335 rev 1 pmurev 18
->>>>>>> brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0: Mar 24 2013
->>>>>>> 20:36:01 version 6.30.171.24.20 (B0 Station/P2P)
->>>>>>> brcmfmac: brcmf_fil_cmd_data: Failed err=-23              <---- error
->>>>>>> message
->>>>>>>
->>>>>>> I'm using yocto rootfs, seems rfkill is always enabled by default.
->>>>>>> I could try another rootfs without rfkill.
->>>>>>> But i don't think rfkill should block WiFi driver to work properly.
->>>>>>>
->>>>>>
->>>>>> I tried another rootfs without rfkill, met the same issue when doing
->>>>>> ifconfig wlan0 up, just like 'rfkill unblock wlan'.
->>>>>>
->>>>>> root@freescale ~$ mmc0: mmc_rescan_try_freq: trying to init card at
->>>>>> 400000
->>>>>> Hz
->>>>>> mmc0: queuing unknown CIS tuple 0x91 (3 bytes)
->>>>>> mmc0: new high speed SDIO card at address 0001
->>>>>> brcmfmac: brcmf_sdioh_request_word: Failed to read word, Err: 0xffffffac
->>>>>> brcmfmac: brcmf_sdioh_request_word: Failed to read word, Err: 0xffffffac
->>>>>> brcmfmac: brcmf_sdioh_request_word: Failed to read word, Err: 0xffffffac
->>>>>> brcmfmac: brcmf_sdio_regrw_helper: failed with -84
->>>>>> brcmfmac: brcmf_sdio_chip_drivestrengthinit: No SDIO Drive strength
->>>>>> init done for chip 4335 rev 1 pmurev 18
->>>>>> brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0: Mar 24 2013
->>>>>> 20:36:01 version 6.30.171.24.20 (B0 Station/P2P)
->>>>>> brcmfmac: brcmf_fil_cmd_data: Failed err=-23
->>>>>>
->>>>>> root@freescale ~$
->>>>>> root@freescale ~$
->>>>>> root@freescale ~$ ifconfig -a
->>>>>> ......
->>>>>>
->>>>>> wlan0     Link encap:Ethernet  HWaddr 00:90:4C:C5:12:38
->>>>>>              BROADCAST MULTICAST  MTU:1500  Metric:1
->>>>>>              RX packets:0 errors:0 dropped:0 overruns:0 frame:0
->>>>>>              TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
->>>>>>              collisions:0 txqueuelen:1000
->>>>>>              RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
->>>>>>
->>>>>> root@freescale ~$ ifconfig wlan0 up
->>>>>> brcmfmac: brcmf_sdbrcm_bus_rxctl: resumed on timeout
->>>>>> brcmfmac: brcmf_add_if: ERROR: netdev:wlan0 already exists
->>>>>> brcmfmac: brcmf_add_if: ignore IF event
->>>>>> brcmfmac: brcmf_fil_cmd_data: Failed err=-110
->>>>>>
->>>>>> brcmfmac: brcmf_fil_cmd_data: Failed err=-23
->>>>>> root@freescale ~$
->>>>>> root@freescale ~$
->>>>>> root@freescale ~$ brcmfmac: brcmf_sdioh_request_byte: Failed to write
->>>>>> byte F1:@0x1001f=01, Err: -110
->>>>>> brcmfmac: brcmf_sdioh_request_byte: Failed to read byte
->>>>>> F1:@0x1001f=ff, Err: -110
->>>>>> brcmfmac: brcmf_sdioh_request_byte: Failed to read byte
->>>>>> F1:@0x1001f=ff, Err: -110
->>>>>>
->>>>>> root@freescale ~$ brcmfmac: brcmf_sdioh_request_byte: Failed to write
->>>>>> byte F1:@0x1001f=01, Err: -110
->>>>>> brcmfmac: brcmf_sdioh_request_byte: Failed to read byte
->>>>>> F1:@0x1001f=ff, Err: -110
->>>>>> brcmfmac: brcmf_sdioh_request_byte: Failed to read byte
->>>>>> F1:@0x1001f=ff, Err: -110
->>>>>> brcmfmac: brcmf_sdioh_request_byte: Failed to write byte
->>>>>> F1:@0x1001f=01, Err: -110
->>>>>> brcmfmac: brcmf_sdioh_request_byte: Failed to read byte
->>>>>> F1:@0x1001f=ff, Err: -110
->>>>>> brcmfmac: brcmf_sdioh_request_byte: Failed to read byte
->>>>>> F1:@0x1001f=ff, Err: -110
->>>>>>
->>>>>> I looked into a bit more about the error and found there's CMD timeout
->>>>>> on the bus during SDIO
->>>>>> command transfer.
->>>>>> ---------------------------------------
->>>>>> brcmutil: RxHdr:
->>>>>> 00000000: 20 00 df ff 19 00 00 0c 00 35 00 00               ........5..
->>>>>> brcmfmac: brcmf_sdbrcm_read_control Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> mmc0: starting CMD52 arg 92001400 flags 00000195
->>>>>> sdhci [sdhci_irq()]: *** mmc0 got interrupt: 0x00010000
->>>>>> mmc0: req done (CMD52): -110: 00000000 00000000 00000000 00000000
->>>>>> brcmfmac: brcmf_sdioh_request_byte: Failed to write byte
->>>>>> F1:@0x1000a=00, Err: -110
->>>>>> ------------------------------------------
->>>>>> I'm not sure how this happened, whether caused by host side or wifi
->>>>>> driver
->>>>>> side.
->>>>>> But for the host, i tried this host driver with another WiFi
->>>>>> card(Atheros AR6103) with same kernel,
->>>>>> and it worked well. So the host driver seems more like ok to me.
->>>>>>
->>>>>> Since i'm not familar with the WiFi driver, i wonder if you could
->>>>>> provide suggestion
->>>>>> from WiFi driver layer to see what the issue could be.
->>>>>>
->>>>>> Below is the detailed log when run 'ifconfig wlan0 up'
->>>>>>
->>>>>> root@freescale ~$ ifconfig wlan0 up
->>>>>> brcmfmac: brcmf_netdev_open Enter, idx=0
->>>>>> brcmfmac: brcmf_sdbrcm_bus_txctl Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_sdbrcm_kso_control Enter
->>>>>> brcmutil: TxHdr:
->>>>>> 00000000: 2f 00 d0 ff 10 00 00 14 00 00 00 00 00 00 00 00
->>>>>> /...............
->>>>>> brcmfmac: brcmf_sdio_ib_irqhandler IB intr triggered
->>>>>> brcmfmac: brcmf_sdbrcm_isr Enter
->>>>>> brcmfmac: brcmf_sdbrcm_dpc Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_sdbrcm_dpc Dongle reports CHIPACTIVE
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_sdbrcm_kso_control Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_rxctl Enter
->>>>>>
->>>>>> brcmfmac: brcmf_sdbrcm_bus_rxctl: resumed on timeout
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_sdbrcm_kso_control Enter
->>>>>> brcmfmac: brcmf_sdio_ib_irqhandler IB intr triggered
->>>>>> brcmfmac: brcmf_sdbrcm_isr Enter
->>>>>> brcmfmac: brcmf_sdbrcm_dpc Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_sdio_readframes Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_sdbrcm_kso_control Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_sdbrcm_checkdied firmware not built with -assert
->>>>>> brcmfmac: brcmf_fil_cmd_data: Failed err=-110
->>>>>> brcmutil: RxHdr:
->>>>>> 00000000: 27 00 d8 ff 12 00 00 0c 00 26 00 00              '........&..
->>>>>> brcmfmac: brcmf_sdbrcm_read_control Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_txctl Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_sdbrcm_kso_control Enter
->>>>>> brcmutil: TxHdr:
->>>>>> 00000000: 28 00 d7 ff 11 00 00 14 00 00 00 00 00 00 00 00
->>>>>> (...............
->>>>>> brcmfmac: brcmf_sdio_ib_irqhandler IB intr triggered
->>>>>> brcmfmac: brcmf_sdbrcm_isr Enter
->>>>>> brcmutil: RxHdr:
->>>>>> 00000000: 00 00 00 00 00 00 00 00 00 00 00 00              ............
->>>>>> brcmfmac: brcmf_sdbrcm_dpc Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_rxctl Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_rxctl Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_sdbrcm_dpc Dongle reports CHIPACTIVE
->>>>>> brcmfmac: brcmf_sdbrcm_dpc Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_sdbrcm_kso_control Enter
->>>>>> brcmfmac: brcmf_sdio_ib_irqhandler IB intr triggered
->>>>>> brcmfmac: brcmf_sdbrcm_isr Enter
->>>>>> brcmfmac: brcmf_sdbrcm_dpc Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_sdbrcm_kso_control Enter
->>>>>> brcmfmac: brcmf_sdio_readframes Enter
->>>>>> brcmutil: RxHdr:
->>>>>> 00000000: 20 00 df ff 13 00 00 0c 00 32 00 00               ........2..
->>>>>> brcmfmac: brcmf_sdbrcm_read_control Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_txctl Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmutil: TxHdr:
->>>>>> 00000000: 28 00 d7 ff 12 00 00 14 00 00 00 00 00 00 00 00
->>>>>> (...............
->>>>>> brcmutil: RxHdr:
->>>>>> 00000000: 10 00 ef ff 14 83 0f 0c 00 32 00 00              .........2..
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_sdbrcm_kso_control Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_fws_hdrpull enter: ifidx 0, skblen 88, sig 8
->>>>>> brcmfmac: brcmf_fws_hdrpull tlv type=TRANS_ID (18), len=6 (6)
->>>>>> brcmfmac: brcmf_fws_hdrpull enter: ifidx 0, skblen 87, sig 8
->>>>>> brcmfmac: brcmf_fws_hdrpull tlv type=TRANS_ID (18), len=6 (6)
->>>>>> brcmfmac: brcmf_fws_notify_credit_map enter: credits 09:27:12:09:09:02
->>>>>> brcmfmac: brcmf_add_if Enter, idx=0, ifidx=0
->>>>>> brcmfmac: brcmf_add_if: ERROR: netdev:wlan0 already exists
->>>>>> brcmfmac: brcmf_add_if: ignore IF event
->>>>>> brcmfmac: brcmf_sdbrcm_bus_rxctl Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmutil: RxHdr:
->>>>>> 00000000: 20 00 df ff 17 00 00 0c 00 33 00 00               ........3..
->>>>>> brcmfmac: brcmf_sdbrcm_read_control Enter
->>>>>> brcmfmac: brcmf_sdio_ib_irqhandler IB intr triggered
->>>>>> brcmfmac: brcmf_sdbrcm_isr Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_txctl Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_sdbrcm_kso_control Enter
->>>>>> brcmutil: TxHdr:
->>>>>> 00000000: 28 00 d7 ff 13 00 00 14 00 00 00 00 00 00 00 00
->>>>>> (...............
->>>>>> brcmutil: RxHdr:
->>>>>> 00000000: 00 00 00 00 00 00 00 00 00 00 00 00              ............
->>>>>> brcmfmac: brcmf_sdbrcm_dpc Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_rxctl Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_sdio_readframes Enter
->>>>>> brcmutil: RxHdr:
->>>>>> 00000000: 20 00 df ff 18 00 00 0c 00 34 00 00               ........4..
->>>>>> brcmfmac: brcmf_sdbrcm_read_control Enter
->>>>>> brcmfmac: brcmf_sdio_ib_irqhandler IB intr triggered
->>>>>> brcmfmac: brcmf_sdbrcm_isr Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_txctl Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmutil: TxHdr:
->>>>>> 00000000: 28 00 d7 ff 14 00 00 14 00 00 00 00 00 00 00 00
->>>>>> (...............
->>>>>> brcmutil: RxHdr:
->>>>>> 00000000: 00 00 00 00 00 00 00 00 00 00 00 00              ............
->>>>>> brcmfmac: brcmf_sdbrcm_dpc Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_sdio_readframes Enter
->>>>>> brcmutil: RxHdr:
->>>>>> 00000000: 00 00 00 00 00 00 00 00 00 00 00 00              ............
->>>>>> brcmfmac: brcmf_sdbrcm_dpc Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_rxctl Enter
->>>>>> brcmfmac: brcmf_sdio_ib_irqhandler IB intr triggered
->>>>>> brcmfmac: brcmf_sdbrcm_isr Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_sdio_readframes Enter
->>>>>> brcmutil: RxHdr:
->>>>>> 00000000: 20 00 df ff 19 00 00 0c 00 35 00 00               ........5..
->>>>>> brcmfmac: brcmf_sdbrcm_read_control Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_txctl Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmutil: TxHdr:
->>>>>> 00000000: 28 00 d7 ff 15 00 00 14 00 00 00 00 00 00 00 00
->>>>>> (...............
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_sdbrcm_kso_control Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmutil: RxHdr:
->>>>>> 00000000: 00 00 00 00 00 00 00 00 00 00 00 00              ............
->>>>>> brcmfmac: brcmf_sdbrcm_dpc Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_rxctl Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_sdbrcm_kso_control Enter
->>>>>> brcmfmac: brcmf_sdbrcm_dpc Enter
->>>>>> brcmfmac: brcmf_sdio_ib_irqhandler IB intr triggered
->>>>>> brcmfmac: brcmf_sdbrcm_isr Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
->>>>>> brcmfmac: brcmf_sdio_readframes Enter
->>>>>> brcmutil: RxHdr:
->>>>>> 00000000: 20 00 df ff 1a 00 00 0c 00 36 00 00               ........6..
->>>>>> brcmfmac: brcmf_sdbrcm_read_control Enter
->>>>>> brcmfmac: brcmf_config_dongle power save set to enabled
->>>>>> brcmfmac: brcmf_dongle_roam Internal Roaming = On
->>>>>
->>>>>
->>>>>
->>>>> It seem this is the last command being sent. Could you provide file
->>>>> contents
->>>>> in /sys/kernel/debug/brcmfmac/mmc*/
->>>>>
->>>>> Not sure if Yocto mounts debugfs on /sys/kernel/debug. Otherwise you can
->>>>> do:
->>>>>
->>>>> # mkdir /tmp/debugfs
->>>>> # mount -t debugfs none /tmp/debugfs
->>>>>
->>>>
->>>> Please see below:
->>>> root@imx6slevk:/sys/kernel/debug/brcmfmac/mmc0:0001:1# ls
->>>> counters  forensics  fws_stats
->>>> root@imx6slevk:/sys/kernel/debug/brcmfmac/mmc0:0001:1# ls -l
->>>> total 0
->>>> -r--r--r-- 1 root root 0 Sep  6 23:21 counters
->>>> -r--r--r-- 1 root root 0 Sep  6 23:21 forensics
->>>> -r--r--r-- 1 root root 0 Sep  6 23:21 fws_stats
->>>> root@imx6slevk:/sys/kernel/debug/brcmfmac/mmc0:0001:1# cat counters
->>>> intrcount:    19
->>>> lastintrs:    0
->>>> pollcnt:      0
->>>> regfails:     0
->>>> tx_sderrs:    0
->>>> fcqueued:     0
->>>> rxrtx:        0
->>>> rx_toolong:   0
->>>> rxc_errors:   0
->>>> rx_hdrfail:   0
->>>> rx_badhdr:    0
->>>> rx_badseq:    0
->>>> fc_rcvd:      0
->>>> fc_xoff:      0
->>>> fc_xon:       0
->>>> rxglomfail:   0
->>>> rxglomframes: 0
->>>> rxglompkts:   0
->>>> f2rxhdrs:     36
->>>> f2rxdata:     3
->>>> f2txdata:     0
->>>> f1regdata:    42
->>>> tickcnt:      53
->>>> tx_ctlerrs:   0
->>>> tx_ctlpkts:   17
->>>> rx_ctlerrs:   0
->>>> rx_ctlpkts:   17
->>>> rx_readahead: 0
->>>> root@imx6slevk:/sys/kernel/debug/brcmfmac/mmc0:0001:1# cat forensics
->>>>
->>>> RTE (USB-SDIO-CDC) 6.30.171.24.20 (B0 Station/P2P) on BCM4335 r1 @
->>>> 37.4/161.3/161.3MHz
->>>> 000000.011 sdpcmdcdc0: Broadcom SDPCMD CDC driver
->>>> 000000.018 reclaim section 0: Returned 42772 bytes to the heap
->>>> 000000.061 wl0: Broadcom BCM4335 802.11 Wireless Controller
->>>> 6.30.171.24.20 (B0 Station/P2P)
->>>> 000000.070 reclaim section 1: Returned 62128 bytes to the heap
->>>> 000000.209 wl0: wlc_enable_probe_req: state down, deferring setting of
->>>> host flags
->>>> root@imx6slevk:/sys/kernel/debug/brcmfmac/mmc0:0001:1# ring setting of
->>>> host flags
->>>> root@imx6slevk:/sys/kernel/debug/brcmfmac/mmc0:0001:1# cat fws_stats
->>>> header_pulls:      0
->>>> header_only_pkt:   0
->>>> tlv_parse_failed:  0
->>>> tlv_invalid_type:  0
->>>> mac_update_fails:  0
->>>> ps_update_fails:   0
->>>> if_update_fails:   0
->>>> pkt2bus:           0
->>>> generic_error:     0
->>>> rollback_success:  0
->>>> rollback_failed:   0
->>>> delayq_full:       0
->>>> supprq_full:       0
->>>> txs_indicate:      0
->>>> txs_discard:       0
->>>> txs_suppr_core:    0
->>>> txs_suppr_ps:      0
->>>> txs_tossed:        0
->>>> txs_host_tossed:   0
->>>> bus_flow_block:    0
->>>> fws_flow_block:    0
->>>> send_pkts:         BK:0 BE:0 VO:0 VI:0 BCMC:0
->>>> requested_sent:    BK:0 BE:0 VO:0 VI:0 BCMC:0
->>>> root@imx6slevk:/sys/kernel/debug/brcmfmac/mmc0:0001:1#
->>>
->>>
->>> Nothing exciting there either. Let's take a step back. The rfkill seems an
->>> issue, but I first would like to know if you can get connectivity. Does the
->>> 'ifconfig wlan0 up' complete at all and is it successful.
->>>
->>
->> The second rootfs i tried does not have rfkill.
->> But shows the similar issue with 'ifconfig wlan0 up'.
->>
->>> As you noticed during the up sequence there is a timeout. I would like to
->>> know what command that is. Could you run it again with debug=1546?
->>>
->>
->> Will run the test now.
->> Thanks for the help.
->>
->
-> Please see blow log:
-> Note: there's no rfkill in this rootfs.
->
-> root@freescale ~$ ifconfgiig wlan0
-> brcmfmac: brcmf_netdev_get_stats Enter, idx=0
-> wlan0     Link encap:Ethernet  HWaddr 00:90:4C:C5:12:38
->            BROADCAST MULTICAST  MTU:1500  Metric:1
->            RX packets:0 errors:0 dropped:0 overruns:0 frame:0
->            TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
->            collisions:0 txqueuelen:1000
->            RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
->
-> root@freescale ~$ ifconfig wlan0 up
-> brcmfmac: brcmf_netdev_open Enter, idx=0
-> brcmfmac: brcmf_sdbrcm_bus_txctl Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_kso_control Enter
-> brcmutil: TxHdr:
-> 00000000: 2f 00 d0 ff 10 00 00 14 00 00 00 00 00 00 00 00  /...............
-> brcmfmac: brcmf_sdio_ib_irqhandler IB intr triggered
-> brcmfmac: brcmf_sdbrcm_isr Enter
-> brcmfmac: brcmf_sdbrcm_dpc Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_dpc Dongle reports CHIPACTIVE
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_kso_control Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_rxctl Enter
->
-> <--------- I noticed a few seconds stall here
->
-> brcmfmac: brcmf_sdbrcm_bus_rxctl: resumed on timeout
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_kso_control Enter
-> brcmfmac: brcmf_sdio_ib_irqhandler IB intr triggered
-> brcmfmac: brcmf_sdbrcm_isr Enter
-> brcmfmac: brcmf_sdbrcm_dpc Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdio_readframes Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_kso_control Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_checkdied firmware not built with -assert
-> brcmfmac: brcmf_fil_cmd_data: Failed err=-110
-> brcmfmac: brcmf_fil_iovar_data_get name=toe_ol, len=4
-> brcmutil: data
-> 00000000: 28 aa 49 80                                      (.I.
->
-> brcmutil: RxHdr:
-> 00000000: 27 00 d8 ff 12 00 00 0c 00 26 00 00              '........&..
-> brcmfmac: brcmf_sdbrcm_read_control Enter
-> brcmfmac: brcmf_fil_cmd_int_set cmd=2, value=0
-> brcmfmac: brcmf_sdbrcm_bus_txctl Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_kso_control Enter
-> brcmutil: TxHdr:
-> 00000000: 28 00 d7 ff 11 00 00 14 00 00 00 00 00 00 00 00  (...............
-> brcmfmac: brcmf_sdio_ib_irqhandler IB intr triggered
-> brcmfmac: brcmf_sdbrcm_isr Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmutil: RxHdr:
-> 00000000: 00 00 00 00 00 00 00 00 00 00 00 00              ............
-> brcmfmac: brcmf_sdbrcm_dpc Enter
-> brcmfmac: brcmf_sdbrcm_bus_rxctl Enter
-> brcmfmac: brcmf_sdbrcm_bus_rxctl Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_dpc Dongle reports CHIPACTIVE
-> brcmfmac: brcmf_sdbrcm_dpc Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_kso_control Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_kso_control Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_kso_control Enter
-> brcmfmac: brcmf_sdio_ib_irqhandler IB intr triggered
-> brcmfmac: brcmf_sdbrcm_isr Enter
-> brcmfmac: brcmf_sdbrcm_dpc Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_kso_control Enter
-> brcmfmac: brcmf_sdio_readframes Enter
-> brcmutil: RxHdr:
-> 00000000: 20 00 df ff 13 00 00 0c 00 32 00 00               ........2..
-> brcmfmac: brcmf_sdbrcm_read_control Enter
->
-> brcmfmac: brcmf_fil_cmd_int_set cmd=185, value=40
-> brcmfmac: brcmf_sdbrcm_bus_txctl Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_kso_control Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_kso_control Enter
-> brcmutil: TxHdr:
-> 00000000: 28 00 d7 ff 12 00 00 14 00 00 00 00 00 00 00 00  (...............
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_kso_control Enter
-> brcmfmac: brcmf_sdbrcm_bus_rxctl Enter
-> brcmutil: RxHdr:
-> 00000000: 10 00 ef ff 14 83 0f 0c 00 32 00 00              .........2..
-> brcmfmac: brcmf_sdio_ib_irqhandler IB intr triggered
-> brcmfmac: brcmf_sdbrcm_isr Enter
-> brcmfmac: brcmf_fws_hdrpull enter: ifidx 0, skblen 88, sig 8
-> brcmfmac: brcmf_fws_hdrpull tlv type=TRANS_ID (18), len=6 (6)
-> brcmfmac: brcmf_fws_hdrpull enter: ifidx 0, skblen 87, sig 8
-> brcmfmac: brcmf_fws_hdrpull tlv type=TRANS_ID (18), len=6 (6)
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_fweh_event_worker event FIFO_CREDIT_MAP (74) ifidx 0
-> bsscfg 0 addr 80:80:80:80:80:80
-> brcmfmac: brcmf_fweh_event_worker   version 2 flags 24 status 0 reason 0
-> brcmutil: event payload, len=6
-> 00000000: 09 27 12 09 09 02                                .'....
-> brcmfmac: brcmf_fws_notify_credit_map enter: credits 09:27:12:09:09:02
-> brcmfmac: brcmf_fweh_event_worker event IF (54) ifidx 0 bsscfg 0 addr
-> 00:90:4c:c5:12:38
-> brcmfmac: brcmf_fweh_event_worker   version 2 flags 0 status 0 reason 0
-> brcmutil: event payload, len=5
-> 00000000: 00 01 00 00 00                                   .....
-> brcmfmac: brcmf_fweh_handle_if_event action: 1 idx: 0 bsscfg: 0 flags: 0 role: 0
-> brcmfmac: brcmf_fweh_handle_if_event adding wl0 (00:90:4c:c5:12:38)
-> brcmfmac: brcmf_add_if Enter, idx=0, ifidx=0
-> brcmfmac: brcmf_add_if: ERROR: netdev:wlan0 already exists
-> brcmfmac: brcmf_add_if: ignore IF event
-> brcmutil: RxHdr:
-> 00000000: 20 00 df ff 17 00 00 0c 00 33 00 00               ........3..
-> brcmfmac: brcmf_sdbrcm_read_control Enter
-> brcmfmac: brcmf_fil_cmd_int_set cmd=187, value=40
-> brcmfmac: brcmf_sdbrcm_bus_txctl Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmutil: RxHdr:
-> 00000000: 00 00 00 00 00 00 00 00 00 00 00 00              ............
-> brcmfmac: brcmf_sdbrcm_dpc Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_kso_control Enter
-> brcmutil: TxHdr:
-> 00000000: 28 00 d7 ff 13 00 00 14 00 00 00 00 00 00 00 00  (...............
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdio_readframes Enter
-> brcmutil: RxHdr:
-> 00000000: 00 00 00 00 00 00 00 00 00 00 00 00              ............
-> brcmfmac: brcmf_sdbrcm_dpc Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_kso_control Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_kso_control Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_kso_control Enter
-> brcmfmac: brcmf_sdbrcm_bus_rxctl Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> .......
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_rxctl: resumed on timeout
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_kso_control Enter
-> brcmfmac: brcmf_sdio_ib_irqhandler IB intr triggered
-> brcmfmac: brcmf_sdbrcm_isr Enter
-> brcmfmac: brcmf_sdbrcm_dpc Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdio_readframes Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_kso_control Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_checkdied firmware not built with -assert
-> brcmfmac: brcmf_fil_cmd_data: Failed err=-110
-> brcmfmac: brcmf_dongle_scantime: Scan unassoc time error (-110)
-> brcmutil: RxHdr:
-> 00000000: 20 00 df ff 18 00 00 0c 00 34 00 00               ........4..
-> brcmfmac: brcmf_sdbrcm_read_control Enter
-> brcmfmac: brcmf_fil_cmd_int_set cmd=86, value=2
-> brcmfmac: brcmf_sdbrcm_bus_txctl Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmutil: RxHdr:
-> 00000000: 00 00 00 00 00 00 00 00 00 00 00 00              ............
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_kso_control Enter
-> brcmutil: TxHdr:
-> 00000000: 28 00 d7 ff 14 00 00 14 00 00 00 00 00 00 00 00  (...............
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_kso_control Enter
-> brcmfmac: brcmf_sdbrcm_bus_rxctl Enter
-> brcmfmac: brcmf_sdbrcm_bus_rxctl Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> .................................
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_rxctl: resumed on timeout
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_kso_control Enter
-> brcmfmac: brcmf_sdio_ib_irqhandler IB intr triggered
-> brcmfmac: brcmf_sdbrcm_isr Enter
-> brcmfmac: brcmf_sdbrcm_dpc Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdio_readframes Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_kso_control Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_checkdied firmware not built with -assert
-> brcmfmac: brcmf_fil_cmd_data: Failed err=-110
-> brcmfmac: brcmf_netdev_open: failed to bring up cfg80211
-> brcmutil: RxHdr:
-> 00000000: 20 00 df ff 19 00 00 0c 00 35 00 00               ........5..
-> brcmfmac: brcmf_sdbrcm_read_control Enter
-> ifconfig: SIOCSIFFLAGS: Operationbrcmfmac: brcmf_sdbrcm_bus_sleep Enter
->   not permitted
-> root@freescale ~$ brcmfmac: brcmf_sdio_readframes: RXHEADER FAILED: -110
->
-> brcmfmac: brcmf_sdbrcm_rxfail: abort command, terminate frame, send NAK
-> root@freescale ~$
-> root@freescale ~$ brcmfmac: brcmf_sdioh_request_word: Failed to write
-> word, Err: 0xffffff92
->
-> root@freescale ~$
-> root@freescale ~$
-> root@freescale ~$ brcmfmac: brcmf_sdioh_request_word: Failed to write
-> word, Err: 0xffffff92
->
-> root@freescale ~$ brcmfmac: brcmf_sdbrcm_dpc Enter
-> brcmfmac: brcmf_sdio_ib_irqhandler IB intr triggered
-> brcmfmac: brcmf_sdbrcm_isr Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_kso_control Enter
-> brcmfmac: brcmf_sdbrcm_dpc Dongle reports CHIPACTIVE
-> brcmfmac: brcmf_sdio_readframes Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_kso_control Enter
-> brcmutil: RxHdr:
-> 00000000: 00 00 00 00 00 00 00 00 00 00 00 00              ............
-> brcmfmac: brcmf_sdbrcm_dpc Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_kso_control Enter
-> brcmfmac: brcmf_sdioh_request_byte: Failed to write byte
-> F1:@0x1001f=01, Err: -110
-> brcmfmac: brcmf_sdioh_request_byte: Failed to write byte
-> F1:@0x1001f=01, Err: -110
-> brcmfmac: brcmf_sdioh_request_byte: Failed to write byte
-> F1:@0x1001f=01, Err: -110
-> brcmfmac: brcmf_sdio_ib_irqhandler IB intr triggered
-> brcmfmac: brcmf_sdbrcm_isr Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_dpc Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_dpc Dongle reports CHIPACTIVE
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_kso_control Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
-> brcmfmac: brcmf_sdbrcm_bus_sleep Enter
+Dave,
 
-One more question. I looked up the board you mentioined. What I found 
-has a dedicated SDIO slot for Wifi. Are you using that and do you know 
-if that is an SDIO3.0 or not? Earlier in the thread i found this logging:
+Here is one more pull request for the 3.13 window.  This is primarily
+composed of downstream pull requests that were posted while I was
+traveling during the last part of the 3.12 release.
 
- > root@imx6slevk:~# mmc0: queuing unknown CIS tuple 0x91 (3 bytes)
- > mmc0: new high speed SDIO card at address 0001
+For the mac80211 bits, Johannes says:
 
-I think it means it is a SDIO2, but I like to be sure.
+"I have two DFS fixes (ath9k already supports DFS) and a fix for a
+pointer race."
 
-Gr. AvS
+And...
 
-> Regards
-> Dong Aisheng
->
+"In this round for mac80211-next I have:
+ * mesh channel switch support
+ * a CCM rewrite, using potential hardware offloads
+ * SMPS for AP mode
+ * RF-kill GPIO driver updates to make it usable as an ACPI driver
+ * regulatory improvements
+ * documentation fixes
+ * DFS for IBSS mode
+ * and a few small other fixes/improvements"
 
+For the TI driver bits, Luca says:
 
+"Some patches intended for 3.13.  Eliad continues upstreaming pending
+patches from the internal tree."
+
+For the iwlwifi bits, Emmanuel says:
+
+"There are a few fixes from Johannes mostly clean up patches. We have
+also a few other fixes that are relevant for the new firmware that has
+not been released yet."
+
+For the Bluetooth bits, Gustavo says:
+
+"A last fix to the 3.12. I ended forgetting to send it before, I hope we can
+still make the way to 3.12. It is a revert and it fixes an issue with bluetooth
+suspend/hibernate that had many bug reports. Please pull or let me know of any
+problems. Thanks!"  (Obviously, that one didn't make 3.12...)
+
+Also...
+
+"One more big pull request for 3.13. These are the patches we queued during
+last week. Here you will find a lot of improvements to the HCI and L2CAP and
+MGMT layers with the main ones being a better debugfs support and end of work
+of splitting L2CAP into Core and Socket parts."
+
+Additionally, there is one ath9k patch to enable DFS in IBSS mode for
+that driver.
+
+I appreciate your consideration for taking this extra pull request
+this cycle.  Please let me know if there are problems!
+
+Thanks,
+
+John
+
+---
+
+The following changes since commit dcd607718385d02ce3741de225927a57f528f93b:
+
+  inet: fix a UFO regression (2013-11-08 02:07:59 -0500)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next.git for-davem
+
+for you to fetch changes up to c1f3bb6bd317994beb3af7bbec4bf54ed0035509:
+
+  Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next into for-davem (2013-11-08 09:03:10 -0500)
+
+----------------------------------------------------------------
+
+Alexander Bondar (1):
+      iwlwifi: mvm: update UAPSD support TLV bits
+
+Andrei Otcheretianski (1):
+      nl80211: fix channel switch parsing
+
+Ard Biesheuvel (1):
+      mac80211: port CCMP to cryptoapi's CCM driver
+
+Barak Bercovitz (3):
+      wlcore: read fw panic log only in host mode
+      wlcore: Allow stopping fw log in recovery
+      wlcore: wakeup from ELP before starting recovery
+
+Chun-Yeow Yeoh (5):
+      mac80211: refactor the parsing of chan switch ie
+      mac80211: process the CSA frame for mesh accordingly
+      {nl,cfg,mac}80211: enable the triggering of CSA frame in mesh
+      {nl,cfg,mac}80211: implement mesh channel switch userspace API
+      mac80211: process mesh channel switching using beacon
+
+Eliad Peller (3):
+      wlcore: add ap_event_mask
+      wlcore: fix started_vifs calculation
+      wlcore: save last regdom configuration on stop
+
+Emmanuel Grumbach (3):
+      mac80211: implement SMPS for AP
+      iwlwifi: mvm: BT Coex fix NULL pointer dereference
+      iwlwifi: mvm: BT Coex - fix copy paste issue
+
+Felix Fietkau (1):
+      mac80211: add ieee80211_tx_prepare_skb() helper function
+
+Gustavo Padovan (14):
+      Bluetooth: Extend state_change() call to report errors too
+      Bluetooth: Add l2cap_state_change_and_error()
+      Bluetooth: Access sk_sndtimeo indirectly in l2cap_core.c
+      Bluetooth: Add chan->ops->set_shutdown()
+      Bluetooth: Move l2cap_wait_ack() to l2cap_sock.c
+      Bluetooth: use l2cap_chan_ready() instead of duplicate code
+      Bluetooth: Remove not used struct sock
+      Bluetooth: Do not access chan->sk directly
+      Bluetooth: Hold socket in defer callback in L2CAP socket
+      Bluetooth: Remove socket lock from l2cap_state_change()
+      Bluetooth: Remove parent socket usage from l2cap_core.c
+      Bluetooth: Add L2CAP channel to skb private data
+      Bluetooth: Use bt_cb(skb)->chan to send raw data back
+      Bluetooth: Remove sk member from struct l2cap_chan
+
+Hans de Goede (1):
+      Bluetooth: revert: "Bluetooth: Add missing reset_resume dev_pm_ops"
+
+Heikki Krogerus (5):
+      net: rfkill: gpio: convert to resource managed allocation
+      net: rfkill: gpio: clean up clock handling
+      net: rfkill: gpio: spinlock-safe GPIO access
+      net: rfkill: gpio: prepare for DT and ACPI support
+      net: rfkill: gpio: add ACPI support
+
+Ido Reis (2):
+      wlcore: fwlog dynamic mem_block control
+      wl12xx/wl18xx: update default fw logger's settings
+
+Igal Chernobelsky (3):
+      wl18xx: default config alignment with phy defaults
+      wlcore: fix interrogate command length
+      wlcore/wl18xx/wl12xx: FW log params per chip arch
+
+Johan Hedberg (20):
+      Bluetooth: Fix L2CAP "Command Reject: Invalid CID" response
+      Bluetooth: Remove unused command reject mapping for EMSGSIZE
+      Bluetooth: Remove useless l2cap_err_to_reason function
+      Bluetooth: Ignore A2MP data on non-BR/EDR links
+      Bluetooth: Ignore SMP data on non-LE links
+      Bluetooth: Fix updating the right variable in update_scan_rsp_data()
+      Bluetooth: Reintroduce socket restrictions for LE sockets
+      Bluetooth: Convert auto accept timer to use delayed work
+      Bluetooth: Convert idle timer to use delayed work
+      Bluetooth: Fix ATT socket backwards compatibility with user space
+      Bluetooth: Check for flag instead of features in update_scan_rsp_data()
+      Bluetooth: Check for flag instead of features in update_adv_data()
+      Bluetooth: Add missing check for BREDR_ENABLED flag in update_class()
+      Bluetooth: Refactor set_connectable settings update to separate function
+      Bluetooth: Fix updating settings when there are no HCI commands to send
+      Bluetooth: Move mgmt_pending_find to avoid forward declarations
+      Bluetooth: Fix sending write_scan_enable when BR/EDR is disabled
+      Bluetooth: Move HCI_LIMITED_DISCOVERABLE changes to a general place
+      Bluetooth: Update Set Discoverable to support LE
+      Bluetooth: Fix enabling fast connectable on LE-only controllers
+
+Johannes Berg (8):
+      cfg80211: fix scheduled scan pointer access
+      mac80211: add missing IEEE80211_HW_SUPPORTS_HT_CCK_RATES docs
+      cfg80211: fix docbook references
+      iwlwifi: transport config n_no_reclaim_cmds should be unsigned
+      iwlwifi: pcie: move warning message into warning
+      iwlwifi: mvm: capture the FCS in monitor mode
+      iwlwifi: mvm: add missing break in debugfs
+      iwlwifi: warn if firmware image doesn't exist
+
+John W. Linville (7):
+      Merge branch 'for-john' of git://git.kernel.org/.../jberg/mac80211-next
+      Merge branch 'for-john' of git://git.kernel.org/.../jberg/mac80211
+      Merge branch 'for-upstream' of git://git.kernel.org/.../bluetooth/bluetooth-next
+      Merge branch 'for-linville' of git://git.kernel.org/.../luca/wl12xx
+      Merge branch 'for-john' of git://git.kernel.org/.../iwlwifi/iwlwifi-next
+      Merge branch 'master' of git://git.kernel.org/.../bluetooth/bluetooth
+      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-next into for-davem
+
+Jouni Malinen (1):
+      mac80211_hwsim: Fix tracking of beaconing for multi-vif
+
+Luis R. Rodriguez (5):
+      cfg80211: fix nl80211.h documentation for DFS enum states
+      cfg80211: rename regulatory_hint_11d() to regulatory_hint_country_ie()
+      cfg80211: enable regulatory hints for strict custom settings
+      cfg80211: simplify strict custom alpha2 regdomain check
+      cfg80211: export reg_initiator_name()
+
+Marcel Holtmann (71):
+      Bluetooth: Fix minor coding style issue in set_connectable()
+      Bluetooth: Use hci_request for discoverable timeout handling
+      Bluetooth: Update advertising data based on management commands
+      Bluetooth: Introduce flag for limited discoverable mode
+      Bluetooth: Make mgmt_discoverable() return void
+      Bluetooth: Make mgmt_connectable() return void
+      Bluetooth: Make mgmt_write_scan_failed() return void
+      Bluetooth: Update class of device after changing discoverable mode
+      Bluetooth: Move arming of discoverable timeout to complete handler
+      Bluetooth: Simplify the code for re-arming discoverable timeout
+      Bluetooth: Add HCI command structure for writing current IAC LAP
+      Bluetooth: Add support for entering limited discoverable mode
+      Bluetooth: Make mgmt_new_link_key() return void
+      Bluetooth: Move eir_append_data() function into mgmt.c
+      Bluetooth: Move eir_get_length() function into hci_event.c
+      Bluetooth: Update class of device on discoverable timeout
+      Bluetooth: Add l2cap_chan_no_resume stub for A2MP
+      Bluetooth: Make mgmt_pin_code_request() return void
+      Bluetooth: Make mgmt_pin_code_reply_complete() return void
+      Bluetooth: Make mgmt_pin_code_neg_reply_complete() return void
+      Bluetooth: Make mgmt_auth_failed() return void
+      Bluetooth: Make mgmt_auth_enable_complete() return void
+      Bluetooth: Make mgmt_ssp_enable_complete() return void
+      Bluetooth: Make mgmt_set_class_of_dev_complete() return void
+      Bluetooth: Make mgmt_set_local_name_complete() return void
+      Bluetooth: Make mgmt_read_local_oob_data_reply_complete() return void
+      Bluetooth: Make mgmt_new_ltk() return void
+      Bluetooth: Rename create_ad into create_adv_data
+      Bluetooth: Store scan response data in HCI device
+      Bluetooth: Set the scan response data when needed
+      Bluetooth: Store device name in scan response data
+      Bluetooth: Rename update_ad into update_adv_data
+      Bluetooth: Remove duplicate definitions for advertising event types
+      Bluetooth: Remove enable_hs declaration
+      Bluetooth: Socket address parameter for CID is in little endian
+      Bluetooth: Expose inquiry_cache debugfs only on BR/EDR controllers
+      Bluetooth: Expose auto_accept_delay debugfs only when SSP is supported
+      Bluetooth: Expose static address value for LE capable controllers
+      Bluetooth: Expose current voice setting in debugfs
+      Bluetooth: Add address type to device blacklist table
+      Bluetooth: Move blacklist debugfs entry creation into hci_core.c
+      Bluetooth: Move uuids debugfs entry creation into hci_core.c
+      Bluetooth: Use IS_ERR_OR_NULL for checking bt_debugfs
+      Bluetooth: Create HCI device debugfs directory in hci_register_dev
+      Bluetooth: Create root debugfs directory during module init
+      Bluetooth: Move device_add handling into hci_register_dev
+      Bluetooth: Include address type in blacklist debugfs data
+      Bluetooth: Move idle_timeout and sniff_{min,max}_interval to hci_core.c
+      Bluetooth: Use BDADDR_BREDR type for old blacklist ioctl interface
+      Bluetooth: Use hcon directly instead of conn->hcon where possible
+      Bluetooth: Block ATT connection on LE when device is blocked
+      Bluetooth: Move HCI device features into hci_core.c
+      Bluetooth: Add workaround for buggy max_page features page value
+      Bluetooth: Remove debug entry for connection features
+      Bluetooth: Move manufacturer, hci_ver and hci_rev into hci_core.c
+      Bluetooth: Store local version information only during setup phase
+      Bluetooth: Move export of class of device information into hci_core.c
+      Bluetooth: Expose current list of link keys via debugfs
+      Bluetooth: Remove bus attribute in favor of hierarchy
+      Bluetooth: Expose white list size information in debugfs
+      Bluetooth: Expose current list of long term keys via debugfs
+      Bluetooth: Select the own address type during initial setup phase
+      Bluetooth: Expose debugfs entry read/write own address type
+      Bluetooth: Expose setting if debug keys are used or not
+      Bluetooth: Add LE features to debugfs if available
+      Bluetooth: Remove interval parameter from HCI connection
+      Bluetooth: Add support for setting SSP debug mode
+      Bluetooth: Expose debugfs settings for LE connection interval
+      Bluetooth: Add support for setting DUT mode
+      Bluetooth: Fix UUID values in debugfs file
+      Bluetooth: Fix minor coding style issue in hci_core.c
+
+Marco Porsch (1):
+      mac80211: fixes for mesh powersave logic
+
+Michael Opdenacker (1):
+      iwlwifi: remove duplicate includes
+
+Michal Kazior (3):
+      cfg80211: fix DFS channel recovery timeout
+      cfg80211: update dfs_state_entered upon dfs_state change
+      mac80211: fix uninitialized variable
+
+Seth Forshee (1):
+      mac80211: Remove check for offchannel state when waking netdev queues
+
+Simon Wunderlich (3):
+      nl80211/cfg80211: enable DFS for IBSS mode
+      mac80211: enable DFS for IBSS mode
+      ath9k: enable DFS for IBSS mode
+
+Sunil Dutt (1):
+      cfg80211: pass station supported channel and oper class info
+
+Victor Goldenshtein (1):
+      wlcore: print active channel in the driver_state
+
+ Documentation/DocBook/80211.tmpl            |   4 +-
+ drivers/bluetooth/btusb.c                   |   1 -
+ drivers/net/wireless/ath/ath9k/init.c       |   3 +-
+ drivers/net/wireless/iwlwifi/dvm/ucode.c    |   9 +-
+ drivers/net/wireless/iwlwifi/iwl-fw.h       |   3 +-
+ drivers/net/wireless/iwlwifi/iwl-io.c       |   1 -
+ drivers/net/wireless/iwlwifi/iwl-trans.h    |   2 +-
+ drivers/net/wireless/iwlwifi/mvm/bt-coex.c  |   8 +-
+ drivers/net/wireless/iwlwifi/mvm/debugfs.c  |   1 +
+ drivers/net/wireless/iwlwifi/mvm/fw.c       |   8 +-
+ drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c |   8 +-
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c |  14 +-
+ drivers/net/wireless/iwlwifi/mvm/mvm.h      |   1 -
+ drivers/net/wireless/iwlwifi/mvm/ops.c      |   2 +-
+ drivers/net/wireless/iwlwifi/mvm/rx.c       |   6 +-
+ drivers/net/wireless/iwlwifi/pcie/tx.c      |   9 +-
+ drivers/net/wireless/mac80211_hwsim.c       |  27 +-
+ drivers/net/wireless/ti/wl12xx/main.c       |  16 +-
+ drivers/net/wireless/ti/wl18xx/main.c       |  32 +-
+ drivers/net/wireless/ti/wlcore/acx.c        |  10 +-
+ drivers/net/wireless/ti/wlcore/cmd.c        |  12 +-
+ drivers/net/wireless/ti/wlcore/cmd.h        |   3 +-
+ drivers/net/wireless/ti/wlcore/conf.h       |   5 +-
+ drivers/net/wireless/ti/wlcore/debugfs.c    |  18 +-
+ drivers/net/wireless/ti/wlcore/event.c      |   1 +
+ drivers/net/wireless/ti/wlcore/hw_ops.h     |   9 +
+ drivers/net/wireless/ti/wlcore/init.c       |   6 +
+ drivers/net/wireless/ti/wlcore/io.h         |   4 +-
+ drivers/net/wireless/ti/wlcore/main.c       |  74 ++-
+ drivers/net/wireless/ti/wlcore/scan.c       |  24 +-
+ drivers/net/wireless/ti/wlcore/testmode.c   |   3 +-
+ drivers/net/wireless/ti/wlcore/wlcore.h     |   9 +
+ drivers/net/wireless/ti/wlcore/wlcore_i.h   |   2 -
+ include/linux/ieee80211.h                   |  20 +
+ include/net/bluetooth/bluetooth.h           |   1 +
+ include/net/bluetooth/hci.h                 |  35 +-
+ include/net/bluetooth/hci_core.h            |  89 ++-
+ include/net/bluetooth/l2cap.h               |  20 +-
+ include/net/cfg80211.h                      |  14 +
+ include/net/mac80211.h                      |  18 +
+ include/uapi/linux/nl80211.h                |  27 +-
+ net/bluetooth/a2mp.c                        |   9 +-
+ net/bluetooth/af_bluetooth.c                |   9 +-
+ net/bluetooth/hci_conn.c                    |  48 +-
+ net/bluetooth/hci_core.c                    | 803 ++++++++++++++++++++++++----
+ net/bluetooth/hci_event.c                   |  59 +-
+ net/bluetooth/hci_sock.c                    |   4 +-
+ net/bluetooth/hci_sysfs.c                   | 373 -------------
+ net/bluetooth/l2cap_core.c                  | 227 +++-----
+ net/bluetooth/l2cap_sock.c                  | 120 ++++-
+ net/bluetooth/mgmt.c                        | 637 +++++++++++++++-------
+ net/bluetooth/rfcomm/core.c                 |  14 +-
+ net/bluetooth/rfcomm/sock.c                 |  14 +-
+ net/bluetooth/sco.c                         |  13 +-
+ net/bluetooth/smp.c                         |   4 +-
+ net/mac80211/Kconfig                        |  12 +
+ net/mac80211/aes_ccm.c                      | 169 ++----
+ net/mac80211/aes_ccm.h                      |  14 +-
+ net/mac80211/cfg.c                          | 142 ++++-
+ net/mac80211/debug.h                        |  10 +
+ net/mac80211/debugfs_netdev.c               |  25 +-
+ net/mac80211/ht.c                           |  41 +-
+ net/mac80211/ibss.c                         | 116 ++--
+ net/mac80211/ieee80211_i.h                  |  50 +-
+ net/mac80211/iface.c                        |   3 +
+ net/mac80211/key.h                          |   2 +-
+ net/mac80211/mesh.c                         | 302 ++++++++++-
+ net/mac80211/mesh_plink.c                   |   3 +-
+ net/mac80211/mesh_ps.c                      |  33 +-
+ net/mac80211/mlme.c                         |  32 +-
+ net/mac80211/rx.c                           |   5 +-
+ net/mac80211/spectmgmt.c                    |  33 +-
+ net/mac80211/sta_info.c                     |  72 +++
+ net/mac80211/sta_info.h                     |   5 +
+ net/mac80211/status.c                       |  31 +-
+ net/mac80211/tx.c                           |  45 ++
+ net/mac80211/util.c                         | 124 ++++-
+ net/mac80211/wpa.c                          |  44 +-
+ net/rfkill/Kconfig                          |   2 +-
+ net/rfkill/rfkill-gpio.c                    | 211 ++++----
+ net/wireless/chan.c                         |   3 +-
+ net/wireless/ibss.c                         |  24 +-
+ net/wireless/mlme.c                         |   6 +-
+ net/wireless/nl80211.c                      |  62 ++-
+ net/wireless/reg.c                          |  14 +-
+ net/wireless/reg.h                          |   4 +-
+ net/wireless/scan.c                         |   4 +-
+ net/wireless/sme.c                          |   4 +-
+ net/wireless/util.c                         |  14 +-
+ 89 files changed, 3037 insertions(+), 1517 deletions(-)
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
