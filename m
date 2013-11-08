@@ -1,168 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4320 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753355Ab3K2LZk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Nov 2013 06:25:40 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Hante Meuleman" <meuleman@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 07/19] brcmfmac: removed dhd_proto.h.
-Date: Fri, 29 Nov 2013 12:25:12 +0100
-Message-ID: <1385724324-6361-8-git-send-email-arend@broadcom.com> (sfid-20131129_123808_025541_0D998FAB)
-In-Reply-To: <1385724324-6361-1-git-send-email-arend@broadcom.com>
-References: <1385724324-6361-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-ea0-f180.google.com ([209.85.215.180]:41647 "EHLO
+	mail-ea0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756675Ab3KHKlq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Nov 2013 05:41:46 -0500
+Received: by mail-ea0-f180.google.com with SMTP id b11so996750eae.11
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Nov 2013 02:41:45 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, mcgrof@do-not-panic.com,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH 2/3] cfg80211/mac80211: DFS pass CAC time as a parameter
+Date: Fri,  8 Nov 2013 11:41:26 +0100
+Message-Id: <1383907287-2925-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131108_114151_002953_7F54F54E)
+In-Reply-To: <1383907287-2925-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1383907287-2925-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+Send Channel Availability Check time as a parameter
+of start_radar_detection() callback.
+We could have different CAC time configuration for
+Off-channel CAC and for weather channels.
 
-dhd_proto.h was cleaned up and prototypes were moved to dhd.h.
-dhd_proto.h was removed. This is a step in cleaning and
-restucturing protocol layer.
-
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/bcdc.c     |    1 -
- drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |   15 ++++++++
- .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |    1 -
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |    1 -
- .../net/wireless/brcm80211/brcmfmac/dhd_proto.h    |   39 --------------------
- drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |    1 -
- 6 files changed, 15 insertions(+), 43 deletions(-)
- delete mode 100644 drivers/net/wireless/brcm80211/brcmfmac/dhd_proto.h
+ include/net/cfg80211.h |    3 ++-
+ net/mac80211/cfg.c     |    8 ++++----
+ net/wireless/nl80211.c |    3 ++-
+ 3 files changed, 8 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcdc.c b/drivers/net/wireless/brcm80211/brcmfmac/bcdc.c
-index 42aaf10..59c6c05 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcdc.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcdc.c
-@@ -26,7 +26,6 @@
- #include <brcmu_wifi.h>
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 968f2ad..d43fa0a 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2412,7 +2412,8 @@ struct cfg80211_ops {
  
- #include "dhd.h"
--#include "dhd_proto.h"
- #include "dhd_bus.h"
- #include "fwsignal.h"
- #include "dhd_dbg.h"
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-index 899a2ad..dc2ebef 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-@@ -635,6 +635,18 @@ int brcmf_netdev_wait_pend8021x(struct net_device *ndev);
- /* Return pointer to interface name */
- char *brcmf_ifname(struct brcmf_pub *drvr, int idx);
+ 	int	(*start_radar_detection)(struct wiphy *wiphy,
+ 					 struct net_device *dev,
+-					 struct cfg80211_chan_def *chandef);
++					 struct cfg80211_chan_def *chandef,
++					 u32 cac_time_ms);
+ 	int	(*update_ft_ies)(struct wiphy *wiphy, struct net_device *dev,
+ 				 struct cfg80211_update_ft_ies_params *ftie);
+ 	int	(*crit_proto_start)(struct wiphy *wiphy,
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index fcdc357..7daea55 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2874,11 +2874,11 @@ static int ieee80211_cancel_remain_on_channel(struct wiphy *wiphy,
  
-+/* Linkage, sets prot link and updates hdrlen in pub */
-+int brcmf_proto_attach(struct brcmf_pub *drvr);
-+
-+/* Unlink, frees allocated protocol memory (including brcmf_proto) */
-+void brcmf_proto_detach(struct brcmf_pub *drvr);
-+
-+/* Add any protocol-specific data header.
-+ * Caller must reserve prot_hdrlen prepend space.
-+ */
-+void brcmf_proto_hdrpush(struct brcmf_pub *, int ifidx, u8 offset,
-+			 struct sk_buff *txp);
-+
- /* Query dongle */
- int brcmf_proto_cdc_query_dcmd(struct brcmf_pub *drvr, int ifidx, uint cmd,
- 			       void *buf, uint len);
-@@ -655,4 +667,7 @@ u32 brcmf_get_chip_info(struct brcmf_if *ifp);
- void brcmf_txfinalize(struct brcmf_pub *drvr, struct sk_buff *txp,
- 		      bool success);
+ static int ieee80211_start_radar_detection(struct wiphy *wiphy,
+ 					   struct net_device *dev,
+-					   struct cfg80211_chan_def *chandef)
++					   struct cfg80211_chan_def *chandef,
++					   u32 cac_time_ms)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct ieee80211_local *local = sdata->local;
+-	unsigned long timeout;
+ 	int err;
  
-+/* Sets dongle media info (drv_version, mac address). */
-+int brcmf_c_preinit_dcmds(struct brcmf_if *ifp);
-+
- #endif				/* _BRCMF_H_ */
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
-index 5c0c919..6017633 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
-@@ -21,7 +21,6 @@
- #include <brcmu_utils.h>
- #include "dhd.h"
- #include "dhd_bus.h"
--#include "dhd_proto.h"
- #include "dhd_dbg.h"
- #include "fwil.h"
- #include "tracepoint.h"
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-index c34ca70..c626938 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-@@ -24,7 +24,6 @@
+ 	if (!list_empty(&local->roc_list) || local->scanning)
+@@ -2896,9 +2896,9 @@ static int ieee80211_start_radar_detection(struct wiphy *wiphy,
+ 	if (err)
+ 		return err;
  
- #include "dhd.h"
- #include "dhd_bus.h"
--#include "dhd_proto.h"
- #include "dhd_dbg.h"
- #include "fwil_types.h"
- #include "p2p.h"
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_proto.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd_proto.h
-deleted file mode 100644
-index d633362..0000000
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_proto.h
-+++ /dev/null
-@@ -1,39 +0,0 @@
--/*
-- * Copyright (c) 2010 Broadcom Corporation
-- *
-- * Permission to use, copy, modify, and/or distribute this software for any
-- * purpose with or without fee is hereby granted, provided that the above
-- * copyright notice and this permission notice appear in all copies.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-- * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-- * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-- */
--
--#ifndef _BRCMF_PROTO_H_
--#define _BRCMF_PROTO_H_
--
--/*
-- * Exported from the brcmf protocol module (brcmf_cdc)
-- */
--
--/* Linkage, sets prot link and updates hdrlen in pub */
--int brcmf_proto_attach(struct brcmf_pub *drvr);
--
--/* Unlink, frees allocated protocol memory (including brcmf_proto) */
--void brcmf_proto_detach(struct brcmf_pub *drvr);
--
--/* Add any protocol-specific data header.
-- * Caller must reserve prot_hdrlen prepend space.
-- */
--void brcmf_proto_hdrpush(struct brcmf_pub *, int ifidx, u8 offset,
--			 struct sk_buff *txp);
--
--/* Sets dongle media info (drv_version, mac address). */
--int brcmf_c_preinit_dcmds(struct brcmf_if *ifp);
--
--#endif				/* _BRCMF_PROTO_H_ */
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-index 296dbf1..b96ee3a 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-@@ -27,7 +27,6 @@
- #include <brcmu_utils.h>
- #include <brcmu_wifi.h>
- #include "dhd.h"
--#include "dhd_proto.h"
- #include "dhd_dbg.h"
- #include "dhd_bus.h"
- #include "fwil.h"
+-	timeout = msecs_to_jiffies(IEEE80211_DFS_MIN_CAC_TIME_MS);
+ 	ieee80211_queue_delayed_work(&sdata->local->hw,
+-				     &sdata->dfs_cac_timer_work, timeout);
++				     &sdata->dfs_cac_timer_work,
++				     msecs_to_jiffies(cac_time_ms));
+ 
+ 	return 0;
+ }
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 635842b..689a335 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5672,7 +5672,8 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
+ 	if (err)
+ 		return err;
+ 
+-	err = rdev->ops->start_radar_detection(&rdev->wiphy, dev, &chandef);
++	err = rdev->ops->start_radar_detection(&rdev->wiphy, dev, &chandef,
++					       IEEE80211_DFS_MIN_CAC_TIME_MS);
+ 	if (!err) {
+ 		wdev->channel = chandef.chan;
+ 		wdev->cac_started = true;
 -- 
-1.7.10.4
-
+1.7.9.5
 
