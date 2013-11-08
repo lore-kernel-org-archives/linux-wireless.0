@@ -1,40 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:60545 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752268Ab3KQJRX (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:44809 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757774Ab3KHRfE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Nov 2013 04:17:23 -0500
-Message-ID: <1384679841.14795.10.camel@jlt4.sipsolutions.net> (sfid-20131117_101727_487952_BA21867E)
-Subject: Re: [PATCHv3] cfg80211: add support for frequency interference event
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Chauhan, Rajesh" <rajeshc@qca.qualcomm.com>
-Cc: "Rodriguez, Luis" <rodrigue@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Malinen, Jouni" <jouni@qca.qualcomm.com>,
-	"BAHINI, Henri" <hbahini@qca.qualcomm.com>,
-	"Johnson, Jeff" <jjohnson@qca.qualcomm.com>,
-	"Chang, Leo" <schang@qca.qualcomm.com>,
-	"Luo, Xun" <xunl@qca.qualcomm.com>,
-	"Thalappil, Sameer" <sameert@qca.qualcomm.com>,
-	"Hussain, Arif" <c_arifh@qca.qualcomm.com>
-Date: Sun, 17 Nov 2013 10:17:21 +0100
-In-Reply-To: <D19FD2B13A40CD4B8DA64DB9B8F112E936C4D635@nasanexd01a.na.qualcomm.com>
-References: <1384198356-427-1-git-send-email-rajeshc@qca.qualcomm.com>
-	 <CAB=NE6V7NkXwmvqajqx4ATnCsT9vn=R0JQFkQE5mOdWHWuBsug@mail.gmail.com>
-	 <D19FD2B13A40CD4B8DA64DB9B8F112E936C4D635@nasanexd01a.na.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 8 Nov 2013 12:35:04 -0500
+Received: by mail-wi0-f178.google.com with SMTP id hn9so2547125wib.17
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Nov 2013 09:35:03 -0800 (PST)
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
+	Eugene Krasnikov <k.eugene.e@gmail.com>,
+	Joe Perches <joe@perches.com>
+Subject: [PATCH 3/3] wcn36xx: Fix logging macro with unnecessary semicolon
+Date: Fri,  8 Nov 2013 17:34:39 +0000
+Message-Id: <1383932079-3791-4-git-send-email-k.eugene.e@gmail.com> (sfid-20131108_183514_031981_36973CE3)
+In-Reply-To: <1383932079-3791-1-git-send-email-k.eugene.e@gmail.com>
+References: <1383932079-3791-1-git-send-email-k.eugene.e@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-11-15 at 18:53 +0000, Chauhan, Rajesh wrote:
-> Hi Johannes,
-> 
-> Could you pl. let us know of any further comments/feedback on patch set v3?
+The wcn36xx_err macro should not end in a semicolon as
+there are 2 consecutive semicolons in the preprocessed
+output.
 
-Trying to push me will make it likely that you get to drop to the bottom
-of the pile. I have more than one thing to look at, as you may have
-noticed.
+Signed-off-by: Joe Perches <joe@perches.com>
+Signed-off-by: Eugene Krasnikov <k.eugene.e@gmail.com>
+---
+ drivers/net/wireless/ath/wcn36xx/wcn36xx.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+index 58b6383..8fa5cba 100644
+--- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
++++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+@@ -54,7 +54,7 @@ enum wcn36xx_debug_mask {
+ };
+ 
+ #define wcn36xx_err(fmt, arg...)				\
+-	printk(KERN_ERR pr_fmt("ERROR " fmt), ##arg);
++	printk(KERN_ERR pr_fmt("ERROR " fmt), ##arg)
+ 
+ #define wcn36xx_warn(fmt, arg...)				\
+ 	printk(KERN_WARNING pr_fmt("WARNING " fmt), ##arg)
+-- 
+1.8.3.2
 
