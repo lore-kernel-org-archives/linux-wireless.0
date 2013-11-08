@@ -1,37 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:56002 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758635Ab3KMRyL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Nov 2013 12:54:11 -0500
-Received: by mail-wg0-f49.google.com with SMTP id x13so761272wgg.4
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Nov 2013 09:54:10 -0800 (PST)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 0/5] cfg80211: few updates prior to quiesce and exporting DFS regions
-Date: Wed, 13 Nov 2013 18:54:01 +0100
-Message-Id: <1384365246-24768-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20131113_185415_164150_BA50BEC2)
+Received: from mail.ispras.ru ([83.149.199.45]:60996 "EHLO mail.ispras.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757706Ab3KHV5Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Nov 2013 16:57:16 -0500
+From: Alexey Khoroshilov <khoroshilov@ispras.ru>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ldv-project@linuxtesting.org
+Subject: [PATCH] libertas_usb: fix leak at failure path in if_usb_probe()
+Date: Sat,  9 Nov 2013 01:57:03 +0400
+Message-Id: <1383947823-8670-1-git-send-email-khoroshilov@ispras.ru> (sfid-20131108_225738_867334_195D8002)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here's a few simple updates for cfg80211 regulatory to help with the
-next patches I'll post as RFC's. Nothing major here.
+Error handling code in if_usb_probe() misses usb_put_dev(udev).
 
-Luis R. Rodriguez (5):
-  cfg80211: use enum nl80211_dfs_regions for dfs_region everywhere
-  cfg80211: intersection dfs regions when intersecting regdomains
-  cfg80211: distinguish unset DFS region from unknown
-  cfg80211: replace print_dfs_region() with reg_dfs_region_str() helper
-  cfg80211: add reg_get_dfs_region()
+Found by Linux Driver Verification project (linuxtesting.org).
 
- include/net/regulatory.h |  4 +--
- net/wireless/nl80211.c   |  2 +-
- net/wireless/reg.c       | 85 +++++++++++++++++++++++++++++++++++-------------
- net/wireless/reg.h       |  3 +-
- 4 files changed, 67 insertions(+), 27 deletions(-)
+Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+---
+ drivers/net/wireless/libertas/if_usb.c | 1 +
+ 1 file changed, 1 insertion(+)
 
+diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+index 2798077..7aec7b2 100644
+--- a/drivers/net/wireless/libertas/if_usb.c
++++ b/drivers/net/wireless/libertas/if_usb.c
+@@ -285,6 +285,7 @@ static int if_usb_probe(struct usb_interface *intf,
+ 	return 0;
+ 
+ err_get_fw:
++	usb_put_dev(udev);
+ 	lbs_remove_card(priv);
+ err_add_card:
+ 	if_usb_reset_device(cardp);
 -- 
-1.8.4.rc3
+1.8.1.2
 
