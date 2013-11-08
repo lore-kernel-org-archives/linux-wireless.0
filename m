@@ -1,32 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:59906 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752755Ab3KGTAK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Nov 2013 14:00:10 -0500
-Date: Thu, 7 Nov 2013 13:54:48 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
-Subject: Re: [PATCH 0/2] cfg80211: a few genregdb.awk updates
-Message-ID: <20131107185448.GB2002@tuxdriver.com> (sfid-20131107_200013_499782_3383F5DD)
-References: <1382926786-7904-1-git-send-email-mcgrof@do-not-panic.com>
- <1382968735.17956.12.camel@jlt4.sipsolutions.net>
+Received: from mantis.wzyboy.im ([199.83.51.51]:37508 "EHLO mantis.wzyboy.im"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751535Ab3KHElp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Nov 2013 23:41:45 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1382968735.17956.12.camel@jlt4.sipsolutions.net>
+In-Reply-To: <CALkVjQZcKrEFYBzFOXRKhX_cPos9pt0iYnQUnpEEmGzR6+3zQw@mail.gmail.com>
+References: <5276134B.8070808@wzyboy.org> <CALkVjQYh-SUte4S6LdqOc3KSc3_pDU6jz1KXp+Jsd5_RFPXSqA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE8338@HASMSX103.ger.corp.intel.com>
+ <CALkVjQb7fCMFpqhdUs8w-Mx_Y0RtAYYFtKxXkqyrCQ39UFGxKg@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE960E@HASMSX103.ger.corp.intel.com>
+ <CALkVjQbW8FeiEh8pBZ=KQFD9+8AdjgT0G_RG7qJe0MRdBvMD-A@mail.gmail.com>
+ <CALkVjQaLx2spaOqUPcs_EwMkU7npMki1Reo1MeZwxB7m=c24=g@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE9FC6@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZDNSgUUFyi94Y8da_NDzW61rCvaMrZpUugFKW_LRNFFA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
+ <CALkVjQY7r=YKhsgDKR0mnYVtZy5BAdj83nY2jL0VFaiew6ha7A@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
+ <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
+ <527A8166.6000701@gmail.com> <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
+ <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com> <CALkVjQZcKrEFYBzFOXRKhX_cPos9pt0iYnQUnpEEmGzR6+3zQw@mail.gmail.com>
+From: wzyboy <wzyboy@wzyboy.org>
+Date: Fri, 8 Nov 2013 12:41:28 +0800
+Message-ID: <CALkVjQZWYn8BLnDNxUOkxGhORXeD3OK6sBeu54usEXPtrCRkSQ@mail.gmail.com> (sfid-20131108_054150_171527_DDE6095C)
+Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 28, 2013 at 02:58:55PM +0100, Johannes Berg wrote:
-> I'd apply this, but would prefer John to take a look - he wrote the awk
-> script and I'm not familiar with it.
+Hi,
 
-They seem OK to me.
+it seems that I might find one possible "trigger" of this bug: heavy download.
 
-Acked-by: John W. Linville <linville@tuxdriver.com>
+Today I'm trying to download a big file with wget, and this bug occurs
+six times before I could not bear it any more (every time I have to
+reboot to recover my network!) and bought a network cable downstairs
+in the supermarket and used wired network instead.
+
+It seems that when downloading at full speed (20 Mbps fiber, ~2.3
+MiB/s) for several minutes and the bug, very possibly, may occur.
+
+Several days ago, when I tried to download "linux-3.12.tar.xz" from
+kernal.org with wget, the bug also occured twice during the whole
+download process.
+
+Could this be a hardware issue (flawed hardware?) or just driver
+issue? I bought this laptop 8 days ago and wiped the pre-installed
+Windows the moment I got it, so I have no idea how this wireless card
+performs under Windows.
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+wzyboy
