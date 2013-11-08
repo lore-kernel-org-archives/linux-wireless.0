@@ -1,42 +1,168 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:34705 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753756Ab3KKODN (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:47640 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756350Ab3KHOkW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Nov 2013 09:03:13 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21120.58000.344447.562435@gargle.gargle.HOWL> (sfid-20131111_150317_078384_C1F9EDC9)
-Date: Mon, 11 Nov 2013 19:28:40 +0530
-To: Sven Eckelmann <sven@open-mesh.com>
-Cc: Adrian Chadd <adrian@freebsd.org>,
-	OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
-	Simon Wunderlich <simon@open-mesh.com>,
-	"ath9k-devel\@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [OpenWrt-Devel] [ath9k-devel] ath9k: Deaf QCA9558 when setting rxchainmask
-In-Reply-To: <2985619.kldLYNDlSX@bentobox>
-References: <19772470.YgPhAz9cYD@bentobox>
-	<87B8D697-4540-4D0E-975B-125531E6833B@net.t-labs.tu-berlin.de>
-	<CAJ-VmombLQqJsN50nndqCioFEOy=9cp_-34onQnWnpMoX6360w@mail.gmail.com>
-	<2985619.kldLYNDlSX@bentobox>
+	Fri, 8 Nov 2013 09:40:22 -0500
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
+	johannes@sipsolutions.net
+Subject: [RFC v3 2/4] mac80211: refactor ieee80211_ibss_process_chanswitch()
+Date: Fri,  8 Nov 2013 16:39:37 +0200
+Message-Id: <1383921579-22373-2-git-send-email-luciano.coelho@intel.com> (sfid-20131108_154027_284066_327E8AD2)
+In-Reply-To: <1383921579-22373-1-git-send-email-luciano.coelho@intel.com>
+References: <1383921579-22373-1-git-send-email-luciano.coelho@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sven Eckelmann wrote:
-> You are talking about ar9003_phy.c -> ar9003_hw_set_chain_masks? No, the 
-> device is 3x3 and ah->caps.tx_chainmask & ah->caps.rx_chainmask are 7 and not 
-> 5. The AR_PHY_ANALOG_SWAP := AR_PHY_SWAP_ALT_CHAIN is only done when one of 
-> them would be 5. But I am not really sure what this register setting is really 
-> doing. Maybe you can explain it when you think it could be related. Thanks
+Refactor ieee80211_ibss_process_chanswitch() to use
+ieee80211_channel_switch() and avoid code duplication.
 
-"0x5" chainmask is an invalid mask for AR9300 - for all revisions, including AR9580.
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
 
-If a 2-stream card is required based on AR9300 for custom designs, the only
-way is to use Chain 0 and Chain 2, since there are HW limitations with Chain 1.
-In this case, a chainmask of 0x7 has to be used and the middle chain disabled in the
-driver. This is done by a few vendors who use the 5Ghz AR9580 radio but want 2x2
-instead of the usual 3x3.
+This is a new patch in the series to make things ready for patch 4/4.
 
-Sujith
+ net/mac80211/cfg.c         |  4 ++--
+ net/mac80211/ibss.c        | 58 +++++++---------------------------------------
+ net/mac80211/ieee80211_i.h |  2 ++
+ 3 files changed, 12 insertions(+), 52 deletions(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 95667b0..44b2f51 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3014,8 +3014,8 @@ void ieee80211_csa_finalize_work(struct work_struct *work)
+ 	cfg80211_ch_switch_notify(sdata->dev, &local->csa_chandef);
+ }
+ 
+-static int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+-				    struct cfg80211_csa_settings *params)
++int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
++			     struct cfg80211_csa_settings *params)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct ieee80211_local *local = sdata->local;
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 531be04..548eae8 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -784,18 +784,10 @@ ieee80211_ibss_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 	struct cfg80211_csa_settings params;
+ 	struct ieee80211_csa_ie csa_ie;
+ 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
+-	struct ieee80211_chanctx_conf *chanctx_conf;
+-	struct ieee80211_chanctx *chanctx;
+ 	enum nl80211_channel_type ch_type;
+-	int err, num_chanctx;
++	int err;
+ 	u32 sta_flags;
+ 
+-	if (sdata->vif.csa_active)
+-		return true;
+-
+-	if (!sdata->vif.bss_conf.ibss_joined)
+-		return false;
+-
+ 	sta_flags = IEEE80211_STA_DISABLE_VHT;
+ 	switch (ifibss->chandef.width) {
+ 	case NL80211_CHAN_WIDTH_5:
+@@ -826,9 +818,6 @@ ieee80211_ibss_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 	params.count = csa_ie.count;
+ 	params.chandef = csa_ie.chandef;
+ 
+-	if (ifibss->chandef.chan->band != params.chandef.chan->band)
+-		goto disconnect;
+-
+ 	switch (ifibss->chandef.width) {
+ 	case NL80211_CHAN_WIDTH_20_NOHT:
+ 	case NL80211_CHAN_WIDTH_20:
+@@ -884,29 +873,6 @@ ieee80211_ibss_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 		params.radar_required = true;
+ 	}
+ 
+-	rcu_read_lock();
+-	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+-	if (!chanctx_conf) {
+-		rcu_read_unlock();
+-		goto disconnect;
+-	}
+-
+-	/* don't handle for multi-VIF cases */
+-	chanctx = container_of(chanctx_conf, struct ieee80211_chanctx, conf);
+-	if (chanctx->refcount > 1) {
+-		rcu_read_unlock();
+-		goto disconnect;
+-	}
+-	num_chanctx = 0;
+-	list_for_each_entry_rcu(chanctx, &sdata->local->chanctx_list, list)
+-		num_chanctx++;
+-
+-	if (num_chanctx > 1) {
+-		rcu_read_unlock();
+-		goto disconnect;
+-	}
+-	rcu_read_unlock();
+-
+ 	/* all checks done, now perform the channel switch. */
+ 	ibss_dbg(sdata,
+ 		 "received channel switch announcement to go to channel %d MHz\n",
+@@ -914,19 +880,9 @@ ieee80211_ibss_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 
+ 	params.block_tx = !!csa_ie.mode;
+ 
+-	ieee80211_ibss_csa_beacon(sdata, &params);
+-	sdata->csa_radar_required = params.radar_required;
+-
+-	if (params.block_tx)
+-		ieee80211_stop_queues_by_reason(&sdata->local->hw,
+-				IEEE80211_MAX_QUEUE_MAP,
+-				IEEE80211_QUEUE_STOP_REASON_CSA);
+-
+-	sdata->local->csa_chandef = params.chandef;
+-	sdata->vif.csa_active = true;
+-
+-	ieee80211_bss_info_change_notify(sdata, err);
+-	drv_channel_switch_beacon(sdata, &params.chandef);
++	if (ieee80211_channel_switch(sdata->local->hw.wiphy, sdata->dev,
++				     &params))
++		goto disconnect;
+ 
+ 	ieee80211_ibss_csa_mark_radar(sdata);
+ 
+@@ -962,7 +918,8 @@ ieee80211_rx_mgmt_spectrum_mgmt(struct ieee80211_sub_if_data *sdata,
+ 	if (len < required_len)
+ 		return;
+ 
+-	ieee80211_ibss_process_chanswitch(sdata, elems, false);
++	if (!sdata->vif.csa_active)
++		ieee80211_ibss_process_chanswitch(sdata, elems, false);
+ }
+ 
+ static void ieee80211_rx_mgmt_deauth_ibss(struct ieee80211_sub_if_data *sdata,
+@@ -1143,7 +1100,8 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+ 		goto put_bss;
+ 
+ 	/* process channel switch */
+-	if (ieee80211_ibss_process_chanswitch(sdata, elems, true))
++	if (sdata->vif.csa_active ||
++	    ieee80211_ibss_process_chanswitch(sdata, elems, true))
+ 		goto put_bss;
+ 
+ 	/* same BSSID */
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 29dc505..90bc5ae 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1414,6 +1414,8 @@ void ieee80211_handle_roc_started(struct ieee80211_roc_work *roc);
+ 
+ /* channel switch handling */
+ void ieee80211_csa_finalize_work(struct work_struct *work);
++int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
++			     struct cfg80211_csa_settings *params);
+ 
+ /* interface handling */
+ int ieee80211_iface_init(void);
+-- 
+1.8.4.rc3
+
