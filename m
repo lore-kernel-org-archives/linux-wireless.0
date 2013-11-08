@@ -1,64 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([46.140.151.2]:65222 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751373Ab3KRNgo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Nov 2013 08:36:44 -0500
-Message-ID: <528A17EA.1020505@neratec.com> (sfid-20131118_143648_032809_88F17CE4)
-Date: Mon, 18 Nov 2013 14:36:42 +0100
-From: Matthias May <matthias.may@neratec.com>
-MIME-Version: 1.0
-To: Sujith Manoharan <sujith@msujith.org>
-CC: Sven Eckelmann <sven@open-mesh.com>,
-	OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Simon Wunderlich <simon@open-mesh.com>,
-	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>
-Subject: Re: [ath9k-devel] [OpenWrt-Devel] ath9k: Deaf QCA9558 when setting
- rxchainmask
-References: <19772470.YgPhAz9cYD@bentobox> <87B8D697-4540-4D0E-975B-125531E6833B@net.t-labs.tu-berlin.de> <CAJ-VmombLQqJsN50nndqCioFEOy=9cp_-34onQnWnpMoX6360w@mail.gmail.com> <2985619.kldLYNDlSX@bentobox> <21120.58000.344447.562435@gargle.gargle.HOWL> <528A0F79.1040807@neratec.com> <21130.4681.687594.315193@gargle.gargle.HOWL>
-In-Reply-To: <21130.4681.687594.315193@gargle.gargle.HOWL>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mail-ea0-f173.google.com ([209.85.215.173]:54096 "EHLO
+	mail-ea0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753134Ab3KHHEs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Nov 2013 02:04:48 -0500
+Received: by mail-ea0-f173.google.com with SMTP id g10so847973eak.32
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Nov 2013 23:04:47 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCHv2 03/13] ath10k: split tasklet killing function
+Date: Fri,  8 Nov 2013 08:01:25 +0100
+Message-Id: <1383894095-27998-4-git-send-email-michal.kazior@tieto.com> (sfid-20131108_080452_710266_98E3B679)
+In-Reply-To: <1383894095-27998-1-git-send-email-michal.kazior@tieto.com>
+References: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com>
+ <1383894095-27998-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 18/11/13 14:12, Sujith Manoharan wrote:
-> Matthias May wrote:
->> I'm in the position where i want to use a 9390 as 2x2 instead of 3x3.
->> I use backports-3.12-1.
->> I've set the rx and tx mask in eeprom to 0x5.
->> Every 30 seconds there is a short disconnect.
->> Enabling some logging in
->> echo "0x0000050C" > /sys/kernel/debug/ieee80211/phy0/ath9k/debug
->> shows that something seems to go wrong during noise calibration. (See
->> attached log).
->> What seems odd to me, that for IQ cal it tries to calibrate chain 1
->> instead of chain 2.
-> What is the value of 0x40d8 register ?
->
-> echo 0x40d8 > /sys/kernel/debug/ieee80211/phy0/ath9k/regidx
-> cat /sys/kernel/debug/ieee80211/phy0/ath9k/regval
->
-> Sujith
-root@CHD500279:/# echo 0x40d8 > 
-/sys/kernel/debug/ieee80211/phy6/ath9k/regidx
-root@CHD500279:/# cat /sys/kernel/debug/ieee80211/phy6/ath9k/regval
-0x00000004
+The function will soon be called from more than 1
+place.
 
-On another device showing the same behaviour (but with various other 
-patches and based on compat-wireless-2013-06-27) 0x04000004.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c | 17 +++++++++++------
+ 1 file changed, 11 insertions(+), 6 deletions(-)
 
-Best regards
-Matthias May
-
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 31cdde0..a001ff2 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -877,21 +877,26 @@ static int ath10k_pci_start_ce(struct ath10k *ar)
+ 	return 0;
+ }
+ 
+-static void ath10k_pci_stop_ce(struct ath10k *ar)
++static void ath10k_pci_kill_tasklet(struct ath10k *ar)
+ {
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+-	struct ath10k_pci_compl *compl;
+-	struct sk_buff *skb;
+ 	int i;
+ 
+-	ath10k_ce_disable_interrupts(ar);
+-
+-	/* Cancel the pending tasklet */
+ 	tasklet_kill(&ar_pci->intr_tq);
+ 	tasklet_kill(&ar_pci->msi_fw_err);
+ 
+ 	for (i = 0; i < CE_COUNT; i++)
+ 		tasklet_kill(&ar_pci->pipe_info[i].intr);
++}
++
++static void ath10k_pci_stop_ce(struct ath10k *ar)
++{
++	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
++	struct ath10k_pci_compl *compl;
++	struct sk_buff *skb;
++
++	ath10k_ce_disable_interrupts(ar);
++	ath10k_pci_kill_tasklet(ar);
+ 
+ 	/* Mark pending completions as aborted, so that upper layers free up
+ 	 * their associated resources */
 -- 
-Matthias May
-Software Engineer
-
-Neratec Solutions AG
-Postfach 83, CH-8608 Bubikon, Switzerland
-Direct: +41 55 253 2074
-Office: +41 55 253 2000
-Fax:    +41 55 253 2070
-email:  matthias.may@neratec.com
-Web:   www.neratec.com
+1.8.4.rc3
 
