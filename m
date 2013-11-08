@@ -1,39 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:43597 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752427Ab3KSOtg (ORCPT
+Received: from mail-lb0-f171.google.com ([209.85.217.171]:65513 "EHLO
+	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751254Ab3KHOUJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Nov 2013 09:49:36 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Marek Puzyniak <marek.puzyniak@tieto.com>
-CC: <ath10k@lists.infradead.org>,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 1/3] ath10k: add phyerr/dfs handling
-References: <1384418018-4973-1-git-send-email-marek.puzyniak@tieto.com>
-Date: Tue, 19 Nov 2013 16:49:30 +0200
-In-Reply-To: <1384418018-4973-1-git-send-email-marek.puzyniak@tieto.com>
-	(Marek Puzyniak's message of "Thu, 14 Nov 2013 09:33:36 +0100")
-Message-ID: <87vbzo1m6d.fsf@kamboji.qca.qualcomm.com> (sfid-20131119_154939_453619_7AB55F9C)
+	Fri, 8 Nov 2013 09:20:09 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+Date: Fri, 8 Nov 2013 08:20:07 -0600
+Message-ID: <CAMP44s1ADLHagfPa8kmx_wSyqvLf7pcN_UuOqoPShYx2HPUQXA@mail.gmail.com> (sfid-20131108_152014_351600_13226009)
+Subject: Re: [PATCH 00/16] wl1251 patches from linux-n900 tree
+From: Felipe Contreras <felipe.contreras@gmail.com>
+To: =?UTF-8?Q?Pali_Roh=C3=A1r?= <pali.rohar@gmail.com>
+Cc: Luciano Coelho <luca@coelho.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	netdev@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	freemangordon@abv.bg, aaro.koskinen@iki.fi,
+	Pavel Machek <pavel@ucw.cz>, sre@ring0.de,
+	joni.lapilainen@gmail.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Marek Puzyniak <marek.puzyniak@tieto.com> writes:
-
-> From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+On Sat, Oct 26, 2013 at 3:33 PM, Pali Rohár <pali.rohar@gmail.com> wrote:
+> Hello, I'm sending wl1251 patches from linux-n900 tree [1] for comments. More
+> patches come from David's monitor & packet injection work. Patches are tested
+> with 3.12 rc5 kernel on Nokia N900.
 >
-> Handle phyerr, dfs event, radar_report and fft_report.
-> Add also debugfs dfs_simulate_radar and dfs_stats files.
-> Use ath dfs pattern detector.
->
-> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+> [1] - https://gitorious.org/linux-n900/linux-n900
 
-Thanks, all three applied.
-
-In the future please add a changelog when you change something in the
-patches. It's very difficult to review otherwise.
+How did you test these patches? I get a panic loop immediately after I
+bring the interface loop in monitor mode (v3.12).
 
 -- 
-Kalle Valo
+Felipe Contreras
