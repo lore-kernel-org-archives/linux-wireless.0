@@ -1,80 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f177.google.com ([209.85.192.177]:59949 "EHLO
-	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751214Ab3K3L67 (ORCPT
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:39657 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757548Ab3KHRfD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Nov 2013 06:58:59 -0500
-Message-ID: <5299D306.7070701@gmail.com> (sfid-20131130_125927_801635_010293DB)
-Date: Sat, 30 Nov 2013 19:59:02 +0800
-From: Chen Gang <gang.chen.5i5j@gmail.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	rkuo <rkuo@codeaurora.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	David Miller <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
-Subject: Re: [PATCH] net: mac80211: tx.c: be sure of 'sdata->vif.type' must
- be NL80211_IFTYPE_AP when be in NL80211_IFTYPE_AP case
-References: <528AEFB7.4060301@gmail.com>  <20131125011938.GB18921@codeaurora.org> <5292B845.3010404@gmail.com>  <5292B8A0.7020409@gmail.com> <5294255E.7040105@gmail.com>  <52957ADA.2080704@gmail.com> (sfid-20131127_055211_558798_A7DF5684) <1385739487.8656.1.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1385739487.8656.1.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 8 Nov 2013 12:35:03 -0500
+Received: by mail-wi0-f169.google.com with SMTP id cb5so28581wib.2
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Nov 2013 09:35:01 -0800 (PST)
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
+	Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [PATCH 2/3] wcn36xx: missing unlocks on error paths
+Date: Fri,  8 Nov 2013 17:34:38 +0000
+Message-Id: <1383932079-3791-3-git-send-email-k.eugene.e@gmail.com> (sfid-20131108_183510_541277_A6E2C3A1)
+In-Reply-To: <1383932079-3791-1-git-send-email-k.eugene.e@gmail.com>
+References: <1383932079-3791-1-git-send-email-k.eugene.e@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/29/2013 11:38 PM, Johannes Berg wrote:
-> 
->> +++ b/net/mac80211/tx.c
->> @@ -1814,8 +1814,9 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
->>  			break;
->>  		/* fall through */
->>  	case NL80211_IFTYPE_AP:
->> -		if (sdata->vif.type == NL80211_IFTYPE_AP)
->> -			chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
->> +		if (sdata->vif.type != NL80211_IFTYPE_AP)
->> +			goto fail_rcu;
->> +		chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
-> 
-> This change is completely wrong.
-> 
+From: Dan Carpenter <dan.carpenter@oracle.com>
 
-Oh, it is.
+There are several places which are missing unlocks.
 
-Hmm... for me, this work flow still can be implemented with a little
-clearer way (at least it will avoid related warning):
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+---
+ drivers/net/wireless/ath/wcn36xx/smd.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
--------------------------diff begin------------------------------
-
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index c558b24..7076128 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1810,14 +1810,14 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
- 		if (!chanctx_conf)
- 			goto fail_rcu;
- 		band = chanctx_conf->def.chan->band;
--		if (sta)
--			break;
--		/* fall through */
-+		if (!sta)
-+			goto try_next;
-+		break;
- 	case NL80211_IFTYPE_AP:
--		if (sdata->vif.type == NL80211_IFTYPE_AP)
--			chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
-+		chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
- 		if (!chanctx_conf)
- 			goto fail_rcu;
-+try_next:
- 		fc |= cpu_to_le16(IEEE80211_FCTL_FROMDS);
- 		/* DA BSSID SA */
- 		memcpy(hdr.addr1, skb->data, ETH_ALEN);
-
-
-
--------------------------diff end--------------------------------
-
-
-Thanks.
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index 04df70b..de9eb2c 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -1286,7 +1286,8 @@ int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct ieee80211_vif *vif,
+ 	} else {
+ 		wcn36xx_err("Beacon is to big: beacon size=%d\n",
+ 			      msg_body.beacon_length);
+-		return -ENOMEM;
++		ret = -ENOMEM;
++		goto out;
+ 	}
+ 	memcpy(msg_body.bssid, vif->addr, ETH_ALEN);
+ 
+@@ -1607,7 +1608,8 @@ int wcn36xx_smd_keep_alive_req(struct wcn36xx *wcn,
+ 		/* TODO: it also support ARP response type */
+ 	} else {
+ 		wcn36xx_warn("unknow keep alive packet type %d\n", packet_type);
+-		return -EINVAL;
++		ret = -EINVAL;
++		goto out;
+ 	}
+ 
+ 	PREPARE_HAL_BUF(wcn->hal_buf, msg_body);
 -- 
-Chen Gang
+1.8.3.2
+
