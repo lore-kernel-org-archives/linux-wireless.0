@@ -1,32 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hetz2.bluebottle.com ([176.9.57.138]:55592 "EHLO
-	fe0.bluebottle.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751141Ab3KRLVU (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:33135 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758134Ab3KHUwK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Nov 2013 06:21:20 -0500
-Received: from localhost (pD9FDC255.dip0.t-ipconnect.de [217.253.194.85])
-	(using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	(Authenticated sender: bittorf@bluebottle.com)
-	by fe0.bluebottle.com (Postfix) with ESMTPSA id EE07F2501B
-	for <linux-wireless@vger.kernel.org>; Mon, 18 Nov 2013 11:12:56 +0000 (UTC)
-Date: Mon, 18 Nov 2013 12:20:25 +0100
-From: Bastian Bittorf <bittorf@bluebottle.com>
-To: linux-wireless@vger.kernel.org
-Subject: iw: query mcast-rate from commandline
-Message-ID: <20131118112025.GV886@medion.lan> (sfid-20131118_122130_740335_7744E355)
+	Fri, 8 Nov 2013 15:52:10 -0500
+Received: by mail-wi0-f171.google.com with SMTP id hn9so926651wib.10
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Nov 2013 12:52:09 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CABPxzYJsLqJbJQzr8+2GujQsbJpo922v9ouVWWPbTFL11-UV5g@mail.gmail.com>
+References: <CAMP44s1XJRHV8bAX=_-TkSKMkY8Nw1=eHorqTCZ2QmtR5m8uJA@mail.gmail.com>
+	<526E20EA.9090203@rempel-privat.de>
+	<CAMP44s2Cvw9HF3c3Asuq+bTSD36Gw6PXOUVjAcCD+hf6KB_awg@mail.gmail.com>
+	<CABPxzY+xJ7kst-sYwP8RJwMO_zkNYWKaYy=_LS7WQfuxquK24w@mail.gmail.com>
+	<CAMP44s0087jYz5AiEaEzwt7GqH9ed8PWE1CmvMPr4Dqn3yE6rA@mail.gmail.com>
+	<CABPxzYLwwyFCFw1pEt0v9Xw4kcue1C_RZx0RbTbMrUw=+MWvgQ@mail.gmail.com>
+	<CAMP44s0svc2MRKCrZXS5ZYRZNPoomQkcKHdC2m2BGy7di+TCyA@mail.gmail.com>
+	<CABPxzYL-Gzbzoc_ui+qUQ6uzoKp=Yq7yLWZvc7PoEjiH3dFczg@mail.gmail.com>
+	<CAMP44s3uRF=jNn5ZHZ=QOcvuMoXxsfkxU=VOq3K02Q0qOspEdA@mail.gmail.com>
+	<CABPxzYJbNjAwymwUq0pN=YyuCBGy2qz_BKafatHTWK+yH8PbkA@mail.gmail.com>
+	<CAMP44s1NOS2p9pKeMLhR7616CzHeHJVJEzcF1tP6tsKfcPhSOQ@mail.gmail.com>
+	<CABPxzY+RL+ikbSff3a7qb20ExxcSTx6U2xcL5CFr-BgVSOr61A@mail.gmail.com>
+	<CAMP44s384vOcMc4vE82gAdVf37YUZfegmPHUSeobPO=gK6ErAw@mail.gmail.com>
+	<CABPxzYLDHP5gyeTL8HR=6uJDLptaUGEnNGSFLMkxKqi-JaBVYQ@mail.gmail.com>
+	<CABPxzYJTuV0vGLnhgcQcXbg_9szSm2hH7_vCeP4TOKNxZQx_Gg@mail.gmail.com>
+	<CAMP44s3VRnqw0XJDZTZTym7wBD5-NnfOD56YHbE87OG=3Zan2w@mail.gmail.com>
+	<CAMP44s15W7gb8rXwqum5bdHOSk=A_sadX7ksvtkG0qTOu1RREg@mail.gmail.com>
+	<CABPxzYLtbs1s-_T+hk+N1hOEuCi_Yq+CGxG7Xx0hPRmiyQM0Jg@mail.gmail.com>
+	<CAMP44s0h836BZ+g9-g_t78bKuV_m_xAuvPYRCHaFdJ58eTKthw@mail.gmail.com>
+	<CABPxzYJsLqJbJQzr8+2GujQsbJpo922v9ouVWWPbTFL11-UV5g@mail.gmail.com>
+Date: Fri, 8 Nov 2013 14:52:08 -0600
+Message-ID: <CAMP44s1ZtTyfKmgy4174ukQU1dwx1Fw=AngNQ=g2Dv2wm4t2-g@mail.gmail.com> (sfid-20131108_215226_228732_D7D6F33F)
+Subject: Re: I always need a miracle to connect with iwlwifi
+From: Felipe Contreras <felipe.contreras@gmail.com>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Cc: Oleksij Rempel <linux@rempel-privat.de>, ilw@linux.intel.com,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi,
+On Fri, Nov 8, 2013 at 2:30 PM, Krishna Chaitanya
+<chaitanya.mgit@gmail.com> wrote:
+> On Fri, Nov 8, 2013 at 7:48 PM, Felipe Contreras
+> <felipe.contreras@gmail.com> wrote:
+>> On Fri, Nov 8, 2013 at 8:06 AM, Krishna Chaitanya
+>> <chaitanya.mgit@gmail.com> wrote:
+>>> On Fri, Nov 8, 2013 at 6:44 PM, Felipe Contreras
+>>> <felipe.contreras@gmail.com> wrote:
+>>>> On Fri, Nov 8, 2013 at 2:35 AM, Felipe Contreras
+>>>> <felipe.contreras@gmail.com> wrote:
+>>>>> On Sat, Nov 2, 2013 at 2:05 PM, Krishna Chaitanya
+>>>>> <chaitanya.mgit@gmail.com> wrote:
+>>>>>
+>>>>>> Also one more thing you said N900 uses mac80211 and it has no issues, but as
+>>>>>> its a embedded device it might running an older kernel where the
+>>>>>> handling might be
+>>>>>> different, so we need to try with the same kernel you are facing an
+>>>>>> issue with the
+>>>>>> a driver which advertises IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC.
+>>>>>
+>>>>> Yes it was running an older kernel, but I just compiled v3.12 and ran
+>>>>> it on the N900, and still everything works fine.
+>>>>>
+>>>>>> (or) if you a have a compilation environment try commenting the advertisement of
+>>>>>> IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC in the iwlwifi DVM driver and
+>>>>>> try to reproduce the issue.
+>>>>>
+>>>>> After commenting that flag everything works fine :)
+>>>
+>>> Oh, great. That was just to corner the problem, that means we are not getting
+>>> the required beacon  before the association, but we only wait for 1 beacon here
+>>> may be we to wait for some number of beacons before giving up the association??
+>>>
+>>> Johannes??
+>>
+>> But we are receiving 0 beacons, waiting for more than 1 won't help.
+>> BTW, why NEED_DTIM_BEFORE_ASSOC if the device doesn't *need* the DTIM
+>> before the association?
+>>
+>>>>> What are the next steps?
+>>>>
+>>>> I tried to add some debugging to see what's going on, and indeed the
+>>>> beacon packets are lost, I added debugging as low in the chain as I
+>>>> could (iwlagn_rx_reply_rx()), and I don't see them there. However,
+>>>> when I enable the monitor mode, I see them. What's going on?
+>>>
+>>> In the captures you shared all the beacons are malformed, so
+>>> probably they failed the CRC check. iwlwifi drops all the CRC failed
+>>> packets. (doth MVM and DVM)
+>>
+>> Before iwlagn_rx_reply_rx()?
+>>
+>>> Not sure how you are receiving the beacons in the monitor mode.
+>>
+>> I don't know what kismet does, but I can see my debugging is printing them.
+>>
+>>> BTW did you tried capturing the beacons in other devices and see if they
+>>> are really malformed, or is it just iwlwifi interpreting them wrongly.?
+>>
+>> I haven't managed to do that yet.
+>>
+>> This is what I'm doing:
+>>
+>> --- a/drivers/net/wireless/iwlwifi/dvm/rx.c
+>> +++ b/drivers/net/wireless/iwlwifi/dvm/rx.c
+>> @@ -919,6 +919,11 @@ static int iwlagn_rx_reply_rx(struct iwl_priv *priv,
+>>         ampdu_status = iwlagn_translate_rx_status(priv,
+>>                                                   le32_to_cpu(rx_pkt_status));
+>>
+>> +       if (ieee80211_is_beacon(header->frame_control)) {
+>> +               print_hex_dump(KERN_INFO, "iwlwifi: dump: ", DUMP_PREFIX_OFFSET,
+>> +                               16, 1, header, len, true);
+>> +       }
+>> +
+>>         if ((unlikely(phy_res->cfg_phy_cnt > 20))) {
+>>                 IWL_DEBUG_DROP(priv, "dsp size out of range [0,20]: %d\n",
+>>                                 phy_res->cfg_phy_cnt);
+>>
+> Oops...you just missed, Right after your print there is a check to
+> drop frames with BAD CRC :-).
 
-i'am using wireless-testing 2013-11-05 on OpenWrt. it is
-possible since a long time (2011?) to _set_ mcast-rate
-for each VIF, but to to query e.g. via 'iw dev wlan0-1 info'.
+That's why I put the print before that check. Since I don't see the
+print, that means the check was never executed. iwlagn_rx_reply_rx()
+was never called for the beacon frame.
 
-also i didnt found anything related in the documentation.
-has somebody done work for this, or should i try to add it?
-
-bye, bastian
+-- 
+Felipe Contreras
