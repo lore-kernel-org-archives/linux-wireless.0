@@ -1,44 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f41.google.com ([209.85.215.41]:43657 "EHLO
-	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752119Ab3KSPT5 (ORCPT
+Received: from mail-ee0-f48.google.com ([74.125.83.48]:48982 "EHLO
+	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752946Ab3KHHEx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Nov 2013 10:19:57 -0500
-Received: by mail-la0-f41.google.com with SMTP id eo20so119567lab.14
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Nov 2013 07:19:56 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1384871747.15364.6.camel@jlt4.sipsolutions.net>
-References: <1384794166-10906-1-git-send-email-egrumbach@gmail.com>
-	<1384794409-11211-1-git-send-email-egrumbach@gmail.com>
-	<1384794409-11211-5-git-send-email-egrumbach@gmail.com>
-	<1384871747.15364.6.camel@jlt4.sipsolutions.net>
-Date: Tue, 19 Nov 2013 17:19:56 +0200
-Message-ID: <CANUX_P2JkFTiVf95kipe8wpfQim1hY5NHsJUaOJEOtE994cZAw@mail.gmail.com> (sfid-20131119_162000_844145_FCD40A0A)
-Subject: Re: [PATCH RESEND 5/5] cfg80211: Aggregate mgmt_tx parameters and fix
- channel setting
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 8 Nov 2013 02:04:53 -0500
+Received: by mail-ee0-f48.google.com with SMTP id d49so771438eek.21
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Nov 2013 23:04:51 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCHv2 10/13] ath10k: guard against CE corruption from firmware
+Date: Fri,  8 Nov 2013 08:01:32 +0100
+Message-Id: <1383894095-27998-11-git-send-email-michal.kazior@tieto.com> (sfid-20131108_080807_432999_0D4472A7)
+In-Reply-To: <1383894095-27998-1-git-send-email-michal.kazior@tieto.com>
+References: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com>
+ <1383894095-27998-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Emmanuel Grumbach
-egrumbach@gmail.com
+In case firmware crashes it may report CE
+completions for entries that were never
+submitted/filled with meaningful data. This in
+turn led to NULL dereferences.
 
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/htc.c | 5 +++++
+ drivers/net/wireless/ath/ath10k/pci.c | 7 +++++++
+ 2 files changed, 12 insertions(+)
 
-On Tue, Nov 19, 2013 at 4:35 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2013-11-18 at 19:06 +0200, Emmanuel Grumbach wrote:
->> From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
->>
->> Change cfg80211 and mac80211 to use cfg80211_mgmt_tx_params
->> struct to aggregate parameters for mgmt_tx functions.
->> This makes the functions' signatures less clumsy and allows
->> less painful parameters extension.
->
-> Also, technically, this broke a whole bunch of drivers - I'll fix it.
->
-oh well....
-Thanks:)
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index 3118d75..6d7a72e 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -191,6 +191,11 @@ static int ath10k_htc_tx_completion_handler(struct ath10k *ar,
+ 	struct ath10k_htc *htc = &ar->htc;
+ 	struct ath10k_htc_ep *ep = &htc->endpoint[eid];
+ 
++	if (!skb) {
++		ath10k_warn("invalid sk_buff completion - NULL pointer. firmware crashed?\n");
++		return 0;
++	}
++
+ 	ath10k_htc_notify_tx_completion(ep, skb);
+ 	/* the skb now belongs to the completion handler */
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index e41665f..0b89726 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1270,6 +1270,13 @@ static void ath10k_pci_tx_pipe_cleanup(struct ath10k_pci_pipe *pipe_info)
+ 		 * Indicate the completion to higer layer to free
+ 		 * the buffer
+ 		 */
++
++		if (!netbuf) {
++			ath10k_warn("invalid sk_buff on CE %d - NULL pointer. firmware crashed?\n",
++				    ce_hdl->id);
++			continue;
++		}
++
+ 		ATH10K_SKB_CB(netbuf)->is_aborted = true;
+ 		ar_pci->msg_callbacks_current.tx_completion(ar,
+ 							    netbuf,
+-- 
+1.8.4.rc3
+
