@@ -1,167 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:36569 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754892Ab3KEUzA (ORCPT
+Received: from mail-we0-f182.google.com ([74.125.82.182]:64099 "EHLO
+	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756613Ab3KHOGi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Nov 2013 15:55:00 -0500
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: linux-wireless@vger.kernel.org, sw@simonwunderlich.de
-Cc: johannes@sipsolutions.net
-Subject: [RFC v2 2/2] mac80211: only set CSA beacon when at least one beacon must be transmitted
-Date: Tue,  5 Nov 2013 22:54:14 +0200
-Message-Id: <1383684854-21663-2-git-send-email-luciano.coelho@intel.com> (sfid-20131105_215504_432041_AD218800)
-In-Reply-To: <1383684854-21663-1-git-send-email-luciano.coelho@intel.com>
-References: <1383684854-21663-1-git-send-email-luciano.coelho@intel.com>
+	Fri, 8 Nov 2013 09:06:38 -0500
+Received: by mail-we0-f182.google.com with SMTP id t61so2048910wes.27
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Nov 2013 06:06:36 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAMP44s15W7gb8rXwqum5bdHOSk=A_sadX7ksvtkG0qTOu1RREg@mail.gmail.com>
+References: <CAMP44s1XJRHV8bAX=_-TkSKMkY8Nw1=eHorqTCZ2QmtR5m8uJA@mail.gmail.com>
+ <526E20EA.9090203@rempel-privat.de> <CAMP44s2Cvw9HF3c3Asuq+bTSD36Gw6PXOUVjAcCD+hf6KB_awg@mail.gmail.com>
+ <CABPxzY+xJ7kst-sYwP8RJwMO_zkNYWKaYy=_LS7WQfuxquK24w@mail.gmail.com>
+ <CAMP44s0087jYz5AiEaEzwt7GqH9ed8PWE1CmvMPr4Dqn3yE6rA@mail.gmail.com>
+ <CABPxzYLwwyFCFw1pEt0v9Xw4kcue1C_RZx0RbTbMrUw=+MWvgQ@mail.gmail.com>
+ <CAMP44s0svc2MRKCrZXS5ZYRZNPoomQkcKHdC2m2BGy7di+TCyA@mail.gmail.com>
+ <CABPxzYL-Gzbzoc_ui+qUQ6uzoKp=Yq7yLWZvc7PoEjiH3dFczg@mail.gmail.com>
+ <CAMP44s3uRF=jNn5ZHZ=QOcvuMoXxsfkxU=VOq3K02Q0qOspEdA@mail.gmail.com>
+ <CABPxzYJbNjAwymwUq0pN=YyuCBGy2qz_BKafatHTWK+yH8PbkA@mail.gmail.com>
+ <CAMP44s1NOS2p9pKeMLhR7616CzHeHJVJEzcF1tP6tsKfcPhSOQ@mail.gmail.com>
+ <CABPxzY+RL+ikbSff3a7qb20ExxcSTx6U2xcL5CFr-BgVSOr61A@mail.gmail.com>
+ <CAMP44s384vOcMc4vE82gAdVf37YUZfegmPHUSeobPO=gK6ErAw@mail.gmail.com>
+ <CABPxzYLDHP5gyeTL8HR=6uJDLptaUGEnNGSFLMkxKqi-JaBVYQ@mail.gmail.com>
+ <CABPxzYJTuV0vGLnhgcQcXbg_9szSm2hH7_vCeP4TOKNxZQx_Gg@mail.gmail.com>
+ <CAMP44s3VRnqw0XJDZTZTym7wBD5-NnfOD56YHbE87OG=3Zan2w@mail.gmail.com> <CAMP44s15W7gb8rXwqum5bdHOSk=A_sadX7ksvtkG0qTOu1RREg@mail.gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Fri, 8 Nov 2013 19:36:16 +0530
+Message-ID: <CABPxzYLtbs1s-_T+hk+N1hOEuCi_Yq+CGxG7Xx0hPRmiyQM0Jg@mail.gmail.com> (sfid-20131108_150641_762058_E2F292AA)
+Subject: Re: I always need a miracle to connect with iwlwifi
+To: Felipe Contreras <felipe.contreras@gmail.com>
+Cc: Oleksij Rempel <linux@rempel-privat.de>, ilw@linux.intel.com,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With a CSA count of 0, we won't transmit any CSA beacons, because the
-switch will happen before the next TBTT.  To avoid extra work and
-potential confusion in the drivers, complete the CSA immediately,
-instead of waiting for the driver to call ieee80211_csa_finish().
+On Fri, Nov 8, 2013 at 6:44 PM, Felipe Contreras
+<felipe.contreras@gmail.com> wrote:
+> On Fri, Nov 8, 2013 at 2:35 AM, Felipe Contreras
+> <felipe.contreras@gmail.com> wrote:
+>> On Sat, Nov 2, 2013 at 2:05 PM, Krishna Chaitanya
+>> <chaitanya.mgit@gmail.com> wrote:
+>>
+>>> Also one more thing you said N900 uses mac80211 and it has no issues, but as
+>>> its a embedded device it might running an older kernel where the
+>>> handling might be
+>>> different, so we need to try with the same kernel you are facing an
+>>> issue with the
+>>> a driver which advertises IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC.
+>>
+>> Yes it was running an older kernel, but I just compiled v3.12 and ran
+>> it on the N900, and still everything works fine.
+>>
+>>> (or) if you a have a compilation environment try commenting the advertisement of
+>>> IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC in the iwlwifi DVM driver and
+>>> try to reproduce the issue.
+>>
+>> After commenting that flag everything works fine :)
 
-To keep things simpler, we also switch immediately when the CSA count
-is 1, while in theory we should delay the switch until just before the
-next TBTT.
+Oh, great. That was just to corner the problem, that means we are not getting
+the required beacon  before the association, but we only wait for 1 beacon here
+may be we to wait for some number of beacons before giving up the association??
 
-Additionally, move the ieee80211_csa_finish() function to cfg.c,
-where it makes more sense (and since we call it from cfg.c now).
+Johannes??
 
-Cc: Simon Wunderlich <sw@simonwunderlich.de>
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
-Simon, I think with this we won't need any changes in ath9k, right?
----
- net/mac80211/cfg.c | 54 ++++++++++++++++++++++++++++++++++++++++++++++++------
- net/mac80211/tx.c  |  9 ---------
- 2 files changed, 48 insertions(+), 15 deletions(-)
+>> What are the next steps?
+>
+> I tried to add some debugging to see what's going on, and indeed the
+> beacon packets are lost, I added debugging as low in the chain as I
+> could (iwlagn_rx_reply_rx()), and I don't see them there. However,
+> when I enable the monitor mode, I see them. What's going on?
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index b0a651c..fe5de2c 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2854,6 +2854,15 @@ cfg80211_beacon_dup(struct cfg80211_beacon_data *beacon)
- 	return new_beacon;
- }
- 
-+void ieee80211_csa_finish(struct ieee80211_vif *vif)
-+{
-+	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-+
-+	ieee80211_queue_work(&sdata->local->hw,
-+			     &sdata->csa_finalize_work);
-+}
-+EXPORT_SYMBOL(ieee80211_csa_finish);
-+
- void ieee80211_csa_finalize_work(struct work_struct *work)
- {
- 	struct ieee80211_sub_if_data *sdata =
-@@ -2912,7 +2921,7 @@ static int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_chanctx_conf *chanctx_conf;
- 	struct ieee80211_chanctx *chanctx;
--	int err, num_chanctx;
-+	int err, num_chanctx, changed = 0;
- 
- 	if (!list_empty(&local->roc_list) || local->scanning)
- 		return -EBUSY;
-@@ -2951,19 +2960,42 @@ static int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 
- 	switch (sdata->vif.type) {
- 	case NL80211_IFTYPE_AP:
--		sdata->csa_counter_offset_beacon =
--			params->counter_offset_beacon;
--		sdata->csa_counter_offset_presp = params->counter_offset_presp;
- 		sdata->u.ap.next_beacon =
- 			cfg80211_beacon_dup(&params->beacon_after);
- 		if (!sdata->u.ap.next_beacon)
- 			return -ENOMEM;
- 
-+		/*
-+		 * With a count of 0, we don't have to wait for any
-+		 * TBTT before switching, so complete the CSA
-+		 * immediately.  In theory, with a count == 1 we
-+		 * should delay the switch until just before the next
-+		 * TBTT, but that would complicate things so we switch
-+		 * immediately too.  If we would delay the switch
-+		 * until the next TBTT, we would have to set the probe
-+		 * response here.
-+		 *
-+		 * TODO: A channel switch with count <= 1 without
-+		 * sending a CSA action frame is kind of useless,
-+		 * because the clients won't know we're changing
-+		 * channels.  The action frame must be implemented
-+		 * either here or in the userspace.
-+		 */
-+		if (params->count <= 1) {
-+			ieee80211_csa_finish(&sdata->vif);
-+			break;
-+		}
-+
-+		sdata->csa_counter_offset_beacon =
-+			params->counter_offset_beacon;
-+		sdata->csa_counter_offset_presp = params->counter_offset_presp;
- 		err = ieee80211_assign_beacon(sdata, &params->beacon_csa);
- 		if (err < 0) {
- 			kfree(sdata->u.ap.next_beacon);
- 			return err;
- 		}
-+		changed |= err;
-+
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
- 		if (!sdata->vif.bss_conf.ibss_joined)
-@@ -2991,9 +3023,17 @@ static int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 		    params->chandef.chan->band)
- 			return -EINVAL;
- 
-+		/* see comments and TODO in the NL80211_IFTYPE_AP block */
-+		if (params->count <= 1) {
-+			ieee80211_csa_finish(&sdata->vif);
-+			break;
-+		}
-+
- 		err = ieee80211_ibss_csa_beacon(sdata, params);
- 		if (err < 0)
- 			return err;
-+		changed |= err;
-+
- 		break;
- 	default:
- 		return -EOPNOTSUPP;
-@@ -3009,8 +3049,10 @@ static int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 	local->csa_chandef = params->chandef;
- 	sdata->vif.csa_active = true;
- 
--	ieee80211_bss_info_change_notify(sdata, err);
--	drv_channel_switch_beacon(sdata, &params->chandef);
-+	ieee80211_bss_info_change_notify(sdata, changed);
-+
-+	if (params->count > 1)
-+		drv_channel_switch_beacon(sdata, &params->chandef);
- 
- 	return 0;
- }
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 1e0d40f..ac4b79f 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2343,15 +2343,6 @@ static int ieee80211_beacon_add_tim(struct ieee80211_sub_if_data *sdata,
- 	return 0;
- }
- 
--void ieee80211_csa_finish(struct ieee80211_vif *vif)
--{
--	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
--
--	ieee80211_queue_work(&sdata->local->hw,
--			     &sdata->csa_finalize_work);
--}
--EXPORT_SYMBOL(ieee80211_csa_finish);
--
- static void ieee80211_update_csa(struct ieee80211_sub_if_data *sdata,
- 				 struct beacon_data *beacon)
- {
--- 
-1.8.4.rc3
+In the captures you shared all the beacons are malformed, so
+probably they failed the CRC check. iwlwifi drops all the CRC failed
+packets. (doth MVM and DVM)
 
+Not sure how you are receiving the beacons in the monitor mode.
+BTW did you tried capturing the beacons in other devices and see if they
+are really malformed, or is it just iwlwifi interpreting them wrongly.?
