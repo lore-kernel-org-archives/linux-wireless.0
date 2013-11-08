@@ -1,161 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:63439 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753293Ab3KNOUu (ORCPT
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:57423 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753977Ab3KHUbF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Nov 2013 09:20:50 -0500
-Received: by mail-pa0-f53.google.com with SMTP id kq14so2134022pab.26
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Nov 2013 06:20:49 -0800 (PST)
-Date: Thu, 14 Nov 2013 06:31:29 -0800
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: janusz.dziedzic@tieto.com, j@w1.fi, sunitb@qca.qualcomm.com,
-	rsunki@qca.qualcomm.com, linux-wireless@vger.kernel.org
-Subject: Re: [RFC 4/5] cfg80211: add DFS region capability support
-Message-ID: <20131114143126.GC19070@garbanzo.do-not-panic.com> (sfid-20131114_152053_765837_46ECD8C4)
-References: <1384366379-25301-1-git-send-email-mcgrof@do-not-panic.com>
- <1384366379-25301-5-git-send-email-mcgrof@do-not-panic.com>
- <1384378096.28806.20.camel@jlt4.sipsolutions.net>
+	Fri, 8 Nov 2013 15:31:05 -0500
+Received: by mail-wg0-f47.google.com with SMTP id c11so2458969wgh.14
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Nov 2013 12:31:04 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1384378096.28806.20.camel@jlt4.sipsolutions.net>
+In-Reply-To: <CAMP44s0h836BZ+g9-g_t78bKuV_m_xAuvPYRCHaFdJ58eTKthw@mail.gmail.com>
+References: <CAMP44s1XJRHV8bAX=_-TkSKMkY8Nw1=eHorqTCZ2QmtR5m8uJA@mail.gmail.com>
+ <526E20EA.9090203@rempel-privat.de> <CAMP44s2Cvw9HF3c3Asuq+bTSD36Gw6PXOUVjAcCD+hf6KB_awg@mail.gmail.com>
+ <CABPxzY+xJ7kst-sYwP8RJwMO_zkNYWKaYy=_LS7WQfuxquK24w@mail.gmail.com>
+ <CAMP44s0087jYz5AiEaEzwt7GqH9ed8PWE1CmvMPr4Dqn3yE6rA@mail.gmail.com>
+ <CABPxzYLwwyFCFw1pEt0v9Xw4kcue1C_RZx0RbTbMrUw=+MWvgQ@mail.gmail.com>
+ <CAMP44s0svc2MRKCrZXS5ZYRZNPoomQkcKHdC2m2BGy7di+TCyA@mail.gmail.com>
+ <CABPxzYL-Gzbzoc_ui+qUQ6uzoKp=Yq7yLWZvc7PoEjiH3dFczg@mail.gmail.com>
+ <CAMP44s3uRF=jNn5ZHZ=QOcvuMoXxsfkxU=VOq3K02Q0qOspEdA@mail.gmail.com>
+ <CABPxzYJbNjAwymwUq0pN=YyuCBGy2qz_BKafatHTWK+yH8PbkA@mail.gmail.com>
+ <CAMP44s1NOS2p9pKeMLhR7616CzHeHJVJEzcF1tP6tsKfcPhSOQ@mail.gmail.com>
+ <CABPxzY+RL+ikbSff3a7qb20ExxcSTx6U2xcL5CFr-BgVSOr61A@mail.gmail.com>
+ <CAMP44s384vOcMc4vE82gAdVf37YUZfegmPHUSeobPO=gK6ErAw@mail.gmail.com>
+ <CABPxzYLDHP5gyeTL8HR=6uJDLptaUGEnNGSFLMkxKqi-JaBVYQ@mail.gmail.com>
+ <CABPxzYJTuV0vGLnhgcQcXbg_9szSm2hH7_vCeP4TOKNxZQx_Gg@mail.gmail.com>
+ <CAMP44s3VRnqw0XJDZTZTym7wBD5-NnfOD56YHbE87OG=3Zan2w@mail.gmail.com>
+ <CAMP44s15W7gb8rXwqum5bdHOSk=A_sadX7ksvtkG0qTOu1RREg@mail.gmail.com>
+ <CABPxzYLtbs1s-_T+hk+N1hOEuCi_Yq+CGxG7Xx0hPRmiyQM0Jg@mail.gmail.com> <CAMP44s0h836BZ+g9-g_t78bKuV_m_xAuvPYRCHaFdJ58eTKthw@mail.gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Sat, 9 Nov 2013 02:00:43 +0530
+Message-ID: <CABPxzYJsLqJbJQzr8+2GujQsbJpo922v9ouVWWPbTFL11-UV5g@mail.gmail.com> (sfid-20131108_213111_292136_0CF310C6)
+Subject: Re: I always need a miracle to connect with iwlwifi
+To: Felipe Contreras <felipe.contreras@gmail.com>
+Cc: Oleksij Rempel <linux@rempel-privat.de>, ilw@linux.intel.com,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 13, 2013 at 10:28:16PM +0100, Johannes Berg wrote:
-> On Wed, 2013-11-13 at 19:12 +0100, Luis R. Rodriguez wrote:
-> 
-> > +/**
-> > + * wiphy_enable_dfs_region - enable a DFS region
-> > + *
-> > + * @wiphy: the wiphy to set the supported DFS regions for
-> > + * @dfs_region: an DFS region specified by an &enum nl80211_dfs_regions
-> > + * 	representing the DFS region to enable support on the wiphy for.
-> > + *
-> > + * This can be used to indicate to cfg80211 that the wiphy has DFS driver
-> > + * support for the specified DFS region for modes of operation that require
-> > + * DFS on the driver.
-> > + */
-> > +void wiphy_enable_dfs_region(struct wiphy *wiphy,
-> > +			     enum nl80211_dfs_regions dfs_region);
-> 
-> What's the point of this function rather than the driver setting the
-> region bits before registration?
+On Fri, Nov 8, 2013 at 7:48 PM, Felipe Contreras
+<felipe.contreras@gmail.com> wrote:
+> On Fri, Nov 8, 2013 at 8:06 AM, Krishna Chaitanya
+> <chaitanya.mgit@gmail.com> wrote:
+>> On Fri, Nov 8, 2013 at 6:44 PM, Felipe Contreras
+>> <felipe.contreras@gmail.com> wrote:
+>>> On Fri, Nov 8, 2013 at 2:35 AM, Felipe Contreras
+>>> <felipe.contreras@gmail.com> wrote:
+>>>> On Sat, Nov 2, 2013 at 2:05 PM, Krishna Chaitanya
+>>>> <chaitanya.mgit@gmail.com> wrote:
+>>>>
+>>>>> Also one more thing you said N900 uses mac80211 and it has no issues, but as
+>>>>> its a embedded device it might running an older kernel where the
+>>>>> handling might be
+>>>>> different, so we need to try with the same kernel you are facing an
+>>>>> issue with the
+>>>>> a driver which advertises IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC.
+>>>>
+>>>> Yes it was running an older kernel, but I just compiled v3.12 and ran
+>>>> it on the N900, and still everything works fine.
+>>>>
+>>>>> (or) if you a have a compilation environment try commenting the advertisement of
+>>>>> IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC in the iwlwifi DVM driver and
+>>>>> try to reproduce the issue.
+>>>>
+>>>> After commenting that flag everything works fine :)
+>>
+>> Oh, great. That was just to corner the problem, that means we are not getting
+>> the required beacon  before the association, but we only wait for 1 beacon here
+>> may be we to wait for some number of beacons before giving up the association??
+>>
+>> Johannes??
+>
+> But we are receiving 0 beacons, waiting for more than 1 won't help.
+> BTW, why NEED_DTIM_BEFORE_ASSOC if the device doesn't *need* the DTIM
+> before the association?
+>
+>>>> What are the next steps?
+>>>
+>>> I tried to add some debugging to see what's going on, and indeed the
+>>> beacon packets are lost, I added debugging as low in the chain as I
+>>> could (iwlagn_rx_reply_rx()), and I don't see them there. However,
+>>> when I enable the monitor mode, I see them. What's going on?
+>>
+>> In the captures you shared all the beacons are malformed, so
+>> probably they failed the CRC check. iwlwifi drops all the CRC failed
+>> packets. (doth MVM and DVM)
+>
+> Before iwlagn_rx_reply_rx()?
+>
+>> Not sure how you are receiving the beacons in the monitor mode.
+>
+> I don't know what kismet does, but I can see my debugging is printing them.
+>
+>> BTW did you tried capturing the beacons in other devices and see if they
+>> are really malformed, or is it just iwlwifi interpreting them wrongly.?
+>
+> I haven't managed to do that yet.
+>
+> This is what I'm doing:
+>
+> --- a/drivers/net/wireless/iwlwifi/dvm/rx.c
+> +++ b/drivers/net/wireless/iwlwifi/dvm/rx.c
+> @@ -919,6 +919,11 @@ static int iwlagn_rx_reply_rx(struct iwl_priv *priv,
+>         ampdu_status = iwlagn_translate_rx_status(priv,
+>                                                   le32_to_cpu(rx_pkt_status));
+>
+> +       if (ieee80211_is_beacon(header->frame_control)) {
+> +               print_hex_dump(KERN_INFO, "iwlwifi: dump: ", DUMP_PREFIX_OFFSET,
+> +                               16, 1, header, len, true);
+> +       }
+> +
+>         if ((unlikely(phy_res->cfg_phy_cnt > 20))) {
+>                 IWL_DEBUG_DROP(priv, "dsp size out of range [0,20]: %d\n",
+>                                 phy_res->cfg_phy_cnt);
+>
+Oops...you just missed, Right after your print there is a check to
+drop frames with BAD CRC :-).
+Line 928.
 
-I don't trust driver developers, this provides a simple interface
-which pushes driver developers to use CONFIG_CFG80211_CERTIFICATION_ONUS
-for driver DFS features, it also validates the input and also does
-the conversion to bitmasks for the driver developers. Without this
-we'd assume driver developers would enable DFS under proper regulatory
-configs but also require BIT() | BIT() settings.
+    ampdu_status = iwlagn_translate_rx_status(priv,
+                          le32_to_cpu(rx_pkt_status));
 
-> > +/**
-> > + * wiphy_dfs_region_supported - checks if a DFS region is supported
-> > + *
-> > + * @wiphy: the wiphy to check the DFS region for
-> > + * @dfs_region: the DFS region we want to check support for
-> > + *
-> > + * This can be used to query if the wiphy's a specific DFS region.
-> > + * This should be checked before for initiating radiation on
-> > + * DFS channels for modes of operation that require DFS on the driver.
-> > + *
-> > + * Return: true if the dfs_region is supported by the device, returns
-> > + * false otherwise.
-> > + */
-> > +bool wiphy_dfs_region_supported(struct wiphy *wiphy,
-> > +				enum nl80211_dfs_regions dfs_region);
-> 
-> Where would this function be used outside of cfg80211?
+    if ((unlikely(phy_res->cfg_phy_cnt > 20))) {
+        IWL_DEBUG_DROP(priv, "dsp size out of range [0,20]: %d\n",
+                phy_res->cfg_phy_cnt);
+        return 0;
+    }
 
-It would not, I can stuff that alone into core.c and make it static.
-
-> > +/**
-> > + * wiphy_core_dfs_region_usable - checks if the current DFS region can be used
-> > + *
-> > + * @wiphy: the wiphy to check the DFS region against
-> > + *
-> > + * This can be used to query if the wiphy can use the currently set
-> > + * DFS region on the regulatory core.
-> > + *
-> > + * Return: true if the core's dfs_region is supported and usable by the device,
-> > + * returns false otherwise.
-> > + */
-> > +bool wiphy_core_dfs_region_usable(struct wiphy *wiphy);
-> 
-> Ditto.
-
-This was a question I had, but based on Januz' feedback it sounds like
-we can keep this private.
-
-> > + *	IBSS network. Userspace is also required to verify that the currently
-> > + *	programmed DFS region is supported by userspace and monitor it in case
-> > + *	of changes.
-> 
-> That seems like wishful thinking since userspace already exists for
-> this.
-
-It is, but its also a heads up as to perhaps what we should do to help
-userspace, I think I mentioned elsewhere we could require userspace DFS
-support to supply the supported DFS regions and then we'd deal with the
-conflicts.
-
-The way I'd envision support for that is to add a user_dfs_regions and
-a respective cmd which userspace can set, if the kernel supports
-it userspace can ifdef it (with the define trick on nl80211.h) and
-then send this over for the supported DFS regions for new IBSS userspace.
-We'd then get an enhancement moving forward, otherwise older kernels
-would require userspace to handle DFS region mismatches / updates /
-quiescing itself.
-
-> > + * @NL80211_ATTR_DFS_REGIONS: bitmask of all supported, tested, and
-> > + * 	certified &enum nl80211_dfs_regions that a wiphy has been declared to
-> > + *	support and that agrees with what is programmed currently on cfg80211.
-> > + *	This is used for modes of operation that require DFS support on the
-> > + *	driver. If %NL80211_ATTR_HANDLE_DFS is set userspace need not check
-> > + *	for this for IBSS as it will support DFS in userspace for IBSS.
-> 
-> ???
-> You're confusing me. What's the point of these patches then if userspace
-> handles it?
-
-NL80211_ATTR_HANDLE_DFS seems to be only for IBSS userspace, I'm trying
-to provide clarification that this is not required for
-NL80211_ATTR_HANDLE_DFS.
-
-> 
-> The way I read the patch description was that here you were advertising
-> which pattern detectors a driver has - but that has nothing to do with
-> how userspace handles DFS in IBSS.
-
-Agreed, I'm just providing clarification to the special
-IBSS case when NL80211_ATTR_HANDLE_DFS is used, so that
-useres of IBSS with DFS in userspace and NL80211_ATTR_HANDLE_DFS
-don't set the DFS regions on their driver. As I mentioned
-above though, a user_dfs_regions however is welcomed.
-
-> > +#define NL80211_ATTR_DFS_REGIONS NL80211_ATTR_DFS_REGIONS
-> 
-> Not needed.
-
-Why is that?
-
-> > +void wiphy_enable_dfs_region(struct wiphy *wiphy,
-> > +			     enum nl80211_dfs_regions dfs_region)
-> > +{
-> > +	if (!config_enabled(CONFIG_CFG80211_CERTIFICATION_ONUS))
-> > +		return;
-> > +	if (!reg_supported_dfs_region(dfs_region))
-> > +		return;
-> 
-> Both of this is pointless, you can do it at build time.
-
-Hrm.
-
-> > +	wiphy->dfs_regions |= BIT(dfs_region);
-> 
-> Just have the driver set this directly before registration and make
-> *using* and *advertising* it conditional.
-
-OK yeah that works too, thanks for the feedback.
-
-  Luis
+    if (!(rx_pkt_status & RX_RES_STATUS_NO_CRC32_ERROR) ||
+        !(rx_pkt_status & RX_RES_STATUS_NO_RXE_OVERFLOW)) {
+        IWL_DEBUG_RX(priv, "Bad CRC or FIFO: 0x%08X.\n",
+                le32_to_cpu(rx_pkt_status));
+        return 0;
+    }
