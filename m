@@ -1,40 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:35344 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753265Ab3KKIyP (ORCPT
+Received: from mail-qe0-f50.google.com ([209.85.128.50]:41604 "EHLO
+	mail-qe0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757939Ab3KICUv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Nov 2013 03:54:15 -0500
-Message-ID: <1384160048.14334.3.camel@jlt4.sipsolutions.net> (sfid-20131111_095445_219777_31E84391)
-Subject: Re: interested in py80211?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 11 Nov 2013 09:54:08 +0100
-In-Reply-To: <52809874.6080908@broadcom.com>
-References: <51D49027.9010803@broadcom.com>
-	 ( sfid-20130703_225725_898124_EAB997AB) <1373616129.8205.2.camel@jlt4.sipsolutions.net>
-	 <52809874.6080908@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 8 Nov 2013 21:20:51 -0500
+Received: by mail-qe0-f50.google.com with SMTP id 1so2767090qee.9
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Nov 2013 18:20:50 -0800 (PST)
+Message-ID: <527D9C01.5070306@lwfinger.net> (sfid-20131109_032055_264314_19B80DE2)
+Date: Fri, 08 Nov 2013 20:20:49 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Dan Williams <dcbw@redhat.com>, Frans Leerink <f.leerink@xs4all.nl>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] prism54: set netdev type to "wlan"
+References: <2774683.Pvb2zYysB7@md8338-opensuse-12-3.site> <1383939584.29096.10.camel@dcbw.foobar.com>
+In-Reply-To: <1383939584.29096.10.camel@dcbw.foobar.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-11-11 at 09:42 +0100, Arend van Spriel wrote:
+On 11/08/2013 01:39 PM, Dan Williams wrote:
+> Userspace uses the netdev devtype for stuff like device naming and type
+> detection.  Be nice and set it.  Remove the pointless #if/#endif around
+> SET_NETDEV_DEV too.
+>
+> Signed-off-by: Dan Williams <dcbw@redhat.com>
 
-> It has been a while that I touched this topic. It is a spare-time 
-> project and that is somewhat limited. Since then I added genl support to 
-> libnl python API. I want to extract part of py80211 from nl80211.[ch] 
-> files. The easy part were the attribute ids and enum values from 
-> nl80211.h. The hurdle I want to leap know is extracting message layout 
-> information from nl80211.c. Do the struct nla_policy definitions hold 
-> all the information or would it be better to get it from the .doit 
-> callbacks.
+Should this be sent to Stable?
 
-Well, you probably can't get it in a scripted fashion from the doit
-callbacks. The policy certainly has the first level information, but as
-soon as you have nested information it will no longer work. The policy
-also doesn't always cover data fram the kernel (i.e. kernel->userspace
-encoding) since the kernel doesn't have to verify that.
+Larry
 
-johannes
+> ---
+> diff --git a/drivers/net/wireless/prism54/islpci_dev.c b/drivers/net/wireless/prism54/islpci_dev.c
+> index 5970ff6..d498b02 100644
+> --- a/drivers/net/wireless/prism54/islpci_dev.c
+> +++ b/drivers/net/wireless/prism54/islpci_dev.c
+> @@ -807,27 +807,30 @@ static const struct net_device_ops islpci_netdev_ops = {
+>   	.ndo_start_xmit		= islpci_eth_transmit,
+>   	.ndo_tx_timeout		= islpci_eth_tx_timeout,
+>   	.ndo_set_mac_address 	= prism54_set_mac_address,
+>   	.ndo_change_mtu		= eth_change_mtu,
+>   	.ndo_validate_addr	= eth_validate_addr,
+>   };
+>
+> +static struct device_type wlan_type = {
+> +	.name	= "wlan",
+> +};
+> +
+>   struct net_device *
+>   islpci_setup(struct pci_dev *pdev)
+>   {
+>   	islpci_private *priv;
+>   	struct net_device *ndev = alloc_etherdev(sizeof (islpci_private));
+>
+>   	if (!ndev)
+>   		return ndev;
+>
+>   	pci_set_drvdata(pdev, ndev);
+> -#if defined(SET_NETDEV_DEV)
+>   	SET_NETDEV_DEV(ndev, &pdev->dev);
+> -#endif
+> +	SET_NETDEV_DEVTYPE(ndev, &wlan_type);
+>
+>   	/* setup the structure members */
+>   	ndev->base_addr = pci_resource_start(pdev, 0);
+>   	ndev->irq = pdev->irq;
+>
+>   	/* initialize the function pointers */
+>   	ndev->netdev_ops = &islpci_netdev_ops;
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
