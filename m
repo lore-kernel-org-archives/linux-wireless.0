@@ -1,56 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:58721 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754607Ab3KEMNz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Nov 2013 07:13:55 -0500
-Date: Tue, 5 Nov 2013 13:13:53 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Sebastian Reichel <sre@debian.org>
-Cc: Sebastian Reichel <sre@ring0.de>, Luciano Coelho <luca@coelho.fi>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Rob Landley <rob@landley.net>,
-	Tony Lindgren <tony@atomide.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Felipe Balbi <balbi@ti.com>,
-	Sachin Kamat <sachin.kamat@linaro.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bill Pemberton <wfp5p@virginia.edu>,
-	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Luciano Coelho <coelho@ti.com>
-Subject: Re: [PATCH 1/4] wl1251: split wl251 platform data to a separate
- structure
-Message-ID: <20131105121353.GB30670@amd.pavel.ucw.cz> (sfid-20131105_131445_726234_9DCCE333)
-References: <1382890469-25286-1-git-send-email-sre@debian.org>
- <1382890469-25286-2-git-send-email-sre@debian.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1382890469-25286-2-git-send-email-sre@debian.org>
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:37065 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751539Ab3KIAji convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Nov 2013 19:39:38 -0500
+References: <19772470.YgPhAz9cYD@bentobox>
+In-Reply-To: <19772470.YgPhAz9cYD@bentobox>
+Mime-Version: 1.0 (1.0)
+Content-Type: text/plain;
+	charset=us-ascii
+Message-Id: <87B8D697-4540-4D0E-975B-125531E6833B@net.t-labs.tu-berlin.de> (sfid-20131109_013954_209384_04289E8F)
+Cc: "ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
+	"simon@open-mesh.com" <simon@open-mesh.com>,
+	"openwrt-devel@lists.openwrt.org" <openwrt-devel@lists.openwrt.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Julius Schulz-Zander <julius@net.t-labs.tu-berlin.de>
+Subject: Re: [ath9k-devel] ath9k: Deaf QCA9558 when setting rxchainmask
+Date: Sat, 9 Nov 2013 01:32:25 +0100
+To: Sven Eckelmann <sven@open-mesh.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun 2013-10-27 17:14:26, Sebastian Reichel wrote:
-> From: Luciano Coelho <coelho@ti.com>
-> 
-> Move the wl1251 part of the wl12xx platform data structure into a new
-> structure specifically for wl1251.  Change the platform data built-in
-> block and board files accordingly.
-> 
-> Cc: Tony Lindgren <tony@atomide.com>
-> Signed-off-by: Luciano Coelho <coelho@ti.com>
-> Acked-by: Tony Lindgren <tony@atomide.com>
-> Reviewed-by: Felipe Balbi <balbi@ti.com>
+Hi Sven,
 
-Reviewed-by: Pavel Machek <pavel@ucw.cz>
+I've asked nbd about this some time ago. It doesn't work if you have gaps in the chain mask! Try chain mask 3 (110) and it should work with 2x2.
 
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+Regards,
+ -Julius
+
+On 06.11.2013, at 16:04, Sven Eckelmann <sven@open-mesh.com> wrote:
+
+> Hi,
+> 
+> I've needed to test some problems with a QCA9558 Rev 0 based 3x3 2.4G device. 
+> During these tests I've wanted to try different antenna configurations to 
+> reduce the complexity of the problem. This was done by setting the 
+> rxchainmask/txchainsmask to settings like 1, 5 and 7. Unfortunatelly, the 
+> setting 5 (antenna 0 and 1) turned the device completely deaf. Here an 
+> overview of the settings (excerpt)
+> 
+> chainmask | ant 0 | ant 1 | ant 2 | Status
+> 1         | 1     | 0     | 0     | works
+> 5         | 1     | 0     | 1     | deaf
+> 7         | 1     | 1     | 1     | works
+> 
+> The antenna setting is used in ath9k at different places but trigger seems to 
+> be the AR_PHY_RX_CHAINMASK register write in ar9003_phy.c in the function 
+> ar9003_hw_set_chain_masks. Forcing it to 7 instead of the requested 5 avoids 
+> this deaf state (but makes the rx chainmask setting useless). Of course, this 
+> is not a valid workaround and quite unexpected.
+> 
+> The test platform was a current trunk OpenWrt build together with compat-
+> wireless 2013-02-22, compat-wireless 2013-06-27 and backports 2013-10-31. The 
+> settings were configured using the txantenna and rxantenna of the OpenWrt 
+> wireless config system. Both were always set to the same values during the 
+> tests.
+> 
+> The deaf state was identified using 1x1 and 2x2 clients which could receive 
+> the beacons of the device. The QCA9558 device was then unable to receive the 
+> probe request from the clients or any other traffic on the air. This was also 
+> checked by a monitor (flags: control) interface on the same phy.
+> 
+> Maybe someone knows whether this is a known problem with this SoC or what 
+> information can be gathered to debug this problem further.
+> 
+> Kind regards,
+>    Sven
+> _______________________________________________
+> ath9k-devel mailing list
+> ath9k-devel@lists.ath9k.org
+> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
