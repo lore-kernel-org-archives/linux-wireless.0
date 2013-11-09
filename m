@@ -1,80 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx02a.posteo.de ([89.146.194.168]:36021 "EHLO mx02a.posteo.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757258Ab3KZQr7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Nov 2013 11:47:59 -0500
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:36183 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751544Ab3KINKw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 9 Nov 2013 08:10:52 -0500
+Received: by mail-wg0-f45.google.com with SMTP id x13so1943767wgg.0
+        for <linux-wireless@vger.kernel.org>; Sat, 09 Nov 2013 05:10:50 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Tue, 26 Nov 2013 17:47:48 +0100
-From: p2p@posteo.de
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Linux wireless <linux-wireless@vger.kernel.org>
-Subject: Re: RTL8188S
-In-Reply-To: <2035998.63y5xTAJxx@blech>
-References: <a3a1cb41444ae8dd89db830ae927491f@posteo.de>
- <2035998.63y5xTAJxx@blech>
-Message-ID: <67b4a51871c98531c68306862402baf4@posteo.de> (sfid-20131126_174804_325981_DD14C377)
+In-Reply-To: <CAMP44s1ZtTyfKmgy4174ukQU1dwx1Fw=AngNQ=g2Dv2wm4t2-g@mail.gmail.com>
+References: <CAMP44s1XJRHV8bAX=_-TkSKMkY8Nw1=eHorqTCZ2QmtR5m8uJA@mail.gmail.com>
+ <526E20EA.9090203@rempel-privat.de> <CAMP44s2Cvw9HF3c3Asuq+bTSD36Gw6PXOUVjAcCD+hf6KB_awg@mail.gmail.com>
+ <CABPxzY+xJ7kst-sYwP8RJwMO_zkNYWKaYy=_LS7WQfuxquK24w@mail.gmail.com>
+ <CAMP44s0087jYz5AiEaEzwt7GqH9ed8PWE1CmvMPr4Dqn3yE6rA@mail.gmail.com>
+ <CABPxzYLwwyFCFw1pEt0v9Xw4kcue1C_RZx0RbTbMrUw=+MWvgQ@mail.gmail.com>
+ <CAMP44s0svc2MRKCrZXS5ZYRZNPoomQkcKHdC2m2BGy7di+TCyA@mail.gmail.com>
+ <CABPxzYL-Gzbzoc_ui+qUQ6uzoKp=Yq7yLWZvc7PoEjiH3dFczg@mail.gmail.com>
+ <CAMP44s3uRF=jNn5ZHZ=QOcvuMoXxsfkxU=VOq3K02Q0qOspEdA@mail.gmail.com>
+ <CABPxzYJbNjAwymwUq0pN=YyuCBGy2qz_BKafatHTWK+yH8PbkA@mail.gmail.com>
+ <CAMP44s1NOS2p9pKeMLhR7616CzHeHJVJEzcF1tP6tsKfcPhSOQ@mail.gmail.com>
+ <CABPxzY+RL+ikbSff3a7qb20ExxcSTx6U2xcL5CFr-BgVSOr61A@mail.gmail.com>
+ <CAMP44s384vOcMc4vE82gAdVf37YUZfegmPHUSeobPO=gK6ErAw@mail.gmail.com>
+ <CABPxzYLDHP5gyeTL8HR=6uJDLptaUGEnNGSFLMkxKqi-JaBVYQ@mail.gmail.com>
+ <CABPxzYJTuV0vGLnhgcQcXbg_9szSm2hH7_vCeP4TOKNxZQx_Gg@mail.gmail.com>
+ <CAMP44s3VRnqw0XJDZTZTym7wBD5-NnfOD56YHbE87OG=3Zan2w@mail.gmail.com>
+ <CAMP44s15W7gb8rXwqum5bdHOSk=A_sadX7ksvtkG0qTOu1RREg@mail.gmail.com>
+ <CABPxzYLtbs1s-_T+hk+N1hOEuCi_Yq+CGxG7Xx0hPRmiyQM0Jg@mail.gmail.com>
+ <CAMP44s0h836BZ+g9-g_t78bKuV_m_xAuvPYRCHaFdJ58eTKthw@mail.gmail.com>
+ <CABPxzYJsLqJbJQzr8+2GujQsbJpo922v9ouVWWPbTFL11-UV5g@mail.gmail.com> <CAMP44s1ZtTyfKmgy4174ukQU1dwx1Fw=AngNQ=g2Dv2wm4t2-g@mail.gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Sat, 9 Nov 2013 18:40:30 +0530
+Message-ID: <CABPxzYKPpL7p0gexV3udgsWYZ_zVYxT6vrz-n-rN36D2AgBCgg@mail.gmail.com> (sfid-20131109_141112_346796_577C8F07)
+Subject: Re: I always need a miracle to connect with iwlwifi
+To: Felipe Contreras <felipe.contreras@gmail.com>
+Cc: Oleksij Rempel <linux@rempel-privat.de>, ilw@linux.intel.com,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear Mr. Lamparter,
+On Sat, Nov 9, 2013 at 2:22 AM, Felipe Contreras
+<felipe.contreras@gmail.com> wrote:
+> On Fri, Nov 8, 2013 at 2:30 PM, Krishna Chaitanya
+> <chaitanya.mgit@gmail.com> wrote:
+>> On Fri, Nov 8, 2013 at 7:48 PM, Felipe Contreras
+>> <felipe.contreras@gmail.com> wrote:
+>>> On Fri, Nov 8, 2013 at 8:06 AM, Krishna Chaitanya
+>>> <chaitanya.mgit@gmail.com> wrote:
+>>>> On Fri, Nov 8, 2013 at 6:44 PM, Felipe Contreras
+>>>> <felipe.contreras@gmail.com> wrote:
+>>>>> On Fri, Nov 8, 2013 at 2:35 AM, Felipe Contreras
+>>>>> <felipe.contreras@gmail.com> wrote:
+>>>>>> On Sat, Nov 2, 2013 at 2:05 PM, Krishna Chaitanya
+>>>>>> <chaitanya.mgit@gmail.com> wrote:
+>>>>>>
+>>>>>>> Also one more thing you said N900 uses mac80211 and it has no issues, but as
+>>>>>>> its a embedded device it might running an older kernel where the
+>>>>>>> handling might be
+>>>>>>> different, so we need to try with the same kernel you are facing an
+>>>>>>> issue with the
+>>>>>>> a driver which advertises IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC.
+>>>>>>
+>>>>>> Yes it was running an older kernel, but I just compiled v3.12 and ran
+>>>>>> it on the N900, and still everything works fine.
+>>>>>>
+>>>>>>> (or) if you a have a compilation environment try commenting the advertisement of
+>>>>>>> IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC in the iwlwifi DVM driver and
+>>>>>>> try to reproduce the issue.
+>>>>>>
+>>>>>> After commenting that flag everything works fine :)
+>>>>
+>>>> Oh, great. That was just to corner the problem, that means we are not getting
+>>>> the required beacon  before the association, but we only wait for 1 beacon here
+>>>> may be we to wait for some number of beacons before giving up the association??
+>>>>
+>>>> Johannes??
+>>>
+>>> But we are receiving 0 beacons, waiting for more than 1 won't help.
+>>> BTW, why NEED_DTIM_BEFORE_ASSOC if the device doesn't *need* the DTIM
+>>> before the association?
+>>>
+This is not just for your case but rather on a generic note. Regarding
+the flag even i am not
+too sure but i guess some hardware need to know the DTIM to set the
+wakeup schedule
+after the association?
 
-Am 25.11.2013 22:57 schrieb Christian Lamparter:
-> On Monday, November 25, 2013 06:57:32 PM p2p@posteo.de wrote:
->> I have a WLAN dongle with Realtek RTL8188S chip.
->> I don't want to use r8712u driver with wext interface
->> because I want to establish a wifi direct p2p connection.
+>>>>>> What are the next steps?
+>>>>>
+>>>>> I tried to add some debugging to see what's going on, and indeed the
+>>>>> beacon packets are lost, I added debugging as low in the chain as I
+>>>>> could (iwlagn_rx_reply_rx()), and I don't see them there. However,
+>>>>> when I enable the monitor mode, I see them. What's going on?
+>>>>
+>>>> In the captures you shared all the beacons are malformed, so
+>>>> probably they failed the CRC check. iwlwifi drops all the CRC failed
+>>>> packets. (doth MVM and DVM)
+>>>
+>>> Before iwlagn_rx_reply_rx()?
+>>>
+>>>> Not sure how you are receiving the beacons in the monitor mode.
+>>>
+>>> I don't know what kismet does, but I can see my debugging is printing them.
+>>>
+>>>> BTW did you tried capturing the beacons in other devices and see if they
+>>>> are really malformed, or is it just iwlwifi interpreting them wrongly.?
+>>>
+>>> I haven't managed to do that yet.
+>>>
+>>> This is what I'm doing:
+>>>
+>>> --- a/drivers/net/wireless/iwlwifi/dvm/rx.c
+>>> +++ b/drivers/net/wireless/iwlwifi/dvm/rx.c
+>>> @@ -919,6 +919,11 @@ static int iwlagn_rx_reply_rx(struct iwl_priv *priv,
+>>>         ampdu_status = iwlagn_translate_rx_status(priv,
+>>>                                                   le32_to_cpu(rx_pkt_status));
+>>>
+>>> +       if (ieee80211_is_beacon(header->frame_control)) {
+>>> +               print_hex_dump(KERN_INFO, "iwlwifi: dump: ", DUMP_PREFIX_OFFSET,
+>>> +                               16, 1, header, len, true);
+>>> +       }
+>>> +
+>>>         if ((unlikely(phy_res->cfg_phy_cnt > 20))) {
+>>>                 IWL_DEBUG_DROP(priv, "dsp size out of range [0,20]: %d\n",
+>>>                                 phy_res->cfg_phy_cnt);
+>>>
+>> Oops...you just missed, Right after your print there is a check to
+>> drop frames with BAD CRC :-).
 >
-> AFICT, you should be able to connect to a p2p-go peer
-> even if your device (in this case rtl8188s) only supports
-> station mode...
+> That's why I put the print before that check. Since I don't see the
+> print, that means the check was never executed. iwlagn_rx_reply_rx()
+> was never called for the beacon frame.
 >
+Ok. So when we disable advertising of that flag in the driver you said things
+are working fine. So in that scenario after the connection are you
+seeing the beacons?
 
-How do I do this?
-
->> Unfortunately the original Realtek driver from hp didn't
->> work with p2p too.
-> Why, what happens in this case?
->
-
-I have downloaded the driver from:
-http://www.realtek.com/downloads/downloadsView.aspx?Langid=1&PNid=48&PFid=48&Level=5&Conn=4&DownTypeID=3&GetDown=false&Downloads=true#RTL8188SU
-
-Installed and loaded the module 8712u.
-
-"iw list" doesn't list p2p-client or p2p-go.
-
-wpa_cli command p2p_find results in FAIL.
-
-wpa_supplicant ouput:
-
-CTRL_IFACE monitor attached - hexdump(len=21): 2f 74 6d 70 2f 77 70 61 
-5f 63 74 72 6c 5f 32 34 39 37 2d 32 00
-1385328422.214780: RX ctrl_iface - hexdump_ascii(len=8):
-      50 32 50 5f 46 49 4e 44                           P2P_FIND
-1385328422.214893: wlan0: Control interface command 'P2P_FIND'
-
--> but nothing more...
-
->> I thought RTL8192cu will work, but Larry F. told me it doesn't.
-> OK? (care to explain?)
->
->> He said there is a new driver in development.
-> Sort of. There's r92su, however this driver only supports what the
-> firmware is able to do (station, ad-hoc and a limited monitor mode).
->
->> I'm searching for information. Please can someone tell me about
->> the project, its status, and if someone can take part.
-> Hey that's good to hear. The future of "r92su" was discussed in [0],
-> [1], ... The good news is:
->
-
-I followed the thread.
-It shows me that it makes no sense. I am a beginner and I only can 
-spent time for it if someone tells me for example: fill this module with 
-code for this specific function. I have good literature and I think I 
-can try to help but not lead something.
-
-Best regards
-p2p
+Just want to understand the problem is throughout or just before association.
+If the driver itself it not getting the beacons then our debugging ends there,
+some one from intel should guide you through the FW debugging.
