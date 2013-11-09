@@ -1,42 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:37673 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751254Ab3KRQYA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Nov 2013 11:24:00 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from nbd.name ([46.4.11.11]:56932 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752479Ab3KIN6E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 9 Nov 2013 08:58:04 -0500
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211_hwsim: use CLOCK_MONOTONIC_RAW
-Date: Mon, 18 Nov 2013 17:23:53 +0100
-Message-Id: <1384791833-2377-1-git-send-email-johannes@sipsolutions.net> (sfid-20131118_172402_937177_CB08372B)
+Cc: johannes@sipsolutions.net
+Subject: [PATCH] cfg80211: fix reporting 5/10 MHz support to user space
+Date: Sat,  9 Nov 2013 14:57:54 +0100
+Message-Id: <1384005474-86844-1-git-send-email-nbd@openwrt.org> (sfid-20131109_145825_163586_A89AAF73)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+nla_put_flag needs a real nl80211 attribute id, not a wiphy flag bit
 
-The beacon timers really shouldn't use any clock that is
-subject to adjustments from userspace, particularly not
-CLOCK_REALTIME. Use CLOCK_MONOTONIC_RAW instead.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/mac80211_hwsim.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/uapi/linux/nl80211.h | 5 +++++
+ net/wireless/nl80211.c       | 2 +-
+ 2 files changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index de95b174..a11dc7c 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -2580,7 +2580,7 @@ static int __init init_mac80211_hwsim(void)
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index f752e98..9126544 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1508,6 +1508,9 @@ enum nl80211_commands {
+  *	to react to radar events, e.g. initiate a channel switch or leave the
+  *	IBSS network.
+  *
++ * @NL80211_ATTR_SUPPORT_5_10_MHZ: A flag indicating that the device supports
++ *	5 MHz and 10 MHz channel bandwidth.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1824,6 +1827,8 @@ enum nl80211_attrs {
  
- 		tasklet_hrtimer_init(&data->beacon_timer,
- 				     mac80211_hwsim_beacon,
--				     CLOCK_REALTIME, HRTIMER_MODE_ABS);
-+				     CLOCK_MONOTONIC_RAW, HRTIMER_MODE_ABS);
+ 	NL80211_ATTR_HANDLE_DFS,
  
- 		list_add_tail(&data->list, &hwsim_radios);
- 	}
++	NL80211_ATTR_SUPPORT_5_10_MHZ,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index a7f4e79..5d17f86 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1229,7 +1229,7 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *dev,
+ 		    nla_put_flag(msg, NL80211_ATTR_TDLS_EXTERNAL_SETUP))
+ 			goto nla_put_failure;
+ 		if ((dev->wiphy.flags & WIPHY_FLAG_SUPPORTS_5_10_MHZ) &&
+-		    nla_put_flag(msg, WIPHY_FLAG_SUPPORTS_5_10_MHZ))
++		    nla_put_flag(msg, NL80211_ATTR_SUPPORT_5_10_MHZ))
+ 			goto nla_put_failure;
+ 
+ 		state->split_start++;
 -- 
-1.8.4.rc3
+1.8.3.4 (Apple Git-47)
 
