@@ -1,204 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:54617 "EHLO
-	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754781Ab3K1Ron (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Nov 2013 12:44:43 -0500
-Message-Id: <1385660680.14556.53217809.32CDF136@webmail.messagingengine.com> (sfid-20131128_184447_992910_DE53EB86)
-From: "Nikita N." <nikitan@operamail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
+Received: from mga01.intel.com ([192.55.52.88]:34018 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751299Ab3KJMRu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 Nov 2013 07:17:50 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: wzyboy <wzyboy@wzyboy.org>
+CC: Emmanuel Grumbach <egrumbach@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [Ilw] Intel Wireless 7260 hardware timed out randomly
+Date: Sun, 10 Nov 2013 12:17:33 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301DEDBCB@HASMSX103.ger.corp.intel.com> (sfid-20131110_131754_574280_447BC390)
+References: <5276134B.8070808@wzyboy.org>
+ <CALkVjQYh-SUte4S6LdqOc3KSc3_pDU6jz1KXp+Jsd5_RFPXSqA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE8338@HASMSX103.ger.corp.intel.com>
+ <CALkVjQb7fCMFpqhdUs8w-Mx_Y0RtAYYFtKxXkqyrCQ39UFGxKg@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE960E@HASMSX103.ger.corp.intel.com>
+ <CALkVjQbW8FeiEh8pBZ=KQFD9+8AdjgT0G_RG7qJe0MRdBvMD-A@mail.gmail.com>
+ <CALkVjQaLx2spaOqUPcs_EwMkU7npMki1Reo1MeZwxB7m=c24=g@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE9FC6@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZDNSgUUFyi94Y8da_NDzW61rCvaMrZpUugFKW_LRNFFA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
+ <CALkVjQY7r=YKhsgDKR0mnYVtZy5BAdj83nY2jL0VFaiew6ha7A@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
+ <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
+ <527A8166.6000701@gmail.com>
+ <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
+ <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
+ <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
+ <CAErSpo6ry6cUaVngozS8-P44=LPJN6cbsZ_mfWkJv9Rn85YXUQ@mail.gmail.com>
+ <CALkVjQZEs1CqMEVApDDGZ6FDugPZ+-F5wzvE45+jB5Xrhv_N2A@mail.gmail.com>
+ <CANUX_P33UqkCsfHrJW+gx-ZbEQduJ1EZ59fpx6T6wQWOLufSqg@mail.gmail.com>
+ <CALkVjQYNPXpTjUpR9NZU6MTJhUmYeO1jXWvOOxk8-Pm=xdKZLg@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEDB31@HASMSX103.ger.corp.intel.com>
+ <CALkVjQbkZSvhbEAwEK-LQGjKX6kdvAMB1UUuFuW3GGO60r0wKQ@mail.gmail.com>
+In-Reply-To: <CALkVjQbkZSvhbEAwEK-LQGjKX6kdvAMB1UUuFuW3GGO60r0wKQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
-Subject: Re: RTL8187 bugs
-Date: Thu, 28 Nov 2013 09:44:40 -0800
-In-Reply-To: <529680A3.8070103@lwfinger.net>
-References: <1385589961.19021.52907237.3EE33E5B@webmail.messagingengine.com>
- <52966D64.2030805@lwfinger.net>
- <1385593188.3627.52911717.4E0712D9@webmail.messagingengine.com>
- <529680A3.8070103@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-answers follow
-
-On Wed, Nov 27, 2013, at 03:30 PM, Larry Finger wrote:
-
-> 
-> On my system, my RTL8187B shows the following for kernel 13.1-rc1:
-> 
-> [11213.196114] usb 1-5: new high-speed USB device number 5 using ehci-pci
-> [11214.663577] rtl8187: inconsistency between id with OEM info!
-> [11214.666105] cfg80211: Updating information on frequency 2412 MHz with 
-> regulatory rule:
-> [11214.666114] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (300
-> mBi, 2700 mBm)
-> [11214.666118] cfg80211: Updating information on frequency 2417 MHz with 
-> regulatory rule:
-> 
-> --snip--
-> 
-> ieee80211 phy2: Selected rate control algorithm 'minstrel_ht'
-> ieee80211 phy2: hwaddr 00:11:6b:3e:c4:0a, RTL8187BvB(early) V0 +
-> rtl8225z2, 
-> rfkill mask 2
-> rtl8187: Customer ID is 0x00
-> rtl8187: wireless switch is on
-> usbcore: registered new interface driver rtl8187
-> systemd-udevd[5796]: renamed network interface wlan1 to wlp0s2f1u5
-> 
-
-Thanks for your answer again Larry, I finding impossible to bring
-back monitor mode in my two, yes TWO different rtl8187 devices.
-They BOTH started malfunction in monitor mode the same day after
-installing 3.11, isnt it strange?
-I repeat, they always worked no problem before 3.11.
->From your report you have a "RTL8187BvB(early) V0".
-I have a different interface, a "RTL8187vB (default) V1".
-So we are talking about different hardware, isnt it?
-Do you have a RTL8187vB for test too?
-
-Here follows the lsusb output, if that can help to see the differences
-between your and mine interface:
-"
-Bus 002 Device 002: ID 0bda:8187 Realtek Semiconductor Corp. RTL8187
-Wireless Adapter
-Device Descriptor:
-  bLength                18
-  bDescriptorType         1
-  bcdUSB               2.00
-  bDeviceClass            0 (Defined at Interface level)
-  bDeviceSubClass         0 
-  bDeviceProtocol         0 
-  bMaxPacketSize0        64
-  idVendor           0x0bda Realtek Semiconductor Corp.
-  idProduct          0x8187 RTL8187 Wireless Adapter
-  bcdDevice            1.00
-  iManufacturer           1 Realtek
-  iProduct                2 RTL8187 Wireless LAN Adapter
-  iSerial                 3 00e04c000001
-  bNumConfigurations      1
-  Configuration Descriptor:
-    bLength                 9
-    bDescriptorType         2
-    wTotalLength           39
-    bNumInterfaces          1
-    bConfigurationValue     1
-    iConfiguration          4 Wireless Network Card
-    bmAttributes         0x80
-      (Bus Powered)
-    MaxPower              500mA
-    Interface Descriptor:
-      bLength                 9
-      bDescriptorType         4
-      bInterfaceNumber        0
-      bAlternateSetting       0
-      bNumEndpoints           3
-      bInterfaceClass         0 (Defined at Interface level)
-      bInterfaceSubClass      0 
-      bInterfaceProtocol      0 
-      iInterface              5 Bulk-IN,Bulk-OUT,Bulk-OUT
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x81  EP 1 IN
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0200  1x 512 bytes
-        bInterval               0
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x02  EP 2 OUT
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0200  1x 512 bytes
-        bInterval               0
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x03  EP 3 OUT
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0200  1x 512 bytes
-        bInterval               0
-Device Qualifier (for other device speed):
-  bLength                10
-  bDescriptorType         6
-  bcdUSB               2.00
-  bDeviceClass            0 (Defined at Interface level)
-  bDeviceSubClass         0 
-  bDeviceProtocol         0 
-  bMaxPacketSize0        64
-  bNumConfigurations      1
-Device Status:     0x0002
-  (Bus Powered)
-  Remote Wakeup Enabled
-"
-
-> 
-> I cannot address this problem very much as I have no idea what went wrong
-> when 
-> you installed backports. Refreshing your kernel from the distro, or
-> regenerating 
-> it again if you build your own should help. The device's EEPROM cannot be 
-> changed, thus your conjecture about discarded frames is not right.
-> 
-
-Unfortunately, reverting back to original distro kernel didnt work.
-Thats why I think something was "written" in the interface.
-Thats why I suspect backports 3.11 has such a bug.
-I use distros ONLY in live-RAM mode, I dont use distro permanently
-installed, exactly for the reason I can always rollback.
-The only distros I use are the following: BT5,Kali,Weaknet and Slitaz4 -
-the issue now
-appears in all of them!
-Before 3.11 it did *NOT* appear in any of them!
-As for updates, I only apply updates in Slitaz4.
-FYI, I create a dedicated cpio fs at every new version, containing the
-"updates" modules, so to load them at kernel runtime by syslinux.
-I use this method from the early times of compat-wireless, even at job,
-I have automated scripts for that, always works.
-So I can e.g. switch between drivers version every time just applying
-the cpio file I want at kernel runtime.
-
-And thats what I did when "installed" 3.11: make install, created
-cpio, reboot & loaded the 3.11 cpio, tested the interfaces, saw the
-issues (mac and frames), removed the cpio from loading and put the 3.9
-cpio back.
-I do that all the times, its a no-fail procedure.
-Unfortunately applying back 3.9 didnt solve the issue, my two rtl8187
-remained STUCK in monitor malfunction.
-As for managed mode, it still works perfectly.
-As for the programs I use to test, here a list: airmon-ng, airbase-ng,
-airodump-ng, apache2, dnsspoof, dnsmasq, iptables, iw, wireshark.. the
-usual wifi net tools.
-That was for historic background, so you understand the situation.
-
-> 
-> The rtlwifi package only includes the drivers that use rtlwifi for their
-> basic 
-> communications. Driver rtl8187 is *NOT* one of them. You have to
-> configure it 
-> separately. This is not a bug.
-
-As for compiling rtl modules you say dont use rtlwifi, ok, infact that
-was the first time I tried, just because defconfig-wifi did *NOT* work.
-I repeat, I always used make defconfig-wifi & make install, even for
-3.11 worked.
-This time for 3.13, is *NOT* compiling rtl818x modules.
-Any functionality change not documented?
-If so, how can I instruct make to compile&install rtl8187 modules in new
-3.13?
-
-Thanks for your attention :)
-
--- 
-http://www.fastmail.fm - A no graphics, no pop-ups email service
-
+PiANCj4gMjAxMy8xMS8xMCBHcnVtYmFjaCwgRW1tYW51ZWwgPGVtbWFudWVsLmdydW1iYWNoQGlu
+dGVsLmNvbT46DQo+ID4gSXQgaXMgcmVhbGx5IGNhbGxlZCBMMSBQTSBTdWJzdGF0ZS4NCj4gPiBJ
+IGRvbid0IHJlYWxseSBrbm93IHRoZSBCSU9TIG9mIFRoaW5rUGFkLi4uIEJ1dCB3ZSBjYW4gdHJ5
+Li4uDQo+IA0KPiANCj4gSSBoYXZlIGJvb3RlZCBpbnRvIEJJT1MgYW5kIHdyaXRlIGRvd24gYWxt
+b3N0IGFsbCB0aGUgb3B0aW9ucywgYXMgYXR0YWNoZWQuDQo+IA0KPiBCeSB0aGUgd2F5LCBJIGFs
+d2F5cyBhdHRhY2ggbXkgbGFwdG9wIHRvIGFuIEFDIGFkYXB0b3IuDQo+IA0KDQpDb29sLi4uLiB0
+aGV5IG1hc2sgYWxsIHRoZSBpbnRlcmVzdGluZyBvcHRpb25zLi4uIG9oIHdlbGwuLi4NCg==
