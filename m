@@ -1,133 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f43.google.com ([209.85.215.43]:38346 "EHLO
-	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756751Ab3KIVYE (ORCPT
+Received: from mail-la0-f51.google.com ([209.85.215.51]:49285 "EHLO
+	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750788Ab3KJHDS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Nov 2013 16:24:04 -0500
-Received: by mail-la0-f43.google.com with SMTP id n7so1912464lam.30
-        for <linux-wireless@vger.kernel.org>; Sat, 09 Nov 2013 13:24:02 -0800 (PST)
+	Sun, 10 Nov 2013 02:03:18 -0500
 MIME-Version: 1.0
-In-Reply-To: <CABPxzYKQfz2CBvHwWHXT9rSZ6He8ru1R-dP5z+wVy8o3o6L8eQ@mail.gmail.com>
-References: <CAMP44s1XJRHV8bAX=_-TkSKMkY8Nw1=eHorqTCZ2QmtR5m8uJA@mail.gmail.com>
-	<526E20EA.9090203@rempel-privat.de>
-	<CAMP44s2Cvw9HF3c3Asuq+bTSD36Gw6PXOUVjAcCD+hf6KB_awg@mail.gmail.com>
-	<CABPxzY+xJ7kst-sYwP8RJwMO_zkNYWKaYy=_LS7WQfuxquK24w@mail.gmail.com>
-	<CAMP44s0087jYz5AiEaEzwt7GqH9ed8PWE1CmvMPr4Dqn3yE6rA@mail.gmail.com>
-	<CABPxzYLwwyFCFw1pEt0v9Xw4kcue1C_RZx0RbTbMrUw=+MWvgQ@mail.gmail.com>
-	<CAMP44s0svc2MRKCrZXS5ZYRZNPoomQkcKHdC2m2BGy7di+TCyA@mail.gmail.com>
-	<CABPxzYL-Gzbzoc_ui+qUQ6uzoKp=Yq7yLWZvc7PoEjiH3dFczg@mail.gmail.com>
-	<CAMP44s3uRF=jNn5ZHZ=QOcvuMoXxsfkxU=VOq3K02Q0qOspEdA@mail.gmail.com>
-	<CABPxzYJbNjAwymwUq0pN=YyuCBGy2qz_BKafatHTWK+yH8PbkA@mail.gmail.com>
-	<CAMP44s1NOS2p9pKeMLhR7616CzHeHJVJEzcF1tP6tsKfcPhSOQ@mail.gmail.com>
-	<CABPxzY+RL+ikbSff3a7qb20ExxcSTx6U2xcL5CFr-BgVSOr61A@mail.gmail.com>
-	<CAMP44s384vOcMc4vE82gAdVf37YUZfegmPHUSeobPO=gK6ErAw@mail.gmail.com>
-	<CABPxzYLDHP5gyeTL8HR=6uJDLptaUGEnNGSFLMkxKqi-JaBVYQ@mail.gmail.com>
-	<CABPxzYJTuV0vGLnhgcQcXbg_9szSm2hH7_vCeP4TOKNxZQx_Gg@mail.gmail.com>
-	<CAMP44s3VRnqw0XJDZTZTym7wBD5-NnfOD56YHbE87OG=3Zan2w@mail.gmail.com>
-	<CAMP44s15W7gb8rXwqum5bdHOSk=A_sadX7ksvtkG0qTOu1RREg@mail.gmail.com>
-	<CABPxzYLtbs1s-_T+hk+N1hOEuCi_Yq+CGxG7Xx0hPRmiyQM0Jg@mail.gmail.com>
-	<CAMP44s0h836BZ+g9-g_t78bKuV_m_xAuvPYRCHaFdJ58eTKthw@mail.gmail.com>
-	<CABPxzYJsLqJbJQzr8+2GujQsbJpo922v9ouVWWPbTFL11-UV5g@mail.gmail.com>
-	<CAMP44s1ZtTyfKmgy4174ukQU1dwx1Fw=AngNQ=g2Dv2wm4t2-g@mail.gmail.com>
-	<CABPxzYKPpL7p0gexV3udgsWYZ_zVYxT6vrz-n-rN36D2AgBCgg@mail.gmail.com>
-	<CAMP44s1vwEMRYost99JgLxvXJkFwhgnn9jnYR5RxLPDm-Qj7ug@mail.gmail.com>
-	<CABPxzYKQfz2CBvHwWHXT9rSZ6He8ru1R-dP5z+wVy8o3o6L8eQ@mail.gmail.com>
-Date: Sat, 9 Nov 2013 15:24:02 -0600
-Message-ID: <CAMP44s2JsVdhRWvkF+jBFns93v7w5kGsP5H83V=CjZr6QynLQA@mail.gmail.com> (sfid-20131109_222410_591284_9909F15A)
-Subject: Re: I always need a miracle to connect with iwlwifi
-From: Felipe Contreras <felipe.contreras@gmail.com>
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Cc: Oleksij Rempel <linux@rempel-privat.de>, ilw@linux.intel.com,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
+References: <5276134B.8070808@wzyboy.org>
+	<CALkVjQYh-SUte4S6LdqOc3KSc3_pDU6jz1KXp+Jsd5_RFPXSqA@mail.gmail.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB301DE8338@HASMSX103.ger.corp.intel.com>
+	<CALkVjQb7fCMFpqhdUs8w-Mx_Y0RtAYYFtKxXkqyrCQ39UFGxKg@mail.gmail.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB301DE960E@HASMSX103.ger.corp.intel.com>
+	<CALkVjQbW8FeiEh8pBZ=KQFD9+8AdjgT0G_RG7qJe0MRdBvMD-A@mail.gmail.com>
+	<CALkVjQaLx2spaOqUPcs_EwMkU7npMki1Reo1MeZwxB7m=c24=g@mail.gmail.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB301DE9FC6@HASMSX103.ger.corp.intel.com>
+	<CALkVjQZDNSgUUFyi94Y8da_NDzW61rCvaMrZpUugFKW_LRNFFA@mail.gmail.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+	<CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
+	<CALkVjQY7r=YKhsgDKR0mnYVtZy5BAdj83nY2jL0VFaiew6ha7A@mail.gmail.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
+	<CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
+	<527A8166.6000701@gmail.com>
+	<CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
+	<CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
+	<CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
+	<CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
+Date: Sun, 10 Nov 2013 09:03:16 +0200
+Message-ID: <CANUX_P2x3r4afsa7PFrexE0Kxtd5t-nak+ao+CqvLKZyMha0_g@mail.gmail.com> (sfid-20131110_080335_278400_4D53D5C8)
+Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: wzyboy <wzyboy@wzyboy.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Nov 9, 2013 at 1:10 PM, Krishna Chaitanya
-<chaitanya.mgit@gmail.com> wrote:
-> On Sat, Nov 9, 2013 at 10:22 PM, Felipe Contreras
-> <felipe.contreras@gmail.com> wrote:
->> On Sat, Nov 9, 2013 at 7:10 AM, Krishna Chaitanya
->> <chaitanya.mgit@gmail.com> wrote:
->>> On Sat, Nov 9, 2013 at 2:22 AM, Felipe Contreras
->>> <felipe.contreras@gmail.com> wrote:
->>>> On Fri, Nov 8, 2013 at 2:30 PM, Krishna Chaitanya
->>>> <chaitanya.mgit@gmail.com> wrote:
->>
->>>>>> But we are receiving 0 beacons, waiting for more than 1 won't help.
->>>>>> BTW, why NEED_DTIM_BEFORE_ASSOC if the device doesn't *need* the DTIM
->>>>>> before the association?
->>>>>>
->>> This is not just for your case but rather on a generic note. Regarding
->>> the flag even i am not
->>> too sure but i guess some hardware need to know the DTIM to set the
->>> wakeup schedule
->>> after the association?
->>
->> But not this hardware? Because everything works fine.
->>
->>>>> Oops...you just missed, Right after your print there is a check to
->>>>> drop frames with BAD CRC :-).
->>>>
->>>> That's why I put the print before that check. Since I don't see the
->>>> print, that means the check was never executed. iwlagn_rx_reply_rx()
->>>> was never called for the beacon frame.
->>>>
->>> Ok. So when we disable advertising of that flag in the driver you said things
->>> are working fine.
->>
->> Yes, everything works perfectly.
->>
->>> So in that scenario after the connection are you
->>> seeing the beacons?
->>
->> No, there are no beacons ever, at least from this AP
-
-> Oh ok, thats interesting. Are you not seeing any disconnects due
-> to beacon loss triggers?
-
-I see some disconnects now and then, but I don't know why. Before
-trying to tackle those problems I would like to be able to connect
-reliably.
-
-> Also can you add some debugging to the iwlagn_rx_beacon_notif
-> (the beacon RX handler)?
-
-All right, I've added debugging there, but so far I see nothing.
-
->> It seems to me all the beacon frames are dropped by the firmware
->> before passing them to the driver, so the driver cannot parse them and
->> do something sensible even though they are corrupted, the driver never
->> gets them.
->>
->>> Just want to understand the problem is throughout or just before association.
->>> If the driver itself it not getting the beacons then our debugging ends there,
->>> some one from intel should guide you through the FW debugging.
->>
->> Not really, part of the debugging ends there, but we can still do something.
->>
->> What is the meaning of NEED_DTIM_BEFORE_ASSOC, if the driver doesn't
->> *need* this? Why fail the association completely, if we don't need to?
->>
->> Also, I realized that after rebooting the router, the beacon frames
->> are not corrupted any more, so it's a compound problem, yet even in
->> the corrupted case, the driver can work just fine, if only it didn't
->> *require* the DTIM unnecessarily,
 >
-> Yeah, that's more of design query with the problem being not able to
-> Rx the beacons? We need to understand the reason for this flag being
-> set by the iwlwifi driver.
-
-Indeed.
-
->>as apparently all hardware and even
->> other OS'es on this hardware do.
 >
-> Thats the reason this flag is a _HW_ not all hardwares requrie this
-> but intel does.
+> Sorry I used the wrong command...
+>
+> I've attached the output of -vvxxx below.
+>
+> There are three files:
+>
+> * lspci.vvxxx.normal.txt: When the interface is "state DOWN" in "ip link".
+> * lspci.vvxxx.normal2.txt: When the interface is "state UP" in "ip
+> link" after I ran "ip link set wlan0 up".
+> * lspci.vvxxx.normal3.txt" When the interface is connected to the
+> Wi-Fi of my dormitory and got an address (but without default
+> gateway, I'm using wired network now).
+>
 
-But it doesn't, my hardware is Intel, and it works fine without it.
-
--- 
-Felipe Contreras
+one more thing?
+Are you using KVM with pass-through? Or is it a native installation?
