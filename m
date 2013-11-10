@@ -1,48 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:45298 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751133Ab3KTKbK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Nov 2013 05:31:10 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: blaise@suitabletech.com, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3.13] mac80211: don't attempt to reorder multicast frames
-Date: Wed, 20 Nov 2013 11:31:01 +0100
-Message-Id: <1384943461-23259-1-git-send-email-johannes@sipsolutions.net> (sfid-20131120_113121_481440_F628A794)
+Received: from mga02.intel.com ([134.134.136.20]:30453 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751206Ab3KJLlM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 Nov 2013 06:41:12 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: wzyboy <wzyboy@wzyboy.org>, Emmanuel Grumbach <egrumbach@gmail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [Ilw] Intel Wireless 7260 hardware timed out randomly
+Date: Sun, 10 Nov 2013 11:41:07 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301DEDB31@HASMSX103.ger.corp.intel.com> (sfid-20131110_124116_614374_20E273DB)
+References: <5276134B.8070808@wzyboy.org>
+ <CALkVjQYh-SUte4S6LdqOc3KSc3_pDU6jz1KXp+Jsd5_RFPXSqA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE8338@HASMSX103.ger.corp.intel.com>
+ <CALkVjQb7fCMFpqhdUs8w-Mx_Y0RtAYYFtKxXkqyrCQ39UFGxKg@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE960E@HASMSX103.ger.corp.intel.com>
+ <CALkVjQbW8FeiEh8pBZ=KQFD9+8AdjgT0G_RG7qJe0MRdBvMD-A@mail.gmail.com>
+ <CALkVjQaLx2spaOqUPcs_EwMkU7npMki1Reo1MeZwxB7m=c24=g@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE9FC6@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZDNSgUUFyi94Y8da_NDzW61rCvaMrZpUugFKW_LRNFFA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
+ <CALkVjQY7r=YKhsgDKR0mnYVtZy5BAdj83nY2jL0VFaiew6ha7A@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
+ <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
+ <527A8166.6000701@gmail.com>
+ <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
+ <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
+ <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
+ <CAErSpo6ry6cUaVngozS8-P44=LPJN6cbsZ_mfWkJv9Rn85YXUQ@mail.gmail.com>
+ <CALkVjQZEs1CqMEVApDDGZ6FDugPZ+-F5wzvE45+jB5Xrhv_N2A@mail.gmail.com>
+ <CANUX_P33UqkCsfHrJW+gx-ZbEQduJ1EZ59fpx6T6wQWOLufSqg@mail.gmail.com>
+ <CALkVjQYNPXpTjUpR9NZU6MTJhUmYeO1jXWvOOxk8-Pm=xdKZLg@mail.gmail.com>
+In-Reply-To: <CALkVjQYNPXpTjUpR9NZU6MTJhUmYeO1jXWvOOxk8-Pm=xdKZLg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-Multicast frames can't be transmitted as part of an aggregation
-session (such a session couldn't even be set up) so don't try to
-reorder them. Trying to do so would cause the reorder to stop
-working correctly since multicast QoS frames (as transmitted by
-the Aruba APs this was found with) would cause sequence number
-confusion in the buffer.
-
-Cc: stable@vger.kernel.org
-Reported-by: Blaise Gassend <blaise@suitabletech.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/rx.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 674eac1..1e5bd0d 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -911,7 +911,8 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx,
- 	u16 sc;
- 	u8 tid, ack_policy;
- 
--	if (!ieee80211_is_data_qos(hdr->frame_control))
-+	if (!ieee80211_is_data_qos(hdr->frame_control) ||
-+	    is_multicast_ether_addr(hdr->addr1))
- 		goto dont_reorder;
- 
- 	/*
--- 
-1.8.4.rc3
-
+PiANCj4gMjAxMy8xMS8xMCBFbW1hbnVlbCBHcnVtYmFjaCA8ZWdydW1iYWNoQGdtYWlsLmNvbT46
+DQo+ID4gSFcgcGVvcGxlIHNlZW0gdG8gd2FudCB0byBrbm93IHdoYXQgaGFwcGVucyBpbiB5b3Ug
+ZGlzYWJsZSBMMQ0KPiBzdWJzdGF0ZXMuDQo+ID4gQ2FuIHlvdSBlbnRlciB5b3UgQklPUyBhbmQg
+Y2hlY2sgaWYgeW91IGhhdmUgc3VjaCBhbiBvcHRpb24gaW4geW91ciBCSU9TPw0KPiANCj4gDQo+
+IENvdWxkIHlvdSBiZSBtb3JlIHNwZWNpZmljIHdoYXQgdGhlIG9wdGlvbiBuYW1lIGxvb2sgbGlr
+ZT8gT3IgSSBjb3VsZCB0YWtlDQo+IHBob3RvcyBmb3IgZWFjaCB0YWIgaW4gQklPUyBhbmQgYXR0
+YWNoIHRoZSBwaG90b3MgaGVyZS4NCj4gDQoNCkl0IGlzIHJlYWxseSBjYWxsZWQgTDEgUE0gU3Vi
+c3RhdGUuDQpJIGRvbid0IHJlYWxseSBrbm93IHRoZSBCSU9TIG9mIFRoaW5rUGFkLi4uIEJ1dCB3
+ZSBjYW4gdHJ5Li4uDQoNCg==
