@@ -1,47 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f41.google.com ([209.85.215.41]:44194 "EHLO
-	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750805Ab3KBFqx (ORCPT
+Received: from mail-la0-f43.google.com ([209.85.215.43]:50974 "EHLO
+	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751532Ab3KJTPa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Nov 2013 01:46:53 -0400
-Received: by mail-la0-f41.google.com with SMTP id el20so4022236lab.14
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 22:46:52 -0700 (PDT)
+	Sun, 10 Nov 2013 14:15:30 -0500
+Received: by mail-la0-f43.google.com with SMTP id n7so2261326lam.2
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Nov 2013 11:15:29 -0800 (PST)
+Message-ID: <527FDB50.1050902@cogentembedded.com> (sfid-20131110_201555_743836_F77D1B06)
+Date: Sun, 10 Nov 2013 23:15:28 +0400
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 MIME-Version: 1.0
-In-Reply-To: <CABPxzYJbNjAwymwUq0pN=YyuCBGy2qz_BKafatHTWK+yH8PbkA@mail.gmail.com>
-References: <CAMP44s1XJRHV8bAX=_-TkSKMkY8Nw1=eHorqTCZ2QmtR5m8uJA@mail.gmail.com>
-	<526E20EA.9090203@rempel-privat.de>
-	<CAMP44s2Cvw9HF3c3Asuq+bTSD36Gw6PXOUVjAcCD+hf6KB_awg@mail.gmail.com>
-	<CABPxzY+xJ7kst-sYwP8RJwMO_zkNYWKaYy=_LS7WQfuxquK24w@mail.gmail.com>
-	<CAMP44s0087jYz5AiEaEzwt7GqH9ed8PWE1CmvMPr4Dqn3yE6rA@mail.gmail.com>
-	<CABPxzYLwwyFCFw1pEt0v9Xw4kcue1C_RZx0RbTbMrUw=+MWvgQ@mail.gmail.com>
-	<CAMP44s0svc2MRKCrZXS5ZYRZNPoomQkcKHdC2m2BGy7di+TCyA@mail.gmail.com>
-	<CABPxzYL-Gzbzoc_ui+qUQ6uzoKp=Yq7yLWZvc7PoEjiH3dFczg@mail.gmail.com>
-	<CAMP44s3uRF=jNn5ZHZ=QOcvuMoXxsfkxU=VOq3K02Q0qOspEdA@mail.gmail.com>
-	<CABPxzYJbNjAwymwUq0pN=YyuCBGy2qz_BKafatHTWK+yH8PbkA@mail.gmail.com>
-Date: Fri, 1 Nov 2013 23:46:51 -0600
-Message-ID: <CAMP44s1NOS2p9pKeMLhR7616CzHeHJVJEzcF1tP6tsKfcPhSOQ@mail.gmail.com> (sfid-20131102_064711_652453_0FAE24CA)
-Subject: Re: I always need a miracle to connect with iwlwifi
-From: Felipe Contreras <felipe.contreras@gmail.com>
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Cc: Oleksij Rempel <linux@rempel-privat.de>, ilw@linux.intel.com,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Michal Nazarewicz <mpn@google.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+CC: Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Michal Nazarewicz <mina86@mina86.com>
+Subject: Re: [PATCH] net: wireless: iwlwifi: remove minor dead code
+References: <1384110397-24386-1-git-send-email-mpn@google.com>
+In-Reply-To: <1384110397-24386-1-git-send-email-mpn@google.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 29, 2013 at 8:23 AM, Krishna Chaitanya
-<chaitanya.mgit@gmail.com> wrote:
-> On Tue, Oct 29, 2013 at 3:02 AM, Felipe Contreras
-> <felipe.contreras@gmail.com> wrote:
+Hello.
 
->> Yes, but maybe I overrode the file. I've pushed a new one again. The
->> sha-1 is 36c260d8d8c171a24eb1aa7b2ea736b06c9b55b7.
->>
-> Thanks, able to decode now. I am not familiar with the
-> iwlwifi code, but let me give it a try.
+On 10-11-2013 23:06, Michal Nazarewicz wrote:
 
-Did you find anything?
+> From: Michal Nazarewicz <mina86@mina86.com>
 
--- 
-Felipe Contreras
+> inta is checked to be zero in a IRQ_NONE branch so afterwards it
+> cannot be zero as it is never modified.
+
+> Signed-off-by: Michal Nazarewicz <mina86@mina86.com>
+> ---
+>   drivers/net/wireless/iwlwifi/pcie/rx.c | 23 ++++++++---------------
+>   1 file changed, 8 insertions(+), 15 deletions(-)
+
+> diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
+> index 3f237b4..c32122a 100644
+> --- a/drivers/net/wireless/iwlwifi/pcie/rx.c
+> +++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
+[...]
+> @@ -1150,7 +1149,13 @@ static irqreturn_t iwl_pcie_isr(int irq, void *data)
+>   	 * or due to sporadic interrupts thrown from our NIC. */
+>   	if (!inta) {
+>   		IWL_DEBUG_ISR(trans, "Ignore interrupt, inta == 0\n");
+> -		goto none;
+> +		/* re-enable interrupts here since we don't have anything to
+> +		 * service.  only Re-enable if disabled by irq and no
+> +		 * schedules tasklet. */
+
+    The preferred way of formatting the multi-line comments in the networking 
+code is this:
+
+/* bla
+  * bla
+  */
+
+WBR, Sergei
+
