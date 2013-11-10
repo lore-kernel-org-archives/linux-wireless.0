@@ -1,136 +1,201 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-vbr11.xs4all.nl ([194.109.24.31]:2674 "EHLO
-	smtp-vbr11.xs4all.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751516Ab3KHPmK (ORCPT
+Received: from mail-lb0-f177.google.com ([209.85.217.177]:57794 "EHLO
+	mail-lb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751463Ab3KJQ0x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Nov 2013 10:42:10 -0500
-Received: from md8338-opensuse-12-3.site (a82-161-119-167.adsl.xs4all.nl [82.161.119.167])
-	by smtp-vbr11.xs4all.nl (8.13.8/8.13.8) with ESMTP id rA8FVke4026152
-	for <linux-wireless@vger.kernel.org>; Fri, 8 Nov 2013 16:31:47 +0100 (CET)
-	(envelope-from f.leerink@xs4all.nl)
-From: Frans Leerink <f.leerink@xs4all.nl>
-To: linux-wireless@vger.kernel.org
-Subject: Bug report - Wrong naming of my Wireless Network card enp3s6, should have been wlp3s6
-Date: Fri, 08 Nov 2013 16:31:46 +0100
-Message-ID: <2774683.Pvb2zYysB7@md8338-opensuse-12-3.site> (sfid-20131108_164216_143671_A2984534)
+	Sun, 10 Nov 2013 11:26:53 -0500
+Received: by mail-lb0-f177.google.com with SMTP id u14so2630087lbd.8
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Nov 2013 08:26:51 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CANUX_P2+zb0-rU-0ryCnOdxjSkFcSNXJbmJ3B0HtJcnYpsrbQg@mail.gmail.com>
+References: <CAMP44s1XJRHV8bAX=_-TkSKMkY8Nw1=eHorqTCZ2QmtR5m8uJA@mail.gmail.com>
+	<526E20EA.9090203@rempel-privat.de>
+	<CAMP44s2Cvw9HF3c3Asuq+bTSD36Gw6PXOUVjAcCD+hf6KB_awg@mail.gmail.com>
+	<CABPxzY+xJ7kst-sYwP8RJwMO_zkNYWKaYy=_LS7WQfuxquK24w@mail.gmail.com>
+	<CAMP44s0087jYz5AiEaEzwt7GqH9ed8PWE1CmvMPr4Dqn3yE6rA@mail.gmail.com>
+	<CABPxzYLwwyFCFw1pEt0v9Xw4kcue1C_RZx0RbTbMrUw=+MWvgQ@mail.gmail.com>
+	<CAMP44s0svc2MRKCrZXS5ZYRZNPoomQkcKHdC2m2BGy7di+TCyA@mail.gmail.com>
+	<CABPxzYL-Gzbzoc_ui+qUQ6uzoKp=Yq7yLWZvc7PoEjiH3dFczg@mail.gmail.com>
+	<CAMP44s3uRF=jNn5ZHZ=QOcvuMoXxsfkxU=VOq3K02Q0qOspEdA@mail.gmail.com>
+	<CABPxzYJbNjAwymwUq0pN=YyuCBGy2qz_BKafatHTWK+yH8PbkA@mail.gmail.com>
+	<CAMP44s1NOS2p9pKeMLhR7616CzHeHJVJEzcF1tP6tsKfcPhSOQ@mail.gmail.com>
+	<CABPxzY+RL+ikbSff3a7qb20ExxcSTx6U2xcL5CFr-BgVSOr61A@mail.gmail.com>
+	<CAMP44s384vOcMc4vE82gAdVf37YUZfegmPHUSeobPO=gK6ErAw@mail.gmail.com>
+	<CABPxzYLDHP5gyeTL8HR=6uJDLptaUGEnNGSFLMkxKqi-JaBVYQ@mail.gmail.com>
+	<CABPxzYJTuV0vGLnhgcQcXbg_9szSm2hH7_vCeP4TOKNxZQx_Gg@mail.gmail.com>
+	<CAMP44s3VRnqw0XJDZTZTym7wBD5-NnfOD56YHbE87OG=3Zan2w@mail.gmail.com>
+	<CAMP44s15W7gb8rXwqum5bdHOSk=A_sadX7ksvtkG0qTOu1RREg@mail.gmail.com>
+	<CABPxzYLtbs1s-_T+hk+N1hOEuCi_Yq+CGxG7Xx0hPRmiyQM0Jg@mail.gmail.com>
+	<CAMP44s0h836BZ+g9-g_t78bKuV_m_xAuvPYRCHaFdJ58eTKthw@mail.gmail.com>
+	<CABPxzYJsLqJbJQzr8+2GujQsbJpo922v9ouVWWPbTFL11-UV5g@mail.gmail.com>
+	<CAMP44s1ZtTyfKmgy4174ukQU1dwx1Fw=AngNQ=g2Dv2wm4t2-g@mail.gmail.com>
+	<CABPxzYKPpL7p0gexV3udgsWYZ_zVYxT6vrz-n-rN36D2AgBCgg@mail.gmail.com>
+	<CAMP44s1vwEMRYost99JgLxvXJkFwhgnn9jnYR5RxLPDm-Qj7ug@mail.gmail.com>
+	<CABPxzYKQfz2CBvHwWHXT9rSZ6He8ru1R-dP5z+wVy8o3o6L8eQ@mail.gmail.com>
+	<CAMP44s2JsVdhRWvkF+jBFns93v7w5kGsP5H83V=CjZr6QynLQA@mail.gmail.com>
+	<CABPxzYKA1qCg=nkFL1HsXraBadDei2skBzU4eVxTZ5-e+JSMUA@mail.gmail.com>
+	<CANUX_P2+zb0-rU-0ryCnOdxjSkFcSNXJbmJ3B0HtJcnYpsrbQg@mail.gmail.com>
+Date: Sun, 10 Nov 2013 10:26:51 -0600
+Message-ID: <CAMP44s0Z1RueHfT_taMSn=sdMyqFXc3hE4HE832qHetXbDhZQQ@mail.gmail.com> (sfid-20131110_172657_826573_F1415E2B)
+Subject: Re: I always need a miracle to connect with iwlwifi
+From: Felipe Contreras <felipe.contreras@gmail.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: Krishna Chaitanya <chaitanya.mgit@gmail.com>,
+	Oleksij Rempel <linux@rempel-privat.de>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Sun, Nov 10, 2013 at 12:31 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>>>>>>>>> But we are receiving 0 beacons, waiting for more than 1 won't help.
+>>>>>>>>> BTW, why NEED_DTIM_BEFORE_ASSOC if the device doesn't *need* the DTIM
+>>>>>>>>> before the association?
+>>>>>>>>>
+>>>>>> This is not just for your case but rather on a generic note. Regarding
+>>>>>> the flag even i am not
+>>>>>> too sure but i guess some hardware need to know the DTIM to set the
+>>>>>> wakeup schedule
+>>>>>> after the association?
+>>>>>
+>
+> Right - we need the send the beacon interval to the device *before* we
+> configure the device to be associated.
 
-I have installed openSUSE 12.3 / KDE on my Medion Notebook
-MD41300 with an INTEL Pentium 4 CPU 3.0 GHz and 1 Gb memory and 
-everything works oke, including wireless.
- 
-I am testing openSUSE 13.1 RC2 with this older laptop. Up to now it has 
-worked very well through all the releases upto openSUSE/KDE 12.3.
+But what do you mean "need"? If I remove the flag the association works fine.
 
-On the moment I test the live openSUSE/KDE 13.1 RC2 via an usb-stick. 
-The system comes up nicely but the wireless network card does not work 
-and generates the following lines in dmesg output:
+>>>>> But not this hardware? Because everything works fine.
+>>>>>
+>>>>>>>> Oops...you just missed, Right after your print there is a check to
+>>>>>>>> drop frames with BAD CRC :-).
+>>>>>>>
+>>>>>>> That's why I put the print before that check. Since I don't see the
+>>>>>>> print, that means the check was never executed. iwlagn_rx_reply_rx()
+>>>>>>> was never called for the beacon frame.
+>>>>>>>
+>
+> That won't help since the firmware will drop frames with bad CRC,
+> unless you are in monitor mode.
 
-[ 48.675564] enp3s6: resetting device...
-[ 48.675587] enp3s6: uploading firmware...
-[ 48.855166] prism54: request_firmware() failed for 'isl3890'
-[ 48.855175] enp3s6: could not upload firmware ('isl3890')
-[ 48.855179] enp3s6: islpci_reset: failure
+And apparently ad-hoc mode too.
 
-While I followed URL:
-         http://wireless.kernel.org/en/users/Drivers/p54
-to activate driver p54pci, the same as I had done for all the previous 
-releases.
+Either way that's not helping, ideally those corrupted beacons should
+be parsed by the driver, it will see they are corrupted, but still do
+something sensible.
 
-The wireless networkcard, according to command "/sbin/lspci"
-Networkcontroller: "Intersil Corporation ISL3890 [Prism GT/Prism
-Duette] /ISL3886 [Prism Javelin/Prism Xbow] (rev 01)".
+>>>>>> Ok. So when we disable advertising of that flag in the driver you said things
+>>>>>> are working fine.
+>>>>>
+>>>>> Yes, everything works perfectly.
+>>>>>
+>>>>>> So in that scenario after the connection are you
+>>>>>> seeing the beacons?
+>>>>>
+>>>>> No, there are no beacons ever, at least from this AP
+>>>
+>>>> Oh ok, thats interesting. Are you not seeing any disconnects due
+>>>> to beacon loss triggers?
+>>>
+>>> I see some disconnects now and then, but I don't know why. Before
+>>> trying to tackle those problems I would like to be able to connect
+>>> reliably.
+>
+> No wonder. If we can't receive any beacons you can expect issues....
+> PS will be completely broken and that is only the first on the list...
 
-The kernel version is according to command uname -r :
-     3.11.6-3-default
+That's OK, it's better to connect with issues rather than not connect at all.
 
-I checked on the openSUSE forum wih Larry Finger, in thread:
+>> Its probably the beacons loss that triggering the disconnects, so
+>> both the problem have the same cause. Its the beacon reception
+>> we need to figure it out.
+>>
+>> Adding some intel guys explicitly.
+>>
+>>>> Also can you add some debugging to the iwlagn_rx_beacon_notif
+>>>> (the beacon RX handler)?
+>>>
+>>> All right, I've added debugging there, but so far I see nothing.
+>>>
+>>
+>> Hmm...dead end this side too.
+>>
+>>>>> It seems to me all the beacon frames are dropped by the firmware
+>>>>> before passing them to the driver, so the driver cannot parse them and
+>>>>> do something sensible even though they are corrupted, the driver never
+>>>>> gets them.
+>>>>>
+>>>>>> Just want to understand the problem is throughout or just before association.
+>>>>>> If the driver itself it not getting the beacons then our debugging ends there,
+>>>>>> some one from intel should guide you through the FW debugging.
+>>>>>
+>>>>> Not really, part of the debugging ends there, but we can still do something.
+>>>>>
+>>>>> What is the meaning of NEED_DTIM_BEFORE_ASSOC, if the driver doesn't
+>>>>> *need* this? Why fail the association completely, if we don't need to?
+>>>>>
+>
+> As I explained, the firmware needs to. This is for configuring the PS
+> state machine. But since you AP is completely broken, PS is likely not
+> to work at all anyway....
 
-http://forums.opensuse.org/english/get-technical-help-here/install-boot-login/413006-please-help-enabling-p54-wireless-firmware-kernel-according-url-http-wireless-kernel-org-en-users-drivers-p54-2.html
+I don't use powersave anyway.
 
-and he noticed that my wireless get the wrong naming "enp3s6" in stead 
-of  "wlp..."
-He proposed a way to still test my wireless card by adding an entry, 
-70-persistent-net.rules (with the mac address of my wireless card and 
-wlan0 in it) to /etc/udev/rules.d/
+> And my small experience in WiFi leads me to the conclusion that if a
+> driver cannot rely on the AP sending beacon, it is really in trouble.
 
-I have added that line to /etc/udev/rules.d/70-persistent-net.rules and 
-deactivated prism54 driver and activated p54pci driver (via modprobe)
-and the wireless device started working correctly.
+Somehow every device in this house doesn't seem to have a problem.
+Even this device in Windows works fine.
 
-> Below the relevant entries from dmesg
-> In the beginning
-> [ 3.245827] Loaded prism54 driver, version 1.2
+> We can cope with buggy AP, but not associate to microwaves.
+> Other devices will work, granted. But they can't go to sleep then, and
+> need to poke the AP from time to time to make sure it hasn't
+> disappeared.
 
-> then somewhere
-> [                    ] systemd-udevd [230]:renamed network interface 
-eth1 to enp3s6
+That's better than not associating at all, ever.
 
-> At the end 
-> [561.396409] enp3s6: removing device
-> [ 561.471117] Unloaded prism54 driver
-> [ 737.932041] cfg80211: Calling CRDA to update world regulatory domain
-> [ 738.248459] ieee80211 phy0: p54 detected a LM86 firmware
-> [ 738.248470] p54: rx_mtu reduced from 3240 to 2376
-> [ 738.248476] ieee80211 phy0: FW rev 2.13.25.0 - Softmac protocol 5.9
-> [ 738.248483] ieee80211 phy0: cryptographic accelerator WEP:YES,
-> TKIP:YES, CCMP:YES
-> [ 738.359804] cfg80211: World regulatory domain updated:
-> [ 738.359812] cfg80211: (start_freq - end_freq @ bandwidth),
-> (max_antenna_gain, max_eirp)
-> [ 738.359816] cfg80211: (2402000 KHz - 2472000 KHz @ 40000 KHz), (300
-> mBi, 2000 mBm)
-> [ 738.359820] cfg80211: (2457000 KHz - 2482000 KHz @ 40000 KHz), (300
-> mBi, 2000 mBm)
-> [ 738.359823] cfg80211: (2474000 KHz - 2494000 KHz @ 20000 KHz), (300
-> mBi, 2000 mBm)
-> [ 738.359826] cfg80211: (5170000 KHz - 5250000 KHz @ 40000 KHz), (300
-> mBi, 2000 mBm)
-> [ 738.359829] cfg80211: (5735000 KHz - 5835000 KHz @ 40000 KHz), (300
-> mBi, 2000 mBm)
-> [ 739.102119] ieee80211 phy0: hwaddr 00:60:b3:1e:5a:fd, MAC:isl3890
-> RF:Frisbee
-> [ 739.314682] ieee80211 phy0: Selected rate control algorithm
-> 'minstrel_ht'
-> [ 739.316966] p54pci 0000:03:06.0: is registered as 'phy0'
-> [ 739.532327] systemd-udevd[2433]: renamed network interface wlan0 to
-> wlp3s6
-> [ 739.860509] IPv6: ADDRCONF(NETDEV_UP): wlp3s6: link is not ready
-> [ 740.057475] NET: Registered protocol family 17
-> [ 754.446569] wlp3s6: authenticate with bc:05:43:f2:77:b4
-> [ 754.446780] wlp3s6: send auth to bc:05:43:f2:77:b4 (try 1/3)
-> [ 754.451362] wlp3s6: authenticated
-> [ 754.452090] wlp3s6: associate with bc:05:43:f2:77:b4 (try 1/3)
-> [ 754.454695] wlp3s6: RX AssocResp from bc:05:43:f2:77:b4 (capab=0x431
-> status=0 aid=2)
-> [ 754.455114] wlp3s6: associated
-> [ 754.455175] IPv6: ADDRCONF(NETDEV_CHANGE): wlp3s6: link becomes 
-ready
-> [ 754.455301] cfg80211: Calling CRDA for country: DE
-> [ 754.473156] cfg80211: Regulatory domain changed to country: DE
-> [ 754.473169] cfg80211: (start_freq - end_freq @ bandwidth),
-> (max_antenna_gain, max_eirp)
-> [ 754.473173] cfg80211: (2400000 KHz - 2483500 KHz @ 40000 KHz),
-> (N/A, 2000 mBm)
-> [ 754.473177] cfg80211: (5150000 KHz - 5250000 KHz @ 40000 KHz),
-> (N/A, 2000 mBm)
-> [ 754.473181] cfg80211: (5250000 KHz - 5350000 KHz @ 40000 KHz),
-> (N/A, 2000 mBm)
-> [ 754.473185] cfg80211: (5470000 KHz - 5725000 KHz @ 40000 KHz),
-> (N/A, 2698 mBm)
-> [ 754.473188] cfg80211: (57240000 KHz - 65880000 KHz @ 2160000 KHz),
-> (N/A, 4000 mBm)
-> linux:/home/linux #
+> Note that this is true regardless of the design / HW wahtever. Ok, the
+> Windows driver on the same device works with this "AP". Fine. But it
+> can't theoretically can't work well. Nor can any other WiFi device
+> that can't hear the beacon. Now - maybe we have an issue in the Linux
+> driver that mangles the beacons (PHY stuff) - that's possible. But
+> since you haven't sent a sniffer capture of the AP with another
+> device, we can't know.
 
-The problem is now why assigned the openSUSE 13.1 RC2 live USB-stick 
-initialy the  wrong naming  enp3s6    to my Wireless Network card.
+That's right, I tried to do that with an N900 but the monitor mode
+doesn't work. I'll keep trying.
 
+>>>>> Also, I realized that after rebooting the router, the beacon frames
+>>>>> are not corrupted any more, so it's a compound problem, yet even in
+>>>>> the corrupted case, the driver can work just fine, if only it didn't
+>>>>> *require* the DTIM unnecessarily,
+>>>>
+>>>> Yeah, that's more of design query with the problem being not able to
+>>>> Rx the beacons? We need to understand the reason for this flag being
+>>>> set by the iwlwifi driver.
+>>>
+>>> Indeed.
+>>>
+>>>>>as apparently all hardware and even
+>>>>> other OS'es on this hardware do.
+>>>>
+>>>> Thats the reason this flag is a _HW_ not all hardwares requrie this
+>>>> but intel does.
+>>>
+>>> But it doesn't, my hardware is Intel, and it works fine without it.
+>>>
+>> Yeah, so far so good. But there should be a reason why they are
+>> specifically advertising this flag? Also DTIM is Multicast+Powersave
+>> so a rare thing, we might no hit that too often.
+>
+> Hmm... well... N/M.
 
-Regards / Groeten,
+Wouldn't it make sense to timeout if there's no DTIM, and still
+associate? It's better than not associating ever. Plus, if you already
+know that power saving wouldn't work in this case, merely disable
+powersave.
 
-	Frans
+-- 
+Felipe Contreras
