@@ -1,75 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0220.hostedemail.com ([216.40.44.220]:50869 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755159Ab3KEUkB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Nov 2013 15:40:01 -0500
-Message-ID: <1383684000.4387.42.camel@joe-AO722> (sfid-20131105_214007_103736_EC729554)
-Subject: [PATCH] wcn36xx: Fix logging macro with unnecessary semicolon
-From: Joe Perches <joe@perches.com>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Tue, 05 Nov 2013 12:40:00 -0800
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from mantis.wzyboy.im ([199.83.51.51]:38168 "EHLO mantis.wzyboy.im"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750964Ab3KJLiW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 Nov 2013 06:38:22 -0500
+MIME-Version: 1.0
+In-Reply-To: <CANUX_P33UqkCsfHrJW+gx-ZbEQduJ1EZ59fpx6T6wQWOLufSqg@mail.gmail.com>
+References: <5276134B.8070808@wzyboy.org> <CALkVjQYh-SUte4S6LdqOc3KSc3_pDU6jz1KXp+Jsd5_RFPXSqA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE8338@HASMSX103.ger.corp.intel.com>
+ <CALkVjQb7fCMFpqhdUs8w-Mx_Y0RtAYYFtKxXkqyrCQ39UFGxKg@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE960E@HASMSX103.ger.corp.intel.com>
+ <CALkVjQbW8FeiEh8pBZ=KQFD9+8AdjgT0G_RG7qJe0MRdBvMD-A@mail.gmail.com>
+ <CALkVjQaLx2spaOqUPcs_EwMkU7npMki1Reo1MeZwxB7m=c24=g@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE9FC6@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZDNSgUUFyi94Y8da_NDzW61rCvaMrZpUugFKW_LRNFFA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
+ <CALkVjQY7r=YKhsgDKR0mnYVtZy5BAdj83nY2jL0VFaiew6ha7A@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
+ <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
+ <527A8166.6000701@gmail.com> <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
+ <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
+ <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
+ <CAErSpo6ry6cUaVngozS8-P44=LPJN6cbsZ_mfWkJv9Rn85YXUQ@mail.gmail.com>
+ <CALkVjQZEs1CqMEVApDDGZ6FDugPZ+-F5wzvE45+jB5Xrhv_N2A@mail.gmail.com> <CANUX_P33UqkCsfHrJW+gx-ZbEQduJ1EZ59fpx6T6wQWOLufSqg@mail.gmail.com>
+From: wzyboy <wzyboy@wzyboy.org>
+Date: Sun, 10 Nov 2013 19:38:05 +0800
+Message-ID: <CALkVjQYNPXpTjUpR9NZU6MTJhUmYeO1jXWvOOxk8-Pm=xdKZLg@mail.gmail.com> (sfid-20131110_123826_272672_4C366CBA)
+Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The wcn36xx_err macro should not end in a semicolon as
-there are 2 consecutive semicolons in the preprocessed
-output.
-
-Remove it.
-
-Neaten the logging macros to use a more common style.
-Convert to use pr_debug to enable dynamic debug.
-
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/ath/wcn36xx/wcn36xx.h | 28 +++++++++++++---------------
- 1 file changed, 13 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-index 58b6383..d157bb7 100644
---- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-+++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-@@ -53,22 +53,20 @@ enum wcn36xx_debug_mask {
- 	WCN36XX_DBG_ANY		= 0xffffffff,
- };
- 
--#define wcn36xx_err(fmt, arg...)				\
--	printk(KERN_ERR pr_fmt("ERROR " fmt), ##arg);
--
--#define wcn36xx_warn(fmt, arg...)				\
--	printk(KERN_WARNING pr_fmt("WARNING " fmt), ##arg)
--
--#define wcn36xx_info(fmt, arg...)		\
--	printk(KERN_INFO pr_fmt(fmt), ##arg)
--
--#define wcn36xx_dbg(mask, fmt, arg...) do {			\
--	if (wcn36xx_dbg_mask & mask)					\
--		printk(KERN_DEBUG pr_fmt(fmt), ##arg);	\
-+#define wcn36xx_err(fmt, ...)					\
-+	pr_err("ERROR " fmt, ##__VA_ARGS__)
-+#define wcn36xx_warn(fmt, ...)					\
-+	pr_warn("WARNING " fmt, ##__VA_ARGS__)
-+#define wcn36xx_info(fmt, ...)					\
-+	pr_info(fmt, ##__VA_ARGS__)
-+#define wcn36xx_dbg(mask, fmt, ...)				\
-+do {								\
-+	if (wcn36xx_dbg_mask & mask)				\
-+		pr_debug(fmt, ##__VA_ARGS__);			\
- } while (0)
--
--#define wcn36xx_dbg_dump(mask, prefix_str, buf, len) do {	\
--	if (wcn36xx_dbg_mask & mask)					\
-+#define wcn36xx_dbg_dump(mask, prefix_str, buf, len)		\
-+do {								\
-+	if (wcn36xx_dbg_mask & mask)				\
- 		print_hex_dump(KERN_DEBUG, pr_fmt(prefix_str),	\
- 			       DUMP_PREFIX_OFFSET, 32, 1,	\
- 			       buf, len, false);		\
+2013/11/10 Emmanuel Grumbach <egrumbach@gmail.com>:
+> HW people seem to want to know what happens in you disable L1 substates.
+> Can you enter you BIOS and check if you have such an option in your BIOS?
 
 
+Could you be more specific what the option name look like? Or I could
+take photos for each tab in BIOS and attach the photos here.
+
+-- 
+wzyboy
