@@ -1,159 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:56018 "EHLO
-	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754705Ab3KURUm (ORCPT
+Received: from mantis.wzyboy.im ([199.83.51.51]:38133 "EHLO mantis.wzyboy.im"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751196Ab3KJHIt convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Nov 2013 12:20:42 -0500
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Simon Wunderlich <sw@simonwunderlich.de>
-Subject: [PATCHv2 3/5] cfg80211/mac80211/ath6kl: acquire wdev lock outside ch_switch_notify
-Date: Thu, 21 Nov 2013 18:19:51 +0100
-Message-Id: <1385054393-17238-4-git-send-email-sw@simonwunderlich.de> (sfid-20131121_182049_683066_3D43374D)
-In-Reply-To: <1385054393-17238-1-git-send-email-sw@simonwunderlich.de>
-References: <1385054393-17238-1-git-send-email-sw@simonwunderlich.de>
+	Sun, 10 Nov 2013 02:08:49 -0500
+MIME-Version: 1.0
+In-Reply-To: <CANUX_P2x3r4afsa7PFrexE0Kxtd5t-nak+ao+CqvLKZyMha0_g@mail.gmail.com>
+References: <5276134B.8070808@wzyboy.org> <CALkVjQYh-SUte4S6LdqOc3KSc3_pDU6jz1KXp+Jsd5_RFPXSqA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE8338@HASMSX103.ger.corp.intel.com>
+ <CALkVjQb7fCMFpqhdUs8w-Mx_Y0RtAYYFtKxXkqyrCQ39UFGxKg@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE960E@HASMSX103.ger.corp.intel.com>
+ <CALkVjQbW8FeiEh8pBZ=KQFD9+8AdjgT0G_RG7qJe0MRdBvMD-A@mail.gmail.com>
+ <CALkVjQaLx2spaOqUPcs_EwMkU7npMki1Reo1MeZwxB7m=c24=g@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DE9FC6@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZDNSgUUFyi94Y8da_NDzW61rCvaMrZpUugFKW_LRNFFA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
+ <CALkVjQY7r=YKhsgDKR0mnYVtZy5BAdj83nY2jL0VFaiew6ha7A@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
+ <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
+ <527A8166.6000701@gmail.com> <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
+ <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
+ <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
+ <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com> <CANUX_P2x3r4afsa7PFrexE0Kxtd5t-nak+ao+CqvLKZyMha0_g@mail.gmail.com>
+From: wzyboy <wzyboy@wzyboy.org>
+Date: Sun, 10 Nov 2013 15:08:32 +0800
+Message-ID: <CALkVjQYKPjOLcBo34h4Eq6f0bac=z4o+54PuNmcgKRz301JYqg@mail.gmail.com> (sfid-20131110_080911_853018_76938FB1)
+Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The channel switch notification should be sent under the
-wdev/sdata-lock, preferably in the same moment as the channel change
-happens, to avoid races by other callers (e.g. start/stop_ap).
-This also adds the previously missing sdata_lock protection in
-csa_finalize_work.
+2013/11/10 Emmanuel Grumbach <egrumbach@gmail.com>:
+> one more thing?
+> Are you using KVM with pass-through? Or is it a native installation?
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    2 ++
- include/net/cfg80211.h                     |    3 ++-
- net/mac80211/cfg.c                         |   21 +++++++++++++++------
- net/wireless/nl80211.c                     |    9 +++------
- 4 files changed, 22 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 36dc61d..43a05c9 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -1109,7 +1109,9 @@ void ath6kl_cfg80211_ch_switch_notify(struct ath6kl_vif *vif, int freq,
- 				(mode == WMI_11G_HT20) ?
- 					NL80211_CHAN_HT20 : NL80211_CHAN_NO_HT);
- 
-+	mutex_lock(vif->wdev->mtx);
- 	cfg80211_ch_switch_notify(vif->ndev, &chandef);
-+	mutex_unlock(vif->wdev->mtx);
- }
- 
- static int ath6kl_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 633146b..874b5ae 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -4286,7 +4286,8 @@ bool cfg80211_reg_can_beacon(struct wiphy *wiphy,
-  * @dev: the device which switched channels
-  * @chandef: the new channel definition
-  *
-- * Acquires wdev_lock, so must only be called from sleepable driver context!
-+ * Caller must acquire wdev_lock, therefore must only be called from sleepable
-+ * driver context!
-  */
- void cfg80211_ch_switch_notify(struct net_device *dev,
- 			       struct cfg80211_chan_def *chandef);
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 1cdf2fb..a135e6f 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2988,13 +2988,18 @@ void ieee80211_csa_finalize_work(struct work_struct *work)
- 	struct ieee80211_local *local = sdata->local;
- 	int err, changed = 0;
- 
-+	sdata_lock(sdata);
-+	/* AP might have been stopped while waiting for the lock. */
-+	if (!sdata->vif.csa_active)
-+		goto unlock;
-+
- 	if (!ieee80211_sdata_running(sdata))
--		return;
-+		goto unlock;
- 
- 	sdata->radar_required = sdata->csa_radar_required;
- 	err = ieee80211_vif_change_channel(sdata, &changed);
- 	if (WARN_ON(err < 0))
--		return;
-+		goto unlock;
- 
- 	if (!local->use_chanctx) {
- 		local->_oper_chandef = sdata->csa_chandef;
-@@ -3003,11 +3008,13 @@ void ieee80211_csa_finalize_work(struct work_struct *work)
- 
- 	ieee80211_bss_info_change_notify(sdata, changed);
- 
-+	sdata->vif.csa_active = false;
- 	switch (sdata->vif.type) {
- 	case NL80211_IFTYPE_AP:
- 		err = ieee80211_assign_beacon(sdata, sdata->u.ap.next_beacon);
- 		if (err < 0)
--			return;
-+			goto unlock;
-+
- 		changed |= err;
- 		kfree(sdata->u.ap.next_beacon);
- 		sdata->u.ap.next_beacon = NULL;
-@@ -3021,20 +3028,22 @@ void ieee80211_csa_finalize_work(struct work_struct *work)
- 	case NL80211_IFTYPE_MESH_POINT:
- 		err = ieee80211_mesh_finish_csa(sdata);
- 		if (err < 0)
--			return;
-+			goto unlock;
- 		break;
- #endif
- 	default:
- 		WARN_ON(1);
--		return;
-+		goto unlock;
- 	}
--	sdata->vif.csa_active = false;
- 
- 	ieee80211_wake_queues_by_reason(&sdata->local->hw,
- 					IEEE80211_MAX_QUEUE_MAP,
- 					IEEE80211_QUEUE_STOP_REASON_CSA);
- 
- 	cfg80211_ch_switch_notify(sdata->dev, &sdata->csa_chandef);
-+
-+unlock:
-+	sdata_unlock(sdata);
- }
- 
- static int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index b1db645..c17c2c3 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -10820,21 +10820,18 @@ void cfg80211_ch_switch_notify(struct net_device *dev,
- 	struct wiphy *wiphy = wdev->wiphy;
- 	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
- 
-+	ASSERT_WDEV_LOCK(wdev);
-+
- 	trace_cfg80211_ch_switch_notify(dev, chandef);
- 
--	wdev_lock(wdev);
--
- 	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_AP &&
- 		    wdev->iftype != NL80211_IFTYPE_P2P_GO &&
- 		    wdev->iftype != NL80211_IFTYPE_ADHOC &&
- 		    wdev->iftype != NL80211_IFTYPE_MESH_POINT))
--		goto out;
-+		return;
- 
- 	wdev->channel = chandef->chan;
- 	nl80211_ch_switch_notify(rdev, dev, chandef, GFP_KERNEL);
--out:
--	wdev_unlock(wdev);
--	return;
- }
- EXPORT_SYMBOL(cfg80211_ch_switch_notify);
- 
+No, I’m using a native installation. I just wiped the pre-installed
+Windows OS and booted from Arch Linux installation disk, set up LUKS
+(without LVM) and installed the system.
+
+However, as you can see in dmesg "modules linked in", I have
+VirtualBox installed and "vboxdrv.ko" loaded.
+
 -- 
-1.7.10.4
-
+wzyboy
