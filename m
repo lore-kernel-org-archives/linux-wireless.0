@@ -1,51 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f169.google.com ([74.125.82.169]:61372 "EHLO
-	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752267Ab3KSUwT (ORCPT
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:45751 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751882Ab3KJUdf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Nov 2013 15:52:19 -0500
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+	Sun, 10 Nov 2013 15:33:35 -0500
+From: Felipe Contreras <felipe.contreras@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>, stable@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 1/7] iwlwifi: mvm: check sta_id/drain values in debugfs
-Date: Tue, 19 Nov 2013 22:52:00 +0200
-Message-Id: <1384894326-24676-1-git-send-email-egrumbach@gmail.com> (sfid-20131119_215224_108229_0F7A10FD)
-In-Reply-To: <528BCEDB.8010703@gmail.com>
-References: <528BCEDB.8010703@gmail.com>
+Cc: netdev@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Felipe Contreras <felipe.contreras@gmail.com>
+Subject: [PATCH] mac80211: add assoc beacon timeout logic
+Date: Sun, 10 Nov 2013 14:26:45 -0600
+Message-Id: <1384115205-3820-1-git-send-email-felipe.contreras@gmail.com> (sfid-20131110_213344_477377_C313CA46)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+We don't want to be waiting forever for a beacon that will never come,
+just continue the association.
 
-The station ID must be valid, if it's out of range then
-the array access may crash. Validate the station ID to
-the array length, and also validate the drain value even
-if that doesn't matter all that much.
-
-Cc: stable@vger.kernel.org
-Fixes: 8ca151b568b6 ("iwlwifi: add the MVM driver")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Felipe Contreras <felipe.contreras@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/debugfs.c |    4 ++++
- 1 file changed, 4 insertions(+)
+ net/mac80211/ieee80211_i.h |  1 +
+ net/mac80211/mlme.c        | 18 ++++++++++++++----
+ 2 files changed, 15 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-index 9864d71..a8fe6b4 100644
---- a/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-@@ -119,6 +119,10 @@ static ssize_t iwl_dbgfs_sta_drain_write(struct file *file,
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 611abfc..e1f858d 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -358,6 +358,7 @@ struct ieee80211_mgd_assoc_data {
+ 	const u8 *supp_rates;
  
- 	if (sscanf(buf, "%d %d", &sta_id, &drain) != 2)
- 		return -EINVAL;
-+	if (sta_id < 0 || sta_id >= IWL_MVM_STATION_COUNT)
-+		return -EINVAL;
-+	if (drain < 0 || drain > 1)
-+		return -EINVAL;
+ 	unsigned long timeout;
++	unsigned long beacon_timeout;
+ 	int tries;
  
- 	mutex_lock(&mvm->mutex);
+ 	u16 capability;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 529cef6..1c14484 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -38,6 +38,7 @@
+ #define IEEE80211_ASSOC_TIMEOUT		(HZ / 5)
+ #define IEEE80211_ASSOC_TIMEOUT_LONG	(HZ / 2)
+ #define IEEE80211_ASSOC_TIMEOUT_SHORT	(HZ / 10)
++#define IEEE80211_ASSOC_BEACON_TIMEOUT	2 * HZ
+ #define IEEE80211_ASSOC_MAX_TRIES	3
  
+ static int max_nullfunc_tries = 2;
+@@ -3537,10 +3538,18 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
+ 
+ 	if (assoc_data && assoc_data->timeout_started) {
+ 		if (time_after(jiffies, assoc_data->timeout)) {
+-			if ((assoc_data->need_beacon && !ifmgd->have_beacon) ||
+-			    ieee80211_do_assoc(sdata)) {
+-				struct cfg80211_bss *bss = assoc_data->bss;
+-
++			struct cfg80211_bss *bss = assoc_data->bss;
++
++			if (assoc_data->need_beacon && !ifmgd->have_beacon) {
++				if (time_after(jiffies, assoc_data->beacon_timeout)) {
++					sdata_info(sdata, "no beacon from %pM\n", bss->bssid);
++					assoc_data->need_beacon = false;
++					assoc_data->timeout = jiffies;
++				} else {
++					assoc_data->timeout = TU_TO_EXP_TIME(bss->beacon_interval);
++				}
++				run_again(sdata, assoc_data->timeout);
++			} else if (ieee80211_do_assoc(sdata)) {
+ 				ieee80211_destroy_assoc_data(sdata, false);
+ 				cfg80211_assoc_timeout(sdata->dev, bss);
+ 			}
+@@ -4341,6 +4350,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 		sdata_info(sdata, "waiting for beacon from %pM\n",
+ 			   ifmgd->bssid);
+ 		assoc_data->timeout = TU_TO_EXP_TIME(req->bss->beacon_interval);
++		assoc_data->beacon_timeout = jiffies + IEEE80211_ASSOC_BEACON_TIMEOUT;
+ 		assoc_data->timeout_started = true;
+ 		assoc_data->need_beacon = true;
+ 	} else if (beacon_ies) {
 -- 
-1.7.9.5
+1.8.4.2+fc1
 
