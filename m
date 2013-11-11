@@ -1,54 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:48659 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753133Ab3KNODC (ORCPT
+Received: from mail-lb0-f179.google.com ([209.85.217.179]:43236 "EHLO
+	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752892Ab3KKLBN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Nov 2013 09:03:02 -0500
-Message-ID: <1384437774.13941.25.camel@jlt4.sipsolutions.net> (sfid-20131114_150307_611218_2962FD19)
-Subject: Re: [RFC 1/5] cfg80211: pass the wdev on the country IE regulatory
- hint
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: janusz.dziedzic@tieto.com, j@w1.fi, sunitb@qca.qualcomm.com,
-	rsunki@qca.qualcomm.com, linux-wireless@vger.kernel.org
-Date: Thu, 14 Nov 2013 15:02:54 +0100
-In-Reply-To: <20131114140505.GA19070@garbanzo.do-not-panic.com> (sfid-20131114_145433_171662_3597550D)
-References: <1384366379-25301-1-git-send-email-mcgrof@do-not-panic.com>
-	 <1384366379-25301-2-git-send-email-mcgrof@do-not-panic.com>
-	 <1384377637.28806.14.camel@jlt4.sipsolutions.net>
-	 <20131114140505.GA19070@garbanzo.do-not-panic.com>
-	 (sfid-20131114_145433_171662_3597550D)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 11 Nov 2013 06:01:13 -0500
+MIME-Version: 1.0
+In-Reply-To: <CABPxzY+MkosJBeQdBFV3u5X=e5io3qKeb6sqd8Fn89awMc2vuA@mail.gmail.com>
+References: <1384119945-31213-1-git-send-email-felipe.contreras@gmail.com>
+	<CABPxzY+MkosJBeQdBFV3u5X=e5io3qKeb6sqd8Fn89awMc2vuA@mail.gmail.com>
+Date: Mon, 11 Nov 2013 05:01:11 -0600
+Message-ID: <CAMP44s3xycqUAxvporp6cmjCqyXg_T07Ee5zKUpnhdQGUhsmLQ@mail.gmail.com> (sfid-20131111_120118_414721_7841D9CC)
+Subject: Re: [PATCH v2] mac80211: add assoc beacon timeout logic
+From: Felipe Contreras <felipe.contreras@gmail.com>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-11-14 at 06:05 -0800, Luis R. Rodriguez wrote:
+On Mon, Nov 11, 2013 at 12:41 AM, Krishna Chaitanya
+<chaitanya.mgit@gmail.com> wrote:
+> On Mon, Nov 11, 2013 at 3:15 AM, Felipe Contreras
+> <felipe.contreras@gmail.com> wrote:
+>> We don't want to be waiting forever for a beacon that will never come,
+>> just continue the association.
+>>
+>> Signed-off-by: Felipe Contreras <felipe.contreras@gmail.com>
+>> ---
+>>
+>> The previous version depended on some cleanup patches, plus had some unclear
+>> rerun logic.
+>>
+>>  net/mac80211/ieee80211_i.h |  1 +
+>>  net/mac80211/mlme.c        | 32 ++++++++++++++++++++++++++------
+>>  2 files changed, 27 insertions(+), 6 deletions(-)
+>>
+>> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+>> index 611abfc..e1f858d 100644
+>> --- a/net/mac80211/ieee80211_i.h
+>> +++ b/net/mac80211/ieee80211_i.h
+>> @@ -358,6 +358,7 @@ struct ieee80211_mgd_assoc_data {
+>>         const u8 *supp_rates;
+>>
+>>         unsigned long timeout;
+>> +       unsigned long beacon_timeout;
+>>         int tries;
+>>
+>>         u16 capability;
+>> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+>> index 86e4ad5..68f76f7 100644
+>> --- a/net/mac80211/mlme.c
+>> +++ b/net/mac80211/mlme.c
+>> @@ -38,6 +38,7 @@
+>>  #define IEEE80211_ASSOC_TIMEOUT                (HZ / 5)
+>>  #define IEEE80211_ASSOC_TIMEOUT_LONG   (HZ / 2)
+>>  #define IEEE80211_ASSOC_TIMEOUT_SHORT  (HZ / 10)
+>> +#define IEEE80211_ASSOC_BEACON_TIMEOUT 2 * HZ
+>
+> Don't you think its too long? 3-4 beacon intervals should suffice.
 
-> > > -void regulatory_hint_country_ie(struct wiphy *wiphy, enum ieee80211_band band,
-> > > +void regulatory_hint_country_ie(struct wireless_dev *wdev,
-> > > +				enum ieee80211_band band,
-> > >  				const u8 *country_ie, u8 country_ie_len)
-> > ...
-> > > +       request->wdev = wdev;
-> > > 
-> > You have absolutely no validation of this pointer - the lifetime of the
-> > request object and the wdev aren't necessarily the same.
-> 
-> Agreed.
-> 
-> > At least you should very carefully document that this pointer is a
-> > cookie (if it really is) and must never be dereferenced.
-> 
-> OK, I could also validate it upon processing but we'd need to loop
-> over the rdev wdev list for the country IE hint, if that is acceptable
-> upon procesing it'd be valid and we'd avoid corner case issues.
-> Thoughts?
+I don't have an opinion, if you think that's better, that's fine by me.
 
-As far as I can tell you already don't use it in any other way but a
-cookie pointer, comparing while iterating the then-current list of
-wdevs. But that's kinda unsafe. Might also be worth just making it a
-void* to avoid people trying to use it.
-
-johannes
-
+-- 
+Felipe Contreras
