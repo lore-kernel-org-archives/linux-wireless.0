@@ -1,31 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:40824 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752354Ab3KPTBB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Nov 2013 14:01:01 -0500
-From: "Coelho, Luciano" <luciano.coelho@intel.com>
-To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-CC: Simon Wunderlich <sw@simonwunderlich.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-Subject: Re: [PATCH v5 5/5] mac80211: only set CSA beacon when at least one
- beacon must be transmitted
-Date: Sat, 16 Nov 2013 19:00:57 +0000
-Message-ID: <1384628430.22010.36.camel@porter.coelho.fi> (sfid-20131116_200112_278306_45EDB657)
-References: <1384430976-13708-1-git-send-email-luciano.coelho@intel.com>
-	 <1384430976-13708-5-git-send-email-luciano.coelho@intel.com>
-	 <201311141553.16912.sw@simonwunderlich.de>
-	 <CAEFj987dHiYcdX0+_FH9W4x9s1M9BGwGWdz-ik5r_KO7gxEY7A@mail.gmail.com>
-In-Reply-To: <CAEFj987dHiYcdX0+_FH9W4x9s1M9BGwGWdz-ik5r_KO7gxEY7A@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([144.76.43.152]:36227 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753646Ab3KKN7X (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Nov 2013 08:59:23 -0500
+Message-ID: <1384178360.14334.18.camel@jlt4.sipsolutions.net> (sfid-20131111_145926_443167_B831D7FC)
+Subject: Re: [RFC v3 1/4] mac80211: don't transmit beacon with CSA count 0
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luciano Coelho <luciano.coelho@intel.com>
+Cc: linux-wireless@vger.kernel.org, sw@simonwunderlich.de
+Date: Mon, 11 Nov 2013 14:59:20 +0100
+In-Reply-To: <1383921579-22373-1-git-send-email-luciano.coelho@intel.com>
+References: <1383921579-22373-1-git-send-email-luciano.coelho@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gU2F0LCAyMDEzLTExLTE2IGF0IDE5OjU0ICswODAwLCBZZW9oIENodW4tWWVvdyB3cm90ZToN
-Cj4gSSBoYXZlIHNlZW4gdGhlIGZvbGxvd2luZyBrZXJuZWwgb29wcyBpZiBzZXQgdGhlIGNvdW50
-IHRvIDAgb3IgMSBpbg0KPiB1c2Vyc3BhY2UuIE90aGVyIHRoYW4gdGhhdCwgc2VlbXMgYWxyaWdo
-dC4NCg0KT3VjaCEgVGhpcyBkb2Vzbid0IGxvb2sgZ29vZC4gIEkgaGF2ZSB0byBjaGVjayB3aGF0
-IGlzIGhhcHBlbmluZy4NCg0KSSdsbCBsb29rIGludG8gaXQgb24gTW9uZGF5Lg0KDQpUaGFua3Mg
-Zm9yIHRlc3RpbmchDQoNCi0tDQpMdWNhLg0KDQo=
+On Fri, 2013-11-08 at 16:39 +0200, Luciano Coelho wrote:
+> A beacon should never have a Channel Switch Announcement information
+> element with a count of 0, because a count of 1 means switch just
+> before the next beacon.  So, if a count of 0 was valid in a beacon, it
+> would have been transmitted in the next channel already, which is
+> useless.  A CSA count equal to zero is only meaningful in action
+> frames or probe_responses.
+> 
+> Fix the ieee80211_csa_is_complete() and ieee80211_update_csa()
+> functions accordingly.
+
+These seem fine to me - maybe we should have some CSA tests in Jouni's
+hwsim test scripts, for the various cases? :)
+
+johannes
+
