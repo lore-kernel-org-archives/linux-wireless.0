@@ -1,100 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f48.google.com ([74.125.83.48]:41922 "EHLO
-	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754824Ab3KENtE (ORCPT
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:65511 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753286Ab3KKVz5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Nov 2013 08:49:04 -0500
-Received: by mail-ee0-f48.google.com with SMTP id d49so1821831eek.35
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Nov 2013 05:49:03 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH v2 3/5] cfg80211: add helper functions for start/end freq
-Date: Tue,  5 Nov 2013 14:48:47 +0100
-Message-Id: <1383659329-11023-3-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131105_144916_521884_3351EB76)
-In-Reply-To: <1383659329-11023-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1383659329-11023-1-git-send-email-janusz.dziedzic@tieto.com>
+	Mon, 11 Nov 2013 16:55:57 -0500
+Received: by mail-ie0-f173.google.com with SMTP id x13so5960363ief.18
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Nov 2013 13:55:57 -0800 (PST)
+Date: Mon, 11 Nov 2013 14:55:53 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: wzyboy <wzyboy@wzyboy.org>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
+Message-ID: <20131111215553.GA30509@google.com> (sfid-20131111_225610_821324_DD578655)
+References: <CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
+ <CALkVjQY7r=YKhsgDKR0mnYVtZy5BAdj83nY2jL0VFaiew6ha7A@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
+ <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
+ <527A8166.6000701@gmail.com>
+ <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
+ <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
+ <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
+ <CAErSpo6ry6cUaVngozS8-P44=LPJN6cbsZ_mfWkJv9Rn85YXUQ@mail.gmail.com>
+ <CALkVjQZEs1CqMEVApDDGZ6FDugPZ+-F5wzvE45+jB5Xrhv_N2A@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CALkVjQZEs1CqMEVApDDGZ6FDugPZ+-F5wzvE45+jB5Xrhv_N2A@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add helper fuctions for start/end freq.
+On Sun, Nov 10, 2013 at 06:19:58PM +0800, wzyboy wrote:
+> 2013/11/9 Bjorn Helgaas <bhelgaas@google.com>:
+> > it might
+> > be interesting to do "echo on >
+> > /sys/bus/pci/devices/0000:03:00.0/power/control" and see whether it
+> > makes a difference.
+> 
+> Hi, should I run this command after the bug? I just ran this after the
+> bug occurs, but there is no output in dmesg, and "ip link set wlan0
+> up" still returns same error ("RTNETLINK answers: Connection timed
+> out").
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Reviewed-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- net/wireless/chan.c |   44 ++++++++++++++++++++++++++++++--------------
- 1 file changed, 30 insertions(+), 14 deletions(-)
+Run the command before the bug occurs.  The idea is to disable run-time
+power management.  If the problem is that we're turning off power to
+the device, disabling power management might make a difference.
 
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index 3449664..1d25a46 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -277,6 +277,32 @@ void cfg80211_set_dfs_state(struct wiphy *wiphy,
- 				     width, dfs_state);
- }
- 
-+static u32 cfg80211_get_start_freq(u32 center_freq,
-+				   u32 bandwidth)
-+{
-+	u32 start_freq;
-+
-+	if (bandwidth <= 20)
-+		start_freq = center_freq;
-+	else
-+		start_freq = center_freq - bandwidth/2 + 10;
-+
-+	return start_freq;
-+}
-+
-+static u32 cfg80211_get_end_freq(u32 center_freq,
-+				 u32 bandwidth)
-+{
-+	u32 end_freq;
-+
-+	if (bandwidth <= 20)
-+		end_freq = center_freq;
-+	else
-+		end_freq = center_freq + bandwidth/2 - 10;
-+
-+	return end_freq;
-+}
-+
- static int cfg80211_get_chans_dfs_required(struct wiphy *wiphy,
- 					    u32 center_freq,
- 					    u32 bandwidth)
-@@ -284,13 +310,8 @@ static int cfg80211_get_chans_dfs_required(struct wiphy *wiphy,
- 	struct ieee80211_channel *c;
- 	u32 freq, start_freq, end_freq;
- 
--	if (bandwidth <= 20) {
--		start_freq = center_freq;
--		end_freq = center_freq;
--	} else {
--		start_freq = center_freq - bandwidth/2 + 10;
--		end_freq = center_freq + bandwidth/2 - 10;
--	}
-+	start_freq = cfg80211_get_start_freq(center_freq, bandwidth);
-+	end_freq = cfg80211_get_end_freq(center_freq, bandwidth);
- 
- 	for (freq = start_freq; freq <= end_freq; freq += 20) {
- 		c = ieee80211_get_channel(wiphy, freq);
-@@ -337,13 +358,8 @@ static bool cfg80211_secondary_chans_ok(struct wiphy *wiphy,
- 	struct ieee80211_channel *c;
- 	u32 freq, start_freq, end_freq;
- 
--	if (bandwidth <= 20) {
--		start_freq = center_freq;
--		end_freq = center_freq;
--	} else {
--		start_freq = center_freq - bandwidth/2 + 10;
--		end_freq = center_freq + bandwidth/2 - 10;
--	}
-+	start_freq = cfg80211_get_start_freq(center_freq, bandwidth);
-+	end_freq = cfg80211_get_end_freq(center_freq, bandwidth);
- 
- 	for (freq = start_freq; freq <= end_freq; freq += 20) {
- 		c = ieee80211_get_channel(wiphy, freq);
--- 
-1.7.9.5
-
+Bjorn
