@@ -1,84 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:60178 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752688Ab3KGAQc (ORCPT
+Received: from mail-wg0-f42.google.com ([74.125.82.42]:56305 "EHLO
+	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752890Ab3KKMMM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Nov 2013 19:16:32 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 01/13] ath9k: Add WB335 PCI IDs
-Date: Thu,  7 Nov 2013 05:41:48 +0530
-Message-Id: <1383783120-22435-2-git-send-email-sujith@msujith.org> (sfid-20131107_011636_391703_DDC19DD8)
-In-Reply-To: <1383783120-22435-1-git-send-email-sujith@msujith.org>
-References: <1383783120-22435-1-git-send-email-sujith@msujith.org>
+	Mon, 11 Nov 2013 07:12:12 -0500
+Received: by mail-wg0-f42.google.com with SMTP id k14so2098519wgh.3
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Nov 2013 04:12:11 -0800 (PST)
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Subject: [PATCH v2] mac80211: minstrel_ht: do not sample unsupported rates
+Date: Mon, 11 Nov 2013 13:10:49 +0100
+Message-Id: <1384171849-21058-1-git-send-email-karl.beldan@gmail.com> (sfid-20131111_131216_028051_72BE1243)
+In-Reply-To: <527D14B7.3090204@openwrt.org>
+References: <527D14B7.3090204@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+From: Karl Beldan <karl.beldan@rivierawaves.com>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+ATM minstrel_ht does not check whether a sampling rate is supported.
+Unsupported rates attempts can trigger when there are holes in bitfields
+of supported MCSes belonging to the same group (e.g many devices are
+MCS32 capable without MCS33->39 capable, also we systematically have a
+hole for CCK rates).
+I originally replaced an unsupported sample index with the fls of the
+bitfield of supported indexes of the sta current sample group, instead,
+this change simply drops the sample attempt, as suggested by Felix.
+
+This is not a problem in minstrel which fills a per STA sample table
+with only supported rates (though only at init).
+
+Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
 ---
- drivers/net/wireless/ath/ath9k/pci.c | 25 +++++++++++++++++++++++++
- 1 file changed, 25 insertions(+)
+ net/mac80211/rc80211_minstrel_ht.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index 7e4c252..04e6507 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -361,6 +361,11 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
- 	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
- 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
- 			 0x0036,
-+			 0x11AD, /* LITEON */
-+			 0x0682),
-+	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0036,
- 			 PCI_VENDOR_ID_AZWAVE,
- 			 0x213A),
- 	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
-@@ -371,6 +376,11 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
- 	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
- 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
- 			 0x0036,
-+			 PCI_VENDOR_ID_LENOVO,
-+			 0x4026),
-+	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0036,
- 			 PCI_VENDOR_ID_HP,
- 			 0x18E3),
- 	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
-@@ -381,6 +391,11 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
- 	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
- 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
- 			 0x0036,
-+			 PCI_VENDOR_ID_HP,
-+			 0x2005),
-+	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0036,
- 			 PCI_VENDOR_ID_DELL,
- 			 0x020E),
- 	  .driver_data = ATH9K_PCI_AR9565_1ANT | ATH9K_PCI_BT_ANT_DIV },
-@@ -458,6 +473,16 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
- 			 0x185F, /* WNC */
- 			 0x3027),
- 	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0036,
-+			 0x185F, /* WNC */
-+			 0xA120),
-+	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0036,
-+			 PCI_VENDOR_ID_FOXCONN,
-+			 0xE07F),
-+	  .driver_data = ATH9K_PCI_AR9565_2ANT | ATH9K_PCI_BT_ANT_DIV },
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index aeec401..1076bca 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -701,12 +701,16 @@ minstrel_get_sample_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
+ 	if (!mi->sample_tries)
+ 		return -1;
  
- 	/* PCI-E AR9565 (WB335) */
- 	{ PCI_VDEVICE(ATHEROS, 0x0036),
+-	mg = &mi->groups[mi->sample_group];
++	sample_group = mi->sample_group;
++	mg = &mi->groups[sample_group];
+ 	sample_idx = sample_table[mg->column][mg->index];
++	minstrel_next_sample_idx(mi);
++
++	if (!(mg->supported & BIT(sample_idx)))
++		return -1;
++
+ 	mr = &mg->rates[sample_idx];
+-	sample_group = mi->sample_group;
+ 	sample_idx += sample_group * MCS_GROUP_RATES;
+-	minstrel_next_sample_idx(mi);
+ 
+ 	/*
+ 	 * Sampling might add some overhead (RTS, no aggregation)
 -- 
-1.8.4.2
+1.8.2
 
