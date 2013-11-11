@@ -1,50 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:55841 "EHLO
-	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753936Ab3KUOfV (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:36789 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753747Ab3KKRBP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Nov 2013 09:35:21 -0500
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Simon Wunderlich <sw@simonwunderlich.de>
-Subject: [RFC 0/3] Fix CSA locking issues
-Date: Thu, 21 Nov 2013 15:34:19 +0100
-Message-Id: <1385044462-23046-1-git-send-email-sw@simonwunderlich.de> (sfid-20131121_153525_018580_7FCBCD51)
+	Mon, 11 Nov 2013 12:01:15 -0500
+Message-ID: <1384189271.14334.49.camel@jlt4.sipsolutions.net> (sfid-20131111_180123_077152_4ABE90F5)
+Subject: Re: [PATCH v2] mac80211: add assoc beacon timeout logic
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felipe Contreras <felipe.contreras@gmail.com>
+Cc: linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>
+Date: Mon, 11 Nov 2013 18:01:11 +0100
+In-Reply-To: <CAMP44s0Lsd2qMf3a-Vx4=HTd_UxzLVC6q1bAGPr+t6anubNknA@mail.gmail.com> (sfid-20131111_175658_138899_90A747C6)
+References: <1384119945-31213-1-git-send-email-felipe.contreras@gmail.com>
+	 <1384160932.14334.6.camel@jlt4.sipsolutions.net>
+	 <CAMP44s3TFSgWuR8gVoFBznNP+t9mz+to===9i1PAnra4ogKu9w@mail.gmail.com>
+	 <1384184624.14334.31.camel@jlt4.sipsolutions.net>
+	 <CAMP44s2cVVe4-yW214B9hJu7n6M1onZpZaPCj5N0Fi1JWDKKsw@mail.gmail.com>
+	 <1384188067.14334.45.camel@jlt4.sipsolutions.net>
+	 <CAMP44s3nkj2wZYCPve7EhyeD7sEFmpUN=-h015dOP68PcNSTug@mail.gmail.com>
+	 <CAMP44s0Lsd2qMf3a-Vx4=HTd_UxzLVC6q1bAGPr+t6anubNknA@mail.gmail.com>
+	 (sfid-20131111_175658_138899_90A747C6)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Unfortunately my channel switch announcement patches contained locking issues
-which I didn't notice during my test due to bad configuration. Johannes pointed
-them out, so here is my attempt to fix them. This series attempts to fix two
-issues:
+On Mon, 2013-11-11 at 10:56 -0600, Felipe Contreras wrote:
+> On Mon, Nov 11, 2013 at 10:53 AM, Felipe Contreras
+> <felipe.contreras@gmail.com> wrote:
+> > On Mon, Nov 11, 2013 at 10:41 AM, Johannes Berg
+> > <johannes@sipsolutions.net> wrote:
+> >> On Mon, 2013-11-11 at 10:23 -0600, Felipe Contreras wrote:
+> 
+> >>> > This isn't really true like I said above - the kernel can only drop the
+> >>> > association, if userspace *insists* then it will try again and again.
+> >>>
+> >>> But it's not doing this:
+> >>>
+> >>>   ieee80211_destroy_assoc_data(sdata, false);
+> >>>   cfg80211_assoc_timeout(sdata->dev, bss);
+> >>>
+> >>> Which is what causes the association to stop for me.
+> >>>
+> >>> So where exactly in the code is the association being "dropped"?
+> >>
+> >> This does get called in my setup.
+> >
+> > Yes, because your setup is receiving beacons.
+> >
+> > Check the code:
+> >
+> > if ((ifmgd->assoc_data->need_beacon && !ifmgd->have_beacon) ||
+> >    ieee80211_do_assoc(sdata)) {
+> > struct cfg80211_bss *bss = ifmgd->assoc_data->bss;
+> >
+> > ieee80211_destroy_assoc_data(sdata, false);
+> > cfg80211_assoc_timeout(sdata->dev, bss);
+> > }
+> >
+> > If there's no beacon, cfg80211_assoc_timeout() is not called.
+> >
+> > I'm sure if you don't call ieee80211_rx_mgmt_beacon() at all you will
+> > see the same behavior I see.
+> 
+> My bad, actually the code that is not being called is:
+> 
+>   cfg80211_unlink_bss(local->hw.wiphy, assoc_data->bss);
+> 
+> In ieee80211_do_assoc().
 
- * There are "suspicious rcu_dereference_protected() usage" problems for
-   ieee80211_assign_beacon and ieee80211_ibss_csa_beacon because the respective
-   locking was missing
- * There is a circular dependency between the wdev/sdata-lock and the
-   csa_finalize worker lock (see description in patch 3).
+That's not really interesting though, it just deletes the scan entry. If
+it was deleted, then the supplicant would just scan again and probably
+retry the connection.
 
-The fix is not really trivial and I'm not an expert on the cfg80211/mac80211
-locking, so I'd like to request your critical review. Patches are based
-on mac80211-next.
+johannes
 
-Thanks,
-   Simon
-
-
-Simon Wunderlich (3):
-  mac80211: modify beacon using sdata/wdev-lock, not rtnl lock
-  cfg80211/mac80211/ath6kl: acquire wdev lock outside ch_switch_notify
-  mac80211: don't cancel csa finalize work within stop_ap
-
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    2 +
- include/net/cfg80211.h                     |    3 +-
- net/mac80211/cfg.c                         |  136 ++++++++++++++++++----------
- net/mac80211/ieee80211_i.h                 |    3 +
- net/wireless/nl80211.c                     |    9 +-
- 5 files changed, 100 insertions(+), 53 deletions(-)
-
--- 
-1.7.10.4
 
