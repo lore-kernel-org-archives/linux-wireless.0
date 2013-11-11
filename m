@@ -1,94 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:38447 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753923Ab3KYQI3 (ORCPT
+Received: from mail-ee0-f51.google.com ([74.125.83.51]:54769 "EHLO
+	mail-ee0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751244Ab3KKSOJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Nov 2013 11:08:29 -0500
-Message-ID: <1385395707.4443.37.camel@jlt4.sipsolutions.net> (sfid-20131125_170833_349092_82EABA5E)
-Subject: Re: [PATCH 1/2] cfg80211: Add support for QoS mapping
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-Cc: Kyeyoon Park <kyeyoonp@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org
-Date: Mon, 25 Nov 2013 17:08:27 +0100
-In-Reply-To: <20131120102828.GA26154@jouni.qca.qualcomm.com>
-References: <20131120102828.GA26154@jouni.qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 11 Nov 2013 13:14:09 -0500
+Received: by mail-ee0-f51.google.com with SMTP id t10so2574219eei.24
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Nov 2013 10:14:08 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Eyal Shapira <eyal@wizery.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 1/2] mac80211: enable easier manipulation of VHT beamforming caps
+Date: Mon, 11 Nov 2013 20:14:00 +0200
+Message-Id: <1384193641-25813-1-git-send-email-egrumbach@gmail.com> (sfid-20131111_191414_145536_38CC673C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-11-20 at 12:28 +0200, Jouni Malinen wrote:
+From: Eyal Shapira <eyal@wizery.com>
 
-> +struct cfg80211_qos_map {
-> +	bool valid;
+Introduce shift and mask defines for beamformee STS cap and number
+of sounding dimensions cap as these can take any 3 bit value.
+While at it also cleanup an unrequired parenthesis.
 
-why do we need a validity flag? isn't NULL pointer enough?
+Signed-off-by: Eyal Shapira <eyal@wizery.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ include/linux/ieee80211.h |    8 ++++++--
+ net/mac80211/vht.c        |    7 +++----
+ 2 files changed, 9 insertions(+), 6 deletions(-)
 
-> + * @set_qos_map: Set QoS mapping information to the driver
->   */
->  struct cfg80211_ops {
->  	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
-> @@ -2428,6 +2476,9 @@ struct cfg80211_ops {
->  	int	(*channel_switch)(struct wiphy *wiphy,
->  				  struct net_device *dev,
->  				  struct cfg80211_csa_settings *params);
-> +	int     (*set_qos_map)(struct wiphy *wiphy,
-> +			       struct net_device *dev,
-> +			       struct cfg80211_qos_map *qos_map);
-
-I wonder if this is necessary? The driver could just have a flag for
-"support QoS mapping" and having such support requires using
-classify8021d(). OTOH, that function needs to gain a parameter anyway,
-so it's not really worth it. Also, it's something that could be changed
-purely internal to the kernel, so I guess I'm not worried about it much.
-
-> + * @NL80211_CMD_SET_QOS_MAP: Set Interworking QoS mapping for IP DSCP values.
-> + *	The QoS mapping information is included in %NL80211_ATTR_QOS_MAP. If
-> + *	that attribute is not included, QoS mapping is disabled.
-
-Might be useful to say that this is only valid while associated?
-
-In fact, why is this even a new operation? Can this change during the
-lifetime of the BSS? If not, then it might be worth just putting the
-attribute into START_AP and ASSOCIATE/CONNECT etc?
-
-> +		if (len & 1 || len < IEEE80211_QOS_MAP_LEN_MIN ||
-
-I think len%2 would be easier to read? Not that it makes a big
-difference, but fundamentally this isn't a bitop thing, it's a "length
-must be even" thing.
-
-> @@ -9564,6 +9606,14 @@ static struct genl_ops nl80211_ops[] = {
->  		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
->  				  NL80211_FLAG_NEED_RTNL,
->  	},
-> +	{
-> +		.cmd = NL80211_CMD_SET_QOS_MAP,
-
-You forgot to advertise availability of the operation, but then again
-see above - is it even needed?
-
-> @@ -720,6 +721,21 @@ unsigned int cfg80211_classify8021d(struct sk_buff *skb)
->  		return 0;
->  	}
->  
-> +	if (qos_map && qos_map->valid) {
-> +		unsigned int i, tmp_dscp = dscp >> 2;
-> +
-> +		for (i = 0; i < qos_map->num_des; i++) {
-> +			if (tmp_dscp == qos_map->dscp_exception[i].dscp)
-> +				return qos_map->dscp_exception[i].up;
-> +		}
-> +
-> +		for (i = 0; i < 8; i++) {
-> +			if (tmp_dscp >= qos_map->up[i].low &&
-> +			    tmp_dscp <= qos_map->up[i].high)
-> +				return i;
-> +		}
-> +	}
-
-Much better than the first version I saw :)
-
-johannes
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 8c3b26a..776cbb8 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -1411,8 +1411,12 @@ struct ieee80211_vht_operation {
+ #define IEEE80211_VHT_CAP_RXSTBC_MASK				0x00000700
+ #define IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE			0x00000800
+ #define IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE			0x00001000
+-#define IEEE80211_VHT_CAP_BEAMFORMEE_STS_MAX			0x0000e000
+-#define IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_MAX		0x00070000
++#define IEEE80211_VHT_CAP_BEAMFORMEE_STS_SHIFT                  13
++#define IEEE80211_VHT_CAP_BEAMFORMEE_STS_MASK			\
++		(7 << IEEE80211_VHT_CAP_BEAMFORMEE_STS_SHIFT)
++#define IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_SHIFT		16
++#define IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_MASK		\
++		(7 << IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_SHIFT)
+ #define IEEE80211_VHT_CAP_MU_BEAMFORMER_CAPABLE			0x00080000
+ #define IEEE80211_VHT_CAP_MU_BEAMFORMEE_CAPABLE			0x00100000
+ #define IEEE80211_VHT_CAP_VHT_TXOP_PS				0x00200000
+diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
+index de01127..d75f35c 100644
+--- a/net/mac80211/vht.c
++++ b/net/mac80211/vht.c
+@@ -182,16 +182,15 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
+ 			 IEEE80211_VHT_CAP_SHORT_GI_160);
+ 
+ 	/* remaining ones */
+-	if (own_cap.cap & IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE) {
++	if (own_cap.cap & IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE)
+ 		vht_cap->cap |= cap_info &
+ 				(IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE |
+-				 IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_MAX);
+-	}
++				 IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_MASK);
+ 
+ 	if (own_cap.cap & IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE)
+ 		vht_cap->cap |= cap_info &
+ 				(IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE |
+-				 IEEE80211_VHT_CAP_BEAMFORMEE_STS_MAX);
++				 IEEE80211_VHT_CAP_BEAMFORMEE_STS_MASK);
+ 
+ 	if (own_cap.cap & IEEE80211_VHT_CAP_MU_BEAMFORMER_CAPABLE)
+ 		vht_cap->cap |= cap_info &
+-- 
+1.7.9.5
 
