@@ -1,102 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:46505 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751727Ab3KSHEQ (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:65454 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754323Ab3KKToD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Nov 2013 02:04:16 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/4] ath9k: Add initvals for AR9565 1.1
-Date: Tue, 19 Nov 2013 12:29:33 +0530
-Message-Id: <1384844375-6347-2-git-send-email-sujith@msujith.org> (sfid-20131119_080421_753280_1C0FE120)
-In-Reply-To: <1384844375-6347-1-git-send-email-sujith@msujith.org>
-References: <1384844375-6347-1-git-send-email-sujith@msujith.org>
+	Mon, 11 Nov 2013 14:44:03 -0500
+Received: by mail-wi0-f172.google.com with SMTP id ez12so2677580wid.17
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Nov 2013 11:44:02 -0800 (PST)
+Date: Mon, 11 Nov 2013 20:43:41 +0100
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Subject: Re: [PATCH 1/2] mac80211: minstrels: spare numerous useless calls to
+ get_random_bytes
+Message-ID: <20131111194341.GA1684@magnum.frso.rivierawaves.com> (sfid-20131111_204409_265764_FE433DCB)
+References: <1383928473-798-1-git-send-email-karl.beldan@gmail.com>
+ <1384184745.14334.32.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1384184745.14334.32.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Mon, Nov 11, 2013 at 04:45:45PM +0100, Johannes Berg wrote:
+> On Fri, 2013-11-08 at 17:34 +0100, Karl Beldan wrote:
+> > From: Karl Beldan <karl.beldan@rivierawaves.com>
+> > 
+> > These are called to init the sample tables.
+> > This occurs once in minstrel_ht upon its registration (since it uses one
+> > single common sample table for all STAs), and once per sta addition in
+> > minstrel.
+> 
+> This commit log is suboptimal, it doesn't even seem to describe a change
+> but rather the behaviour after (or before?) the change?
+> 
+Other than replacing:
+"These are called to init the sample tables.\nThis occurs once in"
+with:
+"These are called to init the sample tables, which occurs once in",
+plus this ridiculously small diff in a non convoluted localized code
+path .. 
 
-The initialization arrays for v1.1 AR9565
-are mostly the same as v1.0/v1.0.1 except for
-radio_postamble.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- .../net/wireless/ath/ath9k/ar9565_1p1_initvals.h   | 64 ++++++++++++++++++++++
- 1 file changed, 64 insertions(+)
- create mode 100644 drivers/net/wireless/ath/ath9k/ar9565_1p1_initvals.h
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar9565_1p1_initvals.h b/drivers/net/wireless/ath/ath9k/ar9565_1p1_initvals.h
-new file mode 100644
-index 0000000..5681053
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath9k/ar9565_1p1_initvals.h
-@@ -0,0 +1,64 @@
-+/*
-+ * Copyright (c) 2010-2011 Atheros Communications Inc.
-+ * Copyright (c) 2011-2012 Qualcomm Atheros Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#ifndef INITVALS_9565_1P1_H
-+#define INITVALS_9565_1P1_H
-+
-+/* AR9565 1.1 */
-+
-+#define ar9565_1p1_mac_core ar9565_1p0_mac_core
-+
-+#define ar9565_1p1_mac_postamble ar9565_1p0_mac_postamble
-+
-+#define ar9565_1p1_baseband_core ar9565_1p0_baseband_core
-+
-+#define ar9565_1p1_baseband_postamble ar9565_1p0_baseband_postamble
-+
-+#define ar9565_1p1_radio_core ar9565_1p0_radio_core
-+
-+#define ar9565_1p1_soc_preamble ar9565_1p0_soc_preamble
-+
-+#define ar9565_1p1_soc_postamble ar9565_1p0_soc_postamble
-+
-+#define ar9565_1p1_Common_rx_gain_table ar9565_1p0_Common_rx_gain_table
-+
-+#define ar9565_1p1_Modes_lowest_ob_db_tx_gain_table ar9565_1p0_Modes_lowest_ob_db_tx_gain_table
-+
-+#define ar9565_1p1_pciephy_clkreq_disable_L1 ar9565_1p0_pciephy_clkreq_disable_L1
-+
-+#define ar9565_1p1_modes_fast_clock ar9565_1p0_modes_fast_clock
-+
-+#define ar9565_1p1_common_wo_xlna_rx_gain_table ar9565_1p0_common_wo_xlna_rx_gain_table
-+
-+#define ar9565_1p1_modes_low_ob_db_tx_gain_table ar9565_1p0_modes_low_ob_db_tx_gain_table
-+
-+#define ar9565_1p1_modes_high_ob_db_tx_gain_table ar9565_1p0_modes_high_ob_db_tx_gain_table
-+
-+#define ar9565_1p1_modes_high_power_tx_gain_table ar9565_1p0_modes_high_power_tx_gain_table
-+
-+#define ar9565_1p1_baseband_core_txfir_coeff_japan_2484 ar9565_1p0_baseband_core_txfir_coeff_japan_2484
-+
-+static const u32 ar9565_1p1_radio_postamble[][5] = {
-+	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
-+	{0x0001609c, 0x0b8ee524, 0x0b8ee524, 0x0b8ee524, 0x0b8ee524},
-+	{0x000160ac, 0xa4646c08, 0xa4646c08, 0x24645808, 0x24645808},
-+	{0x000160b0, 0x01d67f70, 0x01d67f70, 0x01d67f70, 0x01d67f70},
-+	{0x0001610c, 0x40000000, 0x40000000, 0x40000000, 0x40000000},
-+	{0x00016140, 0x10804008, 0x10804008, 0x50804008, 0x50804008},
-+};
-+
-+#endif /* INITVALS_9565_1P1_H */
--- 
-1.8.4.2
-
+FYI, this lowers the prng bytes demands from about 10*12*8bytes to
+10*8bytes per non-ht sta addition and at minstrel_ht init. This is to
+relate to the email posted just after I posted this change:
+http://marc.info/?l=linux-wireless&m=138393239432434&w=2
+ 
+Karl
