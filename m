@@ -1,31 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2003 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754024Ab3KZOVF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Nov 2013 09:21:05 -0500
-Received: from [10.176.68.141] (unknown [10.176.68.141]) by
- mail-sj1-12.sj.broadcom.com (Postfix) with ESMTP id 940A0207C4 for
- <linux-wireless@vger.kernel.org>; Tue, 26 Nov 2013 06:20:48 -0800 (PST)
-Message-ID: <5294AE3F.3090901@broadcom.com> (sfid-20131126_152109_226540_16C4AA96)
-Date: Tue, 26 Nov 2013 15:20:47 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: invalid sparse warnings ?
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Received: from s3.sipsolutions.net ([144.76.43.152]:36205 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753735Ab3KKNqB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Nov 2013 08:46:01 -0500
+Message-ID: <1384177555.14334.14.camel@jlt4.sipsolutions.net> (sfid-20131111_144605_865754_10864BF4)
+Subject: Re: [PATCH] mac80211: add generic cipher scheme support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Max Stepanov <Max.Stepanov@intel.com>
+Date: Mon, 11 Nov 2013 14:45:55 +0100
+In-Reply-To: <1383735753-5973-1-git-send-email-johannes@sipsolutions.net> (sfid-20131106_120243_114995_CE755B19)
+References: <1383735753-5973-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20131106_120243_114995_CE755B19)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Does some of you get these possibly invalid sparse warnings since 3.13-rc1?
+On Wed, 2013-11-06 at 12:02 +0100, Johannes Berg wrote:
+> From: Max Stepanov <Max.Stepanov@intel.com>
+> 
+> This adds generic cipher scheme support to mac80211, such schemes
+> are fully under control by the driver. On hw registration drivers
+> may specify additional HW ciphers with a scheme how these ciphers
+> have to be handled by mac80211 TX/RR. A cipher scheme specifies a
+> cipher suite value, a size of the security header to be added to
+> or stripped from frames and how the PN is to be verified on RX.
 
-brcm80211/brcmfmac/bcmsdh.c:777:1: warning: symbol 
-'__ksymtab_brcmf_sdio_probe' was not declared. Should it be static?
+Applied.
 
-The function brcmf_sdio_probe() is exported using EXPORT_SYMBOL macro. 
-Maybe upgrade my sparse installment?
-
-Regards,
-Arend
+johannes
 
