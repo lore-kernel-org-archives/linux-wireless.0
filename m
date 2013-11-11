@@ -1,118 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f170.google.com ([74.125.82.170]:34824 "EHLO
-	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751653Ab3K1LVp (ORCPT
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:45770 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753476Ab3KKTpA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Nov 2013 06:21:45 -0500
-Received: by mail-we0-f170.google.com with SMTP id w61so8156251wes.1
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Nov 2013 03:21:44 -0800 (PST)
-Message-ID: <52972749.70200@gmail.com> (sfid-20131128_122149_749985_D4D9D6CF)
-Date: Thu, 28 Nov 2013 12:21:45 +0100
-From: Mathy Vanhoef <vanhoefm@gmail.com>
+	Mon, 11 Nov 2013 14:45:00 -0500
+Received: by mail-wi0-f181.google.com with SMTP id m19so2707270wiv.2
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Nov 2013 11:44:59 -0800 (PST)
+Date: Mon, 11 Nov 2013 20:44:38 +0100
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Subject: Re: [PATCH v2] mac80211: minstrel_ht: do not sample unsupported rates
+Message-ID: <20131111194438.GB1684@magnum.frso.rivierawaves.com> (sfid-20131111_204504_815217_9AF8F806)
+References: <527D14B7.3090204@openwrt.org>
+ <1384171849-21058-1-git-send-email-karl.beldan@gmail.com>
+ <1384184796.14334.33.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-To: Pau Koning <paukoning@gmail.com>
-CC: Oleksij Rempel <linux@rempel-privat.de>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, mcgrof@qca.qualcomm.com,
-	jouni@qca.qualcomm.com, vthiagar@qca.qualcomm.com,
-	senthilb@qca.qualcomm.com
-Subject: Re: [PATCH] ath9k_htc: properly set MAC address and BSSID mask
-References: <5294E4C5.4050301@cs.kuleuven.be> <52950812.20001@rempel-privat.de> <5295EF41.8040709@cs.kuleuven.be> <CANiGF999jHN3+5QuNVAkVk_hHxZ6LkPxWB3jW9yoJGbfno7M9A@mail.gmail.com>
-In-Reply-To: <CANiGF999jHN3+5QuNVAkVk_hHxZ6LkPxWB3jW9yoJGbfno7M9A@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1384184796.14334.33.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Third time's the charm? 
---
-From: "Mathy Vanhoef" <vanhoefm@gmail.com>
-
-Pick the MAC address of the first virtual interface as the new hardware MAC
-address. Set BSSID mask according to this MAC address. This fixes CVE-2013-4579.
-
-Signed-off-by: Mathy Vanhoef <vanhoefm@gmail.com>
----
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index d441045..84359c3 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -147,21 +147,26 @@ static void ath9k_htc_bssid_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
- 	struct ath9k_vif_iter_data *iter_data = data;
- 	int i;
+On Mon, Nov 11, 2013 at 04:46:36PM +0100, Johannes Berg wrote:
+> On Mon, 2013-11-11 at 13:10 +0100, Karl Beldan wrote:
+> > From: Karl Beldan <karl.beldan@rivierawaves.com>
+> > 
+> > ATM minstrel_ht does not check whether a sampling rate is supported.
+> > Unsupported rates attempts can trigger when there are holes in bitfields
+> > of supported MCSes belonging to the same group (e.g many devices are
+> > MCS32 capable without MCS33->39 capable, also we systematically have a
+> > hole for CCK rates).
+> > I originally replaced an unsupported sample index with the fls of the
+> > bitfield of supported indexes of the sta current sample group, instead,
+> > this change simply drops the sample attempt, as suggested by Felix.
+> 
+> That paragraph doesn't really belong here - you should describe what
+> this change is doing (now). There may be some value in describing how
+> you arrived at the solution, but this particular description seems
+> unnecessary?
+> 
+Feel free to get rid of the superfluous comments.
  
--	for (i = 0; i < ETH_ALEN; i++)
--		iter_data->mask[i] &= ~(iter_data->hw_macaddr[i] ^ mac[i]);
-+	if (iter_data->hw_macaddr != NULL) {
-+		for (i = 0; i < ETH_ALEN; i++)
-+			iter_data->mask[i] &= ~(iter_data->hw_macaddr[i] ^ mac[i]);
-+	} else {
-+		iter_data->hw_macaddr = mac;
-+	}
- }
- 
--static void ath9k_htc_set_bssid_mask(struct ath9k_htc_priv *priv,
-+static void ath9k_htc_set_mac_bssid_mask(struct ath9k_htc_priv *priv,
- 				     struct ieee80211_vif *vif)
- {
- 	struct ath_common *common = ath9k_hw_common(priv->ah);
- 	struct ath9k_vif_iter_data iter_data;
- 
- 	/*
--	 * Use the hardware MAC address as reference, the hardware uses it
--	 * together with the BSSID mask when matching addresses.
-+	 * Pick the MAC address of the first interface as the new hardware
-+	 * MAC address. The hardware will use it together with the BSSID mask
-+	 * when matching addresses.
- 	 */
--	iter_data.hw_macaddr = common->macaddr;
-+	iter_data.hw_macaddr = NULL;
- 	memset(&iter_data.mask, 0xff, ETH_ALEN);
- 
- 	if (vif)
-@@ -173,6 +178,10 @@ static void ath9k_htc_set_bssid_mask(struct ath9k_htc_priv *priv,
- 		ath9k_htc_bssid_iter, &iter_data);
- 
- 	memcpy(common->bssidmask, iter_data.mask, ETH_ALEN);
-+
-+	if (iter_data.hw_macaddr)
-+		memcpy(common->macaddr, iter_data.hw_macaddr, ETH_ALEN);
-+
- 	ath_hw_setbssidmask(common);
- }
- 
-@@ -1083,7 +1092,7 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
- 		goto out;
- 	}
- 
--	ath9k_htc_set_bssid_mask(priv, vif);
-+	ath9k_htc_set_mac_bssid_mask(priv, vif);
- 
- 	priv->vif_slot |= (1 << avp->index);
- 	priv->nvifs++;
-@@ -1148,7 +1157,7 @@ static void ath9k_htc_remove_interface(struct ieee80211_hw *hw,
- 
- 	ath9k_htc_set_opmode(priv);
- 
--	ath9k_htc_set_bssid_mask(priv, vif);
-+	ath9k_htc_set_mac_bssid_mask(priv, vif);
- 
- 	/*
- 	 * Stop ANI only if there are no associated station interfaces.
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index b6aad69..99ab0aa 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -885,8 +885,9 @@ void ath9k_calculate_iter_data(struct ieee80211_hw *hw,
- 	struct ath_common *common = ath9k_hw_common(ah);
- 
- 	/*
--	 * Use the hardware MAC address as reference, the hardware uses it
--	 * together with the BSSID mask when matching addresses.
-+	 * Pick the MAC address of the first interface as the new hardware
-+	 * MAC address. The hardware will use it together with the BSSID mask
-+	 * when matching addresses.
- 	 */
- 	memset(iter_data, 0, sizeof(*iter_data));
- 	memset(&iter_data->mask, 0xff, ETH_ALEN);
-
-
-
+Karl
