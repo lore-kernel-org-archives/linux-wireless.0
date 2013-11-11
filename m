@@ -1,70 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:56994 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754900Ab3KFTZX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Nov 2013 14:25:23 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: Ben Hutchings <ben@decadent.org.uk>
-CC: <linux-wireless@vger.kernel.org>,
-	<linux-bluetooth@vger.kernel.org>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: linux-firmware: pull-request Marvell mwifiex-firmware 2013-11-06
-Date: Wed, 6 Nov 2013 11:25:13 -0800
-Message-ID: <1383765913-19716-1-git-send-email-bzhao@marvell.com> (sfid-20131106_202533_576757_DE7A972F)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx1.redhat.com ([209.132.183.28]:51002 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754838Ab3KKRUh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Nov 2013 12:20:37 -0500
+Message-ID: <1384190436.4271.31.camel@dcbw.foobar.com> (sfid-20131111_182045_355892_04C04AED)
+Subject: Re: [PATCH] cfg80211: Introduce critical protocol indication for
+ p2p connection.
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Arend van Spriel <arend@broadcom.com>, Jouni Malinen <j@w1.fi>,
+	"Undekari, Sunil Dutt" <usdutt@qti.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Mon, 11 Nov 2013 11:20:36 -0600
+In-Reply-To: <1384187186.14334.39.camel@jlt4.sipsolutions.net>
+References: <1383230452-12608-1-git-send-email-usdutt@qti.qualcomm.com>
+	 <1383230593.14302.1.camel@jlt4.sipsolutions.net>
+	 <26F3B0343EE4744AA14EEEF9E1E534511F7A65CC@aphydexd01a>
+	 <1383233115.14302.2.camel@jlt4.sipsolutions.net>
+	 <26F3B0343EE4744AA14EEEF9E1E534511F7A6606@aphydexd01a>
+	 <52729681.5020004@broadcom.com>
+	 <26F3B0343EE4744AA14EEEF9E1E534511F7A8160@aphydexd01a>
+	 <5273A784.4040900@broadcom.com> <20131102073319.GA3507@w1.fi>
+	 <5274D5DC.1090508@broadcom.com>
+	 <1384187186.14334.39.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The following changes since commit 7d0c7a8cfd78388d90cc784a185b19dcbdbce824:
+On Mon, 2013-11-11 at 17:26 +0100, Johannes Berg wrote:
+> On Sat, 2013-11-02 at 11:37 +0100, Arend van Spriel wrote:
+> 
+> > > Currently, there is no way for wpa_supplicant to clearly indicate to the
+> > > driver that it is about to run through number of quick operations
+> > > (offchannel Action frame exchange for GO Negotiation, single channel
+> > > scan, WPS association + EAPOL exchange, data connection association +
+> > > 4-way handshake). The driver can guess that this is happening (or could
+> > > use really ugly hacks to see what Action frames are exchanged and
+> > > determine next likely operation based on that) and as such, would not
+> > > know how to configure the firmware to avoid background scans for the
+> > > station interface during this full sequence.
+> > 
+> > I wanted this API primarily to avoid drivers doing that kind of hacks so 
+> > I agree. It was intended to avoid extra latencies during IP connection 
+> > setup, which is probably happening right after the group formation. So I 
+> > recommend the connection managers to use this API. I think Dan Williams 
+> > did some initial implementation testing in NetworkManager and had some 
+> > concerns. I forgot about them completely so not sure how that ended.
+> > 
+> > > While the background scan should in most cases not completely break the
+> > > process even with inconvenient timing (or well, hitting one in middle of
+> > > the three frame GO Negotiation would have potential to time out that
+> > > exchange), it would be nice if this common sequence could be optimized
+> > > to avoid extra latencies and to be more robust in general since there is
+> > > a 15 second timeout for group formation and quite a bit shorter timeouts
+> > > in practice for the individual operations within the sequence.
+> > 
+> > I guess the decision is for Johannes to take, but I see your point.
+> 
+> I think after this long discussion we all finally understand the concern
+> and use case - that really could have been explained in the patch
+> message.
+> 
+> Anyhow, I think that the critical protocol API is still a bad fit
+> because it currently only allows
+>  (1) a single user of the API at a time, so e.g. connman using it for
+> DHCP on a
+>      P2P group interface while wpa_s is using it for GO negotation would
+> break
+>  (2) changing that is probably not too difficult technically, but the
+> question is
+>      how multiple concurrent protocols should behave and if anything
+> else has
+>      really started using this yet
 
-  Merge branch 'wilink4' of git://git.kernel.org/pub/scm/linux/kernel/git/balbi/linux-firmware (2013-10-13 21:11:46 +0100)
+I've had patches for NetworkManager for a while for this, I had
+developed them in May 2013 which then resulted in my replies to
+"cfg80211: introduce critical protocol indication from user-space".  I
+posted about your problem #1, and Arnd's reply at the time was "I am not
+fully convinced there will be a need for multiple protocols."  Perhaps
+that need has now become more apparent?
 
-are available in the git repository at:
+Dan
 
-
-  git://git.marvell.com/mwifiex-firmware.git master
-
-for you to fetch changes up to b7c848634538ff87317acd802fb4645cfd2f9fb5:
-
-  linux-firmware: add Marvell SD8897-B0 firmware combo image (2013-11-04 16:03:34 -0800)
-
-----------------------------------------------------------------
-Bing Zhao (2):
-      linux-firmware: update Marvell PCIe/USB 8897-B0 firmware combo image
-      linux-firmware: add Marvell SD8897-B0 firmware combo image
-
- WHENCE                   |   5 ++++-
- mrvl/pcie8897_uapsta.bin | Bin 350244 -> 656896 bytes
- mrvl/sd8897_uapsta.bin   | Bin 0 -> 639012 bytes
- 3 files changed, 4 insertions(+), 1 deletion(-)
- create mode 100644 mrvl/sd8897_uapsta.bin
-
-diff --git a/WHENCE b/WHENCE
-index 2d52804..3875e77 100644
---- a/WHENCE
-+++ b/WHENCE
-@@ -727,11 +727,14 @@ Version: 14.66.9.p96
- File: mrvl/sd8797_uapsta.bin
- Version: 14.66.11.p151
- 
-+File: mrvl/sd8897_uapsta.bin
-+Version: 15.69.2.p11
-+
- File: mrvl/usb8797_uapsta.bin
- Version: 14.69.11.p179
- 
- File: mrvl/pcie8897_uapsta.bin
--Version: 15.69.201.p52
-+Version: 15.69.2.p11
- 
- Licence: Redistributable. See LICENCE.Marvell for details.  Originates from
- http://git.marvell.com/?p=mwifiex-firmware.git
-diff --git a/mrvl/pcie8897_uapsta.bin b/mrvl/pcie8897_uapsta.bin
-index b067689..858c100 100644
-Binary files a/mrvl/pcie8897_uapsta.bin and b/mrvl/pcie8897_uapsta.bin differ
-diff --git a/mrvl/sd8897_uapsta.bin b/mrvl/sd8897_uapsta.bin
-new file mode 100644
-index 0000000..70732a6
-Binary files /dev/null and b/mrvl/sd8897_uapsta.bin differ
