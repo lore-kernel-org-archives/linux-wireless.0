@@ -1,80 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f182.google.com ([74.125.82.182]:64099 "EHLO
-	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756613Ab3KHOGi (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:36346 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754327Ab3KKOlH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Nov 2013 09:06:38 -0500
-Received: by mail-we0-f182.google.com with SMTP id t61so2048910wes.27
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Nov 2013 06:06:36 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAMP44s15W7gb8rXwqum5bdHOSk=A_sadX7ksvtkG0qTOu1RREg@mail.gmail.com>
-References: <CAMP44s1XJRHV8bAX=_-TkSKMkY8Nw1=eHorqTCZ2QmtR5m8uJA@mail.gmail.com>
- <526E20EA.9090203@rempel-privat.de> <CAMP44s2Cvw9HF3c3Asuq+bTSD36Gw6PXOUVjAcCD+hf6KB_awg@mail.gmail.com>
- <CABPxzY+xJ7kst-sYwP8RJwMO_zkNYWKaYy=_LS7WQfuxquK24w@mail.gmail.com>
- <CAMP44s0087jYz5AiEaEzwt7GqH9ed8PWE1CmvMPr4Dqn3yE6rA@mail.gmail.com>
- <CABPxzYLwwyFCFw1pEt0v9Xw4kcue1C_RZx0RbTbMrUw=+MWvgQ@mail.gmail.com>
- <CAMP44s0svc2MRKCrZXS5ZYRZNPoomQkcKHdC2m2BGy7di+TCyA@mail.gmail.com>
- <CABPxzYL-Gzbzoc_ui+qUQ6uzoKp=Yq7yLWZvc7PoEjiH3dFczg@mail.gmail.com>
- <CAMP44s3uRF=jNn5ZHZ=QOcvuMoXxsfkxU=VOq3K02Q0qOspEdA@mail.gmail.com>
- <CABPxzYJbNjAwymwUq0pN=YyuCBGy2qz_BKafatHTWK+yH8PbkA@mail.gmail.com>
- <CAMP44s1NOS2p9pKeMLhR7616CzHeHJVJEzcF1tP6tsKfcPhSOQ@mail.gmail.com>
- <CABPxzY+RL+ikbSff3a7qb20ExxcSTx6U2xcL5CFr-BgVSOr61A@mail.gmail.com>
- <CAMP44s384vOcMc4vE82gAdVf37YUZfegmPHUSeobPO=gK6ErAw@mail.gmail.com>
- <CABPxzYLDHP5gyeTL8HR=6uJDLptaUGEnNGSFLMkxKqi-JaBVYQ@mail.gmail.com>
- <CABPxzYJTuV0vGLnhgcQcXbg_9szSm2hH7_vCeP4TOKNxZQx_Gg@mail.gmail.com>
- <CAMP44s3VRnqw0XJDZTZTym7wBD5-NnfOD56YHbE87OG=3Zan2w@mail.gmail.com> <CAMP44s15W7gb8rXwqum5bdHOSk=A_sadX7ksvtkG0qTOu1RREg@mail.gmail.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Fri, 8 Nov 2013 19:36:16 +0530
-Message-ID: <CABPxzYLtbs1s-_T+hk+N1hOEuCi_Yq+CGxG7Xx0hPRmiyQM0Jg@mail.gmail.com> (sfid-20131108_150641_762058_E2F292AA)
-Subject: Re: I always need a miracle to connect with iwlwifi
-To: Felipe Contreras <felipe.contreras@gmail.com>
-Cc: Oleksij Rempel <linux@rempel-privat.de>, ilw@linux.intel.com,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 11 Nov 2013 09:41:07 -0500
+Message-ID: <1384180862.14334.25.camel@jlt4.sipsolutions.net> (sfid-20131111_154112_016322_FC8D2C98)
+Subject: Re: [PATCH 05/19] cfg80211: processing core regulatory hints on its
+ own
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 11 Nov 2013 15:41:02 +0100
+In-Reply-To: <CAGRGNgXdnwYnNYncPQGp=NNF1FxY3sFMSSf7arWYeX3v=PFAzw@mail.gmail.com> (sfid-20131107_014742_750163_B1BE1A20)
+References: <1383671897-7746-1-git-send-email-mcgrof@do-not-panic.com>
+	 <1383671897-7746-6-git-send-email-mcgrof@do-not-panic.com>
+	 <1383733459.14307.22.camel@jlt4.sipsolutions.net>
+	 <CAB=NE6UuRf=Wsfe_uym1+r+Ay0eNoJKa6Fo1Hi0r-LA8wTddng@mail.gmail.com>
+	 <CAGRGNgXdnwYnNYncPQGp=NNF1FxY3sFMSSf7arWYeX3v=PFAzw@mail.gmail.com>
+	 (sfid-20131107_014742_750163_B1BE1A20)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 8, 2013 at 6:44 PM, Felipe Contreras
-<felipe.contreras@gmail.com> wrote:
-> On Fri, Nov 8, 2013 at 2:35 AM, Felipe Contreras
-> <felipe.contreras@gmail.com> wrote:
->> On Sat, Nov 2, 2013 at 2:05 PM, Krishna Chaitanya
->> <chaitanya.mgit@gmail.com> wrote:
->>
->>> Also one more thing you said N900 uses mac80211 and it has no issues, but as
->>> its a embedded device it might running an older kernel where the
->>> handling might be
->>> different, so we need to try with the same kernel you are facing an
->>> issue with the
->>> a driver which advertises IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC.
->>
->> Yes it was running an older kernel, but I just compiled v3.12 and ran
->> it on the N900, and still everything works fine.
->>
->>> (or) if you a have a compilation environment try commenting the advertisement of
->>> IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC in the iwlwifi DVM driver and
->>> try to reproduce the issue.
->>
->> After commenting that flag everything works fine :)
+On Thu, 2013-11-07 at 11:47 +1100, Julian Calaby wrote:
 
-Oh, great. That was just to corner the problem, that means we are not getting
-the required beacon  before the association, but we only wait for 1 beacon here
-may be we to wait for some number of beacons before giving up the association??
+> >>> -     switch (__regulatory_hint(wiphy, reg_request)) {
+> >>> +     switch (reg_request->initiator) {
+> >>> +     case NL80211_REGDOM_SET_BY_CORE:
+> >>> +             reg_process_hint_core(reg_request);
+> >>> +             return;
+> >
+> > Note that for the core request we bail out early.
+> >
+> >>> +     case NL80211_REGDOM_SET_BY_USER:
+> >>> +     case NL80211_REGDOM_SET_BY_DRIVER:
+> >>> +     case NL80211_REGDOM_SET_BY_COUNTRY_IE:
+> >>> +             treatment = __regulatory_hint(wiphy, reg_request);
+> >>> +             break;
+> >>> +     }
+> >>> +
+> >>> +     switch (treatment) {
+> >>
+> >> is used uninitialized here
+> >
+> > As I see it in the code we either bail early or its assigned to the
+> > return value of __regulatory_hint() for the non-core case. Did I miss
+> > something?
+> 
+> I think Johannes just wants you to assign something to it so that
+> paranoid static checkers / compilers won't complain that it's unset in
+> the potential case where we make it through the switch without hitting
+> any of the cases. (Adding a default: case to the switch statement
+> would also work, but as you've been very very careful to spell out all
+> the cases here that'd tempt developers to remove all the careful
+> spelling out in some crazed cleanup binge.)
+> 
+> Of course this will never happen if reg_request->initiator is an enum
+> and all it's possible values are covered in the switch statement, but
+> some compilers (and developers like me) need it spelled out for them.
 
-Johannes??
+Well actually I was just careless and didn't realize that it was
+actually a false compiler warning :)
 
->> What are the next steps?
->
-> I tried to add some debugging to see what's going on, and indeed the
-> beacon packets are lost, I added debugging as low in the chain as I
-> could (iwlagn_rx_reply_rx()), and I don't see them there. However,
-> when I enable the monitor mode, I see them. What's going on?
+johannes
 
-In the captures you shared all the beacons are malformed, so
-probably they failed the CRC check. iwlwifi drops all the CRC failed
-packets. (doth MVM and DVM)
-
-Not sure how you are receiving the beacons in the monitor mode.
-BTW did you tried capturing the beacons in other devices and see if they
-are really malformed, or is it just iwlwifi interpreting them wrongly.?
