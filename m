@@ -1,45 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:64165 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753197Ab3KAOAH (ORCPT
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:45540 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753009Ab3KKMaI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 10:00:07 -0400
-Received: by mail-wi0-f175.google.com with SMTP id hm4so1109561wib.14
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 07:00:06 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 56/65] wireless-regdb: extend 5 GHz range for CR
-Date: Fri,  1 Nov 2013 14:57:46 +0100
-Message-Id: <1383314275-20960-57-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_150019_271532_665CD1B3)
-In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+	Mon, 11 Nov 2013 07:30:08 -0500
+Received: by mail-wg0-f47.google.com with SMTP id y10so936546wgg.2
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Nov 2013 04:30:07 -0800 (PST)
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Subject: [PATCH] mac80211_hwsim: claim CCK support for HT clients
+Date: Mon, 11 Nov 2013 13:29:33 +0100
+Message-Id: <1384172973-21638-1-git-send-email-karl.beldan@gmail.com> (sfid-20131111_133012_120022_69FA3EF2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This extends the 5 GHz DFS frequency range.
+From: Karl Beldan <karl.beldan@rivierawaves.com>
 
-Source is QCA's regulatory team's efforts.
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
 ---
- db.txt | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/mac80211_hwsim.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/db.txt b/db.txt
-index 6d20e1f..3eb782c 100644
---- a/db.txt
-+++ b/db.txt
-@@ -190,7 +190,7 @@ country CR: DFS-FCC
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 80), (17)
- 	(5250 - 5330 @ 80), (24), DFS
--	(5490 - 5710 @ 80), (24), DFS
-+	(5490 - 5730 @ 80), (24), DFS
- 	(5735 - 5835 @ 80), (30)
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 2cd3f54..bb737bb 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -2305,7 +2305,8 @@ static int __init init_mac80211_hwsim(void)
+ 			    IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS |
+ 			    IEEE80211_HW_AMPDU_AGGREGATION |
+ 			    IEEE80211_HW_WANT_MONITOR_VIF |
+-			    IEEE80211_HW_QUEUE_CONTROL;
++			    IEEE80211_HW_QUEUE_CONTROL |
++			    IEEE80211_HW_SUPPORTS_HT_CCK_RATES;
+ 		if (rctbl)
+ 			hw->flags |= IEEE80211_HW_SUPPORTS_RC_TABLE;
  
- country CY: DFS-ETSI
 -- 
-1.8.4.rc3
+1.8.2
 
