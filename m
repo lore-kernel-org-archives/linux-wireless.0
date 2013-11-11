@@ -1,142 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:40194 "EHLO
-	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752451Ab3KRTHZ (ORCPT
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:44927 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753484Ab3KKMNS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Nov 2013 14:07:25 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>,
-	netdev@vger.kernel.org, Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 3/3] rtlwifi: rtl8192cu: Update table.c
-Date: Mon, 18 Nov 2013 13:06:57 -0600
-Message-Id: <1384801617-22920-4-git-send-email-Larry.Finger@lwfinger.net> (sfid-20131118_200800_358253_123679A6)
-In-Reply-To: <1384801617-22920-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1384801617-22920-1-git-send-email-Larry.Finger@lwfinger.net>
+	Mon, 11 Nov 2013 07:13:18 -0500
+Received: by mail-wg0-f47.google.com with SMTP id y10so919266wgg.2
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Nov 2013 04:13:17 -0800 (PST)
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Subject: [PATCH] mac80211: minstrel_ht: replace some occurences of MCS_GROUP_RATES
+Date: Mon, 11 Nov 2013 13:12:55 +0100
+Message-Id: <1384171975-21111-1-git-send-email-karl.beldan@gmail.com> (sfid-20131111_131335_084037_756A9294)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>
+From: Karl Beldan <karl.beldan@rivierawaves.com>
 
-The latest vendor driver has some new values.
+Consecutive MCSes in [8*(NSS-1)->8*NSS[ have the same number NSS of
+streams (except for MCS32 which is mishandled ATM).
+ATM minstrel_ht uses MCS_GROUP_RATES in place of this 8 modulus.
+This change replaces such occurences and by doing so allows for different
+values of MCS_GROUP_RATES (e.g to cope with VHT MCS8,9).
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Signed-off-by: Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>
+Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
 ---
- drivers/net/wireless/rtlwifi/rtl8192cu/table.c | 40 +++++++++++++-------------
- 1 file changed, 20 insertions(+), 20 deletions(-)
+ net/mac80211/rc80211_minstrel_ht.c         | 9 ++++-----
+ net/mac80211/rc80211_minstrel_ht_debugfs.c | 3 +--
+ 2 files changed, 5 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/table.c b/drivers/net/wireless/rtlwifi/rtl8192cu/table.c
-index 966be51..7903c15 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/table.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/table.c
-@@ -36,7 +36,7 @@ u32 RTL8192CUPHY_REG_2TARRAY[RTL8192CUPHY_REG_2TARRAY_LENGTH] = {
- 	0x804, 0x00000003,
- 	0x808, 0x0000fc00,
- 	0x80c, 0x0000000a,
--	0x810, 0x10005388,
-+	0x810, 0x10000330,
- 	0x814, 0x020c3d10,
- 	0x818, 0x02200385,
- 	0x81c, 0x00000000,
-@@ -110,22 +110,22 @@ u32 RTL8192CUPHY_REG_2TARRAY[RTL8192CUPHY_REG_2TARRAY_LENGTH] = {
- 	0xc44, 0x000100b7,
- 	0xc48, 0xec020107,
- 	0xc4c, 0x007f037f,
--	0xc50, 0x6954341e,
-+	0xc50, 0x69543420,
- 	0xc54, 0x43bc0094,
--	0xc58, 0x6954341e,
-+	0xc58, 0x69543420,
- 	0xc5c, 0x433c0094,
- 	0xc60, 0x00000000,
- 	0xc64, 0x5116848b,
- 	0xc68, 0x47c00bff,
- 	0xc6c, 0x00000036,
- 	0xc70, 0x2c7f000d,
--	0xc74, 0x0186115b,
-+	0xc74, 0x2186115b,
- 	0xc78, 0x0000001f,
- 	0xc7c, 0x00b99612,
- 	0xc80, 0x40000100,
- 	0xc84, 0x20f60000,
- 	0xc88, 0x40000100,
--	0xc8c, 0x20200000,
-+	0xc8c, 0xa0e40000,
- 	0xc90, 0x00121820,
- 	0xc94, 0x00000000,
- 	0xc98, 0x00121820,
-@@ -226,7 +226,7 @@ u32 RTL8192CUPHY_REG_1TARRAY[RTL8192CUPHY_REG_1TARRAY_LENGTH] = {
- 	0x804, 0x00000001,
- 	0x808, 0x0000fc00,
- 	0x80c, 0x0000000a,
--	0x810, 0x10005388,
-+	0x810, 0x10000330,
- 	0x814, 0x020c3d10,
- 	0x818, 0x02200385,
- 	0x81c, 0x00000000,
-@@ -300,9 +300,9 @@ u32 RTL8192CUPHY_REG_1TARRAY[RTL8192CUPHY_REG_1TARRAY_LENGTH] = {
- 	0xc44, 0x000100b7,
- 	0xc48, 0xec020107,
- 	0xc4c, 0x007f037f,
--	0xc50, 0x6954341e,
-+	0xc50, 0x69543420,
- 	0xc54, 0x43bc0094,
--	0xc58, 0x6954341e,
-+	0xc58, 0x69543420,
- 	0xc5c, 0x433c0094,
- 	0xc60, 0x00000000,
- 	0xc64, 0x5116848b,
-@@ -340,7 +340,7 @@ u32 RTL8192CUPHY_REG_1TARRAY[RTL8192CUPHY_REG_1TARRAY_LENGTH] = {
- 	0xce4, 0x00000000,
- 	0xce8, 0x37644302,
- 	0xcec, 0x2f97d40c,
--	0xd00, 0x00080740,
-+	0xd00, 0x00000740,
- 	0xd04, 0x00020401,
- 	0xd08, 0x0000907f,
- 	0xd0c, 0x20010201,
-@@ -633,17 +633,17 @@ u32 RTL8192CURADIOA_2TARRAY[RTL8192CURADIOA_2TARRAYLENGTH] = {
- 	0x012, 0x00071000,
- 	0x012, 0x000b0000,
- 	0x012, 0x000fc000,
--	0x013, 0x000287af,
-+	0x013, 0x000287b3,
- 	0x013, 0x000244b7,
- 	0x013, 0x000204ab,
- 	0x013, 0x0001c49f,
- 	0x013, 0x00018493,
--	0x013, 0x00014297,
--	0x013, 0x00010295,
--	0x013, 0x0000c298,
--	0x013, 0x0000819c,
--	0x013, 0x000040a8,
--	0x013, 0x0000001c,
-+	0x013, 0x0001429b,
-+	0x013, 0x00010299,
-+	0x013, 0x0000c29c,
-+	0x013, 0x000081a0,
-+	0x013, 0x000040ac,
-+	0x013, 0x00000020,
- 	0x014, 0x0001944c,
- 	0x014, 0x00059444,
- 	0x014, 0x0009944c,
-@@ -932,10 +932,10 @@ u32 RTL8192CUMAC_2T_ARRAY[RTL8192CUMAC_2T_ARRAYLENGTH] = {
- 	0x608, 0x0000000e,
- 	0x609, 0x0000002a,
- 	0x652, 0x00000020,
--	0x63c, 0x0000000a,
--	0x63d, 0x0000000e,
--	0x63e, 0x0000000a,
--	0x63f, 0x0000000e,
-+	0x63c, 0x00000008,
-+	0x63d, 0x00000008,
-+	0x63e, 0x0000000c,
-+	0x63f, 0x0000000c,
- 	0x66e, 0x00000005,
- 	0x700, 0x00000021,
- 	0x701, 0x00000043,
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index 1076bca..84ae70b 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -135,7 +135,7 @@ minstrel_ht_update_rates(struct minstrel_priv *mp, struct minstrel_ht_sta *mi);
+ static int
+ minstrel_ht_get_group_idx(struct ieee80211_tx_rate *rate)
+ {
+-	return GROUP_IDX((rate->idx / MCS_GROUP_RATES) + 1,
++	return GROUP_IDX((rate->idx / 8) + 1,
+ 			 !!(rate->flags & IEEE80211_TX_RC_SHORT_GI),
+ 			 !!(rate->flags & IEEE80211_TX_RC_40_MHZ_WIDTH));
+ }
+@@ -148,7 +148,7 @@ minstrel_ht_get_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
+ 
+ 	if (rate->flags & IEEE80211_TX_RC_MCS) {
+ 		group = minstrel_ht_get_group_idx(rate);
+-		idx = rate->idx % MCS_GROUP_RATES;
++		idx = rate->idx % 8;
+ 	} else {
+ 		group = MINSTREL_CCK_GROUP;
+ 
+@@ -636,8 +636,7 @@ minstrel_ht_set_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
+ 		idx = mp->cck_rates[index % ARRAY_SIZE(mp->cck_rates)];
+ 		flags = 0;
+ 	} else {
+-		idx = index % MCS_GROUP_RATES +
+-		      (group->streams - 1) * MCS_GROUP_RATES;
++		idx = index % MCS_GROUP_RATES + (group->streams - 1) * 8;
+ 		flags = IEEE80211_TX_RC_MCS | group->flags;
+ 	}
+ 
+@@ -821,7 +820,7 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+ 	}
+ 
+ 	rate->idx = sample_idx % MCS_GROUP_RATES +
+-		    (sample_group->streams - 1) * MCS_GROUP_RATES;
++		    (sample_group->streams - 1) * 8;
+ 	rate->flags = IEEE80211_TX_RC_MCS | sample_group->flags;
+ }
+ 
+diff --git a/net/mac80211/rc80211_minstrel_ht_debugfs.c b/net/mac80211/rc80211_minstrel_ht_debugfs.c
+index df44a5a..3e7d793 100644
+--- a/net/mac80211/rc80211_minstrel_ht_debugfs.c
++++ b/net/mac80211/rc80211_minstrel_ht_debugfs.c
+@@ -54,8 +54,7 @@ minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
+ 			int r = bitrates[j % 4];
+ 			p += sprintf(p, " %2u.%1uM", r / 10, r % 10);
+ 		} else {
+-			p += sprintf(p, " MCS%-2u", (mg->streams - 1) *
+-					 MCS_GROUP_RATES + j);
++			p += sprintf(p, " MCS%-2u", (mg->streams - 1) * 8 + j);
+ 		}
+ 
+ 		tp = mr->cur_tp / 10;
 -- 
-1.8.4
+1.8.2
 
