@@ -1,45 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f180.google.com ([209.85.214.180]:41811 "EHLO
-	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754182Ab3KYQpm (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:36563 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753904Ab3KKPpt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Nov 2013 11:45:42 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, David Binderman <dcb314@hotmail.com>,
-	Stable <stable@vger.kernel.org>
-Subject: [PATCH] rtlwifi: rtl8188ee: Fix typo in code
-Date: Mon, 25 Nov 2013 10:45:28 -0600
-Message-Id: <1385397928-17159-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20131125_174552_125953_6B4B435E)
+	Mon, 11 Nov 2013 10:45:49 -0500
+Message-ID: <1384184745.14334.32.camel@jlt4.sipsolutions.net> (sfid-20131111_164556_239627_08A61034)
+Subject: Re: [PATCH 1/2] mac80211: minstrels: spare numerous useless calls
+ to get_random_bytes
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Karl Beldan <karl.beldan@gmail.com>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Date: Mon, 11 Nov 2013 16:45:45 +0100
+In-Reply-To: <1383928473-798-1-git-send-email-karl.beldan@gmail.com> (sfid-20131108_173457_501914_FE444774)
+References: <1383928473-798-1-git-send-email-karl.beldan@gmail.com>
+	 (sfid-20131108_173457_501914_FE444774)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The static analyser "cppcheck" shows the following typo:
-drivers/net/wireless/rtlwifi/rtl8188ee/dm.c:1081]: (style) Same expression on both sides of '!='.
+On Fri, 2013-11-08 at 17:34 +0100, Karl Beldan wrote:
+> From: Karl Beldan <karl.beldan@rivierawaves.com>
+> 
+> These are called to init the sample tables.
+> This occurs once in minstrel_ht upon its registration (since it uses one
+> single common sample table for all STAs), and once per sta addition in
+> minstrel.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Reported-by: David Binderman <dcb314@hotmail.com>
-Cc: David Binderman <dcb314@hotmail.com>
-Cc: Stable <stable@vger.kernel.org> [3.10+]
----
- drivers/net/wireless/rtlwifi/rtl8188ee/dm.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This commit log is suboptimal, it doesn't even seem to describe a change
+but rather the behaviour after (or before?) the change?
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/dm.c b/drivers/net/wireless/rtlwifi/rtl8188ee/dm.c
-index 21a5cf0..a6184b6 100644
---- a/drivers/net/wireless/rtlwifi/rtl8188ee/dm.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/dm.c
-@@ -1078,7 +1078,7 @@ static void rtl88e_dm_txpower_tracking_callback_thermalmeter(struct ieee80211_hw
- 				rtldm->swing_flag_ofdm = true;
- 			}
- 
--			if (rtldm->swing_idx_cck != rtldm->swing_idx_cck) {
-+			if (rtldm->swing_idx_cck_cur != rtldm->swing_idx_cck) {
- 				rtldm->swing_idx_cck_cur = rtldm->swing_idx_cck;
- 				rtldm->swing_flag_cck = true;
- 			}
--- 
-1.8.4
+johannes
 
