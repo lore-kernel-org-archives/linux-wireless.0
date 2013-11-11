@@ -1,53 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3225 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754805Ab3KFWHj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Nov 2013 17:07:39 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 0/7] brcm80211: cleanup fixes and out-of-order fix
-Date: Wed, 6 Nov 2013 23:07:15 +0100
-Message-ID: <1383775642-647-1-git-send-email-arend@broadcom.com> (sfid-20131106_230747_317009_6C0A86FE)
+Received: from mail-la0-f50.google.com ([209.85.215.50]:49623 "EHLO
+	mail-la0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753782Ab3KKQ46 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Nov 2013 11:56:58 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAMP44s3nkj2wZYCPve7EhyeD7sEFmpUN=-h015dOP68PcNSTug@mail.gmail.com>
+References: <1384119945-31213-1-git-send-email-felipe.contreras@gmail.com>
+	<1384160932.14334.6.camel@jlt4.sipsolutions.net>
+	<CAMP44s3TFSgWuR8gVoFBznNP+t9mz+to===9i1PAnra4ogKu9w@mail.gmail.com>
+	<1384184624.14334.31.camel@jlt4.sipsolutions.net>
+	<CAMP44s2cVVe4-yW214B9hJu7n6M1onZpZaPCj5N0Fi1JWDKKsw@mail.gmail.com>
+	<1384188067.14334.45.camel@jlt4.sipsolutions.net>
+	<CAMP44s3nkj2wZYCPve7EhyeD7sEFmpUN=-h015dOP68PcNSTug@mail.gmail.com>
+Date: Mon, 11 Nov 2013 10:56:57 -0600
+Message-ID: <CAMP44s0Lsd2qMf3a-Vx4=HTd_UxzLVC6q1bAGPr+t6anubNknA@mail.gmail.com> (sfid-20131111_175703_194804_E9A15B08)
+Subject: Re: [PATCH v2] mac80211: add assoc beacon timeout logic
+From: Felipe Contreras <felipe.contreras@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series contains a couple of small cleanup fixes and one fix
-from Hante to get rid of out-of-order transmit seen doing UDP iperf.
+On Mon, Nov 11, 2013 at 10:53 AM, Felipe Contreras
+<felipe.contreras@gmail.com> wrote:
+> On Mon, Nov 11, 2013 at 10:41 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> On Mon, 2013-11-11 at 10:23 -0600, Felipe Contreras wrote:
 
-This series is intended for 3.13 if the merge window has not yet
-opened. It applies to the master branch of the wireless-next
-repository.
+>>> > This isn't really true like I said above - the kernel can only drop the
+>>> > association, if userspace *insists* then it will try again and again.
+>>>
+>>> But it's not doing this:
+>>>
+>>>   ieee80211_destroy_assoc_data(sdata, false);
+>>>   cfg80211_assoc_timeout(sdata->dev, bss);
+>>>
+>>> Which is what causes the association to stop for me.
+>>>
+>>> So where exactly in the code is the association being "dropped"?
+>>
+>> This does get called in my setup.
+>
+> Yes, because your setup is receiving beacons.
+>
+> Check the code:
+>
+> if ((ifmgd->assoc_data->need_beacon && !ifmgd->have_beacon) ||
+>    ieee80211_do_assoc(sdata)) {
+> struct cfg80211_bss *bss = ifmgd->assoc_data->bss;
+>
+> ieee80211_destroy_assoc_data(sdata, false);
+> cfg80211_assoc_timeout(sdata->dev, bss);
+> }
+>
+> If there's no beacon, cfg80211_assoc_timeout() is not called.
+>
+> I'm sure if you don't call ieee80211_rx_mgmt_beacon() at all you will
+> see the same behavior I see.
 
-Arend van Spriel (5):
-  brcmfmac: add separate function for passing bus tx overhead
-  brcmfmac: replace dongle command list with .preinit() callback
-  brcmfmac: start netif queues only when setup is completed successful
-  brcmfmac: reduce logging noise accessing SDIO SleepCSR register
-  brcmsmac: select CONFIG_BCMA when possible
+My bad, actually the code that is not being called is:
 
-Franky Lin (1):
-  brcmfmac: remove empty brcmf_proto_stop
+  cfg80211_unlink_bss(local->hw.wiphy, assoc_data->bss);
 
-Hante Meuleman (1):
-  brcmfmac: Update fwsignal to fix out of order tx.
-
- drivers/net/wireless/brcm80211/Kconfig             |   3 +-
- .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |  19 ++-
- drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h  |  15 +-
- drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c  |   5 -
- .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |  15 +-
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |  36 +++--
- .../net/wireless/brcm80211/brcmfmac/dhd_proto.h    |   3 -
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |  60 ++++----
- drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c | 167 ++++++++++++++++++---
- drivers/net/wireless/brcm80211/brcmfmac/usb.c      |   4 +-
- 10 files changed, 236 insertions(+), 91 deletions(-)
+In ieee80211_do_assoc().
 
 -- 
-1.8.1.3
-
-
+Felipe Contreras
