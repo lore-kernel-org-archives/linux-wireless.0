@@ -1,43 +1,25 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f182.google.com ([74.125.82.182]:54205 "EHLO
-	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750708Ab3KAN6Y (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:36569 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754216Ab3KKPrL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 09:58:24 -0400
-Received: by mail-we0-f182.google.com with SMTP id t61so3943988wes.41
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:58:24 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 11/65] wireless-regdb: enable VHT80 for BZ
-Date: Fri,  1 Nov 2013 14:57:01 +0100
-Message-Id: <1383314275-20960-12-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_150808_938330_DC222DB4)
-In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+	Mon, 11 Nov 2013 10:47:11 -0500
+Message-ID: <1384184827.14334.34.camel@jlt4.sipsolutions.net> (sfid-20131111_164715_946297_E92F6480)
+Subject: Re: [PATCH] mac80211_hwsim: claim CCK support for HT clients
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Karl Beldan <karl.beldan@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Date: Mon, 11 Nov 2013 16:47:07 +0100
+In-Reply-To: <1384172973-21638-1-git-send-email-karl.beldan@gmail.com> (sfid-20131111_133008_355581_5BB22C05)
+References: <1384172973-21638-1-git-send-email-karl.beldan@gmail.com>
+	 (sfid-20131111_133008_355581_5BB22C05)
+Content-Type: text/plain
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Source is QCA's regulatory team's efforts.
+applied.
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/db.txt b/db.txt
-index 5bdb532..51841a2 100644
---- a/db.txt
-+++ b/db.txt
-@@ -141,7 +141,7 @@ country BY: DFS-ETSI
- 
- country BZ: DFS-JP
- 	(2402 - 2482 @ 40), (30)
--	(5735 - 5835 @ 40), (30)
-+	(5735 - 5835 @ 80), (30)
- 
- country CA: DFS-FCC
- 	(2402 - 2472 @ 40), (27)
--- 
-1.8.4.rc3
+johannes
 
