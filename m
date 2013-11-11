@@ -1,86 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:37957 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751307Ab3KRXcu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Nov 2013 18:32:50 -0500
-Date: Tue, 19 Nov 2013 00:32:47 +0100
-From: Borislav Petkov <bp@alien8.de>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	lkml <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] brcmsmac: Fix build dep on LEDS_CLASS
-Message-ID: <20131118233247.GM24851@pd.tnic> (sfid-20131119_003307_998939_C3CC4884)
-References: <20131117133702.GA30840@pd.tnic>
- <5289359B.8090506@broadcom.com>
- <CACna6ryNX1=8zdYe2bjCj7aj3S_O=LnrxdjBcESvJJ63+h729Q@mail.gmail.com>
- <20131118133250.GH24851@pd.tnic>
- <20131118204003.GK24851@pd.tnic>
- <528A925C.20602@broadcom.com>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:62770 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755038Ab3KKTj4 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Nov 2013 14:39:56 -0500
+Received: by mail-bk0-f46.google.com with SMTP id e11so1834161bkh.5
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Nov 2013 11:39:53 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: wireless-regdb@lists.infradead.org, mcgrof@do-not-panic.com
+Subject: [PATCH] reglib: fix memset usage
+Date: Mon, 11 Nov 2013 20:39:50 +0100
+Message-ID: <2765421.8z1iAPSgk6@blech> (sfid-20131111_204004_513722_F3E1F31C)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <528A925C.20602@broadcom.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 18, 2013 at 11:19:08PM +0100, Arend van Spriel wrote:
-> what about:
-> 
-> config BRCMSMAC
->         tristate "Broadcom IEEE802.11n PCIe SoftMAC WLAN driver"
->         depends on MAC80211
->         depends on BCMA_POSSIBLE
-> +	select LEDS_CLASS if BCMA_DRIVER_GPIO
-> 	select BCMA
+gcc-4.8 fails to compile reglib due to:
 
-I know, nice and short but too good to be true. LEDS_CLASS needs to pull
-in NEW_LEDS unfortunately:
+reglib.c:1133:22: error: argument to ‘sizeof’ in ‘memset’ call is
+			 the same expression as the destination; did you mean
+			 to dereference it? [-Werror=sizeof-pointer-memaccess]
+  memset(rd, 0, sizeof(rd));
+                      ^
+reglib.c:1155:22: error: argument to ‘sizeof’ in... (same as above)
 
-drivers/built-in.o: In function `set_brightness_delayed':
-led-class.c:(.text+0x4596e5): undefined reference to `led_stop_software_blink'
-drivers/built-in.o: In function `led_classdev_register':
-(.text+0x4598db): undefined reference to `leds_list_lock'
-drivers/built-in.o: In function `led_classdev_register':
-(.text+0x4598e7): undefined reference to `leds_list'
-drivers/built-in.o: In function `led_classdev_register':
-(.text+0x4598f3): undefined reference to `leds_list'
-drivers/built-in.o: In function `led_classdev_register':
-(.text+0x4598fa): undefined reference to `leds_list_lock'
-drivers/built-in.o: In function `led_classdev_register':
-(.text+0x459901): undefined reference to `leds_list'
-drivers/built-in.o: In function `led_classdev_unregister':
-(.text+0x4599a8): undefined reference to `led_stop_software_blink'
-drivers/built-in.o: In function `led_classdev_unregister':
-(.text+0x4599b2): undefined reference to `led_set_brightness'
-drivers/built-in.o: In function `led_classdev_unregister':
-(.text+0x4599c2): undefined reference to `leds_list_lock'
-drivers/built-in.o: In function `led_classdev_unregister':
-(.text+0x4599d6): undefined reference to `leds_list_lock'
-make: *** [vmlinux] Error 1
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+ reglib.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-What works, instead, is below. I think my "depends" solution from
-earlier takes care of this without you having to select other stuff
-explicitly but in the end of the day, I don't really care all that much
-which one you guys take.
-
---
-diff --git a/drivers/net/wireless/brcm80211/Kconfig b/drivers/net/wireless/brcm80211/Kconfig
-index b00a7e92225f..54e36fcb3954 100644
---- a/drivers/net/wireless/brcm80211/Kconfig
-+++ b/drivers/net/wireless/brcm80211/Kconfig
-@@ -5,6 +5,8 @@ config BRCMSMAC
-        tristate "Broadcom IEEE802.11n PCIe SoftMAC WLAN driver"
-        depends on MAC80211
-        depends on BCMA
-+       select NEW_LEDS if BCMA_DRIVER_GPIO
-+       select LEDS_CLASS if BCMA_DRIVER_GPIO
-        select BRCMUTIL
-        select FW_LOADER
-        select CRC_CCITT
-
+diff --git a/reglib.c b/reglib.c
+index 9577ada..1e57634 100644
+--- a/reglib.c
++++ b/reglib.c
+@@ -1127,7 +1127,7 @@ reglib_parse_country_simple(char *line, struct ieee80211_regdomain *rd)
+ 	char alpha2[2];
+ 	int hits;
+ 
+-	memset(rd, 0, sizeof(rd));
++	memset(rd, 0, sizeof(*rd));
+ 	memset(alpha2, 0, sizeof(alpha2));
+ 	memset(dfs_region_alpha, 0, sizeof(dfs_region_alpha));
+ 
+@@ -1149,7 +1149,7 @@ static int reglib_parse_country_dfs(char *line, struct ieee80211_regdomain *rd)
+ 	char alpha2[2];
+ 	int hits;
+ 
+-	memset(rd, 0, sizeof(rd));
++	memset(rd, 0, sizeof(*rd));
+ 	memset(alpha2, 0, sizeof(alpha2));
+ 	memset(dfs_region_alpha, 0, sizeof(dfs_region_alpha));
+ 
 -- 
-Regards/Gruss,
-    Boris.
+1.8.4.2
 
-Sent from a fat crate under my desk. Formatting is fine.
---
