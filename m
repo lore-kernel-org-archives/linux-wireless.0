@@ -1,92 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:15102 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753665Ab3KYQXS (ORCPT
+Received: from mail-la0-f42.google.com ([209.85.215.42]:53088 "EHLO
+	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753821Ab3KKSHA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Nov 2013 11:23:18 -0500
-Date: Mon, 25 Nov 2013 18:23:11 +0200
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Kyeyoon Park <kyeyoonp@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/2] cfg80211: Add support for QoS mapping
-Message-ID: <20131125162311.GA31482@jouni.qca.qualcomm.com> (sfid-20131125_172321_835505_3B36128F)
-References: <20131120102828.GA26154@jouni.qca.qualcomm.com>
- <1385395707.4443.37.camel@jlt4.sipsolutions.net>
+	Mon, 11 Nov 2013 13:07:00 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1385395707.4443.37.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1384189227.14334.48.camel@jlt4.sipsolutions.net>
+References: <1384119945-31213-1-git-send-email-felipe.contreras@gmail.com>
+	<1384160932.14334.6.camel@jlt4.sipsolutions.net>
+	<CAMP44s3TFSgWuR8gVoFBznNP+t9mz+to===9i1PAnra4ogKu9w@mail.gmail.com>
+	<1384184624.14334.31.camel@jlt4.sipsolutions.net>
+	<CAMP44s2cVVe4-yW214B9hJu7n6M1onZpZaPCj5N0Fi1JWDKKsw@mail.gmail.com>
+	<1384188067.14334.45.camel@jlt4.sipsolutions.net>
+	<CAMP44s3nkj2wZYCPve7EhyeD7sEFmpUN=-h015dOP68PcNSTug@mail.gmail.com>
+	<1384189227.14334.48.camel@jlt4.sipsolutions.net>
+Date: Mon, 11 Nov 2013 12:06:58 -0600
+Message-ID: <CAMP44s1yJMd+9G5yu988GqafRYnAteN-y-WWDe-rJh_qQpSPkQ@mail.gmail.com> (sfid-20131111_190709_738895_1E5684F1)
+Subject: Re: [PATCH v2] mac80211: add assoc beacon timeout logic
+From: Felipe Contreras <felipe.contreras@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 25, 2013 at 05:08:27PM +0100, Johannes Berg wrote:
-> On Wed, 2013-11-20 at 12:28 +0200, Jouni Malinen wrote:
-> 
-> > +struct cfg80211_qos_map {
-> > +	bool valid;
-> 
-> why do we need a validity flag? isn't NULL pointer enough?
+On Mon, Nov 11, 2013 at 11:00 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2013-11-11 at 10:53 -0600, Felipe Contreras wrote:
 
-For cfg80211, NULL would be fine. I guess the mac80211 use case could be
-handled outside this structure.
+>> > Like I said before - trying to work with an AP without beacons at all is
+>> > really bad, we shouldn't be doing it.
+>>
+>> Why not? For all intents and purposes my system is not receiving any
+>> beacons, and I don't see any problems.
+>
+> The not receiving part is a bug. I think you're probably receiving
+> beacons once associated though?
 
-> > + * @set_qos_map: Set QoS mapping information to the driver
-> >   */
-> >  struct cfg80211_ops {
-> >  	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
-> > @@ -2428,6 +2476,9 @@ struct cfg80211_ops {
-> >  	int	(*channel_switch)(struct wiphy *wiphy,
-> >  				  struct net_device *dev,
-> >  				  struct cfg80211_csa_settings *params);
-> > +	int     (*set_qos_map)(struct wiphy *wiphy,
-> > +			       struct net_device *dev,
-> > +			       struct cfg80211_qos_map *qos_map);
-> 
-> I wonder if this is necessary? The driver could just have a flag for
-> "support QoS mapping" and having such support requires using
-> classify8021d(). OTOH, that function needs to gain a parameter anyway,
-> so it's not really worth it. Also, it's something that could be changed
-> purely internal to the kernel, so I guess I'm not worried about it much.
+Nope. Never.
 
-Hmm.. How else would the caller (that driver or mac80211 receiving this
-call..) of classify8021d() get these parameters?
+>> What would you prefer? That nothing works at all?
+>
+> Yes, that'd be much safer.
 
-> > + * @NL80211_CMD_SET_QOS_MAP: Set Interworking QoS mapping for IP DSCP values.
-> > + *	The QoS mapping information is included in %NL80211_ATTR_QOS_MAP. If
-> > + *	that attribute is not included, QoS mapping is disabled.
-> 
-> Might be useful to say that this is only valid while associated?
+How exactly?
 
-When else can you send an IP packet? I don't have anything against
-adding that here, but it sounds pretty obvious to me.
+>> > We might not properly react to
+>> > radar events, and other things, for example.
+>>
+>> So? I don't know what that means, but it can't be worst than not being
+>> able to connect to the Internet whatsoever at all.
+>
+> It can make you break the law.
 
-> In fact, why is this even a new operation? Can this change during the
-> lifetime of the BSS? If not, then it might be worth just putting the
-> attribute into START_AP and ASSOCIATE/CONNECT etc?
+How?
 
-Yes, this can change during an association (configurable operation on
-AP; a new Action frame from AP to STA for notifying about the change).
+I'm reading this document[1], and if that's what you are referring to,
+then for starters it only applies to the master mode, my patch changes
+the behavior only on station mode.
 
-> > +		if (len & 1 || len < IEEE80211_QOS_MAP_LEN_MIN ||
-> 
-> I think len%2 would be easier to read? Not that it makes a big
-> difference, but fundamentally this isn't a bitop thing, it's a "length
-> must be even" thing.
+Moreover, if continuing the association without beacons has a legal a
+problem, that problem would exist for drivers that don't have the
+IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC flag, wouldn't it? How exactly
+would trying to associate with need_beacon break the law, but not if
+!need_beacon?
 
-Sure, that's fine.
-
-> > @@ -9564,6 +9606,14 @@ static struct genl_ops nl80211_ops[] = {
-> >  		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
-> >  				  NL80211_FLAG_NEED_RTNL,
-> >  	},
-> > +	{
-> > +		.cmd = NL80211_CMD_SET_QOS_MAP,
-> 
-> You forgot to advertise availability of the operation, but then again
-> see above - is it even needed?
-
-I think it is needed and yes, it could be useful to advertise
-availability.
+[1] http://wireless.kernel.org/en/developers/DFS
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Felipe Contreras
