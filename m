@@ -1,64 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:25766 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751755Ab3KNPIx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Nov 2013 10:08:53 -0500
-From: "Coelho, Luciano" <luciano.coelho@intel.com>
-To: Simon Wunderlich <sw@simonwunderlich.de>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"yeohchunyeow@gmail.com" <yeohchunyeow@gmail.com>,
-	"yeohchunyeow@cozybit.com" <yeohchunyeow@cozybit.com>
-Subject: Re: [PATCH v5 5/5] mac80211: only set CSA beacon when at least one
- beacon must be transmitted
-Date: Thu, 14 Nov 2013 15:07:35 +0000
-Message-ID: <1384441625.22010.7.camel@porter.coelho.fi> (sfid-20131114_160856_665352_036B6C1A)
-References: <1384430976-13708-1-git-send-email-luciano.coelho@intel.com>
-	 <1384430976-13708-5-git-send-email-luciano.coelho@intel.com>
-	 <201311141553.16912.sw@simonwunderlich.de>
-In-Reply-To: <201311141553.16912.sw@simonwunderlich.de>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:42598 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752988Ab3KKVPf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Nov 2013 16:15:35 -0500
+Received: by mail-wi0-f174.google.com with SMTP id cb5so2780948wib.7
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Nov 2013 13:15:34 -0800 (PST)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 0/3] cfg80211: add reguatory flags
+Date: Mon, 11 Nov 2013 22:15:28 +0100
+Message-Id: <1384204531-10025-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20131111_221555_588765_414651EA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVGh1LCAyMDEzLTExLTE0IGF0IDE1OjUzICswMTAwLCBTaW1vbiBXdW5kZXJsaWNoIHdyb3Rl
-Og0KPiA+IEBAIC0zMTIyLDkgKzMxNTgsMTYgQEAgaW50IGllZWU4MDIxMV9jaGFubmVsX3N3aXRj
-aChzdHJ1Y3Qgd2lwaHkgKndpcGh5LA0KPiA+IHN0cnVjdCBuZXRfZGV2aWNlICpkZXYsIHBhcmFt
-cy0+Y2hhbmRlZi5jaGFuLT5iYW5kKQ0KPiA+ICAJCQlyZXR1cm4gLUVJTlZBTDsNCj4gPiANCj4g
-PiAtCQllcnIgPSBpZWVlODAyMTFfaWJzc19jc2FfYmVhY29uKHNkYXRhLCBwYXJhbXMpOw0KPiA+
-IC0JCWlmIChlcnIgPCAwKQ0KPiA+IC0JCQlyZXR1cm4gZXJyOw0KPiA+ICsJCS8qIHNlZSBjb21t
-ZW50cyBhbmQgVE9ETyBpbiB0aGUgTkw4MDIxMV9JRlRZUEVfQVAgYmxvY2sgKi8NCj4gDQo+IFNp
-bmNlIHlvdSBhcmUgc2VuZGluZyBhbiBhY3Rpb24gZnJhbWUgYmVsb3csIHRoaXMgVE9ETyBhcHBl
-YXJzIHRvIGJlIG9ic29sZXRlPw0KDQpSaWdodC4uLiBUaGUgY29tbWVudHMgYXJlIHN0aWxsIHZh
-bGlkLCBidXQgdGhlIFRPRE8gb25seSBhcHBsaWVzIHRvIEFQLA0Kc2luY2UgSUJTUyBhbmQgTUVT
-SCBzZW5kIHRoZSBhY3Rpb24gZnJhbWUsIGFzIHlvdSBwb2ludGVkIG91dC4NCg0KSSdsbCBmaXgg
-aXQuDQoNCg0KDQo+ID4gQEAgLTMxNzMsOCArMzIyMCwxMyBAQCBpbnQgaWVlZTgwMjExX2NoYW5u
-ZWxfc3dpdGNoKHN0cnVjdCB3aXBoeSAqd2lwaHksDQo+ID4gc3RydWN0IG5ldF9kZXZpY2UgKmRl
-diwgc2RhdGEtPmNzYV9jaGFuZGVmID0gcGFyYW1zLT5jaGFuZGVmOw0KPiA+ICAJc2RhdGEtPnZp
-Zi5jc2FfYWN0aXZlID0gdHJ1ZTsNCj4gPiANCj4gPiAtCWllZWU4MDIxMV9ic3NfaW5mb19jaGFu
-Z2Vfbm90aWZ5KHNkYXRhLCBlcnIpOw0KPiA+IC0JZHJ2X2NoYW5uZWxfc3dpdGNoX2JlYWNvbihz
-ZGF0YSwgJnBhcmFtcy0+Y2hhbmRlZik7DQo+ID4gKwlpZiAoY2hhbmdlZCkgew0KPiA+ICsJCWll
-ZWU4MDIxMV9ic3NfaW5mb19jaGFuZ2Vfbm90aWZ5KHNkYXRhLCBjaGFuZ2VkKTsNCj4gPiArCQlk
-cnZfY2hhbm5lbF9zd2l0Y2hfYmVhY29uKHNkYXRhLCAmcGFyYW1zLT5jaGFuZGVmKTsNCj4gPiAr
-CX0gZWxzZSB7DQo+ID4gKwkJLyogaWYgdGhlIGJlYWNvbiBkaWRuJ3QgY2hhbmdlLCB3ZSBjYW4g
-ZmluYWxpemUgaW1tZWRpYXRlbHkgKi8NCj4gPiArCQlpZWVlODAyMTFfY3NhX2ZpbmFsaXplKHNk
-YXRhKTsNCj4gPiArCX0NCj4gDQo+IEkgdGhpbmsgc2V0dGluZyBjc2FfYWN0aXZlID09IHRydWUg
-Zm9yIGNvdW50IDAgb3IgMSBpcyB3cm9uZy4gDQo+IA0KPiBXaGVuIGEgYmVhY29uIGlzIGdlbmVy
-YXRlZC91cGRhdGVkIGluIGllZWU4MDIxMV9iZWFjb25fZ2V0X3RpbSgpLCBpdCB3aWwgY2FsbCAN
-Cj4gaWVlZTgwMjExX3VwZGF0ZV9jc2EoKSB3aGljaCB3aWxsIHRocm93IGEgd2FybmluZyBpbiBi
-ZXN0IGNhc2UsIGJ1dCBhbHNvIA0KPiBtb2RpZmllcyByYW5kb20gZGF0YSBpbiB0aGUgYmVhY29u
-L3ByZXNwIGF0IHRoZSBwb3NpdGlvbiB3aGVyZSB0aGUgY291bnQgb2Zmc2V0IA0KPiBwb2ludHMg
-dG8gKHdlIGhhdmUgbm8gQ1NBIElFIGluIHRoaXMgY2FzZSkuDQoNCkhtbW0uLi4gSSBndWVzcyB5
-b3UncmUgcmlnaHQuICBJIHdhcyBzZXR0aW5nIHRoZSBjc2FfYWN0aXZlIHRvIHRydWUgYXQNCmZp
-cnN0IGJlY2F1c2UgSSB3YXMgcHV0dGluZyB0aGUgd29yayBpbiBhIHdvcmtxdWV1ZSwgc28gSSB3
-YXMgdHJ5aW5nIHRvDQphdm9pZCBwb3RlbnRpYWwgcmFjZXMuICBJJ2xsIGluc3BlY3QgdGhpcyBt
-b3JlIGNhcmVmdWxseSBhbmQgZml4IGl0Lg0KDQoNCg0KPiBJJ3ZlIGFsc28gc2VlbiB3YXJuaW5n
-cyBpbiBteSBJQlNTIHRlc3RzIChXQVJOSU5HOiBDUFU6IDAgUElEOiAwIGF0IA0KPiBuZXQvbWFj
-ODAyMTEvdHguYzoyNDA4IGllZWU4MDIxMV91cGRhdGVfY3NhKSwgd2hlbiBkb2luZyBhIENTQSB3
-aXRoIGNvdW50IDAgDQo+IGZyb20gdXNlcnNwYWNlLiBBbHRob3VnaCBsaWtlbHksIEknbSBub3Qg
-c3VyZSBpZiB0aGlzIGlzIHJlbGF0ZWQgdG8gdGhlIA0KPiBwcm9ibGVtIGRlc2NyaWJlZCBhYm92
-ZSwgYnV0IHRoaXMgZnVuY3Rpb24gc2hvdWxkbid0IGJlIGNhbGxlZCBhdCBhbGwgaW4gdGhlIA0K
-PiBjb3VudD0wIGNhc2UuDQoNClllcywgdGhpcyBpcyBtb3N0IGxpa2VseSByZWxhdGVkLiAgSSds
-bCB0cnkgdG8gZmlndXJlIG91dCB3aGF0IGlzIGdvaW5nDQp3cm9uZyBoZXJlLg0KDQpUaGFua3Mg
-YSBsb3QgZm9yIHlvdXIgdGVzdHMhDQoNCi0tDQpDaGVlcnMsDQpMdWNhLg0K
+This series is based on Mihir's unfinished work, it addresses
+Johannes' comments. John, Johannes, you guys pick who this
+goes through, I've based it on Johannes' mac80211-next as
+it touches on regulatory and I had tons of changes already
+merged. I've provided SmPL grammar in case of merge
+conclicts.
+
+Luis R. Rodriguez (3):
+  cfg80211: move regulatory flags to their own variable
+  cfg80211: add flags to define country IE processing rules
+  cfg80211: add an option to disable processing country IEs
+
+ drivers/net/wireless/ath/regd.c                    |  5 ++-
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |  2 +-
+ drivers/net/wireless/brcm80211/brcmsmac/channel.c  |  4 +-
+ drivers/net/wireless/iwlegacy/3945-mac.c           |  6 +--
+ drivers/net/wireless/iwlegacy/4965-mac.c           |  6 +--
+ drivers/net/wireless/iwlwifi/dvm/mac80211.c        |  6 +--
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c        |  6 +--
+ drivers/net/wireless/mac80211_hwsim.c              | 18 ++++----
+ drivers/net/wireless/mwifiex/cfg80211.c            |  5 ++-
+ drivers/net/wireless/rtlwifi/regd.c                |  6 +--
+ include/net/cfg80211.h                             | 33 +++-----------
+ include/net/regulatory.h                           | 50 ++++++++++++++++++++++
+ net/wireless/core.c                                |  2 +-
+ net/wireless/reg.c                                 | 37 ++++++++--------
+ 14 files changed, 109 insertions(+), 77 deletions(-)
+
+-- 
+1.8.4.rc3
+
