@@ -1,79 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f47.google.com ([209.85.160.47]:53837 "EHLO
-	mail-pb0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754144Ab3KNOY3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Nov 2013 09:24:29 -0500
-Received: by mail-pb0-f47.google.com with SMTP id rr4so621648pbb.34
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Nov 2013 06:24:29 -0800 (PST)
-Date: Thu, 14 Nov 2013 06:35:09 -0800
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>, j@w1.fi,
-	sunitb@qca.qualcomm.com, rsunki@qca.qualcomm.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC 5/5] cfg80211: DFS check dfs_region before usage
-Message-ID: <20131114143507.GE19070@garbanzo.do-not-panic.com> (sfid-20131114_152451_652008_BA0FEA65)
-References: <1384366379-25301-1-git-send-email-mcgrof@do-not-panic.com>
- <1384366379-25301-6-git-send-email-mcgrof@do-not-panic.com>
- <1384378173.28806.22.camel@jlt4.sipsolutions.net>
- <CALhHN=r4y+JDw9_i9FdKwNoHgic+bvkMJRpYwnaXoSK519Metw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CALhHN=r4y+JDw9_i9FdKwNoHgic+bvkMJRpYwnaXoSK519Metw@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:38257 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755027Ab3KKTEY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Nov 2013 14:04:24 -0500
+Message-ID: <1384196661.4271.61.camel@dcbw.foobar.com> (sfid-20131111_200435_796897_79022138)
+Subject: Re: [PATCH] cfg80211: Introduce critical protocol indication for
+ p2p connection.
+From: Dan Williams <dcbw@redhat.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>, Jouni Malinen <j@w1.fi>,
+	"Undekari, Sunil Dutt" <usdutt@qti.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Mon, 11 Nov 2013 13:04:21 -0600
+In-Reply-To: <52811F6E.3010100@broadcom.com>
+References: <1383230452-12608-1-git-send-email-usdutt@qti.qualcomm.com>
+	 <1383230593.14302.1.camel@jlt4.sipsolutions.net>
+	 <26F3B0343EE4744AA14EEEF9E1E534511F7A65CC@aphydexd01a>
+	 <1383233115.14302.2.camel@jlt4.sipsolutions.net>
+	 <26F3B0343EE4744AA14EEEF9E1E534511F7A6606@aphydexd01a>
+	 <52729681.5020004@broadcom.com>
+	 <26F3B0343EE4744AA14EEEF9E1E534511F7A8160@aphydexd01a>
+	 <5273A784.4040900@broadcom.com> <20131102073319.GA3507@w1.fi>
+	 <5274D5DC.1090508@broadcom.com>
+	 <1384187186.14334.39.camel@jlt4.sipsolutions.net>
+	 <1384190436.4271.31.camel@dcbw.foobar.com> <52811F6E.3010100@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 14, 2013 at 11:15:25AM +0100, Janusz Dziedzic wrote:
-> On 13 November 2013 22:29, Johannes Berg <johannes@sipsolutions.net> wrote:
-> > On Wed, 2013-11-13 at 19:12 +0100, Luis R. Rodriguez wrote:
-> >> Check the DFS region before channel availability check
-> >> or declaring a channel as DFS usable.
+On Mon, 2013-11-11 at 19:18 +0100, Arend van Spriel wrote:
+> On 11/11/2013 06:20 PM, Dan Williams wrote:
+> > On Mon, 2013-11-11 at 17:26 +0100, Johannes Berg wrote:
+> >> On Sat, 2013-11-02 at 11:37 +0100, Arend van Spriel wrote:
 > >>
-> >> Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
-> >> ---
-> >>  net/wireless/chan.c    | 8 ++++++++
-> >>  net/wireless/nl80211.c | 5 +++++
-> >>  2 files changed, 13 insertions(+)
+> >>>> Currently, there is no way for wpa_supplicant to clearly indicate to the
+> >>>> driver that it is about to run through number of quick operations
+> >>>> (offchannel Action frame exchange for GO Negotiation, single channel
+> >>>> scan, WPS association + EAPOL exchange, data connection association +
+> >>>> 4-way handshake). The driver can guess that this is happening (or could
+> >>>> use really ugly hacks to see what Action frames are exchanged and
+> >>>> determine next likely operation based on that) and as such, would not
+> >>>> know how to configure the firmware to avoid background scans for the
+> >>>> station interface during this full sequence.
+> >>>
+> >>> I wanted this API primarily to avoid drivers doing that kind of hacks so
+> >>> I agree. It was intended to avoid extra latencies during IP connection
+> >>> setup, which is probably happening right after the group formation. So I
+> >>> recommend the connection managers to use this API. I think Dan Williams
+> >>> did some initial implementation testing in NetworkManager and had some
+> >>> concerns. I forgot about them completely so not sure how that ended.
+> >>>
+> >>>> While the background scan should in most cases not completely break the
+> >>>> process even with inconvenient timing (or well, hitting one in middle of
+> >>>> the three frame GO Negotiation would have potential to time out that
+> >>>> exchange), it would be nice if this common sequence could be optimized
+> >>>> to avoid extra latencies and to be more robust in general since there is
+> >>>> a 15 second timeout for group formation and quite a bit shorter timeouts
+> >>>> in practice for the individual operations within the sequence.
+> >>>
+> >>> I guess the decision is for Johannes to take, but I see your point.
 > >>
-> >> diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-> >> index 78559b5..4e6eaa0 100644
-> >> --- a/net/wireless/chan.c
-> >> +++ b/net/wireless/chan.c
-> >> @@ -517,10 +517,18 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
-> >>       struct ieee80211_sta_ht_cap *ht_cap;
-> >>       struct ieee80211_sta_vht_cap *vht_cap;
-> >>       u32 width, control_freq;
-> >> +     enum nl80211_dfs_regions dfs_region;
+> >> I think after this long discussion we all finally understand the concern
+> >> and use case - that really could have been explained in the patch
+> >> message.
 > >>
-> >>       if (WARN_ON(!cfg80211_chandef_valid(chandef)))
-> >>               return false;
-> >>
-> >> +     rtnl_lock();
-> >> +     dfs_region = reg_get_dfs_region(wiphy);
-> >> +     rtnl_unlock();
+> >> Anyhow, I think that the critical protocol API is still a bad fit
+> >> because it currently only allows
+> >>   (1) a single user of the API at a time, so e.g. connman using it for
+> >> DHCP on a
+> >>       P2P group interface while wpa_s is using it for GO negotation would
+> >> break
+> >>   (2) changing that is probably not too difficult technically, but the
+> >> question is
+> >>       how multiple concurrent protocols should behave and if anything
+> >> else has
+> >>       really started using this yet
 > >
+> > I've had patches for NetworkManager for a while for this, I had
+> > developed them in May 2013 which then resulted in my replies to
+> > "cfg80211: introduce critical protocol indication from user-space".  I
+> > posted about your problem #1, and Arnd's reply at the time was "I am not
+> > fully convinced there will be a need for multiple protocols."  Perhaps
+> > that need has now become more apparent?
 > 
-> 
-> Do we need check dfs_region in cfg80211_can_beacon() at all?
-> We already check first if all channels NL80211_DFS_AVAILABLE.
-> To be DFS_AVAILABLE we need pass CAC, and we will fail CAC if
-> dfs_region == UNSET.
+> I don't know what Arnd said, but I went digging in my mailbox and I can 
+> not deny saying that :-p To put it into context I attached the message 
+> holding that statement. I guess our conversation never converged to a 
+> proper follow-up. See if we can do better this time around.
 
-SWEET!
+Sorry, I meant you, Arend :)  Lack of convergence was partly my fault, I
+had to switch off to other things.  However, I think it's safest, most
+technically correct, and best to track each critical protocol
+individually and only cease critical protocol behaviors when all
+protocols are any of (1) removed via netlink, (2) timed out, or (3)
+netlink port has been closed.
 
-> Anyway we can do something like this in cfg80211_can_beacon()
-> 
->         if (cfg80211_chandef_dfs_required(wiphy, chandef) > 0 &&
-> -           cfg80211_chandef_dfs_available(wiphy, chandef)) {
-> +           cfg80211_chandef_dfs_available(wiphy, chandef) &&
-> +           reg_get_dfs_region(wiphy) != NL80211_DFS_UNSET) {
-> ...
-> And change doc that cfg80211_can_beacon() require rtnl_lock.
-> But I think this is not required.
+Dan
 
-If its not required I'd prefer to avoid this junk and just
-clarify what you said as part of the documentation, it wasn't
-clear to me. I'll just drop this patch in the series.
-
-  Luis
