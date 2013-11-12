@@ -1,65 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1905 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751888Ab3K2Ksf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Nov 2013 05:48:35 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH V2 4/7] brcmfmac: start netif queues only when setup is
- completed successful
-Date: Fri, 29 Nov 2013 11:48:16 +0100
-Message-ID: <1385722099-5102-5-git-send-email-arend@broadcom.com> (sfid-20131129_114857_732953_14359ABC)
-In-Reply-To: <1385722099-5102-1-git-send-email-arend@broadcom.com>
-References: <1385722099-5102-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-oa0-f48.google.com ([209.85.219.48]:35872 "EHLO
+	mail-oa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753327Ab3KLRCq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Nov 2013 12:02:46 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org, mark.cave-ayland@ilande.co.uk
+Subject: [PATCH] rtlwifi: Remove unused calls to rtl_is_special_data()
+Date: Tue, 12 Nov 2013 11:02:20 -0600
+Message-Id: <1384275740-10388-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20131112_180254_624800_878B9C79)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Moving the call to netif_start_queue() after brcmf_cfg80211_up() is
-completed successful. If not return -EIO instead of -1 as that results
-in 'Operation not permitted' which can put user on wrong track.
+When routine rtl_is_special_data() is called with false as its last argument,
+and the returned value is not tested, the call is essentially an extended
+no-op. Accordingly, these calls may be removed.
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Reported-by: Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c |    9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+ drivers/net/wireless/rtlwifi/pci.c | 2 --
+ drivers/net/wireless/rtlwifi/usb.c | 4 ----
+ 2 files changed, 6 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-index ab207e2..f4eeaa1 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-@@ -769,7 +769,6 @@ static int brcmf_netdev_open(struct net_device *ndev)
- 	struct brcmf_pub *drvr = ifp->drvr;
- 	struct brcmf_bus *bus_if = drvr->bus_if;
- 	u32 toe_ol;
--	s32 ret = 0;
- 
- 	brcmf_dbg(TRACE, "Enter, idx=%d\n", ifp->bssidx);
- 
-@@ -788,14 +787,14 @@ static int brcmf_netdev_open(struct net_device *ndev)
- 	else
- 		ndev->features &= ~NETIF_F_IP_CSUM;
- 
--	/* Allow transmit calls */
--	netif_start_queue(ndev);
- 	if (brcmf_cfg80211_up(ndev)) {
- 		brcmf_err("failed to bring up cfg80211\n");
--		return -1;
-+		return -EIO;
+diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
+index 0f49444..8707d1a 100644
+--- a/drivers/net/wireless/rtlwifi/pci.c
++++ b/drivers/net/wireless/rtlwifi/pci.c
+@@ -688,8 +688,6 @@ static void _rtl_receive_one(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 		rtlpriv->stats.rxbytesunicast += skb->len;
  	}
  
--	return ret;
-+	/* Allow transmit calls */
-+	netif_start_queue(ndev);
-+	return 0;
- }
+-	rtl_is_special_data(hw, skb, false);
+-
+ 	if (ieee80211_is_data(fc)) {
+ 		rtlpriv->cfg->ops->led_control(hw, LED_CTL_RX);
  
- static const struct net_device_ops brcmf_netdev_ops_pri = {
+diff --git a/drivers/net/wireless/rtlwifi/usb.c b/drivers/net/wireless/rtlwifi/usb.c
+index 6e2b5c5..ec385e4 100644
+--- a/drivers/net/wireless/rtlwifi/usb.c
++++ b/drivers/net/wireless/rtlwifi/usb.c
+@@ -475,8 +475,6 @@ static void _rtl_usb_rx_process_agg(struct ieee80211_hw *hw,
+ 			rtlpriv->stats.rxbytesunicast +=  skb->len;
+ 		}
+ 
+-		rtl_is_special_data(hw, skb, false);
+-
+ 		if (ieee80211_is_data(fc)) {
+ 			rtlpriv->cfg->ops->led_control(hw, LED_CTL_RX);
+ 
+@@ -517,8 +515,6 @@ static void _rtl_usb_rx_process_noagg(struct ieee80211_hw *hw,
+ 			rtlpriv->stats.rxbytesunicast +=  skb->len;
+ 		}
+ 
+-		rtl_is_special_data(hw, skb, false);
+-
+ 		if (ieee80211_is_data(fc)) {
+ 			rtlpriv->cfg->ops->led_control(hw, LED_CTL_RX);
+ 
 -- 
-1.7.10.4
-
+1.8.4
 
