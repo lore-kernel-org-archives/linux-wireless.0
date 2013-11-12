@@ -1,52 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:2550 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751569Ab3KUTJP (ORCPT
+Received: from mail-wg0-f53.google.com ([74.125.82.53]:57923 "EHLO
+	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754711Ab3KLSdY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Nov 2013 14:09:15 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Ujjal Roy <royujjal@gmail.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3.13] mwifiex: fix memory leak issue for ibss join
-Date: Thu, 21 Nov 2013 11:08:56 -0800
-Message-ID: <1385060936-18833-1-git-send-email-bzhao@marvell.com> (sfid-20131121_200918_204354_26280364)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 12 Nov 2013 13:33:24 -0500
+Received: by mail-wg0-f53.google.com with SMTP id b13so2891218wgh.20
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Nov 2013 10:33:23 -0800 (PST)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH] ath: fix dynamic user regulatory settings
+Date: Tue, 12 Nov 2013 19:33:20 +0100
+Message-Id: <1384281200-20454-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20131112_193327_900157_DBC5A377)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ujjal Roy <royujjal@gmail.com>
+A world regulatory domain check was in place that
+prevents user dynamic regulatory hints from being
+processed. This was there for historical reasons
+as this was only possible previously for world
+roaming cards and dynamic regulatory settings was
+only possible for country IEs. Fix this by enforcing
+the world regulatory domain check only for when the
+initiator is a country IE. Support for dynamic user
+regulatory support is already checked.
 
-For IBSS join if the requested SSID matches current SSID,
-it returns without freeing the allocated beacon IE buffer.
-
-Cc: <stable@vger.kernel.org> # 3.10+
-Signed-off-by: Ujjal Roy <royujjal@gmail.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- drivers/net/wireless/mwifiex/sta_ioctl.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/regd.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
-index c8e029d..a09398f 100644
---- a/drivers/net/wireless/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
-@@ -319,8 +319,8 @@ int mwifiex_bss_start(struct mwifiex_private *priv, struct cfg80211_bss *bss,
- 		if (bss_desc && bss_desc->ssid.ssid_len &&
- 		    (!mwifiex_ssid_cmp(&priv->curr_bss_params.bss_descriptor.
- 				       ssid, &bss_desc->ssid))) {
--			kfree(bss_desc);
--			return 0;
-+			ret = 0;
-+			goto done;
- 		}
+diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
+index 3480201..40f9e4e 100644
+--- a/drivers/net/wireless/ath/regd.c
++++ b/drivers/net/wireless/ath/regd.c
+@@ -461,7 +461,8 @@ static int __ath_reg_dyn_country(struct wiphy *wiphy,
+ {
+ 	u16 country_code;
  
- 		/* Exit Adhoc mode first */
+-	if (!ath_is_world_regd(reg))
++	if (request->initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE &&
++	    !ath_is_world_regd(reg))
+ 		return -EINVAL;
+ 
+ 	country_code = ath_regd_find_country_by_name(request->alpha2);
 -- 
-1.8.2.3
+1.8.4.rc3
 
