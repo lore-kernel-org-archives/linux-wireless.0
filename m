@@ -1,116 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f41.google.com ([209.85.219.41]:53674 "EHLO
-	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752104Ab3K0Gwx (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:13184 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752778Ab3KLSHv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Nov 2013 01:52:53 -0500
-From: Felipe Contreras <felipe.contreras@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Felipe Contreras <felipe.contreras@gmail.com>
-Subject: [RESEND/PATCH v2] mac80211: add assoc beacon timeout logic
-Date: Wed, 27 Nov 2013 00:45:32 -0600
-Message-Id: <1385534732-8129-1-git-send-email-felipe.contreras@gmail.com> (sfid-20131127_075310_732532_7079F98F)
+	Tue, 12 Nov 2013 13:07:51 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCHv2 00/13] ath10k: pci fixes 2013-10-30
+References: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com>
+	<1383894095-27998-1-git-send-email-michal.kazior@tieto.com>
+Date: Tue, 12 Nov 2013 20:07:45 +0200
+In-Reply-To: <1383894095-27998-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Fri, 8 Nov 2013 08:01:22 +0100")
+Message-ID: <877gcda3ym.fsf@kamboji.qca.qualcomm.com> (sfid-20131112_190755_030836_11ECF2F2)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We don't want to be waiting forever for a beacon that will never come,
-just continue the association.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Signed-off-by: Felipe Contreras <felipe.contreras@gmail.com>
----
+> Hi,
+>
+> This patchset contains a slew of PCI/CE cleanups
+> and fixes. The aim of the patchset is to deal with
+> CE null dereference bugs Ben has been reporting on
+> the mailing list for some time now.
+>
+> v2:
+>  * fix prints
+>  * fix commit messages
+>  * add additional patch
+>    (ath10k: reset device upon stopping/power down)
+>
+>
+> Michal Kazior (13):
+>   ath10k: remove ar_pci->ce_count
+>   ath10k: don't forget to kill fw error tasklet
+>   ath10k: split tasklet killing function
+>   ath10k: rename ath10k_pci_reset_target()
+>   ath10k: make sure to mask all CE irqs
+>   ath10k: fix ath10k_ce_init() failpath
+>   ath10k: remove meaningless check
+>   ath10k: use ath10k_do_pci_wake/sleep
+>   ath10k: propagate ath10k_ce_disable_interrupts() errors
+>   ath10k: guard against CE corruption from firmware
+>   ath10k: re-arrange PCI init code
+>   ath10k: add and fix some PCI prints
+>   ath10k: reset device upon stopping/power down
 
-This is exactly the same as the previous patch.
+Thanks, all 13 applied.
 
-All the reasons given to not apply this patch have been dismissed. Power saving
-is disabled as expected, regulatory/radar doesn't apply to the station mode, we
-already connect if there are no APs for other drivers.
-
-Therefore there's no reason standing to not apply the patch.
-
- net/mac80211/ieee80211_i.h |  1 +
- net/mac80211/mlme.c        | 32 ++++++++++++++++++++++++++------
- 2 files changed, 27 insertions(+), 6 deletions(-)
-
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 611abfc..e1f858d 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -358,6 +358,7 @@ struct ieee80211_mgd_assoc_data {
- 	const u8 *supp_rates;
- 
- 	unsigned long timeout;
-+	unsigned long beacon_timeout;
- 	int tries;
- 
- 	u16 capability;
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 86e4ad5..68f76f7 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -38,6 +38,7 @@
- #define IEEE80211_ASSOC_TIMEOUT		(HZ / 5)
- #define IEEE80211_ASSOC_TIMEOUT_LONG	(HZ / 2)
- #define IEEE80211_ASSOC_TIMEOUT_SHORT	(HZ / 10)
-+#define IEEE80211_ASSOC_BEACON_TIMEOUT	2 * HZ
- #define IEEE80211_ASSOC_MAX_TRIES	3
- 
- static int max_nullfunc_tries = 2;
-@@ -3475,6 +3476,24 @@ void ieee80211_mgd_conn_tx_status(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_queue_work(&local->hw, &sdata->work);
- }
- 
-+static int check_beacon(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-+	struct ieee80211_mgd_assoc_data *assoc_data = ifmgd->assoc_data;
-+
-+	if (!assoc_data->need_beacon || ifmgd->have_beacon)
-+		return true;
-+
-+	if (time_after(jiffies, assoc_data->beacon_timeout)) {
-+		sdata_info(sdata, "no beacon from %pM\n", assoc_data->bss->bssid);
-+		return true;
-+	}
-+
-+	assoc_data->timeout = TU_TO_EXP_TIME(assoc_data->bss->beacon_interval);
-+	run_again(sdata, assoc_data->timeout);
-+	return false;
-+}
-+
- void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_local *local = sdata->local;
-@@ -3533,12 +3552,12 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
- 
- 	if (ifmgd->assoc_data && ifmgd->assoc_data->timeout_started &&
- 	    time_after(jiffies, ifmgd->assoc_data->timeout)) {
--		if ((ifmgd->assoc_data->need_beacon && !ifmgd->have_beacon) ||
--		    ieee80211_do_assoc(sdata)) {
--			struct cfg80211_bss *bss = ifmgd->assoc_data->bss;
--
--			ieee80211_destroy_assoc_data(sdata, false);
--			cfg80211_assoc_timeout(sdata->dev, bss);
-+		if (check_beacon(sdata)) {
-+			if (ieee80211_do_assoc(sdata)) {
-+				struct cfg80211_bss *bss = ifmgd->assoc_data->bss;
-+				ieee80211_destroy_assoc_data(sdata, false);
-+				cfg80211_assoc_timeout(sdata->dev, bss);
-+			}
- 		}
- 	} else if (ifmgd->assoc_data && ifmgd->assoc_data->timeout_started)
- 		run_again(sdata, ifmgd->assoc_data->timeout);
-@@ -4335,6 +4354,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 		sdata_info(sdata, "waiting for beacon from %pM\n",
- 			   ifmgd->bssid);
- 		assoc_data->timeout = TU_TO_EXP_TIME(req->bss->beacon_interval);
-+		assoc_data->beacon_timeout = jiffies + IEEE80211_ASSOC_BEACON_TIMEOUT;
- 		assoc_data->timeout_started = true;
- 		assoc_data->need_beacon = true;
- 	} else if (beacon_ies) {
 -- 
-1.8.4.2+fc1
-
+Kalle Valo
