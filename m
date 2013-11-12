@@ -1,103 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f169.google.com ([74.125.82.169]:64397 "EHLO
-	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759625Ab3KMSNK (ORCPT
+Received: from mail-lb0-f179.google.com ([209.85.217.179]:46791 "EHLO
+	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757243Ab3KLXlw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Nov 2013 13:13:10 -0500
-Received: by mail-we0-f169.google.com with SMTP id q58so813679wes.14
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Nov 2013 10:13:09 -0800 (PST)
+	Tue, 12 Nov 2013 18:41:52 -0500
+Received: by mail-lb0-f179.google.com with SMTP id w6so5241346lbh.10
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Nov 2013 15:41:50 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1384261527-6253-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1384261527-6253-1-git-send-email-janusz.dziedzic@tieto.com>
 From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: johannes@sipsolutions.net
-Cc: janusz.dziedzic@tieto.com, j@w1.fi, sunitb@qca.qualcomm.com,
-	rsunki@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [RFC 3/5] cfg80211: add regulatory quiescing support
-Date: Wed, 13 Nov 2013 19:12:57 +0100
-Message-Id: <1384366379-25301-4-git-send-email-mcgrof@do-not-panic.com> (sfid-20131113_191316_324340_9D57488A)
-In-Reply-To: <1384366379-25301-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1384366379-25301-1-git-send-email-mcgrof@do-not-panic.com>
+Date: Wed, 13 Nov 2013 00:41:30 +0100
+Message-ID: <CAB=NE6U1PspNUKEfrO4sN2MtQy=YY=_jSm7eCwZtBX4ttp5zkw@mail.gmail.com> (sfid-20131113_004155_820134_9CB4C3AE)
+Subject: Re: [PATCH v2 1/3] cfg80211: DFS check dfs_region before CAC
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Martin Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This quiesces devices when appropriate to ensure that
-regulatory domain updates take effect and avoid having
-devices initiate radiation when they should not.
+On Tue, Nov 12, 2013 at 2:05 PM, Janusz Dziedzic
+<janusz.dziedzic@tieto.com> wrote:
+> Before we will start radar detection check
+> if we have correct DFS region. Fail in case
+> we don't know DFS region (don't know CAC/NOP
+> timing and how to configure DFS pattern detector).
+>
+> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- net/wireless/reg.c | 53 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 53 insertions(+)
+This doesn't address the complexity cases of intersection. From review
+today with a few folks this should simply then set DFS as unset (as
+you patches don't allow DFS then) if there is any intersection with
+DFS regions. That is, intersection doesn't use dfs_regions yet, add
+that and if we do an intersection with two regdoms with different
+regodms or at least one unknown we can't IR on DFS. We can only DFS
+when all regulatory hints agree on the DFS region. Make that happen.
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index e5935c2..3036093 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1287,12 +1287,65 @@ static void reg_call_notifier(struct wiphy *wiphy,
- 		wiphy->reg_notifier(wiphy, request);
- }
- 
-+static void wiphy_regulatory_quiesce_all(struct wiphy *wiphy)
-+{
-+	struct cfg80211_registered_device *rdev;
-+
-+	rdev = wiphy_to_dev(wiphy);
-+	if (!rdev)
-+		return;
-+
-+	cfg80211_leave_all(rdev);
-+}
-+
-+static void wiphy_regulatory_quiesce_skip_wdev(struct wiphy *wiphy,
-+					       struct regulatory_request *lr)
-+{
-+	struct cfg80211_registered_device *rdev;
-+	struct wiphy *last_wiphy = NULL;
-+	struct wireless_dev *wdev;
-+
-+	rdev = wiphy_to_dev(wiphy);
-+	if (!rdev)
-+		return;
-+
-+	last_wiphy = wiphy_idx_to_wiphy(lr->wiphy_idx);
-+	if (last_wiphy != wiphy) {
-+		cfg80211_leave_all(rdev);
-+		return;
-+	}
-+
-+	list_for_each_entry(wdev, &rdev->wdev_list, list)
-+		if (lr->wdev != wdev)
-+			cfg80211_leave(rdev, wdev);
-+}
-+
-+static void wiphy_regulatory_quiesce(struct wiphy *wiphy,
-+				     struct regulatory_request *lr)
-+{
-+	switch (lr->initiator) {
-+	case NL80211_REGDOM_SET_BY_CORE:
-+		return;
-+	case NL80211_REGDOM_SET_BY_USER:
-+		wiphy_regulatory_quiesce_all(wiphy);
-+		return;
-+	case NL80211_REGDOM_SET_BY_DRIVER:
-+		wiphy_regulatory_quiesce_all(wiphy);
-+		return;
-+	case NL80211_REGDOM_SET_BY_COUNTRY_IE:
-+		wiphy_regulatory_quiesce_skip_wdev(wiphy, lr);
-+		return;
-+	}
-+}
-+
- static void wiphy_update_regulatory(struct wiphy *wiphy,
- 				    enum nl80211_reg_initiator initiator)
- {
- 	enum ieee80211_band band;
- 	struct regulatory_request *lr = get_last_request();
- 
-+	wiphy_regulatory_quiesce(wiphy, lr);
-+
- 	if (ignore_reg_update(wiphy, initiator)) {
- 		/*
- 		 * Regulatory updates set by CORE are ignored for custom
--- 
-1.8.4.rc3
-
+  Luis
