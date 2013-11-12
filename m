@@ -1,42 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f176.google.com ([209.85.215.176]:54909 "EHLO
-	mail-ea0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752132Ab3KVNIn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Nov 2013 08:08:43 -0500
-Received: by mail-ea0-f176.google.com with SMTP id h14so508436eaj.35
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Nov 2013 05:08:42 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 3/8] ath10k: fix memory leak on hif_start failpath
-Date: Fri, 22 Nov 2013 14:05:13 +0100
-Message-Id: <1385125518-13461-4-git-send-email-michal.kazior@tieto.com> (sfid-20131122_140850_314963_0D0FFE16)
-In-Reply-To: <1385125518-13461-1-git-send-email-michal.kazior@tieto.com>
-References: <1385125518-13461-1-git-send-email-michal.kazior@tieto.com>
+Received: from mga09.intel.com ([134.134.136.24]:11757 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751689Ab3KLIWQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Nov 2013 03:22:16 -0500
+From: "Coelho, Luciano" <luciano.coelho@intel.com>
+To: Simon Wunderlich <sw@simonwunderlich.de>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
+Subject: Re: [RFC v3 1/4] mac80211: don't transmit beacon with CSA count 0
+Date: Tue, 12 Nov 2013 08:22:10 +0000
+Message-ID: <1384244496.12583.46.camel@porter.coelho.fi> (sfid-20131112_092220_152273_5F10B367)
+References: <1383921579-22373-1-git-send-email-luciano.coelho@intel.com>
+	 <201311111557.42832.sw@simonwunderlich.de>
+In-Reply-To: <201311111557.42832.sw@simonwunderlich.de>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If post_rx failed then completions were not freed.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/pci.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index d4536cb..4067890 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1205,6 +1205,7 @@ static int ath10k_pci_hif_start(struct ath10k *ar)
- 	if (ret) {
- 		ath10k_warn("failed to post RX buffers for all pipes: %d\n",
- 			    ret);
-+		ath10k_pci_stop_ce(ar);
- 		return ret;
- 	}
- 
--- 
-1.8.4.rc3
-
+T24gTW9uLCAyMDEzLTExLTExIGF0IDE1OjU3ICswMTAwLCBTaW1vbiBXdW5kZXJsaWNoIHdyb3Rl
+Og0KPiA+IEEgYmVhY29uIHNob3VsZCBuZXZlciBoYXZlIGEgQ2hhbm5lbCBTd2l0Y2ggQW5ub3Vu
+Y2VtZW50IGluZm9ybWF0aW9uDQo+ID4gZWxlbWVudCB3aXRoIGEgY291bnQgb2YgMCwgYmVjYXVz
+ZSBhIGNvdW50IG9mIDEgbWVhbnMgc3dpdGNoIGp1c3QNCj4gPiBiZWZvcmUgdGhlIG5leHQgYmVh
+Y29uLiAgU28sIGlmIGEgY291bnQgb2YgMCB3YXMgdmFsaWQgaW4gYSBiZWFjb24sIGl0DQo+ID4g
+d291bGQgaGF2ZSBiZWVuIHRyYW5zbWl0dGVkIGluIHRoZSBuZXh0IGNoYW5uZWwgYWxyZWFkeSwg
+d2hpY2ggaXMNCj4gPiB1c2VsZXNzLiAgQSBDU0EgY291bnQgZXF1YWwgdG8gemVybyBpcyBvbmx5
+IG1lYW5pbmdmdWwgaW4gYWN0aW9uDQo+ID4gZnJhbWVzIG9yIHByb2JlX3Jlc3BvbnNlcy4NCj4g
+PiANCj4gPiBGaXggdGhlIGllZWU4MDIxMV9jc2FfaXNfY29tcGxldGUoKSBhbmQgaWVlZTgwMjEx
+X3VwZGF0ZV9jc2EoKQ0KPiA+IGZ1bmN0aW9ucyBhY2NvcmRpbmdseS4NCj4gDQo+IEp1c3QgdG8g
+bWFrZSBmdXR1cmUgYmlzZWN0aW5nIGVhc2llciwgc2hvdWxkbid0IHRoaXMgcGF0Y2ggZ28gYWZ0
+ZXIgIm9ubHkgc2V0IA0KPiBDU0EgYmVhY29uIHdoZW4gYXQgbGVhc3Qgb25lIGJlYWNvbiBtdXN0
+IGJlIHRyYW5zbWl0dGVkIiBpbiB0aGUgc2VyaWVzPyANCj4gT3RoZXJ3aXNlIHVzZXJzcGFjZSBt
+YXkgY2hhbmdlIHRoZSBjaGFubmVsIHdpdGggY291bnQ9MCBhbmQgaGl0IGEgd2FybmluZyANCj4g
+aGVyZSwgYmVjYXVzZSB0aGlzIGlzIG5vdCBzdXBwb3J0ZWQgYW55bW9yZS4NCg0KTXkgcGxhbiB3
+YXMgdG8gc3F1YXNoIHRoZW0sIGJlY2F1c2UgdGhleSByZWFsbHkgYmVsb25nIHRvZ2V0aGVyLiAg
+V2hhdA0KZG8geW91IHRoaW5rPw0KDQoNCg0KPiBBcGFydCBmcm9tIHRoYXQsIHRoZSBzZXJpZXMg
+bG9va3MgZmluZS4gSSdkIGxpa2UgdG8gdGVzdCB0aGUgbmV4dCB2NCB0aGVuLg0KDQpHcmVhdCEg
+SSdsbCB0cnkgdG8gc2VuZCB2NCBzb29uLCBob3BlZnVsbHkgdGhlIG1pc3NpbmcgbWVzaCBwYXJ0
+IGRvZXNuJ3QNCnR1cm4gb3V0IHRvIGJlIHRvbyBjb21wbGljYXRlZC4gOykNCg0KDQo+IEkgZ3Vl
+c3Mgd2Ugc3RpbGwgbmVlZCB0byBkbyB0aGUgYWN0aW9uIGZyYW1lIHBhcnQgLSBmb3IgSUJTUyBt
+b2RlIHdlIGFscmVhZHkgDQo+IGhhdmUgY29kZSBidXQgd2UgcHJvYmFibHkgbmVlZCB0byBtYWtl
+IHN1cmUgdGhhdCB0aGVzZSBwYWNrZXRzIGdvIG91dCBiZWZvcmUgDQo+IGFjdHVhbGx5IGNoYW5n
+aW5nIHRoZSBjaGFubmVsLiBEbyB5b3UgcGxhbiB0byB3b3JrIG9uIHRoYXQ/DQoNClllcywgSSds
+bCBsb29rIGludG8gaXQuICBJIHRoaW5rIGl0IHNob3VsZCBiZSBwcmV0dHkgc2ltcGxlLCBlc3Bl
+Y2lhbGx5DQpub3cgdGhhdCB3ZSBhbHJlYWR5IGhhdmUgSUJTUyBhbmQgTUVTSCBzZW5kaW5nIGl0
+IG91dC4NCg0KDQo+IFRoYW5rcyBmb3IgeW91ciB3b3JrLiA6KQ0KDQpUaGFua3MgZm9yIHlvdXIg
+aGVscCEgOykNCg0KLS0NCkx1Y2EuDQoNCg==
