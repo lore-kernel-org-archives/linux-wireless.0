@@ -1,85 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([83.151.30.3]:48736 "EHLO m25s01.vlinux.de"
+Received: from mga11.intel.com ([192.55.52.93]:47178 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753174Ab3KDOb6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Nov 2013 09:31:58 -0500
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: "Coelho, Luciano" <luciano.coelho@intel.com>
-Subject: Re: [RFC] mac80211: don't transmit beacon with CSA count 0
-Date: Mon, 4 Nov 2013 15:31:56 +0100
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
-References: <1383569955-13236-1-git-send-email-luciano.coelho@intel.com> <201311041436.51673.sw@simonwunderlich.de> <1383574023.5928.149.camel@porter.coelho.fi>
-In-Reply-To: <1383574023.5928.149.camel@porter.coelho.fi>
+	id S1755191Ab3KLMpU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Nov 2013 07:45:20 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: wzyboy <wzyboy@wzyboy.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [Ilw] Intel Wireless 7260 hardware timed out randomly
+Date: Tue, 12 Nov 2013 12:45:11 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301DF04A2@HASMSX103.ger.corp.intel.com> (sfid-20131112_134524_814618_BC5BB4C8)
+References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
+ <CALkVjQY7r=YKhsgDKR0mnYVtZy5BAdj83nY2jL0VFaiew6ha7A@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
+ <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
+ <527A8166.6000701@gmail.com>
+ <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
+ <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
+ <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
+ <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
+ <20131111224439.GA30638@google.com>
+ <CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com>
+ <CALkVjQaXEBpbwu9Qy3+17Eg-nSg-k7iin8G3f1RsTLkCOB-2XQ@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DF044C@HASMSX103.ger.corp.intel.com>
+ <CALkVjQb9H73yjYHUhr6Lrsirr_eTT9JDpCCr-6o6qutL=b3S6A@mail.gmail.com>
+In-Reply-To: <CALkVjQb9H73yjYHUhr6Lrsirr_eTT9JDpCCr-6o6qutL=b3S6A@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201311041531.56693.sw@simonwunderlich.de> (sfid-20131104_153202_006050_EDEEBE96)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hey Luca,
-
-> > 
-> > Thanks for checking back - I've read the part in the spec again [1], and
-> > appearently you are right.
-> > 
-> > With your proposed change, shouldn't we also change the behaviour if the
-> > userspace requests a channel switch with count = 0? I guess we should
-> > immediately change the channel then without waiting for beacons? I don't
-> > see the point in changing the beacons if we don't send them, after all.
-> 
-> You're right, changing the beacons doesn't make sense in this case.
-> I'll change that and send v2.
-> 
-> Another thing is that we are missing the action frames.  The idea with
-> the count == 0 is that the STA's should start listening on the other
-> channel immediately after receiving the action frame (because the switch
-> will happen at any time).
-> 
-> If we don't send the action frame, passing context == 0 from the
-> userspace doesn't much make sense, because the clients won't know we're
-> switching.  Well, maybe it makes a bit of sense, if there are no clients
-> connected, but nevertheless.
-
-Yeah, switching without actionframe and count == 0 is pretty useless.
-
-> 
-> count == 0 should probably be avoided, because the specs are not that
-> clear about it.  In case transmission on our channel needs to be stopped
-> immediately (eg. with DSS), we can always use the channel switch mode
-> (ie. no TX until the switch happens).
-
-Hmm, we probably need to review the IBSS part too - we adopt the channel 
-switch from others here, and adopting with count = 0 works now but would 
-create a warning with your change ...
-
-> 
-> I'll probably start looking into the action frame implementation soon.
-
-I've recently added CSA action frame support for the IBSS mode, because the 
-distributed beaconing may lead to slow adoption of the CSA IEs in the IBSS. 
-Check ieee80211_send_action_csa() for that. I guess it would be useful to send 
-at least the action frames out if we want to change "fast" (count=0).
-
-For AP mode, I guess the right place to implement the action frames would be 
-hostap? This would at least allow great flexibility with CSA, ECSA and all the 
-new channel switch IEs coming now. The beacons are also generated in 
-userspace, after all.
-
-BTW, I've just checked and the WiFi Alliance requires at least 5 beacons with 
-CSA-IEs to pass the 802.11h test. :)
-
-> 
-> > Currently,
-> > ath9k calls the csa_finish() after checking whether beacon sending was
-> > complete ... so this would have to be changed.
-> 
-> Yeah, that's what I suspected from my very quick look at the ath9k code.
-> I'll see if I can change this easily.  I'll probably need some help with
-> testing, because I don't have an ath9k device. :\
-
-No problem, I can test here, just tell me what to test. :)
-
-Cheers,
-    Simon
+PiANCj4gMjAxMy8xMS8xMiBHcnVtYmFjaCwgRW1tYW51ZWwgPGVtbWFudWVsLmdydW1iYWNoQGlu
+dGVsLmNvbT46DQo+ID4gV2VsbC4uLiBJIGhhdmVuJ3QgZG9uZSBtdWNoLCBidXQgdGhlIHNldHBj
+aSBpc24ndCByZWFsbHkgYSBzb2x1dGlvbiAtIGl0IGlzIG1vcmUNCj4gYSB3b3JrIGFyb3VuZC4N
+Cj4gPiBCam9ybiBpcyBiYXNpY2FsbHkgZGlzYWJsaW5nIEwxIFBDSWUgZmVhdHVyZSB3aGljaCBh
+bGxvd3MgdG8gc2F2ZQ0KPiA+IHBvd2VyLiBXaGlsZSB5b3UgbWlnaHQgbm90IGNhcmUsIEkgZG8g
+OikgVGhlIEhXIGZvbGtzIGhlcmUgd291bGQgc3RpbGwgd2FudA0KPiB0byBrbm93IGlmIHlvdSBj
+YW4gZGlzYWJsZSBMMSBzdWJzdGF0ZXMgZmVhdHVyZSAobm90IHRoYXQgSSBrbm93IHdoYXQgaXQg
+aXMgLQ0KPiBidXQgSSBjYW4gZ3Vlc3MpLg0KPiA+IElmIHlvdSBjYW4gdHJ5IHRvOg0KPiA+ICAq
+IHVwZ3JhZGUgeW91ciBCSU9TIChpZiBuZWVkZWQpDQo+ID4gICogY2hlY2sgdGhlIGFkdmFuY2Vk
+IG9wdGlvbnMgSSBzZW50IHRvIHlvdSB0byBzZWUgaWYgeW91IGNhbiB1bmxvY2sNCj4gPiB0aGUg
+YWR2YW5jZWQgbWVudSBpbiB5b3VyIEJJT1MNCj4gPg0KPiA+IGl0J2QgaGVscCBtZSB0byB1bmRl
+cnN0YW5kIHRoZSBpc3N1ZS4NCj4gPiBJbiBhbnkgY2FzZSwgSSBhbSBoYXBweSB0aGF0IHlvdSBo
+YXZlIGEgd2F5IHRvIHJlbGlhYmx5IHVzZSB5b3VyIE5JQyBub3cuDQo+IA0KPiANCj4gT2gsIGFj
+dHVhbGx5IEkgdXBncmFkZWQgbXkgQklPUyB0byBuZXdlc3QgdmVyc2lvbiB0aGUgZGF5IEkgZ290
+IHRoaXMgbGFwdG9wDQo+ICgxMiBkYXlzIGFnbykuDQo+IA0KPiBUaGlua1BhZCByZWFsbHkgY2hh
+bmdlZCBhIGxvdCBhZnRlciBiZWluZyBhY3F1aXJlZCBieSBMZW5vdm8uLi4NCj4gDQoNCklmIHlv
+dSBzYXkgc28gOikgLSBJIGRvbid0a25vdyA6KQ0KDQo+IEFzIG9mIEFTVSwgSSd2ZSBkb3dubG9h
+ZGVkIGl0IGJ1dCBJIGRvIG5vdCBrbm93IGhvdyB0byBzaG93IGhpZGRlbiBCSU9TDQo+IG9wdGlv
+bnMgd2l0aCBpdCBzaW5jZSBJIGhhdmUgbGl0dGxlIGtub3dsZWRnZSBhYm91dCBoYXJkd2FyZS4u
+Lg0KPiANCj4gSGVyZSBpcyB3aGF0IEkgZ290IHdoZW4gcnVubmluZyAuL2FzdTY0IGR1bXA6DQo+
+IA0KPiB3enlib3lAeGVuaWVuOn4vRGVza3RvcC9hc3UkIHN1ZG8gLi9hc3U2NCBkdW1wIElCTSBB
+ZHZhbmNlZCBTZXR0aW5ncw0KPiBVdGlsaXR5IHZlcnNpb24gOS40MS44MUsgTGljZW5zZWQgTWF0
+ZXJpYWxzIC0gUHJvcGVydHkgb2YgSUJNDQo+IChDKSBDb3B5cmlnaHQgSUJNIENvcnAuIDIwMDct
+MjAxMyBBbGwgUmlnaHRzIFJlc2VydmVkDQo+ICAgICAgMCAgMSAgMiAgMyAgNCAgNSAgNiAgNyAg
+OCAgOSAgQSAgQiAgQyAgRCAgRSAgRg0KPiAwMDogMDA+MDAqMDAqMDAqMDAqMDAqNjcqOGIqNDUq
+MDYqNjcqZjYqNDUqZWMqMDEqNzUNCj4gMTA6IDAzKmI4KjAwKmYwKjhlKmQ4KjY3KjhlKjQ1KjA0
+KjY3KjhiKjdkKjAyKjMzKmMwDQo+IDIwOiAyNio4OSo0NSowNCphMSo2MSowOSoyNio4OSo0NSow
+MiphMCo2MyowOSoyNio4OA0KPiAzMDogNDUqMDEqMjYqYzYqMDUqMDEqYjgqMDAqMDAqYzMqYjgq
+ODIqMDAqYzMqYjgqODINCj4gNDA6IDAwKmMzKmI4KjgyKjAwKmMzKmI4KjgyKjAwKmMzKmI4KjAw
+KjEwKjI2Kjg5KjQ1DQo+IDUwOiAwZCpmOCpjMyo5Yyo2Nio2MCplNCo2MCplYiowMCplYiowMCo2
+Nio2MSo5ZCpjMw0KPiA2MDogMWUqYjgqNDAqMDAqOGUqZDgqZjYqMDYqMTAqMDQqMDQqNzQqMDMq
+MWYqZjgqYzMNCj4gNzA6IDFmKmY5KmMzKmY4KmMzKjI1KjAwKjAwKjQxKmQwKjAwKjAwKjA4KjAw
+KjAwKjAzDQo+IDgwOiAwMCoyMiowNCowMCo0NyowMSoyMCowMCoyMCowMCowMCowMio0NyowMSph
+MCowMA0KPiA5MDogYTAqMDAqMDAqMDIqNzkqMDAqNzkqMDAqNzkqMDAqNDUqMDAqMDAqNDEqZDAq
+MDINCj4gYTA6IDAwKjA4KjAxKjAwKjAzKjAwKjJhKjEwKjAwKjQ3KjAxKjAwKjAwKjAwKjAwKjAw
+DQo+IGIwOiAxMCo0NyowMSo4MSowMCo4MSowMCowMCowMyo0NyowMSo4NyowMCo4NyowMCowMA0K
+PiBjMDogMDEqNDcqMDEqODkqMDAqODkqMDAqMDAqMDMqNDcqMDEqOGYqMDAqOGYqMDAqMDANCj4g
+ZDA6IDAzKjQ3KjAxKmMwKjAwKmMwKjAwKjAwKjIwKjc5KjAwKjc5KjAwKjc5KjAwKjFkDQo+IGUw
+OiAwMCowMCo0MSpkMCowMSowMCowOCowMiowMSowMyowMCoyMiowMSowMCo0NyowMQ0KPiBmMDog
+NDAqMDAqNDAqMDAqMDAqMDQqNzkqMDAqNzkqMDAqNzkqMDAqMWQqMDAqMDAqNDENCj4gDQo+IA0K
+PiBDb3VsZCB5b3UgaGVscCBieSB0ZWxsaW5nIG1lIHdoYXQgY29tbWFuZCBzaG91bGQgSSBydW4g
+dG8gZW5hYmxlIHRob3NlDQo+IGhpZGRlbiBvcHRpb25zIGluIEJJT1M/DQoNCkkgaGF2ZSBubyBj
+bHVlIHVuZm9ydHVuYXRlbHkgLSBtYXliZSBjb250YWN0IExlbm92bz8NCg0K
