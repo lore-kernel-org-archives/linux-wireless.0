@@ -1,59 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:50310 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752589Ab3KGAQr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Nov 2013 19:16:47 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 09/13] ath9k: Remove unused AR9462 2.0 initvals
-Date: Thu,  7 Nov 2013 05:41:56 +0530
-Message-Id: <1383783120-22435-10-git-send-email-sujith@msujith.org> (sfid-20131107_011651_454505_2DA44DEB)
-In-Reply-To: <1383783120-22435-1-git-send-email-sujith@msujith.org>
-References: <1383783120-22435-1-git-send-email-sujith@msujith.org>
+Received: from imap.thunk.org ([74.207.234.97]:56994 "EHLO imap.thunk.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751709Ab3KLLyC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Nov 2013 06:54:02 -0500
+Date: Tue, 12 Nov 2013 06:53:50 -0500
+From: Theodore Ts'o <tytso@mit.edu>
+To: Daniel Borkmann <dborkman@redhat.com>, davem@davemloft.net,
+	shemminger@networkplumber.org, fweimer@redhat.com,
+	netdev@vger.kernel.org, Eric Dumazet <eric.dumazet@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH net-next 3/6] random32: add prandom_reseed_late() and
+ call when nonblocking pool becomes initialized
+Message-ID: <20131112115350.GA14077@thunk.org> (sfid-20131112_125411_173736_4A7C850F)
+References: <cover.1384160397.git.dborkman@redhat.com>
+ <2ea03f60bb65429cbe5d74a6d356fde3eefcf06c.1384160397.git.dborkman@redhat.com>
+ <20131111134357.GC10104@thunk.org>
+ <20131112000307.GB14929@order.stressinduktion.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131112000307.GB14929@order.stressinduktion.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Tue, Nov 12, 2013 at 01:03:07AM +0100, Hannes Frederic Sowa wrote:
+>
+> We are much too early to enumerate hardware, so it would be hard to
+> integrate something like mac addresses etc.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h | 14 --------------
- 1 file changed, 14 deletions(-)
+Stupid question --- is there a reason why the minstrel code is
+initialized so early when it is compiled into the kernel?  Can we
+change it so it gets initialized later, after the devices are
+initialized and we get the mac addresses?  
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
-index 092b9d4..5a10dcf 100644
---- a/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
-@@ -33,13 +33,6 @@ static const u32 ar9462_modes_fast_clock_2p0[][3] = {
- 	{0x0000a254, 0x00000898, 0x00001130},
- };
- 
--static const u32 ar9462_pciephy_clkreq_enable_L1_2p0[][2] = {
--	/* Addr      allmodes  */
--	{0x00018c00, 0x18253ede},
--	{0x00018c04, 0x000801d8},
--	{0x00018c08, 0x0003780c},
--};
--
- static const u32 ar9462_2p0_baseband_postamble[][5] = {
- 	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
- 	{0x00009810, 0xd00a8005, 0xd00a8005, 0xd00a8011, 0xd00a800d},
-@@ -366,13 +359,6 @@ static const u32 ar9462_pciephy_clkreq_disable_L1_2p0[][2] = {
- 	{0x00018c08, 0x0003780c},
- };
- 
--static const u32 ar9462_pciephy_pll_on_clkreq_disable_L1_2p0[][2] = {
--	/* Addr      allmodes  */
--	{0x00018c00, 0x18212ede},
--	{0x00018c04, 0x000801d8},
--	{0x00018c08, 0x0003780c},
--};
--
- static const u32 ar9462_2p0_radio_postamble_sys2ant[][5] = {
- 	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
- 	{0x000160ac, 0xa4646c08, 0xa4646c08, 0x24645808, 0x24645808},
--- 
-1.8.4.2
+> Btw. do you see problems regarding get_random_int on architectures without
+> hardware offloading?
+> 
+> We are initializing random_int_secret really late (after all the init
+> calls) and I wonder if we should also use a two stage initialization
+> there, so we have a more unpredictable MD5 hash at early boot.
 
+Most of the users of get_random_int(), at least to date, have been for
+things like ASLR.  A quick audit shows only one device driver user
+that might be impacted: drivers/net/wireless/cw1200/wsm.c.
+
+It's not a bad idea to do a two stage init just in case
+get_random_int() gets used by other code --- although that brings up
+something that I know is really needed, but which I haven't had time
+to try to address yet: we really need to document all of the various
+interfaces that various kernel routines can use to get random numbers,
+and document what their performance and security characteristics are.
+We have probably have a lot of code where the authors didn't realize
+that some other interface would be a better match for their needs, or
+the code is old enough that predates some of the newer interfaces.
+
+    	    	       	    	     - Ted
