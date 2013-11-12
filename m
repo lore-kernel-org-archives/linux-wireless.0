@@ -1,81 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:58129 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754830Ab3KETWw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Nov 2013 14:22:52 -0500
-Received: by mail-pa0-f41.google.com with SMTP id rd3so9474682pab.28
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Nov 2013 11:22:51 -0800 (PST)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Bob Copeland <me@bobcopeland.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	open80211s <devel@lists.open80211s.org>
-Subject: [PATCH 07/17] mac80211: mesh_plink: collapse the two switch statements together
-Date: Tue,  5 Nov 2013 11:16:55 -0800
-Message-Id: <1383679025-7150-7-git-send-email-thomas@cozybit.com> (sfid-20131105_202303_037028_9AB3932C)
-In-Reply-To: <1383679025-7150-1-git-send-email-thomas@cozybit.com>
-References: <1383679025-7150-1-git-send-email-thomas@cozybit.com>
+Received: from purkki.adurom.net ([80.68.90.206]:51303 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750979Ab3KLIBP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Nov 2013 03:01:15 -0500
+From: Kalle Valo <kvalo@adurom.com>
+To: shankar swaminathan <shankswa@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [mac80211] hooking all 802.11 packets to user space without conversion
+References: <CADNhdGHGnHDYdum79cY89kV4LtpiGugMc84Mc_4bNmCuOWrn5g@mail.gmail.com>
+Date: Tue, 12 Nov 2013 10:01:14 +0200
+In-Reply-To: <CADNhdGHGnHDYdum79cY89kV4LtpiGugMc84Mc_4bNmCuOWrn5g@mail.gmail.com>
+	(shankar swaminathan's message of "Tue, 12 Nov 2013 11:58:41 +0530")
+Message-ID: <87d2m6rqut.fsf@purkki.adurom.net> (sfid-20131112_090123_977500_02FE925A)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bob Copeland <me@bobcopeland.com>
+shankar swaminathan <shankswa@gmail.com> writes:
 
-The matches_local check can just be done when looking at the
-individual action types.
+> I would like to know if 802.11 packets could be hooked from the mac80211
+> module to the user space.
+>
+> Basically, I run a module that needs the 802.11 pkts without converting
+> them to 802.3.
+>
+> I am able to register for MLME pkts but not sure whether I can register for
+> data pkts and get them to user space.
 
-Signed-off-by: Bob Copeland <bob@cozybit.com>
----
- net/mac80211/mesh_plink.c | 26 +++++++++-----------------
- 1 file changed, 9 insertions(+), 17 deletions(-)
+Have you tried adding a monitor interface and taking packets from that?
 
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 36b6cff..8e23395 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -821,33 +821,25 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata,
- 
- 	/* Now we will figure out the appropriate event... */
- 	event = PLINK_UNDEFINED;
--	if (!matches_local) {
--		switch (ftype) {
--		case WLAN_SP_MESH_PEERING_OPEN:
--			event = OPN_RJCT;
--			break;
--		case WLAN_SP_MESH_PEERING_CONFIRM:
--			event = CNF_RJCT;
--			break;
--		default:
--			break;
--		}
--	}
- 
- 	if (!sta)
- 		event = OPN_ACPT;
--	else if (matches_local) {
-+	else {
- 		switch (ftype) {
- 		case WLAN_SP_MESH_PEERING_OPEN:
--			if (!mesh_plink_free_count(sdata) ||
--			    (sta->plid && sta->plid != plid))
-+			if (!matches_local)
-+				event = OPN_RJCT;
-+			else if (!mesh_plink_free_count(sdata) ||
-+				 (sta->plid && sta->plid != plid))
- 				event = OPN_IGNR;
- 			else
- 				event = OPN_ACPT;
- 			break;
- 		case WLAN_SP_MESH_PEERING_CONFIRM:
--			if (!mesh_plink_free_count(sdata) ||
--			    (sta->llid != llid || sta->plid != plid))
-+			if (!matches_local)
-+				event = CNF_RJCT;
-+			else if (!mesh_plink_free_count(sdata) ||
-+				 (sta->llid != llid || sta->plid != plid))
- 				event = CNF_IGNR;
- 			else
- 				event = CNF_ACPT;
 -- 
-1.8.4.rc3
-
+Kalle Valo
