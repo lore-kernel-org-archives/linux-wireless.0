@@ -1,30 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qe0-f42.google.com ([209.85.128.42]:56647 "EHLO
-	mail-qe0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757426Ab3K0SrN (ORCPT
+Received: from mail-ee0-f54.google.com ([74.125.83.54]:45294 "EHLO
+	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750861Ab3KLFYK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Nov 2013 13:47:13 -0500
-Received: by mail-qe0-f42.google.com with SMTP id b4so7037138qen.15
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Nov 2013 10:47:12 -0800 (PST)
-Message-ID: <52963E2B.2050301@opensuse.org> (sfid-20131127_194718_559506_8A0C1A53)
-Date: Wed, 27 Nov 2013 15:47:07 -0300
-From: =?ISO-8859-1?Q?Cristian_Rodr=EDguez?= <crrodriguez@opensuse.org>
+	Tue, 12 Nov 2013 00:24:10 -0500
+Message-ID: <5281BB74.50903@gmail.com> (sfid-20131112_062416_417875_3109C2F5)
+Date: Tue, 12 Nov 2013 07:24:04 +0200
+From: Emmanuel Grumbach <egrumbach@gmail.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: wireless-regdb tarballs invalid contents
-References: <529416B2.4050908@opensuse.org> <20131127163207.GA7780@tuxdriver.com>
-In-Reply-To: <20131127163207.GA7780@tuxdriver.com>
+To: Michal Nazarewicz <mina86@mina86.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+CC: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCHv2.1] net: wireless: iwlwifi: remove minor dead code
+References: <1384110397-24386-1-git-send-email-mpn@google.com> <527FDB50.1050902@cogentembedded.com> <87iow080zv.fsf@mina86.com> <1384177312.14334.12.camel@jlt4.sipsolutions.net> <xa1tr4amwkrt.fsf@mina86.com>
+In-Reply-To: <xa1tr4amwkrt.fsf@mina86.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-El 27/11/13 13:32, John W. Linville escribió:
 
-> I have released an update (e.g. 2013-11-27).  Please confirm that
-> the signature is working for you.
+
+On 11/12/2013 02:01 AM, Michal Nazarewicz wrote:
+> inta is checked to be zero in a IRQ_NONE branch so afterwards it
+> cannot be zero as it is never modified.
 > 
-> John
+> Signed-off-by: Michal Nazarewicz <mina86@mina86.com>
+> ---
+>  drivers/net/wireless/iwlwifi/pcie/rx.c | 24 +++++++++---------------
+>  1 file changed, 9 insertions(+), 15 deletions(-)
+> 
+> On Mon, Nov 11 2013, Johannes Berg wrote:
+>> no signed-off-by
+> 
+> Sorry, fixed.  Interestingly, I did not forget about it in my first patch.
 > 
 
-New release works correctly. thanks.
+no worries - I picked it up in our internal tree.
+Thanks!
