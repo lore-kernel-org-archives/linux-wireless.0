@@ -1,61 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:21230 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751459Ab3KAK3j (ORCPT
+Received: from AShevkov.infinet.ru ([91.191.225.92]:43223 "EHLO
+	ashevkov.infinet.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753690Ab3KLHNB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 06:29:39 -0400
-Date: Fri, 1 Nov 2013 13:26:14 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: janusz.dziedzic@tieto.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
-Subject: re: ath9k: dfs move ath_dfs_pool_stats
-Message-ID: <20131101102614.GG29795@longonot.mountain> (sfid-20131101_112942_994132_32D1E26E)
-MIME-Version: 1.0
+	Tue, 12 Nov 2013 02:13:01 -0500
+Date: Tue, 12 Nov 2013 13:12:32 +0600
+From: Alex Hacker <hacker@epn.ru>
+To: Sujith Manoharan <sujith@msujith.org>
+Cc: Sven Eckelmann <sven@open-mesh.com>,
+	OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Simon Wunderlich <simon@open-mesh.com>,
+	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>
+Subject: Re: [ath9k-devel] [OpenWrt-Devel] ath9k: Deaf QCA9558 when setting rxchainmask
+Message-ID: <20131112071232.GB11218@infinet.ru> (sfid-20131112_081306_802063_08B694DA)
+References: <19772470.YgPhAz9cYD@bentobox> <87B8D697-4540-4D0E-975B-125531E6833B@net.t-labs.tu-berlin.de> <CAJ-VmombLQqJsN50nndqCioFEOy=9cp_-34onQnWnpMoX6360w@mail.gmail.com> <2985619.kldLYNDlSX@bentobox> <21120.58000.344447.562435@gargle.gargle.HOWL>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <21120.58000.344447.562435@gargle.gargle.HOWL>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Janusz Dziedzic,
+Thank you Sujith. Probably I understood the following patch in a wrong way.
+Felix removed all chain masks checking. If the mask 5 is invalid, how about
+the mask 4 and 6?
+Regards,
+Alex
 
-This is a semi-automatic email about new static checker warnings.
+commit 24171dd92096fc370b195f3f6bdc0798855dc3f9
+Author: Felix Fietkau <nbd@openwrt.org>
+Date:   Sun Jan 20 21:55:21 2013 +0100
 
-The patch d265214b614a: "ath9k: dfs move ath_dfs_pool_stats" from Oct 
-14, 2013, leads to the following Smatch complaint:
+    ath9k_hw: fix chain swap setting when setting rx chainmask to 5
+    
+    Chain swapping should only be enabled when the EEPROM chainmask is set to 5,
+    regardless of what the runtime chainmask is.
+    
+    Cc: stable@vger.kernel.org
+    Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-drivers/net/wireless/ath/ath9k/dfs_debug.c:67 read_file_dfs()
-	 error: we previously assumed 'sc->dfs_detector' could be null (see line 47)
-
-drivers/net/wireless/ath/ath9k/dfs_debug.c
-    46	
-    47		if (sc->dfs_detector)
-                    ^^^^^^^^^^^^^^^^
-Patch introduces a new check.
-
-    48			dfs_pool_stats = sc->dfs_detector->get_stats(sc->dfs_detector);
-    49	
-    50		len += scnprintf(buf + len, size - len, "DFS support for "
-    51				 "macVersion = 0x%x, macRev = 0x%x: %s\n",
-    52				 hw_ver->macVersion, hw_ver->macRev,
-    53				 (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_DFS) ?
-    54						"enabled" : "disabled");
-    55		len += scnprintf(buf + len, size - len, "Pulse detector statistics:\n");
-    56		ATH9K_DFS_STAT("pulse events reported   ", pulses_total);
-    57		ATH9K_DFS_STAT("invalid pulse events    ", pulses_no_dfs);
-    58		ATH9K_DFS_STAT("DFS pulses detected     ", pulses_detected);
-    59		ATH9K_DFS_STAT("Datalen discards        ", datalen_discards);
-    60		ATH9K_DFS_STAT("RSSI discards           ", rssi_discards);
-    61		ATH9K_DFS_STAT("BW info discards        ", bwinfo_discards);
-    62		ATH9K_DFS_STAT("Primary channel pulses  ", pri_phy_errors);
-    63		ATH9K_DFS_STAT("Secondary channel pulses", ext_phy_errors);
-    64		ATH9K_DFS_STAT("Dual channel pulses     ", dc_phy_errors);
-    65		len += scnprintf(buf + len, size - len, "Radar detector statistics "
-    66				 "(current DFS region: %d)\n",
-    67				 sc->dfs_detector->region);
-                                 ^^^^^^^^^^^^^^^^^^^^^^^^^
-Existing unchecked dereference.
-
-    68		ATH9K_DFS_STAT("Pulse events processed  ", pulses_processed);
-    69		ATH9K_DFS_STAT("Radars detected         ", radar_detected);
-
-regards,
-dan carpenter
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index 8290edd..3afc24b 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -588,30 +588,17 @@ static void ar9003_hw_init_bb(struct ath_hw *ah,
+ 
+ void ar9003_hw_set_chain_masks(struct ath_hw *ah, u8 rx, u8 tx)
+ {
+-	switch (rx) {
+-	case 0x5:
++	if (ah->caps.tx_chainmask == 5 || ah->caps.rx_chainmask == 5)
+ 		REG_SET_BIT(ah, AR_PHY_ANALOG_SWAP,
+ 			    AR_PHY_SWAP_ALT_CHAIN);
+-	case 0x3:
+-	case 0x1:
+-	case 0x2:
+-	case 0x7:
+-		REG_WRITE(ah, AR_PHY_RX_CHAINMASK, rx);
+-		REG_WRITE(ah, AR_PHY_CAL_CHAINMASK, rx);
+-		break;
+-	default:
+-		break;
+-	}
++
++	REG_WRITE(ah, AR_PHY_RX_CHAINMASK, rx);
++	REG_WRITE(ah, AR_PHY_CAL_CHAINMASK, rx);
+ 
+ 	if ((ah->caps.hw_caps & ATH9K_HW_CAP_APM) && (tx == 0x7))
+-		REG_WRITE(ah, AR_SELFGEN_MASK, 0x3);
+-	else
+-		REG_WRITE(ah, AR_SELFGEN_MASK, tx);
++		tx = 3;
+ 
+-	if (tx == 0x5) {
+-		REG_SET_BIT(ah, AR_PHY_ANALOG_SWAP,
+-			    AR_PHY_SWAP_ALT_CHAIN);
+-	}
++	REG_WRITE(ah, AR_SELFGEN_MASK, tx);
+ }
+ 
+ /*
