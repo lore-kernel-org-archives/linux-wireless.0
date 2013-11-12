@@ -1,54 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout3.w1.samsung.com ([210.118.77.13]:27065 "EHLO
-	mailout3.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755144Ab3K2NzI (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:40026 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751868Ab3KLMEO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Nov 2013 08:55:08 -0500
-Received: from eucpsbgm2.samsung.com (unknown [203.254.199.245])
- by mailout3.w1.samsung.com
- (Oracle Communications Messaging Server 7u4-24.01(7.0.4.24.0) 64bit (built Nov
- 17 2011)) with ESMTP id <0MX10037P2NU1X50@mailout3.w1.samsung.com> for
- linux-wireless@vger.kernel.org; Fri, 29 Nov 2013 13:55:06 +0000 (GMT)
-Message-id: <52989CB9.3060108@samsung.com> (sfid-20131129_145512_935705_097D9797)
-Date: Fri, 29 Nov 2013 17:55:05 +0400
-From: Alexey Perevalov <a.perevalov@samsung.com>
-MIME-version: 1.0
-To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Subject: question about generalized way for RSSI notification
-Content-type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 12 Nov 2013 07:04:14 -0500
+Message-ID: <1384257842.14301.7.camel@jlt4.sipsolutions.net> (sfid-20131112_130421_833297_4EA48606)
+Subject: Re: [PATCH net-next 3/6] random32: add prandom_reseed_late() and
+ call when nonblocking pool becomes initialized
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: Daniel Borkmann <dborkman@redhat.com>, davem@davemloft.net,
+	shemminger@networkplumber.org, fweimer@redhat.com,
+	netdev@vger.kernel.org, Eric Dumazet <eric.dumazet@gmail.com>,
+	linux-wireless@vger.kernel.org
+Date: Tue, 12 Nov 2013 13:04:02 +0100
+In-Reply-To: <20131112115350.GA14077@thunk.org> (sfid-20131112_125411_173736_4A7C850F)
+References: <cover.1384160397.git.dborkman@redhat.com>
+	 <2ea03f60bb65429cbe5d74a6d356fde3eefcf06c.1384160397.git.dborkman@redhat.com>
+	 <20131111134357.GC10104@thunk.org>
+	 <20131112000307.GB14929@order.stressinduktion.org>
+	 <20131112115350.GA14077@thunk.org> (sfid-20131112_125411_173736_4A7C850F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear wireless subsystem maintainers,
+On Tue, 2013-11-12 at 06:53 -0500, Theodore Ts'o wrote:
+> On Tue, Nov 12, 2013 at 01:03:07AM +0100, Hannes Frederic Sowa wrote:
+> >
+> > We are much too early to enumerate hardware, so it would be hard to
+> > integrate something like mac addresses etc.
+> 
+> Stupid question --- is there a reason why the minstrel code is
+> initialized so early when it is compiled into the kernel?  Can we
+> change it so it gets initialized later, after the devices are
+> initialized and we get the mac addresses?  
 
-I have a question regarding RSSI notification to the user space.
-Right now this information available in /proc/net/wireless.
-That generalized method is not depending on driver implementation, 
-driver just need to provide wireless statistics.
+It's a bit of a chicken & egg problem - the minstrel rate control is
+needed for the wireless device to get registered - if anything were to
+fail there then we wouldn't want to register.
 
-I found 2 places in kernel which report about RSSI to user space eventually.
-First place, it's wlan_rndis driver base implementation 
-./drivers/net/wireless/rndis_wlan.c.
-The second place, it's mac80211 driver - beacon frame handling.
+johannes
 
-Unfortunately wireless driver we're using isn't rndis based and isn't 
-mac80211 based.
-We don't want to depends on driver code.
-
-What community think in this situation, is it possible to add notifier 
-with following responsibility:
-     send netlink notification in case of signal level changed according 
-to predefined by user threshold?
-
-Technically it will looks like rndis_wlan approach - timer function with 
-predefined frequency.
-
-This functionality is needed to reduce user space daemon activity which 
-provides information to GUI wifi indicator.
-Also such approach could decrease time reaction on signal level changes. 
-Currently, some OSes has 1 second interval,
-another one has 3 seconds for checking RSSI.
-
--- 
-Best regards,
-Alexey Perevalov
