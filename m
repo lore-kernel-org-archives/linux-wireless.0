@@ -1,86 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f170.google.com ([74.125.82.170]:45549 "EHLO
-	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751951Ab3KBQ6F (ORCPT
+Received: from mail-ee0-f54.google.com ([74.125.83.54]:56337 "EHLO
+	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753644Ab3KLABa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Nov 2013 12:58:05 -0400
-Received: by mail-we0-f170.google.com with SMTP id u57so650083wes.29
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Nov 2013 09:58:02 -0700 (PDT)
+	Mon, 11 Nov 2013 19:01:30 -0500
+Received: by mail-ee0-f54.google.com with SMTP id c50so2769646eek.41
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Nov 2013 16:01:28 -0800 (PST)
+From: Michal Nazarewicz <mina86@mina86.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCHv2.1] net: wireless: iwlwifi: remove minor dead code
+In-Reply-To: <1384177312.14334.12.camel@jlt4.sipsolutions.net>
+References: <1384110397-24386-1-git-send-email-mpn@google.com> <527FDB50.1050902@cogentembedded.com> <87iow080zv.fsf@mina86.com> <1384177312.14334.12.camel@jlt4.sipsolutions.net>
+Date: Tue, 12 Nov 2013 01:01:26 +0100
+Message-ID: <xa1tr4amwkrt.fsf@mina86.com> (sfid-20131112_010154_387966_98EACF60)
 MIME-Version: 1.0
-In-Reply-To: <CAMP44s1NOS2p9pKeMLhR7616CzHeHJVJEzcF1tP6tsKfcPhSOQ@mail.gmail.com>
-References: <CAMP44s1XJRHV8bAX=_-TkSKMkY8Nw1=eHorqTCZ2QmtR5m8uJA@mail.gmail.com>
- <526E20EA.9090203@rempel-privat.de> <CAMP44s2Cvw9HF3c3Asuq+bTSD36Gw6PXOUVjAcCD+hf6KB_awg@mail.gmail.com>
- <CABPxzY+xJ7kst-sYwP8RJwMO_zkNYWKaYy=_LS7WQfuxquK24w@mail.gmail.com>
- <CAMP44s0087jYz5AiEaEzwt7GqH9ed8PWE1CmvMPr4Dqn3yE6rA@mail.gmail.com>
- <CABPxzYLwwyFCFw1pEt0v9Xw4kcue1C_RZx0RbTbMrUw=+MWvgQ@mail.gmail.com>
- <CAMP44s0svc2MRKCrZXS5ZYRZNPoomQkcKHdC2m2BGy7di+TCyA@mail.gmail.com>
- <CABPxzYL-Gzbzoc_ui+qUQ6uzoKp=Yq7yLWZvc7PoEjiH3dFczg@mail.gmail.com>
- <CAMP44s3uRF=jNn5ZHZ=QOcvuMoXxsfkxU=VOq3K02Q0qOspEdA@mail.gmail.com>
- <CABPxzYJbNjAwymwUq0pN=YyuCBGy2qz_BKafatHTWK+yH8PbkA@mail.gmail.com> <CAMP44s1NOS2p9pKeMLhR7616CzHeHJVJEzcF1tP6tsKfcPhSOQ@mail.gmail.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Sat, 2 Nov 2013 22:27:42 +0530
-Message-ID: <CABPxzY+RL+ikbSff3a7qb20ExxcSTx6U2xcL5CFr-BgVSOr61A@mail.gmail.com> (sfid-20131102_175823_170114_7958BA4F)
-Subject: Re: I always need a miracle to connect with iwlwifi
-To: Felipe Contreras <felipe.contreras@gmail.com>
-Cc: Oleksij Rempel <linux@rempel-privat.de>, ilw@linux.intel.com,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Nov 2, 2013 at 11:16 AM, Felipe Contreras
-<felipe.contreras@gmail.com> wrote:
->
-> On Tue, Oct 29, 2013 at 8:23 AM, Krishna Chaitanya
-> <chaitanya.mgit@gmail.com> wrote:
-> > On Tue, Oct 29, 2013 at 3:02 AM, Felipe Contreras
-> > <felipe.contreras@gmail.com> wrote:
->
-> >> Yes, but maybe I overrode the file. I've pushed a new one again. The
-> >> sha-1 is 36c260d8d8c171a24eb1aa7b2ea736b06c9b55b7.
-> >>
-> > Thanks, able to decode now. I am not familiar with the
-> > iwlwifi code, but let me give it a try.
->
-> Did you find anything?
+inta is checked to be zero in a IRQ_NONE branch so afterwards it
+cannot be zero as it is never modified.
 
-Not Much, i could see the below pattern repeating
+Signed-off-by: Michal Nazarewicz <mina86@mina86.com>
+---
+ drivers/net/wireless/iwlwifi/pcie/rx.c | 24 +++++++++---------------
+ 1 file changed, 9 insertions(+), 15 deletions(-)
 
-  wpa_supplicant-6915  [003]  5610.786592: drv_return_void:      phy1
-  wpa_supplicant-6915  [003]  5610.786594: drv_sta_state:        phy1
-vif:wlan0(2) sta:e0:1d:3b:46:82:a0 state: 0->1
-  wpa_supplicant-6915  [003]  5610.786597: iwlwifi_dev_hcmd:
-[0000:02:00.0] hcmd 0x18 (sync)
-  irq/44-iwlwifi-6803  [001]  5610.786632: iwlwifi_dev_rx:
-[0000:02:00.0] RX cmd 0x18
-  wpa_supplicant-6915  [003]  5610.786639: drv_return_int:       phy1 - 0
-  wpa_supplicant-6915  [003]  5610.786645: drv_mgd_prepare_tx:   phy1
-vif:wlan0(2)
-  wpa_supplicant-6915  [003]  5610.786645: drv_return_void:      phy1
-  wpa_supplicant-6915  [003]  5610.786663: iwlwifi_dev_tx:
-[0000:02:00.0] TX 1c (90 bytes)
-  irq/44-iwlwifi-6803  [001]  5610.788677: iwlwifi_dev_rx:
-[0000:02:00.0] RX cmd 0x1c
-  irq/44-iwlwifi-6803  [001]  5610.788709: iwlwifi_dev_rx:
-[0000:02:00.0] RX cmd 0xc0
-  irq/44-iwlwifi-6803  [001]  5610.788710: iwlwifi_dev_rx:
-[0000:02:00.0] RX cmd 0xc1
-    kworker/u8:0-1459  [003]  5610.788730: drv_sta_state:        phy1
-vif:wlan0(2) sta:e0:1d:3b:46:82:a0 state: 1->2
-    kworker/u8:0-1459  [003]  5610.788732: drv_return_int:       phy1 - 0
-    kworker/u8:0-1459  [003]  5610.999549: drv_sta_state:        phy1
-vif:wlan0(2) sta:e0:1d:3b:46:82:a0 state: 2->1
-    kworker/u8:0-1459  [003]  5610.999553: drv_return_int:       phy1 - 0
-    kworker/u8:0-1459  [003]  5610.999553: drv_sta_state:        phy1
-vif:wlan0(2) sta:e0:1d:3b:46:82:a0 state: 1->0
-    kworker/u8:0-1459  [003]  5610.999554: drv_return_int:       phy1 - 0
+On Mon, Nov 11 2013, Johannes Berg wrote:
+> no signed-off-by
 
-So We move from NONE to AUTH and then AUTH to NONE. iwlwifi_dev_tx is
-transmistting 90 bytes packets
-but auth request is only 43 bytes, could that be association request??
-If yes where is that getting dropped.
+Sorry, fixed.  Interestingly, I did not forget about it in my first patch.
 
-So my guess is that we are sending the association request (CMD_TX),
-but its never seen OTA, its lost some where in between.
-Ball goes to the FW :-).
+diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
+index 3f237b4..7d0fdc0 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
+@@ -1121,7 +1121,6 @@ static irqreturn_t iwl_pcie_isr(int irq, void *data)
+ 	struct iwl_trans *trans = data;
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	u32 inta, inta_mask;
+-	irqreturn_t ret = IRQ_NONE;
+ 
+ 	lockdep_assert_held(&trans_pcie->irq_lock);
+ 
+@@ -1150,7 +1149,14 @@ static irqreturn_t iwl_pcie_isr(int irq, void *data)
+ 	 * or due to sporadic interrupts thrown from our NIC. */
+ 	if (!inta) {
+ 		IWL_DEBUG_ISR(trans, "Ignore interrupt, inta == 0\n");
+-		goto none;
++		/* re-enable interrupts here since we don't have anything to
++		 * service.  only Re-enable if disabled by irq and no
++		 * schedules tasklet.
++		 */
++		if (test_bit(STATUS_INT_ENABLED, &trans_pcie->status) &&
++		    !trans_pcie->inta)
++			iwl_enable_interrupts(trans);
++		return IRQ_NONE;
+ 	}
+ 
+ 	if ((inta == 0xFFFFFFFF) || ((inta & 0xFFFFFFF0) == 0xa5a5a5a0)) {
+@@ -1168,19 +1174,7 @@ static irqreturn_t iwl_pcie_isr(int irq, void *data)
+ 
+ 	trans_pcie->inta |= inta;
+ 	/* the thread will service interrupts and re-enable them */
+-	if (likely(inta))
+-		return IRQ_WAKE_THREAD;
+-
+-	ret = IRQ_HANDLED;
+-
+-none:
+-	/* re-enable interrupts here since we don't have anything to service. */
+-	/* only Re-enable if disabled by irq  and no schedules tasklet. */
+-	if (test_bit(STATUS_INT_ENABLED, &trans_pcie->status) &&
+-	    !trans_pcie->inta)
+-		iwl_enable_interrupts(trans);
+-
+-	return ret;
++	return IRQ_WAKE_THREAD;
+ }
+ 
+ /* interrupt handler using ict table, with this interrupt driver will
+-- 
+1.8.3.2
