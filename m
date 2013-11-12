@@ -1,47 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:49928 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752622Ab3KAN6G (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:37369 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755666Ab3KLVNw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 09:58:06 -0400
-Received: by mail-wg0-f44.google.com with SMTP id n12so4068747wgh.35
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:58:06 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 03/65] wireless-regdb: enable VHT80 for AN
-Date: Fri,  1 Nov 2013 14:56:53 +0100
-Message-Id: <1383314275-20960-4-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_145812_458766_760EDE1B)
-In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+	Tue, 12 Nov 2013 16:13:52 -0500
+Date: Tue, 12 Nov 2013 16:13:50 -0500 (EST)
+Message-Id: <20131112.161350.946584501122269943.davem@davemloft.net> (sfid-20131112_221401_477581_7DFEF511)
+To: davej@redhat.com
+Cc: netdev@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: shutdown(3) and bluetooth.
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20131112211125.GA2912@redhat.com>
+References: <20131112211125.GA2912@redhat.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Source is QCA's regulatory team's efforts.
+From: Dave Jones <davej@redhat.com>
+Date: Tue, 12 Nov 2013 16:11:25 -0500
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+> Is shutdown() allowed to block indefinitely ? The man page doesn't say either way,
+> and I've noticed that my fuzz tester occasionally hangs for days spinning in bt_sock_wait_state()
+> 
+> Is there something I should be doing to guarantee that this operation
+> will either time out, or return instantly ?
+> 
+> In this specific case, I doubt anything is on the "sender" end of the socket, so
+> it's going to be waiting forever for a state change that won't arrive.
 
-diff --git a/db.txt b/db.txt
-index d08281f..5ef95ee 100644
---- a/db.txt
-+++ b/db.txt
-@@ -35,9 +35,9 @@ country AM: DFS-ETSI
- 
- country AN: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
--	(5170 - 5250 @ 40), (20)
--	(5250 - 5330 @ 40), (20), DFS
--	(5490 - 5710 @ 40), (27), DFS
-+	(5170 - 5250 @ 80), (20)
-+	(5250 - 5330 @ 80), (20), DFS
-+	(5490 - 5710 @ 80), (27), DFS
- 
- country AR: DFS-FCC
- 	(2402 - 2482 @ 40), (20)
--- 
-1.8.4.rc3
-
+Adding bluetooth and wireless lists.  Dave, please consult MAINTAINERS when
+asking questions like this, thanks!
