@@ -1,129 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:33135 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758134Ab3KHUwK (ORCPT
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:59330 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753616Ab3KLSOv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Nov 2013 15:52:10 -0500
-Received: by mail-wi0-f171.google.com with SMTP id hn9so926651wib.10
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Nov 2013 12:52:09 -0800 (PST)
+	Tue, 12 Nov 2013 13:14:51 -0500
+Received: by mail-ie0-f172.google.com with SMTP id to1so4481340ieb.31
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Nov 2013 10:14:51 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CABPxzYJsLqJbJQzr8+2GujQsbJpo922v9ouVWWPbTFL11-UV5g@mail.gmail.com>
-References: <CAMP44s1XJRHV8bAX=_-TkSKMkY8Nw1=eHorqTCZ2QmtR5m8uJA@mail.gmail.com>
-	<526E20EA.9090203@rempel-privat.de>
-	<CAMP44s2Cvw9HF3c3Asuq+bTSD36Gw6PXOUVjAcCD+hf6KB_awg@mail.gmail.com>
-	<CABPxzY+xJ7kst-sYwP8RJwMO_zkNYWKaYy=_LS7WQfuxquK24w@mail.gmail.com>
-	<CAMP44s0087jYz5AiEaEzwt7GqH9ed8PWE1CmvMPr4Dqn3yE6rA@mail.gmail.com>
-	<CABPxzYLwwyFCFw1pEt0v9Xw4kcue1C_RZx0RbTbMrUw=+MWvgQ@mail.gmail.com>
-	<CAMP44s0svc2MRKCrZXS5ZYRZNPoomQkcKHdC2m2BGy7di+TCyA@mail.gmail.com>
-	<CABPxzYL-Gzbzoc_ui+qUQ6uzoKp=Yq7yLWZvc7PoEjiH3dFczg@mail.gmail.com>
-	<CAMP44s3uRF=jNn5ZHZ=QOcvuMoXxsfkxU=VOq3K02Q0qOspEdA@mail.gmail.com>
-	<CABPxzYJbNjAwymwUq0pN=YyuCBGy2qz_BKafatHTWK+yH8PbkA@mail.gmail.com>
-	<CAMP44s1NOS2p9pKeMLhR7616CzHeHJVJEzcF1tP6tsKfcPhSOQ@mail.gmail.com>
-	<CABPxzY+RL+ikbSff3a7qb20ExxcSTx6U2xcL5CFr-BgVSOr61A@mail.gmail.com>
-	<CAMP44s384vOcMc4vE82gAdVf37YUZfegmPHUSeobPO=gK6ErAw@mail.gmail.com>
-	<CABPxzYLDHP5gyeTL8HR=6uJDLptaUGEnNGSFLMkxKqi-JaBVYQ@mail.gmail.com>
-	<CABPxzYJTuV0vGLnhgcQcXbg_9szSm2hH7_vCeP4TOKNxZQx_Gg@mail.gmail.com>
-	<CAMP44s3VRnqw0XJDZTZTym7wBD5-NnfOD56YHbE87OG=3Zan2w@mail.gmail.com>
-	<CAMP44s15W7gb8rXwqum5bdHOSk=A_sadX7ksvtkG0qTOu1RREg@mail.gmail.com>
-	<CABPxzYLtbs1s-_T+hk+N1hOEuCi_Yq+CGxG7Xx0hPRmiyQM0Jg@mail.gmail.com>
-	<CAMP44s0h836BZ+g9-g_t78bKuV_m_xAuvPYRCHaFdJ58eTKthw@mail.gmail.com>
-	<CABPxzYJsLqJbJQzr8+2GujQsbJpo922v9ouVWWPbTFL11-UV5g@mail.gmail.com>
-Date: Fri, 8 Nov 2013 14:52:08 -0600
-Message-ID: <CAMP44s1ZtTyfKmgy4174ukQU1dwx1Fw=AngNQ=g2Dv2wm4t2-g@mail.gmail.com> (sfid-20131108_215226_228732_D7D6F33F)
-Subject: Re: I always need a miracle to connect with iwlwifi
-From: Felipe Contreras <felipe.contreras@gmail.com>
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Cc: Oleksij Rempel <linux@rempel-privat.de>, ilw@linux.intel.com,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB301DF044C@HASMSX103.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
+ <CALkVjQY7r=YKhsgDKR0mnYVtZy5BAdj83nY2jL0VFaiew6ha7A@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
+ <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
+ <527A8166.6000701@gmail.com> <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
+ <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
+ <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
+ <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
+ <20131111224439.GA30638@google.com> <CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com>
+ <CALkVjQaXEBpbwu9Qy3+17Eg-nSg-k7iin8G3f1RsTLkCOB-2XQ@mail.gmail.com> <0BA3FCBA62E2DC44AF3030971E174FB301DF044C@HASMSX103.ger.corp.intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 12 Nov 2013 11:14:31 -0700
+Message-ID: <CAErSpo5iU15AoSVL9WmLp4gNCiNmt6pFZuTsd-Vui4SCrSc_Hw@mail.gmail.com> (sfid-20131112_191456_390734_10477412)
+Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: wzyboy <wzyboy@wzyboy.org>,
+	Emmanuel Grumbach <egrumbach@gmail.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 8, 2013 at 2:30 PM, Krishna Chaitanya
-<chaitanya.mgit@gmail.com> wrote:
-> On Fri, Nov 8, 2013 at 7:48 PM, Felipe Contreras
-> <felipe.contreras@gmail.com> wrote:
->> On Fri, Nov 8, 2013 at 8:06 AM, Krishna Chaitanya
->> <chaitanya.mgit@gmail.com> wrote:
->>> On Fri, Nov 8, 2013 at 6:44 PM, Felipe Contreras
->>> <felipe.contreras@gmail.com> wrote:
->>>> On Fri, Nov 8, 2013 at 2:35 AM, Felipe Contreras
->>>> <felipe.contreras@gmail.com> wrote:
->>>>> On Sat, Nov 2, 2013 at 2:05 PM, Krishna Chaitanya
->>>>> <chaitanya.mgit@gmail.com> wrote:
->>>>>
->>>>>> Also one more thing you said N900 uses mac80211 and it has no issues, but as
->>>>>> its a embedded device it might running an older kernel where the
->>>>>> handling might be
->>>>>> different, so we need to try with the same kernel you are facing an
->>>>>> issue with the
->>>>>> a driver which advertises IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC.
->>>>>
->>>>> Yes it was running an older kernel, but I just compiled v3.12 and ran
->>>>> it on the N900, and still everything works fine.
->>>>>
->>>>>> (or) if you a have a compilation environment try commenting the advertisement of
->>>>>> IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC in the iwlwifi DVM driver and
->>>>>> try to reproduce the issue.
->>>>>
->>>>> After commenting that flag everything works fine :)
->>>
->>> Oh, great. That was just to corner the problem, that means we are not getting
->>> the required beacon  before the association, but we only wait for 1 beacon here
->>> may be we to wait for some number of beacons before giving up the association??
->>>
->>> Johannes??
+On Tue, Nov 12, 2013 at 5:16 AM, Grumbach, Emmanuel
+<emmanuel.grumbach@intel.com> wrote:
 >>
->> But we are receiving 0 beacons, waiting for more than 1 won't help.
->> BTW, why NEED_DTIM_BEFORE_ASSOC if the device doesn't *need* the DTIM
->> before the association?
+>> 2013/11/12 wzyboy <wzyboy@wzyboy.org>:
+>> > I will continue downloading big files to benchmark it.
 >>
->>>>> What are the next steps?
->>>>
->>>> I tried to add some debugging to see what's going on, and indeed the
->>>> beacon packets are lost, I added debugging as low in the chain as I
->>>> could (iwlagn_rx_reply_rx()), and I don't see them there. However,
->>>> when I enable the monitor mode, I see them. What's going on?
->>>
->>> In the captures you shared all the beacons are malformed, so
->>> probably they failed the CRC check. iwlwifi drops all the CRC failed
->>> packets. (doth MVM and DVM)
+>> Hi guys, good news!
 >>
->> Before iwlagn_rx_reply_rx()?
+>> Six hours ago I ran a simple loop script to repeatly download big files (and
+>> saving to /dev/null) and went to have lessons. Six hours later it's after school.
+>> I found that the wireless still works!
 >>
->>> Not sure how you are receiving the beacons in the monitor mode.
->>
->> I don't know what kismet does, but I can see my debugging is printing them.
->>
->>> BTW did you tried capturing the beacons in other devices and see if they
->>> are really malformed, or is it just iwlwifi interpreting them wrongly.?
->>
->> I haven't managed to do that yet.
->>
->> This is what I'm doing:
->>
->> --- a/drivers/net/wireless/iwlwifi/dvm/rx.c
->> +++ b/drivers/net/wireless/iwlwifi/dvm/rx.c
->> @@ -919,6 +919,11 @@ static int iwlagn_rx_reply_rx(struct iwl_priv *priv,
->>         ampdu_status = iwlagn_translate_rx_status(priv,
->>                                                   le32_to_cpu(rx_pkt_status));
->>
->> +       if (ieee80211_is_beacon(header->frame_control)) {
->> +               print_hex_dump(KERN_INFO, "iwlwifi: dump: ", DUMP_PREFIX_OFFSET,
->> +                               16, 1, header, len, true);
->> +       }
->> +
->>         if ((unlikely(phy_res->cfg_phy_cnt > 20))) {
->>                 IWL_DEBUG_DROP(priv, "dsp size out of range [0,20]: %d\n",
->>                                 phy_res->cfg_phy_cnt);
->>
-> Oops...you just missed, Right after your print there is a check to
-> drop frames with BAD CRC :-).
+>> So I believe that the two "setpci" commands really work! Thanks Bjorn and
+>> Emmanuel!
+>
+> Well... I haven't done much, but the setpci isn't really a solution - it is more a work around.
+> Bjorn is basically disabling L1 PCIe feature which allows to save power. While you might not care, I do :)
+> The HW folks here would still want to know if you can disable L1 substates feature (not that I know what it is - but I can guess).
+> If you can try to:
+>  * upgrade your BIOS (if needed)
+>  * check the advanced options I sent to you to see if you can unlock the advanced menu in your BIOS
+>
+> it'd help me to understand the issue.
+> In any case, I am happy that you have a way to reliably use your NIC now.
 
-That's why I put the print before that check. Since I don't see the
-print, that means the check was never executed. iwlagn_rx_reply_rx()
-was never called for the beacon frame.
+The setpci experiment was only for debugging.  Obviously it's not a
+real fix, and it doesn't help any other users of this ThinkPad X240s.
+But it does seem clear that the problem is related to ASPM.
 
--- 
-Felipe Contreras
+And it looks like the same thing we investigated here:
+https://bugzilla.kernel.org/show_bug.cgi?id=57331, which is even on
+the same device.
+
+>From your dmesg logs:
+
+  ACPI FADT declares the system doesn't support PCIe ASPM, so disable it
+  acpi PNP0A08:00: ACPI _OSC control for PCIe not granted, disabling ASPM
+
+The messages are misleading.  Linux does not actually disable ASPM as
+you did with setpci.  All Linux does is leave the current ASPM
+configuration untouched, because we believe that the BIOS is managing
+it.  The BIOS must have enabled ASPM on this device (you could verify
+this by booting with "pci=earlydump"), and BIOS also says the OS must
+not enable ASPM control (via the ACPI FADT table and the PCI host
+bridge _OSC method).
+
+It would really help if you still had Windows on this system, and we
+could look and see whether it disables ASPM for this device (if
+anybody does have Windows, I would probably use AIDA64 to dump the PCI
+config space).  I did experiments for bug 57331 that suggested that
+Windows leaves ASPM alone just like Linux does, but my experiments
+were on qemu, not on real hardware, and I didn't have an Intel wifi
+device.
+
+If the Windows driver works fine even with ASPM enabled, that would
+suggest that the problem is something in the Linux iwlwifi driver.  If
+Windows does actually disable ASPM on this device, then we would have
+to figure out if there's a way we can safely make Linux also disable
+ASPM.
+
+Bjorn
