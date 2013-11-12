@@ -1,83 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f50.google.com ([209.85.215.50]:43353 "EHLO
-	mail-la0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752939Ab3KNLw2 (ORCPT
+Received: from packetmixer.de ([79.140.42.25]:44204 "EHLO
+	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754614Ab3KLRcC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Nov 2013 06:52:28 -0500
-Received: by mail-la0-f50.google.com with SMTP id el20so1476263lab.9
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Nov 2013 03:52:26 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CALhHN=r4y+JDw9_i9FdKwNoHgic+bvkMJRpYwnaXoSK519Metw@mail.gmail.com>
-References: <1384366379-25301-1-git-send-email-mcgrof@do-not-panic.com>
-	<1384366379-25301-6-git-send-email-mcgrof@do-not-panic.com>
-	<1384378173.28806.22.camel@jlt4.sipsolutions.net>
-	<CALhHN=r4y+JDw9_i9FdKwNoHgic+bvkMJRpYwnaXoSK519Metw@mail.gmail.com>
-Date: Thu, 14 Nov 2013 12:52:26 +0100
-Message-ID: <CALhHN=o-LQfXuyujFOj6A7hzE0mBbC5Q6r3ByL6APJffOx4sHQ@mail.gmail.com> (sfid-20131114_125231_596055_7D6867BC)
-Subject: Re: [RFC 5/5] cfg80211: DFS check dfs_region before usage
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>, j@w1.fi,
-	sunitb@qca.qualcomm.com, rsunki@qca.qualcomm.com,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 12 Nov 2013 12:32:02 -0500
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Simon Wunderlich <sw@simonwunderlich.de>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Subject: [PATCHv2] iw: add support for 5 and 10 MHz channels in IBSS mode
+Date: Tue, 12 Nov 2013 18:31:58 +0100
+Message-Id: <1384277518-12398-1-git-send-email-sw@simonwunderlich.de> (sfid-20131112_183206_432132_5D65C0F2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14 November 2013 11:15, Janusz Dziedzic <janusz.dziedzic@tieto.com> wrote:
-> On 13 November 2013 22:29, Johannes Berg <johannes@sipsolutions.net> wrote:
->> On Wed, 2013-11-13 at 19:12 +0100, Luis R. Rodriguez wrote:
->>> Check the DFS region before channel availability check
->>> or declaring a channel as DFS usable.
->>>
->>> Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
->>> ---
->>>  net/wireless/chan.c    | 8 ++++++++
->>>  net/wireless/nl80211.c | 5 +++++
->>>  2 files changed, 13 insertions(+)
->>>
->>> diff --git a/net/wireless/chan.c b/net/wireless/chan.c
->>> index 78559b5..4e6eaa0 100644
->>> --- a/net/wireless/chan.c
->>> +++ b/net/wireless/chan.c
->>> @@ -517,10 +517,18 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
->>>       struct ieee80211_sta_ht_cap *ht_cap;
->>>       struct ieee80211_sta_vht_cap *vht_cap;
->>>       u32 width, control_freq;
->>> +     enum nl80211_dfs_regions dfs_region;
->>>
->>>       if (WARN_ON(!cfg80211_chandef_valid(chandef)))
->>>               return false;
->>>
->>> +     rtnl_lock();
->>> +     dfs_region = reg_get_dfs_region(wiphy);
->>> +     rtnl_unlock();
->>
->
->
-> Do we need check dfs_region in cfg80211_can_beacon() at all?
-> We already check first if all channels NL80211_DFS_AVAILABLE.
-> To be DFS_AVAILABLE we need pass CAC, and we will fail CAC if
-> dfs_region == UNSET.
->
-> Anyway we can do something like this in cfg80211_can_beacon()
->
->         if (cfg80211_chandef_dfs_required(wiphy, chandef) > 0 &&
-> -           cfg80211_chandef_dfs_available(wiphy, chandef)) {
-> +           cfg80211_chandef_dfs_available(wiphy, chandef) &&
-> +           reg_get_dfs_region(wiphy) != NL80211_DFS_UNSET) {
-> ...
-> And change doc that cfg80211_can_beacon() require rtnl_lock.
-> But I think this is not required.
->
-Or if we should handle dfs_region change after we start CAC and start beaconing,
-we could add __cfg80211_can_beacon() without rtnl locking and
-cfg80211_can_beacon() with locking.
+5/10 MHz requires to send the frequency information as chandef instead
+of the the old channel type, therfore send the chandef next the channel
+type (the latter is still used for old kernels).
 
-BTW
-Luis should we handle dfs_region change also during CAC? Who should
-fail CAC in case we switch eg. from ETSI to FCC? Should we handle this
-in driver?
+Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+---
+Changes to PATCH:
+ * also send old channel type to keep compatibility for older kernels
+---
+ ibss.c |   62 ++++++++++++++++++++++++++++++++++++++++++++++----------------
+ 1 file changed, 46 insertions(+), 16 deletions(-)
 
-BR
-Janusz
+diff --git a/ibss.c b/ibss.c
+index 955446e..1bf1bab 100644
+--- a/ibss.c
++++ b/ibss.c
+@@ -30,16 +30,38 @@ static int join_ibss(struct nl80211_state *state,
+ 	float rate;
+ 	int bintval;
+ 	int i;
++	unsigned long freq;
+ 	static const struct {
+ 		const char *name;
+-		unsigned int val;
+-	} htmap[] = {
+-		{ .name = "HT20", .val = NL80211_CHAN_HT20, },
+-		{ .name = "HT40+", .val = NL80211_CHAN_HT40PLUS, },
+-		{ .name = "HT40-", .val = NL80211_CHAN_HT40MINUS, },
+-		{ .name = "NOHT", .val = NL80211_CHAN_NO_HT, },
++		unsigned int width;
++		int freq1_diff;
++		int chantype; /* for older kernel */
++	} *chanmode_selected = NULL, chanmode[] = {
++		{ .name = "HT20",
++		  .width = NL80211_CHAN_WIDTH_20,
++		  .freq1_diff = 0,
++		  .chantype = NL80211_CHAN_HT20 },
++		{ .name = "HT40+",
++		  .width = NL80211_CHAN_WIDTH_40,
++		  .freq1_diff = 10,
++		  .chantype = NL80211_CHAN_HT40PLUS },
++		{ .name = "HT40-",
++		  .width = NL80211_CHAN_WIDTH_40,
++		  .freq1_diff = -10,
++		  .chantype = NL80211_CHAN_HT40MINUS },
++		{ .name = "NOHT",
++		  .width = NL80211_CHAN_WIDTH_20_NOHT,
++		  .freq1_diff = 0,
++		  .chantype = NL80211_CHAN_NO_HT },
++		{ .name = "5MHZ",
++		  .width = NL80211_CHAN_WIDTH_5,
++		  .freq1_diff = 0,
++		  .chantype = -1 },
++		{ .name = "10MHZ",
++		  .width = NL80211_CHAN_WIDTH_10,
++		  .freq1_diff = 0,
++		  .chantype = -1 },
+ 	};
+-	unsigned int htval;
+ 
+ 	if (argc < 2)
+ 		return 1;
+@@ -50,23 +72,31 @@ static int join_ibss(struct nl80211_state *state,
+ 	argc--;
+ 
+ 	/* freq */
+-	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_FREQ,
+-		    strtoul(argv[0], &end, 10));
++	freq = strtoul(argv[0], &end, 10);
+ 	if (*end != '\0')
+ 		return 1;
++
++	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_FREQ, freq);
+ 	argv++;
+ 	argc--;
+ 
+ 	if (argc) {
+-		for (i = 0; i < ARRAY_SIZE(htmap); i++) {
+-			if (strcasecmp(htmap[i].name, argv[0]) == 0) {
+-				htval = htmap[i].val;
++		for (i = 0; i < ARRAY_SIZE(chanmode); i++) {
++			if (strcasecmp(chanmode[i].name, argv[0]) == 0) {
++				chanmode_selected = &chanmode[i];
+ 				break;
+ 			}
+ 		}
+-		if (i != ARRAY_SIZE(htmap)) {
+-			NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_CHANNEL_TYPE,
+-				    htval);
++		if (chanmode_selected) {
++			NLA_PUT_U32(msg, NL80211_ATTR_CHANNEL_WIDTH,
++				    chanmode_selected->width);
++			NLA_PUT_U32(msg, NL80211_ATTR_CENTER_FREQ1,
++				    freq + chanmode_selected->freq1_diff);
++			if (chanmode_selected->chantype != -1)
++				NLA_PUT_U32(msg,
++					    NL80211_ATTR_WIPHY_CHANNEL_TYPE,
++					    chanmode_selected->chantype);
++
+ 			argv++;
+ 			argc--;
+ 		}
+@@ -164,7 +194,7 @@ COMMAND(ibss, leave, NULL,
+ 	NL80211_CMD_LEAVE_IBSS, 0, CIB_NETDEV, leave_ibss,
+ 	"Leave the current IBSS cell.");
+ COMMAND(ibss, join,
+-	"<SSID> <freq in MHz> [HT20|HT40+|HT40-|NOHT] [fixed-freq] [<fixed bssid>] [beacon-interval <TU>]"
++	"<SSID> <freq in MHz> [HT20|HT40+|HT40-|NOHT|5MHZ|10MHZ] [fixed-freq] [<fixed bssid>] [beacon-interval <TU>]"
+ 	" [basic-rates <rate in Mbps,rate2,...>] [mcast-rate <rate in Mbps>] "
+ 	"[key d:0:abcde]",
+ 	NL80211_CMD_JOIN_IBSS, 0, CIB_NETDEV, join_ibss,
+-- 
+1.7.10.4
+
