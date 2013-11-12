@@ -1,164 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from co1ehsobe002.messaging.microsoft.com ([216.32.180.185]:3318
-	"EHLO co1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751257Ab3K2GCQ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Nov 2013 01:02:16 -0500
-From: Hui Liu <Hui.Liu@freescale.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ath6kl-devel@qca.qualcomm.com" <ath6kl-devel@qca.qualcomm.com>
-Subject: RE: [PATCH] ath6kl: sdio: fix system panic when doing wifi stress
- test
-Date: Fri, 29 Nov 2013 06:02:11 +0000
-Message-ID: <AD13664F485EE54694E29A7F9D5BE1AFC0AD96@039-SN2MPN1-022.039d.mgd.msft.net> (sfid-20131129_070238_607537_2130B9FC)
-References: <1384221185-8645-1-git-send-email-r64343@freescale.com>
- <87k3fvjvjg.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87k3fvjvjg.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from packetmixer.de ([79.140.42.25]:44124 "EHLO
+	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752641Ab3KLQdO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Nov 2013 11:33:14 -0500
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Simon Wunderlich <sw@simonwunderlich.de>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Subject: [PATCH] iw: add support for 5 and 10 MHz channels in IBSS mode
+Date: Tue, 12 Nov 2013 17:32:58 +0100
+Message-Id: <1384273978-11510-1-git-send-email-sw@simonwunderlich.de> (sfid-20131112_173317_907576_7B063D06)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> -----Original Message-----
-> From: Kalle Valo [mailto:kvalo@qca.qualcomm.com]
-> Sent: Tuesday, November 26, 2013 6:40 PM
-> To: Liu Hui-R64343
-> Cc: linux-arm-kernel@lists.infradead.org; linville@tuxdriver.com; linux-
-> wireless@vger.kernel.org; netdev@vger.kernel.org; linux-
-> kernel@vger.kernel.org; ath6kl-devel@qca.qualcomm.com
-> Subject: Re: [PATCH] ath6kl: sdio: fix system panic when doing wifi
-> stress test
-> 
-> Hi Jason,
-> 
-> Jason Liu <r64343@freescale.com> writes:
-> 
-> > When did the wifi iperf test, meet one following kernel panic:
-> > command: iperf -c $TARGET_IP -i 5 -t 50 -w 1M
-> >
-> > Unable to handle kernel paging request at virtual address 1a480000 pgd
-> > = 80004000 [1a480000] *pgd=00000000 Internal error: Oops: 805 [#1] SMP
-> > ARM
-> 
-> [...]
-> 
-> > The kernel panic is caused by the sg_buf is not set correctly with the
-> > following code when compiled with Yocto GCC 4.8.1:
-> >
-> > drivers/net/wireless/ath/ath6kl/hif.h:
-> > struct hif_scatter_req {
-> >         struct list_head list;
-> >         /* address for the read/write operation */
-> >         u32 addr;
-> > 	...
-> >
-> >         /* bounce buffer for upper layers to copy to/from */
-> >         u8 *virt_dma_buf;
-> >
-> >         struct hif_scatter_item scat_list[1];
-> >
-> >         u32 scat_q_depth;
-> > };
-> >
-> > (Note: the scat_req.scat_list[] will dynamiclly grow with run-time)
-> 
-> There's actually a major bug right there, scat_list can corrupt
-> scat_q_depth.
-> 
-> > The GCC 4.8.1 compiler will not do the for-loop till scat_entries,
-> > instead, it only run one round loop. This may be caused by that the
-> > GCC 4.8.1 thought that the scat_list only have one item and then no
-> > need to do full iteration, but this is simply wrong by looking at the
-> > assebly code. This will cause the sg buffer not get set when
-> scat_entries > 1 and thus lead to kernel panic.
-> >
-> > This patch is a workaround to the GCC 4.8.1 complier issue by passing
-> > the entry address of the scat_req->scat_list to the for-loop and
-> > interate it, then, GCC 4.8.1 will do the full for-loop correctly.
-> > (Note: This issue not observed with GCC 4.7.2, only found on the GCC
-> > 4.8.1)
-> >
-> > This patch does not change any function logic and no any performance
-> downgrade.
-> 
-> [...]
-> 
-> > +	scat_list = &scat_req->scat_list[0];
-> > +
-> >  	/* assemble SG list */
-> > -	for (i = 0; i < scat_req->scat_entries; i++, sg++) {
-> > +	for (i = 0; i < scat_req->scat_entries; i++, sg++, scat_list++) {
-> >  		ath6kl_dbg(ATH6KL_DBG_SCATTER, "%d: addr:0x%p, len:%d\n",
-> > -			   i, scat_req->scat_list[i].buf,
-> > -			   scat_req->scat_list[i].len);
-> > +			   i, scat_list->buf, scat_list->len);
-> >
-> > -		sg_set_buf(sg, scat_req->scat_list[i].buf,
-> > -			   scat_req->scat_list[i].len);
-> > +		sg_set_buf(sg, scat_list->buf, scat_list->len);
-> >  	}
-> 
-> Working around the problem by adding a temporary variable makes me a bit
-> worried, I would rather fix the root cause. Is the root cause by that we
-> define the field with scat_list[1]?
+5/10 MHz requires to send the frequency information as chandef instead
+of the the old channel type, this change is included here as well.
 
-Yes, this is what I assumed. 
+Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+---
+ ibss.c |   39 +++++++++++++++++++++++----------------
+ 1 file changed, 23 insertions(+), 16 deletions(-)
 
-> 
-> Does the patch below help? It would also fix the corruption with
-> scat_q_depth. Please note that I have only compile tested it. And I might
-> have also missed something important, so please review it carefully.
-
-Yes, Firstly, I have looked at the asm code and the compiler(gcc 4.8.1) works correctly after applying
-the following patch. Secondly, I have tested the patch with compiler(gcc 4.8.1) on the real HW, and it
-works fine too. Without the patch, the kernel crash will happen 100%.
-
-Thus, for the patch:
-
-Acked-by: Jason Liu <r64343@freescale.com>
-Tested-by: Jason Liu <r64343@freescale.com>
-
-Jason Liu
-
-> 
-> --- a/drivers/net/wireless/ath/ath6kl/hif.h
-> +++ b/drivers/net/wireless/ath/ath6kl/hif.h
-> @@ -197,9 +197,9 @@ struct hif_scatter_req {
->  	/* bounce buffer for upper layers to copy to/from */
->  	u8 *virt_dma_buf;
-> 
-> -	struct hif_scatter_item scat_list[1];
-> -
->  	u32 scat_q_depth;
-> +
-> +	struct hif_scatter_item scat_list[0];
->  };
-> 
->  struct ath6kl_irq_proc_registers {
-> diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c
-> b/drivers/net/wireless/ath/ath6kl/sdio.c
-> index 7126bdd..6bf15a3 100644
-> --- a/drivers/net/wireless/ath/ath6kl/sdio.c
-> +++ b/drivers/net/wireless/ath/ath6kl/sdio.c
-> @@ -348,7 +348,7 @@ static int ath6kl_sdio_alloc_prep_scat_req(struct
-> ath6kl_sdio *ar_sdio,
->  	int i, scat_req_sz, scat_list_sz, size;
->  	u8 *virt_buf;
-> 
-> -	scat_list_sz = (n_scat_entry - 1) * sizeof(struct hif_scatter_item);
-> +	scat_list_sz = n_scat_entry * sizeof(struct hif_scatter_item);
->  	scat_req_sz = sizeof(*s_req) + scat_list_sz;
-> 
->  	if (!virt_scat)
-> 
-> 
-> --
-> Kalle Valo
-
+diff --git a/ibss.c b/ibss.c
+index 955446e..3674c1f 100644
+--- a/ibss.c
++++ b/ibss.c
+@@ -30,16 +30,19 @@ static int join_ibss(struct nl80211_state *state,
+ 	float rate;
+ 	int bintval;
+ 	int i;
++	unsigned long freq;
+ 	static const struct {
+ 		const char *name;
+-		unsigned int val;
+-	} htmap[] = {
+-		{ .name = "HT20", .val = NL80211_CHAN_HT20, },
+-		{ .name = "HT40+", .val = NL80211_CHAN_HT40PLUS, },
+-		{ .name = "HT40-", .val = NL80211_CHAN_HT40MINUS, },
+-		{ .name = "NOHT", .val = NL80211_CHAN_NO_HT, },
++		unsigned int width;
++		int freq1_diff;
++	} *chanmode_selected = NULL, chanmode[] = {
++		{ .name = "HT20", .width = NL80211_CHAN_WIDTH_20, .freq1_diff = 0},
++		{ .name = "HT40+", .width = NL80211_CHAN_WIDTH_40, .freq1_diff = 10},
++		{ .name = "HT40-", .width = NL80211_CHAN_WIDTH_40, .freq1_diff = -10},
++		{ .name = "NOHT", .width = NL80211_CHAN_WIDTH_20_NOHT, .freq1_diff = 0},
++		{ .name = "5MHZ", .width = NL80211_CHAN_WIDTH_5, .freq1_diff = 0},
++		{ .name = "10MHZ", .width = NL80211_CHAN_WIDTH_10, .freq1_diff = 0},
+ 	};
+-	unsigned int htval;
+ 
+ 	if (argc < 2)
+ 		return 1;
+@@ -50,23 +53,27 @@ static int join_ibss(struct nl80211_state *state,
+ 	argc--;
+ 
+ 	/* freq */
+-	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_FREQ,
+-		    strtoul(argv[0], &end, 10));
++	freq = strtoul(argv[0], &end, 10);
+ 	if (*end != '\0')
+ 		return 1;
++
++	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_FREQ, freq);
+ 	argv++;
+ 	argc--;
+ 
+ 	if (argc) {
+-		for (i = 0; i < ARRAY_SIZE(htmap); i++) {
+-			if (strcasecmp(htmap[i].name, argv[0]) == 0) {
+-				htval = htmap[i].val;
++		for (i = 0; i < ARRAY_SIZE(chanmode); i++) {
++			if (strcasecmp(chanmode[i].name, argv[0]) == 0) {
++				chanmode_selected = &chanmode[i];
+ 				break;
+ 			}
+ 		}
+-		if (i != ARRAY_SIZE(htmap)) {
+-			NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_CHANNEL_TYPE,
+-				    htval);
++		if (chanmode_selected) {
++			NLA_PUT_U32(msg, NL80211_ATTR_CHANNEL_WIDTH,
++				    chanmode_selected->width);
++			NLA_PUT_U32(msg, NL80211_ATTR_CENTER_FREQ1,
++				    freq + chanmode_selected->freq1_diff);
++
+ 			argv++;
+ 			argc--;
+ 		}
+@@ -164,7 +171,7 @@ COMMAND(ibss, leave, NULL,
+ 	NL80211_CMD_LEAVE_IBSS, 0, CIB_NETDEV, leave_ibss,
+ 	"Leave the current IBSS cell.");
+ COMMAND(ibss, join,
+-	"<SSID> <freq in MHz> [HT20|HT40+|HT40-|NOHT] [fixed-freq] [<fixed bssid>] [beacon-interval <TU>]"
++	"<SSID> <freq in MHz> [HT20|HT40+|HT40-|NOHT|5MHZ|10MHZ] [fixed-freq] [<fixed bssid>] [beacon-interval <TU>]"
+ 	" [basic-rates <rate in Mbps,rate2,...>] [mcast-rate <rate in Mbps>] "
+ 	"[key d:0:abcde]",
+ 	NL80211_CMD_JOIN_IBSS, 0, CIB_NETDEV, join_ibss,
+-- 
+1.7.10.4
 
