@@ -1,67 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:60791 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751883Ab3KOOpd (ORCPT
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:51899 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751807Ab3KLAh2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Nov 2013 09:45:33 -0500
-Date: Fri, 15 Nov 2013 09:32:55 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Tony Lindgren <tony@atomide.com>
-Cc: Luciano Coelho <luca@coelho.fi>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Rob Landley <rob@landley.net>,
-	Russell King <linux@arm.linux.org.uk>,
-	Felipe Balbi <balbi@ti.com>,
-	Sachin Kamat <sachin.kamat@linaro.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bill Pemberton <wfp5p@virginia.edu>,
-	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Luciano Coelho <coelho@ti.com>
-Subject: Re: [PATCH 1/4] wl1251: split wl251 platform data to a separate
- structure
-Message-ID: <20131115143254.GA7079@tuxdriver.com> (sfid-20131115_154600_336146_5A15F726)
-References: <1382890469-25286-1-git-send-email-sre@debian.org>
- <1382890469-25286-2-git-send-email-sre@debian.org>
- <20131114185132.GQ10317@atomide.com>
- <20131114230330.GB6383@earth.universe>
- <20131114232217.GV10317@atomide.com>
+	Mon, 11 Nov 2013 19:37:28 -0500
+Date: Tue, 12 Nov 2013 01:37:09 +0100
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Hannes Frederic Sowa <hannes@stressinduktion.org>
+Cc: Theodore Ts'o <tytso@mit.edu>,
+	Daniel Borkmann <dborkman@redhat.com>, davem@davemloft.net,
+	shemminger@networkplumber.org, fweimer@redhat.com,
+	netdev@vger.kernel.org, Eric Dumazet <eric.dumazet@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH net-next 3/6] random32: add prandom_reseed_late() and
+ call when nonblocking pool becomes initialized
+Message-ID: <20131112003709.GA11824@gobelin> (sfid-20131112_013733_866376_8AB7C8FE)
+References: <cover.1384160397.git.dborkman@redhat.com>
+ <2ea03f60bb65429cbe5d74a6d356fde3eefcf06c.1384160397.git.dborkman@redhat.com>
+ <20131111134357.GC10104@thunk.org>
+ <20131112000307.GB14929@order.stressinduktion.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131114232217.GV10317@atomide.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20131112000307.GB14929@order.stressinduktion.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 14, 2013 at 03:22:18PM -0800, Tony Lindgren wrote:
-> * Sebastian Reichel <sre@debian.org> [131114 15:04]:
-> > On Thu, Nov 14, 2013 at 10:51:33AM -0800, Tony Lindgren wrote:
-> > > [...]
-> > >
-> > > If this is not going into v3.13, these will cause conflicts
-> > > with the mach-omap2/board-*.c files for v3.14.
+On Tue, Nov 12, 2013 at 01:03:07AM +0100, Hannes Frederic Sowa wrote:
+> On Mon, Nov 11, 2013 at 08:43:57AM -0500, Theodore Ts'o wrote:
+> > On Mon, Nov 11, 2013 at 12:20:34PM +0100, Daniel Borkmann wrote:
+> > > From: Hannes Frederic Sowa <hannes@stressinduktion.org>
 > > > 
-> > > So it might be best to do a minimal header patch first that
-> > > can be merged in by both linux-omap and wireless trees.
+> > > The Tausworthe PRNG is initialized at late_initcall time. At that time the
+> > > entropy pool serving get_random_bytes is not filled sufficiently. This
+> > > patch adds an additional reseeding step as soon as the nonblocking pool
+> > > gets marked as initialized.
+> > > 
+> > > On some machines it might be possible that late_initcall gets called after
+> > > the pool has been initialized. In this situation we won't reseed again.
+> > > 
+> > > (A call to prandom_seed_late blocks later invocations of early reseed
+> > > attempts.)
+> > > 
+> > > Joint work with Daniel Borkmann.
 > > 
-> > I guess this patch is pretty minimal. It also seems to be acked by
-> > the involved Maintainers, so maybe just merge Patch 1 without the
-> > other patches?
+> > Acked-by: "Theodore Ts'o" <tytso@mit.edu>
 > > 
-> > This does not solve the problem with the struct modification from
-> > the second patch, but I guess it's the more intrusive patch.
+> > I wasn't cc'ed on the full series (I didn't see the 0/3 or the 4/6
+> > messages) but there are two other things that you might want to
+> > consider.
+> > 
+> > 1)  I'm pretty sure, but it would be good to get netdev confirmation,
+> > that the call to get_random_bytes() in
+> > net/mac80211/rc80211_minstrel.c's init_sample_table() can be replaced
+> > by calls to prandom_u32().
 > 
-> Once at least the first two patches are ready, how about I queue
-> them after -rc1 and set up an immutable branch that can be merged
-> in by linux-omap tree and the wireless tree?
+> Would make sense. I added wireless-devel to confirm.
+> 
+> [...]
+> [    0.673260] random: rc80211_minstrel_ht_init+0x47/0xaa get_random_bytes called with 3 bits of entropy available
+> [    0.674024] random: rc80211_minstrel_ht_init+0x47/0xaa get_random_bytes called with 3 bits of entropy available
+> [    0.675012] random: rc80211_minstrel_ht_init+0x47/0xaa get_random_bytes called with 3 bits of entropy available
+> [    0.676032] random: rc80211_minstrel_ht_init+0x47/0xaa get_random_bytes called with 3 bits of entropy available
+> [    0.677020] random: rc80211_minstrel_ht_init+0x47/0xaa get_random_bytes called with 3 bits of entropy available
+> [    0.678011] random: rc80211_minstrel_ht_init+0x47/0xaa get_random_bytes called with 3 bits of entropy available
+> [    0.679011] random: rc80211_minstrel_ht_init+0x47/0xaa get_random_bytes called with 3 bits of entropy available
+> [...]
+> 
+> In total 80 calls to get_random_bytes.
+> 
 
-That sounds reasonable to me.
+It is already 8 times what rc80211_minstrel_ht_init uses.
+If you could apply on top of:
+http://marc.info/?l=linux-wireless&m=138392850030987&w=2
+although Johannes has not yet agreed/applied this.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+ 
+Karl
