@@ -1,55 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:55932 "EHLO
-	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753057Ab3KUP4a (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:40829 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756002Ab3KLQmI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Nov 2013 10:56:30 -0500
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: johannes@sipsolutions.net
+	Tue, 12 Nov 2013 11:42:08 -0500
+Message-ID: <1384274524.14301.9.camel@jlt4.sipsolutions.net> (sfid-20131112_174222_708269_74D88D96)
+Subject: Re: [PATCH] iw: add support for 5 and 10 MHz channels in IBSS mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Simon Wunderlich <sw@simonwunderlich.de>
 Cc: linux-wireless@vger.kernel.org,
-	Simon Wunderlich <sw@simonwunderlich.de>
-Subject: [PATCH 3/4] mac80211: don't cancel csa finalize work within stop_ap
-Date: Thu, 21 Nov 2013 16:56:22 +0100
-Message-Id: <1385049383-5617-4-git-send-email-sw@simonwunderlich.de> (sfid-20131121_165634_773275_025B7589)
-In-Reply-To: <1385049383-5617-1-git-send-email-sw@simonwunderlich.de>
-References: <1385049383-5617-1-git-send-email-sw@simonwunderlich.de>
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Date: Tue, 12 Nov 2013 17:42:04 +0100
+In-Reply-To: <201311121739.21600.sw@simonwunderlich.de>
+References: <1384273978-11510-1-git-send-email-sw@simonwunderlich.de>
+	 <1384274088.14301.8.camel@jlt4.sipsolutions.net>
+	 <201311121739.21600.sw@simonwunderlich.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The current channel switch code has a potential deadlock:
-1) * cfg80211_stop_ap acquires wdev-lock
-   * ieee80211_stop_ap calls cancel_work_sync for the csa_finalize_work,
-     which acquires the associated worker-lock
-2) * ieee80211_csa_finalize_work holds the worker-lock when run
-   * it calls cfg80211_ch_switch_notify which will claim the wdev-lock,
-     and also needs to claim the sdata-lock (which is the same as the
-     wdev-lock) to modify the beacons.
+On Tue, 2013-11-12 at 17:39 +0100, Simon Wunderlich wrote:
+> 
+> > On Tue, 2013-11-12 at 17:32 +0100, Simon Wunderlich wrote:
+> > > 5/10 MHz requires to send the frequency information as chandef instead
+> > > of the the old channel type, this change is included here as well.
+> > 
+> > I think you need to keep the channel type to stay compatible with old
+> > kernels.
+> > 
+> 
+> Wow, high-speed reply (1 minute 50 seconds), and you are right. :)
 
-It is sufficient to just set the channel switch active to false. If the
-worker is running later, it will find the channel switch to not be
-active anymore and returns immediately without changing anything.
+I needed most of that time to scan if you were really removing it ;-)
 
-Canceling the worker is done anyway when the interface goes down
-(ieee80211_do_stop).
+> I'll change that so it uses chandef only for 5/10 MHz and the old channel 
+> types for the rest (NOHT,HT20,HT40+,HT40-).
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
----
- net/mac80211/cfg.c |    1 -
- 1 file changed, 1 deletion(-)
+You could also add both attributes, but whichever is more convenient,
+the kernel obviously has to support both too.
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index a135e6f..9f19cde 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1080,7 +1080,6 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
- 
- 	/* abort any running channel switch */
- 	sdata->vif.csa_active = false;
--	cancel_work_sync(&sdata->csa_finalize_work);
- 	cancel_work_sync(&sdata->u.ap.request_smps_work);
- 
- 	/* turn off carrier for this interface and dependent VLANs */
--- 
-1.7.10.4
+johannes
+
 
