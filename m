@@ -1,140 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:33115 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758414Ab3KMMNg convert rfc822-to-8bit (ORCPT
+Received: from order.stressinduktion.org ([87.106.68.36]:36635 "EHLO
+	order.stressinduktion.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751807Ab3KLADJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Nov 2013 07:13:36 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>
-CC: wzyboy <wzyboy@wzyboy.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [Ilw] Intel Wireless 7260 hardware timed out randomly
-Date: Wed, 13 Nov 2013 12:13:31 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301E00262@HASMSX103.ger.corp.intel.com> (sfid-20131113_131341_417897_A8E5995B)
-References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
- <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
- <527A8166.6000701@gmail.com>
- <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
- <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
- <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
- <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
- <20131111224439.GA30638@google.com>
- <CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com>
- <CALkVjQaXEBpbwu9Qy3+17Eg-nSg-k7iin8G3f1RsTLkCOB-2XQ@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DF044C@HASMSX103.ger.corp.intel.com>
- <CAErSpo5iU15AoSVL9WmLp4gNCiNmt6pFZuTsd-Vui4SCrSc_Hw@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DF0865@HASMSX103.ger.corp.intel.com>
- <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
- <52828364.6080103@gmail.com>
- <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>  
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Mon, 11 Nov 2013 19:03:09 -0500
+Date: Tue, 12 Nov 2013 01:03:07 +0100
+From: Hannes Frederic Sowa <hannes@stressinduktion.org>
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: Daniel Borkmann <dborkman@redhat.com>, davem@davemloft.net,
+	shemminger@networkplumber.org, fweimer@redhat.com,
+	netdev@vger.kernel.org, Eric Dumazet <eric.dumazet@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH net-next 3/6] random32: add prandom_reseed_late() and call when nonblocking pool becomes initialized
+Message-ID: <20131112000307.GB14929@order.stressinduktion.org> (sfid-20131112_010318_548512_D5595CBF)
+References: <cover.1384160397.git.dborkman@redhat.com> <2ea03f60bb65429cbe5d74a6d356fde3eefcf06c.1384160397.git.dborkman@redhat.com> <20131111134357.GC10104@thunk.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20131111134357.GC10104@thunk.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > > On Tue, Nov 12, 2013 at 12:37 PM, Emmanuel Grumbach
-> > > <egrumbach@gmail.com> wrote:
-> > > > On 11/12/2013 09:14 PM, Bjorn Helgaas wrote:
-> > > >> On Tue, Nov 12, 2013 at 11:25 AM, Grumbach, Emmanuel
-> > > >> <emmanuel.grumbach@intel.com> wrote:
-> > > >>
-> > > >>> Right - I remember the discussion we had on that.
-> > > >>> On this device (7260 that has an issue with ASPM), we don't call
-> > > pci_disable_link_state, because we know it is supposed to work...
-> > > >>
-> > > >> If ASPM is supposed to work as far as the hardware is concerned,
-> > > >> I guess you're saying this must be an iwlwifi driver issue.  Right?
-> > > >
-> > > > ASPM is supposed to work as far as the hardware is concerned.
-> > > > We might very well have an issue in iwlwifi - and I am checking
-> > > > this internally with our System guys.
-> > > > It can be a PCI core problem too, and it could also be a platform
-> > > > / BIOS / Lenovo issue.
-> > > > Of course, I have no clue which of these is the culprit here.
-> > > > Our System folks seemed to say that this new device uses L1
-> > > > substates which can be enabled in Haswell platform which the user
-> owns.
-> > > > Now - L1 substates is a new feature and might introduce issues
-> > > > (apparently) - and this is why they (System folks) wanted the try
-> > > > without L1 substates. But disabling L1 substates doesn't seem
-> > > > trivial with the production BIOS of Lenovo. So I am pretty stuck here.
-> > >
-> > > For debugging purposes, we could configure L1 substates with setpci,
-> > > as we did for ASPM.  The Linux kernel knows nothing about L1
-> > > substates, so the PCI core isn't doing anything with them.  It's
-> > > possible the driver itself could muck with L1 substate
-> > > configuration, but that would be discouraged, and I don't see
-> > > anything in iwlwifi that is
-> > doing that.
-> > >
-> > > The lspci output in
-> > > https://bugzilla.kernel.org/attachment.cgi?id=114061 shows an L1 PM
-> > > Substates extended capability (capability ID 0x1e) for the Root Port
-> > > leading to the 7260 device, but not for the 7260 device itself:
-> > >
-> > >   00:1c.1 PCI bridge: Intel Corporation Lynx Point-LP PCI Express
-> > > Root Port 3 (rev e4) (prog-if 00 [Normal decode])
-> > >     Capabilities: [200 v1] #1e
-> > >
-> > > Per sec 5.5.4 of the ECN for L1 PM Substates (15 Aug 2012), I think
-> > > L1 substates must be configured on both ends of the link, and if the
-> > > 7260 device doesn't have that capability, I don't see how it could be
-> enabled.
-> >
-> > Makes sense.
-> >
-> > >
-> > > The lspci version wzyboy has doesn't decode the L1 PM Substates
-> > > capability, but there is a newer version at
-> > > git://git.kernel.org/pub/scm/utils/pciutils/pciutils.git that should decode
-> it.
-> > > Also, "lspci -vvxxx" didn't hexdump this capability, which should be
-> > > at offset 0x200.  Using "lspci -xxxx" (four "x"s) should dump it,
-> > > and we can decode it manually.
-> > >
-> >
-> > You can find this in
-> > http://permalink.gmane.org/gmane.linux.kernel.wireless.general/115378.
-> >
-> > Somehow my System team says that it should be at offset 0x160?
-> > Is it possible that there is a "walk algorithm" with pointers just
-> > like for the ASPM register?
-> > I'll try to check the PCI spec when I'll find the time for that.
+On Mon, Nov 11, 2013 at 08:43:57AM -0500, Theodore Ts'o wrote:
+> On Mon, Nov 11, 2013 at 12:20:34PM +0100, Daniel Borkmann wrote:
+> > From: Hannes Frederic Sowa <hannes@stressinduktion.org>
+> > 
+> > The Tausworthe PRNG is initialized at late_initcall time. At that time the
+> > entropy pool serving get_random_bytes is not filled sufficiently. This
+> > patch adds an additional reseeding step as soon as the nonblocking pool
+> > gets marked as initialized.
+> > 
+> > On some machines it might be possible that late_initcall gets called after
+> > the pool has been initialized. In this situation we won't reseed again.
+> > 
+> > (A call to prandom_seed_late blocks later invocations of early reseed
+> > attempts.)
+> > 
+> > Joint work with Daniel Borkmann.
 > 
-> So I read a bit the lspci code, and it looks that there are plenty of pointers
-> inside the config space. Fun :) So basically, since:
-> #define PCI_EXT_CAP_ID_L1PM        0x1e
-> This means that I need to find an 0x1e in the output of wzyboy's lspci. I found
-> only one: at offset 0x15d.
-> Should that mean that my System team was right when they asked for offset
-> 0x160 which is 3 bytes afterwards (and matches more the less the code of
-> lspci)?
-> If so,
-> 160: 0f 00 a0 40 f0 00 00 00 00 00 00 00 00 00 00 00 seems to say that it is
-> enabled?
+> Acked-by: "Theodore Ts'o" <tytso@mit.edu>
 > 
-> OTOH, 0x15d is 0x1e and not 0x001e as required by PCI-SIG ECN? Me scraping
-> my head.
+> I wasn't cc'ed on the full series (I didn't see the 0/3 or the 4/6
+> messages) but there are two other things that you might want to
+> consider.
+> 
+> 1)  I'm pretty sure, but it would be good to get netdev confirmation,
+> that the call to get_random_bytes() in
+> net/mac80211/rc80211_minstrel.c's init_sample_table() can be replaced
+> by calls to prandom_u32().
 
-Ok - so I have now the complete picture.
-This device was designed before PCI-SIG gave an ID to L1 PM Substates, so Intel had to use the L1 PM Substate as a Vendor Define whose ID is 0xCAFE. Layout is the same as defined now in PCI-SIG (page 21 in http://www.pcisig.com/specifications/pciexpress/specifications/ECN_L1_PM_Substates_with_CLKREQ_31_May_2013_Rev10a.pdf).
+Would make sense. I added wireless-devel to confirm.
 
-So:
-150: 03 10 03 10 0b 00 01 00 fe ca 41 01 1f 1e f0 00
-160: 0f 00 a0 40 f0 00 00 00 00 00 00 00 00 00 00 00
+[...]
+[    0.673260] random: rc80211_minstrel_ht_init+0x47/0xaa get_random_bytes called with 3 bits of entropy available
+[    0.674024] random: rc80211_minstrel_ht_init+0x47/0xaa get_random_bytes called with 3 bits of entropy available
+[    0.675012] random: rc80211_minstrel_ht_init+0x47/0xaa get_random_bytes called with 3 bits of entropy available
+[    0.676032] random: rc80211_minstrel_ht_init+0x47/0xaa get_random_bytes called with 3 bits of entropy available
+[    0.677020] random: rc80211_minstrel_ht_init+0x47/0xaa get_random_bytes called with 3 bits of entropy available
+[    0.678011] random: rc80211_minstrel_ht_init+0x47/0xaa get_random_bytes called with 3 bits of entropy available
+[    0.679011] random: rc80211_minstrel_ht_init+0x47/0xaa get_random_bytes called with 3 bits of entropy available
+[...]
 
-We can see that L1 PM Substate *is* enabled:
-004h = 41 01 1f 1e
-008h = 0f 00 f0 00
-00Ch = a0 40 f0 00
+In total 80 calls to get_random_bytes.
 
-I may have messed up things here...
+Normally this initialization is called at module load time, so with most
+distributions it runs much later. I had it built-in.
 
-According to System / HW, it is unsafe to disable L1 PM Substate using setpci, even if we disable it from both sides (device and bridge). This kind of settings should be done by BIOS only.
-So we have 2 options here (assuming that we can't disable that in BIOS):
-* either we try to disable L1 PM Substate even my colleagues think it is not safe
-* either we just disable L1 altogether
+> That is, I don't believe cryptographic strength randomness is needed
+> --- which is good, because my debugging indicates on a test system
+> indicates that it gets called so early that there is typically less
+> than two dozen bits of entropy collected in the non-blocking pool
+> before it calls get_random_bytes().  If we can move away from using
+> get_random_bytes(), those two dozen bits of entropy can be used to
+> make sure the urandom pool is initialized much more quickly.
+> 
+> 2) Since the minstrel code apparently uses this information for
+> initializing a machine learning algorithm for backoff purposes, I
+> suspect it might be good if the numbers it gets are different from
+> machine to machine --- and right now prandom_init() does not mix in
+> any kind of personalization information, so calls to prandom_u32()
+> will be the same across machines until it gets initialized from the
+> /dev/random subsysem.
+
+Yes, I agree.
+
+We are much too early to enumerate hardware, so it would be hard to
+integrate something like mac addresses etc.
+
+On x86 it would be easy to seed the cpu type and model from a cpuid call,
+but I fear we could not easily extend it to all architectures. And it
+does not differ that much between systems.
+
+> Currently, the way we get personlization information which uniquifies
+> the randomness in early boot is via add_device_randomness().  Yes,
+> some of the function names are a bit misleading; maybe we should try
+> to fix this at some point.  So perhaps we should add a hook to
+> add_device_randomness() so that each time it gets called, if the
+> random32.c state hasn't been strongly initialized by the call to
+> prandom_reseed_late(), we also use that information add some per-host
+> uniqueness into prandom32.c.  (Note: I'd prefer that we do this via
+> some interface other than get_random_bytes(), so we don't end up
+> draining entropy from the non_blocking pool, and thus delay the point
+> where we can strongly initialize the non_blocking pool, and thus
+> strongly initialize prandom32.c)
+> 
+> Does this make sense to folks?
+
+Totally! That was also the reason why I left the late_initcall intact
+in this patch.
+
+Btw. do you see problems regarding get_random_int on architectures without
+hardware offloading?
+
+We are initializing random_int_secret really late (after all the init
+calls) and I wonder if we should also use a two stage initialization
+there, so we have a more unpredictable MD5 hash at early boot.
+
+Greetings,
+
+  Hannes
+
