@@ -1,38 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:57338 "EHLO
-	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753277Ab3KVMIQ (ORCPT
+Received: from mail-ee0-f47.google.com ([74.125.83.47]:40022 "EHLO
+	mail-ee0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751868Ab3KLMN4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Nov 2013 07:08:16 -0500
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: Karl Beldan <karl.beldan@gmail.com>
-Subject: Re: [PATCH v3] mac80211_hwsim: claim CSA support for AP
-Date: Fri, 22 Nov 2013 13:08:11 +0100
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
-References: <1385111186-19551-1-git-send-email-karl.beldan@gmail.com> <20131122104527.GD8527@magnum.frso.rivierawaves.com>
-In-Reply-To: <20131122104527.GD8527@magnum.frso.rivierawaves.com>
+	Tue, 12 Nov 2013 07:13:56 -0500
+Received: by mail-ee0-f47.google.com with SMTP id c13so3112233eek.34
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Nov 2013 04:13:55 -0800 (PST)
+Received: from [127.0.0.1] (ppp-227-234.27-151.libero.it. [151.27.234.227])
+        by mx.google.com with ESMTPSA id w6sm75338843eeo.12.2013.11.12.04.13.54
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
+        Tue, 12 Nov 2013 04:13:54 -0800 (PST)
+Message-ID: <52821B80.6000305@gmail.com> (sfid-20131112_131359_522389_5034CB01)
+Date: Tue, 12 Nov 2013 13:13:52 +0100
+From: Alessandro Gnagni <enterprise.nx@gmail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201311221308.11994.sw@simonwunderlich.de> (sfid-20131122_130819_737655_4CEAE04D)
+To: linux-wireless@vger.kernel.org
+Subject: Trying to add support of 802.11ac broadcom chpiset to openwrt
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Karl,
+Hi,
+i am trying to implement on a smart city network a solution based on
+high end home routers like the asus RT-AC66U.
+we want to use openwrt for that but unfortunately the broadcom driver
+isn't yet supported.
+I have one rt-ac66u here for development, there is anything that i can
+do for help?
+i came here after a suggestion of one member on openwrt forum:
+https://forum.openwrt.org/viewtopic.php?pid=217341#p217341
 
-> 
-> Hmm, I thought the CSA code would make ieee80211_beacon_get_tim return
-> NULL (or do something alike) after the last ieee80211_beacon_get_tim
-> returned a beacon with a null CSA count until the config is done - but
-> it seems it doesn't - in that case this change would be race prone.
-> Did I miss something ?
+i also read this past email:
+http://www.spinics.net/lists/linux-wireless/msg110443.html
 
-No, you have to do the check yourself (as you appearently did). In ath9k I'm 
-checking if the CSA finished before scheduling the next beacon. Can you do the 
-same for hwsim? Where do you see the race?
-
-Simon
-
-P.S.: Please use my new e-mail address, the old one will go out of service by 
-end of the year.
+Thx for attention.
