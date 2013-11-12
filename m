@@ -1,56 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:43538 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751485Ab3KAODm (ORCPT
+Received: from packetmixer.de ([79.140.42.25]:44152 "EHLO
+	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752010Ab3KLQjX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 10:03:42 -0400
-Received: by mail-wi0-f182.google.com with SMTP id ez12so1124722wid.3
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 07:03:41 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 04/23] wireless-regdb: update KP's 5 GHz rules
-Date: Fri,  1 Nov 2013 15:02:59 +0100
-Message-Id: <1383314598-21240-5-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_150344_816611_03970EBF)
-In-Reply-To: <1383314598-21240-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1383314598-21240-1-git-send-email-mcgrof@do-not-panic.com>
+	Tue, 12 Nov 2013 11:39:23 -0500
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] iw: add support for 5 and 10 MHz channels in IBSS mode
+Date: Tue, 12 Nov 2013 17:39:21 +0100
+Cc: linux-wireless@vger.kernel.org,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+References: <1384273978-11510-1-git-send-email-sw@simonwunderlich.de> <1384274088.14301.8.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1384274088.14301.8.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201311121739.21600.sw@simonwunderlich.de> (sfid-20131112_173926_875991_DB927FB4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This:
 
-  o splits the first 5 GHz frequency ranges into
-    two frequency ranges, one with DFS requirement and
-    one without
-  o enables VHT80 for all 5 GHz frequency ranges
+> On Tue, 2013-11-12 at 17:32 +0100, Simon Wunderlich wrote:
+> > 5/10 MHz requires to send the frequency information as chandef instead
+> > of the the old channel type, this change is included here as well.
+> 
+> I think you need to keep the channel type to stay compatible with old
+> kernels.
+> 
 
-Source is QCA's regulatory team's efforts.
+Wow, high-speed reply (1 minute 50 seconds), and you are right. :)
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+I'll change that so it uses chandef only for 5/10 MHz and the old channel 
+types for the rest (NOHT,HT20,HT40+,HT40-).
 
-diff --git a/db.txt b/db.txt
-index 80a394a..c788681 100644
---- a/db.txt
-+++ b/db.txt
-@@ -462,10 +462,10 @@ country KH: DFS-ETSI
- 
- country KP: DFS-JP
- 	(2402 - 2482 @ 40), (20)
--	(5170 - 5330 @ 40), (20)
--	(5160 - 5250 @ 40), (20), DFS
--	(5490 - 5630 @ 40), (30), DFS
--	(5735 - 5815 @ 40), (30)
-+	(5170 - 5250 @ 80), (20)
-+	(5250 - 5330 @ 80), (20), DFS
-+	(5490 - 5630 @ 80), (30), DFS
-+	(5735 - 5815 @ 80), (30)
- 
- country KR: DFS-JP
- 	(2402 - 2482 @ 20), (20)
--- 
-1.8.4.rc3
-
+Thanks,
+    Simon
