@@ -1,69 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 162-17-110-37-static.hfc.comcastbusiness.net ([162.17.110.37]:53553
-	"EHLO stuffed.shaftnet.org" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751535Ab3KGQRh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Nov 2013 11:17:37 -0500
-Received: from stuffed.shaftnet.org (localhost [127.0.0.1])
-	by stuffed.shaftnet.org (8.14.7/8.14.7) with ESMTP id rA7GHaHl025001
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Thu, 7 Nov 2013 11:17:36 -0500
-Received: (from pizza@localhost)
-	by stuffed.shaftnet.org (8.14.7/8.14.7/Submit) id rA7GHaYF025000
-	for linux-wireless@vger.kernel.org; Thu, 7 Nov 2013 11:17:36 -0500
-Date: Thu, 7 Nov 2013 11:05:22 -0500
-From: Solomon Peachy <pizza@shaftnet.org>
-To: Greg KH <gregkh@linuxfoundation.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: future of prism2_usb (aka wlan-ng) in staging tree
-Message-ID: <20131107160522.GA12612@shaftnet.org> (sfid-20131107_171740_849928_38841C7D)
+Received: from mantis.wzyboy.im ([199.83.51.51]:39227 "EHLO mantis.wzyboy.im"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752085Ab3KLMLN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Nov 2013 07:11:13 -0500
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="LZvS9be/3tNcYl/X"
+In-Reply-To: <CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
+ <CALkVjQY7r=YKhsgDKR0mnYVtZy5BAdj83nY2jL0VFaiew6ha7A@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
+ <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
+ <527A8166.6000701@gmail.com> <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
+ <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
+ <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
+ <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
+ <20131111224439.GA30638@google.com> <CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com>
+From: wzyboy <wzyboy@wzyboy.org>
+Date: Tue, 12 Nov 2013 20:10:56 +0800
+Message-ID: <CALkVjQaXEBpbwu9Qy3+17Eg-nSg-k7iin8G3f1RsTLkCOB-2XQ@mail.gmail.com> (sfid-20131112_131118_676383_324F4D36)
+Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2013/11/12 wzyboy <wzyboy@wzyboy.org>:
+> I will continue downloading big files to benchmark it.
 
---LZvS9be/3tNcYl/X
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Hi guys, good news!
 
-Greg, John,
+Six hours ago I ran a simple loop script to repeatly download big
+files (and saving to /dev/null) and went to have lessons. Six hours
+later it's after school. I found that the wireless still works!
 
-I was wondering what it would take to get the prism2_usb/wlan-ng driver=20
-out of its long home in the staging tree.
+So I believe that the two "setpci" commands really work! Thanks Bjorn
+and Emmanuel!
 
-It's seen some work over the years, including conversion to cfg80211,=20
-and in general seems to be no worse than its ancient bretheren already=20
-living in net/wireless (ie orinoco and hostap)
-
-There's certianly more internal cleanups that can be performed (eg=20
-collapsing more unnecessary internal APIs such as the MIB handlers) but=20
-at face value it would appears that the TODO items in the README have=20
-been met (other than shutting up checkpatch's style warnings)
-
-I'd be willing to take point on this and make checkpatch happy, but I'm=20
-curious to hear your thoughts on any additional work you think is=20
-necessary to get it out of staging.
-
-Cheers,
-
- - Solomon
---=20
-Solomon Peachy        		       pizza at shaftnet dot org
-Delray Beach, FL                          ^^ (email/xmpp) ^^
-Quidquid latine dictum sit, altum viditur.
-
---LZvS9be/3tNcYl/X
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.14 (GNU/Linux)
-
-iD8DBQFSe7pCPuLgii2759ARAiWnAJ4/fDdheKcj5OT0ftzlDlT8y0OYOwCdE/Xg
-1qU1IPYPBiNTNuJ60sDxlno=
-=Xy/y
------END PGP SIGNATURE-----
-
---LZvS9be/3tNcYl/X--
+-- 
+wzyboy
