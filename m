@@ -1,60 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:33481 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752446Ab3K0K2h (ORCPT
+Received: from order.stressinduktion.org ([87.106.68.36]:37915 "EHLO
+	order.stressinduktion.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751554Ab3KLNqF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Nov 2013 05:28:37 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/2] ath9k initval updates
-Date: Wed, 27 Nov 2013 15:53:46 +0530
-Message-Id: <1385547828-4330-1-git-send-email-sujith@msujith.org> (sfid-20131127_112841_236476_D28E1FBB)
+	Tue, 12 Nov 2013 08:46:05 -0500
+Date: Tue, 12 Nov 2013 14:46:03 +0100
+From: Hannes Frederic Sowa <hannes@stressinduktion.org>
+To: Theodore Ts'o <tytso@mit.edu>,
+	Daniel Borkmann <dborkman@redhat.com>, davem@davemloft.net,
+	shemminger@networkplumber.org, fweimer@redhat.com,
+	netdev@vger.kernel.org, Eric Dumazet <eric.dumazet@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] random: seed random_int_secret at least poorly at core_initcall time
+Message-ID: <20131112134603.GE14929@order.stressinduktion.org> (sfid-20131112_144615_215657_A1BC7427)
+References: <cover.1384160397.git.dborkman@redhat.com> <2ea03f60bb65429cbe5d74a6d356fde3eefcf06c.1384160397.git.dborkman@redhat.com> <20131111134357.GC10104@thunk.org> <20131112000307.GB14929@order.stressinduktion.org> <20131112115350.GA14077@thunk.org> <20131112131627.GD14929@order.stressinduktion.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20131112131627.GD14929@order.stressinduktion.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Tue, Nov 12, 2013 at 02:16:27PM +0100, Hannes Frederic Sowa wrote:
+> On Tue, Nov 12, 2013 at 06:53:50AM -0500, Theodore Ts'o wrote:
+> > > Btw. do you see problems regarding get_random_int on architectures without
+> > > hardware offloading?
+> > > 
+> > > We are initializing random_int_secret really late (after all the init
+> > > calls) and I wonder if we should also use a two stage initialization
+> > > there, so we have a more unpredictable MD5 hash at early boot.
+> > 
+> > Most of the users of get_random_int(), at least to date, have been for
+> > things like ASLR.  A quick audit shows only one device driver user
+> > that might be impacted: drivers/net/wireless/cw1200/wsm.c.
+> > 
+> > It's not a bad idea to do a two stage init just in case
+> > get_random_int() gets used by other code --- although that brings up
+> > something that I know is really needed, but which I haven't had time
+> > to try to address yet: we really need to document all of the various
+> > interfaces that various kernel routines can use to get random numbers,
+> > and document what their performance and security characteristics are.
+> > We have probably have a lot of code where the authors didn't realize
+> > that some other interface would be a better match for their needs, or
+> > the code is old enough that predates some of the newer interfaces.
+> 
+> It is needed by fork to set up the stack canary. And this actually gets
+> called before the secret is initialized.
 
-These two patches update the initvals for
-AR9300 2.2 and AR9580 1.0
+Maybe we could use this for the time being and use the seeding method
+of kaslr as soon as it hits the tree?
 
-After these patches, there are still a few differences between the
-INI files from the internal driver and ath9k. From verify_checksum:
+I didn't bother including arch_get_random_int as we don't use the seed at all
+if that function is available on the particular architecture.
 
-ar9003-2p2     96a13663004d71b5ffa4fe9efc6b41dcfaf5a327 fail
-+c8dc777b012068116cd5282aade8eb460f397d20        ar9300_2p2_mac_postamble
-+5542c7d650feeb530de2775003931a00f992c09a        ar9300Modes_high_power_tx_gain_table_2p2
+[PATCH] random: seed random_int_secret at least poorly at core_initcall time
 
-ar9580-1p0     40e08925d7d8daa4c9841ee807fa25b0fd3f725b fail
-+c8dc777b012068116cd5282aade8eb460f397d20        ar9580_1p0_mac_postamble
-+07f9922af110bf9d72a7534a30eefcf9bacd0d7e        ar9580_1p0_baseband_core
-+8e30343d20745791d5c2e7de968f0e81403761d5        ar9580_1p0_baseband_postamble
+We don't seed random_int secret until after all the initcalls happend. But
+it does get used before that. So try at least to seed it before initial
+usage until it gets reseeded again after the initcalls.
 
-Differences:
+Cc: "Theodore Ts'o" <tytso@mit.edu>
+Signed-off-by: Hannes Frederic Sowa <hannes@stressinduktion.org>
+---
+ drivers/char/random.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-* In both chips, "mac_postamble" needs an update - the "ALWAYS_PERFORM_KEY_SEARCH"
-  bit has to enabled. This is required to address key cache corruption, which
-  needs a bigger change in the driver.
-
-* The ar9300Modes_high_power_tx_gain_table_2p2 array has been left as such
-  since it is required for certain Buffalo devices.
-
-* ar9580_1p0_baseband_core and ar9580_1p0_baseband_postamble require updates
-  to handle DFS issues. This will be done in a separate commit.
-
-All initval tool changes have been pushed to:
-https://github.com/sujith/qca-swiss-army-knife/commits/master
-
-Sujith
-
-Sujith Manoharan (2):
-  ath9k: Update initvals for AR9300 v2.2
-  ath9k: Update initvals for AR9580 v1.0
-
- .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   |  24 +-
- .../net/wireless/ath/ath9k/ar9580_1p0_initvals.h   | 559 ++++++++++++++-------
- 2 files changed, 398 insertions(+), 185 deletions(-)
-
+diff --git a/drivers/char/random.c b/drivers/char/random.c
+index 4fe5609..9f2623c 100644
+--- a/drivers/char/random.c
++++ b/drivers/char/random.c
+@@ -1468,6 +1468,16 @@ int random_int_secret_init(void)
+ 	return 0;
+ }
+ 
++static int __init random_int_secret_init_early(void)
++{
++	int i;
++
++	for (i = 0; i < ARRAY_SIZE(random_int_secret); i++)
++		random_int_secret[i] = jiffies ^ random_get_entropy();
++	return 0;
++}
++core_initcall(random_int_secret_init_early);
++
+ /*
+  * Get a random word for internal kernel use only. Similar to urandom but
+  * with the goal of minimal entropy pool depletion. As a result, the random
 -- 
-1.8.4.2
+1.8.3.1
 
