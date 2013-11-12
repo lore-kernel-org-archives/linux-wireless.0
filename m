@@ -1,63 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.neomailbox.net ([178.209.62.157]:26169 "EHLO
-	s3.neomailbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753533Ab3K0Myp (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:39637 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754491Ab3KLJot (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Nov 2013 07:54:45 -0500
-Message-ID: <5295E60D.90600@open-mesh.com> (sfid-20131127_135450_772029_2295429C)
-Date: Wed, 27 Nov 2013 13:31:09 +0100
-From: Antonio Quartulli <antonio@open-mesh.com>
-MIME-Version: 1.0
-To: Sujith Manoharan <sujith@msujith.org>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: ath9k pending patches
-References: <1385547828-4330-1-git-send-email-sujith@msujith.org> <21141.51790.303263.385517@gargle.gargle.HOWL>
-In-Reply-To: <21141.51790.303263.385517@gargle.gargle.HOWL>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 12 Nov 2013 04:44:49 -0500
+Message-ID: <1384249482.14301.5.camel@jlt4.sipsolutions.net> (sfid-20131112_104501_255075_8B5A4D5E)
+Subject: Re: [PATCH] mac80211_hwsim: Fix bcn_en_iter to use atomic iteration
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Date: Tue, 12 Nov 2013 10:44:42 +0100
+In-Reply-To: <20131106100630.GA32033@jouni.qca.qualcomm.com>
+References: <20131106100630.GA32033@jouni.qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA256
+On Wed, 2013-11-06 at 12:06 +0200, Jouni Malinen wrote:
+> 'mac80211_hwsim: Fix tracking of beaconing for multi-vif' introduced an
+> iteration of active interfaces into the bss_info_changed handler.
+> However, it used a wrong type of iteration and could result in a dead
+> lock since iflist_mtx can already be held. Fix this by using the atomic
+> version of the iteration function.
 
-Hi Sujith,
+Applied. Since I have to rebase the tree anyway, I've put it into
+mac80211-next for now.
 
-On 27/11/13 11:32, Sujith Manoharan wrote:
+johannes
 
-
-What patch is addressing this change? And can could please explain a
-bit more about what is needed to address the key cache corruption problem?
-
-Right now I am working on a "reactive behavior" which tries to detect
-a cache corruption event and subsequently re-install all the keys one
-by one to ensure they are back to a proper state.
-
-What does this ALWAYS_PERFORM_KEY_SEARCH bit do? Is it set within the
-initvalues?
-
-Sorry for shooting all these questions at once, but I am really trying
-to understand how to properly address this issue.
-
-
-Cheers,
-
-
-- -- 
-Antonio Quartulli
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIcBAEBCAAGBQJSleYNAAoJEADl0hg6qKeO7p4P/RBa9tGDY1xYTTlHNATh4WfX
-kIIPdM7x8/+S/wQPKndZ4TPJpBjsnXVnSMhcjMDjbepFRmx40FcElj/ObvKhB3Mc
-lMawsFyCEQHjUdNbSS01c3DYmbxw1YM1DUPl2N2XQKaiXbd8Zz7Rr71k8npDt07C
-3LScQeiWvj6TOwP89hXnfz2sBRPkhA4z1rTP7omr3CV9N8Ik6E23LsUnijgG8bgI
-w5XZ4NGZaVn75TdTsdk8wFm853R2/on5rb0CACHV9Z7T/oT8QM3fKMhEV6pR97wI
-P1Titinssw65ycOHlMcGmUi0DoFZHQUuI6LX2V4o5Vr1nsYN8WkQiRu7iy8MiESO
-nLdxK+5VKXL0Tf3roN3CxBzINwE9GsL2EmkvjtUZy4SdAGB7H5+QCs+/XBhB3aTH
-eeJo2nVdFGNNhrTOfdUdNfpwYvwwAzMHBYxARwifPG3g718a/xSlSsjDDTuSY7+x
-656CD7Nbuq3JzVlfM//QEOb07N9xuEcXiSDdghY7GsJzBN+T2eS6vG57S/V4/ecj
-1n7opm+f0+2vjZs/SGiykKyphWFuKY89TAXA67bP91qmYLmrdZccJtrqv/zEhfqO
-Z1lXYvM1X5SAb5Kbmj/8YPz/ZdmGxGSDRVQa8f4ujXCZ8gR4gA6eNkGprPljos6N
-LSZyNHlxM8Adgx20NC/+
-=ONks
------END PGP SIGNATURE-----
