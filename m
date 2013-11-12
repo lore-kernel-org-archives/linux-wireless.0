@@ -1,47 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:63044 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753699Ab3KAN63 (ORCPT
+Received: from order.stressinduktion.org ([87.106.68.36]:37872 "EHLO
+	order.stressinduktion.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752198Ab3KLNQ2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 09:58:29 -0400
-Received: by mail-wg0-f48.google.com with SMTP id b13so4083559wgh.27
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:58:28 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 13/65] wireless-regdb: enable VHT80 for CY
-Date: Fri,  1 Nov 2013 14:57:03 +0100
-Message-Id: <1383314275-20960-14-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_150812_498188_B447ED07)
-In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+	Tue, 12 Nov 2013 08:16:28 -0500
+Date: Tue, 12 Nov 2013 14:16:27 +0100
+From: Hannes Frederic Sowa <hannes@stressinduktion.org>
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: Daniel Borkmann <dborkman@redhat.com>, davem@davemloft.net,
+	shemminger@networkplumber.org, fweimer@redhat.com,
+	netdev@vger.kernel.org, Eric Dumazet <eric.dumazet@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH net-next 3/6] random32: add prandom_reseed_late() and call when nonblocking pool becomes initialized
+Message-ID: <20131112131627.GD14929@order.stressinduktion.org> (sfid-20131112_141636_704546_6BC10FE0)
+References: <cover.1384160397.git.dborkman@redhat.com> <2ea03f60bb65429cbe5d74a6d356fde3eefcf06c.1384160397.git.dborkman@redhat.com> <20131111134357.GC10104@thunk.org> <20131112000307.GB14929@order.stressinduktion.org> <20131112115350.GA14077@thunk.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20131112115350.GA14077@thunk.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Source is QCA's regulatory team's efforts.
+On Tue, Nov 12, 2013 at 06:53:50AM -0500, Theodore Ts'o wrote:
+> > Btw. do you see problems regarding get_random_int on architectures without
+> > hardware offloading?
+> > 
+> > We are initializing random_int_secret really late (after all the init
+> > calls) and I wonder if we should also use a two stage initialization
+> > there, so we have a more unpredictable MD5 hash at early boot.
+> 
+> Most of the users of get_random_int(), at least to date, have been for
+> things like ASLR.  A quick audit shows only one device driver user
+> that might be impacted: drivers/net/wireless/cw1200/wsm.c.
+> 
+> It's not a bad idea to do a two stage init just in case
+> get_random_int() gets used by other code --- although that brings up
+> something that I know is really needed, but which I haven't had time
+> to try to address yet: we really need to document all of the various
+> interfaces that various kernel routines can use to get random numbers,
+> and document what their performance and security characteristics are.
+> We have probably have a lot of code where the authors didn't realize
+> that some other interface would be a better match for their needs, or
+> the code is old enough that predates some of the newer interfaces.
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+It is needed by fork to set up the stack canary. And this actually gets
+called before the secret is initialized.
 
-diff --git a/db.txt b/db.txt
-index 552c95a..b77fc0b 100644
---- a/db.txt
-+++ b/db.txt
-@@ -189,9 +189,9 @@ country CR: DFS-FCC
- 
- country CY: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
--	(5170 - 5250 @ 40), (20)
--	(5250 - 5330 @ 40), (20), DFS
--	(5490 - 5710 @ 40), (27), DFS
-+	(5170 - 5250 @ 80), (20)
-+	(5250 - 5330 @ 80), (20), DFS
-+	(5490 - 5710 @ 80), (27), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
- 
--- 
-1.8.4.rc3
+Btw. the kaslr seeding techniques become quite interesting. It looks like
+they want to hash struct boot_params, maybe the ACPI memory part and also the
+DMI table.
+
+I guess we should start to implement an interface for early-boot entropy which
+the architectures must override to not use jiffies ^ get_cycles() all the
+time.
+
+The documentation idea also does sound as a very good one. ;)
+
+Greetings,
+
+  Hannes
 
