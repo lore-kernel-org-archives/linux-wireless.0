@@ -1,179 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:33284 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751966Ab3KXLwB (ORCPT
+Received: from mail-bk0-f54.google.com ([209.85.214.54]:54972 "EHLO
+	mail-bk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754132Ab3KLThM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Nov 2013 06:52:01 -0500
-Received: by mail-wg0-f50.google.com with SMTP id a1so925330wgh.17
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Nov 2013 03:52:00 -0800 (PST)
-Message-ID: <1385293909.4165.3.camel@canaries32-MCP7A> (sfid-20131124_125224_200804_1A39265A)
-Subject: [PATCH] staging: vt6656: Remove always 0 variable dwDiagRefCount
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Sun, 24 Nov 2013 11:51:49 +0000
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 12 Nov 2013 14:37:12 -0500
+Message-ID: <52828364.6080103@gmail.com> (sfid-20131112_203716_024660_71F9A2EF)
+Date: Tue, 12 Nov 2013 21:37:08 +0200
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+CC: wzyboy <wzyboy@wzyboy.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
+References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com> <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com> <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com> <527A8166.6000701@gmail.com> <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com> <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com> <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com> <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com> <20131111224439.GA30638@google.com> <CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com> <CALkVjQaXEBpbwu9Qy3+17Eg-nSg-k7iin8G3f1RsTLkCOB-2XQ@mail.gmail.com> <0BA3FCBA62E2DC44AF3030971E174FB301DF044C@HASMSX103.ger.corp.intel.com> <CAErSpo5iU15AoSVL9WmLp4gNCiNmt6pFZuTsd-Vui4SCrSc_Hw@mail.gmail.com> <0BA3FCBA62E2DC44AF3030971E174FB301DF0865@HASMSX103.ger.corp.intel.com> <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
+In-Reply-To: <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove > 0 code.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 
----
- drivers/staging/vt6656/channel.c |  3 +--
- drivers/staging/vt6656/device.h  |  1 -
- drivers/staging/vt6656/rf.c      |  3 ---
- drivers/staging/vt6656/rxtx.c    | 56 ++++++++++++++--------------------------
- drivers/staging/vt6656/wcmd.c    |  2 --
- 5 files changed, 21 insertions(+), 44 deletions(-)
+On 11/12/2013 09:14 PM, Bjorn Helgaas wrote:
+> On Tue, Nov 12, 2013 at 11:25 AM, Grumbach, Emmanuel
+> <emmanuel.grumbach@intel.com> wrote:
+> 
+>> Right - I remember the discussion we had on that.
+>> On this device (7260 that has an issue with ASPM), we don't call pci_disable_link_state, because we know it is supposed to work...
+> 
+> If ASPM is supposed to work as far as the hardware is concerned, I
+> guess you're saying this must be an iwlwifi driver issue.  Right?
 
-diff --git a/drivers/staging/vt6656/channel.c b/drivers/staging/vt6656/channel.c
-index e430b35..5a4fa0e 100644
---- a/drivers/staging/vt6656/channel.c
-+++ b/drivers/staging/vt6656/channel.c
-@@ -423,8 +423,7 @@ void CHvInitChannelTable(struct vnt_private *pDevice)
-             break;
-     }
- 
--    if ((pDevice->dwDiagRefCount != 0) ||
--        (pDevice->b11hEable == true)) {
-+    if (pDevice->b11hEable == true) {
-         if (bMultiBand == true) {
- 		for (ii = 0; ii < CB_MAX_CHANNEL; ii++) {
- 			sChannelTbl[ii+1].bValid = true;
-diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-index b7a6e14..ec8acbd 100644
---- a/drivers/staging/vt6656/device.h
-+++ b/drivers/staging/vt6656/device.h
-@@ -697,7 +697,6 @@ struct vnt_private {
- 	u8 byBBPreEDIndex;
- 
- 	int bRadioCmd;
--	u32 dwDiagRefCount;
- 
- 	/* For FOE Tuning */
- 	u8  byFOETuning;
-diff --git a/drivers/staging/vt6656/rf.c b/drivers/staging/vt6656/rf.c
-index e545232..1e8f64b 100644
---- a/drivers/staging/vt6656/rf.c
-+++ b/drivers/staging/vt6656/rf.c
-@@ -740,9 +740,6 @@ int RFbSetPower(struct vnt_private *priv, u32 rate, u32 channel)
- 	int ret = true;
- 	u8 power = priv->byCCKPwr;
- 
--	if (priv->dwDiagRefCount)
--		return true;
--
- 	if (channel == 0)
- 		return -EINVAL;
- 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 5601331..a95575f 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -978,28 +978,19 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
- 			bSoftWEP = true; /* WEP 256 */
- 	}
- 
--    // Get pkt type
--    if (ntohs(psEthHeader->h_proto) > ETH_DATA_LEN) {
--        if (pDevice->dwDiagRefCount == 0) {
--            cb802_1_H_len = 8;
--        } else {
--            cb802_1_H_len = 2;
--        }
--    } else {
--        cb802_1_H_len = 0;
--    }
-+	/* Get pkt type */
-+	if (ntohs(psEthHeader->h_proto) > ETH_DATA_LEN)
-+		cb802_1_H_len = 8;
-+	else
-+		cb802_1_H_len = 0;
- 
-     cbFrameBodySize = uSkbPacketLen - ETH_HLEN + cb802_1_H_len;
- 
-     //Set packet type
-     pTxBufHead->wFIFOCtl |= (u16)(byPktType<<8);
- 
--    if (pDevice->dwDiagRefCount != 0) {
--        bNeedACK = false;
--        pTxBufHead->wFIFOCtl = pTxBufHead->wFIFOCtl & (~FIFOCTL_NEEDACK);
--    } else { //if (pDevice->dwDiagRefCount != 0) {
- 	if ((pDevice->eOPMode == OP_MODE_ADHOC) ||
--	    (pDevice->eOPMode == OP_MODE_AP)) {
-+			(pDevice->eOPMode == OP_MODE_AP)) {
- 		if (is_multicast_ether_addr(psEthHeader->h_dest)) {
- 			bNeedACK = false;
- 			pTxBufHead->wFIFOCtl =
-@@ -1008,13 +999,11 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
- 			bNeedACK = true;
- 			pTxBufHead->wFIFOCtl |= FIFOCTL_NEEDACK;
- 		}
--        }
--        else {
--            // MSDUs in Infra mode always need ACK
--            bNeedACK = true;
--            pTxBufHead->wFIFOCtl |= FIFOCTL_NEEDACK;
--        }
--    } //if (pDevice->dwDiagRefCount != 0) {
-+	} else {
-+		/* MSDUs in Infra mode always need ACK */
-+		bNeedACK = true;
-+		pTxBufHead->wFIFOCtl |= FIFOCTL_NEEDACK;
-+	}
- 
-     pTxBufHead->wTimeStamp = DEFAULT_MSDU_LIFETIME_RES_64us;
- 
-@@ -1183,24 +1172,19 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
-         }
-     }
- 
--    // 802.1H
--    if (ntohs(psEthHeader->h_proto) > ETH_DATA_LEN) {
--	if (pDevice->dwDiagRefCount == 0) {
-+	/* 802.1H */
-+	if (ntohs(psEthHeader->h_proto) > ETH_DATA_LEN) {
- 		if ((psEthHeader->h_proto == cpu_to_be16(ETH_P_IPX)) ||
--		    (psEthHeader->h_proto == cpu_to_le16(0xF380))) {
-+			(psEthHeader->h_proto == cpu_to_le16(0xF380)))
- 			memcpy((u8 *) (pbyPayloadHead),
--			       abySNAP_Bridgetunnel, 6);
--            } else {
--                memcpy((u8 *) (pbyPayloadHead), &abySNAP_RFC1042[0], 6);
--            }
--            pbyType = (u8 *) (pbyPayloadHead + 6);
--            memcpy(pbyType, &(psEthHeader->h_proto), sizeof(u16));
--        } else {
--            memcpy((u8 *) (pbyPayloadHead), &(psEthHeader->h_proto), sizeof(u16));
-+					abySNAP_Bridgetunnel, 6);
-+		else
-+			memcpy((u8 *) (pbyPayloadHead), &abySNAP_RFC1042[0], 6);
- 
--        }
-+		pbyType = (u8 *) (pbyPayloadHead + 6);
- 
--    }
-+		memcpy(pbyType, &(psEthHeader->h_proto), sizeof(u16));
-+	}
- 
-     if (pPacket != NULL) {
-         // Copy the Packet into a tx Buffer
-diff --git a/drivers/staging/vt6656/wcmd.c b/drivers/staging/vt6656/wcmd.c
-index 2d05ccb..6b95229 100644
---- a/drivers/staging/vt6656/wcmd.c
-+++ b/drivers/staging/vt6656/wcmd.c
-@@ -283,8 +283,6 @@ void vRunCommand(struct work_struct *work)
- 	if (pDevice->Flags & fMP_DISCONNECTED)
- 		return;
- 
--	if (pDevice->dwDiagRefCount != 0)
--		return;
- 	if (pDevice->bCmdRunning != true)
- 		return;
- 
--- 
-1.8.4.4
+ASPM is supposed to work as far as the hardware is concerned.
+We might very well have an issue in iwlwifi - and I am checking this
+internally with our System guys.
+It can be a PCI core problem too, and it could also be a platform / BIOS
+/ Lenovo issue.
+Of course, I have no clue which of these is the culprit here.
+Our System folks seemed to say that this new device uses L1 substates
+which can be enabled in Haswell platform which the user owns.
+Now - L1 substates is a new feature and might introduce issues
+(apparently) - and this is why they (System folks) wanted the try
+without L1 substates. But disabling L1 substates doesn't seem trivial
+with the production BIOS of Lenovo. So I am pretty stuck here.
+Another possibility is to run a PCI analyser on the machine, but that
+requires to have the machine in the lab...
 
+> If you think it's a PCI core problem, we have to figure out what the
+> core needs to do differently.  If somebody can point to a difference
+> in the ASPM configuration between Windows and Linux, that would be a
+> good start.
+> 
+> Bjorn
+> 
