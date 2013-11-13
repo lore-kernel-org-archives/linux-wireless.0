@@ -1,58 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm43.bullet.mail.ne1.yahoo.com ([98.138.120.50]:20388 "HELO
-	nm43.bullet.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756145Ab3K0QP2 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Nov 2013 11:15:28 -0500
-Message-ID: <1385568765.12744.YahooMailNeo@web125003.mail.ne1.yahoo.com> (sfid-20131127_171531_933726_F917F3AF)
-Date: Wed, 27 Nov 2013 08:12:45 -0800 (PST)
-From: Gertjan Hofman <gertjan_hofman@yahoo.com>
-Reply-To: Gertjan Hofman <gertjan_hofman@yahoo.com>
-Subject: unwanted client isolation on 5 GHz atheros cards
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:51167 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756071Ab3KMRsH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Nov 2013 12:48:07 -0500
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
+	johannes@sipsolutions.net, yeohchunyeow@gmail.com
+Cc: yeohchunyeow@cozybit.com
+Subject: [PATCH v4 2/5] mac80211: align ieee80211_ibss_csa_beacon() with ieee80211_csa_beacon()
+Date: Wed, 13 Nov 2013 19:47:28 +0200
+Message-Id: <1384364851-31805-2-git-send-email-luciano.coelho@intel.com> (sfid-20131113_184813_817171_9C9F8CFE)
+In-Reply-To: <1384364851-31805-1-git-send-email-luciano.coelho@intel.com>
+References: <1384364851-31805-1-git-send-email-luciano.coelho@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The return value of ieee80211_ibss_csa_beacon is not aligned with the
+return value of ieee80211_csa_beacon().  For consistency and to be
+able to use both functions with similar code, change
+ieee80211_ibss_csa_beacon() not to send the bss changed notification
+itself, but return what has changed so the caller can send the
+notification instead.
 
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
 
-Apologies is this should go to the ath mailing list, but we are not sure where in the stack the problem lies.
+In v4:
 
-On a 3.11 kernel, we are trying to create a AP host using the following  hardware: driver (usb) ath9k_htc: Atheros AR9280 Rev:2 using htc_7010.fw firmware  (1.3, extracted from debian unstable)   After solving some  regulatory domain issues by patching the ath driver, we can force the card into becoming master at 5 GHz.  However, at  5GHz, the clients are isolated from each other (can not ping etc).  When we switch back  to 2.4 GHz (making only two changes in the hostapd file, hw_mode=a->g, channel=36->1) the system works as expected.  
+   * use goto out instead of sdata_unlock and return in the middle of
+     the flow; (Ilan)
 
+ net/mac80211/ibss.c | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
-Using wireshark/tcpdump I verified that ARP packets are _not_ 
-transmitted from the AP host to other clients. In other words, ARP from 
-client to AP hosts are resolved ok, but a client trying to resolve the 
-MAC from another client gets no response and the packet is not seen even on a Windows host running wireshark.  Switch to 2.4 GHz and the ARP packets return.
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 548eae8..3300209 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -522,7 +522,7 @@ int ieee80211_ibss_csa_beacon(struct ieee80211_sub_if_data *sdata,
+ 	if (csa_settings)
+ 		ieee80211_send_action_csa(sdata, csa_settings);
+ 
+-	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
++	return BSS_CHANGED_BEACON;
+  out:
+ 	return ret;
+ }
+@@ -559,11 +559,17 @@ int ieee80211_ibss_finish_csa(struct ieee80211_sub_if_data *sdata)
+ 
+ 	/* generate the beacon */
+ 	err = ieee80211_ibss_csa_beacon(sdata, NULL);
+-	sdata_unlock(sdata);
+ 	if (err < 0)
+-		return err;
++		goto out;
+ 
+-	return 0;
++	if (err) {
++		ieee80211_bss_info_change_notify(sdata, err);
++		err = 0;
++	}
++out:
++	sdata_unlock(sdata);
++
++	return err;
+ }
+ 
+ void ieee80211_ibss_stop(struct ieee80211_sub_if_data *sdata)
+-- 
+1.8.4.rc3
 
-
-Looking at mac80211/cfg.c, I see that host isolation is indeed an option.  I  printed the value of IEEE80211_SDATA_DONT_BRIDGE_PACKETS but it is  false as expected. 
-
-
-Can anyone tell me whether this is likely a problem at the mac80211 level  or closer to the hardware ? Are there other settings that kick in a 5  GHz that would not at 2.4 GHz ?
-
-We are quite capable of modifying drivers but have little knowledge of  wireless hardware.  Any information would be much appreciated.
-
-
-Sincerely,
-
-Gertjan
-
-
-hostapd (v1.1) settings are:
-interface=wlan0
-driver=nl80211
-ssid=MSS-01
-ieee80211n=1
-macaddr_acl=0
-auth_algs=1
-ignore_broadcast_ssid=1
-require_ht=1
-ht_capab=[HT40+][SHORT-GI-40][TXSTBC][RXSTBC123]
-wmm_enabled=1
-hw_mode=a
-channel=36
-country_code=US
-ap_isolate=0
