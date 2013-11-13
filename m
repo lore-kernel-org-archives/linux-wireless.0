@@ -1,130 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f47.google.com ([209.85.215.47]:42416 "EHLO
-	mail-la0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753904Ab3KKQXG (ORCPT
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:34596 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751450Ab3KMRm7 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Nov 2013 11:23:06 -0500
+	Wed, 13 Nov 2013 12:42:59 -0500
+Received: by mail-ie0-f169.google.com with SMTP id tp5so1005234ieb.14
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Nov 2013 09:42:59 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1384184624.14334.31.camel@jlt4.sipsolutions.net>
-References: <1384119945-31213-1-git-send-email-felipe.contreras@gmail.com>
-	<1384160932.14334.6.camel@jlt4.sipsolutions.net>
-	<CAMP44s3TFSgWuR8gVoFBznNP+t9mz+to===9i1PAnra4ogKu9w@mail.gmail.com>
-	<1384184624.14334.31.camel@jlt4.sipsolutions.net>
-Date: Mon, 11 Nov 2013 10:23:05 -0600
-Message-ID: <CAMP44s2cVVe4-yW214B9hJu7n6M1onZpZaPCj5N0Fi1JWDKKsw@mail.gmail.com> (sfid-20131111_172317_668061_59508EE7)
-Subject: Re: [PATCH v2] mac80211: add assoc beacon timeout logic
-From: Felipe Contreras <felipe.contreras@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
+ <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
+ <527A8166.6000701@gmail.com> <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
+ <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
+ <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
+ <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
+ <20131111224439.GA30638@google.com> <CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com>
+ <CALkVjQaXEBpbwu9Qy3+17Eg-nSg-k7iin8G3f1RsTLkCOB-2XQ@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DF044C@HASMSX103.ger.corp.intel.com>
+ <CAErSpo5iU15AoSVL9WmLp4gNCiNmt6pFZuTsd-Vui4SCrSc_Hw@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DF0865@HASMSX103.ger.corp.intel.com>
+ <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
+ <52828364.6080103@gmail.com> <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
+ <CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 13 Nov 2013 10:42:37 -0700
+Message-ID: <CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com> (sfid-20131113_184305_478038_4EC3BDFA)
+Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
+To: wzyboy <wzyboy@wzyboy.org>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	=?ISO-8859-1?Q?Bj=F8rn_Mork?= <bjorn@mork.no>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 11, 2013 at 9:43 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2013-11-11 at 04:59 -0600, Felipe Contreras wrote:
->
->> Well the AP is sending beacons, but they seem to be corrupted,
->> although the corruption often seems to happen in a place that is not
->> so important.
->
-> Indeed - the beacon you sent to me in private is damaged somewhere
-> towards the end of the frame. Are we actually receiving it but ignoring
-> it because it doesn't have the data we need?
+[+cc Bjørn]
 
-The driver is not receiving it at all. I already debugged this:
-
-http://article.gmane.org/gmane.linux.kernel.wireless.general/115429
-
-However, I noticed that once in a very long time, sometimes it does
-receive the corrupted frame and the association continues, and the
-driver code detects it's a corrupted beacon frame.
-
-> The firmware still
-> shouldn't be filtering anything since it doesn't really look at the
-> beacon information (or maybe it filters based on the DS IE? I'm not
-> entirely sure)
-
-That's what I thought, but I don't see it at all (only in monitor
-mode, and in ad-hoc).
-
->> However, if I apply this patch, I don't notice any issue, it
->> associates and works fine. Maybe there's some subtle issues with
->> features I don't personally use, or perhaps there's the occasional
->> disconnection (although that could be due to something else), but
->> that's light years away from not associating at all.
+On Tue, Nov 12, 2013 at 10:39 PM, wzyboy <wzyboy@wzyboy.org> wrote:
+> 2013/11/13 Bjorn Helgaas <bhelgaas@google.com>:
+>> wzyboy, can you run these commands before the bug occurs and before
+>> using the "setpci" workaround:
 >>
->> I'd say between a) some features not working and b) nothing working at
->> all, a) is preferred.
->>
->> If you think it's better that nothing works at all, then wouldn't it
->> make sense to time out and return an error? Currently we just keep
->> trying to associate *forever*.
+>>   lspci -vvxxxx -s00:1c.1
+>>   lspci -vvxxxx -s03:00.0
 >
-> That's wpa_supplicant/userspace behaviour. The kernel will just drop the
-> connection.
+> After today's morning lessons I booted up my laptop with pci=earlydump
+> kernel perameter and here are the output of lspci (without setpci and
+> before bug hit) and dmesg.
 
-Nope, it keeps trying forever.
+Thanks.  Are you 100% sure the lspci output is before the setpci
+workaround?  The dmesg earlydump shows this (the ASPM control bits are
+in the 16-bit Link Control register, which is at 0x50 for both
+devices):
 
-Oct 13 14:33:15 nysa kernel: wlan0: authenticate with e0:1d:3b:46:82:a0
-Oct 13 14:33:15 nysa kernel: wlan0: send auth to e0:1d:3b:46:82:a0 (try 1/3)
-Oct 13 14:33:15 nysa kernel: wlan0: authenticated
-Oct 13 14:33:15 nysa kernel: wlan0: waiting for beacon from e0:1d:3b:46:82:a0
-Oct 13 14:33:18 nysa kernel: wlan0: authenticate with e0:1d:3b:46:82:a0
-Oct 13 14:33:18 nysa kernel: wlan0: send auth to e0:1d:3b:46:82:a0 (try 1/3)
-Oct 13 14:33:18 nysa kernel: wlan0: authenticated
-Oct 13 14:33:18 nysa kernel: wlan0: waiting for beacon from e0:1d:3b:46:82:a0
-Oct 13 14:33:22 nysa kernel: wlan0: authenticate with e0:1d:3b:46:82:a0
-Oct 13 14:33:22 nysa kernel: wlan0: send auth to e0:1d:3b:46:82:a0 (try 1/3)
-Oct 13 14:33:22 nysa kernel: wlan0: authenticated
-Oct 13 14:33:22 nysa kernel: wlan0: waiting for beacon from e0:1d:3b:46:82:a0
-...
+    00:1c.1 Root Port config
+         50: 42 00 11 70 00 b2 14 00 00 00 40 01 00 00 00 00
+    03:00.0 Intel 7260 config:
+         50: 42 01 11 10 00 00 00 00 00 00 00 00 00 00 00 00
 
->> > If the AP is sending beacons but the device isn't receiving them, then
->> > it's a driver bug and mac80211 shouldn't work around it.
->>
->> I agree, but I can't seem to convince Intel guys of that. The firmware
->> is dropping the corrupt beacon frames (although not always), so
->> there's nothing the driver can do afterwards.
->
-> You realize I work for the same team in Intel as well? :)
+So at boot-time, ASPM was enabled.  But the lspci shows:
 
-Now I do.
+    00:1c.1 Root Port config
+      Capabilities: [40] Express (v2) Root Port (Slot+), MSI 00
+        LnkCtl: ASPM Disabled
+         50: 40 00 11 70 00 b2 14 00 00 00 40 01 00 00 00 00
+    03:00.0 Intel 7620 config
+      Capabilities: [40] Express (v2) Endpoint, MSI 00
+        LnkCtl: ASPM Disabled
+         50: 40 01 11 10 00 00 00 00 00 00 00 00 00 00 00 00
 
->> But even if there were not beacons at all (corrupt or otherwise), I
->> still think waiting *forever* in a loop is not ideal, a) is preferred;
->> not having all the features, but still somehow work (from my point of
->> view it's more than somewhat).
->
-> This isn't really true like I said above - the kernel can only drop the
-> association, if userspace *insists* then it will try again and again.
+And now ASPM is disabled.  I'm pretty sure the kernel did not disable
+ASPM, so I assume it was disabled by setpci.
 
-But it's not doing this:
+I manually decoded the L1 PM Substates registers for both the Root
+Port and the 7260 device (details appended below), and everything
+appears enabled there (though I think that since ASPM is disabled, L1
+PM substates is ignored).
 
-  ieee80211_destroy_assoc_data(sdata, false);
-  cfg80211_assoc_timeout(sdata->dev, bss);
+My conclusion is that the BIOS enabled both ASPM and L1 PM substates.
+Obviously the BIOS will do the same when booting Windows, and I assume
+the device works fine with the Windows driver.  Based on our previous
+experience with Windows, I don't think it will change the ASPM
+configuration because the ACPI FADT table and the PCI _OSC method do
+not grant control of ASPM to the OS.  Therefore, I think the problem
+is in the Linux iwlwifi driver.
 
-Which is what causes the association to stop for me.
+I don't think there's anything more I can do here because there's no
+evidence that the PCI core is doing anything wrong.  But if it turns
+out that we *should* be doing something differently, let me know.
 
-So where exactly in the code is the association being "dropped"?
+Bjorn
 
-> I'd much rather try to get to the bottom of this. Maybe the firmware is
-> dropping the beacon because the DS IE is broken? Or are we receiving it
-> but ignoring it because it's broken?
 
-It's not the latter.
+    00:1c.1 Root Port config
+      Capabilities: [40] Express (v2) Root Port (Slot+), MSI 00
+        LnkCtl: ASPM Disabled
+         50: 40 00 11 70 00 b2 14 00 00 00 40 01 00 00 00 00
+      Capabilities: [200 v1] #1e
+        200: 1e 00 01 00 1f 28 28 00 1f 28 a0 40 f0 00 00 00
+        210: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+          Header                        0x0001001e
+            ID 0x001e (L1 Substates)
+            Version 1
+          Capabilities                  0x0028281f
+          Control 1                     0x40a0281f
+            0x40a0281f  Control 1
+            0x00000001    PCI-PM L1.2 Enable
+            0x00000002    PCI-PM L1.1 Enable
+            0x00000004    ASPM L1.2 Enable
+            0x00000008    ASPM L1.1 Enable
+            0x00000010    RsvdP
+            0x00002800    Common_Mode_Restore_Time
+            0x00a00000    LTR_L1.2_THRESHOLD_Value
+            0x40000000    LTR_L1.2_THRESHOLD_Scale
+          Control 2                     0x000000f0
+            0x000000f0  Control 2
+            0x000000f0    T_POWER_ON Value
 
-I would rather fix the problem at the two levels, so even if the
-firmware passes the corrupt frames correctly, the driver would still
-somewhat work when there's no beacon frames at all.
-
-> Unfortunately, there's only so much we can do to work around broken APs.
-
-Indeed, but 'so much' for this AP is really nothing, while with my
-patch it's quite a lot.
-
--- 
-Felipe Contreras
+    03:00.0 Intel 7620 config
+      Capabilities: [40] Express (v2) Endpoint, MSI 00
+        LnkCtl: ASPM Disabled
+         50: 40 01 11 10 00 00 00 00 00 00 00 00 00 00 00 00
+      Capabilities: [154 v1] Vendor Specific Information: ID=cafe
+Rev=1 Len=014 <?>
+        150:             0b 00 01 00 fe ca 41 01 1f 1e f0 00
+        160: 0f 00 a0 40 f0 00 00 00 00 00 00 00 00 00 00 00
+          Header                        0x0001000b
+            ID 0x000b (Vendor-specific)
+            Version 1
+          Vendor-specific header        0x0141cafe
+            VSEC ID 0xcafe
+            VSEC Rev 1
+            Length 0x14
+          Capabilities                  0x00f01e1f
+          Control 1                     0x40a0000f
+            0x40a0000f  Control 1
+            0x00000001    PCI-PM L1.2 Enable
+            0x00000002    PCI-PM L1.1 Enable
+            0x00000004    ASPM L1.2 Enable
+            0x00000008    ASPM L1.1 Enable
+          Control 2                     0x000000f0
