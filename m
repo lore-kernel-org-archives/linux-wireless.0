@@ -1,47 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:55523 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751561Ab3KTAvu (ORCPT
+Received: from mail-bk0-f43.google.com ([209.85.214.43]:53815 "EHLO
+	mail-bk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758798Ab3KMJhM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Nov 2013 19:51:50 -0500
-Received: by mail-wi0-f170.google.com with SMTP id f4so7413726wiw.3
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Nov 2013 16:51:49 -0800 (PST)
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH] mac80211: use capped prob when computing throughputs
-Date: Wed, 20 Nov 2013 01:51:08 +0100
-Message-Id: <1384908668-27869-1-git-send-email-karl.beldan@gmail.com> (sfid-20131120_015154_118817_DC97EE72)
+	Wed, 13 Nov 2013 04:37:12 -0500
+Received: by mail-bk0-f43.google.com with SMTP id mz13so190758bkb.2
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Nov 2013 01:37:11 -0800 (PST)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH] cfg80211: fix regulatory flags kdoc
+Date: Wed, 13 Nov 2013 10:37:08 +0100
+Message-Id: <1384335428-24112-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20131113_103717_404275_82645B47)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karl Beldan <karl.beldan@rivierawaves.com>
+Remove the _FLAG prefix as it was not used.
 
-Commit 3e8b1eb "mac80211/minstrel_ht: improve rate selection stability"
-introduced a local capped prob in minstrel_ht_calc_tp but omitted to use
-it to compute the rate throughput.
-
-Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
-CC: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- net/mac80211/rc80211_minstrel_ht.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/net/regulatory.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 9702d88..341e6f7 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -333,7 +333,7 @@ minstrel_ht_calc_tp(struct minstrel_ht_sta *mi, int group, int rate)
- 		nsecs = 1000 * mi->overhead / MINSTREL_TRUNC(mi->avg_ampdu_len);
- 
- 	nsecs += minstrel_mcs_groups[group].duration[rate];
--	tp = 1000000 * ((mr->probability * 1000) / nsecs);
-+	tp = 1000000 * (prob * 1000) / nsecs;
- 
- 	mr->cur_tp = MINSTREL_TRUNC(tp);
- }
+diff --git a/include/net/regulatory.h b/include/net/regulatory.h
+index 7e98e5a..7e49cf6 100644
+--- a/include/net/regulatory.h
++++ b/include/net/regulatory.h
+@@ -89,14 +89,14 @@ struct regulatory_request {
+ /**
+  * enum ieee80211_regulatory_flags - device regulatory flags
+  *
+- * @REGULATORY_FLAG_CUSTOM_REG: tells us the driver for this device
++ * @REGULATORY_CUSTOM_REG: tells us the driver for this device
+  * 	has its own custom regulatory domain and cannot identify the
+  * 	ISO / IEC 3166 alpha2 it belongs to. When this is enabled
+  * 	we will disregard the first regulatory hint (when the
+  * 	initiator is %REGDOM_SET_BY_CORE). Drivers that use
+  * 	wiphy_apply_custom_regulatory() should have this flag set
+  * 	or the regulatory core will set it for the wiphy.
+- * @REGULATORY_FLAG_STRICT_REG: tells us that the wiphy for this device
++ * @REGULATORY_STRICT_REG: tells us that the wiphy for this device
+  *	has regulatory domain that it wishes to be considered as the
+  *	superset for regulatory rules. After this device gets its regulatory
+  *	domain programmed further regulatory hints shall only be considered
+@@ -112,7 +112,7 @@ struct regulatory_request {
+  *	will have their wiphy->regd programmed once the regulatory
+  *	domain is set, and all other regulatory hints will be ignored
+  *	until their own regulatory domain gets programmed.
+- * @REGULATORY_FLAG_DISABLE_BEACON_HINTS: enable this if your driver needs to
++ * @REGULATORY_DISABLE_BEACON_HINTS: enable this if your driver needs to
+  *	ensure that passive scan flags and beaconing flags may not be lifted by
+  *	cfg80211 due to regulatory beacon hints. For more information on beacon
+  *	hints read the documenation for regulatory_hint_found_beacon()
 -- 
-1.8.2
+1.8.4.rc3
 
