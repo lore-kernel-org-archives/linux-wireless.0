@@ -1,64 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f175.google.com ([209.85.215.175]:58965 "EHLO
-	mail-ea0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752675Ab3KHHEt (ORCPT
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:52171 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751031Ab3KMVj4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Nov 2013 02:04:49 -0500
-Received: by mail-ea0-f175.google.com with SMTP id k10so824953eaj.34
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Nov 2013 23:04:48 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCHv2 04/13] ath10k: rename ath10k_pci_reset_target()
-Date: Fri,  8 Nov 2013 08:01:26 +0100
-Message-Id: <1383894095-27998-5-git-send-email-michal.kazior@tieto.com> (sfid-20131108_080507_375350_52DF0124)
-In-Reply-To: <1383894095-27998-1-git-send-email-michal.kazior@tieto.com>
-References: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com>
- <1383894095-27998-1-git-send-email-michal.kazior@tieto.com>
+	Wed, 13 Nov 2013 16:39:56 -0500
+Message-ID: <1384378761.16343.11.camel@porter.coelho.fi> (sfid-20131113_224000_656900_F17CC7BD)
+Subject: Re: [PATCH v4 3/5] mac80211: refactor
+ ieee80211_mesh_process_chanswitch()
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: sw@simonwunderlich.de, johannes@sipsolutions.net,
+	yeohchunyeow@gmail.com, yeohchunyeow@cozybit.com
+Date: Wed, 13 Nov 2013 23:39:21 +0200
+In-Reply-To: <1384364851-31805-3-git-send-email-luciano.coelho@intel.com>
+References: <1384364851-31805-1-git-send-email-luciano.coelho@intel.com>
+	 <1384364851-31805-3-git-send-email-luciano.coelho@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-What the function does is to actually wait for the
-firmware indication bit to be set. Prerequisite
-for this is having interrupts registered.
+On Wed, 2013-11-13 at 19:47 +0200, Luciano Coelho wrote:
+> Refactor ieee80211_mesh_process_chanswitch() to use
+> ieee80211_channel_switch() and avoid code duplication.
+> 
+> Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+> ---
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/pci.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+[...]
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index a001ff2..4aa7992 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -53,7 +53,7 @@ static int ath10k_pci_post_rx_pipe(struct ath10k_pci_pipe *pipe_info,
- static void ath10k_pci_rx_pipe_cleanup(struct ath10k_pci_pipe *pipe_info);
- static void ath10k_pci_stop_ce(struct ath10k *ar);
- static void ath10k_pci_device_reset(struct ath10k *ar);
--static int ath10k_pci_reset_target(struct ath10k *ar);
-+static int ath10k_pci_wait_for_target_init(struct ath10k *ar);
- static int ath10k_pci_start_intr(struct ath10k *ar);
- static void ath10k_pci_stop_intr(struct ath10k *ar);
- 
-@@ -1857,7 +1857,7 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar)
- 	 */
- 	ath10k_pci_device_reset(ar);
- 
--	ret = ath10k_pci_reset_target(ar);
-+	ret = ath10k_pci_wait_for_target_init(ar);
- 	if (ret)
- 		goto err_irq;
- 
-@@ -2257,7 +2257,7 @@ static void ath10k_pci_stop_intr(struct ath10k *ar)
- 		pci_disable_msi(ar_pci->pdev);
- }
- 
--static int ath10k_pci_reset_target(struct ath10k *ar)
-+static int ath10k_pci_wait_for_target_init(struct ath10k *ar)
- {
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	int wait_limit = 300; /* 3 sec */
--- 
-1.8.4.rc3
+> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+> index f4af05d..bba7897 100644
+> --- a/net/mac80211/ieee80211_i.h
+> +++ b/net/mac80211/ieee80211_i.h
+> @@ -612,6 +612,7 @@ struct ieee80211_if_mesh {
+>  	/* Channel Switching Support */
+>  	struct mesh_csa_settings __rcu *csa;
+>  	bool chsw_init;
+> +	bool csa_repeater;
+
+These two booleans are mutually exclusive, so they should probably be
+combined in an enumeration to avoid confusion.
+
+I'll send v5 with this change.
+
+--
+Cheers,
+Luca.
 
