@@ -1,130 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:64429 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753546Ab3KCRtl (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:49139 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759595Ab3KMSNG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Nov 2013 12:49:41 -0500
-Received: by mail-wi0-f179.google.com with SMTP id hm4so2886595wib.6
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Nov 2013 09:49:40 -0800 (PST)
-Message-ID: <1383500972.3758.27.camel@canaries32-MCP7A> (sfid-20131103_184944_275245_AE11F6AD)
-Subject: [PATCH 4/5] staging; vt6656: device_init_registers Change
- vnt_cmd_card_int and vnt_rsp_card_int to off stack
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Sun, 03 Nov 2013 17:49:32 +0000
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 13 Nov 2013 13:13:06 -0500
+Received: by mail-wg0-f44.google.com with SMTP id k14so799919wgh.35
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Nov 2013 10:13:05 -0800 (PST)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: johannes@sipsolutions.net
+Cc: janusz.dziedzic@tieto.com, j@w1.fi, sunitb@qca.qualcomm.com,
+	rsunki@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [RFC 1/5] cfg80211: pass the wdev on the country IE regulatory hint
+Date: Wed, 13 Nov 2013 19:12:55 +0100
+Message-Id: <1384366379-25301-2-git-send-email-mcgrof@do-not-panic.com> (sfid-20131113_191313_235396_DAAC8CAF)
+In-Reply-To: <1384366379-25301-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1384366379-25301-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move structures to vnt_private and convert to pointers in
-device_init_registers.
+This also records the wdev on the last regulatory request,
+this can be used later to help quiesce wdev's at appropriate
+times by the regulatory core.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- drivers/staging/vt6656/device.h   |  3 +++
- drivers/staging/vt6656/main_usb.c | 23 +++++++++++------------
- 2 files changed, 14 insertions(+), 12 deletions(-)
+ include/net/regulatory.h |  4 ++++
+ net/wireless/reg.c       |  5 ++++-
+ net/wireless/reg.h       | 13 +++++++------
+ net/wireless/sme.c       |  2 +-
+ 4 files changed, 16 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-index ef2b922..739cda4 100644
---- a/drivers/staging/vt6656/device.h
-+++ b/drivers/staging/vt6656/device.h
-@@ -75,6 +75,7 @@
- #include "desc.h"
- #include "key.h"
- #include "card.h"
-+#include "rndis.h"
+diff --git a/include/net/regulatory.h b/include/net/regulatory.h
+index ab0bee0..40df080 100644
+--- a/include/net/regulatory.h
++++ b/include/net/regulatory.h
+@@ -42,6 +42,9 @@ enum environment_cap {
+  * 	can be used by the wireless core to deal with conflicts
+  * 	and potentially inform users of which devices specifically
+  * 	cased the conflicts.
++ * @wdev: this is set for %REGDOM_SET_BY_COUNTRY_IE to help avoid
++ * 	trying to quiesce the same wdev if the country IE was
++ * 	issued through it.
+  * @initiator: indicates who sent this request, could be any of
+  * 	of those set in nl80211_reg_initiator (%NL80211_REGDOM_SET_BY_*)
+  * @alpha2: the ISO / IEC 3166 alpha2 country code of the requested
+@@ -76,6 +79,7 @@ enum environment_cap {
+ struct regulatory_request {
+ 	struct rcu_head rcu_head;
+ 	int wiphy_idx;
++	struct wireless_dev *wdev;
+ 	enum nl80211_reg_initiator initiator;
+ 	enum nl80211_user_reg_hint_type user_reg_hint_type;
+ 	char alpha2[2];
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 4bfbeaa..e5935c2 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1871,12 +1871,14 @@ int regulatory_hint(struct wiphy *wiphy, const char *alpha2)
+ }
+ EXPORT_SYMBOL(regulatory_hint);
  
- #define VNT_USB_VENDOR_ID                     0x160a
- #define VNT_USB_PRODUCT_ID                    0x3184
-@@ -465,6 +466,8 @@ struct vnt_private {
- 	u8 byOriginalZonetype;
- 
- 	int bLinkPass; /* link status: OK or fail */
-+	struct vnt_cmd_card_init init_command;
-+	struct vnt_rsp_card_init init_response;
- 	u8 abyCurrentNetAddr[ETH_ALEN];
- 	u8 abyPermanentNetAddr[ETH_ALEN];
- 
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index d1f923c..ba39aaa 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -67,7 +67,6 @@
- #include "datarate.h"
- #include "rf.h"
- #include "firmware.h"
--#include "rndis.h"
- #include "control.h"
- #include "channel.h"
- #include "int.h"
-@@ -299,8 +298,8 @@ static void device_init_diversity_timer(struct vnt_private *pDevice)
- static int device_init_registers(struct vnt_private *pDevice)
+-void regulatory_hint_country_ie(struct wiphy *wiphy, enum ieee80211_band band,
++void regulatory_hint_country_ie(struct wireless_dev *wdev,
++				enum ieee80211_band band,
+ 				const u8 *country_ie, u8 country_ie_len)
  {
- 	struct vnt_manager *pMgmt = &pDevice->vnt_mgmt;
--	struct vnt_cmd_card_init init_cmd;
--	struct vnt_rsp_card_init init_rsp;
-+	struct vnt_cmd_card_init *init_cmd = &pDevice->init_command;
-+	struct vnt_rsp_card_init *init_rsp = &pDevice->init_response;
- 	u8 abyBroadcastAddr[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
- 	u8 abySNAP_RFC1042[ETH_ALEN] = {0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00};
- 	u8 abySNAP_Bridgetunnel[ETH_ALEN]
-@@ -343,17 +342,17 @@ static int device_init_registers(struct vnt_private *pDevice)
-             return false;
-         }
+ 	char alpha2[2];
+ 	enum environment_cap env = ENVIRON_ANY;
+ 	struct regulatory_request *request = NULL, *lr;
++	struct wiphy *wiphy = wdev->wiphy;
  
--	init_cmd.init_class = DEVICE_INIT_COLD;
--	init_cmd.exist_sw_net_addr = (u8) pDevice->bExistSWNetAddr;
-+	init_cmd->init_class = DEVICE_INIT_COLD;
-+	init_cmd->exist_sw_net_addr = (u8) pDevice->bExistSWNetAddr;
- 	for (ii = 0; ii < 6; ii++)
--		init_cmd.sw_net_addr[ii] = pDevice->abyCurrentNetAddr[ii];
--	init_cmd.short_retry_limit = pDevice->byShortRetryLimit;
--	init_cmd.long_retry_limit = pDevice->byLongRetryLimit;
-+		init_cmd->sw_net_addr[ii] = pDevice->abyCurrentNetAddr[ii];
-+	init_cmd->short_retry_limit = pDevice->byShortRetryLimit;
-+	init_cmd->long_retry_limit = pDevice->byLongRetryLimit;
+ 	/* IE len must be evenly divisible by 2 */
+ 	if (country_ie_len & 0x01)
+@@ -1913,6 +1915,7 @@ void regulatory_hint_country_ie(struct wiphy *wiphy, enum ieee80211_band band,
+ 		goto out;
  
- 	/* issue card_init command to device */
- 	ntStatus = CONTROLnsRequestOut(pDevice,
- 		MESSAGE_TYPE_CARDINIT, 0, 0,
--		sizeof(struct vnt_cmd_card_init), (u8 *)&init_cmd);
-+		sizeof(struct vnt_cmd_card_init), (u8 *)init_cmd);
+ 	request->wiphy_idx = get_wiphy_idx(wiphy);
++	request->wdev = wdev;
+ 	request->alpha2[0] = alpha2[0];
+ 	request->alpha2[1] = alpha2[1];
+ 	request->initiator = NL80211_REGDOM_SET_BY_COUNTRY_IE;
+diff --git a/net/wireless/reg.h b/net/wireless/reg.h
+index 02bd8f4..3b1e352 100644
+--- a/net/wireless/reg.h
++++ b/net/wireless/reg.h
+@@ -61,8 +61,9 @@ int regulatory_hint_found_beacon(struct wiphy *wiphy,
  
-     if ( ntStatus != STATUS_SUCCESS ) {
-         DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO" Issue Card init fail \n");
-@@ -362,7 +361,7 @@ static int device_init_registers(struct vnt_private *pDevice)
-     }
+ /**
+  * regulatory_hint_country_ie - hints a country IE as a regulatory domain
+- * @wiphy: the wireless device giving the hint (used only for reporting
+- *	conflicts)
++ * @wdev: the wireless device giving the hint, used for reporting
++ * 	conflicts and to quiesce devices which may disagree with the
++ * 	regulatory domain update.
+  * @band: the band on which the country IE was received on. This determines
+  *	the band we'll process the country IE channel triplets for.
+  * @country_ie: pointer to the country IE
+@@ -80,10 +81,10 @@ int regulatory_hint_found_beacon(struct wiphy *wiphy,
+  * not observed. For this reason if a triplet is seen with channel
+  * information for a band the BSS is not present in it will be ignored.
+  */
+-void regulatory_hint_country_ie(struct wiphy *wiphy,
+-			 enum ieee80211_band band,
+-			 const u8 *country_ie,
+-			 u8 country_ie_len);
++void regulatory_hint_country_ie(struct wireless_dev *wdev,
++				enum ieee80211_band band,
++				const u8 *country_ie,
++				u8 country_ie_len);
  
- 	ntStatus = CONTROLnsRequestIn(pDevice, MESSAGE_TYPE_INIT_RSP, 0, 0,
--		sizeof(struct vnt_rsp_card_init), (u8 *)&init_rsp);
-+		sizeof(struct vnt_rsp_card_init), (u8 *)init_rsp);
- 	if (ntStatus != STATUS_SUCCESS) {
- 		DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO
- 			"Cardinit request in status fail!\n");
-@@ -519,7 +518,7 @@ static int device_init_registers(struct vnt_private *pDevice)
-         pDevice->byMaxChannel = CB_MAX_CHANNEL;
- 
- 	/* get RFType */
--	pDevice->byRFType = init_rsp.rf_type;
-+	pDevice->byRFType = init_rsp->rf_type;
- 
-         if ((pDevice->byRFType & RF_EMU) != 0) {
- 		/* force change RevID for VT3253 emu */
-@@ -570,7 +569,7 @@ static int device_init_registers(struct vnt_private *pDevice)
-         CARDbSetMediaChannel(pDevice, pMgmt->uCurrChannel);
- 
- 	/* get permanent network address */
--	memcpy(pDevice->abyPermanentNetAddr, &init_rsp.net_addr[0], 6);
-+	memcpy(pDevice->abyPermanentNetAddr, init_rsp->net_addr, 6);
- 	memcpy(pDevice->abyCurrentNetAddr,
- 	       pDevice->abyPermanentNetAddr,
- 	       ETH_ALEN);
+ /**
+  * regulatory_hint_disconnect - informs all devices have been disconneted
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index 65f8008..0a5d304 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -682,7 +682,7 @@ void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
+ 	 * - country_ie + 2, the start of the country ie data, and
+ 	 * - and country_ie[1] which is the IE length
+ 	 */
+-	regulatory_hint_country_ie(wdev->wiphy, bss->channel->band,
++	regulatory_hint_country_ie(wdev, bss->channel->band,
+ 				   country_ie + 2, country_ie[1]);
+ 	kfree(country_ie);
+ }
 -- 
-1.8.3.2
-
-
-
+1.8.4.rc3
 
