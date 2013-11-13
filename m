@@ -1,46 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:53614 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752688Ab3KGAQi (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:45263 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759415Ab3KMSeK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Nov 2013 19:16:38 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 05/13] ath9k: Add a config option for WoW
-Date: Thu,  7 Nov 2013 05:41:52 +0530
-Message-Id: <1383783120-22435-6-git-send-email-sujith@msujith.org> (sfid-20131107_011643_448185_B1005BF8)
-In-Reply-To: <1383783120-22435-1-git-send-email-sujith@msujith.org>
-References: <1383783120-22435-1-git-send-email-sujith@msujith.org>
+	Wed, 13 Nov 2013 13:34:10 -0500
+Message-ID: <1384367646.14578.24.camel@jlt4.sipsolutions.net> (sfid-20131113_193419_824720_98789B8B)
+Subject: Re: [PATCH] mac80211: minstrels: spare numerous useless calls to
+ get_random_bytes
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Karl Beldan <karl.beldan@gmail.com>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Hannes Frederic Sowa <hannes@stressinduktion.org>,
+	netdev@vger.kernel.org, Karl Beldan <karl.beldan@rivierawaves.com>
+Date: Wed, 13 Nov 2013 19:34:06 +0100
+In-Reply-To: <1384336459-5322-1-git-send-email-karl.beldan@gmail.com> (sfid-20131113_105448_249049_106CA6AF)
+References: <1384336459-5322-1-git-send-email-karl.beldan@gmail.com>
+	 (sfid-20131113_105448_249049_106CA6AF)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Wed, 2013-11-13 at 10:54 +0100, Karl Beldan wrote:
+> From: Karl Beldan <karl.beldan@rivierawaves.com>
+> 
+> ATM, only the first array value returned by get_random_bytes is used.
+> This change moves the call to get_random_bytes from the nested loop it
+> is in to its parent.
+> While at it, replace get_random_bytes with prandom_bytes since PRNs are
+> way enough for the selection process.
+> After this, minstrel_ht reclaims 80 PR-bytes instead of 640 R-bytes.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/Kconfig | 8 ++++++++
- 1 file changed, 8 insertions(+)
+Applied.
 
-diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
-index 3ffa4ea..30d273c 100644
---- a/drivers/net/wireless/ath/ath9k/Kconfig
-+++ b/drivers/net/wireless/ath/ath9k/Kconfig
-@@ -104,6 +104,14 @@ config ATH9K_TX99
- 	  be evaluated to meet the RF exposure limits set forth in the
- 	  governmental SAR regulations.
- 
-+config ATH9K_WOW
-+	bool "Wake on Wireless LAN support (EXPERIMENTAL)"
-+	depends on ATH9K && PM
-+	default n
-+	---help---
-+	  This option enables Wake on Wireless LAN support for certain cards.
-+	  Currently, AR9462 is supported.
-+
- config ATH9K_LEGACY_RATE_CONTROL
- 	bool "Atheros ath9k rate control"
- 	depends on ATH9K
--- 
-1.8.4.2
+johannes
 
