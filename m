@@ -1,48 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:45780 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750900Ab3KMVUr (ORCPT
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:51161 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753522Ab3KMRsH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Nov 2013 16:20:47 -0500
-Message-ID: <1384377637.28806.14.camel@jlt4.sipsolutions.net> (sfid-20131113_222050_042134_92A0FD88)
-Subject: Re: [RFC 1/5] cfg80211: pass the wdev on the country IE regulatory
- hint
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: janusz.dziedzic@tieto.com, j@w1.fi, sunitb@qca.qualcomm.com,
-	rsunki@qca.qualcomm.com, linux-wireless@vger.kernel.org
-Date: Wed, 13 Nov 2013 22:20:37 +0100
-In-Reply-To: <1384366379-25301-2-git-send-email-mcgrof@do-not-panic.com> (sfid-20131113_191306_798798_A7D706F7)
-References: <1384366379-25301-1-git-send-email-mcgrof@do-not-panic.com>
-	 <1384366379-25301-2-git-send-email-mcgrof@do-not-panic.com>
-	 (sfid-20131113_191306_798798_A7D706F7)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 13 Nov 2013 12:48:07 -0500
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
+	johannes@sipsolutions.net, yeohchunyeow@gmail.com
+Cc: yeohchunyeow@cozybit.com
+Subject: [PATCH v4 1/5] mac80211: refactor ieee80211_ibss_process_chanswitch()
+Date: Wed, 13 Nov 2013 19:47:27 +0200
+Message-Id: <1384364851-31805-1-git-send-email-luciano.coelho@intel.com> (sfid-20131113_184812_402446_98107DC9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-11-13 at 19:12 +0100, Luis R. Rodriguez wrote:
-> This also records the wdev on the last regulatory request,
-> this can be used later to help quiesce wdev's at appropriate
-> times by the regulatory core.
+Refactor ieee80211_ibss_process_chanswitch() to use
+ieee80211_channel_switch() and avoid code duplication.
 
-> +++ b/net/wireless/reg.c
-> @@ -1871,12 +1871,14 @@ int regulatory_hint(struct wiphy *wiphy, const char *alpha2)
->  }
->  EXPORT_SYMBOL(regulatory_hint);
->  
-> -void regulatory_hint_country_ie(struct wiphy *wiphy, enum ieee80211_band band,
-> +void regulatory_hint_country_ie(struct wireless_dev *wdev,
-> +				enum ieee80211_band band,
->  				const u8 *country_ie, u8 country_ie_len)
-...
-> +       request->wdev = wdev;
-> 
-You have absolutely no validation of this pointer - the lifetime of the
-request object and the wdev aren't necessarily the same.
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+ net/mac80211/cfg.c         |  4 ++--
+ net/mac80211/ibss.c        | 58 +++++++---------------------------------------
+ net/mac80211/ieee80211_i.h |  2 ++
+ 3 files changed, 12 insertions(+), 52 deletions(-)
 
-At least you should very carefully document that this pointer is a
-cookie (if it really is) and must never be dereferenced.
-
-johannes
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 11ddb34..87b2533 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3014,8 +3014,8 @@ void ieee80211_csa_finalize_work(struct work_struct *work)
+ 	cfg80211_ch_switch_notify(sdata->dev, &local->csa_chandef);
+ }
+ 
+-static int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+-				    struct cfg80211_csa_settings *params)
++int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
++			     struct cfg80211_csa_settings *params)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct ieee80211_local *local = sdata->local;
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 531be04..548eae8 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -784,18 +784,10 @@ ieee80211_ibss_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 	struct cfg80211_csa_settings params;
+ 	struct ieee80211_csa_ie csa_ie;
+ 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
+-	struct ieee80211_chanctx_conf *chanctx_conf;
+-	struct ieee80211_chanctx *chanctx;
+ 	enum nl80211_channel_type ch_type;
+-	int err, num_chanctx;
++	int err;
+ 	u32 sta_flags;
+ 
+-	if (sdata->vif.csa_active)
+-		return true;
+-
+-	if (!sdata->vif.bss_conf.ibss_joined)
+-		return false;
+-
+ 	sta_flags = IEEE80211_STA_DISABLE_VHT;
+ 	switch (ifibss->chandef.width) {
+ 	case NL80211_CHAN_WIDTH_5:
+@@ -826,9 +818,6 @@ ieee80211_ibss_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 	params.count = csa_ie.count;
+ 	params.chandef = csa_ie.chandef;
+ 
+-	if (ifibss->chandef.chan->band != params.chandef.chan->band)
+-		goto disconnect;
+-
+ 	switch (ifibss->chandef.width) {
+ 	case NL80211_CHAN_WIDTH_20_NOHT:
+ 	case NL80211_CHAN_WIDTH_20:
+@@ -884,29 +873,6 @@ ieee80211_ibss_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 		params.radar_required = true;
+ 	}
+ 
+-	rcu_read_lock();
+-	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+-	if (!chanctx_conf) {
+-		rcu_read_unlock();
+-		goto disconnect;
+-	}
+-
+-	/* don't handle for multi-VIF cases */
+-	chanctx = container_of(chanctx_conf, struct ieee80211_chanctx, conf);
+-	if (chanctx->refcount > 1) {
+-		rcu_read_unlock();
+-		goto disconnect;
+-	}
+-	num_chanctx = 0;
+-	list_for_each_entry_rcu(chanctx, &sdata->local->chanctx_list, list)
+-		num_chanctx++;
+-
+-	if (num_chanctx > 1) {
+-		rcu_read_unlock();
+-		goto disconnect;
+-	}
+-	rcu_read_unlock();
+-
+ 	/* all checks done, now perform the channel switch. */
+ 	ibss_dbg(sdata,
+ 		 "received channel switch announcement to go to channel %d MHz\n",
+@@ -914,19 +880,9 @@ ieee80211_ibss_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 
+ 	params.block_tx = !!csa_ie.mode;
+ 
+-	ieee80211_ibss_csa_beacon(sdata, &params);
+-	sdata->csa_radar_required = params.radar_required;
+-
+-	if (params.block_tx)
+-		ieee80211_stop_queues_by_reason(&sdata->local->hw,
+-				IEEE80211_MAX_QUEUE_MAP,
+-				IEEE80211_QUEUE_STOP_REASON_CSA);
+-
+-	sdata->local->csa_chandef = params.chandef;
+-	sdata->vif.csa_active = true;
+-
+-	ieee80211_bss_info_change_notify(sdata, err);
+-	drv_channel_switch_beacon(sdata, &params.chandef);
++	if (ieee80211_channel_switch(sdata->local->hw.wiphy, sdata->dev,
++				     &params))
++		goto disconnect;
+ 
+ 	ieee80211_ibss_csa_mark_radar(sdata);
+ 
+@@ -962,7 +918,8 @@ ieee80211_rx_mgmt_spectrum_mgmt(struct ieee80211_sub_if_data *sdata,
+ 	if (len < required_len)
+ 		return;
+ 
+-	ieee80211_ibss_process_chanswitch(sdata, elems, false);
++	if (!sdata->vif.csa_active)
++		ieee80211_ibss_process_chanswitch(sdata, elems, false);
+ }
+ 
+ static void ieee80211_rx_mgmt_deauth_ibss(struct ieee80211_sub_if_data *sdata,
+@@ -1143,7 +1100,8 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+ 		goto put_bss;
+ 
+ 	/* process channel switch */
+-	if (ieee80211_ibss_process_chanswitch(sdata, elems, true))
++	if (sdata->vif.csa_active ||
++	    ieee80211_ibss_process_chanswitch(sdata, elems, true))
+ 		goto put_bss;
+ 
+ 	/* same BSSID */
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 4aea4e7..f4af05d 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1415,6 +1415,8 @@ void ieee80211_handle_roc_started(struct ieee80211_roc_work *roc);
+ 
+ /* channel switch handling */
+ void ieee80211_csa_finalize_work(struct work_struct *work);
++int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
++			     struct cfg80211_csa_settings *params);
+ 
+ /* interface handling */
+ int ieee80211_iface_init(void);
+-- 
+1.8.4.rc3
 
