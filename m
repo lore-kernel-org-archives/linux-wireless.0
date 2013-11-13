@@ -1,188 +1,294 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f179.google.com ([209.85.215.179]:65367 "EHLO
-	mail-ea0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755410Ab3KYNKY (ORCPT
+Received: from mail-pb0-f54.google.com ([209.85.160.54]:39858 "EHLO
+	mail-pb0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758726Ab3KMHmT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Nov 2013 08:10:24 -0500
-Received: by mail-ea0-f179.google.com with SMTP id r15so2347812ead.24
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Nov 2013 05:10:23 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 4/8] ath10k: decouple ath10k_pci_start_ce()
-Date: Mon, 25 Nov 2013 14:06:23 +0100
-Message-Id: <1385384787-12470-5-git-send-email-michal.kazior@tieto.com> (sfid-20131125_141050_109036_E362CF62)
-In-Reply-To: <1385384787-12470-1-git-send-email-michal.kazior@tieto.com>
-References: <1385125518-13461-1-git-send-email-michal.kazior@tieto.com>
- <1385384787-12470-1-git-send-email-michal.kazior@tieto.com>
+	Wed, 13 Nov 2013 02:42:19 -0500
+Received: by mail-pb0-f54.google.com with SMTP id ro12so34353pbb.27
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Nov 2013 23:42:18 -0800 (PST)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	devel@lists.open80211s.org, distro11s@cozybit.com,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] mac80211: use put_unaligned_le in mesh when necessary
+Date: Wed, 13 Nov 2013 15:39:12 +0800
+Message-Id: <1384328352-24552-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20131113_084228_325322_045AA267)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function did a couple of things: it allocated
-CE completions, registered CE callbacks and
-enabled CE interrupts through HW registers.
+Use put_unaligned_le16 and put_unaligned_le32 for
+mesh_path_error_tx and mesh_path_sel_frame_tx.
 
-This cannot be so. Split the function into one
-that allocates CE completions and the other one
-that starts off CE operation.
-
-This is required for future legacy shared
-interrupt handling.
-
-This also fixes possible memory leak if post rx
-failed.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/pci.c | 75 +++++++++++++++++++++++++----------
- 1 file changed, 54 insertions(+), 21 deletions(-)
+ net/mac80211/mesh.h         |    4 +-
+ net/mac80211/mesh_hwmp.c    |   87 ++++++++++++++++++-------------------------
+ net/mac80211/mesh_pathtbl.c |    7 ++--
+ net/mac80211/rx.c           |    5 ++-
+ 4 files changed, 45 insertions(+), 58 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 327afbc..05e6f8b 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -62,6 +62,7 @@ static void ath10k_pci_free_irq(struct ath10k *ar);
- static int ath10k_pci_bmi_wait(struct ath10k_ce_pipe *tx_pipe,
- 			       struct ath10k_ce_pipe *rx_pipe,
- 			       struct bmi_xfer *xfer);
-+static void ath10k_pci_cleanup_ce(struct ath10k *ar);
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index 3f867e5..f39a19f 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -301,8 +301,8 @@ void mesh_mpath_table_grow(void);
+ void mesh_mpp_table_grow(void);
+ /* Mesh paths */
+ int mesh_path_error_tx(struct ieee80211_sub_if_data *sdata,
+-		       u8 ttl, const u8 *target, __le32 target_sn,
+-		       __le16 target_rcode, const u8 *ra);
++		       u8 ttl, const u8 *target, u32 target_sn,
++		       u16 target_rcode, const u8 *ra);
+ void mesh_path_assign_nexthop(struct mesh_path *mpath, struct sta_info *sta);
+ void mesh_path_flush_pending(struct mesh_path *mpath);
+ void mesh_path_tx_pending(struct mesh_path *mpath);
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index 56e0c07..f951468 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -102,12 +102,11 @@ enum mpath_frame_type {
+ static const u8 broadcast_addr[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
  
- static const struct ce_attr host_ce_config_wlan[] = {
- 	/* CE0: host->target HTC control and raw streams */
-@@ -824,14 +825,13 @@ static void ath10k_pci_hif_set_callbacks(struct ath10k *ar,
- 	       sizeof(ar_pci->msg_callbacks_current));
- }
- 
--static int ath10k_pci_start_ce(struct ath10k *ar)
-+static int ath10k_pci_alloc_compl(struct ath10k *ar)
+ static int mesh_path_sel_frame_tx(enum mpath_frame_type action, u8 flags,
+-				  const u8 *orig_addr, __le32 orig_sn,
++				  const u8 *orig_addr, u32 orig_sn,
+ 				  u8 target_flags, const u8 *target,
+-				  __le32 target_sn, const u8 *da,
++				  u32 target_sn, const u8 *da,
+ 				  u8 hop_count, u8 ttl,
+-				  __le32 lifetime, __le32 metric,
+-				  __le32 preq_id,
++				  u32 lifetime, u32 metric, u32 preq_id,
+ 				  struct ieee80211_sub_if_data *sdata)
  {
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
--	struct ath10k_ce_pipe *ce_diag = ar_pci->ce_diag;
- 	const struct ce_attr *attr;
- 	struct ath10k_pci_pipe *pipe_info;
- 	struct ath10k_pci_compl *compl;
--	int i, pipe_num, completions, disable_interrupts;
-+	int i, pipe_num, completions;
- 
- 	spin_lock_init(&ar_pci->compl_lock);
- 	INIT_LIST_HEAD(&ar_pci->compl_process);
-@@ -843,34 +843,23 @@ static int ath10k_pci_start_ce(struct ath10k *ar)
- 		INIT_LIST_HEAD(&pipe_info->compl_free);
- 
- 		/* Handle Diagnostic CE specially */
--		if (pipe_info->ce_hdl == ce_diag)
-+		if (pipe_info->ce_hdl == ar_pci->ce_diag)
- 			continue;
- 
- 		attr = &host_ce_config_wlan[pipe_num];
- 		completions = 0;
- 
--		if (attr->src_nentries) {
--			disable_interrupts = attr->flags & CE_ATTR_DIS_INTR;
--			ath10k_ce_send_cb_register(pipe_info->ce_hdl,
--						   ath10k_pci_ce_send_done,
--						   disable_interrupts);
-+		if (attr->src_nentries)
- 			completions += attr->src_nentries;
--		}
- 
--		if (attr->dest_nentries) {
--			ath10k_ce_recv_cb_register(pipe_info->ce_hdl,
--						   ath10k_pci_ce_recv_data);
-+		if (attr->dest_nentries)
- 			completions += attr->dest_nentries;
--		}
--
--		if (completions == 0)
--			continue;
- 
- 		for (i = 0; i < completions; i++) {
- 			compl = kmalloc(sizeof(*compl), GFP_KERNEL);
- 			if (!compl) {
- 				ath10k_warn("No memory for completion state\n");
--				ath10k_pci_stop_ce(ar);
-+				ath10k_pci_cleanup_ce(ar);
- 				return -ENOMEM;
- 			}
- 
-@@ -882,6 +871,37 @@ static int ath10k_pci_start_ce(struct ath10k *ar)
- 	return 0;
- }
- 
-+static int ath10k_pci_setup_ce_irq(struct ath10k *ar)
-+{
-+	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
-+	const struct ce_attr *attr;
-+	struct ath10k_pci_pipe *pipe_info;
-+	int pipe_num, disable_interrupts;
-+
-+	for (pipe_num = 0; pipe_num < CE_COUNT; pipe_num++) {
-+		pipe_info = &ar_pci->pipe_info[pipe_num];
-+
-+		/* Handle Diagnostic CE specially */
-+		if (pipe_info->ce_hdl == ar_pci->ce_diag)
-+			continue;
-+
-+		attr = &host_ce_config_wlan[pipe_num];
-+
-+		if (attr->src_nentries) {
-+			disable_interrupts = attr->flags & CE_ATTR_DIS_INTR;
-+			ath10k_ce_send_cb_register(pipe_info->ce_hdl,
-+						   ath10k_pci_ce_send_done,
-+						   disable_interrupts);
-+		}
-+
-+		if (attr->dest_nentries)
-+			ath10k_ce_recv_cb_register(pipe_info->ce_hdl,
-+						   ath10k_pci_ce_recv_data);
-+	}
-+
-+	return 0;
-+}
-+
- static void ath10k_pci_kill_tasklet(struct ath10k *ar)
- {
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
-@@ -1210,22 +1230,35 @@ static int ath10k_pci_hif_start(struct ath10k *ar)
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	int ret;
- 
--	ret = ath10k_pci_start_ce(ar);
-+	ret = ath10k_pci_alloc_compl(ar);
- 	if (ret) {
--		ath10k_warn("failed to start CE: %d\n", ret);
-+		ath10k_warn("failed to allocate CE completions: %d\n", ret);
- 		return ret;
+ 	struct ieee80211_local *local = sdata->local;
+@@ -167,33 +166,33 @@ static int mesh_path_sel_frame_tx(enum mpath_frame_type action, u8 flags,
+ 	if (action == MPATH_PREP) {
+ 		memcpy(pos, target, ETH_ALEN);
+ 		pos += ETH_ALEN;
+-		memcpy(pos, &target_sn, 4);
++		put_unaligned_le32(target_sn, pos);
+ 		pos += 4;
+ 	} else {
+ 		if (action == MPATH_PREQ) {
+-			memcpy(pos, &preq_id, 4);
++			put_unaligned_le32(preq_id, pos);
+ 			pos += 4;
+ 		}
+ 		memcpy(pos, orig_addr, ETH_ALEN);
+ 		pos += ETH_ALEN;
+-		memcpy(pos, &orig_sn, 4);
++		put_unaligned_le32(orig_sn, pos);
+ 		pos += 4;
+ 	}
+-	memcpy(pos, &lifetime, 4);	/* interval for RANN */
++	put_unaligned_le32(lifetime, pos); /* interval for RANN */
+ 	pos += 4;
+-	memcpy(pos, &metric, 4);
++	put_unaligned_le32(metric, pos);
+ 	pos += 4;
+ 	if (action == MPATH_PREQ) {
+ 		*pos++ = 1; /* destination count */
+ 		*pos++ = target_flags;
+ 		memcpy(pos, target, ETH_ALEN);
+ 		pos += ETH_ALEN;
+-		memcpy(pos, &target_sn, 4);
++		put_unaligned_le32(target_sn, pos);
+ 		pos += 4;
+ 	} else if (action == MPATH_PREP) {
+ 		memcpy(pos, orig_addr, ETH_ALEN);
+ 		pos += ETH_ALEN;
+-		memcpy(pos, &orig_sn, 4);
++		put_unaligned_le32(orig_sn, pos);
+ 		pos += 4;
  	}
  
-+	ret = ath10k_pci_setup_ce_irq(ar);
-+	if (ret) {
-+		ath10k_warn("failed to setup CE interrupts: %d\n", ret);
-+		goto err_free_compl;
-+	}
-+
- 	/* Post buffers once to start things off. */
- 	ret = ath10k_pci_post_rx(ar);
- 	if (ret) {
- 		ath10k_warn("failed to post RX buffers for all pipes: %d\n",
- 			    ret);
--		return ret;
-+		goto err_stop_ce;
+@@ -239,8 +238,8 @@ static void prepare_frame_for_deferred_tx(struct ieee80211_sub_if_data *sdata,
+  * frame directly but add it to the pending queue instead.
+  */
+ int mesh_path_error_tx(struct ieee80211_sub_if_data *sdata,
+-		       u8 ttl, const u8 *target, __le32 target_sn,
+-		       __le16 target_rcode, const u8 *ra)
++		       u8 ttl, const u8 *target, u32 target_sn,
++		       u16 target_rcode, const u8 *ra)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sk_buff *skb;
+@@ -293,9 +292,9 @@ int mesh_path_error_tx(struct ieee80211_sub_if_data *sdata,
+ 	pos++;
+ 	memcpy(pos, target, ETH_ALEN);
+ 	pos += ETH_ALEN;
+-	memcpy(pos, &target_sn, 4);
++	put_unaligned_le32(target_sn, pos);
+ 	pos += 4;
+-	memcpy(pos, &target_rcode, 2);
++	put_unaligned_le16(target_rcode, pos);
+ 
+ 	/* see note in function header */
+ 	prepare_frame_for_deferred_tx(sdata, skb);
+@@ -592,10 +591,9 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 		if (ttl != 0) {
+ 			mhwmp_dbg(sdata, "replying to the PREQ\n");
+ 			mesh_path_sel_frame_tx(MPATH_PREP, 0, orig_addr,
+-				cpu_to_le32(orig_sn), 0, target_addr,
+-				cpu_to_le32(target_sn), mgmt->sa, 0, ttl,
+-				cpu_to_le32(lifetime), cpu_to_le32(metric),
+-				0, sdata);
++					       orig_sn, 0, target_addr,
++					       target_sn, mgmt->sa, 0, ttl,
++					       lifetime, metric, 0, sdata);
+ 		} else {
+ 			ifmsh->mshstats.dropped_frames_ttl++;
+ 		}
+@@ -625,11 +623,9 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 		}
+ 
+ 		mesh_path_sel_frame_tx(MPATH_PREQ, flags, orig_addr,
+-				cpu_to_le32(orig_sn), target_flags, target_addr,
+-				cpu_to_le32(target_sn), da,
+-				hopcount, ttl, cpu_to_le32(lifetime),
+-				cpu_to_le32(metric), cpu_to_le32(preq_id),
+-				sdata);
++				       orig_sn, target_flags, target_addr,
++				       target_sn, da, hopcount, ttl, lifetime,
++				       metric, preq_id, sdata);
+ 		if (!is_multicast_ether_addr(da))
+ 			ifmsh->mshstats.fwded_unicast++;
+ 		else
+@@ -695,11 +691,9 @@ static void hwmp_prep_frame_process(struct ieee80211_sub_if_data *sdata,
+ 	target_sn = PREP_IE_TARGET_SN(prep_elem);
+ 	orig_sn = PREP_IE_ORIG_SN(prep_elem);
+ 
+-	mesh_path_sel_frame_tx(MPATH_PREP, flags, orig_addr,
+-		cpu_to_le32(orig_sn), 0, target_addr,
+-		cpu_to_le32(target_sn), next_hop, hopcount,
+-		ttl, cpu_to_le32(lifetime), cpu_to_le32(metric),
+-		0, sdata);
++	mesh_path_sel_frame_tx(MPATH_PREP, flags, orig_addr, orig_sn, 0,
++			       target_addr, target_sn, next_hop, hopcount,
++			       ttl, lifetime, metric, 0, sdata);
+ 	rcu_read_unlock();
+ 
+ 	sdata->u.mesh.mshstats.fwded_unicast++;
+@@ -750,8 +744,7 @@ static void hwmp_perr_frame_process(struct ieee80211_sub_if_data *sdata,
+ 			if (!ifmsh->mshcfg.dot11MeshForwarding)
+ 				goto endperr;
+ 			mesh_path_error_tx(sdata, ttl, target_addr,
+-					   cpu_to_le32(target_sn),
+-					   cpu_to_le16(target_rcode),
++					   target_sn, target_rcode,
+ 					   broadcast_addr);
+ 		} else
+ 			spin_unlock_bh(&mpath->state_lock);
+@@ -847,11 +840,9 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
+ 
+ 	if (ifmsh->mshcfg.dot11MeshForwarding) {
+ 		mesh_path_sel_frame_tx(MPATH_RANN, flags, orig_addr,
+-				       cpu_to_le32(orig_sn),
+-				       0, NULL, 0, broadcast_addr,
+-				       hopcount, ttl, cpu_to_le32(interval),
+-				       cpu_to_le32(metric + metric_txsta),
+-				       0, sdata);
++				       orig_sn, 0, NULL, 0, broadcast_addr,
++				       hopcount, ttl, interval,
++				       metric + metric_txsta, 0, sdata);
  	}
  
- 	ar_pci->started = 1;
- 	return 0;
-+
-+err_stop_ce:
-+	ath10k_pci_stop_ce(ar);
-+	ath10k_pci_process_ce(ar);
-+err_free_compl:
-+	ath10k_pci_cleanup_ce(ar);
-+	return ret;
- }
+ 	rcu_read_unlock();
+@@ -1049,11 +1040,9 @@ void mesh_path_start_discovery(struct ieee80211_sub_if_data *sdata)
  
- static void ath10k_pci_rx_pipe_cleanup(struct ath10k_pci_pipe *pipe_info)
+ 	spin_unlock_bh(&mpath->state_lock);
+ 	da = (mpath->is_root) ? mpath->rann_snd_addr : broadcast_addr;
+-	mesh_path_sel_frame_tx(MPATH_PREQ, 0, sdata->vif.addr,
+-			cpu_to_le32(ifmsh->sn), target_flags, mpath->dst,
+-			cpu_to_le32(mpath->sn), da, 0,
+-			ttl, cpu_to_le32(lifetime), 0,
+-			cpu_to_le32(ifmsh->preq_id++), sdata);
++	mesh_path_sel_frame_tx(MPATH_PREQ, 0, sdata->vif.addr, ifmsh->sn,
++			       target_flags, mpath->dst, mpath->sn, da, 0,
++			       ttl, lifetime, 0, ifmsh->preq_id++, sdata);
+ 	mod_timer(&mpath->timer, jiffies + mpath->discovery_timeout);
+ 
+ enddiscovery:
+@@ -1212,10 +1201,9 @@ void mesh_path_tx_root_frame(struct ieee80211_sub_if_data *sdata)
+ 	switch (ifmsh->mshcfg.dot11MeshHWMPRootMode) {
+ 	case IEEE80211_PROACTIVE_RANN:
+ 		mesh_path_sel_frame_tx(MPATH_RANN, flags, sdata->vif.addr,
+-			       cpu_to_le32(++ifmsh->sn),
+-			       0, NULL, 0, broadcast_addr,
+-			       0, ifmsh->mshcfg.element_ttl,
+-			       cpu_to_le32(interval), 0, 0, sdata);
++				       ++ifmsh->sn, 0, NULL, 0, broadcast_addr,
++				       0, ifmsh->mshcfg.element_ttl,
++				       interval, 0, 0, sdata);
+ 		break;
+ 	case IEEE80211_PROACTIVE_PREQ_WITH_PREP:
+ 		flags |= IEEE80211_PREQ_PROACTIVE_PREP_FLAG;
+@@ -1224,11 +1212,10 @@ void mesh_path_tx_root_frame(struct ieee80211_sub_if_data *sdata)
+ 		target_flags |= IEEE80211_PREQ_TO_FLAG |
+ 				IEEE80211_PREQ_USN_FLAG;
+ 		mesh_path_sel_frame_tx(MPATH_PREQ, flags, sdata->vif.addr,
+-				cpu_to_le32(++ifmsh->sn), target_flags,
+-				(u8 *) broadcast_addr, 0, broadcast_addr,
+-				0, ifmsh->mshcfg.element_ttl,
+-				cpu_to_le32(interval),
+-				0, cpu_to_le32(ifmsh->preq_id++), sdata);
++				       ++ifmsh->sn, target_flags,
++				       (u8 *) broadcast_addr, 0, broadcast_addr,
++				       0, ifmsh->mshcfg.element_ttl, interval,
++				       0, ifmsh->preq_id++, sdata);
+ 		break;
+ 	default:
+ 		mhwmp_dbg(sdata, "Proactive mechanism not supported\n");
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index 89aacfd..7d050ed 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -722,7 +722,6 @@ void mesh_plink_broken(struct sta_info *sta)
+ 	struct mpath_node *node;
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
+ 	int i;
+-	__le16 reason = cpu_to_le16(WLAN_REASON_MESH_PATH_DEST_UNREACHABLE);
+ 
+ 	rcu_read_lock();
+ 	tbl = rcu_dereference(mesh_paths);
+@@ -736,9 +735,9 @@ void mesh_plink_broken(struct sta_info *sta)
+ 			++mpath->sn;
+ 			spin_unlock_bh(&mpath->state_lock);
+ 			mesh_path_error_tx(sdata,
+-					   sdata->u.mesh.mshcfg.element_ttl,
+-					   mpath->dst, cpu_to_le32(mpath->sn),
+-					   reason, bcast);
++				sdata->u.mesh.mshcfg.element_ttl,
++				mpath->dst, mpath->sn,
++				WLAN_REASON_MESH_PATH_DEST_UNREACHABLE, bcast);
+ 		}
+ 	}
+ 	rcu_read_unlock();
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index bbd63b9..5638782 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2081,7 +2081,6 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
+ 	struct ieee80211_sub_if_data *sdata = rx->sdata;
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+ 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+-	__le16 reason = cpu_to_le16(WLAN_REASON_MESH_PATH_NOFORWARD);
+ 	u16 q, hdrlen;
+ 
+ 	hdr = (struct ieee80211_hdr *) skb->data;
+@@ -2189,7 +2188,9 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
+ 	} else {
+ 		/* unable to resolve next hop */
+ 		mesh_path_error_tx(sdata, ifmsh->mshcfg.element_ttl,
+-				   fwd_hdr->addr3, 0, reason, fwd_hdr->addr2);
++				   fwd_hdr->addr3, 0,
++				   WLAN_REASON_MESH_PATH_NOFORWARD,
++				   fwd_hdr->addr2);
+ 		IEEE80211_IFSTA_MESH_CTR_INC(ifmsh, dropped_frames_no_route);
+ 		kfree_skb(fwd_skb);
+ 		return RX_DROP_MONITOR;
 -- 
-1.8.4.rc3
+1.7.9.5
 
