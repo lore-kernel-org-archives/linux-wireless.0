@@ -1,58 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f43.google.com ([209.85.214.43]:53815 "EHLO
-	mail-bk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758798Ab3KMJhM (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:45204 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756640Ab3KMSSk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Nov 2013 04:37:12 -0500
-Received: by mail-bk0-f43.google.com with SMTP id mz13so190758bkb.2
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Nov 2013 01:37:11 -0800 (PST)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH] cfg80211: fix regulatory flags kdoc
-Date: Wed, 13 Nov 2013 10:37:08 +0100
-Message-Id: <1384335428-24112-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20131113_103717_404275_82645B47)
+	Wed, 13 Nov 2013 13:18:40 -0500
+Message-ID: <1384366716.14578.13.camel@jlt4.sipsolutions.net> (sfid-20131113_191843_686838_5BC6A4E8)
+Subject: Re: RFC:  Add precise timing to wifi association messages?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 13 Nov 2013 19:18:36 +0100
+In-Reply-To: <5283BE63.8090801@candelatech.com> (sfid-20131113_190112_830842_FCA007A3)
+References: <5283BDB6.5020700@candelatech.com>
+	 <5283BE63.8090801@candelatech.com> (sfid-20131113_190112_830842_FCA007A3)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove the _FLAG prefix as it was not used.
+On Wed, 2013-11-13 at 10:01 -0800, Ben Greear wrote:
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- include/net/regulatory.h | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+> I chose a poor example here...my intention is to just add timers to existing
+> messages...
 
-diff --git a/include/net/regulatory.h b/include/net/regulatory.h
-index 7e98e5a..7e49cf6 100644
---- a/include/net/regulatory.h
-+++ b/include/net/regulatory.h
-@@ -89,14 +89,14 @@ struct regulatory_request {
- /**
-  * enum ieee80211_regulatory_flags - device regulatory flags
-  *
-- * @REGULATORY_FLAG_CUSTOM_REG: tells us the driver for this device
-+ * @REGULATORY_CUSTOM_REG: tells us the driver for this device
-  * 	has its own custom regulatory domain and cannot identify the
-  * 	ISO / IEC 3166 alpha2 it belongs to. When this is enabled
-  * 	we will disregard the first regulatory hint (when the
-  * 	initiator is %REGDOM_SET_BY_CORE). Drivers that use
-  * 	wiphy_apply_custom_regulatory() should have this flag set
-  * 	or the regulatory core will set it for the wiphy.
-- * @REGULATORY_FLAG_STRICT_REG: tells us that the wiphy for this device
-+ * @REGULATORY_STRICT_REG: tells us that the wiphy for this device
-  *	has regulatory domain that it wishes to be considered as the
-  *	superset for regulatory rules. After this device gets its regulatory
-  *	domain programmed further regulatory hints shall only be considered
-@@ -112,7 +112,7 @@ struct regulatory_request {
-  *	will have their wiphy->regd programmed once the regulatory
-  *	domain is set, and all other regulatory hints will be ignored
-  *	until their own regulatory domain gets programmed.
-- * @REGULATORY_FLAG_DISABLE_BEACON_HINTS: enable this if your driver needs to
-+ * @REGULATORY_DISABLE_BEACON_HINTS: enable this if your driver needs to
-  *	ensure that passive scan flags and beaconing flags may not be lifted by
-  *	cfg80211 due to regulatory beacon hints. For more information on beacon
-  *	hints read the documenation for regulatory_hint_found_beacon()
--- 
-1.8.4.rc3
+What does this do that printk timestamps don't?
+
+johannes
 
