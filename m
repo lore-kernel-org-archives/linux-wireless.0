@@ -1,73 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f46.google.com ([74.125.82.46]:62373 "EHLO
-	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754013Ab3KTQT5 (ORCPT
+Received: from mail-wg0-f54.google.com ([74.125.82.54]:53569 "EHLO
+	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758918Ab3KMRyP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Nov 2013 11:19:57 -0500
-Received: by mail-wg0-f46.google.com with SMTP id x12so9186471wgg.13
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Nov 2013 08:19:56 -0800 (PST)
-Date: Wed, 20 Nov 2013 17:19:22 +0100
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: use capped prob when computing throughputs
-Message-ID: <20131120161922.GC9335@magnum.frso.rivierawaves.com> (sfid-20131120_172000_879085_E090BDE9)
-References: <1384908668-27869-1-git-send-email-karl.beldan@gmail.com>
- <528C6590.1000803@openwrt.org>
- <20131120135628.GA9335@magnum.frso.rivierawaves.com>
- <528CC172.1040402@openwrt.org>
- <20131120145035.GB9335@magnum.frso.rivierawaves.com>
- <528CDA23.9090303@openwrt.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <528CDA23.9090303@openwrt.org>
+	Wed, 13 Nov 2013 12:54:15 -0500
+Received: by mail-wg0-f54.google.com with SMTP id y10so794957wgg.9
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Nov 2013 09:54:14 -0800 (PST)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 2/5] cfg80211: intersection dfs regions when intersecting regdomains
+Date: Wed, 13 Nov 2013 18:54:03 +0100
+Message-Id: <1384365246-24768-3-git-send-email-mcgrof@do-not-panic.com> (sfid-20131113_185418_655800_2CBA22E2)
+In-Reply-To: <1384365246-24768-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1384365246-24768-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 20, 2013 at 04:49:55PM +0100, Felix Fietkau wrote:
-> On 2013-11-20 15:50, Karl Beldan wrote:
-> > On Wed, Nov 20, 2013 at 03:04:34PM +0100, Felix Fietkau wrote:
-> >> On 2013-11-20 14:56, Karl Beldan wrote:
-> >> > On Wed, Nov 20, 2013 at 08:32:32AM +0100, Felix Fietkau wrote:
-> >> >> On 2013-11-20 01:51, Karl Beldan wrote:
-> >> >> > From: Karl Beldan <karl.beldan@rivierawaves.com>
-> >> >> > 
-> >> >> > Commit 3e8b1eb "mac80211/minstrel_ht: improve rate selection stability"
-> >> >> > introduced a local capped prob in minstrel_ht_calc_tp but omitted to use
-> >> >> > it to compute the rate throughput.
-> >> >> > 
-> >> >> > Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
-> >> >> > CC: Felix Fietkau <nbd@openwrt.org>
-> >> >> Nice catch!
-> >> >> Acked-by: Felix Fietkau <nbd@openwrt.org>
-> >> >> 
-> >> > Interestingly enough, consecutive coding rates (5/6, 3/4, 2/3) max ratio
-> >> > is 9/10, did you do it on purpose ?  (e.g. (9/10) * (5/6) == 3/4,
-> >> > (9/10) * (3/4) == 2/3 + 11/120).
-> >> The change has nothing to do with coding rates, it's only about
-> >> retransmissions caused by collisions under load.
-> >> 
-> > I understand this, my point was that along with this comes the following:
-> > let's say my SNR is just not so good to get 5/6 as good as 3/4, and e.g.
-> > case1 htMCS7 has  91% 
-> >       htMCS6 has 100% success 
-> > case2 htMCS7 has  80% 
-> >       htMCS6 has 100% success 
-> > capping at 90% will prefer htMCS7 in case1 and htMCS6 in case2 both
-> > achieving best real throughput.
-> > capping at 80% will prefer htMCS7 in case1 _but_ htMCS7 in case2 the
-> > latter being the worst real throughput(90% of 5/6 == 100% of 3/4 > 80%
-> > of 5/6).
-> Not sure if that's a meaningful comparison at all - you're leaving out
-> the per-packet overhead, which is important for the throughput
-> calculation as well.
-> 
-The overhead breaks these numbers but the more we aggregate the more
-this math is realistic as then the rates converge to these numbers ..
-plus, IMHO using the overhead for throughput is wasteful since
-throughputs are ranked and used relatively to each others and overhead
-is shared by all rates.
+Only allow DFS to be set if the DFS regions agree.
 
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ net/wireless/reg.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 2796b62..068cb40 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -571,6 +571,20 @@ static bool freq_in_rule_band(const struct ieee80211_freq_range *freq_range,
+ }
  
-Karl
+ /*
++ * Later on we can perhaps use the more restrictive DFS
++ * region but we don't have information for that yet so
++ * for now simply disallow conflicts.
++ */
++static enum nl80211_dfs_regions
++reg_intersect_dfs_region(const enum nl80211_dfs_regions dfs_region1,
++			 const enum nl80211_dfs_regions dfs_region2)
++{
++	if (dfs_region1 != dfs_region2)
++		return NL80211_DFS_UNSET;
++	return dfs_region1;
++}
++
++/*
+  * Helper for regdom_intersect(), this does the real
+  * mathematical intersection fun
+  */
+@@ -701,6 +715,8 @@ regdom_intersect(const struct ieee80211_regdomain *rd1,
+ 	rd->n_reg_rules = num_rules;
+ 	rd->alpha2[0] = '9';
+ 	rd->alpha2[1] = '8';
++	rd->dfs_region = reg_intersect_dfs_region(rd1->dfs_region,
++						  rd2->dfs_region);
+ 
+ 	return rd;
+ }
+-- 
+1.8.4.rc3
+
