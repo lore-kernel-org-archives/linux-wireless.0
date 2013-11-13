@@ -1,56 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:55755 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753819Ab3KNOA2 (ORCPT
+Received: from mail-ob0-f172.google.com ([209.85.214.172]:52873 "EHLO
+	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751375Ab3KMFE0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Nov 2013 09:00:28 -0500
-Received: by mail-pa0-f54.google.com with SMTP id lj1so2125365pab.41
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Nov 2013 06:00:27 -0800 (PST)
-Date: Thu, 14 Nov 2013 06:11:07 -0800
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: janusz.dziedzic@tieto.com, j@w1.fi, sunitb@qca.qualcomm.com,
-	rsunki@qca.qualcomm.com, linux-wireless@vger.kernel.org
-Subject: Re: [RFC 3/5] cfg80211: add regulatory quiescing support
-Message-ID: <20131114141105.GB19070@garbanzo.do-not-panic.com> (sfid-20131114_150032_488250_4C2F3D0A)
-References: <1384366379-25301-1-git-send-email-mcgrof@do-not-panic.com>
- <1384366379-25301-4-git-send-email-mcgrof@do-not-panic.com>
- <1384377738.28806.15.camel@jlt4.sipsolutions.net>
+	Wed, 13 Nov 2013 00:04:26 -0500
+Received: by mail-ob0-f172.google.com with SMTP id wm4so7148023obc.31
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Nov 2013 21:04:25 -0800 (PST)
+Message-ID: <52830858.80907@lwfinger.net> (sfid-20131113_060428_972280_2C1E943B)
+Date: Tue, 12 Nov 2013 23:04:24 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1384377738.28806.15.camel@jlt4.sipsolutions.net>
+To: Alexandre Demers <alexandre.f.demers@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] staging r8712u: Remove useless netdev_info slowly polluting
+ dmesg
+References: <1384318582-10486-1-git-send-email-alexandre.f.demers@gmail.com>
+In-Reply-To: <1384318582-10486-1-git-send-email-alexandre.f.demers@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 13, 2013 at 10:22:18PM +0100, Johannes Berg wrote:
-> On Wed, 2013-11-13 at 19:12 +0100, Luis R. Rodriguez wrote:
-> > This quiesces devices when appropriate to ensure that
-> > regulatory domain updates take effect and avoid having
-> > devices initiate radiation when they should not.
-> 
-> I'm not really sure this makes sense.
-> 
-> If we're staying connected, how can we be moving far enough to go
-> through regulatory domains to have totally different rules?
+On 11/12/2013 10:56 PM, Alexandre Demers wrote:
+> Remove useless netdev_info slowly flooding dmesg.
+> Fixes bug https://bugzilla.kernel.org/show_bug.cgi?id=64231
+>
+> Signed-off-by: Alexandre Demers <alexandre.f.demers@gmail.com>
+> ---
+>   drivers/staging/rtl8712/rtl871x_mlme.c | 3 ---
+>   1 file changed, 3 deletions(-)
+>
+> diff --git a/drivers/staging/rtl8712/rtl871x_mlme.c b/drivers/staging/rtl8712/rtl871x_mlme.c
+> index 6596154..7e29f48 100644
+> --- a/drivers/staging/rtl8712/rtl871x_mlme.c
+> +++ b/drivers/staging/rtl8712/rtl871x_mlme.c
+> @@ -1043,9 +1043,6 @@ void r8712_got_addbareq_event_callback(struct _adapter *adapter, u8 *pbuf)
+>   	struct	sta_priv *pstapriv = &adapter->stapriv;
+>   	struct	recv_reorder_ctrl *precvreorder_ctrl = NULL;
+>
+> -	netdev_info(adapter->pnetdev, "%s: mac = %pM, seq = %d, tid = %d\n",
+> -		    __func__, pAddbareq_pram->MacAddress,
+> -	    pAddbareq_pram->StartSeqNum, pAddbareq_pram->tid);
+>   	psta = r8712_get_stainfo(pstapriv, pAddbareq_pram->MacAddress);
+>   	if (psta) {
+>   		precvreorder_ctrl =
+>
 
-Don't think of what makes sense, think of the corner cases that
-could happen here, such as plugging in a card that disagrees
-with regulatory settings, and creates a conflict on DFS regions.
-One example might be someone plugging in a USB 802.11 card programmed
-for JP in say a FR 802.11 AP, assuming the AP had the USB 802.11
-driver. Another example may be if a user provides an input with
-say 'iw reg set JP' on a FR AP. In such cases we want to stop IR,
-even if the user was dumb, we'd be respecting the regulatory settings,
-as silly as they may be.
+Congratulations. That one applied.
 
-Another more resonable case may be one AP creating a secondary
-wdev as a STA, consider a P2P GO, with a P2P STA on another channel
-and lets assume the P2P GO is misprogrammed for JP but the STA
-wdev picks up association with an AP from FR.
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-> (Also, probably best to squash patches 2 and 3, 2 is pointless by itself
-> and the code move is obvious with this patch)
+Larry
 
-OK.
-
-  Luis
