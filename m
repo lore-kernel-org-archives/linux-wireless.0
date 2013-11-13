@@ -1,43 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f181.google.com ([209.85.223.181]:50752 "EHLO
-	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756037Ab3KME4Z (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:45255 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756000Ab3KMScP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Nov 2013 23:56:25 -0500
-Received: by mail-ie0-f181.google.com with SMTP id tp5so4725178ieb.40
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Nov 2013 20:56:24 -0800 (PST)
-From: Alexandre Demers <alexandre.f.demers@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] staging r8712u: Remove useless netdev_info slowly polluting dmesg
-Date: Tue, 12 Nov 2013 23:56:22 -0500
-Message-Id: <1384318582-10486-1-git-send-email-alexandre.f.demers@gmail.com> (sfid-20131113_055628_435758_C5946432)
+	Wed, 13 Nov 2013 13:32:15 -0500
+Message-ID: <1384367532.14578.23.camel@jlt4.sipsolutions.net> (sfid-20131113_193218_696769_5BE4CD9E)
+Subject: Re: RFC:  Add precise timing to wifi association messages?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 13 Nov 2013 19:32:12 +0100
+In-Reply-To: <5283C3F7.4090700@candelatech.com>
+References: <5283BDB6.5020700@candelatech.com>
+	  <5283BE63.8090801@candelatech.com>
+	 (sfid-20131113_190112_830842_FCA007A3) <1384366716.14578.13.camel@jlt4.sipsolutions.net>
+	 <5283C3F7.4090700@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove useless netdev_info slowly flooding dmesg.
-Fixes bug https://bugzilla.kernel.org/show_bug.cgi?id=64231
+On Wed, 2013-11-13 at 10:24 -0800, Ben Greear wrote:
+> On 11/13/2013 10:18 AM, Johannes Berg wrote:
+> > On Wed, 2013-11-13 at 10:01 -0800, Ben Greear wrote:
+> > 
+> >> I chose a poor example here...my intention is to just add timers to existing
+> >> messages...
+> > 
+> > What does this do that printk timestamps don't?
+> 
+> Sub-second precision, and the same in 'dmesg' output.
+> 
+> There may be a way to get /var/log/messages to show sub-second
+> precision, but at least it is not enabled by default on the systems
+> I use.  dmesg has no timestamps at all from what I can tell.
 
-Signed-off-by: Alexandre Demers <alexandre.f.demers@gmail.com>
----
- drivers/staging/rtl8712/rtl871x_mlme.c | 3 ---
- 1 file changed, 3 deletions(-)
+Err. Just set CONFIG_PRINTK_TIME in your kernel.
 
-diff --git a/drivers/staging/rtl8712/rtl871x_mlme.c b/drivers/staging/rtl8712/rtl871x_mlme.c
-index 6596154..7e29f48 100644
---- a/drivers/staging/rtl8712/rtl871x_mlme.c
-+++ b/drivers/staging/rtl8712/rtl871x_mlme.c
-@@ -1043,9 +1043,6 @@ void r8712_got_addbareq_event_callback(struct _adapter *adapter, u8 *pbuf)
- 	struct	sta_priv *pstapriv = &adapter->stapriv;
- 	struct	recv_reorder_ctrl *precvreorder_ctrl = NULL;
- 
--	netdev_info(adapter->pnetdev, "%s: mac = %pM, seq = %d, tid = %d\n",
--		    __func__, pAddbareq_pram->MacAddress,
--	    pAddbareq_pram->StartSeqNum, pAddbareq_pram->tid);
- 	psta = r8712_get_stainfo(pstapriv, pAddbareq_pram->MacAddress);
- 	if (psta) {
- 		precvreorder_ctrl =
--- 
-1.8.4.2
+johannes
 
