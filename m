@@ -1,69 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f48.google.com ([74.125.83.48]:48982 "EHLO
-	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752946Ab3KHHEx (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:45806 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751034Ab3KMV2X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Nov 2013 02:04:53 -0500
-Received: by mail-ee0-f48.google.com with SMTP id d49so771438eek.21
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Nov 2013 23:04:51 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCHv2 10/13] ath10k: guard against CE corruption from firmware
-Date: Fri,  8 Nov 2013 08:01:32 +0100
-Message-Id: <1383894095-27998-11-git-send-email-michal.kazior@tieto.com> (sfid-20131108_080807_432999_0D4472A7)
-In-Reply-To: <1383894095-27998-1-git-send-email-michal.kazior@tieto.com>
-References: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com>
- <1383894095-27998-1-git-send-email-michal.kazior@tieto.com>
+	Wed, 13 Nov 2013 16:28:23 -0500
+Message-ID: <1384378096.28806.20.camel@jlt4.sipsolutions.net> (sfid-20131113_222826_421707_A2550DCD)
+Subject: Re: [RFC 4/5] cfg80211: add DFS region capability support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: janusz.dziedzic@tieto.com, j@w1.fi, sunitb@qca.qualcomm.com,
+	rsunki@qca.qualcomm.com, linux-wireless@vger.kernel.org
+Date: Wed, 13 Nov 2013 22:28:16 +0100
+In-Reply-To: <1384366379-25301-5-git-send-email-mcgrof@do-not-panic.com> (sfid-20131113_191313_686085_B462C7D9)
+References: <1384366379-25301-1-git-send-email-mcgrof@do-not-panic.com>
+	 <1384366379-25301-5-git-send-email-mcgrof@do-not-panic.com>
+	 (sfid-20131113_191313_686085_B462C7D9)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In case firmware crashes it may report CE
-completions for entries that were never
-submitted/filled with meaningful data. This in
-turn led to NULL dereferences.
+On Wed, 2013-11-13 at 19:12 +0100, Luis R. Rodriguez wrote:
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/htc.c | 5 +++++
- drivers/net/wireless/ath/ath10k/pci.c | 7 +++++++
- 2 files changed, 12 insertions(+)
+> +/**
+> + * wiphy_enable_dfs_region - enable a DFS region
+> + *
+> + * @wiphy: the wiphy to set the supported DFS regions for
+> + * @dfs_region: an DFS region specified by an &enum nl80211_dfs_regions
+> + * 	representing the DFS region to enable support on the wiphy for.
+> + *
+> + * This can be used to indicate to cfg80211 that the wiphy has DFS driver
+> + * support for the specified DFS region for modes of operation that require
+> + * DFS on the driver.
+> + */
+> +void wiphy_enable_dfs_region(struct wiphy *wiphy,
+> +			     enum nl80211_dfs_regions dfs_region);
 
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index 3118d75..6d7a72e 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -191,6 +191,11 @@ static int ath10k_htc_tx_completion_handler(struct ath10k *ar,
- 	struct ath10k_htc *htc = &ar->htc;
- 	struct ath10k_htc_ep *ep = &htc->endpoint[eid];
+What's the point of this function rather than the driver setting the
+region bits before registration?
+
+> +/**
+> + * wiphy_dfs_region_supported - checks if a DFS region is supported
+> + *
+> + * @wiphy: the wiphy to check the DFS region for
+> + * @dfs_region: the DFS region we want to check support for
+> + *
+> + * This can be used to query if the wiphy's a specific DFS region.
+> + * This should be checked before for initiating radiation on
+> + * DFS channels for modes of operation that require DFS on the driver.
+> + *
+> + * Return: true if the dfs_region is supported by the device, returns
+> + * false otherwise.
+> + */
+> +bool wiphy_dfs_region_supported(struct wiphy *wiphy,
+> +				enum nl80211_dfs_regions dfs_region);
+
+Where would this function be used outside of cfg80211?
+
+> +/**
+> + * wiphy_core_dfs_region_usable - checks if the current DFS region can be used
+> + *
+> + * @wiphy: the wiphy to check the DFS region against
+> + *
+> + * This can be used to query if the wiphy can use the currently set
+> + * DFS region on the regulatory core.
+> + *
+> + * Return: true if the core's dfs_region is supported and usable by the device,
+> + * returns false otherwise.
+> + */
+> +bool wiphy_core_dfs_region_usable(struct wiphy *wiphy);
+
+Ditto.
+
+> + *	IBSS network. Userspace is also required to verify that the currently
+> + *	programmed DFS region is supported by userspace and monitor it in case
+> + *	of changes.
+
+That seems like wishful thinking since userspace already exists for
+this.
+
+> + * @NL80211_ATTR_DFS_REGIONS: bitmask of all supported, tested, and
+> + * 	certified &enum nl80211_dfs_regions that a wiphy has been declared to
+> + *	support and that agrees with what is programmed currently on cfg80211.
+> + *	This is used for modes of operation that require DFS support on the
+> + *	driver. If %NL80211_ATTR_HANDLE_DFS is set userspace need not check
+> + *	for this for IBSS as it will support DFS in userspace for IBSS.
+
+???
+You're confusing me. What's the point of these patches then if userspace
+handles it?
+
+The way I read the patch description was that here you were advertising
+which pattern detectors a driver has - but that has nothing to do with
+how userspace handles DFS in IBSS.
+
+> +#define NL80211_ATTR_DFS_REGIONS NL80211_ATTR_DFS_REGIONS
+
+Not needed.
  
-+	if (!skb) {
-+		ath10k_warn("invalid sk_buff completion - NULL pointer. firmware crashed?\n");
-+		return 0;
-+	}
-+
- 	ath10k_htc_notify_tx_completion(ep, skb);
- 	/* the skb now belongs to the completion handler */
- 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index e41665f..0b89726 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1270,6 +1270,13 @@ static void ath10k_pci_tx_pipe_cleanup(struct ath10k_pci_pipe *pipe_info)
- 		 * Indicate the completion to higer layer to free
- 		 * the buffer
- 		 */
-+
-+		if (!netbuf) {
-+			ath10k_warn("invalid sk_buff on CE %d - NULL pointer. firmware crashed?\n",
-+				    ce_hdl->id);
-+			continue;
-+		}
-+
- 		ATH10K_SKB_CB(netbuf)->is_aborted = true;
- 		ar_pci->msg_callbacks_current.tx_completion(ar,
- 							    netbuf,
--- 
-1.8.4.rc3
+> +void wiphy_enable_dfs_region(struct wiphy *wiphy,
+> +			     enum nl80211_dfs_regions dfs_region)
+> +{
+> +	if (!config_enabled(CONFIG_CFG80211_CERTIFICATION_ONUS))
+> +		return;
+> +	if (!reg_supported_dfs_region(dfs_region))
+> +		return;
+
+Both of this is pointless, you can do it at build time.
+
+> +	wiphy->dfs_regions |= BIT(dfs_region);
+
+Just have the driver set this directly before registration and make
+*using* and *advertising* it conditional.
+
+johannes
 
