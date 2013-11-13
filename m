@@ -1,45 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58930 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750766Ab3K3TL0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Nov 2013 14:11:26 -0500
-Message-ID: <1385838681.2566.6.camel@adam.happyassassin.net> (sfid-20131130_201129_337869_592CD0D8)
-Subject: Support for Atheros chipset with SDIO ID 0271:0418 ?
-From: Adam Williamson <awilliam@redhat.com>
-To: linux-wireless@vger.kernel.org, ath6kl-devel@qualcomm.com
-Date: Sat, 30 Nov 2013 11:11:21 -0800
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail.candelatech.com ([208.74.158.172]:46723 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759407Ab3KMR6P (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Nov 2013 12:58:15 -0500
+Received: from [192.168.100.236] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id rADHwEnV016938
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Wed, 13 Nov 2013 09:58:14 -0800
+Message-ID: <5283BDB6.5020700@candelatech.com> (sfid-20131113_185828_317303_249B3536)
+Date: Wed, 13 Nov 2013 09:58:14 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RFC:  Add precise timing to wifi association messages?
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, folks - I hope this is the appropriate place, it's as close as I
-could manage to Google myself :) I recently bought a Dell Venue 8 Pro -
-a Bay Trail / Valley View-based Intel tablet - to try and get Fedora
-running on it. Among the many things I'm currently fighting :), the
-wireless doesn't work - no driver is loaded, no interface appears at
-all. Using the Device Manager in Windows 8 I've managed to identify it
-as being attached via SDIO and having the device ID 0271:0418 . It calls
-itself a "Dell Wireless 1538", but by the ID and various other details
-about the Windows driver it's clearly a Qualcomm/Atheros part.
+Any interest in a patch looking similar to that below for the
+5 or so messages related to association?  I found it useful for
+tracking down why it was taking longer than expected to roam
+to a new AP...
 
-So the ath6kl-sdio driver in the kernel advertises support for:
 
-alias:          sdio:c*v0271d0401*
-alias:          sdio:c*v0271d0400*
-alias:          sdio:c*v0271d0301*
-alias:          sdio:c*v0271d0300*
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index d2510c0..2e96813 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -908,6 +908,12 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
+                memcpy(pos, assoc_data->ie + offset, noffset - offset);
+        }
 
-Looks pretty close, but no cigar. I'm having trouble finding any more
-information on the chipset than what I've outlined above. It seems most
-likely that it's a variant of the AR6004 for Dell, but that's just my
-best guess.
++       {
++               struct timeval tv;
++               do_gettimeofday(&tv);
++               sdata_info(sdata, "send_assoc, calling prepare_tx at: %lu.%lu\n",
++                          tv.tv_sec, tv.tv_usec);
++       }
+        drv_mgd_prepare_tx(local, sdata);
 
-Is there any hope of getting support for this device in ath6kl or any
-other driver? Thanks!
+        IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
+
+
+Thanks,
+Ben
+
 -- 
-Adam Williamson
-Fedora QA Community Monkey
-IRC: adamw | Twitter: AdamW_Fedora | XMPP: adamw AT happyassassin . net
-http://www.happyassassin.net
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
