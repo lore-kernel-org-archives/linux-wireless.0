@@ -1,91 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3574 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751459Ab3KSJLT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Nov 2013 04:11:19 -0500
-Message-ID: <528B2B2A.2030504@broadcom.com> (sfid-20131119_101144_001049_B22891C1)
-Date: Tue, 19 Nov 2013 10:11:06 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-la0-f43.google.com ([209.85.215.43]:46497 "EHLO
+	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758677Ab3KMJt6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Nov 2013 04:49:58 -0500
+Received: by mail-la0-f43.google.com with SMTP id n7so134009lam.2
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Nov 2013 01:49:57 -0800 (PST)
 MIME-Version: 1.0
-To: "Borislav Petkov" <bp@alien8.de>
-cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	lkml <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] brcmsmac: Fix build dep on LEDS_CLASS
-References: <20131117133702.GA30840@pd.tnic>
- <5289359B.8090506@broadcom.com>
- <CACna6ryNX1=8zdYe2bjCj7aj3S_O=LnrxdjBcESvJJ63+h729Q@mail.gmail.com>
- <20131118133250.GH24851@pd.tnic> <20131118204003.GK24851@pd.tnic>
- <528A925C.20602@broadcom.com> <20131118233247.GM24851@pd.tnic>
-In-Reply-To: <20131118233247.GM24851@pd.tnic>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+In-Reply-To: <CAB=NE6U1PspNUKEfrO4sN2MtQy=YY=_jSm7eCwZtBX4ttp5zkw@mail.gmail.com>
+References: <1384261527-6253-1-git-send-email-janusz.dziedzic@tieto.com> <CAB=NE6U1PspNUKEfrO4sN2MtQy=YY=_jSm7eCwZtBX4ttp5zkw@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Wed, 13 Nov 2013 10:49:36 +0100
+Message-ID: <CAB=NE6VPvRu8OM6y0pLSbqCNoZmReUQzCRdWe-91=it-FJ7mSw@mail.gmail.com> (sfid-20131113_105002_242292_81E87C58)
+Subject: Re: [PATCH v2 1/3] cfg80211: DFS check dfs_region before CAC
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Martin Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/19/2013 12:32 AM, Borislav Petkov wrote:
-> On Mon, Nov 18, 2013 at 11:19:08PM +0100, Arend van Spriel wrote:
->> what about:
->>
->> config BRCMSMAC
->>          tristate "Broadcom IEEE802.11n PCIe SoftMAC WLAN driver"
->>          depends on MAC80211
->>          depends on BCMA_POSSIBLE
->> +	select LEDS_CLASS if BCMA_DRIVER_GPIO
->> 	select BCMA
->
-> I know, nice and short but too good to be true. LEDS_CLASS needs to pull
-> in NEW_LEDS unfortunately:
->
-> drivers/built-in.o: In function `set_brightness_delayed':
-> led-class.c:(.text+0x4596e5): undefined reference to `led_stop_software_blink'
-> drivers/built-in.o: In function `led_classdev_register':
-> (.text+0x4598db): undefined reference to `leds_list_lock'
-> drivers/built-in.o: In function `led_classdev_register':
-> (.text+0x4598e7): undefined reference to `leds_list'
-> drivers/built-in.o: In function `led_classdev_register':
-> (.text+0x4598f3): undefined reference to `leds_list'
-> drivers/built-in.o: In function `led_classdev_register':
-> (.text+0x4598fa): undefined reference to `leds_list_lock'
-> drivers/built-in.o: In function `led_classdev_register':
-> (.text+0x459901): undefined reference to `leds_list'
-> drivers/built-in.o: In function `led_classdev_unregister':
-> (.text+0x4599a8): undefined reference to `led_stop_software_blink'
-> drivers/built-in.o: In function `led_classdev_unregister':
-> (.text+0x4599b2): undefined reference to `led_set_brightness'
-> drivers/built-in.o: In function `led_classdev_unregister':
-> (.text+0x4599c2): undefined reference to `leds_list_lock'
-> drivers/built-in.o: In function `led_classdev_unregister':
-> (.text+0x4599d6): undefined reference to `leds_list_lock'
-> make: *** [vmlinux] Error 1
->
-> What works, instead, is below. I think my "depends" solution from
-> earlier takes care of this without you having to select other stuff
-> explicitly but in the end of the day, I don't really care all that much
-> which one you guys take.
+On Wed, Nov 13, 2013 at 12:41 AM, Luis R. Rodriguez
+<mcgrof@do-not-panic.com> wrote:
+> This doesn't address the complexity cases of intersection. From review
+> today with a few folks this should simply then set DFS as unset (as
+> you patches don't allow DFS then) if there is any intersection with
+> DFS regions. That is, intersection doesn't use dfs_regions yet, add
+> that and if we do an intersection with two regdoms with different
+> regodms or at least one unknown we can't IR on DFS. We can only DFS
+> when all regulatory hints agree on the DFS region. Make that happen.
 
-The problem with 'select' is indeed that you need to cover all 
-dependencies. It looks fine to me so why don't you just submit this to 
-John Linville (and Cc: linux-wireless@vger.kernel.org).
+I'll just go ahead and add some patches for this today.
 
-Regards,
-Arend
-
-> --
-> diff --git a/drivers/net/wireless/brcm80211/Kconfig b/drivers/net/wireless/brcm80211/Kconfig
-> index b00a7e92225f..54e36fcb3954 100644
-> --- a/drivers/net/wireless/brcm80211/Kconfig
-> +++ b/drivers/net/wireless/brcm80211/Kconfig
-> @@ -5,6 +5,8 @@ config BRCMSMAC
->          tristate "Broadcom IEEE802.11n PCIe SoftMAC WLAN driver"
->          depends on MAC80211
->          depends on BCMA
-> +       select NEW_LEDS if BCMA_DRIVER_GPIO
-> +       select LEDS_CLASS if BCMA_DRIVER_GPIO
->          select BRCMUTIL
->          select FW_LOADER
->          select CRC_CCITT
->
-
-
+ Luis
