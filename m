@@ -1,43 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:38295 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750708Ab3KAN6V (ORCPT
+Received: from mail-wg0-f54.google.com ([74.125.82.54]:57850 "EHLO
+	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759304Ab3KMSNQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 09:58:21 -0400
-Received: by mail-wi0-f173.google.com with SMTP id ey11so1118137wid.0
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:58:19 -0700 (PDT)
+	Wed, 13 Nov 2013 13:13:16 -0500
+Received: by mail-wg0-f54.google.com with SMTP id y10so820214wgg.9
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Nov 2013 10:13:15 -0800 (PST)
 From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+To: johannes@sipsolutions.net
+Cc: janusz.dziedzic@tieto.com, j@w1.fi, sunitb@qca.qualcomm.com,
+	rsunki@qca.qualcomm.com, linux-wireless@vger.kernel.org,
 	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 09/65] wireless-regdb: enable VHT80 for BO
-Date: Fri,  1 Nov 2013 14:56:59 +0100
-Message-Id: <1383314275-20960-10-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_150812_374707_863A8FA1)
-In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+Subject: [RFC 5/5] cfg80211: DFS check dfs_region before usage
+Date: Wed, 13 Nov 2013 19:12:59 +0100
+Message-Id: <1384366379-25301-6-git-send-email-mcgrof@do-not-panic.com> (sfid-20131113_191321_609202_D5F6ECA8)
+In-Reply-To: <1384366379-25301-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1384366379-25301-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Source is QCA's regulatory team's efforts.
+Check the DFS region before channel availability check
+or declaring a channel as DFS usable.
 
 Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- db.txt | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/wireless/chan.c    | 8 ++++++++
+ net/wireless/nl80211.c | 5 +++++
+ 2 files changed, 13 insertions(+)
 
-diff --git a/db.txt b/db.txt
-index ef0a155..572d34f 100644
---- a/db.txt
-+++ b/db.txt
-@@ -124,7 +124,7 @@ country BN: DFS-JP
+diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+index 78559b5..4e6eaa0 100644
+--- a/net/wireless/chan.c
++++ b/net/wireless/chan.c
+@@ -517,10 +517,18 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
+ 	struct ieee80211_sta_ht_cap *ht_cap;
+ 	struct ieee80211_sta_vht_cap *vht_cap;
+ 	u32 width, control_freq;
++	enum nl80211_dfs_regions dfs_region;
  
- country BO: DFS-JP
- 	(2402 - 2482 @ 40), (30)
--	(5735 - 5835 @ 40), (30)
-+	(5735 - 5835 @ 80), (30)
+ 	if (WARN_ON(!cfg80211_chandef_valid(chandef)))
+ 		return false;
  
- country BR: DFS-FCC
- 	(2402 - 2482 @ 40), (20)
++	rtnl_lock();
++	dfs_region = reg_get_dfs_region(wiphy);
++	rtnl_unlock();
++
++	if (dfs_region == NL80211_DFS_UNSET)
++		return false;
++
+ 	ht_cap = &wiphy->bands[chandef->chan->band]->ht_cap;
+ 	vht_cap = &wiphy->bands[chandef->chan->band]->vht_cap;
+ 
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index dcbc083..1acf45c 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5641,8 +5641,13 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
+ 	struct net_device *dev = info->user_ptr[1];
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	struct cfg80211_chan_def chandef;
++	enum nl80211_dfs_regions dfs_region;
+ 	int err;
+ 
++	dfs_region = reg_get_dfs_region(wdev->wiphy);
++	if (dfs_region == NL80211_DFS_UNSET)
++		 return -EINVAL;
++
+ 	err = nl80211_parse_chandef(rdev, info, &chandef);
+ 	if (err)
+ 		return err;
 -- 
 1.8.4.rc3
 
