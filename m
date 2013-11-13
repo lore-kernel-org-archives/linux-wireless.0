@@ -1,61 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f181.google.com ([209.85.215.181]:54633 "EHLO
-	mail-ea0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757895Ab3KZTMp (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:59358 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757133Ab3KMSBJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Nov 2013 14:12:45 -0500
-Received: by mail-ea0-f181.google.com with SMTP id m10so3928992eaj.40
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Nov 2013 11:12:43 -0800 (PST)
-Message-ID: <1385493158.6446.7.camel@canaries32-MCP7A> (sfid-20131126_201248_327797_76866B76)
-Subject: [PATCH 2/3] staging: vt6656: s_vGetFreeContext remove pReturnContext
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 26 Nov 2013 19:12:38 +0000
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 13 Nov 2013 13:01:09 -0500
+Received: from [192.168.100.236] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id rADI17FV017239
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Wed, 13 Nov 2013 10:01:07 -0800
+Message-ID: <5283BE63.8090801@candelatech.com> (sfid-20131113_190112_830842_FCA007A3)
+Date: Wed, 13 Nov 2013 10:01:07 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: RFC:  Add precise timing to wifi association messages?
+References: <5283BDB6.5020700@candelatech.com>
+In-Reply-To: <5283BDB6.5020700@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Just return the context from for loop.
+On 11/13/2013 09:58 AM, Ben Greear wrote:
+> Any interest in a patch looking similar to that below for the
+> 5 or so messages related to association?  I found it useful for
+> tracking down why it was taking longer than expected to roam
+> to a new AP...
+> 
+> 
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index d2510c0..2e96813 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -908,6 +908,12 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
+>                 memcpy(pos, assoc_data->ie + offset, noffset - offset);
+>         }
+> 
+> +       {
+> +               struct timeval tv;
+> +               do_gettimeofday(&tv);
+> +               sdata_info(sdata, "send_assoc, calling prepare_tx at: %lu.%lu\n",
+> +                          tv.tv_sec, tv.tv_usec);
+> +       }
+>         drv_mgd_prepare_tx(local, sdata);
+> 
+>         IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
 
-Return NULL if end reached.
+I chose a poor example here...my intention is to just add timers to existing
+messages...
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/rxtx.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+Thanks,
+Ben
 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 0e4b6fb..6534f75 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -141,7 +141,6 @@ static struct vnt_usb_send_context
- 	*s_vGetFreeContext(struct vnt_private *pDevice)
- {
- 	struct vnt_usb_send_context *pContext = NULL;
--	struct vnt_usb_send_context *pReturnContext = NULL;
- 	int ii;
- 
-     DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"GetFreeContext()\n");
-@@ -153,15 +152,14 @@ static struct vnt_usb_send_context
-         if (pContext->bBoolInUse == false) {
-             pContext->bBoolInUse = true;
- 		memset(pContext->Data, 0, MAX_TOTAL_SIZE_WITH_ALL_HEADERS);
--            pReturnContext = pContext;
--            break;
-+		return pContext;
-         }
-     }
-     if ( ii == pDevice->cbTD ) {
-         DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"No Free Tx Context\n");
-     }
- 
--	return pReturnContext;
-+	return NULL;
- }
- 
- static void s_vSaveTxPktInfo(struct vnt_private *pDevice, u8 byPktNum,
+> 
+> 
+> Thanks,
+> Ben
+> 
+
+
 -- 
-1.8.4.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
