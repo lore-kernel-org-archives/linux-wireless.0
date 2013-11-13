@@ -1,49 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f176.google.com ([74.125.82.176]:51661 "EHLO
-	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754488Ab3KAN7j (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:41393 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751966Ab3KMWHo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 09:59:39 -0400
-Received: by mail-we0-f176.google.com with SMTP id w62so3961041wes.21
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:59:38 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 44/65] wireless-regdb: enable VHT80 for VE
-Date: Fri,  1 Nov 2013 14:57:34 +0100
-Message-Id: <1383314275-20960-45-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_145949_706246_333120A7)
-In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+	Wed, 13 Nov 2013 17:07:44 -0500
+Received: by mail-wi0-f170.google.com with SMTP id f4so2108700wiw.1
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Nov 2013 14:07:43 -0800 (PST)
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Subject: [PATCH v2] mac80211: minstrel_ht: fix rates selection
+Date: Wed, 13 Nov 2013 23:07:07 +0100
+Message-Id: <1384380427-12950-1-git-send-email-karl.beldan@gmail.com> (sfid-20131113_230748_688272_51001DCB)
+In-Reply-To: <5283ED31.1050606@openwrt.org>
+References: <5283ED31.1050606@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds two new 5 GHz frequency ranges with VHT80 support
-and extends the existing 5 GHz band by 20 MHz, and enabling
-VHT80 support.
+From: Karl Beldan <karl.beldan@rivierawaves.com>
 
-Source is QCA's regulatory team's efforts.
+When initializing rates selections starting indexes upon stats update,
+the minstrel_sta->max_* rates should be 'group * MCS_GROUP_RATES + i'
+not 'i'. This affects settings where one of the peers does not support
+any of the rates of the group 0 (i.e. when ht_cap.mcs.rx_mask[0] == 0).
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
 ---
- db.txt | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ net/mac80211/rc80211_minstrel_ht.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/db.txt b/db.txt
-index b423b77..cbbbe18 100644
---- a/db.txt
-+++ b/db.txt
-@@ -796,7 +796,9 @@ country UZ: DFS-FCC
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index 53db728..e2a57e2 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -277,13 +277,15 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
+ 			if (!(mg->supported & BIT(i)))
+ 				continue;
  
- country VE: DFS-FCC
- 	(2402 - 2482 @ 40), (20)
--	(5735 - 5815 @ 40), (23)
-+	(5170 - 5250 @ 80), (17)
-+	(5250 - 5330 @ 80), (23), DFS
-+	(5735 - 5835 @ 80), (30)
++			index = MCS_GROUP_RATES * group + i;
++
+ 			/* initialize rates selections starting indexes */
+ 			if (!mg_rates_valid) {
+ 				mg->max_tp_rate = mg->max_tp_rate2 =
+ 					mg->max_prob_rate = i;
+ 				if (!mi_rates_valid) {
+ 					mi->max_tp_rate = mi->max_tp_rate2 =
+-						mi->max_prob_rate = i;
++						mi->max_prob_rate = index;
+ 					mi_rates_valid = true;
+ 				}
+ 				mg_rates_valid = true;
+@@ -291,7 +293,6 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
  
- country VN: DFS-FCC
- 	(2402 - 2482 @ 40), (20)
+ 			mr = &mg->rates[i];
+ 			mr->retry_updated = false;
+-			index = MCS_GROUP_RATES * group + i;
+ 			minstrel_calc_rate_ewma(mr);
+ 			minstrel_ht_calc_tp(mi, group, i);
+ 
 -- 
-1.8.4.rc3
+1.8.2
 
