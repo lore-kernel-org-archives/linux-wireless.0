@@ -1,86 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:45751 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751882Ab3KJUdf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Nov 2013 15:33:35 -0500
-From: Felipe Contreras <felipe.contreras@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Felipe Contreras <felipe.contreras@gmail.com>
-Subject: [PATCH] mac80211: add assoc beacon timeout logic
-Date: Sun, 10 Nov 2013 14:26:45 -0600
-Message-Id: <1384115205-3820-1-git-send-email-felipe.contreras@gmail.com> (sfid-20131110_213344_477377_C313CA46)
+Received: from mantis.wzyboy.im ([199.83.51.51]:39458 "EHLO mantis.wzyboy.im"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758669Ab3KMMSl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Nov 2013 07:18:41 -0500
+MIME-Version: 1.0
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB301E00262@HASMSX103.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
+ <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
+ <527A8166.6000701@gmail.com> <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
+ <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
+ <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
+ <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
+ <20131111224439.GA30638@google.com> <CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com>
+ <CALkVjQaXEBpbwu9Qy3+17Eg-nSg-k7iin8G3f1RsTLkCOB-2XQ@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DF044C@HASMSX103.ger.corp.intel.com>
+ <CAErSpo5iU15AoSVL9WmLp4gNCiNmt6pFZuTsd-Vui4SCrSc_Hw@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DF0865@HASMSX103.ger.corp.intel.com>
+ <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
+ <52828364.6080103@gmail.com> <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E00262@HASMSX103.ger.corp.intel.com>
+From: wzyboy <wzyboy@wzyboy.org>
+Date: Wed, 13 Nov 2013 20:18:24 +0800
+Message-ID: <CALkVjQZfc3SHv8j1Kp-N1_+nQ5_WUsk6mf1BBG9MikzkaHZECA@mail.gmail.com> (sfid-20131113_131857_529951_EC5BC5F8)
+Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We don't want to be waiting forever for a beacon that will never come,
-just continue the association.
+2013/11/13 Grumbach, Emmanuel <emmanuel.grumbach@intel.com>:
+> According to System / HW, it is unsafe to disable L1 PM Substate using setpci, even if we disable it from both sides (device and bridge). This kind of settings should be done by BIOS only.
+> So we have 2 options here (assuming that we can't disable that in BIOS):
+> * either we try to disable L1 PM Substate even my colleagues think it is not safe
+> * either we just disable L1 altogether
 
-Signed-off-by: Felipe Contreras <felipe.contreras@gmail.com>
----
- net/mac80211/ieee80211_i.h |  1 +
- net/mac80211/mlme.c        | 18 ++++++++++++++----
- 2 files changed, 15 insertions(+), 4 deletions(-)
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 611abfc..e1f858d 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -358,6 +358,7 @@ struct ieee80211_mgd_assoc_data {
- 	const u8 *supp_rates;
- 
- 	unsigned long timeout;
-+	unsigned long beacon_timeout;
- 	int tries;
- 
- 	u16 capability;
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 529cef6..1c14484 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -38,6 +38,7 @@
- #define IEEE80211_ASSOC_TIMEOUT		(HZ / 5)
- #define IEEE80211_ASSOC_TIMEOUT_LONG	(HZ / 2)
- #define IEEE80211_ASSOC_TIMEOUT_SHORT	(HZ / 10)
-+#define IEEE80211_ASSOC_BEACON_TIMEOUT	2 * HZ
- #define IEEE80211_ASSOC_MAX_TRIES	3
- 
- static int max_nullfunc_tries = 2;
-@@ -3537,10 +3538,18 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
- 
- 	if (assoc_data && assoc_data->timeout_started) {
- 		if (time_after(jiffies, assoc_data->timeout)) {
--			if ((assoc_data->need_beacon && !ifmgd->have_beacon) ||
--			    ieee80211_do_assoc(sdata)) {
--				struct cfg80211_bss *bss = assoc_data->bss;
--
-+			struct cfg80211_bss *bss = assoc_data->bss;
-+
-+			if (assoc_data->need_beacon && !ifmgd->have_beacon) {
-+				if (time_after(jiffies, assoc_data->beacon_timeout)) {
-+					sdata_info(sdata, "no beacon from %pM\n", bss->bssid);
-+					assoc_data->need_beacon = false;
-+					assoc_data->timeout = jiffies;
-+				} else {
-+					assoc_data->timeout = TU_TO_EXP_TIME(bss->beacon_interval);
-+				}
-+				run_again(sdata, assoc_data->timeout);
-+			} else if (ieee80211_do_assoc(sdata)) {
- 				ieee80211_destroy_assoc_data(sdata, false);
- 				cfg80211_assoc_timeout(sdata->dev, bss);
- 			}
-@@ -4341,6 +4350,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 		sdata_info(sdata, "waiting for beacon from %pM\n",
- 			   ifmgd->bssid);
- 		assoc_data->timeout = TU_TO_EXP_TIME(req->bss->beacon_interval);
-+		assoc_data->beacon_timeout = jiffies + IEEE80211_ASSOC_BEACON_TIMEOUT;
- 		assoc_data->timeout_started = true;
- 		assoc_data->need_beacon = true;
- 	} else if (beacon_ies) {
+Unsafe means battery blows up like a Samsung? :-)
+
+My laptop is now connected to classroom's WiFi (with setpci
+workaround) and running on battery, it seems the power consumption is
+acceptable ... at least not too much more than before.
+
 -- 
-1.8.4.2+fc1
-
+wzyboy
