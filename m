@@ -1,60 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f169.google.com ([209.85.192.169]:60408 "EHLO
-	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754076Ab3KBNtW (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:45401 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756664Ab3KMTNu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Nov 2013 09:49:22 -0400
-From: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
-To: davem@davemloft.net, gregkh@linuxfoundation.org,
-	linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
-	schwidefsky@de.ibm.com, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	IvDoorn@gmail.com, sbhatewara@vmware.com, samuel@sortiz.org,
-	chas@cmf.nrl.navy.mil, roland@kernel.org, isdn@linux-pingi.de,
-	jcliburn@gmail.com, benve@cisco.com, ssujith@cisco.com,
-	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
-	shahed.shaikh@qlogic.com, joe@perches.com, apw@canonical.com
-Cc: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
-Subject: [PATCH net-next 11/13] driver: usb: remove unnecessary NULL check before dev_kfree_skb_any
-Date: Sat,  2 Nov 2013 19:17:52 +0530
-Message-Id: <1383400074-30555-12-git-send-email-govindarajulu90@gmail.com> (sfid-20131102_145030_687592_CA65059E)
-In-Reply-To: <1383400074-30555-1-git-send-email-govindarajulu90@gmail.com>
-References: <1383400074-30555-1-git-send-email-govindarajulu90@gmail.com>
+	Wed, 13 Nov 2013 14:13:50 -0500
+Message-ID: <1384370024.28250.1.camel@jlt4.sipsolutions.net> (sfid-20131113_201353_294408_5B2A3DA1)
+Subject: Re: [RFC 0/5] cfg80211: regulatory quiescing and exporting DFS
+ regions
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	Jouni Malinen <j@w1.fi>, sunitb <sunitb@qca.qualcomm.com>,
+	rsunki <rsunki@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 13 Nov 2013 20:13:44 +0100
+In-Reply-To: <CAB=NE6VkL8L1uiJTrY3P7LUSepRHkS+paE3kmsTunUW_6n5Xvg@mail.gmail.com> (sfid-20131113_195723_598333_78AE4C15)
+References: <1384366379-25301-1-git-send-email-mcgrof@do-not-panic.com>
+	 <1384368487.14578.25.camel@jlt4.sipsolutions.net>
+	 <CAB=NE6VkL8L1uiJTrY3P7LUSepRHkS+paE3kmsTunUW_6n5Xvg@mail.gmail.com>
+	 (sfid-20131113_195723_598333_78AE4C15)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-dev_kfree_skb_any is protected from NULL. No need to check for NULL
-while calling this function.
+On Wed, 2013-11-13 at 19:57 +0100, Luis R. Rodriguez wrote:
+> On Wed, Nov 13, 2013 at 7:48 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Wed, 2013-11-13 at 19:12 +0100, Luis R. Rodriguez wrote:
+> >
+> >> Janusz, please test, and likely feel free to take on the last patch.
+> >> We may need help from Johannes on the rtnl lock question now required
+> >> for checks on enabling beacon operation.
+> >
+> > What's that rtnl thing about?
+> 
+> Whether or not callers of cfg80211_reg_can_beacon() have it properly
+> held already and if not best strategy to make this simple and concise.
+> The rtnl is required as we need to now query the cfg80211 regdom dfs
+> region for the case where a channel requires DFS.
 
-Signed-off-by: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
----
- drivers/usb/gadget/u_ether.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+Can't you just use RCU for that part?
 
-diff --git a/drivers/usb/gadget/u_ether.c b/drivers/usb/gadget/u_ether.c
-index 2aae0d6..3b61ac6 100644
---- a/drivers/usb/gadget/u_ether.c
-+++ b/drivers/usb/gadget/u_ether.c
-@@ -251,8 +251,7 @@ enomem:
- 		defer_kevent(dev, WORK_RX_MEMORY);
- 	if (retval) {
- 		DBG(dev, "rx submit --> %d\n", retval);
--		if (skb)
--			dev_kfree_skb_any(skb);
-+		dev_kfree_skb_any(skb);
- 		spin_lock_irqsave(&dev->req_lock, flags);
- 		list_add(&req->list, &dev->rx_reqs);
- 		spin_unlock_irqrestore(&dev->req_lock, flags);
-@@ -339,8 +338,7 @@ quiesce:
- 		break;
- 	}
- 
--	if (skb)
--		dev_kfree_skb_any(skb);
-+	dev_kfree_skb_any(skb);
- 	if (!netif_running(dev->net)) {
- clean:
- 		spin_lock(&dev->req_lock);
--- 
-1.8.4.2
+johannes
 
