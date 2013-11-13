@@ -1,39 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:32870 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754726Ab3KEVPn (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:49344 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759446Ab3KMSjX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Nov 2013 16:15:43 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH 0/3] Fix incorrect returned signal strengths
-Date: Tue,  5 Nov 2013 15:15:27 -0600
-Message-Id: <1383686130-5113-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20131105_221550_927269_B79FDA56)
+	Wed, 13 Nov 2013 13:39:23 -0500
+Message-ID: <5283C758.9070805@candelatech.com> (sfid-20131113_193941_685680_DF6C6C42)
+Date: Wed, 13 Nov 2013 10:39:20 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: RFC:  Add precise timing to wifi association messages?
+References: <5283BDB6.5020700@candelatech.com>   <5283BE63.8090801@candelatech.com>  (sfid-20131113_190112_830842_FCA007A3) <1384366716.14578.13.camel@jlt4.sipsolutions.net>  <5283C3F7.4090700@candelatech.com> <1384367532.14578.23.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1384367532.14578.23.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In rtl8192se, rtl8192cu, and rtl8192du, the routines that process the
-received frames get the signal strength from the RSSI value. Unfortunately,
-that value is non-zero only if the interface is associated with the AP. As
-a result, scans return incorrect values for the strength, which causes
-unwanted attempts to roam.
+On 11/13/2013 10:32 AM, Johannes Berg wrote:
+> On Wed, 2013-11-13 at 10:24 -0800, Ben Greear wrote:
+>> On 11/13/2013 10:18 AM, Johannes Berg wrote:
+>>> On Wed, 2013-11-13 at 10:01 -0800, Ben Greear wrote:
+>>>
+>>>> I chose a poor example here...my intention is to just add timers to existing
+>>>> messages...
+>>>
+>>> What does this do that printk timestamps don't?
+>>
+>> Sub-second precision, and the same in 'dmesg' output.
+>>
+>> There may be a way to get /var/log/messages to show sub-second
+>> precision, but at least it is not enabled by default on the systems
+>> I use.  dmesg has no timestamps at all from what I can tell.
+> 
+> Err. Just set CONFIG_PRINTK_TIME in your kernel.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+Ok, I didn't realize that was available.
 
-Larry Finger (3):
-  rtlwifi: rtl8192se: Fix incorrect signal strength for unassociated AP
-  rtlwifi: rtl8192cu: Fix incorrect signal strength for unassociated AP
-  rtlwifi: rtl8192de: Fix incorrect signal strength for unassociated AP
+Thanks,
+Ben
 
- drivers/net/wireless/rtlwifi/rtl8192cu/trx.c | 2 +-
- drivers/net/wireless/rtlwifi/rtl8192de/trx.c | 2 +-
- drivers/net/wireless/rtlwifi/rtl8192se/trx.c | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+> 
+> johannes
+> 
+
 
 -- 
-1.8.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
