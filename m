@@ -1,52 +1,230 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f175.google.com ([209.85.217.175]:48583 "EHLO
-	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752065Ab3KTKaL convert rfc822-to-8bit (ORCPT
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:52512 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753192Ab3KNMKM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Nov 2013 05:30:11 -0500
-Received: by mail-lb0-f175.google.com with SMTP id x18so1605672lbi.6
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Nov 2013 02:30:10 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20131104191850.GA1989@tuxdriver.com>
-References: <20131011202459.GF14329@tuxdriver.com> <5272E897.8060606@archlinux.org>
- <20131104191850.GA1989@tuxdriver.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Wed, 20 Nov 2013 11:29:50 +0100
-Message-ID: <CAB=NE6XU80NwLA=qW8jOBPZEmiSJ6NoHXDgp1bfs5=5GYnUi3A@mail.gmail.com> (sfid-20131120_113016_586135_D7DC55B3)
-Subject: Re: [ANN] wireless-regdb: master-2013-10-11
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Nick Kossifidis <mickflemm@gmail.com>
-Cc: =?UTF-8?Q?Thomas_B=C3=A4chler?= <thomas@archlinux.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 14 Nov 2013 07:10:12 -0500
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
+	johannes@sipsolutions.net, yeohchunyeow@gmail.com
+Cc: yeohchunyeow@cozybit.com
+Subject: [PATCH v5 3/5] mac80211: refactor ieee80211_mesh_process_chanswitch()
+Date: Thu, 14 Nov 2013 14:09:34 +0200
+Message-Id: <1384430976-13708-3-git-send-email-luciano.coelho@intel.com> (sfid-20131114_131022_129907_5B56178A)
+In-Reply-To: <1384430976-13708-1-git-send-email-luciano.coelho@intel.com>
+References: <1384430976-13708-1-git-send-email-luciano.coelho@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 4, 2013 at 8:18 PM, John W. Linville <linville@tuxdriver.com> wrote:
-> On Fri, Nov 01, 2013 at 12:32:39AM +0100, Thomas Bächler wrote:
->> Am 11.10.2013 22:24, schrieb John W. Linville:
->> > (Cutting the short log, since the original version got classified as
->> > SPAM on vger.kernel.org...??)
->> >
->> > A new release of wireless-regdb (master-2013-10-11) is available at:
->> >
->> > http://www.kernel.org/pub/software/network/wireless-regdb/wireless-regdb-2013.10.11.tar.gz
->> >
->> > Here is the short log of the changes included since the 2013-02-13
->> > release:
->> >
->> > SNIP -- you'll have to check it yourself:
->>
->> We can't use the database file:
->>
->> $ regdbdump regulatory.bin
->> Database signature verification failed.
->
-> OK, I probably screwed-up something.  I'll investigate, but it may
-> take few days while I recover from some extended travel...
+Refactor ieee80211_mesh_process_chanswitch() to use
+ieee80211_channel_switch() and avoid code duplication.
 
-Hey John, it seems other folks are reporting this as well [0].
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+In v5:
 
-[0] http://forums.gentoo.org/viewtopic-p-7440278.html
+* combine chsw_init and csa_repeater into a single csa_role enumeration;
 
-  Luis
+* rebased on top of mac80211, so no need to apply Chun-Yeow's patch
+  manually (it's already applied);
+
+ net/mac80211/cfg.c         | 17 +++++++-----
+ net/mac80211/ieee80211_i.h |  6 +++-
+ net/mac80211/mesh.c        | 69 +++++++++-------------------------------------
+ 3 files changed, 28 insertions(+), 64 deletions(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index a98dc6b..a5aa766 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3141,15 +3141,18 @@ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 		    params->chandef.chan->band)
+ 			return -EINVAL;
+ 
+-		ifmsh->chsw_init = true;
+-		if (!ifmsh->pre_value)
+-			ifmsh->pre_value = 1;
+-		else
+-			ifmsh->pre_value++;
++		if (ifmsh->csa_role == IEEE80211_MESH_CSA_ROLE_NONE) {
++			ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_INIT;
++			if (!ifmsh->pre_value)
++				ifmsh->pre_value = 1;
++			else
++				ifmsh->pre_value++;
++		}
+ 
+-		err = ieee80211_mesh_csa_beacon(sdata, params, true);
++		err = ieee80211_mesh_csa_beacon(sdata, params,
++			(ifmsh->csa_role == IEEE80211_MESH_CSA_ROLE_INIT));
+ 		if (err < 0) {
+-			ifmsh->chsw_init = false;
++			ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_NONE;
+ 			return err;
+ 		}
+ 		break;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 3a77ed1..15c9c39 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -610,7 +610,11 @@ struct ieee80211_if_mesh {
+ 	struct ps_data ps;
+ 	/* Channel Switching Support */
+ 	struct mesh_csa_settings __rcu *csa;
+-	bool chsw_init;
++	enum {
++		IEEE80211_MESH_CSA_ROLE_NONE,
++		IEEE80211_MESH_CSA_ROLE_INIT,
++		IEEE80211_MESH_CSA_ROLE_REPEATER,
++	} csa_role;
+ 	u8 chsw_ttl;
+ 	u16 pre_value;
+ };
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 89df62b..5852080 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -685,7 +685,7 @@ ieee80211_mesh_build_beacon(struct ieee80211_if_mesh *ifmsh)
+ 		*pos++ = csa->settings.count;
+ 		*pos++ = WLAN_EID_CHAN_SWITCH_PARAM;
+ 		*pos++ = 6;
+-		if (ifmsh->chsw_init) {
++		if (ifmsh->csa_role == IEEE80211_MESH_CSA_ROLE_INIT) {
+ 			*pos++ = ifmsh->mshcfg.dot11MeshTTL;
+ 			*pos |= WLAN_EID_CHAN_SWITCH_PARAM_INITIATOR;
+ 		} else {
+@@ -853,19 +853,11 @@ ieee80211_mesh_process_chnswitch(struct ieee80211_sub_if_data *sdata,
+ {
+ 	struct cfg80211_csa_settings params;
+ 	struct ieee80211_csa_ie csa_ie;
+-	struct ieee80211_chanctx_conf *chanctx_conf;
+-	struct ieee80211_chanctx *chanctx;
+ 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 	enum ieee80211_band band = ieee80211_get_sdata_band(sdata);
+-	int err, num_chanctx;
++	int err;
+ 	u32 sta_flags;
+ 
+-	if (sdata->vif.csa_active)
+-		return true;
+-
+-	if (!ifmsh->mesh_id)
+-		return false;
+-
+ 	sta_flags = IEEE80211_STA_DISABLE_VHT;
+ 	switch (sdata->vif.bss_conf.chandef.width) {
+ 	case NL80211_CHAN_WIDTH_20_NOHT:
+@@ -890,10 +882,6 @@ ieee80211_mesh_process_chnswitch(struct ieee80211_sub_if_data *sdata,
+ 	params.chandef = csa_ie.chandef;
+ 	params.count = csa_ie.count;
+ 
+-	if (sdata->vif.bss_conf.chandef.chan->band !=
+-	    params.chandef.chan->band)
+-		return false;
+-
+ 	if (!cfg80211_chandef_usable(sdata->local->hw.wiphy, &params.chandef,
+ 				     IEEE80211_CHAN_DISABLED)) {
+ 		sdata_info(sdata,
+@@ -916,25 +904,6 @@ ieee80211_mesh_process_chnswitch(struct ieee80211_sub_if_data *sdata,
+ 		return false;
+ 	}
+ 
+-	rcu_read_lock();
+-	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+-	if (!chanctx_conf)
+-		goto failed_chswitch;
+-
+-	/* don't handle for multi-VIF cases */
+-	chanctx = container_of(chanctx_conf, struct ieee80211_chanctx, conf);
+-	if (chanctx->refcount > 1)
+-		goto failed_chswitch;
+-
+-	num_chanctx = 0;
+-	list_for_each_entry_rcu(chanctx, &sdata->local->chanctx_list, list)
+-		num_chanctx++;
+-
+-	if (num_chanctx > 1)
+-		goto failed_chswitch;
+-
+-	rcu_read_unlock();
+-
+ 	mcsa_dbg(sdata,
+ 		 "received channel switch announcement to go to channel %d MHz\n",
+ 		 params.chandef.chan->center_freq);
+@@ -947,30 +916,16 @@ ieee80211_mesh_process_chnswitch(struct ieee80211_sub_if_data *sdata,
+ 		ifmsh->pre_value = csa_ie.pre_value;
+ 	}
+ 
+-	if (ifmsh->chsw_ttl < ifmsh->mshcfg.dot11MeshTTL) {
+-		if (ieee80211_mesh_csa_beacon(sdata, &params, false) < 0)
+-			return false;
+-	} else {
++	if (ifmsh->chsw_ttl >= ifmsh->mshcfg.dot11MeshTTL)
+ 		return false;
+-	}
+-
+-	sdata->csa_radar_required = params.radar_required;
+-
+-	if (params.block_tx)
+-		ieee80211_stop_queues_by_reason(&sdata->local->hw,
+-				IEEE80211_MAX_QUEUE_MAP,
+-				IEEE80211_QUEUE_STOP_REASON_CSA);
+ 
+-	sdata->csa_chandef = params.chandef;
+-	sdata->vif.csa_active = true;
++	ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_REPEATER;
+ 
+-	ieee80211_bss_info_change_notify(sdata, err);
+-	drv_channel_switch_beacon(sdata, &params.chandef);
++	if (ieee80211_channel_switch(sdata->local->hw.wiphy, sdata->dev,
++				     &params) < 0)
++		return false;
+ 
+ 	return true;
+-failed_chswitch:
+-	rcu_read_unlock();
+-	return false;
+ }
+ 
+ static void
+@@ -1080,7 +1035,8 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
+ 		ifmsh->sync_ops->rx_bcn_presp(sdata,
+ 			stype, mgmt, &elems, rx_status);
+ 
+-	if (!ifmsh->chsw_init)
++	if (ifmsh->csa_role != IEEE80211_MESH_CSA_ROLE_INIT &&
++	    !sdata->vif.csa_active)
+ 		ieee80211_mesh_process_chnswitch(sdata, &elems, true);
+ }
+ 
+@@ -1091,7 +1047,7 @@ int ieee80211_mesh_finish_csa(struct ieee80211_sub_if_data *sdata)
+ 	int ret = 0;
+ 
+ 	/* Reset the TTL value and Initiator flag */
+-	ifmsh->chsw_init = false;
++	ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_NONE;
+ 	ifmsh->chsw_ttl = 0;
+ 
+ 	/* Remove the CSA and MCSP elements from the beacon */
+@@ -1204,7 +1160,8 @@ static void mesh_rx_csa_frame(struct ieee80211_sub_if_data *sdata,
+ 
+ 	ifmsh->pre_value = pre_value;
+ 
+-	if (!ieee80211_mesh_process_chnswitch(sdata, &elems, false)) {
++	if (!sdata->vif.csa_active &&
++	    !ieee80211_mesh_process_chnswitch(sdata, &elems, false)) {
+ 		mcsa_dbg(sdata, "Failed to process CSA action frame");
+ 		return;
+ 	}
+@@ -1359,7 +1316,7 @@ void ieee80211_mesh_init_sdata(struct ieee80211_sub_if_data *sdata)
+ 	mesh_rmc_init(sdata);
+ 	ifmsh->last_preq = jiffies;
+ 	ifmsh->next_perr = jiffies;
+-	ifmsh->chsw_init = false;
++	ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_NONE;
+ 	/* Allocate all mesh structures when creating the first mesh interface. */
+ 	if (!mesh_allocated)
+ 		ieee80211s_init();
+-- 
+1.8.4.rc3
+
