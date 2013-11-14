@@ -1,58 +1,182 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:52196 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752219Ab3KXUHA (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:36775 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753026Ab3KNMMX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Nov 2013 15:07:00 -0500
-Received: by mail-wg0-f48.google.com with SMTP id z12so2985661wgg.3
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Nov 2013 12:06:59 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+	Thu, 14 Nov 2013 07:12:23 -0500
+Message-ID: <1384431109.16343.17.camel@porter.coelho.fi> (sfid-20131114_131225_546665_3372B2B3)
+Subject: Re: [PATCH v5 1/5] mac80211: refactor
+ ieee80211_ibss_process_chanswitch()
+From: Luca Coelho <luca@coelho.fi>
 To: linux-wireless@vger.kernel.org
-Cc: Eliad Peller <eliad@wizery.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 08/29] iwlwifi: mvm: disconnect on disconnection wakeup event
-Date: Sun, 24 Nov 2013 22:06:25 +0200
-Message-Id: <1385323606-3603-8-git-send-email-egrumbach@gmail.com> (sfid-20131124_210711_646482_96490BA7)
-In-Reply-To: <52925BE7.4050406@gmail.com>
-References: <52925BE7.4050406@gmail.com>
+Cc: sw@simonwunderlich.de, johannes@sipsolutions.net,
+	yeohchunyeow@gmail.com, yeohchunyeow@cozybit.com
+Date: Thu, 14 Nov 2013 14:11:49 +0200
+In-Reply-To: <1384430976-13708-1-git-send-email-luciano.coelho@intel.com>
+References: <1384430976-13708-1-git-send-email-luciano.coelho@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+Hi,
 
-When waking up from d3 due to disconnection event
-(e.g. because of beacon loss), we should disconnect
-immediately.
+Just to clarify, these patches are now based on mac80211-next (thanks
+Simon), so we don't need to apply anything manually (as with the
+previous patch set that was based on wireless-testing).
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/d3.c |    6 ++++++
- 1 file changed, 6 insertions(+)
+Please review and test, especially the MESH and IBSS parts!
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/d3.c b/drivers/net/wireless/iwlwifi/mvm/d3.c
-index 096cf80..d9eb68e 100644
---- a/drivers/net/wireless/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/d3.c
-@@ -1533,10 +1533,16 @@ static bool iwl_mvm_setup_connection_keep(struct iwl_mvm *mvm,
- 	struct iwl_mvm_d3_gtk_iter_data gtkdata = {
- 		.status = status,
- 	};
-+	u32 disconnection_reasons =
-+		IWL_WOWLAN_WAKEUP_BY_DISCONNECTION_ON_MISSED_BEACON |
-+		IWL_WOWLAN_WAKEUP_BY_DISCONNECTION_ON_DEAUTH;
- 
- 	if (!status || !vif->bss_conf.bssid)
- 		return false;
- 
-+	if (le32_to_cpu(status->wakeup_reasons) & disconnection_reasons)
-+		return false;
-+
- 	/* find last GTK that we used initially, if any */
- 	gtkdata.find_phase = true;
- 	ieee80211_iter_keys(mvm->hw, vif,
--- 
-1.7.9.5
+--
+Cheers,
+Luca.
+
+On Thu, 2013-11-14 at 14:09 +0200, Luciano Coelho wrote:
+> Refactor ieee80211_ibss_process_chanswitch() to use
+> ieee80211_channel_switch() and avoid code duplication.
+> 
+> Change-Id: I265a12c7f825dc20535bad1197a81437310d0086
+> Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+> ---
+>  net/mac80211/cfg.c         |  4 ++--
+>  net/mac80211/ibss.c        | 58 +++++++---------------------------------------
+>  net/mac80211/ieee80211_i.h |  2 ++
+>  3 files changed, 12 insertions(+), 52 deletions(-)
+> 
+> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+> index 3bc92d0..a98dc6b 100644
+> --- a/net/mac80211/cfg.c
+> +++ b/net/mac80211/cfg.c
+> @@ -3035,8 +3035,8 @@ void ieee80211_csa_finalize_work(struct work_struct *work)
+>  	cfg80211_ch_switch_notify(sdata->dev, &sdata->csa_chandef);
+>  }
+>  
+> -static int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+> -				    struct cfg80211_csa_settings *params)
+> +int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+> +			     struct cfg80211_csa_settings *params)
+>  {
+>  	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+>  	struct ieee80211_local *local = sdata->local;
+> diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+> index 0f1fb5d..3514aab 100644
+> --- a/net/mac80211/ibss.c
+> +++ b/net/mac80211/ibss.c
+> @@ -784,18 +784,10 @@ ieee80211_ibss_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+>  	struct cfg80211_csa_settings params;
+>  	struct ieee80211_csa_ie csa_ie;
+>  	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
+> -	struct ieee80211_chanctx_conf *chanctx_conf;
+> -	struct ieee80211_chanctx *chanctx;
+>  	enum nl80211_channel_type ch_type;
+> -	int err, num_chanctx;
+> +	int err;
+>  	u32 sta_flags;
+>  
+> -	if (sdata->vif.csa_active)
+> -		return true;
+> -
+> -	if (!sdata->vif.bss_conf.ibss_joined)
+> -		return false;
+> -
+>  	sta_flags = IEEE80211_STA_DISABLE_VHT;
+>  	switch (ifibss->chandef.width) {
+>  	case NL80211_CHAN_WIDTH_5:
+> @@ -826,9 +818,6 @@ ieee80211_ibss_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+>  	params.count = csa_ie.count;
+>  	params.chandef = csa_ie.chandef;
+>  
+> -	if (ifibss->chandef.chan->band != params.chandef.chan->band)
+> -		goto disconnect;
+> -
+>  	switch (ifibss->chandef.width) {
+>  	case NL80211_CHAN_WIDTH_20_NOHT:
+>  	case NL80211_CHAN_WIDTH_20:
+> @@ -884,29 +873,6 @@ ieee80211_ibss_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+>  		params.radar_required = true;
+>  	}
+>  
+> -	rcu_read_lock();
+> -	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+> -	if (!chanctx_conf) {
+> -		rcu_read_unlock();
+> -		goto disconnect;
+> -	}
+> -
+> -	/* don't handle for multi-VIF cases */
+> -	chanctx = container_of(chanctx_conf, struct ieee80211_chanctx, conf);
+> -	if (chanctx->refcount > 1) {
+> -		rcu_read_unlock();
+> -		goto disconnect;
+> -	}
+> -	num_chanctx = 0;
+> -	list_for_each_entry_rcu(chanctx, &sdata->local->chanctx_list, list)
+> -		num_chanctx++;
+> -
+> -	if (num_chanctx > 1) {
+> -		rcu_read_unlock();
+> -		goto disconnect;
+> -	}
+> -	rcu_read_unlock();
+> -
+>  	/* all checks done, now perform the channel switch. */
+>  	ibss_dbg(sdata,
+>  		 "received channel switch announcement to go to channel %d MHz\n",
+> @@ -914,19 +880,9 @@ ieee80211_ibss_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+>  
+>  	params.block_tx = !!csa_ie.mode;
+>  
+> -	ieee80211_ibss_csa_beacon(sdata, &params);
+> -	sdata->csa_radar_required = params.radar_required;
+> -
+> -	if (params.block_tx)
+> -		ieee80211_stop_queues_by_reason(&sdata->local->hw,
+> -				IEEE80211_MAX_QUEUE_MAP,
+> -				IEEE80211_QUEUE_STOP_REASON_CSA);
+> -
+> -	sdata->csa_chandef = params.chandef;
+> -	sdata->vif.csa_active = true;
+> -
+> -	ieee80211_bss_info_change_notify(sdata, err);
+> -	drv_channel_switch_beacon(sdata, &params.chandef);
+> +	if (ieee80211_channel_switch(sdata->local->hw.wiphy, sdata->dev,
+> +				     &params))
+> +		goto disconnect;
+>  
+>  	ieee80211_ibss_csa_mark_radar(sdata);
+>  
+> @@ -962,7 +918,8 @@ ieee80211_rx_mgmt_spectrum_mgmt(struct ieee80211_sub_if_data *sdata,
+>  	if (len < required_len)
+>  		return;
+>  
+> -	ieee80211_ibss_process_chanswitch(sdata, elems, false);
+> +	if (!sdata->vif.csa_active)
+> +		ieee80211_ibss_process_chanswitch(sdata, elems, false);
+>  }
+>  
+>  static void ieee80211_rx_mgmt_deauth_ibss(struct ieee80211_sub_if_data *sdata,
+> @@ -1143,7 +1100,8 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+>  		goto put_bss;
+>  
+>  	/* process channel switch */
+> -	if (ieee80211_ibss_process_chanswitch(sdata, elems, true))
+> +	if (sdata->vif.csa_active ||
+> +	    ieee80211_ibss_process_chanswitch(sdata, elems, true))
+>  		goto put_bss;
+>  
+>  	/* same BSSID */
+> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+> index 0edc1fb..3a77ed1 100644
+> --- a/net/mac80211/ieee80211_i.h
+> +++ b/net/mac80211/ieee80211_i.h
+> @@ -1412,6 +1412,8 @@ void ieee80211_handle_roc_started(struct ieee80211_roc_work *roc);
+>  
+>  /* channel switch handling */
+>  void ieee80211_csa_finalize_work(struct work_struct *work);
+> +int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+> +			     struct cfg80211_csa_settings *params);
+>  
+>  /* interface handling */
+>  int ieee80211_iface_init(void);
+
 
