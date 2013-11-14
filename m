@@ -1,60 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f51.google.com ([209.85.214.51]:60402 "EHLO
-	mail-bk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751582Ab3KRRG6 (ORCPT
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:33508 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753146Ab3KNNyb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Nov 2013 12:06:58 -0500
-Received: by mail-bk0-f51.google.com with SMTP id 6so725983bkj.38
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Nov 2013 09:06:57 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH RESEND 3/5] mac80211: remove sta_info_flush() from interface teardown
-Date: Mon, 18 Nov 2013 19:06:47 +0200
-Message-Id: <1384794409-11211-3-git-send-email-egrumbach@gmail.com> (sfid-20131118_180707_274953_927F1CD4)
-In-Reply-To: <1384794409-11211-1-git-send-email-egrumbach@gmail.com>
-References: <1384794166-10906-1-git-send-email-egrumbach@gmail.com>
- <1384794409-11211-1-git-send-email-egrumbach@gmail.com>
+	Thu, 14 Nov 2013 08:54:31 -0500
+Received: by mail-pa0-f45.google.com with SMTP id kx10so1336949pab.18
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Nov 2013 05:54:30 -0800 (PST)
+Date: Thu, 14 Nov 2013 06:05:10 -0800
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: janusz.dziedzic@tieto.com, j@w1.fi, sunitb@qca.qualcomm.com,
+	rsunki@qca.qualcomm.com, linux-wireless@vger.kernel.org
+Subject: Re: [RFC 1/5] cfg80211: pass the wdev on the country IE regulatory
+ hint
+Message-ID: <20131114140505.GA19070@garbanzo.do-not-panic.com> (sfid-20131114_145434_112699_5057E336)
+References: <1384366379-25301-1-git-send-email-mcgrof@do-not-panic.com>
+ <1384366379-25301-2-git-send-email-mcgrof@do-not-panic.com>
+ <1384377637.28806.14.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1384377637.28806.14.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, Nov 13, 2013 at 10:20:37PM +0100, Johannes Berg wrote:
+> On Wed, 2013-11-13 at 19:12 +0100, Luis R. Rodriguez wrote:
+> > This also records the wdev on the last regulatory request,
+> > this can be used later to help quiesce wdev's at appropriate
+> > times by the regulatory core.
+> 
+> > +++ b/net/wireless/reg.c
+> > @@ -1871,12 +1871,14 @@ int regulatory_hint(struct wiphy *wiphy, const char *alpha2)
+> >  }
+> >  EXPORT_SYMBOL(regulatory_hint);
+> >  
+> > -void regulatory_hint_country_ie(struct wiphy *wiphy, enum ieee80211_band band,
+> > +void regulatory_hint_country_ie(struct wireless_dev *wdev,
+> > +				enum ieee80211_band band,
+> >  				const u8 *country_ie, u8 country_ie_len)
+> ...
+> > +       request->wdev = wdev;
+> > 
+> You have absolutely no validation of this pointer - the lifetime of the
+> request object and the wdev aren't necessarily the same.
 
-All interface types now properly clean up their stations
-using some form of sta_info_flush() themselves, so there's
-no need to try it again at teardown. Remove the call to
-get rid of the extra delay from the synchronize_net() and
-rcu_barrier() calls.
+Agreed.
 
-Reported-by: Moshe Benji <moshe.benji@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/iface.c |    4 ----
- 1 file changed, 4 deletions(-)
+> At least you should very carefully document that this pointer is a
+> cookie (if it really is) and must never be dereferenced.
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index ff101ea..a3d106d 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1036,7 +1036,6 @@ static void ieee80211_set_multicast_list(struct net_device *dev)
-  */
- static void ieee80211_teardown_sdata(struct ieee80211_sub_if_data *sdata)
- {
--	int flushed;
- 	int i;
- 
- 	/* free extra data */
-@@ -1050,9 +1049,6 @@ static void ieee80211_teardown_sdata(struct ieee80211_sub_if_data *sdata)
- 
- 	if (ieee80211_vif_is_mesh(&sdata->vif))
- 		mesh_rmc_free(sdata);
--
--	flushed = sta_info_flush(sdata);
--	WARN_ON(flushed);
- }
- 
- static void ieee80211_uninit(struct net_device *dev)
--- 
-1.7.9.5
+OK, I could also validate it upon processing but we'd need to loop
+over the rdev wdev list for the country IE hint, if that is acceptable
+upon procesing it'd be valid and we'd avoid corner case issues.
+Thoughts?
 
+  Luis
