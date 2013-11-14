@@ -1,53 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mantis.wzyboy.im ([199.83.51.51]:38133 "EHLO mantis.wzyboy.im"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751196Ab3KJHIt convert rfc822-to-8bit (ORCPT
+Received: from order.stressinduktion.org ([87.106.68.36]:41961 "EHLO
+	order.stressinduktion.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750914Ab3KNFFg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Nov 2013 02:08:49 -0500
-MIME-Version: 1.0
-In-Reply-To: <CANUX_P2x3r4afsa7PFrexE0Kxtd5t-nak+ao+CqvLKZyMha0_g@mail.gmail.com>
-References: <5276134B.8070808@wzyboy.org> <CALkVjQYh-SUte4S6LdqOc3KSc3_pDU6jz1KXp+Jsd5_RFPXSqA@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DE8338@HASMSX103.ger.corp.intel.com>
- <CALkVjQb7fCMFpqhdUs8w-Mx_Y0RtAYYFtKxXkqyrCQ39UFGxKg@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DE960E@HASMSX103.ger.corp.intel.com>
- <CALkVjQbW8FeiEh8pBZ=KQFD9+8AdjgT0G_RG7qJe0MRdBvMD-A@mail.gmail.com>
- <CALkVjQaLx2spaOqUPcs_EwMkU7npMki1Reo1MeZwxB7m=c24=g@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DE9FC6@HASMSX103.ger.corp.intel.com>
- <CALkVjQZDNSgUUFyi94Y8da_NDzW61rCvaMrZpUugFKW_LRNFFA@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
- <CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
- <CALkVjQY7r=YKhsgDKR0mnYVtZy5BAdj83nY2jL0VFaiew6ha7A@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
- <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
- <527A8166.6000701@gmail.com> <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
- <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
- <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
- <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com> <CANUX_P2x3r4afsa7PFrexE0Kxtd5t-nak+ao+CqvLKZyMha0_g@mail.gmail.com>
-From: wzyboy <wzyboy@wzyboy.org>
-Date: Sun, 10 Nov 2013 15:08:32 +0800
-Message-ID: <CALkVjQYKPjOLcBo34h4Eq6f0bac=z4o+54PuNmcgKRz301JYqg@mail.gmail.com> (sfid-20131110_080911_853018_76938FB1)
-Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 14 Nov 2013 00:05:36 -0500
+Date: Thu, 14 Nov 2013 06:05:35 +0100
+From: Hannes Frederic Sowa <hannes@stressinduktion.org>
+To: Theodore Ts'o <tytso@mit.edu>,
+	Daniel Borkmann <dborkman@redhat.com>, davem@davemloft.net,
+	shemminger@networkplumber.org, fweimer@redhat.com,
+	netdev@vger.kernel.org, Eric Dumazet <eric.dumazet@gmail.com>,
+	linux-wireless@vger.kernel.org, keescook@chromium.org
+Subject: Re: [PATCH] random: seed random_int_secret at least poorly at core_initcall time
+Message-ID: <20131114050535.GB26901@order.stressinduktion.org> (sfid-20131114_060543_006699_6E379505)
+References: <cover.1384160397.git.dborkman@redhat.com> <2ea03f60bb65429cbe5d74a6d356fde3eefcf06c.1384160397.git.dborkman@redhat.com> <20131111134357.GC10104@thunk.org> <20131112000307.GB14929@order.stressinduktion.org> <20131112115350.GA14077@thunk.org> <20131112131627.GD14929@order.stressinduktion.org> <20131112134603.GE14929@order.stressinduktion.org> <20131114025448.GB31602@thunk.org> <20131114041829.GA26901@order.stressinduktion.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20131114041829.GA26901@order.stressinduktion.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/11/10 Emmanuel Grumbach <egrumbach@gmail.com>:
-> one more thing?
-> Are you using KVM with pass-through? Or is it a native installation?
+On Thu, Nov 14, 2013 at 05:18:30AM +0100, Hannes Frederic Sowa wrote:
+> On Wed, Nov 13, 2013 at 09:54:48PM -0500, Theodore Ts'o wrote:
+> > On Tue, Nov 12, 2013 at 02:46:03PM +0100, Hannes Frederic Sowa wrote:
+> > > > It is needed by fork to set up the stack canary. And this actually gets
+> > > > called before the secret is initialized.
+> > > 
+> > > Maybe we could use this for the time being and use the seeding method
+> > > of kaslr as soon as it hits the tree?
+> > 
+> > Hmm, from what I can tell even early_initcall() is going to be early
+> > enough.  The stack canary is set up by boot_init_stack_canary(), which
+> > is run very, very early in start_kerne() --- way before
+> > early_initcalls, or even before interrupts are enabled.  So adding
+> > random_int_secret_init_early() as a core_initcall is still too late.
+> 
+> Actually I tried to protect the tsk->stack_canary = get_random_int()
+> in fork.c. It sets up the per-task canary.
+> 
+> > I wonder if we need to do something in common with what Kees has been
+> > considering for the kaslr code, since it's a similar issue --- we need
+> > random number way earlier than we can really afford to initialize
+> > /dev/random.
+> 
+> Definiteley. I would also propose hashing the boot arguments, often
+> enough there is a filesystem UUID in there, or even hash the multiboot
+> information we are given from grub. Maybe compile-time entropy, at least
+> a bit.
+> 
+> > P.S.  Unless I'm missing something (and I hope I am), it would appear
+> > that the stack canary is going to easily predictable by an attacker on
+> > non-x86 platforms that don't have RDRAND.  Has someone tested whether
+> > or not the stack canary isn't constant across ARM or pre-Sandy Bridge
+> > x86 systems?
+> 
+> In case of protection for interrupt stacks and early cmwq threads,
+> it looks pretty bad from a first look at the source (at least for the
+> first initialized CPU).
 
+First output on first cpu of get_random_bytes is always identical on amd64
+without rdrand. :/
 
-No, I’m using a native installation. I just wiped the pre-installed
-Windows OS and booted from Arch Linux installation disk, set up LUKS
-(without LVM) and installed the system.
-
-However, as you can see in dmesg "modules linked in", I have
-VirtualBox installed and "vboxdrv.ko" loaded.
-
--- 
-wzyboy
