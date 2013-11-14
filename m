@@ -1,63 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1947 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752825Ab3K2WAl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Nov 2013 17:00:41 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH for-3.13] brcmfmac: fix uninitialized warning
-Date: Fri, 29 Nov 2013 23:00:31 +0100
-Message-ID: <1385762431-22559-1-git-send-email-arend@broadcom.com> (sfid-20131129_230055_173319_3D867EAA)
+Received: from postler.einfach.org ([91.250.116.113]:35534 "EHLO
+	postler.einfach.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752995Ab3KNRiQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Nov 2013 12:38:16 -0500
+Message-ID: <52850A7F.9090406@einfach.org> (sfid-20131114_183820_025043_A4784C44)
+Date: Thu, 14 Nov 2013 17:38:07 +0000
+From: Bruno Randolf <br1@einfach.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
+CC: Sujith Manoharan <sujith@msujith.org>,
+	Ingo Randolf <ingo.randolf@qupik.com>, mcgrof@do-not-panic.com
+Subject: Re: ath9k AR9382 high latency ping
+References: <52492FB0.3010201@einfach.org>	<5249443E.3080700@rempel-privat.de>	<524954BE.8060603@einfach.org>	<52497C2E.1060406@rempel-privat.de>	<5249A2F7.5090908@einfach.org>	<524DA3DC.6060806@einfach.org> <21087.18050.72635.617321@gargle.gargle.HOWL> <52849677.3090609@einfach.org> <5284A50E.4080702@openwrt.org>
+In-Reply-To: <5284A50E.4080702@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Building brcmfmac for sparc64 gave the following warning:
+On 11/14/2013 10:25 AM, Felix Fietkau wrote:
+> Have you checked for IRQ issues? That seems likely given that packets
+> are sent, but the tx path is still considered hung.
 
-  CC [M]  drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.o
-    bcmsdh_sdmmc.c: In function 'brcmf_sdioh_request_byte':
-     bcmsdh_sdmmc.c:89:6: warning: 'err_ret' may be used uninitialized
-                          in this function [-Wuninitialized]
+Ha, thanks! You are certainly pointing me into the right direction (once
+again!):
 
-Inspecting the code it indeed had a path of execution in
-which the return value was used uninitialized. This patch
-fixes that code path.
+root@mio:~# cat /proc/interrupts
+ 21:          0          0          0          0   IO-APIC-fasteoi ath9k
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
-Hi John,
+But, now, what can I do to fix this? Booting with noapic pci=noacpi or
+acpi=off did not help...
 
-This problem popped up when enabling some more build targets and
-figured it could be taken for 3.13. Just strange it only showed
-on sparc64 as the warning seems valid. Anyway, it applies to the
-wireless master branch.
-
-Regards,
-Arend
----
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-index 905704e..abc9cec 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-@@ -109,6 +109,8 @@ static inline int brcmf_sdioh_f0_write_byte(struct brcmf_sdio_dev *sdiodev,
- 					brcmf_err("Disable F2 failed:%d\n",
- 						  err_ret);
- 			}
-+		} else {
-+			err_ret = -ENOENT;
- 		}
- 	} else if ((regaddr == SDIO_CCCR_ABORT) ||
- 		   (regaddr == SDIO_CCCR_IENx)) {
--- 
-1.8.1.3
-
-
+bruno
