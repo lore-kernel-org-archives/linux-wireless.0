@@ -1,47 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:33836 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751185Ab3KRNRO (ORCPT
+Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:38330 "EHLO
+	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752010Ab3KNXWi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Nov 2013 08:17:14 -0500
-From: Sujith Manoharan <sujith@msujith.org>
+	Thu, 14 Nov 2013 18:22:38 -0500
+Date: Thu, 14 Nov 2013 15:22:18 -0800
+From: Tony Lindgren <tony@atomide.com>
+To: Luciano Coelho <luca@coelho.fi>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Rob Landley <rob@landley.net>,
+	Russell King <linux@arm.linux.org.uk>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Felipe Balbi <balbi@ti.com>,
+	Sachin Kamat <sachin.kamat@linaro.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bill Pemberton <wfp5p@virginia.edu>,
+	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Luciano Coelho <coelho@ti.com>
+Subject: Re: [PATCH 1/4] wl1251: split wl251 platform data to a separate
+ structure
+Message-ID: <20131114232217.GV10317@atomide.com> (sfid-20131115_002245_516154_92799623)
+References: <1382890469-25286-1-git-send-email-sre@debian.org>
+ <1382890469-25286-2-git-send-email-sre@debian.org>
+ <20131114185132.GQ10317@atomide.com>
+ <20131114230330.GB6383@earth.universe>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Message-ID: <21130.4681.687594.315193@gargle.gargle.HOWL> (sfid-20131118_141717_328596_4679DA5A)
-Date: Mon, 18 Nov 2013 18:42:41 +0530
-To: Matthias May <matthias.may@neratec.com>
-Cc: Sven Eckelmann <sven@open-mesh.com>,
-	OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Simon Wunderlich <simon@open-mesh.com>,
-	"ath9k-devel\@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>
-Subject: Re: [ath9k-devel] [OpenWrt-Devel] ath9k: Deaf QCA9558 when setting
- rxchainmask
-In-Reply-To: <528A0F79.1040807@neratec.com>
-References: <19772470.YgPhAz9cYD@bentobox>
-	<87B8D697-4540-4D0E-975B-125531E6833B@net.t-labs.tu-berlin.de>
-	<CAJ-VmombLQqJsN50nndqCioFEOy=9cp_-34onQnWnpMoX6360w@mail.gmail.com>
-	<2985619.kldLYNDlSX@bentobox>
-	<21120.58000.344447.562435@gargle.gargle.HOWL>
-	<528A0F79.1040807@neratec.com>
+In-Reply-To: <20131114230330.GB6383@earth.universe>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Matthias May wrote:
-> I'm in the position where i want to use a 9390 as 2x2 instead of 3x3.
-> I use backports-3.12-1.
-> I've set the rx and tx mask in eeprom to 0x5.
-> Every 30 seconds there is a short disconnect.
-> Enabling some logging in
-> echo "0x0000050C" > /sys/kernel/debug/ieee80211/phy0/ath9k/debug
-> shows that something seems to go wrong during noise calibration. (See 
-> attached log).
-> What seems odd to me, that for IQ cal it tries to calibrate chain 1 
-> instead of chain 2.
+* Sebastian Reichel <sre@debian.org> [131114 15:04]:
+> On Thu, Nov 14, 2013 at 10:51:33AM -0800, Tony Lindgren wrote:
+> > [...]
+> >
+> > If this is not going into v3.13, these will cause conflicts
+> > with the mach-omap2/board-*.c files for v3.14.
+> > 
+> > So it might be best to do a minimal header patch first that
+> > can be merged in by both linux-omap and wireless trees.
+> 
+> I guess this patch is pretty minimal. It also seems to be acked by
+> the involved Maintainers, so maybe just merge Patch 1 without the
+> other patches?
+> 
+> This does not solve the problem with the struct modification from
+> the second patch, but I guess it's the more intrusive patch.
 
-What is the value of 0x40d8 register ?
+Once at least the first two patches are ready, how about I queue
+them after -rc1 and set up an immutable branch that can be merged
+in by linux-omap tree and the wireless tree?
 
-echo 0x40d8 > /sys/kernel/debug/ieee80211/phy0/ath9k/regidx
-cat /sys/kernel/debug/ieee80211/phy0/ath9k/regval
+Regards,
 
-Sujith
+Tony
