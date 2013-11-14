@@ -1,70 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:53073 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751108Ab3KTI71 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Nov 2013 03:59:27 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Marek Puzyniak <marek.puzyniak@tieto.com>
-CC: <ath10k@lists.infradead.org>,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 1/3] ath10k: add phyerr/dfs handling
-References: <1384418018-4973-1-git-send-email-marek.puzyniak@tieto.com>
-	<87vbzo1m6d.fsf@kamboji.qca.qualcomm.com>
-Date: Wed, 20 Nov 2013 10:59:21 +0200
-In-Reply-To: <87vbzo1m6d.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-	of "Tue, 19 Nov 2013 16:49:30 +0200")
-Message-ID: <87wqk3zbx2.fsf@kamboji.qca.qualcomm.com> (sfid-20131120_095930_968054_C2D64FAE)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mga09.intel.com ([134.134.136.24]:37985 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751179Ab3KNHPB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Nov 2013 02:15:01 -0500
+From: Ilan Peer <ilan.peer@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Ilan Peer <ilan.peer@intel.com>
+Subject: [PATCH v2] iw: Use NL80211_FREQUENCY_ATTR_NO_IR channel attribute
+Date: Thu, 14 Nov 2013 09:15:34 +0200
+Message-Id: <1384413334-31631-1-git-send-email-ilan.peer@intel.com> (sfid-20131114_081506_020123_09410FBA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+Align iw with the change in nl80211.h where NL80211_FREQUENCY_ATTR_NO_IBSS
+and NL80211_FREQUENCY_ATTR_PASSIVE_SCAN were replaced by
+NL80211_FREQUENCY_ATTR_NO_IR.
 
-> Marek Puzyniak <marek.puzyniak@tieto.com> writes:
->
->> From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
->>
->> Handle phyerr, dfs event, radar_report and fft_report.
->> Add also debugfs dfs_simulate_radar and dfs_stats files.
->> Use ath dfs pattern detector.
->>
->> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
->
-> Thanks, all three applied.
->
-> In the future please add a changelog when you change something in the
-> patches. It's very difficult to review otherwise.
+In case both NL80211_FREQUENCY_ATTR_NO_IR and __NL80211_FREQUENCY_ATTR_NO_IBSS
+are set, assume that a new kernel is used and use the NO_IR notation,
+otherwise use the previous notation.
 
-I found out _afterwards_ that these patches actually depend on some
-functionality which is only in mac80211-next.git. As I do not want to
-submit broken functionality to John I had to rebase ath.git and change
-the patch 2:
+This change requires nl80211.h with the new definitions
 
-commit e8a50f8ba44b6933b2a39b6a65528b9a4e8ba5f3
-Author: Marek Puzyniak <marek.puzyniak@tieto.com>
-Date:   Wed Nov 20 09:59:47 2013 +0200
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+---
+ event.c |   24 ++++++++++++++----------
+ info.c  |   18 ++++++++++++------
+ reg.c   |   10 ++++++++--
+ 3 files changed, 34 insertions(+), 18 deletions(-)
 
-    ath10k: introduce DFS implementation
-    
-    Configure interface combination for AP running on channels
-    where radar detection is required. It allows only one type
-    of interface - AP on DFS channel and limits number of AP
-    interfaces to 8. Setup WMI channel flags accordingly to mac
-    channel configuration. CAC based on additional monitor vdev
-    is started if required for current channel.
-    
-    kvalo: dropped ATH10K_DFS_CERTIFIED config option as this
-    the DFS still depends on few mac80211 and cfg80211 patches
-    which are on mac80211-next.git right now. The config option
-    will be added later once all dependencies are available.
-    
-    Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
-    Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-    Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-
-
+diff --git a/event.c b/event.c
+index 603b072..bfdb0fb 100644
+--- a/event.c
++++ b/event.c
+@@ -11,7 +11,7 @@ static int no_seq_check(struct nl_msg *msg, void *arg)
+ 
+ struct ieee80211_beacon_channel {
+ 	__u16 center_freq;
+-	bool passive_scan;
++	bool no_ir;
+ 	bool no_ibss;
+ };
+ 
+@@ -21,8 +21,8 @@ static int parse_beacon_hint_chan(struct nlattr *tb,
+ 	struct nlattr *tb_freq[NL80211_FREQUENCY_ATTR_MAX + 1];
+ 	static struct nla_policy beacon_freq_policy[NL80211_FREQUENCY_ATTR_MAX + 1] = {
+ 		[NL80211_FREQUENCY_ATTR_FREQ] = { .type = NLA_U32 },
+-		[NL80211_FREQUENCY_ATTR_PASSIVE_SCAN] = { .type = NLA_FLAG },
+-		[NL80211_FREQUENCY_ATTR_NO_IBSS] = { .type = NLA_FLAG },
++		[NL80211_FREQUENCY_ATTR_NO_IR] = { .type = NLA_FLAG },
++		[__NL80211_FREQUENCY_ATTR_NO_IBSS] = { .type = NLA_FLAG },
+ 	};
+ 
+ 	if (nla_parse_nested(tb_freq,
+@@ -33,9 +33,9 @@ static int parse_beacon_hint_chan(struct nlattr *tb,
+ 
+ 	chan->center_freq = nla_get_u32(tb_freq[NL80211_FREQUENCY_ATTR_FREQ]);
+ 
+-	if (tb_freq[NL80211_FREQUENCY_ATTR_PASSIVE_SCAN])
+-		chan->passive_scan = true;
+-	if (tb_freq[NL80211_FREQUENCY_ATTR_NO_IBSS])
++	if (tb_freq[NL80211_FREQUENCY_ATTR_NO_IR])
++		chan->no_ir = true;
++	if (tb_freq[__NL80211_FREQUENCY_ATTR_NO_IBSS])
+ 		chan->no_ibss = true;
+ 
+ 	return 0;
+@@ -394,10 +394,14 @@ static int print_event(struct nl_msg *msg, void *arg)
+ 		       chan_before_beacon.center_freq,
+ 		       ieee80211_frequency_to_channel(chan_before_beacon.center_freq));
+ 
+-		if (chan_before_beacon.passive_scan && !chan_after_beacon.passive_scan)
+-			printf("\to active scanning enabled\n");
+-		if (chan_before_beacon.no_ibss && !chan_after_beacon.no_ibss)
+-			printf("\to beaconing enabled\n");
++		if (chan_before_beacon.no_ir && !chan_after_beacon.no_ir) {
++			if (chan_before_beacon.no_ibss && !chan_after_beacon.no_ibss)
++				printf("\to Initiating radiation enabled\n");
++			else
++				printf("\to active scan enabled\n");
++		} else if (chan_before_beacon.no_ibss && !chan_after_beacon.no_ibss) {
++			printf("\to ibss enabled\n");
++		}
+ 
+ 		break;
+ 	case NL80211_CMD_NEW_STATION:
+diff --git a/info.c b/info.c
+index 7e61e88..b2eef15 100644
+--- a/info.c
++++ b/info.c
+@@ -74,8 +74,8 @@ static int print_phy_handler(struct nl_msg *msg, void *arg)
+ 	static struct nla_policy freq_policy[NL80211_FREQUENCY_ATTR_MAX + 1] = {
+ 		[NL80211_FREQUENCY_ATTR_FREQ] = { .type = NLA_U32 },
+ 		[NL80211_FREQUENCY_ATTR_DISABLED] = { .type = NLA_FLAG },
+-		[NL80211_FREQUENCY_ATTR_PASSIVE_SCAN] = { .type = NLA_FLAG },
+-		[NL80211_FREQUENCY_ATTR_NO_IBSS] = { .type = NLA_FLAG },
++		[NL80211_FREQUENCY_ATTR_NO_IR] = { .type = NLA_FLAG },
++		[__NL80211_FREQUENCY_ATTR_NO_IBSS] = { .type = NLA_FLAG },
+ 		[NL80211_FREQUENCY_ATTR_RADAR] = { .type = NLA_FLAG },
+ 		[NL80211_FREQUENCY_ATTR_MAX_TX_POWER] = { .type = NLA_U32 },
+ 	};
+@@ -172,10 +172,16 @@ static int print_phy_handler(struct nl_msg *msg, void *arg)
+ 						print_flag("disabled", &open);
+ 						goto next;
+ 					}
+-					if (tb_freq[NL80211_FREQUENCY_ATTR_PASSIVE_SCAN])
+-						print_flag("passive scanning", &open);
+-					if (tb_freq[NL80211_FREQUENCY_ATTR_NO_IBSS])
+-						print_flag("no IBSS", &open);
++
++					/* If both flags are set assume an new kernel */
++					if (tb_freq[NL80211_FREQUENCY_ATTR_NO_IR] && tb_freq[__NL80211_FREQUENCY_ATTR_NO_IBSS]) {
++						print_flag("no IR", &open);
++					} else if (tb_freq[NL80211_FREQUENCY_ATTR_PASSIVE_SCAN]) {
++						print_flag("passive scan", &open);
++					} else if (tb_freq[__NL80211_FREQUENCY_ATTR_NO_IBSS]){
++						print_flag("no ibss", &open);
++					}
++
+ 					if (tb_freq[NL80211_FREQUENCY_ATTR_RADAR])
+ 						print_flag("radar detection", &open);
+ next:
+diff --git a/reg.c b/reg.c
+index 9a60cec..f2481fe 100644
+--- a/reg.c
++++ b/reg.c
+@@ -193,8 +193,14 @@ static int print_reg_handler(struct nl_msg *msg, void *arg)
+ 		PARSE_FLAG(NL80211_RRF_NO_OUTDOOR, "NO-OUTDOOR");
+ 		PARSE_FLAG(NL80211_RRF_DFS, "DFS");
+ 		PARSE_FLAG(NL80211_RRF_PTP_ONLY, "PTP-ONLY");
+-		PARSE_FLAG(NL80211_RRF_PASSIVE_SCAN, "PASSIVE-SCAN");
+-		PARSE_FLAG(NL80211_RRF_NO_IBSS, "NO-IBSS");
++
++		/* Kernels that support NO_IR always turn on both flags */
++		if ((flags & NL80211_RRF_NO_IR) && (flags & __NL80211_RRF_NO_IBSS)) {
++			printf(", NO-IR");
++		} else {
++			PARSE_FLAG(NL80211_RRF_PASSIVE_SCAN, "PASSIVE-SCAN");
++			PARSE_FLAG(__NL80211_RRF_NO_IBSS, "NO-IBSS");
++		}
+ 
+ 		printf("\n");
+ 	}
 -- 
-Kalle Valo
+1.7.10.4
+
