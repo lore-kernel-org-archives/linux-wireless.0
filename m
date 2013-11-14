@@ -1,101 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:36720 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753173Ab3KKQlO (ORCPT
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:32929 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754096Ab3KNOig (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Nov 2013 11:41:14 -0500
-Message-ID: <1384188067.14334.45.camel@jlt4.sipsolutions.net> (sfid-20131111_174120_162935_2681D5D0)
-Subject: Re: [PATCH v2] mac80211: add assoc beacon timeout logic
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felipe Contreras <felipe.contreras@gmail.com>
-Cc: linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>
-Date: Mon, 11 Nov 2013 17:41:07 +0100
-In-Reply-To: <CAMP44s2cVVe4-yW214B9hJu7n6M1onZpZaPCj5N0Fi1JWDKKsw@mail.gmail.com> (sfid-20131111_172306_225045_4D26036E)
-References: <1384119945-31213-1-git-send-email-felipe.contreras@gmail.com>
-	 <1384160932.14334.6.camel@jlt4.sipsolutions.net>
-	 <CAMP44s3TFSgWuR8gVoFBznNP+t9mz+to===9i1PAnra4ogKu9w@mail.gmail.com>
-	 <1384184624.14334.31.camel@jlt4.sipsolutions.net>
-	 <CAMP44s2cVVe4-yW214B9hJu7n6M1onZpZaPCj5N0Fi1JWDKKsw@mail.gmail.com>
-	 (sfid-20131111_172306_225045_4D26036E)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 14 Nov 2013 09:38:36 -0500
+Received: by mail-pa0-f51.google.com with SMTP id fb1so2159690pad.24
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Nov 2013 06:38:36 -0800 (PST)
+Date: Thu, 14 Nov 2013 06:49:16 -0800
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	Jouni Malinen <j@w1.fi>, sunitb <sunitb@qca.qualcomm.com>,
+	rsunki <rsunki@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC 0/5] cfg80211: regulatory quiescing and exporting DFS
+ regions
+Message-ID: <20131114144914.GG19070@garbanzo.do-not-panic.com> (sfid-20131114_153857_070349_3BB006EF)
+References: <1384366379-25301-1-git-send-email-mcgrof@do-not-panic.com>
+ <1384368487.14578.25.camel@jlt4.sipsolutions.net>
+ <CAB=NE6VkL8L1uiJTrY3P7LUSepRHkS+paE3kmsTunUW_6n5Xvg@mail.gmail.com>
+ <1384370024.28250.1.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1384370024.28250.1.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-11-11 at 10:23 -0600, Felipe Contreras wrote:
-
-> The driver is not receiving it at all. I already debugged this:
+On Wed, Nov 13, 2013 at 08:13:44PM +0100, Johannes Berg wrote:
+> On Wed, 2013-11-13 at 19:57 +0100, Luis R. Rodriguez wrote:
+> > On Wed, Nov 13, 2013 at 7:48 PM, Johannes Berg
+> > <johannes@sipsolutions.net> wrote:
+> > > On Wed, 2013-11-13 at 19:12 +0100, Luis R. Rodriguez wrote:
+> > >
+> > >> Janusz, please test, and likely feel free to take on the last patch.
+> > >> We may need help from Johannes on the rtnl lock question now required
+> > >> for checks on enabling beacon operation.
+> > >
+> > > What's that rtnl thing about?
+> > 
+> > Whether or not callers of cfg80211_reg_can_beacon() have it properly
+> > held already and if not best strategy to make this simple and concise.
+> > The rtnl is required as we need to now query the cfg80211 regdom dfs
+> > region for the case where a channel requires DFS.
 > 
-> http://article.gmane.org/gmane.linux.kernel.wireless.general/115429
+> Can't you just use RCU for that part?
 
-Hmm, ok. I pretty much didn't read that thread since some others were
-jumping in.
+If Janusz is right then we don't even need that patch at all :D
+The rtnl then would only be used for sending the wiphy, we'd
+just require hostapd to always check for the DFS region prior to
+starting IR for the first time, if the netdev was brought down
+(quisced), we'd have to have it check again the DFS region.
 
-> However, I noticed that once in a very long time, sometimes it does
-> receive the corrupted frame and the association continues, and the
-> driver code detects it's a corrupted beacon frame.
+This however does assume we can quiesce properly upon regulatory
+domain changes.
 
-So how does it treat the corruption?
-
-> > The firmware still
-> > shouldn't be filtering anything since it doesn't really look at the
-> > beacon information (or maybe it filters based on the DS IE? I'm not
-> > entirely sure)
-> 
-> That's what I thought, but I don't see it at all (only in monitor
-> mode, and in ad-hoc).
-
-Yes, that part is odd - that's really the root cause.
-
-I didn't quickly find in the threads what device and firmware you were
-using, mind identifying it (again)?
-
-> Nope, it keeps trying forever.
-> 
-> Oct 13 14:33:15 nysa kernel: wlan0: authenticate with e0:1d:3b:46:82:a0
-> Oct 13 14:33:15 nysa kernel: wlan0: send auth to e0:1d:3b:46:82:a0 (try 1/3)
-> Oct 13 14:33:15 nysa kernel: wlan0: authenticated
-> Oct 13 14:33:15 nysa kernel: wlan0: waiting for beacon from e0:1d:3b:46:82:a0
-> Oct 13 14:33:18 nysa kernel: wlan0: authenticate with e0:1d:3b:46:82:a0
-> Oct 13 14:33:18 nysa kernel: wlan0: send auth to e0:1d:3b:46:82:a0 (try 1/3)
-> Oct 13 14:33:18 nysa kernel: wlan0: authenticated
-> Oct 13 14:33:18 nysa kernel: wlan0: waiting for beacon from e0:1d:3b:46:82:a0
-> Oct 13 14:33:22 nysa kernel: wlan0: authenticate with e0:1d:3b:46:82:a0
-> Oct 13 14:33:22 nysa kernel: wlan0: send auth to e0:1d:3b:46:82:a0 (try 1/3)
-> Oct 13 14:33:22 nysa kernel: wlan0: authenticated
-> Oct 13 14:33:22 nysa kernel: wlan0: waiting for beacon from e0:1d:3b:46:82:a0
-> ...
-
-I see the same behaviour - but it's the supplicant's doing, it is indeed
-getting the event that the AP connection failed (timed out):
-
-wlan0: Event ASSOC_TIMED_OUT (15) received
-
-
-> > This isn't really true like I said above - the kernel can only drop the
-> > association, if userspace *insists* then it will try again and again.
-> 
-> But it's not doing this:
-> 
->   ieee80211_destroy_assoc_data(sdata, false);
->   cfg80211_assoc_timeout(sdata->dev, bss);
-> 
-> Which is what causes the association to stop for me.
-> 
-> So where exactly in the code is the association being "dropped"?
-
-This does get called in my setup.
-
-> I would rather fix the problem at the two levels, so even if the
-> firmware passes the corrupt frames correctly, the driver would still
-> somewhat work when there's no beacon frames at all.
-
-Like I said before - trying to work with an AP without beacons at all is
-really bad, we shouldn't be doing it. We might not properly react to
-radar events, and other things, for example.
-
-johannes
-
+  Luis
