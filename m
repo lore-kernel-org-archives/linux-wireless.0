@@ -1,47 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:64072 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753910Ab3KAN6m (ORCPT
+Received: from mail-la0-f44.google.com ([209.85.215.44]:34407 "EHLO
+	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755073Ab3KNT1y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 09:58:42 -0400
-Received: by mail-wg0-f41.google.com with SMTP id b13so1065000wgh.0
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:58:42 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 19/65] wireless-regdb: enable VHT80 for HT
-Date: Fri,  1 Nov 2013 14:57:09 +0100
-Message-Id: <1383314275-20960-20-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_150811_091395_4D0819AC)
-In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+	Thu, 14 Nov 2013 14:27:54 -0500
+Received: by mail-la0-f44.google.com with SMTP id ep20so1995235lab.3
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Nov 2013 11:27:53 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <528523EA.80600@gmail.com>
+References: <CAFux1qFNMwOKEOQ-46xev9LHPanV5NxPXW3UjKGY1od-+6KDCA@mail.gmail.com>
+	<528523EA.80600@gmail.com>
+Date: Thu, 14 Nov 2013 20:27:53 +0100
+Message-ID: <CAFux1qFFY6=6X0+zXr++gJK=zyU=HF24C2gFVtUishLG+4MZEg@mail.gmail.com> (sfid-20131114_202757_954165_763FEFD8)
+Subject: Re: Iwlwifi crashing with microcode error - Intel 7260 N
+From: Federico Tomassetti <f.tomassetti@gmail.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Source is QCA's regulatory team's efforts.
+No, I am just using it to connet to my wireless router and navigate from home,
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Federico
 
-diff --git a/db.txt b/db.txt
-index 9f2fd2a..88dd152 100644
---- a/db.txt
-+++ b/db.txt
-@@ -363,9 +363,9 @@ country HR: DFS-ETSI
- 
- country HT: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
--	(5170 - 5250 @ 40), (20)
--	(5250 - 5330 @ 40), (20), DFS
--	(5490 - 5710 @ 40), (27), DFS
-+	(5170 - 5250 @ 80), (20)
-+	(5250 - 5330 @ 80), (20), DFS
-+	(5490 - 5710 @ 80), (27), DFS
- 
- country HU: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
+On Thu, Nov 14, 2013 at 8:26 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>
+>
+> On 11/14/2013 09:12 PM, Federico Tomassetti wrote:
+>> Hi,
+>> I tried with different kernel, right now I am using the wireless
+>> testing kernel and still I get this error.
+>>
+>> uname -a:
+>> Linux normandy 3.12.0-wl+ #1 SMP Wed Nov 13 19:42:50 CET 2013 x86_64
+>> Intel(R) Core(TM) i7-4700MQ CPU @ 2.40GHz GenuineIntel GNU/Linux
+>>
+>> How can I help you working on this bug?
+>>
+>
+> You are using it as an AP, right?
+
+
+
 -- 
-1.8.4.rc3
-
+Website at http://www.federico-tomassetti.it
+Indirizzo PEC federico.tomassetti@ording.eu
