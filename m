@@ -1,59 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f177.google.com ([74.125.82.177]:54399 "EHLO
-	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751485Ab3KAODz (ORCPT
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:52508 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753151Ab3KNMKL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 10:03:55 -0400
-Received: by mail-we0-f177.google.com with SMTP id x55so3977745wes.36
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 07:03:54 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 10/23] wireless-regdb: update RU's 5 GHz rules
-Date: Fri,  1 Nov 2013 15:03:05 +0100
-Message-Id: <1383314598-21240-11-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_150809_509385_FA4E0101)
-In-Reply-To: <1383314598-21240-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1383314598-21240-1-git-send-email-mcgrof@do-not-panic.com>
+	Thu, 14 Nov 2013 07:10:11 -0500
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
+	johannes@sipsolutions.net, yeohchunyeow@gmail.com
+Cc: yeohchunyeow@cozybit.com
+Subject: [PATCH v5 2/5] mac80211: align ieee80211_ibss_csa_beacon() with ieee80211_csa_beacon()
+Date: Thu, 14 Nov 2013 14:09:33 +0200
+Message-Id: <1384430976-13708-2-git-send-email-luciano.coelho@intel.com> (sfid-20131114_131016_388774_DDAED196)
+In-Reply-To: <1384430976-13708-1-git-send-email-luciano.coelho@intel.com>
+References: <1384430976-13708-1-git-send-email-luciano.coelho@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This:
+The return value of ieee80211_ibss_csa_beacon is not aligned with the
+return value of ieee80211_csa_beacon().  For consistency and to be
+able to use both functions with similar code, change
+ieee80211_ibss_csa_beacon() not to send the bss changed notification
+itself, but return what has changed so the caller can send the
+notification instead.
 
-  o Splits up the first 5 GHz rules into two parts,
-    one without  aDFS requirement and one with DFS
-    required
-
-  o extends the second 5 GHZ DFS frequency range by
-    20 MHz and forces DFS on it
-
-  o enables VHT80 for all 5 GHz frequency ranges
-
-Source is QCA's regulatory team's efforts.
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- db.txt | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ net/mac80211/ibss.c | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
-diff --git a/db.txt b/db.txt
-index a1eafa4..908a369 100644
---- a/db.txt
-+++ b/db.txt
-@@ -684,9 +684,10 @@ country RS: DFS-ETSI
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 3514aab..23e035f 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -522,7 +522,7 @@ int ieee80211_ibss_csa_beacon(struct ieee80211_sub_if_data *sdata,
+ 	if (csa_settings)
+ 		ieee80211_send_action_csa(sdata, csa_settings);
  
- country RU: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
--	(5170 - 5330 @ 40), (20)
--	(5650 - 5710 @ 40), (30)
--	(5735 - 5835 @ 40), (30)
-+	(5170 - 5250 @ 80), (20)
-+	(5250 - 5330 @ 80), (20), DFS
-+	(5650 - 5730 @ 80), (30), DFS
-+	(5735 - 5835 @ 80), (30)
+-	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
++	return BSS_CHANGED_BEACON;
+  out:
+ 	return ret;
+ }
+@@ -559,11 +559,17 @@ int ieee80211_ibss_finish_csa(struct ieee80211_sub_if_data *sdata)
  
- country RW: DFS-FCC
- 	(2402 - 2482 @ 40), (20)
+ 	/* generate the beacon */
+ 	err = ieee80211_ibss_csa_beacon(sdata, NULL);
+-	sdata_unlock(sdata);
+ 	if (err < 0)
+-		return err;
++		goto out;
+ 
+-	return 0;
++	if (err) {
++		ieee80211_bss_info_change_notify(sdata, err);
++		err = 0;
++	}
++out:
++	sdata_unlock(sdata);
++
++	return err;
+ }
+ 
+ void ieee80211_ibss_stop(struct ieee80211_sub_if_data *sdata)
 -- 
 1.8.4.rc3
 
