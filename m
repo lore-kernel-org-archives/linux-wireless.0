@@ -1,56 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:13184 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752778Ab3KLSHv (ORCPT
+Received: from mail-we0-f170.google.com ([74.125.82.170]:45863 "EHLO
+	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753965Ab3KNVAB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Nov 2013 13:07:51 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCHv2 00/13] ath10k: pci fixes 2013-10-30
-References: <1383133346-8135-1-git-send-email-michal.kazior@tieto.com>
-	<1383894095-27998-1-git-send-email-michal.kazior@tieto.com>
-Date: Tue, 12 Nov 2013 20:07:45 +0200
-In-Reply-To: <1383894095-27998-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Fri, 8 Nov 2013 08:01:22 +0100")
-Message-ID: <877gcda3ym.fsf@kamboji.qca.qualcomm.com> (sfid-20131112_190755_030836_11ECF2F2)
+	Thu, 14 Nov 2013 16:00:01 -0500
+Received: by mail-we0-f170.google.com with SMTP id p61so2697209wes.15
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Nov 2013 13:00:00 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CADNhdGGeOcSS+nv_LCgCN4jpAf2Lk9j5juyw4ZeWAgnqUe=+AA@mail.gmail.com>
+References: <CADNhdGGeOcSS+nv_LCgCN4jpAf2Lk9j5juyw4ZeWAgnqUe=+AA@mail.gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Fri, 15 Nov 2013 02:29:40 +0530
+Message-ID: <CABPxzYJm_tAZ4APfidQdgMi06vnSLhpouuu905nK41eTEOJq6Q@mail.gmail.com> (sfid-20131114_220006_561467_F3B556FC)
+Subject: Re: [mac80211] 802.11 data packets Rx and Tx from user space
+To: shankar swaminathan <shankswa@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
-
+On Thu, Nov 14, 2013 at 8:31 PM, shankar swaminathan <shankswa@gmail.com> wrote:
 > Hi,
 >
-> This patchset contains a slew of PCI/CE cleanups
-> and fixes. The aim of the patchset is to deal with
-> CE null dereference bugs Ben has been reporting on
-> the mailing list for some time now.
+> I had earlier posted a query specific to the rx path of mac80211.
+> Here is a more complete set of two queries.
+> Kindly help clarifying.
 >
-> v2:
->  * fix prints
->  * fix commit messages
->  * add additional patch
->    (ath10k: reset device upon stopping/power down)
+> I am working on building a PC based Access Point in linux and have the
+> following queries:
 >
->
-> Michal Kazior (13):
->   ath10k: remove ar_pci->ce_count
->   ath10k: don't forget to kill fw error tasklet
->   ath10k: split tasklet killing function
->   ath10k: rename ath10k_pci_reset_target()
->   ath10k: make sure to mask all CE irqs
->   ath10k: fix ath10k_ce_init() failpath
->   ath10k: remove meaningless check
->   ath10k: use ath10k_do_pci_wake/sleep
->   ath10k: propagate ath10k_ce_disable_interrupts() errors
->   ath10k: guard against CE corruption from firmware
->   ath10k: re-arrange PCI init code
->   ath10k: add and fix some PCI prints
->   ath10k: reset device upon stopping/power down
+> 1. Is there a mechanism for user space to receive 802.11 data packets
+> with the 802.11 header intact. I do not want to use a monitor
+> interface as I believe a monitor interface cannot be used to connect
+> wireless clients. Please clarify.
 
-Thanks, all 13 applied.
+If you want 802.11 header monitor interface is the only way (at least to
+my knowledge), you can use 2 VIF's one for connection and one for
+monitoring. Most chipsets support this.
+>
+> 2. From user space can i transmit a fully constructed 802.11 data
+> frame. Will RAW sockets over WiFi work? I have not tried though.
+You can use pcap API's, but you still need the monitor interface
+(use 2VIF's as above)
 
--- 
-Kalle Valo
+http://wireless.kernel.org/en/users/Documentation/packetspammer
