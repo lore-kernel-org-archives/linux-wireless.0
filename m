@@ -1,147 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:37985 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751179Ab3KNHPB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Nov 2013 02:15:01 -0500
-From: Ilan Peer <ilan.peer@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Ilan Peer <ilan.peer@intel.com>
-Subject: [PATCH v2] iw: Use NL80211_FREQUENCY_ATTR_NO_IR channel attribute
-Date: Thu, 14 Nov 2013 09:15:34 +0200
-Message-Id: <1384413334-31631-1-git-send-email-ilan.peer@intel.com> (sfid-20131114_081506_020123_09410FBA)
+Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:57067 "EHLO
+	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754777Ab3KNSvy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Nov 2013 13:51:54 -0500
+Date: Thu, 14 Nov 2013 10:51:33 -0800
+From: Tony Lindgren <tony@atomide.com>
+To: Sebastian Reichel <sre@debian.org>
+Cc: Sebastian Reichel <sre@ring0.de>, Luciano Coelho <luca@coelho.fi>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Rob Landley <rob@landley.net>,
+	Russell King <linux@arm.linux.org.uk>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Felipe Balbi <balbi@ti.com>,
+	Sachin Kamat <sachin.kamat@linaro.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bill Pemberton <wfp5p@virginia.edu>,
+	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Luciano Coelho <coelho@ti.com>
+Subject: Re: [PATCH 1/4] wl1251: split wl251 platform data to a separate
+ structure
+Message-ID: <20131114185132.GQ10317@atomide.com> (sfid-20131114_195202_256169_5583502F)
+References: <1382890469-25286-1-git-send-email-sre@debian.org>
+ <1382890469-25286-2-git-send-email-sre@debian.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1382890469-25286-2-git-send-email-sre@debian.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Align iw with the change in nl80211.h where NL80211_FREQUENCY_ATTR_NO_IBSS
-and NL80211_FREQUENCY_ATTR_PASSIVE_SCAN were replaced by
-NL80211_FREQUENCY_ATTR_NO_IR.
+* Sebastian Reichel <sre@debian.org> [131027 09:15]:
+> From: Luciano Coelho <coelho@ti.com>
+> 
+> Move the wl1251 part of the wl12xx platform data structure into a new
+> structure specifically for wl1251.  Change the platform data built-in
+> block and board files accordingly.
+> 
+> Cc: Tony Lindgren <tony@atomide.com>
+> Signed-off-by: Luciano Coelho <coelho@ti.com>
+> Acked-by: Tony Lindgren <tony@atomide.com>
+> Reviewed-by: Felipe Balbi <balbi@ti.com>
+> ---
+>  arch/arm/mach-omap2/board-omap3pandora.c       |  4 +--
+>  arch/arm/mach-omap2/board-rx51-peripherals.c   |  2 +-
+>  drivers/net/wireless/ti/wilink_platform_data.c | 37 +++++++++++++++++++++-----
+>  drivers/net/wireless/ti/wl1251/sdio.c          | 12 ++++-----
+>  drivers/net/wireless/ti/wl1251/spi.c           |  2 +-
+>  include/linux/wl12xx.h                         | 22 ++++++++++++++-
+>  6 files changed, 62 insertions(+), 17 deletions(-)
+> 
+> diff --git a/arch/arm/mach-omap2/board-omap3pandora.c b/arch/arm/mach-omap2/board-omap3pandora.c
+> index de1bc6b..24f3c1b 100644
+> --- a/arch/arm/mach-omap2/board-omap3pandora.c
+> +++ b/arch/arm/mach-omap2/board-omap3pandora.c
+> @@ -536,7 +536,7 @@ static struct spi_board_info omap3pandora_spi_board_info[] __initdata = {
+>  
+>  static void __init pandora_wl1251_init(void)
+>  {
+> -	struct wl12xx_platform_data pandora_wl1251_pdata;
+> +	struct wl1251_platform_data pandora_wl1251_pdata;
+>  	int ret;
+>  
+>  	memset(&pandora_wl1251_pdata, 0, sizeof(pandora_wl1251_pdata));
+> @@ -550,7 +550,7 @@ static void __init pandora_wl1251_init(void)
+>  		goto fail_irq;
+>  
+>  	pandora_wl1251_pdata.use_eeprom = true;
+> -	ret = wl12xx_set_platform_data(&pandora_wl1251_pdata);
+> +	ret = wl1251_set_platform_data(&pandora_wl1251_pdata);
+>  	if (ret < 0)
+>  		goto fail_irq;
+>  
+> diff --git a/arch/arm/mach-omap2/board-rx51-peripherals.c b/arch/arm/mach-omap2/board-rx51-peripherals.c
+> index 65e3627..0d8e7d2 100644
+> --- a/arch/arm/mach-omap2/board-rx51-peripherals.c
+> +++ b/arch/arm/mach-omap2/board-rx51-peripherals.c
+> @@ -82,7 +82,7 @@ enum {
+>  	RX51_SPI_MIPID,		/* LCD panel */
+>  };
+>  
+> -static struct wl12xx_platform_data wl1251_pdata;
+> +static struct wl1251_platform_data wl1251_pdata;
+>  static struct tsc2005_platform_data tsc2005_pdata;
+>  
+>  #if defined(CONFIG_SENSORS_LIS3_I2C) || defined(CONFIG_SENSORS_LIS3_I2C_MODULE)
 
-In case both NL80211_FREQUENCY_ATTR_NO_IR and __NL80211_FREQUENCY_ATTR_NO_IBSS
-are set, assume that a new kernel is used and use the NO_IR notation,
-otherwise use the previous notation.
+If this is not going into v3.13, these will cause conflicts
+with the mach-omap2/board-*.c files for v3.14.
 
-This change requires nl80211.h with the new definitions
+So it might be best to do a minimal header patch first that
+can be merged in by both linux-omap and wireless trees.
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
----
- event.c |   24 ++++++++++++++----------
- info.c  |   18 ++++++++++++------
- reg.c   |   10 ++++++++--
- 3 files changed, 34 insertions(+), 18 deletions(-)
+Regards,
 
-diff --git a/event.c b/event.c
-index 603b072..bfdb0fb 100644
---- a/event.c
-+++ b/event.c
-@@ -11,7 +11,7 @@ static int no_seq_check(struct nl_msg *msg, void *arg)
- 
- struct ieee80211_beacon_channel {
- 	__u16 center_freq;
--	bool passive_scan;
-+	bool no_ir;
- 	bool no_ibss;
- };
- 
-@@ -21,8 +21,8 @@ static int parse_beacon_hint_chan(struct nlattr *tb,
- 	struct nlattr *tb_freq[NL80211_FREQUENCY_ATTR_MAX + 1];
- 	static struct nla_policy beacon_freq_policy[NL80211_FREQUENCY_ATTR_MAX + 1] = {
- 		[NL80211_FREQUENCY_ATTR_FREQ] = { .type = NLA_U32 },
--		[NL80211_FREQUENCY_ATTR_PASSIVE_SCAN] = { .type = NLA_FLAG },
--		[NL80211_FREQUENCY_ATTR_NO_IBSS] = { .type = NLA_FLAG },
-+		[NL80211_FREQUENCY_ATTR_NO_IR] = { .type = NLA_FLAG },
-+		[__NL80211_FREQUENCY_ATTR_NO_IBSS] = { .type = NLA_FLAG },
- 	};
- 
- 	if (nla_parse_nested(tb_freq,
-@@ -33,9 +33,9 @@ static int parse_beacon_hint_chan(struct nlattr *tb,
- 
- 	chan->center_freq = nla_get_u32(tb_freq[NL80211_FREQUENCY_ATTR_FREQ]);
- 
--	if (tb_freq[NL80211_FREQUENCY_ATTR_PASSIVE_SCAN])
--		chan->passive_scan = true;
--	if (tb_freq[NL80211_FREQUENCY_ATTR_NO_IBSS])
-+	if (tb_freq[NL80211_FREQUENCY_ATTR_NO_IR])
-+		chan->no_ir = true;
-+	if (tb_freq[__NL80211_FREQUENCY_ATTR_NO_IBSS])
- 		chan->no_ibss = true;
- 
- 	return 0;
-@@ -394,10 +394,14 @@ static int print_event(struct nl_msg *msg, void *arg)
- 		       chan_before_beacon.center_freq,
- 		       ieee80211_frequency_to_channel(chan_before_beacon.center_freq));
- 
--		if (chan_before_beacon.passive_scan && !chan_after_beacon.passive_scan)
--			printf("\to active scanning enabled\n");
--		if (chan_before_beacon.no_ibss && !chan_after_beacon.no_ibss)
--			printf("\to beaconing enabled\n");
-+		if (chan_before_beacon.no_ir && !chan_after_beacon.no_ir) {
-+			if (chan_before_beacon.no_ibss && !chan_after_beacon.no_ibss)
-+				printf("\to Initiating radiation enabled\n");
-+			else
-+				printf("\to active scan enabled\n");
-+		} else if (chan_before_beacon.no_ibss && !chan_after_beacon.no_ibss) {
-+			printf("\to ibss enabled\n");
-+		}
- 
- 		break;
- 	case NL80211_CMD_NEW_STATION:
-diff --git a/info.c b/info.c
-index 7e61e88..b2eef15 100644
---- a/info.c
-+++ b/info.c
-@@ -74,8 +74,8 @@ static int print_phy_handler(struct nl_msg *msg, void *arg)
- 	static struct nla_policy freq_policy[NL80211_FREQUENCY_ATTR_MAX + 1] = {
- 		[NL80211_FREQUENCY_ATTR_FREQ] = { .type = NLA_U32 },
- 		[NL80211_FREQUENCY_ATTR_DISABLED] = { .type = NLA_FLAG },
--		[NL80211_FREQUENCY_ATTR_PASSIVE_SCAN] = { .type = NLA_FLAG },
--		[NL80211_FREQUENCY_ATTR_NO_IBSS] = { .type = NLA_FLAG },
-+		[NL80211_FREQUENCY_ATTR_NO_IR] = { .type = NLA_FLAG },
-+		[__NL80211_FREQUENCY_ATTR_NO_IBSS] = { .type = NLA_FLAG },
- 		[NL80211_FREQUENCY_ATTR_RADAR] = { .type = NLA_FLAG },
- 		[NL80211_FREQUENCY_ATTR_MAX_TX_POWER] = { .type = NLA_U32 },
- 	};
-@@ -172,10 +172,16 @@ static int print_phy_handler(struct nl_msg *msg, void *arg)
- 						print_flag("disabled", &open);
- 						goto next;
- 					}
--					if (tb_freq[NL80211_FREQUENCY_ATTR_PASSIVE_SCAN])
--						print_flag("passive scanning", &open);
--					if (tb_freq[NL80211_FREQUENCY_ATTR_NO_IBSS])
--						print_flag("no IBSS", &open);
-+
-+					/* If both flags are set assume an new kernel */
-+					if (tb_freq[NL80211_FREQUENCY_ATTR_NO_IR] && tb_freq[__NL80211_FREQUENCY_ATTR_NO_IBSS]) {
-+						print_flag("no IR", &open);
-+					} else if (tb_freq[NL80211_FREQUENCY_ATTR_PASSIVE_SCAN]) {
-+						print_flag("passive scan", &open);
-+					} else if (tb_freq[__NL80211_FREQUENCY_ATTR_NO_IBSS]){
-+						print_flag("no ibss", &open);
-+					}
-+
- 					if (tb_freq[NL80211_FREQUENCY_ATTR_RADAR])
- 						print_flag("radar detection", &open);
- next:
-diff --git a/reg.c b/reg.c
-index 9a60cec..f2481fe 100644
---- a/reg.c
-+++ b/reg.c
-@@ -193,8 +193,14 @@ static int print_reg_handler(struct nl_msg *msg, void *arg)
- 		PARSE_FLAG(NL80211_RRF_NO_OUTDOOR, "NO-OUTDOOR");
- 		PARSE_FLAG(NL80211_RRF_DFS, "DFS");
- 		PARSE_FLAG(NL80211_RRF_PTP_ONLY, "PTP-ONLY");
--		PARSE_FLAG(NL80211_RRF_PASSIVE_SCAN, "PASSIVE-SCAN");
--		PARSE_FLAG(NL80211_RRF_NO_IBSS, "NO-IBSS");
-+
-+		/* Kernels that support NO_IR always turn on both flags */
-+		if ((flags & NL80211_RRF_NO_IR) && (flags & __NL80211_RRF_NO_IBSS)) {
-+			printf(", NO-IR");
-+		} else {
-+			PARSE_FLAG(NL80211_RRF_PASSIVE_SCAN, "PASSIVE-SCAN");
-+			PARSE_FLAG(__NL80211_RRF_NO_IBSS, "NO-IBSS");
-+		}
- 
- 		printf("\n");
- 	}
--- 
-1.7.10.4
-
+Tony
