@@ -1,46 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:51666 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751352Ab3KOTuI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Nov 2013 14:50:08 -0500
-Received: by mail-wi0-f181.google.com with SMTP id f4so1496170wiw.8
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Nov 2013 11:50:07 -0800 (PST)
+Received: from ring0.de ([91.143.88.219]:57765 "EHLO smtp.ring0.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751397Ab3KNXDv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Nov 2013 18:03:51 -0500
+Date: Thu, 14 Nov 2013 23:03:33 +0000
+From: Sebastian Reichel <sre@debian.org>
+To: Tony Lindgren <tony@atomide.com>
+Cc: Luciano Coelho <luca@coelho.fi>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Rob Landley <rob@landley.net>,
+	Russell King <linux@arm.linux.org.uk>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Felipe Balbi <balbi@ti.com>,
+	Sachin Kamat <sachin.kamat@linaro.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bill Pemberton <wfp5p@virginia.edu>,
+	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Luciano Coelho <coelho@ti.com>
+Subject: Re: [PATCH 1/4] wl1251: split wl251 platform data to a separate
+ structure
+Message-ID: <20131114230330.GB6383@earth.universe> (sfid-20131115_000421_096594_5547900C)
+References: <1382890469-25286-1-git-send-email-sre@debian.org>
+ <1382890469-25286-2-git-send-email-sre@debian.org>
+ <20131114185132.GQ10317@atomide.com>
 MIME-Version: 1.0
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Sat, 16 Nov 2013 01:19:47 +0530
-Message-ID: <CABPxzYJAct6KtwqZY-DOgjf1wueSmeOU=iLku+gGeZ6ZVE6n9Q@mail.gmail.com> (sfid-20131115_205012_024561_36336C6E)
-Subject: [Query] Update mac80211 BSS info from cfg8011_bss_inform_frame when
- hw_scan is enabled
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="V0207lvV8h4k8FAm"
+In-Reply-To: <20131114185132.GQ10317@atomide.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
 
-For chip sets that set
+--V0207lvV8h4k8FAm
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-IEEE80211_HW_CONNECTION_MONITOR
-hw_scan
+On Thu, Nov 14, 2013 at 10:51:33AM -0800, Tony Lindgren wrote:
+> [...]
+>
+> If this is not going into v3.13, these will cause conflicts
+> with the mach-omap2/board-*.c files for v3.14.
+>=20
+> So it might be best to do a minimal header patch first that
+> can be merged in by both linux-omap and wireless trees.
 
-the hardware does the scan and maintains the
-connection.
+I guess this patch is pretty minimal. It also seems to be acked by
+the involved Maintainers, so maybe just merge Patch 1 without the
+other patches?
 
-So some HW's might drop the probe responses and
-beacons as they are not required by the mac80211.
+This does not solve the problem with the struct modification from
+the second patch, but I guess it's the more intrusive patch.
 
-In those scenarios, the rate control module minstrel_ht called from
-prep_connection throws a warning (in rate_control_send_low)
-because "supp_rates" is not set, since scan results are updated
- through "cfg8011_bss_inform_frame" which doesn't call
-"ieee80211_bss_info_update'.
+-- Sebastian
 
-How do we handle such scenarios? Does the cfg80211 need to
-update the bss information in mac80211?
+--V0207lvV8h4k8FAm
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
--- 
-Thanks,
-Regards,
-Chaitanya T K.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.15 (GNU/Linux)
+
+iQIcBAEBCAAGBQJShVbCAAoJENju1/PIO/qa3ygP+QFNNsOwF5PZp0uSpTuxh3II
+kdL4jIoihLkpJ1dgG6rMsJIqyHAk09XUd5TZjsKandyiv1XCSLzEbC6S3X6kBT15
+/gxWHWUYMCDx7l21DFG5/zaEVCtGMalg2kxX9rClbcEdv1uJtVzw2qywyccWGNmp
+N/D84+/Xu7P6n+AJvdJOMqGT1hMcerZCDc0x/8Ggcu9GMc+Ok6uYNwuoVPWhJbot
+iP7+p9A+tz8n6RwLCmIF45TzDjXbx2dSh66qTChpV5LdOxunCXJe5GchEFbfAorx
+3sEIddHZzC4yT3ArTqm/liyCIOUrVXcw0Hjal05XK+5lFKDSLZSGme6UTT0BzfsJ
+wmrnD3Yo49PZrxYzfzonm8kpJ6YjHWX/b7kLQyY2U2W9f/StCE/WAwImp5Fj/SRC
+ZthE7CNdj8L4OdciRSWgIrs8ttpkSIUhIkQ+0LZH6k/gfQWXD+uSdKJXH7zYnByd
+63SgS+Rj9aaIpNyYTXOuWymeRFhh5Zw7wItrLxhZCZMOkcZ0fFMEqDo+zpNHCB4+
+rblAhOdhDjJxpiOivWprhIUptYDl7VwePRG3XUrJaULDYM9S3rEY45MWCZ83QhkZ
+xmSQm2t5voPfTvTnXKYZhj9WHdKGGCKz/sSaz2Y0c1cZ4qA5FpjKbVqPezovCvaM
+rztAFbkFtnT9Tf9BvnZJ
+=yaNn
+-----END PGP SIGNATURE-----
+
+--V0207lvV8h4k8FAm--
