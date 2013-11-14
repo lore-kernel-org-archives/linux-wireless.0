@@ -1,29 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:48592 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751171Ab3KRWz6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Nov 2013 17:55:58 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21130.39398.379492.921373@gargle.gargle.HOWL> (sfid-20131118_235601_704235_9A3A66C7)
-Date: Tue, 19 Nov 2013 04:21:18 +0530
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [PATCH 1/2] ath9k_hw: fix TSF save/restore around chip reset
-In-Reply-To: <1384802084-55082-1-git-send-email-nbd@openwrt.org>
-References: <1384802084-55082-1-git-send-email-nbd@openwrt.org>
+Received: from nbd.name ([46.4.11.11]:40216 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757540Ab3KNUd3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Nov 2013 15:33:29 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, sgruszka@redhat.com
+Subject: [PATCH] rt2x00: fix a crash bug in the HT descriptor handling fix
+Date: Thu, 14 Nov 2013 21:33:15 +0100
+Message-Id: <1384461195-37185-1-git-send-email-nbd@openwrt.org> (sfid-20131114_213336_891490_F13EC5A9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau wrote:
-> A cold reset can be triggered because of DMA stop issues, and this leads
-> to TSF being cleared on all chipsets. To properly deal with this, always
-> save the TSF.
+Commit "rt2x00: fix HT TX descriptor settings regression"
+assumes that the control parameter to rt2x00mac_tx is always non-NULL.
+There is an internal call in rt2x00lib_bc_buffer_iter where NULL is
+passed. Fix the resulting crash by adding an initialized dummy on-stack
+ieee80211_tx_control struct.
 
-I think this needs to be done only when we are in operational state.
-There is no need to do this before the station interface is associated
-or the AP interface is up.
+Cc: stable@vger.kernel.org # 3.7+
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/rt2x00/rt2x00dev.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Sujith
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 080b1fc..9dd92a7 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -181,6 +181,7 @@ static void rt2x00lib_autowakeup(struct work_struct *work)
+ static void rt2x00lib_bc_buffer_iter(void *data, u8 *mac,
+ 				     struct ieee80211_vif *vif)
+ {
++	struct ieee80211_tx_control control = {};
+ 	struct rt2x00_dev *rt2x00dev = data;
+ 	struct sk_buff *skb;
+ 
+@@ -195,7 +196,7 @@ static void rt2x00lib_bc_buffer_iter(void *data, u8 *mac,
+ 	 */
+ 	skb = ieee80211_get_buffered_bc(rt2x00dev->hw, vif);
+ 	while (skb) {
+-		rt2x00mac_tx(rt2x00dev->hw, NULL, skb);
++		rt2x00mac_tx(rt2x00dev->hw, &control, skb);
+ 		skb = ieee80211_get_buffered_bc(rt2x00dev->hw, vif);
+ 	}
+ }
+-- 
+1.8.3.4 (Apple Git-47)
+
