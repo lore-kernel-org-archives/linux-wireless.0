@@ -1,67 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2976 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750867Ab3KYLI3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Nov 2013 06:08:29 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-cc: backports@vger.kernel.org, "Arend van Spriel" <arend@broadcom.com>,
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:61958 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753293Ab3KNOgB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Nov 2013 09:36:01 -0500
+Received: by mail-pb0-f46.google.com with SMTP id un15so2112047pbc.33
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Nov 2013 06:36:00 -0800 (PST)
+Date: Thu, 14 Nov 2013 06:46:41 -0800
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>, j@w1.fi,
+	sunitb@qca.qualcomm.com, rsunki@qca.qualcomm.com,
 	linux-wireless@vger.kernel.org
-Subject: [PATCH] backport: need reinit_completion() for kernel before
- v3.13
-Date: Mon, 25 Nov 2013 12:07:56 +0100
-Message-ID: <1385377676-5106-1-git-send-email-arend@broadcom.com> (sfid-20131125_120832_720547_1B17DF46)
+Subject: Re: [RFC 5/5] cfg80211: DFS check dfs_region before usage
+Message-ID: <20131114144638.GF19070@garbanzo.do-not-panic.com> (sfid-20131114_153606_391412_8D6C924C)
+References: <1384366379-25301-1-git-send-email-mcgrof@do-not-panic.com>
+ <1384366379-25301-6-git-send-email-mcgrof@do-not-panic.com>
+ <1384378173.28806.22.camel@jlt4.sipsolutions.net>
+ <CALhHN=r4y+JDw9_i9FdKwNoHgic+bvkMJRpYwnaXoSK519Metw@mail.gmail.com>
+ <CALhHN=o-LQfXuyujFOj6A7hzE0mBbC5Q6r3ByL6APJffOx4sHQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CALhHN=o-LQfXuyujFOj6A7hzE0mBbC5Q6r3ByL6APJffOx4sHQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The use of INIT_COMPLETION() has been replaced by reinit_completion()
-in v3.13-rc1. This patch backports that inline function.
+On Thu, Nov 14, 2013 at 12:52:26PM +0100, Janusz Dziedzic wrote:
+> On 14 November 2013 11:15, Janusz Dziedzic <janusz.dziedzic@tieto.com> wrote:
+> > On 13 November 2013 22:29, Johannes Berg <johannes@sipsolutions.net> wrote:
+> >> On Wed, 2013-11-13 at 19:12 +0100, Luis R. Rodriguez wrote:
+> >>> Check the DFS region before channel availability check
+> >>> or declaring a channel as DFS usable.
+> >>>
+> >>> Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+> >>> ---
+> >>>  net/wireless/chan.c    | 8 ++++++++
+> >>>  net/wireless/nl80211.c | 5 +++++
+> >>>  2 files changed, 13 insertions(+)
+> >>>
+> >>> diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+> >>> index 78559b5..4e6eaa0 100644
+> >>> --- a/net/wireless/chan.c
+> >>> +++ b/net/wireless/chan.c
+> >>> @@ -517,10 +517,18 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
+> >>>       struct ieee80211_sta_ht_cap *ht_cap;
+> >>>       struct ieee80211_sta_vht_cap *vht_cap;
+> >>>       u32 width, control_freq;
+> >>> +     enum nl80211_dfs_regions dfs_region;
+> >>>
+> >>>       if (WARN_ON(!cfg80211_chandef_valid(chandef)))
+> >>>               return false;
+> >>>
+> >>> +     rtnl_lock();
+> >>> +     dfs_region = reg_get_dfs_region(wiphy);
+> >>> +     rtnl_unlock();
+> >>
+> >
+> >
+> > Do we need check dfs_region in cfg80211_can_beacon() at all?
+> > We already check first if all channels NL80211_DFS_AVAILABLE.
+> > To be DFS_AVAILABLE we need pass CAC, and we will fail CAC if
+> > dfs_region == UNSET.
+> >
+> > Anyway we can do something like this in cfg80211_can_beacon()
+> >
+> >         if (cfg80211_chandef_dfs_required(wiphy, chandef) > 0 &&
+> > -           cfg80211_chandef_dfs_available(wiphy, chandef)) {
+> > +           cfg80211_chandef_dfs_available(wiphy, chandef) &&
+> > +           reg_get_dfs_region(wiphy) != NL80211_DFS_UNSET) {
+> > ...
+> > And change doc that cfg80211_can_beacon() require rtnl_lock.
+> > But I think this is not required.
+> >
+> Or if we should handle dfs_region change after we start CAC and
+> start beaconing, 
 
-Cc: <linux-wireless@vger.kernel.org>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- backport/backport-include/linux/completion.h |   29 ++++++++++++++++++++++++++
- 1 file changed, 29 insertions(+)
- create mode 100644 backport/backport-include/linux/completion.h
+Can you clarify what you mean?
 
-diff --git a/backport/backport-include/linux/completion.h b/backport/backport-include/linux/completion.h
-new file mode 100644
-index 0000000..ed30d8a
---- /dev/null
-+++ b/backport/backport-include/linux/completion.h
-@@ -0,0 +1,29 @@
-+#ifndef _BACKPORTS_LINUX_COMPLETION_H
-+#define _BACKPORTS_LINUX_COMPLETION_H
-+#include_next <linux/completion.h>
-+#include <linux/version.h>
-+
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(3,13,0))
-+/**
-+ * backport of:
-+ *
-+ * commit c32f74ab2872994bc8336ed367313da3139350ca
-+ * Author: Wolfram Sang <wsa@the-dreams.de>
-+ * Date:   Thu Nov 14 14:32:01 2013 -0800
-+ *
-+ *   sched: replace INIT_COMPLETION with reinit_completion
-+ */
-+/**
-+ * reinit_completion - reinitialize a completion structure
-+ * @x:  pointer to completion structure that is to be reinitialized
-+ *
-+ * This inline function should be used to reinitialize a completion structure so it can
-+ * be reused. This is especially important after complete_all() is used.
-+ */
-+static inline void reinit_completion(struct completion *x)
-+{
-+	x->done = 0;
-+}
-+#endif
-+
-+#endif /* _BACKPORTS_LINUX_COMPLETION_H */
--- 
-1.7.10.4
+Right now update_all_wiphy_regulatory() contends on the rtnl_lock(),
+I am not sure if starting CAC and beaconing does. I also just did
+not get what you mean here.
 
+> we could add __cfg80211_can_beacon() without rtnl
+> locking and cfg80211_can_beacon() with locking.
 
+If to use DFS we need DFS_AVAILABLE and if it is *never* set
+if dfs region is unset I think we should be good *if* we handle
+quiescing properly.
+
+> BTW
+> Luis should we handle dfs_region change also during CAC? Who should
+> fail CAC in case we switch eg. from ETSI to FCC? Should we handle this
+> in driver?
+
+I gave this a lot of thought and decided to just do it in kernel
+on cfg80211 by quescing upon regulatory domain changes where
+appropriately (not just for DFS region change), *and* by having
+wiphy_core_dfs_region_usable() always be checked before sending
+to userspace the supported DFS regions. The trick here is that
+since we are quiescing it means that userspace in theory (if
+we do quescing properly) will always have to check query for the
+DFS regions *anytime* it will want to start a new interface for
+initiating radiation, ie just once upon init. If the DFS region
+changes quescing would have turned off radiation and what I was
+aiming for is for then userspace to have to get the DFS region
+again and only if its set would it then again start radiation.
+
+Doing it this way avoid us having to do anything on any driver.
+It also allows us to not even have to deal with this in userspace,
+which would have required userspace to provide support for handling
+DFS region changes by monitoring the multicast regulatory group,
+and upon a regulatory change, if a DFS region change, or any
+regulatory change queisce itself.
+
+Notice that upon a regulatory intersection we end up using DFS
+unset if the DFS regions disagree, and that we now always use
+the central cfg80211 DFS region. This ensures that DFS is tied
+down to regulatory agreement on the system.
+
+  Luis
