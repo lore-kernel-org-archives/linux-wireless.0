@@ -1,135 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:52466 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755300Ab3KLObO (ORCPT
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:51614 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754779Ab3KNRyU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Nov 2013 09:31:14 -0500
-Received: by mail-wg0-f45.google.com with SMTP id a1so2179377wgh.24
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Nov 2013 06:31:12 -0800 (PST)
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@gmail.com>,
-	Karl Beldan <karl.beldan@rivierawaves.com>
-Subject: [RFC 2/2] fixup! mac80211: minstrel_ht: add basic support for VHT rates <= 80MHz
-Date: Tue, 12 Nov 2013 15:30:25 +0100
-Message-Id: <1384266625-22431-2-git-send-email-karl.beldan@gmail.com> (sfid-20131112_153117_833750_B1CD9826)
-In-Reply-To: <1384266625-22431-1-git-send-email-karl.beldan@gmail.com>
-References: <1384266625-22431-1-git-send-email-karl.beldan@gmail.com>
+	Thu, 14 Nov 2013 12:54:20 -0500
+Received: by mail-ie0-f170.google.com with SMTP id to1so3279881ieb.15
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Nov 2013 09:54:20 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB301E02FC6@HASMSX103.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
+ <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
+ <527A8166.6000701@gmail.com> <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
+ <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
+ <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
+ <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
+ <20131111224439.GA30638@google.com> <CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com>
+ <CALkVjQaXEBpbwu9Qy3+17Eg-nSg-k7iin8G3f1RsTLkCOB-2XQ@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DF044C@HASMSX103.ger.corp.intel.com>
+ <CAErSpo5iU15AoSVL9WmLp4gNCiNmt6pFZuTsd-Vui4SCrSc_Hw@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301DF0865@HASMSX103.ger.corp.intel.com>
+ <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
+ <52828364.6080103@gmail.com> <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
+ <CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
+ <CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
+ <CALkVjQaTnocYnV4GM=LHuYwMRZ=sOZnSrtna4C6anNAWr4O7=A@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02E49@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZdPuE2F+ZARBLha-+iOMA4AjDWHO4=ssnuF2Uu87RyuQ@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02EC1@HASMSX103.ger.corp.intel.com>
+ <CALkVjQbPTkGuEa8hLVZE0OVatw7ho=D+D51Qu68PRx-0dYay7w@mail.gmail.com> <0BA3FCBA62E2DC44AF3030971E174FB301E02FC6@HASMSX103.ger.corp.intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 14 Nov 2013 10:53:58 -0700
+Message-ID: <CAErSpo6bKOpycD=cp08aBqp2U-u7sdbTSBYoHop1-1Hkmr3F-g@mail.gmail.com> (sfid-20131114_185424_979859_FBDFE213)
+Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: wzyboy <wzyboy@wzyboy.org>,
+	Emmanuel Grumbach <egrumbach@gmail.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Bj?rn Mork" <bjorn@mork.no>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karl Beldan <karl.beldan@rivierawaves.com>
+On Thu, Nov 14, 2013 at 1:39 AM, Grumbach, Emmanuel
+<emmanuel.grumbach@intel.com> wrote:
+>> > Awesome - you have L1 enabled:
+>>
+>> Though do not understand but it seems like a good news :-)
+>
+> You are saving power (and I know that at least, L1 works).
+> L1 PM substates doesn't work (but that's a brand new feature)
+>
+>> Does that mean you find a real fix instead of a workaround? Congratulations!
+>
+> No. The real fix should come from the driver (unlikely from what I hear from system people here) or disable in BIOS.
+> So I guess you'd need to ask Lenovo how to disable L1 PM Substate in BIOS.
 
-Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
----
- net/mac80211/rc80211_minstrel_ht.c | 34 ++++++++++++++--------------------
- 1 file changed, 14 insertions(+), 20 deletions(-)
+Why would it be unlikely to fix the driver?  Do people think the
+problem is not actually in the driver?
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index dd81516..c3aa1a9 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -52,6 +52,7 @@
- 	[GROUP_IDX(_streams, _sgi, _ht40)] = {				\
- 	.streams = _streams,						\
- 	.flags =							\
-+		IEEE80211_TX_RC_MCS |					\
- 		(_sgi ? IEEE80211_TX_RC_SHORT_GI : 0) |			\
- 		(_ht40 ? IEEE80211_TX_RC_40_MHZ_WIDTH : 0),		\
- 	.duration = {							\
-@@ -79,6 +80,7 @@
- 	[VHT_GROUP_IDX(_streams, _sgi, _bw)] = {				\
- 	.streams = _streams,							\
- 	.flags =								\
-+		IEEE80211_TX_RC_VHT_MCS |					\
- 		(_sgi ? IEEE80211_TX_RC_SHORT_GI : 0) |				\
- 		(_bw == BW_80 ? IEEE80211_TX_RC_80_MHZ_WIDTH :			\
- 		 _bw == BW_40 ? IEEE80211_TX_RC_40_MHZ_WIDTH : 0),		\
-@@ -115,6 +117,7 @@
- #define CCK_GROUP					\
- 	[MINSTREL_CCK_GROUP] = {			\
- 		.streams = 0,				\
-+		.flags = 0,				\
- 		.duration = {				\
- 			CCK_DURATION_LIST(false),	\
- 			CCK_DURATION_LIST(true)		\
-@@ -721,7 +724,7 @@ minstrel_ht_set_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
- 	const struct mcs_group *group = &minstrel_mcs_groups[index / MCS_GROUP_RATES];
- 	struct minstrel_rate_stats *mr;
- 	u8 idx;
--	u16 flags;
-+	u16 flags = group->flags;
- 
- 	mr = minstrel_get_ratestats(mi, index);
- 	if (!mr->retry_updated)
-@@ -737,17 +740,13 @@ minstrel_ht_set_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
- 		ratetbl->rate[offset].count_rts = mr->retry_count_rtscts;
- 	}
- 
--	if (index / MCS_GROUP_RATES == MINSTREL_CCK_GROUP) {
-+	if (index / MCS_GROUP_RATES == MINSTREL_CCK_GROUP)
- 		idx = mp->cck_rates[index % ARRAY_SIZE(mp->cck_rates)];
--		flags = 0;
--	} else if (index / MCS_GROUP_RATES >= MINSTREL_VHT_GROUP_0) {
-+	else if (flags & IEEE80211_TX_RC_VHT_MCS)
- 		idx = ((group->streams - 1) << 4) |
- 		      ((index % MCS_GROUP_RATES) & ~0xF);
--		flags = IEEE80211_TX_RC_VHT_MCS | group->flags;
--	} else {
-+	else
- 		idx = index % MCS_GROUP_RATES + (group->streams - 1) * 8;
--		flags = IEEE80211_TX_RC_MCS | group->flags;
--	}
- 
- 	if (offset > 0) {
- 		ratetbl->rate[offset].count = ratetbl->rate[offset].count_rts;
-@@ -924,18 +923,15 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 	if (sample_idx / MCS_GROUP_RATES == MINSTREL_CCK_GROUP) {
- 		int idx = sample_idx % ARRAY_SIZE(mp->cck_rates);
- 		rate->idx = mp->cck_rates[idx];
--		rate->flags = 0;
--		return;
--	} else if (sample_idx / MCS_GROUP_RATES >= MINSTREL_VHT_GROUP_0) {
--		rate->flags = IEEE80211_TX_RC_VHT_MCS | sample_group->flags;
-+	} else if (sample_group->flags & IEEE80211_TX_RC_VHT_MCS) {
- 		ieee80211_rate_set_vht(rate, sample_idx % MCS_GROUP_RATES,
- 				       sample_group->streams);
--		return;
-+	} else {
-+		rate->idx = sample_idx % MCS_GROUP_RATES +
-+			(sample_group->streams - 1) * 8;
- 	}
- 
--	rate->idx = sample_idx % MCS_GROUP_RATES +
--		    (sample_group->streams - 1) * 8;
--	rate->flags = IEEE80211_TX_RC_MCS | sample_group->flags;
-+	rate->flags = sample_group->flags;
- }
- 
- static void
-@@ -1033,10 +1029,8 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
- 			continue;
- 		}
- 
--#ifdef CONFIG_MAC80211_RC_MINSTREL_VHT /* FIXME otherwise MINSTREL_VHT_GROUP_0 is 0 */
--		if (vht_only && i < MINSTREL_VHT_GROUP_0)
-+		if (vht_only && !(gflags & IEEE80211_TX_RC_VHT_MCS))
- 			continue;
--#endif
- 
- 		if (gflags & IEEE80211_TX_RC_SHORT_GI) {
- 			if (gflags & IEEE80211_TX_RC_40_MHZ_WIDTH) {
-@@ -1057,7 +1051,7 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
- 		    minstrel_mcs_groups[i].streams > 1)
- 			continue;
- 
--		if (i >= MINSTREL_VHT_GROUP_0) {
-+		if (gflags & IEEE80211_TX_RC_VHT_MCS) {
- 			int bw;
- 			if (!vht_cap->vht_supported)
- 				continue;
--- 
-1.8.2
+Asking Lenovo how to disable L1 PM substates is really a non-answer.
+Only the extremely technical and extremely patient user (hi wzyboy :))
+will even bother to investigate why wifi works fine with Windows but
+not with Linux.  The only thing Lenovo *could* do is to release a new
+BIOS with a switch to control L1 PM Substates.  If I were Lenovo, I
+would never do that because then I would have to tell customers
+"disable this for Linux, enable this for Windows," and I'd have to
+deal with support calls about devices using more power than they
+should, battery life being shorter, etc.  Plus you'd have to ask every
+Linux user to upgrade their BIOS.  That's all just a terrible user
+experience.
 
+Bjorn
