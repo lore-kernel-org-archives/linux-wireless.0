@@ -1,33 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f181.google.com ([209.85.217.181]:45128 "EHLO
-	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751663Ab3KRRED (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Nov 2013 12:04:03 -0500
-Received: by mail-lb0-f181.google.com with SMTP id q8so3846530lbi.26
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Nov 2013 09:04:01 -0800 (PST)
+Received: from nbd.name ([46.4.11.11]:47185 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752902Ab3KNLJY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Nov 2013 06:09:24 -0500
+Message-ID: <5284AF55.2070704@openwrt.org> (sfid-20131114_120929_394192_957C0F0A)
+Date: Thu, 14 Nov 2013 12:09:09 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <1384794166-10906-6-git-send-email-egrumbach@gmail.com>
-References: <1384794166-10906-1-git-send-email-egrumbach@gmail.com>
-	<1384794166-10906-6-git-send-email-egrumbach@gmail.com>
-Date: Mon, 18 Nov 2013 19:04:01 +0200
-Message-ID: <CANUX_P3Y2Tg4gGj7WkyEgeTTmYffFCLtcka9f6aOk=-5r6WVEQ@mail.gmail.com> (sfid-20131118_180407_592960_F8A66768)
-Subject: Re: [PATCH 6/6] cfg80211: Fix setting channel in mgmt_tx parameters
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+To: Sujith Manoharan <sujith@msujith.org>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH 2/3] ath9k: optimize ath_drain_all_txq
+References: <1384205015-68622-1-git-send-email-nbd@openwrt.org>	<1384205015-68622-2-git-send-email-nbd@openwrt.org> <21124.34726.610542.341502@gargle.gargle.HOWL>
+In-Reply-To: <21124.34726.610542.341502@gargle.gargle.HOWL>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 18, 2013 at 7:02 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
-> From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
->
-> The cfg80211_mgmt_tx_params.chan member wasn't set which
-> caused a bug in offchan operations.
->
-> Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-> Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+On 2013-11-14 09:19, Sujith Manoharan wrote:
+> Felix Fietkau wrote:
+>> If the software has processed all packets, checking the hardware queue
+>> is unnecessary.
+>> 
+>> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+>> ---
+>>  drivers/net/wireless/ath/ath9k/xmit.c | 3 +++
+>>  1 file changed, 3 insertions(+)
+>> 
+>> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+>> index 09cdbcd..babb513 100644
+>> --- a/drivers/net/wireless/ath/ath9k/xmit.c
+>> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
+>> @@ -1786,6 +1786,9 @@ bool ath_drain_all_txq(struct ath_softc *sc)
+>>  		if (!ATH_TXQ_SETUP(sc, i))
+>>  			continue;
+>>  
+>> +		if (!sc->tx.txq[i].axq_depth)
+>> +			continue;
+>> +
+> 
+> Shouldn't the TX queue lock be taken here ?
+I don't think so. Flushing the queues is only allowed if no frames are
+expected to be pushed by mac80211, and callsites already take the pcu
+lock (preventing the completion tasklet from running).
 
-this one should be folded into the previous one - will resend
+- Felix
+
