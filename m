@@ -1,139 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:60536 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754272Ab3KGLGw (ORCPT
+Received: from mail-lb0-f171.google.com ([209.85.217.171]:58719 "EHLO
+	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752289Ab3KNPfJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Nov 2013 06:06:52 -0500
-From: Sujith Manoharan <sujith@msujith.org>
+	Thu, 14 Nov 2013 10:35:09 -0500
+Received: by mail-lb0-f171.google.com with SMTP id q8so498847lbi.16
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Nov 2013 07:35:07 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21115.29501.911882.300486@gargle.gargle.HOWL> (sfid-20131107_120711_252517_8E136F4F)
-Date: Thu, 7 Nov 2013 16:32:21 +0530
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 11/13] ath9k: Use correct PCIE initvals for AR9485
-In-Reply-To: <1383783120-22435-12-git-send-email-sujith@msujith.org>
-References: <1383783120-22435-1-git-send-email-sujith@msujith.org>
-	<1383783120-22435-12-git-send-email-sujith@msujith.org>
+In-Reply-To: <1384442962.13941.36.camel@jlt4.sipsolutions.net>
+References: <1384366379-25301-1-git-send-email-mcgrof@do-not-panic.com>
+ <1384366379-25301-5-git-send-email-mcgrof@do-not-panic.com>
+ <1384378096.28806.20.camel@jlt4.sipsolutions.net> <20131114143126.GC19070@garbanzo.do-not-panic.com>
+ <1384440519.13941.31.camel@jlt4.sipsolutions.net> <20131114153339.GB30653@garbanzo.do-not-panic.com>
+ <1384442962.13941.36.camel@jlt4.sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Thu, 14 Nov 2013 16:34:47 +0100
+Message-ID: <CAB=NE6WX9JV-Lx11iiPHPinDCxy7u-Q--ucQ-9Mjy-nndKTeqQ@mail.gmail.com> (sfid-20131114_163512_849475_A0CF8D39)
+Subject: Re: [RFC 4/5] cfg80211: add DFS region capability support
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	Jouni Malinen <j@w1.fi>, sunitb@qca.qualcomm.com,
+	rsunki@qca.qualcomm.com,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John,
+On Thu, Nov 14, 2013 at 4:29 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2013-11-14 at 07:33 -0800, Luis R. Rodriguez wrote:
+>> > Still doesn't make sense - HANDLE_DFS means "I'll react to radar
+>> > detection events and will do the CSA". It has absolutely nothing to do
+>> > with DFS regions. Please keep those things separate.
+>>
+>> How you deal with radar detection is completely dependent on the DFS
+>> region, no?
+>
+> You're missing *my* point :-)
+>
+> Radar *detection* is region-dependent.
+>
+> What happens *after* that (announce a channel switch, etc.) isn't at
+> all.
 
-Please drop this patch. This fix is not applicable to
-a few variants based on AR9485 - they need to be identified.
+Sorry, I misread the documentation then, so HANDLE_DFS *does* not mean
+userspace will implement the radar detection in userspace?
 
-Sujith
-
-Sujith Manoharan wrote:
-> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-> 
-> Currently, the PLL is turned off for AR9485 when
-> switching to a low power state, but AR9485 has an issue
-> where the card will become unresponsive if left idle
-> for a long time without any traffic. To fix this,
-> force the PLL to always be on using a different initval
-> array, ar9485_1_1_pll_on_cdr_on_clkreq_disable_L1.
-> 
-> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath9k/ar9003_hw.c       | 11 ++------
->  drivers/net/wireless/ath/ath9k/ar9485_initvals.h | 35 +++++-------------------
->  2 files changed, 9 insertions(+), 37 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-> index 42daea5..b054dee 100644
-> --- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-> +++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-> @@ -187,17 +187,10 @@ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
->  		INIT_INI_ARRAY(&ah->iniCckfirJapan2484,
->  			       ar9485_1_1_baseband_core_txfir_coeff_japan_2484);
->  
-> -		/* Load PCIE SERDES settings from INI */
-> -
-> -		/* Awake Setting */
-> -
->  		INIT_INI_ARRAY(&ah->iniPcieSerdes,
-> -				ar9485_1_1_pcie_phy_clkreq_disable_L1);
-> -
-> -		/* Sleep Setting */
-> -
-> +			       ar9485_1_1_pll_on_cdr_on_clkreq_disable_L1);
->  		INIT_INI_ARRAY(&ah->iniPcieSerdesLowPower,
-> -				ar9485_1_1_pcie_phy_clkreq_disable_L1);
-> +			       ar9485_1_1_pll_on_cdr_on_clkreq_disable_L1);
->  	} else if (AR_SREV_9462_21(ah)) {
->  		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_CORE],
->  			       ar9462_2p1_mac_core);
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9485_initvals.h b/drivers/net/wireless/ath/ath9k/ar9485_initvals.h
-> index 6f899c6..93b18ce 100644
-> --- a/drivers/net/wireless/ath/ath9k/ar9485_initvals.h
-> +++ b/drivers/net/wireless/ath/ath9k/ar9485_initvals.h
-> @@ -32,13 +32,6 @@ static const u32 ar9485_1_1_mac_postamble[][5] = {
->  	{0x00008318, 0x00003e80, 0x00007d00, 0x00006880, 0x00003440},
->  };
->  
-> -static const u32 ar9485_1_1_pcie_phy_pll_on_clkreq_disable_L1[][2] = {
-> -	/* Addr      allmodes  */
-> -	{0x00018c00, 0x18012e5e},
-> -	{0x00018c04, 0x000801d8},
-> -	{0x00018c08, 0x0000080c},
-> -};
-> -
->  static const u32 ar9485Common_wo_xlna_rx_gain_1_1[][2] = {
->  	/* Addr      allmodes  */
->  	{0x00009e00, 0x037216a0},
-> @@ -1101,20 +1094,6 @@ static const u32 ar9485_common_rx_gain_1_1[][2] = {
->  	{0x0000a1fc, 0x00000296},
->  };
->  
-> -static const u32 ar9485_1_1_pcie_phy_pll_on_clkreq_enable_L1[][2] = {
-> -	/* Addr      allmodes  */
-> -	{0x00018c00, 0x18052e5e},
-> -	{0x00018c04, 0x000801d8},
-> -	{0x00018c08, 0x0000080c},
-> -};
-> -
-> -static const u32 ar9485_1_1_pcie_phy_clkreq_enable_L1[][2] = {
-> -	/* Addr      allmodes  */
-> -	{0x00018c00, 0x18053e5e},
-> -	{0x00018c04, 0x000801d8},
-> -	{0x00018c08, 0x0000080c},
-> -};
-> -
->  static const u32 ar9485_1_1_soc_preamble[][2] = {
->  	/* Addr      allmodes  */
->  	{0x00004014, 0xba280400},
-> @@ -1173,13 +1152,6 @@ static const u32 ar9485_1_1_baseband_postamble[][5] = {
->  	{0x0000be18, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
->  };
->  
-> -static const u32 ar9485_1_1_pcie_phy_clkreq_disable_L1[][2] = {
-> -	/* Addr      allmodes  */
-> -	{0x00018c00, 0x18013e5e},
-> -	{0x00018c04, 0x000801d8},
-> -	{0x00018c08, 0x0000080c},
-> -};
-> -
->  static const u32 ar9485_1_1_radio_postamble[][2] = {
->  	/* Addr      allmodes  */
->  	{0x0001609c, 0x0b283f31},
-> @@ -1358,4 +1330,11 @@ static const u32 ar9485_1_1_baseband_core_txfir_coeff_japan_2484[][2] = {
->  	{0x0000a3a0, 0xca9228ee},
->  };
->  
-> +static const u32 ar9485_1_1_pll_on_cdr_on_clkreq_disable_L1[][2] = {
-> +	/* Addr      allmodes  */
-> +	{0x00018c00, 0x1801265e},
-> +	{0x00018c04, 0x000801d8},
-> +	{0x00018c08, 0x0000080c},
-> +};
-> +
->  #endif /* INITVALS_9485_H */
-> -- 
-> 1.8.4.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+  Luis
