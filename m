@@ -1,111 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3793 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751545Ab3KANHd convert rfc822-to-8bit (ORCPT
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:52503 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752910Ab3KNMKL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 09:07:33 -0400
-Message-ID: <5273A784.4040900@broadcom.com> (sfid-20131101_140737_451957_2D4F96CE)
-Date: Fri, 1 Nov 2013 14:07:16 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Undekari, Sunil Dutt" <usdutt@qti.qualcomm.com>
-cc: "Johannes Berg" <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"j@w1.fi" <j@w1.fi>
-Subject: Re: [PATCH] cfg80211: Introduce critical protocol indication
- for p2p connection.
-References: <1383230452-12608-1-git-send-email-usdutt@qti.qualcomm.com>
- (sfid-20131031_154108_037102_6F3E1A6D)
- <1383230593.14302.1.camel@jlt4.sipsolutions.net>
- <26F3B0343EE4744AA14EEEF9E1E534511F7A65CC@aphydexd01a>
- <1383233115.14302.2.camel@jlt4.sipsolutions.net>
- <26F3B0343EE4744AA14EEEF9E1E534511F7A6606@aphydexd01a>
- <52729681.5020004@broadcom.com>
- <26F3B0343EE4744AA14EEEF9E1E534511F7A8160@aphydexd01a>
-In-Reply-To: <26F3B0343EE4744AA14EEEF9E1E534511F7A8160@aphydexd01a>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+	Thu, 14 Nov 2013 07:10:11 -0500
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
+	johannes@sipsolutions.net, yeohchunyeow@gmail.com
+Cc: yeohchunyeow@cozybit.com
+Subject: [PATCH v5 1/5] mac80211: refactor ieee80211_ibss_process_chanswitch()
+Date: Thu, 14 Nov 2013 14:09:32 +0200
+Message-Id: <1384430976-13708-1-git-send-email-luciano.coelho@intel.com> (sfid-20131114_131015_743612_56F2ECE9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/01/2013 12:25 PM, Undekari, Sunil Dutt wrote:
-> Hi Arend,
->
->> So how would the scenario look like. The host driver will get involved in setting up the P2P connection so that knowledge is already available to defer the scans or am I missing something.
-> The host driver shall perform the scan's to find a better BSS in the
-> The host driver / firmware performs (initiates) a scan on the STA interface in the process of finding a better BSS to roam. This scan is offloaded to the driver / firmware for a better roam experience.
-> This scans would definitely affect the p2p connection triggered by the supplicant.
-> Thus, I was suggesting a way to extend the already existing critical protocol indications to also include p2p protocol/connections, so that drivers can defer the scan's (any off channel operations for that matter) on any other interface during this period.
+Refactor ieee80211_ibss_process_chanswitch() to use
+ieee80211_channel_switch() and avoid code duplication.
 
-I got that. What I meant to say is that you can defer the roaming 
-related scans when cfg80211 does a .add_virtual_intf() call to the 
-driver and recommence upon .del_virtual_intf(). I guess this effectively 
-disables roaming, right?
+Change-Id: I265a12c7f825dc20535bad1197a81437310d0086
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+ net/mac80211/cfg.c         |  4 ++--
+ net/mac80211/ibss.c        | 58 +++++++---------------------------------------
+ net/mac80211/ieee80211_i.h |  2 ++
+ 3 files changed, 12 insertions(+), 52 deletions(-)
 
-Regards,
-Arend
-
-> Regards,
-> Sunil.
->
->
->
-> -----Original Message-----
-> From: Arend van Spriel [mailto:arend@broadcom.com]
-> Sent: Thursday, October 31, 2013 11:12 PM
-> To: Undekari, Sunil Dutt
-> Cc: Johannes Berg; linux-wireless@vger.kernel.org; j@w1.fi
-> Subject: Re: [PATCH] cfg80211: Introduce critical protocol indication for p2p connection.
->
-> On 10/31/13 16:54, Undekari, Sunil Dutt wrote:
->>> Just do it in the supplicant - that has full control over what's going on with a given device.
->>> Trying to have the kernel manage multiple things that may or may not be exclusive and are all done in userspace is going to be a futile exercise.
->> Please note that the scans that are mentioned by me in this context are not triggered by the supplicant, rather the host driver would initiate them.
->
-> So how would the scenario look like. The host driver will get involved in setting up the P2P connection so that knowledge is already available to defer the scans or am I missing something.
->
-> Regards,
-> Arend
->
->> The driver / firmware would do such scans for a better roam performance.
->> I would say, some handshake between the supplicant and the driver would be needed for a better understanding on the operations.
->> Please have your say.
->> Regards,
->> Sunil
->>
->> -----Original Message-----
->> From: Johannes Berg [mailto:johannes@sipsolutions.net]
->> Sent: Thursday, October 31, 2013 8:55 PM
->> To: Undekari, Sunil Dutt
->> Cc: linux-wireless@vger.kernel.org; j@w1.fi
->> Subject: Re: [PATCH] cfg80211: Introduce critical protocol indication for p2p connection.
->>
->> On Thu, 2013-10-31 at 15:22 +0000, Undekari, Sunil Dutt wrote:
->>>> That's not what the critical protocol stuff was designed for, so no.
->>> I would consider the P2P connection phase (P2P+WPS+WPA) to be
->>> critical and any off channel operations (scan) triggered by the host
->>> driver would result in the delayed / failed P2P connection attempt.
->>> I suppose there should be an indication to the host driver w.r.t p2p
->>> connection attempt so that any off load operations on any other
->>> interface sharing the same radio would be avoided by the driver.
->>> Since there is already an existing interface through the critical
->>> protocol indication, I thought of extending it to also include a P2P
->>> protocol/connection. This new proto id would be an indication to the
->>> drivers to allow the scan on the current interface and avoid any
->>> scans on another considering the fact that a p2p connection requires a scan.
->>> Do you propose an alternative (a new interface?) to achieve the same?
->>
->> Just do it in the supplicant - that has full control over what's going on with a given device.
->>
->> Trying to have the kernel manage multiple things that may or may not be exclusive and are all done in userspace is going to be a futile exercise.
->>
->> johannes
->>
->> N     r  y   b X  ǧv ^ )޺{.n +    {  *ޕ , {ay ʇڙ ,j
->>    f   h   z  w
->     j:+v   w j m         zZ+     ݢj"  ! i
->
->
-
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 3bc92d0..a98dc6b 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3035,8 +3035,8 @@ void ieee80211_csa_finalize_work(struct work_struct *work)
+ 	cfg80211_ch_switch_notify(sdata->dev, &sdata->csa_chandef);
+ }
+ 
+-static int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+-				    struct cfg80211_csa_settings *params)
++int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
++			     struct cfg80211_csa_settings *params)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct ieee80211_local *local = sdata->local;
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 0f1fb5d..3514aab 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -784,18 +784,10 @@ ieee80211_ibss_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 	struct cfg80211_csa_settings params;
+ 	struct ieee80211_csa_ie csa_ie;
+ 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
+-	struct ieee80211_chanctx_conf *chanctx_conf;
+-	struct ieee80211_chanctx *chanctx;
+ 	enum nl80211_channel_type ch_type;
+-	int err, num_chanctx;
++	int err;
+ 	u32 sta_flags;
+ 
+-	if (sdata->vif.csa_active)
+-		return true;
+-
+-	if (!sdata->vif.bss_conf.ibss_joined)
+-		return false;
+-
+ 	sta_flags = IEEE80211_STA_DISABLE_VHT;
+ 	switch (ifibss->chandef.width) {
+ 	case NL80211_CHAN_WIDTH_5:
+@@ -826,9 +818,6 @@ ieee80211_ibss_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 	params.count = csa_ie.count;
+ 	params.chandef = csa_ie.chandef;
+ 
+-	if (ifibss->chandef.chan->band != params.chandef.chan->band)
+-		goto disconnect;
+-
+ 	switch (ifibss->chandef.width) {
+ 	case NL80211_CHAN_WIDTH_20_NOHT:
+ 	case NL80211_CHAN_WIDTH_20:
+@@ -884,29 +873,6 @@ ieee80211_ibss_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 		params.radar_required = true;
+ 	}
+ 
+-	rcu_read_lock();
+-	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+-	if (!chanctx_conf) {
+-		rcu_read_unlock();
+-		goto disconnect;
+-	}
+-
+-	/* don't handle for multi-VIF cases */
+-	chanctx = container_of(chanctx_conf, struct ieee80211_chanctx, conf);
+-	if (chanctx->refcount > 1) {
+-		rcu_read_unlock();
+-		goto disconnect;
+-	}
+-	num_chanctx = 0;
+-	list_for_each_entry_rcu(chanctx, &sdata->local->chanctx_list, list)
+-		num_chanctx++;
+-
+-	if (num_chanctx > 1) {
+-		rcu_read_unlock();
+-		goto disconnect;
+-	}
+-	rcu_read_unlock();
+-
+ 	/* all checks done, now perform the channel switch. */
+ 	ibss_dbg(sdata,
+ 		 "received channel switch announcement to go to channel %d MHz\n",
+@@ -914,19 +880,9 @@ ieee80211_ibss_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 
+ 	params.block_tx = !!csa_ie.mode;
+ 
+-	ieee80211_ibss_csa_beacon(sdata, &params);
+-	sdata->csa_radar_required = params.radar_required;
+-
+-	if (params.block_tx)
+-		ieee80211_stop_queues_by_reason(&sdata->local->hw,
+-				IEEE80211_MAX_QUEUE_MAP,
+-				IEEE80211_QUEUE_STOP_REASON_CSA);
+-
+-	sdata->csa_chandef = params.chandef;
+-	sdata->vif.csa_active = true;
+-
+-	ieee80211_bss_info_change_notify(sdata, err);
+-	drv_channel_switch_beacon(sdata, &params.chandef);
++	if (ieee80211_channel_switch(sdata->local->hw.wiphy, sdata->dev,
++				     &params))
++		goto disconnect;
+ 
+ 	ieee80211_ibss_csa_mark_radar(sdata);
+ 
+@@ -962,7 +918,8 @@ ieee80211_rx_mgmt_spectrum_mgmt(struct ieee80211_sub_if_data *sdata,
+ 	if (len < required_len)
+ 		return;
+ 
+-	ieee80211_ibss_process_chanswitch(sdata, elems, false);
++	if (!sdata->vif.csa_active)
++		ieee80211_ibss_process_chanswitch(sdata, elems, false);
+ }
+ 
+ static void ieee80211_rx_mgmt_deauth_ibss(struct ieee80211_sub_if_data *sdata,
+@@ -1143,7 +1100,8 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+ 		goto put_bss;
+ 
+ 	/* process channel switch */
+-	if (ieee80211_ibss_process_chanswitch(sdata, elems, true))
++	if (sdata->vif.csa_active ||
++	    ieee80211_ibss_process_chanswitch(sdata, elems, true))
+ 		goto put_bss;
+ 
+ 	/* same BSSID */
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 0edc1fb..3a77ed1 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1412,6 +1412,8 @@ void ieee80211_handle_roc_started(struct ieee80211_roc_work *roc);
+ 
+ /* channel switch handling */
+ void ieee80211_csa_finalize_work(struct work_struct *work);
++int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
++			     struct cfg80211_csa_settings *params);
+ 
+ /* interface handling */
+ int ieee80211_iface_init(void);
+-- 
+1.8.4.rc3
 
