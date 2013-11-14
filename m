@@ -1,42 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:35682 "EHLO
-	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752142Ab3KBVxi (ORCPT
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:52518 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753487Ab3KNMKM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Nov 2013 17:53:38 -0400
-Received: by mail-ob0-f175.google.com with SMTP id wm4so5779256obc.6
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Nov 2013 14:53:38 -0700 (PDT)
-Message-ID: <5275745F.9080002@lwfinger.net> (sfid-20131102_225345_298029_B08FF0CD)
-Date: Sat, 02 Nov 2013 16:53:35 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: alexandre.f.demers@gmail.com, linux-wireless@vger.kernel.org
-Subject: Re: r92su: status and will it be merged anytime soon?
-References: <52755E44.1060501@gmail.com>
-In-Reply-To: <52755E44.1060501@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Thu, 14 Nov 2013 07:10:12 -0500
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
+	johannes@sipsolutions.net, yeohchunyeow@gmail.com
+Cc: yeohchunyeow@cozybit.com
+Subject: [PATCH v5 4/5] mac80211: align ieee80211_mesh_csa_beacon() with ieee80211_csa_beacon()
+Date: Thu, 14 Nov 2013 14:09:35 +0200
+Message-Id: <1384430976-13708-4-git-send-email-luciano.coelho@intel.com> (sfid-20131114_131023_873754_036A726A)
+In-Reply-To: <1384430976-13708-1-git-send-email-luciano.coelho@intel.com>
+References: <1384430976-13708-1-git-send-email-luciano.coelho@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/02/2013 03:19 PM, Alexandre Demers wrote:
-> Good afternoon,
->
-> I was playing in r8712u because I wanted to send a patch to conditionally
-> silence a flooding netdev_info(). But then I found out on
-> http://wireless.kernel.org/en/users/Drivers/rtl819x that r8712u was to be
-> replaced by r92su.
->
->  From its git tree, it seems no commit were added since 4 months ago. Could
-> someone tell me in what shape is this new driver? Is there any plan to merge it
-> (under staging I suppose) soon?
+The return value of ieee80211_mesh_csa_beacon is not aligned with the
+return value of ieee80211_csa_beacon() and
+ieee80211_ibss_csa_beacon().  For consistency and to be able to use
+both functions with similar code, change ieee80211_mesh_csa_beacon()
+not to send the bss changed notification itself, but return what has
+changed so the caller can send the notification instead.
 
-As nothing has happened with that GitHub account for several months, my guess is 
-that it will not be merged any time soon.
+Change-Id: If4c111fd874a3e17a5df98d306f7f1c8fcaa6a1a
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+ net/mac80211/cfg.c  | 2 ++
+ net/mac80211/mesh.c | 4 +---
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-It would make little sense to replace one staging driver (r8712u) with a 
-different one. The only thing that makes sense is for it to use mac80211 and be 
-merged in the regular drivers/net/wireless/rtlwifi tree.
-
-Larry
-
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index a5aa766..6eb8e08 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3155,6 +3155,8 @@ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 			ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_NONE;
+ 			return err;
+ 		}
++		changed |= err;
++
+ 		break;
+ #endif
+ 	default:
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 5852080..94dff7f 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -1091,12 +1091,10 @@ int ieee80211_mesh_csa_beacon(struct ieee80211_sub_if_data *sdata,
+ 		return ret;
+ 	}
+ 
+-	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
+-
+ 	if (csa_action)
+ 		ieee80211_send_action_csa(sdata, csa_settings);
+ 
+-	return 0;
++	return BSS_CHANGED_BEACON;
+ }
+ 
+ static int mesh_fwd_csa_frame(struct ieee80211_sub_if_data *sdata,
+-- 
+1.8.4.rc3
 
