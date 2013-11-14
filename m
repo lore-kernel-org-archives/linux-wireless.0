@@ -1,63 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f43.google.com ([209.85.215.43]:50974 "EHLO
-	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751532Ab3KJTPa (ORCPT
+Received: from packetmixer.de ([79.140.42.25]:46995 "EHLO
+	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752943Ab3KNQOD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Nov 2013 14:15:30 -0500
-Received: by mail-la0-f43.google.com with SMTP id n7so2261326lam.2
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Nov 2013 11:15:29 -0800 (PST)
-Message-ID: <527FDB50.1050902@cogentembedded.com> (sfid-20131110_201555_743836_F77D1B06)
-Date: Sun, 10 Nov 2013 23:15:28 +0400
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+	Thu, 14 Nov 2013 11:14:03 -0500
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: Re: [RFC 4/5] cfg80211: add DFS region capability support
+Date: Thu, 14 Nov 2013 17:13:59 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	Jouni Malinen <j@w1.fi>, sunitb@qca.qualcomm.com,
+	rsunki@qca.qualcomm.com,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
+References: <1384366379-25301-1-git-send-email-mcgrof@do-not-panic.com> <1384442962.13941.36.camel@jlt4.sipsolutions.net> <CAB=NE6WX9JV-Lx11iiPHPinDCxy7u-Q--ucQ-9Mjy-nndKTeqQ@mail.gmail.com>
+In-Reply-To: <CAB=NE6WX9JV-Lx11iiPHPinDCxy7u-Q--ucQ-9Mjy-nndKTeqQ@mail.gmail.com>
 MIME-Version: 1.0
-To: Michal Nazarewicz <mpn@google.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-CC: Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Michal Nazarewicz <mina86@mina86.com>
-Subject: Re: [PATCH] net: wireless: iwlwifi: remove minor dead code
-References: <1384110397-24386-1-git-send-email-mpn@google.com>
-In-Reply-To: <1384110397-24386-1-git-send-email-mpn@google.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201311141714.00098.sw@simonwunderlich.de> (sfid-20131114_171408_169408_59B28CF1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello.
 
-On 10-11-2013 23:06, Michal Nazarewicz wrote:
+> On Thu, Nov 14, 2013 at 4:29 PM, Johannes Berg
+> 
+> <johannes@sipsolutions.net> wrote:
+> > On Thu, 2013-11-14 at 07:33 -0800, Luis R. Rodriguez wrote:
+> >> > Still doesn't make sense - HANDLE_DFS means "I'll react to radar
+> >> > detection events and will do the CSA". It has absolutely nothing to do
+> >> > with DFS regions. Please keep those things separate.
+> >> 
+> >> How you deal with radar detection is completely dependent on the DFS
+> >> region, no?
+> > 
+> > You're missing *my* point :-)
+> > 
+> > Radar *detection* is region-dependent.
+> > 
+> > What happens *after* that (announce a channel switch, etc.) isn't at
+> > all.
+> 
+> Sorry, I misread the documentation then, so HANDLE_DFS *does* not mean
+> userspace will implement the radar detection in userspace?
+> 
 
-> From: Michal Nazarewicz <mina86@mina86.com>
+Right, it does not mean userspace implements radar detection/pattern 
+matching/etc.
 
-> inta is checked to be zero in a IRQ_NONE branch so afterwards it
-> cannot be zero as it is never modified.
+HANDLE_DFS only means that userspace lets the kernel know that it will react 
+to nl80211-dfs-radar events (these only contain "i detected a radar on freq 
+XXX" [1] and similar) and that it will do a channel switch (CSA) in this case 
+to move away.
 
-> Signed-off-by: Michal Nazarewicz <mina86@mina86.com>
-> ---
->   drivers/net/wireless/iwlwifi/pcie/rx.c | 23 ++++++++---------------
->   1 file changed, 8 insertions(+), 15 deletions(-)
+We still assume that the radar detection/pattern matching/etc, which is indeed 
+region-specific, is done in the drivers (as done for ath9k now) or by other 
+means independent of this HANDLE_DFS attribute.
 
-> diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
-> index 3f237b4..c32122a 100644
-> --- a/drivers/net/wireless/iwlwifi/pcie/rx.c
-> +++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
-[...]
-> @@ -1150,7 +1149,13 @@ static irqreturn_t iwl_pcie_isr(int irq, void *data)
->   	 * or due to sporadic interrupts thrown from our NIC. */
->   	if (!inta) {
->   		IWL_DEBUG_ISR(trans, "Ignore interrupt, inta == 0\n");
-> -		goto none;
-> +		/* re-enable interrupts here since we don't have anything to
-> +		 * service.  only Re-enable if disabled by irq and no
-> +		 * schedules tasklet. */
+Cheers,
+    Simon
 
-    The preferred way of formatting the multi-line comments in the networking 
-code is this:
-
-/* bla
-  * bla
-  */
-
-WBR, Sergei
-
+[1] http://lxr.free-electrons.com/source/include/uapi/linux/nl80211.h#L3836
