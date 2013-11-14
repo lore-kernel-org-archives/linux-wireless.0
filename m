@@ -1,65 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:37526 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751632Ab3KDNHu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Nov 2013 08:07:50 -0500
-Date: Mon, 4 Nov 2013 16:07:28 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org
-Subject: Re: How to get BRCM to work?
-Message-ID: <20131104130728.GA20521@mwanda> (sfid-20131104_140753_824430_827D5C29)
-References: <20131104115111.GM26669@mwanda>
- <52778D30.6030605@hauke-m.de>
+Received: from mga01.intel.com ([192.55.52.88]:25766 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751755Ab3KNPIx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Nov 2013 10:08:53 -0500
+From: "Coelho, Luciano" <luciano.coelho@intel.com>
+To: Simon Wunderlich <sw@simonwunderlich.de>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"yeohchunyeow@gmail.com" <yeohchunyeow@gmail.com>,
+	"yeohchunyeow@cozybit.com" <yeohchunyeow@cozybit.com>
+Subject: Re: [PATCH v5 5/5] mac80211: only set CSA beacon when at least one
+ beacon must be transmitted
+Date: Thu, 14 Nov 2013 15:07:35 +0000
+Message-ID: <1384441625.22010.7.camel@porter.coelho.fi> (sfid-20131114_160856_665352_036B6C1A)
+References: <1384430976-13708-1-git-send-email-luciano.coelho@intel.com>
+	 <1384430976-13708-5-git-send-email-luciano.coelho@intel.com>
+	 <201311141553.16912.sw@simonwunderlich.de>
+In-Reply-To: <201311141553.16912.sw@simonwunderlich.de>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <52778D30.6030605@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 04, 2013 at 01:04:00PM +0100, Hauke Mehrtens wrote:
-> On 11/04/2013 12:51 PM, Dan Carpenter wrote:
-> > I've been trying to remember the trick to get BRCM to work and I can't
-> > remember at all.  I'm using BCM4313.  I've enabled everything with BCMA
-> > or BRCM in the config name.
-> > 
-> > The module loads and the device shows up if I type "ifconfig wlan0" but
-> > network manager doesn't see it and wicd doesn't see it.  (These are old
-> > versions of nm and wicd).
-> > 
-> > This used to work under 3.8 but I didn't save my .config...  :(
-> 
-> Are these old versions of nm and wicd only supporting the deprecated
-> WEXT interface? If this is the case you have to set
-> CONFIG_CFG80211_WEXT=y in your config.
-> 
-
-I have that enabled.
-
-> You also need a firmware for this device /lib/firmware/brcm/bcm43xx-0.fw
-> and /lib/firmware/brcm/bcm43xx_hdr-0.fw are needed.
-
-I have the firmware.
-
-> 
-> When the device gets detected by brcmsmac, it is probably not a problem
-> in the Broadcom driver.
-> 
-> > I've done a google search and it seems like the broadcom driver is still
-> > a complete mess and you need to black list modules and hack everything
-> > yourself on a per system basis?  Is that right?  Why can't we fix this
-> > so it works?
-> 
-> When you want to use the property closed source Broadcom driver then you
-> have to blacklist the in kernel drivers. When you want to use the in
-> kernel drivers, BCM4313 should get detected and the modules should get
-> loaded like it is done for every other PCIe device.
-
-I don't have the closed source driver.
-
-I'll do some more testing and get back on this.
-
-regards,
-dan carpenter
-
+T24gVGh1LCAyMDEzLTExLTE0IGF0IDE1OjUzICswMTAwLCBTaW1vbiBXdW5kZXJsaWNoIHdyb3Rl
+Og0KPiA+IEBAIC0zMTIyLDkgKzMxNTgsMTYgQEAgaW50IGllZWU4MDIxMV9jaGFubmVsX3N3aXRj
+aChzdHJ1Y3Qgd2lwaHkgKndpcGh5LA0KPiA+IHN0cnVjdCBuZXRfZGV2aWNlICpkZXYsIHBhcmFt
+cy0+Y2hhbmRlZi5jaGFuLT5iYW5kKQ0KPiA+ICAJCQlyZXR1cm4gLUVJTlZBTDsNCj4gPiANCj4g
+PiAtCQllcnIgPSBpZWVlODAyMTFfaWJzc19jc2FfYmVhY29uKHNkYXRhLCBwYXJhbXMpOw0KPiA+
+IC0JCWlmIChlcnIgPCAwKQ0KPiA+IC0JCQlyZXR1cm4gZXJyOw0KPiA+ICsJCS8qIHNlZSBjb21t
+ZW50cyBhbmQgVE9ETyBpbiB0aGUgTkw4MDIxMV9JRlRZUEVfQVAgYmxvY2sgKi8NCj4gDQo+IFNp
+bmNlIHlvdSBhcmUgc2VuZGluZyBhbiBhY3Rpb24gZnJhbWUgYmVsb3csIHRoaXMgVE9ETyBhcHBl
+YXJzIHRvIGJlIG9ic29sZXRlPw0KDQpSaWdodC4uLiBUaGUgY29tbWVudHMgYXJlIHN0aWxsIHZh
+bGlkLCBidXQgdGhlIFRPRE8gb25seSBhcHBsaWVzIHRvIEFQLA0Kc2luY2UgSUJTUyBhbmQgTUVT
+SCBzZW5kIHRoZSBhY3Rpb24gZnJhbWUsIGFzIHlvdSBwb2ludGVkIG91dC4NCg0KSSdsbCBmaXgg
+aXQuDQoNCg0KDQo+ID4gQEAgLTMxNzMsOCArMzIyMCwxMyBAQCBpbnQgaWVlZTgwMjExX2NoYW5u
+ZWxfc3dpdGNoKHN0cnVjdCB3aXBoeSAqd2lwaHksDQo+ID4gc3RydWN0IG5ldF9kZXZpY2UgKmRl
+diwgc2RhdGEtPmNzYV9jaGFuZGVmID0gcGFyYW1zLT5jaGFuZGVmOw0KPiA+ICAJc2RhdGEtPnZp
+Zi5jc2FfYWN0aXZlID0gdHJ1ZTsNCj4gPiANCj4gPiAtCWllZWU4MDIxMV9ic3NfaW5mb19jaGFu
+Z2Vfbm90aWZ5KHNkYXRhLCBlcnIpOw0KPiA+IC0JZHJ2X2NoYW5uZWxfc3dpdGNoX2JlYWNvbihz
+ZGF0YSwgJnBhcmFtcy0+Y2hhbmRlZik7DQo+ID4gKwlpZiAoY2hhbmdlZCkgew0KPiA+ICsJCWll
+ZWU4MDIxMV9ic3NfaW5mb19jaGFuZ2Vfbm90aWZ5KHNkYXRhLCBjaGFuZ2VkKTsNCj4gPiArCQlk
+cnZfY2hhbm5lbF9zd2l0Y2hfYmVhY29uKHNkYXRhLCAmcGFyYW1zLT5jaGFuZGVmKTsNCj4gPiAr
+CX0gZWxzZSB7DQo+ID4gKwkJLyogaWYgdGhlIGJlYWNvbiBkaWRuJ3QgY2hhbmdlLCB3ZSBjYW4g
+ZmluYWxpemUgaW1tZWRpYXRlbHkgKi8NCj4gPiArCQlpZWVlODAyMTFfY3NhX2ZpbmFsaXplKHNk
+YXRhKTsNCj4gPiArCX0NCj4gDQo+IEkgdGhpbmsgc2V0dGluZyBjc2FfYWN0aXZlID09IHRydWUg
+Zm9yIGNvdW50IDAgb3IgMSBpcyB3cm9uZy4gDQo+IA0KPiBXaGVuIGEgYmVhY29uIGlzIGdlbmVy
+YXRlZC91cGRhdGVkIGluIGllZWU4MDIxMV9iZWFjb25fZ2V0X3RpbSgpLCBpdCB3aWwgY2FsbCAN
+Cj4gaWVlZTgwMjExX3VwZGF0ZV9jc2EoKSB3aGljaCB3aWxsIHRocm93IGEgd2FybmluZyBpbiBi
+ZXN0IGNhc2UsIGJ1dCBhbHNvIA0KPiBtb2RpZmllcyByYW5kb20gZGF0YSBpbiB0aGUgYmVhY29u
+L3ByZXNwIGF0IHRoZSBwb3NpdGlvbiB3aGVyZSB0aGUgY291bnQgb2Zmc2V0IA0KPiBwb2ludHMg
+dG8gKHdlIGhhdmUgbm8gQ1NBIElFIGluIHRoaXMgY2FzZSkuDQoNCkhtbW0uLi4gSSBndWVzcyB5
+b3UncmUgcmlnaHQuICBJIHdhcyBzZXR0aW5nIHRoZSBjc2FfYWN0aXZlIHRvIHRydWUgYXQNCmZp
+cnN0IGJlY2F1c2UgSSB3YXMgcHV0dGluZyB0aGUgd29yayBpbiBhIHdvcmtxdWV1ZSwgc28gSSB3
+YXMgdHJ5aW5nIHRvDQphdm9pZCBwb3RlbnRpYWwgcmFjZXMuICBJJ2xsIGluc3BlY3QgdGhpcyBt
+b3JlIGNhcmVmdWxseSBhbmQgZml4IGl0Lg0KDQoNCg0KPiBJJ3ZlIGFsc28gc2VlbiB3YXJuaW5n
+cyBpbiBteSBJQlNTIHRlc3RzIChXQVJOSU5HOiBDUFU6IDAgUElEOiAwIGF0IA0KPiBuZXQvbWFj
+ODAyMTEvdHguYzoyNDA4IGllZWU4MDIxMV91cGRhdGVfY3NhKSwgd2hlbiBkb2luZyBhIENTQSB3
+aXRoIGNvdW50IDAgDQo+IGZyb20gdXNlcnNwYWNlLiBBbHRob3VnaCBsaWtlbHksIEknbSBub3Qg
+c3VyZSBpZiB0aGlzIGlzIHJlbGF0ZWQgdG8gdGhlIA0KPiBwcm9ibGVtIGRlc2NyaWJlZCBhYm92
+ZSwgYnV0IHRoaXMgZnVuY3Rpb24gc2hvdWxkbid0IGJlIGNhbGxlZCBhdCBhbGwgaW4gdGhlIA0K
+PiBjb3VudD0wIGNhc2UuDQoNClllcywgdGhpcyBpcyBtb3N0IGxpa2VseSByZWxhdGVkLiAgSSds
+bCB0cnkgdG8gZmlndXJlIG91dCB3aGF0IGlzIGdvaW5nDQp3cm9uZyBoZXJlLg0KDQpUaGFua3Mg
+YSBsb3QgZm9yIHlvdXIgdGVzdHMhDQoNCi0tDQpDaGVlcnMsDQpMdWNhLg0K
