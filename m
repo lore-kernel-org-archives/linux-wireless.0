@@ -1,45 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0164.hostedemail.com ([216.40.44.164]:55723 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754675Ab3KFRzz (ORCPT
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:44248 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752336Ab3KNAId (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Nov 2013 12:55:55 -0500
-Message-ID: <1383760556.7940.28.camel@joe-AO722> (sfid-20131106_185615_670584_A288A8EA)
-Subject: Re: [PATCH] wcn36xx: Fix logging macro with unnecessary semicolon
-From: Joe Perches <joe@perches.com>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	wcn36xx <wcn36xx@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	ath5k-devel@lists.ath5k.org,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>,
-	ath10k@lists.infradead.org
-Date: Wed, 06 Nov 2013 09:55:56 -0800
-In-Reply-To: <CAFSJ42YQy96Sko8CuG9BGjHzTV7TkRp2=NVt036APxSKpPB=Ag@mail.gmail.com>
-References: <1383684000.4387.42.camel@joe-AO722>
-	 <CAFSJ42YQy96Sko8CuG9BGjHzTV7TkRp2=NVt036APxSKpPB=Ag@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Wed, 13 Nov 2013 19:08:33 -0500
+Received: by mail-ie0-f171.google.com with SMTP id at1so1626374iec.2
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Nov 2013 16:08:32 -0800 (PST)
+MIME-Version: 1.0
+Date: Wed, 13 Nov 2013 16:08:32 -0800
+Message-ID: <CAM9fjH52HZ=quNrzTeqkzNuCQTSxMs5DmAJAk+2Xnv+2m2aPZQ@mail.gmail.com> (sfid-20131114_010836_185189_8CC53008)
+Subject: WL1271 + recent compat/backports + calibrator?
+From: Kyle Manna <2bluesc@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Luciano Coelho <luca@coelho.fi>, Eliad Peller <eliad@wizery.com>,
+	Arik Nemtsov <arik@wizery.com>, Eyal Shapira <eyal@wizery.com>,
+	Assaf Azulay <assaf@ti.com>,
+	Yair Shapira <yair.shapira@ti.com>, Ido Reis <idor@ti.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-11-06 at 07:49 +0000, Eugene Krasnikov wrote:
-> Hm... when it comes to semicolon the patch seems to be good. When it
-> comes to dynamic debugging i think we should have a separate
-> discussion about that.
-> I personally like the whole idea about dynamic debug but if you want
-> to change it i would suggest to have some kind of framework for all
-> ath drivers(or maybe all wireless drivers). Because obviously you can
-> find common code in every driver that defines it's own debug
-> functions/debug levels and so on. Why not to make a framework with
-> standard API/levels?
+Hi all,
 
-You need to bring that up with the Atheros folk.
-I've tried.  The view seemed to be it was more
-trouble than it was worth.
+I'm running a WL1271L (on Android + v3.0 kernel) and am trying to find
+an up to date compat/backports package (want upstream bug fixes +
+bluetooth stack with better BLE support) + the ability to properly
+calibrate the chip.
+
+I'm able to use newer wlcore architecture + a number of patches to
+bridge the platform configuration gaps and am getting the code
+fromgithub.com/TI-OpenLink/{compat,compat-wireless,wl18xx} on the
+ol_r8.a7.02 tag, BLE works, WiFi works (using 6.3.10.0.133 firmware),
+however the calibrator (v0.73) reports:
+
+root@android:/data # ip link set wlan0 down
+root@android:/data # ./calibrator dev wlan0 plt power_mode off
+240|root@android:/data # ./calibrator plt calibrate
+Unknown arch. Not setting nvs ver 2.1Calibrate ./new-nvs.bin
+Fail to calibrate ith radio status (-36)
+
+I'm able to enter PLT mode without issue, kernel message buffer:
+
+[ 3276.057434] wlcore: power up
+[ 3276.528961] wlcore: firmware booted in PLT mode PLT_ON (PLT 6.3.10.0.133)
+
+Ideally I'd like to just use the upstream backports drivers from
+backports.wiki.kernel.org and avoid the TI repos as they seem rather
+turbulent.  I've succeeded in getting v3.12.1
+(www.kernel.org/pub/linux/kernel/projects/backports/stable/v3.12/backports-3.12-1.tar.bz2)
+ which does approximately the same thing:
+
+root@android:/data # ./calibrator plt calibrate
+Unknown arch. Not setting nvs ver 2.1Calibrate ./new-nvs.bin
+Writing calibration data to ./new-nvs.bin
+File ./new-nvs.bin not exists
+Fail to prepare calibrated NVS file
+
+root@android:/data # dmesg | tail
+[  292.573638] wlcore: power up
+[  293.024566] wlcore: firmware booted in PLT mode PLT_ON (PLT 6.3.10.0.133)
+[  293.074676] wlcore: testmode cmd: radio status=0
+[  293.075103] wlcore: power down
 
 
+This leads me to some questions:
 
+1) My understanding is that calibration tunes only the power
+amplifiers, does anyone know how big of an effect this has?  Is
+figuring out the calibration worth spending time on it?
+2) Has the firmware changed to potentially auto-calibrate as the new
+wl18xx/WiLink8 devices do?  I can't find any real changelogs on the
+firmware that gets loaded.
+3) Any other advice before I jump in to debugging the netlink +
+calibration procedure?
+
+Thanks,
+- Kyle
