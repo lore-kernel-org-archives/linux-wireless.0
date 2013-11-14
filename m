@@ -1,70 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from order.stressinduktion.org ([87.106.68.36]:37854 "EHLO
-	order.stressinduktion.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752657Ab3KLNJs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Nov 2013 08:09:48 -0500
-Date: Tue, 12 Nov 2013 14:09:46 +0100
-From: Hannes Frederic Sowa <hannes@stressinduktion.org>
-To: Karl Beldan <karl.beldan@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Theodore Ts'o <tytso@mit.edu>,
-	Daniel Borkmann <dborkman@redhat.com>, davem@davemloft.net,
-	shemminger@networkplumber.org, fweimer@redhat.com,
-	netdev@vger.kernel.org, Eric Dumazet <eric.dumazet@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH net-next 3/6] random32: add prandom_reseed_late() and call when nonblocking pool becomes initialized
-Message-ID: <20131112130946.GC14929@order.stressinduktion.org> (sfid-20131112_140959_369362_5C509B9D)
-References: <cover.1384160397.git.dborkman@redhat.com> <2ea03f60bb65429cbe5d74a6d356fde3eefcf06c.1384160397.git.dborkman@redhat.com> <20131111134357.GC10104@thunk.org> <20131112000307.GB14929@order.stressinduktion.org> <20131112003709.GA11824@gobelin> <1384245375.14301.1.camel@jlt4.sipsolutions.net> <20131112111310.GA22775@magnum.frso.rivierawaves.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20131112111310.GA22775@magnum.frso.rivierawaves.com>
+Received: from mga11.intel.com ([192.55.52.93]:38977 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751179Ab3KNHOD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Nov 2013 02:14:03 -0500
+From: "Peer, Ilan" <ilan.peer@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH] iw: Use NL80211_FREQUENCY_ATTR_NO_IR channel attribute
+Date: Thu, 14 Nov 2013 07:13:58 +0000
+Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A03332A3E0@HASMSX106.ger.corp.intel.com> (sfid-20131114_081408_169357_90C0150C)
+References: <1384271210-26762-1-git-send-email-ilan.peer@intel.com>
+	 (sfid-20131112_164640_986833_456571BC)
+ <1384367004.14578.14.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1384367004.14578.14.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 12, 2013 at 12:13:10PM +0100, Karl Beldan wrote:
-> On Tue, Nov 12, 2013 at 09:36:15AM +0100, Johannes Berg wrote:
-> > On Tue, 2013-11-12 at 01:37 +0100, Karl Beldan wrote:
-> > 
-> > > > > 1)  I'm pretty sure, but it would be good to get netdev confirmation,
-> > > > > that the call to get_random_bytes() in
-> > > > > net/mac80211/rc80211_minstrel.c's init_sample_table() can be replaced
-> > > > > by calls to prandom_u32().
-> > > > 
-> > > > Would make sense. I added wireless-devel to confirm.
-> > > > 
-> > > > [...]
-> > > > [    0.673260] random: rc80211_minstrel_ht_init+0x47/0xaa get_random_bytes called with 3 bits of entropy available
-> > > > [    0.674024] random: rc80211_minstrel_ht_init+0x47/0xaa get_random_bytes called with 3 bits of entropy available
-> > > > [    0.675012] random: rc80211_minstrel_ht_init+0x47/0xaa get_random_bytes called with 3 bits of entropy available
-> > > > [    0.676032] random: rc80211_minstrel_ht_init+0x47/0xaa get_random_bytes called with 3 bits of entropy available
-> > > > [    0.677020] random: rc80211_minstrel_ht_init+0x47/0xaa get_random_bytes called with 3 bits of entropy available
-> > > > [    0.678011] random: rc80211_minstrel_ht_init+0x47/0xaa get_random_bytes called with 3 bits of entropy available
-> > > > [    0.679011] random: rc80211_minstrel_ht_init+0x47/0xaa get_random_bytes called with 3 bits of entropy available
-> > > > [...]
-> > > > 
-> > > > In total 80 calls to get_random_bytes.
-> > > > 
-> > > 
-> > > It is already 8 times what rc80211_minstrel_ht_init uses.
-> > > If you could apply on top of:
-> > > http://marc.info/?l=linux-wireless&m=138392850030987&w=2
-> > > although Johannes has not yet agreed/applied this.
-> > 
-> > I'll take the patch, I just wanted a more useful commit log :)
-> > 
-> The commit log still feels very right to me, but I don't want you to go
-> grumpy ;) and will reword the log - Hannes, have you staged replacing
-> get_random_bytes with prandom_u32 already or can I do it in a reworded
-> v2 for minstrel ?
-
-I haven't done that so far. So, go ahead, I would love to see
-that. Btw. there is prandom_bytes, which should be a suitable drop-in.
-
-Btw. if the initialization is run later (as in, after the boot process),
-the prandom-PRNG will be better seeded.
-
-Thank you,
-
-  Hannes
-
+PiBGcm9tOiBKb2hhbm5lcyBCZXJnIFttYWlsdG86am9oYW5uZXNAc2lwc29sdXRpb25zLm5ldF0N
+Cj4gU2VudDogV2VkbmVzZGF5LCBOb3ZlbWJlciAxMywgMjAxMyAyMDoyMw0KPiBUbzogUGVlciwg
+SWxhbg0KPiBDYzogbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IFJl
+OiBbUEFUQ0hdIGl3OiBVc2UgTkw4MDIxMV9GUkVRVUVOQ1lfQVRUUl9OT19JUiBjaGFubmVsDQo+
+IGF0dHJpYnV0ZQ0KPiANCj4gT24gVHVlLCAyMDEzLTExLTEyIGF0IDE3OjQ2ICswMjAwLCBJbGFu
+IFBlZXIgd3JvdGU6DQo+IA0KPiA+ICsJCQkJCS8qIElmIGJvdGggZmxhZ3MgYXJlIHNldCBhc3N1
+bWUgYW4NCj4gbmV3IGtlcm5lbCAqLw0KPiA+ICsJCQkJCWlmDQo+ICh0Yl9mcmVxW05MODAyMTFf
+RlJFUVVFTkNZX0FUVFJfTk9fSVJdICYmDQo+IHRiX2ZyZXFbX19OTDgwMjExX0ZSRVFVRU5DWV9B
+VFRSX05PX0lCU1NdKSB7DQo+ID4gKwkJCQkJCXByaW50X2ZsYWcoIm5vdCBhbGxvd2VkIHRvDQo+
+IGluaXRpYXRlIHJhZGlhdGlvbiIsICZvcGVuKTsNCj4gDQo+IFRoYXQgc2VlbXMgZXhjZXNzaXZl
+LCBhbnkgd2F5IHRvIHNob3J0ZW4gdGhhdCBzdHJpbmc/DQo+IA0KDQpTdXJlLiBXaWxsIGNoYW5n
+ZSBpdCB0byAibm8gSVIiIChhbHNvIHRyaWVkICJjYW5ub3QgaW5pdGlhdGUgcmFkaWF0aW9uIiBi
+dXQgdGhpcyBhbHNvIHNlZW1zIGEgYml0IGxvbmcgLi4uKQ0KDQpUaGFua3MsDQoNCklsYW4uDQo=
