@@ -1,51 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:33538 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751485Ab3KAOEM (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:53866 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752323Ab3KNKRm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 10:04:12 -0400
-Received: by mail-wg0-f52.google.com with SMTP id k14so4069033wgh.31
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 07:04:12 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 16/23] wireless-regdb: update CO's regulatory rules
-Date: Fri,  1 Nov 2013 15:03:11 +0100
-Message-Id: <1383314598-21240-17-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_150809_779160_F7406826)
-In-Reply-To: <1383314598-21240-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1383314598-21240-1-git-send-email-mcgrof@do-not-panic.com>
+	Thu, 14 Nov 2013 05:17:42 -0500
+Message-ID: <21124.41527.258721.952015@gargle.gargle.HOWL> (sfid-20131114_111745_398008_49F00E13)
+Date: Thu, 14 Nov 2013 15:43:11 +0530
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, dan.carpenter@oracle.com
+Subject: [PATCH] ath9k: fix SC_OP_INVALID test in ath9k_tx99_init()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This extends CO's coverage by 10 MHz but reduces its
-max EIRP from 27 dBm to 20 dBm. This also increases
-the 5 GHz DFS frequency range.
+From: Dan Carpenter <dan.carpenter@oracle.com>
 
-Source is QCA's regulatory team's efforts.
+SC_OP_INVALID is zero so the test is always false.  We're supposed to be
+testing the lowest bit instead.
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Fixes: 89f927af7f33 ('ath9k: add TX99 support')
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 ---
- db.txt | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/tx99.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/db.txt b/db.txt
-index f26fd1d..50c81ce 100644
---- a/db.txt
-+++ b/db.txt
-@@ -180,10 +180,10 @@ country CN: DFS-FCC
- 	(63720 - 65880 @ 2160), (28)
+diff --git a/drivers/net/wireless/ath/ath9k/tx99.c b/drivers/net/wireless/ath/ath9k/tx99.c
+index 6668197..c65c37f 100644
+--- a/drivers/net/wireless/ath/ath9k/tx99.c
++++ b/drivers/net/wireless/ath/ath9k/tx99.c
+@@ -99,7 +99,7 @@ static int ath9k_tx99_init(struct ath_softc *sc)
+ 	struct ath_tx_control txctl;
+ 	int r;
  
- country CO: DFS-FCC
--	(2402 - 2472 @ 40), (27)
-+	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 80), (17)
- 	(5250 - 5330 @ 80), (24), DFS
--	(5490 - 5710 @ 80), (24), DFS
-+	(5490 - 5730 @ 80), (24), DFS
- 	(5735 - 5835 @ 80), (30)
- 
- country CR: DFS-FCC
+-	if (sc->sc_flags & SC_OP_INVALID) {
++	if (test_bit(SC_OP_INVALID, &sc->sc_flags)) {
+ 		ath_err(common,
+ 			"driver is in invalid state unable to use TX99");
+ 		return -EINVAL;
 -- 
-1.8.4.rc3
+1.8.4.2
 
