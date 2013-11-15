@@ -1,192 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f171.google.com ([209.85.192.171]:65328 "EHLO
-	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753822Ab3KBNsv (ORCPT
+Received: from e06smtp16.uk.ibm.com ([195.75.94.112]:44244 "EHLO
+	e06smtp16.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751869Ab3KOQRL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Nov 2013 09:48:51 -0400
-From: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
-To: davem@davemloft.net, gregkh@linuxfoundation.org,
-	linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
-	schwidefsky@de.ibm.com, linville@tuxdriver.com,
+	Fri, 15 Nov 2013 11:17:11 -0500
+Received: from /spool/local
+	by e06smtp16.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-wireless@vger.kernel.org> from <clg@fr.ibm.com>;
+	Fri, 15 Nov 2013 16:17:08 -0000
+Message-ID: <528648F7.20900@fr.ibm.com> (sfid-20131115_171731_098476_73342991)
+Date: Fri, 15 Nov 2013 17:16:55 +0100
+From: Cedric Le Goater <clg@fr.ibm.com>
+MIME-Version: 1.0
+To: Russell King <rmk+kernel@arm.linux.org.uk>
+CC: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org,
+	devel@driverdev.osuosl.org, devicetree@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net,
+	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-media@vger.kernel.org,
+	linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org,
 	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	IvDoorn@gmail.com, sbhatewara@vmware.com, samuel@sortiz.org,
-	chas@cmf.nrl.navy.mil, roland@kernel.org, isdn@linux-pingi.de,
-	jcliburn@gmail.com, benve@cisco.com, ssujith@cisco.com,
-	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
-	shahed.shaikh@qlogic.com, joe@perches.com, apw@canonical.com
-Cc: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
-Subject: [PATCH net-next 07/13] driver: staging: remove unnecessary NULL check before dev_kfree_skb_any
-Date: Sat,  2 Nov 2013 19:17:48 +0530
-Message-Id: <1383400074-30555-8-git-send-email-govindarajulu90@gmail.com> (sfid-20131102_145152_861831_3DB3F954)
-In-Reply-To: <1383400074-30555-1-git-send-email-govindarajulu90@gmail.com>
-References: <1383400074-30555-1-git-send-email-govindarajulu90@gmail.com>
+	Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+	uclinux-dist-devel@blackfin.uclinux.org,
+	Paul Mackerras <paulus@samba.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH 16/51] DMA-API: ppc: vio.c: replace dma_set_mask()+dma_set_coherent_mask()
+ with new helper
+References: <20130919212235.GD12758@n2100.arm.linux.org.uk> <E1VMly8-0007gy-Ru@rmk-PC.arm.linux.org.uk>
+In-Reply-To: <E1VMly8-0007gy-Ru@rmk-PC.arm.linux.org.uk>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-dev_kfree_skb_any is protected from NULL. No need to check for NULL while
-calling this function.
+Hi, 
 
-Signed-off-by: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
+On 09/19/2013 11:41 PM, Russell King wrote:
+> Replace the following sequence:
+> 
+> 	dma_set_mask(dev, mask);
+> 	dma_set_coherent_mask(dev, mask);
+> 
+> with a call to the new helper dma_set_mask_and_coherent().
+> 
+> Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+> ---
+>  arch/powerpc/kernel/vio.c |    3 +--
+>  1 files changed, 1 insertions(+), 2 deletions(-)
+> 
+> diff --git a/arch/powerpc/kernel/vio.c b/arch/powerpc/kernel/vio.c
+> index 78a3506..96b6c97 100644
+> --- a/arch/powerpc/kernel/vio.c
+> +++ b/arch/powerpc/kernel/vio.c
+> @@ -1413,8 +1413,7 @@ struct vio_dev *vio_register_device_node(struct device_node *of_node)
+> 
+>  		/* needed to ensure proper operation of coherent allocations
+>  		 * later, in case driver doesn't set it explicitly */
+> -		dma_set_mask(&viodev->dev, DMA_BIT_MASK(64));
+> -		dma_set_coherent_mask(&viodev->dev, DMA_BIT_MASK(64));
+> +		dma_set_mask_and_coherent(&viodev->dev, DMA_BIT_MASK(64));
+>  	}
+> 
+>  	/* register with generic device framework */
+> 
+
+The new helper routine dma_set_mask_and_coherent() breaks the 
+initialization of the pseries vio devices which do not have an 
+initial dev->dma_mask. I think we need to use dma_coerce_mask_and_coherent()
+instead.
+
+Signed-off-by: Cédric Le Goater <clg@fr.ibm.com>
 ---
- drivers/staging/rtl8187se/ieee80211/ieee80211_rx.c |  3 +--
- drivers/staging/rtl8187se/ieee80211/ieee80211_tx.c |  3 +--
- drivers/staging/rtl8188eu/core/rtw_recv.c          |  6 ++----
- drivers/staging/rtl8192e/rtllib_rx.c               |  3 +--
- drivers/staging/rtl8192u/ieee80211/ieee80211_rx.c  |  3 +--
- drivers/staging/rtl8712/recv_linux.c               |  3 +--
- drivers/staging/rtl8712/rtl8712_recv.c             |  6 ++----
- drivers/staging/rtl8712/xmit_linux.c               |  3 +--
- drivers/staging/sbe-2t3e3/dc.c                     | 12 ++++--------
- 9 files changed, 14 insertions(+), 28 deletions(-)
+ arch/powerpc/kernel/vio.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/rtl8187se/ieee80211/ieee80211_rx.c b/drivers/staging/rtl8187se/ieee80211/ieee80211_rx.c
-index 10b2210..bbafdcc 100644
---- a/drivers/staging/rtl8187se/ieee80211/ieee80211_rx.c
-+++ b/drivers/staging/rtl8187se/ieee80211/ieee80211_rx.c
-@@ -138,8 +138,7 @@ ieee80211_frag_cache_get(struct ieee80211_device *ieee,
- 		if (ieee->frag_next_idx[tid] >= IEEE80211_FRAG_CACHE_LEN)
- 			ieee->frag_next_idx[tid] = 0;
+diff --git a/arch/powerpc/kernel/vio.c b/arch/powerpc/kernel/vio.c
+index e7d0c88f..76a6482 100644
+--- a/arch/powerpc/kernel/vio.c
++++ b/arch/powerpc/kernel/vio.c
+@@ -1419,7 +1419,7 @@ struct vio_dev *vio_register_device_node(struct device_node *of_node)
  
--		if (entry->skb != NULL)
--			dev_kfree_skb_any(entry->skb);
-+		dev_kfree_skb_any(entry->skb);
- 
- 		entry->first_frag_time = jiffies;
- 		entry->seq = seq;
-diff --git a/drivers/staging/rtl8187se/ieee80211/ieee80211_tx.c b/drivers/staging/rtl8187se/ieee80211/ieee80211_tx.c
-index b346653..fe747b1 100644
---- a/drivers/staging/rtl8187se/ieee80211/ieee80211_tx.c
-+++ b/drivers/staging/rtl8187se/ieee80211/ieee80211_tx.c
-@@ -234,8 +234,7 @@ void ieee80211_txb_free(struct ieee80211_txb *txb) {
- 	if (unlikely(!txb))
- 		return;
- 	for (i = 0; i < txb->nr_frags; i++)
--		if (txb->fragments[i])
--			dev_kfree_skb_any(txb->fragments[i]);
-+		dev_kfree_skb_any(txb->fragments[i]);
- 	kfree(txb);
- }
- 
-diff --git a/drivers/staging/rtl8188eu/core/rtw_recv.c b/drivers/staging/rtl8188eu/core/rtw_recv.c
-index 2011657..93fb9ed 100644
---- a/drivers/staging/rtl8188eu/core/rtw_recv.c
-+++ b/drivers/staging/rtl8188eu/core/rtw_recv.c
-@@ -209,10 +209,8 @@ int rtw_free_recvframe(union recv_frame *precvframe, struct __queue *pfree_recv_
- 
- _func_enter_;
- 
--	if (precvframe->u.hdr.pkt) {
--		dev_kfree_skb_any(precvframe->u.hdr.pkt);/* free skb by driver */
--		precvframe->u.hdr.pkt = NULL;
--	}
-+	dev_kfree_skb_any(precvframe->u.hdr.pkt);/* free skb by driver */
-+	precvframe->u.hdr.pkt = NULL;
- 
- 	_enter_critical_bh(&pfree_recv_queue->lock, &irqL);
- 
-diff --git a/drivers/staging/rtl8192e/rtllib_rx.c b/drivers/staging/rtl8192e/rtllib_rx.c
-index 8aeaed5..0118854 100644
---- a/drivers/staging/rtl8192e/rtllib_rx.c
-+++ b/drivers/staging/rtl8192e/rtllib_rx.c
-@@ -133,8 +133,7 @@ rtllib_frag_cache_get(struct rtllib_device *ieee,
- 		if (ieee->frag_next_idx[tid] >= RTLLIB_FRAG_CACHE_LEN)
- 			ieee->frag_next_idx[tid] = 0;
- 
--		if (entry->skb != NULL)
--			dev_kfree_skb_any(entry->skb);
-+		dev_kfree_skb_any(entry->skb);
- 
- 		entry->first_frag_time = jiffies;
- 		entry->seq = seq;
-diff --git a/drivers/staging/rtl8192u/ieee80211/ieee80211_rx.c b/drivers/staging/rtl8192u/ieee80211/ieee80211_rx.c
-index 59900bf..70bf7a4 100644
---- a/drivers/staging/rtl8192u/ieee80211/ieee80211_rx.c
-+++ b/drivers/staging/rtl8192u/ieee80211/ieee80211_rx.c
-@@ -138,8 +138,7 @@ ieee80211_frag_cache_get(struct ieee80211_device *ieee,
- 		if (ieee->frag_next_idx[tid] >= IEEE80211_FRAG_CACHE_LEN)
- 			ieee->frag_next_idx[tid] = 0;
- 
--		if (entry->skb != NULL)
--			dev_kfree_skb_any(entry->skb);
-+		dev_kfree_skb_any(entry->skb);
- 
- 		entry->first_frag_time = jiffies;
- 		entry->seq = seq;
-diff --git a/drivers/staging/rtl8712/recv_linux.c b/drivers/staging/rtl8712/recv_linux.c
-index 495ee12..c422d1f 100644
---- a/drivers/staging/rtl8712/recv_linux.c
-+++ b/drivers/staging/rtl8712/recv_linux.c
-@@ -75,8 +75,7 @@ int r8712_os_recvbuf_resource_alloc(struct _adapter *padapter,
- int r8712_os_recvbuf_resource_free(struct _adapter *padapter,
- 			     struct recv_buf *precvbuf)
- {
--	if (precvbuf->pskb)
--		dev_kfree_skb_any(precvbuf->pskb);
-+	dev_kfree_skb_any(precvbuf->pskb);
- 	if (precvbuf->purb) {
- 		usb_kill_urb(precvbuf->purb);
- 		usb_free_urb(precvbuf->purb);
-diff --git a/drivers/staging/rtl8712/rtl8712_recv.c b/drivers/staging/rtl8712/rtl8712_recv.c
-index d59a74a..9a4e87c 100644
---- a/drivers/staging/rtl8712/rtl8712_recv.c
-+++ b/drivers/staging/rtl8712/rtl8712_recv.c
-@@ -145,10 +145,8 @@ int r8712_free_recvframe(union recv_frame *precvframe,
- 	struct _adapter *padapter = precvframe->u.hdr.adapter;
- 	struct recv_priv *precvpriv = &padapter->recvpriv;
- 
--	if (precvframe->u.hdr.pkt) {
--		dev_kfree_skb_any(precvframe->u.hdr.pkt);/*free skb by driver*/
--		precvframe->u.hdr.pkt = NULL;
--	}
-+	dev_kfree_skb_any(precvframe->u.hdr.pkt);/*free skb by driver*/
-+	precvframe->u.hdr.pkt = NULL;
- 	spin_lock_irqsave(&pfree_recv_queue->lock, irqL);
- 	list_delete(&(precvframe->u.hdr.list));
- 	list_insert_tail(&(precvframe->u.hdr.list),
-diff --git a/drivers/staging/rtl8712/xmit_linux.c b/drivers/staging/rtl8712/xmit_linux.c
-index 4d22bb7..13bb27a 100644
---- a/drivers/staging/rtl8712/xmit_linux.c
-+++ b/drivers/staging/rtl8712/xmit_linux.c
-@@ -156,8 +156,7 @@ void r8712_xmit_resource_free(struct _adapter *padapter,
- 
- void r8712_xmit_complete(struct _adapter *padapter, struct xmit_frame *pxframe)
- {
--	if (pxframe->pkt)
--		dev_kfree_skb_any(pxframe->pkt);
-+	dev_kfree_skb_any(pxframe->pkt);
- 	pxframe->pkt = NULL;
- }
- 
-diff --git a/drivers/staging/sbe-2t3e3/dc.c b/drivers/staging/sbe-2t3e3/dc.c
-index f207b9e..d8c9464 100644
---- a/drivers/staging/sbe-2t3e3/dc.c
-+++ b/drivers/staging/sbe-2t3e3/dc.c
-@@ -403,10 +403,8 @@ void dc_clear_descriptor_list(struct channel *sc)
- 
- 	/* free all data buffers on TX ring */
- 	for (i = 0; i < SBE_2T3E3_TX_DESC_RING_SIZE; i++) {
--		if (sc->ether.tx_data[i] != NULL) {
--			dev_kfree_skb_any(sc->ether.tx_data[i]);
--			sc->ether.tx_data[i] = NULL;
--		}
-+		dev_kfree_skb_any(sc->ether.tx_data[i]);
-+		sc->ether.tx_data[i] = NULL;
- 	}
- }
- 
-@@ -418,10 +416,8 @@ void dc_drop_descriptor_list(struct channel *sc)
- 
- 	/* free all data buffers on RX ring */
- 	for (i = 0; i < SBE_2T3E3_RX_DESC_RING_SIZE; i++) {
--		if (sc->ether.rx_data[i] != NULL) {
--			dev_kfree_skb_any(sc->ether.rx_data[i]);
--			sc->ether.rx_data[i] = NULL;
--		}
-+		dev_kfree_skb_any(sc->ether.rx_data[i]);
-+		sc->ether.rx_data[i] = NULL;
+ 		/* needed to ensure proper operation of coherent allocations
+ 		 * later, in case driver doesn't set it explicitly */
+-		dma_set_mask_and_coherent(&viodev->dev, DMA_BIT_MASK(64));
++		dma_coerce_mask_and_coherent(&viodev->dev, DMA_BIT_MASK(64));
  	}
  
- 	kfree(sc->ether.rx_ring);
+ 	/* register with generic device framework */
 -- 
-1.8.4.2
+1.7.10.4
+
 
