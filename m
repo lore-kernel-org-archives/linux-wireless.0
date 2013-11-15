@@ -1,43 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:38731 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754470Ab3KOJfH (ORCPT
+Received: from mail-yh0-f41.google.com ([209.85.213.41]:50053 "EHLO
+	mail-yh0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754115Ab3KOMAR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Nov 2013 04:35:07 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [RFC 3/5] ath9k: Remove unnecessary check
-Date: Fri, 15 Nov 2013 15:00:25 +0530
-Message-Id: <1384507827-16026-4-git-send-email-sujith@msujith.org> (sfid-20131115_103519_034826_433DA151)
-In-Reply-To: <1384507827-16026-1-git-send-email-sujith@msujith.org>
-References: <1384507827-16026-1-git-send-email-sujith@msujith.org>
+	Fri, 15 Nov 2013 07:00:17 -0500
+From: "Geyslan G. Bem" <geyslan@gmail.com>
+To: geyslan@gmail.com
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	Piotr Haber <phaber@broadcom.com>,
+	linux-wireless@vger.kernel.org (open list:BROADCOM BRCM8021...),
+	brcm80211-dev-list@broadcom.com (open list:BROADCOM BRCM8021...),
+	netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH] brcmfmac: fix possible memory leak
+Date: Fri, 15 Nov 2013 08:54:17 -0300
+Message-Id: <1384516475-26589-1-git-send-email-geyslan@gmail.com> (sfid-20131115_130035_394671_94B79A7B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+In case of error free 'chanspecs'.
 
-TX IQ calibration is always enabled for SoC chips.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Geyslan G. Bem <geyslan@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_calib.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/p2p.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index 2824824..347b002 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -1252,8 +1252,7 @@ static bool ar9003_hw_init_cal_soc(struct ath_hw *ah,
- 		}
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
+index d7a9745..aea2c2e 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
+@@ -771,7 +771,7 @@ static s32 brcmf_p2p_run_escan(struct brcmf_cfg80211_info *cfg,
+ 	struct brcmf_cfg80211_vif *vif;
+ 	struct net_device *dev = NULL;
+ 	int i, num_nodfs = 0;
+-	u16 *chanspecs;
++	u16 *chanspecs = NULL;
+ 
+ 	brcmf_dbg(TRACE, "enter\n");
+ 
+@@ -825,8 +825,10 @@ static s32 brcmf_p2p_run_escan(struct brcmf_cfg80211_info *cfg,
+ 				      action, P2PAPI_BSSCFG_DEVICE);
  	}
+ exit:
+-	if (err)
++	if (err) {
+ 		brcmf_err("error (%d)\n", err);
++		kfree(chanspecs);
++	}
+ 	return err;
+ }
  
--	if ((IS_CHAN_HALF_RATE(chan) || IS_CHAN_QUARTER_RATE(chan)) ||
--	    !(ah->enabled_cals & TX_IQ_CAL))
-+	if (IS_CHAN_HALF_RATE(chan) || IS_CHAN_QUARTER_RATE(chan))
- 		goto skip_tx_iqcal;
- 
- 	/* Do Tx IQ Calibration */
 -- 
 1.8.4.2
 
