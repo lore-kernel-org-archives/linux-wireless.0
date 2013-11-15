@@ -1,127 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f42.google.com ([209.85.215.42]:44564 "EHLO
-	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753280Ab3KNKov (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:44564 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754775Ab3KOJfH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Nov 2013 05:44:51 -0500
-MIME-Version: 1.0
-In-Reply-To: <1384367422.14578.20.camel@jlt4.sipsolutions.net>
-References: <1384119945-31213-1-git-send-email-felipe.contreras@gmail.com>
-	<1384160932.14334.6.camel@jlt4.sipsolutions.net>
-	<CAMP44s3TFSgWuR8gVoFBznNP+t9mz+to===9i1PAnra4ogKu9w@mail.gmail.com>
-	<1384184624.14334.31.camel@jlt4.sipsolutions.net>
-	<CAMP44s2cVVe4-yW214B9hJu7n6M1onZpZaPCj5N0Fi1JWDKKsw@mail.gmail.com>
-	<1384188067.14334.45.camel@jlt4.sipsolutions.net>
-	<CAMP44s3nkj2wZYCPve7EhyeD7sEFmpUN=-h015dOP68PcNSTug@mail.gmail.com>
-	<1384189227.14334.48.camel@jlt4.sipsolutions.net>
-	<CAMP44s1yJMd+9G5yu988GqafRYnAteN-y-WWDe-rJh_qQpSPkQ@mail.gmail.com>
-	<1384367422.14578.20.camel@jlt4.sipsolutions.net>
-Date: Thu, 14 Nov 2013 04:44:49 -0600
-Message-ID: <CAMP44s1orLwg4v8UPM_1c-PspKQd5run_wAwHj-8oKmj2uqUgw@mail.gmail.com> (sfid-20131114_114500_441912_CB613457)
-Subject: Re: [PATCH v2] mac80211: add assoc beacon timeout logic
-From: Felipe Contreras <felipe.contreras@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 15 Nov 2013 04:35:07 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [RFC 2/5] ath9k: Remove RTT/MCI code from SoC calibration
+Date: Fri, 15 Nov 2013 15:00:24 +0530
+Message-Id: <1384507827-16026-3-git-send-email-sujith@msujith.org> (sfid-20131115_103521_323271_373C1F35)
+In-Reply-To: <1384507827-16026-1-git-send-email-sujith@msujith.org>
+References: <1384507827-16026-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 13, 2013 at 12:30 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2013-11-11 at 12:06 -0600, Felipe Contreras wrote:
->
->> > The not receiving part is a bug. I think you're probably receiving
->> > beacons once associated though?
->>
->> Nope. Never.
->
-> That's odd, firmware bug? But it's still odd since windows works?
->
->> Moreover, if continuing the association without beacons has a legal a
->> problem, that problem would exist for drivers that don't have the
->> IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC flag, wouldn't it? How exactly
->> would trying to associate with need_beacon break the law, but not if
->> !need_beacon?
->
-> Well, it's actually somewhat unlikely you'd break the law, although
-> possible, since eventually you'd get disconnected from the AP anyway?
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-I get disconnected from the AP due to other bugs, you are making the
-assumption that it's because of the lack of beacons.
+RTT is enabled only for AR9462 and MCI for AR9462/AR9565.
+Also, manual peak calibration is not done for any of the
+SoC chips.
 
-I saw this the last time I experienced a disconnect:
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c | 70 +--------------------------
+ 1 file changed, 1 insertion(+), 69 deletions(-)
 
-Nov 13 16:29:48 nysa kernel: iwlwifi 0000:02:00.0: fail to flush all
-tx fifo queues Q 2
-Nov 13 16:29:48 nysa kernel: iwlwifi 0000:02:00.0: Current SW read_ptr
-213 write_ptr 214
-Nov 13 16:29:48 nysa kernel: iwl data: 00000000: 00 00 20 00 00 00 00
-00 00 00 00 00 00 00 00 00  .. .............
-Nov 13 16:29:48 nysa kernel: iwlwifi 0000:02:00.0: FH TRBs(0) = 0x8000302e
-Nov 13 16:29:48 nysa kernel: iwlwifi 0000:02:00.0: FH TRBs(1) = 0x801020d5
-Nov 13 16:29:48 nysa kernel: iwlwifi 0000:02:00.0: FH TRBs(2) = 0x80201016
-Nov 13 16:29:48 nysa kernel: iwlwifi 0000:02:00.0: FH TRBs(3) = 0x803000fb
-Nov 13 16:29:48 nysa kernel: iwlwifi 0000:02:00.0: FH TRBs(4) = 0x00000000
-Nov 13 16:29:48 nysa kernel: iwlwifi 0000:02:00.0: FH TRBs(5) = 0x00000000
-Nov 13 16:29:48 nysa kernel: iwlwifi 0000:02:00.0: FH TRBs(6) = 0x00000000
-Nov 13 16:29:48 nysa kernel: iwlwifi 0000:02:00.0: FH TRBs(7) = 0x00709010
-Nov 13 16:29:48 nysa kernel: iwlwifi 0000:02:00.0: Q 0 is active and
-mapped to fifo 3 ra_tid 0x0000 [252,252]
-Nov 13 16:29:48 nysa kernel: iwlwifi 0000:02:00.0: Q 1 is active and
-mapped to fifo 2 ra_tid 0x0000 [23,23]
-Nov 13 16:29:48 nysa kernel: iwlwifi 0000:02:00.0: Q 2 is active and
-mapped to fifo 1 ra_tid 0x0000 [213,214]
-Nov 13 16:29:48 nysa kernel: iwlwifi 0000:02:00.0: Q 3 is active and
-mapped to fifo 0 ra_tid 0x0000 [47,47]
-Nov 13 16:29:48 nysa kernel: iwlwifi 0000:02:00.0: Q 4 is active and
-mapped to fifo 0 ra_tid 0x0000 [0,0]
-Nov 13 16:29:48 nysa kernel: iwlwifi 0000:02:00.0: Q 5 is active and
-mapped to fifo 4 ra_tid 0x0000 [0,0]
-Nov 13 16:29:48 nysa kernel: iwlwifi 0000:02:00.0: Q 6 is active and
-mapped to fifo 2 ra_tid 0x0000 [0,0]
-Nov 13 16:29:48 nysa kernel: iwlwifi 0000:02:00.0: Q 7 is active and
-mapped to fifo 5 ra_tid 0x0000 [0,0]
-Nov 13 16:29:48 nysa kernel: iwlwifi 0000:02:00.0: Q 8 is active and
-mapped to fifo 4 ra_tid 0x0000 [0,0]
-Nov 13 16:29:48 nysa kernel: iwlwifi 0000:02:00.0: Q 9 is active and
-mapped to fifo 7 ra_tid 0x0000 [17,17]
-Nov 13 16:29:48 nysa kernel: iwlwifi 0000:02:00.0: Q 10 is active and
-mapped to fifo 5 ra_tid 0x0000 [0,0]
-Nov 13 16:29:48 nysa kernel: iwlwifi 0000:02:00.0: Q 11 is inactive
-and mapped to fifo 1 ra_tid 0x0000 [163,163]
-Nov 13 16:29:48 nysa kernel: iwlwifi 0000:02:00.0: Q 12 is inactive
-and mapped to fifo 3 ra_tid 0x0006 [236,236]
-Nov 13 16:29:48 nysa kernel: iwlwifi 0000:02:00.0: Q 13 is inactive
-and mapped to fifo 0 ra_tid 0x0000 [0,0]
-Nov 13 16:29:48 nysa kernel: iwlwifi 0000:02:00.0: Q 14 is inactive
-and mapped to fifo 0 ra_tid 0x0000 [0,0]
-Nov 13 16:29:48 nysa kernel: iwlwifi 0000:02:00.0: Q 15 is inactive
-and mapped to fifo 0 ra_tid 0x0000 [0,0]
-Nov 13 16:29:48 nysa kernel: iwlwifi 0000:02:00.0: Q 16 is inactive
-and mapped to fifo 0 ra_tid 0x0000 [0,0]
-Nov 13 16:29:48 nysa kernel: iwlwifi 0000:02:00.0: Q 17 is inactive
-and mapped to fifo 0 ra_tid 0x0000 [0,0]
-Nov 13 16:29:48 nysa kernel: iwlwifi 0000:02:00.0: Q 18 is inactive
-and mapped to fifo 0 ra_tid 0x0000 [0,0]
-Nov 13 16:29:48 nysa kernel: iwlwifi 0000:02:00.0: Q 19 is inactive
-and mapped to fifo 0 ra_tid 0x0000 [0,0]
-
-> In any case - your argumentation above isn't true because every device
-> listens for beacons, and if none are received then it should eventually
-> disconnect. That should be true even with your hack here.
-
-Should it? I don't see that happening. Where exactly in the code is that check?
-
-> In any case, I'm not really comfortable connecting to an AP that we
-> never ever receive beacons from.
-
-Well, we are *already* doing that for every driver, except the ones
-that do IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC, which are few.
-
-Cheers.
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index 9f54cb5..2824824 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -1235,46 +1235,12 @@ static bool ar9003_hw_init_cal_soc(struct ath_hw *ah,
+ 	struct ath9k_hw_cal_data *caldata = ah->caldata;
+ 	bool txiqcal_done = false;
+ 	bool is_reusable = true, status = true;
+-	bool run_rtt_cal = false, run_agc_cal, sep_iq_cal = false;
+-	bool rtt = !!(ah->caps.hw_caps & ATH9K_HW_CAP_RTT);
++	bool run_agc_cal = false, sep_iq_cal = false;
+ 	u32 rx_delay = 0;
+-	u32 agc_ctrl = 0, agc_supp_cals = AR_PHY_AGC_CONTROL_OFFSET_CAL |
+-					  AR_PHY_AGC_CONTROL_FLTR_CAL   |
+-					  AR_PHY_AGC_CONTROL_PKDET_CAL;
+ 
+ 	/* Use chip chainmask only for calibration */
+ 	ar9003_hw_set_chain_masks(ah, ah->caps.rx_chainmask, ah->caps.tx_chainmask);
+ 
+-	if (rtt) {
+-		if (!ar9003_hw_rtt_restore(ah, chan))
+-			run_rtt_cal = true;
+-
+-		if (run_rtt_cal)
+-			ath_dbg(common, CALIBRATE, "RTT calibration to be done\n");
+-	}
+-
+-	run_agc_cal = run_rtt_cal;
+-
+-	if (run_rtt_cal) {
+-		ar9003_hw_rtt_enable(ah);
+-		ar9003_hw_rtt_set_mask(ah, 0x00);
+-		ar9003_hw_rtt_clear_hist(ah);
+-	}
+-
+-	if (rtt) {
+-		if (!run_rtt_cal) {
+-			agc_ctrl = REG_READ(ah, AR_PHY_AGC_CONTROL);
+-			agc_supp_cals &= agc_ctrl;
+-			agc_ctrl &= ~(AR_PHY_AGC_CONTROL_OFFSET_CAL |
+-				      AR_PHY_AGC_CONTROL_FLTR_CAL |
+-				      AR_PHY_AGC_CONTROL_PKDET_CAL);
+-			REG_WRITE(ah, AR_PHY_AGC_CONTROL, agc_ctrl);
+-		} else {
+-			if (ah->ah_flags & AH_FASTCC)
+-				run_agc_cal = true;
+-		}
+-	}
+-
+ 	if (ah->enabled_cals & TX_CL_CAL) {
+ 		if (caldata && test_bit(TXCLCAL_DONE, &caldata->cal_flags))
+ 			REG_CLR_BIT(ah, AR_PHY_CL_CAL_CTL,
+@@ -1313,9 +1279,6 @@ static bool ar9003_hw_init_cal_soc(struct ath_hw *ah,
+ 	}
+ 
+ skip_tx_iqcal:
+-	if (ath9k_hw_mci_is_enabled(ah) && IS_CHAN_2GHZ(chan) && run_agc_cal)
+-		ar9003_mci_init_cal_req(ah, &is_reusable);
+-
+ 	if (sep_iq_cal) {
+ 		txiqcal_done = ar9003_hw_tx_iq_cal_run(ah);
+ 		REG_WRITE(ah, AR_PHY_ACTIVE, AR_PHY_ACTIVE_DIS);
+@@ -1342,8 +1305,6 @@ skip_tx_iqcal:
+ 		status = ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL,
+ 				       AR_PHY_AGC_CONTROL_CAL,
+ 				       0, AH_WAIT_TIMEOUT);
+-
+-		ar9003_hw_do_manual_peak_cal(ah, chan, run_rtt_cal);
+ 	}
+ 
+ 	if (REG_READ(ah, AR_PHY_CL_CAL_CTL) & AR_PHY_CL_CAL_ENABLE) {
+@@ -1351,18 +1312,7 @@ skip_tx_iqcal:
+ 		udelay(5);
+ 	}
+ 
+-	if (ath9k_hw_mci_is_enabled(ah) && IS_CHAN_2GHZ(chan) && run_agc_cal)
+-		ar9003_mci_init_cal_done(ah);
+-
+-	if (rtt && !run_rtt_cal) {
+-		agc_ctrl |= agc_supp_cals;
+-		REG_WRITE(ah, AR_PHY_AGC_CONTROL, agc_ctrl);
+-	}
+-
+ 	if (!status) {
+-		if (run_rtt_cal)
+-			ar9003_hw_rtt_disable(ah);
+-
+ 		ath_dbg(common, CALIBRATE,
+ 			"offset calibration failed to complete in %d ms; noisy environment?\n",
+ 			AH_WAIT_TIMEOUT / 1000);
+@@ -1376,24 +1326,6 @@ skip_tx_iqcal:
+ 
+ 	ar9003_hw_cl_cal_post_proc(ah, is_reusable);
+ 
+-	if (run_rtt_cal && caldata) {
+-		if (is_reusable) {
+-			if (!ath9k_hw_rfbus_req(ah)) {
+-				ath_err(ath9k_hw_common(ah),
+-					"Could not stop baseband\n");
+-			} else {
+-				ar9003_hw_rtt_fill_hist(ah);
+-
+-				if (test_bit(SW_PKDET_DONE, &caldata->cal_flags))
+-					ar9003_hw_rtt_load_hist(ah);
+-			}
+-
+-			ath9k_hw_rfbus_done(ah);
+-		}
+-
+-		ar9003_hw_rtt_disable(ah);
+-	}
+-
+ 	/* Revert chainmask to runtime parameters */
+ 	ar9003_hw_set_chain_masks(ah, ah->rxchainmask, ah->txchainmask);
+ 
 -- 
-Felipe Contreras
+1.8.4.2
+
