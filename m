@@ -1,54 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:52873 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751375Ab3KMFE0 (ORCPT
+Received: from farad.et-inf.fho-emden.de ([139.13.80.1]:44177 "EHLO
+	farad.et-inf.fho-emden.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753330Ab3KOJZD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Nov 2013 00:04:26 -0500
-Received: by mail-ob0-f172.google.com with SMTP id wm4so7148023obc.31
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Nov 2013 21:04:25 -0800 (PST)
-Message-ID: <52830858.80907@lwfinger.net> (sfid-20131113_060428_972280_2C1E943B)
-Date: Tue, 12 Nov 2013 23:04:24 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Alexandre Demers <alexandre.f.demers@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] staging r8712u: Remove useless netdev_info slowly polluting
- dmesg
-References: <1384318582-10486-1-git-send-email-alexandre.f.demers@gmail.com>
-In-Reply-To: <1384318582-10486-1-git-send-email-alexandre.f.demers@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Fri, 15 Nov 2013 04:25:03 -0500
+Received: from mke-x61t ([139.13.74.206])
+	(authenticated bits=0)
+	by farad.et-inf.fho-emden.de (8.13.8/8.13.8/Debian-3) with ESMTP id rAF9I3pT030240
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 15 Nov 2013 10:18:04 +0100
+Date: Fri, 15 Nov 2013 10:18:03 +0100
+From: mkettn@technik-emden.de
+To: linux-wireless@vger.kernel.org
+Subject: WPA_Supplicant: no unicast with wpa encryption
+Message-ID: <20131115101803.66967a4e@mke-x61t> (sfid-20131115_102509_646800_659DBE79)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/12/2013 10:56 PM, Alexandre Demers wrote:
-> Remove useless netdev_info slowly flooding dmesg.
-> Fixes bug https://bugzilla.kernel.org/show_bug.cgi?id=64231
->
-> Signed-off-by: Alexandre Demers <alexandre.f.demers@gmail.com>
-> ---
->   drivers/staging/rtl8712/rtl871x_mlme.c | 3 ---
->   1 file changed, 3 deletions(-)
->
-> diff --git a/drivers/staging/rtl8712/rtl871x_mlme.c b/drivers/staging/rtl8712/rtl871x_mlme.c
-> index 6596154..7e29f48 100644
-> --- a/drivers/staging/rtl8712/rtl871x_mlme.c
-> +++ b/drivers/staging/rtl8712/rtl871x_mlme.c
-> @@ -1043,9 +1043,6 @@ void r8712_got_addbareq_event_callback(struct _adapter *adapter, u8 *pbuf)
->   	struct	sta_priv *pstapriv = &adapter->stapriv;
->   	struct	recv_reorder_ctrl *precvreorder_ctrl = NULL;
->
-> -	netdev_info(adapter->pnetdev, "%s: mac = %pM, seq = %d, tid = %d\n",
-> -		    __func__, pAddbareq_pram->MacAddress,
-> -	    pAddbareq_pram->StartSeqNum, pAddbareq_pram->tid);
->   	psta = r8712_get_stainfo(pstapriv, pAddbareq_pram->MacAddress);
->   	if (psta) {
->   		precvreorder_ctrl =
->
+Hello,
 
-Congratulations. That one applied.
+I want to use wpa_supplicant to encrypt a ad-hoc network with WPA.
+Each device is also a router (using babeld). 
+With encryption the support for unicast packages drops. I've used
+tshark to monitor the traffic of two devices (A and B):
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+when A wants to ping B it broadcasts a ask for the MAC-address of B.
+B sends the MAC-address successfully but A doesn't care.
 
-Larry
+I see the reply of B in tshark (running on B), but the ARP-package
+doesn't show up on tshark on A.
 
+this only happens with wpa_supplicant enabled.
+
+The wpa_supplicant.conf looks like this:
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+
+# use 'ap_scan=2' on all devices connected to the network
+ap_scan=2
+
+network={
+    ssid="mesh-wpa"
+    mode=1
+    frequency=2432
+    proto=WPA
+    key_mgmt=WPA-NONE
+    pairwise=NONE
+    group=TKIP
+    psk="secret passphrase"
+}
+
+
+and the /etc/network/interfaces like this:
+auto lo
+
+iface lo inet loopback
+iface eth0 inet dhcp
+
+allow-hotplug wlan0
+iface wlan0 inet static
+    address 192.168.13.37
+    netmask 255.255.255.255
+
+    # Load WPA-Supplicant for WPA in Ad-Hoc Mode
+    wpa-driver wext
+    wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf
+
+iface default inet dhcp
+
+
+I'm using two RaspberryPis with Raspbian Linux 3.6.11+.
+Here is the device descriptor of the wlan usb stick:
+lsusb -v -d 0cf3:9271 - http://pastebin.com/nfvVp80u
+
+the output of wpa_supplicant -i wlan0 -D wext
+-c /etc/wpa_supplicant/wpa_supplicant.conf brings:
+
+ioctl[SIOCSIWPMKSA]: Invalid argument
+ioctl[SIOCSIWENCODEEXT]: Invalid argument
+ioctl[SIOCSIWENCODEEXT]: Invalid argument
+wlan0: Trying to associate with SSID 'mesh-wpa'
+ioctl[SIOCSIWGENIE]: Operation not supported
+wlan0: Association request to the driver failed
+wlan0: CTRL-EVENT-CONNECTED - Connection to 00:00:00:00:00:00 completed
+(auth) [id=-1 id_str=] wlan0: Trying to associate with SSID 'mesh-wpa'
+ioctl[SIOCSIWENCODEEXT]: Invalid argument
+ioctl[SIOCSIWENCODEEXT]: Invalid argument
+ioctl[SIOCSIWGENIE]: Operation not supported
+wlan0: Association request to the driver failed
+wlan0: CTRL-EVENT-CONNECTED - Connection to 00:00:00:00:00:00 completed
+(reauth) [id=0 id_str=]
+
+-Mark
