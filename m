@@ -1,84 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:44920 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752523Ab3KXUGy (ORCPT
+Received: from mail-oa0-f45.google.com ([209.85.219.45]:59232 "EHLO
+	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753191Ab3KOTHh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Nov 2013 15:06:54 -0500
-Received: by mail-wg0-f49.google.com with SMTP id x12so2982643wgg.28
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Nov 2013 12:06:53 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 03/29] iwlwifi: pcie: remove useless condition test
-Date: Sun, 24 Nov 2013 22:06:20 +0200
-Message-Id: <1385323606-3603-3-git-send-email-egrumbach@gmail.com> (sfid-20131124_210705_387744_DCAF6101)
-In-Reply-To: <52925BE7.4050406@gmail.com>
-References: <52925BE7.4050406@gmail.com>
+	Fri, 15 Nov 2013 14:07:37 -0500
+Received: by mail-oa0-f45.google.com with SMTP id m1so4437061oag.32
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Nov 2013 11:07:36 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20131115184510.GA911@redhat.com>
+References: <cover.1384160397.git.dborkman@redhat.com>
+	<2ea03f60bb65429cbe5d74a6d356fde3eefcf06c.1384160397.git.dborkman@redhat.com>
+	<20131111134357.GC10104@thunk.org>
+	<20131112000307.GB14929@order.stressinduktion.org>
+	<20131112115350.GA14077@thunk.org>
+	<20131112131627.GD14929@order.stressinduktion.org>
+	<20131112134603.GE14929@order.stressinduktion.org>
+	<20131114025448.GB31602@thunk.org>
+	<CAGXu5j+ySEdQBXKkspYC=svfekBja2Z_2tcWSAOEbvyiMLf=aA@mail.gmail.com>
+	<20131115184510.GA911@redhat.com>
+Date: Fri, 15 Nov 2013 11:07:35 -0800
+Message-ID: <CAGXu5j+emFS+Y-=SOE4SM_gAXfR_NWHRXwv8c6CeB7SgGZgKNw@mail.gmail.com> (sfid-20131115_200843_083620_CFBF166E)
+Subject: Re: [PATCH] random: seed random_int_secret at least poorly at
+ core_initcall time
+From: Kees Cook <keescook@chromium.org>
+To: Dave Jones <davej@redhat.com>
+Cc: "Theodore Ts'o" <tytso@mit.edu>,
+	Daniel Borkmann <dborkman@redhat.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Florian Weimer <fweimer@redhat.com>, netdev@vger.kernel.org,
+	Eric Dumazet <eric.dumazet@gmail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Fri, Nov 15, 2013 at 10:45 AM, Dave Jones <davej@redhat.com> wrote:
+> On Fri, Nov 15, 2013 at 10:33:04AM -0800, Kees Cook wrote:
+>
+>  > Ingo wanted even more
+>  > unpredictability, in the face of total failure from these more dynamic
+>  > sources, so x86 also "seeds" itself with the build string and the
+>  > boot_params. These last two are hardly high entropy, but they should
+>  > at least make 2 different systems not have _identical_ entropy at the
+>  > start. It's far from cryptographically secure, but it's something, I
+>  > hope.
+>
+> Those are both likely to be the same on some configurations.
+> On x86, we could maybe hash the dmi tables ? Vendor stupidity aside,
+> things like serial numbers in those tables _should_ be different.
 
-After wait_event_timeout(), the condition must still be
-true if it returns >0, in fact almost the last thing in
-it is checking the condition again. It's therefore not
-useful to check yet again in our code, clean it up.
+Yeah, DMI tables were suggested as well. (Hopefully people will start
+using -uuid with KVM!) How hard would that be to hook up to the
+pre-random-init code?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/pcie/tx.c |   32 +++++++++++++-------------------
- 1 file changed, 13 insertions(+), 19 deletions(-)
+-Kees
 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
-index 487a517..d81d58c 100644
---- a/drivers/net/wireless/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
-@@ -1542,30 +1542,24 @@ static int iwl_pcie_send_hcmd_sync(struct iwl_trans *trans,
- 	}
- 
- 	if (!ret) {
--		if (test_bit(STATUS_HCMD_ACTIVE, &trans_pcie->status)) {
--			struct iwl_txq *txq =
--				&trans_pcie->txq[trans_pcie->cmd_queue];
--			struct iwl_queue *q = &txq->q;
-+		struct iwl_txq *txq = &trans_pcie->txq[trans_pcie->cmd_queue];
-+		struct iwl_queue *q = &txq->q;
- 
--			IWL_ERR(trans,
--				"Error sending %s: time out after %dms.\n",
--				get_cmd_string(trans_pcie, cmd->id),
--				jiffies_to_msecs(HOST_COMPLETE_TIMEOUT));
-+		IWL_ERR(trans, "Error sending %s: time out after %dms.\n",
-+			get_cmd_string(trans_pcie, cmd->id),
-+			jiffies_to_msecs(HOST_COMPLETE_TIMEOUT));
- 
--			IWL_ERR(trans,
--				"Current CMD queue read_ptr %d write_ptr %d\n",
--				q->read_ptr, q->write_ptr);
-+		IWL_ERR(trans, "Current CMD queue read_ptr %d write_ptr %d\n",
-+			q->read_ptr, q->write_ptr);
- 
--			clear_bit(STATUS_HCMD_ACTIVE, &trans_pcie->status);
--			IWL_DEBUG_INFO(trans,
--				       "Clearing HCMD_ACTIVE for command %s\n",
--				       get_cmd_string(trans_pcie, cmd->id));
--			ret = -ETIMEDOUT;
-+		clear_bit(STATUS_HCMD_ACTIVE, &trans_pcie->status);
-+		IWL_DEBUG_INFO(trans, "Clearing HCMD_ACTIVE for command %s\n",
-+			       get_cmd_string(trans_pcie, cmd->id));
-+		ret = -ETIMEDOUT;
- 
--			iwl_op_mode_nic_error(trans->op_mode);
-+		iwl_op_mode_nic_error(trans->op_mode);
- 
--			goto cancel;
--		}
-+		goto cancel;
- 	}
- 
- 	if (test_bit(STATUS_FW_ERROR, &trans_pcie->status)) {
 -- 
-1.7.9.5
-
+Kees Cook
+Chrome OS Security
