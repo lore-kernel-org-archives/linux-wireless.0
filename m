@@ -1,39 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:44442 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751721Ab3KSTQF (ORCPT
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:40389 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751253Ab3KORZg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Nov 2013 14:16:05 -0500
-Received: by mail-bk0-f46.google.com with SMTP id u15so1864791bkz.5
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Nov 2013 11:16:03 -0800 (PST)
+	Fri, 15 Nov 2013 12:25:36 -0500
+Subject: [PATCH 2/3] ath10k: make core boot messages more compact
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 15 Nov 2013 19:25:33 +0200
+Message-ID: <20131115172533.10646.28979.stgit@localhost6.localdomain6> (sfid-20131115_182539_323999_29EE1765)
+In-Reply-To: <20131115172526.10646.35233.stgit@localhost6.localdomain6>
+References: <20131115172526.10646.35233.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-In-Reply-To: <CABGE7ds77Ea9YeGBLCCYYDfTFEm0MqjRA03aF=vpv9Y+=Z47oA@mail.gmail.com>
-References: <CABGE7dsDtL0ZPAmOTW=G=hMdA-6r=yT0DtQx_-H6Yi6cGa6Udw@mail.gmail.com>
- <CABGE7dur4pM4vLz_iLx7u-g5ohKhXkwKAOmjJ86PE62mYwGPJw@mail.gmail.com>
- <CAG6hwVOOvKfZcv-J70EMeHM3pmx-ieeAF2-6UtbrmoN3xC=SLw@mail.gmail.com>
- <CABGE7dsTzYESpxfO8WL9JP1BR1QdrTNv5+EszuZm225R2pA=Zw@mail.gmail.com> <CABGE7ds77Ea9YeGBLCCYYDfTFEm0MqjRA03aF=vpv9Y+=Z47oA@mail.gmail.com>
-From: Thomas Pedersen <thomas@cozybit.com>
-Date: Tue, 19 Nov 2013 11:15:43 -0800
-Message-ID: <CAG6hwVNqLQB+8ViDyB-XhVx=TzbgZmX-DY6gDaevUoMfETWTVw@mail.gmail.com> (sfid-20131119_201609_110009_3D0EBCDB)
-Subject: Re: NL80211_CMD_NEW_STATION result: -105 (No buffer space available)
-To: Gustavo Azambuja <gazambuja+hostapd@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 19, 2013 at 3:39 AM, Gustavo Azambuja
-<gazambuja+hostapd@gmail.com> wrote:
-> Thank,
-> you know where i can find one list of devices (usb dongle) with more
-> ram, or without this limit (I need provide Internet at less to 30
-> stations)?
+We can show the same amount of information in one line. And then
+it's easier to show this information only during first firmware boot
+(see next patch).
 
-No. But a "real" AP would be cheaper and much more perfomant anyway.
-Something like the TP-LINK WR841n can be had for about $20.
+For UART printouts there's already a message when they are enabled so
+no need to have a print when they are disabled, that's the default
+anyway.
 
-Nothing stopping you from setting HTC_MAX_STA to 30 and seeing what
-happens either!
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c |   16 ++++++++++------
+ drivers/net/wireless/ath/ath10k/htt.c  |    4 ++--
+ 2 files changed, 12 insertions(+), 8 deletions(-)
 
--- 
-Thomas
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index be5b17e..e6c468b 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -597,10 +597,8 @@ static int ath10k_init_uart(struct ath10k *ar)
+ 		return ret;
+ 	}
+ 
+-	if (!uart_print) {
+-		ath10k_info("UART prints disabled\n");
++	if (!uart_print)
+ 		return 0;
+-	}
+ 
+ 	ret = ath10k_bmi_write32(ar, hi_dbg_uart_txpin, 7);
+ 	if (ret) {
+@@ -645,8 +643,8 @@ static int ath10k_init_hw_params(struct ath10k *ar)
+ 
+ 	ar->hw_params = *hw_params;
+ 
+-	ath10k_info("Hardware name %s version 0x%x\n",
+-		    ar->hw_params.name, ar->target_version);
++	ath10k_dbg(ATH10K_DBG_BOOT, "Hardware name %s version 0x%x\n",
++		   ar->hw_params.name, ar->target_version);
+ 
+ 	return 0;
+ }
+@@ -807,7 +805,8 @@ int ath10k_core_start(struct ath10k *ar)
+ 	if (status)
+ 		goto err_htt_detach;
+ 
+-	ath10k_info("firmware %s booted\n", ar->hw->wiphy->fw_version);
++	ath10k_dbg(ATH10K_DBG_BOOT, "firmware %s booted\n",
++		   ar->hw->wiphy->fw_version);
+ 
+ 	status = ath10k_wmi_cmd_init(ar);
+ 	if (status) {
+@@ -833,6 +832,11 @@ int ath10k_core_start(struct ath10k *ar)
+ 	ar->free_vdev_map = (1 << TARGET_NUM_VDEVS) - 1;
+ 	INIT_LIST_HEAD(&ar->arvifs);
+ 
++	ath10k_info("%s (0x%x) fw %s api %d htt %d.%d\n",
++		    ar->hw_params.name, ar->target_version,
++		    ar->hw->wiphy->fw_version, ar->fw_api,
++		    ar->htt.target_version_major, ar->htt.target_version_minor);
++
+ 	return 0;
+ 
+ err_disconnect_htc:
+diff --git a/drivers/net/wireless/ath/ath10k/htt.c b/drivers/net/wireless/ath/ath10k/htt.c
+index 5f7eeeb..69697af5 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.c
++++ b/drivers/net/wireless/ath/ath10k/htt.c
+@@ -104,8 +104,8 @@ err_htc_attach:
+ 
+ static int ath10k_htt_verify_version(struct ath10k_htt *htt)
+ {
+-	ath10k_info("htt target version %d.%d\n",
+-		    htt->target_version_major, htt->target_version_minor);
++	ath10k_dbg(ATH10K_DBG_BOOT, "htt target version %d.%d\n",
++		   htt->target_version_major, htt->target_version_minor);
+ 
+ 	if (htt->target_version_major != 2 &&
+ 	    htt->target_version_major != 3) {
+
