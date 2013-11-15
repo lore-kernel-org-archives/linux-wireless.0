@@ -1,49 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f181.google.com ([209.85.214.181]:63311 "EHLO
-	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751557Ab3KSCVH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Nov 2013 21:21:07 -0500
-Received: by mail-ob0-f181.google.com with SMTP id uz6so8031255obc.12
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Nov 2013 18:21:07 -0800 (PST)
+Received: from imap.thunk.org ([74.207.234.97]:58871 "EHLO imap.thunk.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751446Ab3KOVFd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Nov 2013 16:05:33 -0500
+Date: Fri, 15 Nov 2013 16:05:20 -0500
+From: Theodore Ts'o <tytso@mit.edu>
+To: Kees Cook <keescook@chromium.org>
+Cc: Daniel Borkmann <dborkman@redhat.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	shemminger@networkplumber.org, Florian Weimer <fweimer@redhat.com>,
+	netdev@vger.kernel.org, Eric Dumazet <eric.dumazet@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] random: seed random_int_secret at least poorly at
+ core_initcall time
+Message-ID: <20131115210520.GA16722@thunk.org> (sfid-20131115_220539_130076_BBBF5B1E)
+References: <cover.1384160397.git.dborkman@redhat.com>
+ <2ea03f60bb65429cbe5d74a6d356fde3eefcf06c.1384160397.git.dborkman@redhat.com>
+ <20131111134357.GC10104@thunk.org>
+ <20131112000307.GB14929@order.stressinduktion.org>
+ <20131112115350.GA14077@thunk.org>
+ <20131112131627.GD14929@order.stressinduktion.org>
+ <20131112134603.GE14929@order.stressinduktion.org>
+ <20131114025448.GB31602@thunk.org>
+ <CAGXu5j+ySEdQBXKkspYC=svfekBja2Z_2tcWSAOEbvyiMLf=aA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CABGE7dsDtL0ZPAmOTW=G=hMdA-6r=yT0DtQx_-H6Yi6cGa6Udw@mail.gmail.com>
-References: <CABGE7dsDtL0ZPAmOTW=G=hMdA-6r=yT0DtQx_-H6Yi6cGa6Udw@mail.gmail.com>
-From: Gustavo Azambuja <gazambuja+hostapd@gmail.com>
-Date: Tue, 19 Nov 2013 00:20:46 -0200
-Message-ID: <CABGE7dur4pM4vLz_iLx7u-g5ohKhXkwKAOmjJ86PE62mYwGPJw@mail.gmail.com> (sfid-20131119_032112_343549_DF62ADFE)
-Subject: Re: NL80211_CMD_NEW_STATION result: -105 (No buffer space available)
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAGXu5j+ySEdQBXKkspYC=svfekBja2Z_2tcWSAOEbvyiMLf=aA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, I recently installed in my raspberry pi Raspbian with hostapd 1.0, I
-want to make my own Hotspot, but follow all tutorials, I can only get up to
-6 stations connected at the same time.
+On Fri, Nov 15, 2013 at 10:33:04AM -0800, Kees Cook wrote:
+> 
+> When the static stack canary was mentioned during the ARM summit, I
+> dug around a little bit and saw that at very early boot, yes, it was
+> always the same, but after boot finished, it was different from boot
+> to boot. I didn't get far enough to figure out what was changing it
+> later on.
 
-The next error apper with the #7 client try to connect:
-*NL80211_CMD_NEW_STATION result: -105 (No buffer space available)*
+I've been in Seoul this past week, so I haven't had a chance look more
+closely at this, but what's not clear to me what the impact will be of
+having a static statck canary during early boot.  Does that mean the
+stack canary for the certain kernel threads and the pid 1 are always
+constant, since their stacks are getting set up before we're actually
+able to initialize the stack canary with something random?
 
-How I can resize this and make more clients can connect to my device?
-
-Im using TL-WN722N dongle.
-
-Thanks in advice!
-
-On Tue, Nov 19, 2013 at 12:17 AM, Gustavo Azambuja
-<gazambuja+hostapd@gmail.com> wrote:
-> Hi, I recently installed in my raspberry pi Raspbian with hostapd 1.0, I
-> want to make my own Hotspot, but follow all tutorials, I can only get up to
-> 6 stations connected at the same time.
->
-> The next error apper with the #7 client try to connect:
-> *NL80211_CMD_NEW_STATION result: -105 (No buffer space available)*
->
-> How I can resize this and make more clients can connect to my device?
->
-> Im using TL-WN722N dongle.
->
-> Thanks in advice!
->
-> Gustavo
+     		       	     	    	 - Ted
