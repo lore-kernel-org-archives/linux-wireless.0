@@ -1,46 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:49855 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751827Ab3K0GQ4 (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:42693 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755560Ab3KODLE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Nov 2013 01:16:56 -0500
-Received: by mail-ie0-f182.google.com with SMTP id as1so11166484iec.27
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Nov 2013 22:16:56 -0800 (PST)
+	Thu, 14 Nov 2013 22:11:04 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Ujjal Roy <royujjal@gmail.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3.13 1/6] mwifiex: use return value of mwifiex_add_virtual_intf() correctly
+Date: Thu, 14 Nov 2013 19:10:37 -0800
+Message-ID: <1384485042-7083-1-git-send-email-bzhao@marvell.com> (sfid-20131115_041109_171810_53377E85)
 MIME-Version: 1.0
-In-Reply-To: <1385498361.4177.4.camel@jlt4.sipsolutions.net>
-References: <1385409372-4229-1-git-send-email-janusz.dziedzic@tieto.com>
-	<1385409372-4229-4-git-send-email-janusz.dziedzic@tieto.com>
-	<201311261550.14953.sw@simonwunderlich.de>
-	<CAFED-jmmkA2j4YRhFj7MXgZBgLJrofn1RGnbORtGDzB8wOErfw@mail.gmail.com>
-	<1385498361.4177.4.camel@jlt4.sipsolutions.net>
-Date: Wed, 27 Nov 2013 07:16:56 +0100
-Message-ID: <CAFED-jnMOWKZz1pHpvKmxu7ZZo0KGpomw2v8ug_oqpsdGBbOwQ@mail.gmail.com> (sfid-20131127_071700_163978_DAE37BA3)
-Subject: Re: [PATCH v3 4/4] cfg80211: DFS use 10 minutes CAC when weather channels
-From: Janusz Dziedzic <janusz.dziedzic@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Simon Wunderlich <sw@simonwunderlich.de>,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/11/26 Johannes Berg <johannes@sipsolutions.net>:
-> On Tue, 2013-11-26 at 21:19 +0100, Janusz Dziedzic wrote:
->
->> ath.ko already disable weather channels by default.
->> But in case driver will pass DFS certification (meet all requirements)
->> - why not use weather channels?
->
-> Since I'm a lazy bastard - can you demonstrate such a driver? I'm
-> guessing not (immediately), so I'll drop your patches for now - maybe
-> better to go back to the drawing board and get all of this into regdb
-> etc. Doesn't seem critical to get it into the kernel now, if nobody
-> really supports it anyway ...
->
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-I could say something more after DFS tests.
-What about patch 1 and 2?
+mwifiex_add_virtual_intf() returns ERR_PTR values. So use IS_ERR()
+macro instead of checking for NULL pointer.
 
-BR
-Janusz
+Reported-by: Ujjal Roy <royujjal@gmail.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/main.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
+index 9d7c9d3..7c7da3e 100644
+--- a/drivers/net/wireless/mwifiex/main.c
++++ b/drivers/net/wireless/mwifiex/main.c
+@@ -418,6 +418,7 @@ static void mwifiex_fw_dpc(const struct firmware *firmware, void *context)
+ 	struct mwifiex_fw_image fw;
+ 	struct semaphore *sem = adapter->card_sem;
+ 	bool init_failed = false;
++	struct wireless_dev *wdev;
+ 
+ 	if (!firmware) {
+ 		dev_err(adapter->dev,
+@@ -474,8 +475,9 @@ static void mwifiex_fw_dpc(const struct firmware *firmware, void *context)
+ 
+ 	rtnl_lock();
+ 	/* Create station interface by default */
+-	if (!mwifiex_add_virtual_intf(adapter->wiphy, "mlan%d",
+-				      NL80211_IFTYPE_STATION, NULL, NULL)) {
++	wdev = mwifiex_add_virtual_intf(adapter->wiphy, "mlan%d",
++					NL80211_IFTYPE_STATION, NULL, NULL);
++	if (IS_ERR(wdev)) {
+ 		dev_err(adapter->dev, "cannot create default STA interface\n");
+ 		goto err_add_intf;
+ 	}
+-- 
+1.8.2.3
+
