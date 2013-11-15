@@ -1,55 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:50470 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750810Ab3KFGhW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Nov 2013 01:37:22 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: wzyboy <wzyboy@wzyboy.org>
-CC: "ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [Ilw] Intel Wireless 7260 hardware timed out randomly
-Date: Wed, 6 Nov 2013 06:37:18 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com> (sfid-20131106_073725_464263_769E8E34)
-References: <5276134B.8070808@wzyboy.org>
- <0BA3FCBA62E2DC44AF3030971E174FB301DE75AE@HASMSX103.ger.corp.intel.com>
- <CALkVjQYh-SUte4S6LdqOc3KSc3_pDU6jz1KXp+Jsd5_RFPXSqA@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DE8338@HASMSX103.ger.corp.intel.com>
- <CALkVjQb7fCMFpqhdUs8w-Mx_Y0RtAYYFtKxXkqyrCQ39UFGxKg@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DE960E@HASMSX103.ger.corp.intel.com>
- <CALkVjQbW8FeiEh8pBZ=KQFD9+8AdjgT0G_RG7qJe0MRdBvMD-A@mail.gmail.com>
- <CALkVjQaLx2spaOqUPcs_EwMkU7npMki1Reo1MeZwxB7m=c24=g@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DE9FC6@HASMSX103.ger.corp.intel.com>
- <CALkVjQZDNSgUUFyi94Y8da_NDzW61rCvaMrZpUugFKW_LRNFFA@mail.gmail.com>
-In-Reply-To: <CALkVjQZDNSgUUFyi94Y8da_NDzW61rCvaMrZpUugFKW_LRNFFA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-yh0-f51.google.com ([209.85.213.51]:60814 "EHLO
+	mail-yh0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751262Ab3KOPQG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Nov 2013 10:16:06 -0500
+Date: Fri, 15 Nov 2013 13:15:54 -0200
+From: Gustavo Padovan <gustavo@padovan.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: bluetooth 2013-11-11
+Message-ID: <20131115151554.GB1627@joana> (sfid-20131115_161612_627350_63E4CFC7)
+References: <20131111182738.GB5648@joana>
+ <20131111190548.GA8107@tuxdriver.com>
 MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="0F1p//8PRICkK4MW"
+In-Reply-To: <20131111190548.GA8107@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiA+PiBIaSwgSSdtIGJhY2suDQo+ID4+DQo+ID4+IFRoaXMgdGVycmlhYmxlIGJ1ZyBvY2N1cnMg
-YWdhaW4gaW4gTGludXggMy4xMi4gVGhpcyB0aW1lIEkndmUgYmVlbg0KPiA+PiBwcmVwYXJlZCBm
-b3IgaXQgYW5kIHdyb3RlIGRvd24gdGhlIGNvbXBsZXRlIHByb2Nlc3Mgb2YgaXRzIGFwcGVyYW5j
-ZQ0KPiA+PiBhbmQgbXkgcmVhY3RpbmcsIGFzIGF0dGFjaGVkLg0KPiA+DQo+ID4gVGhhbmtzIC0g
-d2FzIHRoYXQgd2l0aCBwb3dlciBzYXZlIGRpc2FibGVkPw0KPiANCj4gWWVzLCBMaW51eCAzLjEy
-IHdpdGggIm9wdGlvbnMgaXdsbXZtIHBvd2VyX3NjaGVtZT0xIi4gKEkgZGlkIG5vdCB0b3VjaA0K
-PiB0aGF0IC5jb25mIGZpbGUgYWZ0ZXIgdGhlIGtlcm5lbCB1cGdyYWRlKQ0KPiANCj4gPg0KPiA+
-Pg0KPiA+PiBJTUhPIHRoZXkgYXJlIHF1aXRlIHNpbWlsYXIgd2l0aCB0aG9zZSBlcnJvcnMgaW4g
-My4xMS4uLg0KPiA+DQo+ID4gSW5kZWVkLiBUaGUgb25seSBkaWZmZXJlbmNlIGlzIHRoYXQgeW91
-IGRvbuKAmXQgaGF2ZSBQQ0kgY29tcGxhaW4gYWJvdXQgbm90DQo+IGJlaW5nIGFibGUgdG8gZGlz
-YWJsZSBMMS4NCj4gDQo+IEkgc2VlLiBCdXQgSSBzdGlsbCBjYW5ub3QgZmlndXJlIG91dCB3aGF0
-IGlzIHRoZSAidHJpZ2dlciIgb2YgdGhpcyBidWcuIFRvZGF5IChOb3YNCj4gMDYgVVRDKzgpIHRo
-aXMgYnVnIG9jY3VycyB0d2ljZSB0aWxsIG5vdyAoMTQ6MzApLCB0aGV5IHdlcmUgYXQgMTI6MzEg
-YW5kIDEzOjMwLg0KPiBBdCB0aGUgZmlyc3QgdGltZSBJIHdhcyBhYm91dCB0byBkbyBhIHN5c3Rl
-bSB1cGdyYWRlIGFuZCBhdCB0aGUgc2Vjb25kIHRpbWUgSQ0KPiB3YXMgdXNpbmcgcnN5bmMgdG8g
-dXBsb2FkIHBob3RvcyBmcm9tIG15IEFuZHJvaWQgcGhvbmUgdG8gbXkgbGFwdG9wLg0KPiANCj4g
-U29tZXRpbWVzIEkgd2FzIG5vdCBldmVuIHVzaW5nIG5ldHdvcmsgKHRoZSB0cmFmZmljIHdhcyBu
-ZWFyIHplcm8pIHdoZW4NCj4gdGhlIGJ1ZyBvY2N1cnMuIFNvIHRoaXMgYnVnIHNlZW1zIHRvIG9j
-Y3VyIG5vIG1hdHRlciBvZiBuZXR3b3JrIHRyYWZmaWMNCj4gc3RhdGVzPw0KPiANCj4gQ291bGQg
-eW91IHRoaW5rIG9mIGEgcG9zc2libGUgInRyaWdnZXIiIG9mIHRoaXMgYnVnIHNvIEkgY291bGQg
-dHJ5IHRvIGF2b2lkIGl0IChJDQo+IGhhdGUgcmVib290aW5nKSBiZWZvcmUgdGhlIGZpbmFsIGZp
-eCBpcyByZWxlYXNlZD8gRm9yIGV4YW1wbGUsIGlmIHRoZXJlIGlzDQo+IHNvbWV0aGluZyB3cm9u
-ZyB3aXRoIHRoZSAibW9kdWxlcyBsaW5rZWQgaW4iIEkgY291bGQgYmxhY2tsaXN0IHRoYXQgbW9k
-dWxlLi4uDQo+IA0KDQpJIGRvbid0IGtub3cgLSBJIGFtIHRyeWluZyB0byBjaGVjayB3aXRoIG91
-ciBIVyBndXlzIGhlcmUuDQpDYW4geW91IHBsZWFzZSBydW4gbHNwY2kgLXh4eCBiZWZvcmUgYW5k
-IGFmdGVyIGl0IGhhcHBlbnM/DQpCVFcgLSBob3cgZG8geW91IHJlY292ZXI/IFJlbG9hZGluZyB0
-aGUgbW9kdWxlIGlzIGVub3VnaD8NCg0K
+
+--0F1p//8PRICkK4MW
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+Hi John,
+
+2013-11-11 John W. Linville <linville@tuxdriver.com>:
+
+> On Mon, Nov 11, 2013 at 04:27:38PM -0200, Gustavo Padovan wrote:
+> > Hi John,
+> >=20
+> > A few fixes for 3.13. There is 3 fixes to the RFCOMM protocol. One cras=
+h fix to
+> > L2CAP. A simple fix to a bad behaviour in the SMP protocol, and last, an
+> > revert, that I sent in the last pull request but doesn't seem to be in =
+your
+> > tree.
+>=20
+> Are you looking in the wireless-next tree?  It seems to be there, no?
+
+Yes, it is there. I'm resending this pull request without it:
+
+Please pull or let me know of any problems! Thanks
+
+	Gustavo
+
+---
+
+The following changes since commit 8ce9beac4661f576ea0d518b9f086bb52a171a37:
+
+  drivers: net: wireless: b43: Fix possible NULL ptr dereference (2013-10-1=
+8 13:41:11 -0400)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth for-ups=
+tream
+
+for you to fetch changes up to 86ca9eac31d0d8c4fe61b5726e6d63197bc435a6:
+
+  Bluetooth: Fix rejecting SMP security request in slave role (2013-11-13 1=
+1:36:54 -0200)
+
+----------------------------------------------------------------
+Johan Hedberg (1):
+      Bluetooth: Fix rejecting SMP security request in slave role
+
+Marcel Holtmann (1):
+      Bluetooth: Fix issue with RFCOMM getsockopt operation
+
+Seung-Woo Kim (3):
+      Bluetooth: Fix RFCOMM bind fail for L2CAP sock
+      Bluetooth: Fix to set proper bdaddr_type for RFCOMM connect
+      Bluetooth: Fix crash in l2cap_chan_send after l2cap_chan_del
+
+ net/bluetooth/l2cap_core.c  | 3 +++
+ net/bluetooth/rfcomm/core.c | 3 +++
+ net/bluetooth/rfcomm/sock.c | 6 +++++-
+ net/bluetooth/smp.c         | 3 +++
+ 4 files changed, 14 insertions(+), 1 deletion(-)
+
+--0F1p//8PRICkK4MW
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.15 (GNU/Linux)
+
+iQIcBAEBAgAGBQJShjqqAAoJEPs3PUX4s20oeWMP/RwYDHgjGIfe95axt3gMGz2M
+TCWPaCeH64qpx+XljnvZOwg5hbos4Bq5oF9OZ2l7LA7PX8ROqfbFgnRBWEMXHz8j
+1Zg54Y3DN0YoMaWkLjobE7TIVvyzikwAcL96gyfW/caYM88pCe7NWQvTs3FwEVET
+jrLuOUAuMsXRNsZGwGqG0DMr8tVVam6el4hXLZ5Z58A9Ol3Kg7WbfijTsFH4PFjq
+IriOKR5cEA7tSQPNMpKce+YBWgkPakEmAcYF9wAd7cQmbvl1AW0i5P6mlb8t9paI
+2M/hD3mKncAD/8zh6E+hGRXIg+nEa81EryCIWYUNKV0C2sPCSI8ApX5P/H+fw/9p
+HQ9YOktj6Oc5kEFO3bxDiEmQ4oem7U1ctNR4ULxzDUrI0oti9jxfma1XAFr/JncO
+XfeXoLTD09vGbtjfAUk2+WlMXY9ltNx1lbNRmKPFtH0+Xxurtj9GScbdwKQ0gC4M
+xe9Fq5uJgfg1wE6o+bHXFPAeT/WUMdq6EjtEut2KMffZGgASd6CSMKaeSTA3dXFH
+ndPBrPSwOovm9kwzqO2UkrMoskmJc02QrB1yys2fn3scgMzTMyWWHMWq4kRRle5q
+TeNKFW4A+XnFa8w0B+upTt98Dm1A8VN1ztl4s8mQ5sP7E0yYwvJ9aDfD3VSHhJXt
+p9IMJxdPvOzF8PFYxPP2
+=rg0f
+-----END PGP SIGNATURE-----
+
+--0F1p//8PRICkK4MW--
