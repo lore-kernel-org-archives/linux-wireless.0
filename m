@@ -1,68 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gerolde.archlinux.org ([66.211.214.132]:60305 "EHLO
-	gerolde.archlinux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751940Ab3KTSIJ (ORCPT
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:62416 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753407Ab3KOIjp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Nov 2013 13:08:09 -0500
-Message-ID: <528CFA83.6080108@archlinux.org> (sfid-20131120_190814_134541_1B3CA014)
-Date: Wed, 20 Nov 2013 19:08:03 +0100
-From: =?ISO-8859-1?Q?Thomas_B=E4chler?= <thomas@archlinux.org>
+	Fri, 15 Nov 2013 03:39:45 -0500
+Received: by mail-ie0-f182.google.com with SMTP id e14so4351592iej.27
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Nov 2013 00:39:45 -0800 (PST)
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-CC: Nick Kossifidis <mickflemm@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [ANN] wireless-regdb: master-2013-10-11
-References: <20131011202459.GF14329@tuxdriver.com> <5272E897.8060606@archlinux.org> <20131104191850.GA1989@tuxdriver.com> <CAB=NE6XU80NwLA=qW8jOBPZEmiSJ6NoHXDgp1bfs5=5GYnUi3A@mail.gmail.com> <20131120162538.GB2220@tuxdriver.com> <20131120164734.GD2220@tuxdriver.com>
-In-Reply-To: <20131120164734.GD2220@tuxdriver.com>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="3CX3IBUKfQ0daHQlGShT0NvjQsO1FoxlF"
+In-Reply-To: <1384461195-37185-1-git-send-email-nbd@openwrt.org>
+References: <1384461195-37185-1-git-send-email-nbd@openwrt.org>
+Date: Fri, 15 Nov 2013 09:39:45 +0100
+Message-ID: <CAL1gcdORndm_fQ6G7uwWwuJfTyWrrHvxBA4WbDqwW8Nx7cJ0Jw@mail.gmail.com> (sfid-20131115_093949_616838_560D46A6)
+Subject: Re: [PATCH] rt2x00: fix a crash bug in the HT descriptor handling fix
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---3CX3IBUKfQ0daHQlGShT0NvjQsO1FoxlF
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+On Thu, Nov 14, 2013 at 9:33 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+> Commit "rt2x00: fix HT TX descriptor settings regression"
+> assumes that the control parameter to rt2x00mac_tx is always non-NULL.
+> There is an internal call in rt2x00lib_bc_buffer_iter where NULL is
+> passed. Fix the resulting crash by adding an initialized dummy on-stack
+> ieee80211_tx_control struct.
+>
+> Cc: stable@vger.kernel.org # 3.7+
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 
-Am 20.11.2013 17:47, schrieb John W. Linville:
->> Sorry, I dropped the ball after I couldn't replicate the problem
->> locally.  Does anyone have a suggestion as to what the issue might be?=
+Good catch!
 
->=20
-> Hmmm...actually, I may have accidentally regeneratd a key.  I'm not
-> sure why this didn't seem to cause a problem for me...
->=20
-> Can someone try to verify the signature on the attached regulatory.bin =
-file?
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-Works fine here.
+> ---
+>  drivers/net/wireless/rt2x00/rt2x00dev.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+> index 080b1fc..9dd92a7 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+> @@ -181,6 +181,7 @@ static void rt2x00lib_autowakeup(struct work_struct *work)
+>  static void rt2x00lib_bc_buffer_iter(void *data, u8 *mac,
+>                                      struct ieee80211_vif *vif)
+>  {
+> +       struct ieee80211_tx_control control = {};
+>         struct rt2x00_dev *rt2x00dev = data;
+>         struct sk_buff *skb;
+>
+> @@ -195,7 +196,7 @@ static void rt2x00lib_bc_buffer_iter(void *data, u8 *mac,
+>          */
+>         skb = ieee80211_get_buffered_bc(rt2x00dev->hw, vif);
+>         while (skb) {
+> -               rt2x00mac_tx(rt2x00dev->hw, NULL, skb);
+> +               rt2x00mac_tx(rt2x00dev->hw, &control, skb);
+>                 skb = ieee80211_get_buffered_bc(rt2x00dev->hw, vif);
+>         }
+>  }
+> --
+> 1.8.3.4 (Apple Git-47)
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
 
---3CX3IBUKfQ0daHQlGShT0NvjQsO1FoxlF
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQIcBAEBAgAGBQJSjPqGAAoJEChPw0yOSxolXz8P/1yd0b7L8UdVsg7IeCjsd0HX
-IWo0RPZxHPLT4J+qJ3EBTCLWrE+5/FIz2PH0K++x25V3fXrIddblglBtEn6cYTRn
-dd5N3YhO9chmD/xCYWQoL8xFMiVPGfd+Wplvg+cM7+ePtJxlFJ5HU9GplPk3PYA1
-X9ZsALejaF0gjdFT16wl4l1Y2ff+pTIHIlYLn56b7edVhjSj74DxLHWI+lHmLvEM
-tm/MSLKeiwOsSVzda38oFEN56ecmVkcxNr+ZJl/58ZUDdGvoczD4CQ6UrlpTUMCQ
-JyziaFTEYldn4gMLBceULS2/Med73IvmDFiEy5KkzbI18YBlJIzRCHQ35Txu06rg
-O/Yf3sQWvF/t++Yhr2LItAXWI4spLkC0ty4ni/hY4U/3qVqlkrT4t4hycaPhOCdS
-zZ5wW6VPDNgNZc5+i8Zf+xv16VwU1nogDCG8Nx8z7+Qk1RX4Txjx/AnSimxayUSZ
-jB9nzxBD0clJxjkLUbIV44w148EIar76MzLROeoqLavK1V2jMtGlYIpvn3tBM1HA
-tURdFqvUl4CUyG7jGzHXotucFqrEowHwVPFCz1M7+76VSpvhulT+9X/0cGs2o0iq
-nJmP+R5Ykhe1G3F5c2HJss9q+WcvmGmcDuFd+CJGyxQgRewRGg+/QdxNm4n7XIxu
-euixZrg0u0JRX3AhzWAs
-=igEA
------END PGP SIGNATURE-----
-
---3CX3IBUKfQ0daHQlGShT0NvjQsO1FoxlF--
+-- 
+---
+Gertjan
