@@ -1,109 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f181.google.com ([74.125.82.181]:43687 "EHLO
-	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754822Ab3KZTGl (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:53743 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752717Ab3KOJfH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Nov 2013 14:06:41 -0500
-Received: by mail-we0-f181.google.com with SMTP id x55so5711018wes.40
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Nov 2013 11:06:40 -0800 (PST)
-Message-ID: <1385492795.6446.2.camel@canaries32-MCP7A> (sfid-20131126_200644_825509_201ADC7E)
-Subject: [PATCH 1/3] staging: vt6656: remove void pointer from
- s_vGetFreeContext
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
+	Fri, 15 Nov 2013 04:35:07 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-Date: Tue, 26 Nov 2013 19:06:35 +0000
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Subject: [RFC 0/5] ath9k patches
+Date: Fri, 15 Nov 2013 15:00:22 +0530
+Message-Id: <1384507827-16026-1-git-send-email-sujith@msujith.org> (sfid-20131115_103515_636587_E055CB0D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replace with struct vnt_usb_send_context.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/rxtx.c | 19 +++++++++++--------
- 1 file changed, 11 insertions(+), 8 deletions(-)
+This series attempts to cleanup the calibration code
+in ath9k, which has accumulated lots of hacks and cruft.
 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index cc23029..0e4b6fb 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -96,7 +96,8 @@ static const u16 wFB_Opt1[2][5] = {
- static void s_vSaveTxPktInfo(struct vnt_private *pDevice, u8 byPktNum,
- 	u8 *pbyDestAddr, u16 wPktLength, u16 wFIFOCtl);
- 
--static void *s_vGetFreeContext(struct vnt_private *pDevice);
-+static struct vnt_usb_send_context
-+		*s_vGetFreeContext(struct vnt_private *pDevice);
- 
- static u16 s_vGenerateTxParameter(struct vnt_private *pDevice,
- 	u8 byPktType, u16 wCurrentRate,	struct vnt_tx_buffer *tx_buffer,
-@@ -136,7 +137,8 @@ static u16 s_uGetRTSCTSDuration(struct vnt_private *pDevice,
- 	u8 byDurType, u32 cbFrameLength, u8 byPktType, u16 wRate,
- 	int bNeedAck, u8 byFBOption);
- 
--static void *s_vGetFreeContext(struct vnt_private *pDevice)
-+static struct vnt_usb_send_context
-+	*s_vGetFreeContext(struct vnt_private *pDevice)
- {
- 	struct vnt_usb_send_context *pContext = NULL;
- 	struct vnt_usb_send_context *pReturnContext = NULL;
-@@ -158,7 +160,8 @@ static void *s_vGetFreeContext(struct vnt_private *pDevice)
-     if ( ii == pDevice->cbTD ) {
-         DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"No Free Tx Context\n");
-     }
--    return (void *) pReturnContext;
-+
-+	return pReturnContext;
- }
- 
- static void s_vSaveTxPktInfo(struct vnt_private *pDevice, u8 byPktNum,
-@@ -1377,7 +1380,7 @@ CMD_STATUS csMgmt_xmit(struct vnt_private *pDevice,
- 	u32 cbMacHdLen;
- 	u16 wCurrentRate = RATE_1M;
- 
--	pContext = (struct vnt_usb_send_context *)s_vGetFreeContext(pDevice);
-+	pContext = s_vGetFreeContext(pDevice);
- 
-     if (NULL == pContext) {
-         DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"ManagementSend TX...NO CONTEXT!\n");
-@@ -1635,7 +1638,7 @@ CMD_STATUS csBeacon_xmit(struct vnt_private *pDevice,
- 	struct vnt_usb_send_context *pContext;
- 	CMD_STATUS status;
- 
--	pContext = (struct vnt_usb_send_context *)s_vGetFreeContext(pDevice);
-+	pContext = s_vGetFreeContext(pDevice);
-     if (NULL == pContext) {
-         status = CMD_STATUS_RESOURCES;
-         DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"ManagementSend TX...NO CONTEXT!\n");
-@@ -1745,7 +1748,7 @@ void vDMA0_tx_80211(struct vnt_private *pDevice, struct sk_buff *skb)
-     }
-     p80211Header = (PUWLAN_80211HDR)skb->data;
- 
--	pContext = (struct vnt_usb_send_context *)s_vGetFreeContext(pDevice);
-+	pContext = s_vGetFreeContext(pDevice);
- 
-     if (NULL == pContext) {
-         DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"DMA0 TX...NO CONTEXT!\n");
-@@ -2166,7 +2169,7 @@ int nsDMA_tx_packet(struct vnt_private *pDevice,
-         }
-     }
- 
--	pContext = (struct vnt_usb_send_context *)s_vGetFreeContext(pDevice);
-+	pContext = s_vGetFreeContext(pDevice);
- 
-     if (pContext == NULL) {
-         DBG_PRT(MSG_LEVEL_DEBUG, KERN_DEBUG" pContext == NULL\n");
-@@ -2491,7 +2494,7 @@ int bRelayPacketSend(struct vnt_private *pDevice, u8 *pbySkbData, u32 uDataLen,
- 	u32 status;
- 	u16 wKeepRate = pDevice->wCurrentRate;
- 
--	pContext = (struct vnt_usb_send_context *)s_vGetFreeContext(pDevice);
-+	pContext = s_vGetFreeContext(pDevice);
- 
-     if (NULL == pContext) {
-         return false;
+There is still lots of work to be done in this area,
+including fixes for new chips.
+
+Please review.
+
+Sujith
+
+Sujith Manoharan (5):
+  ath9k: Separate routines for PCOEM and SoC calibration
+  ath9k: Remove RTT/MCI code from SoC calibration
+  ath9k: Remove unnecessary check
+  ath9k: Fix Carrier Leak calibration for SoC chips
+  ath9k: Fix TX IQ calibration for SoC chips
+
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c | 102 +++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c   |   9 ++-
+ 2 files changed, 104 insertions(+), 7 deletions(-)
+
 -- 
-1.8.4.4
+1.8.4.2
 
