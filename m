@@ -1,74 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:27843 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751371Ab3KBTlf convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:51666 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751352Ab3KOTuI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Nov 2013 15:41:35 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: iwlwifi: mvm: BT Coex - don't limit agg size in loose scheme
-Date: Sat, 2 Nov 2013 19:41:30 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301DE641D@HASMSX103.ger.corp.intel.com> (sfid-20131102_204140_677835_C3B8A02D)
-References: <20131101102848.GI29795@longonot.mountain>
-In-Reply-To: <20131101102848.GI29795@longonot.mountain>
-Content-Type: text/plain; charset="us-ascii"
+	Fri, 15 Nov 2013 14:50:08 -0500
+Received: by mail-wi0-f181.google.com with SMTP id f4so1496170wiw.8
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Nov 2013 11:50:07 -0800 (PST)
 MIME-Version: 1.0
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Sat, 16 Nov 2013 01:19:47 +0530
+Message-ID: <CABPxzYJAct6KtwqZY-DOgjf1wueSmeOU=iLku+gGeZ6ZVE6n9Q@mail.gmail.com> (sfid-20131115_205012_024561_36336C6E)
+Subject: [Query] Update mac80211 BSS info from cfg8011_bss_inform_frame when
+ hw_scan is enabled
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> 
-> Hello Emmanuel Grumbach,
-> 
-> This is a semi-automatic email about new static checker warnings.
-> 
-> The patch 9145d15128bd: "iwlwifi: mvm: BT Coex - don't limit agg size in loose
-> scheme" from Jul 18, 2013, leads to the following Smatch
-> complaint:
-> 
-> drivers/net/wireless/iwlwifi/mvm/rs.c:2491 rs_fill_link_cmd()
-> 	 error: we previously assumed 'mvm' could be null (see line 2412)
+Hi,
 
-Thanks Dan - I believe we can remove all the checks. Will send a patch.
+For chip sets that set
 
-> 
-> drivers/net/wireless/iwlwifi/mvm/rs.c
->   2411		repeat_rate--;
->   2412		if (mvm)
->                     ^^^
-> Existing check.
-> 
->   2413			valid_tx_ant = iwl_fw_valid_tx_ant(mvm->fw);
->   2414
->   2415		/* Fill rest of rate table */
->   2416		while (index < LINK_QUAL_MAX_RETRY_NUM) {
->   2417			/* Repeat initial/next rate.
->   2418			 * For legacy IWL_NUMBER_TRY == 1, this loop will
-> not execute.
->   2419			 * For HT IWL_HT_NUMBER_TRY == 3, this executes
-> twice. */
-> 
-> [snip]
-> 
->   2481		}
->   2482
->   2483		lq_cmd->agg_frame_cnt_limit =
-> LINK_QUAL_AGG_FRAME_LIMIT_DEF;
->   2484		lq_cmd->agg_disable_start_th =
-> LINK_QUAL_AGG_DISABLE_START_DEF;
->   2485
->   2486		lq_cmd->agg_time_limit =
->   2487			cpu_to_le16(LINK_QUAL_AGG_TIME_LIMIT_DEF);
->   2488
->   2489		if (sta)
->   2490			lq_cmd->agg_time_limit =
->   2491
-> 	cpu_to_le16(iwl_mvm_bt_coex_agg_time_limit(mvm, sta));
->                                                                            ^^^ Patch introduces new unchecked
-> dereference.
-> 
->   2492	}
->   2493
-> 
-> regards,
-> dan carpenter
+IEEE80211_HW_CONNECTION_MONITOR
+hw_scan
+
+the hardware does the scan and maintains the
+connection.
+
+So some HW's might drop the probe responses and
+beacons as they are not required by the mac80211.
+
+In those scenarios, the rate control module minstrel_ht called from
+prep_connection throws a warning (in rate_control_send_low)
+because "supp_rates" is not set, since scan results are updated
+ through "cfg8011_bss_inform_frame" which doesn't call
+"ieee80211_bss_info_update'.
+
+How do we handle such scenarios? Does the cfg80211 need to
+update the bss information in mac80211?
+
+-- 
+Thanks,
+Regards,
+Chaitanya T K.
