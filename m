@@ -1,36 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:41449 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752447Ab3KSOfv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Nov 2013 09:35:51 -0500
-Message-ID: <1384871747.15364.6.camel@jlt4.sipsolutions.net> (sfid-20131119_153555_605557_34C104DE)
-Subject: Re: [PATCH RESEND 5/5] cfg80211: Aggregate mgmt_tx parameters and
- fix channel setting
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Date: Tue, 19 Nov 2013 15:35:47 +0100
-In-Reply-To: <1384794409-11211-5-git-send-email-egrumbach@gmail.com> (sfid-20131118_180700_396153_53AB1F8B)
-References: <1384794166-10906-1-git-send-email-egrumbach@gmail.com>
-	 <1384794409-11211-1-git-send-email-egrumbach@gmail.com>
-	 <1384794409-11211-5-git-send-email-egrumbach@gmail.com>
-	 (sfid-20131118_180700_396153_53AB1F8B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mout.gmx.net ([212.227.15.19]:51803 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751727Ab3KOOS2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Nov 2013 09:18:28 -0500
+Received: from [192.168.1.100] ([79.218.105.41]) by mail.gmx.com (mrgmx001)
+ with ESMTPSA (Nemesis) id 0MF5FT-1VwQNF3aaB-00GIQs for
+ <linux-wireless@vger.kernel.org>; Fri, 15 Nov 2013 15:18:26 +0100
+Message-ID: <52862D32.3010601@rempel-privat.de> (sfid-20131115_151831_787787_560E43C4)
+Date: Fri, 15 Nov 2013 15:18:26 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	"Proffit, Jerome" <jproffit@qca.qualcomm.com>
+CC: ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+	"Biard, David" <dbiard@qca.qualcomm.com>,
+	ath9k_htc_fw@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: ath9k_htc: Target is unresponsive
+References: <39E4555519E9C54593B1BE31E24CB79A39B12884@nasanexd02a.na.qualcomm.com> <20131115134752.GQ9795@pogo>
+In-Reply-To: <20131115134752.GQ9795@pogo>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-11-18 at 19:06 +0200, Emmanuel Grumbach wrote:
-> From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+I do not know which backport include patch for usb interrupt transfer.
+If your kernel still use bulk, it may be the cause of this issue.
+
+Am 15.11.2013 14:47, schrieb Luis R. Rodriguez:
+> Cc'ing linux-wireless and ath9k_htc_fw list. The firmware is open
+> so any issues can now be debugged in collaboration with the community.
 > 
-> Change cfg80211 and mac80211 to use cfg80211_mgmt_tx_params
-> struct to aggregate parameters for mgmt_tx functions.
-> This makes the functions' signatures less clumsy and allows
-> less painful parameters extension.
+> You may try the newer backports:
+> 
+> http://www.kernel.org/pub/linux/kernel/projects/backports/stable/v3.12/backports-3.12-1.tar.bz2
+> 
+> And as for the firmware it seems to be the latest but I'll let
+> others who are maintaining that now chime in.
+> 
+>   Luis
+> 
+> On Fri, Nov 15, 2013 at 02:17:43AM -0800, Proffit, Jerome wrote:
+>> Hello,
+>>
+>> Could anybody help with the question below?
+>>
+>> Thanks,
+>>
+>> -Jerome
+>>
+>> -------------------------------------------
+>>
+>> We are trying to bring up the VIA TECH WLAN USB dongle (AR9271 based
+>> chip) on our platform.  We have downloaded the back port
+>> drivers from:
+>> https://www.kernel.org/pub/linux/kernel/projects/backports/stable/v3.10/backports-3.10-1.tar.bz2
+>> and cross compiled to our target (Tensilica -233).  The Firmware
+>> (htc_9271.fw) is downloaded from:
+>> http://wireless.kernel.org/download/htc_fw/1.3/htc_9271.fw and copied
+>> the same into /lib/firmware/ on the target.  Loaded all generated
+>> modules (.ko) and connect the WiFi over USB dongle into the USB
+>> connector. But the device is not getting initialized. Please find the
+>> log as below. Please help in this regard.
+>>
+>>
+>> Log:
+>> usb 1-1: new high speed USB device using dwc_otg and address 2
+>> usb 1-1: configuration #1 chosen from 1 choice
+>> usb 1-1: ath9k_htc: Firmware htc_9271.fw requested
+>> usb 1-1: firmware: requesting htc_9271.fw
+>> usb 1-1: ath9k_htc: Transferred FW: htc_9271.fw, size: 51000
+>> ath9k_htc 1-1:1.0: ath9k_htc: Target is unresponsive
+>> ath9k_htc: Failed to initialize the device
+>>
+>>
+>> Product:VIA USB2.0 WLAN
+>> Manufacturer:VIA TECH
+>>
+>> Vendor id: 0x040d 
+>> Product id: 0x3801
+>> ----------------------------------------
+>>
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-Also, technically, this broke a whole bunch of drivers - I'll fix it.
 
-johannes
-
+-- 
+Regards,
+Oleksij
