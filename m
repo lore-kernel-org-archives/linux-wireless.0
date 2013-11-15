@@ -1,57 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:38828 "EHLO mga11.intel.com"
+Received: from ring0.de ([91.143.88.219]:60825 "EHLO smtp.ring0.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751104Ab3KNHFE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Nov 2013 02:05:04 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: wzyboy <wzyboy@wzyboy.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bj?rn Mork <bjorn@mork.no>
-Subject: RE: [Ilw] Intel Wireless 7260 hardware timed out randomly
-Date: Thu, 14 Nov 2013 07:04:45 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB301E02EC1@HASMSX103.ger.corp.intel.com> (sfid-20131114_080509_351624_CB814792)
-References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
- <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
- <527A8166.6000701@gmail.com>
- <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
- <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
- <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
- <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
- <20131111224439.GA30638@google.com>
- <CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com>
- <CALkVjQaXEBpbwu9Qy3+17Eg-nSg-k7iin8G3f1RsTLkCOB-2XQ@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DF044C@HASMSX103.ger.corp.intel.com>
- <CAErSpo5iU15AoSVL9WmLp4gNCiNmt6pFZuTsd-Vui4SCrSc_Hw@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DF0865@HASMSX103.ger.corp.intel.com>
- <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
- <52828364.6080103@gmail.com>
- <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
- <CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
- <CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
- <CALkVjQaTnocYnV4GM=LHuYwMRZ=sOZnSrtna4C6anNAWr4O7=A@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301E02E49@HASMSX103.ger.corp.intel.com>
- <CALkVjQZdPuE2F+ZARBLha-+iOMA4AjDWHO4=ssnuF2Uu87RyuQ@mail.gmail.com>
-In-Reply-To: <CALkVjQZdPuE2F+ZARBLha-+iOMA4AjDWHO4=ssnuF2Uu87RyuQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+	id S1752481Ab3KOO4e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Nov 2013 09:56:34 -0500
+Date: Fri, 15 Nov 2013 14:55:56 +0000
+From: Sebastian Reichel <sre@debian.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Tony Lindgren <tony@atomide.com>, Luciano Coelho <luca@coelho.fi>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Rob Landley <rob@landley.net>,
+	Russell King <linux@arm.linux.org.uk>,
+	Felipe Balbi <balbi@ti.com>,
+	Sachin Kamat <sachin.kamat@linaro.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bill Pemberton <wfp5p@virginia.edu>,
+	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Luciano Coelho <coelho@ti.com>
+Subject: Re: [PATCH 1/4] wl1251: split wl251 platform data to a separate
+ structure
+Message-ID: <20131115145555.GA23351@earth.universe> (sfid-20131115_155705_180901_18C7E416)
+References: <1382890469-25286-1-git-send-email-sre@debian.org>
+ <1382890469-25286-2-git-send-email-sre@debian.org>
+ <20131114185132.GQ10317@atomide.com>
+ <20131114230330.GB6383@earth.universe>
+ <20131114232217.GV10317@atomide.com>
+ <20131115143254.GA7079@tuxdriver.com>
 MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="BXVAT5kNtrzKuDFl"
+In-Reply-To: <20131115143254.GA7079@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiAyMDEzLzExLzE0IEdydW1iYWNoLCBFbW1hbnVlbCA8ZW1tYW51ZWwuZ3J1bWJhY2hAaW50ZWwu
-Y29tPjoNCj4gPiBDYW4geW91IHBsZWFzZSB0cnkgdGhlIGZvbGxvd2luZzoNCj4gPiAqIEJvb3Qg
-d2l0aG91dCBhbnkgY2hhbmdlcw0KPiA+ICogc2V0cGNpIC1zMDM6MDAuMCAweDE2MC5CPTB4MDAN
-Cj4gPiAqIHNldHBjaSAtczAwOjFjLjEgMHgyMDQuQj0weDEwDQo+ID4gbHNwY2kgLXZ2DQo+ID4N
-Cj4gPiBhbmQgdGVsbCBtZSBpZiBXaUZpIHdvcmtzIHRoZW4uDQo+ID4gKHRoaXMgcmVwbGFjZXMg
-dGhlIHByZXZpb3VzIHNldHBjaSBjb21tYW5kcykNCj4gPg0KPiA+DQo+ID4gVGhhbmsgeW91DQo+
-IA0KPiANCj4gYm9vdCB1cCAobm8gY29ubmVjdGlvbikgLT4gcnVuIG5ldyBzZXRwY2kgY29tbWFu
-ZHMgLT4gbHNwY2kgYW5kIGRtZXNnDQo+IC0+IGNvbm5lY3QgdG8gZG9taXRvcnkncyBXaUZpIC0+
-IGRvd25sb2FkIDMuNSBHaUIgZGF0YSAtPiB3b3JrcyBmaW5lIQ0KPiANCg0KQXdlc29tZSAtIHlv
-dSBoYXZlIEwxIGVuYWJsZWQ6DQoNCjAzOjAwLjAgTmV0d29yayBjb250cm9sbGVyOiBJbnRlbCBD
-b3Jwb3JhdGlvbiBXaXJlbGVzcyA3MjYwIChyZXYgNmIpDQoJCUxua0N0bDoJQVNQTSBMMSBFbmFi
-bGVkOyBSQ0IgNjQgYnl0ZXMgRGlzYWJsZWQtIFJldHJhaW4tIENvbW1DbGsrDQoJCQlFeHRTeW5j
-aC0gQ2xvY2tQTSsgQXV0V2lkRGlzLSBCV0ludC0gQXV0QldJbnQtDQo=
+
+--BXVAT5kNtrzKuDFl
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Fri, Nov 15, 2013 at 09:32:55AM -0500, John W. Linville wrote:
+> On Thu, Nov 14, 2013 at 03:22:18PM -0800, Tony Lindgren wrote:
+> > * Sebastian Reichel <sre@debian.org> [131114 15:04]:
+> > > On Thu, Nov 14, 2013 at 10:51:33AM -0800, Tony Lindgren wrote:
+> > > > [...]
+> > > >
+> > > > If this is not going into v3.13, these will cause conflicts
+> > > > with the mach-omap2/board-*.c files for v3.14.
+> > > >=20
+> > > > So it might be best to do a minimal header patch first that
+> > > > can be merged in by both linux-omap and wireless trees.
+> > >=20
+> > > I guess this patch is pretty minimal. It also seems to be acked by
+> > > the involved Maintainers, so maybe just merge Patch 1 without the
+> > > other patches?
+> > >=20
+> > > This does not solve the problem with the struct modification from
+> > > the second patch, but I guess it's the more intrusive patch.
+> >=20
+> > Once at least the first two patches are ready, how about I queue
+> > them after -rc1 and set up an immutable branch that can be merged
+> > in by linux-omap tree and the wireless tree?
+>=20
+> That sounds reasonable to me.
+
+So what changes do you request for those patches? I will try to
+update them as soon as possible.
+
+-- Sebastian
+
+--BXVAT5kNtrzKuDFl
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.15 (GNU/Linux)
+
+iQIcBAEBCAAGBQJShjX7AAoJENju1/PIO/qaOgcQAIFxSRKg6g82sFajCuGZfI7s
+t34ArIr0cWzxtFnPw0TE4lGaCPKmUpxdCj3568m6ejI7ZjZvZTD0rO02SS6v0jWM
+7tAgYLXjoBmP4haZ1OfjJitZuQmk/YsBckAjegd3dIGeKO0xroNuIe3yfTIuVFR8
+pFc6cOhFESwT2oPxjh6rAxkHBhhubXIDFnscJWc85JdhN37s8kEfIJPRpDkYWNzE
+6Wun2h3/QzYPPQeVfCLUEL956Vif3Qp/KlKfPRhhd9/5LVUjKzCRij/B2jnB1Ufq
+aZJrRgXq8k9EvIMCUamIgtRwvi3RvhNrE3gET6F0dy9qnwYb1Iqg0CLX1tW5Rrc5
+D1iAFNeYSXXyl3TtnEaoJjMjTHxIGQJhrh27eTD/ChC59kssmNCwpMEDUq13Z4NT
+Ve5tzgbOt3om4RVLdDux443wVbdPwNqjdnDQkLX52yQmMOec33deFTxzNtMEVakN
++vSdwLhHVgdd27llrqpePQGu7ELRVPRwGAKw7JBZzFkE8kbJSzNFvevpMZHe1dDX
+xacBI4c4oiOPgjd7AuEepXeEIaTJ5F+Evzw7ZZPOs4A9vWpPaPm35c0dzQoswAjH
+MHYdO5tuUU6Tm95Fy6jj+SOTjgSlHhq0XS0HbrdgC1pC97ROoLjet3j8fV/aK/mc
+pTx51yqDqRfkjjWgkydn
+=QcUk
+-----END PGP SIGNATURE-----
+
+--BXVAT5kNtrzKuDFl--
