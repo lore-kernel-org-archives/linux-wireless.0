@@ -1,60 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f45.google.com ([209.85.219.45]:59232 "EHLO
-	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753191Ab3KOTHh (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:50654 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751253Ab3KORZm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Nov 2013 14:07:37 -0500
-Received: by mail-oa0-f45.google.com with SMTP id m1so4437061oag.32
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Nov 2013 11:07:36 -0800 (PST)
+	Fri, 15 Nov 2013 12:25:42 -0500
+Subject: [PATCH 3/3] ath10k: show hardware and firmware info prints only once
+To: ath10k@lists.infradead.org
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 15 Nov 2013 19:25:39 +0200
+Message-ID: <20131115172539.10646.6643.stgit@localhost6.localdomain6> (sfid-20131115_182544_700288_2224A577)
+In-Reply-To: <20131115172526.10646.35233.stgit@localhost6.localdomain6>
+References: <20131115172526.10646.35233.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-In-Reply-To: <20131115184510.GA911@redhat.com>
-References: <cover.1384160397.git.dborkman@redhat.com>
-	<2ea03f60bb65429cbe5d74a6d356fde3eefcf06c.1384160397.git.dborkman@redhat.com>
-	<20131111134357.GC10104@thunk.org>
-	<20131112000307.GB14929@order.stressinduktion.org>
-	<20131112115350.GA14077@thunk.org>
-	<20131112131627.GD14929@order.stressinduktion.org>
-	<20131112134603.GE14929@order.stressinduktion.org>
-	<20131114025448.GB31602@thunk.org>
-	<CAGXu5j+ySEdQBXKkspYC=svfekBja2Z_2tcWSAOEbvyiMLf=aA@mail.gmail.com>
-	<20131115184510.GA911@redhat.com>
-Date: Fri, 15 Nov 2013 11:07:35 -0800
-Message-ID: <CAGXu5j+emFS+Y-=SOE4SM_gAXfR_NWHRXwv8c6CeB7SgGZgKNw@mail.gmail.com> (sfid-20131115_200843_083620_CFBF166E)
-Subject: Re: [PATCH] random: seed random_int_secret at least poorly at
- core_initcall time
-From: Kees Cook <keescook@chromium.org>
-To: Dave Jones <davej@redhat.com>
-Cc: "Theodore Ts'o" <tytso@mit.edu>,
-	Daniel Borkmann <dborkman@redhat.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Florian Weimer <fweimer@redhat.com>, netdev@vger.kernel.org,
-	Eric Dumazet <eric.dumazet@gmail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 15, 2013 at 10:45 AM, Dave Jones <davej@redhat.com> wrote:
-> On Fri, Nov 15, 2013 at 10:33:04AM -0800, Kees Cook wrote:
->
->  > Ingo wanted even more
->  > unpredictability, in the face of total failure from these more dynamic
->  > sources, so x86 also "seeds" itself with the build string and the
->  > boot_params. These last two are hardly high entropy, but they should
->  > at least make 2 different systems not have _identical_ entropy at the
->  > start. It's far from cryptographically secure, but it's something, I
->  > hope.
->
-> Those are both likely to be the same on some configurations.
-> On x86, we could maybe hash the dmi tables ? Vendor stupidity aside,
-> things like serial numbers in those tables _should_ be different.
+This makes ath10k a lot less spammy by default.
 
-Yeah, DMI tables were suggested as well. (Hopefully people will start
-using -uuid with KVM!) How hard would that be to hook up to the
-pre-random-init code?
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c |   12 ++++++++----
+ drivers/net/wireless/ath/ath10k/core.h |    1 +
+ drivers/net/wireless/ath/ath10k/pci.c  |    4 +++-
+ 3 files changed, 12 insertions(+), 5 deletions(-)
 
--Kees
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index e6c468b..3b59af3 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -832,10 +832,14 @@ int ath10k_core_start(struct ath10k *ar)
+ 	ar->free_vdev_map = (1 << TARGET_NUM_VDEVS) - 1;
+ 	INIT_LIST_HEAD(&ar->arvifs);
+ 
+-	ath10k_info("%s (0x%x) fw %s api %d htt %d.%d\n",
+-		    ar->hw_params.name, ar->target_version,
+-		    ar->hw->wiphy->fw_version, ar->fw_api,
+-		    ar->htt.target_version_major, ar->htt.target_version_minor);
++	if (!test_bit(ATH10K_FLAG_FIRST_BOOT_DONE, &ar->dev_flags))
++		ath10k_info("%s (0x%x) fw %s api %d htt %d.%d\n",
++			    ar->hw_params.name, ar->target_version,
++			    ar->hw->wiphy->fw_version, ar->fw_api,
++			    ar->htt.target_version_major,
++			    ar->htt.target_version_minor);
++
++	__set_bit(ATH10K_FLAG_FIRST_BOOT_DONE, &ar->dev_flags);
+ 
+ 	return 0;
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 7721e3b..79726e0 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -313,6 +313,7 @@ enum ath10k_fw_features {
+ enum ath10k_dev_flags {
+ 	/* Indicates that ath10k device is during CAC phase of DFS */
+ 	ATH10K_CAC_RUNNING,
++	ATH10K_FLAG_FIRST_BOOT_DONE,
+ };
+ 
+ struct ath10k {
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index a3cdd72..2457c8b 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -19,6 +19,7 @@
+ #include <linux/module.h>
+ #include <linux/interrupt.h>
+ #include <linux/spinlock.h>
++#include <linux/bitops.h>
+ 
+ #include "core.h"
+ #include "debug.h"
+@@ -1925,7 +1926,8 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar)
+ 	else
+ 		irq_mode = "legacy";
+ 
+-	ath10k_info("pci irq %s\n", irq_mode);
++	if (!test_bit(ATH10K_FLAG_FIRST_BOOT_DONE, &ar->dev_flags))
++		ath10k_info("pci irq %s\n", irq_mode);
+ 
+ 	return 0;
+ 
 
--- 
-Kees Cook
-Chrome OS Security
