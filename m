@@ -1,64 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f54.google.com ([209.85.215.54]:40389 "EHLO
-	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751601Ab3KOPdk (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:37968 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756105Ab3KODKy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Nov 2013 10:33:40 -0500
-Received: by mail-la0-f54.google.com with SMTP id ev20so2913219lab.27
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Nov 2013 07:33:39 -0800 (PST)
+	Thu, 14 Nov 2013 22:10:54 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Ujjal Roy <royujjal@gmail.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3.13 2/6] mwifiex: failure path handling in mwifiex_add_virtual_intf()
+Date: Thu, 14 Nov 2013 19:10:38 -0800
+Message-ID: <1384485042-7083-2-git-send-email-bzhao@marvell.com> (sfid-20131115_041057_650180_4D38A3EA)
+In-Reply-To: <1384485042-7083-1-git-send-email-bzhao@marvell.com>
+References: <1384485042-7083-1-git-send-email-bzhao@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <52863154.50105@rempel-privat.de>
-References: <39E4555519E9C54593B1BE31E24CB79A39B12884@nasanexd02a.na.qualcomm.com>
- <20131115134752.GQ9795@pogo> <52862D32.3010601@rempel-privat.de>
- <CAB=NE6VNZDT4JLRM=iqzkaKezXaoaXcXuyTHq62=H-axxGVNZg@mail.gmail.com> <52863154.50105@rempel-privat.de>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Fri, 15 Nov 2013 16:33:19 +0100
-Message-ID: <CAB=NE6U50eTLcUugBBBKz3fxa8yYcm+LCqgAtARzEnLpYqWg1g@mail.gmail.com> (sfid-20131115_163343_748130_B9C3D1A4)
-Subject: Re: ath9k_htc: Target is unresponsive
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: "Proffit, Jerome" <jproffit@qca.qualcomm.com>,
-	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-	"Biard, David" <dbiard@qca.qualcomm.com>,
-	ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 15, 2013 at 3:36 PM, Oleksij Rempel <linux@rempel-privat.de> wrote:
-> Am 15.11.2013 15:29, schrieb Luis R. Rodriguez:
->> On Fri, Nov 15, 2013 at 3:18 PM, Oleksij Rempel <linux@rempel-privat.de> wrote:
->>> I do not know which backport include patch for usb interrupt transfer.
->>
->> Which patch are you referring to? The backports project releases match
->> the Linux kernel releases, so the backports-3.12 release is based on
->> linux v3.12, we can check what kernel the patch you are describing got
->> merged into Linux by doing:
->>
->> git describe --contains gitsum
->
-> i mean:
->
-> commit 2f5e3ecfc155449987d64028ff6b73f29cd1ef8b
-> Author: Oleksij Rempel <linux@rempel-privat.de>
-> Date:   Tue Aug 13 09:29:34 2013 +0200
->
->     ath9k_htc: do not use bulk on EP3 and EP4
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-OK that is upstream commit ID 2b721118b7
+1) If register_netdevice() is failed, we are freeing netdev
+pointer, but priv->netdev is not cleared. This gives kernel
+paging request error when driver is unloaded or interface is
+deleted. Fix the problem by clearing the pointer.
+2) Fix memory leak issue by freeing 'wdev' in failure paths.
+Also, clear priv->wdev pointer.
 
-mcgrof@frijol ~/linux-stable (git::master)$ git describe --contains
-2b721118b7821107757eb1d37af4b60e877b27e7
-v3.12-rc1~132^2~84^2^2~88
+As mwifiex_add_virtual_intf() successfully handles the
+failure conditions, redundant code under err_add_intf label
+is removed in this patch.
 
-This means that patch got merged into v3.12-rc1 which means the
-backports release based on v3.12 will have it.
+Reported-by: Ujjal Roy <royujjal@gmail.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c | 20 ++++++++++++++++----
+ drivers/net/wireless/mwifiex/main.c     | 13 ++-----------
+ 2 files changed, 18 insertions(+), 15 deletions(-)
 
-> If it is already included, then try to revert.
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index fbad00a..ccc9c08 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -2210,8 +2210,10 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 		priv->bss_started = 0;
+ 		priv->bss_num = 0;
+ 
+-		if (mwifiex_cfg80211_init_p2p_client(priv))
+-			return ERR_PTR(-EFAULT);
++		if (mwifiex_cfg80211_init_p2p_client(priv)) {
++			wdev = ERR_PTR(-EFAULT);
++			goto done;
++		}
+ 
+ 		break;
+ 	default:
+@@ -2224,7 +2226,8 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 	if (!dev) {
+ 		wiphy_err(wiphy, "no memory available for netdevice\n");
+ 		priv->bss_mode = NL80211_IFTYPE_UNSPECIFIED;
+-		return ERR_PTR(-ENOMEM);
++		wdev = ERR_PTR(-ENOMEM);
++		goto done;
+ 	}
+ 
+ 	mwifiex_init_priv_params(priv, dev);
+@@ -2264,7 +2267,9 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 		wiphy_err(wiphy, "cannot register virtual network device\n");
+ 		free_netdev(dev);
+ 		priv->bss_mode = NL80211_IFTYPE_UNSPECIFIED;
+-		return ERR_PTR(-EFAULT);
++		priv->netdev = NULL;
++		wdev = ERR_PTR(-EFAULT);
++		goto done;
+ 	}
+ 
+ 	sema_init(&priv->async_sem, 1);
+@@ -2274,6 +2279,13 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ #ifdef CONFIG_DEBUG_FS
+ 	mwifiex_dev_debugfs_init(priv);
+ #endif
++
++done:
++	if (IS_ERR(wdev)) {
++		kfree(priv->wdev);
++		priv->wdev = NULL;
++	}
++
+ 	return wdev;
+ }
+ EXPORT_SYMBOL_GPL(mwifiex_add_virtual_intf);
+diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
+index 7c7da3e..9236b42 100644
+--- a/drivers/net/wireless/mwifiex/main.c
++++ b/drivers/net/wireless/mwifiex/main.c
+@@ -411,7 +411,7 @@ static void mwifiex_terminate_workqueue(struct mwifiex_adapter *adapter)
+  */
+ static void mwifiex_fw_dpc(const struct firmware *firmware, void *context)
+ {
+-	int ret, i;
++	int ret;
+ 	char fmt[64];
+ 	struct mwifiex_private *priv;
+ 	struct mwifiex_adapter *adapter = context;
+@@ -479,6 +479,7 @@ static void mwifiex_fw_dpc(const struct firmware *firmware, void *context)
+ 					NL80211_IFTYPE_STATION, NULL, NULL);
+ 	if (IS_ERR(wdev)) {
+ 		dev_err(adapter->dev, "cannot create default STA interface\n");
++		rtnl_unlock();
+ 		goto err_add_intf;
+ 	}
+ 	rtnl_unlock();
+@@ -488,16 +489,6 @@ static void mwifiex_fw_dpc(const struct firmware *firmware, void *context)
+ 	goto done;
+ 
+ err_add_intf:
+-	for (i = 0; i < adapter->priv_num; i++) {
+-		priv = adapter->priv[i];
+-
+-		if (!priv)
+-			continue;
+-
+-		if (priv->wdev && priv->netdev)
+-			mwifiex_del_virtual_intf(adapter->wiphy, priv->wdev);
+-	}
+-	rtnl_unlock();
+ err_register_cfg80211:
+ 	wiphy_unregister(adapter->wiphy);
+ 	wiphy_free(adapter->wiphy);
+-- 
+1.8.2.3
 
-What do you mean? Are you saying to try to revert that patch in case
-v3.12 backports release causes issues with the card? It seems the user
-of this card had issues with the v3.10 release of backports which
-would not have this patch merged.
-
-  Luis
