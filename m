@@ -1,43 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44948 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751056Ab3KDU3X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Nov 2013 15:29:23 -0500
-Message-ID: <1383596955.29469.2.camel@dcbw.foobar.com> (sfid-20131104_212926_823135_D3593796)
-Subject: Re: orinoco (Lucent/Agere 9.48) unable to connect
-From: Dan Williams <dcbw@redhat.com>
-To: zaphod@berentweb.com
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 04 Nov 2013 14:29:15 -0600
-In-Reply-To: <CAPSTskvZALnaNYfBxCx_fFhYuTPW8AOVkyN9DTBeErfO67hQBw@mail.gmail.com>
-References: <CAPSTskvByfGWTyDmq9WeX7Em1N0DAAZ3eKDV5eV6qfkH2gDzdA@mail.gmail.com>
-	 <1383581905.17589.0.camel@dcbw.foobar.com>
-	 <CAPSTskvZALnaNYfBxCx_fFhYuTPW8AOVkyN9DTBeErfO67hQBw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-yh0-f44.google.com ([209.85.213.44]:32972 "EHLO
+	mail-yh0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750992Ab3KOM1s (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Nov 2013 07:27:48 -0500
+From: "Geyslan G. Bem" <geyslan@gmail.com>
+To: geyslan@gmail.com
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	Piotr Haber <phaber@broadcom.com>,
+	linux-wireless@vger.kernel.org (open list:BROADCOM BRCM8021...),
+	brcm80211-dev-list@broadcom.com (open list:BROADCOM BRCM8021...),
+	netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH v2] brcmfmac: fix possible memory leak
+Date: Fri, 15 Nov 2013 09:21:47 -0300
+Message-Id: <1384518113-3079-1-git-send-email-geyslan@gmail.com> (sfid-20131115_132758_299497_67BFBA41)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-11-04 at 20:42 +0200, Beeblebrox wrote:
-> > What kind of access point are you trying to connect to?  These devices
-> > only support 802.11b, so if the access point is newer and is using
-> > 802.11n, there are some 11n configurations that simply don't support
-> > connections from 11b clients.
-> > Dan
-> 
-> Hi Dan, thanks for your answer.
-> The test A/P is a USR-5451-maxG with ddwrt as OS. A/P is on mixed mode
-> (B+G), but after your mail I tried B-Only mode, which failed also.
-> While observing the connection process, I got the feeling that the
-> orinoco card (eth1) is unable to set an IP. I have tried static and
-> dhclient, with same effect. Shortly after the connection process
-> starts, the card status shows as connected, but does not finalize .
-> Process then terminates (assuming because no IP is agreed on with AP).
-> 
-> Please advise what other info/test I can try.
+Free temporary 'chanspecs' avoiding leakage.
 
-If you're able, can you use wireshark on another computer to capture the
-802.11 frames exchanged between the orinico device and the AP?
+Signed-off-by: Geyslan G. Bem <geyslan@gmail.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/p2p.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Dan
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
+index d7a9745..fcc5e7c 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
+@@ -823,6 +823,7 @@ static s32 brcmf_p2p_run_escan(struct brcmf_cfg80211_info *cfg,
+ 		}
+ 		err = brcmf_p2p_escan(p2p, num_nodfs, chanspecs, search_state,
+ 				      action, P2PAPI_BSSCFG_DEVICE);
++		kfree(chanspecs);
+ 	}
+ exit:
+ 	if (err)
+-- 
+1.8.4.2
 
