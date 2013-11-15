@@ -1,52 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:35069 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756856Ab3KHQnh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Nov 2013 11:43:37 -0500
-Message-ID: <527D14B7.3090204@openwrt.org> (sfid-20131108_174340_484461_36E34F6B)
-Date: Fri, 08 Nov 2013 17:43:35 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:55483 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753010Ab3KONsL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Nov 2013 08:48:11 -0500
+Date: Fri, 15 Nov 2013 05:47:52 -0800
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+To: "Proffit, Jerome" <jproffit@qca.qualcomm.com>
+CC: ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+	"Biard, David" <dbiard@qca.qualcomm.com>,
+	<ath9k_htc_fw@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: ath9k_htc: Target is unresponsive
+Message-ID: <20131115134752.GQ9795@pogo> (sfid-20131115_144831_223701_B0A5D99E)
+References: <39E4555519E9C54593B1BE31E24CB79A39B12884@nasanexd02a.na.qualcomm.com>
 MIME-Version: 1.0
-To: Karl Beldan <karl.beldan@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2] mac80211: minstrel_ht: do not sample unsupported
- rates
-References: <1383928473-798-1-git-send-email-karl.beldan@gmail.com> <1383928473-798-2-git-send-email-karl.beldan@gmail.com>
-In-Reply-To: <1383928473-798-2-git-send-email-karl.beldan@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <39E4555519E9C54593B1BE31E24CB79A39B12884@nasanexd02a.na.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-11-08 17:34, Karl Beldan wrote:
-> From: Karl Beldan <karl.beldan@rivierawaves.com>
-> 
-> ATM minstrel_ht does not check whether the sampling rate is supported.
-> Unsupported rates attempts can trigger when there are holes between
-> supported MCSes belonging to the same group (e.g many devices are
-> capable of MCS32 without being capable of MCS33->MCS39).
-> This change replaces an unsupported sample index with the fls of the
-> bitfield of supported indexes.
-> This is not a problem in minstrel which fills a per STA sample table
-> with only supported rates (though only at init).
-> 
-> Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
-> ---
->  net/mac80211/rc80211_minstrel_ht.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-> index aeec401..1b835ad 100644
-> --- a/net/mac80211/rc80211_minstrel_ht.c
-> +++ b/net/mac80211/rc80211_minstrel_ht.c
-> @@ -703,6 +703,8 @@ minstrel_get_sample_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
->  
->  	mg = &mi->groups[mi->sample_group];
->  	sample_idx = sample_table[mg->column][mg->index];
-> +	if (!(mg->supported & BIT(sample_idx)))
-> +		sample_idx = fls(sample_idx) - 1;
-You probably meant fls(mg->supported) - 1 here, however I think a better
-approach would be to just skip the sample attempt. If there are fewer
-rates in a group, we can run fewer sample attempts on it.
+Cc'ing linux-wireless and ath9k_htc_fw list. The firmware is open
+so any issues can now be debugged in collaboration with the community.
 
-- Felix
+You may try the newer backports:
+
+http://www.kernel.org/pub/linux/kernel/projects/backports/stable/v3.12/backports-3.12-1.tar.bz2
+
+And as for the firmware it seems to be the latest but I'll let
+others who are maintaining that now chime in.
+
+  Luis
+
+On Fri, Nov 15, 2013 at 02:17:43AM -0800, Proffit, Jerome wrote:
+> Hello,
+> 
+> Could anybody help with the question below?
+> 
+> Thanks,
+> 
+> -Jerome
+> 
+> -------------------------------------------
+> 
+> We are trying to bring up the VIA TECH WLAN USB dongle (AR9271 based
+> chip) on our platform.  We have downloaded the back port
+> drivers from:
+> https://www.kernel.org/pub/linux/kernel/projects/backports/stable/v3.10/backports-3.10-1.tar.bz2
+> and cross compiled to our target (Tensilica -233).  The Firmware
+> (htc_9271.fw) is downloaded from:
+> http://wireless.kernel.org/download/htc_fw/1.3/htc_9271.fw and copied
+> the same into /lib/firmware/ on the target.  Loaded all generated
+> modules (.ko) and connect the WiFi over USB dongle into the USB
+> connector. But the device is not getting initialized. Please find the
+> log as below. Please help in this regard.
+> 
+> 
+> Log:
+> usb 1-1: new high speed USB device using dwc_otg and address 2
+> usb 1-1: configuration #1 chosen from 1 choice
+> usb 1-1: ath9k_htc: Firmware htc_9271.fw requested
+> usb 1-1: firmware: requesting htc_9271.fw
+> usb 1-1: ath9k_htc: Transferred FW: htc_9271.fw, size: 51000
+> ath9k_htc 1-1:1.0: ath9k_htc: Target is unresponsive
+> ath9k_htc: Failed to initialize the device
+> 
+> 
+> Product:VIA USB2.0 WLAN
+> Manufacturer:VIA TECH
+> 
+> Vendor id: 0x040d 
+> Product id: 0x3801
+> ----------------------------------------
+> 
+> 
