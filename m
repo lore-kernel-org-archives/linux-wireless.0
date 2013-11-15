@@ -1,38 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:35371 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751419Ab3KKJJC (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:13169 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753494Ab3KOJHE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Nov 2013 04:09:02 -0500
-Message-ID: <1384160932.14334.6.camel@jlt4.sipsolutions.net> (sfid-20131111_100912_035972_4B894912)
-Subject: Re: [PATCH v2] mac80211: add assoc beacon timeout logic
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felipe Contreras <felipe.contreras@gmail.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>
-Date: Mon, 11 Nov 2013 10:08:52 +0100
-In-Reply-To: <1384119945-31213-1-git-send-email-felipe.contreras@gmail.com> (sfid-20131110_225237_639267_0727F79C)
-References: <1384119945-31213-1-git-send-email-felipe.contreras@gmail.com>
-	 (sfid-20131110_225237_639267_0727F79C)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 15 Nov 2013 04:07:04 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Bartosz Markowski <bartosz.markowski@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: expand the wmi mgmt queue limit to 128
+References: <1384416075-13751-1-git-send-email-bartosz.markowski@tieto.com>
+Date: Fri, 15 Nov 2013 11:01:50 +0200
+In-Reply-To: <1384416075-13751-1-git-send-email-bartosz.markowski@tieto.com>
+	(Bartosz Markowski's message of "Thu, 14 Nov 2013 09:01:15 +0100")
+Message-ID: <87iovu3uo1.fsf@kamboji.qca.qualcomm.com> (sfid-20131115_100712_705484_C440CDFA)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2013-11-10 at 15:45 -0600, Felipe Contreras wrote:
-> We don't want to be waiting forever for a beacon that will never come,
-> just continue the association.
+Bartosz Markowski <bartosz.markowski@tieto.com> writes:
 
-This makes no sense, IMO.
+> It was obseverd many times the short queue limit can be
+> easily exceeded in case of AP multiple BSSID scenarios.
+>
+> "ath10k: wmi mgmt_tx queue limit reached."
+>
+> This was leading to TX packets drops.
+>
+> This patch expands the queue limit to 128. After many stress
+> experiments (high traffic and lot of management frames in
+> the air) the new value seems to fix the problem on platforms
+> with limited resources.
+>
+> Reported-By: Tomasz Skapski <tomasz.skapski@tieto.com>
+> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
 
-If there really are no beacons at all, then nothing can work with the AP
--- things like HT, regulatory/radar, powersave, multiple virtual
-interfaces and many others require beacons.
+Thanks, applied.
 
-If the AP is sending beacons but the device isn't receiving them, then
-it's a driver bug and mac80211 shouldn't work around it.
-
-johannes
-
-
+-- 
+Kalle Valo
