@@ -1,35 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0237.hostedemail.com ([216.40.44.237]:34395 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755612Ab3KACEF (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60791 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751883Ab3KOOpd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Oct 2013 22:04:05 -0400
-Message-ID: <1383271441.2769.18.camel@joe-AO722> (sfid-20131101_030414_252649_6A1FE84E)
-Subject: Re: [PATCH NEXT V2] rtlwifi: Fix endian error in extracting packet
- type
-From: Joe Perches <joe@perches.com>
-To: Ben Hutchings <bhutchings@solarflare.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org,
-	Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>,
-	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
-Date: Thu, 31 Oct 2013 19:04:01 -0700
-In-Reply-To: <1383270515.2769.15.camel@joe-AO722>
-References: <1383266638-4813-1-git-send-email-Larry.Finger@lwfinger.net>
-	 <1383267769.1583.8.camel@bwh-desktop.uk.level5networks.com>
-	 <1383270515.2769.15.camel@joe-AO722>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Fri, 15 Nov 2013 09:45:33 -0500
+Date: Fri, 15 Nov 2013 09:32:55 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Tony Lindgren <tony@atomide.com>
+Cc: Luciano Coelho <luca@coelho.fi>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Rob Landley <rob@landley.net>,
+	Russell King <linux@arm.linux.org.uk>,
+	Felipe Balbi <balbi@ti.com>,
+	Sachin Kamat <sachin.kamat@linaro.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bill Pemberton <wfp5p@virginia.edu>,
+	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Luciano Coelho <coelho@ti.com>
+Subject: Re: [PATCH 1/4] wl1251: split wl251 platform data to a separate
+ structure
+Message-ID: <20131115143254.GA7079@tuxdriver.com> (sfid-20131115_154600_336146_5A15F726)
+References: <1382890469-25286-1-git-send-email-sre@debian.org>
+ <1382890469-25286-2-git-send-email-sre@debian.org>
+ <20131114185132.GQ10317@atomide.com>
+ <20131114230330.GB6383@earth.universe>
+ <20131114232217.GV10317@atomide.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131114232217.GV10317@atomide.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-10-31 at 18:48 -0700, Joe Perches wrote:
-> Or maybe something like this?
-[]
-> diff --git a/drivers/net/wireless/rtlwifi/base.c b/drivers/net/wireless/rtlwifi/base.c
-[]
-> +		src = be16_to_cpu(udp->source) >> 8;
-> +		dst = be16_to_cpu(udp->dest) >> 8;
+On Thu, Nov 14, 2013 at 03:22:18PM -0800, Tony Lindgren wrote:
+> * Sebastian Reichel <sre@debian.org> [131114 15:04]:
+> > On Thu, Nov 14, 2013 at 10:51:33AM -0800, Tony Lindgren wrote:
+> > > [...]
+> > >
+> > > If this is not going into v3.13, these will cause conflicts
+> > > with the mach-omap2/board-*.c files for v3.14.
+> > > 
+> > > So it might be best to do a minimal header patch first that
+> > > can be merged in by both linux-omap and wireless trees.
+> > 
+> > I guess this patch is pretty minimal. It also seems to be acked by
+> > the involved Maintainers, so maybe just merge Patch 1 without the
+> > other patches?
+> > 
+> > This does not solve the problem with the struct modification from
+> > the second patch, but I guess it's the more intrusive patch.
+> 
+> Once at least the first two patches are ready, how about I queue
+> them after -rc1 and set up an immutable branch that can be merged
+> in by linux-omap tree and the wireless tree?
 
-Of course this doesn't need the >> 8;
+That sounds reasonable to me.
 
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
