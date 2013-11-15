@@ -1,50 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:65454 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754323Ab3KKToD (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:35471 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751268Ab3KOTaT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Nov 2013 14:44:03 -0500
-Received: by mail-wi0-f172.google.com with SMTP id ez12so2677580wid.17
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Nov 2013 11:44:02 -0800 (PST)
-Date: Mon, 11 Nov 2013 20:43:41 +0100
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>
-Subject: Re: [PATCH 1/2] mac80211: minstrels: spare numerous useless calls to
- get_random_bytes
-Message-ID: <20131111194341.GA1684@magnum.frso.rivierawaves.com> (sfid-20131111_204409_265764_FE433DCB)
-References: <1383928473-798-1-git-send-email-karl.beldan@gmail.com>
- <1384184745.14334.32.camel@jlt4.sipsolutions.net>
+	Fri, 15 Nov 2013 14:30:19 -0500
+Date: Fri, 15 Nov 2013 14:19:13 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Gustavo Padovan <gustavo@padovan.org>,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: bluetooth 2013-11-11
+Message-ID: <20131115191912.GE7079@tuxdriver.com> (sfid-20131115_203024_540884_400995F6)
+References: <20131111182738.GB5648@joana>
+ <20131111190548.GA8107@tuxdriver.com>
+ <20131115151554.GB1627@joana>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1384184745.14334.32.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131115151554.GB1627@joana>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 11, 2013 at 04:45:45PM +0100, Johannes Berg wrote:
-> On Fri, 2013-11-08 at 17:34 +0100, Karl Beldan wrote:
-> > From: Karl Beldan <karl.beldan@rivierawaves.com>
+On Fri, Nov 15, 2013 at 01:15:54PM -0200, Gustavo Padovan wrote:
+> Hi John,
+> 
+> 2013-11-11 John W. Linville <linville@tuxdriver.com>:
+> 
+> > On Mon, Nov 11, 2013 at 04:27:38PM -0200, Gustavo Padovan wrote:
+> > > Hi John,
+> > > 
+> > > A few fixes for 3.13. There is 3 fixes to the RFCOMM protocol. One crash fix to
+> > > L2CAP. A simple fix to a bad behaviour in the SMP protocol, and last, an
+> > > revert, that I sent in the last pull request but doesn't seem to be in your
+> > > tree.
 > > 
-> > These are called to init the sample tables.
-> > This occurs once in minstrel_ht upon its registration (since it uses one
-> > single common sample table for all STAs), and once per sta addition in
-> > minstrel.
+> > Are you looking in the wireless-next tree?  It seems to be there, no?
 > 
-> This commit log is suboptimal, it doesn't even seem to describe a change
-> but rather the behaviour after (or before?) the change?
+> Yes, it is there. I'm resending this pull request without it:
 > 
-Other than replacing:
-"These are called to init the sample tables.\nThis occurs once in"
-with:
-"These are called to init the sample tables, which occurs once in",
-plus this ridiculously small diff in a non convoluted localized code
-path .. 
+> Please pull or let me know of any problems! Thanks
+> 
+> 	Gustavo
+> 
+> ---
+> 
+> The following changes since commit 8ce9beac4661f576ea0d518b9f086bb52a171a37:
+> 
+>   drivers: net: wireless: b43: Fix possible NULL ptr dereference (2013-10-18 13:41:11 -0400)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth for-upstream
+> 
+> for you to fetch changes up to 86ca9eac31d0d8c4fe61b5726e6d63197bc435a6:
+> 
+>   Bluetooth: Fix rejecting SMP security request in slave role (2013-11-13 11:36:54 -0200)
 
-FYI, this lowers the prng bytes demands from about 10*12*8bytes to
-10*8bytes per non-ht sta addition and at minstrel_ht init. This is to
-relate to the email posted just after I posted this change:
-http://marc.info/?l=linux-wireless&m=138393239432434&w=2
- 
-Karl
+Pulling now...
+
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
