@@ -1,91 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f179.google.com ([209.85.215.179]:59682 "EHLO
-	mail-ea0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753580Ab3KYNKU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Nov 2013 08:10:20 -0500
-Received: by mail-ea0-f179.google.com with SMTP id r15so2347768ead.24
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Nov 2013 05:10:19 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 1/8] ath10k: don't consume other's shared interrupts
-Date: Mon, 25 Nov 2013 14:06:20 +0100
-Message-Id: <1385384787-12470-2-git-send-email-michal.kazior@tieto.com> (sfid-20131125_141043_824934_6961781F)
-In-Reply-To: <1385384787-12470-1-git-send-email-michal.kazior@tieto.com>
-References: <1385125518-13461-1-git-send-email-michal.kazior@tieto.com>
- <1385384787-12470-1-git-send-email-michal.kazior@tieto.com>
+Received: from mout.gmx.net ([212.227.17.20]:62890 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750960Ab3KOOgG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Nov 2013 09:36:06 -0500
+Received: from [192.168.1.100] ([79.218.105.41]) by mail.gmx.com (mrgmx001)
+ with ESMTPSA (Nemesis) id 0LiTm8-1V9NnN01Ea-00ckxk for
+ <linux-wireless@vger.kernel.org>; Fri, 15 Nov 2013 15:36:05 +0100
+Message-ID: <52863154.50105@rempel-privat.de> (sfid-20131115_153610_744993_A54E0FBF)
+Date: Fri, 15 Nov 2013 15:36:04 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+CC: "Proffit, Jerome" <jproffit@qca.qualcomm.com>,
+	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+	"Biard, David" <dbiard@qca.qualcomm.com>,
+	ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: ath9k_htc: Target is unresponsive
+References: <39E4555519E9C54593B1BE31E24CB79A39B12884@nasanexd02a.na.qualcomm.com> <20131115134752.GQ9795@pogo> <52862D32.3010601@rempel-privat.de> <CAB=NE6VNZDT4JLRM=iqzkaKezXaoaXcXuyTHq62=H-axxGVNZg@mail.gmail.com>
+In-Reply-To: <CAB=NE6VNZDT4JLRM=iqzkaKezXaoaXcXuyTHq62=H-axxGVNZg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath10k assumed all interrupts were directed to it.
-This isn't the case for legacy shared interrupts.
-ath10k consumed interrupts for other devices.
+Am 15.11.2013 15:29, schrieb Luis R. Rodriguez:
+> On Fri, Nov 15, 2013 at 3:18 PM, Oleksij Rempel <linux@rempel-privat.de> wrote:
+>> I do not know which backport include patch for usb interrupt transfer.
+> 
+> Which patch are you referring to? The backports project releases match
+> the Linux kernel releases, so the backports-3.12 release is based on
+> linux v3.12, we can check what kernel the patch you are describing got
+> merged into Linux by doing:
+> 
+> git describe --contains gitsum
 
-Check device irq status and return IRQ_NONE when
-appropriate.
+i mean:
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
-v2:
- * move function definition up to avoid forward
-   declaration in subsequent patches
- * remove check for legacy interrupts inside the
-   irq_pending() by guaranteeing it is called
-   only for legacy interrupts
+commit 2f5e3ecfc155449987d64028ff6b73f29cd1ef8b
+Author: Oleksij Rempel <linux@rempel-privat.de>
+Date:   Tue Aug 13 09:29:34 2013 +0200
 
+    ath9k_htc: do not use bulk on EP3 and EP4
 
- drivers/net/wireless/ath/ath10k/hw.h  |  1 +
- drivers/net/wireless/ath/ath10k/pci.c | 16 ++++++++++++++++
- 2 files changed, 17 insertions(+)
+If it is already included, then try to revert.
 
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 8aeb46d..9535eaa 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -269,6 +269,7 @@ enum ath10k_mcast2ucast_mode {
- #define CORE_CTRL_CPU_INTR_MASK			0x00002000
- #define CORE_CTRL_ADDRESS			0x0000
- #define PCIE_INTR_ENABLE_ADDRESS		0x0008
-+#define PCIE_INTR_CAUSE_ADDRESS			0x000c
- #define PCIE_INTR_CLR_ADDRESS			0x0014
- #define SCRATCH_3_ADDRESS			0x0030
- 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 2457c8b..12fb12e 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -201,6 +201,19 @@ static const struct ce_pipe_config target_ce_config_wlan[] = {
- 	/* CE7 used only by Host */
- };
- 
-+static bool ath10k_pci_irq_pending(struct ath10k *ar)
-+{
-+	u32 cause;
-+
-+	/* Check if the shared legacy irq is for us */
-+	cause = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
-+				  PCIE_INTR_CAUSE_ADDRESS);
-+	if (cause & (PCIE_INTR_FIRMWARE_MASK | PCIE_INTR_CE_MASK_ALL))
-+		return true;
-+
-+	return false;
-+}
-+
- /*
-  * Diagnostic read/write access is provided for startup/config/debug usage.
-  * Caller must guarantee proper alignment, when applicable, and single user
-@@ -2086,6 +2099,9 @@ static irqreturn_t ath10k_pci_interrupt_handler(int irq, void *arg)
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 
- 	if (ar_pci->num_msi_intrs == 0) {
-+		if (!ath10k_pci_irq_pending(ar))
-+			return IRQ_NONE;
-+
- 		/*
- 		 * IMPORTANT: INTR_CLR regiser has to be set after
- 		 * INTR_ENABLE is set to 0, otherwise interrupt can not be
 -- 
-1.8.4.rc3
-
+Regards,
+Oleksij
