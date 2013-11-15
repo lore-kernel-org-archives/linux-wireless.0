@@ -1,37 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:21751 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752245Ab3KSNFE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Nov 2013 08:05:04 -0500
-Date: Tue, 19 Nov 2013 14:04:14 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	Eliad Peller <eliad@wizery.com>
-Subject: Re: [PATCH RESEND 2/5] mac80211: fix connection polling
-Message-ID: <20131119130414.GA1328@redhat.com> (sfid-20131119_140509_153393_37076DD4)
-References: <1384794166-10906-1-git-send-email-egrumbach@gmail.com>
- <1384794409-11211-1-git-send-email-egrumbach@gmail.com>
- <1384794409-11211-2-git-send-email-egrumbach@gmail.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:48052 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753514Ab3KOJKE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Nov 2013 04:10:04 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: allow dynamic bandwidth in hw rate control
+References: <1384337110-9417-1-git-send-email-michal.kazior@tieto.com>
+Date: Fri, 15 Nov 2013 10:59:57 +0200
+In-Reply-To: <1384337110-9417-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Wed, 13 Nov 2013 11:05:10 +0100")
+Message-ID: <87r4ai3ur6.fsf@kamboji.qca.qualcomm.com> (sfid-20131115_101011_696513_48910ACE)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1384794409-11211-2-git-send-email-egrumbach@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 18, 2013 at 07:06:46PM +0200, Emmanuel Grumbach wrote:
-> From: Eliad Peller <eliad@wizery.com>
-> 
-> Commit 392b9ff ("mac80211: change beacon/connection polling")
-> removed the IEEE80211_STA_BEACON_POLL flag.
-> 
-> However, it accidentally removed the setting of
-> IEEE80211_STA_CONNECTION_POLL, making the connection polling
-> completely useless (the flag is always clear, so the result
-> is never being checked). Fix it.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Good catch!
+> Frames were never retransmitted with
+> different/lower bandwidths, e.g. only 80MHz
+> bandwidth was used when dealing with a VHT80
+> peer.
+>
+> Allow HW rate control to try out different
+> bandwidths when retransmitting. This increases
+> robustness.
+>
+> Also, document the parameter properly.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-Johannes, this patch should be taken to 3.13 queue.
+Thanks, applied.
 
-Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
+-- 
+Kalle Valo
