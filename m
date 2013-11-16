@@ -1,107 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yh0-f51.google.com ([209.85.213.51]:60814 "EHLO
-	mail-yh0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751262Ab3KOPQG (ORCPT
+Received: from order.stressinduktion.org ([87.106.68.36]:46569 "EHLO
+	order.stressinduktion.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751805Ab3KPHka (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Nov 2013 10:16:06 -0500
-Date: Fri, 15 Nov 2013 13:15:54 -0200
-From: Gustavo Padovan <gustavo@padovan.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: bluetooth 2013-11-11
-Message-ID: <20131115151554.GB1627@joana> (sfid-20131115_161612_627350_63E4CFC7)
-References: <20131111182738.GB5648@joana>
- <20131111190548.GA8107@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="0F1p//8PRICkK4MW"
-In-Reply-To: <20131111190548.GA8107@tuxdriver.com>
+	Sat, 16 Nov 2013 02:40:30 -0500
+Date: Sat, 16 Nov 2013 08:40:29 +0100
+From: Hannes Frederic Sowa <hannes@stressinduktion.org>
+To: Kees Cook <keescook@chromium.org>
+Cc: Theodore Ts'o <tytso@mit.edu>,
+	Daniel Borkmann <dborkman@redhat.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	shemminger@networkplumber.org, Florian Weimer <fweimer@redhat.com>,
+	netdev@vger.kernel.org, Eric Dumazet <eric.dumazet@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] random: seed random_int_secret at least poorly at core_initcall time
+Message-ID: <20131116074029.GA16541@order.stressinduktion.org> (sfid-20131116_084036_163114_8EA93D38)
+References: <cover.1384160397.git.dborkman@redhat.com> <2ea03f60bb65429cbe5d74a6d356fde3eefcf06c.1384160397.git.dborkman@redhat.com> <20131111134357.GC10104@thunk.org> <20131112000307.GB14929@order.stressinduktion.org> <20131112115350.GA14077@thunk.org> <20131112131627.GD14929@order.stressinduktion.org> <20131112134603.GE14929@order.stressinduktion.org> <20131114025448.GB31602@thunk.org> <20131114041829.GA26901@order.stressinduktion.org> <CAGXu5jJJtjvAqROzsekOd9Y5wbiw=G9ToNryOfP8auhQRrYORw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAGXu5jJJtjvAqROzsekOd9Y5wbiw=G9ToNryOfP8auhQRrYORw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Nov 15, 2013 at 10:42:28AM -0800, Kees Cook wrote:
+> On Wed, Nov 13, 2013 at 8:18 PM, Hannes Frederic Sowa
+> <hannes@stressinduktion.org> wrote:
+> > On Wed, Nov 13, 2013 at 09:54:48PM -0500, Theodore Ts'o wrote:
+> >> On Tue, Nov 12, 2013 at 02:46:03PM +0100, Hannes Frederic Sowa wrote:
+> >> > > It is needed by fork to set up the stack canary. And this actually gets
+> >> > > called before the secret is initialized.
+> >> >
+> >> > Maybe we could use this for the time being and use the seeding method
+> >> > of kaslr as soon as it hits the tree?
+> >>
+> >> Hmm, from what I can tell even early_initcall() is going to be early
+> >> enough.  The stack canary is set up by boot_init_stack_canary(), which
+> >> is run very, very early in start_kerne() --- way before
+> >> early_initcalls, or even before interrupts are enabled.  So adding
+> >> random_int_secret_init_early() as a core_initcall is still too late.
+> >
+> > Actually I tried to protect the tsk->stack_canary = get_random_int()
+> > in fork.c. It sets up the per-task canary.
+> 
+> I haven't looked closely yet at how the stack canary gets plumbed, but
+> what do things outside of process context end up using?
 
---0F1p//8PRICkK4MW
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Early on boot __stack_chk_guard gets initialized. The address of this symbol
+is looked up by gcc to assemble the stack guard checks.
 
-Hi John,
+Only on ARM with !CONFIG_SMP the __stack_chk_guard is switched as soon
+as a new process context is entered. This is not possible if the kernel
+is compiled for CONFIG_SMP and the kernel will fallback to the one global
+__stack_chk_guard canary.
 
-2013-11-11 John W. Linville <linville@tuxdriver.com>:
-
-> On Mon, Nov 11, 2013 at 04:27:38PM -0200, Gustavo Padovan wrote:
-> > Hi John,
-> >=20
-> > A few fixes for 3.13. There is 3 fixes to the RFCOMM protocol. One cras=
-h fix to
-> > L2CAP. A simple fix to a bad behaviour in the SMP protocol, and last, an
-> > revert, that I sent in the last pull request but doesn't seem to be in =
-your
-> > tree.
->=20
-> Are you looking in the wireless-next tree?  It seems to be there, no?
-
-Yes, it is there. I'm resending this pull request without it:
-
-Please pull or let me know of any problems! Thanks
-
-	Gustavo
-
----
-
-The following changes since commit 8ce9beac4661f576ea0d518b9f086bb52a171a37:
-
-  drivers: net: wireless: b43: Fix possible NULL ptr dereference (2013-10-1=
-8 13:41:11 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth for-ups=
-tream
-
-for you to fetch changes up to 86ca9eac31d0d8c4fe61b5726e6d63197bc435a6:
-
-  Bluetooth: Fix rejecting SMP security request in slave role (2013-11-13 1=
-1:36:54 -0200)
-
-----------------------------------------------------------------
-Johan Hedberg (1):
-      Bluetooth: Fix rejecting SMP security request in slave role
-
-Marcel Holtmann (1):
-      Bluetooth: Fix issue with RFCOMM getsockopt operation
-
-Seung-Woo Kim (3):
-      Bluetooth: Fix RFCOMM bind fail for L2CAP sock
-      Bluetooth: Fix to set proper bdaddr_type for RFCOMM connect
-      Bluetooth: Fix crash in l2cap_chan_send after l2cap_chan_del
-
- net/bluetooth/l2cap_core.c  | 3 +++
- net/bluetooth/rfcomm/core.c | 3 +++
- net/bluetooth/rfcomm/sock.c | 6 +++++-
- net/bluetooth/smp.c         | 3 +++
- 4 files changed, 14 insertions(+), 1 deletion(-)
-
---0F1p//8PRICkK4MW
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.15 (GNU/Linux)
-
-iQIcBAEBAgAGBQJShjqqAAoJEPs3PUX4s20oeWMP/RwYDHgjGIfe95axt3gMGz2M
-TCWPaCeH64qpx+XljnvZOwg5hbos4Bq5oF9OZ2l7LA7PX8ROqfbFgnRBWEMXHz8j
-1Zg54Y3DN0YoMaWkLjobE7TIVvyzikwAcL96gyfW/caYM88pCe7NWQvTs3FwEVET
-jrLuOUAuMsXRNsZGwGqG0DMr8tVVam6el4hXLZ5Z58A9Ol3Kg7WbfijTsFH4PFjq
-IriOKR5cEA7tSQPNMpKce+YBWgkPakEmAcYF9wAd7cQmbvl1AW0i5P6mlb8t9paI
-2M/hD3mKncAD/8zh6E+hGRXIg+nEa81EryCIWYUNKV0C2sPCSI8ApX5P/H+fw/9p
-HQ9YOktj6Oc5kEFO3bxDiEmQ4oem7U1ctNR4ULxzDUrI0oti9jxfma1XAFr/JncO
-XfeXoLTD09vGbtjfAUk2+WlMXY9ltNx1lbNRmKPFtH0+Xxurtj9GScbdwKQ0gC4M
-xe9Fq5uJgfg1wE6o+bHXFPAeT/WUMdq6EjtEut2KMffZGgASd6CSMKaeSTA3dXFH
-ndPBrPSwOovm9kwzqO2UkrMoskmJc02QrB1yys2fn3scgMzTMyWWHMWq4kRRle5q
-TeNKFW4A+XnFa8w0B+upTt98Dm1A8VN1ztl4s8mQ5sP7E0yYwvJ9aDfD3VSHhJXt
-p9IMJxdPvOzF8PFYxPP2
-=rg0f
------END PGP SIGNATURE-----
-
---0F1p//8PRICkK4MW--
