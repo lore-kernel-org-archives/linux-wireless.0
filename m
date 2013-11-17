@@ -1,76 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from farad.et-inf.fho-emden.de ([139.13.80.1]:48751 "EHLO
-	farad.et-inf.fho-emden.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752190Ab3KVJaO convert rfc822-to-8bit (ORCPT
+Received: from mail-oa0-f41.google.com ([209.85.219.41]:47588 "EHLO
+	mail-oa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753591Ab3KQD4i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Nov 2013 04:30:14 -0500
-Date: Fri, 22 Nov 2013 10:30:07 +0100
-From: Mark Kettner <mkettn@technik-emden.de>
-To: Simon Wunderlich <sw@simonwunderlich.de>
-Cc: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>,
-	linux-wireless@vger.kernel.org
-Subject: Re: WPA_Supplicant: no unicast with wpa encryption
-Message-ID: <20131122103007.67e81f97@mke-x61t> (sfid-20131122_103021_001922_6EDBB719)
-In-Reply-To: <201311151612.50894.sw@simonwunderlich.de>
-References: <20131115101803.66967a4e@mke-x61t>
-	<5285EC8C.3050708@lri.fr>
-	<20131115141635.663e48d7@mke-x61t>
-	<201311151612.50894.sw@simonwunderlich.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Sat, 16 Nov 2013 22:56:38 -0500
+Received: by mail-oa0-f41.google.com with SMTP id g12so5790535oah.0
+        for <linux-wireless@vger.kernel.org>; Sat, 16 Nov 2013 19:56:37 -0800 (PST)
+MIME-Version: 1.0
+Date: Sun, 17 Nov 2013 11:56:37 +0800
+Message-ID: <CADqH6VygZFB4HEgcSesZB0cAhB4OvGnST+9mvTjw_QEAD_6QnQ@mail.gmail.com> (sfid-20131117_045642_461091_42E62D85)
+Subject: WL12xx support for WL1270 and ti-connectivity firmware
+From: Jaya Kumar <jayakumar.lkml@gmail.com>
+To: linux-wireless@vger.kernel.org, coelho@ti.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-the update was quite a hassle, but now everything works fine, many
-thanks.
+Hi friends,
 
--Mark
+I searched through the mailing list archives to see if there's any
+conclusive answer about this but didn't find any. I'm planning on
+using the wl12xx driver in 3.0.35 for i.mx6 board with a murata
+LBWA19XSLZ chip (TI WL1270 transceiver) and am checking if this might
+work.
 
-On Fri, 15 Nov 2013 16:12:50 +0100 Simon Wunderlich
-<sw@simonwunderlich.de> wrote:
-> Mark,
-> 
-> > On Fri, 15 Nov 2013 10:42:36 +0100 Nicolas Cavallari
-> > 
-> > <Nicolas.Cavallari@lri.fr> wrote:
-> > > > […]
-> > > 
-> > > WPA-NONE is not true WPA. Support for it was broken in
-> > > wpasupplicant for a long time, and the kernel does not support it
-> > > anymore. Use IBSS RSN instead :
-> > > 
-> > > proto=RSN
-> > > key_mgmt=WPA-PSK
-> > > pairwise=CCMP
-> > > group=CCMP
-> > > 
-> > > > and the /etc/network/interfaces like this:
-> > > > auto lo
-> > > > 
-> > > > iface lo inet loopback
-> > > > iface eth0 inet dhcp
-> > > > 
-> > > > allow-hotplug wlan0
-> > > > iface wlan0 inet static
-> > > > 
-> > > >     address 192.168.13.37
-> > > >     netmask 255.255.255.255
-> > > >     
-> > > >     # Load WPA-Supplicant for WPA in Ad-Hoc Mode
-> > > >     wpa-driver wext
-> > > 
-> > > wext is deprecated, use nl80211 instead.
-> > 
-> > thanks for your reply.
-> > 
-> > I am now using the driver nl80211 and everything works again. But
-> > if I apply the changes to the wpa_supplicant configuration I'm
-> > getting these errors http://pastebin.com/GYW0mng2 in a endless loop.
-> 
-> you might need a recent version of wpa_supplicant as well - AFAIK
-> v2.0 or higher. If that is already installed, please let us know your
-> kernel version and wpa_supplicant version.
-> 
-> Cheers,
->     Simon
+a) does wl12xx support wl1270?
+I'm not certain whether or not the wl12xx driver supports wl1270. The
+code does not mention wl1270. The defines/ops are prefixed with
+wl1271. Eg:
+linux-3.0.35$ egrep ieee80211_ops drivers/net/wireless/wl12xx/*.c
+drivers/net/wireless/wl12xx/main.c:static const struct ieee80211_ops
+wl1271_ops = {
+
+Can I conclude that I should not expect this to work for wl1270? Or is
+it just that wl1271 and wl1270 share compatible ops?
+
+b) is there specific firmware I will need for the wl1270?
+I see that wl1271 gets its firmware from ti-connectivity which has:
+https://github.com/shaharlevi/linux-firmware-ti-connectivity/tree/ti-connectivity/ti-connectivity
+wl1271-fw.binlinux-firmware: wl12xx-update STA FW supports 11n BA sessions
+wl127x-fw-3.binlinux-firmware: wl12xx: Updated STA & AP FW for wl12xx-fw-3
+
+I'm wondering if that wl127x includes wl1270 support.
+
+Thanks for any advice/suggestions.
+
+Thanks,
+jayakumar
