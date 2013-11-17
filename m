@@ -1,92 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f49.google.com ([209.85.160.49]:48886 "EHLO
-	mail-pb0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751327Ab3K3Nur (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Nov 2013 08:50:47 -0500
-Message-ID: <5299ED38.4090509@gmail.com> (sfid-20131130_145112_041336_6C6321E0)
-Date: Sat, 30 Nov 2013 21:50:48 +0800
-From: Chen Gang <gang.chen.5i5j@gmail.com>
+Received: from mail.skyhub.de ([78.46.96.112]:36755 "EHLO mail.skyhub.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751374Ab3KQXCx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Nov 2013 18:02:53 -0500
+Date: Mon, 18 Nov 2013 00:02:20 +0100
+From: Borislav Petkov <bp@alien8.de>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: lkml <linux-kernel@vger.kernel.org>,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] brcmsmac: Fix build dep on LEDS_CLASS
+Message-ID: <20131117230220.GS27323@pd.tnic> (sfid-20131118_000312_432833_C430FF7D)
+References: <20131117133702.GA30840@pd.tnic>
+ <5289359B.8090506@broadcom.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	rkuo <rkuo@codeaurora.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	David Miller <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
-Subject: Re: [PATCH] net: mac80211: tx.c: be sure of 'sdata->vif.type' must
- be NL80211_IFTYPE_AP when be in NL80211_IFTYPE_AP case
-References: <528AEFB7.4060301@gmail.com>   <20131125011938.GB18921@codeaurora.org> <5292B845.3010404@gmail.com>   <5292B8A0.7020409@gmail.com> <5294255E.7040105@gmail.com>   <52957ADA.2080704@gmail.com>  (sfid-20131127_055211_558798_A7DF5684) <1385739487.8656.1.camel@jlt4.sipsolutions.net>  <5299D306.7070701@gmail.com> (sfid-20131130_125901_519610_EDA4068E) <1385816013.4327.1.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1385816013.4327.1.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <5289359B.8090506@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/30/2013 08:53 PM, Johannes Berg wrote:
-> On Sat, 2013-11-30 at 19:59 +0800, Chen Gang wrote:
->> On 11/29/2013 11:38 PM, Johannes Berg wrote:
->>>
->>>> +++ b/net/mac80211/tx.c
->>>> @@ -1814,8 +1814,9 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
->>>>  			break;
->>>>  		/* fall through */
->>>>  	case NL80211_IFTYPE_AP:
->>>> -		if (sdata->vif.type == NL80211_IFTYPE_AP)
->>>> -			chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
->>>> +		if (sdata->vif.type != NL80211_IFTYPE_AP)
->>>> +			goto fail_rcu;
->>>> +		chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
->>>
->>> This change is completely wrong.
->>>
->>
->> Oh, it is.
->>
->> Hmm... for me, this work flow still can be implemented with a little
->> clearer way (at least it will avoid related warning):
->>
->> -------------------------diff begin------------------------------
->>
->> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
->> index c558b24..7076128 100644
->> --- a/net/mac80211/tx.c
->> +++ b/net/mac80211/tx.c
->> @@ -1810,14 +1810,14 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
->>  		if (!chanctx_conf)
->>  			goto fail_rcu;
->>  		band = chanctx_conf->def.chan->band;
->> -		if (sta)
->> -			break;
->> -		/* fall through */
->> +		if (!sta)
->> +			goto try_next;
->> +		break;
->>  	case NL80211_IFTYPE_AP:
->> -		if (sdata->vif.type == NL80211_IFTYPE_AP)
->> -			chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
->> +		chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
->>  		if (!chanctx_conf)
->>  			goto fail_rcu;
->> +try_next:
-> 
-> I don't think that's better than the (fairly obvious) fall-through, and
-> has a pretty odd goto. Also, depending on the compiler, it still knows
-> the previous case label and doesn't warn.
-> 
+On Sun, Nov 17, 2013 at 10:31:07PM +0100, Arend van Spriel wrote:
+> Wouldn't it be better to fix it in brcmsmac.
 
-Yeah, fall-through is obvious. But check 'A' again just near by "case A"
-seems a little strange, and some of compilers (or some of versions) are
-really not quit smart enough to know it is not a warning.
+You're right, BCMA_DRIVER_GPIO doesn't need LEDS_CLASS.
 
-Hmm... for me, if the code (implementation) can express real logical
-work flow as much as directly and simply, the code (implementation) is
-clear enough (don't mind whether use 'goto' or not).
+So, the only solution I can think of right now is below, maybe
+adding a hidden config symbol CONFIG_BRCMSMAC_LEDS which depends on
+BCMA_DRIVER_GPIO and LEDS_CLASS and then doing:
 
+brcmsmac-$(CONFIG_BRCMSMAC_LEDS) += led.o
 
-And originally, at first, I am really not quite careful enough, and sent
-an incorrect patch after noticed the related compiler's warning. :-)
+would be cleaner though. I could try that out tomorrow.
 
+---
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/Makefile b/drivers/net/wireless/brcm80211/brcmsmac/Makefile
+index 32464acccd90..8fd44d168cd5 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/Makefile
++++ b/drivers/net/wireless/brcm80211/brcmsmac/Makefile
+@@ -43,6 +43,8 @@ brcmsmac-y := \
+ 	brcms_trace_events.o \
+ 	debug.o
+ 
++ifdef CONFIG_LEDS_CLASS
+ brcmsmac-$(CONFIG_BCMA_DRIVER_GPIO) += led.o
++endif
+ 
+ obj-$(CONFIG_BRCMSMAC)	+= brcmsmac.o
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/led.h b/drivers/net/wireless/brcm80211/brcmsmac/led.h
+index 17a0b1f5dbcf..23b4b688d9f7 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/led.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/led.h
+@@ -22,7 +22,7 @@ struct brcms_led {
+ 	bool active_low;
+ };
+ 
+-#ifdef CONFIG_BCMA_DRIVER_GPIO
++#if defined(CONFIG_BCMA_DRIVER_GPIO) && defined(CONFIG_LEDS_CLASS)
+ void brcms_led_unregister(struct brcms_info *wl);
+ int brcms_led_register(struct brcms_info *wl);
+ #else
 
-Thanks.
 -- 
-Chen Gang
+Regards/Gruss,
+    Boris.
+
+Sent from a fat crate under my desk. Formatting is fine.
+--
