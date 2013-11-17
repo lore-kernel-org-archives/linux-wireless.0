@@ -1,65 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:42886 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753440Ab3KFJnR (ORCPT
+Received: from mms1.broadcom.com ([216.31.210.17]:4265 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751324Ab3KQVbU convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Nov 2013 04:43:17 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Eliad Peller <eliadx.peller@intel.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: fix scheduled scan rtnl deadlock
-Date: Wed,  6 Nov 2013 10:43:13 +0100
-Message-Id: <1383730993-18259-1-git-send-email-johannes@sipsolutions.net> (sfid-20131106_104320_884172_2DC34946)
+	Sun, 17 Nov 2013 16:31:20 -0500
+Message-ID: <5289359B.8090506@broadcom.com> (sfid-20131117_223145_925514_B5C171FA)
+Date: Sun, 17 Nov 2013 22:31:07 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Borislav Petkov" <bp@alien8.de>
+cc: lkml <linux-kernel@vger.kernel.org>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] brcmsmac: Fix build dep on LEDS_CLASS
+References: <20131117133702.GA30840@pd.tnic>
+In-Reply-To: <20131117133702.GA30840@pd.tnic>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 11/17/13 14:37, Borislav Petkov wrote:
+> From: Borislav Petkov<bp@suse.de>
+>
+> When building randconfigs with CONFIG_BCMA_DRIVER_GPIO=y, I get
+>
+> drivers/built-in.o: In function `brcms_led_unregister':
+> (.text+0x351aca): undefined reference to `led_classdev_unregister'
+> drivers/built-in.o: In function `brcms_led_register':
+> (.text+0x351c65): undefined reference to `led_classdev_register'
+>
+> during the final linking stage because brcmsmac/led.c needs LEDS_CLASS
+> for reg/dereg. Fix that.
 
-When changing cfg80211 to use RTNL locking, this caused a
-deadlock in mac80211 as it calls cfg80211_sched_scan_stopped()
-from a work item that's on a workqueue that is flushed with
-the RTNL held.
+Wouldn't it be better to fix it in brcmsmac.
 
-Fix this by simply using schedule_work(), the work only needs
-to finish running before the wiphy is unregistered, no other
-synchronisation (e.g. with suspend) is really required since
-for suspend userspace is already blocked anyway when we flush
-the workqueue so will only pick up the event after resume.
+Gr AvS
 
-Cc: stable@vger.kernel.org
-Fixes: 5fe231e87372 ("cfg80211: vastly simplify locking")
-Reported-and-tested-by: Eliad Peller <eliadx.peller@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/main.c | 1 +
- net/mac80211/scan.c | 2 +-
- 2 files changed, 2 insertions(+), 1 deletion(-)
+> Cc: "Rafał Miłecki"<zajec5@gmail.com>
+> Cc: linux-wireless@vger.kernel.org
+> Signed-off-by: Borislav Petkov<bp@suse.de>
+> ---
+>
+> I'm attaching the .config in question.
+>
+>   drivers/bcma/Kconfig | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
+> index 7c081b38ef3e..74dba9ca1413 100644
+> --- a/drivers/bcma/Kconfig
+> +++ b/drivers/bcma/Kconfig
+> @@ -74,7 +74,7 @@ config BCMA_DRIVER_GMAC_CMN
+>
+>   config BCMA_DRIVER_GPIO
+>   	bool "BCMA GPIO driver"
+> -	depends on BCMA&&  GPIOLIB
+> +	depends on BCMA&&  GPIOLIB&&  LEDS_CLASS
+>   	help
+>   	  Driver to provide access to the GPIO pins of the bcma bus.
+>
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 21d5d44..e765f77 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -1047,6 +1047,7 @@ void ieee80211_unregister_hw(struct ieee80211_hw *hw)
- 
- 	cancel_work_sync(&local->restart_work);
- 	cancel_work_sync(&local->reconfig_filter);
-+	flush_work(&local->sched_scan_stopped_work);
- 
- 	ieee80211_clear_tx_pending(local);
- 	rate_control_deinitialize(local);
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index a0b78b1..01fdf20 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -1069,6 +1069,6 @@ void ieee80211_sched_scan_stopped(struct ieee80211_hw *hw)
- 
- 	trace_api_sched_scan_stopped(local);
- 
--	ieee80211_queue_work(&local->hw, &local->sched_scan_stopped_work);
-+	schedule_work(&local->sched_scan_stopped_work);
- }
- EXPORT_SYMBOL(ieee80211_sched_scan_stopped);
--- 
-1.8.4.rc3
 
