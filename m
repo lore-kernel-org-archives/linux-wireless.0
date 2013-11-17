@@ -1,56 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f48.google.com ([209.85.214.48]:33738 "EHLO
-	mail-bk0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750830Ab3KYV5S (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:60599 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751799Ab3KQJlj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Nov 2013 16:57:18 -0500
-Received: by mail-bk0-f48.google.com with SMTP id v10so2230048bkz.35
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Nov 2013 13:57:17 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: p2p@posteo.de
+	Sun, 17 Nov 2013 04:41:39 -0500
+Message-ID: <1384681297.14795.15.camel@jlt4.sipsolutions.net> (sfid-20131117_104141_979616_82EF3B4F)
+Subject: Re: [PATCH] cfg80211: fix reporting 5/10 MHz support to user space
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: RTL8188S
-Date: Mon, 25 Nov 2013 22:57:07 +0100
-Message-ID: <2035998.63y5xTAJxx@blech> (sfid-20131125_225721_609290_DD36C167)
-In-Reply-To: <a3a1cb41444ae8dd89db830ae927491f@posteo.de>
-References: <a3a1cb41444ae8dd89db830ae927491f@posteo.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
+Date: Sun, 17 Nov 2013 10:41:37 +0100
+In-Reply-To: <1384005474-86844-1-git-send-email-nbd@openwrt.org>
+References: <1384005474-86844-1-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gTW9uZGF5LCBOb3ZlbWJlciAyNSwgMjAxMyAwNjo1NzozMiBQTSBwMnBAcG9zdGVvLmRlIHdy
-b3RlOgo+IEkgaGF2ZSBhIFdMQU4gZG9uZ2xlIHdpdGggUmVhbHRlayBSVEw4MTg4UyBjaGlwLgo+
-IEkgZG9uJ3Qgd2FudCB0byB1c2Ugcjg3MTJ1IGRyaXZlciB3aXRoIHdleHQgaW50ZXJmYWNlCj4g
-YmVjYXVzZSBJIHdhbnQgdG8gZXN0YWJsaXNoIGEgd2lmaSBkaXJlY3QgcDJwIGNvbm5lY3Rpb24u
-CgpBRklDVCwgeW91IHNob3VsZCBiZSBhYmxlIHRvIGNvbm5lY3QgdG8gYSBwMnAtZ28gcGVlcgpl
-dmVuIGlmIHlvdXIgZGV2aWNlIChpbiB0aGlzIGNhc2UgcnRsODE4OHMpIG9ubHkgc3VwcG9ydHMK
-c3RhdGlvbiBtb2RlLi4uCgo+IFVuZm9ydHVuYXRlbHkgdGhlIG9yaWdpbmFsIFJlYWx0ZWsgZHJp
-dmVyIGZyb20gaHAgZGlkbid0Cj4gd29yayB3aXRoIHAycCB0b28uCldoeSwgd2hhdCBoYXBwZW5z
-IGluIHRoaXMgY2FzZT8KCj4gSSB0aG91Z2h0IFJUTDgxOTJjdSB3aWxsIHdvcmssIGJ1dCBMYXJy
-eSBGLiB0b2xkIG1lIGl0IGRvZXNuJ3QuCk9LPyAoY2FyZSB0byBleHBsYWluPykKCj4gSGUgc2Fp
-ZCB0aGVyZSBpcyBhIG5ldyBkcml2ZXIgaW4gZGV2ZWxvcG1lbnQuClNvcnQgb2YuIFRoZXJlJ3Mg
-cjkyc3UsIGhvd2V2ZXIgdGhpcyBkcml2ZXIgb25seSBzdXBwb3J0cyB3aGF0IHRoZQpmaXJtd2Fy
-ZSBpcyBhYmxlIHRvIGRvIChzdGF0aW9uLCBhZC1ob2MgYW5kIGEgbGltaXRlZCBtb25pdG9yIG1v
-ZGUpLgoKPiBJJ20gc2VhcmNoaW5nIGZvciBpbmZvcm1hdGlvbi4gUGxlYXNlIGNhbiBzb21lb25l
-IHRlbGwgbWUgYWJvdXQKPiB0aGUgcHJvamVjdCwgaXRzIHN0YXR1cywgYW5kIGlmIHNvbWVvbmUg
-Y2FuIHRha2UgcGFydC4KSGV5IHRoYXQncyBnb29kIHRvIGhlYXIuIFRoZSBmdXR1cmUgb2YgInI5
-MnN1IiB3YXMgZGlzY3Vzc2VkIGluIFswXSwKWzFdLCAuLi4gVGhlIGdvb2QgbmV3cyBpczoKCkpv
-c+kgVuF6cXVleiBkaXNjb3ZlcmVkIHRoYXQgUmVhbHRlayBoYXMgcHJvZHVjZWQgdHdvIGxpbnV4
-IGRyaXZlcnMKZm9yIHRoZXNlIGRldmljZXMuIFRoZSBmaXJzdCBpcyByODcxMnUgKHdlIGFsbCBr
-bm93KS4gQnV0IHRoZSBvdGhlcgpkcml2ZXIgKGFuZCBtb3JlIGltcG9ydGFudGx5OiB0aGUgZmly
-bXdhcmUpIEkgdGhpbmsgY2FuIGJlIHVzZWQgYXMKYSBnb29kIGJhc2UgZm9yIGEgcnRsODE5MnN1
-K3J0bHdpZmkgZHJpdmVyICh3aGljaCBjb3VsZCBldmVuIHN1cHBvcnQKQWNjZXNzUG9pbnQtbW9k
-ZSBhbmQgYWxzbyBtb25pdG9yLW1vZGUgd2l0aCBpbmplY3Rpb24pLgoKWW91IGNhbiBnZXQgdGhl
-IHNvdXJjZSBmb3IgdGhpcyBkcml2ZXIgZnJvbSB0aGlzIGltYWdlIFsyXS4KClRoZSBkcml2ZXIg
-aXMgbG9jYXRlZCBpbjoKICBFZGltYXgvc3JjL2tlcm5lbC9saW51eC0yLjYuMTguOC9kcml2ZXJz
-L3VzYi9uZXQvODE5MnN1CgpUaGUgZmlybXdhcmUgKyBwaHkgdmFsdWVzOgogIEVkaW1heC9zcmMv
-a2VybmVsL2xpbnV4LTIuNi4xOC44L3Vzci9yYW1mcy91c3IvcnRsODE5MnN1CgAgCkhvd2V2ZXIs
-IHRoZXJlJ3MgbXVjaCB0aGF0IG5lZWRzIHRvIGJlIGRvbmUuIFNvLCBpZiB5b3Ugd2FudCB0byBo
-ZWxwCnlvdSBjYW4gImtpY2tzdGFydCIgdGhlIHBvcnQgOi0pLgoKUmVnYXJkcwoKQ2hyCgpbMF0g
-PGh0dHA6Ly93d3cuc3Bpbmljcy5uZXQvbGlzdHMvbGludXgtd2lyZWxlc3MvbXNnMTE0MjEzLmh0
-bWw+IChqdXN0IGZvbGxvdyB0aGUgdGhyZWFkKQpbMV0gPGh0dHA6Ly93d3cuc3Bpbmljcy5uZXQv
-bGlzdHMvbGludXgtd2lyZWxlc3MvbXNnMTE0MjE1Lmh0bWw+ClsyXSA8aHR0cDovL3d3dy5lZGlt
-YXguY29tL2ltYWdlcy9JbWFnZS9PcGVuU291cmNlQ29kZS9XaXJlbGVzcy9Sb3V0ZXIvQVItNzI4
-NFduQS9BUi03Mjg0V25BJkJfU0RLXzYyMjIudGFyLnppcD4=
+On Sat, 2013-11-09 at 14:57 +0100, Felix Fietkau wrote:
+> nla_put_flag needs a real nl80211 attribute id, not a wiphy flag bit
+
+Applied to mac80211-next, the 3.12/3.13 situation is a bit more
+complicated so I'll disable 5/10 MHz support there.
+
+johannes
 
