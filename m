@@ -1,47 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:58429 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755408Ab3KLOep (ORCPT
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:46075 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751503Ab3KRRLt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Nov 2013 09:34:45 -0500
-Received: by mail-wg0-f50.google.com with SMTP id k14so4453846wgh.29
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Nov 2013 06:34:44 -0800 (PST)
-Date: Tue, 12 Nov 2013 15:34:22 +0100
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>
-Subject: Re: [RFC 1/2] mac80211: minstrel_ht: add basic support for VHT rates
- <= 80MHz
-Message-ID: <20131112143422.GB22775@magnum.frso.rivierawaves.com> (sfid-20131112_153457_143734_A2C187FB)
-References: <1384266625-22431-1-git-send-email-karl.beldan@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1384266625-22431-1-git-send-email-karl.beldan@gmail.com>
+	Mon, 18 Nov 2013 12:11:49 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
+Subject: [PATCH 02/12 NEXT] rtlwifi: rtl8192cu: Add new firmware
+Date: Mon, 18 Nov 2013 11:11:26 -0600
+Message-Id: <1384794696-20314-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20131118_181205_370168_5EC1A137)
+In-Reply-To: <1384794696-20314-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1384794696-20314-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 12, 2013 at 03:30:24PM +0100, Karl Beldan wrote:
-> From: Karl Beldan <karl.beldan@rivierawaves.com>
-> 
-> Helps feel current minstrel and stack rate-control API limits.
-> Helped trigger some bugs in vht tx code path in the past.
-> Some ppl were interested in checking that out.
-> some TODOs:
-> - Optimize rate-indexes loops and sampling holes
-> - The txinfo flags for vht STAs
-> 
-> VHT rates support depends on a new CONFIG_MAC80211_RC_MINSTREL_VHT.
-> 
-> Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
-> ---
->  net/mac80211/Kconfig                       |   7 +
->  net/mac80211/rc80211_minstrel_ht.c         | 235 ++++++++++++++++++++++++-----
->  net/mac80211/rc80211_minstrel_ht.h         |  33 +++-
->  net/mac80211/rc80211_minstrel_ht_debugfs.c |  30 ++--
->  4 files changed, 248 insertions(+), 57 deletions(-)
-> 
-This commit log is temporary as I am sure I'll have to respin.
+Vendor driver rtl8188C_8192C_8192D_usb_linux_v3.4.2_3727.20120404 introduced
+new firmware for these chips. The code try for the new file, and fall back to
+the original firmware if the new file is not available.
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org>
+---
+ drivers/net/wireless/rtlwifi/core.c         | 10 ++++++++++
+ drivers/net/wireless/rtlwifi/rtl8192cu/sw.c | 16 +++++++++++++---
+ drivers/net/wireless/rtlwifi/wifi.h         |  1 +
+ 3 files changed, 24 insertions(+), 3 deletions(-)
+
+Index: wireless-testing/drivers/net/wireless/rtlwifi/core.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/core.c
++++ wireless-testing/drivers/net/wireless/rtlwifi/core.c
+@@ -46,10 +46,20 @@ void rtl_fw_cb(const struct firmware *fi
+ 			 "Firmware callback routine entered!\n");
+ 	complete(&rtlpriv->firmware_loading_complete);
+ 	if (!firmware) {
++		if (rtlpriv->cfg->alt_fw_name) {
++			err = request_firmware(&firmware,
++					       rtlpriv->cfg->alt_fw_name,
++					       rtlpriv->io.dev);
++			pr_info("Loading alternative firmware %s\n",
++				rtlpriv->cfg->alt_fw_name);
++			if (!err)
++				goto found_alt;
++		}
+ 		pr_err("Firmware %s not available\n", rtlpriv->cfg->fw_name);
+ 		rtlpriv->max_fw_size = 0;
+ 		return;
+ 	}
++found_alt:
+ 	if (firmware->size > rtlpriv->max_fw_size) {
+ 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+ 			 "Firmware is too big!\n");
+Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
++++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+@@ -50,6 +50,9 @@ MODULE_AUTHOR("Larry Finger	<Larry.Finge
+ MODULE_LICENSE("GPL");
+ MODULE_DESCRIPTION("Realtek 8192C/8188C 802.11n USB wireless");
+ MODULE_FIRMWARE("rtlwifi/rtl8192cufw.bin");
++MODULE_FIRMWARE("rtlwifi/rtl8192cufw_A.bin");
++MODULE_FIRMWARE("rtlwifi/rtl8192cufw_B.bin");
++MODULE_FIRMWARE("rtlwifi/rtl8192cufw_TMSC.bin");
  
-Karl
+ static int rtl92cu_init_sw_vars(struct ieee80211_hw *hw)
+ {
+@@ -69,14 +72,21 @@ static int rtl92cu_init_sw_vars(struct i
+ 			 "Can't alloc buffer for fw\n");
+ 		return 1;
+ 	}
+-
++	if (IS_VENDOR_UMC_A_CUT(rtlpriv->rtlhal.version) &&
++	    !IS_92C_SERIAL(rtlpriv->rtlhal.version)) {
++		rtlpriv->cfg->fw_name = "rtlwifi/rtl8192cufw_A.bin";
++	} else if (IS_81xxC_VENDOR_UMC_B_CUT(rtlpriv->rtlhal.version)) {
++		rtlpriv->cfg->fw_name = "rtlwifi/rtl8192cufw_B.bin";
++	} else {
++		rtlpriv->cfg->fw_name = "rtlwifi/rtl8192cufw_TMSC.bin";
++	}
++	/* provide name of alternative file */
++	rtlpriv->cfg->alt_fw_name = "rtlwifi/rtl8192cufw.bin";
+ 	pr_info("Loading firmware %s\n", rtlpriv->cfg->fw_name);
+ 	rtlpriv->max_fw_size = 0x4000;
+ 	err = request_firmware_nowait(THIS_MODULE, 1,
+ 				      rtlpriv->cfg->fw_name, rtlpriv->io.dev,
+ 				      GFP_KERNEL, hw, rtl_fw_cb);
+-
+-
+ 	return err;
+ }
+ 
+Index: wireless-testing/drivers/net/wireless/rtlwifi/wifi.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/wifi.h
++++ wireless-testing/drivers/net/wireless/rtlwifi/wifi.h
+@@ -1804,6 +1804,7 @@ struct rtl_hal_cfg {
+ 	bool write_readback;
+ 	char *name;
+ 	char *fw_name;
++	char *alt_fw_name;
+ 	struct rtl_hal_ops *ops;
+ 	struct rtl_mod_params *mod_params;
+ 	struct rtl_hal_usbint_cfg *usb_interface_cfg;
