@@ -1,50 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f172.google.com ([209.85.215.172]:60876 "EHLO
-	mail-ea0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756941Ab3KZOKo (ORCPT
+Received: from mail-oa0-f48.google.com ([209.85.219.48]:33026 "EHLO
+	mail-oa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751461Ab3KRL67 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Nov 2013 09:10:44 -0500
-Received: by mail-ea0-f172.google.com with SMTP id q10so3589251ead.31
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Nov 2013 06:10:43 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 3/3] ath10k: fix Tx status clearing
-Date: Tue, 26 Nov 2013 14:57:40 +0100
-Message-Id: <1385474260-22385-4-git-send-email-michal.kazior@tieto.com> (sfid-20131126_151050_991152_11E5D2F0)
-In-Reply-To: <1385474260-22385-1-git-send-email-michal.kazior@tieto.com>
-References: <1385126819-15311-1-git-send-email-michal.kazior@tieto.com>
- <1385474260-22385-1-git-send-email-michal.kazior@tieto.com>
+	Mon, 18 Nov 2013 06:58:59 -0500
+MIME-Version: 1.0
+In-Reply-To: <5289359B.8090506@broadcom.com>
+References: <20131117133702.GA30840@pd.tnic>
+	<5289359B.8090506@broadcom.com>
+Date: Mon, 18 Nov 2013 12:58:58 +0100
+Message-ID: <CACna6ryNX1=8zdYe2bjCj7aj3S_O=LnrxdjBcESvJJ63+h729Q@mail.gmail.com> (sfid-20131118_125907_080634_3DBEAD2B)
+Subject: Re: [PATCH] brcmsmac: Fix build dep on LEDS_CLASS
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Borislav Petkov <bp@alien8.de>,
+	lkml <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Too much of tx info was being cleared. This caused
-issues in some setups with tx frame status
-reporting.
+2013/11/17 Arend van Spriel <arend@broadcom.com>:
+> On 11/17/13 14:37, Borislav Petkov wrote:
+>>
+>> From: Borislav Petkov<bp@suse.de>
+>>
+>> When building randconfigs with CONFIG_BCMA_DRIVER_GPIO=y, I get
+>>
+>> drivers/built-in.o: In function `brcms_led_unregister':
+>> (.text+0x351aca): undefined reference to `led_classdev_unregister'
+>> drivers/built-in.o: In function `brcms_led_register':
+>> (.text+0x351c65): undefined reference to `led_classdev_register'
+>>
+>> during the final linking stage because brcmsmac/led.c needs LEDS_CLASS
+>> for reg/dereg. Fix that.
+>
+>
+> Wouldn't it be better to fix it in brcmsmac.
 
-This should fix some cases of stations not being
-able to associate to ath10k AP.
+I agree. After all bcma doesn't use/register LEDs, so this should be
+placed in drivers that do.
 
-Reported-By: Matti Laakso <malaakso@elisanet.fi>
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/txrx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
-index d476b2c..2282980 100644
---- a/drivers/net/wireless/ath/ath10k/txrx.c
-+++ b/drivers/net/wireless/ath/ath10k/txrx.c
-@@ -75,7 +75,7 @@ void ath10k_txrx_tx_unref(struct ath10k_htt *htt,
- 	ath10k_report_offchan_tx(htt->ar, msdu);
- 
- 	info = IEEE80211_SKB_CB(msdu);
--	memset(info, 0, sizeof(*info));
-+	memset(&info->status, 0, sizeof(info->status));
- 
- 	if (tx_done->discard) {
- 		ieee80211_free_txskb(htt->ar->hw, msdu);
--- 
-1.8.4.rc3
-
+P.S.
+Borislav: I think I didn't get your original patch.
