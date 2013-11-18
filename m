@@ -1,219 +1,218 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f182.google.com ([209.85.215.182]:46815 "EHLO
-	mail-ea0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752311Ab3KTJmZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Nov 2013 04:42:25 -0500
-Received: by mail-ea0-f182.google.com with SMTP id o10so4578874eaj.41
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Nov 2013 01:42:24 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH v2 4/4] cfg80211: DFS use 10 minutes CAC when weather channels
-Date: Wed, 20 Nov 2013 10:41:57 +0100
-Message-Id: <1384940517-6154-4-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131120_104235_385871_329F7B3A)
-In-Reply-To: <1384940517-6154-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1384940517-6154-1-git-send-email-janusz.dziedzic@tieto.com>
+Received: from mail.neratec.com ([46.140.151.2]:61430 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751057Ab3KRNGU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Nov 2013 08:06:20 -0500
+Message-ID: <528A0F79.1040807@neratec.com> (sfid-20131118_140624_330027_DBD7F95A)
+Date: Mon, 18 Nov 2013 14:00:41 +0100
+From: Matthias May <matthias.may@neratec.com>
+MIME-Version: 1.0
+To: Sujith Manoharan <sujith@msujith.org>
+CC: Sven Eckelmann <sven@open-mesh.com>,
+	OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Simon Wunderlich <simon@open-mesh.com>,
+	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>
+Subject: Re: [ath9k-devel] [OpenWrt-Devel] ath9k: Deaf QCA9558 when setting
+ rxchainmask
+References: <19772470.YgPhAz9cYD@bentobox> <87B8D697-4540-4D0E-975B-125531E6833B@net.t-labs.tu-berlin.de> <CAJ-VmombLQqJsN50nndqCioFEOy=9cp_-34onQnWnpMoX6360w@mail.gmail.com> <2985619.kldLYNDlSX@bentobox> <21120.58000.344447.562435@gargle.gargle.HOWL>
+In-Reply-To: <21120.58000.344447.562435@gargle.gargle.HOWL>
+Content-Type: multipart/mixed;
+ boundary="------------080603070100040801040609"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When nominal bandwidth falls completely or partly
-within the band 5600MHz to 5650MHz the CAC time shall
-be 10 minutes.
-This is ETSI requirement. FCC forbids weather channels usage.
+This is a multi-part message in MIME format.
+--------------080603070100040801040609
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- include/net/cfg80211.h |    7 ++++-
- net/wireless/chan.c    |   79 ++++++++++++++++++++++++++++++++++++++++++++++++
- net/wireless/core.h    |    4 +++
- net/wireless/mlme.c    |    2 +-
- net/wireless/nl80211.c |    7 ++++-
- 5 files changed, 96 insertions(+), 3 deletions(-)
+On 11/11/13 14:58, Sujith Manoharan wrote:
+> Sven Eckelmann wrote:
+>> You are talking about ar9003_phy.c -> ar9003_hw_set_chain_masks? No, the
+>> device is 3x3 and ah->caps.tx_chainmask & ah->caps.rx_chainmask are 7 and not
+>> 5. The AR_PHY_ANALOG_SWAP := AR_PHY_SWAP_ALT_CHAIN is only done when one of
+>> them would be 5. But I am not really sure what this register setting is really
+>> doing. Maybe you can explain it when you think it could be related. Thanks
+> "0x5" chainmask is an invalid mask for AR9300 - for all revisions, including AR9580.
+>
+> If a 2-stream card is required based on AR9300 for custom designs, the only
+> way is to use Chain 0 and Chain 2, since there are HW limitations with Chain 1.
+> In this case, a chainmask of 0x7 has to be used and the middle chain disabled in the
+> driver. This is done by a few vendors who use the 5Ghz AR9580 radio but want 2x2
+> instead of the usual 3x3.
+>
+> Sujith
+> _______________________________________________
+> ath9k-devel mailing list
+> ath9k-devel@lists.ath9k.org
+> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
+Hi Sujith
+I'm in the position where i want to use a 9390 as 2x2 instead of 3x3.
+I use backports-3.12-1.
+I've set the rx and tx mask in eeprom to 0x5.
+Every 30 seconds there is a short disconnect.
+Enabling some logging in
+echo "0x0000050C" > /sys/kernel/debug/ieee80211/phy0/ath9k/debug
+shows that something seems to go wrong during noise calibration. (See 
+attached log).
+What seems odd to me, that for IQ cal it tries to calibrate chain 1 
+instead of chain 2.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index ba640e9..6045ddc 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -125,9 +125,12 @@ enum ieee80211_channel_flags {
- #define IEEE80211_CHAN_NO_HT40 \
- 	(IEEE80211_CHAN_NO_HT40PLUS | IEEE80211_CHAN_NO_HT40MINUS)
- 
--#define IEEE80211_DFS_MIN_CAC_TIME_MS		60000
-+#define IEEE80211_DFS_MIN_CAC_TIME_MS		(60 * 1000)
- #define IEEE80211_DFS_MIN_NOP_TIME_MS		(30 * 60 * 1000)
- 
-+/* ETSI EN 301 893 V1.7.0 - Table D.1 */
-+#define IEEE80211_DFS_WEATHER_MIN_CAC_TIME_MS	(10 * 60 * 1000)
-+
- /**
-  * struct ieee80211_channel - channel definition
-  *
-@@ -3039,6 +3042,7 @@ struct cfg80211_cached_keys;
-  * @p2p_started: true if this is a P2P Device that has been started
-  * @cac_started: true if DFS channel availability check has been started
-  * @cac_start_time: timestamp (jiffies) when the dfs state was entered.
-+ * @cac_time_ms: CAC time in ms
-  * @ps: powersave mode is enabled
-  * @ps_timeout: dynamic powersave timeout
-  * @ap_unexpected_nlportid: (private) netlink port ID of application
-@@ -3096,6 +3100,7 @@ struct wireless_dev {
- 
- 	bool cac_started;
- 	unsigned long cac_start_time;
-+	unsigned int cac_time_ms;
- 
- #ifdef CONFIG_CFG80211_WEXT
- 	/* wext data */
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index 78559b5..057edde 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -490,6 +490,85 @@ static bool cfg80211_chandef_dfs_available(struct wiphy *wiphy,
- 	return r;
- }
- 
-+static int cfg80211_get_chans_dfs_is_weather(struct wiphy *wiphy,
-+					     u32 center_freq,
-+					     u32 bandwidth)
-+{
-+	u32 start_freq, end_freq;
-+
-+	start_freq = cfg80211_get_start_freq(center_freq, bandwidth) - 10;
-+	end_freq = cfg80211_get_end_freq(center_freq, bandwidth) + 10;
-+
-+	/*
-+	 * ETSI EN 301 893 V1.7.0 Table D.1
-+	 * TODO In the future we can get this from regdb eg. channel flag
-+	 * IEEE80211_CHAN_TDWR.
-+	 */
-+	if ((start_freq >= 5600 && start_freq < 5650) ||
-+	    (end_freq > 5600 && end_freq <= 5650))
-+		return 1;
-+
-+	return 0;
-+}
-+
-+static int
-+cfg80211_chandef_dfs_is_weather(struct wiphy *wiphy,
-+				const struct cfg80211_chan_def *chandef)
-+{
-+	int width;
-+	int r;
-+
-+	if (WARN_ON(!cfg80211_chandef_valid(chandef)))
-+		return -EINVAL;
-+
-+	width = cfg80211_chandef_get_width(chandef);
-+	if (width < 0)
-+		return -EINVAL;
-+
-+	r = cfg80211_get_chans_dfs_is_weather(wiphy,
-+					      chandef->center_freq1,
-+					      width);
-+
-+	if (r)
-+		return r;
-+
-+	switch (chandef->width) {
-+	case NL80211_CHAN_WIDTH_80P80:
-+		WARN_ON(!chandef->center_freq2);
-+		r = cfg80211_get_chans_dfs_is_weather(wiphy,
-+						      chandef->center_freq2,
-+						      width);
-+	default:
-+		WARN_ON(chandef->center_freq2);
-+		break;
-+	}
-+
-+	return r;
-+}
-+
-+unsigned int
-+cfg80211_chandef_dfs_cac_time(struct wiphy *wiphy,
-+			      const struct cfg80211_chan_def *chandef,
-+			      enum nl80211_dfs_regions dfs_region)
-+{
-+	unsigned int timeout_ms = IEEE80211_DFS_MIN_CAC_TIME_MS;
-+
-+	switch (dfs_region) {
-+	case NL80211_DFS_ETSI:
-+		if (cfg80211_chandef_dfs_is_weather(wiphy, chandef))
-+			timeout_ms = IEEE80211_DFS_WEATHER_MIN_CAC_TIME_MS;
-+		break;
-+	/* TODO check JP CAC time */
-+	case NL80211_DFS_JP:
-+		break;
-+	/* FCC don't allow weather channels */
-+	case NL80211_DFS_FCC:
-+	default:
-+		break;
-+	}
-+
-+	return timeout_ms;
-+}
- 
- static bool cfg80211_secondary_chans_ok(struct wiphy *wiphy,
- 					u32 center_freq, u32 bandwidth,
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 5390aeb..f497ea1 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -401,6 +401,10 @@ void cfg80211_set_dfs_state(struct wiphy *wiphy,
- 
- void cfg80211_dfs_channels_update_work(struct work_struct *work);
- 
-+unsigned int
-+cfg80211_chandef_dfs_cac_time(struct wiphy *wiphy,
-+			      const struct cfg80211_chan_def *chandef,
-+			      enum nl80211_dfs_regions dfs_region);
- 
- static inline int
- cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index 733265f..30e2b50 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -780,7 +780,7 @@ void cfg80211_cac_event(struct net_device *netdev,
- 	switch (event) {
- 	case NL80211_RADAR_CAC_FINISHED:
- 		timeout = wdev->cac_start_time +
--			  msecs_to_jiffies(IEEE80211_DFS_MIN_CAC_TIME_MS);
-+			  msecs_to_jiffies(wdev->cac_time_ms);
- 		WARN_ON(!time_after_eq(jiffies, timeout));
- 		cfg80211_set_dfs_state(wiphy, chandef, NL80211_DFS_AVAILABLE);
- 		break;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index ea9ee18..c3b6694 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5632,6 +5632,7 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 	struct cfg80211_chan_def chandef;
- 	enum nl80211_dfs_regions dfs_region;
-+	unsigned int cac_time_ms;
- 	int err;
- 
- 	dfs_region = reg_get_dfs_region(wdev->wiphy);
-@@ -5667,12 +5668,16 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
- 	if (err)
- 		return err;
- 
-+	cac_time_ms = cfg80211_chandef_dfs_cac_time(&rdev->wiphy, &chandef,
-+						    dfs_region);
-+
- 	err = rdev->ops->start_radar_detection(&rdev->wiphy, dev, &chandef,
--					       IEEE80211_DFS_MIN_CAC_TIME_MS);
-+					       cac_time_ms);
- 	if (!err) {
- 		wdev->channel = chandef.chan;
- 		wdev->cac_started = true;
- 		wdev->cac_start_time = jiffies;
-+		wdev->cac_time_ms = cac_time_ms;
- 	}
- 	return err;
- }
+Best regards
+Matthias May
+
 -- 
-1.7.9.5
+Matthias May
+Software Engineer
 
+Neratec Solutions AG
+Postfach 83, CH-8608 Bubikon, Switzerland
+Direct: +41 55 253 2074
+Office: +41 55 253 2000
+Fax:    +41 55 253 2070
+email:  matthias.may@neratec.com
+Web:   www.neratec.com
+
+
+--------------080603070100040801040609
+Content-Type: text/plain; charset=UTF-8;
+ name="log.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="log.txt"
+
+Nov 18 13:39:45 CHD500279 kernel: [16510.563596] ath: phy11: 0: Chn 0 pmi=0x0f3a64d3;pmq=0x0dcc5afb;iqcm=0xffa7b633;
+Nov 18 13:39:45 CHD500279 kernel: [16510.563608] ath: phy11: 0: Chn 2 pmi=0x00000000;pmq=0x00000000;iqcm=0x00000000;
+Nov 18 13:39:45 CHD500279 kernel: [16510.563612] ath: phy11: Starting IQ Cal and Correction for Chain 0
+Nov 18 13:39:45 CHD500279 kernel: [16510.563615] ath: phy11: Original: Chn 0 iq_corr_meas = 0xffa7b633
+Nov 18 13:39:45 CHD500279 kernel: [16510.563619] ath: phy11: Chn 0 pwr_meas_i = 0x0f3a64d3
+Nov 18 13:39:45 CHD500279 kernel: [16510.563622] ath: phy11: Chn 0 pwr_meas_q = 0x0dcc5afb
+Nov 18 13:39:45 CHD500279 kernel: [16510.563625] ath: phy11: iqCorrNeg is 0x00000001
+Nov 18 13:39:45 CHD500279 kernel: [16510.563628] ath: phy11: Chn 0 iCoff = 0x00000006
+Nov 18 13:39:45 CHD500279 kernel: [16510.563631] ath: phy11: Chn 0 qCoff = 0x00000006
+Nov 18 13:39:45 CHD500279 kernel: [16510.563635] ath: phy11: Chn 0 : iCoff = 0x6  qCoff = 0x6
+Nov 18 13:39:45 CHD500279 kernel: [16510.563640] ath: phy11: Register offset (0x98dc) before update = 0x20000000
+Nov 18 13:39:45 CHD500279 kernel: [16510.563649] ath: phy11: Register offset (0x98dc) QI COFF (bitfields 0x00003f80) after update = 0x20000306
+Nov 18 13:39:45 CHD500279 kernel: [16510.563655] ath: phy11: Register offset (0x98dc) QQ COFF (bitfields 0x0000007f) after update = 0x20000306
+Nov 18 13:39:45 CHD500279 kernel: [16510.563658] ath: phy11: IQ Cal and Correction done for Chain 0
+Nov 18 13:39:45 CHD500279 kernel: [16510.563661] ath: phy11: Starting IQ Cal and Correction for Chain 1
+Nov 18 13:39:45 CHD500279 kernel: [16510.563664] ath: phy11: Original: Chn 1 iq_corr_meas = 0x00000000
+Nov 18 13:39:45 CHD500279 kernel: [16510.563667] ath: phy11: Chn 1 pwr_meas_i = 0x00000000
+Nov 18 13:39:45 CHD500279 kernel: [16510.563670] ath: phy11: Chn 1 pwr_meas_q = 0x00000000
+Nov 18 13:39:45 CHD500279 kernel: [16510.563673] ath: phy11: iqCorrNeg is 0x00000000
+Nov 18 13:39:45 CHD500279 kernel: [16510.563681] ath: phy11: IQ Cal and Correction (offset 0x98dc) enabled (bit position 0x00004000). New Value 0x20004306
+Nov 18 13:39:45 CHD500279 kernel: [16510.563694] ath: phy11: NF calibrated [ctl] [chain 0] is -105
+Nov 18 13:39:45 CHD500279 kernel: [16510.563698] ath: phy11: NF calibrated [ctl] [chain 2] is -50
+Nov 18 13:39:45 CHD500279 kernel: [16510.563701] ath: phy11: NF[2] (-50) > MAX (-100), correcting to MAX
+Nov 18 13:39:45 CHD500279 kernel: [16510.563705] ath: phy11: NF calibrated [ext] [chain 0] is -105
+Nov 18 13:39:45 CHD500279 kernel: [16510.563708] ath: phy11: NF calibrated [ext] [chain 2] is -50
+Nov 18 13:39:45 CHD500279 kernel: [16510.563712] ath: phy11: NF[5] (-50) > MAX (-100), correcting to MAX
+Nov 18 13:39:47 CHD500279 kernel: [16512.019747] wlan11: Failed to send nullfunc to AP 00:80:48:70:bd:70 after 500ms, disconnecting
+Nov 18 13:39:47 CHD500279 kernel: [16512.057562] wlan11: moving STA 00:80:48:70:bd:70 to state 3
+Nov 18 13:39:47 CHD500279 kernel: [16512.057569] wlan11: moving STA 00:80:48:70:bd:70 to state 2
+Nov 18 13:39:47 CHD500279 kernel: [16512.057576] wlan11: moving STA 00:80:48:70:bd:70 to state 1
+Nov 18 13:39:47 CHD500279 kernel: [16512.057579] wlan11: Removed STA 00:80:48:70:bd:70
+Nov 18 13:39:47 CHD500279 kernel: [16512.057842] ath: phy11: NF calibrated [ctl] [chain 0] is -105
+Nov 18 13:39:47 CHD500279 kernel: [16512.057847] ath: phy11: NF calibrated [ctl] [chain 2] is -50
+Nov 18 13:39:47 CHD500279 kernel: [16512.057851] ath: phy11: NF[2] (-50) > MAX (-100), correcting to MAX
+Nov 18 13:39:47 CHD500279 kernel: [16512.058278] ath: phy11: ch=0 f=5180 low=5180 -29 h=5180 -29
+Nov 18 13:39:47 CHD500279 kernel: [16512.058282] ath: phy11: ch=1 f=5180 low=5180 -30 h=5180 -30
+Nov 18 13:39:47 CHD500279 kernel: [16512.058286] ath: phy11: ch=2 f=5180 low=5180 -24 h=5180 -24
+Nov 18 13:39:47 CHD500279 kernel: [16512.058301] ath: phy11: for frequency=5180, calibration correction = -29 -30 -24
+Nov 18 13:39:47 CHD500279 wpa_supplicant[3216]: wlan11: CTRL-EVENT-DISCONNECTED bssid=00:80:48:70:bd:70 reason=4
+Nov 18 13:39:47 CHD500279 kernel: [16512.059944] ath: phy11: Doing Tx IQ Cal for chain 0
+Nov 18 13:39:47 CHD500279 kernel: [16512.059958] ath: phy11: IQ_RES[0]=0xd243f03a IQ_RES[1]=0xb6f
+Nov 18 13:39:47 CHD500279 kernel: [16512.059970] ath: phy11: IQ_RES[2]=0x10fa2450 IQ_RES[3]=0xc80
+Nov 18 13:39:47 CHD500279 kernel: [16512.059981] ath: phy11: IQ_RES[4]=0xcb010ffb IQ_RES[5]=0xfe20
+Nov 18 13:39:47 CHD500279 kernel: [16512.059985] ath: phy11: chain 0: mag mismatch=0 phase mismatch=0
+Nov 18 13:39:47 CHD500279 kernel: [16512.059989] ath: phy11: tx chain 0: mag corr=0  phase corr=7
+Nov 18 13:39:47 CHD500279 kernel: [16512.059992] ath: phy11: tx chain 0: iq corr coeff=7
+Nov 18 13:39:47 CHD500279 kernel: [16512.059995] ath: phy11: rx chain 0: mag corr=-3  phase corr=12
+Nov 18 13:39:47 CHD500279 kernel: [16512.059999] ath: phy11: rx chain 0: iq corr coeff=fffffe8c
+Nov 18 13:39:47 CHD500279 kernel: [16512.060002] ath: phy11: Doing Tx IQ Cal for chain 0
+Nov 18 13:39:47 CHD500279 kernel: [16512.060015] ath: phy11: IQ_RES[0]=0xd4419038 IQ_RES[1]=0xb0f
+Nov 18 13:39:47 CHD500279 kernel: [16512.060026] ath: phy11: IQ_RES[2]=0xffa4429 IQ_RES[3]=0xc00
+Nov 18 13:39:47 CHD500279 kernel: [16512.060038] ath: phy11: IQ_RES[4]=0xc300fffb IQ_RES[5]=0xfe30
+Nov 18 13:39:47 CHD500279 kernel: [16512.060041] ath: phy11: chain 0: mag mismatch=0 phase mismatch=0
+Nov 18 13:39:47 CHD500279 kernel: [16512.060045] ath: phy11: tx chain 0: mag corr=0  phase corr=6
+Nov 18 13:39:47 CHD500279 kernel: [16512.060048] ath: phy11: tx chain 0: iq corr coeff=6
+Nov 18 13:39:47 CHD500279 kernel: [16512.060051] ath: phy11: rx chain 0: mag corr=-3  phase corr=12
+Nov 18 13:39:47 CHD500279 kernel: [16512.060055] ath: phy11: rx chain 0: iq corr coeff=fffffe8c
+Nov 18 13:39:47 CHD500279 kernel: [16512.060058] ath: phy11: Doing Tx IQ Cal for chain 0
+Nov 18 13:39:47 CHD500279 kernel: [16512.060071] ath: phy11: IQ_RES[0]=0xac76206b IQ_RES[1]=0x14cf
+Nov 18 13:39:47 CHD500279 kernel: [16512.060082] ath: phy11: IQ_RES[2]=0x1bf66787 IQ_RES[3]=0x15b0
+Nov 18 13:39:47 CHD500279 kernel: [16512.060093] ath: phy11: IQ_RES[4]=0x6101eff5 IQ_RES[5]=0xfca1
+Nov 18 13:39:47 CHD500279 kernel: [16512.060097] ath: phy11: chain 0: mag mismatch=0 phase mismatch=0
+Nov 18 13:39:47 CHD500279 kernel: [16512.060100] ath: phy11: tx chain 0: mag corr=0  phase corr=5
+Nov 18 13:39:47 CHD500279 kernel: [16512.060103] ath: phy11: tx chain 0: iq corr coeff=5
+Nov 18 13:39:47 CHD500279 kernel: [16512.060107] ath: phy11: rx chain 0: mag corr=-4  phase corr=12
+Nov 18 13:39:47 CHD500279 kernel: [16512.060110] ath: phy11: rx chain 0: iq corr coeff=fffffe0c
+Nov 18 13:39:47 CHD500279 kernel: [16512.060113] ath: phy11: Doing Tx IQ Cal for chain 0
+Nov 18 13:39:47 CHD500279 kernel: [16512.060126] ath: phy11: IQ_RES[0]=0xbc6d806e IQ_RES[1]=0x139f
+Nov 18 13:39:47 CHD500279 kernel: [16512.060138] ath: phy11: IQ_RES[2]=0x19f696f7 IQ_RES[3]=0x1410
+Nov 18 13:39:47 CHD500279 kernel: [16512.060149] ath: phy11: IQ_RES[4]=0x44019ff6 IQ_RES[5]=0xfcf1
+Nov 18 13:39:47 CHD500279 kernel: [16512.060153] ath: phy11: chain 0: mag mismatch=0 phase mismatch=0
+Nov 18 13:39:47 CHD500279 kernel: [16512.060156] ath: phy11: tx chain 0: mag corr=0  phase corr=3
+Nov 18 13:39:47 CHD500279 kernel: [16512.060159] ath: phy11: tx chain 0: iq corr coeff=3
+Nov 18 13:39:47 CHD500279 kernel: [16512.060163] ath: phy11: rx chain 0: mag corr=-5  phase corr=10
+Nov 18 13:39:47 CHD500279 kernel: [16512.060166] ath: phy11: rx chain 0: iq corr coeff=fffffd8a
+Nov 18 13:39:47 CHD500279 kernel: [16512.060169] ath: phy11: Doing Tx IQ Cal for chain 0
+Nov 18 13:39:47 CHD500279 kernel: [16512.060182] ath: phy11: IQ_RES[0]=0xc563b06e IQ_RES[1]=0x119f
+Nov 18 13:39:47 CHD500279 kernel: [16512.060193] ath: phy11: IQ_RES[2]=0x17f61659 IQ_RES[3]=0x1230
+Nov 18 13:39:47 CHD500279 kernel: [16512.060204] ath: phy11: IQ_RES[4]=0x28013ff6 IQ_RES[5]=0xfd11
+Nov 18 13:39:47 CHD500279 kernel: [16512.060208] ath: phy11: chain 0: mag mismatch=0 phase mismatch=0
+Nov 18 13:39:47 CHD500279 kernel: [16512.060211] ath: phy11: tx chain 0: mag corr=0  phase corr=2
+Nov 18 13:39:47 CHD500279 kernel: [16512.060215] ath: phy11: tx chain 0: iq corr coeff=2
+Nov 18 13:39:47 CHD500279 kernel: [16512.060218] ath: phy11: rx chain 0: mag corr=-7  phase corr=10
+Nov 18 13:39:47 CHD500279 kernel: [16512.060221] ath: phy11: rx chain 0: iq corr coeff=fffffc8a
+Nov 18 13:39:47 CHD500279 kernel: [16512.060226] ath: phy11: Doing Tx IQ Cal for chain 2
+Nov 18 13:39:47 CHD500279 kernel: [16512.060239] ath: phy11: IQ_RES[0]=0xee47c584 IQ_RES[1]=0xbe3e
+Nov 18 13:39:47 CHD500279 kernel: [16512.060250] ath: phy11: IQ_RES[2]=0x51bdb7fd IQ_RES[3]=0xd5ec
+Nov 18 13:39:47 CHD500279 kernel: [16512.060262] ath: phy11: IQ_RES[4]=0xc443e400 IQ_RES[5]=0xdfdc
+Nov 18 13:39:47 CHD500279 kernel: [16512.060265] ath: phy11: chain 2: mag mismatch=6 phase mismatch=9
+Nov 18 13:39:47 CHD500279 kernel: [16512.060269] ath: phy11: tx chain 2: mag corr=28  phase corr=-2448
+Nov 18 13:39:47 CHD500279 kernel: [16512.060272] ath: phy11: tx chain 2: iq corr coeff=dc1
+Nov 18 13:39:47 CHD500279 kernel: [16512.060276] ath: phy11: rx chain 2: mag corr=28  phase corr=125
+Nov 18 13:39:47 CHD500279 kernel: [16512.060279] ath: phy11: rx chain 2: iq corr coeff=e3f
+Nov 18 13:39:47 CHD500279 kernel: [16512.060282] ath: phy11: Doing Tx IQ Cal for chain 2
+Nov 18 13:39:47 CHD500279 kernel: [16512.060295] ath: phy11: IQ_RES[0]=0xc8de3ede IQ_RES[1]=0xe9b0
+Nov 18 13:39:47 CHD500279 kernel: [16512.060306] ath: phy11: IQ_RES[2]=0x926cf9f9 IQ_RES[3]=0x12e2
+Nov 18 13:39:47 CHD500279 kernel: [16512.060318] ath: phy11: IQ_RES[4]=0x9abb7810 IQ_RES[5]=0x1c80
+Nov 18 13:39:47 CHD500279 kernel: [16512.060321] ath: phy11: chain 2: mag mismatch=-15 phase mismatch=11
+Nov 18 13:39:47 CHD500279 kernel: [16512.060325] ath: phy11: tx chain 2: mag corr=5  phase corr=-2939
+Nov 18 13:39:47 CHD500279 kernel: [16512.060328] ath: phy11: tx chain 2: iq corr coeff=241
+Nov 18 13:39:47 CHD500279 kernel: [16512.060332] ath: phy11: rx chain 2: mag corr=126  phase corr=22
+Nov 18 13:39:47 CHD500279 kernel: [16512.060335] ath: phy11: rx chain 2: iq corr coeff=1f96
+Nov 18 13:39:47 CHD500279 kernel: [16512.060338] ath: phy11: Doing Tx IQ Cal for chain 2
+Nov 18 13:39:47 CHD500279 kernel: [16512.060351] ath: phy11: IQ_RES[0]=0xaa8dbd3b IQ_RES[1]=0x11d5
+Nov 18 13:39:47 CHD500279 kernel: [16512.060362] ath: phy11: IQ_RES[2]=0x1f6e5f1e IQ_RES[3]=0xb71
+Nov 18 13:39:47 CHD500279 kernel: [16512.060374] ath: phy11: IQ_RES[4]=0x69f3c6b0 IQ_RES[5]=0x1bb7
+Nov 18 13:39:47 CHD500279 kernel: [16512.060378] ath: phy11: chain 2: mag mismatch=-346 phase mismatch=-1149
+Nov 18 13:39:47 CHD500279 kernel: [16512.060381] ath: phy11: tx chain 2: mag corr=0  phase corr=32096
+Nov 18 13:39:47 CHD500279 kernel: [16512.060384] ath: phy11: tx chain 2: iq corr coeff=3f
+Nov 18 13:39:47 CHD500279 kernel: [16512.060388] ath: phy11: rx chain 2: mag corr=-460  phase corr=594
+Nov 18 13:39:47 CHD500279 kernel: [16512.060391] ath: phy11: rx chain 2: iq corr coeff=ffffe0bf
+Nov 18 13:39:47 CHD500279 kernel: [16512.060394] ath: phy11: Doing Tx IQ Cal for chain 2
+Nov 18 13:39:47 CHD500279 kernel: [16512.060407] ath: phy11: IQ_RES[0]=0x4cf3afc7 IQ_RES[1]=0xea49
+Nov 18 13:39:47 CHD500279 kernel: [16512.060418] ath: phy11: IQ_RES[2]=0x1424b699 IQ_RES[3]=0x7fba
+Nov 18 13:39:47 CHD500279 kernel: [16512.060430] ath: phy11: IQ_RES[4]=0xf60544b2 IQ_RES[5]=0xfff0
+Nov 18 13:39:47 CHD500279 kernel: [16512.060433] ath: phy11: chain 2: mag mismatch=47 phase mismatch=53
+Nov 18 13:39:47 CHD500279 kernel: [16512.060437] ath: phy11: tx chain 2: mag corr=1  phase corr=-13595
+Nov 18 13:39:47 CHD500279 kernel: [16512.060440] ath: phy11: tx chain 2: iq corr coeff=41
+Nov 18 13:39:47 CHD500279 kernel: [16512.060444] ath: phy11: rx chain 2: mag corr=315  phase corr=-1911
+Nov 18 13:39:47 CHD500279 kernel: [16512.060447] ath: phy11: rx chain 2: iq corr coeff=1f41
+Nov 18 13:39:47 CHD500279 kernel: [16512.060450] ath: phy11: Doing Tx IQ Cal for chain 2
+Nov 18 13:39:47 CHD500279 kernel: [16512.060463] ath: phy11: IQ_RES[0]=0x8f3a6962 IQ_RES[1]=0x2fce
+Nov 18 13:39:47 CHD500279 kernel: [16512.060474] ath: phy11: IQ_RES[2]=0x22ae7536 IQ_RES[3]=0x8ca3
+Nov 18 13:39:47 CHD500279 kernel: [16512.060486] ath: phy11: IQ_RES[4]=0x74bbc4d5 IQ_RES[5]=0xa353
+Nov 18 13:39:47 CHD500279 kernel: [16512.060489] ath: phy11: chain 2: mag mismatch=2 phase mismatch=6
+Nov 18 13:39:47 CHD500279 kernel: [16512.060493] ath: phy11: tx chain 2: mag corr=178  phase corr=-1680
+Nov 18 13:39:47 CHD500279 kernel: [16512.060496] ath: phy11: tx chain 2: iq corr coeff=1f41
+Nov 18 13:39:47 CHD500279 kernel: [16512.060499] ath: phy11: rx chain 2: mag corr=243  phase corr=20
+Nov 18 13:39:47 CHD500279 kernel: [16512.060503] ath: phy11: rx chain 2: iq corr coeff=1f94
+Nov 18 13:39:47 CHD500279 kernel: [16512.060537] ath: phy11: enabling IQ Calibration
+Nov 18 13:39:47 CHD500279 kernel: [16512.060541] ath: phy11: starting IQ Mismatch Calibration
+Nov 18 13:39:47 CHD500279 kernel: [16512.114132] wlan11: Destroyed STA 00:80:48:70:bd:70
+
+--------------080603070100040801040609--
