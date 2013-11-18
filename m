@@ -1,53 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f180.google.com ([74.125.82.180]:47332 "EHLO
-	mail-we0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753553Ab3KAN7D (ORCPT
+Received: from mail-bk0-f52.google.com ([209.85.214.52]:42853 "EHLO
+	mail-bk0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751599Ab3KRRG7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 09:59:03 -0400
-Received: by mail-we0-f180.google.com with SMTP id q59so4056821wes.11
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:59:01 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 28/65] wireless-regdb: enable VHT80 for LK
-Date: Fri,  1 Nov 2013 14:57:18 +0100
-Message-Id: <1383314275-20960-29-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_145907_256532_0C0DC458)
-In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+	Mon, 18 Nov 2013 12:06:59 -0500
+Received: by mail-bk0-f52.google.com with SMTP id u14so2485071bkz.25
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Nov 2013 09:06:58 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Avri Altman <avri.altman@intel.com>
+Subject: [PATCH RESEND 4/5] mac80211: update ht flag if bss configuration changed
+Date: Mon, 18 Nov 2013 19:06:48 +0200
+Message-Id: <1384794409-11211-4-git-send-email-egrumbach@gmail.com> (sfid-20131118_180710_487855_CE08E371)
+In-Reply-To: <1384794409-11211-1-git-send-email-egrumbach@gmail.com>
+References: <1384794166-10906-1-git-send-email-egrumbach@gmail.com>
+ <1384794409-11211-1-git-send-email-egrumbach@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This enables VHT80 for LK but also extends the DFS
-frequency range and augments its max EIRP from 20 dbm
-to 24 dBm.
+From: Avri Altman <avri.altman@intel.com>
 
-Source is QCA's regulatory team's efforts.
+The bug concerned failing to update the ht flag properly.
+updating the ht flag when bss configuration changes should
+be done independently of channel changes.
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Signed-off-by: Avri Altman <avri.altman@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
 ---
- db.txt | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ net/mac80211/mlme.c |   18 ++++++++++--------
+ 1 file changed, 10 insertions(+), 8 deletions(-)
 
-diff --git a/db.txt b/db.txt
-index 3f6753a..00029d9 100644
---- a/db.txt
-+++ b/db.txt
-@@ -483,10 +483,10 @@ country LI: DFS-ETSI
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index b3a3ce3..03aa33f 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -330,6 +330,16 @@ static int ieee80211_config_bw(struct ieee80211_sub_if_data *sdata,
+ 	if (WARN_ON_ONCE(!sta))
+ 		return -EINVAL;
  
- country LK: DFS-FCC
- 	(2402 - 2482 @ 40), (20)
--	(5170 - 5250 @ 20), (17)
--	(5250 - 5330 @ 20), (20), DFS
--	(5490 - 5710 @ 20), (20), DFS
--	(5735 - 5835 @ 20), (30)
-+	(5170 - 5250 @ 80), (17)
-+	(5250 - 5330 @ 80), (24), DFS
-+	(5490 - 5730 @ 80), (24), DFS
-+	(5735 - 5835 @ 80), (30)
++	/*
++	 * if bss configuration changed store the new one -
++	 * this may be applicable even if channel is identical
++	 */
++	ht_opmode = le16_to_cpu(ht_oper->operation_mode);
++	if (sdata->vif.bss_conf.ht_operation_mode != ht_opmode) {
++		*changed |= BSS_CHANGED_HT;
++		sdata->vif.bss_conf.ht_operation_mode = ht_opmode;
++	}
++
+ 	chan = sdata->vif.bss_conf.chandef.chan;
+ 	sband = local->hw.wiphy->bands[chan->band];
  
- country LT: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
+@@ -416,14 +426,6 @@ static int ieee80211_config_bw(struct ieee80211_sub_if_data *sdata,
+ 					 IEEE80211_RC_BW_CHANGED);
+ 	}
+ 
+-	ht_opmode = le16_to_cpu(ht_oper->operation_mode);
+-
+-	/* if bss configuration changed store the new one */
+-	if (sdata->vif.bss_conf.ht_operation_mode != ht_opmode) {
+-		*changed |= BSS_CHANGED_HT;
+-		sdata->vif.bss_conf.ht_operation_mode = ht_opmode;
+-	}
+-
+ 	return 0;
+ }
+ 
 -- 
-1.8.4.rc3
+1.7.9.5
 
