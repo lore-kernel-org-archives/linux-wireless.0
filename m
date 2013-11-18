@@ -1,69 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f47.google.com ([209.85.214.47]:40863 "EHLO
-	mail-bk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754978Ab3KMLiG convert rfc822-to-8bit (ORCPT
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:41071 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751527Ab3KRRLw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Nov 2013 06:38:06 -0500
-Received: by mail-bk0-f47.google.com with SMTP id mx10so261610bkb.6
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Nov 2013 03:38:05 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20131113112810.5221.69685.stgit@localhost6.localdomain6>
-References: <20131113112810.5221.69685.stgit@localhost6.localdomain6>
-Date: Wed, 13 Nov 2013 12:38:04 +0100
-Message-ID: <CA+BoTQkLsbwEAX6RomC_ZA-rtL6q1Q871=9n-Mgry=AZgrKs6Q@mail.gmail.com> (sfid-20131113_123810_048270_EFE53F41)
-Subject: Re: [PATCH] ath10k: remove htt rx amsdu clear retry bit hack
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 18 Nov 2013 12:11:52 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
+Subject: [PATCH 05/12 NEXT] rtlwifi: rtl8192c: Add new definitions in the dm_common header
+Date: Mon, 18 Nov 2013 11:11:29 -0600
+Message-Id: <1384794696-20314-6-git-send-email-Larry.Finger@lwfinger.net> (sfid-20131118_181210_529069_89A35688)
+In-Reply-To: <1384794696-20314-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1384794696-20314-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 13 November 2013 12:28, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> With commit 0cfcefef1 ("mac80211: support reporting A-MSDU subframes
-> individually") there's no need to have the hack to clear the retry bit in
-> ath10k_htt_rx_amsdu(), mac80211 can handle this properly now.
->
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath10k/htt_rx.c |   17 -----------------
->  1 file changed, 17 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-> index 90d4f74..76c152b 100644
-> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-> @@ -659,23 +659,6 @@ static void ath10k_htt_rx_amsdu(struct ath10k_htt *htt,
->         memcpy(hdr_buf, hdr, hdr_len);
->         hdr = (struct ieee80211_hdr *)hdr_buf;
->
-> -       /* FIXME: Hopefully this is a temporary measure.
-> -        *
-> -        * Reporting individual A-MSDU subframes means each reported frame
-> -        * shares the same sequence number.
-> -        *
-> -        * mac80211 drops frames it recognizes as duplicates, i.e.
-> -        * retransmission flag is set and sequence number matches sequence
-> -        * number from a previous frame (as per IEEE 802.11-2012: 9.3.2.10
-> -        * "Duplicate detection and recovery")
-> -        *
-> -        * To avoid frames being dropped clear retransmission flag for all
-> -        * received A-MSDUs.
-> -        *
-> -        * Worst case: actual duplicate frames will be reported but this should
-> -        * still be handled gracefully by other OSI/ISO layers. */
-> -       hdr->frame_control &= cpu_to_le16(~IEEE80211_FCTL_RETRY);
-> -
->         first = skb;
->         while (skb) {
->                 void *decap_hdr;
->
+Changes in the gain-control mechanism will require some changes in the header.
 
-You're missing RX_FLAG_AMSDU_MORE. All subframes (except the last one)
-from an A-MSDU that are reported separately must have the bit set in
-status->flag. Only then mac80211 can apply retransmission/duplication
-check properly.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org>
+---
+ drivers/net/wireless/rtlwifi/rtl8192c/dm_common.h | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.h b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.h
+index 518e208..4f232a0 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.h
+@@ -91,6 +91,17 @@
+ #define TX_POWER_NEAR_FIELD_THRESH_LVL2		74
+ #define TX_POWER_NEAR_FIELD_THRESH_LVL1		67
+ 
++#define DYNAMIC_FUNC_DISABLE			0x0
++#define DYNAMIC_FUNC_DIG			BIT(0)
++#define DYNAMIC_FUNC_HP				BIT(1)
++#define DYNAMIC_FUNC_SS				BIT(2) /*Tx Power Tracking*/
++#define DYNAMIC_FUNC_BT				BIT(3)
++#define DYNAMIC_FUNC_ANT_DIV			BIT(4)
++
++#define	RSSI_CCK				0
++#define	RSSI_OFDM				1
++#define	RSSI_DEFAULT				2
++
+ struct swat_t {
+ 	u8 failure_cnt;
+ 	u8 try_flag;
+@@ -167,5 +178,8 @@ void rtl92c_phy_lc_calibrate(struct ieee80211_hw *hw);
+ void rtl92c_phy_iq_calibrate(struct ieee80211_hw *hw, bool recovery);
+ void rtl92c_dm_dynamic_txpower(struct ieee80211_hw *hw);
+ void rtl92c_dm_bt_coexist(struct ieee80211_hw *hw);
++void dm_savepowerindex(struct ieee80211_hw *hw);
++void dm_writepowerindex(struct ieee80211_hw *hw, u8 value);
++void dm_restorepowerindex(struct ieee80211_hw *hw);
+ 
+ #endif
+-- 
+1.8.4
 
-Michał
