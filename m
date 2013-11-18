@@ -1,78 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f47.google.com ([209.85.214.47]:61993 "EHLO
-	mail-bk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754624Ab3KERRT (ORCPT
+Received: from mail-pb0-f48.google.com ([209.85.160.48]:45235 "EHLO
+	mail-pb0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752081Ab3KRT0Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Nov 2013 12:17:19 -0500
-Received: by mail-bk0-f47.google.com with SMTP id d7so2873646bkh.34
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Nov 2013 09:17:18 -0800 (PST)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 03/19] cfg80211: check regulatory request alpha2 early
-Date: Tue,  5 Nov 2013 09:18:01 -0800
-Message-Id: <1383671897-7746-4-git-send-email-mcgrof@do-not-panic.com> (sfid-20131105_181722_193680_316D3C5A)
-In-Reply-To: <1383671897-7746-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1383671897-7746-1-git-send-email-mcgrof@do-not-panic.com>
+	Mon, 18 Nov 2013 14:26:24 -0500
+Date: Tue, 19 Nov 2013 00:56:48 +0530 (IST)
+From: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
+To: David Miller <davem@davemloft.net>
+cc: Govindarajulu Varadarajan <govindarajulu90@gmail.com>,
+	gregkh@linuxfoundation.org, linux-usb@vger.kernel.org,
+	linux-kernel@vger.kernel.org, schwidefsky@de.ibm.com,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, IvDoorn@gmail.com, sbhatewara@vmware.com,
+	samuel@sortiz.org, chas@cmf.nrl.navy.mil, roland@kernel.org,
+	isdn@linux-pingi.de, jcliburn@gmail.com,
+	"Christian Benvenuti (benve)" <benve@cisco.com>,
+	"Sujith Sankar (ssujith)" <ssujith@cisco.com>,
+	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
+	shahed.shaikh@qlogic.com, joe@perches.com, apw@canonical.com
+Subject: Re: [PATCH net-next 02/13] driver: net: remove unnecessary skb NULL
+ check before calling dev_kfree_skb_irq
+In-Reply-To: <alpine.LNX.2.03.1311111537020.2363@cisco.com>
+Message-ID: <alpine.LNX.2.03.1311190055150.10646@gmail.com> (sfid-20131118_202645_273732_9DB2CF91)
+References: <1383400074-30555-1-git-send-email-govindarajulu90@gmail.com> <1383400074-30555-3-git-send-email-govindarajulu90@gmail.com> <20131104.151230.1978898006990867916.davem@davemloft.net> <alpine.LNX.2.03.1311111537020.2363@cisco.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently nl80211 allows userspace to send the kernel
-a bogus regulatory domain with at most 32 rules set
-and it won't reject it until after its allocated
-memory. Let's be smart about it and take advantage
-that the last_request is now available under RCU
-and check if the alpha2 matches an expected request
-and reject any bogus userspace requests prior to
-hitting the memory allocator.
+Hi Dave
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- net/wireless/nl80211.c | 3 +++
- net/wireless/reg.c     | 2 +-
- net/wireless/reg.h     | 1 +
- 3 files changed, 5 insertions(+), 1 deletion(-)
+Did you have a chance to look at this? Let me know how you want me to
+fix this.
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index cc5d106..476d32c 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5053,6 +5053,9 @@ static int nl80211_set_reg(struct sk_buff *skb, struct genl_info *info)
- 			return -EINVAL;
- 	}
- 
-+	if (!reg_is_valid_request(alpha2))
-+		return -EINVAL;
-+
- 	size_of_regd = sizeof(struct ieee80211_regdomain) +
- 		       num_rules * sizeof(struct ieee80211_reg_rule);
- 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 6183c90..ff595d1 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -450,7 +450,7 @@ static int call_crda(const char *alpha2)
- 	return kobject_uevent(&reg_pdev->dev.kobj, KOBJ_CHANGE);
- }
- 
--static bool reg_is_valid_request(const char *alpha2)
-+bool reg_is_valid_request(const char *alpha2)
- {
- 	struct regulatory_request *lr = get_last_request();
- 
-diff --git a/net/wireless/reg.h b/net/wireless/reg.h
-index 9677e3c..b4076ba 100644
---- a/net/wireless/reg.h
-+++ b/net/wireless/reg.h
-@@ -18,6 +18,7 @@
- 
- extern const struct ieee80211_regdomain __rcu *cfg80211_regdomain;
- 
-+bool reg_is_valid_request(const char *alpha2);
- bool is_world_regdom(const char *alpha2);
- bool reg_supported_dfs_region(u8 dfs_region);
- 
--- 
-1.8.4.rc3
+//govind
 
+On Mon, 11 Nov 2013, Govindarajulu Varadarajan wrote:
+
+>
+>
+> On Mon, 4 Nov 2013, David Miller wrote:
+>
+>> From: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
+>> Date: Sat,  2 Nov 2013 19:17:43 +0530
+>> 
+>>> @@ -1030,10 +1030,8 @@ static void ni65_xmit_intr(struct net_device 
+>>> *dev,int csr0)
+>>>  		}
+>>>
+>>>  #ifdef XMT_VIA_SKB
+>>> -		if(p->tmd_skb[p->tmdlast]) {
+>>> -			 dev_kfree_skb_irq(p->tmd_skb[p->tmdlast]);
+>>> -			 p->tmd_skb[p->tmdlast] = NULL;
+>>> -		}
+>>> +		 dev_kfree_skb_irq(p->tmd_skb[p->tmdlast]);
+>>> +		 p->tmd_skb[p->tmdlast] = NULL;
+>>>  #endif
+>> 
+>> I absolutely disagree with this kind of change.
+>> 
+>> There is a non-trivial cost for NULL'ing out that array entry
+>> unconditionally.  It's a dirtied cache line and this is in the
+>> fast path of TX SKB reclaim of this driver.
+>> 
+>> You've made several changes of this kind.
+>> 
+>> And it sort-of shows that the places that do check for NULL,
+>> are getting something in return for that test, namely avoidance
+>> of an unnecessary cpu store in the fast path of the driver.
+>> 
+>
+> True, in case of dev_kfree_skb_irq. If you look at patch 06-12, at many
+> places we do
+>
+> if (s->skb) {
+> 	dev_kfree_skb_any(s->skb);
+> 	s->skb = NULL)
+> }
+>
+> This is in fast path. If the code is not running in hardirq,
+> dev_kfree_skb_any calls dev_kfree_skb. Which again check if skb is NULL.
+> So we are checking if skb is null twice. That is what this patch is
+> trying to fix. (sorry I should have mentioned this in cover letter).
+>
+> I am not sure if you have read my previous mail. I am pasting it below.
+>
+>>> On Sun, 3 Nov 2013, Brandeburg, Jesse wrote: Thanks for this work, I'm a 
+>>> little concerned that there is a
+>>> non-trivial overhead to this patch.
+>>> 
+>>> when doing (for example in the Intel drivers): if (s->skb) {
+>>>      dev_kfree_skb(s->skb);
+>>>      s->skb = NULL; }
+>>> 
+>> 
+>> In current code, dev_kfree_skb is NULL safe. Which means skb is
+>> checked for NULL inside dev_kfree_skb. dev_kfree_skb_any is also NULL safe
+>> when the code is running in non-hardirq.
+>> 
+>> Lets consider two cases
+>> 
+>> 1. skb is not NULL:
+>>      * Without my patch:
+>>           In the code above, we check for skb!=NULL twice. (once
+>>           before calling dev_kfree_skb, once by dev_kfree_skb). And
+>>           then we do assignment.
+>>       * With this patch:
+>>           we check for skb!=NULL once, And then we do assignment.
+>>
+>>       To fix the twice NULL check, we either have to remove the check
+>>       which is inside dev_kfree_skb (1). Or do whats done in this
+>>       patch.
+>>
+>>       (1) is not an option because a lot of kernel code already
+>>       assumes that dev_kfree_skb is NULL safe.
+>> 
+>> 2. skb is NULL:
+>>       * Without this patch:
+>>           One if statement is executed.
+>>       * With this patch:
+>>           One if statement and one assignment is executed.
+>> 
+>> From my observation most of the dev_kfree_skb calls are from
+>> e1000_unmap_and_free_tx_resource, e1000_put_txbuf,
+>> atl1_clean_tx_ring, alx_free_txbuf etc. in clean up functions.
+>> 
+>> Is is quite unlikely thats skb is NULL. So it comes down to one extra
+>> if-branching statement or one extra assignment. I would prefer extra
+>> assignment to branching statement. In my opinion extra assignment is
+>> very little price we pay.
+>> 
+>> //govind
+>
+> Another way to solve the double NULL check is to define a new function
+> something like this
+>
+> dev_kfree_skb_NULL(struct sk_buff **skb)
+> {
+> 	if(*skb) {
+> 		free_skb(*skb);
+> 		*skb=NULL;
+> 	}
+> }
+>
+> and use this if you want to free a skb and make it NULL.
+> Is this approach better?
+>
+> //govind
+>
+>
