@@ -1,83 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:53639 "EHLO
-	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754856Ab3KPAk2 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:38264 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751544Ab3KRTha (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Nov 2013 19:40:28 -0500
-Received: from /spool/local
-	by e31.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-wireless@vger.kernel.org> from <paulmck@linux.vnet.ibm.com>;
-	Fri, 15 Nov 2013 17:40:28 -0700
-From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
-To: linux-kernel@vger.kernel.org
-Cc: mingo@kernel.org, laijs@cn.fujitsu.com, dipankar@in.ibm.com,
-	akpm@linux-foundation.org, mathieu.desnoyers@efficios.com,
-	josh@joshtriplett.org, niv@us.ibm.com, tglx@linutronix.de,
-	peterz@infradead.org, rostedt@goodmis.org, dhowells@redhat.com,
-	edumazet@google.com, darren@dvhart.com, fweisbec@gmail.com,
-	sbw@mit.edu, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH tip/core/rcu 09/14] mac80211: Apply ACCESS_ONCE() to avoid sparse false positive
-Date: Fri, 15 Nov 2013 16:40:12 -0800
-Message-Id: <1384562417-817-9-git-send-email-paulmck@linux.vnet.ibm.com> (sfid-20131116_014458_336498_237A5286)
-In-Reply-To: <1384562417-817-1-git-send-email-paulmck@linux.vnet.ibm.com>
-References: <20131116003946.GA316@linux.vnet.ibm.com>
- <1384562417-817-1-git-send-email-paulmck@linux.vnet.ibm.com>
+	Mon, 18 Nov 2013 14:37:30 -0500
+Message-ID: <1384803431.17916.31.camel@jlt4.sipsolutions.net> (sfid-20131118_203738_625583_351EED47)
+Subject: Re: [PATCH net-next 02/13] driver: net: remove unnecessary skb NULL
+ check before calling dev_kfree_skb_irq
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
+Cc: David Miller <davem@davemloft.net>, gregkh@linuxfoundation.org,
+	linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
+	schwidefsky@de.ibm.com, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	IvDoorn@gmail.com, sbhatewara@vmware.com, samuel@sortiz.org,
+	chas@cmf.nrl.navy.mil, roland@kernel.org, isdn@linux-pingi.de,
+	jcliburn@gmail.com,
+	"Christian Benvenuti (benve)" <benve@cisco.com>,
+	"Sujith Sankar (ssujith)" <ssujith@cisco.com>,
+	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
+	shahed.shaikh@qlogic.com, joe@perches.com, apw@canonical.com
+Date: Mon, 18 Nov 2013 20:37:11 +0100
+In-Reply-To: <alpine.LNX.2.03.1311190055150.10646@gmail.com> (sfid-20131118_202645_273732_9DB2CF91)
+References: <1383400074-30555-1-git-send-email-govindarajulu90@gmail.com>
+	 <1383400074-30555-3-git-send-email-govindarajulu90@gmail.com>
+	 <20131104.151230.1978898006990867916.davem@davemloft.net>
+	 <alpine.LNX.2.03.1311111537020.2363@cisco.com>
+	 <alpine.LNX.2.03.1311190055150.10646@gmail.com>
+	 (sfid-20131118_202645_273732_9DB2CF91)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+Please don't top-post. You're making a lot of obvious mistakes, to the
+likely effect that soon enough people won't even read your email.
 
-The sparse checking for rcu_assign_pointer() was recently upgraded
-to reject non-__kernel address spaces.  This also rejects __rcu,
-which is almost always the right thing to do.  However, the uses in
-sta_info_hash_del() are legitimate: They are assigning a pointer to an
-element from an RCU-protected list, and all elements of this list are
-already visible to caller.
+> Did you have a chance to look at this? Let me know how you want me to
+> fix this.
 
-This commit therefore silences this false positive by laundering the
-pointer using ACCESS_ONCE() as suggested by Eric Dumazet and Josh
-Triplett.
+By not "fixing" anything?
 
-Reported-by: kbuild test robot <fengguang.wu@intel.com>
-Signed-off-by: Paul E. McKenney <paulmck@linux.vnet.ibm.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
----
- net/mac80211/sta_info.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+> >> Is is quite unlikely thats skb is NULL. So it comes down to one extra
+> >> if-branching statement or one extra assignment. I would prefer extra
+> >> assignment to branching statement. In my opinion extra assignment is
+> >> very little price we pay.
+> >> 
+> >> //govind
+> >
+> > Another way to solve the double NULL check is to define a new function
+> > something like this
+> >
+> > dev_kfree_skb_NULL(struct sk_buff **skb)
+> > {
+> >       if(*skb) {
+> >               free_skb(*skb);
+> >               *skb=NULL;
+> >       }
+> > }
+> >
+> > and use this if you want to free a skb and make it NULL.
+> > Is this approach better?
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index aeb967a0aeed..494f03c0831f 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -74,8 +74,8 @@ static int sta_info_hash_del(struct ieee80211_local *local,
- 	if (!s)
- 		return -ENOENT;
- 	if (s == sta) {
--		rcu_assign_pointer(local->sta_hash[STA_HASH(sta->sta.addr)],
--				   s->hnext);
-+		/* Both --rcu and visible, so ACCESS_ONCE() is OK. */
-+		ACCESS_ONCE(local->sta_hash[STA_HASH(sta->sta.addr)]) = s->hnext;
- 		return 0;
- 	}
- 
-@@ -84,7 +84,8 @@ static int sta_info_hash_del(struct ieee80211_local *local,
- 		s = rcu_dereference_protected(s->hnext,
- 					lockdep_is_held(&local->sta_mtx));
- 	if (rcu_access_pointer(s->hnext)) {
--		rcu_assign_pointer(s->hnext, sta->hnext);
-+		/* Both --rcu and visible, so ACCESS_ONCE() is OK. */
-+		ACCESS_ONCE(s->hnext) = sta->hnext;
- 		return 0;
- 	}
- 
--- 
-1.8.1.5
+That's just ugly imho. Why do you want to "clean up" something that
+doesn't need changing?
+
+Anyway, just saying.
+
+johannes
 
