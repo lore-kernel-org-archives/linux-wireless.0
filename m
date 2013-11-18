@@ -1,35 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:35208 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753477Ab3KDOVT (ORCPT
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:63710 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751503Ab3KRRL6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Nov 2013 09:21:19 -0500
-Message-ID: <1383574873.14295.15.camel@jlt4.sipsolutions.net> (sfid-20131104_152122_556103_ADDB84B4)
-Subject: Re: r92su: status and will it be merged anytime soon?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	alexandre.f.demers@gmail.com, linville@tuxdriver.com
-Date: Mon, 04 Nov 2013 15:21:13 +0100
-In-Reply-To: <5277AC85.5050104@gmail.com> (sfid-20131104_151755_644672_48AB42A5)
-References: <5277AC85.5050104@gmail.com>
-	 (sfid-20131104_151755_644672_48AB42A5)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 18 Nov 2013 12:11:58 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
+Subject: [PATCH 11/12 NEXT] rtlwifi:  Add missing code to PWDB statics routine
+Date: Mon, 18 Nov 2013 11:11:35 -0600
+Message-Id: <1384794696-20314-12-git-send-email-Larry.Finger@lwfinger.net> (sfid-20131118_181250_616856_BE63CBF0)
+In-Reply-To: <1384794696-20314-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1384794696-20314-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-11-04 at 15:17 +0100, Xose Vazquez Perez wrote:
-> Christian Lamparter wrote:
-> 
-> > The issue with r92su is: The driver is ready, but it's fundamentally
->                                       ^^^^^^^^
-> > incompatible with the rtlwifi framework and mac80211.
-> 
-> _anything_ is better than a staging driver.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org>
+---
+ drivers/net/wireless/rtlwifi/stats.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-That's still only staging quality though.
-
-johannes
+diff --git a/drivers/net/wireless/rtlwifi/stats.c b/drivers/net/wireless/rtlwifi/stats.c
+index 8ed3174..4f083fc 100644
+--- a/drivers/net/wireless/rtlwifi/stats.c
++++ b/drivers/net/wireless/rtlwifi/stats.c
+@@ -176,6 +176,7 @@ static void rtl_process_pwdb(struct ieee80211_hw *hw, struct rtl_stats *pstatus)
+ 	struct rtl_sta_info *drv_priv = NULL;
+ 	struct ieee80211_sta *sta = NULL;
+ 	long undec_sm_pwdb;
++	long undec_sm_cck;
+ 
+ 	rcu_read_lock();
+ 	if (rtlpriv->mac80211.opmode != NL80211_IFTYPE_STATION)
+@@ -185,12 +186,16 @@ static void rtl_process_pwdb(struct ieee80211_hw *hw, struct rtl_stats *pstatus)
+ 	if (sta) {
+ 		drv_priv = (struct rtl_sta_info *) sta->drv_priv;
+ 		undec_sm_pwdb = drv_priv->rssi_stat.undec_sm_pwdb;
++		undec_sm_cck = drv_priv->rssi_stat.undec_sm_cck;
+ 	} else {
+ 		undec_sm_pwdb = rtlpriv->dm.undec_sm_pwdb;
++		undec_sm_cck = rtlpriv->dm.undec_sm_cck;
+ 	}
+ 
+ 	if (undec_sm_pwdb < 0)
+ 		undec_sm_pwdb = pstatus->rx_pwdb_all;
++	if (undec_sm_cck < 0)
++		undec_sm_cck = pstatus->rx_pwdb_all;
+ 	if (pstatus->rx_pwdb_all > (u32) undec_sm_pwdb) {
+ 		undec_sm_pwdb = (((undec_sm_pwdb) *
+ 		      (RX_SMOOTH_FACTOR - 1)) +
+@@ -200,6 +205,15 @@ static void rtl_process_pwdb(struct ieee80211_hw *hw, struct rtl_stats *pstatus)
+ 		undec_sm_pwdb = (((undec_sm_pwdb) * (RX_SMOOTH_FACTOR - 1)) +
+ 		     (pstatus->rx_pwdb_all)) / (RX_SMOOTH_FACTOR);
+ 	}
++	if (pstatus->rx_pwdb_all > (u32) undec_sm_cck) {
++		undec_sm_cck = (((undec_sm_pwdb) *
++		      (RX_SMOOTH_FACTOR - 1)) +
++		     (pstatus->rx_pwdb_all)) / (RX_SMOOTH_FACTOR);
++		undec_sm_cck = undec_sm_cck + 1;
++	} else {
++		undec_sm_pwdb = (((undec_sm_cck) * (RX_SMOOTH_FACTOR - 1)) +
++		     (pstatus->rx_pwdb_all)) / (RX_SMOOTH_FACTOR);
++	}
+ 
+ 	if (sta) {
+ 		drv_priv->rssi_stat.undec_sm_pwdb = undec_sm_pwdb;
+-- 
+1.8.4
 
