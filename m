@@ -1,58 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:46872 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752060Ab3KTPuF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Nov 2013 10:50:05 -0500
-Message-ID: <528CDA23.9090303@openwrt.org> (sfid-20131120_165011_160009_B1107D6E)
-Date: Wed, 20 Nov 2013 16:49:55 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Karl Beldan <karl.beldan@gmail.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: use capped prob when computing throughputs
-References: <1384908668-27869-1-git-send-email-karl.beldan@gmail.com> <528C6590.1000803@openwrt.org> <20131120135628.GA9335@magnum.frso.rivierawaves.com> <528CC172.1040402@openwrt.org> <20131120145035.GB9335@magnum.frso.rivierawaves.com>
-In-Reply-To: <20131120145035.GB9335@magnum.frso.rivierawaves.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:61959 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751613Ab3KRRL5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Nov 2013 12:11:57 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
+Subject: [PATCH 09/12 NEXT] rtlwifi: rtl8192cu: Update the power index registers
+Date: Mon, 18 Nov 2013 11:11:33 -0600
+Message-Id: <1384794696-20314-10-git-send-email-Larry.Finger@lwfinger.net> (sfid-20131118_181305_350407_1DA57814)
+In-Reply-To: <1384794696-20314-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1384794696-20314-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-11-20 15:50, Karl Beldan wrote:
-> On Wed, Nov 20, 2013 at 03:04:34PM +0100, Felix Fietkau wrote:
->> On 2013-11-20 14:56, Karl Beldan wrote:
->> > On Wed, Nov 20, 2013 at 08:32:32AM +0100, Felix Fietkau wrote:
->> >> On 2013-11-20 01:51, Karl Beldan wrote:
->> >> > From: Karl Beldan <karl.beldan@rivierawaves.com>
->> >> > 
->> >> > Commit 3e8b1eb "mac80211/minstrel_ht: improve rate selection stability"
->> >> > introduced a local capped prob in minstrel_ht_calc_tp but omitted to use
->> >> > it to compute the rate throughput.
->> >> > 
->> >> > Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
->> >> > CC: Felix Fietkau <nbd@openwrt.org>
->> >> Nice catch!
->> >> Acked-by: Felix Fietkau <nbd@openwrt.org>
->> >> 
->> > Interestingly enough, consecutive coding rates (5/6, 3/4, 2/3) max ratio
->> > is 9/10, did you do it on purpose ?  (e.g. (9/10) * (5/6) == 3/4,
->> > (9/10) * (3/4) == 2/3 + 11/120).
->> The change has nothing to do with coding rates, it's only about
->> retransmissions caused by collisions under load.
->> 
-> I understand this, my point was that along with this comes the following:
-> let's say my SNR is just not so good to get 5/6 as good as 3/4, and e.g.
-> case1 htMCS7 has  91% 
->       htMCS6 has 100% success 
-> case2 htMCS7 has  80% 
->       htMCS6 has 100% success 
-> capping at 90% will prefer htMCS7 in case1 and htMCS6 in case2 both
-> achieving best real throughput.
-> capping at 80% will prefer htMCS7 in case1 _but_ htMCS7 in case2 the
-> latter being the worst real throughput(90% of 5/6 == 100% of 3/4 > 80%
-> of 5/6).
-Not sure if that's a meaningful comparison at all - you're leaving out
-the per-packet overhead, which is important for the throughput
-calculation as well.
+This patch uses the newly introduced power index register routines.
 
-- Felix
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org>
+---
+ drivers/net/wireless/rtlwifi/rtl8192cu/dm.c | 6 ++++++
+ drivers/net/wireless/rtlwifi/rtl8192cu/dm.h | 3 +++
+ 2 files changed, 9 insertions(+)
 
+Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192cu/dm.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192cu/dm.c
++++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192cu/dm.c
+@@ -101,6 +101,15 @@ void rtl92cu_dm_dynamic_txpower(struct i
+ 			 "PHY_SetTxPowerLevel8192S() Channel = %d\n",
+ 			 rtlphy->current_channel);
+ 		rtl92c_phy_set_txpower_level(hw, rtlphy->current_channel);
++		if (rtlpriv->dm.dynamic_txhighpower_lvl ==
++		    TXHIGHPWRLEVEL_NORMAL)
++			dm_restorepowerindex(hw);
++		else if (rtlpriv->dm.dynamic_txhighpower_lvl ==
++			 TXHIGHPWRLEVEL_LEVEL1)
++			dm_writepowerindex(hw, 0x14);
++		else if (rtlpriv->dm.dynamic_txhighpower_lvl ==
++			 TXHIGHPWRLEVEL_LEVEL2)
++			dm_writepowerindex(hw, 0x10);
+ 	}
+ 
+ 	rtlpriv->dm.last_dtp_lvl = rtlpriv->dm.dynamic_txhighpower_lvl;
+Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192cu/dm.h
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192cu/dm.h
++++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192cu/dm.h
+@@ -30,3 +30,6 @@
+ #include "../rtl8192ce/dm.h"
+ 
+ void rtl92cu_dm_dynamic_txpower(struct ieee80211_hw *hw);
++void dm_savepowerindex(struct ieee80211_hw *hw);
++void dm_writepowerindex(struct ieee80211_hw *hw, u8 value);
++void dm_restorepowerindex(struct ieee80211_hw *hw);
