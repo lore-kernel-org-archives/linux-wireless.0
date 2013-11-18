@@ -1,29 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:34822 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752371Ab3KXShQ (ORCPT
+Received: from mail-ob0-f178.google.com ([209.85.214.178]:45720 "EHLO
+	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751646Ab3KRRL5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Nov 2013 13:37:16 -0500
-Message-ID: <1385318232.23961.2.camel@jlt4.sipsolutions.net> (sfid-20131124_193719_768923_8A57F09D)
-Subject: Re: [PATCH 1/3] mac80211: implement ieee80211_get_vif_by_addr
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	mcgrof@do-not-panic.com, sujith@msujith.org,
-	rmanohar@qca.qualcomm.com
-Date: Sun, 24 Nov 2013 19:37:12 +0100
-In-Reply-To: <1385318128.23961.0.camel@jlt4.sipsolutions.net> (sfid-20131124_193554_130494_AE4D6ACD)
-References: <1385312211-3119-1-git-send-email-lorenzo.bianconi83@gmail.com>
-	 <1385312211-3119-2-git-send-email-lorenzo.bianconi83@gmail.com>
-	 (sfid-20131124_175656_328014_B79295F8) <1385318128.23961.0.camel@jlt4.sipsolutions.net>
-	 (sfid-20131124_193554_130494_AE4D6ACD)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 18 Nov 2013 12:11:57 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
+Subject: [PATCH 10/12 NEXT] rtlwifi: rtl8192cu: Fix some code in RF handling
+Date: Mon, 18 Nov 2013 11:11:34 -0600
+Message-Id: <1384794696-20314-11-git-send-email-Larry.Finger@lwfinger.net> (sfid-20131118_181259_278791_F86C4260)
+In-Reply-To: <1384794696-20314-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1384794696-20314-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PS: I also don't care about ath9k patches, splitting the series would
-have been nice.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org>
+---
+ drivers/net/wireless/rtlwifi/rtl8192cu/rf.c | 27 ++++++++++++++-------------
+ 1 file changed, 14 insertions(+), 13 deletions(-)
 
-johannes
-
+Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192cu/rf.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192cu/rf.c
++++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192cu/rf.c
+@@ -85,17 +85,15 @@ void rtl92cu_phy_rf6052_set_cck_txpower(
+ 	if (mac->act_scanning) {
+ 		tx_agc[RF90_PATH_A] = 0x3f3f3f3f;
+ 		tx_agc[RF90_PATH_B] = 0x3f3f3f3f;
+-		if (turbo_scanoff) {
+-			for (idx1 = RF90_PATH_A; idx1 <= RF90_PATH_B; idx1++) {
+-				tx_agc[idx1] = ppowerlevel[idx1] |
+-				    (ppowerlevel[idx1] << 8) |
+-				    (ppowerlevel[idx1] << 16) |
+-				    (ppowerlevel[idx1] << 24);
+-				if (rtlhal->interface == INTF_USB) {
+-					if (tx_agc[idx1] > 0x20 &&
+-					    rtlefuse->external_pa)
+-						tx_agc[idx1] = 0x20;
+-				}
++		for (idx1 = RF90_PATH_A; idx1 <= RF90_PATH_B; idx1++) {
++			tx_agc[idx1] = ppowerlevel[idx1] |
++			    (ppowerlevel[idx1] << 8) |
++			    (ppowerlevel[idx1] << 16) |
++			    (ppowerlevel[idx1] << 24);
++			if (rtlhal->interface == INTF_USB) {
++				if (tx_agc[idx1] > 0x20 &&
++				    rtlefuse->external_pa)
++					tx_agc[idx1] = 0x20;
+ 			}
+ 		}
+ 	} else {
+@@ -107,7 +105,7 @@ void rtl92cu_phy_rf6052_set_cck_txpower(
+ 			   TXHIGHPWRLEVEL_LEVEL2) {
+ 			tx_agc[RF90_PATH_A] = 0x00000000;
+ 			tx_agc[RF90_PATH_B] = 0x00000000;
+-		} else{
++		} else {
+ 			for (idx1 = RF90_PATH_A; idx1 <= RF90_PATH_B; idx1++) {
+ 				tx_agc[idx1] = ppowerlevel[idx1] |
+ 				    (ppowerlevel[idx1] << 8) |
+@@ -373,7 +371,12 @@ static void _rtl92c_write_ofdm_power_reg
+ 			    regoffset == RTXAGC_B_MCS07_MCS04)
+ 				regoffset = 0xc98;
+ 			for (i = 0; i < 3; i++) {
+-				writeVal = (writeVal > 6) ? (writeVal - 6) : 0;
++				if (i != 2)
++					writeVal = (writeVal > 8) ?
++						   (writeVal - 8) : 0;
++				else
++					writeVal = (writeVal > 6) ?
++						   (writeVal - 6) : 0;
+ 				rtl_write_byte(rtlpriv, (u32)(regoffset + i),
+ 					      (u8)writeVal);
+ 			}
