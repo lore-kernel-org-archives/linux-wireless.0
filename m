@@ -1,35 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:13169 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753514Ab3KOJHI (ORCPT
+Received: from hetz2.bluebottle.com ([176.9.57.138]:55592 "EHLO
+	fe0.bluebottle.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751141Ab3KRLVU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Nov 2013 04:07:08 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: clear tx status before submitting to mac80211
-References: <1384421658-7295-1-git-send-email-michal.kazior@tieto.com>
-Date: Fri, 15 Nov 2013 11:06:55 +0200
-In-Reply-To: <1384421658-7295-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Thu, 14 Nov 2013 10:34:18 +0100")
-Message-ID: <87eh6i3ufk.fsf@kamboji.qca.qualcomm.com> (sfid-20131115_100714_402974_A6D16D09)
+	Mon, 18 Nov 2013 06:21:20 -0500
+Received: from localhost (pD9FDC255.dip0.t-ipconnect.de [217.253.194.85])
+	(using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	(Authenticated sender: bittorf@bluebottle.com)
+	by fe0.bluebottle.com (Postfix) with ESMTPSA id EE07F2501B
+	for <linux-wireless@vger.kernel.org>; Mon, 18 Nov 2013 11:12:56 +0000 (UTC)
+Date: Mon, 18 Nov 2013 12:20:25 +0100
+From: Bastian Bittorf <bittorf@bluebottle.com>
+To: linux-wireless@vger.kernel.org
+Subject: iw: query mcast-rate from commandline
+Message-ID: <20131118112025.GV886@medion.lan> (sfid-20131118_122130_740335_7744E355)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+hi,
 
-> Garbage was reported in ieee80211_tx_info. This
-> led to a WARN_ON in cfg80211_calculate_bitrate().
->
-> This also fixes some random tx bitrate values
-> reported through `iw` command.
->
-> Reported-By: Kalle Valo <kvalo@qca.qualcomm.com>
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+i'am using wireless-testing 2013-11-05 on OpenWrt. it is
+possible since a long time (2011?) to _set_ mcast-rate
+for each VIF, but to to query e.g. via 'iw dev wlan0-1 info'.
 
-Thanks, applied.
+also i didnt found anything related in the documentation.
+has somebody done work for this, or should i try to add it?
 
--- 
-Kalle Valo
+bye, bastian
