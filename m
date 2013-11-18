@@ -1,25 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:36569 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754216Ab3KKPrL (ORCPT
+Received: from mail-ob0-f177.google.com ([209.85.214.177]:41398 "EHLO
+	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751199Ab3KRRLr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Nov 2013 10:47:11 -0500
-Message-ID: <1384184827.14334.34.camel@jlt4.sipsolutions.net> (sfid-20131111_164715_946297_E92F6480)
-Subject: Re: [PATCH] mac80211_hwsim: claim CCK support for HT clients
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Karl Beldan <karl.beldan@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>
-Date: Mon, 11 Nov 2013 16:47:07 +0100
-In-Reply-To: <1384172973-21638-1-git-send-email-karl.beldan@gmail.com> (sfid-20131111_133008_355581_5BB22C05)
-References: <1384172973-21638-1-git-send-email-karl.beldan@gmail.com>
-	 (sfid-20131111_133008_355581_5BB22C05)
-Content-Type: text/plain
-Mime-Version: 1.0
+	Mon, 18 Nov 2013 12:11:47 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 00/12]  Fix various problems with the rtl8192cu driver
+Date: Mon, 18 Nov 2013 11:11:24 -0600
+Message-Id: <1384794696-20314-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20131118_181152_592985_C16E7431)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-applied.
+Driver rtl8192cu has not had very high throughput, and it has not maintained
+a stable connection. This set of patches improve the gain control routines,
+which helps solve both problems.
 
-johannes
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+
+Larry Finger (12):
+  rtlwifi: rtl8192c: Prevent reconnect attempts if not connected
+  rtlwifi: rtl8192cu: Add new firmware
+  rtlwifi: Redo register save locations
+  rtlwifi: Set the link state
+  rtlwifi: rtl8192c: Add new definitions in the dm_common header
+  rtlwifi: Increase the RX queue length for USB drivers
+  rtlwifi: Update beacon statistics for USB driver
+  rtlwifi: rtl8192c: Add routines to save/restore power index registers
+  rtlwifi: rtl8192cu: Update the power index registers
+  rtlwifi: rtl8192cu: Fix some code in RF handling
+  rtlwifi:  Add missing code to PWDB statics routine
+  rtlwifi: rtl8192c: Update dynamic gain calculations
+
+ drivers/net/wireless/rtlwifi/base.c               |   3 +-
+ drivers/net/wireless/rtlwifi/core.c               |  11 +
+ drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c | 318 +++++++++++++++-------
+ drivers/net/wireless/rtlwifi/rtl8192c/dm_common.h |  14 +
+ drivers/net/wireless/rtlwifi/rtl8192cu/dm.c       |   6 +
+ drivers/net/wireless/rtlwifi/rtl8192cu/dm.h       |   3 +
+ drivers/net/wireless/rtlwifi/rtl8192cu/rf.c       |  27 +-
+ drivers/net/wireless/rtlwifi/rtl8192cu/sw.c       |  16 +-
+ drivers/net/wireless/rtlwifi/stats.c              |  14 +
+ drivers/net/wireless/rtlwifi/usb.c                |   4 +-
+ drivers/net/wireless/rtlwifi/wifi.h               |  33 +--
+ 11 files changed, 317 insertions(+), 132 deletions(-)
+
+-- 
+1.8.4
 
