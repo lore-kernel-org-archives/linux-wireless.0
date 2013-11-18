@@ -1,40 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:37821 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755921Ab3KFJz5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Nov 2013 04:55:57 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Marek Puzyniak <marek.puzyniak@tieto.com>
-CC: <ath10k@lists.infradead.org>,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/3] ath10k: add phyerr/dfs handling
-References: <1383048394-15256-1-git-send-email-marek.puzyniak@tieto.com>
-Date: Wed, 6 Nov 2013 11:55:48 +0200
-In-Reply-To: <1383048394-15256-1-git-send-email-marek.puzyniak@tieto.com>
-	(Marek Puzyniak's message of "Tue, 29 Oct 2013 13:06:32 +0100")
-Message-ID: <8738n9ua57.fsf@kamboji.qca.qualcomm.com> (sfid-20131106_105600_517283_30BF2E22)
+Received: from mail.neratec.com ([46.140.151.2]:65222 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751373Ab3KRNgo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Nov 2013 08:36:44 -0500
+Message-ID: <528A17EA.1020505@neratec.com> (sfid-20131118_143648_032809_88F17CE4)
+Date: Mon, 18 Nov 2013 14:36:42 +0100
+From: Matthias May <matthias.may@neratec.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Sujith Manoharan <sujith@msujith.org>
+CC: Sven Eckelmann <sven@open-mesh.com>,
+	OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Simon Wunderlich <simon@open-mesh.com>,
+	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>
+Subject: Re: [ath9k-devel] [OpenWrt-Devel] ath9k: Deaf QCA9558 when setting
+ rxchainmask
+References: <19772470.YgPhAz9cYD@bentobox> <87B8D697-4540-4D0E-975B-125531E6833B@net.t-labs.tu-berlin.de> <CAJ-VmombLQqJsN50nndqCioFEOy=9cp_-34onQnWnpMoX6360w@mail.gmail.com> <2985619.kldLYNDlSX@bentobox> <21120.58000.344447.562435@gargle.gargle.HOWL> <528A0F79.1040807@neratec.com> <21130.4681.687594.315193@gargle.gargle.HOWL>
+In-Reply-To: <21130.4681.687594.315193@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Marek Puzyniak <marek.puzyniak@tieto.com> writes:
-
-> From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+On 18/11/13 14:12, Sujith Manoharan wrote:
+> Matthias May wrote:
+>> I'm in the position where i want to use a 9390 as 2x2 instead of 3x3.
+>> I use backports-3.12-1.
+>> I've set the rx and tx mask in eeprom to 0x5.
+>> Every 30 seconds there is a short disconnect.
+>> Enabling some logging in
+>> echo "0x0000050C" > /sys/kernel/debug/ieee80211/phy0/ath9k/debug
+>> shows that something seems to go wrong during noise calibration. (See
+>> attached log).
+>> What seems odd to me, that for IQ cal it tries to calibrate chain 1
+>> instead of chain 2.
+> What is the value of 0x40d8 register ?
 >
-> Handle phyerr, dfs event, radar_report and fft_report.
-> Add also debugfs dfs_simulate_radar and dfs_stats files.
-> Use ath dfs pattern detector.
+> echo 0x40d8 > /sys/kernel/debug/ieee80211/phy0/ath9k/regidx
+> cat /sys/kernel/debug/ieee80211/phy0/ath9k/regval
 >
-> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+> Sujith
+root@CHD500279:/# echo 0x40d8 > 
+/sys/kernel/debug/ieee80211/phy6/ath9k/regidx
+root@CHD500279:/# cat /sys/kernel/debug/ieee80211/phy6/ath9k/regval
+0x00000004
 
-Forgot to mention that after I applied these three patches I saw two new
-checkpatch warnings:
+On another device showing the same behaviour (but with various other 
+patches and based on compat-wireless-2013-06-27) 0x04000004.
 
-drivers/net/wireless/ath/ath10k/debug.c:684: WARNING: line over 80 characters
-drivers/net/wireless/ath/ath10k/wmi.c:1544: WARNING: line over 80 characters
+Best regards
+Matthias May
 
 -- 
-Kalle Valo
+Matthias May
+Software Engineer
+
+Neratec Solutions AG
+Postfach 83, CH-8608 Bubikon, Switzerland
+Direct: +41 55 253 2074
+Office: +41 55 253 2000
+Fax:    +41 55 253 2070
+email:  matthias.may@neratec.com
+Web:   www.neratec.com
+
