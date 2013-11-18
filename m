@@ -1,57 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:33508 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753146Ab3KNNyb (ORCPT
+Received: from mail-bk0-f51.google.com ([209.85.214.51]:56543 "EHLO
+	mail-bk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751373Ab3KRRDA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Nov 2013 08:54:31 -0500
-Received: by mail-pa0-f45.google.com with SMTP id kx10so1336949pab.18
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Nov 2013 05:54:30 -0800 (PST)
-Date: Thu, 14 Nov 2013 06:05:10 -0800
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: janusz.dziedzic@tieto.com, j@w1.fi, sunitb@qca.qualcomm.com,
-	rsunki@qca.qualcomm.com, linux-wireless@vger.kernel.org
-Subject: Re: [RFC 1/5] cfg80211: pass the wdev on the country IE regulatory
- hint
-Message-ID: <20131114140505.GA19070@garbanzo.do-not-panic.com> (sfid-20131114_145434_112699_5057E336)
-References: <1384366379-25301-1-git-send-email-mcgrof@do-not-panic.com>
- <1384366379-25301-2-git-send-email-mcgrof@do-not-panic.com>
- <1384377637.28806.14.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1384377637.28806.14.camel@jlt4.sipsolutions.net>
+	Mon, 18 Nov 2013 12:03:00 -0500
+Received: by mail-bk0-f51.google.com with SMTP id 6so724061bkj.38
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Nov 2013 09:02:58 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Subject: [PATCH 6/6] cfg80211: Fix setting channel in mgmt_tx parameters
+Date: Mon, 18 Nov 2013 19:02:46 +0200
+Message-Id: <1384794166-10906-6-git-send-email-egrumbach@gmail.com> (sfid-20131118_180306_080194_80AB8E7F)
+In-Reply-To: <1384794166-10906-1-git-send-email-egrumbach@gmail.com>
+References: <1384794166-10906-1-git-send-email-egrumbach@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 13, 2013 at 10:20:37PM +0100, Johannes Berg wrote:
-> On Wed, 2013-11-13 at 19:12 +0100, Luis R. Rodriguez wrote:
-> > This also records the wdev on the last regulatory request,
-> > this can be used later to help quiesce wdev's at appropriate
-> > times by the regulatory core.
-> 
-> > +++ b/net/wireless/reg.c
-> > @@ -1871,12 +1871,14 @@ int regulatory_hint(struct wiphy *wiphy, const char *alpha2)
-> >  }
-> >  EXPORT_SYMBOL(regulatory_hint);
-> >  
-> > -void regulatory_hint_country_ie(struct wiphy *wiphy, enum ieee80211_band band,
-> > +void regulatory_hint_country_ie(struct wireless_dev *wdev,
-> > +				enum ieee80211_band band,
-> >  				const u8 *country_ie, u8 country_ie_len)
-> ...
-> > +       request->wdev = wdev;
-> > 
-> You have absolutely no validation of this pointer - the lifetime of the
-> request object and the wdev aren't necessarily the same.
+From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
 
-Agreed.
+The cfg80211_mgmt_tx_params.chan member wasn't set which
+caused a bug in offchan operations.
 
-> At least you should very carefully document that this pointer is a
-> cookie (if it really is) and must never be dereferenced.
+Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/nl80211.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-OK, I could also validate it upon processing but we'd need to loop
-over the rdev wdev list for the country IE hint, if that is acceptable
-upon procesing it'd be valid and we'd avoid corner case issues.
-Thoughts?
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index c2627ba..73ca4fc 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -7505,6 +7505,7 @@ static int nl80211_tx_mgmt(struct sk_buff *skb, struct genl_info *info)
+ 
+ 	params.buf = nla_data(info->attrs[NL80211_ATTR_FRAME]);
+ 	params.len = nla_len(info->attrs[NL80211_ATTR_FRAME]);
++	params.chan = chandef.chan;
+ 	err = cfg80211_mlme_mgmt_tx(rdev, wdev, &params, &cookie);
+ 	if (err)
+ 		goto free_msg;
+-- 
+1.7.9.5
 
-  Luis
