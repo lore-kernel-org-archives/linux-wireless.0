@@ -1,149 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f45.google.com ([74.125.83.45]:37599 "EHLO
-	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756596Ab3KHHIT (ORCPT
+Received: from mms3.broadcom.com ([216.31.210.19]:3016 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751341Ab3KRWf2 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Nov 2013 02:08:19 -0500
-Received: by mail-ee0-f45.google.com with SMTP id l10so154037eei.4
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Nov 2013 23:08:18 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: fix core init failpath
-Date: Fri,  8 Nov 2013 08:05:18 +0100
-Message-Id: <1383894318-29455-1-git-send-email-michal.kazior@tieto.com> (sfid-20131108_080826_886275_2DCDCFBF)
+	Mon, 18 Nov 2013 17:35:28 -0500
+Message-ID: <528A925C.20602@broadcom.com> (sfid-20131118_233532_761327_D448C2D0)
+Date: Mon, 18 Nov 2013 23:19:08 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Borislav Petkov" <bp@alien8.de>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+cc: lkml <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] brcmsmac: Fix build dep on LEDS_CLASS
+References: <20131117133702.GA30840@pd.tnic>
+ <5289359B.8090506@broadcom.com>
+ <CACna6ryNX1=8zdYe2bjCj7aj3S_O=LnrxdjBcESvJJ63+h729Q@mail.gmail.com>
+ <20131118133250.GH24851@pd.tnic> <20131118204003.GK24851@pd.tnic>
+In-Reply-To: <20131118204003.GK24851@pd.tnic>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-HIF was not stopped properly in
-ath10k_core_start() upon failure. This could cause
-memory leaks of CE completions entries and
-possibly other issues as well.
+On 11/18/2013 09:40 PM, Borislav Petkov wrote:
+> On Mon, Nov 18, 2013 at 02:32:50PM +0100, Borislav Petkov wrote:
+>> On Mon, Nov 18, 2013 at 12:58:58PM +0100, Rafał Miłecki wrote:
+>>> Borislav: I think I didn't get your original patch.
+>>
+>> Forget it, I'll send a better one later.
+>
+> Ok, let's try another one. I've done it with depends but we
+> probably could select LEDS_CLASS in BRCMSMAC_LED as it is required
+> functionality...
 
-Move the HIF start/stop out of
-ath10k_htc_wait_target(). The ctl_resp completion
-is already prepared in ath10k_htc_init.
+what about:
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/core.c | 16 +++++++++++++---
- drivers/net/wireless/ath/ath10k/htc.c  | 26 +++++---------------------
- 2 files changed, 18 insertions(+), 24 deletions(-)
+config BRCMSMAC
+         tristate "Broadcom IEEE802.11n PCIe SoftMAC WLAN driver"
+         depends on MAC80211
+         depends on BCMA_POSSIBLE
++	select LEDS_CLASS if BCMA_DRIVER_GPIO
+	select BCMA
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 2a360ca..1d3040e 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -787,14 +787,22 @@ int ath10k_core_start(struct ath10k *ar)
- 		goto err;
- 	}
- 
--	status = ath10k_htc_wait_target(&ar->htc);
--	if (status)
-+	status = ath10k_hif_start(ar);
-+	if (status) {
-+		ath10k_err("could not start HIF: %d\n", status);
- 		goto err_wmi_detach;
-+	}
-+
-+	status = ath10k_htc_wait_target(&ar->htc);
-+	if (status) {
-+		ath10k_err("failed to connect to HTC: %d\n", status);
-+		goto err_hif_stop;
-+	}
- 
- 	status = ath10k_htt_attach(ar);
- 	if (status) {
- 		ath10k_err("could not attach htt (%d)\n", status);
--		goto err_wmi_detach;
-+		goto err_hif_stop;
- 	}
- 
- 	status = ath10k_init_connect_htc(ar);
-@@ -833,6 +841,8 @@ err_disconnect_htc:
- 	ath10k_htc_stop(&ar->htc);
- err_htt_detach:
- 	ath10k_htt_detach(&ar->htt);
-+err_hif_stop:
-+	ath10k_hif_stop(ar);
- err_wmi_detach:
- 	ath10k_wmi_detach(ar);
- err:
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index 3118d75..d015911 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -534,14 +534,6 @@ int ath10k_htc_wait_target(struct ath10k_htc *htc)
- 	u16 credit_count;
- 	u16 credit_size;
- 
--	INIT_COMPLETION(htc->ctl_resp);
--
--	status = ath10k_hif_start(htc->ar);
--	if (status) {
--		ath10k_err("could not start HIF (%d)\n", status);
--		goto err_start;
--	}
--
- 	status = wait_for_completion_timeout(&htc->ctl_resp,
- 					     ATH10K_HTC_WAIT_TIMEOUT_HZ);
- 	if (status <= 0) {
-@@ -549,15 +541,13 @@ int ath10k_htc_wait_target(struct ath10k_htc *htc)
- 			status = -ETIMEDOUT;
- 
- 		ath10k_err("ctl_resp never came in (%d)\n", status);
--		goto err_target;
-+		return status;
- 	}
- 
- 	if (htc->control_resp_len < sizeof(msg->hdr) + sizeof(msg->ready)) {
- 		ath10k_err("Invalid HTC ready msg len:%d\n",
- 			   htc->control_resp_len);
--
--		status = -ECOMM;
--		goto err_target;
-+		return -ECOMM;
- 	}
- 
- 	msg = (struct ath10k_htc_msg *)htc->control_resp_buffer;
-@@ -567,8 +557,7 @@ int ath10k_htc_wait_target(struct ath10k_htc *htc)
- 
- 	if (message_id != ATH10K_HTC_MSG_READY_ID) {
- 		ath10k_err("Invalid HTC ready msg: 0x%x\n", message_id);
--		status = -ECOMM;
--		goto err_target;
-+		return -ECOMM;
- 	}
- 
- 	htc->total_transmit_credits = credit_count;
-@@ -581,9 +570,8 @@ int ath10k_htc_wait_target(struct ath10k_htc *htc)
- 
- 	if ((htc->total_transmit_credits == 0) ||
- 	    (htc->target_credit_size == 0)) {
--		status = -ECOMM;
- 		ath10k_err("Invalid credit size received\n");
--		goto err_target;
-+		return -ECOMM;
- 	}
- 
- 	ath10k_htc_setup_target_buffer_assignments(htc);
-@@ -600,14 +588,10 @@ int ath10k_htc_wait_target(struct ath10k_htc *htc)
- 	status = ath10k_htc_connect_service(htc, &conn_req, &conn_resp);
- 	if (status) {
- 		ath10k_err("could not connect to htc service (%d)\n", status);
--		goto err_target;
-+		return status;
- 	}
- 
- 	return 0;
--err_target:
--	ath10k_hif_stop(htc->ar);
--err_start:
--	return status;
- }
- 
- int ath10k_htc_connect_service(struct ath10k_htc *htc,
--- 
-1.8.4.rc3
+Regards,
+Arend
+
+> ---
+> From: Borislav Petkov <bp@suse.de>
+> Subject: [PATCH -v2] brcmsmac: Fix build dep on LEDS_CLASS
+>
+> When building randconfigs with CONFIG_BCMA_DRIVER_GPIO=y, I get
+>
+> drivers/built-in.o: In function `brcms_led_unregister':
+> (.text+0x351aca): undefined reference to `led_classdev_unregister'
+> drivers/built-in.o: In function `brcms_led_register':
+> (.text+0x351c65): undefined reference to `led_classdev_register'
+>
+> during final linking stage because brcmsmac/led.c needs LEDS_CLASS for
+> registering/deregistering the led device. Add a promptless Kconfig
+> symbol which takes care of that dependency.
+>
+> Cc: "Rafał Miłecki" <zajec5@gmail.com>
+> Cc: <linux-wireless@vger.kernel.org>
+> Signed-off-by: Borislav Petkov <bp@suse.de>
+> ---
+>   drivers/net/wireless/brcm80211/Kconfig           | 4 ++++
+>   drivers/net/wireless/brcm80211/brcmsmac/Makefile | 2 +-
+>   drivers/net/wireless/brcm80211/brcmsmac/led.h    | 2 +-
+>   3 files changed, 6 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/brcm80211/Kconfig b/drivers/net/wireless/brcm80211/Kconfig
+> index b00a7e92225f..c9434b7c7b9b 100644
+> --- a/drivers/net/wireless/brcm80211/Kconfig
+> +++ b/drivers/net/wireless/brcm80211/Kconfig
+> @@ -16,6 +16,10 @@ config BRCMSMAC
+>   	  be available if you select BCMA_DRIVER_GPIO. If you choose to build a
+>   	  module, the driver will be called brcmsmac.ko.
+>
+> +config BRCMSMAC_LED
+> +	def_bool y
+> +	depends on BRCMSMAC && BCMA_DRIVER_GPIO && LEDS_CLASS
+> +
+>   config BRCMFMAC
+>   	tristate "Broadcom IEEE802.11n embedded FullMAC WLAN driver"
+>   	depends on CFG80211
+> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/Makefile b/drivers/net/wireless/brcm80211/brcmsmac/Makefile
+> index 32464acccd90..9ec2c8b2f26c 100644
+> --- a/drivers/net/wireless/brcm80211/brcmsmac/Makefile
+> +++ b/drivers/net/wireless/brcm80211/brcmsmac/Makefile
+> @@ -43,6 +43,6 @@ brcmsmac-y := \
+>   	brcms_trace_events.o \
+>   	debug.o
+>
+> -brcmsmac-$(CONFIG_BCMA_DRIVER_GPIO) += led.o
+> +brcmsmac-$(CONFIG_BRCMSMAC_LED) += led.o
+>
+>   obj-$(CONFIG_BRCMSMAC)	+= brcmsmac.o
+> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/led.h b/drivers/net/wireless/brcm80211/brcmsmac/led.h
+> index 17a0b1f5dbcf..b914466e687b 100644
+> --- a/drivers/net/wireless/brcm80211/brcmsmac/led.h
+> +++ b/drivers/net/wireless/brcm80211/brcmsmac/led.h
+> @@ -22,7 +22,7 @@ struct brcms_led {
+>   	bool active_low;
+>   };
+>
+> -#ifdef CONFIG_BCMA_DRIVER_GPIO
+> +#ifdef CONFIG_BRCMSMAC_LED
+>   void brcms_led_unregister(struct brcms_info *wl);
+>   int brcms_led_register(struct brcms_info *wl);
+>   #else
+>
+
 
