@@ -1,43 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f177.google.com ([74.125.82.177]:39787 "EHLO
-	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753395Ab3KAN6x (ORCPT
+Received: from mail-bk0-f47.google.com ([209.85.214.47]:56850 "EHLO
+	mail-bk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751236Ab3KRRCz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 09:58:53 -0400
-Received: by mail-we0-f177.google.com with SMTP id x55so3959247wes.22
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:58:52 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 24/65] wireless-regdb: enable VHT80 for IR
-Date: Fri,  1 Nov 2013 14:57:14 +0100
-Message-Id: <1383314275-20960-25-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_150808_698106_FEA9557B)
-In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+	Mon, 18 Nov 2013 12:02:55 -0500
+Received: by mail-bk0-f47.google.com with SMTP id mx12so1004490bkb.34
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Nov 2013 09:02:53 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>
+Subject: [PATCH 2/6] mac80211: fix connection polling
+Date: Mon, 18 Nov 2013 19:02:42 +0200
+Message-Id: <1384794166-10906-2-git-send-email-egrumbach@gmail.com> (sfid-20131118_180259_620134_4B5151A1)
+In-Reply-To: <1384794166-10906-1-git-send-email-egrumbach@gmail.com>
+References: <1384794166-10906-1-git-send-email-egrumbach@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Source is QCA's regulatory team's efforts.
+From: Eliad Peller <eliad@wizery.com>
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Commit 392b9ff ("mac80211: change beacon/connection polling")
+removed the IEEE80211_STA_BEACON_POLL flag.
+
+However, it accidentally removed the setting of
+IEEE80211_STA_CONNECTION_POLL, making the connection polling
+completely useless (the flag is always clear, so the result
+is never being checked). Fix it.
+
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
 ---
- db.txt | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/mac80211/mlme.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/db.txt b/db.txt
-index 0602a80..accba4b 100644
---- a/db.txt
-+++ b/db.txt
-@@ -408,7 +408,7 @@ country IS: DFS-ETSI
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index d7504ab..b3a3ce3 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1910,6 +1910,8 @@ static void ieee80211_mgd_probe_ap(struct ieee80211_sub_if_data *sdata,
+ 	if (ifmgd->flags & IEEE80211_STA_CONNECTION_POLL)
+ 		already = true;
  
- country IR: DFS-JP
- 	(2402 - 2482 @ 40), (20)
--	(5735 - 5835 @ 40), (30)
-+	(5735 - 5835 @ 80), (30)
++	ifmgd->flags |= IEEE80211_STA_CONNECTION_POLL;
++
+ 	mutex_unlock(&sdata->local->mtx);
  
- country IT: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
+ 	if (already)
 -- 
-1.8.4.rc3
+1.7.9.5
 
