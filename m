@@ -1,131 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:56317 "EHLO
+Received: from s72.web-hosting.com ([198.187.29.21]:38843 "EHLO
 	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751697Ab3KNKAi (ORCPT
+	with ESMTP id S1751674Ab3KRO5T convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Nov 2013 05:00:38 -0500
+	Mon, 18 Nov 2013 09:57:19 -0500
 From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath9k: Fix issue with MCS15
-Date: Thu, 14 Nov 2013 15:26:06 +0530
-Message-Id: <1384422966-10467-1-git-send-email-sujith@msujith.org> (sfid-20131114_110040_706068_1388DC07)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Message-ID: <21130.10685.758161.252763@gargle.gargle.HOWL> (sfid-20131118_155722_988904_42BCBBB6)
+Date: Mon, 18 Nov 2013 20:22:45 +0530
+To: Matthias May <matthias.may@neratec.com>
+Cc: Sven Eckelmann <sven@open-mesh.com>,
+	OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Simon Wunderlich <simon@open-mesh.com>,
+	"ath9k-devel\@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>
+Subject: Re: [ath9k-devel] [OpenWrt-Devel] ath9k: Deaf QCA9558 when setting
+ rxchainmask
+In-Reply-To: <528A0F79.1040807@neratec.com>
+References: <19772470.YgPhAz9cYD@bentobox>
+	<87B8D697-4540-4D0E-975B-125531E6833B@net.t-labs.tu-berlin.de>
+	<CAJ-VmombLQqJsN50nndqCioFEOy=9cp_-34onQnWnpMoX6360w@mail.gmail.com>
+	<2985619.kldLYNDlSX@bentobox>
+	<21120.58000.344447.562435@gargle.gargle.HOWL>
+	<528A0F79.1040807@neratec.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Matthias May wrote:
+> I'm in the position where i want to use a 9390 as 2x2 instead of 3x3.
+> I use backports-3.12-1.
+> I've set the rx and tx mask in eeprom to 0x5.
 
-On some boards which are based on AR9300, AR9580 or
-AR9550, MCS15 usage is problematic.
+0x5 is not a valid chainmask on AR9390. The official statement is:
 
-This is because these boards use a "frequency doubler",
-which doubles the refclk to get better EVM, but causes
-spurs. Handle this properly in the driver to recover
-throughput.
+"We intentionally didn’t productize the chain mask of 0x5 on AR9380/AR9580
+because of the complexities of register addressing and getting through the ASIC
+self-calibrations in this configuration."
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_phy.c | 50 +++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/ar9003_phy.h | 11 +++++++
- 2 files changed, 61 insertions(+)
+I think for 2x2 operation, 0x3 is the only option. The problem with Chain-1
+(which was mentioned in http://www.spinics.net/lists/linux-wireless/msg114607.html)
+is probably for a specific board. So maybe you can just set 0x3 using iw and
+see if things are okay.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 11f5358..d39b79f 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -701,6 +701,54 @@ static int ar9550_hw_get_modes_txgain_index(struct ath_hw *ah,
- 	return ret;
- }
- 
-+static void ar9003_doubler_fix(struct ath_hw *ah)
-+{
-+	if (AR_SREV_9300(ah) || AR_SREV_9580(ah) || AR_SREV_9550(ah)) {
-+		REG_RMW(ah, AR_PHY_65NM_CH0_RXTX2,
-+			1 << AR_PHY_65NM_CH0_RXTX2_SYNTHON_MASK_S |
-+			1 << AR_PHY_65NM_CH0_RXTX2_SYNTHOVR_MASK_S, 0);
-+		REG_RMW(ah, AR_PHY_65NM_CH1_RXTX2,
-+			1 << AR_PHY_65NM_CH0_RXTX2_SYNTHON_MASK_S |
-+			1 << AR_PHY_65NM_CH0_RXTX2_SYNTHOVR_MASK_S, 0);
-+		REG_RMW(ah, AR_PHY_65NM_CH2_RXTX2,
-+			1 << AR_PHY_65NM_CH0_RXTX2_SYNTHON_MASK_S |
-+			1 << AR_PHY_65NM_CH0_RXTX2_SYNTHOVR_MASK_S, 0);
-+
-+		udelay(200);
-+
-+		REG_CLR_BIT(ah, AR_PHY_65NM_CH0_RXTX2,
-+			    AR_PHY_65NM_CH0_RXTX2_SYNTHON_MASK);
-+		REG_CLR_BIT(ah, AR_PHY_65NM_CH1_RXTX2,
-+			    AR_PHY_65NM_CH0_RXTX2_SYNTHON_MASK);
-+		REG_CLR_BIT(ah, AR_PHY_65NM_CH2_RXTX2,
-+			    AR_PHY_65NM_CH0_RXTX2_SYNTHON_MASK);
-+
-+		udelay(1);
-+
-+		REG_RMW_FIELD(ah, AR_PHY_65NM_CH0_RXTX2,
-+			      AR_PHY_65NM_CH0_RXTX2_SYNTHON_MASK, 1);
-+		REG_RMW_FIELD(ah, AR_PHY_65NM_CH1_RXTX2,
-+			      AR_PHY_65NM_CH0_RXTX2_SYNTHON_MASK, 1);
-+		REG_RMW_FIELD(ah, AR_PHY_65NM_CH2_RXTX2,
-+			      AR_PHY_65NM_CH0_RXTX2_SYNTHON_MASK, 1);
-+
-+		udelay(200);
-+
-+		REG_RMW_FIELD(ah, AR_PHY_65NM_CH0_SYNTH12,
-+			      AR_PHY_65NM_CH0_SYNTH12_VREFMUL3, 0xf);
-+
-+		REG_RMW(ah, AR_PHY_65NM_CH0_RXTX2, 0,
-+			1 << AR_PHY_65NM_CH0_RXTX2_SYNTHON_MASK_S |
-+			1 << AR_PHY_65NM_CH0_RXTX2_SYNTHOVR_MASK_S);
-+		REG_RMW(ah, AR_PHY_65NM_CH1_RXTX2, 0,
-+			1 << AR_PHY_65NM_CH0_RXTX2_SYNTHON_MASK_S |
-+			1 << AR_PHY_65NM_CH0_RXTX2_SYNTHOVR_MASK_S);
-+		REG_RMW(ah, AR_PHY_65NM_CH2_RXTX2, 0,
-+			1 << AR_PHY_65NM_CH0_RXTX2_SYNTHON_MASK_S |
-+			1 << AR_PHY_65NM_CH0_RXTX2_SYNTHOVR_MASK_S);
-+	}
-+}
-+
- static int ar9003_hw_process_ini(struct ath_hw *ah,
- 				 struct ath9k_channel *chan)
- {
-@@ -726,6 +774,8 @@ static int ar9003_hw_process_ini(struct ath_hw *ah,
- 					   modesIndex);
- 	}
- 
-+	ar9003_doubler_fix(ah);
-+
- 	/*
- 	 * RXGAIN initvals.
- 	 */
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-index fca6243..2af667b 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-@@ -656,13 +656,24 @@
- #define AR_PHY_SYNTH4_LONG_SHIFT_SELECT   ((AR_SREV_9462(ah) || AR_SREV_9565(ah)) ? 0x00000001 : 0x00000002)
- #define AR_PHY_SYNTH4_LONG_SHIFT_SELECT_S ((AR_SREV_9462(ah) || AR_SREV_9565(ah)) ? 0 : 1)
- #define AR_PHY_65NM_CH0_SYNTH7      0x16098
-+#define AR_PHY_65NM_CH0_SYNTH12     0x160ac
- #define AR_PHY_65NM_CH0_BIAS1       0x160c0
- #define AR_PHY_65NM_CH0_BIAS2       0x160c4
- #define AR_PHY_65NM_CH0_BIAS4       0x160cc
-+#define AR_PHY_65NM_CH0_RXTX2       0x16104
-+#define AR_PHY_65NM_CH1_RXTX2       0x16504
-+#define AR_PHY_65NM_CH2_RXTX2       0x16904
- #define AR_PHY_65NM_CH0_RXTX4       0x1610c
- #define AR_PHY_65NM_CH1_RXTX4       0x1650c
- #define AR_PHY_65NM_CH2_RXTX4       0x1690c
- 
-+#define AR_PHY_65NM_CH0_SYNTH12_VREFMUL3           0x00780000
-+#define AR_PHY_65NM_CH0_SYNTH12_VREFMUL3_S         19
-+#define AR_PHY_65NM_CH0_RXTX2_SYNTHON_MASK         0x00000004
-+#define AR_PHY_65NM_CH0_RXTX2_SYNTHON_MASK_S       2
-+#define AR_PHY_65NM_CH0_RXTX2_SYNTHOVR_MASK        0x00000008
-+#define AR_PHY_65NM_CH0_RXTX2_SYNTHOVR_MASK_S      3
-+
- #define AR_CH0_TOP	(AR_SREV_9300(ah) ? 0x16288 : \
- 			 (((AR_SREV_9462(ah) || AR_SREV_9565(ah)) ? 0x1628c : 0x16280)))
- #define AR_CH0_TOP_XPABIASLVL (AR_SREV_9550(ah) ? 0x3c0 : 0x300)
--- 
-1.8.4.2
+> Nov 18 13:39:45 CHD500279 kernel: [16510.563694] ath: phy11: NF calibrated [ctl] [chain 0] is -105
+> Nov 18 13:39:45 CHD500279 kernel: [16510.563698] ath: phy11: NF calibrated [ctl] [chain 2] is -50
+> Nov 18 13:39:45 CHD500279 kernel: [16510.563701] ath: phy11: NF[2] (-50) > MAX (-100), correcting to MAX
+> Nov 18 13:39:45 CHD500279 kernel: [16510.563705] ath: phy11: NF calibrated [ext] [chain 0] is -105
+> Nov 18 13:39:45 CHD500279 kernel: [16510.563708] ath: phy11: NF calibrated [ext] [chain 2] is -50
+> Nov 18 13:39:45 CHD500279 kernel: [16510.563712] ath: phy11: NF[5] (-50) > MAX (-100), correcting to MAX
 
+Again, this is the side effect of using the unsupported mask, 0x5.
+
+But, this is also a bug in ath9k. Right now the CCA registers assigned
+in ar9003_hw_attach_phy_ops() are used in a sequential manner.
+
+But, as per our systems engineers:
+
+AR_PHY_CCA_0 - for 1st active chain, (value always valid).
+AR_PHY_CCA_1 - for 2nd active chain, (value should be ignored except for chain mask 3,5,7).
+AR_PHY_CCA_2 - for 3rd active chain, (value should be ignored except for chain mask 7).
+
+So, if 0x5 is used, AR_PHY_CCA_0 and AR_PHY_CCA_1 should be used.
+But, ath9k currently uses AR_PHY_CCA_0 and AR_PHY_CCA_2 for 0x5
+(in ar9003_hw_do_getnf).
+
+In any case, I don't think this needs to be fixed, since 0x5 is invalid.
+
+Sujith
