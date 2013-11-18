@@ -1,143 +1,374 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f181.google.com ([74.125.82.181]:33030 "EHLO
-	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752219Ab3KXUHE (ORCPT
+Received: from mail-bk0-f41.google.com ([209.85.214.41]:48059 "EHLO
+	mail-bk0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751300Ab3KRRHB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Nov 2013 15:07:04 -0500
-Received: by mail-we0-f181.google.com with SMTP id x55so2948778wes.26
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Nov 2013 12:07:03 -0800 (PST)
+	Mon, 18 Nov 2013 12:07:01 -0500
+Received: by mail-bk0-f41.google.com with SMTP id v15so2664038bkz.14
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Nov 2013 09:06:59 -0800 (PST)
 From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Avri Altman <avri.altman@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 11/29] iwlwifi: mvm: fix ht protection flags
-Date: Sun, 24 Nov 2013 22:06:28 +0200
-Message-Id: <1385323606-3603-11-git-send-email-egrumbach@gmail.com> (sfid-20131124_210712_926222_DCA7DDEA)
-In-Reply-To: <52925BE7.4050406@gmail.com>
-References: <52925BE7.4050406@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Subject: [PATCH RESEND 5/5] cfg80211: Aggregate mgmt_tx parameters and fix channel setting
+Date: Mon, 18 Nov 2013 19:06:49 +0200
+Message-Id: <1384794409-11211-5-git-send-email-egrumbach@gmail.com> (sfid-20131118_180712_080956_3E4E1F74)
+In-Reply-To: <1384794409-11211-1-git-send-email-egrumbach@gmail.com>
+References: <1384794166-10906-1-git-send-email-egrumbach@gmail.com>
+ <1384794409-11211-1-git-send-email-egrumbach@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avri Altman <avri.altman@intel.com>
+From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
 
-The HT protection flags have been a mess for a long time,
-this patch fixes all this.
+Change cfg80211 and mac80211 to use cfg80211_mgmt_tx_params
+struct to aggregate parameters for mgmt_tx functions.
+This makes the functions' signatures less clumsy and allows
+less painful parameters extension.
+The cfg80211_mgmt_tx_params.chan member wasn't set which
+caused a bug in offchan operations, fix that too.
 
-The proper source of information for this is the
-protection in the HT operation mode IE which is
-propagated to bss_conf by mac80211.
-
-1) No need to set the HT protection flags when the link
-   doesn't support HT.
-2) We need to set the TGG protection when ERP is active.
-
-Signed-off-by: Avri Altman <avri.altman@intel.com>
+Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
 Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c |   51 ++++++++++++++++++++++-----
- drivers/net/wireless/iwlwifi/mvm/mac80211.c |   11 ++++++
- 2 files changed, 53 insertions(+), 9 deletions(-)
+ include/net/cfg80211.h  |   28 +++++++++++++++++++++++++---
+ net/mac80211/cfg.c      |   29 +++++++++++++++--------------
+ net/wireless/core.h     |    5 ++---
+ net/wireless/mlme.c     |   12 ++++--------
+ net/wireless/nl80211.c  |   32 ++++++++++++++++----------------
+ net/wireless/rdev-ops.h |   12 ++++--------
+ net/wireless/trace.h    |   15 +++++++--------
+ 7 files changed, 73 insertions(+), 60 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-index f41f9b0..fb93961 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-@@ -488,6 +488,40 @@ static void iwl_mvm_ack_rates(struct iwl_mvm *mvm,
- 	*ofdm_rates = ofdm;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 3eae46c..54bdded 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1945,6 +1945,29 @@ struct cfg80211_update_ft_ies_params {
+ };
+ 
+ /**
++ * struct cfg80211_mgmt_tx_params - mgmt tx parameters
++ *
++ * This structure provides information needed to transmit a mgmt frame
++ *
++ * @chan: channel to use
++ * @offchan: indicates wether off channel operation is required
++ * @wait: duration for ROC
++ * @buf: buffer to transmit
++ * @len: buffer length
++ * @no_cck: don't use cck rates for this frame
++ * @dont_wait_for_ack: tells the low level not to wait for an ack
++ */
++struct cfg80211_mgmt_tx_params {
++	struct ieee80211_channel *chan;
++	bool offchan;
++	unsigned int wait;
++	const u8 *buf;
++	size_t len;
++	bool no_cck;
++	bool dont_wait_for_ack;
++};
++
++/**
+  * struct cfg80211_ops - backend description for wireless configuration
+  *
+  * This struct is registered by fullmac card drivers and/or wireless stacks
+@@ -2342,9 +2365,8 @@ struct cfg80211_ops {
+ 					    u64 cookie);
+ 
+ 	int	(*mgmt_tx)(struct wiphy *wiphy, struct wireless_dev *wdev,
+-			  struct ieee80211_channel *chan, bool offchan,
+-			  unsigned int wait, const u8 *buf, size_t len,
+-			  bool no_cck, bool dont_wait_for_ack, u64 *cookie);
++			   struct cfg80211_mgmt_tx_params *params,
++			   u64 *cookie);
+ 	int	(*mgmt_tx_cancel_wait)(struct wiphy *wiphy,
+ 				       struct wireless_dev *wdev,
+ 				       u64 cookie);
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 95667b0..9442837 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3146,26 +3146,25 @@ static int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
  }
  
-+static void iwl_mvm_mac_ctxt_set_ht_flags(struct iwl_mvm *mvm,
-+					 struct ieee80211_vif *vif,
-+					 struct iwl_mac_ctx_cmd *cmd)
-+{
-+	/* for both sta and ap, ht_operation_mode hold the protection_mode */
-+	u8 protection_mode = vif->bss_conf.ht_operation_mode &
-+				 IEEE80211_HT_OP_MODE_PROTECTION;
-+	/* The fw does not distinguish between ht and fat */
-+	u32 ht_flag = MAC_PROT_FLG_HT_PROT | MAC_PROT_FLG_FAT_PROT;
-+
-+	IWL_DEBUG_RATE(mvm, "protection mode set to %d\n", protection_mode);
-+	/*
-+	 * See section 9.23.3.1 of IEEE 80211-2012.
-+	 * Nongreenfield HT STAs Present is not supported.
-+	 */
-+	switch (protection_mode) {
-+	case IEEE80211_HT_OP_MODE_PROTECTION_NONE:
-+		break;
-+	case IEEE80211_HT_OP_MODE_PROTECTION_NONMEMBER:
-+	case IEEE80211_HT_OP_MODE_PROTECTION_NONHT_MIXED:
-+		cmd->protection_flags |= cpu_to_le32(ht_flag);
-+		break;
-+	case IEEE80211_HT_OP_MODE_PROTECTION_20MHZ:
-+		/* Protect when channel wider than 20MHz */
-+		if (vif->bss_conf.chandef.width > NL80211_CHAN_WIDTH_20)
-+			cmd->protection_flags |= cpu_to_le32(ht_flag);
-+		break;
-+	default:
-+		IWL_ERR(mvm, "Illegal protection mode %d\n",
-+			protection_mode);
-+		break;
-+	}
-+}
-+
- static void iwl_mvm_mac_ctxt_cmd_common(struct iwl_mvm *mvm,
- 					struct ieee80211_vif *vif,
- 					struct iwl_mac_ctx_cmd *cmd,
-@@ -495,6 +529,8 @@ static void iwl_mvm_mac_ctxt_cmd_common(struct iwl_mvm *mvm,
+ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+-			     struct ieee80211_channel *chan, bool offchan,
+-			     unsigned int wait, const u8 *buf, size_t len,
+-			     bool no_cck, bool dont_wait_for_ack, u64 *cookie)
++			     struct cfg80211_mgmt_tx_params *params,
++			     u64 *cookie)
  {
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 	struct ieee80211_chanctx_conf *chanctx;
-+	bool ht_enabled = !!(vif->bss_conf.ht_operation_mode &
-+			     IEEE80211_HT_OP_MODE_PROTECTION);
- 	u8 cck_ack_rates, ofdm_ack_rates;
- 	int i;
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sk_buff *skb;
+ 	struct sta_info *sta;
+-	const struct ieee80211_mgmt *mgmt = (void *)buf;
++	const struct ieee80211_mgmt *mgmt = (void *)params->buf;
+ 	bool need_offchan = false;
+ 	u32 flags;
+ 	int ret;
  
-@@ -573,16 +609,13 @@ static void iwl_mvm_mac_ctxt_cmd_common(struct iwl_mvm *mvm,
- 			cmd->protection_flags |=
- 				cpu_to_le32(MAC_PROT_FLG_SELF_CTS_EN);
+-	if (dont_wait_for_ack)
++	if (params->dont_wait_for_ack)
+ 		flags = IEEE80211_TX_CTL_NO_ACK;
+ 	else
+ 		flags = IEEE80211_TX_INTFL_NL80211_FRAME_TX |
+ 			IEEE80211_TX_CTL_REQ_TX_STATUS;
+ 
+-	if (no_cck)
++	if (params->no_cck)
+ 		flags |= IEEE80211_TX_CTL_NO_CCK_RATE;
+ 
+ 	switch (sdata->vif.type) {
+@@ -3213,7 +3212,7 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 	/* configurations requiring offchan cannot work if no channel has been
+ 	 * specified
+ 	 */
+-	if (need_offchan && !chan)
++	if (need_offchan && !params->chan)
+ 		return -EINVAL;
+ 
+ 	mutex_lock(&local->mtx);
+@@ -3226,8 +3225,10 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+ 
+ 		if (chanctx_conf) {
+-			need_offchan = chan && (chan != chanctx_conf->def.chan);
+-		} else if (!chan) {
++			need_offchan = params->chan &&
++				       (params->chan !=
++					chanctx_conf->def.chan);
++		} else if (!params->chan) {
+ 			ret = -EINVAL;
+ 			rcu_read_unlock();
+ 			goto out_unlock;
+@@ -3237,19 +3238,19 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		rcu_read_unlock();
  	}
--
--	/*
--	 * I think that we should enable these 2 flags regardless the HT PROT
--	 * fields in the HT IE, but I am not sure. Someone knows whom to ask?...
--	 */
--	if (vif->bss_conf.chandef.width != NL80211_CHAN_WIDTH_20_NOHT) {
-+	IWL_DEBUG_RATE(mvm, "use_cts_prot %d, ht_operation_mode %d\n",
-+		       vif->bss_conf.use_cts_prot,
-+		       vif->bss_conf.ht_operation_mode);
-+	if (vif->bss_conf.chandef.width != NL80211_CHAN_WIDTH_20_NOHT)
- 		cmd->qos_flags |= cpu_to_le32(MAC_QOS_FLG_TGN);
--		cmd->protection_flags |= cpu_to_le32(MAC_PROT_FLG_HT_PROT |
--						     MAC_PROT_FLG_FAT_PROT);
--	}
-+	if (ht_enabled)
-+		iwl_mvm_mac_ctxt_set_ht_flags(mvm, vif, cmd);
  
- 	cmd->filter_flags = cpu_to_le32(MAC_FILTER_ACCEPT_GRP);
- }
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 0cc9c1e..f892f58 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -990,6 +990,17 @@ iwl_mvm_bss_info_changed_ap_ibss(struct iwl_mvm *mvm,
- 				 struct ieee80211_bss_conf *bss_conf,
- 				 u32 changes)
+-	if (need_offchan && !offchan) {
++	if (need_offchan && !params->offchan) {
+ 		ret = -EBUSY;
+ 		goto out_unlock;
+ 	}
+ 
+-	skb = dev_alloc_skb(local->hw.extra_tx_headroom + len);
++	skb = dev_alloc_skb(local->hw.extra_tx_headroom + params->len);
+ 	if (!skb) {
+ 		ret = -ENOMEM;
+ 		goto out_unlock;
+ 	}
+ 	skb_reserve(skb, local->hw.extra_tx_headroom);
+ 
+-	memcpy(skb_put(skb, len), buf, len);
++	memcpy(skb_put(skb, params->len), params->buf, params->len);
+ 
+ 	IEEE80211_SKB_CB(skb)->flags = flags;
+ 
+@@ -3269,8 +3270,8 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 			local->hw.offchannel_tx_hw_queue;
+ 
+ 	/* This will handle all kinds of coalescing and immediate TX */
+-	ret = ieee80211_start_roc_work(local, sdata, chan,
+-				       wait, cookie, skb,
++	ret = ieee80211_start_roc_work(local, sdata, params->chan,
++				       params->wait, cookie, skb,
+ 				       IEEE80211_ROC_TYPE_MGMT_TX);
+ 	if (ret)
+ 		kfree_skb(skb);
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index eb0f7a3..bff9869 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -317,9 +317,8 @@ void cfg80211_mlme_unregister_socket(struct wireless_dev *wdev, u32 nlpid);
+ void cfg80211_mlme_purge_registrations(struct wireless_dev *wdev);
+ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
+ 			  struct wireless_dev *wdev,
+-			  struct ieee80211_channel *chan, bool offchan,
+-			  unsigned int wait, const u8 *buf, size_t len,
+-			  bool no_cck, bool dont_wait_for_ack, u64 *cookie);
++			  struct cfg80211_mgmt_tx_params *params,
++			  u64 *cookie);
+ void cfg80211_oper_and_ht_capa(struct ieee80211_ht_cap *ht_capa,
+ 			       const struct ieee80211_ht_cap *ht_capa_mask);
+ void cfg80211_oper_and_vht_capa(struct ieee80211_vht_cap *vht_capa,
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index 6a6b1c8..a9cecd7 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -520,9 +520,7 @@ void cfg80211_mlme_purge_registrations(struct wireless_dev *wdev)
+ 
+ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
+ 			  struct wireless_dev *wdev,
+-			  struct ieee80211_channel *chan, bool offchan,
+-			  unsigned int wait, const u8 *buf, size_t len,
+-			  bool no_cck, bool dont_wait_for_ack, u64 *cookie)
++			  struct cfg80211_mgmt_tx_params *params, u64 *cookie)
  {
-+	enum ieee80211_bss_change ht_change = BSS_CHANGED_ERP_CTS_PROT |
-+					      BSS_CHANGED_HT |
-+					      BSS_CHANGED_BANDWIDTH;
-+	int ret;
-+
-+	if (changes & ht_change) {
-+		ret = iwl_mvm_mac_ctxt_changed(mvm, vif);
-+		if (ret)
-+			IWL_ERR(mvm, "failed to update MAC %pM\n", vif->addr);
-+	}
-+
- 	/* Need to send a new beacon template to the FW */
- 	if (changes & BSS_CHANGED_BEACON) {
- 		if (iwl_mvm_mac_ctxt_beacon_changed(mvm, vif))
+ 	const struct ieee80211_mgmt *mgmt;
+ 	u16 stype;
+@@ -533,10 +531,10 @@ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
+ 	if (!rdev->ops->mgmt_tx)
+ 		return -EOPNOTSUPP;
+ 
+-	if (len < 24 + 1)
++	if (params->len < 24 + 1)
+ 		return -EINVAL;
+ 
+-	mgmt = (const struct ieee80211_mgmt *) buf;
++	mgmt = (const struct ieee80211_mgmt *)params->buf;
+ 
+ 	if (!ieee80211_is_mgmt(mgmt->frame_control))
+ 		return -EINVAL;
+@@ -615,9 +613,7 @@ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
+ 		return -EINVAL;
+ 
+ 	/* Transmit the Action frame as requested by user space */
+-	return rdev_mgmt_tx(rdev, wdev, chan, offchan,
+-			    wait, buf, len, no_cck, dont_wait_for_ack,
+-			    cookie);
++	return rdev_mgmt_tx(rdev, wdev, params, cookie);
+ }
+ 
+ bool cfg80211_rx_mgmt(struct wireless_dev *wdev, int freq, int sig_mbm,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index a7f4e79..73ca4fc 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -7428,10 +7428,10 @@ static int nl80211_tx_mgmt(struct sk_buff *skb, struct genl_info *info)
+ 	void *hdr = NULL;
+ 	u64 cookie;
+ 	struct sk_buff *msg = NULL;
+-	unsigned int wait = 0;
+-	bool offchan, no_cck, dont_wait_for_ack;
+-
+-	dont_wait_for_ack = info->attrs[NL80211_ATTR_DONT_WAIT_FOR_ACK];
++	struct cfg80211_mgmt_tx_params params = {
++		.dont_wait_for_ack =
++			info->attrs[NL80211_ATTR_DONT_WAIT_FOR_ACK],
++	};
+ 
+ 	if (!info->attrs[NL80211_ATTR_FRAME])
+ 		return -EINVAL;
+@@ -7458,24 +7458,24 @@ static int nl80211_tx_mgmt(struct sk_buff *skb, struct genl_info *info)
+ 	if (info->attrs[NL80211_ATTR_DURATION]) {
+ 		if (!(rdev->wiphy.flags & WIPHY_FLAG_OFFCHAN_TX))
+ 			return -EINVAL;
+-		wait = nla_get_u32(info->attrs[NL80211_ATTR_DURATION]);
++		params.wait = nla_get_u32(info->attrs[NL80211_ATTR_DURATION]);
+ 
+ 		/*
+ 		 * We should wait on the channel for at least a minimum amount
+ 		 * of time (10ms) but no longer than the driver supports.
+ 		 */
+-		if (wait < NL80211_MIN_REMAIN_ON_CHANNEL_TIME ||
+-		    wait > rdev->wiphy.max_remain_on_channel_duration)
++		if (params.wait < NL80211_MIN_REMAIN_ON_CHANNEL_TIME ||
++		    params.wait > rdev->wiphy.max_remain_on_channel_duration)
+ 			return -EINVAL;
+ 
+ 	}
+ 
+-	offchan = info->attrs[NL80211_ATTR_OFFCHANNEL_TX_OK];
++	params.offchan = info->attrs[NL80211_ATTR_OFFCHANNEL_TX_OK];
+ 
+-	if (offchan && !(rdev->wiphy.flags & WIPHY_FLAG_OFFCHAN_TX))
++	if (params.offchan && !(rdev->wiphy.flags & WIPHY_FLAG_OFFCHAN_TX))
+ 		return -EINVAL;
+ 
+-	no_cck = nla_get_flag(info->attrs[NL80211_ATTR_TX_NO_CCK_RATE]);
++	params.no_cck = nla_get_flag(info->attrs[NL80211_ATTR_TX_NO_CCK_RATE]);
+ 
+ 	/* get the channel if any has been specified, otherwise pass NULL to
+ 	 * the driver. The latter will use the current one
+@@ -7487,10 +7487,10 @@ static int nl80211_tx_mgmt(struct sk_buff *skb, struct genl_info *info)
+ 			return err;
+ 	}
+ 
+-	if (!chandef.chan && offchan)
++	if (!chandef.chan && params.offchan)
+ 		return -EINVAL;
+ 
+-	if (!dont_wait_for_ack) {
++	if (!params.dont_wait_for_ack) {
+ 		msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
+ 		if (!msg)
+ 			return -ENOMEM;
+@@ -7503,10 +7503,10 @@ static int nl80211_tx_mgmt(struct sk_buff *skb, struct genl_info *info)
+ 		}
+ 	}
+ 
+-	err = cfg80211_mlme_mgmt_tx(rdev, wdev, chandef.chan, offchan, wait,
+-				    nla_data(info->attrs[NL80211_ATTR_FRAME]),
+-				    nla_len(info->attrs[NL80211_ATTR_FRAME]),
+-				    no_cck, dont_wait_for_ack, &cookie);
++	params.buf = nla_data(info->attrs[NL80211_ATTR_FRAME]);
++	params.len = nla_len(info->attrs[NL80211_ATTR_FRAME]);
++	params.chan = chandef.chan;
++	err = cfg80211_mlme_mgmt_tx(rdev, wdev, &params, &cookie);
+ 	if (err)
+ 		goto free_msg;
+ 
+diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
+index 37ce9fd..a6c03ab 100644
+--- a/net/wireless/rdev-ops.h
++++ b/net/wireless/rdev-ops.h
+@@ -624,16 +624,12 @@ rdev_cancel_remain_on_channel(struct cfg80211_registered_device *rdev,
+ 
+ static inline int rdev_mgmt_tx(struct cfg80211_registered_device *rdev,
+ 			       struct wireless_dev *wdev,
+-			       struct ieee80211_channel *chan, bool offchan,
+-			       unsigned int wait, const u8 *buf, size_t len,
+-			       bool no_cck, bool dont_wait_for_ack, u64 *cookie)
++			       struct cfg80211_mgmt_tx_params *params,
++			       u64 *cookie)
+ {
+ 	int ret;
+-	trace_rdev_mgmt_tx(&rdev->wiphy, wdev, chan, offchan,
+-			   wait, no_cck, dont_wait_for_ack);
+-	ret = rdev->ops->mgmt_tx(&rdev->wiphy, wdev, chan, offchan,
+-				  wait, buf, len, no_cck,
+-				  dont_wait_for_ack, cookie);
++	trace_rdev_mgmt_tx(&rdev->wiphy, wdev, params);
++	ret = rdev->ops->mgmt_tx(&rdev->wiphy, wdev, params, cookie);
+ 	trace_rdev_return_int_cookie(&rdev->wiphy, ret, *cookie);
+ 	return ret;
+ }
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index ba5f0d6..f7aa7a7 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -1653,9 +1653,8 @@ TRACE_EVENT(rdev_cancel_remain_on_channel,
+ 
+ TRACE_EVENT(rdev_mgmt_tx,
+ 	TP_PROTO(struct wiphy *wiphy, struct wireless_dev *wdev,
+-		 struct ieee80211_channel *chan, bool offchan,
+-		 unsigned int wait, bool no_cck, bool dont_wait_for_ack),
+-	TP_ARGS(wiphy, wdev, chan, offchan, wait, no_cck, dont_wait_for_ack),
++		 struct cfg80211_mgmt_tx_params *params),
++	TP_ARGS(wiphy, wdev, params),
+ 	TP_STRUCT__entry(
+ 		WIPHY_ENTRY
+ 		WDEV_ENTRY
+@@ -1668,11 +1667,11 @@ TRACE_EVENT(rdev_mgmt_tx,
+ 	TP_fast_assign(
+ 		WIPHY_ASSIGN;
+ 		WDEV_ASSIGN;
+-		CHAN_ASSIGN(chan);
+-		__entry->offchan = offchan;
+-		__entry->wait = wait;
+-		__entry->no_cck = no_cck;
+-		__entry->dont_wait_for_ack = dont_wait_for_ack;
++		CHAN_ASSIGN(params->chan);
++		__entry->offchan = params->offchan;
++		__entry->wait = params->wait;
++		__entry->no_cck = params->no_cck;
++		__entry->dont_wait_for_ack = params->dont_wait_for_ack;
+ 	),
+ 	TP_printk(WIPHY_PR_FMT ", " WDEV_PR_FMT ", " CHAN_PR_FMT ", offchan: %s,"
+ 		  " wait: %u, no cck: %s, dont wait for ack: %s",
 -- 
 1.7.9.5
 
