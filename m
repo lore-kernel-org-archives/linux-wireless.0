@@ -1,91 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:10544 "EHLO mga11.intel.com"
+Received: from nbd.name ([46.4.11.11]:46298 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755156Ab3KEOZe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Nov 2013 09:25:34 -0500
-From: "Coelho, Luciano" <luciano.coelho@intel.com>
-To: Simon Wunderlich <sw@simonwunderlich.de>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
-Subject: Re: [RFC] mac80211: don't transmit beacon with CSA count 0
-Date: Tue, 5 Nov 2013 14:25:31 +0000
-Message-ID: <1383661489.579.39.camel@porter.coelho.fi> (sfid-20131105_152541_962684_7CFA3BB7)
-References: <1383569955-13236-1-git-send-email-luciano.coelho@intel.com>
-	 <201311041531.56693.sw@simonwunderlich.de>
-	 <1383640077.579.14.camel@porter.coelho.fi>
-	 <201311051436.13222.sw@simonwunderlich.de>
-In-Reply-To: <201311051436.13222.sw@simonwunderlich.de>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	id S1751409Ab3KRTOz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Nov 2013 14:14:55 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
+Subject: [PATCH 1/2] ath9k_hw: fix TSF save/restore around chip reset
+Date: Mon, 18 Nov 2013 20:14:43 +0100
+Message-Id: <1384802084-55082-1-git-send-email-nbd@openwrt.org> (sfid-20131118_201502_122613_BFD1CEEE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVHVlLCAyMDEzLTExLTA1IGF0IDE0OjM2ICswMTAwLCBTaW1vbiBXdW5kZXJsaWNoIHdyb3Rl
-Og0KPiA+IE9uIE1vbiwgMjAxMy0xMS0wNCBhdCAxNTozMSArMDEwMCwgU2ltb24gV3VuZGVybGlj
-aCB3cm90ZToNCj4gPiA+ID4gPiBUaGFua3MgZm9yIGNoZWNraW5nIGJhY2sgLSBJJ3ZlIHJlYWQg
-dGhlIHBhcnQgaW4gdGhlIHNwZWMgYWdhaW4gWzFdLA0KPiA+ID4gPiA+IGFuZCBhcHBlYXJlbnRs
-eSB5b3UgYXJlIHJpZ2h0Lg0KPiA+ID4gPiA+IA0KPiA+ID4gPiA+IFdpdGggeW91ciBwcm9wb3Nl
-ZCBjaGFuZ2UsIHNob3VsZG4ndCB3ZSBhbHNvIGNoYW5nZSB0aGUgYmVoYXZpb3VyIGlmDQo+ID4g
-PiA+ID4gdGhlIHVzZXJzcGFjZSByZXF1ZXN0cyBhIGNoYW5uZWwgc3dpdGNoIHdpdGggY291bnQg
-PSAwPyBJIGd1ZXNzIHdlDQo+ID4gPiA+ID4gc2hvdWxkIGltbWVkaWF0ZWx5IGNoYW5nZSB0aGUg
-Y2hhbm5lbCB0aGVuIHdpdGhvdXQgd2FpdGluZyBmb3INCj4gPiA+ID4gPiBiZWFjb25zPyBJIGRv
-bid0IHNlZSB0aGUgcG9pbnQgaW4gY2hhbmdpbmcgdGhlIGJlYWNvbnMgaWYgd2UgZG9uJ3QNCj4g
-PiA+ID4gPiBzZW5kIHRoZW0sIGFmdGVyIGFsbC4NCj4gPiA+ID4gDQo+ID4gPiA+IFlvdSdyZSBy
-aWdodCwgY2hhbmdpbmcgdGhlIGJlYWNvbnMgZG9lc24ndCBtYWtlIHNlbnNlIGluIHRoaXMgY2Fz
-ZS4NCj4gPiA+ID4gSSdsbCBjaGFuZ2UgdGhhdCBhbmQgc2VuZCB2Mi4NCj4gPiA+ID4gDQo+ID4g
-PiA+IEFub3RoZXIgdGhpbmcgaXMgdGhhdCB3ZSBhcmUgbWlzc2luZyB0aGUgYWN0aW9uIGZyYW1l
-cy4gIFRoZSBpZGVhIHdpdGgNCj4gPiA+ID4gdGhlIGNvdW50ID09IDAgaXMgdGhhdCB0aGUgU1RB
-J3Mgc2hvdWxkIHN0YXJ0IGxpc3RlbmluZyBvbiB0aGUgb3RoZXINCj4gPiA+ID4gY2hhbm5lbCBp
-bW1lZGlhdGVseSBhZnRlciByZWNlaXZpbmcgdGhlIGFjdGlvbiBmcmFtZSAoYmVjYXVzZSB0aGUN
-Cj4gPiA+ID4gc3dpdGNoIHdpbGwgaGFwcGVuIGF0IGFueSB0aW1lKS4NCj4gPiA+ID4gDQo+ID4g
-PiA+IElmIHdlIGRvbid0IHNlbmQgdGhlIGFjdGlvbiBmcmFtZSwgcGFzc2luZyBjb250ZXh0ID09
-IDAgZnJvbSB0aGUNCj4gPiA+ID4gdXNlcnNwYWNlIGRvZXNuJ3QgbXVjaCBtYWtlIHNlbnNlLCBi
-ZWNhdXNlIHRoZSBjbGllbnRzIHdvbid0IGtub3cgd2UncmUNCj4gPiA+ID4gc3dpdGNoaW5nLiAg
-V2VsbCwgbWF5YmUgaXQgbWFrZXMgYSBiaXQgb2Ygc2Vuc2UsIGlmIHRoZXJlIGFyZSBubw0KPiA+
-ID4gPiBjbGllbnRzIGNvbm5lY3RlZCwgYnV0IG5ldmVydGhlbGVzcy4NCj4gPiA+IA0KPiA+ID4g
-WWVhaCwgc3dpdGNoaW5nIHdpdGhvdXQgYWN0aW9uZnJhbWUgYW5kIGNvdW50ID09IDAgaXMgcHJl
-dHR5IHVzZWxlc3MuDQo+ID4gDQo+ID4gQWN0dWFsbHksIGlmIHRoZSB1c2Vyc3BhY2UgcmVxdWVz
-dHMgY291bnQgPT0gMSwgd2Ugd29uJ3QgaGF2ZSBhbnkNCj4gPiBiZWFjb25zIGVpdGhlciwgYmVj
-YXVzZSAxIG1lYW5zICJqdXN0IGJlZm9yZSB0aGUgbmV4dCBUQlRUIi4gIFNvIGZvcg0KPiA+IGNv
-dW50ID09IDEgKGNvbWluZyBmcm9tIHRoZSB1c2Vyc3BhY2UpIHdlIHNob3VsZG4ndCBjb25maWd1
-cmUgdGhlDQo+ID4gYmVhY29uLCBzaW5jZSB3ZSB3b24ndCBzZW5kIGl0LiAgV2UgbmVlZCB0aGUg
-YWN0aW9uIGZyYW1lIGZvciB0aGlzIGNhc2UNCj4gPiB0b28uDQo+ID4gDQo+IA0KPiBIbW0sIHJp
-Z2h0LCB3ZSB3aWxsIGRlY3JlbWVudCB0aGUgY291bnRlciBiZWZvcmUgc2VuZGluZyBpdCBvdXQg
-Li4uDQoNCkkgdGhpbmsgdGhpcyB3b24ndCBiZSBhIHByb2JsZW0gYW55bW9yZSB3aGVuIEkgY2hh
-bmdlIHRoZSBjb2RlIHRvIHN3aXRjaA0KY2hhbm5lbCBpbW1lZGlhdGVseSAod2l0aG91dCBzZXR0
-aW5nIHRoZSBiZWFjb25zKSBpbiBjYXNlIG9mIGNvdW50ID09IDANCmFuZCBjb3VudCA9PSAxLg0K
-DQoNCj4gPiA+IEZvciBBUCBtb2RlLCBJIGd1ZXNzIHRoZSByaWdodCBwbGFjZSB0byBpbXBsZW1l
-bnQgdGhlIGFjdGlvbiBmcmFtZXMgd291bGQNCj4gPiA+IGJlIGhvc3RhcD8gVGhpcyB3b3VsZCBh
-dCBsZWFzdCBhbGxvdyBncmVhdCBmbGV4aWJpbGl0eSB3aXRoIENTQSwgRUNTQQ0KPiA+ID4gYW5k
-IGFsbCB0aGUgbmV3IGNoYW5uZWwgc3dpdGNoIElFcyBjb21pbmcgbm93LiBUaGUgYmVhY29ucyBh
-cmUgYWxzbw0KPiA+ID4gZ2VuZXJhdGVkIGluIHVzZXJzcGFjZSwgYWZ0ZXIgYWxsLg0KPiA+IA0K
-PiA+IFdoYXQgbmV3IGNoYW5uZWwgY2hhbm5lbCBzd2l0Y2ggSUVzPw0KPiANCj4gUmlnaHQgbm93
-IHdlIGFsc28gaGF2ZSBleHRlbmRlbmRlZCBjaGFubmVsIHN3aXRjaCBhbm5vdW5jZW1lbnRzIChF
-Q1NBKSwgYW5kIA0KPiBzZWNvbmRhcnkgY2hhbm5lbCBvZmZzZXQsIGFuZCB0aGVyZSBhcmUgbW9y
-ZSB0byBjb21lIHdpdGggODAyLjExYWMgSSB0aGluay4gSSANCj4gaGF2ZSBub3Qgc3R1ZGllZCBp
-dCB5ZXQgKGFuZCBJIGRvbid0IGhhdmUgYWNjZXNzIHRvIDgwMi4xMSBkcmFmdHMpLCBidXQgaGF2
-ZSBhIA0KPiBsb29rIGF0IHRoYXQ6DQo+IA0KPiBodHRwczovL21lbnRvci5pZWVlLm9yZy84MDIu
-MTEvZGNuLzEzLzExLTEzLTAxMDUtMDAtMDBhYy1sYjE5MC1wcm9wb3NlZC0NCj4gcmVzb2x1dGlv
-bi1vbi1jaWQtNzM2Ny1hbmQtNzM2OC5kb2N4JmVpPVRfTjRVdUhXR2NtdDRBVFFqNER3QmcmdXNn
-PUFGUWpDTkU1RS0NCj4gYnBxUkdRTTctUXdHMEw0VGlVM09PTGlnJmJ2bT1idi41NTk4MDI3Nixk
-LmJHRSZjYWQ9cmphDQo+IA0KPiAobm90IG9ubHkgdGhlIC5kb2MgZm9ybWF0IGlzIHVnbHkpDQoN
-ClllcywgeW91J3JlIHJpZ2h0LiAgSW4gMTFhYyB0aGVyZSBhcmUgYSBmZXcgbW9yZSBlbGVtZW50
-cyB0aGF0IHNob3VsZCBnbw0KaW4gdGhlIENTQSBhY3Rpb24gZnJhbWUuICBBbmQgc29tZSB3cmFw
-cGVycyBhbmQgb3RoZXIgdGhpbmdzIHRoYXQgZ28gaW4NCnRoZSBiZWFjb25zIGFuZCBwcm9iZV9y
-ZXNwcyBkdXJpbmcgQ1NBLg0KDQpCdXQgc3RpbGwsIGZvciB0aGUgYWN0aW9uIGZyYW1lcywgdGhl
-c2UgYXJlIHJhdGhlciBzdGF0aWMgYW5kIEkgZG9uJ3QNCnRoaW5rIGl0J3MgcmVhbGx5IGJhZCB0
-byBkbyBpdCBpbiBtYWM4MDIxMSBpdHNlbGYuICBCdXQgSSBkb24ndCBoYXZlIGENCnN0cm9uZyBv
-cGluaW9uIHJlZ2FyZGluZyB0aGlzLi4uDQoNCg0KPiA+IFlvdSdyZSByaWdodCB0aGF0IGl0IG1p
-Z2h0IG1ha2Ugc2Vuc2UgdG8gaW1wbGVtZW50IHRoZSBhY3Rpb24gZnJhbWVzIGluDQo+ID4gaG9z
-dGFwLiAgQnV0IE9UT0gsIHRoZSBhY3Rpb24gZnJhbWUgaXMgcXVpdGUgc2ltcGxlIGFuZCBtYWM4
-MDIxMSBzaG91bGQNCj4gPiBoYXZlIGFsbCB0aGUgaW5mb3JtYXRpb24gbmVlZGVkIHRvIHNlbmQg
-aXQgb3V0Lg0KPiA+IA0KPiA+ID4gQlRXLCBJJ3ZlIGp1c3QgY2hlY2tlZCBhbmQgdGhlIFdpRmkg
-QWxsaWFuY2UgcmVxdWlyZXMgYXQgbGVhc3QgNSBiZWFjb25zDQo+ID4gPiB3aXRoIENTQS1JRXMg
-dG8gcGFzcyB0aGUgODAyLjExaCB0ZXN0LiA6KQ0KPiA+IA0KPiA+IERvIHlvdSBtZWFuIHRoYXQg
-dGhlIHRlc3RzIG9ubHkgY2hlY2sgd2hlbiBjb3VudCBzdGFydHMgYXMgPiA1Pw0KPiA+IA0KPiAN
-Cj4gSXQgY2hlY2tzIGlmIHRoZSBsYXN0IGJlYWNvbiBoYXN0IGEgQ1NBIElFIGluIHRoZSBiZWFj
-b24sIGFuZCBhbHNvIGlmIHRoZXJlIA0KPiBhcmUgNCBiZWFjb25zIGJlZm9yZSB0aGF0IGluY2x1
-ZGluZyBhIENTQSBJRS4gSXQgZG9lcyBub3QgY2hlY2sgZm9yIHRoZSBjb3VudCANCj4gdGhvdWdo
-LCBidXQgdGhhdCdzIGltcGxpY2l0bHkgZ2l2ZW4gLi4uDQoNCk9rYXksIHNvIHdlIGp1c3QgbmVl
-ZCB0byByZW1lbWJlciB0byB1c2UgY291bnQgPj0gNiB3aGVuIHRlc3RpbmcuIDspDQoNCi0tDQpM
-dWNhLg0K
+A cold reset can be triggered because of DMA stop issues, and this leads
+to TSF being cleared on all chipsets. To properly deal with this, always
+save the TSF.
+Additionally, account for the time it takes to do the actual chip reset,
+which can be quite significant. On AR9344 it takes around 4.5 ms.
+
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/hw.c | 16 ++++++++++------
+ 1 file changed, 10 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 54b0415..4046da5 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -17,6 +17,7 @@
+ #include <linux/io.h>
+ #include <linux/slab.h>
+ #include <linux/module.h>
++#include <linux/time.h>
+ #include <asm/unaligned.h>
+ 
+ #include "hw.h"
+@@ -1856,10 +1857,12 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 		   struct ath9k_hw_cal_data *caldata, bool fastcc)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
++	struct timespec ts;
+ 	u32 saveLedState;
+ 	u32 saveDefAntenna;
+ 	u32 macStaId1;
+ 	u64 tsf = 0;
++	s64 usec = 0;
+ 	int r;
+ 	bool start_mci_reset = false;
+ 	bool save_fullsleep = ah->chip_fullsleep;
+@@ -1902,10 +1905,10 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 
+ 	macStaId1 = REG_READ(ah, AR_STA_ID1) & AR_STA_ID1_BASE_RATE_11B;
+ 
+-	/* For chips on which RTC reset is done, save TSF before it gets cleared */
+-	if (AR_SREV_9100(ah) ||
+-	    (AR_SREV_9280(ah) && ah->eep_ops->get_eeprom(ah, EEP_OL_PWRCTRL)))
+-		tsf = ath9k_hw_gettsf64(ah);
++	/* Save TSF before chip reset, a cold reset clears it */
++	tsf = ath9k_hw_gettsf64(ah);
++	getrawmonotonic(&ts);
++	usec = ts.tv_sec * 1000 + ts.tv_nsec / 1000;
+ 
+ 	saveLedState = REG_READ(ah, AR_CFG_LED) &
+ 		(AR_CFG_LED_ASSOC_CTL | AR_CFG_LED_MODE_SEL |
+@@ -1938,8 +1941,9 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	}
+ 
+ 	/* Restore TSF */
+-	if (tsf)
+-		ath9k_hw_settsf64(ah, tsf);
++	getrawmonotonic(&ts);
++	usec = ts.tv_sec * 1000 + ts.tv_nsec / 1000 - usec;
++	ath9k_hw_settsf64(ah, tsf + usec);
+ 
+ 	if (AR_SREV_9280_20_OR_LATER(ah))
+ 		REG_SET_BIT(ah, AR_GPIO_INPUT_EN_VAL, AR_GPIO_JTAG_DISABLE);
+-- 
+1.8.3.4 (Apple Git-47)
+
