@@ -1,26 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm15-vm2.bullet.mail.ne1.yahoo.com ([98.138.91.91]:34180 "EHLO
-	nm15-vm2.bullet.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750705Ab3KVFFP (ORCPT
+Received: from mail-bk0-f43.google.com ([209.85.214.43]:36728 "EHLO
+	mail-bk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751563Ab3KRRG4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Nov 2013 00:05:15 -0500
-References: 
-Message-ID: <1385096714.41414.YahooMailNeo@web122305.mail.ne1.yahoo.com> (sfid-20131122_060536_174648_FE68EAD8)
-Date: Thu, 21 Nov 2013 21:05:14 -0800 (PST)
-From: Anand Moon <moon.linux@yahoo.com>
-Reply-To: Anand Moon <moon.linux@yahoo.com>
-Subject: Ath10k router
-To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 18 Nov 2013 12:06:56 -0500
+Received: by mail-bk0-f43.google.com with SMTP id mz12so503589bkb.30
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Nov 2013 09:06:55 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>
+Subject: [PATCH RESEND 2/5] mac80211: fix connection polling
+Date: Mon, 18 Nov 2013 19:06:46 +0200
+Message-Id: <1384794409-11211-2-git-send-email-egrumbach@gmail.com> (sfid-20131118_180707_931889_1F7211C1)
+In-Reply-To: <1384794409-11211-1-git-send-email-egrumbach@gmail.com>
+References: <1384794166-10906-1-git-send-email-egrumbach@gmail.com>
+ <1384794409-11211-1-git-send-email-egrumbach@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
+From: Eliad Peller <eliad@wizery.com>
 
-I am looking to work on development router with support Ath10k, my guess is that compex.sg provide development routers.
-Are there any other free development router which can be use for development as well as testing.
+Commit 392b9ff ("mac80211: change beacon/connection polling")
+removed the IEEE80211_STA_BEACON_POLL flag.
 
-Please share the details and please guide me.
--Anand Moon
+However, it accidentally removed the setting of
+IEEE80211_STA_CONNECTION_POLL, making the connection polling
+completely useless (the flag is always clear, so the result
+is never being checked). Fix it.
+
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/mlme.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index d7504ab..b3a3ce3 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1910,6 +1910,8 @@ static void ieee80211_mgd_probe_ap(struct ieee80211_sub_if_data *sdata,
+ 	if (ifmgd->flags & IEEE80211_STA_CONNECTION_POLL)
+ 		already = true;
+ 
++	ifmgd->flags |= IEEE80211_STA_CONNECTION_POLL;
++
+ 	mutex_unlock(&sdata->local->mtx);
+ 
+ 	if (already)
+-- 
+1.7.9.5
+
