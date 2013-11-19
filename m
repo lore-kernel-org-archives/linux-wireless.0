@@ -1,305 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:48279 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752538Ab3KHGT4 (ORCPT
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:52138 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750823Ab3KSST6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Nov 2013 01:19:56 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2] ath9k: Use correct PCIE initvals for AR9485
-Date: Fri,  8 Nov 2013 11:45:25 +0530
-Message-Id: <1383891325-10258-1-git-send-email-sujith@msujith.org> (sfid-20131108_072000_111707_DCAC4B7E)
+	Tue, 19 Nov 2013 13:19:58 -0500
+Received: by mail-ie0-f177.google.com with SMTP id tp5so4536656ieb.36
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Nov 2013 10:19:58 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAM9fjH5vXGOsoQaJrU_Ezx9L0iHYYAqD=jMB050-=uwnPMVLMw@mail.gmail.com>
+References: <CAM9fjH52HZ=quNrzTeqkzNuCQTSxMs5DmAJAk+2Xnv+2m2aPZQ@mail.gmail.com>
+	<CAM9fjH5vXGOsoQaJrU_Ezx9L0iHYYAqD=jMB050-=uwnPMVLMw@mail.gmail.com>
+Date: Tue, 19 Nov 2013 10:19:58 -0800
+Message-ID: <CAM9fjH4CzsCMbAyJ8qucUc1+fFFMeSA87JWWPiqD7L6-1Cg7aw@mail.gmail.com> (sfid-20131119_192002_613508_F243FA16)
+Subject: Re: WL1271 + recent compat/backports + calibrator?
+From: Kyle Manna <2bluesc@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Hi all,
 
-Currently, the PLL is turned off for AR9485 when
-switching to a low power state, but AR9485 has an issue
-where the card will become unresponsive if left idle
-for a long time without any traffic. To fix this,
-force the PLL to always be on using a different initval
-array, ar9485_1_1_pll_on_cdr_on_clkreq_disable_L1.
+I succeed in resolving this issue and figured I'd share my findings to
+help others.
 
-This is done for most of the AR9485 based cards
-like HB125, WB225 etc. but certain models require the
-feature to be turned off. Identify such cards and use
-default values for them.
+There are some bugs in the calibrator when used against more recent
+versions of the wl12xx driver.  It appears that loading the wl12xx
+module brought the interface "up" in the past and doesn't anymore
+before setting the PLT power_mode to on.  The result would be some
+error about inability to set power mode. Running a manual calibration
+with properly bringing the interface up followed by setting the PLT
+power_mode fixed this.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_hw.c       | 22 +++---
- drivers/net/wireless/ath/ath9k/ar9485_initvals.h | 42 ++++--------
- drivers/net/wireless/ath/ath9k/ath9k.h           | 21 +++---
- drivers/net/wireless/ath/ath9k/hw.h              |  1 +
- drivers/net/wireless/ath/ath9k/init.c            |  5 ++
- drivers/net/wireless/ath/ath9k/pci.c             | 87 ++++++++++++++++++++++++
- 6 files changed, 129 insertions(+), 49 deletions(-)
+Another issue was with Bluetooth subsystem interrupting calibration
+with the non-obvious "radio status (-36)" calibration failure.  If I
+explicitly disable bluetooth (using the BT_EN GPIO which I've
+implemented via rfkill) calibration succeeds. The check of the radio
+status was added in more recent wl12xx kernels and may have been
+causing un-detected problems in earlier releases.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-index f281bad..33f63dc 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-@@ -187,17 +187,17 @@ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
- 		INIT_INI_ARRAY(&ah->iniCckfirJapan2484,
- 			       ar9485_1_1_baseband_core_txfir_coeff_japan_2484);
- 
--		/* Load PCIE SERDES settings from INI */
--
--		/* Awake Setting */
--
--		INIT_INI_ARRAY(&ah->iniPcieSerdes,
--				ar9485_1_1_pcie_phy_clkreq_disable_L1);
--
--		/* Sleep Setting */
--
--		INIT_INI_ARRAY(&ah->iniPcieSerdesLowPower,
--				ar9485_1_1_pcie_phy_clkreq_disable_L1);
-+		if (ah->config.no_pll_pwrsave) {
-+			INIT_INI_ARRAY(&ah->iniPcieSerdes,
-+				       ar9485_1_1_pcie_phy_clkreq_disable_L1);
-+			INIT_INI_ARRAY(&ah->iniPcieSerdesLowPower,
-+				       ar9485_1_1_pcie_phy_clkreq_disable_L1);
-+		} else {
-+			INIT_INI_ARRAY(&ah->iniPcieSerdes,
-+				       ar9485_1_1_pll_on_cdr_on_clkreq_disable_L1);
-+			INIT_INI_ARRAY(&ah->iniPcieSerdesLowPower,
-+				       ar9485_1_1_pll_on_cdr_on_clkreq_disable_L1);
-+		}
- 	} else if (AR_SREV_9462_21(ah)) {
- 		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_CORE],
- 			       ar9462_2p1_mac_core);
-diff --git a/drivers/net/wireless/ath/ath9k/ar9485_initvals.h b/drivers/net/wireless/ath/ath9k/ar9485_initvals.h
-index 6f899c6..7c18452 100644
---- a/drivers/net/wireless/ath/ath9k/ar9485_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9485_initvals.h
-@@ -32,13 +32,6 @@ static const u32 ar9485_1_1_mac_postamble[][5] = {
- 	{0x00008318, 0x00003e80, 0x00007d00, 0x00006880, 0x00003440},
- };
- 
--static const u32 ar9485_1_1_pcie_phy_pll_on_clkreq_disable_L1[][2] = {
--	/* Addr      allmodes  */
--	{0x00018c00, 0x18012e5e},
--	{0x00018c04, 0x000801d8},
--	{0x00018c08, 0x0000080c},
--};
--
- static const u32 ar9485Common_wo_xlna_rx_gain_1_1[][2] = {
- 	/* Addr      allmodes  */
- 	{0x00009e00, 0x037216a0},
-@@ -1101,20 +1094,6 @@ static const u32 ar9485_common_rx_gain_1_1[][2] = {
- 	{0x0000a1fc, 0x00000296},
- };
- 
--static const u32 ar9485_1_1_pcie_phy_pll_on_clkreq_enable_L1[][2] = {
--	/* Addr      allmodes  */
--	{0x00018c00, 0x18052e5e},
--	{0x00018c04, 0x000801d8},
--	{0x00018c08, 0x0000080c},
--};
--
--static const u32 ar9485_1_1_pcie_phy_clkreq_enable_L1[][2] = {
--	/* Addr      allmodes  */
--	{0x00018c00, 0x18053e5e},
--	{0x00018c04, 0x000801d8},
--	{0x00018c08, 0x0000080c},
--};
--
- static const u32 ar9485_1_1_soc_preamble[][2] = {
- 	/* Addr      allmodes  */
- 	{0x00004014, 0xba280400},
-@@ -1173,13 +1152,6 @@ static const u32 ar9485_1_1_baseband_postamble[][5] = {
- 	{0x0000be18, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
- };
- 
--static const u32 ar9485_1_1_pcie_phy_clkreq_disable_L1[][2] = {
--	/* Addr      allmodes  */
--	{0x00018c00, 0x18013e5e},
--	{0x00018c04, 0x000801d8},
--	{0x00018c08, 0x0000080c},
--};
--
- static const u32 ar9485_1_1_radio_postamble[][2] = {
- 	/* Addr      allmodes  */
- 	{0x0001609c, 0x0b283f31},
-@@ -1358,4 +1330,18 @@ static const u32 ar9485_1_1_baseband_core_txfir_coeff_japan_2484[][2] = {
- 	{0x0000a3a0, 0xca9228ee},
- };
- 
-+static const u32 ar9485_1_1_pcie_phy_clkreq_disable_L1[][2] = {
-+	/* Addr      allmodes  */
-+	{0x00018c00, 0x18013e5e},
-+	{0x00018c04, 0x000801d8},
-+	{0x00018c08, 0x0000080c},
-+};
-+
-+static const u32 ar9485_1_1_pll_on_cdr_on_clkreq_disable_L1[][2] = {
-+	/* Addr      allmodes  */
-+	{0x00018c00, 0x1801265e},
-+	{0x00018c04, 0x000801d8},
-+	{0x00018c08, 0x0000080c},
-+};
-+
- #endif /* INITVALS_9485_H */
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index b351df3..a085ec4 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -660,16 +660,17 @@ void ath_ant_comb_scan(struct ath_softc *sc, struct ath_rx_status *rs);
- /* Main driver core */
- /********************/
- 
--#define ATH9K_PCI_CUS198      0x0001
--#define ATH9K_PCI_CUS230      0x0002
--#define ATH9K_PCI_CUS217      0x0004
--#define ATH9K_PCI_CUS252      0x0008
--#define ATH9K_PCI_WOW         0x0010
--#define ATH9K_PCI_BT_ANT_DIV  0x0020
--#define ATH9K_PCI_D3_L1_WAR   0x0040
--#define ATH9K_PCI_AR9565_1ANT 0x0080
--#define ATH9K_PCI_AR9565_2ANT 0x0100
--#define ATH9K_PCI_KILLER      0x0200
-+#define ATH9K_PCI_CUS198          0x0001
-+#define ATH9K_PCI_CUS230          0x0002
-+#define ATH9K_PCI_CUS217          0x0004
-+#define ATH9K_PCI_CUS252          0x0008
-+#define ATH9K_PCI_WOW             0x0010
-+#define ATH9K_PCI_BT_ANT_DIV      0x0020
-+#define ATH9K_PCI_D3_L1_WAR       0x0040
-+#define ATH9K_PCI_AR9565_1ANT     0x0080
-+#define ATH9K_PCI_AR9565_2ANT     0x0100
-+#define ATH9K_PCI_KILLER          0x0200
-+#define ATH9K_PCI_NO_PLL_PWRSAVE  0x0400
- 
- /*
-  * Default cache line size, in bytes.
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 289e5ce..e508436 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -315,6 +315,7 @@ struct ath9k_ops_config {
- 	u32 ant_ctrl_comm2g_switch_enable;
- 	bool xatten_margin_cfg;
- 	bool alt_mingainidx;
-+	bool no_pll_pwrsave;
- };
- 
- enum ath9k_int {
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 6ca7177..eb46b7d 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -612,6 +612,11 @@ static void ath9k_init_platform(struct ath_softc *sc)
- 		ah->config.pcie_waen = 0x0040473b;
- 		ath_info(common, "Enable WAR for ASPM D3/L1\n");
- 	}
-+
-+	if (sc->driver_data & ATH9K_PCI_NO_PLL_PWRSAVE) {
-+		ah->config.no_pll_pwrsave = true;
-+		ath_info(common, "Disable PLL PowerSave\n");
-+	}
- }
- 
- static void ath9k_eeprom_request_cb(const struct firmware *eeprom_blob,
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index 4a7a456..e9a5857 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -208,6 +208,93 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
- 			 0x3219),
- 	  .driver_data = ATH9K_PCI_BT_ANT_DIV },
- 
-+	/* AR9485 cards with PLL power-save disabled by default. */
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0032,
-+			 PCI_VENDOR_ID_AZWAVE,
-+			 0x2C97),
-+	  .driver_data = ATH9K_PCI_NO_PLL_PWRSAVE },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0032,
-+			 PCI_VENDOR_ID_AZWAVE,
-+			 0x2100),
-+	  .driver_data = ATH9K_PCI_NO_PLL_PWRSAVE },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0032,
-+			 0x1C56, /* ASKEY */
-+			 0x4001),
-+	  .driver_data = ATH9K_PCI_NO_PLL_PWRSAVE },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0032,
-+			 0x11AD, /* LITEON */
-+			 0x6627),
-+	  .driver_data = ATH9K_PCI_NO_PLL_PWRSAVE },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0032,
-+			 0x11AD, /* LITEON */
-+			 0x6628),
-+	  .driver_data = ATH9K_PCI_NO_PLL_PWRSAVE },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0032,
-+			 PCI_VENDOR_ID_FOXCONN,
-+			 0xE04E),
-+	  .driver_data = ATH9K_PCI_NO_PLL_PWRSAVE },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0032,
-+			 PCI_VENDOR_ID_FOXCONN,
-+			 0xE04F),
-+	  .driver_data = ATH9K_PCI_NO_PLL_PWRSAVE },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0032,
-+			 0x144F, /* ASKEY */
-+			 0x7197),
-+	  .driver_data = ATH9K_PCI_NO_PLL_PWRSAVE },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0032,
-+			 0x1B9A, /* XAVI */
-+			 0x2000),
-+	  .driver_data = ATH9K_PCI_NO_PLL_PWRSAVE },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0032,
-+			 0x1B9A, /* XAVI */
-+			 0x2001),
-+	  .driver_data = ATH9K_PCI_NO_PLL_PWRSAVE },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0032,
-+			 PCI_VENDOR_ID_AZWAVE,
-+			 0x1186),
-+	  .driver_data = ATH9K_PCI_NO_PLL_PWRSAVE },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0032,
-+			 PCI_VENDOR_ID_AZWAVE,
-+			 0x1F86),
-+	  .driver_data = ATH9K_PCI_NO_PLL_PWRSAVE },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0032,
-+			 PCI_VENDOR_ID_AZWAVE,
-+			 0x1195),
-+	  .driver_data = ATH9K_PCI_NO_PLL_PWRSAVE },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0032,
-+			 PCI_VENDOR_ID_AZWAVE,
-+			 0x1F95),
-+	  .driver_data = ATH9K_PCI_NO_PLL_PWRSAVE },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0032,
-+			 0x1B9A, /* XAVI */
-+			 0x1C00),
-+	  .driver_data = ATH9K_PCI_NO_PLL_PWRSAVE },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0032,
-+			 0x1B9A, /* XAVI */
-+			 0x1C01),
-+	  .driver_data = ATH9K_PCI_NO_PLL_PWRSAVE },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0032,
-+			 PCI_VENDOR_ID_ASUSTEK,
-+			 0x850D),
-+	  .driver_data = ATH9K_PCI_NO_PLL_PWRSAVE },
-+
- 	{ PCI_VDEVICE(ATHEROS, 0x0032) }, /* PCI-E  AR9485 */
- 	{ PCI_VDEVICE(ATHEROS, 0x0033) }, /* PCI-E  AR9580 */
- 
--- 
-1.8.4.2
+In a nutshell the wl12xx calibration procedure works fine on an 3.0.x
+kernel + backports-3.12.1 and I'm happy.
 
+Approximate calibration procedure for me:
+
+rmmod wl12xx
+calibrator set ref_nvs /data/TQS_S_2.6_WG7310_WG7311_NLCP.INI
+/etc/firmware/ti-connectivity/wl1271-nvs.bin
+calibrator set nvs_mac /etc/firmware/ti-connectivity/wl1271-nvs.bin
+aa:bb:cc::dd:ee::ff
+insmod /system/lib/modules/wl12xx.ko
+sleep 1
+
+# Bluetooth/hci interfers with calibration with radio_status=-36 or
+radio_status=-45
+# stop hciattach
+echo 1 > /sys/class/rfkill/rfkill0/soft
+ip link set wlan0 down # Needs to be down for power_mode on to work
+calibrator dev wlan0 plt power_mode on
+calibrator dev wlan0 plt tune_channel 0 7
+calibrator dev wlan0 plt nvs_ver 0403
+calibrator dev wlan0 plt tx_bip 1 0 0 0 0 0 0 0
+/factory/firmware/ti-connectivity/wl1271-nvs.bin
+calibrator dev wlan0 plt power_mode off
+
+- Kyle
+
+On Wed, Nov 13, 2013 at 4:38 PM, Kyle Manna <2bluesc@gmail.com> wrote:
+>
+> It's also worth noting that the old OpenLink tag "ol_R5.SP4.01" does
+> succeed with calibration:
+>
+> # ./calibrator plt autocalibrate wlan0
+> /system/lib/modules/wl12xx_sdio.ko
+> /data/TQS_S_2.6_WG7310_WG7311_NLCP.INI
+> /factory/firmware/ti-connectivity/wl1271-nvs.bin 00:00:00:00:00:00
+>
+> Using nvs version 2.1
+> Calibrate /factory/firmware/ti-connectivity/wl1271-nvs.bin
+> Writing calibration data to /factory/firmware/ti-connectivity/wl1271-nvs.bin
+> Writing mac address 00:00:00:00:00:00 to file
+> /factory/firmware/ti-connectivity/wl1271-nvs.bin
+> Calibration done. FEM1 has 1 bands. AutoFEM is off. Resulting nvs is
+> /factory/firmware/ti-connectivity/wl1271-nvs.bin
+>
+>
+>
+> Base tree version: ol_R5.SP4.01-2-g1aa2c8e
+> compat-wireless release: ol_R5.SP6.01
+>
+>
+> - Kyle
+>
+>
+> On Wed, Nov 13, 2013 at 4:08 PM, Kyle Manna <2bluesc@gmail.com> wrote:
+> > Hi all,
+> >
+> > I'm running a WL1271L (on Android + v3.0 kernel) and am trying to find
+> > an up to date compat/backports package (want upstream bug fixes +
+> > bluetooth stack with better BLE support) + the ability to properly
+> > calibrate the chip.
+> >
+> > I'm able to use newer wlcore architecture + a number of patches to
+> > bridge the platform configuration gaps and am getting the code
+> > fromgithub.com/TI-OpenLink/{compat,compat-wireless,wl18xx} on the
+> > ol_r8.a7.02 tag, BLE works, WiFi works (using 6.3.10.0.133 firmware),
+> > however the calibrator (v0.73) reports:
+> >
+> > root@android:/data # ip link set wlan0 down
+> > root@android:/data # ./calibrator dev wlan0 plt power_mode off
+> > 240|root@android:/data # ./calibrator plt calibrate
+> > Unknown arch. Not setting nvs ver 2.1Calibrate ./new-nvs.bin
+> > Fail to calibrate ith radio status (-36)
+> >
+> > I'm able to enter PLT mode without issue, kernel message buffer:
+> >
+> > [ 3276.057434] wlcore: power up
+> > [ 3276.528961] wlcore: firmware booted in PLT mode PLT_ON (PLT 6.3.10.0.133)
+> >
+> > Ideally I'd like to just use the upstream backports drivers from
+> > backports.wiki.kernel.org and avoid the TI repos as they seem rather
+> > turbulent.  I've succeeded in getting v3.12.1
+> > (www.kernel.org/pub/linux/kernel/projects/backports/stable/v3.12/backports-3.12-1.tar.bz2)
+> >  which does approximately the same thing:
+> >
+> > root@android:/data # ./calibrator plt calibrate
+> > Unknown arch. Not setting nvs ver 2.1Calibrate ./new-nvs.bin
+> > Writing calibration data to ./new-nvs.bin
+> > File ./new-nvs.bin not exists
+> > Fail to prepare calibrated NVS file
+> >
+> > root@android:/data # dmesg | tail
+> > [  292.573638] wlcore: power up
+> > [  293.024566] wlcore: firmware booted in PLT mode PLT_ON (PLT 6.3.10.0.133)
+> > [  293.074676] wlcore: testmode cmd: radio status=0
+> > [  293.075103] wlcore: power down
+> >
+> >
+> > This leads me to some questions:
+> >
+> > 1) My understanding is that calibration tunes only the power
+> > amplifiers, does anyone know how big of an effect this has?  Is
+> > figuring out the calibration worth spending time on it?
+> > 2) Has the firmware changed to potentially auto-calibrate as the new
+> > wl18xx/WiLink8 devices do?  I can't find any real changelogs on the
+> > firmware that gets loaded.
+> > 3) Any other advice before I jump in to debugging the netlink +
+> > calibration procedure?
+> >
+> > Thanks,
+> > - Kyle
