@@ -1,60 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f43.google.com ([209.85.219.43]:41185 "EHLO
-	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750833Ab3KARHU (ORCPT
+Received: from mail-oa0-f52.google.com ([209.85.219.52]:39149 "EHLO
+	mail-oa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750823Ab3KSLj0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 13:07:20 -0400
-Received: by mail-oa0-f43.google.com with SMTP id m1so4832316oag.2
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 10:07:20 -0700 (PDT)
-Message-ID: <5273DFC6.8000305@lwfinger.net> (sfid-20131101_180724_222318_26705E54)
-Date: Fri, 01 Nov 2013 12:07:18 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 19 Nov 2013 06:39:26 -0500
+Received: by mail-oa0-f52.google.com with SMTP id h16so2661969oag.39
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Nov 2013 03:39:25 -0800 (PST)
 MIME-Version: 1.0
-To: Ruben De Smet <ruben.de.smet@telenet.be>,
-	b43-dev@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	brcm80211-dev-list@broadcom.com
-Subject: Re: BCM43228
-References: <52737A9C.3020404@telenet.be> <5273C948.9060409@lwfinger.net> <5273D018.7080607@telenet.be>
-In-Reply-To: <5273D018.7080607@telenet.be>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <CABGE7dsTzYESpxfO8WL9JP1BR1QdrTNv5+EszuZm225R2pA=Zw@mail.gmail.com>
+References: <CABGE7dsDtL0ZPAmOTW=G=hMdA-6r=yT0DtQx_-H6Yi6cGa6Udw@mail.gmail.com>
+ <CABGE7dur4pM4vLz_iLx7u-g5ohKhXkwKAOmjJ86PE62mYwGPJw@mail.gmail.com>
+ <CAG6hwVOOvKfZcv-J70EMeHM3pmx-ieeAF2-6UtbrmoN3xC=SLw@mail.gmail.com> <CABGE7dsTzYESpxfO8WL9JP1BR1QdrTNv5+EszuZm225R2pA=Zw@mail.gmail.com>
+From: Gustavo Azambuja <gazambuja+hostapd@gmail.com>
+Date: Tue, 19 Nov 2013 09:39:05 -0200
+Message-ID: <CABGE7ds77Ea9YeGBLCCYYDfTFEm0MqjRA03aF=vpv9Y+=Z47oA@mail.gmail.com> (sfid-20131119_123929_838522_AAB63D82)
+Subject: Re: NL80211_CMD_NEW_STATION result: -105 (No buffer space available)
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/01/2013 11:00 AM, Ruben De Smet wrote:
-> AFAIK, broadcom only offers it's drivers for intel x86 and x64_86; I
-> guess by MIPS, you mean the architecture? (why wouldn't the intel
-> driver work? Pretty unknown on the subject ;) )
->
-> I read the WIP mail about the 227 chip, I could possibly wait for that
-> one to be released and test it out on mine?
->
-> For the record: the issue I'm having is as follows: when connecting
-> via the bluetooth part of the chip to my phone and using DUN to
-> connect to the internet, everything works fine until I shut down the
-> connection. Then my kernel panics. (Another issue of course is the
-> fact that wl is the only closed source thing in my kernel running atm
-> on my notebook...)
->
-> On brcmsmac: is linux-wireless the right mailinglist to post to then?
-> I see that the range of supported devices is more close to my chip
-> than b43 is ;)
-> I added brcm80211-dev-list@broadcom.com to this mail too, which looks
-> like the more appropriate mailinglist to post the issue to.
->
-> R
->
-> PS. snippet of the output of 'lspci -nn':
->
-> 03:00.0 Network controller [0280]: Broadcom Corporation BCM43228
-> 802.11a/b/g/n [14e4:4359]
->
-> Other information on request, will try to answer asap.
+Thank,
+you know where i can find one list of devices (usb dongle) with more
+ram, or without this limit (I need provide Internet at less to 30
+stations)?
 
-The MIPS drivers are part of the codes used in various SoC implementations used 
-in wireless routers. Disassembling an x86 code stream is much harder than for a 
-machine like MIPS where all instructions are the same size.
+Another question, how I can find this limit in others dongles? (some
+command to know this limit)
 
-Larry
-
-
+On Tue, Nov 19, 2013 at 7:25 AM, Gustavo Azambuja
+<gazambuja+hostapd@gmail.com> wrote:
+> Thank,
+> you know where i can find one list of devices (usb dongle) with more ram, or
+> without this limit (I need provide Internet at less to 30 stations)?
+>
+> Gustavo Azambuja
+>
+> El nov 19, 2013 2:12 a.m., "Thomas Pedersen" <thomas@cozybit.com> escribió:
+>
+>> Hi Gustavo,
+>>
+>> On Mon, Nov 18, 2013 at 6:20 PM, Gustavo Azambuja
+>> <gazambuja+hostapd@gmail.com> wrote:
+>> > Hi, I recently installed in my raspberry pi Raspbian with hostapd 1.0, I
+>> > want to make my own Hotspot, but follow all tutorials, I can only get up
+>> > to
+>> > 6 stations connected at the same time.
+>> >
+>> > The next error apper with the #7 client try to connect:
+>> > *NL80211_CMD_NEW_STATION result: -105 (No buffer space available)*
+>> >
+>> > How I can resize this and make more clients can connect to my device?
+>> >
+>> > Im using TL-WN722N dongle.
+>>
+>> That devices contains an AR9271, which uses the ath9k_htc driver. The
+>> number of stations you can maintain is limited by the device RAM.
+>> Luckily the AR9271 firmware is now GPL [1] so you can hack on this
+>> yourself I'm not quite sure what the upper limit is, but we've raised
+>> it to 16 without seeing any obvious breakage.
+>>
+>> Try modifying ATH9K_HTC_MAX_STA in the ath9k_htc driver and
+>> ATH_NODE_MAX [2] in the firmware.
+>>
+>> [1] https://github.com/qca/open-ath9k-htc-firmware
+>> [2]
+>> https://github.com/qca/open-ath9k-htc-firmware/blob/master/target_firmware/wlan/include/wlan_hdr.h#L99
+>>
+>> --
+>> Thomas
