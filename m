@@ -1,78 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:44248 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752336Ab3KNAId (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:37214 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752584Ab3KSUw0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Nov 2013 19:08:33 -0500
-Received: by mail-ie0-f171.google.com with SMTP id at1so1626374iec.2
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Nov 2013 16:08:32 -0800 (PST)
-MIME-Version: 1.0
-Date: Wed, 13 Nov 2013 16:08:32 -0800
-Message-ID: <CAM9fjH52HZ=quNrzTeqkzNuCQTSxMs5DmAJAk+2Xnv+2m2aPZQ@mail.gmail.com> (sfid-20131114_010836_185189_8CC53008)
-Subject: WL1271 + recent compat/backports + calibrator?
-From: Kyle Manna <2bluesc@gmail.com>
+	Tue, 19 Nov 2013 15:52:26 -0500
+Received: by mail-wi0-f174.google.com with SMTP id fb10so2099452wid.7
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Nov 2013 12:52:24 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: Luciano Coelho <luca@coelho.fi>, Eliad Peller <eliad@wizery.com>,
-	Arik Nemtsov <arik@wizery.com>, Eyal Shapira <eyal@wizery.com>,
-	Assaf Azulay <assaf@ti.com>,
-	Yair Shapira <yair.shapira@ti.com>, Ido Reis <idor@ti.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 7/7] iwlwifi: bump required firmware API version for 3160/7260
+Date: Tue, 19 Nov 2013 22:52:06 +0200
+Message-Id: <1384894326-24676-7-git-send-email-egrumbach@gmail.com> (sfid-20131119_215231_754582_416FF363)
+In-Reply-To: <528BCEDB.8010703@gmail.com>
+References: <528BCEDB.8010703@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-I'm running a WL1271L (on Android + v3.0 kernel) and am trying to find
-an up to date compat/backports package (want upstream bug fixes +
-bluetooth stack with better BLE support) + the ability to properly
-calibrate the chip.
+A new firmware is coming out soon with new APIs.
+To make sure that this new firmware won't be loaded on old
+driver that don't support it, it's API version has been
+updated to 8. In order to be able to load it, bump the API
+version to 8.
+API version 7 is still supported and will be for another
+year or so.
 
-I'm able to use newer wlcore architecture + a number of patches to
-bridge the platform configuration gaps and am getting the code
-fromgithub.com/TI-OpenLink/{compat,compat-wireless,wl18xx} on the
-ol_r8.a7.02 tag, BLE works, WiFi works (using 6.3.10.0.133 firmware),
-however the calibrator (v0.73) reports:
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-7000.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-root@android:/data # ip link set wlan0 down
-root@android:/data # ./calibrator dev wlan0 plt power_mode off
-240|root@android:/data # ./calibrator plt calibrate
-Unknown arch. Not setting nvs ver 2.1Calibrate ./new-nvs.bin
-Fail to calibrate ith radio status (-36)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-7000.c b/drivers/net/wireless/iwlwifi/iwl-7000.c
+index 1ed861f..3c34a72 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-7000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-7000.c
+@@ -67,8 +67,8 @@
+ #include "iwl-agn-hw.h"
+ 
+ /* Highest firmware API version supported */
+-#define IWL7260_UCODE_API_MAX	7
+-#define IWL3160_UCODE_API_MAX	7
++#define IWL7260_UCODE_API_MAX	8
++#define IWL3160_UCODE_API_MAX	8
+ 
+ /* Oldest version we won't warn about */
+ #define IWL7260_UCODE_API_OK	7
+-- 
+1.7.9.5
 
-I'm able to enter PLT mode without issue, kernel message buffer:
-
-[ 3276.057434] wlcore: power up
-[ 3276.528961] wlcore: firmware booted in PLT mode PLT_ON (PLT 6.3.10.0.133)
-
-Ideally I'd like to just use the upstream backports drivers from
-backports.wiki.kernel.org and avoid the TI repos as they seem rather
-turbulent.  I've succeeded in getting v3.12.1
-(www.kernel.org/pub/linux/kernel/projects/backports/stable/v3.12/backports-3.12-1.tar.bz2)
- which does approximately the same thing:
-
-root@android:/data # ./calibrator plt calibrate
-Unknown arch. Not setting nvs ver 2.1Calibrate ./new-nvs.bin
-Writing calibration data to ./new-nvs.bin
-File ./new-nvs.bin not exists
-Fail to prepare calibrated NVS file
-
-root@android:/data # dmesg | tail
-[  292.573638] wlcore: power up
-[  293.024566] wlcore: firmware booted in PLT mode PLT_ON (PLT 6.3.10.0.133)
-[  293.074676] wlcore: testmode cmd: radio status=0
-[  293.075103] wlcore: power down
-
-
-This leads me to some questions:
-
-1) My understanding is that calibration tunes only the power
-amplifiers, does anyone know how big of an effect this has?  Is
-figuring out the calibration worth spending time on it?
-2) Has the firmware changed to potentially auto-calibrate as the new
-wl18xx/WiLink8 devices do?  I can't find any real changelogs on the
-firmware that gets loaded.
-3) Any other advice before I jump in to debugging the netlink +
-calibration procedure?
-
-Thanks,
-- Kyle
