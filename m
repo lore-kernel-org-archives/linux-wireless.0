@@ -1,39 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f175.google.com ([74.125.82.175]:42930 "EHLO
-	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753331Ab3KNPBG (ORCPT
+Received: from mail-pd0-f174.google.com ([209.85.192.174]:39835 "EHLO
+	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751914Ab3KSONz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Nov 2013 10:01:06 -0500
-Received: by mail-we0-f175.google.com with SMTP id t60so2069741wes.20
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Nov 2013 07:01:05 -0800 (PST)
-MIME-Version: 1.0
-Date: Thu, 14 Nov 2013 20:31:04 +0530
-Message-ID: <CADNhdGGeOcSS+nv_LCgCN4jpAf2Lk9j5juyw4ZeWAgnqUe=+AA@mail.gmail.com> (sfid-20131114_160110_709939_A87A2FA8)
-Subject: [mac80211] 802.11 data packets Rx and Tx from user space
-From: shankar swaminathan <shankswa@gmail.com>
+	Tue, 19 Nov 2013 09:13:55 -0500
+Received: by mail-pd0-f174.google.com with SMTP id y13so1991433pdi.33
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Nov 2013 06:13:55 -0800 (PST)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
 To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: k.eugene.e@gmail.com, linville@tuxdriver.com,
+	wcn36xx@lists.infradead.org,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] wcn36xx: set self sta entry as HT capable
+Date: Tue, 19 Nov 2013 22:13:33 +0800
+Message-Id: <1384870413-5569-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20131119_151359_451102_C2A1562E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Set the HT capable for self STA entry for bss configuration. Otherwise,
+only legacy rate will be used for transmitting, especially for mesh
+mode.
 
-I had earlier posted a query specific to the rx path of mac80211.
-Here is a more complete set of two queries.
-Kindly help clarifying.
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+---
+ drivers/net/wireless/ath/wcn36xx/smd.c |    9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-I am working on building a PC based Access Point in linux and have the
-following queries:
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index 19f43de..5160b04 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -115,6 +115,13 @@ static void wcn36xx_smd_set_sta_ht_params(struct ieee80211_sta *sta,
+ 	}
+ }
+ 
++static void wcn36xx_smd_set_sta_default_ht_params(
++		struct wcn36xx_hal_config_sta_params *sta_params)
++{
++	wcn36xx_set_default_rates(&sta_params->supported_rates);
++	sta_params->ht_capable = 1;
++}
++
+ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
+ 		struct ieee80211_vif *vif,
+ 		struct ieee80211_sta *sta,
+@@ -171,7 +178,7 @@ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
+ 		memcpy(&sta_params->supported_rates, &priv_sta->supported_rates,
+ 			sizeof(priv_sta->supported_rates));
+ 	} else {
+-		wcn36xx_set_default_rates(&sta_params->supported_rates);
++		wcn36xx_smd_set_sta_default_ht_params(sta_params);
+ 	}
+ }
+ 
+-- 
+1.7.9.5
 
-1. Is there a mechanism for user space to receive 802.11 data packets
-with the 802.11 header intact. I do not want to use a monitor
-interface as I believe a monitor interface cannot be used to connect
-wireless clients. Please clarify.
-
-2. From user space can i transmit a fully constructed 802.11 data
-frame. Will RAW sockets over WiFi work? I have not tried though.
-
-Please help in clarifying as soon as possible.
-
-thanks,
--shankar
