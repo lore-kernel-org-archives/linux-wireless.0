@@ -1,63 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve0-f176.google.com ([209.85.128.176]:49478 "EHLO
-	mail-ve0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750855Ab3KTHkn (ORCPT
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:46913 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750812Ab3KSUwV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Nov 2013 02:40:43 -0500
-Received: by mail-ve0-f176.google.com with SMTP id oz11so1210190veb.7
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Nov 2013 23:40:43 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAEFj986hb2BLvcF2Bz3jRb_BRq3b+jZ5FwWALc0gdjXhLFU8tA@mail.gmail.com>
-References: <1384870413-5569-1-git-send-email-yeohchunyeow@gmail.com>
-	<CAFSJ42ZLhh5ns-aaO8G38TH1em37iHnYKvgF7BjSK-ZhA7jNcA@mail.gmail.com>
-	<CAEFj986hb2BLvcF2Bz3jRb_BRq3b+jZ5FwWALc0gdjXhLFU8tA@mail.gmail.com>
-Date: Wed, 20 Nov 2013 07:40:43 +0000
-Message-ID: <CAFSJ42YQ5aKo+8NH-rvi_pm7dudpqpWYLJ69JpzKg_7agiOeKg@mail.gmail.com> (sfid-20131120_084047_221157_6C698598)
-Subject: Re: [PATCH] wcn36xx: set self sta entry as HT capable
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	wcn36xx <wcn36xx@lists.infradead.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 19 Nov 2013 15:52:21 -0500
+Received: by mail-wg0-f49.google.com with SMTP id x13so8070318wgg.4
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Nov 2013 12:52:20 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Oren Givon <oren.givon@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 3/7] iwlwifi: add new HW - 7265 series
+Date: Tue, 19 Nov 2013 22:52:02 +0200
+Message-Id: <1384894326-24676-3-git-send-email-egrumbach@gmail.com> (sfid-20131119_215226_570713_EA6CBCE8)
+In-Reply-To: <528BCEDB.8010703@gmail.com>
+References: <528BCEDB.8010703@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-How about wcn36xx_smd_set_sta_default_ht_params?
+From: Oren Givon <oren.givon@intel.com>
 
-This function will set all of the following fields to default values:
-sta_params->ht_capable
-sta_params->tx_channel_width_set
-sta_params->lsig_txop_protection
-sta_params->max_ampdu_size
-sta_params->max_ampdu_density
-sta_params->max_amsdu_size
-sta_params->sgi_20Mhz
-sta_params->sgi_40mhz
-sta_params->green_field_capable
-sta_params->delayed_ba_support
-sta_params->dsss_cck_mode_40mhz
+Add new HW IDs and configurations for 7265 series.
 
-And then in  wcn36xx_smd_set_sta_params it is called like this:
-wcn36xx_set_default_rates(&sta_params->supported_rates);
-wcn36xx_smd_set_sta_default_ht_params
+Signed-off-by: Oren Givon <oren.givon@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-7000.c   |   18 ++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-config.h |    2 ++
+ drivers/net/wireless/iwlwifi/pcie/drv.c   |   22 ++++++++++++++++++++++
+ 3 files changed, 42 insertions(+)
 
-How does that sound?
-
-
-On Wed, Nov 20, 2013 at 7:26 AM, Yeoh Chun-Yeow <yeohchunyeow@gmail.com> wrote:
-> Hi, Eugene
->
->> Why would the function that is setting default HT params will also set
->> default rates? There is no connection between HT params and default
->> rates.
-> How about rename the function name to wcn36xx_smd_set_self_sta?
->
-> ----
-> Chun-Yeow
-
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-7000.c b/drivers/net/wireless/iwlwifi/iwl-7000.c
+index 2ea4b11..1ed861f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-7000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-7000.c
+@@ -203,5 +203,23 @@ const struct iwl_cfg iwl7265_2ac_cfg = {
+ 	.nvm_calib_ver = IWL7265_TX_POWER_VERSION,
+ };
+ 
++const struct iwl_cfg iwl7265_2n_cfg = {
++	.name = "Intel(R) Dual Band Wireless N 7265",
++	.fw_name_pre = IWL7265_FW_PRE,
++	IWL_DEVICE_7000,
++	.ht_params = &iwl7000_ht_params,
++	.nvm_ver = IWL7265_NVM_VERSION,
++	.nvm_calib_ver = IWL7265_TX_POWER_VERSION,
++};
++
++const struct iwl_cfg iwl7265_n_cfg = {
++	.name = "Intel(R) Wireless N 7265",
++	.fw_name_pre = IWL7265_FW_PRE,
++	IWL_DEVICE_7000,
++	.ht_params = &iwl7000_ht_params,
++	.nvm_ver = IWL7265_NVM_VERSION,
++	.nvm_calib_ver = IWL7265_TX_POWER_VERSION,
++};
++
+ MODULE_FIRMWARE(IWL7260_MODULE_FIRMWARE(IWL7260_UCODE_API_OK));
+ MODULE_FIRMWARE(IWL3160_MODULE_FIRMWARE(IWL3160_UCODE_API_OK));
+diff --git a/drivers/net/wireless/iwlwifi/iwl-config.h b/drivers/net/wireless/iwlwifi/iwl-config.h
+index 6801c7a..03fd9aa 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/iwlwifi/iwl-config.h
+@@ -297,6 +297,8 @@ extern const struct iwl_cfg iwl3160_2ac_cfg;
+ extern const struct iwl_cfg iwl3160_2n_cfg;
+ extern const struct iwl_cfg iwl3160_n_cfg;
+ extern const struct iwl_cfg iwl7265_2ac_cfg;
++extern const struct iwl_cfg iwl7265_2n_cfg;
++extern const struct iwl_cfg iwl7265_n_cfg;
+ #endif /* CONFIG_IWLMVM */
+ 
+ #endif /* __IWL_CONFIG_H__ */
+diff --git a/drivers/net/wireless/iwlwifi/pcie/drv.c b/drivers/net/wireless/iwlwifi/pcie/drv.c
+index 941c0c8..64d6ac5 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/iwlwifi/pcie/drv.c
+@@ -352,7 +352,29 @@ static DEFINE_PCI_DEVICE_TABLE(iwl_hw_card_ids) = {
+ 	{IWL_PCI_DEVICE(0x08B3, 0x8570, iwl3160_2ac_cfg)},
+ 
+ /* 7265 Series */
++	{IWL_PCI_DEVICE(0x08B1, 0x0000, iwl7265_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x095A, 0x5010, iwl7265_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x095A, 0x5110, iwl7265_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x095B, 0x5310, iwl7265_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x095B, 0x5302, iwl7265_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x095B, 0x5210, iwl7265_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x095B, 0x5012, iwl7265_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x095B, 0x500A, iwl7265_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x095A, 0x5410, iwl7265_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x095A, 0x1010, iwl7265_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x095A, 0x5000, iwl7265_2n_cfg)},
++	{IWL_PCI_DEVICE(0x095B, 0x5200, iwl7265_2n_cfg)},
++	{IWL_PCI_DEVICE(0x095A, 0x5002, iwl7265_n_cfg)},
++	{IWL_PCI_DEVICE(0x095B, 0x5202, iwl7265_n_cfg)},
++	{IWL_PCI_DEVICE(0x095A, 0x9010, iwl7265_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x095A, 0x9210, iwl7265_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x095A, 0x9410, iwl7265_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x095A, 0x5020, iwl7265_2n_cfg)},
++	{IWL_PCI_DEVICE(0x095A, 0x502A, iwl7265_2n_cfg)},
++	{IWL_PCI_DEVICE(0x095A, 0x5420, iwl7265_2n_cfg)},
++	{IWL_PCI_DEVICE(0x095A, 0x5090, iwl7265_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x095B, 0x5290, iwl7265_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x095A, 0x5490, iwl7265_2ac_cfg)},
+ #endif /* CONFIG_IWLMVM */
+ 
+ 	{0}
 -- 
-Best regards,
-Eugene
+1.7.9.5
+
