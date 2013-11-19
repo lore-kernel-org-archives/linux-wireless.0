@@ -1,47 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:36749 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754336Ab3KAN7G (ORCPT
+Received: from mail-bk0-f42.google.com ([209.85.214.42]:63753 "EHLO
+	mail-bk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751386Ab3KSEMr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 09:59:06 -0400
-Received: by mail-we0-f174.google.com with SMTP id u56so3959117wes.5
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:59:05 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 30/65] wireless-regdb: enable VHT80 for LV
-Date: Fri,  1 Nov 2013 14:57:20 +0100
-Message-Id: <1383314275-20960-31-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_145912_308808_1D325121)
-In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+	Mon, 18 Nov 2013 23:12:47 -0500
+Received: by mail-bk0-f42.google.com with SMTP id w11so749892bkz.15
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Nov 2013 20:12:46 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CABGE7dur4pM4vLz_iLx7u-g5ohKhXkwKAOmjJ86PE62mYwGPJw@mail.gmail.com>
+References: <CABGE7dsDtL0ZPAmOTW=G=hMdA-6r=yT0DtQx_-H6Yi6cGa6Udw@mail.gmail.com>
+ <CABGE7dur4pM4vLz_iLx7u-g5ohKhXkwKAOmjJ86PE62mYwGPJw@mail.gmail.com>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Mon, 18 Nov 2013 20:12:26 -0800
+Message-ID: <CAG6hwVOOvKfZcv-J70EMeHM3pmx-ieeAF2-6UtbrmoN3xC=SLw@mail.gmail.com> (sfid-20131119_051251_651861_983055E8)
+Subject: Re: NL80211_CMD_NEW_STATION result: -105 (No buffer space available)
+To: Gustavo Azambuja <gazambuja+hostapd@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Source is QCA's regulatory team's efforts.
+Hi Gustavo,
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+On Mon, Nov 18, 2013 at 6:20 PM, Gustavo Azambuja
+<gazambuja+hostapd@gmail.com> wrote:
+> Hi, I recently installed in my raspberry pi Raspbian with hostapd 1.0, I
+> want to make my own Hotspot, but follow all tutorials, I can only get up to
+> 6 stations connected at the same time.
+>
+> The next error apper with the #7 client try to connect:
+> *NL80211_CMD_NEW_STATION result: -105 (No buffer space available)*
+>
+> How I can resize this and make more clients can connect to my device?
+>
+> Im using TL-WN722N dongle.
 
-diff --git a/db.txt b/db.txt
-index c84624f..d537298 100644
---- a/db.txt
-+++ b/db.txt
-@@ -506,9 +506,9 @@ country LU: DFS-ETSI
- 
- country LV: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
--	(5170 - 5250 @ 40), (20)
--	(5250 - 5330 @ 40), (20), DFS
--	(5490 - 5710 @ 40), (27), DFS
-+	(5170 - 5250 @ 80), (20)
-+	(5250 - 5330 @ 80), (20), DFS
-+	(5490 - 5710 @ 80), (27), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
- 
--- 
-1.8.4.rc3
+That devices contains an AR9271, which uses the ath9k_htc driver. The
+number of stations you can maintain is limited by the device RAM.
+Luckily the AR9271 firmware is now GPL [1] so you can hack on this
+yourself I'm not quite sure what the upper limit is, but we've raised
+it to 16 without seeing any obvious breakage.
 
+Try modifying ATH9K_HTC_MAX_STA in the ath9k_htc driver and
+ATH_NODE_MAX [2] in the firmware.
+
+[1] https://github.com/qca/open-ath9k-htc-firmware
+[2] https://github.com/qca/open-ath9k-htc-firmware/blob/master/target_firmware/wlan/include/wlan_hdr.h#L99
+
+--
+Thomas
