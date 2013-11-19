@@ -1,83 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f177.google.com ([209.85.215.177]:46901 "EHLO
-	mail-ea0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755189Ab3KYT4W (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:60894 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751766Ab3KSHEQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Nov 2013 14:56:22 -0500
-Received: by mail-ea0-f177.google.com with SMTP id n15so2742079ead.8
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Nov 2013 11:56:21 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH v3 1/4] cfg80211: add reg_get_dfs_region()
-Date: Mon, 25 Nov 2013 20:56:09 +0100
-Message-Id: <1385409372-4229-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131125_205626_775294_E10CA0CC)
+	Tue, 19 Nov 2013 02:04:16 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/4] ath9k: Add version macros for AR9565 1.1
+Date: Tue, 19 Nov 2013 12:29:34 +0530
+Message-Id: <1384844375-6347-3-git-send-email-sujith@msujith.org> (sfid-20131119_080421_165661_71725892)
+In-Reply-To: <1384844375-6347-1-git-send-email-sujith@msujith.org>
+References: <1384844375-6347-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-This can be used outside of the regulatory context for any checks
-on the DFS region. The central cfg80211 dfs_region is always used
-and if it does not match with the wiphy a debug print is issued.
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- net/wireless/reg.c |   27 +++++++++++++++++++++++++++
- net/wireless/reg.h |    1 +
- 2 files changed, 28 insertions(+)
+ drivers/net/wireless/ath/ath9k/reg.h | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index ec54e1a..7d20d84 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -135,6 +135,33 @@ static const char *reg_dfs_region_str(enum nl80211_dfs_regions dfs_region)
- 	return "Unknown";
- }
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index a13b2d1..259a4b3 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -809,6 +809,8 @@
+ #define AR_SREV_REVISION_9462_21	3
+ #define AR_SREV_VERSION_9565            0x2C0
+ #define AR_SREV_REVISION_9565_10        0
++#define AR_SREV_REVISION_9565_101       1
++#define AR_SREV_REVISION_9565_11        2
+ #define AR_SREV_VERSION_9550		0x400
  
-+enum nl80211_dfs_regions reg_get_dfs_region(struct wiphy *wiphy)
-+{
-+	const struct ieee80211_regdomain *regd = NULL;
-+	const struct ieee80211_regdomain *wiphy_regd = NULL;
-+
-+	regd = get_cfg80211_regdom();
-+	if (!wiphy)
-+		goto out;
-+
-+	wiphy_regd = get_wiphy_regdom(wiphy);
-+	if (!wiphy_regd)
-+		goto out;
-+
-+	if (wiphy_regd->dfs_region == regd->dfs_region)
-+		goto out;
-+
-+	REG_DBG_PRINT("%s: device specific dfs_region "
-+		      "(%s) disagrees with cfg80211's "
-+		      "central dfs_region (%s)\n",
-+		      dev_name(&wiphy->dev),
-+		      reg_dfs_region_str(wiphy_regd->dfs_region),
-+		      reg_dfs_region_str(regd->dfs_region));
-+
-+out:
-+	return regd->dfs_region;
-+}
-+
- static void rcu_free_regdom(const struct ieee80211_regdomain *r)
- {
- 	if (!r)
-diff --git a/net/wireless/reg.h b/net/wireless/reg.h
-index cc4c2c0..02bd8f4 100644
---- a/net/wireless/reg.h
-+++ b/net/wireless/reg.h
-@@ -21,6 +21,7 @@ extern const struct ieee80211_regdomain __rcu *cfg80211_regdomain;
- bool reg_is_valid_request(const char *alpha2);
- bool is_world_regdom(const char *alpha2);
- bool reg_supported_dfs_region(enum nl80211_dfs_regions dfs_region);
-+enum nl80211_dfs_regions reg_get_dfs_region(struct wiphy *wiphy);
+ #define AR_SREV_5416(_ah) \
+@@ -927,10 +929,18 @@
  
- int regulatory_hint_user(const char *alpha2,
- 			 enum nl80211_user_reg_hint_type user_reg_hint_type);
+ #define AR_SREV_9565(_ah) \
+ 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9565))
+-
+ #define AR_SREV_9565_10(_ah) \
+ 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9565) && \
+ 	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9565_10))
++#define AR_SREV_9565_101(_ah) \
++	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9565) && \
++	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9565_101))
++#define AR_SREV_9565_11(_ah) \
++	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9565) && \
++	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9565_11))
++#define AR_SREV_9565_11_OR_LATER(_ah) \
++	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9565) && \
++	 ((_ah)->hw_version.macRev >= AR_SREV_REVISION_9565_11))
+ 
+ #define AR_SREV_9550(_ah) \
+ 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9550))
 -- 
-1.7.9.5
+1.8.4.2
 
