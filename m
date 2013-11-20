@@ -1,73 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f50.google.com ([209.85.215.50]:49623 "EHLO
-	mail-la0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753782Ab3KKQ46 (ORCPT
+Received: from mail-ve0-f175.google.com ([209.85.128.175]:62522 "EHLO
+	mail-ve0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750855Ab3KTHzX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Nov 2013 11:56:58 -0500
+	Wed, 20 Nov 2013 02:55:23 -0500
+Received: by mail-ve0-f175.google.com with SMTP id jx11so2421448veb.34
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Nov 2013 23:55:23 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CAMP44s3nkj2wZYCPve7EhyeD7sEFmpUN=-h015dOP68PcNSTug@mail.gmail.com>
-References: <1384119945-31213-1-git-send-email-felipe.contreras@gmail.com>
-	<1384160932.14334.6.camel@jlt4.sipsolutions.net>
-	<CAMP44s3TFSgWuR8gVoFBznNP+t9mz+to===9i1PAnra4ogKu9w@mail.gmail.com>
-	<1384184624.14334.31.camel@jlt4.sipsolutions.net>
-	<CAMP44s2cVVe4-yW214B9hJu7n6M1onZpZaPCj5N0Fi1JWDKKsw@mail.gmail.com>
-	<1384188067.14334.45.camel@jlt4.sipsolutions.net>
-	<CAMP44s3nkj2wZYCPve7EhyeD7sEFmpUN=-h015dOP68PcNSTug@mail.gmail.com>
-Date: Mon, 11 Nov 2013 10:56:57 -0600
-Message-ID: <CAMP44s0Lsd2qMf3a-Vx4=HTd_UxzLVC6q1bAGPr+t6anubNknA@mail.gmail.com> (sfid-20131111_175703_194804_E9A15B08)
-Subject: Re: [PATCH v2] mac80211: add assoc beacon timeout logic
-From: Felipe Contreras <felipe.contreras@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <CAEFj9859MXVE5L1Diiw0cNsaNPaNEYPddm0Fjco5hJGJpLtNSA@mail.gmail.com>
+References: <1384870413-5569-1-git-send-email-yeohchunyeow@gmail.com>
+	<CAFSJ42ZLhh5ns-aaO8G38TH1em37iHnYKvgF7BjSK-ZhA7jNcA@mail.gmail.com>
+	<CAEFj986hb2BLvcF2Bz3jRb_BRq3b+jZ5FwWALc0gdjXhLFU8tA@mail.gmail.com>
+	<CAFSJ42YQ5aKo+8NH-rvi_pm7dudpqpWYLJ69JpzKg_7agiOeKg@mail.gmail.com>
+	<CAEFj9859MXVE5L1Diiw0cNsaNPaNEYPddm0Fjco5hJGJpLtNSA@mail.gmail.com>
+Date: Wed, 20 Nov 2013 07:55:22 +0000
+Message-ID: <CAFSJ42Y_Ge=bbp49DQkrAvK5+cqkPHqOu=mHQghWv9Q5rzxeZA@mail.gmail.com> (sfid-20131120_085530_945385_ABBD0110)
+Subject: Re: [PATCH] wcn36xx: set self sta entry as HT capable
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>,
+	wcn36xx <wcn36xx@lists.infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 11, 2013 at 10:53 AM, Felipe Contreras
-<felipe.contreras@gmail.com> wrote:
-> On Mon, Nov 11, 2013 at 10:41 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->> On Mon, 2013-11-11 at 10:23 -0600, Felipe Contreras wrote:
+Most of these values are taken from wcn_band_2ghz
 
->>> > This isn't really true like I said above - the kernel can only drop the
->>> > association, if userspace *insists* then it will try again and again.
->>>
->>> But it's not doing this:
->>>
->>>   ieee80211_destroy_assoc_data(sdata, false);
->>>   cfg80211_assoc_timeout(sdata->dev, bss);
->>>
->>> Which is what causes the association to stop for me.
->>>
->>> So where exactly in the code is the association being "dropped"?
+Will try to remember:
+
+sta_params->ht_capable = 1
+sta_params->tx_channel_width_set = 1
+sta_params->lsig_txop_protection = 1
+sta_params->max_ampdu_size = 3 // Might be wrong but let's have this
+value as a begining.
+sta_params->max_ampdu_density = 5 // Might be wrong but let's have
+this value as a begining.
+sta_params->max_amsdu_size = 0
+sta_params->sgi_20Mhz = 1
+sta_params->sgi_40mhz = 1
+sta_params->green_field_capable = 1
+sta_params->delayed_ba_support = 0
+sta_params->dsss_cck_mode_40mhz = 1
+
+On Wed, Nov 20, 2013 at 7:43 AM, Yeoh Chun-Yeow <yeohchunyeow@gmail.com> wrote:
+>> This function will set all of the following fields to default values:
+>> sta_params->ht_capable
+>> sta_params->tx_channel_width_set
+>> sta_params->lsig_txop_protection
+>> sta_params->max_ampdu_size
+>> sta_params->max_ampdu_density
+>> sta_params->max_amsdu_size
+>> sta_params->sgi_20Mhz
+>> sta_params->sgi_40mhz
+>> sta_params->green_field_capable
+>> sta_params->delayed_ba_support
+>> sta_params->dsss_cck_mode_40mhz
+>
+>
+> I am alright with that. But I am not sure about the default value of other
+> fields mentioned above. Are you able to provide that?
+>
 >>
->> This does get called in my setup.
+>> And then in  wcn36xx_smd_set_sta_params it is called like this:
+>> wcn36xx_set_default_rates(&sta_params->supported_rates);
+>> wcn36xx_smd_set_sta_default_ht_params
+>>
+>> How does that sound?
 >
-> Yes, because your setup is receiving beacons.
 >
-> Check the code:
->
-> if ((ifmgd->assoc_data->need_beacon && !ifmgd->have_beacon) ||
->    ieee80211_do_assoc(sdata)) {
-> struct cfg80211_bss *bss = ifmgd->assoc_data->bss;
->
-> ieee80211_destroy_assoc_data(sdata, false);
-> cfg80211_assoc_timeout(sdata->dev, bss);
-> }
->
-> If there's no beacon, cfg80211_assoc_timeout() is not called.
->
-> I'm sure if you don't call ieee80211_rx_mgmt_beacon() at all you will
-> see the same behavior I see.
+> ---
+> Chun-Yeow
 
-My bad, actually the code that is not being called is:
 
-  cfg80211_unlink_bss(local->hw.wiphy, assoc_data->bss);
-
-In ieee80211_do_assoc().
 
 -- 
-Felipe Contreras
+Best regards,
+Eugene
