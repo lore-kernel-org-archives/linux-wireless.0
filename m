@@ -1,59 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f51.google.com ([209.85.215.51]:49285 "EHLO
-	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750788Ab3KJHDS (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:45506 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754093Ab3KTRFT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Nov 2013 02:03:18 -0500
+	Wed, 20 Nov 2013 12:05:19 -0500
+Received: by mail-wg0-f44.google.com with SMTP id k14so9410285wgh.23
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Nov 2013 09:05:18 -0800 (PST)
+Date: Wed, 20 Nov 2013 18:04:44 +0100
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Subject: Re: [PATCH] mac80211: use capped prob when computing throughputs
+Message-ID: <20131120170444.GF9335@magnum.frso.rivierawaves.com> (sfid-20131120_180522_434696_DB3F0E78)
+References: <1384908668-27869-1-git-send-email-karl.beldan@gmail.com>
+ <528C6590.1000803@openwrt.org>
+ <528CE9E2.7030707@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
-References: <5276134B.8070808@wzyboy.org>
-	<CALkVjQYh-SUte4S6LdqOc3KSc3_pDU6jz1KXp+Jsd5_RFPXSqA@mail.gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB301DE8338@HASMSX103.ger.corp.intel.com>
-	<CALkVjQb7fCMFpqhdUs8w-Mx_Y0RtAYYFtKxXkqyrCQ39UFGxKg@mail.gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB301DE960E@HASMSX103.ger.corp.intel.com>
-	<CALkVjQbW8FeiEh8pBZ=KQFD9+8AdjgT0G_RG7qJe0MRdBvMD-A@mail.gmail.com>
-	<CALkVjQaLx2spaOqUPcs_EwMkU7npMki1Reo1MeZwxB7m=c24=g@mail.gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB301DE9FC6@HASMSX103.ger.corp.intel.com>
-	<CALkVjQZDNSgUUFyi94Y8da_NDzW61rCvaMrZpUugFKW_LRNFFA@mail.gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
-	<CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
-	<CALkVjQY7r=YKhsgDKR0mnYVtZy5BAdj83nY2jL0VFaiew6ha7A@mail.gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
-	<CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
-	<527A8166.6000701@gmail.com>
-	<CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
-	<CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
-	<CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
-	<CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
-Date: Sun, 10 Nov 2013 09:03:16 +0200
-Message-ID: <CANUX_P2x3r4afsa7PFrexE0Kxtd5t-nak+ao+CqvLKZyMha0_g@mail.gmail.com> (sfid-20131110_080335_278400_4D53D5C8)
-Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: wzyboy <wzyboy@wzyboy.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <528CE9E2.7030707@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->
->
-> Sorry I used the wrong command...
->
-> I've attached the output of -vvxxx below.
->
-> There are three files:
->
-> * lspci.vvxxx.normal.txt: When the interface is "state DOWN" in "ip link".
-> * lspci.vvxxx.normal2.txt: When the interface is "state UP" in "ip
-> link" after I ran "ip link set wlan0 up".
-> * lspci.vvxxx.normal3.txt" When the interface is connected to the
-> Wi-Fi of my dormitory and got an address (but without default
-> gateway, I'm using wired network now).
->
-
-one more thing?
-Are you using KVM with pass-through? Or is it a native installation?
+On Wed, Nov 20, 2013 at 05:57:06PM +0100, Felix Fietkau wrote:
+> On 2013-11-20 08:32, Felix Fietkau wrote:
+> > On 2013-11-20 01:51, Karl Beldan wrote:
+> >> From: Karl Beldan <karl.beldan@rivierawaves.com>
+> >> 
+> >> Commit 3e8b1eb "mac80211/minstrel_ht: improve rate selection stability"
+> >> introduced a local capped prob in minstrel_ht_calc_tp but omitted to use
+> >> it to compute the rate throughput.
+> >> 
+> >> Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
+> >> CC: Felix Fietkau <nbd@openwrt.org>
+> > Nice catch!
+> > Acked-by: Felix Fietkau <nbd@openwrt.org>
+> Sorry, I need to revoke that ACK - there's a bug in this patch:
+> 
+> > -	tp = 1000000 * ((mr->probability * 1000) / nsecs);
+> > +	tp = 1000000 * (prob * 1000) / nsecs;
+> Removing the outer () is wrong, it leads to overflow that makes all
+> throughput values 0.
+> 
+Do you handle this one or I resend ?
+ 
+Karl
