@@ -1,36 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:38811 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750851Ab3KEKO4 (ORCPT
+Received: from mail-ee0-f47.google.com ([74.125.83.47]:53632 "EHLO
+	mail-ee0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752222Ab3KTJmY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Nov 2013 05:14:56 -0500
-Message-ID: <1383646492.4444.0.camel@jlt4.sipsolutions.net> (sfid-20131105_111509_808038_C44E8A74)
-Subject: Re: [PATCH v2 1/3] mac80211_hwsim: use debugfs_remove_recursive
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 05 Nov 2013 11:14:52 +0100
-In-Reply-To: <1383574454.14295.13.camel@jlt4.sipsolutions.net> (sfid-20131104_151435_462544_36095D1B)
-References: <1383334560-10672-1-git-send-email-janusz.dziedzic@tieto.com>
-	 (sfid-20131101_203628_172788_3DC6CA5D) <1383574454.14295.13.camel@jlt4.sipsolutions.net>
-	 (sfid-20131104_151435_462544_36095D1B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 20 Nov 2013 04:42:24 -0500
+Received: by mail-ee0-f47.google.com with SMTP id c50so3273782eek.20
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Nov 2013 01:42:23 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH v2 3/4] cfg80211/mac80211: DFS pass CAC time as a parameter
+Date: Wed, 20 Nov 2013 10:41:56 +0100
+Message-Id: <1384940517-6154-3-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131120_104231_809265_2385B674)
+In-Reply-To: <1384940517-6154-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1384940517-6154-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-11-04 at 15:14 +0100, Johannes Berg wrote:
-> On Fri, 2013-11-01 at 20:35 +0100, Janusz Dziedzic wrote:
-> > Use debugfs_remove_recursive. That avoids the need
-> > for the new dentry pointers and extra debugfs_remove
-> > calls.
-> 
-> All applied, thanks.
+Send Channel Availability Check time as a parameter
+of start_radar_detection() callback.
+We could have different CAC time configuration for
+Off-channel CAC and for weather channels.
 
-Actually, I dropped patches 2 and 3 again - they're causing issues with
-channels>1 since DFS isn't allowed then. That in turn exposes a bug in
-hwsim with registration failures causing warnings or even crashes
-(depending on the kernel version).
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ include/net/cfg80211.h |    3 ++-
+ net/mac80211/cfg.c     |    8 ++++----
+ net/wireless/nl80211.c |    3 ++-
+ 3 files changed, 8 insertions(+), 6 deletions(-)
 
-johannes
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index bacc503..ba640e9 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2412,7 +2412,8 @@ struct cfg80211_ops {
+ 
+ 	int	(*start_radar_detection)(struct wiphy *wiphy,
+ 					 struct net_device *dev,
+-					 struct cfg80211_chan_def *chandef);
++					 struct cfg80211_chan_def *chandef,
++					 u32 cac_time_ms);
+ 	int	(*update_ft_ies)(struct wiphy *wiphy, struct net_device *dev,
+ 				 struct cfg80211_update_ft_ies_params *ftie);
+ 	int	(*crit_proto_start)(struct wiphy *wiphy,
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 3bc92d0..d5a6f5c 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2893,11 +2893,11 @@ static int ieee80211_cancel_remain_on_channel(struct wiphy *wiphy,
+ 
+ static int ieee80211_start_radar_detection(struct wiphy *wiphy,
+ 					   struct net_device *dev,
+-					   struct cfg80211_chan_def *chandef)
++					   struct cfg80211_chan_def *chandef,
++					   u32 cac_time_ms)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct ieee80211_local *local = sdata->local;
+-	unsigned long timeout;
+ 	int err;
+ 
+ 	if (!list_empty(&local->roc_list) || local->scanning)
+@@ -2915,9 +2915,9 @@ static int ieee80211_start_radar_detection(struct wiphy *wiphy,
+ 	if (err)
+ 		return err;
+ 
+-	timeout = msecs_to_jiffies(IEEE80211_DFS_MIN_CAC_TIME_MS);
+ 	ieee80211_queue_delayed_work(&sdata->local->hw,
+-				     &sdata->dfs_cac_timer_work, timeout);
++				     &sdata->dfs_cac_timer_work,
++				     msecs_to_jiffies(cac_time_ms));
+ 
+ 	return 0;
+ }
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 62b4efd..ea9ee18 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5667,7 +5667,8 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
+ 	if (err)
+ 		return err;
+ 
+-	err = rdev->ops->start_radar_detection(&rdev->wiphy, dev, &chandef);
++	err = rdev->ops->start_radar_detection(&rdev->wiphy, dev, &chandef,
++					       IEEE80211_DFS_MIN_CAC_TIME_MS);
+ 	if (!err) {
+ 		wdev->channel = chandef.chan;
+ 		wdev->cac_started = true;
+-- 
+1.7.9.5
 
