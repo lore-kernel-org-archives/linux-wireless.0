@@ -1,61 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:41071 "EHLO
-	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751527Ab3KRRLw (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:55523 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751561Ab3KTAvu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Nov 2013 12:11:52 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
-Subject: [PATCH 05/12 NEXT] rtlwifi: rtl8192c: Add new definitions in the dm_common header
-Date: Mon, 18 Nov 2013 11:11:29 -0600
-Message-Id: <1384794696-20314-6-git-send-email-Larry.Finger@lwfinger.net> (sfid-20131118_181210_529069_89A35688)
-In-Reply-To: <1384794696-20314-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1384794696-20314-1-git-send-email-Larry.Finger@lwfinger.net>
+	Tue, 19 Nov 2013 19:51:50 -0500
+Received: by mail-wi0-f170.google.com with SMTP id f4so7413726wiw.3
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Nov 2013 16:51:49 -0800 (PST)
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH] mac80211: use capped prob when computing throughputs
+Date: Wed, 20 Nov 2013 01:51:08 +0100
+Message-Id: <1384908668-27869-1-git-send-email-karl.beldan@gmail.com> (sfid-20131120_015154_118817_DC97EE72)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Changes in the gain-control mechanism will require some changes in the header.
+From: Karl Beldan <karl.beldan@rivierawaves.com>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>
+Commit 3e8b1eb "mac80211/minstrel_ht: improve rate selection stability"
+introduced a local capped prob in minstrel_ht_calc_tp but omitted to use
+it to compute the rate throughput.
+
+Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
+CC: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/rtlwifi/rtl8192c/dm_common.h | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ net/mac80211/rc80211_minstrel_ht.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.h b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.h
-index 518e208..4f232a0 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.h
-@@ -91,6 +91,17 @@
- #define TX_POWER_NEAR_FIELD_THRESH_LVL2		74
- #define TX_POWER_NEAR_FIELD_THRESH_LVL1		67
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index 9702d88..341e6f7 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -333,7 +333,7 @@ minstrel_ht_calc_tp(struct minstrel_ht_sta *mi, int group, int rate)
+ 		nsecs = 1000 * mi->overhead / MINSTREL_TRUNC(mi->avg_ampdu_len);
  
-+#define DYNAMIC_FUNC_DISABLE			0x0
-+#define DYNAMIC_FUNC_DIG			BIT(0)
-+#define DYNAMIC_FUNC_HP				BIT(1)
-+#define DYNAMIC_FUNC_SS				BIT(2) /*Tx Power Tracking*/
-+#define DYNAMIC_FUNC_BT				BIT(3)
-+#define DYNAMIC_FUNC_ANT_DIV			BIT(4)
-+
-+#define	RSSI_CCK				0
-+#define	RSSI_OFDM				1
-+#define	RSSI_DEFAULT				2
-+
- struct swat_t {
- 	u8 failure_cnt;
- 	u8 try_flag;
-@@ -167,5 +178,8 @@ void rtl92c_phy_lc_calibrate(struct ieee80211_hw *hw);
- void rtl92c_phy_iq_calibrate(struct ieee80211_hw *hw, bool recovery);
- void rtl92c_dm_dynamic_txpower(struct ieee80211_hw *hw);
- void rtl92c_dm_bt_coexist(struct ieee80211_hw *hw);
-+void dm_savepowerindex(struct ieee80211_hw *hw);
-+void dm_writepowerindex(struct ieee80211_hw *hw, u8 value);
-+void dm_restorepowerindex(struct ieee80211_hw *hw);
+ 	nsecs += minstrel_mcs_groups[group].duration[rate];
+-	tp = 1000000 * ((mr->probability * 1000) / nsecs);
++	tp = 1000000 * (prob * 1000) / nsecs;
  
- #endif
+ 	mr->cur_tp = MINSTREL_TRUNC(tp);
+ }
 -- 
-1.8.4
+1.8.2
 
