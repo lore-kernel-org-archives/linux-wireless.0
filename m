@@ -1,68 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:36755 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751374Ab3KQXCx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Nov 2013 18:02:53 -0500
-Date: Mon, 18 Nov 2013 00:02:20 +0100
-From: Borislav Petkov <bp@alien8.de>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: lkml <linux-kernel@vger.kernel.org>,
-	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] brcmsmac: Fix build dep on LEDS_CLASS
-Message-ID: <20131117230220.GS27323@pd.tnic> (sfid-20131118_000312_432833_C430FF7D)
-References: <20131117133702.GA30840@pd.tnic>
- <5289359B.8090506@broadcom.com>
+Received: from mail-ob0-f169.google.com ([209.85.214.169]:43591 "EHLO
+	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753285Ab3KTPWy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Nov 2013 10:22:54 -0500
+Received: by mail-ob0-f169.google.com with SMTP id wm4so4919545obc.28
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Nov 2013 07:22:54 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <5289359B.8090506@broadcom.com>
+In-Reply-To: <CAG6hwVNqLQB+8ViDyB-XhVx=TzbgZmX-DY6gDaevUoMfETWTVw@mail.gmail.com>
+References: <CABGE7dsDtL0ZPAmOTW=G=hMdA-6r=yT0DtQx_-H6Yi6cGa6Udw@mail.gmail.com>
+ <CABGE7dur4pM4vLz_iLx7u-g5ohKhXkwKAOmjJ86PE62mYwGPJw@mail.gmail.com>
+ <CAG6hwVOOvKfZcv-J70EMeHM3pmx-ieeAF2-6UtbrmoN3xC=SLw@mail.gmail.com>
+ <CABGE7dsTzYESpxfO8WL9JP1BR1QdrTNv5+EszuZm225R2pA=Zw@mail.gmail.com>
+ <CABGE7ds77Ea9YeGBLCCYYDfTFEm0MqjRA03aF=vpv9Y+=Z47oA@mail.gmail.com> <CAG6hwVNqLQB+8ViDyB-XhVx=TzbgZmX-DY6gDaevUoMfETWTVw@mail.gmail.com>
+From: Gustavo Azambuja <gazambuja+hostapd@gmail.com>
+Date: Wed, 20 Nov 2013 13:22:33 -0200
+Message-ID: <CABGE7dvky+trLL5=hPv13OHhRm9vdbU33Ndyv_oHAjG3+x24+A@mail.gmail.com> (sfid-20131120_162300_233345_74B1145F)
+Subject: Re: NL80211_CMD_NEW_STATION result: -105 (No buffer space available)
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 17, 2013 at 10:31:07PM +0100, Arend van Spriel wrote:
-> Wouldn't it be better to fix it in brcmsmac.
+Thanks Thomas, but is not an option using a "real" AP... I realy need
+to make my own (I need access to MAC address of connected devices and
+use the monitor mode at the same time).
 
-You're right, BCMA_DRIVER_GPIO doesn't need LEDS_CLASS.
+You have some link to steps to "upgrade/install" the modify version of
+frimware in my device (TL-WN722N) ?
 
-So, the only solution I can think of right now is below, maybe
-adding a hidden config symbol CONFIG_BRCMSMAC_LEDS which depends on
-BCMA_DRIVER_GPIO and LEDS_CLASS and then doing:
+This is one or two step ahead of my confort zone :)
 
-brcmsmac-$(CONFIG_BRCMSMAC_LEDS) += led.o
 
-would be cleaner though. I could try that out tomorrow.
 
----
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/Makefile b/drivers/net/wireless/brcm80211/brcmsmac/Makefile
-index 32464acccd90..8fd44d168cd5 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/Makefile
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/Makefile
-@@ -43,6 +43,8 @@ brcmsmac-y := \
- 	brcms_trace_events.o \
- 	debug.o
- 
-+ifdef CONFIG_LEDS_CLASS
- brcmsmac-$(CONFIG_BCMA_DRIVER_GPIO) += led.o
-+endif
- 
- obj-$(CONFIG_BRCMSMAC)	+= brcmsmac.o
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/led.h b/drivers/net/wireless/brcm80211/brcmsmac/led.h
-index 17a0b1f5dbcf..23b4b688d9f7 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/led.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/led.h
-@@ -22,7 +22,7 @@ struct brcms_led {
- 	bool active_low;
- };
- 
--#ifdef CONFIG_BCMA_DRIVER_GPIO
-+#if defined(CONFIG_BCMA_DRIVER_GPIO) && defined(CONFIG_LEDS_CLASS)
- void brcms_led_unregister(struct brcms_info *wl);
- int brcms_led_register(struct brcms_info *wl);
- #else
 
--- 
-Regards/Gruss,
-    Boris.
-
-Sent from a fat crate under my desk. Formatting is fine.
---
+On Tue, Nov 19, 2013 at 5:15 PM, Thomas Pedersen <thomas@cozybit.com> wrote:
+> On Tue, Nov 19, 2013 at 3:39 AM, Gustavo Azambuja
+> <gazambuja+hostapd@gmail.com> wrote:
+>> Thank,
+>> you know where i can find one list of devices (usb dongle) with more
+>> ram, or without this limit (I need provide Internet at less to 30
+>> stations)?
+>
+> No. But a "real" AP would be cheaper and much more perfomant anyway.
+> Something like the TP-LINK WR841n can be had for about $20.
+>
+> Nothing stopping you from setting HTC_MAX_STA to 30 and seeing what
+> happens either!
+>
+> --
+> Thomas
