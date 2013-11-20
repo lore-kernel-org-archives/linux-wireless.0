@@ -1,58 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:62929 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752519Ab3KBWgq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Nov 2013 18:36:46 -0400
-Received: by mail-ie0-f180.google.com with SMTP id e14so9731355iej.39
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Nov 2013 15:36:45 -0700 (PDT)
-Message-ID: <52757E7A.6020404@gmail.com> (sfid-20131102_233649_501058_01969CE7)
-Date: Sat, 02 Nov 2013 18:36:42 -0400
-From: Alexandre Demers <alexandre.f.demers@gmail.com>
-Reply-To: alexandre.f.demers@gmail.com
-MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>,
+Received: from mout.gmx.net ([212.227.17.21]:62229 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753630Ab3KTMxe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Nov 2013 07:53:34 -0500
+Received: from fb07-iapwap2.localnet ([134.176.19.122]) by mail.gmx.com
+ (mrgmx003) with ESMTPSA (Nemesis) id 0M3j17-1VRixP35Jh-00rDie for
+ <linux-wireless@vger.kernel.org>; Wed, 20 Nov 2013 13:53:30 +0100
+From: Marc Dietrich <marvin24@gmx.de>
+To: users@rt2x00.serialmonkey.com
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
 	linux-wireless@vger.kernel.org
-Subject: Re: r92su: status and will it be merged anytime soon?
-References: <52755E44.1060501@gmail.com> <5275745F.9080002@lwfinger.net>
-In-Reply-To: <5275745F.9080002@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Subject: Re: [rt2x00-users] [PATCH 3.12] rt2800usb: slow down TX statuspolling
+Date: Wed, 20 Nov 2013 13:53:29 +0100
+Message-ID: <1413247.TRgdXSqTuO@fb07-iapwap2> (sfid-20131120_135343_570663_AC2F802E)
+In-Reply-To: <526243C2.7090607@gmail.com>
+References: <20131017100431.GA9603@redhat.com> <20131018094238.GA7506@redhat.com> <526243C2.7090607@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ok, so if I was to work on one of the drivers, I should continue with 
-the one under staging, isn't it? Because, let's say I would have some 
-spare time to invest somewhere, I could port the driver to use mac80211, 
-maybe with some support. I'd prefer to do it only once... on the good 
-driver.
+Am Samstag, 19. Oktober 2013, 10:33:06 schrieb Gertjan van Wingerde:
+> On 10/18/13 11:42, Stanislaw Gruszka wrote:
+> > On Thu, Oct 17, 2013 at 09:39:06AM -0500, Larry Finger wrote:
+> >> I suggest getting rid of the magic numbers as long as you are making
+> >> this change. A single define could handle the delay time for the two
+> >> cases.
+> > 
+> > Thanks for sugestion Larry, though I do not see clear benefit of
+> > introduce define since those magic numbers are just time values
+> > expressed in nano seconds. Anyway patch with define added below.
+> > John can pick it, if he thinks it is better.
+> > 
+> > Stanislaw
+> > ---
+> > From 813e0bde7340bad7d3401c6aa2a3f8635ec49597 Mon Sep 17 00:00:00 2001
+> > From: Stanislaw Gruszka <sgruszka@redhat.com>
+> > Date: Fri, 18 Oct 2013 11:36:54 +0200
+> > Subject: [PATCH] rt2800usb: slow down TX status polling
+> > 
+> > Polling TX statuses too frequently has two negative effects. First is
+> > randomly peek CPU usage, causing overall system functioning delays.
+> > Second bad effect is that device is not able to fill TX statuses in
+> > H/W register on some workloads and we get lot of timeouts like below:
+> > 
+> > ieee80211 phy4: rt2800usb_entry_txstatus_timeout: Warning - TX status
+> > timeout for entry 7 in queue 2 ieee80211 phy4:
+> > rt2800usb_entry_txstatus_timeout: Warning - TX status timeout for entry 7
+> > in queue 2 ieee80211 phy4: rt2800usb_txdone: Warning - Got TX status for
+> > an empty queue 2, dropping
+> > 
+> > This not only cause flood of messages in dmesg, but also bad throughput,
+> > since rate scaling algorithm can not work optimally.
+> > 
+> > In the future, we should probably make polling interval be adjusted
+> > automatically, but for now just increase values, this make mentioned
+> > problems gone.
+> > 
+> > Resolve:
+> > https://bugzilla.kernel.org/show_bug.cgi?id=62781
+> > 
+> > Cc: stable@vger.kernel.org
+> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> 
+> I don't care which version gets picked. In both cases:
+> 
+> Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-Alexandre Demers
+did this ever hit a stable queue? 
 
-On 11/02/2013 05:53 PM, Larry Finger wrote:
-> On 11/02/2013 03:19 PM, Alexandre Demers wrote:
->> Good afternoon,
->>
->> I was playing in r8712u because I wanted to send a patch to 
->> conditionally
->> silence a flooding netdev_info(). But then I found out on
->> http://wireless.kernel.org/en/users/Drivers/rtl819x that r8712u was 
->> to be
->> replaced by r92su.
->>
->>  From its git tree, it seems no commit were added since 4 months ago. 
->> Could
->> someone tell me in what shape is this new driver? Is there any plan 
->> to merge it
->> (under staging I suppose) soon?
->
-> As nothing has happened with that GitHub account for several months, 
-> my guess is that it will not be merged any time soon.
->
-> It would make little sense to replace one staging driver (r8712u) with 
-> a different one. The only thing that makes sense is for it to use 
-> mac80211 and be merged in the regular drivers/net/wireless/rtlwifi tree.
->
-> Larry
->
->
+Marc
 
