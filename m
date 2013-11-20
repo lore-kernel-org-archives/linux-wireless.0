@@ -1,47 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:36107 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750845Ab3KRNzE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Nov 2013 08:55:04 -0500
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1ViPI7-0002Fi-1C
-	for linux-wireless@vger.kernel.org; Mon, 18 Nov 2013 14:55:03 +0100
-Received: from 212-60-115-150.ip.cust.zensystems.net ([212.60.115.150])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Nov 2013 14:55:03 +0100
-Received: from nilsson.troels by 212-60-115-150.ip.cust.zensystems.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Nov 2013 14:55:03 +0100
-To: linux-wireless@vger.kernel.org
-From: Troels Nilsson <nilsson.troels@gmail.com>
-Subject: Roaming with libertas and =?utf-8?b?d3BhX3N1cHBsaWNhbnQ=?= not working
-Date: Mon, 18 Nov 2013 13:50:09 +0000 (UTC)
-Message-ID: <loom.20131118T143002-687@post.gmane.org> (sfid-20131118_145509_206573_37D8C413)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:40154 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750858Ab3KTKPs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Nov 2013 05:15:48 -0500
+Received: by mail-ie0-f180.google.com with SMTP id tp5so5778102ieb.25
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Nov 2013 02:15:47 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1384937328.14295.3.camel@jlt4.sipsolutions.net>
+References: <CAPvVjisu-xcZsqHgcTEKsCJFuESDFO-_0KwkgxffyejemHJZcA@mail.gmail.com>
+ <1384937328.14295.3.camel@jlt4.sipsolutions.net>
+From: Blaise Gassend <blaise@suitabletech.com>
+Date: Wed, 20 Nov 2013 02:15:27 -0800
+Message-ID: <CAPvVjiu55=nscHa-Mpff_LL-Y0v6XHEGx0K7rpCVU9nRiKfaXA@mail.gmail.com> (sfid-20131120_111551_938142_45FA657A)
+Subject: Re: QoS Data packets causing massive packet loss in ieee80211_sta_manage_reorder_buf.
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Catalin Drula <catalin@suitabletech.com>,
+	Alap Modi <amodi@arubanetworks.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi Johannes,
 
-We are having a problem with a custom device which uses the libertas wifi
-driver (on kernel 3.4.24) together with wpa_supplicant (0.7.3). More
-specifically, whenever wpa_supplicant attempts to roam to a different access
-point it gets a EALREADY error.
+Thanks for the quick reply!
 
-I have tracked down the problem to this check in sme.c:
+> I think we just need to skip reorder processing for multicast, since
+> they won't be aggregated anyway?
+>
+> http://p.sipsolutions.net/d00799dd2201676a.txt
 
-        if (wdev->sme_state != CFG80211_SME_IDLE)
-                return -EALREADY;
+This patch works like a charm for my current predicament. But is it
+actually written somewhere that multicast packets can't be aggregated?
+I can't find any place that says they can't, but I'm not authoritative
+by any means.
 
-When we get to this check the sme_state is CFG80211_SME_CONNECTED, so
-nothing gets done. Changing this check to only fail if sme_state is
-CFG80211_SME_CONNECTING fixes the issue, but I guess this check is there for
-a reason?
+If aggregated packets were allowed, would the more a special tid_rx
+for multicast packets be the right way to go (similar to what happens
+in ieee80211_parse_qos)?
 
-In any case I don't know enough about the wireless system to say if this is
-a problem in the libertas driver or cfg80211 or maybe the way wpa_supplicant
-is using the API. Any comments/help would be greatly appreciated :)
+In any case, this patch seems like a huge net improvement over the
+current situation and is probably worth merging.
 
+Regards,
+Blaise
