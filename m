@@ -1,81 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:48550 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753243Ab3KDOIs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Nov 2013 09:08:48 -0500
-From: "Coelho, Luciano" <luciano.coelho@intel.com>
-To: Simon Wunderlich <sw@simonwunderlich.de>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
-Subject: Re: [RFC] mac80211: don't transmit beacon with CSA count 0
-Date: Mon, 4 Nov 2013 14:07:46 +0000
-Message-ID: <1383574023.5928.149.camel@porter.coelho.fi> (sfid-20131104_150852_248164_9E519ED9)
-References: <1383569955-13236-1-git-send-email-luciano.coelho@intel.com>
-	 <201311041436.51673.sw@simonwunderlich.de>
-In-Reply-To: <201311041436.51673.sw@simonwunderlich.de>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-we0-f180.google.com ([74.125.82.180]:37620 "EHLO
+	mail-we0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753715Ab3KTRyA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Nov 2013 12:54:00 -0500
+Received: by mail-we0-f180.google.com with SMTP id u56so2308389wes.11
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Nov 2013 09:53:58 -0800 (PST)
+Date: Wed, 20 Nov 2013 18:53:20 +0100
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: use capped prob when computing throughputs
+Message-ID: <20131120175320.GA15374@magnum.frso.rivierawaves.com> (sfid-20131120_185408_439042_AE029DFD)
+References: <1384908668-27869-1-git-send-email-karl.beldan@gmail.com>
+ <528C6590.1000803@openwrt.org>
+ <20131120135628.GA9335@magnum.frso.rivierawaves.com>
+ <528CC172.1040402@openwrt.org>
+ <20131120145035.GB9335@magnum.frso.rivierawaves.com>
+ <528CDA23.9090303@openwrt.org>
+ <20131120161922.GC9335@magnum.frso.rivierawaves.com>
+ <528CF249.4050902@openwrt.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <528CF249.4050902@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gTW9uLCAyMDEzLTExLTA0IGF0IDE0OjM2ICswMTAwLCBTaW1vbiBXdW5kZXJsaWNoIHdyb3Rl
-Og0KPiBIZXkgTHVjYSwNCg0KSGV5IFNpbW9uLA0KDQpUaGFua3MgZm9yIHlvdXIgcXVpY2sgcmVw
-bHkuIDopDQoNCj4gPiBBIGJlYWNvbiBzaG91bGQgbmV2ZXIgaGF2ZSBhIENoYW5uZWwgU3dpdGNo
-IEFubm91bmNlbWVudCBpbmZvcm1hdGlvbg0KPiA+IGVsZW1lbnQgd2l0aCBhIGNvdW50IG9mIDAs
-IGJlY2F1c2UgYSBjb3VudCBvZiAxIG1lYW5zIHN3aXRjaCBqdXN0DQo+ID4gYmVmb3JlIHRoZSBu
-ZXh0IGJlYWNvbi4gIFNvLCBpZiBhIGNvdW50IG9mIDAgd2FzIHZhbGlkIGluIGEgYmVhY29uLCBp
-dA0KPiA+IHdvdWxkIGhhdmUgYmVlbiB0cmFuc21pdHRlZCBpbiB0aGUgbmV4dCBjaGFubmVsIGFs
-cmVhZHksIHdoaWNoIGlzDQo+ID4gdXNlbGVzcy4gIEEgQ1NBIGNvdW50IGVxdWFsIHRvIHplcm8g
-aXMgb25seSBtZWFuaW5nZnVsIGluIGFjdGlvbg0KPiA+IGZyYW1lcyBvciBwcm9iZV9yZXNwb25z
-ZXMuDQo+ID4gDQo+ID4gRml4IHRoZSBpZWVlODAyMTFfY3NhX2lzX2NvbXBsZXRlKCkgYW5kIGll
-ZWU4MDIxMV91cGRhdGVfY3NhKCkNCj4gPiBmdW5jdGlvbnMgYWNjb3JkaW5nbHkuDQo+ID4gDQo+
-ID4gQ2M6IFNpbW9uIFd1bmRlcmxpY2ggPHN3QHNpbW9ud3VuZGVybGljaC5kZT4NCj4gPiBTaWdu
-ZWQtb2ZmLWJ5OiBMdWNpYW5vIENvZWxobyA8bHVjaWFuby5jb2VsaG9AaW50ZWwuY29tPg0KPiA+
-IC0tLQ0KPiA+IA0KPiA+IEhpIFNpbW9uIChldCBhbCksDQo+ID4gDQo+ID4gSSBpZGVudGlmaWVk
-IHRoaXMgaXNzdWUgd2hpbGUgcGxheWluZyBhcm91bmQgd2l0aCBDU0EuICBJIG5vdGljZWQgdGhh
-dA0KPiA+IHdlIGFyZSBzZW5kaW5nIGEgQ1NBIGJlYW9uIHdpdGggY291bnQgPT0gMCwgd2hpY2gg
-c2hvdWxkIG5vdCBoYXBwZW4uDQo+ID4gVGhlIGxhc3QgYmVhY29uIHZpc2libGUgaW4gdGhlIGN1
-cnJlbnQgY2hhbm5lbCAoaWUuIGJlZm9yZSB0aGUgc3dpdGNoKQ0KPiA+IGNvbnRhaW5zIGEgQ1NB
-IElFIHdpdGggY291bnQgPT0gMS4NCj4gPiANCj4gPiBJIHdhbnRlZCB0byBjaGVjayB3aXRoIHlv
-dSBpZiBteSBwcm9wb3NlZCBjaGFuZ2Ugd291bGQgaGF2ZSBhbnkNCj4gPiBzaWRlLWVmZmVjdHMs
-IGVzcGVjaWFsbHkgd2l0aCB0aGUgYXRoOWsgZHJpdmVyLCB3aGljaCBpcyB0aGUgb25seSB1c2Vy
-DQo+ID4gb2YgdGhpcyBjb2RlIGluIHRoZSBtYWlubGluZSBhdCB0aGUgbW9tZW50Lg0KPiA+IA0K
-PiA+IFRoZSBwb3RlbnRpYWwgZGFuZ2VyIGhlcmUgaXMgaWYgeW91IGRvbid0IGNoZWNrDQo+ID4g
-aWVlZTgwMjExX2NzYV9pc19jb21wbGV0ZSgpIGJlZm9yZSB5b3Ugc2VuZCB0aGUgZmlyc3QgQ1NB
-IGJlYWNvbiBvdXQuDQo+ID4gV2l0aCB0aGUgcHJldmlvdXMgY29kZSwgdGhlcmUgd291bGQgYWx3
-YXlzIGJlIGEgYmVhY29uIHdpdGggQ1NBIChjb3VudA0KPiA+ID09IDApLCBidXQgbm93LCBpZiB0
-aGUgY291bnQgc3RhcnRzIHdpdGggMSwgdGhlcmUgd29uJ3QgYmUgYW55LiAgSWYNCj4gPiB5b3Ug
-ZG9uJ3QgY2hlY2ssIG15IHBhdGNoIHdpbGwgcHJvYmFibHkgaW50cm9kdWNlIGEgV0FSTiB3aGVu
-IHRoZQ0KPiA+IGF0aDlrIGRyaXZlciB0cmllcyB0byBnZXQgdGhlIGJlYWNvbiB3aXRob3V0IGNo
-ZWNraW5nIGZvciBDU0ENCj4gPiBjb21wbGV0aW9uLi4NCj4gPiANCj4gPiBBbnkgb3RoZXIgY29t
-bWVudHMgb3IgYSBzYW5pdHkgY2hlY2sgd291bGQgYWxzbyBiZSBhcHByZWNpYXRlZC4NCj4gDQo+
-IFRoYW5rcyBmb3IgY2hlY2tpbmcgYmFjayAtIEkndmUgcmVhZCB0aGUgcGFydCBpbiB0aGUgc3Bl
-YyBhZ2FpbiBbMV0sIGFuZCANCj4gYXBwZWFyZW50bHkgeW91IGFyZSByaWdodC4NCj4gDQo+IFdp
-dGggeW91ciBwcm9wb3NlZCBjaGFuZ2UsIHNob3VsZG4ndCB3ZSBhbHNvIGNoYW5nZSB0aGUgYmVo
-YXZpb3VyIGlmIHRoZSANCj4gdXNlcnNwYWNlIHJlcXVlc3RzIGEgY2hhbm5lbCBzd2l0Y2ggd2l0
-aCBjb3VudCA9IDA/IEkgZ3Vlc3Mgd2Ugc2hvdWxkIA0KPiBpbW1lZGlhdGVseSBjaGFuZ2UgdGhl
-IGNoYW5uZWwgdGhlbiB3aXRob3V0IHdhaXRpbmcgZm9yIGJlYWNvbnM/IEkgZG9uJ3Qgc2VlIA0K
-PiB0aGUgcG9pbnQgaW4gY2hhbmdpbmcgdGhlIGJlYWNvbnMgaWYgd2UgZG9uJ3Qgc2VuZCB0aGVt
-LCBhZnRlciBhbGwuDQoNCllvdSdyZSByaWdodCwgY2hhbmdpbmcgdGhlIGJlYWNvbnMgZG9lc24n
-dCBtYWtlIHNlbnNlIGluIHRoaXMgY2FzZS4NCkknbGwgY2hhbmdlIHRoYXQgYW5kIHNlbmQgdjIu
-DQoNCkFub3RoZXIgdGhpbmcgaXMgdGhhdCB3ZSBhcmUgbWlzc2luZyB0aGUgYWN0aW9uIGZyYW1l
-cy4gIFRoZSBpZGVhIHdpdGgNCnRoZSBjb3VudCA9PSAwIGlzIHRoYXQgdGhlIFNUQSdzIHNob3Vs
-ZCBzdGFydCBsaXN0ZW5pbmcgb24gdGhlIG90aGVyDQpjaGFubmVsIGltbWVkaWF0ZWx5IGFmdGVy
-IHJlY2VpdmluZyB0aGUgYWN0aW9uIGZyYW1lIChiZWNhdXNlIHRoZSBzd2l0Y2gNCndpbGwgaGFw
-cGVuIGF0IGFueSB0aW1lKS4NCg0KSWYgd2UgZG9uJ3Qgc2VuZCB0aGUgYWN0aW9uIGZyYW1lLCBw
-YXNzaW5nIGNvbnRleHQgPT0gMCBmcm9tIHRoZQ0KdXNlcnNwYWNlIGRvZXNuJ3QgbXVjaCBtYWtl
-IHNlbnNlLCBiZWNhdXNlIHRoZSBjbGllbnRzIHdvbid0IGtub3cgd2UncmUNCnN3aXRjaGluZy4g
-IFdlbGwsIG1heWJlIGl0IG1ha2VzIGEgYml0IG9mIHNlbnNlLCBpZiB0aGVyZSBhcmUgbm8gY2xp
-ZW50cw0KY29ubmVjdGVkLCBidXQgbmV2ZXJ0aGVsZXNzLg0KDQpjb3VudCA9PSAwIHNob3VsZCBw
-cm9iYWJseSBiZSBhdm9pZGVkLCBiZWNhdXNlIHRoZSBzcGVjcyBhcmUgbm90IHRoYXQNCmNsZWFy
-IGFib3V0IGl0LiAgSW4gY2FzZSB0cmFuc21pc3Npb24gb24gb3VyIGNoYW5uZWwgbmVlZHMgdG8g
-YmUgc3RvcHBlZA0KaW1tZWRpYXRlbHkgKGVnLiB3aXRoIERTUyksIHdlIGNhbiBhbHdheXMgdXNl
-IHRoZSBjaGFubmVsIHN3aXRjaCBtb2RlDQooaWUuIG5vIFRYIHVudGlsIHRoZSBzd2l0Y2ggaGFw
-cGVucykuDQoNCkknbGwgcHJvYmFibHkgc3RhcnQgbG9va2luZyBpbnRvIHRoZSBhY3Rpb24gZnJh
-bWUgaW1wbGVtZW50YXRpb24gc29vbi4NCg0KDQo+IEN1cnJlbnRseSwgDQo+IGF0aDlrIGNhbGxz
-IHRoZSBjc2FfZmluaXNoKCkgYWZ0ZXIgY2hlY2tpbmcgd2hldGhlciBiZWFjb24gc2VuZGluZyB3
-YXMgY29tcGxldGUgDQo+IC4uLiBzbyB0aGlzIHdvdWxkIGhhdmUgdG8gYmUgY2hhbmdlZC4NCg0K
-WWVhaCwgdGhhdCdzIHdoYXQgSSBzdXNwZWN0ZWQgZnJvbSBteSB2ZXJ5IHF1aWNrIGxvb2sgYXQg
-dGhlIGF0aDlrIGNvZGUuDQpJJ2xsIHNlZSBpZiBJIGNhbiBjaGFuZ2UgdGhpcyBlYXNpbHkuICBJ
-J2xsIHByb2JhYmx5IG5lZWQgc29tZSBoZWxwIHdpdGgNCnRlc3RpbmcsIGJlY2F1c2UgSSBkb24n
-dCBoYXZlIGFuIGF0aDlrIGRldmljZS4gOlwNCg0KLS0NCkNoZWVycywNCkx1Y2EuDQoNCg==
+On Wed, Nov 20, 2013 at 06:32:57PM +0100, Felix Fietkau wrote:
+> On 2013-11-20 17:19, Karl Beldan wrote:
+> > On Wed, Nov 20, 2013 at 04:49:55PM +0100, Felix Fietkau wrote:
+> >> On 2013-11-20 15:50, Karl Beldan wrote:
+> >> > On Wed, Nov 20, 2013 at 03:04:34PM +0100, Felix Fietkau wrote:
+> >> >> On 2013-11-20 14:56, Karl Beldan wrote:
+> >> >> > On Wed, Nov 20, 2013 at 08:32:32AM +0100, Felix Fietkau wrote:
+> >> >> >> On 2013-11-20 01:51, Karl Beldan wrote:
+> >> >> >> > From: Karl Beldan <karl.beldan@rivierawaves.com>
+> >> >> >> > 
+> >> >> >> > Commit 3e8b1eb "mac80211/minstrel_ht: improve rate selection stability"
+> >> >> >> > introduced a local capped prob in minstrel_ht_calc_tp but omitted to use
+> >> >> >> > it to compute the rate throughput.
+> >> >> >> > 
+> >> >> >> > Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
+> >> >> >> > CC: Felix Fietkau <nbd@openwrt.org>
+> >> >> >> Nice catch!
+> >> >> >> Acked-by: Felix Fietkau <nbd@openwrt.org>
+> >> >> >> 
+> >> >> > Interestingly enough, consecutive coding rates (5/6, 3/4, 2/3) max ratio
+> >> >> > is 9/10, did you do it on purpose ?  (e.g. (9/10) * (5/6) == 3/4,
+> >> >> > (9/10) * (3/4) == 2/3 + 11/120).
+> >> >> The change has nothing to do with coding rates, it's only about
+> >> >> retransmissions caused by collisions under load.
+> >> >> 
+> >> > I understand this, my point was that along with this comes the following:
+> >> > let's say my SNR is just not so good to get 5/6 as good as 3/4, and e.g.
+> >> > case1 htMCS7 has  91% 
+> >> >       htMCS6 has 100% success 
+> >> > case2 htMCS7 has  80% 
+> >> >       htMCS6 has 100% success 
+> >> > capping at 90% will prefer htMCS7 in case1 and htMCS6 in case2 both
+> >> > achieving best real throughput.
+> >> > capping at 80% will prefer htMCS7 in case1 _but_ htMCS7 in case2 the
+> >> > latter being the worst real throughput(90% of 5/6 == 100% of 3/4 > 80%
+> >> > of 5/6).
+> >> Not sure if that's a meaningful comparison at all - you're leaving out
+> >> the per-packet overhead, which is important for the throughput
+> >> calculation as well.
+> >> 
+> > The overhead breaks these numbers but the more we aggregate the more
+> > this math is realistic as then the rates converge to these numbers ..
+> > plus, IMHO using the overhead for throughput is wasteful since
+> > throughputs are ranked and used relatively to each others and overhead
+> > is shared by all rates.
+> The throughput metric (as displayed in debugfs) is calculated as:
+> tp = 10 ms * prob / (overhead_time / ampdu_len + packet_tx_time)
+> 
+> When you have two rates that are relatively close to each other, and the
+> faster rate is less reliable than the slower one, the throughput metric
+> can prefer the slower rate without aggregation, and the faster one with
+> aggregation.
+> 
+> The overhead may be shared between all rates, but that doesn't mean it
+> does not affect the relative comparison between rates.
+> 
+I did not say the overhead doesn't affect the relative comparison.
+ampdu_len and overhead_time are shared by all the rates, what's the
+purpose of computing overhead_time then ? since the rate selection is
+only mere comparison of the said computed tps.
+ 
+Karl
