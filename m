@@ -1,96 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f170.google.com ([74.125.82.170]:39017 "EHLO
-	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758882Ab3KMRyX (ORCPT
+Received: from mail-bk0-f42.google.com ([209.85.214.42]:49992 "EHLO
+	mail-bk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754628Ab3KTTp2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Nov 2013 12:54:23 -0500
-Received: by mail-we0-f170.google.com with SMTP id p61so790072wes.15
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Nov 2013 09:54:22 -0800 (PST)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 4/5] cfg80211: replace print_dfs_region() with reg_dfs_region_str() helper
-Date: Wed, 13 Nov 2013 18:54:05 +0100
-Message-Id: <1384365246-24768-5-git-send-email-mcgrof@do-not-panic.com> (sfid-20131113_185426_711648_3BF926D2)
-In-Reply-To: <1384365246-24768-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1384365246-24768-1-git-send-email-mcgrof@do-not-panic.com>
+	Wed, 20 Nov 2013 14:45:28 -0500
+Received: by mail-bk0-f42.google.com with SMTP id w11so648bkz.29
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Nov 2013 11:45:27 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CABGE7dvky+trLL5=hPv13OHhRm9vdbU33Ndyv_oHAjG3+x24+A@mail.gmail.com>
+References: <CABGE7dsDtL0ZPAmOTW=G=hMdA-6r=yT0DtQx_-H6Yi6cGa6Udw@mail.gmail.com>
+ <CABGE7dur4pM4vLz_iLx7u-g5ohKhXkwKAOmjJ86PE62mYwGPJw@mail.gmail.com>
+ <CAG6hwVOOvKfZcv-J70EMeHM3pmx-ieeAF2-6UtbrmoN3xC=SLw@mail.gmail.com>
+ <CABGE7dsTzYESpxfO8WL9JP1BR1QdrTNv5+EszuZm225R2pA=Zw@mail.gmail.com>
+ <CABGE7ds77Ea9YeGBLCCYYDfTFEm0MqjRA03aF=vpv9Y+=Z47oA@mail.gmail.com>
+ <CAG6hwVNqLQB+8ViDyB-XhVx=TzbgZmX-DY6gDaevUoMfETWTVw@mail.gmail.com> <CABGE7dvky+trLL5=hPv13OHhRm9vdbU33Ndyv_oHAjG3+x24+A@mail.gmail.com>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Wed, 20 Nov 2013 11:45:07 -0800
+Message-ID: <CAG6hwVN8qJQ1kYhf9LGcebbh2+9aDfS6fE9KMxGVC-WN1bq=pw@mail.gmail.com> (sfid-20131120_204559_090843_86630EAE)
+Subject: Re: NL80211_CMD_NEW_STATION result: -105 (No buffer space available)
+To: Gustavo Azambuja <gazambuja+hostapd@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This lets us later reuse the more generic reg_dfs_region_str().
+On Wed, Nov 20, 2013 at 7:22 AM, Gustavo Azambuja
+<gazambuja+hostapd@gmail.com> wrote:
+> Thanks Thomas, but is not an option using a "real" AP... I realy need
+> to make my own (I need access to MAC address of connected devices and
+> use the monitor mode at the same time).
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- net/wireless/reg.c | 41 ++++++++++++++++-------------------------
- 1 file changed, 16 insertions(+), 25 deletions(-)
+The device I mentioned earlier is fully supported by openwrt, which
+gives you a standard linux environment on your router.
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 740eccb..ec54e1a 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -120,6 +120,21 @@ static const struct ieee80211_regdomain *get_wiphy_regdom(struct wiphy *wiphy)
- 	return rtnl_dereference(wiphy->regd);
- }
- 
-+static const char *reg_dfs_region_str(enum nl80211_dfs_regions dfs_region)
-+{
-+	switch (dfs_region) {
-+	case NL80211_DFS_UNSET:
-+		return "unset";
-+	case NL80211_DFS_FCC:
-+		return "FCC";
-+	case NL80211_DFS_ETSI:
-+		return "ETSI";
-+	case NL80211_DFS_JP:
-+		return "JP";
-+	}
-+	return "Unknown";
-+}
-+
- static void rcu_free_regdom(const struct ieee80211_regdomain *r)
- {
- 	if (!r)
-@@ -2146,30 +2161,6 @@ bool reg_supported_dfs_region(enum nl80211_dfs_regions dfs_region)
- 	}
- }
- 
--static void print_dfs_region(enum nl80211_dfs_regions dfs_region)
--{
--	if (!dfs_region)
--		return;
--
--	switch (dfs_region) {
--	case NL80211_DFS_UNSET:
--		pr_info(" DFS Master region unset");
--		break;
--	case NL80211_DFS_FCC:
--		pr_info(" DFS Master region FCC");
--		break;
--	case NL80211_DFS_ETSI:
--		pr_info(" DFS Master region ETSI");
--		break;
--	case NL80211_DFS_JP:
--		pr_info(" DFS Master region JP");
--		break;
--	default:
--		pr_info(" DFS Master region Unknown");
--		break;
--	}
--}
--
- static void print_regdomain(const struct ieee80211_regdomain *rd)
- {
- 	struct regulatory_request *lr = get_last_request();
-@@ -2201,7 +2192,7 @@ static void print_regdomain(const struct ieee80211_regdomain *rd)
- 		}
- 	}
- 
--	print_dfs_region(rd->dfs_region);
-+	pr_info(" DFS Master region: %s", reg_dfs_region_str(rd->dfs_region));
- 	print_rd_rules(rd);
- }
- 
 -- 
-1.8.4.rc3
-
+Thomas
