@@ -1,25 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f181.google.com ([209.85.217.181]:62342 "EHLO
-	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753854Ab3KFJhF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Nov 2013 04:37:05 -0500
-Received: by mail-lb0-f181.google.com with SMTP id x18so7604545lbi.12
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Nov 2013 01:37:04 -0800 (PST)
+Received: from nbd.name ([46.4.11.11]:53349 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752414Ab3KTRhi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Nov 2013 12:37:38 -0500
+Message-ID: <528CF359.9000900@openwrt.org> (sfid-20131120_183741_176557_853F18E1)
+Date: Wed, 20 Nov 2013 18:37:29 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Date: Wed, 6 Nov 2013 11:37:03 +0200
-Message-ID: <CANUX_P1fEmRWXnv-pHuXmY+p5PxDb9=A5oN7HU8Gq3Ec78-kAw@mail.gmail.com> (sfid-20131106_103710_821747_727BF15C)
-Subject: iwlwifi.git in kernel.org to be dropped
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Karl Beldan <karl.beldan@gmail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>
+Subject: Re: [PATCH] mac80211: use capped prob when computing throughputs
+References: <1384908668-27869-1-git-send-email-karl.beldan@gmail.com> <528C6590.1000803@openwrt.org> <528CE9E2.7030707@openwrt.org> <20131120170444.GF9335@magnum.frso.rivierawaves.com>
+In-Reply-To: <20131120170444.GF9335@magnum.frso.rivierawaves.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I guess that none of you is really concerned, but still...
-I am going to delete this tree. If someone wants a tree on which he
-can test latest iwlwifi bits, he can use John's wireless-testing.
+On 2013-11-20 18:04, Karl Beldan wrote:
+> On Wed, Nov 20, 2013 at 05:57:06PM +0100, Felix Fietkau wrote:
+>> On 2013-11-20 08:32, Felix Fietkau wrote:
+>> > On 2013-11-20 01:51, Karl Beldan wrote:
+>> >> From: Karl Beldan <karl.beldan@rivierawaves.com>
+>> >> 
+>> >> Commit 3e8b1eb "mac80211/minstrel_ht: improve rate selection stability"
+>> >> introduced a local capped prob in minstrel_ht_calc_tp but omitted to use
+>> >> it to compute the rate throughput.
+>> >> 
+>> >> Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
+>> >> CC: Felix Fietkau <nbd@openwrt.org>
+>> > Nice catch!
+>> > Acked-by: Felix Fietkau <nbd@openwrt.org>
+>> Sorry, I need to revoke that ACK - there's a bug in this patch:
+>> 
+>> > -	tp = 1000000 * ((mr->probability * 1000) / nsecs);
+>> > +	tp = 1000000 * (prob * 1000) / nsecs;
+>> Removing the outer () is wrong, it leads to overflow that makes all
+>> throughput values 0.
+>> 
+> Do you handle this one or I resend ?
+Please resend.
 
+- Felix
 
-Emmanuel Grumbach
-egrumbach@gmail.com
