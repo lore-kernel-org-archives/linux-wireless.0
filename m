@@ -1,106 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:49639 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751754Ab3KRUkG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Nov 2013 15:40:06 -0500
-Date: Mon, 18 Nov 2013 21:40:03 +0100
-From: Borislav Petkov <bp@alien8.de>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	lkml <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] brcmsmac: Fix build dep on LEDS_CLASS
-Message-ID: <20131118204003.GK24851@pd.tnic> (sfid-20131118_214014_870074_958280FD)
-References: <20131117133702.GA30840@pd.tnic>
- <5289359B.8090506@broadcom.com>
- <CACna6ryNX1=8zdYe2bjCj7aj3S_O=LnrxdjBcESvJJ63+h729Q@mail.gmail.com>
- <20131118133250.GH24851@pd.tnic>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20131118133250.GH24851@pd.tnic>
+Received: from s3.sipsolutions.net ([144.76.43.152]:45298 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751133Ab3KTKbK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Nov 2013 05:31:10 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: blaise@suitabletech.com, Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3.13] mac80211: don't attempt to reorder multicast frames
+Date: Wed, 20 Nov 2013 11:31:01 +0100
+Message-Id: <1384943461-23259-1-git-send-email-johannes@sipsolutions.net> (sfid-20131120_113121_481440_F628A794)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 18, 2013 at 02:32:50PM +0100, Borislav Petkov wrote:
-> On Mon, Nov 18, 2013 at 12:58:58PM +0100, Rafał Miłecki wrote:
-> > Borislav: I think I didn't get your original patch.
-> 
-> Forget it, I'll send a better one later.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Ok, let's try another one. I've done it with depends but we
-probably could select LEDS_CLASS in BRCMSMAC_LED as it is required
-functionality...
+Multicast frames can't be transmitted as part of an aggregation
+session (such a session couldn't even be set up) so don't try to
+reorder them. Trying to do so would cause the reorder to stop
+working correctly since multicast QoS frames (as transmitted by
+the Aruba APs this was found with) would cause sequence number
+confusion in the buffer.
 
+Cc: stable@vger.kernel.org
+Reported-by: Blaise Gassend <blaise@suitabletech.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
-From: Borislav Petkov <bp@suse.de>
-Subject: [PATCH -v2] brcmsmac: Fix build dep on LEDS_CLASS
+ net/mac80211/rx.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-When building randconfigs with CONFIG_BCMA_DRIVER_GPIO=y, I get
-
-drivers/built-in.o: In function `brcms_led_unregister':
-(.text+0x351aca): undefined reference to `led_classdev_unregister'
-drivers/built-in.o: In function `brcms_led_register':
-(.text+0x351c65): undefined reference to `led_classdev_register'
-
-during final linking stage because brcmsmac/led.c needs LEDS_CLASS for
-registering/deregistering the led device. Add a promptless Kconfig
-symbol which takes care of that dependency.
-
-Cc: "Rafał Miłecki" <zajec5@gmail.com>
-Cc: <linux-wireless@vger.kernel.org>
-Signed-off-by: Borislav Petkov <bp@suse.de>
----
- drivers/net/wireless/brcm80211/Kconfig           | 4 ++++
- drivers/net/wireless/brcm80211/brcmsmac/Makefile | 2 +-
- drivers/net/wireless/brcm80211/brcmsmac/led.h    | 2 +-
- 3 files changed, 6 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/Kconfig b/drivers/net/wireless/brcm80211/Kconfig
-index b00a7e92225f..c9434b7c7b9b 100644
---- a/drivers/net/wireless/brcm80211/Kconfig
-+++ b/drivers/net/wireless/brcm80211/Kconfig
-@@ -16,6 +16,10 @@ config BRCMSMAC
- 	  be available if you select BCMA_DRIVER_GPIO. If you choose to build a
- 	  module, the driver will be called brcmsmac.ko.
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 674eac1..1e5bd0d 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -911,7 +911,8 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx,
+ 	u16 sc;
+ 	u8 tid, ack_policy;
  
-+config BRCMSMAC_LED
-+	def_bool y
-+	depends on BRCMSMAC && BCMA_DRIVER_GPIO && LEDS_CLASS
-+
- config BRCMFMAC
- 	tristate "Broadcom IEEE802.11n embedded FullMAC WLAN driver"
- 	depends on CFG80211
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/Makefile b/drivers/net/wireless/brcm80211/brcmsmac/Makefile
-index 32464acccd90..9ec2c8b2f26c 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/Makefile
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/Makefile
-@@ -43,6 +43,6 @@ brcmsmac-y := \
- 	brcms_trace_events.o \
- 	debug.o
+-	if (!ieee80211_is_data_qos(hdr->frame_control))
++	if (!ieee80211_is_data_qos(hdr->frame_control) ||
++	    is_multicast_ether_addr(hdr->addr1))
+ 		goto dont_reorder;
  
--brcmsmac-$(CONFIG_BCMA_DRIVER_GPIO) += led.o
-+brcmsmac-$(CONFIG_BRCMSMAC_LED) += led.o
- 
- obj-$(CONFIG_BRCMSMAC)	+= brcmsmac.o
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/led.h b/drivers/net/wireless/brcm80211/brcmsmac/led.h
-index 17a0b1f5dbcf..b914466e687b 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/led.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/led.h
-@@ -22,7 +22,7 @@ struct brcms_led {
- 	bool active_low;
- };
- 
--#ifdef CONFIG_BCMA_DRIVER_GPIO
-+#ifdef CONFIG_BRCMSMAC_LED
- void brcms_led_unregister(struct brcms_info *wl);
- int brcms_led_register(struct brcms_info *wl);
- #else
+ 	/*
 -- 
-1.8.4
+1.8.4.rc3
 
--- 
-Regards/Gruss,
-    Boris.
-
-Sent from a fat crate under my desk. Formatting is fine.
---
