@@ -1,44 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:53866 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752323Ab3KNKRm (ORCPT
+Received: from mail-ee0-f43.google.com ([74.125.83.43]:34246 "EHLO
+	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752065Ab3KTJmX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Nov 2013 05:17:42 -0500
-Message-ID: <21124.41527.258721.952015@gargle.gargle.HOWL> (sfid-20131114_111745_398008_49F00E13)
-Date: Thu, 14 Nov 2013 15:43:11 +0530
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, dan.carpenter@oracle.com
-Subject: [PATCH] ath9k: fix SC_OP_INVALID test in ath9k_tx99_init()
+	Wed, 20 Nov 2013 04:42:23 -0500
+Received: by mail-ee0-f43.google.com with SMTP id c13so3195048eek.16
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Nov 2013 01:42:22 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH v2 2/4] cfg80211: DFS check dfs_region before usage
+Date: Wed, 20 Nov 2013 10:41:55 +0100
+Message-Id: <1384940517-6154-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131120_104232_420074_C6330A41)
+In-Reply-To: <1384940517-6154-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1384940517-6154-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dan Carpenter <dan.carpenter@oracle.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-SC_OP_INVALID is zero so the test is always false.  We're supposed to be
-testing the lowest bit instead.
+Check the DFS region before channel availability check.
 
-Fixes: 89f927af7f33 ('ath9k: add TX99 support')
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
- drivers/net/wireless/ath/ath9k/tx99.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/wireless/nl80211.c |    5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/tx99.c b/drivers/net/wireless/ath/ath9k/tx99.c
-index 6668197..c65c37f 100644
---- a/drivers/net/wireless/ath/ath9k/tx99.c
-+++ b/drivers/net/wireless/ath/ath9k/tx99.c
-@@ -99,7 +99,7 @@ static int ath9k_tx99_init(struct ath_softc *sc)
- 	struct ath_tx_control txctl;
- 	int r;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index dc0a885..62b4efd 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5631,8 +5631,13 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
+ 	struct net_device *dev = info->user_ptr[1];
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	struct cfg80211_chan_def chandef;
++	enum nl80211_dfs_regions dfs_region;
+ 	int err;
  
--	if (sc->sc_flags & SC_OP_INVALID) {
-+	if (test_bit(SC_OP_INVALID, &sc->sc_flags)) {
- 		ath_err(common,
- 			"driver is in invalid state unable to use TX99");
- 		return -EINVAL;
++	dfs_region = reg_get_dfs_region(wdev->wiphy);
++	if (dfs_region == NL80211_DFS_UNSET)
++		return -EINVAL;
++
+ 	err = nl80211_parse_chandef(rdev, info, &chandef);
+ 	if (err)
+ 		return err;
 -- 
-1.8.4.2
+1.7.9.5
 
