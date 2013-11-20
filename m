@@ -1,26 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:43174 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756120Ab3KFK7v (ORCPT
+Received: from mail-ea0-f172.google.com ([209.85.215.172]:62078 "EHLO
+	mail-ea0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751876Ab3KTJmW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Nov 2013 05:59:51 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1Ve0py-0002EO-Co
-	for linux-wireless@vger.kernel.org; Wed, 06 Nov 2013 11:59:50 +0100
-Message-ID: <1383735588.14307.30.camel@jlt4.sipsolutions.net> (sfid-20131106_115953_737586_A6D86F90)
-Subject: Re: [PATCH 1/4] nl80211: check nla_put_* return values
-From: Johannes Berg <johannes@sipsolutions.net>
+	Wed, 20 Nov 2013 04:42:22 -0500
+Received: by mail-ea0-f172.google.com with SMTP id q10so1507819ead.31
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Nov 2013 01:42:21 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 To: linux-wireless@vger.kernel.org
-Date: Wed, 06 Nov 2013 11:59:48 +0100
-In-Reply-To: <1382969304-25611-1-git-send-email-johannes@sipsolutions.net> (sfid-20131028_150831_591764_43492672)
-References: <1382969304-25611-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20131028_150831_591764_43492672)
-Content-Type: text/plain
-Mime-Version: 1.0
+Cc: johannes@sipsolutions.net,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH v2 1/4] cfg80211: add reg_get_dfs_region()
+Date: Wed, 20 Nov 2013 10:41:54 +0100
+Message-Id: <1384940517-6154-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131120_104231_187801_1A1C94E5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Applied all
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+
+This can be used outside of the regulatory context for any checks
+on the DFS region. The central cfg80211 dfs_region is always used
+and if it does not match with the wiphy a debug print is issued.
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ net/wireless/reg.c |   29 +++++++++++++++++++++++++++++
+ net/wireless/reg.h |    1 +
+ 2 files changed, 30 insertions(+)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index ec54e1a..4bfbeaa 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -135,6 +135,35 @@ static const char *reg_dfs_region_str(enum nl80211_dfs_regions dfs_region)
+ 	return "Unknown";
+ }
+ 
++enum nl80211_dfs_regions reg_get_dfs_region(struct wiphy *wiphy)
++{
++	const struct ieee80211_regdomain *regd = NULL;
++	const struct ieee80211_regdomain *wiphy_regd = NULL;
++
++	ASSERT_RTNL();
++
++	regd = get_cfg80211_regdom();
++	if (!wiphy)
++		goto out;
++
++	wiphy_regd = get_wiphy_regdom(wiphy);
++	if (!wiphy_regd)
++		goto out;
++
++	if (wiphy_regd->dfs_region == regd->dfs_region)
++		goto out;
++
++	REG_DBG_PRINT("%s: device specific dfs_region "
++		      "(%s) disagrees with cfg80211's "
++		      "central dfs_region (%s)\n",
++		      dev_name(&wiphy->dev),
++		      reg_dfs_region_str(wiphy_regd->dfs_region),
++		      reg_dfs_region_str(regd->dfs_region));
++
++out:
++	return regd->dfs_region;
++}
++
+ static void rcu_free_regdom(const struct ieee80211_regdomain *r)
+ {
+ 	if (!r)
+diff --git a/net/wireless/reg.h b/net/wireless/reg.h
+index cc4c2c0..02bd8f4 100644
+--- a/net/wireless/reg.h
++++ b/net/wireless/reg.h
+@@ -21,6 +21,7 @@ extern const struct ieee80211_regdomain __rcu *cfg80211_regdomain;
+ bool reg_is_valid_request(const char *alpha2);
+ bool is_world_regdom(const char *alpha2);
+ bool reg_supported_dfs_region(enum nl80211_dfs_regions dfs_region);
++enum nl80211_dfs_regions reg_get_dfs_region(struct wiphy *wiphy);
+ 
+ int regulatory_hint_user(const char *alpha2,
+ 			 enum nl80211_user_reg_hint_type user_reg_hint_type);
+-- 
+1.7.9.5
 
