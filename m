@@ -1,52 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f181.google.com ([209.85.223.181]:48241 "EHLO
-	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756152Ab3KLTOp (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:53073 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751108Ab3KTI71 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Nov 2013 14:14:45 -0500
-Received: by mail-ie0-f181.google.com with SMTP id tp5so3900950ieb.26
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Nov 2013 11:14:44 -0800 (PST)
+	Wed, 20 Nov 2013 03:59:27 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Marek Puzyniak <marek.puzyniak@tieto.com>
+CC: <ath10k@lists.infradead.org>,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 1/3] ath10k: add phyerr/dfs handling
+References: <1384418018-4973-1-git-send-email-marek.puzyniak@tieto.com>
+	<87vbzo1m6d.fsf@kamboji.qca.qualcomm.com>
+Date: Wed, 20 Nov 2013 10:59:21 +0200
+In-Reply-To: <87vbzo1m6d.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
+	of "Tue, 19 Nov 2013 16:49:30 +0200")
+Message-ID: <87wqk3zbx2.fsf@kamboji.qca.qualcomm.com> (sfid-20131120_095930_968054_C2D64FAE)
 MIME-Version: 1.0
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB301DF0865@HASMSX103.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
- <CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
- <CALkVjQY7r=YKhsgDKR0mnYVtZy5BAdj83nY2jL0VFaiew6ha7A@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
- <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
- <527A8166.6000701@gmail.com> <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
- <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
- <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
- <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
- <20131111224439.GA30638@google.com> <CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com>
- <CALkVjQaXEBpbwu9Qy3+17Eg-nSg-k7iin8G3f1RsTLkCOB-2XQ@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DF044C@HASMSX103.ger.corp.intel.com>
- <CAErSpo5iU15AoSVL9WmLp4gNCiNmt6pFZuTsd-Vui4SCrSc_Hw@mail.gmail.com> <0BA3FCBA62E2DC44AF3030971E174FB301DF0865@HASMSX103.ger.corp.intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 12 Nov 2013 12:14:24 -0700
-Message-ID: <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com> (sfid-20131112_201450_376876_B4C839EB)
-Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: wzyboy <wzyboy@wzyboy.org>,
-	Emmanuel Grumbach <egrumbach@gmail.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 12, 2013 at 11:25 AM, Grumbach, Emmanuel
-<emmanuel.grumbach@intel.com> wrote:
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-> Right - I remember the discussion we had on that.
-> On this device (7260 that has an issue with ASPM), we don't call pci_disable_link_state, because we know it is supposed to work...
+> Marek Puzyniak <marek.puzyniak@tieto.com> writes:
+>
+>> From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+>>
+>> Handle phyerr, dfs event, radar_report and fft_report.
+>> Add also debugfs dfs_simulate_radar and dfs_stats files.
+>> Use ath dfs pattern detector.
+>>
+>> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+>
+> Thanks, all three applied.
+>
+> In the future please add a changelog when you change something in the
+> patches. It's very difficult to review otherwise.
 
-If ASPM is supposed to work as far as the hardware is concerned, I
-guess you're saying this must be an iwlwifi driver issue.  Right?
+I found out _afterwards_ that these patches actually depend on some
+functionality which is only in mac80211-next.git. As I do not want to
+submit broken functionality to John I had to rebase ath.git and change
+the patch 2:
 
-If you think it's a PCI core problem, we have to figure out what the
-core needs to do differently.  If somebody can point to a difference
-in the ASPM configuration between Windows and Linux, that would be a
-good start.
+commit e8a50f8ba44b6933b2a39b6a65528b9a4e8ba5f3
+Author: Marek Puzyniak <marek.puzyniak@tieto.com>
+Date:   Wed Nov 20 09:59:47 2013 +0200
 
-Bjorn
+    ath10k: introduce DFS implementation
+    
+    Configure interface combination for AP running on channels
+    where radar detection is required. It allows only one type
+    of interface - AP on DFS channel and limits number of AP
+    interfaces to 8. Setup WMI channel flags accordingly to mac
+    channel configuration. CAC based on additional monitor vdev
+    is started if required for current channel.
+    
+    kvalo: dropped ATH10K_DFS_CERTIFIED config option as this
+    the DFS still depends on few mac80211 and cfg80211 patches
+    which are on mac80211-next.git right now. The config option
+    will be added later once all dependencies are available.
+    
+    Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
+    Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+    Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+
+
+-- 
+Kalle Valo
