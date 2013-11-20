@@ -1,72 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:57512 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751515Ab3K0KxN (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51213 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753953Ab3KTQaT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Nov 2013 05:53:13 -0500
-Received: by mail-wg0-f45.google.com with SMTP id y10so4807400wgg.12
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Nov 2013 02:53:12 -0800 (PST)
-Date: Wed, 27 Nov 2013 11:52:23 +0100
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Simon Wunderlich <sw@simonwunderlich.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Wed, 20 Nov 2013 11:30:19 -0500
+Date: Wed, 20 Nov 2013 11:25:38 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: Nick Kossifidis <mickflemm@gmail.com>,
+	Thomas =?iso-8859-1?Q?B=E4chler?= <thomas@archlinux.org>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3] mac80211_hwsim: claim CSA support for AP
-Message-ID: <20131127105223.GA7446@magnum.frso.rivierawaves.com> (sfid-20131127_115316_927098_6D05AE82)
-References: <1385111186-19551-1-git-send-email-karl.beldan@gmail.com>
- <20131122140533.GA24796@magnum.frso.rivierawaves.com>
- <20131123093844.GA3895@magnum.frso.rivierawaves.com>
- <201311261643.22536.sw@simonwunderlich.de>
+Subject: Re: [ANN] wireless-regdb: master-2013-10-11
+Message-ID: <20131120162538.GB2220@tuxdriver.com> (sfid-20131120_173023_708598_E014563A)
+References: <20131011202459.GF14329@tuxdriver.com>
+ <5272E897.8060606@archlinux.org>
+ <20131104191850.GA1989@tuxdriver.com>
+ <CAB=NE6XU80NwLA=qW8jOBPZEmiSJ6NoHXDgp1bfs5=5GYnUi3A@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <201311261643.22536.sw@simonwunderlich.de>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAB=NE6XU80NwLA=qW8jOBPZEmiSJ6NoHXDgp1bfs5=5GYnUi3A@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 26, 2013 at 04:43:22PM +0100, Simon Wunderlich wrote:
-> Hey Karl,
-> > Sorry, I was not very clear.
-> > What I meant is that, my change for hwsim is not correct because it
-> > assumed something like what's above that would prevent beacon_get() to
-> > return a beacon when csa is under completion. Instead, it should check
-> > for csa completion prior to getting the beacon.
-> > 
-> > Checking your ath9k change for CSA, I am under the impression this is
-> > possible ? : {{{
-> > ath9k_channel_switch_beacon()
-> > ath9k_beacon_tasklet()
-> >         ath9k_csa_is_finished() // ret false
-> > ..
-> > ath9k_beacon_tasklet()
-> >         ath9k_csa_is_finished() // sets sc->csa_vif to NULL, ret true
-> >                 ieee80211_csa_finish() // schedules csa work
-> > 
-> > ath9k_beacon_tasklet()
-> >         ath9k_csa_is_finished() // ret false because sc->csa_vif==NULL
-> > 
-> > csa_finalize_work() // too late
-> > }}}
+On Wed, Nov 20, 2013 at 11:29:50AM +0100, Luis R. Rodriguez wrote:
+> On Mon, Nov 4, 2013 at 8:18 PM, John W. Linville <linville@tuxdriver.com> wrote:
+> > On Fri, Nov 01, 2013 at 12:32:39AM +0100, Thomas Bächler wrote:
+> >> Am 11.10.2013 22:24, schrieb John W. Linville:
+> >> > (Cutting the short log, since the original version got classified as
+> >> > SPAM on vger.kernel.org...??)
+> >> >
+> >> > A new release of wireless-regdb (master-2013-10-11) is available at:
+> >> >
+> >> > http://www.kernel.org/pub/software/network/wireless-regdb/wireless-regdb-2013.10.11.tar.gz
+> >> >
+> >> > Here is the short log of the changes included since the 2013-02-13
+> >> > release:
+> >> >
+> >> > SNIP -- you'll have to check it yourself:
+> >>
+> >> We can't use the database file:
+> >>
+> >> $ regdbdump regulatory.bin
+> >> Database signature verification failed.
+> >
+> > OK, I probably screwed-up something.  I'll investigate, but it may
+> > take few days while I recover from some extended travel...
 > 
-> Yeah, you are right, if the worker is too late ath9k still generates a beacon 
-> and will hit a warning that the csa was already finished. Actually that helped 
-> quite a lot while developing the feature.
+> Hey John, it seems other folks are reporting this as well [0].
 > 
-> In practice, I don't think it's that bad - the worker shouldn't take so long 
-> too respond, and also it does not hurt to generate/send the beacon one more 
-> time on the same channel with count = 0 (or 1). It's useful to get a warning 
-> in this case so that the root cause for the delay can be worked on.
-> 
-I think it's always nice to add a clean-room use of a new stack feature.
-I was more expecting a WARN_ON(!vif && vif->csa_active) in the driver
-than hitting a "forbidden" path in the stack.
-The v4 I sent for hwsim is immune to this race but I'd have expected the
-CSA code to handle this (e.g. with a vif->csa_finishing, or by letting
-ieee80211_beacon_get* return an ERR_PTR) since many drivers would? have
-to do this ATM.
+> [0] http://forums.gentoo.org/viewtopic-p-7440278.html
 
-> What do you think? I can change that easily in ath9k otherwise. :)
-> 
-I have no strong opinion on this, no pb with me keeping it as is, plus
-CSA being a recent addition, I doubt new ideas won't chime in.
- 
-Karl
+Sorry, I dropped the ball after I couldn't replicate the problem
+locally.  Does anyone have a suggestion as to what the issue might be?
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
