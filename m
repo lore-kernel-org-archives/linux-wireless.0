@@ -1,59 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:61477 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751321Ab3KRQW2 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51676 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754487Ab3KTRAS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Nov 2013 11:22:28 -0500
-Received: by mail-wi0-f169.google.com with SMTP id hj6so99299wib.2
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Nov 2013 08:22:27 -0800 (PST)
+	Wed, 20 Nov 2013 12:00:18 -0500
+Date: Wed, 20 Nov 2013 11:47:35 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: Nick Kossifidis <mickflemm@gmail.com>,
+	Thomas =?iso-8859-1?Q?B=E4chler?= <thomas@archlinux.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [ANN] wireless-regdb: master-2013-10-11
+Message-ID: <20131120164734.GD2220@tuxdriver.com> (sfid-20131120_180022_964443_410498B9)
+References: <20131011202459.GF14329@tuxdriver.com>
+ <5272E897.8060606@archlinux.org>
+ <20131104191850.GA1989@tuxdriver.com>
+ <CAB=NE6XU80NwLA=qW8jOBPZEmiSJ6NoHXDgp1bfs5=5GYnUi3A@mail.gmail.com>
+ <20131120162538.GB2220@tuxdriver.com>
 MIME-Version: 1.0
-In-Reply-To: <1384779666.17916.11.camel@jlt4.sipsolutions.net>
-References: <CABPxzYJAct6KtwqZY-DOgjf1wueSmeOU=iLku+gGeZ6ZVE6n9Q@mail.gmail.com>
- <1384679792.14795.9.camel@jlt4.sipsolutions.net> <CABPxzY+XHXCFpKxU1NPZzb4eXP7x8i0-89eE+7uxWqGKnNsePw@mail.gmail.com>
- <1384779666.17916.11.camel@jlt4.sipsolutions.net>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Mon, 18 Nov 2013 21:52:05 +0530
-Message-ID: <CABPxzYJO7QDci9gVWpaBcLoJ4ib9EiJutWd7pDA2dNxf8ZL9Pw@mail.gmail.com> (sfid-20131118_172231_733289_16E9357E)
-Subject: Re: [Query] Update mac80211 BSS info from cfg8011_bss_inform_frame
- when hw_scan is enabled
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/mixed; boundary="BOKacYhQ+x31HxR3"
+In-Reply-To: <20131120162538.GB2220@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 18, 2013 at 6:31 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sun, 2013-11-17 at 18:43 +0530, Krishna Chaitanya wrote:
->
->> > You're not supposed to even call cfg80211_bss_inform_frame() from a
->> > mac80211-based driver. Just report the RX frame properly.
->
->> Ours is a partial Full MAC driver which still uses mac80211 but mostly with
->> offloads to HW.
->>
->> With mac80211 + hw_scan if we just report the RX frames, then we are just
->> eliminating the SCAN SM from mac80211, is this just to reduce the host
->> cycles? (apart from speeding up the channel switch)
->
-> When you post the driver for upstream we can talk about it. I have no
-> interest in it otherwise - but
->
-May not be possible.
 
->  (a) you can't call cfg80211 from the driver and then have cfg80211 call
-> mac80211
->      - that's a gross layering violation
-That was not my intention either.
->  (b) if you're offloading much, you're probably not using a lot of
-> mac80211 and
->      should come with a proposal to refactor the code
-If we want to truly offload the SCAN to HW then we should have some
-way to update scan_results without ever sending the probe responses
-and beacons up (saves lots of host cycles, assuming Connection
-Monitoring is also offloaded).
+--BOKacYhQ+x31HxR3
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 
-For now, will change the driver to pass the beacons/probes up for
-updating scan results.
+On Wed, Nov 20, 2013 at 11:25:38AM -0500, John W. Linville wrote:
+> On Wed, Nov 20, 2013 at 11:29:50AM +0100, Luis R. Rodriguez wrote:
+> > On Mon, Nov 4, 2013 at 8:18 PM, John W. Linville <linville@tuxdriver.com> wrote:
+> > > On Fri, Nov 01, 2013 at 12:32:39AM +0100, Thomas Bächler wrote:
+> > >> Am 11.10.2013 22:24, schrieb John W. Linville:
+> > >> > (Cutting the short log, since the original version got classified as
+> > >> > SPAM on vger.kernel.org...??)
+> > >> >
+> > >> > A new release of wireless-regdb (master-2013-10-11) is available at:
+> > >> >
+> > >> > http://www.kernel.org/pub/software/network/wireless-regdb/wireless-regdb-2013.10.11.tar.gz
+> > >> >
+> > >> > Here is the short log of the changes included since the 2013-02-13
+> > >> > release:
+> > >> >
+> > >> > SNIP -- you'll have to check it yourself:
+> > >>
+> > >> We can't use the database file:
+> > >>
+> > >> $ regdbdump regulatory.bin
+> > >> Database signature verification failed.
+> > >
+> > > OK, I probably screwed-up something.  I'll investigate, but it may
+> > > take few days while I recover from some extended travel...
+> > 
+> > Hey John, it seems other folks are reporting this as well [0].
+> > 
+> > [0] http://forums.gentoo.org/viewtopic-p-7440278.html
+> 
+> Sorry, I dropped the ball after I couldn't replicate the problem
+> locally.  Does anyone have a suggestion as to what the issue might be?
 
-Thanks.
+Hmmm...actually, I may have accidentally regeneratd a key.  I'm not
+sure why this didn't seem to cause a problem for me...
+
+Can someone try to verify the signature on the attached regulatory.bin file?
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
+
+--BOKacYhQ+x31HxR3
+Content-Type: application/octet-stream
+Content-Disposition: attachment; filename="regulatory.bin"
+Content-Transfer-Encoding: base64
+
+UkdEQgAAABMAAAo4AAAAeQAAAQAAAAAAAAAH0AAAAAAAAAqMAAAAAAAAD6AAAAAAAAAI/AAA
+AAAAAAu4AAABLAAACPwAAAEsAAALuAAAAAAAAAcIAAABLAAABqQAAAEsAAAH0AAAASwAAAlg
+AAAAAAAACP0AAAEsAAAKjAAAAAAAAAAAAAAAAAAACooAAAAAAAAGpAAAAAAAAArwAAAAAAAA
+ETAAJKbQACXfUAAAnEAATuNQAFAb0AABOIAAUBvQAFFUUAABOIAAU8VQAFcgsAABOIADaWnA
+A+0/wAAg9YAATuNQAFAb0AAAnEAAUBvQAFC4EAAAnEAAU8VQAFcgsAAAnEAAUBvQAFFUUAAA
+nEAAV4JYAFkI+AAAnEAATuNQAFAb0AAATiAAUBvQAFFUUAAATiAAV4JYAFkI+AAATiAAV4JY
+AFkI+AABOIAATuNQAFFUUAAAnEAAVjZQAFcgsAAAnEAAJJ8AACXlLAAAnEAATpUwAFGicAAA
+nEAAU3cwAFdbSAAATiAAJKbQACW4QAAAnEAAJcAQACYOMAAATiAASuuwAEwkMAAAnEAATMBw
+AE2q0AAAnEAAU8VQAFcgsAACcQAAU8VQAFcgsAAATiAAV4JYAFi62AAAnEAAJX2oACXfUAAA
+nEADaWnAA8xKQAAg9YAATpUwAFAb0AABOIAAUBvQAFGicAABOIAAU3cwAFdbSAABOIADaWnA
+A4pfQAAg9YADil9AA8xKQAAg9YADzEpAA+0/wAAg9YAAJKbQACXfUAAATiAAU8VQAFXoMAAB
+OIAAV4JYAFi62AABOIAATrxAAFAb0AAAnEAAU8VQAFXoMAAAnEAAU8VQAFVzAAABOIAAUGnw
+AFFUUAAAnEAAAAFkAAAAFAAAAAgAAAFkAAAAFAAAAAAAAAGIAAAAXAAAAAAAAAGIAAAAdAAA
+AAAAAAI8AAAAFAAAAAAAAACkAAAANAAAAAAAAACkAAAAFAAAAAAAAAHcAAAAXAAAAYAAAAGU
+AAAAFAAAAAEAAAGUAAAAXAAAAYEAAAGgAAAALAAAAAAAAAGsAAAALAAAAAAAAAH0AAAAFAAA
+AAgAAAH0AAAAbAAAAAgAAAFwAAAAFAAAAAgAAAFwAAAAbAAAAAgAAAJgAAAAXAAAABAAAAEc
+AAAATAAAAAAAAAEcAAAAFAAAAAAAAAEcAAAAVAAAAAAAAADgAAAAVAAAAAAAAADgAAAAFAAA
+AAAAAADgAAAATAAAAAAAAADgAAAAPAAAAAAAAADgAAAALAAAAAAAAACwAAAAXAAAAAAAAACw
+AAAAXAAAAYAAAACwAAAAFAAAAAgAAACwAAAALAAAAAAAAACwAAAAjAAAAAAAAACwAAAAVAAA
+AAAAAACwAAAAFAAAAAAAAAFMAAAAFAAAAAAAAAFMAAAAXAAAAAAAAADsAAAALAAAABAAAAEo
+AAAATAAAABAAAAEoAAAAXAAAABAAAAEoAAAAPAAAABAAAAEoAAAAFAAAABAAAAEEAAAAPAAA
+ABAAAAEEAAAAFAAAABAAAAEEAAAATAAAABAAAAEEAAAAXAAAABAAAAC8AAAAFAAAABAAAAC8
+AAAAFAAAABgAAAC8AAAALAAAABAAAAC8AAAAZAAAABAAAAC8AAAAXAAAABAAAAIAAAAAbAAA
+ABgAAAIAAAAAFAAAABgAAAKEAAAAVAAAABAAAAF8AAAARAAAABAAAAIMAAAAhAAAABAAAAJ4
+AAAAZAAAABAAAAJsAAAARAAAABAAAAJIAAAARAAAABAAAAHEAAAAHAAAABAAAAHEAAAAXAAA
+ABAAAAD4AAAAXAAAABAAAAD4AAAANAAAABAAAAD4AAAAHAAAABAAAADIAAAARAAAABAAAADI
+AAAAZAAAABAAAADIAAAAHAAAABAAAAG4AAAALAAAABAAAAFYAAAANAAAAAAAAAFYAAAAZAAA
+ABAAAAHQAAAARAAAAAAAAAHQAAAALAAAAAAAAAJUAAAARAAAAAAAAAJUAAAAFAAAAAAAAAE0
+AAAAFAAAAAAAAAE0AAAARAAAAAAAAAEQAAAAFAAAAAAAAAEQAAAANAAAAAAAAAEQAAAARAAA
+AAAAAAFAAAAALAAAAAAAAAFAAAAAXAAAAYAAAAFAAAAARAAAAAAAAAFAAAAANAAAAAAAAAIY
+AAAAlAAAAAAAAAHoAAAAJAAAAAAAAAHoAAAAfAAAAAAAAADUAAAAJAAAAAgAAAIkAAAAnAAA
+AAAAAAIwAAAAlAAAAAAAAAADAAACkAAAAzgAAAZ0AAAABQAAApwAAAMgAAAE3AAABQAAAAZ0
+AAAABQAAApwAAAMsAAAE3AAABQAAAAZ0AAAABAAAApwAAANEAAAE9AAABnQAAAAFAAACtAAA
+A4AAAASIAAAFSAAABhQAAAAEAAACtAAAA4AAAARkAAAGFAAAAAQAAAK0AAAE6AAABWwAAAXM
+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
+wwzOqg+/
+
+--BOKacYhQ+x31HxR3--
