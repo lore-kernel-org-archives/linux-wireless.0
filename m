@@ -1,215 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:41313 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753075Ab3KANzo (ORCPT
+Received: from mail-la0-f44.google.com ([209.85.215.44]:41112 "EHLO
+	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754444Ab3KTS7q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 09:55:44 -0400
-Received: by mail-wg0-f41.google.com with SMTP id b13so1062148wgh.0
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:55:43 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 4/8] wireless-regdb: add DFS ETSI regions
-Date: Fri,  1 Nov 2013 14:55:27 +0100
-Message-Id: <1383314131-20774-5-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_145548_682332_9284CCC0)
-In-Reply-To: <1383314131-20774-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1383314131-20774-1-git-send-email-mcgrof@do-not-panic.com>
+	Wed, 20 Nov 2013 13:59:46 -0500
+Received: by mail-la0-f44.google.com with SMTP id ep20so7812679lab.31
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Nov 2013 10:59:45 -0800 (PST)
+MIME-Version: 1.0
+Date: Wed, 20 Nov 2013 19:59:45 +0100
+Message-ID: <CAEk6gTD66duJkKrWNh_5e+3XdfD82JUaBW2zimj-ncSXZYQqvA@mail.gmail.com> (sfid-20131120_195959_075940_7A7F23F6)
+Subject: ath6kl AP in 802.11n not possible: ATH6KL_FW_CAPABILITY_RSN_CAP_OVERRIDE
+ not set in (latest) linux-firmware
+From: Drasko DRASKOVIC <drasko.draskovic@gmail.com>
+To: linux-wireless@vger.kernel.org, ath6kl-devel@qualcomm.com,
+	kvalo@qca.qualcomm.com, vthiagar@qca.qualcomm.com,
+	raychen@qca.qualcomm.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This associates the following countries to the
-DFS ETSI region:
+Hi all,
+I have spend several days debugging ath6kl driver to work well in AP
+mode for 802.11n (i.e. when ieee80211n=1 in hostapd.conf). With this
+setting hostapd was constantly failing with: nl80211: Failed to set
+channel (freq=2442): -22 (Invalid argument), please refer to the
+http://www.spinics.net/lists/linux-wireless/msg113987.html
 
-	AL, AM, AN, AW, AZ, BY, EG, GE, HT,
-	IL, KH, KW, MA, OM, RS, RU, SA, TN,
-	UA, ZA, ZW
+I am using AR9374 based USB dongle, UB134 reference design (AR6004
+firmware, i.e. hw1.3,
+http://git.kernel.org/cgit/linux/kernel/git/firmware/linux-firmware.git/tree/ath6k/AR6004/hw1.3).
+On fw load driver outputs the message: ath6kl: ar6004 hw 1.3 usb fw
+3.5.0.2356 api 3.
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt | 42 +++++++++++++++++++++---------------------
- 1 file changed, 21 insertions(+), 21 deletions(-)
+Ftrace in the kernel lead me to the cfg80211_chandef_usable()
+(http://lxr.free-electrons.com/source/net/wireless/chan.c#L47), which
+was failing on the checks of ht_cap->ht_supported. For some reasons
+these were FALSE, even that they should be present. Further inspection
+leads to ath6kl_cfg80211_init(), and especially this check of
+ATH6KL_FW_CAPABILITY_RSN_CAP_OVERRIDE:
+https://github.com/kvalo/ath/blob/master/drivers/net/wireless/ath/ath6kl/cfg80211.c#L3767
+which fails, and thus HT is not supported anymore, breaking hostapd
+and making it impossible to put the dongle in the AP 802.11n mode.
+Previous to this check, ht was set to TRUE on WMI_11AGN_CAP case
+(https://github.com/kvalo/ath/blob/master/drivers/net/wireless/ath/ath6kl/cfg80211.c#L3750),
+which I verified with printk.
 
-diff --git a/db.txt b/db.txt
-index 94da96a..beb94fd 100644
---- a/db.txt
-+++ b/db.txt
-@@ -25,15 +25,15 @@ country AE: DFS-FCC
- 	(5490 - 5710 @ 80), (24), DFS
- 	(5735 - 5835 @ 80), (30)
- 
--country AL:
-+country AL: DFS-ETSI
- 	(2402 - 2482 @ 20), (20)
- 
--country AM:
-+country AM: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 20), (18)
- 	(5250 - 5330 @ 20), (18), DFS
- 
--country AN:
-+country AN: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 40), (20)
- 	(5250 - 5330 @ 40), (20), DFS
-@@ -61,13 +61,13 @@ country AU:
- 	(5490 - 5710 @ 80), (24), DFS
- 	(5735 - 5835 @ 80), (30)
- 
--country AW:
-+country AW: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 40), (20)
- 	(5250 - 5330 @ 40), (20), DFS
- 	(5490 - 5710 @ 40), (27), DFS
- 
--country AZ:
-+country AZ: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 40), (18)
- 	(5250 - 5330 @ 40), (18), DFS
-@@ -133,7 +133,7 @@ country BR: DFS-FCC
- 	(5490 - 5710 @ 80), (24), DFS
- 	(5735 - 5835 @ 80), (30)
- 
--country BY:
-+country BY: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 40), (20)
- 	(5250 - 5330 @ 40), (20), DFS
-@@ -263,7 +263,7 @@ country EE: DFS-ETSI
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
- 
--country EG:
-+country EG: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 20), (20)
- 	(5250 - 5330 @ 20), (20), DFS
-@@ -292,7 +292,7 @@ country FR: DFS-ETSI
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
- 
--country GE:
-+country GE: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 40), (18)
- 	(5250 - 5330 @ 40), (18), DFS
-@@ -363,7 +363,7 @@ country HR: DFS-ETSI
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
- 
--country HT:
-+country HT: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 40), (20)
- 	(5250 - 5330 @ 40), (20), DFS
-@@ -390,7 +390,7 @@ country IE: DFS-ETSI
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
- 
--country IL:
-+country IL: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5150 - 5250 @ 80), (200 mW), NO-OUTDOOR
- 	(5250 - 5350 @ 80), (200 mW), NO-OUTDOOR
-@@ -445,7 +445,7 @@ country KE:
- 	(2402 - 2482 @ 40), (20)
- 	(5735 - 5835 @ 40), (30)
- 
--country KH:
-+country KH: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 40), (20)
- 	(5250 - 5330 @ 40), (20), DFS
-@@ -465,7 +465,7 @@ country KR:
- 	(5490 - 5630 @ 80), (30), DFS
- 	(5735 - 5815 @ 80), (30)
- 
--country KW:
-+country KW: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 80), (20)
- 	(5250 - 5330 @ 80), (20), DFS
-@@ -519,7 +519,7 @@ country MC: DFS-ETSI
- 	(5170 - 5250 @ 40), (18)
- 	(5250 - 5330 @ 40), (18), DFS
- 
--country MA:
-+country MA: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 80), (23)
- 	(5735 - 5835 @ 80), (23)
-@@ -586,7 +586,7 @@ country NZ: DFS-FCC
- 	(5490 - 5710 @ 80), (24), DFS
- 	(5735 - 5835 @ 80), (30)
- 
--country OM:
-+country OM: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 40), (17)
- 	(5250 - 5330 @ 40), (20), DFS
-@@ -661,14 +661,14 @@ country RO: DFS-ETSI
- 
- # Source:
- # http://www.ratel.rs/upload/documents/Plan_namene/Plan_namene-sl_glasnik.pdf
--country RS:
-+country RS: DFS-ETSI
- 	(2400 - 2483.5 @ 40), (100 mW)
- 	(5150 - 5350 @ 40), (200 mW), NO-OUTDOOR
- 	(5470 - 5725 @ 20), (1000 mW), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
- 
--country RU:
-+country RU: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5330 @ 40), (20)
- 	(5650 - 5710 @ 40), (30)
-@@ -678,7 +678,7 @@ country RW: DFS-FCC
- 	(2402 - 2482 @ 40), (20)
- 	(5735 - 5835 @ 40), (30)
- 
--country SA:
-+country SA: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 80), (17)
- 	(5250 - 5330 @ 80), (24), DFS
-@@ -745,7 +745,7 @@ country TT: DFS-FCC
- 	(5490 - 5710 @ 40), (20), DFS
- 	(5735 - 5835 @ 40), (30)
- 
--country TN:
-+country TN: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 20), (20)
- 	(5250 - 5330 @ 20), (20), DFS
-@@ -765,7 +765,7 @@ country TR: DFS-ETSI
- # Listed 5GHz range is a lowest common denominator for all related
- # rules in the referenced laws. Such a range is used because of
- # disputable definitions there.
--country UA:
-+country UA: DFS-ETSI
- 	(2400 - 2483.5 @ 40), (20), NO-OUTDOOR
- 	(5150 - 5350 @ 40), (20), NO-OUTDOOR
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
-@@ -811,13 +811,13 @@ country VN: DFS-FCC
- country YE:
- 	(2402 - 2482 @ 40), (20)
- 
--country ZA:
-+country ZA: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 80), (17)
- 	(5250 - 5330 @ 80), (24), DFS
- 	(5490 - 5710 @ 80), (24), DFS
- 	(5735 - 5835 @ 80), (30)
- 
--country ZW:
-+country ZW: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 
--- 
-1.8.4.rc3
+Googling aroud led me to these patches:
+http://permalink.gmane.org/gmane.linux.kernel.wireless.general/89741
+http://www.spinics.net/lists/linux-wireless/msg87931.html
 
+Commenting out these checks I was able to put the dongle in both
+802.11gn and 802.11an in AP mode without encryption and with WPAm but
+not without WPA2 (probably because of 4-way handshaking mentioned in
+the comments).
+
+Can we characterize this behavior like a bug in the firmware, or is
+this limitation is intentional (which I doubt)?
+
+
+Bug summary: ATH6KL_FW_CAPABILITY_RSN_CAP_OVERRIDE not set in latest
+linux-firmware, AP mode in 802.11n not possible, breaks hostapd when
+ieee80211n=1
+ATH chipset: AR9374 based USB dongle, UB134 reference design
+FW: ar6004 hw 1.3 usb fw 3.5.0.2356 api 3
+hostpad: latest stable, hostapd-2.0
+linux-firmware: latest from the
+http://git.kernel.org/cgit/linux/kernel/git/firmware/linux-firmware.git
+(git hash 7d0c7a8cfd78388d90cc784a185b19dcbdbce824)
+
+
+Best regards,
+Drasko
