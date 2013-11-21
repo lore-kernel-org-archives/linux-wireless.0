@@ -1,108 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:26034 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755560Ab3KODKz (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:63320 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754560Ab3KUNl3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Nov 2013 22:10:55 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Ujjal Roy <royujjal@gmail.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3.13 5/6] mwifiex: fix memory leak issue for sdio and pcie cards
-Date: Thu, 14 Nov 2013 19:10:41 -0800
-Message-ID: <1384485042-7083-5-git-send-email-bzhao@marvell.com> (sfid-20131115_041059_394513_88216CDA)
-In-Reply-To: <1384485042-7083-1-git-send-email-bzhao@marvell.com>
-References: <1384485042-7083-1-git-send-email-bzhao@marvell.com>
+	Thu, 21 Nov 2013 08:41:29 -0500
+Received: by mail-we0-f174.google.com with SMTP id q58so4961010wes.33
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Nov 2013 05:41:28 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+Date: Thu, 21 Nov 2013 19:11:28 +0530
+Message-ID: <CADNhdGFPR6JOkZjDMMZ7mEo5cJdBrg9a300A4pS=e_WGMdNpbA@mail.gmail.com> (sfid-20131121_144146_582040_1FEE1D88)
+Subject: [hostapd] configuring for a simple AP
+From: shankar swaminathan <shankswa@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+Hi,
 
-When driver is failed to load, card pointer doesn't get
-freed. We will free it in cleanup handler which is called
-in failure as well as unload path.
-Also, update drvdata in init/cleanup handlers instead of
-register/unregister handlers.
+I am trying to make a linux PC up and running with hostapd to create a
+simple Access Point.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+I do not want authentication, encryption and DHCP -- have configured
+station with static IP address.
+
+if I start hostapd (not as a daemon) with the default hostapd.conf
+file, and try connecting the client (fedora client), i see that the
+wifi sybol does not appear, but the connection seems to have been
+established.
+However, if i open hostapd_cli, i keep getting a print like,
+<client mac> CONNECTED
+<client mac> DISCONNECTED.
+
+Hence, i think the client keeps getting connected and disconnected.
+
+I then tried using a smaller config file with nothing regarding beacon
+interval etc...as shown below:
+
 ---
- drivers/net/wireless/mwifiex/pcie.c | 2 +-
- drivers/net/wireless/mwifiex/sdio.c | 7 ++++---
- 2 files changed, 5 insertions(+), 4 deletions(-)
+interface=wlan0
+driver=nl80211
+ssid=test
+hw_mode=g
+channel=1
+macaddr_acl=0
+auth_algs=1
+ignore_broadcast_ssid=0
+---
 
-diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-index 33fa943..03688aa 100644
---- a/drivers/net/wireless/mwifiex/pcie.c
-+++ b/drivers/net/wireless/mwifiex/pcie.c
-@@ -232,7 +232,6 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
- 	}
- 
- 	mwifiex_remove_card(card->adapter, &add_remove_card_sem);
--	kfree(card);
- }
- 
- static void mwifiex_pcie_shutdown(struct pci_dev *pdev)
-@@ -2313,6 +2312,7 @@ static void mwifiex_pcie_cleanup(struct mwifiex_adapter *adapter)
- 		pci_release_region(pdev, 0);
- 		pci_set_drvdata(pdev, NULL);
- 	}
-+	kfree(card);
- }
- 
- /*
-diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
-index 9bf8898..b44a315 100644
---- a/drivers/net/wireless/mwifiex/sdio.c
-+++ b/drivers/net/wireless/mwifiex/sdio.c
-@@ -196,7 +196,6 @@ mwifiex_sdio_remove(struct sdio_func *func)
- 	}
- 
- 	mwifiex_remove_card(card->adapter, &add_remove_card_sem);
--	kfree(card);
- }
- 
- /*
-@@ -1745,7 +1744,6 @@ mwifiex_unregister_dev(struct mwifiex_adapter *adapter)
- 		sdio_claim_host(card->func);
- 		sdio_disable_func(card->func);
- 		sdio_release_host(card->func);
--		sdio_set_drvdata(card->func, NULL);
- 	}
- }
- 
-@@ -1773,7 +1771,6 @@ static int mwifiex_register_dev(struct mwifiex_adapter *adapter)
- 		return ret;
- 	}
- 
--	sdio_set_drvdata(func, card);
- 
- 	adapter->dev = &func->dev;
- 
-@@ -1801,6 +1798,8 @@ static int mwifiex_init_sdio(struct mwifiex_adapter *adapter)
- 	int ret;
- 	u8 sdio_ireg;
- 
-+	sdio_set_drvdata(card->func, card);
-+
- 	/*
- 	 * Read the HOST_INT_STATUS_REG for ACK the first interrupt got
- 	 * from the bootloader. If we don't do this we get a interrupt
-@@ -1883,6 +1882,8 @@ static void mwifiex_cleanup_sdio(struct mwifiex_adapter *adapter)
- 	kfree(card->mpa_rx.len_arr);
- 	kfree(card->mpa_tx.buf);
- 	kfree(card->mpa_rx.buf);
-+	sdio_set_drvdata(card->func, NULL);
-+	kfree(card);
- }
- 
- /*
--- 
-1.8.2.3
+The results were similar.
 
+Could anyone, guide me or provide me a simple hostapd.conf file, that
+will help me connect clients. I do not want authentication,
+encryption, and DHCP -- will use static IP.
+
+Thanks in advance.
+
+-shankar
