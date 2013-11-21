@@ -1,65 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:59358 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757133Ab3KMSBJ (ORCPT
+Received: from packetmixer.de ([79.140.42.25]:56022 "EHLO
+	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754804Ab3KURUo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Nov 2013 13:01:09 -0500
-Received: from [192.168.100.236] (firewall.candelatech.com [70.89.124.249])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id rADI17FV017239
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Wed, 13 Nov 2013 10:01:07 -0800
-Message-ID: <5283BE63.8090801@candelatech.com> (sfid-20131113_190112_830842_FCA007A3)
-Date: Wed, 13 Nov 2013 10:01:07 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: RFC:  Add precise timing to wifi association messages?
-References: <5283BDB6.5020700@candelatech.com>
-In-Reply-To: <5283BDB6.5020700@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 21 Nov 2013 12:20:44 -0500
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Simon Wunderlich <sw@simonwunderlich.de>
+Subject: [PATCHv2 5/5] mac80211: don't leak next beacon when csa is aborted
+Date: Thu, 21 Nov 2013 18:19:53 +0100
+Message-Id: <1385054393-17238-6-git-send-email-sw@simonwunderlich.de> (sfid-20131121_182051_643666_8C9C62F7)
+In-Reply-To: <1385054393-17238-1-git-send-email-sw@simonwunderlich.de>
+References: <1385054393-17238-1-git-send-email-sw@simonwunderlich.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/13/2013 09:58 AM, Ben Greear wrote:
-> Any interest in a patch looking similar to that below for the
-> 5 or so messages related to association?  I found it useful for
-> tracking down why it was taking longer than expected to roam
-> to a new AP...
-> 
-> 
-> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> index d2510c0..2e96813 100644
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-> @@ -908,6 +908,12 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
->                 memcpy(pos, assoc_data->ie + offset, noffset - offset);
->         }
-> 
-> +       {
-> +               struct timeval tv;
-> +               do_gettimeofday(&tv);
-> +               sdata_info(sdata, "send_assoc, calling prepare_tx at: %lu.%lu\n",
-> +                          tv.tv_sec, tv.tv_usec);
-> +       }
->         drv_mgd_prepare_tx(local, sdata);
-> 
->         IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
+Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+---
+Changes to PATCH:
+ * remove the free in do_stop, because stop_ap is guaranteed to
+   run when the AP is going down (thanks Johannes)
+---
+ net/mac80211/cfg.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
-I chose a poor example here...my intention is to just add timers to existing
-messages...
-
-Thanks,
-Ben
-
-> 
-> 
-> Thanks,
-> Ben
-> 
-
-
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 9f19cde..38d2b6c 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1080,6 +1080,9 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
+ 
+ 	/* abort any running channel switch */
+ 	sdata->vif.csa_active = false;
++	kfree(sdata->u.ap.next_beacon);
++	sdata->u.ap.next_beacon = NULL;
++
+ 	cancel_work_sync(&sdata->u.ap.request_smps_work);
+ 
+ 	/* turn off carrier for this interface and dependent VLANs */
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.10.4
 
