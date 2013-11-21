@@ -1,47 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:55671 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753910Ab3KAN6p (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:2550 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751569Ab3KUTJP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 09:58:45 -0400
-Received: by mail-wg0-f43.google.com with SMTP id b13so4094973wgh.10
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:58:44 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 20/65] wireless-regdb: enable VHT80 for HU
-Date: Fri,  1 Nov 2013 14:57:10 +0100
-Message-Id: <1383314275-20960-21-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_150812_879454_806D4B4E)
-In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+	Thu, 21 Nov 2013 14:09:15 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Ujjal Roy <royujjal@gmail.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3.13] mwifiex: fix memory leak issue for ibss join
+Date: Thu, 21 Nov 2013 11:08:56 -0800
+Message-ID: <1385060936-18833-1-git-send-email-bzhao@marvell.com> (sfid-20131121_200918_204354_26280364)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Source is QCA's regulatory team's efforts.
+From: Ujjal Roy <royujjal@gmail.com>
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+For IBSS join if the requested SSID matches current SSID,
+it returns without freeing the allocated beacon IE buffer.
+
+Cc: <stable@vger.kernel.org> # 3.10+
+Signed-off-by: Ujjal Roy <royujjal@gmail.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- db.txt | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/mwifiex/sta_ioctl.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/db.txt b/db.txt
-index 88dd152..cabf2d8 100644
---- a/db.txt
-+++ b/db.txt
-@@ -369,9 +369,9 @@ country HT: DFS-ETSI
+diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+index c8e029d..a09398f 100644
+--- a/drivers/net/wireless/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+@@ -319,8 +319,8 @@ int mwifiex_bss_start(struct mwifiex_private *priv, struct cfg80211_bss *bss,
+ 		if (bss_desc && bss_desc->ssid.ssid_len &&
+ 		    (!mwifiex_ssid_cmp(&priv->curr_bss_params.bss_descriptor.
+ 				       ssid, &bss_desc->ssid))) {
+-			kfree(bss_desc);
+-			return 0;
++			ret = 0;
++			goto done;
+ 		}
  
- country HU: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
--	(5170 - 5250 @ 40), (20)
--	(5250 - 5330 @ 40), (20), DFS
--	(5490 - 5710 @ 40), (27), DFS
-+	(5170 - 5250 @ 80), (20)
-+	(5250 - 5330 @ 80), (20), DFS
-+	(5490 - 5710 @ 80), (27), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
- 
+ 		/* Exit Adhoc mode first */
 -- 
-1.8.4.rc3
+1.8.2.3
 
