@@ -1,94 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:17191 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755723Ab3KEXCQ (ORCPT
+Received: from packetmixer.de ([79.140.42.25]:55847 "EHLO
+	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754160Ab3KUOfX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Nov 2013 18:02:16 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Ujjal Roy <royujjal@gmail.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3.13 2/2] mwifiex: fix wrong eth_hdr usage for bridged packets in AP mode
-Date: Tue, 5 Nov 2013 15:01:45 -0800
-Message-ID: <1383692505-12654-2-git-send-email-bzhao@marvell.com> (sfid-20131106_000219_139313_D5B6D8F2)
-In-Reply-To: <1383692505-12654-1-git-send-email-bzhao@marvell.com>
-References: <1383692505-12654-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 21 Nov 2013 09:35:23 -0500
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Simon Wunderlich <sw@simonwunderlich.de>
+Subject: [RFC 3/3] mac80211: don't cancel csa finalize work within stop_ap
+Date: Thu, 21 Nov 2013 15:34:22 +0100
+Message-Id: <1385044462-23046-4-git-send-email-sw@simonwunderlich.de> (sfid-20131121_153527_486464_C9A68B5F)
+In-Reply-To: <1385044462-23046-1-git-send-email-sw@simonwunderlich.de>
+References: <1385044462-23046-1-git-send-email-sw@simonwunderlich.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ujjal Roy <royujjal@gmail.com>
+The current channel switch code has a potential deadlock:
+1) * cfg80211_stop_ap acquires wdev-lock
+   * ieee80211_stop_ap calls cancel_work_sync for the csa_finalize_work,
+     which acquires the associated worker-lock
+2) * ieee80211_csa_finalize_work holds the worker-lock when run
+   * it calls cfg80211_ch_switch_notify which will claim the wdev-lock,
+     and also needs to claim the sdata-lock (which is the same as the
+     wdev-lock) to modify the beacons.
 
-The eth_hdr is never defined in this driver but it gets compiled
-without any warning/error because kernel has defined eth_hdr.
+It is sufficient to just set the channel switch active to false. If the
+worker is running later, it will find the channel switch to not be
+active anymore and returns immediately without changing anything.
 
-Fix it by defining our own p_ethhdr and use it instead of eth_hdr.
+Canceling the worker is done anyway when the interface goes down
+(ieee80211_do_stop).
 
-Cc: <stable@vger.kernel.org> # 3.7+
-Signed-off-by: Ujjal Roy <royujjal@gmail.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
 ---
- drivers/net/wireless/mwifiex/uap_txrx.c | 29 ++++++++++++++++++++++++++---
- 1 file changed, 26 insertions(+), 3 deletions(-)
+ net/mac80211/cfg.c |    1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mwifiex/uap_txrx.c b/drivers/net/wireless/mwifiex/uap_txrx.c
-index 1cfe5a7..92f76d6 100644
---- a/drivers/net/wireless/mwifiex/uap_txrx.c
-+++ b/drivers/net/wireless/mwifiex/uap_txrx.c
-@@ -97,6 +97,7 @@ static void mwifiex_uap_queue_bridged_pkt(struct mwifiex_private *priv,
- 	struct mwifiex_txinfo *tx_info;
- 	int hdr_chop;
- 	struct timeval tv;
-+	struct ethhdr *p_ethhdr;
- 	u8 rfc1042_eth_hdr[ETH_ALEN] = { 0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00 };
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index a715c9b..7315819 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1095,7 +1095,6 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
  
- 	uap_rx_pd = (struct uap_rxpd *)(skb->data);
-@@ -112,14 +113,36 @@ static void mwifiex_uap_queue_bridged_pkt(struct mwifiex_private *priv,
- 	}
+ 	/* abort any running channel switch */
+ 	sdata->vif.csa_active = false;
+-	cancel_work_sync(&sdata->csa_finalize_work);
+ 	cancel_work_sync(&sdata->u.ap.request_smps_work);
  
- 	if (!memcmp(&rx_pkt_hdr->rfc1042_hdr,
--		    rfc1042_eth_hdr, sizeof(rfc1042_eth_hdr)))
-+		    rfc1042_eth_hdr, sizeof(rfc1042_eth_hdr))) {
-+		/* Replace the 803 header and rfc1042 header (llc/snap) with
-+		 * an Ethernet II header, keep the src/dst and snap_type
-+		 * (ethertype).
-+		 *
-+		 * The firmware only passes up SNAP frames converting all RX
-+		 * data from 802.11 to 802.2/LLC/SNAP frames.
-+		 *
-+		 * To create the Ethernet II, just move the src, dst address
-+		 * right before the snap_type.
-+		 */
-+		p_ethhdr = (struct ethhdr *)
-+			((u8 *)(&rx_pkt_hdr->eth803_hdr)
-+			 + sizeof(rx_pkt_hdr->eth803_hdr)
-+			 + sizeof(rx_pkt_hdr->rfc1042_hdr)
-+			 - sizeof(rx_pkt_hdr->eth803_hdr.h_dest)
-+			 - sizeof(rx_pkt_hdr->eth803_hdr.h_source)
-+			 - sizeof(rx_pkt_hdr->rfc1042_hdr.snap_type));
-+		memcpy(p_ethhdr->h_source, rx_pkt_hdr->eth803_hdr.h_source,
-+		       sizeof(p_ethhdr->h_source));
-+		memcpy(p_ethhdr->h_dest, rx_pkt_hdr->eth803_hdr.h_dest,
-+		       sizeof(p_ethhdr->h_dest));
- 		/* Chop off the rxpd + the excess memory from
- 		 * 802.2/llc/snap header that was removed.
- 		 */
--		hdr_chop = (u8 *)eth_hdr - (u8 *)uap_rx_pd;
--	else
-+		hdr_chop = (u8 *)p_ethhdr - (u8 *)uap_rx_pd;
-+	} else {
- 		/* Chop off the rxpd */
- 		hdr_chop = (u8 *)&rx_pkt_hdr->eth803_hdr - (u8 *)uap_rx_pd;
-+	}
- 
- 	/* Chop off the leading header bytes so the it points
- 	 * to the start of either the reconstructed EthII frame
+ 	/* turn off carrier for this interface and dependent VLANs */
 -- 
-1.8.2.3
+1.7.10.4
 
