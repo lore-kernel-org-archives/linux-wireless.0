@@ -1,45 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:41385 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750787Ab3KANzv (ORCPT
+Received: from packetmixer.de ([79.140.42.25]:56012 "EHLO
+	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754493Ab3KURUk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 09:55:51 -0400
-Received: by mail-wi0-f179.google.com with SMTP id hm4so1106576wib.6
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:55:50 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 7/8] wireless-regdb: optimize two of IL's rules
-Date: Fri,  1 Nov 2013 14:55:30 +0100
-Message-Id: <1383314131-20774-8-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_145554_696615_E2EF1844)
-In-Reply-To: <1383314131-20774-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1383314131-20774-1-git-send-email-mcgrof@do-not-panic.com>
+	Thu, 21 Nov 2013 12:20:40 -0500
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Simon Wunderlich <sw@simonwunderlich.de>
+Subject: [PATCHv2 0/5] Fix CSA locking issues
+Date: Thu, 21 Nov 2013 18:19:48 +0100
+Message-Id: <1385054393-17238-1-git-send-email-sw@simonwunderlich.de> (sfid-20131121_182043_536429_ACFB11D3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There's no reason not to merge these two rules.
-This as picked up by the new CRDA optimizer.
+Unfortunately my channel switch announcement patches contained locking issues
+which I didn't notice during my test due to bad configuration. Johannes pointed
+them out, so here is my attempt to fix them. This series attempts to fix two
+issues:
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ * There are "suspicious rcu_dereference_protected() usage" problems for
+   ieee80211_assign_beacon and ieee80211_ibss_csa_beacon because the respective
+   locking was missing
+ * There is a circular dependency between the wdev/sdata-lock and the
+   csa_finalize worker lock (see description in patch 3).
 
-diff --git a/db.txt b/db.txt
-index 22b6561..ddfbc04 100644
---- a/db.txt
-+++ b/db.txt
-@@ -390,8 +390,7 @@ country IE: DFS-ETSI
- 
- country IL: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
--	(5150 - 5250 @ 80), (200 mW), NO-OUTDOOR
--	(5250 - 5350 @ 80), (200 mW), NO-OUTDOOR
-+	(5150 - 5350 @ 80), (200 mW), NO-OUTDOOR
- 
- country IN: DFS-JP
- 	(2402 - 2482 @ 40), (20)
+This is another update. Changes from the PATCH series:
+ * split first patch into mac80211 and cfg80211 part
+ * simplify memory leak fix
+
+Cheers,
+   Simon
+
+Simon Wunderlich (5):
+  cfg80211: protect beacon changing functions with wdev-lock
+  mac80211: modify beacon using sdata/wdev-lock, not rtnl lock
+  cfg80211/mac80211/ath6kl: acquire wdev lock outside ch_switch_notify
+  mac80211: don't cancel csa finalize work within stop_ap
+  mac80211: don't leak next beacon when csa is aborted
+
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |    2 ++
+ include/net/cfg80211.h                     |    3 +-
+ net/mac80211/cfg.c                         |   45 ++++++++++++++++++----------
+ net/mac80211/ieee80211_i.h                 |    3 ++
+ net/wireless/nl80211.c                     |   31 +++++++++++++------
+ 5 files changed, 59 insertions(+), 25 deletions(-)
+
 -- 
-1.8.4.rc3
+1.7.10.4
 
