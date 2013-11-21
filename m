@@ -1,56 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f179.google.com ([209.85.214.179]:46344 "EHLO
-	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751771Ab3K3N6K (ORCPT
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:65404 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751373Ab3KUPPV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Nov 2013 08:58:10 -0500
-Received: by mail-ob0-f179.google.com with SMTP id wm4so11048717obc.10
-        for <linux-wireless@vger.kernel.org>; Sat, 30 Nov 2013 05:58:10 -0800 (PST)
+	Thu, 21 Nov 2013 10:15:21 -0500
+Received: by mail-wg0-f49.google.com with SMTP id x12so914608wgg.16
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Nov 2013 07:15:19 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1385817282.5056.0.camel@jlt4.sipsolutions.net>
-References: <CAGXs5wXPB2WvuxfXzuyDaGS5_cA+GG5vHkHO+PnnVncvOwJTDg@mail.gmail.com>
-	<1385817282.5056.0.camel@jlt4.sipsolutions.net>
-Date: Sat, 30 Nov 2013 15:58:10 +0200
-Message-ID: <CAGXs5wVt3okeE6oA_pNV5WnQLv51+bf+n+52s5d7tQkXq_qvNw@mail.gmail.com> (sfid-20131130_145813_960762_E3D8462E)
-Subject: Re: wireless network interfaces and network namespaces
-From: Kevin Wilson <wkevils@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 21 Nov 2013 10:15:19 -0500
+Message-ID: <CAJt7DwxmhhofxMHRKrsF-esPWF_7uF7r1AG=p4cY2Rnd+BNrPg@mail.gmail.com> (sfid-20131121_161525_243707_B37F614D)
+Subject: Long Authentication Times
+From: Michael McElroy <mikem388@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks!
-Running:
-iw phy phy0 set netns 3433
-indeed moved wlan0 to the network namespace I created, where process 3433 ran.
-I did not see a way to specify the network namespace name for moving
-wlan0 in this command (at least iw help does not show it and  I am
-using iw 3.4-1 on ubuntu). I did not looked into the source code of iw
-though.
+Let me start out with I have no prior experience with wifi before
+starting this project. I have worked months trying to resolve this
+problem and finally asking for help.
+I have a Ralink 3070 usb doggle on an embedded ARM device. The device
+is using the 2.6.29 kernel. I have used the backport.org release to
+backport the driver and related networking pieces from 3.9. I am using
+version 2.0 of the wpa_supplicant. Everything works fine in steady
+state mode. My problem is when using wpa2 eap-peap I have trouble
+authenticating, The system sometimes takes 10-20 minutes to
+authenticate. I also cherry-picked commit
+6211dd12da609bc6893b9c3182630b494737ec4b for mlme.c but it didn't help
+the authentication problem.
 
+Thanks in advance for taking the time to look at this.
 
+Regards,
+Mike
 
-
-On Sat, Nov 30, 2013 at 3:14 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sat, 2013-11-30 at 14:12 +0200, Kevin Wilson wrote:
->> Hello,
->> I am trying to move a wireless interface to a network namespace I
->> created and I get an error:
->>
->> ip link set wlan0 netns ns1
->> RTNETLINK answers: Invalid argument
->>
->> I do it with latest iproute2 git sources,  on 3.8 kernel.
->>
->> I want to verify this: all wireless interfaces do no support
->> network namespace. Is this true ? what in fact is the reason for this ?
->
-> At least mac80211-based wireless interfaces *do* support namespaces, but
-> you have to change the entire wireless NIC's namespace using iw --
-> having different virtual interfaces of the same NIC in different
-> namespaces is not supported.
->
-> johannes
->
+wlan0: authenticate with 00:19:92:06:8e:82
+wlan0: direct probe to 00:19:92:06:8e:82 (try 1/3)
+cfg80211: Calling CRDA to update world regulatory domain
+wlan0: send auth to 00:19:92:06:8e:82 (try 2/3)
+wlan0: authenticated
+wlan0: authenticate with 00:19:92:07:95:22
+wlan0: send auth to 00:19:92:07:95:22 (try 1/3)
+wlan0: authenticated
+wlan0: associate with 00:19:92:07:95:22 (try 1/3)
+wlan0: RX AssocResp from 00:19:92:07:95:22 (capab=0x431 status=0 aid=2)
+wlan0: associated
+wlan0: deauthenticated from 00:19:92:07:95:22 (Reason: 2)
+cfg80211: Calling CRDA to update world regulatory domain
+wlan0: authenticate with 00:19:92:06:8e:82
+wlan0: send auth to 00:19:92:06:8e:82 (try 1/3)
+wlan0: authenticated
+wlan0: associate with 00:19:92:06:8e:82 (try 1/3)
+wlan0: RX AssocResp from 00:19:92:06:8e:82 (capab=0x431 status=0 aid=3)
+wlan0: associated
+wlan0: deauthenticated from 00:19:92:06:8e:82 (Reason: 2)
+cfg80211: Calling CRDA to update world regulatory domain
+wlan0: authenticate with 00:19:92:07:78:c2
+wlan0: send auth to 00:19:92:07:78:c2 (try 1/3)
+wlan0: authenticated
+wlan0: associate with 00:19:92:07:78:c2 (try 1/3)
+wlan0: RX AssocResp from 00:19:92:07:78:c2 (capab=0x431 status=0 aid=2)
+wlan0: associated
+wlan0: deauthenticated from 00:19:92:07:78:c2 (Reason: 1)
+cfg80211: Calling CRDA to update world regulatory domain
+wlan0: authenticate with 00:19:92:07:95:22
+wlan0: send auth to 00:19:92:07:95:22 (try 1/3)
+wlan0: authenticated
+wlan0: associate with 00:19:92:07:95:22 (try 1/3)
+wlan0: RX AssocResp from 00:19:92:07:95:22 (capab=0x431 status=0 aid=2)
+wlan0: associated
+wlan0: deauthenticated from 00:19:92:07:95:22 (Reason: 2)
+cfg80211: Calling CRDA to update world regulatory domain
+wlan0: authenticate with 00:19:92:06:8e:82
+wlan0: send auth to 00:19:92:06:8e:82 (try 1/3)
+wlan0: send auth to 00:19:92:06:8e:82 (try 2/3)
+wlan0: authenticated
+wlan0: associate with 00:19:92:06:8e:82 (try 1/3)
+wlan0: RX AssocResp from 00:19:92:06:8e:82 (capab=0x431 status=0 aid=5)
+wlan0: associated
+wlan0: deauthenticated from 00:19:92:06:8e:82 (Reason: 6)
+cfg80211: Calling CRDA to update world regulatory domain
+wlan0: authenticate with 00:19:92:07:95:22
+wlan0: send auth to 00:19:92:07:95:22 (try 1/3)
+wlan0: authenticated
+wlan0: associate with 00:19:92:07:95:22 (try 1/3)
+wlan0: RX AssocResp from 00:19:92:07:95:22 (capab=0x431 status=0 aid=2)
+wlan0: associated
+wlan0: deauthenticated from 00:19:92:07:95:22 (Reason: 2)
+cfg80211: Calling CRDA to update world regulatory domain
+wlan0: authenticate with 00:19:92:07:78:c2
+wlan0: send auth to 00:19:92:07:78:c2 (try 1/3)
+wlan0: authenticated
+wlan0: associate with 00:19:92:07:78:c2 (try 1/3)
+wlan0: RX AssocResp from 00:19:92:07:78:c2 (capab=0x431 status=0 aid=2)
+wlan0: associated
+wlan0: deauthenticating from 00:19:92:07:78:c2 by local choice (reason=3)
+cfg80211: Calling CRDA to update world regulatory domain
+wlan0: authenticate with 00:19:92:06:8e:82
+wlan0: send auth to 00:19:92:06:8e:82 (try 1/3)
+wlan0: authenticated
+wlan0: associate with 00:19:92:06:8e:82 (try 1/3)
+wlan0: RX AssocResp from 00:19:92:06:8e:82 (capab=0x431 status=0 aid=8)
+wlan0: associated
+wlan0: deauthenticated from 00:19:92:06:8e:82 (Reason: 2)
