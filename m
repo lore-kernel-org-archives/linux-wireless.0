@@ -1,107 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:36786 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754817Ab3KKRAf (ORCPT
+Received: from mail-ee0-f49.google.com ([74.125.83.49]:62827 "EHLO
+	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753427Ab3KUN2a (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Nov 2013 12:00:35 -0500
-Message-ID: <1384189227.14334.48.camel@jlt4.sipsolutions.net> (sfid-20131111_180051_371042_26005092)
-Subject: Re: [PATCH v2] mac80211: add assoc beacon timeout logic
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felipe Contreras <felipe.contreras@gmail.com>
-Cc: linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>
-Date: Mon, 11 Nov 2013 18:00:27 +0100
-In-Reply-To: <CAMP44s3nkj2wZYCPve7EhyeD7sEFmpUN=-h015dOP68PcNSTug@mail.gmail.com> (sfid-20131111_175400_478164_6AC66036)
-References: <1384119945-31213-1-git-send-email-felipe.contreras@gmail.com>
-	 <1384160932.14334.6.camel@jlt4.sipsolutions.net>
-	 <CAMP44s3TFSgWuR8gVoFBznNP+t9mz+to===9i1PAnra4ogKu9w@mail.gmail.com>
-	 <1384184624.14334.31.camel@jlt4.sipsolutions.net>
-	 <CAMP44s2cVVe4-yW214B9hJu7n6M1onZpZaPCj5N0Fi1JWDKKsw@mail.gmail.com>
-	 <1384188067.14334.45.camel@jlt4.sipsolutions.net>
-	 <CAMP44s3nkj2wZYCPve7EhyeD7sEFmpUN=-h015dOP68PcNSTug@mail.gmail.com>
-	 (sfid-20131111_175400_478164_6AC66036)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 21 Nov 2013 08:28:30 -0500
+Received: by mail-ee0-f49.google.com with SMTP id b47so2972670eek.22
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Nov 2013 05:28:30 -0800 (PST)
+From: Marek Kwaczynski <marek.kwaczynski@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	Marek Kwaczynski <marek.kwaczynski@tieto.com>
+Subject: [PATCH 1/2] nl80211/cfg80211: Set VHT Operating mode
+Date: Thu, 21 Nov 2013 14:28:14 +0100
+Message-Id: <1385040495-13482-1-git-send-email-marek.kwaczynski@tieto.com> (sfid-20131121_142834_175270_655AFEA6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-11-11 at 10:53 -0600, Felipe Contreras wrote:
+This attribuite is needed for setting VHT operating mode in AP mode
+from User Space. This functionality is required when User Space
+received Assoc Reqeust contains VHT Operation Mode Notification
+element.
 
-> > I see the same behaviour - but it's the supplicant's doing, it is indeed
-> > getting the event that the AP connection failed (timed out):
-> >
-> > wlan0: Event ASSOC_TIMED_OUT (15) received
-> 
-> Not in my setup.
+Signed-off-by: Marek Kwaczynski <marek.kwaczynski@tieto.com>
+---
+ include/net/cfg80211.h       |    4 ++++
+ include/uapi/linux/nl80211.h |    5 +++++
+ net/wireless/nl80211.c       |    6 ++++++
+ 3 files changed, 15 insertions(+)
 
-Well, dunno then. Different kernel versions? This clearly happens for
-me.
-
-> >> > This isn't really true like I said above - the kernel can only drop the
-> >> > association, if userspace *insists* then it will try again and again.
-> >>
-> >> But it's not doing this:
-> >>
-> >>   ieee80211_destroy_assoc_data(sdata, false);
-> >>   cfg80211_assoc_timeout(sdata->dev, bss);
-> >>
-> >> Which is what causes the association to stop for me.
-> >>
-> >> So where exactly in the code is the association being "dropped"?
-> >
-> > This does get called in my setup.
-> 
-> Yes, because your setup is receiving beacons.
-
-No ... I tested on hwsim, making it ask for dtim-before-assoc, and
-short-circuiting the beacon-TX routing. It can't have been seeing
-beacons.
-
-> Check the code:
-> 
-> if ((ifmgd->assoc_data->need_beacon && !ifmgd->have_beacon) ||
->    ieee80211_do_assoc(sdata)) {
-> struct cfg80211_bss *bss = ifmgd->assoc_data->bss;
-> 
-> ieee80211_destroy_assoc_data(sdata, false);
-> cfg80211_assoc_timeout(sdata->dev, bss);
-> }
-> 
-> If there's no beacon, cfg80211_assoc_timeout() is not called.
-
-Yes it is.
-
-"need_beacon && !have_beacon:
-
-means - I wanted the beacon but didn't get it at the timeout.
-
-> I'm sure if you don't call ieee80211_rx_mgmt_beacon() at all you will
-> see the same behavior I see.
-
-I'm sure I won't :)
-
-> > Like I said before - trying to work with an AP without beacons at all is
-> > really bad, we shouldn't be doing it.
-> 
-> Why not? For all intents and purposes my system is not receiving any
-> beacons, and I don't see any problems.
-
-The not receiving part is a bug. I think you're probably receiving
-beacons once associated though?
-
-> What would you prefer? That nothing works at all?
-
-Yes, that'd be much safer.
-
-> > We might not properly react to
-> > radar events, and other things, for example.
-> 
-> So? I don't know what that means, but it can't be worst than not being
-> able to connect to the Internet whatsoever at all.
-
-It can make you break the law.
-
-johannes
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 3eae46c..da6b869 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -748,6 +748,8 @@ enum station_parameters_apply_mask {
+  * @supported_channels_len: number of supported channels
+  * @supported_oper_classes: supported oper classes in IEEE 802.11 format
+  * @supported_oper_classes_len: number of supported operating classes
++ * @vht_opmode: operating mode field
++ * @vht_opmode_used: information if operating mode is used
+  */
+ struct station_parameters {
+ 	const u8 *supported_rates;
+@@ -771,6 +773,8 @@ struct station_parameters {
+ 	u8 supported_channels_len;
+ 	const u8 *supported_oper_classes;
+ 	u8 supported_oper_classes_len;
++	u8 vht_opmode;
++	bool vht_opmode_used;
+ };
+ 
+ /**
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index f752e98..60174a2 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1508,6 +1508,9 @@ enum nl80211_commands {
+  *	to react to radar events, e.g. initiate a channel switch or leave the
+  *	IBSS network.
+  *
++ * @NL80211_ATTR_VHT_OPMODE: VHT Operating mode information element (from
++ *	association request when used with NL80211_CMD_NEW_STATION)
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1824,6 +1827,8 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_HANDLE_DFS,
+ 
++	NL80211_ATTR_VHT_OPMODE,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index a7f4e79..ad0606c 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4125,6 +4125,12 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 		params.vht_capa =
+ 			nla_data(info->attrs[NL80211_ATTR_VHT_CAPABILITY]);
+ 
++	if (info->attrs[NL80211_ATTR_VHT_OPMODE]) {
++		params.vht_opmode_used = 1;
++		params.vht_opmode =
++			nla_get_u8(info->attrs[NL80211_ATTR_VHT_OPMODE]);
++	}
++
+ 	if (info->attrs[NL80211_ATTR_STA_PLINK_ACTION]) {
+ 		params.plink_action =
+ 			nla_get_u8(info->attrs[NL80211_ATTR_STA_PLINK_ACTION]);
+-- 
+1.7.9.5
 
