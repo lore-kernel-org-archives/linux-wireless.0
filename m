@@ -1,70 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f47.google.com ([209.85.214.47]:49665 "EHLO
-	mail-bk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751506Ab3KRRC5 (ORCPT
+Received: from mail-ea0-f176.google.com ([209.85.215.176]:54909 "EHLO
+	mail-ea0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752132Ab3KVNIn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Nov 2013 12:02:57 -0500
-Received: by mail-bk0-f47.google.com with SMTP id mx12so994036bkb.6
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Nov 2013 09:02:56 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Avri Altman <avri.altman@intel.com>
-Subject: [PATCH 4/6] mac80211: update ht flag if bss configuration changed
-Date: Mon, 18 Nov 2013 19:02:44 +0200
-Message-Id: <1384794166-10906-4-git-send-email-egrumbach@gmail.com> (sfid-20131118_180303_739766_D39524AA)
-In-Reply-To: <1384794166-10906-1-git-send-email-egrumbach@gmail.com>
-References: <1384794166-10906-1-git-send-email-egrumbach@gmail.com>
+	Fri, 22 Nov 2013 08:08:43 -0500
+Received: by mail-ea0-f176.google.com with SMTP id h14so508436eaj.35
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Nov 2013 05:08:42 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 3/8] ath10k: fix memory leak on hif_start failpath
+Date: Fri, 22 Nov 2013 14:05:13 +0100
+Message-Id: <1385125518-13461-4-git-send-email-michal.kazior@tieto.com> (sfid-20131122_140850_314963_0D0FFE16)
+In-Reply-To: <1385125518-13461-1-git-send-email-michal.kazior@tieto.com>
+References: <1385125518-13461-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avri Altman <avri.altman@intel.com>
+If post_rx failed then completions were not freed.
 
-The bug concerned failing to update the ht flag properly.
-updating the ht flag when bss configuration changes should
-be done independently of channel changes.
-
-Signed-off-by: Avri Altman <avri.altman@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- net/mac80211/mlme.c |   18 ++++++++++--------
- 1 file changed, 10 insertions(+), 8 deletions(-)
+ drivers/net/wireless/ath/ath10k/pci.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index b3a3ce3..03aa33f 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -330,6 +330,16 @@ static int ieee80211_config_bw(struct ieee80211_sub_if_data *sdata,
- 	if (WARN_ON_ONCE(!sta))
- 		return -EINVAL;
- 
-+	/*
-+	 * if bss configuration changed store the new one -
-+	 * this may be applicable even if channel is identical
-+	 */
-+	ht_opmode = le16_to_cpu(ht_oper->operation_mode);
-+	if (sdata->vif.bss_conf.ht_operation_mode != ht_opmode) {
-+		*changed |= BSS_CHANGED_HT;
-+		sdata->vif.bss_conf.ht_operation_mode = ht_opmode;
-+	}
-+
- 	chan = sdata->vif.bss_conf.chandef.chan;
- 	sband = local->hw.wiphy->bands[chan->band];
- 
-@@ -416,14 +426,6 @@ static int ieee80211_config_bw(struct ieee80211_sub_if_data *sdata,
- 					 IEEE80211_RC_BW_CHANGED);
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index d4536cb..4067890 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1205,6 +1205,7 @@ static int ath10k_pci_hif_start(struct ath10k *ar)
+ 	if (ret) {
+ 		ath10k_warn("failed to post RX buffers for all pipes: %d\n",
+ 			    ret);
++		ath10k_pci_stop_ce(ar);
+ 		return ret;
  	}
  
--	ht_opmode = le16_to_cpu(ht_oper->operation_mode);
--
--	/* if bss configuration changed store the new one */
--	if (sdata->vif.bss_conf.ht_operation_mode != ht_opmode) {
--		*changed |= BSS_CHANGED_HT;
--		sdata->vif.bss_conf.ht_operation_mode = ht_opmode;
--	}
--
- 	return 0;
- }
- 
 -- 
-1.7.9.5
+1.8.4.rc3
 
