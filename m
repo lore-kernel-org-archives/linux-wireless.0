@@ -1,47 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:41847 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752334Ab3KAN6W (ORCPT
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:34515 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751497Ab3KVKqH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 09:58:22 -0400
-Received: by mail-wg0-f51.google.com with SMTP id l18so4079222wgh.30
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:58:21 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 10/65] wireless-regdb: enable VHT80 for BY
-Date: Fri,  1 Nov 2013 14:57:00 +0100
-Message-Id: <1383314275-20960-11-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_145828_790235_0449B960)
-In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+	Fri, 22 Nov 2013 05:46:07 -0500
+Received: by mail-wi0-f169.google.com with SMTP id hm6so1358547wib.2
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Nov 2013 02:46:05 -0800 (PST)
+Date: Fri, 22 Nov 2013 11:45:28 +0100
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: Re: [PATCH v3] mac80211_hwsim: claim CSA support for AP
+Message-ID: <20131122104527.GD8527@magnum.frso.rivierawaves.com> (sfid-20131122_114611_816038_16B0576F)
+References: <1385111186-19551-1-git-send-email-karl.beldan@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1385111186-19551-1-git-send-email-karl.beldan@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Source is QCA's regulatory team's efforts.
+On Fri, Nov 22, 2013 at 10:06:26AM +0100, Karl Beldan wrote:
+> From: Karl Beldan <karl.beldan@rivierawaves.com>
+> 
+> Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
+> Cc: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+> ---
+>  drivers/net/wireless/mac80211_hwsim.c | 31 ++++++++++++++++++++++++++++++-
+>  1 file changed, 30 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+> index a11dc7c..cc30acd 100644
+> --- a/drivers/net/wireless/mac80211_hwsim.c
+> +++ b/drivers/net/wireless/mac80211_hwsim.c
+> @@ -168,6 +168,7 @@ struct hwsim_vif_priv {
+>  	u8 bssid[ETH_ALEN];
+>  	bool assoc;
+>  	bool bcn_en;
+> +	int csa_bcn_cnt;
+>  	u16 aid;
+>  };
+>  
+> @@ -1058,6 +1059,18 @@ static void mac80211_hwsim_beacon_tx(void *arg, u8 *mac,
+>  
+>  	mac80211_hwsim_tx_frame(hw, skb,
+>  				rcu_dereference(vif->chanctx_conf)->def.chan);
+> +
+> +	if (vif->csa_active) {
+> +		struct hwsim_vif_priv *vp = (void *)vif->drv_priv;
+> +
+> +		vp->csa_bcn_cnt++;
+> +		if (ieee80211_csa_is_complete(vif)) {
+> +			wiphy_debug(hw->wiphy,
+> +				    "%s CSA complete after %d beacons\n",
+> +				    __func__, vp->csa_bcn_cnt);
+> +			ieee80211_csa_finish(vif);
+> +		}
+> +	}
+>  }
+>  
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/db.txt b/db.txt
-index 572d34f..5bdb532 100644
---- a/db.txt
-+++ b/db.txt
-@@ -135,9 +135,9 @@ country BR: DFS-FCC
+Hmm, I thought the CSA code would make ieee80211_beacon_get_tim return
+NULL (or do something alike) after the last ieee80211_beacon_get_tim
+returned a beacon with a null CSA count until the config is done - but
+it seems it doesn't - in that case this change would be race prone.
+Did I miss something ?
  
- country BY: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
--	(5170 - 5250 @ 40), (20)
--	(5250 - 5330 @ 40), (20), DFS
--	(5490 - 5710 @ 40), (27), DFS
-+	(5170 - 5250 @ 80), (20)
-+	(5250 - 5330 @ 80), (20), DFS
-+	(5490 - 5710 @ 80), (27), DFS
- 
- country BZ: DFS-JP
- 	(2402 - 2482 @ 40), (30)
--- 
-1.8.4.rc3
-
+Karl
