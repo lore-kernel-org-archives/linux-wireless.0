@@ -1,62 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:35471 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751268Ab3KOTaT (ORCPT
+Received: from mail-ea0-f178.google.com ([209.85.215.178]:40115 "EHLO
+	mail-ea0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752069Ab3KVNIp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Nov 2013 14:30:19 -0500
-Date: Fri, 15 Nov 2013 14:19:13 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Gustavo Padovan <gustavo@padovan.org>,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: bluetooth 2013-11-11
-Message-ID: <20131115191912.GE7079@tuxdriver.com> (sfid-20131115_203024_540884_400995F6)
-References: <20131111182738.GB5648@joana>
- <20131111190548.GA8107@tuxdriver.com>
- <20131115151554.GB1627@joana>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131115151554.GB1627@joana>
+	Fri, 22 Nov 2013 08:08:45 -0500
+Received: by mail-ea0-f178.google.com with SMTP id d10so494892eaj.23
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Nov 2013 05:08:41 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 1/8] ath10k: don't consume other's shared interrupts
+Date: Fri, 22 Nov 2013 14:05:11 +0100
+Message-Id: <1385125518-13461-2-git-send-email-michal.kazior@tieto.com> (sfid-20131122_140850_896977_88313136)
+In-Reply-To: <1385125518-13461-1-git-send-email-michal.kazior@tieto.com>
+References: <1385125518-13461-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 15, 2013 at 01:15:54PM -0200, Gustavo Padovan wrote:
-> Hi John,
-> 
-> 2013-11-11 John W. Linville <linville@tuxdriver.com>:
-> 
-> > On Mon, Nov 11, 2013 at 04:27:38PM -0200, Gustavo Padovan wrote:
-> > > Hi John,
-> > > 
-> > > A few fixes for 3.13. There is 3 fixes to the RFCOMM protocol. One crash fix to
-> > > L2CAP. A simple fix to a bad behaviour in the SMP protocol, and last, an
-> > > revert, that I sent in the last pull request but doesn't seem to be in your
-> > > tree.
-> > 
-> > Are you looking in the wireless-next tree?  It seems to be there, no?
-> 
-> Yes, it is there. I'm resending this pull request without it:
-> 
-> Please pull or let me know of any problems! Thanks
-> 
-> 	Gustavo
-> 
-> ---
-> 
-> The following changes since commit 8ce9beac4661f576ea0d518b9f086bb52a171a37:
-> 
->   drivers: net: wireless: b43: Fix possible NULL ptr dereference (2013-10-18 13:41:11 -0400)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth for-upstream
-> 
-> for you to fetch changes up to 86ca9eac31d0d8c4fe61b5726e6d63197bc435a6:
-> 
->   Bluetooth: Fix rejecting SMP security request in slave role (2013-11-13 11:36:54 -0200)
+ath10k assumed all interrupts were directed to it.
+This isn't the case for legacy shared interrupts.
+ath10k consumed interrupts for other devices.
 
-Pulling now...
+Check device irq status and return IRQ_NONE when
+appropriate.
 
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/hw.h  |  1 +
+ drivers/net/wireless/ath/ath10k/pci.c | 21 +++++++++++++++++++++
+ 2 files changed, 22 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 8aeb46d..9535eaa 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -269,6 +269,7 @@ enum ath10k_mcast2ucast_mode {
+ #define CORE_CTRL_CPU_INTR_MASK			0x00002000
+ #define CORE_CTRL_ADDRESS			0x0000
+ #define PCIE_INTR_ENABLE_ADDRESS		0x0008
++#define PCIE_INTR_CAUSE_ADDRESS			0x000c
+ #define PCIE_INTR_CLR_ADDRESS			0x0014
+ #define SCRATCH_3_ADDRESS			0x0030
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 2457c8b..ed752d6 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -2075,6 +2075,24 @@ static irqreturn_t ath10k_pci_msi_fw_handler(int irq, void *arg)
+ 	return IRQ_HANDLED;
+ }
+ 
++static bool ath10k_pci_irq_pending(struct ath10k *ar)
++{
++	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
++	u32 cause;
++
++	/* MSIs are always exclusive */
++	if (ar_pci->num_msi_intrs > 0)
++		return true;
++
++	/* Check if the shared legacy irq is for us */
++	cause = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
++				  PCIE_INTR_CAUSE_ADDRESS);
++	if (cause & (PCIE_INTR_FIRMWARE_MASK | PCIE_INTR_CE_MASK_ALL))
++		return true;
++
++	return false;
++}
++
+ /*
+  * Top-level interrupt handler for all PCI interrupts from a Target.
+  * When a block of MSI interrupts is allocated, this top-level handler
+@@ -2085,6 +2103,9 @@ static irqreturn_t ath10k_pci_interrupt_handler(int irq, void *arg)
+ 	struct ath10k *ar = arg;
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 
++	if (!ath10k_pci_irq_pending(ar))
++		return IRQ_NONE;
++
+ 	if (ar_pci->num_msi_intrs == 0) {
+ 		/*
+ 		 * IMPORTANT: INTR_CLR regiser has to be set after
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.8.4.rc3
+
