@@ -1,33 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f53.google.com ([209.85.214.53]:52698 "EHLO
-	mail-bk0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932232Ab3KFPOY (ORCPT
+Received: from mail-ea0-f170.google.com ([209.85.215.170]:52720 "EHLO
+	mail-ea0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755601Ab3KVNaV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Nov 2013 10:14:24 -0500
-Received: by mail-bk0-f53.google.com with SMTP id w11so3498885bkz.40
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Nov 2013 07:14:23 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1383734156.14307.24.camel@jlt4.sipsolutions.net>
-References: <1383679025-7150-1-git-send-email-thomas@cozybit.com> <1383734156.14307.24.camel@jlt4.sipsolutions.net>
-From: Thomas Pedersen <thomas@cozybit.com>
-Date: Wed, 6 Nov 2013 07:14:03 -0800
-Message-ID: <CAG6hwVOi87-oHOOCT69wZR93+Y36NJzwReSGE0WnR-Q5TTPDaA@mail.gmail.com> (sfid-20131106_161427_931558_B4E54D6B)
-Subject: Re: [PATCH 01/17] mac80211: fix off-by-one in llid check.
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Bob Copeland <me@bobcopeland.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	open80211s <devel@lists.open80211s.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 22 Nov 2013 08:30:21 -0500
+Received: by mail-ea0-f170.google.com with SMTP id k10so518483eaj.29
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Nov 2013 05:30:20 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 3/3] ath10k: fix Tx status clearing
+Date: Fri, 22 Nov 2013 14:26:59 +0100
+Message-Id: <1385126819-15311-4-git-send-email-michal.kazior@tieto.com> (sfid-20131122_143048_969165_9923CBB4)
+In-Reply-To: <1385126819-15311-1-git-send-email-michal.kazior@tieto.com>
+References: <1385126819-15311-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 6, 2013 at 2:35 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> Very nice. I've squashed the llid assignment into the patch that
-> introduced the warning.
+Too much of tx info was being cleared. This caused
+issues in some setups.
 
-Hm, ok. Guess you can't get them all :)
+Reported-By: Matti Laakso <malaakso@elisanet.fi>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/txrx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks!
-
+diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
+index d476b2c..2282980 100644
+--- a/drivers/net/wireless/ath/ath10k/txrx.c
++++ b/drivers/net/wireless/ath/ath10k/txrx.c
+@@ -75,7 +75,7 @@ void ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+ 	ath10k_report_offchan_tx(htt->ar, msdu);
+ 
+ 	info = IEEE80211_SKB_CB(msdu);
+-	memset(info, 0, sizeof(*info));
++	memset(&info->status, 0, sizeof(info->status));
+ 
+ 	if (tx_done->discard) {
+ 		ieee80211_free_txskb(htt->ar->hw, msdu);
 -- 
-Thomas
+1.8.4.rc3
+
