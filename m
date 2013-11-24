@@ -1,69 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f169.google.com ([74.125.82.169]:60513 "EHLO
-	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753754Ab3KCTCv (ORCPT
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:50339 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753310Ab3KXUHW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Nov 2013 14:02:51 -0500
-Received: by mail-we0-f169.google.com with SMTP id q58so1339419wes.0
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Nov 2013 11:02:50 -0800 (PST)
-Message-ID: <1383505361.3130.3.camel@canaries32-MCP7A> (sfid-20131103_200309_069118_91EE50A0)
-Subject: [PATCH] staging: vt6656: main_usb.c ether_crc use kernel code
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Sun, 03 Nov 2013 19:02:41 +0000
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 24 Nov 2013 15:07:22 -0500
+Received: by mail-wi0-f176.google.com with SMTP id hq4so2729912wib.3
+        for <linux-wireless@vger.kernel.org>; Sun, 24 Nov 2013 12:07:21 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Haim Dreyfuss <haim.dreyfuss@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 25/29] iwlwifi: mvm: Implement low-priority scan
+Date: Sun, 24 Nov 2013 22:06:42 +0200
+Message-Id: <1385323606-3603-25-git-send-email-egrumbach@gmail.com> (sfid-20131124_210809_259097_B53FAA14)
+In-Reply-To: <52925BE7.4050406@gmail.com>
+References: <52925BE7.4050406@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-use ether_crc already in kernel and remove local version.
+From: Haim Dreyfuss <haim.dreyfuss@intel.com>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Advertise driver's support for low priority scan.
+Notice that this overwrites current setting by mac80211 which depends
+only on hw scan support.
+This scan priority  can be configured by user space application
+and it affects scan continuity, low priority scan
+will be more fragmented scan.
+
+Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/staging/vt6656/device.h   |  1 +
- drivers/staging/vt6656/main_usb.c | 16 ----------------
- 2 files changed, 1 insertion(+), 16 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c |    3 +-
+ drivers/net/wireless/iwlwifi/mvm/scan.c     |   52 ++++++++++++++++++++-------
+ 2 files changed, 41 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
-index 739cda4..b7a6e14 100644
---- a/drivers/staging/vt6656/device.h
-+++ b/drivers/staging/vt6656/device.h
-@@ -44,6 +44,7 @@
- #include <net/cfg80211.h>
- #include <linux/timer.h>
- #include <linux/usb.h>
-+#include <linux/crc32.h>
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index e25aa23..37fa559 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -256,7 +256,8 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
+ 	}
  
- #ifdef SIOCETHTOOL
- #define DEVICE_ETHTOOL_IOCTL_SUPPORT
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index 21805c6..4cb7aa7 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -1194,22 +1194,6 @@ out:
- 	return NETDEV_TX_OK;
+ 	hw->wiphy->features |= NL80211_FEATURE_P2P_GO_CTWIN |
+-			       NL80211_FEATURE_P2P_GO_OPPPS;
++			       NL80211_FEATURE_P2P_GO_OPPPS |
++			       NL80211_FEATURE_LOW_PRIORITY_SCAN;
+ 
+ 	mvm->rts_threshold = IEEE80211_MAX_RTS_THRESHOLD;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
+index 5972266..f3713f2 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
+@@ -70,6 +70,9 @@
+ 
+ #define IWL_PLCP_QUIET_THRESH 1
+ #define IWL_ACTIVE_QUIET_TIME 10
++#define LONG_OUT_TIME_PERIOD 600
++#define SHORT_OUT_TIME_PERIOD 200
++#define SUSPEND_TIME_PERIOD 100
+ 
+ static inline __le16 iwl_mvm_scan_rx_chain(struct iwl_mvm *mvm)
+ {
+@@ -87,20 +90,22 @@ static inline __le16 iwl_mvm_scan_rx_chain(struct iwl_mvm *mvm)
+ 	return cpu_to_le16(rx_chain);
  }
  
--static unsigned const ethernet_polynomial = 0x04c11db7U;
--static inline u32 ether_crc(int length, unsigned char *data)
--{
--    int crc = -1;
+-static inline __le32 iwl_mvm_scan_max_out_time(struct ieee80211_vif *vif)
++static inline __le32 iwl_mvm_scan_max_out_time(struct ieee80211_vif *vif,
++					       u32 flags, bool is_assoc)
+ {
+-	if (vif->bss_conf.assoc)
+-		return cpu_to_le32(200 * 1024);
+-	else
++	if (!is_assoc)
+ 		return 0;
++	if (flags & NL80211_SCAN_FLAG_LOW_PRIORITY)
++		return cpu_to_le32(ieee80211_tu_to_usec(SHORT_OUT_TIME_PERIOD));
++	return cpu_to_le32(ieee80211_tu_to_usec(LONG_OUT_TIME_PERIOD));
+ }
+ 
+-static inline __le32 iwl_mvm_scan_suspend_time(struct ieee80211_vif *vif)
++static inline __le32 iwl_mvm_scan_suspend_time(struct ieee80211_vif *vif,
++					       bool is_assoc)
+ {
+-	if (!vif->bss_conf.assoc)
++	if (!is_assoc)
+ 		return 0;
 -
--    while(--length >= 0) {
--        unsigned char current_octet = *data++;
--        int bit;
--        for (bit = 0; bit < 8; bit++, current_octet >>= 1) {
--            crc = (crc << 1) ^
--                ((crc < 0) ^ (current_octet & 1) ? ethernet_polynomial : 0);
--        }
--    }
--    return crc;
--}
+-	return cpu_to_le32(ieee80211_tu_to_usec(vif->bss_conf.beacon_int));
++	return cpu_to_le32(ieee80211_tu_to_usec(SUSPEND_TIME_PERIOD));
+ }
+ 
+ static inline __le32
+@@ -262,6 +267,15 @@ static u16 iwl_mvm_fill_probe_req(struct ieee80211_mgmt *frame, const u8 *ta,
+ 	return (u16)len;
+ }
+ 
++static void iwl_mvm_vif_assoc_iterator(void *data, u8 *mac,
++				       struct ieee80211_vif *vif)
++{
++	bool *is_assoc = data;
++
++	if (vif->bss_conf.assoc)
++		*is_assoc = true;
++}
++
+ int iwl_mvm_scan_request(struct iwl_mvm *mvm,
+ 			 struct ieee80211_vif *vif,
+ 			 struct cfg80211_scan_request *req)
+@@ -274,6 +288,7 @@ int iwl_mvm_scan_request(struct iwl_mvm *mvm,
+ 		.dataflags = { IWL_HCMD_DFL_NOCOPY, },
+ 	};
+ 	struct iwl_scan_cmd *cmd = mvm->scan_cmd;
++	bool is_assoc = false;
+ 	int ret;
+ 	u32 status;
+ 	int ssid_len = 0;
+@@ -289,13 +304,17 @@ int iwl_mvm_scan_request(struct iwl_mvm *mvm,
+ 	memset(cmd, 0, sizeof(struct iwl_scan_cmd) +
+ 	       mvm->fw->ucode_capa.max_probe_length +
+ 	       (MAX_NUM_SCAN_CHANNELS * sizeof(struct iwl_scan_channel)));
 -
- /* find out the start position of str2 from str1 */
- static unsigned char *kstrstr(const unsigned char *str1,
- 			      const unsigned char *str2) {
++	ieee80211_iterate_active_interfaces_atomic(mvm->hw,
++					    IEEE80211_IFACE_ITER_NORMAL,
++					    iwl_mvm_vif_assoc_iterator,
++					    &is_assoc);
+ 	cmd->channel_count = (u8)req->n_channels;
+ 	cmd->quiet_time = cpu_to_le16(IWL_ACTIVE_QUIET_TIME);
+ 	cmd->quiet_plcp_th = cpu_to_le16(IWL_PLCP_QUIET_THRESH);
+ 	cmd->rxchain_sel_flags = iwl_mvm_scan_rx_chain(mvm);
+-	cmd->max_out_time = iwl_mvm_scan_max_out_time(vif);
+-	cmd->suspend_time = iwl_mvm_scan_suspend_time(vif);
++	cmd->max_out_time = iwl_mvm_scan_max_out_time(vif, req->flags,
++						      is_assoc);
++	cmd->suspend_time = iwl_mvm_scan_suspend_time(vif, is_assoc);
+ 	cmd->rxon_flags = iwl_mvm_scan_rxon_flags(req);
+ 	cmd->filter_flags = cpu_to_le32(MAC_FILTER_ACCEPT_GRP |
+ 					MAC_FILTER_IN_BEACON);
+@@ -522,6 +541,12 @@ static void iwl_build_scan_cmd(struct iwl_mvm *mvm,
+ 			       struct cfg80211_sched_scan_request *req,
+ 			       struct iwl_scan_offload_cmd *scan)
+ {
++	bool is_assoc = false;
++
++	ieee80211_iterate_active_interfaces_atomic(mvm->hw,
++					    IEEE80211_IFACE_ITER_NORMAL,
++					    iwl_mvm_vif_assoc_iterator,
++					    &is_assoc);
+ 	scan->channel_count =
+ 		mvm->nvm_data->bands[IEEE80211_BAND_2GHZ].n_channels +
+ 		mvm->nvm_data->bands[IEEE80211_BAND_5GHZ].n_channels;
+@@ -529,8 +554,9 @@ static void iwl_build_scan_cmd(struct iwl_mvm *mvm,
+ 	scan->quiet_plcp_th = cpu_to_le16(IWL_PLCP_QUIET_THRESH);
+ 	scan->good_CRC_th = IWL_GOOD_CRC_TH_DEFAULT;
+ 	scan->rx_chain = iwl_mvm_scan_rx_chain(mvm);
+-	scan->max_out_time = cpu_to_le32(200 * 1024);
+-	scan->suspend_time = iwl_mvm_scan_suspend_time(vif);
++	scan->max_out_time = iwl_mvm_scan_max_out_time(vif, req->flags,
++						       is_assoc);
++	scan->suspend_time = iwl_mvm_scan_suspend_time(vif, is_assoc);
+ 	scan->filter_flags |= cpu_to_le32(MAC_FILTER_ACCEPT_GRP |
+ 					  MAC_FILTER_IN_BEACON);
+ 	scan->scan_type = cpu_to_le32(SCAN_TYPE_BACKGROUND);
 -- 
-1.8.3.2
+1.7.9.5
 
