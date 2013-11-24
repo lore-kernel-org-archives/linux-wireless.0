@@ -1,48 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:34511 "EHLO
-	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756872Ab3KZPHk (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:34811 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752117Ab3KXSfg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Nov 2013 10:07:40 -0500
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Simon Wunderlich <sw@simonwunderlich.de>
-Subject: [PATCH-mac80211] cfg80211: disable CSA for all drivers
-Date: Tue, 26 Nov 2013 16:07:26 +0100
-Message-Id: <1385478446-27868-1-git-send-email-sw@simonwunderlich.de> (sfid-20131126_160751_461361_E4466B51)
+	Sun, 24 Nov 2013 13:35:36 -0500
+Message-ID: <1385318128.23961.0.camel@jlt4.sipsolutions.net> (sfid-20131124_193554_130494_AE4D6ACD)
+Subject: Re: [PATCH 1/3] mac80211: implement ieee80211_get_vif_by_addr
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	mcgrof@do-not-panic.com, sujith@msujith.org,
+	rmanohar@qca.qualcomm.com
+Date: Sun, 24 Nov 2013 19:35:28 +0100
+In-Reply-To: <1385312211-3119-2-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20131124_175656_328014_B79295F8)
+References: <1385312211-3119-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	 <1385312211-3119-2-git-send-email-lorenzo.bianconi83@gmail.com>
+	 (sfid-20131124_175656_328014_B79295F8)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The channel switch announcement code has some major locking problems
-which can cause a deadlock in worst case. A series of fixes has been
-proposed, but these are non-trivial and need to be tested first.
-Therefore disable CSA completely for 3.13.
+On Sun, 2013-11-24 at 17:56 +0100, Lorenzo Bianconi wrote:
+> ieee80211_get_vif_by_addr allows low level drivers to get a reference to
+> vif data structure which is not added to the driver as monitor interface.
+> ieee80211_get_vif_by_addr will be used in ath9k tx99 code
 
-Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
----
-This is based on mac80211.git and should go into 3.13 only
----
- net/wireless/core.c |    6 ++++++
- 1 file changed, 6 insertions(+)
+Is that really better than having the driver use the iteration
+functions?
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index aff959e..507e71f 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -451,6 +451,12 @@ int wiphy_register(struct wiphy *wiphy)
- 	int i;
- 	u16 ifmodes = wiphy->interface_modes;
- 
-+	/*
-+	 * There are major locking problems in nl80211/mac80211 for CSA,
-+	 * disable for all drivers until this has been reworked.
-+	 */
-+	wiphy->flags &= ~WIPHY_FLAG_HAS_CHANNEL_SWITCH;
-+
- #ifdef CONFIG_PM
- 	if (WARN_ON(wiphy->wowlan &&
- 		    (wiphy->wowlan->flags & WIPHY_WOWLAN_GTK_REKEY_FAILURE) &&
--- 
-1.7.10.4
+> + */
+> +struct ieee80211_vif *ieee80211_get_vif_by_addr(struct ieee80211_hw *hw,
+> +						const u8 *mac)
+> +{
+> +	struct ieee80211_vif *vif = NULL;
+> +	struct ieee80211_local *local = hw_to_local(hw);
+> +	struct ieee80211_sub_if_data *sdata;
+> +
+> +	rcu_read_lock();
+> +	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+> +		if (!compare_ether_addr(sdata->vif.addr, mac)) {
+> +			vif = &sdata->vif;
+> +			break;
+> +		}
+> +	}
+> +	rcu_read_unlock();
+> +
+> +	return vif;
+
+In any case, this is completely broken wrt. locking, so I'm not taking
+it.
+
+johannes
 
