@@ -1,46 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f173.google.com ([74.125.82.173]:44592 "EHLO
-	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755894Ab3KALvT (ORCPT
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:50367 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753335Ab3KXUHV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 07:51:19 -0400
-Received: by mail-we0-f173.google.com with SMTP id u57so3832866wes.4
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 04:51:18 -0700 (PDT)
-From: Peter Wu <lekensteyn@gmail.com>
-To: Franky Lin <frankyl@broadcom.com>
-Cc: Fred <mrmocool@gmx.de>, linux-wireless@vger.kernel.org
-Subject: Re: Broadcom brcm80211 monitor mode
-Date: Fri, 01 Nov 2013 12:51:15 +0100
-Message-ID: <1979741.aijnk7UbWX@al> (sfid-20131101_125123_468981_AA9C5100)
-In-Reply-To: <5012C8F5.5070500@broadcom.com>
-References: <CAN+AqrXRuBQZ9Hvnd=sdauFdo1e5eYWBiyo8f2WFDy8EBLGvEQ@mail.gmail.com> <loom.20120727T010814-118@post.gmane.org> <5012C8F5.5070500@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Sun, 24 Nov 2013 15:07:21 -0500
+Received: by mail-wg0-f50.google.com with SMTP id a1so1197897wgh.5
+        for <linux-wireless@vger.kernel.org>; Sun, 24 Nov 2013 12:07:20 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eliad Peller <eliad@wizery.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 24/29] iwlwifi: mvm: fix scan offloading flag definition
+Date: Sun, 24 Nov 2013 22:06:41 +0200
+Message-Id: <1385323606-3603-24-git-send-email-egrumbach@gmail.com> (sfid-20131124_210808_338913_F2C77EA6)
+In-Reply-To: <52925BE7.4050406@gmail.com>
+References: <52925BE7.4050406@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 27 July 2012 09:59:33 Franky Lin wrote:
-> On 07/26/2012 04:12 PM, Fred wrote:
-> > Franky Lin <frankyl@...> writes:
-> >> However, I do plan to work on the monitor mode support on the firmware
-> >> for SDIO dongle as a leisure project although I don't have a schedule for
-> >> it. I will announce it on the mail list when it's ready. Stay tuned :)> 
-> > Any news on this? :)
-> 
-> No, I still don't have time get to it.
+From: Eliad Peller <eliad@wizery.com>
 
-Since there are no messages on this, I guess you did not get to start it?
+Bit 0 in the scan offloading flags asks the filter
+to pass all the results (instead of filtering them,
+by default), rather than the other way around (like
+it is defined and used today).
 
-There is a RE effort on https://code.google.com/p/bcmon/ that looks very 
-hacky.
+Fix the flag name appropriately, and fix its user.
 
-> > Seems like the Galaxy S3 uses BCM4330 as well.
-> 
-> Sorry, wrong answer. :(
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h |    5 ++---
+ drivers/net/wireless/iwlwifi/mvm/scan.c        |    3 +--
+ 2 files changed, 3 insertions(+), 5 deletions(-)
 
-The Samsung Galaxy S3 (i9300) uses BCM4334 (again SDIO interface, so fullmac). 
-I have not tested the brcmfmac driver, but if anyone tries to do so, you might 
-need the patch at http://marc.info/?l=linux-wireless&m=136881782700636.
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h
+index c3782b4..b3ed592 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h
++++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h
+@@ -530,14 +530,13 @@ struct iwl_scan_offload_schedule {
+ /*
+  * iwl_scan_offload_flags
+  *
+- * IWL_SCAN_OFFLOAD_FLAG_FILTER_SSID: filter mode - upload every beacon or match
+- *	ssid list.
++ * IWL_SCAN_OFFLOAD_FLAG_PASS_ALL: pass all results - no filtering.
+  * IWL_SCAN_OFFLOAD_FLAG_CACHED_CHANNEL: add cached channels to partial scan.
+  * IWL_SCAN_OFFLOAD_FLAG_ENERGY_SCAN: use energy based scan before partial scan
+  *	on A band.
+  */
+ enum iwl_scan_offload_flags {
+-	IWL_SCAN_OFFLOAD_FLAG_FILTER_SSID	= BIT(0),
++	IWL_SCAN_OFFLOAD_FLAG_PASS_ALL		= BIT(0),
+ 	IWL_SCAN_OFFLOAD_FLAG_CACHED_CHANNEL	= BIT(2),
+ 	IWL_SCAN_OFFLOAD_FLAG_ENERGY_SCAN	= BIT(3),
+ };
+diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
+index dff7592..5972266 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
+@@ -817,11 +817,10 @@ int iwl_mvm_sched_scan_start(struct iwl_mvm *mvm,
+ 		IWL_DEBUG_SCAN(mvm,
+ 			       "Sending scheduled scan with filtering, filter len %d\n",
+ 			       req->n_match_sets);
+-		scan_req.flags |=
+-				cpu_to_le16(IWL_SCAN_OFFLOAD_FLAG_FILTER_SSID);
+ 	} else {
+ 		IWL_DEBUG_SCAN(mvm,
+ 			       "Sending Scheduled scan without filtering\n");
++		scan_req.flags |= cpu_to_le16(IWL_SCAN_OFFLOAD_FLAG_PASS_ALL);
+ 	}
+ 
+ 	return iwl_mvm_send_cmd_pdu(mvm, SCAN_OFFLOAD_REQUEST_CMD, CMD_SYNC,
+-- 
+1.7.9.5
 
-Regards,
-Peter
