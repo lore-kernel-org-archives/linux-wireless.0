@@ -1,54 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:45018 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750858Ab3KTIsz (ORCPT
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:46927 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753455Ab3KXUHT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Nov 2013 03:48:55 -0500
-Message-ID: <1384937328.14295.3.camel@jlt4.sipsolutions.net> (sfid-20131120_094859_410199_5D9949F3)
-Subject: Re: QoS Data packets causing massive packet loss in
- ieee80211_sta_manage_reorder_buf.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Blaise Gassend <blaise@suitabletech.com>
-Cc: linux-wireless@vger.kernel.org,
-	Catalin Drula <catalin@suitabletech.com>,
-	Alap Modi <amodi@arubanetworks.com>
-Date: Wed, 20 Nov 2013 09:48:48 +0100
-In-Reply-To: <CAPvVjisu-xcZsqHgcTEKsCJFuESDFO-_0KwkgxffyejemHJZcA@mail.gmail.com> (sfid-20131120_094152_985311_4DCD3B9E)
-References: <CAPvVjisu-xcZsqHgcTEKsCJFuESDFO-_0KwkgxffyejemHJZcA@mail.gmail.com>
-	 (sfid-20131120_094152_985311_4DCD3B9E)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 24 Nov 2013 15:07:19 -0500
+Received: by mail-wg0-f50.google.com with SMTP id a1so1193103wgh.17
+        for <linux-wireless@vger.kernel.org>; Sun, 24 Nov 2013 12:07:17 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Luciano Coelho <luciano.coelho@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 22/29] iwlwifi: mvm: don't restart HW if suspending fails before D3 image is loaded
+Date: Sun, 24 Nov 2013 22:06:39 +0200
+Message-Id: <1385323606-3603-22-git-send-email-egrumbach@gmail.com> (sfid-20131124_210808_833039_52074912)
+In-Reply-To: <52925BE7.4050406@gmail.com>
+References: <52925BE7.4050406@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-> I have been tracing the packets through the code, and it appears that
-> the loss happens in ieee80211_sta_manage_reorder_buf. It appears that
-> when there are broadcast QoS Data packets, their sequence numbers get
-> mixed with non-broadcast QoS Data sequence numbers causing out-of-date
-> sequence number conditions to get triggered spuriously.
-> 
-> As far as I can tell broadcast QoS Data packets coming from the AP are
-> pretty rare (the other networks I have access seem to use Data packets
-> for broadcast traffic from the AP), but are legal. So I'm suspecting
-> that the AP is behaving correctly, but is triggering a so-far rare bug
-> in mac80211.
-> But this problem is likely to become much more widespread if Aruba's
-> 802.11ac firmware triggers it.
-> 
-> I'm not a deep 802.11 expert or a mac80211 so I could certainly use
-> some help here. I am putting the details I have gathered below, and
-> would love any suggestions/advice. Currently, my impression is that we
-> might need a special tid_rx for broadcast packets similar to the
-> special handling of broadcast packets in ieee80211_parse_qos.
+If we haven't loaded the D3 image yet and a failure in the suspend
+process occurs, we shouldn't restart the HW, because we're still
+running the D0 image.
 
-I think we just need to skip reorder processing for multicast, since
-they won't be aggregated anyway?
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/d3.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-http://p.sipsolutions.net/d00799dd2201676a.txt
-
-Then again I'm not really sure why we didn't do this before??
-
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/mvm/d3.c b/drivers/net/wireless/iwlwifi/mvm/d3.c
+index 6964b84..16d9103 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/iwlwifi/mvm/d3.c
+@@ -1227,10 +1227,11 @@ static int __iwl_mvm_suspend(struct ieee80211_hw *hw,
+ 	mvm->aux_sta.sta_id = old_aux_sta_id;
+ 	mvm_ap_sta->sta_id = old_ap_sta_id;
+ 	mvmvif->ap_sta_id = old_ap_sta_id;
+- out_noreset:
+-	kfree(key_data.rsc_tsc);
++
+ 	if (ret < 0)
+ 		ieee80211_restart_hw(mvm->hw);
++ out_noreset:
++	kfree(key_data.rsc_tsc);
+ 
+ 	mutex_unlock(&mvm->mutex);
+ 
+-- 
+1.7.9.5
 
