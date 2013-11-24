@@ -1,86 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ring0.de ([91.143.88.219]:57765 "EHLO smtp.ring0.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751397Ab3KNXDv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Nov 2013 18:03:51 -0500
-Date: Thu, 14 Nov 2013 23:03:33 +0000
-From: Sebastian Reichel <sre@debian.org>
-To: Tony Lindgren <tony@atomide.com>
-Cc: Luciano Coelho <luca@coelho.fi>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Rob Landley <rob@landley.net>,
-	Russell King <linux@arm.linux.org.uk>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Felipe Balbi <balbi@ti.com>,
-	Sachin Kamat <sachin.kamat@linaro.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bill Pemberton <wfp5p@virginia.edu>,
-	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Luciano Coelho <coelho@ti.com>
-Subject: Re: [PATCH 1/4] wl1251: split wl251 platform data to a separate
- structure
-Message-ID: <20131114230330.GB6383@earth.universe> (sfid-20131115_000421_096594_5547900C)
-References: <1382890469-25286-1-git-send-email-sre@debian.org>
- <1382890469-25286-2-git-send-email-sre@debian.org>
- <20131114185132.GQ10317@atomide.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="V0207lvV8h4k8FAm"
-In-Reply-To: <20131114185132.GQ10317@atomide.com>
+Received: from mail-we0-f179.google.com ([74.125.82.179]:63603 "EHLO
+	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752879Ab3KXUHJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Nov 2013 15:07:09 -0500
+Received: by mail-we0-f179.google.com with SMTP id q59so3000696wes.38
+        for <linux-wireless@vger.kernel.org>; Sun, 24 Nov 2013 12:07:08 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 14/29] iwlwifi: mvm: don't use void pointers in debugfs
+Date: Sun, 24 Nov 2013 22:06:31 +0200
+Message-Id: <1385323606-3603-14-git-send-email-egrumbach@gmail.com> (sfid-20131124_210809_716025_B38719F1)
+In-Reply-To: <52925BE7.4050406@gmail.com>
+References: <52925BE7.4050406@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
---V0207lvV8h4k8FAm
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+There's really no reason to use void *dbgfs_data
+rather than a struct iwl_mvm *mvm, so do that.
 
-On Thu, Nov 14, 2013 at 10:51:33AM -0800, Tony Lindgren wrote:
-> [...]
->
-> If this is not going into v3.13, these will cause conflicts
-> with the mach-omap2/board-*.c files for v3.14.
->=20
-> So it might be best to do a minimal header patch first that
-> can be merged in by both linux-omap and wireless trees.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c |    4 ++--
+ drivers/net/wireless/iwlwifi/mvm/mvm.h         |    2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-I guess this patch is pretty minimal. It also seems to be acked by
-the involved Maintainers, so maybe just merge Patch 1 without the
-other patches?
+diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c b/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
+index a90dde0..67f6a20 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
++++ b/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
+@@ -69,7 +69,7 @@ static ssize_t iwl_dbgfs_mac_params_read(struct file *file,
+ {
+ 	struct ieee80211_vif *vif = file->private_data;
+ 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+-	struct iwl_mvm *mvm = mvmvif->dbgfs_data;
++	struct iwl_mvm *mvm = mvmvif->mvm;
+ 	u8 ap_sta_id;
+ 	struct ieee80211_chanctx_conf *chanctx_conf;
+ 	char buf[512];
+@@ -144,7 +144,7 @@ void iwl_mvm_vif_dbgfs_register(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ 		return;
+ 
+ 	mvmvif->dbgfs_dir = debugfs_create_dir("iwlmvm", dbgfs_dir);
+-	mvmvif->dbgfs_data = mvm;
++	mvmvif->mvm = mvm;
+ 
+ 	if (!mvmvif->dbgfs_dir) {
+ 		IWL_ERR(mvm, "Failed to create debugfs directory under %s\n",
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index c002b45..e7c97cc 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -323,9 +323,9 @@ struct iwl_mvm_vif {
+ #endif
+ 
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
++	struct iwl_mvm *mvm;
+ 	struct dentry *dbgfs_dir;
+ 	struct dentry *dbgfs_slink;
+-	void *dbgfs_data;
+ 	struct iwl_dbgfs_pm dbgfs_pm;
+ 	struct iwl_dbgfs_bf dbgfs_bf;
+ #endif
+-- 
+1.7.9.5
 
-This does not solve the problem with the struct modification from
-the second patch, but I guess it's the more intrusive patch.
-
--- Sebastian
-
---V0207lvV8h4k8FAm
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.15 (GNU/Linux)
-
-iQIcBAEBCAAGBQJShVbCAAoJENju1/PIO/qa3ygP+QFNNsOwF5PZp0uSpTuxh3II
-kdL4jIoihLkpJ1dgG6rMsJIqyHAk09XUd5TZjsKandyiv1XCSLzEbC6S3X6kBT15
-/gxWHWUYMCDx7l21DFG5/zaEVCtGMalg2kxX9rClbcEdv1uJtVzw2qywyccWGNmp
-N/D84+/Xu7P6n+AJvdJOMqGT1hMcerZCDc0x/8Ggcu9GMc+Ok6uYNwuoVPWhJbot
-iP7+p9A+tz8n6RwLCmIF45TzDjXbx2dSh66qTChpV5LdOxunCXJe5GchEFbfAorx
-3sEIddHZzC4yT3ArTqm/liyCIOUrVXcw0Hjal05XK+5lFKDSLZSGme6UTT0BzfsJ
-wmrnD3Yo49PZrxYzfzonm8kpJ6YjHWX/b7kLQyY2U2W9f/StCE/WAwImp5Fj/SRC
-ZthE7CNdj8L4OdciRSWgIrs8ttpkSIUhIkQ+0LZH6k/gfQWXD+uSdKJXH7zYnByd
-63SgS+Rj9aaIpNyYTXOuWymeRFhh5Zw7wItrLxhZCZMOkcZ0fFMEqDo+zpNHCB4+
-rblAhOdhDjJxpiOivWprhIUptYDl7VwePRG3XUrJaULDYM9S3rEY45MWCZ83QhkZ
-xmSQm2t5voPfTvTnXKYZhj9WHdKGGCKz/sSaz2Y0c1cZ4qA5FpjKbVqPezovCvaM
-rztAFbkFtnT9Tf9BvnZJ
-=yaNn
------END PGP SIGNATURE-----
-
---V0207lvV8h4k8FAm--
