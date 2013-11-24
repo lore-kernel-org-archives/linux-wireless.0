@@ -1,126 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f173.google.com ([209.85.215.173]:58556 "EHLO
-	mail-ea0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753580Ab3KYNK0 (ORCPT
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:44920 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752523Ab3KXUGy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Nov 2013 08:10:26 -0500
-Received: by mail-ea0-f173.google.com with SMTP id g15so2361382eak.32
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Nov 2013 05:10:25 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 6/8] ath10k: extract functions for legacy irq handling
-Date: Mon, 25 Nov 2013 14:06:25 +0100
-Message-Id: <1385384787-12470-7-git-send-email-michal.kazior@tieto.com> (sfid-20131125_141044_465615_0219199C)
-In-Reply-To: <1385384787-12470-1-git-send-email-michal.kazior@tieto.com>
-References: <1385125518-13461-1-git-send-email-michal.kazior@tieto.com>
- <1385384787-12470-1-git-send-email-michal.kazior@tieto.com>
+	Sun, 24 Nov 2013 15:06:54 -0500
+Received: by mail-wg0-f49.google.com with SMTP id x12so2982643wgg.28
+        for <linux-wireless@vger.kernel.org>; Sun, 24 Nov 2013 12:06:53 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 03/29] iwlwifi: pcie: remove useless condition test
+Date: Sun, 24 Nov 2013 22:06:20 +0200
+Message-Id: <1385323606-3603-3-git-send-email-egrumbach@gmail.com> (sfid-20131124_210705_387744_DCAF6101)
+In-Reply-To: <52925BE7.4050406@gmail.com>
+References: <52925BE7.4050406@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Preparation for code re-use. Also use ioread/write
-wrappers.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+After wait_event_timeout(), the condition must still be
+true if it returns >0, in fact almost the last thing in
+it is checking the condition again. It's therefore not
+useful to check yet again in our code, clean it up.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
-v2:
- * move function definitions up to avoid forward
-   declarations in subsequent patches
+ drivers/net/wireless/iwlwifi/pcie/tx.c |   32 +++++++++++++-------------------
+ 1 file changed, 13 insertions(+), 19 deletions(-)
 
- drivers/net/wireless/ath/ath10k/pci.c | 65 +++++++++++++++++------------------
- 1 file changed, 32 insertions(+), 33 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index bd67311..1d2939c 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -220,6 +220,34 @@ static bool ath10k_pci_irq_pending(struct ath10k *ar)
- 	return false;
- }
- 
-+static void ath10k_pci_disable_and_clear_legacy_irq(struct ath10k *ar)
-+{
-+	/* IMPORTANT: INTR_CLR register has to be set after
-+	 * INTR_ENABLE is set to 0, otherwise interrupt can not be
-+	 * really cleared. */
-+	ath10k_pci_write32(ar, SOC_CORE_BASE_ADDRESS + PCIE_INTR_ENABLE_ADDRESS,
-+			   0);
-+	ath10k_pci_write32(ar, SOC_CORE_BASE_ADDRESS + PCIE_INTR_CLR_ADDRESS,
-+			   PCIE_INTR_FIRMWARE_MASK | PCIE_INTR_CE_MASK_ALL);
-+
-+	/* IMPORTANT: this extra read transaction is required to
-+	 * flush the posted write buffer. */
-+	(void) ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
-+				 PCIE_INTR_ENABLE_ADDRESS);
-+}
-+
-+static void ath10k_pci_enable_legacy_irq(struct ath10k *ar)
-+{
-+	ath10k_pci_write32(ar, SOC_CORE_BASE_ADDRESS +
-+			   PCIE_INTR_ENABLE_ADDRESS,
-+			   PCIE_INTR_FIRMWARE_MASK | PCIE_INTR_CE_MASK_ALL);
-+
-+	/* IMPORTANT: this extra read transaction is required to
-+	 * flush the posted write buffer. */
-+	(void) ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
-+				 PCIE_INTR_ENABLE_ADDRESS);
-+}
-+
- /*
-  * Diagnostic read/write access is provided for startup/config/debug usage.
-  * Caller must guarantee proper alignment, when applicable, and single user
-@@ -2128,25 +2156,7 @@ static irqreturn_t ath10k_pci_interrupt_handler(int irq, void *arg)
- 		if (!ath10k_pci_irq_pending(ar))
- 			return IRQ_NONE;
- 
--		/*
--		 * IMPORTANT: INTR_CLR regiser has to be set after
--		 * INTR_ENABLE is set to 0, otherwise interrupt can not be
--		 * really cleared.
--		 */
--		iowrite32(0, ar_pci->mem +
--			  (SOC_CORE_BASE_ADDRESS |
--			   PCIE_INTR_ENABLE_ADDRESS));
--		iowrite32(PCIE_INTR_FIRMWARE_MASK |
--			  PCIE_INTR_CE_MASK_ALL,
--			  ar_pci->mem + (SOC_CORE_BASE_ADDRESS |
--					 PCIE_INTR_CLR_ADDRESS));
--		/*
--		 * IMPORTANT: this extra read transaction is required to
--		 * flush the posted write buffer.
--		 */
--		(void) ioread32(ar_pci->mem +
--				(SOC_CORE_BASE_ADDRESS |
--				 PCIE_INTR_ENABLE_ADDRESS));
-+		ath10k_pci_disable_and_clear_legacy_irq(ar);
+diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
+index 487a517..d81d58c 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
+@@ -1542,30 +1542,24 @@ static int iwl_pcie_send_hcmd_sync(struct iwl_trans *trans,
  	}
  
- 	tasklet_schedule(&ar_pci->intr_tq);
-@@ -2162,20 +2172,9 @@ static void ath10k_pci_tasklet(unsigned long data)
- 	ath10k_pci_fw_interrupt_handler(ar); /* FIXME: Handle FW error */
- 	ath10k_ce_per_engine_service_any(ar);
+ 	if (!ret) {
+-		if (test_bit(STATUS_HCMD_ACTIVE, &trans_pcie->status)) {
+-			struct iwl_txq *txq =
+-				&trans_pcie->txq[trans_pcie->cmd_queue];
+-			struct iwl_queue *q = &txq->q;
++		struct iwl_txq *txq = &trans_pcie->txq[trans_pcie->cmd_queue];
++		struct iwl_queue *q = &txq->q;
  
--	if (ar_pci->num_msi_intrs == 0) {
--		/* Enable Legacy PCI line interrupts */
--		iowrite32(PCIE_INTR_FIRMWARE_MASK |
--			  PCIE_INTR_CE_MASK_ALL,
--			  ar_pci->mem + (SOC_CORE_BASE_ADDRESS |
--					 PCIE_INTR_ENABLE_ADDRESS));
--		/*
--		 * IMPORTANT: this extra read transaction is required to
--		 * flush the posted write buffer
--		 */
--		(void) ioread32(ar_pci->mem +
--				(SOC_CORE_BASE_ADDRESS |
--				 PCIE_INTR_ENABLE_ADDRESS));
--	}
-+	/* Re-enable legacy irq that was disabled in the irq handler */
-+	if (ar_pci->num_msi_intrs == 0)
-+		ath10k_pci_enable_legacy_irq(ar);
- }
+-			IWL_ERR(trans,
+-				"Error sending %s: time out after %dms.\n",
+-				get_cmd_string(trans_pcie, cmd->id),
+-				jiffies_to_msecs(HOST_COMPLETE_TIMEOUT));
++		IWL_ERR(trans, "Error sending %s: time out after %dms.\n",
++			get_cmd_string(trans_pcie, cmd->id),
++			jiffies_to_msecs(HOST_COMPLETE_TIMEOUT));
  
- static int ath10k_pci_request_irq_msix(struct ath10k *ar)
+-			IWL_ERR(trans,
+-				"Current CMD queue read_ptr %d write_ptr %d\n",
+-				q->read_ptr, q->write_ptr);
++		IWL_ERR(trans, "Current CMD queue read_ptr %d write_ptr %d\n",
++			q->read_ptr, q->write_ptr);
+ 
+-			clear_bit(STATUS_HCMD_ACTIVE, &trans_pcie->status);
+-			IWL_DEBUG_INFO(trans,
+-				       "Clearing HCMD_ACTIVE for command %s\n",
+-				       get_cmd_string(trans_pcie, cmd->id));
+-			ret = -ETIMEDOUT;
++		clear_bit(STATUS_HCMD_ACTIVE, &trans_pcie->status);
++		IWL_DEBUG_INFO(trans, "Clearing HCMD_ACTIVE for command %s\n",
++			       get_cmd_string(trans_pcie, cmd->id));
++		ret = -ETIMEDOUT;
+ 
+-			iwl_op_mode_nic_error(trans->op_mode);
++		iwl_op_mode_nic_error(trans->op_mode);
+ 
+-			goto cancel;
+-		}
++		goto cancel;
+ 	}
+ 
+ 	if (test_bit(STATUS_FW_ERROR, &trans_pcie->status)) {
 -- 
-1.8.4.rc3
+1.7.9.5
 
