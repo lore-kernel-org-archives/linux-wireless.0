@@ -1,85 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51002 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754838Ab3KKRUh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Nov 2013 12:20:37 -0500
-Message-ID: <1384190436.4271.31.camel@dcbw.foobar.com> (sfid-20131111_182045_355892_04C04AED)
-Subject: Re: [PATCH] cfg80211: Introduce critical protocol indication for
- p2p connection.
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Arend van Spriel <arend@broadcom.com>, Jouni Malinen <j@w1.fi>,
-	"Undekari, Sunil Dutt" <usdutt@qti.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Mon, 11 Nov 2013 11:20:36 -0600
-In-Reply-To: <1384187186.14334.39.camel@jlt4.sipsolutions.net>
-References: <1383230452-12608-1-git-send-email-usdutt@qti.qualcomm.com>
-	 <1383230593.14302.1.camel@jlt4.sipsolutions.net>
-	 <26F3B0343EE4744AA14EEEF9E1E534511F7A65CC@aphydexd01a>
-	 <1383233115.14302.2.camel@jlt4.sipsolutions.net>
-	 <26F3B0343EE4744AA14EEEF9E1E534511F7A6606@aphydexd01a>
-	 <52729681.5020004@broadcom.com>
-	 <26F3B0343EE4744AA14EEEF9E1E534511F7A8160@aphydexd01a>
-	 <5273A784.4040900@broadcom.com> <20131102073319.GA3507@w1.fi>
-	 <5274D5DC.1090508@broadcom.com>
-	 <1384187186.14334.39.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:59501 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753455Ab3KXUHY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Nov 2013 15:07:24 -0500
+Received: by mail-wg0-f47.google.com with SMTP id n12so2001648wgh.14
+        for <linux-wireless@vger.kernel.org>; Sun, 24 Nov 2013 12:07:23 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eyal Shapira <eyal@wizery.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 27/29] iwlwifi: mvm: stop using MIMO in case BT doesn't allow it
+Date: Sun, 24 Nov 2013 22:06:44 +0200
+Message-Id: <1385323606-3603-27-git-send-email-egrumbach@gmail.com> (sfid-20131124_210809_838453_13DDA3ED)
+In-Reply-To: <52925BE7.4050406@gmail.com>
+References: <52925BE7.4050406@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-11-11 at 17:26 +0100, Johannes Berg wrote:
-> On Sat, 2013-11-02 at 11:37 +0100, Arend van Spriel wrote:
-> 
-> > > Currently, there is no way for wpa_supplicant to clearly indicate to the
-> > > driver that it is about to run through number of quick operations
-> > > (offchannel Action frame exchange for GO Negotiation, single channel
-> > > scan, WPS association + EAPOL exchange, data connection association +
-> > > 4-way handshake). The driver can guess that this is happening (or could
-> > > use really ugly hacks to see what Action frames are exchanged and
-> > > determine next likely operation based on that) and as such, would not
-> > > know how to configure the firmware to avoid background scans for the
-> > > station interface during this full sequence.
-> > 
-> > I wanted this API primarily to avoid drivers doing that kind of hacks so 
-> > I agree. It was intended to avoid extra latencies during IP connection 
-> > setup, which is probably happening right after the group formation. So I 
-> > recommend the connection managers to use this API. I think Dan Williams 
-> > did some initial implementation testing in NetworkManager and had some 
-> > concerns. I forgot about them completely so not sure how that ended.
-> > 
-> > > While the background scan should in most cases not completely break the
-> > > process even with inconvenient timing (or well, hitting one in middle of
-> > > the three frame GO Negotiation would have potential to time out that
-> > > exchange), it would be nice if this common sequence could be optimized
-> > > to avoid extra latencies and to be more robust in general since there is
-> > > a 15 second timeout for group formation and quite a bit shorter timeouts
-> > > in practice for the individual operations within the sequence.
-> > 
-> > I guess the decision is for Johannes to take, but I see your point.
-> 
-> I think after this long discussion we all finally understand the concern
-> and use case - that really could have been explained in the patch
-> message.
-> 
-> Anyhow, I think that the critical protocol API is still a bad fit
-> because it currently only allows
->  (1) a single user of the API at a time, so e.g. connman using it for
-> DHCP on a
->      P2P group interface while wpa_s is using it for GO negotation would
-> break
->  (2) changing that is probably not too difficult technically, but the
-> question is
->      how multiple concurrent protocols should behave and if anything
-> else has
->      really started using this yet
+From: Eyal Shapira <eyal@wizery.com>
 
-I've had patches for NetworkManager for a while for this, I had
-developed them in May 2013 which then resulted in my replies to
-"cfg80211: introduce critical protocol indication from user-space".  I
-posted about your problem #1, and Arnd's reply at the time was "I am not
-fully convinced there will be a need for multiple protocols."  Perhaps
-that need has now become more apparent?
+Switch to using the new btcoex decision api regarding MIMO and stop
+accessing the internal btcoex structs.
+In case MIMO should be disabled it would detect this upon the next
+Tx and force a search. The search will switch to SISO on a antenna A
+which isn't used by BT.
 
-Dan
+Signed-off-by: Eyal Shapira <eyal@wizery.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/rs.c |   26 ++++++--------------------
+ drivers/net/wireless/iwlwifi/mvm/rs.h |   13 -------------
+ 2 files changed, 6 insertions(+), 33 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
+index 482b91b8..9565260 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
+@@ -1499,6 +1499,9 @@ static int rs_move_mimo2_to_other(struct iwl_mvm *mvm,
+ 	u8 update_search_tbl_counter = 0;
+ 	int ret;
+ 
++	if (!iwl_mvm_bt_coex_is_mimo_allowed(mvm, sta))
++		tbl->action = IWL_MIMO2_SWITCH_SISO_A;
++
+ 	start_action = tbl->action;
+ 	while (1) {
+ 		lq_sta->action_counter++;
+@@ -1970,26 +1973,9 @@ static void rs_rate_scale_perform(struct iwl_mvm *mvm,
+ 	     (current_tpt > (100 * tbl->expected_tpt[low]))))
+ 		scale_action = 0;
+ 
+-	if ((le32_to_cpu(mvm->last_bt_notif.bt_activity_grading) >=
+-	     IWL_BT_COEX_TRAFFIC_LOAD_HIGH) && (is_mimo(tbl->lq_type))) {
+-		if (lq_sta->last_bt_traffic >
+-		    le32_to_cpu(mvm->last_bt_notif.bt_activity_grading)) {
+-			/*
+-			 * don't set scale_action, don't want to scale up if
+-			 * the rate scale doesn't otherwise think that is a
+-			 * good idea.
+-			 */
+-		} else if (lq_sta->last_bt_traffic <=
+-			   le32_to_cpu(mvm->last_bt_notif.bt_activity_grading)) {
+-			scale_action = -1;
+-		}
+-	}
+-	lq_sta->last_bt_traffic =
+-		le32_to_cpu(mvm->last_bt_notif.bt_activity_grading);
+-
+-	if ((le32_to_cpu(mvm->last_bt_notif.bt_activity_grading) >=
+-	     IWL_BT_COEX_TRAFFIC_LOAD_HIGH) && is_mimo(tbl->lq_type)) {
+-		/* search for a new modulation */
++	/* Force a search in case BT doesn't like us being in MIMO */
++	if (is_mimo(tbl->lq_type) &&
++	    !iwl_mvm_bt_coex_is_mimo_allowed(mvm, sta)) {
+ 		rs_stay_in_table(lq_sta, true);
+ 		goto lq_update;
+ 	}
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.h b/drivers/net/wireless/iwlwifi/mvm/rs.h
+index b41686b..5dd30ea 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rs.h
++++ b/drivers/net/wireless/iwlwifi/mvm/rs.h
+@@ -328,19 +328,6 @@ struct iwl_lq_sta {
+ 	u32 last_rate_n_flags;
+ 	/* packets destined for this STA are aggregated */
+ 	u8 is_agg;
+-	/* BT traffic this sta was last updated in */
+-	u8 last_bt_traffic;
+-};
+-
+-enum iwl_bt_coex_profile_traffic_load {
+-	IWL_BT_COEX_TRAFFIC_LOAD_NONE		= 0,
+-	IWL_BT_COEX_TRAFFIC_LOAD_LOW		= 1,
+-	IWL_BT_COEX_TRAFFIC_LOAD_HIGH		= 2,
+-	IWL_BT_COEX_TRAFFIC_LOAD_CONTINUOUS	= 3,
+-/*
+- * There are no more even though below is a u8, the
+- * indication from the BT device only has two bits.
+- */
+ };
+ 
+ /* Initialize station's rate scaling information after adding station */
+-- 
+1.7.9.5
 
