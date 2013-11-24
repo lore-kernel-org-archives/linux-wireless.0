@@ -1,75 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.21]:62229 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753630Ab3KTMxe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Nov 2013 07:53:34 -0500
-Received: from fb07-iapwap2.localnet ([134.176.19.122]) by mail.gmx.com
- (mrgmx003) with ESMTPSA (Nemesis) id 0M3j17-1VRixP35Jh-00rDie for
- <linux-wireless@vger.kernel.org>; Wed, 20 Nov 2013 13:53:30 +0100
-From: Marc Dietrich <marvin24@gmx.de>
-To: users@rt2x00.serialmonkey.com
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [rt2x00-users] [PATCH 3.12] rt2800usb: slow down TX statuspolling
-Date: Wed, 20 Nov 2013 13:53:29 +0100
-Message-ID: <1413247.TRgdXSqTuO@fb07-iapwap2> (sfid-20131120_135343_570663_AC2F802E)
-In-Reply-To: <526243C2.7090607@gmail.com>
-References: <20131017100431.GA9603@redhat.com> <20131018094238.GA7506@redhat.com> <526243C2.7090607@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-ea0-f169.google.com ([209.85.215.169]:60110 "EHLO
+	mail-ea0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753033Ab3KXQ44 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Nov 2013 11:56:56 -0500
+Received: by mail-ea0-f169.google.com with SMTP id l9so1926053eaj.28
+        for <linux-wireless@vger.kernel.org>; Sun, 24 Nov 2013 08:56:55 -0800 (PST)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@do-not-panic.com,
+	sujith@msujith.org, johannes@sipsolutions.net,
+	rmanohar@qca.qualcomm.com
+Subject: [PATCH 1/3] mac80211: implement ieee80211_get_vif_by_addr
+Date: Sun, 24 Nov 2013 17:56:49 +0100
+Message-Id: <1385312211-3119-2-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20131124_175702_179022_2BBB86C0)
+In-Reply-To: <1385312211-3119-1-git-send-email-lorenzo.bianconi83@gmail.com>
+References: <1385312211-3119-1-git-send-email-lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Samstag, 19. Oktober 2013, 10:33:06 schrieb Gertjan van Wingerde:
-> On 10/18/13 11:42, Stanislaw Gruszka wrote:
-> > On Thu, Oct 17, 2013 at 09:39:06AM -0500, Larry Finger wrote:
-> >> I suggest getting rid of the magic numbers as long as you are making
-> >> this change. A single define could handle the delay time for the two
-> >> cases.
-> > 
-> > Thanks for sugestion Larry, though I do not see clear benefit of
-> > introduce define since those magic numbers are just time values
-> > expressed in nano seconds. Anyway patch with define added below.
-> > John can pick it, if he thinks it is better.
-> > 
-> > Stanislaw
-> > ---
-> > From 813e0bde7340bad7d3401c6aa2a3f8635ec49597 Mon Sep 17 00:00:00 2001
-> > From: Stanislaw Gruszka <sgruszka@redhat.com>
-> > Date: Fri, 18 Oct 2013 11:36:54 +0200
-> > Subject: [PATCH] rt2800usb: slow down TX status polling
-> > 
-> > Polling TX statuses too frequently has two negative effects. First is
-> > randomly peek CPU usage, causing overall system functioning delays.
-> > Second bad effect is that device is not able to fill TX statuses in
-> > H/W register on some workloads and we get lot of timeouts like below:
-> > 
-> > ieee80211 phy4: rt2800usb_entry_txstatus_timeout: Warning - TX status
-> > timeout for entry 7 in queue 2 ieee80211 phy4:
-> > rt2800usb_entry_txstatus_timeout: Warning - TX status timeout for entry 7
-> > in queue 2 ieee80211 phy4: rt2800usb_txdone: Warning - Got TX status for
-> > an empty queue 2, dropping
-> > 
-> > This not only cause flood of messages in dmesg, but also bad throughput,
-> > since rate scaling algorithm can not work optimally.
-> > 
-> > In the future, we should probably make polling interval be adjusted
-> > automatically, but for now just increase values, this make mentioned
-> > problems gone.
-> > 
-> > Resolve:
-> > https://bugzilla.kernel.org/show_bug.cgi?id=62781
-> > 
-> > Cc: stable@vger.kernel.org
-> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> 
-> I don't care which version gets picked. In both cases:
-> 
-> Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+ieee80211_get_vif_by_addr allows low level drivers to get a reference to
+vif data structure which is not added to the driver as monitor interface.
+ieee80211_get_vif_by_addr will be used in ath9k tx99 code
 
-did this ever hit a stable queue? 
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+---
+ include/net/mac80211.h |  9 +++++++++
+ net/mac80211/util.c    | 26 ++++++++++++++++++++++++++
+ 2 files changed, 35 insertions(+)
 
-Marc
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 7ceed99..cdec60d 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -4585,4 +4585,13 @@ bool ieee80211_tx_prepare_skb(struct ieee80211_hw *hw,
+ 			      struct ieee80211_vif *vif, struct sk_buff *skb,
+ 			      int band, struct ieee80211_sta **sta);
+ 
++/**
++ * ieee80211_get_vif_by_addr - get vif for given mac address
++ * @hw: pointer as obtained from ieee80211_alloc_hw()
++ * @mac: mac address
++ *
++ */
++struct ieee80211_vif *ieee80211_get_vif_by_addr(struct ieee80211_hw *hw,
++						const u8 *mac);
++
+ #endif /* MAC80211_H */
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 592a181..6a7a3df 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2472,3 +2472,29 @@ int ieee80211_send_action_csa(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_tx_skb(sdata, skb);
+ 	return 0;
+ }
++
++/**
++ * ieee80211_get_vif_by_addr - get vif for given mac address
++ * @hw: pointer as obtained from ieee80211_alloc_hw()
++ * @mac: mac address
++ *
++ */
++struct ieee80211_vif *ieee80211_get_vif_by_addr(struct ieee80211_hw *hw,
++						const u8 *mac)
++{
++	struct ieee80211_vif *vif = NULL;
++	struct ieee80211_local *local = hw_to_local(hw);
++	struct ieee80211_sub_if_data *sdata;
++
++	rcu_read_lock();
++	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
++		if (!compare_ether_addr(sdata->vif.addr, mac)) {
++			vif = &sdata->vif;
++			break;
++		}
++	}
++	rcu_read_unlock();
++
++	return vif;
++}
++EXPORT_SYMBOL(ieee80211_get_vif_by_addr);
+-- 
+1.8.3.2
 
