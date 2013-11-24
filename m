@@ -1,181 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f179.google.com ([74.125.82.179]:58465 "EHLO
-	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752326Ab3KSUwU (ORCPT
+Received: from mail-we0-f173.google.com ([74.125.82.173]:46478 "EHLO
+	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752442Ab3KXUHF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Nov 2013 15:52:20 -0500
-Received: by mail-we0-f179.google.com with SMTP id q59so6084863wes.24
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Nov 2013 12:52:19 -0800 (PST)
+	Sun, 24 Nov 2013 15:07:05 -0500
+Received: by mail-we0-f173.google.com with SMTP id t61so3017995wes.18
+        for <linux-wireless@vger.kernel.org>; Sun, 24 Nov 2013 12:07:02 -0800 (PST)
 From: Emmanuel Grumbach <egrumbach@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 2/7] iwlwifi: pcie: refactor a bit the interrupt coalescing
-Date: Tue, 19 Nov 2013 22:52:01 +0200
-Message-Id: <1384894326-24676-2-git-send-email-egrumbach@gmail.com> (sfid-20131119_215225_160684_352711B9)
-In-Reply-To: <528BCEDB.8010703@gmail.com>
-References: <528BCEDB.8010703@gmail.com>
+Cc: Eliad Peller <eliad@wizery.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 10/29] iwlwifi: mvm: allow keeping connections in d3_test
+Date: Sun, 24 Nov 2013 22:06:27 +0200
+Message-Id: <1385323606-3603-10-git-send-email-egrumbach@gmail.com> (sfid-20131124_210710_073391_CC614BA0)
+In-Reply-To: <52925BE7.4050406@gmail.com>
+References: <52925BE7.4050406@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Eliad Peller <eliad@wizery.com>
 
-We changed the timeout for the interrupt coealescing for
-calibration, but that wasn't effective since we changed
-that value back before loading the firmware. Since
-calibrations are notification from firmware and not Rx
-packets, this doesn't change anyway - the firmware will
-fire an interrupt straight away regardless of the interrupt
-coalescing value.
-Also, a HW issue has been discovered in 7000 devices series.
-The work around is to disable the new interrupt coalescing
-timeout feature - do this by setting bit 31 in
-CSR_INT_COALESCING.
-This has been fixed in 7265 which means that we can't rely
-on the device family and must have a hint in the iwl_cfg
-structure.
+Keeping connection can be useful also when testing d3
+using the debugfs file (d3_test).
 
-Cc: stable@vger.kernel.org [3.10+]
-Fixes: 99cd47142399 ("iwlwifi: add 7000 series device configuration")
+Save the vif to keep connection on, and consider it
+when iterating over the interfaces.
+
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+Reviewed-by: Luciano Coelho <luciano.coelho@intel.com>
 Reviewed-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-7000.c   |    7 +++++++
- drivers/net/wireless/iwlwifi/iwl-config.h |    3 +++
- drivers/net/wireless/iwlwifi/iwl-csr.h    |    5 +----
- drivers/net/wireless/iwlwifi/pcie/rx.c    |    4 ++++
- drivers/net/wireless/iwlwifi/pcie/trans.c |    3 ---
- 5 files changed, 15 insertions(+), 7 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/d3.c  |   11 ++++++++++-
+ drivers/net/wireless/iwlwifi/mvm/mvm.h |    1 +
+ 2 files changed, 11 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-7000.c b/drivers/net/wireless/iwlwifi/iwl-7000.c
-index 85879db..2ea4b11 100644
---- a/drivers/net/wireless/iwlwifi/iwl-7000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-7000.c
-@@ -130,6 +130,7 @@ const struct iwl_cfg iwl7260_2ac_cfg = {
- 	.ht_params = &iwl7000_ht_params,
- 	.nvm_ver = IWL7260_NVM_VERSION,
- 	.nvm_calib_ver = IWL7260_TX_POWER_VERSION,
-+	.host_interrupt_operation_mode = true,
- };
+diff --git a/drivers/net/wireless/iwlwifi/mvm/d3.c b/drivers/net/wireless/iwlwifi/mvm/d3.c
+index d9eb68e..6964b84 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/iwlwifi/mvm/d3.c
+@@ -1806,6 +1806,10 @@ static int __iwl_mvm_resume(struct iwl_mvm *mvm, bool test)
+ 	iwl_mvm_read_d3_sram(mvm);
  
- const struct iwl_cfg iwl7260_2ac_cfg_high_temp = {
-@@ -140,6 +141,7 @@ const struct iwl_cfg iwl7260_2ac_cfg_high_temp = {
- 	.nvm_ver = IWL7260_NVM_VERSION,
- 	.nvm_calib_ver = IWL7260_TX_POWER_VERSION,
- 	.high_temp = true,
-+	.host_interrupt_operation_mode = true,
- };
+ 	keep = iwl_mvm_query_wakeup_reasons(mvm, vif);
++#ifdef CONFIG_IWLWIFI_DEBUGFS
++	if (keep)
++		mvm->keep_vif = vif;
++#endif
+ 	/* has unlocked the mutex, so skip that */
+ 	goto out;
  
- const struct iwl_cfg iwl7260_2n_cfg = {
-@@ -149,6 +151,7 @@ const struct iwl_cfg iwl7260_2n_cfg = {
- 	.ht_params = &iwl7000_ht_params,
- 	.nvm_ver = IWL7260_NVM_VERSION,
- 	.nvm_calib_ver = IWL7260_TX_POWER_VERSION,
-+	.host_interrupt_operation_mode = true,
- };
- 
- const struct iwl_cfg iwl7260_n_cfg = {
-@@ -158,6 +161,7 @@ const struct iwl_cfg iwl7260_n_cfg = {
- 	.ht_params = &iwl7000_ht_params,
- 	.nvm_ver = IWL7260_NVM_VERSION,
- 	.nvm_calib_ver = IWL7260_TX_POWER_VERSION,
-+	.host_interrupt_operation_mode = true,
- };
- 
- const struct iwl_cfg iwl3160_2ac_cfg = {
-@@ -167,6 +171,7 @@ const struct iwl_cfg iwl3160_2ac_cfg = {
- 	.ht_params = &iwl7000_ht_params,
- 	.nvm_ver = IWL3160_NVM_VERSION,
- 	.nvm_calib_ver = IWL3160_TX_POWER_VERSION,
-+	.host_interrupt_operation_mode = true,
- };
- 
- const struct iwl_cfg iwl3160_2n_cfg = {
-@@ -176,6 +181,7 @@ const struct iwl_cfg iwl3160_2n_cfg = {
- 	.ht_params = &iwl7000_ht_params,
- 	.nvm_ver = IWL3160_NVM_VERSION,
- 	.nvm_calib_ver = IWL3160_TX_POWER_VERSION,
-+	.host_interrupt_operation_mode = true,
- };
- 
- const struct iwl_cfg iwl3160_n_cfg = {
-@@ -185,6 +191,7 @@ const struct iwl_cfg iwl3160_n_cfg = {
- 	.ht_params = &iwl7000_ht_params,
- 	.nvm_ver = IWL3160_NVM_VERSION,
- 	.nvm_calib_ver = IWL3160_TX_POWER_VERSION,
-+	.host_interrupt_operation_mode = true,
- };
- 
- const struct iwl_cfg iwl7265_2ac_cfg = {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-config.h b/drivers/net/wireless/iwlwifi/iwl-config.h
-index 18f232e..6801c7a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-config.h
-@@ -207,6 +207,8 @@ struct iwl_eeprom_params {
-  * @rx_with_siso_diversity: 1x1 device with rx antenna diversity
-  * @internal_wimax_coex: internal wifi/wimax combo device
-  * @high_temp: Is this NIC is designated to be in high temperature.
-+ * @host_interrupt_operation_mode: device needs host interrupt operation
-+ *	mode set
-  *
-  * We enable the driver to be backward compatible wrt. hardware features.
-  * API differences in uCode shouldn't be handled here but through TLVs
-@@ -235,6 +237,7 @@ struct iwl_cfg {
- 	enum iwl_led_mode led_mode;
- 	const bool rx_with_siso_diversity;
- 	const bool internal_wimax_coex;
-+	const bool host_interrupt_operation_mode;
- 	bool high_temp;
- };
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-csr.h b/drivers/net/wireless/iwlwifi/iwl-csr.h
-index 54a4fdc..da4eca8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-csr.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-csr.h
-@@ -495,14 +495,11 @@ enum secure_load_status_reg {
-  * the CSR_INT_COALESCING is an 8 bit register in 32-usec unit
-  *
-  * default interrupt coalescing timer is 64 x 32 = 2048 usecs
-- * default interrupt coalescing calibration timer is 16 x 32 = 512 usecs
-  */
- #define IWL_HOST_INT_TIMEOUT_MAX	(0xFF)
- #define IWL_HOST_INT_TIMEOUT_DEF	(0x40)
- #define IWL_HOST_INT_TIMEOUT_MIN	(0x0)
--#define IWL_HOST_INT_CALIB_TIMEOUT_MAX	(0xFF)
--#define IWL_HOST_INT_CALIB_TIMEOUT_DEF	(0x10)
--#define IWL_HOST_INT_CALIB_TIMEOUT_MIN	(0x0)
-+#define IWL_HOST_INT_OPER_MODE		BIT(31)
- 
- /*****************************************************************************
-  *                        7000/3000 series SHR DTS addresses                 *
-diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
-index 3f237b4..83d28bc 100644
---- a/drivers/net/wireless/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
-@@ -489,6 +489,10 @@ static void iwl_pcie_rx_hw_init(struct iwl_trans *trans, struct iwl_rxq *rxq)
- 
- 	/* Set interrupt coalescing timer to default (2048 usecs) */
- 	iwl_write8(trans, CSR_INT_COALESCING, IWL_HOST_INT_TIMEOUT_DEF);
-+
-+	/* W/A for interrupt coalescing bug in 7260 and 3160 */
-+	if (trans->cfg->host_interrupt_operation_mode)
-+		iwl_set_bit(trans, CSR_INT_COALESCING, IWL_HOST_INT_OPER_MODE);
+@@ -1862,6 +1866,7 @@ static int iwl_mvm_d3_test_open(struct inode *inode, struct file *file)
+ 		return err;
+ 	}
+ 	mvm->d3_test_active = true;
++	mvm->keep_vif = NULL;
+ 	return 0;
  }
  
- static void iwl_pcie_rx_init_rxb_lists(struct iwl_rxq *rxq)
-diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
-index 5d9337b..cde9c16 100644
---- a/drivers/net/wireless/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
-@@ -279,9 +279,6 @@ static int iwl_pcie_nic_init(struct iwl_trans *trans)
- 	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
- 	iwl_pcie_apm_init(trans);
+@@ -1890,6 +1895,10 @@ static ssize_t iwl_mvm_d3_test_read(struct file *file, char __user *user_buf,
+ static void iwl_mvm_d3_test_disconn_work_iter(void *_data, u8 *mac,
+ 					      struct ieee80211_vif *vif)
+ {
++	/* skip the one we keep connection on */
++	if (_data == vif)
++		return;
++
+ 	if (vif->type == NL80211_IFTYPE_STATION)
+ 		ieee80211_connection_loss(vif);
+ }
+@@ -1916,7 +1925,7 @@ static int iwl_mvm_d3_test_release(struct inode *inode, struct file *file)
  
--	/* Set interrupt coalescing calibration timer to default (512 usecs) */
--	iwl_write8(trans, CSR_INT_COALESCING, IWL_HOST_INT_CALIB_TIMEOUT_DEF);
--
- 	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
+ 	ieee80211_iterate_active_interfaces_atomic(
+ 		mvm->hw, IEEE80211_IFACE_ITER_NORMAL,
+-		iwl_mvm_d3_test_disconn_work_iter, NULL);
++		iwl_mvm_d3_test_disconn_work_iter, mvm->keep_vif);
  
- 	iwl_pcie_set_pwr(trans, false);
+ 	ieee80211_wake_queues(mvm->hw);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index 7992baa..c002b45 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -531,6 +531,7 @@ struct iwl_mvm {
+ 	bool store_d3_resume_sram;
+ 	void *d3_resume_sram;
+ 	u32 d3_test_pme_ptr;
++	struct ieee80211_vif *keep_vif;
+ #endif
+ #endif
+ 
 -- 
 1.7.9.5
 
