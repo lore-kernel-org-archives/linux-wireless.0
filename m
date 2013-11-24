@@ -1,80 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:46298 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751409Ab3KRTOz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Nov 2013 14:14:55 -0500
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:39802 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753321Ab3KXUHP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Nov 2013 15:07:15 -0500
+Received: by mail-wi0-f173.google.com with SMTP id hm4so2718336wib.12
+        for <linux-wireless@vger.kernel.org>; Sun, 24 Nov 2013 12:07:14 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Subject: [PATCH 1/2] ath9k_hw: fix TSF save/restore around chip reset
-Date: Mon, 18 Nov 2013 20:14:43 +0100
-Message-Id: <1384802084-55082-1-git-send-email-nbd@openwrt.org> (sfid-20131118_201502_122613_BFD1CEEE)
+Cc: Michal Nazarewicz <mina86@mina86.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 19/29] iwlwifi: pcie: remove minor dead code
+Date: Sun, 24 Nov 2013 22:06:36 +0200
+Message-Id: <1385323606-3603-19-git-send-email-egrumbach@gmail.com> (sfid-20131124_210808_959647_F25DB8D5)
+In-Reply-To: <52925BE7.4050406@gmail.com>
+References: <52925BE7.4050406@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A cold reset can be triggered because of DMA stop issues, and this leads
-to TSF being cleared on all chipsets. To properly deal with this, always
-save the TSF.
-Additionally, account for the time it takes to do the actual chip reset,
-which can be quite significant. On AR9344 it takes around 4.5 ms.
+From: Michal Nazarewicz <mina86@mina86.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+inta is checked to be zero in a IRQ_NONE branch so afterwards it
+cannot be zero as it is never modified.
+
+Signed-off-by: Michal Nazarewicz <mina86@mina86.com>
+[reword the patch title and fix comment]
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/hw.c | 16 ++++++++++------
- 1 file changed, 10 insertions(+), 6 deletions(-)
+ drivers/net/wireless/iwlwifi/pcie/rx.c |   26 +++++++++++---------------
+ 1 file changed, 11 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 54b0415..4046da5 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -17,6 +17,7 @@
- #include <linux/io.h>
- #include <linux/slab.h>
- #include <linux/module.h>
-+#include <linux/time.h>
- #include <asm/unaligned.h>
+diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
+index 3f237b4..79d46a9 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
+@@ -1121,7 +1121,6 @@ static irqreturn_t iwl_pcie_isr(int irq, void *data)
+ 	struct iwl_trans *trans = data;
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	u32 inta, inta_mask;
+-	irqreturn_t ret = IRQ_NONE;
  
- #include "hw.h"
-@@ -1856,10 +1857,12 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 		   struct ath9k_hw_cal_data *caldata, bool fastcc)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
-+	struct timespec ts;
- 	u32 saveLedState;
- 	u32 saveDefAntenna;
- 	u32 macStaId1;
- 	u64 tsf = 0;
-+	s64 usec = 0;
- 	int r;
- 	bool start_mci_reset = false;
- 	bool save_fullsleep = ah->chip_fullsleep;
-@@ -1902,10 +1905,10 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	lockdep_assert_held(&trans_pcie->irq_lock);
  
- 	macStaId1 = REG_READ(ah, AR_STA_ID1) & AR_STA_ID1_BASE_RATE_11B;
- 
--	/* For chips on which RTC reset is done, save TSF before it gets cleared */
--	if (AR_SREV_9100(ah) ||
--	    (AR_SREV_9280(ah) && ah->eep_ops->get_eeprom(ah, EEP_OL_PWRCTRL)))
--		tsf = ath9k_hw_gettsf64(ah);
-+	/* Save TSF before chip reset, a cold reset clears it */
-+	tsf = ath9k_hw_gettsf64(ah);
-+	getrawmonotonic(&ts);
-+	usec = ts.tv_sec * 1000 + ts.tv_nsec / 1000;
- 
- 	saveLedState = REG_READ(ah, AR_CFG_LED) &
- 		(AR_CFG_LED_ASSOC_CTL | AR_CFG_LED_MODE_SEL |
-@@ -1938,8 +1941,9 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+@@ -1150,7 +1149,16 @@ static irqreturn_t iwl_pcie_isr(int irq, void *data)
+ 	 * or due to sporadic interrupts thrown from our NIC. */
+ 	if (!inta) {
+ 		IWL_DEBUG_ISR(trans, "Ignore interrupt, inta == 0\n");
+-		goto none;
++		/*
++		 * Re-enable interrupts here since we don't have anything to
++		 * service, but only in case the handler won't run. Note that
++		 * the handler can be scheduled because of a previous
++		 * interrupt.
++		 */
++		if (test_bit(STATUS_INT_ENABLED, &trans_pcie->status) &&
++		    !trans_pcie->inta)
++			iwl_enable_interrupts(trans);
++		return IRQ_NONE;
  	}
  
- 	/* Restore TSF */
--	if (tsf)
--		ath9k_hw_settsf64(ah, tsf);
-+	getrawmonotonic(&ts);
-+	usec = ts.tv_sec * 1000 + ts.tv_nsec / 1000 - usec;
-+	ath9k_hw_settsf64(ah, tsf + usec);
+ 	if ((inta == 0xFFFFFFFF) || ((inta & 0xFFFFFFF0) == 0xa5a5a5a0)) {
+@@ -1168,19 +1176,7 @@ static irqreturn_t iwl_pcie_isr(int irq, void *data)
  
- 	if (AR_SREV_9280_20_OR_LATER(ah))
- 		REG_SET_BIT(ah, AR_GPIO_INPUT_EN_VAL, AR_GPIO_JTAG_DISABLE);
+ 	trans_pcie->inta |= inta;
+ 	/* the thread will service interrupts and re-enable them */
+-	if (likely(inta))
+-		return IRQ_WAKE_THREAD;
+-
+-	ret = IRQ_HANDLED;
+-
+-none:
+-	/* re-enable interrupts here since we don't have anything to service. */
+-	/* only Re-enable if disabled by irq  and no schedules tasklet. */
+-	if (test_bit(STATUS_INT_ENABLED, &trans_pcie->status) &&
+-	    !trans_pcie->inta)
+-		iwl_enable_interrupts(trans);
+-
+-	return ret;
++	return IRQ_WAKE_THREAD;
+ }
+ 
+ /* interrupt handler using ict table, with this interrupt driver will
 -- 
-1.8.3.4 (Apple Git-47)
+1.7.9.5
 
