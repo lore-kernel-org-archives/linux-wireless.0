@@ -1,94 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2260 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753977Ab3K2LZl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Nov 2013 06:25:41 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 19/19] brcmfmac: expose chip information through debugfs
-Date: Fri, 29 Nov 2013 12:25:24 +0100
-Message-ID: <1385724324-6361-20-git-send-email-arend@broadcom.com> (sfid-20131129_123808_191848_3DFB94E6)
-In-Reply-To: <1385724324-6361-1-git-send-email-arend@broadcom.com>
-References: <1385724324-6361-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:62610 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753310Ab3KXUHN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Nov 2013 15:07:13 -0500
+Received: by mail-wi0-f182.google.com with SMTP id en1so4596362wid.3
+        for <linux-wireless@vger.kernel.org>; Sun, 24 Nov 2013 12:07:11 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 17/29] iwlwifi: mvm: BT Coex - fine tune the aggregation size
+Date: Sun, 24 Nov 2013 22:06:34 +0200
+Message-Id: <1385323606-3603-17-git-send-email-egrumbach@gmail.com> (sfid-20131124_210807_948383_4117F40F)
+In-Reply-To: <52925BE7.4050406@gmail.com>
+References: <52925BE7.4050406@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding the debugfs file <debugfs_mnt>/brcmfmac/<devid>/chipinfo
-which contains the chip number and revision.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Latest tests have shown that when BT is active and has
+connections but the traffic is low, the WiFi aggregation can
+be large up to 4000us without noticeable impact on BT.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.c |   36 ++++++++++++++++++++-
- 1 file changed, 35 insertions(+), 1 deletion(-)
+ drivers/net/wireless/iwlwifi/mvm/bt-coex.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.c
-index 0f9e9057..03fe8ac 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.c
-@@ -22,7 +22,6 @@
- #include "dhd.h"
- #include "dhd_bus.h"
- #include "dhd_dbg.h"
--#include "tracepoint.h"
+diff --git a/drivers/net/wireless/iwlwifi/mvm/bt-coex.c b/drivers/net/wireless/iwlwifi/mvm/bt-coex.c
+index 5d066cb..7dbb058 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/bt-coex.c
++++ b/drivers/net/wireless/iwlwifi/mvm/bt-coex.c
+@@ -917,7 +917,7 @@ u16 iwl_mvm_bt_coex_agg_time_limit(struct iwl_mvm *mvm,
+ 	enum iwl_bt_coex_lut_type lut_type;
  
- static struct dentry *root_folder;
+ 	if (le32_to_cpu(mvm->last_bt_notif.bt_activity_grading) <
+-	    BT_LOW_TRAFFIC)
++	    BT_HIGH_TRAFFIC)
+ 		return LINK_QUAL_AGG_TIME_LIMIT_DEF;
  
-@@ -42,6 +41,40 @@ void brcmf_debugfs_exit(void)
- 	root_folder = NULL;
- }
- 
-+static
-+ssize_t brcmf_debugfs_chipinfo_read(struct file *f, char __user *data,
-+				   size_t count, loff_t *ppos)
-+{
-+	struct brcmf_pub *drvr = f->private_data;
-+	struct brcmf_bus *bus = drvr->bus_if;
-+	char buf[40];
-+	int res;
-+
-+	/* only allow read from start */
-+	if (*ppos > 0)
-+		return 0;
-+
-+	res = scnprintf(buf, sizeof(buf), "chip: %x(%u) rev %u\n",
-+			bus->chip, bus->chip, bus->chiprev);
-+	return simple_read_from_buffer(data, count, ppos, buf, res);
-+}
-+
-+static const struct file_operations brcmf_debugfs_chipinfo_ops = {
-+	.owner = THIS_MODULE,
-+	.open = simple_open,
-+	.read = brcmf_debugfs_chipinfo_read
-+};
-+
-+static int brcmf_debugfs_create_chipinfo(struct brcmf_pub *drvr)
-+{
-+	struct dentry *dentry =  drvr->dbgfs_dir;
-+
-+	if (!IS_ERR_OR_NULL(dentry))
-+		debugfs_create_file("chipinfo", S_IRUGO, dentry, drvr,
-+				    &brcmf_debugfs_chipinfo_ops);
-+	return 0;
-+}
-+
- int brcmf_debugfs_attach(struct brcmf_pub *drvr)
- {
- 	struct device *dev = drvr->bus_if->dev;
-@@ -50,6 +83,7 @@ int brcmf_debugfs_attach(struct brcmf_pub *drvr)
- 		return -ENODEV;
- 
- 	drvr->dbgfs_dir = debugfs_create_dir(dev_name(dev), root_folder);
-+	brcmf_debugfs_create_chipinfo(drvr);
- 	return PTR_ERR_OR_ZERO(drvr->dbgfs_dir);
- }
- 
+ 	lut_type = iwl_get_coex_type(mvm, mvmsta->vif);
 -- 
-1.7.10.4
-
+1.7.9.5
 
