@@ -1,50 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:55582 "EHLO
-	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751913Ab3K3OV7 (ORCPT
+Received: from mail-ea0-f169.google.com ([209.85.215.169]:38596 "EHLO
+	mail-ea0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753033Ab3KXQ5A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Nov 2013 09:21:59 -0500
-Message-Id: <1385821318.11810.53811117.0E0E19AF@webmail.messagingengine.com> (sfid-20131130_152202_418067_1F6B3285)
-From: "Nikita N." <nikitan@operamail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>, backports@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain
-Subject: Re: 3.13 various backports bugs
-Date: Sat, 30 Nov 2013 06:21:58 -0800
-In-Reply-To: <5299E184.1020302@hauke-m.de>
-References: <1385815530.23776.53787977.56B183FC@webmail.messagingengine.com>
- <5299E184.1020302@hauke-m.de>
+	Sun, 24 Nov 2013 11:57:00 -0500
+Received: by mail-ea0-f169.google.com with SMTP id l9so1901762eaj.0
+        for <linux-wireless@vger.kernel.org>; Sun, 24 Nov 2013 08:56:58 -0800 (PST)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@do-not-panic.com,
+	sujith@msujith.org, johannes@sipsolutions.net,
+	rmanohar@qca.qualcomm.com
+Subject: [PATCH 3/3] ath9k: fix retry chain initialization in tx99 code
+Date: Sun, 24 Nov 2013 17:56:51 +0100
+Message-Id: <1385312211-3119-4-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20131124_175706_144315_3A5754D4)
+In-Reply-To: <1385312211-3119-1-git-send-email-lorenzo.bianconi83@gmail.com>
+References: <1385312211-3119-1-git-send-email-lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-follow answers
-On Sat, Nov 30, 2013, at 05:00 AM, Hauke Mehrtens wrote:
-> > - Bug #2:
-> > eeprom modules are missing into 3.13.
-> > This issue is present systematically in all backports releases, since
-> > the switch from compat-drivers.
-> > It could be a wireless bug only, or a backports bug only, or both.
-> > Anyway, eeprom module is vital for correct interface detection.
-> > Into 3.9 the eeprom modules are located in
-> > ./compat-drivers-3.9-rc4-2-su/drivers/misc/eeprom/
-> 
-> This should be included in your kernel you are compiling against
-> otherwise you wouldn't be able to build rtl8187.
-> 
-> There was a bug in backports regarding EEPROM_93CX6, could you please
-> try backports-20131122-2 and report back if the problem is still there.
+Initialize first chain attempt counter to 1 in ath9k_build_tx99_skb().
+Otherwise multi-retry chain is initialized to {idx,count} = {-1, 0} in
+rate_control_fill_sta_table() and tx99 transmission rate is not configured in
+rate_control_apply_mask() since first chain idx is set to -1
 
-just did it, same issue.
-also in backports-20131122-2 eeprom modules are missing.
-At this point I have the suspect that eeprom libraries builtin Slitaz4
-are bugged, and the bug is capable of persistent damage.. probably the
-bad frames filter in monitor mode im suffering on my two rtl8187, is
-caused by that..? 
-If that would be confirmed, Slitaz4 community has to be warned asap!
-If I can help more, please fell free to ask :)
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/tx99.c | 1 +
+ 1 file changed, 1 insertion(+)
 
+diff --git a/drivers/net/wireless/ath/ath9k/tx99.c b/drivers/net/wireless/ath/ath9k/tx99.c
+index c90eca3..ab154fe 100644
+--- a/drivers/net/wireless/ath/ath9k/tx99.c
++++ b/drivers/net/wireless/ath/ath9k/tx99.c
+@@ -76,6 +76,7 @@ static struct sk_buff *ath9k_build_tx99_skb(struct ath_softc *sc)
+ 	tx_info->band = hw->conf.chandef.chan->band;
+ 	tx_info->flags = IEEE80211_TX_CTL_NO_ACK;
+ 	tx_info->control.vif = sc->tx99_vif;
++	tx_info->control.rates[0].count = 1;
+ 
+ 	memcpy(skb->data + sizeof(*hdr), PN9Data, sizeof(PN9Data));
+ 
 -- 
-http://www.fastmail.fm - Accessible with your email software
-                          or over the web
+1.8.3.2
 
