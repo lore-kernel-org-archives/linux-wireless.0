@@ -1,40 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:2859 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751796Ab3KTNO6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Nov 2013 08:14:58 -0500
-Date: Wed, 20 Nov 2013 15:12:28 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Marc Dietrich <marvin24@gmx.de>
-Cc: users@rt2x00.serialmonkey.com,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [rt2x00-users] [PATCH 3.12] rt2800usb: slow down TX statuspolling
-Message-ID: <20131120141227.GA3827@redhat.com> (sfid-20131120_141501_618593_972DD14C)
-References: <20131017100431.GA9603@redhat.com>
- <20131018094238.GA7506@redhat.com>
- <526243C2.7090607@gmail.com>
- <1413247.TRgdXSqTuO@fb07-iapwap2>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1413247.TRgdXSqTuO@fb07-iapwap2>
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:43378 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753335Ab3KXUH0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Nov 2013 15:07:26 -0500
+Received: by mail-wi0-f173.google.com with SMTP id hm4so2718456wib.12
+        for <linux-wireless@vger.kernel.org>; Sun, 24 Nov 2013 12:07:25 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eyal Shapira <eyal@wizery.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 28/29] iwlwifi: mvm: don't enable VHT MCS9 in 20Mhz
+Date: Sun, 24 Nov 2013 22:06:45 +0200
+Message-Id: <1385323606-3603-28-git-send-email-egrumbach@gmail.com> (sfid-20131124_210808_448040_B83C6C7B)
+In-Reply-To: <52925BE7.4050406@gmail.com>
+References: <52925BE7.4050406@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 20, 2013 at 01:53:29PM +0100, Marc Dietrich wrote:
-> > > Resolve:
-> > > https://bugzilla.kernel.org/show_bug.cgi?id=62781
-> > > 
-> > > Cc: stable@vger.kernel.org
-> > > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> > 
-> > I don't care which version gets picked. In both cases:
-> > 
-> > Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-> 
-> did this ever hit a stable queue? 
+From: Eyal Shapira <eyal@wizery.com>
 
-Not yet, it lend now in Linus' tree, should be queued to stable soon.
+MCS9 in NSS=1 or NSS=2 isn't valid for 20Mhz so don't enable
+it in case we're dealing with a 20Mhz sta. Trying to configure an
+MCS9 rate with 20Mhz in the LQ rate table would lead to a FW assert.
 
-Stanislaw
+Signed-off-by: Eyal Shapira <eyal@wizery.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/rs.c |   10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
+index 9565260..f1364b7 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
+@@ -2241,6 +2241,11 @@ static void rs_vht_set_enabled_rates(struct ieee80211_sta *sta,
+ 			if (i == IWL_RATE_9M_INDEX)
+ 				continue;
+ 
++			/* VHT MCS9 isn't valid for 20Mhz for NSS=1,2 */
++			if (i == IWL_RATE_MCS_9_INDEX &&
++			    sta->bandwidth == IEEE80211_STA_RX_BW_20)
++				continue;
++
+ 			lq_sta->active_siso_rate |= BIT(i);
+ 		}
+ 	}
+@@ -2251,6 +2256,11 @@ static void rs_vht_set_enabled_rates(struct ieee80211_sta *sta,
+ 			if (i == IWL_RATE_9M_INDEX)
+ 				continue;
+ 
++			/* VHT MCS9 isn't valid for 20Mhz for NSS=1,2 */
++			if (i == IWL_RATE_MCS_9_INDEX &&
++			    sta->bandwidth == IEEE80211_STA_RX_BW_20)
++				continue;
++
+ 			lq_sta->active_mimo2_rate |= BIT(i);
+ 		}
+ 	}
+-- 
+1.7.9.5
+
