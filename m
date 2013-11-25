@@ -1,45 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f182.google.com ([74.125.82.182]:59153 "EHLO
-	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753828Ab3KAN6g (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:38407 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751809Ab3KYP4a (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 09:58:36 -0400
-Received: by mail-we0-f182.google.com with SMTP id t61so3944215wes.41
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:58:35 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 16/65] wireless-regdb: enable VHT80 for GE
-Date: Fri,  1 Nov 2013 14:57:06 +0100
-Message-Id: <1383314275-20960-17-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_150808_292577_241D5F2C)
-In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+	Mon, 25 Nov 2013 10:56:30 -0500
+Message-ID: <1385394988.4443.26.camel@jlt4.sipsolutions.net> (sfid-20131125_165633_128312_FEB83894)
+Subject: Re: [PATCH v2] mac80211: use capped prob when computing throughputs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Karl Beldan <karl.beldan@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Date: Mon, 25 Nov 2013 16:56:28 +0100
+In-Reply-To: <1384971215-16302-1-git-send-email-karl.beldan@gmail.com> (sfid-20131120_191430_736650_8E9F6DFC)
+References: <1384971215-16302-1-git-send-email-karl.beldan@gmail.com>
+	 (sfid-20131120_191430_736650_8E9F6DFC)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Source is QCA's regulatory team's efforts.
+On Wed, 2013-11-20 at 19:13 +0100, Karl Beldan wrote:
+> From: Karl Beldan <karl.beldan@rivierawaves.com>
+> 
+> Commit 3e8b1eb "mac80211/minstrel_ht: improve rate selection stability"
+> introduced a local capped prob in minstrel_ht_calc_tp but omitted to use
+> it to compute the per rate throughput.
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Applied.
 
-diff --git a/db.txt b/db.txt
-index d162eba..2f43aa9 100644
---- a/db.txt
-+++ b/db.txt
-@@ -292,8 +292,8 @@ country FR: DFS-ETSI
- 
- country GE: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
--	(5170 - 5250 @ 40), (18)
--	(5250 - 5330 @ 40), (18), DFS
-+	(5170 - 5250 @ 80), (18)
-+	(5250 - 5330 @ 80), (18), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
- 
--- 
-1.8.4.rc3
+johannes
 
