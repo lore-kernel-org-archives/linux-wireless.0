@@ -1,43 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:49042 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753121Ab3KNP32 (ORCPT
+Received: from mailout3.samsung.com ([203.254.224.33]:13376 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753301Ab3KYDh1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Nov 2013 10:29:28 -0500
-Message-ID: <1384442962.13941.36.camel@jlt4.sipsolutions.net> (sfid-20131114_162932_449039_39147D29)
-Subject: Re: [RFC 4/5] cfg80211: add DFS region capability support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: janusz.dziedzic@tieto.com, j@w1.fi, sunitb@qca.qualcomm.com,
-	rsunki@qca.qualcomm.com, linux-wireless@vger.kernel.org
-Date: Thu, 14 Nov 2013 16:29:22 +0100
-In-Reply-To: <20131114153339.GB30653@garbanzo.do-not-panic.com> (sfid-20131114_162303_512952_BEB5909B)
-References: <1384366379-25301-1-git-send-email-mcgrof@do-not-panic.com>
-	 <1384366379-25301-5-git-send-email-mcgrof@do-not-panic.com>
-	 <1384378096.28806.20.camel@jlt4.sipsolutions.net>
-	 <20131114143126.GC19070@garbanzo.do-not-panic.com>
-	 <1384440519.13941.31.camel@jlt4.sipsolutions.net>
-	 <20131114153339.GB30653@garbanzo.do-not-panic.com>
-	 (sfid-20131114_162303_512952_BEB5909B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 24 Nov 2013 22:37:27 -0500
+Received: from epcpsbgr3.samsung.com
+ (u143.gpu120.samsung.co.kr [203.254.230.143])
+ by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MWS00FUZVEDJE80@mailout3.samsung.com> for
+ linux-wireless@vger.kernel.org; Mon, 25 Nov 2013 12:37:25 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: "'John W. Linville'" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	=?iso-8859-2?Q?'Rafa=B3_Mi=B3ecki'?= <zajec5@gmail.com>,
+	'Jingoo Han' <jg1.han@samsung.com>,
+	'Hauke Mehrtens' <hauke@hauke-m.de>
+Subject: [PATCH] bcma: pci: remove unnecessary pci_set_drvdata()
+Date: Mon, 25 Nov 2013 12:37:24 +0900
+Message-id: <002a01cee98f$a817f2e0$f847d8a0$%han@samsung.com> (sfid-20131125_043730_439988_FD163AF7)
+MIME-version: 1.0
+Content-type: text/plain; charset=iso-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-11-14 at 07:33 -0800, Luis R. Rodriguez wrote:
-> > Still doesn't make sense - HANDLE_DFS means "I'll react to radar
-> > detection events and will do the CSA". It has absolutely nothing to do
-> > with DFS regions. Please keep those things separate.
-> 
-> How you deal with radar detection is completely dependent on the DFS
-> region, no?
+The driver core clears the driver data to NULL after device_release
+or on probe failure. Thus, it is not needed to manually clear the
+device driver data to NULL.
 
-You're missing *my* point :-)
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+---
+ drivers/bcma/host_pci.c |    1 -
+ 1 file changed, 1 deletion(-)
 
-Radar *detection* is region-dependent.
+diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
+index 6fb98b5..12a4ff7 100644
+--- a/drivers/bcma/host_pci.c
++++ b/drivers/bcma/host_pci.c
+@@ -238,7 +238,6 @@ static void bcma_host_pci_remove(struct pci_dev *dev)
+ 	pci_release_regions(dev);
+ 	pci_disable_device(dev);
+ 	kfree(bus);
+-	pci_set_drvdata(dev, NULL);
+ }
+ 
+ #ifdef CONFIG_PM_SLEEP
+-- 
+1.7.10.4
 
-What happens *after* that (announce a channel switch, etc.) isn't at
-all.
-
-johannes
 
