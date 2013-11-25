@@ -1,70 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:64572 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753075Ab3KANzi (ORCPT
+Received: from mail-we0-f173.google.com ([74.125.82.173]:40919 "EHLO
+	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750811Ab3KYKLs convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 09:55:38 -0400
-Received: by mail-we0-f174.google.com with SMTP id u56so4026531wes.33
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:55:36 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 1/8] wireless-regdb: consolidate passive-scan and no-ibss flags
-Date: Fri,  1 Nov 2013 14:55:24 +0100
-Message-Id: <1383314131-20774-2-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_145541_128985_525A7150)
-In-Reply-To: <1383314131-20774-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1383314131-20774-1-git-send-email-mcgrof@do-not-panic.com>
+	Mon, 25 Nov 2013 05:11:48 -0500
+Received: by mail-we0-f173.google.com with SMTP id t61so3567471wes.18
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Nov 2013 02:11:47 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <87k3fxsycw.fsf@kamboji.qca.qualcomm.com>
+References: <1385126819-15311-1-git-send-email-michal.kazior@tieto.com>
+	<1385126819-15311-2-git-send-email-michal.kazior@tieto.com>
+	<87k3fxsycw.fsf@kamboji.qca.qualcomm.com>
+Date: Mon, 25 Nov 2013 11:11:46 +0100
+Message-ID: <CA+BoTQnFJzGNK7605M9XUhQK=sxhqHW=9h-ytvgcCci4Knj1ww@mail.gmail.com> (sfid-20131125_111154_040479_30CD0599)
+Subject: Re: [PATCH 1/3] ath10k: use nss provided by mac80211
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath10k@lists.infradead.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These are used interchangeably so just do away
-with the redundancy.
+On 24 November 2013 14:50, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Michal Kazior <michal.kazior@tieto.com> writes:
+>
+>> Calculating STA NSS just from the rateset is not
+>> the greatest idea. The NSS could be possibly
+>> influenced by other things that only mac80211
+>> knows about.
+>>
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>
+> Is there a bug which this patch fixes or what motivated you to do this?
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt     | 8 ++++----
- dbparse.py | 4 ++--
- 2 files changed, 6 insertions(+), 6 deletions(-)
+This doesn't fix any bug that I know of. It just seems like probably
+should use rx_nss instead of calculating it on our own (in case
+something changes in the future).
 
-diff --git a/db.txt b/db.txt
-index d0d1a3f..b8ddb1b 100644
---- a/db.txt
-+++ b/db.txt
-@@ -2,14 +2,14 @@
- country 00:
- 	(2402 - 2472 @ 40), (3, 20)
- 	# Channel 12 - 13.
--	(2457 - 2482 @ 40), (3, 20), PASSIVE-SCAN, NO-IBSS
-+	(2457 - 2482 @ 40), (3, 20), NO-IR
- 	# Channel 14. Only JP enables this and for 802.11b only
--	(2474 - 2494 @ 20), (3, 20), PASSIVE-SCAN, NO-IBSS, NO-OFDM
-+	(2474 - 2494 @ 20), (3, 20), NO-IR, NO-OFDM
- 	# Channel 36 - 48
--	(5170 - 5250 @ 80), (3, 20), PASSIVE-SCAN, NO-IBSS
-+	(5170 - 5250 @ 80), (3, 20), NO-IR
- 	# NB: 5260 MHz - 5700 MHz requies DFS
- 	# Channel 149 - 165
--	(5735 - 5835 @ 80), (3, 20), PASSIVE-SCAN, NO-IBSS
-+	(5735 - 5835 @ 80), (3, 20), NO-IR
- 	# IEEE 802.11ad (60GHz), channels 1..3
- 	(57240 - 63720 @ 2160), (N/A, 0)
- 
-diff --git a/dbparse.py b/dbparse.py
-index 32cbce9..29eb9d6 100755
---- a/dbparse.py
-+++ b/dbparse.py
-@@ -12,8 +12,8 @@ flag_definitions = {
-     'DFS':		1<<4,
-     'PTP-ONLY':		1<<5,
-     'PTMP-ONLY':	1<<6,
--    'PASSIVE-SCAN':	1<<7,
--    'NO-IBSS':		1<<8,
-+    'NO-IR':	        1<<7,
-+    # hole at bit 8
-     # hole at bit 9. FIXME: Where is NO-HT40 defined?
-     'NO-HT40':		1<<10,
- }
--- 
-1.8.4.rc3
+A station may actually include operation mode change notification in
+assoc request declaring it wants to use a different number of streams
+than it actually supports as per its mcs map. That's not supported in
+mac80211 though yet. Marek has posted some patches a few days ago but
+it actually uses a different codepath from what I understand.
 
+
+Michał
