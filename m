@@ -1,59 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f42.google.com ([209.85.214.42]:56580 "EHLO
-	mail-bk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751373Ab3KRRC4 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:38447 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753923Ab3KYQI3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Nov 2013 12:02:56 -0500
-Received: by mail-bk0-f42.google.com with SMTP id w11so575793bkz.1
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Nov 2013 09:02:55 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3/6] mac80211: remove sta_info_flush() from interface teardown
-Date: Mon, 18 Nov 2013 19:02:43 +0200
-Message-Id: <1384794166-10906-3-git-send-email-egrumbach@gmail.com> (sfid-20131118_180301_403561_7E78846E)
-In-Reply-To: <1384794166-10906-1-git-send-email-egrumbach@gmail.com>
-References: <1384794166-10906-1-git-send-email-egrumbach@gmail.com>
+	Mon, 25 Nov 2013 11:08:29 -0500
+Message-ID: <1385395707.4443.37.camel@jlt4.sipsolutions.net> (sfid-20131125_170833_349092_82EABA5E)
+Subject: Re: [PATCH 1/2] cfg80211: Add support for QoS mapping
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: Kyeyoon Park <kyeyoonp@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org
+Date: Mon, 25 Nov 2013 17:08:27 +0100
+In-Reply-To: <20131120102828.GA26154@jouni.qca.qualcomm.com>
+References: <20131120102828.GA26154@jouni.qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, 2013-11-20 at 12:28 +0200, Jouni Malinen wrote:
 
-All interface types now properly clean up their stations
-using some form of sta_info_flush() themselves, so there's
-no need to try it again at teardown. Remove the call to
-get rid of the extra delay from the synchronize_net() and
-rcu_barrier() calls.
+> +struct cfg80211_qos_map {
+> +	bool valid;
 
-Reported-by: Moshe Benji <moshe.benji@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/iface.c |    4 ----
- 1 file changed, 4 deletions(-)
+why do we need a validity flag? isn't NULL pointer enough?
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index ff101ea..a3d106d 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1036,7 +1036,6 @@ static void ieee80211_set_multicast_list(struct net_device *dev)
-  */
- static void ieee80211_teardown_sdata(struct ieee80211_sub_if_data *sdata)
- {
--	int flushed;
- 	int i;
- 
- 	/* free extra data */
-@@ -1050,9 +1049,6 @@ static void ieee80211_teardown_sdata(struct ieee80211_sub_if_data *sdata)
- 
- 	if (ieee80211_vif_is_mesh(&sdata->vif))
- 		mesh_rmc_free(sdata);
--
--	flushed = sta_info_flush(sdata);
--	WARN_ON(flushed);
- }
- 
- static void ieee80211_uninit(struct net_device *dev)
--- 
-1.7.9.5
+> + * @set_qos_map: Set QoS mapping information to the driver
+>   */
+>  struct cfg80211_ops {
+>  	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
+> @@ -2428,6 +2476,9 @@ struct cfg80211_ops {
+>  	int	(*channel_switch)(struct wiphy *wiphy,
+>  				  struct net_device *dev,
+>  				  struct cfg80211_csa_settings *params);
+> +	int     (*set_qos_map)(struct wiphy *wiphy,
+> +			       struct net_device *dev,
+> +			       struct cfg80211_qos_map *qos_map);
+
+I wonder if this is necessary? The driver could just have a flag for
+"support QoS mapping" and having such support requires using
+classify8021d(). OTOH, that function needs to gain a parameter anyway,
+so it's not really worth it. Also, it's something that could be changed
+purely internal to the kernel, so I guess I'm not worried about it much.
+
+> + * @NL80211_CMD_SET_QOS_MAP: Set Interworking QoS mapping for IP DSCP values.
+> + *	The QoS mapping information is included in %NL80211_ATTR_QOS_MAP. If
+> + *	that attribute is not included, QoS mapping is disabled.
+
+Might be useful to say that this is only valid while associated?
+
+In fact, why is this even a new operation? Can this change during the
+lifetime of the BSS? If not, then it might be worth just putting the
+attribute into START_AP and ASSOCIATE/CONNECT etc?
+
+> +		if (len & 1 || len < IEEE80211_QOS_MAP_LEN_MIN ||
+
+I think len%2 would be easier to read? Not that it makes a big
+difference, but fundamentally this isn't a bitop thing, it's a "length
+must be even" thing.
+
+> @@ -9564,6 +9606,14 @@ static struct genl_ops nl80211_ops[] = {
+>  		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
+>  				  NL80211_FLAG_NEED_RTNL,
+>  	},
+> +	{
+> +		.cmd = NL80211_CMD_SET_QOS_MAP,
+
+You forgot to advertise availability of the operation, but then again
+see above - is it even needed?
+
+> @@ -720,6 +721,21 @@ unsigned int cfg80211_classify8021d(struct sk_buff *skb)
+>  		return 0;
+>  	}
+>  
+> +	if (qos_map && qos_map->valid) {
+> +		unsigned int i, tmp_dscp = dscp >> 2;
+> +
+> +		for (i = 0; i < qos_map->num_des; i++) {
+> +			if (tmp_dscp == qos_map->dscp_exception[i].dscp)
+> +				return qos_map->dscp_exception[i].up;
+> +		}
+> +
+> +		for (i = 0; i < 8; i++) {
+> +			if (tmp_dscp >= qos_map->up[i].low &&
+> +			    tmp_dscp <= qos_map->up[i].high)
+> +				return i;
+> +		}
+> +	}
+
+Much better than the first version I saw :)
+
+johannes
 
