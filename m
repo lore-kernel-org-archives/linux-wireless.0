@@ -1,116 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3016 "EHLO mms3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751341Ab3KRWf2 convert rfc822-to-8bit (ORCPT
+Received: from mail-ea0-f177.google.com ([209.85.215.177]:46901 "EHLO
+	mail-ea0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755189Ab3KYT4W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Nov 2013 17:35:28 -0500
-Message-ID: <528A925C.20602@broadcom.com> (sfid-20131118_233532_761327_D448C2D0)
-Date: Mon, 18 Nov 2013 23:19:08 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Borislav Petkov" <bp@alien8.de>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-cc: lkml <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] brcmsmac: Fix build dep on LEDS_CLASS
-References: <20131117133702.GA30840@pd.tnic>
- <5289359B.8090506@broadcom.com>
- <CACna6ryNX1=8zdYe2bjCj7aj3S_O=LnrxdjBcESvJJ63+h729Q@mail.gmail.com>
- <20131118133250.GH24851@pd.tnic> <20131118204003.GK24851@pd.tnic>
-In-Reply-To: <20131118204003.GK24851@pd.tnic>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+	Mon, 25 Nov 2013 14:56:22 -0500
+Received: by mail-ea0-f177.google.com with SMTP id n15so2742079ead.8
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Nov 2013 11:56:21 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH v3 1/4] cfg80211: add reg_get_dfs_region()
+Date: Mon, 25 Nov 2013 20:56:09 +0100
+Message-Id: <1385409372-4229-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131125_205626_775294_E10CA0CC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/18/2013 09:40 PM, Borislav Petkov wrote:
-> On Mon, Nov 18, 2013 at 02:32:50PM +0100, Borislav Petkov wrote:
->> On Mon, Nov 18, 2013 at 12:58:58PM +0100, Rafał Miłecki wrote:
->>> Borislav: I think I didn't get your original patch.
->>
->> Forget it, I'll send a better one later.
->
-> Ok, let's try another one. I've done it with depends but we
-> probably could select LEDS_CLASS in BRCMSMAC_LED as it is required
-> functionality...
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 
-what about:
+This can be used outside of the regulatory context for any checks
+on the DFS region. The central cfg80211 dfs_region is always used
+and if it does not match with the wiphy a debug print is issued.
 
-config BRCMSMAC
-         tristate "Broadcom IEEE802.11n PCIe SoftMAC WLAN driver"
-         depends on MAC80211
-         depends on BCMA_POSSIBLE
-+	select LEDS_CLASS if BCMA_DRIVER_GPIO
-	select BCMA
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ net/wireless/reg.c |   27 +++++++++++++++++++++++++++
+ net/wireless/reg.h |    1 +
+ 2 files changed, 28 insertions(+)
 
-Regards,
-Arend
-
-> ---
-> From: Borislav Petkov <bp@suse.de>
-> Subject: [PATCH -v2] brcmsmac: Fix build dep on LEDS_CLASS
->
-> When building randconfigs with CONFIG_BCMA_DRIVER_GPIO=y, I get
->
-> drivers/built-in.o: In function `brcms_led_unregister':
-> (.text+0x351aca): undefined reference to `led_classdev_unregister'
-> drivers/built-in.o: In function `brcms_led_register':
-> (.text+0x351c65): undefined reference to `led_classdev_register'
->
-> during final linking stage because brcmsmac/led.c needs LEDS_CLASS for
-> registering/deregistering the led device. Add a promptless Kconfig
-> symbol which takes care of that dependency.
->
-> Cc: "Rafał Miłecki" <zajec5@gmail.com>
-> Cc: <linux-wireless@vger.kernel.org>
-> Signed-off-by: Borislav Petkov <bp@suse.de>
-> ---
->   drivers/net/wireless/brcm80211/Kconfig           | 4 ++++
->   drivers/net/wireless/brcm80211/brcmsmac/Makefile | 2 +-
->   drivers/net/wireless/brcm80211/brcmsmac/led.h    | 2 +-
->   3 files changed, 6 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/brcm80211/Kconfig b/drivers/net/wireless/brcm80211/Kconfig
-> index b00a7e92225f..c9434b7c7b9b 100644
-> --- a/drivers/net/wireless/brcm80211/Kconfig
-> +++ b/drivers/net/wireless/brcm80211/Kconfig
-> @@ -16,6 +16,10 @@ config BRCMSMAC
->   	  be available if you select BCMA_DRIVER_GPIO. If you choose to build a
->   	  module, the driver will be called brcmsmac.ko.
->
-> +config BRCMSMAC_LED
-> +	def_bool y
-> +	depends on BRCMSMAC && BCMA_DRIVER_GPIO && LEDS_CLASS
-> +
->   config BRCMFMAC
->   	tristate "Broadcom IEEE802.11n embedded FullMAC WLAN driver"
->   	depends on CFG80211
-> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/Makefile b/drivers/net/wireless/brcm80211/brcmsmac/Makefile
-> index 32464acccd90..9ec2c8b2f26c 100644
-> --- a/drivers/net/wireless/brcm80211/brcmsmac/Makefile
-> +++ b/drivers/net/wireless/brcm80211/brcmsmac/Makefile
-> @@ -43,6 +43,6 @@ brcmsmac-y := \
->   	brcms_trace_events.o \
->   	debug.o
->
-> -brcmsmac-$(CONFIG_BCMA_DRIVER_GPIO) += led.o
-> +brcmsmac-$(CONFIG_BRCMSMAC_LED) += led.o
->
->   obj-$(CONFIG_BRCMSMAC)	+= brcmsmac.o
-> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/led.h b/drivers/net/wireless/brcm80211/brcmsmac/led.h
-> index 17a0b1f5dbcf..b914466e687b 100644
-> --- a/drivers/net/wireless/brcm80211/brcmsmac/led.h
-> +++ b/drivers/net/wireless/brcm80211/brcmsmac/led.h
-> @@ -22,7 +22,7 @@ struct brcms_led {
->   	bool active_low;
->   };
->
-> -#ifdef CONFIG_BCMA_DRIVER_GPIO
-> +#ifdef CONFIG_BRCMSMAC_LED
->   void brcms_led_unregister(struct brcms_info *wl);
->   int brcms_led_register(struct brcms_info *wl);
->   #else
->
-
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index ec54e1a..7d20d84 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -135,6 +135,33 @@ static const char *reg_dfs_region_str(enum nl80211_dfs_regions dfs_region)
+ 	return "Unknown";
+ }
+ 
++enum nl80211_dfs_regions reg_get_dfs_region(struct wiphy *wiphy)
++{
++	const struct ieee80211_regdomain *regd = NULL;
++	const struct ieee80211_regdomain *wiphy_regd = NULL;
++
++	regd = get_cfg80211_regdom();
++	if (!wiphy)
++		goto out;
++
++	wiphy_regd = get_wiphy_regdom(wiphy);
++	if (!wiphy_regd)
++		goto out;
++
++	if (wiphy_regd->dfs_region == regd->dfs_region)
++		goto out;
++
++	REG_DBG_PRINT("%s: device specific dfs_region "
++		      "(%s) disagrees with cfg80211's "
++		      "central dfs_region (%s)\n",
++		      dev_name(&wiphy->dev),
++		      reg_dfs_region_str(wiphy_regd->dfs_region),
++		      reg_dfs_region_str(regd->dfs_region));
++
++out:
++	return regd->dfs_region;
++}
++
+ static void rcu_free_regdom(const struct ieee80211_regdomain *r)
+ {
+ 	if (!r)
+diff --git a/net/wireless/reg.h b/net/wireless/reg.h
+index cc4c2c0..02bd8f4 100644
+--- a/net/wireless/reg.h
++++ b/net/wireless/reg.h
+@@ -21,6 +21,7 @@ extern const struct ieee80211_regdomain __rcu *cfg80211_regdomain;
+ bool reg_is_valid_request(const char *alpha2);
+ bool is_world_regdom(const char *alpha2);
+ bool reg_supported_dfs_region(enum nl80211_dfs_regions dfs_region);
++enum nl80211_dfs_regions reg_get_dfs_region(struct wiphy *wiphy);
+ 
+ int regulatory_hint_user(const char *alpha2,
+ 			 enum nl80211_user_reg_hint_type user_reg_hint_type);
+-- 
+1.7.9.5
 
