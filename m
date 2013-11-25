@@ -1,138 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:37968 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756105Ab3KODKy (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:39148 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754380Ab3KYTrS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Nov 2013 22:10:54 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Ujjal Roy <royujjal@gmail.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3.13 2/6] mwifiex: failure path handling in mwifiex_add_virtual_intf()
-Date: Thu, 14 Nov 2013 19:10:38 -0800
-Message-ID: <1384485042-7083-2-git-send-email-bzhao@marvell.com> (sfid-20131115_041057_650180_4D38A3EA)
-In-Reply-To: <1384485042-7083-1-git-send-email-bzhao@marvell.com>
-References: <1384485042-7083-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 25 Nov 2013 14:47:18 -0500
+Message-ID: <1385408827.4443.61.camel@jlt4.sipsolutions.net> (sfid-20131125_204725_025839_00015B80)
+Subject: pull-request: mac80211 2013-11-25
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 25 Nov 2013 20:47:07 +0100
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-wrN6/J0KJgOBtSXSWTbZ"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
 
-1) If register_netdevice() is failed, we are freeing netdev
-pointer, but priv->netdev is not cleared. This gives kernel
-paging request error when driver is unloaded or interface is
-deleted. Fix the problem by clearing the pointer.
-2) Fix memory leak issue by freeing 'wdev' in failure paths.
-Also, clear priv->wdev pointer.
+--=-wrN6/J0KJgOBtSXSWTbZ
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-As mwifiex_add_virtual_intf() successfully handles the
-failure conditions, redundant code under err_add_intf label
-is removed in this patch.
+John,
 
-Reported-by: Ujjal Roy <royujjal@gmail.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c | 20 ++++++++++++++++----
- drivers/net/wireless/mwifiex/main.c     | 13 ++-----------
- 2 files changed, 18 insertions(+), 15 deletions(-)
+First pull request from me - it took me a while to get my trees in
+order.
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index fbad00a..ccc9c08 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -2210,8 +2210,10 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 		priv->bss_started = 0;
- 		priv->bss_num = 0;
- 
--		if (mwifiex_cfg80211_init_p2p_client(priv))
--			return ERR_PTR(-EFAULT);
-+		if (mwifiex_cfg80211_init_p2p_client(priv)) {
-+			wdev = ERR_PTR(-EFAULT);
-+			goto done;
-+		}
- 
- 		break;
- 	default:
-@@ -2224,7 +2226,8 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 	if (!dev) {
- 		wiphy_err(wiphy, "no memory available for netdevice\n");
- 		priv->bss_mode = NL80211_IFTYPE_UNSPECIFIED;
--		return ERR_PTR(-ENOMEM);
-+		wdev = ERR_PTR(-ENOMEM);
-+		goto done;
- 	}
- 
- 	mwifiex_init_priv_params(priv, dev);
-@@ -2264,7 +2267,9 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 		wiphy_err(wiphy, "cannot register virtual network device\n");
- 		free_netdev(dev);
- 		priv->bss_mode = NL80211_IFTYPE_UNSPECIFIED;
--		return ERR_PTR(-EFAULT);
-+		priv->netdev = NULL;
-+		wdev = ERR_PTR(-EFAULT);
-+		goto done;
- 	}
- 
- 	sema_init(&priv->async_sem, 1);
-@@ -2274,6 +2279,13 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- #ifdef CONFIG_DEBUG_FS
- 	mwifiex_dev_debugfs_init(priv);
- #endif
-+
-+done:
-+	if (IS_ERR(wdev)) {
-+		kfree(priv->wdev);
-+		priv->wdev = NULL;
-+	}
-+
- 	return wdev;
- }
- EXPORT_SYMBOL_GPL(mwifiex_add_virtual_intf);
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index 7c7da3e..9236b42 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -411,7 +411,7 @@ static void mwifiex_terminate_workqueue(struct mwifiex_adapter *adapter)
-  */
- static void mwifiex_fw_dpc(const struct firmware *firmware, void *context)
- {
--	int ret, i;
-+	int ret;
- 	char fmt[64];
- 	struct mwifiex_private *priv;
- 	struct mwifiex_adapter *adapter = context;
-@@ -479,6 +479,7 @@ static void mwifiex_fw_dpc(const struct firmware *firmware, void *context)
- 					NL80211_IFTYPE_STATION, NULL, NULL);
- 	if (IS_ERR(wdev)) {
- 		dev_err(adapter->dev, "cannot create default STA interface\n");
-+		rtnl_unlock();
- 		goto err_add_intf;
- 	}
- 	rtnl_unlock();
-@@ -488,16 +489,6 @@ static void mwifiex_fw_dpc(const struct firmware *firmware, void *context)
- 	goto done;
- 
- err_add_intf:
--	for (i = 0; i < adapter->priv_num; i++) {
--		priv = adapter->priv[i];
--
--		if (!priv)
--			continue;
--
--		if (priv->wdev && priv->netdev)
--			mwifiex_del_virtual_intf(adapter->wiphy, priv->wdev);
--	}
--	rtnl_unlock();
- err_register_cfg80211:
- 	wiphy_unregister(adapter->wiphy);
- 	wiphy_free(adapter->wiphy);
--- 
-1.8.2.3
+For now I have various fixes all over, mostly for issues introduced in
+relatively recent patches. There's no real pattern to it. Some of the
+issues like go back longer, but still seemed 3.13 material.
+
+Let me know if there's any problem.
+
+johannes
+
+The following changes since commit 91398a0992c8aa18eb7749060b75761ece5ddc57=
+:
+
+  genetlink: fix genl_set_err() group ID (2013-11-21 13:09:43 -0500)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
+
+for you to fetch changes up to 24d47300d118c5909a51b7270276d749cce150a2:
+
+  mac80211: set hw initial idle state (2013-11-25 16:56:54 +0100)
+
+----------------------------------------------------------------
+Bob Copeland (1):
+      Revert "mac80211: allow disable power save in mesh"
+
+Chun-Yeow Yeoh (1):
+      mac80211: fix the mesh channel switch support
+
+Eliad Peller (1):
+      mac80211: fix connection polling
+
+Felix Fietkau (2):
+      mac80211: fix crash when using AP VLAN interfaces
+      cfg80211: ignore supported rates for nonexistant bands on scan
+
+Janusz Dziedzic (1):
+      mac80211: DFS setup chandef for radar_event correctly
+
+Javier Lopez (1):
+      mac80211: fix for mesh beacon update on powersave
+
+Johannes Berg (6):
+      mac80211: fix scheduled scan rtnl deadlock
+      nl80211: check nla_put_* return values
+      nl80211: fix error path in nl80211_get_key()
+      nl80211: check nla_nest_start() return value
+      cfg80211: disable 5/10 MHz support for all drivers
+      mac80211: don't attempt to reorder multicast frames
+
+Jouni Malinen (2):
+      mac80211_hwsim: Fix radiotap header for ACK frames
+      mac80211_hwsim: Fix bcn_en_iter to use atomic iteration
+
+Karl Beldan (3):
+      mac80211: minstrel_ht: fix rates selection
+      mac80211: use capped prob when computing throughputs
+      mac80211: set hw initial idle state
+
+Simon Wunderlich (1):
+      cfg80211: fix ibss wext chandef creation
+
+ drivers/net/wireless/mac80211_hwsim.c | 16 +++++++---
+ net/mac80211/cfg.c                    | 15 ++++++---
+ net/mac80211/ieee80211_i.h            |  1 +
+ net/mac80211/iface.c                  |  1 -
+ net/mac80211/main.c                   |  3 ++
+ net/mac80211/mesh.c                   | 20 +++++++-----
+ net/mac80211/mlme.c                   |  2 ++
+ net/mac80211/rc80211_minstrel_ht.c    |  7 ++--
+ net/mac80211/rx.c                     |  3 +-
+ net/mac80211/scan.c                   |  2 +-
+ net/mac80211/spectmgmt.c              |  2 ++
+ net/mac80211/util.c                   | 11 ++-----
+ net/wireless/core.c                   |  3 ++
+ net/wireless/ibss.c                   | 18 +++++------
+ net/wireless/nl80211.c                | 60 +++++++++++++++++++++----------=
+----
+ 15 files changed, 101 insertions(+), 63 deletions(-)
+
+
+--=-wrN6/J0KJgOBtSXSWTbZ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJSk6k7AAoJEDBSmw7B7bqrV54QAJyIPN8J8dWoBWiq+qQyMc6C
+9qj2D3wasnO59DW60zp+7iiUl3OXW9RM1ooPHJxBPVAZ/iwrTg7QwsoBAetu18HO
+XpvDx9+VkKhRNQj6TtTOzEwoC9JAiF4Sv6+LioJtCNKIiTkraVD9yMK6s9GAo7bD
+X68T84N4/p4chC7gEnU40e4vD0oty8UaO607QIJ+nzkUeeAQhr+glEGpIdg9nZm6
+KDvLZYzbt6oXQrvjZ+jYphDamssWglYwbkQ3v+6H6VlpeMsfIP0WGeiObpj9FAS1
+OwfjeWeruvwUvq/D2YC5FwSarAWxLmT3FduBLcbhSlbS/S6KKlTq8maEej6X+sPj
+V/MsrWrwmtFE18QD4KWSvTWPY2m0OpN+YaE6h61aKPVkw31D1WUWGmPPfNpxy1jH
+JBOibfCwjVnuKXaM5g/p2kOK9tzwBUeuT9LW7geLdlbBCbP6eTdFZJ3DQECIYFWR
+w0HWu3P6URSF2dtd4PYKSDSuLuEnH9n8ZhOSQvAjArxJjqGLiqgNucPD2BVI9QR8
+E6HCag7h3O/8+kz8IwIHKmfg/fTuAooJWe/IDfWYAJ2w8pkK2DxQUF83OacGHyu8
+SbZuQh0GaD7puhbZNS8COEBurNpDY89iX1PNYZorDsnrSktOnRhrc44GtDmtTdbc
+F8GiAt8sp9nACGg+9FOb
+=0VqD
+-----END PGP SIGNATURE-----
+
+--=-wrN6/J0KJgOBtSXSWTbZ--
 
