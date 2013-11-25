@@ -1,40 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f179.google.com ([209.85.217.179]:38731 "EHLO
-	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752245Ab3KFQyu (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:38919 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753758Ab3KYSgR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Nov 2013 11:54:50 -0500
-Received: by mail-lb0-f179.google.com with SMTP id w6so7949203lbh.38
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Nov 2013 08:54:48 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1383732921.14307.20.camel@jlt4.sipsolutions.net>
-References: <1383671897-7746-1-git-send-email-mcgrof@do-not-panic.com>
- <1383671897-7746-2-git-send-email-mcgrof@do-not-panic.com> <1383732921.14307.20.camel@jlt4.sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Wed, 6 Nov 2013 08:54:28 -0800
-Message-ID: <CAB=NE6W+m0EkJPz90QyRxGWy8hyOXir7YZ3jGC7=Y9UH3unqLw@mail.gmail.com> (sfid-20131106_175453_167827_AFAA3ACA)
-Subject: Re: [PATCH 01/19] cfg80211: enforce disabling channels by custom or
- strict settings
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 25 Nov 2013 13:36:17 -0500
+Message-ID: <1385404573.4443.58.camel@jlt4.sipsolutions.net> (sfid-20131125_193620_931203_39C06AD5)
+Subject: Re: Roaming with libertas and wpa_supplicant not working
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Troels Nilsson <nilsson.troels@gmail.com>,
+	linux-wireless@vger.kernel.org
+Date: Mon, 25 Nov 2013 19:36:13 +0100
+In-Reply-To: <1385399816.8710.16.camel@dcbw.foobar.com>
+References: <loom.20131118T143002-687@post.gmane.org>
+	 (sfid-20131118_145509_206573_37D8C413) <1385396191.4443.44.camel@jlt4.sipsolutions.net>
+	 <1385399816.8710.16.camel@dcbw.foobar.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 6, 2013 at 2:15 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2013-11-05 at 09:17 -0800, Luis R. Rodriguez wrote:
->
->> @@ -1251,7 +1261,7 @@ static void handle_channel_custom(struct wiphy *wiphy,
->>       if (IS_ERR(reg_rule)) {
->>               REG_DBG_PRINT("Disabling freq %d MHz as custom regd has no rule that fits it\n",
->>                             chan->center_freq);
->> -             chan->flags = IEEE80211_CHAN_DISABLED;
->> +             chan->flags = chan->orig_flags |= IEEE80211_CHAN_DISABLED;
->
-> Are you sure the |= is right?
+On Mon, 2013-11-25 at 11:16 -0600, Dan Williams wrote:
+> On Mon, 2013-11-25 at 17:16 +0100, Johannes Berg wrote:
+> > On Mon, 2013-11-18 at 13:50 +0000, Troels Nilsson wrote:
+> > > Hi,
+> > > 
+> > > We are having a problem with a custom device which uses the libertas wifi
+> > > driver (on kernel 3.4.24) together with wpa_supplicant (0.7.3). More
+> > > specifically, whenever wpa_supplicant attempts to roam to a different access
+> > > point it gets a EALREADY error.
+> > > 
+> > > I have tracked down the problem to this check in sme.c:
+> > > 
+> > >         if (wdev->sme_state != CFG80211_SME_IDLE)
+> > >                 return -EALREADY;
+> > 
+> > This no longer exists - please try a newer kernel.
+> 
+> Yeah, though the code there hasn't changed much in cfg80211 in the
+> "connect" case from what he's using.  It seems that
+> supplicant-controlled roaming simply won't work with "connect" devices
+> unless a disconnect is done first?  Libertas is kinda different here
+> since it does allow userspace roaming control.
 
-It works but I think its best to split this in retrospect to make it
-clear, I'll send a v2 and I don't think the v2 would interfere with
-the series.
+I believe the code *does* in fact allow connect() while connected right
+now, though arguably that's a bug and shouldn't be done. It would make
+some more sense to allow NL80211_CMD_ROAM to be used for something like
+that, but ...
 
-  Luis
+johannes
+
