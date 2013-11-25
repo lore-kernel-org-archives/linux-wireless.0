@@ -1,47 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f175.google.com ([209.85.215.175]:49884 "EHLO
-	mail-ea0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750855Ab3KTLCg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Nov 2013 06:02:36 -0500
-Received: by mail-ea0-f175.google.com with SMTP id z10so1564221ead.34
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Nov 2013 03:02:35 -0800 (PST)
-Date: Wed, 20 Nov 2013 12:01:57 +0100
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Blaise Gassend <blaise@suitabletech.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	Catalin Drula <catalin@suitabletech.com>,
-	Alap Modi <amodi@arubanetworks.com>
-Subject: Re: QoS Data packets causing massive packet loss in
- ieee80211_sta_manage_reorder_buf.
-Message-ID: <20131120110157.GA6993@magnum.frso.rivierawaves.com> (sfid-20131120_120246_351121_8250119E)
-References: <CAPvVjisu-xcZsqHgcTEKsCJFuESDFO-_0KwkgxffyejemHJZcA@mail.gmail.com>
- <1384937328.14295.3.camel@jlt4.sipsolutions.net>
- <CAPvVjiu55=nscHa-Mpff_LL-Y0v6XHEGx0K7rpCVU9nRiKfaXA@mail.gmail.com>
+Received: from nm15-vm6.bullet.mail.ne1.yahoo.com ([98.138.91.108]:47996 "HELO
+	nm15-vm6.bullet.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752561Ab3KYLst convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Nov 2013 06:48:49 -0500
+References: <1385096714.41414.YahooMailNeo@web122305.mail.ne1.yahoo.com> <87txf0q32w.fsf@kamboji.qca.qualcomm.com>
+Message-ID: <1385380128.81718.YahooMailNeo@web122304.mail.ne1.yahoo.com> (sfid-20131125_124852_979448_C291BBE0)
+Date: Mon, 25 Nov 2013 03:48:48 -0800 (PST)
+From: Anand Moon <moon.linux@yahoo.com>
+Reply-To: Anand Moon <moon.linux@yahoo.com>
+Subject: Re: Ath10k router
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+In-Reply-To: <87txf0q32w.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAPvVjiu55=nscHa-Mpff_LL-Y0v6XHEGx0K7rpCVU9nRiKfaXA@mail.gmail.com>
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 20, 2013 at 02:15:27AM -0800, Blaise Gassend wrote:
-> Hi Johannes,
-> 
-> Thanks for the quick reply!
-> 
-> > I think we just need to skip reorder processing for multicast, since
-> > they won't be aggregated anyway?
-> >
-> > http://p.sipsolutions.net/d00799dd2201676a.txt
-> 
-> This patch works like a charm for my current predicament. But is it
-> actually written somewhere that multicast packets can't be aggregated?
-> I can't find any place that says they can't, but I'm not authoritative
-> by any means.
-> 
-There's a chapter "A-MPDU aggregation of group addressed data frames" in
-the specs, however I haven't seen this yet.
+Hi Kalle Valo,
 
- 
-Karl
+Thanks for the input.
+
+-Anand Moon
+
+
+On Monday, November 25, 2013 2:19 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+
+Anand Moon <moon.linux@yahoo.com> writes:
+
+
+> I am looking to work on development router with support Ath10k, my
+> guess is that compex.sg provide development routers. Are there any
+> other free development router which can be use for development as well
+> as testing.
+
+I'm not familiar with development routers. But if you get one, make sure
+it's has QCA988x hw2.0 chip. ath10k does not support hw1.0.
+
+-- 
+Kalle Valo
+
+_______________________________________________
+ath10k mailing list
+ath10k@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/ath10k  
