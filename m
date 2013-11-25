@@ -1,26 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f48.google.com ([209.85.215.48]:41737 "EHLO
-	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751177Ab3K3LmN convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:3812 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752629Ab3KYIso (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Nov 2013 06:42:13 -0500
-Received: by mail-la0-f48.google.com with SMTP id n7so7228344lam.7
-        for <linux-wireless@vger.kernel.org>; Sat, 30 Nov 2013 03:42:12 -0800 (PST)
+	Mon, 25 Nov 2013 03:48:44 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Anand Moon <moon.linux@yahoo.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Ath10k router
+References: <1385096714.41414.YahooMailNeo@web122305.mail.ne1.yahoo.com>
+Date: Mon, 25 Nov 2013 10:48:39 +0200
+In-Reply-To: <1385096714.41414.YahooMailNeo@web122305.mail.ne1.yahoo.com>
+	(Anand Moon's message of "Thu, 21 Nov 2013 21:05:14 -0800 (PST)")
+Message-ID: <87txf0q32w.fsf@kamboji.qca.qualcomm.com> (sfid-20131125_094847_876017_2CC5A256)
 MIME-Version: 1.0
-Date: Sat, 30 Nov 2013 19:42:11 +0800
-Message-ID: <CAKH5=Ls9h06oPLjF6b2avss9g21f4349O=mOcPu5hKRFEps7=g@mail.gmail.com> (sfid-20131130_124218_423616_D029F242)
-Subject: compat-wireless support wifi-direct drivers ?????
-From: Naughtboy <skylvlinux@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi dear all
-as you kown wifi-direct is hot issue!
-i very eager to undstand the driver code for wifi-direct !( but i
-dont' kown how to get these code !!)
-i very eager to undstand    it's working mechanism
-where some    big guys  know it's working mechanism?
-if you kown it well  ,please let 'us get undstand it well too！
-thank you advanvce !!
+Anand Moon <moon.linux@yahoo.com> writes:
+
+> I am looking to work on development router with support Ath10k, my
+> guess is that compex.sg provide development routers. Are there any
+> other free development router which can be use for development as well
+> as testing.
+
+I'm not familiar with development routers. But if you get one, make sure
+it's has QCA988x hw2.0 chip. ath10k does not support hw1.0.
+
+-- 
+Kalle Valo
