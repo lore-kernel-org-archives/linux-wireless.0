@@ -1,116 +1,415 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f45.google.com ([209.85.215.45]:46061 "EHLO
-	mail-la0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751118Ab3KHOSx (ORCPT
+Received: from mail-ea0-f169.google.com ([209.85.215.169]:62764 "EHLO
+	mail-ea0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755368Ab3KYNKW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Nov 2013 09:18:53 -0500
-Received: by mail-la0-f45.google.com with SMTP id el20so1780742lab.4
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Nov 2013 06:18:51 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CABPxzYLtbs1s-_T+hk+N1hOEuCi_Yq+CGxG7Xx0hPRmiyQM0Jg@mail.gmail.com>
-References: <CAMP44s1XJRHV8bAX=_-TkSKMkY8Nw1=eHorqTCZ2QmtR5m8uJA@mail.gmail.com>
-	<526E20EA.9090203@rempel-privat.de>
-	<CAMP44s2Cvw9HF3c3Asuq+bTSD36Gw6PXOUVjAcCD+hf6KB_awg@mail.gmail.com>
-	<CABPxzY+xJ7kst-sYwP8RJwMO_zkNYWKaYy=_LS7WQfuxquK24w@mail.gmail.com>
-	<CAMP44s0087jYz5AiEaEzwt7GqH9ed8PWE1CmvMPr4Dqn3yE6rA@mail.gmail.com>
-	<CABPxzYLwwyFCFw1pEt0v9Xw4kcue1C_RZx0RbTbMrUw=+MWvgQ@mail.gmail.com>
-	<CAMP44s0svc2MRKCrZXS5ZYRZNPoomQkcKHdC2m2BGy7di+TCyA@mail.gmail.com>
-	<CABPxzYL-Gzbzoc_ui+qUQ6uzoKp=Yq7yLWZvc7PoEjiH3dFczg@mail.gmail.com>
-	<CAMP44s3uRF=jNn5ZHZ=QOcvuMoXxsfkxU=VOq3K02Q0qOspEdA@mail.gmail.com>
-	<CABPxzYJbNjAwymwUq0pN=YyuCBGy2qz_BKafatHTWK+yH8PbkA@mail.gmail.com>
-	<CAMP44s1NOS2p9pKeMLhR7616CzHeHJVJEzcF1tP6tsKfcPhSOQ@mail.gmail.com>
-	<CABPxzY+RL+ikbSff3a7qb20ExxcSTx6U2xcL5CFr-BgVSOr61A@mail.gmail.com>
-	<CAMP44s384vOcMc4vE82gAdVf37YUZfegmPHUSeobPO=gK6ErAw@mail.gmail.com>
-	<CABPxzYLDHP5gyeTL8HR=6uJDLptaUGEnNGSFLMkxKqi-JaBVYQ@mail.gmail.com>
-	<CABPxzYJTuV0vGLnhgcQcXbg_9szSm2hH7_vCeP4TOKNxZQx_Gg@mail.gmail.com>
-	<CAMP44s3VRnqw0XJDZTZTym7wBD5-NnfOD56YHbE87OG=3Zan2w@mail.gmail.com>
-	<CAMP44s15W7gb8rXwqum5bdHOSk=A_sadX7ksvtkG0qTOu1RREg@mail.gmail.com>
-	<CABPxzYLtbs1s-_T+hk+N1hOEuCi_Yq+CGxG7Xx0hPRmiyQM0Jg@mail.gmail.com>
-Date: Fri, 8 Nov 2013 08:18:51 -0600
-Message-ID: <CAMP44s0h836BZ+g9-g_t78bKuV_m_xAuvPYRCHaFdJ58eTKthw@mail.gmail.com> (sfid-20131108_151858_192704_0B1AC6BA)
-Subject: Re: I always need a miracle to connect with iwlwifi
-From: Felipe Contreras <felipe.contreras@gmail.com>
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Cc: Oleksij Rempel <linux@rempel-privat.de>, ilw@linux.intel.com,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 25 Nov 2013 08:10:22 -0500
+Received: by mail-ea0-f169.google.com with SMTP id l9so2329179eaj.14
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Nov 2013 05:10:21 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 2/8] ath10k: split up pci irq code
+Date: Mon, 25 Nov 2013 14:06:21 +0100
+Message-Id: <1385384787-12470-3-git-send-email-michal.kazior@tieto.com> (sfid-20131125_141033_539098_EA810508)
+In-Reply-To: <1385384787-12470-1-git-send-email-michal.kazior@tieto.com>
+References: <1385125518-13461-1-git-send-email-michal.kazior@tieto.com>
+ <1385384787-12470-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 8, 2013 at 8:06 AM, Krishna Chaitanya
-<chaitanya.mgit@gmail.com> wrote:
-> On Fri, Nov 8, 2013 at 6:44 PM, Felipe Contreras
-> <felipe.contreras@gmail.com> wrote:
->> On Fri, Nov 8, 2013 at 2:35 AM, Felipe Contreras
->> <felipe.contreras@gmail.com> wrote:
->>> On Sat, Nov 2, 2013 at 2:05 PM, Krishna Chaitanya
->>> <chaitanya.mgit@gmail.com> wrote:
->>>
->>>> Also one more thing you said N900 uses mac80211 and it has no issues, but as
->>>> its a embedded device it might running an older kernel where the
->>>> handling might be
->>>> different, so we need to try with the same kernel you are facing an
->>>> issue with the
->>>> a driver which advertises IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC.
->>>
->>> Yes it was running an older kernel, but I just compiled v3.12 and ran
->>> it on the N900, and still everything works fine.
->>>
->>>> (or) if you a have a compilation environment try commenting the advertisement of
->>>> IEEE80211_HW_NEED_DTIM_BEFORE_ASSOC in the iwlwifi DVM driver and
->>>> try to reproduce the issue.
->>>
->>> After commenting that flag everything works fine :)
->
-> Oh, great. That was just to corner the problem, that means we are not getting
-> the required beacon  before the association, but we only wait for 1 beacon here
-> may be we to wait for some number of beacons before giving up the association??
->
-> Johannes??
+Hardware waits until host signals whether it has
+chosen MSI(-X) or shared legacy interrupts. It is
+not required for the driver to register interrupt
+handlers immediately.
 
-But we are receiving 0 beacons, waiting for more than 1 won't help.
-BTW, why NEED_DTIM_BEFORE_ASSOC if the device doesn't *need* the DTIM
-before the association?
+This patch prepares the pci irq code for more
+changes.
 
->>> What are the next steps?
->>
->> I tried to add some debugging to see what's going on, and indeed the
->> beacon packets are lost, I added debugging as low in the chain as I
->> could (iwlagn_rx_reply_rx()), and I don't see them there. However,
->> when I enable the monitor mode, I see them. What's going on?
->
-> In the captures you shared all the beacons are malformed, so
-> probably they failed the CRC check. iwlwifi drops all the CRC failed
-> packets. (doth MVM and DVM)
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c | 225 ++++++++++++++++++++--------------
+ 1 file changed, 131 insertions(+), 94 deletions(-)
 
-Before iwlagn_rx_reply_rx()?
-
-> Not sure how you are receiving the beacons in the monitor mode.
-
-I don't know what kismet does, but I can see my debugging is printing them.
-
-> BTW did you tried capturing the beacons in other devices and see if they
-> are really malformed, or is it just iwlwifi interpreting them wrongly.?
-
-I haven't managed to do that yet.
-
-This is what I'm doing:
-
---- a/drivers/net/wireless/iwlwifi/dvm/rx.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/rx.c
-@@ -919,6 +919,11 @@ static int iwlagn_rx_reply_rx(struct iwl_priv *priv,
-        ampdu_status = iwlagn_translate_rx_status(priv,
-                                                  le32_to_cpu(rx_pkt_status));
-
-+       if (ieee80211_is_beacon(header->frame_control)) {
-+               print_hex_dump(KERN_INFO, "iwlwifi: dump: ", DUMP_PREFIX_OFFSET,
-+                               16, 1, header, len, true);
-+       }
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 12fb12e..957fc59 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -55,8 +55,10 @@ static void ath10k_pci_rx_pipe_cleanup(struct ath10k_pci_pipe *pipe_info);
+ static void ath10k_pci_stop_ce(struct ath10k *ar);
+ static int ath10k_pci_device_reset(struct ath10k *ar);
+ static int ath10k_pci_wait_for_target_init(struct ath10k *ar);
+-static int ath10k_pci_start_intr(struct ath10k *ar);
+-static void ath10k_pci_stop_intr(struct ath10k *ar);
++static int ath10k_pci_init_irq(struct ath10k *ar);
++static int ath10k_pci_deinit_irq(struct ath10k *ar);
++static int ath10k_pci_request_irq(struct ath10k *ar);
++static void ath10k_pci_free_irq(struct ath10k *ar);
+ 
+ static const struct ce_attr host_ce_config_wlan[] = {
+ 	/* CE0: host->target HTC control and raw streams */
+@@ -1354,7 +1356,7 @@ static void ath10k_pci_hif_stop(struct ath10k *ar)
+ 	ath10k_dbg(ATH10K_DBG_PCI, "%s\n", __func__);
+ 
+ 	/* Irqs are never explicitly re-enabled. They are implicitly re-enabled
+-	 * by ath10k_pci_start_intr(). */
++	 * by upon power_up. */
+ 	ath10k_pci_disable_irqs(ar);
+ 
+ 	ath10k_pci_stop_ce(ar);
+@@ -1900,34 +1902,40 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar)
+ 		goto err_ce;
+ 	}
+ 
+-	ret = ath10k_pci_start_intr(ar);
++	ret = ath10k_pci_init_irq(ar);
+ 	if (ret) {
+-		ath10k_err("failed to start interrupt handling: %d\n", ret);
++		ath10k_err("failed to init irqs: %d\n", ret);
+ 		goto err_ce;
+ 	}
+ 
++	ret = ath10k_pci_request_irq(ar);
++	if (ret) {
++		ath10k_err("failed to request irqs: %d\n", ret);
++		goto err_deinit_irq;
++	}
 +
-        if ((unlikely(phy_res->cfg_phy_cnt > 20))) {
-                IWL_DEBUG_DROP(priv, "dsp size out of range [0,20]: %d\n",
-                                phy_res->cfg_phy_cnt);
-
+ 	ret = ath10k_pci_wait_for_target_init(ar);
+ 	if (ret) {
+ 		ath10k_err("failed to wait for target to init: %d\n", ret);
+-		goto err_irq;
++		goto err_free_irq;
+ 	}
+ 
+ 	ret = ath10k_ce_enable_err_irq(ar);
+ 	if (ret) {
+ 		ath10k_err("failed to enable CE error irq: %d\n", ret);
+-		goto err_irq;
++		goto err_free_irq;
+ 	}
+ 
+ 	ret = ath10k_pci_init_config(ar);
+ 	if (ret) {
+ 		ath10k_err("failed to setup init config: %d\n", ret);
+-		goto err_irq;
++		goto err_free_irq;
+ 	}
+ 
+ 	ret = ath10k_pci_wake_target_cpu(ar);
+ 	if (ret) {
+ 		ath10k_err("could not wake up target CPU: %d\n", ret);
+-		goto err_irq;
++		goto err_free_irq;
+ 	}
+ 
+ 	ath10k_pci_start_bmi(ar);
+@@ -1944,11 +1952,12 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar)
+ 
+ 	return 0;
+ 
+-err_irq:
+-	ath10k_ce_disable_interrupts(ar);
+-	ath10k_pci_stop_intr(ar);
++err_free_irq:
++	ath10k_pci_free_irq(ar);
+ 	ath10k_pci_kill_tasklet(ar);
+ 	ath10k_pci_device_reset(ar);
++err_deinit_irq:
++	ath10k_pci_deinit_irq(ar);
+ err_ce:
+ 	ath10k_pci_ce_deinit(ar);
+ err_ps:
+@@ -1962,7 +1971,8 @@ static void ath10k_pci_hif_power_down(struct ath10k *ar)
+ {
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 
+-	ath10k_pci_stop_intr(ar);
++	ath10k_pci_free_irq(ar);
++	ath10k_pci_deinit_irq(ar);
+ 	ath10k_pci_device_reset(ar);
+ 
+ 	ath10k_pci_ce_deinit(ar);
+@@ -2152,24 +2162,17 @@ static void ath10k_pci_tasklet(unsigned long data)
+ 	}
+ }
+ 
+-static int ath10k_pci_start_intr_msix(struct ath10k *ar, int num)
++static int ath10k_pci_request_irq_msix(struct ath10k *ar)
+ {
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+-	int ret;
+-	int i;
+-
+-	ret = pci_enable_msi_block(ar_pci->pdev, num);
+-	if (ret)
+-		return ret;
++	int ret, i;
+ 
+ 	ret = request_irq(ar_pci->pdev->irq + MSI_ASSIGN_FW,
+ 			  ath10k_pci_msi_fw_handler,
+ 			  IRQF_SHARED, "ath10k_pci", ar);
+ 	if (ret) {
+-		ath10k_warn("request_irq(%d) failed %d\n",
++		ath10k_warn("failed to request MSI-X fw irq %d: %d\n",
+ 			    ar_pci->pdev->irq + MSI_ASSIGN_FW, ret);
+-
+-		pci_disable_msi(ar_pci->pdev);
+ 		return ret;
+ 	}
+ 
+@@ -2178,45 +2181,38 @@ static int ath10k_pci_start_intr_msix(struct ath10k *ar, int num)
+ 				  ath10k_pci_per_engine_handler,
+ 				  IRQF_SHARED, "ath10k_pci", ar);
+ 		if (ret) {
+-			ath10k_warn("request_irq(%d) failed %d\n",
++			ath10k_warn("failed to request MSI-X ce irq %d: %d\n",
+ 				    ar_pci->pdev->irq + i, ret);
+ 
+ 			for (i--; i >= MSI_ASSIGN_CE_INITIAL; i--)
+ 				free_irq(ar_pci->pdev->irq + i, ar);
+ 
+ 			free_irq(ar_pci->pdev->irq + MSI_ASSIGN_FW, ar);
+-			pci_disable_msi(ar_pci->pdev);
+ 			return ret;
+ 		}
+ 	}
+ 
+-	ath10k_dbg(ATH10K_DBG_BOOT,
+-		   "MSI-X interrupt handling (%d intrs)\n", num);
+ 	return 0;
+ }
+ 
+-static int ath10k_pci_start_intr_msi(struct ath10k *ar)
++static int ath10k_pci_request_irq_msi(struct ath10k *ar)
+ {
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 	int ret;
+ 
+-	ret = pci_enable_msi(ar_pci->pdev);
+-	if (ret < 0)
+-		return ret;
+-
+ 	ret = request_irq(ar_pci->pdev->irq,
+ 			  ath10k_pci_interrupt_handler,
+ 			  IRQF_SHARED, "ath10k_pci", ar);
+-	if (ret < 0) {
+-		pci_disable_msi(ar_pci->pdev);
++	if (ret) {
++		ath10k_warn("failed to request MSI irq %d: %d\n",
++			    ar_pci->pdev->irq, ret);
+ 		return ret;
+ 	}
+ 
+-	ath10k_dbg(ATH10K_DBG_BOOT, "MSI interrupt handling\n");
+ 	return 0;
+ }
+ 
+-static int ath10k_pci_start_intr_legacy(struct ath10k *ar)
++static int ath10k_pci_request_irq_legacy(struct ath10k *ar)
+ {
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 	int ret;
+@@ -2224,99 +2220,140 @@ static int ath10k_pci_start_intr_legacy(struct ath10k *ar)
+ 	ret = request_irq(ar_pci->pdev->irq,
+ 			  ath10k_pci_interrupt_handler,
+ 			  IRQF_SHARED, "ath10k_pci", ar);
+-	if (ret < 0)
+-		return ret;
+-
+-	ret = ath10k_pci_wake(ar);
+ 	if (ret) {
+-		free_irq(ar_pci->pdev->irq, ar);
+-		ath10k_err("failed to wake up target: %d\n", ret);
++		ath10k_warn("failed to request legacy irq %d: %d\n",
++			    ar_pci->pdev->irq, ret);
+ 		return ret;
+ 	}
+ 
+-	/*
+-	 * A potential race occurs here: The CORE_BASE write
+-	 * depends on target correctly decoding AXI address but
+-	 * host won't know when target writes BAR to CORE_CTRL.
+-	 * This write might get lost if target has NOT written BAR.
+-	 * For now, fix the race by repeating the write in below
+-	 * synchronization checking.
+-	 */
+-	iowrite32(PCIE_INTR_FIRMWARE_MASK |
+-		  PCIE_INTR_CE_MASK_ALL,
+-		  ar_pci->mem + (SOC_CORE_BASE_ADDRESS |
+-				 PCIE_INTR_ENABLE_ADDRESS));
+-
+-	ath10k_pci_sleep(ar);
+-	ath10k_dbg(ATH10K_DBG_BOOT, "legacy interrupt handling\n");
+ 	return 0;
+ }
+ 
+-static int ath10k_pci_start_intr(struct ath10k *ar)
++static int ath10k_pci_request_irq(struct ath10k *ar)
++{
++	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
++
++	switch (ar_pci->num_msi_intrs) {
++	case 0:
++		return ath10k_pci_request_irq_legacy(ar);
++	case 1:
++		return ath10k_pci_request_irq_msi(ar);
++	case MSI_NUM_REQUEST:
++		return ath10k_pci_request_irq_msix(ar);
++	}
++
++	ath10k_warn("unknown irq configuration upon request\n");
++	return -EINVAL;
++}
++
++static void ath10k_pci_free_irq(struct ath10k *ar)
+ {
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+-	int num = MSI_NUM_REQUEST;
+-	int ret;
+ 	int i;
+ 
+-	tasklet_init(&ar_pci->intr_tq, ath10k_pci_tasklet, (unsigned long) ar);
++	/* There's at least one interrupt irregardless whether its legacy INTR
++	 * or MSI or MSI-X */
++	for (i = 0; i < max(1, ar_pci->num_msi_intrs); i++)
++		free_irq(ar_pci->pdev->irq + i, ar);
++}
++
++static void ath10k_pci_init_irq_tasklets(struct ath10k *ar)
++{
++	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
++	int i;
++
++	tasklet_init(&ar_pci->intr_tq, ath10k_pci_tasklet, (unsigned long)ar);
+ 	tasklet_init(&ar_pci->msi_fw_err, ath10k_msi_err_tasklet,
+-		     (unsigned long) ar);
++		     (unsigned long)ar);
+ 
+ 	for (i = 0; i < CE_COUNT; i++) {
+ 		ar_pci->pipe_info[i].ar_pci = ar_pci;
+-		tasklet_init(&ar_pci->pipe_info[i].intr,
+-			     ath10k_pci_ce_tasklet,
++		tasklet_init(&ar_pci->pipe_info[i].intr, ath10k_pci_ce_tasklet,
+ 			     (unsigned long)&ar_pci->pipe_info[i]);
+ 	}
++}
++
++static int ath10k_pci_init_irq(struct ath10k *ar)
++{
++	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
++	int ret;
++
++	ath10k_pci_init_irq_tasklets(ar);
+ 
+ 	if (!test_bit(ATH10K_PCI_FEATURE_MSI_X, ar_pci->features))
+-		num = 1;
++		goto msi;
+ 
+-	if (num > 1) {
+-		ret = ath10k_pci_start_intr_msix(ar, num);
+-		if (ret == 0)
+-			goto exit;
++	/* Try MSI-X */
++	ar_pci->num_msi_intrs = MSI_NUM_REQUEST;
++	ret = pci_enable_msi_block(ar_pci->pdev, ar_pci->num_msi_intrs);
++	if (ret == 0)
++		return 0;
++	if (ret > 0)
++		pci_disable_msi(ar_pci->pdev);
+ 
+-		ath10k_dbg(ATH10K_DBG_BOOT,
+-			   "MSI-X didn't succeed (%d), trying MSI\n", ret);
+-		num = 1;
+-	}
++msi:
++	/* Try MSI */
++	ar_pci->num_msi_intrs = 1;
++	ret = pci_enable_msi(ar_pci->pdev);
++	if (ret == 0)
++		return 0;
+ 
+-	if (num == 1) {
+-		ret = ath10k_pci_start_intr_msi(ar);
+-		if (ret == 0)
+-			goto exit;
++	/* Try legacy irq
++	 *
++	 * A potential race occurs here: The CORE_BASE write
++	 * depends on target correctly decoding AXI address but
++	 * host won't know when target writes BAR to CORE_CTRL.
++	 * This write might get lost if target has NOT written BAR.
++	 * For now, fix the race by repeating the write in below
++	 * synchronization checking. */
++	ar_pci->num_msi_intrs = 0;
+ 
+-		ath10k_dbg(ATH10K_DBG_BOOT,
+-			   "MSI didn't succeed (%d), trying legacy INTR\n",
+-			   ret);
+-		num = 0;
++	ret = ath10k_pci_wake(ar);
++	if (ret) {
++		ath10k_warn("failed to wake target: %d\n", ret);
++		return ret;
+ 	}
+ 
+-	ret = ath10k_pci_start_intr_legacy(ar);
++	ath10k_pci_write32(ar, SOC_CORE_BASE_ADDRESS + PCIE_INTR_ENABLE_ADDRESS,
++			   PCIE_INTR_FIRMWARE_MASK | PCIE_INTR_CE_MASK_ALL);
++	ath10k_pci_sleep(ar);
++
++	return 0;
++}
++
++static int ath10k_pci_deinit_irq_legacy(struct ath10k *ar)
++{
++	int ret;
++
++	ret = ath10k_pci_wake(ar);
+ 	if (ret) {
+-		ath10k_warn("Failed to start legacy interrupts: %d\n", ret);
++		ath10k_warn("failed to wake target: %d\n", ret);
+ 		return ret;
+ 	}
+ 
+-exit:
+-	ar_pci->num_msi_intrs = num;
+-	return ret;
++	ath10k_pci_write32(ar, SOC_CORE_BASE_ADDRESS + PCIE_INTR_ENABLE_ADDRESS,
++			   0);
++	ath10k_pci_sleep(ar);
++
++	return 0;
+ }
+ 
+-static void ath10k_pci_stop_intr(struct ath10k *ar)
++static int ath10k_pci_deinit_irq(struct ath10k *ar)
+ {
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+-	int i;
+ 
+-	/* There's at least one interrupt irregardless whether its legacy INTR
+-	 * or MSI or MSI-X */
+-	for (i = 0; i < max(1, ar_pci->num_msi_intrs); i++)
+-		free_irq(ar_pci->pdev->irq + i, ar);
+-
+-	if (ar_pci->num_msi_intrs > 0)
++	switch (ar_pci->num_msi_intrs) {
++	case 0:
++		return ath10k_pci_deinit_irq_legacy(ar);
++	case 1:
++		/* fall-through */
++	case MSI_NUM_REQUEST:
+ 		pci_disable_msi(ar_pci->pdev);
++		return 0;
++	}
++
++	ath10k_warn("unknown irq configuration upon deinit\n");
++	return -EINVAL;
+ }
+ 
+ static int ath10k_pci_wait_for_target_init(struct ath10k *ar)
 -- 
-Felipe Contreras
+1.8.4.rc3
+
