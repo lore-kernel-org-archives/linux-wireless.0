@@ -1,35 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:42976 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:38468 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755961Ab3KFKLr (ORCPT
+	with ESMTP id S1754130Ab3KYQNN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Nov 2013 05:11:47 -0500
-Message-ID: <1383732704.14307.18.camel@jlt4.sipsolutions.net> (sfid-20131106_111151_069275_BE7AF41D)
-Subject: Re: [PATCH v2 5/5] cfg80211: allow beaconing after DFS CAC
+	Mon, 25 Nov 2013 11:13:13 -0500
+Message-ID: <1385395990.4443.41.camel@jlt4.sipsolutions.net> (sfid-20131125_171316_256812_DD7421B3)
+Subject: Re: [PATCH 1/2] nl80211/cfg80211: Set VHT Operating mode
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: Marek Kwaczynski <marek.kwaczynski@tieto.com>
 Cc: linux-wireless@vger.kernel.org
-Date: Wed, 06 Nov 2013 11:11:44 +0100
-In-Reply-To: <1383659329-11023-5-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131105_144906_140973_6384EC66)
-References: <1383659329-11023-1-git-send-email-janusz.dziedzic@tieto.com>
-	 <1383659329-11023-5-git-send-email-janusz.dziedzic@tieto.com>
-	 (sfid-20131105_144906_140973_6384EC66)
+Date: Mon, 25 Nov 2013 17:13:10 +0100
+In-Reply-To: <1385040495-13482-1-git-send-email-marek.kwaczynski@tieto.com> (sfid-20131121_142830_633495_FBCC9D6D)
+References: <1385040495-13482-1-git-send-email-marek.kwaczynski@tieto.com>
+	 (sfid-20131121_142830_633495_FBCC9D6D)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-11-05 at 14:48 +0100, Janusz Dziedzic wrote:
-> After going throught the Channel Availability Check (CAC)
-> required by DFS enable beaconing. Channels that have
-> gone through a CAC will be in the NL80211_DFS_AVAILABLE
-> state. Without this change APs don't start beaconing
-> after a successful CAC.
-> Change also cfg80211_secondary_chans_ok() where handle
-> prohibited_flags as prohibited.
+On Thu, 2013-11-21 at 14:28 +0100, Marek Kwaczynski wrote:
+> This attribuite is needed for setting VHT operating mode in AP mode
+> from User Space. This functionality is required when User Space
+> received Assoc Reqeust contains VHT Operation Mode Notification
+> element.
 
-I can't really understand this commit message - can you please rephrase
-it?
+The spec doesn't call this "VHT operating mode", it just calls it
+"operating mode notification" and I believe it is valid even in HT
+stations that are "operating mode notification capable". Shouldn't we
+thus rename it all? Right now it's pretty obvious, but once VHT is
+rolled into 802.11 "proper" it would be somewhat confusing like this, I
+think.
+
+> +	if (info->attrs[NL80211_ATTR_VHT_OPMODE]) {
+> +		params.vht_opmode_used = 1;
+
+true, not 1
 
 johannes
 
