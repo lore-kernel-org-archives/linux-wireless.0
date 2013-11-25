@@ -1,45 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mantis.wzyboy.im ([199.83.51.51]:39227 "EHLO mantis.wzyboy.im"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752085Ab3KLMLN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Nov 2013 07:11:13 -0500
-MIME-Version: 1.0
-In-Reply-To: <CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
- <CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
- <CALkVjQY7r=YKhsgDKR0mnYVtZy5BAdj83nY2jL0VFaiew6ha7A@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com>
- <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com>
- <527A8166.6000701@gmail.com> <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com>
- <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com>
- <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com>
- <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com>
- <20131111224439.GA30638@google.com> <CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com>
-From: wzyboy <wzyboy@wzyboy.org>
-Date: Tue, 12 Nov 2013 20:10:56 +0800
-Message-ID: <CALkVjQaXEBpbwu9Qy3+17Eg-nSg-k7iin8G3f1RsTLkCOB-2XQ@mail.gmail.com> (sfid-20131112_131118_676383_324F4D36)
-Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:57351 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752591Ab3KYWO3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Nov 2013 17:14:29 -0500
+Received: by mail-wi0-f180.google.com with SMTP id hm4so6225114wib.13
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Nov 2013 14:14:28 -0800 (PST)
+Message-ID: <1385417656.6327.1.camel@canaries32-MCP7A> (sfid-20131125_231437_991298_0FE09E79)
+Subject: [PATCH 1/2] staging: vt6656: Remove unused variable bLongHeader
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Mon, 25 Nov 2013 22:14:16 +0000
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/11/12 wzyboy <wzyboy@wzyboy.org>:
-> I will continue downloading big files to benchmark it.
+Remove dead bLongHeader code.
 
-Hi guys, good news!
+In s_vFillTxKey use ieee80211_has_a4 to detect long headers for future use.
 
-Six hours ago I ran a simple loop script to repeatly download big
-files (and saving to /dev/null) and went to have lessons. Six hours
-later it's after school. I found that the wireless still works!
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/device.h |  1 -
+ drivers/staging/vt6656/rxtx.c   | 24 ++++--------------------
+ 2 files changed, 4 insertions(+), 21 deletions(-)
 
-So I believe that the two "setpci" commands really work! Thanks Bjorn
-and Emmanuel!
-
+diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
+index ec8acbd..9a4dfbc 100644
+--- a/drivers/staging/vt6656/device.h
++++ b/drivers/staging/vt6656/device.h
+@@ -598,7 +598,6 @@ struct vnt_private {
+ 
+ 	int bCCK;
+ 	int bEncryptionEnable;
+-	int bLongHeader;
+ 	int bShortSlotTime;
+ 	int bProtectMode;
+ 	int bNonERPPresent;
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 723a8de..aa71d39 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -278,7 +278,7 @@ static void s_vFillTxKey(struct vnt_private *pDevice,
+ 		mic_hdr->tsc_15_0 = cpu_to_be16(pTransmitKey->wTSC15_0);
+ 
+ 		/* MICHDR1 */
+-		if (pDevice->bLongHeader)
++		if (ieee80211_has_a4(pMACHeader->frame_control))
+ 			mic_hdr->hlen = cpu_to_be16(28);
+ 		else
+ 			mic_hdr->hlen = cpu_to_be16(22);
+@@ -292,7 +292,7 @@ static void s_vFillTxKey(struct vnt_private *pDevice,
+ 								& 0xc78f);
+ 		mic_hdr->seq_ctrl = cpu_to_le16(pMACHeader->seq_ctrl & 0xf);
+ 
+-		if (pDevice->bLongHeader)
++		if (ieee80211_has_a4(pMACHeader->frame_control))
+ 			memcpy(mic_hdr->addr4, pMACHeader->addr4, ETH_ALEN);
+ 	}
+ }
+@@ -790,7 +790,6 @@ static u16 s_vGenerateTxParameter(struct vnt_private *pDevice,
+ {
+ 	struct vnt_tx_fifo_head *pFifoHead = &tx_buffer->fifo_head;
+ 	union vnt_tx_data_head *head = NULL;
+-	u32 cbMACHdLen = WLAN_HDR_ADDR3_LEN; /* 24 */
+ 	u16 wFifoCtl;
+ 	u8 byFBOption = AUTO_FB_NONE;
+ 
+@@ -805,9 +804,6 @@ static u16 s_vGenerateTxParameter(struct vnt_private *pDevice,
+ 	if (!pFifoHead)
+ 		return 0;
+ 
+-	if (pDevice->bLongHeader)
+-		cbMACHdLen = WLAN_HDR_ADDR3_LEN + 6;
+-
+ 	if (byPktType == PK_TYPE_11GB || byPktType == PK_TYPE_11GA) {
+ 		if (need_rts) {
+ 			struct vnt_rrv_time_rts *pBuf =
+@@ -1007,16 +1003,9 @@ static int s_bPacketToWirelessUsb(struct vnt_private *pDevice, u8 byPktType,
+ 
+     pTxBufHead->wTimeStamp = DEFAULT_MSDU_LIFETIME_RES_64us;
+ 
+-    //Set FIFOCTL_LHEAD
+-    if (pDevice->bLongHeader)
+-        pTxBufHead->wFIFOCtl |= FIFOCTL_LHEAD;
+-
+     //Set FRAGCTL_MACHDCNT
+-    if (pDevice->bLongHeader) {
+-        cbMACHdLen = WLAN_HDR_ADDR3_LEN + 6;
+-    } else {
+-        cbMACHdLen = WLAN_HDR_ADDR3_LEN;
+-    }
++	cbMACHdLen = WLAN_HDR_ADDR3_LEN;
++
+     pTxBufHead->wFragCtl |= (u16)(cbMACHdLen << 10);
+ 
+     //Set FIFOCTL_GrpAckPolicy
+@@ -1336,11 +1325,6 @@ static void s_vGenerateMACHeader(struct vnt_private *pDevice,
+ 
+     pMACHeader->duration_id = cpu_to_le16(wDuration);
+ 
+-    if (pDevice->bLongHeader) {
+-        PWLAN_80211HDR_A4 pMACA4Header  = (PWLAN_80211HDR_A4) pbyBufferAddr;
+-        pMACHeader->frame_control |= (FC_TODS | FC_FROMDS);
+-        memcpy(pMACA4Header->abyAddr4, pDevice->abyBSSID, WLAN_ADDR_LEN);
+-    }
+     pMACHeader->seq_ctrl = cpu_to_le16(pDevice->wSeqCounter << 4);
+ 
+     //Set FragNumber in Sequence Control
 -- 
-wzyboy
+1.8.4.4
+
