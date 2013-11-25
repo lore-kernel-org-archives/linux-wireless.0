@@ -1,82 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f180.google.com ([209.85.215.180]:52898 "EHLO
-	mail-ea0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751528Ab3KJTGn (ORCPT
+Received: from mail-ea0-f181.google.com ([209.85.215.181]:63765 "EHLO
+	mail-ea0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755323Ab3KYNKT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Nov 2013 14:06:43 -0500
-Received: by mail-ea0-f180.google.com with SMTP id b11so2240951eae.39
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Nov 2013 11:06:41 -0800 (PST)
-From: Michal Nazarewicz <mpn@google.com>
-To: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Michal Nazarewicz <mina86@mina86.com>
-Subject: [PATCH] net: wireless: iwlwifi: remove minor dead code
-Date: Sun, 10 Nov 2013 20:06:37 +0100
-Message-Id: <1384110397-24386-1-git-send-email-mpn@google.com> (sfid-20131110_200715_626735_36532545)
+	Mon, 25 Nov 2013 08:10:19 -0500
+Received: by mail-ea0-f181.google.com with SMTP id m10so2333077eaj.26
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Nov 2013 05:10:18 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 0/8] ath10k: pci fixes 2013-11-22
+Date: Mon, 25 Nov 2013 14:06:19 +0100
+Message-Id: <1385384787-12470-1-git-send-email-michal.kazior@tieto.com> (sfid-20131125_141036_371917_43E3CB67)
+In-Reply-To: <1385125518-13461-1-git-send-email-michal.kazior@tieto.com>
+References: <1385125518-13461-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michal Nazarewicz <mina86@mina86.com>
+Hi,
 
-inta is checked to be zero in a IRQ_NONE branch so afterwards it
-cannot be zero as it is never modified.
+ath10k didn't play well with other devices on a
+shared irq line. This patchset fixes support for
+shared legacy interrupts. 
 
-Signed-off-by: Michal Nazarewicz <mina86@mina86.com>
----
- drivers/net/wireless/iwlwifi/pcie/rx.c | 23 ++++++++---------------
- 1 file changed, 8 insertions(+), 15 deletions(-)
+Some rework was necessary because ath10k was using
+disable_irq and CE irq masking (which is not
+sufficient for shared interrupts).
 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
-index 3f237b4..c32122a 100644
---- a/drivers/net/wireless/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
-@@ -1121,7 +1121,6 @@ static irqreturn_t iwl_pcie_isr(int irq, void *data)
- 	struct iwl_trans *trans = data;
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	u32 inta, inta_mask;
--	irqreturn_t ret = IRQ_NONE;
- 
- 	lockdep_assert_held(&trans_pcie->irq_lock);
- 
-@@ -1150,7 +1149,13 @@ static irqreturn_t iwl_pcie_isr(int irq, void *data)
- 	 * or due to sporadic interrupts thrown from our NIC. */
- 	if (!inta) {
- 		IWL_DEBUG_ISR(trans, "Ignore interrupt, inta == 0\n");
--		goto none;
-+		/* re-enable interrupts here since we don't have anything to
-+		 * service.  only Re-enable if disabled by irq and no
-+		 * schedules tasklet. */
-+		if (test_bit(STATUS_INT_ENABLED, &trans_pcie->status) &&
-+		    !trans_pcie->inta)
-+			iwl_enable_interrupts(trans);
-+		return IRQ_NONE;
- 	}
- 
- 	if ((inta == 0xFFFFFFFF) || ((inta & 0xFFFFFFF0) == 0xa5a5a5a0)) {
-@@ -1168,19 +1173,7 @@ static irqreturn_t iwl_pcie_isr(int irq, void *data)
- 
- 	trans_pcie->inta |= inta;
- 	/* the thread will service interrupts and re-enable them */
--	if (likely(inta))
--		return IRQ_WAKE_THREAD;
--
--	ret = IRQ_HANDLED;
--
--none:
--	/* re-enable interrupts here since we don't have anything to service. */
--	/* only Re-enable if disabled by irq  and no schedules tasklet. */
--	if (test_bit(STATUS_INT_ENABLED, &trans_pcie->status) &&
--	    !trans_pcie->inta)
--		iwl_enable_interrupts(trans);
--
--	return ret;
-+	return IRQ_WAKE_THREAD;
- }
- 
- /* interrupt handler using ict table, with this interrupt driver will
+Since main irq handlers are now registered after
+boot, BMI is now polling for CE updates. I haven't
+observed any differences in boot speed.
+
+Also this plugs a leak I spotted during rework and
+adds an option for testing different irq modes.
+
+v2:
+ * simplify ath10k_pci_irq_pending()
+ * combine memory leak fix patch with a
+   functionality decoupling (it's very closely
+   related)
+ * fix 'irq: nobody cared'
+ * change MSI/MSI-X disabling parameters
+ * some minor fixes & code shuffling to avoid
+   forward declarations
+
+
+Michal Kazior (8):
+  ath10k: don't consume other's shared interrupts
+  ath10k: split up pci irq code
+  ath10k: don't use interrupts for BMI
+  ath10k: decouple ath10k_pci_start_ce()
+  ath10k: defer irq registration until hif start()
+  ath10k: extract functions for legacy irq handling
+  ath10k: re-add support for early fw indication
+  ath10k: allow explicit MSI/MSI-X disabling
+
+ drivers/net/wireless/ath/ath10k/ce.c  |  15 -
+ drivers/net/wireless/ath/ath10k/ce.h  |   1 -
+ drivers/net/wireless/ath/ath10k/hw.h  |   1 +
+ drivers/net/wireless/ath/ath10k/pci.c | 577 ++++++++++++++++++++++------------
+ drivers/net/wireless/ath/ath10k/pci.h |   1 +
+ 5 files changed, 383 insertions(+), 212 deletions(-)
+
 -- 
-1.8.3.2
+1.8.4.rc3
 
