@@ -1,48 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:41667 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751096Ab3KBTNg (ORCPT
+Received: from mail-bk0-f53.google.com ([209.85.214.53]:57153 "EHLO
+	mail-bk0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752298Ab3KYW7G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Nov 2013 15:13:36 -0400
-Received: by mail-wi0-f177.google.com with SMTP id f4so2301428wiw.16
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Nov 2013 12:13:35 -0700 (PDT)
+	Mon, 25 Nov 2013 17:59:06 -0500
+Received: by mail-bk0-f53.google.com with SMTP id na10so2214876bkb.26
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Nov 2013 14:59:05 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: p2p@posteo.de, linux-wireless@vger.kernel.org
+Subject: Re: RTL8188S
+Date: Mon, 25 Nov 2013 23:59:03 +0100
+Message-ID: <2275033.1QHi5CsvI8@blech> (sfid-20131125_235911_458165_C7DA3B54)
+In-Reply-To: <5293CB3E.6090104@lwfinger.net>
+References: <a3a1cb41444ae8dd89db830ae927491f@posteo.de> <2035998.63y5xTAJxx@blech> <5293CB3E.6090104@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <CAMP44s384vOcMc4vE82gAdVf37YUZfegmPHUSeobPO=gK6ErAw@mail.gmail.com>
-References: <CAMP44s1XJRHV8bAX=_-TkSKMkY8Nw1=eHorqTCZ2QmtR5m8uJA@mail.gmail.com>
- <526E20EA.9090203@rempel-privat.de> <CAMP44s2Cvw9HF3c3Asuq+bTSD36Gw6PXOUVjAcCD+hf6KB_awg@mail.gmail.com>
- <CABPxzY+xJ7kst-sYwP8RJwMO_zkNYWKaYy=_LS7WQfuxquK24w@mail.gmail.com>
- <CAMP44s0087jYz5AiEaEzwt7GqH9ed8PWE1CmvMPr4Dqn3yE6rA@mail.gmail.com>
- <CABPxzYLwwyFCFw1pEt0v9Xw4kcue1C_RZx0RbTbMrUw=+MWvgQ@mail.gmail.com>
- <CAMP44s0svc2MRKCrZXS5ZYRZNPoomQkcKHdC2m2BGy7di+TCyA@mail.gmail.com>
- <CABPxzYL-Gzbzoc_ui+qUQ6uzoKp=Yq7yLWZvc7PoEjiH3dFczg@mail.gmail.com>
- <CAMP44s3uRF=jNn5ZHZ=QOcvuMoXxsfkxU=VOq3K02Q0qOspEdA@mail.gmail.com>
- <CABPxzYJbNjAwymwUq0pN=YyuCBGy2qz_BKafatHTWK+yH8PbkA@mail.gmail.com>
- <CAMP44s1NOS2p9pKeMLhR7616CzHeHJVJEzcF1tP6tsKfcPhSOQ@mail.gmail.com>
- <CABPxzY+RL+ikbSff3a7qb20ExxcSTx6U2xcL5CFr-BgVSOr61A@mail.gmail.com> <CAMP44s384vOcMc4vE82gAdVf37YUZfegmPHUSeobPO=gK6ErAw@mail.gmail.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Sun, 3 Nov 2013 00:43:14 +0530
-Message-ID: <CABPxzYLDHP5gyeTL8HR=6uJDLptaUGEnNGSFLMkxKqi-JaBVYQ@mail.gmail.com> (sfid-20131102_201339_587318_B50C7620)
-Subject: Re: I always need a miracle to connect with iwlwifi
-To: Felipe Contreras <felipe.contreras@gmail.com>
-Cc: Oleksij Rempel <linux@rempel-privat.de>, ilw@linux.intel.com,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Nov 2, 2013 at 10:36 PM, Felipe Contreras
-<felipe.contreras@gmail.com> wrote:
-> Sorry for the crappy format (laptop is stuck).
->
-> If the problem is the firmware why does it start working when I
-> restart the router?
+On Monday, November 25, 2013 04:12:14 PM Larry Finger wrote:
+> On 11/25/2013 03:57 PM, Christian Lamparter wrote:
+> >> I thought RTL8192cu will work, but Larry F. told me it doesn't.
+> > OK? (care to explain?)
+> 
+> The driver for an RTL81{88,92}CU device (rtl8192cu) will not work for the 
+> RTL81{88,92}SU device. There are substantial differences between the CU and SU 
+> chips.
 
-I was referring FW on iwlwifi, not the AP's. May be restarting the router
-triggered some kind of event like Beacon Loss which might have
-helped the STA to connect. Just guessing.
+Thanks. I first thought a RTL81xyCU device was involved somehow (for example
+as the P2P GO peer on the other end, or as a replacement for rtl8192su device).
 
-> Plus, I should be seeing this problem with other APs.
-> And what could Windows be doing differently that doesn't exhibit this problem?
+But apparently not... well, that's too bad.
 
-Without knowing the root cause it tough to comment these questions :-)
+Regards
+
+Christian
