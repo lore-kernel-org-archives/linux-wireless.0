@@ -1,62 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from erley.org ([97.107.129.9]:33377 "EHLO remote.erley.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754099Ab3KZSMA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Nov 2013 13:12:00 -0500
-Message-ID: <5294E46C.40102@erley.org> (sfid-20131126_191204_710876_1060F187)
-Date: Tue, 26 Nov 2013 12:11:56 -0600
-From: Pat Erley <pat-lkml@erley.org>
-MIME-Version: 1.0
-To: matt emery <matt@x204.com>, linux-wireless@vger.kernel.org
-Subject: Re: Fwd: Intel 7260
-References: <CAKnB8xgAVp+Ti597RN4_kgPLgXpW1JCr4SQaqfqCzy5A4=o3Ow@mail.gmail.com> <CAKnB8xh6tWFdiL4kBQ5r3J_YgiiwhHhvQEqC+9F7c=3eAsrYbg@mail.gmail.com>
-In-Reply-To: <CAKnB8xh6tWFdiL4kBQ5r3J_YgiiwhHhvQEqC+9F7c=3eAsrYbg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mail-ea0-f173.google.com ([209.85.215.173]:58556 "EHLO
+	mail-ea0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753580Ab3KYNK0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Nov 2013 08:10:26 -0500
+Received: by mail-ea0-f173.google.com with SMTP id g15so2361382eak.32
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Nov 2013 05:10:25 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 6/8] ath10k: extract functions for legacy irq handling
+Date: Mon, 25 Nov 2013 14:06:25 +0100
+Message-Id: <1385384787-12470-7-git-send-email-michal.kazior@tieto.com> (sfid-20131125_141044_465615_0219199C)
+In-Reply-To: <1385384787-12470-1-git-send-email-michal.kazior@tieto.com>
+References: <1385125518-13461-1-git-send-email-michal.kazior@tieto.com>
+ <1385384787-12470-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/26/2013 06:28 AM, matt emery wrote:
-> Hi,
->
-> I hope you can help, I am having problems getting N with new Dual band
-> wireless ac 7260 pci express half mini card, manufacturer code
-> 7260.HMWWB
->
-> lspci: 03:00.0 Network controller: Intel Corporation Device 08b1 (rev 73)
->
-> Kernel: 3.12.0-031200-generic
->
-> firmware: -rw-r--r-- 1 root root 682892 Nov 26 12:10 iwlwifi-7260-7.ucode
-> from here; http://wireless.kernel.org/en/users/Drivers/iwlwifi?action=AttachFile&do=get&target=iwlwifi-7260-ucode-22.0.7.0.tgz
->
-> wlan0     IEEE 802.11abg  ESSID:"XXXX"
->            Mode:Managed  Frequency:2.412 GHz  Access Point: 06:XX:22:XX:ED:XX
->            Bit Rate=54 Mb/s   Tx-Power=16 dBm
->            Retry  long limit:7   RTS thr:off   Fragment thr:off
+Preparation for code re-use. Also use ioread/write
+wrappers.
 
->            Encryption key:off
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+v2:
+ * move function definitions up to avoid forward
+   declarations in subsequent patches
 
-While I'm not certain about your AP or the 7260 driver, I believe 
-802.11n technically requires WPA2 encryption.  Try turning that on and 
-testing again.
+ drivers/net/wireless/ath/ath10k/pci.c | 65 +++++++++++++++++------------------
+ 1 file changed, 32 insertions(+), 33 deletions(-)
 
->            Power Management:off
->            Link Quality=70/70  Signal level=-36 dBm
->            Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
->            Tx excessive retries:1  Invalid misc:27   Missed beacon:0
->
->
-> Let me know if you need anything else.
->
-> Thanks
->
-> matt
->
-> Matthew Emery
-> 07988 197 438
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index bd67311..1d2939c 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -220,6 +220,34 @@ static bool ath10k_pci_irq_pending(struct ath10k *ar)
+ 	return false;
+ }
+ 
++static void ath10k_pci_disable_and_clear_legacy_irq(struct ath10k *ar)
++{
++	/* IMPORTANT: INTR_CLR register has to be set after
++	 * INTR_ENABLE is set to 0, otherwise interrupt can not be
++	 * really cleared. */
++	ath10k_pci_write32(ar, SOC_CORE_BASE_ADDRESS + PCIE_INTR_ENABLE_ADDRESS,
++			   0);
++	ath10k_pci_write32(ar, SOC_CORE_BASE_ADDRESS + PCIE_INTR_CLR_ADDRESS,
++			   PCIE_INTR_FIRMWARE_MASK | PCIE_INTR_CE_MASK_ALL);
++
++	/* IMPORTANT: this extra read transaction is required to
++	 * flush the posted write buffer. */
++	(void) ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
++				 PCIE_INTR_ENABLE_ADDRESS);
++}
++
++static void ath10k_pci_enable_legacy_irq(struct ath10k *ar)
++{
++	ath10k_pci_write32(ar, SOC_CORE_BASE_ADDRESS +
++			   PCIE_INTR_ENABLE_ADDRESS,
++			   PCIE_INTR_FIRMWARE_MASK | PCIE_INTR_CE_MASK_ALL);
++
++	/* IMPORTANT: this extra read transaction is required to
++	 * flush the posted write buffer. */
++	(void) ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
++				 PCIE_INTR_ENABLE_ADDRESS);
++}
++
+ /*
+  * Diagnostic read/write access is provided for startup/config/debug usage.
+  * Caller must guarantee proper alignment, when applicable, and single user
+@@ -2128,25 +2156,7 @@ static irqreturn_t ath10k_pci_interrupt_handler(int irq, void *arg)
+ 		if (!ath10k_pci_irq_pending(ar))
+ 			return IRQ_NONE;
+ 
+-		/*
+-		 * IMPORTANT: INTR_CLR regiser has to be set after
+-		 * INTR_ENABLE is set to 0, otherwise interrupt can not be
+-		 * really cleared.
+-		 */
+-		iowrite32(0, ar_pci->mem +
+-			  (SOC_CORE_BASE_ADDRESS |
+-			   PCIE_INTR_ENABLE_ADDRESS));
+-		iowrite32(PCIE_INTR_FIRMWARE_MASK |
+-			  PCIE_INTR_CE_MASK_ALL,
+-			  ar_pci->mem + (SOC_CORE_BASE_ADDRESS |
+-					 PCIE_INTR_CLR_ADDRESS));
+-		/*
+-		 * IMPORTANT: this extra read transaction is required to
+-		 * flush the posted write buffer.
+-		 */
+-		(void) ioread32(ar_pci->mem +
+-				(SOC_CORE_BASE_ADDRESS |
+-				 PCIE_INTR_ENABLE_ADDRESS));
++		ath10k_pci_disable_and_clear_legacy_irq(ar);
+ 	}
+ 
+ 	tasklet_schedule(&ar_pci->intr_tq);
+@@ -2162,20 +2172,9 @@ static void ath10k_pci_tasklet(unsigned long data)
+ 	ath10k_pci_fw_interrupt_handler(ar); /* FIXME: Handle FW error */
+ 	ath10k_ce_per_engine_service_any(ar);
+ 
+-	if (ar_pci->num_msi_intrs == 0) {
+-		/* Enable Legacy PCI line interrupts */
+-		iowrite32(PCIE_INTR_FIRMWARE_MASK |
+-			  PCIE_INTR_CE_MASK_ALL,
+-			  ar_pci->mem + (SOC_CORE_BASE_ADDRESS |
+-					 PCIE_INTR_ENABLE_ADDRESS));
+-		/*
+-		 * IMPORTANT: this extra read transaction is required to
+-		 * flush the posted write buffer
+-		 */
+-		(void) ioread32(ar_pci->mem +
+-				(SOC_CORE_BASE_ADDRESS |
+-				 PCIE_INTR_ENABLE_ADDRESS));
+-	}
++	/* Re-enable legacy irq that was disabled in the irq handler */
++	if (ar_pci->num_msi_intrs == 0)
++		ath10k_pci_enable_legacy_irq(ar);
+ }
+ 
+ static int ath10k_pci_request_irq_msix(struct ath10k *ar)
+-- 
+1.8.4.rc3
 
