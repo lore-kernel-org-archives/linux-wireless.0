@@ -1,31 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:40422 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751428Ab3K0N6u (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Nov 2013 08:58:50 -0500
-Received: by mail-wg0-f41.google.com with SMTP id y10so3762336wgg.4
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Nov 2013 05:58:48 -0800 (PST)
+Received: from mx02a.posteo.de ([89.146.194.168]:37135 "EHLO mx02a.posteo.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754322Ab3KYSEb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Nov 2013 13:04:31 -0500
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by mail.posteo.de (Postfix) with ESMTP id 53BE12F9EDF
+	for <linux-wireless@vger.kernel.org>; Mon, 25 Nov 2013 17:57:42 +0000 (UTC)
+Received: from posteo.de ([10.125.125.134])
+	by localhost (amavis1.posteo.de [10.125.125.165]) (amavisd-new, port 10026)
+	with ESMTP id UuRwlzmBsya2 for <linux-wireless@vger.kernel.org>;
+	Mon, 25 Nov 2013 18:57:32 +0100 (CET)
+Received: from mail.posteo.de (localhost [127.0.0.1])
+	by mail.posteo.de (Postfix) with ESMTPSA id 931D920027122
+	for <linux-wireless@vger.kernel.org>; Mon, 25 Nov 2013 18:57:32 +0100 (CET)
 MIME-Version: 1.0
-In-Reply-To: <5295EF41.8040709@cs.kuleuven.be>
-References: <5294E4C5.4050301@cs.kuleuven.be>
-	<52950812.20001@rempel-privat.de>
-	<5295EF41.8040709@cs.kuleuven.be>
-Date: Wed, 27 Nov 2013 14:58:46 +0100
-Message-ID: <CANiGF999jHN3+5QuNVAkVk_hHxZ6LkPxWB3jW9yoJGbfno7M9A@mail.gmail.com> (sfid-20131127_145853_247028_3C993D46)
-Subject: Re: [PATCH] ath9k_htc: properly set MAC address and BSSID mask
-From: Pau Koning <paukoning@gmail.com>
-To: Mathy Vanhoef <mathy.vanhoef@cs.kuleuven.be>
-Cc: Oleksij Rempel <linux@rempel-privat.de>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, mcgrof@qca.qualcomm.com,
-	jouni@qca.qualcomm.com, vthiagar@qca.qualcomm.com,
-	senthilb@qca.qualcomm.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Mon, 25 Nov 2013 18:57:32 +0100
+From: p2p@posteo.de
+To: <linux-wireless@vger.kernel.org>
+Subject: RTL8188S
+Message-ID: <a3a1cb41444ae8dd89db830ae927491f@posteo.de> (sfid-20131125_190434_459533_2DD9B1F4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 27, 2013 at 2:10 PM, Mathy Vanhoef
-<mathy.vanhoef@cs.kuleuven.be> wrote:
-> Disclaimer: http://www.kuleuven.be/cwis/email_disclaimer.htm
+Hello,
 
-Sorry, but the patch cannot be accepted when the disclaimer forbids it.
+I have a WLAN dongle with Realtek RTL8188S chip.
+I don't want to use r8712u driver with wext interface because I want to 
+establish a wifi direct p2p connection.
+Unfortunately the original Realtek driver from hp didn't work with p2p 
+too.
+I thought RTL8192cu will work, but Larry F. told me it doesn't.
+
+He said there is a new driver in development.
+I'm searching for information. Please can someone tell me about the 
+project, its status, and if someone can take part.
+
+Best regards
+p2p
