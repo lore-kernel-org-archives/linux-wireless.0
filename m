@@ -1,87 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f177.google.com ([74.125.82.177]:44363 "EHLO
-	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752373Ab3KXN1q (ORCPT
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:55202 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751388Ab3KYKPt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Nov 2013 08:27:46 -0500
-Received: by mail-we0-f177.google.com with SMTP id p61so2792608wes.36
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Nov 2013 05:27:42 -0800 (PST)
-Message-ID: <1385299652.13346.10.camel@canaries32-MCP7A> (sfid-20131124_142748_494468_E93B6709)
-Subject: [PATCH 2/2] staging: vt6656: vnt_beacon_buffer attach mac header.
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Sun, 24 Nov 2013 13:27:32 +0000
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 25 Nov 2013 05:15:49 -0500
+Received: by mail-ob0-f175.google.com with SMTP id uz6so3939802obc.20
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Nov 2013 02:15:48 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1385318128.23961.0.camel@jlt4.sipsolutions.net>
+References: <1385312211-3119-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	<1385312211-3119-2-git-send-email-lorenzo.bianconi83@gmail.com>
+	<1385318128.23961.0.camel@jlt4.sipsolutions.net>
+Date: Mon, 25 Nov 2013 11:15:48 +0100
+Message-ID: <CAA2SeNJYAs4XGiQCnWkpekMtOEc5h4y41he3vQpxNxZiJ9ygCg@mail.gmail.com> (sfid-20131125_111552_588012_22F5E05C)
+Subject: Re: [PATCH 1/3] mac80211: implement ieee80211_get_vif_by_addr
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>, sujith@msujith.org,
+	rmanohar@qca.qualcomm.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Attach ieee80211_hdr to vnt_beacon_buffer and remove pointer arithmetic.
+> On Sun, 2013-11-24 at 17:56 +0100, Lorenzo Bianconi wrote:
+>> ieee80211_get_vif_by_addr allows low level drivers to get a reference to
+>> vif data structure which is not added to the driver as monitor interface.
+>> ieee80211_get_vif_by_addr will be used in ath9k tx99 code
+>
+> Is that really better than having the driver use the iteration
+> functions?
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/rxtx.c | 19 +++++++++----------
- drivers/staging/vt6656/rxtx.h |  1 +
- 2 files changed, 10 insertions(+), 10 deletions(-)
+first two patches are not really necessary since I was using an old
+version of iw which does not allow to set monitor interface in active
+mode
 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index a45604a..723a8de 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -1650,7 +1650,6 @@ CMD_STATUS csBeacon_xmit(struct vnt_private *pDevice,
- 	u16 wCurrentRate;
- 	u32 cbFrameBodySize;
- 	u32 cbReqCount;
--	u8 *pbyTxBufferAddr;
- 	struct vnt_usb_send_context *pContext;
- 	CMD_STATUS status;
- 
-@@ -1663,7 +1662,6 @@ CMD_STATUS csBeacon_xmit(struct vnt_private *pDevice,
- 
- 	pTX_Buffer = (struct vnt_beacon_buffer *)&pContext->Data[0];
- 	short_head = &pTX_Buffer->short_head;
--	pbyTxBufferAddr = (u8 *)&short_head->fifo_ctl;
- 
-     cbFrameBodySize = pPacket->cbPayloadLen;
- 
-@@ -1697,15 +1695,16 @@ CMD_STATUS csBeacon_xmit(struct vnt_private *pDevice,
- 	}
- 
+>
+>> + */
+>> +struct ieee80211_vif *ieee80211_get_vif_by_addr(struct ieee80211_hw *hw,
+>> +                                             const u8 *mac)
+>> +{
+>> +     struct ieee80211_vif *vif = NULL;
+>> +     struct ieee80211_local *local = hw_to_local(hw);
+>> +     struct ieee80211_sub_if_data *sdata;
+>> +
+>> +     rcu_read_lock();
+>> +     list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+>> +             if (!compare_ether_addr(sdata->vif.addr, mac)) {
+>> +                     vif = &sdata->vif;
+>> +                     break;
+>> +             }
+>> +     }
+>> +     rcu_read_unlock();
+>> +
+>> +     return vif;
+>
+> In any case, this is completely broken wrt. locking, so I'm not taking
+> it.
+>
 
--    //Generate Beacon Header
--    pMACHeader = (struct ieee80211_hdr *)(pbyTxBufferAddr + cbHeaderSize);
--    memcpy(pMACHeader, pPacket->p80211Header, pPacket->cbMPDULen);
-+	/* Generate Beacon Header */
-+	pMACHeader = &pTX_Buffer->hdr;
- 
--    pMACHeader->duration_id = 0;
--    pMACHeader->seq_ctrl = cpu_to_le16(pDevice->wSeqCounter << 4);
--    pDevice->wSeqCounter++ ;
--    if (pDevice->wSeqCounter > 0x0fff)
--        pDevice->wSeqCounter = 0;
-+	memcpy(pMACHeader, pPacket->p80211Header, pPacket->cbMPDULen);
-+
-+	pMACHeader->duration_id = 0;
-+	pMACHeader->seq_ctrl = cpu_to_le16(pDevice->wSeqCounter << 4);
-+	pDevice->wSeqCounter++;
-+	if (pDevice->wSeqCounter > 0x0fff)
-+		pDevice->wSeqCounter = 0;
- 
-     cbReqCount = cbHeaderSize + WLAN_HDR_ADDR3_LEN + cbFrameBodySize;
- 
-diff --git a/drivers/staging/vt6656/rxtx.h b/drivers/staging/vt6656/rxtx.h
-index bb21ad6..b3ee6d0 100644
---- a/drivers/staging/vt6656/rxtx.h
-+++ b/drivers/staging/vt6656/rxtx.h
-@@ -243,6 +243,7 @@ struct vnt_beacon_buffer {
- 	u8 byPKTNO;
- 	u16 wTxByteCount;
- 	struct vnt_tx_short_buf_head short_head;
-+	struct ieee80211_hdr hdr;
- } __packed;
- 
- void vDMA0_tx_80211(struct vnt_private *, struct sk_buff *skb);
+sorry, I was wrong
+
+> johannes
+>
+
+
+
 -- 
-1.8.4.4
-
+UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
+unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
+umount; make clean; sleep
