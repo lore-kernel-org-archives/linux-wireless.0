@@ -1,46 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f170.google.com ([74.125.82.170]:45863 "EHLO
-	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753965Ab3KNVAB (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:38547 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754307Ab3KYQjX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Nov 2013 16:00:01 -0500
-Received: by mail-we0-f170.google.com with SMTP id p61so2697209wes.15
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Nov 2013 13:00:00 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CADNhdGGeOcSS+nv_LCgCN4jpAf2Lk9j5juyw4ZeWAgnqUe=+AA@mail.gmail.com>
-References: <CADNhdGGeOcSS+nv_LCgCN4jpAf2Lk9j5juyw4ZeWAgnqUe=+AA@mail.gmail.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Fri, 15 Nov 2013 02:29:40 +0530
-Message-ID: <CABPxzYJm_tAZ4APfidQdgMi06vnSLhpouuu905nK41eTEOJq6Q@mail.gmail.com> (sfid-20131114_220006_561467_F3B556FC)
-Subject: Re: [mac80211] 802.11 data packets Rx and Tx from user space
-To: shankar swaminathan <shankswa@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 25 Nov 2013 11:39:23 -0500
+Message-ID: <1385397560.4443.52.camel@jlt4.sipsolutions.net> (sfid-20131125_173926_388164_E9B975F6)
+Subject: Re: [PATCH v2 1/4] cfg80211: add reg_get_dfs_region()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Mon, 25 Nov 2013 17:39:20 +0100
+In-Reply-To: <1384940517-6154-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131120_104222_148960_2B706C9F)
+References: <1384940517-6154-1-git-send-email-janusz.dziedzic@tieto.com>
+	 (sfid-20131120_104222_148960_2B706C9F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 14, 2013 at 8:31 PM, shankar swaminathan <shankswa@gmail.com> wrote:
-> Hi,
->
-> I had earlier posted a query specific to the rx path of mac80211.
-> Here is a more complete set of two queries.
-> Kindly help clarifying.
->
-> I am working on building a PC based Access Point in linux and have the
-> following queries:
->
-> 1. Is there a mechanism for user space to receive 802.11 data packets
-> with the 802.11 header intact. I do not want to use a monitor
-> interface as I believe a monitor interface cannot be used to connect
-> wireless clients. Please clarify.
+On Wed, 2013-11-20 at 10:41 +0100, Janusz Dziedzic wrote:
 
-If you want 802.11 header monitor interface is the only way (at least to
-my knowledge), you can use 2 VIF's one for connection and one for
-monitoring. Most chipsets support this.
->
-> 2. From user space can i transmit a fully constructed 802.11 data
-> frame. Will RAW sockets over WiFi work? I have not tried though.
-You can use pcap API's, but you still need the monitor interface
-(use 2VIF's as above)
+> +enum nl80211_dfs_regions reg_get_dfs_region(struct wiphy *wiphy)
+> +{
+> +	const struct ieee80211_regdomain *regd = NULL;
+> +	const struct ieee80211_regdomain *wiphy_regd = NULL;
+> +
+> +	ASSERT_RTNL();
 
-http://wireless.kernel.org/en/users/Documentation/packetspammer
+That seems pointless, both get_cfg80211_regdom() and get_wiphy_regdom()
+will already check (if lockdep is enabled)
+
+johannes
+
