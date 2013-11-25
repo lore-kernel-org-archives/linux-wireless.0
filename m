@@ -1,54 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f179.google.com ([74.125.82.179]:49547 "EHLO
-	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751485Ab3KAODd (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:38497 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756505Ab3KYQOc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 10:03:33 -0400
-Received: by mail-we0-f179.google.com with SMTP id w61so3960956wes.38
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 07:03:32 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 00/23] wireless-regdb: general rules updates
-Date: Fri,  1 Nov 2013 15:02:55 +0100
-Message-Id: <1383314598-21240-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_150337_092921_D1BE6F11)
+	Mon, 25 Nov 2013 11:14:32 -0500
+Message-ID: <1385396070.4443.43.camel@jlt4.sipsolutions.net> (sfid-20131125_171453_478767_4384C4D3)
+Subject: Re: [PATCH 2/2] mac80211: Update opmode  during adding new station
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marek Kwaczynski <marek.kwaczynski@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 25 Nov 2013 17:14:30 +0100
+In-Reply-To: <1385040495-13482-2-git-send-email-marek.kwaczynski@tieto.com> (sfid-20131121_142847_841092_54CEEC02)
+References: <1385040495-13482-1-git-send-email-marek.kwaczynski@tieto.com>
+	 <1385040495-13482-2-git-send-email-marek.kwaczynski@tieto.com>
+	 (sfid-20131121_142847_841092_54CEEC02)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is my third series, it contains either just changes for
-the 5 GHz band or changes to both the 2.4 GHz and 5 GHz band.
-This will consist of removal of some frequency ranges so
-special attention should be put to this series.
+On Thu, 2013-11-21 at 14:28 +0100, Marek Kwaczynski wrote:
+> Update Operating mode is needed when User Space received Assoc
+> Request contains Operating mode notification element.
+> ---
 
-Luis R. Rodriguez (23):
-  wireless-regdb: update BN's 5 GHz rules
-  wireless-regdb: update CA's 5 GHz rules
-  wireless-regdb: update KE's 5 GHz rules
-  wireless-regdb: update KP's 5 GHz rules
-  wireless-regdb: update MC's 5 GHz rules
-  wireless-regdb: update MA's 5 GHz rules
-  wireless-regdb: update NP's 5 GHz rules
-  wireless-regdb: update OM's 5 GHz rules
-  wireless-regdb: update PG's 5 GHz rules
-  wireless-regdb: update RU's 5 GHz rules
-  wireless-regdb: update RW's 5 GHz rules
-  wireless-regdb: update SA's 5 GHz rules
-  wireless-regdb: update TT's 5 GHz rules
-  wireless-regdb: update ZA's 5 GHz rules
-  wireless-regdb: update BG's regulatory rules
-  wireless-regdb: update CO's regulatory rules
-  wireless-regdb: update GE's regulatory rules
-  wireless-regdb: update PR's regulatory rules
-  wireless-regdb: update KR's regulatory rules
-  wireless-regdb: update MX's regulatory rules
-  wireless-regdb: update PA's regulatory rules
-  wireless-regdb: update TW's regulatory rules
-  wireless-regdb: update US'  regulatory rules
+Need signed-off-by, there are two spaces in the subject where it should
+only be one.
 
- db.txt | 133 ++++++++++++++++++++++++++++++++++-------------------------------
- 1 file changed, 70 insertions(+), 63 deletions(-)
+> +++ b/net/mac80211/cfg.c
+> @@ -1383,6 +1383,7 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
+>  	struct ieee80211_sub_if_data *sdata;
+>  	int err;
+>  	int layer2_update;
+> +	enum ieee80211_band band;
+>  
+>  	if (params->vlan) {
+>  		sdata = IEEE80211_DEV_TO_SUB_IF(params->vlan);
+> @@ -1425,6 +1426,12 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
+>  	if (!test_sta_flag(sta, WLAN_STA_TDLS_PEER))
+>  		rate_control_rate_init(sta);
+>  
+> +	if (params->vht_opmode_used) {
+> +		band = ieee80211_get_sdata_band(sdata);
 
--- 
-1.8.4.rc3
+could declare band right here?
+
+> +		ieee80211_vht_handle_opmode(sdata, sta, params->vht_opmode,
+> +					    band, 0);
+> +	}
+
+Are you sure this should be at this place and not before moving the
+station to ASSOC/initialising rate control?
+
+johannes
 
