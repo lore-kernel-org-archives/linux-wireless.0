@@ -1,34 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:51303 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750979Ab3KLIBP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Nov 2013 03:01:15 -0500
-From: Kalle Valo <kvalo@adurom.com>
-To: shankar swaminathan <shankswa@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [mac80211] hooking all 802.11 packets to user space without conversion
-References: <CADNhdGHGnHDYdum79cY89kV4LtpiGugMc84Mc_4bNmCuOWrn5g@mail.gmail.com>
-Date: Tue, 12 Nov 2013 10:01:14 +0200
-In-Reply-To: <CADNhdGHGnHDYdum79cY89kV4LtpiGugMc84Mc_4bNmCuOWrn5g@mail.gmail.com>
-	(shankar swaminathan's message of "Tue, 12 Nov 2013 11:58:41 +0530")
-Message-ID: <87d2m6rqut.fsf@purkki.adurom.net> (sfid-20131112_090123_977500_02FE925A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mailout4.samsung.com ([203.254.224.34]:62638 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753061Ab3KYCLQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Nov 2013 21:11:16 -0500
+Received: from epcpsbgr2.samsung.com
+ (u142.gpu120.samsung.co.kr [203.254.230.142])
+ by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MWS00I7WRER7NE0@mailout4.samsung.com> for
+ linux-wireless@vger.kernel.org; Mon, 25 Nov 2013 11:11:15 +0900 (KST)
+From: Jingoo Han <jg1.han@samsung.com>
+To: "'John W. Linville'" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>,
+	'Dan Williams' <dcbw@redhat.com>,
+	libertas-dev@lists.infradead.org
+Subject: [PATCH] wireless: libertas: remove unnecessary spi_set_drvdata()
+Date: Mon, 25 Nov 2013 11:11:15 +0900
+Message-id: <001a01cee983$9eb1c0c0$dc154240$%han@samsung.com> (sfid-20131125_031123_866755_35A80BB1)
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-shankar swaminathan <shankswa@gmail.com> writes:
+The driver core clears the driver data to NULL after device_release
+or on probe failure. Thus, it is not needed to manually clear the
+device driver data to NULL.
 
-> I would like to know if 802.11 packets could be hooked from the mac80211
-> module to the user space.
->
-> Basically, I run a module that needs the 802.11 pkts without converting
-> them to 802.3.
->
-> I am able to register for MLME pkts but not sure whether I can register for
-> data pkts and get them to user space.
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+---
+ drivers/net/wireless/libertas/if_spi.c |    1 -
+ 1 file changed, 1 deletion(-)
 
-Have you tried adding a monitor interface and taking packets from that?
-
+diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
+index 8366915..f11728a 100644
+--- a/drivers/net/wireless/libertas/if_spi.c
++++ b/drivers/net/wireless/libertas/if_spi.c
+@@ -93,7 +93,6 @@ static void free_if_spi_card(struct if_spi_card *card)
+ 		list_del(&packet->list);
+ 		kfree(packet);
+ 	}
+-	spi_set_drvdata(card->spi, NULL);
+ 	kfree(card);
+ }
+ 
 -- 
-Kalle Valo
+1.7.10.4
+
+
