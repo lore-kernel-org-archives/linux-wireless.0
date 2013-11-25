@@ -1,69 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4307 "EHLO mms2.broadcom.com"
+Received: from mx1.redhat.com ([209.132.183.28]:5916 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753156Ab3K2LZk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Nov 2013 06:25:40 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Franky Lin" <frankyl@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 04/19] brcmfmac: add firmware and nvram file name for
- bcm4339
-Date: Fri, 29 Nov 2013 12:25:09 +0100
-Message-ID: <1385724324-6361-5-git-send-email-arend@broadcom.com> (sfid-20131129_123807_592579_A5FCBAE0)
-In-Reply-To: <1385724324-6361-1-git-send-email-arend@broadcom.com>
-References: <1385724324-6361-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1754854Ab3KYRQW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Nov 2013 12:16:22 -0500
+Message-ID: <1385399816.8710.16.camel@dcbw.foobar.com> (sfid-20131125_181636_904932_46F5FE11)
+Subject: Re: Roaming with libertas and wpa_supplicant not working
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Troels Nilsson <nilsson.troels@gmail.com>,
+	linux-wireless@vger.kernel.org
+Date: Mon, 25 Nov 2013 11:16:56 -0600
+In-Reply-To: <1385396191.4443.44.camel@jlt4.sipsolutions.net>
+References: <loom.20131118T143002-687@post.gmane.org>
+	 (sfid-20131118_145509_206573_37D8C413) <1385396191.4443.44.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+On Mon, 2013-11-25 at 17:16 +0100, Johannes Berg wrote:
+> On Mon, 2013-11-18 at 13:50 +0000, Troels Nilsson wrote:
+> > Hi,
+> > 
+> > We are having a problem with a custom device which uses the libertas wifi
+> > driver (on kernel 3.4.24) together with wpa_supplicant (0.7.3). More
+> > specifically, whenever wpa_supplicant attempts to roam to a different access
+> > point it gets a EALREADY error.
+> > 
+> > I have tracked down the problem to this check in sme.c:
+> > 
+> >         if (wdev->sme_state != CFG80211_SME_IDLE)
+> >                 return -EALREADY;
+> 
+> This no longer exists - please try a newer kernel.
 
-Add firmware/nvram file name for bcm4339 so fmac can actually be functional with
-the chip.
+Yeah, though the code there hasn't changed much in cfg80211 in the
+"connect" case from what he's using.  It seems that
+supplicant-controlled roaming simply won't work with "connect" devices
+unless a disconnect is done first?  Libertas is kinda different here
+since it does allow userspace roaming control.
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 510ab18..f017c92 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -499,6 +499,8 @@ enum brcmf_sdio_frmtype {
- #define BCM4334_NVRAM_NAME		"brcm/brcmfmac4334-sdio.txt"
- #define BCM4335_FIRMWARE_NAME		"brcm/brcmfmac4335-sdio.bin"
- #define BCM4335_NVRAM_NAME		"brcm/brcmfmac4335-sdio.txt"
-+#define BCM4339_FIRMWARE_NAME		"brcm/brcmfmac4339-sdio.bin"
-+#define BCM4339_NVRAM_NAME		"brcm/brcmfmac4339-sdio.txt"
- 
- MODULE_FIRMWARE(BCM43143_FIRMWARE_NAME);
- MODULE_FIRMWARE(BCM43143_NVRAM_NAME);
-@@ -514,6 +516,8 @@ MODULE_FIRMWARE(BCM4334_FIRMWARE_NAME);
- MODULE_FIRMWARE(BCM4334_NVRAM_NAME);
- MODULE_FIRMWARE(BCM4335_FIRMWARE_NAME);
- MODULE_FIRMWARE(BCM4335_NVRAM_NAME);
-+MODULE_FIRMWARE(BCM4339_FIRMWARE_NAME);
-+MODULE_FIRMWARE(BCM4339_NVRAM_NAME);
- 
- struct brcmf_firmware_names {
- 	u32 chipid;
-@@ -537,7 +541,8 @@ static const struct brcmf_firmware_names brcmf_fwname_data[] = {
- 	{ BCM4329_CHIP_ID, 0xFFFFFFFF, BRCMF_FIRMWARE_NVRAM(BCM4329) },
- 	{ BCM4330_CHIP_ID, 0xFFFFFFFF, BRCMF_FIRMWARE_NVRAM(BCM4330) },
- 	{ BCM4334_CHIP_ID, 0xFFFFFFFF, BRCMF_FIRMWARE_NVRAM(BCM4334) },
--	{ BCM4335_CHIP_ID, 0xFFFFFFFF, BRCMF_FIRMWARE_NVRAM(BCM4335) }
-+	{ BCM4335_CHIP_ID, 0xFFFFFFFF, BRCMF_FIRMWARE_NVRAM(BCM4335) },
-+	{ BCM4339_CHIP_ID, 0xFFFFFFFF, BRCMF_FIRMWARE_NVRAM(BCM4339) }
- };
- 
- 
--- 
-1.7.10.4
+Dan
 
 
