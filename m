@@ -1,82 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from erley.org ([97.107.129.9]:35510 "EHLO remote.erley.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755881Ab3KVRQz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Nov 2013 12:16:55 -0500
-Message-ID: <528F8FED.6030301@erley.org> (sfid-20131122_181658_771722_5091F8AE)
-Date: Fri, 22 Nov 2013 11:10:05 -0600
-From: Pat Erley <pat-lkml@erley.org>
+Received: from mail-bk0-f48.google.com ([209.85.214.48]:33738 "EHLO
+	mail-bk0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750830Ab3KYV5S (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Nov 2013 16:57:18 -0500
+Received: by mail-bk0-f48.google.com with SMTP id v10so2230048bkz.35
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Nov 2013 13:57:17 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: p2p@posteo.de
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: RTL8188S
+Date: Mon, 25 Nov 2013 22:57:07 +0100
+Message-ID: <2035998.63y5xTAJxx@blech> (sfid-20131125_225721_609290_DD36C167)
+In-Reply-To: <a3a1cb41444ae8dd89db830ae927491f@posteo.de>
+References: <a3a1cb41444ae8dd89db830ae927491f@posteo.de>
 MIME-Version: 1.0
-To: shankar swaminathan <shankswa@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [hostapd] configuring for a simple AP
-References: <CADNhdGFPR6JOkZjDMMZ7mEo5cJdBrg9a300A4pS=e_WGMdNpbA@mail.gmail.com> <CADNhdGGusDJNkh1j3mS+bdLuJS4S2vC9YD+zU5tLOfg7YPJSDw@mail.gmail.com>
-In-Reply-To: <CADNhdGGusDJNkh1j3mS+bdLuJS4S2vC9YD+zU5tLOfg7YPJSDw@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/22/2013 01:13 AM, shankar swaminathan wrote:
-> Hello,
->
-> it would be of great help if someone could throw some light regarding
-> the hostapd issue that I have described in the below email.
->
-> thanks and regards,
-> -shankar
->
->
-> On Thu, Nov 21, 2013 at 7:11 PM, shankar swaminathan <shankswa@gmail.com> wrote:
->> Hi,
->>
->> I am trying to make a linux PC up and running with hostapd to create a
->> simple Access Point.
->>
->> I do not want authentication, encryption and DHCP -- have configured
->> station with static IP address.
->>
->> if I start hostapd (not as a daemon) with the default hostapd.conf
->> file, and try connecting the client (fedora client), i see that the
->> wifi sybol does not appear, but the connection seems to have been
->> established.
->> However, if i open hostapd_cli, i keep getting a print like,
->> <client mac> CONNECTED
->> <client mac> DISCONNECTED.
->>
->> Hence, i think the client keeps getting connected and disconnected.
->>
->> I then tried using a smaller config file with nothing regarding beacon
->> interval etc...as shown below:
->>
->> ---
->> interface=wlan0
->> driver=nl80211
->> ssid=test
->> hw_mode=g
->> channel=1
->> macaddr_acl=0
->> auth_algs=1
->> ignore_broadcast_ssid=0
->> ---
->>
->> The results were similar.
->>
->> Could anyone, guide me or provide me a simple hostapd.conf file, that
->> will help me connect clients. I do not want authentication,
->> encryption, and DHCP -- will use static IP.
->>
->> Thanks in advance.
->>
->> -shankar
-
-What device/driver are you using?  What kind of client is connecting? 
-Is the client indicating it's been disconnected by the AP, or is the 
-client seeing that it's not getting an IP address and disconnecting of 
-its own choosing?
-
-http://wireless.kernel.org/en/users/Documentation/hostapd has a great 
-example of how to get an access point up and running.
-
-for anyone to help, actual hostapd/client output(with little to no 
-editing) will be needed.
+T24gTW9uZGF5LCBOb3ZlbWJlciAyNSwgMjAxMyAwNjo1NzozMiBQTSBwMnBAcG9zdGVvLmRlIHdy
+b3RlOgo+IEkgaGF2ZSBhIFdMQU4gZG9uZ2xlIHdpdGggUmVhbHRlayBSVEw4MTg4UyBjaGlwLgo+
+IEkgZG9uJ3Qgd2FudCB0byB1c2Ugcjg3MTJ1IGRyaXZlciB3aXRoIHdleHQgaW50ZXJmYWNlCj4g
+YmVjYXVzZSBJIHdhbnQgdG8gZXN0YWJsaXNoIGEgd2lmaSBkaXJlY3QgcDJwIGNvbm5lY3Rpb24u
+CgpBRklDVCwgeW91IHNob3VsZCBiZSBhYmxlIHRvIGNvbm5lY3QgdG8gYSBwMnAtZ28gcGVlcgpl
+dmVuIGlmIHlvdXIgZGV2aWNlIChpbiB0aGlzIGNhc2UgcnRsODE4OHMpIG9ubHkgc3VwcG9ydHMK
+c3RhdGlvbiBtb2RlLi4uCgo+IFVuZm9ydHVuYXRlbHkgdGhlIG9yaWdpbmFsIFJlYWx0ZWsgZHJp
+dmVyIGZyb20gaHAgZGlkbid0Cj4gd29yayB3aXRoIHAycCB0b28uCldoeSwgd2hhdCBoYXBwZW5z
+IGluIHRoaXMgY2FzZT8KCj4gSSB0aG91Z2h0IFJUTDgxOTJjdSB3aWxsIHdvcmssIGJ1dCBMYXJy
+eSBGLiB0b2xkIG1lIGl0IGRvZXNuJ3QuCk9LPyAoY2FyZSB0byBleHBsYWluPykKCj4gSGUgc2Fp
+ZCB0aGVyZSBpcyBhIG5ldyBkcml2ZXIgaW4gZGV2ZWxvcG1lbnQuClNvcnQgb2YuIFRoZXJlJ3Mg
+cjkyc3UsIGhvd2V2ZXIgdGhpcyBkcml2ZXIgb25seSBzdXBwb3J0cyB3aGF0IHRoZQpmaXJtd2Fy
+ZSBpcyBhYmxlIHRvIGRvIChzdGF0aW9uLCBhZC1ob2MgYW5kIGEgbGltaXRlZCBtb25pdG9yIG1v
+ZGUpLgoKPiBJJ20gc2VhcmNoaW5nIGZvciBpbmZvcm1hdGlvbi4gUGxlYXNlIGNhbiBzb21lb25l
+IHRlbGwgbWUgYWJvdXQKPiB0aGUgcHJvamVjdCwgaXRzIHN0YXR1cywgYW5kIGlmIHNvbWVvbmUg
+Y2FuIHRha2UgcGFydC4KSGV5IHRoYXQncyBnb29kIHRvIGhlYXIuIFRoZSBmdXR1cmUgb2YgInI5
+MnN1IiB3YXMgZGlzY3Vzc2VkIGluIFswXSwKWzFdLCAuLi4gVGhlIGdvb2QgbmV3cyBpczoKCkpv
+c+kgVuF6cXVleiBkaXNjb3ZlcmVkIHRoYXQgUmVhbHRlayBoYXMgcHJvZHVjZWQgdHdvIGxpbnV4
+IGRyaXZlcnMKZm9yIHRoZXNlIGRldmljZXMuIFRoZSBmaXJzdCBpcyByODcxMnUgKHdlIGFsbCBr
+bm93KS4gQnV0IHRoZSBvdGhlcgpkcml2ZXIgKGFuZCBtb3JlIGltcG9ydGFudGx5OiB0aGUgZmly
+bXdhcmUpIEkgdGhpbmsgY2FuIGJlIHVzZWQgYXMKYSBnb29kIGJhc2UgZm9yIGEgcnRsODE5MnN1
+K3J0bHdpZmkgZHJpdmVyICh3aGljaCBjb3VsZCBldmVuIHN1cHBvcnQKQWNjZXNzUG9pbnQtbW9k
+ZSBhbmQgYWxzbyBtb25pdG9yLW1vZGUgd2l0aCBpbmplY3Rpb24pLgoKWW91IGNhbiBnZXQgdGhl
+IHNvdXJjZSBmb3IgdGhpcyBkcml2ZXIgZnJvbSB0aGlzIGltYWdlIFsyXS4KClRoZSBkcml2ZXIg
+aXMgbG9jYXRlZCBpbjoKICBFZGltYXgvc3JjL2tlcm5lbC9saW51eC0yLjYuMTguOC9kcml2ZXJz
+L3VzYi9uZXQvODE5MnN1CgpUaGUgZmlybXdhcmUgKyBwaHkgdmFsdWVzOgogIEVkaW1heC9zcmMv
+a2VybmVsL2xpbnV4LTIuNi4xOC44L3Vzci9yYW1mcy91c3IvcnRsODE5MnN1CgAgCkhvd2V2ZXIs
+IHRoZXJlJ3MgbXVjaCB0aGF0IG5lZWRzIHRvIGJlIGRvbmUuIFNvLCBpZiB5b3Ugd2FudCB0byBo
+ZWxwCnlvdSBjYW4gImtpY2tzdGFydCIgdGhlIHBvcnQgOi0pLgoKUmVnYXJkcwoKQ2hyCgpbMF0g
+PGh0dHA6Ly93d3cuc3Bpbmljcy5uZXQvbGlzdHMvbGludXgtd2lyZWxlc3MvbXNnMTE0MjEzLmh0
+bWw+IChqdXN0IGZvbGxvdyB0aGUgdGhyZWFkKQpbMV0gPGh0dHA6Ly93d3cuc3Bpbmljcy5uZXQv
+bGlzdHMvbGludXgtd2lyZWxlc3MvbXNnMTE0MjE1Lmh0bWw+ClsyXSA8aHR0cDovL3d3dy5lZGlt
+YXguY29tL2ltYWdlcy9JbWFnZS9PcGVuU291cmNlQ29kZS9XaXJlbGVzcy9Sb3V0ZXIvQVItNzI4
+NFduQS9BUi03Mjg0V25BJkJfU0RLXzYyMjIudGFyLnppcD4=
 
