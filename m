@@ -1,46 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f180.google.com ([209.85.214.180]:49438 "EHLO
-	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754726Ab3KEVPx (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:37151 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753163Ab3KYIv5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Nov 2013 16:15:53 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
-Subject: [PATCH 2/3] rtlwifi: rtl8192cu: Fix incorrect signal strength for unassociated AP
-Date: Tue,  5 Nov 2013 15:15:29 -0600
-Message-Id: <1383686130-5113-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20131105_221601_516722_1D489D43)
-In-Reply-To: <1383686130-5113-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1383686130-5113-1-git-send-email-Larry.Finger@lwfinger.net>
+	Mon, 25 Nov 2013 03:51:57 -0500
+Message-ID: <1385369511.4443.2.camel@jlt4.sipsolutions.net> (sfid-20131125_095202_259284_334FF964)
+Subject: Re: wireless tree status
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 25 Nov 2013 09:51:51 +0100
+In-Reply-To: <1385326492.23961.10.camel@jlt4.sipsolutions.net> (sfid-20131124_215503_335794_81025238)
+References: <1385326492.23961.10.camel@jlt4.sipsolutions.net>
+	 (sfid-20131124_215503_335794_81025238)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The routine that processes received frames was returning the RSSI value for the
-signal strength; however, that value is available only for associated APs. As
-a result, the strength was the absurd value of 10 dBm. As a result, scans
-return incorrect values for the strength, which causes unwanted attempts to roam.
+On Sun, 2013-11-24 at 21:54 +0100, Johannes Berg wrote:
+> John,
+> 
+> were you planning to pull 3.13-rc1 into wireless.git?
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org> [2.6.39+]
----
- drivers/net/wireless/rtlwifi/rtl8192cu/trx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Same question for wireless-next btw, but I think you should definitely
+pull it in there for the genetlink changes I made through the net tree
+recently. Otherwise we'll get conflicts in nl80211 for everything. In
+fact even in wireless.git I believe we'd get conflicts but those are
+less interesting (some bug fixes I have pending conflict slightly with
+the genl changes).
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
-index 25e50ff..b0c346a 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
-@@ -349,7 +349,7 @@ bool rtl92cu_rx_query_desc(struct ieee80211_hw *hw,
- 						 p_drvinfo);
- 	}
- 	/*rx_status->qual = stats->signal; */
--	rx_status->signal = stats->rssi + 10;
-+	rx_status->signal = stats->recvsignalpower + 10;
- 	return true;
- }
- 
--- 
-1.8.4
+johannes
 
