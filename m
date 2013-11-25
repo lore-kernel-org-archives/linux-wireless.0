@@ -1,54 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:46927 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753455Ab3KXUHT (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:38428 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753453Ab3KYP7z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Nov 2013 15:07:19 -0500
-Received: by mail-wg0-f50.google.com with SMTP id a1so1193103wgh.17
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Nov 2013 12:07:17 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Luciano Coelho <luciano.coelho@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 22/29] iwlwifi: mvm: don't restart HW if suspending fails before D3 image is loaded
-Date: Sun, 24 Nov 2013 22:06:39 +0200
-Message-Id: <1385323606-3603-22-git-send-email-egrumbach@gmail.com> (sfid-20131124_210808_833039_52074912)
-In-Reply-To: <52925BE7.4050406@gmail.com>
-References: <52925BE7.4050406@gmail.com>
+	Mon, 25 Nov 2013 10:59:55 -0500
+Message-ID: <1385395191.4443.29.camel@jlt4.sipsolutions.net> (sfid-20131125_165957_484157_24C9D70A)
+Subject: Re: [RFC 3/5] cfg80211: add regulatory quiescing support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: janusz.dziedzic@tieto.com, j@w1.fi, sunitb@qca.qualcomm.com,
+	rsunki@qca.qualcomm.com, linux-wireless@vger.kernel.org
+Date: Mon, 25 Nov 2013 16:59:51 +0100
+In-Reply-To: <20131114151809.GB29954@garbanzo.do-not-panic.com> (sfid-20131114_160753_012217_3FEDD59D)
+References: <1384366379-25301-1-git-send-email-mcgrof@do-not-panic.com>
+	 <1384366379-25301-4-git-send-email-mcgrof@do-not-panic.com>
+	 <1384377738.28806.15.camel@jlt4.sipsolutions.net>
+	 <20131114141105.GB19070@garbanzo.do-not-panic.com>
+	 <1384440286.13941.27.camel@jlt4.sipsolutions.net>
+	 <20131114151809.GB29954@garbanzo.do-not-panic.com>
+	 (sfid-20131114_160753_012217_3FEDD59D)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+On Thu, 2013-11-14 at 07:18 -0800, Luis R. Rodriguez wrote:
 
-If we haven't loaded the D3 image yet and a failure in the suspend
-process occurs, we shouldn't restart the HW, because we're still
-running the D0 image.
+> > Think of the other way around, such as plugging in a stupid USB NIC just
+> > to see if it works - and suddenly finding your 5 GHz connection broken
+> > because that USB NIC said it really needed some stupid country with 2.4
+> > only. I'm not convinced.
+> 
+> Actually your example is a good one that I'd use to make my case, 
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/d3.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+But what's your case? Why trust a just-plugged-in USB NIC more than an
+already-present PCIe NIC?
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/d3.c b/drivers/net/wireless/iwlwifi/mvm/d3.c
-index 6964b84..16d9103 100644
---- a/drivers/net/wireless/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/d3.c
-@@ -1227,10 +1227,11 @@ static int __iwl_mvm_suspend(struct ieee80211_hw *hw,
- 	mvm->aux_sta.sta_id = old_aux_sta_id;
- 	mvm_ap_sta->sta_id = old_ap_sta_id;
- 	mvmvif->ap_sta_id = old_ap_sta_id;
-- out_noreset:
--	kfree(key_data.rsc_tsc);
-+
- 	if (ret < 0)
- 		ieee80211_restart_hw(mvm->hw);
-+ out_noreset:
-+	kfree(key_data.rsc_tsc);
- 
- 	mutex_unlock(&mvm->mutex);
- 
--- 
-1.7.9.5
+> but I
+> can also see this being like a sledge hammer. What if we only quiesce on
+> wdevs of types:
+> 
+>   o NL80211_IFTYPE_ADHOC
+>   o NL80211_IFTYPE_MESH_POINT
+>   o NL80211_IFTYPE_AP
+>   o NL80211_IFTYPE_P2P_GO
+
+At least we should then also have that patch that QCA has somewhere
+about reporting to userspace that AP was stopped :P
+
+johannes
 
