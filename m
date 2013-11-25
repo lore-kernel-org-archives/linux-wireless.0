@@ -1,44 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4815 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751885Ab3KTRbC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Nov 2013 12:31:02 -0500
-Message-ID: <528CF1C1.3090400@broadcom.com> (sfid-20131120_183109_753642_64304911)
-Date: Wed, 20 Nov 2013 18:30:41 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-bk0-f47.google.com ([209.85.214.47]:59112 "EHLO
+	mail-bk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752741Ab3KYWqn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Nov 2013 17:46:43 -0500
+Received: by mail-bk0-f47.google.com with SMTP id mx12so2238687bkb.20
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Nov 2013 14:46:42 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Pi <juanpide@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: RTL8188SU monitor mode.
+Date: Mon, 25 Nov 2013 23:46:39 +0100
+Message-ID: <1422707.OiBfIJAESr@blech> (sfid-20131125_234648_487584_D7180726)
+In-Reply-To: <CAEQWovQBVTqLtqZik-P+RCLbXaWSXXLSq1aijn136q=4xfdoaA@mail.gmail.com>
+References: <CAEQWovQBVTqLtqZik-P+RCLbXaWSXXLSq1aijn136q=4xfdoaA@mail.gmail.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 0/7] brcm80211: cleanup fixes and out-of-order fix
-References: <1383775642-647-1-git-send-email-arend@broadcom.com>
- <528C82A6.4000500@broadcom.com> <20131120162946.GC2220@tuxdriver.com>
-In-Reply-To: <20131120162946.GC2220@tuxdriver.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/20/13 17:29, John W. Linville wrote:
-> On Wed, Nov 20, 2013 at 10:36:38AM +0100, Arend van Spriel wrote:
->> On 11/06/2013 11:07 PM, Arend van Spriel wrote:
->>> This series contains a couple of small cleanup fixes and one fix
->> >from Hante to get rid of out-of-order transmit seen doing UDP iperf.
->>>
->>> This series is intended for 3.13 if the merge window has not yet
->>> opened. It applies to the master branch of the wireless-next
->>> repository.
->>
->> This series was sent two weeks ago, but did not pop up in your
->> repos. Is it put in 3.14 queue?
->
-> I still have the series.  The wireless-next tree is inactive until
-> after -rc1 gets released.
+On Monday, November 25, 2013 02:41:24 PM Pi wrote:
+> Does the r92su or the r8712u drivers support monitor mode
+> and package injection for the  RTL8188SU chipset?
+It depends what you want to do. The original rtl8712 driver (from realtek's
+site) has what seems to be a special mode (mp_mode) complete with special 
+ioctls, etc... which seems like it was designed with something like this in
+mind.
 
-Ok. So it will go into wireless-next for 3.14 after -rc1 release. I just 
-was not sure whether it made it before the merge window. It looked a bit 
-racy :-)
+However, I can't tell you if it works and what exactly it does and doesn't.
+So far, the best answer is: it might work. However it's also possible that
+you need a special firmware and/or a early FPGA/preproduction ASIC for this
+feature.
+
+Good Luck!
+
+> Or it won't happen because of hardware limitations?
+> Some wifi adapters with very good sensitivity use this chipset.
+Well, then I have good news: You have a choice!!! Other vendors are
+actively supporting their upstream drivers (and support is what you
+want, right?!). Even better, these drivers already provide advanced
+channel/site survey statistics and other important features like 5/
+10MHz channels, coverage class, ... you name it: they got it... Already!
+
+I'm sure - if you look around a bit - you can find a device which
+supports what you need "out of the box".
+
+Hint: Visit the wiki at [0].
 
 Regards,
-Arend
 
+Christian
+
+[0] <http://wireless.kernel.org/en/users/Drivers>
