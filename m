@@ -1,55 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f172.google.com ([209.85.217.172]:49441 "EHLO
-	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750976Ab3KAN3E (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:24995 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754991Ab3KZKkn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 09:29:04 -0400
-Received: by mail-lb0-f172.google.com with SMTP id c11so3519343lbj.3
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:29:02 -0700 (PDT)
+	Tue, 26 Nov 2013 05:40:43 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Jason Liu <r64343@freescale.com>
+CC: <linux-arm-kernel@lists.infradead.org>, <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <ath6kl-devel@qca.qualcomm.com>
+Subject: Re: [PATCH] ath6kl: sdio: fix system panic when doing wifi stress test
+References: <1384221185-8645-1-git-send-email-r64343@freescale.com>
+Date: Tue, 26 Nov 2013 12:40:19 +0200
+In-Reply-To: <1384221185-8645-1-git-send-email-r64343@freescale.com> (Jason
+	Liu's message of "Tue, 12 Nov 2013 09:53:05 +0800")
+Message-ID: <87k3fvjvjg.fsf@kamboji.qca.qualcomm.com> (sfid-20131126_114110_105126_E5183D85)
 MIME-Version: 1.0
-In-Reply-To: <1383169509-22619-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1383169509-22619-1-git-send-email-mcgrof@do-not-panic.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Fri, 1 Nov 2013 14:28:42 +0100
-Message-ID: <CAB=NE6W+hf6_+d1Koz84GVcaFHK8xUperA9yht6WfyEw=Gs_pg@mail.gmail.com> (sfid-20131101_142908_774586_07E178A5)
-Subject: Re: [PATCH 0/7] wireless-regdb: DFS regions and optimizations
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 30, 2013 at 10:45 PM, Luis R. Rodriguez
-<mcgrof@do-not-panic.com> wrote:
-> This patch series associates a slew of countries
-> to DFS regions and then provides updates to 4
-> countries based on the new CRDA optimizer. The
-> optimizations have no functional changes other
-> than reducing the size of the regulatory domain
-> data strucutre that would be used to send to
-> the kernel.
+Hi Jason,
+
+Jason Liu <r64343@freescale.com> writes:
+
+> When did the wifi iperf test, meet one following kernel panic:
+> command: iperf -c $TARGET_IP -i 5 -t 50 -w 1M
 >
-> Luis R. Rodriguez (7):
->   wireless-regdb: add DFS FCC regions
->   wireless-regdb: add DFS ETSI regions
+> Unable to handle kernel paging request at virtual address 1a480000
+> pgd = 80004000
+> [1a480000] *pgd=00000000
+> Internal error: Oops: 805 [#1] SMP ARM
 
-This patch was missing one country although the commit log mentioned it.
+[...]
 
->   wireless-regdb: add DFS JP regions
+> The kernel panic is caused by the sg_buf is not set correctly with the
+> following code when compiled with Yocto GCC 4.8.1:
+>
+> drivers/net/wireless/ath/ath6kl/hif.h:
+> struct hif_scatter_req {
+>         struct list_head list;
+>         /* address for the read/write operation */
+>         u32 addr;
+> 	...
+>
+>         /* bounce buffer for upper layers to copy to/from */
+>         u8 *virt_dma_buf;
+>
+>         struct hif_scatter_item scat_list[1];
+>
+>         u32 scat_q_depth;
+> };
+>
+> (Note: the scat_req.scat_list[] will dynamiclly grow with run-time)
 
-This one as well.
+There's actually a major bug right there, scat_list can corrupt scat_q_depth.
 
->   wireless-regdb: optimize two of DE's rules
->   wireless-regdb: optimize two of ES's rules
+> The GCC 4.8.1 compiler will not do the for-loop till scat_entries, instead,
+> it only run one round loop. This may be caused by that the GCC 4.8.1 thought
+> that the scat_list only have one item and then no need to do full iteration,
+> but this is simply wrong by looking at the assebly code. This will cause the
+> sg buffer not get set when scat_entries > 1 and thus lead to kernel panic.
+>
+> This patch is a workaround to the GCC 4.8.1 complier issue by passing the
+> entry address of the scat_req->scat_list to the for-loop and interate it,
+> then, GCC 4.8.1 will do the full for-loop correctly.
+> (Note: This issue not observed with GCC 4.7.2, only found on the GCC 4.8.1)
+>
+> This patch does not change any function logic and no any performance downgrade.
 
-This one conflicts with Xose's patch so I'll drop it.
+[...]
 
->   wireless-regdb: optimize two of IL's rules
->   wireless-regdb: optimize two of NL's rules
+> +	scat_list = &scat_req->scat_list[0];
+> +
+>  	/* assemble SG list */
+> -	for (i = 0; i < scat_req->scat_entries; i++, sg++) {
+> +	for (i = 0; i < scat_req->scat_entries; i++, sg++, scat_list++) {
+>  		ath6kl_dbg(ATH6KL_DBG_SCATTER, "%d: addr:0x%p, len:%d\n",
+> -			   i, scat_req->scat_list[i].buf,
+> -			   scat_req->scat_list[i].len);
+> +			   i, scat_list->buf, scat_list->len);
+>  
+> -		sg_set_buf(sg, scat_req->scat_list[i].buf,
+> -			   scat_req->scat_list[i].len);
+> +		sg_set_buf(sg, scat_list->buf, scat_list->len);
+>  	}
 
-I'll just respin.
+Working around the problem by adding a temporary variable makes me a bit
+worried, I would rather fix the root cause. Is the root cause by that we
+define the field with scat_list[1]?
 
-  Luis
+Does the patch below help? It would also fix the corruption with
+scat_q_depth. Please note that I have only compile tested it. And I
+might have also missed something important, so please review it
+carefully.
+
+--- a/drivers/net/wireless/ath/ath6kl/hif.h
++++ b/drivers/net/wireless/ath/ath6kl/hif.h
+@@ -197,9 +197,9 @@ struct hif_scatter_req {
+ 	/* bounce buffer for upper layers to copy to/from */
+ 	u8 *virt_dma_buf;
+ 
+-	struct hif_scatter_item scat_list[1];
+-
+ 	u32 scat_q_depth;
++
++	struct hif_scatter_item scat_list[0];
+ };
+ 
+ struct ath6kl_irq_proc_registers {
+diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
+index 7126bdd..6bf15a3 100644
+--- a/drivers/net/wireless/ath/ath6kl/sdio.c
++++ b/drivers/net/wireless/ath/ath6kl/sdio.c
+@@ -348,7 +348,7 @@ static int ath6kl_sdio_alloc_prep_scat_req(struct ath6kl_sdio *ar_sdio,
+ 	int i, scat_req_sz, scat_list_sz, size;
+ 	u8 *virt_buf;
+ 
+-	scat_list_sz = (n_scat_entry - 1) * sizeof(struct hif_scatter_item);
++	scat_list_sz = n_scat_entry * sizeof(struct hif_scatter_item);
+ 	scat_req_sz = sizeof(*s_req) + scat_list_sz;
+ 
+ 	if (!virt_scat)
+
+
+-- 
+Kalle Valo
