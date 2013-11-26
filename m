@@ -1,198 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mantis.wzyboy.im ([199.83.51.51]:35509 "EHLO mantis.wzyboy.im"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750802Ab3KFHH3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Nov 2013 02:07:29 -0500
-Received: from mail-pa0-f42.google.com (mail-pa0-f42.google.com [209.85.220.42])
-	by mantis.wzyboy.im (Postfix) with ESMTPSA id 60FCB8813A
-	for <linux-wireless@vger.kernel.org>; Wed,  6 Nov 2013 15:07:29 +0800 (CST)
-Received: by mail-pa0-f42.google.com with SMTP id kp14so10143951pab.15
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Nov 2013 23:07:28 -0800 (PST)
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:52299 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757687Ab3KZSgF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Nov 2013 13:36:05 -0500
+Received: by mail-wi0-f176.google.com with SMTP id hq4so5647597wib.15
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Nov 2013 10:36:03 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
-References: <5276134B.8070808@wzyboy.org> <0BA3FCBA62E2DC44AF3030971E174FB301DE75AE@HASMSX103.ger.corp.intel.com>
- <CALkVjQYh-SUte4S6LdqOc3KSc3_pDU6jz1KXp+Jsd5_RFPXSqA@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DE8338@HASMSX103.ger.corp.intel.com>
- <CALkVjQb7fCMFpqhdUs8w-Mx_Y0RtAYYFtKxXkqyrCQ39UFGxKg@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DE960E@HASMSX103.ger.corp.intel.com>
- <CALkVjQbW8FeiEh8pBZ=KQFD9+8AdjgT0G_RG7qJe0MRdBvMD-A@mail.gmail.com>
- <CALkVjQaLx2spaOqUPcs_EwMkU7npMki1Reo1MeZwxB7m=c24=g@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DE9FC6@HASMSX103.ger.corp.intel.com>
- <CALkVjQZDNSgUUFyi94Y8da_NDzW61rCvaMrZpUugFKW_LRNFFA@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com> <CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com>
-From: wzyboy <wzyboy@wzyboy.org>
-Date: Wed, 6 Nov 2013 15:07:12 +0800
-Message-ID: <CALkVjQY7r=YKhsgDKR0mnYVtZy5BAdj83nY2jL0VFaiew6ha7A@mail.gmail.com> (sfid-20131106_080746_205637_F0911D3B)
-Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=047d7b111baf55219a04ea7ccdcf
+In-Reply-To: <1385490243.7838.16.camel@dcbw.foobar.com>
+References: <CAKnB8xgAVp+Ti597RN4_kgPLgXpW1JCr4SQaqfqCzy5A4=o3Ow@mail.gmail.com>
+ <CAKnB8xh6tWFdiL4kBQ5r3J_YgiiwhHhvQEqC+9F7c=3eAsrYbg@mail.gmail.com>
+ <5294E46C.40102@erley.org> <1385490243.7838.16.camel@dcbw.foobar.com>
+From: matt emery <matt@x204.com>
+Date: Tue, 26 Nov 2013 18:35:33 +0000
+Message-ID: <CAKnB8xiLkDg2yQ9A2ujsUzGYD2OenGwqUnRMwA+=i=iWD85EHA@mail.gmail.com> (sfid-20131126_193611_347683_8D2DD191)
+Subject: Re: Fwd: Intel 7260
+To: Dan Williams <dcbw@redhat.com>
+Cc: Pat Erley <pat-lkml@erley.org>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---047d7b111baf55219a04ea7ccdcf
-Content-Type: text/plain; charset=UTF-8
+iw dev wlan0 info
+Interface wlan0
+    ifindex 3
+    type managed
+    wiphy 0
 
-2013/11/6 wzyboy <wzyboy@wzyboy.org>:
-> I've attached the output of `lspci -xxx'. The next time this bug
-> occurs I will run it again and send the output to you.
+
+iw dev wlan0 link
+Connected to 06:27:22:51:ed:be (on wlan0)
+    SSID: capa
+    freq: 2412
+    RX: 10337197 bytes (45941 packets)
+    TX: 8685983 bytes (25169 packets)
+    signal: -49 dBm
+    tx bitrate: 54.0 MBit/s
+
+    bss flags:    short-preamble short-slot-time
+    dtim period:    0
+    beacon int:    100
+
+Matthew Emery
+07988 197 438
 
 
-So dramatical it was. Several minutes ago I clicked on "Senden"
-(German for "Send") button to send that email. After the mail was
-sent, I opened a new tab in the browser, trying to google something
-and found the Internet connection is lost. -- The bug occured again!
 
-So I ran `lcpci -xxx" and saved the output along with the kernel
-logs. I'm shocked that the hex strings are all "00".
-
-I rebooted my laptop and try to send you the logs and the bug occurs
-again... -- seems more and more freuquent -- and I had to reboot ...
-
-Here are the logs ... finally.
-
--- 
-wzyboy
-
---047d7b111baf55219a04ea7ccdcf
-Content-Type: text/plain; charset=US-ASCII; name="lspci.afterbug.txt"
-Content-Disposition: attachment; filename="lspci.afterbug.txt"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hno7xely1
-
-MDA6MDAuMCBIb3N0IGJyaWRnZTogSW50ZWwgQ29ycG9yYXRpb24gSGFzd2VsbC1VTFQgRFJBTSBD
-b250cm9sbGVyIChyZXYgMDkpCjAwOiA4NiA4MCAwNCAwYSAwNiAwMCA5MCAyMCAwOSAwMCAwMCAw
-NiAwMCAwMCAwMCAwMAoxMDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAg
-MDAgMDAgMDAKMjA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIGFhIDE3IDE0
-IDIyCjMwOiAwMCAwMCAwMCAwMCBlMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMAoK
-MDA6MDIuMCBWR0EgY29tcGF0aWJsZSBjb250cm9sbGVyOiBJbnRlbCBDb3Jwb3JhdGlvbiBIYXN3
-ZWxsLVVMVCBJbnRlZ3JhdGVkIEdyYXBoaWNzIENvbnRyb2xsZXIgKHJldiAwOSkKMDA6IDg2IDgw
-IDE2IDBhIDA3IDA0IDkwIDAwIDA5IDAwIDAwIDAzIDAwIDAwIDAwIDAwCjEwOiAwNCAwMCAwMCBm
-MCAwMCAwMCAwMCAwMCAwYyAwMCAwMCBlMCAwMCAwMCAwMCAwMAoyMDogMDEgMzAgMDAgMDAgMDAg
-MDAgMDAgMDAgMDAgMDAgMDAgMDAgYWEgMTcgMTQgMjIKMzA6IDAwIDAwIDAwIDAwIDkwIDAwIDAw
-IDAwIDAwIDAwIDAwIDAwIDBiIDAxIDAwIDAwCgowMDowMy4wIEF1ZGlvIGRldmljZTogSW50ZWwg
-Q29ycG9yYXRpb24gRGV2aWNlIDBhMGMgKHJldiAwOSkKMDA6IDg2IDgwIDBjIDBhIDA2IDA0IDEw
-IDAwIDA5IDAwIDAzIDA0IDEwIDAwIDAwIDAwCjEwOiAwNCAwMCA2MyBmMCAwMCAwMCAwMCAwMCAw
-MCAwMCAwMCAwMCAwMCAwMCAwMCAwMAoyMDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAg
-MDAgMDAgYWEgMTcgMTQgMjIKMzA6IDAwIDAwIDAwIDAwIDUwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
-IDBiIDAxIDAwIDAwCgowMDoxNC4wIFVTQiBjb250cm9sbGVyOiBJbnRlbCBDb3Jwb3JhdGlvbiBM
-eW54IFBvaW50LUxQIFVTQiB4SENJIEhDIChyZXYgMDQpCjAwOiA4NiA4MCAzMSA5YyAwNiAwNCA5
-MCAwMiAwNCAzMCAwMyAwYyAwMCAwMCAwMCAwMAoxMDogMDQgMDAgNjIgZjAgMDAgMDAgMDAgMDAg
-MDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAKMjA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
-IDAwIDAwIGFhIDE3IDE0IDIyCjMwOiAwMCAwMCAwMCAwMCA3MCAwMCAwMCAwMCAwMCAwMCAwMCAw
-MCAwYiAwMSAwMCAwMAoKMDA6MTYuMCBDb21tdW5pY2F0aW9uIGNvbnRyb2xsZXI6IEludGVsIENv
-cnBvcmF0aW9uIEx5bnggUG9pbnQtTFAgSEVDSSAjMCAocmV2IDA0KQowMDogODYgODAgM2EgOWMg
-MDYgMDQgMTAgMDAgMDQgMDAgODAgMDcgMDAgMDAgODAgMDAKMTA6IDA0IDkwIDYzIGYwIDAwIDAw
-IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwCjIwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
-MCAwMCAwMCAwMCAwMCBhYSAxNyAxNCAyMgozMDogMDAgMDAgMDAgMDAgNTAgMDAgMDAgMDAgMDAg
-MDAgMDAgMDAgMGIgMDEgMDAgMDAKCjAwOjE5LjAgRXRoZXJuZXQgY29udHJvbGxlcjogSW50ZWwg
-Q29ycG9yYXRpb24gRXRoZXJuZXQgQ29ubmVjdGlvbiBJMjE4LVYgKHJldiAwNCkKMDA6IDg2IDgw
-IDU5IDE1IDA3IDA0IDEwIDAwIDA0IDAwIDAwIDAyIDAwIDAwIDAwIDAwCjEwOiAwMCAwMCA2MCBm
-MCAwMCBlMCA2MyBmMCA4MSAzMCAwMCAwMCAwMCAwMCAwMCAwMAoyMDogMDAgMDAgMDAgMDAgMDAg
-MDAgMDAgMDAgMDAgMDAgMDAgMDAgYWEgMTcgMTQgMjIKMzA6IDAwIDAwIDAwIDAwIGM4IDAwIDAw
-IDAwIDAwIDAwIDAwIDAwIDBiIDAxIDAwIDAwCgowMDoxYi4wIEF1ZGlvIGRldmljZTogSW50ZWwg
-Q29ycG9yYXRpb24gTHlueCBQb2ludC1MUCBIRCBBdWRpbyBDb250cm9sbGVyIChyZXYgMDQpCjAw
-OiA4NiA4MCAyMCA5YyAwNiAwNCAxMCAwMCAwNCAwMCAwMyAwNCAxMCAwMCAwMCAwMAoxMDogMDQg
-NDAgNjMgZjAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAKMjA6IDAwIDAwIDAw
-IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIGFhIDE3IDE0IDIyCjMwOiAwMCAwMCAwMCAwMCA1
-MCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwYSAwMSAwMCAwMAoKMDA6MWMuMCBQQ0kgYnJpZGdlOiBJ
-bnRlbCBDb3Jwb3JhdGlvbiBMeW54IFBvaW50LUxQIFBDSSBFeHByZXNzIFJvb3QgUG9ydCA2IChy
-ZXYgZTQpCjAwOiA4NiA4MCAxYSA5YyAwNyAwMCAxMCAwMCBlNCAwMCAwNCAwNiAxMCAwMCA4MSAw
-MAoxMDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDIgMDIgMDAgZjAgMDAgMDAgMjAKMjA6
-IDUwIGYwIDUwIGYwIGYxIGZmIDAxIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwCjMwOiAwMCAw
-MCAwMCAwMCA0MCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwOSAwMiAwMCAwMAoKMDA6MWMuMSBQQ0kg
-YnJpZGdlOiBJbnRlbCBDb3Jwb3JhdGlvbiBMeW54IFBvaW50LUxQIFBDSSBFeHByZXNzIFJvb3Qg
-UG9ydCAzIChyZXYgZTQpCjAwOiA4NiA4MCAxNCA5YyAwNyAwMCAxMCAwMCBlNCAwMCAwNCAwNiAx
-MCAwMCA4MSAwMAoxMDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDMgMDMgMDAgZjAgMDAg
-MDAgMjAKMjA6IDQwIGYwIDQwIGYwIGYxIGZmIDAxIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
-CjMwOiAwMCAwMCAwMCAwMCA0MCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwYSAwMyAwMCAwMAoKMDA6
-MWQuMCBVU0IgY29udHJvbGxlcjogSW50ZWwgQ29ycG9yYXRpb24gTHlueCBQb2ludC1MUCBVU0Ig
-RUhDSSAjMSAocmV2IDA0KQowMDogODYgODAgMjYgOWMgMDYgMDAgOTAgMDIgMDQgMjAgMDMgMGMg
-MDAgMDAgMDAgMDAKMTA6IDAwIGQwIDYzIGYwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
-IDAwIDAwCjIwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCBhYSAxNyAxNCAy
-MgozMDogMDAgMDAgMDAgMDAgNTAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDcgMDEgMDAgMDAKCjAw
-OjFmLjAgSVNBIGJyaWRnZTogSW50ZWwgQ29ycG9yYXRpb24gTHlueCBQb2ludC1MUCBMUEMgQ29u
-dHJvbGxlciAocmV2IDA0KQowMDogODYgODAgNDMgOWMgMDcgMDAgMTAgMDIgMDQgMDAgMDEgMDYg
-MDAgMDAgODAgMDAKMTA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
-IDAwIDAwCjIwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCBhYSAxNyAxNCAy
-MgozMDogMDAgMDAgMDAgMDAgZTAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAKCjAw
-OjFmLjIgU0FUQSBjb250cm9sbGVyOiBJbnRlbCBDb3Jwb3JhdGlvbiBMeW54IFBvaW50LUxQIFNB
-VEEgQ29udHJvbGxlciAxIFtBSENJIG1vZGVdIChyZXYgMDQpCjAwOiA4NiA4MCAwMyA5YyAwNyAw
-NCBiMCAwMiAwNCAwMSAwNiAwMSAwMCAwMCAwMCAwMAoxMDogYTkgMzAgMDAgMDAgYjUgMzAgMDAg
-MDAgYTEgMzAgMDAgMDAgYjEgMzAgMDAgMDAKMjA6IDYxIDMwIDAwIDAwIDAwIGMwIDYzIGYwIDAw
-IDAwIDAwIDAwIGFhIDE3IDE0IDIyCjMwOiAwMCAwMCAwMCAwMCA4MCAwMCAwMCAwMCAwMCAwMCAw
-MCAwMCAwNiAwMiAwMCAwMAoKMDA6MWYuMyBTTUJ1czogSW50ZWwgQ29ycG9yYXRpb24gTHlueCBQ
-b2ludC1MUCBTTUJ1cyBDb250cm9sbGVyIChyZXYgMDQpCjAwOiA4NiA4MCAyMiA5YyAwMyAwMCA4
-MCAwMiAwNCAwMCAwNSAwYyAwMCAwMCAwMCAwMAoxMDogMDQgODAgNjMgZjAgMDAgMDAgMDAgMDAg
-MDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAKMjA6IGExIGVmIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
-IDAwIDAwIGFhIDE3IDE0IDIyCjMwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
-MCAwYSAwMyAwMCAwMAoKMDI6MDAuMCBVbmFzc2lnbmVkIGNsYXNzIFtmZjAwXTogUmVhbHRlayBT
-ZW1pY29uZHVjdG9yIENvLiwgTHRkLiBEZXZpY2UgNTIyNyAocmV2IDAxKQowMDogZWMgMTAgMjcg
-NTIgMDYgMDQgMTAgMDAgMDEgMDAgMDAgZmYgMTAgMDAgMDAgMDAKMTA6IDAwIDAwIDUwIGYwIDAw
-IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwCjIwOiAwMCAwMCAwMCAwMCAwMCAwMCAw
-MCAwMCAwMCAwMCAwMCAwMCBhYSAxNyAxNCAyMgozMDogMDAgMDAgMDAgMDAgNDAgMDAgMDAgMDAg
-MDAgMDAgMDAgMDAgMGIgMDEgMDAgMDAKCjAzOjAwLjAgTmV0d29yayBjb250cm9sbGVyOiBJbnRl
-bCBDb3Jwb3JhdGlvbiBXaXJlbGVzcyA3MjYwIChyZXYgZmYpCjAwOiBmZiBmZiBmZiBmZiBmZiBm
-ZiBmZiBmZiBmZiBmZiBmZiBmZiBmZiBmZiBmZiBmZgoxMDogZmYgZmYgZmYgZmYgZmYgZmYgZmYg
-ZmYgZmYgZmYgZmYgZmYgZmYgZmYgZmYgZmYKMjA6IGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZm
-IGZmIGZmIGZmIGZmIGZmIGZmIGZmCjMwOiBmZiBmZiBmZiBmZiBmZiBmZiBmZiBmZiBmZiBmZiBm
-ZiBmZiBmZiBmZiBmZiBmZgoKCgoKLy8gYmVsb3cgYXJlIGtlcm5lbCBtZXNzYWdlOgoKTm92IDA2
-IDE0OjQ4OjQ2IHhlbmllbiBrZXJuZWw6IC0tLS0tLS0tLS0tLVsgY3V0IGhlcmUgXS0tLS0tLS0t
-LS0tLQpOb3YgMDYgMTQ6NDg6NDYgeGVuaWVuIGtlcm5lbDogV0FSTklORzogQ1BVOiAwIFBJRDog
-MjE2NjggYXQKZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9wY2llL3RyYW5zLmM6ODY0Cml3
-bF90cmFuc19wY2llX2dyYWJfbmljX2FjY2VzcysweDFkNS8weDFmMCBbaXdsd2lmaV0oKQpOb3Yg
-MDYgMTQ6NDg6NDYgeGVuaWVuIGtlcm5lbDogVGltZW91dCB3YWl0aW5nIGZvciBoYXJkd2FyZSBh
-Y2Nlc3MKKENTUl9HUF9DTlRSTCAweGZmZmZmZmZmKQpOb3YgMDYgMTQ6NDg6NDYgeGVuaWVuIGtl
-cm5lbDogTW9kdWxlcyBsaW5rZWQgaW46IHVzYl9zdG9yYWdlIGhpZF9nZW5lcmljCnVzYmhpZCBo
-aWQgZnVzZSB0dW4gaXB0X01BU1FVRVJBREUgaXB0YWJsZV9uYXQgbmZfY29ubnRyYWNrX2lwdjQK
-bmZfZGVmcmFnX2lwdjQgbmZfbmF0X2lwdjQgbmZfbgpOb3YgMDYgMTQ6NDg6NDYgeGVuaWVuIGtl
-cm5lbDogIGRtX2NyeXB0IGRtX21vZCBzZF9tb2QgcnRzeF9wY2lfc2RtbWMgbW1jX2NvcmUKY3Jj
-dDEwZGlmX3BjbG11bCBjcmN0MTBkaWZfY29tbW9uIGNyYzMyX3BjbG11bCBjcmMzMmNfaW50ZWwK
-Z2hhc2hfY2xtdWxuaV9pbnRlbCBhZXNuaV9pbnRlbApOb3YgMDYgMTQ6NDg6NDYgeGVuaWVuIGtl
-cm5lbDogQ1BVOiAwIFBJRDogMjE2NjggQ29tbToga3dvcmtlci91MTY6MCBUYWludGVkOgpHICAg
-ICAgICAgICBPIDMuMTIuMC0xLUFSQ0ggIzEKTm92IDA2IDE0OjQ4OjQ2IHhlbmllbiBrZXJuZWw6
-IEhhcmR3YXJlIG5hbWU6IExFTk9WTyAyMEFLQ1RPMVdXLzIwQUtDVE8xV1csCkJJT1MgR0lFVDYy
-V1cgKDIuMTIgKSAwOS8yNS8yMDEzCk5vdiAwNiAxNDo0ODo0NiB4ZW5pZW4ga2VybmVsOiBXb3Jr
-cXVldWU6IHBoeTAgaWVlZTgwMjExX2JhX3Nlc3Npb25fd29yawpbbWFjODAyMTFdCk5vdiAwNiAx
-NDo0ODo0NiB4ZW5pZW4ga2VybmVsOiAgMDAwMDAwMDAwMDAwMDAwOSBmZmZmODgwMWZkYzRmYjYw
-CmZmZmZmZmZmODE0ZWJmZmIgZmZmZjg4MDFmZGM0ZmJhOApOb3YgMDYgMTQ6NDg6NDYgeGVuaWVu
-IGtlcm5lbDogIGZmZmY4ODAxZmRjNGZiOTggZmZmZmZmZmY4MTA2MmJiZApmZmZmODgwMGNjNzcw
-MDAwIGZmZmY4ODAwY2M3NzMyNTgKTm92IDA2IDE0OjQ4OjQ2IHhlbmllbiBrZXJuZWw6ICBmZmZm
-ODgwMWZkYzRmYzQ4IDAwMDAwMDAwZmZmZmZmZmYKZmZmZjg4MDIxMzQxZTA5OCBmZmZmODgwMWZk
-YzRmYmY4Ck5vdiAwNiAxNDo0ODo0NiB4ZW5pZW4ga2VybmVsOiBDYWxsIFRyYWNlOgpOb3YgMDYg
-MTQ6NDg6NDYgeGVuaWVuIGtlcm5lbDogIFs8ZmZmZmZmZmY4MTRlYmZmYj5dIGR1bXBfc3RhY2sr
-MHg1NC8weDhkCk5vdiAwNiAxNDo0ODo0NiB4ZW5pZW4ga2VybmVsOiAgWzxmZmZmZmZmZjgxMDYy
-YmJkPl0Kd2Fybl9zbG93cGF0aF9jb21tb24rMHg3ZC8weGEwCk5vdiAwNiAxNDo0ODo0NiB4ZW5p
-ZW4ga2VybmVsOiAgWzxmZmZmZmZmZjgxMDYyYzJjPl0Kd2Fybl9zbG93cGF0aF9mbXQrMHg0Yy8w
-eDUwCk5vdiAwNiAxNDo0ODo0NiB4ZW5pZW4ga2VybmVsOiAgWzxmZmZmZmZmZmEwODc5NGI1Pl0K
-aXdsX3RyYW5zX3BjaWVfZ3JhYl9uaWNfYWNjZXNzKzB4MWQ1LzB4MWYwIFtpd2x3aWZpXQpOb3Yg
-MDYgMTQ6NDg6NDYgeGVuaWVuIGtlcm5lbDogIFs8ZmZmZmZmZmZhMDg2YzQ5ZT5dIGl3bF93cml0
-ZV9wcnBoKzB4MmUvMHhlMApbaXdsd2lmaV0KTm92IDA2IDE0OjQ4OjQ2IHhlbmllbiBrZXJuZWw6
-ICBbPGZmZmZmZmZmYTA4Nzc5MjE+XQppd2xfdHJhbnNfcGNpZV90eHFfZGlzYWJsZSsweDgxLzB4
-MTUwIFtpd2x3aWZpXQpOb3YgMDYgMTQ6NDg6NDYgeGVuaWVuIGtlcm5lbDogIFs8ZmZmZmZmZmZh
-MGMzMmUwNT5dCml3bF9tdm1fc3RhX3R4X2FnZ19zdG9wKzB4MWI1LzB4MjIwIFtpd2xtdm1dCk5v
-diAwNiAxNDo0ODo0NiB4ZW5pZW4ga2VybmVsOiAgWzxmZmZmZmZmZmEwYzI5NTMyPl0KaXdsX212
-bV9tYWNfYW1wZHVfYWN0aW9uKzB4MTcyLzB4MWMwIFtpd2xtdm1dCk5vdiAwNiAxNDo0ODo0NiB4
-ZW5pZW4ga2VybmVsOiAgWzxmZmZmZmZmZmEwYjliY2JhPl0KX19faWVlZTgwMjExX3N0b3BfdHhf
-YmFfc2Vzc2lvbisweDE0YS8weDU4MCBbbWFjODAyMTFdCk5vdiAwNiAxNDo0ODo0NiB4ZW5pZW4g
-a2VybmVsOiAgWzxmZmZmZmZmZmEwYjlhYmRhPl0KaWVlZTgwMjExX2JhX3Nlc3Npb25fd29yaysw
-eDE5YS8weDFjMCBbbWFjODAyMTFdCk5vdiAwNiAxNDo0ODo0NiB4ZW5pZW4ga2VybmVsOiAgWzxm
-ZmZmZmZmZjgxMDdkYWM3Pl0KcHJvY2Vzc19vbmVfd29yaysweDE2Ny8weDQ1MApOb3YgMDYgMTQ6
-NDg6NDYgeGVuaWVuIGtlcm5lbDogIFs8ZmZmZmZmZmY4MTA3ZTRkMT5dIHdvcmtlcl90aHJlYWQr
-MHgxMjEvMHgzYTAKTm92IDA2IDE0OjQ4OjQ2IHhlbmllbiBrZXJuZWw6ICBbPGZmZmZmZmZmODEw
-N2UzYjA+XSA/Cm1hbmFnZV93b3JrZXJzLmlzcmEuMjMrMHgyYjAvMHgyYjAKTm92IDA2IDE0OjQ4
-OjQ2IHhlbmllbiBrZXJuZWw6ICBbPGZmZmZmZmZmODEwODRlNjA+XSBrdGhyZWFkKzB4YzAvMHhk
-MApOb3YgMDYgMTQ6NDg6NDYgeGVuaWVuIGtlcm5lbDogIFs8ZmZmZmZmZmY4MTA4NGRhMD5dID8K
-a3RocmVhZF9jcmVhdGVfb25fbm9kZSsweDEyMC8weDEyMApOb3YgMDYgMTQ6NDg6NDYgeGVuaWVu
-IGtlcm5lbDogIFs8ZmZmZmZmZmY4MTRmYWFmYz5dIHJldF9mcm9tX2ZvcmsrMHg3Yy8weGIwCk5v
-diAwNiAxNDo0ODo0NiB4ZW5pZW4ga2VybmVsOiAgWzxmZmZmZmZmZjgxMDg0ZGEwPl0gPwprdGhy
-ZWFkX2NyZWF0ZV9vbl9ub2RlKzB4MTIwLzB4MTIwCk5vdiAwNiAxNDo0ODo0NiB4ZW5pZW4ga2Vy
-bmVsOiAtLS1bIGVuZCB0cmFjZSBjNDY2ODBiYWU2MTY0OTNjIF0tLS0KTm92IDA2IDE0OjQ4OjQ4
-IHhlbmllbiBrZXJuZWw6IGl3bHdpZmkgMDAwMDowMzowMC4wOiBFcnJvciBzZW5kaW5nIEFERF9T
-VEE6CnRpbWUgb3V0IGFmdGVyIDIwMDBtcy4KTm92IDA2IDE0OjQ4OjQ4IHhlbmllbiBrZXJuZWw6
-IGl3bHdpZmkgMDAwMDowMzowMC4wOiBDdXJyZW50IENNRCBxdWV1ZQpyZWFkX3B0ciAyOCB3cml0
-ZV9wdHIgMjkKTm92IDA2IDE0OjQ4OjQ4IHhlbmllbiBrZXJuZWw6IHdsYW4wOiBIVyBwcm9ibGVt
-IC0gY2FuIG5vdCBzdG9wIHJ4IGFnZ3JlZ2F0aW9uCmZvciAxNDplNjplNDozYzoyNDpmOCB0aWQg
-MAo=
---047d7b111baf55219a04ea7ccdcf--
+On 26 November 2013 18:24, Dan Williams <dcbw@redhat.com> wrote:
+> On Tue, 2013-11-26 at 12:11 -0600, Pat Erley wrote:
+>> On 11/26/2013 06:28 AM, matt emery wrote:
+>> > Hi,
+>> >
+>> > I hope you can help, I am having problems getting N with new Dual band
+>> > wireless ac 7260 pci express half mini card, manufacturer code
+>> > 7260.HMWWB
+>> >
+>> > lspci: 03:00.0 Network controller: Intel Corporation Device 08b1 (rev 73)
+>> >
+>> > Kernel: 3.12.0-031200-generic
+>> >
+>> > firmware: -rw-r--r-- 1 root root 682892 Nov 26 12:10 iwlwifi-7260-7.ucode
+>> > from here; http://wireless.kernel.org/en/users/Drivers/iwlwifi?action=AttachFile&do=get&target=iwlwifi-7260-ucode-22.0.7.0.tgz
+>> >
+>> > wlan0     IEEE 802.11abg  ESSID:"XXXX"
+>> >            Mode:Managed  Frequency:2.412 GHz  Access Point: 06:XX:22:XX:ED:XX
+>> >            Bit Rate=54 Mb/s   Tx-Power=16 dBm
+>> >            Retry  long limit:7   RTS thr:off   Fragment thr:off
+>>
+>> >            Encryption key:off
+>>
+>> While I'm not certain about your AP or the 7260 driver, I believe
+>> 802.11n technically requires WPA2 encryption.  Try turning that on and
+>> testing again.
+>
+> This is true, but also Matt is using 'iwconfig', which does not support
+> anything N-related because it uses the older WEXT kernel API.  It simply
+> won't show 802.11n bitrates, nor will it show encryption details for
+> WPA.
+>
+> Matt should be using 'iw' instead, with:
+>
+> iw dev wlan0 info
+> iw dev wlan0 link
+>
+> Dan
+>
+>> >            Power Management:off
+>> >            Link Quality=70/70  Signal level=-36 dBm
+>> >            Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+>> >            Tx excessive retries:1  Invalid misc:27   Missed beacon:0
+>> >
+>> >
+>> > Let me know if you need anything else.
+>> >
+>> > Thanks
+>> >
+>> > matt
+>> >
+>> > Matthew Emery
+>> > 07988 197 438
+>> > --
+>> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> > the body of a message to majordomo@vger.kernel.org
+>> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> >
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
