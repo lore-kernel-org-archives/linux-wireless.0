@@ -1,141 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mantis.wzyboy.im ([199.83.51.51]:35503 "EHLO mantis.wzyboy.im"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750924Ab3KFGrr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Nov 2013 01:47:47 -0500
-Received: from mail-pa0-f45.google.com (mail-pa0-f45.google.com [209.85.220.45])
-	by mantis.wzyboy.im (Postfix) with ESMTPSA id 6E9438813E
-	for <linux-wireless@vger.kernel.org>; Wed,  6 Nov 2013 14:47:47 +0800 (CST)
-Received: by mail-pa0-f45.google.com with SMTP id kp14so10091759pab.32
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Nov 2013 22:47:46 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
-References: <5276134B.8070808@wzyboy.org> <0BA3FCBA62E2DC44AF3030971E174FB301DE75AE@HASMSX103.ger.corp.intel.com>
- <CALkVjQYh-SUte4S6LdqOc3KSc3_pDU6jz1KXp+Jsd5_RFPXSqA@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DE8338@HASMSX103.ger.corp.intel.com>
- <CALkVjQb7fCMFpqhdUs8w-Mx_Y0RtAYYFtKxXkqyrCQ39UFGxKg@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DE960E@HASMSX103.ger.corp.intel.com>
- <CALkVjQbW8FeiEh8pBZ=KQFD9+8AdjgT0G_RG7qJe0MRdBvMD-A@mail.gmail.com>
- <CALkVjQaLx2spaOqUPcs_EwMkU7npMki1Reo1MeZwxB7m=c24=g@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301DE9FC6@HASMSX103.ger.corp.intel.com>
- <CALkVjQZDNSgUUFyi94Y8da_NDzW61rCvaMrZpUugFKW_LRNFFA@mail.gmail.com> <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
-From: wzyboy <wzyboy@wzyboy.org>
-Date: Wed, 6 Nov 2013 14:47:31 +0800
-Message-ID: <CALkVjQZRJw7ghjBa1aPKNKe3Zj2B1Mhk5bWVaRdcCYzfoLRovg@mail.gmail.com> (sfid-20131106_074751_632006_D830E77F)
-Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=047d7b2eded5e189be04ea7c86ff
+Received: from mail-ea0-f180.google.com ([209.85.215.180]:32882 "EHLO
+	mail-ea0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756956Ab3KZOKn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Nov 2013 09:10:43 -0500
+Received: by mail-ea0-f180.google.com with SMTP id f15so3572837eak.39
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Nov 2013 06:10:42 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 2/3] ath10k: implement sta_rc_update()
+Date: Tue, 26 Nov 2013 14:57:39 +0100
+Message-Id: <1385474260-22385-3-git-send-email-michal.kazior@tieto.com> (sfid-20131126_151048_819651_76579150)
+In-Reply-To: <1385474260-22385-1-git-send-email-michal.kazior@tieto.com>
+References: <1385126819-15311-1-git-send-email-michal.kazior@tieto.com>
+ <1385474260-22385-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---047d7b2eded5e189be04ea7c86ff
-Content-Type: text/plain; charset=UTF-8
+This should fix possible connectivity issues upon
+changes of channel width, number of streams or
+SMPS on connected stations.
 
-2013/11/6 Grumbach, Emmanuel <emmanuel.grumbach@intel.com>:
-> I don't know - I am trying to check with our HW guys here.
-> Can you please run lspci -xxx before and after it happens?
-> BTW - how do you recover? Reloading the module is enough?
+An example trigger would be an action frame with
+operation mode change notification.
 
-I've attached the output of `lspci -xxx'. The next time this bug
-occurs I will run it again and send the output to you.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 85 +++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h |  6 +++
+ 2 files changed, 91 insertions(+)
 
-This bug occurs more than 15 times since I bought this laptop on Nov
-01 and I've tried differnt methods after each, trying to bring the
-network back alive without rebooting. However, no matter I use "ip
-link set wlan0 down", "ip link set wlan0 up" or reloading the kernel
-module, it just did not work -- the only way is to reboot the laptop
-... (That's why I said "I hate rebooting")
-
-Could you suggest any other possible methods that may have a chance to
-recover without rebooting? I could try it the next time this bug
-occurs.
-
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 15eda44..65cb63d 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3269,6 +3269,90 @@ exit:
+ 	return ret;
+ }
+ 
++static void ath10k_sta_rc_update(struct ieee80211_hw *hw,
++				 struct ieee80211_vif *vif,
++				 struct ieee80211_sta *sta,
++				 u32 changed)
++{
++	struct ath10k *ar = hw->priv;
++	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
++	u32 chwidth, smps;
++	int ret;
++
++	if (changed & IEEE80211_RC_BW_CHANGED) {
++		switch (sta->bandwidth) {
++		default:
++			ath10k_warn("unsupported STA BW: %d\n", sta->bandwidth);
++		case IEEE80211_STA_RX_BW_20:
++			chwidth = WMI_PEER_CHWIDTH_20MHZ;
++			break;
++		case IEEE80211_STA_RX_BW_40:
++			chwidth = WMI_PEER_CHWIDTH_40MHZ;
++			break;
++		case IEEE80211_STA_RX_BW_80:
++			chwidth = WMI_PEER_CHWIDTH_80MHZ;
++			break;
++		}
++
++		ath10k_dbg(ATH10K_DBG_MAC,
++			   "mac update sta %pM bandwidth (peer chwidth %d) to %d\n",
++			   sta->addr, chwidth, sta->bandwidth);
++
++		ret = ath10k_wmi_peer_set_param(ar, arvif->vdev_id, sta->addr,
++						WMI_PEER_CHAN_WIDTH, chwidth);
++		if (ret)
++			ath10k_warn("failed to update STA %pM bandwidth (peer chwidth %d) to %d: %d\n",
++				    sta->addr, chwidth, sta->bandwidth, ret);
++	}
++
++	if (changed & IEEE80211_RC_NSS_CHANGED) {
++		ath10k_dbg(ATH10K_DBG_MAC, "mac update sta %pM nss to %d\n",
++			   sta->addr, sta->rx_nss);
++
++		ret = ath10k_wmi_peer_set_param(ar, arvif->vdev_id, sta->addr,
++						WMI_PEER_NSS, sta->rx_nss);
++		if (ret)
++			ath10k_warn("failed to update STA %pM nss to %d: %d\n",
++				    sta->addr, sta->rx_nss, ret);
++	}
++
++	if (changed & IEEE80211_RC_SMPS_CHANGED) {
++		smps = WMI_PEER_SMPS_PS_NONE;
++
++		switch (sta->smps_mode) {
++		case IEEE80211_SMPS_NUM_MODES:
++			ath10k_warn("invalid smps mode: %d\n", sta->smps_mode);
++		case IEEE80211_SMPS_AUTOMATIC:
++		case IEEE80211_SMPS_OFF:
++			smps = WMI_PEER_SMPS_PS_NONE;
++			break;
++		case IEEE80211_SMPS_STATIC:
++			smps = WMI_PEER_SMPS_STATIC;
++			break;
++		case IEEE80211_SMPS_DYNAMIC:
++			smps = WMI_PEER_SMPS_DYNAMIC;
++			break;
++		}
++
++		ath10k_dbg(ATH10K_DBG_MAC,
++			   "mac update sta %pM smps (peer smps %d) to %d\n",
++			   sta->addr, smps, sta->smps_mode);
++
++		ret = ath10k_wmi_peer_set_param(ar, arvif->vdev_id, sta->addr,
++						WMI_PEER_SMPS_STATE, smps);
++		if (ret)
++			ath10k_warn("failed to update STA %pM smps (peer smps %d) to %d: %d\n",
++				    sta->addr, smps, sta->smps_mode, ret);
++	}
++
++	if (changed & IEEE80211_RC_SUPP_RATES_CHANGED) {
++		/* FIXME: Not implemented. Not really sure if it's possible to
++		 * influence HW rate control so much. */
++		ath10k_dbg(ATH10K_DBG_MAC,
++			   "mac sta rc update - supp rates changed - not implemented\n");
++	}
++}
++
+ static const struct ieee80211_ops ath10k_ops = {
+ 	.tx				= ath10k_tx,
+ 	.start				= ath10k_start,
+@@ -3291,6 +3375,7 @@ static const struct ieee80211_ops ath10k_ops = {
+ 	.tx_last_beacon			= ath10k_tx_last_beacon,
+ 	.restart_complete		= ath10k_restart_complete,
+ 	.get_survey			= ath10k_get_survey,
++	.sta_rc_update			= ath10k_sta_rc_update,
+ #ifdef CONFIG_PM
+ 	.suspend			= ath10k_suspend,
+ 	.resume				= ath10k_resume,
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 0087d69..e8c4bb7 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -3847,6 +3847,12 @@ enum wmi_peer_smps_state {
+ 	WMI_PEER_SMPS_DYNAMIC = 0x2
+ };
+ 
++enum wmi_peer_chwidth {
++	WMI_PEER_CHWIDTH_20MHZ = 0,
++	WMI_PEER_CHWIDTH_40MHZ = 1,
++	WMI_PEER_CHWIDTH_80MHZ = 2,
++};
++
+ enum wmi_peer_param {
+ 	WMI_PEER_SMPS_STATE = 0x1, /* see %wmi_peer_smps_state */
+ 	WMI_PEER_AMPDU      = 0x2,
 -- 
-wzyboy
+1.8.4.rc3
 
---047d7b2eded5e189be04ea7c86ff
-Content-Type: text/plain; charset=US-ASCII; name="lspci.normal.txt"
-Content-Disposition: attachment; filename="lspci.normal.txt"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hno75yth0
-
-MDA6MDAuMCBIb3N0IGJyaWRnZTogSW50ZWwgQ29ycG9yYXRpb24gSGFzd2VsbC1VTFQgRFJBTSBD
-b250cm9sbGVyIChyZXYgMDkpCjAwOiA4NiA4MCAwNCAwYSAwNiAwMCA5MCAyMCAwOSAwMCAwMCAw
-NiAwMCAwMCAwMCAwMAoxMDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAg
-MDAgMDAgMDAKMjA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIGFhIDE3IDE0
-IDIyCjMwOiAwMCAwMCAwMCAwMCBlMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMAoK
-MDA6MDIuMCBWR0EgY29tcGF0aWJsZSBjb250cm9sbGVyOiBJbnRlbCBDb3Jwb3JhdGlvbiBIYXN3
-ZWxsLVVMVCBJbnRlZ3JhdGVkIEdyYXBoaWNzIENvbnRyb2xsZXIgKHJldiAwOSkKMDA6IDg2IDgw
-IDE2IDBhIDA3IDA0IDkwIDAwIDA5IDAwIDAwIDAzIDAwIDAwIDAwIDAwCjEwOiAwNCAwMCAwMCBm
-MCAwMCAwMCAwMCAwMCAwYyAwMCAwMCBlMCAwMCAwMCAwMCAwMAoyMDogMDEgMzAgMDAgMDAgMDAg
-MDAgMDAgMDAgMDAgMDAgMDAgMDAgYWEgMTcgMTQgMjIKMzA6IDAwIDAwIDAwIDAwIDkwIDAwIDAw
-IDAwIDAwIDAwIDAwIDAwIDBiIDAxIDAwIDAwCgowMDowMy4wIEF1ZGlvIGRldmljZTogSW50ZWwg
-Q29ycG9yYXRpb24gRGV2aWNlIDBhMGMgKHJldiAwOSkKMDA6IDg2IDgwIDBjIDBhIDA2IDA0IDEw
-IDAwIDA5IDAwIDAzIDA0IDEwIDAwIDAwIDAwCjEwOiAwNCAwMCA2MyBmMCAwMCAwMCAwMCAwMCAw
-MCAwMCAwMCAwMCAwMCAwMCAwMCAwMAoyMDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAg
-MDAgMDAgYWEgMTcgMTQgMjIKMzA6IDAwIDAwIDAwIDAwIDUwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
-IDBiIDAxIDAwIDAwCgowMDoxNC4wIFVTQiBjb250cm9sbGVyOiBJbnRlbCBDb3Jwb3JhdGlvbiBM
-eW54IFBvaW50LUxQIFVTQiB4SENJIEhDIChyZXYgMDQpCjAwOiA4NiA4MCAzMSA5YyAwNiAwNCA5
-MCAwMiAwNCAzMCAwMyAwYyAwMCAwMCAwMCAwMAoxMDogMDQgMDAgNjIgZjAgMDAgMDAgMDAgMDAg
-MDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAKMjA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
-IDAwIDAwIGFhIDE3IDE0IDIyCjMwOiAwMCAwMCAwMCAwMCA3MCAwMCAwMCAwMCAwMCAwMCAwMCAw
-MCAwYiAwMSAwMCAwMAoKMDA6MTYuMCBDb21tdW5pY2F0aW9uIGNvbnRyb2xsZXI6IEludGVsIENv
-cnBvcmF0aW9uIEx5bnggUG9pbnQtTFAgSEVDSSAjMCAocmV2IDA0KQowMDogODYgODAgM2EgOWMg
-MDYgMDQgMTAgMDAgMDQgMDAgODAgMDcgMDAgMDAgODAgMDAKMTA6IDA0IDkwIDYzIGYwIDAwIDAw
-IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwCjIwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
-MCAwMCAwMCAwMCAwMCBhYSAxNyAxNCAyMgozMDogMDAgMDAgMDAgMDAgNTAgMDAgMDAgMDAgMDAg
-MDAgMDAgMDAgMGIgMDEgMDAgMDAKCjAwOjE5LjAgRXRoZXJuZXQgY29udHJvbGxlcjogSW50ZWwg
-Q29ycG9yYXRpb24gRXRoZXJuZXQgQ29ubmVjdGlvbiBJMjE4LVYgKHJldiAwNCkKMDA6IDg2IDgw
-IDU5IDE1IDA3IDA0IDEwIDAwIDA0IDAwIDAwIDAyIDAwIDAwIDAwIDAwCjEwOiAwMCAwMCA2MCBm
-MCAwMCBlMCA2MyBmMCA4MSAzMCAwMCAwMCAwMCAwMCAwMCAwMAoyMDogMDAgMDAgMDAgMDAgMDAg
-MDAgMDAgMDAgMDAgMDAgMDAgMDAgYWEgMTcgMTQgMjIKMzA6IDAwIDAwIDAwIDAwIGM4IDAwIDAw
-IDAwIDAwIDAwIDAwIDAwIDBiIDAxIDAwIDAwCgowMDoxYi4wIEF1ZGlvIGRldmljZTogSW50ZWwg
-Q29ycG9yYXRpb24gTHlueCBQb2ludC1MUCBIRCBBdWRpbyBDb250cm9sbGVyIChyZXYgMDQpCjAw
-OiA4NiA4MCAyMCA5YyAwNiAwNCAxMCAwMCAwNCAwMCAwMyAwNCAxMCAwMCAwMCAwMAoxMDogMDQg
-NDAgNjMgZjAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAKMjA6IDAwIDAwIDAw
-IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIGFhIDE3IDE0IDIyCjMwOiAwMCAwMCAwMCAwMCA1
-MCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwYSAwMSAwMCAwMAoKMDA6MWMuMCBQQ0kgYnJpZGdlOiBJ
-bnRlbCBDb3Jwb3JhdGlvbiBMeW54IFBvaW50LUxQIFBDSSBFeHByZXNzIFJvb3QgUG9ydCA2IChy
-ZXYgZTQpCjAwOiA4NiA4MCAxYSA5YyAwNyAwMCAxMCAwMCBlNCAwMCAwNCAwNiAxMCAwMCA4MSAw
-MAoxMDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDIgMDIgMDAgZjAgMDAgMDAgMjAKMjA6
-IDUwIGYwIDUwIGYwIGYxIGZmIDAxIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwCjMwOiAwMCAw
-MCAwMCAwMCA0MCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwOSAwMiAwMCAwMAoKMDA6MWMuMSBQQ0kg
-YnJpZGdlOiBJbnRlbCBDb3Jwb3JhdGlvbiBMeW54IFBvaW50LUxQIFBDSSBFeHByZXNzIFJvb3Qg
-UG9ydCAzIChyZXYgZTQpCjAwOiA4NiA4MCAxNCA5YyAwNyAwMCAxMCAwMCBlNCAwMCAwNCAwNiAx
-MCAwMCA4MSAwMAoxMDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDMgMDMgMDAgZjAgMDAg
-MDAgMjAKMjA6IDQwIGYwIDQwIGYwIGYxIGZmIDAxIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
-CjMwOiAwMCAwMCAwMCAwMCA0MCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwYSAwMyAwMCAwMAoKMDA6
-MWQuMCBVU0IgY29udHJvbGxlcjogSW50ZWwgQ29ycG9yYXRpb24gTHlueCBQb2ludC1MUCBVU0Ig
-RUhDSSAjMSAocmV2IDA0KQowMDogODYgODAgMjYgOWMgMDYgMDAgOTAgMDIgMDQgMjAgMDMgMGMg
-MDAgMDAgMDAgMDAKMTA6IDAwIGQwIDYzIGYwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
-IDAwIDAwCjIwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCBhYSAxNyAxNCAy
-MgozMDogMDAgMDAgMDAgMDAgNTAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDcgMDEgMDAgMDAKCjAw
-OjFmLjAgSVNBIGJyaWRnZTogSW50ZWwgQ29ycG9yYXRpb24gTHlueCBQb2ludC1MUCBMUEMgQ29u
-dHJvbGxlciAocmV2IDA0KQowMDogODYgODAgNDMgOWMgMDcgMDAgMTAgMDIgMDQgMDAgMDEgMDYg
-MDAgMDAgODAgMDAKMTA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
-IDAwIDAwCjIwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCBhYSAxNyAxNCAy
-MgozMDogMDAgMDAgMDAgMDAgZTAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAKCjAw
-OjFmLjIgU0FUQSBjb250cm9sbGVyOiBJbnRlbCBDb3Jwb3JhdGlvbiBMeW54IFBvaW50LUxQIFNB
-VEEgQ29udHJvbGxlciAxIFtBSENJIG1vZGVdIChyZXYgMDQpCjAwOiA4NiA4MCAwMyA5YyAwNyAw
-NCBiMCAwMiAwNCAwMSAwNiAwMSAwMCAwMCAwMCAwMAoxMDogYTkgMzAgMDAgMDAgYjUgMzAgMDAg
-MDAgYTEgMzAgMDAgMDAgYjEgMzAgMDAgMDAKMjA6IDYxIDMwIDAwIDAwIDAwIGMwIDYzIGYwIDAw
-IDAwIDAwIDAwIGFhIDE3IDE0IDIyCjMwOiAwMCAwMCAwMCAwMCA4MCAwMCAwMCAwMCAwMCAwMCAw
-MCAwMCAwNiAwMiAwMCAwMAoKMDA6MWYuMyBTTUJ1czogSW50ZWwgQ29ycG9yYXRpb24gTHlueCBQ
-b2ludC1MUCBTTUJ1cyBDb250cm9sbGVyIChyZXYgMDQpCjAwOiA4NiA4MCAyMiA5YyAwMyAwMCA4
-MCAwMiAwNCAwMCAwNSAwYyAwMCAwMCAwMCAwMAoxMDogMDQgODAgNjMgZjAgMDAgMDAgMDAgMDAg
-MDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAKMjA6IGExIGVmIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
-IDAwIDAwIGFhIDE3IDE0IDIyCjMwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
-MCAwYSAwMyAwMCAwMAoKMDI6MDAuMCBVbmFzc2lnbmVkIGNsYXNzIFtmZjAwXTogUmVhbHRlayBT
-ZW1pY29uZHVjdG9yIENvLiwgTHRkLiBEZXZpY2UgNTIyNyAocmV2IDAxKQowMDogZWMgMTAgMjcg
-NTIgMDYgMDQgMTAgMDAgMDEgMDAgMDAgZmYgMTAgMDAgMDAgMDAKMTA6IDAwIDAwIDUwIGYwIDAw
-IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwCjIwOiAwMCAwMCAwMCAwMCAwMCAwMCAw
-MCAwMCAwMCAwMCAwMCAwMCBhYSAxNyAxNCAyMgozMDogMDAgMDAgMDAgMDAgNDAgMDAgMDAgMDAg
-MDAgMDAgMDAgMDAgMGIgMDEgMDAgMDAKCjAzOjAwLjAgTmV0d29yayBjb250cm9sbGVyOiBJbnRl
-bCBDb3Jwb3JhdGlvbiBXaXJlbGVzcyA3MjYwIChyZXYgNmIpCjAwOiA4NiA4MCBiMiAwOCAwNiAw
-NCAxMCAwMCA2YiAwMCA4MCAwMiAxMCAwMCAwMCAwMAoxMDogMDQgMDAgNDAgZjAgMDAgMDAgMDAg
-MDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAKMjA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
-IDAwIDAwIDAwIDg2IDgwIDYyIGMyCjMwOiAwMCAwMCAwMCAwMCBjOCAwMCAwMCAwMCAwMCAwMCAw
-MCAwMCAwOSAwMSAwMCAwMAoK
---047d7b2eded5e189be04ea7c86ff--
