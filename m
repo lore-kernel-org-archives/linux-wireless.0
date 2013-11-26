@@ -1,45 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f179.google.com ([74.125.82.179]:46637 "EHLO
-	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751924Ab3KAN6L (ORCPT
+Received: from mail-we0-f180.google.com ([74.125.82.180]:33079 "EHLO
+	mail-we0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751744Ab3KZM3B (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 09:58:11 -0400
-Received: by mail-we0-f179.google.com with SMTP id w61so3914080wes.24
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:58:10 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 05/65] wireless-regdb: enable VHT80 for AZ
-Date: Fri,  1 Nov 2013 14:56:55 +0100
-Message-Id: <1383314275-20960-6-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_145817_195248_94A9CC40)
-In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+	Tue, 26 Nov 2013 07:29:01 -0500
+Received: by mail-we0-f180.google.com with SMTP id u56so5142286wes.25
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Nov 2013 04:29:00 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAKnB8xgAVp+Ti597RN4_kgPLgXpW1JCr4SQaqfqCzy5A4=o3Ow@mail.gmail.com>
+References: <CAKnB8xgAVp+Ti597RN4_kgPLgXpW1JCr4SQaqfqCzy5A4=o3Ow@mail.gmail.com>
+From: matt emery <matt@x204.com>
+Date: Tue, 26 Nov 2013 12:28:30 +0000
+Message-ID: <CAKnB8xh6tWFdiL4kBQ5r3J_YgiiwhHhvQEqC+9F7c=3eAsrYbg@mail.gmail.com> (sfid-20131126_132906_347559_7C667091)
+Subject: Fwd: Intel 7260
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Source is QCA's regulatory team's efforts.
+Hi,
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+I hope you can help, I am having problems getting N with new Dual band
+wireless ac 7260 pci express half mini card, manufacturer code
+7260.HMWWB
 
-diff --git a/db.txt b/db.txt
-index 993b8f1..2f62549 100644
---- a/db.txt
-+++ b/db.txt
-@@ -69,8 +69,8 @@ country AW: DFS-ETSI
- 
- country AZ: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
--	(5170 - 5250 @ 40), (18)
--	(5250 - 5330 @ 40), (18), DFS
-+	(5170 - 5250 @ 80), (18)
-+	(5250 - 5330 @ 80), (18), DFS
- 
- country BA: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
--- 
-1.8.4.rc3
+lspci: 03:00.0 Network controller: Intel Corporation Device 08b1 (rev 73)
 
+Kernel: 3.12.0-031200-generic
+
+firmware: -rw-r--r-- 1 root root 682892 Nov 26 12:10 iwlwifi-7260-7.ucode
+from here; http://wireless.kernel.org/en/users/Drivers/iwlwifi?action=AttachFile&do=get&target=iwlwifi-7260-ucode-22.0.7.0.tgz
+
+wlan0     IEEE 802.11abg  ESSID:"XXXX"
+          Mode:Managed  Frequency:2.412 GHz  Access Point: 06:XX:22:XX:ED:XX
+          Bit Rate=54 Mb/s   Tx-Power=16 dBm
+          Retry  long limit:7   RTS thr:off   Fragment thr:off
+          Encryption key:off
+          Power Management:off
+          Link Quality=70/70  Signal level=-36 dBm
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:1  Invalid misc:27   Missed beacon:0
+
+
+Let me know if you need anything else.
+
+Thanks
+
+matt
+
+Matthew Emery
+07988 197 438
