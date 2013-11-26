@@ -1,100 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ring0.de ([91.143.88.219]:60825 "EHLO smtp.ring0.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752481Ab3KOO4e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Nov 2013 09:56:34 -0500
-Date: Fri, 15 Nov 2013 14:55:56 +0000
-From: Sebastian Reichel <sre@debian.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Tony Lindgren <tony@atomide.com>, Luciano Coelho <luca@coelho.fi>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Rob Landley <rob@landley.net>,
-	Russell King <linux@arm.linux.org.uk>,
-	Felipe Balbi <balbi@ti.com>,
-	Sachin Kamat <sachin.kamat@linaro.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bill Pemberton <wfp5p@virginia.edu>,
-	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Luciano Coelho <coelho@ti.com>
-Subject: Re: [PATCH 1/4] wl1251: split wl251 platform data to a separate
- structure
-Message-ID: <20131115145555.GA23351@earth.universe> (sfid-20131115_155705_180901_18C7E416)
-References: <1382890469-25286-1-git-send-email-sre@debian.org>
- <1382890469-25286-2-git-send-email-sre@debian.org>
- <20131114185132.GQ10317@atomide.com>
- <20131114230330.GB6383@earth.universe>
- <20131114232217.GV10317@atomide.com>
- <20131115143254.GA7079@tuxdriver.com>
+Received: from hermes2.cs.kuleuven.be ([134.58.40.2]:57062 "EHLO
+	hermes2.cs.kuleuven.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932718Ab3KZSWF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Nov 2013 13:22:05 -0500
+Received: from hermes2.cs.kuleuven.be. (localhost [127.0.0.1])
+	by hermes2.cs.kuleuven.be.  with ESMTP id rAQIF1I8023490
+	for <linux-wireless@vger.kernel.org>; Tue, 26 Nov 2013 19:15:01 +0100
+Received: (from defang@localhost)
+	by hermes2.cs.kuleuven.be. (8.14.4/8.14.4/Submit) id rAQIDccS023458
+	for <linux-wireless@vger.kernel.org>; Tue, 26 Nov 2013 19:13:38 +0100
+Message-ID: <5294E4C5.4050301@cs.kuleuven.be> (sfid-20131126_192218_076303_059B9155)
+Date: Tue, 26 Nov 2013 19:13:25 +0100
+From: Mathy Vanhoef <mathy.vanhoef@cs.kuleuven.be>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="BXVAT5kNtrzKuDFl"
-In-Reply-To: <20131115143254.GA7079@tuxdriver.com>
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, mcgrof@qca.qualcomm.com,
+	jouni@qca.qualcomm.com, vthiagar@qca.qualcomm.com,
+	senthilb@qca.qualcomm.com
+Subject: [PATCH] ath9k_htc: properly set MAC address and BSSID mask
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: "Mathy Vanhoef" <Mathy.Vanhoef@cs.kuleuven.be>
 
---BXVAT5kNtrzKuDFl
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Pick the MAC address of the first virtual interface as the new hardware MAC
+address. Set BSSID mask according to this MAC address. This fixes CVE-2013-4579.
 
-On Fri, Nov 15, 2013 at 09:32:55AM -0500, John W. Linville wrote:
-> On Thu, Nov 14, 2013 at 03:22:18PM -0800, Tony Lindgren wrote:
-> > * Sebastian Reichel <sre@debian.org> [131114 15:04]:
-> > > On Thu, Nov 14, 2013 at 10:51:33AM -0800, Tony Lindgren wrote:
-> > > > [...]
-> > > >
-> > > > If this is not going into v3.13, these will cause conflicts
-> > > > with the mach-omap2/board-*.c files for v3.14.
-> > > >=20
-> > > > So it might be best to do a minimal header patch first that
-> > > > can be merged in by both linux-omap and wireless trees.
-> > >=20
-> > > I guess this patch is pretty minimal. It also seems to be acked by
-> > > the involved Maintainers, so maybe just merge Patch 1 without the
-> > > other patches?
-> > >=20
-> > > This does not solve the problem with the struct modification from
-> > > the second patch, but I guess it's the more intrusive patch.
-> >=20
-> > Once at least the first two patches are ready, how about I queue
-> > them after -rc1 and set up an immutable branch that can be merged
-> > in by linux-omap tree and the wireless tree?
->=20
-> That sounds reasonable to me.
+Signed-off-by: Mathy Vanhoef <Mathy.Vanhoef@cs.kuleuven.be>
+---
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index d441045..84359c3 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -147,21 +147,26 @@ static void ath9k_htc_bssid_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
+  	struct ath9k_vif_iter_data *iter_data = data;
+  	int i;
+  
+-	for (i = 0; i < ETH_ALEN; i++)
+-		iter_data->mask[i] &= ~(iter_data->hw_macaddr[i] ^ mac[i]);
++	if (iter_data->hw_macaddr != NULL) {
++		for (i = 0; i < ETH_ALEN; i++)
++			iter_data->mask[i] &= ~(iter_data->hw_macaddr[i] ^ mac[i]);
++	} else {
++		iter_data->hw_macaddr = mac;
++	}
+  }
+  
+-static void ath9k_htc_set_bssid_mask(struct ath9k_htc_priv *priv,
++static void ath9k_htc_set_mac_bssid_mask(struct ath9k_htc_priv *priv,
+  				     struct ieee80211_vif *vif)
+  {
+  	struct ath_common *common = ath9k_hw_common(priv->ah);
+  	struct ath9k_vif_iter_data iter_data;
+  
+  	/*
+-	 * Use the hardware MAC address as reference, the hardware uses it
+-	 * together with the BSSID mask when matching addresses.
++	 * Pick the MAC address of the first interface as the new hardware
++	 * MAC address. The hardware will use it together with the BSSID mask
++	 * when matching addresses.
+  	 */
+-	iter_data.hw_macaddr = common->macaddr;
++	iter_data.hw_macaddr = NULL;
+  	memset(&iter_data.mask, 0xff, ETH_ALEN);
+  
+  	if (vif)
+@@ -173,6 +178,10 @@ static void ath9k_htc_set_bssid_mask(struct ath9k_htc_priv *priv,
+  		ath9k_htc_bssid_iter, &iter_data);
+  
+  	memcpy(common->bssidmask, iter_data.mask, ETH_ALEN);
++
++	if (iter_data.hw_macaddr)
++		memcpy(common->macaddr, iter_data.hw_macaddr, ETH_ALEN);
++
+  	ath_hw_setbssidmask(common);
+  }
+  
+@@ -1083,7 +1092,7 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
+  		goto out;
+  	}
+  
+-	ath9k_htc_set_bssid_mask(priv, vif);
++	ath9k_htc_set_mac_bssid_mask(priv, vif);
+  
+  	priv->vif_slot |= (1 << avp->index);
+  	priv->nvifs++;
+@@ -1148,7 +1157,7 @@ static void ath9k_htc_remove_interface(struct ieee80211_hw *hw,
+  
+  	ath9k_htc_set_opmode(priv);
+  
+-	ath9k_htc_set_bssid_mask(priv, vif);
++	ath9k_htc_set_mac_bssid_mask(priv, vif);
+  
+  	/*
+  	 * Stop ANI only if there are no associated station interfaces.
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index b6aad69..99ab0aa 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -885,8 +885,9 @@ void ath9k_calculate_iter_data(struct ieee80211_hw *hw,
+  	struct ath_common *common = ath9k_hw_common(ah);
+  
+  	/*
+-	 * Use the hardware MAC address as reference, the hardware uses it
+-	 * together with the BSSID mask when matching addresses.
++	 * Pick the MAC address of the first interface as the new hardware
++	 * MAC address. The hardware will use it together with the BSSID mask
++	 * when matching addresses.
+  	 */
+  	memset(iter_data, 0, sizeof(*iter_data));
+  	memset(&iter_data->mask, 0xff, ETH_ALEN);
 
-So what changes do you request for those patches? I will try to
-update them as soon as possible.
 
--- Sebastian
-
---BXVAT5kNtrzKuDFl
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.15 (GNU/Linux)
-
-iQIcBAEBCAAGBQJShjX7AAoJENju1/PIO/qaOgcQAIFxSRKg6g82sFajCuGZfI7s
-t34ArIr0cWzxtFnPw0TE4lGaCPKmUpxdCj3568m6ejI7ZjZvZTD0rO02SS6v0jWM
-7tAgYLXjoBmP4haZ1OfjJitZuQmk/YsBckAjegd3dIGeKO0xroNuIe3yfTIuVFR8
-pFc6cOhFESwT2oPxjh6rAxkHBhhubXIDFnscJWc85JdhN37s8kEfIJPRpDkYWNzE
-6Wun2h3/QzYPPQeVfCLUEL956Vif3Qp/KlKfPRhhd9/5LVUjKzCRij/B2jnB1Ufq
-aZJrRgXq8k9EvIMCUamIgtRwvi3RvhNrE3gET6F0dy9qnwYb1Iqg0CLX1tW5Rrc5
-D1iAFNeYSXXyl3TtnEaoJjMjTHxIGQJhrh27eTD/ChC59kssmNCwpMEDUq13Z4NT
-Ve5tzgbOt3om4RVLdDux443wVbdPwNqjdnDQkLX52yQmMOec33deFTxzNtMEVakN
-+vSdwLhHVgdd27llrqpePQGu7ELRVPRwGAKw7JBZzFkE8kbJSzNFvevpMZHe1dDX
-xacBI4c4oiOPgjd7AuEepXeEIaTJ5F+Evzw7ZZPOs4A9vWpPaPm35c0dzQoswAjH
-MHYdO5tuUU6Tm95Fy6jj+SOTjgSlHhq0XS0HbrdgC1pC97ROoLjet3j8fV/aK/mc
-pTx51yqDqRfkjjWgkydn
-=QcUk
------END PGP SIGNATURE-----
-
---BXVAT5kNtrzKuDFl--
+Disclaimer: http://www.kuleuven.be/cwis/email_disclaimer.htm
