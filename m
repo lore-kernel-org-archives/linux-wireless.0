@@ -1,48 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:60320 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754608Ab3KENLe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Nov 2013 08:11:34 -0500
-Date: Tue, 5 Nov 2013 14:11:32 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Sebastian Reichel <sre@debian.org>
-Cc: Sebastian Reichel <sre@ring0.de>, Luciano Coelho <luca@coelho.fi>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Rob Landley <rob@landley.net>,
-	Tony Lindgren <tony@atomide.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Felipe Balbi <balbi@ti.com>,
-	Sachin Kamat <sachin.kamat@linaro.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bill Pemberton <wfp5p@virginia.edu>,
-	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH 2/4] wl1251: move power GPIO handling into the driver
-Message-ID: <20131105131132.GC30670@amd.pavel.ucw.cz> (sfid-20131105_141153_711667_34733F16)
-References: <1382890469-25286-1-git-send-email-sre@debian.org>
- <1382890469-25286-3-git-send-email-sre@debian.org>
+Received: from erley.org ([97.107.129.9]:33377 "EHLO remote.erley.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754099Ab3KZSMA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Nov 2013 13:12:00 -0500
+Message-ID: <5294E46C.40102@erley.org> (sfid-20131126_191204_710876_1060F187)
+Date: Tue, 26 Nov 2013 12:11:56 -0600
+From: Pat Erley <pat-lkml@erley.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1382890469-25286-3-git-send-email-sre@debian.org>
+To: matt emery <matt@x204.com>, linux-wireless@vger.kernel.org
+Subject: Re: Fwd: Intel 7260
+References: <CAKnB8xgAVp+Ti597RN4_kgPLgXpW1JCr4SQaqfqCzy5A4=o3Ow@mail.gmail.com> <CAKnB8xh6tWFdiL4kBQ5r3J_YgiiwhHhvQEqC+9F7c=3eAsrYbg@mail.gmail.com>
+In-Reply-To: <CAKnB8xh6tWFdiL4kBQ5r3J_YgiiwhHhvQEqC+9F7c=3eAsrYbg@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun 2013-10-27 17:14:27, Sebastian Reichel wrote:
-> Move the power GPIO handling from the board code into
-> the driver. This is a dependency for device tree support.
-> 
-> Signed-off-by: Sebastian Reichel <sre@debian.org>
+On 11/26/2013 06:28 AM, matt emery wrote:
+> Hi,
+>
+> I hope you can help, I am having problems getting N with new Dual band
+> wireless ac 7260 pci express half mini card, manufacturer code
+> 7260.HMWWB
+>
+> lspci: 03:00.0 Network controller: Intel Corporation Device 08b1 (rev 73)
+>
+> Kernel: 3.12.0-031200-generic
+>
+> firmware: -rw-r--r-- 1 root root 682892 Nov 26 12:10 iwlwifi-7260-7.ucode
+> from here; http://wireless.kernel.org/en/users/Drivers/iwlwifi?action=AttachFile&do=get&target=iwlwifi-7260-ucode-22.0.7.0.tgz
+>
+> wlan0     IEEE 802.11abg  ESSID:"XXXX"
+>            Mode:Managed  Frequency:2.412 GHz  Access Point: 06:XX:22:XX:ED:XX
+>            Bit Rate=54 Mb/s   Tx-Power=16 dBm
+>            Retry  long limit:7   RTS thr:off   Fragment thr:off
 
-Reviewed-by: Pavel Machek <pavel@ucw.cz>
+>            Encryption key:off
 
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+While I'm not certain about your AP or the 7260 driver, I believe 
+802.11n technically requires WPA2 encryption.  Try turning that on and 
+testing again.
+
+>            Power Management:off
+>            Link Quality=70/70  Signal level=-36 dBm
+>            Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+>            Tx excessive retries:1  Invalid misc:27   Missed beacon:0
+>
+>
+> Let me know if you need anything else.
+>
+> Thanks
+>
+> matt
+>
+> Matthew Emery
+> 07988 197 438
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
