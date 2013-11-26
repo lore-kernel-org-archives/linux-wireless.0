@@ -1,47 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:47004 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754422Ab3KAN7T (ORCPT
+Received: from packetmixer.de ([79.140.42.25]:34581 "EHLO
+	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757206Ab3KZPpV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 09:59:19 -0400
-Received: by mail-wi0-f176.google.com with SMTP id ex4so1114049wid.3
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:59:18 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 36/65] wireless-regdb: enable VHT80 for RO
-Date: Fri,  1 Nov 2013 14:57:26 +0100
-Message-Id: <1383314275-20960-37-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_145925_400895_51E434A9)
-In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+	Tue, 26 Nov 2013 10:45:21 -0500
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Simon Wunderlich <sw@simonwunderlich.de>
+Subject: [PATCH] mac80211: check csa wiphy flag in ibss before switching
+Date: Tue, 26 Nov 2013 16:45:18 +0100
+Message-Id: <1385480718-13702-1-git-send-email-sw@simonwunderlich.de> (sfid-20131126_164524_076498_0EA16859)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Source is QCA's regulatory team's efforts.
+When external CSA IEs are received (beacons or action messages), a
+channel switch is triggered as well. This should only be allowed on
+devices which actually support channel switches, otherwise disconnect.
+(For the corresponding userspace invocation, the wiphy flag is checked
+in nl80211).
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
 ---
- db.txt | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ net/mac80211/ibss.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/db.txt b/db.txt
-index 4483b74..f5d6121 100644
---- a/db.txt
-+++ b/db.txt
-@@ -649,9 +649,9 @@ country QA: DFS-JP
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 0f1fb5d..2eda7b1 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -823,6 +823,10 @@ ieee80211_ibss_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 	if (err)
+ 		return false;
  
- country RO: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
--	(5170 - 5250 @ 40), (20)
--	(5250 - 5330 @ 40), (20), DFS
--	(5490 - 5710 @ 40), (27), DFS
-+	(5170 - 5250 @ 80), (20)
-+	(5250 - 5330 @ 80), (20), DFS
-+	(5490 - 5710 @ 80), (27), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
++	/* channel switch is not supported, disconnect */
++	if (!(sdata->local->hw.wiphy->flags & WIPHY_FLAG_HAS_CHANNEL_SWITCH))
++		goto disconnect;
++
+ 	params.count = csa_ie.count;
+ 	params.chandef = csa_ie.chandef;
  
 -- 
-1.8.4.rc3
+1.7.10.4
 
