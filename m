@@ -1,79 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:41583 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754301Ab3KKTPN (ORCPT
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:46893 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752692Ab3KZGz2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Nov 2013 14:15:13 -0500
-Date: Mon, 11 Nov 2013 14:05:48 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Gustavo Padovan <gustavo@padovan.org>,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: bluetooth 2013-11-11
-Message-ID: <20131111190548.GA8107@tuxdriver.com> (sfid-20131111_201535_610772_17ED4F3D)
-References: <20131111182738.GB5648@joana>
+	Tue, 26 Nov 2013 01:55:28 -0500
+Received: by mail-vc0-f174.google.com with SMTP id id10so3549285vcb.33
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Nov 2013 22:55:27 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131111182738.GB5648@joana>
+In-Reply-To: <000601cee980$a2d1b0a0$e87511e0$%han@samsung.com>
+References: <000601cee980$a2d1b0a0$e87511e0$%han@samsung.com>
+Date: Mon, 25 Nov 2013 22:55:27 -0800
+Message-ID: <CA++WF2NwwnFNOLUaV3hAGbHXttC8gzt1RJ6Ubr0cOHRhVZ8BoA@mail.gmail.com> (sfid-20131126_075532_204681_068134D9)
+Subject: Re: [PATCH 1/3] wireless: ipw2100: remove unnecessary pci_set_drvdata()
+From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 11, 2013 at 04:27:38PM -0200, Gustavo Padovan wrote:
-> Hi John,
-> 
-> A few fixes for 3.13. There is 3 fixes to the RFCOMM protocol. One crash fix to
-> L2CAP. A simple fix to a bad behaviour in the SMP protocol, and last, an
-> revert, that I sent in the last pull request but doesn't seem to be in your
-> tree.
+Hello Jingoo,
 
-Are you looking in the wireless-next tree?  It seems to be there, no?
-
-John
-
-> 
-> Please pull or let me know of any issues. Thanks!
-> 
-> 
-> 	Gustavo
-> 
+On 24 November 2013 17:49, Jingoo Han <jg1.han@samsung.com> wrote:
+> The driver core clears the driver data to NULL after device_release
+> or on probe failure. Thus, it is not needed to manually clear the
+> device driver data to NULL.
+>
+> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
 > ---
-> The following changes since commit 8ce9beac4661f576ea0d518b9f086bb52a171a37:
-> 
->   drivers: net: wireless: b43: Fix possible NULL ptr dereference (2013-10-18 13:41:11 -0400)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth master
-> 
-> for you to fetch changes up to 3244d4a55c95708b0fa6fd820a9009534ed08a5f:
-> 
->   Bluetooth: Fix rejecting SMP security request in slave role (2013-11-11 15:48:36 -0200)
-> 
-> ----------------------------------------------------------------
-> Hans de Goede (1):
->       Bluetooth: revert: "Bluetooth: Add missing reset_resume dev_pm_ops"
-> 
-> Johan Hedberg (1):
->       Bluetooth: Fix rejecting SMP security request in slave role
-> 
-> Marcel Holtmann (1):
->       Bluetooth: Fix issue with RFCOMM getsockopt operation
-> 
-> Seung-Woo Kim (3):
->       Bluetooth: Fix RFCOMM bind fail for L2CAP sock
->       Bluetooth: Fix to set proper bdaddr_type for RFCOMM connect
->       Bluetooth: Fix crash in l2cap_chan_send after l2cap_chan_del
-> 
->  drivers/bluetooth/btusb.c   | 1 -
->  net/bluetooth/l2cap_core.c  | 3 +++
->  net/bluetooth/rfcomm/core.c | 3 +++
->  net/bluetooth/rfcomm/sock.c | 6 +++++-
->  net/bluetooth/smp.c         | 3 +++
->  5 files changed, 14 insertions(+), 2 deletions(-)
-> 
+
+Looks fine, thanks.
 
 
-
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Stanislav.
