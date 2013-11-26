@@ -1,118 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f180.google.com ([209.85.215.180]:49721 "EHLO
-	mail-ea0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755331Ab3KYNK2 (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:37586 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754402Ab3KZVPD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Nov 2013 08:10:28 -0500
-Received: by mail-ea0-f180.google.com with SMTP id f15so2341398eak.39
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Nov 2013 05:10:27 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 8/8] ath10k: allow explicit MSI/MSI-X disabling
-Date: Mon, 25 Nov 2013 14:06:27 +0100
-Message-Id: <1385384787-12470-9-git-send-email-michal.kazior@tieto.com> (sfid-20131125_141040_782344_20F8A7CF)
-In-Reply-To: <1385384787-12470-1-git-send-email-michal.kazior@tieto.com>
-References: <1385125518-13461-1-git-send-email-michal.kazior@tieto.com>
- <1385384787-12470-1-git-send-email-michal.kazior@tieto.com>
+	Tue, 26 Nov 2013 16:15:03 -0500
+Received: by mail-wi0-f174.google.com with SMTP id ey16so1130338wid.13
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Nov 2013 13:14:58 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAEk6gTAXXNFbRTqVNGZWnVBpNSW=HKz3qztdZ1t1vMZLe530Hg@mail.gmail.com>
+References: <CAKnB8xgAVp+Ti597RN4_kgPLgXpW1JCr4SQaqfqCzy5A4=o3Ow@mail.gmail.com>
+ <CAKnB8xh6tWFdiL4kBQ5r3J_YgiiwhHhvQEqC+9F7c=3eAsrYbg@mail.gmail.com>
+ <5294E46C.40102@erley.org> <1385490243.7838.16.camel@dcbw.foobar.com> <CAEk6gTAXXNFbRTqVNGZWnVBpNSW=HKz3qztdZ1t1vMZLe530Hg@mail.gmail.com>
+From: matt emery <matt@x204.com>
+Date: Tue, 26 Nov 2013 21:14:28 +0000
+Message-ID: <CAKnB8xiEoAch9dpm5hRzW76PO8tt3cKFxB2jUvdCNrJaf5tWrg@mail.gmail.com> (sfid-20131126_221525_864871_9F555E9A)
+Subject: Re: Fwd: Intel 7260
+To: Drasko DRASKOVIC <drasko.draskovic@gmail.com>
+Cc: Dan Williams <dcbw@redhat.com>, Pat Erley <pat-lkml@erley.org>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This can be useful for testing and debugging.
+Hi,
 
-This introduces new ath10k_pci module parameter
-`irq_mode`. By default it is 0, meaning automatic
-irq mode (MSI-X as long as both target HW and host
-platform supports it). The parameter works on a
-best effort basis.
+I'm using WPA2/AES and i have other devices connected to the AP using
+N, I can't go open as i am resident on a school campus.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
-v2:
- * merge 2 parameters into 1
- * add info print if the mode is != auto
+Can you tell me if it is possible to get N with this card on linux, or
+should i wait for a newer firmware or something?
 
- drivers/net/wireless/ath/ath10k/pci.c | 47 +++++++++++++++++++++++++----------
- 1 file changed, 34 insertions(+), 13 deletions(-)
+thanks
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 0a2d1c2..9606b9b 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -33,10 +33,21 @@
- #include "ce.h"
- #include "pci.h"
- 
-+enum ath10k_pci_irq_mode {
-+	ATH10K_PCI_IRQ_AUTO = 0,
-+	ATH10K_PCI_IRQ_LEGACY = 1,
-+	ATH10K_PCI_IRQ_MSI = 2,
-+};
-+
- static unsigned int ath10k_target_ps;
-+static unsigned int ath10k_pci_irq_mode = ATH10K_PCI_IRQ_AUTO;
-+
- module_param(ath10k_target_ps, uint, 0644);
- MODULE_PARM_DESC(ath10k_target_ps, "Enable ath10k Target (SoC) PS option");
- 
-+module_param_named(irq_mode, ath10k_pci_irq_mode, uint, 0644);
-+MODULE_PARM_DESC(irq_mode, "0: ayto, 1: legacy, 2: msi (default: 0)");
-+
- #define QCA988X_2_0_DEVICE_ID	(0x003c)
- 
- static DEFINE_PCI_DEVICE_TABLE(ath10k_pci_id_table) = {
-@@ -2387,27 +2398,37 @@ static void ath10k_pci_init_irq_tasklets(struct ath10k *ar)
- static int ath10k_pci_init_irq(struct ath10k *ar)
- {
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
-+	bool msix_supported = test_bit(ATH10K_PCI_FEATURE_MSI_X,
-+				       ar_pci->features);
- 	int ret;
- 
- 	ath10k_pci_init_irq_tasklets(ar);
- 
--	if (!test_bit(ATH10K_PCI_FEATURE_MSI_X, ar_pci->features))
--		goto msi;
-+	if (ath10k_pci_irq_mode != ATH10K_PCI_IRQ_AUTO &&
-+	    !test_bit(ATH10K_FLAG_FIRST_BOOT_DONE, &ar->dev_flags))
-+		ath10k_info("limiting irq mode to: %d\n", ath10k_pci_irq_mode);
- 
- 	/* Try MSI-X */
--	ar_pci->num_msi_intrs = MSI_NUM_REQUEST;
--	ret = pci_enable_msi_block(ar_pci->pdev, ar_pci->num_msi_intrs);
--	if (ret == 0)
--		return 0;
--	if (ret > 0)
--		pci_disable_msi(ar_pci->pdev);
-+	if (ath10k_pci_irq_mode == ATH10K_PCI_IRQ_AUTO && msix_supported) {
-+		ar_pci->num_msi_intrs = MSI_NUM_REQUEST;
-+		ret = pci_enable_msi_block(ar_pci->pdev, ar_pci->num_msi_intrs);
-+		if (ret == 0)
-+			return 0;
-+		if (ret > 0)
-+			pci_disable_msi(ar_pci->pdev);
-+
-+		/* fall-through */
-+	}
- 
--msi:
- 	/* Try MSI */
--	ar_pci->num_msi_intrs = 1;
--	ret = pci_enable_msi(ar_pci->pdev);
--	if (ret == 0)
--		return 0;
-+	if (ath10k_pci_irq_mode != ATH10K_PCI_IRQ_LEGACY) {
-+		ar_pci->num_msi_intrs = 1;
-+		ret = pci_enable_msi(ar_pci->pdev);
-+		if (ret == 0)
-+			return 0;
-+
-+		/* fall-through */
-+	}
- 
- 	/* Try legacy irq
- 	 *
--- 
-1.8.4.rc3
+Matt
+Matthew Emery
+07988 197 438
 
+
+
+On 26 November 2013 20:46, Drasko DRASKOVIC <drasko.draskovic@gmail.com> wrote:
+> On Tue, Nov 26, 2013 at 7:24 PM, Dan Williams <dcbw@redhat.com> wrote:
+>>> While I'm not certain about your AP or the 7260 driver, I believe
+>>> 802.11n technically requires WPA2 encryption.  Try turning that on and
+>>> testing again.
+>>
+>> This is true, but...
+>
+> 802.11n HT prevents WPA:
+> http://www.slideshare.net/HPenterprise/demystifying-80211n-and-wpawpa2,slide
+> 4
+>
+> I do not see however that using no encryption is prevented by the standard...
+>
+> BR,
+> Drasko
