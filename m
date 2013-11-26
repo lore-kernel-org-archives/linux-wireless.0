@@ -1,170 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp35.i.mail.ru ([94.100.177.95]:55494 "EHLO smtp35.i.mail.ru"
+Received: from mx02a.posteo.de ([89.146.194.168]:36021 "EHLO mx02a.posteo.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750856Ab3KDCSW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Nov 2013 21:18:22 -0500
-Message-ID: <527703E6.8040504@mail.ru> (sfid-20131104_031838_424013_0AD795E0)
-Date: Mon, 04 Nov 2013 06:18:14 +0400
-From: Alexander Varnin <fenixk19@mail.ru>
+	id S1757258Ab3KZQr7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Nov 2013 11:47:59 -0500
 MIME-Version: 1.0
-To: Bing Zhao <bzhao@marvell.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>
-Subject: Re: mwifiex_sdio on chromebook
-References: <5276491F.20207@mail.ru> <477F20668A386D41ADCC57781B1F70430F45757E63@SC-VEXCH1.marvell.com>
-In-Reply-To: <477F20668A386D41ADCC57781B1F70430F45757E63@SC-VEXCH1.marvell.com>
-Content-Type: multipart/mixed;
- boundary="------------060700000200060503010602"
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Tue, 26 Nov 2013 17:47:48 +0100
+From: p2p@posteo.de
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Linux wireless <linux-wireless@vger.kernel.org>
+Subject: Re: RTL8188S
+In-Reply-To: <2035998.63y5xTAJxx@blech>
+References: <a3a1cb41444ae8dd89db830ae927491f@posteo.de>
+ <2035998.63y5xTAJxx@blech>
+Message-ID: <67b4a51871c98531c68306862402baf4@posteo.de> (sfid-20131126_174804_325981_DD14C377)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------060700000200060503010602
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Dear Mr. Lamparter,
 
-04.11.2013 02:10, Bing Zhao пишет:
-> Your Chromebook supports SDIO high speed mode (SDIO 2.0 spec). So
-> 50MHz is correct.
+Am 25.11.2013 22:57 schrieb Christian Lamparter:
+> On Monday, November 25, 2013 06:57:32 PM p2p@posteo.de wrote:
+>> I have a WLAN dongle with Realtek RTL8188S chip.
+>> I don't want to use r8712u driver with wext interface
+>> because I want to establish a wifi direct p2p connection.
+>
+> AFICT, you should be able to connect to a p2p-go peer
+> even if your device (in this case rtl8188s) only supports
+> station mode...
+>
 
-Ok, but mainline kernel doesn't try this frequency. It tries 400kHz at
-most.
+How do I do this?
 
-> What are you trying to do here? Are you trying to run a mainline kernel on your Chromebook?
+>> Unfortunately the original Realtek driver from hp didn't
+>> work with p2p too.
+> Why, what happens in this case?
+>
 
-Yes. I've got kernel 3.4 from Google Chrome OS. It works ok for
-mwifiex_sdio. But I want to run mainline kernel. As of 3.11 it is able
-to boot on Chromebook, but WiFi doesn't work.
+I have downloaded the driver from:
+http://www.realtek.com/downloads/downloadsView.aspx?Langid=1&PNid=48&PFid=48&Level=5&Conn=4&DownTypeID=3&GetDown=false&Downloads=true#RTL8188SU
 
-> You said mmc_attach_sdio function fails. The mwifiex_sdio driver and
-> the firmware will not be loaded at all. 
+Installed and loaded the module 8712u.
 
-Ok, that is clear.
+"iw list" doesn't list p2p-client or p2p-go.
 
-> CONFIG_MMC_DEBUG=y, and collect the debug logs.  
+wpa_cli command p2p_find results in FAIL.
 
-This way seems not very useful, because there is also internal and
-external storage on mmc bus, so log quickly get garbaged with it. Dmesg
-seems to be overflowed and forgets early initialization. I have made a
-dirty hack to collect some useful info about initialization. I am
-attaching it. Please check, if I need to add something. Will it be
-useful this way?
+wpa_supplicant ouput:
 
---------------060700000200060503010602
-Content-Type: text/x-patch;
- name="dirty-hack.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="dirty-hack.diff"
+CTRL_IFACE monitor attached - hexdump(len=21): 2f 74 6d 70 2f 77 70 61 
+5f 63 74 72 6c 5f 32 34 39 37 2d 32 00
+1385328422.214780: RX ctrl_iface - hexdump_ascii(len=8):
+      50 32 50 5f 46 49 4e 44                           P2P_FIND
+1385328422.214893: wlan0: Control interface command 'P2P_FIND'
 
-diff --git a/drivers/mmc/core/core.c b/drivers/mmc/core/core.c
-index bf18b6b..c4a2b22 100644
---- a/drivers/mmc/core/core.c
-+++ b/drivers/mmc/core/core.c
-@@ -1001,12 +1001,16 @@ EXPORT_SYMBOL(mmc_put_card);
- static inline void mmc_set_ios(struct mmc_host *host)
- {
- 	struct mmc_ios *ios = &host->ios;
--
--	pr_debug("%s: clock %uHz busmode %u powermode %u cs %u Vdd %u "
-+	
-+	if(((char*)mmc_hostname(host))[3]=='2') {
-+	  printk("%s: clock %uHz busmode %u powermode %u cs %u Vdd %u "
- 		"width %u timing %u\n",
- 		 mmc_hostname(host), ios->clock, ios->bus_mode,
- 		 ios->power_mode, ios->chip_select, ios->vdd,
- 		 ios->bus_width, ios->timing);
-+	
-+	  dump_stack();
-+	}
- 
- 	if (ios->clock > 0)
- 		mmc_set_ungated(host);
-diff --git a/drivers/mmc/core/sdio.c b/drivers/mmc/core/sdio.c
-index 80d89cff..0773be2 100644
---- a/drivers/mmc/core/sdio.c
-+++ b/drivers/mmc/core/sdio.c
-@@ -1133,11 +1133,14 @@ int mmc_attach_sdio(struct mmc_host *host)
- 	int err, i, funcs;
- 	u32 ocr;
- 	struct mmc_card *card;
-+	
-+	printk("mmc_attach_sdio 1\n");
- 
- 	BUG_ON(!host);
- 	WARN_ON(!host->claimed);
- 
- 	err = mmc_send_io_op_cond(host, 0, &ocr);
-+	printk("mmc_attach_sdio err %d\n", err);
- 	if (err)
- 		return err;
- 
-@@ -1166,6 +1169,8 @@ int mmc_attach_sdio(struct mmc_host *host)
- 		goto err;
- 	}
- 
-+	printk("mmc_attach_sdio 2\n");
-+	
- 	/*
- 	 * Detect and init the card.
- 	 */
-@@ -1182,11 +1187,13 @@ int mmc_attach_sdio(struct mmc_host *host)
- 			host->ocr &= ~R4_18V_PRESENT;
- 			err = mmc_sdio_init_card(host, host->ocr, NULL, 0);
- 		}
-+		printk("mmc_attach_sdio 3 err %d\n", err);
- 		if (err)
- 			goto err;
- 	}
- 	card = host->card;
- 
-+	printk("mmc_attach_sdio 4\n");
- 	/*
- 	 * Enable runtime PM only if supported by host+card+board
- 	 */
-@@ -1195,6 +1202,7 @@ int mmc_attach_sdio(struct mmc_host *host)
- 		 * Let runtime PM core know our card is active
- 		 */
- 		err = pm_runtime_set_active(&card->dev);
-+		printk("mmc_attach_sdio 5 err %d\n", err);
- 		if (err)
- 			goto remove;
- 
-@@ -1226,6 +1234,7 @@ int mmc_attach_sdio(struct mmc_host *host)
- 			pm_runtime_enable(&card->sdio_func[i]->dev);
- 	}
- 
-+	printk("mmc_attach_sdio 6\n");
- 	/*
- 	 * First add the card to the driver model...
- 	 */
-diff --git a/drivers/mmc/host/dw_mmc.c b/drivers/mmc/host/dw_mmc.c
-index 018f365..342b0c4 100644
---- a/drivers/mmc/host/dw_mmc.c
-+++ b/drivers/mmc/host/dw_mmc.c
-@@ -1917,6 +1917,7 @@ static int dw_mci_init_slot(struct dw_mci *host, unsigned int id)
- 
- 	mmc->ops = &dw_mci_ops;
- 	mmc->f_min = DIV_ROUND_UP(host->bus_hz, 510);
-+	printk("f_min = %u;  %d", mmc->f_min, host->bus_hz);
- 	mmc->f_max = host->bus_hz;
- 
- 	if (host->pdata->get_ocr)
-diff --git a/drivers/net/wireless/mwifiex/Makefile b/drivers/net/wireless/mwifiex/Makefile
-index a42a506..145f376 100644
---- a/drivers/net/wireless/mwifiex/Makefile
-+++ b/drivers/net/wireless/mwifiex/Makefile
-@@ -14,7 +14,10 @@
- # ARE EXPRESSLY DISCLAIMED.  The License provides additional details about
- # this warranty disclaimer.
- 
--
-+CFLAGS_main.o := -DDEBUG
-+CFLAGS_sdio.o := -DDEBUG
-+CFLAGS_sta_cmdresp.o := -DDEBUG
-+CFLAGS_wmm.o := -DDEBUG
- mwifiex-y += main.o
- mwifiex-y += init.o
- mwifiex-y += cfp.o
+-> but nothing more...
 
---------------060700000200060503010602--
+>> I thought RTL8192cu will work, but Larry F. told me it doesn't.
+> OK? (care to explain?)
+>
+>> He said there is a new driver in development.
+> Sort of. There's r92su, however this driver only supports what the
+> firmware is able to do (station, ad-hoc and a limited monitor mode).
+>
+>> I'm searching for information. Please can someone tell me about
+>> the project, its status, and if someone can take part.
+> Hey that's good to hear. The future of "r92su" was discussed in [0],
+> [1], ... The good news is:
+>
+
+I followed the thread.
+It shows me that it makes no sense. I am a beginner and I only can 
+spent time for it if someone tells me for example: fill this module with 
+code for this specific function. I have good literature and I think I 
+can try to help but not lead something.
+
+Best regards
+p2p
