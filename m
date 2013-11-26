@@ -1,40 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:59031 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751384Ab3K3NOs (ORCPT
+Received: from packetmixer.de ([79.140.42.25]:34571 "EHLO
+	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756518Ab3KZPnZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Nov 2013 08:14:48 -0500
-Message-ID: <1385817282.5056.0.camel@jlt4.sipsolutions.net> (sfid-20131130_141508_214071_F08B5CB5)
-Subject: Re: wireless network interfaces and network namespaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kevin Wilson <wkevils@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Sat, 30 Nov 2013 14:14:42 +0100
-In-Reply-To: <CAGXs5wXPB2WvuxfXzuyDaGS5_cA+GG5vHkHO+PnnVncvOwJTDg@mail.gmail.com> (sfid-20131130_131217_199581_DE585625)
-References: <CAGXs5wXPB2WvuxfXzuyDaGS5_cA+GG5vHkHO+PnnVncvOwJTDg@mail.gmail.com>
-	 (sfid-20131130_131217_199581_DE585625)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 26 Nov 2013 10:43:25 -0500
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: Karl Beldan <karl.beldan@gmail.com>
+Subject: Re: [PATCH v3] mac80211_hwsim: claim CSA support for AP
+Date: Tue, 26 Nov 2013 16:43:22 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
+References: <1385111186-19551-1-git-send-email-karl.beldan@gmail.com> <20131122140533.GA24796@magnum.frso.rivierawaves.com> <20131123093844.GA3895@magnum.frso.rivierawaves.com>
+In-Reply-To: <20131123093844.GA3895@magnum.frso.rivierawaves.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201311261643.22536.sw@simonwunderlich.de> (sfid-20131126_164328_691144_E419BB5A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2013-11-30 at 14:12 +0200, Kevin Wilson wrote:
-> Hello,
-> I am trying to move a wireless interface to a network namespace I
-> created and I get an error:
+Hey Karl,
+> Sorry, I was not very clear.
+> What I meant is that, my change for hwsim is not correct because it
+> assumed something like what's above that would prevent beacon_get() to
+> return a beacon when csa is under completion. Instead, it should check
+> for csa completion prior to getting the beacon.
 > 
-> ip link set wlan0 netns ns1
-> RTNETLINK answers: Invalid argument
+> Checking your ath9k change for CSA, I am under the impression this is
+> possible ? : {{{
+> ath9k_channel_switch_beacon()
+> ath9k_beacon_tasklet()
+>         ath9k_csa_is_finished() // ret false
+> ..
+> ath9k_beacon_tasklet()
+>         ath9k_csa_is_finished() // sets sc->csa_vif to NULL, ret true
+>                 ieee80211_csa_finish() // schedules csa work
 > 
-> I do it with latest iproute2 git sources,  on 3.8 kernel.
+> ath9k_beacon_tasklet()
+>         ath9k_csa_is_finished() // ret false because sc->csa_vif==NULL
 > 
-> I want to verify this: all wireless interfaces do no support
-> network namespace. Is this true ? what in fact is the reason for this ?
+> csa_finalize_work() // too late
+> }}}
 
-At least mac80211-based wireless interfaces *do* support namespaces, but
-you have to change the entire wireless NIC's namespace using iw --
-having different virtual interfaces of the same NIC in different
-namespaces is not supported.
+Yeah, you are right, if the worker is too late ath9k still generates a beacon 
+and will hit a warning that the csa was already finished. Actually that helped 
+quite a lot while developing the feature.
 
-johannes
+In practice, I don't think it's that bad - the worker shouldn't take so long 
+too respond, and also it does not hurt to generate/send the beacon one more 
+time on the same channel with count = 0 (or 1). It's useful to get a warning 
+in this case so that the root cause for the delay can be worked on.
 
+What do you think? I can change that easily in ath9k otherwise. :)
+
+Thanks,
+   Simon
