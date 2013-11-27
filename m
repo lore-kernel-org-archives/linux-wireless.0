@@ -1,35 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:43022 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756085Ab3KFKPY (ORCPT
+Received: from mail-pd0-f181.google.com ([209.85.192.181]:52678 "EHLO
+	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750901Ab3K0Evg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Nov 2013 05:15:24 -0500
-Message-ID: <1383732921.14307.20.camel@jlt4.sipsolutions.net> (sfid-20131106_111527_847231_C46792F1)
-Subject: Re: [PATCH 01/19] cfg80211: enforce disabling channels by custom or
- strict settings
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 06 Nov 2013 11:15:21 +0100
-In-Reply-To: <1383671897-7746-2-git-send-email-mcgrof@do-not-panic.com> (sfid-20131105_181714_779531_5FE770AA)
-References: <1383671897-7746-1-git-send-email-mcgrof@do-not-panic.com>
-	 <1383671897-7746-2-git-send-email-mcgrof@do-not-panic.com>
-	 (sfid-20131105_181714_779531_5FE770AA)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 26 Nov 2013 23:51:36 -0500
+Message-ID: <52957ADA.2080704@gmail.com> (sfid-20131127_055211_558798_A7DF5684)
+Date: Wed, 27 Nov 2013 12:53:46 +0800
+From: Chen Gang <gang.chen.5i5j@gmail.com>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: rkuo <rkuo@codeaurora.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	David Miller <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
+Subject: [PATCH] net: mac80211: tx.c: be sure of 'sdata->vif.type' must be
+ NL80211_IFTYPE_AP when be in NL80211_IFTYPE_AP case
+References: <528AEFB7.4060301@gmail.com> <20131125011938.GB18921@codeaurora.org> <5292B845.3010404@gmail.com> <5292B8A0.7020409@gmail.com> <5294255E.7040105@gmail.com>
+In-Reply-To: <5294255E.7040105@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-11-05 at 09:17 -0800, Luis R. Rodriguez wrote:
+In next-20131122 tree, if "sdata->vif.type != NL80211_IFTYPE_AP",
+'chanctx_conf' will be not initialized, so need check it. Related
+warning (with allmodconfig under hexagon):
 
-> @@ -1251,7 +1261,7 @@ static void handle_channel_custom(struct wiphy *wiphy,
->  	if (IS_ERR(reg_rule)) {
->  		REG_DBG_PRINT("Disabling freq %d MHz as custom regd has no rule that fits it\n",
->  			      chan->center_freq);
-> -		chan->flags = IEEE80211_CHAN_DISABLED;
-> +		chan->flags = chan->orig_flags |= IEEE80211_CHAN_DISABLED;
+    CC [M]  net/mac80211/tx.o
+  net/mac80211/tx.c: In function 'ieee80211_subif_start_xmit':
+  net/mac80211/tx.c:1827:27: warning: 'chanctx_conf' may be used uninitialized in this function [-Wuninitialized]
 
-Are you sure the |= is right?
 
-johannes
+Signed-off-by: Chen Gang <gang.chen.5i5j@gmail.com>
+---
+ net/mac80211/tx.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index c558b24..f3245d6 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1814,8 +1814,9 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 			break;
+ 		/* fall through */
+ 	case NL80211_IFTYPE_AP:
+-		if (sdata->vif.type == NL80211_IFTYPE_AP)
+-			chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
++		if (sdata->vif.type != NL80211_IFTYPE_AP)
++			goto fail_rcu;
++		chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+ 		if (!chanctx_conf)
+ 			goto fail_rcu;
+ 		fc |= cpu_to_le16(IEEE80211_FCTL_FROMDS);
+-- 
+1.7.7.6
