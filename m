@@ -1,93 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:56470 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751023Ab3KOQYP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Nov 2013 11:24:15 -0500
-Received: from [192.168.1.138] ([79.218.105.41]) by mail.gmx.com (mrgmx002)
- with ESMTPSA (Nemesis) id 0LnwxU-1VEu862UsS-00fxwg for
- <linux-wireless@vger.kernel.org>; Fri, 15 Nov 2013 17:24:14 +0100
-Message-ID: <52864AAD.1060702@rempel-privat.de> (sfid-20131115_172419_030084_DEDB5E08)
-Date: Fri, 15 Nov 2013 17:24:13 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:60823 "EHLO
+	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754213Ab3K0W7t (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Nov 2013 17:59:49 -0500
+Received: from compute5.internal (compute5.nyi.mail.srv.osa [10.202.2.45])
+	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 88052208F6
+	for <linux-wireless@vger.kernel.org>; Wed, 27 Nov 2013 17:59:48 -0500 (EST)
+Message-Id: <1385593188.3627.52911717.4E0712D9@webmail.messagingengine.com> (sfid-20131128_000009_192456_A6A5D8D9)
+From: "Nikita N." <nikitan@operamail.com>
+To: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-CC: "Proffit, Jerome" <jproffit@qca.qualcomm.com>,
-	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-	"Biard, David" <dbiard@qca.qualcomm.com>,
-	ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: ath9k_htc: Target is unresponsive
-References: <39E4555519E9C54593B1BE31E24CB79A39B12884@nasanexd02a.na.qualcomm.com> <20131115134752.GQ9795@pogo> <52862D32.3010601@rempel-privat.de> <CAB=NE6VNZDT4JLRM=iqzkaKezXaoaXcXuyTHq62=H-axxGVNZg@mail.gmail.com> <52863154.50105@rempel-privat.de> <CAB=NE6U50eTLcUugBBBKz3fxa8yYcm+LCqgAtARzEnLpYqWg1g@mail.gmail.com> <528645F9.9030708@rempel-privat.de> <CAB=NE6UHO8PO3g0kugAVddOOAEbiCBet7mLsRPfWd2yVOh56yg@mail.gmail.com>
-In-Reply-To: <CAB=NE6UHO8PO3g0kugAVddOOAEbiCBet7mLsRPfWd2yVOh56yg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
+In-Reply-To: <52966D64.2030805@lwfinger.net>
+References: <1385589961.19021.52907237.3EE33E5B@webmail.messagingengine.com>
+ <52966D64.2030805@lwfinger.net>
+Subject: Re: RTL8187 bugs
+Date: Wed, 27 Nov 2013 14:59:48 -0800
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 15.11.2013 17:07, schrieb Luis R. Rodriguez:
-> On Fri, Nov 15, 2013 at 5:04 PM, Oleksij Rempel <linux@rempel-privat.de> wrote:
->> Am 15.11.2013 16:33, schrieb Luis R. Rodriguez:
->>> On Fri, Nov 15, 2013 at 3:36 PM, Oleksij Rempel <linux@rempel-privat.de> wrote:
->>>> Am 15.11.2013 15:29, schrieb Luis R. Rodriguez:
->>>>> On Fri, Nov 15, 2013 at 3:18 PM, Oleksij Rempel <linux@rempel-privat.de> wrote:
->>>>>> I do not know which backport include patch for usb interrupt transfer.
->>>>>
->>>>> Which patch are you referring to? The backports project releases match
->>>>> the Linux kernel releases, so the backports-3.12 release is based on
->>>>> linux v3.12, we can check what kernel the patch you are describing got
->>>>> merged into Linux by doing:
->>>>>
->>>>> git describe --contains gitsum
->>>>
->>>> i mean:
->>>>
->>>> commit 2f5e3ecfc155449987d64028ff6b73f29cd1ef8b
->>>> Author: Oleksij Rempel <linux@rempel-privat.de>
->>>> Date:   Tue Aug 13 09:29:34 2013 +0200
->>>>
->>>>     ath9k_htc: do not use bulk on EP3 and EP4
->>>
->>> OK that is upstream commit ID 2b721118b7
->>>
->>> mcgrof@frijol ~/linux-stable (git::master)$ git describe --contains
->>> 2b721118b7821107757eb1d37af4b60e877b27e7
->>> v3.12-rc1~132^2~84^2^2~88
->>>
->>> This means that patch got merged into v3.12-rc1 which means the
->>> backports release based on v3.12 will have it.
->>>
->>>> If it is already included, then try to revert.
->>>
->>> What do you mean? Are you saying to try to revert that patch in case
->>> v3.12 backports release causes issues with the card?
->>
->> yes
->>
->>> It seems the user
->>> of this card had issues with the v3.10 release of backports which
->>> would not have this patch merged.
->>
->> Ok. Thank you.
+Alright then :) lets start:
+
+
+- Bug #1:
+Im running on standard Slitaz4, updating modules, the following script:
+./backports-3.13-rc1-1/scripts/compress_modules.sh
+the "if" is not able to detect the present compression, as result the
+new modules are not compressed, and get mixed with the old ones
+compressed, resulting in errors.
+My actual workaround is just to delete the "if" line.
+The issue is present in all backports releases, since the switch from
+compat-drivers.
+
+
+
+
+
+- Bug #2:
+I previously updated to backports-3.11-rc3, after install here the dmesg
+report:
+"
+Loading modules backported from Linux version v3.11-rc3-0-g5ae90d8
+Backport generated by backports.git v3.11-rc3-1-0-g4e81a94
+cfg80211: Calling CRDA to update world regulatory domain
+NET: Registered protocol family 10
+rtl8187: Invalid hwaddr! Using randomly generated MAC address
+ieee80211 phy0: Selected rate control algorithm 'minstrel_ht'
+ieee80211 phy0: hwaddr 6a:d5:65:93:2c:69, RTL8187vB (default) V1 +
+rtl8225z2, rfkill mask 2
+rtl8187: Customer ID is 0x00
+Registered led device: rtl8187-phy0::radio
+Registered led device: rtl8187-phy0::tx
+Registered led device: rtl8187-phy0::rx
+rtl8187: wireless switch is on
+usbcore: registered new interface driver rtl8187
+"
+The "Invalid hwaddr!" is the bug.
+As workaround I had to rollback to compat-drivers, where the problem
+does not exists, infact here dmesg:
+"
+Compat-drivers backport release: compat-drivers-v3.9-rc4-2-su
+Backport based on linux-stable.git v3.9-rc4
+compat.git: linux-stable.git
+cfg80211: Calling CRDA to update world regulatory domain
+NET: Registered protocol family 10
+ieee80211 phy0: Selected rate control algorithm 'minstrel_ht'
+ieee80211 phy0: hwaddr 00:e0:4c:X:X:X, RTL8187vB (default) V1 +
+rtl8225z2, rfkill mask 2
+"
+
+
+
+- Bug #3:
+After reverting back to compat-drivers, my interface started behaving
+wrong in monitor mode.
+Monitor mode was always working properly before, but after applying
+backports-3.11 now is broken.
+The symptoms are the following: whatever is the channel, from airodump
+or wireshark I can see only broadcasts frames (dest ff:ff:ff..) and
+management frames (ack,probes,beacons,req send,block,
+assoc,auth,deauth,..)
+I tried also other live-RAM-only distros as BT5, Kali and Weaknet, the
+issue persists.
+The interface behaves like some kind of "wrong" data has been written
+permanently (in the eeprom?) which instructs the interface to discard
+all data frames when in monitor mode.
+Managed mode still works perfectly.
+I still could not find a workaround for this bug, as result my interface
+is still unusable in monitor mode.
+
+
+
+
+- Bug #4:
+Today I tried install latest stable backports-3.13-rc1-1, but RTL
+modules are not compiled.
+Running make defconfig-rtlwifi, it compiles only generic modules.
+Running make defconfig-wifi, compilation is very fast, and skips lots of
+chipsets, again same issue - no RTL modules.
+No workaround - I reverted back again to compat-drivers. 
+
+
+I believe the highest priority bug is the #3, because turned my
+interface unusable.
+Of course its possible that the cause of the monitor malfunction doesnt
+come from backports, I cant say that for sure, but for sure happened
+after reverting to compat-drivers - where it always worked perfectly.
+
+Please feel free to ask all further infos you possibly need!
+Thanks for the attention :)
+
+
+On Wed, Nov 27, 2013, at 02:08 PM, Larry Finger wrote:
+> On 11/27/2013 04:06 PM, Nikita N. wrote:
+> > Hi All :) Its my first time in a mailinglist, so I apologize if Im
+> > mistaken.
+> > I would like to report about few bugs I found running latest modules for
+> > RTL8187 and latest backports.
+> > Is that the right place? Thanks
 > 
-> So to be clear -- you would recommend testing the new v3.12 release
-> that *has* the patch then?
-
-Yes. Before this patch ath9k_htc was overwriting usb descriptor from
-driver. The problem with it - USB subsystem do not have this option, so
-not all usb host controller drivers will use updated information.
-In case driver indeed use Bulk instead of Int, it can still cause other
-problems. For example not all controller can work with 64 byte bulk frames.
-
-This behaviour was added back in 2010 and should be workaround for speed
-problem on EP4, which is intensively used by REG_READ/WRITE.
-
-Right now there are two options:
-- use Bulk, but fail on some controllers
-- use Int but be damn slow on other controllers.
-
-After i tested ath9k-htc on different usb HC, i will not wonder that
-there can be other problems too. Here is some info about known usb issues:
-https://github.com/qca/open-ath9k-htc-firmware/wiki/usb-related-issues
+> Yes, this is the right place.
+> 
+> Larry
+> 
+> 
 
 -- 
-Regards,
-Oleksij
+http://www.fastmail.fm - Send your email first class
+
