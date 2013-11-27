@@ -1,32 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:42965 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932177Ab3KFKJ2 (ORCPT
+Received: from s3.neomailbox.net ([178.209.62.157]:43359 "EHLO
+	s3.neomailbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753300Ab3K0Pnx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Nov 2013 05:09:28 -0500
-Message-ID: <1383732564.14307.16.camel@jlt4.sipsolutions.net> (sfid-20131106_110931_784182_AA1B4FEC)
-Subject: Re: [PATCH v2 1/5] cfg80211/mac80211: DFS setup chandef for cac
- event
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 06 Nov 2013 11:09:24 +0100
-In-Reply-To: <1383659329-11023-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131105_144902_417014_74E30BCC)
-References: <1383659329-11023-1-git-send-email-janusz.dziedzic@tieto.com>
-	 (sfid-20131105_144902_417014_74E30BCC)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 27 Nov 2013 10:43:53 -0500
+Message-ID: <5296131B.2040003@open-mesh.com> (sfid-20131127_164355_565786_44E9B8AC)
+Date: Wed, 27 Nov 2013 16:43:23 +0100
+From: Antonio Quartulli <antonio@open-mesh.com>
+MIME-Version: 1.0
+To: Sujith Manoharan <sujith@msujith.org>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: ath9k pending patches
+References: <1385547828-4330-1-git-send-email-sujith@msujith.org>	<21141.51790.303263.385517@gargle.gargle.HOWL>	<5295EB1D.1050604@meshcoding.com> <21142.4319.977971.553792@gargle.gargle.HOWL>
+In-Reply-To: <21142.4319.977971.553792@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-11-05 at 14:48 +0100, Janusz Dziedzic wrote:
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA256
 
->  void cfg80211_cac_event(struct net_device *netdev,
-> +			struct cfg80211_chan_def *chandef,
+On 27/11/13 16:33, Sujith Manoharan wrote:
+> Antonio Quartulli wrote:
+>> What does this ALWAYS_PERFORM_KEY_SEARCH bit do? Is it set within
+>> the initvalues?
+> 
+> Here is a patch to set ALWAYS_PERFORM_KEY_SEARCH for AR9300 2.2. 
+> Since AR9331, AR9340 and AR9580 use the same array, it applies for 
+> them too.
 
-Jouni had a patch to make a lot of these pointers const - this one
-probably should be as well.
-
-johannes
 
 
+Thanks a lot!
+
+
+- -- 
+Antonio Quartulli
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIcBAEBCAAGBQJSlhMbAAoJEADl0hg6qKeO0+AQAJhKbyNAwXQNbNyO82zaePRG
+WRD2QtPKwNW6O89WZyCP9e63ZqmFDjKaqvLgthclznO2BN+kcOOFIBC0nJ/OKkOl
+nzSZnRp6VVrxKHUMj2VbdjTr90ls9v9qf/C1qJTxBTRKxFt8NX2rErGLe3pTZwXp
+R9geDAQo2NV2Ho735f7LW9D6f9UyHgYGTVKGm3XDPHdIEz0U/mv0lqbkx3HTsCPx
+WVCYgEzqy8cs7Vf+yFHv8iQNhmDtf8UECTKJ9Cvu45np/wDmgFP/AtpY+TN5B1VC
+hzBj7OL3BD0hepjUhh8r4SiqR6LyDL+MfHvyL2Y616ZFr+rbHYUYX+V7Fov7w2Om
+lovKlcGu4AU4e2kgowGWlfAd5YGif2SNKQ3RiMdTpNsXVlIZMu286urrT5Y8H6pR
+eUgThc/5CKpum3a0jCw2FbZr7naC3mJEWVsrB2z8rMvuUnM4ZekwhCHsOMBnQHMf
+6sw9Iw7AxujZjTqoF5HgTnaDJb0Op63EUDa3HW+rq3qpRy/RK/qZ+AM0R2pipiO3
+wHmlBHOYfct8sHl8Hx3VuEmS9Yd//yJqNcDf7iOriU6rqRrdxrn8VWhSUSEXOg7M
++uohr2ibPLmVQgjFik/Yzi+0lIZ6Lu1E1vE0zGZkgQVxLpqNTugyjW/VZansnG85
+3+ddAqwHoioyFFkBcIQE
+=XNZ4
+-----END PGP SIGNATURE-----
