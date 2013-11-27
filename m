@@ -1,32 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve0-f177.google.com ([209.85.128.177]:60827 "EHLO
-	mail-ve0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751126Ab3K3Ng1 (ORCPT
+Received: from mail-bk0-f47.google.com ([209.85.214.47]:46992 "EHLO
+	mail-bk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752744Ab3K0KZq convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Nov 2013 08:36:27 -0500
-Received: by mail-ve0-f177.google.com with SMTP id db12so7466229veb.22
-        for <linux-wireless@vger.kernel.org>; Sat, 30 Nov 2013 05:36:27 -0800 (PST)
+	Wed, 27 Nov 2013 05:25:46 -0500
+Received: by mail-bk0-f47.google.com with SMTP id mx12so3119805bkb.34
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Nov 2013 02:25:45 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1385817282.5056.0.camel@jlt4.sipsolutions.net>
-References: <CAGXs5wXPB2WvuxfXzuyDaGS5_cA+GG5vHkHO+PnnVncvOwJTDg@mail.gmail.com>
- <1385817282.5056.0.camel@jlt4.sipsolutions.net>
-From: Sergey Ryazanov <ryazanov.s.a@gmail.com>
-Date: Sat, 30 Nov 2013 17:36:06 +0400
-Message-ID: <CAHNKnsSZxMscirbW=BqTa7fPXDUeFp67Co=QEtawjSOmctfs9Q@mail.gmail.com> (sfid-20131130_143631_270382_DB14B26A)
-Subject: Re: wireless network interfaces and network namespaces
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Kevin Wilson <wkevils@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1385474260-22385-2-git-send-email-michal.kazior@tieto.com>
+References: <1385126819-15311-1-git-send-email-michal.kazior@tieto.com>
+	<1385474260-22385-1-git-send-email-michal.kazior@tieto.com>
+	<1385474260-22385-2-git-send-email-michal.kazior@tieto.com>
+Date: Wed, 27 Nov 2013 11:25:45 +0100
+Message-ID: <CA+BoTQmtkBGpktbLRfmiLuLDKP9TnUeWu4OMeGUsVcq7m05u4Q@mail.gmail.com> (sfid-20131127_112551_029392_CB0E2653)
+Subject: Re: [PATCH v2 1/3] ath10k: use nss provided by mac80211
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/11/30 Johannes Berg <johannes@sipsolutions.net>:
-> having different virtual interfaces of the same NIC in different
-> namespaces is not supported.
+On 26 November 2013 14:57, Michal Kazior <michal.kazior@tieto.com> wrote:
+> Calculating STA NSS just from the mcs rateset is
+> not the greatest idea.
 >
-Is this rule applicable to hwsim interfaces too?
+> This should prevent connectivity issues if
+> mac80211 is ever to set rx_nss to something other
+> rather than base on max mcs map. As an example
+> operation mode change notification in assoc
+> request may change rx_nss initial values in the
+> future.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> ---
 
--- 
-BR,
-Sergey
+Drop this single patch, please.
+
+I just noticed rx_nss doesn't seem to have correct value when associating..
+
+
+Michał
