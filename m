@@ -1,153 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f182.google.com ([209.85.215.182]:51295 "EHLO
-	mail-ea0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756362Ab3KFM4Z (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:41016 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753338Ab3K0QeX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Nov 2013 07:56:25 -0500
-Received: by mail-ea0-f182.google.com with SMTP id o10so4892037eaj.41
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Nov 2013 04:56:23 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+	Wed, 27 Nov 2013 11:34:23 -0500
+Date: Wed, 27 Nov 2013 11:33:35 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH v3 3/3] cfg80211: allow beaconing after DFS CAC
-Date: Wed,  6 Nov 2013 13:55:53 +0100
-Message-Id: <1383742553-28149-3-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131106_135627_944835_75CAA958)
-In-Reply-To: <1383742553-28149-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1383742553-28149-1-git-send-email-janusz.dziedzic@tieto.com>
+Cc: wireless-regdb@lists.infradead.org
+Subject: [ANN] wireless-regdb: master-2013-11-27
+Message-ID: <20131127163334.GB7780@tuxdriver.com> (sfid-20131127_173426_012540_334F880E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allow beconing after we pass Channel Availability Check (CAC).
-Allow non-DFS and DFS channels mix. All DFS channels have to
-be in NL80211_DFS_AVAILABLE state (pass CAC).
+A new release of wireless-regdb (master-2013-11-27) is available at:
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- net/wireless/chan.c |   85 ++++++++++++++++++++++++++++++++++++++++++++-------
- 1 file changed, 74 insertions(+), 11 deletions(-)
+http://www.kernel.org/pub/software/network/wireless-regdb/wireless-regdb-2013.11.27.tar.gz
 
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index 3b6daf8..78559b5 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -425,9 +425,9 @@ bool cfg80211_chandef_dfs_usable(struct wiphy *wiphy,
- }
- 
- 
--static bool cfg80211_secondary_chans_ok(struct wiphy *wiphy,
--					u32 center_freq, u32 bandwidth,
--					u32 prohibited_flags)
-+static bool cfg80211_get_chans_dfs_available(struct wiphy *wiphy,
-+					     u32 center_freq,
-+					     u32 bandwidth)
- {
- 	struct ieee80211_channel *c;
- 	u32 freq, start_freq, end_freq;
-@@ -435,18 +435,75 @@ static bool cfg80211_secondary_chans_ok(struct wiphy *wiphy,
- 	start_freq = cfg80211_get_start_freq(center_freq, bandwidth);
- 	end_freq = cfg80211_get_end_freq(center_freq, bandwidth);
- 
-+	/*
-+	 * Check entire range of channels for the bandwidth.
-+	 * If any channel in between is disabled or has not
-+	 * had gone through CAC return false
-+	 */
- 	for (freq = start_freq; freq <= end_freq; freq += 20) {
- 		c = ieee80211_get_channel(wiphy, freq);
- 		if (!c)
- 			return false;
- 
--		/* check for radar flags */
--		if ((prohibited_flags & c->flags & IEEE80211_CHAN_RADAR) &&
-+		if (c->flags & IEEE80211_CHAN_DISABLED)
-+			return false;
-+
-+		if ((c->flags & IEEE80211_CHAN_RADAR)  &&
- 		    (c->dfs_state != NL80211_DFS_AVAILABLE))
- 			return false;
-+	}
-+
-+	return true;
-+}
-+
-+static bool cfg80211_chandef_dfs_available(struct wiphy *wiphy,
-+				const struct cfg80211_chan_def *chandef)
-+{
-+	int width;
-+	int r;
-+
-+	if (WARN_ON(!cfg80211_chandef_valid(chandef)))
-+		return false;
-+
-+	width = cfg80211_chandef_get_width(chandef);
-+	if (width < 0)
-+		return false;
-+
-+	r = cfg80211_get_chans_dfs_available(wiphy, chandef->center_freq1,
-+					     width);
-+
-+	/* If any of channels unavailable for cf1 just return */
-+	if (!r)
-+		return r;
-+
-+	switch (chandef->width) {
-+	case NL80211_CHAN_WIDTH_80P80:
-+		WARN_ON(!chandef->center_freq2);
-+		r = cfg80211_get_chans_dfs_available(wiphy,
-+						     chandef->center_freq2,
-+						     width);
-+	default:
-+		WARN_ON(chandef->center_freq2);
-+		break;
-+	}
-+
-+	return r;
-+}
-+
-+
-+static bool cfg80211_secondary_chans_ok(struct wiphy *wiphy,
-+					u32 center_freq, u32 bandwidth,
-+					u32 prohibited_flags)
-+{
-+	struct ieee80211_channel *c;
-+	u32 freq, start_freq, end_freq;
- 
--		/* check for the other flags */
--		if (c->flags & prohibited_flags & ~IEEE80211_CHAN_RADAR)
-+	start_freq = cfg80211_get_start_freq(center_freq, bandwidth);
-+	end_freq = cfg80211_get_end_freq(center_freq, bandwidth);
-+
-+	for (freq = start_freq; freq <= end_freq; freq += 20) {
-+		c = ieee80211_get_channel(wiphy, freq);
-+		if (!c || c->flags & prohibited_flags)
- 			return false;
- 	}
- 
-@@ -552,13 +609,19 @@ bool cfg80211_reg_can_beacon(struct wiphy *wiphy,
- 			     struct cfg80211_chan_def *chandef)
- {
- 	bool res;
-+	u32 prohibited_flags = IEEE80211_CHAN_DISABLED |
-+			       IEEE80211_CHAN_NO_IR |
-+			       IEEE80211_CHAN_RADAR;
- 
- 	trace_cfg80211_reg_can_beacon(wiphy, chandef);
- 
--	res = cfg80211_chandef_usable(wiphy, chandef,
--				      IEEE80211_CHAN_DISABLED |
--				      IEEE80211_CHAN_NO_IR |
--				      IEEE80211_CHAN_RADAR);
-+	if (cfg80211_chandef_dfs_required(wiphy, chandef) > 0 &&
-+	    cfg80211_chandef_dfs_available(wiphy, chandef)) {
-+		/* We can skip IEEE80211_CHAN_NO_IR if chandef dfs available */
-+		prohibited_flags = IEEE80211_CHAN_DISABLED;
-+	}
-+
-+	res = cfg80211_chandef_usable(wiphy, chandef, prohibited_flags);
- 
- 	trace_cfg80211_return_bool(res);
- 	return res;
+Here is the short log of the changes included since the 2013-10-11
+release:
+
+John W. Linville (2):
+      Actually sign regulatory.bin with the correct key...
+      wireless-regdb: update regulatory.bin based on preceding changes.
+
+Luis R. Rodriguez (96):
+      wireless-regdb: consolidate passive-scan and no-ibss flags
+      wireless-regdb: remove antenna gain
+      wireless-regdb: add DFS FCC regions
+      wireless-regdb: add DFS ETSI regions
+      wireless-regdb: add DFS JP regions
+      wireless-regdb: optimize two of DE's rules
+      wireless-regdb: optimize two of IL's rules
+      wireless-regdb: optimize two of NL's rules
+      wireless-regdb: enable HT40 for AL on 2.4 GHz
+      wireless-regdb: enable VHT80 for AM
+      wireless-regdb: enable VHT80 for AN
+      wireless-regdb: enable VHT80 for AW
+      wireless-regdb: enable VHT80 for AZ
+      wireless-regdb: enable VHT80 for BA
+      wireless-regdb: enable VHT80 for BB
+      wireless-regdb: enable VHT80 for BH
+      wireless-regdb: enable VHT80 for BO
+      wireless-regdb: enable VHT80 for BY
+      wireless-regdb: enable VHT80 for BZ
+      wireless-regdb: enable VHT80 for CL
+      wireless-regdb: enable VHT80 for CY
+      wireless-regdb: enable VHT80 for EE
+      wireless-regdb: enable VHT80 for EG
+      wireless-regdb: enable VHT80 for GE
+      wireless-regdb: enable VHT80 for HN
+      wireless-regdb: enable VHT80 for HR
+      wireless-regdb: enable VHT80 for HT
+      wireless-regdb: enable VHT80 for HU
+      wireless-regdb: enable VHT80 for GL
+      wireless-regdb: enable VHT80 for IN
+      wireless-regdb: enable VHT80 for IS
+      wireless-regdb: enable VHT80 for IR
+      wireless-regdb: enable VHT80 for JM
+      wireless-regdb: enable VHT80 for JO
+      wireless-regdb: enable VHT80 for LI
+      wireless-regdb: enable VHT80 for LK
+      wireless-regdb: enable VHT80 for LT
+      wireless-regdb: enable VHT80 for LV
+      wireless-regdb: enable VHT80 for MK
+      wireless-regdb: enable VHT80 for MT
+      wireless-regdb: enable VHT80 for KH
+      wireless-regdb: enable VHT80 for PK
+      wireless-regdb: enable VHT80 for QA
+      wireless-regdb: enable VHT80 for RO
+      wireless-regdb: enable VHT80 for SI
+      wireless-regdb: enable VHT80 for SV
+      wireless-regdb: enable VHT80 for TN
+      wireless-regdb: enable VHT80 for NO
+      wireless-regdb: enable VHT80 for DO
+      wireless-regdb: enable VHT80 for GT
+      wireless-regdb: enable VHT80 for UZ
+      wireless-regdb: enable VHT80 for VE
+      wireless-regdb: enable VHT80 for UY
+      wireless-regdb: add VHT80 rules for AL
+      wireless-regdb: add VHT80 rules for BD
+      wireless-regdb: add VHT80 rules for LB
+      wireless-regdb: add VHT80 rules for CN
+      wireless-regdb: add VHT80 rules for UA
+      wireless-regdb: add VHT80 rules for DZ
+      wireless-regdb: add VHT80 rules for ZW
+      wireless-regdb: extend 5 GHz range for AE
+      wireless-regdb: extend 5 GHz range for AR
+      wireless-regdb: extend 5 GHz range for BR
+      wireless-regdb: extend 5 GHz range for CR
+      wireless-regdb: extend 5 GHz range for EC
+      wireless-regdb: extend 5 GHz range for GU
+      wireless-regdb: extend 5 GHz range for NZ
+      wireless-regdb: extend 5 GHz range for VN
+      wireless-regdb: extend 5 GHz range for PE
+      wireless-regdb: extend 5 GHz range for PH
+      wireless-regdb: extend 5 GHz range for SG
+      wireless-regdb: extend 5 GHz range for TH
+      wireless-regdb: increase 5 GHz power for IL
+      wireless-regdb: update BN's 5 GHz rules
+      wireless-regdb: update CA's 5 GHz rules
+      wireless-regdb: update KE's 5 GHz rules
+      wireless-regdb: update KP's 5 GHz rules
+      wireless-regdb: update MC's 5 GHz rules
+      wireless-regdb: update MA's 5 GHz rules
+      wireless-regdb: update NP's 5 GHz rules
+      wireless-regdb: update OM's 5 GHz rules
+      wireless-regdb: update PG's 5 GHz rules
+      wireless-regdb: update RU's 5 GHz rules
+      wireless-regdb: update RW's 5 GHz rules
+      wireless-regdb: update SA's 5 GHz rules
+      wireless-regdb: update TT's 5 GHz rules
+      wireless-regdb: update ZA's 5 GHz rules
+      wireless-regdb: update BG's regulatory rules
+      wireless-regdb: update CO's regulatory rules
+      wireless-regdb: update GE's regulatory rules
+      wireless-regdb: update PR's regulatory rules
+      wireless-regdb: update KR's regulatory rules
+      wireless-regdb: update MX's regulatory rules
+      wireless-regdb: update PA's regulatory rules
+      wireless-regdb: update TW's regulatory rules
+      wireless-regdb: update US' regulatory rules
+
 -- 
-1.7.9.5
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
