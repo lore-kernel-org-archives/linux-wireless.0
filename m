@@ -1,59 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:63320 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754560Ab3KUNl3 (ORCPT
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:60875 "EHLO
+	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754584Ab3K0WGC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Nov 2013 08:41:29 -0500
-Received: by mail-we0-f174.google.com with SMTP id q58so4961010wes.33
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Nov 2013 05:41:28 -0800 (PST)
-MIME-Version: 1.0
-Date: Thu, 21 Nov 2013 19:11:28 +0530
-Message-ID: <CADNhdGFPR6JOkZjDMMZ7mEo5cJdBrg9a300A4pS=e_WGMdNpbA@mail.gmail.com> (sfid-20131121_144146_582040_1FEE1D88)
-Subject: [hostapd] configuring for a simple AP
-From: shankar swaminathan <shankswa@gmail.com>
+	Wed, 27 Nov 2013 17:06:02 -0500
+Received: from compute1.internal (compute1.nyi.mail.srv.osa [10.202.2.41])
+	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 74D3420E02
+	for <linux-wireless@vger.kernel.org>; Wed, 27 Nov 2013 17:06:01 -0500 (EST)
+Message-Id: <1385589961.19021.52907237.3EE33E5B@webmail.messagingengine.com> (sfid-20131127_230606_488894_D257544C)
+From: "Nikita N." <nikitan@operamail.com>
 To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+MIME-Version: 1.0
+Content-Type: text/plain
+Subject: RTL8187 bugs
+Date: Wed, 27 Nov 2013 14:06:01 -0800
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi All :) Its my first time in a mailinglist, so I apologize if Im
+mistaken.
+I would like to report about few bugs I found running latest modules for
+RTL8187 and latest backports.
+Is that the right place? Thanks
 
-I am trying to make a linux PC up and running with hostapd to create a
-simple Access Point.
+-- 
+http://www.fastmail.fm - Choose from over 50 domains or use your own
 
-I do not want authentication, encryption and DHCP -- have configured
-station with static IP address.
-
-if I start hostapd (not as a daemon) with the default hostapd.conf
-file, and try connecting the client (fedora client), i see that the
-wifi sybol does not appear, but the connection seems to have been
-established.
-However, if i open hostapd_cli, i keep getting a print like,
-<client mac> CONNECTED
-<client mac> DISCONNECTED.
-
-Hence, i think the client keeps getting connected and disconnected.
-
-I then tried using a smaller config file with nothing regarding beacon
-interval etc...as shown below:
-
----
-interface=wlan0
-driver=nl80211
-ssid=test
-hw_mode=g
-channel=1
-macaddr_acl=0
-auth_algs=1
-ignore_broadcast_ssid=0
----
-
-The results were similar.
-
-Could anyone, guide me or provide me a simple hostapd.conf file, that
-will help me connect clients. I do not want authentication,
-encryption, and DHCP -- will use static IP.
-
-Thanks in advance.
-
--shankar
