@@ -1,48 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f52.google.com ([209.85.214.52]:33404 "EHLO
-	mail-bk0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755281Ab3KERRj (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:7807 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750907Ab3K0OsW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Nov 2013 12:17:39 -0500
-Received: by mail-bk0-f52.google.com with SMTP id u14so2747018bkz.11
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Nov 2013 09:17:38 -0800 (PST)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 13/19] cfg80211: allow only the core to request to update the world regdom
-Date: Tue,  5 Nov 2013 09:18:11 -0800
-Message-Id: <1383671897-7746-14-git-send-email-mcgrof@do-not-panic.com> (sfid-20131105_181751_301129_0D8B932E)
-In-Reply-To: <1383671897-7746-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1383671897-7746-1-git-send-email-mcgrof@do-not-panic.com>
+	Wed, 27 Nov 2013 09:48:22 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 0/8] ath10k: pci fixes 2013-11-22
+References: <1385125518-13461-1-git-send-email-michal.kazior@tieto.com>
+	<1385384787-12470-1-git-send-email-michal.kazior@tieto.com>
+Date: Wed, 27 Nov 2013 16:48:17 +0200
+In-Reply-To: <1385384787-12470-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Mon, 25 Nov 2013 14:06:19 +0100")
+Message-ID: <87txexgatq.fsf@kamboji.qca.qualcomm.com> (sfid-20131127_154825_025695_75D12A4B)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It seems some out of tree drivers were using a regulatory_hint("00")
-to trigger off the wiphy regulatory notifier, for those cases just
-setting the WIPHY_FLAG_CUSTOM_REGULATORY would suffice to call
-the reg_notifier() for a world regulatory domain update. If drivers
-find other needs for calling the reg_notifier() a proper implemenation
-is preferred.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- net/wireless/reg.c | 2 ++
- 1 file changed, 2 insertions(+)
+> Hi,
+>
+> ath10k didn't play well with other devices on a
+> shared irq line. This patchset fixes support for
+> shared legacy interrupts. 
+>
+> Some rework was necessary because ath10k was using
+> disable_irq and CE irq masking (which is not
+> sufficient for shared interrupts).
+>
+> Since main irq handlers are now registered after
+> boot, BMI is now polling for CE updates. I haven't
+> observed any differences in boot speed.
+>
+> Also this plugs a leak I spotted during rework and
+> adds an option for testing different irq modes.
+>
+> v2:
+>  * simplify ath10k_pci_irq_pending()
+>  * combine memory leak fix patch with a
+>    functionality decoupling (it's very closely
+>    related)
+>  * fix 'irq: nobody cared'
+>  * change MSI/MSI-X disabling parameters
+>  * some minor fixes & code shuffling to avoid
+>    forward declarations
+>
+>
+> Michal Kazior (8):
+>   ath10k: don't consume other's shared interrupts
+>   ath10k: split up pci irq code
+>   ath10k: don't use interrupts for BMI
+>   ath10k: decouple ath10k_pci_start_ce()
+>   ath10k: defer irq registration until hif start()
+>   ath10k: extract functions for legacy irq handling
+>   ath10k: re-add support for early fw indication
+>   ath10k: allow explicit MSI/MSI-X disabling
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 4619c74..a5b3b40 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -2197,6 +2197,8 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
- 		return -EINVAL;
- 
- 	if (is_world_regdom(rd->alpha2)) {
-+		if (lr->initiator != NL80211_REGDOM_SET_BY_CORE)
-+			return -EINVAL;
- 		update_world_regdomain(rd);
- 		return 0;
- 	}
+Thanks, all eight applied.
+
 -- 
-1.8.4.rc3
-
+Kalle Valo
