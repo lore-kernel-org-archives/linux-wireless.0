@@ -1,46 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f169.google.com ([209.85.215.169]:38596 "EHLO
-	mail-ea0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753033Ab3KXQ5A (ORCPT
+Received: from mail-qe0-f42.google.com ([209.85.128.42]:56647 "EHLO
+	mail-qe0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757426Ab3K0SrN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Nov 2013 11:57:00 -0500
-Received: by mail-ea0-f169.google.com with SMTP id l9so1901762eaj.0
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Nov 2013 08:56:58 -0800 (PST)
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@do-not-panic.com,
-	sujith@msujith.org, johannes@sipsolutions.net,
-	rmanohar@qca.qualcomm.com
-Subject: [PATCH 3/3] ath9k: fix retry chain initialization in tx99 code
-Date: Sun, 24 Nov 2013 17:56:51 +0100
-Message-Id: <1385312211-3119-4-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20131124_175706_144315_3A5754D4)
-In-Reply-To: <1385312211-3119-1-git-send-email-lorenzo.bianconi83@gmail.com>
-References: <1385312211-3119-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	Wed, 27 Nov 2013 13:47:13 -0500
+Received: by mail-qe0-f42.google.com with SMTP id b4so7037138qen.15
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Nov 2013 10:47:12 -0800 (PST)
+Message-ID: <52963E2B.2050301@opensuse.org> (sfid-20131127_194718_559506_8A0C1A53)
+Date: Wed, 27 Nov 2013 15:47:07 -0300
+From: =?ISO-8859-1?Q?Cristian_Rodr=EDguez?= <crrodriguez@opensuse.org>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: wireless-regdb tarballs invalid contents
+References: <529416B2.4050908@opensuse.org> <20131127163207.GA7780@tuxdriver.com>
+In-Reply-To: <20131127163207.GA7780@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Initialize first chain attempt counter to 1 in ath9k_build_tx99_skb().
-Otherwise multi-retry chain is initialized to {idx,count} = {-1, 0} in
-rate_control_fill_sta_table() and tx99 transmission rate is not configured in
-rate_control_apply_mask() since first chain idx is set to -1
+El 27/11/13 13:32, John W. Linville escribió:
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
----
- drivers/net/wireless/ath/ath9k/tx99.c | 1 +
- 1 file changed, 1 insertion(+)
+> I have released an update (e.g. 2013-11-27).  Please confirm that
+> the signature is working for you.
+> 
+> John
+> 
 
-diff --git a/drivers/net/wireless/ath/ath9k/tx99.c b/drivers/net/wireless/ath/ath9k/tx99.c
-index c90eca3..ab154fe 100644
---- a/drivers/net/wireless/ath/ath9k/tx99.c
-+++ b/drivers/net/wireless/ath/ath9k/tx99.c
-@@ -76,6 +76,7 @@ static struct sk_buff *ath9k_build_tx99_skb(struct ath_softc *sc)
- 	tx_info->band = hw->conf.chandef.chan->band;
- 	tx_info->flags = IEEE80211_TX_CTL_NO_ACK;
- 	tx_info->control.vif = sc->tx99_vif;
-+	tx_info->control.rates[0].count = 1;
- 
- 	memcpy(skb->data + sizeof(*hdr), PN9Data, sizeof(PN9Data));
- 
--- 
-1.8.3.2
-
+New release works correctly. thanks.
