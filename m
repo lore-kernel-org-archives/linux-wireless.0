@@ -1,74 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0245.hostedemail.com ([216.40.44.245]:36849 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751772Ab3KGAbi (ORCPT
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:40422 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751428Ab3K0N6u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Nov 2013 19:31:38 -0500
-Message-ID: <1383784301.7940.43.camel@joe-AO722> (sfid-20131107_013140_889960_8E93423E)
-Subject: Re: [PATCH 13/13] ath9k: Update MAINTAINERS
-From: Joe Perches <joe@perches.com>
-To: Sujith Manoharan <sujith@msujith.org>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Date: Wed, 06 Nov 2013 16:31:41 -0800
-In-Reply-To: <1383783120-22435-14-git-send-email-sujith@msujith.org>
-References: <1383783120-22435-1-git-send-email-sujith@msujith.org>
-	 <1383783120-22435-14-git-send-email-sujith@msujith.org>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Wed, 27 Nov 2013 08:58:50 -0500
+Received: by mail-wg0-f41.google.com with SMTP id y10so3762336wgg.4
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Nov 2013 05:58:48 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <5295EF41.8040709@cs.kuleuven.be>
+References: <5294E4C5.4050301@cs.kuleuven.be>
+	<52950812.20001@rempel-privat.de>
+	<5295EF41.8040709@cs.kuleuven.be>
+Date: Wed, 27 Nov 2013 14:58:46 +0100
+Message-ID: <CANiGF999jHN3+5QuNVAkVk_hHxZ6LkPxWB3jW9yoJGbfno7M9A@mail.gmail.com> (sfid-20131127_145853_247028_3C993D46)
+Subject: Re: [PATCH] ath9k_htc: properly set MAC address and BSSID mask
+From: Pau Koning <paukoning@gmail.com>
+To: Mathy Vanhoef <mathy.vanhoef@cs.kuleuven.be>
+Cc: Oleksij Rempel <linux@rempel-privat.de>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, mcgrof@qca.qualcomm.com,
+	jouni@qca.qualcomm.com, vthiagar@qca.qualcomm.com,
+	senthilb@qca.qualcomm.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-11-07 at 05:42 +0530, Sujith Manoharan wrote:
-> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-> 
-> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-> ---
->  MAINTAINERS | 19 ++++++++-----------
->  1 file changed, 8 insertions(+), 11 deletions(-)
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 0d59670..a137b3f 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -1444,17 +1444,6 @@ T:	git git://github.com/kvalo/ath.git
->  S:	Supported
->  F:	drivers/net/wireless/ath/ath6kl/
->  
-> -ATHEROS ATH9K WIRELESS DRIVER
-> -M:	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-> -M:	Jouni Malinen <jouni@qca.qualcomm.com>
-> -M:	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-> -M:	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-> -L:	linux-wireless@vger.kernel.org
-> -L:	ath9k-devel@lists.ath9k.org
-> -W:	http://wireless.kernel.org/en/users/Drivers/ath9k
-> -S:	Supported
-> -F:	drivers/net/wireless/ath/ath9k/
-> -
->  WILOCITY WIL6210 WIRELESS DRIVER
->  M:	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
->  L:	linux-wireless@vger.kernel.org
-> @@ -6849,6 +6838,14 @@ T:	git git://linuxtv.org/anttip/media_tree.git
->  S:	Maintained
->  F:	drivers/media/tuners/qt1010*
->  
-> +QUALCOMM ATHEROS ATH9K WIRELESS DRIVER
-> +M:	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
+On Wed, Nov 27, 2013 at 2:10 PM, Mathy Vanhoef
+<mathy.vanhoef@cs.kuleuven.be> wrote:
+> Disclaimer: http://www.kuleuven.be/cwis/email_disclaimer.htm
 
-While I don't have a problem with this, it's
-more common to appoint a single person as a
-"lead" maintainer.
-
-> +L:	linux-wireless@vger.kernel.org
-> +L:	ath9k-devel@lists.ath9k.org
-> +W:	http://wireless.kernel.org/en/users/Drivers/ath9k
-> +S:	Supported
-> +F:	drivers/net/wireless/ath/ath9k/
-> +
->  QUALCOMM ATHEROS ATH10K WIRELESS DRIVER
->  M:	Kalle Valo <kvalo@qca.qualcomm.com>
->  L:	ath10k@lists.infradead.org
-
-
-
+Sorry, but the patch cannot be accepted when the disclaimer forbids it.
