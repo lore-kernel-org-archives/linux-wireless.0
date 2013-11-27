@@ -1,68 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:36346 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754327Ab3KKOlH (ORCPT
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:49855 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751827Ab3K0GQ4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Nov 2013 09:41:07 -0500
-Message-ID: <1384180862.14334.25.camel@jlt4.sipsolutions.net> (sfid-20131111_154112_016322_FC8D2C98)
-Subject: Re: [PATCH 05/19] cfg80211: processing core regulatory hints on its
- own
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Wed, 27 Nov 2013 01:16:56 -0500
+Received: by mail-ie0-f182.google.com with SMTP id as1so11166484iec.27
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Nov 2013 22:16:56 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1385498361.4177.4.camel@jlt4.sipsolutions.net>
+References: <1385409372-4229-1-git-send-email-janusz.dziedzic@tieto.com>
+	<1385409372-4229-4-git-send-email-janusz.dziedzic@tieto.com>
+	<201311261550.14953.sw@simonwunderlich.de>
+	<CAFED-jmmkA2j4YRhFj7MXgZBgLJrofn1RGnbORtGDzB8wOErfw@mail.gmail.com>
+	<1385498361.4177.4.camel@jlt4.sipsolutions.net>
+Date: Wed, 27 Nov 2013 07:16:56 +0100
+Message-ID: <CAFED-jnMOWKZz1pHpvKmxu7ZZo0KGpomw2v8ug_oqpsdGBbOwQ@mail.gmail.com> (sfid-20131127_071700_163978_DAE37BA3)
+Subject: Re: [PATCH v3 4/4] cfg80211: DFS use 10 minutes CAC when weather channels
+From: Janusz Dziedzic <janusz.dziedzic@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Simon Wunderlich <sw@simonwunderlich.de>,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 11 Nov 2013 15:41:02 +0100
-In-Reply-To: <CAGRGNgXdnwYnNYncPQGp=NNF1FxY3sFMSSf7arWYeX3v=PFAzw@mail.gmail.com> (sfid-20131107_014742_750163_B1BE1A20)
-References: <1383671897-7746-1-git-send-email-mcgrof@do-not-panic.com>
-	 <1383671897-7746-6-git-send-email-mcgrof@do-not-panic.com>
-	 <1383733459.14307.22.camel@jlt4.sipsolutions.net>
-	 <CAB=NE6UuRf=Wsfe_uym1+r+Ay0eNoJKa6Fo1Hi0r-LA8wTddng@mail.gmail.com>
-	 <CAGRGNgXdnwYnNYncPQGp=NNF1FxY3sFMSSf7arWYeX3v=PFAzw@mail.gmail.com>
-	 (sfid-20131107_014742_750163_B1BE1A20)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-11-07 at 11:47 +1100, Julian Calaby wrote:
+2013/11/26 Johannes Berg <johannes@sipsolutions.net>:
+> On Tue, 2013-11-26 at 21:19 +0100, Janusz Dziedzic wrote:
+>
+>> ath.ko already disable weather channels by default.
+>> But in case driver will pass DFS certification (meet all requirements)
+>> - why not use weather channels?
+>
+> Since I'm a lazy bastard - can you demonstrate such a driver? I'm
+> guessing not (immediately), so I'll drop your patches for now - maybe
+> better to go back to the drawing board and get all of this into regdb
+> etc. Doesn't seem critical to get it into the kernel now, if nobody
+> really supports it anyway ...
+>
 
-> >>> -     switch (__regulatory_hint(wiphy, reg_request)) {
-> >>> +     switch (reg_request->initiator) {
-> >>> +     case NL80211_REGDOM_SET_BY_CORE:
-> >>> +             reg_process_hint_core(reg_request);
-> >>> +             return;
-> >
-> > Note that for the core request we bail out early.
-> >
-> >>> +     case NL80211_REGDOM_SET_BY_USER:
-> >>> +     case NL80211_REGDOM_SET_BY_DRIVER:
-> >>> +     case NL80211_REGDOM_SET_BY_COUNTRY_IE:
-> >>> +             treatment = __regulatory_hint(wiphy, reg_request);
-> >>> +             break;
-> >>> +     }
-> >>> +
-> >>> +     switch (treatment) {
-> >>
-> >> is used uninitialized here
-> >
-> > As I see it in the code we either bail early or its assigned to the
-> > return value of __regulatory_hint() for the non-core case. Did I miss
-> > something?
-> 
-> I think Johannes just wants you to assign something to it so that
-> paranoid static checkers / compilers won't complain that it's unset in
-> the potential case where we make it through the switch without hitting
-> any of the cases. (Adding a default: case to the switch statement
-> would also work, but as you've been very very careful to spell out all
-> the cases here that'd tempt developers to remove all the careful
-> spelling out in some crazed cleanup binge.)
-> 
-> Of course this will never happen if reg_request->initiator is an enum
-> and all it's possible values are covered in the switch statement, but
-> some compilers (and developers like me) need it spelled out for them.
+I could say something more after DFS tests.
+What about patch 1 and 2?
 
-Well actually I was just careless and didn't realize that it was
-actually a false compiler warning :)
-
-johannes
-
+BR
+Janusz
