@@ -1,243 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4425 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752111Ab3K2Ksd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Nov 2013 05:48:33 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH V2 3/7] brcmfmac: replace dongle command list with
- .preinit() callback
-Date: Fri, 29 Nov 2013 11:48:15 +0100
-Message-ID: <1385722099-5102-4-git-send-email-arend@broadcom.com> (sfid-20131129_114857_072319_0FF45FA2)
-In-Reply-To: <1385722099-5102-1-git-send-email-arend@broadcom.com>
-References: <1385722099-5102-1-git-send-email-arend@broadcom.com>
+Received: from s72.web-hosting.com ([198.187.29.21]:45706 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751430Ab3K0Kh1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Nov 2013 05:37:27 -0500
+From: Sujith Manoharan <sujith@msujith.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21141.51790.303263.385517@gargle.gargle.HOWL> (sfid-20131127_113730_651367_D1F4A333)
+Date: Wed, 27 Nov 2013 16:02:46 +0530
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: ath9k pending patches
+In-Reply-To: <1385547828-4330-1-git-send-email-sujith@msujith.org>
+References: <1385547828-4330-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The bus-specific interface allowed a list of dongle commands to be
-provided to the common driver part. However, upcoming functionality
-requires a more dynamic behaviour. Hence the list is replaced
-by a new callback function so the bus-specific driver part can
-implement this behaviour.
+Hi,
 
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h  |   12 +++-
- .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |   15 +----
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   10 +++-
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   58 ++++++++++----------
- 4 files changed, 51 insertions(+), 44 deletions(-)
+There are lots of pending patches for ath9k and all of
+them are here, rebased over -wl master:
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
-index a129d21..6a54905 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
-@@ -34,6 +34,7 @@ struct brcmf_bus_dcmd {
- /**
-  * struct brcmf_bus_ops - bus callback operations.
-  *
-+ * @preinit: execute bus/device specific dongle init commands (optional).
-  * @init: prepare for communication with dongle.
-  * @stop: clear pending frames, disable data flow.
-  * @txdata: send a data frame to the dongle. When the data
-@@ -51,6 +52,7 @@ struct brcmf_bus_dcmd {
-  * indicated otherwise these callbacks are mandatory.
-  */
- struct brcmf_bus_ops {
-+	int (*preinit)(struct device *dev);
- 	int (*init)(struct device *dev);
- 	void (*stop)(struct device *dev);
- 	int (*txdata)(struct device *dev, struct sk_buff *skb);
-@@ -85,7 +87,6 @@ struct brcmf_bus {
- 	unsigned long tx_realloc;
- 	u32 chip;
- 	u32 chiprev;
--	struct list_head dcmd_list;
- 
- 	struct brcmf_bus_ops *ops;
- };
-@@ -93,6 +94,13 @@ struct brcmf_bus {
- /*
-  * callback wrappers
-  */
-+static inline int brcmf_bus_preinit(struct brcmf_bus *bus)
-+{
-+	if (!bus->ops->preinit)
-+		return 0;
-+	return bus->ops->preinit(bus->dev);
-+}
-+
- static inline int brcmf_bus_init(struct brcmf_bus *bus)
- {
- 	return bus->ops->init(bus->dev);
-@@ -151,6 +159,8 @@ void brcmf_txflowblock(struct device *dev, bool state);
- void brcmf_txcomplete(struct device *dev, struct sk_buff *txp, bool success);
- 
- int brcmf_bus_start(struct device *dev);
-+s32 brcmf_iovar_data_set(struct device *dev, char *name, void *data,
-+				u32 len);
- void brcmf_bus_add_txhdrlen(struct device *dev, uint len);
- 
- #ifdef CONFIG_BRCMFMAC_SDIO
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
-index 9431af2..5c0c919 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
-@@ -257,8 +257,6 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
- 	u8 buf[BRCMF_DCMD_SMLEN];
- 	char *ptr;
- 	s32 err;
--	struct brcmf_bus_dcmd *cmdlst;
--	struct list_head *cur, *q;
- 
- 	/* retreive mac address */
- 	err = brcmf_fil_iovar_data_get(ifp, "cur_etheraddr", ifp->mac_addr,
-@@ -342,17 +340,8 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
- 	brcmf_c_pktfilter_offload_enable(ifp, BRCMF_DEFAULT_PACKET_FILTER,
- 					 0, true);
- 
--	/* set bus specific command if there is any */
--	list_for_each_safe(cur, q, &ifp->drvr->bus_if->dcmd_list) {
--		cmdlst = list_entry(cur, struct brcmf_bus_dcmd, list);
--		if (cmdlst->name && cmdlst->param && cmdlst->param_len) {
--			brcmf_fil_iovar_data_set(ifp, cmdlst->name,
--						 cmdlst->param,
--						 cmdlst->param_len);
--		}
--		list_del(cur);
--		kfree(cmdlst);
--	}
-+	/* do bus specific preinit here */
-+	err = brcmf_bus_preinit(ifp->drvr->bus_if);
- done:
- 	return err;
- }
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-index 0c4c230..ab207e2 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-@@ -1048,8 +1048,6 @@ int brcmf_attach(struct device *dev)
- 	/* attach firmware event handler */
- 	brcmf_fweh_attach(drvr);
- 
--	INIT_LIST_HEAD(&drvr->bus_if->dcmd_list);
--
- 	return ret;
- 
- fail:
-@@ -1206,6 +1204,14 @@ void brcmf_detach(struct device *dev)
- 	kfree(drvr);
- }
- 
-+s32 brcmf_iovar_data_set(struct device *dev, char *name, void *data, u32 len)
-+{
-+	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
-+	struct brcmf_if *ifp = bus_if->drvr->iflist[0];
-+
-+	return brcmf_fil_iovar_data_set(ifp, name, data, len);
-+}
-+
- static int brcmf_get_pend_8021x_cnt(struct brcmf_if *ifp)
- {
- 	return atomic_read(&ifp->pend_8021x_cnt);
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 928983b..2597a53 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -3425,6 +3425,35 @@ brcmf_sdbrcm_download_firmware(struct brcmf_sdio *bus)
- 	return ret;
- }
- 
-+static int brcmf_sdbrcm_bus_preinit(struct device *dev)
-+{
-+	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
-+	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
-+	struct brcmf_sdio *bus = sdiodev->bus;
-+	u32 value;
-+	u8 idx;
-+	int err;
-+
-+	/* sdio bus core specific dcmd */
-+	idx = brcmf_sdio_chip_getinfidx(bus->ci, BCMA_CORE_SDIO_DEV);
-+	if (bus->ci->c_inf[idx].rev < 12) {
-+		/* for sdio core rev < 12, disable txgloming */
-+		value = 0;
-+		err = brcmf_iovar_data_set(dev, "bus:txglom", &value,
-+					   sizeof(u32));
-+	} else {
-+		/* otherwise, set txglomalign */
-+		value = 4;
-+		if (sdiodev->pdata)
-+			value = sdiodev->pdata->sd_sgentry_align;
-+		/* SDIO ADMA requires at least 32 bit alignment */
-+		value = max_t(u32, value, 4);
-+		err = brcmf_iovar_data_set(dev, "bus:txglomalign", &value,
-+					   sizeof(u32));
-+	}
-+	return err;
-+}
-+
- static int brcmf_sdbrcm_bus_init(struct device *dev)
- {
- 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
-@@ -3905,6 +3934,7 @@ static void brcmf_sdbrcm_release(struct brcmf_sdio *bus)
- 
- static struct brcmf_bus_ops brcmf_sdio_bus_ops = {
- 	.stop = brcmf_sdbrcm_bus_stop,
-+	.preinit = brcmf_sdbrcm_bus_preinit,
- 	.init = brcmf_sdbrcm_bus_init,
- 	.txdata = brcmf_sdbrcm_bus_txdata,
- 	.txctl = brcmf_sdbrcm_bus_txctl,
-@@ -3916,10 +3946,6 @@ void *brcmf_sdbrcm_probe(u32 regsva, struct brcmf_sdio_dev *sdiodev)
- {
- 	int ret;
- 	struct brcmf_sdio *bus;
--	struct brcmf_bus_dcmd *dlst;
--	u32 dngl_txglom;
--	u32 txglomalign = 0;
--	u8 idx;
- 
- 	brcmf_dbg(TRACE, "Enter\n");
- 
-@@ -4003,30 +4029,6 @@ void *brcmf_sdbrcm_probe(u32 regsva, struct brcmf_sdio_dev *sdiodev)
- 	brcmf_sdio_debugfs_create(bus);
- 	brcmf_dbg(INFO, "completed!!\n");
- 
--	/* sdio bus core specific dcmd */
--	idx = brcmf_sdio_chip_getinfidx(bus->ci, BCMA_CORE_SDIO_DEV);
--	dlst = kzalloc(sizeof(struct brcmf_bus_dcmd), GFP_KERNEL);
--	if (dlst) {
--		if (bus->ci->c_inf[idx].rev < 12) {
--			/* for sdio core rev < 12, disable txgloming */
--			dngl_txglom = 0;
--			dlst->name = "bus:txglom";
--			dlst->param = (char *)&dngl_txglom;
--			dlst->param_len = sizeof(u32);
--		} else {
--			/* otherwise, set txglomalign */
--			if (sdiodev->pdata)
--				txglomalign = sdiodev->pdata->sd_sgentry_align;
--			/* SDIO ADMA requires at least 32 bit alignment */
--			if (txglomalign < 4)
--				txglomalign = 4;
--			dlst->name = "bus:txglomalign";
--			dlst->param = (char *)&txglomalign;
--			dlst->param_len = sizeof(u32);
--		}
--		list_add(&dlst->list, &bus->sdiodev->bus_if->dcmd_list);
--	}
--
- 	brcmf_bus_add_txhdrlen(bus->sdiodev->dev, bus->tx_hdrlen);
- 
- 	/* if firmware path present try to download and bring up bus */
--- 
-1.7.10.4
+http://msujith.org/dir/patches/wl/Nov-27-2013/
 
+Sujith
 
+Sujith Manoharan wrote:
+> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+> 
+> These two patches update the initvals for
+> AR9300 2.2 and AR9580 1.0
+> 
+> After these patches, there are still a few differences between the
+> INI files from the internal driver and ath9k. From verify_checksum:
+> 
+> ar9003-2p2     96a13663004d71b5ffa4fe9efc6b41dcfaf5a327 fail
+> +c8dc777b012068116cd5282aade8eb460f397d20        ar9300_2p2_mac_postamble
+> +5542c7d650feeb530de2775003931a00f992c09a        ar9300Modes_high_power_tx_gain_table_2p2
+> 
+> ar9580-1p0     40e08925d7d8daa4c9841ee807fa25b0fd3f725b fail
+> +c8dc777b012068116cd5282aade8eb460f397d20        ar9580_1p0_mac_postamble
+> +07f9922af110bf9d72a7534a30eefcf9bacd0d7e        ar9580_1p0_baseband_core
+> +8e30343d20745791d5c2e7de968f0e81403761d5        ar9580_1p0_baseband_postamble
+> 
+> Differences:
+> 
+> * In both chips, "mac_postamble" needs an update - the "ALWAYS_PERFORM_KEY_SEARCH"
+>   bit has to enabled. This is required to address key cache corruption, which
+>   needs a bigger change in the driver.
+> 
+> * The ar9300Modes_high_power_tx_gain_table_2p2 array has been left as such
+>   since it is required for certain Buffalo devices.
+> 
+> * ar9580_1p0_baseband_core and ar9580_1p0_baseband_postamble require updates
+>   to handle DFS issues. This will be done in a separate commit.
+> 
+> All initval tool changes have been pushed to:
+> https://github.com/sujith/qca-swiss-army-knife/commits/master
+> 
+> Sujith
+> 
+> Sujith Manoharan (2):
+>   ath9k: Update initvals for AR9300 v2.2
+>   ath9k: Update initvals for AR9580 v1.0
+> 
+>  .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   |  24 +-
+>  .../net/wireless/ath/ath9k/ar9580_1p0_initvals.h   | 559 ++++++++++++++-------
+>  2 files changed, 398 insertions(+), 185 deletions(-)
+> 
+> -- 
+> 1.8.4.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
