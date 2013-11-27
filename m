@@ -1,64 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:38742 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932561Ab3KFLwI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Nov 2013 06:52:08 -0500
-From: "Coelho, Luciano" <luciano.coelho@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"sw@simonwunderlich.de" <sw@simonwunderlich.de>
-Subject: Re: [RFC v2 2/2] mac80211: only set CSA beacon when at least one
- beacon must be transmitted
-Date: Wed, 6 Nov 2013 11:52:06 +0000
-Message-ID: <1383738685.4256.50.camel@porter.coelho.fi> (sfid-20131106_125240_319150_94335141)
-References: <1383684854-21663-1-git-send-email-luciano.coelho@intel.com>
-	 <1383684854-21663-2-git-send-email-luciano.coelho@intel.com>
-	 <1383735101.14307.25.camel@jlt4.sipsolutions.net>
-	 <1383737255.4256.34.camel@porter.coelho.fi>
-	 <1383737505.14307.37.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1383737505.14307.37.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:42778 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751810Ab3K0PDu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Nov 2013 10:03:50 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 2/3] ath10k: implement sta_rc_update()
+References: <1385126819-15311-1-git-send-email-michal.kazior@tieto.com>
+	<1385474260-22385-1-git-send-email-michal.kazior@tieto.com>
+	<1385474260-22385-3-git-send-email-michal.kazior@tieto.com>
+Date: Wed, 27 Nov 2013 17:03:41 +0200
+In-Reply-To: <1385474260-22385-3-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Tue, 26 Nov 2013 14:57:39 +0100")
+Message-ID: <87li09ga42.fsf@kamboji.qca.qualcomm.com> (sfid-20131127_160354_072838_81C42933)
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gV2VkLCAyMDEzLTExLTA2IGF0IDEyOjMxICswMTAwLCBKb2hhbm5lcyBCZXJnIHdyb3RlOg0K
-PiBPbiBXZWQsIDIwMTMtMTEtMDYgYXQgMTE6MjggKzAwMDAsIENvZWxobywgTHVjaWFubyB3cm90
-ZToNCj4gDQo+ID4gSW4gdGVybXMgb2YgdGhlIG9yZGVyIG9mIGNhbGxzLCB0aGUgZGlmZmVyZW5j
-ZSBpcyB0aGF0IGluIHRoZSBwYXN0IHdlDQo+ID4gaGFkIHRoaXM6DQo+ID4gDQo+ID4gMS4gU2V0
-IENTQSBiZWFjb247DQo+ID4gMi4gV2hlbiBjb3VudCByZWFjaGVzIDEsIHRoZSBkcml2ZXIgY2Fs
-bHMgaWVlZTgwMjExX2NzYV9maW5pc2goKTsNCj4gPiAzLiBXZSBjYWxsIGRydl9jaGFuZ2VfY2hh
-bmN0eCgpOw0KPiA+IDQuIFNldCBuZXcgY2hhbm5lbCBiZWFjb24uDQo+ID4gDQo+ID4gKFRoaXMg
-Y29udGludWVzIHRvIGJlIHRoZSBjYXNlIHdpdGggbXkgcGF0Y2ggd2hlbiBjb3VudCA+IDEpDQo+
-ID4gDQo+ID4gV2l0aCBteSBwYXRjaCwgaWYgY291bnQgPD0gMSwgd2UgZG8gdGhpcyBpbnN0ZWFk
-Og0KPiA+IA0KPiA+IDEuIENhbGwgZHJ2X2NoYW5nZV9jaGFuY3R4KCk7DQo+ID4gMi4gU2V0IG5l
-dyBjaGFubmVsIGJlYWNvbi4NCj4gPiANCj4gPiBUaGUgbWFpbiBwcm9ibGVtIHdpdGhvdXQgbXkg
-cGF0Y2ggaXMgdGhhdCB0aGUgZHJpdmVyIHNob3VsZG4ndCBiZWFjb24NCj4gPiB3aXRoIHRoZSBD
-U0EgZWxlbWVudCB3aGVuIHRoZSBjb3VudCBzdGFydHMgPD0gMSwgc28gaXQgd29uJ3QgaGF2ZSBh
-DQo+ID4gY2hhbmNlIHRvIGNoZWNrIGlmIHRoZSBjb3VudCByZWFjaGVkIDEgdG8gY2FsbCBpZWVl
-ODAyMTFfY3NhX2ZpbmlzaCgpLg0KPiANCj4gSSB0aGluayB0aGUgb3RoZXIgZGlmZmVyZW5jZSBp
-cyB0aGF0IG9uZSBjYWxscw0KPiBkcnZfY2hhbm5lbF9zd2l0Y2hfYmVhY29uKCk/DQoNClJpZ2h0
-LCB0aGlzIHdhcyBwYXJ0IG9mIG15ICJTZXQgQ1NBIGJlYWNvbiIgaXRlbSwgSSBzaG91bGQgaGF2
-ZSBiZWVuDQptb3JlIGV4cGxpY2l0Lg0KDQoNCj4gVGhlIGRyaXZlciBtaWdodCBkbyBzb21lIGNo
-YW5uZWwNCj4gcHJlcGFyYXRpb25zIHRoZXJlLCB0aG91Z2ggSSBndWVzcyB5b3UgY2FuIGF1ZGl0
-IGFsbCB0aGUgZHJpdmVycyAod2VsbCwNCj4gb25lIC4uLikgOikNCg0KTHVja2lseSwgYWxsIHRo
-ZSBkcml2ZXJzIHRoYXQgdXNlIHRoaXMgKHdlbGwsIG9uZS4uLiA6UCkgZG9uJ3QgZG8NCmFueXRo
-aW5nIGZ1bmt5IHdpdGggdGhpcyBjYWxsLiAgYXRoOWsgb25seSB1c2VzIHRoaXMgY2FsbCBtYXJr
-IHRoYXQNCnRoZXJlIGlzIGFuIG9uZ29pbmcgQ1NBLCB3aGljaCBpcyBub3QgbmVlZGVkIGluIHRo
-ZSBpbW1lZGlhdGUgc3dpdGNoDQpjYXNlLg0KDQoNCj4gQnV0IHRoYXQnZCBuZWVkIHNvbWUgbW9y
-ZSBkb2N1bWVudGF0aW9uLCBvdGhlcndpc2UgSSdkIGd1ZXNzIHBlb3BsZQ0KPiB3b3VsZCBzdGFy
-dCB0byByZWx5IG9uIGRydl9jaGFubmVsX3N3aXRjaF9iZWFjb24oKSBhbmQgaXQgd291bGQgbW9z
-dGx5DQo+IHdvcmsgLSBoZW5jZSBteSBxdWVzdGlvbiBvZiB3aGV0aGVyIGl0IG1ha2VzIHNlbnNl
-IHRvIHJlZnVzZSBpdCBhdCBhbGwNCj4gaW4gdGhlIGNhc2Ugb2YgPD0xLg0KDQpSaWdodC4gIEkg
-YWN0dWFsbHkgYWRkZWQgdGhpcyB0byB0aGUgZG9jdW1lbnRhdGlvbiwgYnV0IEkgYWNjaWRlbnRh
-bGx5DQpzZW50IGl0IGFzIHBhcnQgb2YgcGF0Y2ggMS8yOg0KDQo+ICsrKyBiL2luY2x1ZGUvbmV0
-L21hYzgwMjExLmgNCj4gQEAgLTI2NzYsMTEgKzI2NzYsMTMgQEAgZW51bSBpZWVlODAyMTFfcm9j
-X3R5cGUgew0KPiAgICogQGNoYW5uZWxfc3dpdGNoX2JlYWNvbjogU3RhcnRzIGEgY2hhbm5lbCBz
-d2l0Y2ggdG8gYSBuZXcgY2hhbm5lbC4NClsuLi5dDQo+ICsgKiAgICAgSWYgdGhlIENTQSBjb3Vu
-dCBzdGFydHMgYXMgemVybyBvciAxLCB0aGlzIGZ1bmN0aW9uIHdpbGwgbm90IGJlIGNhbGxlZCwN
-Cj4gKyAqICAgICBzaW5jZSB0aGVyZSB3b24ndCBiZSBhbnkgdGltZSB0byBiZWFjb24gYmVmb3Jl
-IHRoZSBzd2l0Y2ggYW55d2F5Lg0KDQpUaGlzIGNoYW5nZSBzaG91bGQgYmUgaW4gcGF0Y2ggMi8y
-IChhY3R1YWxseSB0aGVzZSB0d28gcGF0Y2hlcyBzaG91bGQNCnByb2JhYmx5IGJlIHNxdWFzaGVk
-LCBJIGp1c3Qga2VwdCB0aGVtIHNlcGFyYXRlIHNvIHRoYXQgcmV2aWV3aW5nIG15IHYyDQp3b3Vs
-ZCBiZSBlYXNpZXIpLg0KDQpJIGNhbiBlbGFib3JhdGUgbW9yZSBpbiB0aGUgZG9jdW1lbnRhdGlv
-biBpZiB5b3UgdGhpbmsgaXQncyBuZWNlc3NhcnkuDQoNCi0tDQpDaGVlcnMsDQpMdWNhLg0K
+Michal Kazior <michal.kazior@tieto.com> writes:
+
+> This should fix possible connectivity issues upon
+> changes of channel width, number of streams or
+> SMPS on connected stations.
+>
+> An example trigger would be an action frame with
+> operation mode change notification.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+
+Sorry, somehow missed these on my previous review:
+
+> +	if (changed & IEEE80211_RC_BW_CHANGED) {
+> +		switch (sta->bandwidth) {
+> +		default:
+> +			ath10k_warn("unsupported STA BW: %d\n", sta->bandwidth);
+> +		case IEEE80211_STA_RX_BW_20:
+> +			chwidth = WMI_PEER_CHWIDTH_20MHZ;
+> +			break;
+> +		case IEEE80211_STA_RX_BW_40:
+> +			chwidth = WMI_PEER_CHWIDTH_40MHZ;
+> +			break;
+> +		case IEEE80211_STA_RX_BW_80:
+> +			chwidth = WMI_PEER_CHWIDTH_80MHZ;
+> +			break;
+> +		}
+
+I assume that the idea here is to use WMI_PEER_CHWIDTH_20MHZ for the
+default case. Actually I would prefer to avoid using default case
+altogether, that way the compiler will warn if there's an enum value we
+don't check. So for example you could add "case IEEE80211_STA_RX_BW_160"
+which prints a warning and uses 20 MHz.
+
+> +	if (changed & IEEE80211_RC_SMPS_CHANGED) {
+> +		smps = WMI_PEER_SMPS_PS_NONE;
+> +
+> +		switch (sta->smps_mode) {
+> +		case IEEE80211_SMPS_NUM_MODES:
+> +			ath10k_warn("invalid smps mode: %d\n", sta->smps_mode);
+> +		case IEEE80211_SMPS_AUTOMATIC:
+> +		case IEEE80211_SMPS_OFF:
+> +			smps = WMI_PEER_SMPS_PS_NONE;
+> +			break;
+> +		case IEEE80211_SMPS_STATIC:
+> +			smps = WMI_PEER_SMPS_STATIC;
+> +			break;
+> +		case IEEE80211_SMPS_DYNAMIC:
+> +			smps = WMI_PEER_SMPS_DYNAMIC;
+> +			break;
+> +		}
+
+This is better, but I think it would be clearer to have
+IEEE80211_SMPS_NUM_MODES last and not "fall through" the cases.
+
+-- 
+Kalle Valo
