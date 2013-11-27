@@ -1,47 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:54205 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754369Ab3KAN7E (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:2595 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756145Ab3K0Ozi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 09:59:04 -0400
-Received: by mail-we0-f174.google.com with SMTP id u56so3959084wes.5
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 06:59:03 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 29/65] wireless-regdb: enable VHT80 for LT
-Date: Fri,  1 Nov 2013 14:57:19 +0100
-Message-Id: <1383314275-20960-30-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_145909_906946_3CDD06C1)
-In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+	Wed, 27 Nov 2013 09:55:38 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 1/3] ath10k: use nss provided by mac80211
+References: <1385126819-15311-1-git-send-email-michal.kazior@tieto.com>
+	<1385474260-22385-1-git-send-email-michal.kazior@tieto.com>
+	<1385474260-22385-2-git-send-email-michal.kazior@tieto.com>
+	<CA+BoTQmtkBGpktbLRfmiLuLDKP9TnUeWu4OMeGUsVcq7m05u4Q@mail.gmail.com>
+Date: Wed, 27 Nov 2013 16:55:32 +0200
+In-Reply-To: <CA+BoTQmtkBGpktbLRfmiLuLDKP9TnUeWu4OMeGUsVcq7m05u4Q@mail.gmail.com>
+	(Michal Kazior's message of "Wed, 27 Nov 2013 11:25:45 +0100")
+Message-ID: <87ppplgahm.fsf@kamboji.qca.qualcomm.com> (sfid-20131127_155541_822371_2BB8035A)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Source is QCA's regulatory team's efforts.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+> On 26 November 2013 14:57, Michal Kazior <michal.kazior@tieto.com> wrote:
+>> Calculating STA NSS just from the mcs rateset is
+>> not the greatest idea.
+>>
+>> This should prevent connectivity issues if
+>> mac80211 is ever to set rx_nss to something other
+>> rather than base on max mcs map. As an example
+>> operation mode change notification in assoc
+>> request may change rx_nss initial values in the
+>> future.
+>>
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>> ---
+>
+> Drop this single patch, please.
+>
+> I just noticed rx_nss doesn't seem to have correct value when associating..
 
-diff --git a/db.txt b/db.txt
-index 00029d9..c84624f 100644
---- a/db.txt
-+++ b/db.txt
-@@ -490,9 +490,9 @@ country LK: DFS-FCC
- 
- country LT: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
--	(5170 - 5250 @ 40), (20)
--	(5250 - 5330 @ 40), (20), DFS
--	(5490 - 5710 @ 40), (27), DFS
-+	(5170 - 5250 @ 80), (20)
-+	(5250 - 5330 @ 80), (20), DFS
-+	(5490 - 5710 @ 80), (27), DFS
- 	# 60 gHz band channels 1-4, ref: Etsi En 302 567
- 	(57240 - 65880 @ 2160), (40), NO-OUTDOOR
- 
+Ok, I'm dropping this.
+
 -- 
-1.8.4.rc3
-
+Kalle Valo
