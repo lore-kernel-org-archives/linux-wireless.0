@@ -1,43 +1,204 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f176.google.com ([74.125.82.176]:63597 "EHLO
-	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754603Ab3KAOAE (ORCPT
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:54617 "EHLO
+	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754781Ab3K1Ron (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 10:00:04 -0400
-Received: by mail-we0-f176.google.com with SMTP id w62so3934751wes.7
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 07:00:04 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 55/65] wireless-regdb: extend 5 GHz range for BR
-Date: Fri,  1 Nov 2013 14:57:45 +0100
-Message-Id: <1383314275-20960-56-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_150014_184536_7DFD24A9)
-In-Reply-To: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1383314275-20960-1-git-send-email-mcgrof@do-not-panic.com>
+	Thu, 28 Nov 2013 12:44:43 -0500
+Message-Id: <1385660680.14556.53217809.32CDF136@webmail.messagingengine.com> (sfid-20131128_184447_992910_DE53EB86)
+From: "Nikita N." <nikitan@operamail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain
+Subject: Re: RTL8187 bugs
+Date: Thu, 28 Nov 2013 09:44:40 -0800
+In-Reply-To: <529680A3.8070103@lwfinger.net>
+References: <1385589961.19021.52907237.3EE33E5B@webmail.messagingengine.com>
+ <52966D64.2030805@lwfinger.net>
+ <1385593188.3627.52911717.4E0712D9@webmail.messagingengine.com>
+ <529680A3.8070103@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Source is QCA's regulatory team's efforts.
+answers follow
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Wed, Nov 27, 2013, at 03:30 PM, Larry Finger wrote:
 
-diff --git a/db.txt b/db.txt
-index 70b0b9d..6d20e1f 100644
---- a/db.txt
-+++ b/db.txt
-@@ -134,7 +134,7 @@ country BR: DFS-FCC
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 80), (17)
- 	(5250 - 5330 @ 80), (24), DFS
--	(5490 - 5710 @ 80), (24), DFS
-+	(5490 - 5730 @ 80), (24), DFS
- 	(5735 - 5835 @ 80), (30)
- 
- country BY: DFS-ETSI
+> 
+> On my system, my RTL8187B shows the following for kernel 13.1-rc1:
+> 
+> [11213.196114] usb 1-5: new high-speed USB device number 5 using ehci-pci
+> [11214.663577] rtl8187: inconsistency between id with OEM info!
+> [11214.666105] cfg80211: Updating information on frequency 2412 MHz with 
+> regulatory rule:
+> [11214.666114] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (300
+> mBi, 2700 mBm)
+> [11214.666118] cfg80211: Updating information on frequency 2417 MHz with 
+> regulatory rule:
+> 
+> --snip--
+> 
+> ieee80211 phy2: Selected rate control algorithm 'minstrel_ht'
+> ieee80211 phy2: hwaddr 00:11:6b:3e:c4:0a, RTL8187BvB(early) V0 +
+> rtl8225z2, 
+> rfkill mask 2
+> rtl8187: Customer ID is 0x00
+> rtl8187: wireless switch is on
+> usbcore: registered new interface driver rtl8187
+> systemd-udevd[5796]: renamed network interface wlan1 to wlp0s2f1u5
+> 
+
+Thanks for your answer again Larry, I finding impossible to bring
+back monitor mode in my two, yes TWO different rtl8187 devices.
+They BOTH started malfunction in monitor mode the same day after
+installing 3.11, isnt it strange?
+I repeat, they always worked no problem before 3.11.
+>From your report you have a "RTL8187BvB(early) V0".
+I have a different interface, a "RTL8187vB (default) V1".
+So we are talking about different hardware, isnt it?
+Do you have a RTL8187vB for test too?
+
+Here follows the lsusb output, if that can help to see the differences
+between your and mine interface:
+"
+Bus 002 Device 002: ID 0bda:8187 Realtek Semiconductor Corp. RTL8187
+Wireless Adapter
+Device Descriptor:
+  bLength                18
+  bDescriptorType         1
+  bcdUSB               2.00
+  bDeviceClass            0 (Defined at Interface level)
+  bDeviceSubClass         0 
+  bDeviceProtocol         0 
+  bMaxPacketSize0        64
+  idVendor           0x0bda Realtek Semiconductor Corp.
+  idProduct          0x8187 RTL8187 Wireless Adapter
+  bcdDevice            1.00
+  iManufacturer           1 Realtek
+  iProduct                2 RTL8187 Wireless LAN Adapter
+  iSerial                 3 00e04c000001
+  bNumConfigurations      1
+  Configuration Descriptor:
+    bLength                 9
+    bDescriptorType         2
+    wTotalLength           39
+    bNumInterfaces          1
+    bConfigurationValue     1
+    iConfiguration          4 Wireless Network Card
+    bmAttributes         0x80
+      (Bus Powered)
+    MaxPower              500mA
+    Interface Descriptor:
+      bLength                 9
+      bDescriptorType         4
+      bInterfaceNumber        0
+      bAlternateSetting       0
+      bNumEndpoints           3
+      bInterfaceClass         0 (Defined at Interface level)
+      bInterfaceSubClass      0 
+      bInterfaceProtocol      0 
+      iInterface              5 Bulk-IN,Bulk-OUT,Bulk-OUT
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x81  EP 1 IN
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0200  1x 512 bytes
+        bInterval               0
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x02  EP 2 OUT
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0200  1x 512 bytes
+        bInterval               0
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x03  EP 3 OUT
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0200  1x 512 bytes
+        bInterval               0
+Device Qualifier (for other device speed):
+  bLength                10
+  bDescriptorType         6
+  bcdUSB               2.00
+  bDeviceClass            0 (Defined at Interface level)
+  bDeviceSubClass         0 
+  bDeviceProtocol         0 
+  bMaxPacketSize0        64
+  bNumConfigurations      1
+Device Status:     0x0002
+  (Bus Powered)
+  Remote Wakeup Enabled
+"
+
+> 
+> I cannot address this problem very much as I have no idea what went wrong
+> when 
+> you installed backports. Refreshing your kernel from the distro, or
+> regenerating 
+> it again if you build your own should help. The device's EEPROM cannot be 
+> changed, thus your conjecture about discarded frames is not right.
+> 
+
+Unfortunately, reverting back to original distro kernel didnt work.
+Thats why I think something was "written" in the interface.
+Thats why I suspect backports 3.11 has such a bug.
+I use distros ONLY in live-RAM mode, I dont use distro permanently
+installed, exactly for the reason I can always rollback.
+The only distros I use are the following: BT5,Kali,Weaknet and Slitaz4 -
+the issue now
+appears in all of them!
+Before 3.11 it did *NOT* appear in any of them!
+As for updates, I only apply updates in Slitaz4.
+FYI, I create a dedicated cpio fs at every new version, containing the
+"updates" modules, so to load them at kernel runtime by syslinux.
+I use this method from the early times of compat-wireless, even at job,
+I have automated scripts for that, always works.
+So I can e.g. switch between drivers version every time just applying
+the cpio file I want at kernel runtime.
+
+And thats what I did when "installed" 3.11: make install, created
+cpio, reboot & loaded the 3.11 cpio, tested the interfaces, saw the
+issues (mac and frames), removed the cpio from loading and put the 3.9
+cpio back.
+I do that all the times, its a no-fail procedure.
+Unfortunately applying back 3.9 didnt solve the issue, my two rtl8187
+remained STUCK in monitor malfunction.
+As for managed mode, it still works perfectly.
+As for the programs I use to test, here a list: airmon-ng, airbase-ng,
+airodump-ng, apache2, dnsspoof, dnsmasq, iptables, iw, wireshark.. the
+usual wifi net tools.
+That was for historic background, so you understand the situation.
+
+> 
+> The rtlwifi package only includes the drivers that use rtlwifi for their
+> basic 
+> communications. Driver rtl8187 is *NOT* one of them. You have to
+> configure it 
+> separately. This is not a bug.
+
+As for compiling rtl modules you say dont use rtlwifi, ok, infact that
+was the first time I tried, just because defconfig-wifi did *NOT* work.
+I repeat, I always used make defconfig-wifi & make install, even for
+3.11 worked.
+This time for 3.13, is *NOT* compiling rtl818x modules.
+Any functionality change not documented?
+If so, how can I instruct make to compile&install rtl8187 modules in new
+3.13?
+
+Thanks for your attention :)
+
 -- 
-1.8.4.rc3
+http://www.fastmail.fm - A no graphics, no pop-ups email service
 
