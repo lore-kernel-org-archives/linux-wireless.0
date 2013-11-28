@@ -1,71 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:9832 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752303Ab3KYBvL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Nov 2013 20:51:11 -0500
-Received: from epcpsbgr5.samsung.com
- (u145.gpu120.samsung.co.kr [203.254.230.145])
- by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MWS003DXQHA13B0@mailout1.samsung.com> for
- linux-wireless@vger.kernel.org; Mon, 25 Nov 2013 10:51:10 +0900 (KST)
-From: Jingoo Han <jg1.han@samsung.com>
-To: "'John W. Linville'" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
-References: <000601cee980$a2d1b0a0$e87511e0$%han@samsung.com>
-In-reply-to: <000601cee980$a2d1b0a0$e87511e0$%han@samsung.com>
-Subject: [PATCH 2/3] wireless: prism54: remove unnecessary pci_set_drvdata()
-Date: Mon, 25 Nov 2013 10:51:09 +0900
-Message-id: <000701cee980$d0046e00$700d4a00$%han@samsung.com> (sfid-20131125_025115_752790_19673728)
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mga14.intel.com ([143.182.124.37]:39022 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755934Ab3K1DXz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Nov 2013 22:23:55 -0500
+Subject: Re: [PATCH] WIFI: handle a neglected case in
+ nl80211_new_interface()
+From: Chao Bi <chao.bi@intel.com>
+To: Ujjal Roy <royujjal@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <CAE2MWk=WEwxbnBDhBRHKVQ7JhAwKANv-HQXyK=qTb4qaH4GZRg@mail.gmail.com>
+References: <1385521254.23222.8.camel@bichao>
+	 <CAE2MWk=WEwxbnBDhBRHKVQ7JhAwKANv-HQXyK=qTb4qaH4GZRg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 28 Nov 2013 11:53:38 +0800
+Message-ID: <1385610818.7437.1.camel@bichao> (sfid-20131128_042419_232226_6739BD21)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver core clears the driver data to NULL after device_release
-or on probe failure. Thus, it is not needed to manually clear the
-device driver data to NULL.
+On Wed, 2013-11-27 at 20:43 +0530, Ujjal Roy wrote:
+> Hi,
+> 
+> 
+> We can use IS_ERR_OR_NULL(wdev) to check NULL as well as error value.
+> 
+> Thanks,
+> UjjaL
+> 
+> On Wed, Nov 27, 2013 at 8:30 AM, Chao Bi <chao.bi@intel.com> wrote:
+>         In nl80211_new_interface(), it calls rdev_add_virtual_intf() to create
+>         a new interface, however, it only checks whether returned value is err
+>         code, but doesn't check if returned value is NULL. The returned 
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
----
- drivers/net/wireless/prism54/islpci_dev.c     |    1 -
- drivers/net/wireless/prism54/islpci_hotplug.c |    2 --
- 2 files changed, 3 deletions(-)
-
-diff --git a/drivers/net/wireless/prism54/islpci_dev.c b/drivers/net/wireless/prism54/islpci_dev.c
-index e05d9b4..7fa2898 100644
---- a/drivers/net/wireless/prism54/islpci_dev.c
-+++ b/drivers/net/wireless/prism54/islpci_dev.c
-@@ -914,7 +914,6 @@ islpci_setup(struct pci_dev *pdev)
-       do_islpci_free_memory:
- 	islpci_free_memory(priv);
-       do_free_netdev:
--	pci_set_drvdata(pdev, NULL);
- 	free_netdev(ndev);
- 	priv = NULL;
- 	return NULL;
-diff --git a/drivers/net/wireless/prism54/islpci_hotplug.c b/drivers/net/wireless/prism54/islpci_hotplug.c
-index 9e68e0c..d7b9e63 100644
---- a/drivers/net/wireless/prism54/islpci_hotplug.c
-+++ b/drivers/net/wireless/prism54/islpci_hotplug.c
-@@ -199,7 +199,6 @@ prism54_probe(struct pci_dev *pdev, const struct pci_device_id *id)
-       do_unregister_netdev:
- 	unregister_netdev(ndev);
- 	islpci_free_memory(priv);
--	pci_set_drvdata(pdev, NULL);
- 	free_netdev(ndev);
- 	priv = NULL;
-       do_pci_clear_mwi:
-@@ -247,7 +246,6 @@ prism54_remove(struct pci_dev *pdev)
- 	/* free the PCI memory and unmap the remapped page */
- 	islpci_free_memory(priv);
- 
--	pci_set_drvdata(pdev, NULL);
- 	free_netdev(ndev);
- 	priv = NULL;
- 
--- 
-1.7.10.4
+Thanks Ujjal. I'll update it.
 
 
