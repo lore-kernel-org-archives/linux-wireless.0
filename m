@@ -1,68 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f45.google.com ([209.85.160.45]:58535 "EHLO
-	mail-pb0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754076Ab3KBNtO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Nov 2013 09:49:14 -0400
-From: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
-To: davem@davemloft.net, gregkh@linuxfoundation.org,
-	linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
-	schwidefsky@de.ibm.com, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	IvDoorn@gmail.com, sbhatewara@vmware.com, samuel@sortiz.org,
-	chas@cmf.nrl.navy.mil, roland@kernel.org, isdn@linux-pingi.de,
-	jcliburn@gmail.com, benve@cisco.com, ssujith@cisco.com,
-	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
-	shahed.shaikh@qlogic.com, joe@perches.com, apw@canonical.com
-Cc: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
-Subject: [PATCH net-next 10/13] driver: infiniband: remove unnecessary NULL check before dev_kfree_skb_any
-Date: Sat,  2 Nov 2013 19:17:51 +0530
-Message-Id: <1383400074-30555-11-git-send-email-govindarajulu90@gmail.com> (sfid-20131102_145048_729027_8FC83C1A)
-In-Reply-To: <1383400074-30555-1-git-send-email-govindarajulu90@gmail.com>
-References: <1383400074-30555-1-git-send-email-govindarajulu90@gmail.com>
+Received: from victor.provo.novell.com ([137.65.250.26]:47256 "EHLO
+	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756783Ab3K1Ck1 (ORCPT
+	<rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
+	Wed, 27 Nov 2013 21:40:27 -0500
+Received: by mail-ie0-f179.google.com with SMTP id x13so13271889ief.38
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Nov 2013 18:20:01 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1385392886-6777-1-git-send-email-machen@suse.com>
+References: <1385392886-6777-1-git-send-email-machen@suse.com>
+Date: Thu, 28 Nov 2013 10:20:01 +0800
+Message-ID: <CALx5=V-_eyhoH+CGS42vfBc0hQ__Q7iEecGiiKT-8mMTUY41dA@mail.gmail.com> (sfid-20131128_034030_706282_EF819A9A)
+Subject: Re: [PATCH] mac80211: save parsing elem if channel is disabled
+From: Matt Chen <machen@suse.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-dev_kfree_skb_any is protected from NULL. No need to check for NULL
-while calling this function.
+Does this patch make sense to you all ?
 
-Signed-off-by: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
----
- drivers/infiniband/hw/amso1100/c2.c | 6 ++----
- drivers/infiniband/hw/nes/nes_hw.c  | 3 +--
- 2 files changed, 3 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/infiniband/hw/amso1100/c2.c b/drivers/infiniband/hw/amso1100/c2.c
-index d53cf51..30c4d00 100644
---- a/drivers/infiniband/hw/amso1100/c2.c
-+++ b/drivers/infiniband/hw/amso1100/c2.c
-@@ -312,10 +312,8 @@ static inline int c2_tx_free(struct c2_dev *c2dev, struct c2_element *elem)
- 	pci_unmap_single(c2dev->pcidev, elem->mapaddr, elem->maplen,
- 			 PCI_DMA_TODEVICE);
- 
--	if (elem->skb) {
--		dev_kfree_skb_any(elem->skb);
--		elem->skb = NULL;
--	}
-+	dev_kfree_skb_any(elem->skb);
-+	elem->skb = NULL;
- 
- 	return 0;
- }
-diff --git a/drivers/infiniband/hw/nes/nes_hw.c b/drivers/infiniband/hw/nes/nes_hw.c
-index 9020024..2275a8e 100644
---- a/drivers/infiniband/hw/nes/nes_hw.c
-+++ b/drivers/infiniband/hw/nes/nes_hw.c
-@@ -2856,8 +2856,7 @@ void nes_nic_ce_handler(struct nes_device *nesdev, struct nes_hw_nic_cq *cq)
- 							break;
- 					}
- 				}
--				if (skb)
--					dev_kfree_skb_any(skb);
-+				dev_kfree_skb_any(skb);
- 				nesnic->sq_tail++;
- 				nesnic->sq_tail &= nesnic->sq_size-1;
- 				if (sq_cqes > 128) {
--- 
-1.8.4.2
-
+2013/11/25 Matt Chen <machen@suse.com>:
+> It is possible to save parsing element time
+> if we find the channel is disabled.
+>
+> Acked-by: Matt Chen <machen@suse.com>
+> ---
+>  net/mac80211/scan.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+> index 5ad66a8..7369557 100644
+> --- a/net/mac80211/scan.c
+> +++ b/net/mac80211/scan.c
+> @@ -198,13 +198,13 @@ void ieee80211_scan_rx(struct ieee80211_local *local, struct sk_buff *skb)
+>         if (baselen > skb->len)
+>                 return;
+>
+> -       ieee802_11_parse_elems(elements, skb->len - baselen, false, &elems);
+> -
+>         channel = ieee80211_get_channel(local->hw.wiphy, rx_status->freq);
+>
+>         if (!channel || channel->flags & IEEE80211_CHAN_DISABLED)
+>                 return;
+>
+> +       ieee802_11_parse_elems(elements, skb->len - baselen, false, &elems);
+> +
+>         bss = ieee80211_bss_info_update(local, rx_status,
+>                                         mgmt, skb->len, &elems,
+>                                         channel);
+> --
+> 1.7.12.4
+>
+>
