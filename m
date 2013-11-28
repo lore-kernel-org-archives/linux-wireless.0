@@ -1,77 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:49130 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755560Ab3KODLI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Nov 2013 22:11:08 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Ujjal Roy <royujjal@gmail.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3.13 4/6] mwifiex: fix potential mem leak in .del_virtual_intf
-Date: Thu, 14 Nov 2013 19:10:40 -0800
-Message-ID: <1384485042-7083-4-git-send-email-bzhao@marvell.com> (sfid-20131115_041113_475817_EF08F378)
-In-Reply-To: <1384485042-7083-1-git-send-email-bzhao@marvell.com>
-References: <1384485042-7083-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga09.intel.com ([134.134.136.24]:24087 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754471Ab3K1EwF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Nov 2013 23:52:05 -0500
+Subject: Re: [PATCH] WIFI: handle a neglected case in
+ nl80211_new_interface()
+From: Chao Bi <chao.bi@intel.com>
+To: Ujjal Roy <royujjal@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1385610818.7437.1.camel@bichao>
+References: <1385521254.23222.8.camel@bichao>
+	 <CAE2MWk=WEwxbnBDhBRHKVQ7JhAwKANv-HQXyK=qTb4qaH4GZRg@mail.gmail.com>
+	 <1385610818.7437.1.camel@bichao>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 28 Nov 2013 13:21:37 +0800
+Message-ID: <1385616097.7437.8.camel@bichao> (sfid-20131128_055210_918927_7E5AE12A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
-
-1) Currently we freeing wdev for each interface in driver unload
-path. We may leak memory if user have already deleted an interface.
-mwifiex_add_virtual_intf() allocates wdev structure. So it should
-be freed in mwifiex_del_virtual_intf().
-This will make sure that wdev will be freed when user deletes an
-interface and also in unload path.
-2) "priv->netdev->ieee80211_ptr" should also be cleared in
-mwifiex_del_virtual_intf.
-
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c | 3 +++
- drivers/net/wireless/mwifiex/main.c     | 6 ------
- 2 files changed, 3 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index ccc9c08..aeaea0e 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -2310,7 +2310,10 @@ int mwifiex_del_virtual_intf(struct wiphy *wiphy, struct wireless_dev *wdev)
- 		unregister_netdevice(wdev->netdev);
- 
- 	/* Clear the priv in adapter */
-+	priv->netdev->ieee80211_ptr = NULL;
- 	priv->netdev = NULL;
-+	kfree(wdev);
-+	priv->wdev = NULL;
- 
- 	priv->media_connected = false;
- 
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index 42d9a68..78e8a66 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -998,12 +998,6 @@ int mwifiex_remove_card(struct mwifiex_adapter *adapter, struct semaphore *sem)
- 	wiphy_unregister(priv->wdev->wiphy);
- 	wiphy_free(priv->wdev->wiphy);
- 
--	for (i = 0; i < adapter->priv_num; i++) {
--		priv = adapter->priv[i];
--		if (priv)
--			kfree(priv->wdev);
--	}
--
- 	mwifiex_terminate_workqueue(adapter);
- 
- 	/* Unregister device */
--- 
-1.8.2.3
+On Thu, 2013-11-28 at 11:53 +0800, Chao Bi wrote:
+> On Wed, 2013-11-27 at 20:43 +0530, Ujjal Roy wrote:
+> > Hi,
+> > 
+> > 
+> > We can use IS_ERR_OR_NULL(wdev) to check NULL as well as error value.
+> > 
+> > Thanks,
+> > UjjaL
+> > 
+> > On Wed, Nov 27, 2013 at 8:30 AM, Chao Bi <chao.bi@intel.com> wrote:
+> >         In nl80211_new_interface(), it calls rdev_add_virtual_intf() to create
+> >         a new interface, however, it only checks whether returned value is err
+> >         code, but doesn't check if returned value is NULL. The returned 
+> 
+> Thanks Ujjal. I'll update it.
+> 
+Hi all,
+This patch is not valid, I further check the nl80211 API introduce,
+don't need to handle this NULL return value because it bans NULL
+feedback of add_virtual_intf() API in cfg80211.h.
 
