@@ -1,194 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f175.google.com ([209.85.215.175]:37219 "EHLO
-	mail-ea0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754733Ab3KENtD (ORCPT
+Received: from mail-we0-f170.google.com ([74.125.82.170]:34824 "EHLO
+	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751653Ab3K1LVp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Nov 2013 08:49:03 -0500
-Received: by mail-ea0-f175.google.com with SMTP id l15so3456364eak.34
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Nov 2013 05:49:01 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH v2 1/5] cfg80211/mac80211: DFS setup chandef for cac event
-Date: Tue,  5 Nov 2013 14:48:45 +0100
-Message-Id: <1383659329-11023-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131105_144907_844500_12E77C1B)
+	Thu, 28 Nov 2013 06:21:45 -0500
+Received: by mail-we0-f170.google.com with SMTP id w61so8156251wes.1
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Nov 2013 03:21:44 -0800 (PST)
+Message-ID: <52972749.70200@gmail.com> (sfid-20131128_122149_749985_D4D9D6CF)
+Date: Thu, 28 Nov 2013 12:21:45 +0100
+From: Mathy Vanhoef <vanhoefm@gmail.com>
+MIME-Version: 1.0
+To: Pau Koning <paukoning@gmail.com>
+CC: Oleksij Rempel <linux@rempel-privat.de>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, mcgrof@qca.qualcomm.com,
+	jouni@qca.qualcomm.com, vthiagar@qca.qualcomm.com,
+	senthilb@qca.qualcomm.com
+Subject: Re: [PATCH] ath9k_htc: properly set MAC address and BSSID mask
+References: <5294E4C5.4050301@cs.kuleuven.be> <52950812.20001@rempel-privat.de> <5295EF41.8040709@cs.kuleuven.be> <CANiGF999jHN3+5QuNVAkVk_hHxZ6LkPxWB3jW9yoJGbfno7M9A@mail.gmail.com>
+In-Reply-To: <CANiGF999jHN3+5QuNVAkVk_hHxZ6LkPxWB3jW9yoJGbfno7M9A@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To report channel width correctly we have
-to send correct channel parameters from
-mac80211 when calling cfg80211_cac_event().
+Third time's the charm? 
+--
+From: "Mathy Vanhoef" <vanhoefm@gmail.com>
 
-This is required in case of using channel width
-higher than 20MHz and we have to set correct
-dfs channel state after CAC (NL80211_DFS_AVAILABLE).
+Pick the MAC address of the first virtual interface as the new hardware MAC
+address. Set BSSID mask according to this MAC address. This fixes CVE-2013-4579.
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Reviewed-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Signed-off-by: Mathy Vanhoef <vanhoefm@gmail.com>
 ---
- include/net/cfg80211.h |    2 ++
- net/mac80211/cfg.c     |    5 ++++-
- net/mac80211/iface.c   |    5 ++++-
- net/mac80211/mlme.c    |    6 ++++--
- net/mac80211/util.c    |    3 +++
- net/wireless/mlme.c    |    8 +++-----
- 6 files changed, 20 insertions(+), 9 deletions(-)
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index d441045..84359c3 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -147,21 +147,26 @@ static void ath9k_htc_bssid_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
+ 	struct ath9k_vif_iter_data *iter_data = data;
+ 	int i;
+ 
+-	for (i = 0; i < ETH_ALEN; i++)
+-		iter_data->mask[i] &= ~(iter_data->hw_macaddr[i] ^ mac[i]);
++	if (iter_data->hw_macaddr != NULL) {
++		for (i = 0; i < ETH_ALEN; i++)
++			iter_data->mask[i] &= ~(iter_data->hw_macaddr[i] ^ mac[i]);
++	} else {
++		iter_data->hw_macaddr = mac;
++	}
+ }
+ 
+-static void ath9k_htc_set_bssid_mask(struct ath9k_htc_priv *priv,
++static void ath9k_htc_set_mac_bssid_mask(struct ath9k_htc_priv *priv,
+ 				     struct ieee80211_vif *vif)
+ {
+ 	struct ath_common *common = ath9k_hw_common(priv->ah);
+ 	struct ath9k_vif_iter_data iter_data;
+ 
+ 	/*
+-	 * Use the hardware MAC address as reference, the hardware uses it
+-	 * together with the BSSID mask when matching addresses.
++	 * Pick the MAC address of the first interface as the new hardware
++	 * MAC address. The hardware will use it together with the BSSID mask
++	 * when matching addresses.
+ 	 */
+-	iter_data.hw_macaddr = common->macaddr;
++	iter_data.hw_macaddr = NULL;
+ 	memset(&iter_data.mask, 0xff, ETH_ALEN);
+ 
+ 	if (vif)
+@@ -173,6 +178,10 @@ static void ath9k_htc_set_bssid_mask(struct ath9k_htc_priv *priv,
+ 		ath9k_htc_bssid_iter, &iter_data);
+ 
+ 	memcpy(common->bssidmask, iter_data.mask, ETH_ALEN);
++
++	if (iter_data.hw_macaddr)
++		memcpy(common->macaddr, iter_data.hw_macaddr, ETH_ALEN);
++
+ 	ath_hw_setbssidmask(common);
+ }
+ 
+@@ -1083,7 +1092,7 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
+ 		goto out;
+ 	}
+ 
+-	ath9k_htc_set_bssid_mask(priv, vif);
++	ath9k_htc_set_mac_bssid_mask(priv, vif);
+ 
+ 	priv->vif_slot |= (1 << avp->index);
+ 	priv->nvifs++;
+@@ -1148,7 +1157,7 @@ static void ath9k_htc_remove_interface(struct ieee80211_hw *hw,
+ 
+ 	ath9k_htc_set_opmode(priv);
+ 
+-	ath9k_htc_set_bssid_mask(priv, vif);
++	ath9k_htc_set_mac_bssid_mask(priv, vif);
+ 
+ 	/*
+ 	 * Stop ANI only if there are no associated station interfaces.
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index b6aad69..99ab0aa 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -885,8 +885,9 @@ void ath9k_calculate_iter_data(struct ieee80211_hw *hw,
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 
+ 	/*
+-	 * Use the hardware MAC address as reference, the hardware uses it
+-	 * together with the BSSID mask when matching addresses.
++	 * Pick the MAC address of the first interface as the new hardware
++	 * MAC address. The hardware will use it together with the BSSID mask
++	 * when matching addresses.
+ 	 */
+ 	memset(iter_data, 0, sizeof(*iter_data));
+ 	memset(&iter_data->mask, 0xff, ETH_ALEN);
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index c1b8874..dc7de24 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -4145,6 +4145,7 @@ void cfg80211_radar_event(struct wiphy *wiphy,
- /**
-  * cfg80211_cac_event - Channel availability check (CAC) event
-  * @netdev: network device
-+ * @chandef: chandef for the current channel
-  * @event: type of event
-  * @gfp: context flags
-  *
-@@ -4153,6 +4154,7 @@ void cfg80211_radar_event(struct wiphy *wiphy,
-  * also by full-MAC drivers.
-  */
- void cfg80211_cac_event(struct net_device *netdev,
-+			struct cfg80211_chan_def *chandef,
- 			enum nl80211_radar_event event, gfp_t gfp);
- 
- 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index ed1e9a8..fcdc357 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1050,6 +1050,7 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
- 	struct ieee80211_local *local = sdata->local;
- 	struct beacon_data *old_beacon;
- 	struct probe_resp *old_probe_resp;
-+	struct cfg80211_chan_def chandef;
- 
- 	old_beacon = rtnl_dereference(sdata->u.ap.beacon);
- 	if (!old_beacon)
-@@ -1091,8 +1092,10 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
- 	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON_ENABLED);
- 
- 	if (sdata->wdev.cac_started) {
-+		chandef = sdata->vif.bss_conf.chandef;
- 		cancel_delayed_work_sync(&sdata->dfs_cac_timer_work);
--		cfg80211_cac_event(sdata->dev, NL80211_RADAR_CAC_ABORTED,
-+		cfg80211_cac_event(sdata->dev, &chandef,
-+				   NL80211_RADAR_CAC_ABORTED,
- 				   GFP_KERNEL);
- 	}
- 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index ff101ea..c9b0442 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -749,6 +749,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 	u32 hw_reconf_flags = 0;
- 	int i, flushed;
- 	struct ps_data *ps;
-+	struct cfg80211_chan_def chandef;
- 
- 	clear_bit(SDATA_STATE_RUNNING, &sdata->state);
- 
-@@ -823,11 +824,13 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 	cancel_delayed_work_sync(&sdata->dfs_cac_timer_work);
- 
- 	if (sdata->wdev.cac_started) {
-+		chandef = sdata->vif.bss_conf.chandef;
- 		WARN_ON(local->suspended);
- 		mutex_lock(&local->iflist_mtx);
- 		ieee80211_vif_release_channel(sdata);
- 		mutex_unlock(&local->iflist_mtx);
--		cfg80211_cac_event(sdata->dev, NL80211_RADAR_CAC_ABORTED,
-+		cfg80211_cac_event(sdata->dev, &chandef,
-+				   NL80211_RADAR_CAC_ABORTED,
- 				   GFP_KERNEL);
- 	}
- 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 1305ff9..e75c82c 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1398,10 +1398,12 @@ void ieee80211_dfs_cac_timer_work(struct work_struct *work)
- 	struct ieee80211_sub_if_data *sdata =
- 		container_of(delayed_work, struct ieee80211_sub_if_data,
- 			     dfs_cac_timer_work);
-+	struct cfg80211_chan_def chandef = sdata->vif.bss_conf.chandef;
- 
- 	ieee80211_vif_release_channel(sdata);
--
--	cfg80211_cac_event(sdata->dev, NL80211_RADAR_CAC_FINISHED, GFP_KERNEL);
-+	cfg80211_cac_event(sdata->dev, &chandef,
-+			   NL80211_RADAR_CAC_FINISHED,
-+			   GFP_KERNEL);
- }
- 
- /* MLME */
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index a38d582..6110be9 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -2258,14 +2258,17 @@ u64 ieee80211_calculate_rx_timestamp(struct ieee80211_local *local,
- void ieee80211_dfs_cac_cancel(struct ieee80211_local *local)
- {
- 	struct ieee80211_sub_if_data *sdata;
-+	struct cfg80211_chan_def chandef;
- 
- 	mutex_lock(&local->iflist_mtx);
- 	list_for_each_entry(sdata, &local->interfaces, list) {
- 		cancel_delayed_work_sync(&sdata->dfs_cac_timer_work);
- 
- 		if (sdata->wdev.cac_started) {
-+			chandef = sdata->vif.bss_conf.chandef;
- 			ieee80211_vif_release_channel(sdata);
- 			cfg80211_cac_event(sdata->dev,
-+					   &chandef,
- 					   NL80211_RADAR_CAC_ABORTED,
- 					   GFP_KERNEL);
- 		}
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index 8d49c1c..b2276f5 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -761,12 +761,12 @@ void cfg80211_radar_event(struct wiphy *wiphy,
- EXPORT_SYMBOL(cfg80211_radar_event);
- 
- void cfg80211_cac_event(struct net_device *netdev,
-+			struct cfg80211_chan_def *chandef,
- 			enum nl80211_radar_event event, gfp_t gfp)
- {
- 	struct wireless_dev *wdev = netdev->ieee80211_ptr;
- 	struct wiphy *wiphy = wdev->wiphy;
- 	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
--	struct cfg80211_chan_def chandef;
- 	unsigned long timeout;
- 
- 	trace_cfg80211_cac_event(netdev, event);
-@@ -777,14 +777,12 @@ void cfg80211_cac_event(struct net_device *netdev,
- 	if (WARN_ON(!wdev->channel))
- 		return;
- 
--	cfg80211_chandef_create(&chandef, wdev->channel, NL80211_CHAN_NO_HT);
--
- 	switch (event) {
- 	case NL80211_RADAR_CAC_FINISHED:
- 		timeout = wdev->cac_start_time +
- 			  msecs_to_jiffies(IEEE80211_DFS_MIN_CAC_TIME_MS);
- 		WARN_ON(!time_after_eq(jiffies, timeout));
--		cfg80211_set_dfs_state(wiphy, &chandef, NL80211_DFS_AVAILABLE);
-+		cfg80211_set_dfs_state(wiphy, chandef, NL80211_DFS_AVAILABLE);
- 		break;
- 	case NL80211_RADAR_CAC_ABORTED:
- 		break;
-@@ -794,6 +792,6 @@ void cfg80211_cac_event(struct net_device *netdev,
- 	}
- 	wdev->cac_started = false;
- 
--	nl80211_radar_notify(rdev, &chandef, event, netdev, gfp);
-+	nl80211_radar_notify(rdev, chandef, event, netdev, gfp);
- }
- EXPORT_SYMBOL(cfg80211_cac_event);
--- 
-1.7.9.5
+
 
