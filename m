@@ -1,59 +1,223 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:61959 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751613Ab3KRRL5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Nov 2013 12:11:57 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
-Subject: [PATCH 09/12 NEXT] rtlwifi: rtl8192cu: Update the power index registers
-Date: Mon, 18 Nov 2013 11:11:33 -0600
-Message-Id: <1384794696-20314-10-git-send-email-Larry.Finger@lwfinger.net> (sfid-20131118_181305_350407_1DA57814)
-In-Reply-To: <1384794696-20314-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1384794696-20314-1-git-send-email-Larry.Finger@lwfinger.net>
+Received: from mms2.broadcom.com ([216.31.210.18]:4268 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753051Ab3K2LZk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Nov 2013 06:25:40 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 10/19] brcmfmac: remove redundant ioctl handlers
+Date: Fri, 29 Nov 2013 12:25:15 +0100
+Message-ID: <1385724324-6361-11-git-send-email-arend@broadcom.com> (sfid-20131129_123808_818329_31B0552E)
+In-Reply-To: <1385724324-6361-1-git-send-email-arend@broadcom.com>
+References: <1385724324-6361-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch uses the newly introduced power index register routines.
+The ioctl() entry points were empty except for handling SIOC_ETHTOOL
+but that has been obsoleted in favor of struct ethtool_ops. Cleaning
+up removing the ioctl() handlers.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/rtlwifi/rtl8192cu/dm.c | 6 ++++++
- drivers/net/wireless/rtlwifi/rtl8192cu/dm.h | 3 +++
- 2 files changed, 9 insertions(+)
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |  149 --------------------
+ 1 file changed, 149 deletions(-)
 
-Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192cu/dm.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192cu/dm.c
-+++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192cu/dm.c
-@@ -101,6 +101,15 @@ void rtl92cu_dm_dynamic_txpower(struct i
- 			 "PHY_SetTxPowerLevel8192S() Channel = %d\n",
- 			 rtlphy->current_channel);
- 		rtl92c_phy_set_txpower_level(hw, rtlphy->current_channel);
-+		if (rtlpriv->dm.dynamic_txhighpower_lvl ==
-+		    TXHIGHPWRLEVEL_NORMAL)
-+			dm_restorepowerindex(hw);
-+		else if (rtlpriv->dm.dynamic_txhighpower_lvl ==
-+			 TXHIGHPWRLEVEL_LEVEL1)
-+			dm_writepowerindex(hw, 0x14);
-+		else if (rtlpriv->dm.dynamic_txhighpower_lvl ==
-+			 TXHIGHPWRLEVEL_LEVEL2)
-+			dm_writepowerindex(hw, 0x10);
- 	}
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+index c626938..9336f6d 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+@@ -591,28 +591,6 @@ static struct net_device_stats *brcmf_netdev_get_stats(struct net_device *ndev)
+ 	return &ifp->stats;
+ }
  
- 	rtlpriv->dm.last_dtp_lvl = rtlpriv->dm.dynamic_txhighpower_lvl;
-Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192cu/dm.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192cu/dm.h
-+++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192cu/dm.h
-@@ -30,3 +30,6 @@
- #include "../rtl8192ce/dm.h"
+-/*
+- * Set current toe component enables in toe_ol iovar,
+- * and set toe global enable iovar
+- */
+-static int brcmf_toe_set(struct brcmf_if *ifp, u32 toe_ol)
+-{
+-	s32 err;
+-
+-	err = brcmf_fil_iovar_int_set(ifp, "toe_ol", toe_ol);
+-	if (err < 0) {
+-		brcmf_err("Setting toe_ol failed, %d\n", err);
+-		return err;
+-	}
+-
+-	err = brcmf_fil_iovar_int_set(ifp, "toe", (toe_ol != 0));
+-	if (err < 0)
+-		brcmf_err("Setting toe failed, %d\n", err);
+-
+-	return err;
+-
+-}
+-
+ static void brcmf_ethtool_get_drvinfo(struct net_device *ndev,
+ 				    struct ethtool_drvinfo *info)
+ {
+@@ -630,124 +608,6 @@ static const struct ethtool_ops brcmf_ethtool_ops = {
+ 	.get_drvinfo = brcmf_ethtool_get_drvinfo,
+ };
  
- void rtl92cu_dm_dynamic_txpower(struct ieee80211_hw *hw);
-+void dm_savepowerindex(struct ieee80211_hw *hw);
-+void dm_writepowerindex(struct ieee80211_hw *hw, u8 value);
-+void dm_restorepowerindex(struct ieee80211_hw *hw);
+-static int brcmf_ethtool(struct brcmf_if *ifp, void __user *uaddr)
+-{
+-	struct brcmf_pub *drvr = ifp->drvr;
+-	struct ethtool_drvinfo info;
+-	char drvname[sizeof(info.driver)];
+-	u32 cmd;
+-	struct ethtool_value edata;
+-	u32 toe_cmpnt, csum_dir;
+-	int ret;
+-
+-	brcmf_dbg(TRACE, "Enter, idx=%d\n", ifp->bssidx);
+-
+-	/* all ethtool calls start with a cmd word */
+-	if (copy_from_user(&cmd, uaddr, sizeof(u32)))
+-		return -EFAULT;
+-
+-	switch (cmd) {
+-	case ETHTOOL_GDRVINFO:
+-		/* Copy out any request driver name */
+-		if (copy_from_user(&info, uaddr, sizeof(info)))
+-			return -EFAULT;
+-		strncpy(drvname, info.driver, sizeof(info.driver));
+-		drvname[sizeof(info.driver) - 1] = '\0';
+-
+-		/* clear struct for return */
+-		memset(&info, 0, sizeof(info));
+-		info.cmd = cmd;
+-
+-		/* if requested, identify ourselves */
+-		if (strcmp(drvname, "?dhd") == 0) {
+-			sprintf(info.driver, "dhd");
+-			strcpy(info.version, BRCMF_VERSION_STR);
+-		}
+-		/* report dongle driver type */
+-		else
+-			sprintf(info.driver, "wl");
+-
+-		sprintf(info.version, "%lu", drvr->drv_version);
+-		if (copy_to_user(uaddr, &info, sizeof(info)))
+-			return -EFAULT;
+-		brcmf_dbg(TRACE, "given %*s, returning %s\n",
+-			  (int)sizeof(drvname), drvname, info.driver);
+-		break;
+-
+-		/* Get toe offload components from dongle */
+-	case ETHTOOL_GRXCSUM:
+-	case ETHTOOL_GTXCSUM:
+-		ret = brcmf_fil_iovar_int_get(ifp, "toe_ol", &toe_cmpnt);
+-		if (ret < 0)
+-			return ret;
+-
+-		csum_dir =
+-		    (cmd == ETHTOOL_GTXCSUM) ? TOE_TX_CSUM_OL : TOE_RX_CSUM_OL;
+-
+-		edata.cmd = cmd;
+-		edata.data = (toe_cmpnt & csum_dir) ? 1 : 0;
+-
+-		if (copy_to_user(uaddr, &edata, sizeof(edata)))
+-			return -EFAULT;
+-		break;
+-
+-		/* Set toe offload components in dongle */
+-	case ETHTOOL_SRXCSUM:
+-	case ETHTOOL_STXCSUM:
+-		if (copy_from_user(&edata, uaddr, sizeof(edata)))
+-			return -EFAULT;
+-
+-		/* Read the current settings, update and write back */
+-		ret = brcmf_fil_iovar_int_get(ifp, "toe_ol", &toe_cmpnt);
+-		if (ret < 0)
+-			return ret;
+-
+-		csum_dir =
+-		    (cmd == ETHTOOL_STXCSUM) ? TOE_TX_CSUM_OL : TOE_RX_CSUM_OL;
+-
+-		if (edata.data != 0)
+-			toe_cmpnt |= csum_dir;
+-		else
+-			toe_cmpnt &= ~csum_dir;
+-
+-		ret = brcmf_toe_set(ifp, toe_cmpnt);
+-		if (ret < 0)
+-			return ret;
+-
+-		/* If setting TX checksum mode, tell Linux the new mode */
+-		if (cmd == ETHTOOL_STXCSUM) {
+-			if (edata.data)
+-				ifp->ndev->features |= NETIF_F_IP_CSUM;
+-			else
+-				ifp->ndev->features &= ~NETIF_F_IP_CSUM;
+-		}
+-
+-		break;
+-
+-	default:
+-		return -EOPNOTSUPP;
+-	}
+-
+-	return 0;
+-}
+-
+-static int brcmf_netdev_ioctl_entry(struct net_device *ndev, struct ifreq *ifr,
+-				    int cmd)
+-{
+-	struct brcmf_if *ifp = netdev_priv(ndev);
+-	struct brcmf_pub *drvr = ifp->drvr;
+-
+-	brcmf_dbg(TRACE, "Enter, idx=%d, cmd=0x%04x\n", ifp->bssidx, cmd);
+-
+-	if (!drvr->iflist[ifp->bssidx])
+-		return -1;
+-
+-	if (cmd == SIOCETHTOOL)
+-		return brcmf_ethtool(ifp, ifr->ifr_data);
+-
+-	return -EOPNOTSUPP;
+-}
+-
+ static int brcmf_netdev_stop(struct net_device *ndev)
+ {
+ 	struct brcmf_if *ifp = netdev_priv(ndev);
+@@ -800,7 +660,6 @@ static const struct net_device_ops brcmf_netdev_ops_pri = {
+ 	.ndo_open = brcmf_netdev_open,
+ 	.ndo_stop = brcmf_netdev_stop,
+ 	.ndo_get_stats = brcmf_netdev_get_stats,
+-	.ndo_do_ioctl = brcmf_netdev_ioctl_entry,
+ 	.ndo_start_xmit = brcmf_netdev_start_xmit,
+ 	.ndo_set_mac_address = brcmf_netdev_set_mac_address,
+ 	.ndo_set_rx_mode = brcmf_netdev_set_multicast_list
+@@ -866,13 +725,6 @@ static int brcmf_net_p2p_stop(struct net_device *ndev)
+ 	return brcmf_cfg80211_down(ndev);
+ }
+ 
+-static int brcmf_net_p2p_do_ioctl(struct net_device *ndev,
+-				  struct ifreq *ifr, int cmd)
+-{
+-	brcmf_dbg(TRACE, "Enter\n");
+-	return 0;
+-}
+-
+ static netdev_tx_t brcmf_net_p2p_start_xmit(struct sk_buff *skb,
+ 					    struct net_device *ndev)
+ {
+@@ -885,7 +737,6 @@ static netdev_tx_t brcmf_net_p2p_start_xmit(struct sk_buff *skb,
+ static const struct net_device_ops brcmf_netdev_ops_p2p = {
+ 	.ndo_open = brcmf_net_p2p_open,
+ 	.ndo_stop = brcmf_net_p2p_stop,
+-	.ndo_do_ioctl = brcmf_net_p2p_do_ioctl,
+ 	.ndo_start_xmit = brcmf_net_p2p_start_xmit
+ };
+ 
+-- 
+1.7.10.4
+
+
