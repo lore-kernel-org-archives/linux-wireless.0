@@ -1,52 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm39.bullet.mail.ne1.yahoo.com ([98.138.229.32]:30385 "EHLO
-	nm39.bullet.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757440Ab3KZVV0 convert rfc822-to-8bit
+Received: from co1ehsobe002.messaging.microsoft.com ([216.32.180.185]:3318
+	"EHLO co1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751257Ab3K2GCQ convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Nov 2013 16:21:26 -0500
-Message-ID: <1385500717.14399.YahooMailNeo@web125003.mail.ne1.yahoo.com> (sfid-20131126_222140_314636_37BCC095)
-Date: Tue, 26 Nov 2013 13:18:37 -0800 (PST)
-From: Gertjan Hofman <gertjan_hofman@yahoo.com>
-Reply-To: Gertjan Hofman <gertjan_hofman@yahoo.com>
-Subject: Unwanted client isolation mode @ 5 Ghz/ Atheros
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+	Fri, 29 Nov 2013 01:02:16 -0500
+From: Hui Liu <Hui.Liu@freescale.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ath6kl-devel@qca.qualcomm.com" <ath6kl-devel@qca.qualcomm.com>
+Subject: RE: [PATCH] ath6kl: sdio: fix system panic when doing wifi stress
+ test
+Date: Fri, 29 Nov 2013 06:02:11 +0000
+Message-ID: <AD13664F485EE54694E29A7F9D5BE1AFC0AD96@039-SN2MPN1-022.039d.mgd.msft.net> (sfid-20131129_070238_607537_2130B9FC)
+References: <1384221185-8645-1-git-send-email-r64343@freescale.com>
+ <87k3fvjvjg.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87k3fvjvjg.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> -----Original Message-----
+> From: Kalle Valo [mailto:kvalo@qca.qualcomm.com]
+> Sent: Tuesday, November 26, 2013 6:40 PM
+> To: Liu Hui-R64343
+> Cc: linux-arm-kernel@lists.infradead.org; linville@tuxdriver.com; linux-
+> wireless@vger.kernel.org; netdev@vger.kernel.org; linux-
+> kernel@vger.kernel.org; ath6kl-devel@qca.qualcomm.com
+> Subject: Re: [PATCH] ath6kl: sdio: fix system panic when doing wifi
+> stress test
+> 
+> Hi Jason,
+> 
+> Jason Liu <r64343@freescale.com> writes:
+> 
+> > When did the wifi iperf test, meet one following kernel panic:
+> > command: iperf -c $TARGET_IP -i 5 -t 50 -w 1M
+> >
+> > Unable to handle kernel paging request at virtual address 1a480000 pgd
+> > = 80004000 [1a480000] *pgd=00000000 Internal error: Oops: 805 [#1] SMP
+> > ARM
+> 
+> [...]
+> 
+> > The kernel panic is caused by the sg_buf is not set correctly with the
+> > following code when compiled with Yocto GCC 4.8.1:
+> >
+> > drivers/net/wireless/ath/ath6kl/hif.h:
+> > struct hif_scatter_req {
+> >         struct list_head list;
+> >         /* address for the read/write operation */
+> >         u32 addr;
+> > 	...
+> >
+> >         /* bounce buffer for upper layers to copy to/from */
+> >         u8 *virt_dma_buf;
+> >
+> >         struct hif_scatter_item scat_list[1];
+> >
+> >         u32 scat_q_depth;
+> > };
+> >
+> > (Note: the scat_req.scat_list[] will dynamiclly grow with run-time)
+> 
+> There's actually a major bug right there, scat_list can corrupt
+> scat_q_depth.
+> 
+> > The GCC 4.8.1 compiler will not do the for-loop till scat_entries,
+> > instead, it only run one round loop. This may be caused by that the
+> > GCC 4.8.1 thought that the scat_list only have one item and then no
+> > need to do full iteration, but this is simply wrong by looking at the
+> > assebly code. This will cause the sg buffer not get set when
+> scat_entries > 1 and thus lead to kernel panic.
+> >
+> > This patch is a workaround to the GCC 4.8.1 complier issue by passing
+> > the entry address of the scat_req->scat_list to the for-loop and
+> > interate it, then, GCC 4.8.1 will do the full for-loop correctly.
+> > (Note: This issue not observed with GCC 4.7.2, only found on the GCC
+> > 4.8.1)
+> >
+> > This patch does not change any function logic and no any performance
+> downgrade.
+> 
+> [...]
+> 
+> > +	scat_list = &scat_req->scat_list[0];
+> > +
+> >  	/* assemble SG list */
+> > -	for (i = 0; i < scat_req->scat_entries; i++, sg++) {
+> > +	for (i = 0; i < scat_req->scat_entries; i++, sg++, scat_list++) {
+> >  		ath6kl_dbg(ATH6KL_DBG_SCATTER, "%d: addr:0x%p, len:%d\n",
+> > -			   i, scat_req->scat_list[i].buf,
+> > -			   scat_req->scat_list[i].len);
+> > +			   i, scat_list->buf, scat_list->len);
+> >
+> > -		sg_set_buf(sg, scat_req->scat_list[i].buf,
+> > -			   scat_req->scat_list[i].len);
+> > +		sg_set_buf(sg, scat_list->buf, scat_list->len);
+> >  	}
+> 
+> Working around the problem by adding a temporary variable makes me a bit
+> worried, I would rather fix the root cause. Is the root cause by that we
+> define the field with scat_list[1]?
+
+Yes, this is what I assumed. 
+
+> 
+> Does the patch below help? It would also fix the corruption with
+> scat_q_depth. Please note that I have only compile tested it. And I might
+> have also missed something important, so please review it carefully.
+
+Yes, Firstly, I have looked at the asm code and the compiler(gcc 4.8.1) works correctly after applying
+the following patch. Secondly, I have tested the patch with compiler(gcc 4.8.1) on the real HW, and it
+works fine too. Without the patch, the kernel crash will happen 100%.
+
+Thus, for the patch:
+
+Acked-by: Jason Liu <r64343@freescale.com>
+Tested-by: Jason Liu <r64343@freescale.com>
+
+Jason Liu
+
+> 
+> --- a/drivers/net/wireless/ath/ath6kl/hif.h
+> +++ b/drivers/net/wireless/ath/ath6kl/hif.h
+> @@ -197,9 +197,9 @@ struct hif_scatter_req {
+>  	/* bounce buffer for upper layers to copy to/from */
+>  	u8 *virt_dma_buf;
+> 
+> -	struct hif_scatter_item scat_list[1];
+> -
+>  	u32 scat_q_depth;
+> +
+> +	struct hif_scatter_item scat_list[0];
+>  };
+> 
+>  struct ath6kl_irq_proc_registers {
+> diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c
+> b/drivers/net/wireless/ath/ath6kl/sdio.c
+> index 7126bdd..6bf15a3 100644
+> --- a/drivers/net/wireless/ath/ath6kl/sdio.c
+> +++ b/drivers/net/wireless/ath/ath6kl/sdio.c
+> @@ -348,7 +348,7 @@ static int ath6kl_sdio_alloc_prep_scat_req(struct
+> ath6kl_sdio *ar_sdio,
+>  	int i, scat_req_sz, scat_list_sz, size;
+>  	u8 *virt_buf;
+> 
+> -	scat_list_sz = (n_scat_entry - 1) * sizeof(struct hif_scatter_item);
+> +	scat_list_sz = n_scat_entry * sizeof(struct hif_scatter_item);
+>  	scat_req_sz = sizeof(*s_req) + scat_list_sz;
+> 
+>  	if (!virt_scat)
+> 
+> 
+> --
+> Kalle Valo
 
 
-Apologies is this should go to the ath mailing list, but we are not sure where in the stack the problem lies.
-
-On a 3.11 kernel, we are trying to create a AP host using the following  hardware: driver (usb) ath9k_htc: Atheros AR9280 Rev:2 using htc_7010.fw firmware  (extracted from debian unstable)   After solving some  regulatory domain issues by patching the ath driver, we can force the card into becoming master at 5 GHz.  However, at  5GHz, the clients are isolated from each other (ARP request from one client are not seen by the other).  When we switch back  to 2.4 GHz the system works as expected.  We need connection between the clients.
-
-
-Looking at mac80211/cfg.c, I see that host isolation is indeed an option.  I  printed the value of  IEEE80211_SDATA_DONT_BRIDGE_PACKETS but it is  false as expected.  
-
-
-Can anyone tell me whether this is likely a problem at the mac80211 level  or closer to the hardware ? Are there other settings that kick in a 5  GHz that would not at 2.4 GHz ?
-
-We are quite capable of modifying drivers but have little knowledge of  wireless hardware.  Any information would be much appreciated.
-
-
-Sincerely,
-
-Gertjan
-
-
-hostapd (v1.1) settings are:
-interface=wlan0
-driver=nl80211
-ssid=MSS-01
-ieee80211n=1
-macaddr_acl=0
-auth_algs=1
-ignore_broadcast_ssid=1
-require_ht=1
-ht_capab=[HT40+][SHORT-GI-40][TXSTBC][RXSTBC123]
-wmm_enabled=1
-hw_mode=a
-channel=36
-country_code=US
-ap_isolate=0
