@@ -1,50 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3167 "EHLO mms1.broadcom.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:1377 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750725Ab3KYJZS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Nov 2013 04:25:18 -0500
-Message-ID: <52931772.30407@broadcom.com> (sfid-20131125_102522_749524_BA1FCAC5)
-Date: Mon, 25 Nov 2013 10:25:06 +0100
+	id S1752776Ab3K2Lqm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Nov 2013 06:46:42 -0500
 From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH V2 06/19] brcmfmac: rename dhd_cdc to bcdc
+Date: Fri, 29 Nov 2013 12:46:29 +0100
+Message-ID: <1385725589-17155-1-git-send-email-arend@broadcom.com> (sfid-20131129_124656_674926_1E5ECAF1)
+In-Reply-To: <1385724324-6361-7-git-send-email-arend@broadcom.com>
+References: <1385724324-6361-7-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: "Hauke Mehrtens" <hauke@hauke-m.de>, linville@tuxdriver.com
-cc: brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] brcmsmac: remove dependency on CRC8 and CRC_CCITT
-References: <1385327021-26851-1-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1385327021-26851-1-git-send-email-hauke@hauke-m.de>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/24/2013 10:03 PM, Hauke Mehrtens wrote:
-> There is no code in brcmsmac that uses a function from CRC8 or
-> CRC_CCITT any more. Building brcmsmac with these two disabled works
-> without any problems. This was probably only used by the bus code which
-> was replaced by bcma some time ago.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-True. These could be removed when using bcma. Thanks for cleaning that up.
+dhd_cdc is renamed to bcdc. This is a step in cleaning and
+restructuring protocol layer. This is done so new protocols can
+be added in the future. This step only renames the source files.
 
-Acked-by: Arend van Spriel <arend@broadcom.com>
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-> ---
->   drivers/net/wireless/brcm80211/Kconfig |    2 --
->   1 file changed, 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/brcm80211/Kconfig b/drivers/net/wireless/brcm80211/Kconfig
-> index b00a7e9..ce0add3 100644
-> --- a/drivers/net/wireless/brcm80211/Kconfig
-> +++ b/drivers/net/wireless/brcm80211/Kconfig
-> @@ -7,8 +7,6 @@ config BRCMSMAC
->   	depends on BCMA
->   	select BRCMUTIL
->   	select FW_LOADER
-> -	select CRC_CCITT
-> -	select CRC8
->   	select CORDIC
->   	---help---
->   	  This module adds support for PCIe wireless adapters based on Broadcom
->
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+[arend@broadcom.com: use 'git mv' to do the rename]
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+Hi John,
+
+Observed that the original patch did not use a git move.
+
+This reworked patch replaces the patch with Message-ID:
+
+<1385724324-6361-7-git-send-email-arend@broadcom.com>
+
+Regards,
+Arend
+---
+ drivers/net/wireless/brcm80211/brcmfmac/Makefile              |    2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/{dhd_cdc.c => bcdc.c} |    0
+ 2 files changed, 1 insertion(+), 1 deletion(-)
+ rename drivers/net/wireless/brcm80211/brcmfmac/{dhd_cdc.c => bcdc.c} (100%)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/Makefile b/drivers/net/wireless/brcm80211/brcmfmac/Makefile
+index 8e9b122..e15b61c 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/Makefile
++++ b/drivers/net/wireless/brcm80211/brcmfmac/Makefile
+@@ -28,7 +28,7 @@ brcmfmac-objs += \
+ 		fweh.o \
+ 		fwsignal.o \
+ 		p2p.o \
+-		dhd_cdc.o \
++		bcdc.o \
+ 		dhd_common.o \
+ 		dhd_linux.o \
+ 		btcoex.o
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c b/drivers/net/wireless/brcm80211/brcmfmac/bcdc.c
+similarity index 100%
+rename from drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
+rename to drivers/net/wireless/brcm80211/brcmfmac/bcdc.c
+-- 
+1.7.10.4
 
 
