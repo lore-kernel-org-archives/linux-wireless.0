@@ -1,61 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:40985 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752488Ab3KGAQc (ORCPT
+Received: from mail-pb0-f44.google.com ([209.85.160.44]:37832 "EHLO
+	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755959Ab3K2Prs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Nov 2013 19:16:32 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 00/13] ath9k pending patches
-Date: Thu,  7 Nov 2013 05:41:47 +0530
-Message-Id: <1383783120-22435-1-git-send-email-sujith@msujith.org> (sfid-20131107_011635_620142_034BC31B)
+	Fri, 29 Nov 2013 10:47:48 -0500
+Received: by mail-pb0-f44.google.com with SMTP id rq2so14681023pbb.31
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Nov 2013 07:47:47 -0800 (PST)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, k.eugene.e@gmail.com,
+	wcn36xx@lists.infradead.org,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] wcn36xx: fix typo error
+Date: Fri, 29 Nov 2013 23:47:30 +0800
+Message-Id: <1385740050-12827-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20131129_164751_490441_BBC49FC0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pending patches for ath9k, rebased over master.
-The MAINTAINERS file has also been updated with patch 13.
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+---
+ drivers/net/wireless/ath/wcn36xx/hal.h |    2 +-
+ drivers/net/wireless/ath/wcn36xx/smd.c |    4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-Sujith
-
-Sujith Manoharan (13):
-  ath9k: Add WB335 PCI IDs
-  ath9k: Identify Killer Wireless cards
-  ath9k: Fix TX99 config option usage
-  ath9k: Fix wow.c compilation
-  ath9k: Add a config option for WoW
-  ath9k: Use CONFIG_ATH9K_WOW
-  ath9k: Add an initialization routine for WoW
-  ath9k: Add SERDES initvals for AR9462 2.1
-  ath9k: Remove unused AR9462 2.0 initvals
-  ath9k: Remove pcieSerDesWrite
-  ath9k: Use correct PCIE initvals for AR9485
-  ath9k: Apply CUS227 specific TX gain values
-  ath9k: Update MAINTAINERS
-
- MAINTAINERS                                        |  19 +-
- drivers/net/wireless/ath/ath9k/Kconfig             |  10 +-
- drivers/net/wireless/ath/ath9k/Makefile            |   8 +-
- drivers/net/wireless/ath/ath9k/ar9003_hw.c         |  43 +-
- drivers/net/wireless/ath/ath9k/ar9003_wow.c        | 422 +++++++++++++++
- drivers/net/wireless/ath/ath9k/ar9340_initvals.h   | 102 ++++
- .../net/wireless/ath/ath9k/ar9462_2p0_initvals.h   |  14 -
- .../net/wireless/ath/ath9k/ar9462_2p1_initvals.h   |   7 +
- drivers/net/wireless/ath/ath9k/ar9485_initvals.h   |  35 +-
- drivers/net/wireless/ath/ath9k/ath9k.h             |  53 +-
- drivers/net/wireless/ath/ath9k/debug.c             | 115 +---
- drivers/net/wireless/ath/ath9k/hw.c                |   1 -
- drivers/net/wireless/ath/ath9k/hw.h                |   5 +-
- drivers/net/wireless/ath/ath9k/init.c              |  23 +-
- drivers/net/wireless/ath/ath9k/main.c              | 468 +---------------
- drivers/net/wireless/ath/ath9k/pci.c               |  45 ++
- drivers/net/wireless/ath/ath9k/tx99.c              | 263 +++++++++
- drivers/net/wireless/ath/ath9k/wow.c               | 589 +++++++++------------
- drivers/net/wireless/ath/ath9k/xmit.c              |   4 +
- 19 files changed, 1224 insertions(+), 1002 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath9k/ar9003_wow.c
- create mode 100644 drivers/net/wireless/ath/ath9k/tx99.c
-
+diff --git a/drivers/net/wireless/ath/wcn36xx/hal.h b/drivers/net/wireless/ath/wcn36xx/hal.h
+index c02dbc6..3c2ef0c 100644
+--- a/drivers/net/wireless/ath/wcn36xx/hal.h
++++ b/drivers/net/wireless/ath/wcn36xx/hal.h
+@@ -2644,7 +2644,7 @@ struct wcn36xx_hal_trigger_ba_rsp_candidate {
+ 	struct add_ba_info ba_info[STACFG_MAX_TC];
+ } __packed;
+ 
+-struct wcn36xx_hal_trigget_ba_req_candidate {
++struct wcn36xx_hal_trigger_ba_req_candidate {
+ 	u8 sta_index;
+ 	u8 tid_bitmap;
+ } __packed;
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index 2f58a7d..24135d7 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -1856,7 +1856,7 @@ out:
+ int wcn36xx_smd_trigger_ba(struct wcn36xx *wcn, u8 sta_index)
+ {
+ 	struct wcn36xx_hal_trigger_ba_req_msg msg_body;
+-	struct wcn36xx_hal_trigget_ba_req_candidate *candidate;
++	struct wcn36xx_hal_trigger_ba_req_candidate *candidate;
+ 	int ret = 0;
+ 
+ 	mutex_lock(&wcn->hal_mutex);
+@@ -1867,7 +1867,7 @@ int wcn36xx_smd_trigger_ba(struct wcn36xx *wcn, u8 sta_index)
+ 	msg_body.header.len += sizeof(*candidate);
+ 	PREPARE_HAL_BUF(wcn->hal_buf, msg_body);
+ 
+-	candidate = (struct wcn36xx_hal_trigget_ba_req_candidate *)
++	candidate = (struct wcn36xx_hal_trigger_ba_req_candidate *)
+ 		(wcn->hal_buf + sizeof(msg_body));
+ 	candidate->sta_index = sta_index;
+ 	candidate->tid_bitmap = 1;
 -- 
-1.8.4.2
+1.7.9.5
 
