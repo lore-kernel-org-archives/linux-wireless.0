@@ -1,100 +1,224 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f170.google.com ([74.125.82.170]:56136 "EHLO
-	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751621Ab3KVJHW (ORCPT
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:45570 "EHLO
+	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751062Ab3K2G0x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Nov 2013 04:07:22 -0500
-Received: by mail-we0-f170.google.com with SMTP id w61so867527wes.1
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Nov 2013 01:07:21 -0800 (PST)
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Subject: [PATCH v3] mac80211_hwsim: claim CSA support for AP
-Date: Fri, 22 Nov 2013 10:06:26 +0100
-Message-Id: <1385111186-19551-1-git-send-email-karl.beldan@gmail.com> (sfid-20131122_100737_326318_65765A7C)
+	Fri, 29 Nov 2013 01:26:53 -0500
+Message-Id: <1385706409.26314.53388933.1E4953C6@webmail.messagingengine.com> (sfid-20131129_072657_992894_6FE08FDE)
+From: "Nikita N." <nikitan@operamail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain
+In-Reply-To: <5298001F.2050508@lwfinger.net>
+References: <1385589961.19021.52907237.3EE33E5B@webmail.messagingengine.com>
+ <52966D64.2030805@lwfinger.net>
+ <1385593188.3627.52911717.4E0712D9@webmail.messagingengine.com>
+ <529680A3.8070103@lwfinger.net>
+ <1385660680.14556.53217809.32CDF136@webmail.messagingengine.com>
+ <5298001F.2050508@lwfinger.net>
+Subject: Re: RTL8187 bugs
+Date: Thu, 28 Nov 2013 22:26:49 -0800
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karl Beldan <karl.beldan@rivierawaves.com>
+ok I see.
+well, the last question, where you guys did put in the code the "if"
+clauses which filter/dispatch the frames? something like "IF frame is
+like that AND interface is in monitor THEN dispatch frame ELSE drop it"?
+if its not a secret..
+So I will be able to debug the bug myself.. in a few weekends I should
+be able to find it and report to you, ok? if there is nothing more
+interesting on tv.. ;) thanks
 
-Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
-Cc: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
----
- drivers/net/wireless/mac80211_hwsim.c | 31 ++++++++++++++++++++++++++++++-
- 1 file changed, 30 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index a11dc7c..cc30acd 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -168,6 +168,7 @@ struct hwsim_vif_priv {
- 	u8 bssid[ETH_ALEN];
- 	bool assoc;
- 	bool bcn_en;
-+	int csa_bcn_cnt;
- 	u16 aid;
- };
- 
-@@ -1058,6 +1059,18 @@ static void mac80211_hwsim_beacon_tx(void *arg, u8 *mac,
- 
- 	mac80211_hwsim_tx_frame(hw, skb,
- 				rcu_dereference(vif->chanctx_conf)->def.chan);
-+
-+	if (vif->csa_active) {
-+		struct hwsim_vif_priv *vp = (void *)vif->drv_priv;
-+
-+		vp->csa_bcn_cnt++;
-+		if (ieee80211_csa_is_complete(vif)) {
-+			wiphy_debug(hw->wiphy,
-+				    "%s CSA complete after %d beacons\n",
-+				    __func__, vp->csa_bcn_cnt);
-+			ieee80211_csa_finish(vif);
-+		}
-+	}
- }
- 
- static enum hrtimer_restart
-@@ -1692,6 +1705,19 @@ static void mac80211_hwsim_unassign_vif_chanctx(struct ieee80211_hw *hw,
- 	hwsim_check_chanctx_magic(ctx);
- }
- 
-+static void mac80211_hwsim_channel_switch_beacon(struct ieee80211_hw *hw,
-+						 struct ieee80211_vif *vif,
-+						 struct cfg80211_chan_def *chandef)
-+{
-+	struct hwsim_vif_priv *vp = (void *)vif->drv_priv;
-+
-+	hwsim_check_magic(vif);
-+	vp->csa_bcn_cnt = 0;
-+	wiphy_debug(hw->wiphy, "%s (freq=%d(%d - %d)/%s)\n", __func__,
-+		    chandef->chan->center_freq, chandef->center_freq1,
-+		    chandef->center_freq2, hwsim_chanwidths[chandef->width]);
-+}
-+
- static struct ieee80211_ops mac80211_hwsim_ops =
- {
- 	.tx = mac80211_hwsim_tx,
-@@ -1716,6 +1742,7 @@ static struct ieee80211_ops mac80211_hwsim_ops =
- 	.flush = mac80211_hwsim_flush,
- 	.get_tsf = mac80211_hwsim_get_tsf,
- 	.set_tsf = mac80211_hwsim_set_tsf,
-+	.channel_switch_beacon = mac80211_hwsim_channel_switch_beacon,
- };
- 
- 
-@@ -2359,7 +2386,9 @@ static int __init init_mac80211_hwsim(void)
- 
- 		hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS |
- 				    WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL |
--				    WIPHY_FLAG_AP_UAPSD;
-+				    WIPHY_FLAG_AP_UAPSD |
-+				    WIPHY_FLAG_HAS_CHANNEL_SWITCH;
-+
- 		hw->wiphy->features |= NL80211_FEATURE_ACTIVE_MONITOR;
- 
- 		/* ask mac80211 to reserve space for magic */
+On Thu, Nov 28, 2013, at 06:46 PM, Larry Finger wrote:
+> On 11/28/2013 11:44 AM, Nikita N. wrote:
+> > answers follow
+> >
+> > On Wed, Nov 27, 2013, at 03:30 PM, Larry Finger wrote:
+> >
+> >>
+> >> On my system, my RTL8187B shows the following for kernel 13.1-rc1:
+> >>
+> >> [11213.196114] usb 1-5: new high-speed USB device number 5 using ehci-pci
+> >> [11214.663577] rtl8187: inconsistency between id with OEM info!
+> >> [11214.666105] cfg80211: Updating information on frequency 2412 MHz with
+> >> regulatory rule:
+> >> [11214.666114] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (300
+> >> mBi, 2700 mBm)
+> >> [11214.666118] cfg80211: Updating information on frequency 2417 MHz with
+> >> regulatory rule:
+> >>
+> >> --snip--
+> >>
+> >> ieee80211 phy2: Selected rate control algorithm 'minstrel_ht'
+> >> ieee80211 phy2: hwaddr 00:11:6b:3e:c4:0a, RTL8187BvB(early) V0 +
+> >> rtl8225z2,
+> >> rfkill mask 2
+> >> rtl8187: Customer ID is 0x00
+> >> rtl8187: wireless switch is on
+> >> usbcore: registered new interface driver rtl8187
+> >> systemd-udevd[5796]: renamed network interface wlan1 to wlp0s2f1u5
+> >>
+> >
+> > Thanks for your answer again Larry, I finding impossible to bring
+> > back monitor mode in my two, yes TWO different rtl8187 devices.
+> > They BOTH started malfunction in monitor mode the same day after
+> > installing 3.11, isnt it strange?
+> > I repeat, they always worked no problem before 3.11.
+> >>From your report you have a "RTL8187BvB(early) V0".
+> > I have a different interface, a "RTL8187vB (default) V1".
+> > So we are talking about different hardware, isnt it?
+> > Do you have a RTL8187vB for test too?
+> 
+> Mine is a B model. It is coded with an RTL8187L USB ID, but it needs the 
+> RTL8187B code. My two other devices are both RTL8187L.
+> 
+> > Here follows the lsusb output, if that can help to see the differences
+> > between your and mine interface:
+> > "
+> > Bus 002 Device 002: ID 0bda:8187 Realtek Semiconductor Corp. RTL8187
+> > Wireless Adapter
+> > Device Descriptor:
+> >    bLength                18
+> >    bDescriptorType         1
+> >    bcdUSB               2.00
+> >    bDeviceClass            0 (Defined at Interface level)
+> >    bDeviceSubClass         0
+> >    bDeviceProtocol         0
+> >    bMaxPacketSize0        64
+> >    idVendor           0x0bda Realtek Semiconductor Corp.
+> >    idProduct          0x8187 RTL8187 Wireless Adapter
+> >    bcdDevice            1.00
+> >    iManufacturer           1 Realtek
+> >    iProduct                2 RTL8187 Wireless LAN Adapter
+> >    iSerial                 3 00e04c000001
+> >    bNumConfigurations      1
+> >    Configuration Descriptor:
+> >      bLength                 9
+> >      bDescriptorType         2
+> >      wTotalLength           39
+> >      bNumInterfaces          1
+> >      bConfigurationValue     1
+> >      iConfiguration          4 Wireless Network Card
+> >      bmAttributes         0x80
+> >        (Bus Powered)
+> >      MaxPower              500mA
+> >      Interface Descriptor:
+> >        bLength                 9
+> >        bDescriptorType         4
+> >        bInterfaceNumber        0
+> >        bAlternateSetting       0
+> >        bNumEndpoints           3
+> >        bInterfaceClass         0 (Defined at Interface level)
+> >        bInterfaceSubClass      0
+> >        bInterfaceProtocol      0
+> >        iInterface              5 Bulk-IN,Bulk-OUT,Bulk-OUT
+> >        Endpoint Descriptor:
+> >          bLength                 7
+> >          bDescriptorType         5
+> >          bEndpointAddress     0x81  EP 1 IN
+> >          bmAttributes            2
+> >            Transfer Type            Bulk
+> >            Synch Type               None
+> >            Usage Type               Data
+> >          wMaxPacketSize     0x0200  1x 512 bytes
+> >          bInterval               0
+> >        Endpoint Descriptor:
+> >          bLength                 7
+> >          bDescriptorType         5
+> >          bEndpointAddress     0x02  EP 2 OUT
+> >          bmAttributes            2
+> >            Transfer Type            Bulk
+> >            Synch Type               None
+> >            Usage Type               Data
+> >          wMaxPacketSize     0x0200  1x 512 bytes
+> >          bInterval               0
+> >        Endpoint Descriptor:
+> >          bLength                 7
+> >          bDescriptorType         5
+> >          bEndpointAddress     0x03  EP 3 OUT
+> >          bmAttributes            2
+> >            Transfer Type            Bulk
+> >            Synch Type               None
+> >            Usage Type               Data
+> >          wMaxPacketSize     0x0200  1x 512 bytes
+> >          bInterval               0
+> > Device Qualifier (for other device speed):
+> >    bLength                10
+> >    bDescriptorType         6
+> >    bcdUSB               2.00
+> >    bDeviceClass            0 (Defined at Interface level)
+> >    bDeviceSubClass         0
+> >    bDeviceProtocol         0
+> >    bMaxPacketSize0        64
+> >    bNumConfigurations      1
+> > Device Status:     0x0002
+> >    (Bus Powered)
+> >    Remote Wakeup Enabled
+> > "
+> >
+> >
+> > Unfortunately, reverting back to original distro kernel didnt work.
+> > Thats why I think something was "written" in the interface.
+> > Thats why I suspect backports 3.11 has such a bug.
+> > I use distros ONLY in live-RAM mode, I dont use distro permanently
+> > installed, exactly for the reason I can always rollback.
+> > The only distros I use are the following: BT5,Kali,Weaknet and Slitaz4 -
+> > the issue now
+> > appears in all of them!
+> > Before 3.11 it did *NOT* appear in any of them!
+> > As for updates, I only apply updates in Slitaz4.
+> > FYI, I create a dedicated cpio fs at every new version, containing the
+> > "updates" modules, so to load them at kernel runtime by syslinux.
+> > I use this method from the early times of compat-wireless, even at job,
+> > I have automated scripts for that, always works.
+> > So I can e.g. switch between drivers version every time just applying
+> > the cpio file I want at kernel runtime.
+> 
+> There is nothing in the code that will or can rewrite the EEPROM. In
+> fact, the 
+> necessary circuits are not built into the devices.
+> >
+> > And thats what I did when "installed" 3.11: make install, created
+> > cpio, reboot & loaded the 3.11 cpio, tested the interfaces, saw the
+> > issues (mac and frames), removed the cpio from loading and put the 3.9
+> > cpio back.
+> > I do that all the times, its a no-fail procedure.
+> > Unfortunately applying back 3.9 didnt solve the issue, my two rtl8187
+> > remained STUCK in monitor malfunction.
+> > As for managed mode, it still works perfectly.
+> > As for the programs I use to test, here a list: airmon-ng, airbase-ng,
+> > airodump-ng, apache2, dnsspoof, dnsmasq, iptables, iw, wireshark.. the
+> > usual wifi net tools.
+> > That was for historic background, so you understand the situation.
+> >
+> >>
+> >> The rtlwifi package only includes the drivers that use rtlwifi for their
+> >> basic
+> >> communications. Driver rtl8187 is *NOT* one of them. You have to
+> >> configure it
+> >> separately. This is not a bug.
+> >
+> > As for compiling rtl modules you say dont use rtlwifi, ok, infact that
+> > was the first time I tried, just because defconfig-wifi did *NOT* work.
+> > I repeat, I always used make defconfig-wifi & make install, even for
+> > 3.11 worked.
+> > This time for 3.13, is *NOT* compiling rtl818x modules.
+> > Any functionality change not documented?
+> > If so, how can I instruct make to compile&install rtl8187 modules in new
+> > 3.13?
+> 
+> Use 'make menuconfig' and select wireless networking, mac80211, and the
+> rtl8187 
+> driver. That is what I did.
+> 
+> Larry
+> 
+> 
+
 -- 
-1.8.2
+http://www.fastmail.fm - Or how I learned to stop worrying and
+                          love email again
 
