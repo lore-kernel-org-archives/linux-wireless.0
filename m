@@ -1,63 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:36266 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751426Ab3KAKbu (ORCPT
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:32828 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756879Ab3K2RH7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 06:31:50 -0400
-Date: Fri, 1 Nov 2013 13:28:48 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: emmanuel.grumbach@intel.com
-Cc: linux-wireless@vger.kernel.org
-Subject: re: iwlwifi: mvm: BT Coex - don't limit agg size in loose scheme
-Message-ID: <20131101102848.GI29795@longonot.mountain> (sfid-20131101_113153_703416_D30E092E)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 29 Nov 2013 12:07:59 -0500
+Received: by mail-wg0-f48.google.com with SMTP id z12so9614344wgg.27
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Nov 2013 09:07:58 -0800 (PST)
+From: Michal Nazarewicz <mpn@google.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Eugene Krasnikov <k.eugene.e@gmail.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] net: wireless: wcn36xx: fix potential NULL pointer dereference
+Date: Fri, 29 Nov 2013 18:07:50 +0100
+Message-Id: <1385744870-10164-1-git-send-email-mpn@google.com> (sfid-20131129_180818_982346_161CC6C1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Emmanuel Grumbach,
+From: Michal Nazarewicz <mina86@mina86.com>
 
-This is a semi-automatic email about new static checker warnings.
+If kmalloc fails wcn36xx_smd_rsp_process will attempt to dereference
+a NULL pointer.  There might be a better error recovery then just
+printing an error, but printing an error message is better then the
+current behaviour.
 
-The patch 9145d15128bd: "iwlwifi: mvm: BT Coex - don't limit agg size 
-in loose scheme" from Jul 18, 2013, leads to the following Smatch 
-complaint:
+Signed-off-by: Michal Nazarewicz <mina86@mina86.com>
+---
+ drivers/net/wireless/ath/wcn36xx/smd.c | 22 ++++++++++++++++------
+ 1 file changed, 16 insertions(+), 6 deletions(-)
 
-drivers/net/wireless/iwlwifi/mvm/rs.c:2491 rs_fill_link_cmd()
-	 error: we previously assumed 'mvm' could be null (see line 2412)
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index de9eb2c..10d6ae9 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -2041,13 +2041,23 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
+ 	case WCN36XX_HAL_DELETE_STA_CONTEXT_IND:
+ 		mutex_lock(&wcn->hal_ind_mutex);
+ 		msg_ind = kmalloc(sizeof(*msg_ind), GFP_KERNEL);
+-		msg_ind->msg_len = len;
+-		msg_ind->msg = kmalloc(len, GFP_KERNEL);
+-		memcpy(msg_ind->msg, buf, len);
+-		list_add_tail(&msg_ind->list, &wcn->hal_ind_queue);
+-		queue_work(wcn->hal_ind_wq, &wcn->hal_ind_work);
+-		wcn36xx_dbg(WCN36XX_DBG_HAL, "indication arrived\n");
++		if (msg_ind) {
++			msg_ind->msg_len = len;
++			msg_ind->msg = kmalloc(len, GFP_KERNEL);
++			memcpy(msg_ind->msg, buf, len);
++			list_add_tail(&msg_ind->list, &wcn->hal_ind_queue);
++			queue_work(wcn->hal_ind_wq, &wcn->hal_ind_work);
++			wcn36xx_dbg(WCN36XX_DBG_HAL, "indication arrived\n");
++		}
+ 		mutex_unlock(&wcn->hal_ind_mutex);
++		if (!msg_ind) {
++			/*
++			 * FIXME: Do something smarter then just
++			 * printing an error when allocation fails.
++			 */
++			wcn36xx_err("Run out of memory while hnadling SMD_EVENT (%d)\n",
++				    msg_header->msg_type);
++		}
+ 		break;
+ 	default:
+ 		wcn36xx_err("SMD_EVENT (%d) not supported\n",
+-- 
+1.8.4.1
 
-drivers/net/wireless/iwlwifi/mvm/rs.c
-  2411		repeat_rate--;
-  2412		if (mvm)
-                    ^^^
-Existing check.
-
-  2413			valid_tx_ant = iwl_fw_valid_tx_ant(mvm->fw);
-  2414	
-  2415		/* Fill rest of rate table */
-  2416		while (index < LINK_QUAL_MAX_RETRY_NUM) {
-  2417			/* Repeat initial/next rate.
-  2418			 * For legacy IWL_NUMBER_TRY == 1, this loop will not execute.
-  2419			 * For HT IWL_HT_NUMBER_TRY == 3, this executes twice. */
-
-[snip]
-
-  2481		}
-  2482	
-  2483		lq_cmd->agg_frame_cnt_limit = LINK_QUAL_AGG_FRAME_LIMIT_DEF;
-  2484		lq_cmd->agg_disable_start_th = LINK_QUAL_AGG_DISABLE_START_DEF;
-  2485	
-  2486		lq_cmd->agg_time_limit =
-  2487			cpu_to_le16(LINK_QUAL_AGG_TIME_LIMIT_DEF);
-  2488	
-  2489		if (sta)
-  2490			lq_cmd->agg_time_limit =
-  2491				cpu_to_le16(iwl_mvm_bt_coex_agg_time_limit(mvm, sta));
-                                                                           ^^^
-Patch introduces new unchecked dereference.
-
-  2492	}
-  2493	
-
-regards,
-dan carpenter
