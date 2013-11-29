@@ -1,50 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f53.google.com ([209.85.219.53]:48685 "EHLO
-	mail-oa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752509Ab3KDPea (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Nov 2013 10:34:30 -0500
-Received: by mail-oa0-f53.google.com with SMTP id n12so7150099oag.26
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Nov 2013 07:34:29 -0800 (PST)
-Message-ID: <5277BE84.7020808@lwfinger.net> (sfid-20131104_163435_320661_22032FDD)
-Date: Mon, 04 Nov 2013 09:34:28 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mms2.broadcom.com ([216.31.210.18]:4307 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753156Ab3K2LZk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Nov 2013 06:25:40 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Franky Lin" <frankyl@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 04/19] brcmfmac: add firmware and nvram file name for
+ bcm4339
+Date: Fri, 29 Nov 2013 12:25:09 +0100
+Message-ID: <1385724324-6361-5-git-send-email-arend@broadcom.com> (sfid-20131129_123807_592579_A5FCBAE0)
+In-Reply-To: <1385724324-6361-1-git-send-email-arend@broadcom.com>
+References: <1385724324-6361-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	alexandre.f.demers@gmail.com, linville@tuxdriver.com
-Subject: Re: r92su: status and will it be merged anytime soon?
-References: <5277AC85.5050104@gmail.com>
-In-Reply-To: <5277AC85.5050104@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/04/2013 08:17 AM, Xose Vazquez Perez wrote:
-> Christian Lamparter wrote:
->
->> The issue with r92su is: The driver is ready, but it's fundamentally
->                                        ^^^^^^^^
->> incompatible with the rtlwifi framework and mac80211.
->
-> _anything_ is better than a staging driver.
->
-> There are distributions that don't build staging drivers.
+From: Franky Lin <frankyl@broadcom.com>
 
-As a result, they force their users to build out-of-tree drivers!
+Add firmware/nvram file name for bcm4339 so fmac can actually be functional with
+the chip.
 
-> So, please, replace and delete staging/rtl8712 with r92su.
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-You seem not to understand. Any new wireless driver that does not use mac80211 
-*must* go into staging. AFAIK, that rule is absolute, and r92su cannot go into 
-the regular wireless tree.
-
-If you do not like having drivers for RTL8192SU in staging, then write one that 
-uses mac80211. You have access to as much information about the chips as anyone 
-outside Realtek. They have no interest in doing the mac80211 version, and I have 
-many other tasks with higher priority.
-
-Larry
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index 510ab18..f017c92 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -499,6 +499,8 @@ enum brcmf_sdio_frmtype {
+ #define BCM4334_NVRAM_NAME		"brcm/brcmfmac4334-sdio.txt"
+ #define BCM4335_FIRMWARE_NAME		"brcm/brcmfmac4335-sdio.bin"
+ #define BCM4335_NVRAM_NAME		"brcm/brcmfmac4335-sdio.txt"
++#define BCM4339_FIRMWARE_NAME		"brcm/brcmfmac4339-sdio.bin"
++#define BCM4339_NVRAM_NAME		"brcm/brcmfmac4339-sdio.txt"
+ 
+ MODULE_FIRMWARE(BCM43143_FIRMWARE_NAME);
+ MODULE_FIRMWARE(BCM43143_NVRAM_NAME);
+@@ -514,6 +516,8 @@ MODULE_FIRMWARE(BCM4334_FIRMWARE_NAME);
+ MODULE_FIRMWARE(BCM4334_NVRAM_NAME);
+ MODULE_FIRMWARE(BCM4335_FIRMWARE_NAME);
+ MODULE_FIRMWARE(BCM4335_NVRAM_NAME);
++MODULE_FIRMWARE(BCM4339_FIRMWARE_NAME);
++MODULE_FIRMWARE(BCM4339_NVRAM_NAME);
+ 
+ struct brcmf_firmware_names {
+ 	u32 chipid;
+@@ -537,7 +541,8 @@ static const struct brcmf_firmware_names brcmf_fwname_data[] = {
+ 	{ BCM4329_CHIP_ID, 0xFFFFFFFF, BRCMF_FIRMWARE_NVRAM(BCM4329) },
+ 	{ BCM4330_CHIP_ID, 0xFFFFFFFF, BRCMF_FIRMWARE_NVRAM(BCM4330) },
+ 	{ BCM4334_CHIP_ID, 0xFFFFFFFF, BRCMF_FIRMWARE_NVRAM(BCM4334) },
+-	{ BCM4335_CHIP_ID, 0xFFFFFFFF, BRCMF_FIRMWARE_NVRAM(BCM4335) }
++	{ BCM4335_CHIP_ID, 0xFFFFFFFF, BRCMF_FIRMWARE_NVRAM(BCM4335) },
++	{ BCM4339_CHIP_ID, 0xFFFFFFFF, BRCMF_FIRMWARE_NVRAM(BCM4339) }
+ };
+ 
+ 
+-- 
+1.7.10.4
 
 
