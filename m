@@ -1,119 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f51.google.com ([74.125.83.51]:59868 "EHLO
-	mail-ee0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751194Ab3KRJhI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Nov 2013 04:37:08 -0500
-Received: by mail-ee0-f51.google.com with SMTP id d41so1633047eek.24
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Nov 2013 01:37:06 -0800 (PST)
-From: Marek Puzyniak <marek.puzyniak@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	Marek Puzyniak <marek.puzyniak@tieto.com>
-Subject: [PATCH v2] cfg80211: fix dfs channel state after stopping AP
-Date: Mon, 18 Nov 2013 10:36:53 +0100
-Message-Id: <1384767413-5648-1-git-send-email-marek.puzyniak@tieto.com> (sfid-20131118_103712_798737_6B9652F3)
+Received: from mms3.broadcom.com ([216.31.210.19]:1854 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754418Ab3K2Ksf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Nov 2013 05:48:35 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Franky Lin" <frankyl@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH V2 5/7] brcmfmac: remove empty brcmf_proto_stop
+Date: Fri, 29 Nov 2013 11:48:17 +0100
+Message-ID: <1385722099-5102-6-git-send-email-arend@broadcom.com> (sfid-20131129_114901_078682_451ABC58)
+In-Reply-To: <1385722099-5102-1-git-send-email-arend@broadcom.com>
+References: <1385722099-5102-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This can be called when a mode of operation that can supports
-initiating radiation on a DFS channel leaves that channel to
-ensure that if the mode of operation is started again on it
-that it will require a new channel availability check.
+From: Franky Lin <frankyl@broadcom.com>
 
-Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
+remove empty brcmf_proto_stop from protocol layer
+
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- net/wireless/ap.c   |  3 +++
- net/wireless/chan.c | 39 +++++++++++++++++++++++++++++++++++++++
- net/wireless/core.h | 11 +++++++++++
- 3 files changed, 53 insertions(+)
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c   |    5 -----
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c |    3 ---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_proto.h |    3 ---
+ 3 files changed, 11 deletions(-)
 
-diff --git a/net/wireless/ap.c b/net/wireless/ap.c
-index 324e8d8..9349773 100644
---- a/net/wireless/ap.c
-+++ b/net/wireless/ap.c
-@@ -26,6 +26,9 @@ static int __cfg80211_stop_ap(struct cfg80211_registered_device *rdev,
- 
- 	err = rdev_stop_ap(rdev, dev);
- 	if (!err) {
-+		if (cfg80211_chandef_dfs_required(wdev->wiphy, &wdev->preset_chandef))
-+			cfg80211_leave_dfs_chandef(wdev->wiphy, &wdev->preset_chandef);
-+
- 		wdev->beacon_interval = 0;
- 		wdev->channel = NULL;
- 		wdev->ssid_len = 0;
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index 2ac4cac..bf85247 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -489,6 +489,45 @@ static bool cfg80211_chandef_dfs_available(struct wiphy *wiphy,
- 	return r;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
+index dd85401..42aaf10 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
+@@ -385,8 +385,3 @@ void brcmf_proto_detach(struct brcmf_pub *drvr)
+ 	kfree(drvr->prot);
+ 	drvr->prot = NULL;
  }
+-
+-void brcmf_proto_stop(struct brcmf_pub *drvr)
+-{
+-	/* Nothing to do for CDC */
+-}
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+index f4eeaa1..c34ca70 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+@@ -1150,9 +1150,6 @@ static void brcmf_bus_detach(struct brcmf_pub *drvr)
+ 	brcmf_dbg(TRACE, "Enter\n");
  
-+static void cfg80211_leave_dfs_chans(struct wiphy *wiphy,
-+				     u32 center_freq,
-+				     u32 bandwidth)
-+{
-+	struct ieee80211_channel *c;
-+	u32 freq, start_freq, end_freq;
-+
-+	start_freq = cfg80211_get_start_freq(center_freq, bandwidth);
-+	end_freq = cfg80211_get_end_freq(center_freq, bandwidth);
-+
-+	for (freq = start_freq; freq <= end_freq; freq += 20) {
-+		c = ieee80211_get_channel(wiphy, freq);
-+		if (!c)
-+			continue;
-+		if (!(c->flags & IEEE80211_CHAN_RADAR))
-+			continue;
-+		if (c->dfs_state != NL80211_DFS_AVAILABLE)
-+			continue;
-+
-+		cfg80211_set_chans_dfs_state(wiphy, freq, 20, NL80211_DFS_USABLE);
-+	}
-+}
-+
-+void cfg80211_leave_dfs_chandef(struct wiphy *wiphy,
-+				struct cfg80211_chan_def *chandef)
-+{
-+	int width;
-+
-+	if (WARN_ON(!cfg80211_chandef_valid(chandef)))
-+		return;
-+
-+	width = cfg80211_chandef_get_width(chandef);
-+	cfg80211_leave_dfs_chans(wiphy, chandef->center_freq1, width);
-+
-+	if (!chandef->center_freq2)
-+		return;
-+
-+	cfg80211_leave_dfs_chans(wiphy, chandef->center_freq2, width);
-+}
+ 	if (drvr) {
+-		/* Stop the protocol module */
+-		brcmf_proto_stop(drvr);
+-
+ 		/* Stop the bus module */
+ 		brcmf_bus_stop(drvr->bus_if);
+ 	}
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_proto.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd_proto.h
+index 53c6e71..d633362 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_proto.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_proto.h
+@@ -27,9 +27,6 @@ int brcmf_proto_attach(struct brcmf_pub *drvr);
+ /* Unlink, frees allocated protocol memory (including brcmf_proto) */
+ void brcmf_proto_detach(struct brcmf_pub *drvr);
  
- static bool cfg80211_secondary_chans_ok(struct wiphy *wiphy,
- 					u32 center_freq, u32 bandwidth,
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 2888867..76dfe6b 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -401,6 +401,17 @@ void cfg80211_set_dfs_state(struct wiphy *wiphy,
- 
- void cfg80211_dfs_channels_update_work(struct work_struct *work);
- 
-+/**
-+ * cfg80211_leave_dfs_chandef - Leaving dfs chandef
-+ * @wiphy: the wiphy
-+ * @chandef: chandef for the current channel
-+ *
-+ * This function is called when dfs chandef is being not used for different
-+ * reasons. Change channels DFS_AVAILABLE to DFS_USABLE again. Leave channels
-+ * DFS_UNAVAILABLE untouched.
-+ */
-+void cfg80211_leave_dfs_chandef(struct wiphy *wiphy,
-+				struct cfg80211_chan_def *chandef);
- 
- static inline int
- cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
+-/* Stop protocol: sync w/dongle state. */
+-void brcmf_proto_stop(struct brcmf_pub *drvr);
+-
+ /* Add any protocol-specific data header.
+  * Caller must reserve prot_hdrlen prepend space.
+  */
 -- 
-1.8.1.2
+1.7.10.4
+
 
