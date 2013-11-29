@@ -1,57 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f54.google.com ([209.85.214.54]:54972 "EHLO
-	mail-bk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754132Ab3KLThM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Nov 2013 14:37:12 -0500
-Message-ID: <52828364.6080103@gmail.com> (sfid-20131112_203716_024660_71F9A2EF)
-Date: Tue, 12 Nov 2013 21:37:08 +0200
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:1064 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752498Ab3K2LZk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Nov 2013 06:25:40 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 12/19] brcmfmac: provide firmware version in ethtool
+ driver info
+Date: Fri, 29 Nov 2013 12:25:17 +0100
+Message-ID: <1385724324-6361-13-git-send-email-arend@broadcom.com> (sfid-20131129_122547_719961_B102D229)
+In-Reply-To: <1385724324-6361-1-git-send-email-arend@broadcom.com>
+References: <1385724324-6361-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-CC: wzyboy <wzyboy@wzyboy.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
-References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com> <0BA3FCBA62E2DC44AF3030971E174FB301DEA097@HASMSX103.ger.corp.intel.com> <CALkVjQY7uRFQ3Qs9T_bgqnYRNcWgsk5gfd=R8RfGFxOdDpFYTQ@mail.gmail.com> <527A8166.6000701@gmail.com> <CAErSpo5H9Mf-xmdzThudNO2WHAOt-1T7CQZvgGUmK4jm7_zf+g@mail.gmail.com> <CALkVjQaHYpR4Tifbt7nh4VeQSrOz5J-xxSrUBKX2kXCZcvkivA@mail.gmail.com> <CAErSpo5dX=cPdThxi-ok=B4beo_jPv2n2n0C1u4UyZMbQDMxqg@mail.gmail.com> <CALkVjQYkAWrwRabQfBSvC1pm47ZyRT5jQ0mYBwbiGh-Bt29gbg@mail.gmail.com> <20131111224439.GA30638@google.com> <CALkVjQb-AJRSGARCQaDFkd+mHBk2qFkAVyVBTW7RHSaxzbZsbw@mail.gmail.com> <CALkVjQaXEBpbwu9Qy3+17Eg-nSg-k7iin8G3f1RsTLkCOB-2XQ@mail.gmail.com> <0BA3FCBA62E2DC44AF3030971E174FB301DF044C@HASMSX103.ger.corp.intel.com> <CAErSpo5iU15AoSVL9WmLp4gNCiNmt6pFZuTsd-Vui4SCrSc_Hw@mail.gmail.com> <0BA3FCBA62E2DC44AF3030971E174FB301DF0865@HASMSX103.ger.corp.intel.com> <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
-In-Reply-To: <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Knowing the firmware version is pretty useful information when
+looking at issues. It is retrieved during initialization so
+store it in driver data structure to fill the ethtool driver
+info when requested.
+
+Reviewed-by: Hante Meuleman <meuleman@brodcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd.h        |    7 ++++++-
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c |    5 +++++
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c  |    4 ++--
+ 3 files changed, 13 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+index 4ed7a97..714194c 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+@@ -211,6 +211,11 @@
+ 
+ #define BRCMF_AMPDU_RX_REORDER_MAXFLOWS		256
+ 
++/* Length of firmware version string stored for
++ * ethtool driver info which uses 32 bytes as well.
++ */
++#define BRCMF_DRIVER_FIRMWARE_VERSION_LEN	32
++
+ /* Pattern matching filter. Specifies an offset within received packets to
+  * start matching, the pattern to match, the size of the pattern, and a bitmask
+  * that indicates which bits within the pattern should be matched.
+@@ -544,7 +549,7 @@ struct brcmf_pub {
+ 	u8 wme_dp;		/* wme discard priority */
+ 
+ 	/* Dongle media info */
+-	unsigned long drv_version;	/* Version of dongle-resident driver */
++	char fwver[BRCMF_DRIVER_FIRMWARE_VERSION_LEN];
+ 	u8 mac[ETH_ALEN];		/* MAC address obtained from dongle */
+ 
+ 	/* Multicast data packets sent to dongle */
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
+index 6017633..d5811a4 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
+@@ -278,9 +278,14 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
+ 	}
+ 	ptr = (char *)buf;
+ 	strsep(&ptr, "\n");
++
+ 	/* Print fw version info */
+ 	brcmf_err("Firmware version = %s\n", buf);
+ 
++	/* locate firmware version number for ethtool */
++	ptr = strrchr(buf, ' ') + 1;
++	strlcpy(ifp->drvr->fwver, ptr, sizeof(ifp->drvr->fwver));
++
+ 	/*
+ 	 * Setup timeout if Beacons are lost and roam is off to report
+ 	 * link down
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+index 644e62e..bce0b8e 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+@@ -599,8 +599,8 @@ static void brcmf_ethtool_get_drvinfo(struct net_device *ndev,
+ 	struct brcmf_pub *drvr = ifp->drvr;
+ 
+ 	strlcpy(info->driver, KBUILD_MODNAME, sizeof(info->driver));
+-	snprintf(info->version, sizeof(info->version), "%lu",
+-		 drvr->drv_version);
++	snprintf(info->version, sizeof(info->version), "n/a");
++	strlcpy(info->fw_version, drvr->fwver, sizeof(info->fw_version));
+ 	strlcpy(info->bus_info, dev_name(drvr->bus_if->dev),
+ 		sizeof(info->bus_info));
+ }
+-- 
+1.7.10.4
 
 
-On 11/12/2013 09:14 PM, Bjorn Helgaas wrote:
-> On Tue, Nov 12, 2013 at 11:25 AM, Grumbach, Emmanuel
-> <emmanuel.grumbach@intel.com> wrote:
-> 
->> Right - I remember the discussion we had on that.
->> On this device (7260 that has an issue with ASPM), we don't call pci_disable_link_state, because we know it is supposed to work...
-> 
-> If ASPM is supposed to work as far as the hardware is concerned, I
-> guess you're saying this must be an iwlwifi driver issue.  Right?
-
-ASPM is supposed to work as far as the hardware is concerned.
-We might very well have an issue in iwlwifi - and I am checking this
-internally with our System guys.
-It can be a PCI core problem too, and it could also be a platform / BIOS
-/ Lenovo issue.
-Of course, I have no clue which of these is the culprit here.
-Our System folks seemed to say that this new device uses L1 substates
-which can be enabled in Haswell platform which the user owns.
-Now - L1 substates is a new feature and might introduce issues
-(apparently) - and this is why they (System folks) wanted the try
-without L1 substates. But disabling L1 substates doesn't seem trivial
-with the production BIOS of Lenovo. So I am pretty stuck here.
-Another possibility is to run a PCI analyser on the machine, but that
-requires to have the machine in the lab...
-
-> If you think it's a PCI core problem, we have to figure out what the
-> core needs to do differently.  If somebody can point to a difference
-> in the ASPM configuration between Windows and Linux, that would be a
-> good start.
-> 
-> Bjorn
-> 
