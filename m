@@ -1,150 +1,243 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s15283307.onlinehome-server.info ([87.106.208.187]:41134 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752305Ab3KAVj5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 17:39:57 -0400
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 7.0 \(1816\))
-Subject: Re: BUG in rfcomm_sock_getsockopt+0x128/0x200
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <607082335.2055771383319324985.JavaMail.defaultUser@defaultHost>
-Date: Fri, 1 Nov 2013 22:39:54 +0100
-Cc: "linux-wireless@vger.kernel.org Wireless"
-	<linux-wireless@vger.kernel.org>,
-	"linux-bluetooth@vger.kernel.org development"
-	<linux-bluetooth@vger.kernel.org>
-Message-Id: <8BA764B1-0C68-4696-9116-9814AE47F4EE@holtmann.org> (sfid-20131101_224005_194458_3BA7B48D)
-References: <607082335.2055771383319324985.JavaMail.defaultUser@defaultHost>
-To: Fabio Rossi <rossi.f@inwind.it>
+Received: from mms2.broadcom.com ([216.31.210.18]:4425 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752111Ab3K2Ksd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Nov 2013 05:48:33 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH V2 3/7] brcmfmac: replace dongle command list with
+ .preinit() callback
+Date: Fri, 29 Nov 2013 11:48:15 +0100
+Message-ID: <1385722099-5102-4-git-send-email-arend@broadcom.com> (sfid-20131129_114857_072319_0FF45FA2)
+In-Reply-To: <1385722099-5102-1-git-send-email-arend@broadcom.com>
+References: <1385722099-5102-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Fabio,
+The bus-specific interface allowed a list of dongle commands to be
+provided to the common driver part. However, upcoming functionality
+requires a more dynamic behaviour. Hence the list is replaced
+by a new callback function so the bus-specific driver part can
+implement this behaviour.
 
->> what socket option is your client program setting? Do you happen to know that. 
-> Would make it a lot easier to track this down.
-> 
-> Hi Marcel,
-> I'm using the bluetoothd daemon at startup and it crashes as soon as the 
-> dongle is inserted. To test the behaviour I removed the dongle and restart the 
-> daemon with
-> 
-> # bluetoothd -n -d
-> 
-> bluetoothd[4450]: Bluetooth daemon 4.101
-> bluetoothd[4450]: src/main.c:parse_config() parsing main.conf
-> bluetoothd[4450]: src/main.c:parse_config() discovto=0
-> bluetoothd[4450]: src/main.c:parse_config() pairto=0
-> bluetoothd[4450]: src/main.c:parse_config() pageto=8192
-> bluetoothd[4450]: src/main.c:parse_config() auto_to=60
-> bluetoothd[4450]: src/main.c:parse_config() name=%h-%d
-> bluetoothd[4450]: src/main.c:parse_config() class=0x000100
-> bluetoothd[4450]: src/main.c:parse_config() Key file does not have key 
-> 'DeviceID'
-> bluetoothd[4450]: Starting SDP server
-> bluetoothd[4450]: src/plugin.c:plugin_init() Loading builtin plugins
-> bluetoothd[4450]: src/plugin.c:add_plugin() Loading pnat plugin
-> bluetoothd[4450]: src/plugin.c:add_plugin() Loading audio plugin
-> bluetoothd[4450]: src/plugin.c:add_plugin() Loading input plugin
-> bluetoothd[4450]: src/plugin.c:add_plugin() Loading serial plugin
-> bluetoothd[4450]: src/plugin.c:add_plugin() Loading network plugin
-> bluetoothd[4450]: src/plugin.c:add_plugin() Loading service plugin
-> bluetoothd[4450]: src/plugin.c:add_plugin() Loading health plugin
-> bluetoothd[4450]: src/plugin.c:add_plugin() Loading hciops plugin
-> bluetoothd[4450]: src/plugin.c:add_plugin() Loading mgmtops plugin
-> bluetoothd[4450]: src/plugin.c:add_plugin() Loading formfactor plugin
-> bluetoothd[4450]: src/plugin.c:add_plugin() Loading storage plugin
-> bluetoothd[4450]: src/plugin.c:add_plugin() Loading adaptername plugin
-> bluetoothd[4450]: src/plugin.c:add_plugin() Loading wiimote plugin
-> bluetoothd[4450]: src/plugin.c:add_plugin() Loading maemo6 plugin
-> bluetoothd[4450]: src/plugin.c:plugin_init() Loading plugins 
-> /usr/lib64/bluetooth/plugins
-> bluetoothd[4450]: plugins/service.c:register_interface() path 
-> /org/bluez/4450/any
-> bluetoothd[4450]: plugins/service.c:register_interface() Registered interface 
-> org.bluez.Service on path /org/bluez/4450/any
-> bluetoothd[4450]: plugins/maemo6.c:maemo6_init() init maemo6 plugin
-> bluetoothd[4450]: health/hdp.c:hdp_manager_start() Starting Health manager
-> bluetoothd[4450]: network/manager.c:read_config() /etc/bluetooth/network.conf: 
-> Key file does not have key 'DisableSecurity'
-> bluetoothd[4450]: network/manager.c:read_config() Config options: 
-> Security=true
-> bluetoothd[4450]: input/manager.c:input_manager_init() input.conf: Key file 
-> does not have key 'IdleTimeout'
-> bluetoothd[4450]: audio/manager.c:audio_manager_init() audio.conf: Key file 
-> does not have key 'AutoConnect'
-> bluetoothd[4450]: plugins/pnat.c:pnat_init() Setup Phonet AT (DUN) plugin
-> bluetoothd[4450]: plugins/hciops.c:hciops_init() 
-> bluetoothd[4450]: Bluetooth Management interface initialized
-> bluetoothd[4450]: Failed to open RFKILL control device
-> bluetoothd[4450]: src/main.c:main() Entering main loop
-> bluetoothd[4450]: plugins/mgmtops.c:mgmt_event() cond 1
-> bluetoothd[4450]: plugins/mgmtops.c:mgmt_event() Received 12 bytes from 
-> management socket
-> bluetoothd[4450]: plugins/mgmtops.c:mgmt_cmd_complete() 
-> bluetoothd[4450]: plugins/mgmtops.c:read_version_complete() version 1 revision 
-> 4
-> bluetoothd[4450]: plugins/mgmtops.c:mgmt_event() cond 1
-> bluetoothd[4450]: plugins/mgmtops.c:mgmt_event() Received 11 bytes from 
-> management socket
-> bluetoothd[4450]: plugins/mgmtops.c:mgmt_cmd_complete() 
-> 
-> then I insert the dongle
-> 
-> bluetoothd[4450]: plugins/mgmtops.c:mgmt_event() cond 1
-> bluetoothd[4450]: plugins/mgmtops.c:mgmt_event() Received 6 bytes from 
-> management socket
-> bluetoothd[4450]: plugins/mgmtops.c:add_controller() Added controller 0
-> bluetoothd[4450]: plugins/mgmtops.c:mgmt_event() cond 1
-> bluetoothd[4450]: plugins/mgmtops.c:mgmt_event() Received 289 bytes from 
-> management socket
-> bluetoothd[4450]: plugins/mgmtops.c:mgmt_cmd_complete() 
-> bluetoothd[4450]: plugins/mgmtops.c:read_info_complete() hci0 addr 00:09:DD:XX:
-> XX:XX version 3 manufacturer 10 class 0x000000
-> bluetoothd[4450]: plugins/mgmtops.c:read_info_complete() hci0 settings
-> bluetoothd[4450]: plugins/mgmtops.c:read_info_complete() hci0 name CSR - bc4
-> bluetoothd[4450]: plugins/mgmtops.c:read_info_complete() hci0 short name 
-> bluetoothd[4450]: plugins/mgmtops.c:mgmt_remove_uuid() index 0
-> bluetoothd[4450]: src/adapter.c:btd_adapter_ref() 0x7f6c1794a800: ref=1
-> bluetoothd[4450]: plugins/mgmtops.c:mgmt_read_bdaddr() index 0 addr 00:09:DD:
-> XX:XX:XX
-> bluetoothd[4450]: src/sdpd-database.c:sdp_init_services_list() 
-> bluetoothd[4450]: plugins/mgmtops.c:mgmt_add_uuid() index 0
-> bluetoothd[4450]: plugins/mgmtops.c:mgmt_add_uuid() index 0
-> bluetoothd[4450]: plugins/service.c:register_interface() path 
-> /org/bluez/4450/hci0
-> bluetoothd[4450]: plugins/service.c:register_interface() Registered interface 
-> org.bluez.Service on path /org/bluez/4450/hci0
-> bluetoothd[4450]: plugins/maemo6.c:mce_probe() path /org/bluez/4450/hci0
-> bluetoothd[4450]: src/adapter.c:btd_adapter_ref() 0x7f6c1794a800: ref=2
-> bluetoothd[4450]: network/manager.c:network_server_probe() path 
-> /org/bluez/4450/hci0
-> bluetoothd[4450]: src/adapter.c:btd_adapter_ref() 0x7f6c1794a800: ref=3
-> bluetoothd[4450]: network/server.c:server_register() Registered interface org.
-> bluez.NetworkServer on path /org/bluez/4450/hci0
-> bluetoothd[4450]: serial/manager.c:proxy_probe() path /org/bluez/4450/hci0
-> bluetoothd[4450]: src/adapter.c:btd_adapter_ref() 0x7f6c1794a800: ref=4
-> bluetoothd[4450]: serial/proxy.c:proxy_register() Registered interface org.
-> bluez.SerialProxyManager on path /org/bluez/4450/hci0
-> bluetoothd[4450]: src/adapter.c:btd_adapter_ref() 0x7f6c1794a800: ref=5
-> bluetoothd[4450]: audio/manager.c:media_server_probe() path 
-> /org/bluez/4450/hci0
-> bluetoothd[4450]: src/adapter.c:btd_adapter_ref() 0x7f6c1794a800: ref=6
-> bluetoothd[4450]: audio/manager.c:audio_adapter_ref() 0x7f6c1794b2b0: ref=1
-> bluetoothd[4450]: audio/manager.c:headset_server_probe() path 
-> /org/bluez/4450/hci0
-> bluetoothd[4450]: audio/manager.c:audio_adapter_ref() 0x7f6c1794b2b0: ref=2
-> bluetoothd[4450]: audio/manager.c:headset_server_init() audio.conf: Key file 
-> does not have key 'Master'
-> Killed
-> 
-> and I get the crash previously reported. If I use a working kernel the 
-> bluetooth daemon continues its startup and the next lines are
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h  |   12 +++-
+ .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |   15 +----
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   10 +++-
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   58 ++++++++++----------
+ 4 files changed, 51 insertions(+), 44 deletions(-)
 
-can you quickly test a kernel build from bluetooth-next tree. I would like to see if that crashes as well. Since I have been running that one for weeks and never saw this bug.
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
+index a129d21..6a54905 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
+@@ -34,6 +34,7 @@ struct brcmf_bus_dcmd {
+ /**
+  * struct brcmf_bus_ops - bus callback operations.
+  *
++ * @preinit: execute bus/device specific dongle init commands (optional).
+  * @init: prepare for communication with dongle.
+  * @stop: clear pending frames, disable data flow.
+  * @txdata: send a data frame to the dongle. When the data
+@@ -51,6 +52,7 @@ struct brcmf_bus_dcmd {
+  * indicated otherwise these callbacks are mandatory.
+  */
+ struct brcmf_bus_ops {
++	int (*preinit)(struct device *dev);
+ 	int (*init)(struct device *dev);
+ 	void (*stop)(struct device *dev);
+ 	int (*txdata)(struct device *dev, struct sk_buff *skb);
+@@ -85,7 +87,6 @@ struct brcmf_bus {
+ 	unsigned long tx_realloc;
+ 	u32 chip;
+ 	u32 chiprev;
+-	struct list_head dcmd_list;
+ 
+ 	struct brcmf_bus_ops *ops;
+ };
+@@ -93,6 +94,13 @@ struct brcmf_bus {
+ /*
+  * callback wrappers
+  */
++static inline int brcmf_bus_preinit(struct brcmf_bus *bus)
++{
++	if (!bus->ops->preinit)
++		return 0;
++	return bus->ops->preinit(bus->dev);
++}
++
+ static inline int brcmf_bus_init(struct brcmf_bus *bus)
+ {
+ 	return bus->ops->init(bus->dev);
+@@ -151,6 +159,8 @@ void brcmf_txflowblock(struct device *dev, bool state);
+ void brcmf_txcomplete(struct device *dev, struct sk_buff *txp, bool success);
+ 
+ int brcmf_bus_start(struct device *dev);
++s32 brcmf_iovar_data_set(struct device *dev, char *name, void *data,
++				u32 len);
+ void brcmf_bus_add_txhdrlen(struct device *dev, uint len);
+ 
+ #ifdef CONFIG_BRCMFMAC_SDIO
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
+index 9431af2..5c0c919 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
+@@ -257,8 +257,6 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
+ 	u8 buf[BRCMF_DCMD_SMLEN];
+ 	char *ptr;
+ 	s32 err;
+-	struct brcmf_bus_dcmd *cmdlst;
+-	struct list_head *cur, *q;
+ 
+ 	/* retreive mac address */
+ 	err = brcmf_fil_iovar_data_get(ifp, "cur_etheraddr", ifp->mac_addr,
+@@ -342,17 +340,8 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
+ 	brcmf_c_pktfilter_offload_enable(ifp, BRCMF_DEFAULT_PACKET_FILTER,
+ 					 0, true);
+ 
+-	/* set bus specific command if there is any */
+-	list_for_each_safe(cur, q, &ifp->drvr->bus_if->dcmd_list) {
+-		cmdlst = list_entry(cur, struct brcmf_bus_dcmd, list);
+-		if (cmdlst->name && cmdlst->param && cmdlst->param_len) {
+-			brcmf_fil_iovar_data_set(ifp, cmdlst->name,
+-						 cmdlst->param,
+-						 cmdlst->param_len);
+-		}
+-		list_del(cur);
+-		kfree(cmdlst);
+-	}
++	/* do bus specific preinit here */
++	err = brcmf_bus_preinit(ifp->drvr->bus_if);
+ done:
+ 	return err;
+ }
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+index 0c4c230..ab207e2 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+@@ -1048,8 +1048,6 @@ int brcmf_attach(struct device *dev)
+ 	/* attach firmware event handler */
+ 	brcmf_fweh_attach(drvr);
+ 
+-	INIT_LIST_HEAD(&drvr->bus_if->dcmd_list);
+-
+ 	return ret;
+ 
+ fail:
+@@ -1206,6 +1204,14 @@ void brcmf_detach(struct device *dev)
+ 	kfree(drvr);
+ }
+ 
++s32 brcmf_iovar_data_set(struct device *dev, char *name, void *data, u32 len)
++{
++	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
++	struct brcmf_if *ifp = bus_if->drvr->iflist[0];
++
++	return brcmf_fil_iovar_data_set(ifp, name, data, len);
++}
++
+ static int brcmf_get_pend_8021x_cnt(struct brcmf_if *ifp)
+ {
+ 	return atomic_read(&ifp->pend_8021x_cnt);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index 928983b..2597a53 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -3425,6 +3425,35 @@ brcmf_sdbrcm_download_firmware(struct brcmf_sdio *bus)
+ 	return ret;
+ }
+ 
++static int brcmf_sdbrcm_bus_preinit(struct device *dev)
++{
++	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
++	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
++	struct brcmf_sdio *bus = sdiodev->bus;
++	u32 value;
++	u8 idx;
++	int err;
++
++	/* sdio bus core specific dcmd */
++	idx = brcmf_sdio_chip_getinfidx(bus->ci, BCMA_CORE_SDIO_DEV);
++	if (bus->ci->c_inf[idx].rev < 12) {
++		/* for sdio core rev < 12, disable txgloming */
++		value = 0;
++		err = brcmf_iovar_data_set(dev, "bus:txglom", &value,
++					   sizeof(u32));
++	} else {
++		/* otherwise, set txglomalign */
++		value = 4;
++		if (sdiodev->pdata)
++			value = sdiodev->pdata->sd_sgentry_align;
++		/* SDIO ADMA requires at least 32 bit alignment */
++		value = max_t(u32, value, 4);
++		err = brcmf_iovar_data_set(dev, "bus:txglomalign", &value,
++					   sizeof(u32));
++	}
++	return err;
++}
++
+ static int brcmf_sdbrcm_bus_init(struct device *dev)
+ {
+ 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+@@ -3905,6 +3934,7 @@ static void brcmf_sdbrcm_release(struct brcmf_sdio *bus)
+ 
+ static struct brcmf_bus_ops brcmf_sdio_bus_ops = {
+ 	.stop = brcmf_sdbrcm_bus_stop,
++	.preinit = brcmf_sdbrcm_bus_preinit,
+ 	.init = brcmf_sdbrcm_bus_init,
+ 	.txdata = brcmf_sdbrcm_bus_txdata,
+ 	.txctl = brcmf_sdbrcm_bus_txctl,
+@@ -3916,10 +3946,6 @@ void *brcmf_sdbrcm_probe(u32 regsva, struct brcmf_sdio_dev *sdiodev)
+ {
+ 	int ret;
+ 	struct brcmf_sdio *bus;
+-	struct brcmf_bus_dcmd *dlst;
+-	u32 dngl_txglom;
+-	u32 txglomalign = 0;
+-	u8 idx;
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+@@ -4003,30 +4029,6 @@ void *brcmf_sdbrcm_probe(u32 regsva, struct brcmf_sdio_dev *sdiodev)
+ 	brcmf_sdio_debugfs_create(bus);
+ 	brcmf_dbg(INFO, "completed!!\n");
+ 
+-	/* sdio bus core specific dcmd */
+-	idx = brcmf_sdio_chip_getinfidx(bus->ci, BCMA_CORE_SDIO_DEV);
+-	dlst = kzalloc(sizeof(struct brcmf_bus_dcmd), GFP_KERNEL);
+-	if (dlst) {
+-		if (bus->ci->c_inf[idx].rev < 12) {
+-			/* for sdio core rev < 12, disable txgloming */
+-			dngl_txglom = 0;
+-			dlst->name = "bus:txglom";
+-			dlst->param = (char *)&dngl_txglom;
+-			dlst->param_len = sizeof(u32);
+-		} else {
+-			/* otherwise, set txglomalign */
+-			if (sdiodev->pdata)
+-				txglomalign = sdiodev->pdata->sd_sgentry_align;
+-			/* SDIO ADMA requires at least 32 bit alignment */
+-			if (txglomalign < 4)
+-				txglomalign = 4;
+-			dlst->name = "bus:txglomalign";
+-			dlst->param = (char *)&txglomalign;
+-			dlst->param_len = sizeof(u32);
+-		}
+-		list_add(&dlst->list, &bus->sdiodev->bus_if->dcmd_list);
+-	}
+-
+ 	brcmf_bus_add_txhdrlen(bus->sdiodev->dev, bus->tx_hdrlen);
+ 
+ 	/* if firmware path present try to download and bring up bus */
+-- 
+1.7.10.4
 
-Regards
-
-Marcel
 
