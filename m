@@ -1,64 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f54.google.com ([74.125.82.54]:53569 "EHLO
-	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758918Ab3KMRyP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Nov 2013 12:54:15 -0500
-Received: by mail-wg0-f54.google.com with SMTP id y10so794957wgg.9
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Nov 2013 09:54:14 -0800 (PST)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 2/5] cfg80211: intersection dfs regions when intersecting regdomains
-Date: Wed, 13 Nov 2013 18:54:03 +0100
-Message-Id: <1384365246-24768-3-git-send-email-mcgrof@do-not-panic.com> (sfid-20131113_185418_655800_2CBA22E2)
-In-Reply-To: <1384365246-24768-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1384365246-24768-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:1905 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751888Ab3K2Ksf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Nov 2013 05:48:35 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH V2 4/7] brcmfmac: start netif queues only when setup is
+ completed successful
+Date: Fri, 29 Nov 2013 11:48:16 +0100
+Message-ID: <1385722099-5102-5-git-send-email-arend@broadcom.com> (sfid-20131129_114857_732953_14359ABC)
+In-Reply-To: <1385722099-5102-1-git-send-email-arend@broadcom.com>
+References: <1385722099-5102-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Only allow DFS to be set if the DFS regions agree.
+Moving the call to netif_start_queue() after brcmf_cfg80211_up() is
+completed successful. If not return -EIO instead of -1 as that results
+in 'Operation not permitted' which can put user on wrong track.
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- net/wireless/reg.c | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c |    9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 2796b62..068cb40 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -571,6 +571,20 @@ static bool freq_in_rule_band(const struct ieee80211_freq_range *freq_range,
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+index ab207e2..f4eeaa1 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+@@ -769,7 +769,6 @@ static int brcmf_netdev_open(struct net_device *ndev)
+ 	struct brcmf_pub *drvr = ifp->drvr;
+ 	struct brcmf_bus *bus_if = drvr->bus_if;
+ 	u32 toe_ol;
+-	s32 ret = 0;
+ 
+ 	brcmf_dbg(TRACE, "Enter, idx=%d\n", ifp->bssidx);
+ 
+@@ -788,14 +787,14 @@ static int brcmf_netdev_open(struct net_device *ndev)
+ 	else
+ 		ndev->features &= ~NETIF_F_IP_CSUM;
+ 
+-	/* Allow transmit calls */
+-	netif_start_queue(ndev);
+ 	if (brcmf_cfg80211_up(ndev)) {
+ 		brcmf_err("failed to bring up cfg80211\n");
+-		return -1;
++		return -EIO;
+ 	}
+ 
+-	return ret;
++	/* Allow transmit calls */
++	netif_start_queue(ndev);
++	return 0;
  }
  
- /*
-+ * Later on we can perhaps use the more restrictive DFS
-+ * region but we don't have information for that yet so
-+ * for now simply disallow conflicts.
-+ */
-+static enum nl80211_dfs_regions
-+reg_intersect_dfs_region(const enum nl80211_dfs_regions dfs_region1,
-+			 const enum nl80211_dfs_regions dfs_region2)
-+{
-+	if (dfs_region1 != dfs_region2)
-+		return NL80211_DFS_UNSET;
-+	return dfs_region1;
-+}
-+
-+/*
-  * Helper for regdom_intersect(), this does the real
-  * mathematical intersection fun
-  */
-@@ -701,6 +715,8 @@ regdom_intersect(const struct ieee80211_regdomain *rd1,
- 	rd->n_reg_rules = num_rules;
- 	rd->alpha2[0] = '9';
- 	rd->alpha2[1] = '8';
-+	rd->dfs_region = reg_intersect_dfs_region(rd1->dfs_region,
-+						  rd2->dfs_region);
- 
- 	return rd;
- }
+ static const struct net_device_ops brcmf_netdev_ops_pri = {
 -- 
-1.8.4.rc3
+1.7.10.4
+
 
