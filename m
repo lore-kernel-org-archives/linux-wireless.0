@@ -1,50 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2501 "EHLO mms2.broadcom.com"
+Received: from ebb06.tieto.com ([131.207.168.38]:65274 "EHLO ebb06.tieto.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755439Ab3KFWHd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Nov 2013 17:07:33 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 7/7] brcmsmac: select CONFIG_BCMA when possible
-Date: Wed, 6 Nov 2013 23:07:22 +0100
-Message-ID: <1383775642-647-8-git-send-email-arend@broadcom.com> (sfid-20131106_230745_734901_CB2E46AC)
-In-Reply-To: <1383775642-647-1-git-send-email-arend@broadcom.com>
-References: <1383775642-647-1-git-send-email-arend@broadcom.com>
+	id S1751718Ab3K2PJc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Nov 2013 10:09:32 -0500
+From: Bartosz Markowski <bartosz.markowski@tieto.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH] ath10k: fix multi BSSID with WPA on FW 10.1
+Date: Fri, 29 Nov 2013 16:09:23 +0100
+Message-ID: <1385737763-10481-1-git-send-email-bartosz.markowski@tieto.com> (sfid-20131129_160936_025324_969BED80)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The brcmsmac relies BCMA functionality to access the device. This
-patch selects CONFIG_BCMA when CONFIG_BCMA_POSSIBLE is set. This
-way the user does not need to be select BCMA to make the brcmsmac
-driver show up in his menuconfig.
+From: Michal Kazior <michal.kazior@tieto.com>
 
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+FW 10.1 seems to require the default key index to
+be updated to point to group key after it is
+installed. Otherwise Txed frames are corrupted.
+
+Tested-by: Tomasz Skapski <tomasz.skapski@tieto.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/brcm80211/Kconfig | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/mac.c |   40 +++++++++++++++++++++++++++++++++
+ 1 file changed, 40 insertions(+)
 
-diff --git a/drivers/net/wireless/brcm80211/Kconfig b/drivers/net/wireless/brcm80211/Kconfig
-index b00a7e9..d9d85e9 100644
---- a/drivers/net/wireless/brcm80211/Kconfig
-+++ b/drivers/net/wireless/brcm80211/Kconfig
-@@ -4,7 +4,8 @@ config BRCMUTIL
- config BRCMSMAC
- 	tristate "Broadcom IEEE802.11n PCIe SoftMAC WLAN driver"
- 	depends on MAC80211
--	depends on BCMA
-+	depends on BCMA_POSSIBLE
-+	select BCMA
- 	select BRCMUTIL
- 	select FW_LOADER
- 	select CRC_CCITT
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index b70a3b2..20821e0 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2717,6 +2717,44 @@ static void ath10k_cancel_hw_scan(struct ieee80211_hw *hw,
+ 	mutex_unlock(&ar->conf_mutex);
+ }
+ 
++static void ath10k_set_key_h_def_keyidx(struct ath10k *ar,
++				        struct ath10k_vif *arvif,
++				        enum set_key_cmd cmd,
++				        struct ieee80211_key_conf *key)
++{
++	u32 vdev_param = arvif->ar->wmi.vdev_param->def_keyid;
++	int ret;
++
++	/* 10.1 firmware branch requires default key index to be set to group
++	 * key index after installing it. Otherwise FW/HW Txes corrupted
++	 * frames with multi-vif APs. This is not required for main firmware
++	 * branch (e.g. 636).
++	 *
++	 * FIXME: This has been tested only in AP. It remains unknown if this
++	 * is required for multi-vif STA interfaces on 10.1 */
++
++	if (arvif->vdev_type != WMI_VDEV_TYPE_AP)
++		return;
++
++	if (key->cipher == WLAN_CIPHER_SUITE_WEP40)
++		return;
++
++	if (key->cipher == WLAN_CIPHER_SUITE_WEP104)
++		return;
++
++	if (key->flags & IEEE80211_KEY_FLAG_PAIRWISE)
++		return;
++
++	if (cmd != SET_KEY)
++		return;
++
++	ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
++					key->keyidx);
++	if (ret)
++		ath10k_warn("failed to set group key as default key: %d\n",
++			    ret);
++}
++
+ static int ath10k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 			  struct ieee80211_vif *vif, struct ieee80211_sta *sta,
+ 			  struct ieee80211_key_conf *key)
+@@ -2778,6 +2816,8 @@ static int ath10k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 		goto exit;
+ 	}
+ 
++	ath10k_set_key_h_def_keyidx(ar, arvif, cmd, key);
++
+ 	spin_lock_bh(&ar->data_lock);
+ 	peer = ath10k_peer_find(ar, arvif->vdev_id, peer_addr);
+ 	if (peer && cmd == SET_KEY)
 -- 
-1.8.1.3
-
+1.7.10
 
