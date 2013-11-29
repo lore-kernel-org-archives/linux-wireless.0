@@ -1,66 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:52518 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753487Ab3KNMKM (ORCPT
+Received: from mms3.broadcom.com ([216.31.210.19]:2244 "EHLO mms3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753803Ab3K2LZl convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Nov 2013 07:10:12 -0500
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
-	johannes@sipsolutions.net, yeohchunyeow@gmail.com
-Cc: yeohchunyeow@cozybit.com
-Subject: [PATCH v5 4/5] mac80211: align ieee80211_mesh_csa_beacon() with ieee80211_csa_beacon()
-Date: Thu, 14 Nov 2013 14:09:35 +0200
-Message-Id: <1384430976-13708-4-git-send-email-luciano.coelho@intel.com> (sfid-20131114_131023_873754_036A726A)
-In-Reply-To: <1384430976-13708-1-git-send-email-luciano.coelho@intel.com>
-References: <1384430976-13708-1-git-send-email-luciano.coelho@intel.com>
+	Fri, 29 Nov 2013 06:25:41 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 00/19] brcmfmac: cleanup and sdio txglom feature
+Date: Fri, 29 Nov 2013 12:25:05 +0100
+Message-ID: <1385724324-6361-1-git-send-email-arend@broadcom.com> (sfid-20131129_123808_670529_498FCE84)
+MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The return value of ieee80211_mesh_csa_beacon is not aligned with the
-return value of ieee80211_csa_beacon() and
-ieee80211_ibss_csa_beacon().  For consistency and to be able to use
-both functions with similar code, change ieee80211_mesh_csa_beacon()
-not to send the bss changed notification itself, but return what has
-changed so the caller can send the notification instead.
+This series has a number of cleanup patches including removing
+ioctl() callbacks and providing firmware version information
+through ethtool driver info callback.
 
-Change-Id: If4c111fd874a3e17a5df98d306f7f1c8fcaa6a1a
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
- net/mac80211/cfg.c  | 2 ++
- net/mac80211/mesh.c | 4 +---
- 2 files changed, 3 insertions(+), 3 deletions(-)
+For the SDIO driver it adds support for txglom feature, which
+transfers multiple transmit packets in one MMC request.
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index a5aa766..6eb8e08 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3155,6 +3155,8 @@ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 			ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_NONE;
- 			return err;
- 		}
-+		changed |= err;
-+
- 		break;
- #endif
- 	default:
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 5852080..94dff7f 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -1091,12 +1091,10 @@ int ieee80211_mesh_csa_beacon(struct ieee80211_sub_if_data *sdata,
- 		return ret;
- 	}
- 
--	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
--
- 	if (csa_action)
- 		ieee80211_send_action_csa(sdata, csa_settings);
- 
--	return 0;
-+	return BSS_CHANGED_BEACON;
- }
- 
- static int mesh_fwd_csa_frame(struct ieee80211_sub_if_data *sdata,
+Lastly, the firmware protocol layer is being reworked to allow
+different protocols being used. This is preparational work for
+PCIe fullmac support.
+
+This series is intended for v3.14 and depends on the patch
+series "brcm80211: cleanup fixes and out-of-order fix" with
+Message-ID: <1385722099-5102-1-git-send-email-arend@broadcom.com>
+
+Arend van Spriel (13):
+  brcmfmac: support hardware extension header in
+    trace_brcmf_sdpcm_hdr()
+  brcmfmac: determine sd host controller related variable earlier
+  brcmfmac: fix driver build issue when CONFIG_BRCMDBG is not set
+  brcmfmac: determine alignment values during probe
+  brcmfmac: use platform specific alignment in SDIO
+  brcmfmac: remove redundant ioctl handlers
+  brcmfmac: provide firmware version in ethtool driver info
+  brcmfmac: remove unnecessary EXPORT_SYMBOL() usage
+  brcmfmac: move firmware related structures to fwil_types.h
+  brcmfmac: move firmware command code definitions
+  brcmfmac: remove some unused definitions
+  brcmfmac: move firmware event related defines to fweh.h
+  brcmfmac: expose chip information through debugfs
+
+Franky Lin (2):
+  brcmfmac: add firmware and nvram file name for bcm4339
+  brcmfmac: add host tx glomming support
+
+Hante Meuleman (4):
+  brcmfmac: rename dhd_cdc to bcdc
+  brcmfmac: removed dhd_proto.h.
+  brcmfmac: Dynamically register a protocol layer.
+  brcmfmac: Use consistent naming for BCDC.
+
+ drivers/net/wireless/brcm80211/brcmfmac/Makefile   |    3 +-
+ drivers/net/wireless/brcm80211/brcmfmac/bcdc.c     |  384 ++++++++++++++++
+ .../brcm80211/brcmfmac/{dhd_proto.h => bcdc.h}     |   27 +-
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |    3 -
+ .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |   32 +-
+ drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |  482 +-------------------
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c  |  387 ----------------
+ .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |    7 +-
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.c  |   36 +-
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h  |    2 +-
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |  158 +------
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |  406 +++++++++++------
+ drivers/net/wireless/brcm80211/brcmfmac/fweh.h     |   54 +++
+ drivers/net/wireless/brcm80211/brcmfmac/fwil.c     |    7 +-
+ drivers/net/wireless/brcm80211/brcmfmac/fwil.h     |   61 +++
+ .../net/wireless/brcm80211/brcmfmac/fwil_types.h   |  304 ++++++++++++
+ drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |   10 +-
+ drivers/net/wireless/brcm80211/brcmfmac/proto.c    |   62 +++
+ drivers/net/wireless/brcm80211/brcmfmac/proto.h    |   57 +++
+ .../net/wireless/brcm80211/brcmfmac/tracepoint.h   |   33 +-
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   10 +-
+ 21 files changed, 1304 insertions(+), 1221 deletions(-)
+ create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/bcdc.c
+ rename drivers/net/wireless/brcm80211/brcmfmac/{dhd_proto.h => bcdc.h} (51%)
+ delete mode 100644 drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
+ create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/proto.c
+ create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/proto.h
+
 -- 
-1.8.4.rc3
+1.7.10.4
+
 
