@@ -1,87 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4156 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750861Ab3KOMNr convert rfc822-to-8bit (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:56594 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751126Ab3K2WOv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Nov 2013 07:13:47 -0500
-From: "Hante Meuleman" <meuleman@broadcom.com>
-To: "Geyslan G. Bem" <geyslan@gmail.com>
-cc: "Brett Rudley" <brudley@broadcom.com>,
-	"Arend Van Spriel" <arend@broadcom.com>,
-	"Franky Lin" <frankyl@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Pieter-Paul Giesberts" <pieterpg@broadcom.com>,
-	"Piotr Haber" <phaber@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] brcmfmac: fix possible memory leak
-Date: Fri, 15 Nov 2013 12:13:37 +0000
-Message-ID: <F51492713EF10846800D8C0ED37A7DCE0186947A@SJEXCHMB15.corp.ad.broadcom.com> (sfid-20131115_131352_966938_B2B48C8B)
-References: <1384516475-26589-1-git-send-email-geyslan@gmail.com>
-In-Reply-To: <1384516475-26589-1-git-send-email-geyslan@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=us-ascii
+	Fri, 29 Nov 2013 17:14:51 -0500
+Message-ID: <1385763288.5149.0.camel@jlt4.sipsolutions.net> (sfid-20131129_231454_968638_B6B9409A)
+Subject: Re: WARNING: CPU: 2 PID: 827 at net/wireless/sme.c:795
+ cfg80211_roamed+0x97/0xa0 [cfg80211]()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Krzysztof Kolasa <kkolasa@winsoft.pl>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 29 Nov 2013 23:14:48 +0100
+In-Reply-To: <5298EA48.1050206@winsoft.pl> (sfid-20131129_204934_655986_57747678)
+References: <5298EA48.1050206@winsoft.pl>
+	 (sfid-20131129_204934_655986_57747678)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Good find, wrong solution. The chanspecs is a temporarily variable which should be freed when exiting the function. Not only when there is an error. I personally would have preferred just a  free at the end of the " if (request->n_channels) {". So something like this:
+On Fri, 2013-11-29 at 20:26 +0100, Krzysztof Kolasa wrote:
 
-		}
-		err = brcmf_p2p_escan(p2p, num_nodfs, chanspecs, search_state,
-				      action, P2PAPI_BSSCFG_DEVICE);
-+		kfree(chanspecs);
-	}
+> cfg80211_roamed+0x97/0xa0 [cfg80211]
+> wl_bss_connect_done.isra.18+0xa3/0x1b0 [wl]
+> wl_notify_connect_status+0x176/0x340 [wl]
 
-In this case the pointer doesn't have to be initialized to NULL.
+Not sure why we should care about proprietary drivers ...
 
-
-Regards,
-Hante
-
------Original Message-----
-From: Geyslan G. Bem [mailto:geyslan@gmail.com] 
-Sent: vrijdag 15 november 2013 12:54
-To: geyslan@gmail.com
-Cc: Brett Rudley; Arend Van Spriel; Franky Lin; Hante Meuleman; John W. Linville; Pieter-Paul Giesberts; Piotr Haber; linux-wireless@vger.kernel.org; brcm80211-dev-list; netdev@vger.kernel.org; linux-kernel@vger.kernel.org
-Subject: [PATCH] brcmfmac: fix possible memory leak
-
-In case of error free 'chanspecs'.
-
-Signed-off-by: Geyslan G. Bem <geyslan@gmail.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/p2p.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-index d7a9745..aea2c2e 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/p2p.c
-@@ -771,7 +771,7 @@ static s32 brcmf_p2p_run_escan(struct brcmf_cfg80211_info *cfg,
- 	struct brcmf_cfg80211_vif *vif;
- 	struct net_device *dev = NULL;
- 	int i, num_nodfs = 0;
--	u16 *chanspecs;
-+	u16 *chanspecs = NULL;
- 
- 	brcmf_dbg(TRACE, "enter\n");
- 
-@@ -825,8 +825,10 @@ static s32 brcmf_p2p_run_escan(struct brcmf_cfg80211_info *cfg,
- 				      action, P2PAPI_BSSCFG_DEVICE);
- 	}
- exit:
--	if (err)
-+	if (err) {
- 		brcmf_err("error (%d)\n", err);
-+		kfree(chanspecs);
-+	}
- 	return err;
- }
- 
--- 
-1.8.4.2
-
-
+johannes
 
