@@ -1,53 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:45913 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751485Ab3KAODs (ORCPT
+Received: from mail-vc0-f179.google.com ([209.85.220.179]:61753 "EHLO
+	mail-vc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751700Ab3K3Mpa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Nov 2013 10:03:48 -0400
-Received: by mail-wg0-f48.google.com with SMTP id b13so4090201wgh.27
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Nov 2013 07:03:47 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 07/23] wireless-regdb: update NP's 5 GHz rules
-Date: Fri,  1 Nov 2013 15:03:02 +0100
-Message-Id: <1383314598-21240-8-git-send-email-mcgrof@do-not-panic.com> (sfid-20131101_150351_589000_DC4B1FD1)
-In-Reply-To: <1383314598-21240-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1383314598-21240-1-git-send-email-mcgrof@do-not-panic.com>
+	Sat, 30 Nov 2013 07:45:30 -0500
+Received: by mail-vc0-f179.google.com with SMTP id ie18so7385715vcb.10
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Nov 2013 04:45:29 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAGXs5wXPB2WvuxfXzuyDaGS5_cA+GG5vHkHO+PnnVncvOwJTDg@mail.gmail.com>
+References: <CAGXs5wXPB2WvuxfXzuyDaGS5_cA+GG5vHkHO+PnnVncvOwJTDg@mail.gmail.com>
+From: Sergey Ryazanov <ryazanov.s.a@gmail.com>
+Date: Sat, 30 Nov 2013 16:45:09 +0400
+Message-ID: <CAHNKnsTTUP9gCVcMbJB=bUs5onS=1GDDmc-yFwjQDuNzwyY7LQ@mail.gmail.com> (sfid-20131130_134605_479852_1DD4F8B0)
+Subject: Re: wireless network interfaces and network namespaces
+To: Kevin Wilson <wkevils@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This:
+Hi,
 
-  o enables VHT80 on its existing 5 GHz frequency range
-    but makes a compromise and reduces the max EIRP from
-    30 dBm to 20 dBm
+2013/11/30 Kevin Wilson <wkevils@gmail.com>:
+> I want to verify this: all wireless interfaces do no support
+> network namespace. Is this true ? what in fact is the reason for this ?
+>
+Yes it is. You may use couple of virtual ethernet interfaces and
+bridge to carry traffic between the process that is isolated in
+separate namespace and a wireless interface.
 
-  o adds two new VHT80 capable frequency ranges
-
-Source is QCA's regulatory team's efforts.
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- db.txt | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/db.txt b/db.txt
-index db20fd0..e2740a6 100644
---- a/db.txt
-+++ b/db.txt
-@@ -589,7 +589,9 @@ country NO: DFS-ETSI
- 
- country NP: DFS-JP
- 	(2402 - 2482 @ 40), (20)
--	(5735 - 5835 @ 40), (30)
-+	(5170 - 5250 @ 80), (20)
-+	(5250 - 5330 @ 80), (20), DFS
-+	(5735 - 5835 @ 80), (20)
- 
- country NZ: DFS-FCC
- 	(2402 - 2482 @ 40), (30)
--- 
-1.8.4.rc3
-
+--
+BR,
+Sergey
