@@ -1,132 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from isrv.corpit.ru ([86.62.121.231]:56934 "EHLO isrv.corpit.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754742Ab3L0VIR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Dec 2013 16:08:17 -0500
-Message-ID: <52BDE9DC.5040206@msgid.tls.msk.ru> (sfid-20131227_220821_640596_139D2FB8)
-Date: Sat, 28 Dec 2013 00:58:04 +0400
-From: Michael Tokarev <mjt@tls.msk.ru>
+Received: from mail-lb0-f182.google.com ([209.85.217.182]:43411 "EHLO
+	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751259Ab3K3Xhs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Nov 2013 18:37:48 -0500
+Received: by mail-lb0-f182.google.com with SMTP id u14so7910092lbd.27
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Nov 2013 15:37:46 -0800 (PST)
 MIME-Version: 1.0
-To: brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org
-Subject: BCM4313 & brcmsmac & 3.12: only semi-working?
+In-Reply-To: <CAHdPZaN6GusQbpmNHt=4cHkUKsJTOrGuc0oBF7O8e0oL0neoPQ@mail.gmail.com>
+References: <CAHdPZaN6GusQbpmNHt=4cHkUKsJTOrGuc0oBF7O8e0oL0neoPQ@mail.gmail.com>
+Date: Sun, 1 Dec 2013 07:37:46 +0800
+Message-ID: <CAKH5=LvXgYkU1mdGSZAoq=bkbp-jQdtxE16Dc1GEHjFeoJBg_w@mail.gmail.com> (sfid-20131201_003807_712687_D8841A6E)
+Subject: Re: unable to set iwlwifi master mode
+From: Naughtboy <skylvlinux@gmail.com>
+To: "devendra.aaru" <devendra.aaru@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello.
-
-Got a Lenovo Thinkpad notebook with the following wifi card:
-
-03:00.0 Network controller [0280]: Broadcom Corporation BCM4313 802.11b/g/n Wireless LAN Controller [14e4:4727] (rev 01)
-	Subsystem: Broadcom Corporation Device [14e4:0608]
-	Flags: bus master, fast devsel, latency 0, IRQ 17
-	Memory at f1600000 (64-bit, non-prefetchable) [size=16K]
-	Capabilities: [40] Power Management version 3
-	Capabilities: [58] Vendor Specific Information: Len=78 <?>
-	Capabilities: [48] MSI: Enable- Count=1/1 Maskable- 64bit+
-	Capabilities: [d0] Express Endpoint, MSI 00
-	Capabilities: [100] Advanced Error Reporting
-	Capabilities: [13c] Virtual Channel
-	Capabilities: [160] Device Serial Number 00-00-24-ff-ff-fe-48-d2
-	Capabilities: [16c] Power Budgeting <?>
-	Kernel driver in use: bcma-pci-bridge
-
-With 3.12 kernel, the device is recognized and it is possible to
-connect to the access point and exchange some data.  In 3.10,
-even connection (assotiation with the AP) was quite a bit
-problematic, and packet exchange never worked).
-
-However, after receiving a few packets (about 100 packets), the
-interface almost stops receiving data, except a few packets once
-in a while.  For example, when d/loading some file over wifi, first
-part (very beginning) gets d/loaded fine, and next d/load stalls,
-with Rx counter of the card not changing.  Terminating the process
-makes the counter to increase by one or two.
-
-Stopping and re-starting the interface in NetworkManager makes
-it go again, also for just about 100 packets, till it stalls
-again.
-
-Sometimes it works longer, say, 500 or even 1000 packets, but
-at the end it stalls anyway.
-
-Here's a typical iwconfig output:
-
-wlan0     IEEE 802.11bgn  ESSID:"mjt"
-          Mode:Managed  Frequency:2.412 GHz  Access Point: 64:70:02:29:D9:30
-          Bit Rate=1 Mb/s   Tx-Power=19 dBm
-          Retry  long limit:7   RTS thr:off   Fragment thr:off
-          Encryption key:off
-          Power Management:off
-          Link Quality=56/70  Signal level=-54 dBm
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-          Tx excessive retries:84  Invalid misc:13   Missed beacon:0
-
-(Note the bitrate of 1Mbps: the AP is pretty much capable of
-running at 54Mbps, and actually my smartphone, when used in
-exactly the same place, goes at full 54Mbps just fine.  The
-signal conditions are very well in here, AP is about 15 meters
-away, stright visible.  When I force-reconnect it, it displays
-some more sane value here for a few moments but drops to 1mbps
-anyway).
-
-Here's some dmesg output when I start/stop wifi network and
-try to d/load something:
-
-...
-[28031.696294] brcmsmac bcma0:0: brcms_ops_bss_info_changed: qos enabled: false (implement)
-[28031.696307] brcmsmac bcma0:0: brcms_ops_config: change power-save mode: false (implement)
-[28033.640097] wlan0: authenticate with 64:70:02:29:d9:30
-[28033.642395] wlan0: send auth to 64:70:02:29:d9:30 (try 1/3)
-[28033.644624] wlan0: authenticated
-[28033.645452] wlan0: associate with 64:70:02:29:d9:30 (try 1/3)
-[28033.650163] wlan0: RX AssocResp from 64:70:02:29:d9:30 (capab=0x411 status=0 aid=1)
-[28033.651697] brcmsmac bcma0:0: brcmsmac: brcms_ops_bss_info_changed: associated
-[28033.651702] brcmsmac bcma0:0: brcms_ops_bss_info_changed: qos enabled: true (implement)
-[28033.651710] wlan0: associated
-[28033.921528] brcmsmac bcma0:0: brcms_ops_bss_info_changed: arp filtering: 1 addresses (implement)
-[28149.522205] wlan0: deauthenticating from 64:70:02:29:d9:30 by local choice (reason=3)
-[28149.535454] brcmsmac bcma0:0: brcmsmac: brcms_ops_bss_info_changed: disassociated
-[28149.535469] brcmsmac bcma0:0: brcms_ops_bss_info_changed: arp filtering: 1 addresses (implement)
-[28149.535476] brcmsmac bcma0:0: brcms_ops_bss_info_changed: qos enabled: false (implement)
-[28149.538431] cfg80211: Calling CRDA to update world regulatory domain
-[28152.718056] brcmsmac bcma0:0: brcms_ops_bss_info_changed: qos enabled: false (implement)
-[28152.718074] brcmsmac bcma0:0: brcms_ops_config: change power-save mode: false (implement)
-[28154.564599] wlan0: authenticate with 64:70:02:29:d9:30
-[28154.567108] wlan0: send auth to 64:70:02:29:d9:30 (try 1/3)
-[28154.569527] wlan0: authenticated
-[28154.570232] wlan0: associate with 64:70:02:29:d9:30 (try 1/3)
-[28154.574687] wlan0: RX AssocResp from 64:70:02:29:d9:30 (capab=0x411 status=0 aid=1)
-[28154.575257] brcmsmac bcma0:0: brcmsmac: brcms_ops_bss_info_changed: associated
-[28154.575261] brcmsmac bcma0:0: brcms_ops_bss_info_changed: qos enabled: true (implement)
-[28154.575268] wlan0: associated
-...
+you  shoud set frepue in the hostapd.conf
+just add channel=6  ok
+and lost of things can immplient in the hostapd.conf
 
 
-The same notebook with the same wifi card works just fine under
-windows (both windows 7 and 8), demonstrating stable reliable
-about-54Mbps connection.
+if you keep on use iwconfig command to set frequecny
+the above all things  should complited by iwconfrig ,or when you run
+hostapd and the hostapd will choose the default channel (channel 1)for
+the wireless driver
 
-Is there any hope to get this device working under linux?
-
-I can re-build kernels and stuff, enable debugging etc, -- that's
-no problem, but I've really limited time.
-
-I purchased this notebook especially to be used when travelling,
-to be able to access to my office/work network over hotel wifi,
-I plan to have a trip starting Jan-2.  After figuring out that
-it doesn't quite work as I'd expect it to do, I purchased another
-wifi card, just to face another issue: it my notebook refuses to
-_boot_ while that card is inserted! (it was a completely new
-and unexpected "feature", now I know what it is, and will avoid
-lenovo and HP notebooks in the future), -- so I returned the card
-back.  But now I'm again without wifi, and I can't return the
-notebook...
-
-P.S. I tried to find archives of brcm80211 list, or a way to
-subscribe to it before posting, but found neither.  Are there
-archives?
-
-Thanks,
-
-/mjt
+2013/12/1 devendra.aaru <devendra.aaru@gmail.com>:
+> Hello,
+>
+> I was trying to use my intel wireless device as an AP. I used hostapd (1.1).
+>
+> It seem to be that i couldn't able to get it working.
+>
+> My hostapd config:
+>
+> interface=wlp3s0
+> driver=nl80211
+> country_code=US
+> ieee80211d=1
+> ssid=testhostapd
+> channel=1
+> hw_mode=g
+> auth_algs=1
+> wpa=3
+> wpa_passphrase=mypassword
+> wpa_key_mgmt=WPA-PSK
+> wpa_pairwise=TKIP CCMP
+> rsn_pairwise=CCMP
+>
+> I have got the following output when i run hostapd -ddd hostapd.conf
+>
+> random: Trying to read entropy from /dev/random
+> Configuration file: 1
+> nl80211: interface wlp3s0 in phy phy0
+> rfkill: initial event: idx=0 type=1 op=0 soft=0 hard=0
+> nl80211: Using driver-based off-channel TX
+> nl80211: Register frame command failed (type=208): ret=-114 (Operation
+> already in progress)
+> nl80211: Register frame match - hexdump(len=1): 06
+> nl80211: Failed to register Action frame processing - ignore for now
+> nl80211: Add own interface ifindex 3
+> nl80211: Set mode ifindex 3 iftype 3 (AP)
+> nl80211: Failed to set interface 3 to mode 3: -95 (Operation not supported)
+> nl80211: Interface already in requested mode - ignore error
+> nl80211: Create interface iftype 6 (MONITOR)
+> nl80211: New interface mon.wlp3s0 created: ifindex=15
+> nl80211: Add own interface ifindex 15
+> BSS count 1, BSSID mask 00:00:00:00:00:00 (0 bits)
+> nl80211: Regulatory information - country=US
+> nl80211: 2402-2472 @ 40 MHz
+> nl80211: 5170-5250 @ 40 MHz
+> nl80211: 5250-5330 @ 40 MHz
+> nl80211: 5490-5600 @ 40 MHz
+> nl80211: 5650-5710 @ 40 MHz
+> nl80211: 5735-5835 @ 40 MHz
+> nl80211: 57240-63720 @ 2160 MHz
+> nl80211: Added 802.11b mode based on 802.11g information
+> Allowed channel: mode=1 chan=1 freq=2412 MHz max_tx_power=14 dBm
+> Allowed channel: mode=1 chan=2 freq=2417 MHz max_tx_power=14 dBm
+> Allowed channel: mode=1 chan=3 freq=2422 MHz max_tx_power=14 dBm
+> Allowed channel: mode=1 chan=4 freq=2427 MHz max_tx_power=14 dBm
+> Allowed channel: mode=1 chan=5 freq=2432 MHz max_tx_power=14 dBm
+> Allowed channel: mode=1 chan=6 freq=2437 MHz max_tx_power=14 dBm
+> Allowed channel: mode=1 chan=7 freq=2442 MHz max_tx_power=14 dBm
+> Allowed channel: mode=1 chan=8 freq=2447 MHz max_tx_power=14 dBm
+> Allowed channel: mode=1 chan=9 freq=2452 MHz max_tx_power=14 dBm
+> Allowed channel: mode=1 chan=10 freq=2457 MHz max_tx_power=14 dBm
+> Allowed channel: mode=1 chan=11 freq=2462 MHz max_tx_power=14 dBm
+> Allowed channel: mode=0 chan=1 freq=2412 MHz max_tx_power=14 dBm
+> Allowed channel: mode=0 chan=2 freq=2417 MHz max_tx_power=14 dBm
+> Allowed channel: mode=0 chan=3 freq=2422 MHz max_tx_power=14 dBm
+> Allowed channel: mode=0 chan=4 freq=2427 MHz max_tx_power=14 dBm
+> Allowed channel: mode=0 chan=5 freq=2432 MHz max_tx_power=14 dBm
+> Allowed channel: mode=0 chan=6 freq=2437 MHz max_tx_power=14 dBm
+> Allowed channel: mode=0 chan=7 freq=2442 MHz max_tx_power=14 dBm
+> Allowed channel: mode=0 chan=8 freq=2447 MHz max_tx_power=14 dBm
+> Allowed channel: mode=0 chan=9 freq=2452 MHz max_tx_power=14 dBm
+> Allowed channel: mode=0 chan=10 freq=2457 MHz max_tx_power=14 dBm
+> Allowed channel: mode=0 chan=11 freq=2462 MHz max_tx_power=14 dBm
+> Completing interface initialization
+> Mode: IEEE 802.11g  Channel: 1  Frequency: 2412 MHz
+> nl80211: Set freq 2412 (ht_enabled=0 sec_channel_offset=0)
+> nl80211: Failed to set channel (freq=2412): -16 (Device or resource busy)
+> Could not set channel for kernel driver
+> wlp3s0: Unable to setup interface.
+> Flushing old station entries
+> Could not connect to kernel driver.
+> Deauthenticate all stations
+> nl80211: Remove interface ifindex=15
+> netlink: Operstate: linkmode=0, operstate=6
+> nl80211: Set mode ifindex 3 iftype 2 (STATION)
+>
+> -------------------------------------------x------------------------------------
+> Seems that the setting of channel is failing
+>
+> and i tried with iwconfig wlp3s0 channel 6. It says
+>
+> Error for wireless request "Set Frequency" (8B04) :
+>     SET failed on device wlp3s0 ; Device or resource busy.
+>
+> What could be the possible mistake?
+>
+> in case:
+>
+> lspci -v output:
+>
+> 03:00.0 Network controller: Intel Corporation Centrino Wireless-N 1000
+> [Condor Peak]
+> Subsystem: Intel Corporation Centrino Wireless-N 1000 BGN
+> Flags: bus master, fast devsel, latency 0, IRQ 45
+> Memory at f2400000 (64-bit, non-prefetchable) [size=8K]
+> Capabilities: [c8] Power Management version 3
+> Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
+> Capabilities: [e0] Express Endpoint, MSI 00
+> Capabilities: [100] Advanced Error Reporting
+> Capabilities: [140] Device Serial Number 00-26-c7-ff-ff-51-11-1a
+> Kernel driver in use: iwlwifi
+>
+> Thanks
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
