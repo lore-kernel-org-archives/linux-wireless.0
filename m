@@ -1,48 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:6268 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752932Ab3KGWZ2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Nov 2013 17:25:28 -0500
-Message-ID: <1383863100.2391.5.camel@dcbw.foobar.com> (sfid-20131107_232532_239348_91D670BC)
-Subject: Re: future of prism2_usb (aka wlan-ng) in staging tree
-From: Dan Williams <dcbw@redhat.com>
-To: Solomon Peachy <pizza@shaftnet.org>
+Received: from s3.sipsolutions.net ([144.76.43.152]:58948 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753639Ab3K3Mxs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Nov 2013 07:53:48 -0500
+Message-ID: <1385816013.4327.1.camel@jlt4.sipsolutions.net> (sfid-20131130_135510_891881_F5B3230D)
+Subject: Re: [PATCH] net: mac80211: tx.c: be sure of 'sdata->vif.type' must
+ be NL80211_IFTYPE_AP when be in NL80211_IFTYPE_AP case
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Chen Gang <gang.chen.5i5j@gmail.com>
 Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org
-Date: Thu, 07 Nov 2013 16:25:00 -0600
-In-Reply-To: <20131107194641.GE12612@shaftnet.org>
-References: <20131107160522.GA12612@shaftnet.org>
-	 <527BC04F.2080000@lwfinger.net> <20131107163719.GC12612@shaftnet.org>
-	 <20131107175201.GA2002@tuxdriver.com> <20131107185714.GD12612@shaftnet.org>
-	 <20131107191122.GD2002@tuxdriver.com> <20131107194641.GE12612@shaftnet.org>
+	rkuo <rkuo@codeaurora.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	David Miller <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
+Date: Sat, 30 Nov 2013 13:53:33 +0100
+In-Reply-To: <5299D306.7070701@gmail.com> (sfid-20131130_125901_519610_EDA4068E)
+References: <528AEFB7.4060301@gmail.com>
+	  <20131125011938.GB18921@codeaurora.org> <5292B845.3010404@gmail.com>
+	  <5292B8A0.7020409@gmail.com> <5294255E.7040105@gmail.com>
+	  <52957ADA.2080704@gmail.com>
+	 (sfid-20131127_055211_558798_A7DF5684) <1385739487.8656.1.camel@jlt4.sipsolutions.net>
+	 <5299D306.7070701@gmail.com> (sfid-20131130_125901_519610_EDA4068E)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-11-07 at 14:46 -0500, Solomon Peachy wrote:
-> On Thu, Nov 07, 2013 at 02:11:23PM -0500, John W. Linville wrote:
-> > And all of which were nominated by someone (possibly me) to be shuffled
-> > out of the tree due to lack of users and unknown functional status...
+On Sat, 2013-11-30 at 19:59 +0800, Chen Gang wrote:
+> On 11/29/2013 11:38 PM, Johannes Berg wrote:
+> > 
+> >> +++ b/net/mac80211/tx.c
+> >> @@ -1814,8 +1814,9 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+> >>  			break;
+> >>  		/* fall through */
+> >>  	case NL80211_IFTYPE_AP:
+> >> -		if (sdata->vif.type == NL80211_IFTYPE_AP)
+> >> -			chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+> >> +		if (sdata->vif.type != NL80211_IFTYPE_AP)
+> >> +			goto fail_rcu;
+> >> +		chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+> > 
+> > This change is completely wrong.
+> > 
 > 
-> Heh, fair enough!
+> Oh, it is.
 > 
-> > I don't want to discourage anyone from working on something that
-> > scratches their itch, especially if you have working hardware and
-> > some users.  OTOH, I'd rather not add a long term support burden to
-> > the kernel if nobody is going to use it...?
+> Hmm... for me, this work flow still can be implemented with a little
+> clearer way (at least it will avoid related warning):
 > 
-> On an average month the linux-wlan-ng repository I still host gets 3-4K 
-> non-spider hits for the USB firmware files, so in this particular case 
-> there are still users out there.
+> -------------------------diff begin------------------------------
 > 
-> At this point it's a more modern driver than the ones already in the 
-> kernel, and I'm willing to maintain it if there's a point to doing so.
+> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> index c558b24..7076128 100644
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> @@ -1810,14 +1810,14 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+>  		if (!chanctx_conf)
+>  			goto fail_rcu;
+>  		band = chanctx_conf->def.chan->band;
+> -		if (sta)
+> -			break;
+> -		/* fall through */
+> +		if (!sta)
+> +			goto try_next;
+> +		break;
+>  	case NL80211_IFTYPE_AP:
+> -		if (sdata->vif.type == NL80211_IFTYPE_AP)
+> -			chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+> +		chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+>  		if (!chanctx_conf)
+>  			goto fail_rcu;
+> +try_next:
 
-What's the delta in device support between prism2_usb and the hostap
-driver's USB subdriver?  Is there any overlap?
+I don't think that's better than the (fairly obvious) fall-through, and
+has a pretty odd goto. Also, depending on the compiler, it still knows
+the previous case label and doesn't warn.
 
-Dan
+johannes
 
