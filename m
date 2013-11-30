@@ -1,33 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:43025 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932137Ab3KFKRP (ORCPT
+Received: from mail-we0-f178.google.com ([74.125.82.178]:43203 "EHLO
+	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751499Ab3K3R0N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Nov 2013 05:17:15 -0500
-Message-ID: <1383733032.14307.21.camel@jlt4.sipsolutions.net> (sfid-20131106_111740_691330_4E7C0753)
-Subject: Re: [PATCH 03/19] cfg80211: check regulatory request alpha2 early
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 06 Nov 2013 11:17:12 +0100
-In-Reply-To: <1383671897-7746-4-git-send-email-mcgrof@do-not-panic.com> (sfid-20131105_181718_685644_A51BF727)
-References: <1383671897-7746-1-git-send-email-mcgrof@do-not-panic.com>
-	 <1383671897-7746-4-git-send-email-mcgrof@do-not-panic.com>
-	 (sfid-20131105_181718_685644_A51BF727)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 30 Nov 2013 12:26:13 -0500
+Received: by mail-we0-f178.google.com with SMTP id u57so4639437wes.23
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Nov 2013 09:26:11 -0800 (PST)
+MIME-Version: 1.0
+Date: Sat, 30 Nov 2013 12:26:11 -0500
+Message-ID: <CAHdPZaN6GusQbpmNHt=4cHkUKsJTOrGuc0oBF7O8e0oL0neoPQ@mail.gmail.com> (sfid-20131130_182616_208496_23D7C894)
+Subject: unable to set iwlwifi master mode
+From: "devendra.aaru" <devendra.aaru@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-11-05 at 09:18 -0800, Luis R. Rodriguez wrote:
-> Currently nl80211 allows userspace to send the kernel
-> a bogus regulatory domain with at most 32 rules set
-> and it won't reject it until after its allocated
-> memory. Let's be smart about it and take advantage
-> that the last_request is now available under RCU
-                                               ^^^
+Hello,
 
-I think you mean RTNL?
+I was trying to use my intel wireless device as an AP. I used hostapd (1.1).
 
-johannes
+It seem to be that i couldn't able to get it working.
 
+My hostapd config:
+
+interface=wlp3s0
+driver=nl80211
+country_code=US
+ieee80211d=1
+ssid=testhostapd
+channel=1
+hw_mode=g
+auth_algs=1
+wpa=3
+wpa_passphrase=mypassword
+wpa_key_mgmt=WPA-PSK
+wpa_pairwise=TKIP CCMP
+rsn_pairwise=CCMP
+
+I have got the following output when i run hostapd -ddd hostapd.conf
+
+random: Trying to read entropy from /dev/random
+Configuration file: 1
+nl80211: interface wlp3s0 in phy phy0
+rfkill: initial event: idx=0 type=1 op=0 soft=0 hard=0
+nl80211: Using driver-based off-channel TX
+nl80211: Register frame command failed (type=208): ret=-114 (Operation
+already in progress)
+nl80211: Register frame match - hexdump(len=1): 06
+nl80211: Failed to register Action frame processing - ignore for now
+nl80211: Add own interface ifindex 3
+nl80211: Set mode ifindex 3 iftype 3 (AP)
+nl80211: Failed to set interface 3 to mode 3: -95 (Operation not supported)
+nl80211: Interface already in requested mode - ignore error
+nl80211: Create interface iftype 6 (MONITOR)
+nl80211: New interface mon.wlp3s0 created: ifindex=15
+nl80211: Add own interface ifindex 15
+BSS count 1, BSSID mask 00:00:00:00:00:00 (0 bits)
+nl80211: Regulatory information - country=US
+nl80211: 2402-2472 @ 40 MHz
+nl80211: 5170-5250 @ 40 MHz
+nl80211: 5250-5330 @ 40 MHz
+nl80211: 5490-5600 @ 40 MHz
+nl80211: 5650-5710 @ 40 MHz
+nl80211: 5735-5835 @ 40 MHz
+nl80211: 57240-63720 @ 2160 MHz
+nl80211: Added 802.11b mode based on 802.11g information
+Allowed channel: mode=1 chan=1 freq=2412 MHz max_tx_power=14 dBm
+Allowed channel: mode=1 chan=2 freq=2417 MHz max_tx_power=14 dBm
+Allowed channel: mode=1 chan=3 freq=2422 MHz max_tx_power=14 dBm
+Allowed channel: mode=1 chan=4 freq=2427 MHz max_tx_power=14 dBm
+Allowed channel: mode=1 chan=5 freq=2432 MHz max_tx_power=14 dBm
+Allowed channel: mode=1 chan=6 freq=2437 MHz max_tx_power=14 dBm
+Allowed channel: mode=1 chan=7 freq=2442 MHz max_tx_power=14 dBm
+Allowed channel: mode=1 chan=8 freq=2447 MHz max_tx_power=14 dBm
+Allowed channel: mode=1 chan=9 freq=2452 MHz max_tx_power=14 dBm
+Allowed channel: mode=1 chan=10 freq=2457 MHz max_tx_power=14 dBm
+Allowed channel: mode=1 chan=11 freq=2462 MHz max_tx_power=14 dBm
+Allowed channel: mode=0 chan=1 freq=2412 MHz max_tx_power=14 dBm
+Allowed channel: mode=0 chan=2 freq=2417 MHz max_tx_power=14 dBm
+Allowed channel: mode=0 chan=3 freq=2422 MHz max_tx_power=14 dBm
+Allowed channel: mode=0 chan=4 freq=2427 MHz max_tx_power=14 dBm
+Allowed channel: mode=0 chan=5 freq=2432 MHz max_tx_power=14 dBm
+Allowed channel: mode=0 chan=6 freq=2437 MHz max_tx_power=14 dBm
+Allowed channel: mode=0 chan=7 freq=2442 MHz max_tx_power=14 dBm
+Allowed channel: mode=0 chan=8 freq=2447 MHz max_tx_power=14 dBm
+Allowed channel: mode=0 chan=9 freq=2452 MHz max_tx_power=14 dBm
+Allowed channel: mode=0 chan=10 freq=2457 MHz max_tx_power=14 dBm
+Allowed channel: mode=0 chan=11 freq=2462 MHz max_tx_power=14 dBm
+Completing interface initialization
+Mode: IEEE 802.11g  Channel: 1  Frequency: 2412 MHz
+nl80211: Set freq 2412 (ht_enabled=0 sec_channel_offset=0)
+nl80211: Failed to set channel (freq=2412): -16 (Device or resource busy)
+Could not set channel for kernel driver
+wlp3s0: Unable to setup interface.
+Flushing old station entries
+Could not connect to kernel driver.
+Deauthenticate all stations
+nl80211: Remove interface ifindex=15
+netlink: Operstate: linkmode=0, operstate=6
+nl80211: Set mode ifindex 3 iftype 2 (STATION)
+
+-------------------------------------------x------------------------------------
+Seems that the setting of channel is failing
+
+and i tried with iwconfig wlp3s0 channel 6. It says
+
+Error for wireless request "Set Frequency" (8B04) :
+    SET failed on device wlp3s0 ; Device or resource busy.
+
+What could be the possible mistake?
+
+in case:
+
+lspci -v output:
+
+03:00.0 Network controller: Intel Corporation Centrino Wireless-N 1000
+[Condor Peak]
+Subsystem: Intel Corporation Centrino Wireless-N 1000 BGN
+Flags: bus master, fast devsel, latency 0, IRQ 45
+Memory at f2400000 (64-bit, non-prefetchable) [size=8K]
+Capabilities: [c8] Power Management version 3
+Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
+Capabilities: [e0] Express Endpoint, MSI 00
+Capabilities: [100] Advanced Error Reporting
+Capabilities: [140] Device Serial Number 00-26-c7-ff-ff-51-11-1a
+Kernel driver in use: iwlwifi
+
+Thanks
