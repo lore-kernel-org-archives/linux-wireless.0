@@ -1,56 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:37586 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754402Ab3KZVPD (ORCPT
+Received: from mail-pb0-f49.google.com ([209.85.160.49]:48886 "EHLO
+	mail-pb0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751327Ab3K3Nur (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Nov 2013 16:15:03 -0500
-Received: by mail-wi0-f174.google.com with SMTP id ey16so1130338wid.13
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Nov 2013 13:14:58 -0800 (PST)
+	Sat, 30 Nov 2013 08:50:47 -0500
+Message-ID: <5299ED38.4090509@gmail.com> (sfid-20131130_145112_041336_6C6321E0)
+Date: Sat, 30 Nov 2013 21:50:48 +0800
+From: Chen Gang <gang.chen.5i5j@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAEk6gTAXXNFbRTqVNGZWnVBpNSW=HKz3qztdZ1t1vMZLe530Hg@mail.gmail.com>
-References: <CAKnB8xgAVp+Ti597RN4_kgPLgXpW1JCr4SQaqfqCzy5A4=o3Ow@mail.gmail.com>
- <CAKnB8xh6tWFdiL4kBQ5r3J_YgiiwhHhvQEqC+9F7c=3eAsrYbg@mail.gmail.com>
- <5294E46C.40102@erley.org> <1385490243.7838.16.camel@dcbw.foobar.com> <CAEk6gTAXXNFbRTqVNGZWnVBpNSW=HKz3qztdZ1t1vMZLe530Hg@mail.gmail.com>
-From: matt emery <matt@x204.com>
-Date: Tue, 26 Nov 2013 21:14:28 +0000
-Message-ID: <CAKnB8xiEoAch9dpm5hRzW76PO8tt3cKFxB2jUvdCNrJaf5tWrg@mail.gmail.com> (sfid-20131126_221525_864871_9F555E9A)
-Subject: Re: Fwd: Intel 7260
-To: Drasko DRASKOVIC <drasko.draskovic@gmail.com>
-Cc: Dan Williams <dcbw@redhat.com>, Pat Erley <pat-lkml@erley.org>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	rkuo <rkuo@codeaurora.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	David Miller <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
+Subject: Re: [PATCH] net: mac80211: tx.c: be sure of 'sdata->vif.type' must
+ be NL80211_IFTYPE_AP when be in NL80211_IFTYPE_AP case
+References: <528AEFB7.4060301@gmail.com>   <20131125011938.GB18921@codeaurora.org> <5292B845.3010404@gmail.com>   <5292B8A0.7020409@gmail.com> <5294255E.7040105@gmail.com>   <52957ADA.2080704@gmail.com>  (sfid-20131127_055211_558798_A7DF5684) <1385739487.8656.1.camel@jlt4.sipsolutions.net>  <5299D306.7070701@gmail.com> (sfid-20131130_125901_519610_EDA4068E) <1385816013.4327.1.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1385816013.4327.1.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-I'm using WPA2/AES and i have other devices connected to the AP using
-N, I can't go open as i am resident on a school campus.
-
-Can you tell me if it is possible to get N with this card on linux, or
-should i wait for a newer firmware or something?
-
-thanks
-
-Matt
-Matthew Emery
-07988 197 438
-
-
-
-On 26 November 2013 20:46, Drasko DRASKOVIC <drasko.draskovic@gmail.com> wrote:
-> On Tue, Nov 26, 2013 at 7:24 PM, Dan Williams <dcbw@redhat.com> wrote:
->>> While I'm not certain about your AP or the 7260 driver, I believe
->>> 802.11n technically requires WPA2 encryption.  Try turning that on and
->>> testing again.
+On 11/30/2013 08:53 PM, Johannes Berg wrote:
+> On Sat, 2013-11-30 at 19:59 +0800, Chen Gang wrote:
+>> On 11/29/2013 11:38 PM, Johannes Berg wrote:
+>>>
+>>>> +++ b/net/mac80211/tx.c
+>>>> @@ -1814,8 +1814,9 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+>>>>  			break;
+>>>>  		/* fall through */
+>>>>  	case NL80211_IFTYPE_AP:
+>>>> -		if (sdata->vif.type == NL80211_IFTYPE_AP)
+>>>> -			chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+>>>> +		if (sdata->vif.type != NL80211_IFTYPE_AP)
+>>>> +			goto fail_rcu;
+>>>> +		chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+>>>
+>>> This change is completely wrong.
+>>>
 >>
->> This is true, but...
->
-> 802.11n HT prevents WPA:
-> http://www.slideshare.net/HPenterprise/demystifying-80211n-and-wpawpa2,slide
-> 4
->
-> I do not see however that using no encryption is prevented by the standard...
->
-> BR,
-> Drasko
+>> Oh, it is.
+>>
+>> Hmm... for me, this work flow still can be implemented with a little
+>> clearer way (at least it will avoid related warning):
+>>
+>> -------------------------diff begin------------------------------
+>>
+>> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+>> index c558b24..7076128 100644
+>> --- a/net/mac80211/tx.c
+>> +++ b/net/mac80211/tx.c
+>> @@ -1810,14 +1810,14 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+>>  		if (!chanctx_conf)
+>>  			goto fail_rcu;
+>>  		band = chanctx_conf->def.chan->band;
+>> -		if (sta)
+>> -			break;
+>> -		/* fall through */
+>> +		if (!sta)
+>> +			goto try_next;
+>> +		break;
+>>  	case NL80211_IFTYPE_AP:
+>> -		if (sdata->vif.type == NL80211_IFTYPE_AP)
+>> -			chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+>> +		chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+>>  		if (!chanctx_conf)
+>>  			goto fail_rcu;
+>> +try_next:
+> 
+> I don't think that's better than the (fairly obvious) fall-through, and
+> has a pretty odd goto. Also, depending on the compiler, it still knows
+> the previous case label and doesn't warn.
+> 
+
+Yeah, fall-through is obvious. But check 'A' again just near by "case A"
+seems a little strange, and some of compilers (or some of versions) are
+really not quit smart enough to know it is not a warning.
+
+Hmm... for me, if the code (implementation) can express real logical
+work flow as much as directly and simply, the code (implementation) is
+clear enough (don't mind whether use 'goto' or not).
+
+
+And originally, at first, I am really not quite careful enough, and sent
+an incorrect patch after noticed the related compiler's warning. :-)
+
+
+Thanks.
+-- 
+Chen Gang
