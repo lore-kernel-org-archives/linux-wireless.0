@@ -1,119 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:41032 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752844Ab3KOJfJ (ORCPT
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:60408 "EHLO
+	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751540Ab3K3NmO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Nov 2013 04:35:09 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
+	Sat, 30 Nov 2013 08:42:14 -0500
+Message-Id: <1385818933.2275.53803445.141AB4C1@webmail.messagingengine.com> (sfid-20131130_144219_831206_4D36ADFA)
+From: "Nikita N." <nikitan@operamail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>, backports@vger.kernel.org
 Cc: linux-wireless@vger.kernel.org
-Subject: [RFC 4/5] ath9k: Fix Carrier Leak calibration for SoC chips
-Date: Fri, 15 Nov 2013 15:00:26 +0530
-Message-Id: <1384507827-16026-5-git-send-email-sujith@msujith.org> (sfid-20131115_103523_468267_CEFF2E07)
-In-Reply-To: <1384507827-16026-1-git-send-email-sujith@msujith.org>
-References: <1384507827-16026-1-git-send-email-sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain
+In-Reply-To: <5299E184.1020302@hauke-m.de>
+References: <1385815530.23776.53787977.56B183FC@webmail.messagingengine.com>
+ <5299E184.1020302@hauke-m.de>
+Subject: Re: 3.13 various backports bugs
+Date: Sat, 30 Nov 2013 05:42:13 -0800
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+follow answers
 
-CL calibration is applicable for all chips and the
-enable/disable knob comes via the INI file. For PCOEM
-chips, the calibration data is reused when Fast Channel Change
-is used. Caldata reuse is not enabled for SoC chips, so remove
-the CL post processing code.
+On Sat, Nov 30, 2013, at 05:00 AM, Hauke Mehrtens wrote:
+> On 11/30/2013 01:45 PM, Nikita N. wrote:
+> > Hi dear maintainers of backports :) I have few bugs to report, Ill try
+> > to be as fast as I can.
+> > 
+> > - Bug #1:
+> > Im running on standard Slitaz4, kernel 2.6.37-slitaz, updating modules,
+> > the following script:
+> > ./backports-3.13-rc1-1/scripts/compress_modules.sh
+> > the "if" is not able to detect the present compression, as result the
+> > new modules are not compressed, and get mixed with the old ones
+> > compressed, resulting in lots of errors.
+> > My actual workaround is just to delete the "if" line.
+> > The issue is present systematically in all backports releases, since the
+> > switch from compat-drivers.
+> > The compress_modules script into 3.9 is instead working good.
+> 
+> What distribution are you using? I want to reproduce the issue.
+>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_calib.c | 27 ++-------------------------
- drivers/net/wireless/ath/ath9k/ar9003_phy.c   |  9 +++++----
- 2 files changed, 7 insertions(+), 29 deletions(-)
+sure thing! you can get Slitaz4 here:
+http://mirror.slitaz.org/iso/4.0/slitaz-4.0.iso
+ 
+> > - Bug #2:
+> > eeprom modules are missing into 3.13.
+> > This issue is present systematically in all backports releases, since
+> > the switch from compat-drivers.
+> > It could be a wireless bug only, or a backports bug only, or both.
+> > Anyway, eeprom module is vital for correct interface detection.
+> > Into 3.9 the eeprom modules are located in
+> > ./compat-drivers-3.9-rc4-2-su/drivers/misc/eeprom/
+> 
+> This should be included in your kernel you are compiling against
+> otherwise you wouldn't be able to build rtl8187.
+> 
+> There was a bug in backports regarding EEPROM_93CX6, could you please
+> try backports-20131122-2 and report back if the problem is still there.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index 347b002..58eacf1 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -1236,20 +1236,13 @@ static bool ar9003_hw_init_cal_soc(struct ath_hw *ah,
- 	bool txiqcal_done = false;
- 	bool is_reusable = true, status = true;
- 	bool run_agc_cal = false, sep_iq_cal = false;
--	u32 rx_delay = 0;
- 
- 	/* Use chip chainmask only for calibration */
- 	ar9003_hw_set_chain_masks(ah, ah->caps.rx_chainmask, ah->caps.tx_chainmask);
- 
- 	if (ah->enabled_cals & TX_CL_CAL) {
--		if (caldata && test_bit(TXCLCAL_DONE, &caldata->cal_flags))
--			REG_CLR_BIT(ah, AR_PHY_CL_CAL_CTL,
--				    AR_PHY_CL_CAL_ENABLE);
--		else {
--			REG_SET_BIT(ah, AR_PHY_CL_CAL_CTL,
--				    AR_PHY_CL_CAL_ENABLE);
--			run_agc_cal = true;
--		}
-+		REG_SET_BIT(ah, AR_PHY_CL_CAL_CTL, AR_PHY_CL_CAL_ENABLE);
-+		run_agc_cal = true;
- 	}
- 
- 	if (IS_CHAN_HALF_RATE(chan) || IS_CHAN_QUARTER_RATE(chan))
-@@ -1285,15 +1278,6 @@ skip_tx_iqcal:
- 		REG_WRITE(ah, AR_PHY_ACTIVE, AR_PHY_ACTIVE_EN);
- 	}
- 
--	if (REG_READ(ah, AR_PHY_CL_CAL_CTL) & AR_PHY_CL_CAL_ENABLE) {
--		rx_delay = REG_READ(ah, AR_PHY_RX_DELAY);
--		/* Disable BB_active */
--		REG_WRITE(ah, AR_PHY_ACTIVE, AR_PHY_ACTIVE_DIS);
--		udelay(5);
--		REG_WRITE(ah, AR_PHY_RX_DELAY, AR_PHY_RX_DELAY_DELAY);
--		REG_WRITE(ah, AR_PHY_ACTIVE, AR_PHY_ACTIVE_EN);
--	}
--
- 	if (run_agc_cal || !(ah->ah_flags & AH_FASTCC)) {
- 		/* Calibrate the AGC */
- 		REG_WRITE(ah, AR_PHY_AGC_CONTROL,
-@@ -1306,11 +1290,6 @@ skip_tx_iqcal:
- 				       0, AH_WAIT_TIMEOUT);
- 	}
- 
--	if (REG_READ(ah, AR_PHY_CL_CAL_CTL) & AR_PHY_CL_CAL_ENABLE) {
--		REG_WRITE(ah, AR_PHY_RX_DELAY, rx_delay);
--		udelay(5);
--	}
--
- 	if (!status) {
- 		ath_dbg(common, CALIBRATE,
- 			"offset calibration failed to complete in %d ms; noisy environment?\n",
-@@ -1323,8 +1302,6 @@ skip_tx_iqcal:
- 	else if (caldata && test_bit(TXIQCAL_DONE, &caldata->cal_flags))
- 		ar9003_hw_tx_iq_cal_reload(ah);
- 
--	ar9003_hw_cl_cal_post_proc(ah, is_reusable);
--
- 	/* Revert chainmask to runtime parameters */
- 	ar9003_hw_set_chain_masks(ah, ah->rxchainmask, ah->txchainmask);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index d39b79f..39b71b3 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -641,11 +641,12 @@ static void ar9003_hw_override_ini(struct ath_hw *ah)
- 		else
- 			ah->enabled_cals &= ~TX_IQ_CAL;
- 
--		if (REG_READ(ah, AR_PHY_CL_CAL_CTL) & AR_PHY_CL_CAL_ENABLE)
--			ah->enabled_cals |= TX_CL_CAL;
--		else
--			ah->enabled_cals &= ~TX_CL_CAL;
- 	}
-+
-+	if (REG_READ(ah, AR_PHY_CL_CAL_CTL) & AR_PHY_CL_CAL_ENABLE)
-+		ah->enabled_cals |= TX_CL_CAL;
-+	else
-+		ah->enabled_cals &= ~TX_CL_CAL;
- }
- 
- static void ar9003_hw_prog_ini(struct ath_hw *ah,
+We are already discussing that with Larry on wireless mailist, Ill
+forward the mails here FYI. 
+
+> 
+> > - Bug #3:
+> > New dependance has been added, CRYPTO_CCM, which denies all modules
+> > compilation based on MAC80211.
+> > The dependance is set in ./backports-3.13-rc1-1/net/mac80211/Kconfig
+> > On Slitaz4, such kernel config is not set, hence its needed to edit
+> > manually the kernel .config in order to enable it.
+> > After enabling, modules compilation goes all right.
+> > Hence, or CRYPTO_CCM is useless, or its needed to show a warning to the
+> > user at Kconfig runtime, in order to take the necessary measures.
+> > It took forever (even for me!) to find that bug, which btw was denying
+> > the compilation of my Realtek modules.
+> 
+> Yes that dependency was added to mac80211 in the mainline kernel some
+> weeks ago. After you activated CRYPTO_CCM in your kernel config you have
+> to recompile your kernel otherwise you will get problems at least when
+> you use WPA2.
+
+..damn.. I dont know how many Slitaz4 users will be happy about that..
+:(
+
+> 
+> > - Bug #4:
+> > Repeated back-slashes "//" are present into script-makefile files, you
+> > can see them appear for example running "make alldefconfig & make
+> > install":
+> > [...]
+> > COMPRESS /lib/modules/2.6.37-slitaz//updates/compat/compat.ko
+> > gzip: can't open
+> > '/lib/modules/2.6.37-slitaz//updates/compat/compat.ko.gz': File exists
+> > [...]
+> 
+> Probably a different error is causing this problem, Linux is fine with
+> repeated back-slahes, it just does not look nice.
+
+agree, forgot adding "cosmetic" as below
+
+> 
+> > - Bug #5:
+> > Cosmetic bug, in file ./backports-3.13-rc1-1/Makefile, the following
+> > line is duplicated:
+> > @echo "  allyesconfig    - New config where all options are accepted
+> > with yes"
+
 -- 
-1.8.4.2
+http://www.fastmail.fm - One of many happy users:
+  http://www.fastmail.fm/help/overview_quotes.html
 
