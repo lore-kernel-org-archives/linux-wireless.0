@@ -1,261 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f173.google.com ([209.85.192.173]:62293 "EHLO
-	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753048Ab3KBNsN (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:60204 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751366Ab3K3UJG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Nov 2013 09:48:13 -0400
-From: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
-To: davem@davemloft.net, gregkh@linuxfoundation.org,
-	linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
-	schwidefsky@de.ibm.com, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	IvDoorn@gmail.com, sbhatewara@vmware.com, samuel@sortiz.org,
-	chas@cmf.nrl.navy.mil, roland@kernel.org, isdn@linux-pingi.de,
-	jcliburn@gmail.com, benve@cisco.com, ssujith@cisco.com,
-	jeffrey.t.kirsher@intel.com, jesse.brandeburg@intel.com,
-	shahed.shaikh@qlogic.com, joe@perches.com, apw@canonical.com
-Cc: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
-Subject: [PATCH net-next 02/13] driver: net: remove unnecessary skb NULL check before calling dev_kfree_skb_irq
-Date: Sat,  2 Nov 2013 19:17:43 +0530
-Message-Id: <1383400074-30555-3-git-send-email-govindarajulu90@gmail.com> (sfid-20131102_145300_745519_2472B80A)
-In-Reply-To: <1383400074-30555-1-git-send-email-govindarajulu90@gmail.com>
-References: <1383400074-30555-1-git-send-email-govindarajulu90@gmail.com>
+	Sat, 30 Nov 2013 15:09:06 -0500
+Message-ID: <1385842134.6108.4.camel@jlt4.sipsolutions.net> (sfid-20131130_210916_109329_B1EF047B)
+Subject: Re: [PATCH] net: mac80211: tx.c: be sure of 'sdata->vif.type' must
+ be NL80211_IFTYPE_AP when be in NL80211_IFTYPE_AP case
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Chen Gang <gang.chen.5i5j@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	rkuo <rkuo@codeaurora.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	David Miller <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
+Date: Sat, 30 Nov 2013 21:08:54 +0100
+In-Reply-To: <5299EFDD.6060405@gmail.com> (sfid-20131130_150205_984535_068F14A9)
+References: <528AEFB7.4060301@gmail.com>
+	   <20131125011938.GB18921@codeaurora.org> <5292B845.3010404@gmail.com>
+	   <5292B8A0.7020409@gmail.com> <5294255E.7040105@gmail.com>
+	   <52957ADA.2080704@gmail.com>
+	  (sfid-20131127_055211_558798_A7DF5684) <1385739487.8656.1.camel@jlt4.sipsolutions.net>
+	  <5299D306.7070701@gmail.com>
+	 (sfid-20131130_125901_519610_EDA4068E) <1385816013.4327.1.camel@jlt4.sipsolutions.net>
+	 <5299ED38.4090509@gmail.com> <5299EFDD.6060405@gmail.com>
+	 (sfid-20131130_150205_984535_068F14A9)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-dev_kfree_skb_irq is protected from NULL. No need to check for NULL
-while calling this function.
+On Sat, 2013-11-30 at 22:02 +0800, Chen Gang wrote:
 
-Signed-off-by: Govindarajulu Varadarajan <govindarajulu90@gmail.com>
----
- drivers/net/ethernet/amd/ni65.c                   |  6 ++----
- drivers/net/ethernet/atheros/atl1c/atl1c_main.c   | 10 ++++------
- drivers/net/ethernet/atheros/atl1e/atl1e_main.c   |  6 ++----
- drivers/net/ethernet/atheros/atlx/atl1.c          |  6 ++----
- drivers/net/ethernet/icplus/ipg.c                 |  6 ++----
- drivers/net/ethernet/intel/e1000e/netdev.c        |  3 +--
- drivers/net/ethernet/marvell/pxa168_eth.c         |  3 +--
- drivers/net/ethernet/xilinx/ll_temac_main.c       |  3 +--
- drivers/net/ethernet/xilinx/xilinx_axienet_main.c |  6 ++----
- drivers/net/hamradio/scc.c                        | 10 +++-------
- drivers/net/vmxnet3/vmxnet3_drv.c                 |  3 +--
- drivers/net/wireless/ath/ar5523/ar5523.c          |  6 ++----
- 12 files changed, 23 insertions(+), 45 deletions(-)
+> >>>  	case NL80211_IFTYPE_AP:
+> >>> -		if (sdata->vif.type == NL80211_IFTYPE_AP)
+> >>> -			chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+> >>> +		chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+> >>>  		if (!chanctx_conf)
+> >>>  			goto fail_rcu;
+> >>> +try_next:
+> >>
+> >> I don't think that's better than the (fairly obvious) fall-through, and
+> >> has a pretty odd goto. Also, depending on the compiler, it still knows
+> >> the previous case label and doesn't warn.
+> >>
+> > 
+> > Yeah, fall-through is obvious. But check 'A' again just near by "case A"
+> > seems a little strange, and some of compilers (or some of versions) are
+> > really not quit smart enough to know it is not a warning.
+> > 
+> 
+> Sorry, the paragraph above may lead misunderstanding, I repeated again:
+> 
+>  - fall-through is obvious (although I did not notice it, originally).
+> 
+>  - Check 'A' again just near by "case A" seems a little strange.
+> 
+>  - Some compilers aren't quit smart enough to know 'chanctx_conf' is OK.
 
-diff --git a/drivers/net/ethernet/amd/ni65.c b/drivers/net/ethernet/amd/ni65.c
-index 1cf33ad..0695ce2 100644
---- a/drivers/net/ethernet/amd/ni65.c
-+++ b/drivers/net/ethernet/amd/ni65.c
-@@ -1030,10 +1030,8 @@ static void ni65_xmit_intr(struct net_device *dev,int csr0)
- 		}
- 
- #ifdef XMT_VIA_SKB
--		if(p->tmd_skb[p->tmdlast]) {
--			 dev_kfree_skb_irq(p->tmd_skb[p->tmdlast]);
--			 p->tmd_skb[p->tmdlast] = NULL;
--		}
-+		 dev_kfree_skb_irq(p->tmd_skb[p->tmdlast]);
-+		 p->tmd_skb[p->tmdlast] = NULL;
- #endif
- 
- 		p->tmdlast = (p->tmdlast + 1) & (TMDNUM-1);
-diff --git a/drivers/net/ethernet/atheros/atl1c/atl1c_main.c b/drivers/net/ethernet/atheros/atl1c/atl1c_main.c
-index a36a760..cf89008 100644
---- a/drivers/net/ethernet/atheros/atl1c/atl1c_main.c
-+++ b/drivers/net/ethernet/atheros/atl1c/atl1c_main.c
-@@ -848,12 +848,10 @@ static inline void atl1c_clean_buffer(struct pci_dev *pdev,
- 			pci_unmap_page(pdev, buffer_info->dma,
- 					buffer_info->length, pci_driection);
- 	}
--	if (buffer_info->skb) {
--		if (in_irq)
--			dev_kfree_skb_irq(buffer_info->skb);
--		else
--			dev_kfree_skb(buffer_info->skb);
--	}
-+	if (in_irq)
-+		dev_kfree_skb_irq(buffer_info->skb);
-+	else
-+		dev_kfree_skb(buffer_info->skb);
- 	buffer_info->dma = 0;
- 	buffer_info->skb = NULL;
- 	ATL1C_SET_BUFFER_STATE(buffer_info, ATL1C_BUFFER_FREE);
-diff --git a/drivers/net/ethernet/atheros/atl1e/atl1e_main.c b/drivers/net/ethernet/atheros/atl1e/atl1e_main.c
-index 7a73f3a..c3ca8c6 100644
---- a/drivers/net/ethernet/atheros/atl1e/atl1e_main.c
-+++ b/drivers/net/ethernet/atheros/atl1e/atl1e_main.c
-@@ -1257,10 +1257,8 @@ static bool atl1e_clean_tx_irq(struct atl1e_adapter *adapter)
- 			tx_buffer->dma = 0;
- 		}
- 
--		if (tx_buffer->skb) {
--			dev_kfree_skb_irq(tx_buffer->skb);
--			tx_buffer->skb = NULL;
--		}
-+		dev_kfree_skb_irq(tx_buffer->skb);
-+		tx_buffer->skb = NULL;
- 
- 		if (++next_to_clean == tx_ring->count)
- 			next_to_clean = 0;
-diff --git a/drivers/net/ethernet/atheros/atlx/atl1.c b/drivers/net/ethernet/atheros/atlx/atl1.c
-index 538211d..b8cc654 100644
---- a/drivers/net/ethernet/atheros/atlx/atl1.c
-+++ b/drivers/net/ethernet/atheros/atlx/atl1.c
-@@ -2082,10 +2082,8 @@ static int atl1_intr_tx(struct atl1_adapter *adapter)
- 			buffer_info->dma = 0;
- 		}
- 
--		if (buffer_info->skb) {
--			dev_kfree_skb_irq(buffer_info->skb);
--			buffer_info->skb = NULL;
--		}
-+		dev_kfree_skb_irq(buffer_info->skb);
-+		buffer_info->skb = NULL;
- 
- 		if (++sw_tpd_next_to_clean == tpd_ring->count)
- 			sw_tpd_next_to_clean = 0;
-diff --git a/drivers/net/ethernet/icplus/ipg.c b/drivers/net/ethernet/icplus/ipg.c
-index 25045ae..d3a5e1f 100644
---- a/drivers/net/ethernet/icplus/ipg.c
-+++ b/drivers/net/ethernet/icplus/ipg.c
-@@ -823,10 +823,8 @@ static void init_tfdlist(struct net_device *dev)
- 
- 		txfd->tfc = cpu_to_le64(IPG_TFC_TFDDONE);
- 
--		if (sp->tx_buff[i]) {
--			dev_kfree_skb_irq(sp->tx_buff[i]);
--			sp->tx_buff[i] = NULL;
--		}
-+		dev_kfree_skb_irq(sp->tx_buff[i]);
-+		sp->tx_buff[i] = NULL;
- 
- 		txfd->next_desc = cpu_to_le64(sp->txd_map +
- 			sizeof(struct ipg_tx)*(i + 1));
-diff --git a/drivers/net/ethernet/intel/e1000e/netdev.c b/drivers/net/ethernet/intel/e1000e/netdev.c
-index 4ef7867..4c22a1a 100644
---- a/drivers/net/ethernet/intel/e1000e/netdev.c
-+++ b/drivers/net/ethernet/intel/e1000e/netdev.c
-@@ -1526,8 +1526,7 @@ static bool e1000_clean_jumbo_rx_irq(struct e1000_ring *rx_ring, int *work_done,
- 			/* recycle both page and skb */
- 			buffer_info->skb = skb;
- 			/* an error means any chain goes out the window too */
--			if (rx_ring->rx_skb_top)
--				dev_kfree_skb_irq(rx_ring->rx_skb_top);
-+			dev_kfree_skb_irq(rx_ring->rx_skb_top);
- 			rx_ring->rx_skb_top = NULL;
- 			goto next_desc;
- 		}
-diff --git a/drivers/net/ethernet/marvell/pxa168_eth.c b/drivers/net/ethernet/marvell/pxa168_eth.c
-index fff6246..7443b11 100644
---- a/drivers/net/ethernet/marvell/pxa168_eth.c
-+++ b/drivers/net/ethernet/marvell/pxa168_eth.c
-@@ -749,8 +749,7 @@ static int txq_reclaim(struct net_device *dev, int force)
- 			dev->stats.tx_errors++;
- 		}
- 		dma_unmap_single(NULL, addr, count, DMA_TO_DEVICE);
--		if (skb)
--			dev_kfree_skb_irq(skb);
-+		dev_kfree_skb_irq(skb);
- 		released++;
- 	}
- txq_reclaim_end:
-diff --git a/drivers/net/ethernet/xilinx/ll_temac_main.c b/drivers/net/ethernet/xilinx/ll_temac_main.c
-index 0029148..3d21741 100644
---- a/drivers/net/ethernet/xilinx/ll_temac_main.c
-+++ b/drivers/net/ethernet/xilinx/ll_temac_main.c
-@@ -629,8 +629,7 @@ static void temac_start_xmit_done(struct net_device *ndev)
- 	while (stat & STS_CTRL_APP0_CMPLT) {
- 		dma_unmap_single(ndev->dev.parent, cur_p->phys, cur_p->len,
- 				 DMA_TO_DEVICE);
--		if (cur_p->app4)
--			dev_kfree_skb_irq((struct sk_buff *)cur_p->app4);
-+		dev_kfree_skb_irq((struct sk_buff *)cur_p->app4);
- 		cur_p->app0 = 0;
- 		cur_p->app1 = 0;
- 		cur_p->app2 = 0;
-diff --git a/drivers/net/ethernet/xilinx/xilinx_axienet_main.c b/drivers/net/ethernet/xilinx/xilinx_axienet_main.c
-index b2ff038..f3bcabb 100644
---- a/drivers/net/ethernet/xilinx/xilinx_axienet_main.c
-+++ b/drivers/net/ethernet/xilinx/xilinx_axienet_main.c
-@@ -589,8 +589,7 @@ static void axienet_start_xmit_done(struct net_device *ndev)
- 		dma_unmap_single(ndev->dev.parent, cur_p->phys,
- 				(cur_p->cntrl & XAXIDMA_BD_CTRL_LENGTH_MASK),
- 				DMA_TO_DEVICE);
--		if (cur_p->app4)
--			dev_kfree_skb_irq((struct sk_buff *)cur_p->app4);
-+		dev_kfree_skb_irq((struct sk_buff *)cur_p->app4);
- 		/*cur_p->phys = 0;*/
- 		cur_p->app0 = 0;
- 		cur_p->app1 = 0;
-@@ -1367,8 +1366,7 @@ static void axienet_dma_err_handler(unsigned long data)
- 					 (cur_p->cntrl &
- 					  XAXIDMA_BD_CTRL_LENGTH_MASK),
- 					 DMA_TO_DEVICE);
--		if (cur_p->app4)
--			dev_kfree_skb_irq((struct sk_buff *) cur_p->app4);
-+		dev_kfree_skb_irq((struct sk_buff *) cur_p->app4);
- 		cur_p->phys = 0;
- 		cur_p->cntrl = 0;
- 		cur_p->status = 0;
-diff --git a/drivers/net/hamradio/scc.c b/drivers/net/hamradio/scc.c
-index 4bc6ee8..0abd1e3 100644
---- a/drivers/net/hamradio/scc.c
-+++ b/drivers/net/hamradio/scc.c
-@@ -496,11 +496,8 @@ static inline void scc_exint(struct scc_channel *scc)
- 		scc->stat.tx_under++;	  /* oops, an underrun! count 'em */
- 		Outb(scc->ctrl, RES_EXT_INT);	/* reset ext/status interrupts */
- 
--		if (scc->tx_buff != NULL)
--		{
--			dev_kfree_skb_irq(scc->tx_buff);
--			scc->tx_buff = NULL;
--		}
-+		dev_kfree_skb_irq(scc->tx_buff);
-+		scc->tx_buff = NULL;
- 		
- 		or(scc,R10,ABUNDER);
- 		scc_start_tx_timer(scc, t_txdelay, 0);	/* restart transmission */
-@@ -577,8 +574,7 @@ static inline void scc_spint(struct scc_channel *scc)
- 		scc->stat.rx_over++;             /* count them */
- 		or(scc,R3,ENT_HM);               /* enter hunt mode for next flag */
- 		
--		if (skb != NULL) 
--			dev_kfree_skb_irq(skb);
-+		dev_kfree_skb_irq(skb);
- 		scc->rx_buff = skb = NULL;
- 	}
- 
-diff --git a/drivers/net/vmxnet3/vmxnet3_drv.c b/drivers/net/vmxnet3/vmxnet3_drv.c
-index 7e2788c..64ca248 100644
---- a/drivers/net/vmxnet3/vmxnet3_drv.c
-+++ b/drivers/net/vmxnet3/vmxnet3_drv.c
-@@ -1142,8 +1142,7 @@ vmxnet3_rx_error(struct vmxnet3_rx_queue *rq, struct Vmxnet3_RxCompDesc *rcd,
- 	 * ctx->skb may be NULL if this is the first and the only one
- 	 * desc for the pkt
- 	 */
--	if (ctx->skb)
--		dev_kfree_skb_irq(ctx->skb);
-+	dev_kfree_skb_irq(ctx->skb);
- 
- 	ctx->skb = NULL;
- }
-diff --git a/drivers/net/wireless/ath/ar5523/ar5523.c b/drivers/net/wireless/ath/ar5523/ar5523.c
-index 280fc3d..cb0dd61 100644
---- a/drivers/net/wireless/ath/ar5523/ar5523.c
-+++ b/drivers/net/wireless/ath/ar5523/ar5523.c
-@@ -601,10 +601,8 @@ static void ar5523_data_rx_cb(struct urb *urb)
- 	data->skb = NULL;
- 
- skip:
--	if (data->skb) {
--		dev_kfree_skb_irq(data->skb);
--		data->skb = NULL;
--	}
-+	dev_kfree_skb_irq(data->skb);
-+	data->skb = NULL;
- 
- 	ar5523_rx_data_put(ar, data);
- 	if (atomic_inc_return(&ar->rx_data_free_cnt) >=
--- 
-1.8.4.2
+I know. If you have any good ideas of how to make it more obvious to the
+compiler, I'm all ears, I just don't like any of the solutions offered
+so far (and you aren't the first to do so either) :-)
+
+FWIW, I find the label to be odd because if you're familiar with the
+code then AP/AP_VLAN *should* be identical except for two special things
+that are now linearly & neatly handled in the code (the first being the
+4-addr station, the second the chanctx assignment which always has to be
+done regardless of 4-addr). IMHO the == check after case should be
+enough to make a human reader take a closer look. I understand that you
+didn't and that's OK since you were just trying to squelch compile
+warnings, but I don't see that this one warrants much attention.
+
+johannes
 
