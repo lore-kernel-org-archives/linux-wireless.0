@@ -1,52 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f43.google.com ([209.85.214.43]:36728 "EHLO
-	mail-bk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751563Ab3KRRG4 (ORCPT
+Received: from mail-ea0-f174.google.com ([209.85.215.174]:58301 "EHLO
+	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750739Ab3K3SU0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Nov 2013 12:06:56 -0500
-Received: by mail-bk0-f43.google.com with SMTP id mz12so503589bkb.30
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Nov 2013 09:06:55 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>
-Subject: [PATCH RESEND 2/5] mac80211: fix connection polling
-Date: Mon, 18 Nov 2013 19:06:46 +0200
-Message-Id: <1384794409-11211-2-git-send-email-egrumbach@gmail.com> (sfid-20131118_180707_931889_1F7211C1)
-In-Reply-To: <1384794409-11211-1-git-send-email-egrumbach@gmail.com>
-References: <1384794166-10906-1-git-send-email-egrumbach@gmail.com>
- <1384794409-11211-1-git-send-email-egrumbach@gmail.com>
+	Sat, 30 Nov 2013 13:20:26 -0500
+Received: by mail-ea0-f174.google.com with SMTP id b10so7587798eae.5
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Nov 2013 10:20:23 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: "devendra.aaru" <devendra.aaru@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: unable to set iwlwifi master mode
+Date: Sat, 30 Nov 2013 19:20:21 +0100
+Message-ID: <1980481.3p2Oa8Hyrn@debian64> (sfid-20131130_192030_009267_E4E5D171)
+In-Reply-To: <CAHdPZaN6GusQbpmNHt=4cHkUKsJTOrGuc0oBF7O8e0oL0neoPQ@mail.gmail.com>
+References: <CAHdPZaN6GusQbpmNHt=4cHkUKsJTOrGuc0oBF7O8e0oL0neoPQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+Hi,
 
-Commit 392b9ff ("mac80211: change beacon/connection polling")
-removed the IEEE80211_STA_BEACON_POLL flag.
+On Saturday 30 November 2013 12:26:11 devendra.aaru wrote:
+> I was trying to use my intel wireless device as an AP. 
+> 
+> It seem to be that i couldn't able to get it working.
+> 
+> in case:
+> 
+> 03:00.0 Network controller: Intel Corporation Centrino Wireless-N 1000
 
-However, it accidentally removed the setting of
-IEEE80211_STA_CONNECTION_POLL, making the connection polling
-completely useless (the flag is always clear, so the result
-is never being checked). Fix it.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/mlme.c |    2 ++
- 1 file changed, 2 insertions(+)
+> What could be the possible mistake?
+Well, The latest version I found for the IWL 1000 was/is v39.31.5.1 Build
+35138. It looks like this version doesn't "support" AP or P2P mode... and
+it looks like it won't be coming.
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index d7504ab..b3a3ce3 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1910,6 +1910,8 @@ static void ieee80211_mgd_probe_ap(struct ieee80211_sub_if_data *sdata,
- 	if (ifmgd->flags & IEEE80211_STA_CONNECTION_POLL)
- 		already = true;
- 
-+	ifmgd->flags |= IEEE80211_STA_CONNECTION_POLL;
-+
- 	mutex_unlock(&sdata->local->mtx);
- 
- 	if (already)
--- 
-1.7.9.5
+You probably want to look for a replacement card. However, if you are using
+a laptop, this might be difficult. Some vendor bios' have a wifi whitelist
+and you have to ask your laptop vendor for the list first or "get creative".
 
+Regards,
+
+Christian
