@@ -1,179 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f170.google.com ([209.85.214.170]:53298 "EHLO
-	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753377Ab3KBTXR (ORCPT
+Received: from smtprelay0137.hostedemail.com ([216.40.44.137]:49483 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751259Ab3K3UjF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Nov 2013 15:23:17 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>,
-	netdev@vger.kernel.org, Larry Finger <Larry.Finger@lwfinger.net>,
-	Stable <stable@vger.kernel.org>
-Subject: [PATCH NEXT V2] rtlwifi: Fix endian error in extracting packet type
-Date: Sat,  2 Nov 2013 14:23:09 -0500
-Message-Id: <1383420189-13065-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20131102_202325_496952_A3ABB1A6)
+	Sat, 30 Nov 2013 15:39:05 -0500
+Message-ID: <1385843940.2664.4.camel@joe-AO722> (sfid-20131130_213949_172029_4049992A)
+Subject: Re: [PATCH] net: mac80211: tx.c: be sure of 'sdata->vif.type' must
+ be NL80211_IFTYPE_AP when be in NL80211_IFTYPE_AP case
+From: Joe Perches <joe@perches.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Chen Gang <gang.chen.5i5j@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	rkuo <rkuo@codeaurora.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	David Miller <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
+Date: Sat, 30 Nov 2013 12:39:00 -0800
+In-Reply-To: <1385842134.6108.4.camel@jlt4.sipsolutions.net>
+References: <528AEFB7.4060301@gmail.com>
+	 <20131125011938.GB18921@codeaurora.org> <5292B845.3010404@gmail.com>
+	 <5292B8A0.7020409@gmail.com> <5294255E.7040105@gmail.com>
+	 <52957ADA.2080704@gmail.com>
+	 (sfid-20131127_055211_558798_A7DF5684) <1385739487.8656.1.camel@jlt4.sipsolutions.net>
+	 <5299D306.7070701@gmail.com>
+	 (sfid-20131130_125901_519610_EDA4068E) <1385816013.4327.1.camel@jlt4.sipsolutions.net>
+	 <5299ED38.4090509@gmail.com> <5299EFDD.6060405@gmail.com>
+	 (sfid-20131130_150205_984535_068F14A9) <1385842134.6108.4.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>
+On Sat, 2013-11-30 at 21:08 +0100, Johannes Berg wrote:
+> On Sat, 2013-11-30 at 22:02 +0800, Chen Gang wrote:
+> 
+> > >>>  	case NL80211_IFTYPE_AP:
+> > >>> -		if (sdata->vif.type == NL80211_IFTYPE_AP)
+> > >>> -			chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+> > >>> +		chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+> > >>>  		if (!chanctx_conf)
+> > >>>  			goto fail_rcu;
+> > >>> +try_next:
+> > >>
+> > >> I don't think that's better than the (fairly obvious) fall-through, and
+> > >> has a pretty odd goto. Also, depending on the compiler, it still knows
+> > >> the previous case label and doesn't warn.
+> > >>
+> > > 
+> > > Yeah, fall-through is obvious. But check 'A' again just near by "case A"
+> > > seems a little strange, and some of compilers (or some of versions) are
+> > > really not quit smart enough to know it is not a warning.
+> > > 
+> > 
+> > Sorry, the paragraph above may lead misunderstanding, I repeated again:
+> > 
+> >  - fall-through is obvious (although I did not notice it, originally).
+> > 
+> >  - Check 'A' again just near by "case A" seems a little strange.
+> > 
+> >  - Some compilers aren't quit smart enough to know 'chanctx_conf' is OK.
+> 
+> I know. If you have any good ideas of how to make it more obvious to the
+> compiler, I'm all ears, I just don't like any of the solutions offered
+> so far (and you aren't the first to do so either) :-)
+> 
+> FWIW, I find the label to be odd because if you're familiar with the
+> code then AP/AP_VLAN *should* be identical except for two special things
+> that are now linearly & neatly handled in the code (the first being the
+> 4-addr station, the second the chanctx assignment which always has to be
+> done regardless of 4-addr). IMHO the == check after case should be
+> enough to make a human reader take a closer look. I understand that you
+> didn't and that's OK since you were just trying to squelch compile
+> warnings, but I don't see that this one warrants much attention.
 
-All of the rtlwifi drivers have an error in the routine that tests if
-the data is "special". If it is, the subsequant transmission will be
-at the lowest rate to enhance reliability. The 16-bit quantity is
-big-endian, but was being extracted in native CPU mode. One of the
-effects of this bug is to inhibit association under some conditions
-as the TX rate is too high.
+The label/test could be moved to save a couple of lines
+of duplicated code.
 
-Based on suggestions by Joe Perches, the entire routine is rewritten.
+Maybe:
 
-One of the local headers contained duplicates of some of the ETH_P_XXX
-definitions. These are deleted.
+ net/mac80211/tx.c | 14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Mark Cave-Ayland <mark.cave-ayland@ilande.co.uk>
-Cc: Stable <stable@vger.kernel.org> [2.6.38+]
----
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 70b5a05..b2160f4 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1777,18 +1777,16 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 		}
+ 		ap_sdata = container_of(sdata->bss, struct ieee80211_sub_if_data,
+ 					u.ap);
+-		chanctx_conf = rcu_dereference(ap_sdata->vif.chanctx_conf);
+-		if (!chanctx_conf)
+-			goto fail_rcu;
+-		band = chanctx_conf->def.chan->band;
+-		if (sta)
+-			break;
+ 		/* fall through */
+ 	case NL80211_IFTYPE_AP:
+-		if (sdata->vif.type == NL80211_IFTYPE_AP)
+-			chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
++		chanctx_conf = rcu_dereference(ap_sdata->vif.chanctx_conf);
+ 		if (!chanctx_conf)
+ 			goto fail_rcu;
++		if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN) {
++			band = chanctx_conf->def.chan->band;
++			if (sta)
++				break;
++		}
+ 		fc |= cpu_to_le16(IEEE80211_FCTL_FROMDS);
+ 		/* DA BSSID SA */
+ 		memcpy(hdr.addr1, skb->data, ETH_ALEN);
 
-V2 - Addresses comments by Ben Hutchings and Bjorn Mork.
-V3 - Rewrite of rtl_is_special_data()
 
- drivers/net/wireless/rtlwifi/base.c |   15 ++++++---------
- drivers/net/wireless/rtlwifi/wifi.h |    6 +-----
- 2 files changed, 7 insertions(+), 14 deletions(-)
-Index: wireless-testing/drivers/net/wireless/rtlwifi/base.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/base.c
-+++ wireless-testing/drivers/net/wireless/rtlwifi/base.c
-@@ -37,6 +37,7 @@
- 
- #include <linux/ip.h>
- #include <linux/module.h>
-+#include <linux/udp.h>
- 
- /*
-  *NOTICE!!!: This file will be very big, we should
-@@ -1074,64 +1075,52 @@ u8 rtl_is_special_data(struct ieee80211_
- 	if (!ieee80211_is_data(fc))
- 		return false;
- 
-+	ip = (const struct iphdr *)(skb->data + mac_hdr_len +
-+				    SNAP_SIZE + PROTOC_TYPE_SIZE);
-+	ether_type = be16_to_cpup((__be16 *)
-+				  (skb->data + mac_hdr_len + SNAP_SIZE));
-+
-+	switch (ether_type) {
-+	case ETH_P_IP: {
-+		struct udphdr *udp;
-+		u16 src;
-+		u16 dst;
-+
-+		if (ip->protocol != IPPROTO_UDP)
-+			return false;
-+		udp = (struct udphdr *)((u8 *)ip + (ip->ihl << 2));
-+		src = be16_to_cpu(udp->source);
-+		dst = be16_to_cpu(udp->dest);
-+
-+		/* If this case involves port 68 (UDP BOOTP client) connecting
-+		 * with port 67 (UDP BOOTP server), then return true so that
-+		 * the lowest speed is used.
-+		 */
-+		if (!((src == 68 && dst == 67) || (src == 67 && dst == 68)))
-+			return false;
- 
--	ip = (struct iphdr *)((u8 *) skb->data + mac_hdr_len +
--			      SNAP_SIZE + PROTOC_TYPE_SIZE);
--	ether_type = *(u16 *) ((u8 *) skb->data + mac_hdr_len + SNAP_SIZE);
--	/*	ether_type = ntohs(ether_type); */
--
--	if (ETH_P_IP == ether_type) {
--		if (IPPROTO_UDP == ip->protocol) {
--			struct udphdr *udp = (struct udphdr *)((u8 *) ip +
--							       (ip->ihl << 2));
--			if (((((u8 *) udp)[1] == 68) &&
--			     (((u8 *) udp)[3] == 67)) ||
--			    ((((u8 *) udp)[1] == 67) &&
--			     (((u8 *) udp)[3] == 68))) {
--				/*
--				 * 68 : UDP BOOTP client
--				 * 67 : UDP BOOTP server
--				 */
--				RT_TRACE(rtlpriv, (COMP_SEND | COMP_RECV),
--					 DBG_DMESG, "dhcp %s !!\n",
--					 is_tx ? "Tx" : "Rx");
--
--				if (is_tx) {
--					rtlpriv->enter_ps = false;
--					schedule_work(&rtlpriv->
--						      works.lps_change_work);
--					ppsc->last_delaylps_stamp_jiffies =
--					    jiffies;
--				}
--
--				return true;
--			}
--		}
--	} else if (ETH_P_ARP == ether_type) {
--		if (is_tx) {
--			rtlpriv->enter_ps = false;
--			schedule_work(&rtlpriv->works.lps_change_work);
--			ppsc->last_delaylps_stamp_jiffies = jiffies;
--		}
--
--		return true;
--	} else if (ETH_P_PAE == ether_type) {
-+		RT_TRACE(rtlpriv, (COMP_SEND | COMP_RECV), DBG_DMESG,
-+			 "dhcp %s !!\n", is_tx ? "Tx" : "Rx");
-+		break;
-+	}
-+	case ETH_P_ARP:
-+		break;
-+	case ETH_P_PAE:
- 		RT_TRACE(rtlpriv, (COMP_SEND | COMP_RECV), DBG_DMESG,
- 			 "802.1X %s EAPOL pkt!!\n", is_tx ? "Tx" : "Rx");
--
--		if (is_tx) {
--			rtlpriv->enter_ps = false;
--			schedule_work(&rtlpriv->works.lps_change_work);
--			ppsc->last_delaylps_stamp_jiffies = jiffies;
--		}
--
--		return true;
--	} else if (ETH_P_IPV6 == ether_type) {
--		/* IPv6 */
--		return true;
-+		break;
-+	case ETH_P_IPV6:
-+		/* TODO: Is this right? */
-+		return false;
-+	default:
-+		return false;
- 	}
--
--	return false;
-+	if (is_tx) {
-+		rtlpriv->enter_ps = false;
-+		schedule_work(&rtlpriv->works.lps_change_work);
-+		ppsc->last_delaylps_stamp_jiffies = jiffies;
-+	}
-+	return true;
- }
- EXPORT_SYMBOL_GPL(rtl_is_special_data);
- 
-Index: wireless-testing/drivers/net/wireless/rtlwifi/wifi.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/wifi.h
-+++ wireless-testing/drivers/net/wireless/rtlwifi/wifi.h
-@@ -77,11 +77,7 @@
- #define RTL_SLOT_TIME_9				9
- #define RTL_SLOT_TIME_20			20
- 
--/*related with tcp/ip. */
--/*if_ehther.h*/
--#define ETH_P_PAE		0x888E	/*Port Access Entity (IEEE 802.1X) */
--#define ETH_P_IP		0x0800	/*Internet Protocol packet */
--#define ETH_P_ARP		0x0806	/*Address Resolution packet */
-+/*related to tcp/ip. */
- #define SNAP_SIZE		6
- #define PROTOC_TYPE_SIZE	2
- 
