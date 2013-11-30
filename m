@@ -1,37 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f47.google.com ([74.125.83.47]:40022 "EHLO
-	mail-ee0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751868Ab3KLMN4 (ORCPT
+Received: from mail-ve0-f177.google.com ([209.85.128.177]:60827 "EHLO
+	mail-ve0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751126Ab3K3Ng1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Nov 2013 07:13:56 -0500
-Received: by mail-ee0-f47.google.com with SMTP id c13so3112233eek.34
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Nov 2013 04:13:55 -0800 (PST)
-Received: from [127.0.0.1] (ppp-227-234.27-151.libero.it. [151.27.234.227])
-        by mx.google.com with ESMTPSA id w6sm75338843eeo.12.2013.11.12.04.13.54
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
-        Tue, 12 Nov 2013 04:13:54 -0800 (PST)
-Message-ID: <52821B80.6000305@gmail.com> (sfid-20131112_131359_522389_5034CB01)
-Date: Tue, 12 Nov 2013 13:13:52 +0100
-From: Alessandro Gnagni <enterprise.nx@gmail.com>
+	Sat, 30 Nov 2013 08:36:27 -0500
+Received: by mail-ve0-f177.google.com with SMTP id db12so7466229veb.22
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Nov 2013 05:36:27 -0800 (PST)
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Trying to add support of 802.11ac broadcom chpiset to openwrt
-Content-Type: text/plain; charset=ISO-8859-15
+In-Reply-To: <1385817282.5056.0.camel@jlt4.sipsolutions.net>
+References: <CAGXs5wXPB2WvuxfXzuyDaGS5_cA+GG5vHkHO+PnnVncvOwJTDg@mail.gmail.com>
+ <1385817282.5056.0.camel@jlt4.sipsolutions.net>
+From: Sergey Ryazanov <ryazanov.s.a@gmail.com>
+Date: Sat, 30 Nov 2013 17:36:06 +0400
+Message-ID: <CAHNKnsSZxMscirbW=BqTa7fPXDUeFp67Co=QEtawjSOmctfs9Q@mail.gmail.com> (sfid-20131130_143631_270382_DB14B26A)
+Subject: Re: wireless network interfaces and network namespaces
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Kevin Wilson <wkevils@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-i am trying to implement on a smart city network a solution based on
-high end home routers like the asus RT-AC66U.
-we want to use openwrt for that but unfortunately the broadcom driver
-isn't yet supported.
-I have one rt-ac66u here for development, there is anything that i can
-do for help?
-i came here after a suggestion of one member on openwrt forum:
-https://forum.openwrt.org/viewtopic.php?pid=217341#p217341
+2013/11/30 Johannes Berg <johannes@sipsolutions.net>:
+> having different virtual interfaces of the same NIC in different
+> namespaces is not supported.
+>
+Is this rule applicable to hwsim interfaces too?
 
-i also read this past email:
-http://www.spinics.net/lists/linux-wireless/msg110443.html
-
-Thx for attention.
+-- 
+BR,
+Sergey
