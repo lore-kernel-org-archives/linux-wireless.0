@@ -1,53 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:43036 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755753Ab3KFKYY (ORCPT
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:55582 "EHLO
+	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751913Ab3K3OV7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Nov 2013 05:24:24 -0500
-Message-ID: <1383733459.14307.22.camel@jlt4.sipsolutions.net> (sfid-20131106_112427_311529_C5CE2025)
-Subject: Re: [PATCH 05/19] cfg80211: processing core regulatory hints on its
- own
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+	Sat, 30 Nov 2013 09:21:59 -0500
+Message-Id: <1385821318.11810.53811117.0E0E19AF@webmail.messagingengine.com> (sfid-20131130_152202_418067_1F6B3285)
+From: "Nikita N." <nikitan@operamail.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>, backports@vger.kernel.org
 Cc: linux-wireless@vger.kernel.org
-Date: Wed, 06 Nov 2013 11:24:19 +0100
-In-Reply-To: <1383671897-7746-6-git-send-email-mcgrof@do-not-panic.com> (sfid-20131105_181722_813465_91E1B730)
-References: <1383671897-7746-1-git-send-email-mcgrof@do-not-panic.com>
-	 <1383671897-7746-6-git-send-email-mcgrof@do-not-panic.com>
-	 (sfid-20131105_181722_813465_91E1B730)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+MIME-Version: 1.0
+Content-Type: text/plain
+Subject: Re: 3.13 various backports bugs
+Date: Sat, 30 Nov 2013 06:21:58 -0800
+In-Reply-To: <5299E184.1020302@hauke-m.de>
+References: <1385815530.23776.53787977.56B183FC@webmail.messagingengine.com>
+ <5299E184.1020302@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-11-05 at 09:18 -0800, Luis R. Rodriguez wrote:
+follow answers
+On Sat, Nov 30, 2013, at 05:00 AM, Hauke Mehrtens wrote:
+> > - Bug #2:
+> > eeprom modules are missing into 3.13.
+> > This issue is present systematically in all backports releases, since
+> > the switch from compat-drivers.
+> > It could be a wireless bug only, or a backports bug only, or both.
+> > Anyway, eeprom module is vital for correct interface detection.
+> > Into 3.9 the eeprom modules are located in
+> > ./compat-drivers-3.9-rc4-2-su/drivers/misc/eeprom/
+> 
+> This should be included in your kernel you are compiling against
+> otherwise you wouldn't be able to build rtl8187.
+> 
+> There was a bug in backports regarding EEPROM_93CX6, could you please
+> try backports-20131122-2 and report back if the problem is still there.
 
->  	struct wiphy *wiphy = NULL;
-> +	enum reg_request_treatment treatment;
+just did it, same issue.
+also in backports-20131122-2 eeprom modules are missing.
+At this point I have the suspect that eeprom libraries builtin Slitaz4
+are bugged, and the bug is capable of persistent damage.. probably the
+bad frames filter in monitor mode im suffering on my two rtl8187, is
+caused by that..? 
+If that would be confirmed, Slitaz4 community has to be warned asap!
+If I can help more, please fell free to ask :)
 
-This
-
->  	if (WARN_ON(!reg_request->alpha2))
->  		return;
-> @@ -1552,7 +1580,18 @@ static void reg_process_hint(struct regulatory_request *reg_request)
->  		return;
->  	}
->  
-> -	switch (__regulatory_hint(wiphy, reg_request)) {
-> +	switch (reg_request->initiator) {
-> +	case NL80211_REGDOM_SET_BY_CORE:
-> +		reg_process_hint_core(reg_request);
-> +		return;
-> +	case NL80211_REGDOM_SET_BY_USER:
-> +	case NL80211_REGDOM_SET_BY_DRIVER:
-> +	case NL80211_REGDOM_SET_BY_COUNTRY_IE:
-> +		treatment = __regulatory_hint(wiphy, reg_request);
-> +		break;
-> +	}
-> +
-> +	switch (treatment) {
-
-is used uninitialized here
-
-johannes
+-- 
+http://www.fastmail.fm - Accessible with your email software
+                          or over the web
 
