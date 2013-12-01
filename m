@@ -1,30 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:41192 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753097Ab3LPMq6 (ORCPT
+Received: from mail-pd0-f170.google.com ([209.85.192.170]:40397 "EHLO
+	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750900Ab3LAGlx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Dec 2013 07:46:58 -0500
-Message-ID: <1387198012.4665.24.camel@jlt4.sipsolutions.net> (sfid-20131216_134700_951947_70772EE5)
-Subject: Re: [PATCH] mac80211: make ieee80211_assign_beacon() static
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	Luciano Coelho <luciano.coelho@intel.com>
-Date: Mon, 16 Dec 2013 13:46:52 +0100
-In-Reply-To: <1386488545-15901-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1386488545-15901-1-git-send-email-emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 1 Dec 2013 01:41:53 -0500
+Received: by mail-pd0-f170.google.com with SMTP id g10so16071111pdj.15
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Nov 2013 22:41:52 -0800 (PST)
+From: Ujjal Roy <royujjal@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Ujjal Roy <royujjal@gmail.com>
+Subject: TEST: testing how to send a patch from git repository
+Date: Sun,  1 Dec 2013 12:11:46 +0530
+Message-Id: <1385880106-5759-1-git-send-email-royujjal@gmail.com> (sfid-20131201_074155_386077_8C366D6A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2013-12-08 at 09:42 +0200, Emmanuel Grumbach wrote:
-> From: Luciano Coelho <luciano.coelho@intel.com>
-> 
-> This function is not used anywhere else than in cfg.c, so there's no
-> need to export it.
+Testing how to send an email through git to see the patch is exactly
+submitted or not. Actually testing the tab characters. Please don't
+mind.
 
-Applied.
+Signed-off-by: Ujjal Roy <royujjal@gmail.com>
+---
+ net/wireless/sme.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-johannes
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index 5eeb8e0..19a5df4 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -20,6 +20,8 @@
+ #include "reg.h"
+ #include "rdev-ops.h"
+ 
++	printk("TEST: submitting patch from git >> Ujjal Roy C: royujjal@gmail.com");
++
+ /*
+  * Software SME in cfg80211, using auth/assoc/deauth calls to the
+  * driver. This is is for implementing nl80211's connect/disconnect
+-- 
+1.8.3.1
 
