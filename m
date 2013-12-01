@@ -1,85 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:48998 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755278Ab3LQSLr (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:34151 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750951Ab3LAJff (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Dec 2013 13:11:47 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/4] ath9k: Remove ath9k_hw_gettsf32()
-Date: Tue, 17 Dec 2013 23:36:45 +0530
-Message-Id: <1387303608-31356-2-git-send-email-sujith@msujith.org> (sfid-20131217_191150_752035_B6BE2D06)
-In-Reply-To: <1387303608-31356-1-git-send-email-sujith@msujith.org>
-References: <1387303608-31356-1-git-send-email-sujith@msujith.org>
+	Sun, 1 Dec 2013 04:35:35 -0500
+Message-ID: <1385890523.4171.1.camel@jlt4.sipsolutions.net> (sfid-20131201_103603_020215_2549B95B)
+Subject: Re: [PATCH] net: mac80211: tx.c: be sure of 'sdata->vif.type' must
+ be NL80211_IFTYPE_AP when be in NL80211_IFTYPE_AP case
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Joe Perches <joe@perches.com>
+Cc: Chen Gang <gang.chen.5i5j@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	rkuo <rkuo@codeaurora.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	David Miller <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
+Date: Sun, 01 Dec 2013 10:35:23 +0100
+In-Reply-To: <1385843940.2664.4.camel@joe-AO722>
+References: <528AEFB7.4060301@gmail.com>
+	 <20131125011938.GB18921@codeaurora.org> <5292B845.3010404@gmail.com>
+	 <5292B8A0.7020409@gmail.com> <5294255E.7040105@gmail.com>
+	 <52957ADA.2080704@gmail.com>
+	 (sfid-20131127_055211_558798_A7DF5684) <1385739487.8656.1.camel@jlt4.sipsolutions.net>
+	 <5299D306.7070701@gmail.com>
+	 (sfid-20131130_125901_519610_EDA4068E) <1385816013.4327.1.camel@jlt4.sipsolutions.net>
+	 <5299ED38.4090509@gmail.com> <5299EFDD.6060405@gmail.com>
+	 (sfid-20131130_150205_984535_068F14A9) <1385842134.6108.4.camel@jlt4.sipsolutions.net>
+	 <1385843940.2664.4.camel@joe-AO722>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Sat, 2013-11-30 at 12:39 -0800, Joe Perches wrote:
 
-It is unnecessary and the value is just a simple,
-direct register read.
+> +++ b/net/mac80211/tx.c
+> @@ -1777,18 +1777,16 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+>  		}
+>  		ap_sdata = container_of(sdata->bss, struct ieee80211_sub_if_data,
+>  					u.ap);
+> -		chanctx_conf = rcu_dereference(ap_sdata->vif.chanctx_conf);
+> -		if (!chanctx_conf)
+> -			goto fail_rcu;
+> -		band = chanctx_conf->def.chan->band;
+> -		if (sta)
+> -			break;
+>  		/* fall through */
+>  	case NL80211_IFTYPE_AP:
+> -		if (sdata->vif.type == NL80211_IFTYPE_AP)
+> -			chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+> +		chanctx_conf = rcu_dereference(ap_sdata->vif.chanctx_conf);
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_mci.c |  2 +-
- drivers/net/wireless/ath/ath9k/hw.c         | 10 ----------
- drivers/net/wireless/ath/ath9k/hw.h         |  1 -
- 3 files changed, 1 insertion(+), 12 deletions(-)
+Good try, but no, now ap_sdata isn't even assigned. :)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-index 7b94a6c..e9cf1de 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-@@ -1263,7 +1263,7 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type)
- 		ar9003_mci_send_coex_bt_status_query(ah, true, query_type);
- 		break;
- 	case MCI_STATE_RECOVER_RX:
--		tsf = ath9k_hw_gettsf32(ah);
-+		tsf = REG_READ(ah, AR_TSF_L32);
- 		if ((tsf - mci->last_recovery) <= MCI_RECOVERY_DUR_TSF) {
- 			ath_dbg(ath9k_hw_common(ah), MCI,
- 				"(MCI) ignore Rx recovery\n");
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 4797cb2..40cc64b 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2973,12 +2973,6 @@ static const struct ath_gen_timer_configuration gen_tmr_configuration[] =
- 
- /* HW generic timer primitives */
- 
--u32 ath9k_hw_gettsf32(struct ath_hw *ah)
--{
--	return REG_READ(ah, AR_TSF_L32);
--}
--EXPORT_SYMBOL(ath9k_hw_gettsf32);
--
- struct ath_gen_timer *ath_gen_timer_alloc(struct ath_hw *ah,
- 					  void (*trigger)(void *),
- 					  void (*overflow)(void *),
-@@ -3137,10 +3131,6 @@ void ath_gen_timer_isr(struct ath_hw *ah)
- }
- EXPORT_SYMBOL(ath_gen_timer_isr);
- 
--/********/
--/* HTC  */
--/********/
--
- static struct {
- 	u32 version;
- 	const char * name;
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 54932d8..ba0059f 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -978,7 +978,6 @@ void ath9k_hw_set_txpowerlimit(struct ath_hw *ah, u32 limit, bool test);
- void ath9k_hw_setopmode(struct ath_hw *ah);
- void ath9k_hw_setmcastfilter(struct ath_hw *ah, u32 filter0, u32 filter1);
- void ath9k_hw_write_associd(struct ath_hw *ah);
--u32 ath9k_hw_gettsf32(struct ath_hw *ah);
- u64 ath9k_hw_gettsf64(struct ath_hw *ah);
- void ath9k_hw_settsf64(struct ath_hw *ah, u64 tsf64);
- void ath9k_hw_reset_tsf(struct ath_hw *ah);
--- 
-1.8.5.1
+johannes
 
