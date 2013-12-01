@@ -1,452 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from asav21.altibox.net ([109.247.116.8]:42756 "EHLO
-	asav21.altibox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751367Ab3LRXgc (ORCPT
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:46294 "EHLO
+	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750909Ab3LAJXF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Dec 2013 18:36:32 -0500
-From: Henrik Austad <henrik@austad.us>
-To: linux-rt-users@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 10/10] iwlwifi: pcie: stop using _irqsave
-Date: Thu, 19 Dec 2013 00:26:05 +0100
-Message-Id: <1387409165-28319-11-git-send-email-henrik@austad.us> (sfid-20131219_003646_689582_2A3B32D6)
-In-Reply-To: <1387409165-28319-1-git-send-email-henrik@austad.us>
-References: <1387409165-28319-1-git-send-email-henrik@austad.us>
+	Sun, 1 Dec 2013 04:23:05 -0500
+Message-Id: <1385889783.6507.54014729.756D4BA0@webmail.messagingengine.com> (sfid-20131201_102338_666616_CE3D1E6D)
+From: "Nikita N." <nikitan@operamail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain
+In-Reply-To: <529A36C5.4060209@lwfinger.net>
+References: <1385589961.19021.52907237.3EE33E5B@webmail.messagingengine.com>
+ <52966D64.2030805@lwfinger.net>
+ <1385593188.3627.52911717.4E0712D9@webmail.messagingengine.com>
+ <52968893.6060405@lwfinger.net>
+ <1385812990.14905.53777877.7646278B@webmail.messagingengine.com>
+ <529A1B52.6040605@lwfinger.net>
+ <1385835820.6559.53858669.5FD3F3A6@webmail.messagingengine.com>
+ <529A36C5.4060209@lwfinger.net>
+Subject: Re: RTL8187 bugs
+Date: Sun, 01 Dec 2013 01:23:03 -0800
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Since we don't take any locks in the upper half any more,
-we don't need _irqsave in any place.
+On Sat, Nov 30, 2013, at 11:04 AM, Larry Finger wrote:
+> On 11/30/2013 12:23 PM, Nikita N. wrote:
+> >
+> > Hi Larry, thanks for your answer, I respect your experience, because in
+> > fact I have 20+ years heavy professional experience in programming, but
+> > very little indeed in linux kernel programming.
+> > The frames I see in monitor mode are real, not made up.. are real probe,
+> > beacons, acks, auth, and so on, I can see the same using laptop
+> > interface of my friend, which never got in contact with 3.11 - and he
+> > gets also all data frames too.. lucky him! :)
+> > What do you mean "make up the data"?
+> 
+> I have no idea how it worked at all Without the entry points in the
+> EEPROM 
+> routine, module loading should have gotten an error. I hope you did not
+> force 
+> the module to load. The driver had to generate a random MAC address. That
+> is 
+> made up data.
 
-Change-Id: I33b33edb063b3b55fb2a50bdb607e0b2ca8cde37
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/pcie/rx.c    |   76 +++++++++++++----------------
- drivers/net/wireless/iwlwifi/pcie/trans.c |   23 ++++-----
- drivers/net/wireless/iwlwifi/pcie/tx.c    |   10 ++--
- 3 files changed, 47 insertions(+), 62 deletions(-)
+Good day Larry :) As Hauke Mehrtens confirmed me, they removed eeprom
+modules from backports, in order to rely on distro native eeprom
+libraries.. unfortunately Slitaz doesnt seems to have such evolved
+eeprom native libraries.. :P hence I dont know which strange kind of
+library was called to generate that mac=00..
+Anyway, now Im going to fill all your code of debug messages, so we will
+know whats going on, you bet! :)
+You said you run successfully monitor mode on your rtl8187, what distro
+exactly did you use? I want to download it too and try tests also
+there.. what do you think?
 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
-index 0977ed5..2893100 100644
---- a/drivers/net/wireless/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
-@@ -148,10 +148,9 @@ int iwl_pcie_rx_stop(struct iwl_trans *trans)
- static void iwl_pcie_rxq_inc_wr_ptr(struct iwl_trans *trans,
- 				    struct iwl_rxq *rxq)
- {
--	unsigned long flags;
- 	u32 reg;
- 
--	spin_lock_irqsave(&rxq->lock, flags);
-+	spin_lock(&rxq->lock);
- 
- 	if (rxq->need_update == 0)
- 		goto exit_unlock;
-@@ -193,7 +192,7 @@ static void iwl_pcie_rxq_inc_wr_ptr(struct iwl_trans *trans,
- 	rxq->need_update = 0;
- 
-  exit_unlock:
--	spin_unlock_irqrestore(&rxq->lock, flags);
-+	spin_unlock(&rxq->lock);
- }
- 
- /*
-@@ -212,7 +211,6 @@ static void iwl_pcie_rxq_restock(struct iwl_trans *trans)
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	struct iwl_rxq *rxq = &trans_pcie->rxq;
- 	struct iwl_rx_mem_buffer *rxb;
--	unsigned long flags;
- 
- 	/*
- 	 * If the device isn't enabled - not need to try to add buffers...
-@@ -225,7 +223,7 @@ static void iwl_pcie_rxq_restock(struct iwl_trans *trans)
- 	if (!test_bit(STATUS_DEVICE_ENABLED, &trans_pcie->status))
- 		return;
- 
--	spin_lock_irqsave(&rxq->lock, flags);
-+	spin_lock(&rxq->lock);
- 	while ((iwl_rxq_space(rxq) > 0) && (rxq->free_count)) {
- 		/* The overwritten rxb must be a used one */
- 		rxb = rxq->queue[rxq->write];
-@@ -242,7 +240,7 @@ static void iwl_pcie_rxq_restock(struct iwl_trans *trans)
- 		rxq->write = (rxq->write + 1) & RX_QUEUE_MASK;
- 		rxq->free_count--;
- 	}
--	spin_unlock_irqrestore(&rxq->lock, flags);
-+	spin_unlock(&rxq->lock);
- 	/* If the pre-allocated buffer pool is dropping low, schedule to
- 	 * refill it */
- 	if (rxq->free_count <= RX_LOW_WATERMARK)
-@@ -251,9 +249,9 @@ static void iwl_pcie_rxq_restock(struct iwl_trans *trans)
- 	/* If we've added more space for the firmware to place data, tell it.
- 	 * Increment device's write pointer in multiples of 8. */
- 	if (rxq->write_actual != (rxq->write & ~0x7)) {
--		spin_lock_irqsave(&rxq->lock, flags);
-+		spin_lock(&rxq->lock);
- 		rxq->need_update = 1;
--		spin_unlock_irqrestore(&rxq->lock, flags);
-+		spin_unlock(&rxq->lock);
- 		iwl_pcie_rxq_inc_wr_ptr(trans, rxq);
- 	}
- }
-@@ -273,16 +271,15 @@ static void iwl_pcie_rxq_alloc_rbs(struct iwl_trans *trans, gfp_t priority)
- 	struct iwl_rxq *rxq = &trans_pcie->rxq;
- 	struct iwl_rx_mem_buffer *rxb;
- 	struct page *page;
--	unsigned long flags;
- 	gfp_t gfp_mask = priority;
- 
- 	while (1) {
--		spin_lock_irqsave(&rxq->lock, flags);
-+		spin_lock(&rxq->lock);
- 		if (list_empty(&rxq->rx_used)) {
--			spin_unlock_irqrestore(&rxq->lock, flags);
-+			spin_unlock(&rxq->lock);
- 			return;
- 		}
--		spin_unlock_irqrestore(&rxq->lock, flags);
-+		spin_unlock(&rxq->lock);
- 
- 		if (rxq->free_count > RX_LOW_WATERMARK)
- 			gfp_mask |= __GFP_NOWARN;
-@@ -311,17 +308,17 @@ static void iwl_pcie_rxq_alloc_rbs(struct iwl_trans *trans, gfp_t priority)
- 			return;
- 		}
- 
--		spin_lock_irqsave(&rxq->lock, flags);
-+		spin_lock(&rxq->lock);
- 
- 		if (list_empty(&rxq->rx_used)) {
--			spin_unlock_irqrestore(&rxq->lock, flags);
-+			spin_unlock(&rxq->lock);
- 			__free_pages(page, trans_pcie->rx_page_order);
- 			return;
- 		}
- 		rxb = list_first_entry(&rxq->rx_used, struct iwl_rx_mem_buffer,
- 				       list);
- 		list_del(&rxb->list);
--		spin_unlock_irqrestore(&rxq->lock, flags);
-+		spin_unlock(&rxq->lock);
- 
- 		BUG_ON(rxb->page);
- 		rxb->page = page;
-@@ -332,9 +329,9 @@ static void iwl_pcie_rxq_alloc_rbs(struct iwl_trans *trans, gfp_t priority)
- 				     DMA_FROM_DEVICE);
- 		if (dma_mapping_error(trans->dev, rxb->page_dma)) {
- 			rxb->page = NULL;
--			spin_lock_irqsave(&rxq->lock, flags);
-+			spin_lock(&rxq->lock);
- 			list_add(&rxb->list, &rxq->rx_used);
--			spin_unlock_irqrestore(&rxq->lock, flags);
-+			spin_unlock(&rxq->lock);
- 			__free_pages(page, trans_pcie->rx_page_order);
- 			return;
- 		}
-@@ -343,12 +340,12 @@ static void iwl_pcie_rxq_alloc_rbs(struct iwl_trans *trans, gfp_t priority)
- 		/* and also 256 byte aligned! */
- 		BUG_ON(rxb->page_dma & DMA_BIT_MASK(8));
- 
--		spin_lock_irqsave(&rxq->lock, flags);
-+		spin_lock(&rxq->lock);
- 
- 		list_add_tail(&rxb->list, &rxq->rx_free);
- 		rxq->free_count++;
- 
--		spin_unlock_irqrestore(&rxq->lock, flags);
-+		spin_unlock(&rxq->lock);
- 	}
- }
- 
-@@ -382,13 +379,12 @@ static void iwl_pcie_rxq_free_rbs(struct iwl_trans *trans)
- static void iwl_pcie_rx_replenish(struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--	unsigned long flags;
- 
- 	iwl_pcie_rxq_alloc_rbs(trans, GFP_KERNEL);
- 
--	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
-+	spin_lock(&trans_pcie->irq_lock);
- 	iwl_pcie_rxq_restock(trans);
--	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
-+	spin_unlock(&trans_pcie->irq_lock);
- }
- 
- static void iwl_pcie_rx_replenish_now(struct iwl_trans *trans)
-@@ -514,7 +510,6 @@ int iwl_pcie_rx_init(struct iwl_trans *trans)
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	struct iwl_rxq *rxq = &trans_pcie->rxq;
- 	int i, err;
--	unsigned long flags;
- 
- 	if (!rxq->bd) {
- 		err = iwl_pcie_rx_alloc(trans);
-@@ -522,7 +517,7 @@ int iwl_pcie_rx_init(struct iwl_trans *trans)
- 			return err;
- 	}
- 
--	spin_lock_irqsave(&rxq->lock, flags);
-+	spin_lock(&rxq->lock);
- 
- 	INIT_WORK(&trans_pcie->rx_replenish, iwl_pcie_rx_replenish_work);
- 
-@@ -538,16 +533,16 @@ int iwl_pcie_rx_init(struct iwl_trans *trans)
- 	rxq->read = rxq->write = 0;
- 	rxq->write_actual = 0;
- 	memset(rxq->rb_stts, 0, sizeof(*rxq->rb_stts));
--	spin_unlock_irqrestore(&rxq->lock, flags);
-+	spin_unlock(&rxq->lock);
- 
- 	iwl_pcie_rx_replenish(trans);
- 
- 	iwl_pcie_rx_hw_init(trans, rxq);
- 
--	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
-+	spin_lock(&trans_pcie->irq_lock);
- 	rxq->need_update = 1;
- 	iwl_pcie_rxq_inc_wr_ptr(trans, rxq);
--	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
-+	spin_unlock(&trans_pcie->irq_lock);
- 
- 	return 0;
- }
-@@ -556,7 +551,6 @@ void iwl_pcie_rx_free(struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	struct iwl_rxq *rxq = &trans_pcie->rxq;
--	unsigned long flags;
- 
- 	/*if rxq->bd is NULL, it means that nothing has been allocated,
- 	 * exit now */
-@@ -567,9 +561,9 @@ void iwl_pcie_rx_free(struct iwl_trans *trans)
- 
- 	cancel_work_sync(&trans_pcie->rx_replenish);
- 
--	spin_lock_irqsave(&rxq->lock, flags);
-+	spin_lock(&rxq->lock);
- 	iwl_pcie_rxq_free_rbs(trans);
--	spin_unlock_irqrestore(&rxq->lock, flags);
-+	spin_unlock(&rxq->lock);
- 
- 	dma_free_coherent(trans->dev, sizeof(__le32) * RX_QUEUE_SIZE,
- 			  rxq->bd, rxq->bd_dma);
-@@ -592,7 +586,6 @@ static void iwl_pcie_rx_handle_rb(struct iwl_trans *trans,
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	struct iwl_rxq *rxq = &trans_pcie->rxq;
- 	struct iwl_txq *txq = &trans_pcie->txq[trans_pcie->cmd_queue];
--	unsigned long flags;
- 	bool page_stolen = false;
- 	int max_len = PAGE_SIZE << trans_pcie->rx_page_order;
- 	u32 offset = 0;
-@@ -694,7 +687,7 @@ static void iwl_pcie_rx_handle_rb(struct iwl_trans *trans,
- 	/* Reuse the page if possible. For notification packets and
- 	 * SKBs that fail to Rx correctly, add them back into the
- 	 * rx_free list for reuse later. */
--	spin_lock_irqsave(&rxq->lock, flags);
-+	spin_lock(&rxq->lock);
- 	if (rxb->page != NULL) {
- 		rxb->page_dma =
- 			dma_map_page(trans->dev, rxb->page, 0,
-@@ -715,7 +708,7 @@ static void iwl_pcie_rx_handle_rb(struct iwl_trans *trans,
- 		}
- 	} else
- 		list_add_tail(&rxb->list, &rxq->rx_used);
--	spin_unlock_irqrestore(&rxq->lock, flags);
-+	spin_unlock(&rxq->lock);
- }
- 
- /*
-@@ -897,12 +890,11 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
- 	struct isr_statistics *isr_stats = &trans_pcie->isr_stats;
- 	u32 inta = 0;
- 	u32 handled = 0;
--	unsigned long flags;
- 	u32 i;
- 
- 	lock_map_acquire(&trans->sync_cmd_lockdep_map);
- 
--	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
-+	spin_lock(&trans_pcie->irq_lock);
- 
- 	/* dram interrupt table not set yet,
- 	 * use legacy interrupt.
-@@ -936,7 +928,7 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
- 		/* Re-enable interrupts here since we don't have anything to service */
- 		if (test_bit(STATUS_INT_ENABLED, &trans_pcie->status))
- 			iwl_enable_interrupts(trans);
--		spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
-+		spin_unlock(&trans_pcie->irq_lock);
- 		return IRQ_NONE;
- 	}
- 
-@@ -963,7 +955,7 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
- 		IWL_DEBUG_ISR(trans, "inta 0x%08x, enabled 0x%08x\n",
- 			      inta, iwl_read32(trans, CSR_INT_MASK));
- 
--	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
-+	spin_unlock(&trans_pcie->irq_lock);
- 
- 	/* Now service all interrupt bits discovered above. */
- 	if (inta & CSR_INT_BIT_HW_ERR) {
-@@ -1188,12 +1180,11 @@ void iwl_pcie_reset_ict(struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	u32 val;
--	unsigned long flags;
- 
- 	if (!trans_pcie->ict_tbl)
- 		return;
- 
--	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
-+	spin_lock(&trans_pcie->irq_lock);
- 	iwl_disable_interrupts(trans);
- 
- 	memset(trans_pcie->ict_tbl, 0, ICT_SIZE);
-@@ -1210,18 +1201,17 @@ void iwl_pcie_reset_ict(struct iwl_trans *trans)
- 	trans_pcie->ict_index = 0;
- 	iwl_write32(trans, CSR_INT, trans_pcie->inta_mask);
- 	iwl_enable_interrupts(trans);
--	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
-+	spin_unlock(&trans_pcie->irq_lock);
- }
- 
- /* Device is going down disable ict interrupt usage */
- void iwl_pcie_disable_ict(struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--	unsigned long flags;
- 
--	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
-+	spin_lock(&trans_pcie->irq_lock);
- 	trans_pcie->use_ict = false;
--	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
-+	spin_unlock(&trans_pcie->irq_lock);
- }
- 
- irqreturn_t iwl_pcie_isr(int irq, void *data)
-diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
-index 6d0c828..8803838 100644
---- a/drivers/net/wireless/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
-@@ -273,13 +273,12 @@ static void iwl_pcie_apm_stop(struct iwl_trans *trans)
- static int iwl_pcie_nic_init(struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--	unsigned long flags;
- 
- 	/* nic_init */
--	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
-+	spin_lock(&trans_pcie->irq_lock);
- 	iwl_pcie_apm_init(trans);
- 
--	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
-+	spin_unlock(&trans_pcie->irq_lock);
- 
- 	iwl_pcie_set_pwr(trans, false);
- 
-@@ -640,12 +639,11 @@ static void iwl_trans_pcie_fw_alive(struct iwl_trans *trans, u32 scd_addr)
- static void iwl_trans_pcie_stop_device(struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--	unsigned long flags;
- 
- 	/* tell the device to stop sending interrupts */
--	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
-+	spin_lock(&trans_pcie->irq_lock);
- 	iwl_disable_interrupts(trans);
--	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
-+	spin_unlock(&trans_pcie->irq_lock);
- 
- 	/* device going down, Stop using ICT table */
- 	iwl_pcie_disable_ict(trans);
-@@ -677,9 +675,9 @@ static void iwl_trans_pcie_stop_device(struct iwl_trans *trans)
- 	/* Upon stop, the APM issues an interrupt if HW RF kill is set.
- 	 * Clean again the interrupt here
- 	 */
--	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
-+	spin_lock(&trans_pcie->irq_lock);
- 	iwl_disable_interrupts(trans);
--	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
-+	spin_unlock(&trans_pcie->irq_lock);
- 
- 	iwl_enable_rfkill_int(trans);
- 
-@@ -811,17 +809,16 @@ static void iwl_trans_pcie_stop_hw(struct iwl_trans *trans,
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	bool hw_rfkill;
--	unsigned long flags;
- 
--	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
-+	spin_lock(&trans_pcie->irq_lock);
- 	iwl_disable_interrupts(trans);
--	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
-+	spin_unlock(&trans_pcie->irq_lock);
- 
- 	iwl_pcie_apm_stop(trans);
- 
--	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
-+	spin_lock(&trans_pcie->irq_lock);
- 	iwl_disable_interrupts(trans);
--	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
-+	spin_unlock(&trans_pcie->irq_lock);
- 
- 	iwl_pcie_disable_ict(trans);
- 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
-index 0adde91..498a24f 100644
---- a/drivers/net/wireless/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
-@@ -739,10 +739,9 @@ int iwl_pcie_tx_stop(struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	int ch, txq_id, ret;
--	unsigned long flags;
- 
- 	/* Turn off all Tx DMA fifos */
--	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
-+	spin_lock(&trans_pcie->irq_lock);
- 
- 	iwl_pcie_txq_set_sched(trans, 0);
- 
-@@ -759,7 +758,7 @@ int iwl_pcie_tx_stop(struct iwl_trans *trans)
- 				iwl_read_direct32(trans,
- 						  FH_TSSR_TX_STATUS_REG));
- 	}
--	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
-+	spin_unlock(&trans_pcie->irq_lock);
- 
- 	if (!trans_pcie->txq) {
- 		IWL_WARN(trans,
-@@ -867,7 +866,6 @@ int iwl_pcie_tx_init(struct iwl_trans *trans)
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	int ret;
- 	int txq_id, slots_num;
--	unsigned long flags;
- 	bool alloc = false;
- 
- 	if (!trans_pcie->txq) {
-@@ -877,7 +875,7 @@ int iwl_pcie_tx_init(struct iwl_trans *trans)
- 		alloc = true;
- 	}
- 
--	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
-+	spin_lock(&trans_pcie->irq_lock);
- 
- 	/* Turn off all Tx DMA fifos */
- 	iwl_write_prph(trans, SCD_TXFACT, 0);
-@@ -886,7 +884,7 @@ int iwl_pcie_tx_init(struct iwl_trans *trans)
- 	iwl_write_direct32(trans, FH_KW_MEM_ADDR_REG,
- 			   trans_pcie->kw.dma >> 4);
- 
--	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
-+	spin_unlock(&trans_pcie->irq_lock);
- 
- 	/* Alloc and init all Tx queues, including the command queue (#4/#9) */
- 	for (txq_id = 0; txq_id < trans->cfg->base_params->num_of_queues;
+> 
+> > About the kernel behavior I know.. but what you say is illogical.. if
+> > what you say is true, how can you explain that before exposing my two
+> > interfaces to 3.11, my kernel was nice, and after 3.11 got "severely
+> > broken" ?? if what you say its true, also kernel configuration of BT5
+> > all versions, Kali all versions, Weaknet all version became suddenly
+> > broken just a few days ago.. by what, a collapsed star passing on Hearth
+> > orbit, a Solar Storm ? :))
+> > The issue appears *EVERYWHERE* now.. before *EXPOSING* my two interfaces
+> > to 3.11 I had no problems whatsoever.. is that concept clear?
+> > Sorry, I dont know how to explain that better..
+> 
+> Your attitude is really putting me off!
+> 
+> > Infact in the little free time I got today I have been analyzing some
+> > code.. and I see there are several calls to eeprom_93cx6_read and
+> > eeprom_93cx6_write.. so it looks possible to write data into eeprom,
+> > isnt it?
+> > Also the read operations imply some bit write into eeprom, isnt it?
+> > So, I think its possible that some bit got "flipped", due to some little
+> > bug/whatever around, isn'it?
+> > So, how can I "re-flip" back the right bit?
+> > I dont know.. but I guess you know what is the right bit to flip.. isn't
+> > it? ;)
+> 
+> When you want to read data from the PROM, you need to set up its
+> controller to 
+> allow the read. The PROM is not mapped to memory. That is what the write 
+> operations do. As far as I know, there is no way to modify the data
+> written into 
+> the PROM
+
+Maybe the circuit allows permanent changes only for some selected data
+range?
+Can I dump (read only op) the whole eeprom memory using sequential calls
+to eeprom_93cx6_read?
+
+> 
+> >
+> > THAT IS EXACTLY WHAT I WANT TO DO! :D
+> > But for doing so I need my interfaces to go back operational, so I can
+> > reproduce all steps of last time, and catch the damned bug!
+> > Like that I cant see sh*t! if sh*t will happen again will mix with sh*t
+> > and I will keep seeing only sh*t! :))
+> >
+> >
+> > Nice to know that something is working.. ;)
+> > So, are you going to give me some help or not?
+> > And I repeat, its not for me only, its for the whole community, for
+> > whoever will fall in that issue too!
+> > Thanks :)
+> 
+> If you want to send me one of your devices, I'll check it out. Otherwise,
+> there 
+> is little I can do. It would be impossible to duplicate the path you have
+> followed.
+
+So nice from you Larry! :) but for now I just need some remote support,
+as I want to see if I can fix that here. Im going to write an article
+about that indeed. If you search around forums, you will see quite few
+users suffered this issue, but no solution was proposed.. hence most of
+users "trashed" their rtl8187 and purchased other chipsets.. very sad
+indeed, dont you think? :(
+Now we have the chance to find a solution for that issue once and for
+all, so yes, we have to take advantage of it.. ;) 
+
 -- 
-1.7.10.4
+http://www.fastmail.fm - Faster than the air-speed velocity of an
+                          unladen european swallow
 
