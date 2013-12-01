@@ -1,75 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f41.google.com ([74.125.83.41]:36770 "EHLO
-	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754205Ab3LEJVm (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:56158 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751328Ab3LAAcB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 04:21:42 -0500
-Received: by mail-ee0-f41.google.com with SMTP id t10so3077329eei.14
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Dec 2013 01:21:41 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/4] mac80211: start_next_roc only if scan was actually running
-Date: Thu,  5 Dec 2013 11:21:28 +0200
-Message-Id: <1386235289-27278-3-git-send-email-eliad@wizery.com> (sfid-20131205_102148_609669_F21763C2)
-In-Reply-To: <1386235289-27278-1-git-send-email-eliad@wizery.com>
-References: <1386235289-27278-1-git-send-email-eliad@wizery.com>
+	Sat, 30 Nov 2013 19:32:01 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21146.33378.141904.187743@gargle.gargle.HOWL> (sfid-20131201_013207_556526_9C6CF954)
+Date: Sun, 1 Dec 2013 05:57:14 +0530
+To: Drasko DRASKOVIC <drasko.draskovic@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"hostap\@lists.shmoo.com" <hostap@lists.shmoo.com>, j@w1.fi
+Subject: Re: multi-wiphy (virtual radios that can be used with multiple channels)
+In-Reply-To: <CAEk6gTCqKgt9zX0Xs147GYfxDw2Ex-1NkG4KZ_m_pdf1M8eDLw@mail.gmail.com>
+References: <CAEk6gTCqKgt9zX0Xs147GYfxDw2Ex-1NkG4KZ_m_pdf1M8eDLw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On scan completion we try start any pending roc.
+Drasko DRASKOVIC wrote:
+> Hi all,
+> can somebody please explain in some more details this possibility of
+> ath9k driver, mentioned here: http://lwn.net/Articles/321690/ and
+> specially here:
+> http://osdir.com/ml/linux-wireless/2009-03/msg00090.html in these
+> patches signed-off by Jouni.
 
-However, if scan was just pending (and not actually started)
-there is no point in trying to start the roc, as it might
-have started already.
+The virtual wiphy feature has been removed from ath9k.
 
-This solves the following warning:
-WARNING: CPU: 0 PID: 3552 at net/mac80211/offchannel.c:269 ieee80211_start_next_roc+0x164/0x204 [mac80211]()
-[<c001cd38>] (unwind_backtrace+0x0/0xf0)
-[<c00181d0>] (show_stack+0x10/0x14)
-[<c05c0d8c>] (dump_stack+0x78/0x94)
-[<c0047c08>] (warn_slowpath_common+0x68/0x8c)
-[<c0047c48>] (warn_slowpath_null+0x1c/0x24)
-[<bf4d6660>] (ieee80211_start_next_roc+0x164/0x204 [mac80211])
-[<bf4d5a74>] (ieee80211_scan_cancel+0xe8/0x190 [mac80211])
-[<bf4df970>] (ieee80211_do_stop+0x63c/0x79c [mac80211])
-[<bf4dfae0>] (ieee80211_stop+0x10/0x18 [mac80211])
-[<c0504d84>] (__dev_close_many+0x84/0xcc)
-[<c0504df4>] (__dev_close+0x28/0x3c)
-[<c0509708>] (__dev_change_flags+0x78/0x144)
-[<c0509854>] (dev_change_flags+0x10/0x48)
-[<c055fe3c>] (devinet_ioctl+0x614/0x6d0)
-[<c04f22a0>] (sock_ioctl+0x5c/0x2a4)
-[<c0124eb4>] (do_vfs_ioctl+0x7c/0x5d8)
-[<c012547c>] (SyS_ioctl+0x6c/0x7c)
+> Does this means that ath9k devices can be put in AP and STA modes
+> simultaneously (one virtual interface for each) over different
+> channels?
+> 
+> I am looking to solve this problem: I want to have always present AP
+> for user settings that I bring on boot, so I give it some
+> pre-configured channel. Via this AP user will configure other
+> interface in STA mode to connect to home network. However, this home
+> network can be over any channel, very potentially different of the one
+> I have chosen for AP.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- net/mac80211/scan.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Multi Channel Concurrency is required to do this, but ath9k doesn't
+support it right now.
 
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index e4baa53..d887b25 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -275,6 +275,7 @@ static void __ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted)
- {
- 	struct ieee80211_local *local = hw_to_local(hw);
- 	bool hw_scan = local->ops->hw_scan;
-+	bool was_scanning = local->scanning;
- 
- 	lockdep_assert_held(&local->mtx);
- 
-@@ -327,7 +328,8 @@ static void __ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted)
- 	ieee80211_mlme_notify_scan_completed(local);
- 	ieee80211_ibss_notify_scan_completed(local);
- 	ieee80211_mesh_notify_scan_completed(local);
--	ieee80211_start_next_roc(local);
-+	if (was_scanning)
-+		ieee80211_start_next_roc(local);
- }
- 
- void ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted)
--- 
-1.8.5.rc1
-
+Sujith
