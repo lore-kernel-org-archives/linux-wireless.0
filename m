@@ -1,48 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:35563 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755300Ab3LQSLv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Dec 2013 13:11:51 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/4] ath9k: Fix RTC reset delay
-Date: Tue, 17 Dec 2013 23:36:47 +0530
-Message-Id: <1387303608-31356-4-git-send-email-sujith@msujith.org> (sfid-20131217_191154_511316_0F4EC2A1)
-In-Reply-To: <1387303608-31356-1-git-send-email-sujith@msujith.org>
-References: <1387303608-31356-1-git-send-email-sujith@msujith.org>
+Received: from foo.stuge.se ([212.116.89.98]:45113 "EHLO foo.stuge.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751361Ab3LAAx6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Nov 2013 19:53:58 -0500
+Message-ID: <20131201004715.11125.qmail@stuge.se> (sfid-20131201_015416_957512_3A15DE32)
+Date: Sun, 1 Dec 2013 01:47:15 +0100
+From: Peter Stuge <peter@stuge.se>
+To: Michal Nazarewicz <mpn@google.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Eugene Krasnikov <k.eugene.e@gmail.com>,
+	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [ath9k-devel] [PATCH] net: wireless: wcn36xx: fix potential
+	NULL pointer dereference
+References: <1385744870-10164-1-git-send-email-mpn@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1385744870-10164-1-git-send-email-mpn@google.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Michal Nazarewicz wrote:
+> +			wcn36xx_err("Run out of memory while hnadling SMD_EVENT (%d)\n",
+> +				    msg_header->msg_type);
 
-The delay that is required after issuing a RTC reset
-varies for each chip. Handle this properly.
+Typo hnadling.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/hw.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index f58868c..2a511c6 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1363,7 +1363,12 @@ static bool ath9k_hw_set_reset(struct ath_hw *ah, int type)
- 
- 	REGWRITE_BUFFER_FLUSH(ah);
- 
--	udelay(50);
-+	if (AR_SREV_9300_20_OR_LATER(ah))
-+		udelay(50);
-+	else if (AR_SREV_9100(ah))
-+		udelay(10000);
-+	else
-+		udelay(100);
- 
- 	REG_WRITE(ah, AR_RTC_RC, 0);
- 	if (!ath9k_hw_wait(ah, AR_RTC_RC, AR_RTC_RC_M, 0, AH_WAIT_TIMEOUT)) {
--- 
-1.8.5.1
-
+//Peter
