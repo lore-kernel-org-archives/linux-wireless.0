@@ -1,57 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f54.google.com ([74.125.83.54]:33367 "EHLO
-	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753695Ab3LaQdN convert rfc822-to-8bit (ORCPT
+Received: from mail-wg0-f54.google.com ([74.125.82.54]:33936 "EHLO
+	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750895Ab3LAI5d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Dec 2013 11:33:13 -0500
-Received: by mail-ee0-f54.google.com with SMTP id e51so4765568eek.41
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Dec 2013 08:33:12 -0800 (PST)
-References: <1388448016-10210-1-git-send-email-bogdan@nimblex.net>
-Mime-Version: 1.0 (1.0)
-In-Reply-To: <1388448016-10210-1-git-send-email-bogdan@nimblex.net>
-Content-Type: text/plain;
-	charset=us-ascii
-Message-Id: <C7C499DD-BAB4-4F69-AFFF-3C9349F9D95F@gmail.com> (sfid-20131231_173318_817422_6BDF2252)
-Cc: "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
-	Bogdan Radulescu <bogdan@nimblex.net>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH] Add STA mode support for devices based on Ralink RT5350
-Date: Tue, 31 Dec 2013 17:33:09 +0100
-To: Bogdan Radulescu <bogdan@nimblex.net>
+	Sun, 1 Dec 2013 03:57:33 -0500
+Message-ID: <1385888246.3121.3.camel@canaries32-MCP7A> (sfid-20131201_095754_213933_E07EC9F0)
+Subject: [PATCH] [stable back port for <= 3.8] staging: vt6656: [BUG] Fix
+ for TX USB resets from vendors driver.
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: stable@vger.kernel.org
+Cc: gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org
+Date: Sun, 01 Dec 2013 08:57:26 +0000
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Bogdan,
+upstream commit
+9df682927c2e3a92f43803d6b52095992e3b2ab8
+back port for 3.8 and less kernels.
 
-> On 31 dec. 2013, at 01:00, Bogdan Radulescu <bogdan@nimblex.net> wrote:
-> 
-> Signed-off-by: Bogdan Radulescu <bogdan@nimblex.net>
-> 
-> ---
-> drivers/net/wireless/rt2x00/rt2x00dev.c | 2 +-
-> 1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> index 9dd92a7..606e968 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> @@ -1236,7 +1236,7 @@ static inline void rt2x00lib_set_if_combinations(struct rt2x00_dev *rt2x00dev)
->     */
->    if_limit = &rt2x00dev->if_limits_ap;
->    if_limit->max = rt2x00dev->ops->max_ap_intf;
-> -    if_limit->types = BIT(NL80211_IFTYPE_AP);
-> +    if_limit->types = BIT(NL80211_IFTYPE_AP) | BIT(NL80211_IFTYPE_STATION);
-> #ifdef CONFIG_MAC80211_MESH
->    if_limit->types |= BIT(NL80211_IFTYPE_MESH_POINT);
-> #endif
-> 
+This fixes resets on heavy TX data traffic.
 
-I'm sorry, but this cannot be correct. All, this patch does is allowing multiple AP and STA interfaces exist next to each other. This is something that is simply not possible with this device.
+Vendor driver
+VT6656_Linux_src_v1.21.03_x86_11.04.zip
+http://www.viaembedded.com/servlet/downloadSvl?id=1890&download_file_id=14704
+This is GPL-licensed code.
 
-Why do you think that STA mode is not supported for the RT5350?
+original code
+BBbVT3184Init
+...
+//2007-0725, RobertChang add, Enable Squelch detect reset option(SQ_RST_Opt), USB (register4, bit1)
+CONTROLnsRequestIn(pDevice,
+                                 MESSAGE_TYPE_READ,
+                                 (WORD)0x600+4,     // USB's Reg4's bit1
+                                 MESSAGE_REQUEST_MEM,
+                                 1,
+                                 (PBYTE) &byData);
+byData = byData|2 ;
+CONTROLnsRequestOut(pDevice,
+                              MESSAGE_TYPE_WRITE,
+                              (WORD)0x600+4,     // USB's Reg4's bit1
+                              MESSAGE_REQUEST_MEM,
+                              1,
+                              (PBYTE) &byData);
 
+return TRUE;//ntStatus;
+....
+
+A back port patch is needed for kernels less than 3.10.
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Cc: stable@vger.kernel.org # <= v3.8
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
-Gertjan
+ drivers/staging/vt6656/baseband.c | 11 +++++++++++
+ drivers/staging/vt6656/rndis.h    |  1 +
+ 2 files changed, 12 insertions(+)
+
+diff --git a/drivers/staging/vt6656/baseband.c b/drivers/staging/vt6656/baseband.c
+index 3855015..65503b9 100644
+--- a/drivers/staging/vt6656/baseband.c
++++ b/drivers/staging/vt6656/baseband.c
+@@ -976,6 +976,7 @@ BOOL BBbVT3184Init(PSDevice pDevice)
+     PBYTE                   pbyAgc;
+     WORD                    wLengthAgc;
+     BYTE                    abyArray[256];
++	u8 data;
+ 
+     ntStatus = CONTROLnsRequestIn(pDevice,
+                                   MESSAGE_TYPE_READ,
+@@ -1144,6 +1145,16 @@ else {
+     ControlvWriteByte(pDevice,MESSAGE_REQUEST_BBREG,0x0D,0x01);
+ 
+     RFbRFTableDownload(pDevice);
++
++	/* Fix for TX USB resets from vendors driver */
++	CONTROLnsRequestIn(pDevice, MESSAGE_TYPE_READ, USB_REG4,
++		MESSAGE_REQUEST_MEM, sizeof(data), &data);
++
++	data |= 0x2;
++
++	CONTROLnsRequestOut(pDevice, MESSAGE_TYPE_WRITE, USB_REG4,
++		MESSAGE_REQUEST_MEM, sizeof(data), &data);
++
+     return TRUE;//ntStatus;
+ }
+ 
+diff --git a/drivers/staging/vt6656/rndis.h b/drivers/staging/vt6656/rndis.h
+index fccf7e9..dcf7bf5 100644
+--- a/drivers/staging/vt6656/rndis.h
++++ b/drivers/staging/vt6656/rndis.h
+@@ -69,6 +69,7 @@
+ 
+ #define VIAUSB20_PACKET_HEADER          0x04
+ 
++#define USB_REG4	0x604
+ 
+ /*---------------------  Export Classes  ----------------------------*/
+ 
+-- 
+1.8.4.4
+
