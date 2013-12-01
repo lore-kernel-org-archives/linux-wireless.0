@@ -1,83 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:48840 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751990Ab3LRJ0i (ORCPT
+Received: from mail-la0-f48.google.com ([209.85.215.48]:42579 "EHLO
+	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751239Ab3LAAJl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Dec 2013 04:26:38 -0500
-Message-ID: <1387358785.4694.9.camel@jlt4.sipsolutions.net> (sfid-20131218_102823_974339_17D6ED17)
-Subject: Re: [cfg80211 / iwlwifi] setting wireless regulatory domain doesn't
- work.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	Ben Hutchings <ben@decadent.org.uk>,
-	Julian Calaby <julian.calaby@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <avinashapatil@gmail.com>
-Date: Wed, 18 Dec 2013 10:26:25 +0100
-In-Reply-To: <52B167F6.5060209@broadcom.com> (sfid-20131218_101718_355278_E8533498)
-References: <1342235583.20131211182804@eikelenboom.it>
-		<CAB=NE6UfumA2xez1DvtDSBDZ72WF_tOozFo_8LRnMryYiSqD-A@mail.gmail.com>
-		<871324710.20131211191104@eikelenboom.it>
-		<CAB=NE6XRnE0j9NMW0K1vKzEO9v70arSH4YXZjudqa0ZxiLB4AA@mail.gmail.com>
-		<1937118387.20131216122200@eikelenboom.it>	<52AEE60B.6030509@broadcom.com>
-		<19210260274.20131216135644@eikelenboom.it>
-		<CAGRGNgXHemM2FfnXgW5RbzhFT+9SfUfVkjdysK3+=_u3hWSacw@mail.gmail.com>
-		<1534126119.20131217104548@eikelenboom.it>
-		<387552477.20131217213319@eikelenboom.it>
-		<20131217212709.GB5624@decadent.org.uk>
-		<1254825772.20131217224914@eikelenboom.it>
-	 <CA+55aFxQg6=MAWEkEGz64Hz8OawvPyX=fpBOjY8cGBL5XgB9WQ@mail.gmail.com>
-	 <52B167F6.5060209@broadcom.com> (sfid-20131218_101718_355278_E8533498)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 30 Nov 2013 19:09:41 -0500
+Received: by mail-la0-f48.google.com with SMTP id n7so7437016lam.7
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Nov 2013 16:09:39 -0800 (PST)
+MIME-Version: 1.0
+Date: Sun, 1 Dec 2013 01:09:38 +0100
+Message-ID: <CAEk6gTCqKgt9zX0Xs147GYfxDw2Ex-1NkG4KZ_m_pdf1M8eDLw@mail.gmail.com> (sfid-20131201_010959_948340_FEBB7608)
+Subject: multi-wiphy (virtual radios that can be used with multiple channels)
+From: Drasko DRASKOVIC <drasko.draskovic@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>, j@w1.fi
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 Hi all,
+can somebody please explain in some more details this possibility of
+ath9k driver, mentioned here: http://lwn.net/Articles/321690/ and
+specially here:
+http://osdir.com/ml/linux-wireless/2009-03/msg00090.html in these
+patches signed-off by Jouni.
 
-We really should be asking Luis to look at this who hasn't yet chimed
-in, presumably because he's between jobs (and travelling IIRC)
+Does this means that ath9k devices can be put in AP and STA modes
+simultaneously (one virtual interface for each) over different
+channels?
 
-On Wed, 2013-12-18 at 10:16 +0100, Arend van Spriel wrote:
-> On 12/17/2013 11:06 PM, Linus Torvalds wrote:
-> > We have literally had this *exact* same issue with firmware loading.
-> > Network drivers shouldn't try to load firmware at module load time.
-> > Same deal.
-> 
-> It is kind of a chicken and egg problem for (wireless) networking
-> drivers. To get IFF_UP from the network layer you have to register a
-> netdevice. For wireless drivers this means you have to register a wiphy
-> device with cfg80211 which flags capabilities and optionally are custom
-> regulatory domain. That information depends on the device and firmware
-> used. And there we have a full circle.
+I am looking to solve this problem: I want to have always present AP
+for user settings that I bring on boot, so I give it some
+pre-configured channel. Via this AP user will configure other
+interface in STA mode to connect to home network. However, this home
+network can be over any channel, very potentially different of the one
+I have chosen for AP.
 
-This is all really beside the point.
+Would these patches allow something like this, and how they should be
+used (I saw here some use case -
+http://www.mail-archive.com/ath9k-devel@lists.ath9k.org/msg03617.html,
+but not clear enough)?
 
-For this CRDA information, the kernel never actually *waits* for it, so
-in the case that there's no reply, it uses the built-in world domain. So
-it's not like request_firmware(), which will block boot forever, but
-it's also not like request_firmware_nowait() which will eventually time
-out and come back with an error if userspace isn't handling it (though
-now that firmware loading is built in ...)
-
-The issue is that it uses the built-in data *forever*, and what Sander
-said was "or it will block forever" but just meant that it never was
-able to do any further updates.
-
-It *doesn't* actually block the boot process or such. Everything Linus
-said is true but seems to have been written in understanding "blocks" as
-"blocking the boot process", rather than "blocking further updates".
-
-Regardless of this, even blocking further updates is a really bad idea.
-There are a few ways to handle this, but I'll let Luis poke at that.
-
-johannes
-
+Best regards,
+Drasko
