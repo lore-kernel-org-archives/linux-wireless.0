@@ -1,43 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:35725 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751901Ab3LPAQp (ORCPT
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:65152 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758827Ab3LBU7x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Dec 2013 19:16:45 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21166.17733.484576.337560@gargle.gargle.HOWL> (sfid-20131216_011648_605655_12AB3B67)
-Date: Mon, 16 Dec 2013 05:41:49 +0530
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath9k: Fix interrupt handling for the AR9002 family
-In-Reply-To: <52AE0EC1.4050706@openwrt.org>
-References: <1387030293-7928-1-git-send-email-sujith@msujith.org>
-	<52AE0D63.9090309@openwrt.org>
-	<52AE0EC1.4050706@openwrt.org>
+	Mon, 2 Dec 2013 15:59:53 -0500
+Received: by mail-wg0-f52.google.com with SMTP id x13so12685965wgg.7
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Dec 2013 12:59:52 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eyal Shapira <eyal@wizery.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 08/13] iwlwifi: mvm: rs: remove unused parameter to rs_get_supported_rates
+Date: Mon,  2 Dec 2013 22:59:20 +0200
+Message-Id: <1386017965-13641-8-git-send-email-egrumbach@gmail.com> (sfid-20131202_220010_543538_24E78C84)
+In-Reply-To: <529CF2D6.1080008@gmail.com>
+References: <529CF2D6.1080008@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau wrote:
-> This change on top of it should fix the interrupt storms (which were
-> observed on AR913x):
-> ---
-> --- a/drivers/net/wireless/ath/ath9k/ar9002_mac.c
-> +++ b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
-> @@ -133,6 +133,11 @@ static bool ar9002_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
->  		*masked |= mask2;
->  	}
->  
-> +	if (!(pCap->hw_caps & ATH9K_HW_CAP_RAC_SUPPORTED)) {
-> +		REG_WRITE(ah, AR_ISR, isr);
-> +		REG_READ(ah, AR_ISR);
-> +	}
-> +
->  	if (AR_SREV_9100(ah))
->  		return true;
+From: Eyal Shapira <eyal@wizery.com>
 
-Thanks, I'll send a revised version.
+No use of the ieee80211 header. Drop it.
 
-Sujith
+Signed-off-by: Eyal Shapira <eyal@wizery.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/rs.c |   12 ++----------
+ 1 file changed, 2 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
+index 3af9062..7beb548 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
+@@ -597,15 +597,7 @@ static int rs_toggle_antenna(u32 valid_ant, u32 *ucode_rate,
+ 	return 1;
+ }
+ 
+-/**
+- * rs_get_supported_rates - get the available rates
+- *
+- * if management frame or broadcast frame only return
+- * basic available rates.
+- *
+- */
+ static u16 rs_get_supported_rates(struct iwl_lq_sta *lq_sta,
+-				  struct ieee80211_hdr *hdr,
+ 				  struct rs_rate *rate)
+ {
+ 	if (is_legacy(rate))
+@@ -704,7 +696,7 @@ static u32 rs_get_lower_rate(struct iwl_lq_sta *lq_sta,
+ 		rate->sgi = false;
+ 	}
+ 
+-	rate_mask = rs_get_supported_rates(lq_sta, NULL, rate);
++	rate_mask = rs_get_supported_rates(lq_sta, rate);
+ 
+ 	/* Mask with station rate restriction */
+ 	if (is_legacy(rate)) {
+@@ -1762,7 +1754,7 @@ static void rs_rate_scale_perform(struct iwl_mvm *mvm,
+ 	index = lq_sta->last_txrate_idx;
+ 
+ 	/* rates available for this association, and for modulation mode */
+-	rate_mask = rs_get_supported_rates(lq_sta, hdr, rate);
++	rate_mask = rs_get_supported_rates(lq_sta, rate);
+ 
+ 	/* mask with station rate restriction */
+ 	if (is_legacy(rate)) {
+-- 
+1.7.9.5
+
