@@ -1,127 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f170.google.com ([209.85.215.170]:54982 "EHLO
-	mail-ea0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751807Ab3LBPi1 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:39105 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751819Ab3LBOnm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Dec 2013 10:38:27 -0500
-Received: by mail-ea0-f170.google.com with SMTP id k10so9368531eaj.1
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Dec 2013 07:38:26 -0800 (PST)
-From: Marek Kwaczynski <marek.kwaczynski@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	Marek Kwaczynski <marek.kwaczynski@tieto.com>
-Subject: [PATCH] mac80211: Update opmode during adding new station
-Date: Mon,  2 Dec 2013 16:38:12 +0100
-Message-Id: <1385998692-27853-1-git-send-email-marek.kwaczynski@tieto.com> (sfid-20131202_163831_128311_A8C8A14A)
+	Mon, 2 Dec 2013 09:43:42 -0500
+Message-ID: <1385995418.20277.3.camel@jlt4.sipsolutions.net> (sfid-20131202_154348_086910_3B70F35C)
+Subject: Re: [PATCH v3 4/4] cfg80211: DFS use 10 minutes CAC when weather
+ channels
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Janusz Dziedzic <janusz.dziedzic@gmail.com>
+Cc: Simon Wunderlich <sw@simonwunderlich.de>,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 02 Dec 2013 15:43:38 +0100
+In-Reply-To: <CAFED-jnMOWKZz1pHpvKmxu7ZZo0KGpomw2v8ug_oqpsdGBbOwQ@mail.gmail.com> (sfid-20131127_071658_337065_73028CF4)
+References: <1385409372-4229-1-git-send-email-janusz.dziedzic@tieto.com>
+	 <1385409372-4229-4-git-send-email-janusz.dziedzic@tieto.com>
+	 <201311261550.14953.sw@simonwunderlich.de>
+	 <CAFED-jmmkA2j4YRhFj7MXgZBgLJrofn1RGnbORtGDzB8wOErfw@mail.gmail.com>
+	 <1385498361.4177.4.camel@jlt4.sipsolutions.net>
+	 <CAFED-jnMOWKZz1pHpvKmxu7ZZo0KGpomw2v8ug_oqpsdGBbOwQ@mail.gmail.com>
+	 (sfid-20131127_071658_337065_73028CF4)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update Operating mode is needed when User Space received Assoc
-Request contains Operating mode notification element.
+On Wed, 2013-11-27 at 07:16 +0100, Janusz Dziedzic wrote:
+> What about patch 1 and 2?
 
-Signed-off-by: Marek Kwaczynski <marek.kwaczynski@tieto.com>
----
- net/mac80211/cfg.c         |    7 +++++++
- net/mac80211/ieee80211_i.h |    3 +++
- net/mac80211/vht.c         |   33 +++++++++++++++++++++------------
- 3 files changed, 31 insertions(+), 12 deletions(-)
+I guess those still make sense as is.
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 95667b0..50f0841 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1409,6 +1409,13 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
- 	 */
- 	if (!(params->sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER))) {
- 		sta_info_pre_move_state(sta, IEEE80211_STA_AUTH);
-+		if (params->vht_opmode_used) {
-+			enum ieee80211_band band =
-+					    ieee80211_get_sdata_band(sdata);
-+			ieee80211_vht_recalc_handle_opmode(sdata, sta,
-+							   params->vht_opmode,
-+							   band, 0);
-+		}
- 		sta_info_pre_move_state(sta, IEEE80211_STA_ASSOC);
- 	}
- 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 29dc505..13965e1 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1510,6 +1510,9 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
- 				    struct sta_info *sta);
- enum ieee80211_sta_rx_bandwidth ieee80211_sta_cur_vht_bw(struct sta_info *sta);
- void ieee80211_sta_set_rx_nss(struct sta_info *sta);
-+u32 ieee80211_vht_recalc_handle_opmode(struct ieee80211_sub_if_data *sdata,
-+				       struct sta_info *sta, u8 opmode,
-+				       enum ieee80211_band band, bool nss_only);
- void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
- 				 struct sta_info *sta, u8 opmode,
- 				 enum ieee80211_band band, bool nss_only);
-diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
-index de01127..463e52c 100644
---- a/net/mac80211/vht.c
-+++ b/net/mac80211/vht.c
-@@ -350,21 +350,17 @@ void ieee80211_sta_set_rx_nss(struct sta_info *sta)
- 	sta->sta.rx_nss = max_t(u8, 1, ht_rx_nss);
- }
- 
--void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
--				 struct sta_info *sta, u8 opmode,
--				 enum ieee80211_band band, bool nss_only)
-+u32 ieee80211_vht_recalc_handle_opmode(struct ieee80211_sub_if_data *sdata,
-+				       struct sta_info *sta, u8 opmode,
-+				       enum ieee80211_band band, bool nss_only)
- {
--	struct ieee80211_local *local = sdata->local;
--	struct ieee80211_supported_band *sband;
- 	enum ieee80211_sta_rx_bandwidth new_bw;
--	u32 changed = 0;
- 	u8 nss;
--
--	sband = local->hw.wiphy->bands[band];
-+	u32 changed = -1;
- 
- 	/* ignore - no support for BF yet */
- 	if (opmode & IEEE80211_OPMODE_NOTIF_RX_NSS_TYPE_BF)
--		return;
-+		return -EOPNOTSUPP;
- 
- 	nss = opmode & IEEE80211_OPMODE_NOTIF_RX_NSS_MASK;
- 	nss >>= IEEE80211_OPMODE_NOTIF_RX_NSS_SHIFT;
-@@ -376,7 +372,7 @@ void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
- 	}
- 
- 	if (nss_only)
--		goto change;
-+		return changed;
- 
- 	switch (opmode & IEEE80211_OPMODE_NOTIF_CHANWIDTH_MASK) {
- 	case IEEE80211_OPMODE_NOTIF_CHANWIDTH_20MHZ:
-@@ -398,8 +394,21 @@ void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
- 		sta->sta.bandwidth = new_bw;
- 		changed |= IEEE80211_RC_BW_CHANGED;
- 	}
-+	return changed;
-+}
-+
-+void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
-+				 struct sta_info *sta, u8 opmode,
-+				 enum ieee80211_band band, bool nss_only)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_supported_band *sband;
-+	u32 changed = 0;
-+
-+	changed = ieee80211_vht_recalc_handle_opmode(sdata, sta, opmode, band,
-+						     nss_only);
-+	sband = local->hw.wiphy->bands[band];
- 
-- change:
--	if (changed)
-+	if (changed >= 0)
- 		rate_control_rate_update(local, sband, sta, changed);
- }
--- 
-1.7.9.5
+johannes
 
