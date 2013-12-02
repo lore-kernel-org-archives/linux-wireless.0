@@ -1,88 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:56389 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754624Ab3LaQ1W (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:60756 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752383Ab3LBHte (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Dec 2013 11:27:22 -0500
-Message-ID: <52C2F056.1020005@candelatech.com> (sfid-20131231_172743_941011_B3E22A4A)
-Date: Tue, 31 Dec 2013 08:27:02 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Julia Lawall <julia.lawall@lip6.fr>
-CC: Joe Perches <joe@perches.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	kernel-janitors@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 4/11]  use ether_addr_equal_64bits
-References: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>  <1388427307-8691-5-git-send-email-Julia.Lawall@lip6.fr>  <1388429761.4410.1.camel@jlt4.sipsolutions.net>  <alpine.DEB.2.02.1312302057420.2209@localhost6.localdomain6>  <1388438724.4573.2.camel@jlt4.sipsolutions.net>  <20131230215701.GA4938@khazad-dum.debian.net>  <1388445188.18164.0.camel@jlt4.sipsolutions.net> <1388445422.26796.38.camel@joe-AO722> <alpine.DEB.2.02.1312310726540.1930@localhost6.localdomain6> <52C2E8BA.6000800@candelatech.com> <alpine.DEB.2.10.1312311704320.2074@hadrien>
-In-Reply-To: <alpine.DEB.2.10.1312311704320.2074@hadrien>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 2 Dec 2013 02:49:34 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] ath9k: Fix initvals for freq 2484
+Date: Mon,  2 Dec 2013 13:14:50 +0530
+Message-Id: <1385970290-30587-1-git-send-email-sujith@msujith.org> (sfid-20131202_084936_850826_54C3F013)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/31/2013 08:09 AM, Julia Lawall wrote:
->
->
-> On Tue, 31 Dec 2013, Ben Greear wrote:
->
->> On 12/30/2013 10:32 PM, Julia Lawall wrote:
->>>>>>> I'm just thinking of a programmer, e.g. changing a struct like this:
->>>>>>>
->>>>>>>    struct foo {
->>>>>>>      u8 addr[ETH_ALEN];
->>>>>>> -  u16 dummy;
->>>>>>>    };
->>>>
->>>> I don't know of a way to catch that.
->>>> Anyone else?
->>>
->>> Well, one could have a semantic patch that checks for that.  But the
->>> problem is that it is very slow, and it only covers the cases that I can
->>> transform automatically, which currently means no pointers, only explicit
->>> arrays.
->>>
->>> On the other hand, I am finding the structure definition, so I can easily
->>> update the structure definition with an appropriate comment.
->>>
->>> struct foo {
->>>       u8 addr[ETH_ALEN]; /* must be followed by two bytes in the structure */
->>>       u16 dummy;
->>> };
->>>
->>> Unfortunately it is kind of verbose.  Could there be an attribute?  That
->>> could even easily be checked.
->>
->> Can you not just add a build-time macro to check that sizeof(foo) >= 8
->> for each of these struct foos?  Or, is it required that the dummy field
->> be there and be not used by anything else?
->
-> It doesn't matter what the field is used for.  The problem is that is it
-> necessary to ensure a property of the position of addr within the
-> structure.  It has to have at least 16 bytes after it.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-You mean 16 bits?
+This is missing for AR9300, AR9580 and AR9340.
 
->
-> But maybe something with sizeof(foo) and offset_of would do?
->
-> Could the macro be put near the declaration of the structure somehow?
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h |  7 +++++++
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c           | 12 +++++++++---
+ drivers/net/wireless/ath/ath9k/ar9340_initvals.h     |  2 ++
+ drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h |  2 +-
+ 4 files changed, 19 insertions(+), 4 deletions(-)
 
-I think that would work, but do not know all of the details of such
-macros, so it's possible there is some catch.
-
-If nothing else, then some run-time code that calculates the offset off
-and asserts if it is broken in module initialization or similar might
-be good enough.
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
+index 1553395..e7cdf11 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
+@@ -1738,4 +1738,11 @@ static const u32 ar9300PciePhy_clkreq_disable_L1_2p2[][2] = {
+ 	{0x00004044, 0x00000000},
+ };
+ 
++static const u32 ar9300_2p2_baseband_core_txfir_coeff_japan_2484[][2] = {
++	/* Addr      allmodes  */
++	{0x0000a398, 0x00000000},
++	{0x0000a39c, 0x6f7f0301},
++	{0x0000a3a0, 0xca9228ee},
++};
++
+ #endif /* INITVALS_9003_2P2_H */
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+index d3eca0c..d8c1eee 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+@@ -149,7 +149,9 @@ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
+ 				ar9340Modes_high_ob_db_tx_gain_table_1p0);
+ 
+ 		INIT_INI_ARRAY(&ah->iniModesFastClock,
+-				ar9340Modes_fast_clock_1p0);
++			       ar9340Modes_fast_clock_1p0);
++		INIT_INI_ARRAY(&ah->iniCckfirJapan2484,
++			       ar9340_1p0_baseband_core_txfir_coeff_japan_2484);
+ 
+ 		if (!ah->is_clk_25mhz)
+ 			INIT_INI_ARRAY(&ah->iniAdditional,
+@@ -335,7 +337,9 @@ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
+ 				ar9580_1p0_low_ob_db_tx_gain_table);
+ 
+ 		INIT_INI_ARRAY(&ah->iniModesFastClock,
+-				ar9580_1p0_modes_fast_clock);
++			       ar9580_1p0_modes_fast_clock);
++		INIT_INI_ARRAY(&ah->iniCckfirJapan2484,
++			       ar9580_1p0_baseband_core_txfir_coeff_japan_2484);
+ 	} else if (AR_SREV_9565_11_OR_LATER(ah)) {
+ 		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_CORE],
+ 			       ar9565_1p1_mac_core);
+@@ -451,7 +455,9 @@ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
+ 
+ 		/* Fast clock modal settings */
+ 		INIT_INI_ARRAY(&ah->iniModesFastClock,
+-				ar9300Modes_fast_clock_2p2);
++			       ar9300Modes_fast_clock_2p2);
++		INIT_INI_ARRAY(&ah->iniCckfirJapan2484,
++			       ar9300_2p2_baseband_core_txfir_coeff_japan_2484);
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/ar9340_initvals.h b/drivers/net/wireless/ath/ath9k/ar9340_initvals.h
+index d2d789bd..7f22cb2 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9340_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9340_initvals.h
+@@ -28,6 +28,8 @@
+ 
+ #define ar9340Common_wo_xlna_rx_gain_table_1p0 ar9300Common_wo_xlna_rx_gain_table_2p2
+ 
++#define ar9340_1p0_baseband_core_txfir_coeff_japan_2484 ar9300_2p2_baseband_core_txfir_coeff_japan_2484
++
+ static const u32 ar9340_1p0_radio_postamble[][5] = {
+ 	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
+ 	{0x000160ac, 0xa4646800, 0xa4646800, 0xa4646800, 0xa4646800},
+diff --git a/drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h
+index 2ae380b..75bef11 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h
+@@ -36,7 +36,7 @@
+ 
+ #define ar9580_1p0_modes_fast_clock ar9300Modes_fast_clock_2p2
+ 
+-#define ar9580_1p0_baseband_core_txfir_coeff_japan_2484 ar9462_2p0_baseband_core_txfir_coeff_japan_2484
++#define ar9580_1p0_baseband_core_txfir_coeff_japan_2484 ar9300_2p2_baseband_core_txfir_coeff_japan_2484
+ 
+ static const u32 ar9580_1p0_radio_postamble[][5] = {
+ 	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.8.4.2
 
