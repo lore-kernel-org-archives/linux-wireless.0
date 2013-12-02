@@ -1,52 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:43668 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932454Ab3LEPZt (ORCPT
+Received: from mail-we0-f182.google.com ([74.125.82.182]:47692 "EHLO
+	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757508Ab3LBU74 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 10:25:49 -0500
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
-	yeohchunyeow@gmail.com
-Cc: yeohchunyeow@cozybit.com, andrei.otcheretianski@intel.com
-Subject: [PATCH v8 4/5] mac80211: align ieee80211_mesh_csa_beacon() with ieee80211_csa_beacon()
-Date: Thu,  5 Dec 2013 17:25:42 +0200
-Message-Id: <1386257143-29840-5-git-send-email-luciano.coelho@intel.com> (sfid-20131205_162554_500402_7BA9FCA3)
-In-Reply-To: <1386257143-29840-1-git-send-email-luciano.coelho@intel.com>
-References: <1386257143-29840-1-git-send-email-luciano.coelho@intel.com>
+	Mon, 2 Dec 2013 15:59:56 -0500
+Received: by mail-we0-f182.google.com with SMTP id q59so12713111wes.13
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Dec 2013 12:59:55 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eyal Shapira <eyal@wizery.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 10/13] iwlwifi: mvm: rs: fix mapping from HT/VHT rates to legacy
+Date: Mon,  2 Dec 2013 22:59:22 +0200
+Message-Id: <1386017965-13641-10-git-send-email-egrumbach@gmail.com> (sfid-20131202_220013_097297_EBF2E75F)
+In-Reply-To: <529CF2D6.1080008@gmail.com>
+References: <529CF2D6.1080008@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The return value of ieee80211_mesh_csa_beacon is not aligned with the
-return value of ieee80211_csa_beacon() and
-ieee80211_ibss_csa_beacon().  For consistency and to be able to use
-both functions with similar code, change ieee80211_mesh_csa_beacon()
-not to send the bss changed notification itself, but return what has
-changed so the caller can send the notification instead.
+From: Eyal Shapira <eyal@wizery.com>
 
-Change-Id: If4c111fd874a3e17a5df98d306f7f1c8fcaa6a1a
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+The table rs_ht_to_legacy is used to get the next legacy rate
+following the last HT or VHT rate in the LQ rates table.
+The mapping wasn't correct as well as didn't include entries
+for MCS8/9 which led to out of bounds access. This didn't
+trigger a crash but led to legacy rate entries using 1Mbps
+rate.
+In 5Ghz this probably caused the Tx to fail completely given
+that Tx attempt would have reached the legacy entries and 1Mbps
+isn't valid.
+
+Signed-off-by: Eyal Shapira <eyal@wizery.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- net/mac80211/mesh.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/rs.c |   25 ++++++++++++-------------
+ 1 file changed, 12 insertions(+), 13 deletions(-)
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 980cc12..5476ad9 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -1089,12 +1089,10 @@ int ieee80211_mesh_csa_beacon(struct ieee80211_sub_if_data *sdata,
- 		return ret;
- 	}
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
+index 5c98d462..ef7126a 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
+@@ -56,19 +56,16 @@
  
--	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
--
- 	if (csa_action)
- 		ieee80211_send_action_csa(sdata, csa_settings);
  
--	return 0;
-+	return BSS_CHANGED_BEACON;
- }
+ static u8 rs_ht_to_legacy[] = {
+-	[IWL_RATE_1M_INDEX] = IWL_RATE_6M_INDEX,
+-	[IWL_RATE_2M_INDEX] = IWL_RATE_6M_INDEX,
+-	[IWL_RATE_5M_INDEX] = IWL_RATE_6M_INDEX,
+-	[IWL_RATE_11M_INDEX] = IWL_RATE_6M_INDEX,
+-	[IWL_RATE_6M_INDEX] = IWL_RATE_6M_INDEX,
+-	[IWL_RATE_9M_INDEX] = IWL_RATE_6M_INDEX,
+-	[IWL_RATE_12M_INDEX] = IWL_RATE_9M_INDEX,
+-	[IWL_RATE_18M_INDEX] = IWL_RATE_12M_INDEX,
+-	[IWL_RATE_24M_INDEX] = IWL_RATE_18M_INDEX,
+-	[IWL_RATE_36M_INDEX] = IWL_RATE_24M_INDEX,
+-	[IWL_RATE_48M_INDEX] = IWL_RATE_36M_INDEX,
+-	[IWL_RATE_54M_INDEX] = IWL_RATE_48M_INDEX,
+-	[IWL_RATE_60M_INDEX] = IWL_RATE_54M_INDEX,
++	[IWL_RATE_MCS_0_INDEX] = IWL_RATE_6M_INDEX,
++	[IWL_RATE_MCS_1_INDEX] = IWL_RATE_9M_INDEX,
++	[IWL_RATE_MCS_2_INDEX] = IWL_RATE_12M_INDEX,
++	[IWL_RATE_MCS_3_INDEX] = IWL_RATE_18M_INDEX,
++	[IWL_RATE_MCS_4_INDEX] = IWL_RATE_24M_INDEX,
++	[IWL_RATE_MCS_5_INDEX] = IWL_RATE_36M_INDEX,
++	[IWL_RATE_MCS_6_INDEX] = IWL_RATE_48M_INDEX,
++	[IWL_RATE_MCS_7_INDEX] = IWL_RATE_54M_INDEX,
++	[IWL_RATE_MCS_8_INDEX] = IWL_RATE_54M_INDEX,
++	[IWL_RATE_MCS_9_INDEX] = IWL_RATE_54M_INDEX,
+ };
  
- static int mesh_fwd_csa_frame(struct ieee80211_sub_if_data *sdata,
+ static const u8 ant_toggle_lookup[] = {
+@@ -682,6 +679,8 @@ static u32 rs_get_lower_rate(struct iwl_lq_sta *lq_sta,
+ 	 * are always supported (spec demand) */
+ 	if (!is_legacy(rate) && (!ht_possible || !scale_index)) {
+ 		switch_to_legacy = 1;
++		WARN_ON_ONCE(scale_index < IWL_RATE_MCS_0_INDEX &&
++			     scale_index > IWL_RATE_MCS_9_INDEX);
+ 		scale_index = rs_ht_to_legacy[scale_index];
+ 		if (lq_sta->band == IEEE80211_BAND_5GHZ)
+ 			rate->type = LQ_LEGACY_A;
 -- 
-1.8.4.3
+1.7.9.5
 
