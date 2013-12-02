@@ -1,39 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:38901 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754799Ab3LPSBO (ORCPT
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:50172 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757497Ab3LBU7p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Dec 2013 13:01:14 -0500
-Received: by mail-wg0-f52.google.com with SMTP id x13so4999620wgg.19
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Dec 2013 10:01:13 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1387205758.2057.17.camel@jlt4.sipsolutions.net>
-References: <1387048146-16380-1-git-send-email-mcgrof@do-not-panic.com>
- <1387048146-16380-2-git-send-email-mcgrof@do-not-panic.com> <1387205758.2057.17.camel@jlt4.sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Mon, 16 Dec 2013 19:00:53 +0100
-Message-ID: <CAB=NE6WmtHy6f9pYx=pKze7N_OpMP2SrPqdvKNFyDn-Bvy1SeA@mail.gmail.com> (sfid-20131216_190121_399574_7A6818A1)
-Subject: Re: [PATCH 2/2] cfg80211: make regulatory_hint() remove REGULATORY_CUSTOM_REG
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 2 Dec 2013 15:59:45 -0500
+Received: by mail-wi0-f176.google.com with SMTP id hq4so5526741wib.3
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Dec 2013 12:59:44 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eyal Shapira <eyal@wizery.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 02/13] iwlwifi: mvm: rs: reduce min failures to end test window
+Date: Mon,  2 Dec 2013 22:59:14 +0200
+Message-Id: <1386017965-13641-2-git-send-email-egrumbach@gmail.com> (sfid-20131202_220014_884300_7306A857)
+In-Reply-To: <529CF2D6.1080008@gmail.com>
+References: <529CF2D6.1080008@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 16, 2013 at 3:55 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sat, 2013-12-14 at 20:09 +0100, Luis R. Rodriguez wrote:
->> The REGULATORY_CUSTOM_REG can be used during early init with
->> the goal of overriding the wiphy's default regulatory settings
->> in case the alpha2 of the device is not known. In the case that
->> the alpha2 becomes known lets avoid having drivers having to
->> clear the REGULATORY_CUSTOM_REG flag by doing it for them
->> when regulatory_hint() is used.
->
-> This change brcmsmac behaviour afaict - are you sure that's correct?
+From: Eyal Shapira <eyal@wizery.com>
 
-It should be, their implementation was just modeled over the ath module.
+This terminates a test window of a new rate quicker in case
+we've hit a bad rate and should recover better.
 
-  Luis
+Signed-off-by: Eyal Shapira <eyal@wizery.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/rs.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
+index 0655209..ecf24cb 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
+@@ -47,7 +47,7 @@
+ #define IWL_HT_NUMBER_TRY   3
+ 
+ #define IWL_RATE_MAX_WINDOW		62	/* # tx in history window */
+-#define IWL_RATE_MIN_FAILURE_TH		6	/* min failures to calc tpt */
++#define IWL_RATE_MIN_FAILURE_TH		3	/* min failures to calc tpt */
+ #define IWL_RATE_MIN_SUCCESS_TH		8	/* min successes to calc tpt */
+ 
+ /* max allowed rate miss before sync LQ cmd */
+-- 
+1.7.9.5
+
