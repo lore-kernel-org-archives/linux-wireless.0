@@ -1,42 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:52920 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751654Ab3LESH3 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:57784 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752888Ab3LBSpQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 13:07:29 -0500
-Message-ID: <1386266845.4182.21.camel@jlt4.sipsolutions.net> (sfid-20131205_190732_381834_9D39B5BB)
-Subject: Re: [PATCH v2 4/4] cfg80211: don't "leak" uncompleted scans
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 05 Dec 2013 19:07:25 +0100
-In-Reply-To: <1386261017-5513-1-git-send-email-eliad@wizery.com> (sfid-20131205_173024_110623_DBFDD19F)
-References: <1386261017-5513-1-git-send-email-eliad@wizery.com>
-	 (sfid-20131205_173024_110623_DBFDD19F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 2 Dec 2013 13:45:16 -0500
+Date: Mon, 2 Dec 2013 13:42:57 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: pull-request: mac80211-next 2013-12-01
+Message-ID: <20131202184256.GF26033@tuxdriver.com> (sfid-20131202_194533_441681_D0239651)
+References: <1386000716.20277.11.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1386000716.20277.11.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-12-05 at 18:30 +0200, Eliad Peller wrote:
-> ___cfg80211_scan_done() can be called in some cases
-> (e.g. on NETDEV_DOWN) before the low level driver
-> notified scan completion (which is indicated by
-> passing leak=true).
+On Mon, Dec 02, 2013 at 05:11:56PM +0100, Johannes Berg wrote:
+> John,
 > 
-> Clearing rdev->scan_req in this case is buggy, as
-> scan_done_wk might have already being queued/running
-> (and can't be flushed as it takes rtnl()).
+> First pull request for -next ... This round looks a bit quieter, but
+> we'll see.
 > 
-> If a new scan will be requested at this stage, the
-> scan_done_wk will try freeing it (instead of the
-> previous scan), and this will later result in
-> a use after free.
+> I have various improvements/cleanups/fixes all over, but the shortlog
+> shows that Luis's regulatory work and mesh work from the cozybit folks
+> are the biggest ones, along with the CSA fixes.
 > 
-> Simply remove the "leak" option, and replace it with
-> a standard WARN_ON.
+> Let me know if there are any issues.
+> 
+> johannes
+> 
+> The following changes since commit 6b732323c1e1ced5c76350bfef2cc8c233f9dcb9:
+> 
+>   Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth (2013-11-05 15:58:21 -0500)
+> 
+> are available in the git repository at:
+> 
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git for-john
+> 
+> for you to fetch changes up to ddcc347b70f298f9d624cd0e250581d831d915fb:
+> 
+>   mac80211: fix rx_nss calculation for drivers with hw rc (2013-12-02 15:42:16 +0100)
 
-Applied. I guess buggy drivers will then crash, but that's hardly news.
+Pulling now...
 
-johannes
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
