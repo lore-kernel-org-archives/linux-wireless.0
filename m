@@ -1,57 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:43787 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751631Ab3LJJVQ (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:54971 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752051Ab3LBOpP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Dec 2013 04:21:16 -0500
-Date: Tue, 10 Dec 2013 10:21:14 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
-Cc: Luciano Coelho <luca@coelho.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, sre@ring0.de, joni.lapilainen@gmail.com,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Felipe Contreras <felipe.contreras@gmail.com>,
-	David Gnedt <david.gnedt@davizone.at>
-Subject: Re: [PATCH v2 01/16] wl1251: fix scan behaviour while not
- associated
-Message-ID: <20131210092114.GB22756@amd.pavel.ucw.cz> (sfid-20131210_102547_921347_38B0E886)
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
- <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
- <1386494714-21070-2-git-send-email-pali.rohar@gmail.com>
+	Mon, 2 Dec 2013 09:45:15 -0500
+Date: Mon, 2 Dec 2013 09:34:12 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Ujjal Roy <royujjal@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: TEST: testing how to send a patch from git repository
+Message-ID: <20131202143411.GB26033@tuxdriver.com> (sfid-20131202_154519_946380_19760066)
+References: <1385881036-6069-1-git-send-email-royujjal@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1386494714-21070-2-git-send-email-pali.rohar@gmail.com>
+In-Reply-To: <1385881036-6069-1-git-send-email-royujjal@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+Please DO NOT use linux-wireless as a test destination for patch
+mailing tools.  It's bad enough to do it once, but over and over
+again is a bit rude.
 
-> diff --git a/drivers/net/wireless/ti/wl1251/cmd.c b/drivers/net/wireless/ti/wl1251/cmd.c
-> index 6822b84..16b6479 100644
-> --- a/drivers/net/wireless/ti/wl1251/cmd.c
-> +++ b/drivers/net/wireless/ti/wl1251/cmd.c
-> @@ -410,7 +411,10 @@ int wl1251_cmd_scan(struct wl1251 *wl, u8 *ssid, size_t ssid_len,
->  	struct wl1251_cmd_scan *cmd;
->  	int i, ret = 0;
+On Sun, Dec 01, 2013 at 12:27:16PM +0530, Ujjal Roy wrote:
+> Testing how to send an email through git to see the patch is exactly
+> submitted or not. Actually testing the tab characters. Please don't
+> mind.
+> 
+> Signed-off-by: Ujjal Roy <royujjal@gmail.com>
+> ---
+>  net/wireless/sme.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+> index 5eeb8e0..19a5df4 100644
+> --- a/net/wireless/sme.c
+> +++ b/net/wireless/sme.c
+> @@ -20,6 +20,8 @@
+>  #include "reg.h"
+>  #include "rdev-ops.h"
 >  
-> -	wl1251_debug(DEBUG_CMD, "cmd scan");
-> +	wl1251_debug(DEBUG_CMD, "cmd scan channels %d ssid(%d) '%s'",
-> +		     n_channels, (int)ssid_len, ssid);
+> +	printk("TEST: submitting patch from git >> Ujjal Roy C: royujjal@gmail.com");
 > +
-> +	WARN_ON(n_channels > SCAN_MAX_NUM_OF_CHANNELS);
->  
+>  /*
+>   * Software SME in cfg80211, using auth/assoc/deauth calls to the
+>   * driver. This is is for implementing nl80211's connect/disconnect
+> -- 
+> 1.8.3.1
+> 
+> 
 
-ssids can have \0s in them... and what is worse, they may not be 0
-terminated AFAICT.
-
-Potential solution is at
-http://www.spinics.net/lists/linux-wireless/msg98640.html . 
-
-Thanks,
-									Pavel
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
