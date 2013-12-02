@@ -1,56 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:61170 "EHLO mout.gmx.net"
+Received: from mx1.redhat.com ([209.132.183.28]:55816 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754609Ab3LPP06 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Dec 2013 10:26:58 -0500
-Received: from [192.168.1.138] ([79.218.126.58]) by mail.gmx.com (mrgmx002)
- with ESMTPSA (Nemesis) id 0MOOpx-1Vvaji0JiX-005n1r for
- <linux-wireless@vger.kernel.org>; Mon, 16 Dec 2013 16:26:57 +0100
-Message-ID: <52AF1BBE.5020602@rempel-privat.de> (sfid-20131216_162712_066882_F2C4B8D1)
-Date: Mon, 16 Dec 2013 16:26:54 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>,
-	David Herrmann <dh.herrmann@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
-Subject: Re: [BUG] P2P setup timeout
-References: <CANq1E4R--OowH-LCUX4oSxsJu7yf_2e6Jei8tP+i_BQ_QHiKkw@mail.gmail.com>	 <1387197416.4665.15.camel@jlt4.sipsolutions.net>	 <CANq1E4TAt_Pw-V5_2LtJjY3LRcuwsxr1mBkcHjmX+MJUxc=zPQ@mail.gmail.com>	 <1387201528.2057.1.camel@jlt4.sipsolutions.net>	 <CANq1E4TJWCgM4yCFC25b3ssQEvFv+hEhW6jP3_mQKxQCw-QtUQ@mail.gmail.com>	 <52AF14EC.9010803@rempel-privat.de>	 <CANq1E4S+u6UZf15fU9aO6JvY4OTE+RnOKGL0K16T9A_4vr+C6A@mail.gmail.com>	 (sfid-20131216_160940_365143_3C2C01EE) <1387206912.2057.25.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1387206912.2057.25.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+	id S1751438Ab3LBPOe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Dec 2013 10:14:34 -0500
+Message-ID: <1385997324.1969.9.camel@dcbw.foobar.com> (sfid-20131202_161437_364773_50EB2B67)
+Subject: Re: question about generalized way for RSSI notification
+From: Dan Williams <dcbw@redhat.com>
+To: Alexey Perevalov <a.perevalov@samsung.com>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Date: Mon, 02 Dec 2013 09:15:24 -0600
+In-Reply-To: <52989CB9.3060108@samsung.com>
+References: <52989CB9.3060108@samsung.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 16.12.2013 16:15, schrieb Johannes Berg:
-> On Mon, 2013-12-16 at 16:09 +0100, David Herrmann wrote:
+On Fri, 2013-11-29 at 17:55 +0400, Alexey Perevalov wrote:
+> Dear wireless subsystem maintainers,
 > 
->> Thanks, I tracked down the ENETDOWN. I'm not entirely sure but I think it's:
+> I have a question regarding RSSI notification to the user space.
+> Right now this information available in /proc/net/wireless.
+> That generalized method is not depending on driver implementation, 
+> driver just need to provide wireless statistics.
 > 
-> Obviously :)
-> 
->> @Oleksij, I actually have three ath9k-htc devices so I'd like to get
->> this working, and the devices are really nice apart from this bug. I
->> will keep you up to date, but if you have any hints where to continue
->> digging, lemme know. Until it's fixed, I'll just work on
->> wired-displays via ethernet instead of wifi-displays..
-> 
-> Based on what Oleksij said, these issues are likely not even related -
-> maybe ath9k_htc can't even set the rates to exclude CCK, so even if that
-> call were to succeed it wouldn't work?
+> I found 2 places in kernel which report about RSSI to user space eventually.
+> First place, it's wlan_rndis driver base implementation 
+> ./drivers/net/wireless/rndis_wlan.c.
+> The second place, it's mac80211 driver - beacon frame handling.
 
-Hmm.. WMI_BITRATE_MASK should do it.
-ieee80211_ops->set_bitrate_mask is set, so theoretically we should be
-able to exclude CCK. Today i won't be able to check it.
+Do you mean ieee80211_rx_mgmt_beacon()?
 
-> The issue here doesn't seem to be that call anyway, since that call was
-> for the data frames on the p2p-wlan1-0 interface, but rather seems to be
-> that ath9k_htc ignores the no-CCK parameter for the NL80211_CMD_FRAME
-> command (in mac80211, this would be IEEE80211_TX_CTL_NO_CCK_RATE)
+> Unfortunately wireless driver we're using isn't rndis based and isn't 
+> mac80211 based.
+> We don't want to depends on driver code.
+
+There's another possibility: use cfg80211 for the driver's configuration
+interface.  cfg80211 is actually just some utility code that implements
+the nl80211 API (which replaces the old WEXT configuration API).  Any
+driver can use cfg80211, not just ones based on the mac80211 software
+stack.  In fact, a number of the older "fullmac" drivers (libertas,
+orinico) have been ported to use the cfg80211 API for all configuration
+handling.
+
+> What community think in this situation, is it possible to add notifier 
+> with following responsibility:
+>      send netlink notification in case of signal level changed according 
+> to predefined by user threshold?
+
+Look at net/wireless/nl80211.c; these are the entry points when
+userspace is configuring the driver with nl80211 commands.  Userspace
+would set up CQM thresholds with the NL80211_CMD_SET_CQM command, which
+then gets passed to your driver.  Your driver could then set up a timer
+or level triggers based on the userspace parameters, and then call
+cfg80211_cqm_rssi_notify() as appropriate to send the notification to
+userspace.
+
+Dan
+
+> Technically it will looks like rndis_wlan approach - timer function with 
+> predefined frequency.
 > 
-> johannes
+> This functionality is needed to reduce user space daemon activity which 
+> provides information to GUI wifi indicator.
+> Also such approach could decrease time reaction on signal level changes. 
+> Currently, some OSes has 1 second interval,
+> another one has 3 seconds for checking RSSI.
 > 
 
 
--- 
-Regards,
-Oleksij
