@@ -1,55 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.15.4]:49779 "EHLO mout.web.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753124Ab3LESK6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 13:10:58 -0500
-Received: from [192.168.178.20] ([88.217.180.24]) by smtp.web.de (mrweb102)
- with ESMTPSA (Nemesis) id 0M40zO-1VXNgY1lru-00rUqV for
- <linux-wireless@vger.kernel.org>; Thu, 05 Dec 2013 19:10:56 +0100
-Message-ID: <52A0C1A8.5020504@web.de> (sfid-20131205_191100_817495_DC796F89)
-Date: Thu, 05 Dec 2013 19:10:48 +0100
-From: Sam <blue-t@web.de>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: AVM Fritz Stick N v2 has troubles loading the driver rt2x00
-References: <528BBFAE.4050900@web.de>
-In-Reply-To: <528BBFAE.4050900@web.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from s3.sipsolutions.net ([144.76.43.152]:38455 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751284Ab3LBK7h (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Dec 2013 05:59:37 -0500
+Message-ID: <1385981972.4445.7.camel@jlt4.sipsolutions.net> (sfid-20131202_115942_549529_092727A4)
+Subject: Re: [RFC] mac80211: fix rx_nss calculation for drivers with hw rc
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Date: Mon, 02 Dec 2013 11:59:32 +0100
+In-Reply-To: <1385981647-4147-1-git-send-email-michal.kazior@tieto.com> (sfid-20131202_115744_274098_9362F537)
+References: <1385739434.8656.0.camel@jlt4.sipsolutions.net>
+	 <1385981647-4147-1-git-send-email-michal.kazior@tieto.com>
+	 (sfid-20131202_115744_274098_9362F537)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2013-12-02 at 11:54 +0100, Michal Kazior wrote:
+> Drivers with hardware rate control were given
+> sta->rx_nss set to 0. This was because rx_nss
+> calculation procedure was protected by hw/sw rate
+> control check.
+> 
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> ---
+> Hi Johannes,
+> 
+> I've re-checked the issue I've mentioned with the patch 'ath10k: use nss
+> provided by mac80211'.
+> 
+> Apparently drivers with HW rate control are only affected by this bug
+> and this patch is what I came up with as a quick fix. Any comments?
 
-Hello,
+Yeah this looks reasonable. I guess I'll apply it despite the [RFC]
 
-I recently tried to get my AVM Fritz Stick N v2 working under Kubuntu
-13.04 with a new 3.12 kernel from the mainline ppa after i
-heard it was supported in this driver.
-
-Here some diagnostic logs:
-
-lsusb
-
-Bus 001 Device 004: ID 057c:8501 AVM GmbH 
-
-uname -a
-
-
-Linux greyback 3.12.0-031200rc2-generic #201309231935 SMP Mon Sep 23 23:37:12 UTC 2013 x86_64 x86_64 x86_64 GNU/Linux
-
-
-Error from dmesg:
-
-[   23.011160] ieee80211 phy0: rt2x00_set_rt: Info - RT chipset 5592, rev 0222 detected
-[   23.048498] ieee80211 phy0: rt2x00usb_vendor_request: Error - Vendor Request 0x09 failed for offset 0x0000 with error -32
-[   23.048539] ieee80211 phy0: rt2x00lib_probe_dev: Error - Failed to allocate device
-[   23.048586] rt2800usb: probe of 1-1.3:1.0 failed with error -32
-[   23.048641] usbcore: registered new interface driver rt2800usb
-
-It is detected , driver modules are loaded according to lsmod. 
-According to the internet this stick is featuring a RT 5572, even though this log says something different.
-
-What is going south here? 
-
-Regards
-Sam
+johannes
 
