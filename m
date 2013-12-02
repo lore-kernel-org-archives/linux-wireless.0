@@ -1,51 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:40847 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750904Ab3LKQAQ (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:39364 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751432Ab3LBPsn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Dec 2013 11:00:16 -0500
-Date: Wed, 11 Dec 2013 10:55:08 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Gustavo Padovan <gustavo@padovan.org>,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: bluetooth-next 2013-12-10
-Message-ID: <20131211155507.GE7411@tuxdriver.com> (sfid-20131211_170057_752608_AB2A392E)
-References: <20131210153830.GA1542@joana>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131210153830.GA1542@joana>
+	Mon, 2 Dec 2013 10:48:43 -0500
+Message-ID: <1385999318.20277.6.camel@jlt4.sipsolutions.net> (sfid-20131202_164846_354934_4D10C6D8)
+Subject: Re: [PATCH] mac80211: Update opmode during adding new station
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marek Kwaczynski <marek.kwaczynski@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 02 Dec 2013 16:48:38 +0100
+In-Reply-To: <1385998692-27853-1-git-send-email-marek.kwaczynski@tieto.com> (sfid-20131202_163827_249999_EAB80767)
+References: <1385998692-27853-1-git-send-email-marek.kwaczynski@tieto.com>
+	 (sfid-20131202_163827_249999_EAB80767)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 10, 2013 at 01:38:30PM -0200, Gustavo Padovan wrote:
-> Hi John,
-> 
-> More patches to 3.14. Here we have the support for Low Energy Connection
-> Oriented Channels (LE CoC). Basically, as the name says, this adds supports
-> for connection oriented channels in the same way we already have them for
-> BR/EDR connections so profiles/protocols that work on top of BR/EDR can now
-> work on LE plus a plenty of new possibilities for LE.
-> 
-> Please pull. Thanks!!
-> 
-> 	Gustavo
-> 
-> ---
-> The following changes since commit 201a5929c8c788f9ef53b010065c9ce70c9c06f0:
-> 
->   Bluetooth: Remove dead code from SMP encryption function (2013-12-04 11:09:05 -0200)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next.git for-upstream
-> 
-> for you to fetch changes up to 71fb419724fadab4efdf98210aa3fe053bd81d29:
-> 
->   Bluetooth: Fix handling of L2CAP Command Reject over LE (2013-12-10 01:15:44 -0800)
+On Mon, 2013-12-02 at 16:38 +0100, Marek Kwaczynski wrote:
+> Update Operating mode is needed when User Space received Assoc
+> Request contains Operating mode notification element.
 
-Pulling now...
+Version tags on your patches would be good. I have no idea what you're
+doing now.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+johannes
+
