@@ -1,46 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0178.hostedemail.com ([216.40.44.178]:43673 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751063Ab3LAWiX (ORCPT
+Received: from mailout4.samsung.com ([203.254.224.34]:32071 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752130Ab3LBXAe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Dec 2013 17:38:23 -0500
-Message-ID: <1385937499.2664.21.camel@joe-AO722> (sfid-20131201_233843_476221_F1D16476)
-Subject: Re: [PATCH] net: mac80211: tx.c: be sure of 'sdata->vif.type' must
- be NL80211_IFTYPE_AP when be in NL80211_IFTYPE_AP case
-From: Joe Perches <joe@perches.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Chen Gang <gang.chen.5i5j@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	rkuo <rkuo@codeaurora.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	David Miller <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
-Date: Sun, 01 Dec 2013 14:38:19 -0800
-In-Reply-To: <1385890523.4171.1.camel@jlt4.sipsolutions.net>
-References: <528AEFB7.4060301@gmail.com>
-	 <20131125011938.GB18921@codeaurora.org> <5292B845.3010404@gmail.com>
-	 <5292B8A0.7020409@gmail.com> <5294255E.7040105@gmail.com>
-	 <52957ADA.2080704@gmail.com>
-	 (sfid-20131127_055211_558798_A7DF5684) <1385739487.8656.1.camel@jlt4.sipsolutions.net>
-	 <5299D306.7070701@gmail.com>
-	 (sfid-20131130_125901_519610_EDA4068E) <1385816013.4327.1.camel@jlt4.sipsolutions.net>
-	 <5299ED38.4090509@gmail.com> <5299EFDD.6060405@gmail.com>
-	 (sfid-20131130_150205_984535_068F14A9) <1385842134.6108.4.camel@jlt4.sipsolutions.net>
-	 <1385843940.2664.4.camel@joe-AO722>
-	 <1385890523.4171.1.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Mon, 2 Dec 2013 18:00:34 -0500
+From: Jingoo Han <jg1.han@samsung.com>
+To: 'Greg Kroah-Hartman' <gregkh@linuxfoundation.org>
+Cc: linux-kernel@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>,
+	"'John W. Linville'" <linville@tuxdriver.com>,
+	=?iso-8859-2?Q?'Rafa=B3_Mi=B3ecki'?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org
+References: <001501ceefb1$69c96820$3d5c3860$%han@samsung.com>
+In-reply-to: <001501ceefb1$69c96820$3d5c3860$%han@samsung.com>
+Subject: [PATCH 02/39] bcma: pci: remove DEFINE_PCI_DEVICE_TABLE macro
+Date: Tue, 03 Dec 2013 08:00:27 +0900
+Message-id: <001701ceefb2$4ad65260$e082f720$%han@samsung.com> (sfid-20131203_000307_390972_C7DAAF37)
+MIME-version: 1.0
+Content-type: text/plain; charset=iso-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2013-12-01 at 10:35 +0100, Johannes Berg wrote:
-> Good try, but no, now ap_sdata isn't even assigned. :)
+Don't use DEFINE_PCI_DEVICE_TABLE macro, because this macro
+is not preferred.
 
-Right.  Oh well.  There's no improving this without
-significant rewrite.  Even then, there may not be much
-overall improvement.
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+---
+ drivers/bcma/host_pci.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-btw: Chen, I think fall-throughs are fine as long as
-they are commented appropriately.
+diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
+index 6fb98b5..6fe0909 100644
+--- a/drivers/bcma/host_pci.c
++++ b/drivers/bcma/host_pci.c
+@@ -270,7 +270,7 @@ static SIMPLE_DEV_PM_OPS(bcma_pm_ops, bcma_host_pci_suspend,
+ 
+ #endif /* CONFIG_PM_SLEEP */
+ 
+-static DEFINE_PCI_DEVICE_TABLE(bcma_pci_bridge_tbl) = {
++static const struct pci_device_id bcma_pci_bridge_tbl[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x0576) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4313) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 43224) },
+-- 
+1.7.10.4
 
 
