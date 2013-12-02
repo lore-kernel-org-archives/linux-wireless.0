@@ -1,45 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:36171 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752120Ab3LWOZ6 (ORCPT
+Received: from mail-ea0-f172.google.com ([209.85.215.172]:65318 "EHLO
+	mail-ea0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752494Ab3LBPeQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Dec 2013 09:25:58 -0500
-Message-ID: <52B8452F.4070508@gmail.com> (sfid-20131223_152630_474942_9CFC31A8)
-Date: Mon, 23 Dec 2013 22:14:07 +0800
-From: Ding Tianhong <dthxman@gmail.com>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>,
-	Ding Tianhong <dingtianhong@huawei.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 19/21] wireless: slight optimization of addr compare
-References: <52B7C600.8030907@huawei.com> <52B83EE1.4040705@openwrt.org>
-In-Reply-To: <52B83EE1.4040705@openwrt.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 2 Dec 2013 10:34:16 -0500
+Received: by mail-ea0-f172.google.com with SMTP id q10so9065820ead.17
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Dec 2013 07:34:14 -0800 (PST)
+From: Marek Kwaczynski <marek.kwaczynski@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	Marek Kwaczynski <marek.kwaczynski@tieto.com>
+Subject: [PATCH 2/2] mac80211: Update opmode during adding new station
+Date: Mon,  2 Dec 2013 16:33:59 +0100
+Message-Id: <1385998439-27632-2-git-send-email-marek.kwaczynski@tieto.com> (sfid-20131202_163420_768407_9FEF0F8B)
+In-Reply-To: <1385998439-27632-1-git-send-email-marek.kwaczynski@tieto.com>
+References: <1385998439-27632-1-git-send-email-marek.kwaczynski@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-于 2013/12/23 21:47, Felix Fietkau 写道:
-> On 2013-12-23 06:11, Ding Tianhong wrote:
->> Use the recently added and possibly more efficient
->> ether_addr_equal_unaligned to instead of memcmp.
-> It looks to me like all of these (including the ones in the other
-> similar patches) are in places, where the address data is aligned to at
-> least 16 bit. Because of this, using ether_addr_equal instead of
-> ether_addr_equal_unaligned would be much better for platforms without
-> CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS.
-> 
-> - Felix
+Update Operating mode is needed when User Space received Assoc
+Request contains Operating mode notification element.
 
-Yes, the most of the place should use ether_addr_equal. thanks.
+Signed-off-by: Marek Kwaczynski <marek.kwaczynski@tieto.com>
+---
+ net/mac80211/cfg.c         |    7 +++++++
+ net/mac80211/ieee80211_i.h |    3 +++
+ net/mac80211/vht.c         |   31 ++++++++++++++++++++-----------
+ 3 files changed, 30 insertions(+), 11 deletions(-)
 
-Regards
-Ding
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe netdev" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 95667b0..50f0841 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1409,6 +1409,13 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
+ 	 */
+ 	if (!(params->sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER))) {
+ 		sta_info_pre_move_state(sta, IEEE80211_STA_AUTH);
++		if (params->vht_opmode_used) {
++			enum ieee80211_band band =
++					    ieee80211_get_sdata_band(sdata);
++			ieee80211_vht_recalc_handle_opmode(sdata, sta,
++							   params->vht_opmode,
++							   band, 0);
++		}
+ 		sta_info_pre_move_state(sta, IEEE80211_STA_ASSOC);
+ 	}
+ 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 29dc505..13965e1 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1510,6 +1510,9 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
+ 				    struct sta_info *sta);
+ enum ieee80211_sta_rx_bandwidth ieee80211_sta_cur_vht_bw(struct sta_info *sta);
+ void ieee80211_sta_set_rx_nss(struct sta_info *sta);
++u32 ieee80211_vht_recalc_handle_opmode(struct ieee80211_sub_if_data *sdata,
++				       struct sta_info *sta, u8 opmode,
++				       enum ieee80211_band band, bool nss_only);
+ void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
+ 				 struct sta_info *sta, u8 opmode,
+ 				 enum ieee80211_band band, bool nss_only);
+diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
+index de01127..4a5174c 100644
+--- a/net/mac80211/vht.c
++++ b/net/mac80211/vht.c
+@@ -350,21 +350,17 @@ void ieee80211_sta_set_rx_nss(struct sta_info *sta)
+ 	sta->sta.rx_nss = max_t(u8, 1, ht_rx_nss);
+ }
+ 
+-void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
+-				 struct sta_info *sta, u8 opmode,
+-				 enum ieee80211_band band, bool nss_only)
++u32 ieee80211_vht_recalc_handle_opmode(struct ieee80211_sub_if_data *sdata,
++				       struct sta_info *sta, u8 opmode,
++				       enum ieee80211_band band, bool nss_only)
+ {
+-	struct ieee80211_local *local = sdata->local;
+-	struct ieee80211_supported_band *sband;
+ 	enum ieee80211_sta_rx_bandwidth new_bw;
+-	u32 changed = 0;
+ 	u8 nss;
+-
+-	sband = local->hw.wiphy->bands[band];
++	u32 changed = -1;
+ 
+ 	/* ignore - no support for BF yet */
+ 	if (opmode & IEEE80211_OPMODE_NOTIF_RX_NSS_TYPE_BF)
+-		return;
++		return -EOPNOTSUPP;
+ 
+ 	nss = opmode & IEEE80211_OPMODE_NOTIF_RX_NSS_MASK;
+ 	nss >>= IEEE80211_OPMODE_NOTIF_RX_NSS_SHIFT;
+@@ -376,7 +372,7 @@ void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	if (nss_only)
+-		goto change;
++		return changed;
+ 
+ 	switch (opmode & IEEE80211_OPMODE_NOTIF_CHANWIDTH_MASK) {
+ 	case IEEE80211_OPMODE_NOTIF_CHANWIDTH_20MHZ:
+@@ -398,8 +394,21 @@ void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
+ 		sta->sta.bandwidth = new_bw;
+ 		changed |= IEEE80211_RC_BW_CHANGED;
+ 	}
++	return changed;
++}
++
++void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
++				 struct sta_info *sta, u8 opmode,
++				 enum ieee80211_band band, bool nss_only)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_supported_band *sband;
++	u32 changed = 0;
++
++	changed = ieee80211_vht_recalc_handle_opmode(sdata, sta, opmode, band,
++						     nss_only);
++	sband = local->hw.wiphy->bands[band];
+ 
+- change:
+ 	if (changed)
+ 		rate_control_rate_update(local, sband, sta, changed);
+ }
+-- 
+1.7.9.5
 
