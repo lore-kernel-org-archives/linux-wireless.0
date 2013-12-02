@@ -1,128 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f172.google.com ([209.85.215.172]:65318 "EHLO
-	mail-ea0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752494Ab3LBPeQ (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:61590 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752815Ab3LBRBq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Dec 2013 10:34:16 -0500
-Received: by mail-ea0-f172.google.com with SMTP id q10so9065820ead.17
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Dec 2013 07:34:14 -0800 (PST)
-From: Marek Kwaczynski <marek.kwaczynski@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	Marek Kwaczynski <marek.kwaczynski@tieto.com>
-Subject: [PATCH 2/2] mac80211: Update opmode during adding new station
-Date: Mon,  2 Dec 2013 16:33:59 +0100
-Message-Id: <1385998439-27632-2-git-send-email-marek.kwaczynski@tieto.com> (sfid-20131202_163420_768407_9FEF0F8B)
-In-Reply-To: <1385998439-27632-1-git-send-email-marek.kwaczynski@tieto.com>
-References: <1385998439-27632-1-git-send-email-marek.kwaczynski@tieto.com>
+	Mon, 2 Dec 2013 12:01:46 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Bartosz Markowski <bartosz.markowski@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+	"Michal Kazior" <michal.kazior@tieto.com>
+Subject: Re: [PATCH v2] ath10k: fix multi BSSID with WPA on FW 10.1
+References: <1385971596-3575-1-git-send-email-bartosz.markowski@tieto.com>
+Date: Mon, 2 Dec 2013 19:01:39 +0200
+In-Reply-To: <1385971596-3575-1-git-send-email-bartosz.markowski@tieto.com>
+	(Bartosz Markowski's message of "Mon, 2 Dec 2013 09:06:36 +0100")
+Message-ID: <87haarb30s.fsf@kamboji.qca.qualcomm.com> (sfid-20131202_180208_756465_42D276B8)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update Operating mode is needed when User Space received Assoc
-Request contains Operating mode notification element.
+Bartosz Markowski <bartosz.markowski@tieto.com> writes:
 
-Signed-off-by: Marek Kwaczynski <marek.kwaczynski@tieto.com>
----
- net/mac80211/cfg.c         |    7 +++++++
- net/mac80211/ieee80211_i.h |    3 +++
- net/mac80211/vht.c         |   31 ++++++++++++++++++++-----------
- 3 files changed, 30 insertions(+), 11 deletions(-)
+> From: Michal Kazior <michal.kazior@tieto.com>
+>
+> FW 10.1 seems to require the default key index to
+> be updated to point to group key after it is
+> installed. Otherwise Txed frames are corrupted.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 95667b0..50f0841 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1409,6 +1409,13 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
- 	 */
- 	if (!(params->sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER))) {
- 		sta_info_pre_move_state(sta, IEEE80211_STA_AUTH);
-+		if (params->vht_opmode_used) {
-+			enum ieee80211_band band =
-+					    ieee80211_get_sdata_band(sdata);
-+			ieee80211_vht_recalc_handle_opmode(sdata, sta,
-+							   params->vht_opmode,
-+							   band, 0);
-+		}
- 		sta_info_pre_move_state(sta, IEEE80211_STA_ASSOC);
- 	}
- 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 29dc505..13965e1 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1510,6 +1510,9 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
- 				    struct sta_info *sta);
- enum ieee80211_sta_rx_bandwidth ieee80211_sta_cur_vht_bw(struct sta_info *sta);
- void ieee80211_sta_set_rx_nss(struct sta_info *sta);
-+u32 ieee80211_vht_recalc_handle_opmode(struct ieee80211_sub_if_data *sdata,
-+				       struct sta_info *sta, u8 opmode,
-+				       enum ieee80211_band band, bool nss_only);
- void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
- 				 struct sta_info *sta, u8 opmode,
- 				 enum ieee80211_band band, bool nss_only);
-diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
-index de01127..4a5174c 100644
---- a/net/mac80211/vht.c
-+++ b/net/mac80211/vht.c
-@@ -350,21 +350,17 @@ void ieee80211_sta_set_rx_nss(struct sta_info *sta)
- 	sta->sta.rx_nss = max_t(u8, 1, ht_rx_nss);
- }
- 
--void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
--				 struct sta_info *sta, u8 opmode,
--				 enum ieee80211_band band, bool nss_only)
-+u32 ieee80211_vht_recalc_handle_opmode(struct ieee80211_sub_if_data *sdata,
-+				       struct sta_info *sta, u8 opmode,
-+				       enum ieee80211_band band, bool nss_only)
- {
--	struct ieee80211_local *local = sdata->local;
--	struct ieee80211_supported_band *sband;
- 	enum ieee80211_sta_rx_bandwidth new_bw;
--	u32 changed = 0;
- 	u8 nss;
--
--	sband = local->hw.wiphy->bands[band];
-+	u32 changed = -1;
- 
- 	/* ignore - no support for BF yet */
- 	if (opmode & IEEE80211_OPMODE_NOTIF_RX_NSS_TYPE_BF)
--		return;
-+		return -EOPNOTSUPP;
- 
- 	nss = opmode & IEEE80211_OPMODE_NOTIF_RX_NSS_MASK;
- 	nss >>= IEEE80211_OPMODE_NOTIF_RX_NSS_SHIFT;
-@@ -376,7 +372,7 @@ void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
- 	}
- 
- 	if (nss_only)
--		goto change;
-+		return changed;
- 
- 	switch (opmode & IEEE80211_OPMODE_NOTIF_CHANWIDTH_MASK) {
- 	case IEEE80211_OPMODE_NOTIF_CHANWIDTH_20MHZ:
-@@ -398,8 +394,21 @@ void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
- 		sta->sta.bandwidth = new_bw;
- 		changed |= IEEE80211_RC_BW_CHANGED;
- 	}
-+	return changed;
-+}
-+
-+void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
-+				 struct sta_info *sta, u8 opmode,
-+				 enum ieee80211_band band, bool nss_only)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_supported_band *sband;
-+	u32 changed = 0;
-+
-+	changed = ieee80211_vht_recalc_handle_opmode(sdata, sta, opmode, band,
-+						     nss_only);
-+	sband = local->hw.wiphy->bands[band];
- 
-- change:
- 	if (changed)
- 		rate_control_rate_update(local, sband, sta, changed);
- }
+Thanks, applied.
+
 -- 
-1.7.9.5
-
+Kalle Valo
