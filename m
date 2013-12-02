@@ -1,29 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:49093 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756809Ab3LERat (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 12:30:49 -0500
-Received: by mail-wi0-f182.google.com with SMTP id en1so7937wid.9
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Dec 2013 09:30:48 -0800 (PST)
-Date: Thu, 5 Dec 2013 18:30:13 +0100
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net, j@w1.fi
-Subject: Re: [PATCH v2] iw: add VHT MCS/NSS set support to set bitrates
-Message-ID: <20131205173013.GB3593@magnum.frso.rivierawaves.com> (sfid-20131205_183053_351284_1C5272BD)
-References: <1386234137-3531-1-git-send-email-janusz.dziedzic@tieto.com>
- <1386234137-3531-4-git-send-email-janusz.dziedzic@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1386234137-3531-4-git-send-email-janusz.dziedzic@tieto.com>
+Received: from mx1.redhat.com ([209.132.183.28]:19256 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751401Ab3LBPCJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Dec 2013 10:02:09 -0500
+Message-ID: <1385996582.1969.3.camel@dcbw.foobar.com> (sfid-20131202_160213_329665_9BBBAF89)
+Subject: Re: Intel (R) PRO/Wireless 2200BG Network Connection
+From: Dan Williams <dcbw@redhat.com>
+To: tom <thomas.w.cranston@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 02 Dec 2013 09:03:02 -0600
+In-Reply-To: <5298070F.3050100@gmail.com>
+References: <5298070F.3050100@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 05, 2013 at 10:02:17AM +0100, Janusz Dziedzic wrote:
-> mcs-2.4/mcs-5 rename to ht-mcs-2.4/ht-mcs-5
-> vht-mcs-2.4/vht-mcs-5 added
+On Thu, 2013-11-28 at 21:16 -0600, tom wrote:
+> Need firmware for Intel Corporation PRO/Wireless 2200BG {Calexico2} 
+> Network Connection (rev 05)
 > 
-Are 256-QAM MCSes regular on 2.4G ?
- 
-Karl
+> I am running retroprecise 5.4.3 on Dell D620 that has non PAE Celeron 
+> CPU. The Linux wireless firmware that came with retroprecise does not 
+> work well. IThe wireless works for a few minutes and then disconnects.
+> 
+> Nov 28 05:17:53 puppypc12586 user.warn kernel: [87435.600488] ipw2200: 
+> Firmware error detected.  Restarting.
+> Nov 28 05:21:55 puppypc12586 user.warn kernel: [87677.401611] ipw2200: 
+> Firmware error detected.  Restarting.
+> Nov 28 05:23:37 puppypc12586 user.warn kernel: [87779.789706] ipw2200: 
+> Firmware error detected.  Restarting.
+> 
+> If there is not Linux firmware, what is the Windows XP .ini so that I 
+> can use the wrapper?
+
+Can you reply with what firmware version the device is running?  If you
+open a terminal and run the command:
+
+dmesg | grep ipw2200
+
+the output should show us what that is.  Latest firmware for the ipw2200
+part appears to be version 3.1.
+
+Dan
+
