@@ -1,47 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:41728 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753541Ab3LTIpU (ORCPT
+Received: from mail-ea0-f176.google.com ([209.85.215.176]:44308 "EHLO
+	mail-ea0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751898Ab3LBO3X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Dec 2013 03:45:20 -0500
-From: "BAHINI, Henri" <hbahini@qca.qualcomm.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-CC: "Chauhan, Rajesh" <rajeshc@qca.qualcomm.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Malinen, Jouni" <jouni@qca.qualcomm.com>,
-	"Johnson, Jeff" <jjohnson@qca.qualcomm.com>,
-	"Chang, Leo" <schang@qca.qualcomm.com>,
-	"Luo, Xun" <xunl@qca.qualcomm.com>,
-	"Thalappil, Sameer" <sameert@qca.qualcomm.com>,
-	"Hussain, Arif" <c_arifh@qca.qualcomm.com>
-Subject: RE: [PATCHv3] cfg80211: add support for frequency interference event
-Date: Fri, 20 Dec 2013 08:45:07 +0000
-Message-ID: <8AC12462F1AA0E4EA8FEB46307AAD6F650AAB222@nasanexd02f.na.qualcomm.com> (sfid-20131220_094524_148134_77316BFE)
-References: <1384198356-427-1-git-send-email-rajeshc@qca.qualcomm.com>
- <1386077130.4393.21.camel@jlt4.sipsolutions.net>
- <CAB=NE6Xa-bdLQm8uAg9wCE0fdp4KPBZ46d5FHVHp6wCvN5=dUA@mail.gmail.com>
- <1386145204.4284.4.camel@jlt4.sipsolutions.net>
- <1386145241.4284.5.camel@jlt4.sipsolutions.net>
- <D19FD2B13A40CD4B8DA64DB9B8F112E93E5CF51C@nasanexd01a.na.qualcomm.com>
- <CAB=NE6VNZDwGj4WWkgCmWxs_xLBZhXn44vo0TEdqo84xsRbZ2Q@mail.gmail.com>
- <8AC12462F1AA0E4EA8FEB46307AAD6F650AAB068@nasanexd02f.na.qualcomm.com>
- <CAB=NE6W3Et-4mDEet5DSDrM=yP60oODvEUGz=RtZj-gDgLNUbw@mail.gmail.com>
- <8AC12462F1AA0E4EA8FEB46307AAD6F650AAB122@nasanexd02f.na.qualcomm.com>
- <CAB=NE6WFOsjRgPyGjudc4c4JVoF-v=nnz2grknOai6=rYxrApA@mail.gmail.com>
-In-Reply-To: <CAB=NE6WFOsjRgPyGjudc4c4JVoF-v=nnz2grknOai6=rYxrApA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Mon, 2 Dec 2013 09:29:23 -0500
+Received: by mail-ea0-f176.google.com with SMTP id h14so8883861eaj.7
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Dec 2013 06:29:21 -0800 (PST)
+From: Marek Kwaczynski <marek.kwaczynski@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	Marek Kwaczynski <marek.kwaczynski@tieto.com>
+Subject: [PATCH 1/2] nl80211/cfg80211: Set VHT Operating mode
+Date: Mon,  2 Dec 2013 15:28:53 +0100
+Message-Id: <1385994534-13383-1-git-send-email-marek.kwaczynski@tieto.com> (sfid-20131202_152927_416221_4A80AB97)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SSBkbyBhcHByZWNpYXRlIHlvdXIgZmVlZGJhY2sgYW5kIHVuZGVyc3RhbmRpbmcsIEx1aXMuDQoN
-ClBsZWFzZSBjb25zaWRlciB0aGF0IHRoZSB3Y24zNnh4IGRyaXZlciB0aGF0IGlzIGFscmVhZHkg
-dXAgc3RyZWFtZWQgd2lsbCBtYWtlIHVzZWQgb2YgdGhpcyBBUEkgaW4gZHVlIGNvdXJzZTogaXQg
-aXMgYWxyZWFkeSBpbiB0aGUgcGxhbm5pbmcgaW4gdGhlIGNvdXJzZSBvZiBmaXJzdCBoYWxmIG9m
-IG5leHQgeWVhciBhcyB3ZSBpbnRlbnNpZnkgdGhlIHB1c2ggb2Ygc29tZSBvZiBvdXIgZmVhdHVy
-ZXMgdG8gdGhpcyBkcml2ZXIuDQpQbGVhc2UgYWxzbyBjb25zaWRlciB0aGF0IHRoZSBjb3JyZXNw
-b25kaW5nIGNoYW5nZXMgaW4gdGhlIHN1cHBsaWNhbnQgd2lsbCBiZSBwaWNrZWQgdXAgYnkgSm91
-bmkncyB0cmVlIGFzIHNvb24gYXMgdGhpcyBjZmc4MDIxMSBBUEkgaXMgdXAgc3RyZWFtZWQuIEpv
-dW5pIGNhbiB2b3VjaCBmb3IgdGhpcy4NCg0KV2l0aCBhYm92ZSwgSSBhcHByZWNpYXRlIHlvdSBn
-dXlzIGNvbnNpZGVyaW5nIHRoaXMgQVBJLg0KDQpUaGFua3MsDQotSGVucmkgDQo=
+This attribuite is needed for setting Operating Mode Notification
+in AP mode from User Space. This functionality is required when
+User Space received Assoc Reqeust contains VHT Operation Mode
+Notification element.
+
+Signed-off-by: Marek Kwaczynski <marek.kwaczynski@tieto.com>
+---
+ include/net/cfg80211.h       |    4 ++++
+ include/uapi/linux/nl80211.h |    6 ++++++
+ net/wireless/nl80211.c       |    7 +++++++
+ 3 files changed, 17 insertions(+)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 3eae46c..0b66d91 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -748,6 +748,8 @@ enum station_parameters_apply_mask {
+  * @supported_channels_len: number of supported channels
+  * @supported_oper_classes: supported oper classes in IEEE 802.11 format
+  * @supported_oper_classes_len: number of supported operating classes
++ * @vht_opmode: operating mode field
++ * @vht_opmode_used: information if operating mode field is used
+  */
+ struct station_parameters {
+ 	const u8 *supported_rates;
+@@ -771,6 +773,8 @@ struct station_parameters {
+ 	u8 supported_channels_len;
+ 	const u8 *supported_oper_classes;
+ 	u8 supported_oper_classes_len;
++	u8 vht_opmode;
++	bool vht_opmode_used;
+ };
+ 
+ /**
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index f752e98..0240e7d 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1508,6 +1508,10 @@ enum nl80211_commands {
+  *	to react to radar events, e.g. initiate a channel switch or leave the
+  *	IBSS network.
+  *
++ * @NL80211_ATTR_VHT_OPMODE: Operating mode field from Operating Mode
++ *	Notification Element based on association request when used with
++ *	NL80211_CMD_NEW_STATION
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1824,6 +1828,8 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_HANDLE_DFS,
+ 
++	NL80211_ATTR_VHT_OPMODE,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index a7f4e79..ddd1f71 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -357,6 +357,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 	[NL80211_ATTR_STA_SUPPORTED_CHANNELS] = { .type = NLA_BINARY },
+ 	[NL80211_ATTR_STA_SUPPORTED_OPER_CLASSES] = { .type = NLA_BINARY },
+ 	[NL80211_ATTR_HANDLE_DFS] = { .type = NLA_FLAG },
++	[NL80211_ATTR_VHT_OPMODE] = { .type = NLA_U8 },
+ };
+ 
+ /* policy for the key attributes */
+@@ -4125,6 +4126,12 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 		params.vht_capa =
+ 			nla_data(info->attrs[NL80211_ATTR_VHT_CAPABILITY]);
+ 
++	if (info->attrs[NL80211_ATTR_VHT_OPMODE]) {
++		params.vht_opmode_used = true;
++		params.vht_opmode =
++			nla_get_u8(info->attrs[NL80211_ATTR_VHT_OPMODE]);
++	}
++
+ 	if (info->attrs[NL80211_ATTR_STA_PLINK_ACTION]) {
+ 		params.plink_action =
+ 			nla_get_u8(info->attrs[NL80211_ATTR_STA_PLINK_ACTION]);
+-- 
+1.7.9.5
+
