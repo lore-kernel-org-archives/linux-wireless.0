@@ -1,41 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:41133 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:39171 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753230Ab3LPMiY (ORCPT
+	with ESMTP id S1751401Ab3LBPCi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Dec 2013 07:38:24 -0500
-Message-ID: <1387197495.4665.16.camel@jlt4.sipsolutions.net> (sfid-20131216_133827_776919_59041C4C)
-Subject: Re: [PATCH] mac80211: fix TX device statistics for monitor
- interfaces
+	Mon, 2 Dec 2013 10:02:38 -0500
+Message-ID: <1385996554.20277.5.camel@jlt4.sipsolutions.net> (sfid-20131202_160242_166379_978D2635)
+Subject: Re: [PATCH v2] cfg80211: fix dfs channel state after stopping AP
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Pali =?ISO-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, David Gnedt <david.gnedt@davizone.at>
-Date: Mon, 16 Dec 2013 13:38:15 +0100
-In-Reply-To: <1386492357-20826-1-git-send-email-pali.rohar@gmail.com> (sfid-20131208_094635_923822_94E0BD99)
-References: <87iowiszyu.fsf@purkki.adurom.net>
-	 <1386492357-20826-1-git-send-email-pali.rohar@gmail.com>
-	 (sfid-20131208_094635_923822_94E0BD99)
+To: Marek Puzyniak <marek.puzyniak@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 02 Dec 2013 16:02:34 +0100
+In-Reply-To: <1384767413-5648-1-git-send-email-marek.puzyniak@tieto.com> (sfid-20131118_103707_203761_B8998029)
+References: <1384767413-5648-1-git-send-email-marek.puzyniak@tieto.com>
+	 (sfid-20131118_103707_203761_B8998029)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2013-12-08 at 09:45 +0100, Pali Rohár wrote:
-> From: David Gnedt <david.gnedt@davizone.at>
-> 
-> Count TX packets and bytes also for monitor interfaces.
+On Mon, 2013-11-18 at 10:36 +0100, Marek Puzyniak wrote:
+> This can be called when a mode of operation that can supports
+> initiating radiation on a DFS channel leaves that channel to
+> ensure that if the mode of operation is started again on it
+> that it will require a new channel availability check.
 
-> +	dev->stats.tx_packets++;
-> +	dev->stats.tx_bytes += skb->len;
-> +
->  	/*
->  	 * fix up the pointers accounting for the radiotap
->  	 * header still being in there.  We are being given
-
-Should we really count the machine-local radiotap management stuff?
+Ugh, I don't understand - care to rephrase? Is this needed in 3.13?
 
 johannes
 
