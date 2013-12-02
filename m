@@ -1,49 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.neomailbox.net ([178.209.62.157]:21828 "EHLO
-	s3.neomailbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751032Ab3LAJkO (ORCPT
+Received: from mail-pd0-f172.google.com ([209.85.192.172]:38445 "EHLO
+	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751841Ab3LBApw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Dec 2013 04:40:14 -0500
-Message-ID: <529B03D9.5050402@open-mesh.com> (sfid-20131201_104019_520506_2127C1CE)
-Date: Sun, 01 Dec 2013 10:39:37 +0100
-From: Antonio Quartulli <antonio@open-mesh.com>
+	Sun, 1 Dec 2013 19:45:52 -0500
+Message-ID: <529BD83B.4030103@gmail.com> (sfid-20131202_014626_200861_F808D49B)
+Date: Mon, 02 Dec 2013 08:45:47 +0800
+From: Chen Gang <gang.chen.5i5j@gmail.com>
 MIME-Version: 1.0
-To: Emmanuel Grumbach <egrumbach@gmail.com>,
-	Antonio Quartulli <antonio@meshcoding.com>
+To: Joe Perches <joe@perches.com>
 CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH mac80211] iwlwifi: don't install GTKs for IBSS vifs on
- resume
-References: <1385846658-2294-1-git-send-email-antonio@meshcoding.com> <CANUX_P3tm+Q4R6NNLchtCZCYGxrs-Z8hahp1YrvF_fCbCFavig@mail.gmail.com>
-In-Reply-To: <CANUX_P3tm+Q4R6NNLchtCZCYGxrs-Z8hahp1YrvF_fCbCFavig@mail.gmail.com>
+	"John W. Linville" <linville@tuxdriver.com>,
+	rkuo <rkuo@codeaurora.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	David Miller <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
+Subject: Re: [PATCH] net: mac80211: tx.c: be sure of 'sdata->vif.type' must
+ be NL80211_IFTYPE_AP when be in NL80211_IFTYPE_AP case
+References: <528AEFB7.4060301@gmail.com>  <20131125011938.GB18921@codeaurora.org> <5292B845.3010404@gmail.com>  <5292B8A0.7020409@gmail.com> <5294255E.7040105@gmail.com>  <52957ADA.2080704@gmail.com>  (sfid-20131127_055211_558798_A7DF5684) <1385739487.8656.1.camel@jlt4.sipsolutions.net>  <5299D306.7070701@gmail.com>  (sfid-20131130_125901_519610_EDA4068E) <1385816013.4327.1.camel@jlt4.sipsolutions.net>  <5299ED38.4090509@gmail.com> <5299EFDD.6060405@gmail.com>  (sfid-20131130_150205_984535_068F14A9) <1385842134.6108.4.camel@jlt4.sipsolutions.net>  <1385843940.2664.4.camel@joe-AO722>  <1385890523.4171.1.camel@jlt4.sipsolutions.net> <1385937499.2664.21.camel@joe-AO722>
+In-Reply-To: <1385937499.2664.21.camel@joe-AO722>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+On 12/02/2013 06:38 AM, Joe Perches wrote:
+> On Sun, 2013-12-01 at 10:35 +0100, Johannes Berg wrote:
+>> Good try, but no, now ap_sdata isn't even assigned. :)
+> 
+> Right.  Oh well.  There's no improving this without
+> significant rewrite.  Even then, there may not be much
+> overall improvement.
+> 
+> btw: Chen, I think fall-throughs are fine as long as
+> they are commented appropriately.
+> 
 
-On 01/12/13 09:39, Emmanuel Grumbach wrote:
->> +       /* Group keys for IBSS interfaces are not stored in HW
->> */ +       if (vif->type == NL80211_IFTYPE_ADHOC && +
->> !(key->flags & IEEE80211_KEY_FLAG_PAIRWISE)) +
->> return; +
+Hmm... for me, when use fall-through, need 2 things:
 
-Well, my knowledge about WoWLAN is really poor (in particular for what
-concern IWLWIFI). I think I should have sent this as RFC first.
+ - need a comment.
 
-So isn't it possible to reach this point with a key that satisfies
-that condition? If so, we are fine :)
+ - next case need not notice about prev case which fall-through.
 
 
-Cheers,
+If we can not fit the 2 things above, either can not use sub functions
+or macros for it because of performance reason, 'goto' is better than
+'fall-through'.
 
-- -- 
-Antonio Quartulli
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
+For me, in most cases, when a function becomes a long function, it is
+always better to use sub-fuctions or macros instead of some blocks (but
+it is really not urgent :-) ).
 
-iEYEARECAAYFAlKbA9kACgkQpGgxIkP9cwdLPgCfbzHDFGPl73p/a+d0Tf2nEt3t
-iPwAmwTxQLYqb9fji3Ld58vgXdsl/Yrw
-=sgjH
------END PGP SIGNATURE-----
+
+Thanks.
+-- 
+Chen Gang
