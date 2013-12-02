@@ -1,66 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f181.google.com ([209.85.215.181]:52585 "EHLO
-	mail-ea0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754028Ab3LJPUq (ORCPT
+Received: from mail-pd0-f179.google.com ([209.85.192.179]:39982 "EHLO
+	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752498Ab3LBIG3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Dec 2013 10:20:46 -0500
-Received: by mail-ea0-f181.google.com with SMTP id m10so2300158eaj.26
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Dec 2013 07:20:45 -0800 (PST)
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Bartosz Markowski <bartosz.markowski@tieto.com>
-Subject: [PATCH 2/2] ath10k: introduce NO_P2P fw feature flag
-Date: Tue, 10 Dec 2013 16:20:40 +0100
-Message-Id: <1386688840-12181-2-git-send-email-bartosz.markowski@tieto.com> (sfid-20131210_162054_562750_233007D2)
-In-Reply-To: <1386688840-12181-1-git-send-email-bartosz.markowski@tieto.com>
-References: <1386688840-12181-1-git-send-email-bartosz.markowski@tieto.com>
+	Mon, 2 Dec 2013 03:06:29 -0500
+Received: by mail-pd0-f179.google.com with SMTP id r10so17699721pdi.10
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Dec 2013 00:06:28 -0800 (PST)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	devel@lists.open80211s.org, distro11s@cozybit.com,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] nl80211: allow the use of DFS channel in mesh
+Date: Mon,  2 Dec 2013 16:05:49 +0800
+Message-Id: <1385971550-4892-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20131202_090632_203138_30FA4F45)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Not each ath10k FW track supports P2P (10.X for instance does not)
-This new firmware feature flag allows to turn off P2P interface type.
+This permits the use of DFS channel once the CAC is conducted and
+no radar is detected.
 
-Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/core.h |    3 +++
- drivers/net/wireless/ath/ath10k/mac.c  |    9 ++++++---
- 2 files changed, 9 insertions(+), 3 deletions(-)
+ net/wireless/mesh.c |   13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 79726e0..035cbf6 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -306,6 +306,9 @@ enum ath10k_fw_features {
- 	/* firmware support tx frame management over WMI, otherwise it's HTT */
- 	ATH10K_FW_FEATURE_HAS_WMI_MGMT_TX = 2,
+diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
+index b0e1869..9c7a11a 100644
+--- a/net/wireless/mesh.c
++++ b/net/wireless/mesh.c
+@@ -99,6 +99,7 @@ int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
+ 			 const struct mesh_config *conf)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	u8 radar_detect_width = 0;
+ 	int err;
  
-+	/* Firmware does not support P2P */
-+	ATH10K_FW_FEATURE_NO_P2P = 3,
-+
- 	/* keep last */
- 	ATH10K_FW_FEATURE_COUNT,
- };
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 35952a4..cdc24d8 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3673,9 +3673,12 @@ int ath10k_mac_register(struct ath10k *ar)
- 	ar->hw->wiphy->interface_modes =
- 		BIT(NL80211_IFTYPE_STATION) |
- 		BIT(NL80211_IFTYPE_ADHOC) |
--		BIT(NL80211_IFTYPE_AP) |
--		BIT(NL80211_IFTYPE_P2P_CLIENT) |
--		BIT(NL80211_IFTYPE_P2P_GO);
-+		BIT(NL80211_IFTYPE_AP);
-+
-+	if (!test_bit(ATH10K_FW_FEATURE_NO_P2P, ar->fw_features))
-+		ar->hw->wiphy->interface_modes |=
-+			BIT(NL80211_IFTYPE_P2P_CLIENT) |
-+			BIT(NL80211_IFTYPE_P2P_GO);
+ 	BUILD_BUG_ON(IEEE80211_MAX_SSID_LEN != IEEE80211_MAX_MESH_ID_LEN);
+@@ -177,8 +178,16 @@ int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
+ 	if (!cfg80211_reg_can_beacon(&rdev->wiphy, &setup->chandef))
+ 		return -EINVAL;
  
- 	ar->hw->flags = IEEE80211_HW_SIGNAL_DBM |
- 			IEEE80211_HW_SUPPORTS_PS |
+-	err = cfg80211_can_use_chan(rdev, wdev, setup->chandef.chan,
+-				    CHAN_MODE_SHARED);
++	err = cfg80211_chandef_dfs_required(wdev->wiphy, &setup->chandef);
++	if (err < 0)
++		return err;
++	if (err)
++		radar_detect_width = BIT(setup->chandef.width);
++
++	err = cfg80211_can_use_iftype_chan(rdev, wdev, wdev->iftype,
++					   setup->chandef.chan,
++					   CHAN_MODE_SHARED,
++					   radar_detect_width);
+ 	if (err)
+ 		return err;
+ 
 -- 
-1.7.10
+1.7.9.5
 
