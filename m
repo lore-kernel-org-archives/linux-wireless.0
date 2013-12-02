@@ -1,63 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f174.google.com ([209.85.215.174]:56083 "EHLO
-	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752645Ab3LQUpP (ORCPT
+Received: from mail-ea0-f170.google.com ([209.85.215.170]:54982 "EHLO
+	mail-ea0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751807Ab3LBPi1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Dec 2013 15:45:15 -0500
-Received: by mail-ea0-f174.google.com with SMTP id b10so3132060eae.33
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Dec 2013 12:45:14 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+	Mon, 2 Dec 2013 10:38:27 -0500
+Received: by mail-ea0-f170.google.com with SMTP id k10so9368531eaj.1
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Dec 2013 07:38:26 -0800 (PST)
+From: Marek Kwaczynski <marek.kwaczynski@tieto.com>
 To: linux-wireless@vger.kernel.org
-Cc: Eliad Peller <eliad@wizery.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 21/36] iwlwifi: mvm: check iwl_nvm_init return value
-Date: Tue, 17 Dec 2013 22:44:24 +0200
-Message-Id: <1387313079-28123-21-git-send-email-egrumbach@gmail.com> (sfid-20131217_214529_794105_981A6FD7)
-In-Reply-To: <52B0B72A.5070704@gmail.com>
-References: <52B0B72A.5070704@gmail.com>
+Cc: johannes@sipsolutions.net,
+	Marek Kwaczynski <marek.kwaczynski@tieto.com>
+Subject: [PATCH] mac80211: Update opmode during adding new station
+Date: Mon,  2 Dec 2013 16:38:12 +0100
+Message-Id: <1385998692-27853-1-git-send-email-marek.kwaczynski@tieto.com> (sfid-20131202_163831_128311_A8C8A14A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+Update Operating mode is needed when User Space received Assoc
+Request contains Operating mode notification element.
 
-iwl_nvm_init() return value wasn't checked in some
-path, which resulted in the following panic (if
-there was some issue with the nvm):
-
-Unable to handle kernel NULL pointer dereference at virtual address 00000004
-pgd = d0460000
-[00000004] *pgd=00000000
-Internal error: Oops: 5 [#1] PREEMPT SMP
-Modules linked in: iwlmvm(+) iwlwifi mac80211 cfg80211 compat [last unloaded: compat]
-PC is at iwl_mvm_mac_setup_register+0x12c/0x460 [iwlmvm]
-LR is at 0x2710
-pc : [<bf50dd4c>]    lr : [<00002710>]    psr: 20800013
-sp : d00cfe18  ip : 0000081e  fp : d006b908
-r10: d0711408  r9 : bf532e64  r8 : d006b5bc
-r7 : d01af000  r6 : bf39cefc  r5 : d006ab00  r4 : d006b5a4
-r3 : 00000001  r2 : 00000000  r1 : d006a120  r0 : d006b860
-
-Signed-off-by: Eliad Peller <eliad@wizery.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Marek Kwaczynski <marek.kwaczynski@tieto.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/ops.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ net/mac80211/cfg.c         |    7 +++++++
+ net/mac80211/ieee80211_i.h |    3 +++
+ net/mac80211/vht.c         |   33 +++++++++++++++++++++------------
+ 3 files changed, 31 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
-index ef3fdcf..a362430 100644
---- a/drivers/net/wireless/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
-@@ -427,7 +427,9 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 	 * there is no need to unnecessarily power up the NIC at driver load
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 95667b0..50f0841 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1409,6 +1409,13 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
  	 */
- 	if (iwlwifi_mod_params.nvm_file) {
--			iwl_nvm_init(mvm);
-+		err = iwl_nvm_init(mvm);
-+		if (err)
-+			goto out_free;
- 	} else {
- 		err = iwl_trans_start_hw(mvm->trans);
- 		if (err)
+ 	if (!(params->sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER))) {
+ 		sta_info_pre_move_state(sta, IEEE80211_STA_AUTH);
++		if (params->vht_opmode_used) {
++			enum ieee80211_band band =
++					    ieee80211_get_sdata_band(sdata);
++			ieee80211_vht_recalc_handle_opmode(sdata, sta,
++							   params->vht_opmode,
++							   band, 0);
++		}
+ 		sta_info_pre_move_state(sta, IEEE80211_STA_ASSOC);
+ 	}
+ 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 29dc505..13965e1 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1510,6 +1510,9 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
+ 				    struct sta_info *sta);
+ enum ieee80211_sta_rx_bandwidth ieee80211_sta_cur_vht_bw(struct sta_info *sta);
+ void ieee80211_sta_set_rx_nss(struct sta_info *sta);
++u32 ieee80211_vht_recalc_handle_opmode(struct ieee80211_sub_if_data *sdata,
++				       struct sta_info *sta, u8 opmode,
++				       enum ieee80211_band band, bool nss_only);
+ void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
+ 				 struct sta_info *sta, u8 opmode,
+ 				 enum ieee80211_band band, bool nss_only);
+diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
+index de01127..463e52c 100644
+--- a/net/mac80211/vht.c
++++ b/net/mac80211/vht.c
+@@ -350,21 +350,17 @@ void ieee80211_sta_set_rx_nss(struct sta_info *sta)
+ 	sta->sta.rx_nss = max_t(u8, 1, ht_rx_nss);
+ }
+ 
+-void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
+-				 struct sta_info *sta, u8 opmode,
+-				 enum ieee80211_band band, bool nss_only)
++u32 ieee80211_vht_recalc_handle_opmode(struct ieee80211_sub_if_data *sdata,
++				       struct sta_info *sta, u8 opmode,
++				       enum ieee80211_band band, bool nss_only)
+ {
+-	struct ieee80211_local *local = sdata->local;
+-	struct ieee80211_supported_band *sband;
+ 	enum ieee80211_sta_rx_bandwidth new_bw;
+-	u32 changed = 0;
+ 	u8 nss;
+-
+-	sband = local->hw.wiphy->bands[band];
++	u32 changed = -1;
+ 
+ 	/* ignore - no support for BF yet */
+ 	if (opmode & IEEE80211_OPMODE_NOTIF_RX_NSS_TYPE_BF)
+-		return;
++		return -EOPNOTSUPP;
+ 
+ 	nss = opmode & IEEE80211_OPMODE_NOTIF_RX_NSS_MASK;
+ 	nss >>= IEEE80211_OPMODE_NOTIF_RX_NSS_SHIFT;
+@@ -376,7 +372,7 @@ void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	if (nss_only)
+-		goto change;
++		return changed;
+ 
+ 	switch (opmode & IEEE80211_OPMODE_NOTIF_CHANWIDTH_MASK) {
+ 	case IEEE80211_OPMODE_NOTIF_CHANWIDTH_20MHZ:
+@@ -398,8 +394,21 @@ void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
+ 		sta->sta.bandwidth = new_bw;
+ 		changed |= IEEE80211_RC_BW_CHANGED;
+ 	}
++	return changed;
++}
++
++void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
++				 struct sta_info *sta, u8 opmode,
++				 enum ieee80211_band band, bool nss_only)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_supported_band *sband;
++	u32 changed = 0;
++
++	changed = ieee80211_vht_recalc_handle_opmode(sdata, sta, opmode, band,
++						     nss_only);
++	sband = local->hw.wiphy->bands[band];
+ 
+- change:
+-	if (changed)
++	if (changed >= 0)
+ 		rate_control_rate_update(local, sband, sta, changed);
+ }
 -- 
 1.7.9.5
 
