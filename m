@@ -1,32 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:47526 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757369Ab3LWOEU (ORCPT
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:63884 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758833Ab3LBU7z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Dec 2013 09:04:20 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: add set_bitrate_mask callback
-References: <1387653946-2988-1-git-send-email-janusz.dziedzic@tieto.com>
-	<87d2koxd8m.fsf@kamboji.qca.qualcomm.com>
-	<CALhHN=q4qgexWTfmmizt5+kNjkM6MfscYp=0VvEnj4YMHrRc1A@mail.gmail.com>
-Date: Mon, 23 Dec 2013 16:04:14 +0200
-In-Reply-To: <CALhHN=q4qgexWTfmmizt5+kNjkM6MfscYp=0VvEnj4YMHrRc1A@mail.gmail.com>
-	(Janusz Dziedzic's message of "Mon, 23 Dec 2013 14:55:12 +0100")
-Message-ID: <87k3evvf35.fsf@kamboji.qca.qualcomm.com> (sfid-20131223_150423_708301_41EE1942)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 2 Dec 2013 15:59:55 -0500
+Received: by mail-wi0-f169.google.com with SMTP id hn6so1066027wib.2
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Dec 2013 12:59:54 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eyal Shapira <eyal@wizery.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 09/13] iwlwifi: mvm: rs: set dual_stream_ant_msk to ANT_AB always
+Date: Mon,  2 Dec 2013 22:59:21 +0200
+Message-Id: <1386017965-13641-9-git-send-email-egrumbach@gmail.com> (sfid-20131202_220005_651884_2D493002)
+In-Reply-To: <529CF2D6.1080008@gmail.com>
+References: <529CF2D6.1080008@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
+From: Eyal Shapira <eyal@wizery.com>
 
->> Bitfields are frowned upon in kernel, better to use SM() and MS().
->>
-> I don't use them, just put as a documentation.
+Drop code which was relevant when there were chips with
+3 antennas. Setting to ANT_AB should be ok with all mvm
+supported chips.
 
-Ok, then you can just document that within comments.
+Signed-off-by: Eyal Shapira <eyal@wizery.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/rs.c |   12 +-----------
+ 1 file changed, 1 insertion(+), 11 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
+index 7beb548..5c98d462 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
+@@ -2386,15 +2386,7 @@ void iwl_mvm_rs_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 	/* These values will be overridden later */
+ 	lq_sta->lq.single_stream_ant_msk =
+ 		first_antenna(iwl_fw_valid_tx_ant(mvm->fw));
+-	lq_sta->lq.dual_stream_ant_msk =
+-		iwl_fw_valid_tx_ant(mvm->fw) &
+-		~first_antenna(iwl_fw_valid_tx_ant(mvm->fw));
+-	if (!lq_sta->lq.dual_stream_ant_msk) {
+-		lq_sta->lq.dual_stream_ant_msk = ANT_AB;
+-	} else if (num_of_ant(iwl_fw_valid_tx_ant(mvm->fw)) == 2) {
+-		lq_sta->lq.dual_stream_ant_msk =
+-			iwl_fw_valid_tx_ant(mvm->fw);
+-	}
++	lq_sta->lq.dual_stream_ant_msk = ANT_AB;
+ 
+ 	/* as default allow aggregation for all tids */
+ 	lq_sta->tx_agg_tid_en = IWL_AGG_ALL_TID;
+@@ -2463,8 +2455,6 @@ static void rs_fill_link_cmd(struct iwl_mvm *mvm,
+ 
+ 	if (num_of_ant(rate.ant) == 1)
+ 		lq_cmd->single_stream_ant_msk = rate.ant;
+-	else if (num_of_ant(rate.ant) == 2)
+-		lq_cmd->dual_stream_ant_msk = rate.ant;
+ 	/* otherwise we don't modify the existing value */
+ 
+ 	index++;
 -- 
-Kalle Valo
+1.7.9.5
+
