@@ -1,54 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:25199 "EHLO
-	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756215Ab3L3RTJ (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:39081 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752951Ab3LBOjo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Dec 2013 12:19:09 -0500
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-Cc: kernel-janitors@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 9/11] ipw2x00: use ether_addr_equal_64bits
-Date: Mon, 30 Dec 2013 19:15:05 +0100
-Message-Id: <1388427307-8691-10-git-send-email-Julia.Lawall@lip6.fr> (sfid-20131230_182348_152905_966448EF)
-In-Reply-To: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>
-References: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>
+	Mon, 2 Dec 2013 09:39:44 -0500
+Message-ID: <1385995176.20277.0.camel@jlt4.sipsolutions.net> (sfid-20131202_153955_753669_2D5CE4A8)
+Subject: Re: [PATCH 2/2] mac80211: Update opmode during adding new station
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marek Kwaczynski <marek.kwaczynski@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 02 Dec 2013 15:39:36 +0100
+In-Reply-To: <1385994534-13383-2-git-send-email-marek.kwaczynski@tieto.com> (sfid-20131202_152938_476020_C588DC36)
+References: <1385994534-13383-1-git-send-email-marek.kwaczynski@tieto.com>
+	 <1385994534-13383-2-git-send-email-marek.kwaczynski@tieto.com>
+	 (sfid-20131202_152938_476020_C588DC36)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <Julia.Lawall@lip6.fr>
+On Mon, 2013-12-02 at 15:28 +0100, Marek Kwaczynski wrote:
+> Update Operating mode is needed when User Space received Assoc
+> Request contains Operating mode notification element.
 
-Ether_addr_equal_64bits is more efficient than ether_addr_equal, and can be
-used when each argument is an array within a structure that contains at
-least two bytes of data beyond the array.
+Please fix coding style.
 
-The structure involved is
-libipw_network defined in drivers/net/wireless/ipw2x00/libipw.h
-
-This was done using Coccinelle (http://coccinelle.lip6.fr/).
-
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-
----
-The semantic patch used is rather long and can be found in message 0 of
-this patch series.
-
- drivers/net/wireless/ipw2x00/libipw_rx.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ipw2x00/libipw_rx.c b/drivers/net/wireless/ipw2x00/libipw_rx.c
-index 9ffe659..ce27859 100644
---- a/drivers/net/wireless/ipw2x00/libipw_rx.c
-+++ b/drivers/net/wireless/ipw2x00/libipw_rx.c
-@@ -1468,7 +1468,7 @@ static inline int is_same_network(struct libipw_network *src,
- 	 * as one network */
- 	return ((src->ssid_len == dst->ssid_len) &&
- 		(src->channel == dst->channel) &&
--		ether_addr_equal(src->bssid, dst->bssid) &&
-+		ether_addr_equal_64bits(src->bssid, dst->bssid) &&
- 		!memcmp(src->ssid, dst->ssid, src->ssid_len));
- }
- 
+johannes
 
