@@ -1,44 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f48.google.com ([209.85.215.48]:42579 "EHLO
-	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751239Ab3LAAJl (ORCPT
+Received: from mail-ea0-f178.google.com ([209.85.215.178]:35987 "EHLO
+	mail-ea0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751515Ab3LBK5o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Nov 2013 19:09:41 -0500
-Received: by mail-la0-f48.google.com with SMTP id n7so7437016lam.7
-        for <linux-wireless@vger.kernel.org>; Sat, 30 Nov 2013 16:09:39 -0800 (PST)
-MIME-Version: 1.0
-Date: Sun, 1 Dec 2013 01:09:38 +0100
-Message-ID: <CAEk6gTCqKgt9zX0Xs147GYfxDw2Ex-1NkG4KZ_m_pdf1M8eDLw@mail.gmail.com> (sfid-20131201_010959_948340_FEBB7608)
-Subject: multi-wiphy (virtual radios that can be used with multiple channels)
-From: Drasko DRASKOVIC <drasko.draskovic@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>, j@w1.fi
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 2 Dec 2013 05:57:44 -0500
+Received: by mail-ea0-f178.google.com with SMTP id d10so9056526eaj.9
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Dec 2013 02:57:43 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC] mac80211: fix rx_nss calculation for drivers with hw rc
+Date: Mon,  2 Dec 2013 11:54:07 +0100
+Message-Id: <1385981647-4147-1-git-send-email-michal.kazior@tieto.com> (sfid-20131202_115748_237895_54877F2C)
+In-Reply-To: <1385739434.8656.0.camel@jlt4.sipsolutions.net>
+References: <1385739434.8656.0.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
-can somebody please explain in some more details this possibility of
-ath9k driver, mentioned here: http://lwn.net/Articles/321690/ and
-specially here:
-http://osdir.com/ml/linux-wireless/2009-03/msg00090.html in these
-patches signed-off by Jouni.
+Drivers with hardware rate control were given
+sta->rx_nss set to 0. This was because rx_nss
+calculation procedure was protected by hw/sw rate
+control check.
 
-Does this means that ath9k devices can be put in AP and STA modes
-simultaneously (one virtual interface for each) over different
-channels?
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+Hi Johannes,
 
-I am looking to solve this problem: I want to have always present AP
-for user settings that I bring on boot, so I give it some
-pre-configured channel. Via this AP user will configure other
-interface in STA mode to connect to home network. However, this home
-network can be over any channel, very potentially different of the one
-I have chosen for AP.
+I've re-checked the issue I've mentioned with the patch 'ath10k: use nss
+provided by mac80211'.
 
-Would these patches allow something like this, and how they should be
-used (I saw here some use case -
-http://www.mail-archive.com/ath9k-devel@lists.ath9k.org/msg03617.html,
-but not clear enough)?
+Apparently drivers with HW rate control are only affected by this bug
+and this patch is what I came up with as a quick fix. Any comments?
 
-Best regards,
-Drasko
+
+ net/mac80211/rate.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/rate.h b/net/mac80211/rate.h
+index 5dedc56..32cdbd2 100644
+--- a/net/mac80211/rate.h
++++ b/net/mac80211/rate.h
+@@ -54,6 +54,8 @@ static inline void rate_control_rate_init(struct sta_info *sta)
+ 	struct ieee80211_supported_band *sband;
+ 	struct ieee80211_chanctx_conf *chanctx_conf;
+ 
++	ieee80211_sta_set_rx_nss(sta);
++
+ 	if (!ref)
+ 		return;
+ 
+@@ -67,8 +69,6 @@ static inline void rate_control_rate_init(struct sta_info *sta)
+ 
+ 	sband = local->hw.wiphy->bands[chanctx_conf->def.chan->band];
+ 
+-	ieee80211_sta_set_rx_nss(sta);
+-
+ 	ref->ops->rate_init(ref->priv, sband, &chanctx_conf->def, ista,
+ 			    priv_sta);
+ 	rcu_read_unlock();
+-- 
+1.8.4.rc3
+
