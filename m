@@ -1,58 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f169.google.com ([209.85.192.169]:36449 "EHLO
-	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751230Ab3LKXNV (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:37003 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751043Ab3LCHS0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Dec 2013 18:13:21 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
-Subject: [PATCH] rtlwifi: pci: Fix oops on driver unload
-Date: Wed, 11 Dec 2013 17:13:10 -0600
-Message-Id: <1386803590-8688-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20131212_001328_414427_B263666D)
+	Tue, 3 Dec 2013 02:18:26 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Ujjal Roy <royujjal@gmail.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 03/12] mwifiex: remove rfc1042_eth_hdr variable
+Date: Mon, 2 Dec 2013 23:17:50 -0800
+Message-ID: <1386055079-6623-4-git-send-email-bzhao@marvell.com> (sfid-20131203_081830_139300_27DC13D7)
+In-Reply-To: <1386055079-6623-1-git-send-email-bzhao@marvell.com>
+References: <1386055079-6623-1-git-send-email-bzhao@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fedora systems, unloading rtl8192ce causes an oops. This patch fixes the
-problem reported at https://bugzilla.redhat.com/show_bug.cgi?id=852761.
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>
+Use 'rfc1042_header' available in net/wireless/util.c
+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/rtlwifi/pci.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/net/wireless/mwifiex/sta_rx.c   | 5 ++---
+ drivers/net/wireless/mwifiex/uap_txrx.c | 5 ++---
+ 2 files changed, 4 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
-index 8707d1a..d7aa165 100644
---- a/drivers/net/wireless/rtlwifi/pci.c
-+++ b/drivers/net/wireless/rtlwifi/pci.c
-@@ -738,6 +738,8 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
- 	};
- 	int index = rtlpci->rx_ring[rx_queue_idx].idx;
+diff --git a/drivers/net/wireless/mwifiex/sta_rx.c b/drivers/net/wireless/mwifiex/sta_rx.c
+index bb22664..241c0e5 100644
+--- a/drivers/net/wireless/mwifiex/sta_rx.c
++++ b/drivers/net/wireless/mwifiex/sta_rx.c
+@@ -88,15 +88,14 @@ int mwifiex_process_rx_packet(struct mwifiex_private *priv,
+ 	struct rxpd *local_rx_pd;
+ 	int hdr_chop;
+ 	struct ethhdr *eth_hdr;
+-	u8 rfc1042_eth_hdr[ETH_ALEN] = { 0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00 };
  
-+	if (rtlpci->driver_is_goingto_unload)
-+		return;
- 	/*RX NORMAL PKT */
- 	while (count--) {
- 		/*rx descriptor */
-@@ -1634,6 +1636,7 @@ static void rtl_pci_stop(struct ieee80211_hw *hw)
- 	 */
- 	set_hal_stop(rtlhal);
+ 	local_rx_pd = (struct rxpd *) (skb->data);
  
-+	rtlpci->driver_is_goingto_unload = true;
- 	rtlpriv->cfg->ops->disable_interrupt(hw);
- 	cancel_work_sync(&rtlpriv->works.lps_change_work);
+ 	rx_pkt_hdr = (void *)local_rx_pd +
+ 		     le16_to_cpu(local_rx_pd->rx_pkt_offset);
  
-@@ -1651,7 +1654,6 @@ static void rtl_pci_stop(struct ieee80211_hw *hw)
- 	ppsc->rfchange_inprogress = true;
- 	spin_unlock_irqrestore(&rtlpriv->locks.rf_ps_lock, flags);
+-	if (!memcmp(&rx_pkt_hdr->rfc1042_hdr,
+-		    rfc1042_eth_hdr, sizeof(rfc1042_eth_hdr))) {
++	if (!memcmp(&rx_pkt_hdr->rfc1042_hdr, rfc1042_header,
++		    sizeof(rfc1042_header))) {
+ 		/*
+ 		 *  Replace the 803 header and rfc1042 header (llc/snap) with an
+ 		 *    EthernetII header, keep the src/dst and snap_type
+diff --git a/drivers/net/wireless/mwifiex/uap_txrx.c b/drivers/net/wireless/mwifiex/uap_txrx.c
+index 92f76d6..0d4b7d6 100644
+--- a/drivers/net/wireless/mwifiex/uap_txrx.c
++++ b/drivers/net/wireless/mwifiex/uap_txrx.c
+@@ -98,7 +98,6 @@ static void mwifiex_uap_queue_bridged_pkt(struct mwifiex_private *priv,
+ 	int hdr_chop;
+ 	struct timeval tv;
+ 	struct ethhdr *p_ethhdr;
+-	u8 rfc1042_eth_hdr[ETH_ALEN] = { 0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00 };
  
--	rtlpci->driver_is_goingto_unload = true;
- 	rtlpriv->cfg->ops->hw_disable(hw);
- 	/* some things are not needed if firmware not available */
- 	if (!rtlpriv->max_fw_size)
+ 	uap_rx_pd = (struct uap_rxpd *)(skb->data);
+ 	rx_pkt_hdr = (void *)uap_rx_pd + le16_to_cpu(uap_rx_pd->rx_pkt_offset);
+@@ -112,8 +111,8 @@ static void mwifiex_uap_queue_bridged_pkt(struct mwifiex_private *priv,
+ 		return;
+ 	}
+ 
+-	if (!memcmp(&rx_pkt_hdr->rfc1042_hdr,
+-		    rfc1042_eth_hdr, sizeof(rfc1042_eth_hdr))) {
++	if (!memcmp(&rx_pkt_hdr->rfc1042_hdr, rfc1042_header,
++		    sizeof(rfc1042_header))) {
+ 		/* Replace the 803 header and rfc1042 header (llc/snap) with
+ 		 * an Ethernet II header, keep the src/dst and snap_type
+ 		 * (ethertype).
 -- 
-1.8.4
+1.8.2.3
 
