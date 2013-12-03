@@ -1,34 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:51759 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:43524 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756320Ab3LEMgE (ORCPT
+	with ESMTP id S1754109Ab3LCOUl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 07:36:04 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1VoY9w-0006OG-E7
-	for linux-wireless@vger.kernel.org; Thu, 05 Dec 2013 13:36:00 +0100
+	Tue, 3 Dec 2013 09:20:41 -0500
+Message-ID: <1386080437.4393.26.camel@jlt4.sipsolutions.net> (sfid-20131203_152044_753217_9E739CA2)
+Subject: Re: [PATCH 2/4] nl80211: back to default bitrate_mask correctly
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/8] mac80211: speed up station cleanup/AP shutdown
-Date: Thu,  5 Dec 2013 13:35:48 +0100
-Message-Id: <1386246956-14257-1-git-send-email-johannes@sipsolutions.net> (sfid-20131205_133615_238897_7D79C534)
-In-Reply-To: <1386192610.5660.4.camel@jlt4.sipsolutions.net>
-References: <1386192610.5660.4.camel@jlt4.sipsolutions.net>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: linux-wireless@vger.kernel.org, j@w1.fi
+Date: Tue, 03 Dec 2013 15:20:37 +0100
+In-Reply-To: <1386060648-6020-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131203_095101_211022_64F5435E)
+References: <1386060648-6020-1-git-send-email-janusz.dziedzic@tieto.com>
+	 <1386060648-6020-2-git-send-email-janusz.dziedzic@tieto.com>
+	 (sfid-20131203_095101_211022_64F5435E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Inspired by hostap shutdown potentially taking a long time (which is
-in part also its fault), I took a closer look at the station removal
-code and I think it's too complex. Only a single driver (iwlmvm) has
-a need for an RCU grace period after sta_state() returns, and that
-can easily be addressed differently.
+On Tue, 2013-12-03 at 09:50 +0100, Janusz Dziedzic wrote:
+> In case of empty NL80211_ATTR_TX_RATES attribute
+> in nl80211_set_tx_bitrate_mask() function back to
+> default bitrate mask.
 
-So consolidate many of the synchronize_rcu()/_net() in these paths
-and get rid of the rcu_barrier() stuff completely.
+Err what?
 
-Testing is still pending, but it should improve timing.
+> +++ b/net/wireless/nl80211.c
+> @@ -7311,9 +7311,6 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
+>  	struct nlattr *tx_rates;
+>  	struct ieee80211_supported_band *sband;
+>  
+> -	if (info->attrs[NL80211_ATTR_TX_RATES] == NULL)
+> -		return -EINVAL;
+
+Why?
 
 johannes
 
