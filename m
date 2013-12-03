@@ -1,108 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:40848 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750992Ab3LKQAQ (ORCPT
+Received: from mail-ee0-f41.google.com ([74.125.83.41]:48960 "EHLO
+	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752804Ab3LCJFf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Dec 2013 11:00:16 -0500
-Date: Wed, 11 Dec 2013 10:48:10 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: pull request: wireless 2013-12-11
-Message-ID: <20131211154810.GB7411@tuxdriver.com> (sfid-20131211_170022_085966_F599BD1B)
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="gBBFr7Ir9EOA20Yy"
+	Tue, 3 Dec 2013 04:05:35 -0500
+Received: by mail-ee0-f41.google.com with SMTP id t10so1323319eei.28
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Dec 2013 01:05:34 -0800 (PST)
+From: Marek Kwaczynski <marek.kwaczynski@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	Marek Kwaczynski <marek.kwaczynski@tieto.com>
+Subject: [PATCH 2/2 V3] mac80211: Update opmode during adding new station
+Date: Tue,  3 Dec 2013 10:05:00 +0100
+Message-Id: <1386061500-5750-2-git-send-email-marek.kwaczynski@tieto.com> (sfid-20131203_100548_297875_08D56429)
+In-Reply-To: <1386061500-5750-1-git-send-email-marek.kwaczynski@tieto.com>
+References: <1386061500-5750-1-git-send-email-marek.kwaczynski@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Update Operating Mode Notification is needed when User Space
+received Assoc Request contains Operating Mode Notification
+element.
 
---gBBFr7Ir9EOA20Yy
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-Dave,
-
-Just one patch this time -- a fix from Felix Fietkau to fix the
-duration calculation for non-aggregated packets in ath9k.  This is
-a small change and it is obviously specific to ath9k.
-
-Please let me know if there are problems!
-
-Thanks,
-
-John
-
+Signed-off-by: Marek Kwaczynski <marek.kwaczynski@tieto.com>
 ---
+ net/mac80211/cfg.c         |    8 ++++++++
+ net/mac80211/ieee80211_i.h |    4 ++++
+ net/mac80211/vht.c         |   36 ++++++++++++++++++++++--------------
+ 3 files changed, 34 insertions(+), 14 deletions(-)
 
-The following changes since commit 8afdd99a1315e759de04ad6e2344f0c5f17ecb1b:
-
-  udp: ipv4: fix an use after free in __udp4_lib_rcv() (2013-12-10 22:58:40=
- -0500)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git for-d=
-avem
-
-for you to fetch changes up to 33457ff7cdd48c54723ab8c550deec28dd904659:
-
-  Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/li=
-nville/wireless into for-davem (2013-12-11 10:41:56 -0500)
-
-----------------------------------------------------------------
-
-Felix Fietkau (1):
-      ath9k: fix duration calculation for non-aggregated packets
-
-John W. Linville (1):
-      Merge branch 'master' of git://git.kernel.org/.../linville/wireless i=
-nto for-davem
-
- drivers/net/wireless/ath/ath9k/xmit.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/a=
-th/ath9k/xmit.c
-index 09cdbcd09739..b5a19e098f2d 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1276,6 +1276,10 @@ static void ath_tx_fill_desc(struct ath_softc *sc, s=
-truct ath_buf *bf,
- 				if (!rts_thresh || (len > rts_thresh))
- 					rts =3D true;
- 			}
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 95667b0..87716f6 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1409,6 +1409,14 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
+ 	 */
+ 	if (!(params->sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER))) {
+ 		sta_info_pre_move_state(sta, IEEE80211_STA_AUTH);
++		if (params->opmode_notif_used) {
++			enum ieee80211_band band =
++					    ieee80211_get_sdata_band(sdata);
++			int changed = 0;
++			ieee80211_vht_recalc_handle_opmode(sdata, sta,
++							   params->opmode_notif,
++							   band, 0, &changed);
++		}
+ 		sta_info_pre_move_state(sta, IEEE80211_STA_ASSOC);
+ 	}
+ 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 29dc505..790accf 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1510,6 +1510,10 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
+ 				    struct sta_info *sta);
+ enum ieee80211_sta_rx_bandwidth ieee80211_sta_cur_vht_bw(struct sta_info *sta);
+ void ieee80211_sta_set_rx_nss(struct sta_info *sta);
++int ieee80211_vht_recalc_handle_opmode(struct ieee80211_sub_if_data *sdata,
++				       struct sta_info *sta, u8 opmode,
++				       enum ieee80211_band band, bool nss_only,
++				       u32 *changed);
+ void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
+ 				 struct sta_info *sta, u8 opmode,
+ 				 enum ieee80211_band band, bool nss_only);
+diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
+index de01127..fee70a9 100644
+--- a/net/mac80211/vht.c
++++ b/net/mac80211/vht.c
+@@ -350,21 +350,17 @@ void ieee80211_sta_set_rx_nss(struct sta_info *sta)
+ 	sta->sta.rx_nss = max_t(u8, 1, ht_rx_nss);
+ }
+ 
+-void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
+-				 struct sta_info *sta, u8 opmode,
+-				 enum ieee80211_band band, bool nss_only)
++int ieee80211_vht_recalc_handle_opmode(struct ieee80211_sub_if_data *sdata,
++				       struct sta_info *sta, u8 opmode,
++				       enum ieee80211_band band, bool nss_only,
++				       u32 *changed)
+ {
+-	struct ieee80211_local *local = sdata->local;
+-	struct ieee80211_supported_band *sband;
+ 	enum ieee80211_sta_rx_bandwidth new_bw;
+-	u32 changed = 0;
+ 	u8 nss;
+ 
+-	sband = local->hw.wiphy->bands[band];
+-
+ 	/* ignore - no support for BF yet */
+ 	if (opmode & IEEE80211_OPMODE_NOTIF_RX_NSS_TYPE_BF)
+-		return;
++		return -EOPNOTSUPP;
+ 
+ 	nss = opmode & IEEE80211_OPMODE_NOTIF_RX_NSS_MASK;
+ 	nss >>= IEEE80211_OPMODE_NOTIF_RX_NSS_SHIFT;
+@@ -372,11 +368,11 @@ void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
+ 
+ 	if (sta->sta.rx_nss != nss) {
+ 		sta->sta.rx_nss = nss;
+-		changed |= IEEE80211_RC_NSS_CHANGED;
++		*changed |= IEEE80211_RC_NSS_CHANGED;
+ 	}
+ 
+ 	if (nss_only)
+-		goto change;
++		return 1;
+ 
+ 	switch (opmode & IEEE80211_OPMODE_NOTIF_CHANWIDTH_MASK) {
+ 	case IEEE80211_OPMODE_NOTIF_CHANWIDTH_20MHZ:
+@@ -396,10 +392,22 @@ void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
+ 	new_bw = ieee80211_sta_cur_vht_bw(sta);
+ 	if (new_bw != sta->sta.bandwidth) {
+ 		sta->sta.bandwidth = new_bw;
+-		changed |= IEEE80211_RC_BW_CHANGED;
++		*changed |= IEEE80211_RC_BW_CHANGED;
++		return 1;
+ 	}
++	return 0;
++}
 +
-+			if (!aggr)
-+				len =3D fi->framelen;
-+
- 			ath_buf_set_rate(sc, bf, &info, len, rts);
- 		}
-=20
---=20
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
++void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
++				 struct sta_info *sta, u8 opmode,
++				 enum ieee80211_band band, bool nss_only)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_supported_band *sband = local->hw.wiphy->bands[band];
++	int ret, changed = 0;
+ 
+- change:
+-	if (changed)
++	ret = ieee80211_vht_recalc_handle_opmode(sdata, sta, opmode, band,
++						 nss_only, &changed);
++	if (ret > 0)
+ 		rate_control_rate_update(local, sband, sta, changed);
+ }
+-- 
+1.7.9.5
 
---gBBFr7Ir9EOA20Yy
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.15 (GNU/Linux)
-
-iQIcBAEBAgAGBQJSqIk6AAoJEJctW/TcYTgG0HQP/2A982a2xUiISAHGSc82shSi
-rRNc5+9xe7sz+249lsXW6ZJEbhd77KbhP5y8xVhF0U4RLQ9z62QRp2qQmg5rxS0r
-3IaJSUf+AfLRafEQSMqxByW98NR2z73jURewRdKPMbNYCdBHhRFIHTlwXBZHVqaE
-zulRYyRZ+Byt5bG82M89NUwG+iyD7iU9Wan+nyR3b7xAvfCy1jsDz+TAaOtm3eIL
-+FEzcQyvnWD/TPngzEtH8jhGiKAzJlwjTSk9UEbU7t+KxOPJLGUj4uX8BdM8m9Ar
-+UEh2X/EOIdb4nbRKGadFNq0/GWi6SdFQNWjpSCkTAP2f1Hh9wiTRZ56YB68JIcu
-A4+zFArbsWqVX549Bnag4+W/7pSUXjouOB+zfE5a2k4qBiNBbGNRDkrsE4ENLWu0
-/09wFQ+XB8Vey6dN45YSYdflpSJDiQAFtGzuXqRqNM7c8xxSblK+IHGKitspAZHx
-lvGb0t5RQiRHkG863zN3+lrW79Y/frsQRBHoc2j4eZFWO3dpdtuycGZgxauvov+x
-oamVChjNfvAc89ngfvxPHICRPKV7YBp0KfpYh8Yd6o2VpBHdVf2Sx4AOjKCil35R
-edC7z2ISfpy1KZt3BcpcLWoKmkr6LUqh+yyOg3bb/wZ8+KOONlxeqq8aWMgmd0+U
-R0gZZLPze8SHb1ElrWdy
-=qyhn
------END PGP SIGNATURE-----
-
---gBBFr7Ir9EOA20Yy--
