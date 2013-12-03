@@ -1,74 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qe0-f51.google.com ([209.85.128.51]:33599 "EHLO
-	mail-qe0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751016Ab3LQXf1 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:42882 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752372Ab3LCKsH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Dec 2013 18:35:27 -0500
-MIME-Version: 1.0
-In-Reply-To: <1254825772.20131217224914@eikelenboom.it>
-References: <1342235583.20131211182804@eikelenboom.it> <CAB=NE6UfumA2xez1DvtDSBDZ72WF_tOozFo_8LRnMryYiSqD-A@mail.gmail.com>
- <871324710.20131211191104@eikelenboom.it> <CAB=NE6XRnE0j9NMW0K1vKzEO9v70arSH4YXZjudqa0ZxiLB4AA@mail.gmail.com>
- <1937118387.20131216122200@eikelenboom.it> <52AEE60B.6030509@broadcom.com>
- <19210260274.20131216135644@eikelenboom.it> <CAGRGNgXHemM2FfnXgW5RbzhFT+9SfUfVkjdysK3+=_u3hWSacw@mail.gmail.com>
- <1534126119.20131217104548@eikelenboom.it> <387552477.20131217213319@eikelenboom.it>
- <20131217212709.GB5624@decadent.org.uk> <1254825772.20131217224914@eikelenboom.it>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 18 Dec 2013 10:35:06 +1100
-Message-ID: <CAGRGNgXJWw20q6Hd=e8dS4A+Ey8wPTLPGeg02-dJJOuCHH9AEA@mail.gmail.com> (sfid-20131218_003548_991923_9BE1D376)
-Subject: Re: [cfg80211 / iwlwifi] setting wireless regulatory domain doesn't work.
-To: Sander Eikelenboom <linux@eikelenboom.it>
-Cc: Ben Hutchings <ben@decadent.org.uk>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <avinashapatil@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 3 Dec 2013 05:48:07 -0500
+Message-ID: <1386067682.4393.5.camel@jlt4.sipsolutions.net> (sfid-20131203_114810_996608_4C530AAE)
+Subject: Re: [RFC] cfg80211/mac80211: drop GTK-protected unicast IP packets
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
+Cc: linux-wireless@vger.kernel.org, j@w1.fi
+Date: Tue, 03 Dec 2013 11:48:02 +0100
+In-Reply-To: <529DB560.40805@lri.fr>
+References: <1386010316-2540-1-git-send-email-johannes@sipsolutions.net>
+	  <529DA7FB.6020600@lri.fr> <1386063957.4393.4.camel@jlt4.sipsolutions.net>
+	 <529DB560.40805@lri.fr>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
+On Tue, 2013-12-03 at 11:41 +0100, Nicolas Cavallari wrote:
+> On 03/12/2013 10:45, Johannes Berg wrote:
+> > On Tue, 2013-12-03 at 10:44 +0100, Nicolas Cavallari wrote:
+> >> On 02/12/2013 19:51, Johannes Berg wrote:
+> >>> +			if (!ipv4_is_multicast(ip.hdr4.daddr))
+> >>> +				return -1;
+> >>
+> >> So broadcasting to e.g. 192.168.255.255 is now forbidden ?
+> > 
+> > Please, read the patch :)
+> 
+> I read the patch further. ipv4_is_multicast only checks if the
+> address is in 224/4, so this patch makes __ieee80211_data_to_8023
+> returns 0 for 224.0.0.0 to 239.255.255.255, and returns -1 for
+> everything else, including the 255.255.255.255, 192.168.255.255 and
+> other limited broadcast addresses, which are actually indistinguishable
+> from unicast addresses if you don't know the IP configuration.
+> 
+> If __ieee80211_data_to_8023 returns -1, the packet is dropped as
+> being unusable -- no less.
 
-On Wed, Dec 18, 2013 at 8:49 AM, Sander Eikelenboom
-<linux@eikelenboom.it> wrote:
->
-> Tuesday, December 17, 2013, 10:27:09 PM, you wrote:
->
->> On Tue, Dec 17, 2013 at 09:33:19PM +0100, Sander Eikelenboom wrote:
->> Debian official kernels use modular drivers, and neither
->> initramfs-tools nor dracut includes wireless drivers in the initramfs.
->> If you build a custom kernel with built-in drivers then you most
->> likely don't need an initramfs at all.
->
->> As maintainer of crda in Debian, I could add an initramfs hook that
->> would include it in an initramfs.  But I don't understand why it would
->> be worth doing so.  Why is it so useful to have wireless drivers
->> built-in *and* an initramfs?  If you think I should do this then open
->> a bug (reportbug crda).
->
-> Indeed, I looked for a crda hook for initramfs-tools but didn't find it, so skipped that idea
-> for the moment.
->
-> So if i combine the two .. it's essentially just a very bad idea to compile the wireless stuff in.
-> It needs a access to a userland program at module load time, or it will block forever.
+You still haven't even begun to understand the patch. It only cares
+about GTK-encrypted frames.
 
->From looking at the code and files in the Debian package, the CRDA
-"calls" are actually events which are then handled by udev.
+johannes
 
-So what happens to events passed to udev which aren't handled by any
-of it's (current) rules?
-
-Thanks,
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
