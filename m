@@ -1,43 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:36324 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752659Ab3LJPtd convert rfc822-to-8bit (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:43252 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753547Ab3LCMzh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Dec 2013 10:49:33 -0500
-From: Kalle Valo <kvalo@adurom.com>
-To: Pali =?utf-8?Q?Roh=C3=A1r?= <pali.rohar@gmail.com>
-Cc: Luciano Coelho <luca@coelho.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
-	joni.lapilainen@gmail.com,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Felipe Contreras <felipe.contreras@gmail.com>
-Subject: Re: [PATCH v2 15/16] wl1251: Add sysfs file address for setting permanent mac address
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
-	<1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
-	<1386494714-21070-16-git-send-email-pali.rohar@gmail.com>
-Date: Tue, 10 Dec 2013 17:49:23 +0200
-In-Reply-To: <1386494714-21070-16-git-send-email-pali.rohar@gmail.com>
- ("Pali
-	=?utf-8?Q?Roh=C3=A1r=22's?= message of "Sun, 8 Dec 2013 10:25:13 +0100")
-Message-ID: <87txegpuyk.fsf@purkki.adurom.net> (sfid-20131210_165039_608683_CFCB9C60)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Tue, 3 Dec 2013 07:55:37 -0500
+Message-ID: <1386075333.4393.13.camel@jlt4.sipsolutions.net> (sfid-20131203_135553_610883_63E642A2)
+Subject: Re: [PATCH v4] mac80211_hwsim: claim CSA support for AP
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Karl Beldan <karl.beldan@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
+	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Date: Tue, 03 Dec 2013 13:55:33 +0100
+In-Reply-To: <1385224698-12294-1-git-send-email-karl.beldan@gmail.com> (sfid-20131123_173902_687822_1D76D641)
+References: <1385224698-12294-1-git-send-email-karl.beldan@gmail.com>
+	 (sfid-20131123_173902_687822_1D76D641)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pali Rohár <pali.rohar@gmail.com> writes:
+On Sat, 2013-11-23 at 17:38 +0100, Karl Beldan wrote:
 
-> Driver wl1251 generating mac address randomly at startup and there is no way to
-> set permanent mac address via SET_IEEE80211_PERM_ADDR. This patch export sysfs
-> file which can set permanent mac address by userspace helper program. Patch is
-> needed for devices which do not store mac address in internal wl1251 eeprom.
->
-> Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
+> This adds a per vif bool csa_finished that is set after a call to
+> ieee80211_csa_finish() and used to skip beaconing while csa_active is
+> set in case a beacon is scheduled prior to csa_finalize_work completion.
+> This bool and the number of beacons transmitted during the CSA up to the
+> call to ieee80211_csa_finish() are reset in channel_switch_beacon op.
 
-We have ioctl() command for setting the mac address.
+Andrei says:
 
--- 
-Kalle Valo
+Overall it seems ok, but all the purpose of csa_finished is not very
+clear..
+It looks that this patch tries to avoid extra beaconing on the previous
+channel/hitting the warning..
+But the problem is much bigger here, it means that we didn't switch in
+time (before the next beacon) so it's ok to hit the warning here and
+transmit extra beacon with count==1.
+So if we see a lot of such warnings, maybe we need to fix
+ieee80211_csa_finish instead (not using work for example)
+
+johannes
+
