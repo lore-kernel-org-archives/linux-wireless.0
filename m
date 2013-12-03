@@ -1,52 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:46882 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755154Ab3LDItu (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:35823 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753074Ab3LCHSl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Dec 2013 03:49:50 -0500
-Message-ID: <1386146977.4284.11.camel@jlt4.sipsolutions.net> (sfid-20131204_095013_961968_17B98E18)
-Subject: Re: [PATCH] net: mac80211: tx.c: be sure of 'sdata->vif.type' must
- be NL80211_IFTYPE_AP when be in NL80211_IFTYPE_AP case
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Chen Gang <gang.chen.5i5j@gmail.com>
-Cc: Joe Perches <joe@perches.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	rkuo <rkuo@codeaurora.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	David Miller <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
-Date: Wed, 04 Dec 2013 09:49:37 +0100
-In-Reply-To: <529EEAC1.3010203@gmail.com> (sfid-20131204_093928_179625_C1EF906B)
-References: <528AEFB7.4060301@gmail.com>
-	   <20131125011938.GB18921@codeaurora.org> <5292B845.3010404@gmail.com>
-	   <5292B8A0.7020409@gmail.com> <5294255E.7040105@gmail.com>
-	   <52957ADA.2080704@gmail.com>
-	   (sfid-20131127_055211_558798_A7DF5684) <1385739487.8656.1.camel@jlt4.sipsolutions.net>
-	   <5299D306.7070701@gmail.com>
-	   (sfid-20131130_125901_519610_EDA4068E) <1385816013.4327.1.camel@jlt4.sipsolutions.net>
-	   <5299ED38.4090509@gmail.com> <5299EFDD.6060405@gmail.com>
-	   (sfid-20131130_150205_984535_068F14A9) <1385842134.6108.4.camel@jlt4.sipsolutions.net>
-	   <1385843940.2664.4.camel@joe-AO722>
-	   <1385890523.4171.1.camel@jlt4.sipsolutions.net>
-	   <1385937499.2664.21.camel@joe-AO722>
-	  <1385995738.20277.4.camel@jlt4.sipsolutions.net>
-	  <529E8F90.1020205@gmail.com>
-	 (sfid-20131204_031032_173575_B927B340) <1386144281.4284.0.camel@jlt4.sipsolutions.net>
-	 <529EEAC1.3010203@gmail.com> (sfid-20131204_093928_179625_C1EF906B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 3 Dec 2013 02:18:41 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Ujjal Roy <royujjal@gmail.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 00/12] mwifiex updates for 3.14
+Date: Mon, 2 Dec 2013 23:17:47 -0800
+Message-ID: <1386055079-6623-1-git-send-email-bzhao@marvell.com> (sfid-20131203_081850_653690_1DDAA666)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-12-04 at 16:41 +0800, Chen Gang wrote:
+These patches improve statistics update as well as
+endian conversion. Some of them appear to be suitable
+for earlier kernel versions but I want to have them
+well cooked in 3.14.
 
-> According to our original discussion, it seems we agree that I am not
-> the suitable member to finish it, so I suggest you or another members to
-> try.
+Amitkumar Karwar (5):
+  mwifiex: declare snap_type as __be16 variable
+  mwifiex: remove rfc1042_eth_hdr variable
+  mwifiex: fix an issue with Appletalk devices
+  mwifiex: remove redundant goto exit_remove statement
+  mwifiex: improvements in mwifiex_ret_tx_power_cfg()
 
-There's nothing to finish here. The code is fine. The compiler is wrong,
-but we haven't found a way to shut up the compiler without breaking the
-code. Please let's just let it rest.
+Bing Zhao (1):
+  mwifiex: avoid using variable name eth_hdr
 
-johannes
+Ujjal Roy (6):
+  mwifiex: use little-endian variables in firmware structures
+  mwifiex: fix rx_pending count imbalance
+  mwifiex: correct RX byte count statistics
+  mwifiex: correct TX byte count statistics
+  mwifiex: update statistics for bridged packets on AP interface
+  mwifiex: do not flood kmsg/dmesg with USB debug messages
+
+ drivers/net/wireless/mwifiex/11n_aggr.c    |  6 ++--
+ drivers/net/wireless/mwifiex/cfg80211.c    |  1 +
+ drivers/net/wireless/mwifiex/cmdevt.c      |  4 +--
+ drivers/net/wireless/mwifiex/decl.h        |  1 +
+ drivers/net/wireless/mwifiex/fw.h          | 30 ++++++++++----------
+ drivers/net/wireless/mwifiex/init.c        |  3 +-
+ drivers/net/wireless/mwifiex/main.c        |  9 ++----
+ drivers/net/wireless/mwifiex/main.h        |  2 +-
+ drivers/net/wireless/mwifiex/sta_cmd.c     |  2 +-
+ drivers/net/wireless/mwifiex/sta_cmdresp.c | 35 +++++++++++-------------
+ drivers/net/wireless/mwifiex/sta_rx.c      | 44 +++++++++++++-----------------
+ drivers/net/wireless/mwifiex/sta_tx.c      |  1 +
+ drivers/net/wireless/mwifiex/txrx.c        | 15 +++++++---
+ drivers/net/wireless/mwifiex/uap_txrx.c    | 39 +++++++++++++++-----------
+ drivers/net/wireless/mwifiex/usb.c         |  4 +--
+ drivers/net/wireless/mwifiex/util.c        |  5 ++--
+ 16 files changed, 103 insertions(+), 98 deletions(-)
+
+-- 
+1.8.2.3
 
