@@ -1,90 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:55943 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751222Ab3LLK4v (ORCPT
+Received: from mail-ea0-f180.google.com ([209.85.215.180]:53254 "EHLO
+	mail-ea0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752097Ab3LCIvA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Dec 2013 05:56:51 -0500
-Date: Thu, 12 Dec 2013 11:56:47 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Ben Hutchings <bhutchings@solarflare.com>
-Cc: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>,
-	Dan Williams <dcbw@redhat.com>, Kalle Valo <kvalo@adurom.com>,
-	Luciano Coelho <luca@coelho.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, sre@ring0.de, joni.lapilainen@gmail.com,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Felipe Contreras <felipe.contreras@gmail.com>
-Subject: Re: [PATCH v2 15/16] wl1251: Add sysfs file address for setting
- permanent mac address
-Message-ID: <20131212105647.GA22471@amd.pavel.ucw.cz> (sfid-20131212_115748_451383_14F651EF)
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
- <201312101814.35112@pali>
- <1386697762.30202.6.camel@dcbw.foobar.com>
- <201312101852.17030@pali>
- <1386796654.1516.268.camel@bwh-desktop.uk.level5networks.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1386796654.1516.268.camel@bwh-desktop.uk.level5networks.com>
+	Tue, 3 Dec 2013 03:51:00 -0500
+Received: by mail-ea0-f180.google.com with SMTP id f15so9795561eak.39
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Dec 2013 00:50:59 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, j@w1.fi,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH 1/4] nl80211: don't clear bitrate_mask twice
+Date: Tue,  3 Dec 2013 09:50:44 +0100
+Message-Id: <1386060648-6020-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131203_095106_140870_E3F4DD0A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed 2013-12-11 21:17:34, Ben Hutchings wrote:
-> On Tue, 2013-12-10 at 18:52 +0100, Pali Rohár wrote:
-> > On Tuesday 10 December 2013 18:49:22 Dan Williams wrote:
-> > > On Tue, 2013-12-10 at 18:14 +0100, Pali Rohár wrote:
-> > > > On Tuesday 10 December 2013 17:10:50 Pali Rohár wrote:
-> > > > > On Tuesday 10 December 2013 16:49:23 Kalle Valo wrote:
-> > > > > > Pali Rohár <pali.rohar@gmail.com> writes:
-> > > > > > > Driver wl1251 generating mac address randomly at
-> > > > > > > startup and there is no way to set permanent mac
-> > > > > > > address via SET_IEEE80211_PERM_ADDR. This patch
-> > > > > > > export sysfs file which can set permanent mac address
-> > > > > > > by userspace helper program. Patch is needed for
-> > > > > > > devices which do not store mac address in internal
-> > > > > > > wl1251 eeprom.
-> > > > > > > 
-> > > > > > > Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
-> > > > > > 
-> > > > > > We have ioctl() command for setting the mac address.
-> > > > > 
-> > > > > Really? Is there ioctl for setting permanent mac address?
-> > > > > Can you show me it?
-> > > > 
-> > > > Now I looked at it again and I did not found any ioctl for
-> > > > it. There is only ioctl cmd for getting address, not
-> > > > setting it.
-> > > > 
-> > > > #define SIOCETHTOOL 0x8946
-> > > > 
-> > > > /* Get permanent hardware address */
-> > > > #define ETHTOOL_GPERMADDR 0x00000020
-> > > 
-> > > Yeah, because it's supposed to be permanent and unchanging. 
-> > > Which means if there was an ioctl for it, that would be
-> > > contrary to the purpose of a permanent MAC address.
-> > > 
-> > > I realize the N900 stores the WiFi MAC address completely
-> > > differently than many other systems, and that's why this
-> > > sysfs file was created.  I don't really have a great
-> > > converged solution for that, other than what you've currently
-> > > got, or perhaps adding SPERMADDR to ethtool.  One thing I
-> > > *would* like though, is a restriction on the sysfs file such
-> > > that if the permanent MAC is already set, it cannot be set
-> > > again.  Otherwise the permanent MAC address isn't permanent
-> > > at all.
-> 
-> I'm really uncomfortable with the idea of involving userland in
-> establishing the 'permanent' MAC address.  (And from what I gather, the
-> Nokia software never did that but only used SIOCSIFHWADDR.)  It ought to
-> be set before the interface is ever registered.
+Don't clear cfg80211_bitrate_mask twice in
+nl80211_set_tx_bitrate_mask() function.
 
-Which is hard to do on n900. What is the problem with userland setting
-permanent mac address?
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ net/wireless/nl80211.c |   17 ++++++++---------
+ 1 file changed, 8 insertions(+), 9 deletions(-)
 
-It is not used for security or anything...
-									Pavel
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index c000449..c6401a8 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -7321,15 +7321,14 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
+ 	/* Default to all rates enabled */
+ 	for (i = 0; i < IEEE80211_NUM_BANDS; i++) {
+ 		sband = rdev->wiphy.bands[i];
+-		mask.control[i].legacy =
+-			sband ? (1 << sband->n_bitrates) - 1 : 0;
+-		if (sband)
+-			memcpy(mask.control[i].mcs,
+-			       sband->ht_cap.mcs.rx_mask,
+-			       sizeof(mask.control[i].mcs));
+-		else
+-			memset(mask.control[i].mcs, 0,
+-			       sizeof(mask.control[i].mcs));
++
++		if (!sband)
++			continue;
++
++		mask.control[i].legacy = (1 << sband->n_bitrates) - 1;
++		memcpy(mask.control[i].mcs,
++		       sband->ht_cap.mcs.rx_mask,
++		       sizeof(mask.control[i].mcs));
+ 	}
+ 
+ 	/*
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+1.7.9.5
+
