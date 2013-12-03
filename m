@@ -1,60 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39775 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932186Ab3LIUaN (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:52948 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753176Ab3LCNs2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Dec 2013 15:30:13 -0500
-Date: Mon, 9 Dec 2013 15:27:24 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: pull request: iwlwifi-next 2013-12-2
-Message-ID: <20131209202724.GB3359@tuxdriver.com> (sfid-20131209_213017_118808_6543CB2A)
-References: <529CF2D6.1080008@gmail.com>
- <529E129B.6080807@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <529E129B.6080807@gmail.com>
+	Tue, 3 Dec 2013 08:48:28 -0500
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
+	yeohchunyeow@gmail.com
+Cc: yeohchunyeow@cozybit.com
+Subject: [PATCH v6 1/5] mac80211: refactor ieee80211_ibss_process_chanswitch()
+Date: Tue,  3 Dec 2013 15:48:18 +0200
+Message-Id: <1386078502-19845-2-git-send-email-luciano.coelho@intel.com> (sfid-20131203_144835_364893_0423465F)
+In-Reply-To: <1386078502-19845-1-git-send-email-luciano.coelho@intel.com>
+References: <1386078502-19845-1-git-send-email-luciano.coelho@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 03, 2013 at 07:19:23PM +0200, Emmanuel Grumbach wrote:
-> 
-> 
-> On 12/02/2013 10:51 PM, Emmanuel Grumbach wrote:
-> > Hi John,
-> > 
-> > This is the fixed and enlarged pull request for 3.14. It includes the
-> > patches in my previous pull request that was based on a bad patch.
-> > 
-> > I have here a big rework of the rate control by Eyal. This is obviously
-> > the biggest part of this batch.
-> > I also have enhancement of protection flags by Avri and a few bits for
-> > WoWLAN by Eliad and Luca. Johannes cleans up the debugfs plus a few
-> > fixes. I provided a few things for Bluetooth coexistence.
-> > Besides this we have an implementation for low priority scan.
-> > 
-> > Note that I had to merge iwlwifi-fixes into -next to solve conflicts
-> > before they hit linux-next.
-> > Please let me know about issues you may face - Thanks!
-> > 
-> 
-> So - I found out that merging iwlwifi-fixes wasn't a good idea... So I
-> updated my tree and added a trivial compilation fix.
-> 
-> New head: 2f579448f3a60c8ede544dd0951b8d2a2e282ba2.
-> 
-> I hope that I have done all the possible mistakes now and that next time
-> I will get it right the first time... Sorry for all the mess...
+Refactor ieee80211_ibss_process_chanswitch() to use
+ieee80211_channel_switch() and avoid code duplication.
 
-This has a couple of merge conflicts when pulling it into
-wireless-next.  I don't have the time to work through them today,
-so I'm not pulling.
+Change-Id: I265a12c7f825dc20535bad1197a81437310d0086
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+ net/mac80211/cfg.c         |  4 ++--
+ net/mac80211/ibss.c        | 58 +++++++---------------------------------------
+ net/mac80211/ieee80211_i.h |  2 ++
+ 3 files changed, 12 insertions(+), 52 deletions(-)
 
-If you would like to work through the resolution and advise me on
-how to do it, I'd love to hear about it. :-)
-
-John
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 754069c..b5bc27e 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3048,8 +3048,8 @@ unlock:
+ 	sdata_unlock(sdata);
+ }
+ 
+-static int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+-				    struct cfg80211_csa_settings *params)
++int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
++			     struct cfg80211_csa_settings *params)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct ieee80211_local *local = sdata->local;
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 0f1fb5d..3514aab 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -784,18 +784,10 @@ ieee80211_ibss_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 	struct cfg80211_csa_settings params;
+ 	struct ieee80211_csa_ie csa_ie;
+ 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
+-	struct ieee80211_chanctx_conf *chanctx_conf;
+-	struct ieee80211_chanctx *chanctx;
+ 	enum nl80211_channel_type ch_type;
+-	int err, num_chanctx;
++	int err;
+ 	u32 sta_flags;
+ 
+-	if (sdata->vif.csa_active)
+-		return true;
+-
+-	if (!sdata->vif.bss_conf.ibss_joined)
+-		return false;
+-
+ 	sta_flags = IEEE80211_STA_DISABLE_VHT;
+ 	switch (ifibss->chandef.width) {
+ 	case NL80211_CHAN_WIDTH_5:
+@@ -826,9 +818,6 @@ ieee80211_ibss_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 	params.count = csa_ie.count;
+ 	params.chandef = csa_ie.chandef;
+ 
+-	if (ifibss->chandef.chan->band != params.chandef.chan->band)
+-		goto disconnect;
+-
+ 	switch (ifibss->chandef.width) {
+ 	case NL80211_CHAN_WIDTH_20_NOHT:
+ 	case NL80211_CHAN_WIDTH_20:
+@@ -884,29 +873,6 @@ ieee80211_ibss_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 		params.radar_required = true;
+ 	}
+ 
+-	rcu_read_lock();
+-	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+-	if (!chanctx_conf) {
+-		rcu_read_unlock();
+-		goto disconnect;
+-	}
+-
+-	/* don't handle for multi-VIF cases */
+-	chanctx = container_of(chanctx_conf, struct ieee80211_chanctx, conf);
+-	if (chanctx->refcount > 1) {
+-		rcu_read_unlock();
+-		goto disconnect;
+-	}
+-	num_chanctx = 0;
+-	list_for_each_entry_rcu(chanctx, &sdata->local->chanctx_list, list)
+-		num_chanctx++;
+-
+-	if (num_chanctx > 1) {
+-		rcu_read_unlock();
+-		goto disconnect;
+-	}
+-	rcu_read_unlock();
+-
+ 	/* all checks done, now perform the channel switch. */
+ 	ibss_dbg(sdata,
+ 		 "received channel switch announcement to go to channel %d MHz\n",
+@@ -914,19 +880,9 @@ ieee80211_ibss_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 
+ 	params.block_tx = !!csa_ie.mode;
+ 
+-	ieee80211_ibss_csa_beacon(sdata, &params);
+-	sdata->csa_radar_required = params.radar_required;
+-
+-	if (params.block_tx)
+-		ieee80211_stop_queues_by_reason(&sdata->local->hw,
+-				IEEE80211_MAX_QUEUE_MAP,
+-				IEEE80211_QUEUE_STOP_REASON_CSA);
+-
+-	sdata->csa_chandef = params.chandef;
+-	sdata->vif.csa_active = true;
+-
+-	ieee80211_bss_info_change_notify(sdata, err);
+-	drv_channel_switch_beacon(sdata, &params.chandef);
++	if (ieee80211_channel_switch(sdata->local->hw.wiphy, sdata->dev,
++				     &params))
++		goto disconnect;
+ 
+ 	ieee80211_ibss_csa_mark_radar(sdata);
+ 
+@@ -962,7 +918,8 @@ ieee80211_rx_mgmt_spectrum_mgmt(struct ieee80211_sub_if_data *sdata,
+ 	if (len < required_len)
+ 		return;
+ 
+-	ieee80211_ibss_process_chanswitch(sdata, elems, false);
++	if (!sdata->vif.csa_active)
++		ieee80211_ibss_process_chanswitch(sdata, elems, false);
+ }
+ 
+ static void ieee80211_rx_mgmt_deauth_ibss(struct ieee80211_sub_if_data *sdata,
+@@ -1143,7 +1100,8 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+ 		goto put_bss;
+ 
+ 	/* process channel switch */
+-	if (ieee80211_ibss_process_chanswitch(sdata, elems, true))
++	if (sdata->vif.csa_active ||
++	    ieee80211_ibss_process_chanswitch(sdata, elems, true))
+ 		goto put_bss;
+ 
+ 	/* same BSSID */
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 32bae21..a7b4d55 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1442,6 +1442,8 @@ void ieee80211_handle_roc_started(struct ieee80211_roc_work *roc);
+ 
+ /* channel switch handling */
+ void ieee80211_csa_finalize_work(struct work_struct *work);
++int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
++			     struct cfg80211_csa_settings *params);
+ 
+ /* interface handling */
+ int ieee80211_iface_init(void);
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.8.4.2
+
