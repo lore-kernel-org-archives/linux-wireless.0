@@ -1,378 +1,226 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:23250 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750894Ab3LKIfB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Dec 2013 03:35:01 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-rt-users@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [RFC 04/10] iwlwifi: pcie: move the ICT / non-ICT handling functions
-Date: Wed, 11 Dec 2013 10:33:39 +0200
-Message-Id: <1386750826-25219-5-git-send-email-emmanuel.grumbach@intel.com> (sfid-20131211_093510_472609_6211091B)
-In-Reply-To: <1386750826-25219-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1386750826-25219-1-git-send-email-emmanuel.grumbach@intel.com>
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:52955 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753315Ab3LCNs3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Dec 2013 08:48:29 -0500
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
+	yeohchunyeow@gmail.com
+Cc: yeohchunyeow@cozybit.com
+Subject: [PATCH v6 3/5] mac80211: refactor ieee80211_mesh_process_chanswitch()
+Date: Tue,  3 Dec 2013 15:48:20 +0200
+Message-Id: <1386078502-19845-4-git-send-email-luciano.coelho@intel.com> (sfid-20131203_144836_631954_F2870717)
+In-Reply-To: <1386078502-19845-1-git-send-email-luciano.coelho@intel.com>
+References: <1386078502-19845-1-git-send-email-luciano.coelho@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The purpose of this is to be able to call these functions
-from the interrupt handler and not from the upper half.
+Refactor ieee80211_mesh_process_chanswitch() to use
+ieee80211_channel_switch() and avoid code duplication.
 
-Change-Id: I0ee9a76ed7d2e396386024b487bfa965b7d0e59d
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/iwlwifi/pcie/rx.c | 324 ++++++++++++++++-----------------
- 1 file changed, 162 insertions(+), 162 deletions(-)
+ net/mac80211/cfg.c         | 10 +++++--
+ net/mac80211/ieee80211_i.h |  6 +++-
+ net/mac80211/mesh.c        | 68 ++++++++++------------------------------------
+ net/mac80211/util.c        |  1 -
+ 4 files changed, 27 insertions(+), 58 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
-index 54a2f4a..7085cda 100644
---- a/drivers/net/wireless/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
-@@ -807,6 +807,168 @@ static void iwl_pcie_irq_handle_error(struct iwl_trans *trans)
- 	wake_up(&trans_pcie->wait_command_queue);
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index b5bc27e..790c15d 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3156,9 +3156,15 @@ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 		    params->chandef.chan->band)
+ 			return -EINVAL;
+ 
+-		err = ieee80211_mesh_csa_beacon(sdata, params, true);
+-		if (err < 0)
++		if (ifmsh->csa_role == IEEE80211_MESH_CSA_ROLE_NONE)
++			ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_INIT;
++
++		err = ieee80211_mesh_csa_beacon(sdata, params,
++			(ifmsh->csa_role == IEEE80211_MESH_CSA_ROLE_INIT));
++		if (err < 0) {
++			ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_NONE;
+ 			return err;
++		}
+ 		break;
+ #endif
+ 	default:
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index a7b4d55..cf38a74 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -611,7 +611,11 @@ struct ieee80211_if_mesh {
+ 	struct ps_data ps;
+ 	/* Channel Switching Support */
+ 	struct mesh_csa_settings __rcu *csa;
+-	bool chsw_init;
++	enum {
++		IEEE80211_MESH_CSA_ROLE_NONE,
++		IEEE80211_MESH_CSA_ROLE_INIT,
++		IEEE80211_MESH_CSA_ROLE_REPEATER,
++	} csa_role;
+ 	u8 chsw_ttl;
+ 	u16 pre_value;
+ };
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 330d1f7..980cc12 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -685,7 +685,7 @@ ieee80211_mesh_build_beacon(struct ieee80211_if_mesh *ifmsh)
+ 		*pos++ = csa->settings.count;
+ 		*pos++ = WLAN_EID_CHAN_SWITCH_PARAM;
+ 		*pos++ = 6;
+-		if (ifmsh->chsw_init) {
++		if (ifmsh->csa_role == IEEE80211_MESH_CSA_ROLE_INIT) {
+ 			*pos++ = ifmsh->mshcfg.dot11MeshTTL;
+ 			*pos |= WLAN_EID_CHAN_SWITCH_PARAM_INITIATOR;
+ 		} else {
+@@ -853,19 +853,11 @@ ieee80211_mesh_process_chnswitch(struct ieee80211_sub_if_data *sdata,
+ {
+ 	struct cfg80211_csa_settings params;
+ 	struct ieee80211_csa_ie csa_ie;
+-	struct ieee80211_chanctx_conf *chanctx_conf;
+-	struct ieee80211_chanctx *chanctx;
+ 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 	enum ieee80211_band band = ieee80211_get_sdata_band(sdata);
+-	int err, num_chanctx;
++	int err;
+ 	u32 sta_flags;
+ 
+-	if (sdata->vif.csa_active)
+-		return true;
+-
+-	if (!ifmsh->mesh_id)
+-		return false;
+-
+ 	sta_flags = IEEE80211_STA_DISABLE_VHT;
+ 	switch (sdata->vif.bss_conf.chandef.width) {
+ 	case NL80211_CHAN_WIDTH_20_NOHT:
+@@ -890,10 +882,6 @@ ieee80211_mesh_process_chnswitch(struct ieee80211_sub_if_data *sdata,
+ 	params.chandef = csa_ie.chandef;
+ 	params.count = csa_ie.count;
+ 
+-	if (sdata->vif.bss_conf.chandef.chan->band !=
+-	    params.chandef.chan->band)
+-		return false;
+-
+ 	if (!cfg80211_chandef_usable(sdata->local->hw.wiphy, &params.chandef,
+ 				     IEEE80211_CHAN_DISABLED)) {
+ 		sdata_info(sdata,
+@@ -916,25 +904,6 @@ ieee80211_mesh_process_chnswitch(struct ieee80211_sub_if_data *sdata,
+ 		return false;
+ 	}
+ 
+-	rcu_read_lock();
+-	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+-	if (!chanctx_conf)
+-		goto failed_chswitch;
+-
+-	/* don't handle for multi-VIF cases */
+-	chanctx = container_of(chanctx_conf, struct ieee80211_chanctx, conf);
+-	if (chanctx->refcount > 1)
+-		goto failed_chswitch;
+-
+-	num_chanctx = 0;
+-	list_for_each_entry_rcu(chanctx, &sdata->local->chanctx_list, list)
+-		num_chanctx++;
+-
+-	if (num_chanctx > 1)
+-		goto failed_chswitch;
+-
+-	rcu_read_unlock();
+-
+ 	mcsa_dbg(sdata,
+ 		 "received channel switch announcement to go to channel %d MHz\n",
+ 		 params.chandef.chan->center_freq);
+@@ -945,27 +914,16 @@ ieee80211_mesh_process_chnswitch(struct ieee80211_sub_if_data *sdata,
+ 	else
+ 		ifmsh->chsw_ttl = 0;
+ 
+-	if (ifmsh->chsw_ttl > 0)
+-		if (ieee80211_mesh_csa_beacon(sdata, &params, false) < 0)
+-			return false;
+-
+-	sdata->csa_radar_required = params.radar_required;
+-
+-	if (params.block_tx)
+-		ieee80211_stop_queues_by_reason(&sdata->local->hw,
+-				IEEE80211_MAX_QUEUE_MAP,
+-				IEEE80211_QUEUE_STOP_REASON_CSA);
++	if (ifmsh->chsw_ttl == 0)
++		return false;
+ 
+-	sdata->csa_chandef = params.chandef;
+-	sdata->vif.csa_active = true;
++	ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_REPEATER;
+ 
+-	ieee80211_bss_info_change_notify(sdata, err);
+-	drv_channel_switch_beacon(sdata, &params.chandef);
++	if (ieee80211_channel_switch(sdata->local->hw.wiphy, sdata->dev,
++				     &params) < 0)
++		return false;
+ 
+ 	return true;
+-failed_chswitch:
+-	rcu_read_unlock();
+-	return false;
  }
  
-+/* legacy (non-ICT) ISR. Assumes that trans_pcie->irq_lock is held */
-+static irqreturn_t iwl_pcie_isr_non_ict(struct iwl_trans *trans)
-+{
-+	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-+	u32 inta;
-+
-+	lockdep_assert_held(&trans_pcie->irq_lock);
-+
-+	trace_iwlwifi_dev_irq(trans->dev);
-+
-+	/* Discover which interrupts are active/pending */
-+	inta = iwl_read32(trans, CSR_INT);
-+
-+	if (inta & (~trans_pcie->inta_mask)) {
-+		IWL_DEBUG_ISR(trans,
-+			      "We got a masked interrupt (0x%08x)...Ack and ignore\n",
-+			      inta & (~trans_pcie->inta_mask));
-+		iwl_write32(trans, CSR_INT, inta & (~trans_pcie->inta_mask));
-+		inta &= trans_pcie->inta_mask;
-+	}
-+
-+	/* Ignore interrupt if there's nothing in NIC to service.
-+	 * This may be due to IRQ shared with another device,
-+	 * or due to sporadic interrupts thrown from our NIC. */
-+	if (!inta) {
-+		IWL_DEBUG_ISR(trans, "Ignore interrupt, inta == 0\n");
-+		/*
-+		 * Re-enable interrupts here since we don't have anything to
-+		 * service, but only in case the handler won't run. Note that
-+		 * the handler can be scheduled because of a previous
-+		 * interrupt.
-+		 */
-+		if (test_bit(STATUS_INT_ENABLED, &trans->status) &&
-+		    !trans_pcie->inta)
-+			iwl_enable_interrupts(trans);
-+		return IRQ_NONE;
-+	}
-+
-+	if ((inta == 0xFFFFFFFF) || ((inta & 0xFFFFFFF0) == 0xa5a5a5a0)) {
-+		/* Hardware disappeared. It might have already raised
-+		 * an interrupt */
-+		IWL_WARN(trans, "HARDWARE GONE?? INTA == 0x%08x\n", inta);
-+		return IRQ_HANDLED;
-+	}
-+
-+	if (iwl_have_debug_level(IWL_DL_ISR))
-+		IWL_DEBUG_ISR(trans,
-+			      "ISR inta 0x%08x, enabled 0x%08x, fh 0x%08x\n",
-+			      inta, trans_pcie->inta_mask,
-+			      iwl_read32(trans, CSR_FH_INT_STATUS));
-+
-+	trans_pcie->inta |= inta;
-+	/* the thread will service interrupts and re-enable them */
-+	return IRQ_WAKE_THREAD;
-+}
-+
-+/* a device (PCI-E) page is 4096 bytes long */
-+#define ICT_SHIFT	12
-+#define ICT_SIZE	(1 << ICT_SHIFT)
-+#define ICT_COUNT	(ICT_SIZE / sizeof(u32))
-+
-+/* interrupt handler using ict table, with this interrupt driver will
-+ * stop using INTA register to get device's interrupt, reading this register
-+ * is expensive, device will write interrupts in ICT dram table, increment
-+ * index then will fire interrupt to driver, driver will OR all ICT table
-+ * entries from current index up to table entry with 0 value. the result is
-+ * the interrupt we need to service, driver will set the entries back to 0 and
-+ * set index.
-+ */
-+static irqreturn_t iwl_pcie_isr_ict(struct iwl_trans *trans)
-+{
-+	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-+	unsigned long flags;
-+	irqreturn_t ret;
-+	u32 inta;
-+	u32 val = 0;
-+	u32 read;
-+
-+	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
-+
-+	/* dram interrupt table not set yet,
-+	 * use legacy interrupt.
-+	 */
-+	if (unlikely(!trans_pcie->use_ict)) {
-+		ret = iwl_pcie_isr_non_ict(trans);
-+		spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
-+		return ret;
-+	}
-+
-+	trace_iwlwifi_dev_irq(trans->dev);
-+
-+	/* Ignore interrupt if there's nothing in NIC to service.
-+	 * This may be due to IRQ shared with another device,
-+	 * or due to sporadic interrupts thrown from our NIC. */
-+	read = le32_to_cpu(trans_pcie->ict_tbl[trans_pcie->ict_index]);
-+	trace_iwlwifi_dev_ict_read(trans->dev, trans_pcie->ict_index, read);
-+	if (!read) {
-+		IWL_DEBUG_ISR(trans, "Ignore interrupt, inta == 0\n");
-+		goto none;
-+	}
-+
-+	/*
-+	 * Collect all entries up to the first 0, starting from ict_index;
-+	 * note we already read at ict_index.
-+	 */
-+	do {
-+		val |= read;
-+		IWL_DEBUG_ISR(trans, "ICT index %d value 0x%08X\n",
-+				trans_pcie->ict_index, read);
-+		trans_pcie->ict_tbl[trans_pcie->ict_index] = 0;
-+		trans_pcie->ict_index =
-+			iwl_queue_inc_wrap(trans_pcie->ict_index, ICT_COUNT);
-+
-+		read = le32_to_cpu(trans_pcie->ict_tbl[trans_pcie->ict_index]);
-+		trace_iwlwifi_dev_ict_read(trans->dev, trans_pcie->ict_index,
-+					   read);
-+	} while (read);
-+
-+	/* We should not get this value, just ignore it. */
-+	if (val == 0xffffffff)
-+		val = 0;
-+
-+	/*
-+	 * this is a w/a for a h/w bug. the h/w bug may cause the Rx bit
-+	 * (bit 15 before shifting it to 31) to clear when using interrupt
-+	 * coalescing. fortunately, bits 18 and 19 stay set when this happens
-+	 * so we use them to decide on the real state of the Rx bit.
-+	 * In order words, bit 15 is set if bit 18 or bit 19 are set.
-+	 */
-+	if (val & 0xC0000)
-+		val |= 0x8000;
-+
-+	inta = (0xff & val) | ((0xff00 & val) << 16);
-+	IWL_DEBUG_ISR(trans, "ISR inta 0x%08x, enabled(sw) 0x%08x ict 0x%08x\n",
-+		      inta, trans_pcie->inta_mask, val);
-+	if (iwl_have_debug_level(IWL_DL_ISR))
-+		IWL_DEBUG_ISR(trans, "enabled(hw) 0x%08x\n",
-+			      iwl_read32(trans, CSR_INT_MASK));
-+
-+	inta &= trans_pcie->inta_mask;
-+	trans_pcie->inta |= inta;
-+
-+	/* iwl_pcie_tasklet() will service interrupts and re-enable them */
-+	if (likely(inta)) {
-+		spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
-+		return IRQ_WAKE_THREAD;
-+	}
-+
-+	ret = IRQ_HANDLED;
-+
-+ none:
-+	/* re-enable interrupts here since we don't have anything to service.
-+	 * only Re-enable if disabled by irq.
-+	 */
-+	if (test_bit(STATUS_INT_ENABLED, &trans->status) &&
-+	    !trans_pcie->inta)
-+		iwl_enable_interrupts(trans);
-+
-+	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
-+	return ret;
-+}
-+
- irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
- {
- 	struct iwl_trans *trans = dev_id;
-@@ -1019,11 +1181,6 @@ out:
-  *
-  ******************************************************************************/
+ static void
+@@ -1075,7 +1033,8 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
+ 		ifmsh->sync_ops->rx_bcn_presp(sdata,
+ 			stype, mgmt, &elems, rx_status);
  
--/* a device (PCI-E) page is 4096 bytes long */
--#define ICT_SHIFT	12
--#define ICT_SIZE	(1 << ICT_SHIFT)
--#define ICT_COUNT	(ICT_SIZE / sizeof(u32))
--
- /* Free dram table */
- void iwl_pcie_free_ict(struct iwl_trans *trans)
- {
-@@ -1110,163 +1267,6 @@ void iwl_pcie_disable_ict(struct iwl_trans *trans)
- 	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
+-	if (!ifmsh->chsw_init)
++	if (ifmsh->csa_role != IEEE80211_MESH_CSA_ROLE_INIT &&
++	    !sdata->vif.csa_active)
+ 		ieee80211_mesh_process_chnswitch(sdata, &elems, true);
  }
  
--/* legacy (non-ICT) ISR. Assumes that trans_pcie->irq_lock is held */
--static irqreturn_t iwl_pcie_isr_non_ict(struct iwl_trans *trans)
--{
--	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--	u32 inta;
--
--	lockdep_assert_held(&trans_pcie->irq_lock);
--
--	trace_iwlwifi_dev_irq(trans->dev);
--
--	/* Discover which interrupts are active/pending */
--	inta = iwl_read32(trans, CSR_INT);
--
--	if (inta & (~trans_pcie->inta_mask)) {
--		IWL_DEBUG_ISR(trans,
--			      "We got a masked interrupt (0x%08x)...Ack and ignore\n",
--			      inta & (~trans_pcie->inta_mask));
--		iwl_write32(trans, CSR_INT, inta & (~trans_pcie->inta_mask));
--		inta &= trans_pcie->inta_mask;
--	}
--
--	/* Ignore interrupt if there's nothing in NIC to service.
--	 * This may be due to IRQ shared with another device,
--	 * or due to sporadic interrupts thrown from our NIC. */
--	if (!inta) {
--		IWL_DEBUG_ISR(trans, "Ignore interrupt, inta == 0\n");
--		/*
--		 * Re-enable interrupts here since we don't have anything to
--		 * service, but only in case the handler won't run. Note that
--		 * the handler can be scheduled because of a previous
--		 * interrupt.
--		 */
--		if (test_bit(STATUS_INT_ENABLED, &trans->status) &&
--		    !trans_pcie->inta)
--			iwl_enable_interrupts(trans);
--		return IRQ_NONE;
--	}
--
--	if ((inta == 0xFFFFFFFF) || ((inta & 0xFFFFFFF0) == 0xa5a5a5a0)) {
--		/* Hardware disappeared. It might have already raised
--		 * an interrupt */
--		IWL_WARN(trans, "HARDWARE GONE?? INTA == 0x%08x\n", inta);
--		return IRQ_HANDLED;
--	}
--
--	if (iwl_have_debug_level(IWL_DL_ISR))
--		IWL_DEBUG_ISR(trans,
--			      "ISR inta 0x%08x, enabled 0x%08x, fh 0x%08x\n",
--			      inta, trans_pcie->inta_mask,
--			      iwl_read32(trans, CSR_FH_INT_STATUS));
--
--	trans_pcie->inta |= inta;
--	/* the thread will service interrupts and re-enable them */
--	return IRQ_WAKE_THREAD;
--}
--
--/* interrupt handler using ict table, with this interrupt driver will
-- * stop using INTA register to get device's interrupt, reading this register
-- * is expensive, device will write interrupts in ICT dram table, increment
-- * index then will fire interrupt to driver, driver will OR all ICT table
-- * entries from current index up to table entry with 0 value. the result is
-- * the interrupt we need to service, driver will set the entries back to 0 and
-- * set index.
-- */
--static irqreturn_t iwl_pcie_isr_ict(struct iwl_trans *trans)
--{
--	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--	unsigned long flags;
--	irqreturn_t ret;
--	u32 inta;
--	u32 val = 0;
--	u32 read;
--
--	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
--
--	/* dram interrupt table not set yet,
--	 * use legacy interrupt.
--	 */
--	if (unlikely(!trans_pcie->use_ict)) {
--		ret = iwl_pcie_isr_non_ict(trans);
--		spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
--		return ret;
--	}
--
--	trace_iwlwifi_dev_irq(trans->dev);
--
--	/* Ignore interrupt if there's nothing in NIC to service.
--	 * This may be due to IRQ shared with another device,
--	 * or due to sporadic interrupts thrown from our NIC. */
--	read = le32_to_cpu(trans_pcie->ict_tbl[trans_pcie->ict_index]);
--	trace_iwlwifi_dev_ict_read(trans->dev, trans_pcie->ict_index, read);
--	if (!read) {
--		IWL_DEBUG_ISR(trans, "Ignore interrupt, inta == 0\n");
--		goto none;
--	}
--
--	/*
--	 * Collect all entries up to the first 0, starting from ict_index;
--	 * note we already read at ict_index.
--	 */
--	do {
--		val |= read;
--		IWL_DEBUG_ISR(trans, "ICT index %d value 0x%08X\n",
--				trans_pcie->ict_index, read);
--		trans_pcie->ict_tbl[trans_pcie->ict_index] = 0;
--		trans_pcie->ict_index =
--			iwl_queue_inc_wrap(trans_pcie->ict_index, ICT_COUNT);
--
--		read = le32_to_cpu(trans_pcie->ict_tbl[trans_pcie->ict_index]);
--		trace_iwlwifi_dev_ict_read(trans->dev, trans_pcie->ict_index,
--					   read);
--	} while (read);
--
--	/* We should not get this value, just ignore it. */
--	if (val == 0xffffffff)
--		val = 0;
--
--	/*
--	 * this is a w/a for a h/w bug. the h/w bug may cause the Rx bit
--	 * (bit 15 before shifting it to 31) to clear when using interrupt
--	 * coalescing. fortunately, bits 18 and 19 stay set when this happens
--	 * so we use them to decide on the real state of the Rx bit.
--	 * In order words, bit 15 is set if bit 18 or bit 19 are set.
--	 */
--	if (val & 0xC0000)
--		val |= 0x8000;
--
--	inta = (0xff & val) | ((0xff00 & val) << 16);
--	IWL_DEBUG_ISR(trans, "ISR inta 0x%08x, enabled(sw) 0x%08x ict 0x%08x\n",
--		      inta, trans_pcie->inta_mask, val);
--	if (iwl_have_debug_level(IWL_DL_ISR))
--		IWL_DEBUG_ISR(trans, "enabled(hw) 0x%08x\n",
--			      iwl_read32(trans, CSR_INT_MASK));
--
--	inta &= trans_pcie->inta_mask;
--	trans_pcie->inta |= inta;
--
--	/* iwl_pcie_tasklet() will service interrupts and re-enable them */
--	if (likely(inta)) {
--		spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
--		return IRQ_WAKE_THREAD;
--	}
--
--	ret = IRQ_HANDLED;
--
-- none:
--	/* re-enable interrupts here since we don't have anything to service.
--	 * only Re-enable if disabled by irq.
--	 */
--	if (test_bit(STATUS_INT_ENABLED, &trans->status) &&
--	    !trans_pcie->inta)
--		iwl_enable_interrupts(trans);
--
--	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
--	return ret;
--}
--
- irqreturn_t iwl_pcie_isr(int irq, void *data)
- {
- 	struct iwl_trans *trans = data;
+@@ -1086,7 +1045,7 @@ int ieee80211_mesh_finish_csa(struct ieee80211_sub_if_data *sdata)
+ 	int ret = 0;
+ 
+ 	/* Reset the TTL value and Initiator flag */
+-	ifmsh->chsw_init = false;
++	ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_NONE;
+ 	ifmsh->chsw_ttl = 0;
+ 
+ 	/* Remove the CSA and MCSP elements from the beacon */
+@@ -1200,7 +1159,8 @@ static void mesh_rx_csa_frame(struct ieee80211_sub_if_data *sdata,
+ 
+ 	ifmsh->pre_value = pre_value;
+ 
+-	if (!ieee80211_mesh_process_chnswitch(sdata, &elems, false)) {
++	if (!sdata->vif.csa_active &&
++	    !ieee80211_mesh_process_chnswitch(sdata, &elems, false)) {
+ 		mcsa_dbg(sdata, "Failed to process CSA action frame");
+ 		return;
+ 	}
+@@ -1355,7 +1315,7 @@ void ieee80211_mesh_init_sdata(struct ieee80211_sub_if_data *sdata)
+ 	mesh_rmc_init(sdata);
+ 	ifmsh->last_preq = jiffies;
+ 	ifmsh->next_perr = jiffies;
+-	ifmsh->chsw_init = false;
++	ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_NONE;
+ 	/* Allocate all mesh structures when creating the first mesh interface. */
+ 	if (!mesh_allocated)
+ 		ieee80211s_init();
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 06265d7..f153ab4 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2487,7 +2487,6 @@ int ieee80211_send_action_csa(struct ieee80211_sub_if_data *sdata,
+ 			ifmsh->pre_value++;
+ 		put_unaligned_le16(ifmsh->pre_value, pos);/* Precedence Value */
+ 		pos += 2;
+-		ifmsh->chsw_init = true;
+ 	}
+ 
+ 	ieee80211_tx_skb(sdata, skb);
 -- 
-1.8.3.2
+1.8.4.2
 
