@@ -1,124 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f41.google.com ([74.125.83.41]:48075 "EHLO
-	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932128Ab3LDMku (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:42638 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752468Ab3LCJeb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Dec 2013 07:40:50 -0500
-Received: by mail-ee0-f41.google.com with SMTP id t10so2353951eei.14
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Dec 2013 04:40:48 -0800 (PST)
-From: Marek Kwaczynski <marek.kwaczynski@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	Marek Kwaczynski <marek.kwaczynski@tieto.com>
-Subject: [PATCH V4] mac80211: Update opmode during adding new station
-Date: Wed,  4 Dec 2013 13:38:53 +0100
-Message-Id: <1386160733-25409-1-git-send-email-marek.kwaczynski@tieto.com> (sfid-20131204_134053_852076_71F69233)
+	Tue, 3 Dec 2013 04:34:31 -0500
+Message-ID: <1386063265.4393.3.camel@jlt4.sipsolutions.net> (sfid-20131203_103436_474873_EEBB931F)
+Subject: Re: [RFC] cfg80211/mac80211: drop GTK-protected unicast IP packets
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>, j@w1.fi
+Date: Tue, 03 Dec 2013 10:34:25 +0100
+In-Reply-To: <CABPxzYJfBG0YtCrfkg_PqV4MP+MdLePhD2QdFQF9D+EfPObnZQ@mail.gmail.com> (sfid-20131203_102026_263382_A70E781F)
+References: <1386010316-2540-1-git-send-email-johannes@sipsolutions.net>
+	 <CABPxzYJfBG0YtCrfkg_PqV4MP+MdLePhD2QdFQF9D+EfPObnZQ@mail.gmail.com>
+	 (sfid-20131203_102026_263382_A70E781F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update Operating Mode Notification is needed when User Space
-received Assoc Request contains Operating Mode Notification
-element.
+On Tue, 2013-12-03 at 14:50 +0530, Krishna Chaitanya wrote:
+> On Tue, Dec 3, 2013 at 12:21 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > From: Johannes Berg <johannes.berg@intel.com>
+> >
+> > The GTK is shared by all stations in an 802.11 BSS and as such any
+> > one of them can send forged group-addressed frames. To prevent this
+> > kind of attack, drop unicast IP packets if they were protected with
+> > the GTK, i.e. were multicast packets at the 802.11 layer.
+> >
+> > Based in part on a patch by Jouni that did the same but in the IP
+> > stack, which was considered too intrusive.
+> >
+> As per RFC 1122 this is an invalid case:
+>          When a host sends a datagram to a link-layer broadcast address,
+>          the IP destination address MUST be a legal IP broadcast or IP
+>          multicast address.
+> 
+>          A host SHOULD silently discard a datagram that is received via
+>          a link-layer broadcast (see Section 2.4) but does not specify
+>          an IP multicast or broadcast destination address.
+> 
+> We can simply drop this frame irrespective of GTK/PTK is used.
 
-Signed-off-by: Marek Kwaczynski <marek.kwaczynski@tieto.com>
----
- net/mac80211/cfg.c         |    7 +++++++
- net/mac80211/ieee80211_i.h |    3 +++
- net/mac80211/vht.c         |   29 +++++++++++++++++------------
- 3 files changed, 27 insertions(+), 12 deletions(-)
+Interesting. Can you point out where this is implemented in the IP
+stack(s)?
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 95667b0..0ec4f1b 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1409,6 +1409,13 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
- 	 */
- 	if (!(params->sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER))) {
- 		sta_info_pre_move_state(sta, IEEE80211_STA_AUTH);
-+		if (params->opmode_notif_used) {
-+			enum ieee80211_band band =
-+					    ieee80211_get_sdata_band(sdata);
-+			ieee80211_vht_recalc_handle_opmode(sdata, sta,
-+							   params->opmode_notif,
-+							   band, 0);
-+		}
- 		sta_info_pre_move_state(sta, IEEE80211_STA_ASSOC);
- 	}
- 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 29dc505..13965e1 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1510,6 +1510,9 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
- 				    struct sta_info *sta);
- enum ieee80211_sta_rx_bandwidth ieee80211_sta_cur_vht_bw(struct sta_info *sta);
- void ieee80211_sta_set_rx_nss(struct sta_info *sta);
-+u32 ieee80211_vht_recalc_handle_opmode(struct ieee80211_sub_if_data *sdata,
-+				       struct sta_info *sta, u8 opmode,
-+				       enum ieee80211_band band, bool nss_only);
- void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
- 				 struct sta_info *sta, u8 opmode,
- 				 enum ieee80211_band band, bool nss_only);
-diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
-index de01127..61d788c 100644
---- a/net/mac80211/vht.c
-+++ b/net/mac80211/vht.c
-@@ -350,21 +350,17 @@ void ieee80211_sta_set_rx_nss(struct sta_info *sta)
- 	sta->sta.rx_nss = max_t(u8, 1, ht_rx_nss);
- }
- 
--void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
--				 struct sta_info *sta, u8 opmode,
--				 enum ieee80211_band band, bool nss_only)
-+u32 ieee80211_vht_recalc_handle_opmode(struct ieee80211_sub_if_data *sdata,
-+				       struct sta_info *sta, u8 opmode,
-+				       enum ieee80211_band band, bool nss_only)
- {
--	struct ieee80211_local *local = sdata->local;
--	struct ieee80211_supported_band *sband;
- 	enum ieee80211_sta_rx_bandwidth new_bw;
--	u32 changed = 0;
- 	u8 nss;
--
--	sband = local->hw.wiphy->bands[band];
-+	u32 changed = 0;
- 
- 	/* ignore - no support for BF yet */
- 	if (opmode & IEEE80211_OPMODE_NOTIF_RX_NSS_TYPE_BF)
--		return;
-+		return 0;
- 
- 	nss = opmode & IEEE80211_OPMODE_NOTIF_RX_NSS_MASK;
- 	nss >>= IEEE80211_OPMODE_NOTIF_RX_NSS_SHIFT;
-@@ -376,7 +372,7 @@ void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
- 	}
- 
- 	if (nss_only)
--		goto change;
-+		return changed;
- 
- 	switch (opmode & IEEE80211_OPMODE_NOTIF_CHANWIDTH_MASK) {
- 	case IEEE80211_OPMODE_NOTIF_CHANWIDTH_20MHZ:
-@@ -398,8 +394,17 @@ void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
- 		sta->sta.bandwidth = new_bw;
- 		changed |= IEEE80211_RC_BW_CHANGED;
- 	}
-+	return changed;
-+}
- 
-- change:
--	if (changed)
-+void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
-+				 struct sta_info *sta, u8 opmode,
-+				 enum ieee80211_band band, bool nss_only)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_supported_band *sband = local->hw.wiphy->bands[band];
-+	u32 changed = ieee80211_vht_recalc_handle_opmode(sdata, sta, opmode,
-+							 band, nss_only);
-+	if (changed > 0)
- 		rate_control_rate_update(local, sband, sta, changed);
- }
--- 
-1.7.9.5
+johannes
 
