@@ -1,62 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f42.google.com ([74.125.83.42]:45493 "EHLO
-	mail-ee0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753994Ab3LQUpd (ORCPT
+Received: from mailout4.w1.samsung.com ([210.118.77.14]:29965 "EHLO
+	mailout4.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752641Ab3LCGrU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Dec 2013 15:45:33 -0500
-Received: by mail-ee0-f42.google.com with SMTP id e53so3131974eek.29
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Dec 2013 12:45:32 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eyal Shapira <eyal@wizery.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 34/36] iwlwifi: mvm: set highest rate in VHT MCS Set
-Date: Tue, 17 Dec 2013 22:44:37 +0200
-Message-Id: <1387313079-28123-34-git-send-email-egrumbach@gmail.com> (sfid-20131217_214542_467411_A40B61FF)
-In-Reply-To: <52B0B72A.5070704@gmail.com>
-References: <52B0B72A.5070704@gmail.com>
+	Tue, 3 Dec 2013 01:47:20 -0500
+Received: from eucpsbgm1.samsung.com (unknown [203.254.199.244])
+ by mailout4.w1.samsung.com
+ (Oracle Communications Messaging Server 7u4-24.01(7.0.4.24.0) 64bit (built Nov
+ 17 2011)) with ESMTP id <0MX700FQDXIUQE00@mailout4.w1.samsung.com> for
+ linux-wireless@vger.kernel.org; Tue, 03 Dec 2013 06:47:18 +0000 (GMT)
+Message-id: <529D7E75.2010702@samsung.com> (sfid-20131203_074735_455083_CC72162A)
+Date: Tue, 03 Dec 2013 10:47:17 +0400
+From: Alexey Perevalov <a.perevalov@samsung.com>
+MIME-version: 1.0
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: question about generalized way for RSSI notification
+References: <52989CB9.3060108@samsung.com>
+ <1385997324.1969.9.camel@dcbw.foobar.com>
+In-reply-to: <1385997324.1969.9.camel@dcbw.foobar.com>
+Content-type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+Hi Dan,
 
-Set the Tx/Rx highest long GI rates in the VHT Supported MCS Set
-field according to the chip capabilties.
+Thank you very much, already existing netlink interface is really what 
+we need.
+And beacon frame it's better place to send notification about RSSI.
 
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-nvm-parse.c |    6 ++++++
- 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-index ebf629b..a48decc 100644
---- a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-@@ -290,6 +290,9 @@ static void iwl_init_vht_hw_capab(const struct iwl_cfg *cfg,
- 			    IEEE80211_VHT_MCS_NOT_SUPPORTED << 12 |
- 			    IEEE80211_VHT_MCS_NOT_SUPPORTED << 14);
- 
-+	/* Max rate for Long GI NSS=2 80Mhz is 780Mbps */
-+	vht_cap->vht_mcs.rx_highest = cpu_to_le16(780);
-+
- 	if (num_ants == 1 ||
- 	    cfg->rx_with_siso_diversity) {
- 		vht_cap->cap |= IEEE80211_VHT_CAP_RX_ANTENNA_PATTERN |
-@@ -297,9 +300,12 @@ static void iwl_init_vht_hw_capab(const struct iwl_cfg *cfg,
- 		/* this works because NOT_SUPPORTED == 3 */
- 		vht_cap->vht_mcs.rx_mcs_map |=
- 			cpu_to_le16(IEEE80211_VHT_MCS_NOT_SUPPORTED << 2);
-+		/* Max rate for Long GI NSS=1 80Mhz is 390Mbps */
-+		vht_cap->vht_mcs.rx_highest = cpu_to_le16(390);
- 	}
- 
- 	vht_cap->vht_mcs.tx_mcs_map = vht_cap->vht_mcs.rx_mcs_map;
-+	vht_cap->vht_mcs.tx_highest = vht_cap->vht_mcs.rx_highest;
- }
- 
- static void iwl_init_sbands(struct device *dev, const struct iwl_cfg *cfg,
+On 12/02/2013 07:15 PM, Dan Williams wrote:
+> On Fri, 2013-11-29 at 17:55 +0400, Alexey Perevalov wrote:
+>> Dear wireless subsystem maintainers,
+>>
+>> I have a question regarding RSSI notification to the user space.
+>> Right now this information available in /proc/net/wireless.
+>> That generalized method is not depending on driver implementation,
+>> driver just need to provide wireless statistics.
+>>
+>> I found 2 places in kernel which report about RSSI to user space eventually.
+>> First place, it's wlan_rndis driver base implementation
+>> ./drivers/net/wireless/rndis_wlan.c.
+>> The second place, it's mac80211 driver - beacon frame handling.
+> Do you mean ieee80211_rx_mgmt_beacon()?
+Yes I meant IEEE80211_STYPE_BEACON handling which use already existing 
+netlink infrastructure.
+
+>> Unfortunately wireless driver we're using isn't rndis based and isn't
+>> mac80211 based.
+>> We don't want to depends on driver code.
+> There's another possibility: use cfg80211 for the driver's configuration
+> interface.  cfg80211 is actually just some utility code that implements
+> the nl80211 API (which replaces the old WEXT configuration API).  Any
+> driver can use cfg80211, not just ones based on the mac80211 software
+> stack.  In fact, a number of the older "fullmac" drivers (libertas,
+> orinico) have been ported to use the cfg80211 API for all configuration
+> handling.
+>
+>> What community think in this situation, is it possible to add notifier
+>> with following responsibility:
+>>       send netlink notification in case of signal level changed according
+>> to predefined by user threshold?
+> Look at net/wireless/nl80211.c; these are the entry points when
+> userspace is configuring the driver with nl80211 commands.  Userspace
+> would set up CQM thresholds with the NL80211_CMD_SET_CQM command, which
+> then gets passed to your driver.  Your driver could then set up a timer
+> or level triggers based on the userspace parameters, and then call
+> cfg80211_cqm_rssi_notify() as appropriate to send the notification to
+> userspace.
+>
+> Dan
+>
+>> Technically it will looks like rndis_wlan approach - timer function with
+>> predefined frequency.
+>>
+>> This functionality is needed to reduce user space daemon activity which
+>> provides information to GUI wifi indicator.
+>> Also such approach could decrease time reaction on signal level changes.
+>> Currently, some OSes has 1 second interval,
+>> another one has 3 seconds for checking RSSI.
+>>
+
+
 -- 
-1.7.9.5
-
+Best regards,
+Alexey Perevalov
