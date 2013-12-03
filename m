@@ -1,74 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:9342 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754433Ab3LTHoK (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:43226 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752801Ab3LCMre (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Dec 2013 02:44:10 -0500
-From: "Chauhan, Rajesh" <rajeshc@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Malinen, Jouni" <jouni@qca.qualcomm.com>,
-	"BAHINI, Henri" <hbahini@qca.qualcomm.com>,
-	"Johnson, Jeff" <jjohnson@qca.qualcomm.com>,
-	"Chang, Leo" <schang@qca.qualcomm.com>,
-	"Luo, Xun" <xunl@qca.qualcomm.com>,
-	"Thalappil, Sameer" <sameert@qca.qualcomm.com>,
-	"Hussain, Arif" <c_arifh@qca.qualcomm.com>,
-	"Chauhan, Rajesh" <rajeshc@qca.qualcomm.com>
-Subject: RE: [PATCHv3] cfg80211: add support for frequency interference event
-Date: Fri, 20 Dec 2013 07:44:08 +0000
-Message-ID: <D19FD2B13A40CD4B8DA64DB9B8F112E93E5CF51C@nasanexd01a.na.qualcomm.com> (sfid-20131220_084418_496823_0E8F6193)
-References: <1384198356-427-1-git-send-email-rajeshc@qca.qualcomm.com>
-	 <1386077130.4393.21.camel@jlt4.sipsolutions.net>
-	 <CAB=NE6Xa-bdLQm8uAg9wCE0fdp4KPBZ46d5FHVHp6wCvN5=dUA@mail.gmail.com>
-	 (sfid-20131203_173549_913735_1E946CDE)
- <1386145204.4284.4.camel@jlt4.sipsolutions.net>
-	 (sfid-20131204_092013_820427_3AA619B7)
- <1386145241.4284.5.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1386145241.4284.5.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Tue, 3 Dec 2013 07:47:34 -0500
+Message-ID: <1386074851.4393.8.camel@jlt4.sipsolutions.net> (sfid-20131203_134737_641541_F8D5ECF5)
+Subject: Re: [PATCH 2/2 V3] mac80211: Update opmode during adding new station
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marek Kwaczynski <marek.kwaczynski@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 03 Dec 2013 13:47:31 +0100
+In-Reply-To: <1386061500-5750-2-git-send-email-marek.kwaczynski@tieto.com> (sfid-20131203_100534_968939_7F496576)
+References: <1386061500-5750-1-git-send-email-marek.kwaczynski@tieto.com>
+	 <1386061500-5750-2-git-send-email-marek.kwaczynski@tieto.com>
+	 (sfid-20131203_100534_968939_7F496576)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGVsbG8gSm9oYW5uZXMsDQoNClBsZWFzZSBhbGxvdyBtZSB0byBjbGFyaWZ5IGhlcmUuIA0KDQpT
-byB0aGUgZmllbGQgImludGVyZmVyZW5jZV9zb3VyY2UiICBpbiB0aGUgc3RydWN0ICJjZmc4MDIx
-MV9hdm9pZF9mcmVxdWVuY3lfcmFuZ2UiIGlzIG5vdCBiZWluZyBlZmZlY3RpdmVseSB1c2VkIGN1
-cnJlbnRseS4gVGhhdCBmaWVsZCB3YXMgYWRkZWQgcGVyIHN1Z2dlc3Rpb24gZnJvbSBMdWlzIGZv
-ciBmdXR1cmUgdXNlLiBCdXQgaWYgeW91IGFyZSBhZHZpc2luZyB0byByZW1vdmUgaXQgdGhlbiB5
-ZXMgd2UgY2FuIHJlbW92ZSB0aGF0IGZpZWxkLg0KDQpUaGUgQVBJIGNmZzgwMjExX2F2b2lkX2Zy
-ZXF1ZW5jeV9ldmVudCgpIHdoaWNoIGlzIGludHJvZHVjZWQgaW4gdGhpcyBwYXRjaCBzaGFsbCBi
-ZSB1c2VkIGJ5IG91ciBXTEFOIGRyaXZlciB3aGljaCBpcyBhbiBvcGVuIHNvdXJjZSBkcml2ZXIu
-IFdMQU4gZHJpdmVyIHNoYWxsIGludm9rZSB0aGlzIGV2ZW50IEFQSSB0byBwYXNzIGZyZXF1ZW5j
-eSBpbmZvcm1hdGlvbiB0byBXUEEgU3VwcGxpY2FudC4gV2UgYWxzbyBoYXZlIGEgcGF0Y2ggcmVh
-ZHkgZm9yIFdQQSBzdXBwbGljYW50IHdoaWNoIEpvdW5pIHdvdWxkIHVwc3RyZWFtIG9uY2Uga2Vy
-bmVsIHBhdGNoIGlzIGJsZXNzZWQgYW5kIHVwIHN0cmVhbWVkLg0KDQpJIHdpbGwgcmVtb3ZlIGZp
-ZWxkICJpbnRlcmZlcmVuY2Vfc291cmNlIiBhbmQgc2VuZCByZXZpc2VkIHBhdGNoIGFuZCBhbHNv
-IGluY29ycG9yYXRlIHlvdXIgb3RoZXIgY29tbWVudHMuIFBsLiBkbyBsZXQgdXMga25vdyBpZiB5
-b3Ugc3RpbGwgc2VlIGFueSBpc3N1ZS4NCg0KUmVnYXJkcywNClJhamVzaCBDaGF1aGFuDQoNCg0K
-LS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEpvaGFubmVzIEJlcmcgW21haWx0bzpq
-b2hhbm5lc0BzaXBzb2x1dGlvbnMubmV0XSANClNlbnQ6IFdlZG5lc2RheSwgRGVjZW1iZXIgMDQs
-IDIwMTMgMTI6MjEgQU0NClRvOiBMdWlzIFIuIFJvZHJpZ3Vleg0KQ2M6IENoYXVoYW4sIFJhamVz
-aDsgbGludXgtd2lyZWxlc3M7IE1hbGluZW4sIEpvdW5pOyBCQUhJTkksIEhlbnJpOyBKb2huc29u
-LCBKZWZmOyBDaGFuZywgTGVvOyBMdW8sIFh1bjsgVGhhbGFwcGlsLCBTYW1lZXI7IEh1c3NhaW4s
-IEFyaWYNClN1YmplY3Q6IFJlOiBbUEFUQ0h2M10gY2ZnODAyMTE6IGFkZCBzdXBwb3J0IGZvciBm
-cmVxdWVuY3kgaW50ZXJmZXJlbmNlIGV2ZW50DQoNCk9uIFdlZCwgMjAxMy0xMi0wNCBhdCAwOToy
-MCArMDEwMCwgSm9oYW5uZXMgQmVyZyB3cm90ZToNCj4gT24gVHVlLCAyMDEzLTEyLTAzIGF0IDE3
-OjM1ICswMTAwLCBMdWlzIFIuIFJvZHJpZ3VleiB3cm90ZToNCj4gPiBPbiBUdWUsIERlYyAzLCAy
-MDEzIGF0IDI6MjUgUE0sIEpvaGFubmVzIEJlcmcgPGpvaGFubmVzQHNpcHNvbHV0aW9ucy5uZXQ+
-IHdyb3RlOg0KPiA+ID4+ICsgKiBAaW50ZXJmZXJlbmNlX3NvdXJjZTogZW51bSBubDgwMjExX2Zy
-ZXFfaW50ZXJmZXJlbmNlX3NvdXJjZV90eXBlDQo+ID4gPj4gKyAqICAgaXMgdXNlZCB0byBzcGVj
-aWZ5IHNvdXJjZSBvZiBpbnRlcmZlcmVuY2UuDQo+ID4gPg0KPiA+ID4gRG8gd2UgZXhwZWN0IHRo
-YXQgZGlmZmVyZW50IHNvdXJjZXMgd291bGQgYmUgdHJlYXRlZCBkaWZmZXJlbnRseT8gDQo+ID4g
-PiBJZiBub3QsIHdoYXQgdXNlIGlzIHRoaXM/DQo+ID4gDQo+ID4gVGhhdCB3YXMgYmVjYXVzZSBv
-ZiBteSBuYWdnaW5nLCB3aXRob3V0IHN1Y2ggYSBmaWVsZCB0aGUgdHlwZSBvZiANCj4gPiBpbnRl
-cmZlcmVuY2Ugd291bGQgYmUgY29tcGxldGVseSBhbWJpZ3VvdXMgYW5kIHdlJ2QgaGF2ZSBubyB1
-c2VycyBvbiANCj4gPiB0aGUgTGludXgga2VybmVsIG9mIHRoaXMgQVBJLA0KPiANCj4gV2FpdCwg
-d2UgaGF2ZSBubyB1c2VycyBmb3IgdGhpcyBBUEk/IEZvcmdldCBpdCB0aGVuIC0gSSB0aG91Z2h0
-IHlvdSANCj4gd2VyZSBnb2luZyB0byBwb3N0IGEgcGF0Y2ggc29vbi4gSSBndWVzcyBJIHNob3Vs
-ZCBoYXZlIGxlYXJuZWQgYnkgbm93IA0KPiBub3QgdG8gdHJ1c3QgUUNBIHdpdGggdGhpcy4NCj4g
-DQo+IEknbGwgZHJvcCB0aGlzIHVudGlsIEkgc2VlIGEgcGF0Y2ggdXNpbmcgaXQuDQoNCllvdSBj
-YW4gc2VlIHRoaXMgYXMgYSBjYXJyb3QgKG9yIHN0aWNrLCBkZXBlbmRpbmcgb24gaG93IHlvdSBs
-b29rIGF0IGl0KSBmb3IgdXBzdHJlYW1pbmcgdGhlIGRyaXZlciB0aGF0IHdhbnRzIGl0Lg0KDQpq
-b2hhbm5lcw0KDQo=
+On Tue, 2013-12-03 at 10:05 +0100, Marek Kwaczynski wrote:
+
+> -void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
+> -				 struct sta_info *sta, u8 opmode,
+> -				 enum ieee80211_band band, bool nss_only)
+> +int ieee80211_vht_recalc_handle_opmode(struct ieee80211_sub_if_data *sdata,
+> +				       struct sta_info *sta, u8 opmode,
+> +				       enum ieee80211_band band, bool nss_only,
+> +				       u32 *changed)
+
+Err, why don't you just return a u32 with the change flags?
+
+johannes
+
