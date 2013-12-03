@@ -1,69 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:52114 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753012Ab3LNCo7 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Dec 2013 21:44:59 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "j@w1.fi" <j@w1.fi>, Johannes Berg <johannes.berg@intel.com>
-Date: Fri, 13 Dec 2013 18:44:49 -0800
-Subject: RE: [RFC] mac80211: implement HS2.0 gratuitous ARP/unsolicited NA
- dropping
-Message-ID: <477F20668A386D41ADCC57781B1F70430F532572E0@SC-VEXCH1.marvell.com> (sfid-20131214_034504_662716_B1E238AF)
-References: <1386010602-3916-1-git-send-email-johannes@sipsolutions.net>
-In-Reply-To: <1386010602-3916-1-git-send-email-johannes@sipsolutions.net>
-Content-Type: text/plain; charset=US-ASCII
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:57317 "EHLO
+	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752542Ab3LCN7E (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Dec 2013 08:59:04 -0500
+Message-Id: <1386079140.19919.54929613.506DE0D0@webmail.messagingengine.com> (sfid-20131203_145911_231688_2B2F3F49)
+From: "Nikita N." <nikitan@operamail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
 MIME-Version: 1.0
+Content-Type: text/plain
+In-Reply-To: <529A36C5.4060209@lwfinger.net>
+References: <1385589961.19021.52907237.3EE33E5B@webmail.messagingengine.com>
+ <52966D64.2030805@lwfinger.net>
+ <1385593188.3627.52911717.4E0712D9@webmail.messagingengine.com>
+ <52968893.6060405@lwfinger.net>
+ <1385812990.14905.53777877.7646278B@webmail.messagingengine.com>
+ <529A1B52.6040605@lwfinger.net>
+ <1385835820.6559.53858669.5FD3F3A6@webmail.messagingengine.com>
+ <529A36C5.4060209@lwfinger.net>
+Subject: Re: RTL8187 bugs
+Date: Tue, 03 Dec 2013 05:59:00 -0800
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Hi Larry :) Im afraid I didnt receive your answer to my last email.. in
+case you sent, please resend, thanks :)
 
-> From: Johannes Berg <johannes.berg@intel.com>
+As for "dissecting" the issue, as you suggested, I have been filling
+your code with debug lines.
+Very interesting in my opinion is the report from
+drivers/net/wireless/rtl818x/rtl8187/dev.c#rtl8187_configure_filter(),
+as follows:
+
+IN>changed_flags=240,total_flags=2147483888,multicast=0,priv->rx_conf=2425682954
+>FIF_CONTROL
+>FIF_OTHER_BSS
+>not FIF_ALLMULTI
+drivers/net/wireless/rtl818x/rtl8187/dev.c#rtl818x_iowrite32_async
+drivers/net/wireless/rtl818x/rtl8187/dev.c#rtl8187_iowrite_async
+OUT>total_flags=96,priv->rx_conf=2426207243
+
+.. after, some daemon calls it again multiple times, but result is
+always the same as follows:
+IN>changed_flags=144,total_flags=2147483888,multicast=0,priv->rx_conf=2426207243
+>not FIF_ALLMULTI
+drivers/net/wireless/rtl818x/rtl8187/dev.c#rtl818x_iowrite32_async
+drivers/net/wireless/rtl818x/rtl8187/dev.c#rtl8187_iowrite_async
+net/mac80211/util.c#ieee80211_queue_work
+OUT>total_flags=96,priv->rx_conf=2426207243
+
+.. seeing anything unusual?
+
+I have the strange feeling that "IN" value of priv->rx_conf could be
+bugged.. as result the relative OUT value is maybe wrong.. :P
+
+Anyway, could you please perform the same test on your working
+interfaces, and report me the output?
+The values of IN/OUT and so on, of rtl8187_configure_filter(), *AFTER*
+calling "airmon-ng start wlan0"?
+>From your probe, my interface type is as follow:
+- "RTL8187vB (default)"
+- PCI_EEPROM_WIDTH_93C46
+- customer id 0
+
+Please insert the following debug lines, as I did:
+static void rtl8187_configure_filter()
+{
+printk(KERN_WARNING
+"drivers/net/wireless/rtl818x/rtl8187/dev.c#rtl8187_configure_filter");
+	struct rtl8187_priv *priv = dev->priv;
+printk(KERN_WARNING
+"IN>changed_flags=%u,total_flags=%u,multicast=%llu,priv->rx_conf=%u",changed_flags,*total_flags,multicast,priv->rx_conf);
+	if (changed_flags & FIF_FCSFAIL) {
+		priv->rx_conf ^= RTL818X_RX_CONF_FCS;
+printk(KERN_WARNING ">FIF_FCSFAIL");}
+	if (changed_flags & FIF_CONTROL) {
+		priv->rx_conf ^= RTL818X_RX_CONF_CTRL;
+printk(KERN_WARNING ">FIF_CONTROL");}
+	if (changed_flags & FIF_OTHER_BSS) {
+		priv->rx_conf ^= RTL818X_RX_CONF_MONITOR;
+printk(KERN_WARNING ">FIF_OTHER_BSS");}
+	if (*total_flags & FIF_ALLMULTI || multicast > 0) {
+		priv->rx_conf |= RTL818X_RX_CONF_MULTICAST;
+printk(KERN_WARNING ">FIF_ALLMULTI");}
+else {
+		priv->rx_conf &= ~RTL818X_RX_CONF_MULTICAST;
+printk(KERN_WARNING ">not FIF_ALLMULTI");}
+
+	rtl818x_iowrite32_async(priv, &priv->map->RX_CONF,
+	priv->rx_conf);
+printk(KERN_WARNING
+"OUT>total_flags=%u,priv->rx_conf=%u",*total_flags,priv->rx_conf);
+}
+
+If you get different outputs also between your interfaces, please send
+me all different outputs!
+thanks :)
+
+
+On Sat, Nov 30, 2013, at 11:04 AM, Larry Finger wrote:
+
+> If you want to send me one of your devices, I'll check it out. Otherwise,
+> there 
+> is little I can do. It would be impossible to duplicate the path you have
+> followed.
 > 
-> Taking the gratuitous ARP/unsolicited NA detection code from
-> mwifiex (but fixing it up to not have read-after-skb-end bugs),
-> implement the ability for userspace to request the behaviour
-> required by HS2.0 to drop gratuitous ARP and unsolicited NA
-> frames when proxy ARP service is enabled on the AP. Since this
-> behaviour is only mandatory for HS2.0 and may not always be
-> desired, make it optional - modify cfg80211/nl80211 for that.
+> Larry
 > 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> 
+> 
 
-[...]
-
-> diff --git a/drivers/net/wireless/mwifiex/decl.h b/drivers/net/wireless/mwifiex/decl.h
-> index 5c85d78..1887629 100644
-> --- a/drivers/net/wireless/mwifiex/decl.h
-> +++ b/drivers/net/wireless/mwifiex/decl.h
-> @@ -153,12 +153,4 @@ struct mwifiex_types_wmm_info {
->  	u8 reserved;
->  	struct ieee_types_wmm_ac_parameters ac_params[IEEE80211_NUM_ACS];
->  } __packed;
-> -
-> -struct mwifiex_arp_eth_header {
-> -	struct arphdr hdr;
-> -	u8 ar_sha[ETH_ALEN];
-> -	u8 ar_sip[4];
-> -	u8 ar_tha[ETH_ALEN];
-> -	u8 ar_tip[4];
-> -} __packed;
-
-"#include <uapi/linux/if_arp.h" in this file can be removed too.
-
-@@ -26,7 +26,6 @@
- #include <linux/wait.h>
- #include <linux/timer.h>
- #include <linux/ieee80211.h>
--#include <uapi/linux/if_arp.h>
- #include <net/mac80211.h>
-
-
-Acked-by: Bing Zhao <bzhao@marvell.com> [mwifiex]
-
-Thanks,
-Bing
+-- 
+http://www.fastmail.fm - A fast, anti-spam email service.
 
