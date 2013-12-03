@@ -1,62 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f49.google.com ([74.125.83.49]:36018 "EHLO
-	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753214Ab3LIWhw (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:43350 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753404Ab3LCNZd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Dec 2013 17:37:52 -0500
-Received: by mail-ee0-f49.google.com with SMTP id c41so1857472eek.8
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Dec 2013 14:37:51 -0800 (PST)
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@do-not-panic.com,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	rmanohar@qti.qualcomm.com
-Subject: [PATCH] ath9k: initialize retry chain flags in tx99 code
-Date: Mon,  9 Dec 2013 23:37:49 +0100
-Message-Id: <1386628669-15039-1-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20131209_233756_681050_0C111568)
+	Tue, 3 Dec 2013 08:25:33 -0500
+Message-ID: <1386077130.4393.21.camel@jlt4.sipsolutions.net> (sfid-20131203_142537_442351_B9A4DE15)
+Subject: Re: [PATCHv3] cfg80211: add support for frequency interference event
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rajesh Chauhan <rajeshc@qca.qualcomm.com>
+Cc: rodrigue@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+	jouni@qca.qualcomm.com, hbahini@qca.qualcomm.com,
+	jjohnson@qca.qualcomm.com, schang@qca.qualcomm.com,
+	xunl@qca.qualcomm.com, sameert@qca.qualcomm.com,
+	c_arifh@qca.qualcomm.com
+Date: Tue, 03 Dec 2013 14:25:30 +0100
+In-Reply-To: <1384198356-427-1-git-send-email-rajeshc@qca.qualcomm.com>
+References: <1384198356-427-1-git-send-email-rajeshc@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Initialize first chain flags in ath9k_build_tx99_skb() according to
-configured channel mode and channel width
+On Mon, 2013-11-11 at 11:32 -0800, Rajesh Chauhan wrote:
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
----
- drivers/net/wireless/ath/ath9k/tx99.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
+> + * This structure provides frequency range(s) that should be avoided
+> + *	because of interference.
 
-diff --git a/drivers/net/wireless/ath/ath9k/tx99.c b/drivers/net/wireless/ath/ath9k/tx99.c
-index 57d7757..b686a74 100644
---- a/drivers/net/wireless/ath/ath9k/tx99.c
-+++ b/drivers/net/wireless/ath/ath9k/tx99.c
-@@ -48,7 +48,9 @@ static struct sk_buff *ath9k_build_tx99_skb(struct ath_softc *sc)
- 			       0x02, 0x23, 0x23, 0xab, 0x63, 0x89, 0x51, 0xb3,
- 			       0xe7, 0x8b, 0x72, 0x90, 0x4c, 0xe8, 0xfb, 0xc0};
- 	u32 len = 1200;
-+	struct ieee80211_tx_rate *rate;
- 	struct ieee80211_hw *hw = sc->hw;
-+	struct ath_hw *ah = sc->sc_ah;
- 	struct ieee80211_hdr *hdr;
- 	struct ieee80211_tx_info *tx_info;
- 	struct sk_buff *skb;
-@@ -73,10 +75,16 @@ static struct sk_buff *ath9k_build_tx99_skb(struct ath_softc *sc)
- 
- 	tx_info = IEEE80211_SKB_CB(skb);
- 	memset(tx_info, 0, sizeof(*tx_info));
-+	rate = &tx_info->control.rates[0];
- 	tx_info->band = hw->conf.chandef.chan->band;
- 	tx_info->flags = IEEE80211_TX_CTL_NO_ACK;
- 	tx_info->control.vif = sc->tx99_vif;
--	tx_info->control.rates[0].count = 1;
-+	rate->count = 1;
-+	if (ah->curchan && IS_CHAN_HT(ah->curchan)) {
-+		rate->flags |= IEEE80211_TX_RC_MCS;
-+		if (IS_CHAN_HT40(ah->curchan))
-+			rate->flags |= IEEE80211_TX_RC_40_MHZ_WIDTH;
-+	}
- 
- 	memcpy(skb->data + sizeof(*hdr), PN9Data, sizeof(PN9Data));
- 
--- 
-1.8.3.2
+extra tab that should be a space only
+
+> + * @interference_source: enum nl80211_freq_interference_source_type
+> + *	is used to specify source of interference.
+
+Do we expect that different sources would be treated differently? If
+not, what use is this?
+
+> + * @start_freq: start of frequency range. Frequency is specified in
+> + *	KHz and is center frequency in 20 MHz channel bandwidth
+> + * @end_freq: end of frequency range. Frequency is specified in KHz
+> + *	and is center frequency in 20 MHz channel bandwidth
+
+Why would those be required to be center frequencies of some wireless
+channels? That doesn't make much sense, e.g. if you have raw
+interference data from a modem, no?
+
+>  /**
+> + * cfg80211_avoid_frequency_event - frequency interference event
+> + * @netdev: network device
+> + * @freq_list: frequency range(s) information
+> + * @gfp: allocation flags
+> + *
+> + * Wireless driver calls this function to notify userspace about frequency
+> + * range(s) that should be avoided because of interference.
+> + */
+> +void cfg80211_avoid_frequency_event(struct net_device *netdev,
+> +		   struct cfg80211_avoid_frequency_list *freq_list, gfp_t gfp);
+
+Indentation. Also, that freq_list parameter should probably be const?
+
+> + * @NL80211_CMD_AVOID_FREQUENCIES_EVENT: Send range(s) of interfering
+> + *	frequencies that should be avoided, from the wireless driver to the
+> + *	user space. If SoftAP/P2P-GO is operating on interfering frequency
+> + *	then user space should stop and resart them avoiding interfering
+
+typo: restart
+
+> + *	frequency range(s). User space may decide to continue operation on
+> + *	interfering frequency, but in such case, there might be impact on
+> + *	performance.
+
+Also, I think describing policy here ("userspace should stop and
+restart") is wrong. This should be up to userspace. It could
+alternatively do a real CSA for example.
+
+> + * @NL80211_ATTR_AVOID_FREQUENCIES: Avoid frequencies container
+> information
+
+That should probably describe in more detail how the information in it
+is formatted.
+
+> +/**,
+> + * enum nl80211_avoid_frequency_attr - avoid frequency attributes
+> + * @__NL80211_FREQUENCY_ATTR_INVALID: attribute number 0 is reserved
+> + * @NL80211_AVOID_FREQUENCY_ATTR_INTERFERENCE_SOURCE_TYPE: interference
+> + *	source
+> + * @NL80211_AVOID_FREQUENCY_ATTR_START_FREQ: Start of frequency range.
+> + *	Frequency is specified in KHz and is center frequency in 20 MHz
+> + *	channel bandwidth.
+> + * @NL80211_AVOID_FREQUENCY_ATTR_END_FREQ: End of frequency range.
+> + *	Frequency is specified in KHz and is center frequency in 20 MHz
+> + *	channel bandwidth.
+> + * @__NL80211_FREQUENCY_ATTR_AFTER_LAST: internal use
+
+missing docs for the other remaining enum members
+
+
+> +void cfg80211_avoid_frequency_event(struct net_device *netdev,
+> +		struct cfg80211_avoid_frequency_list *freq_list, gfp_t gfp)
+
+indentation
+
+> +	struct wiphy *wiphy;
+> +	struct cfg80211_registered_device *rdev;
+> +	struct sk_buff *msg;
+> +	void *hdr;
+> +	struct nlattr *nl_ranges, *nl_range;
+> +	int err = -EINVAL;
+
+wtf? that value is never used - don't randomly initialize variables. Is
+the variable itself even used?
+
+> +	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_AVOID_FREQUENCIES_EVENT);
+> +	if (!hdr) {
+> +		nlmsg_free(msg);
+> +		return;
+> +	}
+> +
+> +	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
+> +	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex))
+> +		goto nla_put_failure;
+
+wdev index is missing, however, see above.
+
+> +	for (i = 0; i < freq_list->n_freq_ranges; i++) {
+> +		nl_range = nla_nest_start(msg, i);
+
+0 is invalid, I'm pretty sure.
+
+> +	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
+> +				nl80211_mlme_mcgrp.id, gfp);
+
+This is no longer the right API
+
+johannes
 
