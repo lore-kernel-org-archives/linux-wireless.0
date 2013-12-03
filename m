@@ -1,108 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:52323 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754300Ab3LDHp7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Dec 2013 02:45:59 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21150.56469.69819.785943@gargle.gargle.HOWL> (sfid-20131204_084602_670030_617D40E1)
-Date: Wed, 4 Dec 2013 13:11:09 +0530
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] ath9k: Add initval arrays for DFS channels
-In-Reply-To: <1386131365-28780-1-git-send-email-sujith@msujith.org>
-References: <1386131365-28780-1-git-send-email-sujith@msujith.org>
+Received: from mga02.intel.com ([134.134.136.20]:35067 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754612Ab3LCTPd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Dec 2013 14:15:33 -0500
+From: Ilan Peer <ilan.peer@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: wireless-regdb@lists.infradead.org, Ilan Peer <ilan.peer@intel.com>
+Subject: [PATCH v2 5/6] cfg80211: Enable GO operation on indoor channels
+Date: Tue,  3 Dec 2013 21:16:05 +0200
+Message-Id: <1386098166-24196-6-git-send-email-ilan.peer@intel.com> (sfid-20131203_201540_158842_BBB1D481)
+In-Reply-To: <1386098166-24196-1-git-send-email-ilan.peer@intel.com>
+References: <1386098166-24196-1-git-send-email-ilan.peer@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+---
+ net/wireless/chan.c |    5 +++++
+ 1 file changed, 5 insertions(+)
 
-I'll squash these two patches into another series that also adds
-updates for AR9331.
+diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+index d47856b..36f2f5f 100644
+--- a/net/wireless/chan.c
++++ b/net/wireless/chan.c
+@@ -611,6 +611,8 @@ EXPORT_SYMBOL(cfg80211_chandef_usable);
+  * IEEE80211_CHAN_GO_CONCURRENT and there is an additional station interface
+  * associated to an AP on the same channel or on the same UNII band
+  * (assuming that the AP is an authorized master).
++ * In addition allow the GO to operate on a channel on which indoor operation is
++ * allowed, iff we are currently operating in an indoor environment.
+  */
+ static bool cfg80211_go_permissive_chan(struct cfg80211_registered_device *rdev,
+ 					struct ieee80211_channel *chan)
+@@ -619,6 +621,9 @@ static bool cfg80211_go_permissive_chan(struct cfg80211_registered_device *rdev,
+ 
+ 	ASSERT_RTNL();
+ 
++	if (regulatory_ir_allowed(chan))
++		return true;
++
+ 	if (!(chan->flags & IEEE80211_CHAN_GO_CONCURRENT))
+ 		return false;
+ 
+-- 
+1.7.10.4
 
-Sujith
-
-Sujith Manoharan wrote:
-> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-> 
-> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h |  7 +++++++
->  drivers/net/wireless/ath/ath9k/ar9340_initvals.h     |  2 ++
->  drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h | 13 +++++++++++--
->  3 files changed, 20 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-> index e7cdf11..97b4bd1 100644
-> --- a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-> +++ b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-> @@ -1745,4 +1745,11 @@ static const u32 ar9300_2p2_baseband_core_txfir_coeff_japan_2484[][2] = {
->  	{0x0000a3a0, 0xca9228ee},
->  };
->  
-> +static const u32 ar9300_2p2_baseband_postamble_dfs_channel[][3] = {
-> +	/* Addr      5G          2G        */
-> +	{0x00009824, 0x5ac668d0, 0x5ac668d0},
-> +	{0x00009e0c, 0x6d4000e2, 0x6d4000e2},
-> +	{0x00009e14, 0x37b9625e, 0x37b9625e},
-> +};
-> +
->  #endif /* INITVALS_9003_2P2_H */
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9340_initvals.h b/drivers/net/wireless/ath/ath9k/ar9340_initvals.h
-> index 7f22cb2..a01f0ed 100644
-> --- a/drivers/net/wireless/ath/ath9k/ar9340_initvals.h
-> +++ b/drivers/net/wireless/ath/ath9k/ar9340_initvals.h
-> @@ -30,6 +30,8 @@
->  
->  #define ar9340_1p0_baseband_core_txfir_coeff_japan_2484 ar9300_2p2_baseband_core_txfir_coeff_japan_2484
->  
-> +#define ar9340_1p0_baseband_postamble_dfs_channel ar9300_2p2_baseband_postamble_dfs_channel
-> +
->  static const u32 ar9340_1p0_radio_postamble[][5] = {
->  	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
->  	{0x000160ac, 0xa4646800, 0xa4646800, 0xa4646800, 0xa4646800},
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h
-> index 75bef11..e6aec2c 100644
-> --- a/drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h
-> +++ b/drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h
-> @@ -57,8 +57,6 @@ static const u32 ar9580_1p0_baseband_core[][2] = {
->  	{0x00009804, 0xfd14e000},
->  	{0x00009808, 0x9c0a9f6b},
->  	{0x0000980c, 0x04900000},
-> -	{0x00009814, 0x3280c00a},
-> -	{0x00009818, 0x00000000},
->  	{0x0000981c, 0x00020028},
->  	{0x00009834, 0x6400a190},
->  	{0x00009838, 0x0108ecff},
-> @@ -1133,6 +1131,8 @@ static const u32 ar9580_1p0_rx_gain_table[][2] = {
->  static const u32 ar9580_1p0_baseband_postamble[][5] = {
->  	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
->  	{0x00009810, 0xd00a8005, 0xd00a8005, 0xd00a8011, 0xd00a8011},
-> +	{0x00009814, 0x3280c00a, 0x3280c00a, 0x3280c00a, 0x3280c00a},
-> +	{0x00009818, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
->  	{0x00009820, 0x206a022e, 0x206a022e, 0x206a012e, 0x206a012e},
->  	{0x00009824, 0x5ac640d0, 0x5ac640d0, 0x5ac640d0, 0x5ac640d0},
->  	{0x00009828, 0x06903081, 0x06903081, 0x06903881, 0x06903881},
-> @@ -1207,4 +1207,13 @@ static const u32 ar9580_1p0_pcie_phy_pll_on_clkreq[][2] = {
->  	{0x00004044, 0x00000000},
->  };
->  
-> +static const u32 ar9580_1p0_baseband_postamble_dfs_channel[][3] = {
-> +	/* Addr      5G          2G        */
-> +	{0x00009814, 0x3400c00f, 0x3400c00f},
-> +	{0x00009824, 0x5ac668d0, 0x5ac668d0},
-> +	{0x00009828, 0x06903080, 0x06903080},
-> +	{0x00009e0c, 0x6d4000e2, 0x6d4000e2},
-> +	{0x00009e14, 0x37b9625e, 0x37b9625e},
-> +};
-> +
->  #endif /* INITVALS_9580_1P0_H */
-> -- 
-> 1.8.4.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
