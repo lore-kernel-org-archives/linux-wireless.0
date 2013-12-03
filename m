@@ -1,32 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:52845 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932845Ab3LERkd (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:63378 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753142Ab3LCHSm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 12:40:33 -0500
-Message-ID: <1386265226.4182.20.camel@jlt4.sipsolutions.net> (sfid-20131205_184042_226603_61AECF19)
-Subject: Re: Using wmediumd in kernel 3.10
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dani Camps <danicamps81@yahoo.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 05 Dec 2013 18:40:26 +0100
-In-Reply-To: <1386261738.73311.YahooMailNeo@web172703.mail.ir2.yahoo.com>
-References: <1386259047.2121.YahooMailNeo@web172705.mail.ir2.yahoo.com>
-			 (sfid-20131205_165733_059424_F6F2D350) <1386259875.4182.15.camel@jlt4.sipsolutions.net>
-		 <1386260074.45953.YahooMailNeo@web172706.mail.ir2.yahoo.com>
-	 <1386260744.4182.18.camel@jlt4.sipsolutions.net>
-	 <1386261738.73311.YahooMailNeo@web172703.mail.ir2.yahoo.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 3 Dec 2013 02:18:42 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Ujjal Roy <royujjal@gmail.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 04/12] mwifiex: fix an issue with Appletalk devices
+Date: Mon, 2 Dec 2013 23:17:51 -0800
+Message-ID: <1386055079-6623-5-git-send-email-bzhao@marvell.com> (sfid-20131203_081854_736434_18A336FD)
+In-Reply-To: <1386055079-6623-1-git-send-email-bzhao@marvell.com>
+References: <1386055079-6623-1-git-send-email-bzhao@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-12-05 at 16:42 +0000, Dani Camps wrote:
-> ping -I mesh0 192.168.77.11
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Works fine for me. Maybe you should try a later backports version, e.g.
-3.12? I don't remember fixing anything, but I don't see any issues
-either.
+SNAP/LLC header in the AARP packet is being stripped off while
+preparing an EthernetII header.
+Annex M, Table M.3 in 802.11 spec says that some header
+(ex. AppleTalk AARP(2)) should pass through untouched.
+This patch modifies the check to exclude/include EthernetII
+header translation for special cases.
 
-johannes
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/sta_rx.c   | 8 ++++++--
+ drivers/net/wireless/mwifiex/uap_txrx.c | 8 ++++++--
+ 2 files changed, 12 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/sta_rx.c b/drivers/net/wireless/mwifiex/sta_rx.c
+index 241c0e5..4523899 100644
+--- a/drivers/net/wireless/mwifiex/sta_rx.c
++++ b/drivers/net/wireless/mwifiex/sta_rx.c
+@@ -94,8 +94,12 @@ int mwifiex_process_rx_packet(struct mwifiex_private *priv,
+ 	rx_pkt_hdr = (void *)local_rx_pd +
+ 		     le16_to_cpu(local_rx_pd->rx_pkt_offset);
+ 
+-	if (!memcmp(&rx_pkt_hdr->rfc1042_hdr, rfc1042_header,
+-		    sizeof(rfc1042_header))) {
++	if ((!memcmp(&rx_pkt_hdr->rfc1042_hdr, bridge_tunnel_header,
++		     sizeof(bridge_tunnel_header))) ||
++	    (!memcmp(&rx_pkt_hdr->rfc1042_hdr, rfc1042_header,
++		     sizeof(rfc1042_header)) &&
++	     ntohs(rx_pkt_hdr->rfc1042_hdr.snap_type) != ETH_P_AARP &&
++	     ntohs(rx_pkt_hdr->rfc1042_hdr.snap_type) != ETH_P_IPX)) {
+ 		/*
+ 		 *  Replace the 803 header and rfc1042 header (llc/snap) with an
+ 		 *    EthernetII header, keep the src/dst and snap_type
+diff --git a/drivers/net/wireless/mwifiex/uap_txrx.c b/drivers/net/wireless/mwifiex/uap_txrx.c
+index 0d4b7d6..a0bd954 100644
+--- a/drivers/net/wireless/mwifiex/uap_txrx.c
++++ b/drivers/net/wireless/mwifiex/uap_txrx.c
+@@ -111,8 +111,12 @@ static void mwifiex_uap_queue_bridged_pkt(struct mwifiex_private *priv,
+ 		return;
+ 	}
+ 
+-	if (!memcmp(&rx_pkt_hdr->rfc1042_hdr, rfc1042_header,
+-		    sizeof(rfc1042_header))) {
++	if ((!memcmp(&rx_pkt_hdr->rfc1042_hdr, bridge_tunnel_header,
++		     sizeof(bridge_tunnel_header))) ||
++	    (!memcmp(&rx_pkt_hdr->rfc1042_hdr, rfc1042_header,
++		     sizeof(rfc1042_header)) &&
++	     ntohs(rx_pkt_hdr->rfc1042_hdr.snap_type) != ETH_P_AARP &&
++	     ntohs(rx_pkt_hdr->rfc1042_hdr.snap_type) != ETH_P_IPX)) {
+ 		/* Replace the 803 header and rfc1042 header (llc/snap) with
+ 		 * an Ethernet II header, keep the src/dst and snap_type
+ 		 * (ethertype).
+-- 
+1.8.2.3
 
