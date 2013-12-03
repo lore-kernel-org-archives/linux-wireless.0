@@ -1,71 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:65152 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758827Ab3LBU7x (ORCPT
+Received: from mail-we0-f181.google.com ([74.125.82.181]:39505 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752853Ab3LCReD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Dec 2013 15:59:53 -0500
-Received: by mail-wg0-f52.google.com with SMTP id x13so12685965wgg.7
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Dec 2013 12:59:52 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eyal Shapira <eyal@wizery.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 08/13] iwlwifi: mvm: rs: remove unused parameter to rs_get_supported_rates
-Date: Mon,  2 Dec 2013 22:59:20 +0200
-Message-Id: <1386017965-13641-8-git-send-email-egrumbach@gmail.com> (sfid-20131202_220010_543538_24E78C84)
-In-Reply-To: <529CF2D6.1080008@gmail.com>
-References: <529CF2D6.1080008@gmail.com>
+	Tue, 3 Dec 2013 12:34:03 -0500
+Received: by mail-we0-f181.google.com with SMTP id x55so14076765wes.12
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Dec 2013 09:34:01 -0800 (PST)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: c_manoha@qca.qualcomm.com, linville@tuxdriver.com,
+	johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [RFT 0/2] wireless: address REGULATORY_CUSTOM_REG usage with regulatory_hint()
+Date: Tue,  3 Dec 2013 18:33:52 +0100
+Message-Id: <1386092034-13442-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20131203_183413_089211_8028D8EB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+Sujith spotted a warning on the ath module when it doesn't set the
+REGULATORY_CUSTOM_REG flag but still uses the wiphy_apply_custom_regulatory().
+The issue is that the cards that it is warning on are not world roaming
+but the ath module preference is to be conservative and to apply a custom
+world roaming regulatory domain *prior* to applying the one seen mandated
+by the alpha2 on the card with regulatory_hint().
 
-No use of the ieee80211 header. Drop it.
+Fix this first in the shared ath module for the Atheros drivers and then
+later merge a generic solution so that others drivers don't have to do
+this, and remove the temporary flag removal within the ath module then.
 
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/rs.c |   12 ++----------
- 1 file changed, 2 insertions(+), 10 deletions(-)
+The split of the patches should let John take in the ath module fix while
+Johannes can take in the generic solution for cfg80211 separately. Once
+Johannes sends a pull request to Linville I suspect there will be no
+conflicts.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
-index 3af9062..7beb548 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
-@@ -597,15 +597,7 @@ static int rs_toggle_antenna(u32 valid_ant, u32 *ucode_rate,
- 	return 1;
- }
- 
--/**
-- * rs_get_supported_rates - get the available rates
-- *
-- * if management frame or broadcast frame only return
-- * basic available rates.
-- *
-- */
- static u16 rs_get_supported_rates(struct iwl_lq_sta *lq_sta,
--				  struct ieee80211_hdr *hdr,
- 				  struct rs_rate *rate)
- {
- 	if (is_legacy(rate))
-@@ -704,7 +696,7 @@ static u32 rs_get_lower_rate(struct iwl_lq_sta *lq_sta,
- 		rate->sgi = false;
- 	}
- 
--	rate_mask = rs_get_supported_rates(lq_sta, NULL, rate);
-+	rate_mask = rs_get_supported_rates(lq_sta, rate);
- 
- 	/* Mask with station rate restriction */
- 	if (is_legacy(rate)) {
-@@ -1762,7 +1754,7 @@ static void rs_rate_scale_perform(struct iwl_mvm *mvm,
- 	index = lq_sta->last_txrate_idx;
- 
- 	/* rates available for this association, and for modulation mode */
--	rate_mask = rs_get_supported_rates(lq_sta, hdr, rate);
-+	rate_mask = rs_get_supported_rates(lq_sta, rate);
- 
- 	/* mask with station rate restriction */
- 	if (is_legacy(rate)) {
+Sujith please test each one separately if you can.
+
+Luis R. Rodriguez (2):
+  ath: fix warning on usage of REGULATORY_CUSTOM_REG
+  cfg80211: make regulatory_hint() remove REGULATORY_CUSTOM_REG
+
+ drivers/net/wireless/ath/regd.c | 7 ++++---
+ include/net/regulatory.h        | 4 ++++
+ net/wireless/reg.c              | 2 ++
+ 3 files changed, 10 insertions(+), 3 deletions(-)
+
 -- 
-1.7.9.5
+1.8.4.3
 
