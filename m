@@ -1,56 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oa0-f49.google.com ([209.85.219.49]:36824 "EHLO
-	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760951Ab3LIJit (ORCPT
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:49270 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752726Ab3LCLRs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Dec 2013 04:38:49 -0500
-Received: by mail-oa0-f49.google.com with SMTP id i4so3542634oah.36
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Dec 2013 01:38:48 -0800 (PST)
+	Tue, 3 Dec 2013 06:17:48 -0500
+Received: by mail-wg0-f49.google.com with SMTP id x12so13079294wgg.28
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Dec 2013 03:17:03 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20131209041821.GC14878@us.netrek.org>
-References: <20131203202607.0b445195@kemnade.info> <1386167786.19448.4.camel@dcbw.foobar.com>
- <CA+E=qVdY4M=bnX=pqMiMirhQ_BRg6Uc6K9Xkzvf328BaByUF1g@mail.gmail.com> <20131209041821.GC14878@us.netrek.org>
-From: Vasily Khoruzhick <anarsoul@gmail.com>
-Date: Mon, 9 Dec 2013 12:38:28 +0300
-Message-ID: <CA+E=qVd_F_=z5Vb2jan-nNVmizQznOiR=98CPHQevMxbnxGJiA@mail.gmail.com> (sfid-20131209_103858_456183_856DEA05)
-Subject: Re: status of libertas_tf + sdio?
-To: James Cameron <quozl@laptop.org>
-Cc: Dan Williams <dcbw@redhat.com>,
-	Andreas Kemnade <andreas@kemnade.info>,
-	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1386063265.4393.3.camel@jlt4.sipsolutions.net>
+References: <1386010316-2540-1-git-send-email-johannes@sipsolutions.net>
+ <CABPxzYJfBG0YtCrfkg_PqV4MP+MdLePhD2QdFQF9D+EfPObnZQ@mail.gmail.com> <1386063265.4393.3.camel@jlt4.sipsolutions.net>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Tue, 3 Dec 2013 16:46:43 +0530
+Message-ID: <CABPxzYKRvxOunXyFVCBi=9ta4VSHDgN3vqhiqMpkJUCD+hwnGw@mail.gmail.com> (sfid-20131203_121751_974588_EF3BDA82)
+Subject: Re: [RFC] cfg80211/mac80211: drop GTK-protected unicast IP packets
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>, j@w1.fi
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 9, 2013 at 7:18 AM, James Cameron <quozl@laptop.org> wrote:
-> On Fri, Dec 06, 2013 at 01:40:00PM +0300, Vasily Khoruzhick wrote:
->> Out of curiosity,
+On Tue, Dec 3, 2013 at 3:04 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Tue, 2013-12-03 at 14:50 +0530, Krishna Chaitanya wrote:
+>> On Tue, Dec 3, 2013 at 12:21 AM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>> > From: Johannes Berg <johannes.berg@intel.com>
+>> >
+>> > The GTK is shared by all stations in an 802.11 BSS and as such any
+>> > one of them can send forged group-addressed frames. To prevent this
+>> > kind of attack, drop unicast IP packets if they were protected with
+>> > the GTK, i.e. were multicast packets at the 802.11 layer.
+>> >
+>> > Based in part on a patch by Jouni that did the same but in the IP
+>> > stack, which was considered too intrusive.
+>> >
+>> As per RFC 1122 this is an invalid case:
+>>          When a host sends a datagram to a link-layer broadcast address,
+>>          the IP destination address MUST be a legal IP broadcast or IP
+>>          multicast address.
 >>
->> Does anyone know if it's possible to get thin firmware for 8686 with
->> SPI interface?
+>>          A host SHOULD silently discard a datagram that is received via
+>>          a link-layer broadcast (see Section 2.4) but does not specify
+>>          an IP multicast or broadcast destination address.
+>>
+>> We can simply drop this frame irrespective of GTK/PTK is used.
 >
-> What happens when you try?
+> Interesting. Can you point out where this is implemented in the IP
+> stack(s)?
 
-How? There's no tf available for 8686 with SPI interface.
-
-> How are you downloading firmware over SPI?
-
-See drivers/net/wireless/libertas/if_spi.c, but it's for fat firmware
-
-> I'm not aware of a second stage firmware download helper specific to
-> the SPI mode.
-
-What's a second stage firmware download helper?
-
-> I think it is not possible without firmware engineering.
-
-Yeah, just hoped that Marvell already did it. It's a pity that
-firmware source code isn't available :(
-
-Regards
-Vasily
-
->
-> --
-> James Cameron
-> http://quozl.linux.org.au/
+AFAIK there is no check in the drivers/IP Stack for this. May be we can
+implement this IP stack in a generic way confirming to RFC1122?
