@@ -1,31 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:42663 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751697Ab3LMJCw (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:43228 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753079Ab3LCMrl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Dec 2013 04:02:52 -0500
-Message-ID: <52AACD38.5060203@broadcom.com> (sfid-20131213_100257_055246_35D5AAE0)
-Date: Fri, 13 Dec 2013 10:02:48 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: Re: [PATCH 00/18] brcmfmac: sdio rework and msgbuf protocol changes
-References: <1386845946-9859-1-git-send-email-arend@broadcom.com>
-In-Reply-To: <1386845946-9859-1-git-send-email-arend@broadcom.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Tue, 3 Dec 2013 07:47:41 -0500
+Message-ID: <1386074858.4393.9.camel@jlt4.sipsolutions.net> (sfid-20131203_134744_547338_E8182C87)
+Subject: Re: [PATCH 1/2 V3] nl80211/cfg80211: Set Operating Mode Notification
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marek Kwaczynski <marek.kwaczynski@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 03 Dec 2013 13:47:38 +0100
+In-Reply-To: <1386061500-5750-1-git-send-email-marek.kwaczynski@tieto.com> (sfid-20131203_100517_923549_5D57D5B6)
+References: <1386061500-5750-1-git-send-email-marek.kwaczynski@tieto.com>
+	 (sfid-20131203_100517_923549_5D57D5B6)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/12/2013 11:58 AM, Arend van Spriel wrote:
-> This series consists mostly of cleanup in SDIO driver code. Other changes
-> are preparing to new firmware protocol called msgbuf, which is intended
-> for PCIe fullmac devices.
+On Tue, 2013-12-03 at 10:04 +0100, Marek Kwaczynski wrote:
+> This attribuite is needed for setting Operating Mode Notification
+> in AP mode from User Space. This functionality is required when
+> User Space received Assoc Reqeust contains Operation Mode
+> Notification element.
 
-Probably needless to say, but saying it anyway ;-). This patch series is 
-intended fro 3.14. It applies to the master branch of the wireless-next 
-repository.
+Applied.
 
-Regards,
-Arend
+johannes
+
