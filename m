@@ -1,83 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:37003 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751043Ab3LCHS0 (ORCPT
+Received: from mail-we0-f170.google.com ([74.125.82.170]:63168 "EHLO
+	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754102Ab3LCReH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Dec 2013 02:18:26 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Ujjal Roy <royujjal@gmail.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 03/12] mwifiex: remove rfc1042_eth_hdr variable
-Date: Mon, 2 Dec 2013 23:17:50 -0800
-Message-ID: <1386055079-6623-4-git-send-email-bzhao@marvell.com> (sfid-20131203_081830_139300_27DC13D7)
-In-Reply-To: <1386055079-6623-1-git-send-email-bzhao@marvell.com>
-References: <1386055079-6623-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 3 Dec 2013 12:34:07 -0500
+Received: by mail-we0-f170.google.com with SMTP id w61so14041817wes.15
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Dec 2013 09:34:06 -0800 (PST)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: c_manoha@qca.qualcomm.com, linville@tuxdriver.com,
+	johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [RFT 2/2] cfg80211: make regulatory_hint() remove REGULATORY_CUSTOM_REG
+Date: Tue,  3 Dec 2013 18:33:54 +0100
+Message-Id: <1386092034-13442-3-git-send-email-mcgrof@do-not-panic.com> (sfid-20131203_183414_359070_B7442146)
+In-Reply-To: <1386092034-13442-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1386092034-13442-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+The REGULATORY_CUSTOM_REG can be used during early init with
+the goal of overriding the wiphy's default regulatory settings
+in case the alpha2 of the device is not known. In the case that
+the alpha2 becomes known lets avoid having drivers having to
+clear the REGULATORY_CUSTOM_REG flag by doing it for them
+when regulatory_hint() is used.
 
-Use 'rfc1042_header' available in net/wireless/util.c
-
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Cc: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- drivers/net/wireless/mwifiex/sta_rx.c   | 5 ++---
- drivers/net/wireless/mwifiex/uap_txrx.c | 5 ++---
- 2 files changed, 4 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/regd.c | 2 --
+ include/net/regulatory.h        | 4 ++++
+ net/wireless/reg.c              | 2 ++
+ 3 files changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/sta_rx.c b/drivers/net/wireless/mwifiex/sta_rx.c
-index bb22664..241c0e5 100644
---- a/drivers/net/wireless/mwifiex/sta_rx.c
-+++ b/drivers/net/wireless/mwifiex/sta_rx.c
-@@ -88,15 +88,14 @@ int mwifiex_process_rx_packet(struct mwifiex_private *priv,
- 	struct rxpd *local_rx_pd;
- 	int hdr_chop;
- 	struct ethhdr *eth_hdr;
--	u8 rfc1042_eth_hdr[ETH_ALEN] = { 0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00 };
- 
- 	local_rx_pd = (struct rxpd *) (skb->data);
- 
- 	rx_pkt_hdr = (void *)local_rx_pd +
- 		     le16_to_cpu(local_rx_pd->rx_pkt_offset);
- 
--	if (!memcmp(&rx_pkt_hdr->rfc1042_hdr,
--		    rfc1042_eth_hdr, sizeof(rfc1042_eth_hdr))) {
-+	if (!memcmp(&rx_pkt_hdr->rfc1042_hdr, rfc1042_header,
-+		    sizeof(rfc1042_header))) {
- 		/*
- 		 *  Replace the 803 header and rfc1042 header (llc/snap) with an
- 		 *    EthernetII header, keep the src/dst and snap_type
-diff --git a/drivers/net/wireless/mwifiex/uap_txrx.c b/drivers/net/wireless/mwifiex/uap_txrx.c
-index 92f76d6..0d4b7d6 100644
---- a/drivers/net/wireless/mwifiex/uap_txrx.c
-+++ b/drivers/net/wireless/mwifiex/uap_txrx.c
-@@ -98,7 +98,6 @@ static void mwifiex_uap_queue_bridged_pkt(struct mwifiex_private *priv,
- 	int hdr_chop;
- 	struct timeval tv;
- 	struct ethhdr *p_ethhdr;
--	u8 rfc1042_eth_hdr[ETH_ALEN] = { 0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00 };
- 
- 	uap_rx_pd = (struct uap_rxpd *)(skb->data);
- 	rx_pkt_hdr = (void *)uap_rx_pd + le16_to_cpu(uap_rx_pd->rx_pkt_offset);
-@@ -112,8 +111,8 @@ static void mwifiex_uap_queue_bridged_pkt(struct mwifiex_private *priv,
- 		return;
+diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
+index 06b05d0..43d6234 100644
+--- a/drivers/net/wireless/ath/regd.c
++++ b/drivers/net/wireless/ath/regd.c
+@@ -622,8 +622,6 @@ ath_regd_init_wiphy(struct ath_regulatory *reg,
  	}
  
--	if (!memcmp(&rx_pkt_hdr->rfc1042_hdr,
--		    rfc1042_eth_hdr, sizeof(rfc1042_eth_hdr))) {
-+	if (!memcmp(&rx_pkt_hdr->rfc1042_hdr, rfc1042_header,
-+		    sizeof(rfc1042_header))) {
- 		/* Replace the 803 header and rfc1042 header (llc/snap) with
- 		 * an Ethernet II header, keep the src/dst and snap_type
- 		 * (ethertype).
+ 	wiphy_apply_custom_regulatory(wiphy, regd);
+-	if (!ath_is_world_regd(reg))
+-		wiphy->regulatory_flags &= ~REGULATORY_STRICT_REG;
+ 	ath_reg_apply_radar_flags(wiphy);
+ 	ath_reg_apply_world_flags(wiphy, NL80211_REGDOM_SET_BY_DRIVER, reg);
+ 	return 0;
+diff --git a/include/net/regulatory.h b/include/net/regulatory.h
+index c96a0b8..b07cdc9 100644
+--- a/include/net/regulatory.h
++++ b/include/net/regulatory.h
+@@ -96,6 +96,10 @@ struct regulatory_request {
+  *	initiator is %REGDOM_SET_BY_CORE). Drivers that use
+  *	wiphy_apply_custom_regulatory() should have this flag set
+  *	or the regulatory core will set it for the wiphy.
++ *	If you use regulatory_hint() *after* using
++ *	wiphy_apply_custom_regulatory() the wireless core will
++ *	clear the REGULATORY_CUSTOM_REG for your wiphy as it would be
++ *	implied that the device somehow gained knowledge of its region.
+  * @REGULATORY_STRICT_REG: tells us that the wiphy for this device
+  *	has regulatory domain that it wishes to be considered as the
+  *	superset for regulatory rules. After this device gets its regulatory
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index ec54e1a..edebd04 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1826,6 +1826,8 @@ int regulatory_hint(struct wiphy *wiphy, const char *alpha2)
+ 	if (WARN_ON(!alpha2 || !wiphy))
+ 		return -EINVAL;
+ 
++	wiphy->regulatory_flags &= ~REGULATORY_STRICT_REG;
++
+ 	request = kzalloc(sizeof(struct regulatory_request), GFP_KERNEL);
+ 	if (!request)
+ 		return -ENOMEM;
 -- 
-1.8.2.3
+1.8.4.3
 
