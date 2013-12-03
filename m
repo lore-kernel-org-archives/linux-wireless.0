@@ -1,41 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f52.google.com ([209.85.214.52]:37544 "EHLO
-	mail-bk0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751580Ab3LAR5Y (ORCPT
+Received: from mail-pb0-f45.google.com ([209.85.160.45]:47058 "EHLO
+	mail-pb0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751472Ab3LCGYn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Dec 2013 12:57:24 -0500
-Received: by mail-bk0-f52.google.com with SMTP id u14so5037418bkz.11
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Dec 2013 09:57:22 -0800 (PST)
-Message-ID: <529B7880.2090909@gmail.com> (sfid-20131201_185740_991686_1D39C47C)
-Date: Sun, 01 Dec 2013 19:57:20 +0200
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+	Tue, 3 Dec 2013 01:24:43 -0500
+Received: by mail-pb0-f45.google.com with SMTP id rp16so20438681pbb.4
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Dec 2013 22:24:42 -0800 (PST)
 MIME-Version: 1.0
-To: Antonio Quartulli <antonio@open-mesh.com>,
-	Antonio Quartulli <antonio@meshcoding.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH mac80211] iwlwifi: don't install GTKs for IBSS vifs on
- resume
-References: <1385846658-2294-1-git-send-email-antonio@meshcoding.com> <CANUX_P3tm+Q4R6NNLchtCZCYGxrs-Z8hahp1YrvF_fCbCFavig@mail.gmail.com> <529B03D9.5050402@open-mesh.com>
-In-Reply-To: <529B03D9.5050402@open-mesh.com>
+In-Reply-To: <CAE2MWkkA+5ki90wJ+vkSdeBiXygVv9vXhpGp0h+84+fbgbga0g@mail.gmail.com>
+References: <1385883096-7143-1-git-send-email-royujjal@gmail.com>
+	<1385890375.4171.0.camel@jlt4.sipsolutions.net>
+	<CAE2MWkkA+5ki90wJ+vkSdeBiXygVv9vXhpGp0h+84+fbgbga0g@mail.gmail.com>
+Date: Tue, 3 Dec 2013 11:54:42 +0530
+Message-ID: <CAE2MWkn8fkosqF8SztJRUuhU5bE-OPPL3oWUjRz6XSQynd5mUw@mail.gmail.com> (sfid-20131203_072446_317952_547074F4)
+Subject: Re: [PATCH] cfg80211: fix WARN_ON for re-association to the expired BSS
+From: Ujjal Roy <royujjal@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Kernel <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/01/2013 11:39 AM, Antonio Quartulli wrote:
-> On 01/12/13 09:39, Emmanuel Grumbach wrote:
->>> +       /* Group keys for IBSS interfaces are not stored in HW
->>> */ +       if (vif->type == NL80211_IFTYPE_ADHOC && +
->>> !(key->flags & IEEE80211_KEY_FLAG_PAIRWISE)) +
->>> return; +
-> 
-> Well, my knowledge about WoWLAN is really poor (in particular for what
-> concern IWLWIFI). I think I should have sent this as RFC first.
-> 
-> So isn't it possible to reach this point with a key that satisfies
-> that condition? If so, we are fine :)
-> 
+Hi Johannes,
 
-No - because in WoWLAN we will never have IBSS configured.
-WoWLAN supports (currently) BSS only - I am not even sure we want to
-have P2P Client there.
+Are there any update about my arguments?
+
+Thanks,
+UjjaL Roy
+
+
+On Mon, Dec 2, 2013 at 10:49 AM, Ujjal Roy <royujjal@gmail.com> wrote:
+> So, can you please tell me what type of bugs or what bugs the cfg80211
+> going to catch? As I see cfg80211 allows re-assoc command and the
+> driver is able to get a BSS using the function cfg80211_get_bss(). So,
+> the driver is going to re-associate and the result is a Kernel warning.
+> At this point driver's internal association is successful though.
+>
+> On Sun, Dec 1, 2013 at 3:02 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>> On Sun, 2013-12-01 at 13:01 +0530, Ujjal Roy wrote:
+>>> cfg80211 allows re-association in managed mode and if a user
+>>> wants to re-associate to the same AP network after the time
+>>> period of IEEE80211_SCAN_RESULT_EXPIRE, cfg80211 warns with
+>>> the following message on receiving the connect result event.
+>>
+>> This behaviour is intentional to point out driver bugs. I'm not applying
+>> this.
+>>
+>> johannes
+>>
