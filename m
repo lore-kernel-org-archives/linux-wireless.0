@@ -1,48 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f45.google.com ([209.85.215.45]:38394 "EHLO
-	mail-la0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750961Ab3LRHuS (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:41172 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751851Ab3LCEqn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Dec 2013 02:50:18 -0500
-Message-ID: <52B153B3.4070903@gmail.com> (sfid-20131218_085039_556772_1A3511DB)
-Date: Wed, 18 Dec 2013 08:50:11 +0100
-From: Pontus Fuchs <pontus.fuchs@gmail.com>
-MIME-Version: 1.0
-To: Sander Eikelenboom <linux@eikelenboom.it>,
-	Ben Hutchings <ben@decadent.org.uk>
-CC: Julian Calaby <julian.calaby@gmail.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <avinashapatil@gmail.com>
-Subject: Re: [cfg80211 / iwlwifi] setting wireless regulatory domain doesn't
- work.
-References: <1342235583.20131211182804@eikelenboom.it> <CAB=NE6UfumA2xez1DvtDSBDZ72WF_tOozFo_8LRnMryYiSqD-A@mail.gmail.com> <871324710.20131211191104@eikelenboom.it> <CAB=NE6XRnE0j9NMW0K1vKzEO9v70arSH4YXZjudqa0ZxiLB4AA@mail.gmail.com> <1937118387.20131216122200@eikelenboom.it> <52AEE60B.6030509@broadcom.com> <19210260274.20131216135644@eikelenboom.it> <CAGRGNgXHemM2FfnXgW5RbzhFT+9SfUfVkjdysK3+=_u3hWSacw@mail.gmail.com> <1534126119.20131217104548@eikelenboom.it> <387552477.20131217213319@eikelenboom.it> <20131217212709.GB5624@decadent.org.uk> <1254825772.20131217224914@eikelenboom.it>
-In-Reply-To: <1254825772.20131217224914@eikelenboom.it>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 2 Dec 2013 23:46:43 -0500
+From: Chet Lanctot <clanctot@codeaurora.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Chet Lanctot <clanctot@codeaurora.org>
+Subject: [PATCH 0/2 V2] nl80211/cfg80211: Support PMF on drivers with integrated AP SME
+Date: Mon,  2 Dec 2013 20:46:23 -0800
+Message-Id: <1386045985-2398-1-git-send-email-clanctot@codeaurora.org> (sfid-20131203_054703_485161_09EF8F53)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-12-17 22:49, Sander Eikelenboom wrote:
->
-> Indeed, I looked for a crda hook for initramfs-tools but didn't find it, so skipped that idea
-> for the moment.
->
-> So if i combine the two .. it's essentially just a very bad idea to compile the wireless stuff in.
-> It needs a access to a userland program at module load time, or it will block forever.
+These patches represent a small number of extensions to the
+nl80211/cfg80211 interface to support Protected Management Frames
+(PMF, 802.11w) on an AP when the AP SME is integrated into the
+device driver or device firmware.
 
-The canonical trick to have cfg80211 built in is to execute crda 
-manually in your boot scripts. This will satisfy the initial request and 
-resolve the block.
+Device drivers that implement AP SME handle connection requests
+from stations internally.  These patches allow hostapd to specify
+to the device driver the PMF state that should be used when these
+connections are made.
 
-Cheers,
+Also, these patches allow device drivers that do not implement the
+SA Query procedure (part of PMF) to communicate the need for hostapd
+do this procedure.  Normally the software component handling
+connection requests would do SA Query. These patches provide a way
+for the device driver to shift SA Query processing to hostapd where
+it is already fully implemented.
 
-Pontus
+The following changes are made to nl80211/cfg80211.
+
+1.  A new nl80211_ap_sme_feature is defined which is used by drivers
+to inform hostapd that the driver does not support the SA query
+procedure.  hostapd must register for Re/Association Request frames
+from the driver so that these frames can be delivered by the driver
+to start an SA Query procedure.  An example of code in
+the driver that sets this feature is as follows:
+     struct wiphy *wiphy; /* wiphy defined in cfg80211.h */
+     .
+     .
+     .
+     wiphy->ap_sme_capa |= BIT(NL80211_AP_SME_FEATURE_NO_SA_QUERY);
+
+2.  A new entry is made in cfg80211_ap_settings to inform drivers
+whether management frame protection should be used for station connections.
+This entry is passed by hostapd using NL80211_CMD_START_AP and it is only
+used when the device is acting as an AP.  Existing type nl80211_mfp defines the
+values that can be used for this entry.  Existing value NL80211_MFP_NO
+means that PMF connections cannot be made with stations. Existing value
+NL80211_MFP_REQUIRED means that all station connections must be PMF
+protected.  A new value NL80211_MFP_OPTIONAL is defined which means
+that a connection can be made if the station supports it, but it is
+not required.
+
+3.  A new station flag is defined that indicates to the driver that
+hostapd has completed the SA Query procedure for that station (SA
+Query timed out) and the driver should process the next Re/Association
+Request normally and not pass it to hostapd.
+
+Chet Lanctot (2):
+  nl80211/cfg80211: Add support for drivers with AP SME that require
+    PMF SA Query assistance
+  nl80211/cfg80211: Enable station PMF requirement to be specified to
+    driver with AP SME
+
+ include/net/cfg80211.h       |  4 ++++
+ include/uapi/linux/nl80211.h | 26 ++++++++++++++++++++------
+ net/wireless/nl80211.c       | 16 +++++++++++++---
+ 3 files changed, 37 insertions(+), 9 deletions(-)
+
+-- 
+1.7.12.rc0.22.gcdd159b
 
