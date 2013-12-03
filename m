@@ -1,63 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f48.google.com ([209.85.214.48]:49213 "EHLO
-	mail-bk0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752717Ab3LJRIt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Dec 2013 12:08:49 -0500
-From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Kalle Valo <kvalo@adurom.com>, Pavel Machek <pavel@ucw.cz>
-Subject: Re: [PATCH v2 01/16] wl1251: fix scan behaviour while not associated
-Date: Tue, 10 Dec 2013 18:08:44 +0100
-Cc: Luciano Coelho <luca@coelho.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, sre@ring0.de, joni.lapilainen@gmail.com,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Felipe Contreras <felipe.contreras@gmail.com>,
-	David Gnedt <david.gnedt@davizone.at>
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com> <20131210092114.GB22756@amd.pavel.ucw.cz> <8738m0r9wv.fsf@purkki.adurom.net>
-In-Reply-To: <8738m0r9wv.fsf@purkki.adurom.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1950882.g5FqhQI21j";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <201312101808.44713@pali> (sfid-20131210_180904_321650_5AEB953E)
+Received: from glaubenleben.de ([85.214.105.140]:39698 "EHLO glaubenleben.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754125Ab3LCUKX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Dec 2013 15:10:23 -0500
+Date: Tue, 3 Dec 2013 20:26:07 +0100
+From: Andreas Kemnade <andreas@kemnade.info>
+To: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+Subject: status of libertas_tf + sdio?
+Message-ID: <20131203202607.0b445195@kemnade.info> (sfid-20131203_211026_589880_7AEA89CB)
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/99/4iGekBLiWLQ+.zjPJO42"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1950882.g5FqhQI21j
-Content-Type: Text/Plain;
-  charset="utf-8"
+--Sig_/99/4iGekBLiWLQ+.zjPJO42
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Tuesday 10 December 2013 16:41:04 Kalle Valo wrote:
-> Pavel Machek <pavel@ucw.cz> writes:
-> > ssids can have \0s in them... and what is worse, they may
-> > not be 0 terminated AFAICT.
-> >=20
-> > Potential solution is at
-> > http://www.spinics.net/lists/linux-wireless/msg98640.html .
->=20
-> I just use print_hex_dump_bytes() to print SSIDs.
+Hi,
 
-Ok and has kernel printf modifier for size_t?
+I want to be able to use my marvel sdio wifi as an ap, so I am interested
+in having the sdio interface of libertas_tf. I sucessfully copied
+over the libertas_tf directory from somewhere and fixed a bit of things
+and compiled that in a 3.7 kernel. It works.
+But now I am thinking about generating a clean patch.
 
-=2D-=20
-Pali Roh=C3=A1r
-pali.rohar@gmail.com
+I found this one here:
+http://www.spinics.net/lists/linux-wireless/msg55245.html
+Is there any newer patch to start working on?
 
---nextPart1950882.g5FqhQI21j
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+Greetings
+Andreas Kemnade
+
+--Sig_/99/4iGekBLiWLQ+.zjPJO42
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
+Version: GnuPG v1.4.12 (GNU/Linux)
 
-iEYEABECAAYFAlKnSpwACgkQi/DJPQPkQ1L9pQCgjFc7/1zXxMNs6AWKB6PogyxB
-v9MAoIMHpQbRIy/N2p6/y3ViuvDYtIcf
-=/Nzb
+iEYEARECAAYFAlKeME8ACgkQvUy8S31NDeZ7HACfb1CJLiUXX4LM6cSr8effWBaI
+LSYAni0qZ8XESLeH9e3P+C2siRagyezM
+=PcT5
 -----END PGP SIGNATURE-----
 
---nextPart1950882.g5FqhQI21j--
+--Sig_/99/4iGekBLiWLQ+.zjPJO42--
