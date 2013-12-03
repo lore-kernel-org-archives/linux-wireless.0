@@ -1,60 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:36389 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752539Ab3LaCrK (ORCPT
+Received: from mail-ea0-f177.google.com ([209.85.215.177]:36334 "EHLO
+	mail-ea0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755037Ab3LCUO1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Dec 2013 21:47:10 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
+	Tue, 3 Dec 2013 15:14:27 -0500
+Received: by mail-ea0-f177.google.com with SMTP id n15so10093069ead.22
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Dec 2013 12:14:26 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: p2p@posteo.de
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 1/5] ath9k: Add version/revision macros for QCA9531
-Date: Tue, 31 Dec 2013 08:11:58 +0530
-Message-Id: <1388457722-29643-1-git-send-email-sujith@msujith.org> (sfid-20131231_034714_900935_ECAE7ED5)
+Subject: Re: RTL8188S
+Date: Tue, 03 Dec 2013 21:14:22 +0100
+Message-ID: <1708062.P25CKJLDQp@blech> (sfid-20131203_211449_071172_2B6A6B26)
+In-Reply-To: <71e5f26b0cd51bcceb26565aa236fe7a@posteo.de>
+References: <a3a1cb41444ae8dd89db830ae927491f@posteo.de> <1783016.HDzIMuL15q@blech> <71e5f26b0cd51bcceb26565aa236fe7a@posteo.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/reg.h | 13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index c9a8b77..b1fd3fa 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -813,6 +813,9 @@
- #define AR_SREV_REVISION_9565_101       1
- #define AR_SREV_REVISION_9565_11        2
- #define AR_SREV_VERSION_9550		0x400
-+#define AR_SREV_VERSION_9531            0x500
-+#define AR_SREV_REVISION_9531_10        0
-+#define AR_SREV_REVISION_9531_11        1
+Hello - Still don't know your Name - 
+On Tuesday, December 03, 2013 08:14:08 PM p2p@posteo.de wrote:
+> Am 26.11.2013 21:38 schrieb Christian Lamparter:
+>
+> We need the "p2p magic" to develop a linux miracast sink.
+Sounds a bit like OpenWFD [0], or is this unrelated? 
  
- #define AR_SREV_5416(_ah) \
- 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_5416_PCI) || \
-@@ -946,11 +949,19 @@
- #define AR_SREV_9580(_ah) \
- 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9580) && \
- 	((_ah)->hw_version.macRev >= AR_SREV_REVISION_9580_10))
--
- #define AR_SREV_9580_10(_ah) \
- 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9580) && \
- 	((_ah)->hw_version.macRev == AR_SREV_REVISION_9580_10))
- 
-+#define AR_SREV_9531(_ah) \
-+	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9531))
-+#define AR_SREV_9531_10(_ah) \
-+	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9531) && \
-+	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9531_10))
-+#define AR_SREV_9531_11(_ah) \
-+	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9531) && \
-+	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9531_11))
-+
- /* NOTE: When adding chips newer than Peacock, add chip check here */
- #define AR_SREV_9580_10_OR_LATER(_ah) \
- 	(AR_SREV_9580(_ah))
--- 
-1.8.5.2
+> >> I followed the thread.
+> >> It shows me that it makes no sense. I am a beginner and I only can
+> >> spent time for it if someone tells me for example: fill this module 
+> >> with
+> >> code for this specific function. I have good literature and I think 
+> >> I
+> >> can try to help but not lead something.
+> >
+> > Hey that's great, that's exactly what needs to be "done". ;-)
+> >
+> 
+> I don't know yet if I have the time to take part. But as I wrote I have 
+> a good book which describes in detail driver development for 2.6 kernel.
+> 
+> What do you think how many LOC have to been written?
+Ok?!
+
+rtl8192cu has around 8600 LOCs, rtl8192se has around 10700. That said,
+realtek's own 8190n driver comes in at 90 000+ LOCs driver [of course,
+that driver comes with its own stack, sme and maybe a few other bells
+and whiles]. I guess the answer here is really: take what ever number
+you prefer :-D.
+
+Regards,
+
+Christian
+
+[0] <http://www.freedesktop.org/wiki/Software/openwfd/>
 
