@@ -1,119 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f182.google.com ([209.85.215.182]:45412 "EHLO
-	mail-ea0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752065Ab3LHJ1Q (ORCPT
+Received: from smtprelay0161.hostedemail.com ([216.40.44.161]:45667 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753561Ab3LCS3Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Dec 2013 04:27:16 -0500
-From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Luciano Coelho <luca@coelho.fi>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
-	joni.lapilainen@gmail.com,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Felipe Contreras <felipe.contreras@gmail.com>,
-	David Gnedt <david.gnedt@davizone.at>,
-	=?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
-Subject: [PATCH v2 01/16] wl1251: fix scan behaviour while not associated
-Date: Sun,  8 Dec 2013 10:24:59 +0100
-Message-Id: <1386494714-21070-2-git-send-email-pali.rohar@gmail.com> (sfid-20131208_103343_873870_7F2D661F)
-In-Reply-To: <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
- <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Tue, 3 Dec 2013 13:29:25 -0500
+Message-ID: <1386095360.15309.29.camel@joe-AO722> (sfid-20131203_192930_293707_DC022CBF)
+Subject: [PATCH] mac80211: rx: Neaten ieee80211_deliver_skb, remove
+ compare_ether_addr
+From: Joe Perches <joe@perches.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>
+Date: Tue, 03 Dec 2013 10:29:20 -0800
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Gnedt <david.gnedt@davizone.at>
+Remove the unnecessary duplicate test of "if (skb) {"
+when !CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS.
 
-With a dissacociated card I often encoutered very long scan delays.
+Remove now unnecessary __maybe_unused, neaten comment
+Remove unnecessary parenthesis around align cast.
+Substitute reference to deprecated compare_ether_addr
+with ether_addr_equal.
 
-My guess is that it has something to do with the cards DTIM handling and
-another firmware bug mentioned in the TI WLAN driver, which is described as
-the card may never end scanning if the channel is overloaded because it
-can't send probe requests. I think the firmware somehow also tries to
-receive DTIM messages when the BSSID is not set. Therefore most of the time
-it waits for DTIM messages and can't do scanning work.
-
-Anyway we can workaround this misbehaviour by setting the HIGH_PRIORITY
-bit for scans in disassociated state.
-
-Signed-off-by: David Gnedt <david.gnedt@davizone.at>
-Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
+Signed-off-by: Joe Perches <joe@perches.com>
 ---
- drivers/net/wireless/ti/wl1251/cmd.c  |   13 ++++++++++++-
- drivers/net/wireless/ti/wl1251/cmd.h  |    5 +++++
- drivers/net/wireless/ti/wl1251/main.c |    1 +
- 3 files changed, 18 insertions(+), 1 deletion(-)
+ net/mac80211/rx.c | 33 +++++++++++++++------------------
+ 1 file changed, 15 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wl1251/cmd.c b/drivers/net/wireless/ti/wl1251/cmd.c
-index 6822b84..16b6479 100644
---- a/drivers/net/wireless/ti/wl1251/cmd.c
-+++ b/drivers/net/wireless/ti/wl1251/cmd.c
-@@ -3,6 +3,7 @@
- #include <linux/module.h>
- #include <linux/slab.h>
- #include <linux/crc7.h>
-+#include <linux/etherdevice.h>
- 
- #include "wl1251.h"
- #include "reg.h"
-@@ -410,7 +411,10 @@ int wl1251_cmd_scan(struct wl1251 *wl, u8 *ssid, size_t ssid_len,
- 	struct wl1251_cmd_scan *cmd;
- 	int i, ret = 0;
- 
--	wl1251_debug(DEBUG_CMD, "cmd scan");
-+	wl1251_debug(DEBUG_CMD, "cmd scan channels %d ssid(%d) '%s'",
-+		     n_channels, (int)ssid_len, ssid);
-+
-+	WARN_ON(n_channels > SCAN_MAX_NUM_OF_CHANNELS);
- 
- 	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
- 	if (!cmd)
-@@ -421,6 +425,13 @@ int wl1251_cmd_scan(struct wl1251 *wl, u8 *ssid, size_t ssid_len,
- 						    CFG_RX_MGMT_EN |
- 						    CFG_RX_BCN_EN);
- 	cmd->params.scan_options = 0;
-+	/*
-+	 * Use high priority scan when not associated to prevent fw issue
-+	 * causing never-ending scans (sometimes 20+ minutes).
-+	 * Note: This bug may be caused by the fw's DTIM handling.
-+	 */
-+	if (is_zero_ether_addr(wl->bssid))
-+		cmd->params.scan_options |= WL1251_SCAN_OPT_PRIORITY_HIGH;
- 	cmd->params.num_channels = n_channels;
- 	cmd->params.num_probe_requests = n_probes;
- 	cmd->params.tx_rate = cpu_to_le16(1 << 1); /* 2 Mbps */
-diff --git a/drivers/net/wireless/ti/wl1251/cmd.h b/drivers/net/wireless/ti/wl1251/cmd.h
-index ee4f2b3..126f273 100644
---- a/drivers/net/wireless/ti/wl1251/cmd.h
-+++ b/drivers/net/wireless/ti/wl1251/cmd.h
-@@ -167,6 +167,11 @@ struct cmd_read_write_memory {
- #define CMDMBOX_HEADER_LEN 4
- #define CMDMBOX_INFO_ELEM_HEADER_LEN 4
- 
-+#define WL1251_SCAN_OPT_PASSIVE		1
-+#define WL1251_SCAN_OPT_5GHZ_BAND	2
-+#define WL1251_SCAN_OPT_TRIGGERD_SCAN	4
-+#define WL1251_SCAN_OPT_PRIORITY_HIGH	8
-+
- #define WL1251_SCAN_MIN_DURATION 30000
- #define WL1251_SCAN_MAX_DURATION 60000
- 
-diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
-index 3291ffa..4d89ac8 100644
---- a/drivers/net/wireless/ti/wl1251/main.c
-+++ b/drivers/net/wireless/ti/wl1251/main.c
-@@ -930,6 +930,7 @@ static int wl1251_op_hw_scan(struct ieee80211_hw *hw,
- 	ret = wl1251_cmd_scan(wl, ssid, ssid_len, req->channels,
- 			      req->n_channels, WL1251_SCAN_NUM_PROBES);
- 	if (ret < 0) {
-+		wl1251_debug(DEBUG_SCAN, "scan failed %d", ret);
- 		wl->scanning = false;
- 		goto out_idle;
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index caecef8..b178c8f 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1937,20 +1937,17 @@ ieee80211_deliver_skb(struct ieee80211_rx_data *rx)
+ 		}
  	}
--- 
-1.7.9.5
+ 
+-	if (skb) {
+-		int align __maybe_unused;
+-
+ #ifndef CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS
+-		/*
+-		 * 'align' will only take the values 0 or 2 here
+-		 * since all frames are required to be aligned
+-		 * to 2-byte boundaries when being passed to
+-		 * mac80211; the code here works just as well if
+-		 * that isn't true, but mac80211 assumes it can
+-		 * access fields as 2-byte aligned (e.g. for
+-		 * compare_ether_addr)
++	if (skb) {
++		/* 'align' will only take the values 0 or 2 here since all
++		 * frames are required to be aligned to 2-byte boundaries
++		 * when being passed to mac80211; the code here works just
++		 * as well if that isn't true, but mac80211 assumes it can
++		 * access fields as 2-byte aligned (e.g. for ether_addr_equal)
+ 		 */
+-		align = ((unsigned long)(skb->data + sizeof(struct ethhdr))) & 3;
++		int align;
++
++		align = (unsigned long)(skb->data + sizeof(struct ethhdr)) & 3;
+ 		if (align) {
+ 			if (WARN_ON(skb_headroom(skb) < 3)) {
+ 				dev_kfree_skb(skb);
+@@ -1963,14 +1960,14 @@ ieee80211_deliver_skb(struct ieee80211_rx_data *rx)
+ 				skb_set_tail_pointer(skb, len);
+ 			}
+ 		}
++	}
+ #endif
+ 
+-		if (skb) {
+-			/* deliver to local stack */
+-			skb->protocol = eth_type_trans(skb, dev);
+-			memset(skb->cb, 0, sizeof(skb->cb));
+-			netif_receive_skb(skb);
+-		}
++	if (skb) {
++		/* deliver to local stack */
++		skb->protocol = eth_type_trans(skb, dev);
++		memset(skb->cb, 0, sizeof(skb->cb));
++		netif_receive_skb(skb);
+ 	}
+ 
+ 	if (xmit_skb) {
+
 
