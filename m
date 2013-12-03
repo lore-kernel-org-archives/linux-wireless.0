@@ -1,225 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f41.google.com ([74.125.83.41]:34017 "EHLO
-	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752097Ab3LCIvD (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:51213 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753095Ab3LCHSl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Dec 2013 03:51:03 -0500
-Received: by mail-ee0-f41.google.com with SMTP id t10so1310106eei.28
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Dec 2013 00:51:02 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, j@w1.fi,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH 4/4] nl80211: add VHT support for set_bitrate_mask
-Date: Tue,  3 Dec 2013 09:50:47 +0100
-Message-Id: <1386060648-6020-4-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131203_095110_015543_83CCBB45)
-In-Reply-To: <1386060648-6020-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1386060648-6020-1-git-send-email-janusz.dziedzic@tieto.com>
+	Tue, 3 Dec 2013 02:18:41 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Ujjal Roy <royujjal@gmail.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 01/12] mwifiex: use little-endian variables in firmware structures
+Date: Mon, 2 Dec 2013 23:17:48 -0800
+Message-ID: <1386055079-6623-2-git-send-email-bzhao@marvell.com> (sfid-20131203_081900_169764_720FEFAA)
+In-Reply-To: <1386055079-6623-1-git-send-email-bzhao@marvell.com>
+References: <1386055079-6623-1-git-send-email-bzhao@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add VHT mcs support for nl80211_set_tx_bitrate_mask().
+From: Ujjal Roy <royujjal@gmail.com>
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+The firmware expects the command structure members in little
+endianness.
+
+Signed-off-by: Ujjal Roy <royujjal@gmail.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- include/linux/ieee80211.h    |    1 +
- include/net/cfg80211.h       |    1 +
- include/uapi/linux/nl80211.h |    4 ++
- net/wireless/nl80211.c       |   93 +++++++++++++++++++++++++++++++++++++++---
- 4 files changed, 94 insertions(+), 5 deletions(-)
+ drivers/net/wireless/mwifiex/cmdevt.c  |  4 ++--
+ drivers/net/wireless/mwifiex/fw.h      | 28 ++++++++++++++--------------
+ drivers/net/wireless/mwifiex/sta_cmd.c |  2 +-
+ 3 files changed, 17 insertions(+), 17 deletions(-)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 8c3b26a..3c92dfd 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1124,6 +1124,7 @@ struct ieee80211_bar {
- #define IEEE80211_BAR_CTRL_TID_INFO_MASK	0xf000
- #define IEEE80211_BAR_CTRL_TID_INFO_SHIFT	12
+diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
+index e47f4e3..1ddc8b2 100644
+--- a/drivers/net/wireless/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/mwifiex/cmdevt.c
+@@ -312,14 +312,14 @@ static int mwifiex_dnld_sleep_confirm_cmd(struct mwifiex_adapter *adapter)
+ 	}
+ 	if (GET_BSS_ROLE(mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY))
+ 	    == MWIFIEX_BSS_ROLE_STA) {
+-		if (!sleep_cfm_buf->resp_ctrl)
++		if (!le16_to_cpu(sleep_cfm_buf->resp_ctrl))
+ 			/* Response is not needed for sleep
+ 			   confirm command */
+ 			adapter->ps_state = PS_STATE_SLEEP;
+ 		else
+ 			adapter->ps_state = PS_STATE_SLEEP_CFM;
  
-+#define IEEE80211_VHT_NSS_MAX			8
- #define IEEE80211_HT_MCS_MASK_LEN		10
+-		if (!sleep_cfm_buf->resp_ctrl &&
++		if (!le16_to_cpu(sleep_cfm_buf->resp_ctrl) &&
+ 		    (adapter->is_hs_configured &&
+ 		     !adapter->sleep_period.period)) {
+ 			adapter->pm_wakeup_card_req = true;
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index c8385ec..6998413 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -610,12 +610,12 @@ struct mwifiex_ie_types_tsf_timestamp {
+ struct mwifiex_cf_param_set {
+ 	u8 cfp_cnt;
+ 	u8 cfp_period;
+-	u16 cfp_max_duration;
+-	u16 cfp_duration_remaining;
++	__le16 cfp_max_duration;
++	__le16 cfp_duration_remaining;
+ } __packed;
  
- /**
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 626087b..ffdf771 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1764,6 +1764,7 @@ struct cfg80211_bitrate_mask {
- 	struct {
- 		u32 legacy;
- 		u8 ht_mcs[IEEE80211_HT_MCS_MASK_LEN];
-+		u16 vht_mcs[IEEE80211_VHT_NSS_MAX];
- 	} control[IEEE80211_NUM_BANDS];
- };
- /**
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 4d89492..5b7ed5d 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1862,6 +1862,7 @@ enum nl80211_attrs {
+ struct mwifiex_ibss_param_set {
+-	u16 atim_window;
++	__le16 atim_window;
+ } __packed;
  
- #define NL80211_MAX_SUPP_RATES			32
- #define NL80211_MAX_SUPP_HT_RATES		77
-+#define NL80211_MAX_SUPP_VHT_RATES		80
- #define NL80211_MAX_SUPP_REG_RULES		32
- #define NL80211_TKIP_DATA_OFFSET_ENCR_KEY	0
- #define NL80211_TKIP_DATA_OFFSET_TX_MIC_KEY	16
-@@ -3060,6 +3061,8 @@ enum nl80211_key_attributes {
-  *	%NL80211_MAX_SUPP_RATES in a single array).
-  * @NL80211_TXRATE_HT_MCS: HT (MCS) rates allowed for TX rate selection
-  *	in an array of MCS numbers.
-+ * @NL80211_TXRATE_VHT_MCS: VHT (MCS) rates allowed for TX rate selection
-+ *	in an array of MCS numbers.
-  * @__NL80211_TXRATE_AFTER_LAST: internal
-  * @NL80211_TXRATE_MAX: highest TX rate attribute
-  */
-@@ -3067,6 +3070,7 @@ enum nl80211_tx_rate_attributes {
- 	__NL80211_TXRATE_INVALID,
- 	NL80211_TXRATE_LEGACY,
- 	NL80211_TXRATE_HT_MCS,
-+	NL80211_TXRATE_VHT_MCS,
+ struct mwifiex_ie_types_ss_param_set {
+@@ -627,7 +627,7 @@ struct mwifiex_ie_types_ss_param_set {
+ } __packed;
  
- 	/* keep last */
- 	__NL80211_TXRATE_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index ff65172..3ab794e 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -7293,11 +7293,74 @@ static bool ht_rateset_to_mask(struct ieee80211_supported_band *sband,
- 	return true;
- }
+ struct mwifiex_fh_param_set {
+-	u16 dwell_time;
++	__le16 dwell_time;
+ 	u8 hop_set;
+ 	u8 hop_pattern;
+ 	u8 hop_index;
+@@ -684,10 +684,10 @@ struct host_cmd_ds_802_11_key_material {
+ } __packed;
  
-+static void vht_mcs_map_to_mcs_mask(u16 vht_mcs_map,
-+				    u16 vht_mcs_mask[IEEE80211_VHT_NSS_MAX])
-+{
-+	u8 nss;
-+
-+	for (nss = 0; nss < IEEE80211_VHT_NSS_MAX; nss++) {
-+		switch (vht_mcs_map & 0x03) {
-+		case IEEE80211_VHT_MCS_NOT_SUPPORTED:
-+			vht_mcs_mask[nss] = 0;
-+			break;
-+		case IEEE80211_VHT_MCS_SUPPORT_0_7:
-+			vht_mcs_mask[nss] = 0x00FF;
-+			break;
-+		case IEEE80211_VHT_MCS_SUPPORT_0_8:
-+			vht_mcs_mask[nss] = 0x01FF;
-+			break;
-+		case IEEE80211_VHT_MCS_SUPPORT_0_9:
-+			vht_mcs_mask[nss] = 0x03FF;
-+			break;
-+		}
-+
-+		vht_mcs_map >>= 2;
-+	}
-+}
-+
-+static bool vht_rateset_to_mask(struct ieee80211_supported_band *sband,
-+				u8 *rates, u8 rates_len,
-+				u16 mcs[IEEE80211_VHT_NSS_MAX])
-+{
-+	u16 tx_mcs_map = le16_to_cpu(sband->vht_cap.vht_mcs.tx_mcs_map);
-+	u16 tx_mcs_mask[IEEE80211_VHT_NSS_MAX] = {};
-+	u8 i;
-+
-+	if (!sband->vht_cap.vht_supported)
-+		return false;
-+
-+	memset(mcs, 0, sizeof(mcs));
-+
-+	/* Build vht_mcs_mask from VHT capabilities */
-+	vht_mcs_map_to_mcs_mask(tx_mcs_map, tx_mcs_mask);
-+
-+	for (i = 0; i < rates_len; i++) {
-+		int ridx, rbit;
-+
-+		ridx = rates[i] / 10;
-+		rbit = BIT(rates[i] % 10);
-+
-+		/* check validity */
-+		if ((ridx < 0) || (ridx >= IEEE80211_VHT_NSS_MAX))
-+			return false;
-+
-+		/* check availability */
-+		if (!(tx_mcs_mask[ridx] & rbit))
-+			return false;
-+
-+		mcs[ridx] |= rbit;
-+	}
-+
-+	return true;
-+}
-+
- static const struct nla_policy nl80211_txattr_policy[NL80211_TXRATE_MAX + 1] = {
- 	[NL80211_TXRATE_LEGACY] = { .type = NLA_BINARY,
- 				    .len = NL80211_MAX_SUPP_RATES },
- 	[NL80211_TXRATE_HT_MCS] = { .type = NLA_BINARY,
- 				    .len = NL80211_MAX_SUPP_HT_RATES },
-+	[NL80211_TXRATE_VHT_MCS] = { .type = NLA_BINARY,
-+				     .len = NL80211_MAX_SUPP_VHT_RATES},
+ struct host_cmd_ds_gen {
+-	u16 command;
+-	u16 size;
+-	u16 seq_num;
+-	u16 result;
++	__le16 command;
++	__le16 size;
++	__le16 seq_num;
++	__le16 result;
  };
  
- static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
-@@ -7310,6 +7373,7 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
- 	struct net_device *dev = info->user_ptr[1];
- 	struct nlattr *tx_rates;
- 	struct ieee80211_supported_band *sband;
-+	u16 vht_tx_mcs_map;
+ #define S_DS_GEN        sizeof(struct host_cmd_ds_gen)
+@@ -820,8 +820,8 @@ struct ieee_types_cf_param_set {
+ 	u8 len;
+ 	u8 cfp_cnt;
+ 	u8 cfp_period;
+-	u16 cfp_max_duration;
+-	u16 cfp_duration_remaining;
++	__le16 cfp_max_duration;
++	__le16 cfp_duration_remaining;
+ } __packed;
  
- 	if (!rdev->ops->set_bitrate_mask)
- 		return -EOPNOTSUPP;
-@@ -7326,6 +7390,13 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
- 		memcpy(mask.control[i].ht_mcs,
- 		       sband->ht_cap.mcs.rx_mask,
- 		       sizeof(mask.control[i].ht_mcs));
-+
-+		if (!sband->vht_cap.vht_supported)
-+			continue;
-+
-+		vht_tx_mcs_map = le16_to_cpu(sband->vht_cap.vht_mcs.tx_mcs_map);
-+		vht_mcs_map_to_mcs_mask(vht_tx_mcs_map,
-+					mask.control[i].vht_mcs);
+ struct ieee_types_ibss_param_set {
+@@ -957,7 +957,7 @@ struct mwifiex_hs_config_param {
+ } __packed;
+ 
+ struct hs_activate_param {
+-	u16 resp_ctrl;
++	__le16 resp_ctrl;
+ } __packed;
+ 
+ struct host_cmd_ds_802_11_hs_cfg_enh {
+@@ -1131,7 +1131,7 @@ struct host_cmd_ds_802_11_bg_scan_query {
+ } __packed;
+ 
+ struct host_cmd_ds_802_11_bg_scan_query_rsp {
+-	u32 report_condition;
++	__le32 report_condition;
+ 	struct host_cmd_ds_802_11_scan_rsp scan_resp;
+ } __packed;
+ 
+@@ -1230,7 +1230,7 @@ struct mwifiex_ie_types_wmm_queue_status {
+ 	struct mwifiex_ie_types_header header;
+ 	u8 queue_index;
+ 	u8 disabled;
+-	u16 medium_time;
++	__le16 medium_time;
+ 	u8 flow_required;
+ 	u8 flow_created;
+ 	u32 reserved;
+@@ -1310,7 +1310,7 @@ struct mwifiex_ie_types_vht_oper {
+ 	u8 chan_center_freq_1;
+ 	u8 chan_center_freq_2;
+ 	/* Basic MCS set map, each 2 bits stands for a NSS */
+-	u16 basic_mcs_map;
++	__le16 basic_mcs_map;
+ } __packed;
+ 
+ struct mwifiex_ie_types_wmmcap {
+diff --git a/drivers/net/wireless/mwifiex/sta_cmd.c b/drivers/net/wireless/mwifiex/sta_cmd.c
+index 2181ee2..1efa43e 100644
+--- a/drivers/net/wireless/mwifiex/sta_cmd.c
++++ b/drivers/net/wireless/mwifiex/sta_cmd.c
+@@ -354,7 +354,7 @@ mwifiex_cmd_802_11_hs_cfg(struct mwifiex_private *priv,
  	}
- 
- 	/* Back to default settings */
-@@ -7364,20 +7435,32 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
- 					mask.control[band].ht_mcs))
- 				return -EINVAL;
- 		}
-+		if (tb[NL80211_TXRATE_VHT_MCS]) {
-+			if (!vht_rateset_to_mask(
-+					sband,
-+					nla_data(tb[NL80211_TXRATE_VHT_MCS]),
-+					nla_len(tb[NL80211_TXRATE_VHT_MCS]),
-+					mask.control[band].vht_mcs))
-+				return -EINVAL;
-+		}
- 
- 		if (mask.control[band].legacy == 0) {
--			/* don't allow empty legacy rates if HT
-+			/* don't allow empty legacy rates if HT and VHT
- 			 * is not even supported. */
--			if (!rdev->wiphy.bands[band]->ht_cap.ht_supported)
-+			if (!(rdev->wiphy.bands[band]->ht_cap.ht_supported ||
-+			      rdev->wiphy.bands[band]->vht_cap.vht_supported))
- 				return -EINVAL;
- 
- 			for (i = 0; i < IEEE80211_HT_MCS_MASK_LEN; i++)
- 				if (mask.control[band].ht_mcs[i])
--					break;
-+					goto out;
-+
-+			for (i = 0; i < IEEE80211_VHT_NSS_MAX; i++)
-+				if (mask.control[band].vht_mcs[i])
-+					goto out;
- 
- 			/* legacy and mcs rates may not be both empty */
--			if (i == IEEE80211_HT_MCS_MASK_LEN)
--				return -EINVAL;
-+			return -EINVAL;
- 		}
- 	}
- 
+ 	if (hs_activate) {
+ 		hs_cfg->action = cpu_to_le16(HS_ACTIVATE);
+-		hs_cfg->params.hs_activate.resp_ctrl = RESP_NEEDED;
++		hs_cfg->params.hs_activate.resp_ctrl = cpu_to_le16(RESP_NEEDED);
+ 	} else {
+ 		hs_cfg->action = cpu_to_le16(HS_CONFIGURE);
+ 		hs_cfg->params.hs_config.conditions = hscfg_param->conditions;
 -- 
-1.7.9.5
+1.8.2.3
 
