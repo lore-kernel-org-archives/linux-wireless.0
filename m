@@ -1,36 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:49835 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753702Ab3LPNPA (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:42528 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752513Ab3LCIyU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Dec 2013 08:15:00 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21166.64423.30022.947286@gargle.gargle.HOWL> (sfid-20131216_141502_926615_C0784D39)
-Date: Mon, 16 Dec 2013 18:39:59 +0530
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [PATCH 06/11] ath9k_hw: remove ah->config.pcie_clock_req
-In-Reply-To: <52AEE12F.5020008@openwrt.org>
-References: <1387040625-38114-1-git-send-email-nbd@openwrt.org>
-	<1387040625-38114-6-git-send-email-nbd@openwrt.org>
-	<21166.30518.304613.545323@gargle.gargle.HOWL>
-	<52AEE12F.5020008@openwrt.org>
+	Tue, 3 Dec 2013 03:54:20 -0500
+Message-ID: <1386060856.4393.2.camel@jlt4.sipsolutions.net> (sfid-20131203_095425_215279_E0AD4728)
+Subject: Re: [RFC] cfg80211/mac80211: drop GTK-protected unicast IP packets
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pontus Fuchs <pontus.fuchs@gmail.com>
+Cc: linux-wireless@vger.kernel.org, j@w1.fi
+Date: Tue, 03 Dec 2013 09:54:16 +0100
+In-Reply-To: <529D9BBE.6040900@gmail.com> (sfid-20131203_095221_806346_3857F957)
+References: <1386010316-2540-1-git-send-email-johannes@sipsolutions.net>
+	 <529D9BBE.6040900@gmail.com> (sfid-20131203_095221_806346_3857F957)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau wrote:
-> Fine with me, let's leave this one out and merge the others (if there
-> aren't any other issues).
+On Tue, 2013-12-03 at 09:52 +0100, Pontus Fuchs wrote:
 
-Station mode seems fine with the series, I didn't get a chance to test
-IBSS or P2P.
+> > +/**
+> > + * cfg80211_is_ip_unicast - check if packet is IP unicast
+> > + * @skb: skb, in 802.3 format
+> > + */
+> > +bool cfg80211_is_ip_unicast(struct sk_buff *skb);
+> > +
+> 
+> Not implemented anywhere. Leftovers?
 
-In AP mode, the timestamp in the first beacon is higher than earlier, since
-we no longer reset the HW TSF when enabling beaconing and there is a
-window between start() and enable_beacon(). I am not sure if this is a
-problem, but I think the spec has something to say about BSS creation in
-infrastructure mode.
+Oops, yeah, I was going to make this a helper function but then needed
+so much extra setup/checking there I just inlined it into mac80211.
 
-Sujith
+Thanks for spotting!
+
+johannes
+
