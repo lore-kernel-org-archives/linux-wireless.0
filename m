@@ -1,110 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vserver.eikelenboom.it ([84.200.39.61]:41744 "EHLO
-	smtp.eikelenboom.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750922Ab3LKTG5 (ORCPT
+Received: from mail-ee0-f48.google.com ([74.125.83.48]:49870 "EHLO
+	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752099Ab3LCIvC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Dec 2013 14:06:57 -0500
-Date: Wed, 11 Dec 2013 20:06:51 +0100
-From: Sander Eikelenboom <linux@eikelenboom.it>
-Message-ID: <716357837.20131211200651@eikelenboom.it> (sfid-20131211_200723_352970_BE753D4C)
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-CC: "Berg, Johannes" <johannes.berg@intel.com>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [cfg80211 / iwlwifi] setting wireless regulatory domain doesn't work.
-In-Reply-To: <CAB=NE6XRnE0j9NMW0K1vKzEO9v70arSH4YXZjudqa0ZxiLB4AA@mail.gmail.com>
-References: <1507831110.20131018194349@eikelenboom.it> <792757788.20131023142849@eikelenboom.it> <1819533168.20131211161710@eikelenboom.it> <CAB=NE6V-RSnqbAC-0tfYK=WGJLp1aPC2UpFDurs49h+wXr9UfQ@mail.gmail.com> <1818324675.20131211175350@eikelenboom.it> <CAB=NE6Wf=T0bGLSYPDyb=-fMAVnGcbGkeaBiNrzwV-Lpxr6VZg@mail.gmail.com> <1342235583.20131211182804@eikelenboom.it> <CAB=NE6UfumA2xez1DvtDSBDZ72WF_tOozFo_8LRnMryYiSqD-A@mail.gmail.com> <871324710.20131211191104@eikelenboom.it> <CAB=NE6XRnE0j9NMW0K1vKzEO9v70arSH4YXZjudqa0ZxiLB4AA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 3 Dec 2013 03:51:02 -0500
+Received: by mail-ee0-f48.google.com with SMTP id e49so1241256eek.7
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Dec 2013 00:51:00 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, j@w1.fi,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH 2/4] nl80211: back to default bitrate_mask correctly
+Date: Tue,  3 Dec 2013 09:50:45 +0100
+Message-Id: <1386060648-6020-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131203_095108_697742_F9B5285C)
+In-Reply-To: <1386060648-6020-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1386060648-6020-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+In case of empty NL80211_ATTR_TX_RATES attribute
+in nl80211_set_tx_bitrate_mask() function back to
+default bitrate mask.
 
-Wednesday, December 11, 2013, 7:38:50 PM, you wrote:
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ net/wireless/nl80211.c |    8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-> On Wed, Dec 11, 2013 at 7:11 PM, Sander Eikelenboom
-> <linux@eikelenboom.it> wrote:
->>
->> Wednesday, December 11, 2013, 6:53:07 PM, you wrote:
->>
->>> The best way to address all this is by automatic region awareness and
->>> doing the right thing on devices, this however requires good
->>> architecture / calibration data  / etc and all that needs to be
->>> verified by the system integrators, and finally they need to be
->>> certified. If you want to hack your firmware and software go at it,
->>> just be aware there are reasons for things.
->>
->> Well the general problem seems to be "we don't trust the user" so we FORCE him to the lowest
->> common denominator (without a way to overrule that) so he is forced to operate *well* within the law.
-
-> Its simply stupid to have the user be involved, period, the fact that
-> a user would be involved should only be for testing or helping
-> compliance for a busted device, development, research and obviously
-> hacking. Linux allows all these but by default a device with firmware
-> and a custom regdomain that will barf if you try to use a channel that
-> is not allowed is a restriction in firmware. Feel free to reverse
-> engineer that if you don't like it but it just won't be supported or
-> go upstream. Now, the common denominator is generally optimized for
-> best performance as well so you shouldn't have to do anything, and for
-> APs -- this is typically carefully crafted for a region, also highly
-> optimized.
-
-Well how about a car maker shipping al his cars capped to say 10 miles an hour,
-because somewhere in the world that's the lowest. So to prevent you from breaking the law
-we will cap your 500HP engine, owh in your country you have a higher speedlimit, ah wel bad luck for you then.
-We need to enforce this so no one is going to brake any law any where.
-
-It's just plain stupid in my opinion (but not something linux can do much about, but it's about enforcing this stuff in firmware in general
-and thinking too much for the user (fine if you are capable to do so, but in this case clearly not, since there is no automatic way to detect in which country the device is,
-except by relying on user input).
-Why just don't set the safe and restricted value on boot and let the user overrule that if he wishes.
-(that means the user has to invoke a action, so he also should be aware of the consequences).
-
-
->>>>> It doesn't seem like you are getting your original requests getting
->>>>> processed, so I don't think CRDA is passing it. Can you verify running
->>>>> from CRDA code:
->>>>
->>>> They don't get processed unless i remove the return from the code as i indicated.
->>>> If i remove that return it processes the request.
->>>>
->>>>> ./regdbdump /usr/lib/crda/regulatory.bin
->>>>
->>>> Although it's in a different location on Debian, /lib/crda/regulatory.bin
->>>> the dump seems fine.
->>
->>> OK thanks. Can you send a patch of what exact change you made, it was
->>> unclear from the paste you made.
->>
->>> diff -u file.c.orig file.c
->>
->> Well i just did a pull from wireless-next, to try Avinash Patil's patch.
->> net/wireless/reg.c had already changed much so i couldn't apply his patch without.
->>
->> With his patch it sets the regulatory domain, although as now expected i still can not use channels 12 and 13 yet,
->> probably due to those firmware restrictions.
-
-> Its unclear what results you got, and yeah if the device is restricted
-> then its just the fw telling the driver its channels and you can't use
-> them. That's it. You won't be able to override information then unless
-> you hack the firmware.
-
-Without the patch:
-
-- "iw reg get" gives country 00
-- now do a "iw reg set US", no error so it should be fine
-- now do a "iw reg get" .. gives country 00 again, so it has not been set to the country requested.
-
-With the patch:
-
-- "iw reg get" gives country 00
-- now do a "iw reg set US", no error so it should be fine
-- now do a "iw reg get" .. gives country US, so it has been set to the country requested.
-
->   Luis
-
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index c6401a8..072b60d 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -7311,9 +7311,6 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
+ 	struct nlattr *tx_rates;
+ 	struct ieee80211_supported_band *sband;
+ 
+-	if (info->attrs[NL80211_ATTR_TX_RATES] == NULL)
+-		return -EINVAL;
+-
+ 	if (!rdev->ops->set_bitrate_mask)
+ 		return -EOPNOTSUPP;
+ 
+@@ -7331,6 +7328,10 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
+ 		       sizeof(mask.control[i].mcs));
+ 	}
+ 
++	/* Back to default settings */
++	if (info->attrs[NL80211_ATTR_TX_RATES] == NULL)
++		goto out;
++
+ 	/*
+ 	 * The nested attribute uses enum nl80211_band as the index. This maps
+ 	 * directly to the enum ieee80211_band values used in cfg80211.
+@@ -7380,6 +7381,7 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
+ 		}
+ 	}
+ 
++out:
+ 	return rdev_set_bitrate_mask(rdev, dev, NULL, &mask);
+ }
+ 
+-- 
+1.7.9.5
 
