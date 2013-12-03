@@ -1,97 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ring0.de ([91.143.88.219]:39873 "EHLO smtp.ring0.de"
+Received: from mga02.intel.com ([134.134.136.20]:35056 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756540Ab3LFAWm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 19:22:42 -0500
-From: Sebastian Reichel <sre@debian.org>
-To: Sebastian Reichel <sre@ring0.de>, Luciano Coelho <luca@coelho.fi>,
-	Tony Lindgren <tony@atomide.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: Rob Herring <rob.herring@calxeda.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Rob Landley <rob@landley.net>,
-	Kumar Gala <galak@codeaurora.org>, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-omap@vger.kernel.org, netdev@vger.kernel.org,
-	Sebastian Reichel <sre@debian.org>
-Subject: [PATCHv2 4/5] wl1251: spi: add device tree support
-Date: Fri,  6 Dec 2013 01:22:15 +0100
-Message-Id: <1386289336-26704-5-git-send-email-sre@debian.org> (sfid-20131206_012303_445582_A28A8633)
-In-Reply-To: <1386289336-26704-1-git-send-email-sre@debian.org>
-References: <1382890469-25286-1-git-send-email-sre@debian.org>
- <1386289336-26704-1-git-send-email-sre@debian.org>
+	id S1754442Ab3LCTPc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Dec 2013 14:15:32 -0500
+From: Ilan Peer <ilan.peer@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: wireless-regdb@lists.infradead.org, Ilan Peer <ilan.peer@intel.com>
+Subject: [PATCH v2 2/6] cfg80211: Add Kconfig option for cellular BS hints
+Date: Tue,  3 Dec 2013 21:16:02 +0200
+Message-Id: <1386098166-24196-3-git-send-email-ilan.peer@intel.com> (sfid-20131203_201537_726166_50F52C75)
+In-Reply-To: <1386098166-24196-1-git-send-email-ilan.peer@intel.com>
+References: <1386098166-24196-1-git-send-email-ilan.peer@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add device tree support for the spi variant of wl1251.
+Move the regulatory cellular base station hints support under
+a specific configuration option and make the option depend
+on CFG80211_CERTIFICATION_ONUS.
 
-Signed-off-by: Sebastian Reichel <sre@debian.org>
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
 ---
- drivers/net/wireless/ti/wl1251/spi.c | 23 +++++++++++++++++------
- 1 file changed, 17 insertions(+), 6 deletions(-)
+ net/wireless/Kconfig |    7 +++++++
+ net/wireless/reg.c   |    2 +-
+ 2 files changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ti/wl1251/spi.c b/drivers/net/wireless/ti/wl1251/spi.c
-index 0a8aacc..b06d36d 100644
---- a/drivers/net/wireless/ti/wl1251/spi.c
-+++ b/drivers/net/wireless/ti/wl1251/spi.c
-@@ -27,6 +27,8 @@
- #include <linux/spi/spi.h>
- #include <linux/wl12xx.h>
- #include <linux/gpio.h>
-+#include <linux/of.h>
-+#include <linux/of_gpio.h>
- #include <linux/regulator/consumer.h>
+diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
+index 16d08b3..81c05e4 100644
+--- a/net/wireless/Kconfig
++++ b/net/wireless/Kconfig
+@@ -95,6 +95,13 @@ config CFG80211_CERTIFICATION_ONUS
+ 	  you are a wireless researcher and are working in a controlled
+ 	  and approved environment by your local regulatory agency.
  
- #include "wl1251.h"
-@@ -240,13 +242,13 @@ static const struct wl1251_if_operations wl1251_spi_ops = {
- 
- static int wl1251_spi_probe(struct spi_device *spi)
- {
--	struct wl1251_platform_data *pdata;
-+	struct wl1251_platform_data *pdata = dev_get_platdata(&spi->dev);
-+	struct device_node *np = spi->dev.of_node;
- 	struct ieee80211_hw *hw;
- 	struct wl1251 *wl;
- 	int ret;
- 
--	pdata = dev_get_platdata(&spi->dev);
--	if (!pdata) {
-+	if (!np && !pdata) {
- 		wl1251_error("no platform data");
- 		return -ENODEV;
- 	}
-@@ -273,7 +275,18 @@ static int wl1251_spi_probe(struct spi_device *spi)
- 		goto out_free;
- 	}
- 
--	wl->power_gpio = pdata->power_gpio;
-+	if (np) {
-+		wl->use_eeprom = of_property_read_bool(np, "ti,wl1251-has-eeprom");
-+		wl->power_gpio = of_get_named_gpio(np, "ti,power-gpio", 0);
-+	} else if (pdata) {
-+		wl->power_gpio = pdata->power_gpio;
-+		wl->use_eeprom = pdata->use_eeprom;
-+	}
++config CFG80211_REG_CELLULAR_HINTS
++	bool "cfg80211 regulatory support for cellular base station hints"
++	depends on CFG80211_CERTIFICATION_ONUS
++	---help---
++	  This option adds support for drivers that can receive regulatory
++	  hints from cellular base stations
 +
-+	if (wl->power_gpio == -EPROBE_DEFER) {
-+		ret = -EPROBE_DEFER;
-+		goto out_free;
-+	}
+ config CFG80211_DEFAULT_PS
+ 	bool "enable powersave by default"
+ 	depends on CFG80211
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 80fe9b3..2449dce 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -992,7 +992,7 @@ bool reg_last_request_cell_base(void)
+ 	return reg_request_cell_base(get_last_request());
+ }
  
- 	if (gpio_is_valid(wl->power_gpio)) {
- 		ret = devm_gpio_request_one(&spi->dev, wl->power_gpio,
-@@ -295,8 +308,6 @@ static int wl1251_spi_probe(struct spi_device *spi)
- 		goto out_free;
- 	}
- 
--	wl->use_eeprom = pdata->use_eeprom;
--
- 	irq_set_status_flags(wl->irq, IRQ_NOAUTOEN);
- 	ret = devm_request_irq(&spi->dev, wl->irq, wl1251_irq, 0,
- 							DRIVER_NAME, wl);
+-#ifdef CONFIG_CFG80211_CERTIFICATION_ONUS
++#ifdef CONFIG_CFG80211_REG_CELLULAR_HINTS
+ /* Core specific check */
+ static enum reg_request_treatment
+ reg_ignore_cell_hint(struct regulatory_request *pending_request)
 -- 
-1.8.4.3
+1.7.10.4
 
