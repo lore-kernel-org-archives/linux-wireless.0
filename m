@@ -1,135 +1,181 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:46023 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932452Ab3LEOAL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 09:00:11 -0500
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1VoZTI-0002H6-L2
-	for linux-wireless@vger.kernel.org; Thu, 05 Dec 2013 15:00:04 +0100
-Received: from gw.alumnux.com ([121.243.14.254])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Dec 2013 15:00:04 +0100
-Received: from royujjal by gw.alumnux.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Dec 2013 15:00:04 +0100
-To: linux-wireless@vger.kernel.org
-From: Ujjal Roy <royujjal@gmail.com>
-Subject: Re: [PATCH v2] cfg80211: fix =?utf-8?b?V0FSTl9PTg==?= for re-association to the expired BSS
-Date: Thu, 5 Dec 2013 13:51:02 +0000 (UTC)
-Message-ID: <loom.20131205T144715-166@post.gmane.org> (sfid-20131205_150018_406122_FEF13CCB)
-References: <1385883096-7143-1-git-send-email-royujjal@gmail.com>  (sfid-20131201_083145_260096_779C94CC) <1386081014.4393.31.camel@jlt4.sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-pd0-f180.google.com ([209.85.192.180]:33807 "EHLO
+	mail-pd0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755255Ab3LDCc1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Dec 2013 21:32:27 -0500
+Received: by mail-pd0-f180.google.com with SMTP id q10so21334379pdj.39
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Dec 2013 18:32:27 -0800 (PST)
+Message-ID: <529E9437.7020305@lwfinger.net> (sfid-20131204_033231_120148_78F7E211)
+Date: Tue, 03 Dec 2013 20:32:23 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: "Nikita N." <nikitan@operamail.com>, linux-wireless@vger.kernel.org
+Subject: Re: RTL8187 bugs
+References: <1385589961.19021.52907237.3EE33E5B@webmail.messagingengine.com> <52966D64.2030805@lwfinger.net> <1385593188.3627.52911717.4E0712D9@webmail.messagingengine.com> <52968893.6060405@lwfinger.net> <1385812990.14905.53777877.7646278B@webmail.messagingengine.com> <529A1B52.6040605@lwfinger.net> <1385835820.6559.53858669.5FD3F3A6@webmail.messagingengine.com> <529A36C5.4060209@lwfinger.net> <1386079140.19919.54929613.506DE0D0@webmail.messagingengine.com> <529E0166.90302@lwfinger.net> <1386105710.9442.55117909.7AF98FBC@webmail.messagingengine.com>
+In-Reply-To: <1386105710.9442.55117909.7AF98FBC@webmail.messagingengine.com>
+Content-Type: multipart/mixed;
+ boundary="------------090609000909010009070804"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@...> writes:
+This is a multi-part message in MIME format.
+--------------090609000909010009070804
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-> In an unsuccessful result case, this leaks the BSS struct. I'd prefer to
-> reshuffle the code a bit to not need a separate save_bss variable, but I
-> don't immediately see an easy way to do that.
-> 
-> johannes
->
+On 12/03/2013 03:21 PM, Nikita N. wrote:
 
-Thanks for pointing out the issue. The modified patch is here.
----
+After rewriting your patch a bit (see attached copy), I got the following:
 
-cfg80211 allows re-association in managed mode and if a user
-wants to re-associate to the same AP network after the time
-period of IEEE80211_SCAN_RESULT_EXPIRE, cfg80211 warns with
-the following message on receiving the connect result event.
+usb 1-5: new high-speed USB device number 5 using ehci-pci
+rtl8187: inconsistency between id with OEM info!
+-- regulatory rules --
+ieee80211 phy3: Selected rate control algorithm 'minstrel_ht'
+ieee80211 phy3: hwaddr 00:11:6b:3e:c4:0a, RTL8187BvB(early) V0 + rtl8225z2, 
+rfkill mask 2
+rtl8187: Customer ID is 0x00
+rtl8187: wireless switch is on
+usbcore: registered new interface driver rtl8187
+systemd-udevd[5366]: renamed network interface wlan1 to wlp0s2f1u5
+rtl8187_configure_filter
+IN>changed_flags=0x0 ,total_flags=0x80000000 ,multicast=0x1 
+,priv->rx_conf=0x9094fc0e
+ >FIF_ALLMULTI
+OUT>total_flags=0x2 ,priv->rx_conf=0x9094fc0e
+rtl8187_configure_filter
+IN>changed_flags=0x2 ,total_flags=0x80000000 ,multicast=0x1 
+,priv->rx_conf=0x9094fc0e
+ >FIF_ALLMULTI
+OUT>total_flags=0x2 ,priv->rx_conf=0x9094fc0e
+IPv6: ADDRCONF(NETDEV_UP): wlp0s2f1u5: link is not ready
+rtl8187_configure_filter
+IN>changed_flags=0x2 ,total_flags=0x80000000 ,multicast=0x2 
+,priv->rx_conf=0x9094fc0e
+ >FIF_ALLMULTI
+OUT>total_flags=0x2 ,priv->rx_conf=0x9094fc0e
+rtl8187_configure_filter
+IN>changed_flags=0x12 ,total_flags=0x80000010 ,multicast=0x2 
+,priv->rx_conf=0x9094fc0e
+ >FIF_ALLMULTI
+OUT>total_flags=0x2 ,priv->rx_conf=0x9094fc0e
+rtl8187_configure_filter
+IN>changed_flags=0x2 ,total_flags=0x80000000 ,multicast=0x2 
+,priv->rx_conf=0x9094fc0e
+ >FIF_ALLMULTI
+OUT>total_flags=0x2 ,priv->rx_conf=0x9094fc0e
+rtl8187_configure_filter
+IN>changed_flags=0x12 ,total_flags=0x80000010 ,multicast=0x2 
+,priv->rx_conf=0x9094fc0e
+ >FIF_ALLMULTI
+OUT>total_flags=0x2 ,priv->rx_conf=0x9094fc0e
+wlp0s2f1u5: authenticate with 20:e5:2a:01:f7:ea
+rtl8187_configure_filter
+IN>changed_flags=0x2 ,total_flags=0x80000000 ,multicast=0x2 
+,priv->rx_conf=0x9094fc0e
+ >FIF_ALLMULTI
+OUT>total_flags=0x2 ,priv->rx_conf=0x9094fc0e
+wlp0s2f1u5: send auth to 20:e5:2a:01:f7:ea (try 1/3)
+wlp0s2f1u5: authenticated
+wlp0s2f1u5: associate with 20:e5:2a:01:f7:ea (try 1/3)
+wlp0s2f1u5: RX AssocResp from 20:e5:2a:01:f7:ea (capab=0x411 status=0 aid=7)
+wlp0s2f1u5: associated
+IPv6: ADDRCONF(NETDEV_CHANGE): wlp0s2f1u5: link becomes ready
+rtl8187_configure_filter
+IN>changed_flags=0x2 ,total_flags=0x80000000 ,multicast=0x3 
+,priv->rx_conf=0x9094fc0e
+ >FIF_ALLMULTI
+OUT>total_flags=0x2 ,priv->rx_conf=0x9094fc0e
+rtl8187_configure_filter
+IN>changed_flags=0x2 ,total_flags=0x80000000 ,multicast=0x4 
+,priv->rx_conf=0x9094fc0e
+ >FIF_ALLMULTI
+OUT>total_flags=0x2 ,priv->rx_conf=0x9094fc0e
+rtl8187_configure_filter
+IN>changed_flags=0x2 ,total_flags=0x80000000 ,multicast=0x5 
+,priv->rx_conf=0x9094fc0e
+ >FIF_ALLMULTI
+OUT>total_flags=0x2 ,priv->rx_conf=0x9094fc0e
+rtl8187_configure_filter
+IN>changed_flags=0x12 ,total_flags=0x80000010 ,multicast=0x5 
+,priv->rx_conf=0x9094fc0e
+ >FIF_ALLMULTI
+OUT>total_flags=0x2 ,priv->rx_conf=0x9094fc0e
 
-------------[ cut here ]------------
-WARNING: CPU: 0 PID: 13984 at net/wireless/sme.c:658
-         __cfg80211_connect_result+0x3a6/0x3e0 [cfg80211]()
-Call Trace:
- [<ffffffff81747a41>] dump_stack+0x46/0x58
- [<ffffffff81045847>] warn_slowpath_common+0x87/0xb0
- [<ffffffff81045885>] warn_slowpath_null+0x15/0x20
- [<ffffffffa05345f6>] __cfg80211_connect_result+0x3a6/0x3e0 [cfg80211]
- [<ffffffff8107168b>] ? update_rq_clock+0x2b/0x50
- [<ffffffff81078c01>] ? update_curr+0x1/0x160
- [<ffffffffa05133d2>] cfg80211_process_wdev_events+0xb2/0x1c0 [cfg80211]
- [<ffffffff81079303>] ? pick_next_task_fair+0x63/0x170
- [<ffffffffa0513518>] cfg80211_process_rdev_events+0x38/0x90 [cfg80211]
- [<ffffffffa050f03d>] cfg80211_event_work+0x1d/0x30 [cfg80211]
- [<ffffffff8105f21f>] process_one_work+0x17f/0x420
- [<ffffffff8105f90a>] worker_thread+0x11a/0x370
- [<ffffffff8105f7f0>] ? rescuer_thread+0x2f0/0x2f0
- [<ffffffff8106638b>] kthread+0xbb/0xc0
- [<ffffffff810662d0>] ? kthread_create_on_node+0x120/0x120
- [<ffffffff817574bc>] ret_from_fork+0x7c/0xb0
- [<ffffffff810662d0>] ? kthread_create_on_node+0x120/0x120
----[ end trace 61f3bddc9c4981f7 ]---
+Some comments on your patch:
 
-The reason is that, in connect result event cfg80211 unholds
-the BSS to which the device is associated (and was held so
-far). So, for the event with status successful, when cfg80211
-wants to get that BSS from the device's BSS list it gets a
-NULL BSS because the BSS has been expired and unheld already.
+1. The routine can be gotten from ("%s\n", __func__). That is a lot easier than 
+hand coding the routine name.
 
-Fix it by reshuffling the code.
+2. Every printk should be terminated with \n (new line).
 
-Signed-off-by: Ujjal Roy <royujjal@gmail.com>
----
- net/wireless/sme.c | 22 ++++++++++++----------
- 1 file changed, 12 insertions(+), 10 deletions(-)
+3. You can print multi-byte values with 0x%x. No need to split out the bytes the 
+way you did.
 
-diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index 65f8008..d3c5bd7 100644
---- a/net/wireless/sme.c
-+++ b/net/wireless/sme.c
-@@ -632,6 +632,16 @@ void __cfg80211_connect_result(struct net_device *dev, 
-const u8 *bssid,
- 	}
- #endif
+I do not have aircrack running on my system, thus I cannot issue exactly the 
+same command that you did.
+
+The "daemon" that keeps calling rtl8187_configure_filter() is the transmit 
+packet process of the kernel. You get one call for every packet out.
+
+Larry
+
+
+--------------090609000909010009070804
+Content-Type: text/x-patch;
+ name="nikita8187.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="nikita8187.patch"
+
+Index: wireless-testing/drivers/net/wireless/rtl818x/rtl8187/dev.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/rtl818x/rtl8187/dev.c
++++ wireless-testing/drivers/net/wireless/rtl818x/rtl8187/dev.c
+@@ -1306,17 +1306,30 @@ static void rtl8187_configure_filter(str
+ 				     u64 multicast)
+ {
+ 	struct rtl8187_priv *priv = dev->priv;
++//nikita
++	printk(KERN_WARNING "%s\n", __func__);
++	printk(KERN_WARNING "IN>changed_flags=0x%x ,total_flags=0x%x ,multicast=0x%x ,priv->rx_conf=0x%x\n",
++	       changed_flags, *total_flags, (unsigned int)multicast, priv->rx_conf);
  
-+	if (!bss && (status == WLAN_STATUS_SUCCESS)) {
-+		WARN_ON_ONCE(!wiphy_to_dev(wdev->wiphy)->ops->connect);
-+		bss = cfg80211_get_bss(wdev->wiphy, NULL, bssid,
-+				       wdev->ssid, wdev->ssid_len,
-+				       WLAN_CAPABILITY_ESS,
-+				       WLAN_CAPABILITY_ESS);
-+		if (bss)
-+			cfg80211_hold_bss(bss_from_pub(bss));
+-	if (changed_flags & FIF_FCSFAIL)
++	if (changed_flags & FIF_FCSFAIL) {
+ 		priv->rx_conf ^= RTL818X_RX_CONF_FCS;
+-	if (changed_flags & FIF_CONTROL)
++		printk(KERN_WARNING ">FIF_FCSFAIL\n");
 +	}
-+
- 	if (wdev->current_bss) {
- 		cfg80211_unhold_bss(wdev->current_bss);
- 		cfg80211_put_bss(wdev->wiphy, &wdev->current_bss->pub);
-@@ -649,16 +659,8 @@ void __cfg80211_connect_result(struct net_device *dev, 
-const u8 *bssid,
- 		return;
- 	}
++	if (changed_flags & FIF_CONTROL) {
+ 		priv->rx_conf ^= RTL818X_RX_CONF_CTRL;
+-	if (changed_flags & FIF_OTHER_BSS)
++		printk(KERN_WARNING ">FIF_CONTROL\n");
++	}
++	if (changed_flags & FIF_OTHER_BSS) {
+ 		priv->rx_conf ^= RTL818X_RX_CONF_MONITOR;
+-	if (*total_flags & FIF_ALLMULTI || multicast > 0)
++		printk(KERN_WARNING ">FIF_OTHER_BSS\n");
++	}
++	if (*total_flags & FIF_ALLMULTI || multicast > 0) {
+ 		priv->rx_conf |= RTL818X_RX_CONF_MULTICAST;
+-	else
++		printk(KERN_WARNING ">FIF_ALLMULTI\n");
++	} else {
+ 		priv->rx_conf &= ~RTL818X_RX_CONF_MULTICAST;
++		printk(KERN_WARNING ">not FIF_ALLMULTI\n");
++	}
  
--	if (!bss) {
--		WARN_ON_ONCE(!wiphy_to_dev(wdev->wiphy)->ops->connect);
--		bss = cfg80211_get_bss(wdev->wiphy, NULL, bssid,
--				       wdev->ssid, wdev->ssid_len,
--				       WLAN_CAPABILITY_ESS,
--				       WLAN_CAPABILITY_ESS);
--		if (WARN_ON(!bss))
--			return;
--		cfg80211_hold_bss(bss_from_pub(bss));
--	}
-+	if (WARN_ON(!bss))
-+		return;
+ 	*total_flags = 0;
  
- 	wdev->current_bss = bss_from_pub(bss);
+@@ -1330,6 +1343,8 @@ static void rtl8187_configure_filter(str
+ 		*total_flags |= FIF_ALLMULTI;
  
--- 
-1.8.1.4
+ 	rtl818x_iowrite32_async(priv, &priv->map->RX_CONF, priv->rx_conf);
++//nikita
++	printk(KERN_WARNING "OUT>total_flags=0x%x ,priv->rx_conf=0x%x\n", *total_flags, priv->rx_conf);
+ }
+ 
+ static int rtl8187_conf_tx(struct ieee80211_hw *dev,
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" 
-in
-> the body of a message to majordomo@...
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
-
-
-
+--------------090609000909010009070804--
