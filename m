@@ -1,135 +1,242 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f54.google.com ([74.125.82.54]:52014 "EHLO
-	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751789Ab3LFUak (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Dec 2013 15:30:40 -0500
-Received: by mail-wg0-f54.google.com with SMTP id n12so1153664wgh.21
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Dec 2013 12:30:39 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20131206162919.GE13285@tuxdriver.com>
-References: <5294E4C5.4050301@cs.kuleuven.be> <52950812.20001@rempel-privat.de>
- <5295EF41.8040709@cs.kuleuven.be> <CANiGF999jHN3+5QuNVAkVk_hHxZ6LkPxWB3jW9yoJGbfno7M9A@mail.gmail.com>
- <52972749.70200@gmail.com> <20131206162919.GE13285@tuxdriver.com>
-From: Mathy <vanhoefm@gmail.com>
-Date: Fri, 6 Dec 2013 21:30:18 +0100
-Message-ID: <CAFXAJYzO5ifSYbiN7xqV5Sr+3CFrZsaqc2dg0bt-JB0EUxFRdQ@mail.gmail.com> (sfid-20131206_213044_170363_2D211A48)
-Subject: Re: [PATCH] ath9k_htc: properly set MAC address and BSSID mask
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Pau Koning <paukoning@gmail.com>,
-	Oleksij Rempel <linux@rempel-privat.de>,
-	linux-wireless@vger.kernel.org, mcgrof@qca.qualcomm.com,
-	jouni@qca.qualcomm.com, vthiagar@qca.qualcomm.com,
-	senthilb@qca.qualcomm.com
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga11.intel.com ([192.55.52.93]:30014 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753738Ab3LDJPp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Dec 2013 04:15:45 -0500
+From: Ilan Peer <ilan.peer@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: wireless-regdb@lists.infradead.org, Ilan Peer <ilan.peer@intel.com>
+Subject: [PATCH v3 4/6] cfg80211: Add an option to hint indoor operation
+Date: Wed,  4 Dec 2013 11:16:27 +0200
+Message-Id: <1386148587-1743-1-git-send-email-ilan.peer@intel.com> (sfid-20131204_101551_814831_60D92E1E)
+In-Reply-To: <1386098166-24196-5-git-send-email-ilan.peer@intel.com>
+References: <1386098166-24196-5-git-send-email-ilan.peer@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It was renamed to make it clear the function now changes both the
-BSSID and MAC registers.
+Add the option to hint the wireless core that it is operating in an indoor
+environment.
 
-On Fri, Dec 6, 2013 at 5:29 PM, John W. Linville <linville@tuxdriver.com> wrote:
-> On Thu, Nov 28, 2013 at 12:21:45PM +0100, Mathy Vanhoef wrote:
->> Third time's the charm?
->> --
->> From: "Mathy Vanhoef" <vanhoefm@gmail.com>
->>
->> Pick the MAC address of the first virtual interface as the new hardware MAC
->> address. Set BSSID mask according to this MAC address. This fixes CVE-2013-4579.
->>
->> Signed-off-by: Mathy Vanhoef <vanhoefm@gmail.com>
->> ---
->> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
->> index d441045..84359c3 100644
->> --- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
->> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
->> @@ -147,21 +147,26 @@ static void ath9k_htc_bssid_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
->>       struct ath9k_vif_iter_data *iter_data = data;
->>       int i;
->>
->> -     for (i = 0; i < ETH_ALEN; i++)
->> -             iter_data->mask[i] &= ~(iter_data->hw_macaddr[i] ^ mac[i]);
->> +     if (iter_data->hw_macaddr != NULL) {
->> +             for (i = 0; i < ETH_ALEN; i++)
->> +                     iter_data->mask[i] &= ~(iter_data->hw_macaddr[i] ^ mac[i]);
->> +     } else {
->> +             iter_data->hw_macaddr = mac;
->> +     }
->>  }
->>
->> -static void ath9k_htc_set_bssid_mask(struct ath9k_htc_priv *priv,
->> +static void ath9k_htc_set_mac_bssid_mask(struct ath9k_htc_priv *priv,
->>                                    struct ieee80211_vif *vif)
->>  {
->
-> I'm not sure I see the point of renaming this function -- just
-> personal preference?
->
->>       struct ath_common *common = ath9k_hw_common(priv->ah);
->>       struct ath9k_vif_iter_data iter_data;
->>
->>       /*
->> -      * Use the hardware MAC address as reference, the hardware uses it
->> -      * together with the BSSID mask when matching addresses.
->> +      * Pick the MAC address of the first interface as the new hardware
->> +      * MAC address. The hardware will use it together with the BSSID mask
->> +      * when matching addresses.
->>        */
->> -     iter_data.hw_macaddr = common->macaddr;
->> +     iter_data.hw_macaddr = NULL;
->>       memset(&iter_data.mask, 0xff, ETH_ALEN);
->>
->>       if (vif)
->> @@ -173,6 +178,10 @@ static void ath9k_htc_set_bssid_mask(struct ath9k_htc_priv *priv,
->>               ath9k_htc_bssid_iter, &iter_data);
->>
->>       memcpy(common->bssidmask, iter_data.mask, ETH_ALEN);
->> +
->> +     if (iter_data.hw_macaddr)
->> +             memcpy(common->macaddr, iter_data.hw_macaddr, ETH_ALEN);
->> +
->>       ath_hw_setbssidmask(common);
->>  }
->>
->> @@ -1083,7 +1092,7 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
->>               goto out;
->>       }
->>
->> -     ath9k_htc_set_bssid_mask(priv, vif);
->> +     ath9k_htc_set_mac_bssid_mask(priv, vif);
->>
->>       priv->vif_slot |= (1 << avp->index);
->>       priv->nvifs++;
->> @@ -1148,7 +1157,7 @@ static void ath9k_htc_remove_interface(struct ieee80211_hw *hw,
->>
->>       ath9k_htc_set_opmode(priv);
->>
->> -     ath9k_htc_set_bssid_mask(priv, vif);
->> +     ath9k_htc_set_mac_bssid_mask(priv, vif);
->>
->>       /*
->>        * Stop ANI only if there are no associated station interfaces.
->> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
->> index b6aad69..99ab0aa 100644
->> --- a/drivers/net/wireless/ath/ath9k/main.c
->> +++ b/drivers/net/wireless/ath/ath9k/main.c
->> @@ -885,8 +885,9 @@ void ath9k_calculate_iter_data(struct ieee80211_hw *hw,
->>       struct ath_common *common = ath9k_hw_common(ah);
->>
->>       /*
->> -      * Use the hardware MAC address as reference, the hardware uses it
->> -      * together with the BSSID mask when matching addresses.
->> +      * Pick the MAC address of the first interface as the new hardware
->> +      * MAC address. The hardware will use it together with the BSSID mask
->> +      * when matching addresses.
->>        */
->>       memset(iter_data, 0, sizeof(*iter_data));
->>       memset(&iter_data->mask, 0xff, ETH_ALEN);
->>
->>
->>
->>
->
-> --
-> John W. Linville                Someday the world will need a hero, and you
-> linville@tuxdriver.com                  might be all we have.  Be ready.
+In addition add regulatory_ir_allowed(), that can be used to
+test if initiation radiation is allowed based on the channel flags
+and the wireless core indoor hint.
+
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+---
+ include/net/cfg80211.h       |   12 ++++++++++
+ include/uapi/linux/nl80211.h |    3 +++
+ net/wireless/nl80211.c       |   18 +++++++-------
+ net/wireless/reg.c           |   54 +++++++++++++++++++++++++++++++++++++++---
+ net/wireless/reg.h           |    1 +
+ 5 files changed, 75 insertions(+), 13 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 504d656..8c29b3d 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3534,6 +3534,18 @@ const struct ieee80211_reg_rule *freq_reg_info(struct wiphy *wiphy,
+  */
+ const char *reg_initiator_name(enum nl80211_reg_initiator initiator);
+ 
++/**
++ * regulatory_ir_allowed - is it allowed to initiate radiation on the channel.
++ * @chan: the channel
++ *
++ * Generally, it is not allowed to initiate radiation on a channel marked with
++ * IEEE80211_CHAN_NO_IR. The exception is operation on channels marked with
++ * IEEE80211_CHAN_INDOOR_ONLY. For such channels, initiating radiation is
++ * allowed iff the wireless core was notified that it operates in an indoor
++ * environment.
++ */
++bool regulatory_ir_allowed(struct ieee80211_channel *chan);
++
+ /*
+  * callbacks for asynchronous cfg80211 methods, notification
+  * functions and BSS handling helpers
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index b6721a1..6674444 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2489,10 +2489,13 @@ enum nl80211_dfs_regions {
+  *	present has been registered with the wireless core that
+  *	has listed NL80211_FEATURE_CELL_BASE_REG_HINTS as a
+  *	supported feature.
++ * @NL80211_USER_REG_HINT_INDOOR: a user sent an hint indicating that the
++ *	platform is operating in an indoor environment.
+  */
+ enum nl80211_user_reg_hint_type {
+ 	NL80211_USER_REG_HINT_USER	= 0,
+ 	NL80211_USER_REG_HINT_CELL_BASE = 1,
++	NL80211_USER_REG_HINT_INDOOR    = 2,
+ };
+ 
+ /**
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 267d37e..514170c 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4614,7 +4614,6 @@ static int parse_reg_rule(struct nlattr *tb[],
+ 
+ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
+ {
+-	int r;
+ 	char *data = NULL;
+ 	enum nl80211_user_reg_hint_type user_reg_hint_type;
+ 
+@@ -4627,11 +4626,6 @@ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
+ 	if (unlikely(!rcu_access_pointer(cfg80211_regdomain)))
+ 		return -EINPROGRESS;
+ 
+-	if (!info->attrs[NL80211_ATTR_REG_ALPHA2])
+-		return -EINVAL;
+-
+-	data = nla_data(info->attrs[NL80211_ATTR_REG_ALPHA2]);
+-
+ 	if (info->attrs[NL80211_ATTR_USER_REG_HINT_TYPE])
+ 		user_reg_hint_type =
+ 		  nla_get_u32(info->attrs[NL80211_ATTR_USER_REG_HINT_TYPE]);
+@@ -4641,14 +4635,18 @@ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
+ 	switch (user_reg_hint_type) {
+ 	case NL80211_USER_REG_HINT_USER:
+ 	case NL80211_USER_REG_HINT_CELL_BASE:
+-		break;
++		if (!info->attrs[NL80211_ATTR_REG_ALPHA2])
++			return -EINVAL;
++
++		data = nla_data(info->attrs[NL80211_ATTR_REG_ALPHA2]);
++		return regulatory_hint_user(data, user_reg_hint_type);
++	case NL80211_USER_REG_HINT_INDOOR:
++		return regulatory_hint_indoor_user();
+ 	default:
+ 		return -EINVAL;
+ 	}
+ 
+-	r = regulatory_hint_user(data, user_reg_hint_type);
+-
+-	return r;
++	return 0;
+ }
+ 
+ static int nl80211_get_mesh_config(struct sk_buff *skb,
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 212b5c2..2ab1503 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -110,6 +110,14 @@ const struct ieee80211_regdomain __rcu *cfg80211_regdomain;
+  */
+ static int reg_num_devs_support_basehint;
+ 
++/*
++ * State variable indicating if the platform on which the devices
++ * are attached is operating in an indoor environment. The state variable
++ * is relevant for all registered devices.
++ * Note: currently not protected by any synchronization primitive.
++ */
++static bool reg_is_indoor;
++
+ static const struct ieee80211_regdomain *get_cfg80211_regdom(void)
+ {
+ 	return rtnl_dereference(cfg80211_regdomain);
+@@ -987,6 +995,13 @@ static bool reg_request_cell_base(struct regulatory_request *request)
+ 	return request->user_reg_hint_type == NL80211_USER_REG_HINT_CELL_BASE;
+ }
+ 
++static bool reg_request_indoor(struct regulatory_request *request)
++{
++	if (request->initiator != NL80211_REGDOM_SET_BY_USER)
++		return false;
++	return request->user_reg_hint_type == NL80211_USER_REG_HINT_INDOOR;
++}
++
+ bool reg_last_request_cell_base(void)
+ {
+ 	return reg_request_cell_base(get_last_request());
+@@ -1423,6 +1438,11 @@ __reg_process_hint_user(struct regulatory_request *user_request)
+ {
+ 	struct regulatory_request *lr = get_last_request();
+ 
++	if (reg_request_indoor(user_request)) {
++		reg_is_indoor = true;
++		return REG_REQ_ALREADY_SET;
++	}
++
+ 	if (reg_request_cell_base(user_request))
+ 		return reg_ignore_cell_hint(user_request);
+ 
+@@ -1658,9 +1678,6 @@ static void reg_process_hint(struct regulatory_request *reg_request)
+ 	struct wiphy *wiphy = NULL;
+ 	enum reg_request_treatment treatment;
+ 
+-	if (WARN_ON(!reg_request->alpha2))
+-		return;
+-
+ 	if (reg_request->wiphy_idx != WIPHY_IDX_INVALID)
+ 		wiphy = wiphy_idx_to_wiphy(reg_request->wiphy_idx);
+ 
+@@ -1820,6 +1837,22 @@ int regulatory_hint_user(const char *alpha2,
+ 	return 0;
+ }
+ 
++int regulatory_hint_indoor_user(void)
++{
++	struct regulatory_request *request;
++
++	request = kzalloc(sizeof(struct regulatory_request), GFP_KERNEL);
++	if (!request)
++		return -ENOMEM;
++
++	request->wiphy_idx = WIPHY_IDX_INVALID;
++	request->initiator = NL80211_REGDOM_SET_BY_USER;
++	request->user_reg_hint_type = NL80211_USER_REG_HINT_INDOOR;
++	queue_regulatory_request(request);
++
++	return 0;
++}
++
+ /* Driver hints */
+ int regulatory_hint(struct wiphy *wiphy, const char *alpha2)
+ {
+@@ -2482,6 +2515,19 @@ int cfg80211_get_unii(int freq)
+ 	return -EINVAL;
+ }
+ 
++bool regulatory_ir_allowed(struct ieee80211_channel *chan)
++{
++#ifdef CONFIG_CFG80211_REG_SOFT_CONFIGURATIONS
++	if (reg_is_indoor && (chan->flags & IEEE80211_CHAN_INDOOR_ONLY))
++		return true;
++#endif /* CONFIG_CFG80211_REG_SOFT_CONFIGURATIONS */
++
++	if (chan->flags & IEEE80211_CHAN_NO_IR)
++		return false;
++	return true;
++}
++EXPORT_SYMBOL(regulatory_ir_allowed);
++
+ int __init regulatory_init(void)
+ {
+ 	int err = 0;
+@@ -2502,6 +2548,8 @@ int __init regulatory_init(void)
+ 	user_alpha2[0] = '9';
+ 	user_alpha2[1] = '7';
+ 
++	reg_is_indoor = false;
++
+ 	/* We always try to get an update for the static regdomain */
+ 	err = regulatory_hint_core(cfg80211_world_regdom->alpha2);
+ 	if (err) {
+diff --git a/net/wireless/reg.h b/net/wireless/reg.h
+index 1ef2daa..bd708d1 100644
+--- a/net/wireless/reg.h
++++ b/net/wireless/reg.h
+@@ -24,6 +24,7 @@ bool reg_supported_dfs_region(enum nl80211_dfs_regions dfs_region);
+ 
+ int regulatory_hint_user(const char *alpha2,
+ 			 enum nl80211_user_reg_hint_type user_reg_hint_type);
++int regulatory_hint_indoor_user(void);
+ 
+ int reg_device_uevent(struct device *dev, struct kobj_uevent_env *env);
+ void wiphy_regulatory_register(struct wiphy *wiphy);
+-- 
+1.7.10.4
+
