@@ -1,68 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:5290 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754270Ab3LEJDH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 04:03:07 -0500
-From: "Coelho, Luciano" <luciano.coelho@intel.com>
-To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Simon Wunderlich" <sw@simonwunderlich.de>,
-	Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+Received: from mail-ve0-f180.google.com ([209.85.128.180]:51905 "EHLO
+	mail-ve0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753661Ab3LDJf6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Dec 2013 04:35:58 -0500
+Received: by mail-ve0-f180.google.com with SMTP id jz11so11505510veb.39
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Dec 2013 01:35:58 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1386078502-19845-6-git-send-email-luciano.coelho@intel.com>
+References: <1386078502-19845-1-git-send-email-luciano.coelho@intel.com>
+	<1386078502-19845-6-git-send-email-luciano.coelho@intel.com>
+Date: Wed, 4 Dec 2013 17:35:57 +0800
+Message-ID: <CAEFj9850NcEhzBFTDkOhCKzpQNtBooSCj3CqsJHuncunUxXw9Q@mail.gmail.com> (sfid-20131204_103607_594668_5EC5CCA6)
 Subject: Re: [PATCH v6 5/5] mac80211: only set CSA beacon when at least one
  beacon must be transmitted
-Date: Thu, 5 Dec 2013 09:03:01 +0000
-Message-ID: <1386234180.3878.8.camel@porter.coelho.fi> (sfid-20131205_100314_282749_1CE4F452)
-References: <1386078502-19845-1-git-send-email-luciano.coelho@intel.com>
-	 <1386078502-19845-6-git-send-email-luciano.coelho@intel.com>
-	 <CAEFj9850NcEhzBFTDkOhCKzpQNtBooSCj3CqsJHuncunUxXw9Q@mail.gmail.com>
-	 <CAEFj984YzCvRtqKtvvng_9EUFk3J2wFRcrn-1xNmQ85OZ1BxfQ@mail.gmail.com>
-In-Reply-To: <CAEFj984YzCvRtqKtvvng_9EUFk3J2wFRcrn-1xNmQ85OZ1BxfQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: Luciano Coelho <luciano.coelho@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Simon Wunderlich <sw@simonwunderlich.de>,
+	Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gV2VkLCAyMDEzLTEyLTA0IGF0IDE3OjQ1ICswODAwLCBZZW9oIENodW4tWWVvdyB3cm90ZToN
-Cj4gT24gV2VkLCBEZWMgNCwgMjAxMyBhdCA1OjM1IFBNLCBZZW9oIENodW4tWWVvdyA8eWVvaGNo
-dW55ZW93QGdtYWlsLmNvbT4gd3JvdGU6DQo+ID4+ICAjaWZkZWYgQ09ORklHX01BQzgwMjExX01F
-U0gNCj4gPj4gICAgICAgICBjYXNlIE5MODAyMTFfSUZUWVBFX01FU0hfUE9JTlQ6DQo+ID4+IEBA
-IC0zMTU5LDEyICszMjA4LDE4IEBAIGludCBpZWVlODAyMTFfY2hhbm5lbF9zd2l0Y2goc3RydWN0
-IHdpcGh5ICp3aXBoeSwgc3RydWN0IG5ldF9kZXZpY2UgKmRldiwNCj4gPj4gICAgICAgICAgICAg
-ICAgIGlmIChpZm1zaC0+Y3NhX3JvbGUgPT0gSUVFRTgwMjExX01FU0hfQ1NBX1JPTEVfTk9ORSkN
-Cj4gPj4gICAgICAgICAgICAgICAgICAgICAgICAgaWZtc2gtPmNzYV9yb2xlID0gSUVFRTgwMjEx
-X01FU0hfQ1NBX1JPTEVfSU5JVDsNCj4gPj4NCj4gPj4gLSAgICAgICAgICAgICAgIGVyciA9IGll
-ZWU4MDIxMV9tZXNoX2NzYV9iZWFjb24oc2RhdGEsIHBhcmFtcywNCj4gPj4gLSAgICAgICAgICAg
-ICAgICAgICAgICAgKGlmbXNoLT5jc2Ffcm9sZSA9PSBJRUVFODAyMTFfTUVTSF9DU0FfUk9MRV9J
-TklUKSk7DQo+ID4+IC0gICAgICAgICAgICAgICBpZiAoZXJyIDwgMCkgew0KPiA+PiAtICAgICAg
-ICAgICAgICAgICAgICAgICBpZm1zaC0+Y3NhX3JvbGUgPSBJRUVFODAyMTFfTUVTSF9DU0FfUk9M
-RV9OT05FOw0KPiA+PiAtICAgICAgICAgICAgICAgICAgICAgICByZXR1cm4gZXJyOw0KPiA+PiAr
-ICAgICAgICAgICAgICAgaWYgKHBhcmFtcy0+Y291bnQgPiAxKSB7DQo+ID4+ICsgICAgICAgICAg
-ICAgICAgICAgICAgIGVyciA9IGllZWU4MDIxMV9tZXNoX2NzYV9iZWFjb24oc2RhdGEsIHBhcmFt
-cyk7DQo+ID4+ICsgICAgICAgICAgICAgICAgICAgICAgIGlmIChlcnIgPCAwKSB7DQo+ID4+ICsg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgaWZtc2gtPmNzYV9yb2xlID0gSUVFRTgwMjEx
-X01FU0hfQ1NBX1JPTEVfTk9ORTsNCj4gPj4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICByZXR1cm4gZXJyOw0KPiA+PiArICAgICAgICAgICAgICAgICAgICAgICB9DQo+ID4+ICsgICAg
-ICAgICAgICAgICAgICAgICAgIGNoYW5nZWQgfD0gZXJyOw0KPiA+PiAgICAgICAgICAgICAgICAg
-fQ0KPiA+DQo+ID4gU2luY2UgdGhlIGllZWU4MDIxMV9tZXNoX2NzYV9iZWFjb24gaXMgbm90IGNh
-bGxlZCwgdGhlIGtmcmVlX3JjdSBvZg0KPiA+IHRtcF9jc2Ffc2V0dGluZ3MgaW4gaWVlZTgwMjEx
-X21lc2hfZmluaXNoX2NzYSBoYXMgY2F1c2VkIGtlcm5lbCBvb3BzLg0KDQpVZ2gsIHJpZ2h0LCBt
-eSBiYWQuDQoNCg0KDQo+ID4gQW55d2F5LCBJIHdvdWxkIGxpa2UgdG8gc3VnZ2VzdCBpZiB0aGUg
-cGFyYW1zLT5jb3VudCBpcyBsZXNzIHRoYW4gMSwNCj4gPiB0aGUgbWVzaCBjaGFubmVsIHN3aXRj
-aCBpcyBub3QgdHJpZ2dlcmVkIHNpbmNlIHRoZXJlIG1heWJlIG1lc2ggU1RBDQo+ID4gbG9jYXRl
-ZCB0d28gaG9wcyBhd2F5IGZyb20gdGhlIGluaXRpYXRvci4NCj4gPg0KPiA+IGlmIChwYXJhbXMt
-PmNvdW50ID4gMSkgew0KPiA+IC4uLi4uDQo+ID4gfSBlbHNlDQo+ID4gcmV0dXJuIC1FSU5WQUw7
-DQo+IA0KPiBtYXliZSB0cnkgdG8gcHVzaCB0aGUgY2hlY2tpbmcgb2YgcGFyYW1zLT5jb3VudCBl
-YXJsaWVyLCBzdWNoIGFzIGZvbGxvdzoNCj4gDQo+IGlmIChwYXJhbXMtPmNvdW50IDwgMikNCj4g
-ICAgICAgcmV0dXJuIC1FSU5WQUw7DQoNCkFjdHVhbGx5LCBJIGp1c3QgbG9va2VkIGF0IHRoZSBz
-cGVjcyBhZ2FpbiBhbmQgdGhlIGNvdW50IHZhbHVlIGZvciBtZXNoDQppcyBjb21wbGV0ZWx5IGRp
-ZmZlcmVudC4gIEluc3RlYWQgb2Ygc3BlY2lmeWluZyB0aGUgbnVtYmVyIG9mIFRCVFRzDQp1bnRp
-bCB0aGUgc3dpdGNoIGhhcHBlbnMsIGl0IHNwZWNpZmllcyB0aGUgdGltZSBpbiBUVXMgdW50aWwg
-dGhlIHN3aXRjaA0KaGFwcGVucyBhbmQgMCBtZWFucyBhdCBhbnkgdGltZSBhZnRlciB0aGUgZnJh
-bWUgd2FzIHNlbnQgKHRoZSBzYW1lIGFzDQp3aXRoIG5vbm1lc2gpLiAgSW4gb3VyIGltcGxlbWVu
-dGF0aW9uLCB3ZSBqdXN0IGRlY3JlYXNlIHRoZSBjb3VudCBvbg0KZXZlcnkgYmVhY29uLCB3aGlj
-aCBpcyB3cm9uZyBpbiB0aGUgbWVzaCBjYXNlLg0KDQpUaGUgY291bnQgaW1wbGVtZW50YXRpb24g
-Zm9yIG1lc2ggaXMgYm9ndXMuICBXZSBuZWVkIHRvIGZpeCB0aGF0Lg0KDQpXaGF0IGlmLCBmb3Ig
-bm93LCBJIGp1c3QgZml4IHRoZSBvb3BzIGJlY2F1c2Ugb2YgdGhlIHJjdV9kZXJlZmVuY2Ugd2hl
-bg0KdGhlIHJjdSBpcyBub3QgaW5pdGlhbGl6ZWQgYW5kIHdlIGZpeCB0aGUgY291bnQgaW1wbGVt
-ZW50YXRpb24gbGF0ZXI/DQoNClRoYW5rcyBhIGxvdCBmb3IgdGVzdGluZyENCg0KLS0NCkNoZWVy
-cywNCkx1Y2EuDQo=
+>  #ifdef CONFIG_MAC80211_MESH
+>         case NL80211_IFTYPE_MESH_POINT:
+> @@ -3159,12 +3208,18 @@ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+>                 if (ifmsh->csa_role == IEEE80211_MESH_CSA_ROLE_NONE)
+>                         ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_INIT;
+>
+> -               err = ieee80211_mesh_csa_beacon(sdata, params,
+> -                       (ifmsh->csa_role == IEEE80211_MESH_CSA_ROLE_INIT));
+> -               if (err < 0) {
+> -                       ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_NONE;
+> -                       return err;
+> +               if (params->count > 1) {
+> +                       err = ieee80211_mesh_csa_beacon(sdata, params);
+> +                       if (err < 0) {
+> +                               ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_NONE;
+> +                               return err;
+> +                       }
+> +                       changed |= err;
+>                 }
+
+Since the ieee80211_mesh_csa_beacon is not called, the kfree_rcu of
+tmp_csa_settings in ieee80211_mesh_finish_csa has caused kernel oops.
+
+Anyway, I would like to suggest if the params->count is less than 1,
+the mesh channel switch is not triggered since there maybe mesh STA
+located two hops away from the initiator.
+
+if (params->count > 1) {
+.....
+} else
+return -EINVAL;
+
+
+
+
+> +
+> +               if (ifmsh->csa_role == IEEE80211_MESH_CSA_ROLE_INIT)
+> +                       ieee80211_send_action_csa(sdata, params);
+> +
+>                 break;
+
+----
+Chun-Yeow
