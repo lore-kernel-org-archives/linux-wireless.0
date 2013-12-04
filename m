@@ -1,41 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:52489 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:46778 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932726Ab3LEPnq (ORCPT
+	with ESMTP id S1754999Ab3LDIQK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 10:43:46 -0500
-Message-ID: <1386258223.4182.9.camel@jlt4.sipsolutions.net> (sfid-20131205_164350_017579_D7416BB7)
-Subject: Re: [PATCH v2] iw: add VHT MCS/NSS set support to set bitrates
+	Wed, 4 Dec 2013 03:16:10 -0500
+Message-ID: <1386144962.4284.2.camel@jlt4.sipsolutions.net> (sfid-20131204_091636_236564_687665AD)
+Subject: Re: [PATCH] mac80211: rx: Neaten ieee80211_deliver_skb, remove
+ compare_ether_addr
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org, j@w1.fi
-Date: Thu, 05 Dec 2013 16:43:43 +0100
-In-Reply-To: <1386234137-3531-4-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131205_100231_746591_EE306996)
-References: <1386234137-3531-1-git-send-email-janusz.dziedzic@tieto.com>
-	 <1386234137-3531-4-git-send-email-janusz.dziedzic@tieto.com>
-	 (sfid-20131205_100231_746591_EE306996)
+To: Joe Perches <joe@perches.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>
+Date: Wed, 04 Dec 2013 09:16:02 +0100
+In-Reply-To: <1386095360.15309.29.camel@joe-AO722>
+References: <1386095360.15309.29.camel@joe-AO722>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-12-05 at 10:02 +0100, Janusz Dziedzic wrote:
-> mcs-2.4/mcs-5 rename to ht-mcs-2.4/ht-mcs-5
-> vht-mcs-2.4/vht-mcs-5 added
+On Tue, 2013-12-03 at 10:29 -0800, Joe Perches wrote:
+> Remove the unnecessary duplicate test of "if (skb) {"
+> when !CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS.
 > 
-> Format for vht-mcs-*, eg:
-> 1  - MCS=1, NSS=1
-> 9  - MCS=9, NSS=1
-> 10 - MCS=0, NSS=2
-> 19 - MCS=9, NSS=2
-> 20 - MCS=0, NSS=3
-> 29 - MCS=9, NSS=3
+> Remove now unnecessary __maybe_unused, neaten comment
+> Remove unnecessary parenthesis around align cast.
+> Substitute reference to deprecated compare_ether_addr
+> with ether_addr_equal.
 
-I totally don't like that format, can't we parse something like
-
-1:0-9 2:0-7 3:2,4,6
-
-or so?
+I already had a patch to remove the __maybe_unused, but this looks good,
+applied.
 
 johannes
 
