@@ -1,36 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:53580 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755349Ab3LSMf2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Dec 2013 07:35:28 -0500
-Message-ID: <1387456523.4298.8.camel@jlt4.sipsolutions.net> (sfid-20131219_133535_420198_B2B8142C)
-Subject: Re: [PATCH] mac80211: remove unnecessary iflist_mtx locking
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from mga02.intel.com ([134.134.136.20]:6260 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932619Ab3LDPmo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Dec 2013 10:42:44 -0500
+From: Max.Stepanov@intel.com
 To: linux-wireless@vger.kernel.org
-Cc: sw@simonwunderlich.de
-Date: Thu, 19 Dec 2013 13:35:23 +0100
-In-Reply-To: <1387393315-15671-1-git-send-email-johannes@sipsolutions.net> (sfid-20131218_200202_219087_C4056ED1)
-References: <1387393315-15671-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20131218_200202_219087_C4056ED1)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Cc: Max Stepanov <Max.Stepanov@intel.com>
+Subject: [PATCH] cfg80211: check pairwise key_idx on get_key call
+Date: Wed,  4 Dec 2013 17:42:22 +0200
+Message-Id: <1386171742-5382-1-git-send-email-Max.Stepanov@intel.com> (sfid-20131204_164250_559785_A21BB23D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-12-18 at 20:01 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> The radar detection code changed a few times, and due to
-> the changes some iflist_mtx locking stayed in that isn't
-> actually necessary - remove it.
-> 
-> One version of the code needed it because an AP interface's
-> VLAN list was changed to use this, but then we moved the
-> list handling outside of the chanctx handling and thus the
-> locking was no longer needed.
+From: Max Stepanov <Max.Stepanov@intel.com>
 
-Applied.
+Verify that a pairwise key index value on ieee80211_get_key call
+doesn't exceed the boundaries of the pairwise key array.
 
-johannes
+Signed-off-by: Max Stepanov <Max.Stepanov@intel.com>
+---
+ net/mac80211/cfg.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 8e70df0..00fa219 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -301,9 +301,9 @@ static int ieee80211_get_key(struct wiphy *wiphy, struct net_device *dev,
+ 		if (!sta)
+ 			goto out;
+ 
+-		if (pairwise)
++		if (pairwise && key_idx < NUM_DEFAULT_KEYS)
+ 			key = rcu_dereference(sta->ptk[key_idx]);
+-		else if (key_idx < NUM_DEFAULT_KEYS)
++		else if (!pairwise && key_idx < NUM_DEFAULT_KEYS)
+ 			key = rcu_dereference(sta->gtk[key_idx]);
+ 	} else
+ 		key = rcu_dereference(sdata->keys[key_idx]);
+-- 
+1.8.5.rc2
 
