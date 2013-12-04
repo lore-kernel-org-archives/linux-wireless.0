@@ -1,86 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:41595 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753762Ab3LPOx4 (ORCPT
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:62494 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754647Ab3LDIb6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Dec 2013 09:53:56 -0500
-Message-ID: <1387205627.2057.16.camel@jlt4.sipsolutions.net> (sfid-20131216_155359_776319_F527BAAA)
-Subject: pull-request: mac80211 2013-12-16
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 16 Dec 2013 15:53:47 +0100
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-1g88B7B51D2R9Q8S1gbC"
-Mime-Version: 1.0
+	Wed, 4 Dec 2013 03:31:58 -0500
+Received: by mail-wi0-f175.google.com with SMTP id hi5so7841322wib.14
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Dec 2013 00:31:58 -0800 (PST)
+MIME-Version: 1.0
+Date: Wed, 4 Dec 2013 09:31:57 +0100
+Message-ID: <CADnKcViSH_VEgJH1=twMtwH+sWV6NaDx=sq359KCdmCS2EuVNw@mail.gmail.com> (sfid-20131204_093203_309404_592550E1)
+Subject: Re: [PATCH v3] cfg80211: fix dfs channel state after stopping AP
+From: Marek Puzyniak <marek.puzyniak@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 3 December 2013 15:18, Johannes Berg <johannes@sipsolutions.net> wrote:
 
---=-1g88B7B51D2R9Q8S1gbC
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+>> +             if (cfg80211_chandef_dfs_required(wdev->wiphy, &wdev->preset_chandef))
+>> +                     cfg80211_leave_dfs_chandef(wdev->wiphy, &wdev->preset_chandef);
+>
+> *far* too long lines. Read CodingStyle documentation please.
+>
+> Also, any reason to not always call cfg80211_leave_dfs_chandef()?
 
-John,
+I had only cfg80211_leave_dfs_chandef() but then I added if() and
+exceeded  80 lines.
+So I will call always cfg80211_leave_dfs_chandef().
 
-Two more fixes ...
+>> +static void cfg80211_leave_dfs_chans(struct wiphy *wiphy,
+>> +                                  u32 center_freq,
+>> +                                  u32 bandwidth)
+>> +{
+>> +     struct ieee80211_channel *c;
+>> +     u32 freq, start_freq, end_freq;
+>> +
+>> +     start_freq = cfg80211_get_start_freq(center_freq, bandwidth);
+>> +     end_freq = cfg80211_get_end_freq(center_freq, bandwidth);
+>> +
+>> +     for (freq = start_freq; freq <= end_freq; freq += 20) {
+>> +             c = ieee80211_get_channel(wiphy, freq);
+>> +             if (!c)
+>> +                     continue;
+>> +             if (!(c->flags & IEEE80211_CHAN_RADAR))
+>> +                     continue;
+>> +             if (c->dfs_state != NL80211_DFS_AVAILABLE)
+>> +                     continue;
+>> +
+>> +             cfg80211_set_chans_dfs_state(wiphy, freq, 20, NL80211_DFS_USABLE);
+>
+> This seems to catch it anyway.
+>
+> This also seems a bit wrong, if regulatory happens to change and say the
+> RADAR flag goes away, then this won't set it to USABLE, and then if the
+> RADAR flag later re-appears? I guess Luis should handle that in reg.c
+> though or so?
 
-Here's a fix for another potential radiotap parser buffer overrun thanks
-to Evan Huus, and a fix for a cfg80211 warning in a certain corner case
-(reconnecting to the same BSS).
+Yes, you are right. It does not matter if RADAR flag is set. When we
+are leaving AP mode then none of channels should have dfs_state =
+NL80211_DFS_AVAILABLE. So all DFS_AVAILABLE channel will be set to
+DFS_USABLE.
 
-Let me know if there's any problem.
+I will send new version of this patch.
 
-johannes
+Concerning your question whether this patch is needed in 3.13. I think
+this is rather important issue. Look at such situation:
+*start AP on DFS channel,
+*CAC pass - channel dfs_state changes to AVAILABLE, AP starts beaconing,
+*stop AP by killing hostapd, channel dfs_state stays AVAILABLE,
+*start AP again, it starts beaconig immediately, there is no CAC
+beacuse channel dfs_state is AVAILABLE.
 
-The following changes since commit 0834ae3c3af44480834cce128b6fef83006e537f=
-:
-
-  mac80211: check csa wiphy flag in ibss before switching (2013-12-02 11:54=
-:13 +0100)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git for-john
-
-for you to fetch changes up to bd02cd2549cfcdfc57cb5ce57ffc3feb94f70575:
-
-  radiotap: fix bitmap-end-finding buffer overrun (2013-12-16 12:06:43 +010=
-0)
-
-----------------------------------------------------------------
-Johannes Berg (1):
-      radiotap: fix bitmap-end-finding buffer overrun
-
-Ujjal Roy (1):
-      cfg80211: fix WARN_ON for re-association to the expired BSS
-
- net/wireless/radiotap.c |  4 ++++
- net/wireless/sme.c      | 22 ++++++++++++----------
- 2 files changed, 16 insertions(+), 10 deletions(-)
+Purpose of this patch is to change channel dfs_state to USABLE when
+leaving/stoping AP, so starting AP again will trigger first CAC and
+after successful CAC starts beaconig.
 
 
---=-1g88B7B51D2R9Q8S1gbC
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCAAGBQJSrxP7AAoJEDBSmw7B7bqrHncQAMs9u1T35reIItkNKK5HzQAX
-9G6W4yisU2mfGL9BhUIwBJ0LVW+k0wv1X8fFQi7y2sLGCYWZTh6l/+mlzJfkOOaz
-uCmjHcPiT7k0R2D50Egwv2X0a4v82vOOE+qjdavgum3jVPnSlr7RF/3QKBiaPI2H
-FvN7IC3GSrW+srOvmYU12geQf6jc6ADmDrsVAb9qP+5/L9RDbK1bh23dS8KrDafL
-7n2QtfrmUmDVPaOo4g/ls8scGIO7SVM8Xv0GWuG+y5jApR2inK4JHIA4GdYA/Dcr
-3uQZUGQVtVzU0v6TgRtjvM3Viv+Kw4U6ZLVKpaiIpbuWFKJCgvvN/r93CuiF09pL
-Q4FGpYG+7VP3jXXctrZj+Lz4ux3ngxS7aKF7nWFLgKtmC4EWzCVlFUL6L7dzzkTI
-5AoOyyVjJtKe9I9Ak5ejrwW6F75fo1HL6AYCen6Vl3ntlrxfburTW5OObFxGaWbT
-rFVw/vVfW08K3n/btDyXyrS2DOt+5dP5SZKlFoSJdlgPnmEOriiIbr/k6et1Z/Yo
-OM582gK5YEh5HuYuFLaz1XIRUyF0fxyOKIvCqgIjk7kC9TspcvxfF+Ig2vO6VDgO
-cElNdmC7tZoOy4/lzUSz0HqlgJhbeT/T+gloTp8W82Y7F+8LgRSgknXa4SpbKG/1
-FrCx25BHwPqUCiowBRmy
-=xVP8
------END PGP SIGNATURE-----
-
---=-1g88B7B51D2R9Q8S1gbC--
-
+> johannes
+Marek
