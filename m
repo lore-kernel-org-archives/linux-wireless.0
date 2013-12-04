@@ -1,76 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f171.google.com ([209.85.215.171]:46541 "EHLO
-	mail-ea0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756163Ab3LaRQk (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:46732 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754795Ab3LDILx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Dec 2013 12:16:40 -0500
-Received: by mail-ea0-f171.google.com with SMTP id h10so5588706eak.16
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Dec 2013 09:16:39 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eyal Shapira <eyal@wizery.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 26/28] iwlwifi: mvm: rs: fix a potential NULL deref
-Date: Tue, 31 Dec 2013 19:15:55 +0200
-Message-Id: <1388510157-23345-26-git-send-email-egrumbach@gmail.com> (sfid-20131231_183436_810818_F6107BF9)
-In-Reply-To: <52C2FB68.2010708@gmail.com>
-References: <52C2FB68.2010708@gmail.com>
+	Wed, 4 Dec 2013 03:11:53 -0500
+Message-ID: <1386144708.4284.1.camel@jlt4.sipsolutions.net> (sfid-20131204_091158_653127_5798919B)
+Subject: Re: [PATCH] nl80211: allow the use of DFS channel in mesh
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>,
+	"devel@lists.open80211s.org" <devel@lists.open80211s.org>,
+	"distro11s@cozybit.com" <distro11s@cozybit.com>
+Date: Wed, 04 Dec 2013 09:11:48 +0100
+In-Reply-To: <CAEFj984xLXHCLoXUrevEdaeFyC1qGq5T9Zt9MPf5kYj7WZUNCA@mail.gmail.com> (sfid-20131204_022624_630701_2B3B2F16)
+References: <1385971550-4892-1-git-send-email-yeohchunyeow@gmail.com>
+	 <1386075017.4393.11.camel@jlt4.sipsolutions.net>
+	 <CAEFj984xLXHCLoXUrevEdaeFyC1qGq5T9Zt9MPf5kYj7WZUNCA@mail.gmail.com>
+	 (sfid-20131204_022624_630701_2B3B2F16)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+On Wed, 2013-12-04 at 09:26 +0800, Yeoh Chun-Yeow wrote:
+> > This seems pretty pointless right now? There's nothing supporting it, is
+> > there?
+> >
+> I have currently extended the iw to trigger the CAC on DFC channel
+> using NL80211_CMD_RADAR_DETECT. But not able to join mesh on DFS even
+> it is clear.
+> 
+> So this patch at least allows us to trigger beaconing and bring up the
+> mesh on DFS channel.
 
-Found by klocwork analysis.
-mvm could be NULL which may cause a NULL dereference
-in a theoretical call flow
+Yeah, never mind. I was confused about the "TODO DFS" in the mesh code,
+but that's with CSA *to* a radar channel.
 
-rs_fill_lq_cmd(mvm = NULL, ...)
-rs_build_rates_table
-rs_fill_rates_for_column
-ucode_rate_from_rs_rate
-IWL_ERR(mvm,...)
+I'll apply this.
 
-No real reason for passing NULL to rs_fill_lq_cmd so fix that.
-
-Reported-by: Eytan Lifshitz <eytan.lifshitz@intel.com>
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/rs.c |    7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
-index 269fa0a..b7668dc 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
-@@ -2121,7 +2121,7 @@ static void rs_initialize_lq(struct iwl_mvm *mvm,
- 		tbl->column = RS_COLUMN_LEGACY_ANT_B;
- 
- 	rs_set_expected_tpt_table(lq_sta, tbl);
--	rs_fill_lq_cmd(NULL, NULL, lq_sta, rate);
-+	rs_fill_lq_cmd(mvm, sta, lq_sta, rate);
- 	/* TODO restore station should remember the lq cmd */
- 	iwl_mvm_send_lq_cmd(mvm, &lq_sta->lq, init);
- }
-@@ -2448,8 +2448,7 @@ static void rs_build_rates_table(struct iwl_mvm *mvm,
- 
- 	memcpy(&rate, initial_rate, sizeof(rate));
- 
--	if (mvm)
--		valid_tx_ant = iwl_fw_valid_tx_ant(mvm->fw);
-+	valid_tx_ant = iwl_fw_valid_tx_ant(mvm->fw);
- 
- 	if (is_siso(&rate)) {
- 		num_rates = RS_INITIAL_SISO_NUM_RATES;
-@@ -2623,7 +2622,7 @@ static void rs_program_fix_rate(struct iwl_mvm *mvm,
- 		struct rs_rate rate;
- 		rs_rate_from_ucode_rate(lq_sta->dbg_fixed_rate,
- 					lq_sta->band, &rate);
--		rs_fill_lq_cmd(NULL, NULL, lq_sta, &rate);
-+		rs_fill_lq_cmd(mvm, NULL, lq_sta, &rate);
- 		iwl_mvm_send_lq_cmd(lq_sta->drv, &lq_sta->lq, false);
- 	}
- }
--- 
-1.7.9.5
+johannes
 
