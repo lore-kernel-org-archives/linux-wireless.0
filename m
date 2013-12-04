@@ -1,62 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:51753 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756299Ab3LEMgE (ORCPT
+Received: from mail-pd0-f169.google.com ([209.85.192.169]:45017 "EHLO
+	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753925Ab3LDCKa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 07:36:04 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3/8] mac80211: move 4-addr sta pointer clearing before synchronize_rcu()
-Date: Thu,  5 Dec 2013 13:35:51 +0100
-Message-Id: <1386246956-14257-4-git-send-email-johannes@sipsolutions.net> (sfid-20131205_133614_113866_416F1901)
-In-Reply-To: <1386246956-14257-1-git-send-email-johannes@sipsolutions.net>
-References: <1386192610.5660.4.camel@jlt4.sipsolutions.net>
- <1386246956-14257-1-git-send-email-johannes@sipsolutions.net>
+	Tue, 3 Dec 2013 21:10:30 -0500
+Message-ID: <529E8F90.1020205@gmail.com> (sfid-20131204_031055_819388_B39CF8AE)
+Date: Wed, 04 Dec 2013 10:12:32 +0800
+From: Chen Gang <gang.chen.5i5j@gmail.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Joe Perches <joe@perches.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	rkuo <rkuo@codeaurora.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	David Miller <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
+Subject: Re: [PATCH] net: mac80211: tx.c: be sure of 'sdata->vif.type' must
+ be NL80211_IFTYPE_AP when be in NL80211_IFTYPE_AP case
+References: <528AEFB7.4060301@gmail.com>  <20131125011938.GB18921@codeaurora.org> <5292B845.3010404@gmail.com>  <5292B8A0.7020409@gmail.com> <5294255E.7040105@gmail.com>  <52957ADA.2080704@gmail.com>  (sfid-20131127_055211_558798_A7DF5684) <1385739487.8656.1.camel@jlt4.sipsolutions.net>  <5299D306.7070701@gmail.com>  (sfid-20131130_125901_519610_EDA4068E) <1385816013.4327.1.camel@jlt4.sipsolutions.net>  <5299ED38.4090509@gmail.com> <5299EFDD.6060405@gmail.com>  (sfid-20131130_150205_984535_068F14A9) <1385842134.6108.4.camel@jlt4.sipsolutions.net>  <1385843940.2664.4.camel@joe-AO722>  <1385890523.4171.1.camel@jlt4.sipsolutions.net>  <1385937499.2664.21.camel@joe-AO722> <1385995738.20277.4.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1385995738.20277.4.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=GB2312
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 12/02/2013 10:48 PM, Johannes Berg wrote:
+> On Sun, 2013-12-01 at 14:38 -0800, Joe Perches wrote:
+>> On Sun, 2013-12-01 at 10:35 +0100, Johannes Berg wrote:
+>>> Good try, but no, now ap_sdata isn't even assigned. :)
+>>
+>> Right.  Oh well.  There's no improving this without
+>> significant rewrite.  Even then, there may not be much
+>> overall improvement.
+> 
+> I could see an improvement if we were to actually make changes to assign
+> the pointer based on the iftype, when that changes, so that each
+> function only has to handle the right type and we don't need the switch
+> statement at all...
+> 
 
-The pointer should be cleared before synchronize_rcu() so that the
-consequently dead station won't be found by any lookups in the TX
-or RX paths.
+OK, thanks, it is one of good ideas to me (which I can not find).  :-)
 
-Also check that the station is actually the one being removed, the
-check is not needed because each 4-addr VLAN can only have a single
-station and non-4-addr VLANs always have a NULL pointer there, but
-the code is clearer this way (and we avoid the memory write.)
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/sta_info.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+> But that's tricky to get right and I'm between vacations and holidays
+> and all that ...
+> 
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 1e14774..557ac25 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -875,6 +875,10 @@ int __must_check __sta_info_destroy(struct sta_info *sta)
- 
- 	drv_sta_pre_rcu_remove(local, sta->sdata, sta);
- 
-+	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
-+	    rcu_access_pointer(sdata->u.vlan.sta) == sta)
-+		RCU_INIT_POINTER(sdata->u.vlan.sta, NULL);
-+
- 	/* this always calls synchronize_net() */
- 	ieee80211_free_sta_keys(local, sta);
- 
-@@ -883,9 +887,6 @@ int __must_check __sta_info_destroy(struct sta_info *sta)
- 	local->num_sta--;
- 	local->sta_generation++;
- 
--	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
--		RCU_INIT_POINTER(sdata->u.vlan.sta, NULL);
--
- 	while (sta->sta_state > IEEE80211_STA_NONE) {
- 		ret = sta_info_move_state(sta, sta->sta_state - 1);
- 		if (ret) {
+It is really not urgent, and for keeping quality, it is necessary to
+spend suitable time resource (e.g 1 hour or more) to  make, review and
+test this kind of patch carefully by oneself.
+
+So could you please help improve it when you have suitable related time
+resources?
+
+
+Thanks.
 -- 
-1.8.4.rc3
-
+Chen Gang
