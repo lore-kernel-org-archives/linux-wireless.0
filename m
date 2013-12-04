@@ -1,47 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:32071 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752130Ab3LBXAe (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:49399 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756056Ab3LDWvy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Dec 2013 18:00:34 -0500
-From: Jingoo Han <jg1.han@samsung.com>
-To: 'Greg Kroah-Hartman' <gregkh@linuxfoundation.org>
-Cc: linux-kernel@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>,
-	"'John W. Linville'" <linville@tuxdriver.com>,
-	=?iso-8859-2?Q?'Rafa=B3_Mi=B3ecki'?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org
-References: <001501ceefb1$69c96820$3d5c3860$%han@samsung.com>
-In-reply-to: <001501ceefb1$69c96820$3d5c3860$%han@samsung.com>
-Subject: [PATCH 02/39] bcma: pci: remove DEFINE_PCI_DEVICE_TABLE macro
-Date: Tue, 03 Dec 2013 08:00:27 +0900
-Message-id: <001701ceefb2$4ad65260$e082f720$%han@samsung.com> (sfid-20131203_000307_390972_C7DAAF37)
-MIME-version: 1.0
-Content-type: text/plain; charset=iso-8859-2
+	Wed, 4 Dec 2013 17:51:54 -0500
+Message-ID: <1386197511.7669.6.camel@jlt4.sipsolutions.net> (sfid-20131204_235157_936716_440F37D1)
+Subject: Re: question for mac80211 driver maintainers - RCU usage in drivers
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 04 Dec 2013 23:51:51 +0100
+In-Reply-To: <3284918.YsYQbnYjhH@blech> (sfid-20131204_234714_914088_FAFC5473)
+References: <1386192610.5660.4.camel@jlt4.sipsolutions.net>
+	 <1409469.QTj73PAUiY@blech> <1386195829.7669.3.camel@jlt4.sipsolutions.net>
+	 <3284918.YsYQbnYjhH@blech> (sfid-20131204_234714_914088_FAFC5473)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Don't use DEFINE_PCI_DEVICE_TABLE macro, because this macro
-is not preferred.
+On Wed, 2013-12-04 at 23:47 +0100, Christian Lamparter wrote:
+> On Wednesday, December 04, 2013 11:23:49 PM Johannes Berg wrote:
+> > On Wed, 2013-12-04 at 23:16 +0100, Christian Lamparter wrote:
+> > > > Is there any other driver that assumes it is safe to delete a station
+> > > > pointer in the sta_state callback and not use synchronize_rcu()? From
+> > > > looking at the code, I don't see any, but I can't really be sure that
+> > > > everyone uses __rcu annotations correctly ... :)
+> > 
+> > > No, carl9170 doesn't use sta_state but it uses sta_remove. 
+> > 
+> > Yeah, I actually saw this. But I think you use it for aggregation
+> > sessions only? And the code didn't look like it could still get to the
+> > station pointer after it was removed with sta_remove() callback, but I
+> > may be wrong.
+> no, you are not wrong. The code gets its sta pointers either from 
+> callback-parameters or via ieee80211_get_sta. [But would it even be
+> possible to do it any other way? After all, this should crash "sooner
+> or later" otherwise].
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
----
- drivers/bcma/host_pci.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Yeah that's what I thought. Both of those are obviously fine. In iwlmvm,
+we have something like this:
 
-diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
-index 6fb98b5..6fe0909 100644
---- a/drivers/bcma/host_pci.c
-+++ b/drivers/bcma/host_pci.c
-@@ -270,7 +270,7 @@ static SIMPLE_DEV_PM_OPS(bcma_pm_ops, bcma_host_pci_suspend,
- 
- #endif /* CONFIG_PM_SLEEP */
- 
--static DEFINE_PCI_DEVICE_TABLE(bcma_pci_bridge_tbl) = {
-+static const struct pci_device_id bcma_pci_bridge_tbl[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x0576) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4313) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 43224) },
--- 
-1.7.10.4
+ struct ieee80211_sta __rcu *our_stations[16];
 
+and then just set it to NULL (well, simplifying a bit) on sta_remove
+(actually sta_state.)
+
+This is safe because after sta_state/sta_remove, mac80211 still does
+call_rcu() to really free the station, but it's kinda pointless. By
+adding the callback I'd suggested before to set this to NULL before the
+synchronize_net() in mac80211, I think we can get rid of the whole
+call_rcu() stuff.
+
+Anyway, right now my patch is breaking iwlmvm, I'll try to sort that out
+tomorrow and then post patches.
+
+johannes
 
