@@ -1,54 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f175.google.com ([209.85.217.175]:39917 "EHLO
-	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751650Ab3L2LpV (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:54424 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755564Ab3LDVlA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Dec 2013 06:45:21 -0500
+	Wed, 4 Dec 2013 16:41:00 -0500
+Received: by mail-wg0-f44.google.com with SMTP id a1so13927881wgh.35
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Dec 2013 13:40:58 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CALkVjQaWBq6--sekifyGfJt9FDigsk56eXMUv9YR3sDVnVcX=Q@mail.gmail.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
-	<CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
-	<52828364.6080103@gmail.com>
-	<CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
-	<CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
-	<CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
-	<CALkVjQaTnocYnV4GM=LHuYwMRZ=sOZnSrtna4C6anNAWr4O7=A@mail.gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB301E02E49@HASMSX103.ger.corp.intel.com>
-	<CALkVjQZdPuE2F+ZARBLha-+iOMA4AjDWHO4=ssnuF2Uu87RyuQ@mail.gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB301E02EC1@HASMSX103.ger.corp.intel.com>
-	<CALkVjQbPTkGuEa8hLVZE0OVatw7ho=D+D51Qu68PRx-0dYay7w@mail.gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB301E02FC6@HASMSX103.ger.corp.intel.com>
-	<CAErSpo6bKOpycD=cp08aBqp2U-u7sdbTSBYoHop1-1Hkmr3F-g@mail.gmail.com>
-	<CALkVjQaOHix5uxFGd-62negbfubz-rdP+zmj9w5wDEa1rCA75Q@mail.gmail.com>
-	<5285E028.20906@gmail.com>
-	<CALkVjQYT9P--dgez064je4vM-xve4uF5ptOVVk3DuVoQiWQvew@mail.gmail.com>
-	<CANUX_P1j9QNGQ2n02KpXsuMQcZo9uOsSN-zZ8yNS1e5+Y9bJOA@mail.gmail.com>
-	<CALkVjQYFJzP1E_YayPOjRu3u85WdpDojDD+DmU9ZehY7ZHF0AA@mail.gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB303D297F0@HASMSX103.ger.corp.intel.com>
-	<CALkVjQaJ94osfBwnrpKBk4tE_+=XMqznXY=qVv5KdzSkvsthaA@mail.gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB303D2D2C5@HASMSX103.ger.corp.intel.com>
-	<CALkVjQaWBq6--sekifyGfJt9FDigsk56eXMUv9YR3sDVnVcX=Q@mail.gmail.com>
-Date: Sun, 29 Dec 2013 13:45:19 +0200
-Message-ID: <CANUX_P21k4Tm460u1_SSD6Xrv2huDZR_EdZjOPh5wdhUfkqZGg@mail.gmail.com> (sfid-20131229_124527_391480_589C45ED)
-Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: wzyboy <wzyboy@wzyboy.org>
-Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Bj?rn Mork" <bjorn@mork.no>
-Content-Type: text/plain; charset=ISO-8859-1
+Date: Wed, 4 Dec 2013 22:40:58 +0100
+Message-ID: <CA+OxbLhpRV2GhHbYD_VpoWgdYfR1uV4g38OO=gT4WPEt=F8_Og@mail.gmail.com> (sfid-20131204_224104_474135_3272203B)
+Subject: Weak Signal and slow tx Rate with RTL8723AE
+From: =?ISO-8859-1?Q?David_Pinilla_Caparr=F3s?= <dpini@caliu.cat>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->
->
-> Here are the output of "PCI" and "PCI Index" of Intel Wireless.
->
->
+Hello,
 
-looks like all the power features are enabled... including the ones I
-told you to disable.
-I am lost now...
+I have mailed with Larry Finger asking for a problem and he has
+pointed me to this list.
+
+I am an Arch Linux User with a Clevo based laptop.
+
+It ships with the RTL8723AE. I have been reading posts around the net
+and found that some people are having problems and talking about the
+driver and something about the RX or TX Power.
+
+
+With the 2 APs wich I usually use I can only reach 18Mb/s of Bit rate
+whatever the signal level or link quality is. Both of them are 802.11
+G and not N I think.
+
+The connection is very unstable. Sometimes powering the wifi off and
+on increases the performance a bit when it's impossible to do anything
+(pings to gateway don't reply)
+
+If they are related to the driver, I would be proud to help with
+anything that I am able to. Testing for example.
+
+I have a recent version of the stable Kernel but I dont know if the
+firmware files are up to date.
+
+
+
+Some data:
+
+03:00.0 Network controller: Realtek Semiconductor Co., Ltd. RTL8723AE
+PCIe Wireless Network Adapter
+    Subsystem: Realtek Semiconductor Co., Ltd. Device 0726
+    Flags: bus master, fast devsel, latency 0, IRQ 18
+    I/O ports at d000 [size=256]
+    Memory at f7900000 (64-bit, non-prefetchable) [size=16K]
+    Capabilities: [40] Power Management version 3
+    Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
+    Capabilities: [70] Express Endpoint, MSI 00
+    Capabilities: [100] Advanced Error Reporting
+    Capabilities: [140] Virtual Channel
+    Capabilities: [160] Device Serial Number 01-23-87-fe-ff-4c-e0-00
+    Kernel driver in use: rtl8723ae
+    Kernel modules: rtl8723ae
+
+ root  ~  dmesg | grep rtl
+[    2.734124] rtl8723ae 0000:03:00.0: enabling device (0000 -> 0003)
+[    2.749732] rtl8723ae: Using firmware rtlwifi/rtl8723fw_B.bin
+[    2.752940] ieee80211 phy0: Selected rate control algorithm 'rtl_rc'
+[    2.753057] rtlwifi: wireless switch is on
+[ 8838.570486] rtlwifi: wireless switch is o
+
+
+ root  ~  uname -a
+Linux DPini-Laptop 3.12.2-1-ARCH #1 SMP PREEMPT Fri Nov 29 21:14:15
+CET 2013 x86_64 GNU/Linux
+
+
+Iwconfig:
+
+wlp3s0    IEEE 802.11bgn  ESSID:"Pinis_AP"
+          Mode:Managed  Frequency:2.462 GHz  Access Point: 00:1A:2B:12:34:56
+          Bit Rate=18 Mb/s   Tx-Power=20 dBm
+          Retry  long limit:7   RTS thr=2347 B   Fragment thr:off
+          Encryption key:off
+          Power Management:off
+          Link Quality=50/70  Signal level=-60 dBm
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:9   Missed beacon:0
+
+ root  ~  rfkill list
+0: phy0: Wireless LAN
+    Soft blocked: no
+    Hard blocked: no
+1: hci0: Bluetooth
+    Soft blocked: no
+    Hard blocked: no
+
+ root  ⋯  lib  firmware  rtlwifi  md5sum rtl8723fw*
+ce50dfe07dbb1bfe9e14bdb315a4b28a  rtl8723fw_B.bin
+69ccaffbe94cc0ef1b89c25290e19b2e  rtl8723fw.bin
+
+
+
+Thank you for all, and sorry for my English.
+
+Best regards,
+David
