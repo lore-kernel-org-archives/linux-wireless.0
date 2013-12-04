@@ -1,52 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:52945 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753144Ab3LCNs2 (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:23573 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753411Ab3LDUfJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Dec 2013 08:48:28 -0500
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
-	yeohchunyeow@gmail.com
-Cc: yeohchunyeow@cozybit.com
-Subject: [PATCH v6 0/5] CSA beacon count changes
-Date: Tue,  3 Dec 2013 15:48:17 +0200
-Message-Id: <1386078502-19845-1-git-send-email-luciano.coelho@intel.com> (sfid-20131203_144834_719578_5B295563)
+	Wed, 4 Dec 2013 15:35:09 -0500
+Date: Wed, 4 Dec 2013 23:34:51 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: nbd@openwrt.org
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net
+Subject: re: ath5k: fix tx status reporting issues
+Message-ID: <20131204203451.GA18708@elgon.mountain> (sfid-20131204_213514_624501_958776C0)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hello Felix Fietkau,
 
-This is a new version of my patchset.  Now it's rebased on the latest
-mac80211-next, so all the locking changes are included.  I hope the
-warnings observed with mesh and IBSS go away now that the locks are
-working properly.
+The patch 6d7b97b23e11: "ath5k: fix tx status reporting issues" from 
+Apr 9, 2011, leads to the following
+static checker warning: "drivers/net/wireless/ath/ath5k/base.c:1683 
+ath5k_tx_frame_completed()
+	 error: buffer overflow 'info->status.rates' 4 <= 4"
 
-Simon and Chun-Yeow, it would be great if you could re-test this
-updated version and let me know how it goes.
+drivers/net/wireless/ath/ath5k/base.c
+  1675          for (i = 0; i < ts->ts_final_idx; i++) {
+  1676                  struct ieee80211_tx_rate *r =
+  1677                          &info->status.rates[i];
+  1678  
+  1679                  r->count = tries[i];
+  1680          }
+  1681  
+  1682          info->status.rates[ts->ts_final_idx].count = ts->ts_final_retry;
+  1683          info->status.rates[ts->ts_final_idx + 1].idx = -1;
+                                   ^^^^^^^^^^^^^^^^^^^^
+It's complaining about this.
 
-Thanks!
+  1684  
 
-Luca.
+->ts_final_idx is set in ath5k_hw_proc_4word_tx_status() it comes from
+the hardware but in theory it could be a number between 0-3...  I'm not
+sure.
 
-Luciano Coelho (5):
-  mac80211: refactor ieee80211_ibss_process_chanswitch()
-  mac80211: align ieee80211_ibss_csa_beacon() with
-    ieee80211_csa_beacon()
-  mac80211: refactor ieee80211_mesh_process_chanswitch()
-  mac80211: align ieee80211_mesh_csa_beacon() with
-    ieee80211_csa_beacon()
-  mac80211: only set CSA beacon when at least one beacon must be
-    transmitted
-
- include/net/mac80211.h     |  10 ++--
- net/mac80211/cfg.c         | 120 +++++++++++++++++++++++++++++++++++----------
- net/mac80211/ibss.c        |  78 +++++++----------------------
- net/mac80211/ieee80211_i.h |  11 +++--
- net/mac80211/mesh.c        |  78 ++++++-----------------------
- net/mac80211/tx.c          |  19 +++----
- net/mac80211/util.c        |   1 -
- 7 files changed, 148 insertions(+), 169 deletions(-)
-
--- 
-1.8.4.2
+regards,
+dan carpenter
 
