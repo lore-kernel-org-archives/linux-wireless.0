@@ -1,38 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:51813 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932270Ab3LDNHd convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:34695 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933090Ab3LDTPy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Dec 2013 08:07:33 -0500
-From: "Stepanov, Max" <Max.Stepanov@intel.com>
-To: 'Dan Carpenter' <dan.carpenter@oracle.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: mac80211: add generic cipher scheme support
-Date: Wed, 4 Dec 2013 13:07:29 +0000
-Message-ID: <3A934E7FDB083A4683727C7D377065951172F2E5@HASMSX105.ger.corp.intel.com> (sfid-20131204_140745_258084_01EB90C5)
-References: <20131203163712.GA1857@elgon.mountain>
-In-Reply-To: <20131203163712.GA1857@elgon.mountain>
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 4 Dec 2013 14:15:54 -0500
+Received: by mail-wi0-f182.google.com with SMTP id en1so8706636wid.3
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Dec 2013 11:15:53 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <1386092034-13442-3-git-send-email-mcgrof@do-not-panic.com>
+References: <1386092034-13442-1-git-send-email-mcgrof@do-not-panic.com> <1386092034-13442-3-git-send-email-mcgrof@do-not-panic.com>
+From: Mihir Shete <mihirsht@gmail.com>
+Date: Thu, 5 Dec 2013 00:45:33 +0530
+Message-ID: <CAOHe==HZrDHCA+L5-2+y-p68mRzpD1Vwye+1N48zhxoQEhU57A@mail.gmail.com> (sfid-20131204_201609_047038_A48D293B)
+Subject: Re: [RFT 2/2] cfg80211: make regulatory_hint() remove REGULATORY_CUSTOM_REG
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: c_manoha@qca.qualcomm.com, linville@tuxdriver.com,
+	johannes@sipsolutions.net,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->   304                  if (pairwise)
->   305                          key = rcu_dereference(sta->ptk[key_idx]);
->   306                  else if (key_idx < NUM_DEFAULT_KEYS)
->   307                          key = rcu_dereference(sta->gtk[key_idx]);
+> @@ -1826,6 +1826,8 @@ int regulatory_hint(struct wiphy *wiphy, const char *alpha2)
+>         if (WARN_ON(!alpha2 || !wiphy))
+>                 return -EINVAL;
 >
->key_idx is a number between 0 and 5.
->NUM_DEFAULT_KEYS is 4.
->->ptk has 4 elements.
->->gtk has 6 elements.
->
->I looked but I didn't see that "pairwise" implied that key_idx is less than 4.
->These are set in nl80211_get_key().
+> +       wiphy->regulatory_flags &= ~REGULATORY_STRICT_REG;
+> +
+Clear REGULATORY_CUSTOM_REG
 
-Hi Dan,
 
-1. ptk - I think you are right here - need to verify that key_idx doesn't exceed sta->ptk array boundaries. I'll prepare the fix
-2. gtk - frankly I'm not sure about key_idx < NUM_DEFAULT_KEYS. I understand why it's here: not to return management keys, but I don't see a reason why not to do it... In any case I'll prepare the fix for this case too
 
-Max
+-- 
+~Mihir~
