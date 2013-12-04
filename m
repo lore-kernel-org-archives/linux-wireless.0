@@ -1,104 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f174.google.com ([209.85.215.174]:41142 "EHLO
-	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752494Ab3LBPeK (ORCPT
+Received: from mail-yh0-f49.google.com ([209.85.213.49]:43566 "EHLO
+	mail-yh0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754072Ab3LDNZc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Dec 2013 10:34:10 -0500
-Received: by mail-ea0-f174.google.com with SMTP id b10so9017330eae.19
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Dec 2013 07:34:09 -0800 (PST)
-From: Marek Kwaczynski <marek.kwaczynski@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	Marek Kwaczynski <marek.kwaczynski@tieto.com>
-Subject: [PATCH 1/2] nl80211/cfg80211: Set VHT Operating mode
-Date: Mon,  2 Dec 2013 16:33:58 +0100
-Message-Id: <1385998439-27632-1-git-send-email-marek.kwaczynski@tieto.com> (sfid-20131202_163414_795209_0ED995B3)
+	Wed, 4 Dec 2013 08:25:32 -0500
+Date: Wed, 4 Dec 2013 11:25:27 -0200
+From: Gustavo Padovan <gustavo@padovan.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: bluetooth-next 2013-12-04
+Message-ID: <20131204132527.GD1608@joana> (sfid-20131204_142549_331776_932CA94E)
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="6c2NcOVqGQ03X4Wi"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This attribuite is needed for setting Operating Mode Notification
-in AP mode from User Space. This functionality is required when
-User Space received Assoc Reqeust contains VHT Operation Mode
-Notification element.
 
-Signed-off-by: Marek Kwaczynski <marek.kwaczynski@tieto.com>
+--6c2NcOVqGQ03X4Wi
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+Hi John,
+
+This is the first batch of patches intended for 3.14. There is nothing big here.
+Most of the code are refactors, clean up, small fixes, plus some new device id
+support.
+
+Please pull or let me know of any problems! Thanks.
+
+	Gustavo
+
 ---
- include/net/cfg80211.h       |    4 ++++
- include/uapi/linux/nl80211.h |    6 ++++++
- net/wireless/nl80211.c       |    7 +++++++
- 3 files changed, 17 insertions(+)
+The following changes since commit 4b074b07625f603d40d4d04937f8874a00415dc4:
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 3eae46c..0b66d91 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -748,6 +748,8 @@ enum station_parameters_apply_mask {
-  * @supported_channels_len: number of supported channels
-  * @supported_oper_classes: supported oper classes in IEEE 802.11 format
-  * @supported_oper_classes_len: number of supported operating classes
-+ * @vht_opmode: operating mode field
-+ * @vht_opmode_used: information if operating mode field is used
-  */
- struct station_parameters {
- 	const u8 *supported_rates;
-@@ -771,6 +773,8 @@ struct station_parameters {
- 	u8 supported_channels_len;
- 	const u8 *supported_oper_classes;
- 	u8 supported_oper_classes_len;
-+	u8 vht_opmode;
-+	bool vht_opmode_used;
- };
- 
- /**
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index f752e98..0240e7d 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1508,6 +1508,10 @@ enum nl80211_commands {
-  *	to react to radar events, e.g. initiate a channel switch or leave the
-  *	IBSS network.
-  *
-+ * @NL80211_ATTR_VHT_OPMODE: Operating mode field from Operating Mode
-+ *	Notification Element based on association request when used with
-+ *	NL80211_CMD_NEW_STATION
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1824,6 +1828,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_HANDLE_DFS,
- 
-+	NL80211_ATTR_VHT_OPMODE,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index a7f4e79..ddd1f71 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -357,6 +357,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 	[NL80211_ATTR_STA_SUPPORTED_CHANNELS] = { .type = NLA_BINARY },
- 	[NL80211_ATTR_STA_SUPPORTED_OPER_CLASSES] = { .type = NLA_BINARY },
- 	[NL80211_ATTR_HANDLE_DFS] = { .type = NLA_FLAG },
-+	[NL80211_ATTR_VHT_OPMODE] = { .type = NLA_U8 },
- };
- 
- /* policy for the key attributes */
-@@ -4125,6 +4126,12 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 		params.vht_capa =
- 			nla_data(info->attrs[NL80211_ATTR_VHT_CAPABILITY]);
- 
-+	if (info->attrs[NL80211_ATTR_VHT_OPMODE]) {
-+		params.vht_opmode_used = true;
-+		params.vht_opmode =
-+			nla_get_u8(info->attrs[NL80211_ATTR_VHT_OPMODE]);
-+	}
-+
- 	if (info->attrs[NL80211_ATTR_STA_PLINK_ACTION]) {
- 		params.plink_action =
- 			nla_get_u8(info->attrs[NL80211_ATTR_STA_PLINK_ACTION]);
--- 
-1.7.9.5
+  Merge branch 'for-john' of git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next (2013-12-02 14:25:38 -0500)
 
+are available in the git repository at:
+
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next.git for-upstream
+
+for you to fetch changes up to 201a5929c8c788f9ef53b010065c9ce70c9c06f0:
+
+  Bluetooth: Remove dead code from SMP encryption function (2013-12-04 11:09:05 -0200)
+
+----------------------------------------------------------------
+Andre Guedes (5):
+      Bluetooth: Check address in mgmt_disconnect_failed()
+      Bluetooth: Add an extra check in mgmt_device_disconnected()
+      Bluetooth: Remove link type check in hci_disconn_complete_evt()
+      Bluetooth: Remove unneeded check in hci_disconn_complete_evt()
+      Bluetooth: Refactor hci_disconn_complete_evt
+
+Bing Zhao (3):
+      Bluetooth: btmrvl: operate on 16-bit opcodes instead of ogf/ocf
+      Bluetooth: btmrvl: use cal-data from device-tree instead of conf file
+      Bluetooth: btmrvl: remove cal-data byte swapping and redundant mem copy
+
+Johan Hedberg (3):
+      Bluetooth: Remove unnecessary 'send' parameter from smp_failure()
+      Bluetooth: Remove useless smp_rand function
+      Bluetooth: Remove dead code from SMP encryption function
+
+Marcel Holtmann (4):
+      Bluetooth: Fix limited discoverable mode for Zeevo modules
+      Bluetooth: Set default own address type only during controller setup
+      Bluetooth: Remove debug statement for features complete event
+      Bluetooth: Store supported commands only during setup procedure
+
+Sujith Manoharan (2):
+      Bluetooth: ath3k: Add support for another AR3012 card
+      Bluetooth: ath3k: Add support for a new AR3012 device
+
+Tedd Ho-Jeong An (2):
+      Bluetooth: Add support for Intel Bluetooth device [8087:0a2a]
+      Bluetooth: Enable autosuspend for Intel Bluetooth device
+
+ drivers/bluetooth/ath3k.c       |   4 ++
+ drivers/bluetooth/btmrvl_drv.h  |  25 +++++-----
+ drivers/bluetooth/btmrvl_main.c | 130 ++++++++++++---------------------------------------
+ drivers/bluetooth/btmrvl_sdio.c |   9 +---
+ drivers/bluetooth/btmrvl_sdio.h |   2 -
+ drivers/bluetooth/btusb.c       |   7 ++-
+ net/bluetooth/hci_core.c        |  20 ++++----
+ net/bluetooth/hci_event.c       |  72 +++++++++++++---------------
+ net/bluetooth/mgmt.c            |  17 ++++++-
+ net/bluetooth/smp.c             |  40 +++++-----------
+ 10 files changed, 124 insertions(+), 202 deletions(-)
+
+
+--6c2NcOVqGQ03X4Wi
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.15 (GNU/Linux)
+
+iQIcBAEBAgAGBQJSny1HAAoJEPs3PUX4s20oN78P/19j7gjAyV3fpN6MKwGAOed2
+PRSfOhF+wamFApivrWFmceF3aEnUkSV7F4dJUshUEQ25GiubD9Nkx6eiISpJ6xtM
+2jC8Zf//ntdSWwwFzuULeWI3xVT2McOOk2BnPU4jAXOBZLeRZuwujFi9pNFt63AE
+sdseeUIumrit47o5589oNRTduOUaPX2Tl+niqWIRh3Eqc2JTDadp5Ny61k7fzctz
+C4MUdO8YRO59MPIDmLLx9M40ApUZvNO12aaZlNIIZLio21D6912Oe2tWf0R2WE3O
+wOCqq+UsalSSgOMYfTqMDLvj86C7OsIP9oN87lBjNzfhGoR9O0Li6nIlV7nqq2cA
+IDjFkk9ysGkSLTkN31DazDJkjted2FawjzOyqp9ReW89kts1w3+6d4bt2PaSgN1X
+x2BS0SX0IpVUNEdO6L9POAyq0jG3jBSwoIrWJXKjCUFlYscgCEZMWU/V4HSQLEDe
+ZMNwS5WcDzUGnTnPktrfSbQe3nYilz31lBRDhXF6cuGAy3Fw8PXtcOWppBXpd9wI
+NX1/HfPgjkwf/4PaHnoTnOcUR66JK9KPyagHrYq13YGyzPHsevF0t/7bZ0ua2FNi
+p71ucuPSbM/FAgyS+W0a9crnIEH82F/uixvtiPXl6HBlpTf8pw3f6uyeUCi8T/5U
+Uw2e4vyQEL+fnSI0RTb6
+=aM32
+-----END PGP SIGNATURE-----
+
+--6c2NcOVqGQ03X4Wi--
