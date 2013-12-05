@@ -1,131 +1,179 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f52.google.com ([74.125.83.52]:64905 "EHLO
-	mail-ee0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753653Ab3LQUpY (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:51762 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756340Ab3LEMgF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Dec 2013 15:45:24 -0500
-Received: by mail-ee0-f52.google.com with SMTP id d17so3142137eek.39
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Dec 2013 12:45:23 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+	Thu, 5 Dec 2013 07:36:05 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: Eyal Shapira <eyal@wizery.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 27/36] iwlwifi: mvm: rs: avoid recalc of supported legacy rate mask
-Date: Tue, 17 Dec 2013 22:44:30 +0200
-Message-Id: <1387313079-28123-27-git-send-email-egrumbach@gmail.com> (sfid-20131217_214553_442902_9119D24E)
-In-Reply-To: <52B0B72A.5070704@gmail.com>
-References: <52B0B72A.5070704@gmail.com>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 8/8] mac80211: free all AP/VLAN keys at once
+Date: Thu,  5 Dec 2013 13:35:56 +0100
+Message-Id: <1386246956-14257-9-git-send-email-johannes@sipsolutions.net> (sfid-20131205_133625_013593_EA235566)
+In-Reply-To: <1386246956-14257-1-git-send-email-johannes@sipsolutions.net>
+References: <1386192610.5660.4.camel@jlt4.sipsolutions.net>
+ <1386246956-14257-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-The supported legacy rate mask is initialized when rs
-is initialized based on the remote peer supported rates.
-There's no need to re mask it repeatedly with the supported
-remote peer rates.
+When the AP interface is stopped, free all AP and VLAN keys at
+once to only require synchronize_net() once. Since that does
+synchronize_net(), also move two such calls into the function
+(using the new force_synchronize parameter) to avoid doing it
+twice.
 
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/rs.c |   36 ++-------------------------------
- drivers/net/wireless/iwlwifi/mvm/rs.h |    1 -
- 2 files changed, 2 insertions(+), 35 deletions(-)
+ net/mac80211/cfg.c   |  5 +----
+ net/mac80211/iface.c | 19 ++++++++-----------
+ net/mac80211/key.c   | 44 ++++++++++++++++++++++++++++++++------------
+ net/mac80211/key.h   |  3 ++-
+ 4 files changed, 43 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
-index eee3381..30470d4 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
-@@ -880,16 +880,6 @@ static void rs_get_lower_rate(struct iwl_lq_sta *lq_sta,
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index b045deb2..556809a 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1098,10 +1098,7 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
+ 		kfree_rcu(old_probe_resp, rcu_head);
  
- 	rate_mask = rs_get_supported_rates(lq_sta, rate);
+ 	__sta_info_flush(sdata, true);
+-	synchronize_net();
+-	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
+-		ieee80211_free_keys(vlan);
+-	ieee80211_free_keys(sdata);
++	ieee80211_free_keys(sdata, true);
  
--	/* Mask with station rate restriction */
--	if (is_legacy(rate)) {
--		/* supp_rates has no CCK bits in A mode */
--		if (lq_sta->band == IEEE80211_BAND_5GHZ)
--			rate_mask = (u16)(rate_mask &
--			   (lq_sta->supp_rates << IWL_FIRST_OFDM_RATE));
--		else
--			rate_mask = (u16)(rate_mask & lq_sta->supp_rates);
--	}
+ 	sdata->vif.bss_conf.enable_beacon = false;
+ 	sdata->vif.bss_conf.ssid_len = 0;
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index c5e9a11..3ef9674 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -889,18 +889,15 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 		cancel_work_sync(&sdata->work);
+ 		/*
+ 		 * When we get here, the interface is marked down.
++		 * Free the remaining keys, if there are any
++		 * (shouldn't be, except maybe in WDS mode?)
+ 		 *
+-		 * We need synchronize_rcu() to wait for the RX path in
+-		 * case it is using the interface and enqueuing frames
+-		 * at this very time on another CPU.
++		 * Force the key freeing to always synchronize_net()
++		 * to wait for the RX path in case it is using this
++		 * interface enqueuing frames * at this very time on
++		 * another CPU.
+ 		 */
+-		synchronize_rcu();
 -
- 	/* If we switched from HT to legacy, check current rate */
- 	if (switch_to_legacy && (rate_mask & (1 << scale_index))) {
- 		low = scale_index;
-@@ -1629,7 +1619,6 @@ static void rs_rate_scale_perform(struct iwl_mvm *mvm,
- 	u16 rate_mask;
- 	u8 update_lq = 0;
- 	struct iwl_scale_tbl_info *tbl, *tbl1;
--	u16 rate_scale_index_msk = 0;
- 	u8 active_tbl = 0;
- 	u8 done_search = 0;
- 	u16 high_low;
-@@ -1646,8 +1635,6 @@ static void rs_rate_scale_perform(struct iwl_mvm *mvm,
- 	    info->flags & IEEE80211_TX_CTL_NO_ACK)
- 		return;
+-		/*
+-		 * Free all remaining keys, there shouldn't be any,
+-		 * except maybe in WDS mode?
+-		 */
+-		ieee80211_free_keys(sdata);
++		ieee80211_free_keys(sdata, true);
  
--	lq_sta->supp_rates = sta->supp_rates[lq_sta->band];
+ 		/* fall through */
+ 	case NL80211_IFTYPE_AP:
+@@ -1026,7 +1023,7 @@ static void ieee80211_teardown_sdata(struct ieee80211_sub_if_data *sdata)
+ 	int i;
+ 
+ 	/* free extra data */
+-	ieee80211_free_keys(sdata);
++	ieee80211_free_keys(sdata, false);
+ 
+ 	ieee80211_debugfs_remove_netdev(sdata);
+ 
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index 12e6154..6ff65a1 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -589,14 +589,10 @@ void ieee80211_iter_keys(struct ieee80211_hw *hw,
+ }
+ EXPORT_SYMBOL(ieee80211_iter_keys);
+ 
+-void ieee80211_free_keys(struct ieee80211_sub_if_data *sdata)
++static void ieee80211_free_keys_iface(struct ieee80211_sub_if_data *sdata,
++				      struct list_head *keys)
+ {
+ 	struct ieee80211_key *key, *tmp;
+-	LIST_HEAD(keys);
 -
- 	tid = rs_get_tid(lq_sta, hdr);
- 	if ((tid != IWL_MAX_TID_COUNT) &&
- 	    (lq_sta->tx_agg_tid_en & (1 << tid))) {
-@@ -1686,24 +1673,7 @@ static void rs_rate_scale_perform(struct iwl_mvm *mvm,
- 	/* rates available for this association, and for modulation mode */
- 	rate_mask = rs_get_supported_rates(lq_sta, rate);
- 
--	/* mask with station rate restriction */
--	if (is_legacy(rate)) {
--		if (lq_sta->band == IEEE80211_BAND_5GHZ)
--			/* supp_rates has no CCK bits in A mode */
--			rate_scale_index_msk = (u16) (rate_mask &
--				(lq_sta->supp_rates << IWL_FIRST_OFDM_RATE));
--		else
--			rate_scale_index_msk = (u16) (rate_mask &
--						      lq_sta->supp_rates);
+-	cancel_delayed_work_sync(&sdata->dec_tailroom_needed_wk);
 -
--	} else {
--		rate_scale_index_msk = rate_mask;
--	}
--
--	if (!rate_scale_index_msk)
--		rate_scale_index_msk = rate_mask;
--
--	if (!((BIT(index) & rate_scale_index_msk))) {
-+	if (!(BIT(index) & rate_mask)) {
- 		IWL_ERR(mvm, "Current Rate is not valid\n");
- 		if (lq_sta->search_better_tbl) {
- 			/* revert to active table if search table is not valid*/
-@@ -1816,8 +1786,7 @@ static void rs_rate_scale_perform(struct iwl_mvm *mvm,
+-	mutex_lock(&sdata->local->key_mtx);
  
- 	/* (Else) not in search of better modulation mode, try for better
- 	 * starting rate, while staying in this mode. */
--	high_low = rs_get_adjacent_rate(mvm, index, rate_scale_index_msk,
--					rate->type);
-+	high_low = rs_get_adjacent_rate(mvm, index, rate_mask, rate->type);
- 	low = high_low & 0xff;
- 	high = (high_low >> 8) & 0xff;
+ 	sdata->crypto_tx_tailroom_needed_cnt -=
+ 		sdata->crypto_tx_tailroom_pending_dec;
+@@ -608,21 +604,45 @@ void ieee80211_free_keys(struct ieee80211_sub_if_data *sdata)
+ 		ieee80211_key_replace(key->sdata, key->sta,
+ 				key->conf.flags & IEEE80211_KEY_FLAG_PAIRWISE,
+ 				key, NULL);
+-		list_add_tail(&key->list, &keys);
++		list_add_tail(&key->list, keys);
+ 	}
  
-@@ -2253,7 +2222,6 @@ void iwl_mvm_rs_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 			rs_rate_scale_clear_window(&lq_sta->lq_info[j].win[i]);
+ 	ieee80211_debugfs_key_update_default(sdata);
++}
  
- 	lq_sta->flush_timer = 0;
--	lq_sta->supp_rates = sta->supp_rates[sband->band];
+-	if (!list_empty(&keys)) {
+-		synchronize_net();
+-		list_for_each_entry_safe(key, tmp, &keys, list)
+-			__ieee80211_key_destroy(key, false);
++void ieee80211_free_keys(struct ieee80211_sub_if_data *sdata,
++			 bool force_synchronize)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_sub_if_data *vlan;
++	struct ieee80211_key *key, *tmp;
++	LIST_HEAD(keys);
++
++	cancel_delayed_work_sync(&sdata->dec_tailroom_needed_wk);
++
++	mutex_lock(&local->key_mtx);
++
++	ieee80211_free_keys_iface(sdata, &keys);
++
++	if (sdata->vif.type == NL80211_IFTYPE_AP) {
++		list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
++			ieee80211_free_keys_iface(vlan, &keys);
+ 	}
  
- 	IWL_DEBUG_RATE(mvm,
- 		       "LQ: *** rate scale station global init for station %d ***\n",
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.h b/drivers/net/wireless/iwlwifi/mvm/rs.h
-index 7b26e65..c31aa59 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.h
-@@ -314,7 +314,6 @@ struct iwl_lq_sta {
- 	enum ieee80211_band band;
++	if (!list_empty(&keys) || force_synchronize)
++		synchronize_net();
++	list_for_each_entry_safe(key, tmp, &keys, list)
++		__ieee80211_key_destroy(key, false);
++
+ 	WARN_ON_ONCE(sdata->crypto_tx_tailroom_needed_cnt ||
+ 		     sdata->crypto_tx_tailroom_pending_dec);
++	if (sdata->vif.type == NL80211_IFTYPE_AP) {
++		list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
++			WARN_ON_ONCE(vlan->crypto_tx_tailroom_needed_cnt ||
++				     vlan->crypto_tx_tailroom_pending_dec);
++	}
  
- 	/* The following are bitmaps of rates; IWL_RATE_6M_MASK, etc. */
--	u32 supp_rates;
- 	u16 active_legacy_rate;
- 	u16 active_siso_rate;
- 	u16 active_mimo2_rate;
+-	mutex_unlock(&sdata->local->key_mtx);
++	mutex_unlock(&local->key_mtx);
+ }
+ 
+ void ieee80211_free_sta_keys(struct ieee80211_local *local,
+diff --git a/net/mac80211/key.h b/net/mac80211/key.h
+index 0aebb88..19db686 100644
+--- a/net/mac80211/key.h
++++ b/net/mac80211/key.h
+@@ -136,7 +136,8 @@ void ieee80211_set_default_key(struct ieee80211_sub_if_data *sdata, int idx,
+ 			       bool uni, bool multi);
+ void ieee80211_set_default_mgmt_key(struct ieee80211_sub_if_data *sdata,
+ 				    int idx);
+-void ieee80211_free_keys(struct ieee80211_sub_if_data *sdata);
++void ieee80211_free_keys(struct ieee80211_sub_if_data *sdata,
++			 bool force_synchronize);
+ void ieee80211_free_sta_keys(struct ieee80211_local *local,
+ 			     struct sta_info *sta);
+ void ieee80211_enable_keys(struct ieee80211_sub_if_data *sdata);
 -- 
-1.7.9.5
+1.8.4.rc3
 
