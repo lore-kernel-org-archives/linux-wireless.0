@@ -1,40 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:53610 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752366Ab3LBHnA (ORCPT
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:43659 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932419Ab3LEPZs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Dec 2013 02:43:00 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Bartosz Markowski <bartosz.markowski@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: Re: [PATCH] ath10k: fix multi BSSID with WPA on FW 10.1
-References: <1385737763-10481-1-git-send-email-bartosz.markowski@tieto.com>
-Date: Mon, 2 Dec 2013 09:42:55 +0200
-In-Reply-To: <1385737763-10481-1-git-send-email-bartosz.markowski@tieto.com>
-	(Bartosz Markowski's message of "Fri, 29 Nov 2013 16:09:23 +0100")
-Message-ID: <87wqjnbsw0.fsf@kamboji.qca.qualcomm.com> (sfid-20131202_084304_912763_393D4B1A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 5 Dec 2013 10:25:48 -0500
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
+	yeohchunyeow@gmail.com
+Cc: yeohchunyeow@cozybit.com, andrei.otcheretianski@intel.com
+Subject: [PATCH v8 2/5] mac80211: align ieee80211_ibss_csa_beacon() with ieee80211_csa_beacon()
+Date: Thu,  5 Dec 2013 17:25:40 +0200
+Message-Id: <1386257143-29840-3-git-send-email-luciano.coelho@intel.com> (sfid-20131205_162557_861102_266BC040)
+In-Reply-To: <1386257143-29840-1-git-send-email-luciano.coelho@intel.com>
+References: <1386257143-29840-1-git-send-email-luciano.coelho@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bartosz Markowski <bartosz.markowski@tieto.com> writes:
+The return value of ieee80211_ibss_csa_beacon is not aligned with the
+return value of ieee80211_csa_beacon().  For consistency and to be
+able to use both functions with similar code, change
+ieee80211_ibss_csa_beacon() not to send the bss changed notification
+itself, but return what has changed so the caller can send the
+notification instead.
 
-> From: Michal Kazior <michal.kazior@tieto.com>
->
-> FW 10.1 seems to require the default key index to
-> be updated to point to group key after it is
-> installed. Otherwise Txed frames are corrupted.
->
-> Tested-by: Tomasz Skapski <tomasz.skapski@tieto.com>
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+ net/mac80211/ibss.c | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
-I see few checkpatch warnings:
-
-drivers/net/wireless/ath/ath10k/mac.c:2721: ERROR: code indent should use tabs where possible
-drivers/net/wireless/ath/ath10k/mac.c:2722: ERROR: code indent should use tabs where possible
-drivers/net/wireless/ath/ath10k/mac.c:2723: ERROR: code indent should use tabs where possible
-
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 3514aab..23e035f 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -522,7 +522,7 @@ int ieee80211_ibss_csa_beacon(struct ieee80211_sub_if_data *sdata,
+ 	if (csa_settings)
+ 		ieee80211_send_action_csa(sdata, csa_settings);
+ 
+-	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
++	return BSS_CHANGED_BEACON;
+  out:
+ 	return ret;
+ }
+@@ -559,11 +559,17 @@ int ieee80211_ibss_finish_csa(struct ieee80211_sub_if_data *sdata)
+ 
+ 	/* generate the beacon */
+ 	err = ieee80211_ibss_csa_beacon(sdata, NULL);
+-	sdata_unlock(sdata);
+ 	if (err < 0)
+-		return err;
++		goto out;
+ 
+-	return 0;
++	if (err) {
++		ieee80211_bss_info_change_notify(sdata, err);
++		err = 0;
++	}
++out:
++	sdata_unlock(sdata);
++
++	return err;
+ }
+ 
+ void ieee80211_ibss_stop(struct ieee80211_sub_if_data *sdata)
 -- 
-Kalle Valo
+1.8.4.3
+
