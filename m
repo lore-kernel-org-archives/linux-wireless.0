@@ -1,74 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f45.google.com ([74.125.83.45]:33439 "EHLO
-	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751149Ab3LQJWb (ORCPT
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:58171 "EHLO
+	mail.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753559Ab3LEKZV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Dec 2013 04:22:31 -0500
-Received: by mail-ee0-f45.google.com with SMTP id d49so2743531eek.4
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Dec 2013 01:22:28 -0800 (PST)
-Date: Tue, 17 Dec 2013 10:21:20 +0100
-From: Henrik Austad <henrik@austad.us>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	linux-rt-users@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [RFC 00/10] make iwlwifi RT friendly
-Message-ID: <20131217092120.GA28480@austad.us> (sfid-20131217_102238_136222_14578E89)
-References: <1386750826-25219-1-git-send-email-emmanuel.grumbach@intel.com>
- <20131215154843.GL31090@linutronix.de>
- <52ADEAAF.3080107@gmail.com>
- <52ADEB0D.3080306@linutronix.de>
- <52ADEBDF.5060406@gmail.com>
+	Thu, 5 Dec 2013 05:25:21 -0500
+Message-ID: <52A05325.2070501@openwrt.org> (sfid-20131205_112523_897088_4907AC69)
+Date: Thu, 05 Dec 2013 11:19:17 +0100
+From: Gabor Juhos <juhosg@openwrt.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="d6Gm4EdcadzBjdND"
-In-Reply-To: <52ADEBDF.5060406@gmail.com>
+To: Sujith Manoharan <sujith@msujith.org>,
+	linux-wireless@vger.kernel.org
+CC: ath9k-devel@lists.ath9k.org
+Subject: Re: [RFC 08/12] ath9k: Use a separate TX gain table for WZR-HP-G450H
+References: <1386233177-11132-1-git-send-email-sujith@msujith.org> <1386233177-11132-9-git-send-email-sujith@msujith.org>
+In-Reply-To: <1386233177-11132-9-git-send-email-sujith@msujith.org>
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2013.12.05. 9:46 keltezéssel, Sujith Manoharan írta:
+> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+> 
+> The Buffalo device WZR-HP-G450H uses the index 3 for TX gain,
+> which is set to the high_power table currently. Later variants
+> of the router use the same index, but instead refer to the
+> low_ob_db gain table. This is not handled in the driver since
+> there is no way to distinguish board revisions and the high_power
+> table is used (incorrectly) for the newer variants.
+> 
+> By default, devices based on AR9300 using the TX gain index 3 have
+> to use the high_power table. To make sure that WZR-HP-G450H is not
+> broken when the high_power table is updated, use a separate array
+> based on information obtained from the platform data.
+> 
+> The current situation where only the original variant of WZR-HP-G450H
+> works properly stays unchanged.
+> 
+> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
---d6Gm4EdcadzBjdND
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+<...>
 
-On Sun, Dec 15, 2013 at 07:50:23PM +0200, Emmanuel Grumbach wrote:
->=20
->=20
-> On 12/15/2013 07:46 PM, Sebastian Andrzej Siewior wrote:
-> > On 12/15/2013 06:45 PM, Emmanuel Grumbach wrote:
-> >> No we don't. The primary interrupt just tells the hardware to stop
-> >> firing interrupts and wakes up the thread as written above.
-> >=20
-> > Sounds great then.
-> >=20
->=20
-> Ok - I guess I'll submit then internally then before we send them upstrea=
-m.
+> diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+> index 8f4c167..998335c 100644
+> --- a/drivers/net/wireless/ath/ath9k/init.c
+> +++ b/drivers/net/wireless/ath/ath9k/init.c
+> @@ -554,7 +554,7 @@ static void ath9k_init_misc(struct ath_softc *sc)
+>  	sc->spec_config.fft_period = 0xF;
+>  }
+>  
+> -static void ath9k_init_platform(struct ath_softc *sc)
+> +static void ath9k_init_pcoem_platform(struct ath_softc *sc)
+>  {
+>  	struct ath_hw *ah = sc->sc_ah;
+>  	struct ath9k_hw_capabilities *pCap = &ah->caps;
+> @@ -664,6 +664,27 @@ static void ath9k_eeprom_release(struct ath_softc *sc)
+>  	release_firmware(sc->sc_ah->eeprom_blob);
+>  }
+>  
+> +static int ath9k_init_soc_platform(struct ath_softc *sc)
+> +{
+> +	struct ath9k_platform_data *pdata = sc->dev->platform_data;
+> +	struct ath_hw *ah = sc->sc_ah;
+> +	int ret = 0;
+> +
+> +	if (!pdata)
+> +		return 0;
+> +
+> +	if (pdata->eeprom_name) {
+> +		ret = ath9k_eeprom_request(sc, pdata->eeprom_name);
+> +		if (ret)
+> +			return ret;
+> +	}
+> +
+> +	if (pdata->tx_gain_buffalo)
 
-I'm trying to mash this on top of 3.12.5 for the latest rt-release, and=20
-especially drivers/net/wireless/iwlwifi/pcie/rx.c is not particularly=20
-compatible with your patches, especially iwl_pcie_int_cause_non_ict(),=20
-which as been moved, renamed and given new return values.
+The ath9k_platform_data structure in 'include/linux/ath9k_platform.h' should be
+updated as well. Otherwise this will cause a build error.
 
-Especially 07 is giving me some headaches, and instead of me making a=20
-massive trainwreck of it all, would you mind moving this closer to 3.12?
+> +		ah->config.tx_gain_buffalo = true;
+> +
+> +	return ret;
+> +}
+> +
 
-Thanks!
-
---=20
-Henrik Austad
-
---d6Gm4EdcadzBjdND
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEARECAAYFAlKwF5AACgkQ6k5VT6v45lmElwCcDdDgBqI42zooxDbPb1yHKY+b
-PUsAmwUdVOH1fJVJMHYI1v73WH4k30iU
-=3Tsq
------END PGP SIGNATURE-----
-
---d6Gm4EdcadzBjdND--
+-Gabor
