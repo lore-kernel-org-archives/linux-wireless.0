@@ -1,135 +1,211 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:54960 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753389Ab3LSU1j (ORCPT
+Received: from mail-ee0-f49.google.com ([74.125.83.49]:33122 "EHLO
+	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754270Ab3LEJCc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Dec 2013 15:27:39 -0500
-Message-ID: <1387484847.4298.21.camel@jlt4.sipsolutions.net> (sfid-20131219_212742_979202_5C9119E5)
-Subject: pull-request: mac80211-next 2013-12-19
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 19 Dec 2013 21:27:27 +0100
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-kTqFDSMDp5ExkutggnXQ"
-Mime-Version: 1.0
+	Thu, 5 Dec 2013 04:02:32 -0500
+Received: by mail-ee0-f49.google.com with SMTP id c41so2863169eek.36
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Dec 2013 01:02:31 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, j@w1.fi,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH v2] iw: add VHT MCS/NSS set support to set bitrates
+Date: Thu,  5 Dec 2013 10:02:17 +0100
+Message-Id: <1386234137-3531-4-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131205_100244_265143_070E89FC)
+In-Reply-To: <1386234137-3531-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1386234137-3531-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+mcs-2.4/mcs-5 rename to ht-mcs-2.4/ht-mcs-5
+vht-mcs-2.4/vht-mcs-5 added
 
---=-kTqFDSMDp5ExkutggnXQ
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Format for vht-mcs-*, eg:
+1  - MCS=1, NSS=1
+9  - MCS=9, NSS=1
+10 - MCS=0, NSS=2
+19 - MCS=9, NSS=2
+20 - MCS=0, NSS=3
+29 - MCS=9, NSS=3
 
-John,
-
-Yeah, I know what you're going to say ... but here are some (locking)
-fixes for mac80211-next that people may want to use over the
-holidays :-)
-
-Felix adds some helper functions for P2P NoA software tracking, Joe
-fixes alignment (but as this apparently never caused issues I didn't
-send it to 3.13), Kyeyoon/Jouni add QoS-mapping support (a Hotspot 2.0
-feature), Weilong fixed a bunch of checkpatch errors and I get to play
-fire-fighter or so and clean up other people's locking issues. I also
-added nl80211 vendor-specific events, as we'd discussed at the wireless
-summit.
-
-Let me know if there's any problem; however, with this, I'm going on
-vacation until January 6th. I'll check in to see if there are any
-important issues that need my attention, but I don't expect to send you
-any more pull requests this year.
-
-johannes
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
-The following changes since commit 204e35a91c4b3327b7239d7687fbd4923edbbf08=
-:
+ bitrate.c |  101 ++++++++++++++++++++++++++++++++++++++++++++++---------------
+ 1 file changed, 76 insertions(+), 25 deletions(-)
 
-  nl80211: add VHT support for set_bitrate_mask (2013-12-16 16:05:17 +0100)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git for=
--john
-
-for you to fetch changes up to 32db6b54dfba38aa8fa4072b2a3fc6425139166a:
-
-  mac80211: Add support for QoS mapping (2013-12-19 16:30:58 +0100)
-
-----------------------------------------------------------------
-Felix Fietkau (1):
-      mac80211: add helper functions for tracking P2P NoA state
-
-Joe Perches (1):
-      mac80211: align struct ps_data.tim to unsigned long
-
-Johannes Berg (4):
-      mac80211: make ieee80211_recalc_radar_chanctx static
-      mac80211: remove unnecessary iflist_mtx locking
-      mac80211: fix iflist_mtx/mtx locking in radar detection
-      nl80211: support vendor-specific events
-
-Kyeyoon Park (2):
-      cfg80211: Add support for QoS mapping
-      mac80211: Add support for QoS mapping
-
-Weilong Chen (1):
-      mac80211: fix checkpatch errors
-
- drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |   2 +-
- drivers/net/wireless/mwifiex/main.c                |   2 +-
- include/net/cfg80211.h                             | 118 ++++++++++++++-
- include/net/mac80211.h                             |  47 ++++++
- include/uapi/linux/nl80211.h                       |  17 +++
- net/mac80211/aes_cmac.c                            |   2 +-
- net/mac80211/aes_cmac.h                            |   2 +-
- net/mac80211/cfg.c                                 |  54 ++++++-
- net/mac80211/chan.c                                |  67 ++++-----
- net/mac80211/ibss.c                                |   7 +
- net/mac80211/ieee80211_i.h                         |  11 +-
- net/mac80211/iface.c                               |   8 +-
- net/mac80211/mlme.c                                |  25 +++-
- net/mac80211/rc80211_minstrel.c                    |   8 +-
- net/mac80211/rc80211_minstrel_ht.c                 |   2 +-
- net/mac80211/tkip.c                                |   2 +-
- net/mac80211/trace.h                               |   2 +-
- net/mac80211/tx.c                                  |   4 +-
- net/mac80211/util.c                                | 150 +++++++++++++++++=
-+-
- net/mac80211/wme.c                                 |   7 +-
- net/wireless/ap.c                                  |   1 +
- net/wireless/ibss.c                                |   2 +
- net/wireless/mesh.c                                |   1 +
- net/wireless/nl80211.c                             | 160 +++++++++++++++++=
-+---
- net/wireless/rdev-ops.h                            |  15 ++
- net/wireless/sme.c                                 |   2 +
- net/wireless/trace.h                               |  40 ++++++
- net/wireless/util.c                                |  19 ++-
- 28 files changed, 687 insertions(+), 90 deletions(-)
-
-
---=-kTqFDSMDp5ExkutggnXQ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCAAGBQJSs1avAAoJEDBSmw7B7bqraHQQAIEIgZbmIdBrEePG+1vvMEGP
-5OxOnedudRf3PZTXMt/QL80RU/LA55BmquFLSpg1GcB6P50QcGRyCVAMnqDWpaZR
-sJsCvw5hIvGgkeo1ErfR/TmvKL56C9WfIal4lJYyadZfxUXD0KLO514YHBI/AQ7O
-OV5uRoUZ6T8eD4rxJL6cH+3dZ/5HSzWfDL/UcJA5uzKpWaGT+00rQnC5yzrRvoW+
-Su0TXolbhGpYGW2Z5k4R5/7VIRosGJ497uToQAAjf3pOW91sBgBQXxRzf5cqTBRd
-Gs843sLb4N+PfQ9kgIQNXjH1PAZpCb2YTvZLUfsGHxVNH1X1qBiTyVGsB3+NdTJV
-DKysl2Iirgx3BcnGepg7TP/birb07BRgj2rMNsLZPuDxz9qF0UEsKWtFaWDQjwEG
-CAwNmx5CGper+j2v/caw4gedFAd7iqlNVBcAQInPjlZ4F0ayRu0Xd6ADtWp6LFjI
-NIE+ouG1RMzHe+TbDi+OIvIFhXplEoMqHrABf2lJH9xe9RKOGo++rRnF+friRZq0
-LHfUJpD0SkffYp21JEHHf3WMdhM8Rc70j6jd4Ld1xK4l7jlIoKqJ4HmFvR3bFTjt
-1uaBzof+nS2igsVx6kLbYrryx5yLYhdCtfDbed6cdP/Z6oStfCocUkyvF8k2ocQs
-037rRSIm9YjSCKsYpG9S
-=BYFT
------END PGP SIGNATURE-----
-
---=-kTqFDSMDp5ExkutggnXQ--
+diff --git a/bitrate.c b/bitrate.c
+index 4da246f..cc80003 100644
+--- a/bitrate.c
++++ b/bitrate.c
+@@ -4,6 +4,26 @@
+ #include "iw.h"
+ 
+ 
++static int setup_vht(struct nl80211_txrate_vht *txrate_vht,
++		      uint8_t *mcs_table, int n_mcs)
++{
++	int nss, mcs, i;
++
++	memset(txrate_vht, 0, sizeof(*txrate_vht));
++
++	for (i = 0; i < n_mcs; i++) {
++		nss = mcs_table[i]  / 10;
++		mcs = 1 << (mcs_table[i] % 10);
++
++		if ((nss < 0) || (nss >= NL80211_VHT_NSS_MAX))
++			return 0;
++
++		txrate_vht->mcs[nss] |= mcs;
++	}
++
++	return 1;
++}
++
+ static int handle_bitrates(struct nl80211_state *state,
+ 			   struct nl_cb *cb,
+ 			   struct nl_msg *msg,
+@@ -17,15 +37,19 @@ static int handle_bitrates(struct nl80211_state *state,
+ 	int n_legacy_24 = 0, n_legacy_5 = 0;
+ 	uint8_t *legacy = NULL;
+ 	int *n_legacy = NULL;
+-	bool have_mcs_24 = false, have_mcs_5 = false;
+-	uint8_t mcs_24[77], mcs_5[77];
+-	int n_mcs_24 = 0, n_mcs_5 = 0;
++	bool have_ht_mcs_24 = false, have_ht_mcs_5 = false;
++	bool have_vht_mcs_24 = false, have_vht_mcs_5 = false;
++	uint8_t ht_mcs_24[77], ht_mcs_5[77], vht_mcs_24[80], vht_mcs_5[80];
++	int n_ht_mcs_24 = 0, n_ht_mcs_5 = 0, n_vht_mcs_24 = 0, n_vht_mcs_5 = 0;
++	struct nl80211_txrate_vht txrate_vht_24 = {};
++	struct nl80211_txrate_vht txrate_vht_5 = {};
+ 	uint8_t *mcs = NULL;
+ 	int *n_mcs = NULL;
+ 	enum {
+ 		S_NONE,
+ 		S_LEGACY,
+-		S_MCS,
++		S_HT,
++		S_VHT,
+ 	} parser_state = S_NONE;
+ 
+ 	for (i = 0; i < argc; i++) {
+@@ -48,20 +72,34 @@ static int handle_bitrates(struct nl80211_state *state,
+ 			n_legacy = &n_legacy_5;
+ 			have_legacy_5 = true;
+ 		}
+-		else if (strcmp(argv[i], "mcs-2.4") == 0) {
+-			if (have_mcs_24)
++		else if (strcmp(argv[i], "ht-mcs-2.4") == 0) {
++			if (have_ht_mcs_24)
++				return 1;
++			parser_state = S_HT;
++			mcs = ht_mcs_24;
++			n_mcs = &n_ht_mcs_24;
++			have_ht_mcs_24 = true;
++		} else if (strcmp(argv[i], "ht-mcs-5") == 0) {
++			if (have_ht_mcs_5)
+ 				return 1;
+-			parser_state = S_MCS;
+-			mcs = mcs_24;
+-			n_mcs = &n_mcs_24;
+-			have_mcs_24 = true;
+-		} else if (strcmp(argv[i], "mcs-5") == 0) {
+-			if (have_mcs_5)
++			parser_state = S_HT;
++			mcs = ht_mcs_5;
++			n_mcs = &n_ht_mcs_5;
++			have_ht_mcs_5 = true;
++		} else if (strcmp(argv[i], "vht-mcs-2.4") == 0) {
++			if (have_vht_mcs_24)
+ 				return 1;
+-			parser_state = S_MCS;
+-			mcs = mcs_5;
+-			n_mcs = &n_mcs_5;
+-			have_mcs_5 = true;
++			parser_state = S_VHT;
++			mcs = vht_mcs_24;
++			n_mcs = &n_vht_mcs_24;
++			have_vht_mcs_24 = true;
++		} else if (strcmp(argv[i], "vht-mcs-5") == 0) {
++			if (have_vht_mcs_5)
++				return 1;
++			parser_state = S_VHT;
++			mcs = vht_mcs_5;
++			n_mcs = &n_vht_mcs_5;
++			have_vht_mcs_5 = true;
+ 		}
+ 		else switch (parser_state) {
+ 		case S_LEGACY:
+@@ -72,7 +110,8 @@ static int handle_bitrates(struct nl80211_state *state,
+ 				return 1;
+ 			legacy[(*n_legacy)++] = tmpd * 2;
+ 			break;
+-		case S_MCS:
++		case S_HT:
++		case S_VHT:
+ 			tmpl = strtol(argv[i], &end, 0);
+ 			if (*end != '\0')
+ 				return 1;
+@@ -85,29 +124,41 @@ static int handle_bitrates(struct nl80211_state *state,
+ 		}
+ 	}
+ 
++	if (have_vht_mcs_24)
++		if(!setup_vht(&txrate_vht_24, vht_mcs_24, n_vht_mcs_24))
++			return -EINVAL;
++
++	if (have_vht_mcs_5)
++		if(!setup_vht(&txrate_vht_5, vht_mcs_5, n_vht_mcs_5))
++			return -EINVAL;
++
+ 	nl_rates = nla_nest_start(msg, NL80211_ATTR_TX_RATES);
+ 	if (!nl_rates)
+ 		goto nla_put_failure;
+ 
+-	if (have_legacy_24 || have_mcs_24) {
++	if (have_legacy_24 || have_ht_mcs_24 || have_vht_mcs_24) {
+ 		nl_band = nla_nest_start(msg, NL80211_BAND_2GHZ);
+ 		if (!nl_band)
+ 			goto nla_put_failure;
+ 		if (have_legacy_24)
+ 			nla_put(msg, NL80211_TXRATE_LEGACY, n_legacy_24, legacy_24);
+-		if (have_mcs_24)
+-			nla_put(msg, NL80211_TXRATE_MCS, n_mcs_24, mcs_24);
++		if (have_ht_mcs_24)
++			nla_put(msg, NL80211_TXRATE_HT, n_ht_mcs_24, ht_mcs_24);
++		if (have_vht_mcs_24)
++			nla_put(msg, NL80211_TXRATE_VHT, sizeof(txrate_vht_24), &txrate_vht_24);
+ 		nla_nest_end(msg, nl_band);
+ 	}
+ 
+-	if (have_legacy_5 || have_mcs_5) {
++	if (have_legacy_5 || have_ht_mcs_5 || have_vht_mcs_5) {
+ 		nl_band = nla_nest_start(msg, NL80211_BAND_5GHZ);
+ 		if (!nl_band)
+ 			goto nla_put_failure;
+ 		if (have_legacy_5)
+ 			nla_put(msg, NL80211_TXRATE_LEGACY, n_legacy_5, legacy_5);
+-		if (have_mcs_5)
+-			nla_put(msg, NL80211_TXRATE_MCS, n_mcs_5, mcs_5);
++		if (have_ht_mcs_5)
++			nla_put(msg, NL80211_TXRATE_HT, n_ht_mcs_5, ht_mcs_5);
++		if (have_vht_mcs_5)
++			nla_put(msg, NL80211_TXRATE_VHT, sizeof(txrate_vht_5), &txrate_vht_5);
+ 		nla_nest_end(msg, nl_band);
+ 	}
+ 
+@@ -119,9 +170,9 @@ static int handle_bitrates(struct nl80211_state *state,
+ }
+ 
+ #define DESCR_LEGACY "[legacy-<2.4|5> <legacy rate in Mbps>*]"
+-#define DESCR DESCR_LEGACY " [mcs-<2.4|5> <MCS index>*]"
++#define DESCR DESCR_LEGACY " [ht-mcs-<2.4|5> <MCS index>*] [vht-mcs-<2.4|5> <MCS index>*]"
+ 
+-COMMAND(set, bitrates, "[legacy-<2.4|5> <legacy rate in Mbps>*] [mcs-<2.4|5> <MCS index>*]",
++COMMAND(set, bitrates, "[legacy-<2.4|5> <legacy rate in Mbps>*] [ht-mcs-<2.4|5> <MCS index>*] [vht-mcs-<2.4|5> <MCS index>*]",
+ 	NL80211_CMD_SET_TX_BITRATE_MASK, 0, CIB_NETDEV, handle_bitrates,
+ 	"Sets up the specified rate masks.\n"
+ 	"Not passing any arguments would clear the existing mask (if any).");
+-- 
+1.7.9.5
 
