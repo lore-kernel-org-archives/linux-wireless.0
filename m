@@ -1,234 +1,378 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:40268 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752364Ab3LEIvP (ORCPT
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:56839 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932598Ab3LEPHb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 03:51:15 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org
-Subject: [RFC 09/12] ath9k: Update high power gain table for AR9300
-Date: Thu,  5 Dec 2013 14:16:14 +0530
-Message-Id: <1386233177-11132-10-git-send-email-sujith@msujith.org> (sfid-20131205_095124_609933_CCCD8304)
-In-Reply-To: <1386233177-11132-1-git-send-email-sujith@msujith.org>
-References: <1386233177-11132-1-git-send-email-sujith@msujith.org>
+	Thu, 5 Dec 2013 10:07:31 -0500
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
+	yeohchunyeow@gmail.com
+Cc: yeohchunyeow@cozybit.com
+Subject: [PATCH v7 5/5] mac80211: only set CSA beacon when at least one beacon must be transmitted
+Date: Thu,  5 Dec 2013 17:07:24 +0200
+Message-Id: <1386256044-8651-6-git-send-email-luciano.coelho@intel.com> (sfid-20131205_160746_337368_75046674)
+In-Reply-To: <1386256044-8651-1-git-send-email-luciano.coelho@intel.com>
+References: <1386256044-8651-1-git-send-email-luciano.coelho@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+A beacon should never have a Channel Switch Announcement information
+element with a count of 0, because a count of 1 means switch just
+before the next beacon.  So, if a count of 0 was valid in a beacon, it
+would have been transmitted in the next channel already, which is
+useless.  A CSA count equal to zero is only meaningful in action
+frames or probe_responses.
 
-Now that the Buffalo-specific initvals have been
-moved to a separate array, update the default high
-power TX gain table for all AR9300 v2.2 devices.
+Fix the ieee80211_csa_is_complete() and ieee80211_update_csa()
+functions accordingly.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+With a CSA count of 0, we won't transmit any CSA beacons, because the
+switch will happen before the next TBTT.  To avoid extra work and
+potential confusion in the drivers, complete the CSA immediately,
+instead of waiting for the driver to call ieee80211_csa_finish().
+
+To keep things simpler, we also switch immediately when the CSA count
+is 1, while in theory we should delay the switch until just before the
+next TBTT.
+
+Additionally, move the ieee80211_csa_finish() function to cfg.c,
+where it makes more sense.
+
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   | 182 ++++++++++-----------
- 1 file changed, 91 insertions(+), 91 deletions(-)
+ include/net/mac80211.h     |  10 ++--
+ net/mac80211/cfg.c         | 113 ++++++++++++++++++++++++++++++++++-----------
+ net/mac80211/ibss.c        |   6 ---
+ net/mac80211/ieee80211_i.h |   3 +-
+ net/mac80211/mesh.c        |   9 ++--
+ net/mac80211/tx.c          |  19 +++-----
+ 6 files changed, 104 insertions(+), 56 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-index 7243674..0a6163e 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-@@ -534,107 +534,107 @@ static const u32 ar9300_2p2_baseband_core[][2] = {
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index c014acc..5cc9a79 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2730,11 +2730,13 @@ enum ieee80211_roc_type {
+  * @channel_switch_beacon: Starts a channel switch to a new channel.
+  *	Beacons are modified to include CSA or ECSA IEs before calling this
+  *	function. The corresponding count fields in these IEs must be
+- *	decremented, and when they reach zero the driver must call
++ *	decremented, and when they reach 1 the driver must call
+  *	ieee80211_csa_finish(). Drivers which use ieee80211_beacon_get()
+  *	get the csa counter decremented by mac80211, but must check if it is
+- *	zero using ieee80211_csa_is_complete() after the beacon has been
++ *	1 using ieee80211_csa_is_complete() after the beacon has been
+  *	transmitted and then call ieee80211_csa_finish().
++ *	If the CSA count starts as zero or 1, this function will not be called,
++ *	since there won't be any time to beacon before the switch anyway.
+  *
+  * @join_ibss: Join an IBSS (on an IBSS interface); this is called after all
+  *	information in bss_conf is set up and the beacon can be retrieved. A
+@@ -3429,13 +3431,13 @@ static inline struct sk_buff *ieee80211_beacon_get(struct ieee80211_hw *hw,
+  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
+  *
+  * After a channel switch announcement was scheduled and the counter in this
+- * announcement hit zero, this function must be called by the driver to
++ * announcement hits 1, this function must be called by the driver to
+  * notify mac80211 that the channel can be changed.
+  */
+ void ieee80211_csa_finish(struct ieee80211_vif *vif);
  
- static const u32 ar9300Modes_high_power_tx_gain_table_2p2[][5] = {
- 	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
--	{0x0000a2dc, 0x0380c7fc, 0x0380c7fc, 0x03aaa352, 0x03aaa352},
--	{0x0000a2e0, 0x0000f800, 0x0000f800, 0x03ccc584, 0x03ccc584},
--	{0x0000a2e4, 0x03ff0000, 0x03ff0000, 0x03f0f800, 0x03f0f800},
-+	{0x0000a2dc, 0x000cfff0, 0x000cfff0, 0x03aaa352, 0x03aaa352},
-+	{0x0000a2e0, 0x000f0000, 0x000f0000, 0x03ccc584, 0x03ccc584},
-+	{0x0000a2e4, 0x03f00000, 0x03f00000, 0x03f0f800, 0x03f0f800},
- 	{0x0000a2e8, 0x00000000, 0x00000000, 0x03ff0000, 0x03ff0000},
--	{0x0000a410, 0x000050d8, 0x000050d8, 0x000050d9, 0x000050d9},
--	{0x0000a500, 0x00002220, 0x00002220, 0x00000000, 0x00000000},
--	{0x0000a504, 0x04002222, 0x04002222, 0x04000002, 0x04000002},
--	{0x0000a508, 0x09002421, 0x09002421, 0x08000004, 0x08000004},
--	{0x0000a50c, 0x0d002621, 0x0d002621, 0x0b000200, 0x0b000200},
--	{0x0000a510, 0x13004620, 0x13004620, 0x0f000202, 0x0f000202},
--	{0x0000a514, 0x19004a20, 0x19004a20, 0x11000400, 0x11000400},
--	{0x0000a518, 0x1d004e20, 0x1d004e20, 0x15000402, 0x15000402},
--	{0x0000a51c, 0x21005420, 0x21005420, 0x19000404, 0x19000404},
--	{0x0000a520, 0x26005e20, 0x26005e20, 0x1b000603, 0x1b000603},
--	{0x0000a524, 0x2b005e40, 0x2b005e40, 0x1f000a02, 0x1f000a02},
--	{0x0000a528, 0x2f005e42, 0x2f005e42, 0x23000a04, 0x23000a04},
--	{0x0000a52c, 0x33005e44, 0x33005e44, 0x26000a20, 0x26000a20},
--	{0x0000a530, 0x38005e65, 0x38005e65, 0x2a000e20, 0x2a000e20},
--	{0x0000a534, 0x3c005e69, 0x3c005e69, 0x2e000e22, 0x2e000e22},
--	{0x0000a538, 0x40005e6b, 0x40005e6b, 0x31000e24, 0x31000e24},
--	{0x0000a53c, 0x44005e6d, 0x44005e6d, 0x34001640, 0x34001640},
--	{0x0000a540, 0x49005e72, 0x49005e72, 0x38001660, 0x38001660},
--	{0x0000a544, 0x4e005eb2, 0x4e005eb2, 0x3b001861, 0x3b001861},
--	{0x0000a548, 0x53005f12, 0x53005f12, 0x3e001a81, 0x3e001a81},
--	{0x0000a54c, 0x59025eb2, 0x59025eb2, 0x42001a83, 0x42001a83},
--	{0x0000a550, 0x5e025f12, 0x5e025f12, 0x44001c84, 0x44001c84},
--	{0x0000a554, 0x61027f12, 0x61027f12, 0x48001ce3, 0x48001ce3},
--	{0x0000a558, 0x6702bf12, 0x6702bf12, 0x4c001ce5, 0x4c001ce5},
--	{0x0000a55c, 0x6b02bf14, 0x6b02bf14, 0x50001ce9, 0x50001ce9},
--	{0x0000a560, 0x6f02bf16, 0x6f02bf16, 0x54001ceb, 0x54001ceb},
--	{0x0000a564, 0x6f02bf16, 0x6f02bf16, 0x56001eec, 0x56001eec},
--	{0x0000a568, 0x6f02bf16, 0x6f02bf16, 0x56001eec, 0x56001eec},
--	{0x0000a56c, 0x6f02bf16, 0x6f02bf16, 0x56001eec, 0x56001eec},
--	{0x0000a570, 0x6f02bf16, 0x6f02bf16, 0x56001eec, 0x56001eec},
--	{0x0000a574, 0x6f02bf16, 0x6f02bf16, 0x56001eec, 0x56001eec},
--	{0x0000a578, 0x6f02bf16, 0x6f02bf16, 0x56001eec, 0x56001eec},
--	{0x0000a57c, 0x6f02bf16, 0x6f02bf16, 0x56001eec, 0x56001eec},
--	{0x0000a580, 0x00802220, 0x00802220, 0x00800000, 0x00800000},
--	{0x0000a584, 0x04802222, 0x04802222, 0x04800002, 0x04800002},
--	{0x0000a588, 0x09802421, 0x09802421, 0x08800004, 0x08800004},
--	{0x0000a58c, 0x0d802621, 0x0d802621, 0x0b800200, 0x0b800200},
--	{0x0000a590, 0x13804620, 0x13804620, 0x0f800202, 0x0f800202},
--	{0x0000a594, 0x19804a20, 0x19804a20, 0x11800400, 0x11800400},
--	{0x0000a598, 0x1d804e20, 0x1d804e20, 0x15800402, 0x15800402},
--	{0x0000a59c, 0x21805420, 0x21805420, 0x19800404, 0x19800404},
--	{0x0000a5a0, 0x26805e20, 0x26805e20, 0x1b800603, 0x1b800603},
--	{0x0000a5a4, 0x2b805e40, 0x2b805e40, 0x1f800a02, 0x1f800a02},
--	{0x0000a5a8, 0x2f805e42, 0x2f805e42, 0x23800a04, 0x23800a04},
--	{0x0000a5ac, 0x33805e44, 0x33805e44, 0x26800a20, 0x26800a20},
--	{0x0000a5b0, 0x38805e65, 0x38805e65, 0x2a800e20, 0x2a800e20},
--	{0x0000a5b4, 0x3c805e69, 0x3c805e69, 0x2e800e22, 0x2e800e22},
--	{0x0000a5b8, 0x40805e6b, 0x40805e6b, 0x31800e24, 0x31800e24},
--	{0x0000a5bc, 0x44805e6d, 0x44805e6d, 0x34801640, 0x34801640},
--	{0x0000a5c0, 0x49805e72, 0x49805e72, 0x38801660, 0x38801660},
--	{0x0000a5c4, 0x4e805eb2, 0x4e805eb2, 0x3b801861, 0x3b801861},
--	{0x0000a5c8, 0x53805f12, 0x53805f12, 0x3e801a81, 0x3e801a81},
--	{0x0000a5cc, 0x59825eb2, 0x59825eb2, 0x42801a83, 0x42801a83},
--	{0x0000a5d0, 0x5e825f12, 0x5e825f12, 0x44801c84, 0x44801c84},
--	{0x0000a5d4, 0x61827f12, 0x61827f12, 0x48801ce3, 0x48801ce3},
--	{0x0000a5d8, 0x6782bf12, 0x6782bf12, 0x4c801ce5, 0x4c801ce5},
--	{0x0000a5dc, 0x6b82bf14, 0x6b82bf14, 0x50801ce9, 0x50801ce9},
--	{0x0000a5e0, 0x6f82bf16, 0x6f82bf16, 0x54801ceb, 0x54801ceb},
--	{0x0000a5e4, 0x6f82bf16, 0x6f82bf16, 0x56801eec, 0x56801eec},
--	{0x0000a5e8, 0x6f82bf16, 0x6f82bf16, 0x56801eec, 0x56801eec},
--	{0x0000a5ec, 0x6f82bf16, 0x6f82bf16, 0x56801eec, 0x56801eec},
--	{0x0000a5f0, 0x6f82bf16, 0x6f82bf16, 0x56801eec, 0x56801eec},
--	{0x0000a5f4, 0x6f82bf16, 0x6f82bf16, 0x56801eec, 0x56801eec},
--	{0x0000a5f8, 0x6f82bf16, 0x6f82bf16, 0x56801eec, 0x56801eec},
--	{0x0000a5fc, 0x6f82bf16, 0x6f82bf16, 0x56801eec, 0x56801eec},
-+	{0x0000a410, 0x000050d9, 0x000050d9, 0x000050d9, 0x000050d9},
-+	{0x0000a500, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-+	{0x0000a504, 0x06000003, 0x06000003, 0x04000002, 0x04000002},
-+	{0x0000a508, 0x0a000020, 0x0a000020, 0x08000004, 0x08000004},
-+	{0x0000a50c, 0x10000023, 0x10000023, 0x0b000200, 0x0b000200},
-+	{0x0000a510, 0x15000028, 0x15000028, 0x0f000202, 0x0f000202},
-+	{0x0000a514, 0x1b00002b, 0x1b00002b, 0x12000400, 0x12000400},
-+	{0x0000a518, 0x1f020028, 0x1f020028, 0x16000402, 0x16000402},
-+	{0x0000a51c, 0x2502002b, 0x2502002b, 0x19000404, 0x19000404},
-+	{0x0000a520, 0x2a04002a, 0x2a04002a, 0x1c000603, 0x1c000603},
-+	{0x0000a524, 0x2e06002a, 0x2e06002a, 0x21000a02, 0x21000a02},
-+	{0x0000a528, 0x3302202d, 0x3302202d, 0x25000a04, 0x25000a04},
-+	{0x0000a52c, 0x3804202c, 0x3804202c, 0x28000a20, 0x28000a20},
-+	{0x0000a530, 0x3c06202c, 0x3c06202c, 0x2c000e20, 0x2c000e20},
-+	{0x0000a534, 0x4108202d, 0x4108202d, 0x30000e22, 0x30000e22},
-+	{0x0000a538, 0x4506402d, 0x4506402d, 0x34000e24, 0x34000e24},
-+	{0x0000a53c, 0x4906222d, 0x4906222d, 0x38001640, 0x38001640},
-+	{0x0000a540, 0x4d062231, 0x4d062231, 0x3c001660, 0x3c001660},
-+	{0x0000a544, 0x50082231, 0x50082231, 0x3f001861, 0x3f001861},
-+	{0x0000a548, 0x5608422e, 0x5608422e, 0x43001a81, 0x43001a81},
-+	{0x0000a54c, 0x5e08442e, 0x5e08442e, 0x47001a83, 0x47001a83},
-+	{0x0000a550, 0x620a4431, 0x620a4431, 0x4a001c84, 0x4a001c84},
-+	{0x0000a554, 0x640a4432, 0x640a4432, 0x4e001ce3, 0x4e001ce3},
-+	{0x0000a558, 0x680a4434, 0x680a4434, 0x52001ce5, 0x52001ce5},
-+	{0x0000a55c, 0x6c0a6434, 0x6c0a6434, 0x56001ce9, 0x56001ce9},
-+	{0x0000a560, 0x6f0a6633, 0x6f0a6633, 0x5a001ceb, 0x5a001ceb},
-+	{0x0000a564, 0x730c6634, 0x730c6634, 0x5d001eec, 0x5d001eec},
-+	{0x0000a568, 0x730c6634, 0x730c6634, 0x5d001eec, 0x5d001eec},
-+	{0x0000a56c, 0x730c6634, 0x730c6634, 0x5d001eec, 0x5d001eec},
-+	{0x0000a570, 0x730c6634, 0x730c6634, 0x5d001eec, 0x5d001eec},
-+	{0x0000a574, 0x730c6634, 0x730c6634, 0x5d001eec, 0x5d001eec},
-+	{0x0000a578, 0x730c6634, 0x730c6634, 0x5d001eec, 0x5d001eec},
-+	{0x0000a57c, 0x730c6634, 0x730c6634, 0x5d001eec, 0x5d001eec},
-+	{0x0000a580, 0x00800000, 0x00800000, 0x00800000, 0x00800000},
-+	{0x0000a584, 0x06800003, 0x06800003, 0x04800002, 0x04800002},
-+	{0x0000a588, 0x0a800020, 0x0a800020, 0x08800004, 0x08800004},
-+	{0x0000a58c, 0x10800023, 0x10800023, 0x0b800200, 0x0b800200},
-+	{0x0000a590, 0x15800028, 0x15800028, 0x0f800202, 0x0f800202},
-+	{0x0000a594, 0x1b80002b, 0x1b80002b, 0x12800400, 0x12800400},
-+	{0x0000a598, 0x1f820028, 0x1f820028, 0x16800402, 0x16800402},
-+	{0x0000a59c, 0x2582002b, 0x2582002b, 0x19800404, 0x19800404},
-+	{0x0000a5a0, 0x2a84002a, 0x2a84002a, 0x1c800603, 0x1c800603},
-+	{0x0000a5a4, 0x2e86002a, 0x2e86002a, 0x21800a02, 0x21800a02},
-+	{0x0000a5a8, 0x3382202d, 0x3382202d, 0x25800a04, 0x25800a04},
-+	{0x0000a5ac, 0x3884202c, 0x3884202c, 0x28800a20, 0x28800a20},
-+	{0x0000a5b0, 0x3c86202c, 0x3c86202c, 0x2c800e20, 0x2c800e20},
-+	{0x0000a5b4, 0x4188202d, 0x4188202d, 0x30800e22, 0x30800e22},
-+	{0x0000a5b8, 0x4586402d, 0x4586402d, 0x34800e24, 0x34800e24},
-+	{0x0000a5bc, 0x4986222d, 0x4986222d, 0x38801640, 0x38801640},
-+	{0x0000a5c0, 0x4d862231, 0x4d862231, 0x3c801660, 0x3c801660},
-+	{0x0000a5c4, 0x50882231, 0x50882231, 0x3f801861, 0x3f801861},
-+	{0x0000a5c8, 0x5688422e, 0x5688422e, 0x43801a81, 0x43801a81},
-+	{0x0000a5cc, 0x5e88442e, 0x5e88442e, 0x47801a83, 0x47801a83},
-+	{0x0000a5d0, 0x628a4431, 0x628a4431, 0x4a801c84, 0x4a801c84},
-+	{0x0000a5d4, 0x648a4432, 0x648a4432, 0x4e801ce3, 0x4e801ce3},
-+	{0x0000a5d8, 0x688a4434, 0x688a4434, 0x52801ce5, 0x52801ce5},
-+	{0x0000a5dc, 0x6c8a6434, 0x6c8a6434, 0x56801ce9, 0x56801ce9},
-+	{0x0000a5e0, 0x6f8a6633, 0x6f8a6633, 0x5a801ceb, 0x5a801ceb},
-+	{0x0000a5e4, 0x738c6634, 0x738c6634, 0x5d801eec, 0x5d801eec},
-+	{0x0000a5e8, 0x738c6634, 0x738c6634, 0x5d801eec, 0x5d801eec},
-+	{0x0000a5ec, 0x738c6634, 0x738c6634, 0x5d801eec, 0x5d801eec},
-+	{0x0000a5f0, 0x738c6634, 0x738c6634, 0x5d801eec, 0x5d801eec},
-+	{0x0000a5f4, 0x738c6634, 0x738c6634, 0x5d801eec, 0x5d801eec},
-+	{0x0000a5f8, 0x738c6634, 0x738c6634, 0x5d801eec, 0x5d801eec},
-+	{0x0000a5fc, 0x738c6634, 0x738c6634, 0x5d801eec, 0x5d801eec},
- 	{0x0000a600, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
- 	{0x0000a604, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
--	{0x0000a608, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
--	{0x0000a60c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
--	{0x0000a610, 0x00804000, 0x00804000, 0x00000000, 0x00000000},
--	{0x0000a614, 0x00804201, 0x00804201, 0x01404000, 0x01404000},
--	{0x0000a618, 0x0280c802, 0x0280c802, 0x01404501, 0x01404501},
--	{0x0000a61c, 0x0280ca03, 0x0280ca03, 0x02008501, 0x02008501},
--	{0x0000a620, 0x04c15104, 0x04c15104, 0x0280ca03, 0x0280ca03},
--	{0x0000a624, 0x04c15305, 0x04c15305, 0x03010c04, 0x03010c04},
--	{0x0000a628, 0x04c15305, 0x04c15305, 0x04014c04, 0x04014c04},
--	{0x0000a62c, 0x04c15305, 0x04c15305, 0x04015005, 0x04015005},
--	{0x0000a630, 0x04c15305, 0x04c15305, 0x04015005, 0x04015005},
--	{0x0000a634, 0x04c15305, 0x04c15305, 0x04015005, 0x04015005},
--	{0x0000a638, 0x04c15305, 0x04c15305, 0x04015005, 0x04015005},
--	{0x0000a63c, 0x04c15305, 0x04c15305, 0x04015005, 0x04015005},
--	{0x0000b2dc, 0x0380c7fc, 0x0380c7fc, 0x03aaa352, 0x03aaa352},
--	{0x0000b2e0, 0x0000f800, 0x0000f800, 0x03ccc584, 0x03ccc584},
--	{0x0000b2e4, 0x03ff0000, 0x03ff0000, 0x03f0f800, 0x03f0f800},
-+	{0x0000a608, 0x01804601, 0x01804601, 0x00000000, 0x00000000},
-+	{0x0000a60c, 0x01804601, 0x01804601, 0x00000000, 0x00000000},
-+	{0x0000a610, 0x01804601, 0x01804601, 0x00000000, 0x00000000},
-+	{0x0000a614, 0x01804601, 0x01804601, 0x01404000, 0x01404000},
-+	{0x0000a618, 0x01804601, 0x01804601, 0x01404501, 0x01404501},
-+	{0x0000a61c, 0x01804601, 0x01804601, 0x02008501, 0x02008501},
-+	{0x0000a620, 0x03408d02, 0x03408d02, 0x0280ca03, 0x0280ca03},
-+	{0x0000a624, 0x0300cc03, 0x0300cc03, 0x03010c04, 0x03010c04},
-+	{0x0000a628, 0x03410d04, 0x03410d04, 0x04014c04, 0x04014c04},
-+	{0x0000a62c, 0x03410d04, 0x03410d04, 0x04015005, 0x04015005},
-+	{0x0000a630, 0x03410d04, 0x03410d04, 0x04015005, 0x04015005},
-+	{0x0000a634, 0x03410d04, 0x03410d04, 0x04015005, 0x04015005},
-+	{0x0000a638, 0x03410d04, 0x03410d04, 0x04015005, 0x04015005},
-+	{0x0000a63c, 0x03410d04, 0x03410d04, 0x04015005, 0x04015005},
-+	{0x0000b2dc, 0x000cfff0, 0x000cfff0, 0x03aaa352, 0x03aaa352},
-+	{0x0000b2e0, 0x000f0000, 0x000f0000, 0x03ccc584, 0x03ccc584},
-+	{0x0000b2e4, 0x03f00000, 0x03f00000, 0x03f0f800, 0x03f0f800},
- 	{0x0000b2e8, 0x00000000, 0x00000000, 0x03ff0000, 0x03ff0000},
--	{0x0000c2dc, 0x0380c7fc, 0x0380c7fc, 0x03aaa352, 0x03aaa352},
--	{0x0000c2e0, 0x0000f800, 0x0000f800, 0x03ccc584, 0x03ccc584},
--	{0x0000c2e4, 0x03ff0000, 0x03ff0000, 0x03f0f800, 0x03f0f800},
-+	{0x0000c2dc, 0x000cfff0, 0x000cfff0, 0x03aaa352, 0x03aaa352},
-+	{0x0000c2e0, 0x000f0000, 0x000f0000, 0x03ccc584, 0x03ccc584},
-+	{0x0000c2e4, 0x03f00000, 0x03f00000, 0x03f0f800, 0x03f0f800},
- 	{0x0000c2e8, 0x00000000, 0x00000000, 0x03ff0000, 0x03ff0000},
- 	{0x00016044, 0x012492d4, 0x012492d4, 0x012492d4, 0x012492d4},
--	{0x00016048, 0x66480001, 0x66480001, 0x66480001, 0x66480001},
-+	{0x00016048, 0x61200001, 0x61200001, 0x66480001, 0x66480001},
- 	{0x00016068, 0x6db6db6c, 0x6db6db6c, 0x6db6db6c, 0x6db6db6c},
- 	{0x00016444, 0x012492d4, 0x012492d4, 0x012492d4, 0x012492d4},
--	{0x00016448, 0x66480001, 0x66480001, 0x66480001, 0x66480001},
-+	{0x00016448, 0x61200001, 0x61200001, 0x66480001, 0x66480001},
- 	{0x00016468, 0x6db6db6c, 0x6db6db6c, 0x6db6db6c, 0x6db6db6c},
- 	{0x00016844, 0x012492d4, 0x012492d4, 0x012492d4, 0x012492d4},
--	{0x00016848, 0x66480001, 0x66480001, 0x66480001, 0x66480001},
-+	{0x00016848, 0x61200001, 0x61200001, 0x66480001, 0x66480001},
- 	{0x00016868, 0x6db6db6c, 0x6db6db6c, 0x6db6db6c, 0x6db6db6c},
- };
+ /**
+- * ieee80211_csa_is_complete - find out if counters reached zero
++ * ieee80211_csa_is_complete - find out if counters reached 1
+  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
+  *
+  * This function returns whether the channel switch counters reached zero.
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 790c15d..ff7aa17 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2982,21 +2982,19 @@ cfg80211_beacon_dup(struct cfg80211_beacon_data *beacon)
+ 	return new_beacon;
+ }
  
+-void ieee80211_csa_finalize_work(struct work_struct *work)
++void ieee80211_csa_finish(struct ieee80211_vif *vif)
+ {
+-	struct ieee80211_sub_if_data *sdata =
+-		container_of(work, struct ieee80211_sub_if_data,
+-			     csa_finalize_work);
+-	struct ieee80211_local *local = sdata->local;
+-	int err, changed = 0;
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+ 
+-	sdata_lock(sdata);
+-	/* AP might have been stopped while waiting for the lock. */
+-	if (!sdata->vif.csa_active)
+-		goto unlock;
++	ieee80211_queue_work(&sdata->local->hw,
++			     &sdata->csa_finalize_work);
++}
++EXPORT_SYMBOL(ieee80211_csa_finish);
+ 
+-	if (!ieee80211_sdata_running(sdata))
+-		goto unlock;
++static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_local *local = sdata->local;
++	int err, changed = 0;
+ 
+ 	sdata->radar_required = sdata->csa_radar_required;
+ 	err = ieee80211_vif_change_channel(sdata, &changed);
+@@ -3048,6 +3046,29 @@ unlock:
+ 	sdata_unlock(sdata);
+ }
+ 
++void ieee80211_csa_finalize_work(struct work_struct *work)
++{
++	struct ieee80211_sub_if_data *sdata =
++		container_of(work, struct ieee80211_sub_if_data,
++			     csa_finalize_work);
++
++	sdata_lock(sdata);
++	/* AP might have been stopped while waiting for the lock. */
++	if (!sdata->vif.csa_active)
++		goto unlock;
++
++	if (!ieee80211_sdata_running(sdata))
++		goto unlock;
++
++	if (!ieee80211_sdata_running(sdata))
++		return;
++
++	ieee80211_csa_finalize(sdata);
++
++unlock:
++	sdata_unlock(sdata);
++}
++
+ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 			     struct cfg80211_csa_settings *params)
+ {
+@@ -3056,7 +3077,7 @@ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 	struct ieee80211_chanctx_conf *chanctx_conf;
+ 	struct ieee80211_chanctx *chanctx;
+ 	struct ieee80211_if_mesh __maybe_unused *ifmsh;
+-	int err, num_chanctx;
++	int err, num_chanctx, changed = 0;
+ 
+ 	lockdep_assert_held(&sdata->wdev.mtx);
+ 
+@@ -3097,19 +3118,40 @@ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_AP:
+-		sdata->csa_counter_offset_beacon =
+-			params->counter_offset_beacon;
+-		sdata->csa_counter_offset_presp = params->counter_offset_presp;
+ 		sdata->u.ap.next_beacon =
+ 			cfg80211_beacon_dup(&params->beacon_after);
+ 		if (!sdata->u.ap.next_beacon)
+ 			return -ENOMEM;
+ 
++		/*
++		 * With a count of 0, we don't have to wait for any
++		 * TBTT before switching, so complete the CSA
++		 * immediately.  In theory, with a count == 1 we
++		 * should delay the switch until just before the next
++		 * TBTT, but that would complicate things so we switch
++		 * immediately too.  If we would delay the switch
++		 * until the next TBTT, we would have to set the probe
++		 * response here.
++		 *
++		 * TODO: A channel switch with count <= 1 without
++		 * sending a CSA action frame is kind of useless,
++		 * because the clients won't know we're changing
++		 * channels.  The action frame must be implemented
++		 * either here or in the userspace.
++		 */
++		if (params->count <= 1)
++			break;
++
++		sdata->csa_counter_offset_beacon =
++			params->counter_offset_beacon;
++		sdata->csa_counter_offset_presp = params->counter_offset_presp;
+ 		err = ieee80211_assign_beacon(sdata, &params->beacon_csa);
+ 		if (err < 0) {
+ 			kfree(sdata->u.ap.next_beacon);
+ 			return err;
+ 		}
++		changed |= err;
++
+ 		break;
+ 	case NL80211_IFTYPE_ADHOC:
+ 		if (!sdata->vif.bss_conf.ibss_joined)
+@@ -3137,9 +3179,16 @@ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 		    params->chandef.chan->band)
+ 			return -EINVAL;
+ 
+-		err = ieee80211_ibss_csa_beacon(sdata, params);
+-		if (err < 0)
+-			return err;
++		/* see comments in the NL80211_IFTYPE_AP block */
++		if (params->count > 1) {
++			err = ieee80211_ibss_csa_beacon(sdata, params);
++			if (err < 0)
++				return err;
++			changed |= err;
++		}
++
++		ieee80211_send_action_csa(sdata, params);
++
+ 		break;
+ #ifdef CONFIG_MAC80211_MESH
+ 	case NL80211_IFTYPE_MESH_POINT:
+@@ -3159,12 +3208,19 @@ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 		if (ifmsh->csa_role == IEEE80211_MESH_CSA_ROLE_NONE)
+ 			ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_INIT;
+ 
+-		err = ieee80211_mesh_csa_beacon(sdata, params,
+-			(ifmsh->csa_role == IEEE80211_MESH_CSA_ROLE_INIT));
+-		if (err < 0) {
+-			ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_NONE;
+-			return err;
++		/* see comments in the NL80211_IFTYPE_AP block */
++		if (params->count > 1) {
++			err = ieee80211_mesh_csa_beacon(sdata, params);
++			if (err < 0) {
++				ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_NONE;
++				return err;
++			}
++			changed |= err;
+ 		}
++
++		if (ifmsh->csa_role == IEEE80211_MESH_CSA_ROLE_INIT)
++			ieee80211_send_action_csa(sdata, params);
++
+ 		break;
+ #endif
+ 	default:
+@@ -3181,8 +3237,13 @@ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 	sdata->csa_chandef = params->chandef;
+ 	sdata->vif.csa_active = true;
+ 
+-	ieee80211_bss_info_change_notify(sdata, err);
+-	drv_channel_switch_beacon(sdata, &params->chandef);
++	if (changed) {
++		ieee80211_bss_info_change_notify(sdata, changed);
++		drv_channel_switch_beacon(sdata, &params->chandef);
++	} else {
++		/* if the beacon didn't change, we can finalize immediately */
++		ieee80211_csa_finalize(sdata);
++	}
+ 
+ 	return 0;
+ }
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 23e035f..595902c 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -516,12 +516,6 @@ int ieee80211_ibss_csa_beacon(struct ieee80211_sub_if_data *sdata,
+ 	if (old_presp)
+ 		kfree_rcu(old_presp, rcu_head);
+ 
+-	/* it might not send the beacon for a while. send an action frame
+-	 * immediately to announce the channel switch.
+-	 */
+-	if (csa_settings)
+-		ieee80211_send_action_csa(sdata, csa_settings);
+-
+ 	return BSS_CHANGED_BEACON;
+  out:
+ 	return ret;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index cf38a74..9b5f1bc 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1400,8 +1400,7 @@ void ieee80211_mesh_work(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_mesh_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
+ 				   struct sk_buff *skb);
+ int ieee80211_mesh_csa_beacon(struct ieee80211_sub_if_data *sdata,
+-			      struct cfg80211_csa_settings *csa_settings,
+-			      bool csa_action);
++			      struct cfg80211_csa_settings *csa_settings);
+ int ieee80211_mesh_finish_csa(struct ieee80211_sub_if_data *sdata);
+ 
+ /* scan/BSS handling */
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 5476ad9..a7fad0d 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -1051,7 +1051,8 @@ int ieee80211_mesh_finish_csa(struct ieee80211_sub_if_data *sdata)
+ 	/* Remove the CSA and MCSP elements from the beacon */
+ 	tmp_csa_settings = rcu_dereference(ifmsh->csa);
+ 	rcu_assign_pointer(ifmsh->csa, NULL);
+-	kfree_rcu(tmp_csa_settings, rcu_head);
++	if (tmp_csa_settings)
++		kfree_rcu(tmp_csa_settings, rcu_head);
+ 	ret = ieee80211_mesh_rebuild_beacon(sdata);
+ 	if (ret)
+ 		return -EINVAL;
+@@ -1064,8 +1065,7 @@ int ieee80211_mesh_finish_csa(struct ieee80211_sub_if_data *sdata)
+ }
+ 
+ int ieee80211_mesh_csa_beacon(struct ieee80211_sub_if_data *sdata,
+-			      struct cfg80211_csa_settings *csa_settings,
+-			      bool csa_action)
++			      struct cfg80211_csa_settings *csa_settings)
+ {
+ 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 	struct mesh_csa_settings *tmp_csa_settings;
+@@ -1089,9 +1089,6 @@ int ieee80211_mesh_csa_beacon(struct ieee80211_sub_if_data *sdata,
+ 		return ret;
+ 	}
+ 
+-	if (csa_action)
+-		ieee80211_send_action_csa(sdata, csa_settings);
+-
+ 	return BSS_CHANGED_BEACON;
+ }
+ 
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 6d59e21..b86a679 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2397,15 +2397,6 @@ static int ieee80211_beacon_add_tim(struct ieee80211_sub_if_data *sdata,
+ 	return 0;
+ }
+ 
+-void ieee80211_csa_finish(struct ieee80211_vif *vif)
+-{
+-	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+-
+-	ieee80211_queue_work(&sdata->local->hw,
+-			     &sdata->csa_finalize_work);
+-}
+-EXPORT_SYMBOL(ieee80211_csa_finish);
+-
+ static void ieee80211_update_csa(struct ieee80211_sub_if_data *sdata,
+ 				 struct beacon_data *beacon)
+ {
+@@ -2434,8 +2425,12 @@ static void ieee80211_update_csa(struct ieee80211_sub_if_data *sdata,
+ 	if (WARN_ON(counter_offset_beacon >= beacon_data_len))
+ 		return;
+ 
+-	/* warn if the driver did not check for/react to csa completeness */
+-	if (WARN_ON(beacon_data[counter_offset_beacon] == 0))
++	/* Warn if the driver did not check for/react to csa
++	 * completeness.  A beacon with CSA counter set to 0 should
++	 * never occur, because a counter of 1 means switch just
++	 * before the next beacon.
++	 */
++	if (WARN_ON(beacon_data[counter_offset_beacon] == 1))
+ 		return;
+ 
+ 	beacon_data[counter_offset_beacon]--;
+@@ -2501,7 +2496,7 @@ bool ieee80211_csa_is_complete(struct ieee80211_vif *vif)
+ 	if (WARN_ON(counter_beacon > beacon_data_len))
+ 		goto out;
+ 
+-	if (beacon_data[counter_beacon] == 0)
++	if (beacon_data[counter_beacon] == 1)
+ 		ret = true;
+  out:
+ 	rcu_read_unlock();
 -- 
-1.8.4.2
+1.8.4.3
 
