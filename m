@@ -1,57 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:3203 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752605Ab3LMTLB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Dec 2013 14:11:01 -0500
-From: "Coelho, Luciano" <luciano.coelho@intel.com>
-To: Simon Wunderlich <sw@simonwunderlich.de>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"yeohchunyeow@gmail.com" <yeohchunyeow@gmail.com>,
-	"yeohchunyeow@cozybit.com" <yeohchunyeow@cozybit.com>
-Subject: Re: [PATCH v9 0/5] CSA Beacon Count changes
-Date: Fri, 13 Dec 2013 19:10:57 +0000
-Message-ID: <1386961857.3214.2.camel@porter.coelho.fi> (sfid-20131213_201106_270838_22505710)
-References: <1386935675-24548-1-git-send-email-luciano.coelho@intel.com>
-	 <201312131823.35206.sw@simonwunderlich.de>
-In-Reply-To: <201312131823.35206.sw@simonwunderlich.de>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([144.76.43.152]:52158 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932222Ab3LEObZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Dec 2013 09:31:25 -0500
+Message-ID: <1386253879.4182.4.camel@jlt4.sipsolutions.net> (sfid-20131205_153128_857356_93C22EAB)
+Subject: Re: [PATCH 4/4] cfg80211: prevent race condition on scan request
+ cleanup
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 05 Dec 2013 15:31:19 +0100
+In-Reply-To: <1386235289-27278-4-git-send-email-eliad@wizery.com> (sfid-20131205_102143_377274_769D4BD3)
+References: <1386235289-27278-1-git-send-email-eliad@wizery.com>
+	 <1386235289-27278-4-git-send-email-eliad@wizery.com>
+	 (sfid-20131205_102143_377274_769D4BD3)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gRnJpLCAyMDEzLTEyLTEzIGF0IDE4OjIzICswMTAwLCBTaW1vbiBXdW5kZXJsaWNoIHdyb3Rl
-Og0KPiBIZXkgTHVjYSwNCj4gDQo+ID4gSGksDQo+ID4gDQo+ID4gTW9yZSBjaGFuZ2VzLCBob3Bl
-ZnVsbHkgdGhlIGxhc3Qgb25lcyBmb3IgdGhpcyBzZXJpZXMuIDspDQo+ID4gDQo+ID4gSSBoYXZl
-IGhhY2tlZCB3cGFfc3VwcGxpY2FudCB0byBzdXBwb3J0IENTQSBpbiBJQlNTLCBzbyBJIGNvdWxk
-IHRlc3QNCj4gPiBpdCB0b28uICBJIGNyZWF0ZWQgc29tZSBtYTgwMjExX2h3c2ltIHRlc3RjYXNl
-cyBvbiB0b3Agb2YgdGhpcy4gIFRoZQ0KPiA+IHRlc3RzIG5vdyBwYXNzLCB0aG91Z2ggSSBnZXQg
-c29tZSBzZW1pLXJhbmRvbSBXQVJOcyBbMV0gd2hlbiB1c2luZyAzDQo+ID4gc3RhdGlvbnMuICBJ
-dCBzZWVtcyB0byBiZSBhIHJhY2UgY29uZGl0aW9uIGFuZCBpdCBkb2Vzbid0IHNlZW0gdG8gYmUN
-Cj4gPiByZWxhdGVkIHRvIHRoaXMgc2VyaWVzLCBzbyBJIHRoaW5rIHdlIHNob3VsZCBhZGRyZXNz
-IGl0IHNlcGFyYXRlbHkNCj4gPiAoU2ltb24sIGhpbnQhIDspLg0KPiA+IA0KPiA+IEkgaGF2ZSBh
-bHNvIGNyZWF0ZWQgc29tZSBiYXNpYyBCU1MgQ1NBIHRlc3QgY2FzZXMgZm9yIG1hYzgwMjExX2h3
-c2ltLg0KPiA+IFRoZSB0ZXN0cyBwYXNzLCBleGNlcHQgd2hlbiBJIHRyeSBjb3VudCA8IDIsIHdo
-aWNoIGlzIGV4cGVjdGVkLCBzaW5jZQ0KPiA+IHdlIGRpZCBub3QgaW1wbGVtZW50IHRoZSBDU0Eg
-YWN0aW9uIGZyYW1lIGluIEJTUyBtb2RlLg0KPiA+IA0KPiA+IEknbGwgdXBzdHJlYW0gdGhlIEJT
-UyBDU0EgdGVzdCBjYXNlcyBzb29uLiAgVGhlIElCU1MgdGVzdCBjYXNlcyBzdGlsbA0KPiA+IG5l
-ZWQgdG8gYmUgY2xlYW5lZCB1cCAoYWN0dWFsbHkgdGhleSdyZSB3b3J0aGxlc3Mgd2l0aG91dCB0
-aGUgSUJTUyBDU0ENCj4gPiBzdXBwb3J0IGluIHdwYV9zdXBwbGljYW50LCB3aGljaCBuZWVkcyB0
-byBiZSBjbGVhbmVkIHVwKS4gIElmIHNvbWVvbmUNCj4gPiBpcyBpbnRlcmVzdGVkIGluIHRoaXMs
-IGxldCBtZSBrbm93IGFuZCBJIGNhbiBzZW5kIHRoZW0NCj4gPiAid2l0aG91dC13YXJyYW50eSBv
-ZiBhbnkga2luZCIuIDspDQo+ID4gDQo+ID4gUGxlYXNlIHJldmlldyBhbmQgdGVzdCENCj4gDQo+
-IFBhdGNoZXMgbG9vayBnb29kIHRvIG1lIGFuZCB3b3JrZWQgZmluZSBpbiBteSB0ZXN0IGVudmly
-b25tZW50LiBFdmVyeXRoaW5nIGFzIA0KPiBleHBlY3RlZCBmb3IgQ1NBIGNvdW50cyBvZiAwLCAx
-LCAyIGFuZCAxMCwgbm8gd2FybmluZ3Mgb3Igd2VpcmQgYmVoYXZpb3VyLiANCj4gSSd2ZSB0ZXN0
-ZWQgd2l0aCB0d28gc3RhdGlvbnMgaW4gSUJTUyBtb2RlIHVzaW5nIGF0aDlrLg0KPiANCj4gU28s
-IGFwYXJ0IGZyb20gdGhhdCBmdW5jdGlvbiBuYW1lIGlzc3VlLCBmZWVsIGZyZWUgdG8gYWRkIGZv
-ciBQYXRjaCAxLDIgYW5kIDU6DQo+IA0KPiBBY2tlZC1ieS9UZXN0ZWQtYnk6IFNpbW9uIFd1bmRl
-cmxpY2ggPHN3QHNpbW9ud3VuZGVybGljaC5kZT4NCg0KVGhhbmsgeW91IHZlcnkgbXVjaCBmb3Ig
-YWxsIHlvdXIgaGVscCwgU2ltb24hDQoNCg0KDQo+IEknbGwgdHJ5IHRvIHJlcHJvZHVjZSB0aGUg
-aXNzdWUgeW91IHdlcmUgc2VlaW5nIHdoZW4gdGhlc2UgdGVzdGNhc2VzL3dwYV9zIA0KPiBpbXBs
-ZW1lbnRhdGlvbiBhcmUgdXBzdHJlYW0gKG9yIHBhdGNoZXMgYXJlIGF2YWlsYWJsZSkuIEkgZGlk
-bid0IHNlZSB0aGUgDQo+IHByb2JsZW0gb24gYSBmaXJzdCBnbGFuY2UsIGJ1dCB0aGUgd2Fybmlu
-ZyBpcyBub3QgY3JpdGljYWwgKGJhc2ljYWxseSB0aGUgQ1NBIA0KPiB3aWxsIGZhaWwpLCBzbyBJ
-IGd1ZXNzIGl0J3MgT0sgdG8gZml4IGl0IHNvb25bdG1dLg0KDQpZZWFoLCBsZXQncyBmaXggaXQg
-c2VwYXJhdGVseS4gIFByb2JhYmx5IGJlc3QgdG8gd2FpdCB1bnRpbCBhZnRlciB0aGUNCmhvbGlk
-YXlzLCBzaW5jZSBJJ20gaGF2aW5nIHZhY2F0aW9ucyBhbHJlYWR5IG5leHQgd2Vlay4NCg0KLS0N
-CkNoZWVycywNCkx1Y2EuDQo=
+On Thu, 2013-12-05 at 11:21 +0200, Eliad Peller wrote:
+
+> @@ -219,8 +221,13 @@ void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev, bool leak)
+>  	 * the scan request or not ... if it accesses the dev
+>  	 * in there (it shouldn't anyway) then it may crash.
+>  	 */
+> -	if (!leak)
+> -		kfree(request);
+> +	if (leak) {
+> +		request->pending_cleanup = true;
+> +		return;
+
+This seems insufficient, if the driver never indicates completion, we'd
+never clear rdev->scan_req?
+
+johannes
+
