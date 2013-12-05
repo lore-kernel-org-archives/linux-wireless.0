@@ -1,93 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:18503 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750958Ab3LNCdZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Dec 2013 21:33:25 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 1/4] mwifiex: send regulatory domain info to firmware only if alpha2 changed
-Date: Fri, 13 Dec 2013 18:32:59 -0800
-Message-ID: <1386988382-30023-1-git-send-email-bzhao@marvell.com> (sfid-20131214_033343_834157_97B4C849)
+Received: from nm11.bullet.mail.ird.yahoo.com ([77.238.189.64]:24135 "HELO
+	nm11.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756764Ab3LEP53 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Dec 2013 10:57:29 -0500
+Message-ID: <1386259047.2121.YahooMailNeo@web172705.mail.ir2.yahoo.com> (sfid-20131205_165733_059424_F6F2D350)
+Date: Thu, 5 Dec 2013 15:57:27 +0000 (GMT)
+From: Dani Camps <danicamps81@yahoo.com>
+Reply-To: Dani Camps <danicamps81@yahoo.com>
+Subject: Using wmediumd in kernel 3.10
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On cfg80211 regulatory domain change, drivers gets alpha2 country
-code or "00" in driver's notification handler.
 
-In most cases, the pattern will be US, 00, US, 00, US, 00, US, ...
-There is no need to send domain info to firmware in case of "00" or
-with the same alpha2 country code.
 
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c  | 19 +++++++++++++------
- drivers/net/wireless/mwifiex/sta_ioctl.c |  8 ++++++++
- 2 files changed, 21 insertions(+), 6 deletions(-)
+Dear all,
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index b2f271e..611fbcf 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -542,19 +542,26 @@ static void mwifiex_reg_notifier(struct wiphy *wiphy,
- 	wiphy_dbg(wiphy, "info: cfg80211 regulatory domain callback for %c%c\n",
- 		  request->alpha2[0], request->alpha2[1]);
- 
--	memcpy(adapter->country_code, request->alpha2, sizeof(request->alpha2));
--
- 	switch (request->initiator) {
- 	case NL80211_REGDOM_SET_BY_DRIVER:
- 	case NL80211_REGDOM_SET_BY_CORE:
- 	case NL80211_REGDOM_SET_BY_USER:
--		break;
--		/* Todo: apply driver specific changes in channel flags based
--		   on the request initiator if necessary. */
- 	case NL80211_REGDOM_SET_BY_COUNTRY_IE:
- 		break;
-+	default:
-+		wiphy_err(wiphy, "unknown regdom initiator: %d\n",
-+			  request->initiator);
-+		return;
-+	}
-+
-+	/* Don't send world or same regdom info to firmware */
-+	if (strncmp(request->alpha2, "00", 2) &&
-+	    strncmp(request->alpha2, adapter->country_code,
-+		    sizeof(request->alpha2))) {
-+		memcpy(adapter->country_code, request->alpha2,
-+		       sizeof(request->alpha2));
-+		mwifiex_send_domain_info_cmd_fw(wiphy);
- 	}
--	mwifiex_send_domain_info_cmd_fw(wiphy);
- }
- 
- /*
-diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
-index 1c67dfe..3259e00 100644
---- a/drivers/net/wireless/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
-@@ -205,6 +205,14 @@ static int mwifiex_process_country_ie(struct mwifiex_private *priv,
- 		return 0;
- 	}
- 
-+	if (!strncmp(priv->adapter->country_code, &country_ie[2], 2)) {
-+		rcu_read_unlock();
-+		wiphy_dbg(priv->wdev->wiphy,
-+			  "11D: skip setting domain info in FW\n");
-+		return 0;
-+	}
-+	memcpy(priv->adapter->country_code, &country_ie[2], 2);
-+
- 	domain_info->country_code[0] = country_ie[2];
- 	domain_info->country_code[1] = country_ie[3];
- 	domain_info->country_code[2] = ' ';
--- 
-1.8.2.3
+I would like to use wmediumd with linuxwireless backports 3.10.
 
+The problem is that as indicated in this post: http://www.spinics.net/lists/linux-wireless/msg96575.html, wmediumd is not supported in this kernel. Quoting from the post:
+
+"To use mac80211_hwsim for testing channel contexts it has to support them, and for that it has to support hw scan and hw-remain-on-channel.
+Since it's pure software, the off-channel activities are really not off-channel but listening and sending on a second channel. Also, the multi-channel isn't really doing TDM, it's just on both channels at the same time. 
+Note that this breaks wmediumd right now as it doesn't propagate the channel."
+
+
+In particular, wmediumd crashes whenever the first packet between the two mac80211_hwsim radios is sent. Specifically the place in mac80211_hwsim.c where the error occurs is in this call inside the function hwsim_tx_info_frame_received_nl():
+
+mac80211_hwsim_monitor_ack(txi->rate_driver_data[0], hdr->addr2);
+
+In mac80211_hwsim_monitor_ack() a crash occurs whenever accessing a field of txi->rate_driver_data[0], which is of type struct ieee80211_channel.
+
+So, I would like to ask for support in any of the following:
+
+1- Guidance on how to fix wmediumd for kernel 3.10.
+2- Advise on another tool with functionality equivalent to that of wmediumd, i.e. introducing delay and drop probability to packets exchanged between mac80211_hwsim radios, and that works with kernel 3.10.
+
+Best Regards
+
+Daniel
