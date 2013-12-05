@@ -1,43 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f174.google.com ([209.85.215.174]:49373 "EHLO
-	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753937Ab3LQUp3 (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:51753 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756299Ab3LEMgE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Dec 2013 15:45:29 -0500
-Received: by mail-ea0-f174.google.com with SMTP id b10so3132186eae.33
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Dec 2013 12:45:28 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+	Thu, 5 Dec 2013 07:36:04 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 31/36] iwlwifi: mvm: fixup Makefile
-Date: Tue, 17 Dec 2013 22:44:34 +0200
-Message-Id: <1387313079-28123-31-git-send-email-egrumbach@gmail.com> (sfid-20131217_214549_777147_8FA13D1F)
-In-Reply-To: <52B0B72A.5070704@gmail.com>
-References: <52B0B72A.5070704@gmail.com>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3/8] mac80211: move 4-addr sta pointer clearing before synchronize_rcu()
+Date: Thu,  5 Dec 2013 13:35:51 +0100
+Message-Id: <1386246956-14257-4-git-send-email-johannes@sipsolutions.net> (sfid-20131205_133614_113866_416F1901)
+In-Reply-To: <1386246956-14257-1-git-send-email-johannes@sipsolutions.net>
+References: <1386192610.5660.4.camel@jlt4.sipsolutions.net>
+ <1386246956-14257-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-debufs.o appeared twice in the Makefile. Fix that.
+The pointer should be cleared before synchronize_rcu() so that the
+consequently dead station won't be found by any lookups in the TX
+or RX paths.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Also check that the station is actually the one being removed, the
+check is not needed because each 4-addr VLAN can only have a single
+station and non-4-addr VLANs always have a NULL pointer there, but
+the code is clearer this way (and we avoid the memory write.)
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/Makefile |    1 -
- 1 file changed, 1 deletion(-)
+ net/mac80211/sta_info.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/Makefile b/drivers/net/wireless/iwlwifi/mvm/Makefile
-index 3ea47ab..f98ec2b 100644
---- a/drivers/net/wireless/iwlwifi/mvm/Makefile
-+++ b/drivers/net/wireless/iwlwifi/mvm/Makefile
-@@ -4,7 +4,6 @@ iwlmvm-y += utils.o rx.o tx.o binding.o quota.o sta.o sf.o
- iwlmvm-y += scan.o time-event.o rs.o
- iwlmvm-y += power.o power_legacy.o bt-coex.o
- iwlmvm-y += led.o tt.o
--iwlmvm-$(CONFIG_IWLWIFI_DEBUGFS) += debugfs.o
- iwlmvm-$(CONFIG_IWLWIFI_DEBUGFS) += debugfs.o debugfs-vif.o
- iwlmvm-$(CONFIG_PM_SLEEP) += d3.o
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 1e14774..557ac25 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -875,6 +875,10 @@ int __must_check __sta_info_destroy(struct sta_info *sta)
  
+ 	drv_sta_pre_rcu_remove(local, sta->sdata, sta);
+ 
++	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
++	    rcu_access_pointer(sdata->u.vlan.sta) == sta)
++		RCU_INIT_POINTER(sdata->u.vlan.sta, NULL);
++
+ 	/* this always calls synchronize_net() */
+ 	ieee80211_free_sta_keys(local, sta);
+ 
+@@ -883,9 +887,6 @@ int __must_check __sta_info_destroy(struct sta_info *sta)
+ 	local->num_sta--;
+ 	local->sta_generation++;
+ 
+-	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
+-		RCU_INIT_POINTER(sdata->u.vlan.sta, NULL);
+-
+ 	while (sta->sta_state > IEEE80211_STA_NONE) {
+ 		ret = sta_info_move_state(sta, sta->sta_state - 1);
+ 		if (ret) {
 -- 
-1.7.9.5
+1.8.4.rc3
 
