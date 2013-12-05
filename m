@@ -1,88 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:55431 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752047Ab3LRTng (ORCPT
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:56819 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932203Ab3LEPHa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Dec 2013 14:43:36 -0500
-Date: Wed, 18 Dec 2013 11:43:28 -0800
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: Sander Eikelenboom <linux@eikelenboom.it>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arend van Spriel <arend@broadcom.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Ben Hutchings <ben@decadent.org.uk>,
-	Julian Calaby <julian.calaby@gmail.com>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <avinashapatil@gmail.com>
-Subject: Re: [cfg80211 / iwlwifi] setting wireless regulatory domain doesn't
- work.
-Message-ID: <20131218194328.GE5705@cerro.do-not-panic.com> (sfid-20131218_204416_702285_5C26F1BD)
-References: <19210260274.20131216135644@eikelenboom.it>
- <CAGRGNgXHemM2FfnXgW5RbzhFT+9SfUfVkjdysK3+=_u3hWSacw@mail.gmail.com>
- <1534126119.20131217104548@eikelenboom.it>
- <387552477.20131217213319@eikelenboom.it>
- <20131217212709.GB5624@decadent.org.uk>
- <1254825772.20131217224914@eikelenboom.it>
- <CA+55aFxQg6=MAWEkEGz64Hz8OawvPyX=fpBOjY8cGBL5XgB9WQ@mail.gmail.com>
- <52B167F6.5060209@broadcom.com>
- <1387358785.4694.9.camel@jlt4.sipsolutions.net>
- <133955103.20131218114845@eikelenboom.it>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <133955103.20131218114845@eikelenboom.it>
+	Thu, 5 Dec 2013 10:07:30 -0500
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
+	yeohchunyeow@gmail.com
+Cc: yeohchunyeow@cozybit.com
+Subject: [PATCH v7 0/5] CSA beacon count changes
+Date: Thu,  5 Dec 2013 17:07:19 +0200
+Message-Id: <1386256044-8651-1-git-send-email-luciano.coelho@intel.com> (sfid-20131205_160740_292124_EBC77232)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 18, 2013 at 11:48:45AM +0100, Sander Eikelenboom wrote:
-> 
-> Wednesday, December 18, 2013, 10:26:25 AM, you wrote:
-> 
-> > Hi all,
-> 
-> > We really should be asking Luis to look at this who hasn't yet chimed
-> > in, presumably because he's between jobs (and travelling IIRC)
-> 
-> > On Wed, 2013-12-18 at 10:16 +0100, Arend van Spriel wrote:
-> >> On 12/17/2013 11:06 PM, Linus Torvalds wrote:
-> >> > We have literally had this *exact* same issue with firmware loading.
-> >> > Network drivers shouldn't try to load firmware at module load time.
-> >> > Same deal.
-> >> 
-> >> It is kind of a chicken and egg problem for (wireless) networking
-> >> drivers. To get IFF_UP from the network layer you have to register a
-> >> netdevice. For wireless drivers this means you have to register a wiphy
-> >> device with cfg80211 which flags capabilities and optionally are custom
-> >> regulatory domain. That information depends on the device and firmware
-> >> used. And there we have a full circle.
-> 
-> > This is all really beside the point.
-> 
-> > For this CRDA information, the kernel never actually *waits* for it, so
-> > in the case that there's no reply, it uses the built-in world domain. So
-> > it's not like request_firmware(), which will block boot forever, but
-> > it's also not like request_firmware_nowait() which will eventually time
-> > out and come back with an error if userspace isn't handling it (though
-> > now that firmware loading is built in ...)
-> 
-> > The issue is that it uses the built-in data *forever*, and what Sander
-> > said was "or it will block forever" but just meant that it never was
-> > able to do any further updates.
-> 
-> > It *doesn't* actually block the boot process or such. Everything Linus
-> > said is true but seems to have been written in understanding "blocks" as
-> > "blocking the boot process", rather than "blocking further updates".
-> 
-> > Regardless of this, even blocking further updates is a really bad idea.
-> > There are a few ways to handle this, but I'll let Luis poke at that.
-> 
-> Your description is correct, sorry if I was not clear.
+New version with some changes:
 
-We have a timeout handler for this, I'll check to see what's going on
-by trying to reproduce on my end. Are you using wireless-testing ?
+* (hopefully) a fix for the kfree_rcu() oops (thanks Chun-Yeow);
+* removed stray extra space at the top of cfg.c (thanks Johannes);
+* removed the TODO action frame comment for mesh and IBSS (thanks Simon);
 
-  Luis
+Chun-Yeow, it would be great if you could retest this, at least once
+with count > 1 and once with count <= 1.
+
+Simon, would you have the time to test the IBSS case as well? I'd
+really appreciate that! :)
+
+--
+Cheers,
+Luca.
+
+Luciano Coelho (5):
+  mac80211: refactor ieee80211_ibss_process_chanswitch()
+  mac80211: align ieee80211_ibss_csa_beacon() with
+    ieee80211_csa_beacon()
+  mac80211: refactor ieee80211_mesh_process_chanswitch()
+  mac80211: align ieee80211_mesh_csa_beacon() with
+    ieee80211_csa_beacon()
+  mac80211: only set CSA beacon when at least one beacon must be
+    transmitted
+
+ include/net/mac80211.h     |  10 ++--
+ net/mac80211/cfg.c         | 119 +++++++++++++++++++++++++++++++++++----------
+ net/mac80211/ibss.c        |  78 +++++++----------------------
+ net/mac80211/ieee80211_i.h |  11 +++--
+ net/mac80211/mesh.c        |  81 +++++++-----------------------
+ net/mac80211/tx.c          |  19 +++-----
+ net/mac80211/util.c        |   1 -
+ 7 files changed, 150 insertions(+), 169 deletions(-)
+
+-- 
+1.8.4.3
+
