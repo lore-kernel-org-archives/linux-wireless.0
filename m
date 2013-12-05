@@ -1,51 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:45432 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751144Ab3LJJss (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:52558 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932336Ab3LEQEb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Dec 2013 04:48:48 -0500
-Date: Tue, 10 Dec 2013 10:48:47 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
-Cc: Luciano Coelho <luca@coelho.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, sre@ring0.de, joni.lapilainen@gmail.com,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Felipe Contreras <felipe.contreras@gmail.com>,
-	David Gnedt <david.gnedt@davizone.at>
-Subject: Re: [PATCH v2 12/16] wl1251: enforce changed hw encryption support
- on monitor state change
-Message-ID: <20131210094846.GA24412@amd.pavel.ucw.cz> (sfid-20131210_104905_004719_D74ADD1D)
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
- <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
- <1386494714-21070-13-git-send-email-pali.rohar@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1386494714-21070-13-git-send-email-pali.rohar@gmail.com>
+	Thu, 5 Dec 2013 11:04:31 -0500
+Message-ID: <1386259467.4182.13.camel@jlt4.sipsolutions.net> (sfid-20131205_170434_546674_3C2DECDE)
+Subject: Re: [PATCH v8 4/5] mac80211: align ieee80211_mesh_csa_beacon() with
+ ieee80211_csa_beacon()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luciano Coelho <luciano.coelho@intel.com>
+Cc: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
+	yeohchunyeow@gmail.com, yeohchunyeow@cozybit.com,
+	andrei.otcheretianski@intel.com
+Date: Thu, 05 Dec 2013 17:04:27 +0100
+In-Reply-To: <1386257143-29840-5-git-send-email-luciano.coelho@intel.com> (sfid-20131205_162554_500402_7BA9FCA3)
+References: <1386257143-29840-1-git-send-email-luciano.coelho@intel.com>
+	 <1386257143-29840-5-git-send-email-luciano.coelho@intel.com>
+	 (sfid-20131205_162554_500402_7BA9FCA3)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun 2013-12-08 10:25:10, Pali Rohár wrote:
-> From: David Gnedt <david.gnedt@davizone.at>
-> 
-> The firmware doesn't support per packet encryption selection, so disable hw
-> encryption support completely while a monitor interface is present to support
-> injection of packets (which shouldn't get encrypted by hw).
-> To enforce the changed hw encryption support force a disassociation on
-> non-monitor interfaces.
-> For disassociation a workaround using hw connection monitor is employed,
-> which temporary enables hw connection manager flag.
-> 
-> Signed-off-by: David Gnedt <david.gnedt@davizone.at>
-> Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
+On Thu, 2013-12-05 at 17:25 +0200, Luciano Coelho wrote:
+> The return value of ieee80211_mesh_csa_beacon is not aligned with the
+> return value of ieee80211_csa_beacon() and
+> ieee80211_ibss_csa_beacon().  For consistency and to be able to use
+> both functions with similar code, change ieee80211_mesh_csa_beacon()
+> not to send the bss changed notification itself, but return what has
+> changed so the caller can send the notification instead.
 
-Reviewed-by: Pavel Machek <pavel@ucw.cz>
+It seems to me that the caller should be updated?
 
-Thanks,
-								Pavel
+johannes
 
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
