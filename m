@@ -1,86 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f175.google.com ([209.85.215.175]:53106 "EHLO
-	mail-ea0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751512Ab3LLUYo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Dec 2013 15:24:44 -0500
-Message-ID: <52AA1B72.1070905@gmail.com> (sfid-20131212_212504_901457_9B1F9FDF)
-Date: Thu, 12 Dec 2013 22:24:18 +0200
-From: Ivajlo Dimitrov <ivo.g.dimitrov.75@gmail.com>
+Received: from mout.web.de ([212.227.15.4]:49779 "EHLO mout.web.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753124Ab3LESK6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Dec 2013 13:10:58 -0500
+Received: from [192.168.178.20] ([88.217.180.24]) by smtp.web.de (mrweb102)
+ with ESMTPSA (Nemesis) id 0M40zO-1VXNgY1lru-00rUqV for
+ <linux-wireless@vger.kernel.org>; Thu, 05 Dec 2013 19:10:56 +0100
+Message-ID: <52A0C1A8.5020504@web.de> (sfid-20131205_191100_817495_DC796F89)
+Date: Thu, 05 Dec 2013 19:10:48 +0100
+From: Sam <blue-t@web.de>
 MIME-Version: 1.0
-To: Ben Hutchings <bhutchings@solarflare.com>,
-	Dan Williams <dcbw@redhat.com>
-CC: Ivajlo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-	=?UTF-8?B?UGFsaSBSb2jDoQ==?= =?UTF-8?B?cg==?=
-	<pali.rohar@gmail.com>, Kalle Valo <kvalo@adurom.com>,
-	Luciano Coelho <luca@coelho.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
-	joni.lapilainen@gmail.com,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Felipe Contreras <felipe.contreras@gmail.com>
-Subject: Re: [PATCH v2 15/16] wl1251: Add sysfs file address for setting permanent
- mac address
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>	 <201312101814.35112@pali> <1386697762.30202.6.camel@dcbw.foobar.com>	 <201312101852.17030@pali>	 <1386796654.1516.268.camel@bwh-desktop.uk.level5networks.com>	 <52A8DA9A.50501@gmail.com>	 <1386800135.1516.296.camel@bwh-desktop.uk.level5networks.com>	 <1386802416.17188.69.camel@dcbw.foobar.com> <1386878159.1516.312.camel@bwh-desktop.uk.level5networks.com>
-In-Reply-To: <1386878159.1516.312.camel@bwh-desktop.uk.level5networks.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: linux-wireless@vger.kernel.org
+Subject: AVM Fritz Stick N v2 has troubles loading the driver rt2x00
+References: <528BBFAE.4050900@web.de>
+In-Reply-To: <528BBFAE.4050900@web.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-On 12.12.2013 21:55, Ben Hutchings wrote:
-> On Wed, 2013-12-11 at 16:53 -0600, Dan Williams wrote:
->> On Wed, 2013-12-11 at 22:15 +0000, Ben Hutchings wrote:
->>> On Wed, 2013-12-11 at 23:35 +0200, Ivajlo Dimitrov wrote:
->>>> On 11.12.2013 23:17, Ben Hutchings wrote:
->>>>> I think that's an even worse idea.  This is not firmware and it already
->>>>> exists in separate storage.
->>>>>
->>>>> I think that rx51_init_wl1251() in
->>>>> arch/arm/mach-omap2/board-rx51-peripherals.c should either copy the MAC
->>>>> address out of NVRAM, or if it's too early to do that, then schedule a
->>>>> function to run later and only then set up wl1251 platform data.
->>>>>
->>>>> Ben.
->>>>>
->>>> And how will that work with DT when board files will be in the history?
->>> 1. Boot loader reads the MAC address from NVRAM and puts it in the DT
->>> node.
->>> or
->>> 2. NVRAM reading is done by a tiny driver that is loaded based on the
->>> platform name and updates the DT node in memory.  (But I don't know how
->>> wl1251 should decide to defer probing if it's probed before that other
->>> driver.)
->> I'm uncomfortable with it too, and yes the permanent MAC should really
->> be known before the interface is even registered, but...
->>
->> Imagine if the MAC address for your ethernet device was stored
->> in /etc/my-mac-addr.txt, except that /etc was a read-only protected
->> partition from a very small SSD.  That's essentially the N900; it's
->> stored in a file in a normal ext2/ext3 (?) filesystem on a partition of
->> the internal flash.
-> Oh, from my quick look I got the impression that this 'CAL' was stored
-> directly in a specific flash partition.
->
->>    It seems like overkill to write a small driver that
->> duplicates the ext3 + MTD drivers just to read the MAC.
-> [...]
->
-> I don't see that anything would need to be duplicated.  But reading
-> files from the kernel is really ugly, and deciding when to read the file
-> would be another problem (as you noted).
->
-> Ben
->
-Yes, CAL is stored in /dev/mtd1, a dedicated partition in the NAND 
-flash. But reading the data stored in it from the kernel is not a 
-trivial task, as it uses its own pseudo-fs format etc. Not impossible (I 
-RE-ed libcal a while ago [0], so there is a code that could be reused, 
-calvaria works too afaik), but still doesn't sound like a very good idea.
+Hello,
 
-[0] 
-https://gitorious.org/community-ssu/libcal/source/d4c5fd9293ddb693c9b032b4c084cd0343b3ea26:
+I recently tried to get my AVM Fritz Stick N v2 working under Kubuntu
+13.04 with a new 3.12 kernel from the mainline ppa after i
+heard it was supported in this driver.
 
-Ivo
+Here some diagnostic logs:
+
+lsusb
+
+Bus 001 Device 004: ID 057c:8501 AVM GmbH 
+
+uname -a
+
+
+Linux greyback 3.12.0-031200rc2-generic #201309231935 SMP Mon Sep 23 23:37:12 UTC 2013 x86_64 x86_64 x86_64 GNU/Linux
+
+
+Error from dmesg:
+
+[   23.011160] ieee80211 phy0: rt2x00_set_rt: Info - RT chipset 5592, rev 0222 detected
+[   23.048498] ieee80211 phy0: rt2x00usb_vendor_request: Error - Vendor Request 0x09 failed for offset 0x0000 with error -32
+[   23.048539] ieee80211 phy0: rt2x00lib_probe_dev: Error - Failed to allocate device
+[   23.048586] rt2800usb: probe of 1-1.3:1.0 failed with error -32
+[   23.048641] usbcore: registered new interface driver rt2800usb
+
+It is detected , driver modules are loaded according to lsmod. 
+According to the internet this stick is featuring a RT 5572, even though this log says something different.
+
+What is going south here? 
+
+Regards
+Sam
+
