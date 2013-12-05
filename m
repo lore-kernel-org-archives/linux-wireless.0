@@ -1,77 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f49.google.com ([209.85.216.49]:47929 "EHLO
-	mail-qa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752825Ab3LEVrI (ORCPT
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:43654 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932452Ab3LEPZs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 16:47:08 -0500
-Received: by mail-qa0-f49.google.com with SMTP id ii20so9732qab.15
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Dec 2013 13:47:07 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <52A09B5B.70800@schinagl.nl>
-References: <52A040CE.5040706@schinagl.nl> <CAFXj5xjJ0DTa0Qo1avLboQF-e3TFv3aEr_jjkuZjinwuTzXykQ@mail.gmail.com>
- <52A09B5B.70800@schinagl.nl>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Fri, 6 Dec 2013 08:46:47 +1100
-Message-ID: <CAGRGNgWBgWqoPUdHSm2OXGb8r-ca5NX2z4_v0eG6oOMgJRd3HQ@mail.gmail.com> (sfid-20131205_224723_847733_F9E5C627)
-Subject: Re: [linux-sunxi] Firmware for Bluetooth (and wifi)
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-sunxi@googlegroups.com,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 5 Dec 2013 10:25:48 -0500
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
+	yeohchunyeow@gmail.com
+Cc: yeohchunyeow@cozybit.com, andrei.otcheretianski@intel.com
+Subject: [PATCH v8 1/5] mac80211: refactor ieee80211_ibss_process_chanswitch()
+Date: Thu,  5 Dec 2013 17:25:39 +0200
+Message-Id: <1386257143-29840-2-git-send-email-luciano.coelho@intel.com> (sfid-20131205_162552_452273_D7EAD57E)
+In-Reply-To: <1386257143-29840-1-git-send-email-luciano.coelho@intel.com>
+References: <1386257143-29840-1-git-send-email-luciano.coelho@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+Refactor ieee80211_ibss_process_chanswitch() to use
+ieee80211_channel_switch() and avoid code duplication.
 
-I watch the linux-sunxi list where we're trying to support a certain
-family of ARM chips and the boards they're on with open source,
-community maintained kernels. They're at the cheaper end of the
-spectrum so they usually end up with chipsets which are bought for
-their price point and Android compatibility, not their ease of use by
-people doing "generic" Linux.
+Change-Id: I265a12c7f825dc20535bad1197a81437310d0086
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+ net/mac80211/cfg.c         |  4 ++--
+ net/mac80211/ibss.c        | 58 +++++++---------------------------------------
+ net/mac80211/ieee80211_i.h |  2 ++
+ 3 files changed, 12 insertions(+), 52 deletions(-)
 
-On Fri, Dec 6, 2013 at 2:27 AM, Olliver Schinagl
-<oliver+list@schinagl.nl> wrote:
-> On 05-12-13 14:25, Neal Peacock wrote:
->>
->>
->> On Dec 5, 2013 4:02 AM, "Olliver Schinagl" <oliver+list@schinagl.nl
->> <mailto:oliver%2Blist@schinagl.nl>> wrote:
->>  >
->>  > Hey Benn,
->>  >
->>  > it appears as if the bluetooth module requires specific firmware to
->> operate, it's likly the FM module requires it too?
->>  >
->>  > Can you confirm this or wether the firmware for the wifi module also
->> contains the BT and FM firmwares?
->>  >
->> Which WiFi chip is this for?
->
-> Wifi is mostly handled by extracting it from the broadcom drivers I belive
-> via a script, but BT we are in the dark for.
-
-So, the AMPAK AP6210 Wifi+BT combo device contains one of:
-1. BCM43362 / BCM20710
-2. BCM4330 / BCM40183
-3. BCM4329 / BCM40181
-
-Depending on who you talk to. I can only find one reference for
-options #1 and #3, so I suspect it's the BCM4330 based chipset,
-however I don't have one of these I can crack open so I'm not sure.
-
-Firstly, are there any plans to support the BCM43362 chipset with the
-brcmfmac driver in the near future?
-
-Secondly, is there an upstream driver for the bluetooth parts of these
-chipsets, and if so, do we need firmware and where can we get it from?
-If there isn't, are there any plans to add support for them?
-
-Thanks,
-
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 754069c..b5bc27e 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3048,8 +3048,8 @@ unlock:
+ 	sdata_unlock(sdata);
+ }
+ 
+-static int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+-				    struct cfg80211_csa_settings *params)
++int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
++			     struct cfg80211_csa_settings *params)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct ieee80211_local *local = sdata->local;
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 0f1fb5d..3514aab 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -784,18 +784,10 @@ ieee80211_ibss_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 	struct cfg80211_csa_settings params;
+ 	struct ieee80211_csa_ie csa_ie;
+ 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
+-	struct ieee80211_chanctx_conf *chanctx_conf;
+-	struct ieee80211_chanctx *chanctx;
+ 	enum nl80211_channel_type ch_type;
+-	int err, num_chanctx;
++	int err;
+ 	u32 sta_flags;
+ 
+-	if (sdata->vif.csa_active)
+-		return true;
+-
+-	if (!sdata->vif.bss_conf.ibss_joined)
+-		return false;
+-
+ 	sta_flags = IEEE80211_STA_DISABLE_VHT;
+ 	switch (ifibss->chandef.width) {
+ 	case NL80211_CHAN_WIDTH_5:
+@@ -826,9 +818,6 @@ ieee80211_ibss_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 	params.count = csa_ie.count;
+ 	params.chandef = csa_ie.chandef;
+ 
+-	if (ifibss->chandef.chan->band != params.chandef.chan->band)
+-		goto disconnect;
+-
+ 	switch (ifibss->chandef.width) {
+ 	case NL80211_CHAN_WIDTH_20_NOHT:
+ 	case NL80211_CHAN_WIDTH_20:
+@@ -884,29 +873,6 @@ ieee80211_ibss_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 		params.radar_required = true;
+ 	}
+ 
+-	rcu_read_lock();
+-	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+-	if (!chanctx_conf) {
+-		rcu_read_unlock();
+-		goto disconnect;
+-	}
+-
+-	/* don't handle for multi-VIF cases */
+-	chanctx = container_of(chanctx_conf, struct ieee80211_chanctx, conf);
+-	if (chanctx->refcount > 1) {
+-		rcu_read_unlock();
+-		goto disconnect;
+-	}
+-	num_chanctx = 0;
+-	list_for_each_entry_rcu(chanctx, &sdata->local->chanctx_list, list)
+-		num_chanctx++;
+-
+-	if (num_chanctx > 1) {
+-		rcu_read_unlock();
+-		goto disconnect;
+-	}
+-	rcu_read_unlock();
+-
+ 	/* all checks done, now perform the channel switch. */
+ 	ibss_dbg(sdata,
+ 		 "received channel switch announcement to go to channel %d MHz\n",
+@@ -914,19 +880,9 @@ ieee80211_ibss_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 
+ 	params.block_tx = !!csa_ie.mode;
+ 
+-	ieee80211_ibss_csa_beacon(sdata, &params);
+-	sdata->csa_radar_required = params.radar_required;
+-
+-	if (params.block_tx)
+-		ieee80211_stop_queues_by_reason(&sdata->local->hw,
+-				IEEE80211_MAX_QUEUE_MAP,
+-				IEEE80211_QUEUE_STOP_REASON_CSA);
+-
+-	sdata->csa_chandef = params.chandef;
+-	sdata->vif.csa_active = true;
+-
+-	ieee80211_bss_info_change_notify(sdata, err);
+-	drv_channel_switch_beacon(sdata, &params.chandef);
++	if (ieee80211_channel_switch(sdata->local->hw.wiphy, sdata->dev,
++				     &params))
++		goto disconnect;
+ 
+ 	ieee80211_ibss_csa_mark_radar(sdata);
+ 
+@@ -962,7 +918,8 @@ ieee80211_rx_mgmt_spectrum_mgmt(struct ieee80211_sub_if_data *sdata,
+ 	if (len < required_len)
+ 		return;
+ 
+-	ieee80211_ibss_process_chanswitch(sdata, elems, false);
++	if (!sdata->vif.csa_active)
++		ieee80211_ibss_process_chanswitch(sdata, elems, false);
+ }
+ 
+ static void ieee80211_rx_mgmt_deauth_ibss(struct ieee80211_sub_if_data *sdata,
+@@ -1143,7 +1100,8 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+ 		goto put_bss;
+ 
+ 	/* process channel switch */
+-	if (ieee80211_ibss_process_chanswitch(sdata, elems, true))
++	if (sdata->vif.csa_active ||
++	    ieee80211_ibss_process_chanswitch(sdata, elems, true))
+ 		goto put_bss;
+ 
+ 	/* same BSSID */
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 32bae21..a7b4d55 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1442,6 +1442,8 @@ void ieee80211_handle_roc_started(struct ieee80211_roc_work *roc);
+ 
+ /* channel switch handling */
+ void ieee80211_csa_finalize_work(struct work_struct *work);
++int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
++			     struct cfg80211_csa_settings *params);
+ 
+ /* interface handling */
+ int ieee80211_iface_init(void);
 -- 
-Julian Calaby
+1.8.4.3
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
