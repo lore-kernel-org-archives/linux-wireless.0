@@ -1,62 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:27981 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752351Ab3LXL3W (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:52582 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752705Ab3LEQLS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Dec 2013 06:29:22 -0500
-Message-ID: <52B96FDA.2020009@huawei.com> (sfid-20131224_123353_763440_ADA99CFE)
-Date: Tue, 24 Dec 2013 19:28:26 +0800
-From: Ding Tianhong <dingtianhong@huawei.com>
-MIME-Version: 1.0
-To: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Netdev <netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 08/20] zd1211rw: slight optimization of addr compare
+	Thu, 5 Dec 2013 11:11:18 -0500
+Message-ID: <1386259875.4182.15.camel@jlt4.sipsolutions.net> (sfid-20131205_171122_325773_5C12C9DB)
+Subject: Re: Using wmediumd in kernel 3.10
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dani Camps <danicamps81@yahoo.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 05 Dec 2013 17:11:15 +0100
+In-Reply-To: <1386259047.2121.YahooMailNeo@web172705.mail.ir2.yahoo.com> (sfid-20131205_165733_059424_F6F2D350)
+References: <1386259047.2121.YahooMailNeo@web172705.mail.ir2.yahoo.com>
+	 (sfid-20131205_165733_059424_F6F2D350)
 Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use possibly more efficient ether_addr_equal
-instead of memcmp.
 
-Cc: Daniel Drake <dsd@gentoo.org>
-Cc: Ulrich Kunitz <kune@deine-taler.de>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Signed-off-by: Tan Xiaojun <tanxiaojun@huawei.com>
-Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
----
- drivers/net/wireless/zd1211rw/zd_mac.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+> I would like to use wmediumd with linuxwireless backports 3.10.
+> 
+> The problem is that as indicated in this
+> post: http://www.spinics.net/lists/linux-wireless/msg96575.html,
+> wmediumd is not supported in this kernel. Quoting from the post:
+> 
+> "To use mac80211_hwsim for testing channel contexts it has to support
+> them, and for that it has to support hw scan and hw-remain-on-channel.
+> Since it's pure software, the off-channel activities are really not
+> off-channel but listening and sending on a second channel. Also, the
+> multi-channel isn't really doing TDM, it's just on both channels at
+> the same time. 
+> Note that this breaks wmediumd right now as it doesn't propagate the
+> channel."
 
-diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
-index eff79a3..e7af261 100644
---- a/drivers/net/wireless/zd1211rw/zd_mac.c
-+++ b/drivers/net/wireless/zd1211rw/zd_mac.c
-@@ -532,9 +532,8 @@ void zd_mac_tx_failed(struct urb *urb)
- 		tx_hdr = (struct ieee80211_hdr *)skb->data;
- 
- 		/* we skip all frames not matching the reported destination */
--		if (unlikely(memcmp(tx_hdr->addr1, tx_status->mac, ETH_ALEN))) {
-+		if (unlikely(!ether_addr_equal(tx_hdr->addr1, tx_status->mac)))
- 			continue;
--		}
- 
- 		/* we skip all frames not matching the reported final rate */
- 
-@@ -997,7 +996,7 @@ static int filter_ack(struct ieee80211_hw *hw, struct ieee80211_hdr *rx_hdr,
- 		    continue;
- 
- 		tx_hdr = (struct ieee80211_hdr *)skb->data;
--		if (likely(!memcmp(tx_hdr->addr2, rx_hdr->addr1, ETH_ALEN)))
-+		if (likely(ether_addr_equal(tx_hdr->addr2, rx_hdr->addr1)))
- 		{
- 			found = 1;
- 			break;
--- 
-1.8.0
+This should only affect hwsim if you load it with channels=2 or more,
+are you doing that?
 
+johannes
 
