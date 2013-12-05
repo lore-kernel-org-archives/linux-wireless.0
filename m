@@ -1,76 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:33225 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753976Ab3LNVkw convert rfc822-to-8bit (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:53610 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750877Ab3LEWHi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Dec 2013 16:40:52 -0500
-Received: by mail-wg0-f50.google.com with SMTP id a1so3241506wgh.5
-        for <linux-wireless@vger.kernel.org>; Sat, 14 Dec 2013 13:40:51 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <21163.55288.562709.691719@gargle.gargle.HOWL>
-References: <20131211174519.34966001@nehalam.linuxnetplumber.net>
-	<21161.18818.926049.511664@gargle.gargle.HOWL>
-	<C0DD393A-6810-4CB6-B705-AE801ED5BBBA@gmx.de>
-	<21162.54025.118938.614891@gargle.gargle.HOWL>
-	<CAA93jw5tOoYGB5Q=vFT6N_G7-KEjGC7=oxH2CwpM9FMT+J_A7g@mail.gmail.com>
-	<CAA93jw7Tj+jdapc-OWFr1LDYQDx3r6crafk302jXJaa3va43-A@mail.gmail.com>
-	<21163.55288.562709.691719@gargle.gargle.HOWL>
-Date: Sat, 14 Dec 2013 13:40:51 -0800
-Message-ID: <CAA93jw6P=dbfC1u8ePZPrPMZswj3_gQOEZwHBzto9SvpJTfq5Q@mail.gmail.com> (sfid-20131214_224056_502900_75FD21AE)
-Subject: Re: [Cerowrt-devel] Wireless failures 3.10.17-3
-From: Dave Taht <dave.taht@gmail.com>
-To: Sujith Manoharan <sujith@msujith.org>
-Cc: Sebastian Moeller <sebastian.moeller@gmail.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"cerowrt-devel@lists.bufferbloat.net"
-	<cerowrt-devel@lists.bufferbloat.net>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 5 Dec 2013 17:07:38 -0500
+Message-ID: <1386281254.4182.24.camel@jlt4.sipsolutions.net> (sfid-20131205_230742_058858_0D8BEA5B)
+Subject: Re: Using wmediumd in kernel 3.10
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dani Camps <danicamps81@yahoo.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 05 Dec 2013 23:07:34 +0100
+In-Reply-To: <1386279479.16148.YahooMailNeo@web172701.mail.ir2.yahoo.com>
+References: <1386259047.2121.YahooMailNeo@web172705.mail.ir2.yahoo.com>
+				 (sfid-20131205_165733_059424_F6F2D350) <1386259875.4182.15.camel@jlt4.sipsolutions.net>
+			 <1386260074.45953.YahooMailNeo@web172706.mail.ir2.yahoo.com>
+		 <1386260744.4182.18.camel@jlt4.sipsolutions.net>
+		 <1386261738.73311.YahooMailNeo@web172703.mail.ir2.yahoo.com>
+	 <1386265226.4182.20.camel@jlt4.sipsolutions.net>
+	 <1386279479.16148.YahooMailNeo@web172701.mail.ir2.yahoo.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 13, 2013 at 8:00 PM, Sujith Manoharan <sujith@msujith.org> wrote:
-> Dave Taht wrote:
->> OK, I couldn't help myself but boot up that release. Wet paint! It
->> successfully brought up
->> the 5ghz radio, but did not manage to assign an ip address to it
->> (netifd bug?) and failed on the 2ghz radio utterly.
->>
->> trying to restart it manually fails to bring up the 5ghz radio as well.
->> Here's an strace of that.
->>
->> http://snapon.lab.bufferbloat.net/~d/hostapd.strace.txt
->>
->> I don't see it beacon, either.
->>
->> Now, I don't have a grip on what started happening two releases back
->> (I was out of town) but I figure it is perhaps more relevant than
->> chasing the DMA tx thing. And ENOTIME for me on this til sunday. I
->> will revert this patch and bisect backwards.
->
-> I am not sure how the patch would break things.
->
-> Booting OpenWrt trunk (with the patch) on an AP96 reference board seems
-> to work fine: http://pastebin.com/3rPSfuad
->
-> Sujith
+On Thu, 2013-12-05 at 21:37 +0000, Dani Camps wrote:
+> Hi,
+> 
+> I tried with kernel 3.12 but I still get the same error. Just to
+> clarify, if wmediumd would work properly you should see in the ping
+> approximately half of the packets being dropped, because the
+> configuration file has 0.5 drop probability for all rates. If you see
+> that the ping proceeds normally is because the error happened and
+> wmediumd de-registered.
 
-We appear to have a deeper problem. I reverted your patch, moved my build back
-to 3.10.21 to match openwrt, felix reverted some stuff in netifd...
+Not sure I saw packet loss, but I made wmediumd print out statistics and
+it was definitely seeing packets ...
 
-... and on first boot, somehow, all the wireless interfaces come up.
+johannes
 
-After a reboot, most don't. doing openwrt's wifi up is also
-interesting with all sorts of failures trying to bring up different
-interfaces.
-
-So I suspect netifd has a race still.
-
-Afer we get that sorted, we can move onto trying to poke into the DMA
-tx error, or since it seems by hammering on it I can get an interface
-up I can move forward a bit, in parallel.
-
--- 
-Dave Täht
-
-Fixing bufferbloat with cerowrt: http://www.teklibre.com/cerowrt/subscribe.html
