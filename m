@@ -1,87 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from asav21.altibox.net ([109.247.116.8]:42754 "EHLO
-	asav21.altibox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751356Ab3LRXgc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Dec 2013 18:36:32 -0500
-From: Henrik Austad <henrik@austad.us>
-To: linux-rt-users@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 01/10] iwlwifi: pcie: clean up ICT allocation code
-Date: Thu, 19 Dec 2013 00:25:56 +0100
-Message-Id: <1387409165-28319-2-git-send-email-henrik@austad.us> (sfid-20131219_003644_490223_596F0C15)
-In-Reply-To: <1387409165-28319-1-git-send-email-henrik@austad.us>
-References: <1387409165-28319-1-git-send-email-henrik@austad.us>
+Received: from mga09.intel.com ([134.134.136.24]:43838 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750877Ab3LETBb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Dec 2013 14:01:31 -0500
+From: "Coelho, Luciano" <luciano.coelho@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"sw@simonwunderlich.de" <sw@simonwunderlich.de>,
+	"yeohchunyeow@gmail.com" <yeohchunyeow@gmail.com>,
+	"yeohchunyeow@cozybit.com" <yeohchunyeow@cozybit.com>,
+	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
+Subject: Re: [PATCH v8 4/5] mac80211: align ieee80211_mesh_csa_beacon() with
+ ieee80211_csa_beacon()
+Date: Thu, 5 Dec 2013 19:01:25 +0000
+Message-ID: <1386270085.3878.24.camel@porter.coelho.fi> (sfid-20131205_200135_202288_30C297BE)
+References: <1386257143-29840-1-git-send-email-luciano.coelho@intel.com>
+	 <1386257143-29840-5-git-send-email-luciano.coelho@intel.com>
+	 (sfid-20131205_162554_500402_7BA9FCA3)
+ <1386259467.4182.13.camel@jlt4.sipsolutions.net>
+	 <1386269585.3878.21.camel@porter.coelho.fi>
+	 <1386269631.4182.22.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1386269631.4182.22.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-
-Since iwl_trans_pcie_alloc_ict is called in the PCIe
-allocation code, we always set CSR_INT_BIT_RX_PERIODIC.
-Move that bit to the default list of interrupts we enable
-and simplify the code.
-Also use dma_zalloc_ and avoid to memset the memory
-afterwards.
-trans_pcie->ict_index is 0 since trans_pcie has just been
-kzalloced, remove the redundant assignment.
-
-Change-Id: I1612bafb2c93d8a796cdd42444102e39199d4869
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-csr.h |    3 ++-
- drivers/net/wireless/iwlwifi/pcie/rx.c |   15 ++++-----------
- 2 files changed, 6 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-csr.h b/drivers/net/wireless/iwlwifi/iwl-csr.h
-index da4eca8..bbab26e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-csr.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-csr.h
-@@ -198,7 +198,8 @@
- 				 CSR_INT_BIT_RF_KILL | \
- 				 CSR_INT_BIT_SW_RX   | \
- 				 CSR_INT_BIT_WAKEUP  | \
--				 CSR_INT_BIT_ALIVE)
-+				 CSR_INT_BIT_ALIVE   | \
-+				 CSR_INT_BIT_RX_PERIODIC)
- 
- /* interrupt flags in FH (flow handler) (PCI busmaster DMA) */
- #define CSR_FH_INT_BIT_ERR       (1 << 31) /* Error */
-diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
-index be3995a..f1d3b84 100644
---- a/drivers/net/wireless/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
-@@ -1051,7 +1051,7 @@ int iwl_pcie_alloc_ict(struct iwl_trans *trans)
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 
- 	trans_pcie->ict_tbl =
--		dma_alloc_coherent(trans->dev, ICT_SIZE,
-+		dma_zalloc_coherent(trans->dev, ICT_SIZE,
- 				   &trans_pcie->ict_tbl_dma,
- 				   GFP_KERNEL);
- 	if (!trans_pcie->ict_tbl)
-@@ -1063,17 +1063,10 @@ int iwl_pcie_alloc_ict(struct iwl_trans *trans)
- 		return -EINVAL;
- 	}
- 
--	IWL_DEBUG_ISR(trans, "ict dma addr %Lx\n",
--		      (unsigned long long)trans_pcie->ict_tbl_dma);
-+	IWL_DEBUG_ISR(trans, "ict dma addr %Lx ict vir addr %p\n",
-+		      (unsigned long long)trans_pcie->ict_tbl_dma,
-+		      trans_pcie->ict_tbl);
- 
--	IWL_DEBUG_ISR(trans, "ict vir addr %p\n", trans_pcie->ict_tbl);
--
--	/* reset table and index to all 0 */
--	memset(trans_pcie->ict_tbl, 0, ICT_SIZE);
--	trans_pcie->ict_index = 0;
--
--	/* add periodic RX interrupt */
--	trans_pcie->inta_mask |= CSR_INT_BIT_RX_PERIODIC;
- 	return 0;
- }
- 
--- 
-1.7.10.4
-
+T24gVGh1LCAyMDEzLTEyLTA1IGF0IDE5OjUzICswMTAwLCBKb2hhbm5lcyBCZXJnIHdyb3RlOg0K
+PiBPbiBUaHUsIDIwMTMtMTItMDUgYXQgMTg6NTMgKzAwMDAsIENvZWxobywgTHVjaWFubyB3cm90
+ZToNCj4gPiBPbiBUaHUsIDIwMTMtMTItMDUgYXQgMTc6MDQgKzAxMDAsIEpvaGFubmVzIEJlcmcg
+d3JvdGU6DQo+ID4gPiBPbiBUaHUsIDIwMTMtMTItMDUgYXQgMTc6MjUgKzAyMDAsIEx1Y2lhbm8g
+Q29lbGhvIHdyb3RlOg0KPiA+ID4gPiBUaGUgcmV0dXJuIHZhbHVlIG9mIGllZWU4MDIxMV9tZXNo
+X2NzYV9iZWFjb24gaXMgbm90IGFsaWduZWQgd2l0aCB0aGUNCj4gPiA+ID4gcmV0dXJuIHZhbHVl
+IG9mIGllZWU4MDIxMV9jc2FfYmVhY29uKCkgYW5kDQo+ID4gPiA+IGllZWU4MDIxMV9pYnNzX2Nz
+YV9iZWFjb24oKS4gIEZvciBjb25zaXN0ZW5jeSBhbmQgdG8gYmUgYWJsZSB0byB1c2UNCj4gPiA+
+ID4gYm90aCBmdW5jdGlvbnMgd2l0aCBzaW1pbGFyIGNvZGUsIGNoYW5nZSBpZWVlODAyMTFfbWVz
+aF9jc2FfYmVhY29uKCkNCj4gPiA+ID4gbm90IHRvIHNlbmQgdGhlIGJzcyBjaGFuZ2VkIG5vdGlm
+aWNhdGlvbiBpdHNlbGYsIGJ1dCByZXR1cm4gd2hhdCBoYXMNCj4gPiA+ID4gY2hhbmdlZCBzbyB0
+aGUgY2FsbGVyIGNhbiBzZW5kIHRoZSBub3RpZmljYXRpb24gaW5zdGVhZC4NCj4gPiA+IA0KPiA+
+ID4gSXQgc2VlbXMgdG8gbWUgdGhhdCB0aGUgY2FsbGVyIHNob3VsZCBiZSB1cGRhdGVkPw0KPiA+
+IA0KPiA+IFdpdGggdGhpcyBwYXRjaCBvbmx5LCB0aGUgY2FsbGVyIGp1c3QgY2hlY2tzIGlmIHRo
+ZSByZXR1cm4gdmFsdWUgaXMgPCAwDQo+ID4gKGllLiBhbiBlcnJvciksIG90aGVyd2lzZSBpdCBh
+c3N1bWVzIGl0IHdhcyBva2F5LiAgV2l0aCB0aGlzIHBhdGNoLCB3ZQ0KPiA+IHN0aWxsIHJldHVy
+biA8IDAgb24gZXJyb3JzLCBidXQgd2UgcmV0dXJuIHBvc2l0aXZlLCBzYXlpbmcgdGhhdCB0aGUN
+Cj4gPiBiZWFjb24gaGFzIGNoYW5nZWQuDQo+ID4gDQo+ID4gTXkgbmV4dCBwYXRjaCAoNS81KSBj
+aGFuZ2VzIHRoZSBjYWxsZXIgc28gdGhhdCB0aGUgdmFsdWUgaXMgdXNlZA0KPiA+IHByb3Blcmx5
+IChpZS4gT1JpbmcgdGhlIHJldHVybiB2YWx1ZSB0byB0aGUgY2hhbmdlZCB2YXJpYWJsZSkuDQo+
+IA0KPiBCdXQgZG9lc24ndCB0aGF0IGxlYXZlIHRoaXMgcGF0Y2ggYnJva2VuPw0KDQpOby4gIFdl
+IHVzZWQgdG8gcmV0dXJuIDAgaW4gY2FzZSBvZiBzdWNjZXNzIChvciAtRU5PTUVNIG9uIGZhaWx1
+cmUpLg0KVGhlIGNhbGxlciBjaGVja3MgdGhlIHJldHVybiB2YWx1ZSBsaWtlIHRoaXM6DQoNCgkJ
+ZXJyID0gaWVlZTgwMjExX21lc2hfY3NhX2JlYWNvbihzZGF0YSwgcGFyYW1zLA0KCQkJKGlmbXNo
+LT5jc2Ffcm9sZSA9PSBJRUVFODAyMTFfTUVTSF9DU0FfUk9MRV9JTklUKSk7DQoJCWlmIChlcnIg
+PCAwKSB7DQoJCQlpZm1zaC0+Y3NhX3JvbGUgPSBJRUVFODAyMTFfTUVTSF9DU0FfUk9MRV9OT05F
+Ow0KCQkJcmV0dXJuIGVycjsNCgkJfQ0KDQpXaXRoIG15IGNoYW5nZSwgaW5zdGVhZCBvZiByZXR1
+cm5pbmcgMCBvbiBzdWNjZXNzLCB3ZSByZXR1cm4NCkJTU19DSEFOR0VEX0JFQUNPTi4gIFRoZSBp
+ZiAoZXJyIDwgMCkgd2lsbCBzdGlsbCBldmFsdWF0ZSB0byBmYWxzZSwgc28NCml0IHdpbGwgYmUg
+dGhlIHNhbWUgYXMgYmVmb3JlLg0KDQpOb3RlIHRoYXQgdGhpcyBwYXRjaCBpcyBvbiB0b3Agb2Yg
+dGhlICJtYWM4MDIxMTogcmVmYWN0b3INCmllZWU4MDIxMV9tZXNoX2NoYW5zd2l0Y2goKSIuDQoN
+Ci0tDQpMdWNhLg0K
