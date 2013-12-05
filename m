@@ -1,257 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:49959 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757469Ab3LFLcZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Dec 2013 06:32:25 -0500
-From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: [net 3/5] prism54: Fix FSF address in file headers
-Date: Fri,  6 Dec 2013 03:32:12 -0800
-Message-Id: <1386329534-21739-3-git-send-email-jeffrey.t.kirsher@intel.com> (sfid-20131206_123257_081776_395E72EB)
-In-Reply-To: <1386329534-21739-1-git-send-email-jeffrey.t.kirsher@intel.com>
-References: <1386329534-21739-1-git-send-email-jeffrey.t.kirsher@intel.com>
+Received: from s72.web-hosting.com ([198.187.29.21]:58803 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751191Ab3LEIvJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Dec 2013 03:51:09 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org
+Subject: [RFC 02/12] ath9k: Initialize baseband for DFS channels
+Date: Thu,  5 Dec 2013 14:16:07 +0530
+Message-Id: <1386233177-11132-3-git-send-email-sujith@msujith.org> (sfid-20131205_095113_512041_87F99F65)
+In-Reply-To: <1386233177-11132-1-git-send-email-sujith@msujith.org>
+References: <1386233177-11132-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Several files refer to an old address for the Free Software Foundation
-in the file header comment.  Resolve by replacing the address with
-the URL <http://www.gnu.org/licenses/> so that we do not have to keep
-updating the header comments anytime the address changes.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-CC: linux-wireless@vger.kernel.org
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Certain baseband registers require different values
+to be programmed when operating in a DFS channel to
+ensure that radar detection works correctly. This
+is required for AR9300, AR9340 and AR9580.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/prism54/isl_38xx.c       | 3 +--
- drivers/net/wireless/prism54/isl_38xx.h       | 3 +--
- drivers/net/wireless/prism54/isl_ioctl.c      | 3 +--
- drivers/net/wireless/prism54/isl_ioctl.h      | 3 +--
- drivers/net/wireless/prism54/isl_oid.h        | 3 +--
- drivers/net/wireless/prism54/islpci_dev.c     | 3 +--
- drivers/net/wireless/prism54/islpci_dev.h     | 3 +--
- drivers/net/wireless/prism54/islpci_eth.c     | 3 +--
- drivers/net/wireless/prism54/islpci_eth.h     | 3 +--
- drivers/net/wireless/prism54/islpci_hotplug.c | 3 +--
- drivers/net/wireless/prism54/islpci_mgt.c     | 3 +--
- drivers/net/wireless/prism54/islpci_mgt.h     | 3 +--
- drivers/net/wireless/prism54/oid_mgt.c        | 3 +--
- drivers/net/wireless/prism54/oid_mgt.h        | 3 +--
- drivers/net/wireless/prism54/prismcompat.h    | 3 +--
- 15 files changed, 15 insertions(+), 30 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c  | 6 ++++++
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c | 6 ++++++
+ drivers/net/wireless/ath/ath9k/hw.h         | 1 +
+ 3 files changed, 13 insertions(+)
 
-diff --git a/drivers/net/wireless/prism54/isl_38xx.c b/drivers/net/wireless/prism54/isl_38xx.c
-index 02fc67b..333c1a2 100644
---- a/drivers/net/wireless/prism54/isl_38xx.c
-+++ b/drivers/net/wireless/prism54/isl_38xx.c
-@@ -12,8 +12,7 @@
-  *  GNU General Public License for more details.
-  *
-  *  You should have received a copy of the GNU General Public License
-- *  along with this program; if not, write to the Free Software
-- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-+ *  along with this program; if not, see <http://www.gnu.org/licenses/>.
-  *
-  */
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+index d8c1eee..4e8ae4a 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+@@ -152,6 +152,8 @@ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
+ 			       ar9340Modes_fast_clock_1p0);
+ 		INIT_INI_ARRAY(&ah->iniCckfirJapan2484,
+ 			       ar9340_1p0_baseband_core_txfir_coeff_japan_2484);
++		INIT_INI_ARRAY(&ah->ini_dfs,
++			       ar9340_1p0_baseband_postamble_dfs_channel);
  
-diff --git a/drivers/net/wireless/prism54/isl_38xx.h b/drivers/net/wireless/prism54/isl_38xx.h
-index 19c33d3..547ab88 100644
---- a/drivers/net/wireless/prism54/isl_38xx.h
-+++ b/drivers/net/wireless/prism54/isl_38xx.h
-@@ -11,8 +11,7 @@
-  *  GNU General Public License for more details.
-  *
-  *  You should have received a copy of the GNU General Public License
-- *  along with this program; if not, write to the Free Software
-- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-+ *  along with this program; if not, see <http://www.gnu.org/licenses/>.
-  *
-  */
+ 		if (!ah->is_clk_25mhz)
+ 			INIT_INI_ARRAY(&ah->iniAdditional,
+@@ -340,6 +342,8 @@ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
+ 			       ar9580_1p0_modes_fast_clock);
+ 		INIT_INI_ARRAY(&ah->iniCckfirJapan2484,
+ 			       ar9580_1p0_baseband_core_txfir_coeff_japan_2484);
++		INIT_INI_ARRAY(&ah->ini_dfs,
++			       ar9580_1p0_baseband_postamble_dfs_channel);
+ 	} else if (AR_SREV_9565_11_OR_LATER(ah)) {
+ 		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_CORE],
+ 			       ar9565_1p1_mac_core);
+@@ -458,6 +462,8 @@ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
+ 			       ar9300Modes_fast_clock_2p2);
+ 		INIT_INI_ARRAY(&ah->iniCckfirJapan2484,
+ 			       ar9300_2p2_baseband_core_txfir_coeff_japan_2484);
++		INIT_INI_ARRAY(&ah->ini_dfs,
++			       ar9300_2p2_baseband_postamble_dfs_channel);
+ 	}
+ }
  
-diff --git a/drivers/net/wireless/prism54/isl_ioctl.c b/drivers/net/wireless/prism54/isl_ioctl.c
-index 8863a6c..df784fe 100644
---- a/drivers/net/wireless/prism54/isl_ioctl.c
-+++ b/drivers/net/wireless/prism54/isl_ioctl.c
-@@ -14,8 +14,7 @@
-  *  GNU General Public License for more details.
-  *
-  *  You should have received a copy of the GNU General Public License
-- *  along with this program; if not, write to the Free Software
-- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-+ *  along with this program; if not, see <http://www.gnu.org/licenses/>.
-  *
-  */
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index 39b71b3..9f051a0 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -1332,6 +1332,7 @@ static void ar9003_hw_ani_cache_ini_regs(struct ath_hw *ah)
+ static void ar9003_hw_set_radar_params(struct ath_hw *ah,
+ 				       struct ath_hw_radar_conf *conf)
+ {
++	unsigned int regWrites = 0;
+ 	u32 radar_0 = 0, radar_1 = 0;
  
-diff --git a/drivers/net/wireless/prism54/isl_ioctl.h b/drivers/net/wireless/prism54/isl_ioctl.h
-index a34bceb..842a254 100644
---- a/drivers/net/wireless/prism54/isl_ioctl.h
-+++ b/drivers/net/wireless/prism54/isl_ioctl.h
-@@ -13,8 +13,7 @@
-  *  GNU General Public License for more details.
-  *
-  *  You should have received a copy of the GNU General Public License
-- *  along with this program; if not, write to the Free Software
-- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-+ *  along with this program; if not, see <http://www.gnu.org/licenses/>.
-  *
-  */
+ 	if (!conf) {
+@@ -1358,6 +1359,11 @@ static void ar9003_hw_set_radar_params(struct ath_hw *ah,
+ 		REG_SET_BIT(ah, AR_PHY_RADAR_EXT, AR_PHY_RADAR_EXT_ENA);
+ 	else
+ 		REG_CLR_BIT(ah, AR_PHY_RADAR_EXT, AR_PHY_RADAR_EXT_ENA);
++
++	if (AR_SREV_9300(ah) || AR_SREV_9340(ah) || AR_SREV_9580(ah)) {
++		REG_WRITE_ARRAY(&ah->ini_dfs,
++				IS_CHAN_HT40(ah->curchan) ? 2 : 1, regWrites);
++	}
+ }
  
-diff --git a/drivers/net/wireless/prism54/isl_oid.h b/drivers/net/wireless/prism54/isl_oid.h
-index 59e3125..83fec55 100644
---- a/drivers/net/wireless/prism54/isl_oid.h
-+++ b/drivers/net/wireless/prism54/isl_oid.h
-@@ -13,8 +13,7 @@
-  *  GNU General Public License for more details.
-  *
-  *  You should have received a copy of the GNU General Public License
-- *  along with this program; if not, write to the Free Software
-- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-+ *  along with this program; if not, see <http://www.gnu.org/licenses/>.
-  *
-  */
+ static void ar9003_hw_set_radar_conf(struct ath_hw *ah)
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index e508436..7490047 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -864,6 +864,7 @@ struct ath_hw {
+ 	u32 gpio_mask;
+ 	u32 gpio_val;
  
-diff --git a/drivers/net/wireless/prism54/islpci_dev.c b/drivers/net/wireless/prism54/islpci_dev.c
-index e05d9b4..53884ca 100644
---- a/drivers/net/wireless/prism54/islpci_dev.c
-+++ b/drivers/net/wireless/prism54/islpci_dev.c
-@@ -13,8 +13,7 @@
-  *  GNU General Public License for more details.
-  *
-  *  You should have received a copy of the GNU General Public License
-- *  along with this program; if not, write to the Free Software
-- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-+ *  along with this program; if not, see <http://www.gnu.org/licenses/>.
-  *
-  */
- 
-diff --git a/drivers/net/wireless/prism54/islpci_dev.h b/drivers/net/wireless/prism54/islpci_dev.h
-index c404038..f6f088e 100644
---- a/drivers/net/wireless/prism54/islpci_dev.h
-+++ b/drivers/net/wireless/prism54/islpci_dev.h
-@@ -14,8 +14,7 @@
-  *  GNU General Public License for more details.
-  *
-  *  You should have received a copy of the GNU General Public License
-- *  along with this program; if not, write to the Free Software
-- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-+ *  along with this program; if not, see <http://www.gnu.org/licenses/>.
-  *
-  */
- 
-diff --git a/drivers/net/wireless/prism54/islpci_eth.c b/drivers/net/wireless/prism54/islpci_eth.c
-index 799e148..674658f 100644
---- a/drivers/net/wireless/prism54/islpci_eth.c
-+++ b/drivers/net/wireless/prism54/islpci_eth.c
-@@ -11,8 +11,7 @@
-  *  GNU General Public License for more details.
-  *
-  *  You should have received a copy of the GNU General Public License
-- *  along with this program; if not, write to the Free Software
-- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-+ *  along with this program; if not, see <http://www.gnu.org/licenses/>.
-  *
-  */
- 
-diff --git a/drivers/net/wireless/prism54/islpci_eth.h b/drivers/net/wireless/prism54/islpci_eth.h
-index 6ca30a5..80f50f1 100644
---- a/drivers/net/wireless/prism54/islpci_eth.h
-+++ b/drivers/net/wireless/prism54/islpci_eth.h
-@@ -11,8 +11,7 @@
-  *  GNU General Public License for more details.
-  *
-  *  You should have received a copy of the GNU General Public License
-- *  along with this program; if not, write to the Free Software
-- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-+ *  along with this program; if not, see <http://www.gnu.org/licenses/>.
-  *
-  */
- 
-diff --git a/drivers/net/wireless/prism54/islpci_hotplug.c b/drivers/net/wireless/prism54/islpci_hotplug.c
-index 9e68e0c..890334a 100644
---- a/drivers/net/wireless/prism54/islpci_hotplug.c
-+++ b/drivers/net/wireless/prism54/islpci_hotplug.c
-@@ -12,8 +12,7 @@
-  *  GNU General Public License for more details.
-  *
-  *  You should have received a copy of the GNU General Public License
-- *  along with this program; if not, write to the Free Software
-- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-+ *  along with this program; if not, see <http://www.gnu.org/licenses/>.
-  *
-  */
- 
-diff --git a/drivers/net/wireless/prism54/islpci_mgt.c b/drivers/net/wireless/prism54/islpci_mgt.c
-index 9f19cce..0de14df 100644
---- a/drivers/net/wireless/prism54/islpci_mgt.c
-+++ b/drivers/net/wireless/prism54/islpci_mgt.c
-@@ -12,8 +12,7 @@
-  *  GNU General Public License for more details.
-  *
-  *  You should have received a copy of the GNU General Public License
-- *  along with this program; if not, write to the Free Software
-- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-+ *  along with this program; if not, see <http://www.gnu.org/licenses/>.
-  *
-  */
- 
-diff --git a/drivers/net/wireless/prism54/islpci_mgt.h b/drivers/net/wireless/prism54/islpci_mgt.h
-index 0db93db..700c434 100644
---- a/drivers/net/wireless/prism54/islpci_mgt.h
-+++ b/drivers/net/wireless/prism54/islpci_mgt.h
-@@ -12,8 +12,7 @@
-  *  GNU General Public License for more details.
-  *
-  *  You should have received a copy of the GNU General Public License
-- *  along with this program; if not, write to the Free Software
-- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-+ *  along with this program; if not, see <http://www.gnu.org/licenses/>.
-  *
-  */
- 
-diff --git a/drivers/net/wireless/prism54/oid_mgt.c b/drivers/net/wireless/prism54/oid_mgt.c
-index 056af38..47b34bf 100644
---- a/drivers/net/wireless/prism54/oid_mgt.c
-+++ b/drivers/net/wireless/prism54/oid_mgt.c
-@@ -11,8 +11,7 @@
-  *  GNU General Public License for more details.
-  *
-  *  You should have received a copy of the GNU General Public License
-- *  along with this program; if not, write to the Free Software
-- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-+ *  along with this program; if not, see <http://www.gnu.org/licenses/>.
-  *
-  */
- 
-diff --git a/drivers/net/wireless/prism54/oid_mgt.h b/drivers/net/wireless/prism54/oid_mgt.h
-index 92c8a2d..cf5141d 100644
---- a/drivers/net/wireless/prism54/oid_mgt.h
-+++ b/drivers/net/wireless/prism54/oid_mgt.h
-@@ -11,8 +11,7 @@
-  *  GNU General Public License for more details.
-  *
-  *  You should have received a copy of the GNU General Public License
-- *  along with this program; if not, write to the Free Software
-- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-+ *  along with this program; if not, see <http://www.gnu.org/licenses/>.
-  *
-  */
- 
-diff --git a/drivers/net/wireless/prism54/prismcompat.h b/drivers/net/wireless/prism54/prismcompat.h
-index aa1d174..bc1401e 100644
---- a/drivers/net/wireless/prism54/prismcompat.h
-+++ b/drivers/net/wireless/prism54/prismcompat.h
-@@ -11,8 +11,7 @@
-  *  GNU General Public License for more details.
-  *
-  *  You should have received a copy of the GNU General Public License
-- *  along with this program; if not, write to the Free Software
-- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-+ *  along with this program; if not, see <http://www.gnu.org/licenses/>.
-  *
-  */
- 
++	struct ar5416IniArray ini_dfs;
+ 	struct ar5416IniArray iniModes;
+ 	struct ar5416IniArray iniCommon;
+ 	struct ar5416IniArray iniBB_RfGain;
 -- 
-1.8.3.1
+1.8.4.2
 
