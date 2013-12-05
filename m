@@ -1,83 +1,226 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:53002 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932065Ab3LSSjH (ORCPT
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:56829 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932590Ab3LEPHa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Dec 2013 13:39:07 -0500
-Received: by mail-wi0-f170.google.com with SMTP id hq4so7007733wib.1
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Dec 2013 10:39:06 -0800 (PST)
-Message-ID: <52B33D43.1080209@gmail.com> (sfid-20131219_193913_013093_350FC21A)
-Date: Thu, 19 Dec 2013 20:38:59 +0200
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-MIME-Version: 1.0
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	Ben Hutchings <ben@decadent.org.uk>
-CC: Stanislaw Gruszka <sgruszka@redhat.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Seth@localhost.localdomain" <Seth@localhost.localdomain>,
-	Linville <linville@tuxdriver.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	Forshee <seth.forshee@canonical.com>,
-	"John@localhost.localdomain" <John@localhost.localdomain>,
-	Matt Chen <machen@suse.com>
-Subject: Re: [Ilw] Re: pull request: firmware for Intel Wireless adapter -
- 7260	/ 3160
-References: <CANUX_P3PxN3ENgizJ-V5D0Of45AFoGcJ2wuzW-8ZwzToxTkcdQ@mail.gmail.com>	<52AF37CE.4020906@gmail.com> <1387449216.21926.40.camel@deadeye.wl.decadent.org.uk> <0BA3FCBA62E2DC44AF3030971E174FB303D24E3E@HASMSX103.ger.corp.intel.com>
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB303D24E3E@HASMSX103.ger.corp.intel.com>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="xsRo3c9o1nsWiPthDVPIq6Vf2GKvWI7Jh"
+	Thu, 5 Dec 2013 10:07:30 -0500
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
+	yeohchunyeow@gmail.com
+Cc: yeohchunyeow@cozybit.com
+Subject: [PATCH v7 3/5] mac80211: refactor ieee80211_mesh_process_chanswitch()
+Date: Thu,  5 Dec 2013 17:07:22 +0200
+Message-Id: <1386256044-8651-4-git-send-email-luciano.coelho@intel.com> (sfid-20131205_160739_069137_76761264)
+In-Reply-To: <1386256044-8651-1-git-send-email-luciano.coelho@intel.com>
+References: <1386256044-8651-1-git-send-email-luciano.coelho@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---xsRo3c9o1nsWiPthDVPIq6Vf2GKvWI7Jh
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Refactor ieee80211_mesh_process_chanswitch() to use
+ieee80211_channel_switch() and avoid code duplication.
 
->>
->> On Mon, 2013-12-16 at 19:26 +0200, Emmanuel Grumbach wrote:
->>> Hi Ben,
->>>
->>> I have a new firmware for 7260 / 3160 - new version is 22.1.7.0.
->>>
->>> Please pull - thanks!
->>
->> You need to update the version number in WHENCE.
->>
->> Ben.
->>
-> Oops - thanks...
-> I can't push again from here - will do later and resend the pull-reques=
-t.
-> Sorry.
->=20
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+ net/mac80211/cfg.c         | 10 +++++--
+ net/mac80211/ieee80211_i.h |  6 +++-
+ net/mac80211/mesh.c        | 68 ++++++++++------------------------------------
+ net/mac80211/util.c        |  1 -
+ 4 files changed, 27 insertions(+), 58 deletions(-)
 
-Here you go - new head: 824994715e0276e64cdbf2badbe02921a78fb287
-Thanks for the good catch.
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index b5bc27e..790c15d 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3156,9 +3156,15 @@ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 		    params->chandef.chan->band)
+ 			return -EINVAL;
+ 
+-		err = ieee80211_mesh_csa_beacon(sdata, params, true);
+-		if (err < 0)
++		if (ifmsh->csa_role == IEEE80211_MESH_CSA_ROLE_NONE)
++			ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_INIT;
++
++		err = ieee80211_mesh_csa_beacon(sdata, params,
++			(ifmsh->csa_role == IEEE80211_MESH_CSA_ROLE_INIT));
++		if (err < 0) {
++			ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_NONE;
+ 			return err;
++		}
+ 		break;
+ #endif
+ 	default:
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index a7b4d55..cf38a74 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -611,7 +611,11 @@ struct ieee80211_if_mesh {
+ 	struct ps_data ps;
+ 	/* Channel Switching Support */
+ 	struct mesh_csa_settings __rcu *csa;
+-	bool chsw_init;
++	enum {
++		IEEE80211_MESH_CSA_ROLE_NONE,
++		IEEE80211_MESH_CSA_ROLE_INIT,
++		IEEE80211_MESH_CSA_ROLE_REPEATER,
++	} csa_role;
+ 	u8 chsw_ttl;
+ 	u16 pre_value;
+ };
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 330d1f7..980cc12 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -685,7 +685,7 @@ ieee80211_mesh_build_beacon(struct ieee80211_if_mesh *ifmsh)
+ 		*pos++ = csa->settings.count;
+ 		*pos++ = WLAN_EID_CHAN_SWITCH_PARAM;
+ 		*pos++ = 6;
+-		if (ifmsh->chsw_init) {
++		if (ifmsh->csa_role == IEEE80211_MESH_CSA_ROLE_INIT) {
+ 			*pos++ = ifmsh->mshcfg.dot11MeshTTL;
+ 			*pos |= WLAN_EID_CHAN_SWITCH_PARAM_INITIATOR;
+ 		} else {
+@@ -853,19 +853,11 @@ ieee80211_mesh_process_chnswitch(struct ieee80211_sub_if_data *sdata,
+ {
+ 	struct cfg80211_csa_settings params;
+ 	struct ieee80211_csa_ie csa_ie;
+-	struct ieee80211_chanctx_conf *chanctx_conf;
+-	struct ieee80211_chanctx *chanctx;
+ 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 	enum ieee80211_band band = ieee80211_get_sdata_band(sdata);
+-	int err, num_chanctx;
++	int err;
+ 	u32 sta_flags;
+ 
+-	if (sdata->vif.csa_active)
+-		return true;
+-
+-	if (!ifmsh->mesh_id)
+-		return false;
+-
+ 	sta_flags = IEEE80211_STA_DISABLE_VHT;
+ 	switch (sdata->vif.bss_conf.chandef.width) {
+ 	case NL80211_CHAN_WIDTH_20_NOHT:
+@@ -890,10 +882,6 @@ ieee80211_mesh_process_chnswitch(struct ieee80211_sub_if_data *sdata,
+ 	params.chandef = csa_ie.chandef;
+ 	params.count = csa_ie.count;
+ 
+-	if (sdata->vif.bss_conf.chandef.chan->band !=
+-	    params.chandef.chan->band)
+-		return false;
+-
+ 	if (!cfg80211_chandef_usable(sdata->local->hw.wiphy, &params.chandef,
+ 				     IEEE80211_CHAN_DISABLED)) {
+ 		sdata_info(sdata,
+@@ -916,25 +904,6 @@ ieee80211_mesh_process_chnswitch(struct ieee80211_sub_if_data *sdata,
+ 		return false;
+ 	}
+ 
+-	rcu_read_lock();
+-	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
+-	if (!chanctx_conf)
+-		goto failed_chswitch;
+-
+-	/* don't handle for multi-VIF cases */
+-	chanctx = container_of(chanctx_conf, struct ieee80211_chanctx, conf);
+-	if (chanctx->refcount > 1)
+-		goto failed_chswitch;
+-
+-	num_chanctx = 0;
+-	list_for_each_entry_rcu(chanctx, &sdata->local->chanctx_list, list)
+-		num_chanctx++;
+-
+-	if (num_chanctx > 1)
+-		goto failed_chswitch;
+-
+-	rcu_read_unlock();
+-
+ 	mcsa_dbg(sdata,
+ 		 "received channel switch announcement to go to channel %d MHz\n",
+ 		 params.chandef.chan->center_freq);
+@@ -945,27 +914,16 @@ ieee80211_mesh_process_chnswitch(struct ieee80211_sub_if_data *sdata,
+ 	else
+ 		ifmsh->chsw_ttl = 0;
+ 
+-	if (ifmsh->chsw_ttl > 0)
+-		if (ieee80211_mesh_csa_beacon(sdata, &params, false) < 0)
+-			return false;
+-
+-	sdata->csa_radar_required = params.radar_required;
+-
+-	if (params.block_tx)
+-		ieee80211_stop_queues_by_reason(&sdata->local->hw,
+-				IEEE80211_MAX_QUEUE_MAP,
+-				IEEE80211_QUEUE_STOP_REASON_CSA);
++	if (ifmsh->chsw_ttl == 0)
++		return false;
+ 
+-	sdata->csa_chandef = params.chandef;
+-	sdata->vif.csa_active = true;
++	ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_REPEATER;
+ 
+-	ieee80211_bss_info_change_notify(sdata, err);
+-	drv_channel_switch_beacon(sdata, &params.chandef);
++	if (ieee80211_channel_switch(sdata->local->hw.wiphy, sdata->dev,
++				     &params) < 0)
++		return false;
+ 
+ 	return true;
+-failed_chswitch:
+-	rcu_read_unlock();
+-	return false;
+ }
+ 
+ static void
+@@ -1075,7 +1033,8 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
+ 		ifmsh->sync_ops->rx_bcn_presp(sdata,
+ 			stype, mgmt, &elems, rx_status);
+ 
+-	if (!ifmsh->chsw_init)
++	if (ifmsh->csa_role != IEEE80211_MESH_CSA_ROLE_INIT &&
++	    !sdata->vif.csa_active)
+ 		ieee80211_mesh_process_chnswitch(sdata, &elems, true);
+ }
+ 
+@@ -1086,7 +1045,7 @@ int ieee80211_mesh_finish_csa(struct ieee80211_sub_if_data *sdata)
+ 	int ret = 0;
+ 
+ 	/* Reset the TTL value and Initiator flag */
+-	ifmsh->chsw_init = false;
++	ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_NONE;
+ 	ifmsh->chsw_ttl = 0;
+ 
+ 	/* Remove the CSA and MCSP elements from the beacon */
+@@ -1200,7 +1159,8 @@ static void mesh_rx_csa_frame(struct ieee80211_sub_if_data *sdata,
+ 
+ 	ifmsh->pre_value = pre_value;
+ 
+-	if (!ieee80211_mesh_process_chnswitch(sdata, &elems, false)) {
++	if (!sdata->vif.csa_active &&
++	    !ieee80211_mesh_process_chnswitch(sdata, &elems, false)) {
+ 		mcsa_dbg(sdata, "Failed to process CSA action frame");
+ 		return;
+ 	}
+@@ -1355,7 +1315,7 @@ void ieee80211_mesh_init_sdata(struct ieee80211_sub_if_data *sdata)
+ 	mesh_rmc_init(sdata);
+ 	ifmsh->last_preq = jiffies;
+ 	ifmsh->next_perr = jiffies;
+-	ifmsh->chsw_init = false;
++	ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_NONE;
+ 	/* Allocate all mesh structures when creating the first mesh interface. */
+ 	if (!mesh_allocated)
+ 		ieee80211s_init();
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 4a376a7..0dd7911 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2498,7 +2498,6 @@ int ieee80211_send_action_csa(struct ieee80211_sub_if_data *sdata,
+ 			ifmsh->pre_value++;
+ 		put_unaligned_le16(ifmsh->pre_value, pos);/* Precedence Value */
+ 		pos += 2;
+-		ifmsh->chsw_init = true;
+ 	}
+ 
+ 	ieee80211_tx_skb(sdata, skb);
+-- 
+1.8.4.3
 
-
---xsRo3c9o1nsWiPthDVPIq6Vf2GKvWI7Jh
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJSsz1FAAoJEC0Llv5uNjIBVwoP/AnnZqf0JRtfN9NmkarjxQ9S
-hxCJMJG6GA/kJNSx6ynxroyI+JUgW+cgZgQyN7g4rlCPB9/KwVuzs0/U3qbHMJH0
-luURgwkT0ZO9zyoVPSZcYVIyA1CoMcI1zERvZUq1yooxDa76EnRj3ut3jrDrHdYL
-HLs3pNnAj0RqG+VhMJTbsDRKPMOLFov4T9TGV0nZJz60QGKLRB6+Asni9dGUqwU4
-/2V6t0sKuQYM49UYk6Tc49VlsghmaZ2mZm2kdayO18ESwLvr3Lq6ksolgSinl8Cz
-BETlwpCA3L8q7vX3ALot8kt+CF+Egij57itUHcD/pxZMzoWGY4EXqT1JzvS+WpZn
-BOEA0GAmfR1efvBx5t7+D1Bjw/WwOnxXYb+fxPJ76o27VXFg2Nya4TmUrCykMcKR
-9FbIKqCrYjotu3kFTZEWxjyw8bEoSp1VZu1sCNN71ERSPgReu5fz7Yreb3gLaYmp
-5vtbqnP0ZqEwECOI3w7mXusVrW+cxRER4ZHegpNpkN9k/ByOtPnbSaxSaz+HGk5n
-73+/yMIqg6njlNaVxf+JT3F6DfeNGE/KfO2HR27nKCnEW3ssnTAZHGjwJfymSMHH
-UReo2eigR6oUsVUIzymiLPIJc1D105TDSukY8xp6cwhXNfEHd6savTt/ipqWZGmM
-ybibKsQGYhvtNGGG1n9T
-=iJ/V
------END PGP SIGNATURE-----
-
---xsRo3c9o1nsWiPthDVPIq6Vf2GKvWI7Jh--
