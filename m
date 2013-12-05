@@ -1,55 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:46960 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753661Ab3LDJOb (ORCPT
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:49993 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756943Ab3LESaj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Dec 2013 04:14:31 -0500
-Message-ID: <1386148462.4284.13.camel@jlt4.sipsolutions.net> (sfid-20131204_101437_441505_F640B008)
-Subject: Re: [PATCH 4/4] nl80211: add VHT support for set_bitrate_mask
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@gmail.com>
-Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <j@w1.fi>
-Date: Wed, 04 Dec 2013 10:14:22 +0100
-In-Reply-To: <CAFED-jkJ0d+AAmjusWXhFH5dutof7VSQkwqK+Ead1M8JUmhjVg@mail.gmail.com> (sfid-20131204_100834_380854_3EA7654F)
-References: <1386060648-6020-1-git-send-email-janusz.dziedzic@tieto.com>
-	 <1386060648-6020-4-git-send-email-janusz.dziedzic@tieto.com>
-	 <1386080659.4393.29.camel@jlt4.sipsolutions.net>
-	 <CALhHN=q63LmZb7CvO=4sDWf70-O7_vc7T6jhU7gFQNtsH7PuDQ@mail.gmail.com>
-	 <1386145635.4284.10.camel@jlt4.sipsolutions.net>
-	 <CAFED-jkJ0d+AAmjusWXhFH5dutof7VSQkwqK+Ead1M8JUmhjVg@mail.gmail.com>
-	 (sfid-20131204_100834_380854_3EA7654F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 5 Dec 2013 13:30:39 -0500
+Received: by mail-ie0-f176.google.com with SMTP id at1so29666380iec.21
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Dec 2013 10:30:38 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <52A09324.6050706@rempel-privat.de>
+References: <CANq1E4Td-uDE7fR-5PkJEBZkMRQODs+i-jgytt4O2YewxT9yrA@mail.gmail.com>
+	<52A09324.6050706@rempel-privat.de>
+Date: Thu, 5 Dec 2013 19:30:38 +0100
+Message-ID: <CANq1E4SUYppAB8fAOAvuva4npQ4PA8ngAJesMsDb6LGLeVn-3A@mail.gmail.com> (sfid-20131205_193042_909118_98BC4911)
+Subject: Re: [BUG] Atheros AR9280: NULL-deref during P2P setup
+From: David Herrmann <dh.herrmann@gmail.com>
+To: Oleksij Rempel <linux@rempel-privat.de>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-12-04 at 10:08 +0100, Janusz Dziedzic wrote:
+Hi
 
-> Yes, and I added 8 bitmaps:
-> 
-> + u16 vht_mcs[IEEE80211_VHT_NSS_MAX];
+On Thu, Dec 5, 2013 at 3:52 PM, Oleksij Rempel <linux@rempel-privat.de> wrote:
+> Hi David,
+>
+> currently i work on other ath9k_htc related issue. If you or some body
+> else can work on this one it will be great.
 
-But that was the internal API, inside the kernel.
+It's weird, now I cannot reproduce the issue. I am actually trying to
+make my Nexus-4 and my linux host connect via wifi-p2p. If I initiate
+the connection via standard Android Wifi-Direct menu, it all works.
+However, doing that via the Wifi-Display menu hasn't worked, yet. I
+correctly set the WFD IE subelements and can see the device, but
+initiating the connection from the Android device just sends an
+P2P_INVITATION. If I follow up via P2P_CONNECT, nothing happens. Just
+nothing..
 
-> 80 bytes is because of format we will from user mode (80 available
-> combinations for VHT mask).
-> I decided for:
-> >> 9 - NSS=1, MCS=9
-> >> 10 - NSS=2, MCS=0
-> >> 11 - NSS=2, MCS=1
-> To be compatible with ht-mcs set.
-> You mean better to send 8*u16 from user mode and do conversion in IW
-> (currently we send 80 bytes and do conversion in nl80211, same as for
-> HT)?
+All I get is this:
+<3>P2P-DEVICE-FOUND 12:68:3f:4e:39:f2 p2p_dev_addr=12:68:3f:4e:39:f2
+pri_dev_type=10-0050F204-5 name='dvdhrm-nx' config_methods=0x188
+dev_capab=0x25 group_capab=0x0
+<3>P2P-INVITATION-RECEIVED sa=12:68:3f:4e:39:f2
+go_dev_addr=12:68:3f:4e:39:f2 bssid=12:68:3f:4e:b9:f2 unknown-network
 
-But HT MCS is specified that way, there are 77 MCSes in HT, which each
-have implicit NSS etc. That's how the standard works for HT. For VHT,
-the standard works completely differently.
+I tried all available pin-methods.. I will check the wpa_supplicant
+log later, but it's usually overly verbose that I cannot find anything
+useful in it.
 
-So yes, I think sending 8 bitmaps from userspace would be much easier to
-understand.
+Note that after the android device timed-out, it gets the incoming
+p2p-connection from my linux host. But it gets it as standard
+P2P-connection, not as WFD connection. So somehow it ignores all
+incoming requests.
 
-johannes
+Weird thing is, earlier today I got a P2P-PROV-DISC-REQ instead of the
+P2P-INVITATION-RECEIVED. cannot figure out why.. same kernel, same
+config. Tried it like 20 times each..
 
+Any hints welcome! Especially if someone knows more about Android wifi
+debugging.
+
+Thanks
+David
