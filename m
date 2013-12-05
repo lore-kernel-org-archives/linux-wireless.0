@@ -1,165 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f54.google.com ([74.125.83.54]:47922 "EHLO
-	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752006Ab3LPK4I (ORCPT
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:56834 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932592Ab3LEPHb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Dec 2013 05:56:08 -0500
-Received: by mail-ee0-f54.google.com with SMTP id e51so1824687eek.27
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Dec 2013 02:56:06 -0800 (PST)
-From: Marek Puzyniak <marek.puzyniak@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	Marek Puzyniak <marek.puzyniak@tieto.com>
-Subject: [PATCH v4] cfg80211: fix dfs channel state after stopping AP
-Date: Mon, 16 Dec 2013 11:55:46 +0100
-Message-Id: <1387191346-23830-1-git-send-email-marek.puzyniak@tieto.com> (sfid-20131216_115612_959113_E7AE37EA)
+	Thu, 5 Dec 2013 10:07:31 -0500
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
+	yeohchunyeow@gmail.com
+Cc: yeohchunyeow@cozybit.com
+Subject: [PATCH v7 4/5] mac80211: align ieee80211_mesh_csa_beacon() with ieee80211_csa_beacon()
+Date: Thu,  5 Dec 2013 17:07:23 +0200
+Message-Id: <1386256044-8651-5-git-send-email-luciano.coelho@intel.com> (sfid-20131205_160738_434969_D064D0BC)
+In-Reply-To: <1386256044-8651-1-git-send-email-luciano.coelho@intel.com>
+References: <1386256044-8651-1-git-send-email-luciano.coelho@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In AP mode DFS channel state is changed to DFS_AVAILABLE
-after successful CAC and remains as such until a radar
-signal is detected during the In-Service Monitoring.
-When AP is stopped it is no longer monitoring current channel
-for radar signals. DFS channel state should be changed
-to DFS_USABLE when last AP interface is stopped. Starting AP
-again on that channel will start CAC instead of starting radiation.
+The return value of ieee80211_mesh_csa_beacon is not aligned with the
+return value of ieee80211_csa_beacon() and
+ieee80211_ibss_csa_beacon().  For consistency and to be able to use
+both functions with similar code, change ieee80211_mesh_csa_beacon()
+not to send the bss changed notification itself, but return what has
+changed so the caller can send the notification instead.
 
-Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
+Change-Id: If4c111fd874a3e17a5df98d306f7f1c8fcaa6a1a
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- net/wireless/ap.c   | 40 ++++++++++++++++++++++++++++++++++++++++
- net/wireless/chan.c | 38 ++++++++++++++++++++++++++++++++++++++
- net/wireless/core.h | 11 +++++++++++
- 3 files changed, 89 insertions(+)
+ net/mac80211/mesh.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/net/wireless/ap.c b/net/wireless/ap.c
-index 324e8d8..bb7b206 100644
---- a/net/wireless/ap.c
-+++ b/net/wireless/ap.c
-@@ -6,6 +6,43 @@
- #include "rdev-ops.h"
- 
- 
-+static bool cfg80211_is_last_ap_running(struct cfg80211_registered_device *rdev,
-+					struct net_device *dev)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct wireless_dev *wdev_iter;
-+
-+	ASSERT_WDEV_LOCK(wdev);
-+
-+	if (rdev->num_running_ifaces == 1) {
-+		/* Last running AP iface*/
-+		return true;
-+	}
-+
-+	/* More running interfaces */
-+	list_for_each_entry(wdev_iter, &rdev->wdev_list, list) {
-+		if (wdev_iter == wdev)
-+			continue;
-+
-+		if (!wdev_iter->netdev)
-+			continue;
-+
-+		wdev_lock(wdev_iter);
-+		if (!netif_running(wdev_iter->netdev)) {
-+			wdev_unlock(wdev_iter);
-+			continue;
-+		}
-+
-+		if (wdev_iter->iftype == NL80211_IFTYPE_AP) {
-+			wdev_unlock(wdev_iter);
-+			return false;
-+		}
-+		wdev_unlock(wdev_iter);
-+	}
-+
-+	return true;
-+}
-+
- static int __cfg80211_stop_ap(struct cfg80211_registered_device *rdev,
- 			      struct net_device *dev)
- {
-@@ -31,6 +68,9 @@ static int __cfg80211_stop_ap(struct cfg80211_registered_device *rdev,
- 		wdev->ssid_len = 0;
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 980cc12..5476ad9 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -1089,12 +1089,10 @@ int ieee80211_mesh_csa_beacon(struct ieee80211_sub_if_data *sdata,
+ 		return ret;
  	}
  
-+	if (cfg80211_is_last_ap_running(rdev, dev))
-+		cfg80211_leave_dfs_chandef(wdev->wiphy, &wdev->preset_chandef);
-+
- 	return err;
+-	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
+-
+ 	if (csa_action)
+ 		ieee80211_send_action_csa(sdata, csa_settings);
+ 
+-	return 0;
++	return BSS_CHANGED_BEACON;
  }
  
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index 78559b5..54c217a 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -490,6 +490,44 @@ static bool cfg80211_chandef_dfs_available(struct wiphy *wiphy,
- 	return r;
- }
- 
-+static void cfg80211_leave_dfs_chans(struct wiphy *wiphy,
-+				     u32 center_freq,
-+				     u32 bandwidth)
-+{
-+	struct ieee80211_channel *c;
-+	u32 freq, start_freq, end_freq;
-+
-+	start_freq = cfg80211_get_start_freq(center_freq, bandwidth);
-+	end_freq = cfg80211_get_end_freq(center_freq, bandwidth);
-+
-+	for (freq = start_freq; freq <= end_freq; freq += 20) {
-+		c = ieee80211_get_channel(wiphy, freq);
-+		if (!c)
-+			continue;
-+		if (c->dfs_state != NL80211_DFS_AVAILABLE)
-+			continue;
-+
-+		c->dfs_state = NL80211_DFS_USABLE;
-+		c->dfs_state_entered = jiffies;
-+	}
-+}
-+
-+void cfg80211_leave_dfs_chandef(struct wiphy *wiphy,
-+				struct cfg80211_chan_def *chandef)
-+{
-+	int width;
-+
-+	if (WARN_ON(!cfg80211_chandef_valid(chandef)))
-+		return;
-+
-+	width = cfg80211_chandef_get_width(chandef);
-+	cfg80211_leave_dfs_chans(wiphy, chandef->center_freq1, width);
-+
-+	if (!chandef->center_freq2)
-+		return;
-+
-+	cfg80211_leave_dfs_chans(wiphy, chandef->center_freq2, width);
-+}
- 
- static bool cfg80211_secondary_chans_ok(struct wiphy *wiphy,
- 					u32 center_freq, u32 bandwidth,
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 37ec16d..4ed2c81 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -398,6 +398,17 @@ void cfg80211_set_dfs_state(struct wiphy *wiphy,
- 
- void cfg80211_dfs_channels_update_work(struct work_struct *work);
- 
-+/**
-+ * cfg80211_leave_dfs_chandef - Leaving dfs chandef
-+ * @wiphy: the wiphy
-+ * @chandef: chandef for the current channel
-+ *
-+ * This function is called when dfs chandef is being not used for different
-+ * reasons. Change channels DFS_AVAILABLE to DFS_USABLE again. Leave channels
-+ * DFS_UNAVAILABLE untouched.
-+ */
-+void cfg80211_leave_dfs_chandef(struct wiphy *wiphy,
-+				struct cfg80211_chan_def *chandef);
- 
- static inline int
- cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
+ static int mesh_fwd_csa_frame(struct ieee80211_sub_if_data *sdata,
 -- 
-1.8.1.2
+1.8.4.3
 
