@@ -1,63 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:43864 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751445Ab3LHJLq (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:32905 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751053Ab3LEIvB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Dec 2013 04:11:46 -0500
-Received: by mail-wg0-f47.google.com with SMTP id n12so2275193wgh.14
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Dec 2013 01:11:45 -0800 (PST)
-Message-ID: <1386493890.5257.15.camel@canaries32-MCP7A> (sfid-20131208_101209_053148_148E3A6E)
-Subject: [PATCH] staging: vt6656: [BUG] BBvUpdatePreEDThreshold Always set
- sensitivity on bScanning
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Sun, 08 Dec 2013 09:11:30 +0000
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 5 Dec 2013 03:51:01 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org
+Subject: [RFC 01/12] ath9k: Add initval arrays for DFS channels
+Date: Thu,  5 Dec 2013 14:16:06 +0530
+Message-Id: <1386233177-11132-2-git-send-email-sujith@msujith.org> (sfid-20131205_095106_315980_67595B4B)
+In-Reply-To: <1386233177-11132-1-git-send-email-sujith@msujith.org>
+References: <1386233177-11132-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-byBBPreEDIndex value is initially 0, this means that from
-cold BBvUpdatePreEDThreshold is never set.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-This means that sensitivity may be in an ambiguous state,
-failing to scan any wireless points or at least distant ones.
-
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
-Cc: stable@vger.kernel.org
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/staging/vt6656/baseband.c | 3 ---
- 1 file changed, 3 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h |  7 +++++++
+ drivers/net/wireless/ath/ath9k/ar9340_initvals.h     |  2 ++
+ drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h | 13 +++++++++++--
+ 3 files changed, 20 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/vt6656/baseband.c b/drivers/staging/vt6656/baseband.c
-index 468f455..86c047b 100644
---- a/drivers/staging/vt6656/baseband.c
-+++ b/drivers/staging/vt6656/baseband.c
-@@ -1464,7 +1464,6 @@ void BBvUpdatePreEDThreshold(struct vnt_private *pDevice, int bScanning)
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
+index e7cdf11..97b4bd1 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
+@@ -1745,4 +1745,11 @@ static const u32 ar9300_2p2_baseband_core_txfir_coeff_japan_2484[][2] = {
+ 	{0x0000a3a0, 0xca9228ee},
+ };
  
-             if( bScanning )
-             {   // need Max sensitivity //RSSI -69, -70,....
--                if(pDevice->byBBPreEDIndex == 0) break;
-                 pDevice->byBBPreEDIndex = 0;
-                 ControlvWriteByte(pDevice, MESSAGE_REQUEST_BBREG, 0xC9, 0x00); //CR201(0xC9)
-                 ControlvWriteByte(pDevice, MESSAGE_REQUEST_BBREG, 0xCE, 0x30); //CR206(0xCE)
-@@ -1607,7 +1606,6 @@ void BBvUpdatePreEDThreshold(struct vnt_private *pDevice, int bScanning)
++static const u32 ar9300_2p2_baseband_postamble_dfs_channel[][3] = {
++	/* Addr      5G          2G        */
++	{0x00009824, 0x5ac668d0, 0x5ac668d0},
++	{0x00009e0c, 0x6d4000e2, 0x6d4000e2},
++	{0x00009e14, 0x37b9625e, 0x37b9625e},
++};
++
+ #endif /* INITVALS_9003_2P2_H */
+diff --git a/drivers/net/wireless/ath/ath9k/ar9340_initvals.h b/drivers/net/wireless/ath/ath9k/ar9340_initvals.h
+index 7f22cb2..a01f0ed 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9340_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9340_initvals.h
+@@ -30,6 +30,8 @@
  
-             if( bScanning )
-             {   // need Max sensitivity  //RSSI -69, -70, ...
--                if(pDevice->byBBPreEDIndex == 0) break;
-                 pDevice->byBBPreEDIndex = 0;
-                 ControlvWriteByte(pDevice, MESSAGE_REQUEST_BBREG, 0xC9, 0x00); //CR201(0xC9)
-                 ControlvWriteByte(pDevice, MESSAGE_REQUEST_BBREG, 0xCE, 0x24); //CR206(0xCE)
-@@ -1759,7 +1757,6 @@ void BBvUpdatePreEDThreshold(struct vnt_private *pDevice, int bScanning)
-         case RF_VT3342A0: //RobertYu:20060627, testing table
-             if( bScanning )
-             {   // need Max sensitivity  //RSSI -67, -68, ...
--                if(pDevice->byBBPreEDIndex == 0) break;
-                 pDevice->byBBPreEDIndex = 0;
-                 ControlvWriteByte(pDevice, MESSAGE_REQUEST_BBREG, 0xC9, 0x00); //CR201(0xC9)
-                 ControlvWriteByte(pDevice, MESSAGE_REQUEST_BBREG, 0xCE, 0x38); //CR206(0xCE)
+ #define ar9340_1p0_baseband_core_txfir_coeff_japan_2484 ar9300_2p2_baseband_core_txfir_coeff_japan_2484
+ 
++#define ar9340_1p0_baseband_postamble_dfs_channel ar9300_2p2_baseband_postamble_dfs_channel
++
+ static const u32 ar9340_1p0_radio_postamble[][5] = {
+ 	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
+ 	{0x000160ac, 0xa4646800, 0xa4646800, 0xa4646800, 0xa4646800},
+diff --git a/drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h
+index 75bef11..e6aec2c 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h
+@@ -57,8 +57,6 @@ static const u32 ar9580_1p0_baseband_core[][2] = {
+ 	{0x00009804, 0xfd14e000},
+ 	{0x00009808, 0x9c0a9f6b},
+ 	{0x0000980c, 0x04900000},
+-	{0x00009814, 0x3280c00a},
+-	{0x00009818, 0x00000000},
+ 	{0x0000981c, 0x00020028},
+ 	{0x00009834, 0x6400a190},
+ 	{0x00009838, 0x0108ecff},
+@@ -1133,6 +1131,8 @@ static const u32 ar9580_1p0_rx_gain_table[][2] = {
+ static const u32 ar9580_1p0_baseband_postamble[][5] = {
+ 	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
+ 	{0x00009810, 0xd00a8005, 0xd00a8005, 0xd00a8011, 0xd00a8011},
++	{0x00009814, 0x3280c00a, 0x3280c00a, 0x3280c00a, 0x3280c00a},
++	{0x00009818, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+ 	{0x00009820, 0x206a022e, 0x206a022e, 0x206a012e, 0x206a012e},
+ 	{0x00009824, 0x5ac640d0, 0x5ac640d0, 0x5ac640d0, 0x5ac640d0},
+ 	{0x00009828, 0x06903081, 0x06903081, 0x06903881, 0x06903881},
+@@ -1207,4 +1207,13 @@ static const u32 ar9580_1p0_pcie_phy_pll_on_clkreq[][2] = {
+ 	{0x00004044, 0x00000000},
+ };
+ 
++static const u32 ar9580_1p0_baseband_postamble_dfs_channel[][3] = {
++	/* Addr      5G          2G        */
++	{0x00009814, 0x3400c00f, 0x3400c00f},
++	{0x00009824, 0x5ac668d0, 0x5ac668d0},
++	{0x00009828, 0x06903080, 0x06903080},
++	{0x00009e0c, 0x6d4000e2, 0x6d4000e2},
++	{0x00009e14, 0x37b9625e, 0x37b9625e},
++};
++
+ #endif /* INITVALS_9580_1P0_H */
 -- 
-1.8.5.1
+1.8.4.2
 
