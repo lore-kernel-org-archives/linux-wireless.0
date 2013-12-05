@@ -1,82 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:3827 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751953Ab3LWHBS (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:52480 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932718Ab3LEPmj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Dec 2013 02:01:18 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Thu, 5 Dec 2013 10:42:39 -0500
+Message-ID: <1386258156.4182.8.camel@jlt4.sipsolutions.net> (sfid-20131205_164255_025867_67654AD4)
+Subject: Re: [PATCH v2 3/3] nl80211: add VHT support for set_bitrate_mask
+From: Johannes Berg <johannes@sipsolutions.net>
 To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: add set_bitrate_mask callback
-References: <1387653946-2988-1-git-send-email-janusz.dziedzic@tieto.com>
-Date: Mon, 23 Dec 2013 09:01:13 +0200
-In-Reply-To: <1387653946-2988-1-git-send-email-janusz.dziedzic@tieto.com>
-	(Janusz Dziedzic's message of "Sat, 21 Dec 2013 20:25:46 +0100")
-Message-ID: <87d2koxd8m.fsf@kamboji.qca.qualcomm.com> (sfid-20131223_080125_956367_ED0770D3)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Cc: linux-wireless@vger.kernel.org, j@w1.fi
+Date: Thu, 05 Dec 2013 16:42:36 +0100
+In-Reply-To: <1386234137-3531-3-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131205_100230_705131_CB931FCE)
+References: <1386234137-3531-1-git-send-email-janusz.dziedzic@tieto.com>
+	 <1386234137-3531-3-git-send-email-janusz.dziedzic@tieto.com>
+	 (sfid-20131205_100230_705131_CB931FCE)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
+On Thu, 2013-12-05 at 10:02 +0100, Janusz Dziedzic wrote:
 
-> Add set_bitrate_mask callback. Currently
-> ath10k HW is limited to handle only single
-> fixed rate setting or limit number of used
-> spatial streams.
->
-> Example:
-> iw wlanX set bitrates legacy-5 ht-mcs-5 vht-mcs-5 2:9
-> will setup VHT, nss=2, mcs=9
->
-> iw wlanX set bitrates legacy-5 18 ht-mcs-5 vht-mcs-5
-> will setup legacy, 18Mbps
->
-> iw wlanX set bitrates legacy-5 ht-mcs-5 3 vht-mcs-5
-> will setup HT, nss=1, mcs=3
->
-> iw wlanX set bitrate legacy-5 ht-mcs-5 vht-mcs-5 1:0-9
-> will setup nss=1
->
-> iw wlanX set bitrate legacy-5 ht-mcs-5 vht-mcs-5 1:0-9 2:0-9
-> will setup nss=2
->
-> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+> +	switch (vht_mcs_map & 0x03) {
 
-I see a new warning with this patch:
+I think that should be in the caller.
 
-ath10k/mac.c:3593:52: error: unknown field name in initializer
+> +	case IEEE80211_VHT_MCS_NOT_SUPPORTED:
+> +		break;
+> +	case IEEE80211_VHT_MCS_SUPPORT_0_7:
+> +		mcs_mask = 0x00FF;
+> +		break;
+> +	case IEEE80211_VHT_MCS_SUPPORT_0_8:
+> +		mcs_mask = 0x01FF;
+> +		break;
+> +	case IEEE80211_VHT_MCS_SUPPORT_0_9:
+> +		mcs_mask = 0x03FF;
+> +		break;
+> +	}
+> +
+> +	return mcs_mask;
+> +}
+> +
+> +static void vht_build_mcs_mask(u16 vht_mcs_map,
+> +			       u16 vht_mcs_mask[NL80211_VHT_NSS_MAX])
+> +{
+> +	u8 nss;
+> +
+> +	for (nss = 0; nss < NL80211_VHT_NSS_MAX; nss++) {
+> +		vht_mcs_mask[nss] = vht_mcs_map_to_mcs_mask(vht_mcs_map);
+> +		vht_mcs_map >>= 2;
+> +	}
 
-> Depends on, nl80211: add VHT support for set_bitrate_mask
-
-Good, I need to always know this. I now merged wireless-next to ath-next
-to get the dependency included.
-
-> --- a/drivers/net/wireless/ath/ath10k/wmi.h
-> +++ b/drivers/net/wireless/ath/ath10k/wmi.h
-> @@ -3003,6 +3003,24 @@ struct wmi_vdev_install_key_arg {
->  	const void *key_data;
->  };
+> @@ -7364,20 +7430,31 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
+>  					mask.control[band].ht_mcs))
+>  				return -EINVAL;
+>  		}
+> +		if (tb[NL80211_TXRATE_VHT]) {
+> +			if (!vht_set_mcs_mask(
+> +					sband,
+> +					nla_data(tb[NL80211_TXRATE_VHT]),
+> +					mask.control[band].vht_mcs))
+> +				return -EINVAL;
+> +		}
 >  
-> +/*
-> + * CCK:  0 - 11Mbps, 1 - 5,5Mbps, 2 - 2Mbps, 3 - 1Mbps,
-> + *       4 - 11Mbps (s), 5 - 5,5Mbps (s), 6 - 2Mbps (s)
-> + * OFDM: 0 - 48Mbps, 1 - 24Mbps, 2 - 12Mbps, 3 - 6Mbps,
-> + *       4 - 54Mbps, 5 - 36Mbps, 6 - 18Mbps, 7 - 9Mbps
-> + * HT/VHT: MCS index
-> + */
-> +struct wmi_vdev_fixed_rate {
-> +	union {
-> +		u8 rate;
-> +		struct {
-> +			u8 preamble:2, /* %WMI_RATE_PREAMBLE_ */
-> +			   nss:2,
-> +			   rate_mcs:4; /* see above */
-> +		} __packed;
-> +	} __packed;
-> +} __packed;
+>  		if (mask.control[band].legacy == 0) {
+> -			/* don't allow empty legacy rates if HT
+> -			 * is not even supported. */
+> -			if (!rdev->wiphy.bands[band]->ht_cap.ht_supported)
+> +			/* don't allow empty legacy rates if HT or VHT
+> +			 * are not even supported. */
 
-Bitfields are frowned upon in kernel, better to use SM() and MS().
+comment style
 
--- 
-Kalle Valo
+johannes
+
