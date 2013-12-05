@@ -1,97 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f51.google.com ([74.125.83.51]:34175 "EHLO
-	mail-ee0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755650Ab3LaRQe (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:51860 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751299Ab3LENJT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Dec 2013 12:16:34 -0500
-Received: by mail-ee0-f51.google.com with SMTP id b15so5638974eek.38
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Dec 2013 09:16:33 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Ilan Peer <ilan.peer@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 22/28] iwlwifi: mvm: Add a missed beacons threshold
-Date: Tue, 31 Dec 2013 19:15:51 +0200
-Message-Id: <1388510157-23345-22-git-send-email-egrumbach@gmail.com> (sfid-20131231_183436_460569_DFB5C8F1)
-In-Reply-To: <52C2FB68.2010708@gmail.com>
-References: <52C2FB68.2010708@gmail.com>
+	Thu, 5 Dec 2013 08:09:19 -0500
+Message-ID: <1386248952.4182.1.camel@jlt4.sipsolutions.net> (sfid-20131205_140922_976451_7EB0F98B)
+Subject: Re: [PATCH v2 3/6] cfg80211: Enable GO operation on additional
+ channels
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ilan Peer <ilan.peer@intel.com>
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
+Date: Thu, 05 Dec 2013 14:09:12 +0100
+In-Reply-To: <1386098166-24196-4-git-send-email-ilan.peer@intel.com> (sfid-20131203_201542_768088_0385761E)
+References: <1386098166-24196-1-git-send-email-ilan.peer@intel.com>
+	 <1386098166-24196-4-git-send-email-ilan.peer@intel.com>
+	 (sfid-20131203_201542_768088_0385761E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ilan Peer <ilan.peer@intel.com>
+On Tue, 2013-12-03 at 21:16 +0200, Ilan Peer wrote:
 
-Instead of always calling ieee80211_beacon_loss() on every missed
-beacons notification, call this function only if the number of
-consecutive missed beacons from last rx is higher than a predefined
-threshold.
+> +#ifdef CONFIG_CFG80211_REG_SOFT_CONFIGURATIONS
+> +/* For GO only, check if the channel can be used under permissive conditions
+> + * mandated by the some regulatory bodies, i.e., the channel is marked with
+> + * IEEE80211_CHAN_GO_CONCURRENT and there is an additional station interface
+> + * associated to an AP on the same channel or on the same UNII band
+> + * (assuming that the AP is an authorized master).
+> + */
+> +static bool cfg80211_go_permissive_chan(struct cfg80211_registered_device *rdev,
+> +					struct ieee80211_channel *chan)
+> +{
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c |   25 ++++++++++++++++++++-----
- drivers/net/wireless/iwlwifi/mvm/mvm.h      |    1 +
- 2 files changed, 21 insertions(+), 5 deletions(-)
+Seems like you could move the ifdef here ...
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-index eaaf2db..761cca3 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-@@ -1191,10 +1191,18 @@ int iwl_mvm_rx_beacon_notif(struct iwl_mvm *mvm,
- static void iwl_mvm_beacon_loss_iterator(void *_data, u8 *mac,
- 					 struct ieee80211_vif *vif)
- {
--	u16 *id = _data;
-+	struct iwl_missed_beacons_notif *missed_beacons = _data;
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 
--	if (mvmvif->id == *id)
-+	if (mvmvif->id != (u16)le32_to_cpu(missed_beacons->mac_id))
-+		return;
-+
-+	/*
-+	 * TODO: the threshold should be adjusted based on latency conditions,
-+	 * and/or in case of a CS flow on one of the other AP vifs.
-+	 */
-+	if (le32_to_cpu(missed_beacons->consec_missed_beacons_since_last_rx) >
-+	     IWL_MVM_MISSED_BEACONS_THRESHOLD)
- 		ieee80211_beacon_loss(vif);
- }
- 
-@@ -1203,12 +1211,19 @@ int iwl_mvm_rx_missed_beacons_notif(struct iwl_mvm *mvm,
- 				    struct iwl_device_cmd *cmd)
- {
- 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
--	struct iwl_missed_beacons_notif *missed_beacons = (void *)pkt->data;
--	u16 id = (u16)le32_to_cpu(missed_beacons->mac_id);
-+	struct iwl_missed_beacons_notif *mb = (void *)pkt->data;
-+
-+	IWL_DEBUG_INFO(mvm,
-+		       "missed bcn mac_id=%u, consecutive=%u (%u, %u, %u)\n",
-+		       le32_to_cpu(mb->mac_id),
-+		       le32_to_cpu(mb->consec_missed_beacons),
-+		       le32_to_cpu(mb->consec_missed_beacons_since_last_rx),
-+		       le32_to_cpu(mb->num_recvd_beacons),
-+		       le32_to_cpu(mb->num_expected_beacons));
- 
- 	ieee80211_iterate_active_interfaces_atomic(mvm->hw,
- 						   IEEE80211_IFACE_ITER_NORMAL,
- 						   iwl_mvm_beacon_loss_iterator,
--						   &id);
-+						   mb);
- 	return 0;
- }
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index 84edf36..ca8a904 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -81,6 +81,7 @@
- #define IWL_MVM_MAX_ADDRESSES		5
- /* RSSI offset for WkP */
- #define IWL_RSSI_OFFSET 50
-+#define IWL_MVM_MISSED_BEACONS_THRESHOLD 8
- 
- enum iwl_mvm_tx_fifo {
- 	IWL_MVM_TX_FIFO_BK = 0,
--- 
-1.7.9.5
+> +	struct wireless_dev *wdev_iter;
+> +
+> +	ASSERT_RTNL();
+> +
+> +	if (!(chan->flags & IEEE80211_CHAN_GO_CONCURRENT))
+> +		return false;
+> +
+> +	list_for_each_entry(wdev_iter, &rdev->wdev_list, list) {
+> +		struct ieee80211_channel *other_chan = NULL;
+> +
+> +		if (wdev_iter->iftype != NL80211_IFTYPE_STATION ||
+> +		    !netif_running(wdev_iter->netdev))
+> +				continue;
+> +
+> +		wdev_lock(wdev_iter);
+> +		if (wdev_iter->current_bss)
+> +			other_chan = wdev_iter->current_bss->pub.channel;
+> +		wdev_unlock(wdev_iter);
+> +
+> +		if (!other_chan)
+> +			continue;
+> +
+> +		if (chan == other_chan) {
+> +			return true;
+> +		} else if (chan->band == IEEE80211_BAND_5GHZ) {
+> +			int r1 = cfg80211_get_unii(chan->center_freq);
+> +			int r2 = cfg80211_get_unii(other_chan->center_freq);
+> +
+> +			if (r1 != -EINVAL && r1 == r2)
+> +				return true;
+> +		}
+> +	}
+
+and here instead of duplicating the function prototype
+
+> +	return false;
+> +}
+
+johannes
 
