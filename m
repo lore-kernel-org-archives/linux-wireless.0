@@ -1,74 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0151.hostedemail.com ([216.40.44.151]:55714 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754671Ab3LGWzc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Dec 2013 17:55:32 -0500
-Message-ID: <1386456926.31845.57.camel@joe-AO722> (sfid-20131207_235549_204524_E361F6EC)
-Subject: Re: [net] nfc: Fix FSF address in file headers
-From: Joe Perches <joe@perches.com>
-To: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Date: Sat, 07 Dec 2013 14:55:26 -0800
-In-Reply-To: <1386456552.2195.52.camel@jtkirshe-mobl>
-References: <1386348976-24657-1-git-send-email-jeffrey.t.kirsher@intel.com>
-	 <52A39F18.8080202@broadcom.com> <1386456552.2195.52.camel@jtkirshe-mobl>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from mga01.intel.com ([192.55.52.88]:35607 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752362Ab3LETbN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Dec 2013 14:31:13 -0500
+From: "Coelho, Luciano" <luciano.coelho@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"sw@simonwunderlich.de" <sw@simonwunderlich.de>,
+	"yeohchunyeow@gmail.com" <yeohchunyeow@gmail.com>,
+	"yeohchunyeow@cozybit.com" <yeohchunyeow@cozybit.com>,
+	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
+Subject: Re: [PATCH v8 3/5] mac80211: refactor
+ ieee80211_mesh_process_chanswitch()
+Date: Thu, 5 Dec 2013 19:31:08 +0000
+Message-ID: <1386271868.3878.26.camel@porter.coelho.fi> (sfid-20131205_203121_156183_E0A05D52)
+References: <1386257143-29840-1-git-send-email-luciano.coelho@intel.com>
+	 <1386257143-29840-4-git-send-email-luciano.coelho@intel.com>
+	 (sfid-20131205_162558_512881_D06BF6C3)
+ <1386259544.4182.14.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1386259544.4182.14.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2013-12-07 at 14:49 -0800, Jeff Kirsher wrote:
-> On Sat, 2013-12-07 at 23:20 +0100, Arend van Spriel wrote:
-> > On 12/06/2013 05:56 PM, Jeff Kirsher wrote:
-> > > Several files refer to an old address for the Free Software Foundation
-> > > in the file header comment.  Resolve by replacing the address with
-> > > the URL<http://www.gnu.org/licenses/>  so that we do not have to keep
-> > > updating the header comments anytime the address changes.
-> > 
-> > This seems to pop up from time to time and unfortunately the resolution 
-> > seems not consistent at those times. Why not simply refer to the full 
-> > license text that is in the COPYING file in the tree itself.
-> 
-> I, personally have only had one request in the last 10 years to change
-> our Intel Wired Ethernet headers and that was because the address
-> changed.  I am open to suggestions, although when I proposed either
-> updating the address to the current address or use the URL on LKML and
-> netdev, the response I got was to update to the use the URL.
-> 
-> I guess the only argument I would have against referring to the COPYING
-> in the tree itself is that the headers already state:
-> 
-> You should have received a copy of the GNU General Public License along
-> with this program;
-> 
-> (which refers to the COPYING file) and then it states...
-> 
-> if not, write to the Free Software Foundation, Inc.,
-> 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
-> 
-> This is the second part that needs cleanup if the file refers to the old
-> address.  So just by removing the address and providing the URL, you are
-> providing a place that users can get the license *if* the COPYING file
-> gets removed (or altered) by who ever releases the kernel.
-
-Hi Jeff.
-
-I think what you've done is fine, but remember that
-URLs come and go too.
-
-There was a discussion about this just a bit ago on lkml
-https://lkml.org/lkml/2013/10/6/158
-and this message was added to checkpatch recently:
-
-"Do not include the paragraph about writing to the Free Software
-Foundation's mailing address from the sample GPL notice. The FSF has
-changed addresses in the past, and may do so again. Linux already
-includes a copy of the GPL.\n"
-
-
+T24gVGh1LCAyMDEzLTEyLTA1IGF0IDE3OjA1ICswMTAwLCBKb2hhbm5lcyBCZXJnIHdyb3RlOg0K
+PiBPbiBUaHUsIDIwMTMtMTItMDUgYXQgMTc6MjUgKzAyMDAsIEx1Y2lhbm8gQ29lbGhvIHdyb3Rl
+Og0KPiANCj4gPiArKysgYi9uZXQvbWFjODAyMTEvdXRpbC5jDQo+ID4gQEAgLTI0OTgsNyArMjQ5
+OCw2IEBAIGludCBpZWVlODAyMTFfc2VuZF9hY3Rpb25fY3NhKHN0cnVjdCBpZWVlODAyMTFfc3Vi
+X2lmX2RhdGEgKnNkYXRhLA0KPiA+ICAJCQlpZm1zaC0+cHJlX3ZhbHVlKys7DQo+ID4gIAkJcHV0
+X3VuYWxpZ25lZF9sZTE2KGlmbXNoLT5wcmVfdmFsdWUsIHBvcyk7LyogUHJlY2VkZW5jZSBWYWx1
+ZSAqLw0KPiA+ICAJCXBvcyArPSAyOw0KPiA+IC0JCWlmbXNoLT5jaHN3X2luaXQgPSB0cnVlOw0K
+PiANCj4gV2hlcmUgZGlkIHRoaXMgZ28/IEknbSBhc2tpbmcgbW9zdGx5IGJlY2F1c2UgbWFjODAy
+MTEuZ2l0IGhhcyBhIHBhdGNoDQo+IHRoYXQgY2hhbmdlZCB0aGlzIGNvZGUgc28gSSdtIHdvbmRl
+cmluZyBob3cgdG8gcmVzb2x2ZSB0aGUgY29uZmxpY3QgLi4uDQoNClRoaXMgYmVjYW1lIHRoZSBp
+Zm1zaC0+Y3NhX3JvbGUuICBpZm1zaC0+Y2hzd19pbml0ID09IHRydWUgaXMgbm93DQppZm1zaC0+
+Y3NhX3JvbGUgPT0gSUVFRTgwMjExX01FU0hfQ1NBX1JPTEVfSU5JVC4NCg0KLS0NCkx1Y2EuDQo=
