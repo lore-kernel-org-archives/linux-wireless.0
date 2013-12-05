@@ -1,58 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:51359 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752785Ab3LRI67 (ORCPT
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:43368 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752250Ab3LEPUy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Dec 2013 03:58:59 -0500
-Message-ID: <52B163CC.1030901@broadcom.com> (sfid-20131218_095943_327416_3C0D634C)
-Date: Wed, 18 Dec 2013 09:58:52 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Pontus Fuchs <pontus.fuchs@gmail.com>,
-	Sander Eikelenboom <linux@eikelenboom.it>,
-	Ben Hutchings <ben@decadent.org.uk>
-CC: Julian Calaby <julian.calaby@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <avinashapatil@gmail.com>
-Subject: Re: [cfg80211 / iwlwifi] setting wireless regulatory domain doesn't
- work.
-References: <1342235583.20131211182804@eikelenboom.it> <CAB=NE6UfumA2xez1DvtDSBDZ72WF_tOozFo_8LRnMryYiSqD-A@mail.gmail.com> <871324710.20131211191104@eikelenboom.it> <CAB=NE6XRnE0j9NMW0K1vKzEO9v70arSH4YXZjudqa0ZxiLB4AA@mail.gmail.com> <1937118387.20131216122200@eikelenboom.it> <52AEE60B.6030509@broadcom.com> <19210260274.20131216135644@eikelenboom.it> <CAGRGNgXHemM2FfnXgW5RbzhFT+9SfUfVkjdysK3+=_u3hWSacw@mail.gmail.com> <1534126119.20131217104548@eikelenboom.it> <387552477.20131217213319@eikelenboom.it> <20131217212709.GB5624@decadent.org.uk> <1254825772.20131217224914@eikelenboom.it> <52B153B3.4070903@gmail.com>
-In-Reply-To: <52B153B3.4070903@gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Thu, 5 Dec 2013 10:20:54 -0500
+Message-ID: <1386256850.3878.19.camel@porter.coelho.fi> (sfid-20131205_162057_177143_115F568A)
+Subject: Re: [PATCH v7 5/5] mac80211: only set CSA beacon when at least one
+ beacon must be transmitted
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: sw@simonwunderlich.de, yeohchunyeow@gmail.com,
+	yeohchunyeow@cozybit.com
+Date: Thu, 05 Dec 2013 17:20:50 +0200
+In-Reply-To: <1386256044-8651-6-git-send-email-luciano.coelho@intel.com>
+References: <1386256044-8651-1-git-send-email-luciano.coelho@intel.com>
+	 <1386256044-8651-6-git-send-email-luciano.coelho@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/18/2013 08:50 AM, Pontus Fuchs wrote:
-> On 2013-12-17 22:49, Sander Eikelenboom wrote:
->>
->> Indeed, I looked for a crda hook for initramfs-tools but didn't find
->> it, so skipped that idea
->> for the moment.
->>
->> So if i combine the two .. it's essentially just a very bad idea to
->> compile the wireless stuff in.
->> It needs a access to a userland program at module load time, or it
->> will block forever.
-> 
-> The canonical trick to have cfg80211 built in is to execute crda
-> manually in your boot scripts. This will satisfy the initial request and
-> resolve the block.
+On Thu, 2013-12-05 at 17:07 +0200, Luciano Coelho wrote:
+> @@ -2982,21 +2982,19 @@ cfg80211_beacon_dup(struct cfg80211_beacon_data *beacon)
+>  	return new_beacon;
+>  }
+>  
+> -void ieee80211_csa_finalize_work(struct work_struct *work)
+> +void ieee80211_csa_finish(struct ieee80211_vif *vif)
+>  {
+> -	struct ieee80211_sub_if_data *sdata =
+> -		container_of(work, struct ieee80211_sub_if_data,
+> -			     csa_finalize_work);
+> -	struct ieee80211_local *local = sdata->local;
+> -	int err, changed = 0;
+> +	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+>  
+> -	sdata_lock(sdata);
+> -	/* AP might have been stopped while waiting for the lock. */
+> -	if (!sdata->vif.csa_active)
+> -		goto unlock;
+> +	ieee80211_queue_work(&sdata->local->hw,
+> +			     &sdata->csa_finalize_work);
+> +}
+> +EXPORT_SYMBOL(ieee80211_csa_finish);
+>  
+> -	if (!ieee80211_sdata_running(sdata))
+> -		goto unlock;
+> +static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
+> +{
+> +	struct ieee80211_local *local = sdata->local;
+> +	int err, changed = 0;
+>  
+>  	sdata->radar_required = sdata->csa_radar_required;
+>  	err = ieee80211_vif_change_channel(sdata, &changed);
+> @@ -3048,6 +3046,29 @@ unlock:
+>  	sdata_unlock(sdata);
+>  }
 
-There is a Kconfig option to have the regulatory data built-in the
-kernel as well. Obviously that makes a regulatory update more difficult.
+Hrmmmhh... This unlock should not be here anymore.  I missed it when
+rebasing.
 
-net/wireless/Kconfig:
-config CFG80211_INTERNAL_REGDB
-        bool "use statically compiled regulatory rules database" if EXPERT
+v8 coming soon!
 
-Regards,
-AvS
+--
+Luca.
 
