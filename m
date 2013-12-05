@@ -1,77 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:32059 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751779Ab3LJWLW (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:53070 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932847Ab3LESx4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Dec 2013 17:11:22 -0500
-From: Chet Lanctot <clanctot@codeaurora.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Chet Lanctot <clanctot@codeaurora.org>
-Subject: [PATCH 0/2 V3] nl80211/cfg80211: Support PMF on drivers with integrated AP SME
-Date: Tue, 10 Dec 2013 14:11:15 -0800
-Message-Id: <1386713477-30040-1-git-send-email-clanctot@codeaurora.org> (sfid-20131210_231125_484390_C3C8F30A)
+	Thu, 5 Dec 2013 13:53:56 -0500
+Message-ID: <1386269631.4182.22.camel@jlt4.sipsolutions.net> (sfid-20131205_195400_289983_9648E70B)
+Subject: Re: [PATCH v8 4/5] mac80211: align ieee80211_mesh_csa_beacon() with
+ ieee80211_csa_beacon()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Coelho, Luciano" <luciano.coelho@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"sw@simonwunderlich.de" <sw@simonwunderlich.de>,
+	"yeohchunyeow@gmail.com" <yeohchunyeow@gmail.com>,
+	"yeohchunyeow@cozybit.com" <yeohchunyeow@cozybit.com>,
+	"Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
+Date: Thu, 05 Dec 2013 19:53:51 +0100
+In-Reply-To: <1386269585.3878.21.camel@porter.coelho.fi>
+References: <1386257143-29840-1-git-send-email-luciano.coelho@intel.com>
+	 <1386257143-29840-5-git-send-email-luciano.coelho@intel.com>
+	 (sfid-20131205_162554_500402_7BA9FCA3) <1386259467.4182.13.camel@jlt4.sipsolutions.net>
+	 <1386269585.3878.21.camel@porter.coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These patches represent a small number of extensions to the
-nl80211/cfg80211 interface to support Protected Management Frames
-(PMF, 802.11w) on an AP when the AP SME is integrated into the
-device driver or device firmware.
+On Thu, 2013-12-05 at 18:53 +0000, Coelho, Luciano wrote:
+> On Thu, 2013-12-05 at 17:04 +0100, Johannes Berg wrote:
+> > On Thu, 2013-12-05 at 17:25 +0200, Luciano Coelho wrote:
+> > > The return value of ieee80211_mesh_csa_beacon is not aligned with the
+> > > return value of ieee80211_csa_beacon() and
+> > > ieee80211_ibss_csa_beacon().  For consistency and to be able to use
+> > > both functions with similar code, change ieee80211_mesh_csa_beacon()
+> > > not to send the bss changed notification itself, but return what has
+> > > changed so the caller can send the notification instead.
+> > 
+> > It seems to me that the caller should be updated?
+> 
+> With this patch only, the caller just checks if the return value is < 0
+> (ie. an error), otherwise it assumes it was okay.  With this patch, we
+> still return < 0 on errors, but we return positive, saying that the
+> beacon has changed.
+> 
+> My next patch (5/5) changes the caller so that the value is used
+> properly (ie. ORing the return value to the changed variable).
 
-Device drivers that implement AP SME handle connection requests
-from stations internally.  These patches allow hostapd to specify
-to the device driver the PMF state that should be used when these
-connections are made.
+But doesn't that leave this patch broken?
 
-Also, these patches allow device drivers that do not implement the
-SA Query procedure (part of PMF) to communicate the need for hostapd
-do this procedure.  Normally the software component handling
-connection requests would do SA Query. These patches provide a way
-for the device driver to shift SA Query processing to hostapd where
-it is already fully implemented.
-
-The following changes are made to nl80211/cfg80211.
-
-1.  A new nl80211_ap_sme_feature is defined which is used by drivers
-to inform hostapd that the driver does not support the SA query
-procedure.  hostapd must register for Re/Association Request frames
-from the driver so that these frames can be delivered by the driver
-to start an SA Query procedure.  An example of code in
-the driver that sets this feature is as follows:
-     struct wiphy *wiphy; /* wiphy defined in cfg80211.h */
-     .
-     .
-     .
-     wiphy->ap_sme_capa |= BIT(NL80211_AP_SME_FEATURE_NO_SA_QUERY);
-
-2.  A new entry is made in cfg80211_ap_settings to inform drivers
-whether management frame protection should be used for station connections.
-This entry is passed by hostapd using NL80211_CMD_START_AP and it is only
-used when the device is acting as an AP.  Existing type nl80211_mfp defines the
-values that can be used for this entry.  Existing value NL80211_MFP_NO
-means that PMF connections cannot be made with stations. Existing value
-NL80211_MFP_REQUIRED means that all station connections must be PMF
-protected.  A new value NL80211_MFP_OPTIONAL is defined which means
-that a connection can be made if the station supports it, but it is
-not required.
-
-3.  A new station flag is defined that indicates to the driver that
-hostapd has completed the SA Query procedure for that station (SA
-Query timed out) and the driver should process the next Re/Association
-Request normally and not pass it to hostapd.
-
-Chet Lanctot (2):
-  nl80211/cfg80211: Add support for drivers with AP SME that require
-    PMF SA Query assistance
-  nl80211/cfg80211: Enable station PMF requirement to be specified to
-    driver with AP SME
-
- include/net/cfg80211.h       |  4 ++++
- include/uapi/linux/nl80211.h | 26 ++++++++++++++++++++------
- net/wireless/nl80211.c       | 16 +++++++++++++---
- 3 files changed, 37 insertions(+), 9 deletions(-)
-
--- 
-1.7.12.rc0.22.gcdd159b
+johannes
 
