@@ -1,89 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:60267 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755944Ab3L3OZ0 (ORCPT
+Received: from mail-ea0-f181.google.com ([209.85.215.181]:57733 "EHLO
+	mail-ea0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751699Ab3LEOGd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Dec 2013 09:25:26 -0500
-Message-ID: <1388413508.2900.54.camel@deadeye.wl.decadent.org.uk> (sfid-20131230_152545_921212_0D620442)
-Subject: Re: [Ilw] Re: pull request: firmware for Intel Wireless adapter -
- 7260	/ 3160
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	Matt Chen <machen@suse.com>
-Date: Mon, 30 Dec 2013 15:25:08 +0100
-In-Reply-To: <52B33D43.1080209@gmail.com>
-References: <CANUX_P3PxN3ENgizJ-V5D0Of45AFoGcJ2wuzW-8ZwzToxTkcdQ@mail.gmail.com>
-		<52AF37CE.4020906@gmail.com>
-	 <1387449216.21926.40.camel@deadeye.wl.decadent.org.uk>
-	 <0BA3FCBA62E2DC44AF3030971E174FB303D24E3E@HASMSX103.ger.corp.intel.com>
-	 <52B33D43.1080209@gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-CbFx9enPwgOsVHQWXHSp"
-Mime-Version: 1.0
+	Thu, 5 Dec 2013 09:06:33 -0500
+Received: by mail-ea0-f181.google.com with SMTP id m10so11500477eaj.12
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Dec 2013 06:06:30 -0800 (PST)
+From: Marek Kwaczynski <marek.kwaczynski@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	Marek Kwaczynski <marek.kwaczynski@tieto.com>
+Subject: [PATCH V6] mac80211: Update opmode during adding new station
+Date: Thu,  5 Dec 2013 15:05:34 +0100
+Message-Id: <1386252334-26696-1-git-send-email-marek.kwaczynski@tieto.com> (sfid-20131205_150636_491020_E1688B4C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Update Operating Mode Notification is needed when User Space
+received Assoc Request contains Operating Mode Notification
+element.
 
---=-CbFx9enPwgOsVHQWXHSp
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Marek Kwaczynski <marek.kwaczynski@tieto.com>
+---
 
-On Thu, 2013-12-19 at 20:38 +0200, Emmanuel Grumbach wrote:
-> >>
-> >> On Mon, 2013-12-16 at 19:26 +0200, Emmanuel Grumbach wrote:
-> >>> Hi Ben,
-> >>>
-> >>> I have a new firmware for 7260 / 3160 - new version is 22.1.7.0.
-> >>>
-> >>> Please pull - thanks!
-> >>
-> >> You need to update the version number in WHENCE.
-> >>
-> >> Ben.
-> >>
-> > Oops - thanks...
-> > I can't push again from here - will do later and resend the pull-reques=
-t.
-> > Sorry.
-> >=20
->=20
-> Here you go - new head: 824994715e0276e64cdbf2badbe02921a78fb287
-> Thanks for the good catch.
+V6: Moved ieee80211_vht_recalc_handle_opmode calling to
+sta_apply_parameters function, it works fine
+V5: Moved ieee80211_vht_recalc_handle_opmode calling to other place
+in ieee80211_add_station function. Tested and worked fine.
+V4: It didn't work. Function sta_apply_parameters overwrote bandwidth
+and nss parameters from ht and vht capabilities.
 
-Pulled and pushed out, thanks.
+ net/mac80211/cfg.c         |    8 ++++++++
+ net/mac80211/ieee80211_i.h |    3 +++
+ net/mac80211/vht.c         |   29 +++++++++++++++++------------
+ 3 files changed, 28 insertions(+), 12 deletions(-)
 
-Ben.
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 95667b0..4e45992 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1315,6 +1315,14 @@ static int sta_apply_parameters(struct ieee80211_local *local,
+ 		ieee80211_vht_cap_ie_to_sta_vht_cap(sdata, sband,
+ 						    params->vht_capa, sta);
+ 
++	if (params->opmode_notif_used) {
++		enum ieee80211_band band =
++				ieee80211_get_sdata_band(sdata);
++		ieee80211_vht_recalc_handle_opmode(sdata, sta,
++						   params->opmode_notif,
++						   band, 0);
++	}
++
+ 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
+ #ifdef CONFIG_MAC80211_MESH
+ 		u32 changed = 0;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 29dc505..13965e1 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1510,6 +1510,9 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
+ 				    struct sta_info *sta);
+ enum ieee80211_sta_rx_bandwidth ieee80211_sta_cur_vht_bw(struct sta_info *sta);
+ void ieee80211_sta_set_rx_nss(struct sta_info *sta);
++u32 ieee80211_vht_recalc_handle_opmode(struct ieee80211_sub_if_data *sdata,
++				       struct sta_info *sta, u8 opmode,
++				       enum ieee80211_band band, bool nss_only);
+ void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
+ 				 struct sta_info *sta, u8 opmode,
+ 				 enum ieee80211_band band, bool nss_only);
+diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
+index de01127..61d788c 100644
+--- a/net/mac80211/vht.c
++++ b/net/mac80211/vht.c
+@@ -350,21 +350,17 @@ void ieee80211_sta_set_rx_nss(struct sta_info *sta)
+ 	sta->sta.rx_nss = max_t(u8, 1, ht_rx_nss);
+ }
+ 
+-void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
+-				 struct sta_info *sta, u8 opmode,
+-				 enum ieee80211_band band, bool nss_only)
++u32 ieee80211_vht_recalc_handle_opmode(struct ieee80211_sub_if_data *sdata,
++				       struct sta_info *sta, u8 opmode,
++				       enum ieee80211_band band, bool nss_only)
+ {
+-	struct ieee80211_local *local = sdata->local;
+-	struct ieee80211_supported_band *sband;
+ 	enum ieee80211_sta_rx_bandwidth new_bw;
+-	u32 changed = 0;
+ 	u8 nss;
+-
+-	sband = local->hw.wiphy->bands[band];
++	u32 changed = 0;
+ 
+ 	/* ignore - no support for BF yet */
+ 	if (opmode & IEEE80211_OPMODE_NOTIF_RX_NSS_TYPE_BF)
+-		return;
++		return 0;
+ 
+ 	nss = opmode & IEEE80211_OPMODE_NOTIF_RX_NSS_MASK;
+ 	nss >>= IEEE80211_OPMODE_NOTIF_RX_NSS_SHIFT;
+@@ -376,7 +372,7 @@ void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	if (nss_only)
+-		goto change;
++		return changed;
+ 
+ 	switch (opmode & IEEE80211_OPMODE_NOTIF_CHANWIDTH_MASK) {
+ 	case IEEE80211_OPMODE_NOTIF_CHANWIDTH_20MHZ:
+@@ -398,8 +394,17 @@ void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
+ 		sta->sta.bandwidth = new_bw;
+ 		changed |= IEEE80211_RC_BW_CHANGED;
+ 	}
++	return changed;
++}
+ 
+- change:
+-	if (changed)
++void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
++				 struct sta_info *sta, u8 opmode,
++				 enum ieee80211_band band, bool nss_only)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_supported_band *sband = local->hw.wiphy->bands[band];
++	u32 changed = ieee80211_vht_recalc_handle_opmode(sdata, sta, opmode,
++							 band, nss_only);
++	if (changed > 0)
+ 		rate_control_rate_update(local, sband, sta, changed);
+ }
+-- 
+1.7.9.5
 
---=20
-Ben Hutchings
-Logic doesn't apply to the real world. - Marvin Minsky
-
---=-CbFx9enPwgOsVHQWXHSp
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.15 (GNU/Linux)
-
-iQIVAwUAUsGCROe/yOyVhhEJAQoC3RAAzWIec23IA4FCH0p6qlkpGnZA8Q6Thlmx
-STEWWPrys+oSwLZQFZ4U4CLhfi/36tTbDYsO/cSNlLIvdC0chCqaacLmm6Ldzxy2
-hvW9wVLR/e80IanniX2wDwmOYDnu4OofymEoYkwtKr1sw8tvMl+CjD4z4hfTroPE
-b5L24wdTzLynD6LlY4gCJm1Ny5Gldo4syRj/pbnThUQxV3ePcHFgGIqMbZX87b8j
-ErPD0hULG8WnSXFbti6h5/qvQsvWqfp630lbehiiIkh1StIufS7S195NJQ+NqeVF
-5vO8PAYIjszdzJ8DXHhAgAQSJXqml0v7IkE0JIwZNN47k9O4cbKE1yQo0zphIHQt
-tVtwGO5eDv5XhDpIaecHsYZWzaHj2xu1WPn7GzATEYYWZdzHnIk3Jax7hDcbS+TR
-ZVvDM/p181QD4UKomaPKSFFosApAUWPyhp7hUiDndJpDP7JFpmN2cBJ40kZ9fDyW
-EAheI5XWOmZ1alhFZ99kDzq7K/p3Li5zCXvpFVxwN98BeZJ+we2mP9cJpkzPlS+4
-AiXnbikDYRUR36c9mJ8i1lYXCVjG+1pPdBqvdCrsxjhWTddGpELGTiExFR2t6ESH
-xspMdqJN0t2P38VJ2oZTeEWy6t42bfOofY9SN2uikumDZnQAj1XxCAfbD3YlgHNj
-T/g6SDbKLlQ=
-=8B7C
------END PGP SIGNATURE-----
-
---=-CbFx9enPwgOsVHQWXHSp--
