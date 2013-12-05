@@ -1,66 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f171.google.com ([209.85.220.171]:54994 "EHLO
-	mail-vc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755168Ab3LDJpK (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:52525 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756765Ab3LEPpd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Dec 2013 04:45:10 -0500
-Received: by mail-vc0-f171.google.com with SMTP id ik5so11339661vcb.30
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Dec 2013 01:45:09 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAEFj9850NcEhzBFTDkOhCKzpQNtBooSCj3CqsJHuncunUxXw9Q@mail.gmail.com>
-References: <1386078502-19845-1-git-send-email-luciano.coelho@intel.com>
-	<1386078502-19845-6-git-send-email-luciano.coelho@intel.com>
-	<CAEFj9850NcEhzBFTDkOhCKzpQNtBooSCj3CqsJHuncunUxXw9Q@mail.gmail.com>
-Date: Wed, 4 Dec 2013 17:45:09 +0800
-Message-ID: <CAEFj984YzCvRtqKtvvng_9EUFk3J2wFRcrn-1xNmQ85OZ1BxfQ@mail.gmail.com> (sfid-20131204_104517_070440_3373136C)
-Subject: Re: [PATCH v6 5/5] mac80211: only set CSA beacon when at least one
- beacon must be transmitted
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: Luciano Coelho <luciano.coelho@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Simon Wunderlich <sw@simonwunderlich.de>,
-	Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 5 Dec 2013 10:45:33 -0500
+Message-ID: <1386258330.4182.11.camel@jlt4.sipsolutions.net> (sfid-20131205_164536_836909_DD19B182)
+Subject: Re: [PATCH 4/4] cfg80211: prevent race condition on scan request
+ cleanup
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 05 Dec 2013 16:45:30 +0100
+In-Reply-To: <CAB3XZEc4pikahyAmPCh_pCjFEiRvFgAyZgxGrbH9A6hLP2nhFw@mail.gmail.com> (sfid-20131205_163919_049659_09596AAD)
+References: <1386235289-27278-1-git-send-email-eliad@wizery.com>
+	 <1386235289-27278-4-git-send-email-eliad@wizery.com>
+	 <1386253879.4182.4.camel@jlt4.sipsolutions.net>
+	 <CAB3XZEcpM9PAQCGQ99X2A-bqYXoPEmE=Cg29CDKY7=s8QquwUA@mail.gmail.com>
+	 <1386254607.4182.5.camel@jlt4.sipsolutions.net>
+	 <CAB3XZEc4pikahyAmPCh_pCjFEiRvFgAyZgxGrbH9A6hLP2nhFw@mail.gmail.com>
+	 (sfid-20131205_163919_049659_09596AAD)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 4, 2013 at 5:35 PM, Yeoh Chun-Yeow <yeohchunyeow@gmail.com> wrote:
->>  #ifdef CONFIG_MAC80211_MESH
->>         case NL80211_IFTYPE_MESH_POINT:
->> @@ -3159,12 +3208,18 @@ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
->>                 if (ifmsh->csa_role == IEEE80211_MESH_CSA_ROLE_NONE)
->>                         ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_INIT;
->>
->> -               err = ieee80211_mesh_csa_beacon(sdata, params,
->> -                       (ifmsh->csa_role == IEEE80211_MESH_CSA_ROLE_INIT));
->> -               if (err < 0) {
->> -                       ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_NONE;
->> -                       return err;
->> +               if (params->count > 1) {
->> +                       err = ieee80211_mesh_csa_beacon(sdata, params);
->> +                       if (err < 0) {
->> +                               ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_NONE;
->> +                               return err;
->> +                       }
->> +                       changed |= err;
->>                 }
->
-> Since the ieee80211_mesh_csa_beacon is not called, the kfree_rcu of
-> tmp_csa_settings in ieee80211_mesh_finish_csa has caused kernel oops.
->
-> Anyway, I would like to suggest if the params->count is less than 1,
-> the mesh channel switch is not triggered since there maybe mesh STA
-> located two hops away from the initiator.
->
-> if (params->count > 1) {
-> .....
-> } else
-> return -EINVAL;
+On Thu, 2013-12-05 at 17:39 +0200, Eliad Peller wrote:
+> On Thu, Dec 5, 2013 at 4:43 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > On Thu, 2013-12-05 at 16:36 +0200, Eliad Peller wrote:
+> >> On Thu, Dec 5, 2013 at 4:31 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> >> > On Thu, 2013-12-05 at 11:21 +0200, Eliad Peller wrote:
+> >> >
+> >> >> @@ -219,8 +221,13 @@ void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev, bool leak)
+> >> >>        * the scan request or not ... if it accesses the dev
+> >> >>        * in there (it shouldn't anyway) then it may crash.
+> >> >>        */
+> >> >> -     if (!leak)
+> >> >> -             kfree(request);
+> >> >> +     if (leak) {
+> >> >> +             request->pending_cleanup = true;
+> >> >> +             return;
+> >> >
+> >> > This seems insufficient, if the driver never indicates completion, we'd
+> >> > never clear rdev->scan_req?
+> >> >
+> >> right, but i think it somehow makes sense (i.e. the driver must
+> >> indicate completion...)?
+> >
+> > But the whole thing was intended to catch buggy drivers :)
+> >
+> yeah, you have a point here :)
+> anyway, i guess it's either leaking scan_req and hoping the driver
+> really forgot about it, or keeping it and hoping the driver will
+> finally indicate completion.
+> 
+> since i don't think this is a real-world scenario, i'm ok with
+> dropping this patch.
 
-maybe try to push the checking of params->count earlier, such as follow:
+Well, it can be made to crash, so ...
 
-if (params->count < 2)
-      return -EINVAL;
+Can we maybe avoid the crash in a different way? Disallow a new scan
+somehow?
 
-----
-Chun-Yeow
+> > Btw, should any of this go to 3.13?
+> maybe the first one. it's the only "real" issue.
+
+Thanks.
+
+johannes
+
