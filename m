@@ -1,81 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f43.google.com ([209.85.214.43]:46532 "EHLO
-	mail-bk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752841Ab3LJQJn (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:52624 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751949Ab3LEQPG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Dec 2013 11:09:43 -0500
-From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Kalle Valo <kvalo@adurom.com>
-Subject: Re: [PATCH v2 02/16] wl1251: add sysfs interface for bluetooth coexistence mode configuration
-Date: Tue, 10 Dec 2013 17:09:38 +0100
-Cc: Luciano Coelho <luca@coelho.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
-	joni.lapilainen@gmail.com,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Felipe Contreras <felipe.contreras@gmail.com>,
-	David Gnedt <david.gnedt@davizone.at>
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com> <1386494714-21070-3-git-send-email-pali.rohar@gmail.com> <87y53spv2p.fsf@purkki.adurom.net>
-In-Reply-To: <87y53spv2p.fsf@purkki.adurom.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1900256.WvqENPmUIs";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <201312101709.38566@pali> (sfid-20131210_171148_174121_D6367315)
+	Thu, 5 Dec 2013 11:15:06 -0500
+Message-ID: <1386260099.4182.16.camel@jlt4.sipsolutions.net> (sfid-20131205_171511_138218_0B1C1FA1)
+Subject: Re: [PATCH 4/4] cfg80211: prevent race condition on scan request
+ cleanup
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 05 Dec 2013 17:14:59 +0100
+In-Reply-To: <CAB3XZEc4pikahyAmPCh_pCjFEiRvFgAyZgxGrbH9A6hLP2nhFw@mail.gmail.com> (sfid-20131205_163919_049659_09596AAD)
+References: <1386235289-27278-1-git-send-email-eliad@wizery.com>
+	 <1386235289-27278-4-git-send-email-eliad@wizery.com>
+	 <1386253879.4182.4.camel@jlt4.sipsolutions.net>
+	 <CAB3XZEcpM9PAQCGQ99X2A-bqYXoPEmE=Cg29CDKY7=s8QquwUA@mail.gmail.com>
+	 <1386254607.4182.5.camel@jlt4.sipsolutions.net>
+	 <CAB3XZEc4pikahyAmPCh_pCjFEiRvFgAyZgxGrbH9A6hLP2nhFw@mail.gmail.com>
+	 (sfid-20131205_163919_049659_09596AAD)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1900256.WvqENPmUIs
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+On Thu, 2013-12-05 at 17:39 +0200, Eliad Peller wrote:
 
-On Tuesday 10 December 2013 16:46:54 Kalle Valo wrote:
-> Pali Roh=C3=A1r <pali.rohar@gmail.com> writes:
-> > From: David Gnedt <david.gnedt@davizone.at>
-> >=20
-> > Port the bt_coex_mode sysfs interface from wl1251 driver
-> > version included in the Maemo Fremantle kernel to allow
-> > bt-coexistence mode configuration. This enables userspace
-> > applications to set one of the modes WL1251_BT_COEX_OFF,
-> > WL1251_BT_COEX_ENABLE and WL1251_BT_COEX_MONOAUDIO. The
-> > default mode is WL1251_BT_COEX_OFF.
-> > It should be noted that this driver always enabled
-> > bt-coexistence before and enabled bt-coexistence directly
-> > affects the receiving performance, rendering it unusable in
-> > some low-signal situations. Especially monitor mode is
-> > affected very badly with bt-coexistence enabled.
-> >=20
-> > Signed-off-by: David Gnedt <david.gnedt@davizone.at>
-> > Signed-off-by: Pali Roh=C3=A1r <pali.rohar@gmail.com>
->=20
-> I think this is also what I wrote a long time. And also this
-> sysfs hack should not go to upstream.
->=20
-> Over the years there has been some talk about solving the BT
-> coex properly, but I haven't seen any patches. I guess the
-> proper solution would be that BT subsystem in kernel would
-> notify wireless drivers about BT use?
+> > Btw, should any of this go to 3.13?
+> maybe the first one. it's the only "real" issue.
 
-See other drivers in upstream, they doing something similar...
+Actually, I'm not going to take that into 3.13 - we defined the API so
+that the driver is always allowed to drop the scheduled scan, this isn't
+really any different, is it?
 
-=2D-=20
-Pali Roh=C3=A1r
-pali.rohar@gmail.com
+johannes
 
---nextPart1900256.WvqENPmUIs
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEABECAAYFAlKnPMIACgkQi/DJPQPkQ1IGggCgzNsUtLFGcAD+yCko8VRuygN3
-SB0An3DFjuGsXApnVSreed7qES4Dphmd
-=/quV
------END PGP SIGNATURE-----
-
---nextPart1900256.WvqENPmUIs--
