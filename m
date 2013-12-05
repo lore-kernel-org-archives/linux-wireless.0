@@ -1,111 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f174.google.com ([209.85.192.174]:48603 "EHLO
-	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751328Ab3K3Xsg (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:49493 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753876Ab3LEIvV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Nov 2013 18:48:36 -0500
-Message-ID: <529A7955.9010507@gmail.com> (sfid-20131201_004915_582720_F0DC27FF)
-Date: Sun, 01 Dec 2013 07:48:37 +0800
-From: Chen Gang <gang.chen.5i5j@gmail.com>
-MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	rkuo <rkuo@codeaurora.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	David Miller <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
-Subject: Re: [PATCH] net: mac80211: tx.c: be sure of 'sdata->vif.type' must
- be NL80211_IFTYPE_AP when be in NL80211_IFTYPE_AP case
-References: <528AEFB7.4060301@gmail.com>  <20131125011938.GB18921@codeaurora.org> <5292B845.3010404@gmail.com>  <5292B8A0.7020409@gmail.com> <5294255E.7040105@gmail.com>  <52957ADA.2080704@gmail.com>  (sfid-20131127_055211_558798_A7DF5684) <1385739487.8656.1.camel@jlt4.sipsolutions.net>  <5299D306.7070701@gmail.com>  (sfid-20131130_125901_519610_EDA4068E) <1385816013.4327.1.camel@jlt4.sipsolutions.net>  <5299ED38.4090509@gmail.com> <5299EFDD.6060405@gmail.com>  (sfid-20131130_150205_984535_068F14A9) <1385842134.6108.4.camel@jlt4.sipsolutions.net> <1385843940.2664.4.camel@joe-AO722>
-In-Reply-To: <1385843940.2664.4.camel@joe-AO722>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 5 Dec 2013 03:51:21 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org
+Subject: [RFC 12/12] ath9k: Identify duplicate AR9565 v1.0 initvals
+Date: Thu,  5 Dec 2013 14:16:17 +0530
+Message-Id: <1386233177-11132-13-git-send-email-sujith@msujith.org> (sfid-20131205_095147_745711_8E4EA77E)
+In-Reply-To: <1386233177-11132-1-git-send-email-sujith@msujith.org>
+References: <1386233177-11132-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/01/2013 04:39 AM, Joe Perches wrote:
-> On Sat, 2013-11-30 at 21:08 +0100, Johannes Berg wrote:
->> On Sat, 2013-11-30 at 22:02 +0800, Chen Gang wrote:
->>>  - fall-through is obvious (although I did not notice it, originally).
->>>
->>>  - Check 'A' again just near by "case A" seems a little strange.
->>>
->>>  - Some compilers aren't quit smart enough to know 'chanctx_conf' is OK.
->>
->> I know. If you have any good ideas of how to make it more obvious to the
->> compiler, I'm all ears, I just don't like any of the solutions offered
->> so far (and you aren't the first to do so either) :-)
->>
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-OK, thanks.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ .../net/wireless/ath/ath9k/ar9565_1p0_initvals.h   | 85 ++--------------------
+ 1 file changed, 6 insertions(+), 79 deletions(-)
 
->> FWIW, I find the label to be odd because if you're familiar with the
->> code then AP/AP_VLAN *should* be identical except for two special things
->> that are now linearly & neatly handled in the code (the first being the
->> 4-addr station, the second the chanctx assignment which always has to be
->> done regardless of 4-addr). IMHO the == check after case should be
->> enough to make a human reader take a closer look. I understand that you
->> didn't and that's OK since you were just trying to squelch compile
->> warnings, but I don't see that this one warrants much attention.
-> 
-> The label/test could be moved to save a couple of lines
-> of duplicated code.
-> 
-
-Hmm... for me, it must be an implementation which can satisfy all of us.
-
-If ieee80211_subif_start_xmit() is not performance sensitive (I guess
-so), we can use some short static functions instead of some code blocks
-within ieee80211_subif_start_xmit().
-
- - ieee80211_subif_start_xmit() is a long function (600+ lines).
-
- - use short static function can share some code.
-
- - if code can be shared, the work flow can be more clearer too (don't
-   need fall-through or goto).
-
-
-And I guess, the implementation below can cause panic when
-"sdata->vif.type == NL80211_IFTYPE_AP_VLAN".  :-(
-
-> Maybe:
-> 
->  net/mac80211/tx.c | 14 ++++++--------
->  1 file changed, 6 insertions(+), 8 deletions(-)
-> 
-> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-> index 70b5a05..b2160f4 100644
-> --- a/net/mac80211/tx.c
-> +++ b/net/mac80211/tx.c
-> @@ -1777,18 +1777,16 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
->  		}
->  		ap_sdata = container_of(sdata->bss, struct ieee80211_sub_if_data,
->  					u.ap);
-> -		chanctx_conf = rcu_dereference(ap_sdata->vif.chanctx_conf);
-> -		if (!chanctx_conf)
-> -			goto fail_rcu;
-> -		band = chanctx_conf->def.chan->band;
-> -		if (sta)
-> -			break;
->  		/* fall through */
->  	case NL80211_IFTYPE_AP:
-> -		if (sdata->vif.type == NL80211_IFTYPE_AP)
-> -			chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
-> +		chanctx_conf = rcu_dereference(ap_sdata->vif.chanctx_conf);
->  		if (!chanctx_conf)
->  			goto fail_rcu;
-> +		if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN) {
-> +			band = chanctx_conf->def.chan->band;
-> +			if (sta)
-> +				break;
-> +		}
->  		fc |= cpu_to_le16(IEEE80211_FCTL_FROMDS);
->  		/* DA BSSID SA */
->  		memcpy(hdr.addr1, skb->data, ETH_ALEN);
-> 
-> 
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h
+index a8c757b..10d4a6c 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h
+@@ -20,6 +20,12 @@
+ 
+ /* AR9565 1.0 */
+ 
++#define ar9565_1p0_mac_postamble ar9331_1p1_mac_postamble
++
++#define ar9565_1p0_Modes_lowest_ob_db_tx_gain_table ar9565_1p0_modes_low_ob_db_tx_gain_table
++
++#define ar9565_1p0_baseband_core_txfir_coeff_japan_2484 ar9300_2p2_baseband_core_txfir_coeff_japan_2484
++
+ static const u32 ar9565_1p0_mac_core[][2] = {
+ 	/* Addr      allmodes  */
+ 	{0x00000008, 0x00000000},
+@@ -182,18 +188,6 @@ static const u32 ar9565_1p0_mac_core[][2] = {
+ 	{0x000083d0, 0x800301ff},
+ };
+ 
+-static const u32 ar9565_1p0_mac_postamble[][5] = {
+-	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
+-	{0x00001030, 0x00000230, 0x00000460, 0x000002c0, 0x00000160},
+-	{0x00001070, 0x00000168, 0x000002d0, 0x00000318, 0x0000018c},
+-	{0x000010b0, 0x00000e60, 0x00001cc0, 0x00007c70, 0x00003e38},
+-	{0x00008014, 0x03e803e8, 0x07d007d0, 0x10801600, 0x08400b00},
+-	{0x0000801c, 0x128d8027, 0x128d804f, 0x12e00057, 0x12e0002b},
+-	{0x00008120, 0x08f04800, 0x08f04800, 0x08f04810, 0x08f04810},
+-	{0x000081d0, 0x00003210, 0x00003210, 0x0000320a, 0x0000320a},
+-	{0x00008318, 0x00003e80, 0x00007d00, 0x00006880, 0x00003440},
+-};
+-
+ static const u32 ar9565_1p0_baseband_core[][2] = {
+ 	/* Addr      allmodes  */
+ 	{0x00009800, 0xafe68e30},
+@@ -711,66 +705,6 @@ static const u32 ar9565_1p0_Common_rx_gain_table[][2] = {
+ 	{0x0000b1fc, 0x00000196},
+ };
+ 
+-static const u32 ar9565_1p0_Modes_lowest_ob_db_tx_gain_table[][5] = {
+-	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
+-	{0x0000a2dc, 0xfc0a9380, 0xfc0a9380, 0xfdab5b52, 0xfdab5b52},
+-	{0x0000a2e0, 0xffecec00, 0xffecec00, 0xfd339c84, 0xfd339c84},
+-	{0x0000a2e4, 0xfc0f0000, 0xfc0f0000, 0xfec3e000, 0xfec3e000},
+-	{0x0000a2e8, 0xfc100000, 0xfc100000, 0xfffc0000, 0xfffc0000},
+-	{0x0000a410, 0x000050d9, 0x000050d9, 0x000050d9, 0x000050d9},
+-	{0x0000a500, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000a504, 0x06000003, 0x06000003, 0x04000002, 0x04000002},
+-	{0x0000a508, 0x0a000020, 0x0a000020, 0x08000004, 0x08000004},
+-	{0x0000a50c, 0x10000023, 0x10000023, 0x0b000200, 0x0b000200},
+-	{0x0000a510, 0x16000220, 0x16000220, 0x0f000202, 0x0f000202},
+-	{0x0000a514, 0x1c000223, 0x1c000223, 0x12000400, 0x12000400},
+-	{0x0000a518, 0x21020220, 0x21020220, 0x16000402, 0x16000402},
+-	{0x0000a51c, 0x27020223, 0x27020223, 0x19000404, 0x19000404},
+-	{0x0000a520, 0x2b022220, 0x2b022220, 0x1c000603, 0x1c000603},
+-	{0x0000a524, 0x2f022222, 0x2f022222, 0x21000a02, 0x21000a02},
+-	{0x0000a528, 0x34022225, 0x34022225, 0x25000a04, 0x25000a04},
+-	{0x0000a52c, 0x3a02222a, 0x3a02222a, 0x28000a20, 0x28000a20},
+-	{0x0000a530, 0x3e02222c, 0x3e02222c, 0x2c000e20, 0x2c000e20},
+-	{0x0000a534, 0x4202242a, 0x4202242a, 0x30000e22, 0x30000e22},
+-	{0x0000a538, 0x4702244a, 0x4702244a, 0x34000e24, 0x34000e24},
+-	{0x0000a53c, 0x4b02244c, 0x4b02244c, 0x38001640, 0x38001640},
+-	{0x0000a540, 0x4e02246c, 0x4e02246c, 0x3c001660, 0x3c001660},
+-	{0x0000a544, 0x5302266c, 0x5302266c, 0x3f001861, 0x3f001861},
+-	{0x0000a548, 0x5702286c, 0x5702286c, 0x43001a81, 0x43001a81},
+-	{0x0000a54c, 0x5c04286b, 0x5c04286b, 0x47001a83, 0x47001a83},
+-	{0x0000a550, 0x61042a6c, 0x61042a6c, 0x4a001c84, 0x4a001c84},
+-	{0x0000a554, 0x66062a6c, 0x66062a6c, 0x4e001ce3, 0x4e001ce3},
+-	{0x0000a558, 0x6b062e6c, 0x6b062e6c, 0x52001ce5, 0x52001ce5},
+-	{0x0000a55c, 0x7006308c, 0x7006308c, 0x56001ce9, 0x56001ce9},
+-	{0x0000a560, 0x730a308a, 0x730a308a, 0x5a001ceb, 0x5a001ceb},
+-	{0x0000a564, 0x770a308c, 0x770a308c, 0x5d001eec, 0x5d001eec},
+-	{0x0000a568, 0x770a308c, 0x770a308c, 0x5d001eec, 0x5d001eec},
+-	{0x0000a56c, 0x770a308c, 0x770a308c, 0x5d001eec, 0x5d001eec},
+-	{0x0000a570, 0x770a308c, 0x770a308c, 0x5d001eec, 0x5d001eec},
+-	{0x0000a574, 0x770a308c, 0x770a308c, 0x5d001eec, 0x5d001eec},
+-	{0x0000a578, 0x770a308c, 0x770a308c, 0x5d001eec, 0x5d001eec},
+-	{0x0000a57c, 0x770a308c, 0x770a308c, 0x5d001eec, 0x5d001eec},
+-	{0x0000a600, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000a604, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000a608, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000a60c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000a610, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000a614, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000a618, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000a61c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000a620, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000a624, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000a628, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000a62c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000a630, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000a634, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000a638, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000a63c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x00016044, 0x012482d4, 0x012482d4, 0x012482d4, 0x012482d4},
+-	{0x00016048, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x00016054, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-};
+-
+ static const u32 ar9565_1p0_pciephy_clkreq_disable_L1[][2] = {
+ 	/* Addr      allmodes  */
+ 	{0x00018c00, 0x18212ede},
+@@ -1231,11 +1165,4 @@ static const u32 ar9565_1p0_modes_high_power_tx_gain_table[][5] = {
+ 	{0x00016054, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+ };
+ 
+-static const u32 ar9565_1p0_baseband_core_txfir_coeff_japan_2484[][2] = {
+-	/* Addr      allmodes  */
+-	{0x0000a398, 0x00000000},
+-	{0x0000a39c, 0x6f7f0301},
+-	{0x0000a3a0, 0xca9228ee},
+-};
+-
+ #endif /* INITVALS_9565_1P0_H */
 -- 
-Chen Gang
+1.8.4.2
+
