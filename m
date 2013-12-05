@@ -1,31 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:39094 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:51870 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751912Ab3LBOml (ORCPT
+	with ESMTP id S1752911Ab3LENKW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Dec 2013 09:42:41 -0500
-Message-ID: <1385995357.20277.2.camel@jlt4.sipsolutions.net> (sfid-20131202_154245_011651_C768F782)
-Subject: Re: [RFC] mac80211: fix rx_nss calculation for drivers with hw rc
+	Thu, 5 Dec 2013 08:10:22 -0500
+Message-ID: <1386249019.4182.2.camel@jlt4.sipsolutions.net> (sfid-20131205_141031_011020_6128591C)
+Subject: Re: [PATCH v2 5/6] cfg80211: Enable GO operation on indoor channels
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Date: Mon, 02 Dec 2013 15:42:37 +0100
-In-Reply-To: <1385981647-4147-1-git-send-email-michal.kazior@tieto.com> (sfid-20131202_115744_274098_9362F537)
-References: <1385739434.8656.0.camel@jlt4.sipsolutions.net>
-	 <1385981647-4147-1-git-send-email-michal.kazior@tieto.com>
-	 (sfid-20131202_115744_274098_9362F537)
+To: Ilan Peer <ilan.peer@intel.com>
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
+Date: Thu, 05 Dec 2013 14:10:19 +0100
+In-Reply-To: <1386098166-24196-6-git-send-email-ilan.peer@intel.com> (sfid-20131203_201540_158842_BBB1D481)
+References: <1386098166-24196-1-git-send-email-ilan.peer@intel.com>
+	 <1386098166-24196-6-git-send-email-ilan.peer@intel.com>
+	 (sfid-20131203_201540_158842_BBB1D481)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-12-02 at 11:54 +0100, Michal Kazior wrote:
-> Drivers with hardware rate control were given
-> sta->rx_nss set to 0. This was because rx_nss
-> calculation procedure was protected by hw/sw rate
-> control check.
+On Tue, 2013-12-03 at 21:16 +0200, Ilan Peer wrote:
+> Signed-off-by: Ilan Peer <ilan.peer@intel.com>
 
-Applied.
+Some commit log maybe? :)
 
 johannes
 
