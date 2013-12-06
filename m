@@ -1,97 +1,257 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:57651 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751053Ab3LEIvA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 03:51:00 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org
-Subject: [RFC 00/12] ath9k initval updates
-Date: Thu,  5 Dec 2013 14:16:05 +0530
-Message-Id: <1386233177-11132-1-git-send-email-sujith@msujith.org> (sfid-20131205_095105_019030_B7B1FE31)
+Received: from ring0.de ([91.143.88.219]:39882 "EHLO smtp.ring0.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756543Ab3LFAWp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Dec 2013 19:22:45 -0500
+From: Sebastian Reichel <sre@debian.org>
+To: Sebastian Reichel <sre@ring0.de>, Luciano Coelho <luca@coelho.fi>,
+	Tony Lindgren <tony@atomide.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Rob Herring <rob.herring@calxeda.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Rob Landley <rob@landley.net>,
+	Kumar Gala <galak@codeaurora.org>, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-omap@vger.kernel.org, netdev@vger.kernel.org,
+	Sebastian Reichel <sre@debian.org>
+Subject: [PATCHv2 2/5] wl1251: move power GPIO handling into the driver
+Date: Fri,  6 Dec 2013 01:22:13 +0100
+Message-Id: <1386289336-26704-3-git-send-email-sre@debian.org> (sfid-20131206_012353_525544_EBF9E793)
+In-Reply-To: <1386289336-26704-1-git-send-email-sre@debian.org>
+References: <1382890469-25286-1-git-send-email-sre@debian.org>
+ <1386289336-26704-1-git-send-email-sre@debian.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Move the power GPIO handling from the board code into
+the driver. This is a dependency for device tree support.
 
-This series updates initvals for the AR9003/AR9004 family.
+Signed-off-by: Sebastian Reichel <sre@debian.org>
+Reviewed-by: Pavel Machek <pavel@ucw.cz>
+---
+ arch/arm/mach-omap2/board-omap3pandora.c     |  2 ++
+ arch/arm/mach-omap2/board-rx51-peripherals.c | 11 ++--------
+ drivers/net/wireless/ti/wl1251/sdio.c        | 21 +++++++++++++-----
+ drivers/net/wireless/ti/wl1251/spi.c         | 33 ++++++++++++++++++----------
+ drivers/net/wireless/ti/wl1251/wl1251.h      |  2 +-
+ include/linux/wl12xx.h                       |  2 +-
+ 6 files changed, 43 insertions(+), 28 deletions(-)
 
-AR9300 v2.2
-------------
-
-* Update the high_power TX gain table that is used by default
-  for v2.2 cards.
-
-* Handle the Buffalo-specific array via platform_data for
-  the specific device - an OpenWrt patch for WZR-HP-G450H will be
-  sent once the backports package is updated.
-
-AR9331 v1.1/v1.2
------------------
-
-* Updates for radio/baseband arrays.
-  These probably require HW code updates (hence the RFC).
-
-AR955x/AR9485/AR9462/AR9565
----------------------------
-
-* Remove a number of duplicates, reducing module size.
-
-DFS
-----
-
-* Use DFS-specific baseband parameters when using a DFS channel.
-
-With this series, all the INI files have been updated, verify_checksum shows:
-
-ar9003-2p2     e08640f0fc48a9a2a5f90699bd530123b238b4b1 pass
-ar9330-1p1     4e08677bf31000d97bcccfbe82b03bbb068376c3 pass
-ar9330-1p2     688f60aac1986d9c09043c03c3917936dedb48b9 pass
-ar9340         8817822fa8eeb9cd71f50258fb21dab3078524e7 pass
-ar9462-1p0     da39a3ee5e6b4b0d3255bfef95601890afd80709 pass
-ar9485         e73550261601ea10d6bfec752a57fb43bae3cfb4 pass
-ar955x-1p0     afeaaa07c1833c69642a3a5fc5cbd6b24ce8515b pass
-ar9565-1p0     d03982594e7e6ef2a7eac0bbe601379580ed3af3 pass
-ar9580-1p0     1134cdb72d89a643b94ecb6475a7c5e0ddaa1637 pass
-
-All the initval tool changes have been pushed to:
-https://github.com/sujith/qca-swiss-army-knife/commits/master
-
-Sujith
-
-Sujith Manoharan (12):
-  ath9k: Add initval arrays for DFS channels
-  ath9k: Initialize baseband for DFS channels
-  ath9k: Update mac_postamble for AR9003 family
-  ath9k: Remove AR955x INI duplicates
-  ath9k: Update AR9331 v1.1 initvals
-  ath9k: Update AR9331 v1.2 initvals
-  ath9k: Add a new flag for Buffalo devices
-  ath9k: Use a separate TX gain table for WZR-HP-G450H
-  ath9k: Update high power gain table for AR9300
-  ath9k: Identify duplicate AR9485 initvals
-  ath9k: Identify duplicate AR9462 v2.0 initvals
-  ath9k: Identify duplicate AR9565 v1.0 initvals
-
- .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   | 191 +++---
- .../wireless/ath/ath9k/ar9003_buffalo_initvals.h   | 126 ++++
- drivers/net/wireless/ath/ath9k/ar9003_hw.c         |  18 +-
- drivers/net/wireless/ath/ath9k/ar9003_phy.c        |   6 +
- .../net/wireless/ath/ath9k/ar9330_1p1_initvals.h   | 128 +---
- .../net/wireless/ath/ath9k/ar9330_1p2_initvals.h   | 401 ++++++++++--
- drivers/net/wireless/ath/ath9k/ar9340_initvals.h   |   2 +
- .../net/wireless/ath/ath9k/ar9462_2p0_initvals.h   | 697 +++------------------
- drivers/net/wireless/ath/ath9k/ar9485_initvals.h   | 117 +---
- .../net/wireless/ath/ath9k/ar955x_1p0_initvals.h   | 540 +---------------
- .../net/wireless/ath/ath9k/ar9565_1p0_initvals.h   |  85 +--
- .../net/wireless/ath/ath9k/ar9580_1p0_initvals.h   |  13 +-
- drivers/net/wireless/ath/ath9k/hw.h                |   2 +
- drivers/net/wireless/ath/ath9k/init.c              |  36 +-
- include/linux/ath9k_platform.h                     |   2 +
- 15 files changed, 749 insertions(+), 1615 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath9k/ar9003_buffalo_initvals.h
-
+diff --git a/arch/arm/mach-omap2/board-omap3pandora.c b/arch/arm/mach-omap2/board-omap3pandora.c
+index 24f3c1b..cf18340 100644
+--- a/arch/arm/mach-omap2/board-omap3pandora.c
++++ b/arch/arm/mach-omap2/board-omap3pandora.c
+@@ -541,6 +541,8 @@ static void __init pandora_wl1251_init(void)
+ 
+ 	memset(&pandora_wl1251_pdata, 0, sizeof(pandora_wl1251_pdata));
+ 
++	pandora_wl1251_pdata.power_gpio = -1;
++
+ 	ret = gpio_request_one(PANDORA_WIFI_IRQ_GPIO, GPIOF_IN, "wl1251 irq");
+ 	if (ret < 0)
+ 		goto fail;
+diff --git a/arch/arm/mach-omap2/board-rx51-peripherals.c b/arch/arm/mach-omap2/board-rx51-peripherals.c
+index 01e8bef..6538184 100644
+--- a/arch/arm/mach-omap2/board-rx51-peripherals.c
++++ b/arch/arm/mach-omap2/board-rx51-peripherals.c
+@@ -1166,13 +1166,7 @@ static inline void board_smc91x_init(void)
+ 
+ #endif
+ 
+-static void rx51_wl1251_set_power(bool enable)
+-{
+-	gpio_set_value(RX51_WL1251_POWER_GPIO, enable);
+-}
+-
+ static struct gpio rx51_wl1251_gpios[] __initdata = {
+-	{ RX51_WL1251_POWER_GPIO, GPIOF_OUT_INIT_LOW,	"wl1251 power"	},
+ 	{ RX51_WL1251_IRQ_GPIO,	  GPIOF_IN,		"wl1251 irq"	},
+ };
+ 
+@@ -1189,17 +1183,16 @@ static void __init rx51_init_wl1251(void)
+ 	if (irq < 0)
+ 		goto err_irq;
+ 
+-	wl1251_pdata.set_power = rx51_wl1251_set_power;
++	wl1251_pdata.power_gpio = RX51_WL1251_POWER_GPIO;
+ 	rx51_peripherals_spi_board_info[RX51_SPI_WL1251].irq = irq;
+ 
+ 	return;
+ 
+ err_irq:
+ 	gpio_free(RX51_WL1251_IRQ_GPIO);
+-	gpio_free(RX51_WL1251_POWER_GPIO);
+ error:
+ 	printk(KERN_ERR "wl1251 board initialisation failed\n");
+-	wl1251_pdata.set_power = NULL;
++	wl1251_pdata.power_gpio = -1;
+ 
+ 	/*
+ 	 * Now rx51_peripherals_spi_board_info[1].irq is zero and
+diff --git a/drivers/net/wireless/ti/wl1251/sdio.c b/drivers/net/wireless/ti/wl1251/sdio.c
+index b75a37a..b661f89 100644
+--- a/drivers/net/wireless/ti/wl1251/sdio.c
++++ b/drivers/net/wireless/ti/wl1251/sdio.c
+@@ -28,6 +28,7 @@
+ #include <linux/wl12xx.h>
+ #include <linux/irq.h>
+ #include <linux/pm_runtime.h>
++#include <linux/gpio.h>
+ 
+ #include "wl1251.h"
+ 
+@@ -182,8 +183,9 @@ static int wl1251_sdio_set_power(struct wl1251 *wl, bool enable)
+ 		 * callback in case it wants to do any additional setup,
+ 		 * for example enabling clock buffer for the module.
+ 		 */
+-		if (wl->set_power)
+-			wl->set_power(true);
++		if (gpio_is_valid(wl->power_gpio))
++			gpio_set_value(wl->power_gpio, true);
++
+ 
+ 		ret = pm_runtime_get_sync(&func->dev);
+ 		if (ret < 0) {
+@@ -203,8 +205,8 @@ static int wl1251_sdio_set_power(struct wl1251 *wl, bool enable)
+ 		if (ret < 0)
+ 			goto out;
+ 
+-		if (wl->set_power)
+-			wl->set_power(false);
++		if (gpio_is_valid(wl->power_gpio))
++			gpio_set_value(wl->power_gpio, false);
+ 	}
+ 
+ out:
+@@ -256,11 +258,20 @@ static int wl1251_sdio_probe(struct sdio_func *func,
+ 
+ 	wl1251_board_data = wl1251_get_platform_data();
+ 	if (!IS_ERR(wl1251_board_data)) {
+-		wl->set_power = wl1251_board_data->set_power;
++		wl->power_gpio = wl1251_board_data->power_gpio;
+ 		wl->irq = wl1251_board_data->irq;
+ 		wl->use_eeprom = wl1251_board_data->use_eeprom;
+ 	}
+ 
++	if (gpio_is_valid(wl->power_gpio)) {
++		ret = devm_gpio_request(&func->dev, wl->power_gpio,
++								"wl1251 power");
++		if (ret) {
++			wl1251_error("Failed to request gpio: %d\n", ret);
++			goto disable;
++		}
++	}
++
+ 	if (wl->irq) {
+ 		irq_set_status_flags(wl->irq, IRQ_NOAUTOEN);
+ 		ret = request_irq(wl->irq, wl1251_line_irq, 0, "wl1251", wl);
+diff --git a/drivers/net/wireless/ti/wl1251/spi.c b/drivers/net/wireless/ti/wl1251/spi.c
+index 62403a1..6abcbc3 100644
+--- a/drivers/net/wireless/ti/wl1251/spi.c
++++ b/drivers/net/wireless/ti/wl1251/spi.c
+@@ -26,6 +26,7 @@
+ #include <linux/crc7.h>
+ #include <linux/spi/spi.h>
+ #include <linux/wl12xx.h>
++#include <linux/gpio.h>
+ 
+ #include "wl1251.h"
+ #include "reg.h"
+@@ -221,8 +222,8 @@ static void wl1251_spi_disable_irq(struct wl1251 *wl)
+ 
+ static int wl1251_spi_set_power(struct wl1251 *wl, bool enable)
+ {
+-	if (wl->set_power)
+-		wl->set_power(enable);
++	if (gpio_is_valid(wl->power_gpio))
++		gpio_set_value(wl->power_gpio, enable);
+ 
+ 	return 0;
+ }
+@@ -271,22 +272,33 @@ static int wl1251_spi_probe(struct spi_device *spi)
+ 		goto out_free;
+ 	}
+ 
+-	wl->set_power = pdata->set_power;
+-	if (!wl->set_power) {
+-		wl1251_error("set power function missing in platform data");
+-		return -ENODEV;
++	wl->power_gpio = pdata->power_gpio;
++
++	if (gpio_is_valid(wl->power_gpio)) {
++		ret = devm_gpio_request_one(&spi->dev, wl->power_gpio,
++					GPIOF_OUT_INIT_LOW, "wl1251 power");
++		if (ret) {
++			wl1251_error("Failed to request gpio: %d\n", ret);
++			goto out_free;
++		}
++	} else {
++		wl1251_error("set power gpio missing in platform data");
++		ret = -ENODEV;
++		goto out_free;
+ 	}
+ 
+ 	wl->irq = spi->irq;
+ 	if (wl->irq < 0) {
+ 		wl1251_error("irq missing in platform data");
+-		return -ENODEV;
++		ret = -ENODEV;
++		goto out_free;
+ 	}
+ 
+ 	wl->use_eeprom = pdata->use_eeprom;
+ 
+ 	irq_set_status_flags(wl->irq, IRQ_NOAUTOEN);
+-	ret = request_irq(wl->irq, wl1251_irq, 0, DRIVER_NAME, wl);
++	ret = devm_request_irq(&spi->dev, wl->irq, wl1251_irq, 0,
++							DRIVER_NAME, wl);
+ 	if (ret < 0) {
+ 		wl1251_error("request_irq() failed: %d", ret);
+ 		goto out_free;
+@@ -296,13 +308,10 @@ static int wl1251_spi_probe(struct spi_device *spi)
+ 
+ 	ret = wl1251_init_ieee80211(wl);
+ 	if (ret)
+-		goto out_irq;
++		goto out_free;
+ 
+ 	return 0;
+ 
+- out_irq:
+-	free_irq(wl->irq, wl);
+-
+  out_free:
+ 	ieee80211_free_hw(hw);
+ 
+diff --git a/drivers/net/wireless/ti/wl1251/wl1251.h b/drivers/net/wireless/ti/wl1251/wl1251.h
+index 2c3bd1b..f396a95 100644
+--- a/drivers/net/wireless/ti/wl1251/wl1251.h
++++ b/drivers/net/wireless/ti/wl1251/wl1251.h
+@@ -275,7 +275,7 @@ struct wl1251 {
+ 	void *if_priv;
+ 	const struct wl1251_if_operations *if_ops;
+ 
+-	void (*set_power)(bool enable);
++	int power_gpio;
+ 	int irq;
+ 	bool use_eeprom;
+ 
+diff --git a/include/linux/wl12xx.h b/include/linux/wl12xx.h
+index b516b4f..a9c723b 100644
+--- a/include/linux/wl12xx.h
++++ b/include/linux/wl12xx.h
+@@ -49,7 +49,7 @@ enum {
+ };
+ 
+ struct wl1251_platform_data {
+-	void (*set_power)(bool enable);
++	int power_gpio;
+ 	/* SDIO only: IRQ number if WLAN_IRQ line is used, 0 for SDIO IRQs */
+ 	int irq;
+ 	bool use_eeprom;
 -- 
-1.8.4.2
+1.8.4.3
 
