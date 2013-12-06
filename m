@@ -1,74 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.21]:58271 "EHLO mout.gmx.net"
+Received: from ring0.de ([91.143.88.219]:39857 "EHLO smtp.ring0.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754474Ab3LPPiC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Dec 2013 10:38:02 -0500
-Received: from [192.168.1.138] ([79.218.126.58]) by mail.gmx.com (mrgmx003)
- with ESMTPSA (Nemesis) id 0MFMEG-1Vn64B2uQO-00EPlH for
- <linux-wireless@vger.kernel.org>; Mon, 16 Dec 2013 16:38:00 +0100
-Message-ID: <52AF1E57.2040300@rempel-privat.de> (sfid-20131216_163806_152796_5349883F)
-Date: Mon, 16 Dec 2013 16:37:59 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: David Herrmann <dh.herrmann@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
-Subject: Re: [BUG] P2P setup timeout
-References: <CANq1E4R--OowH-LCUX4oSxsJu7yf_2e6Jei8tP+i_BQ_QHiKkw@mail.gmail.com>		 <1387197416.4665.15.camel@jlt4.sipsolutions.net>		 <CANq1E4TAt_Pw-V5_2LtJjY3LRcuwsxr1mBkcHjmX+MJUxc=zPQ@mail.gmail.com>		 <1387201528.2057.1.camel@jlt4.sipsolutions.net>		 <CANq1E4TJWCgM4yCFC25b3ssQEvFv+hEhW6jP3_mQKxQCw-QtUQ@mail.gmail.com>		 <52AF14EC.9010803@rempel-privat.de>		 <CANq1E4S+u6UZf15fU9aO6JvY4OTE+RnOKGL0K16T9A_4vr+C6A@mail.gmail.com>		 (sfid-20131216_160940_365143_3C2C01EE) <1387206912.2057.25.camel@jlt4.sipsolutions.net>	 <52AF1BBE.5020602@rempel-privat.de> (sfid-20131216_162658_384029_A0D0E0F0) <1387207795.2057.29.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1387207795.2057.29.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+	id S1756328Ab3LFAWe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Dec 2013 19:22:34 -0500
+From: Sebastian Reichel <sre@debian.org>
+To: Sebastian Reichel <sre@ring0.de>, Luciano Coelho <luca@coelho.fi>,
+	Tony Lindgren <tony@atomide.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Rob Herring <rob.herring@calxeda.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Rob Landley <rob@landley.net>,
+	Kumar Gala <galak@codeaurora.org>, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-omap@vger.kernel.org, netdev@vger.kernel.org,
+	Sebastian Reichel <sre@debian.org>
+Subject: [PATCHv2 3/5] wl1251: spi: add vio regulator support
+Date: Fri,  6 Dec 2013 01:22:14 +0100
+Message-Id: <1386289336-26704-4-git-send-email-sre@debian.org> (sfid-20131206_012422_211304_56704580)
+In-Reply-To: <1386289336-26704-1-git-send-email-sre@debian.org>
+References: <1382890469-25286-1-git-send-email-sre@debian.org>
+ <1386289336-26704-1-git-send-email-sre@debian.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 16.12.2013 16:29, schrieb Johannes Berg:
-> On Mon, 2013-12-16 at 16:26 +0100, Oleksij Rempel wrote:
->> Am 16.12.2013 16:15, schrieb Johannes Berg:
->>> On Mon, 2013-12-16 at 16:09 +0100, David Herrmann wrote:
->>>
->>>> Thanks, I tracked down the ENETDOWN. I'm not entirely sure but I think it's:
->>>
->>> Obviously :)
->>>
->>>> @Oleksij, I actually have three ath9k-htc devices so I'd like to get
->>>> this working, and the devices are really nice apart from this bug. I
->>>> will keep you up to date, but if you have any hints where to continue
->>>> digging, lemme know. Until it's fixed, I'll just work on
->>>> wired-displays via ethernet instead of wifi-displays..
->>>
->>> Based on what Oleksij said, these issues are likely not even related -
->>> maybe ath9k_htc can't even set the rates to exclude CCK, so even if that
->>> call were to succeed it wouldn't work?
->>
->> Hmm.. WMI_BITRATE_MASK should do it.
->> ieee80211_ops->set_bitrate_mask is set, so theoretically we should be
->> able to exclude CCK. Today i won't be able to check it.
-> 
-> There are two things:
->  * the issue at hand, which is only for some certain management frames
-> that I
->    believe are sent over the normal wlan0 netdev/vif, but still must not
-> use CCK
->    even though wlan0 allows CCK
->  * the issue about the set tx-rate on the p2p netdev/vif, which is how I
-> noticed
->    this, but which is actually not related to the current bug
-> 
-> It sounds to me like only the latter can be solved with WMI_BITRATE_MASK
-> since you can't generally disable CCK on wlan0 when doing P2P (you might
-> be connected to an 11b AP at the same time)
-> 
-> For the latter issue, you really need a per-frame "disable CCK" flag in
-> the firmware, or you need to use a P2P_DEVICE vif.
+This patch adds support for requesting the regulator powering
+the vio pin.
 
-Ah.. there is comment which clarify the situation with
-ieee80211_ops->set_bitrate_mask in ath9k_htc:
-/*
- * Currently, this is used only for selecting the minimum rate
- * for management frames, rate selection for data frames remain
- * unaffected.
- */
+Signed-off-by: Sebastian Reichel <sre@debian.org>
+Reviewed-by: Pavel Machek <pavel@ucw.cz>
+---
+ drivers/net/wireless/ti/wl1251/spi.c    | 19 +++++++++++++++++--
+ drivers/net/wireless/ti/wl1251/wl1251.h |  2 ++
+ 2 files changed, 19 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/net/wireless/ti/wl1251/spi.c b/drivers/net/wireless/ti/wl1251/spi.c
+index 6abcbc3..0a8aacc 100644
+--- a/drivers/net/wireless/ti/wl1251/spi.c
++++ b/drivers/net/wireless/ti/wl1251/spi.c
+@@ -27,6 +27,7 @@
+ #include <linux/spi/spi.h>
+ #include <linux/wl12xx.h>
+ #include <linux/gpio.h>
++#include <linux/regulator/consumer.h>
+ 
+ #include "wl1251.h"
+ #include "reg.h"
+@@ -306,13 +307,26 @@ static int wl1251_spi_probe(struct spi_device *spi)
+ 
+ 	irq_set_irq_type(wl->irq, IRQ_TYPE_EDGE_RISING);
+ 
+-	ret = wl1251_init_ieee80211(wl);
++	wl->vio = devm_regulator_get(&spi->dev, "vio");
++	if (IS_ERR(wl->vio)) {
++		ret = PTR_ERR(wl->vio);
++		wl1251_error("vio regulator missing: %d", ret);
++		goto out_free;
++	}
++
++	ret = regulator_enable(wl->vio);
+ 	if (ret)
+ 		goto out_free;
+ 
++	ret = wl1251_init_ieee80211(wl);
++	if (ret)
++		goto disable_regulator;
++
+ 	return 0;
+ 
+- out_free:
++disable_regulator:
++	regulator_disable(wl->vio);
++out_free:
+ 	ieee80211_free_hw(hw);
+ 
+ 	return ret;
+@@ -324,6 +338,7 @@ static int wl1251_spi_remove(struct spi_device *spi)
+ 
+ 	free_irq(wl->irq, wl);
+ 	wl1251_free_hw(wl);
++	regulator_disable(wl->vio);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/ti/wl1251/wl1251.h b/drivers/net/wireless/ti/wl1251/wl1251.h
+index f396a95..b0bfdf5 100644
+--- a/drivers/net/wireless/ti/wl1251/wl1251.h
++++ b/drivers/net/wireless/ti/wl1251/wl1251.h
+@@ -279,6 +279,8 @@ struct wl1251 {
+ 	int irq;
+ 	bool use_eeprom;
+ 
++	struct regulator *vio;
++
+ 	spinlock_t wl_lock;
+ 
+ 	enum wl1251_state state;
 -- 
-Regards,
-Oleksij
+1.8.4.3
+
