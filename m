@@ -1,529 +1,223 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f52.google.com ([74.125.83.52]:54459 "EHLO
-	mail-ee0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753849Ab3LQUo4 (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:43087 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752661Ab3LFLDs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Dec 2013 15:44:56 -0500
-Received: by mail-ee0-f52.google.com with SMTP id d17so3099209eek.25
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Dec 2013 12:44:55 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Alexander Bondar <alexander.bondar@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 07/36] iwlwifi: mvm: Add uAPSD misbehaving AP notification handling
-Date: Tue, 17 Dec 2013 22:44:10 +0200
-Message-Id: <1387313079-28123-7-git-send-email-egrumbach@gmail.com> (sfid-20131217_214640_547524_D0C04FED)
-In-Reply-To: <52B0B72A.5070704@gmail.com>
-References: <52B0B72A.5070704@gmail.com>
+	Fri, 6 Dec 2013 06:03:48 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 05/16] ath9k: Update AR9331 v1.1 initvals
+Date: Fri,  6 Dec 2013 16:28:43 +0530
+Message-Id: <1386327534-31105-6-git-send-email-sujith@msujith.org> (sfid-20131206_120400_638989_DF126A60)
+In-Reply-To: <1386327534-31105-1-git-send-email-sujith@msujith.org>
+References: <1386327534-31105-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Alexander Bondar <alexander.bondar@intel.com>
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-FW implements protective algorithm to identify AP's improper uAPSD
-behavior. FW sends misbehaving AP notification in this case.
-Add this notification handling. Avoid using uAPSD in next association
-to the exactly same AP. Refactor iwl_mvm_power_build_cmd() to move
-uAPSD related code to a separate function.
+* Update radio/baseband/gain tables.
+* Mark ar9331_modes_high_power_tx_gain_1p1 as a duplicate
+* ar9331_1p1_mac_postamble is not a duplicate.
 
-Signed-off-by: Alexander Bondar <alexander.bondar@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/fw-api-power.h |   16 ++
- drivers/net/wireless/iwlwifi/mvm/fw-api.h       |    1 +
- drivers/net/wireless/iwlwifi/mvm/mac80211.c     |    1 +
- drivers/net/wireless/iwlwifi/mvm/mvm.h          |   10 +
- drivers/net/wireless/iwlwifi/mvm/ops.c          |    3 +
- drivers/net/wireless/iwlwifi/mvm/power.c        |  318 +++++++++++++----------
- 6 files changed, 209 insertions(+), 140 deletions(-)
+ .../net/wireless/ath/ath9k/ar9330_1p1_initvals.h   | 128 ++++-----------------
+ 1 file changed, 24 insertions(+), 104 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-power.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-power.h
-index 5cb93ae..cb78e55 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw-api-power.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-power.h
-@@ -85,6 +85,8 @@
-  *		PBW Snoozing enabled
-  * @POWER_FLAGS_ADVANCE_PM_ENA_MSK: Advanced PM (uAPSD) enable mask
-  * @POWER_FLAGS_LPRX_ENA_MSK: Low Power RX enable.
-+ * @POWER_FLAGS_AP_UAPSD_MISBEHAVING_ENA_MSK: AP/GO's uAPSD misbehaving
-+ *		detection enablement
- */
- enum iwl_power_flags {
- 	POWER_FLAGS_POWER_SAVE_ENA_MSK		= BIT(0),
-@@ -94,6 +96,7 @@ enum iwl_power_flags {
- 	POWER_FLAGS_BT_SCO_ENA			= BIT(8),
- 	POWER_FLAGS_ADVANCE_PM_ENA_MSK		= BIT(9),
- 	POWER_FLAGS_LPRX_ENA_MSK		= BIT(11),
-+	POWER_FLAGS_UAPSD_MISBEHAVING_ENA_MSK	= BIT(12),
+diff --git a/drivers/net/wireless/ath/ath9k/ar9330_1p1_initvals.h b/drivers/net/wireless/ath/ath9k/ar9330_1p1_initvals.h
+index 6e1756b..f76139b 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9330_1p1_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9330_1p1_initvals.h
+@@ -18,6 +18,10 @@
+ #ifndef INITVALS_9330_1P1_H
+ #define INITVALS_9330_1P1_H
+ 
++#define ar9331_1p1_baseband_core_txfir_coeff_japan_2484 ar9300_2p2_baseband_core_txfir_coeff_japan_2484
++
++#define ar9331_modes_high_power_tx_gain_1p1 ar9331_modes_lowest_ob_db_tx_gain_1p1
++
+ static const u32 ar9331_1p1_baseband_postamble[][5] = {
+ 	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
+ 	{0x00009810, 0xd00a8005, 0xd00a8005, 0xd00a8005, 0xd00a8005},
+@@ -55,7 +59,7 @@ static const u32 ar9331_1p1_baseband_postamble[][5] = {
+ 	{0x0000a284, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+ 	{0x0000a288, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+ 	{0x0000a28c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000a2c4, 0x00158d18, 0x00158d18, 0x00158d18, 0x00158d18},
++	{0x0000a2c4, 0x00158d18, 0x00158d18, 0x00058d18, 0x00058d18},
+ 	{0x0000a2d0, 0x00071982, 0x00071982, 0x00071982, 0x00071982},
+ 	{0x0000a2d8, 0xf999a83a, 0xf999a83a, 0xf999a83a, 0xf999a83a},
+ 	{0x0000a358, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+@@ -252,7 +256,7 @@ static const u32 ar9331_modes_low_ob_db_tx_gain_1p1[][5] = {
+ 	{0x0000a2e0, 0xffffcc84, 0xffffcc84, 0xffffcc84, 0xffffcc84},
+ 	{0x0000a2e4, 0xfffff000, 0xfffff000, 0xfffff000, 0xfffff000},
+ 	{0x0000a2e8, 0xfffe0000, 0xfffe0000, 0xfffe0000, 0xfffe0000},
+-	{0x0000a410, 0x000050d7, 0x000050d7, 0x000050d0, 0x000050d0},
++	{0x0000a410, 0x000050d7, 0x000050d7, 0x000050d4, 0x000050d4},
+ 	{0x0000a500, 0x00022200, 0x00022200, 0x00000000, 0x00000000},
+ 	{0x0000a504, 0x05062002, 0x05062002, 0x04000002, 0x04000002},
+ 	{0x0000a508, 0x0c002e00, 0x0c002e00, 0x08000004, 0x08000004},
+@@ -337,8 +341,6 @@ static const u32 ar9331_modes_low_ob_db_tx_gain_1p1[][5] = {
+ 	{0x00016284, 0x14d3f000, 0x14d3f000, 0x14d3f000, 0x14d3f000},
  };
  
- #define IWL_POWER_VEC_SIZE 5
-@@ -228,6 +231,19 @@ struct iwl_mac_power_cmd {
- 	u8 reserved;
- } __packed;
- 
-+/*
-+ * struct iwl_uapsd_misbehaving_ap_notif - FW sends this notification when
-+ * associated AP is identified as improperly implementing uAPSD protocol.
-+ * PSM_UAPSD_AP_MISBEHAVING_NOTIFICATION = 0x78
-+ * @sta_id: index of station in uCode's station table - associated AP ID in
-+ *	    this context.
-+ */
-+struct iwl_uapsd_misbehaving_ap_notif {
-+	__le32 sta_id;
-+	u8 mac_id;
-+	u8 reserved[3];
-+} __packed;
-+
- /**
-  * struct iwl_beacon_filter_cmd
-  * REPLY_BEACON_FILTERING_CMD = 0xd2 (command)
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
-index c9cfaad..d0b9399 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw-api.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
-@@ -141,6 +141,7 @@ enum {
- 
- 	/* Power - legacy power table command */
- 	POWER_TABLE_CMD = 0x77,
-+	PSM_UAPSD_AP_MISBEHAVING_NOTIFICATION = 0x78,
- 
- 	/* Thermal Throttling*/
- 	REPLY_THERMAL_MNG_BACKOFF = 0x7e,
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 8a99ecc..8d80728 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -858,6 +858,7 @@ static void iwl_mvm_bss_info_changed_station(struct iwl_mvm *mvm,
- 			}
- 
- 			iwl_mvm_sf_update(mvm, vif, false);
-+			iwl_mvm_power_vif_assoc(mvm, vif);
- 		} else if (mvmvif->ap_sta_id != IWL_MVM_STATION_COUNT) {
- 			/*
- 			 * If update fails - SF might be running in associated
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index bd072c7..5da5e2d 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -181,6 +181,7 @@ enum iwl_dbgfs_pm_mask {
- 	MVM_DEBUGFS_PM_LPRX_ENA = BIT(6),
- 	MVM_DEBUGFS_PM_LPRX_RSSI_THRESHOLD = BIT(7),
- 	MVM_DEBUGFS_PM_SNOOZE_ENABLE = BIT(8),
-+	MVM_DEBUGFS_PM_UAPSD_MISBEHAVING = BIT(9),
+-#define ar9331_1p1_baseband_core_txfir_coeff_japan_2484 ar9462_2p0_baseband_core_txfir_coeff_japan_2484
+-
+ static const u32 ar9331_1p1_xtal_25M[][2] = {
+ 	/* Addr      allmodes  */
+ 	{0x00007038, 0x000002f8},
+@@ -373,17 +375,17 @@ static const u32 ar9331_1p1_radio_core[][2] = {
+ 	{0x000160b4, 0x92480040},
+ 	{0x000160c0, 0x006db6db},
+ 	{0x000160c4, 0x0186db60},
+-	{0x000160c8, 0x6db4db6c},
++	{0x000160c8, 0x6db6db6c},
+ 	{0x000160cc, 0x6de6c300},
+ 	{0x000160d0, 0x14500820},
+ 	{0x00016100, 0x04cb0001},
+ 	{0x00016104, 0xfff80015},
+ 	{0x00016108, 0x00080010},
+ 	{0x0001610c, 0x00170000},
+-	{0x00016140, 0x10800000},
++	{0x00016140, 0x50804000},
+ 	{0x00016144, 0x01884080},
+ 	{0x00016148, 0x000080c0},
+-	{0x00016280, 0x01000015},
++	{0x00016280, 0x01001015},
+ 	{0x00016284, 0x14d20000},
+ 	{0x00016288, 0x00318000},
+ 	{0x0001628c, 0x50000000},
+@@ -622,12 +624,12 @@ static const u32 ar9331_1p1_baseband_core[][2] = {
+ 	{0x0000a370, 0x00000000},
+ 	{0x0000a390, 0x00000001},
+ 	{0x0000a394, 0x00000444},
+-	{0x0000a398, 0x001f0e0f},
+-	{0x0000a39c, 0x0075393f},
+-	{0x0000a3a0, 0xb79f6427},
+-	{0x0000a3a4, 0x00000000},
+-	{0x0000a3a8, 0xaaaaaaaa},
+-	{0x0000a3ac, 0x3c466478},
++	{0x0000a398, 0x00000000},
++	{0x0000a39c, 0x210d0401},
++	{0x0000a3a0, 0xab9a7144},
++	{0x0000a3a4, 0x00000011},
++	{0x0000a3a8, 0x3c3c003d},
++	{0x0000a3ac, 0x30310030},
+ 	{0x0000a3c0, 0x20202020},
+ 	{0x0000a3c4, 0x22222220},
+ 	{0x0000a3c8, 0x20200020},
+@@ -686,100 +688,18 @@ static const u32 ar9331_1p1_baseband_core[][2] = {
+ 	{0x0000a7dc, 0x00000001},
  };
  
- struct iwl_dbgfs_pm {
-@@ -193,6 +194,7 @@ struct iwl_dbgfs_pm {
- 	bool lprx_ena;
- 	u32 lprx_rssi_threshold;
- 	bool snooze_ena;
-+	bool uapsd_misbehaving;
- 	int mask;
+-static const u32 ar9331_modes_high_power_tx_gain_1p1[][5] = {
++static const u32 ar9331_1p1_mac_postamble[][5] = {
+ 	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
+-	{0x0000a2d8, 0x7999a83a, 0x7999a83a, 0x7999a83a, 0x7999a83a},
+-	{0x0000a2dc, 0xffff2a52, 0xffff2a52, 0xffff2a52, 0xffff2a52},
+-	{0x0000a2e0, 0xffffcc84, 0xffffcc84, 0xffffcc84, 0xffffcc84},
+-	{0x0000a2e4, 0xfffff000, 0xfffff000, 0xfffff000, 0xfffff000},
+-	{0x0000a2e8, 0xfffe0000, 0xfffe0000, 0xfffe0000, 0xfffe0000},
+-	{0x0000a410, 0x000050d7, 0x000050d7, 0x000050d0, 0x000050d0},
+-	{0x0000a500, 0x00022200, 0x00022200, 0x00000000, 0x00000000},
+-	{0x0000a504, 0x05062002, 0x05062002, 0x04000002, 0x04000002},
+-	{0x0000a508, 0x0c002e00, 0x0c002e00, 0x08000004, 0x08000004},
+-	{0x0000a50c, 0x11062202, 0x11062202, 0x0d000200, 0x0d000200},
+-	{0x0000a510, 0x17022e00, 0x17022e00, 0x11000202, 0x11000202},
+-	{0x0000a514, 0x1d000ec2, 0x1d000ec2, 0x15000400, 0x15000400},
+-	{0x0000a518, 0x25020ec0, 0x25020ec0, 0x19000402, 0x19000402},
+-	{0x0000a51c, 0x2b020ec3, 0x2b020ec3, 0x1d000404, 0x1d000404},
+-	{0x0000a520, 0x2f001f04, 0x2f001f04, 0x23000a00, 0x23000a00},
+-	{0x0000a524, 0x35001fc4, 0x35001fc4, 0x27000a02, 0x27000a02},
+-	{0x0000a528, 0x3c022f04, 0x3c022f04, 0x2b000a04, 0x2b000a04},
+-	{0x0000a52c, 0x41023e85, 0x41023e85, 0x2d000a20, 0x2d000a20},
+-	{0x0000a530, 0x48023ec6, 0x48023ec6, 0x31000a22, 0x31000a22},
+-	{0x0000a534, 0x4d023f01, 0x4d023f01, 0x35000a24, 0x35000a24},
+-	{0x0000a538, 0x53023f4b, 0x53023f4b, 0x38000a43, 0x38000a43},
+-	{0x0000a53c, 0x5a027f09, 0x5a027f09, 0x3b000e42, 0x3b000e42},
+-	{0x0000a540, 0x5f027fc9, 0x5f027fc9, 0x3f000e44, 0x3f000e44},
+-	{0x0000a544, 0x6502feca, 0x6502feca, 0x42000e64, 0x42000e64},
+-	{0x0000a548, 0x6b02ff4a, 0x6b02ff4a, 0x46000e66, 0x46000e66},
+-	{0x0000a54c, 0x7203feca, 0x7203feca, 0x4a000ea6, 0x4a000ea6},
+-	{0x0000a550, 0x7703ff0b, 0x7703ff0b, 0x4a000ea6, 0x4a000ea6},
+-	{0x0000a554, 0x7d06ffcb, 0x7d06ffcb, 0x4a000ea6, 0x4a000ea6},
+-	{0x0000a558, 0x8407ff0b, 0x8407ff0b, 0x4a000ea6, 0x4a000ea6},
+-	{0x0000a55c, 0x8907ffcb, 0x8907ffcb, 0x4a000ea6, 0x4a000ea6},
+-	{0x0000a560, 0x900fff0b, 0x900fff0b, 0x4a000ea6, 0x4a000ea6},
+-	{0x0000a564, 0x960fffcb, 0x960fffcb, 0x4a000ea6, 0x4a000ea6},
+-	{0x0000a568, 0x9c1fff0b, 0x9c1fff0b, 0x4a000ea6, 0x4a000ea6},
+-	{0x0000a56c, 0x9c1fff0b, 0x9c1fff0b, 0x4a000ea6, 0x4a000ea6},
+-	{0x0000a570, 0x9c1fff0b, 0x9c1fff0b, 0x4a000ea6, 0x4a000ea6},
+-	{0x0000a574, 0x9c1fff0b, 0x9c1fff0b, 0x4a000ea6, 0x4a000ea6},
+-	{0x0000a578, 0x9c1fff0b, 0x9c1fff0b, 0x4a000ea6, 0x4a000ea6},
+-	{0x0000a57c, 0x9c1fff0b, 0x9c1fff0b, 0x4a000ea6, 0x4a000ea6},
+-	{0x0000a580, 0x00022200, 0x00022200, 0x00000000, 0x00000000},
+-	{0x0000a584, 0x05062002, 0x05062002, 0x04000002, 0x04000002},
+-	{0x0000a588, 0x0c002e00, 0x0c002e00, 0x08000004, 0x08000004},
+-	{0x0000a58c, 0x11062202, 0x11062202, 0x0b000200, 0x0b000200},
+-	{0x0000a590, 0x17022e00, 0x17022e00, 0x0f000202, 0x0f000202},
+-	{0x0000a594, 0x1d000ec2, 0x1d000ec2, 0x11000400, 0x11000400},
+-	{0x0000a598, 0x25020ec0, 0x25020ec0, 0x15000402, 0x15000402},
+-	{0x0000a59c, 0x2b020ec3, 0x2b020ec3, 0x19000404, 0x19000404},
+-	{0x0000a5a0, 0x2f001f04, 0x2f001f04, 0x1b000603, 0x1b000603},
+-	{0x0000a5a4, 0x35001fc4, 0x35001fc4, 0x1f000a02, 0x1f000a02},
+-	{0x0000a5a8, 0x3c022f04, 0x3c022f04, 0x23000a04, 0x23000a04},
+-	{0x0000a5ac, 0x41023e85, 0x41023e85, 0x26000a20, 0x26000a20},
+-	{0x0000a5b0, 0x48023ec6, 0x48023ec6, 0x2a000e20, 0x2a000e20},
+-	{0x0000a5b4, 0x4d023f01, 0x4d023f01, 0x2e000e22, 0x2e000e22},
+-	{0x0000a5b8, 0x53023f4b, 0x53023f4b, 0x31000e24, 0x31000e24},
+-	{0x0000a5bc, 0x5a027f09, 0x5a027f09, 0x34001640, 0x34001640},
+-	{0x0000a5c0, 0x5f027fc9, 0x5f027fc9, 0x38001660, 0x38001660},
+-	{0x0000a5c4, 0x6502feca, 0x6502feca, 0x3b001861, 0x3b001861},
+-	{0x0000a5c8, 0x6b02ff4a, 0x6b02ff4a, 0x3e001a81, 0x3e001a81},
+-	{0x0000a5cc, 0x7203feca, 0x7203feca, 0x42001a83, 0x42001a83},
+-	{0x0000a5d0, 0x7703ff0b, 0x7703ff0b, 0x44001c84, 0x44001c84},
+-	{0x0000a5d4, 0x7d06ffcb, 0x7d06ffcb, 0x48001ce3, 0x48001ce3},
+-	{0x0000a5d8, 0x8407ff0b, 0x8407ff0b, 0x4c001ce5, 0x4c001ce5},
+-	{0x0000a5dc, 0x8907ffcb, 0x8907ffcb, 0x50001ce9, 0x50001ce9},
+-	{0x0000a5e0, 0x900fff0b, 0x900fff0b, 0x54001ceb, 0x54001ceb},
+-	{0x0000a5e4, 0x960fffcb, 0x960fffcb, 0x56001eec, 0x56001eec},
+-	{0x0000a5e8, 0x9c1fff0b, 0x9c1fff0b, 0x56001eec, 0x56001eec},
+-	{0x0000a5ec, 0x9c1fff0b, 0x9c1fff0b, 0x56001eec, 0x56001eec},
+-	{0x0000a5f0, 0x9c1fff0b, 0x9c1fff0b, 0x56001eec, 0x56001eec},
+-	{0x0000a5f4, 0x9c1fff0b, 0x9c1fff0b, 0x56001eec, 0x56001eec},
+-	{0x0000a5f8, 0x9c1fff0b, 0x9c1fff0b, 0x56001eec, 0x56001eec},
+-	{0x0000a5fc, 0x9c1fff0b, 0x9c1fff0b, 0x56001eec, 0x56001eec},
+-	{0x0000a600, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000a604, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000a608, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000a60c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000a610, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000a614, 0x01404000, 0x01404000, 0x01404000, 0x01404000},
+-	{0x0000a618, 0x01404501, 0x01404501, 0x01404501, 0x01404501},
+-	{0x0000a61c, 0x02008802, 0x02008802, 0x02008802, 0x02008802},
+-	{0x0000a620, 0x0280c802, 0x0280c802, 0x0280c802, 0x0280c802},
+-	{0x0000a624, 0x03010a03, 0x03010a03, 0x03010a03, 0x03010a03},
+-	{0x0000a628, 0x03010c04, 0x03010c04, 0x03010c04, 0x03010c04},
+-	{0x0000a62c, 0x03010c04, 0x03010c04, 0x03010c04, 0x03010c04},
+-	{0x0000a630, 0x03010c04, 0x03010c04, 0x03010c04, 0x03010c04},
+-	{0x0000a634, 0x03010c04, 0x03010c04, 0x03010c04, 0x03010c04},
+-	{0x0000a638, 0x03010c04, 0x03010c04, 0x03010c04, 0x03010c04},
+-	{0x0000a63c, 0x03010c04, 0x03010c04, 0x03010c04, 0x03010c04},
+-	{0x00016044, 0x034922db, 0x034922db, 0x034922db, 0x034922db},
+-	{0x00016284, 0x14d3f000, 0x14d3f000, 0x14d3f000, 0x14d3f000},
++	{0x00001030, 0x00000230, 0x00000460, 0x000002c0, 0x00000160},
++	{0x00001070, 0x00000168, 0x000002d0, 0x00000318, 0x0000018c},
++	{0x000010b0, 0x00000e60, 0x00001cc0, 0x00007c70, 0x00003e38},
++	{0x00008014, 0x03e803e8, 0x07d007d0, 0x10801600, 0x08400b00},
++	{0x0000801c, 0x128d8027, 0x128d804f, 0x12e00057, 0x12e0002b},
++	{0x00008120, 0x08f04800, 0x08f04800, 0x08f04810, 0x08f04810},
++	{0x000081d0, 0x00003210, 0x00003210, 0x0000320a, 0x0000320a},
++	{0x00008318, 0x00003e80, 0x00007d00, 0x00006880, 0x00003440},
  };
  
-@@ -331,6 +333,9 @@ struct iwl_mvm_vif {
- #endif
- 
- 	enum ieee80211_smps_mode smps_requests[NUM_IWL_MVM_SMPS_REQ];
-+
-+	/* FW identified misbehaving AP */
-+	u8 uapsd_misbehaving_bssid[ETH_ALEN];
- };
- 
- static inline struct iwl_mvm_vif *
-@@ -781,6 +786,11 @@ static inline int iwl_mvm_power_update_device_mode(struct iwl_mvm *mvm)
- 	return 0;
- }
- 
-+void iwl_mvm_power_vif_assoc(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
-+int iwl_mvm_power_uapsd_misbehaving_ap_notif(struct iwl_mvm *mvm,
-+					     struct iwl_rx_cmd_buffer *rxb,
-+					     struct iwl_device_cmd *cmd);
-+
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- static inline int iwl_mvm_power_dbgfs_read(struct iwl_mvm *mvm,
- 					    struct ieee80211_vif *vif,
-diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
-index cae6123..2e9af9f 100644
---- a/drivers/net/wireless/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
-@@ -236,6 +236,8 @@ static const struct iwl_rx_handlers iwl_mvm_rx_handlers[] = {
- 		   false),
- 
- 	RX_HANDLER(REPLY_ERROR, iwl_mvm_rx_fw_error, false),
-+	RX_HANDLER(PSM_UAPSD_AP_MISBEHAVING_NOTIFICATION,
-+		   iwl_mvm_power_uapsd_misbehaving_ap_notif, false),
- };
- #undef RX_HANDLER
- #define CMD(x) [x] = #x
-@@ -311,6 +313,7 @@ static const char *iwl_mvm_cmd_strings[REPLY_MAX] = {
- 	CMD(REPLY_THERMAL_MNG_BACKOFF),
- 	CMD(MAC_PM_POWER_TABLE),
- 	CMD(BT_COEX_CI),
-+	CMD(PSM_UAPSD_AP_MISBEHAVING_NOTIFICATION),
- };
- #undef CMD
- 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/power.c b/drivers/net/wireless/iwlwifi/mvm/power.c
-index 550824a..1817b2a 100644
---- a/drivers/net/wireless/iwlwifi/mvm/power.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/power.c
-@@ -186,6 +186,92 @@ static void iwl_mvm_power_log(struct iwl_mvm *mvm,
- 	}
- }
- 
-+static void iwl_mvm_power_configure_uapsd(struct iwl_mvm *mvm,
-+					  struct ieee80211_vif *vif,
-+					  struct iwl_mac_power_cmd *cmd)
-+{
-+	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+	enum ieee80211_ac_numbers ac;
-+	bool tid_found = false;
-+
-+	for (ac = IEEE80211_AC_VO; ac <= IEEE80211_AC_BK; ac++) {
-+		if (!mvmvif->queue_params[ac].uapsd)
-+			continue;
-+
-+		if (mvm->cur_ucode != IWL_UCODE_WOWLAN)
-+			cmd->flags |=
-+				cpu_to_le16(POWER_FLAGS_ADVANCE_PM_ENA_MSK);
-+
-+		cmd->uapsd_ac_flags |= BIT(ac);
-+
-+		/* QNDP TID - the highest TID with no admission control */
-+		if (!tid_found && !mvmvif->queue_params[ac].acm) {
-+			tid_found = true;
-+			switch (ac) {
-+			case IEEE80211_AC_VO:
-+				cmd->qndp_tid = 6;
-+				break;
-+			case IEEE80211_AC_VI:
-+				cmd->qndp_tid = 5;
-+				break;
-+			case IEEE80211_AC_BE:
-+				cmd->qndp_tid = 0;
-+				break;
-+			case IEEE80211_AC_BK:
-+				cmd->qndp_tid = 1;
-+				break;
-+			}
-+		}
-+	}
-+
-+	if (!(cmd->flags & cpu_to_le16(POWER_FLAGS_ADVANCE_PM_ENA_MSK)))
-+		return;
-+
-+	cmd->flags |= cpu_to_le16(POWER_FLAGS_UAPSD_MISBEHAVING_ENA_MSK);
-+
-+	if (cmd->uapsd_ac_flags == (BIT(IEEE80211_AC_VO) |
-+				    BIT(IEEE80211_AC_VI) |
-+				    BIT(IEEE80211_AC_BE) |
-+				    BIT(IEEE80211_AC_BK))) {
-+		cmd->flags |= cpu_to_le16(POWER_FLAGS_SNOOZE_ENA_MSK);
-+		cmd->snooze_interval = cpu_to_le16(IWL_MVM_PS_SNOOZE_INTERVAL);
-+		cmd->snooze_window = (mvm->cur_ucode == IWL_UCODE_WOWLAN) ?
-+			cpu_to_le16(IWL_MVM_WOWLAN_PS_SNOOZE_WINDOW) :
-+			cpu_to_le16(IWL_MVM_PS_SNOOZE_WINDOW);
-+	}
-+
-+	cmd->uapsd_max_sp = IWL_UAPSD_MAX_SP;
-+
-+	if (mvm->cur_ucode == IWL_UCODE_WOWLAN || cmd->flags &
-+	    cpu_to_le16(POWER_FLAGS_SNOOZE_ENA_MSK)) {
-+		cmd->rx_data_timeout_uapsd =
-+			cpu_to_le32(IWL_MVM_WOWLAN_PS_RX_DATA_TIMEOUT);
-+		cmd->tx_data_timeout_uapsd =
-+			cpu_to_le32(IWL_MVM_WOWLAN_PS_TX_DATA_TIMEOUT);
-+	} else {
-+		cmd->rx_data_timeout_uapsd =
-+			cpu_to_le32(IWL_MVM_UAPSD_RX_DATA_TIMEOUT);
-+		cmd->tx_data_timeout_uapsd =
-+			cpu_to_le32(IWL_MVM_UAPSD_TX_DATA_TIMEOUT);
-+	}
-+
-+	if (cmd->flags & cpu_to_le16(POWER_FLAGS_SNOOZE_ENA_MSK)) {
-+		cmd->heavy_tx_thld_packets =
-+			IWL_MVM_PS_SNOOZE_HEAVY_TX_THLD_PACKETS;
-+		cmd->heavy_rx_thld_packets =
-+			IWL_MVM_PS_SNOOZE_HEAVY_RX_THLD_PACKETS;
-+	} else {
-+		cmd->heavy_tx_thld_packets =
-+			IWL_MVM_PS_HEAVY_TX_THLD_PACKETS;
-+		cmd->heavy_rx_thld_packets =
-+			IWL_MVM_PS_HEAVY_RX_THLD_PACKETS;
-+	}
-+	cmd->heavy_tx_thld_percentage =
-+		IWL_MVM_PS_HEAVY_TX_THLD_PERCENT;
-+	cmd->heavy_rx_thld_percentage =
-+		IWL_MVM_PS_HEAVY_RX_THLD_PERCENT;
-+}
-+
- static void iwl_mvm_power_build_cmd(struct iwl_mvm *mvm,
- 				    struct ieee80211_vif *vif,
- 				    struct iwl_mac_power_cmd *cmd)
-@@ -198,8 +284,6 @@ static void iwl_mvm_power_build_cmd(struct iwl_mvm *mvm,
- 	bool radar_detect = false;
- 	struct iwl_mvm_vif *mvmvif __maybe_unused =
- 		iwl_mvm_vif_from_mac80211(vif);
--	enum ieee80211_ac_numbers ac;
--	bool tid_found = false;
- 
- 	cmd->id_and_color = cpu_to_le32(FW_CMD_ID_AND_COLOR(mvmvif->id,
- 							    mvmvif->color));
-@@ -269,81 +353,9 @@ static void iwl_mvm_power_build_cmd(struct iwl_mvm *mvm,
- 			cpu_to_le32(IWL_MVM_WOWLAN_PS_TX_DATA_TIMEOUT);
- 	}
- 
--	for (ac = IEEE80211_AC_VO; ac <= IEEE80211_AC_BK; ac++) {
--		if (!mvmvif->queue_params[ac].uapsd)
--			continue;
+-#define ar9331_1p1_mac_postamble ar9300_2p2_mac_postamble
 -
--		if (mvm->cur_ucode != IWL_UCODE_WOWLAN)
--			cmd->flags |=
--				cpu_to_le16(POWER_FLAGS_ADVANCE_PM_ENA_MSK);
--
--		cmd->uapsd_ac_flags |= BIT(ac);
--
--		/* QNDP TID - the highest TID with no admission control */
--		if (!tid_found && !mvmvif->queue_params[ac].acm) {
--			tid_found = true;
--			switch (ac) {
--			case IEEE80211_AC_VO:
--				cmd->qndp_tid = 6;
--				break;
--			case IEEE80211_AC_VI:
--				cmd->qndp_tid = 5;
--				break;
--			case IEEE80211_AC_BE:
--				cmd->qndp_tid = 0;
--				break;
--			case IEEE80211_AC_BK:
--				cmd->qndp_tid = 1;
--				break;
--			}
--		}
--	}
--
--	if (cmd->flags & cpu_to_le16(POWER_FLAGS_ADVANCE_PM_ENA_MSK)) {
--		if (cmd->uapsd_ac_flags == (BIT(IEEE80211_AC_VO) |
--					    BIT(IEEE80211_AC_VI) |
--					    BIT(IEEE80211_AC_BE) |
--					    BIT(IEEE80211_AC_BK))) {
--			cmd->flags |= cpu_to_le16(POWER_FLAGS_SNOOZE_ENA_MSK);
--			cmd->snooze_interval =
--				cpu_to_le16(IWL_MVM_PS_SNOOZE_INTERVAL);
--			cmd->snooze_window =
--				(mvm->cur_ucode == IWL_UCODE_WOWLAN) ?
--				cpu_to_le16(IWL_MVM_WOWLAN_PS_SNOOZE_WINDOW) :
--				cpu_to_le16(IWL_MVM_PS_SNOOZE_WINDOW);
--		}
--
--		cmd->uapsd_max_sp = IWL_UAPSD_MAX_SP;
--
--		if (mvm->cur_ucode == IWL_UCODE_WOWLAN || cmd->flags &
--		    cpu_to_le16(POWER_FLAGS_SNOOZE_ENA_MSK)) {
--			cmd->rx_data_timeout_uapsd =
--				cpu_to_le32(IWL_MVM_WOWLAN_PS_RX_DATA_TIMEOUT);
--			cmd->tx_data_timeout_uapsd =
--				cpu_to_le32(IWL_MVM_WOWLAN_PS_TX_DATA_TIMEOUT);
--		} else {
--			cmd->rx_data_timeout_uapsd =
--				cpu_to_le32(IWL_MVM_UAPSD_RX_DATA_TIMEOUT);
--			cmd->tx_data_timeout_uapsd =
--				cpu_to_le32(IWL_MVM_UAPSD_TX_DATA_TIMEOUT);
--		}
--
--		if (cmd->flags & cpu_to_le16(POWER_FLAGS_SNOOZE_ENA_MSK)) {
--			cmd->heavy_tx_thld_packets =
--				IWL_MVM_PS_SNOOZE_HEAVY_TX_THLD_PACKETS;
--			cmd->heavy_rx_thld_packets =
--				IWL_MVM_PS_SNOOZE_HEAVY_RX_THLD_PACKETS;
--		} else {
--			cmd->heavy_tx_thld_packets =
--				IWL_MVM_PS_HEAVY_TX_THLD_PACKETS;
--			cmd->heavy_rx_thld_packets =
--				IWL_MVM_PS_HEAVY_RX_THLD_PACKETS;
--		}
--		cmd->heavy_tx_thld_percentage =
--			IWL_MVM_PS_HEAVY_TX_THLD_PERCENT;
--		cmd->heavy_rx_thld_percentage =
--			IWL_MVM_PS_HEAVY_RX_THLD_PERCENT;
--	}
-+	if (memcmp(mvmvif->uapsd_misbehaving_bssid, vif->bss_conf.bssid,
-+		   ETH_ALEN))
-+		iwl_mvm_power_configure_uapsd(mvm, vif, cmd);
- 
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- 	if (mvmvif->dbgfs_pm.mask & MVM_DEBUGFS_PM_KEEP_ALIVE)
-@@ -472,6 +484,44 @@ static int iwl_mvm_power_update_device(struct iwl_mvm *mvm)
- 				    &cmd);
- }
- 
-+void iwl_mvm_power_vif_assoc(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
-+{
-+	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+
-+	if (memcmp(vif->bss_conf.bssid, mvmvif->uapsd_misbehaving_bssid,
-+		   ETH_ALEN))
-+		memset(mvmvif->uapsd_misbehaving_bssid, 0, ETH_ALEN);
-+}
-+
-+static void iwl_mvm_power_uapsd_misbehav_ap_iterator(void *_data, u8 *mac,
-+						     struct ieee80211_vif *vif)
-+{
-+	u8 *ap_sta_id = _data;
-+	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+
-+	/* The ap_sta_id is not expected to change during current association
-+	 * so no explicit protection is needed
-+	 */
-+	if (mvmvif->ap_sta_id == *ap_sta_id)
-+		memcpy(mvmvif->uapsd_misbehaving_bssid, vif->bss_conf.bssid,
-+		       ETH_ALEN);
-+}
-+
-+int iwl_mvm_power_uapsd_misbehaving_ap_notif(struct iwl_mvm *mvm,
-+					     struct iwl_rx_cmd_buffer *rxb,
-+					     struct iwl_device_cmd *cmd)
-+{
-+	struct iwl_rx_packet *pkt = rxb_addr(rxb);
-+	struct iwl_uapsd_misbehaving_ap_notif *notif = (void *)pkt->data;
-+	u8 ap_sta_id = le32_to_cpu(notif->sta_id);
-+
-+	ieee80211_iterate_active_interfaces_atomic(
-+		mvm->hw, IEEE80211_IFACE_ITER_NORMAL,
-+		iwl_mvm_power_uapsd_misbehav_ap_iterator, &ap_sta_id);
-+
-+	return 0;
-+}
-+
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- static int iwl_mvm_power_mac_dbgfs_read(struct iwl_mvm *mvm,
- 					struct ieee80211_vif *vif, char *buf,
-@@ -494,70 +544,58 @@ static int iwl_mvm_power_mac_dbgfs_read(struct iwl_mvm *mvm,
- 	pos += scnprintf(buf+pos, bufsz-pos, "keep_alive = %d\n",
- 			 le16_to_cpu(cmd.keep_alive_seconds));
- 
--	if (cmd.flags & cpu_to_le16(POWER_FLAGS_POWER_MANAGEMENT_ENA_MSK)) {
--		pos += scnprintf(buf+pos, bufsz-pos, "skip_over_dtim = %d\n",
--				 (cmd.flags &
--				 cpu_to_le16(POWER_FLAGS_SKIP_OVER_DTIM_MSK)) ?
--				 1 : 0);
--		pos += scnprintf(buf+pos, bufsz-pos, "skip_dtim_periods = %d\n",
--				 cmd.skip_dtim_periods);
--		if (!(cmd.flags &
--		      cpu_to_le16(POWER_FLAGS_ADVANCE_PM_ENA_MSK))) {
--			pos += scnprintf(buf+pos, bufsz-pos,
--					 "rx_data_timeout = %d\n",
--					 le32_to_cpu(cmd.rx_data_timeout));
--			pos += scnprintf(buf+pos, bufsz-pos,
--					 "tx_data_timeout = %d\n",
--					 le32_to_cpu(cmd.tx_data_timeout));
--		}
--		if (cmd.flags & cpu_to_le16(POWER_FLAGS_LPRX_ENA_MSK))
--			pos += scnprintf(buf+pos, bufsz-pos,
--					 "lprx_rssi_threshold = %d\n",
--					 cmd.lprx_rssi_threshold);
--		if (cmd.flags & cpu_to_le16(POWER_FLAGS_ADVANCE_PM_ENA_MSK)) {
--			pos +=
--			scnprintf(buf+pos, bufsz-pos,
--				  "rx_data_timeout_uapsd = %d\n",
--				  le32_to_cpu(cmd.rx_data_timeout_uapsd));
--			pos +=
--			scnprintf(buf+pos, bufsz-pos,
--				  "tx_data_timeout_uapsd = %d\n",
--				  le32_to_cpu(cmd.tx_data_timeout_uapsd));
--			pos += scnprintf(buf+pos, bufsz-pos, "qndp_tid = %d\n",
--					 cmd.qndp_tid);
--			pos += scnprintf(buf+pos, bufsz-pos,
--					 "uapsd_ac_flags = 0x%x\n",
--					 cmd.uapsd_ac_flags);
--			pos += scnprintf(buf+pos, bufsz-pos,
--					 "uapsd_max_sp = %d\n",
--					 cmd.uapsd_max_sp);
--			pos += scnprintf(buf+pos, bufsz-pos,
--					 "heavy_tx_thld_packets = %d\n",
--					 cmd.heavy_tx_thld_packets);
--			pos += scnprintf(buf+pos, bufsz-pos,
--					 "heavy_rx_thld_packets = %d\n",
--					 cmd.heavy_rx_thld_packets);
--			pos += scnprintf(buf+pos, bufsz-pos,
--					 "heavy_tx_thld_percentage = %d\n",
--					 cmd.heavy_tx_thld_percentage);
--			pos += scnprintf(buf+pos, bufsz-pos,
--					 "heavy_rx_thld_percentage = %d\n",
--					 cmd.heavy_rx_thld_percentage);
--			pos +=
--			scnprintf(buf+pos, bufsz-pos, "snooze_enable = %d\n",
--				  (cmd.flags &
--				   cpu_to_le16(POWER_FLAGS_SNOOZE_ENA_MSK)) ?
--				  1 : 0);
--		}
--		if (cmd.flags & cpu_to_le16(POWER_FLAGS_SNOOZE_ENA_MSK)) {
--			pos += scnprintf(buf+pos, bufsz-pos,
--					 "snooze_interval = %d\n",
--					 cmd.snooze_interval);
--			pos += scnprintf(buf+pos, bufsz-pos,
--					 "snooze_window = %d\n",
--					 cmd.snooze_window);
--		}
-+	if (!(cmd.flags & cpu_to_le16(POWER_FLAGS_POWER_MANAGEMENT_ENA_MSK)))
-+		return pos;
-+
-+	pos += scnprintf(buf+pos, bufsz-pos, "skip_over_dtim = %d\n",
-+			 (cmd.flags &
-+			 cpu_to_le16(POWER_FLAGS_SKIP_OVER_DTIM_MSK)) ? 1 : 0);
-+	pos += scnprintf(buf+pos, bufsz-pos, "skip_dtim_periods = %d\n",
-+			 cmd.skip_dtim_periods);
-+	if (!(cmd.flags & cpu_to_le16(POWER_FLAGS_ADVANCE_PM_ENA_MSK))) {
-+		pos += scnprintf(buf+pos, bufsz-pos, "rx_data_timeout = %d\n",
-+				 le32_to_cpu(cmd.rx_data_timeout));
-+		pos += scnprintf(buf+pos, bufsz-pos, "tx_data_timeout = %d\n",
-+				 le32_to_cpu(cmd.tx_data_timeout));
- 	}
-+	if (cmd.flags & cpu_to_le16(POWER_FLAGS_LPRX_ENA_MSK))
-+		pos += scnprintf(buf+pos, bufsz-pos,
-+				 "lprx_rssi_threshold = %d\n",
-+				 cmd.lprx_rssi_threshold);
-+
-+	if (!(cmd.flags & cpu_to_le16(POWER_FLAGS_ADVANCE_PM_ENA_MSK)))
-+		return pos;
-+
-+	pos += scnprintf(buf+pos, bufsz-pos, "rx_data_timeout_uapsd = %d\n",
-+			 le32_to_cpu(cmd.rx_data_timeout_uapsd));
-+	pos += scnprintf(buf+pos, bufsz-pos, "tx_data_timeout_uapsd = %d\n",
-+			 le32_to_cpu(cmd.tx_data_timeout_uapsd));
-+	pos += scnprintf(buf+pos, bufsz-pos, "qndp_tid = %d\n", cmd.qndp_tid);
-+	pos += scnprintf(buf+pos, bufsz-pos, "uapsd_ac_flags = 0x%x\n",
-+			 cmd.uapsd_ac_flags);
-+	pos += scnprintf(buf+pos, bufsz-pos, "uapsd_max_sp = %d\n",
-+			 cmd.uapsd_max_sp);
-+	pos += scnprintf(buf+pos, bufsz-pos, "heavy_tx_thld_packets = %d\n",
-+			 cmd.heavy_tx_thld_packets);
-+	pos += scnprintf(buf+pos, bufsz-pos, "heavy_rx_thld_packets = %d\n",
-+			 cmd.heavy_rx_thld_packets);
-+	pos += scnprintf(buf+pos, bufsz-pos, "heavy_tx_thld_percentage = %d\n",
-+			 cmd.heavy_tx_thld_percentage);
-+	pos += scnprintf(buf+pos, bufsz-pos, "heavy_rx_thld_percentage = %d\n",
-+			 cmd.heavy_rx_thld_percentage);
-+	pos += scnprintf(buf+pos, bufsz-pos, "uapsd_misbehaving_enable = %d\n",
-+			 (cmd.flags &
-+			  cpu_to_le16(POWER_FLAGS_UAPSD_MISBEHAVING_ENA_MSK)) ?
-+			 1 : 0);
-+
-+	if (!(cmd.flags & cpu_to_le16(POWER_FLAGS_SNOOZE_ENA_MSK)))
-+		return pos;
-+
-+	pos += scnprintf(buf+pos, bufsz-pos, "snooze_interval = %d\n",
-+			 cmd.snooze_interval);
-+	pos += scnprintf(buf+pos, bufsz-pos, "snooze_window = %d\n",
-+			 cmd.snooze_window);
-+
- 	return pos;
- }
- 
+ static const u32 ar9331_1p1_soc_preamble[][2] = {
+ 	/* Addr      allmodes  */
+ 	{0x00007020, 0x00000000},
 -- 
-1.7.9.5
+1.8.4.2
 
