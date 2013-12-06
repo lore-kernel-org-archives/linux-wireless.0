@@ -1,63 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:54356 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752165Ab3LRNBv (ORCPT
+Received: from szxga03-in.huawei.com ([119.145.14.66]:39817 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757757Ab3LFLLy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Dec 2013 08:01:51 -0500
-Received: by mail-pa0-f49.google.com with SMTP id kx10so5843103pab.8
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Dec 2013 05:01:51 -0800 (PST)
-From: ZHAO Gang <gamerh2o@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH] cfg80211: remove function reg_process_beacons()
-Date: Wed, 18 Dec 2013 20:56:38 +0800
-Message-Id: <db1bee094cd6ead618cb41fb7831503be0b4e3ef.1387371372.git.gamerh2o@gmail.com> (sfid-20131218_140155_009844_B9C9CC50)
+	Fri, 6 Dec 2013 06:11:54 -0500
+Message-ID: <52A1B0B4.9060703@huawei.com> (sfid-20131206_121159_345395_5BBAB54C)
+Date: Fri, 6 Dec 2013 19:10:44 +0800
+From: Wang Weidong <wangweidong1@huawei.com>
+MIME-Version: 1.0
+To: <johannes@sipsolutions.net>, <linville@tuxdriver.com>,
+	David Miller <davem@davemloft.net>
+CC: <netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] wireless: fix build warning of used uninitialized variable
+References: <52A15777.5000508@huawei.com>
+In-Reply-To: <52A15777.5000508@huawei.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since pointer last_request is initialized to &core_request_world, the
-if check in reg_process_beacons() is useless, and
-reg_process_beacons() is only called by wiphy_update_regulatory(), so
-we can let wiphy_update_regulatory() calls wiphy_update_beacon_reg()
-directly and remove unnecesssary reg_process_beacons().
+On 2013/12/6 12:49, Wang Weidong wrote:
+> nl80211.c: In function __cfg80211_wdev_from_attrs
+> nl80211.c:77: warning: wdev_id may be used uninitialized in this function
+> 
 
-Signed-off-by: ZHAO Gang <gamerh2o@gmail.com>
----
- net/wireless/reg.c | 14 +-------------
- 1 file changed, 1 insertion(+), 13 deletions(-)
+Sorry. My complier version is too low so that I got this warning.
+Just ignore it.
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index ec54e1a..b833bea 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1163,18 +1163,6 @@ static void wiphy_update_beacon_reg(struct wiphy *wiphy)
- 	}
- }
- 
--/* Reap the advantages of previously found beacons */
--static void reg_process_beacons(struct wiphy *wiphy)
--{
--	/*
--	 * Means we are just firing up cfg80211, so no beacons would
--	 * have been processed yet.
--	 */
--	if (!last_request)
--		return;
--	wiphy_update_beacon_reg(wiphy);
--}
--
- static bool is_ht40_allowed(struct ieee80211_channel *chan)
- {
- 	if (!chan)
-@@ -1281,7 +1269,7 @@ static void wiphy_update_regulatory(struct wiphy *wiphy,
- 	for (band = 0; band < IEEE80211_NUM_BANDS; band++)
- 		handle_band(wiphy, initiator, wiphy->bands[band]);
- 
--	reg_process_beacons(wiphy);
-+	wiphy_update_beacon_reg(wiphy);
- 	reg_process_ht_flags(wiphy);
- 	reg_call_notifier(wiphy, lr);
- }
--- 
-1.8.3.1
+Regards.
+Wang
+
+> Signed-off-by: Wang Weidong <wangweidong1@huawei.com>
+> ---
+>  net/wireless/nl80211.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> index 138dc3b..6894229 100644
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -74,7 +74,7 @@ __cfg80211_wdev_from_attrs(struct net *netns, struct nlattr **attrs)
+>  	struct wireless_dev *result = NULL;
+>  	bool have_ifidx = attrs[NL80211_ATTR_IFINDEX];
+>  	bool have_wdev_id = attrs[NL80211_ATTR_WDEV];
+> -	u64 wdev_id;
+> +	u64 wdev_id = 0;
+>  	int wiphy_idx = -1;
+>  	int ifidx = -1;
+>  
+> 
+
 
