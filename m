@@ -1,37 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:50892 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751162Ab3LLFdb (ORCPT
+Received: from szxga03-in.huawei.com ([119.145.14.66]:46727 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752575Ab3LFEuj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Dec 2013 00:33:31 -0500
-From: Sujith Manoharan <sujith@msujith.org>
+	Thu, 5 Dec 2013 23:50:39 -0500
+Message-ID: <52A15777.5000508@huawei.com> (sfid-20131206_055047_191951_1BB6BFF7)
+Date: Fri, 6 Dec 2013 12:49:59 +0800
+From: Wang Weidong <wangweidong1@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21161.18818.926049.511664@gargle.gargle.HOWL> (sfid-20131212_063334_669198_97E19B01)
-Date: Thu, 12 Dec 2013 10:58:34 +0530
-To: Sebastian Moeller <moeller0@gmx.de>
-Cc: Stephen Hemminger <stephen@networkplumber.org>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: Re: Fw: [Cerowrt-devel] Wireless failures 3.10.17-3
-In-Reply-To: <20131211174519.34966001@nehalam.linuxnetplumber.net>
-References: <20131211174519.34966001@nehalam.linuxnetplumber.net>
+To: <johannes@sipsolutions.net>, <linville@tuxdriver.com>,
+	David Miller <davem@davemloft.net>
+CC: <netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH] wireless: fix build warning of used uninitialized variable
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sebastian,
+nl80211.c: In function __cfg80211_wdev_from_attrs
+nl80211.c:77: warning: wdev_id may be used uninitialized in this function
 
-> I think I can make tho error appear "at will" by running netperf-wrapper
-> against my wndr3700v2, just tested under 3.10.21-1:
-> /netperf-wrapper -l 300 -H gw.home.lan rrul -p all -t hms-beagle_cerowrt3.10.21-1_2_nacktmulle
-> 
-> dmesg on the router:
-> [   53.007812] IPv6: ADDRCONF(NETDEV_CHANGE): gw11: link becomes ready
-> [28792.039062] ath: phy1: Failed to stop TX DMA, queues=0x00e!
-> [28794.078125] ath: phy1: Failed to stop TX DMA, queues=0x00e!
-> [28807.164062] ath: phy1: Failed to stop TX DMA, queues=0x00e!
-> [28809.191406] ath: phy1: Failed to stop TX DMA, queues=0x002!
-> [28823.269531] ath: phy1: Failed to stop TX DMA, queues=0x00e!
+Signed-off-by: Wang Weidong <wangweidong1@huawei.com>
+---
+ net/wireless/nl80211.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-What board is this ? Can you post the initial bootlog ?
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 138dc3b..6894229 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -74,7 +74,7 @@ __cfg80211_wdev_from_attrs(struct net *netns, struct nlattr **attrs)
+ 	struct wireless_dev *result = NULL;
+ 	bool have_ifidx = attrs[NL80211_ATTR_IFINDEX];
+ 	bool have_wdev_id = attrs[NL80211_ATTR_WDEV];
+-	u64 wdev_id;
++	u64 wdev_id = 0;
+ 	int wiphy_idx = -1;
+ 	int ifidx = -1;
+ 
+-- 
+1.6.0.2
 
-Sujith
+
