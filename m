@@ -1,48 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f180.google.com ([209.85.215.180]:49047 "EHLO
-	mail-ea0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752223Ab3LEJVi (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:36436 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755114Ab3LFQaQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 04:21:38 -0500
-Received: by mail-ea0-f180.google.com with SMTP id f15so11190204eak.39
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Dec 2013 01:21:37 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>,
-	Barak Bercovitz <barak@wizery.com>
-Subject: [PATCH 1/4] cfg80211: stop sched scan only when needed
-Date: Thu,  5 Dec 2013 11:21:26 +0200
-Message-Id: <1386235289-27278-1-git-send-email-eliad@wizery.com> (sfid-20131205_102143_852813_761051DD)
+	Fri, 6 Dec 2013 11:30:16 -0500
+Date: Fri, 6 Dec 2013 11:25:56 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Mathy Vanhoef <vanhoefm@gmail.com>
+Cc: Pau Koning <paukoning@gmail.com>,
+	Oleksij Rempel <linux@rempel-privat.de>,
+	linux-wireless@vger.kernel.org, jouni@qca.qualcomm.com,
+	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
+	ath9k-devel@qualcomm.com
+Subject: Re: [PATCH] ath9k_htc: properly set MAC address and BSSID mask
+Message-ID: <20131206162555.GD13285@tuxdriver.com> (sfid-20131206_173021_637656_7112B993)
+References: <5294E4C5.4050301@cs.kuleuven.be>
+ <52950812.20001@rempel-privat.de>
+ <5295EF41.8040709@cs.kuleuven.be>
+ <CANiGF999jHN3+5QuNVAkVk_hHxZ6LkPxWB3jW9yoJGbfno7M9A@mail.gmail.com>
+ <52972749.70200@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <52972749.70200@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Barak Bercovitz <barak@wizery.com>
+Can we get some comments on this patch?  It is attempting to address
+a CVE.
 
-cfg80211_leave stops sched scan when any station vif
-is leaving. Add an explicit check and call it only
-when the relevant vif (the one we scan on) is leaving.
+John
 
-Signed-off-by: Barak Bercovitz <barak@wizery.com>
-[Eliad - changed the commit message a bit]
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- net/wireless/core.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+On Thu, Nov 28, 2013 at 12:21:45PM +0100, Mathy Vanhoef wrote:
+> Third time's the charm? 
+> --
+> From: "Mathy Vanhoef" <vanhoefm@gmail.com>
+> 
+> Pick the MAC address of the first virtual interface as the new hardware MAC
+> address. Set BSSID mask according to this MAC address. This fixes CVE-2013-4579.
+> 
+> Signed-off-by: Mathy Vanhoef <vanhoefm@gmail.com>
+> ---
+> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+> index d441045..84359c3 100644
+> --- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+> @@ -147,21 +147,26 @@ static void ath9k_htc_bssid_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
+>  	struct ath9k_vif_iter_data *iter_data = data;
+>  	int i;
+>  
+> -	for (i = 0; i < ETH_ALEN; i++)
+> -		iter_data->mask[i] &= ~(iter_data->hw_macaddr[i] ^ mac[i]);
+> +	if (iter_data->hw_macaddr != NULL) {
+> +		for (i = 0; i < ETH_ALEN; i++)
+> +			iter_data->mask[i] &= ~(iter_data->hw_macaddr[i] ^ mac[i]);
+> +	} else {
+> +		iter_data->hw_macaddr = mac;
+> +	}
+>  }
+>  
+> -static void ath9k_htc_set_bssid_mask(struct ath9k_htc_priv *priv,
+> +static void ath9k_htc_set_mac_bssid_mask(struct ath9k_htc_priv *priv,
+>  				     struct ieee80211_vif *vif)
+>  {
+>  	struct ath_common *common = ath9k_hw_common(priv->ah);
+>  	struct ath9k_vif_iter_data iter_data;
+>  
+>  	/*
+> -	 * Use the hardware MAC address as reference, the hardware uses it
+> -	 * together with the BSSID mask when matching addresses.
+> +	 * Pick the MAC address of the first interface as the new hardware
+> +	 * MAC address. The hardware will use it together with the BSSID mask
+> +	 * when matching addresses.
+>  	 */
+> -	iter_data.hw_macaddr = common->macaddr;
+> +	iter_data.hw_macaddr = NULL;
+>  	memset(&iter_data.mask, 0xff, ETH_ALEN);
+>  
+>  	if (vif)
+> @@ -173,6 +178,10 @@ static void ath9k_htc_set_bssid_mask(struct ath9k_htc_priv *priv,
+>  		ath9k_htc_bssid_iter, &iter_data);
+>  
+>  	memcpy(common->bssidmask, iter_data.mask, ETH_ALEN);
+> +
+> +	if (iter_data.hw_macaddr)
+> +		memcpy(common->macaddr, iter_data.hw_macaddr, ETH_ALEN);
+> +
+>  	ath_hw_setbssidmask(common);
+>  }
+>  
+> @@ -1083,7 +1092,7 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
+>  		goto out;
+>  	}
+>  
+> -	ath9k_htc_set_bssid_mask(priv, vif);
+> +	ath9k_htc_set_mac_bssid_mask(priv, vif);
+>  
+>  	priv->vif_slot |= (1 << avp->index);
+>  	priv->nvifs++;
+> @@ -1148,7 +1157,7 @@ static void ath9k_htc_remove_interface(struct ieee80211_hw *hw,
+>  
+>  	ath9k_htc_set_opmode(priv);
+>  
+> -	ath9k_htc_set_bssid_mask(priv, vif);
+> +	ath9k_htc_set_mac_bssid_mask(priv, vif);
+>  
+>  	/*
+>  	 * Stop ANI only if there are no associated station interfaces.
+> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+> index b6aad69..99ab0aa 100644
+> --- a/drivers/net/wireless/ath/ath9k/main.c
+> +++ b/drivers/net/wireless/ath/ath9k/main.c
+> @@ -885,8 +885,9 @@ void ath9k_calculate_iter_data(struct ieee80211_hw *hw,
+>  	struct ath_common *common = ath9k_hw_common(ah);
+>  
+>  	/*
+> -	 * Use the hardware MAC address as reference, the hardware uses it
+> -	 * together with the BSSID mask when matching addresses.
+> +	 * Pick the MAC address of the first interface as the new hardware
+> +	 * MAC address. The hardware will use it together with the BSSID mask
+> +	 * when matching addresses.
+>  	 */
+>  	memset(iter_data, 0, sizeof(*iter_data));
+>  	memset(&iter_data->mask, 0xff, ETH_ALEN);
+> 
+> 
+> 
+> 
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 32af857..a8e48c7 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -775,7 +775,8 @@ void cfg80211_leave(struct cfg80211_registered_device *rdev,
- 		break;
- 	case NL80211_IFTYPE_P2P_CLIENT:
- 	case NL80211_IFTYPE_STATION:
--		__cfg80211_stop_sched_scan(rdev, false);
-+		if (rdev->sched_scan_req && dev == rdev->sched_scan_req->dev)
-+			__cfg80211_stop_sched_scan(rdev, false);
- 
- 		wdev_lock(wdev);
- #ifdef CONFIG_CFG80211_WEXT
 -- 
-1.8.5.rc1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
