@@ -1,99 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f172.google.com ([209.85.192.172]:51101 "EHLO
-	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932169Ab3L3VIw (ORCPT
+Received: from mail-wg0-f54.google.com ([74.125.82.54]:52014 "EHLO
+	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751789Ab3LFUak (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Dec 2013 16:08:52 -0500
-Message-ID: <52C1E0DF.2000800@lwfinger.net> (sfid-20131230_220920_886304_9E4F8C73)
-Date: Mon, 30 Dec 2013 15:08:47 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 6 Dec 2013 15:30:40 -0500
+Received: by mail-wg0-f54.google.com with SMTP id n12so1153664wgh.21
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Dec 2013 12:30:39 -0800 (PST)
 MIME-Version: 1.0
-To: Julia Lawall <Julia.Lawall@lip6.fr>
-CC: kernel-janitors@vger.kernel.org,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 6/11] rtlwifi: use ether_addr_equal_64bits
-References: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr> <1388427307-8691-7-git-send-email-Julia.Lawall@lip6.fr>
-In-Reply-To: <1388427307-8691-7-git-send-email-Julia.Lawall@lip6.fr>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <20131206162919.GE13285@tuxdriver.com>
+References: <5294E4C5.4050301@cs.kuleuven.be> <52950812.20001@rempel-privat.de>
+ <5295EF41.8040709@cs.kuleuven.be> <CANiGF999jHN3+5QuNVAkVk_hHxZ6LkPxWB3jW9yoJGbfno7M9A@mail.gmail.com>
+ <52972749.70200@gmail.com> <20131206162919.GE13285@tuxdriver.com>
+From: Mathy <vanhoefm@gmail.com>
+Date: Fri, 6 Dec 2013 21:30:18 +0100
+Message-ID: <CAFXAJYzO5ifSYbiN7xqV5Sr+3CFrZsaqc2dg0bt-JB0EUxFRdQ@mail.gmail.com> (sfid-20131206_213044_170363_2D211A48)
+Subject: Re: [PATCH] ath9k_htc: properly set MAC address and BSSID mask
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Pau Koning <paukoning@gmail.com>,
+	Oleksij Rempel <linux@rempel-privat.de>,
+	linux-wireless@vger.kernel.org, mcgrof@qca.qualcomm.com,
+	jouni@qca.qualcomm.com, vthiagar@qca.qualcomm.com,
+	senthilb@qca.qualcomm.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/30/2013 12:15 PM, Julia Lawall wrote:
-> From: Julia Lawall <Julia.Lawall@lip6.fr>
->
-> Ether_addr_equal_64bits is more efficient than ether_addr_equal, and can be
-> used when each argument is an array within a structure that contains at
-> least two bytes of data beyond the array.
->
-> The structures involved are:
-> ieee80211_hdr defined in include/linux/ieee80211.h and
-> rtl_mac defined in drivers/net/wireless/rtlwifi/wifi.h
->
-> This was done using Coccinelle (http://coccinelle.lip6.fr/).
->
-> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+It was renamed to make it clear the function now changes both the
+BSSID and MAC registers.
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
-
-Larry
-
-
+On Fri, Dec 6, 2013 at 5:29 PM, John W. Linville <linville@tuxdriver.com> wrote:
+> On Thu, Nov 28, 2013 at 12:21:45PM +0100, Mathy Vanhoef wrote:
+>> Third time's the charm?
+>> --
+>> From: "Mathy Vanhoef" <vanhoefm@gmail.com>
+>>
+>> Pick the MAC address of the first virtual interface as the new hardware MAC
+>> address. Set BSSID mask according to this MAC address. This fixes CVE-2013-4579.
+>>
+>> Signed-off-by: Mathy Vanhoef <vanhoefm@gmail.com>
+>> ---
+>> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+>> index d441045..84359c3 100644
+>> --- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+>> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+>> @@ -147,21 +147,26 @@ static void ath9k_htc_bssid_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
+>>       struct ath9k_vif_iter_data *iter_data = data;
+>>       int i;
+>>
+>> -     for (i = 0; i < ETH_ALEN; i++)
+>> -             iter_data->mask[i] &= ~(iter_data->hw_macaddr[i] ^ mac[i]);
+>> +     if (iter_data->hw_macaddr != NULL) {
+>> +             for (i = 0; i < ETH_ALEN; i++)
+>> +                     iter_data->mask[i] &= ~(iter_data->hw_macaddr[i] ^ mac[i]);
+>> +     } else {
+>> +             iter_data->hw_macaddr = mac;
+>> +     }
+>>  }
+>>
+>> -static void ath9k_htc_set_bssid_mask(struct ath9k_htc_priv *priv,
+>> +static void ath9k_htc_set_mac_bssid_mask(struct ath9k_htc_priv *priv,
+>>                                    struct ieee80211_vif *vif)
+>>  {
 >
-> ---
-> The semantic patch used is rather long and can be found in message 0 of
-> this patch series.
+> I'm not sure I see the point of renaming this function -- just
+> personal preference?
 >
->   drivers/net/wireless/rtlwifi/base.c |    4 ++--
->   drivers/net/wireless/rtlwifi/ps.c   |    4 ++--
->   2 files changed, 4 insertions(+), 4 deletions(-)
+>>       struct ath_common *common = ath9k_hw_common(priv->ah);
+>>       struct ath9k_vif_iter_data iter_data;
+>>
+>>       /*
+>> -      * Use the hardware MAC address as reference, the hardware uses it
+>> -      * together with the BSSID mask when matching addresses.
+>> +      * Pick the MAC address of the first interface as the new hardware
+>> +      * MAC address. The hardware will use it together with the BSSID mask
+>> +      * when matching addresses.
+>>        */
+>> -     iter_data.hw_macaddr = common->macaddr;
+>> +     iter_data.hw_macaddr = NULL;
+>>       memset(&iter_data.mask, 0xff, ETH_ALEN);
+>>
+>>       if (vif)
+>> @@ -173,6 +178,10 @@ static void ath9k_htc_set_bssid_mask(struct ath9k_htc_priv *priv,
+>>               ath9k_htc_bssid_iter, &iter_data);
+>>
+>>       memcpy(common->bssidmask, iter_data.mask, ETH_ALEN);
+>> +
+>> +     if (iter_data.hw_macaddr)
+>> +             memcpy(common->macaddr, iter_data.hw_macaddr, ETH_ALEN);
+>> +
+>>       ath_hw_setbssidmask(common);
+>>  }
+>>
+>> @@ -1083,7 +1092,7 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
+>>               goto out;
+>>       }
+>>
+>> -     ath9k_htc_set_bssid_mask(priv, vif);
+>> +     ath9k_htc_set_mac_bssid_mask(priv, vif);
+>>
+>>       priv->vif_slot |= (1 << avp->index);
+>>       priv->nvifs++;
+>> @@ -1148,7 +1157,7 @@ static void ath9k_htc_remove_interface(struct ieee80211_hw *hw,
+>>
+>>       ath9k_htc_set_opmode(priv);
+>>
+>> -     ath9k_htc_set_bssid_mask(priv, vif);
+>> +     ath9k_htc_set_mac_bssid_mask(priv, vif);
+>>
+>>       /*
+>>        * Stop ANI only if there are no associated station interfaces.
+>> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+>> index b6aad69..99ab0aa 100644
+>> --- a/drivers/net/wireless/ath/ath9k/main.c
+>> +++ b/drivers/net/wireless/ath/ath9k/main.c
+>> @@ -885,8 +885,9 @@ void ath9k_calculate_iter_data(struct ieee80211_hw *hw,
+>>       struct ath_common *common = ath9k_hw_common(ah);
+>>
+>>       /*
+>> -      * Use the hardware MAC address as reference, the hardware uses it
+>> -      * together with the BSSID mask when matching addresses.
+>> +      * Pick the MAC address of the first interface as the new hardware
+>> +      * MAC address. The hardware will use it together with the BSSID mask
+>> +      * when matching addresses.
+>>        */
+>>       memset(iter_data, 0, sizeof(*iter_data));
+>>       memset(&iter_data->mask, 0xff, ETH_ALEN);
+>>
+>>
+>>
+>>
 >
-> diff --git a/drivers/net/wireless/rtlwifi/ps.c b/drivers/net/wireless/rtlwifi/ps.c
-> index 0d81f76..deedae3 100644
-> --- a/drivers/net/wireless/rtlwifi/ps.c
-> +++ b/drivers/net/wireless/rtlwifi/ps.c
-> @@ -478,7 +478,7 @@ void rtl_swlps_beacon(struct ieee80211_hw *hw, void *data, unsigned int len)
->   		return;
->
->   	/* and only beacons from the associated BSSID, please */
-> -	if (!ether_addr_equal(hdr->addr3, rtlpriv->mac80211.bssid))
-> +	if (!ether_addr_equal_64bits(hdr->addr3, rtlpriv->mac80211.bssid))
->   		return;
->
->   	rtlpriv->psc.last_beacon = jiffies;
-> @@ -923,7 +923,7 @@ void rtl_p2p_info(struct ieee80211_hw *hw, void *data, unsigned int len)
->   		return;
->
->   	/* and only beacons from the associated BSSID, please */
-> -	if (!ether_addr_equal(hdr->addr3, rtlpriv->mac80211.bssid))
-> +	if (!ether_addr_equal_64bits(hdr->addr3, rtlpriv->mac80211.bssid))
->   		return;
->
->   	/* check if this really is a beacon */
-> diff --git a/drivers/net/wireless/rtlwifi/base.c b/drivers/net/wireless/rtlwifi/base.c
-> index fcf9b62..d63a12c 100644
-> --- a/drivers/net/wireless/rtlwifi/base.c
-> +++ b/drivers/net/wireless/rtlwifi/base.c
-> @@ -1293,7 +1293,7 @@ void rtl_beacon_statistic(struct ieee80211_hw *hw, struct sk_buff *skb)
->   		return;
->
->   	/* and only beacons from the associated BSSID, please */
-> -	if (!ether_addr_equal(hdr->addr3, rtlpriv->mac80211.bssid))
-> +	if (!ether_addr_equal_64bits(hdr->addr3, rtlpriv->mac80211.bssid))
->   		return;
->
->   	rtlpriv->link_info.bcn_rx_inperiod++;
-> @@ -1781,7 +1781,7 @@ void rtl_recognize_peer(struct ieee80211_hw *hw, u8 *data, unsigned int len)
->   		return;
->
->   	/* and only beacons from the associated BSSID, please */
-> -	if (!ether_addr_equal(hdr->addr3, rtlpriv->mac80211.bssid))
-> +	if (!ether_addr_equal_64bits(hdr->addr3, rtlpriv->mac80211.bssid))
->   		return;
->
->   	if (rtl_find_221_ie(hw, data, len))
->
->
-
+> --
+> John W. Linville                Someday the world will need a hero, and you
+> linville@tuxdriver.com                  might be all we have.  Be ready.
