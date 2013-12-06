@@ -1,76 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f50.google.com ([209.85.214.50]:53323 "EHLO
-	mail-bk0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754712Ab3LJROj (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:58733 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757711Ab3LFLEE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Dec 2013 12:14:39 -0500
-From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Kalle Valo <kvalo@adurom.com>
-Subject: Re: [PATCH v2 15/16] wl1251: Add sysfs file address for setting permanent mac address
-Date: Tue, 10 Dec 2013 18:14:34 +0100
-Cc: Luciano Coelho <luca@coelho.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
-	joni.lapilainen@gmail.com,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Felipe Contreras <felipe.contreras@gmail.com>
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com> <87txegpuyk.fsf@purkki.adurom.net> <201312101710.51015@pali>
-In-Reply-To: <201312101710.51015@pali>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart2810353.qq4FXZTbCO";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <201312101814.35112@pali> (sfid-20131210_181459_683824_2A3D0298)
+	Fri, 6 Dec 2013 06:04:04 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 15/16] ath9k: Fix internal regulator for AR955x
+Date: Fri,  6 Dec 2013 16:28:53 +0530
+Message-Id: <1386327534-31105-16-git-send-email-sujith@msujith.org> (sfid-20131206_120414_805801_0BE9DE24)
+In-Reply-To: <1386327534-31105-1-git-send-email-sujith@msujith.org>
+References: <1386327534-31105-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart2810353.qq4FXZTbCO
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-On Tuesday 10 December 2013 17:10:50 Pali Roh=C3=A1r wrote:
-> On Tuesday 10 December 2013 16:49:23 Kalle Valo wrote:
-> > Pali Roh=C3=A1r <pali.rohar@gmail.com> writes:
-> > > Driver wl1251 generating mac address randomly at startup
-> > > and there is no way to set permanent mac address via
-> > > SET_IEEE80211_PERM_ADDR. This patch export sysfs file
-> > > which can set permanent mac address by userspace helper
-> > > program. Patch is needed for devices which do not store
-> > > mac address in internal wl1251 eeprom.
-> > >=20
-> > > Signed-off-by: Pali Roh=C3=A1r <pali.rohar@gmail.com>
-> >=20
-> > We have ioctl() command for setting the mac address.
->=20
-> Really? Is there ioctl for setting permanent mac address?
-> Can you show me it?
+The internal regulator needs to be programmed
+correctly for AR955x.
 
-Now I looked at it again and I did not found any ioctl for it.=20
-There is only ioctl cmd for getting address, not setting it.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-#define SIOCETHTOOL 0x8946
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 130657d..2845ace 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -4122,7 +4122,7 @@ static void ath9k_hw_ar9300_set_board_values(struct ath_hw *ah,
+ 	ar9003_hw_xlna_bias_strength_apply(ah, is2ghz);
+ 	ar9003_hw_atten_apply(ah, chan);
+ 	ar9003_hw_quick_drop_apply(ah, chan->channel);
+-	if (!AR_SREV_9330(ah) && !AR_SREV_9340(ah) && !AR_SREV_9550(ah))
++	if (!AR_SREV_9330(ah) && !AR_SREV_9340(ah))
+ 		ar9003_hw_internal_regulator_apply(ah);
+ 	ar9003_hw_apply_tuning_caps(ah);
+ 	ar9003_hw_txend_to_xpa_off_apply(ah, is2ghz);
+-- 
+1.8.4.2
 
-/* Get permanent hardware address */
-#define ETHTOOL_GPERMADDR 0x00000020
-
-=2D-=20
-Pali Roh=C3=A1r
-pali.rohar@gmail.com
-
---nextPart2810353.qq4FXZTbCO
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEABECAAYFAlKnS/sACgkQi/DJPQPkQ1J31wCgrIJnLvfHn3mrxDuz5NXWGAZp
-TdYAnAi+f8roZoYzm97nHVHz9VY/2KqV
-=7/CT
------END PGP SIGNATURE-----
-
---nextPart2810353.qq4FXZTbCO--
