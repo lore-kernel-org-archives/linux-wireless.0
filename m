@@ -1,42 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:44531 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751052Ab3LQII7 (ORCPT
+Received: from mail-wg0-f42.google.com ([74.125.82.42]:48644 "EHLO
+	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753833Ab3LFJIu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Dec 2013 03:08:59 -0500
-Message-ID: <1387267730.4749.2.camel@jlt4.sipsolutions.net> (sfid-20131217_090902_196043_1F0D66D2)
-Subject: Re: [RFC PATCH 1/8] mac80211: Move dynamic PS data out of common
- code
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	brcm80211-dev-list@broadcom.com,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Arend van Spriel <arend@broadcom.com>
-Date: Tue, 17 Dec 2013 09:08:50 +0100
-In-Reply-To: <1387231260-2849-2-git-send-email-seth.forshee@canonical.com> (sfid-20131216_230107_034586_FFC8C889)
-References: <1387231260-2849-1-git-send-email-seth.forshee@canonical.com>
-	 <1387231260-2849-2-git-send-email-seth.forshee@canonical.com>
-	 (sfid-20131216_230107_034586_FFC8C889)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 6 Dec 2013 04:08:50 -0500
+Received: by mail-wg0-f42.google.com with SMTP id a1so592935wgh.3
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Dec 2013 01:08:49 -0800 (PST)
+Date: Fri, 6 Dec 2013 10:08:07 +0100
+From: Karl Beldan <karl.beldan@gmail.com>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net, j@w1.fi
+Subject: Re: [PATCH v2] iw: add VHT MCS/NSS set support to set bitrates
+Message-ID: <20131206090807.GA7049@magnum.frso.rivierawaves.com> (sfid-20131206_100856_658247_0C2CE036)
+References: <1386234137-3531-1-git-send-email-janusz.dziedzic@tieto.com>
+ <1386234137-3531-4-git-send-email-janusz.dziedzic@tieto.com>
+ <20131205173013.GB3593@magnum.frso.rivierawaves.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20131205173013.GB3593@magnum.frso.rivierawaves.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-12-16 at 16:00 -0600, Seth Forshee wrote:
+On Thu, Dec 05, 2013 at 06:30:13PM +0100, Karl Beldan wrote:
+> On Thu, Dec 05, 2013 at 10:02:17AM +0100, Janusz Dziedzic wrote:
+> > mcs-2.4/mcs-5 rename to ht-mcs-2.4/ht-mcs-5
+> > vht-mcs-2.4/vht-mcs-5 added
+> > 
+> Are 256-QAM MCSes regular on 2.4G ?
+>  
+For example, in
+https://android.googlesource.com/kernel/common/+/a2951d66120cbd5ec6e8ea5cba81c107bc6382e8/drivers/net/wireless/bcmdhd/dhd_linux.c
+there is:
 
-> +void ieee80211_notify_rx(struct ieee80211_rx_data *rx)
-> +{
-> +	switch(rx->sdata->vif.type) {
-> +	case NL80211_IFTYPE_MONITOR:
-> +		ieee80211_mgd_notify_rx(rx);
+#ifdef SUPPORT_2G_VHT
+        uint32 vht_features = 0x3; /* 2G enable | rates all */
 
-This ... seems wrong.
-
-Also, we already have ieee80211_sta_rx_notify() which you want, I think?
-
-With this change, do you even still need local->ps_sdata?
-
-johannes
-
+ 
+Karl
