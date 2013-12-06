@@ -1,45 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:56158 "EHLO
+Received: from s72.web-hosting.com ([198.187.29.21]:48155 "EHLO
 	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751328Ab3LAAcB (ORCPT
+	with ESMTP id S1757704Ab3LFLEG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Nov 2013 19:32:01 -0500
+	Fri, 6 Dec 2013 06:04:06 -0500
 From: Sujith Manoharan <sujith@msujith.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21146.33378.141904.187743@gargle.gargle.HOWL> (sfid-20131201_013207_556526_9C6CF954)
-Date: Sun, 1 Dec 2013 05:57:14 +0530
-To: Drasko DRASKOVIC <drasko.draskovic@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"hostap\@lists.shmoo.com" <hostap@lists.shmoo.com>, j@w1.fi
-Subject: Re: multi-wiphy (virtual radios that can be used with multiple channels)
-In-Reply-To: <CAEk6gTCqKgt9zX0Xs147GYfxDw2Ex-1NkG4KZ_m_pdf1M8eDLw@mail.gmail.com>
-References: <CAEk6gTCqKgt9zX0Xs147GYfxDw2Ex-1NkG4KZ_m_pdf1M8eDLw@mail.gmail.com>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 16/16] ath9k: Apply tuning caps for AR9330 and AR9485
+Date: Fri,  6 Dec 2013 16:28:54 +0530
+Message-Id: <1386327534-31105-17-git-send-email-sujith@msujith.org> (sfid-20131206_120412_660581_F297BBB0)
+In-Reply-To: <1386327534-31105-1-git-send-email-sujith@msujith.org>
+References: <1386327534-31105-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Drasko DRASKOVIC wrote:
-> Hi all,
-> can somebody please explain in some more details this possibility of
-> ath9k driver, mentioned here: http://lwn.net/Articles/321690/ and
-> specially here:
-> http://osdir.com/ml/linux-wireless/2009-03/msg00090.html in these
-> patches signed-off by Jouni.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-The virtual wiphy feature has been removed from ath9k.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> Does this means that ath9k devices can be put in AP and STA modes
-> simultaneously (one virtual interface for each) over different
-> channels?
-> 
-> I am looking to solve this problem: I want to have always present AP
-> for user settings that I bring on boot, so I give it some
-> pre-configured channel. Via this AP user will configure other
-> interface in STA mode to connect to home network. However, this home
-> network can be over any channel, very potentially different of the one
-> I have chosen for AP.
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 2845ace..ec317d6 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3965,7 +3965,7 @@ static void ar9003_hw_apply_tuning_caps(struct ath_hw *ah)
+ 	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
+ 	u8 tuning_caps_param = eep->baseEepHeader.params_for_tuning_caps[0];
+ 
+-	if (AR_SREV_9485(ah) || AR_SREV_9330(ah) || AR_SREV_9340(ah))
++	if (AR_SREV_9340(ah))
+ 		return;
+ 
+ 	if (eep->baseEepHeader.featureEnable & 0x40) {
+-- 
+1.8.4.2
 
-Multi Channel Concurrency is required to do this, but ath9k doesn't
-support it right now.
-
-Sujith
