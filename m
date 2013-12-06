@@ -1,203 +1,226 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:48971 "EHLO nbd.name"
+Received: from mga09.intel.com ([134.134.136.24]:59887 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753863Ab3LNRD5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Dec 2013 12:03:57 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Subject: [PATCH 07/11] ath9k_hw: simplify spur channel handling
-Date: Sat, 14 Dec 2013 18:03:41 +0100
-Message-Id: <1387040625-38114-7-git-send-email-nbd@openwrt.org> (sfid-20131214_180422_279590_2B21C09B)
-In-Reply-To: <1387040625-38114-1-git-send-email-nbd@openwrt.org>
-References: <1387040625-38114-1-git-send-email-nbd@openwrt.org>
+	id S1753212Ab3LFLcY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Dec 2013 06:32:24 -0500
+From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
+	Ulrich Kunitz <kune@deine-taler.de>
+Subject: [net 1/5] zd1211rw: Fix FSF address in file headers
+Date: Fri,  6 Dec 2013 03:32:10 -0800
+Message-Id: <1386329534-21739-1-git-send-email-jeffrey.t.kirsher@intel.com> (sfid-20131206_123255_302622_CDFB743E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove ah->config.spurmode and ah->config.spurchans, always use EEPROM
-data.
+Several files refer to an old address for the Free Software Foundation
+in the file header comment.  Resolve by replacing the address with
+the URL <http://www.gnu.org/licenses/> so that we do not have to keep
+updating the header comments anytime the address changes.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+CC: linux-wireless@vger.kernel.org
+CC: Daniel Drake <dsd@gentoo.org>
+CC: Ulrich Kunitz <kune@deine-taler.de>
+Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9002_phy.c  |  1 -
- drivers/net/wireless/ath/ath9k/eeprom_4k.c   | 26 +-------------------------
- drivers/net/wireless/ath/ath9k/eeprom_9287.c | 26 +-------------------------
- drivers/net/wireless/ath/ath9k/eeprom_def.c  | 26 +-------------------------
- drivers/net/wireless/ath/ath9k/hw.c          |  7 -------
- drivers/net/wireless/ath/ath9k/hw.h          |  5 -----
- 6 files changed, 3 insertions(+), 88 deletions(-)
+ drivers/net/wireless/zd1211rw/zd_chip.c       | 3 +--
+ drivers/net/wireless/zd1211rw/zd_chip.h       | 3 +--
+ drivers/net/wireless/zd1211rw/zd_def.h        | 3 +--
+ drivers/net/wireless/zd1211rw/zd_mac.c        | 3 +--
+ drivers/net/wireless/zd1211rw/zd_mac.h        | 3 +--
+ drivers/net/wireless/zd1211rw/zd_rf.c         | 3 +--
+ drivers/net/wireless/zd1211rw/zd_rf.h         | 3 +--
+ drivers/net/wireless/zd1211rw/zd_rf_al2230.c  | 3 +--
+ drivers/net/wireless/zd1211rw/zd_rf_al7230b.c | 3 +--
+ drivers/net/wireless/zd1211rw/zd_rf_rf2959.c  | 3 +--
+ drivers/net/wireless/zd1211rw/zd_rf_uw2453.c  | 3 +--
+ drivers/net/wireless/zd1211rw/zd_usb.c        | 3 +--
+ drivers/net/wireless/zd1211rw/zd_usb.h        | 3 +--
+ 13 files changed, 13 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.c b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-index f087117..9a2afa2 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-@@ -201,7 +201,6 @@ static void ar9002_hw_spur_mitigate(struct ath_hw *ah,
- 	ath9k_hw_get_channel_centers(ah, chan, &centers);
- 	freq = centers.synth_center;
+diff --git a/drivers/net/wireless/zd1211rw/zd_chip.c b/drivers/net/wireless/zd1211rw/zd_chip.c
+index 71ab320..73a49b8 100644
+--- a/drivers/net/wireless/zd1211rw/zd_chip.c
++++ b/drivers/net/wireless/zd1211rw/zd_chip.c
+@@ -14,8 +14,7 @@
+  * GNU General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
++ * along with this program; if not, see <http://www.gnu.org/licenses/>.
+  */
  
--	ah->config.spurmode = SPUR_ENABLE_EEPROM;
- 	for (i = 0; i < AR_EEPROM_MODAL_SPURS; i++) {
- 		cur_bb_spur = ah->eep_ops->get_spur_channel(ah, i, is2GHz);
+ /* This file implements all the hardware specific functions for the ZD1211
+diff --git a/drivers/net/wireless/zd1211rw/zd_chip.h b/drivers/net/wireless/zd1211rw/zd_chip.h
+index 7ab9222..b03786c 100644
+--- a/drivers/net/wireless/zd1211rw/zd_chip.h
++++ b/drivers/net/wireless/zd1211rw/zd_chip.h
+@@ -14,8 +14,7 @@
+  * GNU General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
++ * along with this program; if not, see <http://www.gnu.org/licenses/>.
+  */
  
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-index b409171..07b806c 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-@@ -1085,31 +1085,7 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
+ #ifndef _ZD_CHIP_H
+diff --git a/drivers/net/wireless/zd1211rw/zd_def.h b/drivers/net/wireless/zd1211rw/zd_def.h
+index 9a1b013..41bd755 100644
+--- a/drivers/net/wireless/zd1211rw/zd_def.h
++++ b/drivers/net/wireless/zd1211rw/zd_def.h
+@@ -14,8 +14,7 @@
+  * GNU General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
++ * along with this program; if not, see <http://www.gnu.org/licenses/>.
+  */
  
- static u16 ath9k_hw_4k_get_spur_channel(struct ath_hw *ah, u16 i, bool is2GHz)
- {
--#define EEP_MAP4K_SPURCHAN \
--	(ah->eeprom.map4k.modalHeader.spurChans[i].spurChan)
--	struct ath_common *common = ath9k_hw_common(ah);
--
--	u16 spur_val = AR_NO_SPUR;
--
--	ath_dbg(common, ANI, "Getting spur idx:%d is2Ghz:%d val:%x\n",
--		i, is2GHz, ah->config.spurchans[i][is2GHz]);
--
--	switch (ah->config.spurmode) {
--	case SPUR_DISABLE:
--		break;
--	case SPUR_ENABLE_IOCTL:
--		spur_val = ah->config.spurchans[i][is2GHz];
--		ath_dbg(common, ANI, "Getting spur val from new loc. %d\n",
--			spur_val);
--		break;
--	case SPUR_ENABLE_EEPROM:
--		spur_val = EEP_MAP4K_SPURCHAN;
--		break;
--	}
--
--	return spur_val;
--
--#undef EEP_MAP4K_SPURCHAN
-+	return ah->eeprom.map4k.modalHeader.spurChans[i].spurChan;
- }
+ #ifndef _ZD_DEF_H
+diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
+index c6208a7..eff79a3 100644
+--- a/drivers/net/wireless/zd1211rw/zd_mac.c
++++ b/drivers/net/wireless/zd1211rw/zd_mac.c
+@@ -16,8 +16,7 @@
+  * GNU General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
++ * along with this program; if not, see <http://www.gnu.org/licenses/>.
+  */
  
- const struct eeprom_ops eep_4k_ops = {
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-index e1d0c21..5ba1385 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-@@ -1004,31 +1004,7 @@ static void ath9k_hw_ar9287_set_board_values(struct ath_hw *ah,
- static u16 ath9k_hw_ar9287_get_spur_channel(struct ath_hw *ah,
- 					    u16 i, bool is2GHz)
- {
--#define EEP_MAP9287_SPURCHAN \
--	(ah->eeprom.map9287.modalHeader.spurChans[i].spurChan)
--
--	struct ath_common *common = ath9k_hw_common(ah);
--	u16 spur_val = AR_NO_SPUR;
--
--	ath_dbg(common, ANI, "Getting spur idx:%d is2Ghz:%d val:%x\n",
--		i, is2GHz, ah->config.spurchans[i][is2GHz]);
--
--	switch (ah->config.spurmode) {
--	case SPUR_DISABLE:
--		break;
--	case SPUR_ENABLE_IOCTL:
--		spur_val = ah->config.spurchans[i][is2GHz];
--		ath_dbg(common, ANI, "Getting spur val from new loc. %d\n",
--			spur_val);
--		break;
--	case SPUR_ENABLE_EEPROM:
--		spur_val = EEP_MAP9287_SPURCHAN;
--		break;
--	}
--
--	return spur_val;
--
--#undef EEP_MAP9287_SPURCHAN
-+	return ah->eeprom.map9287.modalHeader.spurChans[i].spurChan;
- }
+ #include <linux/netdevice.h>
+diff --git a/drivers/net/wireless/zd1211rw/zd_mac.h b/drivers/net/wireless/zd1211rw/zd_mac.h
+index c01eca8..5a48423 100644
+--- a/drivers/net/wireless/zd1211rw/zd_mac.h
++++ b/drivers/net/wireless/zd1211rw/zd_mac.h
+@@ -14,8 +14,7 @@
+  * GNU General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
++ * along with this program; if not, see <http://www.gnu.org/licenses/>.
+  */
  
- const struct eeprom_ops eep_ar9287_ops = {
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-index 39107e3..3218ca9 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-@@ -1348,31 +1348,7 @@ static void ath9k_hw_def_set_txpower(struct ath_hw *ah,
+ #ifndef _ZD_MAC_H
+diff --git a/drivers/net/wireless/zd1211rw/zd_rf.c b/drivers/net/wireless/zd1211rw/zd_rf.c
+index c875ee0..dc179c4 100644
+--- a/drivers/net/wireless/zd1211rw/zd_rf.c
++++ b/drivers/net/wireless/zd1211rw/zd_rf.c
+@@ -14,8 +14,7 @@
+  * GNU General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
++ * along with this program; if not, see <http://www.gnu.org/licenses/>.
+  */
  
- static u16 ath9k_hw_def_get_spur_channel(struct ath_hw *ah, u16 i, bool is2GHz)
- {
--#define EEP_DEF_SPURCHAN \
--	(ah->eeprom.def.modalHeader[is2GHz].spurChans[i].spurChan)
--	struct ath_common *common = ath9k_hw_common(ah);
--
--	u16 spur_val = AR_NO_SPUR;
--
--	ath_dbg(common, ANI, "Getting spur idx:%d is2Ghz:%d val:%x\n",
--		i, is2GHz, ah->config.spurchans[i][is2GHz]);
--
--	switch (ah->config.spurmode) {
--	case SPUR_DISABLE:
--		break;
--	case SPUR_ENABLE_IOCTL:
--		spur_val = ah->config.spurchans[i][is2GHz];
--		ath_dbg(common, ANI, "Getting spur val from new loc. %d\n",
--			spur_val);
--		break;
--	case SPUR_ENABLE_EEPROM:
--		spur_val = EEP_DEF_SPURCHAN;
--		break;
--	}
--
--	return spur_val;
--
--#undef EEP_DEF_SPURCHAN
-+	return ah->eeprom.def.modalHeader[is2GHz].spurChans[i].spurChan;
- }
+ #include <linux/errno.h>
+diff --git a/drivers/net/wireless/zd1211rw/zd_rf.h b/drivers/net/wireless/zd1211rw/zd_rf.h
+index 725b7c9..8f14e25 100644
+--- a/drivers/net/wireless/zd1211rw/zd_rf.h
++++ b/drivers/net/wireless/zd1211rw/zd_rf.h
+@@ -14,8 +14,7 @@
+  * GNU General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
++ * along with this program; if not, see <http://www.gnu.org/licenses/>.
+  */
  
- const struct eeprom_ops eep_def_ops = {
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index eeb0741..a4f3d2b 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -439,8 +439,6 @@ static bool ath9k_hw_chip_test(struct ath_hw *ah)
+ #ifndef _ZD_RF_H
+diff --git a/drivers/net/wireless/zd1211rw/zd_rf_al2230.c b/drivers/net/wireless/zd1211rw/zd_rf_al2230.c
+index 12babcb..99aed7d 100644
+--- a/drivers/net/wireless/zd1211rw/zd_rf_al2230.c
++++ b/drivers/net/wireless/zd1211rw/zd_rf_al2230.c
+@@ -14,8 +14,7 @@
+  * GNU General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
++ * along with this program; if not, see <http://www.gnu.org/licenses/>.
+  */
  
- static void ath9k_hw_init_config(struct ath_hw *ah)
- {
--	int i;
--
- 	ah->config.dma_beacon_response_time = 1;
- 	ah->config.sw_beacon_response_time = 6;
- 	ah->config.additional_swba_backoff = 0;
-@@ -448,11 +446,6 @@ static void ath9k_hw_init_config(struct ath_hw *ah)
- 	ah->config.cwm_ignore_extcca = 0;
- 	ah->config.analog_shiftreg = 1;
+ #include <linux/kernel.h>
+diff --git a/drivers/net/wireless/zd1211rw/zd_rf_al7230b.c b/drivers/net/wireless/zd1211rw/zd_rf_al7230b.c
+index 385c670..5fea485 100644
+--- a/drivers/net/wireless/zd1211rw/zd_rf_al7230b.c
++++ b/drivers/net/wireless/zd1211rw/zd_rf_al7230b.c
+@@ -14,8 +14,7 @@
+  * GNU General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
++ * along with this program; if not, see <http://www.gnu.org/licenses/>.
+  */
  
--	for (i = 0; i < AR_EEPROM_MODAL_SPURS; i++) {
--		ah->config.spurchans[i][0] = AR_NO_SPUR;
--		ah->config.spurchans[i][1] = AR_NO_SPUR;
--	}
--
- 	ah->config.rx_intr_mitigation = true;
+ #include <linux/kernel.h>
+diff --git a/drivers/net/wireless/zd1211rw/zd_rf_rf2959.c b/drivers/net/wireless/zd1211rw/zd_rf_rf2959.c
+index 784d9cc..a93f657 100644
+--- a/drivers/net/wireless/zd1211rw/zd_rf_rf2959.c
++++ b/drivers/net/wireless/zd1211rw/zd_rf_rf2959.c
+@@ -14,8 +14,7 @@
+  * GNU General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
++ * along with this program; if not, see <http://www.gnu.org/licenses/>.
+  */
  
- 	/*
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index b8e2476..57d3d0c 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -293,9 +293,6 @@ struct ath9k_ops_config {
- 	int serialize_regmode;
- 	bool rx_intr_mitigation;
- 	bool tx_intr_mitigation;
--#define SPUR_DISABLE        	0
--#define SPUR_ENABLE_IOCTL   	1
--#define SPUR_ENABLE_EEPROM  	2
- #define AR_SPUR_5413_1      	1640
- #define AR_SPUR_5413_2      	1200
- #define AR_NO_SPUR      	0x8000
-@@ -303,8 +300,6 @@ struct ath9k_ops_config {
- #define AR_BASE_FREQ_5GHZ   	4900
- #define AR_SPUR_FEEQ_BOUND_HT40 19
- #define AR_SPUR_FEEQ_BOUND_HT20 10
--	int spurmode;
--	u16 spurchans[AR_EEPROM_MODAL_SPURS][2];
- 	u8 max_txtrig_level;
- 	u16 ani_poll_interval; /* ANI poll interval in ms */
+ #include <linux/kernel.h>
+diff --git a/drivers/net/wireless/zd1211rw/zd_rf_uw2453.c b/drivers/net/wireless/zd1211rw/zd_rf_uw2453.c
+index c4d324e..61b9240 100644
+--- a/drivers/net/wireless/zd1211rw/zd_rf_uw2453.c
++++ b/drivers/net/wireless/zd1211rw/zd_rf_uw2453.c
+@@ -14,8 +14,7 @@
+  * GNU General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
++ * along with this program; if not, see <http://www.gnu.org/licenses/>.
+  */
  
+ #include <linux/kernel.h>
+diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
+index 84d94f5..a912dc0 100644
+--- a/drivers/net/wireless/zd1211rw/zd_usb.c
++++ b/drivers/net/wireless/zd1211rw/zd_usb.c
+@@ -15,8 +15,7 @@
+  * GNU General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
++ * along with this program; if not, see <http://www.gnu.org/licenses/>.
+  */
+ 
+ #include <linux/kernel.h>
+diff --git a/drivers/net/wireless/zd1211rw/zd_usb.h b/drivers/net/wireless/zd1211rw/zd_usb.h
+index 45e3bb2..a9075f2 100644
+--- a/drivers/net/wireless/zd1211rw/zd_usb.h
++++ b/drivers/net/wireless/zd1211rw/zd_usb.h
+@@ -14,8 +14,7 @@
+  * GNU General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
++ * along with this program; if not, see <http://www.gnu.org/licenses/>.
+  */
+ 
+ #ifndef _ZD_USB_H
 -- 
-1.8.3.4 (Apple Git-47)
+1.8.3.1
 
