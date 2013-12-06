@@ -1,203 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:5692 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752704Ab3LYDac (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:58361 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752420Ab3LFLDo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Dec 2013 22:30:32 -0500
-Message-ID: <52BA512E.3050304@huawei.com> (sfid-20131225_043239_935387_6CF2A086)
-Date: Wed, 25 Dec 2013 11:29:50 +0800
-From: Ding Tianhong <dingtianhong@huawei.com>
-MIME-Version: 1.0
-To: Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>, Netdev <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH v3 16/19] ipw2x00: slight optimization of addr compare
-Content-Type: text/plain; charset="UTF-8"
+	Fri, 6 Dec 2013 06:03:44 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 03/16] ath9k: Update mac_postamble for AR9003 family
+Date: Fri,  6 Dec 2013 16:28:41 +0530
+Message-Id: <1386327534-31105-4-git-send-email-sujith@msujith.org> (sfid-20131206_120350_637035_8B64354B)
+In-Reply-To: <1386327534-31105-1-git-send-email-sujith@msujith.org>
+References: <1386327534-31105-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use possibly more efficient ether_addr_equal
-instead of memcmp.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Cc: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Signed-off-by: Weilong Chen <chenweilong@huawei.com>
-Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+Enable the ALWAYS_KEYSEARCH bit in the initvals. Currently
+this is done in the driver, but adding this to the initvals
+makes it easier to be in sync with the INI files given
+by the systems engineering team.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/ipw2x00/ipw2200.c   | 34 ++++++++++++++++----------------
- drivers/net/wireless/ipw2x00/libipw_rx.c | 10 +++++-----
- 2 files changed, 22 insertions(+), 22 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
-index 9244b36..1393260 100644
---- a/drivers/net/wireless/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-@@ -3012,7 +3012,7 @@ static void ipw_remove_current_network(struct ipw_priv *priv)
- 	spin_lock_irqsave(&priv->ieee->lock, flags);
- 	list_for_each_safe(element, safe, &priv->ieee->network_list) {
- 		network = list_entry(element, struct libipw_network, list);
--		if (!memcmp(network->bssid, priv->bssid, ETH_ALEN)) {
-+		if (ether_addr_equal(network->bssid, priv->bssid)) {
- 			list_del(element);
- 			list_add_tail(&network->list,
- 				      &priv->ieee->network_free_list);
-@@ -3921,7 +3921,7 @@ static u8 ipw_add_station(struct ipw_priv *priv, u8 * bssid)
- 	int i;
- 
- 	for (i = 0; i < priv->num_stations; i++) {
--		if (!memcmp(priv->stations[i], bssid, ETH_ALEN)) {
-+		if (ether_addr_equal(priv->stations[i], bssid)) {
- 			/* Another node is active in network */
- 			priv->missed_adhoc_beacons = 0;
- 			if (!(priv->config & CFG_STATIC_CHANNEL))
-@@ -3953,7 +3953,7 @@ static u8 ipw_find_station(struct ipw_priv *priv, u8 * bssid)
- 	int i;
- 
- 	for (i = 0; i < priv->num_stations; i++)
--		if (!memcmp(priv->stations[i], bssid, ETH_ALEN))
-+		if (ether_addr_equal(priv->stations[i], bssid))
- 			return i;
- 
- 	return IPW_INVALID_STATION;
-@@ -5622,7 +5622,7 @@ static int ipw_find_adhoc_network(struct ipw_priv *priv,
- 		return 0;
- 	}
- 
--	if (!memcmp(network->bssid, priv->bssid, ETH_ALEN)) {
-+	if (ether_addr_equal(network->bssid, priv->bssid)) {
- 		IPW_DEBUG_MERGE("Network '%s (%pM)' excluded "
- 				"because of the same BSSID match: %pM"
- 				".\n", print_ssid(ssid, network->ssid,
-@@ -5849,7 +5849,7 @@ static int ipw_best_network(struct ipw_priv *priv,
- 	}
- 
- 	if ((priv->config & CFG_STATIC_BSSID) &&
--	    memcmp(network->bssid, priv->bssid, ETH_ALEN)) {
-+	    !ether_addr_equal(network->bssid, priv->bssid)) {
- 		IPW_DEBUG_ASSOC("Network '%s (%pM)' excluded "
- 				"because of BSSID mismatch: %pM.\n",
- 				print_ssid(ssid, network->ssid,
-@@ -6988,7 +6988,7 @@ static int ipw_qos_handle_probe_response(struct ipw_priv *priv,
- 	}
- 	if ((priv->status & STATUS_ASSOCIATED) &&
- 	    (priv->ieee->iw_mode == IW_MODE_ADHOC) && (active_network == 0)) {
--		if (memcmp(network->bssid, priv->bssid, ETH_ALEN))
-+		if (!ether_addr_equal(network->bssid, priv->bssid))
- 			if (network->capability & WLAN_CAPABILITY_IBSS)
- 				if ((network->ssid_len ==
- 				     priv->assoc_network->ssid_len) &&
-@@ -8210,29 +8210,29 @@ static int is_network_packet(struct ipw_priv *priv,
- 	switch (priv->ieee->iw_mode) {
- 	case IW_MODE_ADHOC:	/* Header: Dest. | Source    | BSSID */
- 		/* packets from our adapter are dropped (echo) */
--		if (!memcmp(header->addr2, priv->net_dev->dev_addr, ETH_ALEN))
-+		if (ether_addr_equal(header->addr2, priv->net_dev->dev_addr))
- 			return 0;
- 
- 		/* {broad,multi}cast packets to our BSSID go through */
- 		if (is_multicast_ether_addr(header->addr1))
--			return !memcmp(header->addr3, priv->bssid, ETH_ALEN);
-+			return ether_addr_equal(header->addr3, priv->bssid);
- 
- 		/* packets to our adapter go through */
--		return !memcmp(header->addr1, priv->net_dev->dev_addr,
--			       ETH_ALEN);
-+		return ether_addr_equal(header->addr1,
-+					priv->net_dev->dev_addr);
- 
- 	case IW_MODE_INFRA:	/* Header: Dest. | BSSID | Source */
- 		/* packets from our adapter are dropped (echo) */
--		if (!memcmp(header->addr3, priv->net_dev->dev_addr, ETH_ALEN))
-+		if (ether_addr_equal(header->addr3, priv->net_dev->dev_addr))
- 			return 0;
- 
- 		/* {broad,multi}cast packets to our BSS go through */
- 		if (is_multicast_ether_addr(header->addr1))
--			return !memcmp(header->addr2, priv->bssid, ETH_ALEN);
-+			return ether_addr_equal(header->addr2, priv->bssid);
- 
- 		/* packets to our adapter go through */
--		return !memcmp(header->addr1, priv->net_dev->dev_addr,
--			       ETH_ALEN);
-+		return ether_addr_equal(header->addr1,
-+					priv->net_dev->dev_addr);
- 	}
- 
- 	return 1;
-@@ -8260,7 +8260,7 @@ static  int is_duplicate_packet(struct ipw_priv *priv,
- 			list_for_each(p, &priv->ibss_mac_hash[index]) {
- 				entry =
- 				    list_entry(p, struct ipw_ibss_seq, list);
--				if (!memcmp(entry->mac, mac, ETH_ALEN))
-+				if (ether_addr_equal(entry->mac, mac))
- 					break;
- 			}
- 			if (p == &priv->ibss_mac_hash[index]) {
-@@ -8329,7 +8329,7 @@ static void ipw_handle_mgmt_packet(struct ipw_priv *priv,
- 	      IEEE80211_STYPE_PROBE_RESP) ||
- 	     (WLAN_FC_GET_STYPE(le16_to_cpu(header->frame_ctl)) ==
- 	      IEEE80211_STYPE_BEACON))) {
--		if (!memcmp(header->addr3, priv->bssid, ETH_ALEN))
-+		if (ether_addr_equal(header->addr3, priv->bssid))
- 			ipw_add_station(priv, header->addr2);
- 	}
- 
-@@ -9045,7 +9045,7 @@ static int ipw_wx_set_wap(struct net_device *dev,
- 	}
- 
- 	priv->config |= CFG_STATIC_BSSID;
--	if (!memcmp(priv->bssid, wrqu->ap_addr.sa_data, ETH_ALEN)) {
-+	if (ether_addr_equal(priv->bssid, wrqu->ap_addr.sa_data)) {
- 		IPW_DEBUG_WX("BSSID set to current BSSID.\n");
- 		mutex_unlock(&priv->mutex);
- 		return 0;
-diff --git a/drivers/net/wireless/ipw2x00/libipw_rx.c b/drivers/net/wireless/ipw2x00/libipw_rx.c
-index 9ffe659..5c62538 100644
---- a/drivers/net/wireless/ipw2x00/libipw_rx.c
-+++ b/drivers/net/wireless/ipw2x00/libipw_rx.c
-@@ -874,13 +874,13 @@ void libipw_rx_any(struct libipw_device *ieee,
- 	switch (ieee->iw_mode) {
- 	case IW_MODE_ADHOC:
- 		/* our BSS and not from/to DS */
--		if (memcmp(hdr->addr3, ieee->bssid, ETH_ALEN) == 0)
-+		if (ether_addr_equal(hdr->addr3, ieee->bssid))
- 		if ((fc & (IEEE80211_FCTL_TODS+IEEE80211_FCTL_FROMDS)) == 0) {
- 			/* promisc: get all */
- 			if (ieee->dev->flags & IFF_PROMISC)
- 				is_packet_for_us = 1;
- 			/* to us */
--			else if (memcmp(hdr->addr1, ieee->dev->dev_addr, ETH_ALEN) == 0)
-+			else if (ether_addr_equal(hdr->addr1, ieee->dev->dev_addr))
- 				is_packet_for_us = 1;
- 			/* mcast */
- 			else if (is_multicast_ether_addr(hdr->addr1))
-@@ -889,18 +889,18 @@ void libipw_rx_any(struct libipw_device *ieee,
- 		break;
- 	case IW_MODE_INFRA:
- 		/* our BSS (== from our AP) and from DS */
--		if (memcmp(hdr->addr2, ieee->bssid, ETH_ALEN) == 0)
-+		if (ether_addr_equal(hdr->addr2, ieee->bssid))
- 		if ((fc & (IEEE80211_FCTL_TODS+IEEE80211_FCTL_FROMDS)) == IEEE80211_FCTL_FROMDS) {
- 			/* promisc: get all */
- 			if (ieee->dev->flags & IFF_PROMISC)
- 				is_packet_for_us = 1;
- 			/* to us */
--			else if (memcmp(hdr->addr1, ieee->dev->dev_addr, ETH_ALEN) == 0)
-+			else if (ether_addr_equal(hdr->addr1, ieee->dev->dev_addr))
- 				is_packet_for_us = 1;
- 			/* mcast */
- 			else if (is_multicast_ether_addr(hdr->addr1)) {
- 				/* not our own packet bcasted from AP */
--				if (memcmp(hdr->addr3, ieee->dev->dev_addr, ETH_ALEN))
-+				if (!ether_addr_equal(hdr->addr3, ieee->dev->dev_addr))
- 					is_packet_for_us = 1;
- 			}
- 		}
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
+index 97b4bd1..7243674 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
+@@ -303,7 +303,7 @@ static const u32 ar9300_2p2_mac_postamble[][5] = {
+ 	{0x000010b0, 0x00000e60, 0x00001cc0, 0x00007c70, 0x00003e38},
+ 	{0x00008014, 0x03e803e8, 0x07d007d0, 0x10801600, 0x08400b00},
+ 	{0x0000801c, 0x128d8027, 0x128d804f, 0x12e00057, 0x12e0002b},
+-	{0x00008120, 0x08f04800, 0x08f04800, 0x08f04810, 0x08f04810},
++	{0x00008120, 0x18f04800, 0x18f04800, 0x18f04810, 0x18f04810},
+ 	{0x000081d0, 0x00003210, 0x00003210, 0x0000320a, 0x0000320a},
+ 	{0x00008318, 0x00003e80, 0x00007d00, 0x00006880, 0x00003440},
+ };
 -- 
-1.8.0
-
+1.8.4.2
 
