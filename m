@@ -1,59 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:52534 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751545Ab3LEPxx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 10:53:53 -0500
-Message-ID: <1386258827.4182.12.camel@jlt4.sipsolutions.net> (sfid-20131205_165356_240116_36FB4E03)
-Subject: Re: [PATCH 4/4] cfg80211: prevent race condition on scan request
- cleanup
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: Eliad Peller <eliad@wizery.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 05 Dec 2013 16:53:47 +0100
-In-Reply-To: <CA+XVXffcA+TKAaH6MuybncUAe7jgaWEFdo5nL7+FnTR-7pc1+g@mail.gmail.com> (sfid-20131205_165233_922106_BD55352E)
-References: <1386235289-27278-1-git-send-email-eliad@wizery.com>
-	 <1386235289-27278-4-git-send-email-eliad@wizery.com>
-	 <1386253879.4182.4.camel@jlt4.sipsolutions.net>
-	 <CAB3XZEcpM9PAQCGQ99X2A-bqYXoPEmE=Cg29CDKY7=s8QquwUA@mail.gmail.com>
-	 <1386254607.4182.5.camel@jlt4.sipsolutions.net>
-	 <CAB3XZEc4pikahyAmPCh_pCjFEiRvFgAyZgxGrbH9A6hLP2nhFw@mail.gmail.com>
-	 <1386258330.4182.11.camel@jlt4.sipsolutions.net>
-	 <CA+XVXffcA+TKAaH6MuybncUAe7jgaWEFdo5nL7+FnTR-7pc1+g@mail.gmail.com>
-	 (sfid-20131205_165233_922106_BD55352E)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:59887 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757525Ab3LFLc0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Dec 2013 06:32:26 -0500
+From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	linux-wireless@vger.kernel.org,
+	Simon Kelley <simon@thekelleys.org.uk>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Jussi Kivilinna <jussi.kivilinna@iki.fi>
+Subject: [net 4/5] drivers/net/wireless: Fix FSF address in file headers
+Date: Fri,  6 Dec 2013 03:32:13 -0800
+Message-Id: <1386329534-21739-4-git-send-email-jeffrey.t.kirsher@intel.com> (sfid-20131206_123256_333790_EDB573CF)
+In-Reply-To: <1386329534-21739-1-git-send-email-jeffrey.t.kirsher@intel.com>
+References: <1386329534-21739-1-git-send-email-jeffrey.t.kirsher@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-12-05 at 17:52 +0200, Arik Nemtsov wrote:
+Several files refer to an old address for the Free Software Foundation
+in the file header comment.  Resolve by replacing the address with
+the URL <http://www.gnu.org/licenses/> so that we do not have to keep
+updating the header comments anytime the address changes.
 
-> >> > But the whole thing was intended to catch buggy drivers :)
-> >> >
-> >> yeah, you have a point here :)
-> >> anyway, i guess it's either leaking scan_req and hoping the driver
-> >> really forgot about it, or keeping it and hoping the driver will
-> >> finally indicate completion.
-> >>
-> >> since i don't think this is a real-world scenario, i'm ok with
-> >> dropping this patch.
-> >
-> > Well, it can be made to crash, so ...
-> >
-> > Can we maybe avoid the crash in a different way? Disallow a new scan
-> > somehow?
-> 
-> Maybe we should drop the whole netdev-notified doing ___cfg80211_scan_done?
-> I mean if a workaround for buggy drivers is causing bugs for
-> legitimate drivers..
-> 
-> Something simple for buggy drivers would be doing this in the notifier
-> - BUG_ON(!rdev->scan_req->notified)
+CC: linux-wireless@vger.kernel.org
+CC: Simon Kelley <simon@thekelleys.org.uk>
+CC: Christian Lamparter <chunkeey@googlemail.com>
+CC: Jussi Kivilinna <jussi.kivilinna@iki.fi>
+Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+---
+ drivers/net/wireless/atmel.c         | 7 +++----
+ drivers/net/wireless/atmel.h         | 4 ++--
+ drivers/net/wireless/atmel_cs.c      | 4 ++--
+ drivers/net/wireless/atmel_pci.c     | 4 ++--
+ drivers/net/wireless/libertas/README | 5 ++---
+ drivers/net/wireless/p54/net2280.h   | 3 +--
+ drivers/net/wireless/ray_cs.c        | 3 +--
+ drivers/net/wireless/rndis_wlan.c    | 3 +--
+ 8 files changed, 14 insertions(+), 19 deletions(-)
 
-BUG_ON is probably a bit heavy-handed, but yeah, I suppose we can drop
-this. We used to have more bugs with drivers and even mac80211, but that
-should be a thing of the past.
-
-johannes
+diff --git a/drivers/net/wireless/atmel.c b/drivers/net/wireless/atmel.c
+index 0d950f2..b73b7e3 100644
+--- a/drivers/net/wireless/atmel.c
++++ b/drivers/net/wireless/atmel.c
+@@ -28,8 +28,8 @@
+     GNU General Public License for more details.
+ 
+     You should have received a copy of the GNU General Public License
+-    along with Atmel wireless lan drivers; if not, write to the Free Software
+-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++    along with Atmel wireless lan drivers; if not, see
++    <http://www.gnu.org/licenses/>.
+ 
+     For all queries about this code, please contact the current author,
+     Simon Kelley <simon@thekelleys.org.uk> and not Atmel Corporation.
+@@ -4278,8 +4278,7 @@ static void atmel_wmem32(struct atmel_private *priv, u16 pos, u32 data)
+     GNU General Public License for more details.
+ 
+     You should have received a copy of the GNU General Public License
+-    along with AtmelMACFW; if not, write to the Free Software
+-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++    along with AtmelMACFW; if not, see <http://www.gnu.org/licenses/>.
+ 
+ ****************************************************************************/
+ /* This firmware should work on the 76C502 RFMD, RFMD_D, and RFMD_E        */
+diff --git a/drivers/net/wireless/atmel.h b/drivers/net/wireless/atmel.h
+index b9b3e5b..96f7318 100644
+--- a/drivers/net/wireless/atmel.h
++++ b/drivers/net/wireless/atmel.h
+@@ -15,8 +15,8 @@
+     GNU General Public License for more details.
+ 
+     You should have received a copy of the GNU General Public License
+-    along with Atmel wireless lan drivers; if not, write to the Free Software
+-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++    along with Atmel wireless lan drivers; if not, see
++    <http://www.gnu.org/licenses/>.
+ 
+ ******************************************************************************/
+ 
+diff --git a/drivers/net/wireless/atmel_cs.c b/drivers/net/wireless/atmel_cs.c
+index 5225722..5e2749d 100644
+--- a/drivers/net/wireless/atmel_cs.c
++++ b/drivers/net/wireless/atmel_cs.c
+@@ -24,8 +24,8 @@
+     GNU General Public License for more details.
+ 
+     You should have received a copy of the GNU General Public License
+-    along with Atmel wireless lan drivers; if not, write to the Free Software
+-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++    along with Atmel wireless lan drivers; if not, see
++    <http://www.gnu.org/licenses/>.
+ 
+ ******************************************************************************/
+ 
+diff --git a/drivers/net/wireless/atmel_pci.c b/drivers/net/wireless/atmel_pci.c
+index c1b159e..64d5973 100644
+--- a/drivers/net/wireless/atmel_pci.c
++++ b/drivers/net/wireless/atmel_pci.c
+@@ -15,8 +15,8 @@
+     GNU General Public License for more details.
+ 
+     You should have received a copy of the GNU General Public License
+-    along with Atmel wireless lan drivers; if not, write to the Free Software
+-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++    along with Atmel wireless lan drivers; if not, see
++    <http://www.gnu.org/licenses/>.
+ 
+ ******************************************************************************/
+ #include <linux/pci.h>
+diff --git a/drivers/net/wireless/libertas/README b/drivers/net/wireless/libertas/README
+index 91f2ca9..1a554a6 100644
+--- a/drivers/net/wireless/libertas/README
++++ b/drivers/net/wireless/libertas/README
+@@ -8,9 +8,8 @@
+  Ltd. under the terms of the GNU General Public License Version 2, June 1991
+  (the "License").  You may use, redistribute and/or modify this File in
+  accordance with the terms and conditions of the License, a copy of which
+- is available along with the File in the license.txt file or by writing to
+- the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+- 02111-1307 or on the worldwide web at http://www.gnu.org/licenses/gpl.txt.
++ is available along with the File in the license.txt file or on the worldwide
++ web at http://www.gnu.org/licenses/gpl.txt.
+ 
+  THE FILE IS DISTRIBUTED AS-IS, WITHOUT WARRANTY OF ANY KIND, AND THE
+  IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE
+diff --git a/drivers/net/wireless/p54/net2280.h b/drivers/net/wireless/p54/net2280.h
+index e3ed893..aedfaf2 100644
+--- a/drivers/net/wireless/p54/net2280.h
++++ b/drivers/net/wireless/p54/net2280.h
+@@ -20,8 +20,7 @@
+  * GNU General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++ * along with this program; if not, see <http://www.gnu.org/licenses/>.
+  */
+ 
+ /*-------------------------------------------------------------------------*/
+diff --git a/drivers/net/wireless/ray_cs.c b/drivers/net/wireless/ray_cs.c
+index 9b557a1..cbf0a58 100644
+--- a/drivers/net/wireless/ray_cs.c
++++ b/drivers/net/wireless/ray_cs.c
+@@ -17,8 +17,7 @@
+  * GNU General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
++ * along with this program; if not, see <http://www.gnu.org/licenses/>.
+  *
+  * Changes:
+  * Arnaldo Carvalho de Melo <acme@conectiva.com.br> - 08/08/2000
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index 8169a85..c3cdda1 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -15,8 +15,7 @@
+  * GNU General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++ * along with this program; if not, see <http://www.gnu.org/licenses/>.
+  *
+  *  Portions of this file are based on NDISwrapper project,
+  *  Copyright (C) 2003-2005 Pontus Fuchs, Giridhar Pemmasani
+-- 
+1.8.3.1
 
