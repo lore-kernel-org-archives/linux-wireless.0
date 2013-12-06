@@ -1,49 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:34350 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751383Ab3LTI01 (ORCPT
+Received: from mail-ob0-f176.google.com ([209.85.214.176]:64005 "EHLO
+	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754827Ab3LFKkV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Dec 2013 03:26:27 -0500
-Received: by mail-wi0-f175.google.com with SMTP id hi5so8001942wib.14
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Dec 2013 00:26:26 -0800 (PST)
+	Fri, 6 Dec 2013 05:40:21 -0500
+Received: by mail-ob0-f176.google.com with SMTP id va2so541244obc.21
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Dec 2013 02:40:21 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <8AC12462F1AA0E4EA8FEB46307AAD6F650AAB068@nasanexd02f.na.qualcomm.com>
-References: <1384198356-427-1-git-send-email-rajeshc@qca.qualcomm.com>
- <1386077130.4393.21.camel@jlt4.sipsolutions.net> <CAB=NE6Xa-bdLQm8uAg9wCE0fdp4KPBZ46d5FHVHp6wCvN5=dUA@mail.gmail.com>
- <1386145204.4284.4.camel@jlt4.sipsolutions.net> <1386145241.4284.5.camel@jlt4.sipsolutions.net>
- <D19FD2B13A40CD4B8DA64DB9B8F112E93E5CF51C@nasanexd01a.na.qualcomm.com>
- <CAB=NE6VNZDwGj4WWkgCmWxs_xLBZhXn44vo0TEdqo84xsRbZ2Q@mail.gmail.com> <8AC12462F1AA0E4EA8FEB46307AAD6F650AAB068@nasanexd02f.na.qualcomm.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Fri, 20 Dec 2013 00:26:06 -0800
-Message-ID: <CAB=NE6W3Et-4mDEet5DSDrM=yP60oODvEUGz=RtZj-gDgLNUbw@mail.gmail.com> (sfid-20131220_092631_075450_2EDF8C21)
-Subject: Re: [PATCHv3] cfg80211: add support for frequency interference event
-To: "BAHINI, Henri" <hbahini@qca.qualcomm.com>
-Cc: "Chauhan, Rajesh" <rajeshc@qca.qualcomm.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Malinen, Jouni" <jouni@qca.qualcomm.com>,
-	"Johnson, Jeff" <jjohnson@qca.qualcomm.com>,
-	"Chang, Leo" <schang@qca.qualcomm.com>,
-	"Luo, Xun" <xunl@qca.qualcomm.com>,
-	"Thalappil, Sameer" <sameert@qca.qualcomm.com>,
-	"Hussain, Arif" <c_arifh@qca.qualcomm.com>
+In-Reply-To: <1386167786.19448.4.camel@dcbw.foobar.com>
+References: <20131203202607.0b445195@kemnade.info> <1386167786.19448.4.camel@dcbw.foobar.com>
+From: Vasily Khoruzhick <anarsoul@gmail.com>
+Date: Fri, 6 Dec 2013 13:40:00 +0300
+Message-ID: <CA+E=qVdY4M=bnX=pqMiMirhQ_BRg6Uc6K9Xkzvf328BaByUF1g@mail.gmail.com> (sfid-20131206_114025_141793_E17CB525)
+Subject: Re: status of libertas_tf + sdio?
+To: Dan Williams <dcbw@redhat.com>
+Cc: Andreas Kemnade <andreas@kemnade.info>,
+	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 20, 2013 at 12:16 AM, BAHINI, Henri
-<hbahini@qca.qualcomm.com> wrote:
-> Luis-
->   Can we be a bit professional here and limit the discussion to the patch that we're introducing.
->   Rajesh does not decide when the driver gets up streamed.
+Out of curiosity,
 
-Let's be professional. Who the fuck decides to try to introduce APIs
-for shit for drivers that are not upstream ?
+Does anyone know if it's possible to get thin firmware for 8686 with
+SPI interface?
 
->  Can we get this discussion outside of the context of this patch?
+Regards
+Vasily
 
-What type of serious effort are you putting into getting your driver
-upstream? Otherwise it seems to me like a waste of my and other's own
-time for review.
-
-  Luis
+On Wed, Dec 4, 2013 at 5:36 PM, Dan Williams <dcbw@redhat.com> wrote:
+> On Tue, 2013-12-03 at 20:26 +0100, Andreas Kemnade wrote:
+>> Hi,
+>>
+>> I want to be able to use my marvel sdio wifi as an ap, so I am interested
+>> in having the sdio interface of libertas_tf. I sucessfully copied
+>> over the libertas_tf directory from somewhere and fixed a bit of things
+>> and compiled that in a 3.7 kernel. It works.
+>> But now I am thinking about generating a clean patch.
+>>
+>> I found this one here:
+>> http://www.spinics.net/lists/linux-wireless/msg55245.html
+>> Is there any newer patch to start working on?
+>
+> I don't think so.  If you're interested in working on this, great!
+>
+> Dan
+>
+>
+> _______________________________________________
+> libertas-dev mailing list
+> libertas-dev@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/libertas-dev
