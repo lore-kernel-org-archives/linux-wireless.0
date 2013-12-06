@@ -1,121 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:36258 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757911Ab3LFQPQ (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:52442 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757569Ab3LFLDy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Dec 2013 11:15:16 -0500
-Date: Fri, 6 Dec 2013 11:12:58 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>
-Cc: Michal Nazarewicz <mina86@mina86.com>,
-	Peter Stuge <peter@stuge.se>,
-	ath9k-devel <ath9k-devel@venema.h4ckr.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCHv2] net: wireless: wcn36xx: fix potential NULL pointer
- dereference
-Message-ID: <20131206161258.GC13285@tuxdriver.com> (sfid-20131206_171538_047571_FF6FA51D)
-References: <1385744870-10164-1-git-send-email-mpn@google.com>
- <20131201004715.11125.qmail@stuge.se>
- <xa1tiov78kmp.fsf@mina86.com>
- <CAFSJ42YckTDO=UV=fWG9mmVXSBYep1x6xiHahzGDcrB4dy0oOQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAFSJ42YckTDO=UV=fWG9mmVXSBYep1x6xiHahzGDcrB4dy0oOQ@mail.gmail.com>
+	Fri, 6 Dec 2013 06:03:54 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 09/16] ath9k: Identify duplicate AR9485 initvals
+Date: Fri,  6 Dec 2013 16:28:47 +0530
+Message-Id: <1386327534-31105-10-git-send-email-sujith@msujith.org> (sfid-20131206_122459_685210_2337AC8B)
+In-Reply-To: <1386327534-31105-1-git-send-email-sujith@msujith.org>
+References: <1386327534-31105-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-FWIW, I merged the earlier version.  Please send any changes as a
-follow-up patch, probably against wireless-next.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-John
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9485_initvals.h | 117 +----------------------
+ 1 file changed, 5 insertions(+), 112 deletions(-)
 
-On Thu, Dec 05, 2013 at 08:41:29AM +0000, Eugene Krasnikov wrote:
-> > +               if (msg_ind)
-> > +                       break;
-> > +               /* FIXME: Do something smarter then just printing an error. */
-> > +               wcn36xx_err("Run out of memory while handling SMD_EVENT (%d)\n",
-> 
-> I think code will look neater if error case will be handled in "else"
-> statement something like:
-> if (msg_ind) {
-> ...
-> } else {
-> /*print message*/
-> }
-> /*unlock and break;*/
-> 
-> How about that?
-> 
-> 
-> On Mon, Dec 2, 2013 at 1:09 PM, Michal Nazarewicz <mina86@mina86.com> wrote:
-> >
-> > If kmalloc fails wcn36xx_smd_rsp_process will attempt to dereference
-> > a NULL pointer.  There might be a better error recovery then just
-> > printing an error, but printing an error message is better then the
-> > current behaviour.
-> >
-> > Signed-off-by: Michal Nazarewicz <mina86@mina86.com>
-> > ---
-> >  drivers/net/wireless/ath/wcn36xx/smd.c | 19 +++++++++++++------
-> >  1 file changed, 13 insertions(+), 6 deletions(-)
-> >
-> > On Sun, Dec 01 2013, Peter Stuge wrote:
-> >> Michal Nazarewicz wrote:
-> >>> +                    wcn36xx_err("Run out of memory while hnadling SMD_EVENT (%d)\n",
-> >>> +                                msg_header->msg_type);
-> >>
-> >> Typo hnadling.
-> >
-> > Fixed.
-> >
-> > diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-> > index de9eb2c..3663394 100644
-> > --- a/drivers/net/wireless/ath/wcn36xx/smd.c
-> > +++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-> > @@ -2041,13 +2041,20 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
-> >         case WCN36XX_HAL_DELETE_STA_CONTEXT_IND:
-> >                 mutex_lock(&wcn->hal_ind_mutex);
-> >                 msg_ind = kmalloc(sizeof(*msg_ind), GFP_KERNEL);
-> > -               msg_ind->msg_len = len;
-> > -               msg_ind->msg = kmalloc(len, GFP_KERNEL);
-> > -               memcpy(msg_ind->msg, buf, len);
-> > -               list_add_tail(&msg_ind->list, &wcn->hal_ind_queue);
-> > -               queue_work(wcn->hal_ind_wq, &wcn->hal_ind_work);
-> > -               wcn36xx_dbg(WCN36XX_DBG_HAL, "indication arrived\n");
-> > +               if (msg_ind) {
-> > +                       msg_ind->msg_len = len;
-> > +                       msg_ind->msg = kmalloc(len, GFP_KERNEL);
-> > +                       memcpy(msg_ind->msg, buf, len);
-> > +                       list_add_tail(&msg_ind->list, &wcn->hal_ind_queue);
-> > +                       queue_work(wcn->hal_ind_wq, &wcn->hal_ind_work);
-> > +                       wcn36xx_dbg(WCN36XX_DBG_HAL, "indication arrived\n");
-> > +               }
-> >                 mutex_unlock(&wcn->hal_ind_mutex);
-> > +               if (msg_ind)
-> > +                       break;
-> > +               /* FIXME: Do something smarter then just printing an error. */
-> > +               wcn36xx_err("Run out of memory while handling SMD_EVENT (%d)\n",
-> > +                           msg_header->msg_type);
-> >                 break;
-> >         default:
-> >                 wcn36xx_err("SMD_EVENT (%d) not supported\n",
-> > --
-> > 1.8.4.1
-> >
-> > --
-> > Best regards,                                         _     _
-> > .o. | Liege of Serenely Enlightened Majesty of      o' \,=./ `o
-> > ..o | Computer Science,  Michał “mina86” Nazarewicz    (o o)
-> > ooo +--<mpn@google.com>--<xmpp:mina86@jabber.org>--ooO--(_)--Ooo--
-> 
-> 
-> 
-> -- 
-> Best regards,
-> Eugene
-> 
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9485_initvals.h b/drivers/net/wireless/ath/ath9k/ar9485_initvals.h
+index 7c18452..ce83ce4 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9485_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9485_initvals.h
+@@ -20,17 +20,11 @@
+ 
+ /* AR9485 1.1 */
+ 
+-static const u32 ar9485_1_1_mac_postamble[][5] = {
+-	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
+-	{0x00001030, 0x00000230, 0x00000460, 0x000002c0, 0x00000160},
+-	{0x00001070, 0x00000168, 0x000002d0, 0x00000318, 0x0000018c},
+-	{0x000010b0, 0x00000e60, 0x00001cc0, 0x00007c70, 0x00003e38},
+-	{0x00008014, 0x03e803e8, 0x07d007d0, 0x10801600, 0x08400b00},
+-	{0x0000801c, 0x128d8027, 0x128d804f, 0x12e00057, 0x12e0002b},
+-	{0x00008120, 0x08f04800, 0x08f04800, 0x08f04810, 0x08f04810},
+-	{0x000081d0, 0x00003210, 0x00003210, 0x0000320a, 0x0000320a},
+-	{0x00008318, 0x00003e80, 0x00007d00, 0x00006880, 0x00003440},
+-};
++#define ar9485_modes_lowest_ob_db_tx_gain_1_1 ar9485Modes_low_ob_db_tx_gain_1_1
++
++#define ar9485_1_1_mac_postamble ar9331_1p1_mac_postamble
++
++#define ar9485_1_1_baseband_core_txfir_coeff_japan_2484 ar9300_2p2_baseband_core_txfir_coeff_japan_2484
+ 
+ static const u32 ar9485Common_wo_xlna_rx_gain_1_1[][2] = {
+ 	/* Addr      allmodes  */
+@@ -546,100 +540,6 @@ static const u32 ar9485Modes_low_ob_db_tx_gain_1_1[][5] = {
+ 	{0x00016048, 0x6c924260, 0x6c924260, 0x6c924260, 0x6c924260},
+ };
+ 
+-static const u32 ar9485_modes_lowest_ob_db_tx_gain_1_1[][5] = {
+-	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
+-	{0x000098bc, 0x00000002, 0x00000002, 0x00000002, 0x00000002},
+-	{0x0000a2d8, 0xf999a83a, 0xf999a83a, 0x7999a83a, 0x7999a83a},
+-	{0x0000a2dc, 0x00000000, 0x00000000, 0xfe2d3552, 0xfe2d3552},
+-	{0x0000a2e0, 0x00000000, 0x00000000, 0xfe2d3552, 0xfe2d3552},
+-	{0x0000a2e4, 0x00000000, 0x00000000, 0xfe2d3552, 0xfe2d3552},
+-	{0x0000a2e8, 0x00000000, 0x00000000, 0xfe2d3552, 0xfe2d3552},
+-	{0x0000a410, 0x000050d9, 0x000050d9, 0x000050d8, 0x000050d8},
+-	{0x0000a458, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000a500, 0x00022200, 0x00022200, 0x00000000, 0x00000000},
+-	{0x0000a504, 0x05062002, 0x05062002, 0x04000002, 0x04000002},
+-	{0x0000a508, 0x0c002e00, 0x0c002e00, 0x08000004, 0x08000004},
+-	{0x0000a50c, 0x11062202, 0x11062202, 0x0d000200, 0x0d000200},
+-	{0x0000a510, 0x17022e00, 0x17022e00, 0x11000202, 0x11000202},
+-	{0x0000a514, 0x1d000ec2, 0x1d000ec2, 0x15000400, 0x15000400},
+-	{0x0000a518, 0x25020ec0, 0x25020ec0, 0x19000402, 0x19000402},
+-	{0x0000a51c, 0x2b020ec3, 0x2b020ec3, 0x1d000404, 0x1d000404},
+-	{0x0000a520, 0x2f001f04, 0x2f001f04, 0x21000603, 0x21000603},
+-	{0x0000a524, 0x35001fc4, 0x35001fc4, 0x25000605, 0x25000605},
+-	{0x0000a528, 0x3c022f04, 0x3c022f04, 0x2a000a03, 0x2a000a03},
+-	{0x0000a52c, 0x41023e85, 0x41023e85, 0x2c000a04, 0x2c000a04},
+-	{0x0000a530, 0x48023ec6, 0x48023ec6, 0x34000e20, 0x34000e20},
+-	{0x0000a534, 0x4d023f01, 0x4d023f01, 0x35000e21, 0x35000e21},
+-	{0x0000a538, 0x53023f4b, 0x53023f4b, 0x43000e62, 0x43000e62},
+-	{0x0000a53c, 0x5a027f09, 0x5a027f09, 0x45000e63, 0x45000e63},
+-	{0x0000a540, 0x5f027fc9, 0x5f027fc9, 0x49000e65, 0x49000e65},
+-	{0x0000a544, 0x6502feca, 0x6502feca, 0x4b000e66, 0x4b000e66},
+-	{0x0000a548, 0x6b02ff4a, 0x6b02ff4a, 0x4d001645, 0x4d001645},
+-	{0x0000a54c, 0x7203feca, 0x7203feca, 0x51001865, 0x51001865},
+-	{0x0000a550, 0x7703ff0b, 0x7703ff0b, 0x55001a86, 0x55001a86},
+-	{0x0000a554, 0x7d06ffcb, 0x7d06ffcb, 0x57001ce9, 0x57001ce9},
+-	{0x0000a558, 0x8407ff0b, 0x8407ff0b, 0x5a001ceb, 0x5a001ceb},
+-	{0x0000a55c, 0x8907ffcb, 0x8907ffcb, 0x5e001eeb, 0x5e001eeb},
+-	{0x0000a560, 0x900fff0b, 0x900fff0b, 0x5e001eeb, 0x5e001eeb},
+-	{0x0000a564, 0x960fffcb, 0x960fffcb, 0x5e001eeb, 0x5e001eeb},
+-	{0x0000a568, 0x9c1fff0b, 0x9c1fff0b, 0x5e001eeb, 0x5e001eeb},
+-	{0x0000a56c, 0x9c1fff0b, 0x9c1fff0b, 0x5e001eeb, 0x5e001eeb},
+-	{0x0000a570, 0x9c1fff0b, 0x9c1fff0b, 0x5e001eeb, 0x5e001eeb},
+-	{0x0000a574, 0x9c1fff0b, 0x9c1fff0b, 0x5e001eeb, 0x5e001eeb},
+-	{0x0000a578, 0x9c1fff0b, 0x9c1fff0b, 0x5e001eeb, 0x5e001eeb},
+-	{0x0000a57c, 0x9c1fff0b, 0x9c1fff0b, 0x5e001eeb, 0x5e001eeb},
+-	{0x0000a580, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000a584, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000a588, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000a58c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000a590, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000a594, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000a598, 0x00000000, 0x00000000, 0x01404501, 0x01404501},
+-	{0x0000a59c, 0x00000000, 0x00000000, 0x02808a02, 0x02808a02},
+-	{0x0000a5a0, 0x00000000, 0x00000000, 0x02808a02, 0x02808a02},
+-	{0x0000a5a4, 0x00000000, 0x00000000, 0x02808803, 0x02808803},
+-	{0x0000a5a8, 0x00000000, 0x00000000, 0x04c14b04, 0x04c14b04},
+-	{0x0000a5ac, 0x00000000, 0x00000000, 0x04c15305, 0x04c15305},
+-	{0x0000a5b0, 0x00000000, 0x00000000, 0x04c15305, 0x04c15305},
+-	{0x0000a5b4, 0x00000000, 0x00000000, 0x04c15305, 0x04c15305},
+-	{0x0000a5b8, 0x00000000, 0x00000000, 0x04c15305, 0x04c15305},
+-	{0x0000a5bc, 0x00000000, 0x00000000, 0x04c15305, 0x04c15305},
+-	{0x0000b500, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000b504, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000b508, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000b50c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000b510, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000b514, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000b518, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000b51c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000b520, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000b524, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000b528, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000b52c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000b530, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000b534, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000b538, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000b53c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000b540, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000b544, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000b548, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000b54c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000b550, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000b554, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000b558, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000b55c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000b560, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000b564, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000b568, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000b56c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000b570, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000b574, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000b578, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000b57c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x00016044, 0x05d6b2db, 0x05d6b2db, 0x05d6b2db, 0x05d6b2db},
+-	{0x00016048, 0x6c924260, 0x6c924260, 0x6c924260, 0x6c924260},
+-};
+-
+ static const u32 ar9485Modes_green_spur_ob_db_tx_gain_1_1[][5] = {
+ 	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
+ 	{0x000098bc, 0x00000003, 0x00000003, 0x00000003, 0x00000003},
+@@ -1323,13 +1223,6 @@ static const u32 ar9485_1_1_mac_core[][2] = {
+ 	{0x000083d0, 0x000301ff},
+ };
+ 
+-static const u32 ar9485_1_1_baseband_core_txfir_coeff_japan_2484[][2] = {
+-	/* Addr      allmodes  */
+-	{0x0000a398, 0x00000000},
+-	{0x0000a39c, 0x6f7f0301},
+-	{0x0000a3a0, 0xca9228ee},
+-};
+-
+ static const u32 ar9485_1_1_pcie_phy_clkreq_disable_L1[][2] = {
+ 	/* Addr      allmodes  */
+ 	{0x00018c00, 0x18013e5e},
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.8.4.2
+
