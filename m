@@ -1,44 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm11.bullet.mail.ird.yahoo.com ([77.238.189.64]:24135 "HELO
-	nm11.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756764Ab3LEP53 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 10:57:29 -0500
-Message-ID: <1386259047.2121.YahooMailNeo@web172705.mail.ir2.yahoo.com> (sfid-20131205_165733_059424_F6F2D350)
-Date: Thu, 5 Dec 2013 15:57:27 +0000 (GMT)
-From: Dani Camps <danicamps81@yahoo.com>
-Reply-To: Dani Camps <danicamps81@yahoo.com>
-Subject: Using wmediumd in kernel 3.10
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: from ring0.de ([91.143.88.219]:39893 "EHLO smtp.ring0.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756554Ab3LFAWq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Dec 2013 19:22:46 -0500
+From: Sebastian Reichel <sre@debian.org>
+To: Sebastian Reichel <sre@ring0.de>, Luciano Coelho <luca@coelho.fi>,
+	Tony Lindgren <tony@atomide.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Rob Herring <rob.herring@calxeda.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Rob Landley <rob@landley.net>,
+	Kumar Gala <galak@codeaurora.org>, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-omap@vger.kernel.org, netdev@vger.kernel.org,
+	Sebastian Reichel <sre@debian.org>
+Subject: [PATCHv2 5/5] Documentation: dt: wireless: Add wl1251
+Date: Fri,  6 Dec 2013 01:22:16 +0100
+Message-Id: <1386289336-26704-6-git-send-email-sre@debian.org> (sfid-20131206_012413_611087_2FDA377F)
+In-Reply-To: <1386289336-26704-1-git-send-email-sre@debian.org>
+References: <1382890469-25286-1-git-send-email-sre@debian.org>
+ <1386289336-26704-1-git-send-email-sre@debian.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Add device tree binding documentation for Texas Instrument's wl1251
+wireless lan chip. For now only the SPI binding is documented.
 
+Signed-off-by: Sebastian Reichel <sre@debian.org>
+---
+ .../devicetree/bindings/net/wireless/ti,wl1251.txt | 39 ++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt
 
-Dear all,
+diff --git a/Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt b/Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt
+new file mode 100644
+index 0000000..189ae5c
+--- /dev/null
++++ b/Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt
+@@ -0,0 +1,39 @@
++* Texas Instruments wl1251 wireless lan controller
++
++The wl1251 chip can be connected via SPI or via SDIO. This
++document describes the binding for the SPI connected chip.
++
++Required properties:
++- compatible :        Should be "ti,wl1251"
++- reg :               Chip select address of device
++- spi-max-frequency : Maximum SPI clocking speed of device in Hz
++- interrupts :        Should contain interrupt line
++- interrupt-parent :  Should be the phandle for the interrupt controller
++                      that services interrupts for this device
++- vio-supply :        phandle to regulator providing VIO
++- ti,power-gpio :     GPIO connected to chip's PMEN pin
++
++Optional properties:
++- ti,wl1251-has-eeprom : boolean, the wl1251 has an eeprom connected, which
++                         provides configuration data (calibration, MAC, ...)
++- Please consult Documentation/devicetree/bindings/spi/spi-bus.txt
++  for optional SPI connection related properties,
++
++Examples:
++
++&spi1 {
++	wl1251@0 {
++		compatible = "ti,wl1251";
++
++		reg = <0>;
++		spi-max-frequency = <48000000>;
++		spi-cpol;
++		spi-cpha;
++
++		interrupt-parent = <&gpio2>;
++		interrupts = <10 IRQ_TYPE_NONE>; /* gpio line 42 */
++
++		vio-supply = <&vio>;
++		ti,power-gpio = <&gpio3 23 GPIO_ACTIVE_HIGH>; /* 87 */
++	};
++};
+-- 
+1.8.4.3
 
-I would like to use wmediumd with linuxwireless backports 3.10.
-
-The problem is that as indicated in this post: http://www.spinics.net/lists/linux-wireless/msg96575.html, wmediumd is not supported in this kernel. Quoting from the post:
-
-"To use mac80211_hwsim for testing channel contexts it has to support them, and for that it has to support hw scan and hw-remain-on-channel.
-Since it's pure software, the off-channel activities are really not off-channel but listening and sending on a second channel. Also, the multi-channel isn't really doing TDM, it's just on both channels at the same time. 
-Note that this breaks wmediumd right now as it doesn't propagate the channel."
-
-
-In particular, wmediumd crashes whenever the first packet between the two mac80211_hwsim radios is sent. Specifically the place in mac80211_hwsim.c where the error occurs is in this call inside the function hwsim_tx_info_frame_received_nl():
-
-mac80211_hwsim_monitor_ack(txi->rate_driver_data[0], hdr->addr2);
-
-In mac80211_hwsim_monitor_ack() a crash occurs whenever accessing a field of txi->rate_driver_data[0], which is of type struct ieee80211_channel.
-
-So, I would like to ask for support in any of the following:
-
-1- Guidance on how to fix wmediumd for kernel 3.10.
-2- Advise on another tool with functionality equivalent to that of wmediumd, i.e. introducing delay and drop probability to packets exchanged between mac80211_hwsim radios, and that works with kernel 3.10.
-
-Best Regards
-
-Daniel
