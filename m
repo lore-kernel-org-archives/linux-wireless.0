@@ -1,311 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:46257 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755551Ab3LHXnp convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:36258 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757911Ab3LFQPQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Dec 2013 18:43:45 -0500
-Received: by mail-wg0-f44.google.com with SMTP id a1so2698391wgh.23
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Dec 2013 15:43:44 -0800 (PST)
+	Fri, 6 Dec 2013 11:15:16 -0500
+Date: Fri, 6 Dec 2013 11:12:58 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>
+Cc: Michal Nazarewicz <mina86@mina86.com>,
+	Peter Stuge <peter@stuge.se>,
+	ath9k-devel <ath9k-devel@venema.h4ckr.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCHv2] net: wireless: wcn36xx: fix potential NULL pointer
+ dereference
+Message-ID: <20131206161258.GC13285@tuxdriver.com> (sfid-20131206_171538_047571_FF6FA51D)
+References: <1385744870-10164-1-git-send-email-mpn@google.com>
+ <20131201004715.11125.qmail@stuge.se>
+ <xa1tiov78kmp.fsf@mina86.com>
+ <CAFSJ42YckTDO=UV=fWG9mmVXSBYep1x6xiHahzGDcrB4dy0oOQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CA+OxbLhPWMMCOuDK93wGzVNnMwT_vHq0A7jwyYJjL8kh6s7s_w@mail.gmail.com>
-References: <CA+OxbLhpRV2GhHbYD_VpoWgdYfR1uV4g38OO=gT4WPEt=F8_Og@mail.gmail.com>
-	<529FAF1B.5040706@lwfinger.net>
-	<CA+OxbLiZUPMj0Qv=7ZsgXWT1KWT06ZgUpptARHW5U39e69jD8w@mail.gmail.com>
-	<529FC4D8.6090703@lwfinger.net>
-	<CA+OxbLhPWMMCOuDK93wGzVNnMwT_vHq0A7jwyYJjL8kh6s7s_w@mail.gmail.com>
-Date: Mon, 9 Dec 2013 00:43:44 +0100
-Message-ID: <CA+OxbLjm7R-WPLtEFKuBPngDmb21J29EAT1pH3oMWT7MWkYx5g@mail.gmail.com> (sfid-20131209_004350_331882_328D9E00)
-Subject: Re: Weak Signal and slow tx Rate with RTL8723AE
-From: =?ISO-8859-1?Q?David_Pinilla_Caparr=F3s?= <dpini@caliu.cat>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAFSJ42YckTDO=UV=fWG9mmVXSBYep1x6xiHahzGDcrB4dy0oOQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Now at home I have had some performance issues.
+FWIW, I merged the earlier version.  Please send any changes as a
+follow-up patch, probably against wireless-next.
 
-With a signal between -40 to -50 dBm and link quality 65-70/70 I get
-~3 Mbps with an iperf test with my home server.
-I do not have any object between the AP and the computer itself.
+John
 
-Another time the number of "Invalid misc" packets increases a lot when
-there are some traffic.
+On Thu, Dec 05, 2013 at 08:41:29AM +0000, Eugene Krasnikov wrote:
+> > +               if (msg_ind)
+> > +                       break;
+> > +               /* FIXME: Do something smarter then just printing an error. */
+> > +               wcn36xx_err("Run out of memory while handling SMD_EVENT (%d)\n",
+> 
+> I think code will look neater if error case will be handled in "else"
+> statement something like:
+> if (msg_ind) {
+> ...
+> } else {
+> /*print message*/
+> }
+> /*unlock and break;*/
+> 
+> How about that?
+> 
+> 
+> On Mon, Dec 2, 2013 at 1:09 PM, Michal Nazarewicz <mina86@mina86.com> wrote:
+> >
+> > If kmalloc fails wcn36xx_smd_rsp_process will attempt to dereference
+> > a NULL pointer.  There might be a better error recovery then just
+> > printing an error, but printing an error message is better then the
+> > current behaviour.
+> >
+> > Signed-off-by: Michal Nazarewicz <mina86@mina86.com>
+> > ---
+> >  drivers/net/wireless/ath/wcn36xx/smd.c | 19 +++++++++++++------
+> >  1 file changed, 13 insertions(+), 6 deletions(-)
+> >
+> > On Sun, Dec 01 2013, Peter Stuge wrote:
+> >> Michal Nazarewicz wrote:
+> >>> +                    wcn36xx_err("Run out of memory while hnadling SMD_EVENT (%d)\n",
+> >>> +                                msg_header->msg_type);
+> >>
+> >> Typo hnadling.
+> >
+> > Fixed.
+> >
+> > diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+> > index de9eb2c..3663394 100644
+> > --- a/drivers/net/wireless/ath/wcn36xx/smd.c
+> > +++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+> > @@ -2041,13 +2041,20 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
+> >         case WCN36XX_HAL_DELETE_STA_CONTEXT_IND:
+> >                 mutex_lock(&wcn->hal_ind_mutex);
+> >                 msg_ind = kmalloc(sizeof(*msg_ind), GFP_KERNEL);
+> > -               msg_ind->msg_len = len;
+> > -               msg_ind->msg = kmalloc(len, GFP_KERNEL);
+> > -               memcpy(msg_ind->msg, buf, len);
+> > -               list_add_tail(&msg_ind->list, &wcn->hal_ind_queue);
+> > -               queue_work(wcn->hal_ind_wq, &wcn->hal_ind_work);
+> > -               wcn36xx_dbg(WCN36XX_DBG_HAL, "indication arrived\n");
+> > +               if (msg_ind) {
+> > +                       msg_ind->msg_len = len;
+> > +                       msg_ind->msg = kmalloc(len, GFP_KERNEL);
+> > +                       memcpy(msg_ind->msg, buf, len);
+> > +                       list_add_tail(&msg_ind->list, &wcn->hal_ind_queue);
+> > +                       queue_work(wcn->hal_ind_wq, &wcn->hal_ind_work);
+> > +                       wcn36xx_dbg(WCN36XX_DBG_HAL, "indication arrived\n");
+> > +               }
+> >                 mutex_unlock(&wcn->hal_ind_mutex);
+> > +               if (msg_ind)
+> > +                       break;
+> > +               /* FIXME: Do something smarter then just printing an error. */
+> > +               wcn36xx_err("Run out of memory while handling SMD_EVENT (%d)\n",
+> > +                           msg_header->msg_type);
+> >                 break;
+> >         default:
+> >                 wcn36xx_err("SMD_EVENT (%d) not supported\n",
+> > --
+> > 1.8.4.1
+> >
+> > --
+> > Best regards,                                         _     _
+> > .o. | Liege of Serenely Enlightened Majesty of      o' \,=./ `o
+> > ..o | Computer Science,  Michał “mina86” Nazarewicz    (o o)
+> > ooo +--<mpn@google.com>--<xmpp:mina86@jabber.org>--ooO--(_)--Ooo--
+> 
+> 
+> 
+> -- 
+> Best regards,
+> Eugene
+> 
 
-It is possible that this is related with a configuration problem?
-
-I have recorded 2 videos to show the increase of invalid packets. I
-will try to edit them to remove info like mac address and I upload
-them. (Any service that you can recommend me?)
-
-Thanks a lot again for your help.
-
-
-David
-
-2013/12/5 David Pinilla Caparrós <dpini@caliu.cat>:
-> 2013/12/5 Larry Finger <Larry.Finger@lwfinger.net>:
->> On 12/04/2013 05:08 PM, David Pinilla Caparrós wrote:
->>>
->>> 2013/12/4 Larry Finger <Larry.Finger@lwfinger.net>:
->>>>
->>>> On 12/04/2013 03:40 PM, David Pinilla Caparrós wrote:
->>>>>
->>>>>
->>>>> Hello,
->>>>>
->>>>> I have mailed with Larry Finger asking for a problem and he has
->>>>> pointed me to this list.
->>>>>
->>>>> I am an Arch Linux User with a Clevo based laptop.
->>>>>
->>>>> It ships with the RTL8723AE. I have been reading posts around the net
->>>>> and found that some people are having problems and talking about the
->>>>> driver and something about the RX or TX Power.
->>>>>
->>>>>
->>>>> With the 2 APs wich I usually use I can only reach 18Mb/s of Bit rate
->>>>> whatever the signal level or link quality is. Both of them are 802.11
->>>>> G and not N I think.
->>>>>
->>>>> The connection is very unstable. Sometimes powering the wifi off and
->>>>> on increases the performance a bit when it's impossible to do anything
->>>>> (pings to gateway don't reply)
->>>>>
->>>>> If they are related to the driver, I would be proud to help with
->>>>> anything that I am able to. Testing for example.
->>>>>
->>>>> I have a recent version of the stable Kernel but I dont know if the
->>>>> firmware files are up to date.
->>>>>
->>>>>
->>>>>
->>>>> Some data:
->>>>>
->>>>> 03:00.0 Network controller: Realtek Semiconductor Co., Ltd. RTL8723AE
->>>>> PCIe Wireless Network Adapter
->>>>>       Subsystem: Realtek Semiconductor Co., Ltd. Device 0726
->>>>>       Flags: bus master, fast devsel, latency 0, IRQ 18
->>>>>       I/O ports at d000 [size=256]
->>>>>       Memory at f7900000 (64-bit, non-prefetchable) [size=16K]
->>>>>       Capabilities: [40] Power Management version 3
->>>>>       Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
->>>>>       Capabilities: [70] Express Endpoint, MSI 00
->>>>>       Capabilities: [100] Advanced Error Reporting
->>>>>       Capabilities: [140] Virtual Channel
->>>>>       Capabilities: [160] Device Serial Number 01-23-87-fe-ff-4c-e0-00
->>>>>       Kernel driver in use: rtl8723ae
->>>>>       Kernel modules: rtl8723ae
->>>>>
->>>>>    root  ~  dmesg | grep rtl
->>>>> [    2.734124] rtl8723ae 0000:03:00.0: enabling device (0000 -> 0003)
->>>>> [    2.749732] rtl8723ae: Using firmware rtlwifi/rtl8723fw_B.bin
->>>>> [    2.752940] ieee80211 phy0: Selected rate control algorithm 'rtl_rc'
->>>>> [    2.753057] rtlwifi: wireless switch is on
->>>>> [ 8838.570486] rtlwifi: wireless switch is o
->>>>>
->>>>>
->>>>>    root  ~  uname -a
->>>>> Linux DPini-Laptop 3.12.2-1-ARCH #1 SMP PREEMPT Fri Nov 29 21:14:15
->>>>> CET 2013 x86_64 GNU/Linux
->>>>>
->>>>>
->>>>> Iwconfig:
->>>>>
->>>>> wlp3s0    IEEE 802.11bgn  ESSID:"Pinis_AP"
->>>>>             Mode:Managed  Frequency:2.462 GHz  Access Point:
->>>>> 00:1A:2B:12:34:56
->>>>>             Bit Rate=18 Mb/s   Tx-Power=20 dBm
->>>>>             Retry  long limit:7   RTS thr=2347 B   Fragment thr:off
->>>>>             Encryption key:off
->>>>>             Power Management:off
->>>>>             Link Quality=50/70  Signal level=-60 dBm
->>>>>             Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
->>>>>             Tx excessive retries:0  Invalid misc:9   Missed beacon:0
->>>>>
->>>>>    root  ~  rfkill list
->>>>> 0: phy0: Wireless LAN
->>>>>       Soft blocked: no
->>>>>       Hard blocked: no
->>>>> 1: hci0: Bluetooth
->>>>>       Soft blocked: no
->>>>>       Hard blocked: no
->>>>>
->>>>>    root  ⋯  lib  firmware  rtlwifi  md5sum rtl8723fw*
->>>>> ce50dfe07dbb1bfe9e14bdb315a4b28a  rtl8723fw_B.bin
->>>>> 69ccaffbe94cc0ef1b89c25290e19b2e  rtl8723fw.bin
->>>>
->>>>
->>>
->>> Inline reply
->>>
->>>> Those md5sums match those of the latest firmware.
->>>
->>>
->>> Thanks. It's a great notice
->>>
->>>> Your signal is a bit lower than mine. My iwconfig shows
->>>>
->>>> wlp14s0   IEEE 802.11bgn  ESSID:"NETGEAR81"
->>>>            Mode:Managed  Frequency:2.437 GHz  Access Point:
->>>> 20:E5:2A:01:F7:EA
->>>>            Bit Rate=7.2 Mb/s   Tx-Power=20 dBm
->>>>
->>>>            Retry  long limit:7   RTS thr=2347 B   Fragment thr:off
->>>>            Power Management:off
->>>>            Link Quality=60/70  Signal level=-50 dBm
->>>>
->>>>            Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
->>>>            Tx excessive retries:0  Invalid misc:2254   Missed beacon:0
->>>>
->>>> My AP is 802.11n. Note that the 7.2 Mbps is misleading. When I pushed
->>>> data
->>>> through using netperf, it jumped to 72.2 Mbps, and my throughput was
->>>>
->>>> TCP_MAERTS Test:  30.64 27.65 30.54 28.86 33.33 33.59 37.86 39.40 39.76
->>>> 37.20
->>>> RX Results: max 39.76, min 27.65. Mean 33.88(4.22)
->>>>
->>>> TCP_STREAM Test:  35.34 37.34 29.59 20.10 36.11 40.24 40.67 41.93 38.08
->>>> 33.93
->>>> TX Results: max 41.93, min 20.10. Mean 35.33(6.13)
->>>>
->>>> When I switch to an 802.11g AP, I get the following:
->>>>
->>>> TCP_MAERTS Test:  10.77 10.81 11.53 11.69 10.46 10.16 11.04 10.66  7.34
->>>> 10.90
->>>> RX Results: max 11.69, min  7.34. Mean 10.54(1.15)
->>>>
->>>> TCP_STREAM Test:   5.74  6.24  6.76  6.43  7.37  6.23  7.63  7.07  7.07
->>>> 6.50
->>>> TX Results: max  7.63, min  5.74. Mean  6.70(0.55)
->>>
->>>
->>> Here at home I get similar results:
->>>
->>>   dpini  ~  iperf -c 192.168.1.102
->>> ------------------------------------------------------------
->>> Client connecting to 192.168.1.102, TCP port 5001
->>> TCP window size: 22.9 KByte (default)
->>> ------------------------------------------------------------
->>> [  3] local 192.168.1.117 port 36449 connected with 192.168.1.102 port
->>> 5001
->>> [ ID] Interval       Transfer     Bandwidth
->>> [  3]  0.0-10.3 sec  10.0 MBytes  8.13 Mbits/sec
->>>   dpini  ~  iperf -c 192.168.1.102
->>> ------------------------------------------------------------
->>> Client connecting to 192.168.1.102, TCP port 5001
->>> TCP window size: 22.9 KByte (default)
->>> ------------------------------------------------------------
->>> [  3] local 192.168.1.117 port 36450 connected with 192.168.1.102 port
->>> 5001
->>> [ ID] Interval       Transfer     Bandwidth
->>> [  3]  0.0-10.1 sec  7.50 MBytes  6.25 Mbits/sec
->>>
->>>
->>> I will try it tomorrow at school, where I have the most of the problems.
->>>
->>>
->>>> Those numbers could probably be improved, but without any details on how
->>>> the
->>>> chip works, what could one do. Messing with power settings on the
->>>> amplifiers
->>>> could lead to destruction of radios. I cannot take that chance.
->>>
->>>
->>> Im ok with that. When I was talking about the power is because I have
->>> read somwhere that there were problems with power management in the
->>> driver. I am trying to get working another wireless card in a router.
->>> I could be confused about the power problem.
->>>
->>>>
->>>> As to stability, I am in the middle of a long-term test of rtl8723ae.
->>>> After
->>>> roughly 86,000 seconds of connect time, I have had only 9 disconnections,
->>>> and all were due to a bug in the roaming code that I have so far been
->>>> unable
->>>> to find. The interface thinks it has lost the APs beacons, does a
->>>> disconnect, and immediately reconnects. Otherwise, the connection was
->>>> stable
->>>> until I forced a reconnect to my G AP for this reply.
->>>
->>>
->>> Sorry for beeing the cause of this disconnection. I really appreciate
->>> the work that you and others do so everyone can use FLOSS drivers.
->>>
->>>> Unfortunately, I have no idea what to do for your complaints. If you want
->>>> higher throughput, then an 802.11n AP seems warranted.
->>>
->>>
->>> The hope that we can replace the wireless home router soon.
->>>
->>> But for the AP on the school I can't do anything. Thay have spent a
->>> lof of money buying HP AP with central management and I can't do
->>> anything to change them.
->>>
->>>> Larry
->>>>
->>>
->>> I think that the problems in the school can be because channel saturation.
->>>
->>> There are some APs reachable with the same SSID (every AP have 3 SSID
->>> I think). But the other students doesn't have any problems. I have
->>> checked with "other OS and the RTL drivers" on the laptop and the
->>> connection is ok.
->>>
->>> It coluld be related with the bug with roaming?
->>>
->>> Any tip for diagnosing this? I can help you with the bug providing
->>> data or doing any test?
->>
->>
->> Please do not drop the mailing list from the reply. Always use
->> "Reply-to-All". I have added the Cc on my reply, but because it was not on
->> your mail, I dare not trim the reply.
->>
->> You will see messages like the following if you have the bug:
->>
->> finger@larrylap:~/realtek> dmesg | grep watchdog
->> [24098.632094] rtlwifi:rtl_watchdog_wq_callback():<0-0> AP off, try to
->> reconnect now
->> [88203.348090] rtlwifi:rtl_watchdog_wq_callback():<0-0> AP off, try to
->> reconnect now
->> [88221.856380] rtlwifi:rtl_watchdog_wq_callback():<0-0> AP off, try to
->> reconnect now
->> [88228.360104] rtlwifi:rtl_watchdog_wq_callback():<0-0> AP off, try to
->> reconnect now
->> [88238.520095] rtlwifi:rtl_watchdog_wq_callback():<0-0> AP off, try to
->> reconnect now
->> [88346.876102] rtlwifi:rtl_watchdog_wq_callback():<0-0> AP off, try to
->> reconnect now
->> [88353.032106] rtlwifi:rtl_watchdog_wq_callback():<0-0> AP off, try to
->> reconnect now
->> [88377.196053] rtlwifi:rtl_watchdog_wq_callback():<0-0> AP off, try to
->> reconnect now
->> [88417.776110] rtlwifi:rtl_watchdog_wq_callback():<0-0> AP off, try to
->> reconnect now
->>
->> As you can see this happens quite infrequently. Finding it will not be easy.
->>
->> Larry
->>
->
->
-> I have been testing a little bit.
-> Right now I am on the school. I've used watch to watch for the signal level.
-> It's stable at ~-50 dBm sometimes it drops to ~25dBm for a bit (less
-> than 1 second)
->
-> When traffic increases the number of "Invalid misc" increases a lot.
-> For example for a Speed test of 1 minute of duration it increases 800.
->
-> The performance for the moment is acceptable. I will do more test when
-> the performance drops.
->
-> I haven't had any message related with the roaming bug.
->
-> Any tool for doing better diagnostics that I can use?
->
-> Thank you a lot.
->
-> David
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
