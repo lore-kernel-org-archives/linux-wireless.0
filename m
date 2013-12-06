@@ -1,60 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:36002 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751545Ab3LEPjR (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:47641 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757569Ab3LFLED (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 10:39:17 -0500
-Received: by mail-ie0-f179.google.com with SMTP id x13so30256608ief.10
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Dec 2013 07:39:16 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1386254607.4182.5.camel@jlt4.sipsolutions.net>
-References: <1386235289-27278-1-git-send-email-eliad@wizery.com>
-	<1386235289-27278-4-git-send-email-eliad@wizery.com>
-	<1386253879.4182.4.camel@jlt4.sipsolutions.net>
-	<CAB3XZEcpM9PAQCGQ99X2A-bqYXoPEmE=Cg29CDKY7=s8QquwUA@mail.gmail.com>
-	<1386254607.4182.5.camel@jlt4.sipsolutions.net>
-Date: Thu, 5 Dec 2013 17:39:16 +0200
-Message-ID: <CAB3XZEc4pikahyAmPCh_pCjFEiRvFgAyZgxGrbH9A6hLP2nhFw@mail.gmail.com> (sfid-20131205_163920_768871_C7A5FD80)
-Subject: Re: [PATCH 4/4] cfg80211: prevent race condition on scan request cleanup
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 6 Dec 2013 06:04:03 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 14/16] ath9k: Enable manual peak calibration for AR9331 v1.1
+Date: Fri,  6 Dec 2013 16:28:52 +0530
+Message-Id: <1386327534-31105-15-git-send-email-sujith@msujith.org> (sfid-20131206_122459_938990_9EDFEB30)
+In-Reply-To: <1386327534-31105-1-git-send-email-sujith@msujith.org>
+References: <1386327534-31105-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 5, 2013 at 4:43 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Thu, 2013-12-05 at 16:36 +0200, Eliad Peller wrote:
->> On Thu, Dec 5, 2013 at 4:31 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->> > On Thu, 2013-12-05 at 11:21 +0200, Eliad Peller wrote:
->> >
->> >> @@ -219,8 +221,13 @@ void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev, bool leak)
->> >>        * the scan request or not ... if it accesses the dev
->> >>        * in there (it shouldn't anyway) then it may crash.
->> >>        */
->> >> -     if (!leak)
->> >> -             kfree(request);
->> >> +     if (leak) {
->> >> +             request->pending_cleanup = true;
->> >> +             return;
->> >
->> > This seems insufficient, if the driver never indicates completion, we'd
->> > never clear rdev->scan_req?
->> >
->> right, but i think it somehow makes sense (i.e. the driver must
->> indicate completion...)?
->
-> But the whole thing was intended to catch buggy drivers :)
->
-yeah, you have a point here :)
-anyway, i guess it's either leaking scan_req and hoping the driver
-really forgot about it, or keeping it and hoping the driver will
-finally indicate completion.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-since i don't think this is a real-world scenario, i'm ok with
-dropping this patch.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c | 29 ++++++++++++++++++---------
+ 1 file changed, 19 insertions(+), 10 deletions(-)
 
-> Btw, should any of this go to 3.13?
-maybe the first one. it's the only "real" issue.
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index aa01272..97e09d5 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -898,7 +898,7 @@ static void ar9003_hw_tx_iq_cal_reload(struct ath_hw *ah)
+ 
+ static void ar9003_hw_manual_peak_cal(struct ath_hw *ah, u8 chain, bool is_2g)
+ {
+-	int offset[8], total = 0, test;
++	int offset[8] = {0}, total = 0, test;
+ 	int agc_out, i;
+ 
+ 	REG_RMW_FIELD(ah, AR_PHY_65NM_RXRF_GAINSTAGES(chain),
+@@ -923,12 +923,18 @@ static void ar9003_hw_manual_peak_cal(struct ath_hw *ah, u8 chain, bool is_2g)
+ 		      AR_PHY_65NM_RXRF_AGC_AGC_ON_OVR, 0x1);
+ 	REG_RMW_FIELD(ah, AR_PHY_65NM_RXRF_AGC(chain),
+ 		      AR_PHY_65NM_RXRF_AGC_AGC_CAL_OVR, 0x1);
+-	if (is_2g)
+-		REG_RMW_FIELD(ah, AR_PHY_65NM_RXRF_AGC(chain),
+-			      AR_PHY_65NM_RXRF_AGC_AGC2G_DBDAC_OVR, 0x0);
+-	else
++
++	if (AR_SREV_9330_11(ah)) {
+ 		REG_RMW_FIELD(ah, AR_PHY_65NM_RXRF_AGC(chain),
+-			      AR_PHY_65NM_RXRF_AGC_AGC5G_DBDAC_OVR, 0x0);
++			      AR_PHY_65NM_RXRF_AGC_AGC2G_CALDAC_OVR, 0x0);
++	} else {
++		if (is_2g)
++			REG_RMW_FIELD(ah, AR_PHY_65NM_RXRF_AGC(chain),
++				      AR_PHY_65NM_RXRF_AGC_AGC2G_DBDAC_OVR, 0x0);
++		else
++			REG_RMW_FIELD(ah, AR_PHY_65NM_RXRF_AGC(chain),
++				      AR_PHY_65NM_RXRF_AGC_AGC5G_DBDAC_OVR, 0x0);
++	}
+ 
+ 	for (i = 6; i > 0; i--) {
+ 		offset[i] = BIT(i - 1);
+@@ -964,9 +970,9 @@ static void ar9003_hw_manual_peak_cal(struct ath_hw *ah, u8 chain, bool is_2g)
+ 		      AR_PHY_65NM_RXRF_AGC_AGC_CAL_OVR, 0);
+ }
+ 
+-static void ar9003_hw_do_manual_peak_cal(struct ath_hw *ah,
+-					 struct ath9k_channel *chan,
+-					 bool run_rtt_cal)
++static void ar9003_hw_do_pcoem_manual_peak_cal(struct ath_hw *ah,
++					       struct ath9k_channel *chan,
++					       bool run_rtt_cal)
+ {
+ 	struct ath9k_hw_cal_data *caldata = ah->caldata;
+ 	int i;
+@@ -1145,7 +1151,7 @@ skip_tx_iqcal:
+ 				       AR_PHY_AGC_CONTROL_CAL,
+ 				       0, AH_WAIT_TIMEOUT);
+ 
+-		ar9003_hw_do_manual_peak_cal(ah, chan, run_rtt_cal);
++		ar9003_hw_do_pcoem_manual_peak_cal(ah, chan, run_rtt_cal);
+ 	}
+ 
+ 	if (REG_READ(ah, AR_PHY_CL_CAL_CTL) & AR_PHY_CL_CAL_ENABLE) {
+@@ -1267,6 +1273,9 @@ static bool ar9003_hw_init_cal_soc(struct ath_hw *ah,
+ 
+ skip_tx_iqcal:
+ 	if (run_agc_cal || !(ah->ah_flags & AH_FASTCC)) {
++		if (AR_SREV_9330_11(ah))
++			ar9003_hw_manual_peak_cal(ah, 0, IS_CHAN_2GHZ(chan));
++
+ 		/* Calibrate the AGC */
+ 		REG_WRITE(ah, AR_PHY_AGC_CONTROL,
+ 			  REG_READ(ah, AR_PHY_AGC_CONTROL) |
+-- 
+1.8.4.2
 
-Eliad.
