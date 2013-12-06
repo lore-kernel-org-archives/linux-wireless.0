@@ -1,64 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:35209 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752600Ab3LXL3s (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Dec 2013 06:29:48 -0500
-Message-ID: <52B96FE7.6050602@huawei.com> (sfid-20131224_123252_992212_999DA7ED)
-Date: Tue, 24 Dec 2013 19:28:39 +0800
-From: Ding Tianhong <dingtianhong@huawei.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	<linux-wireless@vger.kernel.org>, Netdev <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH v2 11/20] mac8011: slight optimization of addr compare
-Content-Type: text/plain; charset="UTF-8"
+Received: from ring0.de ([91.143.88.219]:39873 "EHLO smtp.ring0.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756540Ab3LFAWm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Dec 2013 19:22:42 -0500
+From: Sebastian Reichel <sre@debian.org>
+To: Sebastian Reichel <sre@ring0.de>, Luciano Coelho <luca@coelho.fi>,
+	Tony Lindgren <tony@atomide.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Rob Herring <rob.herring@calxeda.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Rob Landley <rob@landley.net>,
+	Kumar Gala <galak@codeaurora.org>, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-omap@vger.kernel.org, netdev@vger.kernel.org,
+	Sebastian Reichel <sre@debian.org>
+Subject: [PATCHv2 4/5] wl1251: spi: add device tree support
+Date: Fri,  6 Dec 2013 01:22:15 +0100
+Message-Id: <1386289336-26704-5-git-send-email-sre@debian.org> (sfid-20131206_012303_445582_A28A8633)
+In-Reply-To: <1386289336-26704-1-git-send-email-sre@debian.org>
+References: <1382890469-25286-1-git-send-email-sre@debian.org>
+ <1386289336-26704-1-git-send-email-sre@debian.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the possibly more efficient ether_addr_equal
-to instead of memcmp.
+Add device tree support for the spi variant of wl1251.
 
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Signed-off-by: Wang Weidong <wangweidong1@huawei.com>
-Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+Signed-off-by: Sebastian Reichel <sre@debian.org>
 ---
- net/mac80211/iface.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ti/wl1251/spi.c | 23 +++++++++++++++++------
+ 1 file changed, 17 insertions(+), 6 deletions(-)
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 7aa9f9d..a4f9812 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1497,8 +1497,8 @@ static void ieee80211_assign_perm_addr(struct ieee80211_local *local,
- 			bool used = false;
+diff --git a/drivers/net/wireless/ti/wl1251/spi.c b/drivers/net/wireless/ti/wl1251/spi.c
+index 0a8aacc..b06d36d 100644
+--- a/drivers/net/wireless/ti/wl1251/spi.c
++++ b/drivers/net/wireless/ti/wl1251/spi.c
+@@ -27,6 +27,8 @@
+ #include <linux/spi/spi.h>
+ #include <linux/wl12xx.h>
+ #include <linux/gpio.h>
++#include <linux/of.h>
++#include <linux/of_gpio.h>
+ #include <linux/regulator/consumer.h>
  
- 			list_for_each_entry(sdata, &local->interfaces, list) {
--				if (memcmp(local->hw.wiphy->addresses[i].addr,
--					   sdata->vif.addr, ETH_ALEN) == 0) {
-+				if (ether_addr_equal(local->hw.wiphy->addresses[i].addr,
-+						     sdata->vif.addr)) {
- 					used = true;
- 					break;
- 				}
-@@ -1558,8 +1558,7 @@ static void ieee80211_assign_perm_addr(struct ieee80211_local *local,
- 			val += inc;
+ #include "wl1251.h"
+@@ -240,13 +242,13 @@ static const struct wl1251_if_operations wl1251_spi_ops = {
  
- 			list_for_each_entry(sdata, &local->interfaces, list) {
--				if (memcmp(tmp_addr, sdata->vif.addr,
--							ETH_ALEN) == 0) {
-+				if (ether_addr_equal(tmp_addr, sdata->vif.addr)) {
- 					used = true;
- 					break;
- 				}
+ static int wl1251_spi_probe(struct spi_device *spi)
+ {
+-	struct wl1251_platform_data *pdata;
++	struct wl1251_platform_data *pdata = dev_get_platdata(&spi->dev);
++	struct device_node *np = spi->dev.of_node;
+ 	struct ieee80211_hw *hw;
+ 	struct wl1251 *wl;
+ 	int ret;
+ 
+-	pdata = dev_get_platdata(&spi->dev);
+-	if (!pdata) {
++	if (!np && !pdata) {
+ 		wl1251_error("no platform data");
+ 		return -ENODEV;
+ 	}
+@@ -273,7 +275,18 @@ static int wl1251_spi_probe(struct spi_device *spi)
+ 		goto out_free;
+ 	}
+ 
+-	wl->power_gpio = pdata->power_gpio;
++	if (np) {
++		wl->use_eeprom = of_property_read_bool(np, "ti,wl1251-has-eeprom");
++		wl->power_gpio = of_get_named_gpio(np, "ti,power-gpio", 0);
++	} else if (pdata) {
++		wl->power_gpio = pdata->power_gpio;
++		wl->use_eeprom = pdata->use_eeprom;
++	}
++
++	if (wl->power_gpio == -EPROBE_DEFER) {
++		ret = -EPROBE_DEFER;
++		goto out_free;
++	}
+ 
+ 	if (gpio_is_valid(wl->power_gpio)) {
+ 		ret = devm_gpio_request_one(&spi->dev, wl->power_gpio,
+@@ -295,8 +308,6 @@ static int wl1251_spi_probe(struct spi_device *spi)
+ 		goto out_free;
+ 	}
+ 
+-	wl->use_eeprom = pdata->use_eeprom;
+-
+ 	irq_set_status_flags(wl->irq, IRQ_NOAUTOEN);
+ 	ret = devm_request_irq(&spi->dev, wl->irq, wl1251_irq, 0,
+ 							DRIVER_NAME, wl);
 -- 
-1.8.0
-
-
+1.8.4.3
 
