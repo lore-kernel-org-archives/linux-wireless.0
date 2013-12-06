@@ -1,184 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:45267 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753156Ab3LCHSp (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:41888 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752420Ab3LFLD7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Dec 2013 02:18:45 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Ujjal Roy <royujjal@gmail.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 06/12] mwifiex: fix rx_pending count imbalance
-Date: Mon, 2 Dec 2013 23:17:53 -0800
-Message-ID: <1386055079-6623-7-git-send-email-bzhao@marvell.com> (sfid-20131203_082459_625819_13406690)
-In-Reply-To: <1386055079-6623-1-git-send-email-bzhao@marvell.com>
-References: <1386055079-6623-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 6 Dec 2013 06:03:59 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 12/16] ath9k: Fix regulatory compliance
+Date: Fri,  6 Dec 2013 16:28:50 +0530
+Message-Id: <1386327534-31105-13-git-send-email-sujith@msujith.org> (sfid-20131206_120420_011569_12F2A71E)
+In-Reply-To: <1386327534-31105-1-git-send-email-sujith@msujith.org>
+References: <1386327534-31105-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ujjal Roy <royujjal@gmail.com>
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-RX packets are handled in different paths. Not all paths have
-decrement of rx_pending counter. This patch fixes the counter
-imbalance.
+Adjusting the CCA registers for maximum permissible
+noise floor in ETSI/Japan domains has to be done for
+all AR9003 family chips.
 
-Signed-off-by: Ujjal Roy <royujjal@gmail.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/mwifiex/init.c     |  3 ++-
- drivers/net/wireless/mwifiex/main.h     |  2 +-
- drivers/net/wireless/mwifiex/sta_rx.c   | 15 +++------------
- drivers/net/wireless/mwifiex/txrx.c     | 11 +++++++++--
- drivers/net/wireless/mwifiex/uap_txrx.c | 15 +++------------
- drivers/net/wireless/mwifiex/usb.c      |  4 +---
- 6 files changed, 19 insertions(+), 31 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h | 5 +++--
+ drivers/net/wireless/ath/ath9k/hw.c         | 6 +++---
+ 2 files changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
-index 6499117..1d0a817 100644
---- a/drivers/net/wireless/mwifiex/init.c
-+++ b/drivers/net/wireless/mwifiex/init.c
-@@ -643,7 +643,8 @@ mwifiex_shutdown_drv(struct mwifiex_adapter *adapter)
- 			if (priv)
- 				priv->stats.rx_dropped++;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+index 2af667b..bbbfc4d 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+@@ -341,14 +341,15 @@
+ #define AR_PHY_CCA_MAX_GOOD_VAL_9300_2GHZ     -95
+ #define AR_PHY_CCA_MAX_GOOD_VAL_9300_5GHZ     -100
  
--			adapter->if_ops.data_complete(adapter, skb);
-+			dev_kfree_skb_any(skb);
-+			adapter->if_ops.data_complete(adapter);
++#define AR_PHY_CCA_MAX_GOOD_VAL_9300_FCC_2GHZ -95
++#define AR_PHY_CCA_MAX_GOOD_VAL_9300_FCC_5GHZ -100
++
+ #define AR_PHY_CCA_NOM_VAL_9462_2GHZ          -127
+ #define AR_PHY_CCA_MIN_GOOD_VAL_9462_2GHZ     -127
+ #define AR_PHY_CCA_MAX_GOOD_VAL_9462_2GHZ     -60
+-#define AR_PHY_CCA_MAX_GOOD_VAL_9462_FCC_2GHZ -95
+ #define AR_PHY_CCA_NOM_VAL_9462_5GHZ          -127
+ #define AR_PHY_CCA_MIN_GOOD_VAL_9462_5GHZ     -127
+ #define AR_PHY_CCA_MAX_GOOD_VAL_9462_5GHZ     -60
+-#define AR_PHY_CCA_MAX_GOOD_VAL_9462_FCC_5GHZ -100
+ 
+ #define AR_PHY_CCA_NOM_VAL_9330_2GHZ          -118
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 779d38a..4ee24b1 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -548,11 +548,11 @@ static int ath9k_hw_post_init(struct ath_hw *ah)
+ 	 * EEPROM needs to be initialized before we do this.
+ 	 * This is required for regulatory compliance.
+ 	 */
+-	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
++	if (AR_SREV_9300_20_OR_LATER(ah)) {
+ 		u16 regdmn = ah->eep_ops->get_eeprom(ah, EEP_REG_0);
+ 		if ((regdmn & 0xF0) == CTL_FCC) {
+-			ah->nf_2g.max = AR_PHY_CCA_MAX_GOOD_VAL_9462_FCC_2GHZ;
+-			ah->nf_5g.max = AR_PHY_CCA_MAX_GOOD_VAL_9462_FCC_5GHZ;
++			ah->nf_2g.max = AR_PHY_CCA_MAX_GOOD_VAL_9300_FCC_2GHZ;
++			ah->nf_5g.max = AR_PHY_CCA_MAX_GOOD_VAL_9300_FCC_5GHZ;
  		}
  	}
  
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 1d72f13..dc34457 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -615,7 +615,7 @@ struct mwifiex_if_ops {
- 	void (*cleanup_mpa_buf) (struct mwifiex_adapter *);
- 	int (*cmdrsp_complete) (struct mwifiex_adapter *, struct sk_buff *);
- 	int (*event_complete) (struct mwifiex_adapter *, struct sk_buff *);
--	int (*data_complete) (struct mwifiex_adapter *, struct sk_buff *);
-+	int (*data_complete) (struct mwifiex_adapter *);
- 	int (*init_fw_port) (struct mwifiex_adapter *);
- 	int (*dnld_fw) (struct mwifiex_adapter *, struct mwifiex_fw_image *);
- 	void (*card_reset) (struct mwifiex_adapter *);
-diff --git a/drivers/net/wireless/mwifiex/sta_rx.c b/drivers/net/wireless/mwifiex/sta_rx.c
-index d74192d..0bb510d 100644
---- a/drivers/net/wireless/mwifiex/sta_rx.c
-+++ b/drivers/net/wireless/mwifiex/sta_rx.c
-@@ -188,12 +188,7 @@ int mwifiex_process_sta_rx_packet(struct mwifiex_private *priv,
- 			"wrong rx packet: len=%d, rx_pkt_offset=%d, rx_pkt_length=%d\n",
- 			skb->len, rx_pkt_offset, rx_pkt_length);
- 		priv->stats.rx_dropped++;
--
--		if (adapter->if_ops.data_complete)
--			adapter->if_ops.data_complete(adapter, skb);
--		else
--			dev_kfree_skb_any(skb);
--
-+		dev_kfree_skb_any(skb);
- 		return ret;
- 	}
- 
-@@ -247,12 +242,8 @@ int mwifiex_process_sta_rx_packet(struct mwifiex_private *priv,
- 	ret = mwifiex_11n_rx_reorder_pkt(priv, seq_num, local_rx_pd->priority,
- 					 ta, (u8) rx_pkt_type, skb);
- 
--	if (ret || (rx_pkt_type == PKT_TYPE_BAR)) {
--		if (adapter->if_ops.data_complete)
--			adapter->if_ops.data_complete(adapter, skb);
--		else
--			dev_kfree_skb_any(skb);
--	}
-+	if (ret || (rx_pkt_type == PKT_TYPE_BAR))
-+		dev_kfree_skb_any(skb);
- 
- 	if (ret)
- 		priv->stats.rx_dropped++;
-diff --git a/drivers/net/wireless/mwifiex/txrx.c b/drivers/net/wireless/mwifiex/txrx.c
-index 8f923d0..8dd145c 100644
---- a/drivers/net/wireless/mwifiex/txrx.c
-+++ b/drivers/net/wireless/mwifiex/txrx.c
-@@ -40,6 +40,7 @@ int mwifiex_handle_rx_packet(struct mwifiex_adapter *adapter,
- 		mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
- 	struct rxpd *local_rx_pd;
- 	struct mwifiex_rxinfo *rx_info = MWIFIEX_SKB_RXCB(skb);
-+	int ret;
- 
- 	local_rx_pd = (struct rxpd *) (skb->data);
- 	/* Get the BSS number from rxpd, get corresponding priv */
-@@ -58,9 +59,15 @@ int mwifiex_handle_rx_packet(struct mwifiex_adapter *adapter,
- 	rx_info->bss_type = priv->bss_type;
- 
- 	if (priv->bss_role == MWIFIEX_BSS_ROLE_UAP)
--		return mwifiex_process_uap_rx_packet(priv, skb);
-+		ret = mwifiex_process_uap_rx_packet(priv, skb);
-+	else
-+		ret = mwifiex_process_sta_rx_packet(priv, skb);
-+
-+	/* Decrement RX pending counter for each packet */
-+	if (adapter->if_ops.data_complete)
-+		adapter->if_ops.data_complete(adapter);
- 
--	return mwifiex_process_sta_rx_packet(priv, skb);
-+	return ret;
- }
- EXPORT_SYMBOL_GPL(mwifiex_handle_rx_packet);
- 
-diff --git a/drivers/net/wireless/mwifiex/uap_txrx.c b/drivers/net/wireless/mwifiex/uap_txrx.c
-index a0bd954..6c0a31a 100644
---- a/drivers/net/wireless/mwifiex/uap_txrx.c
-+++ b/drivers/net/wireless/mwifiex/uap_txrx.c
-@@ -267,12 +267,7 @@ int mwifiex_process_uap_rx_packet(struct mwifiex_private *priv,
- 			skb->len, le16_to_cpu(uap_rx_pd->rx_pkt_offset),
- 			le16_to_cpu(uap_rx_pd->rx_pkt_length));
- 		priv->stats.rx_dropped++;
--
--		if (adapter->if_ops.data_complete)
--			adapter->if_ops.data_complete(adapter, skb);
--		else
--			dev_kfree_skb_any(skb);
--
-+		dev_kfree_skb_any(skb);
- 		return 0;
- 	}
- 
-@@ -326,12 +321,8 @@ int mwifiex_process_uap_rx_packet(struct mwifiex_private *priv,
- 					 uap_rx_pd->priority, ta, pkt_type,
- 					 skb);
- 
--	if (ret || (rx_pkt_type == PKT_TYPE_BAR)) {
--		if (adapter->if_ops.data_complete)
--			adapter->if_ops.data_complete(adapter, skb);
--		else
--			dev_kfree_skb_any(skb);
--	}
-+	if (ret || (rx_pkt_type == PKT_TYPE_BAR))
-+		dev_kfree_skb_any(skb);
- 
- 	if (ret)
- 		priv->stats.rx_dropped++;
-diff --git a/drivers/net/wireless/mwifiex/usb.c b/drivers/net/wireless/mwifiex/usb.c
-index edf5b7a..a9240a2 100644
---- a/drivers/net/wireless/mwifiex/usb.c
-+++ b/drivers/net/wireless/mwifiex/usb.c
-@@ -938,11 +938,9 @@ static int mwifiex_usb_cmd_event_complete(struct mwifiex_adapter *adapter,
- 	return 0;
- }
- 
--static int mwifiex_usb_data_complete(struct mwifiex_adapter *adapter,
--				     struct sk_buff *skb)
-+static int mwifiex_usb_data_complete(struct mwifiex_adapter *adapter)
- {
- 	atomic_dec(&adapter->rx_pending);
--	dev_kfree_skb_any(skb);
- 
- 	return 0;
- }
 -- 
-1.8.2.3
+1.8.4.2
 
