@@ -1,79 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:46673 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753182Ab3LZLmP (ORCPT
+Received: from mail-pd0-f179.google.com ([209.85.192.179]:44088 "EHLO
+	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751487Ab3LFD2P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Dec 2013 06:42:15 -0500
-Message-ID: <52BC15E7.7050205@huawei.com> (sfid-20131226_124324_411680_FDE3C68F)
-Date: Thu, 26 Dec 2013 19:41:27 +0800
-From: Ding Tianhong <dingtianhong@huawei.com>
-MIME-Version: 1.0
-To: Bing Zhao <bzhao@marvell.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>, Netdev <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH v3.5 17/19] mwifiex: slight optimization of addr compare
-Content-Type: text/plain; charset="UTF-8"
+	Thu, 5 Dec 2013 22:28:15 -0500
+Received: by mail-pd0-f179.google.com with SMTP id r10so226392pdi.38
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Dec 2013 19:28:14 -0800 (PST)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
+	Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+Subject: [PATCH] wcn36xx: enable the beaconing in mesh mode
+Date: Fri,  6 Dec 2013 11:28:02 +0800
+Message-Id: <1386300482-3352-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20131206_042818_649550_BBD51130)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use possibly more efficient ether_addr_equal
-instead of memcmp.
+Enable the beaconing in wnc36xx by tweaking the tim offset and
+force the use of AP-style beaconing. Otherwise, beaconing is not
+working. The tim offset is set to 256. Otherwise, this will
+overwrite mesh beacon submitted by mac80211.
 
-Cc: Bing Zhao <bzhao@marvell.com>
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Signed-off-by: Weilong Chen <chenweilong@huawei.com>
-Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
 ---
- drivers/net/wireless/mwifiex/11n.c         | 2 +-
- drivers/net/wireless/mwifiex/sta_cmdresp.c | 3 +--
- drivers/net/wireless/mwifiex/sta_rx.c      | 2 +-
- 3 files changed, 3 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/wcn36xx/smd.c |   12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/11n.c b/drivers/net/wireless/mwifiex/11n.c
-index 0b803c0..6261f8c 100644
---- a/drivers/net/wireless/mwifiex/11n.c
-+++ b/drivers/net/wireless/mwifiex/11n.c
-@@ -483,7 +483,7 @@ mwifiex_get_ba_tbl(struct mwifiex_private *priv, int tid, u8 *ra)
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index f8c3a10..19f43de 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -1134,14 +1134,14 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
+ 		/* STA */
+ 		bss->oper_mode = 1;
+ 		bss->wcn36xx_hal_persona = WCN36XX_HAL_STA_MODE;
+-	} else if (vif->type == NL80211_IFTYPE_AP) {
++	} else if (vif->type == NL80211_IFTYPE_AP ||
++		   vif->type == NL80211_IFTYPE_MESH_POINT) {
+ 		bss->bss_type = WCN36XX_HAL_INFRA_AP_MODE;
  
- 	spin_lock_irqsave(&priv->tx_ba_stream_tbl_lock, flags);
- 	list_for_each_entry(tx_ba_tsr_tbl, &priv->tx_ba_stream_tbl_ptr, list) {
--		if (!memcmp(tx_ba_tsr_tbl->ra, ra, ETH_ALEN) &&
-+		if (ether_addr_equal_unaligned(tx_ba_tsr_tbl->ra, ra) &&
- 		    tx_ba_tsr_tbl->tid == tid) {
- 			spin_unlock_irqrestore(&priv->tx_ba_stream_tbl_lock,
- 					       flags);
-diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-index 5511946..24523e4 100644
---- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
-+++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-@@ -782,8 +782,7 @@ static int mwifiex_ret_ibss_coalescing_status(struct mwifiex_private *priv,
- 	}
+ 		/* AP */
+ 		bss->oper_mode = 0;
+ 		bss->wcn36xx_hal_persona = WCN36XX_HAL_STA_SAP_MODE;
+-	} else if (vif->type == NL80211_IFTYPE_ADHOC ||
+-		   vif->type == NL80211_IFTYPE_MESH_POINT) {
++	} else if (vif->type == NL80211_IFTYPE_ADHOC) {
+ 		bss->bss_type = WCN36XX_HAL_IBSS_MODE;
  
- 	/* If BSSID is diff, modify current BSS parameters */
--	if (memcmp(priv->curr_bss_params.bss_descriptor.mac_address,
--		   ibss_coal_resp->bssid, ETH_ALEN)) {
-+	if (!ether_addr_equal(priv->curr_bss_params.bss_descriptor.mac_address, ibss_coal_resp->bssid)) {
- 		/* BSSID */
- 		memcpy(priv->curr_bss_params.bss_descriptor.mac_address,
- 		       ibss_coal_resp->bssid, ETH_ALEN);
-diff --git a/drivers/net/wireless/mwifiex/sta_rx.c b/drivers/net/wireless/mwifiex/sta_rx.c
-index 0bb510d..4651d67 100644
---- a/drivers/net/wireless/mwifiex/sta_rx.c
-+++ b/drivers/net/wireless/mwifiex/sta_rx.c
-@@ -224,7 +224,7 @@ int mwifiex_process_sta_rx_packet(struct mwifiex_private *priv,
- 	 * directly to os. Don't pass thru rx reordering
- 	 */
- 	if (!IS_11N_ENABLED(priv) ||
--	    memcmp(priv->curr_addr, rx_pkt_hdr->eth803_hdr.h_dest, ETH_ALEN)) {
-+	    !ether_addr_equal_unaligned(priv->curr_addr, rx_pkt_hdr->eth803_hdr.h_dest)) {
- 		mwifiex_process_rx_packet(priv, skb);
- 		return ret;
- 	}
+ 		/* STA */
+@@ -1291,7 +1291,11 @@ int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct ieee80211_vif *vif,
+ 	memcpy(msg_body.bssid, vif->addr, ETH_ALEN);
+ 
+ 	/* TODO need to find out why this is needed? */
+-	msg_body.tim_ie_offset = tim_off+4;
++	if (vif->type == NL80211_IFTYPE_MESH_POINT)
++		/* mesh beacon don't need this, so push further down */
++		msg_body.tim_ie_offset = 256;
++	else
++		msg_body.tim_ie_offset = tim_off+4;
+ 	msg_body.p2p_ie_offset = p2p_off;
+ 	PREPARE_HAL_BUF(wcn->hal_buf, msg_body);
+ 
 -- 
-1.8.0
-
+1.7.9.5
 
