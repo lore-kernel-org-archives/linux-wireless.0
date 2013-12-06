@@ -1,84 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f42.google.com ([74.125.83.42]:38311 "EHLO
-	mail-ee0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753911Ab3LaQ7a (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:52740 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752661Ab3LFLDp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Dec 2013 11:59:30 -0500
-Received: by mail-ee0-f42.google.com with SMTP id e53so5569039eek.15
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Dec 2013 08:59:29 -0800 (PST)
-Message-ID: <52C2F7EA.3050600@gmail.com> (sfid-20131231_175935_370853_EAB7FE0F)
-Date: Tue, 31 Dec 2013 18:59:22 +0200
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-MIME-Version: 1.0
-To: John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "ilw@linux.intel.com" <ilw@linux.intel.com>
-Subject: pull request: iwlwifi 2013 12 31
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="I8OknrOiF7Rw0a6A60OLk8Q6bj5mKOebT"
+	Fri, 6 Dec 2013 06:03:45 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 02/16] ath9k: Initialize baseband for DFS channels
+Date: Fri,  6 Dec 2013 16:28:40 +0530
+Message-Id: <1386327534-31105-3-git-send-email-sujith@msujith.org> (sfid-20131206_120351_263222_90A90B9C)
+In-Reply-To: <1386327534-31105-1-git-send-email-sujith@msujith.org>
+References: <1386327534-31105-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---I8OknrOiF7Rw0a6A60OLk8Q6bj5mKOebT
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Hi John,
+Certain baseband registers require different values
+to be programmed when operating in a DFS channel to
+ensure that radar detection works correctly. This
+is required for AR9300, AR9340 and AR9580.
 
-This is a pull request intended for 3.13.
-It only includes new device IDs so it's not vital. If you have a pull
-request to net.git anyway, I'd happy to have this in. If not, I'll CC
-stable later.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c  | 6 ++++++
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c | 6 ++++++
+ drivers/net/wireless/ath/ath9k/hw.h         | 1 +
+ 3 files changed, 13 insertions(+)
 
-Thanks!
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+index d8c1eee..4e8ae4a 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+@@ -152,6 +152,8 @@ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
+ 			       ar9340Modes_fast_clock_1p0);
+ 		INIT_INI_ARRAY(&ah->iniCckfirJapan2484,
+ 			       ar9340_1p0_baseband_core_txfir_coeff_japan_2484);
++		INIT_INI_ARRAY(&ah->ini_dfs,
++			       ar9340_1p0_baseband_postamble_dfs_channel);
+ 
+ 		if (!ah->is_clk_25mhz)
+ 			INIT_INI_ARRAY(&ah->iniAdditional,
+@@ -340,6 +342,8 @@ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
+ 			       ar9580_1p0_modes_fast_clock);
+ 		INIT_INI_ARRAY(&ah->iniCckfirJapan2484,
+ 			       ar9580_1p0_baseband_core_txfir_coeff_japan_2484);
++		INIT_INI_ARRAY(&ah->ini_dfs,
++			       ar9580_1p0_baseband_postamble_dfs_channel);
+ 	} else if (AR_SREV_9565_11_OR_LATER(ah)) {
+ 		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_CORE],
+ 			       ar9565_1p1_mac_core);
+@@ -458,6 +462,8 @@ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
+ 			       ar9300Modes_fast_clock_2p2);
+ 		INIT_INI_ARRAY(&ah->iniCckfirJapan2484,
+ 			       ar9300_2p2_baseband_core_txfir_coeff_japan_2484);
++		INIT_INI_ARRAY(&ah->ini_dfs,
++			       ar9300_2p2_baseband_postamble_dfs_channel);
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index 39b71b3..9f051a0 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -1332,6 +1332,7 @@ static void ar9003_hw_ani_cache_ini_regs(struct ath_hw *ah)
+ static void ar9003_hw_set_radar_params(struct ath_hw *ah,
+ 				       struct ath_hw_radar_conf *conf)
+ {
++	unsigned int regWrites = 0;
+ 	u32 radar_0 = 0, radar_1 = 0;
+ 
+ 	if (!conf) {
+@@ -1358,6 +1359,11 @@ static void ar9003_hw_set_radar_params(struct ath_hw *ah,
+ 		REG_SET_BIT(ah, AR_PHY_RADAR_EXT, AR_PHY_RADAR_EXT_ENA);
+ 	else
+ 		REG_CLR_BIT(ah, AR_PHY_RADAR_EXT, AR_PHY_RADAR_EXT_ENA);
++
++	if (AR_SREV_9300(ah) || AR_SREV_9340(ah) || AR_SREV_9580(ah)) {
++		REG_WRITE_ARRAY(&ah->ini_dfs,
++				IS_CHAN_HT40(ah->curchan) ? 2 : 1, regWrites);
++	}
+ }
+ 
+ static void ar9003_hw_set_radar_conf(struct ath_hw *ah)
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index e508436..7490047 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -864,6 +864,7 @@ struct ath_hw {
+ 	u32 gpio_mask;
+ 	u32 gpio_val;
+ 
++	struct ar5416IniArray ini_dfs;
+ 	struct ar5416IniArray iniModes;
+ 	struct ar5416IniArray iniCommon;
+ 	struct ar5416IniArray iniBB_RfGain;
+-- 
+1.8.4.2
 
-The following changes since commit 3c5da7eefce5835acfc73ebd0a4f961cdae4ae=
-67:
-
-  iwlwifi: mvm: use a cast to calculate the last seqno from the next one
-(2013-11-25 23:00:21 +0200)
-
-are available in the git repository at:
-
-
-git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git
-for=3Djohn
-
-for you to fetch changes up to efc5520c4224479967b7381775a63fb48283b082:
-
-  iwlwifi: add new devices for 7265 series (2013-12-31 17:32:20 +0200)
-
-----------------------------------------------------------------
-Oren Givon (1):
-      iwlwifi: add new devices for 7265 series
-
- drivers/net/wireless/iwlwifi/pcie/drv.c |   10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
-
-
---I8OknrOiF7Rw0a6A60OLk8Q6bj5mKOebT
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJSwvfsAAoJEC0Llv5uNjIBxF0P/AsoNtU0QtgApEwhk8pMmCvY
-PRZ6WeuW0OvbIzXzsKlXeiUg4Rzz9639vcy8V8LKF9TYgTVKzO1uoHQZevA3VaST
-t5BtMHFpiNZ3p+5yCh9oPSNWNtFygHMjJ00+r9GGOCAabquBjSisvJIFUxxwFgfK
-5GkzIajx/te0RDz0y+QS4n8h8ZnW0N/o4yDyBASxgxextecw6XmCSSS1ghLW4pgr
-IfIE8KptDUMcelIItXa0En0+34SZlcnzJOOPg73EcxXEeVo3aut1vPpqIiAS3+bo
-THFaUHU6wr3gWvC981a2QORueg1QJmUGjmm670KjGsq4UJC71vCIepAp6wzdXawC
-WHcMjycVEwX0P5sLSXis/cswNo0cuuv5C1Nn45vzAfS+4119/U5ICM1c5SM5ynhz
-ePHn7J7AXJvQ/ejy3AIhoeNpl67A+WqyBmqpTX4RsAppEvgIzHAPHlXzHBxHFfSJ
-eVf01LSoyc6VhTMhfo2x+WKldyjA/aliiHoiy6iOE+lkQLmGRSBb3kHcGfEGGTaO
-6QupY4hhiw5X+e/lHGTGZ/Id+C5KlIScoRh+EYNuJUN3oxXjDLYUQm9IOF1aPC4a
-lYgva5OgTo3xsDuT6m0QiieoZRPx+qrIbr+XBKhMqW+Yja0PFIwaGxStvSEYL75S
-D9fiW1SK8VieJCwkTqsr
-=sC9u
------END PGP SIGNATURE-----
-
---I8OknrOiF7Rw0a6A60OLk8Q6bj5mKOebT--
