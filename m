@@ -1,78 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:37279 "EHLO
-	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756206Ab3L3RTG (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:42072 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752661Ab3LFLDo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Dec 2013 12:19:06 -0500
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: Johannes Berg <johannes.berg@intel.com>
-Cc: kernel-janitors@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 4/11]  use ether_addr_equal_64bits
-Date: Mon, 30 Dec 2013 19:15:00 +0100
-Message-Id: <1388427307-8691-5-git-send-email-Julia.Lawall@lip6.fr> (sfid-20131230_182319_112673_F481A1D3)
-In-Reply-To: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>
-References: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>
+	Fri, 6 Dec 2013 06:03:44 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 01/16] ath9k: Add initval arrays for DFS channels
+Date: Fri,  6 Dec 2013 16:28:39 +0530
+Message-Id: <1386327534-31105-2-git-send-email-sujith@msujith.org> (sfid-20131206_120347_367364_BC7BA0E3)
+In-Reply-To: <1386327534-31105-1-git-send-email-sujith@msujith.org>
+References: <1386327534-31105-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <Julia.Lawall@lip6.fr>
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Ether_addr_equal_64bits is more efficient than ether_addr_equal, and can be
-used when each argument is an array within a structure that contains at
-least two bytes of data beyond the array.
-
-The structures involved are:
-iwl_rxon_cmd defined in drivers/net/wireless/iwlwifi/dvm/commands.h and
-ieee80211_hdr defined in include/linux/ieee80211.h
-
-This was done using Coccinelle (http://coccinelle.lip6.fr/).
-
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
-The semantic patch used is rather long and can be found in message 0 of
-this patch series.
+ drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h |  7 +++++++
+ drivers/net/wireless/ath/ath9k/ar9340_initvals.h     |  2 ++
+ drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h | 13 +++++++++++--
+ 3 files changed, 20 insertions(+), 2 deletions(-)
 
- drivers/net/wireless/iwlwifi/dvm/rx.c   |    4 ++--
- drivers/net/wireless/iwlwifi/dvm/rxon.c |    8 ++++----
- 2 files changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/dvm/rxon.c b/drivers/net/wireless/iwlwifi/dvm/rxon.c
-index d7ce2f1..0439dd5 100644
---- a/drivers/net/wireless/iwlwifi/dvm/rxon.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/rxon.c
-@@ -875,10 +875,10 @@ static int iwl_full_rxon_required(struct iwl_priv *priv,
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
+index e7cdf11..97b4bd1 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
+@@ -1745,4 +1745,11 @@ static const u32 ar9300_2p2_baseband_core_txfir_coeff_japan_2484[][2] = {
+ 	{0x0000a3a0, 0xca9228ee},
+ };
  
- 	/* These items are only settable from the full RXON command */
- 	CHK(!iwl_is_associated_ctx(ctx));
--	CHK(!ether_addr_equal(staging->bssid_addr, active->bssid_addr));
--	CHK(!ether_addr_equal(staging->node_addr, active->node_addr));
--	CHK(!ether_addr_equal(staging->wlap_bssid_addr,
--			      active->wlap_bssid_addr));
-+	CHK(!ether_addr_equal_64bits(staging->bssid_addr, active->bssid_addr));
-+	CHK(!ether_addr_equal_64bits(staging->node_addr, active->node_addr));
-+	CHK(!ether_addr_equal_64bits(staging->wlap_bssid_addr,
-+				     active->wlap_bssid_addr));
- 	CHK_NEQ(staging->dev_type, active->dev_type);
- 	CHK_NEQ(staging->channel, active->channel);
- 	CHK_NEQ(staging->air_propagation, active->air_propagation);
-diff --git a/drivers/net/wireless/iwlwifi/dvm/rx.c b/drivers/net/wireless/iwlwifi/dvm/rx.c
-index d71776d..d18570b 100644
---- a/drivers/net/wireless/iwlwifi/dvm/rx.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/rx.c
-@@ -780,8 +780,8 @@ static void iwlagn_pass_packet_to_mac80211(struct iwl_priv *priv,
- 	*/
- 	if (unlikely(ieee80211_is_beacon(fc) && priv->passive_no_rx)) {
- 		for_each_context(priv, ctx) {
--			if (!ether_addr_equal(hdr->addr3,
--					      ctx->active.bssid_addr))
-+			if (!ether_addr_equal_64bits(hdr->addr3,
-+						     ctx->active.bssid_addr))
- 				continue;
- 			iwlagn_lift_passive_no_rx(priv);
- 		}
++static const u32 ar9300_2p2_baseband_postamble_dfs_channel[][3] = {
++	/* Addr      5G          2G        */
++	{0x00009824, 0x5ac668d0, 0x5ac668d0},
++	{0x00009e0c, 0x6d4000e2, 0x6d4000e2},
++	{0x00009e14, 0x37b9625e, 0x37b9625e},
++};
++
+ #endif /* INITVALS_9003_2P2_H */
+diff --git a/drivers/net/wireless/ath/ath9k/ar9340_initvals.h b/drivers/net/wireless/ath/ath9k/ar9340_initvals.h
+index 7f22cb2..a01f0ed 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9340_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9340_initvals.h
+@@ -30,6 +30,8 @@
+ 
+ #define ar9340_1p0_baseband_core_txfir_coeff_japan_2484 ar9300_2p2_baseband_core_txfir_coeff_japan_2484
+ 
++#define ar9340_1p0_baseband_postamble_dfs_channel ar9300_2p2_baseband_postamble_dfs_channel
++
+ static const u32 ar9340_1p0_radio_postamble[][5] = {
+ 	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
+ 	{0x000160ac, 0xa4646800, 0xa4646800, 0xa4646800, 0xa4646800},
+diff --git a/drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h
+index 75bef11..e6aec2c 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h
+@@ -57,8 +57,6 @@ static const u32 ar9580_1p0_baseband_core[][2] = {
+ 	{0x00009804, 0xfd14e000},
+ 	{0x00009808, 0x9c0a9f6b},
+ 	{0x0000980c, 0x04900000},
+-	{0x00009814, 0x3280c00a},
+-	{0x00009818, 0x00000000},
+ 	{0x0000981c, 0x00020028},
+ 	{0x00009834, 0x6400a190},
+ 	{0x00009838, 0x0108ecff},
+@@ -1133,6 +1131,8 @@ static const u32 ar9580_1p0_rx_gain_table[][2] = {
+ static const u32 ar9580_1p0_baseband_postamble[][5] = {
+ 	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
+ 	{0x00009810, 0xd00a8005, 0xd00a8005, 0xd00a8011, 0xd00a8011},
++	{0x00009814, 0x3280c00a, 0x3280c00a, 0x3280c00a, 0x3280c00a},
++	{0x00009818, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+ 	{0x00009820, 0x206a022e, 0x206a022e, 0x206a012e, 0x206a012e},
+ 	{0x00009824, 0x5ac640d0, 0x5ac640d0, 0x5ac640d0, 0x5ac640d0},
+ 	{0x00009828, 0x06903081, 0x06903081, 0x06903881, 0x06903881},
+@@ -1207,4 +1207,13 @@ static const u32 ar9580_1p0_pcie_phy_pll_on_clkreq[][2] = {
+ 	{0x00004044, 0x00000000},
+ };
+ 
++static const u32 ar9580_1p0_baseband_postamble_dfs_channel[][3] = {
++	/* Addr      5G          2G        */
++	{0x00009814, 0x3400c00f, 0x3400c00f},
++	{0x00009824, 0x5ac668d0, 0x5ac668d0},
++	{0x00009828, 0x06903080, 0x06903080},
++	{0x00009e0c, 0x6d4000e2, 0x6d4000e2},
++	{0x00009e14, 0x37b9625e, 0x37b9625e},
++};
++
+ #endif /* INITVALS_9580_1P0_H */
+-- 
+1.8.4.2
+
