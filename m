@@ -1,54 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:39146 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752075Ab3LBOtK (ORCPT
+Received: from mail-pb0-f45.google.com ([209.85.160.45]:54358 "EHLO
+	mail-pb0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751977Ab3LFBxk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Dec 2013 09:49:10 -0500
-Message-ID: <1385995738.20277.4.camel@jlt4.sipsolutions.net> (sfid-20131202_154942_691295_8B570393)
-Subject: Re: [PATCH] net: mac80211: tx.c: be sure of 'sdata->vif.type' must
- be NL80211_IFTYPE_AP when be in NL80211_IFTYPE_AP case
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Joe Perches <joe@perches.com>
-Cc: Chen Gang <gang.chen.5i5j@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	rkuo <rkuo@codeaurora.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	David Miller <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
-Date: Mon, 02 Dec 2013 15:48:58 +0100
-In-Reply-To: <1385937499.2664.21.camel@joe-AO722>
-References: <528AEFB7.4060301@gmail.com>
-	 <20131125011938.GB18921@codeaurora.org> <5292B845.3010404@gmail.com>
-	 <5292B8A0.7020409@gmail.com> <5294255E.7040105@gmail.com>
-	 <52957ADA.2080704@gmail.com>
-	 (sfid-20131127_055211_558798_A7DF5684) <1385739487.8656.1.camel@jlt4.sipsolutions.net>
-	 <5299D306.7070701@gmail.com>
-	 (sfid-20131130_125901_519610_EDA4068E) <1385816013.4327.1.camel@jlt4.sipsolutions.net>
-	 <5299ED38.4090509@gmail.com> <5299EFDD.6060405@gmail.com>
-	 (sfid-20131130_150205_984535_068F14A9) <1385842134.6108.4.camel@jlt4.sipsolutions.net>
-	 <1385843940.2664.4.camel@joe-AO722>
-	 <1385890523.4171.1.camel@jlt4.sipsolutions.net>
-	 <1385937499.2664.21.camel@joe-AO722>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 5 Dec 2013 20:53:40 -0500
+Received: by mail-pb0-f45.google.com with SMTP id rp16so107995pbb.4
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Dec 2013 17:53:39 -0800 (PST)
+From: Javier Lopez <jlopex@cozybit.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net, j@w1.fi,
+	danicamps81@yahoo.com, Javier Lopez <jlopex@cozybit.com>
+Subject: [PATCH] mac80211_hwsim: Fix NULL pointer dereference
+Date: Thu,  5 Dec 2013 17:53:26 -0800
+Message-Id: <1386294806-18083-1-git-send-email-jlopex@cozybit.com> (sfid-20131206_025343_415862_CB33E533)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2013-12-01 at 14:38 -0800, Joe Perches wrote:
-> On Sun, 2013-12-01 at 10:35 +0100, Johannes Berg wrote:
-> > Good try, but no, now ap_sdata isn't even assigned. :)
-> 
-> Right.  Oh well.  There's no improving this without
-> significant rewrite.  Even then, there may not be much
-> overall improvement.
+mac80211_hwsim was crashing when receiving tx information from user
+space. Crash happens because txi->rate_driver_data[0] is pointing to a
+non valid memory address.
 
-I could see an improvement if we were to actually make changes to assign
-the pointer based on the iftype, when that changes, so that each
-function only has to handle the right type and we don't need the switch
-statement at all...
+This code path is only used by wmediumd and wmediumd doesn't provide
+multiple channel support, so we can update txi->rate_driver_data[0]
+to point to the mac80211_hwsim_data channel information struct
+(data2->channel).
 
-But that's tricky to get right and I'm between vacations and holidays
-and all that ...
+Signed-off-by: Javier Lopez <jlopex@cozybit.com>
+---
+ drivers/net/wireless/mac80211_hwsim.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-johannes
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 9c0cc8d..eddf7bf 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -2013,6 +2013,7 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
+ 	}
+ 
+ 	txi->status.ack_signal = nla_get_u32(info->attrs[HWSIM_ATTR_SIGNAL]);
++	txi->rate_driver_data[0] = data2->channel;
+ 
+ 	if (!(hwsim_flags & HWSIM_TX_CTL_NO_ACK) &&
+ 	   (hwsim_flags & HWSIM_TX_STAT_ACK)) {
+-- 
+1.7.9.5
 
