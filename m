@@ -1,52 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from webmail.solarflare.com ([12.187.104.25]:14316 "EHLO
-	webmail.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750873Ab3LKUor (ORCPT
+Received: from smtprelay0151.hostedemail.com ([216.40.44.151]:55714 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754671Ab3LGWzc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Dec 2013 15:44:47 -0500
-Message-ID: <1386794680.1516.249.camel@bwh-desktop.uk.level5networks.com> (sfid-20131211_214451_003969_452989DC)
-Subject: Re: [PATCH v2 01/16] wl1251: fix scan behaviour while not associated
-From: Ben Hutchings <bhutchings@solarflare.com>
-To: Pali =?ISO-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
-CC: Kalle Valo <kvalo@adurom.com>, Pavel Machek <pavel@ucw.cz>,
-	"Luciano Coelho" <luca@coelho.fi>,
+	Sat, 7 Dec 2013 17:55:32 -0500
+Message-ID: <1386456926.31845.57.camel@joe-AO722> (sfid-20131207_235549_204524_E361F6EC)
+Subject: Re: [net] nfc: Fix FSF address in file headers
+From: Joe Perches <joe@perches.com>
+To: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <freemangordon@abv.bg>,
-	<aaro.koskinen@iki.fi>, <sre@ring0.de>,
-	<joni.lapilainen@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Felipe Contreras <felipe.contreras@gmail.com>,
-	David Gnedt <david.gnedt@davizone.at>
-Date: Wed, 11 Dec 2013 20:44:40 +0000
-In-Reply-To: <201312101808.44713@pali>
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
-	 <20131210092114.GB22756@amd.pavel.ucw.cz>
-	 <8738m0r9wv.fsf@purkki.adurom.net> <201312101808.44713@pali>
-Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
+	linux-wireless@vger.kernel.org,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Date: Sat, 07 Dec 2013 14:55:26 -0800
+In-Reply-To: <1386456552.2195.52.camel@jtkirshe-mobl>
+References: <1386348976-24657-1-git-send-email-jeffrey.t.kirsher@intel.com>
+	 <52A39F18.8080202@broadcom.com> <1386456552.2195.52.camel@jtkirshe-mobl>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-12-10 at 18:08 +0100, Pali Rohár wrote:
-> On Tuesday 10 December 2013 16:41:04 Kalle Valo wrote:
-> > Pavel Machek <pavel@ucw.cz> writes:
-> > > ssids can have \0s in them... and what is worse, they may
-> > > not be 0 terminated AFAICT.
-> > > 
-> > > Potential solution is at
-> > > http://www.spinics.net/lists/linux-wireless/msg98640.html .
+On Sat, 2013-12-07 at 14:49 -0800, Jeff Kirsher wrote:
+> On Sat, 2013-12-07 at 23:20 +0100, Arend van Spriel wrote:
+> > On 12/06/2013 05:56 PM, Jeff Kirsher wrote:
+> > > Several files refer to an old address for the Free Software Foundation
+> > > in the file header comment.  Resolve by replacing the address with
+> > > the URL<http://www.gnu.org/licenses/>  so that we do not have to keep
+> > > updating the header comments anytime the address changes.
 > > 
-> > I just use print_hex_dump_bytes() to print SSIDs.
+> > This seems to pop up from time to time and unfortunately the resolution 
+> > seems not consistent at those times. Why not simply refer to the full 
+> > license text that is in the COPYING file in the tree itself.
 > 
-> Ok and has kernel printf modifier for size_t?
+> I, personally have only had one request in the last 10 years to change
+> our Intel Wired Ethernet headers and that was because the address
+> changed.  I am open to suggestions, although when I proposed either
+> updating the address to the current address or use the URL on LKML and
+> netdev, the response I got was to update to the use the URL.
+> 
+> I guess the only argument I would have against referring to the COPYING
+> in the tree itself is that the headers already state:
+> 
+> You should have received a copy of the GNU General Public License along
+> with this program;
+> 
+> (which refers to the COPYING file) and then it states...
+> 
+> if not, write to the Free Software Foundation, Inc.,
+> 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
+> 
+> This is the second part that needs cleanup if the file refers to the old
+> address.  So just by removing the address and providing the URL, you are
+> providing a place that users can get the license *if* the COPYING file
+> gets removed (or altered) by who ever releases the kernel.
 
-It is 'z', same as in userland.
+Hi Jeff.
 
-Ben.
+I think what you've done is fine, but remember that
+URLs come and go too.
 
--- 
-Ben Hutchings, Staff Engineer, Solarflare
-Not speaking for my employer; that's the marketing department's job.
-They asked us to note that Solarflare product names are trademarked.
+There was a discussion about this just a bit ago on lkml
+https://lkml.org/lkml/2013/10/6/158
+and this message was added to checkpatch recently:
+
+"Do not include the paragraph about writing to the Free Software
+Foundation's mailing address from the sample GPL notice. The FSF has
+changed addresses in the past, and may do so again. Linux already
+includes a copy of the GPL.\n"
+
 
