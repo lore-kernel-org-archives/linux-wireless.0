@@ -1,106 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:36142 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752665Ab3LRE2c (ORCPT
+Received: from mail-we0-f182.google.com ([74.125.82.182]:59003 "EHLO
+	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753700Ab3LGCSx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Dec 2013 23:28:32 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 06/10] ath9k: Fix regulatory compliance
-Date: Wed, 18 Dec 2013 09:53:23 +0530
-Message-Id: <1387340607-20045-7-git-send-email-sujith@msujith.org> (sfid-20131218_052857_845743_C8479872)
-In-Reply-To: <1387340607-20045-1-git-send-email-sujith@msujith.org>
-References: <1387340607-20045-1-git-send-email-sujith@msujith.org>
+	Fri, 6 Dec 2013 21:18:53 -0500
+Received: by mail-we0-f182.google.com with SMTP id q59so1406175wes.41
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Dec 2013 18:18:52 -0800 (PST)
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@gmail.com, jirislaby@gmail.com,
+	klebanov@kit.edu, Nick Kossifidis <mickflemm@gmail.com>
+Subject: [PATCH] ath5k: Reset Tx interrupt bits also on PISR
+Date: Sat,  7 Dec 2013 02:17:40 +0000
+Message-Id: <1386382660-5040-1-git-send-email-mickflemm@gmail.com> (sfid-20131207_031857_542225_E30A94AE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Some cards don't update the PISR properly when all SISR bits
+for Tx interrupts are being cleared and as a result we get
+interrupt storm. Since we handle all tx queues all together
+(so we don't really use the SISR bits to do per-queue interrupt
+handling), we can manualy update PISR by doing a write-to-clear
+on its Tx interrupt bits.
 
-To comply with ETSI regulations, make sure that
-the CCA registers are programmed with the threshold
-values from the EEPROM/Caldata. A new field is used
-to indicate if the card has been calibrated with the
-required threshold information.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 32 ++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/ar9003_phy.h    |  4 +++-
- 2 files changed, 35 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath5k/dma.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index d9e09bf..c8d22ec 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -4121,6 +4121,37 @@ static void ar9003_hw_thermo_cal_apply(struct ath_hw *ah)
- 	}
- }
+diff --git a/drivers/net/wireless/ath/ath5k/dma.c b/drivers/net/wireless/ath/ath5k/dma.c
+index ce86f15..84c01c5 100644
+--- a/drivers/net/wireless/ath/ath5k/dma.c
++++ b/drivers/net/wireless/ath/ath5k/dma.c
+@@ -616,7 +616,16 @@ ath5k_hw_get_isr(struct ath5k_hw *ah, enum ath5k_int *interrupt_mask)
+ 		 * SISRs will also clear PISR so no need to worry here.
+ 		 */
  
-+static void ar9003_hw_apply_minccapwr_thresh(struct ath_hw *ah,
-+					     bool is2ghz)
-+{
-+	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
-+	const u_int32_t cca_ctrl[AR9300_MAX_CHAINS] = {
-+		AR_PHY_CCA_CTRL_0,
-+		AR_PHY_CCA_CTRL_1,
-+		AR_PHY_CCA_CTRL_2,
-+	};
-+	int chain;
-+	u32 val;
-+
-+	if (is2ghz) {
-+		if (!(eep->base_ext1.misc_enable & BIT(2)))
-+			return;
-+	} else {
-+		if (!(eep->base_ext1.misc_enable & BIT(3)))
-+			return;
-+	}
-+
-+	for (chain = 0; chain < AR9300_MAX_CHAINS; chain++) {
-+		if (!(ah->caps.tx_chainmask & BIT(chain)))
-+			continue;
-+
-+		val = ar9003_modal_header(ah, is2ghz)->noiseFloorThreshCh[chain];
-+		REG_RMW_FIELD(ah, cca_ctrl[chain],
-+			      AR_PHY_EXT_CCA0_THRESH62_1, val);
-+	}
-+
-+}
-+
- static void ath9k_hw_ar9300_set_board_values(struct ath_hw *ah,
- 					     struct ath9k_channel *chan)
- {
-@@ -4135,6 +4166,7 @@ static void ath9k_hw_ar9300_set_board_values(struct ath_hw *ah,
- 	if (!AR_SREV_9330(ah) && !AR_SREV_9340(ah))
- 		ar9003_hw_internal_regulator_apply(ah);
- 	ar9003_hw_apply_tuning_caps(ah);
-+	ar9003_hw_apply_minccapwr_thresh(ah, chan);
- 	ar9003_hw_txend_to_xpa_off_apply(ah, is2ghz);
- 	ar9003_hw_thermometer_apply(ah);
- 	ar9003_hw_thermo_cal_apply(ah);
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-index bbbfc4d..1b44171 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-@@ -270,7 +270,7 @@
- #define AR_PHY_AGC              (AR_AGC_BASE + 0x14)
- #define AR_PHY_EXT_ATTEN_CTL_0  (AR_AGC_BASE + 0x18)
- #define AR_PHY_CCA_0            (AR_AGC_BASE + 0x1c)
--#define AR_PHY_EXT_CCA0         (AR_AGC_BASE + 0x20)
-+#define AR_PHY_CCA_CTRL_0       (AR_AGC_BASE + 0x20)
- #define AR_PHY_RESTART          (AR_AGC_BASE + 0x24)
+-		pisr_clear = pisr & ~AR5K_ISR_BITS_FROM_SISRS;
++		/* XXX: There seems to be  an issue on some cards
++		 *	with tx interrupt flags not being updated
++		 *	on PISR despite that all Tx interrupt bits
++		 * 	are cleared on SISRs. Since we handle all
++		 *	Tx queues all together it shouldn't be an
++		 *	issue if we clear Tx interrupt flags also
++		 * 	on PISR to avoid that.
++		 */
++		pisr_clear = (pisr & ~AR5K_ISR_BITS_FROM_SISRS) |
++					(pisr & AR5K_INT_TX_ALL);
  
- /*
-@@ -398,6 +398,8 @@
- #define AR9280_PHY_CCA_THRESH62_S   12
- #define AR_PHY_EXT_CCA0_THRESH62    0x000000FF
- #define AR_PHY_EXT_CCA0_THRESH62_S  0
-+#define AR_PHY_EXT_CCA0_THRESH62_1    0x000001FF
-+#define AR_PHY_EXT_CCA0_THRESH62_1_S  0
- #define AR_PHY_CCK_DETECT_WEAK_SIG_THR_CCK          0x0000003F
- #define AR_PHY_CCK_DETECT_WEAK_SIG_THR_CCK_S        0
- #define AR_PHY_CCK_DETECT_ANT_SWITCH_TIME           0x00001FC0
+ 		/*
+ 		 * Write to clear them...
 -- 
-1.8.5.1
+1.8.4.4
 
