@@ -1,88 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from webmail.solarflare.com ([12.187.104.25]:42623 "EHLO
-	webmail.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754432Ab3LHQgI (ORCPT
+Received: from mail-ea0-f170.google.com ([209.85.215.170]:42932 "EHLO
+	mail-ea0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753709Ab3LGROD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Dec 2013 11:36:08 -0500
-Message-ID: <1386520563.12186.13.camel@deadeye.wl.decadent.org.uk> (sfid-20131208_173630_417893_49649B7A)
-Subject: Re: [PATCH 03/16] wl1251: add sysfs interface for bluetooth
- coexistence mode configuration
-From: Ben Hutchings <bhutchings@solarflare.com>
-To: Pali =?ISO-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
-CC: Luciano Coelho <luca@coelho.fi>,
+	Sat, 7 Dec 2013 12:14:03 -0500
+From: Michal Nazarewicz <mina86@mina86.com>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>
+Cc: Peter Stuge <peter@stuge.se>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <freemangordon@abv.bg>,
-	<aaro.koskinen@iki.fi>, <pavel@ucw.cz>, <sre@ring0.de>,
-	<joni.lapilainen@gmail.com>, David Gnedt <david.gnedt@davizone.at>
-Date: Sun, 8 Dec 2013 16:36:03 +0000
-In-Reply-To: <201312080855.24999@pali>
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
-	 <1382819655-30430-4-git-send-email-pali.rohar@gmail.com>
-	 <1383003587.3779.49.camel@bwh-desktop.uk.level5networks.com>
-	 <201312080855.24999@pali>
-Content-Type: text/plain; charset="UTF-8"
+	ath9k-devel <ath9k-devel@lists.ath9k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH] net: wirelesse: wcn36xx: pull allocation outside of critical
+ section
+In-Reply-To: <CAFSJ42YckTDO=UV=fWG9mmVXSBYep1x6xiHahzGDcrB4dy0oOQ@mail.gmail.com>
+References: <1385744870-10164-1-git-send-email-mpn@google.com> <20131201004715.11125.qmail@stuge.se> <xa1tiov78kmp.fsf@mina86.com> <CAFSJ42YckTDO=UV=fWG9mmVXSBYep1x6xiHahzGDcrB4dy0oOQ@mail.gmail.com>
+Date: Sat, 07 Dec 2013 18:13:58 +0100
+Message-ID: <878uvw1t49.fsf@mina86.com> (sfid-20131207_181408_965410_B48D3972)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2013-12-08 at 08:55 +0100, Pali Rohár wrote:
-> On Tuesday 29 October 2013 00:39:47 Ben Hutchings wrote:
-> > On Sat, 2013-10-26 at 22:34 +0200, Pali Rohár wrote:
-> > > From: David Gnedt <david.gnedt@davizone.at>
-> > > 
-> > > Port the bt_coex_mode sysfs interface from wl1251 driver
-> > > version included in the Maemo Fremantle kernel to allow
-> > > bt-coexistence mode configuration. This enables userspace
-> > > applications to set one of the modes WL1251_BT_COEX_OFF,
-> > > WL1251_BT_COEX_ENABLE and WL1251_BT_COEX_MONOAUDIO. The
-> > > default mode is WL1251_BT_COEX_OFF.
-> > > It should be noted that this driver always enabled
-> > > bt-coexistence before and enabled bt-coexistence directly
-> > > affects the receiving performance, rendering it unusable in
-> > > some low-signal situations. Especially monitor mode is
-> > > affected very badly with bt-coexistence enabled.
-> > 
-> > [...]
-> > 
-> > This should be implemented consistently with other drivers:
-> > 
-> > drivers/net/wireless/ath/ath9k/htc_drv_init.c:module_param_nam
-> > ed(btcoex_enable, ath9k_htc_btcoex_enable, int, 0444);
-> > drivers/net/wireless/ath/ath9k/init.c:module_param_named(btco
-> > ex_enable, ath9k_btcoex_enable, int, 0444);
-> > drivers/net/wireless/b43/main.c:module_param_named(btcoex,
-> > modparam_btcoex, int, 0444);
-> > drivers/net/wireless/ipw2x00/ipw2200.c:module_param(bt_coexis
-> > t, int, 0444);
-> > drivers/net/wireless/iwlegacy/common.c:module_param(bt_coex_a
-> > ctive, bool, S_IRUGO);
-> > drivers/net/wireless/iwlwifi/iwl-drv.c:module_param_named(bt_
-> > coex_active, iwlwifi_mod_params.bt_coex_active,
-> > drivers/net/wireless/ti/wlcore/sysfs.c:static
-> > DEVICE_ATTR(bt_coex_state, S_IRUGO | S_IWUSR,
-> > 
-> > Oh, hmm, I see a problem here.
-> > 
-> > Ben.
-> 
-> So where is consitency? Each driver doing this in different way:
-> btcoex_enable, btcoex, bt_coexist, bt_coex_active
 
-Indeed, it's a bigger problem than one driver and this isn't really an
-objection to your patch.  I suppose there should be an nl80211 attribute
-to control this behaviour per-interface.  You or any other wireless
-networking developer could work on that.
+This also simplifies flow-controll as there is now only one if
+condition with a single branch.
+---
+ drivers/net/wireless/ath/wcn36xx/smd.c | 28 +++++++++++++++-------------
+ 1 file changed, 15 insertions(+), 13 deletions(-)
 
-Ben.
+On Thu, Dec 05 2013, Eugene Krasnikov <k.eugene.e@gmail.com> wrote:
+> I think code will look neater if error case will be handled in "else"
+> statement something like: [...]
 
-> Reason for this usage in wl1251 is to not break existing 
-> userspace applications.
+How about the following:
 
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index 823631c..ebab2db 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -2056,22 +2056,24 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
+ 	case WCN36XX_HAL_OTA_TX_COMPL_IND:
+ 	case WCN36XX_HAL_MISSED_BEACON_IND:
+ 	case WCN36XX_HAL_DELETE_STA_CONTEXT_IND:
+-		mutex_lock(&wcn->hal_ind_mutex);
+ 		msg_ind = kmalloc(sizeof(*msg_ind), GFP_KERNEL);
+-		if (msg_ind) {
+-			msg_ind->msg_len = len;
+-			msg_ind->msg = kmalloc(len, GFP_KERNEL);
+-			memcpy(msg_ind->msg, buf, len);
+-			list_add_tail(&msg_ind->list, &wcn->hal_ind_queue);
+-			queue_work(wcn->hal_ind_wq, &wcn->hal_ind_work);
+-			wcn36xx_dbg(WCN36XX_DBG_HAL, "indication arrived\n");
++		if (!msg_ind) {
++			/*
++			 * FIXME: Do something smarter then just
++			 * printing an error.
++			 */
++			wcn36xx_err("Run out of memory while handling SMD_EVENT (%d)\n",
++				    msg_header->msg_type);
++			break;
+ 		}
++		mutex_lock(&wcn->hal_ind_mutex);
++		msg_ind->msg_len = len;
++		msg_ind->msg = kmalloc(len, GFP_KERNEL);
++		memcpy(msg_ind->msg, buf, len);
++		list_add_tail(&msg_ind->list, &wcn->hal_ind_queue);
++		queue_work(wcn->hal_ind_wq, &wcn->hal_ind_work);
++		wcn36xx_dbg(WCN36XX_DBG_HAL, "indication arrived\n");
+ 		mutex_unlock(&wcn->hal_ind_mutex);
+-		if (msg_ind)
+-			break;
+-		/* FIXME: Do something smarter then just printing an error. */
+-		wcn36xx_err("Run out of memory while handling SMD_EVENT (%d)\n",
+-			    msg_header->msg_type);
+ 		break;
+ 	default:
+ 		wcn36xx_err("SMD_EVENT (%d) not supported\n",
 -- 
-Ben Hutchings, Staff Engineer, Solarflare
-Not speaking for my employer; that's the marketing department's job.
-They asked us to note that Solarflare product names are trademarked.
+1.8.4
 
