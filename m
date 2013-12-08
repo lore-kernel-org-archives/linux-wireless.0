@@ -1,57 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:40477 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752920Ab3LJPq6 convert rfc822-to-8bit (ORCPT
+Received: from mail-ea0-f175.google.com ([209.85.215.175]:52471 "EHLO
+	mail-ea0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751445Ab3LHJ1P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Dec 2013 10:46:58 -0500
-From: Kalle Valo <kvalo@adurom.com>
-To: Pali =?utf-8?Q?Roh=C3=A1r?= <pali.rohar@gmail.com>
-Cc: Luciano Coelho <luca@coelho.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Sun, 8 Dec 2013 04:27:15 -0500
+From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
+To: Luciano Coelho <luca@coelho.fi>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
 	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
 	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
 	joni.lapilainen@gmail.com,
 	Johannes Berg <johannes@sipsolutions.net>,
 	Felipe Contreras <felipe.contreras@gmail.com>,
-	David Gnedt <david.gnedt@davizone.at>
-Subject: Re: [PATCH v2 02/16] wl1251: add sysfs interface for bluetooth coexistence mode configuration
+	=?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
+Subject: [PATCH v2 00/16] wl1251 patches from linux-n900 tree
+Date: Sun,  8 Dec 2013 10:24:58 +0100
+Message-Id: <1386494714-21070-1-git-send-email-pali.rohar@gmail.com> (sfid-20131208_102824_955691_4885CB08)
+In-Reply-To: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
 References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
-	<1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
-	<1386494714-21070-3-git-send-email-pali.rohar@gmail.com>
-Date: Tue, 10 Dec 2013 17:46:54 +0200
-In-Reply-To: <1386494714-21070-3-git-send-email-pali.rohar@gmail.com> ("Pali
-	=?utf-8?Q?Roh=C3=A1r=22's?= message of "Sun, 8 Dec 2013 10:25:00 +0100")
-Message-ID: <87y53spv2p.fsf@purkki.adurom.net> (sfid-20131210_164703_138470_58D3E5A5)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pali Rohár <pali.rohar@gmail.com> writes:
+Hello, I'm sending wl1251 patches from linux-n900 tree [1] for comments. More
+patches come from David's monitor & packet injection work. Patches are tested
+with 3.12 rc5 kernel on Nokia N900.
 
-> From: David Gnedt <david.gnedt@davizone.at>
->
-> Port the bt_coex_mode sysfs interface from wl1251 driver version included
-> in the Maemo Fremantle kernel to allow bt-coexistence mode configuration.
-> This enables userspace applications to set one of the modes
-> WL1251_BT_COEX_OFF, WL1251_BT_COEX_ENABLE and WL1251_BT_COEX_MONOAUDIO.
-> The default mode is WL1251_BT_COEX_OFF.
-> It should be noted that this driver always enabled bt-coexistence before
-> and enabled bt-coexistence directly affects the receiving performance,
-> rendering it unusable in some low-signal situations. Especially monitor
-> mode is affected very badly with bt-coexistence enabled.
->
-> Signed-off-by: David Gnedt <david.gnedt@davizone.at>
-> Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
+Second version contains new patch for fixing NULL pointer dereference which
+sometimes cause kernel panic and fixes code suggested by Pavel Machek.
 
-I think this is also what I wrote a long time. And also this sysfs hack
-should not go to upstream.
+[1] - https://gitorious.org/linux-n900/linux-n900
 
-Over the years there has been some talk about solving the BT coex
-properly, but I haven't seen any patches. I guess the proper solution
-would be that BT subsystem in kernel would notify wireless drivers about
-BT use?
+David Gnedt (12):
+  wl1251: fix scan behaviour while not associated
+  wl1251: add sysfs interface for bluetooth coexistence mode
+    configuration
+  wl1251: retry power save entry
+  wl1251: implement hardware ARP filtering
+  wl1251: split RX and TX data path initialisation
+  wl1251: configure hardware en-/decryption for monitor mode
+  wl1251: implement multicast address filtering
+  wl1251: disable power saving in monitor mode
+  wl1251: fix channel switching in monitor mode
+  wl1251: enable tx path in monitor mode if necessary for packet
+    injection
+  wl1251: disable retry and ACK policy for injected packets
+  wl1251: enforce changed hw encryption support on monitor state change
+
+Pali Rohár (4):
+  wl1251: add nvs file name to module firmware list
+  wl1251: Add sysfs file tx_mgmt_frm_rate for setting rate
+  wl1251: Add sysfs file address for setting permanent mac address
+  wl1251: fix NULL pointer dereference
+
+ drivers/net/wireless/ti/wl1251/acx.c    |   92 +++++-
+ drivers/net/wireless/ti/wl1251/acx.h    |   34 ++-
+ drivers/net/wireless/ti/wl1251/boot.c   |    3 +-
+ drivers/net/wireless/ti/wl1251/cmd.c    |   59 +++-
+ drivers/net/wireless/ti/wl1251/cmd.h    |    8 +-
+ drivers/net/wireless/ti/wl1251/event.c  |   46 ++-
+ drivers/net/wireless/ti/wl1251/event.h  |    7 +
+ drivers/net/wireless/ti/wl1251/init.c   |   19 +-
+ drivers/net/wireless/ti/wl1251/main.c   |  462 ++++++++++++++++++++++++++++++-
+ drivers/net/wireless/ti/wl1251/rx.c     |    2 +-
+ drivers/net/wireless/ti/wl1251/tx.c     |   35 ++-
+ drivers/net/wireless/ti/wl1251/wl1251.h |   14 +
+ 12 files changed, 720 insertions(+), 61 deletions(-)
 
 -- 
-Kalle Valo
+1.7.9.5
+
