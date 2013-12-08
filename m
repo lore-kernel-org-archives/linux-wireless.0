@@ -1,53 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:45665 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752606Ab3LMTOA (ORCPT
+Received: from mail-ea0-f179.google.com ([209.85.215.179]:45439 "EHLO
+	mail-ea0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754614Ab3LHJ1a (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Dec 2013 14:14:00 -0500
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
-	yeohchunyeow@gmail.com
-Cc: yeohchunyeow@cozybit.com
-Subject: [PATCH v10 4/5] mac80211: align ieee80211_mesh_csa_beacon() with ieee80211_assign_beacon()
-Date: Fri, 13 Dec 2013 21:13:53 +0200
-Message-Id: <1386962034-7141-5-git-send-email-luciano.coelho@intel.com> (sfid-20131213_201410_034450_702216BA)
-In-Reply-To: <1386962034-7141-1-git-send-email-luciano.coelho@intel.com>
-References: <1386962034-7141-1-git-send-email-luciano.coelho@intel.com>
+	Sun, 8 Dec 2013 04:27:30 -0500
+From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
+To: Luciano Coelho <luca@coelho.fi>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
+	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
+	joni.lapilainen@gmail.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Felipe Contreras <felipe.contreras@gmail.com>,
+	David Gnedt <david.gnedt@davizone.at>,
+	=?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
+Subject: [PATCH v2 11/16] wl1251: disable retry and ACK policy for injected packets
+Date: Sun,  8 Dec 2013 10:25:09 +0100
+Message-Id: <1386494714-21070-12-git-send-email-pali.rohar@gmail.com> (sfid-20131208_103357_164357_55E1D86C)
+In-Reply-To: <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+ <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The return value of ieee80211_mesh_csa_beacon is not aligned with the
-return value of ieee80211_assign_beacon() and
-ieee80211_ibss_csa_beacon().  For consistency and to be able to use
-both functions with similar code, change ieee80211_mesh_csa_beacon()
-not to send the bss changed notification itself, but return what has
-changed so the caller can send the notification instead.
+From: David Gnedt <david.gnedt@davizone.at>
 
-Tested by: Simon Wunderlich <sw@simonwunderlich.de>
-Acked by: Simon Wunderlich <sw@simonwunderlich.de>
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Set the retry limit to 0 and disable the ACK policy for injected packets.
+
+Signed-off-by: David Gnedt <david.gnedt@davizone.at>
+Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
 ---
- net/mac80211/mesh.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/net/wireless/ti/wl1251/acx.c |    8 +++++++-
+ drivers/net/wireless/ti/wl1251/tx.c  |    7 ++++++-
+ 2 files changed, 13 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index d0c4131..f255bd9 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -1096,12 +1096,10 @@ int ieee80211_mesh_csa_beacon(struct ieee80211_sub_if_data *sdata,
- 		return ret;
+diff --git a/drivers/net/wireless/ti/wl1251/acx.c b/drivers/net/wireless/ti/wl1251/acx.c
+index f772e62..8f420d0 100644
+--- a/drivers/net/wireless/ti/wl1251/acx.c
++++ b/drivers/net/wireless/ti/wl1251/acx.c
+@@ -943,12 +943,18 @@ int wl1251_acx_rate_policies(struct wl1251 *wl)
  	}
  
--	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
--
- 	if (csa_action)
- 		ieee80211_send_action_csa(sdata, csa_settings);
+ 	/* configure one default (one-size-fits-all) rate class */
+-	acx->rate_class_cnt = 1;
++	acx->rate_class_cnt = 2;
+ 	acx->rate_class[0].enabled_rates = ACX_RATE_MASK_UNSPECIFIED;
+ 	acx->rate_class[0].short_retry_limit = ACX_RATE_RETRY_LIMIT;
+ 	acx->rate_class[0].long_retry_limit = ACX_RATE_RETRY_LIMIT;
+ 	acx->rate_class[0].aflags = 0;
  
--	return 0;
-+	return BSS_CHANGED_BEACON;
- }
++	/* no-retry rate class */
++	acx->rate_class[1].enabled_rates = ACX_RATE_MASK_UNSPECIFIED;
++	acx->rate_class[1].short_retry_limit = 0;
++	acx->rate_class[1].long_retry_limit = 0;
++	acx->rate_class[1].aflags = 0;
++
+ 	ret = wl1251_cmd_configure(wl, ACX_RATE_POLICY, acx, sizeof(*acx));
+ 	if (ret < 0) {
+ 		wl1251_warning("Setting of rate policies failed: %d", ret);
+diff --git a/drivers/net/wireless/ti/wl1251/tx.c b/drivers/net/wireless/ti/wl1251/tx.c
+index 216334d..4516180 100644
+--- a/drivers/net/wireless/ti/wl1251/tx.c
++++ b/drivers/net/wireless/ti/wl1251/tx.c
+@@ -90,8 +90,12 @@ static void wl1251_tx_control(struct tx_double_buffer_desc *tx_hdr,
+ 	/* 802.11 packets */
+ 	tx_hdr->control.packet_type = 0;
  
- static int mesh_fwd_csa_frame(struct ieee80211_sub_if_data *sdata,
+-	if (control->flags & IEEE80211_TX_CTL_NO_ACK)
++	/* Also disable retry and ACK policy for injected packets */
++	if ((control->flags & IEEE80211_TX_CTL_NO_ACK) ||
++	    (control->flags & IEEE80211_TX_CTL_INJECTED)) {
++		tx_hdr->control.rate_policy = 1;
+ 		tx_hdr->control.ack_policy = 1;
++	}
+ 
+ 	tx_hdr->control.tx_complete = 1;
+ 
+@@ -422,6 +426,7 @@ static void wl1251_tx_packet_cb(struct wl1251 *wl,
+ 	info = IEEE80211_SKB_CB(skb);
+ 
+ 	if (!(info->flags & IEEE80211_TX_CTL_NO_ACK) &&
++	    !(info->flags & IEEE80211_TX_CTL_INJECTED) &&
+ 	    (result->status == TX_SUCCESS))
+ 		info->flags |= IEEE80211_TX_STAT_ACK;
+ 
 -- 
-1.8.5.1
+1.7.9.5
 
