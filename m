@@ -1,76 +1,215 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:52480 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932718Ab3LEPmj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 10:42:39 -0500
-Message-ID: <1386258156.4182.8.camel@jlt4.sipsolutions.net> (sfid-20131205_164255_025867_67654AD4)
-Subject: Re: [PATCH v2 3/3] nl80211: add VHT support for set_bitrate_mask
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org, j@w1.fi
-Date: Thu, 05 Dec 2013 16:42:36 +0100
-In-Reply-To: <1386234137-3531-3-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131205_100230_705131_CB931FCE)
-References: <1386234137-3531-1-git-send-email-janusz.dziedzic@tieto.com>
-	 <1386234137-3531-3-git-send-email-janusz.dziedzic@tieto.com>
-	 (sfid-20131205_100230_705131_CB931FCE)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:45387 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752669Ab3LHH4l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Dec 2013 02:56:41 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [RFC] mac80211: add helper functions for tracking P2P NoA state
+Date: Sun,  8 Dec 2013 08:56:37 +0100
+Message-Id: <1386489397-49425-1-git-send-email-nbd@openwrt.org> (sfid-20131208_085644_844501_E5FC0411)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-12-05 at 10:02 +0100, Janusz Dziedzic wrote:
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ include/net/mac80211.h |  40 +++++++++++++++
+ net/mac80211/util.c    | 135 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 175 insertions(+)
 
-> +	switch (vht_mcs_map & 0x03) {
-
-I think that should be in the caller.
-
-> +	case IEEE80211_VHT_MCS_NOT_SUPPORTED:
-> +		break;
-> +	case IEEE80211_VHT_MCS_SUPPORT_0_7:
-> +		mcs_mask = 0x00FF;
-> +		break;
-> +	case IEEE80211_VHT_MCS_SUPPORT_0_8:
-> +		mcs_mask = 0x01FF;
-> +		break;
-> +	case IEEE80211_VHT_MCS_SUPPORT_0_9:
-> +		mcs_mask = 0x03FF;
-> +		break;
-> +	}
-> +
-> +	return mcs_mask;
-> +}
-> +
-> +static void vht_build_mcs_mask(u16 vht_mcs_map,
-> +			       u16 vht_mcs_mask[NL80211_VHT_NSS_MAX])
-> +{
-> +	u8 nss;
-> +
-> +	for (nss = 0; nss < NL80211_VHT_NSS_MAX; nss++) {
-> +		vht_mcs_mask[nss] = vht_mcs_map_to_mcs_mask(vht_mcs_map);
-> +		vht_mcs_map >>= 2;
-> +	}
-
-> @@ -7364,20 +7430,31 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
->  					mask.control[band].ht_mcs))
->  				return -EINVAL;
->  		}
-> +		if (tb[NL80211_TXRATE_VHT]) {
-> +			if (!vht_set_mcs_mask(
-> +					sband,
-> +					nla_data(tb[NL80211_TXRATE_VHT]),
-> +					mask.control[band].vht_mcs))
-> +				return -EINVAL;
-> +		}
->  
->  		if (mask.control[band].legacy == 0) {
-> -			/* don't allow empty legacy rates if HT
-> -			 * is not even supported. */
-> -			if (!rdev->wiphy.bands[band]->ht_cap.ht_supported)
-> +			/* don't allow empty legacy rates if HT or VHT
-> +			 * are not even supported. */
-
-comment style
-
-johannes
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 3cd408b..ae17543 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -4625,4 +4625,44 @@ bool ieee80211_tx_prepare_skb(struct ieee80211_hw *hw,
+ 			      struct ieee80211_vif *vif, struct sk_buff *skb,
+ 			      int band, struct ieee80211_sta **sta);
+ 
++/**
++ * struct ieee80211_noa_data - holds temporary data for tracking P2P NoA state
++ *
++ * @next_tsf: TSF timestamp of the next absent state change
++ * @has_next_tsf: next absent state change event pending
++ *
++ * @absent: descriptor bitmask, set if GO is currently absent
++ */
++struct ieee80211_noa_data {
++	u32 next_tsf;
++	bool has_next_tsf;
++
++	u8 absent;
++
++	u8 count[IEEE80211_P2P_NOA_DESC_MAX];
++	struct {
++		u32 start;
++		u32 duration;
++		u32 interval;
++	} desc[IEEE80211_P2P_NOA_DESC_MAX];
++};
++
++/**
++ * ieee80211_parse_p2p_noa - initialize NoA tracking data from P2P IE
++ *
++ * @attr: P2P NoA IE
++ * @data: NoA tracking data
++ * @tsf: current TSF timestamp
++ */
++int ieee80211_parse_p2p_noa(const struct ieee80211_p2p_noa_attr *attr,
++			    struct ieee80211_noa_data *data, u32 tsf);
++
++/**
++ * ieee80211_update_p2p_noa - get next pending P2P GO absent state change
++ *
++ * @data: NoA tracking data
++ * @tsf: current TSF timestamp
++ */
++void ieee80211_update_p2p_noa(struct ieee80211_noa_data *data, u32 tsf);
++
+ #endif /* MAC80211_H */
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 875e172..d6e606d 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2554,3 +2554,138 @@ int ieee80211_cs_headroom(struct ieee80211_local *local,
+ 
+ 	return headroom;
+ }
++
++static bool
++ieee80211_extend_noa_desc(struct ieee80211_noa_data *data, u32 tsf, int i)
++{
++	s32 end = data->desc[i].start + data->desc[i].duration - (tsf + 1);
++	int skip;
++
++	if (end > 0)
++		return false;
++
++	/* End time is in the past, check for repetitions */
++	skip = DIV_ROUND_UP(-end, data->desc[i].interval);
++	if (data->count[i] < 255) {
++		if (data->count[i] <= skip) {
++			data->count[i] = 0;
++			return false;
++		}
++
++		data->count[i] -= skip;
++	}
++
++	data->desc[i].start += skip * data->desc[i].interval;
++
++	return true;
++}
++
++static bool
++ieee80211_extend_absent_time(struct ieee80211_noa_data *data, u32 tsf,
++			     s32 *offset)
++{
++	bool ret = false;
++	int i;
++
++	for (i = 0; i < IEEE80211_P2P_NOA_DESC_MAX; i++) {
++		s32 cur;
++
++		if (!data->count[i])
++			continue;
++
++		if (ieee80211_extend_noa_desc(data, tsf + *offset, i))
++			ret = true;
++
++		cur = data->desc[i].start - tsf;
++		if (cur > *offset)
++			continue;
++
++		cur = data->desc[i].start + data->desc[i].duration - tsf;
++		if (cur > *offset)
++			*offset = cur;
++	}
++
++	return ret;
++}
++
++static u32
++ieee80211_get_noa_absent_time(struct ieee80211_noa_data *data, u32 tsf)
++{
++	s32 offset = 0;
++	int tries = 0;
++
++	ieee80211_extend_absent_time(data, tsf, &offset);
++	do {
++		if (!ieee80211_extend_absent_time(data, tsf, &offset))
++			break;
++
++		tries++;
++	} while (tries < 5);
++
++	return offset;
++}
++
++void ieee80211_update_p2p_noa(struct ieee80211_noa_data *data, u32 tsf)
++{
++	u32 next_offset = BIT(31) - 1;
++	int i;
++
++	data->absent = false;
++	data->has_next_tsf = false;
++	for (i = 0; i < IEEE80211_P2P_NOA_DESC_MAX; i++) {
++		s32 start;
++
++		if (!data->count[i])
++			continue;
++
++		ieee80211_extend_noa_desc(data, tsf, i);
++		start = data->desc[i].start - tsf;
++		if (start <= 0)
++			data->absent |= BIT(i);
++
++		if (next_offset > start)
++			next_offset = start;
++
++		data->has_next_tsf = true;
++	}
++
++	if (data->absent)
++		next_offset = ieee80211_get_noa_absent_time(data, tsf);
++
++	data->next_tsf = tsf + next_offset;
++}
++EXPORT_SYMBOL(ieee80211_update_p2p_noa);
++
++int ieee80211_parse_p2p_noa(const struct ieee80211_p2p_noa_attr *attr,
++			    struct ieee80211_noa_data *data, u32 tsf)
++{
++	int ret = 0;
++	int i;
++
++	memset(data, 0, sizeof(*data));
++
++	for (i = 0; i < IEEE80211_P2P_NOA_DESC_MAX; i++) {
++		const struct ieee80211_p2p_noa_desc *desc = &attr->desc[i];
++
++		if (!desc->count || !desc->duration)
++			continue;
++
++		data->count[i] = desc->count;
++		data->desc[i].start = le32_to_cpu(desc->start_time);
++		data->desc[i].duration = le32_to_cpu(desc->duration);
++		data->desc[i].interval = le32_to_cpu(desc->interval);
++
++		if (data->count[i] > 1 &&
++		    data->desc[i].interval < data->desc[i].duration)
++			continue;
++
++		ieee80211_extend_noa_desc(data, tsf, i);
++		ret++;
++	}
++
++	if (ret)
++		ieee80211_update_p2p_noa(data, tsf);
++
++	return ret;
++}
++EXPORT_SYMBOL(ieee80211_parse_p2p_noa);
+-- 
+1.8.3.4 (Apple Git-47)
 
