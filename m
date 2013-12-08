@@ -1,48 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:45492 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753894Ab3LQUpH (ORCPT
+Received: from mail-ee0-f41.google.com ([74.125.83.41]:50788 "EHLO
+	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754671Ab3LHJ1d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Dec 2013 15:45:07 -0500
-Received: by mail-ee0-f46.google.com with SMTP id d49so3061782eek.5
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Dec 2013 12:45:06 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 15/36] iwlwifi: mvm: clarify smps_requests documentation
-Date: Tue, 17 Dec 2013 22:44:18 +0200
-Message-Id: <1387313079-28123-15-git-send-email-egrumbach@gmail.com> (sfid-20131217_214631_537033_7FE97B64)
-In-Reply-To: <52B0B72A.5070704@gmail.com>
-References: <52B0B72A.5070704@gmail.com>
+	Sun, 8 Dec 2013 04:27:33 -0500
+From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
+To: Luciano Coelho <luca@coelho.fi>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
+	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
+	joni.lapilainen@gmail.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Felipe Contreras <felipe.contreras@gmail.com>,
+	=?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
+Subject: [PATCH v2 13/16] wl1251: add nvs file name to module firmware list
+Date: Sun,  8 Dec 2013 10:25:11 +0100
+Message-Id: <1386494714-21070-14-git-send-email-pali.rohar@gmail.com> (sfid-20131208_103235_950662_0BA82C19)
+In-Reply-To: <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+ <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-The documentation for smps_requests is unclear, rewrite it.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/mvm.h |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ti/wl1251/main.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index 4275720..84edf36 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -273,8 +273,8 @@ struct iwl_mvm_vif_bf_data {
-  * @bcast_sta: station used for broadcast packets. Used by the following
-  *  vifs: P2P_DEVICE, GO and AP.
-  * @beacon_skb: the skb used to hold the AP/GO beacon template
-- * @smps_requests: the requests of of differents parts of the driver, regard
--	the desired smps mode.
-+ * @smps_requests: the SMPS requests of differents parts of the driver,
-+ *	combined on update to yield the overall request to mac80211.
-  */
- struct iwl_mvm_vif {
- 	u16 id;
+diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
+index 1ef264c..382dedf 100644
+--- a/drivers/net/wireless/ti/wl1251/main.c
++++ b/drivers/net/wireless/ti/wl1251/main.c
+@@ -1711,3 +1711,4 @@ MODULE_DESCRIPTION("TI wl1251 Wireles LAN Driver Core");
+ MODULE_LICENSE("GPL");
+ MODULE_AUTHOR("Kalle Valo <kvalo@adurom.com>");
+ MODULE_FIRMWARE(WL1251_FW_NAME);
++MODULE_FIRMWARE(WL1251_NVS_NAME);
 -- 
 1.7.9.5
 
