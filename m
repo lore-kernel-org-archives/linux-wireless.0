@@ -1,65 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:35208 "EHLO nbd.name"
+Received: from mga02.intel.com ([134.134.136.20]:27624 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751897Ab3LOUT2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Dec 2013 15:19:28 -0500
-Message-ID: <52AE0EC1.4050706@openwrt.org> (sfid-20131215_211931_426327_D0A564AC)
-Date: Sun, 15 Dec 2013 21:19:13 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Sujith Manoharan <sujith@msujith.org>,
-	John Linville <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath9k: Fix interrupt handling for the AR9002 family
-References: <1387030293-7928-1-git-send-email-sujith@msujith.org> <52AE0D63.9090309@openwrt.org>
-In-Reply-To: <52AE0D63.9090309@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	id S1752921Ab3LHLap (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Dec 2013 06:30:45 -0500
+From: Max.Stepanov@intel.com
+To: linux-wireless@vger.kernel.org
+Cc: Max Stepanov <Max.Stepanov@intel.com>
+Subject: [PATCH v2] mac80211: check pairwise key_idx on get_key call
+Date: Sun,  8 Dec 2013 13:30:52 +0200
+Message-Id: <1386502252-10185-1-git-send-email-Max.Stepanov@intel.com> (sfid-20131208_123103_375945_8FA4F880)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-12-15 21:13, Felix Fietkau wrote:
-> On 2013-12-14 15:11, Sujith Manoharan wrote:
->> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
->> 
->> This patch adds a driver workaround for a HW issue.
->> 
->> A race condition in the HW results in missing interrupts,
->> which can be avoided by a read/write with the ISR register.
->> All chips in the AR9002 series are affected by this bug - AR9003
->> and above do not have this problem.
->> 
->> Cc: stable@vger.kernel.org
->> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-> Please don't apply this patch just yet, it seems to be causing interrupt
-> storms. I'm currently looking into it.
-This change on top of it should fix the interrupt storms (which were
-observed on AR913x):
----
---- a/drivers/net/wireless/ath/ath9k/ar9002_mac.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
-@@ -133,6 +133,11 @@ static bool ar9002_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
- 		*masked |= mask2;
- 	}
- 
-+	if (!(pCap->hw_caps & ATH9K_HW_CAP_RAC_SUPPORTED)) {
-+		REG_WRITE(ah, AR_ISR, isr);
-+		REG_READ(ah, AR_ISR);
-+	}
-+
- 	if (AR_SREV_9100(ah))
- 		return true;
- 
-@@ -164,11 +169,6 @@ static bool ar9002_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
- 		}
- 	}
- 
--	if (!(pCap->hw_caps & ATH9K_HW_CAP_RAC_SUPPORTED)) {
--		REG_WRITE(ah, AR_ISR, isr);
--		REG_READ(ah, AR_ISR);
--	}
--
- 	if (sync_cause) {
- 		ath9k_debug_sync_cause(common, sync_cause);
- 		fatal_int =
+From: Max Stepanov <Max.Stepanov@intel.com>
 
+Verify that a pairwise key index value on ieee80211_get_key call
+doesn't exceed the boundaries of the pairwise key array.
+
+Signed-off-by: Max Stepanov <Max.Stepanov@intel.com>
+---
+ net/mac80211/cfg.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 8e70df0..00fa219 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -301,9 +301,9 @@ static int ieee80211_get_key(struct wiphy *wiphy, struct net_device *dev,
+ 		if (!sta)
+ 			goto out;
+ 
+-		if (pairwise)
++		if (pairwise && key_idx < NUM_DEFAULT_KEYS)
+ 			key = rcu_dereference(sta->ptk[key_idx]);
+-		else if (key_idx < NUM_DEFAULT_KEYS)
++		else if (!pairwise && key_idx < NUM_DEFAULT_KEYS)
+ 			key = rcu_dereference(sta->gtk[key_idx]);
+ 	} else
+ 		key = rcu_dereference(sdata->keys[key_idx]);
+-- 
+1.8.5.rc2
 
