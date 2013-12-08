@@ -1,94 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zimbra.real-time.com ([63.170.91.9]:58535 "EHLO
-	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751053Ab3LKUzr (ORCPT
+Received: from mail-ea0-f175.google.com ([209.85.215.175]:50958 "EHLO
+	mail-ea0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752417Ab3LHJ1U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Dec 2013 15:55:47 -0500
-Date: Thu, 12 Dec 2013 07:55:32 +1100
-From: James Cameron <quozl@laptop.org>
-To: Vasily Khoruzhick <anarsoul@gmail.com>
-Cc: Dan Williams <dcbw@redhat.com>,
-	Andreas Kemnade <andreas@kemnade.info>,
-	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-Subject: Re: status of libertas_tf + sdio?
-Message-ID: <20131211205532.GE452@us.netrek.org> (sfid-20131211_215550_234185_A4A76970)
-References: <20131203202607.0b445195@kemnade.info>
- <1386167786.19448.4.camel@dcbw.foobar.com>
- <CA+E=qVdY4M=bnX=pqMiMirhQ_BRg6Uc6K9Xkzvf328BaByUF1g@mail.gmail.com>
- <20131209041821.GC14878@us.netrek.org>
- <CA+E=qVd_F_=z5Vb2jan-nNVmizQznOiR=98CPHQevMxbnxGJiA@mail.gmail.com>
- <20131210022746.GE28975@us.netrek.org>
- <CA+E=qVdFq6XNAibsTUCbxQVbdRh+p6YT=nvgvmuO_u7jkBdKcw@mail.gmail.com>
+	Sun, 8 Dec 2013 04:27:20 -0500
+From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
+To: Luciano Coelho <luca@coelho.fi>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
+	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
+	joni.lapilainen@gmail.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Felipe Contreras <felipe.contreras@gmail.com>,
+	David Gnedt <david.gnedt@davizone.at>,
+	=?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
+Subject: [PATCH v2 04/16] wl1251: implement hardware ARP filtering
+Date: Sun,  8 Dec 2013 10:25:02 +0100
+Message-Id: <1386494714-21070-5-git-send-email-pali.rohar@gmail.com> (sfid-20131208_102853_019362_9EA552FD)
+In-Reply-To: <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+ <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+E=qVdFq6XNAibsTUCbxQVbdRh+p6YT=nvgvmuO_u7jkBdKcw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 11, 2013 at 11:10:50AM +0300, Vasily Khoruzhick wrote:
-> On Tue, Dec 10, 2013 at 5:27 AM, James Cameron <quozl@laptop.org> wrote:
-> > On Mon, Dec 09, 2013 at 12:38:28PM +0300, Vasily Khoruzhick wrote:
-> >> On Mon, Dec 9, 2013 at 7:18 AM, James Cameron <quozl@laptop.org> wrote:
-> >> > On Fri, Dec 06, 2013 at 01:40:00PM +0300, Vasily Khoruzhick wrote:
-> >> >> Out of curiosity,
-> >> >>
-> >> >> Does anyone know if it's possible to get thin firmware for 8686 with
-> >> >> SPI interface?
-> >> >
-> >> > What happens when you try?
-> >>
-> >> How? There's no tf available for 8686 with SPI interface.
-> >
-> > How do you know that?  Are you saying that SPI support was removed
-> > from firmware during the conversion from fat to thin?
-> 
-> Err, there's no lbtf_spi.bin file.
+From: David Gnedt <david.gnedt@davizone.at>
 
-Basing decisions on the names of files rather than the code they
-may contain seems rather limiting.
+Update hardware ARP filter configuration on BSS_CHANGED_ARP_FILTER
+notification from mac80211.
+Ported from wl1271 driver.
 
-In the absence of evidence, there's a possibility that SPI support
-remained.
+Signed-off-by: David Gnedt <david.gnedt@davizone.at>
+Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
+---
+ drivers/net/wireless/ti/wl1251/acx.c  |   26 ++++++++++++++++++++++++++
+ drivers/net/wireless/ti/wl1251/acx.h  |   15 +++++++++++++++
+ drivers/net/wireless/ti/wl1251/main.c |   12 ++++++++++++
+ 3 files changed, 53 insertions(+)
 
-> >> > How are you downloading firmware over SPI?
-> >>
-> >> See drivers/net/wireless/libertas/if_spi.c, but it's for fat
-> >> firmware
-> >
-> > What happens if you send the thin firmware instead?
-> 
-> I have no thin firmware for 8686 with SPI interface
-
-What happens if you send the thin firmware for SDIO interface to the
-device using the fat firmware helper for SPI interface?
-
-I don't have an SPI setup to test, but I gather you do.
-
-> >> > I'm not aware of a second stage firmware download helper
-> >> > specific to the SPI mode.
-> >>
-> >> What's a second stage firmware download helper?
-> >
-> > File sd8686_helper.bin, we use it in Open Firmware with SDIO 8686 on
-> > OLPC XO.
-> >
-> > For SPI, which we don't use, I see if_spi.c uses gspi8686_v9_helper.bin
-> >
-> > I was wrong; I am now aware of a second stage firmware downloader
-> > helper specific to the SPI mode.  I hadn't looked before.
-> >
-> >> > I think it is not possible without firmware engineering.
-> >>
-> >> Yeah, just hoped that Marvell already did it. It's a pity that
-> >> firmware source code isn't available :(
-> >
-> > Cozybit did the thin firmware, if I recall correctly.
-> 
-> Do you think it makes sense to contact them?
-
-I don't think it makes sense to ignore them, but I don't wish to
-speculate further.
-
+diff --git a/drivers/net/wireless/ti/wl1251/acx.c b/drivers/net/wireless/ti/wl1251/acx.c
+index cce50e2..5f4a552 100644
+--- a/drivers/net/wireless/ti/wl1251/acx.c
++++ b/drivers/net/wireless/ti/wl1251/acx.c
+@@ -1062,6 +1062,32 @@ out:
+ 	return ret;
+ }
+ 
++int wl1251_acx_arp_ip_filter(struct wl1251 *wl, bool enable, __be32 address)
++{
++	struct wl1251_acx_arp_filter *acx;
++	int ret;
++
++	wl1251_debug(DEBUG_ACX, "acx arp ip filter, enable: %d", enable);
++
++	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
++	if (!acx)
++		return -ENOMEM;
++
++	acx->version = ACX_IPV4_VERSION;
++	acx->enable = enable;
++
++	if (enable)
++		memcpy(acx->address, &address, ACX_IPV4_ADDR_SIZE);
++
++	ret = wl1251_cmd_configure(wl, ACX_ARP_IP_FILTER,
++				   acx, sizeof(*acx));
++	if (ret < 0)
++		wl1251_warning("failed to set arp ip filter: %d", ret);
++
++	kfree(acx);
++	return ret;
++}
++
+ int wl1251_acx_ac_cfg(struct wl1251 *wl, u8 ac, u8 cw_min, u16 cw_max,
+ 		      u8 aifs, u16 txop)
+ {
+diff --git a/drivers/net/wireless/ti/wl1251/acx.h b/drivers/net/wireless/ti/wl1251/acx.h
+index 99ea80e..4444cd0 100644
+--- a/drivers/net/wireless/ti/wl1251/acx.h
++++ b/drivers/net/wireless/ti/wl1251/acx.h
+@@ -1233,6 +1233,20 @@ struct wl1251_acx_bet_enable {
+ 	u8 padding[2];
+ } __packed;
+ 
++#define ACX_IPV4_VERSION 4
++#define ACX_IPV6_VERSION 6
++#define ACX_IPV4_ADDR_SIZE 4
++struct wl1251_acx_arp_filter {
++	struct acx_header header;
++	u8 version;	/* The IP version: 4 - IPv4, 6 - IPv6.*/
++	u8 enable;	/* 1 - ARP filtering is enabled, 0 - disabled */
++	u8 padding[2];
++	u8 address[16];	/* The IP address used to filter ARP packets.
++			   ARP packets that do not match this address are
++			   dropped. When the IP Version is 4, the last 12
++			   bytes of the the address are ignored. */
++} __attribute__((packed));
++
+ struct wl1251_acx_ac_cfg {
+ 	struct acx_header header;
+ 
+@@ -1475,6 +1489,7 @@ int wl1251_acx_mem_cfg(struct wl1251 *wl);
+ int wl1251_acx_wr_tbtt_and_dtim(struct wl1251 *wl, u16 tbtt, u8 dtim);
+ int wl1251_acx_bet_enable(struct wl1251 *wl, enum wl1251_acx_bet_mode mode,
+ 			  u8 max_consecutive);
++int wl1251_acx_arp_ip_filter(struct wl1251 *wl, bool enable, __be32 address);
+ int wl1251_acx_ac_cfg(struct wl1251 *wl, u8 ac, u8 cw_min, u16 cw_max,
+ 		      u8 aifs, u16 txop);
+ int wl1251_acx_tid_cfg(struct wl1251 *wl, u8 queue,
+diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
+index 46a2494..0e27f1f 100644
+--- a/drivers/net/wireless/ti/wl1251/main.c
++++ b/drivers/net/wireless/ti/wl1251/main.c
+@@ -980,6 +980,7 @@ static void wl1251_op_bss_info_changed(struct ieee80211_hw *hw,
+ {
+ 	struct wl1251 *wl = hw->priv;
+ 	struct sk_buff *beacon, *skb;
++	bool enable;
+ 	int ret;
+ 
+ 	wl1251_debug(DEBUG_MAC80211, "mac80211 bss info changed");
+@@ -1078,6 +1079,17 @@ static void wl1251_op_bss_info_changed(struct ieee80211_hw *hw,
+ 		}
+ 	}
+ 
++	if (changed & BSS_CHANGED_ARP_FILTER) {
++		__be32 addr = bss_conf->arp_addr_list[0];
++		WARN_ON(wl->bss_type != BSS_TYPE_STA_BSS);
++
++		enable = bss_conf->arp_addr_cnt == 1 && bss_conf->assoc;
++		wl1251_acx_arp_ip_filter(wl, enable, addr);
++
++		if (ret < 0)
++			goto out_sleep;
++	}
++
+ 	if (changed & BSS_CHANGED_BEACON) {
+ 		beacon = ieee80211_beacon_get(hw, vif);
+ 		if (!beacon)
 -- 
-James Cameron
-http://quozl.linux.org.au/
+1.7.9.5
+
