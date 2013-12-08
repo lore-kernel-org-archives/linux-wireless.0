@@ -1,44 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:43880 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754437Ab3LCPXl (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:34095 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753929Ab3LHMuk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Dec 2013 10:23:41 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:256)
-	(Exim 4.80)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1Vnrp6-00019A-Cs
-	for linux-wireless@vger.kernel.org; Tue, 03 Dec 2013 16:23:40 +0100
-Message-ID: <1386084218.4393.36.camel@jlt4.sipsolutions.net> (sfid-20131203_162345_249835_FE666F16)
-Subject: Re: [PATCH] nl80211: vendor command support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Tue, 03 Dec 2013 16:23:38 +0100
-In-Reply-To: <1384346267-4174-1-git-send-email-johannes@sipsolutions.net> (sfid-20131113_133756_475020_6AF572DF)
-References: <1384346267-4174-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20131113_133756_475020_6AF572DF)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 8 Dec 2013 07:50:40 -0500
+Message-ID: <52A46B10.6030104@candelatech.com> (sfid-20131208_135044_802861_D04D02B5)
+Date: Sun, 08 Dec 2013 04:50:24 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Oleksij Rempel <linux@rempel-privat.de>
+CC: Mathy <vanhoefm@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Pau Koning <paukoning@gmail.com>,
+	linux-wireless@vger.kernel.org, mcgrof@qca.qualcomm.com,
+	jouni@qca.qualcomm.com, vthiagar@qca.qualcomm.com,
+	senthilb@qca.qualcomm.com
+Subject: Re: [PATCH] ath9k_htc: properly set MAC address and BSSID mask
+References: <5294E4C5.4050301@cs.kuleuven.be> <52950812.20001@rempel-privat.de> <5295EF41.8040709@cs.kuleuven.be> <CANiGF999jHN3+5QuNVAkVk_hHxZ6LkPxWB3jW9yoJGbfno7M9A@mail.gmail.com> <52972749.70200@gmail.com> <20131206162919.GE13285@tuxdriver.com> <CAFXAJYzO5ifSYbiN7xqV5Sr+3CFrZsaqc2dg0bt-JB0EUxFRdQ@mail.gmail.com> <52A35189.7010804@rempel-privat.de>
+In-Reply-To: <52A35189.7010804@rempel-privat.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-11-13 at 13:37 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> Add support for vendor-specific commands to nl80211. This is
-> intended to be used for really vendor-specific functionality
-> that can't be implemented in a generic fashion for any reason.
-> It's *NOT* intended to be used for any normal/generic feature
-> or any optimisations that could be implemented across drivers.
-> 
-> Currently, only vendor commands (with replies) are supported,
-> no dump operations or vendor-specific notifications.
-> 
-> Also add a function wdev_to_ieee80211_vif() to mac80211 which
-> is needed for mac80211-based drivers wanting to implement any
-> vendor commands.
+On 12/07/2013 08:49 AM, Oleksij Rempel wrote:
+> I have only one doubt in this patch.
+> It will overwrite original MAC. If you wont to restore it, then you need
+> to reload module.
+>
+> If no body against it, i can live it too.
 
-Not sure why I forgot this -- applied now.
+I believe ethtool allows an API to read the eeprom-MAC addr.  Maybe
+add support for that API to the ath9k_htc driver so that the original
+MAC can be read that way?
 
-johannes
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
