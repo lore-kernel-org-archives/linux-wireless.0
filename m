@@ -1,67 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:46805 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753747Ab3LDI1U (ORCPT
+Received: from mail-ea0-f169.google.com ([209.85.215.169]:62218 "EHLO
+	mail-ea0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754608Ab3LHJ13 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Dec 2013 03:27:20 -0500
-Message-ID: <1386145635.4284.10.camel@jlt4.sipsolutions.net> (sfid-20131204_092723_545492_F7EE7A15)
-Subject: Re: [PATCH 4/4] nl80211: add VHT support for set_bitrate_mask
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org, j@w1.fi
-Date: Wed, 04 Dec 2013 09:27:15 +0100
-In-Reply-To: <CALhHN=q63LmZb7CvO=4sDWf70-O7_vc7T6jhU7gFQNtsH7PuDQ@mail.gmail.com> (sfid-20131203_172122_770299_EE929FB5)
-References: <1386060648-6020-1-git-send-email-janusz.dziedzic@tieto.com>
-	 <1386060648-6020-4-git-send-email-janusz.dziedzic@tieto.com>
-	 <1386080659.4393.29.camel@jlt4.sipsolutions.net>
-	 <CALhHN=q63LmZb7CvO=4sDWf70-O7_vc7T6jhU7gFQNtsH7PuDQ@mail.gmail.com>
-	 (sfid-20131203_172122_770299_EE929FB5)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 8 Dec 2013 04:27:29 -0500
+From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
+To: Luciano Coelho <luca@coelho.fi>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
+	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
+	joni.lapilainen@gmail.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Felipe Contreras <felipe.contreras@gmail.com>,
+	David Gnedt <david.gnedt@davizone.at>,
+	=?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
+Subject: [PATCH v2 10/16] wl1251: enable tx path in monitor mode if necessary for packet injection
+Date: Sun,  8 Dec 2013 10:25:08 +0100
+Message-Id: <1386494714-21070-11-git-send-email-pali.rohar@gmail.com> (sfid-20131208_103249_075836_3FA466DC)
+In-Reply-To: <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+ <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-12-03 at 17:21 +0100, Janusz Dziedzic wrote:
+From: David Gnedt <david.gnedt@davizone.at>
 
-> We need this for test purpose. Need to test different MCS/NSS
-> configurations using our HW (mainly for VHT).
-> Our HW supports setting TX fixed_rate for legacy/HT/VHT.
-> So, we decided to use set_tx_bitrate_mask() as the best interface for
-> that in nl80211.
-> And after that we realize VHT implementation/change will be needed in
-> nl80211/iw also.
-> Because of that I send this VHT patch.
-> So, we need this :)
+If necessary enable the tx path in monitor mode for packet injection using
+the JOIN command with BSS_TYPE_STA_BSS and zero BSSID.
 
-Fair enough - please add a line or two to the commit log.
+Signed-off-by: David Gnedt <david.gnedt@davizone.at>
+Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
+---
+ drivers/net/wireless/ti/wl1251/main.c   |    5 +++++
+ drivers/net/wireless/ti/wl1251/tx.c     |   25 +++++++++++++++++++++++++
+ drivers/net/wireless/ti/wl1251/wl1251.h |    1 +
+ 3 files changed, 31 insertions(+)
 
-> >> +#define NL80211_MAX_SUPP_VHT_RATES           80
-> >
-> > Where does 80 come from? That seems odd?
-> >
-> NSS_MAX (8) * MCS_MAX (10)
-> 
-> Eg.
-> 9 - NSS=1, MCS=9
-> 10 - NSS=2, MCS=0
-> 11 - NSS=2, MCS=1
-> ...
-
-Can we please find a better way to encode this?
-
-> >> + * @NL80211_TXRATE_VHT_MCS: VHT (MCS) rates allowed for TX rate selection
-> >> + *   in an array of MCS numbers.
-> >
-> > VHT has no "MCS numbers", so this doesn't make much sense?
-> >
-> You mean description only or mcs mask for vht (like above)?
-
-Well, for VHT, there's no single "MCS" identifier for a rate, rates are
-identified using MCS (0-9) and NSS (1-8). In mac80211, we do some bit
-tricks to fit them into a single byte, but I see no reason to do this in
-the nl80211 API and would rather have an API that makes this obvious.
-The easiest would be using a struct, but then you don't need 80 bytes,
-only 8 bitmaps (one for each NSS), for example.
-
-johannes
+diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
+index b6f11b8..bb6e873 100644
+--- a/drivers/net/wireless/ti/wl1251/main.c
++++ b/drivers/net/wireless/ti/wl1251/main.c
+@@ -487,6 +487,7 @@ static void wl1251_op_stop(struct ieee80211_hw *hw)
+ 	wl->rssi_thold = 0;
+ 	wl->channel = WL1251_DEFAULT_CHANNEL;
+ 	wl->monitor_present = false;
++	wl->joined = false;
+ 
+ 	wl1251_debugfs_reset(wl);
+ 
+@@ -546,6 +547,7 @@ static void wl1251_op_remove_interface(struct ieee80211_hw *hw,
+ 	mutex_lock(&wl->mutex);
+ 	wl1251_debug(DEBUG_MAC80211, "mac80211 remove interface");
+ 	wl->vif = NULL;
++	memset(wl->bssid, 0, ETH_ALEN);
+ 	mutex_unlock(&wl->mutex);
+ }
+ 
+@@ -624,6 +626,7 @@ static int wl1251_op_config(struct ieee80211_hw *hw, u32 changed)
+ 		 * at firmware level.
+ 		 */
+ 		if (wl->vif == NULL) {
++			wl->joined = false;
+ 			ret = wl1251_cmd_data_path_rx(wl, wl->channel, 1);
+ 		} else {
+ 			ret = wl1251_join(wl, wl->bss_type, wl->channel,
+@@ -1612,7 +1615,9 @@ struct ieee80211_hw *wl1251_alloc_hw(void)
+ 	INIT_DELAYED_WORK(&wl->elp_work, wl1251_elp_work);
+ 	wl->channel = WL1251_DEFAULT_CHANNEL;
+ 	wl->monitor_present = false;
++	wl->joined = false;
+ 	wl->scanning = false;
++	wl->bss_type = MAX_BSS_TYPE;
+ 	wl->default_key = 0;
+ 	wl->listen_int = 1;
+ 	wl->rx_counter = 0;
+diff --git a/drivers/net/wireless/ti/wl1251/tx.c b/drivers/net/wireless/ti/wl1251/tx.c
+index 3cc82fd..216334d 100644
+--- a/drivers/net/wireless/ti/wl1251/tx.c
++++ b/drivers/net/wireless/ti/wl1251/tx.c
+@@ -28,6 +28,7 @@
+ #include "tx.h"
+ #include "ps.h"
+ #include "io.h"
++#include "event.h"
+ 
+ static bool wl1251_tx_double_buffer_busy(struct wl1251 *wl, u32 data_out_count)
+ {
+@@ -277,6 +278,26 @@ static void wl1251_tx_trigger(struct wl1251 *wl)
+ 		TX_STATUS_DATA_OUT_COUNT_MASK;
+ }
+ 
++static void enable_tx_for_packet_injection(struct wl1251 *wl)
++{
++	int ret;
++
++	ret = wl1251_cmd_join(wl, BSS_TYPE_STA_BSS, wl->channel,
++			      wl->beacon_int, wl->dtim_period);
++	if (ret < 0) {
++		wl1251_warning("join failed");
++		return;
++	}
++
++	ret = wl1251_event_wait(wl, JOIN_EVENT_COMPLETE_ID, 100);
++	if (ret < 0) {
++		wl1251_warning("join timeout");
++		return;
++	}
++
++	wl->joined = true;
++}
++
+ /* caller must hold wl->mutex */
+ static int wl1251_tx_frame(struct wl1251 *wl, struct sk_buff *skb)
+ {
+@@ -298,6 +319,10 @@ static int wl1251_tx_frame(struct wl1251 *wl, struct sk_buff *skb)
+ 		}
+ 	}
+ 
++	/* Enable tx path in monitor mode for packet injection */
++	if ((wl->vif == NULL) && !wl->joined)
++		enable_tx_for_packet_injection(wl);
++
+ 	ret = wl1251_tx_path_status(wl);
+ 	if (ret < 0)
+ 		return ret;
+diff --git a/drivers/net/wireless/ti/wl1251/wl1251.h b/drivers/net/wireless/ti/wl1251/wl1251.h
+index 93c18d2..89f07f6 100644
+--- a/drivers/net/wireless/ti/wl1251/wl1251.h
++++ b/drivers/net/wireless/ti/wl1251/wl1251.h
+@@ -311,6 +311,7 @@ struct wl1251 {
+ 	u8 listen_int;
+ 	int channel;
+ 	bool monitor_present;
++	bool joined;
+ 
+ 	void *target_mem_map;
+ 	struct acx_data_path_params_resp *data_path;
+-- 
+1.7.9.5
 
