@@ -1,73 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3-smtp.messagingengine.com ([66.111.4.27]:50828 "EHLO
-	out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932222Ab3L3V5G (ORCPT
+Received: from mail-ea0-f170.google.com ([209.85.215.170]:62279 "EHLO
+	mail-ea0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754784Ab3LHJ1g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Dec 2013 16:57:06 -0500
-Date: Mon, 30 Dec 2013 19:57:01 -0200
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Julia Lawall <julia.lawall@lip6.fr>,
-	kernel-janitors@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 4/11]  use ether_addr_equal_64bits
-Message-ID: <20131230215701.GA4938@khazad-dum.debian.net> (sfid-20131230_225739_349064_BAFCA748)
-References: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>
- <1388427307-8691-5-git-send-email-Julia.Lawall@lip6.fr>
- <1388429761.4410.1.camel@jlt4.sipsolutions.net>
- <alpine.DEB.2.02.1312302057420.2209@localhost6.localdomain6>
- <1388438724.4573.2.camel@jlt4.sipsolutions.net>
+	Sun, 8 Dec 2013 04:27:36 -0500
+From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
+To: Luciano Coelho <luca@coelho.fi>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
+	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
+	joni.lapilainen@gmail.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Felipe Contreras <felipe.contreras@gmail.com>,
+	=?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
+Subject: [PATCH v2 15/16] wl1251: Add sysfs file address for setting permanent mac address
+Date: Sun,  8 Dec 2013 10:25:13 +0100
+Message-Id: <1386494714-21070-16-git-send-email-pali.rohar@gmail.com> (sfid-20131208_103224_310802_5677F4AA)
+In-Reply-To: <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+ <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1388438724.4573.2.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 30 Dec 2013, Johannes Berg wrote:
-> On Mon, 2013-12-30 at 20:58 +0100, Julia Lawall wrote:
-> > > Is there any way we could catch (sparse, or some other script?) that
-> > > struct reorganising won't break the condition needed ("within a
-> > > structure that contains at least two more bytes")?
-> > 
-> > What kind of reorganizing could happen?  Do you mean that the programmer 
-> > might do at some time in the future, or something the compiler might do?
-> 
-> I'm just thinking of a programmer, e.g. changing a struct like this:
-> 
->  struct foo {
->    u8 addr[ETH_ALEN];
-> -  u16 dummy;
->  };
-> 
-> for example.
+Driver wl1251 generating mac address randomly at startup and there is no way to
+set permanent mac address via SET_IEEE80211_PERM_ADDR. This patch export sysfs
+file which can set permanent mac address by userspace helper program. Patch is
+needed for devices which do not store mac address in internal wl1251 eeprom.
 
-That is easily resolved by:
+Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
+---
+ drivers/net/wireless/ti/wl1251/main.c |   52 +++++++++++++++++++++++++++++++++
+ 1 file changed, 52 insertions(+)
 
-struct foo {
-	u8 addr[ETH_ALEN];
-	u16 required_padding;	/* do not remove upon pain of death */
-};
-
-Preferably with a comment nearby explaining just why that padding is so
-important in the first place.
-
-Unfortunately, we do have a lot of code with unexplained padding that one
-should never remove, and it is often nowhere nearly as obvious as stray
-elements with idiotic non-explanatory names in a structure.
-
-One example is the via-rng hw_random driver, where the buffer used by the
-"xstore" via-specific instriction *MUST* be longer than what the "xstore"
-instruction is documented to require due to CPU errata (you ask it to write
-from 1 to 8 bytes, and it may end up writing 16 bytes).  The xstore buffer
-is an array that was made long enough to avoid the errata, but that fact is
-documented only in a git commit message.
-
+diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
+index 42730b7..a69b741 100644
+--- a/drivers/net/wireless/ti/wl1251/main.c
++++ b/drivers/net/wireless/ti/wl1251/main.c
+@@ -1377,6 +1377,46 @@ static const struct ieee80211_ops wl1251_ops = {
+ 	.get_survey = wl1251_op_get_survey,
+ };
+ 
++static ssize_t wl1251_sysfs_show_address(struct device *dev,
++					 struct device_attribute *attr,
++					 char *buf)
++{
++	struct wl1251 *wl = dev_get_drvdata(dev);
++	ssize_t len;
++
++	/* FIXME: what's the maximum length of buf? page size?*/
++	len = 500;
++
++	len = snprintf(buf, len, "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x\n",
++		       wl->mac_addr[0], wl->mac_addr[1], wl->mac_addr[2],
++		       wl->mac_addr[3], wl->mac_addr[4], wl->mac_addr[5]);
++
++	return len;
++}
++
++static ssize_t wl1251_sysfs_store_address(struct device *dev,
++					  struct device_attribute *attr,
++					  const char *buf, size_t count)
++{
++	struct wl1251 *wl = dev_get_drvdata(dev);
++	unsigned int addr[6];
++	int ret, i;
++
++	ret = sscanf(buf, "%2x:%2x:%2x:%2x:%2x:%2x\n",
++			&addr[0], &addr[1], &addr[2],
++			&addr[3], &addr[4], &addr[5]);
++
++	if (ret != 6)
++		return -EINVAL;
++
++	for (i = 0; i < 6; i++)
++		wl->mac_addr[i] = addr[i] & 0xff;
++
++	SET_IEEE80211_PERM_ADDR(wl->hw, wl->mac_addr);
++
++	return count;
++}
++
+ static ssize_t wl1251_sysfs_show_tx_mgmt_frm_rate(struct device *dev,
+ 						  struct device_attribute *attr,
+ 						  char *buf)
+@@ -1586,6 +1626,10 @@ out:
+ 	return count;
+ }
+ 
++static DEVICE_ATTR(address, S_IRUGO | S_IWUSR,
++		   wl1251_sysfs_show_address,
++		   wl1251_sysfs_store_address);
++
+ static DEVICE_ATTR(tx_mgmt_frm_rate, S_IRUGO | S_IWUSR,
+ 		   wl1251_sysfs_show_tx_mgmt_frm_rate,
+ 		   wl1251_sysfs_store_tx_mgmt_frm_rate);
+@@ -1730,6 +1774,14 @@ int wl1251_init_ieee80211(struct wl1251 *wl)
+ 	}
+ 	dev_set_drvdata(&wl1251_device.dev, wl);
+ 
++	/* Create sysfs file address */
++	ret = device_create_file(&wl1251_device.dev,
++				 &dev_attr_address);
++	if (ret < 0) {
++		wl1251_error("failed to create sysfs file address");
++		goto out;
++	}
++
+ 	/* Create sysfs file tx_mgmt_frm_rate */
+ 	ret = device_create_file(&wl1251_device.dev,
+ 				 &dev_attr_tx_mgmt_frm_rate);
 -- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
+1.7.9.5
+
