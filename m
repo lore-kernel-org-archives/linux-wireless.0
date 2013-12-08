@@ -1,64 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:50518 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755479Ab3LRTB7 (ORCPT
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:43864 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751445Ab3LHJLq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Dec 2013 14:01:59 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: sw@simonwunderlich.de, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: remove unnecessary iflist_mtx locking
-Date: Wed, 18 Dec 2013 20:01:55 +0100
-Message-Id: <1387393315-15671-1-git-send-email-johannes@sipsolutions.net> (sfid-20131218_200202_219087_C4056ED1)
+	Sun, 8 Dec 2013 04:11:46 -0500
+Received: by mail-wg0-f47.google.com with SMTP id n12so2275193wgh.14
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Dec 2013 01:11:45 -0800 (PST)
+Message-ID: <1386493890.5257.15.camel@canaries32-MCP7A> (sfid-20131208_101209_053148_148E3A6E)
+Subject: [PATCH] staging: vt6656: [BUG] BBvUpdatePreEDThreshold Always set
+ sensitivity on bScanning
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Sun, 08 Dec 2013 09:11:30 +0000
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+byBBPreEDIndex value is initially 0, this means that from
+cold BBvUpdatePreEDThreshold is never set.
 
-The radar detection code changed a few times, and due to
-the changes some iflist_mtx locking stayed in that isn't
-actually necessary - remove it.
+This means that sensitivity may be in an ambiguous state,
+failing to scan any wireless points or at least distant ones.
 
-One version of the code needed it because an AP interface's
-VLAN list was changed to use this, but then we moved the
-list handling outside of the chanctx handling and thus the
-locking was no longer needed.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Cc: stable@vger.kernel.org
 ---
- net/mac80211/cfg.c   | 2 --
- net/mac80211/iface.c | 2 --
- 2 files changed, 4 deletions(-)
+ drivers/staging/vt6656/baseband.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index ac18528..bfe54da 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2903,10 +2903,8 @@ static int ieee80211_start_radar_detection(struct wiphy *wiphy,
- 	sdata->needed_rx_chains = local->rx_chains;
- 	sdata->radar_required = true;
+diff --git a/drivers/staging/vt6656/baseband.c b/drivers/staging/vt6656/baseband.c
+index 468f455..86c047b 100644
+--- a/drivers/staging/vt6656/baseband.c
++++ b/drivers/staging/vt6656/baseband.c
+@@ -1464,7 +1464,6 @@ void BBvUpdatePreEDThreshold(struct vnt_private *pDevice, int bScanning)
  
--	mutex_lock(&local->iflist_mtx);
- 	err = ieee80211_vif_use_channel(sdata, chandef,
- 					IEEE80211_CHANCTX_SHARED);
--	mutex_unlock(&local->iflist_mtx);
- 	if (err)
- 		return err;
+             if( bScanning )
+             {   // need Max sensitivity //RSSI -69, -70,....
+-                if(pDevice->byBBPreEDIndex == 0) break;
+                 pDevice->byBBPreEDIndex = 0;
+                 ControlvWriteByte(pDevice, MESSAGE_REQUEST_BBREG, 0xC9, 0x00); //CR201(0xC9)
+                 ControlvWriteByte(pDevice, MESSAGE_REQUEST_BBREG, 0xCE, 0x30); //CR206(0xCE)
+@@ -1607,7 +1606,6 @@ void BBvUpdatePreEDThreshold(struct vnt_private *pDevice, int bScanning)
  
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 3d2168c..0c0be90 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -826,9 +826,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 	if (sdata->wdev.cac_started) {
- 		chandef = sdata->vif.bss_conf.chandef;
- 		WARN_ON(local->suspended);
--		mutex_lock(&local->iflist_mtx);
- 		ieee80211_vif_release_channel(sdata);
--		mutex_unlock(&local->iflist_mtx);
- 		cfg80211_cac_event(sdata->dev, &chandef,
- 				   NL80211_RADAR_CAC_ABORTED,
- 				   GFP_KERNEL);
+             if( bScanning )
+             {   // need Max sensitivity  //RSSI -69, -70, ...
+-                if(pDevice->byBBPreEDIndex == 0) break;
+                 pDevice->byBBPreEDIndex = 0;
+                 ControlvWriteByte(pDevice, MESSAGE_REQUEST_BBREG, 0xC9, 0x00); //CR201(0xC9)
+                 ControlvWriteByte(pDevice, MESSAGE_REQUEST_BBREG, 0xCE, 0x24); //CR206(0xCE)
+@@ -1759,7 +1757,6 @@ void BBvUpdatePreEDThreshold(struct vnt_private *pDevice, int bScanning)
+         case RF_VT3342A0: //RobertYu:20060627, testing table
+             if( bScanning )
+             {   // need Max sensitivity  //RSSI -67, -68, ...
+-                if(pDevice->byBBPreEDIndex == 0) break;
+                 pDevice->byBBPreEDIndex = 0;
+                 ControlvWriteByte(pDevice, MESSAGE_REQUEST_BBREG, 0xC9, 0x00); //CR201(0xC9)
+                 ControlvWriteByte(pDevice, MESSAGE_REQUEST_BBREG, 0xCE, 0x38); //CR206(0xCE)
 -- 
 1.8.5.1
 
