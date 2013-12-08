@@ -1,39 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:43678 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754220Ab3LCPGr (ORCPT
+Received: from mail-ea0-f178.google.com ([209.85.215.178]:45486 "EHLO
+	mail-ea0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754524Ab3LHJ10 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Dec 2013 10:06:47 -0500
-Message-ID: <1386083203.4393.35.camel@jlt4.sipsolutions.net> (sfid-20131203_160650_897658_2A8A5004)
-Subject: Re: [PATCHv3] cfg80211: add support for frequency interference event
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rajesh Chauhan <rajeshc@qca.qualcomm.com>
-Cc: rodrigue@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-	jouni@qca.qualcomm.com, hbahini@qca.qualcomm.com,
-	jjohnson@qca.qualcomm.com, schang@qca.qualcomm.com,
-	xunl@qca.qualcomm.com, sameert@qca.qualcomm.com,
-	c_arifh@qca.qualcomm.com
-Date: Tue, 03 Dec 2013 16:06:43 +0100
-In-Reply-To: <1386077130.4393.21.camel@jlt4.sipsolutions.net> (sfid-20131203_142537_442351_B9A4DE15)
-References: <1384198356-427-1-git-send-email-rajeshc@qca.qualcomm.com>
-	 <1386077130.4393.21.camel@jlt4.sipsolutions.net>
-	 (sfid-20131203_142537_442351_B9A4DE15)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 8 Dec 2013 04:27:26 -0500
+From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
+To: Luciano Coelho <luca@coelho.fi>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
+	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
+	joni.lapilainen@gmail.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Felipe Contreras <felipe.contreras@gmail.com>,
+	David Gnedt <david.gnedt@davizone.at>,
+	=?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
+Subject: [PATCH v2 08/16] wl1251: disable power saving in monitor mode
+Date: Sun,  8 Dec 2013 10:25:06 +0100
+Message-Id: <1386494714-21070-9-git-send-email-pali.rohar@gmail.com> (sfid-20131208_103424_374147_DEF391F5)
+In-Reply-To: <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+ <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-12-03 at 14:25 +0100, Johannes Berg wrote:
+From: David Gnedt <david.gnedt@davizone.at>
 
-> > +	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
-> > +	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex))
-> > +		goto nla_put_failure;
-> 
-> wdev index is missing, however, see above.
+Force power saving off while monitor interface is present.
 
-Forgot add the "see above" part, so I'll just put it here:
+Signed-off-by: David Gnedt <david.gnedt@davizone.at>
+Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
+---
+ drivers/net/wireless/ti/wl1251/main.c |   10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-I don't think this API makes sense per netdev.
-
-johannes
+diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
+index ee318c8..1223bc6 100644
+--- a/drivers/net/wireless/ti/wl1251/main.c
++++ b/drivers/net/wireless/ti/wl1251/main.c
+@@ -570,6 +570,11 @@ static int wl1251_build_qos_null_data(struct wl1251 *wl)
+ 				       sizeof(template));
+ }
+ 
++static bool wl1251_can_do_pm(struct ieee80211_conf *conf, struct wl1251 *wl)
++{
++	return (conf->flags & IEEE80211_CONF_PS) && !wl->monitor_present;
++}
++
+ static int wl1251_op_config(struct ieee80211_hw *hw, u32 changed)
+ {
+ 	struct wl1251 *wl = hw->priv;
+@@ -617,7 +622,7 @@ static int wl1251_op_config(struct ieee80211_hw *hw, u32 changed)
+ 			goto out_sleep;
+ 	}
+ 
+-	if (conf->flags & IEEE80211_CONF_PS && !wl->psm_requested) {
++	if (wl1251_can_do_pm(conf, wl) && !wl->psm_requested) {
+ 		wl1251_debug(DEBUG_PSM, "psm enabled");
+ 
+ 		wl->psm_requested = true;
+@@ -633,8 +638,7 @@ static int wl1251_op_config(struct ieee80211_hw *hw, u32 changed)
+ 		ret = wl1251_ps_set_mode(wl, STATION_POWER_SAVE_MODE);
+ 		if (ret < 0)
+ 			goto out_sleep;
+-	} else if (!(conf->flags & IEEE80211_CONF_PS) &&
+-		   wl->psm_requested) {
++	} else if (!wl1251_can_do_pm(conf, wl) && wl->psm_requested) {
+ 		wl1251_debug(DEBUG_PSM, "psm disabled");
+ 
+ 		wl->psm_requested = false;
+-- 
+1.7.9.5
 
