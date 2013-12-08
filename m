@@ -1,98 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f52.google.com ([74.125.83.52]:65430 "EHLO
-	mail-ee0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753925Ab3LaRQL (ORCPT
+Received: from mail-ea0-f171.google.com ([209.85.215.171]:64185 "EHLO
+	mail-ea0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753373Ab3LHJ1W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Dec 2013 12:16:11 -0500
-Received: by mail-ee0-f52.google.com with SMTP id d17so5624912eek.11
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Dec 2013 09:16:10 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 06/28] iwlwifi: pcie: determine the interrupt type in the handler
-Date: Tue, 31 Dec 2013 19:15:35 +0200
-Message-Id: <1388510157-23345-6-git-send-email-egrumbach@gmail.com> (sfid-20131231_181619_318436_87338530)
-In-Reply-To: <52C2FB68.2010708@gmail.com>
-References: <52C2FB68.2010708@gmail.com>
+	Sun, 8 Dec 2013 04:27:22 -0500
+From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
+To: Luciano Coelho <luca@coelho.fi>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
+	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
+	joni.lapilainen@gmail.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Felipe Contreras <felipe.contreras@gmail.com>,
+	David Gnedt <david.gnedt@davizone.at>,
+	=?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
+Subject: [PATCH v2 05/16] wl1251: split RX and TX data path initialisation
+Date: Sun,  8 Dec 2013 10:25:03 +0100
+Message-Id: <1386494714-21070-6-git-send-email-pali.rohar@gmail.com> (sfid-20131208_102825_607293_95E378A7)
+In-Reply-To: <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+ <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: David Gnedt <david.gnedt@davizone.at>
 
-Instead of having:
-iwl_pcie_irq_handler
-	iwl_pcie_isr_ict
-		iwl_pcie_isr_non_ict
+Split up data path initialisation into RX and TX data path initialisation
+functions. This change is required for channel switching in monitor mode.
 
-we now have:
-
-iwl_pcie_irq_handler:
-	if (use_ict))
-		iwl_pcie_int_cause_ict;
-	else
-		iwl_pcie_int_cause_non_ict;
-
-This is much clearer.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: David Gnedt <david.gnedt@davizone.at>
+Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/pcie/rx.c |   22 ++++++++++------------
- 1 file changed, 10 insertions(+), 12 deletions(-)
+ drivers/net/wireless/ti/wl1251/cmd.c  |   46 +++++++++++++++++++++++----------
+ drivers/net/wireless/ti/wl1251/cmd.h  |    3 ++-
+ drivers/net/wireless/ti/wl1251/init.c |    9 +++++--
+ 3 files changed, 41 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
-index 5044fbd..58d3f64 100644
---- a/drivers/net/wireless/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
-@@ -807,8 +807,7 @@ static void iwl_pcie_irq_handle_error(struct iwl_trans *trans)
- 	wake_up(&trans_pcie->wait_command_queue);
+diff --git a/drivers/net/wireless/ti/wl1251/cmd.c b/drivers/net/wireless/ti/wl1251/cmd.c
+index 16b6479..381b3fe 100644
+--- a/drivers/net/wireless/ti/wl1251/cmd.c
++++ b/drivers/net/wireless/ti/wl1251/cmd.c
+@@ -204,11 +204,11 @@ out:
+ 	return ret;
  }
  
--/* legacy (non-ICT) ISR. Assumes that trans_pcie->irq_lock is held */
--static irqreturn_t iwl_pcie_isr_non_ict(struct iwl_trans *trans)
-+static irqreturn_t iwl_pcie_int_cause_non_ict(struct iwl_trans *trans)
+-int wl1251_cmd_data_path(struct wl1251 *wl, u8 channel, bool enable)
++int wl1251_cmd_data_path_rx(struct wl1251 *wl, u8 channel, bool enable)
  {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	u32 inta;
-@@ -876,7 +875,7 @@ static irqreturn_t iwl_pcie_isr_non_ict(struct iwl_trans *trans)
-  * the interrupt we need to service, driver will set the entries back to 0 and
-  * set index.
-  */
--static irqreturn_t iwl_pcie_isr_ict(struct iwl_trans *trans)
-+static irqreturn_t iwl_pcie_int_cause_ict(struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	irqreturn_t ret;
-@@ -884,14 +883,6 @@ static irqreturn_t iwl_pcie_isr_ict(struct iwl_trans *trans)
- 	u32 val = 0;
- 	u32 read;
+ 	struct cmd_enabledisable_path *cmd;
+ 	int ret;
+-	u16 cmd_rx, cmd_tx;
++	u16 cmd_rx;
  
--	/* dram interrupt table not set yet,
--	 * use legacy interrupt.
--	 */
--	if (unlikely(!trans_pcie->use_ict)) {
--		ret = iwl_pcie_isr_non_ict(trans);
--		return ret;
+ 	wl1251_debug(DEBUG_CMD, "cmd data path");
+ 
+@@ -220,13 +220,10 @@ int wl1251_cmd_data_path(struct wl1251 *wl, u8 channel, bool enable)
+ 
+ 	cmd->channel = channel;
+ 
+-	if (enable) {
++	if (enable)
+ 		cmd_rx = CMD_ENABLE_RX;
+-		cmd_tx = CMD_ENABLE_TX;
+-	} else {
++	else
+ 		cmd_rx = CMD_DISABLE_RX;
+-		cmd_tx = CMD_DISABLE_TX;
+-	}
+ 
+ 	ret = wl1251_cmd_send(wl, cmd_rx, cmd, sizeof(*cmd));
+ 	if (ret < 0) {
+@@ -238,17 +235,38 @@ int wl1251_cmd_data_path(struct wl1251 *wl, u8 channel, bool enable)
+ 	wl1251_debug(DEBUG_BOOT, "rx %s cmd channel %d",
+ 		     enable ? "start" : "stop", channel);
+ 
++out:
++	kfree(cmd);
++	return ret;
++}
++
++int wl1251_cmd_data_path_tx(struct wl1251 *wl, u8 channel, bool enable)
++{
++	struct cmd_enabledisable_path *cmd;
++	int ret;
++	u16 cmd_tx;
++
++	wl1251_debug(DEBUG_CMD, "cmd data path");
++
++	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
++	if (!cmd)
++		return -ENOMEM;
++
++	cmd->channel = channel;
++
++	if (enable)
++		cmd_tx = CMD_ENABLE_TX;
++	else
++		cmd_tx = CMD_DISABLE_TX;
++
+ 	ret = wl1251_cmd_send(wl, cmd_tx, cmd, sizeof(*cmd));
+-	if (ret < 0) {
++	if (ret < 0)
+ 		wl1251_error("tx %s cmd for channel %d failed",
+ 			     enable ? "start" : "stop", channel);
+-		goto out;
 -	}
 -
- 	trace_iwlwifi_dev_irq(trans->dev);
- 
- 	/* Ignore interrupt if there's nothing in NIC to service.
-@@ -977,7 +968,14 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
- 
- 	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
- 
--	ret = iwl_pcie_isr_ict(trans);
-+	/* dram interrupt table not set yet,
-+	 * use legacy interrupt.
-+	 */
-+	if (likely(trans_pcie->use_ict))
-+		ret = iwl_pcie_int_cause_ict(trans);
+-	wl1251_debug(DEBUG_BOOT, "tx %s cmd channel %d",
+-		     enable ? "start" : "stop", channel);
 +	else
-+		ret = iwl_pcie_int_cause_non_ict(trans);
++		wl1251_debug(DEBUG_BOOT, "tx %s cmd channel %d",
++			     enable ? "start" : "stop", channel);
+ 
+-out:
+ 	kfree(cmd);
+ 	return ret;
+ }
+diff --git a/drivers/net/wireless/ti/wl1251/cmd.h b/drivers/net/wireless/ti/wl1251/cmd.h
+index 126f273..d824ff9 100644
+--- a/drivers/net/wireless/ti/wl1251/cmd.h
++++ b/drivers/net/wireless/ti/wl1251/cmd.h
+@@ -35,7 +35,8 @@ int wl1251_cmd_interrogate(struct wl1251 *wl, u16 id, void *buf, size_t len);
+ int wl1251_cmd_configure(struct wl1251 *wl, u16 id, void *buf, size_t len);
+ int wl1251_cmd_vbm(struct wl1251 *wl, u8 identity,
+ 		   void *bitmap, u16 bitmap_len, u8 bitmap_control);
+-int wl1251_cmd_data_path(struct wl1251 *wl, u8 channel, bool enable);
++int wl1251_cmd_data_path_rx(struct wl1251 *wl, u8 channel, bool enable);
++int wl1251_cmd_data_path_tx(struct wl1251 *wl, u8 channel, bool enable);
+ int wl1251_cmd_join(struct wl1251 *wl, u8 bss_type, u8 channel,
+ 		    u16 beacon_interval, u8 dtim_interval);
+ int wl1251_cmd_ps_mode(struct wl1251 *wl, u8 ps_mode);
+diff --git a/drivers/net/wireless/ti/wl1251/init.c b/drivers/net/wireless/ti/wl1251/init.c
+index a6ad223..424ce01 100644
+--- a/drivers/net/wireless/ti/wl1251/init.c
++++ b/drivers/net/wireless/ti/wl1251/init.c
+@@ -390,8 +390,13 @@ int wl1251_hw_init(struct wl1251 *wl)
+ 	if (ret < 0)
+ 		goto out_free_data_path;
+ 
+-	/* Enable data path */
+-	ret = wl1251_cmd_data_path(wl, wl->channel, 1);
++	/* Enable rx data path */
++	ret = wl1251_cmd_data_path_rx(wl, wl->channel, 1);
++	if (ret < 0)
++		goto out_free_data_path;
 +
- 	if (ret != IRQ_WAKE_THREAD) {
- 		spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
- 		return ret;
++	/* Enable tx data path */
++	ret = wl1251_cmd_data_path_tx(wl, wl->channel, 1);
+ 	if (ret < 0)
+ 		goto out_free_data_path;
+ 
 -- 
 1.7.9.5
 
