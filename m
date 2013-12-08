@@ -1,191 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f54.google.com ([74.125.83.54]:39124 "EHLO
-	mail-ee0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752444Ab3LCIvC (ORCPT
+Received: from mail-we0-f179.google.com ([74.125.82.179]:50647 "EHLO
+	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755110Ab3LHSJk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Dec 2013 03:51:02 -0500
-Received: by mail-ee0-f54.google.com with SMTP id e51so1251056eek.13
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Dec 2013 00:51:01 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, j@w1.fi,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH 3/4] nl80211/cfg80211: bitrate_mask, rename mcs to ht_mcs
-Date: Tue,  3 Dec 2013 09:50:46 +0100
-Message-Id: <1386060648-6020-3-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131203_095109_378762_FDBFCDC7)
-In-Reply-To: <1386060648-6020-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1386060648-6020-1-git-send-email-janusz.dziedzic@tieto.com>
+	Sun, 8 Dec 2013 13:09:40 -0500
+Received: by mail-we0-f179.google.com with SMTP id q59so2589845wes.10
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Dec 2013 10:09:39 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <52A46B10.6030104@candelatech.com>
+References: <5294E4C5.4050301@cs.kuleuven.be> <52950812.20001@rempel-privat.de>
+ <5295EF41.8040709@cs.kuleuven.be> <CANiGF999jHN3+5QuNVAkVk_hHxZ6LkPxWB3jW9yoJGbfno7M9A@mail.gmail.com>
+ <52972749.70200@gmail.com> <20131206162919.GE13285@tuxdriver.com>
+ <CAFXAJYzO5ifSYbiN7xqV5Sr+3CFrZsaqc2dg0bt-JB0EUxFRdQ@mail.gmail.com>
+ <52A35189.7010804@rempel-privat.de> <52A46B10.6030104@candelatech.com>
+From: Mathy <vanhoefm@gmail.com>
+Date: Sun, 8 Dec 2013 19:09:18 +0100
+Message-ID: <CAFXAJYyOrd_ybL=roYqdjF_eK81kP1sEBHbjSsXL8y0P_oR38w@mail.gmail.com> (sfid-20131208_191000_847783_907BB39F)
+Subject: Re: [PATCH] ath9k_htc: properly set MAC address and BSSID mask
+To: Ben Greear <greearb@candelatech.com>
+Cc: Oleksij Rempel <linux@rempel-privat.de>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Pau Koning <paukoning@gmail.com>,
+	linux-wireless@vger.kernel.org, jouni@qca.qualcomm.com,
+	vthiagar@qti.qualcomm.com, senthilb@qti.qualcomm.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rename NL80211_TXRATE_MCS into NL80211_TXRATE_HT_MCS.
-Rename mcs to ht_mcs in cfg80211_bitrate_mask structure.
-This is cleanup before we will introduce VHT_MCS.
+The common->macaddr field is also updated in the ath9k driver
+(function ath9k_calculate_iter_data in main.c).
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- drivers/net/wireless/ath/ath6kl/wmi.c   |    6 +++---
- drivers/net/wireless/mwifiex/cfg80211.c |    6 +++---
- include/net/cfg80211.h                  |    2 +-
- include/uapi/linux/nl80211.h            |    6 ++++--
- net/mac80211/cfg.c                      |    4 ++--
- net/wireless/nl80211.c                  |   18 +++++++++---------
- 6 files changed, 22 insertions(+), 20 deletions(-)
+I just did a quick test. When using macchanger to assign a random MAC
+address, the original (permanent) MAC address is still retrieved
+properly. So there is no need to reload the module, macchanger can
+simply restore the permanent MAC. I assume the permanent MAC address
+is saved elsewhere?
 
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index 546d5da..4f16d79 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -2754,9 +2754,9 @@ static int ath6kl_set_bitrate_mask64(struct wmi *wmi, u8 if_idx,
- 				mask->control[band].legacy << 4;
- 
- 		/* copy mcs rate mask */
--		mcsrate = mask->control[band].mcs[1];
-+		mcsrate = mask->control[band].ht_mcs[1];
- 		mcsrate <<= 8;
--		mcsrate |= mask->control[band].mcs[0];
-+		mcsrate |= mask->control[band].ht_mcs[0];
- 		ratemask[band] |= mcsrate << 12;
- 		ratemask[band] |= mcsrate << 28;
- 	}
-@@ -2806,7 +2806,7 @@ static int ath6kl_set_bitrate_mask32(struct wmi *wmi, u8 if_idx,
- 				mask->control[band].legacy << 4;
- 
- 		/* copy mcs rate mask */
--		mcsrate = mask->control[band].mcs[0];
-+		mcsrate = mask->control[band].ht_mcs[0];
- 		ratemask[band] |= mcsrate << 12;
- 		ratemask[band] |= mcsrate << 20;
- 	}
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index fbad00a..27033ab 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1170,10 +1170,10 @@ static int mwifiex_cfg80211_set_bitrate_mask(struct wiphy *wiphy,
- 	else
- 		bitmap_rates[1] = mask->control[band].legacy;
- 
--	/* Fill MCS rates */
--	bitmap_rates[2] = mask->control[band].mcs[0];
-+	/* Fill HT MCS rates */
-+	bitmap_rates[2] = mask->control[band].ht_mcs[0];
- 	if (priv->adapter->hw_dev_mcs_support == HT_STREAM_2X2)
--		bitmap_rates[2] |= mask->control[band].mcs[1] << 8;
-+		bitmap_rates[2] |= mask->control[band].ht_mcs[1] << 8;
- 
- 	return mwifiex_send_cmd_sync(priv, HostCmd_CMD_TX_RATE_CFG,
- 				     HostCmd_ACT_GEN_SET, 0, bitmap_rates);
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index f07840e..626087b 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1763,7 +1763,7 @@ enum wiphy_params_flags {
- struct cfg80211_bitrate_mask {
- 	struct {
- 		u32 legacy;
--		u8 mcs[IEEE80211_HT_MCS_MASK_LEN];
-+		u8 ht_mcs[IEEE80211_HT_MCS_MASK_LEN];
- 	} control[IEEE80211_NUM_BANDS];
- };
- /**
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index f752e98..4d89492 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -3058,7 +3058,7 @@ enum nl80211_key_attributes {
-  *	in an array of rates as defined in IEEE 802.11 7.3.2.2 (u8 values with
-  *	1 = 500 kbps) but without the IE length restriction (at most
-  *	%NL80211_MAX_SUPP_RATES in a single array).
-- * @NL80211_TXRATE_MCS: HT (MCS) rates allowed for TX rate selection
-+ * @NL80211_TXRATE_HT_MCS: HT (MCS) rates allowed for TX rate selection
-  *	in an array of MCS numbers.
-  * @__NL80211_TXRATE_AFTER_LAST: internal
-  * @NL80211_TXRATE_MAX: highest TX rate attribute
-@@ -3066,13 +3066,15 @@ enum nl80211_key_attributes {
- enum nl80211_tx_rate_attributes {
- 	__NL80211_TXRATE_INVALID,
- 	NL80211_TXRATE_LEGACY,
--	NL80211_TXRATE_MCS,
-+	NL80211_TXRATE_HT_MCS,
- 
- 	/* keep last */
- 	__NL80211_TXRATE_AFTER_LAST,
- 	NL80211_TXRATE_MAX = __NL80211_TXRATE_AFTER_LAST - 1
- };
- 
-+#define NL80211_TXRATE_MCS NL80211_TXRATE_HT_MCS
-+
- /**
-  * enum nl80211_band - Frequency band
-  * @NL80211_BAND_2GHZ: 2.4 GHz ISM band
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 5232b01..57d25a0 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2565,8 +2565,8 @@ static int ieee80211_set_bitrate_mask(struct wiphy *wiphy,
- 		int j;
- 
- 		sdata->rc_rateidx_mask[i] = mask->control[i].legacy;
--		memcpy(sdata->rc_rateidx_mcs_mask[i], mask->control[i].mcs,
--		       sizeof(mask->control[i].mcs));
-+		memcpy(sdata->rc_rateidx_mcs_mask[i], mask->control[i].ht_mcs,
-+		       sizeof(mask->control[i].ht_mcs));
- 
- 		sdata->rc_has_mcs_mask[i] = false;
- 		if (!sband)
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 072b60d..ff65172 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -7296,8 +7296,8 @@ static bool ht_rateset_to_mask(struct ieee80211_supported_band *sband,
- static const struct nla_policy nl80211_txattr_policy[NL80211_TXRATE_MAX + 1] = {
- 	[NL80211_TXRATE_LEGACY] = { .type = NLA_BINARY,
- 				    .len = NL80211_MAX_SUPP_RATES },
--	[NL80211_TXRATE_MCS] = { .type = NLA_BINARY,
--				 .len = NL80211_MAX_SUPP_HT_RATES },
-+	[NL80211_TXRATE_HT_MCS] = { .type = NLA_BINARY,
-+				    .len = NL80211_MAX_SUPP_HT_RATES },
- };
- 
- static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
-@@ -7323,9 +7323,9 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
- 			continue;
- 
- 		mask.control[i].legacy = (1 << sband->n_bitrates) - 1;
--		memcpy(mask.control[i].mcs,
-+		memcpy(mask.control[i].ht_mcs,
- 		       sband->ht_cap.mcs.rx_mask,
--		       sizeof(mask.control[i].mcs));
-+		       sizeof(mask.control[i].ht_mcs));
- 	}
- 
- 	/* Back to default settings */
-@@ -7356,12 +7356,12 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
- 			    nla_len(tb[NL80211_TXRATE_LEGACY]))
- 				return -EINVAL;
- 		}
--		if (tb[NL80211_TXRATE_MCS]) {
-+		if (tb[NL80211_TXRATE_HT_MCS]) {
- 			if (!ht_rateset_to_mask(
- 					sband,
--					nla_data(tb[NL80211_TXRATE_MCS]),
--					nla_len(tb[NL80211_TXRATE_MCS]),
--					mask.control[band].mcs))
-+					nla_data(tb[NL80211_TXRATE_HT_MCS]),
-+					nla_len(tb[NL80211_TXRATE_HT_MCS]),
-+					mask.control[band].ht_mcs))
- 				return -EINVAL;
- 		}
- 
-@@ -7372,7 +7372,7 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
- 				return -EINVAL;
- 
- 			for (i = 0; i < IEEE80211_HT_MCS_MASK_LEN; i++)
--				if (mask.control[band].mcs[i])
-+				if (mask.control[band].ht_mcs[i])
- 					break;
- 
- 			/* legacy and mcs rates may not be both empty */
--- 
-1.7.9.5
-
+On Sun, Dec 8, 2013 at 1:50 PM, Ben Greear <greearb@candelatech.com> wrote:
+> On 12/07/2013 08:49 AM, Oleksij Rempel wrote:
+>>
+>> I have only one doubt in this patch.
+>> It will overwrite original MAC. If you wont to restore it, then you need
+>> to reload module.
+>>
+>> If no body against it, i can live it too.
+>
+>
+> I believe ethtool allows an API to read the eeprom-MAC addr.  Maybe
+> add support for that API to the ath9k_htc driver so that the original
+> MAC can be read that way?
+>
+> Thanks,
+> Ben
+>
+> --
+> Ben Greear <greearb@candelatech.com>
+> Candela Technologies Inc  http://www.candelatech.com
+>
