@@ -1,159 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm25-vm7.bullet.mail.ird.yahoo.com ([212.82.109.208]:26076 "HELO
-	nm25-vm7.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753224Ab3LEVnd (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:39775 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932186Ab3LIUaN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 16:43:33 -0500
-References: <1386259047.2121.YahooMailNeo@web172705.mail.ir2.yahoo.com>			 (sfid-20131205_165733_059424_F6F2D350) <1386259875.4182.15.camel@jlt4.sipsolutions.net>		 <1386260074.45953.YahooMailNeo@web172706.mail.ir2.yahoo.com>	 <1386260744.4182.18.camel@jlt4.sipsolutions.net>	 <1386261738.73311.YahooMailNeo@web172703.mail.ir2.yahoo.com> <1386265226.4182.20.camel@jlt4.sipsolutions.net>
-Message-ID: <1386279479.16148.YahooMailNeo@web172701.mail.ir2.yahoo.com> (sfid-20131205_224341_409702_DE685746)
-Date: Thu, 5 Dec 2013 21:37:59 +0000 (GMT)
-From: Dani Camps <danicamps81@yahoo.com>
-Reply-To: Dani Camps <danicamps81@yahoo.com>
-Subject: Re: Using wmediumd in kernel 3.10
-To: Johannes Berg <johannes@sipsolutions.net>
+	Mon, 9 Dec 2013 15:30:13 -0500
+Date: Mon, 9 Dec 2013 15:27:24 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
 Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1386265226.4182.20.camel@jlt4.sipsolutions.net>
+Subject: Re: pull request: iwlwifi-next 2013-12-2
+Message-ID: <20131209202724.GB3359@tuxdriver.com> (sfid-20131209_213017_118808_6543CB2A)
+References: <529CF2D6.1080008@gmail.com>
+ <529E129B.6080807@gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="139879195-1987227575-1386279479=:16148"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <529E129B.6080807@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---139879195-1987227575-1386279479=:16148
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: quoted-printable
+On Tue, Dec 03, 2013 at 07:19:23PM +0200, Emmanuel Grumbach wrote:
+> 
+> 
+> On 12/02/2013 10:51 PM, Emmanuel Grumbach wrote:
+> > Hi John,
+> > 
+> > This is the fixed and enlarged pull request for 3.14. It includes the
+> > patches in my previous pull request that was based on a bad patch.
+> > 
+> > I have here a big rework of the rate control by Eyal. This is obviously
+> > the biggest part of this batch.
+> > I also have enhancement of protection flags by Avri and a few bits for
+> > WoWLAN by Eliad and Luca. Johannes cleans up the debugfs plus a few
+> > fixes. I provided a few things for Bluetooth coexistence.
+> > Besides this we have an implementation for low priority scan.
+> > 
+> > Note that I had to merge iwlwifi-fixes into -next to solve conflicts
+> > before they hit linux-next.
+> > Please let me know about issues you may face - Thanks!
+> > 
+> 
+> So - I found out that merging iwlwifi-fixes wasn't a good idea... So I
+> updated my tree and added a trivial compilation fix.
+> 
+> New head: 2f579448f3a60c8ede544dd0951b8d2a2e282ba2.
+> 
+> I hope that I have done all the possible mistakes now and that next time
+> I will get it right the first time... Sorry for all the mess...
 
-Hi,=0A=0AI tried with kernel 3.12 but I still get the same error. Just to c=
-larify, if wmediumd would work properly you should see in the ping approxim=
-ately half of the packets being dropped, because the configuration file has=
- 0.5 drop probability for all rates. If you see that the ping proceeds norm=
-ally is because the error happened and wmediumd de-registered.=0A=0AI attac=
-h the error I see in syslog.=0A=0ABest Regards=0A=0A=0ADaniel=0A=0A=0A=0A=
-=0A=0AEl Jueves 5 de diciembre de 2013 18:40, Johannes Berg <johannes@sipso=
-lutions.net> escribi=F3:=0AOn Thu, 2013-12-05 at 16:42 +0000, Dani Camps wr=
-ote:=0A> ping -I mesh0 192.168.77.11=0A=0AWorks fine for me. Maybe you shou=
-ld try a later backports version, e.g.=0A3.12? I don't remember fixing anyt=
-hing, but I don't see any issues=0Aeither.=0A=0A=0Ajohannes
---139879195-1987227575-1386279479=:16148
-Content-Type: text/plain; name="var_log_syslog.txt"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="var_log_syslog.txt"
+This has a couple of merge conflicts when pulling it into
+wireless-next.  I don't have the time to work through them today,
+so I'm not pulling.
 
-RGVjICA1IDEzOjI4OjIxIG1pbmluZXQtdm0ga2VybmVsOiBbICAyNjEuMzAw
-MTIwXSBtYWM4MDIxMV9od3NpbTogcmVjZWl2ZWQgYSBSRUdJU1RFUiwgc3dp
-dGNoaW5nIHRvIHdtZWRpdW1kIG1vZGUgd2l0aCBwaWQgMTU2MQ0KRGVjICA1
-IDEzOjI4OjQ0IG1pbmluZXQtdm0ga2VybmVsOiBbICAyODQuMjkyMjQ3XSBC
-VUc6IHVuYWJsZSB0byBoYW5kbGUga2VybmVsIE5VTEwgcG9pbnRlciBkZXJl
-ZmVyZW5jZSBhdCAwMDAwMDAwNA0KRGVjICA1IDEzOjI4OjQ0IG1pbmluZXQt
-dm0ga2VybmVsOiBbICAyODQuMjkyMjQ3XSBJUDogWzxmODFkZGY5OT5dIG1h
-YzgwMjExX2h3c2ltX21vbml0b3JfYWNrLmlzcmEuMTkucGFydC4yMCsweDQ5
-LzB4MTIwIFttYWM4MDIxMV9od3NpbV0NCkRlYyAgNSAxMzoyODo0NCBtaW5p
-bmV0LXZtIGtlcm5lbDogWyAgMjg0LjI5MjI0N10gKnBkZSA9IDdlYmMxMDY3
-DQpEZWMgIDUgMTM6Mjg6NDQgbWluaW5ldC12bSBrZXJuZWw6IFsgIDI4NC4y
-OTIyNDddIE9vcHM6IDAwMDAgWyMxXSBTTVANCkRlYyAgNSAxMzoyODo0NCBt
-aW5pbmV0LXZtIGtlcm5lbDogWyAgMjg0LjI5MjI0N10gTW9kdWxlcyBsaW5r
-ZWQgaW46IGFyYzQgbWFjODAyMTFfaHdzaW0gbWFjODAyMTEgY2ZnODAyMTEg
-Y29tcGF0IHZlc2FmYiBwcGRldiBqb3lkZXYgc25kX2ludGVsOHgwIHNuZF9h
-Yzk3X2NvZGVjIGFjOTdfYnVzIGJpbmZtdF9taXNjIHNuZF9wY20gcHNtb3Vz
-ZSBzZXJpb19yYXcgcGFycG9ydF9wYyBzbmRfdGltZXIgc25kIHNvdW5kY29y
-ZSBzbmRfcGFnZV9hbGxvYyBpMmNfcGlpeDQgbHAgcGFycG9ydCB1c2JoaWQg
-aGlkIGFoY2kgbGliYWhjaSBlMTAwMA0KRGVjICA1IDEzOjI4OjQ0IG1pbmlu
-ZXQtdm0ga2VybmVsOiBbICAyODQuMjkyMjQ3XQ0KRGVjICA1IDEzOjI4OjQ0
-IG1pbmluZXQtdm0ga2VybmVsOiBbICAyODQuMjkyMjQ3XSBQaWQ6IDE1NjEs
-IGNvbW06IHdtZWRpdW1kIFRhaW50ZWQ6IEcgICAgICAgIFcgICAzLjAuMC0x
-Mi1nZW5lcmljICMyMC1VYnVudHUgaW5ub3RlayBHbWJIIFZpcnR1YWxCb3gv
-VmlydHVhbEJveA0KRGVjICA1IDEzOjI4OjQ0IG1pbmluZXQtdm0ga2VybmVs
-OiBbICAyODQuMjkyMjQ3XSBFSVA6IDAwNjA6WzxmODFkZGY5OT5dIEVGTEFH
-UzogMDAwMTAyODcgQ1BVOiAwDQpEZWMgIDUgMTM6Mjg6NDQgbWluaW5ldC12
-bSBrZXJuZWw6IFsgIDI4NC4yOTIyNDddIEVJUCBpcyBhdCBtYWM4MDIxMV9o
-d3NpbV9tb25pdG9yX2Fjay5pc3JhLjE5LnBhcnQuMjArMHg0OS8weDEyMCBb
-bWFjODAyMTFfaHdzaW1dDQpEZWMgIDUgMTM6Mjg6NDQgbWluaW5ldC12bSBr
-ZXJuZWw6IFsgIDI4NC4yOTIyNDddIEVBWDogZjI4ZTM2NDAgRUJYOiBmMmRj
-MzkwMCBFQ1g6IGYyZGMzOTAwIEVEWDogMDAwMDAwMTYNCkRlYyAgNSAxMzoy
-ODo0NCBtaW5pbmV0LXZtIGtlcm5lbDogWyAgMjg0LjI5MjI0N10gRVNJOiBm
-MjhlM2M1OCBFREk6IDAwMDAwMDA0IEVCUDogZjJkMGJjMzQgRVNQOiBmMmQw
-YmMyOA0KRGVjICA1IDEzOjI4OjQ0IG1pbmluZXQtdm0ga2VybmVsOiBbICAy
-ODQuMjkyMjQ3XSAgRFM6IDAwN2IgRVM6IDAwN2IgRlM6IDAwZDggR1M6IDAw
-ZTAgU1M6IDAwNjgNCkRlYyAgNSAxMzoyODo0NCBtaW5pbmV0LXZtIGtlcm5l
-bDogWyAgMjg0LjI5MjI0N10gUHJvY2VzcyB3bWVkaXVtZCAocGlkOiAxNTYx
-LCB0aT1mMmQwYTAwMCB0YXNrPWYyOTg2NjAwIHRhc2sudGk9ZjJkMGEwMDAp
-DQpEZWMgIDUgMTM6Mjg6NDQgbWluaW5ldC12bSBrZXJuZWw6IFsgIDI4NC4y
-OTIyNDddIFN0YWNrOg0KRGVjICA1IDEzOjI4OjQ0IG1pbmluZXQtdm0ga2Vy
-bmVsOiBbICAyODQuMjkyMjQ3XSAgZjJkYzNjMDAgZjJkYzNjMmMgZjJkYzNj
-MjEgZjJkMGJjNjAgZjgxZGU1NGMgMDAwMDAwMDQgZjJkMGJjOGMgZjJkYzNj
-MDANCkRlYyAgNSAxMzoyODo0NCBtaW5pbmV0LXZtIGtlcm5lbDogWyAgMjg0
-LjI5MjI0N10gIGYyOTI5NWEwIGYyZGMzYzAwIDAwMDAwMDAwIGY4MWUzMjYw
-IGY4MWUzMWMwIDAwMDAwMDAwIGYyZDBiY2JjIGMxNDVkNGY0DQpEZWMgIDUg
-MTM6Mjg6NDQgbWluaW5ldC12bSBrZXJuZWw6IFsgIDI4NC4yOTIyNDddICAw
-MDAwMDAzOCBmODFlMzJhMCAwMDAwMDAwOCBmODFlMzJhMCAwMDAwMDAwNCBj
-MTk0M2U0MCBmMjhlMzQxMCBmMmRjMzYwMA0KRGVjICA1IDEzOjI4OjQ0IG1p
-bmluZXQtdm0ga2VybmVsOiBbICAyODQuMjkyMjQ3XSBDYWxsIFRyYWNlOg0K
-RGVjICA1IDEzOjI4OjQ0IG1pbmluZXQtdm0ga2VybmVsOiBbICAyODQuMjky
-MjQ3XSAgWzxmODFkZTU0Yz5dIGh3c2ltX3R4X2luZm9fZnJhbWVfcmVjZWl2
-ZWRfbmwrMHgxZGMvMHgxZTAgW21hYzgwMjExX2h3c2ltXQ0KRGVjICA1IDEz
-OjI4OjQ0IG1pbmluZXQtdm0ga2VybmVsOiBbICAyODQuMjkyMjQ3XSAgWzxj
-MTQ1ZDRmND5dIGdlbmxfcmN2X21zZysweDFjNC8weDI0MA0KRGVjICA1IDEz
-OjI4OjQ0IG1pbmluZXQtdm0ga2VybmVsOiBbICAyODQuMjkyMjQ3XSAgWzxj
-MTQ1ZDMzMD5dID8gZ2VubF9yY3YrMHgzMC8weDMwDQpEZWMgIDUgMTM6Mjg6
-NDQgbWluaW5ldC12bSBrZXJuZWw6IFsgIDI4NC4yOTIyNDddICBbPGMxNDVj
-ZTllPl0gbmV0bGlua19yY3Zfc2tiKzB4OGUvMHhiMA0KRGVjICA1IDEzOjI4
-OjQ0IG1pbmluZXQtdm0ga2VybmVsOiBbICAyODQuMjkyMjQ3XSAgWzxjMTQ1
-ZDMxYz5dIGdlbmxfcmN2KzB4MWMvMHgzMA0KRGVjICA1IDEzOjI4OjQ0IG1p
-bmluZXQtdm0ga2VybmVsOiBbICAyODQuMjkyMjQ3XSAgWzxjMTQ1YzhhOT5d
-IG5ldGxpbmtfdW5pY2FzdCsweDIzOS8weDI5MA0KRGVjICA1IDEzOjI4OjQ0
-IG1pbmluZXQtdm0ga2VybmVsOiBbICAyODQuMjkyMjQ3XSAgWzxjMTQ1Y2I1
-Yj5dIG5ldGxpbmtfc2VuZG1zZysweDI1Yi8weDJlMA0KRGVjICA1IDEzOjI4
-OjQ0IG1pbmluZXQtdm0ga2VybmVsOiBbICAyODQuMjkyMjQ3XSAgWzxjMTQy
-NWQ3Yz5dIHNvY2tfc2VuZG1zZysweGVjLzB4MTEwDQpEZWMgIDUgMTM6Mjg6
-NDQgbWluaW5ldC12bSBrZXJuZWw6IFsgIDI4NC4yOTIyNDddICBbPGMxMDMy
-MGQyPl0gPyBjaGVja19wcmVlbXB0X2N1cnIrMHg3Mi8weDkwDQpEZWMgIDUg
-MTM6Mjg6NDQgbWluaW5ldC12bSBrZXJuZWw6IFsgIDI4NC4yOTIyNDddICBb
-PGMxMjg4MzZmPl0gPyBfX2NvcHlfZnJvbV91c2VyX2xsKzB4MWYvMHg0MA0K
-RGVjICA1IDEzOjI4OjQ0IG1pbmluZXQtdm0ga2VybmVsOiBbICAyODQuMjky
-MjQ3XSAgWzxjMTI4ODUwMj5dID8gX2NvcHlfZnJvbV91c2VyKzB4NDIvMHg2
-MA0KRGVjICA1IDEzOjI4OjQ0IG1pbmluZXQtdm0ga2VybmVsOiBbICAyODQu
-MjkyMjQ3XSAgWzxjMTQzMGQ0ND5dID8gdmVyaWZ5X2lvdmVjKzB4NDQvMHhi
-MA0KRGVjICA1IDEzOjI4OjQ0IG1pbmluZXQtdm0ga2VybmVsOiBbICAyODQu
-MjkyMjQ3XSAgWzxjMTQyNzU5MD5dIF9fc3lzX3NlbmRtc2crMHgyNzAvMHgy
-ODANCkRlYyAgNSAxMzoyODo0NCBtaW5pbmV0LXZtIGtlcm5lbDogWyAgMjg0
-LjI5MjI0N10gIFs8YzEwNDE2MDA+XSA/IGRlZmF1bHRfd2FrZV9mdW5jdGlv
-bisweDEwLzB4MjANCkRlYyAgNSAxMzoyODo0NCBtaW5pbmV0LXZtIGtlcm5l
-bDogWyAgMjg0LjI5MjI0N10gIFs8YzEwMmUyNzc+XSA/IF9fd2FrZV91cF9j
-b21tb24rMHg0Ny8weDcwDQpEZWMgIDUgMTM6Mjg6NDQgbWluaW5ldC12bSBr
-ZXJuZWw6IFsgIDI4NC4yOTIyNDddICBbPGMxMDJmYTg1Pl0gPyBfX3dha2Vf
-dXArMHg0NS8weDYwDQpEZWMgIDUgMTM6Mjg6NDQgbWluaW5ldC12bSBrZXJu
-ZWw6IFsgIDI4NC4yOTIyNDddICBbPGMxMzExMDQ5Pl0gPyB0dHlfd2FrZXVw
-KzB4MzkvMHg3MA0KRGVjICA1IDEzOjI4OjQ0IG1pbmluZXQtdm0ga2VybmVs
-OiBbICAyODQuMjkyMjQ3XSAgWzxjMTMxYWIyOT5dID8gcHR5X3dyaXRlKzB4
-NjkvMHg3MA0KRGVjICA1IDEzOjI4OjQ0IG1pbmluZXQtdm0ga2VybmVsOiBb
-ICAyODQuMjkyMjQ3XSAgWzxjMTAyNjAxOD5dID8gZGVmYXVsdF9zcGluX2xv
-Y2tfZmxhZ3MrMHg4LzB4MTANCkRlYyAgNSAxMzoyODo0NCBtaW5pbmV0LXZt
-IGtlcm5lbDogWyAgMjg0LjI5MjI0N10gIFs8YzE1MmM2ZmQ+XSA/IF9yYXdf
-c3Bpbl9sb2NrX2lycXNhdmUrMHgyZC8weDQwDQpEZWMgIDUgMTM6Mjg6NDQg
-bWluaW5ldC12bSBrZXJuZWw6IFsgIDI4NC4yOTIyNDddICBbPGMxMDJmYTg1
-Pl0gPyBfX3dha2VfdXArMHg0NS8weDYwDQpEZWMgIDUgMTM6Mjg6NDQgbWlu
-aW5ldC12bSBrZXJuZWw6IFsgIDI4NC4yOTIyNDddICBbPGMxMTViYzg4Pl0g
-PyBmc25vdGlmeSsweDE5OC8weDI1MA0KRGVjICA1IDEzOjI4OjQ0IG1pbmlu
-ZXQtdm0ga2VybmVsOiBbICAyODQuMjkyMjQ3XSAgWzxjMTQyODM5Yj5dIHN5
-c19zZW5kbXNnKzB4M2IvMHg2MA0KRGVjICA1IDEzOjI4OjQ0IG1pbmluZXQt
-dm0ga2VybmVsOiBbICAyODQuMjkyMjQ3XSAgWzxjMTQyOGEyMz5dIHN5c19z
-b2NrZXRjYWxsKzB4MjYzLzB4MmMwDQpEZWMgIDUgMTM6Mjg6NDQgbWluaW5l
-dC12bSBrZXJuZWw6IFsgIDI4NC4yOTIyNDddICBbPGMxNTJjOGU0Pl0gc3lz
-Y2FsbF9jYWxsKzB4Ny8weGINCkRlYyAgNSAxMzoyODo0NCBtaW5pbmV0LXZt
-IGtlcm5lbDogWyAgMjg0LjI5MjI0N10gQ29kZTogODQgYmQgMDAgMDAgMDAg
-YmEgMTYgMDAgMDAgMDAgZTggMjMgZjIgMjQgYzkgYzYgMDAgMDAgYzYgNDAg
-MDEgMDAgNjYgYzcgNDAgMDIgMTYgMDAgYzcgNDAgMDQgMGEgMDAgMDAgMDAg
-YzYgNDAgMTAgMDAgYzYgNDAgMTEgMDAgPDBmPiBiNyAxNyA4ZCA3YiAxOCA2
-NiBjNyA0MCAxNCA4MCAwMCA2NiA4OSA1MCAxMiBiYSAwYSAwMCAwMCAwMA0K
-RGVjICA1IDEzOjI4OjQ0IG1pbmluZXQtdm0ga2VybmVsOiBbICAyODQuMjky
-MjQ3XSBFSVA6IFs8ZjgxZGRmOTk+XSBtYWM4MDIxMV9od3NpbV9tb25pdG9y
-X2Fjay5pc3JhLjE5LnBhcnQuMjArMHg0OS8weDEyMCBbbWFjODAyMTFfaHdz
-aW1dIFNTOkVTUCAwMDY4OmYyZDBiYzI4DQpEZWMgIDUgMTM6Mjg6NDQgbWlu
-aW5ldC12bSBrZXJuZWw6IFsgIDI4NC4yOTIyNDddIENSMjogMDAwMDAwMDAw
-MDAwMDAwNA0KRGVjICA1IDEzOjI4OjQ0IG1pbmluZXQtdm0ga2VybmVsOiBb
-ICAyODQuNDkzMDA1XSAtLS1bIGVuZCB0cmFjZSBhNzkxOWU3ZjE3YzBhNzI4
-IF0tLS0NCkRlYyAgNSAxMzoyODo0NCBtaW5pbmV0LXZtIGtlcm5lbDogWyAg
-Mjg0LjQ5NjM4Ml0gbWFjODAyMTFfaHdzaW06IHdtZWRpdW1kIHJlbGVhc2Vk
-IG5ldGxpbmsgc29ja2V0LCBzd2l0Y2hpbmcgdG8gcGVyZmVjdCBjaGFubmVs
-IG1lZGl1bQ0K
+If you would like to work through the resolution and advise me on
+how to do it, I'd love to hear about it. :-)
 
---139879195-1987227575-1386279479=:16148--
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
