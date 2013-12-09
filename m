@@ -1,92 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:49324 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750877Ab3LWHTc (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:39968 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932582Ab3LIUpW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Dec 2013 02:19:32 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org
-Subject: [RFC 5/9] ath9k: Fix PHY restart workaround
-Date: Mon, 23 Dec 2013 12:44:22 +0530
-Message-Id: <1387782866-19847-6-git-send-email-sujith@msujith.org> (sfid-20131223_081938_275152_A565AF13)
-In-Reply-To: <1387782866-19847-1-git-send-email-sujith@msujith.org>
-References: <1387782866-19847-1-git-send-email-sujith@msujith.org>
+	Mon, 9 Dec 2013 15:45:22 -0500
+Date: Mon, 9 Dec 2013 15:30:57 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Subject: Re: Pull request: ath 20131203
+Message-ID: <20131209203057.GC3359@tuxdriver.com> (sfid-20131209_214530_771813_638464EF)
+References: <87txep52hf.fsf@kamboji.qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87txep52hf.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Tue, Dec 03, 2013 at 06:22:04PM +0200, Kalle Valo wrote:
+> Hi John,
+> 
+> here are ath10k patches which accumulated during the merge window.
+> 
+> Janusz and Marek implemented DFS support to ath10k, but the code is not
+> enabled yet due to missing cfg80211/mac80211 patches (it will be enabled
+> in the next pull request). Michal did some device reset fixes and made
+> it possible for ath10k to share an interrupt with another device. And
+> lots of smaller fixes from different people.
+> 
+> This time there are two conflicts, one in htc.c and other in mac.c. For
+> the htc change just delete the hunk. For the mac.c conflict take the
+> hunk from cfb27d29b61 (the bigger one) and rename
+> IEEE80211_CHAN_PASSIVE_SCAN to IEEE80211_CHAN_NO_IR. After you have
+> fixed the conflicts 'git diff' should show you this:
+> 
+> diff --cc drivers/net/wireless/ath/ath10k/htc.c
+> index edae50b,b068ae0..0000000
+> --- a/drivers/net/wireless/ath/ath10k/htc.c
+> +++ b/drivers/net/wireless/ath/ath10k/htc.c
+> diff --cc drivers/net/wireless/ath/ath10k/mac.c
+> index 06fe2b8,7d3d3ac..0000000
+> --- a/drivers/net/wireless/ath/ath10k/mac.c
+> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+> @@@ -1356,7 -1482,10 +1482,10 @@@ static int ath10k_update_channel_list(s
+>                         ch->ht40plus =
+>                                 !(channel->flags & IEEE80211_CHAN_NO_HT40PLUS);
+>   
+> +                       ch->chan_radar =
+> +                               !!(channel->flags & IEEE80211_CHAN_RADAR);
+> + 
+>  -                      passive = channel->flags & IEEE80211_CHAN_PASSIVE_SCAN;
+>  +                      passive = channel->flags & IEEE80211_CHAN_NO_IR;
+>                         ch->passive = passive;
+>   
+>                         ch->freq = channel->center_freq;
+> 
+> Please let me know if you prefer me to handle the conflict differently
+> or if there are any other problems with the pull request.
+> 
+> The following changes since commit a1b13b9ad3759dca24c6b721ee026c540a4e6564:
+> 
+>   rt2x00: rt2800pci: use module_pci_driver macro (2013-10-18 14:07:00 -0400)
+> 
+> are available in the git repository at:
+> 
+>   git://github.com/kvalo/ath.git tags/for-linville-20131203
+> 
+> for you to fetch changes up to cfb27d29b61cc32c0bb75f741aeabb9c6e6af742:
+> 
+>   ath10k: fix multi BSSID with WPA on FW 10.1 (2013-12-02 18:51:13 +0200)
 
-The PHY restart workaround that handles baseband hangs
-for packets with unsupported rates is required only
-for a HW bug in AR9300 v2.2. All the subsequent chips in
-the AR9003 family do not require this driver fix since
-it has been addressed in the HW.
+Pulling now -- thanks for the advice on the merge fixup!
 
-Since the value of the AR_PHY_RESTART register is written
-with the default initvals, make sure that PHY restart is
-always disabled once this particular BB hang signaure has
-been encountered.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_phy.c | 17 ++++++++---------
- drivers/net/wireless/ath/ath9k/hw.c         |  5 +++--
- 2 files changed, 11 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 9f051a0..b020331 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -1930,6 +1930,7 @@ EXPORT_SYMBOL(ar9003_hw_bb_watchdog_dbg_info);
- 
- void ar9003_hw_disable_phy_restart(struct ath_hw *ah)
- {
-+	u8 result;
- 	u32 val;
- 
- 	/* While receiving unsupported rate frame rx state machine
-@@ -1937,15 +1938,13 @@ void ar9003_hw_disable_phy_restart(struct ath_hw *ah)
- 	 * state, BB would go hang. If RXSM is in 0xb state after
- 	 * first bb panic, ensure to disable the phy_restart.
- 	 */
--	if (!((MS(ah->bb_watchdog_last_status,
--		  AR_PHY_WATCHDOG_RX_OFDM_SM) == 0xb) ||
--	    ah->bb_hang_rx_ofdm))
--		return;
--
--	ah->bb_hang_rx_ofdm = true;
--	val = REG_READ(ah, AR_PHY_RESTART);
--	val &= ~AR_PHY_RESTART_ENA;
-+	result = MS(ah->bb_watchdog_last_status, AR_PHY_WATCHDOG_RX_OFDM_SM);
- 
--	REG_WRITE(ah, AR_PHY_RESTART, val);
-+	if ((result == 0xb) || ah->bb_hang_rx_ofdm) {
-+		ah->bb_hang_rx_ofdm = true;
-+		val = REG_READ(ah, AR_PHY_RESTART);
-+		val &= ~AR_PHY_RESTART_ENA;
-+		REG_WRITE(ah, AR_PHY_RESTART, val);
-+	}
- }
- EXPORT_SYMBOL(ar9003_hw_disable_phy_restart);
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 7aa7835..fc4bb48 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1935,10 +1935,11 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	ath9k_hw_loadnf(ah, chan);
- 	ath9k_hw_start_nfcal(ah, true);
- 
--	if (AR_SREV_9300_20_OR_LATER(ah)) {
-+	if (AR_SREV_9300_20_OR_LATER(ah))
- 		ar9003_hw_bb_watchdog_config(ah);
-+
-+	if (ah->config.hw_hang_checks & HW_PHYRESTART_CLC_WAR)
- 		ar9003_hw_disable_phy_restart(ah);
--	}
- 
- 	ath9k_hw_apply_gpio_override(ah);
- 
 -- 
-1.8.5.2
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
