@@ -1,52 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:39817 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757757Ab3LFLLy (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:51950 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932684Ab3LIU2f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Dec 2013 06:11:54 -0500
-Message-ID: <52A1B0B4.9060703@huawei.com> (sfid-20131206_121159_345395_5BBAB54C)
-Date: Fri, 6 Dec 2013 19:10:44 +0800
-From: Wang Weidong <wangweidong1@huawei.com>
-MIME-Version: 1.0
-To: <johannes@sipsolutions.net>, <linville@tuxdriver.com>,
-	David Miller <davem@davemloft.net>
-CC: <netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] wireless: fix build warning of used uninitialized variable
-References: <52A15777.5000508@huawei.com>
-In-Reply-To: <52A15777.5000508@huawei.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Mon, 9 Dec 2013 15:28:35 -0500
+From: Luciano Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Cc: luca@coelho.fi, balbi@ti.com
+Subject: [PATCH] MAINTAINERS: remove myself as maintainer of TI WiLink drivers
+Date: Mon,  9 Dec 2013 22:28:32 +0200
+Message-Id: <1386620912-9292-1-git-send-email-luca@coelho.fi> (sfid-20131209_212838_766465_F15DB104)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013/12/6 12:49, Wang Weidong wrote:
-> nl80211.c: In function __cfg80211_wdev_from_attrs
-> nl80211.c:77: warning: wdev_id may be used uninitialized in this function
-> 
+I don't have the time to maintain the TI WiLink WLAN drivers anymore.
+Remove my name and mark them as Orphan.
 
-Sorry. My complier version is too low so that I got this warning.
-Just ignore it.
+Signed-off-by: Luciano Coelho <luca@coelho.fi>
+---
 
-Regards.
-Wang
+Unfortunately I don't have the time to maintain the WiLink drivers
+anymore.  Does anyone want to step forward to take it over?
 
-> Signed-off-by: Wang Weidong <wangweidong1@huawei.com>
-> ---
->  net/wireless/nl80211.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-> index 138dc3b..6894229 100644
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -74,7 +74,7 @@ __cfg80211_wdev_from_attrs(struct net *netns, struct nlattr **attrs)
->  	struct wireless_dev *result = NULL;
->  	bool have_ifidx = attrs[NL80211_ATTR_IFINDEX];
->  	bool have_wdev_id = attrs[NL80211_ATTR_WDEV];
-> -	u64 wdev_id;
-> +	u64 wdev_id = 0;
->  	int wiphy_idx = -1;
->  	int ifidx = -1;
->  
-> 
+ MAINTAINERS | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
+diff --git a/MAINTAINERS b/MAINTAINERS
+index e65a2c2..265bf79 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -8560,12 +8560,11 @@ S:	Maintained
+ F:	sound/soc/codecs/twl4030*
+ 
+ TI WILINK WIRELESS DRIVERS
+-M:	Luciano Coelho <luca@coelho.fi>
+ L:	linux-wireless@vger.kernel.org
+ W:	http://wireless.kernel.org/en/users/Drivers/wl12xx
+ W:	http://wireless.kernel.org/en/users/Drivers/wl1251
+ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git
+-S:	Maintained
++S:	Orphan
+ F:	drivers/net/wireless/ti/
+ F:	include/linux/wl12xx.h
+ 
+-- 
+1.8.5.1
 
