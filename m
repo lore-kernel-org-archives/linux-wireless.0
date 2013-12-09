@@ -1,67 +1,215 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f53.google.com ([209.85.212.53]:33202 "EHLO
-	mail-vb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751019Ab3LPVzj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Dec 2013 16:55:39 -0500
-Received: by mail-vb0-f53.google.com with SMTP id o19so3510545vbm.40
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Dec 2013 13:55:38 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAHmEv85q4c0FmvS+_kwQG9SfZgrokfYPNUvJmteKjdzxqnDvHw@mail.gmail.com>
-References: <1387142056-21850-1-git-send-email-twpedersen@gmail.com>
- <1387142056-21850-2-git-send-email-twpedersen@gmail.com> <CAHNKnsTAJJBNT0nj8z-4mSAC_Gh1F6M7pdu3CGAMQ70+aALx4w@mail.gmail.com>
- <CAHmEv85q4c0FmvS+_kwQG9SfZgrokfYPNUvJmteKjdzxqnDvHw@mail.gmail.com>
-From: Sergey Ryazanov <ryazanov.s.a@gmail.com>
-Date: Tue, 17 Dec 2013 01:55:17 +0400
-Message-ID: <CAHNKnsS-mT=fqwFEU82PQxeyAGaDLkEw8PpLm+83CfAbnSGy8w@mail.gmail.com> (sfid-20131216_225545_730408_6F55D1CD)
-Subject: Re: [PATCH 2/3] mac80211: reset TSF to 0 when joining a mesh
-To: Thomas Pedersen <twpedersen@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	open80211s <devel@lists.open80211s.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Thomas Pedersen <thomas@cozybit.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from nbd.name ([46.4.11.11]:44482 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932566Ab3LIP7R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Dec 2013 10:59:17 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH] mac80211: add helper functions for tracking P2P NoA state
+Date: Mon,  9 Dec 2013 16:59:02 +0100
+Message-Id: <1386604742-8560-1-git-send-email-nbd@openwrt.org> (sfid-20131209_165920_765501_9E63247D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/12/16 Thomas Pedersen <twpedersen@gmail.com>:
-> On Mon, Dec 16, 2013 at 4:33 AM, Sergey Ryazanov <ryazanov.s.a@gmail.com> wrote:
->> Hello Thomas,
->>
->> 2013/12/16 Thomas Pedersen <twpedersen@gmail.com>:
->>> diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
->>> index 330d1f7..1174157 100644
->>> --- a/net/mac80211/mesh.c
->>> +++ b/net/mac80211/mesh.c
->>> @@ -802,6 +802,8 @@ int ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
->>>                 return -ENOMEM;
->>>         }
->>>
->>> +       /* next beacon will be DTIM-1, so TSF=0 was DTIM=0 */
->>> +       drv_set_tsf(local, sdata, 0);
->>>         ieee80211_bss_info_change_notify(sdata, changed);
->>>
->>>         netif_carrier_on(sdata->dev);
->>
->> What happen with AP interface on the same radio if we configure mesh
->> portal? Clients could be confused by such TSF jump.
->
-> Like Johannes said; either the driver supports per-vif TSF, or well,
-> it doesn't. Anyway wouldn't clients reset their own TSF when the new
-> beacon is received?
->
-Yeah, IEEE 802.11 says that stations must blindly use AP time, but it
-says nothing about the situation when time is accidentally reset to
-zero. I can't predict reaction of each chip/firmware/driver to such
-situation.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ include/net/mac80211.h |  40 +++++++++++++++
+ net/mac80211/util.c    | 135 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 175 insertions(+)
 
-Another one unclear situation is the reaction of peers of mesh STA,
-which share the same radio (and same TSF). If we silently reset its
-time, what happens to the time synchronization with neighbors?
-
-Why could not we calculate DTIM counter value on basis of known TSF
-and Beacon/DTIM interval, instead of primitive time reset?
-
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 3cd408b..ae17543 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -4625,4 +4625,44 @@ bool ieee80211_tx_prepare_skb(struct ieee80211_hw *hw,
+ 			      struct ieee80211_vif *vif, struct sk_buff *skb,
+ 			      int band, struct ieee80211_sta **sta);
+ 
++/**
++ * struct ieee80211_noa_data - holds temporary data for tracking P2P NoA state
++ *
++ * @next_tsf: TSF timestamp of the next absent state change
++ * @has_next_tsf: next absent state change event pending
++ *
++ * @absent: descriptor bitmask, set if GO is currently absent
++ */
++struct ieee80211_noa_data {
++	u32 next_tsf;
++	bool has_next_tsf;
++
++	u8 absent;
++
++	u8 count[IEEE80211_P2P_NOA_DESC_MAX];
++	struct {
++		u32 start;
++		u32 duration;
++		u32 interval;
++	} desc[IEEE80211_P2P_NOA_DESC_MAX];
++};
++
++/**
++ * ieee80211_parse_p2p_noa - initialize NoA tracking data from P2P IE
++ *
++ * @attr: P2P NoA IE
++ * @data: NoA tracking data
++ * @tsf: current TSF timestamp
++ */
++int ieee80211_parse_p2p_noa(const struct ieee80211_p2p_noa_attr *attr,
++			    struct ieee80211_noa_data *data, u32 tsf);
++
++/**
++ * ieee80211_update_p2p_noa - get next pending P2P GO absent state change
++ *
++ * @data: NoA tracking data
++ * @tsf: current TSF timestamp
++ */
++void ieee80211_update_p2p_noa(struct ieee80211_noa_data *data, u32 tsf);
++
+ #endif /* MAC80211_H */
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 875e172..b7a8326 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2554,3 +2554,138 @@ int ieee80211_cs_headroom(struct ieee80211_local *local,
+ 
+ 	return headroom;
+ }
++
++static bool
++ieee80211_extend_noa_desc(struct ieee80211_noa_data *data, u32 tsf, int i)
++{
++	s32 end = data->desc[i].start + data->desc[i].duration - (tsf + 1);
++	int skip;
++
++	if (end > 0)
++		return false;
++
++	/* End time is in the past, check for repetitions */
++	skip = DIV_ROUND_UP(-end, data->desc[i].interval);
++	if (data->count[i] < 255) {
++		if (data->count[i] <= skip) {
++			data->count[i] = 0;
++			return false;
++		}
++
++		data->count[i] -= skip;
++	}
++
++	data->desc[i].start += skip * data->desc[i].interval;
++
++	return true;
++}
++
++static bool
++ieee80211_extend_absent_time(struct ieee80211_noa_data *data, u32 tsf,
++			     s32 *offset)
++{
++	bool ret = false;
++	int i;
++
++	for (i = 0; i < IEEE80211_P2P_NOA_DESC_MAX; i++) {
++		s32 cur;
++
++		if (!data->count[i])
++			continue;
++
++		if (ieee80211_extend_noa_desc(data, tsf + *offset, i))
++			ret = true;
++
++		cur = data->desc[i].start - tsf;
++		if (cur > *offset)
++			continue;
++
++		cur = data->desc[i].start + data->desc[i].duration - tsf;
++		if (cur > *offset)
++			*offset = cur;
++	}
++
++	return ret;
++}
++
++static u32
++ieee80211_get_noa_absent_time(struct ieee80211_noa_data *data, u32 tsf)
++{
++	s32 offset = 0;
++	int tries = 0;
++
++	ieee80211_extend_absent_time(data, tsf, &offset);
++	do {
++		if (!ieee80211_extend_absent_time(data, tsf, &offset))
++			break;
++
++		tries++;
++	} while (tries < 5);
++
++	return offset;
++}
++
++void ieee80211_update_p2p_noa(struct ieee80211_noa_data *data, u32 tsf)
++{
++	u32 next_offset = BIT(31) - 1;
++	int i;
++
++	data->absent = 0;
++	data->has_next_tsf = false;
++	for (i = 0; i < IEEE80211_P2P_NOA_DESC_MAX; i++) {
++		s32 start;
++
++		if (!data->count[i])
++			continue;
++
++		ieee80211_extend_noa_desc(data, tsf, i);
++		start = data->desc[i].start - tsf;
++		if (start <= 0)
++			data->absent |= BIT(i);
++
++		if (next_offset > start)
++			next_offset = start;
++
++		data->has_next_tsf = true;
++	}
++
++	if (data->absent)
++		next_offset = ieee80211_get_noa_absent_time(data, tsf);
++
++	data->next_tsf = tsf + next_offset;
++}
++EXPORT_SYMBOL(ieee80211_update_p2p_noa);
++
++int ieee80211_parse_p2p_noa(const struct ieee80211_p2p_noa_attr *attr,
++			    struct ieee80211_noa_data *data, u32 tsf)
++{
++	int ret = 0;
++	int i;
++
++	memset(data, 0, sizeof(*data));
++
++	for (i = 0; i < IEEE80211_P2P_NOA_DESC_MAX; i++) {
++		const struct ieee80211_p2p_noa_desc *desc = &attr->desc[i];
++
++		if (!desc->count || !desc->duration)
++			continue;
++
++		data->count[i] = desc->count;
++		data->desc[i].start = le32_to_cpu(desc->start_time);
++		data->desc[i].duration = le32_to_cpu(desc->duration);
++		data->desc[i].interval = le32_to_cpu(desc->interval);
++
++		if (data->count[i] > 1 &&
++		    data->desc[i].interval < data->desc[i].duration)
++			continue;
++
++		ieee80211_extend_noa_desc(data, tsf, i);
++		ret++;
++	}
++
++	if (ret)
++		ieee80211_update_p2p_noa(data, tsf);
++
++	return ret;
++}
++EXPORT_SYMBOL(ieee80211_parse_p2p_noa);
 -- 
-BR,
-Sergey
+1.8.3.4 (Apple Git-47)
+
