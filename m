@@ -1,97 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f169.google.com ([209.85.215.169]:57443 "EHLO
-	mail-ea0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750826Ab3LLO2d (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Dec 2013 09:28:33 -0500
-Received: by mail-ea0-f169.google.com with SMTP id l9so233109eaj.0
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Dec 2013 06:28:32 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 2/3] ath10k: zero device DRAM to avoid host hangs
-Date: Thu, 12 Dec 2013 15:24:20 +0100
-Message-Id: <1386858261-16037-3-git-send-email-michal.kazior@tieto.com> (sfid-20131212_152839_371848_61FD81C3)
-In-Reply-To: <1386858261-16037-1-git-send-email-michal.kazior@tieto.com>
-References: <1386858261-16037-1-git-send-email-michal.kazior@tieto.com>
+Received: from mout.gmx.net ([212.227.17.22]:51098 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752124Ab3LIODT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Dec 2013 09:03:19 -0500
+Received: from [192.168.1.100] ([93.218.116.213]) by mail.gmx.com (mrgmx103)
+ with ESMTPSA (Nemesis) id 0MCtLD-1VhX6L1Wi3-009dZd for
+ <linux-wireless@vger.kernel.org>; Mon, 09 Dec 2013 15:03:18 +0100
+Message-ID: <52A5CDA5.7000601@rempel-privat.de> (sfid-20131209_150334_677343_F06EE8F1)
+Date: Mon, 09 Dec 2013 15:03:17 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
+MIME-Version: 1.0
+To: David Herrmann <dh.herrmann@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [BUG] P2P setup timeout
+References: <CANq1E4R--OowH-LCUX4oSxsJu7yf_2e6Jei8tP+i_BQ_QHiKkw@mail.gmail.com>
+In-Reply-To: <CANq1E4R--OowH-LCUX4oSxsJu7yf_2e6Jei8tP+i_BQ_QHiKkw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hardware has a bug that causes it to dereference
-garbage from the DRAM into the host. This can lead
-to host crashes, hangs, memory corruption or data
-bus errors.
+Am 06.12.2013 11:18, schrieb David Herrmann:
+> Hi
+> 
+> I am currently working on user-space helpers for P2P setup as part of
+> an Open-Source Miracast implementation (openwfd). I can set up a
+> P2P-group with my Android test-device just fine, however, it only
+> works if initiated by the GNU/Linux host. Once I initiate the
+> p2p-connect from the Android device, it creates a group and sends me a
+> p2p-invitation which I am unable to accept.
+> 
+> I am running wpa_supplicant-git from today (but also tried older
+> versions), ath9k-htc from linus-git (3.13-rc2) and the relevant log
+> files are appended.
+> 
+> My wpa-config is:
+>   ctrl_interface=/var/run/wpa_supplicant
+>   update_config=1
+>   p2p_go_ht40=1
+> 
+> And I do nothing else than open wpa_cli and run:
+>   p2p_find
+>   p2p_connect <peer> pbc
+> 
+> This works perfectly well if I don't touch the Android device before
+> issuing the p2p_connect. However, if I initiate the first connect on
+> the Android device, my linux host gets a p2p-invitation:
+>   <3>P2P-INVITATION-RECEIVED sa=12:68:3f:4e:39:f2
+> go_dev_addr=12:68:3f:4e:39:f2 bssid=12:68:3f:4e:b9:f2 unknown-network
+> 
+> I tried accepting this invitation via p2p_connect, but just nothing
+> happens. I also tried any combination of arguments
+> (auth/join/persistent, pbc/pin/PIN#, playing with go_intent=), didn't
+> help..
+> 
+> Looking at the wpa-log, I see a timeout firing repeatedly:
+>   P2P: GO Negotiation Request TX callback: success=1
+>   P2P: State CONNECT -> CONNECT
+>   P2P: Set timeout (state=CONNECT): 0.500000 sec
+>   P2P: Timeout (state=CONNECT)
+> Below you can see the whole sequence of wpa-messages that repeat over
+> and over again until I cancel the connection-request.
+> 
+> For WFD I need to initiate the connect from the Android device,
+> otherwise their WFD stack won't recognize the connection. So if anyone
+> has hints what might be wrong here, I'd gladly try out any patches or
+> configurations.
+> I cannot test whether this happens with other drivers, too, as I
+> couldn't get my hands on a device other than ath9k-htc which supports
+> p2p on linux.
+> 
+> If anyone is interested, I'll be presenting OpenWFD at FOSDEM in the
+> graphics-devroom. It would be awesome if I can get my Nexus-4 as a
+> working demo until then. Otherwise, it'll be just linux<->linux demos
+> (non-android), which is already working fine.
 
-Apparently doing a cold reset in a tight loop
-isn't enough to trigger the bug. The device must
-be excercised with a regular workload (i.e. start
-AP, etc). After that there's a chance cold reset
-will break and hang the host.
+Is it related to your "Atheros AR9280: NULL-deref during P2P setup"
+issue? Or it is not reproducible any more?
 
-A rough guess here is this is related to DRAM
-contents. The patch tries to zero the DRAM when
-tearing down the device to avoid subsequent cold
-reset break the host.
-
-Ideally DRAM should be also zeroed right before
-a cold reset but current CE init code doesn't
-allow that.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/hw.h  |  1 +
- drivers/net/wireless/ath/ath10k/pci.c | 18 ++++++++++++++++++
- 2 files changed, 19 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 2032737..3c60476 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -289,6 +289,7 @@ enum ath10k_mcast2ucast_mode {
- #define PCIE_INTR_CE_MASK_ALL			0x0007f800
- 
- #define DRAM_BASE_ADDRESS			0x00400000
-+#define DRAM_BASE_SIZE				(512*1024)
- 
- #define MISSING 0
- 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 475b4da..2527004 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -617,6 +617,22 @@ static int ath10k_pci_diag_write_access(struct ath10k *ar, u32 address,
- 	return 0;
- }
- 
-+static void ath10k_pci_zero_target_dram(struct ath10k *ar)
-+{
-+	int i;
-+
-+	/* Target device has a bug with cold reset. It can dereference garbage
-+	 * and access host memory leading to data bus errors, memory corruption
-+	 * on host and hangs.
-+	 *
-+	 * To avoid that try to zero target DRAM through the diagnostic CE. */
-+
-+	ath10k_dbg(ATH10K_DBG_BOOT, "zeroing device DRAM\n");
-+
-+	for (i = 0; i < DRAM_BASE_SIZE; i += sizeof(u32))
-+		ath10k_pci_diag_write_access(ar, DRAM_BASE_ADDRESS + i, 0);
-+}
-+
- static bool ath10k_pci_target_is_awake(struct ath10k *ar)
- {
- 	void __iomem *mem = ath10k_pci_priv(ar)->mem;
-@@ -1461,6 +1477,8 @@ static void ath10k_pci_ce_deinit(struct ath10k *ar)
- 	struct ath10k_pci_pipe *pipe_info;
- 	int pipe_num;
- 
-+	ath10k_pci_zero_target_dram(ar);
-+
- 	for (pipe_num = 0; pipe_num < CE_COUNT; pipe_num++) {
- 		pipe_info = &ar_pci->pipe_info[pipe_num];
- 		if (pipe_info->ce_hdl) {
 -- 
-1.8.4.rc3
-
+Regards,
+Oleksij
