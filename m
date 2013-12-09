@@ -1,40 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:48155 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757704Ab3LFLEG (ORCPT
+Received: from mail-oa0-f49.google.com ([209.85.219.49]:36824 "EHLO
+	mail-oa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760951Ab3LIJit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Dec 2013 06:04:06 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 16/16] ath9k: Apply tuning caps for AR9330 and AR9485
-Date: Fri,  6 Dec 2013 16:28:54 +0530
-Message-Id: <1386327534-31105-17-git-send-email-sujith@msujith.org> (sfid-20131206_120412_660581_F297BBB0)
-In-Reply-To: <1386327534-31105-1-git-send-email-sujith@msujith.org>
-References: <1386327534-31105-1-git-send-email-sujith@msujith.org>
+	Mon, 9 Dec 2013 04:38:49 -0500
+Received: by mail-oa0-f49.google.com with SMTP id i4so3542634oah.36
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Dec 2013 01:38:48 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20131209041821.GC14878@us.netrek.org>
+References: <20131203202607.0b445195@kemnade.info> <1386167786.19448.4.camel@dcbw.foobar.com>
+ <CA+E=qVdY4M=bnX=pqMiMirhQ_BRg6Uc6K9Xkzvf328BaByUF1g@mail.gmail.com> <20131209041821.GC14878@us.netrek.org>
+From: Vasily Khoruzhick <anarsoul@gmail.com>
+Date: Mon, 9 Dec 2013 12:38:28 +0300
+Message-ID: <CA+E=qVd_F_=z5Vb2jan-nNVmizQznOiR=98CPHQevMxbnxGJiA@mail.gmail.com> (sfid-20131209_103858_456183_856DEA05)
+Subject: Re: status of libertas_tf + sdio?
+To: James Cameron <quozl@laptop.org>
+Cc: Dan Williams <dcbw@redhat.com>,
+	Andreas Kemnade <andreas@kemnade.info>,
+	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Mon, Dec 9, 2013 at 7:18 AM, James Cameron <quozl@laptop.org> wrote:
+> On Fri, Dec 06, 2013 at 01:40:00PM +0300, Vasily Khoruzhick wrote:
+>> Out of curiosity,
+>>
+>> Does anyone know if it's possible to get thin firmware for 8686 with
+>> SPI interface?
+>
+> What happens when you try?
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+How? There's no tf available for 8686 with SPI interface.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 2845ace..ec317d6 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3965,7 +3965,7 @@ static void ar9003_hw_apply_tuning_caps(struct ath_hw *ah)
- 	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
- 	u8 tuning_caps_param = eep->baseEepHeader.params_for_tuning_caps[0];
- 
--	if (AR_SREV_9485(ah) || AR_SREV_9330(ah) || AR_SREV_9340(ah))
-+	if (AR_SREV_9340(ah))
- 		return;
- 
- 	if (eep->baseEepHeader.featureEnable & 0x40) {
--- 
-1.8.4.2
+> How are you downloading firmware over SPI?
 
+See drivers/net/wireless/libertas/if_spi.c, but it's for fat firmware
+
+> I'm not aware of a second stage firmware download helper specific to
+> the SPI mode.
+
+What's a second stage firmware download helper?
+
+> I think it is not possible without firmware engineering.
+
+Yeah, just hoped that Marvell already did it. It's a pity that
+firmware source code isn't available :(
+
+Regards
+Vasily
+
+>
+> --
+> James Cameron
+> http://quozl.linux.org.au/
