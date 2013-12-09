@@ -1,274 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f52.google.com ([74.125.83.52]:38580 "EHLO
-	mail-ee0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753965Ab3LQUp2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Dec 2013 15:45:28 -0500
-Received: by mail-ee0-f52.google.com with SMTP id d17so3137373eek.11
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Dec 2013 12:45:27 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eyal Shapira <eyal@wizery.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 30/36] iwlwifi: mvm: rs: refactor rate scale action decision
-Date: Tue, 17 Dec 2013 22:44:33 +0200
-Message-Id: <1387313079-28123-30-git-send-email-egrumbach@gmail.com> (sfid-20131217_215149_925510_2556B0C3)
-In-Reply-To: <52B0B72A.5070704@gmail.com>
-References: <52B0B72A.5070704@gmail.com>
+Received: from mout.gmx.net ([212.227.15.18]:53193 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760802Ab3LIOGb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Dec 2013 09:06:31 -0500
+Received: from [192.168.1.100] ([93.218.116.213]) by mail.gmx.com (mrgmx101)
+ with ESMTPSA (Nemesis) id 0LlYrb-1VFrFK44db-00bIQo for
+ <linux-wireless@vger.kernel.org>; Mon, 09 Dec 2013 15:06:30 +0100
+Message-ID: <52A5CE63.1060009@rempel-privat.de> (sfid-20131209_150635_350467_5B141AB6)
+Date: Mon, 09 Dec 2013 15:06:27 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
+MIME-Version: 1.0
+To: Mathy <vanhoefm@gmail.com>, Ben Greear <greearb@candelatech.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Pau Koning <paukoning@gmail.com>,
+	linux-wireless@vger.kernel.org, jouni@qca.qualcomm.com,
+	vthiagar@qti.qualcomm.com, senthilb@qti.qualcomm.com
+Subject: Re: [PATCH] ath9k_htc: properly set MAC address and BSSID mask
+References: <5294E4C5.4050301@cs.kuleuven.be> <52950812.20001@rempel-privat.de> <5295EF41.8040709@cs.kuleuven.be> <CANiGF999jHN3+5QuNVAkVk_hHxZ6LkPxWB3jW9yoJGbfno7M9A@mail.gmail.com> <52972749.70200@gmail.com> <20131206162919.GE13285@tuxdriver.com> <CAFXAJYzO5ifSYbiN7xqV5Sr+3CFrZsaqc2dg0bt-JB0EUxFRdQ@mail.gmail.com> <52A35189.7010804@rempel-privat.de> <52A46B10.6030104@candelatech.com> <CAFXAJYyOrd_ybL=roYqdjF_eK81kP1sEBHbjSsXL8y0P_oR38w@mail.gmail.com>
+In-Reply-To: <CAFXAJYyOrd_ybL=roYqdjF_eK81kP1sEBHbjSsXL8y0P_oR38w@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+Am 08.12.2013 19:09, schrieb Mathy:
+> The common->macaddr field is also updated in the ath9k driver
+> (function ath9k_calculate_iter_data in main.c).
+> 
+> I just did a quick test. When using macchanger to assign a random MAC
+> address, the original (permanent) MAC address is still retrieved
+> properly. So there is no need to reload the module, macchanger can
+> simply restore the permanent MAC. I assume the permanent MAC address
+> is saved elsewhere?
 
-Extract the scale action decision to a different function
-in preparation of modifying it. While at it also convert
-the scale action values from hardcoded values to a clear enum.
+Right now i have no time to digg deeper in it. I'm ok with this patch.
+Thanks a lot for your work!
 
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/rs.c |  186 ++++++++++++++++++---------------
- 1 file changed, 103 insertions(+), 83 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
-index 6d0bd45..62b29d7 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
-@@ -130,6 +130,12 @@ static const struct iwl_rs_rate_info iwl_rates[IWL_RATE_COUNT] = {
- 	IWL_DECLARE_MCS_RATE(9),                 /* MCS 9 */
- };
- 
-+enum rs_action {
-+	RS_ACTION_STAY = 0,
-+	RS_ACTION_DOWNSCALE = -1,
-+	RS_ACTION_UPSCALE = 1,
-+};
-+
- enum rs_column_mode {
- 	RS_INVALID = 0,
- 	RS_LEGACY,
-@@ -1616,6 +1622,97 @@ err:
- 	return -1;
- }
- 
-+static enum rs_action rs_get_rate_action(struct iwl_mvm *mvm,
-+					 struct iwl_scale_tbl_info *tbl,
-+					 s32 sr, int low, int high,
-+					 int current_tpt,
-+					 int low_tpt, int high_tpt)
-+{
-+	enum rs_action action = RS_ACTION_STAY;
-+
-+	/* Too many failures, decrease rate */
-+	if ((sr <= RS_SR_FORCE_DECREASE) || (current_tpt == 0)) {
-+		IWL_DEBUG_RATE(mvm,
-+			       "decrease rate because of low SR\n");
-+		action = RS_ACTION_DOWNSCALE;
-+	/* No throughput measured yet for adjacent rates; try increase. */
-+	} else if ((low_tpt == IWL_INVALID_VALUE) &&
-+		   (high_tpt == IWL_INVALID_VALUE)) {
-+		if (high != IWL_RATE_INVALID && sr >= IWL_RATE_INCREASE_TH) {
-+			IWL_DEBUG_RATE(mvm,
-+				       "Good SR and no high rate measurement. "
-+				       "Increase rate\n");
-+			action = RS_ACTION_UPSCALE;
-+		} else if (low != IWL_RATE_INVALID) {
-+			IWL_DEBUG_RATE(mvm,
-+				       "Remain in current rate\n");
-+			action = RS_ACTION_STAY;
-+		}
-+	}
-+
-+	/* Both adjacent throughputs are measured, but neither one has better
-+	 * throughput; we're using the best rate, don't change it!
-+	 */
-+	else if ((low_tpt != IWL_INVALID_VALUE) &&
-+		 (high_tpt != IWL_INVALID_VALUE) &&
-+		 (low_tpt < current_tpt) &&
-+		 (high_tpt < current_tpt)) {
-+		IWL_DEBUG_RATE(mvm,
-+			       "Both high and low are worse. "
-+			       "Maintain rate\n");
-+		action = RS_ACTION_STAY;
-+	}
-+
-+	/* At least one adjacent rate's throughput is measured,
-+	 * and may have better performance.
-+	 */
-+	else {
-+		/* Higher adjacent rate's throughput is measured */
-+		if (high_tpt != IWL_INVALID_VALUE) {
-+			/* Higher rate has better throughput */
-+			if (high_tpt > current_tpt &&
-+			    sr >= IWL_RATE_INCREASE_TH) {
-+				IWL_DEBUG_RATE(mvm,
-+					       "Higher rate is better and good "
-+					       "SR. Increate rate\n");
-+				action = RS_ACTION_UPSCALE;
-+			} else {
-+				IWL_DEBUG_RATE(mvm,
-+					       "Higher rate isn't better OR "
-+					       "no good SR. Maintain rate\n");
-+				action = RS_ACTION_STAY;
-+			}
-+
-+		/* Lower adjacent rate's throughput is measured */
-+		} else if (low_tpt != IWL_INVALID_VALUE) {
-+			/* Lower rate has better throughput */
-+			if (low_tpt > current_tpt) {
-+				IWL_DEBUG_RATE(mvm,
-+					       "Lower rate is better. "
-+					       "Decrease rate\n");
-+				action = RS_ACTION_DOWNSCALE;
-+			} else if (sr >= IWL_RATE_INCREASE_TH) {
-+				IWL_DEBUG_RATE(mvm,
-+					       "Lower rate isn't better and "
-+					       "good SR. Increase rate\n");
-+				action = RS_ACTION_UPSCALE;
-+			}
-+		}
-+	}
-+
-+	/* Sanity check; asked for decrease, but success rate or throughput
-+	 * has been good at old rate.  Don't change it.
-+	 */
-+	if ((action == RS_ACTION_DOWNSCALE) && (low != IWL_RATE_INVALID) &&
-+	    ((sr > IWL_RATE_HIGH_TH) ||
-+	     (current_tpt > (100 * tbl->expected_tpt[low])))) {
-+		IWL_DEBUG_RATE(mvm,
-+			       "Sanity check failed. Maintain rate\n");
-+		action = RS_ACTION_STAY;
-+	}
-+
-+	return action;
-+}
- 
- /*
-  * Do rate scaling and search for new modulation mode.
-@@ -1636,7 +1733,7 @@ static void rs_rate_scale_perform(struct iwl_mvm *mvm,
- 	int low_tpt = IWL_INVALID_VALUE;
- 	int high_tpt = IWL_INVALID_VALUE;
- 	u32 fail_count;
--	s8 scale_action = 0;
-+	enum rs_action scale_action = RS_ACTION_STAY;
- 	u16 rate_mask;
- 	u8 update_lq = 0;
- 	struct iwl_scale_tbl_info *tbl, *tbl1;
-@@ -1830,85 +1927,8 @@ static void rs_rate_scale_perform(struct iwl_mvm *mvm,
- 		       rs_pretty_lq_type(rate->type), index, current_tpt, sr,
- 		       low, high, low_tpt, high_tpt);
- 
--	scale_action = 0;
--
--	/* Too many failures, decrease rate */
--	if ((sr <= RS_SR_FORCE_DECREASE) || (current_tpt == 0)) {
--		IWL_DEBUG_RATE(mvm,
--			       "decrease rate because of low SR\n");
--		scale_action = -1;
--	/* No throughput measured yet for adjacent rates; try increase. */
--	} else if ((low_tpt == IWL_INVALID_VALUE) &&
--		   (high_tpt == IWL_INVALID_VALUE)) {
--		if (high != IWL_RATE_INVALID && sr >= IWL_RATE_INCREASE_TH) {
--			IWL_DEBUG_RATE(mvm,
--				       "Good SR and no high rate measurement. "
--				       "Increase rate\n");
--			scale_action = 1;
--		} else if (low != IWL_RATE_INVALID) {
--			IWL_DEBUG_RATE(mvm,
--				       "Remain in current rate\n");
--			scale_action = 0;
--		}
--	}
--
--	/* Both adjacent throughputs are measured, but neither one has better
--	 * throughput; we're using the best rate, don't change it! */
--	else if ((low_tpt != IWL_INVALID_VALUE) &&
--		 (high_tpt != IWL_INVALID_VALUE) &&
--		 (low_tpt < current_tpt) &&
--		 (high_tpt < current_tpt)) {
--		IWL_DEBUG_RATE(mvm,
--			       "Both high and low are worse. "
--			       "Maintain rate\n");
--		scale_action = 0;
--	}
--
--	/* At least one adjacent rate's throughput is measured,
--	 * and may have better performance. */
--	else {
--		/* Higher adjacent rate's throughput is measured */
--		if (high_tpt != IWL_INVALID_VALUE) {
--			/* Higher rate has better throughput */
--			if (high_tpt > current_tpt &&
--			    sr >= IWL_RATE_INCREASE_TH) {
--				IWL_DEBUG_RATE(mvm,
--					       "Higher rate is better and good "
--					       "SR. Increate rate\n");
--				scale_action = 1;
--			} else {
--				IWL_DEBUG_RATE(mvm,
--					       "Higher rate isn't better OR "
--					       "no good SR. Maintain rate\n");
--				scale_action = 0;
--			}
--
--		/* Lower adjacent rate's throughput is measured */
--		} else if (low_tpt != IWL_INVALID_VALUE) {
--			/* Lower rate has better throughput */
--			if (low_tpt > current_tpt) {
--				IWL_DEBUG_RATE(mvm,
--					       "Lower rate is better. "
--					       "Decrease rate\n");
--				scale_action = -1;
--			} else if (sr >= IWL_RATE_INCREASE_TH) {
--				IWL_DEBUG_RATE(mvm,
--					       "Lower rate isn't better and "
--					       "good SR. Increase rate\n");
--				scale_action = 1;
--			}
--		}
--	}
--
--	/* Sanity check; asked for decrease, but success rate or throughput
--	 * has been good at old rate.  Don't change it. */
--	if ((scale_action == -1) && (low != IWL_RATE_INVALID) &&
--	    ((sr > IWL_RATE_HIGH_TH) ||
--	     (current_tpt > (100 * tbl->expected_tpt[low])))) {
--		IWL_DEBUG_RATE(mvm,
--			       "Sanity check failed. Maintain rate\n");
--		scale_action = 0;
--	}
-+	scale_action = rs_get_rate_action(mvm, tbl, sr, low, high,
-+					  current_tpt, low_tpt, high_tpt);
- 
- 	/* Force a search in case BT doesn't like us being in MIMO */
- 	if (is_mimo(rate) &&
-@@ -1920,7 +1940,7 @@ static void rs_rate_scale_perform(struct iwl_mvm *mvm,
- 	}
- 
- 	switch (scale_action) {
--	case -1:
-+	case RS_ACTION_DOWNSCALE:
- 		/* Decrease starting rate, update uCode's rate table */
- 		if (low != IWL_RATE_INVALID) {
- 			update_lq = 1;
-@@ -1931,7 +1951,7 @@ static void rs_rate_scale_perform(struct iwl_mvm *mvm,
- 		}
- 
- 		break;
--	case 1:
-+	case RS_ACTION_UPSCALE:
- 		/* Increase starting rate, update uCode's rate table */
- 		if (high != IWL_RATE_INVALID) {
- 			update_lq = 1;
-@@ -1942,7 +1962,7 @@ static void rs_rate_scale_perform(struct iwl_mvm *mvm,
- 		}
- 
- 		break;
--	case 0:
-+	case RS_ACTION_STAY:
- 		/* No change */
- 	default:
- 		break;
 -- 
-1.7.9.5
-
+Regards,
+Oleksij
