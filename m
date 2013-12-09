@@ -1,167 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:56821 "EHLO
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:59406 "EHLO
 	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932586Ab3LEPHa (ORCPT
+	with ESMTP id S932286Ab3LIUdM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 10:07:30 -0500
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
-	yeohchunyeow@gmail.com
-Cc: yeohchunyeow@cozybit.com
-Subject: [PATCH v7 1/5] mac80211: refactor ieee80211_ibss_process_chanswitch()
-Date: Thu,  5 Dec 2013 17:07:20 +0200
-Message-Id: <1386256044-8651-2-git-send-email-luciano.coelho@intel.com> (sfid-20131205_160740_914169_6096DE8C)
-In-Reply-To: <1386256044-8651-1-git-send-email-luciano.coelho@intel.com>
-References: <1386256044-8651-1-git-send-email-luciano.coelho@intel.com>
+	Mon, 9 Dec 2013 15:33:12 -0500
+Message-ID: <1386621181.3878.87.camel@porter.coelho.fi> (sfid-20131209_213316_052722_DCBDB4D6)
+Subject: Re: [PATCH] MAINTAINERS: remove myself as maintainer of TI WiLink
+ drivers
+From: Luca Coelho <luca@coelho.fi>
+To: linville@tuxdriver.com
+Cc: balbi@ti.com, linux-wireless@vger.kernel.org
+Date: Mon, 09 Dec 2013 22:33:01 +0200
+In-Reply-To: <1386620912-9292-1-git-send-email-luca@coelho.fi>
+References: <1386620912-9292-1-git-send-email-luca@coelho.fi>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
+	boundary="=-mWii1unmLws1XIq2wGDx"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Refactor ieee80211_ibss_process_chanswitch() to use
-ieee80211_channel_switch() and avoid code duplication.
 
-Change-Id: I265a12c7f825dc20535bad1197a81437310d0086
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
- net/mac80211/cfg.c         |  4 ++--
- net/mac80211/ibss.c        | 58 +++++++---------------------------------------
- net/mac80211/ieee80211_i.h |  2 ++
- 3 files changed, 12 insertions(+), 52 deletions(-)
+--=-mWii1unmLws1XIq2wGDx
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 754069c..b5bc27e 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3048,8 +3048,8 @@ unlock:
- 	sdata_unlock(sdata);
- }
- 
--static int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
--				    struct cfg80211_csa_settings *params)
-+int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
-+			     struct cfg80211_csa_settings *params)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct ieee80211_local *local = sdata->local;
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 0f1fb5d..3514aab 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -784,18 +784,10 @@ ieee80211_ibss_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 	struct cfg80211_csa_settings params;
- 	struct ieee80211_csa_ie csa_ie;
- 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
--	struct ieee80211_chanctx_conf *chanctx_conf;
--	struct ieee80211_chanctx *chanctx;
- 	enum nl80211_channel_type ch_type;
--	int err, num_chanctx;
-+	int err;
- 	u32 sta_flags;
- 
--	if (sdata->vif.csa_active)
--		return true;
--
--	if (!sdata->vif.bss_conf.ibss_joined)
--		return false;
--
- 	sta_flags = IEEE80211_STA_DISABLE_VHT;
- 	switch (ifibss->chandef.width) {
- 	case NL80211_CHAN_WIDTH_5:
-@@ -826,9 +818,6 @@ ieee80211_ibss_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 	params.count = csa_ie.count;
- 	params.chandef = csa_ie.chandef;
- 
--	if (ifibss->chandef.chan->band != params.chandef.chan->band)
--		goto disconnect;
--
- 	switch (ifibss->chandef.width) {
- 	case NL80211_CHAN_WIDTH_20_NOHT:
- 	case NL80211_CHAN_WIDTH_20:
-@@ -884,29 +873,6 @@ ieee80211_ibss_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 		params.radar_required = true;
- 	}
- 
--	rcu_read_lock();
--	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
--	if (!chanctx_conf) {
--		rcu_read_unlock();
--		goto disconnect;
--	}
--
--	/* don't handle for multi-VIF cases */
--	chanctx = container_of(chanctx_conf, struct ieee80211_chanctx, conf);
--	if (chanctx->refcount > 1) {
--		rcu_read_unlock();
--		goto disconnect;
--	}
--	num_chanctx = 0;
--	list_for_each_entry_rcu(chanctx, &sdata->local->chanctx_list, list)
--		num_chanctx++;
--
--	if (num_chanctx > 1) {
--		rcu_read_unlock();
--		goto disconnect;
--	}
--	rcu_read_unlock();
--
- 	/* all checks done, now perform the channel switch. */
- 	ibss_dbg(sdata,
- 		 "received channel switch announcement to go to channel %d MHz\n",
-@@ -914,19 +880,9 @@ ieee80211_ibss_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 
- 	params.block_tx = !!csa_ie.mode;
- 
--	ieee80211_ibss_csa_beacon(sdata, &params);
--	sdata->csa_radar_required = params.radar_required;
--
--	if (params.block_tx)
--		ieee80211_stop_queues_by_reason(&sdata->local->hw,
--				IEEE80211_MAX_QUEUE_MAP,
--				IEEE80211_QUEUE_STOP_REASON_CSA);
--
--	sdata->csa_chandef = params.chandef;
--	sdata->vif.csa_active = true;
--
--	ieee80211_bss_info_change_notify(sdata, err);
--	drv_channel_switch_beacon(sdata, &params.chandef);
-+	if (ieee80211_channel_switch(sdata->local->hw.wiphy, sdata->dev,
-+				     &params))
-+		goto disconnect;
- 
- 	ieee80211_ibss_csa_mark_radar(sdata);
- 
-@@ -962,7 +918,8 @@ ieee80211_rx_mgmt_spectrum_mgmt(struct ieee80211_sub_if_data *sdata,
- 	if (len < required_len)
- 		return;
- 
--	ieee80211_ibss_process_chanswitch(sdata, elems, false);
-+	if (!sdata->vif.csa_active)
-+		ieee80211_ibss_process_chanswitch(sdata, elems, false);
- }
- 
- static void ieee80211_rx_mgmt_deauth_ibss(struct ieee80211_sub_if_data *sdata,
-@@ -1143,7 +1100,8 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 		goto put_bss;
- 
- 	/* process channel switch */
--	if (ieee80211_ibss_process_chanswitch(sdata, elems, true))
-+	if (sdata->vif.csa_active ||
-+	    ieee80211_ibss_process_chanswitch(sdata, elems, true))
- 		goto put_bss;
- 
- 	/* same BSSID */
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 32bae21..a7b4d55 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1442,6 +1442,8 @@ void ieee80211_handle_roc_started(struct ieee80211_roc_work *roc);
- 
- /* channel switch handling */
- void ieee80211_csa_finalize_work(struct work_struct *work);
-+int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
-+			     struct cfg80211_csa_settings *params);
- 
- /* interface handling */
- int ieee80211_iface_init(void);
--- 
-1.8.4.3
+Hi John,
+
+Can you start taking wl12xx/wl1251 patches directly into your tree from
+now on?
+
+I'm not going to send any more pull requests for the WiLink drivers.
+
+--
+Cheers,
+Luca.
+
+On Mon, 2013-12-09 at 22:28 +0200, Luciano Coelho wrote:
+> I don't have the time to maintain the TI WiLink WLAN drivers anymore.
+> Remove my name and mark them as Orphan.
+>=20
+> Signed-off-by: Luciano Coelho <luca@coelho.fi>
+> ---
+>=20
+> Unfortunately I don't have the time to maintain the WiLink drivers
+> anymore.  Does anyone want to step forward to take it over?
+>=20
+>  MAINTAINERS | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+>=20
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index e65a2c2..265bf79 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -8560,12 +8560,11 @@ S:	Maintained
+>  F:	sound/soc/codecs/twl4030*
+> =20
+>  TI WILINK WIRELESS DRIVERS
+> -M:	Luciano Coelho <luca@coelho.fi>
+>  L:	linux-wireless@vger.kernel.org
+>  W:	http://wireless.kernel.org/en/users/Drivers/wl12xx
+>  W:	http://wireless.kernel.org/en/users/Drivers/wl1251
+>  T:	git git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git
+> -S:	Maintained
+> +S:	Orphan
+>  F:	drivers/net/wireless/ti/
+>  F:	include/linux/wl12xx.h
+> =20
+
+
+--=-mWii1unmLws1XIq2wGDx
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.15 (GNU/Linux)
+
+iQIcBAABAgAGBQJSpij9AAoJEKFHnKIaPMX6rFsP/ixOzZ2qWWbixicpxIWf2doF
+ppqrxizUnXz73dFN7Lk9wEFPa10p+SjXT9hHFXqueFTXGncwB7P3O4Wjvi4c/uIi
+RmEAEnpRaGSsr/giKyVjqYrxuaVuBNg3txPtGXHm0HBwVzBccy460CwHJbCkx0Do
+2e2tB+tHfdyO8QZYiUaIKcgBrWN17aLn7bvc4VYmeJPkk+mIO7vJUxhtwCuijPp8
+LmYMcMjFri82aGIJ5msQMuT+NLk9c6qz3G6OfSADyK4xOqTGBlxz6h/dmS4gkaqL
+/76E52j+GXHc5Y5OO23b58M7SxIrUx21p9entWc5MBK399Ymau5GRvlRDbvvJYCX
+Iqu4VtFmngRhMCbzRpzHF1c7ZpR0Iva+ViXFdJ65XeuLbqzTzDZqvY/GjgVC8vDW
+LAxXtzeQBo00WqXGUozVmXHd4IptB0PlyV9p2oW31+F0vbLWYSnZxC8vDAUxXP1W
+5pVBEO0ab15OinY6StUZ9vEOfXf5jrh71tbOe51lCr2L7/GMm7toKLwt555rbMqf
+xbsZqISJkMyE5jQ5RYn4O/UULWl9bPRdoLA8tF2kjPuMYJ0yWNlh50ieFkiv0x6F
+11Nzi4xEig69gee/Dsv9Fd5b1/gY5ScA+JT/DTs7ZVTRCXuv1OkZVZJyHSq3vTim
+Y8bToiCeFAIKc91tLY+g
+=bF89
+-----END PGP SIGNATURE-----
+
+--=-mWii1unmLws1XIq2wGDx--
 
