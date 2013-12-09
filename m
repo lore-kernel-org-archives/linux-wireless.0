@@ -1,107 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:33613 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751984Ab3LQJWs (ORCPT
+Received: from mail-ee0-f43.google.com ([74.125.83.43]:35023 "EHLO
+	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932199Ab3LIUdF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Dec 2013 04:22:48 -0500
-From: Sujith Manoharan <sujith@msujith.org>
+	Mon, 9 Dec 2013 15:33:05 -0500
+Received: by mail-ee0-f43.google.com with SMTP id c13so1791999eek.16
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Dec 2013 12:33:03 -0800 (PST)
+Message-ID: <52A628F7.7050408@gmail.com> (sfid-20131209_213309_392649_033EE439)
+Date: Mon, 09 Dec 2013 22:32:55 +0200
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+MIME-Version: 1.0
 To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/4] ath9k: Update BaseExtension_1 eeprom structure
-Date: Tue, 17 Dec 2013 14:47:48 +0530
-Message-Id: <1387271869-12780-3-git-send-email-sujith@msujith.org> (sfid-20131217_102317_947709_3C02761A)
-In-Reply-To: <1387271869-12780-1-git-send-email-sujith@msujith.org>
-References: <1387271869-12780-1-git-send-email-sujith@msujith.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: pull request: iwlwifi-next 2013-12-2
+References: <529CF2D6.1080008@gmail.com> <529E129B.6080807@gmail.com>
+In-Reply-To: <529E129B.6080807@gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="kP6NiTSSG8Hl5nf7pLHF5fSvHETtxvNKg"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--kP6NiTSSG8Hl5nf7pLHF5fSvHETtxvNKg
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-* Add a new field "misc_enable"
-* Use int_8 for tempslopextension.
+Hi John,
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 10 +++++-----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.h | 14 ++++++++++++--
- 2 files changed, 17 insertions(+), 7 deletions(-)
+On 12/03/2013 07:19 PM, Emmanuel Grumbach wrote:
+>=20
+>=20
+> On 12/02/2013 10:51 PM, Emmanuel Grumbach wrote:
+>> Hi John,
+>>
+>> This is the fixed and enlarged pull request for 3.14. It includes the
+>> patches in my previous pull request that was based on a bad patch.
+>>
+>> I have here a big rework of the rate control by Eyal. This is obviousl=
+y
+>> the biggest part of this batch.
+>> I also have enhancement of protection flags by Avri and a few bits for=
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 86baa20..d9e09bf 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -139,7 +139,7 @@ static const struct ar9300_eeprom ar9300_default = {
- 	 },
- 	.base_ext1 = {
- 		.ant_div_control = 0,
--		.future = {0, 0, 0},
-+		.future = {0, 0},
- 		.tempslopextension = {0, 0, 0, 0, 0, 0, 0, 0}
- 	},
- 	.calFreqPier2G = {
-@@ -717,7 +717,7 @@ static const struct ar9300_eeprom ar9300_x113 = {
- 	 },
- 	 .base_ext1 = {
- 		.ant_div_control = 0,
--		.future = {0, 0, 0},
-+		.future = {0, 0},
- 		.tempslopextension = {0, 0, 0, 0, 0, 0, 0, 0}
- 	 },
- 	.calFreqPier2G = {
-@@ -1296,7 +1296,7 @@ static const struct ar9300_eeprom ar9300_h112 = {
- 	},
- 	.base_ext1 = {
- 		.ant_div_control = 0,
--		.future = {0, 0, 0},
-+		.future = {0, 0},
- 		.tempslopextension = {0, 0, 0, 0, 0, 0, 0, 0}
- 	},
- 	.calFreqPier2G = {
-@@ -1875,7 +1875,7 @@ static const struct ar9300_eeprom ar9300_x112 = {
- 	},
- 	.base_ext1 = {
- 		.ant_div_control = 0,
--		.future = {0, 0, 0},
-+		.future = {0, 0},
- 		.tempslopextension = {0, 0, 0, 0, 0, 0, 0, 0}
- 	},
- 	.calFreqPier2G = {
-@@ -2453,7 +2453,7 @@ static const struct ar9300_eeprom ar9300_h116 = {
- 	 },
- 	 .base_ext1 = {
- 		.ant_div_control = 0,
--		.future = {0, 0, 0},
-+		.future = {0, 0},
- 		.tempslopextension = {0, 0, 0, 0, 0, 0, 0, 0}
- 	 },
- 	.calFreqPier2G = {
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-index 0e5daa5..694ca2e 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-@@ -270,10 +270,20 @@ struct cal_ctl_data_5g {
- 	u8 ctlEdges[AR9300_NUM_BAND_EDGES_5G];
- } __packed;
- 
-+#define MAX_BASE_EXTENSION_FUTURE 2
-+
- struct ar9300_BaseExtension_1 {
- 	u8 ant_div_control;
--	u8 future[3];
--	u8 tempslopextension[8];
-+	u8 future[MAX_BASE_EXTENSION_FUTURE];
-+	/*
-+	 * misc_enable:
-+	 *
-+	 * BIT 0   - TX Gain Cap enable.
-+	 * BIT 1   - Uncompressed Checksum enable.
-+	 * BIT 2/3 - MinCCApwr enable 2g/5g.
-+	 */
-+	u8 misc_enable;
-+	int8_t tempslopextension[8];
- 	int8_t quick_drop_low;
- 	int8_t quick_drop_high;
- } __packed;
--- 
-1.8.5.1
+>> WoWLAN by Eliad and Luca. Johannes cleans up the debugfs plus a few
+>> fixes. I provided a few things for Bluetooth coexistence.
+>> Besides this we have an implementation for low priority scan.
+>>
+>> Note that I had to merge iwlwifi-fixes into -next to solve conflicts
+>> before they hit linux-next.
+>> Please let me know about issues you may face - Thanks!
+>>
+>=20
+> So - I found out that merging iwlwifi-fixes wasn't a good idea... So I
+> updated my tree and added a trivial compilation fix.
+>=20
+> New head: 2f579448f3a60c8ede544dd0951b8d2a2e282ba2.
+>=20
+> I hope that I have done all the possible mistakes now and that next tim=
+e
+> I will get it right the first time... Sorry for all the mess...
+>=20
 
+Since you merged wireless into wireless-next, I decided to rebase my
+tree on top of wireless-next to make your life easier. I solved the
+conflicts you would have faced.
+New head: 9d10849e4ea8bf9d8da80afa73918a9fe45c09ef.
+
+
+--kP6NiTSSG8Hl5nf7pLHF5fSvHETtxvNKg
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJSpij7AAoJEC0Llv5uNjIBYVIP/jCy/Tv9jnMrJ5KV6wVYTW/f
+ztocx5Iw5WzF9VKNaYRK5yF/8/sdrv9cVBq7hkH8uJN3h4k9WdO52IZXixWXfoCR
+aEf08agA1/cvs/VepIQ4M7dsd7J3/5u4jSIPjZzVGfuAaiuLg31W61tYh1SfCvf0
+3qxWy3Bq5O3dN48PmB7nPGuovwpp52+Zpz7PC9hYxmEdCPgcuXK8lNruEn8Q6QGb
+R6nYsiIXOxeiWz33nznZALbZLwS2dQk/yFe7Nbhg9m6Z/jQODz+kME3CTickW1gP
+MIhrPMVl0xrERGk5DKdH6HchwCCIzju15R8I1t1WKPpo4MuMjQFbwpdHDxadQFR4
+bUYJOw4yXpxCe+Ue5Bz+h4HGQfOzlIUDiTQyvsqh6g0x7a9cYoiQVKxLfyaNUoaT
+uLrGgZTPbH6d2q6HFp+r6+8alh/EwikQXjis7z+P25S1vtashG5NFWi1aXZzh9QD
+iLeiJbnPCinb3u7nSvSwrSguTtQINBwzhyA8F/WXOrgmpUIkTyjs5TOFT3OD8bBk
+d7WzRxeHrCh+WmfV0BPRybfCkkWKTLKKI1rLYhEFLNXFhRa05N+1j8ZDfRtGkARb
+m7AjeJydVueuLwrj8XZ0K+SNjkkKMhNtHJz4HcqvYa09PLJE4pwSnkNTS7XSl9fp
+uHa97icpbEqRKlGWMV8t
+=fSHv
+-----END PGP SIGNATURE-----
+
+--kP6NiTSSG8Hl5nf7pLHF5fSvHETtxvNKg--
