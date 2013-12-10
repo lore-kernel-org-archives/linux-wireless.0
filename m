@@ -1,35 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:53904 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751025Ab3LEKgC (ORCPT
+Received: from mail-bk0-f48.google.com ([209.85.214.48]:49213 "EHLO
+	mail-bk0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752717Ab3LJRIt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 05:36:02 -0500
-Received: by mail-wi0-f182.google.com with SMTP id en1so9580167wid.3
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Dec 2013 02:36:01 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <21152.21739.555819.395470@gargle.gargle.HOWL>
-References: <1386092034-13442-1-git-send-email-mcgrof@do-not-panic.com>
- <1386092034-13442-2-git-send-email-mcgrof@do-not-panic.com> <21152.21739.555819.395470@gargle.gargle.HOWL>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Thu, 5 Dec 2013 11:35:40 +0100
-Message-ID: <CAB=NE6XHsSdWcVf30kxj-zP-SFo+d+pv3EuyoR0f5Rjzd=Z5dQ@mail.gmail.com> (sfid-20131205_113605_750277_6EF1D8C1)
-Subject: Re: [RFT 1/2] ath: fix warning on usage of REGULATORY_CUSTOM_REG
-To: Sujith Manoharan <sujith@msujith.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Tue, 10 Dec 2013 12:08:49 -0500
+From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
+To: Kalle Valo <kvalo@adurom.com>, Pavel Machek <pavel@ucw.cz>
+Subject: Re: [PATCH v2 01/16] wl1251: fix scan behaviour while not associated
+Date: Tue, 10 Dec 2013 18:08:44 +0100
+Cc: Luciano Coelho <luca@coelho.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
+	aaro.koskinen@iki.fi, sre@ring0.de, joni.lapilainen@gmail.com,
 	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Felipe Contreras <felipe.contreras@gmail.com>,
+	David Gnedt <david.gnedt@davizone.at>
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com> <20131210092114.GB22756@amd.pavel.ucw.cz> <8738m0r9wv.fsf@purkki.adurom.net>
+In-Reply-To: <8738m0r9wv.fsf@purkki.adurom.net>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1950882.g5FqhQI21j";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <201312101808.44713@pali> (sfid-20131210_180904_321650_5AEB953E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 5, 2013 at 11:26 AM, Sujith Manoharan <sujith@msujith.org> wrote:
-> Luis R. Rodriguez wrote:
->>       wiphy_apply_custom_regulatory(wiphy, regd);
->> +     if (!ath_is_world_regd(reg))
->> +             wiphy->regulatory_flags &= ~REGULATORY_STRICT_REG;
->
-> The warning is gone, but why is this cleared here ?
+--nextPart1950882.g5FqhQI21j
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 
-It should be CUSTOM that gets cleared, sorry.
+On Tuesday 10 December 2013 16:41:04 Kalle Valo wrote:
+> Pavel Machek <pavel@ucw.cz> writes:
+> > ssids can have \0s in them... and what is worse, they may
+> > not be 0 terminated AFAICT.
+> >=20
+> > Potential solution is at
+> > http://www.spinics.net/lists/linux-wireless/msg98640.html .
+>=20
+> I just use print_hex_dump_bytes() to print SSIDs.
 
-  Luis
+Ok and has kernel printf modifier for size_t?
+
+=2D-=20
+Pali Roh=C3=A1r
+pali.rohar@gmail.com
+
+--nextPart1950882.g5FqhQI21j
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEABECAAYFAlKnSpwACgkQi/DJPQPkQ1L9pQCgjFc7/1zXxMNs6AWKB6PogyxB
+v9MAoIMHpQbRIy/N2p6/y3ViuvDYtIcf
+=/Nzb
+-----END PGP SIGNATURE-----
+
+--nextPart1950882.g5FqhQI21j--
