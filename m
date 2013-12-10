@@ -1,48 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:43533 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932094Ab3L3S4Q (ORCPT
+Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:61710 "EHLO
+	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750805Ab3LJD2W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Dec 2013 13:56:16 -0500
-Message-ID: <1388429761.4410.1.camel@jlt4.sipsolutions.net> (sfid-20131230_195636_126793_E1416E49)
-Subject: Re: [PATCH 4/11]  use ether_addr_equal_64bits
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Julia Lawall <Julia.Lawall@lip6.fr>
-Cc: kernel-janitors@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
+	Mon, 9 Dec 2013 22:28:22 -0500
+Date: Mon, 9 Dec 2013 19:28:00 -0800
+From: Tony Lindgren <tony@atomide.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Luciano Coelho <luca@coelho.fi>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Rob Landley <rob@landley.net>,
+	Russell King <linux@arm.linux.org.uk>,
+	Felipe Balbi <balbi@ti.com>,
+	Sachin Kamat <sachin.kamat@linaro.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bill Pemberton <wfp5p@virginia.edu>,
+	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
 	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Mon, 30 Dec 2013 19:56:01 +0100
-In-Reply-To: <1388427307-8691-5-git-send-email-Julia.Lawall@lip6.fr> (sfid-20131230_182319_112673_F481A1D3)
-References: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>
-	 <1388427307-8691-5-git-send-email-Julia.Lawall@lip6.fr>
-	 (sfid-20131230_182319_112673_F481A1D3)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Luciano Coelho <coelho@ti.com>
+Subject: Re: [PATCH 1/4] wl1251: split wl251 platform data to a separate
+ structure
+Message-ID: <20131210032800.GE13171@atomide.com> (sfid-20131210_042849_375544_BA58DB5A)
+References: <1382890469-25286-1-git-send-email-sre@debian.org>
+ <1382890469-25286-2-git-send-email-sre@debian.org>
+ <20131114185132.GQ10317@atomide.com>
+ <20131114230330.GB6383@earth.universe>
+ <20131114232217.GV10317@atomide.com>
+ <20131115143254.GA7079@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20131115143254.GA7079@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-12-30 at 19:15 +0100, Julia Lawall wrote:
-> From: Julia Lawall <Julia.Lawall@lip6.fr>
+* John W. Linville <linville@tuxdriver.com> [131115 06:46]:
+> On Thu, Nov 14, 2013 at 03:22:18PM -0800, Tony Lindgren wrote:
+> > * Sebastian Reichel <sre@debian.org> [131114 15:04]:
+> > > On Thu, Nov 14, 2013 at 10:51:33AM -0800, Tony Lindgren wrote:
+> > > > [...]
+> > > >
+> > > > If this is not going into v3.13, these will cause conflicts
+> > > > with the mach-omap2/board-*.c files for v3.14.
+> > > > 
+> > > > So it might be best to do a minimal header patch first that
+> > > > can be merged in by both linux-omap and wireless trees.
+> > > 
+> > > I guess this patch is pretty minimal. It also seems to be acked by
+> > > the involved Maintainers, so maybe just merge Patch 1 without the
+> > > other patches?
+> > > 
+> > > This does not solve the problem with the struct modification from
+> > > the second patch, but I guess it's the more intrusive patch.
+> > 
+> > Once at least the first two patches are ready, how about I queue
+> > them after -rc1 and set up an immutable branch that can be merged
+> > in by linux-omap tree and the wireless tree?
 > 
-> Ether_addr_equal_64bits is more efficient than ether_addr_equal, and can be
-> used when each argument is an array within a structure that contains at
-> least two bytes of data beyond the array.
-> 
-> The structures involved are:
-> iwl_rxon_cmd defined in drivers/net/wireless/iwlwifi/dvm/commands.h and
-> ieee80211_hdr defined in include/linux/ieee80211.h
-> 
-> This was done using Coccinelle (http://coccinelle.lip6.fr/).
+> That sounds reasonable to me.
 
-Seems to be missing an "iwlwifi:" or so prefix, but I guess we can add
-it when we take the patch ...
+OK sorry it took a while, I was chasing bugs and did not get around
+to doing this until now. I've applied only the first two patches from
+the v2 set of patches later on in this thread against v3.13-rc1 into
+a signed tag wl1251-pdata-signed here:
 
-Is there any way we could catch (sparse, or some other script?) that
-struct reorganising won't break the condition needed ("within a
-structure that contains at least two more bytes")?
+http://git.kernel.org/cgit/linux/kernel/git/tmlind/linux-omap.git/tag/?id=wl1251-pdata-signed
 
-johannes
+John, please feel free to pull the branch above also into the wireless
+tree so you can apply the remaining wl1251 patches from Sebastian.
+This way things keep working without creating merge conflicts with the
+linux-omap tree.
 
+Regards,
+
+Tony
