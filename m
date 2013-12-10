@@ -1,63 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:44358 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751448Ab3LYD36 (ORCPT
+Received: from purkki.adurom.net ([80.68.90.206]:36324 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752659Ab3LJPtd convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Dec 2013 22:29:58 -0500
-Message-ID: <52BA50FF.5070901@huawei.com> (sfid-20131225_043424_747472_52698AB9)
-Date: Wed, 25 Dec 2013 11:29:03 +0800
-From: Ding Tianhong <dingtianhong@huawei.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>,
+	Tue, 10 Dec 2013 10:49:33 -0500
+From: Kalle Valo <kvalo@adurom.com>
+To: Pali =?utf-8?Q?Roh=C3=A1r?= <pali.rohar@gmail.com>
+Cc: Luciano Coelho <luca@coelho.fi>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	<linux-wireless@vger.kernel.org>, Netdev <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH v3 10/19] mac8011: slight optimization of addr compare
-Content-Type: text/plain; charset="UTF-8"
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
+	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
+	joni.lapilainen@gmail.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Felipe Contreras <felipe.contreras@gmail.com>
+Subject: Re: [PATCH v2 15/16] wl1251: Add sysfs file address for setting permanent mac address
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+	<1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
+	<1386494714-21070-16-git-send-email-pali.rohar@gmail.com>
+Date: Tue, 10 Dec 2013 17:49:23 +0200
+In-Reply-To: <1386494714-21070-16-git-send-email-pali.rohar@gmail.com>
+ ("Pali
+	=?utf-8?Q?Roh=C3=A1r=22's?= message of "Sun, 8 Dec 2013 10:25:13 +0100")
+Message-ID: <87txegpuyk.fsf@purkki.adurom.net> (sfid-20131210_165039_608683_CFCB9C60)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the possibly more efficient ether_addr_equal
-to instead of memcmp.
+Pali Rohár <pali.rohar@gmail.com> writes:
 
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Signed-off-by: Wang Weidong <wangweidong1@huawei.com>
-Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
----
- net/mac80211/iface.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+> Driver wl1251 generating mac address randomly at startup and there is no way to
+> set permanent mac address via SET_IEEE80211_PERM_ADDR. This patch export sysfs
+> file which can set permanent mac address by userspace helper program. Patch is
+> needed for devices which do not store mac address in internal wl1251 eeprom.
+>
+> Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 7aa9f9d..a4f9812 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1497,8 +1497,8 @@ static void ieee80211_assign_perm_addr(struct ieee80211_local *local,
- 			bool used = false;
- 
- 			list_for_each_entry(sdata, &local->interfaces, list) {
--				if (memcmp(local->hw.wiphy->addresses[i].addr,
--					   sdata->vif.addr, ETH_ALEN) == 0) {
-+				if (ether_addr_equal(local->hw.wiphy->addresses[i].addr,
-+						     sdata->vif.addr)) {
- 					used = true;
- 					break;
- 				}
-@@ -1558,8 +1558,7 @@ static void ieee80211_assign_perm_addr(struct ieee80211_local *local,
- 			val += inc;
- 
- 			list_for_each_entry(sdata, &local->interfaces, list) {
--				if (memcmp(tmp_addr, sdata->vif.addr,
--							ETH_ALEN) == 0) {
-+				if (ether_addr_equal(tmp_addr, sdata->vif.addr)) {
- 					used = true;
- 					break;
- 				}
+We have ioctl() command for setting the mac address.
+
 -- 
-1.8.0
-
-
+Kalle Valo
