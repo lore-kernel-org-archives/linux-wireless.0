@@ -1,37 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:46778 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754999Ab3LDIQK (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:44286 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753173Ab3LJJ3S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Dec 2013 03:16:10 -0500
-Message-ID: <1386144962.4284.2.camel@jlt4.sipsolutions.net> (sfid-20131204_091636_236564_687665AD)
-Subject: Re: [PATCH] mac80211: rx: Neaten ieee80211_deliver_skb, remove
- compare_ether_addr
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Joe Perches <joe@perches.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
+	Tue, 10 Dec 2013 04:29:18 -0500
+Date: Tue, 10 Dec 2013 10:29:16 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
+Cc: Luciano Coelho <luca@coelho.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>
-Date: Wed, 04 Dec 2013 09:16:02 +0100
-In-Reply-To: <1386095360.15309.29.camel@joe-AO722>
-References: <1386095360.15309.29.camel@joe-AO722>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
+	aaro.koskinen@iki.fi, sre@ring0.de, joni.lapilainen@gmail.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Felipe Contreras <felipe.contreras@gmail.com>,
+	David Gnedt <david.gnedt@davizone.at>
+Subject: Re: [PATCH v2 04/16] wl1251: implement hardware ARP filtering
+Message-ID: <20131210092916.GD22756@amd.pavel.ucw.cz> (sfid-20131210_103013_797191_A34FBB4B)
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+ <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
+ <1386494714-21070-5-git-send-email-pali.rohar@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1386494714-21070-5-git-send-email-pali.rohar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-12-03 at 10:29 -0800, Joe Perches wrote:
-> Remove the unnecessary duplicate test of "if (skb) {"
-> when !CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS.
+Hi!
+
+> Update hardware ARP filter configuration on BSS_CHANGED_ARP_FILTER
+> notification from mac80211.
+> Ported from wl1271 driver.
 > 
-> Remove now unnecessary __maybe_unused, neaten comment
-> Remove unnecessary parenthesis around align cast.
-> Substitute reference to deprecated compare_ether_addr
-> with ether_addr_equal.
+> Signed-off-by: David Gnedt <david.gnedt@davizone.at>
+> Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
+> ---
+>  drivers/net/wireless/ti/wl1251/acx.c  |   26 ++++++++++++++++++++++++++
+>  drivers/net/wireless/ti/wl1251/acx.h  |   15 +++++++++++++++
+>  drivers/net/wireless/ti/wl1251/main.c |   12 ++++++++++++
+>  3 files changed, 53 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/ti/wl1251/acx.c b/drivers/net/wireless/ti/wl1251/acx.c
+> index cce50e2..5f4a552 100644
+> --- a/drivers/net/wireless/ti/wl1251/acx.c
+> +++ b/drivers/net/wireless/ti/wl1251/acx.c
+> @@ -1062,6 +1062,32 @@ out:
+>  	return ret;
+>  }
+>  
+> +int wl1251_acx_arp_ip_filter(struct wl1251 *wl, bool enable, __be32 address)
+> +{
+> +	struct wl1251_acx_arp_filter *acx;
+> +	int ret;
 
-I already had a patch to remove the __maybe_unused, but this looks good,
-applied.
+Is it good idea to use be32 for IP address? AFAICT IPv4 addresses
+really don't have edianity. Perhaps u32 is better?
 
-johannes
+> +	if (enable)
+> +		memcpy(acx->address, &address, ACX_IPV4_ADDR_SIZE);
 
+acx->address is an array of u8, so no endianity there, either.
+									Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
