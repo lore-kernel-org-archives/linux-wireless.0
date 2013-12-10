@@ -1,49 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f43.google.com ([74.125.83.43]:33684 "EHLO
-	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754877Ab3LHJ1h (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:45007 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751513Ab3LJJnR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Dec 2013 04:27:37 -0500
-From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Luciano Coelho <luca@coelho.fi>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Tue, 10 Dec 2013 04:43:17 -0500
+Date: Tue, 10 Dec 2013 10:43:16 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
+Cc: Luciano Coelho <luca@coelho.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
 	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
-	joni.lapilainen@gmail.com,
+	aaro.koskinen@iki.fi, sre@ring0.de, joni.lapilainen@gmail.com,
 	Johannes Berg <johannes@sipsolutions.net>,
 	Felipe Contreras <felipe.contreras@gmail.com>,
-	=?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
-Subject: [PATCH v2 16/16] wl1251: fix NULL pointer dereference
-Date: Sun,  8 Dec 2013 10:25:14 +0100
-Message-Id: <1386494714-21070-17-git-send-email-pali.rohar@gmail.com> (sfid-20131208_102853_665192_9AD8936F)
-In-Reply-To: <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
+	David Gnedt <david.gnedt@davizone.at>
+Subject: Re: [PATCH v2 09/16] wl1251: fix channel switching in monitor mode
+Message-ID: <20131210094316.GJ22756@amd.pavel.ucw.cz> (sfid-20131210_104342_605551_B2BB923D)
 References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
  <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
+ <1386494714-21070-10-git-send-email-pali.rohar@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1386494714-21070-10-git-send-email-pali.rohar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Pali Roh√°r <pali.rohar@gmail.com>
-Reported-by: Felipe Contreras <felipe.contreras@gmail.com>
----
- drivers/net/wireless/ti/wl1251/event.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Sun 2013-12-08 10:25:07, Pali Roh·r wrote:
+> From: David Gnedt <david.gnedt@davizone.at>
+> 
+> Use the ENABLE_RX command for channel switching when no interface is present
+> (monitor mode only).
+> The advantage of ENABLE_RX is that it leaves the tx data path disabled in
+> firmware, whereas the usual JOIN command seems to transmit some frames at
+> firmware level.
+> 
+> Signed-off-by: David Gnedt <david.gnedt@davizone.at>
+> Signed-off-by: Pali Roh·r <pali.rohar@gmail.com>
 
-diff --git a/drivers/net/wireless/ti/wl1251/event.c b/drivers/net/wireless/ti/wl1251/event.c
-index 192cebd..db01053 100644
---- a/drivers/net/wireless/ti/wl1251/event.c
-+++ b/drivers/net/wireless/ti/wl1251/event.c
-@@ -124,7 +124,7 @@ static int wl1251_event_process(struct wl1251 *wl, struct event_mailbox *mbox)
- 			return ret;
- 	}
- 
--	if (vector & SYNCHRONIZATION_TIMEOUT_EVENT_ID) {
-+	if (wl->vif && vector & SYNCHRONIZATION_TIMEOUT_EVENT_ID) {
- 		wl1251_debug(DEBUG_EVENT, "SYNCHRONIZATION_TIMEOUT_EVENT");
- 
- 		/* indicate to the stack, that beacons have been lost */
+Reviewed-by: Pavel Machek <pavel@ucw.cz>
+
+Thanks,
+								Pavel
+
 -- 
-1.7.9.5
-
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
