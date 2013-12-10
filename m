@@ -1,45 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:45290 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753016Ab3LJJqL (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:32059 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751779Ab3LJWLW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Dec 2013 04:46:11 -0500
-Date: Tue, 10 Dec 2013 10:46:09 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
-Cc: Luciano Coelho <luca@coelho.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, sre@ring0.de, joni.lapilainen@gmail.com,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Felipe Contreras <felipe.contreras@gmail.com>,
-	David Gnedt <david.gnedt@davizone.at>
-Subject: Re: [PATCH v2 11/16] wl1251: disable retry and ACK policy for
- injected packets
-Message-ID: <20131210094609.GL22756@amd.pavel.ucw.cz> (sfid-20131210_104643_037378_DAD781D6)
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
- <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
- <1386494714-21070-12-git-send-email-pali.rohar@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1386494714-21070-12-git-send-email-pali.rohar@gmail.com>
+	Tue, 10 Dec 2013 17:11:22 -0500
+From: Chet Lanctot <clanctot@codeaurora.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Chet Lanctot <clanctot@codeaurora.org>
+Subject: [PATCH 0/2 V3] nl80211/cfg80211: Support PMF on drivers with integrated AP SME
+Date: Tue, 10 Dec 2013 14:11:15 -0800
+Message-Id: <1386713477-30040-1-git-send-email-clanctot@codeaurora.org> (sfid-20131210_231125_484390_C3C8F30A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun 2013-12-08 10:25:09, Pali Rohár wrote:
-> From: David Gnedt <david.gnedt@davizone.at>
-> 
-> Set the retry limit to 0 and disable the ACK policy for injected packets.
-> 
-> Signed-off-by: David Gnedt <david.gnedt@davizone.at>
-> Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
+These patches represent a small number of extensions to the
+nl80211/cfg80211 interface to support Protected Management Frames
+(PMF, 802.11w) on an AP when the AP SME is integrated into the
+device driver or device firmware.
 
-Reviewed-by: Pavel Machek <pavel@ucw.cz>
+Device drivers that implement AP SME handle connection requests
+from stations internally.  These patches allow hostapd to specify
+to the device driver the PMF state that should be used when these
+connections are made.
 
-Thanks,
-								Pavel
+Also, these patches allow device drivers that do not implement the
+SA Query procedure (part of PMF) to communicate the need for hostapd
+do this procedure.  Normally the software component handling
+connection requests would do SA Query. These patches provide a way
+for the device driver to shift SA Query processing to hostapd where
+it is already fully implemented.
+
+The following changes are made to nl80211/cfg80211.
+
+1.  A new nl80211_ap_sme_feature is defined which is used by drivers
+to inform hostapd that the driver does not support the SA query
+procedure.  hostapd must register for Re/Association Request frames
+from the driver so that these frames can be delivered by the driver
+to start an SA Query procedure.  An example of code in
+the driver that sets this feature is as follows:
+     struct wiphy *wiphy; /* wiphy defined in cfg80211.h */
+     .
+     .
+     .
+     wiphy->ap_sme_capa |= BIT(NL80211_AP_SME_FEATURE_NO_SA_QUERY);
+
+2.  A new entry is made in cfg80211_ap_settings to inform drivers
+whether management frame protection should be used for station connections.
+This entry is passed by hostapd using NL80211_CMD_START_AP and it is only
+used when the device is acting as an AP.  Existing type nl80211_mfp defines the
+values that can be used for this entry.  Existing value NL80211_MFP_NO
+means that PMF connections cannot be made with stations. Existing value
+NL80211_MFP_REQUIRED means that all station connections must be PMF
+protected.  A new value NL80211_MFP_OPTIONAL is defined which means
+that a connection can be made if the station supports it, but it is
+not required.
+
+3.  A new station flag is defined that indicates to the driver that
+hostapd has completed the SA Query procedure for that station (SA
+Query timed out) and the driver should process the next Re/Association
+Request normally and not pass it to hostapd.
+
+Chet Lanctot (2):
+  nl80211/cfg80211: Add support for drivers with AP SME that require
+    PMF SA Query assistance
+  nl80211/cfg80211: Enable station PMF requirement to be specified to
+    driver with AP SME
+
+ include/net/cfg80211.h       |  4 ++++
+ include/uapi/linux/nl80211.h | 26 ++++++++++++++++++++------
+ net/wireless/nl80211.c       | 16 +++++++++++++---
+ 3 files changed, 37 insertions(+), 9 deletions(-)
 
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+1.7.12.rc0.22.gcdd159b
+
