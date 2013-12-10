@@ -1,87 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f181.google.com ([209.85.215.181]:50184 "EHLO
-	mail-ea0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752434Ab3LMJs3 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:35105 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751779Ab3LJWLY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Dec 2013 04:48:29 -0500
-Received: by mail-ea0-f181.google.com with SMTP id m10so759030eaj.12
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Dec 2013 01:48:28 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
+	Tue, 10 Dec 2013 17:11:24 -0500
+From: Chet Lanctot <clanctot@codeaurora.org>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: fix band reporting for mgmt CCK frames on 5GHz
-Date: Fri, 13 Dec 2013 10:44:43 +0100
-Message-Id: <1386927883-14028-1-git-send-email-michal.kazior@tieto.com> (sfid-20131213_104918_532169_E71025D1)
+	Chet Lanctot <clanctot@codeaurora.org>
+Subject: [PATCH 2/2 V3] nl80211/cfg80211: Enable station PMF requirement to be specified to driver with AP SME
+Date: Tue, 10 Dec 2013 14:11:17 -0800
+Message-Id: <1386713477-30040-3-git-send-email-clanctot@codeaurora.org> (sfid-20131210_231133_211429_52E9E479)
+In-Reply-To: <1386713477-30040-1-git-send-email-clanctot@codeaurora.org>
+References: <1386713477-30040-1-git-send-email-clanctot@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Although CCK modulation isn't expected for 11a if
-it happened it made ath10k report wrong band
-(2GHz) for a mgmt frame that were actually
-received on 5Ghz band. Frequency would also
-decoded incorrectly too.
+When the device driver implements the AP SME there is a need
+for userspace to indicate to the driver the PMF (Protected
+Management Frames, 802.11w) requirements for station connections.
 
-In case of 5GHz-only devices this triggered
-mac80211 WARN_ON because there was no according
-sband pointer to be found.
+The driver enforces the requested PMF state when processing station
+connection requests.  Value NL80211_MFP_NO means that PMF connections
+cannot be made with stations.  Value NL80211_MFP_REQUIRED means that all
+station connections must be PMF protected.  Value NL80211_MFP_OPTIONAL
+means that a connection can be made if the station supports it, but it is not
+required.
 
-The patch should fix delivery of such frames by
-using different means to acquire band parameter.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Chet Lanctot <clanctot@codeaurora.org>
 ---
+ include/net/cfg80211.h       |  4 ++++
+ include/uapi/linux/nl80211.h | 12 +++++++++---
+ net/wireless/nl80211.c       |  9 +++++++++
+ 3 files changed, 22 insertions(+), 3 deletions(-)
 
-One could argue whether such frames should be even
-delievered to mac80211. I decided it's better to
-deliver to increase interoperability with silly
-devices.
-
-If anyone disagrees I can change the patch to
-simply drop such frames in ath10k.
-
- drivers/net/wireless/ath/ath10k/wmi.c | 21 ++++++++++++++++++++-
- 1 file changed, 20 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 9ea333a..3ec6c9a 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -875,6 +875,7 @@ static int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
- 	struct wmi_mgmt_rx_event_v2 *ev_v2;
- 	struct wmi_mgmt_rx_hdr_v1 *ev_hdr;
- 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
-+	struct ieee80211_channel *ch;
- 	struct ieee80211_hdr *hdr;
- 	u32 rx_status;
- 	u32 channel;
-@@ -927,7 +928,25 @@ static int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
- 	if (rx_status & WMI_RX_STATUS_ERR_MIC)
- 		status->flag |= RX_FLAG_MMIC_ERROR;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index aeaf6df..9039888 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -636,6 +636,9 @@ struct cfg80211_acl_data {
+  *	user space)
+  * @ssid_len: length of @ssid
+  * @hidden_ssid: whether to hide the SSID in Beacon/Probe Response frames
++ * @mfp: indicate whether management frame protection is used for
++ *	station connections, this is enforced by the driver when a station
++ *	attempts to make a connection (see definion of nl80211_mfp for details)
+  * @crypto: crypto settings
+  * @privacy: the BSS uses privacy
+  * @auth_type: Authentication type (algorithm)
+@@ -655,6 +658,7 @@ struct cfg80211_ap_settings {
+ 	const u8 *ssid;
+ 	size_t ssid_len;
+ 	enum nl80211_hidden_ssid hidden_ssid;
++	enum nl80211_mfp mfp;
+ 	struct cfg80211_crypto_settings crypto;
+ 	bool privacy;
+ 	enum nl80211_auth_type auth_type;
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 4c80a10..59d4d2e 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1063,8 +1063,8 @@ enum nl80211_commands {
+  *
+  * @NL80211_ATTR_USE_MFP: Whether management frame protection (IEEE 802.11w) is
+  *	used for the association (&enum nl80211_mfp, represented as a u32);
+- *	this attribute can be used
+- *	with %NL80211_CMD_ASSOCIATE and %NL80211_CMD_CONNECT requests
++ *	this attribute can be used with %NL80211_CMD_ASSOCIATE,
++ *	%NL80211_CMD_CONNECT, and @NL80211_CMD_START_AP requests
+  *
+  * @NL80211_ATTR_STA_FLAGS2: Attribute containing a
+  *	&struct nl80211_sta_flag_update.
+@@ -2934,12 +2934,18 @@ enum nl80211_key_type {
  
--	status->band = phy_mode_to_band(phy_mode);
-+	/* HW can Rx CCK rates on 5GHz. In that case phy_mode is set to
-+	 * MODE_11B. This means phy_mode is not a reliable source for the band
-+	 * of mgmt rx. */
+ /**
+  * enum nl80211_mfp - Management frame protection state
+- * @NL80211_MFP_NO: Management frame protection not used
++ * @NL80211_MFP_NO: Management frame protection not used on
++ *	any connection
+  * @NL80211_MFP_REQUIRED: Management frame protection required
++ *	on all connections
++ * @NL80211_MFP_OPTIONAL: For an AP, management frame
++ *	protection is optional for a station connection depending
++ *	on whether the station supports MFP
+  */
+ enum nl80211_mfp {
+ 	NL80211_MFP_NO,
+ 	NL80211_MFP_REQUIRED,
++	NL80211_MFP_OPTIONAL,
+ };
+ 
+ enum nl80211_wpa_versions {
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 276e4a3..7a73adf 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3207,6 +3207,15 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+ 			return PTR_ERR(params.acl);
+ 	}
+ 
++	if (info->attrs[NL80211_ATTR_USE_MFP]) {
++		params.mfp = nla_get_u32(info->attrs[NL80211_ATTR_USE_MFP]);
++		if (params.mfp != NL80211_MFP_REQUIRED &&
++		    params.mfp != NL80211_MFP_OPTIONAL &&
++		    params.mfp != NL80211_MFP_NO)
++			return -EINVAL;
++	} else
++		params.mfp = NL80211_MFP_NO;
 +
-+	ch = ar->scan_channel;
-+	if (!ch)
-+		ch = ar->rx_channel;
-+
-+	if (ch) {
-+		status->band = ch->band;
-+
-+		if (phy_mode == MODE_11B &&
-+		    status->band == IEEE80211_BAND_5GHZ)
-+			ath10k_dbg(ATH10K_DBG_MGMT, "wmi mgmt rx 11b (CCK) on 5GHz\n");
-+	} else {
-+		ath10k_warn("using (unreliable) phy_mode to extract band for mgmt rx\n");
-+		status->band = phy_mode_to_band(phy_mode);
-+	}
-+
- 	status->freq = ieee80211_channel_to_frequency(channel, status->band);
- 	status->signal = snr + ATH10K_DEFAULT_NOISE_FLOOR;
- 	status->rate_idx = get_rate_idx(rate, status->band);
+ 	err = rdev_start_ap(rdev, dev, &params);
+ 	if (!err) {
+ 		wdev->preset_chandef = params.chandef;
 -- 
-1.8.4.rc3
+1.7.12.rc0.22.gcdd159b
 
