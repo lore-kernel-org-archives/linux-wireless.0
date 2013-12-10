@@ -1,41 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zimbra.real-time.com ([63.170.91.9]:60288 "EHLO
-	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755614Ab3LIEZd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Dec 2013 23:25:33 -0500
-Date: Mon, 9 Dec 2013 15:18:21 +1100
-From: James Cameron <quozl@laptop.org>
-To: Vasily Khoruzhick <anarsoul@gmail.com>
-Cc: Dan Williams <dcbw@redhat.com>,
-	Andreas Kemnade <andreas@kemnade.info>,
-	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-Subject: Re: status of libertas_tf + sdio?
-Message-ID: <20131209041821.GC14878@us.netrek.org> (sfid-20131209_052551_162817_B8F60952)
-References: <20131203202607.0b445195@kemnade.info>
- <1386167786.19448.4.camel@dcbw.foobar.com>
- <CA+E=qVdY4M=bnX=pqMiMirhQ_BRg6Uc6K9Xkzvf328BaByUF1g@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+E=qVdY4M=bnX=pqMiMirhQ_BRg6Uc6K9Xkzvf328BaByUF1g@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:46022 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753631Ab3LJRsl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Dec 2013 12:48:41 -0500
+Message-ID: <1386697762.30202.6.camel@dcbw.foobar.com> (sfid-20131210_184846_602798_3BE77166)
+Subject: Re: [PATCH v2 15/16] wl1251: Add sysfs file address for setting
+ permanent mac address
+From: Dan Williams <dcbw@redhat.com>
+To: Pali =?ISO-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
+Cc: Kalle Valo <kvalo@adurom.com>, Luciano Coelho <luca@coelho.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
+	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
+	joni.lapilainen@gmail.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Felipe Contreras <felipe.contreras@gmail.com>
+Date: Tue, 10 Dec 2013 11:49:22 -0600
+In-Reply-To: <201312101814.35112@pali>
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+	 <87txegpuyk.fsf@purkki.adurom.net> <201312101710.51015@pali>
+	 <201312101814.35112@pali>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 06, 2013 at 01:40:00PM +0300, Vasily Khoruzhick wrote:
-> Out of curiosity,
+On Tue, 2013-12-10 at 18:14 +0100, Pali Rohár wrote:
+> On Tuesday 10 December 2013 17:10:50 Pali Rohár wrote:
+> > On Tuesday 10 December 2013 16:49:23 Kalle Valo wrote:
+> > > Pali Rohár <pali.rohar@gmail.com> writes:
+> > > > Driver wl1251 generating mac address randomly at startup
+> > > > and there is no way to set permanent mac address via
+> > > > SET_IEEE80211_PERM_ADDR. This patch export sysfs file
+> > > > which can set permanent mac address by userspace helper
+> > > > program. Patch is needed for devices which do not store
+> > > > mac address in internal wl1251 eeprom.
+> > > > 
+> > > > Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
+> > > 
+> > > We have ioctl() command for setting the mac address.
+> > 
+> > Really? Is there ioctl for setting permanent mac address?
+> > Can you show me it?
 > 
-> Does anyone know if it's possible to get thin firmware for 8686 with
-> SPI interface?
+> Now I looked at it again and I did not found any ioctl for it. 
+> There is only ioctl cmd for getting address, not setting it.
+> 
+> #define SIOCETHTOOL 0x8946
+> 
+> /* Get permanent hardware address */
+> #define ETHTOOL_GPERMADDR 0x00000020
 
-What happens when you try?
+Yeah, because it's supposed to be permanent and unchanging.  Which means
+if there was an ioctl for it, that would be contrary to the purpose of a
+permanent MAC address.
 
-How are you downloading firmware over SPI?
+I realize the N900 stores the WiFi MAC address completely differently
+than many other systems, and that's why this sysfs file was created.  I
+don't really have a great converged solution for that, other than what
+you've currently got, or perhaps adding SPERMADDR to ethtool.  One thing
+I *would* like though, is a restriction on the sysfs file such that if
+the permanent MAC is already set, it cannot be set again.  Otherwise the
+permanent MAC address isn't permanent at all.
 
-I'm not aware of a second stage firmware download helper specific to
-the SPI mode.
+Dan
 
-I think it is not possible without firmware engineering.
 
--- 
-James Cameron
-http://quozl.linux.org.au/
