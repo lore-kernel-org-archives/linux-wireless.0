@@ -1,77 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:41755 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751190Ab3LWHT1 (ORCPT
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:47610 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755120Ab3LJRFh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Dec 2013 02:19:27 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org
-Subject: [RFC 1/9] ath9k: Fix max AMPDU size calculation
-Date: Mon, 23 Dec 2013 12:44:18 +0530
-Message-Id: <1387782866-19847-2-git-send-email-sujith@msujith.org> (sfid-20131223_081931_900425_9CE8F66E)
-In-Reply-To: <1387782866-19847-1-git-send-email-sujith@msujith.org>
-References: <1387782866-19847-1-git-send-email-sujith@msujith.org>
+	Tue, 10 Dec 2013 12:05:37 -0500
+Received: by mail-ie0-f180.google.com with SMTP id tp5so8718742ieb.25
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Dec 2013 09:05:36 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1386693598-3934-1-git-send-email-antonio@meshcoding.com>
+References: <1386693598-3934-1-git-send-email-antonio@meshcoding.com>
+Date: Tue, 10 Dec 2013 19:05:36 +0200
+Message-ID: <CAB3XZEfwLk5PUp34hQ_8Uog6T8BHRP6akW4SThjXjgAQRAhC-Q@mail.gmail.com> (sfid-20131210_180542_836236_AC9E9306)
+Subject: Re: [RFC 1/2] mac80211: iterate over vif using RCU
+From: Eliad Peller <eliad@wizery.com>
+To: Antonio Quartulli <antonio@meshcoding.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Antonio Quartulli <antonio@open-mesh.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+hi,
 
-The maximum A-MPDU size is calculated in ath_tx_aggr_start(),
-so there is no need to do it in node_attach() too. Also, make
-sure that the correct size is calculated as described in
-8.4.2.58.3.
+On Tue, Dec 10, 2013 at 6:39 PM, Antonio Quartulli
+<antonio@meshcoding.com> wrote:
+> I need to invoke ieee80211_iter_keys() from a periodic worker in a driver and
+> therefore I would prefer to get rid of any of locks to avoid problems.
+> These two patches try to use rcu lock to protect the iteration, but I'd like to
+> get a feedback before sending this stuff as a patch :-)
+>
+at least iwlwifi might sleep inside the iterator, so you can't just
+convert it to rcu (atomic).
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/main.c | 6 ------
- drivers/net/wireless/ath/ath9k/xmit.c | 9 ++-------
- 2 files changed, 2 insertions(+), 13 deletions(-)
+> Moreover, why do we use list_for_each_entry_safe() is ieee80211_iter_keys() if
+> the list cannot be altered (pointer to key is not passed to iter() so we should
+> be sure that nobody is going to invoke list_del())?
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 21b764b..dd9bad2 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -427,12 +427,6 @@ static void ath_node_attach(struct ath_softc *sc, struct ieee80211_sta *sta,
- 	an->vif = vif;
- 
- 	ath_tx_node_init(sc, an);
--
--	if (sta->ht_cap.ht_supported) {
--		an->maxampdu = 1 << (IEEE80211_HT_MAX_AMPDU_FACTOR +
--				     sta->ht_cap.ampdu_factor);
--		an->mpdudensity = ath9k_parse_mpdudensity(sta->ht_cap.ampdu_density);
--	}
- }
- 
- static void ath_node_detach(struct ath_softc *sc, struct ieee80211_sta *sta)
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 9d735c5..e8d0e7f 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -774,11 +774,6 @@ static u32 ath_lookup_rate(struct ath_softc *sc, struct ath_buf *bf,
- 	if (bt_aggr_limit)
- 		aggr_limit = bt_aggr_limit;
- 
--	/*
--	 * h/w can accept aggregates up to 16 bit lengths (65535).
--	 * The IE, however can hold up to 65536, which shows up here
--	 * as zero. Ignore 65536 since we  are constrained by hw.
--	 */
- 	if (tid->an->maxampdu)
- 		aggr_limit = min(aggr_limit, tid->an->maxampdu);
- 
-@@ -1403,8 +1398,8 @@ int ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
- 	 * has already been added.
- 	 */
- 	if (sta->ht_cap.ht_supported) {
--		an->maxampdu = 1 << (IEEE80211_HT_MAX_AMPDU_FACTOR +
--				     sta->ht_cap.ampdu_factor);
-+		an->maxampdu = (1 << (IEEE80211_HT_MAX_AMPDU_FACTOR +
-+				      sta->ht_cap.ampdu_factor)) - 1;
- 		density = ath9k_parse_mpdudensity(sta->ht_cap.ampdu_density);
- 		an->mpdudensity = density;
- 	}
--- 
-1.8.5.2
+see the documentation of ieee80211_remove_key():
+/**
+ * ieee80211_remove_key - remove the given key
+ * @keyconf: the parameter passed with the set key
+ *
+ * Remove the given key. If the key was uploaded to the hardware at the
+ * time this function is called, it is not deleted in the hardware but
+ * instead assumed to have been removed already.
+ *
+ * Note that due to locking considerations this function can (currently)
+ * only be called during key iteration (ieee80211_iter_keys().)
+ */
 
+Eliad.
