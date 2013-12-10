@@ -1,39 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:41488 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751128Ab3LSRFx (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:45477 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751545Ab3LJJtY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Dec 2013 12:05:53 -0500
-Date: Thu, 19 Dec 2013 20:05:41 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Max.Stepanov@intel.com
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: re: iwlwifi: mvm: add a generic cipher scheme support
-Message-ID: <20131219170541.GA21029@elgon.mountain> (sfid-20131219_180556_709153_0695AFEB)
+	Tue, 10 Dec 2013 04:49:24 -0500
+Date: Tue, 10 Dec 2013 10:49:22 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
+Cc: Luciano Coelho <luca@coelho.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
+	aaro.koskinen@iki.fi, sre@ring0.de, joni.lapilainen@gmail.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Felipe Contreras <felipe.contreras@gmail.com>
+Subject: Re: [PATCH v2 13/16] wl1251: add nvs file name to module firmware
+ list
+Message-ID: <20131210094922.GB24412@amd.pavel.ucw.cz> (sfid-20131210_104958_050226_8197055C)
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+ <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
+ <1386494714-21070-14-git-send-email-pali.rohar@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1386494714-21070-14-git-send-email-pali.rohar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Max Stepanov,
+On Sun 2013-12-08 10:25:11, Pali Rohár wrote:
+> Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
 
-The patch e36e5433c98d: "iwlwifi: mvm: add a generic cipher scheme
-support" from Aug 27, 2013, leads to the following (soon to be pushed)
-Smatch warning:
-	drivers/net/wireless/iwlwifi/mvm/mac80211.c:265 iwl_mvm_mac_setup_register()
-	warn: this array is probably non-NULL. 'mvm->fw->cs'
+Reviewed-by: Pavel Machek <pavel@ucw.cz>
 
-drivers/net/wireless/iwlwifi/mvm/mac80211.c
-   264          /* currently FW API supports only one optional cipher scheme */
-   265          if (mvm->fw->cs && mvm->fw->cs->cipher) {
-                    ^^^^^^^^^^^
-This is an array, not a pointer.
+Thanks,
+								Pavel
 
-   266                  mvm->hw->n_cipher_schemes = 1;
-   267                  mvm->hw->cipher_schemes = mvm->fw->cs;
-   268          }
-
-regards,
-dan carpenter
-
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
