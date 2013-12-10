@@ -1,66 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:48961 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753882Ab3LNRD5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Dec 2013 12:03:57 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Subject: [PATCH 08/11] ath9k_hw: remove additional_swba_backoff
-Date: Sat, 14 Dec 2013 18:03:42 +0100
-Message-Id: <1387040625-38114-8-git-send-email-nbd@openwrt.org> (sfid-20131214_180401_296398_A9741C1A)
-In-Reply-To: <1387040625-38114-1-git-send-email-nbd@openwrt.org>
-References: <1387040625-38114-1-git-send-email-nbd@openwrt.org>
+Received: from zimbra.real-time.com ([63.170.91.9]:59513 "EHLO
+	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751208Ab3LJC1z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Dec 2013 21:27:55 -0500
+Date: Tue, 10 Dec 2013 13:27:46 +1100
+From: James Cameron <quozl@laptop.org>
+To: Vasily Khoruzhick <anarsoul@gmail.com>
+Cc: Dan Williams <dcbw@redhat.com>,
+	Andreas Kemnade <andreas@kemnade.info>,
+	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+Subject: Re: status of libertas_tf + sdio?
+Message-ID: <20131210022746.GE28975@us.netrek.org> (sfid-20131210_032800_045756_5F716A64)
+References: <20131203202607.0b445195@kemnade.info>
+ <1386167786.19448.4.camel@dcbw.foobar.com>
+ <CA+E=qVdY4M=bnX=pqMiMirhQ_BRg6Uc6K9Xkzvf328BaByUF1g@mail.gmail.com>
+ <20131209041821.GC14878@us.netrek.org>
+ <CA+E=qVd_F_=z5Vb2jan-nNVmizQznOiR=98CPHQevMxbnxGJiA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CA+E=qVd_F_=z5Vb2jan-nNVmizQznOiR=98CPHQevMxbnxGJiA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It is unused
+On Mon, Dec 09, 2013 at 12:38:28PM +0300, Vasily Khoruzhick wrote:
+> On Mon, Dec 9, 2013 at 7:18 AM, James Cameron <quozl@laptop.org> wrote:
+> > On Fri, Dec 06, 2013 at 01:40:00PM +0300, Vasily Khoruzhick wrote:
+> >> Out of curiosity,
+> >>
+> >> Does anyone know if it's possible to get thin firmware for 8686 with
+> >> SPI interface?
+> >
+> > What happens when you try?
+> 
+> How? There's no tf available for 8686 with SPI interface.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/hw.c  | 1 -
- drivers/net/wireless/ath/ath9k/hw.h  | 1 -
- drivers/net/wireless/ath/ath9k/mac.c | 3 +--
- 3 files changed, 1 insertion(+), 4 deletions(-)
+How do you know that?  Are you saying that SPI support was removed
+from firmware during the conversion from fat to thin?
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index a4f3d2b..dd10fee 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -441,7 +441,6 @@ static void ath9k_hw_init_config(struct ath_hw *ah)
- {
- 	ah->config.dma_beacon_response_time = 1;
- 	ah->config.sw_beacon_response_time = 6;
--	ah->config.additional_swba_backoff = 0;
- 	ah->config.ack_6mb = 0x0;
- 	ah->config.cwm_ignore_extcca = 0;
- 	ah->config.analog_shiftreg = 1;
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 57d3d0c..2ef9d24 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -280,7 +280,6 @@ struct ath9k_hw_capabilities {
- struct ath9k_ops_config {
- 	int dma_beacon_response_time;
- 	int sw_beacon_response_time;
--	int additional_swba_backoff;
- 	int ack_6mb;
- 	u32 cwm_ignore_extcca;
- 	u32 pcie_waen;
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index a850482..89d7e20 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -481,8 +481,7 @@ bool ath9k_hw_resettxqueue(struct ath_hw *ah, u32 q)
- 			    | AR_Q_MISC_CBR_INCR_DIS0);
- 		value = (qi->tqi_readyTime -
- 			 (ah->config.sw_beacon_response_time -
--			  ah->config.dma_beacon_response_time) -
--			 ah->config.additional_swba_backoff) * 1024;
-+			  ah->config.dma_beacon_response_time)) * 1024;
- 		REG_WRITE(ah, AR_QRDYTIMECFG(q),
- 			  value | AR_Q_RDYTIMECFG_EN);
- 		REG_SET_BIT(ah, AR_DMISC(q),
+> > How are you downloading firmware over SPI?
+> 
+> See drivers/net/wireless/libertas/if_spi.c, but it's for fat
+> firmware
+
+What happens if you send the thin firmware instead?
+
+> > I'm not aware of a second stage firmware download helper specific to
+> > the SPI mode.
+> 
+> What's a second stage firmware download helper?
+
+File sd8686_helper.bin, we use it in Open Firmware with SDIO 8686 on
+OLPC XO.
+
+For SPI, which we don't use, I see if_spi.c uses gspi8686_v9_helper.bin
+
+I was wrong; I am now aware of a second stage firmware downloader
+helper specific to the SPI mode.  I hadn't looked before.
+
+> > I think it is not possible without firmware engineering.
+> 
+> Yeah, just hoped that Marvell already did it. It's a pity that
+> firmware source code isn't available :(
+
+Cozybit did the thin firmware, if I recall correctly.
+
 -- 
-1.8.3.4 (Apple Git-47)
-
+James Cameron
+http://quozl.linux.org.au/
