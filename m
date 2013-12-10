@@ -1,104 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f176.google.com ([209.85.215.176]:44308 "EHLO
-	mail-ea0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751898Ab3LBO3X (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:60188 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751141Ab3LJWHj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Dec 2013 09:29:23 -0500
-Received: by mail-ea0-f176.google.com with SMTP id h14so8883861eaj.7
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Dec 2013 06:29:21 -0800 (PST)
-From: Marek Kwaczynski <marek.kwaczynski@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	Marek Kwaczynski <marek.kwaczynski@tieto.com>
-Subject: [PATCH 1/2] nl80211/cfg80211: Set VHT Operating mode
-Date: Mon,  2 Dec 2013 15:28:53 +0100
-Message-Id: <1385994534-13383-1-git-send-email-marek.kwaczynski@tieto.com> (sfid-20131202_152927_416221_4A80AB97)
+	Tue, 10 Dec 2013 17:07:39 -0500
+Message-ID: <3121017861fe910940c6b44994156635.squirrel@www.codeaurora.org> (sfid-20131210_230742_728644_B467BB63)
+In-Reply-To: <CA+XVXfc1ryVcfqsMOc_592iEGYmpP4x3F_w88-10Ky4YG7zZmQ@mail.gmail.com>
+References: <1386045985-2398-1-git-send-email-clanctot@codeaurora.org>
+    <1386045985-2398-2-git-send-email-clanctot@codeaurora.org>
+    <CA+XVXfc1ryVcfqsMOc_592iEGYmpP4x3F_w88-10Ky4YG7zZmQ@mail.gmail.com>
+Date: Tue, 10 Dec 2013 22:07:38 -0000
+Subject: Re: [PATCH 1/2 V2] nl80211/cfg80211: Add support for drivers with AP
+ SME that require PMF SA Query assistance
+From: clanctot@codeaurora.org
+To: "Arik Nemtsov" <arik@wizery.com>
+Cc: "Chet Lanctot" <clanctot@codeaurora.org>,
+	"John Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This attribuite is needed for setting Operating Mode Notification
-in AP mode from User Space. This functionality is required when
-User Space received Assoc Reqeust contains VHT Operation Mode
-Notification element.
+Arik,
 
-Signed-off-by: Marek Kwaczynski <marek.kwaczynski@tieto.com>
----
- include/net/cfg80211.h       |    4 ++++
- include/uapi/linux/nl80211.h |    6 ++++++
- net/wireless/nl80211.c       |    7 +++++++
- 3 files changed, 17 insertions(+)
+Thank you for catching this and passing it along.  Yes, it is not non
+purpose.  It is due to an error when I entered the changes. 
+NL80211_STA_FLAG_NO_SA_QUERY_REQUIRED is the correct name, but it should
+have been that name from the beginning.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 3eae46c..0b66d91 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -748,6 +748,8 @@ enum station_parameters_apply_mask {
-  * @supported_channels_len: number of supported channels
-  * @supported_oper_classes: supported oper classes in IEEE 802.11 format
-  * @supported_oper_classes_len: number of supported operating classes
-+ * @vht_opmode: operating mode field
-+ * @vht_opmode_used: information if operating mode field is used
-  */
- struct station_parameters {
- 	const u8 *supported_rates;
-@@ -771,6 +773,8 @@ struct station_parameters {
- 	u8 supported_channels_len;
- 	const u8 *supported_oper_classes;
- 	u8 supported_oper_classes_len;
-+	u8 vht_opmode;
-+	bool vht_opmode_used;
- };
- 
- /**
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index f752e98..0240e7d 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1508,6 +1508,10 @@ enum nl80211_commands {
-  *	to react to radar events, e.g. initiate a channel switch or leave the
-  *	IBSS network.
-  *
-+ * @NL80211_ATTR_VHT_OPMODE: Operating mode field from Operating Mode
-+ *	Notification Element based on association request when used with
-+ *	NL80211_CMD_NEW_STATION
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1824,6 +1828,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_HANDLE_DFS,
- 
-+	NL80211_ATTR_VHT_OPMODE,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index a7f4e79..ddd1f71 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -357,6 +357,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 	[NL80211_ATTR_STA_SUPPORTED_CHANNELS] = { .type = NLA_BINARY },
- 	[NL80211_ATTR_STA_SUPPORTED_OPER_CLASSES] = { .type = NLA_BINARY },
- 	[NL80211_ATTR_HANDLE_DFS] = { .type = NLA_FLAG },
-+	[NL80211_ATTR_VHT_OPMODE] = { .type = NLA_U8 },
- };
- 
- /* policy for the key attributes */
-@@ -4125,6 +4126,12 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 		params.vht_capa =
- 			nla_data(info->attrs[NL80211_ATTR_VHT_CAPABILITY]);
- 
-+	if (info->attrs[NL80211_ATTR_VHT_OPMODE]) {
-+		params.vht_opmode_used = true;
-+		params.vht_opmode =
-+			nla_get_u8(info->attrs[NL80211_ATTR_VHT_OPMODE]);
-+	}
-+
- 	if (info->attrs[NL80211_ATTR_STA_PLINK_ACTION]) {
- 		params.plink_action =
- 			nla_get_u8(info->attrs[NL80211_ATTR_STA_PLINK_ACTION]);
--- 
-1.7.9.5
+I also noticed that I did not break the changes up between the two commits
+correctly.  I have fixed that.
+
+I will now send out a new set of patch files for review.
+
+-	Chet
+
+
+> On Tue, Dec 3, 2013 at 6:46 AM, Chet Lanctot <clanctot@codeaurora.org>
+> wrote:
+>> This adds support for drivers that have AP SME integrated but do
+>> not implement the SA Query procedure that is part of Protected
+>> Management Frames (PMF, 802.11w).
+>>
+>> Instead, hostapd can be used to assist drivers that lack SA Query
+>> Procedure handling on their own by allowing them to specify this as
+>> a device capability flag.
+>>
+>> Also, a station flag is added to let hostapd indicate to the driver
+>> that the SA Query procedure is complete and the driver can process
+>> association requests from the station normally.
+> [...]
+>>   * enum nl80211_feature_flags - device/driver features
+>> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+>> index 587ff84..14a14d4 100644
+>> --- a/net/wireless/nl80211.c
+>> +++ b/net/wireless/nl80211.c
+>> @@ -3766,7 +3766,8 @@ int cfg80211_check_station_change(struct wiphy
+>> *wiphy,
+>>                                   BIT(NL80211_STA_FLAG_ASSOCIATED) |
+>>                                   BIT(NL80211_STA_FLAG_SHORT_PREAMBLE) |
+>>                                   BIT(NL80211_STA_FLAG_WME) |
+>> -                                 BIT(NL80211_STA_FLAG_MFP)))
+>> +                                 BIT(NL80211_STA_FLAG_MFP) |
+>> +
+>> BIT(NL80211_STA_FLAG_SA_QUERY_REQUIRED)))
+>
+> I didn't really read the patch, but noticed you're adding
+> NL80211_STA_FLAG_SA_QUERY_REQUIRED here and changing it to
+> NL80211_STA_FLAG_NO_SA_QUERY_REQUIRED in the next one.
+> Pretty sure that's not on purpose :)
+>
+> Arik
+>
+
 
