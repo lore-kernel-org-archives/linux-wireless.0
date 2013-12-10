@@ -1,42 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:48776 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750834Ab3LMIty (ORCPT
+Received: from mail-bk0-f52.google.com ([209.85.214.52]:38865 "EHLO
+	mail-bk0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753422Ab3LJQKz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Dec 2013 03:49:54 -0500
-Message-ID: <52AAC9B8.8060008@broadcom.com> (sfid-20131213_094957_007882_C5993352)
-Date: Fri, 13 Dec 2013 09:47:52 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Tue, 10 Dec 2013 11:10:55 -0500
+From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
+To: Kalle Valo <kvalo@adurom.com>
+Subject: Re: [PATCH v2 15/16] wl1251: Add sysfs file address for setting permanent mac address
+Date: Tue, 10 Dec 2013 17:10:50 +0100
+Cc: Luciano Coelho <luca@coelho.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
+	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
+	joni.lapilainen@gmail.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Felipe Contreras <felipe.contreras@gmail.com>
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com> <1386494714-21070-16-git-send-email-pali.rohar@gmail.com> <87txegpuyk.fsf@purkki.adurom.net>
+In-Reply-To: <87txegpuyk.fsf@purkki.adurom.net>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Naughtboy <skylvlinux@gmail.com>, <b43-dev@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: where can download bcm43236 linux driver code!!
-References: <CAKH5=LsbEAVX4_=EEukJnGkKbiG--RzywvK+wOGhmh3zz6pkxA@mail.gmail.com> <52AAA948.1000509@lwfinger.net>
-In-Reply-To: <52AAA948.1000509@lwfinger.net>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: multipart/signed;
+  boundary="nextPart5139172.ScLoRPZvaW";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <201312101710.51015@pali> (sfid-20131210_171123_139109_0FB2991D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/13/2013 07:29 AM, Larry Finger wrote:
-> On 12/12/2013 08:48 PM, Naughtboy wrote:
->> hell big guys
->> now i have a usbdognle  bcm4323
->> but i did'nt have it driver code (linux)
->> if you kown it , please let'us kown it
->> thanks adanvce!!
->
-> As far as I know, there are no Linux drivers for any Broadcom USB adapters.
+--nextPart5139172.ScLoRPZvaW
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 
-Not sure how the subject got changed from bcm4323 to bcm43236. The 
-brcmfmac driver has support for the bcm43236 for almost two years, 
-but... only for particular chip revision. Earlier revisions of that chip 
-do not have enough memory for fullmac support (see [1] for details). If 
-it is really about a bcm4323 the answer is it does not support fullmac 
-either.
+On Tuesday 10 December 2013 16:49:23 Kalle Valo wrote:
+> Pali Roh=C3=A1r <pali.rohar@gmail.com> writes:
+> > Driver wl1251 generating mac address randomly at startup and
+> > there is no way to set permanent mac address via
+> > SET_IEEE80211_PERM_ADDR. This patch export sysfs file which
+> > can set permanent mac address by userspace helper program.
+> > Patch is needed for devices which do not store mac address
+> > in internal wl1251 eeprom.
+> >=20
+> > Signed-off-by: Pali Roh=C3=A1r <pali.rohar@gmail.com>
+>=20
+> We have ioctl() command for setting the mac address.
 
-Regards,
-Arend
+Really? Is there ioctl for setting permanent mac address?
+Can you show me it?
 
-[1] wireless.kernel.org/en/users/Drivers/brcm80211
+=2D-=20
+Pali Roh=C3=A1r
+pali.rohar@gmail.com
 
+--nextPart5139172.ScLoRPZvaW
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEABECAAYFAlKnPQoACgkQi/DJPQPkQ1ID0wCeK8927F0vrMmTB9OXR9P7AGi4
+sfoAn1nv5jrhT8VNKmoyC7Ev8fgQ1pLK
+=KlEV
+-----END PGP SIGNATURE-----
+
+--nextPart5139172.ScLoRPZvaW--
