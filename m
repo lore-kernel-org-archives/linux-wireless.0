@@ -1,93 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:51750 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756056Ab3LEMgE (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:43936 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753045Ab3LJJYk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 07:36:04 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 5/8] mac80211: move synchronize_net() before sta key removal
-Date: Thu,  5 Dec 2013 13:35:53 +0100
-Message-Id: <1386246956-14257-6-git-send-email-johannes@sipsolutions.net> (sfid-20131205_133611_739449_5C4629FC)
-In-Reply-To: <1386246956-14257-1-git-send-email-johannes@sipsolutions.net>
-References: <1386192610.5660.4.camel@jlt4.sipsolutions.net>
- <1386246956-14257-1-git-send-email-johannes@sipsolutions.net>
+	Tue, 10 Dec 2013 04:24:40 -0500
+Date: Tue, 10 Dec 2013 10:24:38 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
+Cc: Luciano Coelho <luca@coelho.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
+	aaro.koskinen@iki.fi, sre@ring0.de, joni.lapilainen@gmail.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Felipe Contreras <felipe.contreras@gmail.com>,
+	David Gnedt <david.gnedt@davizone.at>
+Subject: Re: [PATCH v2 03/16] wl1251: retry power save entry
+Message-ID: <20131210092438.GC22756@amd.pavel.ucw.cz> (sfid-20131210_102511_681471_413F3C7F)
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+ <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
+ <1386494714-21070-4-git-send-email-pali.rohar@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1386494714-21070-4-git-send-email-pali.rohar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Sun 2013-12-08 10:25:01, Pali Rohár wrote:
+> From: David Gnedt <david.gnedt@davizone.at>
+> 
+> Port of the power save entry retry code from wl1251 driver version included
+> in the Maemo Fremantle kernel.
+> This tries to enable power save mode up to 3 times before failing.
+> 
+> Signed-off-by: David Gnedt <david.gnedt@davizone.at>
+> Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
 
-There's no reason to do this inside the sta key removal
-since the keys can only be reached through the sta (and
-not by the driver at all) so once the sta can no longer
-be reached, the keys are safe.
+Reviewed-by: Pavel Machek <pavel@ucw.cz>
 
-This will allow further optimisation opportunities with
-multiple stations.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/key.c      | 16 +++-------------
- net/mac80211/sta_info.c |  3 ++-
- 2 files changed, 5 insertions(+), 14 deletions(-)
-
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index e568d98..12e6154 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -628,8 +628,7 @@ void ieee80211_free_keys(struct ieee80211_sub_if_data *sdata)
- void ieee80211_free_sta_keys(struct ieee80211_local *local,
- 			     struct sta_info *sta)
- {
--	struct ieee80211_key *key, *tmp;
--	LIST_HEAD(keys);
-+	struct ieee80211_key *key;
- 	int i;
- 
- 	mutex_lock(&local->key_mtx);
-@@ -640,7 +639,7 @@ void ieee80211_free_sta_keys(struct ieee80211_local *local,
- 		ieee80211_key_replace(key->sdata, key->sta,
- 				key->conf.flags & IEEE80211_KEY_FLAG_PAIRWISE,
- 				key, NULL);
--		list_add(&key->list, &keys);
-+		__ieee80211_key_destroy(key, true);
- 	}
- 
- 	for (i = 0; i < NUM_DEFAULT_KEYS; i++) {
-@@ -650,17 +649,8 @@ void ieee80211_free_sta_keys(struct ieee80211_local *local,
- 		ieee80211_key_replace(key->sdata, key->sta,
- 				key->conf.flags & IEEE80211_KEY_FLAG_PAIRWISE,
- 				key, NULL);
--		list_add(&key->list, &keys);
--	}
--
--	/*
--	 * NB: the station code relies on this being
--	 * done even if there aren't any keys
--	 */
--	synchronize_net();
--
--	list_for_each_entry_safe(key, tmp, &keys, list)
- 		__ieee80211_key_destroy(key, true);
-+	}
- 
- 	mutex_unlock(&local->key_mtx);
- }
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 7241f322..08e5076 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -831,7 +831,8 @@ int __must_check __sta_info_destroy(struct sta_info *sta)
- 	    rcu_access_pointer(sdata->u.vlan.sta) == sta)
- 		RCU_INIT_POINTER(sdata->u.vlan.sta, NULL);
- 
--	/* this always calls synchronize_net() */
-+	synchronize_net();
-+	/* now keys can no longer be reached */
- 	ieee80211_free_sta_keys(local, sta);
- 
- 	sta->dead = true;
 -- 
-1.8.4.rc3
-
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
