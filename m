@@ -1,42 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:46215 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752339Ab3LRE20 (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:45432 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751144Ab3LJJss (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Dec 2013 23:28:26 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 03/10] ath9k: Remove unneeded ref. count initialization
-Date: Wed, 18 Dec 2013 09:53:20 +0530
-Message-Id: <1387340607-20045-4-git-send-email-sujith@msujith.org> (sfid-20131218_052925_243147_19AE8762)
-In-Reply-To: <1387340607-20045-1-git-send-email-sujith@msujith.org>
-References: <1387340607-20045-1-git-send-email-sujith@msujith.org>
+	Tue, 10 Dec 2013 04:48:48 -0500
+Date: Tue, 10 Dec 2013 10:48:47 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
+Cc: Luciano Coelho <luca@coelho.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
+	aaro.koskinen@iki.fi, sre@ring0.de, joni.lapilainen@gmail.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Felipe Contreras <felipe.contreras@gmail.com>,
+	David Gnedt <david.gnedt@davizone.at>
+Subject: Re: [PATCH v2 12/16] wl1251: enforce changed hw encryption support
+ on monitor state change
+Message-ID: <20131210094846.GA24412@amd.pavel.ucw.cz> (sfid-20131210_104905_004719_D74ADD1D)
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+ <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
+ <1386494714-21070-13-git-send-email-pali.rohar@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1386494714-21070-13-git-send-email-pali.rohar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Sun 2013-12-08 10:25:10, Pali Rohár wrote:
+> From: David Gnedt <david.gnedt@davizone.at>
+> 
+> The firmware doesn't support per packet encryption selection, so disable hw
+> encryption support completely while a monitor interface is present to support
+> injection of packets (which shouldn't get encrypted by hw).
+> To enforce the changed hw encryption support force a disassociation on
+> non-monitor interfaces.
+> For disassociation a workaround using hw connection monitor is employed,
+> which temporary enables hw connection manager flag.
+> 
+> Signed-off-by: David Gnedt <david.gnedt@davizone.at>
+> Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
 
-The interrupt reference counter is always initialized
-in ath9k_start().
+Reviewed-by: Pavel Machek <pavel@ucw.cz>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/init.c | 1 -
- 1 file changed, 1 deletion(-)
+Thanks,
+								Pavel
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 9d2c3eb..ea67c01 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -705,7 +705,6 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 	ah->reg_ops.read = ath9k_ioread32;
- 	ah->reg_ops.write = ath9k_iowrite32;
- 	ah->reg_ops.rmw = ath9k_reg_rmw;
--	atomic_set(&ah->intr_ref_cnt, -1);
- 	sc->sc_ah = ah;
- 	pCap = &ah->caps;
- 
 -- 
-1.8.5.1
-
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
