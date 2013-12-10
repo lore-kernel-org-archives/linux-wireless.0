@@ -1,45 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:44423 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751356Ab3LQHUI (ORCPT
+Received: from purkki.adurom.net ([80.68.90.206]:40477 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752920Ab3LJPq6 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Dec 2013 02:20:08 -0500
-Message-ID: <1387264797.4749.0.camel@jlt4.sipsolutions.net> (sfid-20131217_082012_407831_D3B5B60F)
-Subject: Re: [BUG] P2P setup timeout
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ujjal Roy <royujjal@gmail.com>
-Cc: David Herrmann <dh.herrmann@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 17 Dec 2013 08:19:57 +0100
-In-Reply-To: <52AFE619.1060104@gmail.com> (sfid-20131217_065027_262928_A0D43F31)
-References: <CANq1E4R--OowH-LCUX4oSxsJu7yf_2e6Jei8tP+i_BQ_QHiKkw@mail.gmail.com>
-		 <1387197416.4665.15.camel@jlt4.sipsolutions.net>
-		 <CANq1E4TAt_Pw-V5_2LtJjY3LRcuwsxr1mBkcHjmX+MJUxc=zPQ@mail.gmail.com>
-		 (sfid-20131216_143914_205158_56AAC54B) <1387201528.2057.1.camel@jlt4.sipsolutions.net>
-	 <52AFE619.1060104@gmail.com> (sfid-20131217_065027_262928_A0D43F31)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 10 Dec 2013 10:46:58 -0500
+From: Kalle Valo <kvalo@adurom.com>
+To: Pali =?utf-8?Q?Roh=C3=A1r?= <pali.rohar@gmail.com>
+Cc: Luciano Coelho <luca@coelho.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
+	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
+	joni.lapilainen@gmail.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Felipe Contreras <felipe.contreras@gmail.com>,
+	David Gnedt <david.gnedt@davizone.at>
+Subject: Re: [PATCH v2 02/16] wl1251: add sysfs interface for bluetooth coexistence mode configuration
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+	<1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
+	<1386494714-21070-3-git-send-email-pali.rohar@gmail.com>
+Date: Tue, 10 Dec 2013 17:46:54 +0200
+In-Reply-To: <1386494714-21070-3-git-send-email-pali.rohar@gmail.com> ("Pali
+	=?utf-8?Q?Roh=C3=A1r=22's?= message of "Sun, 8 Dec 2013 10:25:00 +0100")
+Message-ID: <87y53spv2p.fsf@purkki.adurom.net> (sfid-20131210_164703_138470_58D3E5A5)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-12-17 at 11:20 +0530, Ujjal Roy wrote:
-> Hi Johannes,
-> 
-> On 12/16/2013 07:15 PM, Johannes Berg wrote:
-> > On Mon, 2013-12-16 at 14:39 +0100, David Herrmann wrote:
-> >
-> > Right, and I suspect they don't get a response because (as the sniffer
-> > trace tells me) they're sent with 1 Mbps (a CCK rate), which is invalid
-> > in the P2P spec (must use OFDM).
-> >
-> 
-> Can you please let me know, is the P2P spec freely available to read or 
-> download? If so, please provide some info from where I can able to get 
-> the document. Actually, I need to know - how to add P2P_DEVICE support 
-> in a driver.
+Pali Rohár <pali.rohar@gmail.com> writes:
 
-No, it isn't. However, P2P_DEVICE support is not described in the spec
-anyway since it's a Linux thing.
+> From: David Gnedt <david.gnedt@davizone.at>
+>
+> Port the bt_coex_mode sysfs interface from wl1251 driver version included
+> in the Maemo Fremantle kernel to allow bt-coexistence mode configuration.
+> This enables userspace applications to set one of the modes
+> WL1251_BT_COEX_OFF, WL1251_BT_COEX_ENABLE and WL1251_BT_COEX_MONOAUDIO.
+> The default mode is WL1251_BT_COEX_OFF.
+> It should be noted that this driver always enabled bt-coexistence before
+> and enabled bt-coexistence directly affects the receiving performance,
+> rendering it unusable in some low-signal situations. Especially monitor
+> mode is affected very badly with bt-coexistence enabled.
+>
+> Signed-off-by: David Gnedt <david.gnedt@davizone.at>
+> Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
 
-johannes
+I think this is also what I wrote a long time. And also this sysfs hack
+should not go to upstream.
 
+Over the years there has been some talk about solving the BT coex
+properly, but I haven't seen any patches. I guess the proper solution
+would be that BT subsystem in kernel would notify wireless drivers about
+BT use?
+
+-- 
+Kalle Valo
