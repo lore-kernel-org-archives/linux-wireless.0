@@ -1,186 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:53546 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750877Ab3LWHT1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Dec 2013 02:19:27 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org
-Subject: [RFC 2/9] ath9k: Register supported HW hang checks
-Date: Mon, 23 Dec 2013 12:44:19 +0530
-Message-Id: <1387782866-19847-3-git-send-email-sujith@msujith.org> (sfid-20131223_081930_664483_D568DC7D)
-In-Reply-To: <1387782866-19847-1-git-send-email-sujith@msujith.org>
-References: <1387782866-19847-1-git-send-email-sujith@msujith.org>
+Received: from mx1.redhat.com ([209.132.183.28]:29220 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750917Ab3LKWww (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Dec 2013 17:52:52 -0500
+Message-ID: <1386802416.17188.69.camel@dcbw.foobar.com> (sfid-20131211_235259_723626_99D45D42)
+Subject: Re: Re: [PATCH v2 15/16] wl1251: Add sysfs file address for setting
+ permanent mac address
+From: Dan Williams <dcbw@redhat.com>
+To: Ben Hutchings <bhutchings@solarflare.com>
+Cc: Ivajlo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+	Pali =?ISO-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>,
+	Kalle Valo <kvalo@adurom.com>, Luciano Coelho <luca@coelho.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
+	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
+	joni.lapilainen@gmail.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Felipe Contreras <felipe.contreras@gmail.com>
+Date: Wed, 11 Dec 2013 16:53:36 -0600
+In-Reply-To: <1386800135.1516.296.camel@bwh-desktop.uk.level5networks.com>
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+	 <201312101814.35112@pali> <1386697762.30202.6.camel@dcbw.foobar.com>
+	 <201312101852.17030@pali>
+	 <1386796654.1516.268.camel@bwh-desktop.uk.level5networks.com>
+	 <52A8DA9A.50501@gmail.com>
+	 <1386800135.1516.296.camel@bwh-desktop.uk.level5networks.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Wed, 2013-12-11 at 22:15 +0000, Ben Hutchings wrote:
+> On Wed, 2013-12-11 at 23:35 +0200, Ivajlo Dimitrov wrote:
+> > On 11.12.2013 23:17, Ben Hutchings wrote:
+> > > I think that's an even worse idea.  This is not firmware and it already
+> > > exists in separate storage.
+> > >
+> > > I think that rx51_init_wl1251() in
+> > > arch/arm/mach-omap2/board-rx51-peripherals.c should either copy the MAC
+> > > address out of NVRAM, or if it's too early to do that, then schedule a
+> > > function to run later and only then set up wl1251 platform data.
+> > >
+> > > Ben.
+> > >
+> > 
+> > And how will that work with DT when board files will be in the history?
+> 
+> 1. Boot loader reads the MAC address from NVRAM and puts it in the DT
+> node.
+> or
+> 2. NVRAM reading is done by a tiny driver that is loaded based on the
+> platform name and updates the DT node in memory.  (But I don't know how
+> wl1251 should decide to defer probing if it's probed before that other
+> driver.)
 
-HW hang checks have to be done on a per-chip basis.
+I'm uncomfortable with it too, and yes the permanent MAC should really
+be known before the interface is even registered, but...
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9002_hw.c | 15 +++++++++++++++
- drivers/net/wireless/ath/ath9k/ar9003_hw.c | 21 +++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/hw-ops.h    |  5 +++++
- drivers/net/wireless/ath/ath9k/hw.c        |  5 +----
- drivers/net/wireless/ath/ath9k/hw.h        | 22 +++++++++++++++++-----
- 5 files changed, 59 insertions(+), 9 deletions(-)
+Imagine if the MAC address for your ethernet device was stored
+in /etc/my-mac-addr.txt, except that /etc was a read-only protected
+partition from a very small SSD.  That's essentially the N900; it's
+stored in a file in a normal ext2/ext3 (?) filesystem on a partition of
+the internal flash.  It seems like overkill to write a small driver that
+duplicates the ext3 + MTD drivers just to read the MAC.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-index 149aba3..d480d2f 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-@@ -383,6 +383,20 @@ void ar9002_hw_enable_async_fifo(struct ath_hw *ah)
- 	}
- }
- 
-+static void ar9002_hw_init_hang_checks(struct ath_hw *ah)
-+{
-+	if (AR_SREV_9100(ah) || AR_SREV_9160(ah)) {
-+		ah->config.hw_hang_checks |= HW_BB_RIFS_HANG;
-+		ah->config.hw_hang_checks |= HW_BB_DFS_HANG;
-+	}
-+
-+	if (AR_SREV_9280(ah))
-+		ah->config.hw_hang_checks |= HW_BB_RX_CLEAR_STUCK_HANG;
-+
-+	if (AR_SREV_5416(ah) || AR_SREV_9100(ah) || AR_SREV_9160(ah))
-+		ah->config.hw_hang_checks |= HW_MAC_HANG;
-+}
-+
- /* Sets up the AR5008/AR9001/AR9002 hardware familiy callbacks */
- int ar9002_hw_attach_ops(struct ath_hw *ah)
- {
-@@ -395,6 +409,7 @@ int ar9002_hw_attach_ops(struct ath_hw *ah)
- 		return ret;
- 
- 	priv_ops->init_mode_gain_regs = ar9002_hw_init_mode_gain_regs;
-+	priv_ops->init_hang_checks = ar9002_hw_init_hang_checks;
- 
- 	ops->config_pci_powersave = ar9002_hw_configpcipowersave;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-index 29613eb..f1d3c4a 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-@@ -872,6 +872,26 @@ static void ar9003_hw_configpcipowersave(struct ath_hw *ah,
- 	}
- }
- 
-+static void ar9003_hw_init_hang_checks(struct ath_hw *ah)
-+{
-+	/*
-+	 * All chips support detection of BB/MAC hangs.
-+	 */
-+	ah->config.hw_hang_checks |= HW_BB_WATCHDOG;
-+	ah->config.hw_hang_checks |= HW_MAC_HANG;
-+
-+	/*
-+	 * This is not required for AR9580 1.0
-+	 */
-+	if (AR_SREV_9300_22(ah))
-+		ah->config.hw_hang_checks |= HW_PHYRESTART_CLC_WAR;
-+
-+	if (AR_SREV_9330(ah))
-+		ah->bb_watchdog_timeout_ms = 85;
-+	else
-+		ah->bb_watchdog_timeout_ms = 25;
-+}
-+
- /* Sets up the AR9003 hardware familiy callbacks */
- void ar9003_hw_attach_ops(struct ath_hw *ah)
- {
-@@ -880,6 +900,7 @@ void ar9003_hw_attach_ops(struct ath_hw *ah)
- 
- 	ar9003_hw_init_mode_regs(ah);
- 	priv_ops->init_mode_gain_regs = ar9003_hw_init_mode_gain_regs;
-+	priv_ops->init_hang_checks = ar9003_hw_init_hang_checks;
- 
- 	ops->config_pci_powersave = ar9003_hw_configpcipowersave;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
-index cc58a8e..bd95eae 100644
---- a/drivers/net/wireless/ath/ath9k/hw-ops.h
-+++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
-@@ -107,6 +107,11 @@ static inline void ath9k_hw_set_bt_ant_diversity(struct ath_hw *ah, bool enable)
- 
- /* Private hardware call ops */
- 
-+static inline void ath9k_hw_init_hang_checks(struct ath_hw *ah)
-+{
-+	ath9k_hw_private_ops(ah)->init_hang_checks(ah);
-+}
-+
- /* PHY ops */
- 
- static inline int ath9k_hw_rf_set_freq(struct ath_hw *ah,
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index a4b1ae0..d4fb74f 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -636,10 +636,7 @@ static int __ath9k_hw_init(struct ath_hw *ah)
- 	else
- 		ah->tx_trig_level = (AR_FTRIG_512B >> AR_FTRIG_S);
- 
--	if (AR_SREV_9330(ah))
--		ah->bb_watchdog_timeout_ms = 85;
--	else
--		ah->bb_watchdog_timeout_ms = 25;
-+	ath9k_hw_init_hang_checks(ah);
- 
- 	common->state = ATH_HW_INITIALIZED;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 6132ffe..0a3cfc5 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -277,6 +277,21 @@ struct ath9k_hw_capabilities {
- 	u8 txs_len;
- };
- 
-+#define AR_NO_SPUR      	0x8000
-+#define AR_BASE_FREQ_2GHZ   	2300
-+#define AR_BASE_FREQ_5GHZ   	4900
-+#define AR_SPUR_FEEQ_BOUND_HT40 19
-+#define AR_SPUR_FEEQ_BOUND_HT20 10
-+
-+enum ath9k_hw_hang_checks {
-+	HW_BB_WATCHDOG            = BIT(0),
-+	HW_PHYRESTART_CLC_WAR     = BIT(1),
-+	HW_BB_RIFS_HANG           = BIT(2),
-+	HW_BB_DFS_HANG            = BIT(3),
-+	HW_BB_RX_CLEAR_STUCK_HANG = BIT(4),
-+	HW_MAC_HANG               = BIT(5),
-+};
-+
- struct ath9k_ops_config {
- 	int dma_beacon_response_time;
- 	int sw_beacon_response_time;
-@@ -292,13 +307,9 @@ struct ath9k_ops_config {
- 	int serialize_regmode;
- 	bool rx_intr_mitigation;
- 	bool tx_intr_mitigation;
--#define AR_NO_SPUR      	0x8000
--#define AR_BASE_FREQ_2GHZ   	2300
--#define AR_BASE_FREQ_5GHZ   	4900
--#define AR_SPUR_FEEQ_BOUND_HT40 19
--#define AR_SPUR_FEEQ_BOUND_HT20 10
- 	u8 max_txtrig_level;
- 	u16 ani_poll_interval; /* ANI poll interval in ms */
-+	u16 hw_hang_checks;
- 
- 	/* Platform specific config */
- 	u32 aspm_l1_fix;
-@@ -573,6 +584,7 @@ struct ath_hw_radar_conf {
-  *	register settings through the register initialization.
-  */
- struct ath_hw_private_ops {
-+	void (*init_hang_checks)(struct ath_hw *ah);
- 	/* Calibration ops */
- 	void (*init_cal_settings)(struct ath_hw *ah);
- 	bool (*init_cal)(struct ath_hw *ah, struct ath9k_channel *chan);
--- 
-1.8.5.2
+There's got to be a better way to do this than having it set from
+userspace though, but I don't know what that is.  The request_firmware()
+method would probably run into race conditions, since who knows if the
+partition gets mounted before the WiFi gets initialized?  I suppose the
+firmware helper could block until it did, and while that's ugly, it's
+the best approach I've seen yet that doesn't violate the "permanent"
+idea here.
+
+Dan
 
