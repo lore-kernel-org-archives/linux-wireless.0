@@ -1,103 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ring0.de ([91.143.88.219]:39857 "EHLO smtp.ring0.de"
+Received: from mga09.intel.com ([134.134.136.24]:23250 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756328Ab3LFAWe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 19:22:34 -0500
-From: Sebastian Reichel <sre@debian.org>
-To: Sebastian Reichel <sre@ring0.de>, Luciano Coelho <luca@coelho.fi>,
-	Tony Lindgren <tony@atomide.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: Rob Herring <rob.herring@calxeda.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Rob Landley <rob@landley.net>,
-	Kumar Gala <galak@codeaurora.org>, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-omap@vger.kernel.org, netdev@vger.kernel.org,
-	Sebastian Reichel <sre@debian.org>
-Subject: [PATCHv2 3/5] wl1251: spi: add vio regulator support
-Date: Fri,  6 Dec 2013 01:22:14 +0100
-Message-Id: <1386289336-26704-4-git-send-email-sre@debian.org> (sfid-20131206_012422_211304_56704580)
-In-Reply-To: <1386289336-26704-1-git-send-email-sre@debian.org>
-References: <1382890469-25286-1-git-send-email-sre@debian.org>
- <1386289336-26704-1-git-send-email-sre@debian.org>
+	id S1751321Ab3LKIe6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Dec 2013 03:34:58 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-rt-users@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [RFC 03/10] iwlwifi: pcie: re-organize the PCIe ISR code
+Date: Wed, 11 Dec 2013 10:33:38 +0200
+Message-Id: <1386750826-25219-4-git-send-email-emmanuel.grumbach@intel.com> (sfid-20131211_093527_643577_5955136B)
+In-Reply-To: <1386750826-25219-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1386750826-25219-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds support for requesting the regulator powering
-the vio pin.
+Separate the code that simply disables interrupt in the
+hardware and the code that checks what interrupt fired.
+This will be useful to move the second part in the threaded
+handler which will be done in a future patch.
 
-Signed-off-by: Sebastian Reichel <sre@debian.org>
-Reviewed-by: Pavel Machek <pavel@ucw.cz>
+Change-Id: Iec42aa577c9de5c5a13a6030a1d8a69b4da37f43
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ti/wl1251/spi.c    | 19 +++++++++++++++++--
- drivers/net/wireless/ti/wl1251/wl1251.h |  2 ++
- 2 files changed, 19 insertions(+), 2 deletions(-)
+ drivers/net/wireless/iwlwifi/pcie/internal.h |  2 +-
+ drivers/net/wireless/iwlwifi/pcie/rx.c       | 49 +++++++++++++---------------
+ drivers/net/wireless/iwlwifi/pcie/trans.c    |  4 +--
+ 3 files changed, 26 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wl1251/spi.c b/drivers/net/wireless/ti/wl1251/spi.c
-index 6abcbc3..0a8aacc 100644
---- a/drivers/net/wireless/ti/wl1251/spi.c
-+++ b/drivers/net/wireless/ti/wl1251/spi.c
-@@ -27,6 +27,7 @@
- #include <linux/spi/spi.h>
- #include <linux/wl12xx.h>
- #include <linux/gpio.h>
-+#include <linux/regulator/consumer.h>
- 
- #include "wl1251.h"
- #include "reg.h"
-@@ -306,13 +307,26 @@ static int wl1251_spi_probe(struct spi_device *spi)
- 
- 	irq_set_irq_type(wl->irq, IRQ_TYPE_EDGE_RISING);
- 
--	ret = wl1251_init_ieee80211(wl);
-+	wl->vio = devm_regulator_get(&spi->dev, "vio");
-+	if (IS_ERR(wl->vio)) {
-+		ret = PTR_ERR(wl->vio);
-+		wl1251_error("vio regulator missing: %d", ret);
-+		goto out_free;
-+	}
-+
-+	ret = regulator_enable(wl->vio);
- 	if (ret)
- 		goto out_free;
- 
-+	ret = wl1251_init_ieee80211(wl);
-+	if (ret)
-+		goto disable_regulator;
-+
- 	return 0;
- 
-- out_free:
-+disable_regulator:
-+	regulator_disable(wl->vio);
-+out_free:
- 	ieee80211_free_hw(hw);
- 
- 	return ret;
-@@ -324,6 +338,7 @@ static int wl1251_spi_remove(struct spi_device *spi)
- 
- 	free_irq(wl->irq, wl);
- 	wl1251_free_hw(wl);
-+	regulator_disable(wl->vio);
- 
- 	return 0;
+diff --git a/drivers/net/wireless/iwlwifi/pcie/internal.h b/drivers/net/wireless/iwlwifi/pcie/internal.h
+index c9821ca..c790df6 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/iwlwifi/pcie/internal.h
+@@ -346,7 +346,7 @@ void iwl_pcie_rx_free(struct iwl_trans *trans);
+ /*****************************************************
+ * ICT - interrupt handling
+ ******************************************************/
+-irqreturn_t iwl_pcie_isr_ict(int irq, void *data);
++irqreturn_t iwl_pcie_isr(int irq, void *data);
+ int iwl_pcie_alloc_ict(struct iwl_trans *trans);
+ void iwl_pcie_free_ict(struct iwl_trans *trans);
+ void iwl_pcie_reset_ict(struct iwl_trans *trans);
+diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
+index 7e4836f..54a2f4a 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
+@@ -1111,9 +1111,8 @@ void iwl_pcie_disable_ict(struct iwl_trans *trans)
  }
-diff --git a/drivers/net/wireless/ti/wl1251/wl1251.h b/drivers/net/wireless/ti/wl1251/wl1251.h
-index f396a95..b0bfdf5 100644
---- a/drivers/net/wireless/ti/wl1251/wl1251.h
-+++ b/drivers/net/wireless/ti/wl1251/wl1251.h
-@@ -279,6 +279,8 @@ struct wl1251 {
- 	int irq;
- 	bool use_eeprom;
  
-+	struct regulator *vio;
+ /* legacy (non-ICT) ISR. Assumes that trans_pcie->irq_lock is held */
+-static irqreturn_t iwl_pcie_isr(int irq, void *data)
++static irqreturn_t iwl_pcie_isr_non_ict(struct iwl_trans *trans)
+ {
+-	struct iwl_trans *trans = data;
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	u32 inta;
+ 
+@@ -1121,12 +1120,6 @@ static irqreturn_t iwl_pcie_isr(int irq, void *data)
+ 
+ 	trace_iwlwifi_dev_irq(trans->dev);
+ 
+-	/* Disable (but don't clear!) interrupts here to avoid
+-	 *    back-to-back ISRs and sporadic interrupts from our NIC.
+-	 * If we have something to service, the irq thread will re-enable ints.
+-	 * If we *don't* have something, we'll re-enable before leaving here. */
+-	iwl_write32(trans, CSR_INT_MASK, 0x00000000);
+-
+ 	/* Discover which interrupts are active/pending */
+ 	inta = iwl_read32(trans, CSR_INT);
+ 
+@@ -1181,20 +1174,14 @@ static irqreturn_t iwl_pcie_isr(int irq, void *data)
+  * the interrupt we need to service, driver will set the entries back to 0 and
+  * set index.
+  */
+-irqreturn_t iwl_pcie_isr_ict(int irq, void *data)
++static irqreturn_t iwl_pcie_isr_ict(struct iwl_trans *trans)
+ {
+-	struct iwl_trans *trans = data;
+-	struct iwl_trans_pcie *trans_pcie;
++	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
++	unsigned long flags;
++	irqreturn_t ret;
+ 	u32 inta;
+ 	u32 val = 0;
+ 	u32 read;
+-	unsigned long flags;
+-	irqreturn_t ret = IRQ_NONE;
+-
+-	if (!trans)
+-		return IRQ_NONE;
+-
+-	trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 
+ 	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
+ 
+@@ -1202,20 +1189,13 @@ irqreturn_t iwl_pcie_isr_ict(int irq, void *data)
+ 	 * use legacy interrupt.
+ 	 */
+ 	if (unlikely(!trans_pcie->use_ict)) {
+-		ret = iwl_pcie_isr(irq, data);
++		ret = iwl_pcie_isr_non_ict(trans);
+ 		spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
+ 		return ret;
+ 	}
+ 
+ 	trace_iwlwifi_dev_irq(trans->dev);
+ 
+-	/* Disable (but don't clear!) interrupts here to avoid
+-	 * back-to-back ISRs and sporadic interrupts from our NIC.
+-	 * If we have something to service, the tasklet will re-enable ints.
+-	 * If we *don't* have something, we'll re-enable before leaving here.
+-	 */
+-	iwl_write32(trans, CSR_INT_MASK, 0x00000000);
+-
+ 	/* Ignore interrupt if there's nothing in NIC to service.
+ 	 * This may be due to IRQ shared with another device,
+ 	 * or due to sporadic interrupts thrown from our NIC. */
+@@ -1286,3 +1266,20 @@ irqreturn_t iwl_pcie_isr_ict(int irq, void *data)
+ 	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
+ 	return ret;
+ }
 +
- 	spinlock_t wl_lock;
++irqreturn_t iwl_pcie_isr(int irq, void *data)
++{
++	struct iwl_trans *trans = data;
++
++	if (!trans)
++		return IRQ_NONE;
++
++	/* Disable (but don't clear!) interrupts here to avoid
++	 * back-to-back ISRs and sporadic interrupts from our NIC.
++	 * If we have something to service, the tasklet will re-enable ints.
++	 * If we *don't* have something, we'll re-enable before leaving here.
++	 */
++	iwl_write32(trans, CSR_INT_MASK, 0x00000000);
++
++	return iwl_pcie_isr_ict(trans);
++}
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index d8ae0ad..af3ec74 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -1608,11 +1608,11 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
  
- 	enum wl1251_state state;
+ #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
+ 	err = compat_request_threaded_irq(&trans_pcie->irq_compat,
+-					  pdev->irq, iwl_pcie_isr_ict,
++					  pdev->irq, iwl_pcie_isr,
+ 					  iwl_pcie_irq_handler,
+ 					  IRQF_SHARED, DRV_NAME, trans);
+ #else
+-	err = request_threaded_irq(pdev->irq, iwl_pcie_isr_ict,
++	err = request_threaded_irq(pdev->irq, iwl_pcie_isr,
+ 				   iwl_pcie_irq_handler,
+ 				   IRQF_SHARED, DRV_NAME, trans);
+ #endif
 -- 
-1.8.4.3
+1.8.3.2
 
