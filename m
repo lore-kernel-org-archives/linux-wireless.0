@@ -1,91 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f178.google.com ([209.85.215.178]:39677 "EHLO
-	mail-ea0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754594Ab3LPR0q (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Dec 2013 12:26:46 -0500
-Received: by mail-ea0-f178.google.com with SMTP id d10so2441146eaj.9
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Dec 2013 09:26:45 -0800 (PST)
-Message-ID: <52AF37CE.4020906@gmail.com> (sfid-20131216_182649_958117_302C1BB5)
-Date: Mon, 16 Dec 2013 19:26:38 +0200
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-MIME-Version: 1.0
-To: Ben Hutchings <ben@decadent.org.uk>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	Matt Chen <machen@suse.com>,
-	John Linville <linville@tuxdriver.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-Subject: pull request: firmware for Intel Wireless adapter - 7260 / 3160
-References: <CANUX_P3PxN3ENgizJ-V5D0Of45AFoGcJ2wuzW-8ZwzToxTkcdQ@mail.gmail.com>
-In-Reply-To: <CANUX_P3PxN3ENgizJ-V5D0Of45AFoGcJ2wuzW-8ZwzToxTkcdQ@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="Emeb98DBDJRDxD4W0i1jiOU5UsVUomWke"
+Received: from mga09.intel.com ([134.134.136.24]:20040 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751453Ab3LKIfK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Dec 2013 03:35:10 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-rt-users@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [RFC 09/10] iwlwifi: pcie: move interrupt prints to the common handler
+Date: Wed, 11 Dec 2013 10:33:45 +0200
+Message-Id: <1386750826-25219-11-git-send-email-emmanuel.grumbach@intel.com> (sfid-20131211_093522_949909_7184D2EE)
+In-Reply-To: <1386750826-25219-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1386750826-25219-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---Emeb98DBDJRDxD4W0i1jiOU5UsVUomWke
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+Handling interrupt with no cause and printing logs doesn't
+need to be ICT / non-ICT specific move this to the common
+code.
 
-Hi Ben,
+Change-Id: I741894a8079faf0bf192a63ea5f40de5d08c433c
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/pcie/rx.c | 90 ++++++++++++----------------------
+ 1 file changed, 30 insertions(+), 60 deletions(-)
 
-I have a new firmware for 7260 / 3160 - new version is 22.1.7.0.
+diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
+index 3f247da..f25e6bb 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
+@@ -819,43 +819,6 @@ static u32 iwl_pcie_int_cause_non_ict(struct iwl_trans *trans)
+ 	/* Discover which interrupts are active/pending */
+ 	inta = iwl_read32(trans, CSR_INT);
+ 
+-	if (inta & (~trans_pcie->inta_mask)) {
+-		IWL_DEBUG_ISR(trans,
+-			      "We got a masked interrupt (0x%08x)...Ack and ignore\n",
+-			      inta & (~trans_pcie->inta_mask));
+-		iwl_write32(trans, CSR_INT, inta & (~trans_pcie->inta_mask));
+-		inta &= trans_pcie->inta_mask;
+-	}
+-
+-	/* Ignore interrupt if there's nothing in NIC to service.
+-	 * This may be due to IRQ shared with another device,
+-	 * or due to sporadic interrupts thrown from our NIC. */
+-	if (!inta) {
+-		IWL_DEBUG_ISR(trans, "Ignore interrupt, inta == 0\n");
+-		/*
+-		 * Re-enable interrupts here since we don't have anything to
+-		 * service, but only in case the handler won't run. Note that
+-		 * the handler can be scheduled because of a previous
+-		 * interrupt.
+-		 */
+-		if (test_bit(STATUS_INT_ENABLED, &trans->status) && !inta)
+-			iwl_enable_interrupts(trans);
+-		return inta;
+-	}
+-
+-	if ((inta == 0xFFFFFFFF) || ((inta & 0xFFFFFFF0) == 0xa5a5a5a0)) {
+-		/* Hardware disappeared. It might have already raised
+-		 * an interrupt */
+-		IWL_WARN(trans, "HARDWARE GONE?? INTA == 0x%08x\n", inta);
+-		return inta;
+-	}
+-
+-	if (iwl_have_debug_level(IWL_DL_ISR))
+-		IWL_DEBUG_ISR(trans,
+-			      "ISR inta 0x%08x, enabled 0x%08x, fh 0x%08x\n",
+-			      inta, trans_pcie->inta_mask,
+-			      iwl_read32(trans, CSR_FH_INT_STATUS));
+-
+ 	/* the thread will service interrupts and re-enable them */
+ 	return inta;
+ }
+@@ -887,10 +850,8 @@ static u32 iwl_pcie_int_cause_ict(struct iwl_trans *trans)
+ 	 * or due to sporadic interrupts thrown from our NIC. */
+ 	read = le32_to_cpu(trans_pcie->ict_tbl[trans_pcie->ict_index]);
+ 	trace_iwlwifi_dev_ict_read(trans->dev, trans_pcie->ict_index, read);
+-	if (!read) {
+-		IWL_DEBUG_ISR(trans, "Ignore interrupt, inta == 0\n");
+-		goto none;
+-	}
++	if (!read)
++		return 0;
+ 
+ 	/*
+ 	 * Collect all entries up to the first 0, starting from ict_index;
+@@ -924,25 +885,6 @@ static u32 iwl_pcie_int_cause_ict(struct iwl_trans *trans)
+ 		val |= 0x8000;
+ 
+ 	inta = (0xff & val) | ((0xff00 & val) << 16);
+-	IWL_DEBUG_ISR(trans, "ISR inta 0x%08x, enabled(sw) 0x%08x ict 0x%08x\n",
+-		      inta, trans_pcie->inta_mask, val);
+-	if (iwl_have_debug_level(IWL_DL_ISR))
+-		IWL_DEBUG_ISR(trans, "enabled(hw) 0x%08x\n",
+-			      iwl_read32(trans, CSR_INT_MASK));
+-
+-	inta &= trans_pcie->inta_mask;
+-
+-	/* iwl_pcie_tasklet() will service interrupts and re-enable them */
+-	if (likely(inta))
+-		return inta;
+-
+- none:
+-	/* re-enable interrupts here since we don't have anything to service.
+-	 * only Re-enable if disabled by irq.
+-	 */
+-	if (test_bit(STATUS_INT_ENABLED, &trans->status) && !inta)
+-		iwl_enable_interrupts(trans);
+-
+ 	return inta;
+ }
+ 
+@@ -968,11 +910,39 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
+ 	else
+ 		inta = iwl_pcie_int_cause_non_ict(trans);
+ 
++	if (iwl_have_debug_level(IWL_DL_ISR)) {
++		IWL_DEBUG_ISR(trans,
++			      "ISR inta 0x%08x, enabled 0x%08x(sw), enabled(hw) 0x%08x, fh 0x%08x\n",
++			      inta, trans_pcie->inta_mask,
++			      iwl_read32(trans, CSR_INT_MASK),
++			      iwl_read32(trans, CSR_FH_INT_STATUS));
++		if (inta & (~trans_pcie->inta_mask))
++			IWL_DEBUG_ISR(trans,
++				      "We got a masked interrupt (0x%08x)\n",
++				      inta & (~trans_pcie->inta_mask));
++	}
++
++	inta &= trans_pcie->inta_mask;
++
++	/*
++	 * Ignore interrupt if there's nothing in NIC to service.
++	 * This may be due to IRQ shared with another device,
++	 * or due to sporadic interrupts thrown from our NIC.\
++	 */
+ 	if (!inta) {
++		IWL_DEBUG_ISR(trans, "Ignore interrupt, inta == 0\n");
++		/* Re-enable interrupts here since we don't have anything to service */
++		if (test_bit(STATUS_INT_ENABLED, &trans->status))
++			iwl_enable_interrupts(trans);
+ 		spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
+ 		return IRQ_NONE;
+ 	}
+ 
++	if ((inta == 0xFFFFFFFF) || ((inta & 0xFFFFFFF0) == 0xa5a5a5a0)) {
++		/* Hardware disappeared. It might have already raised an interrupt */
++		IWL_WARN(trans, "HARDWARE GONE?? INTA == 0x%08x\n", inta);
++	}
++
+ 	/* Ack/clear/reset pending uCode interrupts.
+ 	 * Note:  Some bits in CSR_INT are "OR" of bits in CSR_FH_INT_STATUS,
+ 	 */
+-- 
+1.8.3.2
 
-Please pull - thanks!
-
-
-The following changes since commit 7d0c7a8cfd78388d90cc784a185b19dcbdbce8=
-24:
-
-  Merge branch 'wilink4' of
-git://git.kernel.org/pub/scm/linux/kernel/git/balbi/linux-firmware
-(2013-10-13 21:11:46 +0100)
-
-are available in the git repository at:
-
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/egrumbach/linux-firmware
-master
-
-for you to fetch changes up to 478227556dfc3563892c3e1ec3abfa03c663e10d:
-
-  iwlwifi: update firmware for 7260 / 3160 devices (2013-12-15 21:40:38
-+0200)
-
-----------------------------------------------------------------
-Emmanuel Grumbach (1):
-      iwlwifi: update firmware for 7260 / 3160 devices
-
- iwlwifi-3160-7.ucode |  Bin 670172 -> 670484 bytes
- iwlwifi-7260-7.ucode |  Bin 682892 -> 683236 bytes
- 2 files changed, 0 insertions(+), 0 deletions(-)
-
-
---Emeb98DBDJRDxD4W0i1jiOU5UsVUomWke
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJSrzfRAAoJEC0Llv5uNjIBivYP/0u29ExBWRF4mfT6Gec1Nqj3
-XqPXzmHh2J9hMTJLTIsJYvij8EroTP1zWsOH6dRSVeP4bxfNj2aiVHdOzo79GBpE
-Ho3qFZ+lXvkPQ17f+TZCM8tHlOwLs5h1hcxvzEu6f30Zquaw6N7hLiyeu/6CFtJs
-ylLDk2M6nZTAigjCVV291uLrbC6tixCOC383jr9K6Kwu67jGrcHWTtel3Wc51JSi
-5J7VWz2jvj0y+8kDlHB/iUVMazAKry+6c9VPMxg1z02XOOeDypxSxs4d+37Rdtf0
-7tamLPSTqTMQu4a9DtNau3/CHF6OeBDHfspKNI47uSmpLiMvOzpIe65Xa8UVgvCM
-xPxWeqCu+5Qp4I0VRC1JyVR3zhH0PrWoDhlopxQp5k9B4Fp+jMXxbqcIIdJlKDtJ
-QnvAZEH30/kLEkKKHMR7+tc5yBVfeMtPorh1GNBVjxXKdw7H97vYNHGTS6OL+7XO
-OxUxDpswzoX9RJFKLdA1VMFFWZxlmTHN83KwcRlI8poYJxm7gq4hTiVBl7G+FdHl
-fOE/NyZUqtc7kirEBpo/Gxq39rw2+V4simIq0OzTAQJuuQQGiWLt1wJSw79CmmPk
-IcubVPG24mGffXoJ78LIELCfjBvgQfhZYQtnzCrd5c2e/rffdeWax/33M0+YilEw
-HZvJR8nRWzQAPUY6Ykr3
-=aeHn
------END PGP SIGNATURE-----
-
---Emeb98DBDJRDxD4W0i1jiOU5UsVUomWke--
