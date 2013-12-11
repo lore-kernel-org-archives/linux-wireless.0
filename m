@@ -1,173 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:45864 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751541Ab3LLK7Q (ORCPT
+Received: from mail-ea0-f173.google.com ([209.85.215.173]:60531 "EHLO
+	mail-ea0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751824Ab3LKTSu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Dec 2013 05:59:16 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 05/18] brcmfmac: use sdio functions to enable/disable F2
-Date: Thu, 12 Dec 2013 11:58:53 +0100
-Message-ID: <1386845946-9859-6-git-send-email-arend@broadcom.com> (sfid-20131212_122500_730423_D6F6BFC2)
-In-Reply-To: <1386845946-9859-1-git-send-email-arend@broadcom.com>
-References: <1386845946-9859-1-git-send-email-arend@broadcom.com>
+	Wed, 11 Dec 2013 14:18:50 -0500
+Received: by mail-ea0-f173.google.com with SMTP id o10so3119721eaj.32
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Dec 2013 11:18:49 -0800 (PST)
+Message-ID: <52A8BA8B.6040104@gmail.com> (sfid-20131211_201854_557275_9459AC3B)
+Date: Wed, 11 Dec 2013 20:18:35 +0100
+From: Jeremy Johnathan Rodent <rat.o.drat@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Random lock-ups (?) of Centrino Ultimate-N 6300 (iwlwifi)
+References: <52A40FE5.30004@gmail.com> <CANUX_P0iO2YdDGO6_GcBOA2A6QvUfYQNz8E2L2SjLpMPYYviuQ@mail.gmail.com>
+In-Reply-To: <CANUX_P0iO2YdDGO6_GcBOA2A6QvUfYQNz8E2L2SjLpMPYYviuQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of catching CCCR_IOEx register in F0 write access to
-determine whether F2 state needs to change do it with direct
-call to sdio_[enable/disable]_func().
 
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |   29 +++++------------
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   33 ++++----------------
- 2 files changed, 14 insertions(+), 48 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-index 1975054..5919b45 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-@@ -53,6 +53,9 @@
- 
- #define SDIO_FUNC1_BLOCKSIZE		64
- #define SDIO_FUNC2_BLOCKSIZE		512
-+/* Maximum milliseconds to wait for F2 to come up */
-+#define SDIO_WAIT_F2RDY	3000
-+
- 
- static irqreturn_t brcmf_sdio_oob_irqhandler(int irq, void *dev_id)
- {
-@@ -205,27 +208,8 @@ static inline int brcmf_sdioh_f0_write_byte(struct brcmf_sdio_dev *sdiodev,
- 	 * Handle F2 enable/disable and Abort command
- 	 * as a special case.
- 	 */
--	if (regaddr == SDIO_CCCR_IOEx) {
--		sdfunc = sdiodev->func[2];
--		if (sdfunc) {
--			if (*byte & SDIO_FUNC_ENABLE_2) {
--				/* Enable Function 2 */
--				err_ret = sdio_enable_func(sdfunc);
--				if (err_ret)
--					brcmf_err("enable F2 failed:%d\n",
--						  err_ret);
--			} else {
--				/* Disable Function 2 */
--				err_ret = sdio_disable_func(sdfunc);
--				if (err_ret)
--					brcmf_err("Disable F2 failed:%d\n",
--						  err_ret);
--			}
--		} else {
--			err_ret = -ENOENT;
--		}
--	} else if ((regaddr == SDIO_CCCR_ABORT) ||
--		   (regaddr == SDIO_CCCR_IENx)) {
-+	if ((regaddr == SDIO_CCCR_ABORT) ||
-+	    (regaddr == SDIO_CCCR_IENx)) {
- 		sdfunc = kmemdup(sdiodev->func[0], sizeof(struct sdio_func),
- 				 GFP_KERNEL);
- 		if (!sdfunc)
-@@ -945,6 +929,9 @@ static int brcmf_sdioh_attach(struct brcmf_sdio_dev *sdiodev)
- 		goto out;
- 	}
- 
-+	/* increase F2 timeout */
-+	sdiodev->func[2]->enable_timeout = SDIO_WAIT_F2RDY;
-+
- 	/* Enable Function 1 */
- 	err_ret = sdio_enable_func(sdiodev->func[1]);
- 	if (err_ret) {
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 0f95f3e..c3f3d8d 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -260,9 +260,6 @@ struct rte_console {
- #define MAX_HDR_READ	(1 << 6)
- #define MAX_RX_DATASZ	2048
- 
--/* Maximum milliseconds to wait for F2 to come up */
--#define BRCMF_WAIT_F2RDY	3000
--
- /* Bump up limit on waiting for HT to account for first startup;
-  * if the image is doing a CRC calculation before programming the PMU
-  * for HT availability, it could take a couple hundred ms more, so
-@@ -2265,8 +2262,7 @@ static void brcmf_sdbrcm_bus_stop(struct device *dev)
- 
- 	/* Turn off the bus (F2), free any pending packets */
- 	brcmf_dbg(INTR, "disable SDIO interrupts\n");
--	brcmf_sdio_regwb(bus->sdiodev, SDIO_CCCR_IOEx, SDIO_FUNC_ENABLE_1,
--			 NULL);
-+	sdio_disable_func(bus->sdiodev->func[SDIO_FUNC_2]);
- 
- 	/* Clear any pending interrupts now that F2 is disabled */
- 	w_sdreg32(bus, local_hostintmask,
-@@ -3570,8 +3566,6 @@ static int brcmf_sdbrcm_bus_init(struct device *dev)
- 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
- 	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
- 	struct brcmf_sdio *bus = sdiodev->bus;
--	unsigned long timeout;
--	u8 ready, enable;
- 	int err, ret = 0;
- 	u8 saveclk;
- 
-@@ -3612,26 +3606,13 @@ static int brcmf_sdbrcm_bus_init(struct device *dev)
- 	/* Enable function 2 (frame transfers) */
- 	w_sdreg32(bus, SDPCM_PROT_VERSION << SMB_DATA_VERSION_SHIFT,
- 		  offsetof(struct sdpcmd_regs, tosbmailboxdata));
--	enable = (SDIO_FUNC_ENABLE_1 | SDIO_FUNC_ENABLE_2);
--
--	brcmf_sdio_regwb(bus->sdiodev, SDIO_CCCR_IOEx, enable, NULL);
-+	err = sdio_enable_func(bus->sdiodev->func[SDIO_FUNC_2]);
- 
--	timeout = jiffies + msecs_to_jiffies(BRCMF_WAIT_F2RDY);
--	ready = 0;
--	while (enable != ready) {
--		ready = brcmf_sdio_regrb(bus->sdiodev,
--					 SDIO_CCCR_IORx, NULL);
--		if (time_after(jiffies, timeout))
--			break;
--		else if (time_after(jiffies, timeout - BRCMF_WAIT_F2RDY + 50))
--			/* prevent busy waiting if it takes too long */
--			msleep_interruptible(20);
--	}
- 
--	brcmf_dbg(INFO, "enable 0x%02x, ready 0x%02x\n", enable, ready);
-+	brcmf_dbg(INFO, "enable F2: err=%d\n", err);
- 
- 	/* If F2 successfully enabled, set core and enable interrupts */
--	if (ready == enable) {
-+	if (!err) {
- 		/* Set up the interrupt mask and enable interrupts */
- 		bus->hostintmask = HOSTINTMASK;
- 		w_sdreg32(bus, bus->hostintmask,
-@@ -3640,8 +3621,7 @@ static int brcmf_sdbrcm_bus_init(struct device *dev)
- 		brcmf_sdio_regwb(bus->sdiodev, SBSDIO_WATERMARK, 8, &err);
- 	} else {
- 		/* Disable F2 again */
--		enable = SDIO_FUNC_ENABLE_1;
--		brcmf_sdio_regwb(bus->sdiodev, SDIO_CCCR_IOEx, enable, NULL);
-+		sdio_disable_func(bus->sdiodev->func[SDIO_FUNC_2]);
- 		ret = -ENODEV;
- 	}
- 
-@@ -3942,8 +3922,7 @@ static bool brcmf_sdbrcm_probe_init(struct brcmf_sdio *bus)
- 	sdio_claim_host(bus->sdiodev->func[1]);
- 
- 	/* Disable F2 to clear any intermediate frame state on the dongle */
--	brcmf_sdio_regwb(bus->sdiodev, SDIO_CCCR_IOEx,
--			 SDIO_FUNC_ENABLE_1, NULL);
-+	sdio_disable_func(bus->sdiodev->func[SDIO_FUNC_2]);
- 
- 	bus->sdiodev->bus_if->state = BRCMF_BUS_DOWN;
- 	bus->rxflow = false;
--- 
-1.7.10.4
-
+On 08.12.2013 08:19, Emmanuel Grumbach wrote:
+> On Sun, Dec 8, 2013 at 8:21 AM, Jeremy Johnathan Rodent
+> <rat.o.drat@gmail.com> wrote:
+>> Hello.
+>>
+>> I'd like to apologize in advance, if I shouldn't report such issues to this
+>> mailing list. I was told this is a good place for bug reports associated
+>> with Linux kernel modules for wireless devices.
+>>
+>> I have a ThinkPad X201 Tablet, which I recently bought used. This laptop has
+>> an Intel Centrino Ultimate-N 6300 wireless 802.11abgn card, which is
+>> supported via the iwlwifi module and a firmware image. I'm using Arch Linux
+>> on it (i haven't tried a different OS yet), and so have fairly recent and
+>> vanilla kernel and firmware packages (the policy of this distribution is to
+>> have the latest packages marked as stable by upstream and only do patching
+>> if it's required to build the package or make it work with others).
+>>
+>> Since some time I've been struggling with my laptop's wifi card randomly
+>> locking up (at least, I think the hardware locks up), usually after at least
+>> a few hours of usage. The initial symptom of such an event is the wifi card
+>> ceasing to work. Afterwards, each few seconds the computer "freezes" for a
+>> few other seconds. I can stop these freezes by flipping a radio disable
+>> switch, which causes rfkill's hard block on all wireless devices. However,
+>> flipping it back to unblock doesn't cause the wifi card to function, only
+>> bringing back aforementioned freezes.
+>>
+>> These lock-ups happen completely randomly. I'm using this laptop a lot, over
+>> 10 hours daily, and there are days when there is no problem. I even managed
+>> to use it a week without problems. Other times it can happen as much as 4
+>> times daily. Twice it happened straight after boot, but otherwise it happens
+>> after at least a few hours of usage.
+>>
+>> I at first thought, that it might be associated with the amount of data sent
+>> in and out of the interface, but there was no correlation. I specially
+>> tested this by moving large amounts of data within my local network for a
+>> few hours. Next thing I considered, was that the device overheats due to
+>> radiation (I'm usually very close to my AP, and have the default tx-power
+>> setting, which is 15dBm). But these issues happened no matter how far I was
+>> and changing tx-power to smallest possible value didn't help. I also thought
+>> this might be because the device accumulates heat after a few hours, but
+>> recently I got the lock-up 3 minutes after boot, which happened after the
+>> laptop was laying all night powered off.
+>>
+>> Since this issues started, I've considered many packages (such as those
+>> network-related and kernel modules like tp-smapi) as the culprits
+>> (especially those installed or updated around the time of the first
+>> occurrence) and tried uninstalling or downgrading. I also tried removing any
+>> module options and udev rules I made before the lock-ups started. Again, no
+>> success.
+>>
+>> Finally, I recently tried a few options of the iwlwifi module
+>> (11n_disable=1, swcrypto=1, bt_coex_active=0). None of those helped, though
+>> after setting bt_coex_active=0 I had 2 days of peace. I haven't tried the
+>> power-saving ones yet, though.
+>>
+>> My only remaining clue is that this seems more likely to happen if I'm on
+>> battery power, especially when the battery has little charge. So I guess
+>> this might be associated with power management.
+>>
+>> I have to say, I don't have the knowledge to understand what's really going
+>> on, how to read the ring buffer output or how to debug such an issue. But it
+>> seems to me, looking at the dmesg output, that the driver has some issue,
+>> the device is reinitialized, which fails. Hence why I wrote that the device
+>> locks up.
+>>
+>> I've attached output of dmesg captured right after a recent lock-up. I hope
+>> I have a recent enough kernel for this to be useful. I also attached outputs
+>> of dmidecode and lspci -vvvv, and /proc/config.gz, in case this information
+>> would be useful.
+>>
+>> Please tell me if anything else is needed. I'm willing to invest some time
+>> and have no problem with things like compiling a custom kernel, using gdb.
+>> The only problem here is that I have no idea how I can trigger this, and can
+>> never be sure if the issue went away.
+>>
+>> I thank in advance for any help.
+>>
+> can you please apply this and report back?
+>
+> diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c
+> b/drivers/net/wireless/iwlwifi/pcie/tx.c
+> index c5746ed..0a1f39c 100644
+> --- a/drivers/net/wireless/iwlwifi/pcie/tx.c
+> +++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
+> @@ -708,10 +708,6 @@ void iwl_pcie_tx_start(struct iwl_trans *trans,
+> u32 scd_base_addr)
+>          reg_val = iwl_read_direct32(trans, FH_TX_CHICKEN_BITS_REG);
+>          iwl_write_direct32(trans, FH_TX_CHICKEN_BITS_REG,
+>                             reg_val | FH_TX_CHICKEN_BITS_SCD_AUTO_RETRY_EN);
+> -
+> -       /* Enable L1-Active */
+> -       iwl_clear_bits_prph(trans, APMG_PCIDEV_STT_REG,
+> -                           APMG_PCIDEV_STT_VAL_L1_ACT_DIS);
+>   }
+>
+>   void iwl_trans_pcie_tx_reset(struct iwl_trans *trans)
+Sorry it took so long.
+I've built 3.12.3 with this patch applied. What now?
