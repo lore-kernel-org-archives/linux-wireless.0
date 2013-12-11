@@ -1,61 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f48.google.com ([209.85.214.48]:58956 "EHLO
-	mail-bk0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756189Ab3LVXum (ORCPT
+Received: from vserver.eikelenboom.it ([84.200.39.61]:40785 "EHLO
+	smtp.eikelenboom.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751350Ab3LKRBB convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Dec 2013 18:50:42 -0500
-Received: by mail-bk0-f48.google.com with SMTP id r7so1786053bkg.7
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Dec 2013 15:50:41 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Scott S <scotta1265@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: will rtl8192su driver work for 64-bit kernel 3.2.0-23-generic?
-Date: Mon, 23 Dec 2013 00:50:04 +0100
-Message-ID: <3015747.JIT0jyjz1q@debian64> (sfid-20131223_005045_709421_66A6F7F0)
-In-Reply-To: <CAGqmZoR8rXm5hNp6pMfESMM7a31aVpNeeGwxMY1Ng4sUXsJ_tg@mail.gmail.com>
-References: <CAGqmZoR8rXm5hNp6pMfESMM7a31aVpNeeGwxMY1Ng4sUXsJ_tg@mail.gmail.com>
+	Wed, 11 Dec 2013 12:01:01 -0500
+Date: Wed, 11 Dec 2013 18:00:47 +0100
+From: Sander Eikelenboom <linux@eikelenboom.it>
+Message-ID: <12930742.20131211180047@eikelenboom.it> (sfid-20131211_180129_067704_8FEC9722)
+To: Avinash Patil <avinashapatil@gmail.com>
+CC: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>
+Subject: Re: [cfg80211 / iwlwifi] setting wireless regulatory domain doesn't work.
+In-Reply-To: <CAJwzM1nwFa7z5gwh42aj39M2dxVXnuecDrhQkVyL+DDFAXwwbg@mail.gmail.com>
+References: <1507831110.20131018194349@eikelenboom.it> <792757788.20131023142849@eikelenboom.it> <1819533168.20131211161710@eikelenboom.it> <CAB=NE6V-RSnqbAC-0tfYK=WGJLp1aPC2UpFDurs49h+wXr9UfQ@mail.gmail.com> <CAJwzM1nwFa7z5gwh42aj39M2dxVXnuecDrhQkVyL+DDFAXwwbg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
 
-On Sunday, December 22, 2013 05:58:12 PM Scott S wrote:
-> I'm no guru or developer, so please bear with me.
-That's fine.
 
-> I'm looking for a better driver for a Rosewill RNX-N180UBE USB wifi on
-> 64-bit Linux Mint 13 (Ubuntu 12LTS Kernel 3.2.0-23) the Ubuntu driver
-> is junk+10.
-in what way is it junk? Is it crashing/misbehaving, does it lack important
-features, is the wifi connection unstable, or is something else bothering
-you?
+Wednesday, December 11, 2013, 5:34:27 PM, you wrote:
 
-> I found your site from here:
-> 
-> http://wikidevi.com/wiki/Rosewill_RNX-N180UBE
-> it says your driver is under development... ??
-Yes, you are referring to "r92su".
+> Hi Luis,
+>  I have seen that hint during regulatory init still has request processed set to false. This results into further request set to pending. I have sent a patch for the same last week. Please have a look- I think issue faced by me is similar to what Sander is same.
+> Thanks,
+> Avinash.
 
-> but you have a compile ready source...?
-Yes, the source is available from <https://github.com/chunkeey/rtl8192su>.
-However this driver is for 3.10+ kernels. AFICT there are no ready
-[plans for] backports of the driver for an older kernel version. 
+Hi Avinash,
 
-If you are interested in the state and future of r92su you can find some
-information in this thread:
-<http://www.spinics.net/lists/linux-wireless/msg114213.html>
-<http://www.spinics.net/lists/linux-wireless/msg114215.html>
-TL;DR: r92su is doomed too.
+Could you send me the patch (or a link to it), i can't find it on the linux-wireless list.
 
-> Just wonder if you can tell me if it will work, or should I use the
-> older one listed there? (r8712u)
->
-> Or what?
-Oh, you can help with the rtl8192su-mac80211 driver rewrite. This would 
-certainly make a difference :-D. Anything other than that: no, not that I
-know.
+--
+Sander
 
-Regards,
-Christian
+
+>  On Dec 11, 2013 9:14 PM, "Luis R. Rodriguez" <mcgrof@do-not-panic.com> wrote:
+>  On Wed, Dec 11, 2013 at 4:17 PM, Sander Eikelenboom
+>  <linux@eikelenboom.it> wrote:
+ >> Since i haven't got a response to this yet and after having the troubled machine back:
+ >> The problem is still present in linux 3.13-rc3
+>  
+>  Keep in mind regulatory hints for Intel or Atheros cards do nothing
+>  other than help compliance further given that the cards already have
+>  their own regulatory data, the user input / hint is only going to
+>  reduce the card's channels further. That said the fact that you are
+>  not seeing a regulatory domain being set is an issue provided you have
+>  CRDA installed or use CONFIG_CFG80211_INTERNAL_REGDB. Keep in mind
+>  that the latest version of wireless-regdb had a signature issue
+>  reported by users and not sure if that is cleared yet, so that would
+>  also prevent the wireless-regdb being read even if CRDA was present.
+>  To rule that out try putting the db.txt into net/wireless/db.txt and
+>  compile with CONFIG_CFG80211_INTERNAL_REGDB for now.
+>  
+>  Then send the dmesg output, no need for all that fluffy intel debug
+>  log as its not useful in this case.
+>  
+>    Luis
+>  --
+>  To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>  the body of a message to majordomo@vger.kernel.org
+>  More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>  
+
