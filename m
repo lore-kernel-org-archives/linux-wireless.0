@@ -1,15 +1,13 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:4001 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752195Ab3LPLhv (ORCPT
+Received: from vserver.eikelenboom.it ([84.200.39.61]:41318 "EHLO
+	smtp.eikelenboom.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750968Ab3LKSLM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Dec 2013 06:37:51 -0500
-Message-ID: <52AEE60B.6030509@broadcom.com> (sfid-20131216_123812_919893_A1891D0E)
-Date: Mon, 16 Dec 2013 12:37:47 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Sander Eikelenboom <linux@eikelenboom.it>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+	Wed, 11 Dec 2013 13:11:12 -0500
+Date: Wed, 11 Dec 2013 19:11:04 +0100
+From: Sander Eikelenboom <linux@eikelenboom.it>
+Message-ID: <871324710.20131211191104@eikelenboom.it> (sfid-20131211_191138_162874_20F90D40)
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 CC: "Berg, Johannes" <johannes.berg@intel.com>,
 	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
@@ -17,78 +15,119 @@ CC: "Berg, Johannes" <johannes.berg@intel.com>,
 	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
 	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [cfg80211 / iwlwifi] setting wireless regulatory domain doesn't
- work.
-References: <1507831110.20131018194349@eikelenboom.it> <792757788.20131023142849@eikelenboom.it> <1819533168.20131211161710@eikelenboom.it> <CAB=NE6V-RSnqbAC-0tfYK=WGJLp1aPC2UpFDurs49h+wXr9UfQ@mail.gmail.com> <1818324675.20131211175350@eikelenboom.it> <CAB=NE6Wf=T0bGLSYPDyb=-fMAVnGcbGkeaBiNrzwV-Lpxr6VZg@mail.gmail.com> <1342235583.20131211182804@eikelenboom.it> <CAB=NE6UfumA2xez1DvtDSBDZ72WF_tOozFo_8LRnMryYiSqD-A@mail.gmail.com> <871324710.20131211191104@eikelenboom.it> <CAB=NE6XRnE0j9NMW0K1vKzEO9v70arSH4YXZjudqa0ZxiLB4AA@mail.gmail.com> <1937118387.20131216122200@eikelenboom.it>
-In-Reply-To: <1937118387.20131216122200@eikelenboom.it>
-Content-Type: text/plain; charset="ISO-8859-1"
+Subject: Re: [cfg80211 / iwlwifi] setting wireless regulatory domain doesn't work.
+In-Reply-To: <CAB=NE6UfumA2xez1DvtDSBDZ72WF_tOozFo_8LRnMryYiSqD-A@mail.gmail.com>
+References: <1507831110.20131018194349@eikelenboom.it> <792757788.20131023142849@eikelenboom.it> <1819533168.20131211161710@eikelenboom.it> <CAB=NE6V-RSnqbAC-0tfYK=WGJLp1aPC2UpFDurs49h+wXr9UfQ@mail.gmail.com> <1818324675.20131211175350@eikelenboom.it> <CAB=NE6Wf=T0bGLSYPDyb=-fMAVnGcbGkeaBiNrzwV-Lpxr6VZg@mail.gmail.com> <1342235583.20131211182804@eikelenboom.it> <CAB=NE6UfumA2xez1DvtDSBDZ72WF_tOozFo_8LRnMryYiSqD-A@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/16/2013 12:22 PM, Sander Eikelenboom wrote:
-> 
-> Wednesday, December 11, 2013, 7:38:50 PM, you wrote:
-> 
->> On Wed, Dec 11, 2013 at 7:11 PM, Sander Eikelenboom
->> <linux@eikelenboom.it> wrote:
->>>
->>> Wednesday, December 11, 2013, 6:53:07 PM, you wrote:
->>>
->>>> The best way to address all this is by automatic region awareness and
->>>> doing the right thing on devices, this however requires good
->>>> architecture / calibration data  / etc and all that needs to be
->>>> verified by the system integrators, and finally they need to be
->>>> certified. If you want to hack your firmware and software go at it,
->>>> just be aware there are reasons for things.
->>>
->>> Well the general problem seems to be "we don't trust the user" so we FORCE him to the lowest
->>> common denominator (without a way to overrule that) so he is forced to operate *well* within the law.
-> 
->> Its simply stupid to have the user be involved, period, the fact that
->> a user would be involved should only be for testing or helping
->> compliance for a busted device, development, research and obviously
->> hacking. Linux allows all these but by default a device with firmware
->> and a custom regdomain that will barf if you try to use a channel that
->> is not allowed is a restriction in firmware. Feel free to reverse
->> engineer that if you don't like it but it just won't be supported or
->> go upstream. Now, the common denominator is generally optimized for
->> best performance as well so you shouldn't have to do anything, and for
->> APs -- this is typically carefully crafted for a region, also highly
->> optimized.
-> 
->>>>>> It doesn't seem like you are getting your original requests getting
->>>>>> processed, so I don't think CRDA is passing it. Can you verify running
->>>>>> from CRDA code:
->>>>>
->>>>> They don't get processed unless i remove the return from the code as i indicated.
->>>>> If i remove that return it processes the request.
->>>>>
->>>>>> ./regdbdump /usr/lib/crda/regulatory.bin
->>>>>
->>>>> Although it's in a different location on Debian, /lib/crda/regulatory.bin
->>>>> the dump seems fine.
->>>
->>>> OK thanks. Can you send a patch of what exact change you made, it was
->>>> unclear from the paste you made.
->>>
->>>> diff -u file.c.orig file.c
->>>
->>> Well i just did a pull from wireless-next, to try Avinash Patil's patch.
->>> net/wireless/reg.c had already changed much so i couldn't apply his patch without.
->>>
->>> With his patch it sets the regulatory domain, although as now expected i still can not use channels 12 and 13 yet,
->>> probably due to those firmware restrictions.
-> 
->> Its unclear what results you got, and yeah if the device is restricted
->> then its just the fw telling the driver its channels and you can't use
->> them. That's it. You won't be able to override information then unless
->> you hack the firmware
-> 
-> Ping ?
-> 
-> Is there anymore information you need to *fix* the problem ?
 
-Maybe you did not get the essence of the response from Luis: There is
-*no* problem to be fixed.
+Wednesday, December 11, 2013, 6:53:07 PM, you wrote:
 
-Gr. AvS
+> On Wed, Dec 11, 2013 at 6:28 PM, Sander Eikelenboom
+> <linux@eikelenboom.it> wrote:
+>> Wednesday, December 11, 2013, 6:14:16 PM, you wrote:
+>>> Yeap, that's the case for Intel Atheros, and I think nowadays new
+>>> broadcom upstream drivers too. Users should not have to be involved on
+>>> setting the regulatory domain, everything should just work
+>>> automatically.
+>>
+>> Erhmm yes that works, under the assumption that the device is not leaving the country it was programmed for at the factory.
+
+> Moving out of a region that you purchased a device is called to "world
+> roam". Believe it or not some devices are designed with the intent you
+> do not take it out of a country. The Playstation comes to mind as an
+> example but I believe some Apple tablets are also in the same
+> situation. Some devices like mobile phones obviously need to support
+> world roaming and they do, what they do then is build architecture to
+> support a base set and then rely on your APs around to see the country
+> IE to determine region. Some other devices rely on cellular base
+> station information, but that is allowed only in a few countries right
+> now and in the US at least this requires some sort of special review
+> from FCC on the design. We support all this in the Linux kernel today,
+> its up to system integrators to do things and certify things properly.
+
+>> (Or you like to be limited in your abilities, channel 12 and 13 are legal here)
+>> That there is a restriction on boot or on first use, i can understand. Crippling a device for it's life time though.
+
+> The best way to address all this is by automatic region awareness and
+> doing the right thing on devices, this however requires good
+> architecture / calibration data  / etc and all that needs to be
+> verified by the system integrators, and finally they need to be
+> certified. If you want to hack your firmware and software go at it,
+> just be aware there are reasons for things.
+
+Well the general problem seems to be "we don't trust the user" so we FORCE him to the lowest
+common denominator (without a way to overrule that) so he is forced to operate *well* within the law.
+
+>>> It doesn't seem like you are getting your original requests getting
+>>> processed, so I don't think CRDA is passing it. Can you verify running
+>>> from CRDA code:
+>>
+>> They don't get processed unless i remove the return from the code as i indicated.
+>> If i remove that return it processes the request.
+>>
+>>> ./regdbdump /usr/lib/crda/regulatory.bin
+>>
+>> Although it's in a different location on Debian, /lib/crda/regulatory.bin
+>> the dump seems fine.
+
+> OK thanks. Can you send a patch of what exact change you made, it was
+> unclear from the paste you made.
+
+> diff -u file.c.orig file.c
+
+Well i just did a pull from wireless-next, to try Avinash Patil's patch.
+net/wireless/reg.c had already changed much so i couldn't apply his patch without.
+
+With his patch it sets the regulatory domain, although as now expected i still can not use channels 12 and 13 yet,
+probably due to those firmware restrictions.
+
+His patch is copy pasted below.
+
+
+>   Luis
+
+
+---------- Forwarded message ----------
+From: "Avinash Patil" <patila@marvell.com>
+Date: Dec 6, 2013 8:31 PM
+Subject: [RFC] cfg80211: set regulatory request processed for initiator core
+To: <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>
+Cc:
+
+During cfg80211 init, cfg80211 initializes regulatory to set to
+world domain. Here we dont set last request processed flag.
+This results into further request set to pending indefinitely.
+
+This patch fixes this by setting last request to processed.
+
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ net/wireless/reg.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index ec54e1a..70a8f0a 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1670,6 +1670,8 @@ static void reg_process_hint(struct
+regulatory_request *reg_request)
+        switch (reg_request->initiator) {
+        case NL80211_REGDOM_SET_BY_CORE:
+                reg_process_hint_core(reg_request);
++               nl80211_send_reg_change_event(reg_request);
++               reg_set_request_processed();
+                return;
+        case NL80211_REGDOM_SET_BY_USER:
+                treatment = reg_process_hint_user(reg_request);
+--
+1.7.3.4
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
