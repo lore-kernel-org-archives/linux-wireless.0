@@ -1,90 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f176.google.com ([209.85.192.176]:46289 "EHLO
-	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756534Ab3LSUxj (ORCPT
+Received: from mail-la0-f42.google.com ([209.85.215.42]:59584 "EHLO
+	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752477Ab3LKLRG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Dec 2013 15:53:39 -0500
-Received: by mail-pd0-f176.google.com with SMTP id w10so1604319pde.35
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Dec 2013 12:53:39 -0800 (PST)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: johannes@sipsolutions.net
-Cc: linux@eikelenboom.it, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 3/3] cfg80211: processing regulatory requests on netdev notifier
-Date: Thu, 19 Dec 2013 12:53:19 -0800
-Message-Id: <1387486399-4053-4-git-send-email-mcgrof@do-not-panic.com> (sfid-20131219_215342_688722_79CA05BA)
-In-Reply-To: <1387486399-4053-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1387486399-4053-1-git-send-email-mcgrof@do-not-panic.com>
+	Wed, 11 Dec 2013 06:17:06 -0500
+MIME-Version: 1.0
+In-Reply-To: <1386750826-25219-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1386750826-25219-1-git-send-email-emmanuel.grumbach@intel.com>
+Date: Wed, 11 Dec 2013 13:17:04 +0200
+Message-ID: <CANUX_P3g_WFvpiUZi9h1MKbHRcDtTdrLjem6n0mSf9wwv_+UwA@mail.gmail.com> (sfid-20131211_121713_233193_7B05EE39)
+Subject: Re: [RFC 00/10] make iwlwifi RT friendly
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-rt-users@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds a trigger to review any pending regulatory
-requests whenever an 802.11 device interface is brought
-down or up. We use this as an opportunistic trigger
-for checking the regulatory work queues as otherwise
-they they're only checked upon an initial regulatory
-request or when beacon hints are found.
+On Wed, Dec 11, 2013 at 10:33 AM, Emmanuel Grumbach
+<emmanuel.grumbach@intel.com> wrote:
+> RT folks have raised issues with iwlwifi wrt. RT kernel some time
+> ago. Johannes had a few patches to address this, but I had a few
+> concerns with them. This series tries to address the RT concerns:
+> * we don't do anything in hard-irq context besides stopping the
+>   interrupts in the device.
+> * the interrupt cause is read from the irq handler and is handled
+>   there.
+>
 
-This opportunistic mechanism can be used to trigger
-kicking the queues regulatory queues at any time from
-userspace without having to change the regulatory state.
+Well - this was a bit unfair :)
+The code I get is probably very similar (and inspired) from Johannes's
+work. But I guess I was missing:
+iwlwifi: pcie: track interrupt mask in SW.
 
-Reported-by: Sander Eikelenboom <linux@eikelenboom.it>
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- net/wireless/core.c | 2 ++
- net/wireless/reg.c  | 5 +++++
- net/wireless/reg.h  | 1 +
- 3 files changed, 8 insertions(+)
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index d89dee2..bc0f518 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -812,6 +812,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 		SET_NETDEV_DEVTYPE(dev, &wiphy_type);
- 		break;
- 	case NETDEV_REGISTER:
-+		reg_process_pending_work();
- 		/*
- 		 * NB: cannot take rdev->mtx here because this may be
- 		 * called within code protected by it when interfaces
-@@ -871,6 +872,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 		wake_up(&rdev->dev_wait);
- 		break;
- 	case NETDEV_UP:
-+		reg_process_pending_work();
- 		cfg80211_update_iface_num(rdev, wdev->iftype, 1);
- 		wdev_lock(wdev);
- 		switch (wdev->iftype) {
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index ecf364e..1a049b3 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -196,6 +196,11 @@ static DECLARE_WORK(reg_work, reg_todo);
- static void reg_timeout_work(struct work_struct *work);
- static DECLARE_DELAYED_WORK(reg_timeout, reg_timeout_work);
- 
-+void reg_process_pending_work(void)
-+{
-+	schedule_work(&reg_work);
-+}
-+
- /* We keep a static world regulatory domain in case of the absence of CRDA */
- static const struct ieee80211_regdomain world_regdom = {
- 	.n_reg_rules = 6,
-diff --git a/net/wireless/reg.h b/net/wireless/reg.h
-index 02bd8f4..063fb7a 100644
---- a/net/wireless/reg.h
-+++ b/net/wireless/reg.h
-@@ -36,6 +36,7 @@ void regulatory_exit(void);
- int set_regdom(const struct ieee80211_regdomain *rd);
- 
- bool reg_last_request_cell_base(void);
-+void reg_process_pending_work(void);
- 
- /**
-  * regulatory_hint_found_beacon - hints a beacon was found on a channel
--- 
-1.8.4.3
-
+> This allows us to avoid the usage of _irqsave all over the driver
+> and also avoids any kind of locks in the hard-irq context.
+> We still have some work to do with the locks in the handler.
+> I believe the locking model can be improved there.
+>
+> This patch series is split is very small patches. While this can
+> annoy the reader - it helped me much to make sure I don't do anything
+> wrong (well - I am still not sure) - and IMHO, it makes the review easier.
+> For example, in patch
+>     iwlwifi: pcie: move the ICT / non-ICT handling functions
+> I just copy code from place to place without changing a bit. This makes
+> the significant diff smaller.
+>
+> Emmanuel Grumbach (10):
+>   iwlwifi: pcie: clean up ICT allocation code
+>   iwlwifi: pcie: track interrupt mask in SW
+>   iwlwifi: pcie: re-organize the PCIe ISR code
+>   iwlwifi: pcie: move the ICT / non-ICT handling functions
+>   iwlwifi: pcie: read the interrupt cause from the handler
+>   iwlwifi: pcie: determine the interrupt type in the handler
+>   iwlwifi: pcie: return inta from iwl_pcie_int_cause_{non_}ict
+>   iwlwifi: pcie: no need to save inta in trans_pcie
+>   iwlwifi: pcie: move interrupt prints to the common handler
+>   iwlwifi: pcie: stop using _irqsave
+>
+>  drivers/net/wireless/iwlwifi/iwl-csr.h       |   3 +-
+>  drivers/net/wireless/iwlwifi/pcie/internal.h |   9 +-
+>  drivers/net/wireless/iwlwifi/pcie/rx.c       | 389 +++++++++++----------------
+>  drivers/net/wireless/iwlwifi/pcie/trans.c    |  27 +-
+>  drivers/net/wireless/iwlwifi/pcie/tx.c       |  10 +-
+>  5 files changed, 185 insertions(+), 253 deletions(-)
+>
+> --
+> 1.8.3.2
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
