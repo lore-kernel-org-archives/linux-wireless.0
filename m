@@ -1,373 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:52964 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753337Ab3LCNsa (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:51553 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751186Ab3LKMMi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Dec 2013 08:48:30 -0500
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
-	yeohchunyeow@gmail.com
-Cc: yeohchunyeow@cozybit.com
-Subject: [PATCH v6 5/5] mac80211: only set CSA beacon when at least one beacon must be transmitted
-Date: Tue,  3 Dec 2013 15:48:22 +0200
-Message-Id: <1386078502-19845-6-git-send-email-luciano.coelho@intel.com> (sfid-20131203_144839_767551_FC7556F7)
-In-Reply-To: <1386078502-19845-1-git-send-email-luciano.coelho@intel.com>
-References: <1386078502-19845-1-git-send-email-luciano.coelho@intel.com>
+	Wed, 11 Dec 2013 07:12:38 -0500
+Received: from [50.54.140.2] (50-54-140-2.evrt.wa.frontiernet.net [50.54.140.2])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id rBBCCbOk021232
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Wed, 11 Dec 2013 04:12:38 -0800
+Message-ID: <52A856B5.2060700@candelatech.com> (sfid-20131211_131242_996754_505DF50D)
+Date: Wed, 11 Dec 2013 04:12:37 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Kernel crash related to scan in 3.13-rc3-wl-ath+
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A beacon should never have a Channel Switch Announcement information
-element with a count of 0, because a count of 1 means switch just
-before the next beacon.  So, if a count of 0 was valid in a beacon, it
-would have been transmitted in the next channel already, which is
-useless.  A CSA count equal to zero is only meaningful in action
-frames or probe_responses.
+I have a few patches to ath10k, and one patch to mac80211 that adds
+an sdata_info() message, but no other patches.  I'm running a few
+station interfaces on ath10k, they were not doing a good job of
+getting DHCP lease and were being bounced by user-space app
+periodically.
 
-Fix the ieee80211_csa_is_complete() and ieee80211_update_csa()
-functions accordingly.
 
-With a CSA count of 0, we won't transmit any CSA beacons, because the
-switch will happen before the next TBTT.  To avoid extra work and
-potential confusion in the drivers, complete the CSA immediately,
-instead of waiting for the driver to call ieee80211_csa_finish().
+Bug that hit was this:
 
-To keep things simpler, we also switch immediately when the CSA count
-is 1, while in theory we should delay the switch until just before the
-next TBTT.
+static inline
+struct cfg80211_registered_device *wiphy_to_dev(struct wiphy *wiphy)
+{
+	BUG_ON(!wiphy);
+	return container_of(wiphy, struct cfg80211_registered_device, wiphy);
+}
 
-Additionally, move the ieee80211_csa_finish() function to cfg.c,
-where it makes more sense.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
- include/net/mac80211.h     |  10 ++--
- net/mac80211/cfg.c         | 114 ++++++++++++++++++++++++++++++++++-----------
- net/mac80211/ibss.c        |   6 ---
- net/mac80211/ieee80211_i.h |   3 +-
- net/mac80211/mesh.c        |   6 +--
- net/mac80211/tx.c          |  19 +++-----
- 6 files changed, 102 insertions(+), 56 deletions(-)
+IPv6: ADDRCONF(NETDEV_UP): sta330: link is not ready
+------------[ cut here ]------------
+kernel BUG at /mnt/sda/home/greearb/git/linux.ath/net/wireless/core.h:92!
+invalid opcode: 0000 [#1] sta326: deauthenticating from 00:03:83:3d:30:ab by local choice (reason)
+PREEMPT SMP
+Modules linked in: ath10k_pci ath10k_core ath5k ath9k ath9k_common ath9k_hw nf_nat_ipv4 nf_nat ve]
+CPU: 0 PID: 2982 Comm: kworker/u8:2 Tainted: G        WC   3.13.0-rc3-wl-ath+ #5
+Hardware name: To be filled by O.E.M. To be filled by O.E.M./HURONRIVER, BIOS 4.6.5 05/02/2012
+Workqueue: phy14 ieee80211_scan_work [mac80211]
+task: ffff88020d0cc380 ti: ffff880034bfc000 task.ti: ffff880034bfc000
+RIP: 0010:[<ffffffffa027e022>]  [<ffffffffa027e022>] wiphy_to_dev+0x9/0x14 [cfg80211]
+RSP: 0018:ffff880034bfdce8  EFLAGS: 00010246
+RAX: ffff88020d0cc380 RBX: ffff88020d7b76c0 RCX: 0000000100130006
+RDX: 0000000000000006 RSI: 0000000000000000 RDI: 0000000000000000
+RBP: ffff880034bfdce8 R08: ffff880217004b40 R09: 0000000000000000
+R10: ffffffff00000008 R11: 0000000000000292 R12: ffff8800ca7f9d00
+R13: ffff8802151d4c01 R14: ffff8800ca7f9c00 R15: ffff8800ca7f9c88
+FS:  0000000000000000(0000) GS:ffff88021fa00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000000001f1e240 CR3: 0000000001a0d000 CR4: 00000000000407f0
+Stack:
+  ffff880034bfdd08 ffffffffa027e380 ffff8800ca7f88a0 ffff8800ca7f9d00
+  ffff880034bfdd38 ffffffffa03cc7cb 0000000000000004 ffff8800ca7f88a0
+  ffff8800ca7f9d50 ffff8802151d4ce0 ffff880034bfdd98 ffffffffa03cd532
+Call Trace:
+  [<ffffffffa027e380>] cfg80211_scan_done+0x16/0x5e [cfg80211]
+  [<ffffffffa03cc7cb>] __ieee80211_scan_completed+0xd5/0x1ab [mac80211]
+  [<ffffffffa03cd532>] ieee80211_scan_work+0x417/0x42e [mac80211]
+  [<ffffffff810c01a9>] process_one_work+0x1d7/0x2fc
+  [<ffffffff810c013f>] ? process_one_work+0x16d/0x2fc
+  [<ffffffff810bd4e4>] ? spin_lock_irq+0x9/0xb
+  [<ffffffff810c06a1>] worker_thread+0x12e/0x1fb
+  [<ffffffff810c0573>] ? rescuer_thread+0x27b/0x27b
+  [<ffffffff810c5aca>] kthread+0xb5/0xbd
+  [<ffffffff815a91e8>] ? _raw_spin_unlock_irq+0x28/0x42
+  [<ffffffff810c5a15>] ? __kthread_parkme+0x5c/0x5c
+  [<ffffffff815ae00c>] ret_from_fork+0x7c/0xb0
+  [<ffffffff810c5a15>] ? __kthread_parkme+0x5c/0x5c
+Code: d6 48 8d 71 08 48 01 d0 4c 89 c1 48 89 c7 4c 89 c8 f3 a4 eb 0b 41 83 e8 04 be 04 00 00 00 e
+RIP  [<ffffffffa027e022>] wiphy_to_dev+0x9/0x14 [cfg80211]
+  RSP <ffff880034bfdce8>
+---[ end trace 81847a827847ddaf ]---
+BUG: unable to handle kernel paging request at ffffffffffffffa8
+IP: [<ffffffff810c5f40>] kthread_data+0xb/0x11
+PGD 1a10067 PUD 1a12067 PMD 0
+Oops: 0000 [#2] PREEMPT SMP
+Modules linked in: ath10k_pci ath10k_core ath5k ath9k ath9k_common ath9k_hw nf_nat_ipv4 nf_nat ve]
+CPU: 2 PID: 2982 Comm: kworker/u8:2 Tainted: G      D WC   3.13.0-rc3-wl-ath+ #5
+Hardware name: To be filled by O.E.M. To be filled by O.E.M./HURONRIVER, BIOS 4.6.5 05/02/2012
+task: ffff88020d0cc380 ti: ffff880034bfc000 task.ti: ffff880034bfc000
+RIP: 0010:[<ffffffff810c5f40>]  [<ffffffff810c5f40>] kthread_data+0xb/0x11
+RSP: 0018:ffff880034bfd998  EFLAGS: 00010002
+RAX: 0000000000000000 RBX: ffff88021fb13ac0 RCX: ffff88021fb13b70
+RDX: 0000000000000005 RSI: 0000000000000002 RDI: ffff88020d0cc380
+RBP: ffff880034bfd998 R08: ffffffff81c5a300 R09: 000000000000b635
+R10: ffffffff810dfbc6 R11: 000000000000b522 R12: 0000000000000002
+R13: 0000000000000001 R14: 0000000000000002 R15: ffff88020d0cc370
+FS:  0000000000000000(0000) GS:ffff88021fb00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000000000000028 CR3: 0000000214c4d000 CR4: 00000000000407e0
+Stack:
+  ffff880034bfd9b8 ffffffff810c0b68 ffff88021fb13ac0 ffff88020d0cc798
+  ffff880034bfda28 ffffffff815a52d0 ffff880034bfdfd8 ffff88020d0cc380
+  0000000000013ac0 0000000000013ac0 ffff88020b44ce00 ffff88020d0cc380
+Call Trace:
+  [<ffffffff810c0b68>] wq_worker_sleeping+0xf/0x87
+  [<ffffffff815a52d0>] __schedule+0x14a/0x5d8
+  [<ffffffff815a5852>] schedule+0x6a/0x6c
+  [<ffffffff810ad8ae>] do_exit+0x91f/0x921
+  [<ffffffff815aa670>] oops_end+0xa9/0xb2
+  [<ffffffff8100d0e5>] die+0x55/0x60
+  [<ffffffff815aa0a0>] do_trap+0x69/0x135
+  [<ffffffff8100af5b>] do_invalid_op+0x93/0x9c
+  [<ffffffffa027e022>] ? wiphy_to_dev+0x9/0x14 [cfg80211]
+  [<ffffffff810e0b49>] ? trace_hardirqs_off_caller+0x37/0xa6
+  [<ffffffff812cda7d>] ? trace_hardirqs_off_thunk+0x3a/0x3c
+  [<ffffffff815a98e7>] ? restore_args+0x30/0x30
+  [<ffffffff815af46e>] invalid_op+0x1e/0x30
+  [<ffffffffa027e022>] ? wiphy_to_dev+0x9/0x14 [cfg80211]
+  [<ffffffff81175c84>] ? kfree+0xbf/0xd1
+  [<ffffffffa027e380>] cfg80211_scan_done+0x16/0x5e [cfg80211]
+  [<ffffffffa03cc7cb>] __ieee80211_scan_completed+0xd5/0x1ab [mac80211]
+  [<ffffffffa03cd532>] ieee80211_scan_work+0x417/0x42e [mac80211]
+  [<ffffffff810c01a9>] process_one_work+0x1d7/0x2fc
+  [<ffffffff810c013f>] ? process_one_work+0x16d/0x2fc
+  [<ffffffff810bd4e4>] ? spin_lock_irq+0x9/0xb
+  [<ffffffff810c06a1>] worker_thread+0x12e/0x1fb
+  [<ffffffff810c0573>] ? rescuer_thread+0x27b/0x27b
+  [<ffffffff810c5aca>] kthread+0xb5/0xbd
+  [<ffffffff815a91e8>] ? _raw_spin_unlock_irq+0x28/0x42
+  [<ffffffff810c5a15>] ? __kthread_parkme+0x5c/0x5c
+  [<ffffffff815ae00c>] ret_from_fork+0x7c/0xb0
+  [<ffffffff810c5a15>] ? __kthread_parkme+0x5c/0x5c
+Code: 65 48 8b 04 25 c0 c8 00 00 48 8b 80 c0 03 00 00 48 89 e5 5d 48 8b 40 98 48 c1 e8 02 83 e0 0
+RIP  [<ffffffff810c5f40>] kthread_data+0xb/0x11
+  RSP <ffff880034bfd998>
+CR2: ffffffffffffffa8
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 73d99bc..a72d408 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2717,11 +2717,13 @@ enum ieee80211_roc_type {
-  * @channel_switch_beacon: Starts a channel switch to a new channel.
-  *	Beacons are modified to include CSA or ECSA IEs before calling this
-  *	function. The corresponding count fields in these IEs must be
-- *	decremented, and when they reach zero the driver must call
-+ *	decremented, and when they reach 1 the driver must call
-  *	ieee80211_csa_finish(). Drivers which use ieee80211_beacon_get()
-  *	get the csa counter decremented by mac80211, but must check if it is
-- *	zero using ieee80211_csa_is_complete() after the beacon has been
-+ *	1 using ieee80211_csa_is_complete() after the beacon has been
-  *	transmitted and then call ieee80211_csa_finish().
-+ *	If the CSA count starts as zero or 1, this function will not be called,
-+ *	since there won't be any time to beacon before the switch anyway.
-  *
-  * @join_ibss: Join an IBSS (on an IBSS interface); this is called after all
-  *	information in bss_conf is set up and the beacon can be retrieved. A
-@@ -3416,13 +3418,13 @@ static inline struct sk_buff *ieee80211_beacon_get(struct ieee80211_hw *hw,
-  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-  *
-  * After a channel switch announcement was scheduled and the counter in this
-- * announcement hit zero, this function must be called by the driver to
-+ * announcement hits 1, this function must be called by the driver to
-  * notify mac80211 that the channel can be changed.
-  */
- void ieee80211_csa_finish(struct ieee80211_vif *vif);
- 
- /**
-- * ieee80211_csa_is_complete - find out if counters reached zero
-+ * ieee80211_csa_is_complete - find out if counters reached 1
-  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-  *
-  * This function returns whether the channel switch counters reached zero.
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 790c15d..0ebce55 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1,4 +1,4 @@
--/*
-+ /*
-  * mac80211 configuration hooks for cfg80211
-  *
-  * Copyright 2006-2010	Johannes Berg <johannes@sipsolutions.net>
-@@ -2982,21 +2982,19 @@ cfg80211_beacon_dup(struct cfg80211_beacon_data *beacon)
- 	return new_beacon;
- }
- 
--void ieee80211_csa_finalize_work(struct work_struct *work)
-+void ieee80211_csa_finish(struct ieee80211_vif *vif)
- {
--	struct ieee80211_sub_if_data *sdata =
--		container_of(work, struct ieee80211_sub_if_data,
--			     csa_finalize_work);
--	struct ieee80211_local *local = sdata->local;
--	int err, changed = 0;
-+	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
- 
--	sdata_lock(sdata);
--	/* AP might have been stopped while waiting for the lock. */
--	if (!sdata->vif.csa_active)
--		goto unlock;
-+	ieee80211_queue_work(&sdata->local->hw,
-+			     &sdata->csa_finalize_work);
-+}
-+EXPORT_SYMBOL(ieee80211_csa_finish);
- 
--	if (!ieee80211_sdata_running(sdata))
--		goto unlock;
-+static void ieee80211_csa_finalize(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	int err, changed = 0;
- 
- 	sdata->radar_required = sdata->csa_radar_required;
- 	err = ieee80211_vif_change_channel(sdata, &changed);
-@@ -3048,6 +3046,29 @@ unlock:
- 	sdata_unlock(sdata);
- }
- 
-+void ieee80211_csa_finalize_work(struct work_struct *work)
-+{
-+	struct ieee80211_sub_if_data *sdata =
-+		container_of(work, struct ieee80211_sub_if_data,
-+			     csa_finalize_work);
-+
-+	sdata_lock(sdata);
-+	/* AP might have been stopped while waiting for the lock. */
-+	if (!sdata->vif.csa_active)
-+		goto unlock;
-+
-+	if (!ieee80211_sdata_running(sdata))
-+		goto unlock;
-+
-+	if (!ieee80211_sdata_running(sdata))
-+		return;
-+
-+	ieee80211_csa_finalize(sdata);
-+
-+unlock:
-+	sdata_unlock(sdata);
-+}
-+
- int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 			     struct cfg80211_csa_settings *params)
- {
-@@ -3056,7 +3077,7 @@ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 	struct ieee80211_chanctx_conf *chanctx_conf;
- 	struct ieee80211_chanctx *chanctx;
- 	struct ieee80211_if_mesh __maybe_unused *ifmsh;
--	int err, num_chanctx;
-+	int err, num_chanctx, changed = 0;
- 
- 	lockdep_assert_held(&sdata->wdev.mtx);
- 
-@@ -3097,19 +3118,40 @@ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 
- 	switch (sdata->vif.type) {
- 	case NL80211_IFTYPE_AP:
--		sdata->csa_counter_offset_beacon =
--			params->counter_offset_beacon;
--		sdata->csa_counter_offset_presp = params->counter_offset_presp;
- 		sdata->u.ap.next_beacon =
- 			cfg80211_beacon_dup(&params->beacon_after);
- 		if (!sdata->u.ap.next_beacon)
- 			return -ENOMEM;
- 
-+		/*
-+		 * With a count of 0, we don't have to wait for any
-+		 * TBTT before switching, so complete the CSA
-+		 * immediately.  In theory, with a count == 1 we
-+		 * should delay the switch until just before the next
-+		 * TBTT, but that would complicate things so we switch
-+		 * immediately too.  If we would delay the switch
-+		 * until the next TBTT, we would have to set the probe
-+		 * response here.
-+		 *
-+		 * TODO: A channel switch with count <= 1 without
-+		 * sending a CSA action frame is kind of useless,
-+		 * because the clients won't know we're changing
-+		 * channels.  The action frame must be implemented
-+		 * either here or in the userspace.
-+		 */
-+		if (params->count <= 1)
-+			break;
-+
-+		sdata->csa_counter_offset_beacon =
-+			params->counter_offset_beacon;
-+		sdata->csa_counter_offset_presp = params->counter_offset_presp;
- 		err = ieee80211_assign_beacon(sdata, &params->beacon_csa);
- 		if (err < 0) {
- 			kfree(sdata->u.ap.next_beacon);
- 			return err;
- 		}
-+		changed |= err;
-+
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
- 		if (!sdata->vif.bss_conf.ibss_joined)
-@@ -3137,9 +3179,16 @@ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 		    params->chandef.chan->band)
- 			return -EINVAL;
- 
--		err = ieee80211_ibss_csa_beacon(sdata, params);
--		if (err < 0)
--			return err;
-+		/* see comments and TODO in the NL80211_IFTYPE_AP block */
-+		if (params->count > 1) {
-+			err = ieee80211_ibss_csa_beacon(sdata, params);
-+			if (err < 0)
-+				return err;
-+			changed |= err;
-+		}
-+
-+		ieee80211_send_action_csa(sdata, params);
-+
- 		break;
- #ifdef CONFIG_MAC80211_MESH
- 	case NL80211_IFTYPE_MESH_POINT:
-@@ -3159,12 +3208,18 @@ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 		if (ifmsh->csa_role == IEEE80211_MESH_CSA_ROLE_NONE)
- 			ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_INIT;
- 
--		err = ieee80211_mesh_csa_beacon(sdata, params,
--			(ifmsh->csa_role == IEEE80211_MESH_CSA_ROLE_INIT));
--		if (err < 0) {
--			ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_NONE;
--			return err;
-+		if (params->count > 1) {
-+			err = ieee80211_mesh_csa_beacon(sdata, params);
-+			if (err < 0) {
-+				ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_NONE;
-+				return err;
-+			}
-+			changed |= err;
- 		}
-+
-+		if (ifmsh->csa_role == IEEE80211_MESH_CSA_ROLE_INIT)
-+			ieee80211_send_action_csa(sdata, params);
-+
- 		break;
- #endif
- 	default:
-@@ -3181,8 +3236,13 @@ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 	sdata->csa_chandef = params->chandef;
- 	sdata->vif.csa_active = true;
- 
--	ieee80211_bss_info_change_notify(sdata, err);
--	drv_channel_switch_beacon(sdata, &params->chandef);
-+	if (changed) {
-+		ieee80211_bss_info_change_notify(sdata, changed);
-+		drv_channel_switch_beacon(sdata, &params->chandef);
-+	} else {
-+		/* if the beacon didn't change, we can finalize immediately */
-+		ieee80211_csa_finalize(sdata);
-+	}
- 
- 	return 0;
- }
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 23e035f..595902c 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -516,12 +516,6 @@ int ieee80211_ibss_csa_beacon(struct ieee80211_sub_if_data *sdata,
- 	if (old_presp)
- 		kfree_rcu(old_presp, rcu_head);
- 
--	/* it might not send the beacon for a while. send an action frame
--	 * immediately to announce the channel switch.
--	 */
--	if (csa_settings)
--		ieee80211_send_action_csa(sdata, csa_settings);
--
- 	return BSS_CHANGED_BEACON;
-  out:
- 	return ret;
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index cf38a74..9b5f1bc 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1400,8 +1400,7 @@ void ieee80211_mesh_work(struct ieee80211_sub_if_data *sdata);
- void ieee80211_mesh_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
- 				   struct sk_buff *skb);
- int ieee80211_mesh_csa_beacon(struct ieee80211_sub_if_data *sdata,
--			      struct cfg80211_csa_settings *csa_settings,
--			      bool csa_action);
-+			      struct cfg80211_csa_settings *csa_settings);
- int ieee80211_mesh_finish_csa(struct ieee80211_sub_if_data *sdata);
- 
- /* scan/BSS handling */
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 5476ad9..e604b9e 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -1064,8 +1064,7 @@ int ieee80211_mesh_finish_csa(struct ieee80211_sub_if_data *sdata)
- }
- 
- int ieee80211_mesh_csa_beacon(struct ieee80211_sub_if_data *sdata,
--			      struct cfg80211_csa_settings *csa_settings,
--			      bool csa_action)
-+			      struct cfg80211_csa_settings *csa_settings)
- {
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
- 	struct mesh_csa_settings *tmp_csa_settings;
-@@ -1089,9 +1088,6 @@ int ieee80211_mesh_csa_beacon(struct ieee80211_sub_if_data *sdata,
- 		return ret;
- 	}
- 
--	if (csa_action)
--		ieee80211_send_action_csa(sdata, csa_settings);
--
- 	return BSS_CHANGED_BEACON;
- }
- 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 6d59e21..b86a679 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2397,15 +2397,6 @@ static int ieee80211_beacon_add_tim(struct ieee80211_sub_if_data *sdata,
- 	return 0;
- }
- 
--void ieee80211_csa_finish(struct ieee80211_vif *vif)
--{
--	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
--
--	ieee80211_queue_work(&sdata->local->hw,
--			     &sdata->csa_finalize_work);
--}
--EXPORT_SYMBOL(ieee80211_csa_finish);
--
- static void ieee80211_update_csa(struct ieee80211_sub_if_data *sdata,
- 				 struct beacon_data *beacon)
- {
-@@ -2434,8 +2425,12 @@ static void ieee80211_update_csa(struct ieee80211_sub_if_data *sdata,
- 	if (WARN_ON(counter_offset_beacon >= beacon_data_len))
- 		return;
- 
--	/* warn if the driver did not check for/react to csa completeness */
--	if (WARN_ON(beacon_data[counter_offset_beacon] == 0))
-+	/* Warn if the driver did not check for/react to csa
-+	 * completeness.  A beacon with CSA counter set to 0 should
-+	 * never occur, because a counter of 1 means switch just
-+	 * before the next beacon.
-+	 */
-+	if (WARN_ON(beacon_data[counter_offset_beacon] == 1))
- 		return;
- 
- 	beacon_data[counter_offset_beacon]--;
-@@ -2501,7 +2496,7 @@ bool ieee80211_csa_is_complete(struct ieee80211_vif *vif)
- 	if (WARN_ON(counter_beacon > beacon_data_len))
- 		goto out;
- 
--	if (beacon_data[counter_beacon] == 0)
-+	if (beacon_data[counter_beacon] == 1)
- 		ret = true;
-  out:
- 	rcu_read_unlock();
 -- 
-1.8.4.2
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
