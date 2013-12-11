@@ -1,74 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f173.google.com ([209.85.192.173]:45074 "EHLO
-	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932355Ab3LEPwb (ORCPT
+Received: from mail-oa0-f48.google.com ([209.85.219.48]:40370 "EHLO
+	mail-oa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751051Ab3LKVVv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 10:52:31 -0500
-Received: by mail-pd0-f173.google.com with SMTP id p10so24908253pdj.32
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Dec 2013 07:52:31 -0800 (PST)
+	Wed, 11 Dec 2013 16:21:51 -0500
+Received: by mail-oa0-f48.google.com with SMTP id l6so7953732oag.35
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Dec 2013 13:21:51 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1386258330.4182.11.camel@jlt4.sipsolutions.net>
-References: <1386235289-27278-1-git-send-email-eliad@wizery.com>
- <1386235289-27278-4-git-send-email-eliad@wizery.com> <1386253879.4182.4.camel@jlt4.sipsolutions.net>
- <CAB3XZEcpM9PAQCGQ99X2A-bqYXoPEmE=Cg29CDKY7=s8QquwUA@mail.gmail.com>
- <1386254607.4182.5.camel@jlt4.sipsolutions.net> <CAB3XZEc4pikahyAmPCh_pCjFEiRvFgAyZgxGrbH9A6hLP2nhFw@mail.gmail.com>
- <1386258330.4182.11.camel@jlt4.sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Thu, 5 Dec 2013 17:52:14 +0200
-Message-ID: <CA+XVXffcA+TKAaH6MuybncUAe7jgaWEFdo5nL7+FnTR-7pc1+g@mail.gmail.com> (sfid-20131205_165234_866245_6D87DEB3)
-Subject: Re: [PATCH 4/4] cfg80211: prevent race condition on scan request cleanup
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Eliad Peller <eliad@wizery.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <20131211205532.GE452@us.netrek.org>
+References: <20131203202607.0b445195@kemnade.info> <1386167786.19448.4.camel@dcbw.foobar.com>
+ <CA+E=qVdY4M=bnX=pqMiMirhQ_BRg6Uc6K9Xkzvf328BaByUF1g@mail.gmail.com>
+ <20131209041821.GC14878@us.netrek.org> <CA+E=qVd_F_=z5Vb2jan-nNVmizQznOiR=98CPHQevMxbnxGJiA@mail.gmail.com>
+ <20131210022746.GE28975@us.netrek.org> <CA+E=qVdFq6XNAibsTUCbxQVbdRh+p6YT=nvgvmuO_u7jkBdKcw@mail.gmail.com>
+ <20131211205532.GE452@us.netrek.org>
+From: Vasily Khoruzhick <anarsoul@gmail.com>
+Date: Thu, 12 Dec 2013 00:21:31 +0300
+Message-ID: <CA+E=qVdFfvXVXJfbnKj6sxfsE6qDxQ6YZ5-eSKOmopVEodxM0A@mail.gmail.com> (sfid-20131211_222156_313526_E8D5E219)
+Subject: Re: status of libertas_tf + sdio?
+To: James Cameron <quozl@laptop.org>
+Cc: Dan Williams <dcbw@redhat.com>,
+	Andreas Kemnade <andreas@kemnade.info>,
+	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 5, 2013 at 5:45 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Thu, 2013-12-05 at 17:39 +0200, Eliad Peller wrote:
->> On Thu, Dec 5, 2013 at 4:43 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->> > On Thu, 2013-12-05 at 16:36 +0200, Eliad Peller wrote:
->> >> On Thu, Dec 5, 2013 at 4:31 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->> >> > On Thu, 2013-12-05 at 11:21 +0200, Eliad Peller wrote:
+On Wed, Dec 11, 2013 at 11:55 PM, James Cameron <quozl@laptop.org> wrote:
+> On Wed, Dec 11, 2013 at 11:10:50AM +0300, Vasily Khoruzhick wrote:
+>> On Tue, Dec 10, 2013 at 5:27 AM, James Cameron <quozl@laptop.org> wrote:
+>> > On Mon, Dec 09, 2013 at 12:38:28PM +0300, Vasily Khoruzhick wrote:
+>> >> On Mon, Dec 9, 2013 at 7:18 AM, James Cameron <quozl@laptop.org> wrote:
+>> >> > On Fri, Dec 06, 2013 at 01:40:00PM +0300, Vasily Khoruzhick wrote:
+>> >> >> Out of curiosity,
+>> >> >>
+>> >> >> Does anyone know if it's possible to get thin firmware for 8686 with
+>> >> >> SPI interface?
 >> >> >
->> >> >> @@ -219,8 +221,13 @@ void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev, bool leak)
->> >> >>        * the scan request or not ... if it accesses the dev
->> >> >>        * in there (it shouldn't anyway) then it may crash.
->> >> >>        */
->> >> >> -     if (!leak)
->> >> >> -             kfree(request);
->> >> >> +     if (leak) {
->> >> >> +             request->pending_cleanup = true;
->> >> >> +             return;
->> >> >
->> >> > This seems insufficient, if the driver never indicates completion, we'd
->> >> > never clear rdev->scan_req?
->> >> >
->> >> right, but i think it somehow makes sense (i.e. the driver must
->> >> indicate completion...)?
+>> >> > What happens when you try?
+>> >>
+>> >> How? There's no tf available for 8686 with SPI interface.
 >> >
->> > But the whole thing was intended to catch buggy drivers :)
->> >
->> yeah, you have a point here :)
->> anyway, i guess it's either leaking scan_req and hoping the driver
->> really forgot about it, or keeping it and hoping the driver will
->> finally indicate completion.
+>> > How do you know that?  Are you saying that SPI support was removed
+>> > from firmware during the conversion from fat to thin?
 >>
->> since i don't think this is a real-world scenario, i'm ok with
->> dropping this patch.
+>> Err, there's no lbtf_spi.bin file.
 >
-> Well, it can be made to crash, so ...
+> Basing decisions on the names of files rather than the code they
+> may contain seems rather limiting.
 >
-> Can we maybe avoid the crash in a different way? Disallow a new scan
-> somehow?
+> In the absence of evidence, there's a possibility that SPI support
+> remained.
 
-Maybe we should drop the whole netdev-notified doing ___cfg80211_scan_done?
-I mean if a workaround for buggy drivers is causing bugs for
-legitimate drivers..
+But fat firmware differs for SPI and SDIO
 
-Something simple for buggy drivers would be doing this in the notifier
-- BUG_ON(!rdev->scan_req->notified)
+>> >> > How are you downloading firmware over SPI?
+>> >>
+>> >> See drivers/net/wireless/libertas/if_spi.c, but it's for fat
+>> >> firmware
+>> >
+>> > What happens if you send the thin firmware instead?
+>>
+>> I have no thin firmware for 8686 with SPI interface
+>
+> What happens if you send the thin firmware for SDIO interface to the
+> device using the fat firmware helper for SPI interface?
+>
+> I don't have an SPI setup to test, but I gather you do.
 
-Just my 2c.
+OK, I'll try.
 
-Arik
+>> >> > I'm not aware of a second stage firmware download helper
+>> >> > specific to the SPI mode.
+>> >>
+>> >> What's a second stage firmware download helper?
+>> >
+>> > File sd8686_helper.bin, we use it in Open Firmware with SDIO 8686 on
+>> > OLPC XO.
+>> >
+>> > For SPI, which we don't use, I see if_spi.c uses gspi8686_v9_helper.bin
+>> >
+>> > I was wrong; I am now aware of a second stage firmware downloader
+>> > helper specific to the SPI mode.  I hadn't looked before.
+>> >
+>> >> > I think it is not possible without firmware engineering.
+>> >>
+>> >> Yeah, just hoped that Marvell already did it. It's a pity that
+>> >> firmware source code isn't available :(
+>> >
+>> > Cozybit did the thin firmware, if I recall correctly.
+>>
+>> Do you think it makes sense to contact them?
+>
+> I don't think it makes sense to ignore them, but I don't wish to
+> speculate further.
+
+OK, thanks!
+
+Regards
+Vasily
+
+> --
+> James Cameron
+> http://quozl.linux.org.au/
