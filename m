@@ -1,255 +1,256 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:28494 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753101Ab3LZLmA (ORCPT
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:60759 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751053Ab3LKVXl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Dec 2013 06:42:00 -0500
-Message-ID: <52BC15DB.8000309@huawei.com> (sfid-20131226_124349_706180_7AD3066D)
-Date: Thu, 26 Dec 2013 19:41:15 +0800
-From: Ding Tianhong <dingtianhong@huawei.com>
-MIME-Version: 1.0
-To: Jouni Malinen <j@w1.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>, Netdev <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH v3.5 14/19] hostap: slight optimization of addr compare
+	Wed, 11 Dec 2013 16:23:41 -0500
+Received: by mail-wi0-f176.google.com with SMTP id hq4so7746676wib.15
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Dec 2013 13:23:40 -0800 (PST)
+Message-ID: <1386797011.7790.9.camel@canaries64-MCP7A> (sfid-20131211_222345_829536_793B2DDF)
+Subject: [PATCH 1/2] staging: vt6656: Remove unused scStatistic
+ data/functions from driver.
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 11 Dec 2013 21:23:31 +0000
 Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use possibly more efficient ether_addr_equal
-instead of memcmp.
+None of these stats reach user. So delete them from driver
 
-Cc: Jouni Malinen <j@w1.fi>
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Signed-off-by: Weilong Chen <chenweilong@huawei.com>
-Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+mib.c and mib.h becomes dead code as result of this patch.
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+
 ---
- drivers/net/wireless/hostap/hostap_80211_tx.c |  4 ++--
- drivers/net/wireless/hostap/hostap_ap.c       | 28 +++++++++++++--------------
- drivers/net/wireless/hostap/hostap_hw.c       |  2 +-
- drivers/net/wireless/hostap/hostap_ioctl.c    |  4 ++--
- drivers/net/wireless/hostap/hostap_main.c     |  8 +++-----
- 5 files changed, 22 insertions(+), 24 deletions(-)
+ drivers/staging/vt6656/bssdb.c   |  8 --------
+ drivers/staging/vt6656/device.h  |  5 -----
+ drivers/staging/vt6656/dpc.c     | 43 ----------------------------------------
+ drivers/staging/vt6656/int.c     | 10 ----------
+ drivers/staging/vt6656/usbpipe.c | 10 ----------
+ 5 files changed, 76 deletions(-)
 
-diff --git a/drivers/net/wireless/hostap/hostap_80211_tx.c b/drivers/net/wireless/hostap/hostap_80211_tx.c
-index 344a981..8bde776 100644
---- a/drivers/net/wireless/hostap/hostap_80211_tx.c
-+++ b/drivers/net/wireless/hostap/hostap_80211_tx.c
-@@ -1,5 +1,6 @@
- #include <linux/slab.h>
- #include <linux/export.h>
-+#include <linux/etherdevice.h>
+diff --git a/drivers/staging/vt6656/bssdb.c b/drivers/staging/vt6656/bssdb.c
+index c3fab7b..8d2c43d 100644
+--- a/drivers/staging/vt6656/bssdb.c
++++ b/drivers/staging/vt6656/bssdb.c
+@@ -1403,7 +1403,6 @@ static void s_uCalculateLinkQual(struct vnt_private *pDevice)
+ 	/* decide link quality */
+ 	if (pDevice->bLinkPass != true) {
+ 		pDevice->wstats.qual.qual = 0;
+-		pDevice->scStatistic.SignalStren = 0;
+ 	} else {
+ 		RFvRSSITodBm(pDevice, (u8)(pDevice->uCurrRSSI), &ldBm);
+ 		if (-ldBm < 50)
+@@ -1413,19 +1412,12 @@ static void s_uCalculateLinkQual(struct vnt_private *pDevice)
+ 		else
+ 			RssiRatio = (40-(-ldBm-50)) * 4000 / 40;
  
- #include "hostap_80211.h"
- #include "hostap_common.h"
-@@ -103,8 +104,7 @@ netdev_tx_t hostap_data_start_xmit(struct sk_buff *skb,
- 			return NETDEV_TX_OK;
- 		} else if (local->iw_mode == IW_MODE_INFRA &&
- 			   (local->wds_type & HOSTAP_WDS_AP_CLIENT) &&
--			   memcmp(skb->data + ETH_ALEN, dev->dev_addr,
--				  ETH_ALEN) != 0) {
-+			   !ether_addr_equal(skb->data + ETH_ALEN, dev->dev_addr)) {
- 			/* AP client mode: send frames with foreign src addr
- 			 * using 4-addr WDS frames */
- 			use_wds = WDS_COMPLIANT_FRAME;
-diff --git a/drivers/net/wireless/hostap/hostap_ap.c b/drivers/net/wireless/hostap/hostap_ap.c
-index d6033a8..d36e252 100644
---- a/drivers/net/wireless/hostap/hostap_ap.c
-+++ b/drivers/net/wireless/hostap/hostap_ap.c
-@@ -24,6 +24,7 @@
- #include <linux/slab.h>
- #include <linux/export.h>
- #include <linux/moduleparam.h>
-+#include <linux/etherdevice.h>
- 
- #include "hostap_wlan.h"
- #include "hostap.h"
-@@ -106,13 +107,12 @@ static void ap_sta_hash_del(struct ap_data *ap, struct sta_info *sta)
- 
- 	s = ap->sta_hash[STA_HASH(sta->addr)];
- 	if (s == NULL) return;
--	if (memcmp(s->addr, sta->addr, ETH_ALEN) == 0) {
-+	if (ether_addr_equal(s->addr, sta->addr)) {
- 		ap->sta_hash[STA_HASH(sta->addr)] = s->hnext;
- 		return;
+-		pDevice->scStatistic.SignalStren = RssiRatio / 40;
+ 		qual = (RssiRatio + TxOkRatio + RxOkRatio) / 100;
+ 		if (qual < 100)
+ 			pDevice->wstats.qual.qual = (u8)qual;
+ 		else
+ 			pDevice->wstats.qual.qual = 100;
  	}
- 
--	while (s->hnext != NULL && memcmp(s->hnext->addr, sta->addr, ETH_ALEN)
--	       != 0)
-+	while (s->hnext != NULL && !ether_addr_equal(s->hnext->addr, sta->addr))
- 		s = s->hnext;
- 	if (s->hnext != NULL)
- 		s->hnext = s->hnext->hnext;
-@@ -435,7 +435,7 @@ int ap_control_del_mac(struct mac_restrictions *mac_restrictions, u8 *mac)
- 	     ptr != &mac_restrictions->mac_list; ptr = ptr->next) {
- 		entry = list_entry(ptr, struct mac_entry, list);
- 
--		if (memcmp(entry->addr, mac, ETH_ALEN) == 0) {
-+		if (ether_addr_equal(entry->addr, mac)) {
- 			list_del(ptr);
- 			kfree(entry);
- 			mac_restrictions->entries--;
-@@ -459,7 +459,7 @@ static int ap_control_mac_deny(struct mac_restrictions *mac_restrictions,
- 
- 	spin_lock_bh(&mac_restrictions->lock);
- 	list_for_each_entry(entry, &mac_restrictions->mac_list, list) {
--		if (memcmp(entry->addr, mac, ETH_ALEN) == 0) {
-+		if (ether_addr_equal(entry->addr, mac)) {
- 			found = 1;
- 			break;
- 		}
-@@ -957,7 +957,7 @@ static struct sta_info* ap_get_sta(struct ap_data *ap, u8 *sta)
- 	struct sta_info *s;
- 
- 	s = ap->sta_hash[STA_HASH(sta)];
--	while (s != NULL && memcmp(s->addr, sta, ETH_ALEN) != 0)
-+	while (s != NULL && !ether_addr_equal(s->addr, sta))
- 		s = s->hnext;
- 	return s;
+-
+-   pDevice->scStatistic.RxFcsErrCnt = 0;
+-   pDevice->scStatistic.RxOkCnt = 0;
+-   pDevice->scStatistic.TxFailCount = 0;
+-   pDevice->scStatistic.TxNoRetryOkCount = 0;
+-   pDevice->scStatistic.TxRetryOkCount = 0;
  }
-@@ -1391,7 +1391,7 @@ static void handle_authen(local_info_t *local, struct sk_buff *skb,
- 	status_code = __le16_to_cpu(*pos);
- 	pos++;
  
--	if (memcmp(dev->dev_addr, hdr->addr2, ETH_ALEN) == 0 ||
-+	if (ether_addr_equal(dev->dev_addr, hdr->addr2) ||
- 	    ap_control_mac_deny(&ap->mac_restrictions, hdr->addr2)) {
- 		txt = "authentication denied";
- 		resp = WLAN_STATUS_UNSPECIFIED_FAILURE;
-@@ -1935,7 +1935,7 @@ static void handle_pspoll(local_info_t *local,
- 	PDEBUG(DEBUG_PS2, "handle_pspoll: BSSID=%pM, TA=%pM PWRMGT=%d\n",
- 	       hdr->addr1, hdr->addr2, !!ieee80211_has_pm(hdr->frame_control));
+ void BSSvClearAnyBSSJoinRecord(struct vnt_private *pDevice)
+diff --git a/drivers/staging/vt6656/device.h b/drivers/staging/vt6656/device.h
+index c58c69a..7dfe89d 100644
+--- a/drivers/staging/vt6656/device.h
++++ b/drivers/staging/vt6656/device.h
+@@ -481,11 +481,6 @@ struct vnt_private {
  
--	if (memcmp(hdr->addr1, dev->dev_addr, ETH_ALEN)) {
-+	if (!ether_addr_equal(hdr->addr1, dev->dev_addr)) {
- 		PDEBUG(DEBUG_AP,
- 		       "handle_pspoll - addr1(BSSID)=%pM not own MAC\n",
- 		       hdr->addr1);
-@@ -2230,7 +2230,7 @@ static void handle_ap_item(local_info_t *local, struct sk_buff *skb,
- 			goto done;
- 		}
+ 	int bExistSWNetAddr;
  
--		if (memcmp(hdr->addr1, dev->dev_addr, ETH_ALEN)) {
-+		if (!ether_addr_equal(hdr->addr1, dev->dev_addr)) {
- 			PDEBUG(DEBUG_AP, "handle_ap_item - addr1(BSSID)=%pM"
- 			       " not own MAC\n", hdr->addr1);
- 			goto done;
-@@ -2267,13 +2267,13 @@ static void handle_ap_item(local_info_t *local, struct sk_buff *skb,
- 		goto done;
+-	/* Adapter statistics */
+-	SStatCounter scStatistic;
+-	/* 802.11 counter */
+-	SDot11Counters s802_11Counter;
+-
+ 	/* Maintain statistical debug info. */
+ 	unsigned long packetsReceived;
+ 	unsigned long packetsReceivedDropped;
+diff --git a/drivers/staging/vt6656/dpc.c b/drivers/staging/vt6656/dpc.c
+index 84901c1..7b050e9 100644
+--- a/drivers/staging/vt6656/dpc.c
++++ b/drivers/staging/vt6656/dpc.c
+@@ -347,16 +347,6 @@ int RXbBulkInProcessData(struct vnt_private *pDevice, struct vnt_rcb *pRCB,
+     FrameSize = *pwPLCP_Length;
+ 
+     pbyFrame = pbyDAddress + 8;
+-    // update receive statistic counter
+-
+-    STAvUpdateRDStatCounter(&pDevice->scStatistic,
+-                            *pbyRsr,
+-                            *pbyNewRsr,
+-                            *pbyRxSts,
+-                            *pbyRxRate,
+-                            pbyFrame,
+-                            FrameSize
+-                            );
+ 
+     pMACHeader = (struct ieee80211_hdr *) pbyFrame;
+ 
+@@ -373,7 +363,6 @@ int RXbBulkInProcessData(struct vnt_private *pDevice, struct vnt_rcb *pRCB,
+ 
+     if (!is_multicast_ether_addr(pMACHeader->addr1)) {
+         if (WCTLbIsDuplicate(&(pDevice->sDupRxCache), (struct ieee80211_hdr *) pbyFrame)) {
+-            pDevice->s802_11Counter.FrameDuplicateCount++;
+             return false;
+         }
+ 
+@@ -453,14 +442,6 @@ int RXbBulkInProcessData(struct vnt_private *pDevice, struct vnt_rcb *pRCB,
+                     (pMgmt->eAuthenMode == WMAC_AUTH_WPANONE) ||
+                     (pMgmt->eAuthenMode == WMAC_AUTH_WPA2) ||
+                     (pMgmt->eAuthenMode == WMAC_AUTH_WPA2PSK)) {
+-
+-                    if ((pKey != NULL) && (pKey->byCipherSuite == KEY_CTL_TKIP)) {
+-                        pDevice->s802_11Counter.TKIPICVErrors++;
+-                    } else if ((pKey != NULL) && (pKey->byCipherSuite == KEY_CTL_CCMP)) {
+-                        pDevice->s802_11Counter.CCMPDecryptErrors++;
+-                    } else if ((pKey != NULL) && (pKey->byCipherSuite == KEY_CTL_WEP)) {
+-//                      pDevice->s802_11Counter.WEPICVErrorCount.QuadPart++;
+-                    }
+                 }
+                 return false;
+             }
+@@ -485,7 +466,6 @@ int RXbBulkInProcessData(struct vnt_private *pDevice, struct vnt_rcb *pRCB,
+         ) {
+         // defragment
+         bDeFragRx = WCTLbHandleFragment(pDevice, (struct ieee80211_hdr *) (pbyFrame), FrameSize, bIsWEP, bExtIV);
+-        pDevice->s802_11Counter.ReceivedFragmentCount++;
+         if (bDeFragRx) {
+             // defrag complete
+             // TODO skb, pbyFrame
+@@ -763,8 +743,6 @@ int RXbBulkInProcessData(struct vnt_private *pDevice, struct vnt_rcb *pRCB,
+                 (pDevice->bRxMICFail == true)) {
+                 DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"MIC comparison is fail!\n");
+                 pDevice->bRxMICFail = false;
+-                //pDevice->s802_11Counter.TKIPLocalMICFailures.QuadPart++;
+-                pDevice->s802_11Counter.TKIPLocalMICFailures++;
+                 if (bDeFragRx) {
+                     if (!device_alloc_frag_buf(pDevice, &pDevice->sRxDFCB[pDevice->uCurrentDFCBIdx])) {
+                         DBG_PRT(MSG_LEVEL_ERR,KERN_ERR "%s: can not alloc more frag bufs\n",
+@@ -827,12 +805,6 @@ int RXbBulkInProcessData(struct vnt_private *pDevice, struct vnt_rcb *pRCB,
+                      (dwRxTSC47_16 <= dwLocalTSC47_16) &&
+                      !((dwRxTSC47_16 == 0) && (dwLocalTSC47_16 == 0xFFFFFFFF))) {
+                     DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"TSC is illegal~~!\n ");
+-                    if (pKey->byCipherSuite == KEY_CTL_TKIP)
+-                        //pDevice->s802_11Counter.TKIPReplays.QuadPart++;
+-                        pDevice->s802_11Counter.TKIPReplays++;
+-                    else
+-                        //pDevice->s802_11Counter.CCMPReplays.QuadPart++;
+-                        pDevice->s802_11Counter.CCMPReplays++;
+ 
+                     if (bDeFragRx) {
+                         if (!device_alloc_frag_buf(pDevice, &pDevice->sRxDFCB[pDevice->uCurrentDFCBIdx])) {
+@@ -1064,19 +1036,9 @@ static int s_bHandleRxEncryption(struct vnt_private *pDevice, u8 *pbyFrame,
+ 
+     if (pKey == NULL) {
+         DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"pKey == NULL\n");
+-        if (byDecMode == KEY_CTL_WEP) {
+-//            pDevice->s802_11Counter.WEPUndecryptableCount.QuadPart++;
+-        } else if (pDevice->bLinkPass == true) {
+-//            pDevice->s802_11Counter.DecryptFailureCount.QuadPart++;
+-        }
+         return false;
+     }
+     if (byDecMode != pKey->byCipherSuite) {
+-        if (byDecMode == KEY_CTL_WEP) {
+-//            pDevice->s802_11Counter.WEPUndecryptableCount.QuadPart++;
+-        } else if (pDevice->bLinkPass == true) {
+-//            pDevice->s802_11Counter.DecryptFailureCount.QuadPart++;
+-        }
+         *pKeyOut = NULL;
+         return false;
+     }
+@@ -1167,11 +1129,6 @@ static int s_bHostWepRxEncryption(struct vnt_private *pDevice, u8 *pbyFrame,
+     DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"AES:%d %d %d\n", pMgmt->byCSSPK, pMgmt->byCSSGK, byDecMode);
+ 
+     if (byDecMode != pKey->byCipherSuite) {
+-        if (byDecMode == KEY_CTL_WEP) {
+-//            pDevice->s802_11Counter.WEPUndecryptableCount.QuadPart++;
+-        } else if (pDevice->bLinkPass == true) {
+-//            pDevice->s802_11Counter.DecryptFailureCount.QuadPart++;
+-        }
+         return false;
+     }
+ 
+diff --git a/drivers/staging/vt6656/int.c b/drivers/staging/vt6656/int.c
+index 512bb5d..a2778a4 100644
+--- a/drivers/staging/vt6656/int.c
++++ b/drivers/staging/vt6656/int.c
+@@ -175,16 +175,6 @@ void INTnsProcessData(struct vnt_private *pDevice)
+ 		  pINTData->byISR0,
+ 		  pINTData->dwLoTSF,
+ 		  pINTData->dwHiTSF)); */
+-
+-		STAvUpdate802_11Counter(&pDevice->s802_11Counter,
+-					&pDevice->scStatistic,
+-					pINTData->byRTSSuccess,
+-					pINTData->byRTSFail,
+-					pINTData->byACKFail,
+-					pINTData->byFCSErr);
+-		STAvUpdateIsrStatCounter(&pDevice->scStatistic,
+-					pINTData->byISR0,
+-					pINTData->byISR1);
  	}
+ 	if (pINTData->byISR1 != 0)
+ 		if (pINTData->byISR1 & ISR_GPIO3)
+diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
+index 5fc18ad..01cf099 100644
+--- a/drivers/staging/vt6656/usbpipe.c
++++ b/drivers/staging/vt6656/usbpipe.c
+@@ -390,8 +390,6 @@ static void s_nsInterruptUsbIoCompleteRead(struct urb *urb)
+ 	    INTnsProcessData(pDevice);
+     }
  
--	if (memcmp(hdr->addr1, dev->dev_addr, ETH_ALEN)) {
-+	if (!ether_addr_equal(hdr->addr1, dev->dev_addr)) {
- 		PDEBUG(DEBUG_AP, "handle_ap_item - addr1(DA)=%pM"
- 		       " not own MAC\n", hdr->addr1);
- 		goto done;
- 	}
+-    STAvUpdateUSBCounter(&pDevice->scStatistic.USB_InterruptStat, ntStatus);
+-
+     if (pDevice->fKillEventPollingThread != true) {
+        usb_fill_bulk_urb(pDevice->pInterruptURB,
+ 		      pDevice->usb,
+@@ -499,8 +497,6 @@ static void s_nsBulkInUsbIoCompleteRead(struct urb *urb)
+     if (status) {
+         pDevice->ulBulkInError++;
+         DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"BULK In failed %d\n", status);
+-
+-           pDevice->scStatistic.RxFcsErrCnt ++;
+ //todo...xxxxxx
+ //        if (status == USBD_STATUS_CRC) {
+ //            pDevice->ulBulkInContCRCError++;
+@@ -514,12 +510,8 @@ static void s_nsBulkInUsbIoCompleteRead(struct urb *urb)
+ 		bIndicateReceive = true;
+         pDevice->ulBulkInContCRCError = 0;
+         pDevice->ulBulkInBytesRead += bytesRead;
+-
+-           pDevice->scStatistic.RxOkCnt ++;
+     }
  
--	if (memcmp(hdr->addr3, dev->dev_addr, ETH_ALEN)) {
-+	if (!ether_addr_equal(hdr->addr3, dev->dev_addr)) {
- 		PDEBUG(DEBUG_AP, "handle_ap_item - addr3(BSSID)=%pM"
- 		       " not own MAC\n", hdr->addr3);
- 		goto done;
-@@ -3035,7 +3035,7 @@ ap_rx_ret hostap_handle_sta_rx(local_info_t *local, struct net_device *dev,
- 		if (!wds) {
- 			/* FromDS frame - not for us; probably
- 			 * broadcast/multicast in another BSS - drop */
--			if (memcmp(hdr->addr1, dev->dev_addr, ETH_ALEN) == 0) {
-+			if (ether_addr_equal(hdr->addr1, dev->dev_addr)) {
- 				printk(KERN_DEBUG "Odd.. FromDS packet "
- 				       "received with own BSSID\n");
- 				hostap_dump_rx_80211(dev->name, skb, rx_stats);
-@@ -3044,7 +3044,7 @@ ap_rx_ret hostap_handle_sta_rx(local_info_t *local, struct net_device *dev,
- 			goto out;
- 		}
- 	} else if (stype == IEEE80211_STYPE_NULLFUNC && sta == NULL &&
--		   memcmp(hdr->addr1, dev->dev_addr, ETH_ALEN) == 0) {
-+		   ether_addr_equal(hdr->addr1, dev->dev_addr)) {
+-    STAvUpdateUSBCounter(&pDevice->scStatistic.USB_BulkInStat, status);
+-
+     if (bIndicateReceive) {
+         spin_lock(&pDevice->lock);
+         if (RXbBulkInProcessData(pDevice, pRCB, bytesRead) == true)
+@@ -655,8 +647,6 @@ static void s_nsBulkOutIoCompleteWrite(struct urb *urb)
+     //
  
- 		if (local->hostapd) {
- 			prism2_rx_80211(local->apdev, skb, rx_stats,
-@@ -3073,7 +3073,7 @@ ap_rx_ret hostap_handle_sta_rx(local_info_t *local, struct net_device *dev,
- 		/* If BSSID (Addr3) is foreign, this frame is a normal
- 		 * broadcast frame from an IBSS network. Drop it silently.
- 		 * If BSSID is own, report the dropping of this frame. */
--		if (memcmp(hdr->addr3, dev->dev_addr, ETH_ALEN) == 0) {
-+		if (ether_addr_equal(hdr->addr3, dev->dev_addr)) {
- 			printk(KERN_DEBUG "%s: dropped received packet from %pM"
- 			       " with no ToDS flag "
- 			       "(type=0x%02x, subtype=0x%02x)\n", dev->name,
-diff --git a/drivers/net/wireless/hostap/hostap_hw.c b/drivers/net/wireless/hostap/hostap_hw.c
-index c275dc1..6df3ee5 100644
---- a/drivers/net/wireless/hostap/hostap_hw.c
-+++ b/drivers/net/wireless/hostap/hostap_hw.c
-@@ -2175,7 +2175,7 @@ static void hostap_tx_callback(local_info_t *local,
- 	struct hostap_tx_callback_info *cb;
+     status = urb->status;
+-    //we should have failed, succeeded, or cancelled, but NOT be pending
+-    STAvUpdateUSBCounter(&pDevice->scStatistic.USB_BulkOutStat, status);
  
- 	/* Make sure that frame was from us. */
--	if (memcmp(txdesc->addr2, local->dev->dev_addr, ETH_ALEN)) {
-+	if (!ether_addr_equal(txdesc->addr2, local->dev->dev_addr)) {
- 		printk(KERN_DEBUG "%s: TX callback - foreign frame\n",
- 		       local->dev->name);
- 		return;
-diff --git a/drivers/net/wireless/hostap/hostap_ioctl.c b/drivers/net/wireless/hostap/hostap_ioctl.c
-index e509030..2454a74 100644
---- a/drivers/net/wireless/hostap/hostap_ioctl.c
-+++ b/drivers/net/wireless/hostap/hostap_ioctl.c
-@@ -655,7 +655,7 @@ static int hostap_join_ap(struct net_device *dev)
- 		if (!local->last_scan_results)
- 			break;
- 		entry = &local->last_scan_results[i];
--		if (memcmp(local->preferred_ap, entry->bssid, ETH_ALEN) == 0) {
-+		if (ether_addr_equal(local->preferred_ap, entry->bssid)) {
- 			req.channel = entry->chid;
- 			break;
- 		}
-@@ -1978,7 +1978,7 @@ static inline int prism2_translate_scan(local_info_t *local,
- 		list_for_each(ptr, &local->bss_list) {
- 			struct hostap_bss_info *bss;
- 			bss = list_entry(ptr, struct hostap_bss_info, list);
--			if (memcmp(bss->bssid, scan->bssid, ETH_ALEN) == 0) {
-+			if (ether_addr_equal(bss->bssid, scan->bssid)) {
- 				bss->included = 1;
- 				current_ev = __prism2_translate_scan(
- 					local, info, scan, bss, current_ev,
-diff --git a/drivers/net/wireless/hostap/hostap_main.c b/drivers/net/wireless/hostap/hostap_main.c
-index a1257c9..67db34e 100644
---- a/drivers/net/wireless/hostap/hostap_main.c
-+++ b/drivers/net/wireless/hostap/hostap_main.c
-@@ -155,8 +155,7 @@ int prism2_wds_add(local_info_t *local, u8 *remote_addr,
- 
- 		if (prism2_wds_special_addr(iface->u.wds.remote_addr))
- 			empty = iface;
--		else if (memcmp(iface->u.wds.remote_addr, remote_addr,
--				ETH_ALEN) == 0) {
-+		else if (ether_addr_equal(iface->u.wds.remote_addr, remote_addr)) {
- 			match = iface;
- 			break;
- 		}
-@@ -214,8 +213,7 @@ int prism2_wds_del(local_info_t *local, u8 *remote_addr,
- 		if (iface->type != HOSTAP_INTERFACE_WDS)
- 			continue;
- 
--		if (memcmp(iface->u.wds.remote_addr, remote_addr,
--			   ETH_ALEN) == 0) {
-+		if (ether_addr_equal(iface->u.wds.remote_addr, remote_addr)) {
- 			selected = iface;
- 			break;
- 		}
-@@ -1085,7 +1083,7 @@ int prism2_sta_deauth(local_info_t *local, u16 reason)
- 
- 	if (local->iw_mode != IW_MODE_INFRA ||
- 	    is_zero_ether_addr(local->bssid) ||
--	    memcmp(local->bssid, "\x44\x44\x44\x44\x44\x44", ETH_ALEN) == 0)
-+	    ether_addr_equal(local->bssid, "\x44\x44\x44\x44\x44\x44"))
- 		return 0;
- 
- 	ret = prism2_sta_send_mgmt(local, local->bssid, IEEE80211_STYPE_DEAUTH,
+     if(status == STATUS_SUCCESS) {
+         DBG_PRT(MSG_LEVEL_DEBUG, KERN_INFO"Write %d bytes\n",(int)ulBufLen);
 -- 
-1.8.0
-
+1.8.3.2
 
