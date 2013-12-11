@@ -1,35 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f48.google.com ([209.85.212.48]:56706 "EHLO
-	mail-vb0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752067Ab3LPBvL (ORCPT
+Received: from webmail.solarflare.com ([12.187.104.25]:57924 "EHLO
+	webmail.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751399Ab3LKVRk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Dec 2013 20:51:11 -0500
-Received: by mail-vb0-f48.google.com with SMTP id f13so2691646vbg.21
-        for <linux-wireless@vger.kernel.org>; Sun, 15 Dec 2013 17:51:10 -0800 (PST)
+	Wed, 11 Dec 2013 16:17:40 -0500
+Message-ID: <1386796654.1516.268.camel@bwh-desktop.uk.level5networks.com> (sfid-20131211_221758_162158_D96BBDB3)
+Subject: Re: [PATCH v2 15/16] wl1251: Add sysfs file address for setting
+ permanent mac address
+From: Ben Hutchings <bhutchings@solarflare.com>
+To: Pali =?ISO-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
+CC: Dan Williams <dcbw@redhat.com>, Kalle Valo <kvalo@adurom.com>,
+	"Luciano Coelho" <luca@coelho.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <freemangordon@abv.bg>,
+	<aaro.koskinen@iki.fi>, <pavel@ucw.cz>, <sre@ring0.de>,
+	<joni.lapilainen@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Felipe Contreras <felipe.contreras@gmail.com>
+Date: Wed, 11 Dec 2013 21:17:34 +0000
+In-Reply-To: <201312101852.17030@pali>
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+	 <201312101814.35112@pali> <1386697762.30202.6.camel@dcbw.foobar.com>
+	 <201312101852.17030@pali>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-In-Reply-To: <1386962034-7141-4-git-send-email-luciano.coelho@intel.com>
-References: <1386962034-7141-1-git-send-email-luciano.coelho@intel.com>
-	<1386962034-7141-4-git-send-email-luciano.coelho@intel.com>
-Date: Mon, 16 Dec 2013 09:51:10 +0800
-Message-ID: <CAEFj987JhRnx93qCTusoGB-gmcuLLDXeL76xEw_bz7HUmLFitQ@mail.gmail.com> (sfid-20131216_025116_191828_7AE1F52C)
-Subject: Re: [PATCH v10 3/5] mac80211: refactor ieee80211_mesh_process_chanswitch()
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: Luciano Coelho <luciano.coelho@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Simon Wunderlich <sw@simonwunderlich.de>,
-	Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> -
-> -       rcu_read_unlock();
-> +       if (cfg80211_chandef_identical(&params.chandef,
-> +                                      &sdata->vif.bss_conf.chandef)) {
-> +               ibss_dbg(sdata,
-> +                        "received csa with an identical chandef, ignoring\n");
+On Tue, 2013-12-10 at 18:52 +0100, Pali Rohár wrote:
+> On Tuesday 10 December 2013 18:49:22 Dan Williams wrote:
+> > On Tue, 2013-12-10 at 18:14 +0100, Pali Rohár wrote:
+> > > On Tuesday 10 December 2013 17:10:50 Pali Rohár wrote:
+> > > > On Tuesday 10 December 2013 16:49:23 Kalle Valo wrote:
+> > > > > Pali Rohár <pali.rohar@gmail.com> writes:
+> > > > > > Driver wl1251 generating mac address randomly at
+> > > > > > startup and there is no way to set permanent mac
+> > > > > > address via SET_IEEE80211_PERM_ADDR. This patch
+> > > > > > export sysfs file which can set permanent mac address
+> > > > > > by userspace helper program. Patch is needed for
+> > > > > > devices which do not store mac address in internal
+> > > > > > wl1251 eeprom.
+> > > > > > 
+> > > > > > Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
+> > > > > 
+> > > > > We have ioctl() command for setting the mac address.
+> > > > 
+> > > > Really? Is there ioctl for setting permanent mac address?
+> > > > Can you show me it?
+> > > 
+> > > Now I looked at it again and I did not found any ioctl for
+> > > it. There is only ioctl cmd for getting address, not
+> > > setting it.
+> > > 
+> > > #define SIOCETHTOOL 0x8946
+> > > 
+> > > /* Get permanent hardware address */
+> > > #define ETHTOOL_GPERMADDR 0x00000020
+> > 
+> > Yeah, because it's supposed to be permanent and unchanging. 
+> > Which means if there was an ioctl for it, that would be
+> > contrary to the purpose of a permanent MAC address.
+> > 
+> > I realize the N900 stores the WiFi MAC address completely
+> > differently than many other systems, and that's why this
+> > sysfs file was created.  I don't really have a great
+> > converged solution for that, other than what you've currently
+> > got, or perhaps adding SPERMADDR to ethtool.  One thing I
+> > *would* like though, is a restriction on the sysfs file such
+> > that if the permanent MAC is already set, it cannot be set
+> > again.  Otherwise the permanent MAC address isn't permanent
+> > at all.
 
-mcsa_dbg here?
+I'm really uncomfortable with the idea of involving userland in
+establishing the 'permanent' MAC address.  (And from what I gather, the
+Nokia software never did that but only used SIOCSIFHWADDR.)  It ought to
+be set before the interface is ever registered.
 
------
-Chun-Yeow
+> > Dan
+> 
+> Maybe another way could be to use request_firmware to load address 
+> from userspace... Or what do you think?
+
+I think that's an even worse idea.  This is not firmware and it already
+exists in separate storage.
+
+I think that rx51_init_wl1251() in
+arch/arm/mach-omap2/board-rx51-peripherals.c should either copy the MAC
+address out of NVRAM, or if it's too early to do that, then schedule a
+function to run later and only then set up wl1251 platform data.
+
+Ben.
+
+-- 
+Ben Hutchings, Staff Engineer, Solarflare
+Not speaking for my employer; that's the marketing department's job.
+They asked us to note that Solarflare product names are trademarked.
+
