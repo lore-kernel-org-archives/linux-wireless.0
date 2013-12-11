@@ -1,42 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f171.google.com ([209.85.215.171]:46077 "EHLO
-	mail-ea0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932328Ab3L3WAf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Dec 2013 17:00:35 -0500
-Received: by mail-ea0-f171.google.com with SMTP id h10so5249387eak.2
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Dec 2013 14:00:34 -0800 (PST)
-From: Bogdan Radulescu <bogdan@nimblex.net>
-To: torvalds@linux-foundation.org
-Cc: Bogdan Radulescu <bogdan@nimblex.net>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] Add STA mode support for devices based on Ralink RT5350
-Date: Tue, 31 Dec 2013 02:00:16 +0200
-Message-Id: <1388448016-10210-1-git-send-email-bogdan@nimblex.net> (sfid-20131230_230039_428786_6E6C0DA3)
+Received: from mga09.intel.com ([134.134.136.24]:23250 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750894Ab3LKIey (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Dec 2013 03:34:54 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-rt-users@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [RFC 00/10] make iwlwifi RT friendly
+Date: Wed, 11 Dec 2013 10:33:35 +0200
+Message-Id: <1386750826-25219-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20131211_093500_976789_EB353A33)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Bogdan Radulescu <bogdan@nimblex.net>
+RT folks have raised issues with iwlwifi wrt. RT kernel some time
+ago. Johannes had a few patches to address this, but I had a few
+concerns with them. This series tries to address the RT concerns:
+* we don't do anything in hard-irq context besides stopping the
+  interrupts in the device.
+* the interrupt cause is read from the irq handler and is handled
+  there.
 
----
- drivers/net/wireless/rt2x00/rt2x00dev.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This allows us to avoid the usage of _irqsave all over the driver
+and also avoids any kind of locks in the hard-irq context.
+We still have some work to do with the locks in the handler.
+I believe the locking model can be improved there.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 9dd92a7..606e968 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -1236,7 +1236,7 @@ static inline void rt2x00lib_set_if_combinations(struct rt2x00_dev *rt2x00dev)
- 	 */
- 	if_limit = &rt2x00dev->if_limits_ap;
- 	if_limit->max = rt2x00dev->ops->max_ap_intf;
--	if_limit->types = BIT(NL80211_IFTYPE_AP);
-+	if_limit->types = BIT(NL80211_IFTYPE_AP) | BIT(NL80211_IFTYPE_STATION);
- #ifdef CONFIG_MAC80211_MESH
- 	if_limit->types |= BIT(NL80211_IFTYPE_MESH_POINT);
- #endif
+This patch series is split is very small patches. While this can
+annoy the reader - it helped me much to make sure I don't do anything
+wrong (well - I am still not sure) - and IMHO, it makes the review easier.
+For example, in patch 
+    iwlwifi: pcie: move the ICT / non-ICT handling functions
+I just copy code from place to place without changing a bit. This makes
+the significant diff smaller.
+
+Emmanuel Grumbach (10):
+  iwlwifi: pcie: clean up ICT allocation code
+  iwlwifi: pcie: track interrupt mask in SW
+  iwlwifi: pcie: re-organize the PCIe ISR code
+  iwlwifi: pcie: move the ICT / non-ICT handling functions
+  iwlwifi: pcie: read the interrupt cause from the handler
+  iwlwifi: pcie: determine the interrupt type in the handler
+  iwlwifi: pcie: return inta from iwl_pcie_int_cause_{non_}ict
+  iwlwifi: pcie: no need to save inta in trans_pcie
+  iwlwifi: pcie: move interrupt prints to the common handler
+  iwlwifi: pcie: stop using _irqsave
+
+ drivers/net/wireless/iwlwifi/iwl-csr.h       |   3 +-
+ drivers/net/wireless/iwlwifi/pcie/internal.h |   9 +-
+ drivers/net/wireless/iwlwifi/pcie/rx.c       | 389 +++++++++++----------------
+ drivers/net/wireless/iwlwifi/pcie/trans.c    |  27 +-
+ drivers/net/wireless/iwlwifi/pcie/tx.c       |  10 +-
+ 5 files changed, 185 insertions(+), 253 deletions(-)
+
 -- 
-1.8.4
+1.8.3.2
 
