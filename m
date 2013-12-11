@@ -1,55 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:25199 "EHLO
-	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756199Ab3L3RTG (ORCPT
+Received: from webmail.solarflare.com ([12.187.104.25]:63323 "EHLO
+	webmail.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751041Ab3LKV2v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Dec 2013 12:19:06 -0500
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: kernel-janitors@vger.kernel.org,
+	Wed, 11 Dec 2013 16:28:51 -0500
+Message-ID: <1386797325.1516.275.camel@bwh-desktop.uk.level5networks.com> (sfid-20131211_222858_457795_C033A8B0)
+Subject: Re: [PATCH v2 15/16] wl1251: Add sysfs file address for setting
+ permanent mac address
+From: Ben Hutchings <bhutchings@solarflare.com>
+To: Pali =?ISO-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
+CC: Dan Williams <dcbw@redhat.com>, Kalle Valo <kvalo@adurom.com>,
+	"Luciano Coelho" <luca@coelho.fi>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 3/11] mac80211: use ether_addr_equal_64bits
-Date: Mon, 30 Dec 2013 19:14:59 +0100
-Message-Id: <1388427307-8691-4-git-send-email-Julia.Lawall@lip6.fr> (sfid-20131230_182339_915063_432F706F)
-In-Reply-To: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>
-References: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>
+	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <freemangordon@abv.bg>,
+	<aaro.koskinen@iki.fi>, <pavel@ucw.cz>, <sre@ring0.de>,
+	<joni.lapilainen@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Felipe Contreras <felipe.contreras@gmail.com>
+Date: Wed, 11 Dec 2013 21:28:45 +0000
+In-Reply-To: <1386796654.1516.268.camel@bwh-desktop.uk.level5networks.com>
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+	 <201312101814.35112@pali> <1386697762.30202.6.camel@dcbw.foobar.com>
+	 <201312101852.17030@pali>
+	 <1386796654.1516.268.camel@bwh-desktop.uk.level5networks.com>
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <Julia.Lawall@lip6.fr>
+On Wed, 2013-12-11 at 21:17 +0000, Ben Hutchings wrote:
+> On Tue, 2013-12-10 at 18:52 +0100, Pali Rohár wrote:
+[...]
+> > Maybe another way could be to use request_firmware to load address 
+> > from userspace... Or what do you think?
+> 
+> I think that's an even worse idea.  This is not firmware and it already
+> exists in separate storage.
+[...]
 
-Ether_addr_equal_64bits is more efficient than ether_addr_equal, and can be
-used when each argument is an array within a structure that contains at
-least two bytes of data beyond the array.
+Actually, as it seems you meant to do some kind of dynamic conversion, I
+think it's not so bad.  Unfortunately I don't think it can work as I
+explained in my other email.
 
-The structures involved are:
-ieee80211_hdr defined in include/linux/ieee80211.h and
-p54_common defined in drivers/net/wireless/p54/p54.h
+Ben.
 
-This was done using Coccinelle (http://coccinelle.lip6.fr/).
-
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-
----
-The semantic patch used is rather long and can be found in message 0 of
-this patch series.
-
- drivers/net/wireless/p54/txrx.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/p54/txrx.c b/drivers/net/wireless/p54/txrx.c
-index f95de0d..b7cc7c2 100644
---- a/drivers/net/wireless/p54/txrx.c
-+++ b/drivers/net/wireless/p54/txrx.c
-@@ -308,7 +308,7 @@ static void p54_pspoll_workaround(struct p54_common *priv, struct sk_buff *skb)
- 		return;
- 
- 	/* only consider beacons from the associated BSSID */
--	if (!ether_addr_equal(hdr->addr3, priv->bssid))
-+	if (!ether_addr_equal_64bits(hdr->addr3, priv->bssid))
- 		return;
- 
- 	tim = p54_find_ie(skb, WLAN_EID_TIM);
+-- 
+Ben Hutchings, Staff Engineer, Solarflare
+Not speaking for my employer; that's the marketing department's job.
+They asked us to note that Solarflare product names are trademarked.
 
