@@ -1,52 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve0-f182.google.com ([209.85.128.182]:58188 "EHLO
-	mail-ve0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751025Ab3LEKf2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 05:35:28 -0500
-Received: by mail-ve0-f182.google.com with SMTP id jy13so13789684veb.27
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Dec 2013 02:35:27 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1386234180.3878.8.camel@porter.coelho.fi>
-References: <1386078502-19845-1-git-send-email-luciano.coelho@intel.com>
-	<1386078502-19845-6-git-send-email-luciano.coelho@intel.com>
-	<CAEFj9850NcEhzBFTDkOhCKzpQNtBooSCj3CqsJHuncunUxXw9Q@mail.gmail.com>
-	<CAEFj984YzCvRtqKtvvng_9EUFk3J2wFRcrn-1xNmQ85OZ1BxfQ@mail.gmail.com>
-	<1386234180.3878.8.camel@porter.coelho.fi>
-Date: Thu, 5 Dec 2013 18:35:27 +0800
-Message-ID: <CAEFj986VzE9ybX0_gomnRv3_kt5t7HyqQEZxvzCwjBXFrNdaLA@mail.gmail.com> (sfid-20131205_113530_920498_18A1D226)
-Subject: Re: [PATCH v6 5/5] mac80211: only set CSA beacon when at least one
- beacon must be transmitted
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: "Coelho, Luciano" <luciano.coelho@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Simon Wunderlich <sw@simonwunderlich.de>,
-	Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:20040 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751423Ab3LKIfF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Dec 2013 03:35:05 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-rt-users@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [RFC 07/10] iwlwifi: pcie: return inta from iwl_pcie_int_cause_{non_}ict
+Date: Wed, 11 Dec 2013 10:33:42 +0200
+Message-Id: <1386750826-25219-8-git-send-email-emmanuel.grumbach@intel.com> (sfid-20131211_093512_947770_24BECD52)
+In-Reply-To: <1386750826-25219-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1386750826-25219-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Actually, I just looked at the specs again and the count value for mesh
-> is completely different.  Instead of specifying the number of TBTTs
-> until the switch happens, it specifies the time in TUs until the switch
-> happens and 0 means at any time after the frame was sent (the same as
-> with nonmesh).  In our implementation, we just decrease the count on
-> every beacon, which is wrong in the mesh case.
+These functions are meant to return an interrupt cause and
+not an irqreturn_t.
 
-Yes, you are absolutely correct.
+The only drawback is that we will return IRQ_NONE instead
+of IRQ_HANDLED when error occurs - but that shouldn't be
+an issue.
 
->
-> The count implementation for mesh is bogus.  We need to fix that.
->
-> What if, for now, I just fix the oops because of the rcu_derefence when
-> the rcu is not initialized
+Change-Id: I2de5c0d39fafb2a00429c314a2a5f0336347233d
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/pcie/rx.c | 31 ++++++++++++-------------------
+ 1 file changed, 12 insertions(+), 19 deletions(-)
 
-Sure
+diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
+index 58d3f64..3ddf012 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
+@@ -807,7 +807,7 @@ static void iwl_pcie_irq_handle_error(struct iwl_trans *trans)
+ 	wake_up(&trans_pcie->wait_command_queue);
+ }
+ 
+-static irqreturn_t iwl_pcie_int_cause_non_ict(struct iwl_trans *trans)
++static u32 iwl_pcie_int_cause_non_ict(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	u32 inta;
+@@ -841,14 +841,14 @@ static irqreturn_t iwl_pcie_int_cause_non_ict(struct iwl_trans *trans)
+ 		if (test_bit(STATUS_INT_ENABLED, &trans->status) &&
+ 		    !trans_pcie->inta)
+ 			iwl_enable_interrupts(trans);
+-		return IRQ_NONE;
++		return trans_pcie->inta;
+ 	}
+ 
+ 	if ((inta == 0xFFFFFFFF) || ((inta & 0xFFFFFFF0) == 0xa5a5a5a0)) {
+ 		/* Hardware disappeared. It might have already raised
+ 		 * an interrupt */
+ 		IWL_WARN(trans, "HARDWARE GONE?? INTA == 0x%08x\n", inta);
+-		return IRQ_HANDLED;
++		return trans_pcie->inta;
+ 	}
+ 
+ 	if (iwl_have_debug_level(IWL_DL_ISR))
+@@ -859,7 +859,7 @@ static irqreturn_t iwl_pcie_int_cause_non_ict(struct iwl_trans *trans)
+ 
+ 	trans_pcie->inta |= inta;
+ 	/* the thread will service interrupts and re-enable them */
+-	return IRQ_WAKE_THREAD;
++	return trans_pcie->inta;
+ }
+ 
+ /* a device (PCI-E) page is 4096 bytes long */
+@@ -875,10 +875,9 @@ static irqreturn_t iwl_pcie_int_cause_non_ict(struct iwl_trans *trans)
+  * the interrupt we need to service, driver will set the entries back to 0 and
+  * set index.
+  */
+-static irqreturn_t iwl_pcie_int_cause_ict(struct iwl_trans *trans)
++static u32 iwl_pcie_int_cause_ict(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+-	irqreturn_t ret;
+ 	u32 inta;
+ 	u32 val = 0;
+ 	u32 read;
+@@ -938,9 +937,7 @@ static irqreturn_t iwl_pcie_int_cause_ict(struct iwl_trans *trans)
+ 
+ 	/* iwl_pcie_tasklet() will service interrupts and re-enable them */
+ 	if (likely(inta))
+-		return IRQ_WAKE_THREAD;
+-
+-	ret = IRQ_HANDLED;
++		return trans_pcie->inta;
+ 
+  none:
+ 	/* re-enable interrupts here since we don't have anything to service.
+@@ -950,7 +947,7 @@ static irqreturn_t iwl_pcie_int_cause_ict(struct iwl_trans *trans)
+ 	    !trans_pcie->inta)
+ 		iwl_enable_interrupts(trans);
+ 
+-	return ret;
++	return trans_pcie->inta;
+ }
+ 
+ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
+@@ -961,7 +958,6 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
+ 	u32 inta = 0;
+ 	u32 handled = 0;
+ 	unsigned long flags;
+-	irqreturn_t ret;
+ 	u32 i;
+ 
+ 	lock_map_acquire(&trans->sync_cmd_lockdep_map);
+@@ -972,13 +968,13 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
+ 	 * use legacy interrupt.
+ 	 */
+ 	if (likely(trans_pcie->use_ict))
+-		ret = iwl_pcie_int_cause_ict(trans);
++		inta = iwl_pcie_int_cause_ict(trans);
+ 	else
+-		ret = iwl_pcie_int_cause_non_ict(trans);
++		inta = iwl_pcie_int_cause_non_ict(trans);
+ 
+-	if (ret != IRQ_WAKE_THREAD) {
++	if (!inta) {
+ 		spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
+-		return ret;
++		return IRQ_NONE;
+ 	}
+ 
+ 	/* Ack/clear/reset pending uCode interrupts.
+@@ -992,10 +988,7 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
+ 	 * hardware bugs here by ACKing all the possible interrupts so that
+ 	 * interrupt coalescing can still be achieved.
+ 	 */
+-	iwl_write32(trans, CSR_INT,
+-		    trans_pcie->inta | ~trans_pcie->inta_mask);
+-
+-	inta = trans_pcie->inta;
++	iwl_write32(trans, CSR_INT, inta | ~trans_pcie->inta_mask);
+ 
+ 	if (iwl_have_debug_level(IWL_DL_ISR))
+ 		IWL_DEBUG_ISR(trans, "inta 0x%08x, enabled 0x%08x\n",
+-- 
+1.8.3.2
 
-> and we fix the count implementation later?
-
-Hmm, even with unit of 100TU, we can't use the current count approach
-since the default TBTT for mesh is 1000 TU.
-
-----
-Chun-Yeow
