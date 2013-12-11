@@ -1,61 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f181.google.com ([74.125.82.181]:34864 "EHLO
-	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751545Ab3L2Lnm (ORCPT
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:59613 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751609Ab3LKU1m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Dec 2013 06:43:42 -0500
-Received: by mail-we0-f181.google.com with SMTP id x55so9491654wes.12
-        for <linux-wireless@vger.kernel.org>; Sun, 29 Dec 2013 03:43:41 -0800 (PST)
-MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <CANUX_P3EwRW=+1SwHQN81hKKGZiVBFDcmLZAqknXZE+UzL_fTA@mail.gmail.com>
-References: <CANUX_P3EwRW=+1SwHQN81hKKGZiVBFDcmLZAqknXZE+UzL_fTA@mail.gmail.com>
-Date: Sun, 29 Dec 2013 12:43:41 +0100
-Message-ID: <CA+icZUUvK749V302H7s5etznVQYqN3bA5WYn04YCmcyydss-tg@mail.gmail.com> (sfid-20131229_124404_474300_F7F49527)
-Subject: Re: [ANN] New firmware for Intel 7260 / 3160
-From: Sedat Dilek <sedat.dilek@gmail.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 11 Dec 2013 15:27:42 -0500
+Message-ID: <1386793658.23883.29.camel@porter.coelho.fi> (sfid-20131211_212747_711302_2F2901E0)
+Subject: Re: Doc for Qualcomm AR3001 HCI
+From: Luca Coelho <luca@coelho.fi>
+To: Frank Zhao <frank.zhao.main@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 11 Dec 2013 22:27:38 +0200
+In-Reply-To: <CAGGtaNarW2fVT=KyCgYpCrZv914FQR26kQNza0VvKR2FBZrnMQ@mail.gmail.com>
+References: <CAGGtaNarW2fVT=KyCgYpCrZv914FQR26kQNza0VvKR2FBZrnMQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Dec 29, 2013 at 11:02 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
-> Hi,
->
-> We have released a new firmware for 3160 and for 7260 Intel devices.
-> This firmware includes the neww APIs we have been implementing for a while now.
-> We have here bug fixes along with better power save and P2P support.
-> Anyone who wants to use this firmware must have 3.13 at least.
-> The new file name is iwlwifi-{7260,3160}-8.ucode.
-> Just copy the file into /lib/firmware - if the driver / kernel
-> supports the new firmware, it will load the new one. If not,
-> iwlwifi-{7260,3160}-7.ucode will be loaded and everything should work
-> just fine.
->
-> The firmware for 7260 is available at [1] and for 3160 at [2].
-> I encourage people running 3.13 and up to take the new firmware and
-> report issues.
-> The new firmware's version is 22.15.8.0:
->
-> $ dmesg | grep loaded\ firmware
-> [ 8871.825758] iwlwifi 0000:02:00.0: loaded firmware version 22.15.8.0
-> op_mode iwlmvm
->
-> [1] - http://wireless.kernel.org/en/users/Drivers/iwlwifi?action=AttachFile&do=get&target=iwlwifi-7260-ucode-22.15.8.0.tgz
-> [2] - http://wireless.kernel.org/en/users/Drivers/iwlwifi?action=AttachFile&do=get&target=iwlwifi-3160-ucode-22.15.8.0.tgz
->
+On Wed, 2013-12-11 at 15:03 -0500, Frank Zhao wrote:
+> Hi
+> 
+> I am doing some hacking on a PlayStation 4's DualShock 4 controller,
+> inside is a Qualcomm Atheros AR3002 connected to a microcontroller
+> using UART HCI. I have a logic analyzer connected to the UART signals
+> and I have captured a lot of data. But a lot of the HCI commands have
+> OGF of 0xFC which means that the commands are "vendor defined", and
+> thus they are not in the HCI functional specifications documentation.
+> 
+> I can't find any helpful technical documentation at all from
+> Qualcomm's website and they probably won't help some hobbyist anyways.
+> I've searched Google and found your website. You guys have written a
+> driver for this chip already, so you must have some documentation on
+> Qualcomm's own HCI commands. Can you please share this documentation
+> with me?
 
-Shouldn't such stuff also go to the linux-firmware-folks?
+You're probably looking at a Bluetooth chip.  You have a better chance
+of getting answers if you try linux-bluetooth@vger.kernel.org.
 
-- Sedat -
+But proprietary commands are usually, well, proprietary and closed, not
+public.  So I guess you may have some difficulties there.  You most
+likely need to reverse-engineer it yourself. ;)
 
-[1] http://git.kernel.org/cgit/linux/kernel/git/firmware/linux-firmware.git/
+--
+Luca.
 
-> Emmanuel Grumbach
-> egrumbach@gmail.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
