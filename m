@@ -1,133 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:51751 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756238Ab3LEMgE (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:48972 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751287Ab3LKROi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 07:36:04 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 6/8] mac80211: optimise synchronize_net() for sta_info_flush
-Date: Thu,  5 Dec 2013 13:35:54 +0100
-Message-Id: <1386246956-14257-7-git-send-email-johannes@sipsolutions.net> (sfid-20131205_133620_180762_C06D51F5)
-In-Reply-To: <1386246956-14257-1-git-send-email-johannes@sipsolutions.net>
-References: <1386192610.5660.4.camel@jlt4.sipsolutions.net>
- <1386246956-14257-1-git-send-email-johannes@sipsolutions.net>
+	Wed, 11 Dec 2013 12:14:38 -0500
+MIME-Version: 1.0
+In-Reply-To: <1818324675.20131211175350@eikelenboom.it>
+References: <1507831110.20131018194349@eikelenboom.it> <792757788.20131023142849@eikelenboom.it>
+ <1819533168.20131211161710@eikelenboom.it> <CAB=NE6V-RSnqbAC-0tfYK=WGJLp1aPC2UpFDurs49h+wXr9UfQ@mail.gmail.com>
+ <1818324675.20131211175350@eikelenboom.it>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Wed, 11 Dec 2013 18:14:16 +0100
+Message-ID: <CAB=NE6Wf=T0bGLSYPDyb=-fMAVnGcbGkeaBiNrzwV-Lpxr6VZg@mail.gmail.com> (sfid-20131211_181519_601537_1DDDC8BF)
+Subject: Re: [cfg80211 / iwlwifi] setting wireless regulatory domain doesn't work.
+To: Sander Eikelenboom <linux@eikelenboom.it>
+Cc: "Berg, Johannes" <johannes.berg@intel.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, Dec 11, 2013 at 5:53 PM, Sander Eikelenboom
+<linux@eikelenboom.it> wrote:
+>
+> Wednesday, December 11, 2013, 4:38:13 PM, you wrote:
+>
+>> On Wed, Dec 11, 2013 at 4:17 PM, Sander Eikelenboom
+>> <linux@eikelenboom.it> wrote:
+>>> Since i haven't got a response to this yet and after having the troubled machine back:
+>>> The problem is still present in linux 3.13-rc3
+>
+>> Keep in mind regulatory hints for Intel or Atheros cards do nothing
+>> other than help compliance further given that the cards already have
+>> their own regulatory data, the user input / hint is only going to
+>> reduce the card's channels further.
+>
+> So in essence what you are saying is that the firmware/eeprom already dictates the limited channels available based on .. errr .. yeah based on what ...
 
-There's no reason to have one synchronize_net() for each
-removed station, refactor the code slightly to have just
-a single synchronize_net() for all stations.
+Whatever the device was programmed with but in practice my
+understanding is Intel only sells hardware for a few regions so they
+have only a few custom world regulatory domains, so that is used upon
+initialization. Having the capability to actually work properly on a
+different set of regions with optimal power and performance without
+violating regulatory is a challenge and this is why cards are either
+region specific or built / optimized for a few regions or a general
+world roaming card. Channels is just one thing to consider, there are
+tons of other things to consider and this will be very card and
+hardware specific.
 
-Note that this is currently useless as hostapd removes
-stations one by one and this coalescing never happens.
+> And setting the regulatory domain yourself only limits this list of limited channels available only further ?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/sta_info.c | 42 +++++++++++++++++++++++++++++++++++++++---
- net/mac80211/sta_info.h |  2 +-
- 2 files changed, 40 insertions(+), 4 deletions(-)
+Yeap, that's the case for Intel Atheros, and I think nowadays new
+broadcom upstream drivers too. Users should not have to be involved on
+setting the regulatory domain, everything should just work
+automatically.
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 08e5076..89d449d 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -794,7 +794,7 @@ static bool sta_info_cleanup_expire_buffered(struct ieee80211_local *local,
- 	return have_buffered;
- }
- 
--int __must_check __sta_info_destroy(struct sta_info *sta)
-+static int __must_check __sta_info_destroy_part1(struct sta_info *sta)
- {
- 	struct ieee80211_local *local;
- 	struct ieee80211_sub_if_data *sdata;
-@@ -831,7 +831,23 @@ int __must_check __sta_info_destroy(struct sta_info *sta)
- 	    rcu_access_pointer(sdata->u.vlan.sta) == sta)
- 		RCU_INIT_POINTER(sdata->u.vlan.sta, NULL);
- 
--	synchronize_net();
-+	return 0;
-+}
-+
-+static void __sta_info_destroy_part2(struct sta_info *sta)
-+{
-+	struct ieee80211_local *local = sta->local;
-+	struct ieee80211_sub_if_data *sdata = sta->sdata;
-+	int ret;
-+
-+	/*
-+	 * NOTE: This assumes at least synchronize_net() was done
-+	 *	 after _part1 and before _part2!
-+	 */
-+
-+	might_sleep();
-+	lockdep_assert_held(&local->sta_mtx);
-+
- 	/* now keys can no longer be reached */
- 	ieee80211_free_sta_keys(local, sta);
- 
-@@ -863,6 +879,18 @@ int __must_check __sta_info_destroy(struct sta_info *sta)
- 	ieee80211_recalc_min_chandef(sdata);
- 
- 	cleanup_single_sta(sta);
-+}
-+
-+int __must_check __sta_info_destroy(struct sta_info *sta)
-+{
-+	int err = __sta_info_destroy_part1(sta);
-+
-+	if (err)
-+		return err;
-+
-+	synchronize_net();
-+
-+	__sta_info_destroy_part2(sta);
- 
- 	return 0;
- }
-@@ -936,6 +964,7 @@ int sta_info_flush(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta, *tmp;
-+	LIST_HEAD(free_list);
- 	int ret = 0;
- 
- 	might_sleep();
-@@ -943,10 +972,17 @@ int sta_info_flush(struct ieee80211_sub_if_data *sdata)
- 	mutex_lock(&local->sta_mtx);
- 	list_for_each_entry_safe(sta, tmp, &local->sta_list, list) {
- 		if (sdata == sta->sdata) {
--			WARN_ON(__sta_info_destroy(sta));
-+			if (!WARN_ON(__sta_info_destroy_part1(sta)))
-+				list_add(&sta->free_list, &free_list);
- 			ret++;
- 		}
- 	}
-+
-+	if (!list_empty(&free_list)) {
-+		synchronize_net();
-+		list_for_each_entry_safe(sta, tmp, &free_list, free_list)
-+			__sta_info_destroy_part2(sta);
-+	}
- 	mutex_unlock(&local->sta_mtx);
- 
- 	return ret;
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 9104f81..1f20664 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -329,7 +329,7 @@ struct ieee80211_tx_latency_stat {
-  */
- struct sta_info {
- 	/* General information, mostly static */
--	struct list_head list;
-+	struct list_head list, free_list;
- 	struct rcu_head rcu_head;
- 	struct sta_info __rcu *hnext;
- 	struct ieee80211_local *local;
--- 
-1.8.4.rc3
+> I now spotted this from the dmesg:
+> [    4.818467] cfg80211: Ignoring regulatory request set by core since the driver uses its own custom regulatory domain
 
+Yeap, that's by design, if a card sets a flag that its has a custom
+world regulatory domain the first hint from CRDA / internel regdb that
+updates the world regulatory domain will bet set on cfg80211 but for
+the wiphy data structure for the drivers that have the custom flag set
+we'll skip using the regulatory domain for that card as it has its own
+custom regulatory domain.
+
+> Joy o joy who ever came up with that great idea ..
+
+Understand the architecture before making conclusions.
+
+> Would be nice it that error came up again when you would try to set the domain, instead of silently ignoring it.
+
+That is not an error message, its a head up and that would only apply
+for the first update of the world regulatory domain. The regulatory
+domain settings that a user would do next would be applied but like I
+said you'd be restricting the device further.
+
+> So now the only thing left is to try to find out if some one has hacked these bloody cards, what a mess.
+
+Feel free to hack the living hell out of things, go wild.
+
+> Do other cards like broadcom or whatever have the same issue ?
+
+This is a non-issue in so far as hardware is concerned, this is a
+regulatory thing, if you're unhappy you can lobby for ability to use
+the spectrum as you wish all over the world. That won't go well, but
+what may work well is if you can sign off on your responsibility for
+causing issues. This is important -- consider weather radar channels
+which are used on 5 GHz and are used to help with airplanes, you can't
+just take any hardware and go crazy anywhere. There are reasons for
+this. Upstream ships compliant solutions, what you do in your basement
+is up to you.
+
+>>  That said the fact that you are
+>> not seeing a regulatory domain being set is an issue provided you have
+>> CRDA installed or use CONFIG_CFG80211_INTERNAL_REGDB. Keep in mind
+>> that the latest version of wireless-regdb had a signature issue
+>> reported by users and not sure if that is cleared yet, so that would
+>> also prevent the wireless-regdb being read even if CRDA was present.
+>> To rule that out try putting the db.txt into net/wireless/db.txt and
+>> compile with CONFIG_CFG80211_INTERNAL_REGDB for now.
+>
+> I did have CRDA installed (debian).
+> And also compiled the db.txt in.
+
+Can you verify that CRDA gets called? You should see something like this:
+
+[   71.133856] cfg80211: Calling CRDA to update world regulatory domain
+[   71.139098] cfg80211: World regulatory domain updated:
+[   71.139102] cfg80211:  DFS Master region: unset
+[   71.139104] cfg80211:   (start_freq - end_freq @ bandwidth),
+(max_antenna_gain, max_eirp)
+[   71.139106] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz),
+(N/A, 2000 mBm)
+[   71.139108] cfg80211:   (2457000 KHz - 2482000 KHz @ 40000 KHz),
+(N/A, 2000 mBm)
+[   71.139110] cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz),
+(N/A, 2000 mBm)
+[   71.139112] cfg80211:   (5170000 KHz - 5250000 KHz @ 80000 KHz),
+(N/A, 2000 mBm)
+[   71.139114] cfg80211:   (5735000 KHz - 5835000 KHz @ 80000 KHz),
+(N/A, 2000 mBm)
+[   71.139115] cfg80211:   (57240000 KHz - 63720000 KHz @ 2160000
+KHz), (N/A, 0 mBm)
+
+
+>> Then send the dmesg output, no need for all that fluffy intel debug
+>> log as its not useful in this case.
+>
+> Compiled with db.txt in:
+>
+> ~# iw reg set US
+> ~# iw reg get
+> country 00:
+>         (2402 - 2472 @ 40), (6, 20)
+>         (2457 - 2482 @ 40), (6, 20), PASSIVE-SCAN, NO-IBSS
+>         (2474 - 2494 @ 20), (6, 20), NO-OFDM, PASSIVE-SCAN, NO-IBSS
+>         (5170 - 5250 @ 160), (6, 20), PASSIVE-SCAN, NO-IBSS
+>         (5250 - 5330 @ 160), (6, 20), DFS, PASSIVE-SCAN, NO-IBSS
+>         (5490 - 5730 @ 160), (6, 20), DFS, PASSIVE-SCAN, NO-IBSS
+
+This can be from the static world regulatory domain in the kernel, it
+doesn't mean it came from CRDA.
+
+> [    3.862108] cfg80211: Calling CRDA to update world regulatory domain
+
+<-- snip -->
+
+> [    4.818467] cfg80211: Ignoring regulatory request set by core since the driver uses its own custom regulatory domain
+
+<-- snip -->
+
+> [   20.502235] cfg80211: Pending regulatory request, waiting for it to be processed...
+
+<-- snip -->
+
+> [  126.454516] cfg80211: Pending regulatory request, waiting for it to be processed...
+
+It doesn't seem like you are getting your original requests getting
+processed, so I don't think CRDA is passing it. Can you verify running
+from CRDA code:
+
+./regdbdump /usr/lib/crda/regulatory.bin
+
+  Luis
