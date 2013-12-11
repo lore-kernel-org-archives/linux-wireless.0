@@ -1,81 +1,186 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f180.google.com ([209.85.215.180]:43846 "EHLO
-	mail-ea0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754871Ab3LaRQ0 (ORCPT
+Received: from vserver.eikelenboom.it ([84.200.39.61]:41016 "EHLO
+	smtp.eikelenboom.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750971Ab3LKR2O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Dec 2013 12:16:26 -0500
-Received: by mail-ea0-f180.google.com with SMTP id f15so5553287eak.25
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Dec 2013 09:16:25 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 17/28] iwlwifi: mvm: disable the device as soon as RFKILL fires
-Date: Tue, 31 Dec 2013 19:15:46 +0200
-Message-Id: <1388510157-23345-17-git-send-email-egrumbach@gmail.com> (sfid-20131231_183437_947927_209B2559)
-In-Reply-To: <52C2FB68.2010708@gmail.com>
-References: <52C2FB68.2010708@gmail.com>
+	Wed, 11 Dec 2013 12:28:14 -0500
+Date: Wed, 11 Dec 2013 18:28:04 +0100
+From: Sander Eikelenboom <linux@eikelenboom.it>
+Message-ID: <1342235583.20131211182804@eikelenboom.it> (sfid-20131211_182848_720595_CA523AE7)
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+CC: "Berg, Johannes" <johannes.berg@intel.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [cfg80211 / iwlwifi] setting wireless regulatory domain doesn't work.
+In-Reply-To: <CAB=NE6Wf=T0bGLSYPDyb=-fMAVnGcbGkeaBiNrzwV-Lpxr6VZg@mail.gmail.com>
+References: <1507831110.20131018194349@eikelenboom.it> <792757788.20131023142849@eikelenboom.it> <1819533168.20131211161710@eikelenboom.it> <CAB=NE6V-RSnqbAC-0tfYK=WGJLp1aPC2UpFDurs49h+wXr9UfQ@mail.gmail.com> <1818324675.20131211175350@eikelenboom.it> <CAB=NE6Wf=T0bGLSYPDyb=-fMAVnGcbGkeaBiNrzwV-Lpxr6VZg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-The firmware needs to be stopped quickly (100ms) after the
-RFKILL interrupt fired. Failing to do so would allow the
-firmware to access the radio registers which would lead to
-a hardware error.
+Wednesday, December 11, 2013, 6:14:16 PM, you wrote:
 
-Before this change, we would kill the firmware only when
-mac80211 stops the device which can take a fair amount of
-time. Take a shortcut by stopping the device right away
-in the interrupt.
+> On Wed, Dec 11, 2013 at 5:53 PM, Sander Eikelenboom
+> <linux@eikelenboom.it> wrote:
+>>
+>> Wednesday, December 11, 2013, 4:38:13 PM, you wrote:
+>>
+>>> On Wed, Dec 11, 2013 at 4:17 PM, Sander Eikelenboom
+>>> <linux@eikelenboom.it> wrote:
+>>>> Since i haven't got a response to this yet and after having the troubled machine back:
+>>>> The problem is still present in linux 3.13-rc3
+>>
+>>> Keep in mind regulatory hints for Intel or Atheros cards do nothing
+>>> other than help compliance further given that the cards already have
+>>> their own regulatory data, the user input / hint is only going to
+>>> reduce the card's channels further.
+>>
+>> So in essence what you are saying is that the firmware/eeprom already dictates the limited channels available based on .. errr .. yeah based on what ...
 
-This is not relevant if the current firmware is INIT
-firmware since that firmware can run while in RFKILL.
+> Whatever the device was programmed with but in practice my
+> understanding is Intel only sells hardware for a few regions so they
+> have only a few custom world regulatory domains, so that is used upon
+> initialization. Having the capability to actually work properly on a
+> different set of regions with optimal power and performance without
+> violating regulatory is a challenge and this is why cards are either
+> region specific or built / optimized for a few regions or a general
+> world roaming card. Channels is just one thing to consider, there are
+> tons of other things to consider and this will be very card and
+> hardware specific.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/ops.c  |    2 ++
- drivers/net/wireless/iwlwifi/mvm/scan.c |    9 +++++++--
- 2 files changed, 9 insertions(+), 2 deletions(-)
+>> And setting the regulatory domain yourself only limits this list of limited channels available only further ?
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
-index a362430..d6b96ca 100644
---- a/drivers/net/wireless/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
-@@ -665,6 +665,8 @@ static void iwl_mvm_set_hw_rfkill_state(struct iwl_op_mode *op_mode, bool state)
- 	else
- 		clear_bit(IWL_MVM_STATUS_HW_RFKILL, &mvm->status);
- 
-+	if (state && mvm->cur_ucode != IWL_UCODE_INIT)
-+		iwl_trans_stop_device(mvm->trans);
- 	wiphy_rfkill_set_hw_state(mvm->hw->wiphy, iwl_mvm_is_radio_killed(mvm));
- }
- 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
-index 4ce9bb5..71718a81 100644
---- a/drivers/net/wireless/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
-@@ -473,13 +473,18 @@ void iwl_mvm_cancel_scan(struct iwl_mvm *mvm)
- 	if (mvm->scan_status == IWL_MVM_SCAN_NONE)
- 		return;
- 
-+	if (iwl_mvm_is_radio_killed(mvm)) {
-+		ieee80211_scan_completed(mvm->hw, true);
-+		mvm->scan_status = IWL_MVM_SCAN_NONE;
-+		return;
-+	}
-+
- 	iwl_init_notification_wait(&mvm->notif_wait, &wait_scan_abort,
- 				   scan_abort_notif,
- 				   ARRAY_SIZE(scan_abort_notif),
- 				   iwl_mvm_scan_abort_notif, NULL);
- 
--	ret = iwl_mvm_send_cmd_pdu(mvm, SCAN_ABORT_CMD,
--				   CMD_SYNC | CMD_SEND_IN_RFKILL, 0, NULL);
-+	ret = iwl_mvm_send_cmd_pdu(mvm, SCAN_ABORT_CMD, CMD_SYNC, 0, NULL);
- 	if (ret) {
- 		IWL_ERR(mvm, "Couldn't send SCAN_ABORT_CMD: %d\n", ret);
- 		/* mac80211's state will be cleaned in the fw_restart flow */
--- 
-1.7.9.5
+> Yeap, that's the case for Intel Atheros, and I think nowadays new
+> broadcom upstream drivers too. Users should not have to be involved on
+> setting the regulatory domain, everything should just work
+> automatically.
+
+Erhmm yes that works, under the assumption that the device is not leaving the country it was programmed for at the factory.
+(Or you like to be limited in your abilities, channel 12 and 13 are legal here)
+That there is a restriction on boot or on first use, i can understand. Crippling a device for it's life time though.
+
+
+>> I now spotted this from the dmesg:
+>> [    4.818467] cfg80211: Ignoring regulatory request set by core since the driver uses its own custom regulatory domain
+
+> Yeap, that's by design, if a card sets a flag that its has a custom
+> world regulatory domain the first hint from CRDA / internel regdb that
+> updates the world regulatory domain will bet set on cfg80211 but for
+> the wiphy data structure for the drivers that have the custom flag set
+> we'll skip using the regulatory domain for that card as it has its own
+> custom regulatory domain.
+
+>> Joy o joy who ever came up with that great idea ..
+
+> Understand the architecture before making conclusions.
+
+>> Would be nice it that error came up again when you would try to set the domain, instead of silently ignoring it.
+
+> That is not an error message, its a head up and that would only apply
+> for the first update of the world regulatory domain. The regulatory
+> domain settings that a user would do next would be applied but like I
+> said you'd be restricting the device further.
+
+>> So now the only thing left is to try to find out if some one has hacked these bloody cards, what a mess.
+
+> Feel free to hack the living hell out of things, go wild.
+
+>> Do other cards like broadcom or whatever have the same issue ?
+
+> This is a non-issue in so far as hardware is concerned, this is a
+> regulatory thing, if you're unhappy you can lobby for ability to use
+> the spectrum as you wish all over the world. That won't go well, but
+> what may work well is if you can sign off on your responsibility for
+> causing issues. This is important -- consider weather radar channels
+> which are used on 5 GHz and are used to help with airplanes, you can't
+> just take any hardware and go crazy anywhere. There are reasons for
+> this. Upstream ships compliant solutions, what you do in your basement
+> is up to you.
+
+>>>  That said the fact that you are
+>>> not seeing a regulatory domain being set is an issue provided you have
+>>> CRDA installed or use CONFIG_CFG80211_INTERNAL_REGDB. Keep in mind
+>>> that the latest version of wireless-regdb had a signature issue
+>>> reported by users and not sure if that is cleared yet, so that would
+>>> also prevent the wireless-regdb being read even if CRDA was present.
+>>> To rule that out try putting the db.txt into net/wireless/db.txt and
+>>> compile with CONFIG_CFG80211_INTERNAL_REGDB for now.
+>>
+>> I did have CRDA installed (debian).
+>> And also compiled the db.txt in.
+
+> Can you verify that CRDA gets called? You should see something like this:
+
+> [   71.133856] cfg80211: Calling CRDA to update world regulatory domain
+> [   71.139098] cfg80211: World regulatory domain updated:
+> [   71.139102] cfg80211:  DFS Master region: unset
+> [   71.139104] cfg80211:   (start_freq - end_freq @ bandwidth),
+> (max_antenna_gain, max_eirp)
+> [   71.139106] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz),
+> (N/A, 2000 mBm)
+> [   71.139108] cfg80211:   (2457000 KHz - 2482000 KHz @ 40000 KHz),
+> (N/A, 2000 mBm)
+> [   71.139110] cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz),
+> (N/A, 2000 mBm)
+> [   71.139112] cfg80211:   (5170000 KHz - 5250000 KHz @ 80000 KHz),
+> (N/A, 2000 mBm)
+> [   71.139114] cfg80211:   (5735000 KHz - 5835000 KHz @ 80000 KHz),
+> (N/A, 2000 mBm)
+> [   71.139115] cfg80211:   (57240000 KHz - 63720000 KHz @ 2160000
+> KHz), (N/A, 0 mBm)
+
+
+>>> Then send the dmesg output, no need for all that fluffy intel debug
+>>> log as its not useful in this case.
+>>
+>> Compiled with db.txt in:
+>>
+>> ~# iw reg set US
+>> ~# iw reg get
+>> country 00:
+>>         (2402 - 2472 @ 40), (6, 20)
+>>         (2457 - 2482 @ 40), (6, 20), PASSIVE-SCAN, NO-IBSS
+>>         (2474 - 2494 @ 20), (6, 20), NO-OFDM, PASSIVE-SCAN, NO-IBSS
+>>         (5170 - 5250 @ 160), (6, 20), PASSIVE-SCAN, NO-IBSS
+>>         (5250 - 5330 @ 160), (6, 20), DFS, PASSIVE-SCAN, NO-IBSS
+>>         (5490 - 5730 @ 160), (6, 20), DFS, PASSIVE-SCAN, NO-IBSS
+
+> This can be from the static world regulatory domain in the kernel, it
+> doesn't mean it came from CRDA.
+
+>> [    3.862108] cfg80211: Calling CRDA to update world regulatory domain
+
+> <-- snip -->
+
+>> [    4.818467] cfg80211: Ignoring regulatory request set by core since the driver uses its own custom regulatory domain
+
+> <-- snip -->
+
+>> [   20.502235] cfg80211: Pending regulatory request, waiting for it to be processed...
+
+> <-- snip -->
+
+>> [  126.454516] cfg80211: Pending regulatory request, waiting for it to be processed...
+
+> It doesn't seem like you are getting your original requests getting
+> processed, so I don't think CRDA is passing it. Can you verify running
+> from CRDA code:
+
+They don't get processed unless i remove the return from the code as i indicated.
+If i remove that return it processes the request.
+
+> ./regdbdump /usr/lib/crda/regulatory.bin
+
+Although it's in a different location on Debian, /lib/crda/regulatory.bin
+the dump seems fine.
+
+
+>   Luis
+
 
