@@ -1,61 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vserver.eikelenboom.it ([84.200.39.61]:46553 "EHLO
-	smtp.eikelenboom.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753351Ab3LRJZj (ORCPT
+Received: from webmail.solarflare.com ([12.187.104.25]:14316 "EHLO
+	webmail.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750873Ab3LKUor (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Dec 2013 04:25:39 -0500
-Date: Wed, 18 Dec 2013 10:25:31 +0100
-From: Sander Eikelenboom <linux@eikelenboom.it>
-Message-ID: <1652328425.20131218102531@eikelenboom.it> (sfid-20131218_102609_180366_35612131)
-To: Arend van Spriel <arend@broadcom.com>
-CC: Linus Torvalds <torvalds@linux-foundation.org>,
-	Ben Hutchings <ben@decadent.org.uk>,
-	Julian Calaby <julian.calaby@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Wed, 11 Dec 2013 15:44:47 -0500
+Message-ID: <1386794680.1516.249.camel@bwh-desktop.uk.level5networks.com> (sfid-20131211_214451_003969_452989DC)
+Subject: Re: [PATCH v2 01/16] wl1251: fix scan behaviour while not associated
+From: Ben Hutchings <bhutchings@solarflare.com>
+To: Pali =?ISO-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
+CC: Kalle Valo <kvalo@adurom.com>, Pavel Machek <pavel@ucw.cz>,
+	"Luciano Coelho" <luca@coelho.fi>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <avinashapatil@gmail.com>
-Subject: Re: [cfg80211 / iwlwifi] setting wireless regulatory domain doesn't work.
-In-Reply-To: <52B167F6.5060209@broadcom.com>
-References: <1342235583.20131211182804@eikelenboom.it> <CAB=NE6UfumA2xez1DvtDSBDZ72WF_tOozFo_8LRnMryYiSqD-A@mail.gmail.com> <871324710.20131211191104@eikelenboom.it> <CAB=NE6XRnE0j9NMW0K1vKzEO9v70arSH4YXZjudqa0ZxiLB4AA@mail.gmail.com> <1937118387.20131216122200@eikelenboom.it> <52AEE60B.6030509@broadcom.com> <19210260274.20131216135644@eikelenboom.it> <CAGRGNgXHemM2FfnXgW5RbzhFT+9SfUfVkjdysK3+=_u3hWSacw@mail.gmail.com> <1534126119.20131217104548@eikelenboom.it> <387552477.20131217213319@eikelenboom.it> <20131217212709.GB5624@decadent.org.uk> <1254825772.20131217224914@eikelenboom.it> <CA+55aFxQg6=MAWEkEGz64Hz8OawvPyX=fpBOjY8cGBL5XgB9WQ@mail.gmail.com> <52B167F6.5060209@broadcom.com>
+	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <freemangordon@abv.bg>,
+	<aaro.koskinen@iki.fi>, <sre@ring0.de>,
+	<joni.lapilainen@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Felipe Contreras <felipe.contreras@gmail.com>,
+	David Gnedt <david.gnedt@davizone.at>
+Date: Wed, 11 Dec 2013 20:44:40 +0000
+In-Reply-To: <201312101808.44713@pali>
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+	 <20131210092114.GB22756@amd.pavel.ucw.cz>
+	 <8738m0r9wv.fsf@purkki.adurom.net> <201312101808.44713@pali>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2013-12-10 at 18:08 +0100, Pali Rohár wrote:
+> On Tuesday 10 December 2013 16:41:04 Kalle Valo wrote:
+> > Pavel Machek <pavel@ucw.cz> writes:
+> > > ssids can have \0s in them... and what is worse, they may
+> > > not be 0 terminated AFAICT.
+> > > 
+> > > Potential solution is at
+> > > http://www.spinics.net/lists/linux-wireless/msg98640.html .
+> > 
+> > I just use print_hex_dump_bytes() to print SSIDs.
+> 
+> Ok and has kernel printf modifier for size_t?
 
-Wednesday, December 18, 2013, 10:16:38 AM, you wrote:
+It is 'z', same as in userland.
 
-> On 12/17/2013 11:06 PM, Linus Torvalds wrote:
->> We have literally had this *exact* same issue with firmware loading.
->> Network drivers shouldn't try to load firmware at module load time.
->> Same deal.
+Ben.
 
-> It is kind of a chicken and egg problem for (wireless) networking
-> drivers. To get IFF_UP from the network layer you have to register a
-> netdevice. For wireless drivers this means you have to register a wiphy
-> device with cfg80211 which flags capabilities and optionally are custom
-> regulatory domain. That information depends on the device and firmware
-> used. And there we have a full circle.
-
-Very well, but:
-
-If it can't access the CRDA and it is setting the world domain, why on earth is it blocking any
-subsequent requests to setting the regulatory domain from userspace when the CRDA *is* accessible ?
-
-I mean, i could see the need to do something *temporary* at boot when accessing the CRDA fails and to take the most
-safe default for the time being ..
-
-The BUG is that it is NOT temporary, but blocking until next reboot because the first request wasn't completely processed.
-My hostapd will try to set the domain when it starts and at that point the CRDA is accessible, so it would set it from the temporary
-domain to the one specified, as long as it isn't blocking.
-
-> Regards,
-> Arend
-
+-- 
+Ben Hutchings, Staff Engineer, Solarflare
+Not speaking for my employer; that's the marketing department's job.
+They asked us to note that Solarflare product names are trademarked.
 
