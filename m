@@ -1,83 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f171.google.com ([209.85.216.171]:36969 "EHLO
-	mail-qc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753313Ab3LRMwn (ORCPT
+Received: from vserver.eikelenboom.it ([84.200.39.61]:41744 "EHLO
+	smtp.eikelenboom.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750922Ab3LKTG5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Dec 2013 07:52:43 -0500
-Date: Wed, 18 Dec 2013 10:52:36 -0200
-From: Gustavo Padovan <gustavo@padovan.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: bluetooth 2013-12-18
-Message-ID: <20131218125236.GA1376@joana> (sfid-20131218_135257_451655_07FD2278)
+	Wed, 11 Dec 2013 14:06:57 -0500
+Date: Wed, 11 Dec 2013 20:06:51 +0100
+From: Sander Eikelenboom <linux@eikelenboom.it>
+Message-ID: <716357837.20131211200651@eikelenboom.it> (sfid-20131211_200723_352970_BE753D4C)
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+CC: "Berg, Johannes" <johannes.berg@intel.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [cfg80211 / iwlwifi] setting wireless regulatory domain doesn't work.
+In-Reply-To: <CAB=NE6XRnE0j9NMW0K1vKzEO9v70arSH4YXZjudqa0ZxiLB4AA@mail.gmail.com>
+References: <1507831110.20131018194349@eikelenboom.it> <792757788.20131023142849@eikelenboom.it> <1819533168.20131211161710@eikelenboom.it> <CAB=NE6V-RSnqbAC-0tfYK=WGJLp1aPC2UpFDurs49h+wXr9UfQ@mail.gmail.com> <1818324675.20131211175350@eikelenboom.it> <CAB=NE6Wf=T0bGLSYPDyb=-fMAVnGcbGkeaBiNrzwV-Lpxr6VZg@mail.gmail.com> <1342235583.20131211182804@eikelenboom.it> <CAB=NE6UfumA2xez1DvtDSBDZ72WF_tOozFo_8LRnMryYiSqD-A@mail.gmail.com> <871324710.20131211191104@eikelenboom.it> <CAB=NE6XRnE0j9NMW0K1vKzEO9v70arSH4YXZjudqa0ZxiLB4AA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="Dxnq1zWXvFF0Q93v"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---Dxnq1zWXvFF0Q93v
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Wednesday, December 11, 2013, 7:38:50 PM, you wrote:
 
-Hi John,
+> On Wed, Dec 11, 2013 at 7:11 PM, Sander Eikelenboom
+> <linux@eikelenboom.it> wrote:
+>>
+>> Wednesday, December 11, 2013, 6:53:07 PM, you wrote:
+>>
+>>> The best way to address all this is by automatic region awareness and
+>>> doing the right thing on devices, this however requires good
+>>> architecture / calibration data  / etc and all that needs to be
+>>> verified by the system integrators, and finally they need to be
+>>> certified. If you want to hack your firmware and software go at it,
+>>> just be aware there are reasons for things.
+>>
+>> Well the general problem seems to be "we don't trust the user" so we FORCE him to the lowest
+>> common denominator (without a way to overrule that) so he is forced to operate *well* within the law.
 
-Two patches in this pull request. An important fix from Marcel in the
-permission check for HCI User Channels, there was a extra check for
-CAP_NET_RAW, and it was now removed. These channels should only require
-CAP_NET_ADMIN. The other patch is a device id addition.
+> Its simply stupid to have the user be involved, period, the fact that
+> a user would be involved should only be for testing or helping
+> compliance for a busted device, development, research and obviously
+> hacking. Linux allows all these but by default a device with firmware
+> and a custom regdomain that will barf if you try to use a channel that
+> is not allowed is a restriction in firmware. Feel free to reverse
+> engineer that if you don't like it but it just won't be supported or
+> go upstream. Now, the common denominator is generally optimized for
+> best performance as well so you shouldn't have to do anything, and for
+> APs -- this is typically carefully crafted for a region, also highly
+> optimized.
 
-Please pull or let me know of any problems! Thanks.
+Well how about a car maker shipping al his cars capped to say 10 miles an hour,
+because somewhere in the world that's the lowest. So to prevent you from breaking the law
+we will cap your 500HP engine, owh in your country you have a higher speedlimit, ah wel bad luck for you then.
+We need to enforce this so no one is going to brake any law any where.
 
-        Gustavo
-
----
-The following changes since commit eafbdde9c5629bea58df07275c5917eb42afbbe7:
-
-  rtlwifi: rtl8192cu: Fix more pointer arithmetic errors (2013-11-15 14:29:33 -0500)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth.git for-upstream
-
-for you to fetch changes up to 1bc5ad168f441f6f8bfd944288a5f7b4963ac1f6:
-
-  Bluetooth: Fix HCI User Channel permission check in hci_sock_sendmsg (2013-12-17 13:47:27 +0200)
-
-----------------------------------------------------------------
-Marcel Holtmann (1):
-      Bluetooth: Fix HCI User Channel permission check in hci_sock_sendmsg
-
-Marco Piazza (1):
-      Bluetooth: Add support for Toshiba Bluetooth device [0930:0220]
-
- drivers/bluetooth/ath3k.c |  2 ++
- drivers/bluetooth/btusb.c |  1 +
- net/bluetooth/hci_sock.c  | 26 ++++++++++++++++----------
- 3 files changed, 19 insertions(+), 10 deletions(-)
+It's just plain stupid in my opinion (but not something linux can do much about, but it's about enforcing this stuff in firmware in general
+and thinking too much for the user (fine if you are capable to do so, but in this case clearly not, since there is no automatic way to detect in which country the device is,
+except by relying on user input).
+Why just don't set the safe and restricted value on boot and let the user overrule that if he wishes.
+(that means the user has to invoke a action, so he also should be aware of the consequences).
 
 
---Dxnq1zWXvFF0Q93v
-Content-Type: application/pgp-signature
+>>>>> It doesn't seem like you are getting your original requests getting
+>>>>> processed, so I don't think CRDA is passing it. Can you verify running
+>>>>> from CRDA code:
+>>>>
+>>>> They don't get processed unless i remove the return from the code as i indicated.
+>>>> If i remove that return it processes the request.
+>>>>
+>>>>> ./regdbdump /usr/lib/crda/regulatory.bin
+>>>>
+>>>> Although it's in a different location on Debian, /lib/crda/regulatory.bin
+>>>> the dump seems fine.
+>>
+>>> OK thanks. Can you send a patch of what exact change you made, it was
+>>> unclear from the paste you made.
+>>
+>>> diff -u file.c.orig file.c
+>>
+>> Well i just did a pull from wireless-next, to try Avinash Patil's patch.
+>> net/wireless/reg.c had already changed much so i couldn't apply his patch without.
+>>
+>> With his patch it sets the regulatory domain, although as now expected i still can not use channels 12 and 13 yet,
+>> probably due to those firmware restrictions.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.15 (GNU/Linux)
+> Its unclear what results you got, and yeah if the device is restricted
+> then its just the fw telling the driver its channels and you can't use
+> them. That's it. You won't be able to override information then unless
+> you hack the firmware.
 
-iQIcBAEBAgAGBQJSsZqUAAoJEPs3PUX4s20oc+wQALE4nVpiebImQrqwbmxPKvfW
-3iq8A+0/7FAN3HkwBV3eZcxAkDcxWUH+Gpk4yYfQBgFyEk+cZRP3sZ8ueK7pyw0e
-af6EQ1DQReO1ESqquuwg7FKmAReCSsQD7SMOf6lgajcPIaD0K+qBZh0U7umbXsYH
-5vIbwvdmoYbbShs+gknbJKjoRyceYCe1hZ7a6AenlgUOtT7i6bLNPSO6Jew2s9p8
-V7XVrHRmQOtIdRGW0HtiJLUWvaI7cuxU1FIgTFAyawWG/OmB2wZ8zE/UIBWjB/35
-JM5JaYgWMKIJuWmn9vgMigCmRy7MnTCnhQ9c8YhY+Xp/IC73tONmAhdimEL4g8hO
-9lj0kbgOPcRBVpDbFBruesFUm/QU1cOkT6ojcqbgdL+QvsI2R3vDUj6U5X26v9xv
-VcMAnOSBcClgeZNvd6NDe9IVdgpZgKYnqZ8xYd+yg0ca4c8SE/TXY3HMcf8m2KY3
-ZIHcWP4YqqSVU8MwoYiL9mXX7/m9QOZ6SY0RlUXN449bftIuSvrxIlaexp+rwufB
-13+MmL611U1LXX4Dz4JSMfm/WkTZB5iNDwjdkSgnBkvfai3RjTUcBVsz9UwGeTIE
-X69dFEvzD4I0JgaEHeRY3lisJKLhTm+t1b2b2agYirIssLKpYWqc9A41IVOqUp1W
-VuUrjMLWcK4foa8d7YHZ
-=yAmU
------END PGP SIGNATURE-----
+Without the patch:
 
---Dxnq1zWXvFF0Q93v--
+- "iw reg get" gives country 00
+- now do a "iw reg set US", no error so it should be fine
+- now do a "iw reg get" .. gives country 00 again, so it has not been set to the country requested.
+
+With the patch:
+
+- "iw reg get" gives country 00
+- now do a "iw reg set US", no error so it should be fine
+- now do a "iw reg get" .. gives country US, so it has been set to the country requested.
+
+>   Luis
+
+
