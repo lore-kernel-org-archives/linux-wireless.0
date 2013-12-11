@@ -1,107 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:35795 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752592Ab3LRE2a (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:57695 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751390Ab3LKRjH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Dec 2013 23:28:30 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 05/10] ath9k: Update BaseExtension_1 eeprom structure
-Date: Wed, 18 Dec 2013 09:53:22 +0530
-Message-Id: <1387340607-20045-6-git-send-email-sujith@msujith.org> (sfid-20131218_052916_540854_F1E5A3CA)
-In-Reply-To: <1387340607-20045-1-git-send-email-sujith@msujith.org>
-References: <1387340607-20045-1-git-send-email-sujith@msujith.org>
+	Wed, 11 Dec 2013 12:39:07 -0500
+Received: by mail-wi0-f178.google.com with SMTP id bz8so1236510wib.17
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Dec 2013 09:39:04 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20131207035407.GA19456@pe-lt052.marvell.com>
+References: <20131207035407.GA19456@pe-lt052.marvell.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Wed, 11 Dec 2013 18:38:44 +0100
+Message-ID: <CAB=NE6Xs7mgp6oM4VTXHjKGgPnsPz5v=2O4LwPKu=Cm4V4P7fw@mail.gmail.com> (sfid-20131211_183955_925811_0F6E5815)
+Subject: Re: [RFC] cfg80211: set regulatory request processed for initiator core
+To: Avinash Patil <patila@marvell.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Sat, Dec 7, 2013 at 4:54 AM, Avinash Patil <patila@marvell.com> wrote:
+> During cfg80211 init, cfg80211 initializes regulatory to set to
+> world domain. Here we dont set last request processed flag.
+> This results into further request set to pending indefinitely.
+>
+> This patch fixes this by setting last request to processed.
+>
+> Signed-off-by: Avinash Patil <patila@marvell.com>
+> ---
+>  net/wireless/reg.c |    2 ++
+>  1 files changed, 2 insertions(+), 0 deletions(-)
+>
+> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> index ec54e1a..70a8f0a 100644
+> --- a/net/wireless/reg.c
+> +++ b/net/wireless/reg.c
+> @@ -1670,6 +1670,8 @@ static void reg_process_hint(struct regulatory_request *reg_request)
+>         switch (reg_request->initiator) {
+>         case NL80211_REGDOM_SET_BY_CORE:
+>                 reg_process_hint_core(reg_request);
+> +               nl80211_send_reg_change_event(reg_request);
+> +               reg_set_request_processed();
+>                 return;
+>         case NL80211_REGDOM_SET_BY_USER:
+>                 treatment = reg_process_hint_user(reg_request);
 
-* Add a new field "misc_enable"
-* Use int_8 for tempslopextension.
+NACK, the reg_process_hint() is supposed to *process* a request, and
+then call the internal regdb if its there and also call CRDA. Later
+whoever sends the regulatory domain and gets cfg80211 to process it
+will have reg_set_request_processed() called.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 10 +++++-----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.h | 14 ++++++++++++--
- 2 files changed, 17 insertions(+), 7 deletions(-)
+Can you verify if CRDA is sending the regulatory domains to cfg80211?
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 86baa20..d9e09bf 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -139,7 +139,7 @@ static const struct ar9300_eeprom ar9300_default = {
- 	 },
- 	.base_ext1 = {
- 		.ant_div_control = 0,
--		.future = {0, 0, 0},
-+		.future = {0, 0},
- 		.tempslopextension = {0, 0, 0, 0, 0, 0, 0, 0}
- 	},
- 	.calFreqPier2G = {
-@@ -717,7 +717,7 @@ static const struct ar9300_eeprom ar9300_x113 = {
- 	 },
- 	 .base_ext1 = {
- 		.ant_div_control = 0,
--		.future = {0, 0, 0},
-+		.future = {0, 0},
- 		.tempslopextension = {0, 0, 0, 0, 0, 0, 0, 0}
- 	 },
- 	.calFreqPier2G = {
-@@ -1296,7 +1296,7 @@ static const struct ar9300_eeprom ar9300_h112 = {
- 	},
- 	.base_ext1 = {
- 		.ant_div_control = 0,
--		.future = {0, 0, 0},
-+		.future = {0, 0},
- 		.tempslopextension = {0, 0, 0, 0, 0, 0, 0, 0}
- 	},
- 	.calFreqPier2G = {
-@@ -1875,7 +1875,7 @@ static const struct ar9300_eeprom ar9300_x112 = {
- 	},
- 	.base_ext1 = {
- 		.ant_div_control = 0,
--		.future = {0, 0, 0},
-+		.future = {0, 0},
- 		.tempslopextension = {0, 0, 0, 0, 0, 0, 0, 0}
- 	},
- 	.calFreqPier2G = {
-@@ -2453,7 +2453,7 @@ static const struct ar9300_eeprom ar9300_h116 = {
- 	 },
- 	 .base_ext1 = {
- 		.ant_div_control = 0,
--		.future = {0, 0, 0},
-+		.future = {0, 0},
- 		.tempslopextension = {0, 0, 0, 0, 0, 0, 0, 0}
- 	 },
- 	.calFreqPier2G = {
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-index 0e5daa5..694ca2e 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-@@ -270,10 +270,20 @@ struct cal_ctl_data_5g {
- 	u8 ctlEdges[AR9300_NUM_BAND_EDGES_5G];
- } __packed;
- 
-+#define MAX_BASE_EXTENSION_FUTURE 2
-+
- struct ar9300_BaseExtension_1 {
- 	u8 ant_div_control;
--	u8 future[3];
--	u8 tempslopextension[8];
-+	u8 future[MAX_BASE_EXTENSION_FUTURE];
-+	/*
-+	 * misc_enable:
-+	 *
-+	 * BIT 0   - TX Gain Cap enable.
-+	 * BIT 1   - Uncompressed Checksum enable.
-+	 * BIT 2/3 - MinCCApwr enable 2g/5g.
-+	 */
-+	u8 misc_enable;
-+	int8_t tempslopextension[8];
- 	int8_t quick_drop_low;
- 	int8_t quick_drop_high;
- } __packed;
--- 
-1.8.5.1
-
+  Luis
