@@ -1,70 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:52525 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756765Ab3LEPpd (ORCPT
+Received: from mail-pb0-f51.google.com ([209.85.160.51]:45247 "EHLO
+	mail-pb0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750814Ab3LKEev (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 10:45:33 -0500
-Message-ID: <1386258330.4182.11.camel@jlt4.sipsolutions.net> (sfid-20131205_164536_836909_DD19B182)
-Subject: Re: [PATCH 4/4] cfg80211: prevent race condition on scan request
- cleanup
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 05 Dec 2013 16:45:30 +0100
-In-Reply-To: <CAB3XZEc4pikahyAmPCh_pCjFEiRvFgAyZgxGrbH9A6hLP2nhFw@mail.gmail.com> (sfid-20131205_163919_049659_09596AAD)
-References: <1386235289-27278-1-git-send-email-eliad@wizery.com>
-	 <1386235289-27278-4-git-send-email-eliad@wizery.com>
-	 <1386253879.4182.4.camel@jlt4.sipsolutions.net>
-	 <CAB3XZEcpM9PAQCGQ99X2A-bqYXoPEmE=Cg29CDKY7=s8QquwUA@mail.gmail.com>
-	 <1386254607.4182.5.camel@jlt4.sipsolutions.net>
-	 <CAB3XZEc4pikahyAmPCh_pCjFEiRvFgAyZgxGrbH9A6hLP2nhFw@mail.gmail.com>
-	 (sfid-20131205_163919_049659_09596AAD)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 10 Dec 2013 23:34:51 -0500
+Received: by mail-pb0-f51.google.com with SMTP id up15so9202659pbc.10
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Dec 2013 20:34:50 -0800 (PST)
+Message-ID: <52A7EB67.7090808@lwfinger.net> (sfid-20131211_053454_736728_84048DE5)
+Date: Tue, 10 Dec 2013 22:34:47 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Kam <kampowchicken@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: rtl8723ae owner.
+References: <loom.20131211T021101-974@post.gmane.org> <52A7DC0C.8090902@lwfinger.net> <loom.20131211T045200-389@post.gmane.org>
+In-Reply-To: <loom.20131211T045200-389@post.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-12-05 at 17:39 +0200, Eliad Peller wrote:
-> On Thu, Dec 5, 2013 at 4:43 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> > On Thu, 2013-12-05 at 16:36 +0200, Eliad Peller wrote:
-> >> On Thu, Dec 5, 2013 at 4:31 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> >> > On Thu, 2013-12-05 at 11:21 +0200, Eliad Peller wrote:
-> >> >
-> >> >> @@ -219,8 +221,13 @@ void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev, bool leak)
-> >> >>        * the scan request or not ... if it accesses the dev
-> >> >>        * in there (it shouldn't anyway) then it may crash.
-> >> >>        */
-> >> >> -     if (!leak)
-> >> >> -             kfree(request);
-> >> >> +     if (leak) {
-> >> >> +             request->pending_cleanup = true;
-> >> >> +             return;
-> >> >
-> >> > This seems insufficient, if the driver never indicates completion, we'd
-> >> > never clear rdev->scan_req?
-> >> >
-> >> right, but i think it somehow makes sense (i.e. the driver must
-> >> indicate completion...)?
-> >
-> > But the whole thing was intended to catch buggy drivers :)
-> >
-> yeah, you have a point here :)
-> anyway, i guess it's either leaking scan_req and hoping the driver
-> really forgot about it, or keeping it and hoping the driver will
-> finally indicate completion.
-> 
-> since i don't think this is a real-world scenario, i'm ok with
-> dropping this patch.
+On 12/10/2013 10:19 PM, Kam wrote:
+> Larry Finger <Larry.Finger@...> writes:
+>
+>>
+>> On 12/10/2013 07:42 PM, Kam wrote:
+>>> I have the rtl8723ae PCIe wifi card. I've read through the messages on the
+>>> forums and experience similar issues to others who have inquired about the
+>>> card. I experience sluggish connections and disconnects, I for the most
+>>> can't connect to my school wifi at all.
+>>>
+>>> I switched my router to 'AP' today after reading through the posts here and
+>>> initially the connection was faster than I've experienced thus far(since
+>>> switching to linux last year), I ended up shutting down the computer
+>>> eventually and after turning it back on few hours later, It was back to the
+>>> slow sluggish connection.
+>>
+>> What does switching the router to 'AP' mean? If it was not an AP before, you
+>> would never have been able to connect to it.
+>>
+>>> I've collected all the output that I could think of and wanted to contribute
+>>> it in hopes that it can assist the devs in testing/debugging the issues with
+>>> the card. The text file is a little but over 800 lines, so I will post it on
+>>> fpaste, if this isn't acceptable please let me know and I will repost the
+>>> text in preferred format. I am about ready to smoke the beacons off this
+>>> thing :P.
+>>
+>> One thing missing in what you posted is any messages from dmesg that describe
+>> the disconnects.
+>>
+>> The only thing I noted in your posting is that your channel is about as badly
+>> chosen as is possible. Wifi is not like TV. The channel spacing is 5 MHz, but
+>> the width for 802.11g is 20 MHz, and 802.11n is 40 MHz. If you do the
+> math, your
+>> choice of channel 9 overlaps *every* AP in your neighborhood. At -60 dBm,
+> your
+>> signal is not strong, and is even weaker than Home2.
+>>
+>> I would choose a channel as low as possible. That would be #1 for 802.11g.
+> Your
+>> AP may not allow lower than #3 for 802.11n.
+>>
+>> Next, you might try loading the module with the option "ips=0". That will
+>> disable power save mode, and it might help.
+>>
+>> I have been running a long-term test of rtl8723ae. After 100 hours, I have
+> had a
+>> total of 11 disconnects. Each of them has reconnected with very little
+>> interruption in service. The difference is that my channel is chosen to
+> have as
+>> little interference as possible, and my signal strength is -44 dBm.
+>>
+>> Larry
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@...
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>>
+>
+>
+>
+> Thank you for the prompt response, I really appreciate it. And I would like
+> to apologize ahead of time in case I mess up the format.
+>
+>> What does switching the router to 'AP' mean? If it was not an AP before, you
+>> would never have been able to connect to it.
+>
+> Unfortunately my router has a check box under Advanced > Advanced Setup >
+> Wireless Settings that switches the router to AP Mode. I looked into the
+> manual after seeing the posting here and it's how I discovered it. It was
+> never checked until today.
+>
+>>From the manual:
+> "AP Mode. You can make the WNDR3400v2 function as an access point."
+> Page 77:
+> http://www.downloads.netgear.com/files/GDC/WNDR3400V2/WNDR3400v2_UM_23JAN2013.pdf
 
-Well, it can be made to crash, so ...
+I also have a WNDR3400V2, which has been functional as a 2.4/5 GHz AP for the 
+two years that I have owned it, and that box has never been checked. I have no 
+idea what might be its effect, but it certainly was an AP before you checked 
+that box.
 
-Can we maybe avoid the crash in a different way? Disallow a new scan
-somehow?
+>> The only thing I noted in your posting is that your channel is about as badly
+>> chosen as is possible.
+>
+> Channel selection isn't done by me, it is set to "auto" mode at the router
+> settings which explains that it will choose the best channel. I appreciate
+> you pointing that out because now it will give me more options to play
+> around with. I have seen the ips posting else where and will test this once
+> I configure the channel. Thank you.
 
-> > Btw, should any of this go to 3.13?
-> maybe the first one. it's the only "real" issue.
+I never select the auto channel selection. You never know what strong sources in 
+your neighborhood might be off when it makes the choice.
 
-Thanks.
-
-johannes
+Larry
 
