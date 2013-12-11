@@ -1,37 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:55079 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750926Ab3LMIgh (ORCPT
+Received: from webmail.solarflare.com ([12.187.104.25]:22828 "EHLO
+	webmail.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751230Ab3LKWPl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Dec 2013 03:36:37 -0500
-Message-ID: <52AAC6AA.2030609@broadcom.com> (sfid-20131213_093644_750577_A3C28A5F)
-Date: Fri, 13 Dec 2013 09:34:50 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Wed, 11 Dec 2013 17:15:41 -0500
+Message-ID: <1386800135.1516.296.camel@bwh-desktop.uk.level5networks.com> (sfid-20131211_231602_583269_301EBA57)
+Subject: Re: Re: [PATCH v2 15/16] wl1251: Add sysfs file address for setting
+ permanent mac address
+From: Ben Hutchings <bhutchings@solarflare.com>
+To: Ivajlo Dimitrov <ivo.g.dimitrov.75@gmail.com>
+CC: Pali =?ISO-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>,
+	Dan Williams <dcbw@redhat.com>, Kalle Valo <kvalo@adurom.com>,
+	Luciano Coelho <luca@coelho.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <freemangordon@abv.bg>,
+	<aaro.koskinen@iki.fi>, <pavel@ucw.cz>, <sre@ring0.de>,
+	<joni.lapilainen@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Felipe Contreras <felipe.contreras@gmail.com>
+Date: Wed, 11 Dec 2013 22:15:35 +0000
+In-Reply-To: <52A8DA9A.50501@gmail.com>
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+		 <201312101814.35112@pali> <1386697762.30202.6.camel@dcbw.foobar.com>
+		 <201312101852.17030@pali>
+	 <1386796654.1516.268.camel@bwh-desktop.uk.level5networks.com>
+	 <52A8DA9A.50501@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-To: Naughtboy <skylvlinux@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: where can download bcm4323 linux driver code!!
-References: <CAKH5=LuNMoNro0U6vU5Mp8vjeceHAhWhbb-P2ZDsR4j_A0f-JA@mail.gmail.com>
-In-Reply-To: <CAKH5=LuNMoNro0U6vU5Mp8vjeceHAhWhbb-P2ZDsR4j_A0f-JA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/13/2013 03:07 AM, Naughtboy wrote:
-> hell big guys
-> now i have a usbdognle  bcm4323
-> but i did'nt have it driver code (linux)
-> if you kown it , please let'us kown it
-> thanks adanvce!!
+On Wed, 2013-12-11 at 23:35 +0200, Ivajlo Dimitrov wrote:
+> On 11.12.2013 23:17, Ben Hutchings wrote:
+> > I think that's an even worse idea.  This is not firmware and it already
+> > exists in separate storage.
+> >
+> > I think that rx51_init_wl1251() in
+> > arch/arm/mach-omap2/board-rx51-peripherals.c should either copy the MAC
+> > address out of NVRAM, or if it's too early to do that, then schedule a
+> > function to run later and only then set up wl1251 platform data.
+> >
+> > Ben.
+> >
+> 
+> And how will that work with DT when board files will be in the history?
 
-Nice haiku :-p. I will respond later.
+1. Boot loader reads the MAC address from NVRAM and puts it in the DT
+node.
+or
+2. NVRAM reading is done by a tiny driver that is loaded based on the
+platform name and updates the DT node in memory.  (But I don't know how
+wl1251 should decide to defer probing if it's probed before that other
+driver.)
 
-Regards,
-Arend
+Ben.
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+-- 
+Ben Hutchings, Staff Engineer, Solarflare
+Not speaking for my employer; that's the marketing department's job.
+They asked us to note that Solarflare product names are trademarked.
 
