@@ -1,60 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f175.google.com ([209.85.215.175]:37259 "EHLO
-	mail-ea0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751993Ab3LQUpF (ORCPT
+Received: from mail-we0-f169.google.com ([74.125.82.169]:53065 "EHLO
+	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751508Ab3LKSDH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Dec 2013 15:45:05 -0500
-Received: by mail-ea0-f175.google.com with SMTP id z10so3123080ead.6
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Dec 2013 12:45:04 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eliad Peller <eliad@wizery.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 14/36] iwlwifi: mvm: configure phy_ctxt with min_def
-Date: Tue, 17 Dec 2013 22:44:17 +0200
-Message-Id: <1387313079-28123-14-git-send-email-egrumbach@gmail.com> (sfid-20131217_214514_775019_AE7ABE68)
-In-Reply-To: <52B0B72A.5070704@gmail.com>
-References: <52B0B72A.5070704@gmail.com>
+	Wed, 11 Dec 2013 13:03:07 -0500
+MIME-Version: 1.0
+In-Reply-To: <CAB=NE6UfumA2xez1DvtDSBDZ72WF_tOozFo_8LRnMryYiSqD-A@mail.gmail.com>
+References: <1507831110.20131018194349@eikelenboom.it> <792757788.20131023142849@eikelenboom.it>
+ <1819533168.20131211161710@eikelenboom.it> <CAB=NE6V-RSnqbAC-0tfYK=WGJLp1aPC2UpFDurs49h+wXr9UfQ@mail.gmail.com>
+ <1818324675.20131211175350@eikelenboom.it> <CAB=NE6Wf=T0bGLSYPDyb=-fMAVnGcbGkeaBiNrzwV-Lpxr6VZg@mail.gmail.com>
+ <1342235583.20131211182804@eikelenboom.it> <CAB=NE6UfumA2xez1DvtDSBDZ72WF_tOozFo_8LRnMryYiSqD-A@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Wed, 11 Dec 2013 19:02:45 +0100
+Message-ID: <CAB=NE6WWWhe4_oPrWPtHn3VzEqk0k1qWdYvYxL=vSm2JVScMmg@mail.gmail.com> (sfid-20131211_190334_501649_67368B82)
+Subject: Re: [cfg80211 / iwlwifi] setting wireless regulatory domain doesn't work.
+To: Sander Eikelenboom <linux@eikelenboom.it>
+Cc: "Berg, Johannes" <johannes.berg@intel.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+Also can you try with wireless-testing ?
 
-Configure the phy context to the minimum required
-bandwidth, given by ctx->min_def.
-
-Tuning to a narrower bandwidth should reduce the
-noise level and consume less power.
-
-Signed-off-by: Eliad Peller <eliad@wizery.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mac80211.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 01b58fc..fbd3114 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -1608,7 +1608,7 @@ static int iwl_mvm_add_chanctx(struct ieee80211_hw *hw,
- 		goto out;
- 	}
- 
--	ret = iwl_mvm_phy_ctxt_changed(mvm, phy_ctxt, &ctx->def,
-+	ret = iwl_mvm_phy_ctxt_changed(mvm, phy_ctxt, &ctx->min_def,
- 				       ctx->rx_chains_static,
- 				       ctx->rx_chains_dynamic);
- 	if (ret) {
-@@ -1652,7 +1652,7 @@ static void iwl_mvm_change_chanctx(struct ieee80211_hw *hw,
- 		return;
- 
- 	mutex_lock(&mvm->mutex);
--	iwl_mvm_phy_ctxt_changed(mvm, phy_ctxt, &ctx->def,
-+	iwl_mvm_phy_ctxt_changed(mvm, phy_ctxt, &ctx->min_def,
- 				 ctx->rx_chains_static,
- 				 ctx->rx_chains_dynamic);
- 	iwl_mvm_bt_coex_vif_change(mvm);
--- 
-1.7.9.5
-
+  Luis
