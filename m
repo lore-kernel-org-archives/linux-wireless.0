@@ -1,35 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:40864 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752842Ab3LaPax (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Dec 2013 10:30:53 -0500
-From: Ilan Peer <ilan.peer@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Ilan Peer <ilan.peer@intel.com>
-Subject: [PATCH 0/2] modify the inclusion of supported channels IE
-Date: Tue, 31 Dec 2013 17:32:24 +0200
-Message-Id: <1388503946-25862-1-git-send-email-ilan.peer@intel.com> (sfid-20131231_163057_240832_93C05121)
+Received: from webmail.solarflare.com ([12.187.104.25]:63242 "EHLO
+	webmail.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751382Ab3LKV0U (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Dec 2013 16:26:20 -0500
+Message-ID: <1386797175.1516.272.camel@bwh-desktop.uk.level5networks.com> (sfid-20131211_222639_933728_97887CB8)
+Subject: Re: [PATCH v2 15/16] wl1251: Add sysfs file address for setting
+ permanent mac address
+From: Ben Hutchings <bhutchings@solarflare.com>
+To: Pali =?ISO-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
+CC: Dan Williams <dcbw@redhat.com>, Kalle Valo <kvalo@adurom.com>,
+	"Luciano Coelho" <luca@coelho.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <freemangordon@abv.bg>,
+	<aaro.koskinen@iki.fi>, <pavel@ucw.cz>, <sre@ring0.de>,
+	<joni.lapilainen@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Felipe Contreras <felipe.contreras@gmail.com>
+Date: Wed, 11 Dec 2013 21:26:15 +0000
+In-Reply-To: <201312102031.23797@pali>
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+	 <201312101852.17030@pali> <1386703339.30202.19.camel@dcbw.foobar.com>
+	 <201312102031.23797@pali>
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The 80211-2012 specification defines in 8.4.2.20 that the supported
-channels information element should contain a list of the channel subbands
-in which the station is capable to operate. Change the mac80211 implementation
-to add all the channels currently enabled by the device (excluding disabled
-channels).
+On Tue, 2013-12-10 at 20:31 +0100, Pali Rohár wrote:
+[...]
+> So, if you like this idea, can you help me how to write udev rule 
+> which will run my own program (it print mac address) and send mac 
+> address when driver ask for mac address in request_firmware? 
+> Problem is that default udev rule for firmware trying to load data 
+> from /lib/firmware/... but in this case mac address first must be 
+> read from special location and converted to correct format.
 
-Note: the implementation is not complete as it missing an better handling
-for subband in bands other than 2.4 GHz.
+Unfortunately, udev no longer supports firmware loading during module
+loading (unless that was fixed - I don't think it has been).  Loading
+firmware *files* still works because the kernel can read those directly
+rather than requesting them from udev.
 
-Ilan Peer (2):
-  cfg80211: Add a function to get the number of enabled channels
-  mac80211: Add all enabled channels to the supported channels element
-
- include/net/cfg80211.h |    9 ++++++
- net/mac80211/mlme.c    |   80 ++++++++++++++++++++++++++++++++++++++++++------
- net/wireless/util.c    |   21 +++++++++++++
- 3 files changed, 100 insertions(+), 10 deletions(-)
+Ben.
 
 -- 
-1.7.10.4
+Ben Hutchings, Staff Engineer, Solarflare
+Not speaking for my employer; that's the marketing department's job.
+They asked us to note that Solarflare product names are trademarked.
 
