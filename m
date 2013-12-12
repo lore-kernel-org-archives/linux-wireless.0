@@ -1,39 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f171.google.com ([74.125.82.171]:35391 "EHLO
-	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753071Ab3LTIL4 (ORCPT
+Received: from mail-la0-f54.google.com ([209.85.215.54]:62189 "EHLO
+	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751503Ab3LLMps (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Dec 2013 03:11:56 -0500
-Received: by mail-we0-f171.google.com with SMTP id q58so2143192wes.16
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Dec 2013 00:11:55 -0800 (PST)
+	Thu, 12 Dec 2013 07:45:48 -0500
+Received: by mail-la0-f54.google.com with SMTP id b8so272223lan.27
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Dec 2013 04:45:47 -0800 (PST)
+Message-ID: <52A9AFFD.1040408@cogentembedded.com> (sfid-20131212_134611_335404_E0281BBC)
+Date: Thu, 12 Dec 2013 16:45:49 +0400
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 MIME-Version: 1.0
-In-Reply-To: <D19FD2B13A40CD4B8DA64DB9B8F112E93E5CF51C@nasanexd01a.na.qualcomm.com>
-References: <1384198356-427-1-git-send-email-rajeshc@qca.qualcomm.com>
- <1386077130.4393.21.camel@jlt4.sipsolutions.net> <CAB=NE6Xa-bdLQm8uAg9wCE0fdp4KPBZ46d5FHVHp6wCvN5=dUA@mail.gmail.com>
- <1386145204.4284.4.camel@jlt4.sipsolutions.net> <1386145241.4284.5.camel@jlt4.sipsolutions.net>
- <D19FD2B13A40CD4B8DA64DB9B8F112E93E5CF51C@nasanexd01a.na.qualcomm.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Fri, 20 Dec 2013 00:11:35 -0800
-Message-ID: <CAB=NE6VNZDwGj4WWkgCmWxs_xLBZhXn44vo0TEdqo84xsRbZ2Q@mail.gmail.com> (sfid-20131220_091200_218453_50727B40)
-Subject: Re: [PATCHv3] cfg80211: add support for frequency interference event
-To: "Chauhan, Rajesh" <rajeshc@qca.qualcomm.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Malinen, Jouni" <jouni@qca.qualcomm.com>,
-	"BAHINI, Henri" <hbahini@qca.qualcomm.com>,
-	"Johnson, Jeff" <jjohnson@qca.qualcomm.com>,
-	"Chang, Leo" <schang@qca.qualcomm.com>,
-	"Luo, Xun" <xunl@qca.qualcomm.com>,
-	"Thalappil, Sameer" <sameert@qca.qualcomm.com>,
-	"Hussain, Arif" <c_arifh@qca.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
+To: Ivajlo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+	Ben Hutchings <bhutchings@solarflare.com>
+CC: =?UTF-8?B?UGFsaSBSb2jDoXI=?= <pali.rohar@gmail.com>,
+	Dan Williams <dcbw@redhat.com>, Kalle Valo <kvalo@adurom.com>,
+	Luciano Coelho <luca@coelho.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
+	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
+	joni.lapilainen@gmail.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Felipe Contreras <felipe.contreras@gmail.com>
+Subject: Re: [PATCH v2 15/16] wl1251: Add sysfs file address for setting permanent
+ mac address
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>		 <201312101814.35112@pali> <1386697762.30202.6.camel@dcbw.foobar.com>		 <201312101852.17030@pali>	 <1386796654.1516.268.camel@bwh-desktop.uk.level5networks.com>	 <52A8DA9A.50501@gmail.com> <1386800135.1516.296.camel@bwh-desktop.uk.level5networks.com> <52A8E8EE.7050001@gmail.com>
+In-Reply-To: <52A8E8EE.7050001@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 19, 2013 at 11:44 PM, Chauhan, Rajesh
-<rajeshc@qca.qualcomm.com> wrote:
-> The API cfg80211_avoid_frequency_event() which is introduced in this patch shall be used by our WLAN driver which is an open source driver.
+Hello.
 
-Get your shit upstream. For fuck's sake.
+On 12-12-2013 2:36, Ivajlo Dimitrov wrote:
 
-  Luis
+>> 2. NVRAM reading is done by a tiny driver that is loaded based on the
+>> platform name and updates the DT node in memory.  (But I don't know how
+>> wl1251 should decide to defer probing if it's probed before that other
+>> driver.)
+
+>> Ben.
+
+
+> Maybe a "hwmac" property with a value of XX:XX:XX:XX:XX:XX (or some other
+> invalid value) set in DT could be used to tell the driver to defer until that
+> value changes to something sane?
+
+    The standard property name for that is "local-mac-address". There's also 
+non-standard "mac-address" variation.
+
+> Ivo
+
+WBR, Sergei
+
