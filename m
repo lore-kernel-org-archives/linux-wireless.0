@@ -1,59 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:53383 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756957Ab3LER1J (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:6952 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751543Ab3LLK7R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 12:27:09 -0500
-Received: by mail-wg0-f44.google.com with SMTP id a1so15004514wgh.23
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Dec 2013 09:27:08 -0800 (PST)
-Date: Thu, 5 Dec 2013 18:26:27 +0100
-From: Karl Beldan <karl.beldan@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Karl Beldan <karl.beldan@rivierawaves.com>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
-	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Subject: Re: [PATCH v4] mac80211_hwsim: claim CSA support for AP
-Message-ID: <20131205172627.GA3593@magnum.frso.rivierawaves.com> (sfid-20131205_182720_125647_68D5A322)
-References: <1385224698-12294-1-git-send-email-karl.beldan@gmail.com>
- <1386075333.4393.13.camel@jlt4.sipsolutions.net>
+	Thu, 12 Dec 2013 05:59:17 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 17/18] brcmfmac: remove brcmf_sdio_disconnect() function
+Date: Thu, 12 Dec 2013 11:59:05 +0100
+Message-ID: <1386845946-9859-18-git-send-email-arend@broadcom.com> (sfid-20131212_122500_142979_D3F12FF6)
+In-Reply-To: <1386845946-9859-1-git-send-email-arend@broadcom.com>
+References: <1386845946-9859-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1386075333.4393.13.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 03, 2013 at 01:55:33PM +0100, Johannes Berg wrote:
-> On Sat, 2013-11-23 at 17:38 +0100, Karl Beldan wrote:
-> 
-> > This adds a per vif bool csa_finished that is set after a call to
-> > ieee80211_csa_finish() and used to skip beaconing while csa_active is
-> > set in case a beacon is scheduled prior to csa_finalize_work completion.
-> > This bool and the number of beacons transmitted during the CSA up to the
-> > call to ieee80211_csa_finish() are reset in channel_switch_beacon op.
-> 
-> Andrei says:
-> 
-> Overall it seems ok, but all the purpose of csa_finished is not very
-> clear..
-> It looks that this patch tries to avoid extra beaconing on the previous
-> channel/hitting the warning..
-Yes, it avoids extra beacons.
+Instead of calling brcmf_sdio_disconnect() expose brcmf_sdio_remove()
+and call it directly.
 
-> But the problem is much bigger here, it means that we didn't switch in
-> time (before the next beacon) so it's ok to hit the warning here and
-> transmit extra beacon with count==1.
-Precisely what I discussed in the previous emails.
-However, I'd expect WARN*s to trigger on unexpected conditions .. though
-I haven't seen any warning, the codepath nearly seems to beg for it.
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |    2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   51 ++++++++------------
+ .../net/wireless/brcm80211/brcmfmac/sdio_host.h    |    2 +-
+ 3 files changed, 23 insertions(+), 32 deletions(-)
 
-> So if we see a lot of such warnings, maybe we need to fix
-> ieee80211_csa_finish instead (not using work for example)
-> 
-The replies I got from the race I detailed felt like ppl wanted to
-prevent this in-driver, now we agree this race prone work is a flaw.
-Maybe I'll send a v5 for hwsim relying on future in-stack improvement to
-avoid extra beacon instead of doing this in-driver, with some
-appropriate comments.
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+index e07bad2..337802c 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+@@ -901,7 +901,7 @@ static int brcmf_sdiod_remove(struct brcmf_sdio_dev *sdiodev)
+ 	sdiodev->bus_if->state = BRCMF_BUS_DOWN;
  
-Karl
+ 	if (sdiodev->bus) {
+-		brcmf_sdio_disconnect(sdiodev->bus);
++		brcmf_sdio_remove(sdiodev->bus);
+ 		sdiodev->bus = NULL;
+ 	}
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index f3069b4..f214510 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -3973,33 +3973,6 @@ static void brcmf_sdio_release_dongle(struct brcmf_sdio *bus)
+ 	brcmf_dbg(TRACE, "Disconnected\n");
+ }
+ 
+-/* Detach and free everything */
+-static void brcmf_sdio_release(struct brcmf_sdio *bus)
+-{
+-	brcmf_dbg(TRACE, "Enter\n");
+-
+-	if (bus) {
+-		/* De-register interrupt handler */
+-		brcmf_sdiod_intr_unregister(bus->sdiodev);
+-
+-		cancel_work_sync(&bus->datawork);
+-		if (bus->brcmf_wq)
+-			destroy_workqueue(bus->brcmf_wq);
+-
+-		if (bus->sdiodev->bus_if->drvr) {
+-			brcmf_detach(bus->sdiodev->dev);
+-			brcmf_sdio_release_dongle(bus);
+-		}
+-
+-		brcmu_pkt_buf_free_skb(bus->txglom_sgpad);
+-		brcmf_sdio_release_malloc(bus);
+-		kfree(bus->hdrbuf);
+-		kfree(bus);
+-	}
+-
+-	brcmf_dbg(TRACE, "Disconnected\n");
+-}
+-
+ static struct brcmf_bus_ops brcmf_sdio_bus_ops = {
+ 	.stop = brcmf_sdio_bus_stop,
+ 	.preinit = brcmf_sdio_bus_preinit,
+@@ -4116,15 +4089,33 @@ struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
+ 	return bus;
+ 
+ fail:
+-	brcmf_sdio_release(bus);
++	brcmf_sdio_remove(bus);
+ 	return NULL;
+ }
+ 
+-void brcmf_sdio_disconnect(struct brcmf_sdio *bus)
++/* Detach and free everything */
++void brcmf_sdio_remove(struct brcmf_sdio *bus)
+ {
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+-	brcmf_sdio_release(bus);
++	if (bus) {
++		/* De-register interrupt handler */
++		brcmf_sdiod_intr_unregister(bus->sdiodev);
++
++		cancel_work_sync(&bus->datawork);
++		if (bus->brcmf_wq)
++			destroy_workqueue(bus->brcmf_wq);
++
++		if (bus->sdiodev->bus_if->drvr) {
++			brcmf_detach(bus->sdiodev->dev);
++			brcmf_sdio_release_dongle(bus);
++		}
++
++		brcmu_pkt_buf_free_skb(bus->txglom_sgpad);
++		brcmf_sdio_release_malloc(bus);
++		kfree(bus->hdrbuf);
++		kfree(bus);
++	}
+ 
+ 	brcmf_dbg(TRACE, "Disconnected\n");
+ }
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h b/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
+index e28498e..a0981b3 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
+@@ -236,7 +236,7 @@ int brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
+ int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, uint fn);
+ 
+ struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev);
+-void brcmf_sdio_disconnect(struct brcmf_sdio *bus);
++void brcmf_sdio_remove(struct brcmf_sdio *bus);
+ void brcmf_sdio_isr(struct brcmf_sdio *bus);
+ 
+ void brcmf_sdio_wd_timer(struct brcmf_sdio *bus, uint wdtick);
+-- 
+1.7.10.4
+
