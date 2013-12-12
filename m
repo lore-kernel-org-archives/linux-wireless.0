@@ -1,45 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:56239 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755301Ab3LQSLv (ORCPT
+Received: from webmail.solarflare.com ([12.187.104.25]:16151 "EHLO
+	webmail.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751466Ab3LLT4F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Dec 2013 13:11:51 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/4] ath9k: Add a delay between RTC reset/clear for AR9003
-Date: Tue, 17 Dec 2013 23:36:46 +0530
-Message-Id: <1387303608-31356-3-git-send-email-sujith@msujith.org> (sfid-20131217_191156_980644_B03B878A)
-In-Reply-To: <1387303608-31356-1-git-send-email-sujith@msujith.org>
-References: <1387303608-31356-1-git-send-email-sujith@msujith.org>
+	Thu, 12 Dec 2013 14:56:05 -0500
+Message-ID: <1386878159.1516.312.camel@bwh-desktop.uk.level5networks.com> (sfid-20131212_205644_132238_595CBDDB)
+Subject: Re: Re: [PATCH v2 15/16] wl1251: Add sysfs file address for setting
+ permanent mac address
+From: Ben Hutchings <bhutchings@solarflare.com>
+To: Dan Williams <dcbw@redhat.com>
+CC: Ivajlo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+	Pali =?ISO-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>,
+	Kalle Valo <kvalo@adurom.com>, Luciano Coelho <luca@coelho.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <freemangordon@abv.bg>,
+	<aaro.koskinen@iki.fi>, <pavel@ucw.cz>, <sre@ring0.de>,
+	<joni.lapilainen@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Felipe Contreras <felipe.contreras@gmail.com>
+Date: Thu, 12 Dec 2013 19:55:59 +0000
+In-Reply-To: <1386802416.17188.69.camel@dcbw.foobar.com>
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+	 <201312101814.35112@pali> <1386697762.30202.6.camel@dcbw.foobar.com>
+	 <201312101852.17030@pali>
+	 <1386796654.1516.268.camel@bwh-desktop.uk.level5networks.com>
+	 <52A8DA9A.50501@gmail.com>
+	 <1386800135.1516.296.camel@bwh-desktop.uk.level5networks.com>
+	 <1386802416.17188.69.camel@dcbw.foobar.com>
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Wed, 2013-12-11 at 16:53 -0600, Dan Williams wrote:
+> On Wed, 2013-12-11 at 22:15 +0000, Ben Hutchings wrote:
+> > On Wed, 2013-12-11 at 23:35 +0200, Ivajlo Dimitrov wrote:
+> > > On 11.12.2013 23:17, Ben Hutchings wrote:
+> > > > I think that's an even worse idea.  This is not firmware and it already
+> > > > exists in separate storage.
+> > > >
+> > > > I think that rx51_init_wl1251() in
+> > > > arch/arm/mach-omap2/board-rx51-peripherals.c should either copy the MAC
+> > > > address out of NVRAM, or if it's too early to do that, then schedule a
+> > > > function to run later and only then set up wl1251 platform data.
+> > > >
+> > > > Ben.
+> > > >
+> > > 
+> > > And how will that work with DT when board files will be in the history?
+> > 
+> > 1. Boot loader reads the MAC address from NVRAM and puts it in the DT
+> > node.
+> > or
+> > 2. NVRAM reading is done by a tiny driver that is loaded based on the
+> > platform name and updates the DT node in memory.  (But I don't know how
+> > wl1251 should decide to defer probing if it's probed before that other
+> > driver.)
+> 
+> I'm uncomfortable with it too, and yes the permanent MAC should really
+> be known before the interface is even registered, but...
+> 
+> Imagine if the MAC address for your ethernet device was stored
+> in /etc/my-mac-addr.txt, except that /etc was a read-only protected
+> partition from a very small SSD.  That's essentially the N900; it's
+> stored in a file in a normal ext2/ext3 (?) filesystem on a partition of
+> the internal flash.
 
-The small delay that is present between a RTC reset/clear
-operation is required for the chip to settle and this is
-needed for all chips, not just the AR9002 family.
+Oh, from my quick look I got the impression that this 'CAL' was stored
+directly in a specific flash partition.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/hw.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+>   It seems like overkill to write a small driver that
+> duplicates the ext3 + MTD drivers just to read the MAC.
+[...]
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 40cc64b..f58868c 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1399,8 +1399,7 @@ static bool ath9k_hw_set_reset_power_on(struct ath_hw *ah)
- 
- 	REGWRITE_BUFFER_FLUSH(ah);
- 
--	if (!AR_SREV_9300_20_OR_LATER(ah))
--		udelay(2);
-+	udelay(2);
- 
- 	if (!AR_SREV_9100(ah) && !AR_SREV_9300_20_OR_LATER(ah))
- 		REG_WRITE(ah, AR_RC, 0);
+I don't see that anything would need to be duplicated.  But reading
+files from the kernel is really ugly, and deciding when to read the file
+would be another problem (as you noted).
+
+Ben
+
 -- 
-1.8.5.1
+Ben Hutchings, Staff Engineer, Solarflare
+Not speaking for my employer; that's the marketing department's job.
+They asked us to note that Solarflare product names are trademarked.
 
