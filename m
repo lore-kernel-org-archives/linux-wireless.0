@@ -1,76 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:35047 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753385Ab3LCTPd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Dec 2013 14:15:33 -0500
-From: Ilan Peer <ilan.peer@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: wireless-regdb@lists.infradead.org, Ilan Peer <ilan.peer@intel.com>
-Subject: [PATCH v2 6/6] mac80211: Enable initiating radiation on indoor channels
-Date: Tue,  3 Dec 2013 21:16:06 +0200
-Message-Id: <1386098166-24196-7-git-send-email-ilan.peer@intel.com> (sfid-20131203_201543_454379_27BE3A6E)
-In-Reply-To: <1386098166-24196-1-git-send-email-ilan.peer@intel.com>
-References: <1386098166-24196-1-git-send-email-ilan.peer@intel.com>
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:55943 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751222Ab3LLK4v (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Dec 2013 05:56:51 -0500
+Date: Thu, 12 Dec 2013 11:56:47 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Ben Hutchings <bhutchings@solarflare.com>
+Cc: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>,
+	Dan Williams <dcbw@redhat.com>, Kalle Valo <kvalo@adurom.com>,
+	Luciano Coelho <luca@coelho.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
+	aaro.koskinen@iki.fi, sre@ring0.de, joni.lapilainen@gmail.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Felipe Contreras <felipe.contreras@gmail.com>
+Subject: Re: [PATCH v2 15/16] wl1251: Add sysfs file address for setting
+ permanent mac address
+Message-ID: <20131212105647.GA22471@amd.pavel.ucw.cz> (sfid-20131212_115748_451383_14F651EF)
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
+ <201312101814.35112@pali>
+ <1386697762.30202.6.camel@dcbw.foobar.com>
+ <201312101852.17030@pali>
+ <1386796654.1516.268.camel@bwh-desktop.uk.level5networks.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1386796654.1516.268.camel@bwh-desktop.uk.level5networks.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allow active scanning and frame injection on channels marked with
-IEEE80211_CHAN_NO_IR iff the channel is also marked with
-IEEE80211_CHAN_INDOOR_ONLY and the wireless core thinks that it
-operates in an indoor environment.
+On Wed 2013-12-11 21:17:34, Ben Hutchings wrote:
+> On Tue, 2013-12-10 at 18:52 +0100, Pali Rohár wrote:
+> > On Tuesday 10 December 2013 18:49:22 Dan Williams wrote:
+> > > On Tue, 2013-12-10 at 18:14 +0100, Pali Rohár wrote:
+> > > > On Tuesday 10 December 2013 17:10:50 Pali Rohár wrote:
+> > > > > On Tuesday 10 December 2013 16:49:23 Kalle Valo wrote:
+> > > > > > Pali Rohár <pali.rohar@gmail.com> writes:
+> > > > > > > Driver wl1251 generating mac address randomly at
+> > > > > > > startup and there is no way to set permanent mac
+> > > > > > > address via SET_IEEE80211_PERM_ADDR. This patch
+> > > > > > > export sysfs file which can set permanent mac address
+> > > > > > > by userspace helper program. Patch is needed for
+> > > > > > > devices which do not store mac address in internal
+> > > > > > > wl1251 eeprom.
+> > > > > > > 
+> > > > > > > Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
+> > > > > > 
+> > > > > > We have ioctl() command for setting the mac address.
+> > > > > 
+> > > > > Really? Is there ioctl for setting permanent mac address?
+> > > > > Can you show me it?
+> > > > 
+> > > > Now I looked at it again and I did not found any ioctl for
+> > > > it. There is only ioctl cmd for getting address, not
+> > > > setting it.
+> > > > 
+> > > > #define SIOCETHTOOL 0x8946
+> > > > 
+> > > > /* Get permanent hardware address */
+> > > > #define ETHTOOL_GPERMADDR 0x00000020
+> > > 
+> > > Yeah, because it's supposed to be permanent and unchanging. 
+> > > Which means if there was an ioctl for it, that would be
+> > > contrary to the purpose of a permanent MAC address.
+> > > 
+> > > I realize the N900 stores the WiFi MAC address completely
+> > > differently than many other systems, and that's why this
+> > > sysfs file was created.  I don't really have a great
+> > > converged solution for that, other than what you've currently
+> > > got, or perhaps adding SPERMADDR to ethtool.  One thing I
+> > > *would* like though, is a restriction on the sysfs file such
+> > > that if the permanent MAC is already set, it cannot be set
+> > > again.  Otherwise the permanent MAC address isn't permanent
+> > > at all.
+> 
+> I'm really uncomfortable with the idea of involving userland in
+> establishing the 'permanent' MAC address.  (And from what I gather, the
+> Nokia software never did that but only used SIOCSIFHWADDR.)  It ought to
+> be set before the interface is ever registered.
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
----
- net/mac80211/scan.c |    8 +++-----
- net/mac80211/tx.c   |    2 +-
- 2 files changed, 4 insertions(+), 6 deletions(-)
+Which is hard to do on n900. What is the problem with userland setting
+permanent mac address?
 
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 4d73c46..fd4f58a 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -525,8 +525,7 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
- 		/* We need to ensure power level is at max for scanning. */
- 		ieee80211_hw_config(local, 0);
- 
--		if ((req->channels[0]->flags &
--		     IEEE80211_CHAN_NO_IR) ||
-+		if (!regulatory_ir_allowed(req->channels[0]) ||
- 		    !local->scan_req->n_ssids) {
- 			next_delay = IEEE80211_PASSIVE_CHANNEL_TIME;
- 		} else {
-@@ -572,7 +571,7 @@ ieee80211_scan_get_channel_time(struct ieee80211_channel *chan)
- 	 * TODO: channel switching also consumes quite some time,
- 	 * add that delay as well to get a better estimation
- 	 */
--	if (chan->flags & IEEE80211_CHAN_NO_IR)
-+	if (!regulatory_ir_allowed(chan))
- 		return IEEE80211_PASSIVE_CHANNEL_TIME;
- 	return IEEE80211_PROBE_DELAY + IEEE80211_CHANNEL_TIME;
- }
-@@ -696,8 +695,7 @@ static void ieee80211_scan_state_set_channel(struct ieee80211_local *local,
- 	 *
- 	 * In any case, it is not necessary for a passive scan.
- 	 */
--	if (chan->flags & IEEE80211_CHAN_NO_IR ||
--	    !local->scan_req->n_ssids) {
-+	if (!regulatory_ir_allowed(chan) || !local->scan_req->n_ssids) {
- 		*next_delay = IEEE80211_PASSIVE_CHANNEL_TIME;
- 		local->next_scan_state = SCAN_DECISION;
- 		return;
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 6d59e21..596caa8 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1727,7 +1727,7 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
- 	 * radar detection by itself. We can do that later by adding a
- 	 * monitor flag interfaces used for AP support.
- 	 */
--	if ((chan->flags & (IEEE80211_CHAN_NO_IR | IEEE80211_CHAN_RADAR)))
-+	if (!regulatory_ir_allowed(chan) || chan->flags & IEEE80211_CHAN_RADAR)
- 		goto fail_rcu;
- 
- 	ieee80211_xmit(sdata, skb, chan->band);
+It is not used for security or anything...
+									Pavel
 -- 
-1.7.10.4
-
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
