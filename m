@@ -1,44 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f178.google.com ([209.85.192.178]:60799 "EHLO
-	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750900Ab3LAG50 (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:51778 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751542Ab3LLK7Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Dec 2013 01:57:26 -0500
-Received: by mail-pd0-f178.google.com with SMTP id y10so15897175pdj.23
-        for <linux-wireless@vger.kernel.org>; Sat, 30 Nov 2013 22:57:25 -0800 (PST)
-From: Ujjal Roy <royujjal@gmail.com>
+	Thu, 12 Dec 2013 05:59:16 -0500
+From: Arend van Spriel <arend@broadcom.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Ujjal Roy <royujjal@gmail.com>
-Subject: TEST: testing how to send a patch from git repository
-Date: Sun,  1 Dec 2013 12:27:16 +0530
-Message-Id: <1385881036-6069-1-git-send-email-royujjal@gmail.com> (sfid-20131201_075738_778026_CEE3DDD2)
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 09/18] brcmfmac: remove brcmf_sdio_wdtimer_enable() function
+Date: Thu, 12 Dec 2013 11:58:57 +0100
+Message-ID: <1386845946-9859-10-git-send-email-arend@broadcom.com> (sfid-20131212_122500_874346_B18EDD68)
+In-Reply-To: <1386845946-9859-1-git-send-email-arend@broadcom.com>
+References: <1386845946-9859-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Testing how to send an email through git to see the patch is exactly
-submitted or not. Actually testing the tab characters. Please don't
-mind.
+Instead of using the brcmf_sdio_wdtimer_enable() function
+call brcmf_sdbrcm_wd_timer() directly.
 
-Signed-off-by: Ujjal Roy <royujjal@gmail.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- net/wireless/sme.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |   12 ++----------
+ 1 file changed, 2 insertions(+), 10 deletions(-)
 
-diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index 5eeb8e0..19a5df4 100644
---- a/net/wireless/sme.c
-+++ b/net/wireless/sme.c
-@@ -20,6 +20,8 @@
- #include "reg.h"
- #include "rdev-ops.h"
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+index a56a779..2decb41 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+@@ -1122,14 +1122,6 @@ static void brcmf_ops_sdio_remove(struct sdio_func *func)
+ }
  
-+	printk("TEST: submitting patch from git >> Ujjal Roy C: royujjal@gmail.com");
-+
- /*
-  * Software SME in cfg80211, using auth/assoc/deauth calls to the
-  * driver. This is is for implementing nl80211's connect/disconnect
+ #ifdef CONFIG_PM_SLEEP
+-static void brcmf_sdio_wdtmr_enable(struct brcmf_sdio_dev *sdiodev, bool enable)
+-{
+-	if (enable)
+-		brcmf_sdbrcm_wd_timer(sdiodev->bus, BRCMF_WD_POLL_MS);
+-	else
+-		brcmf_sdbrcm_wd_timer(sdiodev->bus, 0);
+-}
+-
+ static int brcmf_sdio_suspend(struct device *dev)
+ {
+ 	mmc_pm_flag_t sdio_flags;
+@@ -1153,7 +1145,7 @@ static int brcmf_sdio_suspend(struct device *dev)
+ 		return ret;
+ 	}
+ 
+-	brcmf_sdio_wdtmr_enable(sdiodev, false);
++	brcmf_sdbrcm_wd_timer(sdiodev->bus, 0);
+ 
+ 	return ret;
+ }
+@@ -1163,7 +1155,7 @@ static int brcmf_sdio_resume(struct device *dev)
+ 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+ 	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
+ 
+-	brcmf_sdio_wdtmr_enable(sdiodev, true);
++	brcmf_sdbrcm_wd_timer(sdiodev->bus, BRCMF_WD_POLL_MS);
+ 	atomic_set(&sdiodev->suspend, false);
+ 	return 0;
+ }
 -- 
-1.8.3.1
+1.7.10.4
 
