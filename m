@@ -1,149 +1,268 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:45527 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752700Ab3LSIjS (ORCPT
+Received: from mail-ea0-f170.google.com ([209.85.215.170]:55811 "EHLO
+	mail-ea0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751779Ab3LLO2c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Dec 2013 03:39:18 -0500
-Received: by mail-pa0-f42.google.com with SMTP id lj1so877237pab.1
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Dec 2013 00:39:17 -0800 (PST)
-From: Thomas Pedersen <twpedersen@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	open80211s <devel@lists.open80211s.org>,
-	Thomas Pedersen <thomas@cozybit.com>
-Subject: [PATCH 2/2] mac80211: sync dtim_count to TSF
-Date: Thu, 19 Dec 2013 00:37:59 -0800
-Message-Id: <1387442279-1526-2-git-send-email-twpedersen@gmail.com> (sfid-20131219_093925_370409_E48E7922)
-In-Reply-To: <1387442279-1526-1-git-send-email-twpedersen@gmail.com>
-References: <1387442279-1526-1-git-send-email-twpedersen@gmail.com>
+	Thu, 12 Dec 2013 09:28:32 -0500
+Received: by mail-ea0-f170.google.com with SMTP id k10so274480eaj.15
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Dec 2013 06:28:31 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 1/3] ath10k: fix device initialization routine
+Date: Thu, 12 Dec 2013 15:24:19 +0100
+Message-Id: <1386858261-16037-2-git-send-email-michal.kazior@tieto.com> (sfid-20131212_152836_527875_C45F3D37)
+In-Reply-To: <1386858261-16037-1-git-send-email-michal.kazior@tieto.com>
+References: <1386858261-16037-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Thomas Pedersen <thomas@cozybit.com>
+Hardware revision 2 has some issues with cold
+reset that lead to Data Bus Errors or system hangs
+in some cases. It's safer to use warm reset when
+possible as it shouldn't trigger the
+aforementioned issues.
 
-On starting a mesh, ad-hoc, or AP BSS, the interface
-dtim_count countdown should match that of the driver TSF.
+Prefer warm reset over cold reset. However since
+warm reset doesn't always work (e.g. after FW
+crash) make sure to fallback to cold reset.
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+This should generally reduce frequency of the
+problem.
 
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
-v2:
-	adjust dtim_count instead of setting TSF=0
-	(Sergey)
+ drivers/net/wireless/ath/ath10k/hw.h  |   6 ++
+ drivers/net/wireless/ath/ath10k/pci.c | 125 ++++++++++++++++++++++++++++++----
+ 2 files changed, 118 insertions(+), 13 deletions(-)
 
- net/mac80211/cfg.c            |    2 ++
- net/mac80211/debugfs_netdev.c |    1 +
- net/mac80211/ibss.c           |    1 +
- net/mac80211/ieee80211_i.h    |    2 ++
- net/mac80211/mesh.c           |    1 +
- net/mac80211/util.c           |   28 ++++++++++++++++++++++++++++
- 6 files changed, 35 insertions(+)
-
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index ac18528..8211d30 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -951,6 +951,7 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 			      struct cfg80211_ap_settings *params)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = sdata->local;
- 	struct beacon_data *old;
- 	struct ieee80211_sub_if_data *vlan;
- 	u32 changed = BSS_CHANGED_BEACON_INT |
-@@ -1030,6 +1031,7 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 		return err;
- 	}
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 9535eaa..2032737 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -204,8 +204,11 @@ enum ath10k_mcast2ucast_mode {
+ #define WLAN_ANALOG_INTF_PCIE_BASE_ADDRESS	0x0006c000
+ #define PCIE_LOCAL_BASE_ADDRESS			0x00080000
  
-+	ieee80211_recalc_dtim(local, sdata);
- 	ieee80211_bss_info_change_notify(sdata, changed);
++#define SOC_RESET_CONTROL_ADDRESS		0x00000000
+ #define SOC_RESET_CONTROL_OFFSET		0x00000000
+ #define SOC_RESET_CONTROL_SI0_RST_MASK		0x00000001
++#define SOC_RESET_CONTROL_CE_RST_MASK		0x00040000
++#define SOC_RESET_CONTROL_CPU_WARM_RST_MASK	0x00000040
+ #define SOC_CPU_CLOCK_OFFSET			0x00000020
+ #define SOC_CPU_CLOCK_STANDARD_LSB		0
+ #define SOC_CPU_CLOCK_STANDARD_MASK		0x00000003
+@@ -215,6 +218,8 @@ enum ath10k_mcast2ucast_mode {
+ #define SOC_LPO_CAL_OFFSET			0x000000e0
+ #define SOC_LPO_CAL_ENABLE_LSB			20
+ #define SOC_LPO_CAL_ENABLE_MASK			0x00100000
++#define SOC_LF_TIMER_CONTROL0_ADDRESS		0x00000050
++#define SOC_LF_TIMER_CONTROL0_ENABLE_MASK	0x00000004
  
- 	netif_carrier_on(dev);
-diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-index 04b5a14..89160f7 100644
---- a/net/mac80211/debugfs_netdev.c
-+++ b/net/mac80211/debugfs_netdev.c
-@@ -468,6 +468,7 @@ static ssize_t ieee80211_if_parse_tsf(
- 		}
- 	}
+ #define SOC_CHIP_ID_ADDRESS			0x000000ec
+ #define SOC_CHIP_ID_REV_LSB			8
+@@ -272,6 +277,7 @@ enum ath10k_mcast2ucast_mode {
+ #define PCIE_INTR_CAUSE_ADDRESS			0x000c
+ #define PCIE_INTR_CLR_ADDRESS			0x0014
+ #define SCRATCH_3_ADDRESS			0x0030
++#define CPU_INTR_ADDRESS			0x0010
  
-+	ieee80211_recalc_dtim(local, sdata);
- 	return buflen;
- }
- __IEEE80211_IF_FILE_W(tsf);
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index d6ba8414..a92c8a9 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -369,6 +369,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 		return;
- 	}
+ /* Firmware indications to the Host via SCRATCH_3 register. */
+ #define FW_INDICATOR_ADDRESS	(SOC_CORE_BASE_ADDRESS + SCRATCH_3_ADDRESS)
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 29fd197..475b4da 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -64,7 +64,8 @@ static int ath10k_pci_post_rx_pipe(struct ath10k_pci_pipe *pipe_info,
+ 					     int num);
+ static void ath10k_pci_rx_pipe_cleanup(struct ath10k_pci_pipe *pipe_info);
+ static void ath10k_pci_stop_ce(struct ath10k *ar);
+-static int ath10k_pci_device_reset(struct ath10k *ar);
++static int ath10k_pci_cold_reset(struct ath10k *ar);
++static int ath10k_pci_warm_reset(struct ath10k *ar);
+ static int ath10k_pci_wait_for_target_init(struct ath10k *ar);
+ static int ath10k_pci_init_irq(struct ath10k *ar);
+ static int ath10k_pci_deinit_irq(struct ath10k *ar);
+@@ -1477,6 +1478,10 @@ static void ath10k_pci_hif_stop(struct ath10k *ar)
  
-+	ieee80211_recalc_dtim(local, sdata);
- 	ieee80211_bss_info_change_notify(sdata, bss_change);
+ 	ath10k_dbg(ATH10K_DBG_PCI, "%s\n", __func__);
  
- 	ifibss->state = IEEE80211_IBSS_MLME_JOINED;
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 33ebe08..337fcad 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1794,6 +1794,8 @@ ieee80211_cs_get(struct ieee80211_local *local, u32 cipher,
- int ieee80211_cs_headroom(struct ieee80211_local *local,
- 			  struct cfg80211_crypto_settings *crypto,
- 			  enum nl80211_iftype iftype);
-+void ieee80211_recalc_dtim(struct ieee80211_local *local,
-+			   struct ieee80211_sub_if_data *sdata);
- 
- #ifdef CONFIG_MAC80211_NOINLINE
- #define debug_noinline noinline
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 5a74b24..5b919ca 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -807,6 +807,7 @@ int ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
- 		return -ENOMEM;
- 	}
- 
-+	ieee80211_recalc_dtim(local, sdata);
- 	ieee80211_bss_info_change_notify(sdata, changed);
- 
- 	netif_carrier_on(sdata->dev);
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 656648b..599cf37 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -2588,3 +2588,31 @@ int ieee80211_cs_headroom(struct ieee80211_local *local,
- 
- 	return headroom;
- }
++	/* Make the sure the device won't access any structures on the host by
++	 * resetting it. This should prevent host memory corruption, hangs. */
++	ath10k_pci_warm_reset(ar);
 +
-+void ieee80211_recalc_dtim(struct ieee80211_local *local,
-+			   struct ieee80211_sub_if_data *sdata)
+ 	ret = ath10k_ce_disable_interrupts(ar);
+ 	if (ret)
+ 		ath10k_warn("failed to disable CE interrupts: %d\n", ret);
+@@ -1497,13 +1502,6 @@ static void ath10k_pci_hif_stop(struct ath10k *ar)
+ 	ath10k_pci_cleanup_ce(ar);
+ 	ath10k_pci_buffer_cleanup(ar);
+ 
+-	/* Make the sure the device won't access any structures on the host by
+-	 * resetting it. The device was fed with PCI CE ringbuffer
+-	 * configuration during init. If ringbuffers are freed and the device
+-	 * were to access them this could lead to memory corruption on the
+-	 * host. */
+-	ath10k_pci_device_reset(ar);
+-
+ 	ar_pci->started = 0;
+ }
+ 
+@@ -1993,7 +1991,73 @@ static void ath10k_pci_fw_interrupt_handler(struct ath10k *ar)
+ 	ath10k_pci_sleep(ar);
+ }
+ 
+-static int ath10k_pci_hif_power_up(struct ath10k *ar)
++static int ath10k_pci_warm_reset(struct ath10k *ar)
 +{
-+	u64 tsf = drv_get_tsf(local, sdata);
-+	u64 dtim_count = 0;
-+	u16 beacon_int = sdata->vif.bss_conf.beacon_int * 1024;
-+	u8 dtim_period = sdata->vif.bss_conf.dtim_period;
-+	u8 bcns_from_dtim;
++	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
++	void __iomem *addr;
++	int ret = 0;
++	u32 val;
 +
-+	if (tsf == -1ULL || !beacon_int || !dtim_period)
-+		return;
++	ath10k_dbg(ATH10K_DBG_BOOT, "performing warm chip reset\n");
++
++	ret = ath10k_do_pci_wake(ar);
++	if (ret)
++		return ret;
++
++	/* debug */
++	addr = ar_pci->mem + SOC_CORE_BASE_ADDRESS + PCIE_INTR_CAUSE_ADDRESS;
++	ath10k_dbg(ATH10K_DBG_BOOT, "host CPU intr cause: 0x%x\n", ioread32(addr));
++	addr = ar_pci->mem + SOC_CORE_BASE_ADDRESS + CPU_INTR_ADDRESS;
++	ath10k_dbg(ATH10K_DBG_BOOT, "target CPU intr cause: 0x%x\n", ioread32(addr));
++
++	/* disable pending irqs */
++	iowrite32(0, ar_pci->mem + SOC_CORE_BASE_ADDRESS + PCIE_INTR_ENABLE_ADDRESS);
++	iowrite32(~0, ar_pci->mem + SOC_CORE_BASE_ADDRESS + PCIE_INTR_CLR_ADDRESS);
++
++	msleep(100);
++
++	/* clear fw indicator */
++	iowrite32(0, ar_pci->mem + ar_pci->fw_indicator_address);
++
++	/* clear target LF timer interrupts */
++	addr = ar_pci->mem + RTC_SOC_BASE_ADDRESS + SOC_LF_TIMER_CONTROL0_ADDRESS;
++	iowrite32(ioread32(addr) & ~SOC_LF_TIMER_CONTROL0_ENABLE_MASK, addr);
++
++	/* reset CE */
++	addr = ar_pci->mem + RTC_SOC_BASE_ADDRESS + SOC_RESET_CONTROL_ADDRESS;
++	val = ioread32(addr);
++	val |= SOC_RESET_CONTROL_CE_RST_MASK;
++	iowrite32(val, addr);
++	val = ioread32(addr);
++	msleep(10);
++
++	/* unreset CE */
++	val &= ~SOC_RESET_CONTROL_CE_RST_MASK, addr;
++	iowrite32(val, addr);
++	val = ioread32(addr);
++	msleep(10);
++
++	/* debug */
++	addr = ar_pci->mem + SOC_CORE_BASE_ADDRESS + PCIE_INTR_CAUSE_ADDRESS;
++	ath10k_dbg(ATH10K_DBG_BOOT, "host CPU intr cause: 0x%x\n", ioread32(addr));
++	addr = ar_pci->mem + SOC_CORE_BASE_ADDRESS + CPU_INTR_ADDRESS;
++	ath10k_dbg(ATH10K_DBG_BOOT, "target CPU intr cause: 0x%x\n", ioread32(addr));
++
++	/* CPU warm reset */
++	addr = ar_pci->mem + RTC_SOC_BASE_ADDRESS + SOC_RESET_CONTROL_ADDRESS;
++	iowrite32(ioread32(addr) | SOC_RESET_CONTROL_CPU_WARM_RST_MASK, addr);
++
++	ath10k_dbg(ATH10K_DBG_BOOT, "target reset state: 0x%x\n", ioread32(addr));
++
++	msleep(100);
++
++	ath10k_dbg(ATH10K_DBG_BOOT, "warm reset complete\n");
++
++	ath10k_do_pci_sleep(ar);
++	return ret;
++}
++
++static int __ath10k_pci_hif_power_up(struct ath10k *ar, bool cold_reset)
+ {
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 	const char *irq_mode;
+@@ -2009,7 +2073,11 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar)
+ 	 * is in an unexpected state. We try to catch that here in order to
+ 	 * reset the Target and retry the probe.
+ 	 */
+-	ret = ath10k_pci_device_reset(ar);
++	if (cold_reset)
++		ret = ath10k_pci_cold_reset(ar);
++	else
++		ret = ath10k_pci_warm_reset(ar);
++
+ 	if (ret) {
+ 		ath10k_err("failed to reset target: %d\n", ret);
+ 		goto err;
+@@ -2078,8 +2146,8 @@ err_free_early_irq:
+ err_deinit_irq:
+ 	ath10k_pci_deinit_irq(ar);
+ err_ce:
++	ath10k_pci_warm_reset(ar);
+ 	ath10k_pci_ce_deinit(ar);
+-	ath10k_pci_device_reset(ar);
+ err_ps:
+ 	if (!test_bit(ATH10K_PCI_FEATURE_SOC_POWER_SAVE, ar_pci->features))
+ 		ath10k_do_pci_sleep(ar);
+@@ -2087,14 +2155,45 @@ err:
+ 	return ret;
+ }
+ 
++static int ath10k_pci_hif_power_up(struct ath10k *ar)
++{
++	int ret;
 +
 +	/*
-+	 * actually finds last dtim_count, mac80211 will update in
-+	 * __beacon_add_tim().
-+	 * dtim_count = dtim_period - (tsf / bcn_int) % dtim_period
++	 * Hardware revision 2 has some issues with cold reset and the
++	 * preferred (and safer) way to perform a device reset is through a
++	 * warm reset.
++	 *
++	 * Warm reset doesn't always work though (notably after a firmware
++	 * crash) so fall back to cold reset if necessary.
 +	 */
-+	do_div(tsf, beacon_int);
-+	bcns_from_dtim = do_div(tsf, dtim_period);
-+	/* just had a DTIM */
-+	if (!bcns_from_dtim)
-+		dtim_count = 0;
-+	else
-+		dtim_count = dtim_period - bcns_from_dtim;
++	ret = __ath10k_pci_hif_power_up(ar, 0);
++	if (ret) {
++		ath10k_warn("failed to power up target using warm reset (%d), trying cold reset\n",
++			    ret);
 +
-+	sdata->u.mesh.ps.dtim_count = dtim_count;
++		ret = __ath10k_pci_hif_power_up(ar, 1);
++		if (ret) {
++			ath10k_err("failed to power up target using cold reset too (%d)\n",
++				   ret);
++			return ret;
++		}
++	}
++
++	return 0;
 +}
++
+ static void ath10k_pci_hif_power_down(struct ath10k *ar)
+ {
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 
++	/* Make the sure the device won't access any structures on the host by
++	 * resetting it. This should prevent host memory corruption, hangs. */
++	ath10k_pci_warm_reset(ar);
++
+ 	ath10k_pci_free_early_irq(ar);
+ 	ath10k_pci_kill_tasklet(ar);
+ 	ath10k_pci_deinit_irq(ar);
+-	ath10k_pci_device_reset(ar);
+ 
+ 	ath10k_pci_ce_deinit(ar);
+ 	if (!test_bit(ATH10K_PCI_FEATURE_SOC_POWER_SAVE, ar_pci->features))
+@@ -2523,7 +2622,7 @@ out:
+ 	return ret;
+ }
+ 
+-static int ath10k_pci_device_reset(struct ath10k *ar)
++static int ath10k_pci_cold_reset(struct ath10k *ar)
+ {
+ 	int i, ret;
+ 	u32 val;
 -- 
-1.7.10.4
+1.8.4.rc3
 
