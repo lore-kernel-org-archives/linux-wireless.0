@@ -1,1295 +1,580 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:38819 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751520Ab3LLK7U (ORCPT
+Received: from mail-ea0-f174.google.com ([209.85.215.174]:33361 "EHLO
+	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750826Ab3LLPSa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Dec 2013 05:59:20 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 16/18] brcmfmac: use consistent function names in dhd_sdio.c
-Date: Thu, 12 Dec 2013 11:59:04 +0100
-Message-ID: <1386845946-9859-17-git-send-email-arend@broadcom.com> (sfid-20131212_122500_582999_4DD7A4BB)
-In-Reply-To: <1386845946-9859-1-git-send-email-arend@broadcom.com>
-References: <1386845946-9859-1-git-send-email-arend@broadcom.com>
+	Thu, 12 Dec 2013 10:18:30 -0500
+Received: by mail-ea0-f174.google.com with SMTP id b10so304533eae.33
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Dec 2013 07:18:28 -0800 (PST)
+Message-ID: <52A9D3B9.7040707@gmail.com> (sfid-20131212_161833_936217_CFE21AAF)
+Date: Thu, 12 Dec 2013 16:18:17 +0100
+From: Jeremy Johnathan Rodent <rat.o.drat@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Random lock-ups (?) of Centrino Ultimate-N 6300 (iwlwifi)
+References: <52A40FE5.30004@gmail.com>	<CANUX_P0iO2YdDGO6_GcBOA2A6QvUfYQNz8E2L2SjLpMPYYviuQ@mail.gmail.com>	<52A8BA8B.6040104@gmail.com> <CANUX_P1VC80TAexTJfR8EQWBGfOXpQOdj75piKaaJ=to9tuRuQ@mail.gmail.com>
+In-Reply-To: <CANUX_P1VC80TAexTJfR8EQWBGfOXpQOdj75piKaaJ=to9tuRuQ@mail.gmail.com>
+Content-Type: multipart/mixed;
+ boundary="------------050905050100090403050201"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Functions in dhd_sdio.c that are called with struct brcmf_sdio
-instance are renamed consistently with brcmf_sdio_ prefix.
+This is a multi-part message in MIME format.
+--------------050905050100090403050201
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |   12 +-
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |  346 ++++++++++----------
- .../net/wireless/brcm80211/brcmfmac/sdio_host.h    |    9 +-
- 3 files changed, 178 insertions(+), 189 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-index 9c41438..e07bad2 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-@@ -72,7 +72,7 @@ static irqreturn_t brcmf_sdiod_oob_irqhandler(int irq, void *dev_id)
- 		sdiodev->irq_en = false;
- 	}
- 
--	brcmf_sdbrcm_isr(sdiodev->bus);
-+	brcmf_sdio_isr(sdiodev->bus);
- 
- 	return IRQ_HANDLED;
- }
-@@ -84,7 +84,7 @@ static void brcmf_sdiod_ib_irqhandler(struct sdio_func *func)
- 
- 	brcmf_dbg(INTR, "IB intr triggered\n");
- 
--	brcmf_sdbrcm_isr(sdiodev->bus);
-+	brcmf_sdio_isr(sdiodev->bus);
- }
- 
- /* dummy handler for SDIO function 2 interrupt */
-@@ -901,7 +901,7 @@ static int brcmf_sdiod_remove(struct brcmf_sdio_dev *sdiodev)
- 	sdiodev->bus_if->state = BRCMF_BUS_DOWN;
- 
- 	if (sdiodev->bus) {
--		brcmf_sdbrcm_disconnect(sdiodev->bus);
-+		brcmf_sdio_disconnect(sdiodev->bus);
- 		sdiodev->bus = NULL;
- 	}
- 
-@@ -971,7 +971,7 @@ static int brcmf_sdiod_probe(struct brcmf_sdio_dev *sdiodev)
- 	sdiodev->max_segment_size = host->max_seg_size;
- 
- 	/* try to attach to the target device */
--	sdiodev->bus = brcmf_sdbrcm_probe(sdiodev);
-+	sdiodev->bus = brcmf_sdio_probe(sdiodev);
- 	if (!sdiodev->bus) {
- 		ret = -ENODEV;
- 		goto out;
-@@ -1117,7 +1117,7 @@ static int brcmf_ops_sdio_suspend(struct device *dev)
- 		return ret;
- 	}
- 
--	brcmf_sdbrcm_wd_timer(sdiodev->bus, 0);
-+	brcmf_sdio_wd_timer(sdiodev->bus, 0);
- 
- 	return ret;
- }
-@@ -1127,7 +1127,7 @@ static int brcmf_ops_sdio_resume(struct device *dev)
- 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
- 	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
- 
--	brcmf_sdbrcm_wd_timer(sdiodev->bus, BRCMF_WD_POLL_MS);
-+	brcmf_sdio_wd_timer(sdiodev->bus, BRCMF_WD_POLL_MS);
- 	atomic_set(&sdiodev->suspend, false);
- 	return 0;
- }
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 7fff4cc..f3069b4 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -556,7 +556,7 @@ static const struct brcmf_firmware_names brcmf_fwname_data[] = {
- };
- 
- 
--static const struct firmware *brcmf_sdbrcm_get_fw(struct brcmf_sdio *bus,
-+static const struct firmware *brcmf_sdio_get_fw(struct brcmf_sdio *bus,
- 						  enum brcmf_firmware_type type)
- {
- 	const struct firmware *fw;
-@@ -641,7 +641,7 @@ w_sdreg32(struct brcmf_sdio *bus, u32 regval, u32 reg_offset)
- }
- 
- static int
--brcmf_sdbrcm_kso_control(struct brcmf_sdio *bus, bool on)
-+brcmf_sdio_kso_control(struct brcmf_sdio *bus, bool on)
- {
- 	u8 wr_val = 0, rd_val, cmp_val, bmask;
- 	int err = 0;
-@@ -701,7 +701,7 @@ brcmf_sdbrcm_kso_control(struct brcmf_sdio *bus, bool on)
- #define HOSTINTMASK		(I_HMB_SW_MASK | I_CHIPACTIVE)
- 
- /* Turn backplane clock on or off */
--static int brcmf_sdbrcm_htclk(struct brcmf_sdio *bus, bool on, bool pendok)
-+static int brcmf_sdio_htclk(struct brcmf_sdio *bus, bool on, bool pendok)
- {
- 	int err;
- 	u8 clkctl, clkreq, devctl;
-@@ -823,7 +823,7 @@ static int brcmf_sdbrcm_htclk(struct brcmf_sdio *bus, bool on, bool pendok)
- }
- 
- /* Change idle/active SD state */
--static int brcmf_sdbrcm_sdclk(struct brcmf_sdio *bus, bool on)
-+static int brcmf_sdio_sdclk(struct brcmf_sdio *bus, bool on)
- {
- 	brcmf_dbg(SDIO, "Enter\n");
- 
-@@ -836,7 +836,7 @@ static int brcmf_sdbrcm_sdclk(struct brcmf_sdio *bus, bool on)
- }
- 
- /* Transition SD and backplane clock readiness */
--static int brcmf_sdbrcm_clkctl(struct brcmf_sdio *bus, uint target, bool pendok)
-+static int brcmf_sdio_clkctl(struct brcmf_sdio *bus, uint target, bool pendok)
- {
- #ifdef DEBUG
- 	uint oldstate = bus->clkstate;
-@@ -847,7 +847,7 @@ static int brcmf_sdbrcm_clkctl(struct brcmf_sdio *bus, uint target, bool pendok)
- 	/* Early exit if we're already there */
- 	if (bus->clkstate == target) {
- 		if (target == CLK_AVAIL) {
--			brcmf_sdbrcm_wd_timer(bus, BRCMF_WD_POLL_MS);
-+			brcmf_sdio_wd_timer(bus, BRCMF_WD_POLL_MS);
- 			bus->activity = true;
- 		}
- 		return 0;
-@@ -857,32 +857,32 @@ static int brcmf_sdbrcm_clkctl(struct brcmf_sdio *bus, uint target, bool pendok)
- 	case CLK_AVAIL:
- 		/* Make sure SD clock is available */
- 		if (bus->clkstate == CLK_NONE)
--			brcmf_sdbrcm_sdclk(bus, true);
-+			brcmf_sdio_sdclk(bus, true);
- 		/* Now request HT Avail on the backplane */
--		brcmf_sdbrcm_htclk(bus, true, pendok);
--		brcmf_sdbrcm_wd_timer(bus, BRCMF_WD_POLL_MS);
-+		brcmf_sdio_htclk(bus, true, pendok);
-+		brcmf_sdio_wd_timer(bus, BRCMF_WD_POLL_MS);
- 		bus->activity = true;
- 		break;
- 
- 	case CLK_SDONLY:
- 		/* Remove HT request, or bring up SD clock */
- 		if (bus->clkstate == CLK_NONE)
--			brcmf_sdbrcm_sdclk(bus, true);
-+			brcmf_sdio_sdclk(bus, true);
- 		else if (bus->clkstate == CLK_AVAIL)
--			brcmf_sdbrcm_htclk(bus, false, false);
-+			brcmf_sdio_htclk(bus, false, false);
- 		else
- 			brcmf_err("request for %d -> %d\n",
- 				  bus->clkstate, target);
--		brcmf_sdbrcm_wd_timer(bus, BRCMF_WD_POLL_MS);
-+		brcmf_sdio_wd_timer(bus, BRCMF_WD_POLL_MS);
- 		break;
- 
- 	case CLK_NONE:
- 		/* Make sure to remove HT request */
- 		if (bus->clkstate == CLK_AVAIL)
--			brcmf_sdbrcm_htclk(bus, false, false);
-+			brcmf_sdio_htclk(bus, false, false);
- 		/* Now remove the SD clock */
--		brcmf_sdbrcm_sdclk(bus, false);
--		brcmf_sdbrcm_wd_timer(bus, 0);
-+		brcmf_sdio_sdclk(bus, false);
-+		brcmf_sdio_wd_timer(bus, 0);
- 		break;
- 	}
- #ifdef DEBUG
-@@ -893,7 +893,7 @@ static int brcmf_sdbrcm_clkctl(struct brcmf_sdio *bus, uint target, bool pendok)
- }
- 
- static int
--brcmf_sdbrcm_bus_sleep(struct brcmf_sdio *bus, bool sleep, bool pendok)
-+brcmf_sdio_bus_sleep(struct brcmf_sdio *bus, bool sleep, bool pendok)
- {
- 	int err = 0;
- 	brcmf_dbg(TRACE, "Enter\n");
-@@ -916,13 +916,13 @@ brcmf_sdbrcm_bus_sleep(struct brcmf_sdio *bus, bool sleep, bool pendok)
- 			    brcmu_pktq_mlen(&bus->txq, ~bus->flowcontrol) &&
- 			    data_ok(bus)))
- 				 return -EBUSY;
--			err = brcmf_sdbrcm_kso_control(bus, false);
-+			err = brcmf_sdio_kso_control(bus, false);
- 			/* disable watchdog */
- 			if (!err)
--				brcmf_sdbrcm_wd_timer(bus, 0);
-+				brcmf_sdio_wd_timer(bus, 0);
- 		} else {
- 			bus->idlecount = 0;
--			err = brcmf_sdbrcm_kso_control(bus, true);
-+			err = brcmf_sdio_kso_control(bus, true);
- 		}
- 		if (!err) {
- 			/* Change state */
-@@ -940,16 +940,16 @@ end:
- 	/* control clocks */
- 	if (sleep) {
- 		if (!bus->sr_enabled)
--			brcmf_sdbrcm_clkctl(bus, CLK_NONE, pendok);
-+			brcmf_sdio_clkctl(bus, CLK_NONE, pendok);
- 	} else {
--		brcmf_sdbrcm_clkctl(bus, CLK_AVAIL, pendok);
-+		brcmf_sdio_clkctl(bus, CLK_AVAIL, pendok);
- 	}
- 
- 	return err;
- 
- }
- 
--static u32 brcmf_sdbrcm_hostmail(struct brcmf_sdio *bus)
-+static u32 brcmf_sdio_hostmail(struct brcmf_sdio *bus)
- {
- 	u32 intstatus = 0;
- 	u32 hmb_data;
-@@ -1025,7 +1025,7 @@ static u32 brcmf_sdbrcm_hostmail(struct brcmf_sdio *bus)
- 	return intstatus;
- }
- 
--static void brcmf_sdbrcm_rxfail(struct brcmf_sdio *bus, bool abort, bool rtx)
-+static void brcmf_sdio_rxfail(struct brcmf_sdio *bus, bool abort, bool rtx)
- {
- 	uint retries = 0;
- 	u16 lastrbc;
-@@ -1085,7 +1085,7 @@ static void brcmf_sdbrcm_rxfail(struct brcmf_sdio *bus, bool abort, bool rtx)
- }
- 
- /* return total length of buffer chain */
--static uint brcmf_sdbrcm_glom_len(struct brcmf_sdio *bus)
-+static uint brcmf_sdio_glom_len(struct brcmf_sdio *bus)
- {
- 	struct sk_buff *p;
- 	uint total;
-@@ -1096,7 +1096,7 @@ static uint brcmf_sdbrcm_glom_len(struct brcmf_sdio *bus)
- 	return total;
- }
- 
--static void brcmf_sdbrcm_free_glom(struct brcmf_sdio *bus)
-+static void brcmf_sdio_free_glom(struct brcmf_sdio *bus)
- {
- 	struct sk_buff *cur, *next;
- 
-@@ -1184,7 +1184,7 @@ static int brcmf_sdio_hdparse(struct brcmf_sdio *bus, u8 *header,
- 	if ((u16)(~(len ^ checksum))) {
- 		brcmf_err("HW header checksum error\n");
- 		bus->sdcnt.rx_badhdr++;
--		brcmf_sdbrcm_rxfail(bus, false, false);
-+		brcmf_sdio_rxfail(bus, false, false);
- 		return -EIO;
- 	}
- 	if (len < SDPCM_HDRLEN) {
-@@ -1216,7 +1216,7 @@ static int brcmf_sdio_hdparse(struct brcmf_sdio *bus, u8 *header,
- 	    type != BRCMF_SDIO_FT_SUPER) {
- 		brcmf_err("HW header length too long\n");
- 		bus->sdcnt.rx_toolong++;
--		brcmf_sdbrcm_rxfail(bus, false, false);
-+		brcmf_sdio_rxfail(bus, false, false);
- 		rd->len = 0;
- 		return -EPROTO;
- 	}
-@@ -1235,7 +1235,7 @@ static int brcmf_sdio_hdparse(struct brcmf_sdio *bus, u8 *header,
- 	if (rd->dat_offset < SDPCM_HDRLEN || rd->dat_offset > rd->len) {
- 		brcmf_err("seq %d: bad data offset\n", rx_seq);
- 		bus->sdcnt.rx_badhdr++;
--		brcmf_sdbrcm_rxfail(bus, false, false);
-+		brcmf_sdio_rxfail(bus, false, false);
- 		rd->len = 0;
- 		return -ENXIO;
- 	}
-@@ -1308,7 +1308,7 @@ static void brcmf_sdio_hdpack(struct brcmf_sdio *bus, u8 *header,
- 	trace_brcmf_sdpcm_hdr(SDPCM_TX + !!(bus->txglom), header);
- }
- 
--static u8 brcmf_sdbrcm_rxglom(struct brcmf_sdio *bus, u8 rxseq)
-+static u8 brcmf_sdio_rxglom(struct brcmf_sdio *bus, u8 rxseq)
- {
- 	u16 dlen, totlen;
- 	u8 *dptr, num = 0;
-@@ -1388,7 +1388,7 @@ static u8 brcmf_sdbrcm_rxglom(struct brcmf_sdio *bus, u8 rxseq)
- 			}
- 			pfirst = pnext = NULL;
- 		} else {
--			brcmf_sdbrcm_free_glom(bus);
-+			brcmf_sdio_free_glom(bus);
- 			num = 0;
- 		}
- 
-@@ -1411,7 +1411,7 @@ static u8 brcmf_sdbrcm_rxglom(struct brcmf_sdio *bus, u8 rxseq)
- 		}
- 
- 		pfirst = skb_peek(&bus->glom);
--		dlen = (u16) brcmf_sdbrcm_glom_len(bus);
-+		dlen = (u16) brcmf_sdio_glom_len(bus);
- 
- 		/* Do an SDIO read for the superframe.  Configurable iovar to
- 		 * read directly into the chained packet, or allocate a large
-@@ -1430,12 +1430,12 @@ static u8 brcmf_sdbrcm_rxglom(struct brcmf_sdio *bus, u8 rxseq)
- 
- 			sdio_claim_host(bus->sdiodev->func[1]);
- 			if (bus->glomerr++ < 3) {
--				brcmf_sdbrcm_rxfail(bus, true, true);
-+				brcmf_sdio_rxfail(bus, true, true);
- 			} else {
- 				bus->glomerr = 0;
--				brcmf_sdbrcm_rxfail(bus, true, false);
-+				brcmf_sdio_rxfail(bus, true, false);
- 				bus->sdcnt.rxglomfail++;
--				brcmf_sdbrcm_free_glom(bus);
-+				brcmf_sdio_free_glom(bus);
- 			}
- 			sdio_release_host(bus->sdiodev->func[1]);
- 			return 0;
-@@ -1483,12 +1483,12 @@ static u8 brcmf_sdbrcm_rxglom(struct brcmf_sdio *bus, u8 rxseq)
- 			if (bus->glomerr++ < 3) {
- 				/* Restore superframe header space */
- 				skb_push(pfirst, sfdoff);
--				brcmf_sdbrcm_rxfail(bus, true, true);
-+				brcmf_sdio_rxfail(bus, true, true);
- 			} else {
- 				bus->glomerr = 0;
--				brcmf_sdbrcm_rxfail(bus, true, false);
-+				brcmf_sdio_rxfail(bus, true, false);
- 				bus->sdcnt.rxglomfail++;
--				brcmf_sdbrcm_free_glom(bus);
-+				brcmf_sdio_free_glom(bus);
- 			}
- 			sdio_release_host(bus->sdiodev->func[1]);
- 			bus->cur_read.len = 0;
-@@ -1532,8 +1532,8 @@ static u8 brcmf_sdbrcm_rxglom(struct brcmf_sdio *bus, u8 rxseq)
- 	return num;
- }
- 
--static int brcmf_sdbrcm_dcmd_resp_wait(struct brcmf_sdio *bus, uint *condition,
--					bool *pending)
-+static int brcmf_sdio_dcmd_resp_wait(struct brcmf_sdio *bus, uint *condition,
-+				     bool *pending)
- {
- 	DECLARE_WAITQUEUE(wait, current);
- 	int timeout = msecs_to_jiffies(DCMD_RESP_TIMEOUT);
-@@ -1554,7 +1554,7 @@ static int brcmf_sdbrcm_dcmd_resp_wait(struct brcmf_sdio *bus, uint *condition,
- 	return timeout;
- }
- 
--static int brcmf_sdbrcm_dcmd_resp_wake(struct brcmf_sdio *bus)
-+static int brcmf_sdio_dcmd_resp_wake(struct brcmf_sdio *bus)
- {
- 	if (waitqueue_active(&bus->dcmd_resp_wait))
- 		wake_up_interruptible(&bus->dcmd_resp_wait);
-@@ -1562,7 +1562,7 @@ static int brcmf_sdbrcm_dcmd_resp_wake(struct brcmf_sdio *bus)
- 	return 0;
- }
- static void
--brcmf_sdbrcm_read_control(struct brcmf_sdio *bus, u8 *hdr, uint len, uint doff)
-+brcmf_sdio_read_control(struct brcmf_sdio *bus, u8 *hdr, uint len, uint doff)
- {
- 	uint rdlen, pad;
- 	u8 *buf = NULL, *rbuf;
-@@ -1600,7 +1600,7 @@ brcmf_sdbrcm_read_control(struct brcmf_sdio *bus, u8 *hdr, uint len, uint doff)
- 	if ((rdlen + BRCMF_FIRSTREAD) > bus->sdiodev->bus_if->maxctl) {
- 		brcmf_err("%d-byte control read exceeds %d-byte buffer\n",
- 			  rdlen, bus->sdiodev->bus_if->maxctl);
--		brcmf_sdbrcm_rxfail(bus, false, false);
-+		brcmf_sdio_rxfail(bus, false, false);
- 		goto done;
- 	}
- 
-@@ -1608,7 +1608,7 @@ brcmf_sdbrcm_read_control(struct brcmf_sdio *bus, u8 *hdr, uint len, uint doff)
- 		brcmf_err("%d-byte ctl frame (%d-byte ctl data) exceeds %d-byte limit\n",
- 			  len, len - doff, bus->sdiodev->bus_if->maxctl);
- 		bus->sdcnt.rx_toolong++;
--		brcmf_sdbrcm_rxfail(bus, false, false);
-+		brcmf_sdio_rxfail(bus, false, false);
- 		goto done;
- 	}
- 
-@@ -1621,7 +1621,7 @@ brcmf_sdbrcm_read_control(struct brcmf_sdio *bus, u8 *hdr, uint len, uint doff)
- 		brcmf_err("read %d control bytes failed: %d\n",
- 			  rdlen, sdret);
- 		bus->sdcnt.rxc_errors++;
--		brcmf_sdbrcm_rxfail(bus, true, true);
-+		brcmf_sdio_rxfail(bus, true, true);
- 		goto done;
- 	} else
- 		memcpy(buf + BRCMF_FIRSTREAD, rbuf, rdlen);
-@@ -1646,11 +1646,11 @@ gotpkt:
- 
- done:
- 	/* Awake any waiters */
--	brcmf_sdbrcm_dcmd_resp_wake(bus);
-+	brcmf_sdio_dcmd_resp_wake(bus);
- }
- 
- /* Pad read to blocksize for efficiency */
--static void brcmf_pad(struct brcmf_sdio *bus, u16 *pad, u16 *rdlen)
-+static void brcmf_sdio_pad(struct brcmf_sdio *bus, u16 *pad, u16 *rdlen)
- {
- 	if (bus->roundup && bus->blocksize && *rdlen > bus->blocksize) {
- 		*pad = bus->blocksize - (*rdlen % bus->blocksize);
-@@ -1687,7 +1687,7 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
- 			u8 cnt;
- 			brcmf_dbg(GLOM, "calling rxglom: glomd %p, glom %p\n",
- 				  bus->glomd, skb_peek(&bus->glom));
--			cnt = brcmf_sdbrcm_rxglom(bus, rd->seq_num);
-+			cnt = brcmf_sdio_rxglom(bus, rd->seq_num);
- 			brcmf_dbg(GLOM, "rxglom returned %d\n", cnt);
- 			rd->seq_num += cnt - 1;
- 			rxleft = (rxleft > cnt) ? (rxleft - cnt) : 1;
-@@ -1705,7 +1705,7 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
- 				brcmf_err("RXHEADER FAILED: %d\n",
- 					  ret);
- 				bus->sdcnt.rx_hdrfail++;
--				brcmf_sdbrcm_rxfail(bus, true, true);
-+				brcmf_sdio_rxfail(bus, true, true);
- 				sdio_release_host(bus->sdiodev->func[1]);
- 				continue;
- 			}
-@@ -1724,9 +1724,9 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
- 			}
- 
- 			if (rd->channel == SDPCM_CONTROL_CHANNEL) {
--				brcmf_sdbrcm_read_control(bus, bus->rxhdr,
--							  rd->len,
--							  rd->dat_offset);
-+				brcmf_sdio_read_control(bus, bus->rxhdr,
-+							rd->len,
-+							rd->dat_offset);
- 				/* prepare the descriptor for the next read */
- 				rd->len = rd->len_nxtfrm << 4;
- 				rd->len_nxtfrm = 0;
-@@ -1740,14 +1740,14 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
- 			head_read = BRCMF_FIRSTREAD;
- 		}
- 
--		brcmf_pad(bus, &pad, &rd->len_left);
-+		brcmf_sdio_pad(bus, &pad, &rd->len_left);
- 
- 		pkt = brcmu_pkt_buf_get_skb(rd->len_left + head_read +
- 					    bus->head_align);
- 		if (!pkt) {
- 			/* Give up on data, request rtx of events */
- 			brcmf_err("brcmu_pkt_buf_get_skb failed\n");
--			brcmf_sdbrcm_rxfail(bus, false,
-+			brcmf_sdio_rxfail(bus, false,
- 					    RETRYCHAN(rd->channel));
- 			sdio_release_host(bus->sdiodev->func[1]);
- 			continue;
-@@ -1764,7 +1764,7 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
- 				  rd->len, rd->channel, ret);
- 			brcmu_pkt_buf_free_skb(pkt);
- 			sdio_claim_host(bus->sdiodev->func[1]);
--			brcmf_sdbrcm_rxfail(bus, true,
-+			brcmf_sdio_rxfail(bus, true,
- 					    RETRYCHAN(rd->channel));
- 			sdio_release_host(bus->sdiodev->func[1]);
- 			continue;
-@@ -1789,7 +1789,7 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
- 					  rd->len,
- 					  roundup(rd_new.len, 16) >> 4);
- 				rd->len = 0;
--				brcmf_sdbrcm_rxfail(bus, true, true);
-+				brcmf_sdio_rxfail(bus, true, true);
- 				sdio_release_host(bus->sdiodev->func[1]);
- 				brcmu_pkt_buf_free_skb(pkt);
- 				continue;
-@@ -1811,7 +1811,7 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
- 				/* Force retry w/normal header read */
- 				rd->len = 0;
- 				sdio_claim_host(bus->sdiodev->func[1]);
--				brcmf_sdbrcm_rxfail(bus, false, true);
-+				brcmf_sdio_rxfail(bus, false, true);
- 				sdio_release_host(bus->sdiodev->func[1]);
- 				brcmu_pkt_buf_free_skb(pkt);
- 				continue;
-@@ -1836,7 +1836,7 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
- 				brcmf_err("%s: glom superframe w/o "
- 					  "descriptor!\n", __func__);
- 				sdio_claim_host(bus->sdiodev->func[1]);
--				brcmf_sdbrcm_rxfail(bus, false, false);
-+				brcmf_sdio_rxfail(bus, false, false);
- 				sdio_release_host(bus->sdiodev->func[1]);
- 			}
- 			/* prepare the descriptor for the next read */
-@@ -1880,7 +1880,7 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
- }
- 
- static void
--brcmf_sdbrcm_wait_event_wakeup(struct brcmf_sdio *bus)
-+brcmf_sdio_wait_event_wakeup(struct brcmf_sdio *bus)
- {
- 	if (waitqueue_active(&bus->ctrl_wait))
- 		wake_up_interruptible(&bus->ctrl_wait);
-@@ -2096,8 +2096,8 @@ brcmf_sdio_txpkt_postp(struct brcmf_sdio *bus, struct sk_buff_head *pktq)
- 
- /* Writes a HW/SW header into the packet and sends it. */
- /* Assumes: (a) header space already there, (b) caller holds lock */
--static int brcmf_sdbrcm_txpkt(struct brcmf_sdio *bus, struct sk_buff_head *pktq,
--			      uint chan)
-+static int brcmf_sdio_txpkt(struct brcmf_sdio *bus, struct sk_buff_head *pktq,
-+			    uint chan)
- {
- 	int ret;
- 	int i;
-@@ -2148,7 +2148,7 @@ done:
- 	return ret;
- }
- 
--static uint brcmf_sdbrcm_sendfromq(struct brcmf_sdio *bus, uint maxframes)
-+static uint brcmf_sdio_sendfromq(struct brcmf_sdio *bus, uint maxframes)
- {
- 	struct sk_buff *pkt;
- 	struct sk_buff_head pktq;
-@@ -2182,7 +2182,7 @@ static uint brcmf_sdbrcm_sendfromq(struct brcmf_sdio *bus, uint maxframes)
- 		if (i == 0)
- 			break;
- 
--		ret = brcmf_sdbrcm_txpkt(bus, &pktq, SDPCM_DATA_CHANNEL);
-+		ret = brcmf_sdio_txpkt(bus, &pktq, SDPCM_DATA_CHANNEL);
- 		cnt += i;
- 
- 		/* In poll mode, need to check for other events */
-@@ -2211,7 +2211,7 @@ static uint brcmf_sdbrcm_sendfromq(struct brcmf_sdio *bus, uint maxframes)
- 	return cnt;
- }
- 
--static void brcmf_sdbrcm_bus_stop(struct device *dev)
-+static void brcmf_sdio_bus_stop(struct device *dev)
- {
- 	u32 local_hostintmask;
- 	u8 saveclk;
-@@ -2231,7 +2231,7 @@ static void brcmf_sdbrcm_bus_stop(struct device *dev)
- 	sdio_claim_host(bus->sdiodev->func[1]);
- 
- 	/* Enable clock for device interrupts */
--	brcmf_sdbrcm_bus_sleep(bus, false, false);
-+	brcmf_sdio_bus_sleep(bus, false, false);
- 
- 	/* Disable and clear interrupts at the chip level also */
- 	w_sdreg32(bus, 0, offsetof(struct sdpcmd_regs, hostintmask));
-@@ -2260,7 +2260,7 @@ static void brcmf_sdbrcm_bus_stop(struct device *dev)
- 		  offsetof(struct sdpcmd_regs, intstatus));
- 
- 	/* Turn off the backplane clock (only) */
--	brcmf_sdbrcm_clkctl(bus, CLK_SDONLY, false);
-+	brcmf_sdio_clkctl(bus, CLK_SDONLY, false);
- 	sdio_release_host(bus->sdiodev->func[1]);
- 
- 	/* Clear the data packet queues */
-@@ -2269,20 +2269,20 @@ static void brcmf_sdbrcm_bus_stop(struct device *dev)
- 	/* Clear any held glomming stuff */
- 	if (bus->glomd)
- 		brcmu_pkt_buf_free_skb(bus->glomd);
--	brcmf_sdbrcm_free_glom(bus);
-+	brcmf_sdio_free_glom(bus);
- 
- 	/* Clear rx control and wake any waiters */
- 	spin_lock_bh(&bus->rxctl_lock);
- 	bus->rxlen = 0;
- 	spin_unlock_bh(&bus->rxctl_lock);
--	brcmf_sdbrcm_dcmd_resp_wake(bus);
-+	brcmf_sdio_dcmd_resp_wake(bus);
- 
- 	/* Reset some F2 state stuff */
- 	bus->rxskip = false;
- 	bus->tx_seq = bus->rx_seq = 0;
- }
- 
--static inline void brcmf_sdbrcm_clrintr(struct brcmf_sdio *bus)
-+static inline void brcmf_sdio_clrintr(struct brcmf_sdio *bus)
- {
- 	unsigned long flags;
- 
-@@ -2331,7 +2331,7 @@ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
- 	return ret;
- }
- 
--static void brcmf_sdbrcm_dpc(struct brcmf_sdio *bus)
-+static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
- {
- 	u32 newstatus = 0;
- 	unsigned long intstatus;
-@@ -2391,7 +2391,7 @@ static void brcmf_sdbrcm_dpc(struct brcmf_sdio *bus)
- 	}
- 
- 	/* Make sure backplane clock is on */
--	brcmf_sdbrcm_bus_sleep(bus, false, true);
-+	brcmf_sdio_bus_sleep(bus, false, true);
- 
- 	/* Pending interrupt indicates new device status */
- 	if (atomic_read(&bus->ipend) > 0) {
-@@ -2422,7 +2422,7 @@ static void brcmf_sdbrcm_dpc(struct brcmf_sdio *bus)
- 	/* Handle host mailbox indication */
- 	if (intstatus & I_HMB_HOST_INT) {
- 		intstatus &= ~I_HMB_HOST_INT;
--		intstatus |= brcmf_sdbrcm_hostmail(bus);
-+		intstatus |= brcmf_sdio_hostmail(bus);
- 	}
- 
- 	sdio_release_host(bus->sdiodev->func[1]);
-@@ -2467,7 +2467,7 @@ static void brcmf_sdbrcm_dpc(struct brcmf_sdio *bus)
- 			set_bit(n, (unsigned long *)&bus->intstatus.counter);
- 	}
- 
--	brcmf_sdbrcm_clrintr(bus);
-+	brcmf_sdio_clrintr(bus);
- 
- 	if (data_ok(bus) && bus->ctrl_frame_stat &&
- 		(bus->clkstate == CLK_AVAIL)) {
-@@ -2508,7 +2508,7 @@ static void brcmf_sdbrcm_dpc(struct brcmf_sdio *bus)
- 		}
- 		sdio_release_host(bus->sdiodev->func[1]);
- 		bus->ctrl_frame_stat = false;
--		brcmf_sdbrcm_wait_event_wakeup(bus);
-+		brcmf_sdio_wait_event_wakeup(bus);
- 	}
- 	/* Send queued frames (limit 1 if rx may still be pending) */
- 	else if ((bus->clkstate == CLK_AVAIL) && !atomic_read(&bus->fcstate) &&
-@@ -2516,7 +2516,7 @@ static void brcmf_sdbrcm_dpc(struct brcmf_sdio *bus)
- 		 && data_ok(bus)) {
- 		framecnt = bus->rxpending ? min(txlimit, bus->txminmax) :
- 					    txlimit;
--		framecnt = brcmf_sdbrcm_sendfromq(bus, framecnt);
-+		framecnt = brcmf_sdio_sendfromq(bus, framecnt);
- 		txlimit -= framecnt;
- 	}
- 
-@@ -2538,12 +2538,12 @@ static void brcmf_sdbrcm_dpc(struct brcmf_sdio *bus)
- 		bus->activity = false;
- 		brcmf_dbg(SDIO, "idle state\n");
- 		sdio_claim_host(bus->sdiodev->func[1]);
--		brcmf_sdbrcm_bus_sleep(bus, true, false);
-+		brcmf_sdio_bus_sleep(bus, true, false);
- 		sdio_release_host(bus->sdiodev->func[1]);
- 	}
- }
- 
--static struct pktq *brcmf_sdbrcm_bus_gettxq(struct device *dev)
-+static struct pktq *brcmf_sdio_bus_gettxq(struct device *dev)
- {
- 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
- 	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
-@@ -2552,7 +2552,7 @@ static struct pktq *brcmf_sdbrcm_bus_gettxq(struct device *dev)
- 	return &bus->txq;
- }
- 
--static int brcmf_sdbrcm_bus_txdata(struct device *dev, struct sk_buff *pkt)
-+static int brcmf_sdio_bus_txdata(struct device *dev, struct sk_buff *pkt)
- {
- 	int ret = -EBADE;
- 	uint datalen, prec;
-@@ -2608,7 +2608,7 @@ static int brcmf_sdbrcm_bus_txdata(struct device *dev, struct sk_buff *pkt)
- #ifdef DEBUG
- #define CONSOLE_LINE_MAX	192
- 
--static int brcmf_sdbrcm_readconsole(struct brcmf_sdio *bus)
-+static int brcmf_sdio_readconsole(struct brcmf_sdio *bus)
- {
- 	struct brcmf_console *c = &bus->console;
- 	u8 line[CONSOLE_LINE_MAX], ch;
-@@ -2685,7 +2685,7 @@ break2:
- }
- #endif				/* DEBUG */
- 
--static int brcmf_tx_frame(struct brcmf_sdio *bus, u8 *frame, u16 len)
-+static int brcmf_sdio_tx_frame(struct brcmf_sdio *bus, u8 *frame, u16 len)
- {
- 	int i;
- 	int ret;
-@@ -2724,7 +2724,7 @@ static int brcmf_tx_frame(struct brcmf_sdio *bus, u8 *frame, u16 len)
- }
- 
- static int
--brcmf_sdbrcm_bus_txctl(struct device *dev, unsigned char *msg, uint msglen)
-+brcmf_sdio_bus_txctl(struct device *dev, unsigned char *msg, uint msglen)
- {
- 	u8 *frame;
- 	u16 len, pad;
-@@ -2768,7 +2768,7 @@ brcmf_sdbrcm_bus_txctl(struct device *dev, unsigned char *msg, uint msglen)
- 
- 	/* Make sure backplane clock is on */
- 	sdio_claim_host(bus->sdiodev->func[1]);
--	brcmf_sdbrcm_bus_sleep(bus, false, false);
-+	brcmf_sdio_bus_sleep(bus, false, false);
- 	sdio_release_host(bus->sdiodev->func[1]);
- 
- 	hd_info.len = (u16)msglen;
-@@ -2812,7 +2812,7 @@ brcmf_sdbrcm_bus_txctl(struct device *dev, unsigned char *msg, uint msglen)
- 
- 		do {
- 			sdio_claim_host(bus->sdiodev->func[1]);
--			ret = brcmf_tx_frame(bus, frame, len);
-+			ret = brcmf_sdio_tx_frame(bus, frame, len);
- 			sdio_release_host(bus->sdiodev->func[1]);
- 		} while (ret < 0 && retries++ < TXRETRIES);
- 	}
-@@ -2822,7 +2822,7 @@ brcmf_sdbrcm_bus_txctl(struct device *dev, unsigned char *msg, uint msglen)
- 		bus->activity = false;
- 		sdio_claim_host(bus->sdiodev->func[1]);
- 		brcmf_dbg(INFO, "idle\n");
--		brcmf_sdbrcm_clkctl(bus, CLK_NONE, true);
-+		brcmf_sdio_clkctl(bus, CLK_NONE, true);
- 		sdio_release_host(bus->sdiodev->func[1]);
- 	}
- 
-@@ -2856,7 +2856,7 @@ static int brcmf_sdio_readshared(struct brcmf_sdio *bus,
- 	 * address of sdpcm_shared structure
- 	 */
- 	sdio_claim_host(bus->sdiodev->func[1]);
--	brcmf_sdbrcm_bus_sleep(bus, false, false);
-+	brcmf_sdio_bus_sleep(bus, false, false);
- 	rv = brcmf_sdiod_ramrw(bus->sdiodev, false, shaddr, (u8 *)&addr_le, 4);
- 	sdio_release_host(bus->sdiodev->func[1]);
- 	if (rv < 0)
-@@ -3044,7 +3044,7 @@ static int brcmf_sdio_assert_info(struct brcmf_sdio *bus,
- 	return simple_read_from_buffer(data, count, &pos, buf, res);
- }
- 
--static int brcmf_sdbrcm_checkdied(struct brcmf_sdio *bus)
-+static int brcmf_sdio_checkdied(struct brcmf_sdio *bus)
- {
- 	int error;
- 	struct sdpcm_shared sh;
-@@ -3065,8 +3065,8 @@ static int brcmf_sdbrcm_checkdied(struct brcmf_sdio *bus)
- 	return 0;
- }
- 
--static int brcmf_sdbrcm_died_dump(struct brcmf_sdio *bus, char __user *data,
--				  size_t count, loff_t *ppos)
-+static int brcmf_sdio_died_dump(struct brcmf_sdio *bus, char __user *data,
-+				size_t count, loff_t *ppos)
- {
- 	int error = 0;
- 	struct sdpcm_shared sh;
-@@ -3107,7 +3107,7 @@ static ssize_t brcmf_sdio_forensic_read(struct file *f, char __user *data,
- 	struct brcmf_sdio *bus = f->private_data;
- 	int res;
- 
--	res = brcmf_sdbrcm_died_dump(bus, data, count, ppos);
-+	res = brcmf_sdio_died_dump(bus, data, count, ppos);
- 	if (res > 0)
- 		*ppos += res;
- 	return (ssize_t)res;
-@@ -3132,7 +3132,7 @@ static void brcmf_sdio_debugfs_create(struct brcmf_sdio *bus)
- 	brcmf_debugfs_create_sdio_count(drvr, &bus->sdcnt);
- }
- #else
--static int brcmf_sdbrcm_checkdied(struct brcmf_sdio *bus)
-+static int brcmf_sdio_checkdied(struct brcmf_sdio *bus)
- {
- 	return 0;
- }
-@@ -3143,7 +3143,7 @@ static void brcmf_sdio_debugfs_create(struct brcmf_sdio *bus)
- #endif /* DEBUG */
- 
- static int
--brcmf_sdbrcm_bus_rxctl(struct device *dev, unsigned char *msg, uint msglen)
-+brcmf_sdio_bus_rxctl(struct device *dev, unsigned char *msg, uint msglen)
- {
- 	int timeleft;
- 	uint rxlen = 0;
-@@ -3156,7 +3156,7 @@ brcmf_sdbrcm_bus_rxctl(struct device *dev, unsigned char *msg, uint msglen)
- 	brcmf_dbg(TRACE, "Enter\n");
- 
- 	/* Wait until control frame is available */
--	timeleft = brcmf_sdbrcm_dcmd_resp_wait(bus, &bus->rxlen, &pending);
-+	timeleft = brcmf_sdio_dcmd_resp_wait(bus, &bus->rxlen, &pending);
- 
- 	spin_lock_bh(&bus->rxctl_lock);
- 	rxlen = bus->rxlen;
-@@ -3173,13 +3173,13 @@ brcmf_sdbrcm_bus_rxctl(struct device *dev, unsigned char *msg, uint msglen)
- 			  rxlen, msglen);
- 	} else if (timeleft == 0) {
- 		brcmf_err("resumed on timeout\n");
--		brcmf_sdbrcm_checkdied(bus);
-+		brcmf_sdio_checkdied(bus);
- 	} else if (pending) {
- 		brcmf_dbg(CTL, "cancelled\n");
- 		return -ERESTARTSYS;
- 	} else {
- 		brcmf_dbg(CTL, "resumed for unknown reason?\n");
--		brcmf_sdbrcm_checkdied(bus);
-+		brcmf_sdio_checkdied(bus);
- 	}
- 
- 	if (rxlen)
-@@ -3190,7 +3190,7 @@ brcmf_sdbrcm_bus_rxctl(struct device *dev, unsigned char *msg, uint msglen)
- 	return rxlen ? (int)rxlen : -ETIMEDOUT;
- }
- 
--static bool brcmf_sdbrcm_download_state(struct brcmf_sdio *bus, bool enter)
-+static bool brcmf_sdio_download_state(struct brcmf_sdio *bus, bool enter)
- {
- 	struct chip_info *ci = bus->ci;
- 
-@@ -3215,7 +3215,7 @@ static bool brcmf_sdbrcm_download_state(struct brcmf_sdio *bus, bool enter)
- 	return true;
- }
- 
--static int brcmf_sdbrcm_download_code_file(struct brcmf_sdio *bus)
-+static int brcmf_sdio_download_code_file(struct brcmf_sdio *bus)
- {
- 	const struct firmware *fw;
- 	int err;
-@@ -3223,7 +3223,7 @@ static int brcmf_sdbrcm_download_code_file(struct brcmf_sdio *bus)
- 	int address;
- 	int len;
- 
--	fw = brcmf_sdbrcm_get_fw(bus, BRCMF_FIRMWARE_BIN);
-+	fw = brcmf_sdio_get_fw(bus, BRCMF_FIRMWARE_BIN);
- 	if (fw == NULL)
- 		return -ENOENT;
- 
-@@ -3263,8 +3263,8 @@ failure:
-  * by two NULs.
- */
- 
--static int brcmf_process_nvram_vars(struct brcmf_sdio *bus,
--				    const struct firmware *nv)
-+static int brcmf_sdio_strip_nvram(struct brcmf_sdio *bus,
-+				  const struct firmware *nv)
- {
- 	char *varbuf;
- 	char *dp;
-@@ -3328,44 +3328,48 @@ err:
- 	return ret;
- }
- 
--static int brcmf_sdbrcm_download_nvram(struct brcmf_sdio *bus)
-+static int brcmf_sdio_download_nvram(struct brcmf_sdio *bus)
- {
- 	const struct firmware *nv;
- 	int ret;
- 
--	nv = brcmf_sdbrcm_get_fw(bus, BRCMF_FIRMWARE_NVRAM);
-+	nv = brcmf_sdio_get_fw(bus, BRCMF_FIRMWARE_NVRAM);
- 	if (nv == NULL)
- 		return -ENOENT;
- 
--	ret = brcmf_process_nvram_vars(bus, nv);
-+	ret = brcmf_sdio_strip_nvram(bus, nv);
- 
- 	release_firmware(nv);
- 
- 	return ret;
- }
- 
--static int _brcmf_sdbrcm_download_firmware(struct brcmf_sdio *bus)
-+static int brcmf_sdio_download_firmware(struct brcmf_sdio *bus)
- {
--	int bcmerror = -1;
-+	int bcmerror = -EFAULT;
-+
-+
-+	sdio_claim_host(bus->sdiodev->func[1]);
-+	brcmf_sdio_clkctl(bus, CLK_AVAIL, false);
- 
- 	/* Keep arm in reset */
--	if (!brcmf_sdbrcm_download_state(bus, true)) {
-+	if (!brcmf_sdio_download_state(bus, true)) {
- 		brcmf_err("error placing ARM core in reset\n");
- 		goto err;
- 	}
- 
--	if (brcmf_sdbrcm_download_code_file(bus)) {
-+	if (brcmf_sdio_download_code_file(bus)) {
- 		brcmf_err("dongle image file download failed\n");
- 		goto err;
- 	}
- 
--	if (brcmf_sdbrcm_download_nvram(bus)) {
-+	if (brcmf_sdio_download_nvram(bus)) {
- 		brcmf_err("dongle nvram file download failed\n");
- 		goto err;
- 	}
- 
- 	/* Take arm out of reset */
--	if (!brcmf_sdbrcm_download_state(bus, false)) {
-+	if (!brcmf_sdio_download_state(bus, false)) {
- 		brcmf_err("error getting out of ARM core reset\n");
- 		goto err;
- 	}
-@@ -3373,10 +3377,12 @@ static int _brcmf_sdbrcm_download_firmware(struct brcmf_sdio *bus)
- 	bcmerror = 0;
- 
- err:
-+	brcmf_sdio_clkctl(bus, CLK_SDONLY, false);
-+	sdio_release_host(bus->sdiodev->func[1]);
- 	return bcmerror;
- }
- 
--static bool brcmf_sdbrcm_sr_capable(struct brcmf_sdio *bus)
-+static bool brcmf_sdio_sr_capable(struct brcmf_sdio *bus)
- {
- 	u32 addr, reg;
- 
-@@ -3395,7 +3401,7 @@ static bool brcmf_sdbrcm_sr_capable(struct brcmf_sdio *bus)
- 	return (bool)reg;
- }
- 
--static void brcmf_sdbrcm_sr_init(struct brcmf_sdio *bus)
-+static void brcmf_sdio_sr_init(struct brcmf_sdio *bus)
- {
- 	int err = 0;
- 	u8 val;
-@@ -3438,7 +3444,7 @@ static void brcmf_sdbrcm_sr_init(struct brcmf_sdio *bus)
- }
- 
- /* enable KSO bit */
--static int brcmf_sdbrcm_kso_init(struct brcmf_sdio *bus)
-+static int brcmf_sdio_kso_init(struct brcmf_sdio *bus)
- {
- 	u8 val;
- 	int err = 0;
-@@ -3470,25 +3476,7 @@ static int brcmf_sdbrcm_kso_init(struct brcmf_sdio *bus)
- }
- 
- 
--static bool
--brcmf_sdbrcm_download_firmware(struct brcmf_sdio *bus)
--{
--	bool ret;
--
--	sdio_claim_host(bus->sdiodev->func[1]);
--
--	brcmf_sdbrcm_clkctl(bus, CLK_AVAIL, false);
--
--	ret = _brcmf_sdbrcm_download_firmware(bus) == 0;
--
--	brcmf_sdbrcm_clkctl(bus, CLK_SDONLY, false);
--
--	sdio_release_host(bus->sdiodev->func[1]);
--
--	return ret;
--}
--
--static int brcmf_sdbrcm_bus_preinit(struct device *dev)
-+static int brcmf_sdio_bus_preinit(struct device *dev)
- {
- 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
- 	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
-@@ -3547,7 +3535,7 @@ done:
- 	return err;
- }
- 
--static int brcmf_sdbrcm_bus_init(struct device *dev)
-+static int brcmf_sdio_bus_init(struct device *dev)
- {
- 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
- 	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
-@@ -3559,8 +3547,9 @@ static int brcmf_sdbrcm_bus_init(struct device *dev)
- 
- 	/* try to download image and nvram to the dongle */
- 	if (bus_if->state == BRCMF_BUS_DOWN) {
--		if (!(brcmf_sdbrcm_download_firmware(bus)))
--			return -1;
-+		err = brcmf_sdio_download_firmware(bus);
-+		if (err)
-+			return err;
- 	}
- 
- 	if (!bus->sdiodev->bus_if->drvr)
-@@ -3568,12 +3557,12 @@ static int brcmf_sdbrcm_bus_init(struct device *dev)
- 
- 	/* Start the watchdog timer */
- 	bus->sdcnt.tickcnt = 0;
--	brcmf_sdbrcm_wd_timer(bus, BRCMF_WD_POLL_MS);
-+	brcmf_sdio_wd_timer(bus, BRCMF_WD_POLL_MS);
- 
- 	sdio_claim_host(bus->sdiodev->func[1]);
- 
- 	/* Make sure backplane clock is on, needed to generate F2 interrupt */
--	brcmf_sdbrcm_clkctl(bus, CLK_AVAIL, false);
-+	brcmf_sdio_clkctl(bus, CLK_AVAIL, false);
- 	if (bus->clkstate != CLK_AVAIL)
- 		goto exit;
- 
-@@ -3611,8 +3600,8 @@ static int brcmf_sdbrcm_bus_init(struct device *dev)
- 		ret = -ENODEV;
- 	}
- 
--	if (brcmf_sdbrcm_sr_capable(bus)) {
--		brcmf_sdbrcm_sr_init(bus);
-+	if (brcmf_sdio_sr_capable(bus)) {
-+		brcmf_sdio_sr_init(bus);
- 	} else {
- 		/* Restore previous clock setting */
- 		brcmf_sdiod_regwb(bus->sdiodev, SBSDIO_FUNC1_CHIPCLKCSR,
-@@ -3627,7 +3616,7 @@ static int brcmf_sdbrcm_bus_init(struct device *dev)
- 
- 	/* If we didn't come up, turn off backplane clock */
- 	if (bus_if->state != BRCMF_BUS_DATA)
--		brcmf_sdbrcm_clkctl(bus, CLK_NONE, false);
-+		brcmf_sdio_clkctl(bus, CLK_NONE, false);
- 
- exit:
- 	sdio_release_host(bus->sdiodev->func[1]);
-@@ -3635,7 +3624,7 @@ exit:
- 	return ret;
- }
- 
--void brcmf_sdbrcm_isr(struct brcmf_sdio *bus)
-+void brcmf_sdio_isr(struct brcmf_sdio *bus)
- {
- 	brcmf_dbg(TRACE, "Enter\n");
- 
-@@ -3666,7 +3655,7 @@ void brcmf_sdbrcm_isr(struct brcmf_sdio *bus)
- 	queue_work(bus->brcmf_wq, &bus->datawork);
- }
- 
--static bool brcmf_sdbrcm_bus_watchdog(struct brcmf_sdio *bus)
-+static bool brcmf_sdio_bus_watchdog(struct brcmf_sdio *bus)
- {
- #ifdef DEBUG
- 	struct brcmf_bus *bus_if = dev_get_drvdata(bus->sdiodev->dev);
-@@ -3722,8 +3711,8 @@ static bool brcmf_sdbrcm_bus_watchdog(struct brcmf_sdio *bus)
- 			bus->console.count -= bus->console_interval;
- 			sdio_claim_host(bus->sdiodev->func[1]);
- 			/* Make sure backplane clock is on */
--			brcmf_sdbrcm_bus_sleep(bus, false, false);
--			if (brcmf_sdbrcm_readconsole(bus) < 0)
-+			brcmf_sdio_bus_sleep(bus, false, false);
-+			if (brcmf_sdio_readconsole(bus) < 0)
- 				/* stop on error */
- 				bus->console_interval = 0;
- 			sdio_release_host(bus->sdiodev->func[1]);
-@@ -3737,11 +3726,11 @@ static bool brcmf_sdbrcm_bus_watchdog(struct brcmf_sdio *bus)
- 			bus->idlecount = 0;
- 			if (bus->activity) {
- 				bus->activity = false;
--				brcmf_sdbrcm_wd_timer(bus, BRCMF_WD_POLL_MS);
-+				brcmf_sdio_wd_timer(bus, BRCMF_WD_POLL_MS);
- 			} else {
- 				brcmf_dbg(SDIO, "idle\n");
- 				sdio_claim_host(bus->sdiodev->func[1]);
--				brcmf_sdbrcm_bus_sleep(bus, true, false);
-+				brcmf_sdio_bus_sleep(bus, true, false);
- 				sdio_release_host(bus->sdiodev->func[1]);
- 			}
- 		}
-@@ -3756,12 +3745,12 @@ static void brcmf_sdio_dataworker(struct work_struct *work)
- 					      datawork);
- 
- 	while (atomic_read(&bus->dpc_tskcnt)) {
--		brcmf_sdbrcm_dpc(bus);
-+		brcmf_sdio_dpc(bus);
- 		atomic_dec(&bus->dpc_tskcnt);
- 	}
- }
- 
--static void brcmf_sdbrcm_release_malloc(struct brcmf_sdio *bus)
-+static void brcmf_sdio_release_malloc(struct brcmf_sdio *bus)
- {
- 	brcmf_dbg(TRACE, "Enter\n");
- 
-@@ -3770,7 +3759,7 @@ static void brcmf_sdbrcm_release_malloc(struct brcmf_sdio *bus)
- 	bus->rxlen = 0;
- }
- 
--static bool brcmf_sdbrcm_probe_malloc(struct brcmf_sdio *bus)
-+static bool brcmf_sdio_probe_malloc(struct brcmf_sdio *bus)
- {
- 	brcmf_dbg(TRACE, "Enter\n");
- 
-@@ -3787,7 +3776,7 @@ static bool brcmf_sdbrcm_probe_malloc(struct brcmf_sdio *bus)
- }
- 
- static bool
--brcmf_sdbrcm_probe_attach(struct brcmf_sdio *bus)
-+brcmf_sdio_probe_attach(struct brcmf_sdio *bus)
- {
- 	u8 clkctl = 0;
- 	int err = 0;
-@@ -3824,7 +3813,7 @@ brcmf_sdbrcm_probe_attach(struct brcmf_sdio *bus)
- 		goto fail;
- 	}
- 
--	if (brcmf_sdbrcm_kso_init(bus)) {
-+	if (brcmf_sdio_kso_init(bus)) {
- 		brcmf_err("error enabling KSO\n");
- 		goto fail;
- 	}
-@@ -3899,7 +3888,7 @@ fail:
- 	return false;
- }
- 
--static bool brcmf_sdbrcm_probe_init(struct brcmf_sdio *bus)
-+static bool brcmf_sdio_probe_init(struct brcmf_sdio *bus)
- {
- 	brcmf_dbg(TRACE, "Enter\n");
- 
-@@ -3933,7 +3922,7 @@ static bool brcmf_sdbrcm_probe_init(struct brcmf_sdio *bus)
- }
- 
- static int
--brcmf_sdbrcm_watchdog_thread(void *data)
-+brcmf_sdio_watchdog_thread(void *data)
- {
- 	struct brcmf_sdio *bus = (struct brcmf_sdio *)data;
- 
-@@ -3943,7 +3932,7 @@ brcmf_sdbrcm_watchdog_thread(void *data)
- 		if (kthread_should_stop())
- 			break;
- 		if (!wait_for_completion_interruptible(&bus->watchdog_wait)) {
--			brcmf_sdbrcm_bus_watchdog(bus);
-+			brcmf_sdio_bus_watchdog(bus);
- 			/* Count the tick for reference */
- 			bus->sdcnt.tickcnt++;
- 		} else
-@@ -3953,7 +3942,7 @@ brcmf_sdbrcm_watchdog_thread(void *data)
- }
- 
- static void
--brcmf_sdbrcm_watchdog(unsigned long data)
-+brcmf_sdio_watchdog(unsigned long data)
- {
- 	struct brcmf_sdio *bus = (struct brcmf_sdio *)data;
- 
-@@ -3966,14 +3955,14 @@ brcmf_sdbrcm_watchdog(unsigned long data)
- 	}
- }
- 
--static void brcmf_sdbrcm_release_dongle(struct brcmf_sdio *bus)
-+static void brcmf_sdio_release_dongle(struct brcmf_sdio *bus)
- {
- 	brcmf_dbg(TRACE, "Enter\n");
- 
- 	if (bus->ci) {
- 		sdio_claim_host(bus->sdiodev->func[1]);
--		brcmf_sdbrcm_clkctl(bus, CLK_AVAIL, false);
--		brcmf_sdbrcm_clkctl(bus, CLK_NONE, false);
-+		brcmf_sdio_clkctl(bus, CLK_AVAIL, false);
-+		brcmf_sdio_clkctl(bus, CLK_NONE, false);
- 		sdio_release_host(bus->sdiodev->func[1]);
- 		brcmf_sdio_chip_detach(&bus->ci);
- 		if (bus->vars && bus->varsz)
-@@ -3985,7 +3974,7 @@ static void brcmf_sdbrcm_release_dongle(struct brcmf_sdio *bus)
- }
- 
- /* Detach and free everything */
--static void brcmf_sdbrcm_release(struct brcmf_sdio *bus)
-+static void brcmf_sdio_release(struct brcmf_sdio *bus)
- {
- 	brcmf_dbg(TRACE, "Enter\n");
- 
-@@ -3999,11 +3988,11 @@ static void brcmf_sdbrcm_release(struct brcmf_sdio *bus)
- 
- 		if (bus->sdiodev->bus_if->drvr) {
- 			brcmf_detach(bus->sdiodev->dev);
--			brcmf_sdbrcm_release_dongle(bus);
-+			brcmf_sdio_release_dongle(bus);
- 		}
- 
- 		brcmu_pkt_buf_free_skb(bus->txglom_sgpad);
--		brcmf_sdbrcm_release_malloc(bus);
-+		brcmf_sdio_release_malloc(bus);
- 		kfree(bus->hdrbuf);
- 		kfree(bus);
- 	}
-@@ -4012,16 +4001,16 @@ static void brcmf_sdbrcm_release(struct brcmf_sdio *bus)
- }
- 
- static struct brcmf_bus_ops brcmf_sdio_bus_ops = {
--	.stop = brcmf_sdbrcm_bus_stop,
--	.preinit = brcmf_sdbrcm_bus_preinit,
--	.init = brcmf_sdbrcm_bus_init,
--	.txdata = brcmf_sdbrcm_bus_txdata,
--	.txctl = brcmf_sdbrcm_bus_txctl,
--	.rxctl = brcmf_sdbrcm_bus_rxctl,
--	.gettxq = brcmf_sdbrcm_bus_gettxq,
-+	.stop = brcmf_sdio_bus_stop,
-+	.preinit = brcmf_sdio_bus_preinit,
-+	.init = brcmf_sdio_bus_init,
-+	.txdata = brcmf_sdio_bus_txdata,
-+	.txctl = brcmf_sdio_bus_txctl,
-+	.rxctl = brcmf_sdio_bus_rxctl,
-+	.gettxq = brcmf_sdio_bus_gettxq,
- };
- 
--struct brcmf_sdio *brcmf_sdbrcm_probe(struct brcmf_sdio_dev *sdiodev)
-+struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
- {
- 	int ret;
- 	struct brcmf_sdio *bus;
-@@ -4061,8 +4050,8 @@ struct brcmf_sdio *brcmf_sdbrcm_probe(struct brcmf_sdio_dev *sdiodev)
- 	}
- 
- 	/* attempt to attach to the dongle */
--	if (!(brcmf_sdbrcm_probe_attach(bus))) {
--		brcmf_err("brcmf_sdbrcm_probe_attach failed\n");
-+	if (!(brcmf_sdio_probe_attach(bus))) {
-+		brcmf_err("brcmf_sdio_probe_attach failed\n");
- 		goto fail;
- 	}
- 
-@@ -4074,11 +4063,11 @@ struct brcmf_sdio *brcmf_sdbrcm_probe(struct brcmf_sdio_dev *sdiodev)
- 	/* Set up the watchdog timer */
- 	init_timer(&bus->timer);
- 	bus->timer.data = (unsigned long)bus;
--	bus->timer.function = brcmf_sdbrcm_watchdog;
-+	bus->timer.function = brcmf_sdio_watchdog;
- 
- 	/* Initialize watchdog thread */
- 	init_completion(&bus->watchdog_wait);
--	bus->watchdog_tsk = kthread_run(brcmf_sdbrcm_watchdog_thread,
-+	bus->watchdog_tsk = kthread_run(brcmf_sdio_watchdog_thread,
- 					bus, "brcmf_watchdog");
- 	if (IS_ERR(bus->watchdog_tsk)) {
- 		pr_warn("brcmf_watchdog thread failed to start\n");
-@@ -4104,13 +4093,13 @@ struct brcmf_sdio *brcmf_sdbrcm_probe(struct brcmf_sdio_dev *sdiodev)
- 	}
- 
- 	/* Allocate buffers */
--	if (!(brcmf_sdbrcm_probe_malloc(bus))) {
--		brcmf_err("brcmf_sdbrcm_probe_malloc failed\n");
-+	if (!(brcmf_sdio_probe_malloc(bus))) {
-+		brcmf_err("brcmf_sdio_probe_malloc failed\n");
- 		goto fail;
- 	}
- 
--	if (!(brcmf_sdbrcm_probe_init(bus))) {
--		brcmf_err("brcmf_sdbrcm_probe_init failed\n");
-+	if (!(brcmf_sdio_probe_init(bus))) {
-+		brcmf_err("brcmf_sdio_probe_init failed\n");
- 		goto fail;
- 	}
- 
-@@ -4127,21 +4116,20 @@ struct brcmf_sdio *brcmf_sdbrcm_probe(struct brcmf_sdio_dev *sdiodev)
- 	return bus;
- 
- fail:
--	brcmf_sdbrcm_release(bus);
-+	brcmf_sdio_release(bus);
- 	return NULL;
- }
- 
--void brcmf_sdbrcm_disconnect(struct brcmf_sdio *bus)
-+void brcmf_sdio_disconnect(struct brcmf_sdio *bus)
- {
- 	brcmf_dbg(TRACE, "Enter\n");
- 
--	brcmf_sdbrcm_release(bus);
-+	brcmf_sdio_release(bus);
- 
- 	brcmf_dbg(TRACE, "Disconnected\n");
- }
- 
--void
--brcmf_sdbrcm_wd_timer(struct brcmf_sdio *bus, uint wdtick)
-+void brcmf_sdio_wd_timer(struct brcmf_sdio *bus, uint wdtick)
- {
- 	/* Totally stop the timer */
- 	if (!wdtick && bus->wd_timer_valid) {
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h b/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
-index 4c70cf2..e28498e 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
-@@ -235,9 +235,10 @@ int brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
- /* Issue an abort to the specified function */
- int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, uint fn);
- 
--struct brcmf_sdio *brcmf_sdbrcm_probe(struct brcmf_sdio_dev *sdiodev);
--void brcmf_sdbrcm_disconnect(struct brcmf_sdio *bus);
--void brcmf_sdbrcm_isr(struct brcmf_sdio *bus);
--void brcmf_sdbrcm_wd_timer(struct brcmf_sdio *bus, uint wdtick);
-+struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev);
-+void brcmf_sdio_disconnect(struct brcmf_sdio *bus);
-+void brcmf_sdio_isr(struct brcmf_sdio *bus);
-+
-+void brcmf_sdio_wd_timer(struct brcmf_sdio *bus, uint wdtick);
- 
- #endif				/* _BRCM_SDH_H_ */
--- 
-1.7.10.4
+On 12.12.2013 06:58, Emmanuel Grumbach wrote:
+>>> can you please apply this and report back?
+>>>
+>>> diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c
+>>> b/drivers/net/wireless/iwlwifi/pcie/tx.c
+>>> index c5746ed..0a1f39c 100644
+>>> --- a/drivers/net/wireless/iwlwifi/pcie/tx.c
+>>> +++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
+>>> @@ -708,10 +708,6 @@ void iwl_pcie_tx_start(struct iwl_trans *trans,
+>>> u32 scd_base_addr)
+>>>           reg_val = iwl_read_direct32(trans, FH_TX_CHICKEN_BITS_REG);
+>>>           iwl_write_direct32(trans, FH_TX_CHICKEN_BITS_REG,
+>>>                              reg_val | FH_TX_CHICKEN_BITS_SCD_AUTO_RETRY_EN);
+>>> -
+>>> -       /* Enable L1-Active */
+>>> -       iwl_clear_bits_prph(trans, APMG_PCIDEV_STT_REG,
+>>> -                           APMG_PCIDEV_STT_VAL_L1_ACT_DIS);
+>>>    }
+>>>
+>>>    void iwl_trans_pcie_tx_reset(struct iwl_trans *trans)
+>> Sorry it took so long.
+>> I've built 3.12.3 with this patch applied. What now?
+> Does it help?
+> Do you still the same issues?
+> If yes - please share the log again.
+I booted with it today, being on battery, and got the lock-up after an 
+hour. I've attached the dmesg output.
 
+--------------050905050100090403050201
+Content-Type: application/gzip;
+ name="dmesg.log.gz"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="dmesg.log.gz"
+
+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
+--------------050905050100090403050201--
