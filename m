@@ -1,128 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:35456 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752725Ab3LRE2j (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:32343 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751530Ab3LLK7Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Dec 2013 23:28:39 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 10/10] ath9k: Use a subroutine for the AR9330 reset WAR
-Date: Wed, 18 Dec 2013 09:53:27 +0530
-Message-Id: <1387340607-20045-11-git-send-email-sujith@msujith.org> (sfid-20131218_052854_468893_F4C19C07)
-In-Reply-To: <1387340607-20045-1-git-send-email-sujith@msujith.org>
-References: <1387340607-20045-1-git-send-email-sujith@msujith.org>
+	Thu, 12 Dec 2013 05:59:16 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 01/18] brcmfmac: add missing curly braces in brcmf_fws_txstatus_suppressed()
+Date: Thu, 12 Dec 2013 11:58:49 +0100
+Message-ID: <1386845946-9859-2-git-send-email-arend@broadcom.com> (sfid-20131212_122500_281369_C04BB153)
+In-Reply-To: <1386845946-9859-1-git-send-email-arend@broadcom.com>
+References: <1386845946-9859-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+The 0-day testing from Fenguang Wu issued the following warning:
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+tree:   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next.git master
+head:   4b074b07625f603d40d4d04937f8874a00415dc4
+commit: 1e86d69662d7d86360624f74bbe1b5fa1b8ffb13
+    [33/59] brcmfmac: Update fwsignal to fix out of order tx.
+
+>> drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c:1393:2-56:
+    code aligned with following code on line 1394
+
+vim +1393 drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+
+84bcc0c3  1387 	}
+84bcc0c3  1388
+84bcc0c3  1389 	entry->generation = genbit;
+84bcc0c3  1390
+2747e5f7  1391 	ret = brcmf_proto_hdrpull(fws->drvr, false, &ifidx, skb);
+2747e5f7  1392 	if (ret == 0)
+1e86d696 @1393 		brcmf_skb_htod_tag_set_field(skb, GENERATION, ..
+1e86d696 @1394 		brcmf_skbcb(skb)->htod_seq = seq;
+1e86d696  1395 		if (brcmf_skb_htod_seq_get_field(skb, FROMFW)) {
+1e86d696  1396 			brcmf_skb_htod_seq_set_field(skb, ..
+1e86d696  1397 			brcmf_skb_htod_seq_set_field(skb, ..
+
+This warning is valid and the if statement needs curly braces here.
+
+Reported-by: Fengguang Wu <fengguang.wu@intel.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath9k/hw.c   | 70 +++++++++++++++++++----------------
- drivers/net/wireless/ath/ath9k/init.c |  1 -
- 2 files changed, 38 insertions(+), 33 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 2a511c6..289a59d 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1272,6 +1272,42 @@ void ath9k_hw_get_delta_slope_vals(struct ath_hw *ah, u32 coef_scaled,
- 	*coef_exponent = coef_exp - 16;
- }
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+index e9bdfdb..a593784 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+@@ -1393,7 +1393,7 @@ static int brcmf_fws_txstatus_suppressed(struct brcmf_fws_info *fws, int fifo,
+ 	entry->generation = genbit;
  
-+/* AR9330 WAR:
-+ * call external reset function to reset WMAC if:
-+ * - doing a cold reset
-+ * - we have pending frames in the TX queues.
-+ */
-+static bool ath9k_hw_ar9330_reset_war(struct ath_hw *ah, int type)
-+{
-+	int i, npend = 0;
-+
-+	for (i = 0; i < AR_NUM_QCU; i++) {
-+		npend = ath9k_hw_numtxpending(ah, i);
-+		if (npend)
-+			break;
+ 	ret = brcmf_proto_hdrpull(fws->drvr, false, &ifidx, skb);
+-	if (ret == 0)
++	if (ret == 0) {
+ 		brcmf_skb_htod_tag_set_field(skb, GENERATION, genbit);
+ 		brcmf_skbcb(skb)->htod_seq = seq;
+ 		if (brcmf_skb_htod_seq_get_field(skb, FROMFW)) {
+@@ -1404,6 +1404,8 @@ static int brcmf_fws_txstatus_suppressed(struct brcmf_fws_info *fws, int fifo,
+ 		}
+ 		ret = brcmf_fws_enq(fws, BRCMF_FWS_SKBSTATE_SUPPRESSED, fifo,
+ 				    skb);
 +	}
 +
-+	if (ah->external_reset &&
-+	    (npend || type == ATH9K_RESET_COLD)) {
-+		int reset_err = 0;
-+
-+		ath_dbg(ath9k_hw_common(ah), RESET,
-+			"reset MAC via external reset\n");
-+
-+		reset_err = ah->external_reset();
-+		if (reset_err) {
-+			ath_err(ath9k_hw_common(ah),
-+				"External reset failed, err=%d\n",
-+				reset_err);
-+			return false;
-+		}
-+
-+		REG_WRITE(ah, AR_RTC_RESET, 1);
-+	}
-+
-+	return true;
-+}
-+
- static bool ath9k_hw_set_reset(struct ath_hw *ah, int type)
- {
- 	u32 rst_flags;
-@@ -1322,38 +1358,8 @@ static bool ath9k_hw_set_reset(struct ath_hw *ah, int type)
- 	}
- 
- 	if (AR_SREV_9330(ah)) {
--		int npend = 0;
--		int i;
--
--		/* AR9330 WAR:
--		 * call external reset function to reset WMAC if:
--		 * - doing a cold reset
--		 * - we have pending frames in the TX queues
--		 */
--
--		for (i = 0; i < AR_NUM_QCU; i++) {
--			npend = ath9k_hw_numtxpending(ah, i);
--			if (npend)
--				break;
--		}
--
--		if (ah->external_reset &&
--		    (npend || type == ATH9K_RESET_COLD)) {
--			int reset_err = 0;
--
--			ath_dbg(ath9k_hw_common(ah), RESET,
--				"reset MAC via external reset\n");
--
--			reset_err = ah->external_reset();
--			if (reset_err) {
--				ath_err(ath9k_hw_common(ah),
--					"External reset failed, err=%d\n",
--					reset_err);
--				return false;
--			}
--
--			REG_WRITE(ah, AR_RTC_RESET, 1);
--		}
-+		if (!ath9k_hw_ar9330_reset_war(ah, type))
-+			return false;
- 	}
- 
- 	if (ath9k_hw_mci_is_enabled(ah))
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index ea67c01..e63465b7 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -470,7 +470,6 @@ static int ath9k_init_queues(struct ath_softc *sc)
- 
- 	sc->beacon.beaconq = ath9k_hw_beaconq_setup(sc->sc_ah);
- 	sc->beacon.cabq = ath_txq_setup(sc, ATH9K_TX_QUEUE_CAB, 0);
--
- 	ath_cabq_update(sc);
- 
- 	sc->tx.uapsdq = ath_txq_setup(sc, ATH9K_TX_QUEUE_UAPSD, 0);
+ 	if (ret != 0) {
+ 		/* suppress q is full or hdrpull failed, drop this packet */
+ 		brcmf_fws_hanger_poppkt(&fws->hanger, hslot, &skb,
 -- 
-1.8.5.1
+1.7.10.4
 
