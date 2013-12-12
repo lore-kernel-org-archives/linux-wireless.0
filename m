@@ -1,114 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:46638 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751254Ab3LXFTd (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:11789 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751546Ab3LLK7R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Dec 2013 00:19:33 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 06/11] ath9k: Fix baseband watchdog interrupts
-Date: Tue, 24 Dec 2013 10:44:22 +0530
-Message-Id: <1387862067-25457-6-git-send-email-sujith@msujith.org> (sfid-20131224_062013_124908_B8DAED9B)
-In-Reply-To: <1387862067-25457-1-git-send-email-sujith@msujith.org>
-References: <1387862067-25457-1-git-send-email-sujith@msujith.org>
+	Thu, 12 Dec 2013 05:59:17 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 06/18] brcmfmac: remove brcmf_sdio_regrw_helper() from header file
+Date: Thu, 12 Dec 2013 11:58:54 +0100
+Message-ID: <1386845946-9859-7-git-send-email-arend@broadcom.com> (sfid-20131212_115935_361555_E54D7AAB)
+In-Reply-To: <1386845946-9859-1-git-send-email-arend@broadcom.com>
+References: <1386845946-9859-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Make brcmf_sdio_regrw_helper() static removing its use outside of
+the bcmsdh.c source file.
 
-Program the required baseband watchdog interrupt
-mask to ensure that the correct watchdog interrupts
-are raised when the BB is hung for some reason.
-
-Also, use the capability HW_BB_WATCHDOG instead of
-relying on other flags.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath9k/mac.c  | 24 +++++++++++++++++++++---
- drivers/net/wireless/ath/ath9k/main.c |  8 +++++---
- drivers/net/wireless/ath/ath9k/reg.h  |  1 +
- 3 files changed, 27 insertions(+), 6 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c    |    5 ++---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c  |    4 ++--
+ drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h |    2 --
+ 3 files changed, 4 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index 89d7e20..5f72758 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -922,11 +922,29 @@ void ath9k_hw_set_interrupts(struct ath_hw *ah)
- 			mask2 |= AR_IMR_S2_CST;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+index 5919b45..8ba1b77 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+@@ -369,9 +369,8 @@ brcmf_sdio_addrprep(struct brcmf_sdio_dev *sdiodev, uint width, u32 *addr)
+ 	return 0;
+ }
+ 
+-int
+-brcmf_sdio_regrw_helper(struct brcmf_sdio_dev *sdiodev, u32 addr,
+-			void *data, bool write)
++static int brcmf_sdio_regrw_helper(struct brcmf_sdio_dev *sdiodev, u32 addr,
++				   void *data, bool write)
+ {
+ 	u8 func_num, reg_size;
+ 	s32 retry = 0;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index c3f3d8d..a70feb5 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -2316,7 +2316,7 @@ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
+ 	addr = bus->ci->c_inf[idx].base +
+ 	       offsetof(struct sdpcmd_regs, intstatus);
+ 
+-	ret = brcmf_sdio_regrw_helper(bus->sdiodev, addr, &val, false);
++	val = brcmf_sdio_regrl(bus->sdiodev, addr, &ret);
+ 	bus->sdcnt.f1regdata++;
+ 	if (ret != 0)
+ 		val = 0;
+@@ -2326,7 +2326,7 @@ static int brcmf_sdio_intr_rstatus(struct brcmf_sdio *bus)
+ 
+ 	/* Clear interrupts */
+ 	if (val) {
+-		ret = brcmf_sdio_regrw_helper(bus->sdiodev, addr, &val, true);
++		brcmf_sdio_regwl(bus->sdiodev, addr, val, &ret);
+ 		bus->sdcnt.f1regdata++;
  	}
  
-+	if (ah->config.hw_hang_checks & HW_BB_WATCHDOG) {
-+		if (ints & ATH9K_INT_BB_WATCHDOG) {
-+			mask |= AR_IMR_BCNMISC;
-+			mask2 |= AR_IMR_S2_BB_WATCHDOG;
-+		}
-+	}
-+
- 	ath_dbg(common, INTERRUPT, "new IMR 0x%x\n", mask);
- 	REG_WRITE(ah, AR_IMR, mask);
--	ah->imrs2_reg &= ~(AR_IMR_S2_TIM | AR_IMR_S2_DTIM | AR_IMR_S2_DTIMSYNC |
--			   AR_IMR_S2_CABEND | AR_IMR_S2_CABTO |
--			   AR_IMR_S2_TSFOOR | AR_IMR_S2_GTT | AR_IMR_S2_CST);
-+	ah->imrs2_reg &= ~(AR_IMR_S2_TIM |
-+			   AR_IMR_S2_DTIM |
-+			   AR_IMR_S2_DTIMSYNC |
-+			   AR_IMR_S2_CABEND |
-+			   AR_IMR_S2_CABTO |
-+			   AR_IMR_S2_TSFOOR |
-+			   AR_IMR_S2_GTT |
-+			   AR_IMR_S2_CST);
-+
-+	if (ah->config.hw_hang_checks & HW_BB_WATCHDOG) {
-+		if (ints & ATH9K_INT_BB_WATCHDOG)
-+			ah->imrs2_reg &= ~AR_IMR_S2_BB_WATCHDOG;
-+	}
-+
- 	ah->imrs2_reg |= mask2;
- 	REG_WRITE(ah, AR_IMR_S2, ah->imrs2_reg);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h b/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
+index 8b8f2a9..a1e5f72 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
+@@ -194,8 +194,6 @@ void brcmf_sdio_regwb(struct brcmf_sdio_dev *sdiodev, u32 addr, u8 data,
+ 		      int *ret);
+ void brcmf_sdio_regwl(struct brcmf_sdio_dev *sdiodev, u32 addr, u32 data,
+ 		      int *ret);
+-int brcmf_sdio_regrw_helper(struct brcmf_sdio_dev *sdiodev, u32 addr,
+-			    void *data, bool write);
  
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index dd9bad2..894c892 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -587,7 +587,7 @@ irqreturn_t ath_isr(int irq, void *dev)
- 	    !(ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)))
- 		goto chip_reset;
- 
--	if ((ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) &&
-+	if ((ah->config.hw_hang_checks & HW_BB_WATCHDOG) &&
- 	    (status & ATH9K_INT_BB_WATCHDOG)) {
- 
- 		spin_lock(&common->cc_lock);
-@@ -726,11 +726,13 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 
- 	if (ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)
- 		ah->imask |= ATH9K_INT_RXHP |
--			     ATH9K_INT_RXLP |
--			     ATH9K_INT_BB_WATCHDOG;
-+			     ATH9K_INT_RXLP;
- 	else
- 		ah->imask |= ATH9K_INT_RX;
- 
-+	if (ah->config.hw_hang_checks & HW_BB_WATCHDOG)
-+		ah->imask |= ATH9K_INT_BB_WATCHDOG;
-+
- 	ah->imask |= ATH9K_INT_GTT;
- 
- 	if (ah->caps.hw_caps & ATH9K_HW_CAP_HT)
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index 9ad0073..c9a8b77 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -304,6 +304,7 @@
- #define AR_IMR_S2              0x00ac
- #define AR_IMR_S2_QCU_TXURN    0x000003FF
- #define AR_IMR_S2_QCU_TXURN_S  0
-+#define AR_IMR_S2_BB_WATCHDOG  0x00010000
- #define AR_IMR_S2_CST          0x00400000
- #define AR_IMR_S2_GTT          0x00800000
- #define AR_IMR_S2_TIM          0x01000000
+ /* Buffer transfer to/from device (client) core via cmd53.
+  *   fn:       function number
 -- 
-1.8.5.2
+1.7.10.4
 
