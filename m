@@ -1,52 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f180.google.com ([209.85.192.180]:48286 "EHLO
-	mail-pd0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752169Ab3LNMae (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:43028 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751222Ab3LLLKj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Dec 2013 07:30:34 -0500
-Date: Sat, 14 Dec 2013 18:00:25 +0530
-From: Rashika Kheria <rashika.kheria@gmail.com>
-To: linux-kernel@vger.kernel.org
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	josh@joshtriplett.org
-Subject: [PATCH v2 8/9] drivers: net: Mark functions as static in debug.c
-Message-ID: <f72a822c9171b17d2d51a221820e30d0ca1ecd36.1386911124.git.rashika.kheria@gmail.com> (sfid-20131214_133052_890079_5C60A5F4)
-References: <a610f6ee6bb992b91e43bdc851f3db62fc3decd5.1386911123.git.rashika.kheria@gmail.com>
+	Thu, 12 Dec 2013 06:10:39 -0500
+Message-ID: <52A999AD.6030401@candelatech.com> (sfid-20131212_121042_368295_24351E58)
+Date: Thu, 12 Dec 2013 03:10:37 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <a610f6ee6bb992b91e43bdc851f3db62fc3decd5.1386911123.git.rashika.kheria@gmail.com>
+To: Eliad Peller <eliad@wizery.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Kernel crash related to scan in 3.13-rc3-wl-ath+
+References: <52A856B5.2060700@candelatech.com> <CAB3XZEdxQo07yW2g7_6PQUspb8Knd5wrjEaOmvB2Q3M3xNOvow@mail.gmail.com>
+In-Reply-To: <CAB3XZEdxQo07yW2g7_6PQUspb8Knd5wrjEaOmvB2Q3M3xNOvow@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch marks the function il_clear_traffic_stats() in debug.c as
-static because they are not used outside this file.
+On 12/11/2013 08:29 AM, Eliad Peller wrote:
 
-Thus, it also removes the following warnings in
-wireless/iwlegacy/debug.c:
+> it looks a bit similar to the one i got here:
+> http://www.spinics.net/lists/linux-wireless/msg115739.html
+>
+> can you give it a shot (if this is reproducible)?
 
-drivers/net/wireless/iwlegacy/debug.c:35:1: warning: no previous prototype for ‘il_clear_traffic_stats’ [-Wmissing-prototypes]
+Thanks for the suggestion.  It is not reproducible, at least not
+on a daily basis.  I'll add your patch to my tree manually if it
+does not show up in the upstream tree sometime soon.
 
-Signed-off-by: Rashika Kheria <rashika.kheria@gmail.com>
-Reviewed-by: Josh Triplett <josh@joshtriplett.org>
----
- drivers/net/wireless/iwlegacy/debug.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Thanks,
+Ben
 
-diff --git a/drivers/net/wireless/iwlegacy/debug.c b/drivers/net/wireless/iwlegacy/debug.c
-index eff2650..b7e03dd 100644
---- a/drivers/net/wireless/iwlegacy/debug.c
-+++ b/drivers/net/wireless/iwlegacy/debug.c
-@@ -31,7 +31,7 @@
- 
- #include "common.h"
- 
--void
-+static void
- il_clear_traffic_stats(struct il_priv *il)
- {
- 	memset(&il->tx_stats, 0, sizeof(struct traffic_stats));
 -- 
-1.7.9.5
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
