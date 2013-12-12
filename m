@@ -1,77 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f181.google.com ([209.85.214.181]:52234 "EHLO
-	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751938Ab3LPWBN (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:30964 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751549Ab3LLK7S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Dec 2013 17:01:13 -0500
-Received: by mail-ob0-f181.google.com with SMTP id uy5so5521589obc.12
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Dec 2013 14:01:12 -0800 (PST)
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	brcm80211-dev-list@broadcom.com,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Arend van Spriel <arend@broadcom.com>,
-	Seth Forshee <seth.forshee@canonical.com>
-Subject: [RFC PATCH 7/8] b43: Allow HWPS state to be changed
-Date: Mon, 16 Dec 2013 16:00:59 -0600
-Message-Id: <1387231260-2849-8-git-send-email-seth.forshee@canonical.com> (sfid-20131216_230122_024723_48C8B11E)
-In-Reply-To: <1387231260-2849-1-git-send-email-seth.forshee@canonical.com>
-References: <1387231260-2849-1-git-send-email-seth.forshee@canonical.com>
+	Thu, 12 Dec 2013 05:59:18 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 18/18] brcmfmac: clarify struct brcmf_sdio_dev::func[0] reference
+Date: Thu, 12 Dec 2013 11:59:06 +0100
+Message-ID: <1386845946-9859-19-git-send-email-arend@broadcom.com> (sfid-20131212_115933_859330_91A5BDE8)
+In-Reply-To: <1386845946-9859-1-git-send-email-arend@broadcom.com>
+References: <1386845946-9859-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-During background scans mac80211 wants to set powersave at the AP
-so that frames will be buffered while off-channel. In order to do
-this on Broadcom chips B43_MACCTL_HWPS needs to be set when
-transmitting the nullfunc frames to enable powersave, however
-b43_power_saving_ctl_bits() doesn't allow it to be set.
+The struct brcmf_sdio_dev contains array of sdio functions that
+are used in the driver. However, during probe func[0] entry was
+assigned to the function 1 reference. This was corrected upon
+doing the actual I/O access. This patch makes it more clear by
+creating the func[0] entry properly and use it as is during
+I/O access.
 
-Rework this function a bit to allow setting HWPS. First,
-initialize the hwps and awake variables based off the macctl
-register to avoid changing the unintentionally changing the
-values. It's not really necessary to set awake since it is later
-forced to true, but it does no harm and might help avoid future
-problems.
-
-Second, remove the force set of hwps to false. No code currently tries
-to change the hwps state anyway, so this results in no functional
-change.
-
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/b43/main.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |   36 ++++++++++------------
+ 1 file changed, 16 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index ccd24f0a..bc6ba1c 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -1117,6 +1117,10 @@ void b43_power_saving_ctl_bits(struct b43_wldev *dev, unsigned int ps_flags)
- 		    (ps_flags & B43_PS_DISABLED));
- 	B43_WARN_ON((ps_flags & B43_PS_AWAKE) && (ps_flags & B43_PS_ASLEEP));
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+index 337802c..6bf0473 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+@@ -197,32 +197,21 @@ int brcmf_sdiod_intr_unregister(struct brcmf_sdio_dev *sdiodev)
+ 	return 0;
+ }
  
-+	macctl = b43_read32(dev, B43_MMIO_MACCTL);
-+	hwps = !!(macctl & B43_MACCTL_HWPS);
-+	awake = !!(macctl & B43_MACCTL_AWAKE);
-+
- 	if (ps_flags & B43_PS_ENABLED) {
- 		hwps = true;
- 	} else if (ps_flags & B43_PS_DISABLED) {
-@@ -1135,11 +1139,9 @@ void b43_power_saving_ctl_bits(struct b43_wldev *dev, unsigned int ps_flags)
- 		//      successful, set bit26
+-static inline int brcmf_sdiod_f0_write_byte(struct brcmf_sdio_dev *sdiodev,
+-					    uint regaddr, u8 *byte)
++static inline int brcmf_sdiod_f0_writeb(struct sdio_func *func,
++					uint regaddr, u8 byte)
+ {
+-	struct sdio_func *sdfunc = sdiodev->func[0];
+ 	int err_ret;
+ 
+ 	/*
+ 	 * Can only directly write to some F0 registers.
+-	 * Handle F2 enable/disable and Abort command
++	 * Handle CCCR_IENx and CCCR_ABORT command
+ 	 * as a special case.
+ 	 */
+ 	if ((regaddr == SDIO_CCCR_ABORT) ||
+-	    (regaddr == SDIO_CCCR_IENx)) {
+-		sdfunc = kmemdup(sdiodev->func[0], sizeof(struct sdio_func),
+-				 GFP_KERNEL);
+-		if (!sdfunc)
+-			return -ENOMEM;
+-		sdfunc->num = 0;
+-		sdio_writeb(sdfunc, *byte, regaddr, &err_ret);
+-		kfree(sdfunc);
+-	} else if (regaddr < 0xF0) {
+-		brcmf_err("F0 Wr:0x%02x: write disallowed\n", regaddr);
+-		err_ret = -EPERM;
+-	} else {
+-		sdio_f0_writeb(sdfunc, *byte, regaddr, &err_ret);
+-	}
++	    (regaddr == SDIO_CCCR_IENx))
++		sdio_writeb(func, byte, regaddr, &err_ret);
++	else
++		sdio_f0_writeb(func, byte, regaddr, &err_ret);
+ 
+ 	return err_ret;
+ }
+@@ -240,7 +229,8 @@ static int brcmf_sdiod_request_byte(struct brcmf_sdio_dev *sdiodev, uint rw,
+ 
+ 	if (rw && func == 0) {
+ 		/* handle F0 separately */
+-		err_ret = brcmf_sdiod_f0_write_byte(sdiodev, regaddr, byte);
++		err_ret = brcmf_sdiod_f0_writeb(sdiodev->func[func],
++						regaddr, *byte);
+ 	} else {
+ 		if (rw) /* CMD52 Write */
+ 			sdio_writeb(sdiodev->func[func], *byte, regaddr,
+@@ -1030,7 +1020,11 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
+ 		return -ENOMEM;
  	}
  
--/* FIXME: For now we force awake-on and hwps-off */
--	hwps = false;
-+/* FIXME: For now we force awake-on */
- 	awake = true;
+-	sdiodev->func[0] = func->card->sdio_func[0];
++	/* store refs to functions used. mmc_card does
++	 * not hold the F0 function pointer.
++	 */
++	sdiodev->func[0] = kmemdup(func, sizeof(*func), GFP_KERNEL);
++	sdiodev->func[0]->num = 0;
+ 	sdiodev->func[1] = func->card->sdio_func[0];
+ 	sdiodev->func[2] = func;
  
--	macctl = b43_read32(dev, B43_MMIO_MACCTL);
- 	if (hwps)
- 		macctl |= B43_MACCTL_HWPS;
- 	else
+@@ -1060,6 +1054,7 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
+ fail:
+ 	dev_set_drvdata(&func->dev, NULL);
+ 	dev_set_drvdata(&sdiodev->func[1]->dev, NULL);
++	kfree(sdiodev->func[0]);
+ 	kfree(sdiodev);
+ 	kfree(bus_if);
+ 	return err;
+@@ -1087,6 +1082,7 @@ static void brcmf_ops_sdio_remove(struct sdio_func *func)
+ 		dev_set_drvdata(&sdiodev->func[2]->dev, NULL);
+ 
+ 		kfree(bus_if);
++		kfree(sdiodev->func[0]);
+ 		kfree(sdiodev);
+ 	}
+ 
 -- 
-1.8.3.2
+1.7.10.4
 
