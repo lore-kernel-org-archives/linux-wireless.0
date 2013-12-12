@@ -1,221 +1,247 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f44.google.com ([74.125.83.44]:59717 "EHLO
-	mail-ee0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754173Ab3LHJ1Y (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:32343 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751550Ab3LLK7U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Dec 2013 04:27:24 -0500
-From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Luciano Coelho <luca@coelho.fi>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
-	joni.lapilainen@gmail.com,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Felipe Contreras <felipe.contreras@gmail.com>,
-	David Gnedt <david.gnedt@davizone.at>,
-	=?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
-Subject: [PATCH v2 06/16] wl1251: configure hardware en-/decryption for monitor mode
-Date: Sun,  8 Dec 2013 10:25:04 +0100
-Message-Id: <1386494714-21070-7-git-send-email-pali.rohar@gmail.com> (sfid-20131208_102826_421115_DBEDE2D3)
-In-Reply-To: <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
- <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
+	Thu, 12 Dec 2013 05:59:20 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 15/18] brcmfmac: Combine protocol push hdr and bus txdata.
+Date: Thu, 12 Dec 2013 11:59:03 +0100
+Message-ID: <1386845946-9859-16-git-send-email-arend@broadcom.com> (sfid-20131212_115930_140976_E379EA9F)
+In-Reply-To: <1386845946-9859-1-git-send-email-arend@broadcom.com>
+References: <1386845946-9859-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Gnedt <david.gnedt@davizone.at>
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Disable hardware encryption (DF_ENCRYPTION_DISABLE) and decryption
-(DF_SNIFF_MODE_ENABLE) via wl1251_acx_feature_cfg while monitor interface is
-present.
+For the transmission of data a protocol push hdr is performed
+followed by a bus txdata call. For the new protocol msgbuf this
+is not workable. Since they are already "loosely" coupled for
+bcdc protocol they are combined. This means that txdata will
+go "through" the protocol layer and a seperate protocol push
+hdr will not be needed anymore.
 
-Signed-off-by: David Gnedt <david.gnedt@davizone.at>
-Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ti/wl1251/acx.c    |    6 +++---
- drivers/net/wireless/ti/wl1251/acx.h    |    2 +-
- drivers/net/wireless/ti/wl1251/init.c   |    2 +-
- drivers/net/wireless/ti/wl1251/main.c   |   34 ++++++++++++++++++++++++++-----
- drivers/net/wireless/ti/wl1251/rx.c     |    2 +-
- drivers/net/wireless/ti/wl1251/tx.c     |    3 +++
- drivers/net/wireless/ti/wl1251/wl1251.h |    1 +
- 7 files changed, 39 insertions(+), 11 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/bcdc.c     |   11 +++++-
+ drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c |   37 +++++++++-----------
+ drivers/net/wireless/brcm80211/brcmfmac/proto.c    |    2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/proto.h    |   14 ++++----
+ 4 files changed, 35 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wl1251/acx.c b/drivers/net/wireless/ti/wl1251/acx.c
-index 5f4a552..1ec98e9 100644
---- a/drivers/net/wireless/ti/wl1251/acx.c
-+++ b/drivers/net/wireless/ti/wl1251/acx.c
-@@ -209,7 +209,7 @@ out:
- 	return ret;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcdc.c b/drivers/net/wireless/brcm80211/brcmfmac/bcdc.c
+index ee86142..12c27d1 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcdc.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcdc.c
+@@ -329,6 +329,15 @@ brcmf_proto_bcdc_hdrpull(struct brcmf_pub *drvr, bool do_fws, u8 *ifidx,
+ 	return 0;
  }
  
--int wl1251_acx_feature_cfg(struct wl1251 *wl)
-+int wl1251_acx_feature_cfg(struct wl1251 *wl, u32 data_flow_options)
++static int
++brcmf_proto_bcdc_txdata(struct brcmf_pub *drvr, int ifidx, u8 offset,
++			struct sk_buff *pktbuf)
++{
++	brcmf_proto_bcdc_hdrpush(drvr, ifidx, offset, pktbuf);
++	return brcmf_bus_txdata(drvr->bus_if, pktbuf);
++}
++
++
+ int brcmf_proto_bcdc_attach(struct brcmf_pub *drvr)
  {
- 	struct acx_feature_config *feature;
- 	int ret;
-@@ -222,8 +222,8 @@ int wl1251_acx_feature_cfg(struct wl1251 *wl)
- 		goto out;
+ 	struct brcmf_bcdc *bcdc;
+@@ -343,10 +352,10 @@ int brcmf_proto_bcdc_attach(struct brcmf_pub *drvr)
+ 		goto fail;
  	}
  
--	/* DF_ENCRYPTION_DISABLE and DF_SNIFF_MODE_ENABLE are disabled */
--	feature->data_flow_options = 0;
-+	/* DF_ENCRYPTION_DISABLE and DF_SNIFF_MODE_ENABLE can be set */
-+	feature->data_flow_options = data_flow_options;
- 	feature->options = 0;
+-	drvr->proto->hdrpush = brcmf_proto_bcdc_hdrpush;
+ 	drvr->proto->hdrpull = brcmf_proto_bcdc_hdrpull;
+ 	drvr->proto->query_dcmd = brcmf_proto_bcdc_query_dcmd;
+ 	drvr->proto->set_dcmd = brcmf_proto_bcdc_set_dcmd;
++	drvr->proto->txdata = brcmf_proto_bcdc_txdata;
+ 	drvr->proto->pd = bcdc;
  
- 	ret = wl1251_cmd_configure(wl, ACX_FEATURE_CFG,
-diff --git a/drivers/net/wireless/ti/wl1251/acx.h b/drivers/net/wireless/ti/wl1251/acx.h
-index 4444cd0..bea2e67 100644
---- a/drivers/net/wireless/ti/wl1251/acx.h
-+++ b/drivers/net/wireless/ti/wl1251/acx.h
-@@ -1455,7 +1455,7 @@ int wl1251_acx_wake_up_conditions(struct wl1251 *wl, u8 wake_up_event,
- int wl1251_acx_sleep_auth(struct wl1251 *wl, u8 sleep_auth);
- int wl1251_acx_fw_version(struct wl1251 *wl, char *buf, size_t len);
- int wl1251_acx_tx_power(struct wl1251 *wl, int power);
--int wl1251_acx_feature_cfg(struct wl1251 *wl);
-+int wl1251_acx_feature_cfg(struct wl1251 *wl, u32 data_flow_options);
- int wl1251_acx_mem_map(struct wl1251 *wl,
- 		       struct acx_header *mem_map, size_t len);
- int wl1251_acx_data_path_params(struct wl1251 *wl,
-diff --git a/drivers/net/wireless/ti/wl1251/init.c b/drivers/net/wireless/ti/wl1251/init.c
-index 424ce01..92de289 100644
---- a/drivers/net/wireless/ti/wl1251/init.c
-+++ b/drivers/net/wireless/ti/wl1251/init.c
-@@ -33,7 +33,7 @@ int wl1251_hw_init_hwenc_config(struct wl1251 *wl)
+ 	drvr->hdrlen += BCDC_HEADER_LEN + BRCMF_PROT_FW_SIGNAL_MAX_TXBYTES;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+index a593784..7918c10 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+@@ -838,7 +838,7 @@ static void brcmf_fws_cleanup(struct brcmf_fws_info *fws, int ifidx)
+ 	brcmf_fws_hanger_cleanup(fws, matchfn, ifidx);
+ }
+ 
+-static int brcmf_fws_hdrpush(struct brcmf_fws_info *fws, struct sk_buff *skb)
++static u8 brcmf_fws_hdrpush(struct brcmf_fws_info *fws, struct sk_buff *skb)
  {
- 	int ret;
+ 	struct brcmf_fws_mac_descriptor *entry = brcmf_skbcb(skb)->mac;
+ 	u8 *wlh;
+@@ -887,9 +887,7 @@ static int brcmf_fws_hdrpush(struct brcmf_fws_info *fws, struct sk_buff *skb)
+ 	if (fillers)
+ 		memset(wlh, BRCMF_FWS_TYPE_FILLER, fillers);
  
--	ret = wl1251_acx_feature_cfg(wl);
-+	ret = wl1251_acx_feature_cfg(wl, 0);
- 	if (ret < 0) {
- 		wl1251_warning("couldn't set feature config");
- 		return ret;
-diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
-index 0e27f1f..39a6105 100644
---- a/drivers/net/wireless/ti/wl1251/main.c
-+++ b/drivers/net/wireless/ti/wl1251/main.c
-@@ -485,6 +485,7 @@ static void wl1251_op_stop(struct ieee80211_hw *hw)
- 	wl->power_level = WL1251_DEFAULT_POWER_LEVEL;
- 	wl->rssi_thold = 0;
- 	wl->channel = WL1251_DEFAULT_CHANNEL;
-+	wl->monitor_present = false;
+-	brcmf_proto_hdrpush(fws->drvr, brcmf_skb_if_flags_get_field(skb, INDEX),
+-			    data_offset >> 2, skb);
+-	return 0;
++	return (u8)(data_offset >> 2);
+ }
  
- 	wl1251_debugfs_reset(wl);
+ static bool brcmf_fws_tim_update(struct brcmf_fws_info *fws,
+@@ -897,10 +895,11 @@ static bool brcmf_fws_tim_update(struct brcmf_fws_info *fws,
+ 				 int fifo, bool send_immediately)
+ {
+ 	struct sk_buff *skb;
+-	struct brcmf_bus *bus;
+ 	struct brcmf_skbuff_cb *skcb;
+ 	s32 err;
+ 	u32 len;
++	u8 data_offset;
++	int ifidx;
  
-@@ -577,8 +578,10 @@ static int wl1251_op_config(struct ieee80211_hw *hw, u32 changed)
- 	channel = ieee80211_frequency_to_channel(
- 			conf->chandef.chan->center_freq);
+ 	/* check delayedQ and suppressQ in one call using bitmap */
+ 	if (brcmu_pktq_mlen(&entry->psq, 3 << (fifo * 2)) == 0)
+@@ -928,13 +927,11 @@ static bool brcmf_fws_tim_update(struct brcmf_fws_info *fws,
+ 		skcb->state = BRCMF_FWS_SKBSTATE_TIM;
+ 		skcb->htod = 0;
+ 		skcb->htod_seq = 0;
+-		bus = fws->drvr->bus_if;
+-		err = brcmf_fws_hdrpush(fws, skb);
+-		if (err == 0) {
+-			brcmf_fws_unlock(fws);
+-			err = brcmf_bus_txdata(bus, skb);
+-			brcmf_fws_lock(fws);
+-		}
++		data_offset = brcmf_fws_hdrpush(fws, skb);
++		ifidx = brcmf_skb_if_flags_get_field(skb, INDEX);
++		brcmf_fws_unlock(fws);
++		err = brcmf_proto_txdata(fws->drvr, ifidx, data_offset, skb);
++		brcmf_fws_lock(fws);
+ 		if (err)
+ 			brcmu_pkt_buf_free_skb(skb);
+ 		return true;
+@@ -1719,7 +1716,7 @@ int brcmf_fws_hdrpull(struct brcmf_pub *drvr, int ifidx, s16 signal_len,
+ 	return 0;
+ }
  
--	wl1251_debug(DEBUG_MAC80211, "mac80211 config ch %d psm %s power %d",
-+	wl1251_debug(DEBUG_MAC80211,
-+		     "mac80211 config ch %d monitor %s psm %s power %d",
- 		     channel,
-+		     conf->flags & IEEE80211_CONF_MONITOR ? "on" : "off",
- 		     conf->flags & IEEE80211_CONF_PS ? "on" : "off",
- 		     conf->power_level);
- 
-@@ -588,6 +591,22 @@ static int wl1251_op_config(struct ieee80211_hw *hw, u32 changed)
- 	if (ret < 0)
- 		goto out;
- 
-+	if (changed & IEEE80211_CONF_CHANGE_MONITOR) {
-+		u32 mode;
-+
-+		if (conf->flags & IEEE80211_CONF_MONITOR) {
-+			wl->monitor_present = true;
-+			mode = DF_SNIFF_MODE_ENABLE | DF_ENCRYPTION_DISABLE;
-+		} else {
-+			wl->monitor_present = false;
-+			mode = 0;
-+		}
-+
-+		ret = wl1251_acx_feature_cfg(wl, mode);
-+		if (ret < 0)
-+			goto out_sleep;
-+	}
-+
- 	if (channel != wl->channel) {
- 		wl->channel = channel;
- 
-@@ -804,12 +823,12 @@ static int wl1251_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 
- 	mutex_lock(&wl->mutex);
- 
--	ret = wl1251_ps_elp_wakeup(wl);
--	if (ret < 0)
--		goto out_unlock;
--
- 	switch (cmd) {
- 	case SET_KEY:
-+		if (wl->monitor_present) {
-+			ret = -EOPNOTSUPP;
-+			goto out_unlock;
-+		}
- 		wl_cmd->key_action = KEY_ADD_OR_REPLACE;
- 		break;
- 	case DISABLE_KEY:
-@@ -820,6 +839,10 @@ static int wl1251_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		break;
+-static void brcmf_fws_precommit_skb(struct brcmf_fws_info *fws, int fifo,
++static u8 brcmf_fws_precommit_skb(struct brcmf_fws_info *fws, int fifo,
+ 				   struct sk_buff *p)
+ {
+ 	struct brcmf_skbuff_cb *skcb = brcmf_skbcb(p);
+@@ -1737,7 +1734,7 @@ static void brcmf_fws_precommit_skb(struct brcmf_fws_info *fws, int fifo,
+ 		flags |= BRCMF_FWS_HTOD_FLAG_PKT_REQUESTED;
  	}
+ 	brcmf_skb_htod_tag_set_field(p, FLAGS, flags);
+-	brcmf_fws_hdrpush(fws, p);
++	return brcmf_fws_hdrpush(fws, p);
+ }
  
-+	ret = wl1251_ps_elp_wakeup(wl);
-+	if (ret < 0)
-+		goto out_unlock;
-+
- 	ret = wl1251_set_key_type(wl, wl_cmd, cmd, key, addr);
- 	if (ret < 0) {
- 		wl1251_error("Set KEY type failed");
-@@ -1520,6 +1543,7 @@ struct ieee80211_hw *wl1251_alloc_hw(void)
+ static void brcmf_fws_rollback_toq(struct brcmf_fws_info *fws,
+@@ -1805,20 +1802,21 @@ static int brcmf_fws_commit_skb(struct brcmf_fws_info *fws, int fifo,
+ {
+ 	struct brcmf_skbuff_cb *skcb = brcmf_skbcb(skb);
+ 	struct brcmf_fws_mac_descriptor *entry;
+-	struct brcmf_bus *bus = fws->drvr->bus_if;
+ 	int rc;
+ 	u8 ifidx;
++	u8 data_offset;
  
- 	INIT_DELAYED_WORK(&wl->elp_work, wl1251_elp_work);
- 	wl->channel = WL1251_DEFAULT_CHANNEL;
-+	wl->monitor_present = false;
- 	wl->scanning = false;
- 	wl->default_key = 0;
- 	wl->listen_int = 1;
-diff --git a/drivers/net/wireless/ti/wl1251/rx.c b/drivers/net/wireless/ti/wl1251/rx.c
-index 23289d4..123c4bb 100644
---- a/drivers/net/wireless/ti/wl1251/rx.c
-+++ b/drivers/net/wireless/ti/wl1251/rx.c
-@@ -83,7 +83,7 @@ static void wl1251_rx_status(struct wl1251 *wl,
+ 	entry = skcb->mac;
+ 	if (IS_ERR(entry))
+ 		return PTR_ERR(entry);
  
- 	status->flag |= RX_FLAG_MACTIME_START;
+-	brcmf_fws_precommit_skb(fws, fifo, skb);
++	data_offset = brcmf_fws_precommit_skb(fws, fifo, skb);
+ 	entry->transit_count++;
+ 	if (entry->suppressed)
+ 		entry->suppr_transit_count++;
++	ifidx = brcmf_skb_if_flags_get_field(skb, INDEX);
+ 	brcmf_fws_unlock(fws);
+-	rc = brcmf_bus_txdata(bus, skb);
++	rc = brcmf_proto_txdata(fws->drvr, ifidx, data_offset, skb);
+ 	brcmf_fws_lock(fws);
+ 	brcmf_dbg(DATA, "%s flags %X htod %X bus_tx %d\n", entry->name,
+ 		  skcb->if_flags, skcb->htod, rc);
+@@ -1979,10 +1977,9 @@ static void brcmf_fws_dequeue_worker(struct work_struct *worker)
+ 							&skb, true);
+ 				ifidx = brcmf_skb_if_flags_get_field(skb,
+ 								     INDEX);
+-				brcmf_proto_hdrpush(drvr, ifidx, 0, skb);
+-				/* Use bus module to send data frame */
++				/* Use proto layer to send data frame */
+ 				brcmf_fws_unlock(fws);
+-				ret = brcmf_bus_txdata(drvr->bus_if, skb);
++				ret = brcmf_proto_txdata(drvr, ifidx, 0, skb);
+ 				brcmf_fws_lock(fws);
+ 				if (ret < 0)
+ 					brcmf_txfinalize(drvr, skb, false);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/proto.c b/drivers/net/wireless/brcm80211/brcmfmac/proto.c
+index 87eb2bd..b6b4641 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/proto.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/proto.c
+@@ -39,7 +39,7 @@ int brcmf_proto_attach(struct brcmf_pub *drvr)
+ 	if (brcmf_proto_bcdc_attach(drvr))
+ 		goto fail;
  
--	if (desc->flags & RX_DESC_ENCRYPTION_MASK) {
-+	if (!wl->monitor_present && (desc->flags & RX_DESC_ENCRYPTION_MASK)) {
- 		status->flag |= RX_FLAG_IV_STRIPPED | RX_FLAG_MMIC_STRIPPED;
+-	if ((proto->hdrpush == NULL) || (proto->hdrpull == NULL) ||
++	if ((proto->txdata == NULL) || (proto->hdrpull == NULL) ||
+ 	    (proto->query_dcmd == NULL) || (proto->set_dcmd == NULL)) {
+ 		brcmf_err("Not all proto handlers have been installed\n");
+ 		goto fail;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/proto.h b/drivers/net/wireless/brcm80211/brcmfmac/proto.h
+index 8de1b3b..482fb0b 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/proto.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/proto.h
+@@ -17,14 +17,14 @@
+ #define BRCMFMAC_PROTO_H
  
- 		if (likely(!(desc->flags & RX_DESC_DECRYPT_FAIL)))
-diff --git a/drivers/net/wireless/ti/wl1251/tx.c b/drivers/net/wireless/ti/wl1251/tx.c
-index 28121c5..3cc82fd 100644
---- a/drivers/net/wireless/ti/wl1251/tx.c
-+++ b/drivers/net/wireless/ti/wl1251/tx.c
-@@ -287,6 +287,9 @@ static int wl1251_tx_frame(struct wl1251 *wl, struct sk_buff *skb)
- 	info = IEEE80211_SKB_CB(skb);
+ struct brcmf_proto {
+-	void (*hdrpush)(struct brcmf_pub *drvr, int ifidx, u8 offset,
+-			struct sk_buff *skb);
+ 	int (*hdrpull)(struct brcmf_pub *drvr, bool do_fws, u8 *ifidx,
+ 		       struct sk_buff *skb);
+ 	int (*query_dcmd)(struct brcmf_pub *drvr, int ifidx, uint cmd,
+ 			  void *buf, uint len);
+ 	int (*set_dcmd)(struct brcmf_pub *drvr, int ifidx, uint cmd, void *buf,
+ 			uint len);
++	int (*txdata)(struct brcmf_pub *drvr, int ifidx, u8 offset,
++		      struct sk_buff *skb);
+ 	void *pd;
+ };
  
- 	if (info->control.hw_key) {
-+		if (unlikely(wl->monitor_present))
-+			return -1;
-+
- 		idx = info->control.hw_key->hw_key_idx;
- 		if (unlikely(wl->default_key != idx)) {
- 			ret = wl1251_acx_default_key(wl, idx);
-diff --git a/drivers/net/wireless/ti/wl1251/wl1251.h b/drivers/net/wireless/ti/wl1251/wl1251.h
-index de9e418..45df03a 100644
---- a/drivers/net/wireless/ti/wl1251/wl1251.h
-+++ b/drivers/net/wireless/ti/wl1251/wl1251.h
-@@ -309,6 +309,7 @@ struct wl1251 {
- 	u8 bss_type;
- 	u8 listen_int;
- 	int channel;
-+	bool monitor_present;
+@@ -32,11 +32,6 @@ struct brcmf_proto {
+ int brcmf_proto_attach(struct brcmf_pub *drvr);
+ void brcmf_proto_detach(struct brcmf_pub *drvr);
  
- 	void *target_mem_map;
- 	struct acx_data_path_params_resp *data_path;
+-static inline void brcmf_proto_hdrpush(struct brcmf_pub *drvr, int ifidx,
+-				       u8 offset, struct sk_buff *skb)
+-{
+-	drvr->proto->hdrpush(drvr, ifidx, offset, skb);
+-}
+ static inline int brcmf_proto_hdrpull(struct brcmf_pub *drvr, bool do_fws,
+ 				      u8 *ifidx, struct sk_buff *skb)
+ {
+@@ -52,6 +47,11 @@ static inline int brcmf_proto_set_dcmd(struct brcmf_pub *drvr, int ifidx,
+ {
+ 	return drvr->proto->set_dcmd(drvr, ifidx, cmd, buf, len);
+ }
++static inline int brcmf_proto_txdata(struct brcmf_pub *drvr, int ifidx,
++				       u8 offset, struct sk_buff *skb)
++{
++	return drvr->proto->txdata(drvr, ifidx, offset, skb);
++}
+ 
+ 
+ #endif /* BRCMFMAC_PROTO_H */
 -- 
-1.7.9.5
+1.7.10.4
 
