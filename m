@@ -1,48 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:33206 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750765Ab3LJGpl (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:6952 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751415Ab3LLK7N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Dec 2013 01:45:41 -0500
-Message-ID: <1386657937.3878.93.camel@porter.coelho.fi> (sfid-20131210_074544_973586_FBA72628)
-Subject: Re: [PATCH] MAINTAINERS: remove myself as maintainer of TI WiLink
- drivers
-From: Luca Coelho <luca@coelho.fi>
+	Thu, 12 Dec 2013 05:59:13 -0500
+From: Arend van Spriel <arend@broadcom.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: balbi@ti.com, linux-wireless@vger.kernel.org
-Date: Tue, 10 Dec 2013 08:45:37 +0200
-In-Reply-To: <20131209210833.GF3359@tuxdriver.com>
-References: <1386620912-9292-1-git-send-email-luca@coelho.fi>
-	 <1386621181.3878.87.camel@porter.coelho.fi>
-	 <20131209210833.GF3359@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 08/18] brcmfmac: get rid of some void pointer parameters
+Date: Thu, 12 Dec 2013 11:58:56 +0100
+Message-ID: <1386845946-9859-9-git-send-email-arend@broadcom.com> (sfid-20131212_115917_076058_4AC431DF)
+In-Reply-To: <1386845946-9859-1-git-send-email-arend@broadcom.com>
+References: <1386845946-9859-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-12-09 at 16:08 -0500, John W. Linville wrote:
-> On Mon, Dec 09, 2013 at 10:33:01PM +0200, Luca Coelho wrote:
-> > Hi John,
-> > 
-> > Can you start taking wl12xx/wl1251 patches directly into your tree from
-> > now on?
-> > 
-> > I'm not going to send any more pull requests for the WiLink drivers.
-> 
-> 
-> Hmmm...I guess I'll have to stop deleting them... :-)
+In sdio code a couple of functions use a void pointer as argument
+type although it should be struct brcmf_sdio. Changing the functions
+to have proper type checking.
 
-Yeah, that's probably a good idea!
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Franky Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c  |   13 ++++---------
+ drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h |    9 ++++-----
+ 2 files changed, 8 insertions(+), 14 deletions(-)
 
-
-> If anyone has any pending wl12xx or wl1251 driver patches, please
-> re-send them!
-
-Sorry for the hassle.  Anyway, AFAICT there are Pali's "N900 wl1251"
-series and Sebastian's wl1251 DT series (half of which is going through
-Tony's tree).
-
---
-Cheers,
-Luca.
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index 24d69f4..c42d5a0 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -3649,10 +3649,8 @@ exit:
+ 	return ret;
+ }
+ 
+-void brcmf_sdbrcm_isr(void *arg)
++void brcmf_sdbrcm_isr(struct brcmf_sdio *bus)
+ {
+-	struct brcmf_sdio *bus = (struct brcmf_sdio *) arg;
+-
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+ 	if (!bus) {
+@@ -4037,7 +4035,7 @@ static struct brcmf_bus_ops brcmf_sdio_bus_ops = {
+ 	.gettxq = brcmf_sdbrcm_bus_gettxq,
+ };
+ 
+-void *brcmf_sdbrcm_probe(struct brcmf_sdio_dev *sdiodev)
++struct brcmf_sdio *brcmf_sdbrcm_probe(struct brcmf_sdio_dev *sdiodev)
+ {
+ 	int ret;
+ 	struct brcmf_sdio *bus;
+@@ -4147,14 +4145,11 @@ fail:
+ 	return NULL;
+ }
+ 
+-void brcmf_sdbrcm_disconnect(void *ptr)
++void brcmf_sdbrcm_disconnect(struct brcmf_sdio *bus)
+ {
+-	struct brcmf_sdio *bus = (struct brcmf_sdio *)ptr;
+-
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+-	if (bus)
+-		brcmf_sdbrcm_release(bus);
++	brcmf_sdbrcm_release(bus);
+ 
+ 	brcmf_dbg(TRACE, "Disconnected\n");
+ }
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h b/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
+index d98b4bd..414aa16 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
+@@ -165,7 +165,7 @@ struct brcmf_sdio_dev {
+ 	struct sdio_func *func[SDIO_MAX_FUNCS];
+ 	u8 num_funcs;			/* Supported funcs on client */
+ 	u32 sbwad;			/* Save backplane window address */
+-	void *bus;
++	struct brcmf_sdio *bus;
+ 	atomic_t suspend;		/* suspend flag */
+ 	wait_queue_head_t request_byte_wait;
+ 	wait_queue_head_t request_word_wait;
+@@ -239,10 +239,9 @@ int brcmf_sdio_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
+ /* Issue an abort to the specified function */
+ int brcmf_sdcard_abort(struct brcmf_sdio_dev *sdiodev, uint fn);
+ 
+-void *brcmf_sdbrcm_probe(struct brcmf_sdio_dev *sdiodev);
+-void brcmf_sdbrcm_disconnect(void *ptr);
+-void brcmf_sdbrcm_isr(void *arg);
+-
++struct brcmf_sdio *brcmf_sdbrcm_probe(struct brcmf_sdio_dev *sdiodev);
++void brcmf_sdbrcm_disconnect(struct brcmf_sdio *bus);
++void brcmf_sdbrcm_isr(struct brcmf_sdio *bus);
+ void brcmf_sdbrcm_wd_timer(struct brcmf_sdio *bus, uint wdtick);
+ 
+ #endif				/* _BRCM_SDH_H_ */
+-- 
+1.7.10.4
 
