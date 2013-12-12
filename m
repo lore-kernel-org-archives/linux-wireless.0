@@ -1,100 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ve0-f173.google.com ([209.85.128.173]:36801 "EHLO
-	mail-ve0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751457Ab3LSKMk (ORCPT
+Received: from mail-ea0-f175.google.com ([209.85.215.175]:53106 "EHLO
+	mail-ea0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751512Ab3LLUYo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Dec 2013 05:12:40 -0500
-Received: by mail-ve0-f173.google.com with SMTP id oz11so524702veb.4
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Dec 2013 02:12:39 -0800 (PST)
+	Thu, 12 Dec 2013 15:24:44 -0500
+Message-ID: <52AA1B72.1070905@gmail.com> (sfid-20131212_212504_901457_9B1F9FDF)
+Date: Thu, 12 Dec 2013 22:24:18 +0200
+From: Ivajlo Dimitrov <ivo.g.dimitrov.75@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAGb2v67cnP0yth0xxBKcaW_T2fF+4nP4r6h9NLqy5FV2x=hO=Q@mail.gmail.com>
-References: <52A040CE.5040706@schinagl.nl> <CAFXj5xjJ0DTa0Qo1avLboQF-e3TFv3aEr_jjkuZjinwuTzXykQ@mail.gmail.com>
- <52A09B5B.70800@schinagl.nl> <CAGRGNgWBgWqoPUdHSm2OXGb8r-ca5NX2z4_v0eG6oOMgJRd3HQ@mail.gmail.com>
- <52B17973.1000608@broadcom.com> <52B19F38.7060503@redhat.com>
- <52B1CA51.4010202@broadcom.com> <CAGb2v67cnP0yth0xxBKcaW_T2fF+4nP4r6h9NLqy5FV2x=hO=Q@mail.gmail.com>
-From: Chen-Yu Tsai <wens@csie.org>
-Date: Thu, 19 Dec 2013 18:12:19 +0800
-Message-ID: <CAGb2v67mmYnyPeOd4Wwp1zHs7EC_Gr+gEdaaMWeKP5z_Z_SVGA@mail.gmail.com> (sfid-20131219_111247_511080_B2A5E58C)
-Subject: Re: [linux-sunxi] Firmware for Bluetooth (and wifi)
-To: linux-sunxi <linux-sunxi@googlegroups.com>
-Cc: Hans de Goede <hdegoede@redhat.com>,
-	Julian Calaby <julian.calaby@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Ben Hutchings <bhutchings@solarflare.com>,
+	Dan Williams <dcbw@redhat.com>
+CC: Ivajlo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+	=?UTF-8?B?UGFsaSBSb2jDoQ==?= =?UTF-8?B?cg==?=
+	<pali.rohar@gmail.com>, Kalle Valo <kvalo@adurom.com>,
+	Luciano Coelho <luca@coelho.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
+	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
+	joni.lapilainen@gmail.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Felipe Contreras <felipe.contreras@gmail.com>
+Subject: Re: [PATCH v2 15/16] wl1251: Add sysfs file address for setting permanent
+ mac address
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>	 <201312101814.35112@pali> <1386697762.30202.6.camel@dcbw.foobar.com>	 <201312101852.17030@pali>	 <1386796654.1516.268.camel@bwh-desktop.uk.level5networks.com>	 <52A8DA9A.50501@gmail.com>	 <1386800135.1516.296.camel@bwh-desktop.uk.level5networks.com>	 <1386802416.17188.69.camel@dcbw.foobar.com> <1386878159.1516.312.camel@bwh-desktop.uk.level5networks.com>
+In-Reply-To: <1386878159.1516.312.camel@bwh-desktop.uk.level5networks.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
 
-On Thu, Dec 19, 2013 at 12:39 AM, Chen-Yu Tsai <wens@csie.org> wrote:
-> Hi,
->
-> On Thu, Dec 19, 2013 at 12:16 AM, Arend van Spriel <arend@broadcom.com> wrote:
->> On 12/18/2013 02:12 PM, Hans de Goede wrote:
->>> Hi,
->>>
->>> On 12/18/2013 11:31 AM, Arend van Spriel wrote:
->>>> On 12/05/2013 10:46 PM, Julian Calaby wrote:
->>>>> Firstly, are there any plans to support the BCM43362 chipset with the
->>>>> brcmfmac driver in the near future?
->>>>
->>>> Hi Julian,
->>>>
->>>> I am working on a patch to support this chip. It is looking promising.
->>>> Just have to go after a firmware image to be sure.
->>>
->>> Cool. Do you have a cubietruck? With my latest wip tree:
->>> https://github.com/jwrdegoede/linux-sunxi/commits/sunxi-next
+On 12.12.2013 21:55, Ben Hutchings wrote:
+> On Wed, 2013-12-11 at 16:53 -0600, Dan Williams wrote:
+>> On Wed, 2013-12-11 at 22:15 +0000, Ben Hutchings wrote:
+>>> On Wed, 2013-12-11 at 23:35 +0200, Ivajlo Dimitrov wrote:
+>>>> On 11.12.2013 23:17, Ben Hutchings wrote:
+>>>>> I think that's an even worse idea.  This is not firmware and it already
+>>>>> exists in separate storage.
+>>>>>
+>>>>> I think that rx51_init_wl1251() in
+>>>>> arch/arm/mach-omap2/board-rx51-peripherals.c should either copy the MAC
+>>>>> address out of NVRAM, or if it's too early to do that, then schedule a
+>>>>> function to run later and only then set up wl1251 platform data.
+>>>>>
+>>>>> Ben.
+>>>>>
+>>>> And how will that work with DT when board files will be in the history?
+>>> 1. Boot loader reads the MAC address from NVRAM and puts it in the DT
+>>> node.
+>>> or
+>>> 2. NVRAM reading is done by a tiny driver that is loaded based on the
+>>> platform name and updates the DT node in memory.  (But I don't know how
+>>> wl1251 should decide to defer probing if it's probed before that other
+>>> driver.)
+>> I'm uncomfortable with it too, and yes the permanent MAC should really
+>> be known before the interface is even registered, but...
 >>
->> No cubietruck here. I googled the term last week because it came up and
->> found embeddedcomputer.nl selling it.
->>
->>> We've mmc/sdio controller support on top of 3.13-rc4, it would be
->>> nice if we could also get the wifi and bluetooth to work here.
-
-I got the chip to respond to probing. It is BCM43362 for sure.
-
-  root@cubietruck:/sys/bus/mmc/devices/mmc1:0001/mmc1:0001:1# cat device
-  0xa962
-  root@cubietruck:/sys/bus/mmc/devices/mmc1:0001/mmc1:0001:1# cat vendor
-  0x02d0
-
-Vendor ID is Broadcom. Device ID is 43362.
-But I get two devices, mmc1:0001:1 and mmc1:0001:2. I don't know
-if this is normal or not.
-
-Bluetooth still isn't responding.
-
->>> I'm certainly willing to give some patches for this a try. Do you
->>> have an example of what the dts file for a board with broadcom sdio
->>> wifi looks like ?
->>
->> I am still struggling with dts changes for a Pandaboard. As I understood
->> the cubietruck uses AP6210 module and the dts really depends on how
->> things are wired up with it. Apart from the SDIO lines it may have an
->> additional GPIO output to power the module and GPIO inputs to wakeup the
->> host and interrupt line.
+>> Imagine if the MAC address for your ethernet device was stored
+>> in /etc/my-mac-addr.txt, except that /etc was a read-only protected
+>> partition from a very small SSD.  That's essentially the N900; it's
+>> stored in a file in a normal ext2/ext3 (?) filesystem on a partition of
+>> the internal flash.
+> Oh, from my quick look I got the impression that this 'CAL' was stored
+> directly in a specific flash partition.
 >
-> Yes it does. 2 GPIO lines for power, 1 for WiFi, 1 for BT.
-> Also takes 2 GPIO inputs for interrupts. Not sure how to feed this
-> to the driver. Last, it takes a clock output out of the A20 for the
-> low power 32k clock. Not sure if this is mandatory?
+>>    It seems like overkill to write a small driver that
+>> duplicates the ext3 + MTD drivers just to read the MAC.
+> [...]
 >
-> I've read the schematics more than a few times. I can get a dts out
-> tomorrow. I was planning on doing the clock output and rfkill part
-> first.
+> I don't see that anything would need to be duplicated.  But reading
+> files from the kernel is really ugly, and deciding when to read the file
+> would be another problem (as you noted).
+>
+> Ben
+>
+Yes, CAL is stored in /dev/mtd1, a dedicated partition in the NAND 
+flash. But reading the data stored in it from the kernel is not a 
+trivial task, as it uses its own pseudo-fs format etc. Not impossible (I 
+RE-ed libcal a while ago [0], so there is a code that could be reused, 
+calvaria works too afaik), but still doesn't sound like a very good idea.
 
-Here's my tree, in case anyone wants to play around. It will be rebased
-a lot.
+[0] 
+https://gitorious.org/community-ssu/libcal/source/d4c5fd9293ddb693c9b032b4c084cd0343b3ea26:
 
-  https://github.com/wens/linux/tree/wip/sunxi-next-wifi
-
-The DT is not finished yet. External interrupts and low power clock are
-still missing. Can anyone provide an example for useing the PIO EINT
-interrupt pins?
-
-
-Cheers,
-
-ChenYu
+Ivo
