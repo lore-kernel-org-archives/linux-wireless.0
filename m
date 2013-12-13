@@ -1,37 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:54696 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752816Ab3LJPg0 (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:42663 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751697Ab3LMJCw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Dec 2013 10:36:26 -0500
-Message-ID: <52A734D9.3000506@candelatech.com> (sfid-20131210_163629_265269_59CEF499)
-Date: Tue, 10 Dec 2013 07:35:53 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Fri, 13 Dec 2013 04:02:52 -0500
+Message-ID: <52AACD38.5060203@broadcom.com> (sfid-20131213_100257_055246_35D5AAE0)
+Date: Fri, 13 Dec 2013 10:02:48 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-To: Bartosz Markowski <bartosz.markowski@tieto.com>
-CC: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] ath10k: split the if_limits and if_comb
-References: <1386688840-12181-1-git-send-email-bartosz.markowski@tieto.com>
-In-Reply-To: <1386688840-12181-1-git-send-email-bartosz.markowski@tieto.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: Re: [PATCH 00/18] brcmfmac: sdio rework and msgbuf protocol changes
+References: <1386845946-9859-1-git-send-email-arend@broadcom.com>
+In-Reply-To: <1386845946-9859-1-git-send-email-arend@broadcom.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/10/2013 07:20 AM, Bartosz Markowski wrote:
-> Split the interface limits and inteface combination,
-> to reflect the 10.X capabilites (no P2P, no STA and 8 VAP).
+On 12/12/2013 11:58 AM, Arend van Spriel wrote:
+> This series consists mostly of cleanup in SDIO driver code. Other changes
+> are preparing to new firmware protocol called msgbuf, which is intended
+> for PCIe fullmac devices.
 
-My 10.X firmware works just fine with stations..I just tested up
-to 32 of them.
+Probably needless to say, but saying it anyway ;-). This patch series is 
+intended fro 3.14. It applies to the master branch of the wireless-next 
+repository.
 
-Maybe add firmware IEs to explicitly advertise how many it can
-support instead of setting one flag and making assumptions?
-
-Thanks,
-Ben
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Regards,
+Arend
