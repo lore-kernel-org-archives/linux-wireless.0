@@ -1,56 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f49.google.com ([209.85.212.49]:38773 "EHLO
-	mail-vb0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753762Ab3LPOxT (ORCPT
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:45649 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752606Ab3LMTN7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Dec 2013 09:53:19 -0500
-Received: by mail-vb0-f49.google.com with SMTP id x11so3157662vbb.22
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Dec 2013 06:53:19 -0800 (PST)
-MIME-Version: 1.0
-Date: Mon, 16 Dec 2013 15:53:18 +0100
-Message-ID: <CAD_=uH_pzbobvJGAgQcaPAVV+w9YA9DnFiSV+e4K-k456mmcBQ@mail.gmail.com> (sfid-20131216_155328_556817_E7790C64)
-Subject: Re: [PATCH v4] cfg80211: fix dfs channel state after stopping AP
-From: Marek Puzyniak <xpumapu@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Marek Puzyniak <marek.puzyniak@tieto.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 13 Dec 2013 14:13:59 -0500
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
+	yeohchunyeow@gmail.com
+Cc: yeohchunyeow@cozybit.com
+Subject: [PATCH v10 0/5] CSA beacon count changes
+Date: Fri, 13 Dec 2013 21:13:49 +0200
+Message-Id: <1386962034-7141-1-git-send-email-luciano.coelho@intel.com> (sfid-20131213_201402_248218_84DAF0A4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2013/12/16 Johannes Berg <johannes@sipsolutions.net>
-> If you keep changing your patch without any changelog (after the "---"
-> line!) then I have no idea what I should look at?
+A couple more changes, this time only in the commit logs.
 
-Right, I will add history of changes.
+In v10:
 
-> > +     if (rdev->num_running_ifaces == 1) {
-> > +             /* Last running AP iface*/
->
-> missing a space
-Yes, right.
+* s/ieee80211_csa_beacon/ieee80211_assign_beacon/ in the commit
+  messages (thanks Simon);
+* remove stray Change-Id tags.
 
-> > +             wdev_lock(wdev_iter);
->
-> This will almost certainly cause a lockdep warning since you hold the
-> wdev lock already.
->
-> > +             if (!netif_running(wdev_iter->netdev)) {
-> > +                     wdev_unlock(wdev_iter);
-> > +                     continue;
-> > +             }
-> > +
-> > +             if (wdev_iter->iftype == NL80211_IFTYPE_AP) {
-> > +                     wdev_unlock(wdev_iter);
-> > +                     return false;
-> > +             }
-> > +             wdev_unlock(wdev_iter);
->
-> I don't think checking the iftype needs the lock (this lock - maybe
-> rtnl) anyway?
+In v9:
 
-I will remove lock here.
+* fix lock in ieee80211_ibss_finish_csa();
+* remove double check for sdata_running() (thanks Simon);
+* check cfg80211_chandef_identical before calling
+  ieee80211_channel_switch() to avoid disconnecting;
 
-> johannes
+In v8:
 
-Marek
+* removed bogus sdata_unlock from ieee80211_csa_finalize();
+
+In v7:
+
+* (hopefully) a fix for the kfree_rcu() oops (thanks Chun-Yeow);
+* removed stray extra space at the top of cfg.c (thanks Johannes);
+* removed the TODO action frame comment for mesh and IBSS (thanks Simon);
+
+--
+Cheers,
+Luca.
+
+
+Luciano Coelho (5):
+  mac80211: refactor ieee80211_ibss_process_chanswitch()
+  mac80211: align ieee80211_ibss_csa_beacon() with
+    ieee80211_assign_beacon()
+  mac80211: refactor ieee80211_mesh_process_chanswitch()
+  mac80211: align ieee80211_mesh_csa_beacon() with
+    ieee80211_assign_beacon()
+  mac80211: only set CSA beacon when at least one beacon must be
+    transmitted
+
+ include/net/mac80211.h     |  10 ++--
+ net/mac80211/cfg.c         | 121 ++++++++++++++++++++++++++++++++++-----------
+ net/mac80211/ibss.c        |  72 +++++++--------------------
+ net/mac80211/ieee80211_i.h |  11 +++--
+ net/mac80211/mesh.c        |  86 +++++++++-----------------------
+ net/mac80211/tx.c          |  19 +++----
+ net/mac80211/util.c        |   1 -
+ 7 files changed, 153 insertions(+), 167 deletions(-)
+
+-- 
+1.8.5.1
+
