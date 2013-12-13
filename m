@@ -1,33 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:36847 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756738Ab3LSXwh (ORCPT
+Received: from mail-ea0-f181.google.com ([209.85.215.181]:50184 "EHLO
+	mail-ea0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752434Ab3LMJs3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Dec 2013 18:52:37 -0500
-Date: Thu, 19 Dec 2013 18:52:36 -0500 (EST)
-Message-Id: <20131219.185236.196101381723148304.davem@davemloft.net> (sfid-20131220_005322_970130_3DA8BDC7)
-To: rashika.kheria@gmail.com
-Cc: sgruszka@redhat.com, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, josh@joshtriplett.org
-Subject: Re: [PATCH v3 7/8] drivers: net: Mark functions as static in
- debug.c
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <8e5f8e06430a9d822c4d5a1a3a7a3454eb75281c.1387382457.git.rashika.kheria@gmail.com>
-References: <04fe932bc3585620c91d511bb0894e45bb762ffa.1387382457.git.rashika.kheria@gmail.com>
-	<8e5f8e06430a9d822c4d5a1a3a7a3454eb75281c.1387382457.git.rashika.kheria@gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=iso-8859-7
+	Fri, 13 Dec 2013 04:48:29 -0500
+Received: by mail-ea0-f181.google.com with SMTP id m10so759030eaj.12
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Dec 2013 01:48:28 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH] ath10k: fix band reporting for mgmt CCK frames on 5GHz
+Date: Fri, 13 Dec 2013 10:44:43 +0100
+Message-Id: <1386927883-14028-1-git-send-email-michal.kazior@tieto.com> (sfid-20131213_104918_532169_E71025D1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RnJvbTogUmFzaGlrYSBLaGVyaWEgPHJhc2hpa2Eua2hlcmlhQGdtYWlsLmNvbT4NCkRhdGU6IFRo
-dSwgMTkgRGVjIDIwMTMgMTQ6MjU6MzQgKzA1MzANCg0KPiBUaGlzIHBhdGNoIG1hcmtzIHRoZSBm
-dW5jdGlvbiBpbF9jbGVhcl90cmFmZmljX3N0YXRzKCkgaW4gZGVidWcuYyBhcw0KPiBzdGF0aWMg
-YmVjYXVzZSB0aGV5IGFyZSBub3QgdXNlZCBvdXRzaWRlIHRoaXMgZmlsZS4NCj4gDQo+IFRodXMs
-IGl0IGFsc28gcmVtb3ZlcyB0aGUgZm9sbG93aW5nIHdhcm5pbmdzIGluDQo+IHdpcmVsZXNzL2l3
-bGVnYWN5L2RlYnVnLmM6DQo+IA0KPiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2xlZ2FjeS9kZWJ1
-Zy5jOjM1OjE6IHdhcm5pbmc6IG5vIHByZXZpb3VzIHByb3RvdHlwZSBmb3IgoWlsX2NsZWFyX3Ry
-YWZmaWNfc3RhdHOiIFstV21pc3NpbmctcHJvdG90eXBlc10NCj4gDQo+IFNpZ25lZC1vZmYtYnk6
-IFJhc2hpa2EgS2hlcmlhIDxyYXNoaWthLmtoZXJpYUBnbWFpbC5jb20+DQo+IFJldmlld2VkLWJ5
-OiBKb3NoIFRyaXBsZXR0IDxqb3NoQGpvc2h0cmlwbGV0dC5vcmc+DQoNCkFwcGxpZWQuDQo=
+Although CCK modulation isn't expected for 11a if
+it happened it made ath10k report wrong band
+(2GHz) for a mgmt frame that were actually
+received on 5Ghz band. Frequency would also
+decoded incorrectly too.
+
+In case of 5GHz-only devices this triggered
+mac80211 WARN_ON because there was no according
+sband pointer to be found.
+
+The patch should fix delivery of such frames by
+using different means to acquire band parameter.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+
+One could argue whether such frames should be even
+delievered to mac80211. I decided it's better to
+deliver to increase interoperability with silly
+devices.
+
+If anyone disagrees I can change the patch to
+simply drop such frames in ath10k.
+
+ drivers/net/wireless/ath/ath10k/wmi.c | 21 ++++++++++++++++++++-
+ 1 file changed, 20 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 9ea333a..3ec6c9a 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -875,6 +875,7 @@ static int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
+ 	struct wmi_mgmt_rx_event_v2 *ev_v2;
+ 	struct wmi_mgmt_rx_hdr_v1 *ev_hdr;
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
++	struct ieee80211_channel *ch;
+ 	struct ieee80211_hdr *hdr;
+ 	u32 rx_status;
+ 	u32 channel;
+@@ -927,7 +928,25 @@ static int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
+ 	if (rx_status & WMI_RX_STATUS_ERR_MIC)
+ 		status->flag |= RX_FLAG_MMIC_ERROR;
+ 
+-	status->band = phy_mode_to_band(phy_mode);
++	/* HW can Rx CCK rates on 5GHz. In that case phy_mode is set to
++	 * MODE_11B. This means phy_mode is not a reliable source for the band
++	 * of mgmt rx. */
++
++	ch = ar->scan_channel;
++	if (!ch)
++		ch = ar->rx_channel;
++
++	if (ch) {
++		status->band = ch->band;
++
++		if (phy_mode == MODE_11B &&
++		    status->band == IEEE80211_BAND_5GHZ)
++			ath10k_dbg(ATH10K_DBG_MGMT, "wmi mgmt rx 11b (CCK) on 5GHz\n");
++	} else {
++		ath10k_warn("using (unreliable) phy_mode to extract band for mgmt rx\n");
++		status->band = phy_mode_to_band(phy_mode);
++	}
++
+ 	status->freq = ieee80211_channel_to_frequency(channel, status->band);
+ 	status->signal = snr + ATH10K_DEFAULT_NOISE_FLOOR;
+ 	status->rate_idx = get_rate_idx(rate, status->band);
+-- 
+1.8.4.rc3
+
