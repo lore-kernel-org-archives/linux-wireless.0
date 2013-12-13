@@ -1,30 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:39171 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751401Ab3LBPCi (ORCPT
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:45655 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752991Ab3LMTN7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Dec 2013 10:02:38 -0500
-Message-ID: <1385996554.20277.5.camel@jlt4.sipsolutions.net> (sfid-20131202_160242_166379_978D2635)
-Subject: Re: [PATCH v2] cfg80211: fix dfs channel state after stopping AP
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marek Puzyniak <marek.puzyniak@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 02 Dec 2013 16:02:34 +0100
-In-Reply-To: <1384767413-5648-1-git-send-email-marek.puzyniak@tieto.com> (sfid-20131118_103707_203761_B8998029)
-References: <1384767413-5648-1-git-send-email-marek.puzyniak@tieto.com>
-	 (sfid-20131118_103707_203761_B8998029)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 13 Dec 2013 14:13:59 -0500
+From: Luciano Coelho <luciano.coelho@intel.com>
+To: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
+	yeohchunyeow@gmail.com
+Cc: yeohchunyeow@cozybit.com
+Subject: [PATCH v10 2/5] mac80211: align ieee80211_ibss_csa_beacon() with ieee80211_assign_beacon()
+Date: Fri, 13 Dec 2013 21:13:51 +0200
+Message-Id: <1386962034-7141-3-git-send-email-luciano.coelho@intel.com> (sfid-20131213_201404_903012_33AAC768)
+In-Reply-To: <1386962034-7141-1-git-send-email-luciano.coelho@intel.com>
+References: <1386962034-7141-1-git-send-email-luciano.coelho@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-11-18 at 10:36 +0100, Marek Puzyniak wrote:
-> This can be called when a mode of operation that can supports
-> initiating radiation on a DFS channel leaves that channel to
-> ensure that if the mode of operation is started again on it
-> that it will require a new channel availability check.
+The return value of ieee80211_ibss_csa_beacon is not aligned with the
+return value of ieee80211_assign_beacon().  For consistency and to be
+able to use both functions with similar code, change
+ieee80211_ibss_csa_beacon() not to send the bss changed notification
+itself, but return what has changed so the caller can send the
+notification instead.
 
-Ugh, I don't understand - care to rephrase? Is this needed in 3.13?
+Tested by: Simon Wunderlich <sw@simonwunderlich.de>
+Acked by: Simon Wunderlich <sw@simonwunderlich.de>
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+ net/mac80211/ibss.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-johannes
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 0c3a45c..262fd56 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -522,7 +522,7 @@ int ieee80211_ibss_csa_beacon(struct ieee80211_sub_if_data *sdata,
+ 	if (csa_settings)
+ 		ieee80211_send_action_csa(sdata, csa_settings);
+ 
+-	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
++	return BSS_CHANGED_BEACON;
+  out:
+ 	return ret;
+ }
+@@ -563,6 +563,9 @@ int ieee80211_ibss_finish_csa(struct ieee80211_sub_if_data *sdata)
+ 	if (err < 0)
+ 		return err;
+ 
++	if (err)
++		ieee80211_bss_info_change_notify(sdata, err);
++
+ 	return 0;
+ }
+ 
+-- 
+1.8.5.1
 
