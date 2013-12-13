@@ -1,125 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:41213 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753511Ab3LIWZz (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:48487 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752388Ab3LMJcb convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Dec 2013 17:25:55 -0500
-Received: by mail-wi0-f172.google.com with SMTP id en1so4552523wid.17
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Dec 2013 14:25:54 -0800 (PST)
-Message-ID: <1386627948.14057.3.camel@canaries64-MCP7A> (sfid-20131209_232558_607098_E00FC71D)
-Subject: [PATCH 2/4] staging: vt6656: Get wireless stats qual.qual directly
- from s_uCalculateLinkQual
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 09 Dec 2013 22:25:48 +0000
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 13 Dec 2013 04:32:31 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Message-ID: <21162.54025.118938.614891@gargle.gargle.HOWL> (sfid-20131213_103241_169512_AD4D6012)
+Date: Fri, 13 Dec 2013 14:57:37 +0530
+To: Sebastian Moeller <sebastian.moeller@gmail.com>
+Cc: cerowrt-devel@lists.bufferbloat.net,
+	Stephen Hemminger <stephen@networkplumber.org>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: Re: [Cerowrt-devel] Wireless failures 3.10.17-3
+In-Reply-To: <C0DD393A-6810-4CB6-B705-AE801ED5BBBA@gmx.de>
+References: <20131211174519.34966001@nehalam.linuxnetplumber.net>
+	<21161.18818.926049.511664@gargle.gargle.HOWL>
+	<C0DD393A-6810-4CB6-B705-AE801ED5BBBA@gmx.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Calculate the qual from the tx_packets and wstats.discard.retries and
-apply to wstats.qual.qual
+Sebastian Moeller wrote:
+> It is a net gear WNDR3700 v2, so according to:
+> http://wiki.openwrt.org/toh/netgear/wndr3700 it is a Atheros AR7161 rev 2 680
+> MHz soc with the following wireless parts: Atheros AR9223 802.11bgn / Atheros
+> AR9220 802.11an.
+> 
+> Sure, I hope I got the right one. Now this is not from the same boot as the
+> one with the errors, but I assume that does not make a difference… Since I am
+> located in Germany I set the regulatory domain to DE. please let me know if I
+> you need any additional information or testing (note I am not set up to build
+> cerowrt myself, so I would need Dave Täht's help to build a modified firmware)
 
-Discard pDevice->scStatistic.LinkQuality.
+Can you try this patch ?
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/bssdb.c | 59 +++++++++++++++++++++++-------------------
- drivers/staging/vt6656/iwctl.c |  3 ---
- 2 files changed, 32 insertions(+), 30 deletions(-)
-
-diff --git a/drivers/staging/vt6656/bssdb.c b/drivers/staging/vt6656/bssdb.c
-index 1c3cbc5..4c32b12 100644
---- a/drivers/staging/vt6656/bssdb.c
-+++ b/drivers/staging/vt6656/bssdb.c
-@@ -1384,39 +1384,44 @@ static void s_vCheckSensitivity(struct vnt_private *pDevice)
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_mac.c b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
+index 8d78253..0337de7 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_mac.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
+@@ -76,9 +76,16 @@ static bool ar9002_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
+ 				mask2 |= ATH9K_INT_CST;
+ 			if (isr2 & AR_ISR_S2_TSFOOR)
+ 				mask2 |= ATH9K_INT_TSFOOR;
++
++			if (!(pCap->hw_caps & ATH9K_HW_CAP_RAC_SUPPORTED)) {
++				REG_WRITE(ah, AR_ISR_S2, isr2);
++				isr &= ~AR_ISR_BCNMISC;
++			}
+ 		}
  
- static void s_uCalculateLinkQual(struct vnt_private *pDevice)
- {
-+	struct net_device_stats *stats = &pDevice->stats;
- 	unsigned long TxOkRatio, TxCnt;
- 	unsigned long RxOkRatio, RxCnt;
- 	unsigned long RssiRatio;
-+	unsigned long qual;
- 	long ldBm;
+-		isr = REG_READ(ah, AR_ISR_RAC);
++		if (pCap->hw_caps & ATH9K_HW_CAP_RAC_SUPPORTED)
++			isr = REG_READ(ah, AR_ISR_RAC);
++
+ 		if (isr == 0xffffffff) {
+ 			*masked = 0;
+ 			return false;
+@@ -97,11 +104,23 @@ static bool ar9002_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
  
--TxCnt = pDevice->scStatistic.TxNoRetryOkCount +
--	      pDevice->scStatistic.TxRetryOkCount +
--	      pDevice->scStatistic.TxFailCount;
--RxCnt = pDevice->scStatistic.RxFcsErrCnt +
-+	TxCnt = stats->tx_packets + pDevice->wstats.discard.retries;
+ 			*masked |= ATH9K_INT_TX;
+ 
+-			s0_s = REG_READ(ah, AR_ISR_S0_S);
++			if (pCap->hw_caps & ATH9K_HW_CAP_RAC_SUPPORTED) {
++				s0_s = REG_READ(ah, AR_ISR_S0_S);
++				s1_s = REG_READ(ah, AR_ISR_S1_S);
++			} else {
++				s0_s = REG_READ(ah, AR_ISR_S0);
++				REG_WRITE(ah, AR_ISR_S0, s0_s);
++				s1_s = REG_READ(ah, AR_ISR_S1);
++				REG_WRITE(ah, AR_ISR_S1, s1_s);
 +
-+	RxCnt = pDevice->scStatistic.RxFcsErrCnt +
- 	      pDevice->scStatistic.RxOkCnt;
--TxOkRatio = (TxCnt < 6) ? 4000:((pDevice->scStatistic.TxNoRetryOkCount * 4000) / TxCnt);
--RxOkRatio = (RxCnt < 6) ? 2000:((pDevice->scStatistic.RxOkCnt * 2000) / RxCnt);
--//decide link quality
--if(pDevice->bLinkPass !=true)
--{
--   pDevice->scStatistic.LinkQuality = 0;
--   pDevice->scStatistic.SignalStren = 0;
--}
--else
--{
--   RFvRSSITodBm(pDevice, (u8)(pDevice->uCurrRSSI), &ldBm);
--   if(-ldBm < 50)  {
--   	RssiRatio = 4000;
--     }
--   else if(-ldBm > 90) {
--   	RssiRatio = 0;
--     }
--   else {
--   	RssiRatio = (40-(-ldBm-50))*4000/40;
--     }
--   pDevice->scStatistic.SignalStren = RssiRatio/40;
--   pDevice->scStatistic.LinkQuality = (RssiRatio+TxOkRatio+RxOkRatio)/100;
--}
++				isr &= ~(AR_ISR_TXOK |
++					 AR_ISR_TXDESC |
++					 AR_ISR_TXERR |
++					 AR_ISR_TXEOL);
++			}
 +
-+	TxOkRatio = (TxCnt < 6) ? 4000:((stats->tx_packets * 4000) / TxCnt);
+ 			ah->intr_txqs |= MS(s0_s, AR_ISR_S0_QCU_TXOK);
+ 			ah->intr_txqs |= MS(s0_s, AR_ISR_S0_QCU_TXDESC);
+-
+-			s1_s = REG_READ(ah, AR_ISR_S1_S);
+ 			ah->intr_txqs |= MS(s1_s, AR_ISR_S1_QCU_TXERR);
+ 			ah->intr_txqs |= MS(s1_s, AR_ISR_S1_QCU_TXEOL);
+ 		}
+@@ -120,7 +139,12 @@ static bool ar9002_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
+ 	if (isr & AR_ISR_GENTMR) {
+ 		u32 s5_s;
+ 
+-		s5_s = REG_READ(ah, AR_ISR_S5_S);
++		if (pCap->hw_caps & ATH9K_HW_CAP_RAC_SUPPORTED) {
++			s5_s = REG_READ(ah, AR_ISR_S5_S);
++		} else {
++			s5_s = REG_READ(ah, AR_ISR_S5);
++		}
 +
-+	RxOkRatio = (RxCnt < 6) ? 2000 :
-+				((pDevice->scStatistic.RxOkCnt * 2000) / RxCnt);
+ 		ah->intr_gen_timer_trigger =
+ 				MS(s5_s, AR_ISR_S5_GENTIMER_TRIG);
+ 
+@@ -133,6 +157,16 @@ static bool ar9002_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
+ 		if ((s5_s & AR_ISR_S5_TIM_TIMER) &&
+ 		    !(pCap->hw_caps & ATH9K_HW_CAP_AUTOSLEEP))
+ 			*masked |= ATH9K_INT_TIM_TIMER;
 +
-+	/* decide link quality */
-+	if (pDevice->bLinkPass != true) {
-+		pDevice->wstats.qual.qual = 0;
-+		pDevice->scStatistic.SignalStren = 0;
-+	} else {
-+		RFvRSSITodBm(pDevice, (u8)(pDevice->uCurrRSSI), &ldBm);
-+		if (-ldBm < 50)
-+			RssiRatio = 4000;
-+		else if (-ldBm > 90)
-+			RssiRatio = 0;
-+		else
-+			RssiRatio = (40-(-ldBm-50)) * 4000 / 40;
-+
-+		pDevice->scStatistic.SignalStren = RssiRatio / 40;
-+		qual = (RssiRatio + TxOkRatio + RxOkRatio) / 100;
-+		if (qual < 100)
-+			pDevice->wstats.qual.qual = (u8)qual;
-+		else
-+			pDevice->wstats.qual.qual = 100;
++		if (!(pCap->hw_caps & ATH9K_HW_CAP_RAC_SUPPORTED)) {
++			REG_WRITE(ah, AR_ISR_S5, s5_s);
++			isr &= ~AR_ISR_GENTMR;
++		}
 +	}
 +
-    pDevice->scStatistic.RxFcsErrCnt = 0;
-    pDevice->scStatistic.RxOkCnt = 0;
-    pDevice->scStatistic.TxFailCount = 0;
-diff --git a/drivers/staging/vt6656/iwctl.c b/drivers/staging/vt6656/iwctl.c
-index 183c5a2..058df65 100644
---- a/drivers/staging/vt6656/iwctl.c
-+++ b/drivers/staging/vt6656/iwctl.c
-@@ -58,9 +58,6 @@ struct iw_statistics *iwctl_get_wireless_stats(struct net_device *dev)
- 	long ldBm;
++	if (!(pCap->hw_caps & ATH9K_HW_CAP_RAC_SUPPORTED)) {
++		REG_WRITE(ah, AR_ISR, isr);
++		REG_READ(ah, AR_ISR);
+ 	}
  
- 	pDevice->wstats.status = pDevice->eOPMode;
--	if (pDevice->scStatistic.LinkQuality > 100)
--		pDevice->scStatistic.LinkQuality = 100;
--	pDevice->wstats.qual.qual = (u8)pDevice->scStatistic.LinkQuality;
- 	RFvRSSITodBm(pDevice, (u8)(pDevice->uCurrRSSI), &ldBm);
- 	pDevice->wstats.qual.level = ldBm;
- 	pDevice->wstats.qual.noise = 0;
--- 
-1.8.3.2
+ 	if (sync_cause) {
 
 
+A version that applies over OpenWrt trunk is here:
+http://msujith.org/dir/patches/wl/Dec-13-2013/0001-ath9k-Interrupt-handling-fix-for-AR9002-family.patch
+
+Sujith
