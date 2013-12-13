@@ -1,52 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f47.google.com ([74.125.83.47]:54282 "EHLO
-	mail-ee0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752031Ab3LQUpg (ORCPT
+Received: from mout.gmx.net ([212.227.15.18]:51672 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752833Ab3LMTIL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Dec 2013 15:45:36 -0500
-Received: by mail-ee0-f47.google.com with SMTP id e51so2653077eek.34
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Dec 2013 12:45:36 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 36/36] iwlwifi: mvm: rs: fix variable shadowing
-Date: Tue, 17 Dec 2013 22:44:39 +0200
-Message-Id: <1387313079-28123-36-git-send-email-egrumbach@gmail.com> (sfid-20131217_214546_130563_F9BE1B80)
-In-Reply-To: <52B0B72A.5070704@gmail.com>
-References: <52B0B72A.5070704@gmail.com>
+	Fri, 13 Dec 2013 14:08:11 -0500
+Received: from hms-beagle-3.home.lan ([87.150.22.181]) by mail.gmx.com
+ (mrgmx003) with ESMTPSA (Nemesis) id 0MLfLH-1VqikN3D3j-000ukE for
+ <linux-wireless@vger.kernel.org>; Fri, 13 Dec 2013 20:08:09 +0100
+Content-Type: text/plain; charset=windows-1252
+Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
+Subject: Re: [Cerowrt-devel] Wireless failures 3.10.17-3
+From: Sebastian Moeller <moeller0@gmx.de>
+In-Reply-To: <52AB3B2A.1020207@openwrt.org>
+Date: Fri, 13 Dec 2013 20:08:08 +0100
+Cc: Sujith Manoharan <sujith@msujith.org>, ath9k-devel@lists.ath9k.org,
+	linux-wireless@vger.kernel.org, cerowrt-devel@lists.bufferbloat.net
+Message-Id: <E342AE53-F57D-4467-8E23-0E99E0568866@gmx.de> (sfid-20131213_200814_613370_C06B3D01)
+References: <20131211174519.34966001@nehalam.linuxnetplumber.net> <21161.18818.926049.511664@gargle.gargle.HOWL> <C0DD393A-6810-4CB6-B705-AE801ED5BBBA@gmx.de> <21162.54025.118938.614891@gargle.gargle.HOWL> <24E1A6F1-E642-43D3-8FB1-B6C27B6D8E24@gmail.com> <52AB3B2A.1020207@openwrt.org>
+To: Felix Fietkau <nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hello Felix,
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Reviewed-by: EyalX Shapira <eyal@wizery.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/rs.c |    8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
-index 1f06450..d6d28d7 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
-@@ -2718,12 +2718,10 @@ static ssize_t rs_sta_dbgfs_scale_table_read(struct file *file,
- 			lq_sta->lq.initial_rate_index[3]);
- 
- 	for (i = 0; i < LINK_QUAL_MAX_RETRY_NUM; i++) {
--		u32 rate = le32_to_cpu(lq_sta->lq.rs_table[i]);
--		desc += sprintf(buff+desc,
--				" rate[%d] 0x%X ",
--				i, rate);
-+		u32 r = le32_to_cpu(lq_sta->lq.rs_table[i]);
- 
--		desc += rs_pretty_print_rate(buff+desc, rate);
-+		desc += sprintf(buff+desc, " rate[%d] 0x%X ", i, r);
-+		desc += rs_pretty_print_rate(buff+desc, r);
- 	}
- 
- 	ret = simple_read_from_buffer(user_buf, count, ppos, buff, desc);
--- 
-1.7.9.5
+On Dec 13, 2013, at 17:51 , Felix Fietkau <nbd@openwrt.org> wrote:
+
+> On 2013-12-13 10:48, Sebastian Moeller wrote:
+>> Hi Sujith,
+>> 
+>> On Dec 13, 2013, at 10:27 , Sujith Manoharan <sujith@msujith.org> wrote:
+>> 
+>>> Sebastian Moeller wrote:
+>>>> It is a net gear WNDR3700 v2, so according to:
+>>>> http://wiki.openwrt.org/toh/netgear/wndr3700 it is a Atheros AR7161 rev 2 680
+>>>> MHz soc with the following wireless parts: Atheros AR9223 802.11bgn / Atheros
+>>>> AR9220 802.11an.
+>>>> 
+>>>> Sure, I hope I got the right one. Now this is not from the same boot as the
+>>>> one with the errors, but I assume that does not make a difference… Since I am
+>>>> located in Germany I set the regulatory domain to DE. please let me know if I
+>>>> you need any additional information or testing (note I am not set up to build
+>>>> cerowrt myself, so I would need Dave Täht's help to build a modified firmware)
+>>> 
+>>> Can you try this patch ?
+>> 
+>> 	I will, but it will take some time, as I cannot build the firmware for this device myself, but need help. So I let you know once I tested the patched kernel.
+> On OpenWrt/CeroWrt you should not patch it into the kernel. You need to
+> add it as a patch for package/kernel/mac80211.
+
+	Ah, thanks, good to know. Vielen Dank. (I still need Dave's help in integrating this patch into a firmware image so I can actually test it...)
+
+Best Regards
+	Sebastian
+
+> 
+> - Felix
+> _______________________________________________
+> Cerowrt-devel mailing list
+> Cerowrt-devel@lists.bufferbloat.net
+> https://lists.bufferbloat.net/listinfo/cerowrt-devel
 
