@@ -1,80 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:62424 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753612Ab3LNTJR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Dec 2013 14:09:17 -0500
-Received: by mail-wi0-f176.google.com with SMTP id hq4so611423wib.15
-        for <linux-wireless@vger.kernel.org>; Sat, 14 Dec 2013 11:09:15 -0800 (PST)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>
-Subject: [PATCH 2/2] cfg80211: make regulatory_hint() remove REGULATORY_CUSTOM_REG
-Date: Sat, 14 Dec 2013 20:09:06 +0100
-Message-Id: <1387048146-16380-2-git-send-email-mcgrof@do-not-panic.com> (sfid-20131214_200919_828386_300039BA)
-In-Reply-To: <1387048146-16380-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1387048146-16380-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from mga11.intel.com ([192.55.52.93]:3203 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752605Ab3LMTLB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Dec 2013 14:11:01 -0500
+From: "Coelho, Luciano" <luciano.coelho@intel.com>
+To: Simon Wunderlich <sw@simonwunderlich.de>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"yeohchunyeow@gmail.com" <yeohchunyeow@gmail.com>,
+	"yeohchunyeow@cozybit.com" <yeohchunyeow@cozybit.com>
+Subject: Re: [PATCH v9 0/5] CSA Beacon Count changes
+Date: Fri, 13 Dec 2013 19:10:57 +0000
+Message-ID: <1386961857.3214.2.camel@porter.coelho.fi> (sfid-20131213_201106_270838_22505710)
+References: <1386935675-24548-1-git-send-email-luciano.coelho@intel.com>
+	 <201312131823.35206.sw@simonwunderlich.de>
+In-Reply-To: <201312131823.35206.sw@simonwunderlich.de>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The REGULATORY_CUSTOM_REG can be used during early init with
-the goal of overriding the wiphy's default regulatory settings
-in case the alpha2 of the device is not known. In the case that
-the alpha2 becomes known lets avoid having drivers having to
-clear the REGULATORY_CUSTOM_REG flag by doing it for them
-when regulatory_hint() is used.
-
-Cc: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- drivers/net/wireless/ath/regd.c | 2 --
- include/net/regulatory.h        | 4 ++++
- net/wireless/reg.c              | 2 ++
- 3 files changed, 6 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
-index 56c3d05..e5e9059 100644
---- a/drivers/net/wireless/ath/regd.c
-+++ b/drivers/net/wireless/ath/regd.c
-@@ -652,8 +652,6 @@ ath_regd_init_wiphy(struct ath_regulatory *reg,
- 	}
- 
- 	wiphy_apply_custom_regulatory(wiphy, regd);
--	if (!ath_is_world_regd(reg))
--		wiphy->regulatory_flags &= ~REGULATORY_CUSTOM_REG;
- 	ath_reg_apply_radar_flags(wiphy);
- 	ath_reg_apply_world_flags(wiphy, NL80211_REGDOM_SET_BY_DRIVER, reg);
- 	return 0;
-diff --git a/include/net/regulatory.h b/include/net/regulatory.h
-index c96a0b8..b07cdc9 100644
---- a/include/net/regulatory.h
-+++ b/include/net/regulatory.h
-@@ -96,6 +96,10 @@ struct regulatory_request {
-  *	initiator is %REGDOM_SET_BY_CORE). Drivers that use
-  *	wiphy_apply_custom_regulatory() should have this flag set
-  *	or the regulatory core will set it for the wiphy.
-+ *	If you use regulatory_hint() *after* using
-+ *	wiphy_apply_custom_regulatory() the wireless core will
-+ *	clear the REGULATORY_CUSTOM_REG for your wiphy as it would be
-+ *	implied that the device somehow gained knowledge of its region.
-  * @REGULATORY_STRICT_REG: tells us that the wiphy for this device
-  *	has regulatory domain that it wishes to be considered as the
-  *	superset for regulatory rules. After this device gets its regulatory
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index ec54e1a..070ff28 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1826,6 +1826,8 @@ int regulatory_hint(struct wiphy *wiphy, const char *alpha2)
- 	if (WARN_ON(!alpha2 || !wiphy))
- 		return -EINVAL;
- 
-+	wiphy->regulatory_flags &= ~REGULATORY_CUSTOM_REG;
-+
- 	request = kzalloc(sizeof(struct regulatory_request), GFP_KERNEL);
- 	if (!request)
- 		return -ENOMEM;
--- 
-1.8.4.3
-
+T24gRnJpLCAyMDEzLTEyLTEzIGF0IDE4OjIzICswMTAwLCBTaW1vbiBXdW5kZXJsaWNoIHdyb3Rl
+Og0KPiBIZXkgTHVjYSwNCj4gDQo+ID4gSGksDQo+ID4gDQo+ID4gTW9yZSBjaGFuZ2VzLCBob3Bl
+ZnVsbHkgdGhlIGxhc3Qgb25lcyBmb3IgdGhpcyBzZXJpZXMuIDspDQo+ID4gDQo+ID4gSSBoYXZl
+IGhhY2tlZCB3cGFfc3VwcGxpY2FudCB0byBzdXBwb3J0IENTQSBpbiBJQlNTLCBzbyBJIGNvdWxk
+IHRlc3QNCj4gPiBpdCB0b28uICBJIGNyZWF0ZWQgc29tZSBtYTgwMjExX2h3c2ltIHRlc3RjYXNl
+cyBvbiB0b3Agb2YgdGhpcy4gIFRoZQ0KPiA+IHRlc3RzIG5vdyBwYXNzLCB0aG91Z2ggSSBnZXQg
+c29tZSBzZW1pLXJhbmRvbSBXQVJOcyBbMV0gd2hlbiB1c2luZyAzDQo+ID4gc3RhdGlvbnMuICBJ
+dCBzZWVtcyB0byBiZSBhIHJhY2UgY29uZGl0aW9uIGFuZCBpdCBkb2Vzbid0IHNlZW0gdG8gYmUN
+Cj4gPiByZWxhdGVkIHRvIHRoaXMgc2VyaWVzLCBzbyBJIHRoaW5rIHdlIHNob3VsZCBhZGRyZXNz
+IGl0IHNlcGFyYXRlbHkNCj4gPiAoU2ltb24sIGhpbnQhIDspLg0KPiA+IA0KPiA+IEkgaGF2ZSBh
+bHNvIGNyZWF0ZWQgc29tZSBiYXNpYyBCU1MgQ1NBIHRlc3QgY2FzZXMgZm9yIG1hYzgwMjExX2h3
+c2ltLg0KPiA+IFRoZSB0ZXN0cyBwYXNzLCBleGNlcHQgd2hlbiBJIHRyeSBjb3VudCA8IDIsIHdo
+aWNoIGlzIGV4cGVjdGVkLCBzaW5jZQ0KPiA+IHdlIGRpZCBub3QgaW1wbGVtZW50IHRoZSBDU0Eg
+YWN0aW9uIGZyYW1lIGluIEJTUyBtb2RlLg0KPiA+IA0KPiA+IEknbGwgdXBzdHJlYW0gdGhlIEJT
+UyBDU0EgdGVzdCBjYXNlcyBzb29uLiAgVGhlIElCU1MgdGVzdCBjYXNlcyBzdGlsbA0KPiA+IG5l
+ZWQgdG8gYmUgY2xlYW5lZCB1cCAoYWN0dWFsbHkgdGhleSdyZSB3b3J0aGxlc3Mgd2l0aG91dCB0
+aGUgSUJTUyBDU0ENCj4gPiBzdXBwb3J0IGluIHdwYV9zdXBwbGljYW50LCB3aGljaCBuZWVkcyB0
+byBiZSBjbGVhbmVkIHVwKS4gIElmIHNvbWVvbmUNCj4gPiBpcyBpbnRlcmVzdGVkIGluIHRoaXMs
+IGxldCBtZSBrbm93IGFuZCBJIGNhbiBzZW5kIHRoZW0NCj4gPiAid2l0aG91dC13YXJyYW50eSBv
+ZiBhbnkga2luZCIuIDspDQo+ID4gDQo+ID4gUGxlYXNlIHJldmlldyBhbmQgdGVzdCENCj4gDQo+
+IFBhdGNoZXMgbG9vayBnb29kIHRvIG1lIGFuZCB3b3JrZWQgZmluZSBpbiBteSB0ZXN0IGVudmly
+b25tZW50LiBFdmVyeXRoaW5nIGFzIA0KPiBleHBlY3RlZCBmb3IgQ1NBIGNvdW50cyBvZiAwLCAx
+LCAyIGFuZCAxMCwgbm8gd2FybmluZ3Mgb3Igd2VpcmQgYmVoYXZpb3VyLiANCj4gSSd2ZSB0ZXN0
+ZWQgd2l0aCB0d28gc3RhdGlvbnMgaW4gSUJTUyBtb2RlIHVzaW5nIGF0aDlrLg0KPiANCj4gU28s
+IGFwYXJ0IGZyb20gdGhhdCBmdW5jdGlvbiBuYW1lIGlzc3VlLCBmZWVsIGZyZWUgdG8gYWRkIGZv
+ciBQYXRjaCAxLDIgYW5kIDU6DQo+IA0KPiBBY2tlZC1ieS9UZXN0ZWQtYnk6IFNpbW9uIFd1bmRl
+cmxpY2ggPHN3QHNpbW9ud3VuZGVybGljaC5kZT4NCg0KVGhhbmsgeW91IHZlcnkgbXVjaCBmb3Ig
+YWxsIHlvdXIgaGVscCwgU2ltb24hDQoNCg0KDQo+IEknbGwgdHJ5IHRvIHJlcHJvZHVjZSB0aGUg
+aXNzdWUgeW91IHdlcmUgc2VlaW5nIHdoZW4gdGhlc2UgdGVzdGNhc2VzL3dwYV9zIA0KPiBpbXBs
+ZW1lbnRhdGlvbiBhcmUgdXBzdHJlYW0gKG9yIHBhdGNoZXMgYXJlIGF2YWlsYWJsZSkuIEkgZGlk
+bid0IHNlZSB0aGUgDQo+IHByb2JsZW0gb24gYSBmaXJzdCBnbGFuY2UsIGJ1dCB0aGUgd2Fybmlu
+ZyBpcyBub3QgY3JpdGljYWwgKGJhc2ljYWxseSB0aGUgQ1NBIA0KPiB3aWxsIGZhaWwpLCBzbyBJ
+IGd1ZXNzIGl0J3MgT0sgdG8gZml4IGl0IHNvb25bdG1dLg0KDQpZZWFoLCBsZXQncyBmaXggaXQg
+c2VwYXJhdGVseS4gIFByb2JhYmx5IGJlc3QgdG8gd2FpdCB1bnRpbCBhZnRlciB0aGUNCmhvbGlk
+YXlzLCBzaW5jZSBJJ20gaGF2aW5nIHZhY2F0aW9ucyBhbHJlYWR5IG5leHQgd2Vlay4NCg0KLS0N
+CkNoZWVycywNCkx1Y2EuDQo=
