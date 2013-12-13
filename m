@@ -1,112 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:44622 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750760Ab3LQIZT (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:41919 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752607Ab3LMOV7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Dec 2013 03:25:19 -0500
-Message-ID: <1387268712.4749.14.camel@jlt4.sipsolutions.net> (sfid-20131217_092522_967666_39B1BEA7)
-Subject: Re: [RFC PATCH 4/8] mac80211: Use PS module for managed mode
- powersave
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	brcm80211-dev-list@broadcom.com,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Arend van Spriel <arend@broadcom.com>
-Date: Tue, 17 Dec 2013 09:25:12 +0100
-In-Reply-To: <1387231260-2849-5-git-send-email-seth.forshee@canonical.com> (sfid-20131216_230111_164514_93A543E7)
-References: <1387231260-2849-1-git-send-email-seth.forshee@canonical.com>
-	 <1387231260-2849-5-git-send-email-seth.forshee@canonical.com>
-	 (sfid-20131216_230111_164514_93A543E7)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 13 Dec 2013 09:21:59 -0500
+Message-ID: <52AB17E7.9080807@candelatech.com> (sfid-20131213_152202_280014_0E38F8EF)
+Date: Fri, 13 Dec 2013 06:21:27 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: Question on software-crypt mode.
+References: <52A87FBD.4000901@candelatech.com> <CA+BoTQkO+FyuAnLfo473QH=QK1FKtS7bQ8ZTXdOj67xSqUxWOw@mail.gmail.com>
+In-Reply-To: <CA+BoTQkO+FyuAnLfo473QH=QK1FKtS7bQ8ZTXdOj67xSqUxWOw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-12-16 at 16:00 -0600, Seth Forshee wrote:
+On 12/13/2013 02:53 AM, Michal Kazior wrote:
+> On 11 December 2013 16:07, Ben Greear <greearb@candelatech.com> wrote:
+>> Hello!
+>>
+>> I am trying to implement software-crypt for ath10k so that it can do crypt
+>> with multiple stations connected to same AP.
+>>
+>> I tried using ath9k's approach and just not setting keys, but that does not
+>> work at all
+>> (no stations can communicate).
+>>
+>> If I basically leave code as is, then secondary stations can associate but
+>> never
+>> get DHCP.  I see FCS and hw-crypt errored packets being received from the
+>> ath10k firmware/chip.  This is probably because the chip/firmware decodes
+>> the
+>> secondary station's packets with the first station's keys.
+>> Transmitted packets (as sniffed from the AP) do appear fine.
+>
+> This sounds a lot like a multi-BSS issues that were discovered
+> recently on AP branch firmware.
 
-> --- a/net/mac80211/iface.c
-> +++ b/net/mac80211/iface.c
-> @@ -682,7 +682,7 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
->  	if (hw_reconf_flags)
->  		ieee80211_hw_config(local, hw_reconf_flags);
->  
-> -	ieee80211_recalc_ps(local, -1);
-> +	ieee80211_ps_vif_open(sdata);
+I think that it may be mostly impossible to
+get hardware to do crypt with multiple STA associated to same AP
+because hardware/firmware wants to hash on peer's MAC, and in this case,
+I have multiple peers with same MAC.  I wanted to just ignore the RX crypt
+errors and have the software RX path handle it up in mac80211, but
+I did not make much progress when trying that.
 
-I have a feeling that now that we have very regular join/leave code, and
-are guaranteed to go through disassoc when the interface is stopped, we
-probably don't need all the hooks in this file at all any more.
+I made some progress with software-only crypt, but I had to modify
+firmware because it will not transmit the 4/4 handshake message until
+key has been configured, and with sw-crypt, the key will never be
+set.
 
-> @@ -1609,6 +1609,7 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
->  		strlcpy(sdata->name, name, IFNAMSIZ);
->  		ieee80211_assign_perm_addr(local, wdev->address, type);
->  		memcpy(sdata->vif.addr, wdev->address, ETH_ALEN);
-> +		ieee80211_ps_init_vif(sdata);
+With this change to the firmware, I can authenticate/connect to the AP, but DHCP will not work,
+and the AP shows no received data packets.  I suspect the firmware is expecting the
+tx packets to be un-encrypted and is either trying to crypt them again or is getting
+confused when it cannot find packet headers where it expects them.
 
-That doesn't really seem like the right place? Shouldn't it somehow be
-specific for managed interfaces, and be reset when the interface changes
-type, for example?
+When I find time I will dig back into the firmware to work on this some more.
 
-> --- a/net/mac80211/status.c
-> +++ b/net/mac80211/status.c
-> @@ -732,15 +732,16 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
->  			local->dot11FailedCount++;
->  	}
->  
-> +	sdata = IEEE80211_DEV_TO_SUB_IF(skb->dev);
+> See commit:
+>
+>    ath10k: fix multi BSSID with WPA on FW 10.1
+>
+> You could try applying the commit and remove the following code from it:
+>
+>    if (arvif->vdev_type != WMI_VDEV_TYPE_AP)
+>      return;
+>
+> The commit was originally only tested against AP interfaces but I was
+> suspecting the same thing (i.e. corrupted Tx) could be happening on
+> multi-STA.
 
-This isn't safe, the interface can go away while the SKB is on some
-hardware queue. Look at what we do in ieee80211_report_used_skb() and
-maybe refactor that somehow.
+I will look at that as well.
 
-> -	if (local->hw.conf.flags & IEEE80211_CONF_PS) {
-> +	if (sdata->vif.ps_mode == IEEE80211_VIF_PS_DOZE) {
->  		ieee80211_stop_queues_by_reason(&local->hw,
->  						IEEE80211_MAX_QUEUE_MAP,
->  						IEEE80211_QUEUE_STOP_REASON_PS);
+Thanks,
+Ben
 
-This is a bit odd now - shouldn't you only stop the queues for that
-interface? Or is this still assuming only a single interface?
 
-> +	list_for_each_entry(sdata, &local->interfaces, list) {
-> +		if (sdata->vif.type != NL80211_IFTYPE_STATION)
-> +			continue;
-> +		if (!sdata->u.mgd.associated)
-> +			continue;
-> +		if (sdata->vif.ps_mode != IEEE80211_VIF_PS_AWAKE)
-> +			continue;
->  
-> -			ieee80211_send_nullfunc(local, sdata, 0);
-> -		}
-> +		ieee80211_send_nullfunc(local, sdata, 0);
-
-Unrelated to your patch, but we should probably send a nullfunc(PM=1)
-packet for the other cases to detect if we got disconnected. Or wake up
-briefly, and go back to sleep later or something ...
-
-> +void ieee80211_recalc_ps(struct ieee80211_sub_if_data *sdata)
-> +{
-> +	switch (sdata->vif.type) {
-> +	case NL80211_IFTYPE_STATION:
-> +		ieee80211_mgd_recalc_ps(sdata);
-> +		break;
-> +	default:
-> +		break;
-> +	}
-> +}
-
-Would that make more sense in ps.c now?
-
-> +int ieee80211_max_network_latency(struct notifier_block *nb,
-> +				  unsigned long data, void *dummy)
-
-ditto?
-
-> +	mutex_lock(&local->iflist_mtx);
-> +	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
-
-locking mutex & then rcu seems weird.
-johannes
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
