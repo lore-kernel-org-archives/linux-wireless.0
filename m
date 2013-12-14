@@ -1,65 +1,203 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f175.google.com ([209.85.192.175]:56447 "EHLO
-	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751941Ab3LKD3V (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Dec 2013 22:29:21 -0500
-Received: by mail-pd0-f175.google.com with SMTP id w10so8659986pde.20
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Dec 2013 19:29:20 -0800 (PST)
-Message-ID: <52A7DC0C.8090902@lwfinger.net> (sfid-20131211_042925_806578_9B5D6CAF)
-Date: Tue, 10 Dec 2013 21:29:16 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Kam <kampowchicken@gmail.com>, linux-wireless@vger.kernel.org
-Subject: Re: rtl8723ae owner.
-References: <loom.20131211T021101-974@post.gmane.org>
-In-Reply-To: <loom.20131211T021101-974@post.gmane.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from nbd.name ([46.4.11.11]:48971 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753863Ab3LNRD5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Dec 2013 12:03:57 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
+Subject: [PATCH 07/11] ath9k_hw: simplify spur channel handling
+Date: Sat, 14 Dec 2013 18:03:41 +0100
+Message-Id: <1387040625-38114-7-git-send-email-nbd@openwrt.org> (sfid-20131214_180422_279590_2B21C09B)
+In-Reply-To: <1387040625-38114-1-git-send-email-nbd@openwrt.org>
+References: <1387040625-38114-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/10/2013 07:42 PM, Kam wrote:
-> I have the rtl8723ae PCIe wifi card. I've read through the messages on the
-> forums and experience similar issues to others who have inquired about the
-> card. I experience sluggish connections and disconnects, I for the most
-> can't connect to my school wifi at all.
->
-> I switched my router to 'AP' today after reading through the posts here and
-> initially the connection was faster than I've experienced thus far(since
-> switching to linux last year), I ended up shutting down the computer
-> eventually and after turning it back on few hours later, It was back to the
-> slow sluggish connection.
+Remove ah->config.spurmode and ah->config.spurchans, always use EEPROM
+data.
 
-What does switching the router to 'AP' mean? If it was not an AP before, you 
-would never have been able to connect to it.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ar9002_phy.c  |  1 -
+ drivers/net/wireless/ath/ath9k/eeprom_4k.c   | 26 +-------------------------
+ drivers/net/wireless/ath/ath9k/eeprom_9287.c | 26 +-------------------------
+ drivers/net/wireless/ath/ath9k/eeprom_def.c  | 26 +-------------------------
+ drivers/net/wireless/ath/ath9k/hw.c          |  7 -------
+ drivers/net/wireless/ath/ath9k/hw.h          |  5 -----
+ 6 files changed, 3 insertions(+), 88 deletions(-)
 
-> I've collected all the output that I could think of and wanted to contribute
-> it in hopes that it can assist the devs in testing/debugging the issues with
-> the card. The text file is a little but over 800 lines, so I will post it on
-> fpaste, if this isn't acceptable please let me know and I will repost the
-> text in preferred format. I am about ready to smoke the beacons off this
-> thing :P.
-
-One thing missing in what you posted is any messages from dmesg that describe 
-the disconnects.
-
-The only thing I noted in your posting is that your channel is about as badly 
-chosen as is possible. Wifi is not like TV. The channel spacing is 5 MHz, but 
-the width for 802.11g is 20 MHz, and 802.11n is 40 MHz. If you do the math, your 
-choice of channel 9 overlaps *every* AP in your neighborhood. At -60 dBm, your 
-signal is not strong, and is even weaker than Home2.
-
-I would choose a channel as low as possible. That would be #1 for 802.11g. Your 
-AP may not allow lower than #3 for 802.11n.
-
-Next, you might try loading the module with the option "ips=0". That will 
-disable power save mode, and it might help.
-
-I have been running a long-term test of rtl8723ae. After 100 hours, I have had a 
-total of 11 disconnects. Each of them has reconnected with very little 
-interruption in service. The difference is that my channel is chosen to have as 
-little interference as possible, and my signal strength is -44 dBm.
-
-Larry
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.c b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
+index f087117..9a2afa2 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
+@@ -201,7 +201,6 @@ static void ar9002_hw_spur_mitigate(struct ath_hw *ah,
+ 	ath9k_hw_get_channel_centers(ah, chan, &centers);
+ 	freq = centers.synth_center;
+ 
+-	ah->config.spurmode = SPUR_ENABLE_EEPROM;
+ 	for (i = 0; i < AR_EEPROM_MODAL_SPURS; i++) {
+ 		cur_bb_spur = ah->eep_ops->get_spur_channel(ah, i, is2GHz);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+index b409171..07b806c 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+@@ -1085,31 +1085,7 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
+ 
+ static u16 ath9k_hw_4k_get_spur_channel(struct ath_hw *ah, u16 i, bool is2GHz)
+ {
+-#define EEP_MAP4K_SPURCHAN \
+-	(ah->eeprom.map4k.modalHeader.spurChans[i].spurChan)
+-	struct ath_common *common = ath9k_hw_common(ah);
+-
+-	u16 spur_val = AR_NO_SPUR;
+-
+-	ath_dbg(common, ANI, "Getting spur idx:%d is2Ghz:%d val:%x\n",
+-		i, is2GHz, ah->config.spurchans[i][is2GHz]);
+-
+-	switch (ah->config.spurmode) {
+-	case SPUR_DISABLE:
+-		break;
+-	case SPUR_ENABLE_IOCTL:
+-		spur_val = ah->config.spurchans[i][is2GHz];
+-		ath_dbg(common, ANI, "Getting spur val from new loc. %d\n",
+-			spur_val);
+-		break;
+-	case SPUR_ENABLE_EEPROM:
+-		spur_val = EEP_MAP4K_SPURCHAN;
+-		break;
+-	}
+-
+-	return spur_val;
+-
+-#undef EEP_MAP4K_SPURCHAN
++	return ah->eeprom.map4k.modalHeader.spurChans[i].spurChan;
+ }
+ 
+ const struct eeprom_ops eep_4k_ops = {
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+index e1d0c21..5ba1385 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+@@ -1004,31 +1004,7 @@ static void ath9k_hw_ar9287_set_board_values(struct ath_hw *ah,
+ static u16 ath9k_hw_ar9287_get_spur_channel(struct ath_hw *ah,
+ 					    u16 i, bool is2GHz)
+ {
+-#define EEP_MAP9287_SPURCHAN \
+-	(ah->eeprom.map9287.modalHeader.spurChans[i].spurChan)
+-
+-	struct ath_common *common = ath9k_hw_common(ah);
+-	u16 spur_val = AR_NO_SPUR;
+-
+-	ath_dbg(common, ANI, "Getting spur idx:%d is2Ghz:%d val:%x\n",
+-		i, is2GHz, ah->config.spurchans[i][is2GHz]);
+-
+-	switch (ah->config.spurmode) {
+-	case SPUR_DISABLE:
+-		break;
+-	case SPUR_ENABLE_IOCTL:
+-		spur_val = ah->config.spurchans[i][is2GHz];
+-		ath_dbg(common, ANI, "Getting spur val from new loc. %d\n",
+-			spur_val);
+-		break;
+-	case SPUR_ENABLE_EEPROM:
+-		spur_val = EEP_MAP9287_SPURCHAN;
+-		break;
+-	}
+-
+-	return spur_val;
+-
+-#undef EEP_MAP9287_SPURCHAN
++	return ah->eeprom.map9287.modalHeader.spurChans[i].spurChan;
+ }
+ 
+ const struct eeprom_ops eep_ar9287_ops = {
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+index 39107e3..3218ca9 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+@@ -1348,31 +1348,7 @@ static void ath9k_hw_def_set_txpower(struct ath_hw *ah,
+ 
+ static u16 ath9k_hw_def_get_spur_channel(struct ath_hw *ah, u16 i, bool is2GHz)
+ {
+-#define EEP_DEF_SPURCHAN \
+-	(ah->eeprom.def.modalHeader[is2GHz].spurChans[i].spurChan)
+-	struct ath_common *common = ath9k_hw_common(ah);
+-
+-	u16 spur_val = AR_NO_SPUR;
+-
+-	ath_dbg(common, ANI, "Getting spur idx:%d is2Ghz:%d val:%x\n",
+-		i, is2GHz, ah->config.spurchans[i][is2GHz]);
+-
+-	switch (ah->config.spurmode) {
+-	case SPUR_DISABLE:
+-		break;
+-	case SPUR_ENABLE_IOCTL:
+-		spur_val = ah->config.spurchans[i][is2GHz];
+-		ath_dbg(common, ANI, "Getting spur val from new loc. %d\n",
+-			spur_val);
+-		break;
+-	case SPUR_ENABLE_EEPROM:
+-		spur_val = EEP_DEF_SPURCHAN;
+-		break;
+-	}
+-
+-	return spur_val;
+-
+-#undef EEP_DEF_SPURCHAN
++	return ah->eeprom.def.modalHeader[is2GHz].spurChans[i].spurChan;
+ }
+ 
+ const struct eeprom_ops eep_def_ops = {
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index eeb0741..a4f3d2b 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -439,8 +439,6 @@ static bool ath9k_hw_chip_test(struct ath_hw *ah)
+ 
+ static void ath9k_hw_init_config(struct ath_hw *ah)
+ {
+-	int i;
+-
+ 	ah->config.dma_beacon_response_time = 1;
+ 	ah->config.sw_beacon_response_time = 6;
+ 	ah->config.additional_swba_backoff = 0;
+@@ -448,11 +446,6 @@ static void ath9k_hw_init_config(struct ath_hw *ah)
+ 	ah->config.cwm_ignore_extcca = 0;
+ 	ah->config.analog_shiftreg = 1;
+ 
+-	for (i = 0; i < AR_EEPROM_MODAL_SPURS; i++) {
+-		ah->config.spurchans[i][0] = AR_NO_SPUR;
+-		ah->config.spurchans[i][1] = AR_NO_SPUR;
+-	}
+-
+ 	ah->config.rx_intr_mitigation = true;
+ 
+ 	/*
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index b8e2476..57d3d0c 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -293,9 +293,6 @@ struct ath9k_ops_config {
+ 	int serialize_regmode;
+ 	bool rx_intr_mitigation;
+ 	bool tx_intr_mitigation;
+-#define SPUR_DISABLE        	0
+-#define SPUR_ENABLE_IOCTL   	1
+-#define SPUR_ENABLE_EEPROM  	2
+ #define AR_SPUR_5413_1      	1640
+ #define AR_SPUR_5413_2      	1200
+ #define AR_NO_SPUR      	0x8000
+@@ -303,8 +300,6 @@ struct ath9k_ops_config {
+ #define AR_BASE_FREQ_5GHZ   	4900
+ #define AR_SPUR_FEEQ_BOUND_HT40 19
+ #define AR_SPUR_FEEQ_BOUND_HT20 10
+-	int spurmode;
+-	u16 spurchans[AR_EEPROM_MODAL_SPURS][2];
+ 	u8 max_txtrig_level;
+ 	u16 ani_poll_interval; /* ANI poll interval in ms */
+ 
+-- 
+1.8.3.4 (Apple Git-47)
 
