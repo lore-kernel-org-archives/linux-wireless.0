@@ -1,52 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:5577 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932146Ab3LEN77 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 08:59:59 -0500
-From: Ilan Peer <ilan.peer@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: wireless-regdb@lists.infradead.org, Ilan Peer <ilan.peer@intel.com>
-Subject: [PATCH v3 5/6] cfg80211: Enable GO operation on indoor channels
-Date: Thu,  5 Dec 2013 16:00:56 +0200
-Message-Id: <1386252056-17808-1-git-send-email-ilan.peer@intel.com> (sfid-20131205_150002_179892_4A045FC2)
-In-Reply-To: <1386098166-24196-6-git-send-email-ilan.peer@intel.com>
-References: <1386098166-24196-6-git-send-email-ilan.peer@intel.com>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:19831 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753079Ab3LNCd3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Dec 2013 21:33:29 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 4/4] mwifiex: download per country tx power table to firmware
+Date: Fri, 13 Dec 2013 18:33:02 -0800
+Message-ID: <1386988382-30023-4-git-send-email-bzhao@marvell.com> (sfid-20131214_033345_380052_BE7839AA)
+In-Reply-To: <1386988382-30023-1-git-send-email-bzhao@marvell.com>
+References: <1386988382-30023-1-git-send-email-bzhao@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allow GO operation on a channel marked with IEEE80211_CHAN_INDOOR_ONLY
-iff there is a user hint indicating that the platform is operating in
-an indoor environment, i.e., the platform is a printer or media center
-device.
+When driver gets regulatory domain change notifications or before
+associates to an AP with Country IE, the txpwrlimit table stored
+in device tree for that country is downloaded to firmware.
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+The txpwrlimit downloading will happen only at the first time
+when the alpha2 country code is changed. World regulatory domain
+"00" notification doesn't trigger the downloading. This behavior
+is same as domain_info command.
+
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- net/wireless/chan.c |    5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/net/wireless/mwifiex/cfg80211.c  | 10 ++++++++++
+ drivers/net/wireless/mwifiex/main.h      |  2 ++
+ drivers/net/wireless/mwifiex/sta_cmd.c   |  4 ++--
+ drivers/net/wireless/mwifiex/sta_ioctl.c |  7 +++++++
+ 4 files changed, 21 insertions(+), 2 deletions(-)
 
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index 2c1b319..49fef2a 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -610,6 +610,8 @@ EXPORT_SYMBOL(cfg80211_chandef_usable);
-  * IEEE80211_CHAN_GO_CONCURRENT and there is an additional station interface
-  * associated to an AP on the same channel or on the same UNII band
-  * (assuming that the AP is an authorized master).
-+ * In addition allow the GO to operate on a channel on which indoor operation is
-+ * allowed, iff we are currently operating in an indoor environment.
-  */
- static bool cfg80211_go_permissive_chan(struct cfg80211_registered_device *rdev,
- 					struct ieee80211_channel *chan)
-@@ -619,6 +621,9 @@ static bool cfg80211_go_permissive_chan(struct cfg80211_registered_device *rdev,
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 611fbcf..0a10500 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -538,6 +538,8 @@ static void mwifiex_reg_notifier(struct wiphy *wiphy,
+ 				 struct regulatory_request *request)
+ {
+ 	struct mwifiex_adapter *adapter = mwifiex_cfg80211_get_adapter(wiphy);
++	struct mwifiex_private *priv = mwifiex_get_priv(adapter,
++							MWIFIEX_BSS_ROLE_ANY);
  
- 	ASSERT_RTNL();
- 
-+	if (regulatory_ir_allowed(chan))
-+		return true;
+ 	wiphy_dbg(wiphy, "info: cfg80211 regulatory domain callback for %c%c\n",
+ 		  request->alpha2[0], request->alpha2[1]);
+@@ -561,6 +563,14 @@ static void mwifiex_reg_notifier(struct wiphy *wiphy,
+ 		memcpy(adapter->country_code, request->alpha2,
+ 		       sizeof(request->alpha2));
+ 		mwifiex_send_domain_info_cmd_fw(wiphy);
 +
- 	if (!(chan->flags & IEEE80211_CHAN_GO_CONCURRENT))
- 		return false;
++		if (adapter->dt_node) {
++			char txpwr[] = {"marvell,00_txpwrlimit"};
++
++			memcpy(&txpwr[8], adapter->country_code, 2);
++			mwifiex_dnld_dt_cfgdata(priv, adapter->dt_node,
++						txpwr);
++		}
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 2f50354..ab34164 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -1153,6 +1153,8 @@ void mwifiex_uap_del_sta_data(struct mwifiex_private *priv,
+ void mwifiex_11h_process_join(struct mwifiex_private *priv, u8 **buffer,
+ 			      struct mwifiex_bssdescriptor *bss_desc);
+ int mwifiex_11h_handle_event_chanswann(struct mwifiex_private *priv);
++int mwifiex_dnld_dt_cfgdata(struct mwifiex_private *priv,
++			    struct device_node *node, const char *prefix);
+ 
+ extern const struct ethtool_ops mwifiex_ethtool_ops;
+ 
+diff --git a/drivers/net/wireless/mwifiex/sta_cmd.c b/drivers/net/wireless/mwifiex/sta_cmd.c
+index 6a95086..9c2404c 100644
+--- a/drivers/net/wireless/mwifiex/sta_cmd.c
++++ b/drivers/net/wireless/mwifiex/sta_cmd.c
+@@ -1156,8 +1156,8 @@ static u32 mwifiex_parse_cal_cfg(u8 *src, size_t len, u8 *dst)
+ 	return d - dst;
+ }
+ 
+-static int mwifiex_dnld_dt_cfgdata(struct mwifiex_private *priv,
+-				   struct device_node *node, const char *prefix)
++int mwifiex_dnld_dt_cfgdata(struct mwifiex_private *priv,
++			    struct device_node *node, const char *prefix)
+ {
+ #ifdef CONFIG_OF
+ 	struct property *prop;
+diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+index 3259e00..874ecec 100644
+--- a/drivers/net/wireless/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+@@ -234,6 +234,13 @@ static int mwifiex_process_country_ie(struct mwifiex_private *priv,
+ 		return -1;
+ 	}
+ 
++	if (priv->adapter->dt_node) {
++		char txpwr[] = {"marvell,00_txpwrlimit"};
++
++		memcpy(&txpwr[8], priv->adapter->country_code, 2);
++		mwifiex_dnld_dt_cfgdata(priv, priv->adapter->dt_node, txpwr);
++	}
++
+ 	return 0;
+ }
  
 -- 
-1.7.10.4
+1.8.2.3
 
