@@ -1,41 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:27519 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932750Ab3LDPml (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Dec 2013 10:42:41 -0500
-From: Max.Stepanov@intel.com
-To: linux-wireless@vger.kernel.org
-Cc: Max Stepanov <Max.Stepanov@intel.com>
-Subject: [RFC] cfg80211: read station mgmt keys via get_key call
-Date: Wed,  4 Dec 2013 17:42:42 +0200
-Message-Id: <1386171762-5422-1-git-send-email-Max.Stepanov@intel.com> (sfid-20131204_164249_975320_5DA925D7)
+Received: from mail-pd0-f180.google.com ([209.85.192.180]:48286 "EHLO
+	mail-pd0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752169Ab3LNMae (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Dec 2013 07:30:34 -0500
+Date: Sat, 14 Dec 2013 18:00:25 +0530
+From: Rashika Kheria <rashika.kheria@gmail.com>
+To: linux-kernel@vger.kernel.org
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	josh@joshtriplett.org
+Subject: [PATCH v2 8/9] drivers: net: Mark functions as static in debug.c
+Message-ID: <f72a822c9171b17d2d51a221820e30d0ca1ecd36.1386911124.git.rashika.kheria@gmail.com> (sfid-20131214_133052_890079_5C60A5F4)
+References: <a610f6ee6bb992b91e43bdc851f3db62fc3decd5.1386911123.git.rashika.kheria@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <a610f6ee6bb992b91e43bdc851f3db62fc3decd5.1386911123.git.rashika.kheria@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Max Stepanov <Max.Stepanov@intel.com>
+This patch marks the function il_clear_traffic_stats() in debug.c as
+static because they are not used outside this file.
 
-Allow to read management keys stored in a station's gtk key
-array with cfg80211 get_key function.
+Thus, it also removes the following warnings in
+wireless/iwlegacy/debug.c:
 
-Signed-off-by: Max Stepanov <Max.Stepanov@intel.com>
+drivers/net/wireless/iwlegacy/debug.c:35:1: warning: no previous prototype for ‘il_clear_traffic_stats’ [-Wmissing-prototypes]
+
+Signed-off-by: Rashika Kheria <rashika.kheria@gmail.com>
+Reviewed-by: Josh Triplett <josh@joshtriplett.org>
 ---
- net/mac80211/cfg.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/iwlegacy/debug.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 00fa219..e96960f 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -303,7 +303,8 @@ static int ieee80211_get_key(struct wiphy *wiphy, struct net_device *dev,
+diff --git a/drivers/net/wireless/iwlegacy/debug.c b/drivers/net/wireless/iwlegacy/debug.c
+index eff2650..b7e03dd 100644
+--- a/drivers/net/wireless/iwlegacy/debug.c
++++ b/drivers/net/wireless/iwlegacy/debug.c
+@@ -31,7 +31,7 @@
  
- 		if (pairwise && key_idx < NUM_DEFAULT_KEYS)
- 			key = rcu_dereference(sta->ptk[key_idx]);
--		else if (!pairwise && key_idx < NUM_DEFAULT_KEYS)
-+		else if (!pairwise &&
-+			 key_idx < NUM_DEFAULT_KEYS + NUM_DEFAULT_MGMT_KEYS)
- 			key = rcu_dereference(sta->gtk[key_idx]);
- 	} else
- 		key = rcu_dereference(sdata->keys[key_idx]);
+ #include "common.h"
+ 
+-void
++static void
+ il_clear_traffic_stats(struct il_priv *il)
+ {
+ 	memset(&il->tx_stats, 0, sizeof(struct traffic_stats));
 -- 
-1.8.5.rc2
+1.7.9.5
 
