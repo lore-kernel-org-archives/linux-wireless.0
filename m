@@ -1,55 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f182.google.com ([209.85.192.182]:41736 "EHLO
-	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756493Ab3LSUx0 (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:18503 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750958Ab3LNCdZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Dec 2013 15:53:26 -0500
-Received: by mail-pd0-f182.google.com with SMTP id v10so1609895pde.13
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Dec 2013 12:53:25 -0800 (PST)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: johannes@sipsolutions.net
-Cc: linux@eikelenboom.it, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 0/3] cfg80211: process pending regulatory requests
-Date: Thu, 19 Dec 2013 12:53:16 -0800
-Message-Id: <1387486399-4053-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20131219_215330_786332_31AB0B29)
+	Fri, 13 Dec 2013 21:33:25 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 1/4] mwifiex: send regulatory domain info to firmware only if alpha2 changed
+Date: Fri, 13 Dec 2013 18:32:59 -0800
+Message-ID: <1386988382-30023-1-git-send-email-bzhao@marvell.com> (sfid-20131214_033343_834157_97B4C849)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sander spotted that regulatory requests get stalled when
-cfg80211 is built-in. This issue is hit since regulatory
-requests only trigger a udev rule to run CRDA when
-being processed and if cfg80211 is built-in the udev rule
-that kicks CRDA could end up doing nothing as the filesystem
-path that has CRDA may not be mounted yet. This series of
-patches addresses this situation by allowing us to reprocess
-the last pending regulatory request. We add support for that
-by first taking into consideration the RCU case where the
-request being processed is the last request, then by
-trying to reprocess the last request if we find it hasn't
-been processed yet when checking the queues, and lastly by
-adding some opportunistic checks of the pending regulatory
-work when bringing an interface up or down.
+On cfg80211 regulatory domain change, drivers gets alpha2 country
+code or "00" in driver's notification handler.
 
-If folks want to consider this for stable the first two
-seem least intrusive and address the issue but those two
-patches still require a trigger to process the queue.
-Typically the queues will be processed on a system after
-bootup after the interface comes up and finds some beacon
-hints on 5 gHz, or when a user asks to change regulatory
-domains. The last patch tries to avoid requiring this
-and I consider it more an enhancement.
+In most cases, the pattern will be US, 00, US, 00, US, 00, US, ...
+There is no need to send domain info to firmware in case of "00" or
+with the same alpha2 country code.
 
-Luis R. Rodriguez (3):
-  cfg80211: allow reprocessing of pending requests
-  cfg80211: fix processing world regdomain when non modular
-  cfg80211: processing regulatory requests on netdev notifier
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c  | 19 +++++++++++++------
+ drivers/net/wireless/mwifiex/sta_ioctl.c |  8 ++++++++
+ 2 files changed, 21 insertions(+), 6 deletions(-)
 
- net/wireless/core.c |  2 ++
- net/wireless/reg.c  | 21 ++++++++++++++-------
- net/wireless/reg.h  |  1 +
- 3 files changed, 17 insertions(+), 7 deletions(-)
-
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index b2f271e..611fbcf 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -542,19 +542,26 @@ static void mwifiex_reg_notifier(struct wiphy *wiphy,
+ 	wiphy_dbg(wiphy, "info: cfg80211 regulatory domain callback for %c%c\n",
+ 		  request->alpha2[0], request->alpha2[1]);
+ 
+-	memcpy(adapter->country_code, request->alpha2, sizeof(request->alpha2));
+-
+ 	switch (request->initiator) {
+ 	case NL80211_REGDOM_SET_BY_DRIVER:
+ 	case NL80211_REGDOM_SET_BY_CORE:
+ 	case NL80211_REGDOM_SET_BY_USER:
+-		break;
+-		/* Todo: apply driver specific changes in channel flags based
+-		   on the request initiator if necessary. */
+ 	case NL80211_REGDOM_SET_BY_COUNTRY_IE:
+ 		break;
++	default:
++		wiphy_err(wiphy, "unknown regdom initiator: %d\n",
++			  request->initiator);
++		return;
++	}
++
++	/* Don't send world or same regdom info to firmware */
++	if (strncmp(request->alpha2, "00", 2) &&
++	    strncmp(request->alpha2, adapter->country_code,
++		    sizeof(request->alpha2))) {
++		memcpy(adapter->country_code, request->alpha2,
++		       sizeof(request->alpha2));
++		mwifiex_send_domain_info_cmd_fw(wiphy);
+ 	}
+-	mwifiex_send_domain_info_cmd_fw(wiphy);
+ }
+ 
+ /*
+diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+index 1c67dfe..3259e00 100644
+--- a/drivers/net/wireless/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+@@ -205,6 +205,14 @@ static int mwifiex_process_country_ie(struct mwifiex_private *priv,
+ 		return 0;
+ 	}
+ 
++	if (!strncmp(priv->adapter->country_code, &country_ie[2], 2)) {
++		rcu_read_unlock();
++		wiphy_dbg(priv->wdev->wiphy,
++			  "11D: skip setting domain info in FW\n");
++		return 0;
++	}
++	memcpy(priv->adapter->country_code, &country_ie[2], 2);
++
+ 	domain_info->country_code[0] = country_ie[2];
+ 	domain_info->country_code[1] = country_ie[3];
+ 	domain_info->country_code[2] = ' ';
 -- 
-1.8.4.3
+1.8.2.3
 
