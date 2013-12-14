@@ -1,71 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:40979 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751145Ab3LCHSl (ORCPT
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:44924 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753484Ab3LNM2r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Dec 2013 02:18:41 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Ujjal Roy <royujjal@gmail.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 09/12] mwifiex: update statistics for bridged packets on AP interface
-Date: Mon, 2 Dec 2013 23:17:56 -0800
-Message-ID: <1386055079-6623-10-git-send-email-bzhao@marvell.com> (sfid-20131203_081848_166706_D3F9DB38)
-In-Reply-To: <1386055079-6623-1-git-send-email-bzhao@marvell.com>
-References: <1386055079-6623-1-git-send-email-bzhao@marvell.com>
+	Sat, 14 Dec 2013 07:28:47 -0500
+Date: Sat, 14 Dec 2013 17:58:38 +0530
+From: Rashika Kheria <rashika.kheria@gmail.com>
+To: linux-kernel@vger.kernel.org
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	josh@joshtriplett.org
+Subject: [PATCH v2 7/9] drivers: net: Mark functions as static in 4965-debug.c
+Message-ID: <e2e1afdbd3f2a70aba2217531604b31cce6dd8ca.1386911124.git.rashika.kheria@gmail.com> (sfid-20131214_132908_467504_010603AF)
+References: <a610f6ee6bb992b91e43bdc851f3db62fc3decd5.1386911123.git.rashika.kheria@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <a610f6ee6bb992b91e43bdc851f3db62fc3decd5.1386911123.git.rashika.kheria@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ujjal Roy <royujjal@gmail.com>
+This patch marks the function il4965_ucode_rx_stats_read(),
+il4965_ucode_tx_stats_read() and il4965_ucode_general_stats_read() in
+4965-debug.c as static because they are not used outside this file.
 
-The bridged packets are updated to statistics on both TX and RX
-paths. Also fix a typo in the comment.
+Thus, it also removes the following warnings in
+wireless/iwlegacy/4965-debug.c:
 
-Signed-off-by: Ujjal Roy <royujjal@gmail.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+drivers/net/wireless/iwlegacy/4965-debug.c:59:1: warning: no previous prototype for ‘il4965_ucode_rx_stats_read’ [-Wmissing-prototypes]
+drivers/net/wireless/iwlegacy/4965-debug.c:471:1: warning: no previous prototype for ‘il4965_ucode_tx_stats_read’ [-Wmissing-prototypes]
+drivers/net/wireless/iwlegacy/4965-debug.c:637:1: warning: no previous prototype for ‘il4965_ucode_general_stats_read’ [-Wmissing-prototypes]
+
+Signed-off-by: Rashika Kheria <rashika.kheria@gmail.com>
+Reviewed-by: Josh Triplett <josh@joshtriplett.org>
 ---
- drivers/net/wireless/mwifiex/uap_txrx.c | 15 ++++++++++++++-
- 1 file changed, 14 insertions(+), 1 deletion(-)
+ drivers/net/wireless/iwlegacy/4965-debug.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/uap_txrx.c b/drivers/net/wireless/mwifiex/uap_txrx.c
-index 6c0a31a..3c74eb2 100644
---- a/drivers/net/wireless/mwifiex/uap_txrx.c
-+++ b/drivers/net/wireless/mwifiex/uap_txrx.c
-@@ -147,7 +147,7 @@ static void mwifiex_uap_queue_bridged_pkt(struct mwifiex_private *priv,
- 		hdr_chop = (u8 *)&rx_pkt_hdr->eth803_hdr - (u8 *)uap_rx_pd;
- 	}
+diff --git a/drivers/net/wireless/iwlegacy/4965-debug.c b/drivers/net/wireless/iwlegacy/4965-debug.c
+index c8153fc..e0597bf 100644
+--- a/drivers/net/wireless/iwlegacy/4965-debug.c
++++ b/drivers/net/wireless/iwlegacy/4965-debug.c
+@@ -55,7 +55,7 @@ il4965_stats_flag(struct il_priv *il, char *buf, int bufsz)
+ 	return p;
+ }
  
--	/* Chop off the leading header bytes so the it points
-+	/* Chop off the leading header bytes so that it points
- 	 * to the start of either the reconstructed EthII frame
- 	 * or the 802.2/llc/snap frame.
- 	 */
-@@ -179,6 +179,19 @@ static void mwifiex_uap_queue_bridged_pkt(struct mwifiex_private *priv,
- 	tx_info->bss_type = priv->bss_type;
- 	tx_info->flags |= MWIFIEX_BUF_FLAG_BRIDGED_PKT;
+-ssize_t
++static ssize_t
+ il4965_ucode_rx_stats_read(struct file *file, char __user *user_buf,
+ 			   size_t count, loff_t *ppos)
+ {
+@@ -467,7 +467,7 @@ il4965_ucode_rx_stats_read(struct file *file, char __user *user_buf,
+ 	return ret;
+ }
  
-+	if (is_unicast_ether_addr(rx_pkt_hdr->eth803_hdr.h_dest)) {
-+		/* Update bridge packet statistics as the
-+		 * packet is not going to kernel/upper layer.
-+		 */
-+		priv->stats.rx_bytes += skb->len;
-+		priv->stats.rx_packets++;
-+
-+		/* Sending bridge packet to TX queue, so save the packet
-+		 * length in TXCB to update statistics in TX complete.
-+		 */
-+		tx_info->pkt_len = skb->len;
-+	}
-+
- 	do_gettimeofday(&tv);
- 	skb->tstamp = timeval_to_ktime(tv);
- 	mwifiex_wmm_add_buf_txqueue(priv, skb);
+-ssize_t
++static ssize_t
+ il4965_ucode_tx_stats_read(struct file *file, char __user *user_buf,
+ 			   size_t count, loff_t *ppos)
+ {
+@@ -633,7 +633,7 @@ il4965_ucode_tx_stats_read(struct file *file, char __user *user_buf,
+ 	return ret;
+ }
+ 
+-ssize_t
++static ssize_t
+ il4965_ucode_general_stats_read(struct file *file, char __user *user_buf,
+ 				size_t count, loff_t *ppos)
+ {
 -- 
-1.8.2.3
+1.7.9.5
 
