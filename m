@@ -1,55 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f171.google.com ([209.85.215.171]:57371 "EHLO
-	mail-ea0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751415Ab3L3IIH (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:43060 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753266Ab3LNEFt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Dec 2013 03:08:07 -0500
-Received: by mail-ea0-f171.google.com with SMTP id h10so4985915eak.30
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Dec 2013 00:08:06 -0800 (PST)
-From: Marek Puzyniak <marek.puzyniak@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Marek Puzyniak <marek.puzyniak@tieto.com>
-Subject: [PATCH] ath10k: disable STA KICKOUT in FW
-Date: Mon, 30 Dec 2013 09:07:51 +0100
-Message-Id: <1388390871-3932-1-git-send-email-marek.puzyniak@tieto.com> (sfid-20131230_090811_598346_D9D4EC12)
+	Fri, 13 Dec 2013 23:05:49 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21163.55288.562709.691719@gargle.gargle.HOWL> (sfid-20131214_050552_931520_352EE117)
+Date: Sat, 14 Dec 2013 09:30:56 +0530
+To: Dave Taht <dave.taht@gmail.com>
+Cc: Sebastian Moeller <sebastian.moeller@gmail.com>,
+	"ath9k-devel\@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"cerowrt-devel\@lists.bufferbloat.net"
+	<cerowrt-devel@lists.bufferbloat.net>
+Subject: Re: [Cerowrt-devel] Wireless failures 3.10.17-3
+In-Reply-To: <CAA93jw7Tj+jdapc-OWFr1LDYQDx3r6crafk302jXJaa3va43-A@mail.gmail.com>
+References: <20131211174519.34966001@nehalam.linuxnetplumber.net>
+	<21161.18818.926049.511664@gargle.gargle.HOWL>
+	<C0DD393A-6810-4CB6-B705-AE801ED5BBBA@gmx.de>
+	<21162.54025.118938.614891@gargle.gargle.HOWL>
+	<CAA93jw5tOoYGB5Q=vFT6N_G7-KEjGC7=oxH2CwpM9FMT+J_A7g@mail.gmail.com>
+	<CAA93jw7Tj+jdapc-OWFr1LDYQDx3r6crafk302jXJaa3va43-A@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently ath10k is not using STA KICKOUT firmware functionality.
-In order to avoid unwanted FW events this functionality should be
-disabled when not used.
+Dave Taht wrote:
+> OK, I couldn't help myself but boot up that release. Wet paint! It
+> successfully brought up
+> the 5ghz radio, but did not manage to assign an ip address to it
+> (netifd bug?) and failed on the 2ghz radio utterly.
+> 
+> trying to restart it manually fails to bring up the 5ghz radio as well.
+> Here's an strace of that.
+> 
+> http://snapon.lab.bufferbloat.net/~d/hostapd.strace.txt
+> 
+> I don't see it beacon, either.
+> 
+> Now, I don't have a grip on what started happening two releases back
+> (I was out of town) but I figure it is perhaps more relevant than
+> chasing the DMA tx thing. And ENOTIME for me on this til sunday. I
+> will revert this patch and bisect backwards.
 
-Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+I am not sure how the patch would break things.
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 5b45f3a..93416ab 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2292,11 +2292,20 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 	}
- 
- 	if (arvif->vdev_type == WMI_VDEV_TYPE_AP) {
-+		u32 param_id;
-+
- 		ret = ath10k_peer_create(ar, arvif->vdev_id, vif->addr);
- 		if (ret) {
- 			ath10k_warn("Failed to create peer for AP: %d\n", ret);
- 			goto err_vdev_delete;
- 		}
-+
-+		param_id = ar->wmi.pdev_param->sta_kickout_th;
-+
-+		/* Disable STA KICKOUT functionality in FW */
-+		ret = ath10k_wmi_pdev_set_param(ar, param_id, 0);
-+		if (ret)
-+			ath10k_warn("Failed to disable STA KICKOUT\n");
- 	}
- 
- 	if (arvif->vdev_type == WMI_VDEV_TYPE_STA) {
--- 
-1.8.1.2
+Booting OpenWrt trunk (with the patch) on an AP96 reference board seems
+to work fine: http://pastebin.com/3rPSfuad
 
+Sujith
