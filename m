@@ -1,88 +1,200 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:25199 "EHLO
-	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756210Ab3L3RTH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Dec 2013 12:19:07 -0500
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: kernel-janitors@vger.kernel.org,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 6/11] rtlwifi: use ether_addr_equal_64bits
-Date: Mon, 30 Dec 2013 19:15:02 +0100
-Message-Id: <1388427307-8691-7-git-send-email-Julia.Lawall@lip6.fr> (sfid-20131230_182249_071105_5E2AE387)
-In-Reply-To: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>
-References: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>
+Received: from nbd.name ([46.4.11.11]:48973 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754115Ab3LNRD5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Dec 2013 12:03:57 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
+Subject: [PATCH 11/11] ath9k: properly preserve TSF across reset
+Date: Sat, 14 Dec 2013 18:03:45 +0100
+Message-Id: <1387040625-38114-11-git-send-email-nbd@openwrt.org> (sfid-20131214_180410_169688_FD7C7262)
+In-Reply-To: <1387040625-38114-1-git-send-email-nbd@openwrt.org>
+References: <1387040625-38114-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <Julia.Lawall@lip6.fr>
+The beacon code previously reset TSF on every configuration call, as
+some of the code was not prepared to properly calculate nexttbtt based
+on current TSF.
 
-Ether_addr_equal_64bits is more efficient than ether_addr_equal, and can be
-used when each argument is an array within a structure that contains at
-least two bytes of data beyond the array.
+This patch adds a common function for calculating nexttbtt and moves the
+TSF reset to driver start.
 
-The structures involved are:
-ieee80211_hdr defined in include/linux/ieee80211.h and
-rtl_mac defined in drivers/net/wireless/rtlwifi/wifi.h
+This should improve AP mode compatibility with various stations that
+expect the TSF to not randomly jump due to hardware resets.
 
-This was done using Coccinelle (http://coccinelle.lip6.fr/).
-
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
-The semantic patch used is rather long and can be found in message 0 of
-this patch series.
+ drivers/net/wireless/ath/ath9k/beacon.c | 88 ++++++++++++++++-----------------
+ drivers/net/wireless/ath/ath9k/main.c   |  2 +
+ 2 files changed, 45 insertions(+), 45 deletions(-)
 
- drivers/net/wireless/rtlwifi/base.c |    4 ++--
- drivers/net/wireless/rtlwifi/ps.c   |    4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/rtlwifi/ps.c b/drivers/net/wireless/rtlwifi/ps.c
-index 0d81f76..deedae3 100644
---- a/drivers/net/wireless/rtlwifi/ps.c
-+++ b/drivers/net/wireless/rtlwifi/ps.c
-@@ -478,7 +478,7 @@ void rtl_swlps_beacon(struct ieee80211_hw *hw, void *data, unsigned int len)
- 		return;
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 5128856..78ffe76 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -431,6 +431,33 @@ static void ath9k_beacon_init(struct ath_softc *sc, u32 nexttbtt,
+ 	ath9k_hw_enable_interrupts(ah);
+ }
  
- 	/* and only beacons from the associated BSSID, please */
--	if (!ether_addr_equal(hdr->addr3, rtlpriv->mac80211.bssid))
-+	if (!ether_addr_equal_64bits(hdr->addr3, rtlpriv->mac80211.bssid))
- 		return;
++/* Calculate the modulo of a 64 bit TSF snapshot with a TU divisor */
++static u32 ath9k_mod_tsf64_tu(u64 tsf, u32 div_tu)
++{
++	u32 tsf_mod, tsf_hi, tsf_lo, mod_hi, mod_lo;
++
++	tsf_mod = tsf & (BIT(10) - 1);
++	tsf_hi = tsf >> 32;
++	tsf_lo = ((u32) tsf) >> 10;
++
++	mod_hi = tsf_hi % div_tu;
++	mod_lo = ((mod_hi << 22) + tsf_lo) % div_tu;
++
++	return (mod_lo << 10) | tsf_mod;
++}
++
++static u32 ath9k_get_next_tbtt(struct ath_softc *sc, u64 tsf,
++			       unsigned int interval)
++{
++	struct ath_hw *ah = sc->sc_ah;
++	unsigned int offset;
++
++	tsf += TU_TO_USEC(FUDGE + ah->config.sw_beacon_response_time);
++	offset = ath9k_mod_tsf64_tu(tsf, interval);
++
++	return (u32) tsf + TU_TO_USEC(interval) - offset;
++}
++
+ /*
+  * For multi-bss ap support beacons are either staggered evenly over N slots or
+  * burst together.  For the former arrange for the SWBA to be delivered for each
+@@ -446,7 +473,8 @@ static void ath9k_beacon_config_ap(struct ath_softc *sc,
+ 	/* NB: the beacon interval is kept internally in TU's */
+ 	intval = TU_TO_USEC(conf->beacon_interval);
+ 	intval /= ATH_BCBUF;
+-	nexttbtt = intval;
++	nexttbtt = ath9k_get_next_tbtt(sc, ath9k_hw_gettsf64(ah),
++				       conf->beacon_interval);
  
- 	rtlpriv->psc.last_beacon = jiffies;
-@@ -923,7 +923,7 @@ void rtl_p2p_info(struct ieee80211_hw *hw, void *data, unsigned int len)
- 		return;
+ 	if (conf->enable_beacon)
+ 		ah->imask |= ATH9K_INT_SWBA;
+@@ -458,7 +486,7 @@ static void ath9k_beacon_config_ap(struct ath_softc *sc,
+ 		(conf->enable_beacon) ? "Enable" : "Disable",
+ 		nexttbtt, intval, conf->beacon_interval);
  
- 	/* and only beacons from the associated BSSID, please */
--	if (!ether_addr_equal(hdr->addr3, rtlpriv->mac80211.bssid))
-+	if (!ether_addr_equal_64bits(hdr->addr3, rtlpriv->mac80211.bssid))
- 		return;
+-	ath9k_beacon_init(sc, nexttbtt, intval, true);
++	ath9k_beacon_init(sc, nexttbtt, intval, false);
+ }
  
- 	/* check if this really is a beacon */
-diff --git a/drivers/net/wireless/rtlwifi/base.c b/drivers/net/wireless/rtlwifi/base.c
-index fcf9b62..d63a12c 100644
---- a/drivers/net/wireless/rtlwifi/base.c
-+++ b/drivers/net/wireless/rtlwifi/base.c
-@@ -1293,7 +1293,7 @@ void rtl_beacon_statistic(struct ieee80211_hw *hw, struct sk_buff *skb)
- 		return;
+ /*
+@@ -475,10 +503,9 @@ static void ath9k_beacon_config_sta(struct ath_softc *sc,
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ath9k_beacon_state bs;
+-	int dtimperiod, dtimcount, sleepduration;
+-	u32 nexttbtt = 0, intval, tsftu;
++	int dtim_intval, sleepduration;
++	u32 nexttbtt = 0, intval;
+ 	u64 tsf;
+-	int num_beacons, offset, dtim_dec_count;
  
- 	/* and only beacons from the associated BSSID, please */
--	if (!ether_addr_equal(hdr->addr3, rtlpriv->mac80211.bssid))
-+	if (!ether_addr_equal_64bits(hdr->addr3, rtlpriv->mac80211.bssid))
- 		return;
+ 	/* No need to configure beacon if we are not associated */
+ 	if (!test_bit(SC_OP_PRIM_STA_VIF, &sc->sc_flags)) {
+@@ -494,11 +521,7 @@ static void ath9k_beacon_config_sta(struct ath_softc *sc,
+ 	 * Setup dtim parameters according to
+ 	 * last beacon we received (which may be none).
+ 	 */
+-	dtimperiod = conf->dtim_period;
+-	dtimcount = conf->dtim_count;
+-	if (dtimcount >= dtimperiod)	/* NB: sanity check */
+-		dtimcount = 0;
+-
++	dtim_intval = intval * conf->dtim_period;
+ 	sleepduration = conf->listen_interval * intval;
  
- 	rtlpriv->link_info.bcn_rx_inperiod++;
-@@ -1781,7 +1781,7 @@ void rtl_recognize_peer(struct ieee80211_hw *hw, u8 *data, unsigned int len)
- 		return;
+ 	/*
+@@ -506,24 +529,14 @@ static void ath9k_beacon_config_sta(struct ath_softc *sc,
+ 	 * TSF and calculate dtim state for the result.
+ 	 */
+ 	tsf = ath9k_hw_gettsf64(ah);
+-	tsftu = TSF_TO_TU(tsf>>32, tsf) + FUDGE;
+-
+-	num_beacons = tsftu / intval + 1;
+-	offset = tsftu % intval;
+-	nexttbtt = tsftu - offset;
+-	if (offset)
+-		nexttbtt += intval;
+-
+-	/* DTIM Beacon every dtimperiod Beacon */
+-	dtim_dec_count = num_beacons % dtimperiod;
+-	dtimcount -= dtim_dec_count;
+-	if (dtimcount < 0)
+-		dtimcount += dtimperiod;
++	nexttbtt = ath9k_get_next_tbtt(sc, tsf, intval);
  
- 	/* and only beacons from the associated BSSID, please */
--	if (!ether_addr_equal(hdr->addr3, rtlpriv->mac80211.bssid))
-+	if (!ether_addr_equal_64bits(hdr->addr3, rtlpriv->mac80211.bssid))
- 		return;
+ 	bs.bs_intval = TU_TO_USEC(intval);
+-	bs.bs_nexttbtt = TU_TO_USEC(nexttbtt);
+-	bs.bs_dtimperiod = dtimperiod * bs.bs_intval;
+-	bs.bs_nextdtim = bs.bs_nexttbtt + dtimcount * bs.bs_intval;
++	bs.bs_dtimperiod = conf->dtim_period * bs.bs_intval;
++	bs.bs_nexttbtt = nexttbtt;
++	bs.bs_nextdtim = nexttbtt;
++	if (conf->dtim_period > 1)
++		bs.bs_nextdtim = ath9k_get_next_tbtt(sc, tsf, dtim_intval);
  
- 	if (rtl_find_221_ie(hw, data, len))
+ 	/*
+ 	 * Calculate the number of consecutive beacons to miss* before taking
+@@ -559,7 +572,6 @@ static void ath9k_beacon_config_sta(struct ath_softc *sc,
+ 	/* TSF out of range threshold fixed at 1 second */
+ 	bs.bs_tsfoor_threshold = ATH9K_TSFOOR_THRESHOLD;
+ 
+-	ath_dbg(common, BEACON, "tsf: %llu tsftu: %u\n", tsf, tsftu);
+ 	ath_dbg(common, BEACON, "bmiss: %u sleep: %u\n",
+ 		bs.bs_bmissthreshold, bs.bs_sleepduration);
+ 
+@@ -584,25 +596,11 @@ static void ath9k_beacon_config_adhoc(struct ath_softc *sc,
+ 
+ 	intval = TU_TO_USEC(conf->beacon_interval);
+ 
+-	if (conf->ibss_creator) {
++	if (conf->ibss_creator)
+ 		nexttbtt = intval;
+-	} else {
+-		u32 tbtt, offset, tsftu;
+-		u64 tsf;
+-
+-		/*
+-		 * Pull nexttbtt forward to reflect the current
+-		 * sync'd TSF.
+-		 */
+-		tsf = ath9k_hw_gettsf64(ah);
+-		tsftu = TSF_TO_TU(tsf >> 32, tsf) + FUDGE;
+-		offset = tsftu % conf->beacon_interval;
+-		tbtt = tsftu - offset;
+-		if (offset)
+-			tbtt += conf->beacon_interval;
+-
+-		nexttbtt = TU_TO_USEC(tbtt);
+-	}
++	else
++		nexttbtt = ath9k_get_next_tbtt(sc, ath9k_hw_gettsf64(ah),
++					       conf->beacon_interval);
+ 
+ 	if (conf->enable_beacon)
+ 		ah->imask |= ATH9K_INT_SWBA;
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 4798f6a..6a23120 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -760,6 +760,8 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 	 */
+ 	ath9k_cmn_init_crypto(sc->sc_ah);
+ 
++	ath9k_hw_reset_tsf(ah);
++
+ 	spin_unlock_bh(&sc->sc_pcu_lock);
+ 
+ 	mutex_unlock(&sc->mutex);
+-- 
+1.8.3.4 (Apple Git-47)
 
