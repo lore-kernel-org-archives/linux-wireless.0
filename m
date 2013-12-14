@@ -1,49 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f178.google.com ([209.85.215.178]:35846 "EHLO
-	mail-ea0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754843Ab3LaRQc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Dec 2013 12:16:32 -0500
-Received: by mail-ea0-f178.google.com with SMTP id d10so5569805eaj.37
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Dec 2013 09:16:31 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+Received: from nbd.name ([46.4.11.11]:48967 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754113Ab3LNRD6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Dec 2013 12:03:58 -0500
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Cc: Arik Nemtsov <arik@wizery.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 21/28] iwlwifi: mvm: squash a spurious warning on chnctx change
-Date: Tue, 31 Dec 2013 19:15:50 +0200
-Message-Id: <1388510157-23345-21-git-send-email-egrumbach@gmail.com> (sfid-20131231_183436_062007_1ED9BC25)
-In-Reply-To: <52C2FB68.2010708@gmail.com>
-References: <52C2FB68.2010708@gmail.com>
+Cc: linville@tuxdriver.com
+Subject: [PATCH 06/11] ath9k_hw: remove ah->config.pcie_clock_req
+Date: Sat, 14 Dec 2013 18:03:40 +0100
+Message-Id: <1387040625-38114-6-git-send-email-nbd@openwrt.org> (sfid-20131214_180415_613286_290C550C)
+In-Reply-To: <1387040625-38114-1-git-send-email-nbd@openwrt.org>
+References: <1387040625-38114-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+It is unused
 
-If the channel min-width changes, we can update the PHY ctx, even if
-it has multiple references.
-
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Reviewed-by: Eliad Peller <eliad@wizery.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/iwlwifi/mvm/mac80211.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/ar9002_hw.c | 8 ++------
+ drivers/net/wireless/ath/ath9k/hw.c        | 1 -
+ drivers/net/wireless/ath/ath9k/hw.h        | 1 -
+ 3 files changed, 2 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index e9eff30..abe7514 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -1649,7 +1649,8 @@ static void iwl_mvm_change_chanctx(struct ieee80211_hw *hw,
- 	if (WARN_ONCE((phy_ctxt->ref > 1) &&
- 		      (changed & ~(IEEE80211_CHANCTX_CHANGE_WIDTH |
- 				   IEEE80211_CHANCTX_CHANGE_RX_CHAINS |
--				   IEEE80211_CHANCTX_CHANGE_RADAR)),
-+				   IEEE80211_CHANCTX_CHANGE_RADAR |
-+				   IEEE80211_CHANCTX_CHANGE_MIN_WIDTH)),
- 		      "Cannot change PHY. Ref=%d, changed=0x%X\n",
- 		      phy_ctxt->ref, changed))
- 		return;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+index 5c95fd9..149aba3 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+@@ -32,12 +32,8 @@ static int ar9002_hw_init_mode_regs(struct ath_hw *ah)
+ 		return 0;
+ 	}
+ 
+-	if (ah->config.pcie_clock_req)
+-		INIT_INI_ARRAY(&ah->iniPcieSerdes,
+-			   ar9280PciePhy_clkreq_off_L1_9280);
+-	else
+-		INIT_INI_ARRAY(&ah->iniPcieSerdes,
+-			   ar9280PciePhy_clkreq_always_on_L1_9280);
++	INIT_INI_ARRAY(&ah->iniPcieSerdes,
++		       ar9280PciePhy_clkreq_always_on_L1_9280);
+ 
+ 	if (AR_SREV_9287_11_OR_LATER(ah)) {
+ 		INIT_INI_ARRAY(&ah->iniModes, ar9287Modes_9287_1_1);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index a403cfc..eeb0741 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -446,7 +446,6 @@ static void ath9k_hw_init_config(struct ath_hw *ah)
+ 	ah->config.additional_swba_backoff = 0;
+ 	ah->config.ack_6mb = 0x0;
+ 	ah->config.cwm_ignore_extcca = 0;
+-	ah->config.pcie_clock_req = 0;
+ 	ah->config.analog_shiftreg = 1;
+ 
+ 	for (i = 0; i < AR_EEPROM_MODAL_SPURS; i++) {
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 3a70682..b8e2476 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -283,7 +283,6 @@ struct ath9k_ops_config {
+ 	int additional_swba_backoff;
+ 	int ack_6mb;
+ 	u32 cwm_ignore_extcca;
+-	u8 pcie_clock_req;
+ 	u32 pcie_waen;
+ 	u8 analog_shiftreg;
+ 	u32 ofdm_trig_low;
 -- 
-1.7.9.5
+1.8.3.4 (Apple Git-47)
 
