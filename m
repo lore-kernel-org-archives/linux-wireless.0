@@ -1,80 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vserver.eikelenboom.it ([84.200.39.61]:47113 "EHLO
-	smtp.eikelenboom.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751665Ab3LRKs5 (ORCPT
+Received: from mail-la0-f47.google.com ([209.85.215.47]:65362 "EHLO
+	mail-la0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751631Ab3LOUun (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Dec 2013 05:48:57 -0500
-Date: Wed, 18 Dec 2013 11:48:45 +0100
-From: Sander Eikelenboom <linux@eikelenboom.it>
-Message-ID: <133955103.20131218114845@eikelenboom.it> (sfid-20131218_114922_326427_302ECB76)
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Arend van Spriel <arend@broadcom.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Ben Hutchings <ben@decadent.org.uk>,
-	Julian Calaby <julian.calaby@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <avinashapatil@gmail.com>
-Subject: Re: [cfg80211 / iwlwifi] setting wireless regulatory domain doesn't work.
-In-Reply-To: <1387358785.4694.9.camel@jlt4.sipsolutions.net>
-References: <1342235583.20131211182804@eikelenboom.it> <CAB=NE6UfumA2xez1DvtDSBDZ72WF_tOozFo_8LRnMryYiSqD-A@mail.gmail.com> <871324710.20131211191104@eikelenboom.it> <CAB=NE6XRnE0j9NMW0K1vKzEO9v70arSH4YXZjudqa0ZxiLB4AA@mail.gmail.com> <1937118387.20131216122200@eikelenboom.it> <52AEE60B.6030509@broadcom.com> <19210260274.20131216135644@eikelenboom.it> <CAGRGNgXHemM2FfnXgW5RbzhFT+9SfUfVkjdysK3+=_u3hWSacw@mail.gmail.com> <1534126119.20131217104548@eikelenboom.it> <387552477.20131217213319@eikelenboom.it> <20131217212709.GB5624@decadent.org.uk> <1254825772.20131217224914@eikelenboom.it> <CA+55aFxQg6=MAWEkEGz64Hz8OawvPyX=fpBOjY8cGBL5XgB9WQ@mail.gmail.com> <52B167F6.5060209@broadcom.com> (sfid-20131218_101718_355278_E8533498) <1387358785.4694.9.camel@jlt4.sipsolutions.net>
+	Sun, 15 Dec 2013 15:50:43 -0500
+Received: by mail-la0-f47.google.com with SMTP id ep20so2316949lab.6
+        for <linux-wireless@vger.kernel.org>; Sun, 15 Dec 2013 12:50:42 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CANUDGG1y3Qy5yqpwB2UzLthCm7P9Rk+zgHD4xoNzk9XuHkAo+w@mail.gmail.com>
+References: <CANUDGG3bU9PkQgZYKFYAb31sN7xzvtAM0+xsasXpSgR5Q1CmHw@mail.gmail.com>
+	<52AA7A57.9090902@gmail.com>
+	<CANUDGG1y3Qy5yqpwB2UzLthCm7P9Rk+zgHD4xoNzk9XuHkAo+w@mail.gmail.com>
+Date: Sun, 15 Dec 2013 22:50:41 +0200
+Message-ID: <CANUX_P1eVaKkb_=Kx_8tUXsms5XVRAOPbg0vhc5zxrC+VZgRag@mail.gmail.com> (sfid-20131215_215058_302846_353CC203)
+Subject: Re: Microcode crashes on Intel 7260
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: David Williams <xflow7@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+>
+> On Thu, Dec 12, 2013 at 10:09 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>>
+>>
+>> On 12/12/2013 10:38 PM, David Williams wrote:
+>>> Hello,
+>>>
+>>> I am a victim of the bug causing microcode crashes on Intel 7260.  I
+>>> understand that new firmware is in the works that should resolve this.  I
+>>> have two questions:
+>>
+>> Please share iw list output and dmesg output
+>>
+>>>
+>>> 1) Is there any indication as to whether the new firmware/driver will make
+>>> it into the 3.10 or 3.12 kernels?
+>>>
+>>
+>> It is most probably a firmware issue - I'll know after you send the
+>> output I mentioned above.
 
-Wednesday, December 18, 2013, 10:26:25 AM, you wrote:
+I got the firmware team to backport the fixes to the old code base
+that works on 3.10.
+firmware is here:
+https://git.kernel.org/cgit/linux/kernel/git/egrumbach/linux-firmware.git/plain/iwlwifi-7260-7.ucode.
+I am waiting for a few feedbacks before I send the pull request.
 
-> Hi all,
-
-> We really should be asking Luis to look at this who hasn't yet chimed
-> in, presumably because he's between jobs (and travelling IIRC)
-
-> On Wed, 2013-12-18 at 10:16 +0100, Arend van Spriel wrote:
->> On 12/17/2013 11:06 PM, Linus Torvalds wrote:
->> > We have literally had this *exact* same issue with firmware loading.
->> > Network drivers shouldn't try to load firmware at module load time.
->> > Same deal.
->> 
->> It is kind of a chicken and egg problem for (wireless) networking
->> drivers. To get IFF_UP from the network layer you have to register a
->> netdevice. For wireless drivers this means you have to register a wiphy
->> device with cfg80211 which flags capabilities and optionally are custom
->> regulatory domain. That information depends on the device and firmware
->> used. And there we have a full circle.
-
-> This is all really beside the point.
-
-> For this CRDA information, the kernel never actually *waits* for it, so
-> in the case that there's no reply, it uses the built-in world domain. So
-> it's not like request_firmware(), which will block boot forever, but
-> it's also not like request_firmware_nowait() which will eventually time
-> out and come back with an error if userspace isn't handling it (though
-> now that firmware loading is built in ...)
-
-> The issue is that it uses the built-in data *forever*, and what Sander
-> said was "or it will block forever" but just meant that it never was
-> able to do any further updates.
-
-> It *doesn't* actually block the boot process or such. Everything Linus
-> said is true but seems to have been written in understanding "blocks" as
-> "blocking the boot process", rather than "blocking further updates".
-
-> Regardless of this, even blocking further updates is a really bad idea.
-> There are a few ways to handle this, but I'll let Luis poke at that.
-
-Your description is correct, sorry if I was not clear.
-
---
-Sander
-
-> johannes
-
-
-
+>>
+>>> 2) Is there a workaround using the existing firmware in the meantime?
+>>>
+>>
+>> I am not aware of any microcode error we can workaround in the driver.
+>> But you might be facing an issue I have never seen - please send the
+>> output and we'll see.
+>>
+>>> Thanks,
+>>>
+>>> Dave Williams
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
