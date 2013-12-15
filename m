@@ -1,74 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:47149 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750877Ab3LWHTj (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:42627 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751914Ab3LOVPU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Dec 2013 02:19:39 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org
-Subject: [RFC 8/9] ath9k: Fix baseband watchdog reset
-Date: Mon, 23 Dec 2013 12:44:25 +0530
-Message-Id: <1387782866-19847-9-git-send-email-sujith@msujith.org> (sfid-20131223_081943_301710_EEF823C4)
-In-Reply-To: <1387782866-19847-1-git-send-email-sujith@msujith.org>
-References: <1387782866-19847-1-git-send-email-sujith@msujith.org>
+	Sun, 15 Dec 2013 16:15:20 -0500
+Received: by mail-pb0-f46.google.com with SMTP id md12so4589634pbc.5
+        for <linux-wireless@vger.kernel.org>; Sun, 15 Dec 2013 13:15:20 -0800 (PST)
+From: Thomas Pedersen <twpedersen@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: open80211s <devel@lists.open80211s.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH 2/3] mac80211: reset TSF to 0 when joining a mesh
+Date: Sun, 15 Dec 2013 13:14:15 -0800
+Message-Id: <1387142056-21850-2-git-send-email-twpedersen@gmail.com> (sfid-20131215_221524_235029_2AB5C07A)
+In-Reply-To: <1387142056-21850-1-git-send-email-twpedersen@gmail.com>
+References: <1387142056-21850-1-git-send-email-twpedersen@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+From: Thomas Pedersen <thomas@cozybit.com>
 
-Do a HW reset only for required signatures.
+This should ensure the mac80211 DTIM count matches that of
+the firmware beacon timer (DTIM 0 starts at TSF 0).
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c | 27 +++++++++++++++++++--------
- 1 file changed, 19 insertions(+), 8 deletions(-)
+ net/mac80211/mesh.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 894c892..24e2654 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -448,14 +448,8 @@ void ath9k_tasklet(unsigned long data)
- 	ath9k_ps_wakeup(sc);
- 	spin_lock(&sc->sc_pcu_lock);
- 
--	if ((status & ATH9K_INT_FATAL) ||
--	    (status & ATH9K_INT_BB_WATCHDOG)) {
--
--		if (status & ATH9K_INT_FATAL)
--			type = RESET_TYPE_FATAL_INT;
--		else
--			type = RESET_TYPE_BB_WATCHDOG;
--
-+	if (status & ATH9K_INT_FATAL) {
-+		type = RESET_TYPE_FATAL_INT;
- 		ath9k_queue_reset(sc, type);
- 
- 		/*
-@@ -467,6 +461,23 @@ void ath9k_tasklet(unsigned long data)
- 		goto out;
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 330d1f7..1174157 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -802,6 +802,8 @@ int ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
+ 		return -ENOMEM;
  	}
  
-+	if ((ah->config.hw_hang_checks & HW_BB_WATCHDOG) &&
-+	    (status & ATH9K_INT_BB_WATCHDOG)) {
-+		if (ar9003_hw_bb_watchdog_check(ah)) {
-+			type = RESET_TYPE_BB_WATCHDOG;
-+			ath9k_queue_reset(sc, type);
-+
-+			/*
-+			 * Increment the ref. counter here so that
-+			 * interrupts are enabled in the reset routine.
-+			 */
-+			atomic_inc(&ah->intr_ref_cnt);
-+			ath_dbg(common, ANY,
-+				"BB_WATCHDOG: Skipping interrupts\n");
-+			goto out;
-+		}
-+	}
-+
- 	spin_lock_irqsave(&sc->sc_pm_lock, flags);
- 	if ((status & ATH9K_INT_TSFOOR) && sc->ps_enabled) {
- 		/*
++	/* next beacon will be DTIM-1, so TSF=0 was DTIM=0 */
++	drv_set_tsf(local, sdata, 0);
+ 	ieee80211_bss_info_change_notify(sdata, changed);
+ 
+ 	netif_carrier_on(sdata->dev);
 -- 
-1.8.5.2
+1.7.10.4
 
