@@ -1,29 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:49179 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753655Ab3LEKbn (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:53846 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752520Ab3LOJPi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 05:31:43 -0500
-From: Sujith Manoharan <sujith@msujith.org>
+	Sun, 15 Dec 2013 04:15:38 -0500
+Message-ID: <52AD7335.1090101@broadcom.com> (sfid-20131215_101605_083447_47D1D0F4)
+Date: Sun, 15 Dec 2013 10:15:33 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21152.21739.555819.395470@gargle.gargle.HOWL> (sfid-20131205_113145_898425_48C1A5E9)
-Date: Thu, 5 Dec 2013 15:56:51 +0530
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: <linville@tuxdriver.com>, <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [RFT 1/2] ath: fix warning on usage of REGULATORY_CUSTOM_REG
-In-Reply-To: <1386092034-13442-2-git-send-email-mcgrof@do-not-panic.com>
-References: <1386092034-13442-1-git-send-email-mcgrof@do-not-panic.com>
-	<1386092034-13442-2-git-send-email-mcgrof@do-not-panic.com>
+To: Jouni Malinen <j@w1.fi>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: wpa_supplicant and driver reload
+References: <52A82A1D.80409@broadcom.com> <2323CBC6-B7B3-49FF-882F-66B9F0B9A879@w1.fi>
+In-Reply-To: <2323CBC6-B7B3-49FF-882F-66B9F0B9A879@w1.fi>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
->  	wiphy_apply_custom_regulatory(wiphy, regd);
-> +	if (!ath_is_world_regd(reg))
-> +		wiphy->regulatory_flags &= ~REGULATORY_STRICT_REG;
+On 12/15/2013 06:46 AM, Jouni Malinen wrote:
+>
+> On 11 Dec 2013, at 1:02 am, Arend van Spriel <arend@broadcom.com> wrote:
+>
+>> A basic questionIn my testing I normally stop wpa_supplicant when reloading my driver and start it again, but I was wondering whether this is needed. Can wpa_supplicant deal with interface index change for the network interface?
+>
+> Yes, it can.
+>
+> (Did you not try it before asking? Or did it fail in some way?)
 
-The warning is gone, but why is this cleared here ?
+It failed. On my Ubuntu machine it works fine, but it seems 
+NetworkManager does give explicit RemoveInterface and CreateInterface 
+dbus primitives. When running wpa_supplicant without NetworkManager it 
+fails and it seems to be using the previous if_index. I will give 
+another stare the wpa_s log and send it out when I can not make sense of it.
 
-Sujith
+Regards,
+Arend
+
+
