@@ -1,30 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:35807 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751496Ab3LaIXr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Dec 2013 03:23:47 -0500
-From: Kalle Valo <kvalo@adurom.com>
-To: Pierre Bourdon <delroth@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Exporting the TSF to userland
-References: <CA+V6dmh7Udn96GG0XGaabx-t6ZViu1RGk-xTawa_KbnCdro9Ew@mail.gmail.com>
-Date: Tue, 31 Dec 2013 10:23:46 +0200
-In-Reply-To: <CA+V6dmh7Udn96GG0XGaabx-t6ZViu1RGk-xTawa_KbnCdro9Ew@mail.gmail.com>
-	(Pierre Bourdon's message of "Tue, 31 Dec 2013 05:24:42 +0100")
-Message-ID: <87sit9o2ct.fsf@purkki.adurom.net> (sfid-20131231_092351_161936_312EFDED)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([144.76.43.152]:41228 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753466Ab3LPMzW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Dec 2013 07:55:22 -0500
+Message-ID: <1387198518.4665.29.camel@jlt4.sipsolutions.net> (sfid-20131216_135525_478219_5E1AE12E)
+Subject: Re: [PATCH 3/3] mac80211: update adjusting TBTT bit in beacon
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <twpedersen@gmail.com>
+Cc: open80211s <devel@lists.open80211s.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Thomas Pedersen <thomas@cozybit.com>
+Date: Mon, 16 Dec 2013 13:55:18 +0100
+In-Reply-To: <1387142056-21850-3-git-send-email-twpedersen@gmail.com> (sfid-20131215_221523_822205_B4A0108F)
+References: <1387142056-21850-1-git-send-email-twpedersen@gmail.com>
+	 <1387142056-21850-3-git-send-email-twpedersen@gmail.com>
+	 (sfid-20131215_221523_822205_B4A0108F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pierre Bourdon <delroth@gmail.com> writes:
+On Sun, 2013-12-15 at 13:14 -0800, Thomas Pedersen wrote:
+> From: Thomas Pedersen <thomas@cozybit.com>
+> 
+> This regression was introduced in "mac80211: cache mesh
+> beacon".
+> 
+> mesh_sync_offset_adjust_tbtt()  was assuming that the
+> beacon would be rebuilt in every single pre-tbtt
+> interrupt, but now the beacon update happens on the
+> workqueue, and it must be ready for immediate delivery to
+> the driver.
+> 
+> Save a pointer to the meshconf IE in the beacon_data (this
+> works because both the IE pointer and beacon buffer are
+> protected by the same rcu_{dereference,assign_pointer}())
+> for quick updates during pre-tbtt. This is faster and a
+> little prettier than iterating over the elements to find
+> the meshconf IE every time.
 
-> I'm a developer of libdrc, a project that allows Linux computers to
-> control a Wii U GamePad. Because of how the device operates, our
-> library needs to be able to read the TSF value of the access point
-> device from userland.
+Applied, since it doesn't look like this depends on patch 2. I'll let
+you discuss patch 2 with Sergey first, though I'm of the opinion that if
+there's no per-vif TSF in your hardware then you're SOL anyway and what
+you did is fine.
 
-Just out of curiosity, how do you use TSF exactly?
+johannes
 
--- 
-Kalle Valo
