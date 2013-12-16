@@ -1,226 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:52955 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753315Ab3LCNs3 (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:4001 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752195Ab3LPLhv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Dec 2013 08:48:29 -0500
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
-	yeohchunyeow@gmail.com
-Cc: yeohchunyeow@cozybit.com
-Subject: [PATCH v6 3/5] mac80211: refactor ieee80211_mesh_process_chanswitch()
-Date: Tue,  3 Dec 2013 15:48:20 +0200
-Message-Id: <1386078502-19845-4-git-send-email-luciano.coelho@intel.com> (sfid-20131203_144836_631954_F2870717)
-In-Reply-To: <1386078502-19845-1-git-send-email-luciano.coelho@intel.com>
-References: <1386078502-19845-1-git-send-email-luciano.coelho@intel.com>
+	Mon, 16 Dec 2013 06:37:51 -0500
+Message-ID: <52AEE60B.6030509@broadcom.com> (sfid-20131216_123812_919893_A1891D0E)
+Date: Mon, 16 Dec 2013 12:37:47 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Sander Eikelenboom <linux@eikelenboom.it>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+CC: "Berg, Johannes" <johannes.berg@intel.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [cfg80211 / iwlwifi] setting wireless regulatory domain doesn't
+ work.
+References: <1507831110.20131018194349@eikelenboom.it> <792757788.20131023142849@eikelenboom.it> <1819533168.20131211161710@eikelenboom.it> <CAB=NE6V-RSnqbAC-0tfYK=WGJLp1aPC2UpFDurs49h+wXr9UfQ@mail.gmail.com> <1818324675.20131211175350@eikelenboom.it> <CAB=NE6Wf=T0bGLSYPDyb=-fMAVnGcbGkeaBiNrzwV-Lpxr6VZg@mail.gmail.com> <1342235583.20131211182804@eikelenboom.it> <CAB=NE6UfumA2xez1DvtDSBDZ72WF_tOozFo_8LRnMryYiSqD-A@mail.gmail.com> <871324710.20131211191104@eikelenboom.it> <CAB=NE6XRnE0j9NMW0K1vKzEO9v70arSH4YXZjudqa0ZxiLB4AA@mail.gmail.com> <1937118387.20131216122200@eikelenboom.it>
+In-Reply-To: <1937118387.20131216122200@eikelenboom.it>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Refactor ieee80211_mesh_process_chanswitch() to use
-ieee80211_channel_switch() and avoid code duplication.
+On 12/16/2013 12:22 PM, Sander Eikelenboom wrote:
+> 
+> Wednesday, December 11, 2013, 7:38:50 PM, you wrote:
+> 
+>> On Wed, Dec 11, 2013 at 7:11 PM, Sander Eikelenboom
+>> <linux@eikelenboom.it> wrote:
+>>>
+>>> Wednesday, December 11, 2013, 6:53:07 PM, you wrote:
+>>>
+>>>> The best way to address all this is by automatic region awareness and
+>>>> doing the right thing on devices, this however requires good
+>>>> architecture / calibration data  / etc and all that needs to be
+>>>> verified by the system integrators, and finally they need to be
+>>>> certified. If you want to hack your firmware and software go at it,
+>>>> just be aware there are reasons for things.
+>>>
+>>> Well the general problem seems to be "we don't trust the user" so we FORCE him to the lowest
+>>> common denominator (without a way to overrule that) so he is forced to operate *well* within the law.
+> 
+>> Its simply stupid to have the user be involved, period, the fact that
+>> a user would be involved should only be for testing or helping
+>> compliance for a busted device, development, research and obviously
+>> hacking. Linux allows all these but by default a device with firmware
+>> and a custom regdomain that will barf if you try to use a channel that
+>> is not allowed is a restriction in firmware. Feel free to reverse
+>> engineer that if you don't like it but it just won't be supported or
+>> go upstream. Now, the common denominator is generally optimized for
+>> best performance as well so you shouldn't have to do anything, and for
+>> APs -- this is typically carefully crafted for a region, also highly
+>> optimized.
+> 
+>>>>>> It doesn't seem like you are getting your original requests getting
+>>>>>> processed, so I don't think CRDA is passing it. Can you verify running
+>>>>>> from CRDA code:
+>>>>>
+>>>>> They don't get processed unless i remove the return from the code as i indicated.
+>>>>> If i remove that return it processes the request.
+>>>>>
+>>>>>> ./regdbdump /usr/lib/crda/regulatory.bin
+>>>>>
+>>>>> Although it's in a different location on Debian, /lib/crda/regulatory.bin
+>>>>> the dump seems fine.
+>>>
+>>>> OK thanks. Can you send a patch of what exact change you made, it was
+>>>> unclear from the paste you made.
+>>>
+>>>> diff -u file.c.orig file.c
+>>>
+>>> Well i just did a pull from wireless-next, to try Avinash Patil's patch.
+>>> net/wireless/reg.c had already changed much so i couldn't apply his patch without.
+>>>
+>>> With his patch it sets the regulatory domain, although as now expected i still can not use channels 12 and 13 yet,
+>>> probably due to those firmware restrictions.
+> 
+>> Its unclear what results you got, and yeah if the device is restricted
+>> then its just the fw telling the driver its channels and you can't use
+>> them. That's it. You won't be able to override information then unless
+>> you hack the firmware
+> 
+> Ping ?
+> 
+> Is there anymore information you need to *fix* the problem ?
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
- net/mac80211/cfg.c         | 10 +++++--
- net/mac80211/ieee80211_i.h |  6 +++-
- net/mac80211/mesh.c        | 68 ++++++++++------------------------------------
- net/mac80211/util.c        |  1 -
- 4 files changed, 27 insertions(+), 58 deletions(-)
+Maybe you did not get the essence of the response from Luis: There is
+*no* problem to be fixed.
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index b5bc27e..790c15d 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3156,9 +3156,15 @@ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 		    params->chandef.chan->band)
- 			return -EINVAL;
- 
--		err = ieee80211_mesh_csa_beacon(sdata, params, true);
--		if (err < 0)
-+		if (ifmsh->csa_role == IEEE80211_MESH_CSA_ROLE_NONE)
-+			ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_INIT;
-+
-+		err = ieee80211_mesh_csa_beacon(sdata, params,
-+			(ifmsh->csa_role == IEEE80211_MESH_CSA_ROLE_INIT));
-+		if (err < 0) {
-+			ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_NONE;
- 			return err;
-+		}
- 		break;
- #endif
- 	default:
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index a7b4d55..cf38a74 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -611,7 +611,11 @@ struct ieee80211_if_mesh {
- 	struct ps_data ps;
- 	/* Channel Switching Support */
- 	struct mesh_csa_settings __rcu *csa;
--	bool chsw_init;
-+	enum {
-+		IEEE80211_MESH_CSA_ROLE_NONE,
-+		IEEE80211_MESH_CSA_ROLE_INIT,
-+		IEEE80211_MESH_CSA_ROLE_REPEATER,
-+	} csa_role;
- 	u8 chsw_ttl;
- 	u16 pre_value;
- };
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 330d1f7..980cc12 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -685,7 +685,7 @@ ieee80211_mesh_build_beacon(struct ieee80211_if_mesh *ifmsh)
- 		*pos++ = csa->settings.count;
- 		*pos++ = WLAN_EID_CHAN_SWITCH_PARAM;
- 		*pos++ = 6;
--		if (ifmsh->chsw_init) {
-+		if (ifmsh->csa_role == IEEE80211_MESH_CSA_ROLE_INIT) {
- 			*pos++ = ifmsh->mshcfg.dot11MeshTTL;
- 			*pos |= WLAN_EID_CHAN_SWITCH_PARAM_INITIATOR;
- 		} else {
-@@ -853,19 +853,11 @@ ieee80211_mesh_process_chnswitch(struct ieee80211_sub_if_data *sdata,
- {
- 	struct cfg80211_csa_settings params;
- 	struct ieee80211_csa_ie csa_ie;
--	struct ieee80211_chanctx_conf *chanctx_conf;
--	struct ieee80211_chanctx *chanctx;
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
- 	enum ieee80211_band band = ieee80211_get_sdata_band(sdata);
--	int err, num_chanctx;
-+	int err;
- 	u32 sta_flags;
- 
--	if (sdata->vif.csa_active)
--		return true;
--
--	if (!ifmsh->mesh_id)
--		return false;
--
- 	sta_flags = IEEE80211_STA_DISABLE_VHT;
- 	switch (sdata->vif.bss_conf.chandef.width) {
- 	case NL80211_CHAN_WIDTH_20_NOHT:
-@@ -890,10 +882,6 @@ ieee80211_mesh_process_chnswitch(struct ieee80211_sub_if_data *sdata,
- 	params.chandef = csa_ie.chandef;
- 	params.count = csa_ie.count;
- 
--	if (sdata->vif.bss_conf.chandef.chan->band !=
--	    params.chandef.chan->band)
--		return false;
--
- 	if (!cfg80211_chandef_usable(sdata->local->hw.wiphy, &params.chandef,
- 				     IEEE80211_CHAN_DISABLED)) {
- 		sdata_info(sdata,
-@@ -916,25 +904,6 @@ ieee80211_mesh_process_chnswitch(struct ieee80211_sub_if_data *sdata,
- 		return false;
- 	}
- 
--	rcu_read_lock();
--	chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
--	if (!chanctx_conf)
--		goto failed_chswitch;
--
--	/* don't handle for multi-VIF cases */
--	chanctx = container_of(chanctx_conf, struct ieee80211_chanctx, conf);
--	if (chanctx->refcount > 1)
--		goto failed_chswitch;
--
--	num_chanctx = 0;
--	list_for_each_entry_rcu(chanctx, &sdata->local->chanctx_list, list)
--		num_chanctx++;
--
--	if (num_chanctx > 1)
--		goto failed_chswitch;
--
--	rcu_read_unlock();
--
- 	mcsa_dbg(sdata,
- 		 "received channel switch announcement to go to channel %d MHz\n",
- 		 params.chandef.chan->center_freq);
-@@ -945,27 +914,16 @@ ieee80211_mesh_process_chnswitch(struct ieee80211_sub_if_data *sdata,
- 	else
- 		ifmsh->chsw_ttl = 0;
- 
--	if (ifmsh->chsw_ttl > 0)
--		if (ieee80211_mesh_csa_beacon(sdata, &params, false) < 0)
--			return false;
--
--	sdata->csa_radar_required = params.radar_required;
--
--	if (params.block_tx)
--		ieee80211_stop_queues_by_reason(&sdata->local->hw,
--				IEEE80211_MAX_QUEUE_MAP,
--				IEEE80211_QUEUE_STOP_REASON_CSA);
-+	if (ifmsh->chsw_ttl == 0)
-+		return false;
- 
--	sdata->csa_chandef = params.chandef;
--	sdata->vif.csa_active = true;
-+	ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_REPEATER;
- 
--	ieee80211_bss_info_change_notify(sdata, err);
--	drv_channel_switch_beacon(sdata, &params.chandef);
-+	if (ieee80211_channel_switch(sdata->local->hw.wiphy, sdata->dev,
-+				     &params) < 0)
-+		return false;
- 
- 	return true;
--failed_chswitch:
--	rcu_read_unlock();
--	return false;
- }
- 
- static void
-@@ -1075,7 +1033,8 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
- 		ifmsh->sync_ops->rx_bcn_presp(sdata,
- 			stype, mgmt, &elems, rx_status);
- 
--	if (!ifmsh->chsw_init)
-+	if (ifmsh->csa_role != IEEE80211_MESH_CSA_ROLE_INIT &&
-+	    !sdata->vif.csa_active)
- 		ieee80211_mesh_process_chnswitch(sdata, &elems, true);
- }
- 
-@@ -1086,7 +1045,7 @@ int ieee80211_mesh_finish_csa(struct ieee80211_sub_if_data *sdata)
- 	int ret = 0;
- 
- 	/* Reset the TTL value and Initiator flag */
--	ifmsh->chsw_init = false;
-+	ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_NONE;
- 	ifmsh->chsw_ttl = 0;
- 
- 	/* Remove the CSA and MCSP elements from the beacon */
-@@ -1200,7 +1159,8 @@ static void mesh_rx_csa_frame(struct ieee80211_sub_if_data *sdata,
- 
- 	ifmsh->pre_value = pre_value;
- 
--	if (!ieee80211_mesh_process_chnswitch(sdata, &elems, false)) {
-+	if (!sdata->vif.csa_active &&
-+	    !ieee80211_mesh_process_chnswitch(sdata, &elems, false)) {
- 		mcsa_dbg(sdata, "Failed to process CSA action frame");
- 		return;
- 	}
-@@ -1355,7 +1315,7 @@ void ieee80211_mesh_init_sdata(struct ieee80211_sub_if_data *sdata)
- 	mesh_rmc_init(sdata);
- 	ifmsh->last_preq = jiffies;
- 	ifmsh->next_perr = jiffies;
--	ifmsh->chsw_init = false;
-+	ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_NONE;
- 	/* Allocate all mesh structures when creating the first mesh interface. */
- 	if (!mesh_allocated)
- 		ieee80211s_init();
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 06265d7..f153ab4 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -2487,7 +2487,6 @@ int ieee80211_send_action_csa(struct ieee80211_sub_if_data *sdata,
- 			ifmsh->pre_value++;
- 		put_unaligned_le16(ifmsh->pre_value, pos);/* Precedence Value */
- 		pos += 2;
--		ifmsh->chsw_init = true;
- 	}
- 
- 	ieee80211_tx_skb(sdata, skb);
--- 
-1.8.4.2
-
+Gr. AvS
