@@ -1,32 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:52028 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932127Ab3LEOCQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 09:02:16 -0500
-Message-ID: <1386252128.4182.3.camel@jlt4.sipsolutions.net> (sfid-20131205_150219_574639_12B14DF6)
-Subject: Re: [PATCH] cfg80211: fix WARN_ON for re-association to the expired
- BSS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ujjal Roy <royujjal@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Date: Thu, 05 Dec 2013 15:02:08 +0100
-In-Reply-To: <1386158254-10647-1-git-send-email-royujjal@gmail.com> (sfid-20131204_125801_012827_2F36E30D)
-References: <1386158254-10647-1-git-send-email-royujjal@gmail.com>
-	 (sfid-20131204_125801_012827_2F36E30D)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:53654 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751883Ab3LPUjy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Dec 2013 15:39:54 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH v2 3.13] mac80211: move "bufferable MMPDU" check to fix AP mode scan
+Date: Mon, 16 Dec 2013 21:39:50 +0100
+Message-Id: <1387226390-12551-1-git-send-email-nbd@openwrt.org> (sfid-20131216_213957_325198_A80CF072)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-12-04 at 17:27 +0530, Ujjal Roy wrote:
-> cfg80211 allows re-association in managed mode and if a user
-> wants to re-associate to the same AP network after the time
-> period of IEEE80211_SCAN_RESULT_EXPIRE, cfg80211 warns with
-> the following message on receiving the connect result event.
+The check needs to apply to both multicast and unicast packets,
+otherwise probe requests on AP mode scans are sent through the multicast
+buffer queue, which adds long delays (often longer than the scanning
+interval).
 
-Applied.
+Cc: stable@vger.kernel.org
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ net/mac80211/tx.c | 23 +++++++++++++----------
+ 1 file changed, 13 insertions(+), 10 deletions(-)
 
-johannes
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 002ded2..76d54ae 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -464,7 +464,6 @@ ieee80211_tx_h_unicast_ps_buf(struct ieee80211_tx_data *tx)
+ {
+ 	struct sta_info *sta = tx->sta;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
+-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
+ 	struct ieee80211_local *local = tx->local;
+ 
+ 	if (unlikely(!sta))
+@@ -475,15 +474,6 @@ ieee80211_tx_h_unicast_ps_buf(struct ieee80211_tx_data *tx)
+ 		     !(info->flags & IEEE80211_TX_CTL_NO_PS_BUFFER))) {
+ 		int ac = skb_get_queue_mapping(tx->skb);
+ 
+-		/* only deauth, disassoc and action are bufferable MMPDUs */
+-		if (ieee80211_is_mgmt(hdr->frame_control) &&
+-		    !ieee80211_is_deauth(hdr->frame_control) &&
+-		    !ieee80211_is_disassoc(hdr->frame_control) &&
+-		    !ieee80211_is_action(hdr->frame_control)) {
+-			info->flags |= IEEE80211_TX_CTL_NO_PS_BUFFER;
+-			return TX_CONTINUE;
+-		}
+-
+ 		ps_dbg(sta->sdata, "STA %pM aid %d: PS buffer for AC %d\n",
+ 		       sta->sta.addr, sta->sta.aid, ac);
+ 		if (tx->local->total_ps_buffered >= TOTAL_MAX_TX_BUFFER)
+@@ -526,9 +516,22 @@ ieee80211_tx_h_unicast_ps_buf(struct ieee80211_tx_data *tx)
+ static ieee80211_tx_result debug_noinline
+ ieee80211_tx_h_ps_buf(struct ieee80211_tx_data *tx)
+ {
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
++
+ 	if (unlikely(tx->flags & IEEE80211_TX_PS_BUFFERED))
+ 		return TX_CONTINUE;
+ 
++	/* only deauth, disassoc and action are bufferable MMPDUs */
++	if (ieee80211_is_mgmt(hdr->frame_control) &&
++	    !ieee80211_is_deauth(hdr->frame_control) &&
++	    !ieee80211_is_disassoc(hdr->frame_control) &&
++	    !ieee80211_is_action(hdr->frame_control)) {
++		if (tx->flags & IEEE80211_TX_UNICAST)
++			info->flags |= IEEE80211_TX_CTL_NO_PS_BUFFER;
++		return TX_CONTINUE;
++	}
++
+ 	if (tx->flags & IEEE80211_TX_UNICAST)
+ 		return ieee80211_tx_h_unicast_ps_buf(tx);
+ 	else
+-- 
+1.8.3.4 (Apple Git-47)
 
