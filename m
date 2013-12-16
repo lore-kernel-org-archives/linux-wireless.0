@@ -1,95 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:23250 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751417Ab3LKIfD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Dec 2013 03:35:03 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-rt-users@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [RFC 06/10] iwlwifi: pcie: determine the interrupt type in the handler
-Date: Wed, 11 Dec 2013 10:33:41 +0200
-Message-Id: <1386750826-25219-7-git-send-email-emmanuel.grumbach@intel.com> (sfid-20131211_093529_416921_C2434828)
-In-Reply-To: <1386750826-25219-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1386750826-25219-1-git-send-email-emmanuel.grumbach@intel.com>
+Received: from s3.sipsolutions.net ([144.76.43.152]:41129 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753648Ab3LPMg7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Dec 2013 07:36:59 -0500
+Message-ID: <1387197416.4665.15.camel@jlt4.sipsolutions.net> (sfid-20131216_133702_514978_251C4386)
+Subject: Re: [BUG] P2P setup timeout
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Herrmann <dh.herrmann@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 16 Dec 2013 13:36:56 +0100
+In-Reply-To: <CANq1E4R--OowH-LCUX4oSxsJu7yf_2e6Jei8tP+i_BQ_QHiKkw@mail.gmail.com> (sfid-20131206_111836_809074_6F087586)
+References: <CANq1E4R--OowH-LCUX4oSxsJu7yf_2e6Jei8tP+i_BQ_QHiKkw@mail.gmail.com>
+	 (sfid-20131206_111836_809074_6F087586)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of having:
-iwl_pcie_irq_handler
-	iwl_pcie_isr_ict
-		iwl_pcie_isr_non_ict
+On Fri, 2013-12-06 at 11:18 +0100, David Herrmann wrote:
+> Hi
+> 
+> I am currently working on user-space helpers for P2P setup as part of
+> an Open-Source Miracast implementation (openwfd). I can set up a
+> P2P-group with my Android test-device just fine, however, it only
+> works if initiated by the GNU/Linux host. Once I initiate the
+> p2p-connect from the Android device, it creates a group and sends me a
+> p2p-invitation which I am unable to accept.
+> 
+> I am running wpa_supplicant-git from today (but also tried older
+> versions), ath9k-htc from linus-git (3.13-rc2) and the relevant log
+> files are appended.
 
-we now have:
+Can you check in a sniffer what the frame bitrates are that go out? This
+seems suspicious:
 
-iwl_pcie_irq_handler:
-	if (use_ict))
-		iwl_pcie_int_cause_ict;
-	else
-		iwl_pcie_int_cause_non_ict;
+nl80211: Set TX rates failed: ret=-100 (Network is down)
 
-This is much clearer.
-
-Change-Id: Ieb99e8120c62749c06e3b2636aaf7ccbea8c72c5
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/pcie/rx.c | 22 ++++++++++------------
- 1 file changed, 10 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
-index 5044fbd..58d3f64 100644
---- a/drivers/net/wireless/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
-@@ -807,8 +807,7 @@ static void iwl_pcie_irq_handle_error(struct iwl_trans *trans)
- 	wake_up(&trans_pcie->wait_command_queue);
- }
- 
--/* legacy (non-ICT) ISR. Assumes that trans_pcie->irq_lock is held */
--static irqreturn_t iwl_pcie_isr_non_ict(struct iwl_trans *trans)
-+static irqreturn_t iwl_pcie_int_cause_non_ict(struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	u32 inta;
-@@ -876,7 +875,7 @@ static irqreturn_t iwl_pcie_isr_non_ict(struct iwl_trans *trans)
-  * the interrupt we need to service, driver will set the entries back to 0 and
-  * set index.
-  */
--static irqreturn_t iwl_pcie_isr_ict(struct iwl_trans *trans)
-+static irqreturn_t iwl_pcie_int_cause_ict(struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	irqreturn_t ret;
-@@ -884,14 +883,6 @@ static irqreturn_t iwl_pcie_isr_ict(struct iwl_trans *trans)
- 	u32 val = 0;
- 	u32 read;
- 
--	/* dram interrupt table not set yet,
--	 * use legacy interrupt.
--	 */
--	if (unlikely(!trans_pcie->use_ict)) {
--		ret = iwl_pcie_isr_non_ict(trans);
--		return ret;
--	}
--
- 	trace_iwlwifi_dev_irq(trans->dev);
- 
- 	/* Ignore interrupt if there's nothing in NIC to service.
-@@ -977,7 +968,14 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
- 
- 	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
- 
--	ret = iwl_pcie_isr_ict(trans);
-+	/* dram interrupt table not set yet,
-+	 * use legacy interrupt.
-+	 */
-+	if (likely(trans_pcie->use_ict))
-+		ret = iwl_pcie_int_cause_ict(trans);
-+	else
-+		ret = iwl_pcie_int_cause_non_ict(trans);
-+
- 	if (ret != IRQ_WAKE_THREAD) {
- 		spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
- 		return ret;
--- 
-1.8.3.2
+johannes
 
