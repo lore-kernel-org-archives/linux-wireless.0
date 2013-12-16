@@ -1,94 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f174.google.com ([209.85.215.174]:38957 "EHLO
-	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753910Ab3LJPUo (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:41211 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753823Ab3LPMv6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Dec 2013 10:20:44 -0500
-Received: by mail-ea0-f174.google.com with SMTP id b10so2306129eae.19
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Dec 2013 07:20:43 -0800 (PST)
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Bartosz Markowski <bartosz.markowski@tieto.com>
-Subject: [PATCH 1/2] ath10k: split the if_limits and if_comb
-Date: Tue, 10 Dec 2013 16:20:39 +0100
-Message-Id: <1386688840-12181-1-git-send-email-bartosz.markowski@tieto.com> (sfid-20131210_162055_193854_1194E6A7)
+	Mon, 16 Dec 2013 07:51:58 -0500
+Message-ID: <1387198314.4665.27.camel@jlt4.sipsolutions.net> (sfid-20131216_135202_406645_921B0088)
+Subject: Re: [PATCH v4] mac80211_hwsim: claim CSA support for AP
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Karl Beldan <karl.beldan@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
+	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Date: Mon, 16 Dec 2013 13:51:54 +0100
+In-Reply-To: <20131205172627.GA3593@magnum.frso.rivierawaves.com> (sfid-20131205_182708_985437_520E9348)
+References: <1385224698-12294-1-git-send-email-karl.beldan@gmail.com>
+	 <1386075333.4393.13.camel@jlt4.sipsolutions.net>
+	 <20131205172627.GA3593@magnum.frso.rivierawaves.com>
+	 (sfid-20131205_182708_985437_520E9348)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Split the interface limits and inteface combination,
-to reflect the 10.X capabilites (no P2P, no STA and 8 VAP).
+On Thu, 2013-12-05 at 18:26 +0100, Karl Beldan wrote:
 
-Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
----
- drivers/net/wireless/ath/ath10k/mac.c |   26 +++++++++++++++++---------
- 1 file changed, 17 insertions(+), 9 deletions(-)
+> > Overall it seems ok, but all the purpose of csa_finished is not very
+> > clear..
+> > It looks that this patch tries to avoid extra beaconing on the previous
+> > channel/hitting the warning..
+> Yes, it avoids extra beacons.
+> 
+> > But the problem is much bigger here, it means that we didn't switch in
+> > time (before the next beacon) so it's ok to hit the warning here and
+> > transmit extra beacon with count==1.
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index ce9ef349..35952a4 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3464,14 +3464,12 @@ static const struct ieee80211_iface_limit ath10k_if_limits[] = {
- 	},
- };
- 
--#ifdef CONFIG_ATH10K_DFS_CERTIFIED
--static const struct ieee80211_iface_limit ath10k_if_dfs_limits[] = {
-+static const struct ieee80211_iface_limit ath10k_10x_if_limits[] = {
- 	{
- 	.max	= 8,
- 	.types	= BIT(NL80211_IFTYPE_AP)
- 	},
- };
--#endif
- 
- static const struct ieee80211_iface_combination ath10k_if_comb[] = {
- 	{
-@@ -3481,19 +3479,22 @@ static const struct ieee80211_iface_combination ath10k_if_comb[] = {
- 		.num_different_channels = 1,
- 		.beacon_int_infra_match = true,
- 	},
--#ifdef CONFIG_ATH10K_DFS_CERTIFIED
-+};
-+
-+static const struct ieee80211_iface_combination ath10k_10x_if_comb[] = {
- 	{
--		.limits = ath10k_if_dfs_limits,
--		.n_limits = ARRAY_SIZE(ath10k_if_dfs_limits),
-+		.limits = ath10k_10x_if_limits,
-+		.n_limits = ARRAY_SIZE(ath10k_10x_if_limits),
- 		.max_interfaces = 8,
- 		.num_different_channels = 1,
- 		.beacon_int_infra_match = true,
-+#ifdef CONFIG_ATH10K_DFS_CERTIFIED
- 		.radar_detect_widths =	BIT(NL80211_CHAN_WIDTH_20_NOHT) |
- 					BIT(NL80211_CHAN_WIDTH_20) |
- 					BIT(NL80211_CHAN_WIDTH_40) |
- 					BIT(NL80211_CHAN_WIDTH_80),
--	}
- #endif
-+	},
- };
- 
- static struct ieee80211_sta_vht_cap ath10k_create_vht_cap(struct ath10k *ar)
-@@ -3717,8 +3718,15 @@ int ath10k_mac_register(struct ath10k *ar)
- 	 */
- 	ar->hw->queues = 4;
- 
--	ar->hw->wiphy->iface_combinations = ath10k_if_comb;
--	ar->hw->wiphy->n_iface_combinations = ARRAY_SIZE(ath10k_if_comb);
-+	if (!test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features)) {
-+
-+		ar->hw->wiphy->iface_combinations = ath10k_if_comb;
-+		ar->hw->wiphy->n_iface_combinations = ARRAY_SIZE(ath10k_if_comb);
-+
-+	} else {
-+		ar->hw->wiphy->iface_combinations = ath10k_10x_if_comb;
-+		ar->hw->wiphy->n_iface_combinations = ARRAY_SIZE(ath10k_10x_if_comb);
-+	}
- 
- 	ar->hw->netdev_features = NETIF_F_HW_CSUM;
- 
--- 
-1.7.10
+> Precisely what I discussed in the previous emails.
+> However, I'd expect WARN*s to trigger on unexpected conditions .. though
+> I haven't seen any warning, the codepath nearly seems to beg for it.
+> 
+> > So if we see a lot of such warnings, maybe we need to fix
+> > ieee80211_csa_finish instead (not using work for example)
+
+> The replies I got from the race I detailed felt like ppl wanted to
+> prevent this in-driver, now we agree this race prone work is a flaw.
+> Maybe I'll send a v5 for hwsim relying on future in-stack improvement to
+> avoid extra beacon instead of doing this in-driver, with some
+> appropriate comments.
+
+Generally, I think I'd prefer simpler code in the driver(s) over simpler
+code in the stack, since the former tends to get duplicated a lot.
+
+johannes
 
