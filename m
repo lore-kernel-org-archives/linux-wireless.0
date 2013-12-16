@@ -1,65 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0212.hostedemail.com ([216.40.44.212]:60691 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751196Ab3LRIQH (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:41446 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753685Ab3LPOKc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Dec 2013 03:16:07 -0500
-Message-ID: <1387354564.13593.26.camel@joe-AO722> (sfid-20131218_091612_149215_EA847147)
-Subject: ieee80211_i.h: shouldn't struct ps_data.tim be aligned unsigned
- long?
-From: Joe Perches <joe@perches.com>
-To: Jiri Benc <jbenc@redhat.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>
-Date: Wed, 18 Dec 2013 00:16:04 -0800
-Content-Type: text/plain; charset="ISO-8859-1"
+	Mon, 16 Dec 2013 09:10:32 -0500
+Message-ID: <1387203028.2057.4.camel@jlt4.sipsolutions.net> (sfid-20131216_151041_120939_A3095C14)
+Subject: Re: [PATCH v2] mac80211: check pairwise key_idx on get_key call
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Max.Stepanov@intel.com
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 16 Dec 2013 15:10:28 +0100
+In-Reply-To: <1386502252-10185-1-git-send-email-Max.Stepanov@intel.com> (sfid-20131208_123103_375945_8FA4F880)
+References: <1386502252-10185-1-git-send-email-Max.Stepanov@intel.com>
+	 (sfid-20131208_123103_375945_8FA4F880)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-about
-net/mac80211/tx.c:              have_bits = !bitmap_empty((unsigned long*)ps->tim,
-and
-net/mac80211/ieee80211_i.h
-d012a6051 (Marco Porsch        2012-10-10 12:39:50 -0700 244) struct ps_data {
-f0706e828 (Jiri Benc           2007-05-05 11:45:53 -0700 245)   /* yes, this looks ugly, but guarantees that we can later use
-f0706e828 (Jiri Benc           2007-05-05 11:45:53 -0700 246)    * bitmap_empty :)
-004c872e7 (Johannes Berg       2008-02-20 11:21:35 +0100 247)    * NB: don't touch this bitmap, use sta_info_{set,clear}_tim_bit */
-f0706e828 (Jiri Benc           2007-05-05 11:45:53 -0700 248)   u8 tim[sizeof(unsigned long) * BITS_TO_LONGS(IEEE80211_MAX_AID + 1)];
-d012a6051 (Marco Porsch        2012-10-10 12:39:50 -0700 249)   struct sk_buff_head bc_buf;
-056cdd599 (Johannes Berg       2008-03-26 23:21:47 +0100 250)   atomic_t num_sta_ps; /* number of stations in PS mode */
-5dfdaf58d (Johannes Berg       2007-12-19 02:03:33 +0100 251)   int dtim_count;
-512119b36 (Christian Lamparter 2011-01-31 20:48:44 +0200 252)   bool dtim_bc_mc;
-f0706e828 (Jiri Benc           2007-05-05 11:45:53 -0700 253) };
+On Sun, 2013-12-08 at 13:30 +0200, Max.Stepanov@intel.com wrote:
+> From: Max Stepanov <Max.Stepanov@intel.com>
+> 
+> Verify that a pairwise key index value on ieee80211_get_key call
+> doesn't exceed the boundaries of the pairwise key array.
 
-Perhaps the
-	u8 tim[sizeof...]
-member should be marked
-	__aligned(sizeof(unsigned long))
-so that the cast to ulong when bitmap_empty
-is actually forced to be ulong aligned?
+Applied.
 
-Perhaps the "guarantee" isn't valid without it.
-
----
-
- net/mac80211/ieee80211_i.h | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index ed5bf8b..e5a9c51 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -245,7 +245,8 @@ struct ps_data {
- 	/* yes, this looks ugly, but guarantees that we can later use
- 	 * bitmap_empty :)
- 	 * NB: don't touch this bitmap, use sta_info_{set,clear}_tim_bit */
--	u8 tim[sizeof(unsigned long) * BITS_TO_LONGS(IEEE80211_MAX_AID + 1)];
-+	u8 tim[sizeof(unsigned long) * BITS_TO_LONGS(IEEE80211_MAX_AID + 1)]
-+			__aligned(sizeof(unsigned long));
- 	struct sk_buff_head bc_buf;
- 	atomic_t num_sta_ps; /* number of stations in PS mode */
- 	int dtim_count;
-
+johannes
 
