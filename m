@@ -1,48 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f177.google.com ([209.85.215.177]:62334 "EHLO
-	mail-ea0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753664Ab3LQUpT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Dec 2013 15:45:19 -0500
-Received: by mail-ea0-f177.google.com with SMTP id n15so3150934ead.36
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Dec 2013 12:45:18 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Arik Nemtsov <arik@wizery.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 24/36] iwlwifi: trans: turn set_pmi into an optional callback
-Date: Tue, 17 Dec 2013 22:44:27 +0200
-Message-Id: <1387313079-28123-24-git-send-email-egrumbach@gmail.com> (sfid-20131217_214525_511284_AFD79F6C)
-In-Reply-To: <52B0B72A.5070704@gmail.com>
-References: <52B0B72A.5070704@gmail.com>
+Received: from nbd.name ([46.4.11.11]:56519 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754124Ab3LPPYZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Dec 2013 10:24:25 -0500
+Message-ID: <52AF1B26.3020702@openwrt.org> (sfid-20131216_162428_219954_B7F7E826)
+Date: Mon, 16 Dec 2013 16:24:22 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] mac80211: add helper functions for tracking P2P NoA
+ state
+References: <1386626388-45880-1-git-send-email-nbd@openwrt.org> <1387206567.2057.21.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1387206567.2057.21.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+On 2013-12-16 16:09, Johannes Berg wrote:
+> On Mon, 2013-12-09 at 22:59 +0100, Felix Fietkau wrote:
+> 
+>> +static u32
+>> +ieee80211_get_noa_absent_time(struct ieee80211_noa_data *data, u32 tsf)
+>> +{
+>> +	s32 offset = 0;
+>> +	int tries = 0;
+>> +
+>> +	ieee80211_extend_absent_time(data, tsf, &offset);
+>> +	do {
+>> +		if (!ieee80211_extend_absent_time(data, tsf, &offset))
+>> +			break;
+>> +
+>> +		tries++;
+>> +	} while (tries < 5);
+> 
+> What's "tries < 5"?
+Arbitrary value. It tries to merge up to 5 intervals of each NoA
+descriptor. I can't let it try forever because that can easily make it
+run into an infinite loop if the combination of the NoA descriptors
+doesn't leave any presence time inbetween.
 
-It is not currently implemented for SDIO, and not required for other slave
-buses as well.
-
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-trans.h |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index 8aaabdb..0c36478 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -787,7 +787,8 @@ static inline u32 iwl_trans_write_mem32(struct iwl_trans *trans, u32 addr,
- 
- static inline void iwl_trans_set_pmi(struct iwl_trans *trans, bool state)
- {
--	trans->ops->set_pmi(trans, state);
-+	if (trans->ops->set_pmi)
-+		trans->ops->set_pmi(trans, state);
- }
- 
- static inline void
--- 
-1.7.9.5
+- Felix
 
