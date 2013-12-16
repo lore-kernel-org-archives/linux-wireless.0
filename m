@@ -1,76 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f178.google.com ([209.85.215.178]:45486 "EHLO
-	mail-ea0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754524Ab3LHJ10 (ORCPT
+Received: from mail-vb0-f53.google.com ([209.85.212.53]:33202 "EHLO
+	mail-vb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751019Ab3LPVzj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Dec 2013 04:27:26 -0500
-From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Luciano Coelho <luca@coelho.fi>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
-	joni.lapilainen@gmail.com,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Felipe Contreras <felipe.contreras@gmail.com>,
-	David Gnedt <david.gnedt@davizone.at>,
-	=?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
-Subject: [PATCH v2 08/16] wl1251: disable power saving in monitor mode
-Date: Sun,  8 Dec 2013 10:25:06 +0100
-Message-Id: <1386494714-21070-9-git-send-email-pali.rohar@gmail.com> (sfid-20131208_103424_374147_DEF391F5)
-In-Reply-To: <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
- <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
+	Mon, 16 Dec 2013 16:55:39 -0500
+Received: by mail-vb0-f53.google.com with SMTP id o19so3510545vbm.40
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Dec 2013 13:55:38 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <CAHmEv85q4c0FmvS+_kwQG9SfZgrokfYPNUvJmteKjdzxqnDvHw@mail.gmail.com>
+References: <1387142056-21850-1-git-send-email-twpedersen@gmail.com>
+ <1387142056-21850-2-git-send-email-twpedersen@gmail.com> <CAHNKnsTAJJBNT0nj8z-4mSAC_Gh1F6M7pdu3CGAMQ70+aALx4w@mail.gmail.com>
+ <CAHmEv85q4c0FmvS+_kwQG9SfZgrokfYPNUvJmteKjdzxqnDvHw@mail.gmail.com>
+From: Sergey Ryazanov <ryazanov.s.a@gmail.com>
+Date: Tue, 17 Dec 2013 01:55:17 +0400
+Message-ID: <CAHNKnsS-mT=fqwFEU82PQxeyAGaDLkEw8PpLm+83CfAbnSGy8w@mail.gmail.com> (sfid-20131216_225545_730408_6F55D1CD)
+Subject: Re: [PATCH 2/3] mac80211: reset TSF to 0 when joining a mesh
+To: Thomas Pedersen <twpedersen@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	open80211s <devel@lists.open80211s.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Thomas Pedersen <thomas@cozybit.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Gnedt <david.gnedt@davizone.at>
+2013/12/16 Thomas Pedersen <twpedersen@gmail.com>:
+> On Mon, Dec 16, 2013 at 4:33 AM, Sergey Ryazanov <ryazanov.s.a@gmail.com> wrote:
+>> Hello Thomas,
+>>
+>> 2013/12/16 Thomas Pedersen <twpedersen@gmail.com>:
+>>> diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+>>> index 330d1f7..1174157 100644
+>>> --- a/net/mac80211/mesh.c
+>>> +++ b/net/mac80211/mesh.c
+>>> @@ -802,6 +802,8 @@ int ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
+>>>                 return -ENOMEM;
+>>>         }
+>>>
+>>> +       /* next beacon will be DTIM-1, so TSF=0 was DTIM=0 */
+>>> +       drv_set_tsf(local, sdata, 0);
+>>>         ieee80211_bss_info_change_notify(sdata, changed);
+>>>
+>>>         netif_carrier_on(sdata->dev);
+>>
+>> What happen with AP interface on the same radio if we configure mesh
+>> portal? Clients could be confused by such TSF jump.
+>
+> Like Johannes said; either the driver supports per-vif TSF, or well,
+> it doesn't. Anyway wouldn't clients reset their own TSF when the new
+> beacon is received?
+>
+Yeah, IEEE 802.11 says that stations must blindly use AP time, but it
+says nothing about the situation when time is accidentally reset to
+zero. I can't predict reaction of each chip/firmware/driver to such
+situation.
 
-Force power saving off while monitor interface is present.
+Another one unclear situation is the reaction of peers of mesh STA,
+which share the same radio (and same TSF). If we silently reset its
+time, what happens to the time synchronization with neighbors?
 
-Signed-off-by: David Gnedt <david.gnedt@davizone.at>
-Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
----
- drivers/net/wireless/ti/wl1251/main.c |   10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+Why could not we calculate DTIM counter value on basis of known TSF
+and Beacon/DTIM interval, instead of primitive time reset?
 
-diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
-index ee318c8..1223bc6 100644
---- a/drivers/net/wireless/ti/wl1251/main.c
-+++ b/drivers/net/wireless/ti/wl1251/main.c
-@@ -570,6 +570,11 @@ static int wl1251_build_qos_null_data(struct wl1251 *wl)
- 				       sizeof(template));
- }
- 
-+static bool wl1251_can_do_pm(struct ieee80211_conf *conf, struct wl1251 *wl)
-+{
-+	return (conf->flags & IEEE80211_CONF_PS) && !wl->monitor_present;
-+}
-+
- static int wl1251_op_config(struct ieee80211_hw *hw, u32 changed)
- {
- 	struct wl1251 *wl = hw->priv;
-@@ -617,7 +622,7 @@ static int wl1251_op_config(struct ieee80211_hw *hw, u32 changed)
- 			goto out_sleep;
- 	}
- 
--	if (conf->flags & IEEE80211_CONF_PS && !wl->psm_requested) {
-+	if (wl1251_can_do_pm(conf, wl) && !wl->psm_requested) {
- 		wl1251_debug(DEBUG_PSM, "psm enabled");
- 
- 		wl->psm_requested = true;
-@@ -633,8 +638,7 @@ static int wl1251_op_config(struct ieee80211_hw *hw, u32 changed)
- 		ret = wl1251_ps_set_mode(wl, STATION_POWER_SAVE_MODE);
- 		if (ret < 0)
- 			goto out_sleep;
--	} else if (!(conf->flags & IEEE80211_CONF_PS) &&
--		   wl->psm_requested) {
-+	} else if (!wl1251_can_do_pm(conf, wl) && wl->psm_requested) {
- 		wl1251_debug(DEBUG_PSM, "psm disabled");
- 
- 		wl->psm_requested = false;
 -- 
-1.7.9.5
-
+BR,
+Sergey
