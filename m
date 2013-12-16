@@ -1,41 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:34326 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756525Ab3LFOAQ (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:41631 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754318Ab3LPPFz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Dec 2013 09:00:16 -0500
-Date: Fri, 6 Dec 2013 08:57:19 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [net 5/5] rfkill: Fix FSF address in file headers
-Message-ID: <20131206135718.GB13285@tuxdriver.com> (sfid-20131206_150030_104177_1EF10E01)
-References: <1386329534-21739-1-git-send-email-jeffrey.t.kirsher@intel.com>
- <1386329534-21739-5-git-send-email-jeffrey.t.kirsher@intel.com>
- <1386330604.4456.0.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1386330604.4456.0.camel@jlt4.sipsolutions.net>
+	Mon, 16 Dec 2013 10:05:55 -0500
+Message-ID: <1387206348.2057.20.camel@jlt4.sipsolutions.net> (sfid-20131216_160604_657923_C98C1198)
+Subject: Re: [PATCH v3 3/3] nl80211: add VHT support for set_bitrate_mask
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: linux-wireless@vger.kernel.org, j@w1.fi
+Date: Mon, 16 Dec 2013 16:05:48 +0100
+In-Reply-To: <1386272578-3540-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131205_204314_402741_BF24BF6A)
+References: <1386272578-3540-1-git-send-email-janusz.dziedzic@tieto.com>
+	 (sfid-20131205_204314_402741_BF24BF6A)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 06, 2013 at 12:50:04PM +0100, Johannes Berg wrote:
-> On Fri, 2013-12-06 at 03:32 -0800, Jeff Kirsher wrote:
-> > Several files refer to an old address for the Free Software Foundation
-> > in the file header comment.  Resolve by replacing the address with
-> > the URL <http://www.gnu.org/licenses/> so that we do not have to keep
-> > updating the header comments anytime the address changes.
-> 
-> Looks good to me, I guess you want me to pick it up?
-> 
-> Or John - do you just want to pick up the series?
-> 
-> johannes
+On Thu, 2013-12-05 at 20:42 +0100, Janusz Dziedzic wrote:
+> Add VHT MCS/NSS set support for nl80211_set_tx_bitrate_mask().
+> This should be used mainly for test purpose, to check
+> different MCS/NSS VHT combinations.
 
-I'll just take the series.
+Applied.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+johannes
+
