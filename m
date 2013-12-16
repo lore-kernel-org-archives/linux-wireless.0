@@ -1,116 +1,186 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:20040 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751438Ab3LKIfI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Dec 2013 03:35:08 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-rt-users@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [RFC 08/10] iwlwifi: pcie: no need to save inta in trans_pcie
-Date: Wed, 11 Dec 2013 10:33:44 +0200
-Message-Id: <1386750826-25219-10-git-send-email-emmanuel.grumbach@intel.com> (sfid-20131211_093533_702112_C8BA734D)
-In-Reply-To: <1386750826-25219-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1386750826-25219-1-git-send-email-emmanuel.grumbach@intel.com>
+Received: from mail-oa0-f43.google.com ([209.85.219.43]:60335 "EHLO
+	mail-oa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751205Ab3LPWBH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Dec 2013 17:01:07 -0500
+Received: by mail-oa0-f43.google.com with SMTP id i7so5737609oag.16
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Dec 2013 14:01:06 -0800 (PST)
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	brcm80211-dev-list@broadcom.com,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Arend van Spriel <arend@broadcom.com>,
+	Seth Forshee <seth.forshee@canonical.com>
+Subject: [RFC PATCH 2/8] mac80211: Add per-interface powersave states and parameters
+Date: Mon, 16 Dec 2013 16:00:54 -0600
+Message-Id: <1387231260-2849-3-git-send-email-seth.forshee@canonical.com> (sfid-20131216_230126_684068_EB22D5CF)
+In-Reply-To: <1387231260-2849-1-git-send-email-seth.forshee@canonical.com>
+References: <1387231260-2849-1-git-send-email-seth.forshee@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This was useful when the handling was not in the same
-context as the interrupt cause retrieval: we could have
-several hard interrupts until the handler gets called.
-Since we retrieve the interrupt cause in the handler itself,
-there is no need to OR the interrupt causes.
+In preparation for managing powersave states on a per-interface
+basis, add powersave states and parameters to the interface-
+specific data structures. Also add a change_ps driver callback
+to notify drivers about changes to interface powersave states.
 
-Change-Id: I043ea25c4ba1add17d20d26da23148437114981c
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+The new members and callback are unused here but will be
+utilized by subsequent commits.
+
+Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
 ---
- drivers/net/wireless/iwlwifi/pcie/internal.h |  1 -
- drivers/net/wireless/iwlwifi/pcie/rx.c       | 21 +++++++--------------
- 2 files changed, 7 insertions(+), 15 deletions(-)
+ include/net/mac80211.h    | 43 +++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/driver-ops.h | 13 +++++++++++++
+ net/mac80211/trace.h      | 27 +++++++++++++++++++++++++++
+ 3 files changed, 83 insertions(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/internal.h b/drivers/net/wireless/iwlwifi/pcie/internal.h
-index c790df6..f959308 100644
---- a/drivers/net/wireless/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/iwlwifi/pcie/internal.h
-@@ -273,7 +273,6 @@ struct iwl_trans_pcie {
- 	__le32 *ict_tbl;
- 	dma_addr_t ict_tbl_dma;
- 	int ict_index;
--	u32 inta;
- 	bool use_ict;
- 	struct isr_statistics isr_stats;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 3cd408b..03e4a63 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1103,6 +1103,26 @@ enum ieee80211_vif_flags {
+ };
  
-diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
-index 3ddf012..3f247da 100644
---- a/drivers/net/wireless/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
-@@ -838,17 +838,16 @@ static u32 iwl_pcie_int_cause_non_ict(struct iwl_trans *trans)
- 		 * the handler can be scheduled because of a previous
- 		 * interrupt.
- 		 */
--		if (test_bit(STATUS_INT_ENABLED, &trans->status) &&
--		    !trans_pcie->inta)
-+		if (test_bit(STATUS_INT_ENABLED, &trans->status) && !inta)
- 			iwl_enable_interrupts(trans);
--		return trans_pcie->inta;
-+		return inta;
- 	}
+ /**
++ * enum ieee80211_vif_ps_mode - virtual interface power save mode
++ *
++ * Ordered in terms of increasing wakefulness.
++ *
++ * @IEEE80211_VIF_PS_INACTIVE: the interface is not currently open
++ * @IEEE80211_VIF_PS_DOZE: the interface is in a low-power mode and may
++ *	not be able to transmit or receive frames
++ * @IEEE80211_VIF_PS_AWAKE_PM: the interface is awake and able to transmit
++ *	and receive frames but PM may be set in frame control
++ * @IEEE80211_VIF_PS_AWAKE: the interface is fully awake and able to
++ *	transmit and receive frames
++ */
++enum ieee80211_vif_ps_mode {
++	IEEE80211_VIF_PS_INACTIVE,
++	IEEE80211_VIF_PS_DOZE,
++	IEEE80211_VIF_PS_AWAKE_PM,
++	IEEE80211_VIF_PS_AWAKE,
++};
++
++/**
+  * struct ieee80211_vif - per-interface data
+  *
+  * Data in this structure is continually present for driver
+@@ -1129,6 +1149,19 @@ enum ieee80211_vif_flags {
+  * @debugfs_dir: debugfs dentry, can be used by drivers to create own per
+  *	interface debug files. Note that it will be NULL for the virtual
+  *	monitor interface (if that is requested.)
++ * @ps_mode: power save mode of this vif
++ * @dynamic_ps_active: indicates whether dynamic PS is active for this vif
++ * @dynamic_ps_timeout: The dynamic powersave timeout (in ms), see the
++ *	powersave documentation below. This variable is valid only when
++ *	the interface is in the doze state.
++ * @max_sleep_period: the maximum number of beacon intervals to sleep for
++ *	before checking the beacon for a TIM bit (managed mode only); this
++ *	value will be only achievable between DTIM frames, the hardware
++ *	needs to check for the multicast traffic bit in DTIM beacons.
++ *	This variable is valid only when the interface is in the doze state.
++ * @ps_dtim_period: The DTIM period of the AP we're connected to, for use
++ *	in power saving. Power saving will not be enabled until a beacon
++ *	has been received and the DTIM period is known.
+  * @drv_priv: data area for driver use, will always be aligned to
+  *	sizeof(void *).
+  */
+@@ -1144,6 +1177,11 @@ struct ieee80211_vif {
  
- 	if ((inta == 0xFFFFFFFF) || ((inta & 0xFFFFFFF0) == 0xa5a5a5a0)) {
- 		/* Hardware disappeared. It might have already raised
- 		 * an interrupt */
- 		IWL_WARN(trans, "HARDWARE GONE?? INTA == 0x%08x\n", inta);
--		return trans_pcie->inta;
-+		return inta;
- 	}
+ 	struct ieee80211_chanctx_conf __rcu *chanctx_conf;
  
- 	if (iwl_have_debug_level(IWL_DL_ISR))
-@@ -857,9 +856,8 @@ static u32 iwl_pcie_int_cause_non_ict(struct iwl_trans *trans)
- 			      inta, trans_pcie->inta_mask,
- 			      iwl_read32(trans, CSR_FH_INT_STATUS));
++	enum ieee80211_vif_ps_mode ps_mode;
++	bool dynamic_ps_active;
++	int dynamic_ps_timeout, max_sleep_period;
++	u8 ps_dtim_period;
++
+ 	u32 driver_flags;
  
--	trans_pcie->inta |= inta;
- 	/* the thread will service interrupts and re-enable them */
--	return trans_pcie->inta;
-+	return inta;
+ #ifdef CONFIG_MAC80211_DEBUGFS
+@@ -2390,6 +2428,10 @@ enum ieee80211_roc_type {
+  *	of the bss parameters has changed when a call is made. The callback
+  *	can sleep.
+  *
++ * @change_ps: Change the power save mode or parameters for the given virtual
++ *	interface. @next_tbtt is required for mesh powersave but is currently
++ *	unused. This callback is optional and may sleep.
++ *
+  * @prepare_multicast: Prepare for multicast filter configuration.
+  *	This callback is optional, and its return value is passed
+  *	to configure_filter(). This callback must be atomic.
+@@ -2754,6 +2796,7 @@ struct ieee80211_ops {
+ 				 struct ieee80211_vif *vif,
+ 				 struct ieee80211_bss_conf *info,
+ 				 u32 changed);
++	void (*change_ps)(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
+ 
+ 	int (*start_ap)(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
+ 	void (*stop_ap)(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 5d03c47..8e708bd7 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -227,6 +227,19 @@ static inline void drv_bss_info_changed(struct ieee80211_local *local,
+ 	trace_drv_return_void(local);
  }
  
- /* a device (PCI-E) page is 4096 bytes long */
-@@ -933,21 +931,19 @@ static u32 iwl_pcie_int_cause_ict(struct iwl_trans *trans)
- 			      iwl_read32(trans, CSR_INT_MASK));
++static inline void drv_change_ps(struct ieee80211_local *local,
++				 struct ieee80211_sub_if_data *sdata)
++{
++	might_sleep();
++
++	check_sdata_in_driver(sdata);
++
++	trace_drv_change_ps(local, sdata);
++	if (local->ops->change_ps)
++		local->ops->change_ps(&local->hw, &sdata->vif);
++	trace_drv_return_void(local);
++}
++
+ static inline u64 drv_prepare_multicast(struct ieee80211_local *local,
+ 					struct netdev_hw_addr_list *mc_list)
+ {
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index e9ccf22..fcc9ac5 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -422,6 +422,33 @@ TRACE_EVENT(drv_bss_info_changed,
+ 	)
+ );
  
- 	inta &= trans_pcie->inta_mask;
--	trans_pcie->inta |= inta;
++TRACE_EVENT(drv_change_ps,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata),
++
++	TP_ARGS(local, sdata),
++
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		VIF_ENTRY
++		__field(int, ps_mode)
++		__field(bool, dynamic_ps_active)
++	),
++
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		VIF_ASSIGN;
++		__entry->ps_mode = sdata->vif.ps_mode;
++		__entry->dynamic_ps_active = sdata->vif.dynamic_ps_active;
++	),
++
++	TP_printk(
++		LOCAL_PR_FMT  VIF_PR_FMT "mode:%d dynamic_ps:%sactive",
++		LOCAL_PR_ARG, VIF_PR_ARG, __entry->ps_mode,
++		__entry->dynamic_ps_active ? "" : "in"
++	)
++);
++
+ TRACE_EVENT(drv_prepare_multicast,
+ 	TP_PROTO(struct ieee80211_local *local, int mc_count),
  
- 	/* iwl_pcie_tasklet() will service interrupts and re-enable them */
- 	if (likely(inta))
--		return trans_pcie->inta;
-+		return inta;
- 
-  none:
- 	/* re-enable interrupts here since we don't have anything to service.
- 	 * only Re-enable if disabled by irq.
- 	 */
--	if (test_bit(STATUS_INT_ENABLED, &trans->status) &&
--	    !trans_pcie->inta)
-+	if (test_bit(STATUS_INT_ENABLED, &trans->status) && !inta)
- 		iwl_enable_interrupts(trans);
- 
--	return trans_pcie->inta;
-+	return inta;
- }
- 
- irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
-@@ -994,9 +990,6 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
- 		IWL_DEBUG_ISR(trans, "inta 0x%08x, enabled 0x%08x\n",
- 			      inta, iwl_read32(trans, CSR_INT_MASK));
- 
--	/* saved interrupt in inta variable now we can reset trans_pcie->inta */
--	trans_pcie->inta = 0;
--
- 	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
- 
- 	/* Now service all interrupt bits discovered above. */
 -- 
 1.8.3.2
 
