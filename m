@@ -1,45 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:61160 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752920Ab3LCNDV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Dec 2013 08:03:21 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>
-Subject: [PATCH] mac80211: remove duplicate code
-Date: Tue,  3 Dec 2013 15:02:15 +0200
-Message-Id: <1386075735-28589-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20131203_140335_209147_21F091DF)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:33693 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753466Ab3LPNTS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Dec 2013 08:19:18 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: fix band reporting for mgmt CCK frames on 5GHz
+References: <1386927883-14028-1-git-send-email-michal.kazior@tieto.com>
+Date: Mon, 16 Dec 2013 15:19:12 +0200
+In-Reply-To: <1386927883-14028-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Fri, 13 Dec 2013 10:44:43 +0100")
+Message-ID: <87wqj5exwv.fsf@kamboji.qca.qualcomm.com> (sfid-20131216_141921_374234_FF7E1695)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-The same code appears just a few lines below.
+> Although CCK modulation isn't expected for 11a if
+> it happened it made ath10k report wrong band
+> (2GHz) for a mgmt frame that were actually
+> received on 5Ghz band. Frequency would also
+> decoded incorrectly too.
+>
+> In case of 5GHz-only devices this triggered
+> mac80211 WARN_ON because there was no according
+> sband pointer to be found.
+>
+> The patch should fix delivery of such frames by
+> using different means to acquire band parameter.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- net/mac80211/scan.c | 8 --------
- 1 file changed, 8 deletions(-)
+Thanks, applied.
 
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 5ad66a8..6a94d48 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -786,14 +786,6 @@ void ieee80211_scan_work(struct work_struct *work)
- 	}
- 
- 	/*
--	 * Avoid re-scheduling when the sdata is going away.
--	 */
--	if (!ieee80211_sdata_running(sdata)) {
--		aborted = true;
--		goto out_complete;
--	}
--
--	/*
- 	 * as long as no delay is required advance immediately
- 	 * without scheduling a new work
- 	 */
 -- 
-1.8.3.2
-
+Kalle Valo
