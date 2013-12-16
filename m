@@ -1,98 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:22479 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754289Ab3LGWtN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Dec 2013 17:49:13 -0500
-Message-ID: <1386456552.2195.52.camel@jtkirshe-mobl> (sfid-20131207_234934_191095_6287DAAF)
-Subject: Re: [net] nfc: Fix FSF address in file headers
-From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Date: Sat, 07 Dec 2013 14:49:12 -0800
-In-Reply-To: <52A39F18.8080202@broadcom.com>
-References: <1386348976-24657-1-git-send-email-jeffrey.t.kirsher@intel.com>
-	 <52A39F18.8080202@broadcom.com>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-Vz1sHFsJRGWXg7jAbnb4"
+Received: from s3.sipsolutions.net ([144.76.43.152]:41501 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753685Ab3LPOTl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Dec 2013 09:19:41 -0500
+Message-ID: <1387203571.2057.11.camel@jlt4.sipsolutions.net> (sfid-20131216_151952_109090_31D1485C)
+Subject: Re: [PATCH 1/2 V3] nl80211/cfg80211: Add support for drivers with
+ AP SME that require PMF SA Query assistance
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Chet Lanctot <clanctot@codeaurora.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Date: Mon, 16 Dec 2013 15:19:31 +0100
+In-Reply-To: <1386713477-30040-2-git-send-email-clanctot@codeaurora.org> (sfid-20131210_231131_934459_38971108)
+References: <1386713477-30040-1-git-send-email-clanctot@codeaurora.org>
+	 <1386713477-30040-2-git-send-email-clanctot@codeaurora.org>
+	 (sfid-20131210_231131_934459_38971108)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2013-12-10 at 14:11 -0800, Chet Lanctot wrote:
+> This adds support for drivers that have AP SME integrated but do
+> not implement the SA Query procedure that is part of Protected
+> Management Frames (PMF, 802.11w).
+> 
+> Instead, hostapd can be used to assist drivers that lack SA Query
+> Procedure handling on their own by allowing them to specify this as
+> a device capability flag.
+> 
+> Also, a station flag is added to let hostapd indicate to the driver
+> that the SA Query procedure is complete and the driver can process
+> association requests from the station normally.
 
---=-Vz1sHFsJRGWXg7jAbnb4
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+How will this work? If the device is processing the auth/assoc request
+frames, then how can hostapd know this? Is the device expected to then
+pass up the frame?
 
-On Sat, 2013-12-07 at 23:20 +0100, Arend van Spriel wrote:
-> On 12/06/2013 05:56 PM, Jeff Kirsher wrote:
-> > Several files refer to an old address for the Free Software Foundation
-> > in the file header comment.  Resolve by replacing the address with
-> > the URL<http://www.gnu.org/licenses/>  so that we do not have to keep
-> > updating the header comments anytime the address changes.
->=20
-> This seems to pop up from time to time and unfortunately the resolution=
-=20
-> seems not consistent at those times. Why not simply refer to the full=20
-> license text that is in the COPYING file in the tree itself.
+Also, which (upstream) driver is going to use this?
 
-I, personally have only had one request in the last 10 years to change
-our Intel Wired Ethernet headers and that was because the address
-changed.  I am open to suggestions, although when I proposed either
-updating the address to the current address or use the URL on LKML and
-netdev, the response I got was to update to the use the URL.
+> + * @NL80211_ATTR_AP_SME_NO_SA_QUERY: The driver for this device
+> + *	implments the AP SME but lacks support for doing the MFP SA
 
-I guess the only argument I would have against referring to the COPYING
-in the tree itself is that the headers already state:
+typo: implements
 
-You should have received a copy of the GNU General Public License along
-with this program;
+> + *	Query procedure.  This flag is used to express the need for
+> + *	a userspace helper (hostapd) to do this procedure and notifiy
 
-(which refers to the COPYING file) and then it states...
+typo: notify
 
-if not, write to the Free Software Foundation, Inc.,
-51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
+> + *	the driver through cfg80211 when it is complete.
 
-This is the second part that needs cleanup if the file refers to the old
-address.  So just by removing the address and providing the URL, you are
-providing a place that users can get the license *if* the COPYING file
-gets removed (or altered) by who ever releases the kernel.
+Should probably say how the driver is notified (via the station flag)?
 
->=20
-> > CC:linux-wireless@vger.kernel.org
-> > CC: Lauro Ramos Venancio<lauro.venancio@openbossa.org>
-> > CC: Aloisio Almeida Jr<aloisio.almeida@openbossa.org>
-> > CC: Samuel Ortiz<sameo@linux.intel.com>
-> > Signed-off-by: Jeff Kirsher<jeffrey.t.kirsher@intel.com>
->=20
+> @@ -3689,7 +3689,7 @@ int cfg80211_check_station_change(struct wiphy *wiphy,
+>  		return -EINVAL;
+>  
+>  	/* When you run into this, adjust the code below for the new flag */
+> -	BUILD_BUG_ON(NL80211_STA_FLAG_MAX != 7);
+> +	BUILD_BUG_ON(NL80211_STA_FLAG_MAX != 8);
+>  
+>  	switch (statype) {
+>  	case CFG80211_STA_MESH_PEER_KERNEL:
+> @@ -3766,7 +3766,8 @@ int cfg80211_check_station_change(struct wiphy *wiphy,
+>  				  BIT(NL80211_STA_FLAG_ASSOCIATED) |
+>  				  BIT(NL80211_STA_FLAG_SHORT_PREAMBLE) |
+>  				  BIT(NL80211_STA_FLAG_WME) |
+> -				  BIT(NL80211_STA_FLAG_MFP)))
+> +				  BIT(NL80211_STA_FLAG_MFP) |
+> +				  BIT(NL80211_STA_FLAG_NO_SA_QUERY_REQUIRED)))
+>  			return -EINVAL;
+>  
+>  		/* but authenticated/associated only if driver handles it */
 
+Maybe we should also check if the driver supports the flag?
 
+> @@ -4090,7 +4091,7 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+>  		return -EINVAL;
+>  
+>  	/* When you run into this, adjust the code below for the new flag */
+> -	BUILD_BUG_ON(NL80211_STA_FLAG_MAX != 7);
+> +	BUILD_BUG_ON(NL80211_STA_FLAG_MAX != 8);
+>  
+>  	switch (dev->ieee80211_ptr->iftype) {
+>  	case NL80211_IFTYPE_AP:
 
---=-Vz1sHFsJRGWXg7jAbnb4
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
+Can this really be right? Is it simply invalid on a new station? Why
+does this even make sense - this is done for AP SME where this is never
+invoked?
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.15 (GNU/Linux)
+Anyway you need to reject adding TDLS peers with this flag, for example,
+afaict.
 
-iQIcBAABCgAGBQJSo6XoAAoJEOVv75VaS+3O4YUP/18Mc/6st455/udZtCQMnEFz
-48/GMJzGiCAkAj4nazdW6qs1KvEvCWr+5NdHAkkJZvVJ/nEjNITQoUm4biMaHmXH
-7DpuUGd6jaM4g0VqRDPIByZLuq9QnJlLHd6ownD43pKD7BqrOhZ55M/MCLoY/ni/
-/basVoDo0mgMYWhAqhYkcbkzG3ckOtkPzbIdiTL8H5muojnl94NU9zz3qiBK3iyE
-zT/L1DAYKbXJv4TNImadWL92zD8pW8qOS208xDEEd6RbCkbpJ/ilODSCg0E8Qb2k
-HBGOjU84u1REXv1rbEuo5jQua2cKVX+K2IKSkTgg9pckuoSuAL+zbTzPMHA5o2gT
-1cK3tAa0OVef2AfshjtqBj4EYaKn/i8wwCz/9HfIhIuDsb/BmDoUCPx3bo1l7nlp
-4ifSoesp88gCXE7HpvL6KFWYDLSrRJGmzCxAqIP7myDaYDp6Er1TG16+/Va13U5y
-YfD/PP2JgEvFuzUkIR9Rvzjf1aHHgufrTjRlSEBl4e2+FauKneWtCgV07FowEOt2
-EQ0ojCbakY9egSloYoVYS+P8Q2bLQECuru9zjRvbrVOWX0pocqwFBrtmsjcNqc4n
-jIpqD7aoZScm4a7icEo7GdVAVQjMPhYzCvJmlsDd7gpeyKL5J9YsHtFUskYq0c+E
-b/jAethmdmsm2NEBLR22
-=fHP+
------END PGP SIGNATURE-----
-
---=-Vz1sHFsJRGWXg7jAbnb4--
+johannes
 
