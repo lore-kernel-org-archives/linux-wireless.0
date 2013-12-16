@@ -1,99 +1,181 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f48.google.com ([209.85.214.48]:57794 "EHLO
-	mail-bk0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755445Ab3LJRwV (ORCPT
+Received: from mail-ee0-f42.google.com ([74.125.83.42]:60182 "EHLO
+	mail-ee0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754143Ab3LPPvG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Dec 2013 12:52:21 -0500
-From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Dan Williams <dcbw@redhat.com>
-Subject: Re: [PATCH v2 15/16] wl1251: Add sysfs file address for setting permanent mac address
-Date: Tue, 10 Dec 2013 18:52:16 +0100
-Cc: Kalle Valo <kvalo@adurom.com>, Luciano Coelho <luca@coelho.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
-	joni.lapilainen@gmail.com,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Felipe Contreras <felipe.contreras@gmail.com>
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com> <201312101814.35112@pali> <1386697762.30202.6.camel@dcbw.foobar.com>
-In-Reply-To: <1386697762.30202.6.camel@dcbw.foobar.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart6544305.mUThAbcFQS";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <201312101852.17030@pali> (sfid-20131210_185226_826255_A59ABE6D)
+	Mon, 16 Dec 2013 10:51:06 -0500
+Received: by mail-ee0-f42.google.com with SMTP id e53so2336063eek.1
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Dec 2013 07:51:05 -0800 (PST)
+From: Marek Puzyniak <marek.puzyniak@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	Marek Puzyniak <marek.puzyniak@tieto.com>
+Subject: [PATCH v5] cfg80211: fix dfs channel state after stopping AP
+Date: Mon, 16 Dec 2013 16:50:49 +0100
+Message-Id: <1387209049-25529-1-git-send-email-marek.puzyniak@tieto.com> (sfid-20131216_165114_848530_B09F927E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart6544305.mUThAbcFQS
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+In AP mode DFS channel state is changed to DFS_AVAILABLE
+after successful CAC and remains as such until a radar
+signal is detected during the In-Service Monitoring.
+When AP is stopped it is no longer monitoring current channel
+for radar signals. DFS channel state should be changed
+to DFS_USABLE when last AP interface is stopped. Starting AP
+again on that channel will start CAC instead of starting radiation.
 
-On Tuesday 10 December 2013 18:49:22 Dan Williams wrote:
-> On Tue, 2013-12-10 at 18:14 +0100, Pali Roh=C3=A1r wrote:
-> > On Tuesday 10 December 2013 17:10:50 Pali Roh=C3=A1r wrote:
-> > > On Tuesday 10 December 2013 16:49:23 Kalle Valo wrote:
-> > > > Pali Roh=C3=A1r <pali.rohar@gmail.com> writes:
-> > > > > Driver wl1251 generating mac address randomly at
-> > > > > startup and there is no way to set permanent mac
-> > > > > address via SET_IEEE80211_PERM_ADDR. This patch
-> > > > > export sysfs file which can set permanent mac address
-> > > > > by userspace helper program. Patch is needed for
-> > > > > devices which do not store mac address in internal
-> > > > > wl1251 eeprom.
-> > > > >=20
-> > > > > Signed-off-by: Pali Roh=C3=A1r <pali.rohar@gmail.com>
-> > > >=20
-> > > > We have ioctl() command for setting the mac address.
-> > >=20
-> > > Really? Is there ioctl for setting permanent mac address?
-> > > Can you show me it?
-> >=20
-> > Now I looked at it again and I did not found any ioctl for
-> > it. There is only ioctl cmd for getting address, not
-> > setting it.
-> >=20
-> > #define SIOCETHTOOL 0x8946
-> >=20
-> > /* Get permanent hardware address */
-> > #define ETHTOOL_GPERMADDR 0x00000020
->=20
-> Yeah, because it's supposed to be permanent and unchanging.=20
-> Which means if there was an ioctl for it, that would be
-> contrary to the purpose of a permanent MAC address.
->=20
-> I realize the N900 stores the WiFi MAC address completely
-> differently than many other systems, and that's why this
-> sysfs file was created.  I don't really have a great
-> converged solution for that, other than what you've currently
-> got, or perhaps adding SPERMADDR to ethtool.  One thing I
-> *would* like though, is a restriction on the sysfs file such
-> that if the permanent MAC is already set, it cannot be set
-> again.  Otherwise the permanent MAC address isn't permanent
-> at all.
->=20
-> Dan
+Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
+---
 
-Maybe another way could be to use request_firmware to load address=20
-from userspace... Or what do you think?
+Patch v1:
+*Initial version. Partially in mac80211 and cfg80211.
 
-=2D-=20
-Pali Roh=C3=A1r
-pali.rohar@gmail.com
+Patch v2:
+*Moved all implementation to cfg80211.
 
---nextPart6544305.mUThAbcFQS
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+Patch v3:
+*Rephrase patch description.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
+Patch v4:
+*Fix coding style,
+*Do not check if RADAR flag is set, when dfs channel state was AVAILABLE
+ change it to USABLE, 
+*Handle multiBSSID APs - Change DFS channel state when last AP was stoped. 
 
-iEYEABECAAYFAlKnVNEACgkQi/DJPQPkQ1IC6ACfXfDhp4HT+tVRfEC1oIdak11e
-zfAAoJBb/+UAUHTcOICKFZ3VF2jzkQRy
-=wz9M
------END PGP SIGNATURE-----
+Patch v5:
+*Fix coding style,
+*Remove unnecessary and nested wdev_lock.
 
---nextPart6544305.mUThAbcFQS--
+ net/wireless/ap.c   | 36 ++++++++++++++++++++++++++++++++++++
+ net/wireless/chan.c | 38 ++++++++++++++++++++++++++++++++++++++
+ net/wireless/core.h | 11 +++++++++++
+ 3 files changed, 85 insertions(+)
+
+diff --git a/net/wireless/ap.c b/net/wireless/ap.c
+index 324e8d8..28d1a3c 100644
+--- a/net/wireless/ap.c
++++ b/net/wireless/ap.c
+@@ -6,6 +6,39 @@
+ #include "rdev-ops.h"
+ 
+ 
++static bool cfg80211_is_last_ap_running(struct cfg80211_registered_device *rdev,
++					struct net_device *dev)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct wireless_dev *wdev_iter;
++
++	ASSERT_WDEV_LOCK(wdev);
++
++	if (rdev->num_running_ifaces == 1) {
++		/* Last running AP iface */
++		return true;
++	}
++
++	/* More running interfaces */
++	list_for_each_entry(wdev_iter, &rdev->wdev_list, list) {
++		if (wdev_iter == wdev)
++			continue;
++
++		if (!wdev_iter->netdev)
++			continue;
++
++		if (!netif_running(wdev_iter->netdev)) {
++			continue;
++		}
++
++		if (wdev_iter->iftype == NL80211_IFTYPE_AP) {
++			return false;
++		}
++	}
++
++	return true;
++}
++
+ static int __cfg80211_stop_ap(struct cfg80211_registered_device *rdev,
+ 			      struct net_device *dev)
+ {
+@@ -31,6 +64,9 @@ static int __cfg80211_stop_ap(struct cfg80211_registered_device *rdev,
+ 		wdev->ssid_len = 0;
+ 	}
+ 
++	if (cfg80211_is_last_ap_running(rdev, dev))
++		cfg80211_leave_dfs_chandef(wdev->wiphy, &wdev->preset_chandef);
++
+ 	return err;
+ }
+ 
+diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+index 78559b5..54c217a 100644
+--- a/net/wireless/chan.c
++++ b/net/wireless/chan.c
+@@ -490,6 +490,44 @@ static bool cfg80211_chandef_dfs_available(struct wiphy *wiphy,
+ 	return r;
+ }
+ 
++static void cfg80211_leave_dfs_chans(struct wiphy *wiphy,
++				     u32 center_freq,
++				     u32 bandwidth)
++{
++	struct ieee80211_channel *c;
++	u32 freq, start_freq, end_freq;
++
++	start_freq = cfg80211_get_start_freq(center_freq, bandwidth);
++	end_freq = cfg80211_get_end_freq(center_freq, bandwidth);
++
++	for (freq = start_freq; freq <= end_freq; freq += 20) {
++		c = ieee80211_get_channel(wiphy, freq);
++		if (!c)
++			continue;
++		if (c->dfs_state != NL80211_DFS_AVAILABLE)
++			continue;
++
++		c->dfs_state = NL80211_DFS_USABLE;
++		c->dfs_state_entered = jiffies;
++	}
++}
++
++void cfg80211_leave_dfs_chandef(struct wiphy *wiphy,
++				struct cfg80211_chan_def *chandef)
++{
++	int width;
++
++	if (WARN_ON(!cfg80211_chandef_valid(chandef)))
++		return;
++
++	width = cfg80211_chandef_get_width(chandef);
++	cfg80211_leave_dfs_chans(wiphy, chandef->center_freq1, width);
++
++	if (!chandef->center_freq2)
++		return;
++
++	cfg80211_leave_dfs_chans(wiphy, chandef->center_freq2, width);
++}
+ 
+ static bool cfg80211_secondary_chans_ok(struct wiphy *wiphy,
+ 					u32 center_freq, u32 bandwidth,
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 37ec16d..4ed2c81 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -398,6 +398,17 @@ void cfg80211_set_dfs_state(struct wiphy *wiphy,
+ 
+ void cfg80211_dfs_channels_update_work(struct work_struct *work);
+ 
++/**
++ * cfg80211_leave_dfs_chandef - Leaving dfs chandef
++ * @wiphy: the wiphy
++ * @chandef: chandef for the current channel
++ *
++ * This function is called when dfs chandef is being not used for different
++ * reasons. Change channels DFS_AVAILABLE to DFS_USABLE again. Leave channels
++ * DFS_UNAVAILABLE untouched.
++ */
++void cfg80211_leave_dfs_chandef(struct wiphy *wiphy,
++				struct cfg80211_chan_def *chandef);
+ 
+ static inline int
+ cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
+-- 
+1.8.1.2
+
