@@ -1,111 +1,228 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:18252 "EHLO
-	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753925Ab3LaQkk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Dec 2013 11:40:40 -0500
-Date: Tue, 31 Dec 2013 17:40:24 +0100 (CET)
-From: Julia Lawall <julia.lawall@lip6.fr>
-To: Ben Greear <greearb@candelatech.com>
-cc: Julia Lawall <julia.lawall@lip6.fr>, Joe Perches <joe@perches.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	kernel-janitors@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 4/11]  use ether_addr_equal_64bits
-In-Reply-To: <52C2F056.1020005@candelatech.com>
-Message-ID: <alpine.DEB.2.10.1312311732080.2074@hadrien> (sfid-20131231_174102_256368_3000619A)
-References: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>  <1388427307-8691-5-git-send-email-Julia.Lawall@lip6.fr>  <1388429761.4410.1.camel@jlt4.sipsolutions.net>  <alpine.DEB.2.02.1312302057420.2209@localhost6.localdomain6>
- <1388438724.4573.2.camel@jlt4.sipsolutions.net>  <20131230215701.GA4938@khazad-dum.debian.net>  <1388445188.18164.0.camel@jlt4.sipsolutions.net> <1388445422.26796.38.camel@joe-AO722> <alpine.DEB.2.02.1312310726540.1930@localhost6.localdomain6>
- <52C2E8BA.6000800@candelatech.com> <alpine.DEB.2.10.1312311704320.2074@hadrien> <52C2F056.1020005@candelatech.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from nbd.name ([46.4.11.11]:54246 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751465Ab3LPUtQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Dec 2013 15:49:16 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH v3] mac80211: add helper functions for tracking P2P NoA state
+Date: Mon, 16 Dec 2013 21:49:14 +0100
+Message-Id: <1387226954-16848-1-git-send-email-nbd@openwrt.org> (sfid-20131216_214919_913155_38DDF92A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ include/net/mac80211.h |  47 +++++++++++++++++
+ net/mac80211/util.c    | 141 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 188 insertions(+)
 
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 92e060a..6645dcf 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -4629,4 +4629,51 @@ bool ieee80211_tx_prepare_skb(struct ieee80211_hw *hw,
+ 			      struct ieee80211_vif *vif, struct sk_buff *skb,
+ 			      int band, struct ieee80211_sta **sta);
+ 
++/**
++ * struct ieee80211_noa_data - holds temporary data for tracking P2P NoA state
++ *
++ * @next_tsf: TSF timestamp of the next absent state change
++ * @has_next_tsf: next absent state change event pending
++ *
++ * @absent: descriptor bitmask, set if GO is currently absent
++ *
++ * private:
++ *
++ * @count: count fields from the NoA descriptors
++ * @desc: adjusted data from the NoA
++ */
++struct ieee80211_noa_data {
++	u32 next_tsf;
++	bool has_next_tsf;
++
++	u8 absent;
++
++	u8 count[IEEE80211_P2P_NOA_DESC_MAX];
++	struct {
++		u32 start;
++		u32 duration;
++		u32 interval;
++	} desc[IEEE80211_P2P_NOA_DESC_MAX];
++};
++
++/**
++ * ieee80211_parse_p2p_noa - initialize NoA tracking data from P2P IE
++ *
++ * @attr: P2P NoA IE
++ * @data: NoA tracking data
++ * @tsf: current TSF timestamp
++ *
++ * Return: number of successfully parsed descriptors
++ */
++int ieee80211_parse_p2p_noa(const struct ieee80211_p2p_noa_attr *attr,
++			    struct ieee80211_noa_data *data, u32 tsf);
++
++/**
++ * ieee80211_update_p2p_noa - get next pending P2P GO absent state change
++ *
++ * @data: NoA tracking data
++ * @tsf: current TSF timestamp
++ */
++void ieee80211_update_p2p_noa(struct ieee80211_noa_data *data, u32 tsf);
++
+ #endif /* MAC80211_H */
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 875e172..a607619 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2554,3 +2554,144 @@ int ieee80211_cs_headroom(struct ieee80211_local *local,
+ 
+ 	return headroom;
+ }
++
++static bool
++ieee80211_extend_noa_desc(struct ieee80211_noa_data *data, u32 tsf, int i)
++{
++	s32 end = data->desc[i].start + data->desc[i].duration - (tsf + 1);
++	int skip;
++
++	if (end > 0)
++		return false;
++
++	/* End time is in the past, check for repetitions */
++	skip = DIV_ROUND_UP(-end, data->desc[i].interval);
++	if (data->count[i] < 255) {
++		if (data->count[i] <= skip) {
++			data->count[i] = 0;
++			return false;
++		}
++
++		data->count[i] -= skip;
++	}
++
++	data->desc[i].start += skip * data->desc[i].interval;
++
++	return true;
++}
++
++static bool
++ieee80211_extend_absent_time(struct ieee80211_noa_data *data, u32 tsf,
++			     s32 *offset)
++{
++	bool ret = false;
++	int i;
++
++	for (i = 0; i < IEEE80211_P2P_NOA_DESC_MAX; i++) {
++		s32 cur;
++
++		if (!data->count[i])
++			continue;
++
++		if (ieee80211_extend_noa_desc(data, tsf + *offset, i))
++			ret = true;
++
++		cur = data->desc[i].start - tsf;
++		if (cur > *offset)
++			continue;
++
++		cur = data->desc[i].start + data->desc[i].duration - tsf;
++		if (cur > *offset)
++			*offset = cur;
++	}
++
++	return ret;
++}
++
++static u32
++ieee80211_get_noa_absent_time(struct ieee80211_noa_data *data, u32 tsf)
++{
++	s32 offset = 0;
++	int tries = 0;
++
++	/*
++	 * arbitrary limit, used to avoid infinite loops when combined NoA
++	 * descriptors cover the full time period.
++	 */
++	int max_tries = 5;
++
++	ieee80211_extend_absent_time(data, tsf, &offset);
++	do {
++		if (!ieee80211_extend_absent_time(data, tsf, &offset))
++			break;
++
++		tries++;
++	} while (tries < max_tries);
++
++	return offset;
++}
++
++void ieee80211_update_p2p_noa(struct ieee80211_noa_data *data, u32 tsf)
++{
++	u32 next_offset = BIT(31) - 1;
++	int i;
++
++	data->absent = 0;
++	data->has_next_tsf = false;
++	for (i = 0; i < IEEE80211_P2P_NOA_DESC_MAX; i++) {
++		s32 start;
++
++		if (!data->count[i])
++			continue;
++
++		ieee80211_extend_noa_desc(data, tsf, i);
++		start = data->desc[i].start - tsf;
++		if (start <= 0)
++			data->absent |= BIT(i);
++
++		if (next_offset > start)
++			next_offset = start;
++
++		data->has_next_tsf = true;
++	}
++
++	if (data->absent)
++		next_offset = ieee80211_get_noa_absent_time(data, tsf);
++
++	data->next_tsf = tsf + next_offset;
++}
++EXPORT_SYMBOL(ieee80211_update_p2p_noa);
++
++int ieee80211_parse_p2p_noa(const struct ieee80211_p2p_noa_attr *attr,
++			    struct ieee80211_noa_data *data, u32 tsf)
++{
++	int ret = 0;
++	int i;
++
++	memset(data, 0, sizeof(*data));
++
++	for (i = 0; i < IEEE80211_P2P_NOA_DESC_MAX; i++) {
++		const struct ieee80211_p2p_noa_desc *desc = &attr->desc[i];
++
++		if (!desc->count || !desc->duration)
++			continue;
++
++		data->count[i] = desc->count;
++		data->desc[i].start = le32_to_cpu(desc->start_time);
++		data->desc[i].duration = le32_to_cpu(desc->duration);
++		data->desc[i].interval = le32_to_cpu(desc->interval);
++
++		if (data->count[i] > 1 &&
++		    data->desc[i].interval < data->desc[i].duration)
++			continue;
++
++		ieee80211_extend_noa_desc(data, tsf, i);
++		ret++;
++	}
++
++	if (ret)
++		ieee80211_update_p2p_noa(data, tsf);
++
++	return ret;
++}
++EXPORT_SYMBOL(ieee80211_parse_p2p_noa);
+-- 
+1.8.3.4 (Apple Git-47)
 
-On Tue, 31 Dec 2013, Ben Greear wrote:
-
-> On 12/31/2013 08:09 AM, Julia Lawall wrote:
-> >
-> >
-> > On Tue, 31 Dec 2013, Ben Greear wrote:
-> >
-> > > On 12/30/2013 10:32 PM, Julia Lawall wrote:
-> > > > > > > > I'm just thinking of a programmer, e.g. changing a struct like
-> > > > > > > > this:
-> > > > > > > >
-> > > > > > > >    struct foo {
-> > > > > > > >      u8 addr[ETH_ALEN];
-> > > > > > > > -  u16 dummy;
-> > > > > > > >    };
-> > > > >
-> > > > > I don't know of a way to catch that.
-> > > > > Anyone else?
-> > > >
-> > > > Well, one could have a semantic patch that checks for that.  But the
-> > > > problem is that it is very slow, and it only covers the cases that I can
-> > > > transform automatically, which currently means no pointers, only
-> > > > explicit
-> > > > arrays.
-> > > >
-> > > > On the other hand, I am finding the structure definition, so I can
-> > > > easily
-> > > > update the structure definition with an appropriate comment.
-> > > >
-> > > > struct foo {
-> > > >       u8 addr[ETH_ALEN]; /* must be followed by two bytes in the
-> > > > structure */
-> > > >       u16 dummy;
-> > > > };
-> > > >
-> > > > Unfortunately it is kind of verbose.  Could there be an attribute?  That
-> > > > could even easily be checked.
-> > >
-> > > Can you not just add a build-time macro to check that sizeof(foo) >= 8
-> > > for each of these struct foos?  Or, is it required that the dummy field
-> > > be there and be not used by anything else?
-> >
-> > It doesn't matter what the field is used for.  The problem is that is it
-> > necessary to ensure a property of the position of addr within the
-> > structure.  It has to have at least 16 bytes after it.
->
-> You mean 16 bits?
-
-Oops, yes.  16 bits.
-
-> >
-> > But maybe something with sizeof(foo) and offset_of would do?
-> >
-> > Could the macro be put near the declaration of the structure somehow?
->
-> I think that would work, but do not know all of the details of such
-> macros, so it's possible there is some catch.
->
-> If nothing else, then some run-time code that calculates the offset off
-> and asserts if it is broken in module initialization or similar might
-> be good enough.
-
-Could be OK.  Something right in or after the structure declaration would
-be nicest.
-
-julia
-
->
-> Thanks,
-> Ben
->
-> --
-> Ben Greear <greearb@candelatech.com>
-> Candela Technologies Inc  http://www.candelatech.com
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe kernel-janitors" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
