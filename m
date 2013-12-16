@@ -1,74 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:50763 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751441Ab3LXFTg (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:40743 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750769Ab3LPKab (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Dec 2013 00:19:36 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 08/11] ath9k: Fix baseband watchdog reset
-Date: Tue, 24 Dec 2013 10:44:24 +0530
-Message-Id: <1387862067-25457-8-git-send-email-sujith@msujith.org> (sfid-20131224_061958_824865_5416737A)
-In-Reply-To: <1387862067-25457-1-git-send-email-sujith@msujith.org>
-References: <1387862067-25457-1-git-send-email-sujith@msujith.org>
+	Mon, 16 Dec 2013 05:30:31 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:256)
+	(Exim 4.80)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1VsVRW-0006Ur-P3
+	for linux-wireless@vger.kernel.org; Mon, 16 Dec 2013 11:30:30 +0100
+Message-ID: <1387189828.4665.5.camel@jlt4.sipsolutions.net> (sfid-20131216_113034_808187_8524F5FD)
+Subject: Re: [PATCH 0/8] mac80211: speed up station cleanup/AP shutdown
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Mon, 16 Dec 2013 11:30:28 +0100
+In-Reply-To: <1386246956-14257-1-git-send-email-johannes@sipsolutions.net> (sfid-20131205_133615_238897_7D79C534)
+References: <1386192610.5660.4.camel@jlt4.sipsolutions.net>
+	 <1386246956-14257-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20131205_133615_238897_7D79C534)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Thu, 2013-12-05 at 13:35 +0100, Johannes Berg wrote:
+> Inspired by hostap shutdown potentially taking a long time (which is
+> in part also its fault), I took a closer look at the station removal
+> code and I think it's too complex. Only a single driver (iwlmvm) has
+> a need for an RCU grace period after sta_state() returns, and that
+> can easily be addressed differently.
+> 
+> So consolidate many of the synchronize_rcu()/_net() in these paths
+> and get rid of the rcu_barrier() stuff completely.
+> 
+> Testing is still pending, but it should improve timing.
 
-Do a HW reset only for required signatures.
+Timing tests showed a huge improvement, applied all patches.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/main.c | 27 +++++++++++++++++++--------
- 1 file changed, 19 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 894c892..24e2654 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -448,14 +448,8 @@ void ath9k_tasklet(unsigned long data)
- 	ath9k_ps_wakeup(sc);
- 	spin_lock(&sc->sc_pcu_lock);
- 
--	if ((status & ATH9K_INT_FATAL) ||
--	    (status & ATH9K_INT_BB_WATCHDOG)) {
--
--		if (status & ATH9K_INT_FATAL)
--			type = RESET_TYPE_FATAL_INT;
--		else
--			type = RESET_TYPE_BB_WATCHDOG;
--
-+	if (status & ATH9K_INT_FATAL) {
-+		type = RESET_TYPE_FATAL_INT;
- 		ath9k_queue_reset(sc, type);
- 
- 		/*
-@@ -467,6 +461,23 @@ void ath9k_tasklet(unsigned long data)
- 		goto out;
- 	}
- 
-+	if ((ah->config.hw_hang_checks & HW_BB_WATCHDOG) &&
-+	    (status & ATH9K_INT_BB_WATCHDOG)) {
-+		if (ar9003_hw_bb_watchdog_check(ah)) {
-+			type = RESET_TYPE_BB_WATCHDOG;
-+			ath9k_queue_reset(sc, type);
-+
-+			/*
-+			 * Increment the ref. counter here so that
-+			 * interrupts are enabled in the reset routine.
-+			 */
-+			atomic_inc(&ah->intr_ref_cnt);
-+			ath_dbg(common, ANY,
-+				"BB_WATCHDOG: Skipping interrupts\n");
-+			goto out;
-+		}
-+	}
-+
- 	spin_lock_irqsave(&sc->sc_pm_lock, flags);
- 	if ((status & ATH9K_INT_TSFOOR) && sc->ps_enabled) {
- 		/*
--- 
-1.8.5.2
+johannes
 
