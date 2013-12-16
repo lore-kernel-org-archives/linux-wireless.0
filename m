@@ -1,118 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f47.google.com ([209.85.214.47]:38592 "EHLO
-	mail-bk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750706Ab3LJTb3 (ORCPT
+Received: from mail-qc0-f177.google.com ([209.85.216.177]:51970 "EHLO
+	mail-qc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755153Ab3LPSfc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Dec 2013 14:31:29 -0500
-From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Dan Williams <dcbw@redhat.com>
-Subject: Re: [PATCH v2 15/16] wl1251: Add sysfs file address for setting permanent mac address
-Date: Tue, 10 Dec 2013 20:31:23 +0100
-Cc: Kalle Valo <kvalo@adurom.com>, Luciano Coelho <luca@coelho.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
-	joni.lapilainen@gmail.com,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Felipe Contreras <felipe.contreras@gmail.com>
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com> <201312101852.17030@pali> <1386703339.30202.19.camel@dcbw.foobar.com>
-In-Reply-To: <1386703339.30202.19.camel@dcbw.foobar.com>
+	Mon, 16 Dec 2013 13:35:32 -0500
+Received: by mail-qc0-f177.google.com with SMTP id m20so3965525qcx.36
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Dec 2013 10:35:32 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart2284039.d878SBvJzH";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <201312102031.23797@pali> (sfid-20131210_203149_308841_89EAC65A)
+In-Reply-To: <1387200253.4665.32.camel@jlt4.sipsolutions.net>
+References: <1387142056-21850-1-git-send-email-twpedersen@gmail.com>
+ <1387198425.4665.28.camel@jlt4.sipsolutions.net> <1387200253.4665.32.camel@jlt4.sipsolutions.net>
+From: Thomas Pedersen <twpedersen@gmail.com>
+Date: Mon, 16 Dec 2013 10:35:12 -0800
+Message-ID: <CAHmEv841yO7NDdD4wan9CAOZL4Z19M3cu1vRgNZ2Q3_=NMvhCw@mail.gmail.com> (sfid-20131216_193535_904484_2C00D7B6)
+Subject: Re: [PATCH 1/3] mac80211_hwsim: fix duplicate beacons on TSF adjust
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: open80211s <devel@lists.open80211s.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Thomas Pedersen <thomas@cozybit.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart2284039.d878SBvJzH
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+On Mon, Dec 16, 2013 at 5:24 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2013-12-16 at 13:53 +0100, Johannes Berg wrote:
+>> On Sun, 2013-12-15 at 13:14 -0800, Thomas Pedersen wrote:
+>> > From: Thomas Pedersen <thomas@cozybit.com>
+>> >
+>> > There was some bug when rescheduling the next beacon from
+>> > the beacon tasklet after adjusting TSF which would cause
+>> > the beacon timer to trigger twice. Beaconing at "old" TBT
+>> > (previously scheduled interface TBTT) with new timestamp
+>> > was incorrect anyway.
+>> >
+>> > Instead, reschedule the beacon straight away when
+>> > adjusting TSF.
+>>
+>> Applied.
+>
+> Nope, never mind - this caused the wpa_s test cases to crash the kernel.
 
-On Tuesday 10 December 2013 20:22:19 Dan Williams wrote:
-> On Tue, 2013-12-10 at 18:52 +0100, Pali Roh=C3=A1r wrote:
-> > On Tuesday 10 December 2013 18:49:22 Dan Williams wrote:
-> > > On Tue, 2013-12-10 at 18:14 +0100, Pali Roh=C3=A1r wrote:
-> > > > On Tuesday 10 December 2013 17:10:50 Pali Roh=C3=A1r wrote:
-> > > > > On Tuesday 10 December 2013 16:49:23 Kalle Valo wrote:
-> > > > > > Pali Roh=C3=A1r <pali.rohar@gmail.com> writes:
-> > > > > > > Driver wl1251 generating mac address randomly at
-> > > > > > > startup and there is no way to set permanent mac
-> > > > > > > address via SET_IEEE80211_PERM_ADDR. This patch
-> > > > > > > export sysfs file which can set permanent mac
-> > > > > > > address by userspace helper program. Patch is
-> > > > > > > needed for devices which do not store mac address
-> > > > > > > in internal wl1251 eeprom.
-> > > > > > >=20
-> > > > > > > Signed-off-by: Pali Roh=C3=A1r <pali.rohar@gmail.com>
-> > > > > >=20
-> > > > > > We have ioctl() command for setting the mac address.
-> > > > >=20
-> > > > > Really? Is there ioctl for setting permanent mac
-> > > > > address? Can you show me it?
-> > > >=20
-> > > > Now I looked at it again and I did not found any ioctl
-> > > > for it. There is only ioctl cmd for getting address,
-> > > > not setting it.
-> > > >=20
-> > > > #define SIOCETHTOOL 0x8946
-> > > >=20
-> > > > /* Get permanent hardware address */
-> > > > #define ETHTOOL_GPERMADDR 0x00000020
-> > >=20
-> > > Yeah, because it's supposed to be permanent and
-> > > unchanging. Which means if there was an ioctl for it,
-> > > that would be contrary to the purpose of a permanent MAC
-> > > address.
-> > >=20
-> > > I realize the N900 stores the WiFi MAC address completely
-> > > differently than many other systems, and that's why this
-> > > sysfs file was created.  I don't really have a great
-> > > converged solution for that, other than what you've
-> > > currently got, or perhaps adding SPERMADDR to ethtool.=20
-> > > One thing I *would* like though, is a restriction on the
-> > > sysfs file such that if the permanent MAC is already set,
-> > > it cannot be set again.  Otherwise the permanent MAC
-> > > address isn't permanent at all.
-> > >=20
-> > > Dan
-> >=20
-> > Maybe another way could be to use request_firmware to load
-> > address from userspace... Or what do you think?
->=20
-> That sounds like a great idea to try.  A number of devices
-> either need stub firmware to read the MAC from EEPROM, or do
-> use request_firmware() to load firmware before they read the
-> MAC.  You may have to use request_firmware() synchronously
-> though to ensure that the MAC is read before registering with
-> mac80211.
->=20
-> Dan
+OK sorry about that, I'll give it a run through those.
 
-So, if you like this idea, can you help me how to write udev rule=20
-which will run my own program (it print mac address) and send mac=20
-address when driver ask for mac address in request_firmware?=20
-Problem is that default udev rule for firmware trying to load data=20
-from /lib/firmware/... but in this case mac address first must be=20
-read from special location and converted to correct format.
-
-=2D-=20
-Pali Roh=C3=A1r
-pali.rohar@gmail.com
-
---nextPart2284039.d878SBvJzH
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEABECAAYFAlKnbAsACgkQi/DJPQPkQ1KMAwCfZsn5s3EjIltZnqxjpd4lo+9v
-CQEAn1wBPRMrVsWALaU9ItBeBSaB6Iki
-=vT15
------END PGP SIGNATURE-----
-
---nextPart2284039.d878SBvJzH--
+Thanks,
+Thomas
