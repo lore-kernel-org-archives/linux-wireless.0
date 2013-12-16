@@ -1,40 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:48963 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754082Ab3LNRD5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Dec 2013 12:03:57 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Subject: [PATCH 01/11] ath9k_common: get rid of an unnecessary variable
-Date: Sat, 14 Dec 2013 18:03:35 +0100
-Message-Id: <1387040625-38114-1-git-send-email-nbd@openwrt.org> (sfid-20131214_180404_938817_1D6DF321)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:59920 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753809Ab3LPONm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Dec 2013 09:13:42 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Bartosz Markowski <bartosz.markowski@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/2] ath10k: split the if_limits and if_comb
+References: <1386688840-12181-1-git-send-email-bartosz.markowski@tieto.com>
+Date: Mon, 16 Dec 2013 16:13:36 +0200
+In-Reply-To: <1386688840-12181-1-git-send-email-bartosz.markowski@tieto.com>
+	(Bartosz Markowski's message of "Tue, 10 Dec 2013 16:20:39 +0100")
+Message-ID: <87k3f4g9yn.fsf@kamboji.qca.qualcomm.com> (sfid-20131216_151344_759000_869B6F4F)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There's no need to truncate curchan->hw_value to u8
+Bartosz Markowski <bartosz.markowski@tieto.com> writes:
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/common.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+> Split the interface limits and inteface combination,
+> to reflect the 10.X capabilites (no P2P, no STA and 8 VAP).
+>
+> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
-index a7e5a05..768c733 100644
---- a/drivers/net/wireless/ath/ath9k/common.c
-+++ b/drivers/net/wireless/ath/ath9k/common.c
-@@ -98,10 +98,8 @@ struct ath9k_channel *ath9k_cmn_get_channel(struct ieee80211_hw *hw,
- {
- 	struct ieee80211_channel *curchan = chandef->chan;
- 	struct ath9k_channel *channel;
--	u8 chan_idx;
- 
--	chan_idx = curchan->hw_value;
--	channel = &ah->channels[chan_idx];
-+	channel = &ah->channels[curchan->hw_value];
- 	ath9k_cmn_update_ichannel(channel, chandef);
- 
- 	return channel;
+Both patches applied. I did minor changes in patch 1, please double
+check:
+
+> @@ -3717,8 +3718,15 @@ int ath10k_mac_register(struct ath10k *ar)
+>  	 */
+>  	ar->hw->queues = 4;
+>  
+> -	ar->hw->wiphy->iface_combinations = ath10k_if_comb;
+> -	ar->hw->wiphy->n_iface_combinations = ARRAY_SIZE(ath10k_if_comb);
+> +	if (!test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features)) {
+> +
+> +		ar->hw->wiphy->iface_combinations = ath10k_if_comb;
+> +		ar->hw->wiphy->n_iface_combinations = ARRAY_SIZE(ath10k_if_comb);
+> +
+> +	} else {
+> +		ar->hw->wiphy->iface_combinations = ath10k_10x_if_comb;
+> +		ar->hw->wiphy->n_iface_combinations = ARRAY_SIZE(ath10k_10x_if_comb);
+> +	}
+
+I fixed checkpatch warnings here and reversed the test to get rid
+unnecessary negation operator.
+
 -- 
-1.8.3.4 (Apple Git-47)
-
+Kalle Valo
