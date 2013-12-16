@@ -1,57 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:34151 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750951Ab3LAJff (ORCPT
+Received: from mail-we0-f180.google.com ([74.125.82.180]:64953 "EHLO
+	mail-we0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754211Ab3LPQ2B (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Dec 2013 04:35:35 -0500
-Message-ID: <1385890523.4171.1.camel@jlt4.sipsolutions.net> (sfid-20131201_103603_020215_2549B95B)
-Subject: Re: [PATCH] net: mac80211: tx.c: be sure of 'sdata->vif.type' must
- be NL80211_IFTYPE_AP when be in NL80211_IFTYPE_AP case
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Joe Perches <joe@perches.com>
-Cc: Chen Gang <gang.chen.5i5j@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	rkuo <rkuo@codeaurora.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	David Miller <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
-Date: Sun, 01 Dec 2013 10:35:23 +0100
-In-Reply-To: <1385843940.2664.4.camel@joe-AO722>
-References: <528AEFB7.4060301@gmail.com>
-	 <20131125011938.GB18921@codeaurora.org> <5292B845.3010404@gmail.com>
-	 <5292B8A0.7020409@gmail.com> <5294255E.7040105@gmail.com>
-	 <52957ADA.2080704@gmail.com>
-	 (sfid-20131127_055211_558798_A7DF5684) <1385739487.8656.1.camel@jlt4.sipsolutions.net>
-	 <5299D306.7070701@gmail.com>
-	 (sfid-20131130_125901_519610_EDA4068E) <1385816013.4327.1.camel@jlt4.sipsolutions.net>
-	 <5299ED38.4090509@gmail.com> <5299EFDD.6060405@gmail.com>
-	 (sfid-20131130_150205_984535_068F14A9) <1385842134.6108.4.camel@jlt4.sipsolutions.net>
-	 <1385843940.2664.4.camel@joe-AO722>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 16 Dec 2013 11:28:01 -0500
+Received: by mail-we0-f180.google.com with SMTP id t61so4820412wes.39
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Dec 2013 08:28:00 -0800 (PST)
+MIME-Version: 1.0
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Mon, 16 Dec 2013 21:57:39 +0530
+Message-ID: <CABPxzY+CnnssaZpqgWuJ=QH-k=zJbHpLaGkJXAQSWSxq7kKa6Q@mail.gmail.com> (sfid-20131216_172806_041475_12934CFB)
+Subject: [RFC] crda: Fix the linking order to avoid compilation error
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	wireless-regdb@lists.infradead.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2013-11-30 at 12:39 -0800, Joe Perches wrote:
+While linking the crda.o and libreg.so, first put crda.o
+and then -lreg. This fixed the below error:
 
-> +++ b/net/mac80211/tx.c
-> @@ -1777,18 +1777,16 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
->  		}
->  		ap_sdata = container_of(sdata->bss, struct ieee80211_sub_if_data,
->  					u.ap);
-> -		chanctx_conf = rcu_dereference(ap_sdata->vif.chanctx_conf);
-> -		if (!chanctx_conf)
-> -			goto fail_rcu;
-> -		band = chanctx_conf->def.chan->band;
-> -		if (sta)
-> -			break;
->  		/* fall through */
->  	case NL80211_IFTYPE_AP:
-> -		if (sdata->vif.type == NL80211_IFTYPE_AP)
-> -			chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
-> +		chanctx_conf = rcu_dereference(ap_sdata->vif.chanctx_conf);
+# make
+  GEN  keys-gcrypt.c
+  Trusted pubkeys: pubkeys/linville.key.pub.pem
+  CC   libreg.so
+  CC   crda.o
+  LD   crda
+crda.o: In function `main':
+crda/crda.c:196: undefined reference to `reglib_get_rd_alpha2'
+collect2: ld returned 1 exit status
+make: *** [crda] Error 1
 
-Good try, but no, now ap_sdata isn't even assigned. :)
+Note: This still doesn't fix the below error (will send another mail)
 
-johannes
+  CHK  /usr/lib/crda/regulatory.bin
+Database signature verification failed.
+Invalid or empty regulatory file, note: a binary regulatory file should be used.
+make: *** [verify] Error 234
 
+Signed-off-by: Chaitanya T K <chaitanya.mgit@gmail.com>
+---
+ Makefile |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 4a351c6..0b2f0d7 100644
+--- a/Makefile
++++ b/Makefile
+@@ -28,10 +28,11 @@ RUNTIME_PUBKEY_DIR?=/etc/wireless-regdb/pubkeys
+ CFLAGS += -O2 -fpic
+ CFLAGS += -std=gnu99 -Wall -Werror -pedantic
+ CFLAGS += -Wall -g
+-LDLIBS += -lm
+ LDLIBREG += -lreg
++LDLIBS += $(LDLIBREG)
++LDLIBS += -lm
+ LIBREG += libreg.so
+-LDFLAGS += -L ./ $(LDLIBREG)
++LDFLAGS += -L ./
+
+ all: all_noverify verify
