@@ -1,59 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:39382 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751666Ab3LYKiY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Dec 2013 05:38:24 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: wzyboy <wzyboy@wzyboy.org>, Emmanuel Grumbach <egrumbach@gmail.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bj?rn Mork <bjorn@mork.no>
-Subject: RE: [Ilw] Intel Wireless 7260 hardware timed out randomly
-Date: Wed, 25 Dec 2013 10:38:20 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB303D297F0@HASMSX103.ger.corp.intel.com> (sfid-20131225_113837_781459_EA46E2A3)
-References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
- <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
- <52828364.6080103@gmail.com>
- <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
- <CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
- <CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
- <CALkVjQaTnocYnV4GM=LHuYwMRZ=sOZnSrtna4C6anNAWr4O7=A@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301E02E49@HASMSX103.ger.corp.intel.com>
- <CALkVjQZdPuE2F+ZARBLha-+iOMA4AjDWHO4=ssnuF2Uu87RyuQ@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301E02EC1@HASMSX103.ger.corp.intel.com>
- <CALkVjQbPTkGuEa8hLVZE0OVatw7ho=D+D51Qu68PRx-0dYay7w@mail.gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB301E02FC6@HASMSX103.ger.corp.intel.com>
- <CAErSpo6bKOpycD=cp08aBqp2U-u7sdbTSBYoHop1-1Hkmr3F-g@mail.gmail.com>
- <CALkVjQaOHix5uxFGd-62negbfubz-rdP+zmj9w5wDEa1rCA75Q@mail.gmail.com>
- <5285E028.20906@gmail.com>
- <CALkVjQYT9P--dgez064je4vM-xve4uF5ptOVVk3DuVoQiWQvew@mail.gmail.com>
- <CANUX_P1j9QNGQ2n02KpXsuMQcZo9uOsSN-zZ8yNS1e5+Y9bJOA@mail.gmail.com>
- <CALkVjQYFJzP1E_YayPOjRu3u85WdpDojDD+DmU9ZehY7ZHF0AA@mail.gmail.com>
-In-Reply-To: <CALkVjQYFJzP1E_YayPOjRu3u85WdpDojDD+DmU9ZehY7ZHF0AA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-qe0-f46.google.com ([209.85.128.46]:56775 "EHLO
+	mail-qe0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751112Ab3LPKDt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Dec 2013 05:03:49 -0500
+Received: by mail-qe0-f46.google.com with SMTP id a11so3682275qen.33
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Dec 2013 02:03:48 -0800 (PST)
 MIME-Version: 1.0
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 16 Dec 2013 21:03:28 +1100
+Message-ID: <CAGRGNgXdwkbAxbEojrj=doRF=fsEUajjojjR4SOmyOgaRMJP_w@mail.gmail.com> (sfid-20131216_110353_207322_6262ABF9)
+Subject: Poor throughput with Intel Wireless-N 2230 on Debian's 3.11 kernel
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiANCj4gDQo+IEdsYWQgdG8gc2VlIHlvdSBhZ2FpbiA6LSkNCj4gDQo+IEkndmUgY29tcGlsZWQg
-TGludXggMy4xMi41IHdpdGggeW91ciBwYXRjaCwgcmVtb3ZlZCAic2V0cGNpIiB0cmljayBhbmQN
-Cj4gcmVib290ZWQuDQo+IA0KPiBEdXJpbmcgdGhlIGJvb3Qgb2YgbmV3IGtlcm5lbCwgSSBjYW4g
-c2VlIGFkZGl0aW9uYWwgKGVycm9yKSBtZXNzYWdlcyBhbW9uZw0KPiAic3lzdGVtZC1mc2NrIiBs
-aW5lcyBidXQgSSB3YXMgbm90IGZhc3QgZW5vdWdoIHRvIHRha2UgcGhvdG9zIGZvciB0aGVtDQo+
-IGJlZm9yZSB0aGV5IGRpc2FwcGVhcmVkIChmbHVzaGVkIGF3YXkpIGJ5IHR0eSBsb2dpbiBpbnRl
-cmZhY2UuDQo+IA0KPiBBZnRlciBsb2dnaW5nIGluLCBJIGZpbmQgdGhhdCBuZXRjZmcgZGlkIG5v
-dCBjb25uZWN0IHRvIGRvcm1pdG9yeSdzIFdpLUZpIGFzDQo+IGJlZm9yZS4gSSBydW4gImxzcGNp
-IC12dnh4eCIgYW5kIGZpbmQgdGhhdCB0aGUgaW50ZXJmYWNlIGlzIGZpbGxlZCB3aXRoICJmZiIu
-IEkndmUNCj4gYXR0YWNoZWQgdGhlIG91dHB1dCBvZiAibHNwY2kgLXZ2eHh4IiBhbmQgImRtZXNn
-Ii4NCj4gDQoNClNvIGl0IGRpZG4ndCB3b3JrIC0gb2suIEkgYW0gbm90IHN1cnByaXNlZCwgYnV0
-IEkgc3RpbGwgd2FudGVkIHRvIGtub3cuDQpUaGlzIHBhdGNoIGlzIHN1cHBvc2VkIHRvIGZpeCBz
-b21lIHRpbWluZyBpc3N1ZSBpbiB0aGUgd2FrZSB1cCBmcm9tIEwxLg0KVGhhbmtzIGZvciB0ZXN0
-aW5nLg0KDQo+IA0KPiAoQW5kIGhlcmUgaXMgc29tZXRoaW5nICJmdW4iOiBJIHJldmVydGVkIG15
-IGtlcm5lbCB0byBBcmNoJ3Mgb2ZmaWNpYWwNCj4gMy4xMi41IGFuZCByZWJvb3RlZCwgYW5kIHRo
-ZSBpbnRlcmZhY2UgaXMgdG90YWxseSBtaXNzaW5nISBJIG1lYW4sIGl0DQo+IGRpc2FwcGVhcmVk
-IGZyb20gdGhlIG91dHB1dCBvZiAiaXAgbGluayIuIEkgY2Fubm90IGV2ZW4gc2VlIGl0IGluICJs
-c3BjaSAtDQo+IHZ2eHh4Iiwgbm90IGV2ZW4gImZmIi4gVGhlIHN0cmFuZ2UgZWZmZWN0IHZhbmlz
-aGVkIGFmdGVyIG9uZSBtb3JlIHJlYm9vdA0KPiBhbmQgYSBjb2xkIGJvb3QuKQ0KDQpHcmVhdCAt
-IHRoYXQgY2FuIGhhcHBlbiBzb21ldGltZXMgd2hlbiBzb21ldGhpbmcgZ29lcyB3cm9uZy4uLg0K
+Hi all,
+
+I recently built a home theatre PC with a Mini-ITX motherboard with an
+Intel Wireless-N 2230 on board. I'm running up-to-date Debian Testing
+(Wheezy) on it with the default 3.11 kernel.
+
+I'm having issues streaming "low" bitrate video (well below 1Mbit/sec)
+over our otherwise quiet wireless network.
+
+iw dev wlan0 link reports a signal level of ~-60dBm, my access point
+claims a slightly lower signal level.
+
+My wireless network is run off a cheap ath9k router with 3 antennae.
+
+I believe that this particular part is at fault as my laptop, which
+has an Ultimate-N 5300 with 2 antennae, can stream the same files
+without issue when placed next to the HTPC; and the network has
+sufficient bandwidth to stream similar files to four devices
+simultaneously.
+
+I'm well aware that I should update to the latest wireless-testing (or
+install an equivalent backport release) before filing official bug
+reports, however I want to know if there have been any improvements
+since 3.11 which would benefit the 'N 2230.
+
+Also, are there any new firmware versions which may improve this
+situation? - I'm using version 18.168.6.1 as distributed by Debian.
+
+Relevant dmesg snippet:
+
+[    1.320728] iwlwifi 0000:03:00.0: enabling device (0000 -> 0002)
+[    1.320850] iwlwifi 0000:03:00.0: irq 44 for MSI/MSI-X
+[    1.324627] iwlwifi 0000:03:00.0: firmware: agent loaded
+iwlwifi-2030-6.ucode into memory
+[    1.324925] iwlwifi 0000:03:00.0: loaded firmware version
+18.168.6.1 op_mode iwldvm
+[    1.338637] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_DEBUG disabled
+[    1.338641] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_DEBUGFS disabled
+[    1.338643] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_DEVICE_TRACING disabled
+[    1.338645] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_P2P enabled
+[    1.338647] iwlwifi 0000:03:00.0: Detected Intel(R) Centrino(R)
+Wireless-N 2230 BGN, REV=0xC8
+[    1.338702] iwlwifi 0000:03:00.0: L1 Disabled; Enabling L0S
+[    1.361414] ieee80211 phy0: Selected rate control algorithm 'iwl-agn-rs'
+[    3.384827] iwlwifi 0000:03:00.0: L1 Disabled; Enabling L0S
+[    3.392503] iwlwifi 0000:03:00.0: Radio type=0x2-0x0-0x0
+[    3.632396] iwlwifi 0000:03:00.0: L1 Disabled; Enabling L0S
+[    3.640063] iwlwifi 0000:03:00.0: Radio type=0x2-0x0-0x0
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
