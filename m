@@ -1,48 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:48563 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751901Ab3LEOVI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 09:21:08 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, sw@simonwunderlich.de
-Subject: [PATCH 3.13] ath9k: fix duration calculation for non-aggregated packets
-Date: Thu,  5 Dec 2013 15:20:53 +0100
-Message-Id: <1386253253-73378-1-git-send-email-nbd@openwrt.org> (sfid-20131205_152111_898128_17A32FEB)
+Received: from mail-vb0-f48.google.com ([209.85.212.48]:56706 "EHLO
+	mail-vb0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752067Ab3LPBvL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Dec 2013 20:51:11 -0500
+Received: by mail-vb0-f48.google.com with SMTP id f13so2691646vbg.21
+        for <linux-wireless@vger.kernel.org>; Sun, 15 Dec 2013 17:51:10 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1386962034-7141-4-git-send-email-luciano.coelho@intel.com>
+References: <1386962034-7141-1-git-send-email-luciano.coelho@intel.com>
+	<1386962034-7141-4-git-send-email-luciano.coelho@intel.com>
+Date: Mon, 16 Dec 2013 09:51:10 +0800
+Message-ID: <CAEFj987JhRnx93qCTusoGB-gmcuLLDXeL76xEw_bz7HUmLFitQ@mail.gmail.com> (sfid-20131216_025116_191828_7AE1F52C)
+Subject: Re: [PATCH v10 3/5] mac80211: refactor ieee80211_mesh_process_chanswitch()
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: Luciano Coelho <luciano.coelho@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Simon Wunderlich <sw@simonwunderlich.de>,
+	Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When not aggregating packets, fi->framelen should be passed in as length
-to calculate the duration. Before the tx path rework, ath_tx_fill_desc
-was called for either one aggregate, or one single frame, with the
-length of the packet or the aggregate as a parameter.
-After the rework, ath_tx_sched_aggr can pass a burst of single frames to
-ath_tx_fill_desc and sets len=0.
-Fix broken duration calculation by overriding the length in ath_tx_fill_desc
-before passing it to ath_buf_set_rate.
+> -
+> -       rcu_read_unlock();
+> +       if (cfg80211_chandef_identical(&params.chandef,
+> +                                      &sdata->vif.bss_conf.chandef)) {
+> +               ibss_dbg(sdata,
+> +                        "received csa with an identical chandef, ignoring\n");
 
-Cc: stable@vger.kernel.org
-Reported-by: Simon Wunderlich <sw@simonwunderlich.de>
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/xmit.c | 4 ++++
- 1 file changed, 4 insertions(+)
+mcsa_dbg here?
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 09cdbcd..b5a19e0 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1276,6 +1276,10 @@ static void ath_tx_fill_desc(struct ath_softc *sc, struct ath_buf *bf,
- 				if (!rts_thresh || (len > rts_thresh))
- 					rts = true;
- 			}
-+
-+			if (!aggr)
-+				len = fi->framelen;
-+
- 			ath_buf_set_rate(sc, bf, &info, len, rts);
- 		}
- 
--- 
-1.8.3.4 (Apple Git-47)
-
+-----
+Chun-Yeow
