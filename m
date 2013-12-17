@@ -1,38 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:56920 "EHLO
-	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932094Ab3L3T67 (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:48998 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755278Ab3LQSLr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Dec 2013 14:58:59 -0500
-Date: Mon, 30 Dec 2013 20:58:55 +0100 (CET)
-From: Julia Lawall <julia.lawall@lip6.fr>
-To: Johannes Berg <johannes@sipsolutions.net>
-cc: Julia Lawall <Julia.Lawall@lip6.fr>,
-	kernel-janitors@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 4/11]  use ether_addr_equal_64bits
-In-Reply-To: <1388429761.4410.1.camel@jlt4.sipsolutions.net>
-Message-ID: <alpine.DEB.2.02.1312302057420.2209@localhost6.localdomain6> (sfid-20131230_205931_253981_691C5F4F)
-References: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>  <1388427307-8691-5-git-send-email-Julia.Lawall@lip6.fr>  (sfid-20131230_182319_112673_F481A1D3) <1388429761.4410.1.camel@jlt4.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+	Tue, 17 Dec 2013 13:11:47 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/4] ath9k: Remove ath9k_hw_gettsf32()
+Date: Tue, 17 Dec 2013 23:36:45 +0530
+Message-Id: <1387303608-31356-2-git-send-email-sujith@msujith.org> (sfid-20131217_191150_752035_B6BE2D06)
+In-Reply-To: <1387303608-31356-1-git-send-email-sujith@msujith.org>
+References: <1387303608-31356-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Seems to be missing an "iwlwifi:" or so prefix, but I guess we can add
-> it when we take the patch ...
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Sorry.  Not sure why that happened.  I'll look into it.
+It is unnecessary and the value is just a simple,
+direct register read.
 
-> Is there any way we could catch (sparse, or some other script?) that
-> struct reorganising won't break the condition needed ("within a
-> structure that contains at least two more bytes")?
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c |  2 +-
+ drivers/net/wireless/ath/ath9k/hw.c         | 10 ----------
+ drivers/net/wireless/ath/ath9k/hw.h         |  1 -
+ 3 files changed, 1 insertion(+), 12 deletions(-)
 
-What kind of reorganizing could happen?  Do you mean that the programmer 
-might do at some time in the future, or something the compiler might do?
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index 7b94a6c..e9cf1de 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -1263,7 +1263,7 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type)
+ 		ar9003_mci_send_coex_bt_status_query(ah, true, query_type);
+ 		break;
+ 	case MCI_STATE_RECOVER_RX:
+-		tsf = ath9k_hw_gettsf32(ah);
++		tsf = REG_READ(ah, AR_TSF_L32);
+ 		if ((tsf - mci->last_recovery) <= MCI_RECOVERY_DUR_TSF) {
+ 			ath_dbg(ath9k_hw_common(ah), MCI,
+ 				"(MCI) ignore Rx recovery\n");
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 4797cb2..40cc64b 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2973,12 +2973,6 @@ static const struct ath_gen_timer_configuration gen_tmr_configuration[] =
+ 
+ /* HW generic timer primitives */
+ 
+-u32 ath9k_hw_gettsf32(struct ath_hw *ah)
+-{
+-	return REG_READ(ah, AR_TSF_L32);
+-}
+-EXPORT_SYMBOL(ath9k_hw_gettsf32);
+-
+ struct ath_gen_timer *ath_gen_timer_alloc(struct ath_hw *ah,
+ 					  void (*trigger)(void *),
+ 					  void (*overflow)(void *),
+@@ -3137,10 +3131,6 @@ void ath_gen_timer_isr(struct ath_hw *ah)
+ }
+ EXPORT_SYMBOL(ath_gen_timer_isr);
+ 
+-/********/
+-/* HTC  */
+-/********/
+-
+ static struct {
+ 	u32 version;
+ 	const char * name;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 54932d8..ba0059f 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -978,7 +978,6 @@ void ath9k_hw_set_txpowerlimit(struct ath_hw *ah, u32 limit, bool test);
+ void ath9k_hw_setopmode(struct ath_hw *ah);
+ void ath9k_hw_setmcastfilter(struct ath_hw *ah, u32 filter0, u32 filter1);
+ void ath9k_hw_write_associd(struct ath_hw *ah);
+-u32 ath9k_hw_gettsf32(struct ath_hw *ah);
+ u64 ath9k_hw_gettsf64(struct ath_hw *ah);
+ void ath9k_hw_settsf64(struct ath_hw *ah, u64 tsf64);
+ void ath9k_hw_reset_tsf(struct ath_hw *ah);
+-- 
+1.8.5.1
 
-julia
