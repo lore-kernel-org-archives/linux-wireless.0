@@ -1,185 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:48978 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754123Ab3LNRD6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Dec 2013 12:03:58 -0500
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-ee0-f50.google.com ([74.125.83.50]:64069 "EHLO
+	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753664Ab3LQUpQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Dec 2013 15:45:16 -0500
+Received: by mail-ee0-f50.google.com with SMTP id c41so3091354eek.37
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Dec 2013 12:45:15 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Subject: [PATCH 03/11] ath9k_hw: use a software timer for btcoex no_stomp_timer
-Date: Sat, 14 Dec 2013 18:03:37 +0100
-Message-Id: <1387040625-38114-3-git-send-email-nbd@openwrt.org> (sfid-20131214_180417_399327_BF2F6935)
-In-Reply-To: <1387040625-38114-1-git-send-email-nbd@openwrt.org>
-References: <1387040625-38114-1-git-send-email-nbd@openwrt.org>
+Cc: Arik Nemtsov <arik@wizery.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 22/36] iwlwifi: trans: prevent reprobe on repeated FW errors before restart
+Date: Tue, 17 Dec 2013 22:44:25 +0200
+Message-Id: <1387313079-28123-22-git-send-email-egrumbach@gmail.com> (sfid-20131217_214523_173205_FDDE275D)
+In-Reply-To: <52B0B72A.5070704@gmail.com>
+References: <52B0B72A.5070704@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-TSF accuracy is not needed here, and there is only one usable generic
-timer that is supported by all chips and uses the primary TSF counter.
+From: Arik Nemtsov <arik@wizery.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+In case a sync command timeouts or Tx is stuck while a FW error
+interrupt arrives, we might call iwl_op_mode_nic_error twice before
+a restart has been initiated. This will cause a reprobe. Unify calls
+to this function at the transport level and only call it on the first
+FW error in a given by checking the transport FW error flag.
+
+While at it, remove the privately defined iwl_nic_error from PCIE code
+and use the common callback instead.
+
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |  7 ++---
- drivers/net/wireless/ath/ath9k/gpio.c  | 53 +++++++---------------------------
- drivers/net/wireless/ath/ath9k/mci.c   |  2 +-
- 3 files changed, 15 insertions(+), 47 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-trans.h     |   11 +++++++++++
+ drivers/net/wireless/iwlwifi/pcie/internal.h |    6 ------
+ drivers/net/wireless/iwlwifi/pcie/rx.c       |   12 ++++++------
+ drivers/net/wireless/iwlwifi/pcie/tx.c       |    6 +++---
+ 4 files changed, 20 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 5e5d5cb..dbf2a97 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -477,20 +477,19 @@ enum bt_op_flags {
- };
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index c71519d..fa495ba 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -70,6 +70,7 @@
+ #include "iwl-debug.h"
+ #include "iwl-config.h"
+ #include "iwl-fw.h"
++#include "iwl-op-mode.h"
  
- struct ath_btcoex {
--	bool hw_timer_enabled;
- 	spinlock_t btcoex_lock;
- 	struct timer_list period_timer; /* Timer for BT period */
-+	struct timer_list no_stomp_timer;
- 	u32 bt_priority_cnt;
- 	unsigned long bt_priority_time;
- 	unsigned long op_flags;
- 	int bt_stomp_type; /* Types of BT stomping */
--	u32 btcoex_no_stomp; /* in usec */
-+	u32 btcoex_no_stomp; /* in msec */
- 	u32 btcoex_period; /* in msec */
--	u32 btscan_no_stomp; /* in usec */
-+	u32 btscan_no_stomp; /* in msec */
- 	u32 duty_cycle;
- 	u32 bt_wait_time;
- 	int rssi_count;
--	struct ath_gen_timer *no_stomp_timer; /* Timer for no BT stomping */
- 	struct ath_mci_profile mci;
- 	u8 stomp_audio;
- };
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index c34f212..a85e220 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -257,19 +257,9 @@ static void ath_btcoex_period_timer(unsigned long data)
- 
- 	spin_unlock_bh(&btcoex->btcoex_lock);
- 
--	/*
--	 * btcoex_period is in msec while (btocex/btscan_)no_stomp are in usec,
--	 * ensure that we properly convert btcoex_period to usec
--	 * for any comparision with (btcoex/btscan_)no_stomp.
--	 */
--	if (btcoex->btcoex_period * 1000 != btcoex->btcoex_no_stomp) {
--		if (btcoex->hw_timer_enabled)
--			ath9k_gen_timer_stop(ah, btcoex->no_stomp_timer);
--
--		ath9k_gen_timer_start(ah, btcoex->no_stomp_timer, timer_period,
--				      timer_period * 10);
--		btcoex->hw_timer_enabled = true;
--	}
-+	if (btcoex->btcoex_period != btcoex->btcoex_no_stomp)
-+		mod_timer(&btcoex->no_stomp_timer,
-+			 jiffies + msecs_to_jiffies(timer_period));
- 
- 	ath9k_ps_restore(sc);
- 
-@@ -282,7 +272,7 @@ skip_hw_wakeup:
-  * Generic tsf based hw timer which configures weight
-  * registers to time slice between wlan and bt traffic
-  */
--static void ath_btcoex_no_stomp_timer(void *arg)
-+static void ath_btcoex_no_stomp_timer(unsigned long arg)
- {
- 	struct ath_softc *sc = (struct ath_softc *)arg;
- 	struct ath_hw *ah = sc->sc_ah;
-@@ -311,24 +301,18 @@ static int ath_init_btcoex_timer(struct ath_softc *sc)
- 	struct ath_btcoex *btcoex = &sc->btcoex;
- 
- 	btcoex->btcoex_period = ATH_BTCOEX_DEF_BT_PERIOD;
--	btcoex->btcoex_no_stomp = (100 - ATH_BTCOEX_DEF_DUTY_CYCLE) * 1000 *
-+	btcoex->btcoex_no_stomp = (100 - ATH_BTCOEX_DEF_DUTY_CYCLE) *
- 		btcoex->btcoex_period / 100;
--	btcoex->btscan_no_stomp = (100 - ATH_BTCOEX_BTSCAN_DUTY_CYCLE) * 1000 *
-+	btcoex->btscan_no_stomp = (100 - ATH_BTCOEX_BTSCAN_DUTY_CYCLE) *
- 				   btcoex->btcoex_period / 100;
- 
- 	setup_timer(&btcoex->period_timer, ath_btcoex_period_timer,
- 			(unsigned long) sc);
-+	setup_timer(&btcoex->no_stomp_timer, ath_btcoex_no_stomp_timer,
-+			(unsigned long) sc);
- 
- 	spin_lock_init(&btcoex->btcoex_lock);
- 
--	btcoex->no_stomp_timer = ath_gen_timer_alloc(sc->sc_ah,
--			ath_btcoex_no_stomp_timer,
--			ath_btcoex_no_stomp_timer,
--			(void *) sc, AR_FIRST_NDP_TIMER);
--
--	if (!btcoex->no_stomp_timer)
--		return -ENOMEM;
--
- 	return 0;
+ /**
+  * DOC: Transport layer - what is it ?
+@@ -805,6 +806,16 @@ iwl_trans_release_nic_access(struct iwl_trans *trans, unsigned long *flags)
+ 	__release(nic_access);
  }
  
-@@ -343,10 +327,7 @@ void ath9k_btcoex_timer_resume(struct ath_softc *sc)
- 	ath_dbg(ath9k_hw_common(ah), BTCOEX, "Starting btcoex timers\n");
++static inline void iwl_trans_fw_error(struct iwl_trans *trans)
++{
++	if (WARN_ON_ONCE(!trans->op_mode))
++		return;
++
++	/* prevent double restarts due to the same erroneous FW */
++	if (!test_and_set_bit(STATUS_FW_ERROR, &trans->status))
++		iwl_op_mode_nic_error(trans->op_mode);
++}
++
+ /*****************************************************
+ * driver (transport) register/unregister functions
+ ******************************************************/
+diff --git a/drivers/net/wireless/iwlwifi/pcie/internal.h b/drivers/net/wireless/iwlwifi/pcie/internal.h
+index 8a2de33..674c75b 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/iwlwifi/pcie/internal.h
+@@ -456,10 +456,4 @@ static inline bool iwl_is_rfkill_set(struct iwl_trans *trans)
+ 		CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW);
+ }
  
- 	/* make sure duty cycle timer is also stopped when resuming */
--	if (btcoex->hw_timer_enabled) {
--		ath9k_gen_timer_stop(sc->sc_ah, btcoex->no_stomp_timer);
--		btcoex->hw_timer_enabled = false;
--	}
-+	del_timer_sync(&btcoex->no_stomp_timer);
- 
- 	btcoex->bt_priority_cnt = 0;
- 	btcoex->bt_priority_time = jiffies;
-@@ -363,24 +344,16 @@ void ath9k_btcoex_timer_resume(struct ath_softc *sc)
- void ath9k_btcoex_timer_pause(struct ath_softc *sc)
- {
- 	struct ath_btcoex *btcoex = &sc->btcoex;
--	struct ath_hw *ah = sc->sc_ah;
- 
- 	del_timer_sync(&btcoex->period_timer);
+-static inline void iwl_nic_error(struct iwl_trans *trans)
+-{
+-	set_bit(STATUS_FW_ERROR, &trans->status);
+-	iwl_op_mode_nic_error(trans->op_mode);
+-}
 -
--	if (btcoex->hw_timer_enabled) {
--		ath9k_gen_timer_stop(ah, btcoex->no_stomp_timer);
--		btcoex->hw_timer_enabled = false;
--	}
-+	del_timer_sync(&btcoex->no_stomp_timer);
- }
+ #endif /* __iwl_trans_int_pcie_h__ */
+diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
+index bbbb3ca..7aeec5c 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
+@@ -797,14 +797,14 @@ static void iwl_pcie_irq_handle_error(struct iwl_trans *trans)
+ 	iwl_pcie_dump_csr(trans);
+ 	iwl_dump_fh(trans, NULL);
  
- void ath9k_btcoex_stop_gen_timer(struct ath_softc *sc)
- {
- 	struct ath_btcoex *btcoex = &sc->btcoex;
- 
--	if (btcoex->hw_timer_enabled) {
--		ath9k_gen_timer_stop(sc->sc_ah, btcoex->no_stomp_timer);
--		btcoex->hw_timer_enabled = false;
--	}
-+	del_timer_sync(&btcoex->no_stomp_timer);
- }
- 
- u16 ath9k_btcoex_aggr_limit(struct ath_softc *sc, u32 max_4ms_framelen)
-@@ -447,10 +420,6 @@ void ath9k_deinit_btcoex(struct ath_softc *sc)
- {
- 	struct ath_hw *ah = sc->sc_ah;
- 
--        if ((sc->btcoex.no_stomp_timer) &&
--	    ath9k_hw_get_btcoex_scheme(sc->sc_ah) == ATH_BTCOEX_CFG_3WIRE)
--		ath_gen_timer_free(sc->sc_ah, sc->btcoex.no_stomp_timer);
+-	/* set the ERROR bit before we wake up the caller */
+-	set_bit(STATUS_FW_ERROR, &trans->status);
+-	clear_bit(STATUS_SYNC_HCMD_ACTIVE, &trans->status);
+-	wake_up(&trans_pcie->wait_command_queue);
 -
- 	if (ath9k_hw_mci_is_enabled(ah))
- 		ath_mci_cleanup(sc);
+ 	local_bh_disable();
+-	iwl_nic_error(trans);
++	/* The STATUS_FW_ERROR bit is set in this function. This must happen
++	 * before we wake up the command caller, to ensure a proper cleanup. */
++	iwl_trans_fw_error(trans);
+ 	local_bh_enable();
++
++	clear_bit(STATUS_SYNC_HCMD_ACTIVE, &trans->status);
++	wake_up(&trans_pcie->wait_command_queue);
  }
-diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
-index 0ac1b5f..71799fc 100644
---- a/drivers/net/wireless/ath/ath9k/mci.c
-+++ b/drivers/net/wireless/ath/ath9k/mci.c
-@@ -200,7 +200,7 @@ skip_tuning:
- 	if (btcoex->duty_cycle > ATH_MCI_MAX_DUTY_CYCLE)
- 		btcoex->duty_cycle = ATH_MCI_MAX_DUTY_CYCLE;
  
--	btcoex->btcoex_no_stomp =  btcoex->btcoex_period * 1000 *
-+	btcoex->btcoex_no_stomp =  btcoex->btcoex_period *
- 		(100 - btcoex->duty_cycle) / 100;
+ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
+diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
+index 5b63948..8df2478 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
+@@ -207,7 +207,7 @@ static void iwl_pcie_txq_stuck_timer(unsigned long data)
+ 		IWL_ERR(trans, "scratch %d = 0x%08x\n", i,
+ 			le32_to_cpu(txq->scratchbufs[i].scratch));
  
- 	ath9k_hw_btcoex_enable(sc->sc_ah);
+-	iwl_nic_error(trans);
++	iwl_trans_fw_error(trans);
+ }
+ 
+ /*
+@@ -1021,7 +1021,7 @@ static void iwl_pcie_cmdq_reclaim(struct iwl_trans *trans, int txq_id, int idx)
+ 		if (nfreed++ > 0) {
+ 			IWL_ERR(trans, "HCMD skipped: index (%d) %d %d\n",
+ 				idx, q->write_ptr, q->read_ptr);
+-			iwl_nic_error(trans);
++			iwl_trans_fw_error(trans);
+ 		}
+ 	}
+ 
+@@ -1555,7 +1555,7 @@ static int iwl_pcie_send_hcmd_sync(struct iwl_trans *trans,
+ 			       get_cmd_string(trans_pcie, cmd->id));
+ 		ret = -ETIMEDOUT;
+ 
+-		iwl_nic_error(trans);
++		iwl_trans_fw_error(trans);
+ 
+ 		goto cancel;
+ 	}
 -- 
-1.8.3.4 (Apple Git-47)
+1.7.9.5
 
