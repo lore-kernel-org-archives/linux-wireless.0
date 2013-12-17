@@ -1,24 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:52630 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752671Ab3LEQSI (ORCPT
+Received: from mail-ve0-f173.google.com ([209.85.128.173]:49239 "EHLO
+	mail-ve0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751504Ab3LQWGI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 11:18:08 -0500
-Message-ID: <1386260285.4182.17.camel@jlt4.sipsolutions.net> (sfid-20131205_171813_136401_0FA1A40C)
-Subject: Re: [PATCH 1/4] cfg80211: stop sched scan only when needed
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org, Barak Bercovitz <barak@wizery.com>
-Date: Thu, 05 Dec 2013 17:18:05 +0100
-In-Reply-To: <1386235289-27278-1-git-send-email-eliad@wizery.com> (sfid-20131205_102140_637870_9D045EFD)
-References: <1386235289-27278-1-git-send-email-eliad@wizery.com>
-	 (sfid-20131205_102140_637870_9D045EFD)
-Content-Type: text/plain
-Mime-Version: 1.0
+	Tue, 17 Dec 2013 17:06:08 -0500
+MIME-Version: 1.0
+In-Reply-To: <1254825772.20131217224914@eikelenboom.it>
+References: <1342235583.20131211182804@eikelenboom.it>
+	<CAB=NE6UfumA2xez1DvtDSBDZ72WF_tOozFo_8LRnMryYiSqD-A@mail.gmail.com>
+	<871324710.20131211191104@eikelenboom.it>
+	<CAB=NE6XRnE0j9NMW0K1vKzEO9v70arSH4YXZjudqa0ZxiLB4AA@mail.gmail.com>
+	<1937118387.20131216122200@eikelenboom.it>
+	<52AEE60B.6030509@broadcom.com>
+	<19210260274.20131216135644@eikelenboom.it>
+	<CAGRGNgXHemM2FfnXgW5RbzhFT+9SfUfVkjdysK3+=_u3hWSacw@mail.gmail.com>
+	<1534126119.20131217104548@eikelenboom.it>
+	<387552477.20131217213319@eikelenboom.it>
+	<20131217212709.GB5624@decadent.org.uk>
+	<1254825772.20131217224914@eikelenboom.it>
+Date: Tue, 17 Dec 2013 14:06:06 -0800
+Message-ID: <CA+55aFxQg6=MAWEkEGz64Hz8OawvPyX=fpBOjY8cGBL5XgB9WQ@mail.gmail.com> (sfid-20131217_230627_296998_37397F04)
+Subject: Re: [cfg80211 / iwlwifi] setting wireless regulatory domain doesn't work.
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: Sander Eikelenboom <linux@eikelenboom.it>
+Cc: Ben Hutchings <ben@decadent.org.uk>,
+	Julian Calaby <julian.calaby@gmail.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <avinashapatil@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Applied 1-3, still discussing patch 4.
+On Tue, Dec 17, 2013 at 1:49 PM, Sander Eikelenboom
+<linux@eikelenboom.it> wrote:
+>
+> So if i combine the two .. it's essentially just a very bad idea to compile the wireless stuff in.
+> It needs a access to a userland program at module load time, or it will block forever.
 
-johannes
+No, it's a very stupid module if it does that.
 
+It should require the crda hook not at module load time, but at first
+ifconfig time.
+
+We've had bugs like this before.  Doing user-mode callbacks at module
+loading time is a disaster exactly because it doesn't work well with
+built-in modules.
+
+The fact that those things apparently also don't time out or notice
+when they fail seems to then just exacerbate the bad decision.
+
+We have literally had this *exact* same issue with firmware loading.
+Network drivers shouldn't try to load firmware at module load time.
+Same deal.
+
+What's the broken path? Is this driver-specific, or is it generic to
+the 802.11 code?
+
+                Linus
