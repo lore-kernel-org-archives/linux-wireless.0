@@ -1,66 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:37279 "EHLO
-	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756142Ab3L3RTF (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:44531 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751052Ab3LQII7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Dec 2013 12:19:05 -0500
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: kernel-janitors@vger.kernel.org,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Tue, 17 Dec 2013 03:08:59 -0500
+Message-ID: <1387267730.4749.2.camel@jlt4.sipsolutions.net> (sfid-20131217_090902_196043_1F0D66D2)
+Subject: Re: [RFC PATCH 1/8] mac80211: Move dynamic PS data out of common
+ code
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Seth Forshee <seth.forshee@canonical.com>
+Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	brcm80211-dev-list@broadcom.com,
 	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 2/11] ath5k: use ether_addr_equal_64bits
-Date: Mon, 30 Dec 2013 19:14:58 +0100
-Message-Id: <1388427307-8691-3-git-send-email-Julia.Lawall@lip6.fr> (sfid-20131230_182212_802868_99F6C68B)
-In-Reply-To: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>
-References: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Arend van Spriel <arend@broadcom.com>
+Date: Tue, 17 Dec 2013 09:08:50 +0100
+In-Reply-To: <1387231260-2849-2-git-send-email-seth.forshee@canonical.com> (sfid-20131216_230107_034586_FFC8C889)
+References: <1387231260-2849-1-git-send-email-seth.forshee@canonical.com>
+	 <1387231260-2849-2-git-send-email-seth.forshee@canonical.com>
+	 (sfid-20131216_230107_034586_FFC8C889)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <Julia.Lawall@lip6.fr>
+On Mon, 2013-12-16 at 16:00 -0600, Seth Forshee wrote:
 
-Ether_addr_equal_64bits is more efficient than ether_addr_equal, and can be
-used when each argument is an array within a structure that contains at
-least two bytes of data beyond the array.
+> +void ieee80211_notify_rx(struct ieee80211_rx_data *rx)
+> +{
+> +	switch(rx->sdata->vif.type) {
+> +	case NL80211_IFTYPE_MONITOR:
+> +		ieee80211_mgd_notify_rx(rx);
 
-The structures involved are:
-ieee80211_mgmt defined in include/linux/ieee80211.h and
-ath_common defined in drivers/net/wireless/ath/ath.h
+This ... seems wrong.
 
-This was done using Coccinelle (http://coccinelle.lip6.fr/).
+Also, we already have ieee80211_sta_rx_notify() which you want, I think?
 
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+With this change, do you even still need local->ps_sdata?
 
----
-The semantic patch used is rather long and can be found in message 0 of
-this patch series.
-
- drivers/net/wireless/ath/ath5k/base.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 69f58b0..6396ad4 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -1245,7 +1245,7 @@ ath5k_check_ibss_tsf(struct ath5k_hw *ah, struct sk_buff *skb,
- 
- 	if (ieee80211_is_beacon(mgmt->frame_control) &&
- 	    le16_to_cpu(mgmt->u.beacon.capab_info) & WLAN_CAPABILITY_IBSS &&
--	    ether_addr_equal(mgmt->bssid, common->curbssid)) {
-+	    ether_addr_equal_64bits(mgmt->bssid, common->curbssid)) {
- 		/*
- 		 * Received an IBSS beacon with the same BSSID. Hardware *must*
- 		 * have updated the local TSF. We have to work around various
-@@ -1309,7 +1309,7 @@ ath5k_update_beacon_rssi(struct ath5k_hw *ah, struct sk_buff *skb, int rssi)
- 
- 	/* only beacons from our BSSID */
- 	if (!ieee80211_is_beacon(mgmt->frame_control) ||
--	    !ether_addr_equal(mgmt->bssid, common->curbssid))
-+	    !ether_addr_equal_64bits(mgmt->bssid, common->curbssid))
- 		return;
- 
- 	ewma_add(&ah->ah_beacon_rssi_avg, rssi);
+johannes
 
