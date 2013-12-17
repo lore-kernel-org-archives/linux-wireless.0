@@ -1,151 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f53.google.com ([209.85.160.53]:62347 "EHLO
-	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755275Ab3LSS0b (ORCPT
+Received: from mail-ee0-f45.google.com ([74.125.83.45]:33439 "EHLO
+	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751149Ab3LQJWb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Dec 2013 13:26:31 -0500
-Received: by mail-pb0-f53.google.com with SMTP id ma3so1491881pbc.40
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Dec 2013 10:26:30 -0800 (PST)
-From: Thomas Pedersen <twpedersen@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	open80211s <devel@lists.open80211s.org>,
-	Thomas Pedersen <twpedersen@gmail.com>
-Subject: [PATCH v3 2/2] mac80211: sync dtim_count to TSF
-Date: Thu, 19 Dec 2013 10:25:15 -0800
-Message-Id: <1387477515-3583-2-git-send-email-twpedersen@gmail.com> (sfid-20131219_192635_465719_C880076F)
-In-Reply-To: <1387477515-3583-1-git-send-email-twpedersen@gmail.com>
-References: <1387477515-3583-1-git-send-email-twpedersen@gmail.com>
+	Tue, 17 Dec 2013 04:22:31 -0500
+Received: by mail-ee0-f45.google.com with SMTP id d49so2743531eek.4
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Dec 2013 01:22:28 -0800 (PST)
+Date: Tue, 17 Dec 2013 10:21:20 +0100
+From: Henrik Austad <henrik@austad.us>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	linux-rt-users@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [RFC 00/10] make iwlwifi RT friendly
+Message-ID: <20131217092120.GA28480@austad.us> (sfid-20131217_102238_136222_14578E89)
+References: <1386750826-25219-1-git-send-email-emmanuel.grumbach@intel.com>
+ <20131215154843.GL31090@linutronix.de>
+ <52ADEAAF.3080107@gmail.com>
+ <52ADEB0D.3080306@linutronix.de>
+ <52ADEBDF.5060406@gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="d6Gm4EdcadzBjdND"
+In-Reply-To: <52ADEBDF.5060406@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On starting a mesh or AP BSS, the interface dtim_count
-countdown should match that of the driver TSF.
 
-Signed-off-by: Thomas Pedersen <twpedersen@gmail.com>
----
+--d6Gm4EdcadzBjdND
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-v2:
-	adjust dtim_count instead of setting TSF=0
-	(Sergey)
+On Sun, Dec 15, 2013 at 07:50:23PM +0200, Emmanuel Grumbach wrote:
+>=20
+>=20
+> On 12/15/2013 07:46 PM, Sebastian Andrzej Siewior wrote:
+> > On 12/15/2013 06:45 PM, Emmanuel Grumbach wrote:
+> >> No we don't. The primary interrupt just tells the hardware to stop
+> >> firing interrupts and wakes up the thread as written above.
+> >=20
+> > Sounds great then.
+> >=20
+>=20
+> Ok - I guess I'll submit then internally then before we send them upstrea=
+m.
 
-v3:
-	handle interface types other than mesh, and drop
-	IBSS dtim calculation since mac80211 doesn't
-	support ad-hoc PS.
+I'm trying to mash this on top of 3.12.5 for the latest rt-release, and=20
+especially drivers/net/wireless/iwlwifi/pcie/rx.c is not particularly=20
+compatible with your patches, especially iwl_pcie_int_cause_non_ict(),=20
+which as been moved, renamed and given new return values.
 
- net/mac80211/cfg.c            |    2 ++
- net/mac80211/debugfs_netdev.c |    1 +
- net/mac80211/ieee80211_i.h    |    2 ++
- net/mac80211/mesh.c           |    1 +
- net/mac80211/util.c           |   40 ++++++++++++++++++++++++++++++++++++++++
- 5 files changed, 46 insertions(+)
+Especially 07 is giving me some headaches, and instead of me making a=20
+massive trainwreck of it all, would you mind moving this closer to 3.12?
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index ac18528..8211d30 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -951,6 +951,7 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 			      struct cfg80211_ap_settings *params)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = sdata->local;
- 	struct beacon_data *old;
- 	struct ieee80211_sub_if_data *vlan;
- 	u32 changed = BSS_CHANGED_BEACON_INT |
-@@ -1030,6 +1031,7 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 		return err;
- 	}
- 
-+	ieee80211_recalc_dtim(local, sdata);
- 	ieee80211_bss_info_change_notify(sdata, changed);
- 
- 	netif_carrier_on(dev);
-diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-index 04b5a14..89160f7 100644
---- a/net/mac80211/debugfs_netdev.c
-+++ b/net/mac80211/debugfs_netdev.c
-@@ -468,6 +468,7 @@ static ssize_t ieee80211_if_parse_tsf(
- 		}
- 	}
- 
-+	ieee80211_recalc_dtim(local, sdata);
- 	return buflen;
- }
- __IEEE80211_IF_FILE_W(tsf);
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 33ebe08..337fcad 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1794,6 +1794,8 @@ ieee80211_cs_get(struct ieee80211_local *local, u32 cipher,
- int ieee80211_cs_headroom(struct ieee80211_local *local,
- 			  struct cfg80211_crypto_settings *crypto,
- 			  enum nl80211_iftype iftype);
-+void ieee80211_recalc_dtim(struct ieee80211_local *local,
-+			   struct ieee80211_sub_if_data *sdata);
- 
- #ifdef CONFIG_MAC80211_NOINLINE
- #define debug_noinline noinline
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 5a74b24..5b919ca 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -807,6 +807,7 @@ int ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
- 		return -ENOMEM;
- 	}
- 
-+	ieee80211_recalc_dtim(local, sdata);
- 	ieee80211_bss_info_change_notify(sdata, changed);
- 
- 	netif_carrier_on(sdata->dev);
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 656648b..d51d6c1 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -2588,3 +2588,43 @@ int ieee80211_cs_headroom(struct ieee80211_local *local,
- 
- 	return headroom;
- }
-+
-+void ieee80211_recalc_dtim(struct ieee80211_local *local,
-+			   struct ieee80211_sub_if_data *sdata)
-+{
-+	u64 tsf = drv_get_tsf(local, sdata);
-+	u64 dtim_count = 0;
-+	u16 beacon_int = sdata->vif.bss_conf.beacon_int * 1024;
-+	u8 dtim_period = sdata->vif.bss_conf.dtim_period;
-+	struct ps_data *ps;
-+	u8 bcns_from_dtim;
-+
-+	if (tsf == -1ULL || !beacon_int || !dtim_period)
-+		return;
-+
-+	if (sdata->vif.type == NL80211_IFTYPE_AP ||
-+	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN) {
-+		if (!sdata->bss)
-+			return;
-+
-+		ps = &sdata->bss->ps;
-+	} else if (ieee80211_vif_is_mesh(&sdata->vif))
-+		ps = &sdata->u.mesh.ps;
-+	else
-+		return;
-+
-+	/*
-+	 * actually finds last dtim_count, mac80211 will update in
-+	 * __beacon_add_tim().
-+	 * dtim_count = dtim_period - (tsf / bcn_int) % dtim_period
-+	 */
-+	do_div(tsf, beacon_int);
-+	bcns_from_dtim = do_div(tsf, dtim_period);
-+	/* just had a DTIM */
-+	if (!bcns_from_dtim)
-+		dtim_count = 0;
-+	else
-+		dtim_count = dtim_period - bcns_from_dtim;
-+
-+	ps->dtim_count = dtim_count;
-+}
--- 
-1.7.10.4
+Thanks!
 
+--=20
+Henrik Austad
+
+--d6Gm4EdcadzBjdND
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iEYEARECAAYFAlKwF5AACgkQ6k5VT6v45lmElwCcDdDgBqI42zooxDbPb1yHKY+b
+PUsAmwUdVOH1fJVJMHYI1v73WH4k30iU
+=3Tsq
+-----END PGP SIGNATURE-----
+
+--d6Gm4EdcadzBjdND--
