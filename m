@@ -1,67 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:52952 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753217Ab3LCNs3 (ORCPT
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:50746 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752083Ab3LQGu7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Dec 2013 08:48:29 -0500
-From: Luciano Coelho <luciano.coelho@intel.com>
-To: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
-	yeohchunyeow@gmail.com
-Cc: yeohchunyeow@cozybit.com
-Subject: [PATCH v6 2/5] mac80211: align ieee80211_ibss_csa_beacon() with ieee80211_csa_beacon()
-Date: Tue,  3 Dec 2013 15:48:19 +0200
-Message-Id: <1386078502-19845-3-git-send-email-luciano.coelho@intel.com> (sfid-20131203_144836_023054_822D2EAA)
-In-Reply-To: <1386078502-19845-1-git-send-email-luciano.coelho@intel.com>
-References: <1386078502-19845-1-git-send-email-luciano.coelho@intel.com>
+	Tue, 17 Dec 2013 01:50:59 -0500
+Received: by mail-wg0-f49.google.com with SMTP id x12so5686338wgg.16
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Dec 2013 22:50:57 -0800 (PST)
+MIME-Version: 1.0
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Tue, 17 Dec 2013 12:20:37 +0530
+Message-ID: <CABPxzYJSBagxbz4nd8=Qt_HbG4ecqe=-cbzi0N4JDPCwDE42Mg@mail.gmail.com> (sfid-20131217_075102_353968_914A31FF)
+Subject: CRDA: Build Fail: Database signature verification failed
+To: John Linville <linville@tuxdriver.com>,
+	Luis Rodriguez <mcgrof@do-not-panic.com>
+Cc: wireless-regdb@lists.infradead.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The return value of ieee80211_ibss_csa_beacon is not aligned with the
-return value of ieee80211_csa_beacon().  For consistency and to be
-able to use both functions with similar code, change
-ieee80211_ibss_csa_beacon() not to send the bss changed notification
-itself, but return what has changed so the caller can send the
-notification instead.
+Hi,
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
- net/mac80211/ibss.c | 14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
+With the latest git source, i am seeing a build failure with the below error.
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 3514aab..23e035f 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -522,7 +522,7 @@ int ieee80211_ibss_csa_beacon(struct ieee80211_sub_if_data *sdata,
- 	if (csa_settings)
- 		ieee80211_send_action_csa(sdata, csa_settings);
- 
--	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
-+	return BSS_CHANGED_BEACON;
-  out:
- 	return ret;
- }
-@@ -559,11 +559,17 @@ int ieee80211_ibss_finish_csa(struct ieee80211_sub_if_data *sdata)
- 
- 	/* generate the beacon */
- 	err = ieee80211_ibss_csa_beacon(sdata, NULL);
--	sdata_unlock(sdata);
- 	if (err < 0)
--		return err;
-+		goto out;
- 
--	return 0;
-+	if (err) {
-+		ieee80211_bss_info_change_notify(sdata, err);
-+		err = 0;
-+	}
-+out:
-+	sdata_unlock(sdata);
-+
-+	return err;
- }
- 
- void ieee80211_ibss_stop(struct ieee80211_sub_if_data *sdata)
+  LD   crda
+  CC   intersect.o
+  LD   intersect
+  CC   regdbdump.o
+  LD   regdbdump
+  CC   db2rd.o
+  LD   db2rd
+  CC   optimize.o
+  LD   optimize
+  CHK  /usr/lib/crda/regulatory.bin
+Database signature verification failed.
+Invalid or empty regulatory file, note: a binary regulatory file should be used.
+make: *** [verify] Error 234
+
+Is there something wrong with the certificate?
+
 -- 
-1.8.4.2
-
+Thanks,
+Regards,
+Chaitanya T K.
