@@ -1,68 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f176.google.com ([74.125.82.176]:50191 "EHLO
-	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752856Ab3LIXIm (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:56239 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755301Ab3LQSLv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Dec 2013 18:08:42 -0500
-Received: by mail-we0-f176.google.com with SMTP id w62so4114402wes.7
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Dec 2013 15:08:40 -0800 (PST)
-Message-ID: <1386630515.14057.12.camel@canaries64-MCP7A> (sfid-20131210_000845_838210_BF42B3FE)
-Subject: [PATCH] staging: vt6656: Move double definition of MAX_RATE to
- device_cfg.h
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
+	Tue, 17 Dec 2013 13:11:51 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-Date: Mon, 09 Dec 2013 23:08:35 +0000
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Subject: [PATCH 2/4] ath9k: Add a delay between RTC reset/clear for AR9003
+Date: Tue, 17 Dec 2013 23:36:46 +0530
+Message-Id: <1387303608-31356-3-git-send-email-sujith@msujith.org> (sfid-20131217_191156_980644_B03B878A)
+In-Reply-To: <1387303608-31356-1-git-send-email-sujith@msujith.org>
+References: <1387303608-31356-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+The small delay that is present between a RTC reset/clear
+operation is required for the chip to settle and this is
+needed for all chips, not just the AR9002 family.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/staging/vt6656/datarate.h   | 1 -
- drivers/staging/vt6656/device_cfg.h | 2 ++
- drivers/staging/vt6656/mib.h        | 1 -
- 3 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/staging/vt6656/datarate.h b/drivers/staging/vt6656/datarate.h
-index 43cb778..96252ad 100644
---- a/drivers/staging/vt6656/datarate.h
-+++ b/drivers/staging/vt6656/datarate.h
-@@ -52,7 +52,6 @@
- #define RATE_48M       10
- #define RATE_54M       11
- #define RATE_AUTO      12
--#define MAX_RATE       12
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 40cc64b..f58868c 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1399,8 +1399,7 @@ static bool ath9k_hw_set_reset_power_on(struct ath_hw *ah)
  
- void RATEvParseMaxRate(struct vnt_private *, PWLAN_IE_SUPP_RATES pItemRates,
- 	PWLAN_IE_SUPP_RATES pItemExtRates, int bUpdateBasicRate,
-diff --git a/drivers/staging/vt6656/device_cfg.h b/drivers/staging/vt6656/device_cfg.h
-index a97f7bb..0b9d834 100644
---- a/drivers/staging/vt6656/device_cfg.h
-+++ b/drivers/staging/vt6656/device_cfg.h
-@@ -65,6 +65,8 @@ struct _version {
- #define DEVICE_VERSION       "1.19_12"
- #endif
+ 	REGWRITE_BUFFER_FLUSH(ah);
  
-+#define MAX_RATE	12
-+
- /* config file */
- #include <linux/fs.h>
- #include <linux/fcntl.h>
-diff --git a/drivers/staging/vt6656/mib.h b/drivers/staging/vt6656/mib.h
-index 5616b9a..c342dad 100644
---- a/drivers/staging/vt6656/mib.h
-+++ b/drivers/staging/vt6656/mib.h
-@@ -222,7 +222,6 @@ typedef struct tagSTxPktInfo {
-     u8    abyDestAddr[ETH_ALEN];
- } STxPktInfo, *PSTxPktInfo;
+-	if (!AR_SREV_9300_20_OR_LATER(ah))
+-		udelay(2);
++	udelay(2);
  
--#define MAX_RATE            12
- //
- // statistic counter
- //
+ 	if (!AR_SREV_9100(ah) && !AR_SREV_9300_20_OR_LATER(ah))
+ 		REG_WRITE(ah, AR_RC, 0);
 -- 
-1.8.3.2
+1.8.5.1
 
