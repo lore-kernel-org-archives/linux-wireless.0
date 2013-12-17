@@ -1,61 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:55533 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752838Ab3LYDav (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:36585 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751149Ab3LQJWo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Dec 2013 22:30:51 -0500
-Message-ID: <52BA513A.4080502@huawei.com> (sfid-20131225_043141_302792_23DCC574)
-Date: Wed, 25 Dec 2013 11:30:02 +0800
-From: Ding Tianhong <dingtianhong@huawei.com>
-MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>, Netdev <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH v3 18/19] rtlwifi: slight optimization of addr compare
-Content-Type: text/plain; charset="UTF-8"
+	Tue, 17 Dec 2013 04:22:44 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/4] ath9k: Remove unneeded ref. count initialization
+Date: Tue, 17 Dec 2013 14:47:46 +0530
+Message-Id: <1387271869-12780-1-git-send-email-sujith@msujith.org> (sfid-20131217_102249_217842_170C0C8F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use possibly more efficient ether_addr_equal_unaligned
-instead of memcmp.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Chaoming Li <chaoming_li@realsil.com.cn>
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Signed-off-by: Weilong Chen <chenweilong@huawei.com>
-Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+The interrupt reference counter is always initialized
+in ath9k_start().
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/rtlwifi/cam.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/init.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/cam.c b/drivers/net/wireless/rtlwifi/cam.c
-index 0e510f7..0276153 100644
---- a/drivers/net/wireless/rtlwifi/cam.c
-+++ b/drivers/net/wireless/rtlwifi/cam.c
-@@ -295,7 +295,7 @@ u8 rtl_cam_get_free_entry(struct ieee80211_hw *hw, u8 *sta_addr)
- 	/* Does STA already exist? */
- 	for (i = 4; i < TOTAL_CAM_ENTRY; i++) {
- 		addr = rtlpriv->sec.hwsec_cam_sta_addr[i];
--		if (memcmp(addr, sta_addr, ETH_ALEN) == 0)
-+		if (ether_addr_equal_unaligned(addr, sta_addr))
- 			return i;
- 	}
- 	/* Get a free CAM entry. */
-@@ -335,7 +335,7 @@ void rtl_cam_del_entry(struct ieee80211_hw *hw, u8 *sta_addr)
- 		addr = rtlpriv->sec.hwsec_cam_sta_addr[i];
- 		bitmap = (rtlpriv->sec.hwsec_cam_bitmap) >> i;
- 		if (((bitmap & BIT(0)) == BIT(0)) &&
--		    (memcmp(addr, sta_addr, ETH_ALEN) == 0)) {
-+		    (ether_addr_equal_unaligned(addr, sta_addr))) {
- 			/* Remove from HW Security CAM */
- 			eth_zero_addr(rtlpriv->sec.hwsec_cam_sta_addr[i]);
- 			rtlpriv->sec.hwsec_cam_bitmap &= ~(BIT(0) << i);
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 9d2c3eb..ea67c01 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -705,7 +705,6 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 	ah->reg_ops.read = ath9k_ioread32;
+ 	ah->reg_ops.write = ath9k_iowrite32;
+ 	ah->reg_ops.rmw = ath9k_reg_rmw;
+-	atomic_set(&ah->intr_ref_cnt, -1);
+ 	sc->sc_ah = ah;
+ 	pCap = &ah->caps;
+ 
 -- 
-1.8.0
-
+1.8.5.1
 
