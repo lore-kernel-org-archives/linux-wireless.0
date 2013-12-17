@@ -1,61 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:46691 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753264Ab3LZLmY (ORCPT
+Received: from mail-ee0-f49.google.com ([74.125.83.49]:54503 "EHLO
+	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753630Ab3LQQeC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Dec 2013 06:42:24 -0500
-Message-ID: <52BC15EA.2020603@huawei.com> (sfid-20131226_124253_289561_AC78C8FE)
-Date: Thu, 26 Dec 2013 19:41:30 +0800
-From: Ding Tianhong <dingtianhong@huawei.com>
-MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>, Netdev <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH v3.5 18/19] rtlwifi: slight optimization of addr compare
-Content-Type: text/plain; charset="UTF-8"
+	Tue, 17 Dec 2013 11:34:02 -0500
+Received: by mail-ee0-f49.google.com with SMTP id c41so3008424eek.8
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Dec 2013 08:34:00 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH] ath10k: add DFS_CERTIFIED option
+Date: Tue, 17 Dec 2013 17:33:45 +0100
+Message-Id: <1387298026-2599-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131217_173411_380320_689B8FFF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use possibly more efficient ether_addr_equal_unaligned
-instead of memcmp.
+Add Kconfig option that allow DFS functionality.
 
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Chaoming Li <chaoming_li@realsil.com.cn>
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Signed-off-by: Weilong Chen <chenweilong@huawei.com>
-Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
- drivers/net/wireless/rtlwifi/cam.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath10k/Kconfig |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/net/wireless/rtlwifi/cam.c b/drivers/net/wireless/rtlwifi/cam.c
-index 0e510f7..0276153 100644
---- a/drivers/net/wireless/rtlwifi/cam.c
-+++ b/drivers/net/wireless/rtlwifi/cam.c
-@@ -295,7 +295,7 @@ u8 rtl_cam_get_free_entry(struct ieee80211_hw *hw, u8 *sta_addr)
- 	/* Does STA already exist? */
- 	for (i = 4; i < TOTAL_CAM_ENTRY; i++) {
- 		addr = rtlpriv->sec.hwsec_cam_sta_addr[i];
--		if (memcmp(addr, sta_addr, ETH_ALEN) == 0)
-+		if (ether_addr_equal_unaligned(addr, sta_addr))
- 			return i;
- 	}
- 	/* Get a free CAM entry. */
-@@ -335,7 +335,7 @@ void rtl_cam_del_entry(struct ieee80211_hw *hw, u8 *sta_addr)
- 		addr = rtlpriv->sec.hwsec_cam_sta_addr[i];
- 		bitmap = (rtlpriv->sec.hwsec_cam_bitmap) >> i;
- 		if (((bitmap & BIT(0)) == BIT(0)) &&
--		    (memcmp(addr, sta_addr, ETH_ALEN) == 0)) {
-+		    (ether_addr_equal_unaligned(addr, sta_addr))) {
- 			/* Remove from HW Security CAM */
- 			eth_zero_addr(rtlpriv->sec.hwsec_cam_sta_addr[i]);
- 			rtlpriv->sec.hwsec_cam_bitmap &= ~(BIT(0) << i);
+diff --git a/drivers/net/wireless/ath/ath10k/Kconfig b/drivers/net/wireless/ath/ath10k/Kconfig
+index 82e8088..a6f5285 100644
+--- a/drivers/net/wireless/ath/ath10k/Kconfig
++++ b/drivers/net/wireless/ath/ath10k/Kconfig
+@@ -37,3 +37,10 @@ config ATH10K_TRACING
+ 	---help---
+ 	  Select this to ath10k use tracing infrastructure.
+ 
++config ATH10K_DFS_CERTIFIED
++	bool "Atheros DFS support for certified platforms"
++	depends on ATH10K && CFG80211_CERTIFICATION_ONUS
++	default n
++	---help---
++	This option enables DFS support for initiating radiation on
++	ath10k.
 -- 
-1.8.0
-
+1.7.9.5
 
