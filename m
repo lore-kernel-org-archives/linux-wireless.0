@@ -1,35 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:41606 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753755Ab3LPO4C (ORCPT
+Received: from mail-ea0-f174.google.com ([209.85.215.174]:49373 "EHLO
+	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753937Ab3LQUp3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Dec 2013 09:56:02 -0500
-Message-ID: <1387205758.2057.17.camel@jlt4.sipsolutions.net> (sfid-20131216_155607_020988_F11AB5A9)
-Subject: Re: [PATCH 2/2] cfg80211: make regulatory_hint() remove
- REGULATORY_CUSTOM_REG
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>
-Date: Mon, 16 Dec 2013 15:55:58 +0100
-In-Reply-To: <1387048146-16380-2-git-send-email-mcgrof@do-not-panic.com> (sfid-20131214_200916_241465_7761FAAE)
-References: <1387048146-16380-1-git-send-email-mcgrof@do-not-panic.com>
-	 <1387048146-16380-2-git-send-email-mcgrof@do-not-panic.com>
-	 (sfid-20131214_200916_241465_7761FAAE)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 17 Dec 2013 15:45:29 -0500
+Received: by mail-ea0-f174.google.com with SMTP id b10so3132186eae.33
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Dec 2013 12:45:28 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 31/36] iwlwifi: mvm: fixup Makefile
+Date: Tue, 17 Dec 2013 22:44:34 +0200
+Message-Id: <1387313079-28123-31-git-send-email-egrumbach@gmail.com> (sfid-20131217_214549_777147_8FA13D1F)
+In-Reply-To: <52B0B72A.5070704@gmail.com>
+References: <52B0B72A.5070704@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2013-12-14 at 20:09 +0100, Luis R. Rodriguez wrote:
-> The REGULATORY_CUSTOM_REG can be used during early init with
-> the goal of overriding the wiphy's default regulatory settings
-> in case the alpha2 of the device is not known. In the case that
-> the alpha2 becomes known lets avoid having drivers having to
-> clear the REGULATORY_CUSTOM_REG flag by doing it for them
-> when regulatory_hint() is used.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-This change brcmsmac behaviour afaict - are you sure that's correct?
+debufs.o appeared twice in the Makefile. Fix that.
 
-johannes
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/Makefile |    1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/Makefile b/drivers/net/wireless/iwlwifi/mvm/Makefile
+index 3ea47ab..f98ec2b 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/Makefile
++++ b/drivers/net/wireless/iwlwifi/mvm/Makefile
+@@ -4,7 +4,6 @@ iwlmvm-y += utils.o rx.o tx.o binding.o quota.o sta.o sf.o
+ iwlmvm-y += scan.o time-event.o rs.o
+ iwlmvm-y += power.o power_legacy.o bt-coex.o
+ iwlmvm-y += led.o tt.o
+-iwlmvm-$(CONFIG_IWLWIFI_DEBUGFS) += debugfs.o
+ iwlmvm-$(CONFIG_IWLWIFI_DEBUGFS) += debugfs.o debugfs-vif.o
+ iwlmvm-$(CONFIG_PM_SLEEP) += d3.o
+ 
+-- 
+1.7.9.5
 
