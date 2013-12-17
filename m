@@ -1,49 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:41228 "EHLO
+Received: from s3.sipsolutions.net ([144.76.43.152]:44956 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753466Ab3LPMzW (ORCPT
+	with ESMTP id S1750901Ab3LQK3v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Dec 2013 07:55:22 -0500
-Message-ID: <1387198518.4665.29.camel@jlt4.sipsolutions.net> (sfid-20131216_135525_478219_5E1AE12E)
-Subject: Re: [PATCH 3/3] mac80211: update adjusting TBTT bit in beacon
+	Tue, 17 Dec 2013 05:29:51 -0500
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <twpedersen@gmail.com>
-Cc: open80211s <devel@lists.open80211s.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Thomas Pedersen <thomas@cozybit.com>
-Date: Mon, 16 Dec 2013 13:55:18 +0100
-In-Reply-To: <1387142056-21850-3-git-send-email-twpedersen@gmail.com> (sfid-20131215_221523_822205_B4A0108F)
-References: <1387142056-21850-1-git-send-email-twpedersen@gmail.com>
-	 <1387142056-21850-3-git-send-email-twpedersen@gmail.com>
-	 (sfid-20131215_221523_822205_B4A0108F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3.13] ath9k: disable radar detection support
+Date: Tue, 17 Dec 2013 11:29:47 +0100
+Message-Id: <1387276187-16063-1-git-send-email-johannes@sipsolutions.net> (sfid-20131217_112955_247958_C80745E3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2013-12-15 at 13:14 -0800, Thomas Pedersen wrote:
-> From: Thomas Pedersen <thomas@cozybit.com>
-> 
-> This regression was introduced in "mac80211: cache mesh
-> beacon".
-> 
-> mesh_sync_offset_adjust_tbtt()  was assuming that the
-> beacon would be rebuilt in every single pre-tbtt
-> interrupt, but now the beacon update happens on the
-> workqueue, and it must be ready for immediate delivery to
-> the driver.
-> 
-> Save a pointer to the meshconf IE in the beacon_data (this
-> works because both the IE pointer and beacon buffer are
-> protected by the same rcu_{dereference,assign_pointer}())
-> for quick updates during pre-tbtt. This is faster and a
-> little prettier than iterating over the elements to find
-> the meshconf IE every time.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Applied, since it doesn't look like this depends on patch 2. I'll let
-you discuss patch 2 with Sergey first, though I'm of the opinion that if
-there's no per-vif TSF in your hardware then you're SOL anyway and what
-you did is fine.
+Since the cfg80211 and mac80211 radar detection support is
+rather broken right now, disable it in the only driver that
+advertises support for it. When all the bugs are resolved,
+support for it can be restored.
 
-johannes
+Cc: stable@vger.kernel.org [3.10+]
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/ath/ath9k/init.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 710192e..b9a1ce3 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -920,7 +920,10 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 			BIT(NL80211_IFTYPE_ADHOC) |
+ 			BIT(NL80211_IFTYPE_MESH_POINT);
+ 		hw->wiphy->iface_combinations = if_comb;
+-		hw->wiphy->n_iface_combinations = ARRAY_SIZE(if_comb);
++		/* radar detection code is rather broken right now,
++		 * so for now disable it entirely
++		 */
++		hw->wiphy->n_iface_combinations = 1;
+ 	}
+ 
+ 	hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
+-- 
+1.8.5.1
 
