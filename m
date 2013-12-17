@@ -1,121 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:34496 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752610Ab3LaCrL (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:36269 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751095Ab3LQKMq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Dec 2013 21:47:11 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 4/5] ath9k: Initialize QCA953x INI arrays
-Date: Tue, 31 Dec 2013 08:12:01 +0530
-Message-Id: <1388457722-29643-4-git-send-email-sujith@msujith.org> (sfid-20131231_034718_786455_A1820559)
-In-Reply-To: <1388457722-29643-1-git-send-email-sujith@msujith.org>
-References: <1388457722-29643-1-git-send-email-sujith@msujith.org>
+	Tue, 17 Dec 2013 05:12:46 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: Circular lock with mac80211_hwsim and DFS
+Date: Tue, 17 Dec 2013 12:12:41 +0200
+Message-ID: <87lhzjeqg6.fsf@kamboji.qca.qualcomm.com> (sfid-20131217_111250_394625_7CF651F6)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Hi,
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_hw.c | 48 +++++++++++++++++++++++++++++-
- 1 file changed, 47 insertions(+), 1 deletion(-)
+I tried to run a simple DFS test with mac80211_hwsim for the first time
+but got the deadlock below. Is this a regression or has DFS ever worked
+with hwsim?
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-index f3c4102..ec1da0c 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-@@ -28,6 +28,7 @@
- #include "ar9462_2p1_initvals.h"
- #include "ar9565_1p0_initvals.h"
- #include "ar9565_1p1_initvals.h"
-+#include "ar953x_initvals.h"
- 
- /* General hardware code for the AR9003 hadware family */
- 
-@@ -308,6 +309,31 @@ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
- 		/* Fast clock modal settings */
- 		INIT_INI_ARRAY(&ah->iniModesFastClock,
- 				ar955x_1p0_modes_fast_clock);
-+	} else if (AR_SREV_9531(ah)) {
-+		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_CORE],
-+			       qca953x_1p0_mac_core);
-+		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_POST],
-+			       qca953x_1p0_mac_postamble);
-+		INIT_INI_ARRAY(&ah->iniBB[ATH_INI_CORE],
-+			       qca953x_1p0_baseband_core);
-+		INIT_INI_ARRAY(&ah->iniBB[ATH_INI_POST],
-+			       qca953x_1p0_baseband_postamble);
-+		INIT_INI_ARRAY(&ah->iniRadio[ATH_INI_CORE],
-+			       qca953x_1p0_radio_core);
-+		INIT_INI_ARRAY(&ah->iniRadio[ATH_INI_POST],
-+			       qca953x_1p0_radio_postamble);
-+		INIT_INI_ARRAY(&ah->iniSOC[ATH_INI_PRE],
-+			       qca953x_1p0_soc_preamble);
-+		INIT_INI_ARRAY(&ah->iniSOC[ATH_INI_POST],
-+			       qca953x_1p0_soc_postamble);
-+		INIT_INI_ARRAY(&ah->iniModesRxGain,
-+			       qca953x_1p0_common_wo_xlna_rx_gain_table);
-+		INIT_INI_ARRAY(&ah->ini_modes_rx_gain_bounds,
-+			       qca953x_1p0_common_wo_xlna_rx_gain_bounds);
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			       qca953x_1p0_modes_no_xpa_tx_gain_table);
-+		INIT_INI_ARRAY(&ah->iniModesFastClock,
-+			       qca953x_1p0_modes_fast_clock);
- 	} else if (AR_SREV_9580(ah)) {
- 		/* mac */
- 		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_CORE],
-@@ -485,6 +511,9 @@ static void ar9003_tx_gain_table_mode0(struct ath_hw *ah)
- 	else if (AR_SREV_9550(ah))
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
- 			ar955x_1p0_modes_xpa_tx_gain_table);
-+	else if (AR_SREV_9531(ah))
-+		INIT_INI_ARRAY(&ah->iniModesTxGain,
-+			qca953x_1p0_modes_xpa_tx_gain_table);
- 	else if (AR_SREV_9580(ah))
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
- 			ar9580_1p0_lowest_ob_db_tx_gain_table);
-@@ -525,7 +554,14 @@ static void ar9003_tx_gain_table_mode1(struct ath_hw *ah)
- 	else if (AR_SREV_9550(ah))
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
- 			ar955x_1p0_modes_no_xpa_tx_gain_table);
--	else if (AR_SREV_9462_21(ah))
-+	else if (AR_SREV_9531(ah)) {
-+		if (AR_SREV_9531_11(ah))
-+			INIT_INI_ARRAY(&ah->iniModesTxGain,
-+				       qca953x_1p1_modes_no_xpa_tx_gain_table);
-+		else
-+			INIT_INI_ARRAY(&ah->iniModesTxGain,
-+				       qca953x_1p0_modes_no_xpa_tx_gain_table);
-+	} else if (AR_SREV_9462_21(ah))
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
- 			ar9462_2p1_modes_high_ob_db_tx_gain);
- 	else if (AR_SREV_9462_20(ah))
-@@ -699,6 +735,11 @@ static void ar9003_rx_gain_table_mode0(struct ath_hw *ah)
- 				ar955x_1p0_common_rx_gain_table);
- 		INIT_INI_ARRAY(&ah->ini_modes_rx_gain_bounds,
- 				ar955x_1p0_common_rx_gain_bounds);
-+	} else if (AR_SREV_9531(ah)) {
-+		INIT_INI_ARRAY(&ah->iniModesRxGain,
-+			       qca953x_1p0_common_rx_gain_table);
-+		INIT_INI_ARRAY(&ah->ini_modes_rx_gain_bounds,
-+			       qca953x_1p0_common_rx_gain_bounds);
- 	} else if (AR_SREV_9580(ah))
- 		INIT_INI_ARRAY(&ah->iniModesRxGain,
- 				ar9580_1p0_rx_gain_table);
-@@ -744,6 +785,11 @@ static void ar9003_rx_gain_table_mode1(struct ath_hw *ah)
- 			ar955x_1p0_common_wo_xlna_rx_gain_table);
- 		INIT_INI_ARRAY(&ah->ini_modes_rx_gain_bounds,
- 			ar955x_1p0_common_wo_xlna_rx_gain_bounds);
-+	} else if (AR_SREV_9531(ah)) {
-+		INIT_INI_ARRAY(&ah->iniModesRxGain,
-+			       qca953x_1p0_common_wo_xlna_rx_gain_table);
-+		INIT_INI_ARRAY(&ah->ini_modes_rx_gain_bounds,
-+			       qca953x_1p0_common_wo_xlna_rx_gain_bounds);
- 	} else if (AR_SREV_9580(ah))
- 		INIT_INI_ARRAY(&ah->iniModesRxGain,
- 			ar9580_1p0_wo_xlna_rx_gain_table);
+Using 31e1798fbf from mac80211-next.
+
+[  232.576709] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[  232.584928] 
+[  232.585383] ======================================================
+[  232.586828] [ INFO: possible circular locking dependency detected ]
+[  232.587735] 3.12.0+ #3 Not tainted
+[  232.588314] -------------------------------------------------------
+[  232.589189] hostapd/611 is trying to acquire lock:
+[  232.590039]  (&local->chanctx_mtx){+.+.+.}, at: [<ffffffff8143fffa>] ieee80211_vif_use_channel+0x5a/0x160
+[  232.591249] 
+[  232.591249] but task is already holding lock:
+[  232.591249]  (&local->iflist_mtx){+.+...}, at: [<ffffffff814230ca>] ieee80211_start_radar_detection+0x7a/0xe0
+[  232.591249] 
+[  232.591249] which lock already depends on the new lock.
+[  232.591249] 
+[  232.591249] 
+[  232.591249] the existing dependency chain (in reverse order) is:
+[  232.591249] 
+-> #2 (&local->iflist_mtx){+.+...}:
+[  232.591249]        [<ffffffff8108a938>] check_prevs_add+0x148/0x1e0
+[  232.591249]        [<ffffffff8108ae31>] validate_chain.isra.33+0x461/0x720
+[  232.591249]        [<ffffffff8108e374>] __lock_acquire+0x424/0xad0
+[  232.591249]        [<ffffffff810902fa>] lock_acquire+0xaa/0x200
+[  232.591249]        [<ffffffff814852a0>] mutex_lock_nested+0x70/0x530
+[  232.591249]        [<ffffffff814068ec>] ieee80211_offchannel_stop_vifs+0x4c/0x130
+[  232.591249]        [<ffffffff81403e94>] ieee80211_start_sw_scan+0x84/0x2d0
+[  232.591249]        [<ffffffff8140445d>] __ieee80211_start_scan+0x37d/0x7d0
+[  232.591249]        [<ffffffff8140543b>] ieee80211_request_scan+0x3b/0x60
+[  232.591249]        [<ffffffff8142080c>] ieee80211_scan+0x8c/0x90
+[  232.591249]        [<ffffffff813d2445>] nl80211_trigger_scan+0x575/0x870
+[  232.591249]        [<ffffffff812e52e3>] genl_family_rcv_msg+0x323/0x380
+[  232.591249]        [<ffffffff812e5384>] genl_rcv_msg+0x44/0x80
+[  232.591249]        [<ffffffff812e44d9>] netlink_rcv_skb+0xa9/0xd0
+[  232.591249]        [<ffffffff812e468c>] genl_rcv+0x2c/0x40
+[  232.591249]        [<ffffffff812e2da9>] netlink_unicast+0x159/0x1d0
+[  232.591249]        [<ffffffff812e358c>] netlink_sendmsg+0x38c/0x410
+[  232.591249]        [<ffffffff812a638c>] sock_sendmsg+0x6c/0x90
+[  232.591249]        [<ffffffff812a6656>] ___sys_sendmsg.part.36+0x2a6/0x2b0
+[  232.591249]        [<ffffffff812a7f69>] __sys_sendmsg+0xb9/0xd0
+[  232.591249]        [<ffffffff812a7f8e>] SyS_sendmsg+0xe/0x10
+[  232.591249]        [<ffffffff8148b3a9>] system_call_fastpath+0x16/0x1b
+[  232.591249] 
+-> #1 (&local->mtx){+.+...}:
+[  232.591249]        [<ffffffff8108a938>] check_prevs_add+0x148/0x1e0
+[  232.591249]        [<ffffffff8108ae31>] validate_chain.isra.33+0x461/0x720
+[  232.591249]        [<ffffffff8108e374>] __lock_acquire+0x424/0xad0
+[  232.591249]        [<ffffffff810902fa>] lock_acquire+0xaa/0x200
+[  232.591249]        [<ffffffff814852a0>] mutex_lock_nested+0x70/0x530
+[  232.591249]        [<ffffffff8143e9bd>] ieee80211_new_chanctx+0xad/0x430
+[  232.591249]        [<ffffffff814400ee>] ieee80211_vif_use_channel+0x14e/0x160
+[  232.591249]        [<ffffffff81421c17>] ieee80211_start_ap+0x87/0x6f0
+[  232.591249]        [<ffffffff813cd24d>] nl80211_start_ap+0x37d/0x7d0
+[  232.591249]        [<ffffffff812e52e3>] genl_family_rcv_msg+0x323/0x380
+[  232.591249]        [<ffffffff812e5384>] genl_rcv_msg+0x44/0x80
+[  232.591249]        [<ffffffff812e44d9>] netlink_rcv_skb+0xa9/0xd0
+[  232.591249]        [<ffffffff812e468c>] genl_rcv+0x2c/0x40
+[  232.591249]        [<ffffffff812e2da9>] netlink_unicast+0x159/0x1d0
+[  232.591249]        [<ffffffff812e358c>] netlink_sendmsg+0x38c/0x410
+[  232.591249]        [<ffffffff812a638c>] sock_sendmsg+0x6c/0x90
+[  232.591249]        [<ffffffff812a6656>] ___sys_sendmsg.part.36+0x2a6/0x2b0
+[  232.591249]        [<ffffffff812a7f69>] __sys_sendmsg+0xb9/0xd0
+[  232.591249]        [<ffffffff812a7f8e>] SyS_sendmsg+0xe/0x10
+[  232.591249]        [<ffffffff8148b3a9>] system_call_fastpath+0x16/0x1b
+[  232.591249] 
+-> #0 (&local->chanctx_mtx){+.+.+.}:
+[  232.591249]        [<ffffffff8108a7da>] check_prev_add+0x82a/0x840
+[  232.591249]        [<ffffffff8108a938>] check_prevs_add+0x148/0x1e0
+[  232.591249]        [<ffffffff8108ae31>] validate_chain.isra.33+0x461/0x720
+[  232.591249]        [<ffffffff8108e374>] __lock_acquire+0x424/0xad0
+[  232.591249]        [<ffffffff810902fa>] lock_acquire+0xaa/0x200
+[  232.591249]        [<ffffffff814852a0>] mutex_lock_nested+0x70/0x530
+[  232.591249]        [<ffffffff8143fffa>] ieee80211_vif_use_channel+0x5a/0x160
+[  232.591249]        [<ffffffff814230db>] ieee80211_start_radar_detection+0x8b/0xe0
+[  232.591249]        [<ffffffff813c9551>] nl80211_start_radar_detection+0x111/0x150
+[  232.591249]        [<ffffffff812e52e3>] genl_family_rcv_msg+0x323/0x380
+[  232.591249]        [<ffffffff812e5384>] genl_rcv_msg+0x44/0x80
+[  232.591249]        [<ffffffff812e44d9>] netlink_rcv_skb+0xa9/0xd0
+[  232.591249]        [<ffffffff812e468c>] genl_rcv+0x2c/0x40
+[  232.591249]        [<ffffffff812e2da9>] netlink_unicast+0x159/0x1d0
+[  232.591249]        [<ffffffff812e358c>] netlink_sendmsg+0x38c/0x410
+[  232.591249]        [<ffffffff812a638c>] sock_sendmsg+0x6c/0x90
+[  232.591249]        [<ffffffff812a6656>] ___sys_sendmsg.part.36+0x2a6/0x2b0
+[  232.591249]        [<ffffffff812a7f69>] __sys_sendmsg+0xb9/0xd0
+[  232.591249]        [<ffffffff812a7f8e>] SyS_sendmsg+0xe/0x10
+[  232.591249]        [<ffffffff8148b3a9>] system_call_fastpath+0x16/0x1b
+
 -- 
-1.8.5.2
-
+Kalle Valo
