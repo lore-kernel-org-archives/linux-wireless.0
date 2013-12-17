@@ -1,40 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:53610 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750877Ab3LEWHi (ORCPT
+Received: from mail-ee0-f42.google.com ([74.125.83.42]:51175 "EHLO
+	mail-ee0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753343Ab3LQUoy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 17:07:38 -0500
-Message-ID: <1386281254.4182.24.camel@jlt4.sipsolutions.net> (sfid-20131205_230742_058858_0D8BEA5B)
-Subject: Re: Using wmediumd in kernel 3.10
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dani Camps <danicamps81@yahoo.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 05 Dec 2013 23:07:34 +0100
-In-Reply-To: <1386279479.16148.YahooMailNeo@web172701.mail.ir2.yahoo.com>
-References: <1386259047.2121.YahooMailNeo@web172705.mail.ir2.yahoo.com>
-				 (sfid-20131205_165733_059424_F6F2D350) <1386259875.4182.15.camel@jlt4.sipsolutions.net>
-			 <1386260074.45953.YahooMailNeo@web172706.mail.ir2.yahoo.com>
-		 <1386260744.4182.18.camel@jlt4.sipsolutions.net>
-		 <1386261738.73311.YahooMailNeo@web172703.mail.ir2.yahoo.com>
-	 <1386265226.4182.20.camel@jlt4.sipsolutions.net>
-	 <1386279479.16148.YahooMailNeo@web172701.mail.ir2.yahoo.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 17 Dec 2013 15:44:54 -0500
+Received: by mail-ee0-f42.google.com with SMTP id e53so3146019eek.1
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Dec 2013 12:44:53 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eyal Shapira <eyal@wizery.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 06/36] iwlwifi: publish Tx STBC support in VHT
+Date: Tue, 17 Dec 2013 22:44:09 +0200
+Message-Id: <1387313079-28123-6-git-send-email-egrumbach@gmail.com> (sfid-20131217_214503_634532_6AF99069)
+In-Reply-To: <52B0B72A.5070704@gmail.com>
+References: <52B0B72A.5070704@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-12-05 at 21:37 +0000, Dani Camps wrote:
-> Hi,
-> 
-> I tried with kernel 3.12 but I still get the same error. Just to
-> clarify, if wmediumd would work properly you should see in the ping
-> approximately half of the packets being dropped, because the
-> configuration file has 0.5 drop probability for all rates. If you see
-> that the ping proceeds normally is because the error happened and
-> wmediumd de-registered.
+From: Eyal Shapira <eyal@wizery.com>
 
-Not sure I saw packet loss, but I made wmediumd print out statistics and
-it was definitely seeing packets ...
+If the device is MIMO and VHT capable it supports Tx STBC.
+Unlike HT, any chip that supports VHT also support STBC so
+no need for a config parameter.
+Using num_of_ants multiple times warranted caching it.
 
-johannes
+Signed-off-by: Eyal Shapira <eyal@wizery.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-nvm-parse.c |    8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
+index e366f12..ebf629b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
+@@ -263,7 +263,8 @@ static void iwl_init_vht_hw_capab(const struct iwl_cfg *cfg,
+ 				  struct iwl_nvm_data *data,
+ 				  struct ieee80211_sta_vht_cap *vht_cap)
+ {
+-	int bf_sts_cap = num_of_ant(data->valid_rx_ant) - 1;
++	int num_ants = num_of_ant(data->valid_rx_ant);
++	int bf_sts_cap = num_ants - 1;
+ 
+ 	vht_cap->vht_supported = true;
+ 
+@@ -273,6 +274,9 @@ static void iwl_init_vht_hw_capab(const struct iwl_cfg *cfg,
+ 		       bf_sts_cap << IEEE80211_VHT_CAP_BEAMFORMEE_STS_SHIFT |
+ 		       7 << IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_SHIFT;
+ 
++	if (num_ants > 1)
++		vht_cap->cap |= IEEE80211_VHT_CAP_TXSTBC;
++
+ 	if (iwlwifi_mod_params.amsdu_size_8K)
+ 		vht_cap->cap |= IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_7991;
+ 
+@@ -286,7 +290,7 @@ static void iwl_init_vht_hw_capab(const struct iwl_cfg *cfg,
+ 			    IEEE80211_VHT_MCS_NOT_SUPPORTED << 12 |
+ 			    IEEE80211_VHT_MCS_NOT_SUPPORTED << 14);
+ 
+-	if (num_of_ant(data->valid_rx_ant) == 1 ||
++	if (num_ants == 1 ||
+ 	    cfg->rx_with_siso_diversity) {
+ 		vht_cap->cap |= IEEE80211_VHT_CAP_RX_ANTENNA_PATTERN |
+ 				IEEE80211_VHT_CAP_TX_ANTENNA_PATTERN;
+-- 
+1.7.9.5
 
