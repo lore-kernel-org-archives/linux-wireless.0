@@ -1,35 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:34918 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751829Ab3LOUNj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Dec 2013 15:13:39 -0500
-Message-ID: <52AE0D63.9090309@openwrt.org> (sfid-20131215_211358_197209_CB1E0DE8)
-Date: Sun, 15 Dec 2013 21:13:23 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-pd0-f178.google.com ([209.85.192.178]:53828 "EHLO
+	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750878Ab3LQFuY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Dec 2013 00:50:24 -0500
+Received: by mail-pd0-f178.google.com with SMTP id y10so6324863pdj.37
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Dec 2013 21:50:22 -0800 (PST)
+Message-ID: <52AFE619.1060104@gmail.com> (sfid-20131217_065038_077560_00461BBE)
+Date: Tue, 17 Dec 2013 11:20:17 +0530
+From: Ujjal Roy <royujjal@gmail.com>
 MIME-Version: 1.0
-To: Sujith Manoharan <sujith@msujith.org>,
-	John Linville <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath9k: Fix interrupt handling for the AR9002 family
-References: <1387030293-7928-1-git-send-email-sujith@msujith.org>
-In-Reply-To: <1387030293-7928-1-git-send-email-sujith@msujith.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Johannes Berg <johannes@sipsolutions.net>,
+	David Herrmann <dh.herrmann@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [BUG] P2P setup timeout
+References: <CANq1E4R--OowH-LCUX4oSxsJu7yf_2e6Jei8tP+i_BQ_QHiKkw@mail.gmail.com>	 <1387197416.4665.15.camel@jlt4.sipsolutions.net>	 <CANq1E4TAt_Pw-V5_2LtJjY3LRcuwsxr1mBkcHjmX+MJUxc=zPQ@mail.gmail.com>	 (sfid-20131216_143914_205158_56AAC54B) <1387201528.2057.1.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1387201528.2057.1.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2013-12-14 15:11, Sujith Manoharan wrote:
-> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-> 
-> This patch adds a driver workaround for a HW issue.
-> 
-> A race condition in the HW results in missing interrupts,
-> which can be avoided by a read/write with the ISR register.
-> All chips in the AR9002 series are affected by this bug - AR9003
-> and above do not have this problem.
-> 
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-Please don't apply this patch just yet, it seems to be causing interrupt
-storms. I'm currently looking into it.
+Hi Johannes,
 
-- Felix
+On 12/16/2013 07:15 PM, Johannes Berg wrote:
+> On Mon, 2013-12-16 at 14:39 +0100, David Herrmann wrote:
+>
+> Right, and I suspect they don't get a response because (as the sniffer
+> trace tells me) they're sent with 1 Mbps (a CCK rate), which is invalid
+> in the P2P spec (must use OFDM).
+>
+
+Can you please let me know, is the P2P spec freely available to read or 
+download? If so, please provide some info from where I can able to get 
+the document. Actually, I need to know - how to add P2P_DEVICE support 
+in a driver.
+
+Thanks,
+UjjaL
