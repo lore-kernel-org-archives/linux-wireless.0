@@ -1,54 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm18.bullet.mail.ird.yahoo.com ([77.238.189.71]:41061 "HELO
-	nm18.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752671Ab3LEQUF convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 11:20:05 -0500
-References: <1386259047.2121.YahooMailNeo@web172705.mail.ir2.yahoo.com>	 (sfid-20131205_165733_059424_F6F2D350) <1386259875.4182.15.camel@jlt4.sipsolutions.net>
-Message-ID: <1386260074.45953.YahooMailNeo@web172706.mail.ir2.yahoo.com> (sfid-20131205_172010_974853_013DDEAF)
-Date: Thu, 5 Dec 2013 16:14:34 +0000 (GMT)
-From: Dani Camps <danicamps81@yahoo.com>
-Reply-To: Dani Camps <danicamps81@yahoo.com>
-Subject: Re: Using wmediumd in kernel 3.10
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1386259875.4182.15.camel@jlt4.sipsolutions.net>
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:40890 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753736Ab3LQQCz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Dec 2013 11:02:55 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Karl Beldan <karl.beldan@gmail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Karl Beldan <karl.beldan@rivierawaves.com>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: Re: [PATCH v4] mac80211_hwsim: claim CSA support for AP
+References: <1385224698-12294-1-git-send-email-karl.beldan@gmail.com>
+Date: Tue, 17 Dec 2013 18:01:00 +0200
+In-Reply-To: <1385224698-12294-1-git-send-email-karl.beldan@gmail.com> (Karl
+	Beldan's message of "Sat, 23 Nov 2013 17:38:18 +0100")
+Message-ID: <874n67eabn.fsf@kamboji.qca.qualcomm.com> (sfid-20131217_170258_771984_C6A9D4E9)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Karl Beldan <karl.beldan@gmail.com> writes:
 
+> From: Karl Beldan <karl.beldan@rivierawaves.com>
+>
+> This assigns the channel_switch_beacon op.
+> For hwsim, it comes down to calling ieee80211_csa_finish once
+> ieee80211_csa_is_complete is true.
+> Since channel_switch_beacon is not called if CSA count starts @ 0 or 1,
+> the check for ieee80211_csa_is_complete can be done after getting the
+> beacon (and this way it might trigger helpful warnings).
+>
+> This adds a per vif bool csa_finished that is set after a call to
+> ieee80211_csa_finish() and used to skip beaconing while csa_active is
+> set in case a beacon is scheduled prior to csa_finalize_work completion.
+> This bool and the number of beacons transmitted during the CSA up to the
+> call to ieee80211_csa_finish() are reset in channel_switch_beacon op.
+>
+> Signed-off-by: Karl Beldan <karl.beldan@rivierawaves.com>
+> Cc: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
 
-Hi,
+What are we going to do with this patch? It would be convenient to get
+hwsim support CSA as it would help working with DFS issues.
 
-I am only loading mac80211_hwsim with the parameter "radios=2". I am not specifying anything about "channels", which looking at the code should be 1.
+Was the issue blocking this patch the race when transmitting beacons?
+IMHO we can live with that and fix it properly later. It's not the only
+bug in DFS code right now ;)
 
-Cheers
+> @@ -1058,6 +1067,17 @@ static void mac80211_hwsim_beacon_tx(void *arg, u8 *mac,
+>  
+>  	mac80211_hwsim_tx_frame(hw, skb,
+>  				rcu_dereference(vif->chanctx_conf)->def.chan);
+> +
+> +	if (vif->csa_active) {
+> +		vp->csa_bcn_cnt++;
+> +		if (ieee80211_csa_is_complete(vif)) {
+> +			wiphy_debug(hw->wiphy,
+> +				    "%s CSA complete after %d beacons\n",
+> +				    __func__, vp->csa_bcn_cnt);
+> +			ieee80211_csa_finish(vif);
+> +			vp->csa_finished = 1;
+> +		}
+> +	}
 
-Daniel
+csa_finished is a bool so 'true' should be used here.
 
-
-
-El Jueves 5 de diciembre de 2013 17:11, Johannes Berg <johannes@sipsolutions.net> escribió:
-
-
-> I would like to use wmediumd with linuxwireless backports 3.10.
-> 
-> The problem is that as indicated in this
-> post: http://www.spinics.net/lists/linux-wireless/msg96575.html,
-> wmediumd is not supported in this kernel. Quoting from the post:
-> 
-> "To use mac80211_hwsim for testing channel contexts it has to support
-> them, and for that it has to support hw scan and hw-remain-on-channel.
-> Since it's pure software, the off-channel activities are really not
-> off-channel but listening and sending on a second channel. Also, the
-> multi-channel isn't really doing TDM, it's just on both channels at
-> the same time. 
-> Note that this breaks wmediumd right now as it doesn't propagate the
-> channel."
-
-This should only affect hwsim if you load it with channels=2 or more,
-are you doing that?
-
-johannes
+-- 
+Kalle Valo
