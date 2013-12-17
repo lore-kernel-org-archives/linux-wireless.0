@@ -1,48 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:50100 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758824Ab3LBU75 (ORCPT
+Received: from packetmixer.de ([79.140.42.25]:58774 "EHLO
+	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753173Ab3LQURX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Dec 2013 15:59:57 -0500
-Received: by mail-wi0-f181.google.com with SMTP id hq4so5513753wib.14
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Dec 2013 12:59:56 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eyal Shapira <eyal@wizery.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 11/13] iwlwifi: mvm: rs: use the proper channel width define for legacy rate
-Date: Mon,  2 Dec 2013 22:59:23 +0200
-Message-Id: <1386017965-13641-11-git-send-email-egrumbach@gmail.com> (sfid-20131202_220011_479926_9B060E8D)
-In-Reply-To: <529CF2D6.1080008@gmail.com>
-References: <529CF2D6.1080008@gmail.com>
+	Tue, 17 Dec 2013 15:17:23 -0500
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Subject: Re: Circular lock with mac80211_hwsim and DFS
+Date: Tue, 17 Dec 2013 21:17:17 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <87lhzjeqg6.fsf@kamboji.qca.qualcomm.com> <201312171805.34821.sw@simonwunderlich.de>
+In-Reply-To: <201312171805.34821.sw@simonwunderlich.de>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201312172117.17538.sw@simonwunderlich.de> (sfid-20131217_211728_045996_011D7C4B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+> > Hi,
+> > 
+> > I tried to run a simple DFS test with mac80211_hwsim for the first time
+> > but got the deadlock below. Is this a regression or has DFS ever worked
+> > with hwsim?
+> > 
+> > Using 31e1798fbf from mac80211-next.
+> 
+> just checked again with mac80211-next for ath9k, and I don't see this
+> lockdep problem. Appearently this is a problem in hwsim only ....
+> 
 
-Use the 20Mhz channel width define instead of just the number
-zero for legacy rates. Note that the define has the same value
-so this is just a minor cleanup.
+...after talking to Johannes, I could actually recreate the problem. I have 
+never tried to scan before starting hostap (actually this would only be 
+possible with force-ap when in AP mode). This will then mark the path for 
+lockdep, which eventually will hit the splat you reported. So I take that 
+back, the problem is also in ath9k and not in hwsim.
 
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/rs.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+As Johannes pointed out, this should not happen when using DFS because of RTNL 
+locking, but still this is ugly.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
-index ef7126a..1bfdde5 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
-@@ -691,7 +691,7 @@ static u32 rs_get_lower_rate(struct iwl_lq_sta *lq_sta,
- 			rate->ant =
- 			    first_antenna(iwl_fw_valid_tx_ant(mvm->fw));
- 
--		rate->bw = 0;
-+		rate->bw = RATE_MCS_CHAN_WIDTH_20;
- 		rate->sgi = false;
- 	}
- 
--- 
-1.7.9.5
+For reference, the problem is:
 
+1)
+ * ieee80211_request_scan locks local->mtx 
+ * ieee80211_offchannel_stop_vifs locks local->iflist_mtx
+2)
+ * start_radar_detection locks local->iflist_mtx
+ * ieee80211_vif_use_channel locks local->chanctx_mtx
+ * ieee80211_new_chanctx locks local->mtx
+
+And there we have the circular dependency.
+
+Cheers,
+    Simon
