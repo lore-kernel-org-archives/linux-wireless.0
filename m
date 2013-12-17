@@ -1,106 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:49313 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751892Ab3LQJWs (ORCPT
+Received: from mail-ee0-f47.google.com ([74.125.83.47]:54282 "EHLO
+	mail-ee0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752031Ab3LQUpg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Dec 2013 04:22:48 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 4/4] ath9k: Fix regulatory compliance
-Date: Tue, 17 Dec 2013 14:47:49 +0530
-Message-Id: <1387271869-12780-4-git-send-email-sujith@msujith.org> (sfid-20131217_102319_302356_C1BB2AE9)
-In-Reply-To: <1387271869-12780-1-git-send-email-sujith@msujith.org>
-References: <1387271869-12780-1-git-send-email-sujith@msujith.org>
+	Tue, 17 Dec 2013 15:45:36 -0500
+Received: by mail-ee0-f47.google.com with SMTP id e51so2653077eek.34
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Dec 2013 12:45:36 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 36/36] iwlwifi: mvm: rs: fix variable shadowing
+Date: Tue, 17 Dec 2013 22:44:39 +0200
+Message-Id: <1387313079-28123-36-git-send-email-egrumbach@gmail.com> (sfid-20131217_214546_130563_F9BE1B80)
+In-Reply-To: <52B0B72A.5070704@gmail.com>
+References: <52B0B72A.5070704@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-To comply with ETSI regulations, make sure that
-the CCA registers are programmed with the threshold
-values from the EEPROM/Caldata. A new field is used
-to indicate if the card has been calibrated with the
-required threshold information.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Reviewed-by: EyalX Shapira <eyal@wizery.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 32 ++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/ar9003_phy.h    |  4 +++-
- 2 files changed, 35 insertions(+), 1 deletion(-)
+ drivers/net/wireless/iwlwifi/mvm/rs.c |    8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index d9e09bf..c8d22ec 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -4121,6 +4121,37 @@ static void ar9003_hw_thermo_cal_apply(struct ath_hw *ah)
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
+index 1f06450..d6d28d7 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
+@@ -2718,12 +2718,10 @@ static ssize_t rs_sta_dbgfs_scale_table_read(struct file *file,
+ 			lq_sta->lq.initial_rate_index[3]);
+ 
+ 	for (i = 0; i < LINK_QUAL_MAX_RETRY_NUM; i++) {
+-		u32 rate = le32_to_cpu(lq_sta->lq.rs_table[i]);
+-		desc += sprintf(buff+desc,
+-				" rate[%d] 0x%X ",
+-				i, rate);
++		u32 r = le32_to_cpu(lq_sta->lq.rs_table[i]);
+ 
+-		desc += rs_pretty_print_rate(buff+desc, rate);
++		desc += sprintf(buff+desc, " rate[%d] 0x%X ", i, r);
++		desc += rs_pretty_print_rate(buff+desc, r);
  	}
- }
  
-+static void ar9003_hw_apply_minccapwr_thresh(struct ath_hw *ah,
-+					     bool is2ghz)
-+{
-+	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
-+	const u_int32_t cca_ctrl[AR9300_MAX_CHAINS] = {
-+		AR_PHY_CCA_CTRL_0,
-+		AR_PHY_CCA_CTRL_1,
-+		AR_PHY_CCA_CTRL_2,
-+	};
-+	int chain;
-+	u32 val;
-+
-+	if (is2ghz) {
-+		if (!(eep->base_ext1.misc_enable & BIT(2)))
-+			return;
-+	} else {
-+		if (!(eep->base_ext1.misc_enable & BIT(3)))
-+			return;
-+	}
-+
-+	for (chain = 0; chain < AR9300_MAX_CHAINS; chain++) {
-+		if (!(ah->caps.tx_chainmask & BIT(chain)))
-+			continue;
-+
-+		val = ar9003_modal_header(ah, is2ghz)->noiseFloorThreshCh[chain];
-+		REG_RMW_FIELD(ah, cca_ctrl[chain],
-+			      AR_PHY_EXT_CCA0_THRESH62_1, val);
-+	}
-+
-+}
-+
- static void ath9k_hw_ar9300_set_board_values(struct ath_hw *ah,
- 					     struct ath9k_channel *chan)
- {
-@@ -4135,6 +4166,7 @@ static void ath9k_hw_ar9300_set_board_values(struct ath_hw *ah,
- 	if (!AR_SREV_9330(ah) && !AR_SREV_9340(ah))
- 		ar9003_hw_internal_regulator_apply(ah);
- 	ar9003_hw_apply_tuning_caps(ah);
-+	ar9003_hw_apply_minccapwr_thresh(ah, chan);
- 	ar9003_hw_txend_to_xpa_off_apply(ah, is2ghz);
- 	ar9003_hw_thermometer_apply(ah);
- 	ar9003_hw_thermo_cal_apply(ah);
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-index bbbfc4d..1b44171 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-@@ -270,7 +270,7 @@
- #define AR_PHY_AGC              (AR_AGC_BASE + 0x14)
- #define AR_PHY_EXT_ATTEN_CTL_0  (AR_AGC_BASE + 0x18)
- #define AR_PHY_CCA_0            (AR_AGC_BASE + 0x1c)
--#define AR_PHY_EXT_CCA0         (AR_AGC_BASE + 0x20)
-+#define AR_PHY_CCA_CTRL_0       (AR_AGC_BASE + 0x20)
- #define AR_PHY_RESTART          (AR_AGC_BASE + 0x24)
- 
- /*
-@@ -398,6 +398,8 @@
- #define AR9280_PHY_CCA_THRESH62_S   12
- #define AR_PHY_EXT_CCA0_THRESH62    0x000000FF
- #define AR_PHY_EXT_CCA0_THRESH62_S  0
-+#define AR_PHY_EXT_CCA0_THRESH62_1    0x000001FF
-+#define AR_PHY_EXT_CCA0_THRESH62_1_S  0
- #define AR_PHY_CCK_DETECT_WEAK_SIG_THR_CCK          0x0000003F
- #define AR_PHY_CCK_DETECT_WEAK_SIG_THR_CCK_S        0
- #define AR_PHY_CCK_DETECT_ANT_SWITCH_TIME           0x00001FC0
+ 	ret = simple_read_from_buffer(user_buf, count, ppos, buff, desc);
 -- 
-1.8.5.1
+1.7.9.5
 
