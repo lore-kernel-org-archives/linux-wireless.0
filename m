@@ -1,25 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:31751 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750943Ab3LKJCX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Dec 2013 04:02:23 -0500
-Message-ID: <52A82A1D.80409@broadcom.com> (sfid-20131211_100234_527318_2F0CD48C)
-Date: Wed, 11 Dec 2013 10:02:21 +0100
-From: Arend van Spriel <arend@broadcom.com>
+Received: from nbd.name ([46.4.11.11]:42692 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752978Ab3LQUo4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Dec 2013 15:44:56 -0500
+Message-ID: <52B0B7BC.9020307@openwrt.org> (sfid-20131217_214638_477548_126D96ED)
+Date: Tue, 17 Dec 2013 21:44:44 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: Jouni Malinen <j@w1.fi>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: wpa_supplicant and driver reload
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+To: Sujith Manoharan <sujith@msujith.org>,
+	John Linville <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 4/4] ath9k: Fix AR9330 external reset
+References: <1387303608-31356-1-git-send-email-sujith@msujith.org> <1387303608-31356-5-git-send-email-sujith@msujith.org>
+In-Reply-To: <1387303608-31356-5-git-send-email-sujith@msujith.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Jouni,
+On 2013-12-17 19:06, Sujith Manoharan wrote:
+> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+> 
+> The external SoC reset for AR9330 is required only when a
+> beacon stuck is seen, so do not check all the TX queues
+> for pending frames.
+In my tests, the external reset helped with getting Tx DMA un-stuck as
+well, even if no beacons are enabled. I think we should keep the tx
+pending check.
 
-A basic questionIn my testing I normally stop wpa_supplicant when 
-reloading my driver and start it again, but I was wondering whether this 
-is needed. Can wpa_supplicant deal with interface index change for the 
-network interface?
-
-Gr. AvS
+- Felix
