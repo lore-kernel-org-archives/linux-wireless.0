@@ -1,39 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:52158 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932222Ab3LEObZ (ORCPT
+Received: from mail-ea0-f177.google.com ([209.85.215.177]:62334 "EHLO
+	mail-ea0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753664Ab3LQUpT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 09:31:25 -0500
-Message-ID: <1386253879.4182.4.camel@jlt4.sipsolutions.net> (sfid-20131205_153128_857356_93C22EAB)
-Subject: Re: [PATCH 4/4] cfg80211: prevent race condition on scan request
- cleanup
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 05 Dec 2013 15:31:19 +0100
-In-Reply-To: <1386235289-27278-4-git-send-email-eliad@wizery.com> (sfid-20131205_102143_377274_769D4BD3)
-References: <1386235289-27278-1-git-send-email-eliad@wizery.com>
-	 <1386235289-27278-4-git-send-email-eliad@wizery.com>
-	 (sfid-20131205_102143_377274_769D4BD3)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 17 Dec 2013 15:45:19 -0500
+Received: by mail-ea0-f177.google.com with SMTP id n15so3150934ead.36
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Dec 2013 12:45:18 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Arik Nemtsov <arik@wizery.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 24/36] iwlwifi: trans: turn set_pmi into an optional callback
+Date: Tue, 17 Dec 2013 22:44:27 +0200
+Message-Id: <1387313079-28123-24-git-send-email-egrumbach@gmail.com> (sfid-20131217_214525_511284_AFD79F6C)
+In-Reply-To: <52B0B72A.5070704@gmail.com>
+References: <52B0B72A.5070704@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2013-12-05 at 11:21 +0200, Eliad Peller wrote:
+From: Arik Nemtsov <arik@wizery.com>
 
-> @@ -219,8 +221,13 @@ void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev, bool leak)
->  	 * the scan request or not ... if it accesses the dev
->  	 * in there (it shouldn't anyway) then it may crash.
->  	 */
-> -	if (!leak)
-> -		kfree(request);
-> +	if (leak) {
-> +		request->pending_cleanup = true;
-> +		return;
+It is not currently implemented for SDIO, and not required for other slave
+buses as well.
 
-This seems insufficient, if the driver never indicates completion, we'd
-never clear rdev->scan_req?
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-trans.h |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index 8aaabdb..0c36478 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -787,7 +787,8 @@ static inline u32 iwl_trans_write_mem32(struct iwl_trans *trans, u32 addr,
+ 
+ static inline void iwl_trans_set_pmi(struct iwl_trans *trans, bool state)
+ {
+-	trans->ops->set_pmi(trans, state);
++	if (trans->ops->set_pmi)
++		trans->ops->set_pmi(trans, state);
+ }
+ 
+ static inline void
+-- 
+1.7.9.5
 
