@@ -1,69 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:37280 "EHLO
-	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756214Ab3L3RTI (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:60143 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753937Ab3LQUpO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Dec 2013 12:19:08 -0500
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
-Cc: kernel-janitors@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 8/11]  use ether_addr_equal_64bits
-Date: Mon, 30 Dec 2013 19:15:04 +0100
-Message-Id: <1388427307-8691-9-git-send-email-Julia.Lawall@lip6.fr> (sfid-20131230_182230_878976_6E79C380)
-In-Reply-To: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>
-References: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>
+	Tue, 17 Dec 2013 15:45:14 -0500
+Received: by mail-ee0-f46.google.com with SMTP id d49so3127653eek.19
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Dec 2013 12:45:13 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 20/36] iwlwifi: remove pointer to transport from op_mode
+Date: Tue, 17 Dec 2013 22:44:23 +0200
+Message-Id: <1387313079-28123-20-git-send-email-egrumbach@gmail.com> (sfid-20131217_214624_980674_04825706)
+In-Reply-To: <52B0B72A.5070704@gmail.com>
+References: <52B0B72A.5070704@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <Julia.Lawall@lip6.fr>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Ether_addr_equal_64bits is more efficient than ether_addr_equal, and can be
-used when each argument is an array within a structure that contains at
-least two bytes of data beyond the array.
+This pointer was not used anywhere.
 
-The structures involved are:
-ieee80211_hdr defined in include/linux/ieee80211.h
-ath_common defined in drivers/net/wireless/ath/ath.h
-
-This was done using Coccinelle (http://coccinelle.lip6.fr/).
-
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
-The semantic patch used is rather long and can be found in message 0 of
-this patch series.
+ drivers/net/wireless/iwlwifi/iwl-op-mode.h |    4 +---
+ drivers/net/wireless/iwlwifi/mvm/ops.c     |    1 -
+ 2 files changed, 1 insertion(+), 4 deletions(-)
 
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |    2 +-
- drivers/net/wireless/ath/ath9k/recv.c         |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index c028df7..b41e008 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -1077,7 +1077,7 @@ static bool ath9k_rx_prepare(struct ath9k_htc_priv *priv,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-op-mode.h b/drivers/net/wireless/iwlwifi/iwl-op-mode.h
+index 976448a..f50e6c6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-op-mode.h
++++ b/drivers/net/wireless/iwlwifi/iwl-op-mode.h
+@@ -155,14 +155,12 @@ void iwl_opmode_deregister(const char *name);
  
- 	if (ieee80211_is_beacon(hdr->frame_control) &&
- 	    !is_zero_ether_addr(common->curbssid) &&
--	    ether_addr_equal(hdr->addr3, common->curbssid)) {
-+	    ether_addr_equal_64bits(hdr->addr3, common->curbssid)) {
- 		s8 rssi = rxbuf->rxstatus.rs_rssi;
+ /**
+  * struct iwl_op_mode - operational mode
++ * @ops - pointer to its own ops
+  *
+  * This holds an implementation of the mac80211 / fw API.
+- *
+- * @ops - pointer to its own ops
+  */
+ struct iwl_op_mode {
+ 	const struct iwl_op_mode_ops *ops;
+-	const struct iwl_trans *trans;
  
- 		if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER))
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 3692b2a..0152318 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -982,7 +982,7 @@ static bool ath9k_is_mybeacon(struct ath_softc *sc, struct ieee80211_hdr *hdr)
- 	if (ieee80211_is_beacon(hdr->frame_control)) {
- 		RX_STAT_INC(rx_beacons);
- 		if (!is_zero_ether_addr(common->curbssid) &&
--		    ether_addr_equal(hdr->addr3, common->curbssid))
-+		    ether_addr_equal_64bits(hdr->addr3, common->curbssid))
- 			return true;
- 	}
+ 	char op_mode_specific[0] __aligned(sizeof(void *));
+ };
+diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
+index a6f4be8..ef3fdcf 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
+@@ -344,7 +344,6 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
  
+ 	op_mode = hw->priv;
+ 	op_mode->ops = &iwl_mvm_ops;
+-	op_mode->trans = trans;
+ 
+ 	mvm = IWL_OP_MODE_GET_MVM(op_mode);
+ 	mvm->dev = trans->dev;
+-- 
+1.7.9.5
 
