@@ -1,51 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f51.google.com ([209.85.215.51]:54412 "EHLO
-	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753862Ab3LCQAK (ORCPT
+Received: from mail-ee0-f52.google.com ([74.125.83.52]:64905 "EHLO
+	mail-ee0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753653Ab3LQUpY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Dec 2013 11:00:10 -0500
-Received: by mail-la0-f51.google.com with SMTP id ec20so9184694lab.38
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Dec 2013 08:00:06 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1386080437.4393.26.camel@jlt4.sipsolutions.net>
-References: <1386060648-6020-1-git-send-email-janusz.dziedzic@tieto.com>
-	<1386060648-6020-2-git-send-email-janusz.dziedzic@tieto.com>
-	<1386080437.4393.26.camel@jlt4.sipsolutions.net>
-Date: Tue, 3 Dec 2013 17:00:06 +0100
-Message-ID: <CALhHN=otvEjKAWxRvX4KAC4DY39BSeqm-v8mOfyL+M2XLQezYw@mail.gmail.com> (sfid-20131203_170014_816287_29629017)
-Subject: Re: [PATCH 2/4] nl80211: back to default bitrate_mask correctly
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, j@w1.fi
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 17 Dec 2013 15:45:24 -0500
+Received: by mail-ee0-f52.google.com with SMTP id d17so3142137eek.39
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Dec 2013 12:45:23 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eyal Shapira <eyal@wizery.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 27/36] iwlwifi: mvm: rs: avoid recalc of supported legacy rate mask
+Date: Tue, 17 Dec 2013 22:44:30 +0200
+Message-Id: <1387313079-28123-27-git-send-email-egrumbach@gmail.com> (sfid-20131217_214553_442902_9119D24E)
+In-Reply-To: <52B0B72A.5070704@gmail.com>
+References: <52B0B72A.5070704@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3 December 2013 15:20, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2013-12-03 at 09:50 +0100, Janusz Dziedzic wrote:
->> In case of empty NL80211_ATTR_TX_RATES attribute
->> in nl80211_set_tx_bitrate_mask() function back to
->> default bitrate mask.
->
-> Err what?
->
->> +++ b/net/wireless/nl80211.c
->> @@ -7311,9 +7311,6 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
->>       struct nlattr *tx_rates;
->>       struct ieee80211_supported_band *sband;
->>
->> -     if (info->attrs[NL80211_ATTR_TX_RATES] == NULL)
->> -             return -EINVAL;
->
-> Why?
-In case we will execute:
-iw wlanX set bitrate
-with this patch we will back to default - defined by capabilities
-(driver) startup values for both legacy and ht (and VHT with last
-patch).
+From: Eyal Shapira <eyal@wizery.com>
 
-Without this patch I don't see an option how to do that from iw. Or I
-miss something
+The supported legacy rate mask is initialized when rs
+is initialized based on the remote peer supported rates.
+There's no need to re mask it repeatedly with the supported
+remote peer rates.
 
-BR
-Janusz
+Signed-off-by: Eyal Shapira <eyal@wizery.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/rs.c |   36 ++-------------------------------
+ drivers/net/wireless/iwlwifi/mvm/rs.h |    1 -
+ 2 files changed, 2 insertions(+), 35 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
+index eee3381..30470d4 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
+@@ -880,16 +880,6 @@ static void rs_get_lower_rate(struct iwl_lq_sta *lq_sta,
+ 
+ 	rate_mask = rs_get_supported_rates(lq_sta, rate);
+ 
+-	/* Mask with station rate restriction */
+-	if (is_legacy(rate)) {
+-		/* supp_rates has no CCK bits in A mode */
+-		if (lq_sta->band == IEEE80211_BAND_5GHZ)
+-			rate_mask = (u16)(rate_mask &
+-			   (lq_sta->supp_rates << IWL_FIRST_OFDM_RATE));
+-		else
+-			rate_mask = (u16)(rate_mask & lq_sta->supp_rates);
+-	}
+-
+ 	/* If we switched from HT to legacy, check current rate */
+ 	if (switch_to_legacy && (rate_mask & (1 << scale_index))) {
+ 		low = scale_index;
+@@ -1629,7 +1619,6 @@ static void rs_rate_scale_perform(struct iwl_mvm *mvm,
+ 	u16 rate_mask;
+ 	u8 update_lq = 0;
+ 	struct iwl_scale_tbl_info *tbl, *tbl1;
+-	u16 rate_scale_index_msk = 0;
+ 	u8 active_tbl = 0;
+ 	u8 done_search = 0;
+ 	u16 high_low;
+@@ -1646,8 +1635,6 @@ static void rs_rate_scale_perform(struct iwl_mvm *mvm,
+ 	    info->flags & IEEE80211_TX_CTL_NO_ACK)
+ 		return;
+ 
+-	lq_sta->supp_rates = sta->supp_rates[lq_sta->band];
+-
+ 	tid = rs_get_tid(lq_sta, hdr);
+ 	if ((tid != IWL_MAX_TID_COUNT) &&
+ 	    (lq_sta->tx_agg_tid_en & (1 << tid))) {
+@@ -1686,24 +1673,7 @@ static void rs_rate_scale_perform(struct iwl_mvm *mvm,
+ 	/* rates available for this association, and for modulation mode */
+ 	rate_mask = rs_get_supported_rates(lq_sta, rate);
+ 
+-	/* mask with station rate restriction */
+-	if (is_legacy(rate)) {
+-		if (lq_sta->band == IEEE80211_BAND_5GHZ)
+-			/* supp_rates has no CCK bits in A mode */
+-			rate_scale_index_msk = (u16) (rate_mask &
+-				(lq_sta->supp_rates << IWL_FIRST_OFDM_RATE));
+-		else
+-			rate_scale_index_msk = (u16) (rate_mask &
+-						      lq_sta->supp_rates);
+-
+-	} else {
+-		rate_scale_index_msk = rate_mask;
+-	}
+-
+-	if (!rate_scale_index_msk)
+-		rate_scale_index_msk = rate_mask;
+-
+-	if (!((BIT(index) & rate_scale_index_msk))) {
++	if (!(BIT(index) & rate_mask)) {
+ 		IWL_ERR(mvm, "Current Rate is not valid\n");
+ 		if (lq_sta->search_better_tbl) {
+ 			/* revert to active table if search table is not valid*/
+@@ -1816,8 +1786,7 @@ static void rs_rate_scale_perform(struct iwl_mvm *mvm,
+ 
+ 	/* (Else) not in search of better modulation mode, try for better
+ 	 * starting rate, while staying in this mode. */
+-	high_low = rs_get_adjacent_rate(mvm, index, rate_scale_index_msk,
+-					rate->type);
++	high_low = rs_get_adjacent_rate(mvm, index, rate_mask, rate->type);
+ 	low = high_low & 0xff;
+ 	high = (high_low >> 8) & 0xff;
+ 
+@@ -2253,7 +2222,6 @@ void iwl_mvm_rs_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 			rs_rate_scale_clear_window(&lq_sta->lq_info[j].win[i]);
+ 
+ 	lq_sta->flush_timer = 0;
+-	lq_sta->supp_rates = sta->supp_rates[sband->band];
+ 
+ 	IWL_DEBUG_RATE(mvm,
+ 		       "LQ: *** rate scale station global init for station %d ***\n",
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.h b/drivers/net/wireless/iwlwifi/mvm/rs.h
+index 7b26e65..c31aa59 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rs.h
++++ b/drivers/net/wireless/iwlwifi/mvm/rs.h
+@@ -314,7 +314,6 @@ struct iwl_lq_sta {
+ 	enum ieee80211_band band;
+ 
+ 	/* The following are bitmaps of rates; IWL_RATE_6M_MASK, etc. */
+-	u32 supp_rates;
+ 	u16 active_legacy_rate;
+ 	u16 active_siso_rate;
+ 	u16 active_mimo2_rate;
+-- 
+1.7.9.5
+
