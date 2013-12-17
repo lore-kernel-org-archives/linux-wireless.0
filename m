@@ -1,113 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:54412 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753827Ab3LNOQ2 (ORCPT
+Received: from mail-ea0-f181.google.com ([209.85.215.181]:59970 "EHLO
+	mail-ea0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752313Ab3LQUpb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Dec 2013 09:16:28 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, stable@vger.kernel.org
-Subject: [PATCH] ath9k: Fix interrupt handling for the AR9002 family
-Date: Sat, 14 Dec 2013 19:41:33 +0530
-Message-Id: <1387030293-7928-1-git-send-email-sujith@msujith.org> (sfid-20131214_151631_863065_D9D11630)
+	Tue, 17 Dec 2013 15:45:31 -0500
+Received: by mail-ea0-f181.google.com with SMTP id m10so3160763eaj.12
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Dec 2013 12:45:30 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Ilan Peer <ilan.peer@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 32/36] iwlwifi: mvm: Do not allow AP MAC context update if not active
+Date: Tue, 17 Dec 2013 22:44:35 +0200
+Message-Id: <1387313079-28123-32-git-send-email-egrumbach@gmail.com> (sfid-20131217_214558_531976_301B1DBF)
+In-Reply-To: <52B0B72A.5070704@gmail.com>
+References: <52B0B72A.5070704@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+From: Ilan Peer <ilan.peer@intel.com>
 
-This patch adds a driver workaround for a HW issue.
+Fix a regression introduced in "iwlwifi: mvm: fix ht protection flags"
+where an AP/IBSS MAC context could have been updated even before the
+context was added to the FW. This fix avoids the following warning:
 
-A race condition in the HW results in missing interrupts,
-which can be avoided by a read/write with the ISR register.
-All chips in the AR9002 series are affected by this bug - AR9003
-and above do not have this problem.
+WARNING: ... at .../drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c:1132
+    iwl_mvm_mac_ctxt_changed+0x75/0x90 [iwlmvm]()
+Changing inactive MAC 0c:8b:fd:01:1a:30/3
+Modules linked in: [...]
+Call Trace:
+[<c16041fd>] dump_stack+0x41/0x52
+[<c1041074>] warn_slowpath_common+0x84/0xa0
+[<f80d8f45>] ? iwl_mvm_mac_ctxt_changed+0x75/0x90 [iwlmvm]
+[<f80d8f45>] ? iwl_mvm_mac_ctxt_changed+0x75/0x90 [iwlmvm]
+[<c1041133>] warn_slowpath_fmt+0x33/0x40
+[<f80d8f45>] iwl_mvm_mac_ctxt_changed+0x75/0x90 [iwlmvm]
+[<f80d517a>] iwl_mvm_bss_info_changed+0x22a/0x4b0 [iwlmvm]
+[<c160831d>] ? mutex_unlock+0xd/0x10
+[<f80d4678>] ? iwl_mvm_configure_filter+0x58/0x70 [iwlmvm]
+[<f80d4f50>] ? iwl_mvm_mac_tx+0xc0/0xc0 [iwlmvm]
+[<f8132d83>] ieee80211_bss_info_change_notify+0xa3/0x1d0 [mac80211]
+[<f8149247>] ? ieee80211_del_virtual_monitor+0x127/0x1f0 [mac80211]
+[<f8149cac>] ieee80211_do_open+0x12c/0xeb0 [mac80211]
+[<c106c6de>] ? __raw_notifier_call_chain+0x1e/0x30
+[<c106c70f>] ? raw_notifier_call_chain+0x1f/0x30
+[<f814aa8d>] ieee80211_open+0x5d/0x60 [mac80211]
+[<c1500c7b>] __dev_open+0xab/0x140
+[<c160b39a>] ? _raw_spin_unlock_bh+0x2a/0x30
+[<c1500f41>] __dev_change_flags+0x81/0x160
+[<c10ab6fc>] ? __lock_is_held+0x3c/0x60
+[<c15010d1>] dev_change_flags+0x21/0x60
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Reported-by: Johannes Berg <johannes.berg@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9002_mac.c | 44 +++++++++++++++++++++++++----
- 1 file changed, 39 insertions(+), 5 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c |    5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_mac.c b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
-index 8d78253..0337de7 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_mac.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
-@@ -76,9 +76,16 @@ static bool ar9002_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
- 				mask2 |= ATH9K_INT_CST;
- 			if (isr2 & AR_ISR_S2_TSFOOR)
- 				mask2 |= ATH9K_INT_TSFOOR;
-+
-+			if (!(pCap->hw_caps & ATH9K_HW_CAP_RAC_SUPPORTED)) {
-+				REG_WRITE(ah, AR_ISR_S2, isr2);
-+				isr &= ~AR_ISR_BCNMISC;
-+			}
- 		}
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 272aabd..b61d5a2 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -1053,11 +1053,16 @@ iwl_mvm_bss_info_changed_ap_ibss(struct iwl_mvm *mvm,
+ 				 struct ieee80211_bss_conf *bss_conf,
+ 				 u32 changes)
+ {
++	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+ 	enum ieee80211_bss_change ht_change = BSS_CHANGED_ERP_CTS_PROT |
+ 					      BSS_CHANGED_HT |
+ 					      BSS_CHANGED_BANDWIDTH;
+ 	int ret;
  
--		isr = REG_READ(ah, AR_ISR_RAC);
-+		if (pCap->hw_caps & ATH9K_HW_CAP_RAC_SUPPORTED)
-+			isr = REG_READ(ah, AR_ISR_RAC);
++	/* Changes will be applied when the AP/IBSS is started */
++	if (!mvmvif->ap_ibss_active)
++		return;
 +
- 		if (isr == 0xffffffff) {
- 			*masked = 0;
- 			return false;
-@@ -97,11 +104,23 @@ static bool ar9002_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
- 
- 			*masked |= ATH9K_INT_TX;
- 
--			s0_s = REG_READ(ah, AR_ISR_S0_S);
-+			if (pCap->hw_caps & ATH9K_HW_CAP_RAC_SUPPORTED) {
-+				s0_s = REG_READ(ah, AR_ISR_S0_S);
-+				s1_s = REG_READ(ah, AR_ISR_S1_S);
-+			} else {
-+				s0_s = REG_READ(ah, AR_ISR_S0);
-+				REG_WRITE(ah, AR_ISR_S0, s0_s);
-+				s1_s = REG_READ(ah, AR_ISR_S1);
-+				REG_WRITE(ah, AR_ISR_S1, s1_s);
-+
-+				isr &= ~(AR_ISR_TXOK |
-+					 AR_ISR_TXDESC |
-+					 AR_ISR_TXERR |
-+					 AR_ISR_TXEOL);
-+			}
-+
- 			ah->intr_txqs |= MS(s0_s, AR_ISR_S0_QCU_TXOK);
- 			ah->intr_txqs |= MS(s0_s, AR_ISR_S0_QCU_TXDESC);
--
--			s1_s = REG_READ(ah, AR_ISR_S1_S);
- 			ah->intr_txqs |= MS(s1_s, AR_ISR_S1_QCU_TXERR);
- 			ah->intr_txqs |= MS(s1_s, AR_ISR_S1_QCU_TXEOL);
- 		}
-@@ -120,7 +139,12 @@ static bool ar9002_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
- 	if (isr & AR_ISR_GENTMR) {
- 		u32 s5_s;
- 
--		s5_s = REG_READ(ah, AR_ISR_S5_S);
-+		if (pCap->hw_caps & ATH9K_HW_CAP_RAC_SUPPORTED) {
-+			s5_s = REG_READ(ah, AR_ISR_S5_S);
-+		} else {
-+			s5_s = REG_READ(ah, AR_ISR_S5);
-+		}
-+
- 		ah->intr_gen_timer_trigger =
- 				MS(s5_s, AR_ISR_S5_GENTIMER_TRIG);
- 
-@@ -133,6 +157,16 @@ static bool ar9002_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
- 		if ((s5_s & AR_ISR_S5_TIM_TIMER) &&
- 		    !(pCap->hw_caps & ATH9K_HW_CAP_AUTOSLEEP))
- 			*masked |= ATH9K_INT_TIM_TIMER;
-+
-+		if (!(pCap->hw_caps & ATH9K_HW_CAP_RAC_SUPPORTED)) {
-+			REG_WRITE(ah, AR_ISR_S5, s5_s);
-+			isr &= ~AR_ISR_GENTMR;
-+		}
-+	}
-+
-+	if (!(pCap->hw_caps & ATH9K_HW_CAP_RAC_SUPPORTED)) {
-+		REG_WRITE(ah, AR_ISR, isr);
-+		REG_READ(ah, AR_ISR);
- 	}
- 
- 	if (sync_cause) {
+ 	if (changes & ht_change) {
+ 		ret = iwl_mvm_mac_ctxt_changed(mvm, vif);
+ 		if (ret)
 -- 
-1.8.5.1
+1.7.9.5
 
