@@ -1,91 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0161.hostedemail.com ([216.40.44.161]:45667 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753561Ab3LCS3Z (ORCPT
+Received: from asav4.altibox.net ([81.167.36.153]:45373 "EHLO
+	asav4.altibox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752020Ab3LRXhr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Dec 2013 13:29:25 -0500
-Message-ID: <1386095360.15309.29.camel@joe-AO722> (sfid-20131203_192930_293707_DC022CBF)
-Subject: [PATCH] mac80211: rx: Neaten ieee80211_deliver_skb, remove
- compare_ether_addr
-From: Joe Perches <joe@perches.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>
-Date: Tue, 03 Dec 2013 10:29:20 -0800
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Wed, 18 Dec 2013 18:37:47 -0500
+From: Henrik Austad <henrik@austad.us>
+To: linux-rt-users@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 06/10] iwlwifi: pcie: determine the interrupt type in the handler
+Date: Thu, 19 Dec 2013 00:26:01 +0100
+Message-Id: <1387409165-28319-7-git-send-email-henrik@austad.us> (sfid-20131219_003816_095964_F12502AB)
+In-Reply-To: <1387409165-28319-1-git-send-email-henrik@austad.us>
+References: <1387409165-28319-1-git-send-email-henrik@austad.us>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove the unnecessary duplicate test of "if (skb) {"
-when !CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Remove now unnecessary __maybe_unused, neaten comment
-Remove unnecessary parenthesis around align cast.
-Substitute reference to deprecated compare_ether_addr
-with ether_addr_equal.
+Instead of having:
+iwl_pcie_irq_handler
+	iwl_pcie_isr_ict
+		iwl_pcie_isr_non_ict
 
-Signed-off-by: Joe Perches <joe@perches.com>
+we now have:
+
+iwl_pcie_irq_handler:
+	if (use_ict))
+		iwl_pcie_int_cause_ict;
+	else
+		iwl_pcie_int_cause_non_ict;
+
+This is much clearer.
+
+Change-Id: Ieb99e8120c62749c06e3b2636aaf7ccbea8c72c5
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- net/mac80211/rx.c | 33 +++++++++++++++------------------
- 1 file changed, 15 insertions(+), 18 deletions(-)
+ drivers/net/wireless/iwlwifi/pcie/rx.c |   22 ++++++++++------------
+ 1 file changed, 10 insertions(+), 12 deletions(-)
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index caecef8..b178c8f 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1937,20 +1937,17 @@ ieee80211_deliver_skb(struct ieee80211_rx_data *rx)
- 		}
- 	}
+diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
+index cd96eb2..aea6202 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
+@@ -810,8 +810,7 @@ static void iwl_pcie_irq_handle_error(struct iwl_trans *trans)
+ 	local_bh_enable();
+ }
  
--	if (skb) {
--		int align __maybe_unused;
+-/* legacy (non-ICT) ISR. Assumes that trans_pcie->irq_lock is held */
+-static irqreturn_t iwl_pcie_isr_non_ict(struct iwl_trans *trans)
++static irqreturn_t iwl_pcie_int_cause_non_ict(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	u32 inta;
+@@ -884,7 +883,7 @@ none:
+  * the interrupt we need to service, driver will set the entries back to 0 and
+  * set index.
+  */
+-static irqreturn_t iwl_pcie_isr_ict(struct iwl_trans *trans)
++static irqreturn_t iwl_pcie_int_cause_ict(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	irqreturn_t ret;
+@@ -892,14 +891,6 @@ static irqreturn_t iwl_pcie_isr_ict(struct iwl_trans *trans)
+ 	u32 val = 0;
+ 	u32 read;
+ 
+-	/* dram interrupt table not set yet,
+-	 * use legacy interrupt.
+-	 */
+-	if (unlikely(!trans_pcie->use_ict)) {
+-		ret = iwl_pcie_isr_non_ict(trans);
+-		return ret;
+-	}
 -
- #ifndef CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS
--		/*
--		 * 'align' will only take the values 0 or 2 here
--		 * since all frames are required to be aligned
--		 * to 2-byte boundaries when being passed to
--		 * mac80211; the code here works just as well if
--		 * that isn't true, but mac80211 assumes it can
--		 * access fields as 2-byte aligned (e.g. for
--		 * compare_ether_addr)
-+	if (skb) {
-+		/* 'align' will only take the values 0 or 2 here since all
-+		 * frames are required to be aligned to 2-byte boundaries
-+		 * when being passed to mac80211; the code here works just
-+		 * as well if that isn't true, but mac80211 assumes it can
-+		 * access fields as 2-byte aligned (e.g. for ether_addr_equal)
- 		 */
--		align = ((unsigned long)(skb->data + sizeof(struct ethhdr))) & 3;
-+		int align;
+ 	trace_iwlwifi_dev_irq(trans->dev);
+ 
+ 	/* Ignore interrupt if there's nothing in NIC to service.
+@@ -985,7 +976,14 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
+ 
+ 	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
+ 
+-	ret = iwl_pcie_isr_ict(trans);
++	/* dram interrupt table not set yet,
++	 * use legacy interrupt.
++	 */
++	if (likely(trans_pcie->use_ict))
++		ret = iwl_pcie_int_cause_ict(trans);
++	else
++		ret = iwl_pcie_int_cause_non_ict(trans);
 +
-+		align = (unsigned long)(skb->data + sizeof(struct ethhdr)) & 3;
- 		if (align) {
- 			if (WARN_ON(skb_headroom(skb) < 3)) {
- 				dev_kfree_skb(skb);
-@@ -1963,14 +1960,14 @@ ieee80211_deliver_skb(struct ieee80211_rx_data *rx)
- 				skb_set_tail_pointer(skb, len);
- 			}
- 		}
-+	}
- #endif
- 
--		if (skb) {
--			/* deliver to local stack */
--			skb->protocol = eth_type_trans(skb, dev);
--			memset(skb->cb, 0, sizeof(skb->cb));
--			netif_receive_skb(skb);
--		}
-+	if (skb) {
-+		/* deliver to local stack */
-+		skb->protocol = eth_type_trans(skb, dev);
-+		memset(skb->cb, 0, sizeof(skb->cb));
-+		netif_receive_skb(skb);
- 	}
- 
- 	if (xmit_skb) {
-
+ 	if (ret != IRQ_WAKE_THREAD) {
+ 		spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
+ 		return ret;
+-- 
+1.7.10.4
 
