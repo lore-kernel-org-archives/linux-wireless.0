@@ -1,41 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:50196 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755316Ab3LSM1u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Dec 2013 07:27:50 -0500
-Message-ID: <52B2E638.8060906@hauke-m.de> (sfid-20131219_132801_317708_8F172CF7)
-Date: Thu, 19 Dec 2013 13:27:36 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from s72.web-hosting.com ([198.187.29.21]:50476 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752836Ab3LRLbQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Dec 2013 06:31:16 -0500
+From: Sujith Manoharan <sujith@msujith.org>
 MIME-Version: 1.0
-To: Naughtboy <skylvlinux@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: bcm43236 complient in the compat-wireless-3.6.81???
-References: <CAKH5=Lv=7CroQcx6x_JONnE+6mOTH1sLLcSxntGq2fogn-t4+Q@mail.gmail.com>
-In-Reply-To: <CAKH5=Lv=7CroQcx6x_JONnE+6mOTH1sLLcSxntGq2fogn-t4+Q@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21169.34397.50727.31496@gargle.gargle.HOWL> (sfid-20131218_123119_425664_1D6A15F4)
+Date: Wed, 18 Dec 2013 16:56:21 +0530
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 07/10] ath9k: Remove ath9k_hw_gettsf32()
+In-Reply-To: <52B18628.1080607@openwrt.org>
+References: <1387340607-20045-1-git-send-email-sujith@msujith.org>
+	<1387340607-20045-8-git-send-email-sujith@msujith.org>
+	<52B18628.1080607@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/19/2013 11:03 AM, Naughtboy wrote:
-> hi erveryone !
-> i  have a usb dongle bcm43236
-> i wan to trsan it in the mips bcm47xx
-> but i search in hte www , and didn't find the driver for bcm43236
-> linux soucre code !!
-> i have find and study  http://wireless.kernel.org/en/users/Drivers/b43
-> 
-> and  find   http://wireless.kernel.org/en/users/Drivers/b43 do nothing
-> usefull !!
-> 
-> anyone can do one hand?
-> thanks advance !!
-> 
-> -----Naughyboy !
+Felix Fietkau wrote:
+> I'm using this function in my work-in-progress patches for p2p
+> multichannel.
+> Should I switch to using REG_READ in the driver or would you prefer to
+> drop this patch instead?
 
-Hi,
+We can drop this patch. I can send it after the p2p work is done.
 
-I assume you have a bcm43236 rev 2 as all the bcm43236s connected to a
-MIPS BCM47XX SoC I saw have that rev.  There is probably no open source
-driver for the bcm43236 rev 2, just rev 3 is supported by brcmfmac.
+Jphn, please drop this patch from the series.
 
-Hauke
+Sujith
