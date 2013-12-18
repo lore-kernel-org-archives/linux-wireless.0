@@ -1,89 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f43.google.com ([74.125.83.43]:48203 "EHLO
-	mail-ee0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753343Ab3LQUov (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:52214 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752698Ab3LRE2e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Dec 2013 15:44:51 -0500
-Received: by mail-ee0-f43.google.com with SMTP id c13so3130137eek.30
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Dec 2013 12:44:50 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eyal Shapira <eyal@wizery.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 04/36] iwlwifi: publish STBC support in HT
-Date: Tue, 17 Dec 2013 22:44:07 +0200
-Message-Id: <1387313079-28123-4-git-send-email-egrumbach@gmail.com> (sfid-20131217_214456_819039_D3E083D3)
-In-Reply-To: <52B0B72A.5070704@gmail.com>
-References: <52B0B72A.5070704@gmail.com>
+	Tue, 17 Dec 2013 23:28:34 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH v2 07/10] ath9k: Remove ath9k_hw_gettsf32()
+Date: Wed, 18 Dec 2013 09:53:24 +0530
+Message-Id: <1387340607-20045-8-git-send-email-sujith@msujith.org> (sfid-20131218_052900_226290_BDBBF797)
+In-Reply-To: <1387340607-20045-1-git-send-email-sujith@msujith.org>
+References: <1387340607-20045-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Not all chips support STBC so allow this to be
-another config parameter per chip type. If STBC
-is supported then publish it in the HT caps.
+It is unnecessary and the value is just a simple,
+direct register read.
 
-Since 7260/7265/3160 chips support it - set the stbc
-support bit.
-
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-7000.c         |    1 +
- drivers/net/wireless/iwlwifi/iwl-config.h       |    2 ++
- drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c |    7 +++++++
- 3 files changed, 10 insertions(+)
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c |  2 +-
+ drivers/net/wireless/ath/ath9k/hw.c         | 10 ----------
+ drivers/net/wireless/ath/ath9k/hw.h         |  1 -
+ 3 files changed, 1 insertion(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-7000.c b/drivers/net/wireless/iwlwifi/iwl-7000.c
-index 3c34a72..5efc6d1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-7000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-7000.c
-@@ -108,6 +108,7 @@ static const struct iwl_base_params iwl7000_base_params = {
- };
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index 7b94a6c..e9cf1de 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -1263,7 +1263,7 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type)
+ 		ar9003_mci_send_coex_bt_status_query(ah, true, query_type);
+ 		break;
+ 	case MCI_STATE_RECOVER_RX:
+-		tsf = ath9k_hw_gettsf32(ah);
++		tsf = REG_READ(ah, AR_TSF_L32);
+ 		if ((tsf - mci->last_recovery) <= MCI_RECOVERY_DUR_TSF) {
+ 			ath_dbg(ath9k_hw_common(ah), MCI,
+ 				"(MCI) ignore Rx recovery\n");
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 4797cb2..40cc64b 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2973,12 +2973,6 @@ static const struct ath_gen_timer_configuration gen_tmr_configuration[] =
  
- static const struct iwl_ht_params iwl7000_ht_params = {
-+	.stbc = true,
- 	.use_rts_for_aggregation = true, /* use rts/cts protection */
- 	.ht40_bands = BIT(IEEE80211_BAND_2GHZ) | BIT(IEEE80211_BAND_5GHZ),
- };
-diff --git a/drivers/net/wireless/iwlwifi/iwl-config.h b/drivers/net/wireless/iwlwifi/iwl-config.h
-index 0b91624..e05440f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-config.h
-@@ -162,12 +162,14 @@ struct iwl_base_params {
- };
+ /* HW generic timer primitives */
  
- /*
-+ * @stbc: support Tx STBC and 1*SS Rx STBC
-  * @use_rts_for_aggregation: use rts/cts protection for HT traffic
-  * @ht40_bands: bitmap of bands (using %IEEE80211_BAND_*) that support HT40
-  */
- struct iwl_ht_params {
- 	enum ieee80211_smps_mode smps_mode;
- 	const bool ht_greenfield_support; /* if used set to true */
-+	const bool stbc;
- 	bool use_rts_for_aggregation;
- 	u8 ht40_bands;
- };
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c b/drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c
-index f4a6d31..4380c16 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom-parse.c
-@@ -751,6 +751,13 @@ void iwl_init_ht_hw_capab(const struct iwl_cfg *cfg,
- 	ht_info->ht_supported = true;
- 	ht_info->cap = IEEE80211_HT_CAP_DSSSCCK40;
+-u32 ath9k_hw_gettsf32(struct ath_hw *ah)
+-{
+-	return REG_READ(ah, AR_TSF_L32);
+-}
+-EXPORT_SYMBOL(ath9k_hw_gettsf32);
+-
+ struct ath_gen_timer *ath_gen_timer_alloc(struct ath_hw *ah,
+ 					  void (*trigger)(void *),
+ 					  void (*overflow)(void *),
+@@ -3137,10 +3131,6 @@ void ath_gen_timer_isr(struct ath_hw *ah)
+ }
+ EXPORT_SYMBOL(ath_gen_timer_isr);
  
-+	if (cfg->ht_params->stbc) {
-+		ht_info->cap |= (1 << IEEE80211_HT_CAP_RX_STBC_SHIFT);
-+
-+		if (tx_chains > 1)
-+			ht_info->cap |= IEEE80211_HT_CAP_TX_STBC;
-+	}
-+
- 	if (iwlwifi_mod_params.amsdu_size_8K)
- 		ht_info->cap |= IEEE80211_HT_CAP_MAX_AMSDU;
- 
+-/********/
+-/* HTC  */
+-/********/
+-
+ static struct {
+ 	u32 version;
+ 	const char * name;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 54932d8..ba0059f 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -978,7 +978,6 @@ void ath9k_hw_set_txpowerlimit(struct ath_hw *ah, u32 limit, bool test);
+ void ath9k_hw_setopmode(struct ath_hw *ah);
+ void ath9k_hw_setmcastfilter(struct ath_hw *ah, u32 filter0, u32 filter1);
+ void ath9k_hw_write_associd(struct ath_hw *ah);
+-u32 ath9k_hw_gettsf32(struct ath_hw *ah);
+ u64 ath9k_hw_gettsf64(struct ath_hw *ah);
+ void ath9k_hw_settsf64(struct ath_hw *ah, u64 tsf64);
+ void ath9k_hw_reset_tsf(struct ath_hw *ah);
 -- 
-1.7.9.5
+1.8.5.1
 
