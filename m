@@ -1,152 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:51778 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751565Ab3LLK7U (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:35795 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752592Ab3LRE2a (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Dec 2013 05:59:20 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 12/18] brcmfmac: Move common BCDC code in single function.
-Date: Thu, 12 Dec 2013 11:59:00 +0100
-Message-ID: <1386845946-9859-13-git-send-email-arend@broadcom.com> (sfid-20131212_122459_985395_BDE2553A)
-In-Reply-To: <1386845946-9859-1-git-send-email-arend@broadcom.com>
-References: <1386845946-9859-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 17 Dec 2013 23:28:30 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH v2 05/10] ath9k: Update BaseExtension_1 eeprom structure
+Date: Wed, 18 Dec 2013 09:53:22 +0530
+Message-Id: <1387340607-20045-6-git-send-email-sujith@msujith.org> (sfid-20131218_052916_540854_F1E5A3CA)
+In-Reply-To: <1387340607-20045-1-git-send-email-sujith@msujith.org>
+References: <1387340607-20045-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-The BCDC functions query_dcmd and set_dcmd both create a msgbuf to
-be sent to dongle this code is very similar and for optimisation
-best put in a function.
+* Add a new field "misc_enable"
+* Use int_8 for tempslopextension.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/bcdc.c |   68 +++++++++---------------
- 1 file changed, 25 insertions(+), 43 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 10 +++++-----
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.h | 14 ++++++++++++--
+ 2 files changed, 17 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcdc.c b/drivers/net/wireless/brcm80211/brcmfmac/bcdc.c
-index 06848e4..ee86142 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcdc.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcdc.c
-@@ -101,35 +101,41 @@ struct brcmf_proto_bcdc_header {
- 					 * plus any space that might be needed
- 					 * for bus alignment padding.
- 					 */
--#define ROUND_UP_MARGIN	2048	/* Biggest bus block size possible for
--				 * round off at the end of buffer
--				 * Currently is SDIO
--				 */
--
- struct brcmf_bcdc {
- 	u16 reqid;
- 	u8 bus_header[BUS_HEADER_LEN];
- 	struct brcmf_proto_bcdc_dcmd msg;
--	unsigned char buf[BRCMF_DCMD_MAXLEN + ROUND_UP_MARGIN];
-+	unsigned char buf[BRCMF_DCMD_MAXLEN];
- };
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 86baa20..d9e09bf 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -139,7 +139,7 @@ static const struct ar9300_eeprom ar9300_default = {
+ 	 },
+ 	.base_ext1 = {
+ 		.ant_div_control = 0,
+-		.future = {0, 0, 0},
++		.future = {0, 0},
+ 		.tempslopextension = {0, 0, 0, 0, 0, 0, 0, 0}
+ 	},
+ 	.calFreqPier2G = {
+@@ -717,7 +717,7 @@ static const struct ar9300_eeprom ar9300_x113 = {
+ 	 },
+ 	 .base_ext1 = {
+ 		.ant_div_control = 0,
+-		.future = {0, 0, 0},
++		.future = {0, 0},
+ 		.tempslopextension = {0, 0, 0, 0, 0, 0, 0, 0}
+ 	 },
+ 	.calFreqPier2G = {
+@@ -1296,7 +1296,7 @@ static const struct ar9300_eeprom ar9300_h112 = {
+ 	},
+ 	.base_ext1 = {
+ 		.ant_div_control = 0,
+-		.future = {0, 0, 0},
++		.future = {0, 0},
+ 		.tempslopextension = {0, 0, 0, 0, 0, 0, 0, 0}
+ 	},
+ 	.calFreqPier2G = {
+@@ -1875,7 +1875,7 @@ static const struct ar9300_eeprom ar9300_x112 = {
+ 	},
+ 	.base_ext1 = {
+ 		.ant_div_control = 0,
+-		.future = {0, 0, 0},
++		.future = {0, 0},
+ 		.tempslopextension = {0, 0, 0, 0, 0, 0, 0, 0}
+ 	},
+ 	.calFreqPier2G = {
+@@ -2453,7 +2453,7 @@ static const struct ar9300_eeprom ar9300_h116 = {
+ 	 },
+ 	 .base_ext1 = {
+ 		.ant_div_control = 0,
+-		.future = {0, 0, 0},
++		.future = {0, 0},
+ 		.tempslopextension = {0, 0, 0, 0, 0, 0, 0, 0}
+ 	 },
+ 	.calFreqPier2G = {
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
+index 0e5daa5..694ca2e 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
+@@ -270,10 +270,20 @@ struct cal_ctl_data_5g {
+ 	u8 ctlEdges[AR9300_NUM_BAND_EDGES_5G];
+ } __packed;
  
--static int brcmf_proto_bcdc_msg(struct brcmf_pub *drvr)
++#define MAX_BASE_EXTENSION_FUTURE 2
 +
-+static int
-+brcmf_proto_bcdc_msg(struct brcmf_pub *drvr, int ifidx, uint cmd, void *buf,
-+		     uint len, bool set)
- {
- 	struct brcmf_bcdc *bcdc = (struct brcmf_bcdc *)drvr->proto->pd;
--	int len = le32_to_cpu(bcdc->msg.len) +
--			sizeof(struct brcmf_proto_bcdc_dcmd);
-+	struct brcmf_proto_bcdc_dcmd *msg = &bcdc->msg;
-+	u32 flags;
- 
- 	brcmf_dbg(BCDC, "Enter\n");
- 
--	/* NOTE : bcdc->msg.len holds the desired length of the buffer to be
--	 *        returned. Only up to BCDC_MAX_MSG_SIZE of this buffer area
--	 *        is actually sent to the dongle
--	 */
--	if (len > BCDC_MAX_MSG_SIZE)
--		len = BCDC_MAX_MSG_SIZE;
-+	memset(msg, 0, sizeof(struct brcmf_proto_bcdc_dcmd));
-+
-+	msg->cmd = cpu_to_le32(cmd);
-+	msg->len = cpu_to_le32(len);
-+	flags = (++bcdc->reqid << BCDC_DCMD_ID_SHIFT);
-+	if (set)
-+		flags |= BCDC_DCMD_SET;
-+	flags = (flags & ~BCDC_DCMD_IF_MASK) |
-+		(ifidx << BCDC_DCMD_IF_SHIFT);
-+	msg->flags = cpu_to_le32(flags);
-+
-+	if (buf)
-+		memcpy(bcdc->buf, buf, len);
- 
- 	/* Send request */
--	return brcmf_bus_txctl(drvr->bus_if, (unsigned char *)&bcdc->msg, len);
-+	return brcmf_bus_txctl(drvr->bus_if, (unsigned char *)&bcdc->msg,
-+			       len + sizeof(struct brcmf_proto_bcdc_dcmd));
- }
- 
- static int brcmf_proto_bcdc_cmplt(struct brcmf_pub *drvr, u32 id, u32 len)
-@@ -161,19 +167,7 @@ brcmf_proto_bcdc_query_dcmd(struct brcmf_pub *drvr, int ifidx, uint cmd,
- 
- 	brcmf_dbg(BCDC, "Enter, cmd %d len %d\n", cmd, len);
- 
--	memset(msg, 0, sizeof(struct brcmf_proto_bcdc_dcmd));
--
--	msg->cmd = cpu_to_le32(cmd);
--	msg->len = cpu_to_le32(len);
--	flags = (++bcdc->reqid << BCDC_DCMD_ID_SHIFT);
--	flags = (flags & ~BCDC_DCMD_IF_MASK) |
--		(ifidx << BCDC_DCMD_IF_SHIFT);
--	msg->flags = cpu_to_le32(flags);
--
--	if (buf)
--		memcpy(bcdc->buf, buf, len);
--
--	ret = brcmf_proto_bcdc_msg(drvr);
-+	ret = brcmf_proto_bcdc_msg(drvr, ifidx, cmd, buf, len, false);
- 	if (ret < 0) {
- 		brcmf_err("brcmf_proto_bcdc_msg failed w/status %d\n",
- 			  ret);
-@@ -227,19 +221,7 @@ brcmf_proto_bcdc_set_dcmd(struct brcmf_pub *drvr, int ifidx, uint cmd,
- 
- 	brcmf_dbg(BCDC, "Enter, cmd %d len %d\n", cmd, len);
- 
--	memset(msg, 0, sizeof(struct brcmf_proto_bcdc_dcmd));
--
--	msg->cmd = cpu_to_le32(cmd);
--	msg->len = cpu_to_le32(len);
--	flags = (++bcdc->reqid << BCDC_DCMD_ID_SHIFT) | BCDC_DCMD_SET;
--	flags = (flags & ~BCDC_DCMD_IF_MASK) |
--		(ifidx << BCDC_DCMD_IF_SHIFT);
--	msg->flags = cpu_to_le32(flags);
--
--	if (buf)
--		memcpy(bcdc->buf, buf, len);
--
--	ret = brcmf_proto_bcdc_msg(drvr);
-+	ret = brcmf_proto_bcdc_msg(drvr, ifidx, cmd, buf, len, true);
- 	if (ret < 0)
- 		goto done;
- 
-@@ -369,7 +351,7 @@ int brcmf_proto_bcdc_attach(struct brcmf_pub *drvr)
- 
- 	drvr->hdrlen += BCDC_HEADER_LEN + BRCMF_PROT_FW_SIGNAL_MAX_TXBYTES;
- 	drvr->bus_if->maxctl = BRCMF_DCMD_MAXLEN +
--			sizeof(struct brcmf_proto_bcdc_dcmd) + ROUND_UP_MARGIN;
-+			sizeof(struct brcmf_proto_bcdc_dcmd);
- 	return 0;
- 
- fail:
+ struct ar9300_BaseExtension_1 {
+ 	u8 ant_div_control;
+-	u8 future[3];
+-	u8 tempslopextension[8];
++	u8 future[MAX_BASE_EXTENSION_FUTURE];
++	/*
++	 * misc_enable:
++	 *
++	 * BIT 0   - TX Gain Cap enable.
++	 * BIT 1   - Uncompressed Checksum enable.
++	 * BIT 2/3 - MinCCApwr enable 2g/5g.
++	 */
++	u8 misc_enable;
++	int8_t tempslopextension[8];
+ 	int8_t quick_drop_low;
+ 	int8_t quick_drop_high;
+ } __packed;
 -- 
-1.7.10.4
+1.8.5.1
 
