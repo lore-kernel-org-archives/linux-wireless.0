@@ -1,61 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:54256 "EHLO
-	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753012Ab3LMRXi (ORCPT
+Received: from asav21.altibox.net ([109.247.116.8]:42757 "EHLO
+	asav21.altibox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751448Ab3LRXgc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Dec 2013 12:23:38 -0500
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: Luciano Coelho <luciano.coelho@intel.com>
-Subject: Re: [PATCH v9 0/5] CSA Beacon Count changes
-Date: Fri, 13 Dec 2013 18:23:35 +0100
-Cc: linux-wireless@vger.kernel.org, yeohchunyeow@gmail.com,
-	yeohchunyeow@cozybit.com
-References: <1386935675-24548-1-git-send-email-luciano.coelho@intel.com>
-In-Reply-To: <1386935675-24548-1-git-send-email-luciano.coelho@intel.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201312131823.35206.sw@simonwunderlich.de> (sfid-20131213_182341_681266_BC75B9C4)
+	Wed, 18 Dec 2013 18:36:32 -0500
+From: Henrik Austad <henrik@austad.us>
+To: linux-rt-users@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 05/10] iwlwifi: pcie: read the interrupt cause from the handler
+Date: Thu, 19 Dec 2013 00:26:00 +0100
+Message-Id: <1387409165-28319-6-git-send-email-henrik@austad.us> (sfid-20131219_003641_716446_9E6D7C4F)
+In-Reply-To: <1387409165-28319-1-git-send-email-henrik@austad.us>
+References: <1387409165-28319-1-git-send-email-henrik@austad.us>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hey Luca,
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-> Hi,
-> 
-> More changes, hopefully the last ones for this series. ;)
-> 
-> I have hacked wpa_supplicant to support CSA in IBSS, so I could test
-> it too.  I created some ma80211_hwsim testcases on top of this.  The
-> tests now pass, though I get some semi-random WARNs [1] when using 3
-> stations.  It seems to be a race condition and it doesn't seem to be
-> related to this series, so I think we should address it separately
-> (Simon, hint! ;).
-> 
-> I have also created some basic BSS CSA test cases for mac80211_hwsim.
-> The tests pass, except when I try count < 2, which is expected, since
-> we did not implement the CSA action frame in BSS mode.
-> 
-> I'll upstream the BSS CSA test cases soon.  The IBSS test cases still
-> need to be cleaned up (actually they're worthless without the IBSS CSA
-> support in wpa_supplicant, which needs to be cleaned up).  If someone
-> is interested in this, let me know and I can send them
-> "without-warranty of any kind". ;)
-> 
-> Please review and test!
+We now disable the interrupts in the hardware from the
+upper half and all the rest (including reading the interrupt
+cause) is done in the handler.
 
-Patches look good to me and worked fine in my test environment. Everything as 
-expected for CSA counts of 0, 1, 2 and 10, no warnings or weird behaviour. 
-I've tested with two stations in IBSS mode using ath9k.
+Change-Id: Ib319a81a6ba124c1e1d22c115ed6f865b678d672
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/pcie/rx.c |   18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-So, apart from that function name issue, feel free to add for Patch 1,2 and 5:
+diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
+index 42fd96d..cd96eb2 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
+@@ -887,20 +887,16 @@ none:
+ static irqreturn_t iwl_pcie_isr_ict(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+-	unsigned long flags;
+ 	irqreturn_t ret;
+ 	u32 inta;
+ 	u32 val = 0;
+ 	u32 read;
+ 
+-	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
+-
+ 	/* dram interrupt table not set yet,
+ 	 * use legacy interrupt.
+ 	 */
+ 	if (unlikely(!trans_pcie->use_ict)) {
+ 		ret = iwl_pcie_isr_non_ict(trans);
+-		spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
+ 		return ret;
+ 	}
+ 
+@@ -958,10 +954,8 @@ static irqreturn_t iwl_pcie_isr_ict(struct iwl_trans *trans)
+ 	trans_pcie->inta |= inta;
+ 
+ 	/* iwl_pcie_tasklet() will service interrupts and re-enable them */
+-	if (likely(inta)) {
+-		spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
++	if (likely(inta))
+ 		return IRQ_WAKE_THREAD;
+-	}
+ 
+ 	ret = IRQ_HANDLED;
+ 
+@@ -973,7 +967,6 @@ static irqreturn_t iwl_pcie_isr_ict(struct iwl_trans *trans)
+ 	    !trans_pcie->inta)
+ 		iwl_enable_interrupts(trans);
+ 
+-	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
+ 	return ret;
+ }
+ 
+@@ -985,12 +978,19 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
+ 	u32 inta = 0;
+ 	u32 handled = 0;
+ 	unsigned long flags;
++	irqreturn_t ret;
+ 	u32 i;
+ 
+ 	lock_map_acquire(&trans->sync_cmd_lockdep_map);
+ 
+ 	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
+ 
++	ret = iwl_pcie_isr_ict(trans);
++	if (ret != IRQ_WAKE_THREAD) {
++		spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
++		return ret;
++	}
++
+ 	/* Ack/clear/reset pending uCode interrupts.
+ 	 * Note:  Some bits in CSR_INT are "OR" of bits in CSR_FH_INT_STATUS,
+ 	 */
+@@ -1289,5 +1289,5 @@ irqreturn_t iwl_pcie_isr(int irq, void *data)
+ 	 */
+ 	iwl_write32(trans, CSR_INT_MASK, 0x00000000);
+ 
+-	return iwl_pcie_isr_ict(trans);
++	return IRQ_WAKE_THREAD;
+ }
+-- 
+1.7.10.4
 
-Acked-by/Tested-by: Simon Wunderlich <sw@simonwunderlich.de>
-
-I'll try to reproduce the issue you were seeing when these testcases/wpa_s 
-implementation are upstream (or patches are available). I didn't see the 
-problem on a first glance, but the warning is not critical (basically the CSA 
-will fail), so I guess it's OK to fix it soon[tm].
-
-Thanks for your work!
-   Simon
