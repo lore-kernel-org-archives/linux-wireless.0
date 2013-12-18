@@ -1,43 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:38828 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752509Ab3LEOgY (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:55708 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753582Ab3LRKbY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 09:36:24 -0500
-Received: by mail-ie0-f172.google.com with SMTP id qd12so30107173ieb.3
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Dec 2013 06:36:23 -0800 (PST)
+	Wed, 18 Dec 2013 05:31:24 -0500
+Message-ID: <52B17973.1000608@broadcom.com> (sfid-20131218_113144_626515_8E5F26C1)
+Date: Wed, 18 Dec 2013 11:31:15 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1386253879.4182.4.camel@jlt4.sipsolutions.net>
-References: <1386235289-27278-1-git-send-email-eliad@wizery.com>
-	<1386235289-27278-4-git-send-email-eliad@wizery.com>
-	<1386253879.4182.4.camel@jlt4.sipsolutions.net>
-Date: Thu, 5 Dec 2013 16:36:23 +0200
-Message-ID: <CAB3XZEcpM9PAQCGQ99X2A-bqYXoPEmE=Cg29CDKY7=s8QquwUA@mail.gmail.com> (sfid-20131205_153635_937822_762CF3DD)
-Subject: Re: [PATCH 4/4] cfg80211: prevent race condition on scan request cleanup
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Julian Calaby <julian.calaby@gmail.com>
+CC: <linux-sunxi@googlegroups.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [linux-sunxi] Firmware for Bluetooth (and wifi)
+References: <52A040CE.5040706@schinagl.nl> <CAFXj5xjJ0DTa0Qo1avLboQF-e3TFv3aEr_jjkuZjinwuTzXykQ@mail.gmail.com> <52A09B5B.70800@schinagl.nl> <CAGRGNgWBgWqoPUdHSm2OXGb8r-ca5NX2z4_v0eG6oOMgJRd3HQ@mail.gmail.com>
+In-Reply-To: <CAGRGNgWBgWqoPUdHSm2OXGb8r-ca5NX2z4_v0eG6oOMgJRd3HQ@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 5, 2013 at 4:31 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Thu, 2013-12-05 at 11:21 +0200, Eliad Peller wrote:
->
->> @@ -219,8 +221,13 @@ void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev, bool leak)
->>        * the scan request or not ... if it accesses the dev
->>        * in there (it shouldn't anyway) then it may crash.
->>        */
->> -     if (!leak)
->> -             kfree(request);
->> +     if (leak) {
->> +             request->pending_cleanup = true;
->> +             return;
->
-> This seems insufficient, if the driver never indicates completion, we'd
-> never clear rdev->scan_req?
->
-right, but i think it somehow makes sense (i.e. the driver must
-indicate completion...)?
+On 12/05/2013 10:46 PM, Julian Calaby wrote:
+> Firstly, are there any plans to support the BCM43362 chipset with the
+> brcmfmac driver in the near future?
 
-Eliad.
+Hi Julian,
+
+I am working on a patch to support this chip. It is looking promising.
+Just have to go after a firmware image to be sure.
+
+Gr. AvS
