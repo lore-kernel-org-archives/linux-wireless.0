@@ -1,59 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:49399 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756056Ab3LDWvy (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:22669 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753057Ab3LRJQn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Dec 2013 17:51:54 -0500
-Message-ID: <1386197511.7669.6.camel@jlt4.sipsolutions.net> (sfid-20131204_235157_936716_440F37D1)
-Subject: Re: question for mac80211 driver maintainers - RCU usage in drivers
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 04 Dec 2013 23:51:51 +0100
-In-Reply-To: <3284918.YsYQbnYjhH@blech> (sfid-20131204_234714_914088_FAFC5473)
-References: <1386192610.5660.4.camel@jlt4.sipsolutions.net>
-	 <1409469.QTj73PAUiY@blech> <1386195829.7669.3.camel@jlt4.sipsolutions.net>
-	 <3284918.YsYQbnYjhH@blech> (sfid-20131204_234714_914088_FAFC5473)
+	Wed, 18 Dec 2013 04:16:43 -0500
+Message-ID: <52B167F6.5060209@broadcom.com> (sfid-20131218_101718_355278_E8533498)
+Date: Wed, 18 Dec 2013 10:16:38 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Linus Torvalds <torvalds@linux-foundation.org>,
+	Sander Eikelenboom <linux@eikelenboom.it>
+CC: Ben Hutchings <ben@decadent.org.uk>,
+	Julian Calaby <julian.calaby@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <avinashapatil@gmail.com>
+Subject: Re: [cfg80211 / iwlwifi] setting wireless regulatory domain doesn't
+ work.
+References: <1342235583.20131211182804@eikelenboom.it>	<CAB=NE6UfumA2xez1DvtDSBDZ72WF_tOozFo_8LRnMryYiSqD-A@mail.gmail.com>	<871324710.20131211191104@eikelenboom.it>	<CAB=NE6XRnE0j9NMW0K1vKzEO9v70arSH4YXZjudqa0ZxiLB4AA@mail.gmail.com>	<1937118387.20131216122200@eikelenboom.it>	<52AEE60B.6030509@broadcom.com>	<19210260274.20131216135644@eikelenboom.it>	<CAGRGNgXHemM2FfnXgW5RbzhFT+9SfUfVkjdysK3+=_u3hWSacw@mail.gmail.com>	<1534126119.20131217104548@eikelenboom.it>	<387552477.20131217213319@eikelenboom.it>	<20131217212709.GB5624@decadent.org.uk>	<1254825772.20131217224914@eikelenboom.it> <CA+55aFxQg6=MAWEkEGz64Hz8OawvPyX=fpBOjY8cGBL5XgB9WQ@mail.gmail.com>
+In-Reply-To: <CA+55aFxQg6=MAWEkEGz64Hz8OawvPyX=fpBOjY8cGBL5XgB9WQ@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-12-04 at 23:47 +0100, Christian Lamparter wrote:
-> On Wednesday, December 04, 2013 11:23:49 PM Johannes Berg wrote:
-> > On Wed, 2013-12-04 at 23:16 +0100, Christian Lamparter wrote:
-> > > > Is there any other driver that assumes it is safe to delete a station
-> > > > pointer in the sta_state callback and not use synchronize_rcu()? From
-> > > > looking at the code, I don't see any, but I can't really be sure that
-> > > > everyone uses __rcu annotations correctly ... :)
-> > 
-> > > No, carl9170 doesn't use sta_state but it uses sta_remove. 
-> > 
-> > Yeah, I actually saw this. But I think you use it for aggregation
-> > sessions only? And the code didn't look like it could still get to the
-> > station pointer after it was removed with sta_remove() callback, but I
-> > may be wrong.
-> no, you are not wrong. The code gets its sta pointers either from 
-> callback-parameters or via ieee80211_get_sta. [But would it even be
-> possible to do it any other way? After all, this should crash "sooner
-> or later" otherwise].
+On 12/17/2013 11:06 PM, Linus Torvalds wrote:
+> We have literally had this *exact* same issue with firmware loading.
+> Network drivers shouldn't try to load firmware at module load time.
+> Same deal.
 
-Yeah that's what I thought. Both of those are obviously fine. In iwlmvm,
-we have something like this:
+It is kind of a chicken and egg problem for (wireless) networking
+drivers. To get IFF_UP from the network layer you have to register a
+netdevice. For wireless drivers this means you have to register a wiphy
+device with cfg80211 which flags capabilities and optionally are custom
+regulatory domain. That information depends on the device and firmware
+used. And there we have a full circle.
 
- struct ieee80211_sta __rcu *our_stations[16];
-
-and then just set it to NULL (well, simplifying a bit) on sta_remove
-(actually sta_state.)
-
-This is safe because after sta_state/sta_remove, mac80211 still does
-call_rcu() to really free the station, but it's kinda pointless. By
-adding the callback I'd suggested before to set this to NULL before the
-synchronize_net() in mac80211, I think we can get rid of the whole
-call_rcu() stuff.
-
-Anyway, right now my patch is breaking iwlmvm, I'll try to sort that out
-tomorrow and then post patches.
-
-johannes
-
+Regards,
+Arend
