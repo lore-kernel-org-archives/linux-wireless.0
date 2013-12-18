@@ -1,70 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zimbra.real-time.com ([63.170.91.9]:59513 "EHLO
-	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751208Ab3LJC1z (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:45829 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751074Ab3LRTaR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Dec 2013 21:27:55 -0500
-Date: Tue, 10 Dec 2013 13:27:46 +1100
-From: James Cameron <quozl@laptop.org>
-To: Vasily Khoruzhick <anarsoul@gmail.com>
-Cc: Dan Williams <dcbw@redhat.com>,
-	Andreas Kemnade <andreas@kemnade.info>,
-	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-Subject: Re: status of libertas_tf + sdio?
-Message-ID: <20131210022746.GE28975@us.netrek.org> (sfid-20131210_032800_045756_5F716A64)
-References: <20131203202607.0b445195@kemnade.info>
- <1386167786.19448.4.camel@dcbw.foobar.com>
- <CA+E=qVdY4M=bnX=pqMiMirhQ_BRg6Uc6K9Xkzvf328BaByUF1g@mail.gmail.com>
- <20131209041821.GC14878@us.netrek.org>
- <CA+E=qVd_F_=z5Vb2jan-nNVmizQznOiR=98CPHQevMxbnxGJiA@mail.gmail.com>
+	Wed, 18 Dec 2013 14:30:17 -0500
+Date: Wed, 18 Dec 2013 14:23:30 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Gustavo Padovan <gustavo@padovan.org>,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: bluetooth 2013-12-18
+Message-ID: <20131218192330.GC3096@tuxdriver.com> (sfid-20131218_203022_308479_ABE76D31)
+References: <20131218125236.GA1376@joana>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+E=qVd_F_=z5Vb2jan-nNVmizQznOiR=98CPHQevMxbnxGJiA@mail.gmail.com>
+In-Reply-To: <20131218125236.GA1376@joana>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 09, 2013 at 12:38:28PM +0300, Vasily Khoruzhick wrote:
-> On Mon, Dec 9, 2013 at 7:18 AM, James Cameron <quozl@laptop.org> wrote:
-> > On Fri, Dec 06, 2013 at 01:40:00PM +0300, Vasily Khoruzhick wrote:
-> >> Out of curiosity,
-> >>
-> >> Does anyone know if it's possible to get thin firmware for 8686 with
-> >> SPI interface?
-> >
-> > What happens when you try?
+On Wed, Dec 18, 2013 at 10:52:36AM -0200, Gustavo Padovan wrote:
+> Hi John,
 > 
-> How? There's no tf available for 8686 with SPI interface.
-
-How do you know that?  Are you saying that SPI support was removed
-from firmware during the conversion from fat to thin?
-
-> > How are you downloading firmware over SPI?
+> Two patches in this pull request. An important fix from Marcel in the
+> permission check for HCI User Channels, there was a extra check for
+> CAP_NET_RAW, and it was now removed. These channels should only require
+> CAP_NET_ADMIN. The other patch is a device id addition.
 > 
-> See drivers/net/wireless/libertas/if_spi.c, but it's for fat
-> firmware
-
-What happens if you send the thin firmware instead?
-
-> > I'm not aware of a second stage firmware download helper specific to
-> > the SPI mode.
+> Please pull or let me know of any problems! Thanks.
 > 
-> What's a second stage firmware download helper?
-
-File sd8686_helper.bin, we use it in Open Firmware with SDIO 8686 on
-OLPC XO.
-
-For SPI, which we don't use, I see if_spi.c uses gspi8686_v9_helper.bin
-
-I was wrong; I am now aware of a second stage firmware downloader
-helper specific to the SPI mode.  I hadn't looked before.
-
-> > I think it is not possible without firmware engineering.
+>         Gustavo
 > 
-> Yeah, just hoped that Marvell already did it. It's a pity that
-> firmware source code isn't available :(
+> ---
+> The following changes since commit eafbdde9c5629bea58df07275c5917eb42afbbe7:
+> 
+>   rtlwifi: rtl8192cu: Fix more pointer arithmetic errors (2013-11-15 14:29:33 -0500)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth.git for-upstream
+> 
+> for you to fetch changes up to 1bc5ad168f441f6f8bfd944288a5f7b4963ac1f6:
+> 
+>   Bluetooth: Fix HCI User Channel permission check in hci_sock_sendmsg (2013-12-17 13:47:27 +0200)
 
-Cozybit did the thin firmware, if I recall correctly.
+Pulling now...
 
 -- 
-James Cameron
-http://quozl.linux.org.au/
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
