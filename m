@@ -1,75 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:33089 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750877Ab3LWHTZ (ORCPT
+Received: from mail-we0-f181.google.com ([74.125.82.181]:34272 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752047Ab3LRJUA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Dec 2013 02:19:25 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org
-Subject: [RFC 0/9] ath9k patches
-Date: Mon, 23 Dec 2013 12:44:17 +0530
-Message-Id: <1387782866-19847-1-git-send-email-sujith@msujith.org> (sfid-20131223_081928_794984_8CD14A6F)
+	Wed, 18 Dec 2013 04:20:00 -0500
+Received: by mail-we0-f181.google.com with SMTP id x55so7337825wes.12
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Dec 2013 01:19:59 -0800 (PST)
+MIME-Version: 1.0
+Date: Wed, 18 Dec 2013 10:19:59 +0100
+Message-ID: <CADnKcVie-gqXMNS-c+ObtFrwuN3RYJVaPsnPc9=DuPxBKiPaaA@mail.gmail.com> (sfid-20131218_102008_561675_2A1727E0)
+Subject: Re: [PATCH v5] cfg80211: fix dfs channel state after stopping AP
+From: Marek Puzyniak <marek.puzyniak@tieto.com>
+To: Simon Wunderlich <sw@simonwunderlich.de>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On 17 December 2013 15:44, Simon Wunderlich <sw@simonwunderlich.de> wrote:
+> Sorry for answering after so many revisions, but ... why do you think this is
+> required? Many APs first do a CAC on all available channels, but then pick one
+> channel and use that, while being able to switch to another channel
+> immediately.
+>
+> WIth this patch (if I understand that correctly), this is not possible
+> anymore. Why do you think it is required? I can not find this requirement in
+> ETSI, at least.
+>
+> To quote from ETSI 301.893:
+>
+> Once the RLAN has started operations on an Available Channel, then that
+> channel becomes an Operating Channel. During normal operation, the master
+> device shall monitor all Operating Channels (In-Service Monitoring) to ensure
+> that there is no radar operating within these channel(s). If no radar was
+> detected on an Operating Channel but the RLAN stops operating on that channel,
+> then the channel becomes an Available Channel.
+>
+> I think this patch is wrong and should not be applied.
+>
+> Thanks,
+>     Simon
 
-Hi,
+I also have doubts when reading this specification:
 
-This series has a number of fixes for the baseband watchdog
-code and the hang signatures have been updated.
+ETSI 301.893 v1.7.0:
 
-The RX poll routine has been removed.
+"A master device shall only start operations on Available Channels. At
+installation (or reinstallation) of the equipment, the RLAN is assumed
+to have no Available Channels within the band 5 250 MHz to 5 350 MHz
+and/or 5 470 MHz to 5 725 MHz. In such a case, before starting
+operations on one or more of these channels, the master device shall
+perform either a Channel Availability Check or an Off-Channel CAC to
+ensure that there are no radars operating on any selected channel. If
+no radar has been detected, the channel(s) becomes an Available
+Channel(s) and remains as such until a radar signal is detected during
+the In-Service Monitoring. The Channel Availability Check or the
+Off-Channel CAC may be performed over a wider bandwidth such that all
+channels within the tested bandwidth become Available Channels."
 
-The HW hang check function is simple now and is currently
-used only in the beacon transmission patch. For normal transmission,
-we already have the TX poll routine, but it would help to
-monitor GTT interrupts and check the HW periodically.
-We can unify the normal TX poll function and the GTT monitoring
-logic.
+First thing: how to interpret words installation and reinstallation?
+If we include stating hostapd in installation process then we should
+have no available channels when starting hostapd.
 
-Right now, beacon transmission doesn't have any fancy logic
-for identifying strong interference. We just do a Noise Floor
-calibration in case we miss 3 beacons. This can probably be improved
-by adjusting the immunity levels.
+Second thing: How to interpret this sentence: "If no radar has been
+detected, the channel(s) becomes an Available Channel(s) and remains
+as such until a radar signal is detected during the In-Service
+Monitoring."
+As I understand this sentence channel can be available as long as
+radar detection works, so called In-Service Monitoring. When in
+service monitoring is off then channel can not be available. Of course
+this is my interpretation. So if there are APs than can monitor one
+channel after switch to new channel then I agree that both channels
+can be available. In hostapd when last AP interface is stopped then it
+is no longer monitoring current channel, so starting AP after some
+time can not happened without CAC. Simple case: we have our AP on
+mobile device, it was stopped in one place where was no radars and
+after moving to new place we start AP again. But this new place is in
+radar range. So we should start beaconig or start CAC first?
 
-Code to handle MAC/BB hangs in the AR9002 family is yet to be added.
 
-Please review !
-
-Sujith
-
-Sujith Manoharan (9):
-  ath9k: Fix max AMPDU size calculation
-  ath9k: Register supported HW hang checks
-  ath9k: Add HW callbacks for MAC/BB hang checks
-  ath9k: Fix MAC HW hang check for AR9003
-  ath9k: Fix PHY restart workaround
-  ath9k: Fix baseband watchdog interrupts
-  ath9k: Identify baseband watchdog signatures
-  ath9k: Fix baseband watchdog reset
-  ath9k: Remove RX Poll
-
- drivers/net/wireless/ath/ath9k/ar9002_hw.c  |  15 ++++
- drivers/net/wireless/ath/ath9k/ar9003_hw.c  | 113 ++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/ar9003_phy.c |  79 ++++++++++++++++---
- drivers/net/wireless/ath/ath9k/ar9003_phy.h |   2 +
- drivers/net/wireless/ath/ath9k/ath9k.h      |   7 +-
- drivers/net/wireless/ath/ath9k/beacon.c     |  10 ++-
- drivers/net/wireless/ath/ath9k/hw-ops.h     |  15 ++++
- drivers/net/wireless/ath/ath9k/hw.c         |  80 +-------------------
- drivers/net/wireless/ath/ath9k/hw.h         |  26 +++++--
- drivers/net/wireless/ath/ath9k/init.c       |   2 -
- drivers/net/wireless/ath/ath9k/link.c       |  63 ++--------------
- drivers/net/wireless/ath/ath9k/mac.c        |  24 +++++-
- drivers/net/wireless/ath/ath9k/main.c       |  48 ++++++------
- drivers/net/wireless/ath/ath9k/recv.c       |   4 -
- drivers/net/wireless/ath/ath9k/reg.h        |   1 +
- drivers/net/wireless/ath/ath9k/wow.c        |   1 -
- drivers/net/wireless/ath/ath9k/xmit.c       |   9 +--
- 17 files changed, 305 insertions(+), 194 deletions(-)
-
--- 
-1.8.5.2
-
+Marek
