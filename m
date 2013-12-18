@@ -1,28 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:38433 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753375Ab3LBKwc (ORCPT
+Received: from mail-pb0-f41.google.com ([209.85.160.41]:57897 "EHLO
+	mail-pb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751196Ab3LRK3Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Dec 2013 05:52:32 -0500
-Message-ID: <1385981549.4445.4.camel@jlt4.sipsolutions.net> (sfid-20131202_115236_106487_B41CCBE8)
-Subject: Re: [PATCH] nl80211: split 5 and 10 mhz capability flags
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 02 Dec 2013 11:52:29 +0100
-In-Reply-To: <1385414625-53124-1-git-send-email-nbd@openwrt.org>
-References: <1385414625-53124-1-git-send-email-nbd@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 18 Dec 2013 05:29:25 -0500
+Received: by mail-pb0-f41.google.com with SMTP id jt11so8313606pbb.0
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Dec 2013 02:29:25 -0800 (PST)
+MIME-Version: 1.0
+Date: Wed, 18 Dec 2013 15:59:25 +0530
+Message-ID: <CAE2MWkn5KT7nM+RgPptbfUDVEz5KThytpNmMUzhQeP30ZSocEg@mail.gmail.com> (sfid-20131218_112936_173964_87A54C02)
+Subject: P2P_DEVICE support in driver
+From: Ujjal Roy <royujjal@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Kernel <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2013-11-25 at 22:23 +0100, Felix Fietkau wrote:
-> This helps in case we need to support hardware that can only do one of
-> the two.
+Hi Johannes,
 
-Applied. I also moved the code and squashed this into the right previous
-patch ...
+I want to add P2P_DEVICE support in a driver. And it's not described
+in the P2P spec. So, please tell me the following points -
+1> what do the driver do?
+2> register_netdevice() should not be called from driver for the
+P2P_DEVICE interface. Then what are the procedures (network stacks) to
+add a P2P device from driver's point of view?
+3> How the supplicant will communicate with this type of interface?
 
-johannes
-
+-- 
+Thanks,
+UjjaL Roy
