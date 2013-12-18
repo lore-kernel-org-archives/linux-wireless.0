@@ -1,98 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f181.google.com ([209.85.223.181]:47910 "EHLO
-	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753978Ab3LPPxi (ORCPT
+Received: from mail-vb0-f42.google.com ([209.85.212.42]:61180 "EHLO
+	mail-vb0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751941Ab3LRQjY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Dec 2013 10:53:38 -0500
-Received: by mail-ie0-f181.google.com with SMTP id e14so6314670iej.26
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Dec 2013 07:53:38 -0800 (PST)
+	Wed, 18 Dec 2013 11:39:24 -0500
+Received: by mail-vb0-f42.google.com with SMTP id w5so5234794vbf.29
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Dec 2013 08:39:23 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <52AF1E57.2040300@rempel-privat.de>
-References: <CANq1E4R--OowH-LCUX4oSxsJu7yf_2e6Jei8tP+i_BQ_QHiKkw@mail.gmail.com>
-	<1387197416.4665.15.camel@jlt4.sipsolutions.net>
-	<CANq1E4TAt_Pw-V5_2LtJjY3LRcuwsxr1mBkcHjmX+MJUxc=zPQ@mail.gmail.com>
-	<1387201528.2057.1.camel@jlt4.sipsolutions.net>
-	<CANq1E4TJWCgM4yCFC25b3ssQEvFv+hEhW6jP3_mQKxQCw-QtUQ@mail.gmail.com>
-	<52AF14EC.9010803@rempel-privat.de>
-	<CANq1E4S+u6UZf15fU9aO6JvY4OTE+RnOKGL0K16T9A_4vr+C6A@mail.gmail.com>
-	<1387206912.2057.25.camel@jlt4.sipsolutions.net>
-	<52AF1BBE.5020602@rempel-privat.de>
-	<1387207795.2057.29.camel@jlt4.sipsolutions.net>
-	<52AF1E57.2040300@rempel-privat.de>
-Date: Mon, 16 Dec 2013 16:53:37 +0100
-Message-ID: <CANq1E4Q_+FwGjZr7yKudc=RYQPmJW9oUFUoTgg0U8vn5us3Bww@mail.gmail.com> (sfid-20131216_165341_617921_6FBCE31A)
-Subject: Re: [BUG] P2P setup timeout
-From: David Herrmann <dh.herrmann@gmail.com>
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+In-Reply-To: <52B1CA51.4010202@broadcom.com>
+References: <52A040CE.5040706@schinagl.nl> <CAFXj5xjJ0DTa0Qo1avLboQF-e3TFv3aEr_jjkuZjinwuTzXykQ@mail.gmail.com>
+ <52A09B5B.70800@schinagl.nl> <CAGRGNgWBgWqoPUdHSm2OXGb8r-ca5NX2z4_v0eG6oOMgJRd3HQ@mail.gmail.com>
+ <52B17973.1000608@broadcom.com> <52B19F38.7060503@redhat.com> <52B1CA51.4010202@broadcom.com>
+From: Chen-Yu Tsai <wens@csie.org>
+Date: Thu, 19 Dec 2013 00:39:03 +0800
+Message-ID: <CAGb2v67cnP0yth0xxBKcaW_T2fF+4nP4r6h9NLqy5FV2x=hO=Q@mail.gmail.com> (sfid-20131218_173927_371481_C457C69D)
+Subject: Re: [linux-sunxi] Firmware for Bluetooth (and wifi)
+To: linux-sunxi <linux-sunxi@googlegroups.com>
+Cc: Hans de Goede <hdegoede@redhat.com>,
+	Julian Calaby <julian.calaby@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+Hi,
 
-On Mon, Dec 16, 2013 at 4:37 PM, Oleksij Rempel <linux@rempel-privat.de> wrote:
-> Am 16.12.2013 16:29, schrieb Johannes Berg:
->> On Mon, 2013-12-16 at 16:26 +0100, Oleksij Rempel wrote:
->>> Am 16.12.2013 16:15, schrieb Johannes Berg:
->>>> On Mon, 2013-12-16 at 16:09 +0100, David Herrmann wrote:
->>>>
->>>>> Thanks, I tracked down the ENETDOWN. I'm not entirely sure but I think it's:
->>>>
->>>> Obviously :)
->>>>
->>>>> @Oleksij, I actually have three ath9k-htc devices so I'd like to get
->>>>> this working, and the devices are really nice apart from this bug. I
->>>>> will keep you up to date, but if you have any hints where to continue
->>>>> digging, lemme know. Until it's fixed, I'll just work on
->>>>> wired-displays via ethernet instead of wifi-displays..
->>>>
->>>> Based on what Oleksij said, these issues are likely not even related -
->>>> maybe ath9k_htc can't even set the rates to exclude CCK, so even if that
->>>> call were to succeed it wouldn't work?
+On Thu, Dec 19, 2013 at 12:16 AM, Arend van Spriel <arend@broadcom.com> wrote:
+> On 12/18/2013 02:12 PM, Hans de Goede wrote:
+>> Hi,
+>>
+>> On 12/18/2013 11:31 AM, Arend van Spriel wrote:
+>>> On 12/05/2013 10:46 PM, Julian Calaby wrote:
+>>>> Firstly, are there any plans to support the BCM43362 chipset with the
+>>>> brcmfmac driver in the near future?
 >>>
->>> Hmm.. WMI_BITRATE_MASK should do it.
->>> ieee80211_ops->set_bitrate_mask is set, so theoretically we should be
->>> able to exclude CCK. Today i won't be able to check it.
+>>> Hi Julian,
+>>>
+>>> I am working on a patch to support this chip. It is looking promising.
+>>> Just have to go after a firmware image to be sure.
 >>
->> There are two things:
->>  * the issue at hand, which is only for some certain management frames
->> that I
->>    believe are sent over the normal wlan0 netdev/vif, but still must not
->> use CCK
->>    even though wlan0 allows CCK
->>  * the issue about the set tx-rate on the p2p netdev/vif, which is how I
->> noticed
->>    this, but which is actually not related to the current bug
->>
->> It sounds to me like only the latter can be solved with WMI_BITRATE_MASK
->> since you can't generally disable CCK on wlan0 when doing P2P (you might
->> be connected to an 11b AP at the same time)
->>
->> For the latter issue, you really need a per-frame "disable CCK" flag in
->> the firmware, or you need to use a P2P_DEVICE vif.
+>> Cool. Do you have a cubietruck? With my latest wip tree:
+>> https://github.com/jwrdegoede/linux-sunxi/commits/sunxi-next
 >
-> Ah.. there is comment which clarify the situation with
-> ieee80211_ops->set_bitrate_mask in ath9k_htc:
-> /*
->  * Currently, this is used only for selecting the minimum rate
->  * for management frames, rate selection for data frames remain
->  * unaffected.
->  */
+> No cubietruck here. I googled the term last week because it came up and
+> found embeddedcomputer.nl selling it.
+>
+>> We've mmc/sdio controller support on top of 3.13-rc4, it would be
+>> nice if we could also get the wifi and bluetooth to work here.
+>>
+>> I'm certainly willing to give some patches for this a try. Do you
+>> have an example of what the dts file for a board with broadcom sdio
+>> wifi looks like ?
+>
+> I am still struggling with dts changes for a Pandaboard. As I understood
+> the cubietruck uses AP6210 module and the dts really depends on how
+> things are wired up with it. Apart from the SDIO lines it may have an
+> additional GPIO output to power the module and GPIO inputs to wakeup the
+> host and interrupt line.
 
-Yeah, I read that, but couldn't really understand it's meaning.. So it
-seems unless we add fw-support to ignore CCK rates for p2p mgmt
-frames, I'm screwed? Wouldn't it work to set >11mbits as lowest rate
-which should exclude CCK, right? I'm fine with breaking other stuff if
-I can get this running for a test environment. Or would it help trying
-p2p on 5ghz? Not sure which rates are used there, though..
+Yes it does. 2 GPIO lines for power, 1 for WiFi, 1 for BT.
+Also takes 2 GPIO inputs for interrupts. Not sure how to feed this
+to the driver. Last, it takes a clock output out of the A20 for the
+low power 32k clock. Not sure if this is mandatory?
 
-I will try to look into the ath9k-htc firmware. But given the
-complexity, I guess I won't be able to do that in <1month. And my
-80211 knowledge is not that comprehensive.. Maybe I'll find time for
-it during my next semester.
+I've read the schematics more than a few times. I can get a dts out
+tomorrow. I was planning on doing the clock output and rfkill part
+first.
 
-Thanks!
-David
+
+Regards,
+
+ChenYu
+
+
+>
+>> Regards,
+>>
+>> Hans
+>>
+>>
+>> p.s.
+>>
+>> Your last name seems Dutch, are you Dutch, and if so, are you
+>> located in the Netherlands?
+>
+> Geboren en getogen. We hebben idd een Broadcom vestiging in Nederland.
+>
+> Gr. AvS
+>
+> --
+> You received this message because you are subscribed to the Google Groups "linux-sunxi" group.
+> To unsubscribe from this group and stop receiving emails from it, send an email to linux-sunxi+unsubscribe@googlegroups.com.
+> For more options, visit https://groups.google.com/groups/opt_out.
