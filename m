@@ -1,571 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:41607 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751130Ab3LFQ4b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Dec 2013 11:56:31 -0500
-From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	linux-wireless@vger.kernel.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: [net] nfc: Fix FSF address in file headers
-Date: Fri,  6 Dec 2013 08:56:16 -0800
-Message-Id: <1386348976-24657-1-git-send-email-jeffrey.t.kirsher@intel.com> (sfid-20131206_175635_443801_84A2A134)
+Received: from vserver.eikelenboom.it ([84.200.39.61]:47113 "EHLO
+	smtp.eikelenboom.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751665Ab3LRKs5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Dec 2013 05:48:57 -0500
+Date: Wed, 18 Dec 2013 11:48:45 +0100
+From: Sander Eikelenboom <linux@eikelenboom.it>
+Message-ID: <133955103.20131218114845@eikelenboom.it> (sfid-20131218_114922_326427_302ECB76)
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Arend van Spriel <arend@broadcom.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Ben Hutchings <ben@decadent.org.uk>,
+	Julian Calaby <julian.calaby@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <avinashapatil@gmail.com>
+Subject: Re: [cfg80211 / iwlwifi] setting wireless regulatory domain doesn't work.
+In-Reply-To: <1387358785.4694.9.camel@jlt4.sipsolutions.net>
+References: <1342235583.20131211182804@eikelenboom.it> <CAB=NE6UfumA2xez1DvtDSBDZ72WF_tOozFo_8LRnMryYiSqD-A@mail.gmail.com> <871324710.20131211191104@eikelenboom.it> <CAB=NE6XRnE0j9NMW0K1vKzEO9v70arSH4YXZjudqa0ZxiLB4AA@mail.gmail.com> <1937118387.20131216122200@eikelenboom.it> <52AEE60B.6030509@broadcom.com> <19210260274.20131216135644@eikelenboom.it> <CAGRGNgXHemM2FfnXgW5RbzhFT+9SfUfVkjdysK3+=_u3hWSacw@mail.gmail.com> <1534126119.20131217104548@eikelenboom.it> <387552477.20131217213319@eikelenboom.it> <20131217212709.GB5624@decadent.org.uk> <1254825772.20131217224914@eikelenboom.it> <CA+55aFxQg6=MAWEkEGz64Hz8OawvPyX=fpBOjY8cGBL5XgB9WQ@mail.gmail.com> <52B167F6.5060209@broadcom.com> (sfid-20131218_101718_355278_E8533498) <1387358785.4694.9.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Several files refer to an old address for the Free Software Foundation
-in the file header comment.  Resolve by replacing the address with
-the URL <http://www.gnu.org/licenses/> so that we do not have to keep
-updating the header comments anytime the address changes.
 
-CC: linux-wireless@vger.kernel.org
-CC: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-CC: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-CC: Samuel Ortiz <sameo@linux.intel.com>
-Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
----
- drivers/nfc/mei_phy.c               | 4 +---
- drivers/nfc/microread/i2c.c         | 4 +---
- drivers/nfc/microread/mei.c         | 4 +---
- drivers/nfc/microread/microread.c   | 4 +---
- drivers/nfc/microread/microread.h   | 4 +---
- drivers/nfc/nfcwilink.c             | 3 +--
- drivers/nfc/pn533.c                 | 4 +---
- drivers/nfc/pn544/i2c.c             | 4 +---
- drivers/nfc/pn544/mei.c             | 4 +---
- drivers/nfc/pn544/pn544.c           | 4 +---
- drivers/nfc/pn544/pn544.h           | 4 +---
- include/linux/platform_data/pn544.h | 3 +--
- net/nfc/af_nfc.c                    | 4 +---
- net/nfc/core.c                      | 4 +---
- net/nfc/hci/command.c               | 4 +---
- net/nfc/hci/core.c                  | 4 +---
- net/nfc/hci/hci.h                   | 4 +---
- net/nfc/hci/hcp.c                   | 4 +---
- net/nfc/hci/llc.c                   | 4 +---
- net/nfc/hci/llc.h                   | 4 +---
- net/nfc/hci/llc_nop.c               | 4 +---
- net/nfc/hci/llc_shdlc.c             | 4 +---
- net/nfc/llcp.h                      | 4 +---
- net/nfc/llcp_commands.c             | 4 +---
- net/nfc/llcp_core.c                 | 4 +---
- net/nfc/llcp_sock.c                 | 4 +---
- net/nfc/nci/core.c                  | 3 +--
- net/nfc/nci/data.c                  | 3 +--
- net/nfc/nci/lib.c                   | 3 +--
- net/nfc/nci/ntf.c                   | 3 +--
- net/nfc/nci/rsp.c                   | 3 +--
- net/nfc/netlink.c                   | 4 +---
- net/nfc/nfc.h                       | 4 +---
- net/nfc/rawsock.c                   | 4 +---
- 34 files changed, 34 insertions(+), 95 deletions(-)
+Wednesday, December 18, 2013, 10:26:25 AM, you wrote:
 
-diff --git a/drivers/nfc/mei_phy.c b/drivers/nfc/mei_phy.c
-index 85f9009..1d78605 100644
---- a/drivers/nfc/mei_phy.c
-+++ b/drivers/nfc/mei_phy.c
-@@ -13,9 +13,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the
-- * Free Software Foundation, Inc.,
-- * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
- 
- #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-diff --git a/drivers/nfc/microread/i2c.c b/drivers/nfc/microread/i2c.c
-index 696e346..df85cd3 100644
---- a/drivers/nfc/microread/i2c.c
-+++ b/drivers/nfc/microread/i2c.c
-@@ -13,9 +13,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the
-- * Free Software Foundation, Inc.,
-- * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
- 
- #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-diff --git a/drivers/nfc/microread/mei.c b/drivers/nfc/microread/mei.c
-index 72fafec..2d1395b 100644
---- a/drivers/nfc/microread/mei.c
-+++ b/drivers/nfc/microread/mei.c
-@@ -13,9 +13,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the
-- * Free Software Foundation, Inc.,
-- * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
- 
- #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-diff --git a/drivers/nfc/microread/microread.c b/drivers/nfc/microread/microread.c
-index 970ded6..f868333 100644
---- a/drivers/nfc/microread/microread.c
-+++ b/drivers/nfc/microread/microread.c
-@@ -13,9 +13,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the
-- * Free Software Foundation, Inc.,
-- * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
- 
- #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-diff --git a/drivers/nfc/microread/microread.h b/drivers/nfc/microread/microread.h
-index 64b447a..f538641 100644
---- a/drivers/nfc/microread/microread.h
-+++ b/drivers/nfc/microread/microread.h
-@@ -12,9 +12,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the
-- * Free Software Foundation, Inc.,
-- * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
- 
- #ifndef __LOCAL_MICROREAD_H_
-diff --git a/drivers/nfc/nfcwilink.c b/drivers/nfc/nfcwilink.c
-index 7130864..683671a 100644
---- a/drivers/nfc/nfcwilink.c
-+++ b/drivers/nfc/nfcwilink.c
-@@ -22,8 +22,7 @@
-  *  GNU General Public License for more details.
-  *
-  *  You should have received a copy of the GNU General Public License
-- *  along with this program; if not, write to the Free Software
-- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-+ *  along with this program; if not, see <http://www.gnu.org/licenses/>.
-  *
-  */
- #include <linux/platform_device.h>
-diff --git a/drivers/nfc/pn533.c b/drivers/nfc/pn533.c
-index 2daf04c..3df19e6 100644
---- a/drivers/nfc/pn533.c
-+++ b/drivers/nfc/pn533.c
-@@ -13,9 +13,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the
-- * Free Software Foundation, Inc.,
-- * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
- 
- #include <linux/device.h>
-diff --git a/drivers/nfc/pn544/i2c.c b/drivers/nfc/pn544/i2c.c
-index b158ee1..d6185ff 100644
---- a/drivers/nfc/pn544/i2c.c
-+++ b/drivers/nfc/pn544/i2c.c
-@@ -13,9 +13,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the
-- * Free Software Foundation, Inc.,
-- * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
- 
- #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-diff --git a/drivers/nfc/pn544/mei.c b/drivers/nfc/pn544/mei.c
-index ee67de5..330cd40 100644
---- a/drivers/nfc/pn544/mei.c
-+++ b/drivers/nfc/pn544/mei.c
-@@ -13,9 +13,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the
-- * Free Software Foundation, Inc.,
-- * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
- 
- #include <linux/module.h>
-diff --git a/drivers/nfc/pn544/pn544.c b/drivers/nfc/pn544/pn544.c
-index 74cfa0a..51e21a8 100644
---- a/drivers/nfc/pn544/pn544.c
-+++ b/drivers/nfc/pn544/pn544.c
-@@ -13,9 +13,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the
-- * Free Software Foundation, Inc.,
-- * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
- 
- #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-diff --git a/drivers/nfc/pn544/pn544.h b/drivers/nfc/pn544/pn544.h
-index 01020e5..491bf45 100644
---- a/drivers/nfc/pn544/pn544.h
-+++ b/drivers/nfc/pn544/pn544.h
-@@ -12,9 +12,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the
-- * Free Software Foundation, Inc.,
-- * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
- 
- #ifndef __LOCAL_PN544_H_
-diff --git a/include/linux/platform_data/pn544.h b/include/linux/platform_data/pn544.h
-index 713bfd7..5ce1ab9 100644
---- a/include/linux/platform_data/pn544.h
-+++ b/include/linux/platform_data/pn544.h
-@@ -16,8 +16,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the Free Software
-- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
- 
- #ifndef _PN544_H_
-diff --git a/net/nfc/af_nfc.c b/net/nfc/af_nfc.c
-index 9d68441..2277276 100644
---- a/net/nfc/af_nfc.c
-+++ b/net/nfc/af_nfc.c
-@@ -16,9 +16,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the
-- * Free Software Foundation, Inc.,
-- * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
- 
- #include <linux/nfc.h>
-diff --git a/net/nfc/core.c b/net/nfc/core.c
-index 8725291..02ab341 100644
---- a/net/nfc/core.c
-+++ b/net/nfc/core.c
-@@ -16,9 +16,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the
-- * Free Software Foundation, Inc.,
-- * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
- 
- #define pr_fmt(fmt) KBUILD_MODNAME ": %s: " fmt, __func__
-diff --git a/net/nfc/hci/command.c b/net/nfc/hci/command.c
-index 64f922b..a9f4d2e 100644
---- a/net/nfc/hci/command.c
-+++ b/net/nfc/hci/command.c
-@@ -12,9 +12,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the
-- * Free Software Foundation, Inc.,
-- * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
- 
- #define pr_fmt(fmt) "hci: %s: " fmt, __func__
-diff --git a/net/nfc/hci/core.c b/net/nfc/hci/core.c
-index d07ca4c..3b96100 100644
---- a/net/nfc/hci/core.c
-+++ b/net/nfc/hci/core.c
-@@ -12,9 +12,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the
-- * Free Software Foundation, Inc.,
-- * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
- 
- #define pr_fmt(fmt) "hci: %s: " fmt, __func__
-diff --git a/net/nfc/hci/hci.h b/net/nfc/hci/hci.h
-index b274d12..c3d2e2c 100644
---- a/net/nfc/hci/hci.h
-+++ b/net/nfc/hci/hci.h
-@@ -12,9 +12,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the
-- * Free Software Foundation, Inc.,
-- * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
- 
- #ifndef __LOCAL_HCI_H
-diff --git a/net/nfc/hci/hcp.c b/net/nfc/hci/hcp.c
-index b6b4109..e9de151 100644
---- a/net/nfc/hci/hcp.c
-+++ b/net/nfc/hci/hcp.c
-@@ -12,9 +12,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the
-- * Free Software Foundation, Inc.,
-- * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
- 
- #define pr_fmt(fmt) "hci: %s: " fmt, __func__
-diff --git a/net/nfc/hci/llc.c b/net/nfc/hci/llc.c
-index fe5e966..a07d2b8 100644
---- a/net/nfc/hci/llc.c
-+++ b/net/nfc/hci/llc.c
-@@ -13,9 +13,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the
-- * Free Software Foundation, Inc.,
-- * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
- 
- #include <net/nfc/llc.h>
-diff --git a/net/nfc/hci/llc.h b/net/nfc/hci/llc.h
-index 7be0b7f..5dad4c5 100644
---- a/net/nfc/hci/llc.h
-+++ b/net/nfc/hci/llc.h
-@@ -13,9 +13,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the
-- * Free Software Foundation, Inc.,
-- * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
- 
- #ifndef __LOCAL_LLC_H_
-diff --git a/net/nfc/hci/llc_nop.c b/net/nfc/hci/llc_nop.c
-index 87b1029..d0435d5 100644
---- a/net/nfc/hci/llc_nop.c
-+++ b/net/nfc/hci/llc_nop.c
-@@ -13,9 +13,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the
-- * Free Software Foundation, Inc.,
-- * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
- 
- #include <linux/types.h>
-diff --git a/net/nfc/hci/llc_shdlc.c b/net/nfc/hci/llc_shdlc.c
-index 27b313b..719ad0a 100644
---- a/net/nfc/hci/llc_shdlc.c
-+++ b/net/nfc/hci/llc_shdlc.c
-@@ -13,9 +13,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the
-- * Free Software Foundation, Inc.,
-- * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
- 
- #define pr_fmt(fmt) "shdlc: %s: " fmt, __func__
-diff --git a/net/nfc/llcp.h b/net/nfc/llcp.h
-index f4d48b5..de1789e 100644
---- a/net/nfc/llcp.h
-+++ b/net/nfc/llcp.h
-@@ -12,9 +12,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the
-- * Free Software Foundation, Inc.,
-- * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
- 
- enum llcp_state {
-diff --git a/net/nfc/llcp_commands.c b/net/nfc/llcp_commands.c
-index 1017894..693cd1a 100644
---- a/net/nfc/llcp_commands.c
-+++ b/net/nfc/llcp_commands.c
-@@ -12,9 +12,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the
-- * Free Software Foundation, Inc.,
-- * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
- 
- #define pr_fmt(fmt) "llcp: %s: " fmt, __func__
-diff --git a/net/nfc/llcp_core.c b/net/nfc/llcp_core.c
-index 81cd341..1349074 100644
---- a/net/nfc/llcp_core.c
-+++ b/net/nfc/llcp_core.c
-@@ -12,9 +12,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the
-- * Free Software Foundation, Inc.,
-- * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
- 
- #define pr_fmt(fmt) "llcp: %s: " fmt, __func__
-diff --git a/net/nfc/llcp_sock.c b/net/nfc/llcp_sock.c
-index 824c605..69fbc8d 100644
---- a/net/nfc/llcp_sock.c
-+++ b/net/nfc/llcp_sock.c
-@@ -12,9 +12,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the
-- * Free Software Foundation, Inc.,
-- * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
- 
- #define pr_fmt(fmt) "llcp: %s: " fmt, __func__
-diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
-index b943d46..f0e955e 100644
---- a/net/nfc/nci/core.c
-+++ b/net/nfc/nci/core.c
-@@ -20,8 +20,7 @@
-  *  GNU General Public License for more details.
-  *
-  *  You should have received a copy of the GNU General Public License
-- *  along with this program; if not, write to the Free Software
-- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-+ *  along with this program; if not, see <http://www.gnu.org/licenses/>.
-  *
-  */
- 
-diff --git a/net/nfc/nci/data.c b/net/nfc/nci/data.c
-index 2a9399d..6c3aef8 100644
---- a/net/nfc/nci/data.c
-+++ b/net/nfc/nci/data.c
-@@ -16,8 +16,7 @@
-  *  GNU General Public License for more details.
-  *
-  *  You should have received a copy of the GNU General Public License
-- *  along with this program; if not, write to the Free Software
-- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-+ *  along with this program; if not, see <http://www.gnu.org/licenses/>.
-  *
-  */
- 
-diff --git a/net/nfc/nci/lib.c b/net/nfc/nci/lib.c
-index 6b7fd26..ed774a2 100644
---- a/net/nfc/nci/lib.c
-+++ b/net/nfc/nci/lib.c
-@@ -20,8 +20,7 @@
-  *  GNU General Public License for more details.
-  *
-  *  You should have received a copy of the GNU General Public License
-- *  along with this program; if not, write to the Free Software
-- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-+ *  along with this program; if not, see <http://www.gnu.org/licenses/>.
-  *
-  */
- 
-diff --git a/net/nfc/nci/ntf.c b/net/nfc/nci/ntf.c
-index b2aa98e..1e90509 100644
---- a/net/nfc/nci/ntf.c
-+++ b/net/nfc/nci/ntf.c
-@@ -20,8 +20,7 @@
-  *  GNU General Public License for more details.
-  *
-  *  You should have received a copy of the GNU General Public License
-- *  along with this program; if not, write to the Free Software
-- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-+ *  along with this program; if not, see <http://www.gnu.org/licenses/>.
-  *
-  */
- 
-diff --git a/net/nfc/nci/rsp.c b/net/nfc/nci/rsp.c
-index dd072f3..041de51 100644
---- a/net/nfc/nci/rsp.c
-+++ b/net/nfc/nci/rsp.c
-@@ -20,8 +20,7 @@
-  *  GNU General Public License for more details.
-  *
-  *  You should have received a copy of the GNU General Public License
-- *  along with this program; if not, write to the Free Software
-- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-+ *  along with this program; if not, see <http://www.gnu.org/licenses/>.
-  *
-  */
- 
-diff --git a/net/nfc/netlink.c b/net/nfc/netlink.c
-index a9b2342..ebbf6fb 100644
---- a/net/nfc/netlink.c
-+++ b/net/nfc/netlink.c
-@@ -16,9 +16,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the
-- * Free Software Foundation, Inc.,
-- * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
- 
- #define pr_fmt(fmt) KBUILD_MODNAME ": %s: " fmt, __func__
-diff --git a/net/nfc/nfc.h b/net/nfc/nfc.h
-index aaf606f..9d6e74f 100644
---- a/net/nfc/nfc.h
-+++ b/net/nfc/nfc.h
-@@ -16,9 +16,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the
-- * Free Software Foundation, Inc.,
-- * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
- 
- #ifndef __LOCAL_NFC_H
-diff --git a/net/nfc/rawsock.c b/net/nfc/rawsock.c
-index 66bcd2e..c27a6e8 100644
---- a/net/nfc/rawsock.c
-+++ b/net/nfc/rawsock.c
-@@ -16,9 +16,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the
-- * Free Software Foundation, Inc.,
-- * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
- 
- #define pr_fmt(fmt) KBUILD_MODNAME ": %s: " fmt, __func__
--- 
-1.8.3.1
+> Hi all,
+
+> We really should be asking Luis to look at this who hasn't yet chimed
+> in, presumably because he's between jobs (and travelling IIRC)
+
+> On Wed, 2013-12-18 at 10:16 +0100, Arend van Spriel wrote:
+>> On 12/17/2013 11:06 PM, Linus Torvalds wrote:
+>> > We have literally had this *exact* same issue with firmware loading.
+>> > Network drivers shouldn't try to load firmware at module load time.
+>> > Same deal.
+>> 
+>> It is kind of a chicken and egg problem for (wireless) networking
+>> drivers. To get IFF_UP from the network layer you have to register a
+>> netdevice. For wireless drivers this means you have to register a wiphy
+>> device with cfg80211 which flags capabilities and optionally are custom
+>> regulatory domain. That information depends on the device and firmware
+>> used. And there we have a full circle.
+
+> This is all really beside the point.
+
+> For this CRDA information, the kernel never actually *waits* for it, so
+> in the case that there's no reply, it uses the built-in world domain. So
+> it's not like request_firmware(), which will block boot forever, but
+> it's also not like request_firmware_nowait() which will eventually time
+> out and come back with an error if userspace isn't handling it (though
+> now that firmware loading is built in ...)
+
+> The issue is that it uses the built-in data *forever*, and what Sander
+> said was "or it will block forever" but just meant that it never was
+> able to do any further updates.
+
+> It *doesn't* actually block the boot process or such. Everything Linus
+> said is true but seems to have been written in understanding "blocks" as
+> "blocking the boot process", rather than "blocking further updates".
+
+> Regardless of this, even blocking further updates is a really bad idea.
+> There are a few ways to handle this, but I'll let Luis poke at that.
+
+Your description is correct, sorry if I was not clear.
+
+--
+Sander
+
+> johannes
+
+
 
