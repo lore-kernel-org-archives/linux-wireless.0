@@ -1,16 +1,16 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from asav4.altibox.net ([81.167.36.153]:45373 "EHLO
-	asav4.altibox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752020Ab3LRXhr (ORCPT
+Received: from asav21.altibox.net ([109.247.116.8]:42754 "EHLO
+	asav21.altibox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751356Ab3LRXgc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Dec 2013 18:37:47 -0500
+	Wed, 18 Dec 2013 18:36:32 -0500
 From: Henrik Austad <henrik@austad.us>
 To: linux-rt-users@vger.kernel.org
 Cc: linux-wireless@vger.kernel.org,
 	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 06/10] iwlwifi: pcie: determine the interrupt type in the handler
-Date: Thu, 19 Dec 2013 00:26:01 +0100
-Message-Id: <1387409165-28319-7-git-send-email-henrik@austad.us> (sfid-20131219_003816_095964_F12502AB)
+Subject: [PATCH 01/10] iwlwifi: pcie: clean up ICT allocation code
+Date: Thu, 19 Dec 2013 00:25:56 +0100
+Message-Id: <1387409165-28319-2-git-send-email-henrik@austad.us> (sfid-20131219_003644_490223_596F0C15)
 In-Reply-To: <1387409165-28319-1-git-send-email-henrik@austad.us>
 References: <1387409165-28319-1-git-send-email-henrik@austad.us>
 Sender: linux-wireless-owner@vger.kernel.org
@@ -18,81 +18,70 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Instead of having:
-iwl_pcie_irq_handler
-	iwl_pcie_isr_ict
-		iwl_pcie_isr_non_ict
+Since iwl_trans_pcie_alloc_ict is called in the PCIe
+allocation code, we always set CSR_INT_BIT_RX_PERIODIC.
+Move that bit to the default list of interrupts we enable
+and simplify the code.
+Also use dma_zalloc_ and avoid to memset the memory
+afterwards.
+trans_pcie->ict_index is 0 since trans_pcie has just been
+kzalloced, remove the redundant assignment.
 
-we now have:
-
-iwl_pcie_irq_handler:
-	if (use_ict))
-		iwl_pcie_int_cause_ict;
-	else
-		iwl_pcie_int_cause_non_ict;
-
-This is much clearer.
-
-Change-Id: Ieb99e8120c62749c06e3b2636aaf7ccbea8c72c5
+Change-Id: I1612bafb2c93d8a796cdd42444102e39199d4869
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/iwlwifi/pcie/rx.c |   22 ++++++++++------------
- 1 file changed, 10 insertions(+), 12 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-csr.h |    3 ++-
+ drivers/net/wireless/iwlwifi/pcie/rx.c |   15 ++++-----------
+ 2 files changed, 6 insertions(+), 12 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-csr.h b/drivers/net/wireless/iwlwifi/iwl-csr.h
+index da4eca8..bbab26e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-csr.h
++++ b/drivers/net/wireless/iwlwifi/iwl-csr.h
+@@ -198,7 +198,8 @@
+ 				 CSR_INT_BIT_RF_KILL | \
+ 				 CSR_INT_BIT_SW_RX   | \
+ 				 CSR_INT_BIT_WAKEUP  | \
+-				 CSR_INT_BIT_ALIVE)
++				 CSR_INT_BIT_ALIVE   | \
++				 CSR_INT_BIT_RX_PERIODIC)
+ 
+ /* interrupt flags in FH (flow handler) (PCI busmaster DMA) */
+ #define CSR_FH_INT_BIT_ERR       (1 << 31) /* Error */
 diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
-index cd96eb2..aea6202 100644
+index be3995a..f1d3b84 100644
 --- a/drivers/net/wireless/iwlwifi/pcie/rx.c
 +++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
-@@ -810,8 +810,7 @@ static void iwl_pcie_irq_handle_error(struct iwl_trans *trans)
- 	local_bh_enable();
+@@ -1051,7 +1051,7 @@ int iwl_pcie_alloc_ict(struct iwl_trans *trans)
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 
+ 	trans_pcie->ict_tbl =
+-		dma_alloc_coherent(trans->dev, ICT_SIZE,
++		dma_zalloc_coherent(trans->dev, ICT_SIZE,
+ 				   &trans_pcie->ict_tbl_dma,
+ 				   GFP_KERNEL);
+ 	if (!trans_pcie->ict_tbl)
+@@ -1063,17 +1063,10 @@ int iwl_pcie_alloc_ict(struct iwl_trans *trans)
+ 		return -EINVAL;
+ 	}
+ 
+-	IWL_DEBUG_ISR(trans, "ict dma addr %Lx\n",
+-		      (unsigned long long)trans_pcie->ict_tbl_dma);
++	IWL_DEBUG_ISR(trans, "ict dma addr %Lx ict vir addr %p\n",
++		      (unsigned long long)trans_pcie->ict_tbl_dma,
++		      trans_pcie->ict_tbl);
+ 
+-	IWL_DEBUG_ISR(trans, "ict vir addr %p\n", trans_pcie->ict_tbl);
+-
+-	/* reset table and index to all 0 */
+-	memset(trans_pcie->ict_tbl, 0, ICT_SIZE);
+-	trans_pcie->ict_index = 0;
+-
+-	/* add periodic RX interrupt */
+-	trans_pcie->inta_mask |= CSR_INT_BIT_RX_PERIODIC;
+ 	return 0;
  }
  
--/* legacy (non-ICT) ISR. Assumes that trans_pcie->irq_lock is held */
--static irqreturn_t iwl_pcie_isr_non_ict(struct iwl_trans *trans)
-+static irqreturn_t iwl_pcie_int_cause_non_ict(struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	u32 inta;
-@@ -884,7 +883,7 @@ none:
-  * the interrupt we need to service, driver will set the entries back to 0 and
-  * set index.
-  */
--static irqreturn_t iwl_pcie_isr_ict(struct iwl_trans *trans)
-+static irqreturn_t iwl_pcie_int_cause_ict(struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	irqreturn_t ret;
-@@ -892,14 +891,6 @@ static irqreturn_t iwl_pcie_isr_ict(struct iwl_trans *trans)
- 	u32 val = 0;
- 	u32 read;
- 
--	/* dram interrupt table not set yet,
--	 * use legacy interrupt.
--	 */
--	if (unlikely(!trans_pcie->use_ict)) {
--		ret = iwl_pcie_isr_non_ict(trans);
--		return ret;
--	}
--
- 	trace_iwlwifi_dev_irq(trans->dev);
- 
- 	/* Ignore interrupt if there's nothing in NIC to service.
-@@ -985,7 +976,14 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
- 
- 	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
- 
--	ret = iwl_pcie_isr_ict(trans);
-+	/* dram interrupt table not set yet,
-+	 * use legacy interrupt.
-+	 */
-+	if (likely(trans_pcie->use_ict))
-+		ret = iwl_pcie_int_cause_ict(trans);
-+	else
-+		ret = iwl_pcie_int_cause_non_ict(trans);
-+
- 	if (ret != IRQ_WAKE_THREAD) {
- 		spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
- 		return ret;
 -- 
 1.7.10.4
 
