@@ -1,106 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:54424 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755564Ab3LDVlA convert rfc822-to-8bit (ORCPT
+Received: from vserver.eikelenboom.it ([84.200.39.61]:50246 "EHLO
+	smtp.eikelenboom.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755061Ab3LRSy6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Dec 2013 16:41:00 -0500
-Received: by mail-wg0-f44.google.com with SMTP id a1so13927881wgh.35
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Dec 2013 13:40:58 -0800 (PST)
+	Wed, 18 Dec 2013 13:54:58 -0500
+Date: Wed, 18 Dec 2013 19:54:46 +0100
+From: Sander Eikelenboom <linux@eikelenboom.it>
+Message-ID: <116277577.20131218195446@eikelenboom.it> (sfid-20131218_195554_555085_3E74D2FE)
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+CC: "Berg, Johannes" <johannes.berg@intel.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [cfg80211 / iwlwifi] setting wireless regulatory domain doesn't work.
+In-Reply-To: <20131218182910.GA5705@cerro.do-not-panic.com>
+References: <792757788.20131023142849@eikelenboom.it> <1819533168.20131211161710@eikelenboom.it> <CAB=NE6V-RSnqbAC-0tfYK=WGJLp1aPC2UpFDurs49h+wXr9UfQ@mail.gmail.com> <1818324675.20131211175350@eikelenboom.it> <CAB=NE6Wf=T0bGLSYPDyb=-fMAVnGcbGkeaBiNrzwV-Lpxr6VZg@mail.gmail.com> <1342235583.20131211182804@eikelenboom.it> <CAB=NE6UfumA2xez1DvtDSBDZ72WF_tOozFo_8LRnMryYiSqD-A@mail.gmail.com> <871324710.20131211191104@eikelenboom.it> <CAB=NE6XRnE0j9NMW0K1vKzEO9v70arSH4YXZjudqa0ZxiLB4AA@mail.gmail.com> <1937118387.20131216122200@eikelenboom.it> <20131218182910.GA5705@cerro.do-not-panic.com>
 MIME-Version: 1.0
-Date: Wed, 4 Dec 2013 22:40:58 +0100
-Message-ID: <CA+OxbLhpRV2GhHbYD_VpoWgdYfR1uV4g38OO=gT4WPEt=F8_Og@mail.gmail.com> (sfid-20131204_224104_474135_3272203B)
-Subject: Weak Signal and slow tx Rate with RTL8723AE
-From: =?ISO-8859-1?Q?David_Pinilla_Caparr=F3s?= <dpini@caliu.cat>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
 
-I have mailed with Larry Finger asking for a problem and he has
-pointed me to this list.
+Wednesday, December 18, 2013, 7:29:10 PM, you wrote:
 
-I am an Arch Linux User with a Clevo based laptop.
+> On Mon, Dec 16, 2013 at 12:22:00PM +0100, Sander Eikelenboom wrote:
+>> 
+>> Wednesday, December 11, 2013, 7:38:50 PM, you wrote:
+>> 
+>> > On Wed, Dec 11, 2013 at 7:11 PM, Sander Eikelenboom
+>> > <linux@eikelenboom.it> wrote:
+>> >>
+>> >> Wednesday, December 11, 2013, 6:53:07 PM, you wrote:
+>> >>
+>> >>> The best way to address all this is by automatic region awareness and
+>> >>> doing the right thing on devices, this however requires good
+>> >>> architecture / calibration data  / etc and all that needs to be
+>> >>> verified by the system integrators, and finally they need to be
+>> >>> certified. If you want to hack your firmware and software go at it,
+>> >>> just be aware there are reasons for things.
+>> >>
+>> >> Well the general problem seems to be "we don't trust the user" so we FORCE him to the lowest
+>> >> common denominator (without a way to overrule that) so he is forced to operate *well* within the law.
+>> 
+>> > Its simply stupid to have the user be involved, period, the fact that
+>> > a user would be involved should only be for testing or helping
+>> > compliance for a busted device, development, research and obviously
+>> > hacking. Linux allows all these but by default a device with firmware
+>> > and a custom regdomain that will barf if you try to use a channel that
+>> > is not allowed is a restriction in firmware. Feel free to reverse
+>> > engineer that if you don't like it but it just won't be supported or
+>> > go upstream. Now, the common denominator is generally optimized for
+>> > best performance as well so you shouldn't have to do anything, and for
+>> > APs -- this is typically carefully crafted for a region, also highly
+>> > optimized.
+>> 
+>> >>>>> It doesn't seem like you are getting your original requests getting
+>> >>>>> processed, so I don't think CRDA is passing it. Can you verify running
+>> >>>>> from CRDA code:
+>> >>>>
+>> >>>> They don't get processed unless i remove the return from the code as i indicated.
+>> >>>> If i remove that return it processes the request.
+>> >>>>
+>> >>>>> ./regdbdump /usr/lib/crda/regulatory.bin
+>> >>>>
+>> >>>> Although it's in a different location on Debian, /lib/crda/regulatory.bin
+>> >>>> the dump seems fine.
+>> >>
+>> >>> OK thanks. Can you send a patch of what exact change you made, it was
+>> >>> unclear from the paste you made.
+>> >>
+>> >>> diff -u file.c.orig file.c
+>> >>
+>> >> Well i just did a pull from wireless-next, to try Avinash Patil's patch.
+>> >> net/wireless/reg.c had already changed much so i couldn't apply his patch without.
+>> >>
+>> >> With his patch it sets the regulatory domain, although as now expected i still can not use channels 12 and 13 yet,
+>> >> probably due to those firmware restrictions.
+>> 
+>> > Its unclear what results you got, and yeah if the device is restricted
+>> > then its just the fw telling the driver its channels and you can't use
+>> > them. That's it. You won't be able to override information then unless
+>> > you hack the firmware
+>> 
+>> Ping ?
+>> 
+>> Is there anymore information you need to *fix* the problem ?
 
-It ships with the RTL8723AE. I have been reading posts around the net
-and found that some people are having problems and talking about the
-driver and something about the RX or TX Power.
+> I was away on Travel back home, and will soon be traveling to
+> visit family so e-mail replies will be delayed, I'll jump on this
+> thread now but in short:
+
+> You are confusing the main issue you reported (cannot override regulatory)
+> as a software issue rather than a firmware issue with intel firmware, you are
+> also making claims and making people believe things work in different ways
+> (I'll clarify things there, proper regulatory support without CRDA works, CRDA
+> is just a helper, we also do have a timeout on requests). Lastly there is one
+> issue that may be a software issue but I cannot reproduce which I am
+> interested in getting down to the bottom to.
+
+To hopefully save you some time ...
+
+I would suggest reading the thread from bottom to top ;-)
+
+A summary .. it's now limited to:
+
+Problem:    Not being able to set the regulator domain with userspace tools after boot although CRDA works.
+Condition:  This only occurs when i build the modules in, when i use loadable modules all is fine.
+What seems to happen:
+            - This seems to be due to the fact that when the modules are built-in the modules are initialized *before* the root-filesystem is mounted.
+            - Since the root-filesystem isn't mounted, the CRDA is also not accessible.
+            - The world regulatory domain is now set and the boot continues, but somehow the request keeps pending doesn't seem to be cleared.
+            - *All* subsequent requests to change the regulatory domain, also when the CRDA has become accessible, also keep pending because that first request (at boot) was never fullfilled (or cleared)
+
+And IMHO that's a bug.
+
+> I'll dive into the different things now.
+
+>   Luis
 
 
-With the 2 APs wich I usually use I can only reach 18Mb/s of Bit rate
-whatever the signal level or link quality is. Both of them are 802.11
-G and not N I think.
-
-The connection is very unstable. Sometimes powering the wifi off and
-on increases the performance a bit when it's impossible to do anything
-(pings to gateway don't reply)
-
-If they are related to the driver, I would be proud to help with
-anything that I am able to. Testing for example.
-
-I have a recent version of the stable Kernel but I dont know if the
-firmware files are up to date.
-
-
-
-Some data:
-
-03:00.0 Network controller: Realtek Semiconductor Co., Ltd. RTL8723AE
-PCIe Wireless Network Adapter
-    Subsystem: Realtek Semiconductor Co., Ltd. Device 0726
-    Flags: bus master, fast devsel, latency 0, IRQ 18
-    I/O ports at d000 [size=256]
-    Memory at f7900000 (64-bit, non-prefetchable) [size=16K]
-    Capabilities: [40] Power Management version 3
-    Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
-    Capabilities: [70] Express Endpoint, MSI 00
-    Capabilities: [100] Advanced Error Reporting
-    Capabilities: [140] Virtual Channel
-    Capabilities: [160] Device Serial Number 01-23-87-fe-ff-4c-e0-00
-    Kernel driver in use: rtl8723ae
-    Kernel modules: rtl8723ae
-
- root  ~  dmesg | grep rtl
-[    2.734124] rtl8723ae 0000:03:00.0: enabling device (0000 -> 0003)
-[    2.749732] rtl8723ae: Using firmware rtlwifi/rtl8723fw_B.bin
-[    2.752940] ieee80211 phy0: Selected rate control algorithm 'rtl_rc'
-[    2.753057] rtlwifi: wireless switch is on
-[ 8838.570486] rtlwifi: wireless switch is o
-
-
- root  ~  uname -a
-Linux DPini-Laptop 3.12.2-1-ARCH #1 SMP PREEMPT Fri Nov 29 21:14:15
-CET 2013 x86_64 GNU/Linux
-
-
-Iwconfig:
-
-wlp3s0    IEEE 802.11bgn  ESSID:"Pinis_AP"
-          Mode:Managed  Frequency:2.462 GHz  Access Point: 00:1A:2B:12:34:56
-          Bit Rate=18 Mb/s   Tx-Power=20 dBm
-          Retry  long limit:7   RTS thr=2347 B   Fragment thr:off
-          Encryption key:off
-          Power Management:off
-          Link Quality=50/70  Signal level=-60 dBm
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-          Tx excessive retries:0  Invalid misc:9   Missed beacon:0
-
- root  ~  rfkill list
-0: phy0: Wireless LAN
-    Soft blocked: no
-    Hard blocked: no
-1: hci0: Bluetooth
-    Soft blocked: no
-    Hard blocked: no
-
- root  ⋯  lib  firmware  rtlwifi  md5sum rtl8723fw*
-ce50dfe07dbb1bfe9e14bdb315a4b28a  rtl8723fw_B.bin
-69ccaffbe94cc0ef1b89c25290e19b2e  rtl8723fw.bin
-
-
-
-Thank you for all, and sorry for my English.
-
-Best regards,
-David
