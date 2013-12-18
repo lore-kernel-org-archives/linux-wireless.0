@@ -1,316 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:38819 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751526Ab3LLK7Q (ORCPT
+Received: from vserver.eikelenboom.it ([84.200.39.61]:50643 "EHLO
+	smtp.eikelenboom.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751277Ab3LRTpz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Dec 2013 05:59:16 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 11/18] brcmfmac: reduce function parameters in sdio send/receive calls
-Date: Thu, 12 Dec 2013 11:58:59 +0100
-Message-ID: <1386845946-9859-12-git-send-email-arend@broadcom.com> (sfid-20131212_122500_427710_F046D0A0)
-In-Reply-To: <1386845946-9859-1-git-send-email-arend@broadcom.com>
-References: <1386845946-9859-1-git-send-email-arend@broadcom.com>
+	Wed, 18 Dec 2013 14:45:55 -0500
+Date: Wed, 18 Dec 2013 20:45:46 +0100
+From: Sander Eikelenboom <linux@eikelenboom.it>
+Message-ID: <4610721898.20131218204546@eikelenboom.it> (sfid-20131218_204619_245854_C761B06C)
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	Arend van Spriel <arend@broadcom.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Ben Hutchings <ben@decadent.org.uk>,
+	Julian Calaby <julian.calaby@gmail.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <avinashapatil@gmail.com>
+Subject: Re: [cfg80211 / iwlwifi] setting wireless regulatory domain doesn't work.
+In-Reply-To: <20131218194328.GE5705@cerro.do-not-panic.com>
+References: <19210260274.20131216135644@eikelenboom.it> <CAGRGNgXHemM2FfnXgW5RbzhFT+9SfUfVkjdysK3+=_u3hWSacw@mail.gmail.com> <1534126119.20131217104548@eikelenboom.it> <387552477.20131217213319@eikelenboom.it> <20131217212709.GB5624@decadent.org.uk> <1254825772.20131217224914@eikelenboom.it> <CA+55aFxQg6=MAWEkEGz64Hz8OawvPyX=fpBOjY8cGBL5XgB9WQ@mail.gmail.com> <52B167F6.5060209@broadcom.com> <1387358785.4694.9.camel@jlt4.sipsolutions.net> <133955103.20131218114845@eikelenboom.it> <20131218194328.GE5705@cerro.do-not-panic.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The SDIO send and receive functions in bcmsdh.c are always called
-with the same parameters. For the driver there is no use-case
-to call them otherwise so remove those parameters from function
-prototypes.
 
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |   73 +++++++++-----------
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   20 ++----
- .../net/wireless/brcm80211/brcmfmac/sdio_host.h    |   20 +++---
- 3 files changed, 46 insertions(+), 67 deletions(-)
+Wednesday, December 18, 2013, 8:43:28 PM, you wrote:
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-index 1249a60..5ff34e6 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-@@ -679,9 +679,7 @@ exit:
- 	return ret;
- }
- 
--int
--brcmf_sdiod_recv_buf(struct brcmf_sdio_dev *sdiodev, u32 addr, uint fn,
--		     uint flags, u8 *buf, uint nbytes)
-+int brcmf_sdiod_recv_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
- {
- 	struct sk_buff *mypkt;
- 	int err;
-@@ -693,7 +691,7 @@ brcmf_sdiod_recv_buf(struct brcmf_sdio_dev *sdiodev, u32 addr, uint fn,
- 		return -EIO;
- 	}
- 
--	err = brcmf_sdiod_recv_pkt(sdiodev, addr, fn, flags, mypkt);
-+	err = brcmf_sdiod_recv_pkt(sdiodev, mypkt);
- 	if (!err)
- 		memcpy(buf, mypkt->data, nbytes);
- 
-@@ -701,50 +699,47 @@ brcmf_sdiod_recv_buf(struct brcmf_sdio_dev *sdiodev, u32 addr, uint fn,
- 	return err;
- }
- 
--int
--brcmf_sdiod_recv_pkt(struct brcmf_sdio_dev *sdiodev, u32 addr, uint fn,
--		     uint flags, struct sk_buff *pkt)
-+int brcmf_sdiod_recv_pkt(struct brcmf_sdio_dev *sdiodev, struct sk_buff *pkt)
- {
--	uint width;
-+	u32 addr = sdiodev->sbwad;
- 	int err = 0;
- 
--	brcmf_dbg(SDIO, "fun = %d, addr = 0x%x, size = %d\n",
--		  fn, addr, pkt->len);
-+	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n", addr, pkt->len);
- 
--	width = (flags & SDIO_REQ_4BYTE) ? 4 : 2;
--	err = brcmf_sdiod_addrprep(sdiodev, width, &addr);
-+	err = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
- 	if (err)
- 		goto done;
- 
--	err = brcmf_sdiod_buffrw(sdiodev, fn, false, addr, pkt);
-+	err = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_2, false, addr, pkt);
- 
- done:
- 	return err;
- }
- 
--int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev, u32 addr, uint fn,
--			   uint flags, struct sk_buff_head *pktq, uint totlen)
-+int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
-+			   struct sk_buff_head *pktq, uint totlen)
- {
- 	struct sk_buff *glom_skb;
- 	struct sk_buff *skb;
--	uint width;
-+	u32 addr = sdiodev->sbwad;
- 	int err = 0;
- 
--	brcmf_dbg(SDIO, "fun = %d, addr = 0x%x, size = %d\n",
--		  fn, addr, pktq->qlen);
-+	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n",
-+		  addr, pktq->qlen);
- 
--	width = (flags & SDIO_REQ_4BYTE) ? 4 : 2;
--	err = brcmf_sdiod_addrprep(sdiodev, width, &addr);
-+	err = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
- 	if (err)
- 		goto done;
- 
- 	if (pktq->qlen == 1)
--		err = brcmf_sdiod_buffrw(sdiodev, fn, false, addr, pktq->next);
-+		err = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_2, false, addr,
-+					 pktq->next);
- 	else if (!sdiodev->sg_support) {
- 		glom_skb = brcmu_pkt_buf_get_skb(totlen);
- 		if (!glom_skb)
- 			return -ENOMEM;
--		err = brcmf_sdiod_buffrw(sdiodev, fn, false, addr, glom_skb);
-+		err = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_2, false, addr,
-+					 glom_skb);
- 		if (err)
- 			goto done;
- 
-@@ -753,18 +748,17 @@ int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev, u32 addr, uint fn,
- 			skb_pull(glom_skb, skb->len);
- 		}
- 	} else
--		err = brcmf_sdiod_sglist_rw(sdiodev, fn, false, addr, pktq);
-+		err = brcmf_sdiod_sglist_rw(sdiodev, SDIO_FUNC_2, false, addr,
-+					    pktq);
- 
- done:
- 	return err;
- }
- 
--int
--brcmf_sdiod_send_buf(struct brcmf_sdio_dev *sdiodev, u32 addr, uint fn,
--		     uint flags, u8 *buf, uint nbytes)
-+int brcmf_sdiod_send_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
- {
- 	struct sk_buff *mypkt;
--	uint width;
-+	u32 addr = sdiodev->sbwad;
- 	int err;
- 
- 	mypkt = brcmu_pkt_buf_get_skb(nbytes);
-@@ -776,41 +770,40 @@ brcmf_sdiod_send_buf(struct brcmf_sdio_dev *sdiodev, u32 addr, uint fn,
- 
- 	memcpy(mypkt->data, buf, nbytes);
- 
--	width = (flags & SDIO_REQ_4BYTE) ? 4 : 2;
--	err = brcmf_sdiod_addrprep(sdiodev, width, &addr);
-+	err = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
- 
- 	if (!err)
--		err = brcmf_sdiod_buffrw(sdiodev, fn, true, addr, mypkt);
-+		err = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_2, true, addr,
-+					 mypkt);
- 
- 	brcmu_pkt_buf_free_skb(mypkt);
- 	return err;
- 
- }
- 
--int
--brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev, u32 addr, uint fn,
--		     uint flags, struct sk_buff_head *pktq)
-+int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
-+			 struct sk_buff_head *pktq)
- {
- 	struct sk_buff *skb;
--	uint width;
-+	u32 addr = sdiodev->sbwad;
- 	int err;
- 
--	brcmf_dbg(SDIO, "fun = %d, addr = 0x%x, size = %d\n",
--		  fn, addr, pktq->qlen);
-+	brcmf_dbg(SDIO, "addr = 0x%x, size = %d\n", addr, pktq->qlen);
- 
--	width = (flags & SDIO_REQ_4BYTE) ? 4 : 2;
--	err = brcmf_sdiod_addrprep(sdiodev, width, &addr);
-+	err = brcmf_sdiod_addrprep(sdiodev, 4, &addr);
- 	if (err)
- 		return err;
- 
- 	if (pktq->qlen == 1 || !sdiodev->sg_support)
- 		skb_queue_walk(pktq, skb) {
--			err = brcmf_sdiod_buffrw(sdiodev, fn, true, addr, skb);
-+			err = brcmf_sdiod_buffrw(sdiodev, SDIO_FUNC_2, true,
-+						 addr, skb);
- 			if (err)
- 				break;
- 		}
- 	else
--		err = brcmf_sdiod_sglist_rw(sdiodev, fn, true, addr, pktq);
-+		err = brcmf_sdiod_sglist_rw(sdiodev, SDIO_FUNC_2, true, addr,
-+					    pktq);
- 
- 	return err;
- }
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 3d8a1a8..7fff4cc 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -1419,8 +1419,6 @@ static u8 brcmf_sdbrcm_rxglom(struct brcmf_sdio *bus, u8 rxseq)
- 		 */
- 		sdio_claim_host(bus->sdiodev->func[1]);
- 		errcode = brcmf_sdiod_recv_chain(bus->sdiodev,
--						 bus->sdiodev->sbwad,
--						 SDIO_FUNC_2, F2SYNC,
- 						 &bus->glom, dlen);
- 		sdio_release_host(bus->sdiodev->func[1]);
- 		bus->sdcnt.f2rxdata++;
-@@ -1615,8 +1613,7 @@ brcmf_sdbrcm_read_control(struct brcmf_sdio *bus, u8 *hdr, uint len, uint doff)
- 	}
- 
- 	/* Read remain of frame body */
--	sdret = brcmf_sdiod_recv_buf(bus->sdiodev, bus->sdiodev->sbwad,
--				     SDIO_FUNC_2, F2SYNC, rbuf, rdlen);
-+	sdret = brcmf_sdiod_recv_buf(bus->sdiodev, rbuf, rdlen);
- 	bus->sdcnt.f2rxdata++;
- 
- 	/* Control frame failures need retransmission */
-@@ -1702,8 +1699,6 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
- 		sdio_claim_host(bus->sdiodev->func[1]);
- 		if (!rd->len) {
- 			ret = brcmf_sdiod_recv_buf(bus->sdiodev,
--						   bus->sdiodev->sbwad,
--						   SDIO_FUNC_2, F2SYNC,
- 						   bus->rxhdr, BRCMF_FIRSTREAD);
- 			bus->sdcnt.f2rxhdrs++;
- 			if (ret < 0) {
-@@ -1760,8 +1755,7 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
- 		skb_pull(pkt, head_read);
- 		pkt_align(pkt, rd->len_left, bus->head_align);
- 
--		ret = brcmf_sdiod_recv_pkt(bus->sdiodev, bus->sdiodev->sbwad,
--					   SDIO_FUNC_2, F2SYNC, pkt);
-+		ret = brcmf_sdiod_recv_pkt(bus->sdiodev, pkt);
- 		bus->sdcnt.f2rxdata++;
- 		sdio_release_host(bus->sdiodev->func[1]);
- 
-@@ -2116,8 +2110,7 @@ static int brcmf_sdbrcm_txpkt(struct brcmf_sdio *bus, struct sk_buff_head *pktq,
- 		goto done;
- 
- 	sdio_claim_host(bus->sdiodev->func[1]);
--	ret = brcmf_sdiod_send_pkt(bus->sdiodev, bus->sdiodev->sbwad,
--				   SDIO_FUNC_2, F2SYNC, pktq);
-+	ret = brcmf_sdiod_send_pkt(bus->sdiodev, pktq);
- 	bus->sdcnt.f2txdata++;
- 
- 	if (ret < 0) {
-@@ -2481,9 +2474,7 @@ static void brcmf_sdbrcm_dpc(struct brcmf_sdio *bus)
- 		int i;
- 
- 		sdio_claim_host(bus->sdiodev->func[1]);
--		err = brcmf_sdiod_send_buf(bus->sdiodev, bus->sdiodev->sbwad,
--					   SDIO_FUNC_2, F2SYNC,
--					   bus->ctrl_frame_buf,
-+		err = brcmf_sdiod_send_buf(bus->sdiodev, bus->ctrl_frame_buf,
- 					   (u32)bus->ctrl_frame_len);
- 
- 		if (err < 0) {
-@@ -2700,8 +2691,7 @@ static int brcmf_tx_frame(struct brcmf_sdio *bus, u8 *frame, u16 len)
- 	int ret;
- 
- 	bus->ctrl_frame_stat = false;
--	ret = brcmf_sdiod_send_buf(bus->sdiodev, bus->sdiodev->sbwad,
--				   SDIO_FUNC_2, F2SYNC, frame, len);
-+	ret = brcmf_sdiod_send_buf(bus->sdiodev, frame, len);
- 
- 	if (ret < 0) {
- 		/* On failure, abort the command and terminate the frame */
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h b/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
-index 4d71eb0..4c70cf2 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
-@@ -197,7 +197,6 @@ void brcmf_sdiod_regwl(struct brcmf_sdio_dev *sdiodev, u32 addr, u32 data,
- 
- /* Buffer transfer to/from device (client) core via cmd53.
-  *   fn:       function number
-- *   addr:     backplane address (i.e. >= regsva from attach)
-  *   flags:    backplane width, address increment, sync/async
-  *   buf:      pointer to memory data buffer
-  *   nbytes:   number of bytes to transfer to/from buf
-@@ -207,17 +206,14 @@ void brcmf_sdiod_regwl(struct brcmf_sdio_dev *sdiodev, u32 addr, u32 data,
-  * Returns 0 or error code.
-  * NOTE: Async operation is not currently supported.
-  */
--int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev, u32 addr, uint fn,
--			 uint flags, struct sk_buff_head *pktq);
--int brcmf_sdiod_send_buf(struct brcmf_sdio_dev *sdiodev, u32 addr, uint fn,
--			 uint flags, u8 *buf, uint nbytes);
--
--int brcmf_sdiod_recv_pkt(struct brcmf_sdio_dev *sdiodev, u32 addr, uint fn,
--			 uint flags, struct sk_buff *pkt);
--int brcmf_sdiod_recv_buf(struct brcmf_sdio_dev *sdiodev, u32 addr, uint fn,
--			 uint flags, u8 *buf, uint nbytes);
--int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev, u32 addr, uint fn,
--			   uint flags, struct sk_buff_head *pktq, uint totlen);
-+int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
-+			 struct sk_buff_head *pktq);
-+int brcmf_sdiod_send_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes);
-+
-+int brcmf_sdiod_recv_pkt(struct brcmf_sdio_dev *sdiodev, struct sk_buff *pkt);
-+int brcmf_sdiod_recv_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes);
-+int brcmf_sdiod_recv_chain(struct brcmf_sdio_dev *sdiodev,
-+			   struct sk_buff_head *pktq, uint totlen);
- 
- /* Flags bits */
- 
--- 
-1.7.10.4
+> On Wed, Dec 18, 2013 at 11:48:45AM +0100, Sander Eikelenboom wrote:
+>> 
+>> Wednesday, December 18, 2013, 10:26:25 AM, you wrote:
+>> 
+>> > Hi all,
+>> 
+>> > We really should be asking Luis to look at this who hasn't yet chimed
+>> > in, presumably because he's between jobs (and travelling IIRC)
+>> 
+>> > On Wed, 2013-12-18 at 10:16 +0100, Arend van Spriel wrote:
+>> >> On 12/17/2013 11:06 PM, Linus Torvalds wrote:
+>> >> > We have literally had this *exact* same issue with firmware loading.
+>> >> > Network drivers shouldn't try to load firmware at module load time.
+>> >> > Same deal.
+>> >> 
+>> >> It is kind of a chicken and egg problem for (wireless) networking
+>> >> drivers. To get IFF_UP from the network layer you have to register a
+>> >> netdevice. For wireless drivers this means you have to register a wiphy
+>> >> device with cfg80211 which flags capabilities and optionally are custom
+>> >> regulatory domain. That information depends on the device and firmware
+>> >> used. And there we have a full circle.
+>> 
+>> > This is all really beside the point.
+>> 
+>> > For this CRDA information, the kernel never actually *waits* for it, so
+>> > in the case that there's no reply, it uses the built-in world domain. So
+>> > it's not like request_firmware(), which will block boot forever, but
+>> > it's also not like request_firmware_nowait() which will eventually time
+>> > out and come back with an error if userspace isn't handling it (though
+>> > now that firmware loading is built in ...)
+>> 
+>> > The issue is that it uses the built-in data *forever*, and what Sander
+>> > said was "or it will block forever" but just meant that it never was
+>> > able to do any further updates.
+>> 
+>> > It *doesn't* actually block the boot process or such. Everything Linus
+>> > said is true but seems to have been written in understanding "blocks" as
+>> > "blocking the boot process", rather than "blocking further updates".
+>> 
+>> > Regardless of this, even blocking further updates is a really bad idea.
+>> > There are a few ways to handle this, but I'll let Luis poke at that.
+>> 
+>> Your description is correct, sorry if I was not clear.
+
+> We have a timeout handler for this, I'll check to see what's going on
+> by trying to reproduce on my end. Are you using wireless-testing ?
+
+Originally 3.13-rc4, after that i tried with 3.13-rc4 with wireless-next pulled on top of it
+(since there were major changes to reg.c) but the problem occurs with both.
+
+
+>   Luis
+
 
