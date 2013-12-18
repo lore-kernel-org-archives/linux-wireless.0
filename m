@@ -1,117 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f170.google.com ([209.85.215.170]:62279 "EHLO
-	mail-ea0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754784Ab3LHJ1g (ORCPT
+Received: from smtprelay0145.hostedemail.com ([216.40.44.145]:47590 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753153Ab3LRJXJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Dec 2013 04:27:36 -0500
-From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Luciano Coelho <luca@coelho.fi>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
-	joni.lapilainen@gmail.com,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Felipe Contreras <felipe.contreras@gmail.com>,
-	=?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
-Subject: [PATCH v2 15/16] wl1251: Add sysfs file address for setting permanent mac address
-Date: Sun,  8 Dec 2013 10:25:13 +0100
-Message-Id: <1386494714-21070-16-git-send-email-pali.rohar@gmail.com> (sfid-20131208_103224_310802_5677F4AA)
-In-Reply-To: <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
- <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Wed, 18 Dec 2013 04:23:09 -0500
+Message-ID: <1387358585.13593.40.camel@joe-AO722> (sfid-20131218_102427_159183_F990F5D1)
+Subject: Re: ieee80211_i.h: shouldn't struct ps_data.tim be aligned unsigned
+ long?
+From: Joe Perches <joe@perches.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jiri Benc <jbenc@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>
+Date: Wed, 18 Dec 2013 01:23:05 -0800
+In-Reply-To: <1387358347.4694.2.camel@jlt4.sipsolutions.net>
+References: <1387354564.13593.26.camel@joe-AO722>
+	 (sfid-20131218_091612_149215_EA847147) <1387358347.4694.2.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Driver wl1251 generating mac address randomly at startup and there is no way to
-set permanent mac address via SET_IEEE80211_PERM_ADDR. This patch export sysfs
-file which can set permanent mac address by userspace helper program. Patch is
-needed for devices which do not store mac address in internal wl1251 eeprom.
+On Wed, 2013-12-18 at 10:19 +0100, Johannes Berg wrote:
+> On Wed, 2013-12-18 at 00:16 -0800, Joe Perches wrote:
+> 
+> > Perhaps the
+> > 	u8 tim[sizeof...]
+> > member should be marked
+> > 	__aligned(sizeof(unsigned long))
+> > so that the cast to ulong when bitmap_empty
+> > is actually forced to be ulong aligned?
+> 
+> yeah, I suppose that's true.
+> 
+> > diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+> > index ed5bf8b..e5a9c51 100644
+> > --- a/net/mac80211/ieee80211_i.h
+> > +++ b/net/mac80211/ieee80211_i.h
+> > @@ -245,7 +245,8 @@ struct ps_data {
+> >  	/* yes, this looks ugly, but guarantees that we can later use
+> >  	 * bitmap_empty :)
+> >  	 * NB: don't touch this bitmap, use sta_info_{set,clear}_tim_bit */
+> > -	u8 tim[sizeof(unsigned long) * BITS_TO_LONGS(IEEE80211_MAX_AID + 1)];
+> > +	u8 tim[sizeof(unsigned long) * BITS_TO_LONGS(IEEE80211_MAX_AID + 1)]
+> > +			__aligned(sizeof(unsigned long));
+> 
+> Care to send a proper patch? Otherwise I'll just re-do it and pick it up
+> that way ...
 
-Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
----
- drivers/net/wireless/ti/wl1251/main.c |   52 +++++++++++++++++++++++++++++++++
- 1 file changed, 52 insertions(+)
+Hi Johannes.
 
-diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
-index 42730b7..a69b741 100644
---- a/drivers/net/wireless/ti/wl1251/main.c
-+++ b/drivers/net/wireless/ti/wl1251/main.c
-@@ -1377,6 +1377,46 @@ static const struct ieee80211_ops wl1251_ops = {
- 	.get_survey = wl1251_op_get_survey,
- };
- 
-+static ssize_t wl1251_sysfs_show_address(struct device *dev,
-+					 struct device_attribute *attr,
-+					 char *buf)
-+{
-+	struct wl1251 *wl = dev_get_drvdata(dev);
-+	ssize_t len;
-+
-+	/* FIXME: what's the maximum length of buf? page size?*/
-+	len = 500;
-+
-+	len = snprintf(buf, len, "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x\n",
-+		       wl->mac_addr[0], wl->mac_addr[1], wl->mac_addr[2],
-+		       wl->mac_addr[3], wl->mac_addr[4], wl->mac_addr[5]);
-+
-+	return len;
-+}
-+
-+static ssize_t wl1251_sysfs_store_address(struct device *dev,
-+					  struct device_attribute *attr,
-+					  const char *buf, size_t count)
-+{
-+	struct wl1251 *wl = dev_get_drvdata(dev);
-+	unsigned int addr[6];
-+	int ret, i;
-+
-+	ret = sscanf(buf, "%2x:%2x:%2x:%2x:%2x:%2x\n",
-+			&addr[0], &addr[1], &addr[2],
-+			&addr[3], &addr[4], &addr[5]);
-+
-+	if (ret != 6)
-+		return -EINVAL;
-+
-+	for (i = 0; i < 6; i++)
-+		wl->mac_addr[i] = addr[i] & 0xff;
-+
-+	SET_IEEE80211_PERM_ADDR(wl->hw, wl->mac_addr);
-+
-+	return count;
-+}
-+
- static ssize_t wl1251_sysfs_show_tx_mgmt_frm_rate(struct device *dev,
- 						  struct device_attribute *attr,
- 						  char *buf)
-@@ -1586,6 +1626,10 @@ out:
- 	return count;
- }
- 
-+static DEVICE_ATTR(address, S_IRUGO | S_IWUSR,
-+		   wl1251_sysfs_show_address,
-+		   wl1251_sysfs_store_address);
-+
- static DEVICE_ATTR(tx_mgmt_frm_rate, S_IRUGO | S_IWUSR,
- 		   wl1251_sysfs_show_tx_mgmt_frm_rate,
- 		   wl1251_sysfs_store_tx_mgmt_frm_rate);
-@@ -1730,6 +1774,14 @@ int wl1251_init_ieee80211(struct wl1251 *wl)
- 	}
- 	dev_set_drvdata(&wl1251_device.dev, wl);
- 
-+	/* Create sysfs file address */
-+	ret = device_create_file(&wl1251_device.dev,
-+				 &dev_attr_address);
-+	if (ret < 0) {
-+		wl1251_error("failed to create sysfs file address");
-+		goto out;
-+	}
-+
- 	/* Create sysfs file tx_mgmt_frm_rate */
- 	ret = device_create_file(&wl1251_device.dev,
- 				 &dev_attr_tx_mgmt_frm_rate);
--- 
-1.7.9.5
+You can redo it easier than applying a patch
+from me.
+
+I just noticed it when the reformatting
+patch went by.
+
+No need to give a credit or anything.
+It's just a nit.
+
+cheers, Joe
 
