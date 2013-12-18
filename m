@@ -1,100 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vserver.eikelenboom.it ([84.200.39.61]:40127 "EHLO
-	smtp.eikelenboom.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751687Ab3LKPWn (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:49079 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750817Ab3LRKqt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Dec 2013 10:22:43 -0500
-Date: Wed, 11 Dec 2013 16:17:10 +0100
-From: Sander Eikelenboom <linux@eikelenboom.it>
-Message-ID: <1819533168.20131211161710@eikelenboom.it> (sfid-20131211_162250_874520_A245497B)
-To: "Berg, Johannes" <johannes.berg@intel.com>
-CC: "Luis R. Rodriguez" <mcgrof@frijolero.org>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	<linux-kernel@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [cfg80211 / iwlwifi] setting wireless regulatory domain doesn't work.
-In-Reply-To: <792757788.20131023142849@eikelenboom.it>
-References: <1507831110.20131018194349@eikelenboom.it> <792757788.20131023142849@eikelenboom.it>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 18 Dec 2013 05:46:49 -0500
+Message-ID: <1387363601.4694.12.camel@jlt4.sipsolutions.net> (sfid-20131218_114652_986688_20ED72ED)
+Subject: Re: P2P_DEVICE support in driver
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ujjal Roy <royujjal@gmail.com>
+Cc: Kernel <linux-wireless@vger.kernel.org>
+Date: Wed, 18 Dec 2013 11:46:41 +0100
+In-Reply-To: <CAE2MWkn5KT7nM+RgPptbfUDVEz5KThytpNmMUzhQeP30ZSocEg@mail.gmail.com> (sfid-20131218_112927_792469_9DE8FAB4)
+References: <CAE2MWkn5KT7nM+RgPptbfUDVEz5KThytpNmMUzhQeP30ZSocEg@mail.gmail.com>
+	 (sfid-20131218_112927_792469_9DE8FAB4)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since i haven't got a response to this yet and after having the troubled machine back:
-The problem is still present in linux 3.13-rc3
+On Wed, 2013-12-18 at 15:59 +0530, Ujjal Roy wrote:
+> Hi Johannes,
+> 
+> I want to add P2P_DEVICE support in a driver. And it's not described
+> in the P2P spec. So, please tell me the following points -
+> 1> what do the driver do?
+> 2> register_netdevice() should not be called from driver for the
+> P2P_DEVICE interface. Then what are the procedures (network stacks) to
+> add a P2P device from driver's point of view?
+> 3> How the supplicant will communicate with this type of interface?
 
-The problem seems to be in this piece of code:
+A P2P_DEVICE netdev is (always) created by the supplicant if the driver
+advertises support for it, and then p2p-device operations are done there
+rather than on the wlan0 netdev.
 
-root@creabox:/usr/src/linux-tip# git blame  -L 1567,1601 net/wireless/reg.c
-fe33eb39 (Luis R. Rodriguez 2009-02-21 00:04:30 -0500 1567)
-b2e253cf (Luis R. Rodriguez 2010-11-17 21:46:09 -0800 1568) /*
-b2e253cf (Luis R. Rodriguez 2010-11-17 21:46:09 -0800 1569)  * Processes regulatory hints, this is all the NL80211_REGDOM_SET_BY_*
-b2e253cf (Luis R. Rodriguez 2010-11-17 21:46:09 -0800 1570)  * Regulatory hints come on a first come first serve basis and we
-b2e253cf (Luis R. Rodriguez 2010-11-17 21:46:09 -0800 1571)  * must process each one atomically.
-b2e253cf (Luis R. Rodriguez 2010-11-17 21:46:09 -0800 1572)  */
-fe33eb39 (Luis R. Rodriguez 2009-02-21 00:04:30 -0500 1573) static void reg_process_pending_hints(void)
-b0e2880b (Luis R. Rodriguez 2010-11-17 21:46:08 -0800 1574) {
-c492db37 (Johannes Berg     2012-12-06 16:29:25 +0100 1575)     struct regulatory_request *reg_request, *lr;
-fe33eb39 (Luis R. Rodriguez 2009-02-21 00:04:30 -0500 1576)
-c492db37 (Johannes Berg     2012-12-06 16:29:25 +0100 1577)     lr = get_last_request();
-b0e2880b (Luis R. Rodriguez 2010-11-17 21:46:08 -0800 1578)
-b2e253cf (Luis R. Rodriguez 2010-11-17 21:46:09 -0800 1579)     /* When last_request->processed becomes true this will be rescheduled */
-c492db37 (Johannes Berg     2012-12-06 16:29:25 +0100 1580)     if (lr && !lr->processed) {
-1a919318 (Johannes Berg     2012-12-03 17:21:11 +0100 1581)             REG_DBG_PRINT("Pending regulatory request, waiting for it to be processed...\n");
-5fe231e8 (Johannes Berg     2013-05-08 21:45:15 +0200 1582)             return;
+The driver has to support it (interface combinations) and then deal with
+add_interface for it. You can see mac80211 with hwsim and iwlmvm for
+example.
 
-If i "comment out" the return above, setting the regulatory domain with "iw reg set XX" does work.
-
-b2e253cf (Luis R. Rodriguez 2010-11-17 21:46:09 -0800 1583)     }
-b2e253cf (Luis R. Rodriguez 2010-11-17 21:46:09 -0800 1584)
-fe33eb39 (Luis R. Rodriguez 2009-02-21 00:04:30 -0500 1585)     spin_lock(&reg_requests_lock);
-fe33eb39 (Luis R. Rodriguez 2009-02-21 00:04:30 -0500 1586)
-b2e253cf (Luis R. Rodriguez 2010-11-17 21:46:09 -0800 1587)     if (list_empty(&reg_requests_list)) {
-d951c1dd (Luis R. Rodriguez 2009-02-21 00:24:15 -0500 1588)             spin_unlock(&reg_requests_lock);
-5fe231e8 (Johannes Berg     2013-05-08 21:45:15 +0200 1589)             return;
-fe33eb39 (Luis R. Rodriguez 2009-02-21 00:04:30 -0500 1590)     }
-b2e253cf (Luis R. Rodriguez 2010-11-17 21:46:09 -0800 1591)
-b2e253cf (Luis R. Rodriguez 2010-11-17 21:46:09 -0800 1592)     reg_request = list_first_entry(&reg_requests_list,
-b2e253cf (Luis R. Rodriguez 2010-11-17 21:46:09 -0800 1593)                                    struct regulatory_request,
-b2e253cf (Luis R. Rodriguez 2010-11-17 21:46:09 -0800 1594)                                    list);
-b2e253cf (Luis R. Rodriguez 2010-11-17 21:46:09 -0800 1595)     list_del_init(&reg_request->list);
-b2e253cf (Luis R. Rodriguez 2010-11-17 21:46:09 -0800 1596)
-fe33eb39 (Luis R. Rodriguez 2009-02-21 00:04:30 -0500 1597)     spin_unlock(&reg_requests_lock);
-b0e2880b (Luis R. Rodriguez 2010-11-17 21:46:08 -0800 1598)
-8848bef0 (Luis R. Rodriguez 2011-12-20 12:23:36 -0800 1599)     reg_process_hint(reg_request, reg_request->initiator);
-fe33eb39 (Luis R. Rodriguez 2009-02-21 00:04:30 -0500 1600) }
-fe33eb39 (Luis R. Rodriguez 2009-02-21 00:04:30 -0500 1601)
-
---
-Sander
-
-
-Wednesday, October 23, 2013, 2:28:49 PM, you wrote:
-
-> Ping ?
-
-> Friday, October 18, 2013, 7:43:49 PM, you wrote:
-
->> Hi,
-
->> I'm trying to change the regulatory domain for my wireless adapter:
->> Intel Corporation Centrino Advanced-N 6235
-
->> But it fails to change from "world" to anything else (say "US")
-
->> I enabled debug options used iwlwifi.debug=0x00043FFF for boot and added some printk's which i think should be triggered .. but they are not.
->> It seems in function "reg_process_pending_hints" the processing is deferred,
->> but from the code i don't see how it would ever be triggered to complete ?
-
->> Hope some can give some hints to what could be going on ...
-
->> Attached:
->> - full syslog from boot till "iw set reg US", which is done at "Oct 18 21:26:09"
->> - patch.diff with the added debug printk's against 3.12-rc5 (it also contains the patch that was needed to suppress another warning in the iwlwifi driver.
-
->> --
->> Sander
+johannes
 
