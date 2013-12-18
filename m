@@ -1,41 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:37746 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757675Ab3LFLEB (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:51359 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752785Ab3LRI67 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Dec 2013 06:04:01 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 13/16] ath9k: Remove AR9330 v1.0 macro as it's not supported
-Date: Fri,  6 Dec 2013 16:28:51 +0530
-Message-Id: <1386327534-31105-14-git-send-email-sujith@msujith.org> (sfid-20131206_120417_622799_BF73FAF5)
-In-Reply-To: <1386327534-31105-1-git-send-email-sujith@msujith.org>
-References: <1386327534-31105-1-git-send-email-sujith@msujith.org>
+	Wed, 18 Dec 2013 03:58:59 -0500
+Message-ID: <52B163CC.1030901@broadcom.com> (sfid-20131218_095943_327416_3C0D634C)
+Date: Wed, 18 Dec 2013 09:58:52 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Pontus Fuchs <pontus.fuchs@gmail.com>,
+	Sander Eikelenboom <linux@eikelenboom.it>,
+	Ben Hutchings <ben@decadent.org.uk>
+CC: Julian Calaby <julian.calaby@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <avinashapatil@gmail.com>
+Subject: Re: [cfg80211 / iwlwifi] setting wireless regulatory domain doesn't
+ work.
+References: <1342235583.20131211182804@eikelenboom.it> <CAB=NE6UfumA2xez1DvtDSBDZ72WF_tOozFo_8LRnMryYiSqD-A@mail.gmail.com> <871324710.20131211191104@eikelenboom.it> <CAB=NE6XRnE0j9NMW0K1vKzEO9v70arSH4YXZjudqa0ZxiLB4AA@mail.gmail.com> <1937118387.20131216122200@eikelenboom.it> <52AEE60B.6030509@broadcom.com> <19210260274.20131216135644@eikelenboom.it> <CAGRGNgXHemM2FfnXgW5RbzhFT+9SfUfVkjdysK3+=_u3hWSacw@mail.gmail.com> <1534126119.20131217104548@eikelenboom.it> <387552477.20131217213319@eikelenboom.it> <20131217212709.GB5624@decadent.org.uk> <1254825772.20131217224914@eikelenboom.it> <52B153B3.4070903@gmail.com>
+In-Reply-To: <52B153B3.4070903@gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On 12/18/2013 08:50 AM, Pontus Fuchs wrote:
+> On 2013-12-17 22:49, Sander Eikelenboom wrote:
+>>
+>> Indeed, I looked for a crda hook for initramfs-tools but didn't find
+>> it, so skipped that idea
+>> for the moment.
+>>
+>> So if i combine the two .. it's essentially just a very bad idea to
+>> compile the wireless stuff in.
+>> It needs a access to a userland program at module load time, or it
+>> will block forever.
+> 
+> The canonical trick to have cfg80211 built in is to execute crda
+> manually in your boot scripts. This will satisfy the initial request and
+> resolve the block.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/reg.h | 3 ---
- 1 file changed, 3 deletions(-)
+There is a Kconfig option to have the regulatory data built-in the
+kernel as well. Obviously that makes a regulatory update more difficult.
 
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index 259a4b3..9ad0073 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -883,9 +883,6 @@
- 
- #define AR_SREV_9330(_ah) \
- 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9330))
--#define AR_SREV_9330_10(_ah) \
--	(AR_SREV_9330((_ah)) && \
--	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9330_10))
- #define AR_SREV_9330_11(_ah) \
- 	(AR_SREV_9330((_ah)) && \
- 	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9330_11))
--- 
-1.8.4.2
+net/wireless/Kconfig:
+config CFG80211_INTERNAL_REGDB
+        bool "use statically compiled regulatory rules database" if EXPERT
+
+Regards,
+AvS
 
