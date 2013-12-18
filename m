@@ -1,69 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:51778 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751542Ab3LLK7Q (ORCPT
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:54356 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752165Ab3LRNBv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Dec 2013 05:59:16 -0500
-From: Arend van Spriel <arend@broadcom.com>
+	Wed, 18 Dec 2013 08:01:51 -0500
+Received: by mail-pa0-f49.google.com with SMTP id kx10so5843103pab.8
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Dec 2013 05:01:51 -0800 (PST)
+From: ZHAO Gang <gamerh2o@gmail.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 09/18] brcmfmac: remove brcmf_sdio_wdtimer_enable() function
-Date: Thu, 12 Dec 2013 11:58:57 +0100
-Message-ID: <1386845946-9859-10-git-send-email-arend@broadcom.com> (sfid-20131212_122500_874346_B18EDD68)
-In-Reply-To: <1386845946-9859-1-git-send-email-arend@broadcom.com>
-References: <1386845946-9859-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH] cfg80211: remove function reg_process_beacons()
+Date: Wed, 18 Dec 2013 20:56:38 +0800
+Message-Id: <db1bee094cd6ead618cb41fb7831503be0b4e3ef.1387371372.git.gamerh2o@gmail.com> (sfid-20131218_140155_009844_B9C9CC50)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of using the brcmf_sdio_wdtimer_enable() function
-call brcmf_sdbrcm_wd_timer() directly.
+Since pointer last_request is initialized to &core_request_world, the
+if check in reg_process_beacons() is useless, and
+reg_process_beacons() is only called by wiphy_update_regulatory(), so
+we can let wiphy_update_regulatory() calls wiphy_update_beacon_reg()
+directly and remove unnecesssary reg_process_beacons().
 
-Reviewed-by: Franky Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: ZHAO Gang <gamerh2o@gmail.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |   12 ++----------
- 1 file changed, 2 insertions(+), 10 deletions(-)
+ net/wireless/reg.c | 14 +-------------
+ 1 file changed, 1 insertion(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-index a56a779..2decb41 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-@@ -1122,14 +1122,6 @@ static void brcmf_ops_sdio_remove(struct sdio_func *func)
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index ec54e1a..b833bea 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1163,18 +1163,6 @@ static void wiphy_update_beacon_reg(struct wiphy *wiphy)
+ 	}
  }
  
- #ifdef CONFIG_PM_SLEEP
--static void brcmf_sdio_wdtmr_enable(struct brcmf_sdio_dev *sdiodev, bool enable)
+-/* Reap the advantages of previously found beacons */
+-static void reg_process_beacons(struct wiphy *wiphy)
 -{
--	if (enable)
--		brcmf_sdbrcm_wd_timer(sdiodev->bus, BRCMF_WD_POLL_MS);
--	else
--		brcmf_sdbrcm_wd_timer(sdiodev->bus, 0);
+-	/*
+-	 * Means we are just firing up cfg80211, so no beacons would
+-	 * have been processed yet.
+-	 */
+-	if (!last_request)
+-		return;
+-	wiphy_update_beacon_reg(wiphy);
 -}
 -
- static int brcmf_sdio_suspend(struct device *dev)
+ static bool is_ht40_allowed(struct ieee80211_channel *chan)
  {
- 	mmc_pm_flag_t sdio_flags;
-@@ -1153,7 +1145,7 @@ static int brcmf_sdio_suspend(struct device *dev)
- 		return ret;
- 	}
+ 	if (!chan)
+@@ -1281,7 +1269,7 @@ static void wiphy_update_regulatory(struct wiphy *wiphy,
+ 	for (band = 0; band < IEEE80211_NUM_BANDS; band++)
+ 		handle_band(wiphy, initiator, wiphy->bands[band]);
  
--	brcmf_sdio_wdtmr_enable(sdiodev, false);
-+	brcmf_sdbrcm_wd_timer(sdiodev->bus, 0);
- 
- 	return ret;
- }
-@@ -1163,7 +1155,7 @@ static int brcmf_sdio_resume(struct device *dev)
- 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
- 	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
- 
--	brcmf_sdio_wdtmr_enable(sdiodev, true);
-+	brcmf_sdbrcm_wd_timer(sdiodev->bus, BRCMF_WD_POLL_MS);
- 	atomic_set(&sdiodev->suspend, false);
- 	return 0;
+-	reg_process_beacons(wiphy);
++	wiphy_update_beacon_reg(wiphy);
+ 	reg_process_ht_flags(wiphy);
+ 	reg_call_notifier(wiphy, lr);
  }
 -- 
-1.7.10.4
+1.8.3.1
 
