@@ -1,74 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f179.google.com ([209.85.217.179]:46672 "EHLO
-	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750896Ab3LAIjl (ORCPT
+Received: from asav4.altibox.net ([81.167.36.153]:45351 "EHLO
+	asav4.altibox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751231Ab3LRXhq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Dec 2013 03:39:41 -0500
-Received: by mail-lb0-f179.google.com with SMTP id l4so7996547lbv.10
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Dec 2013 00:39:40 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1385846658-2294-1-git-send-email-antonio@meshcoding.com>
-References: <1385846658-2294-1-git-send-email-antonio@meshcoding.com>
-Date: Sun, 1 Dec 2013 10:39:39 +0200
-Message-ID: <CANUX_P3tm+Q4R6NNLchtCZCYGxrs-Z8hahp1YrvF_fCbCFavig@mail.gmail.com> (sfid-20131201_093958_947537_5E1A7305)
-Subject: Re: [PATCH mac80211] iwlwifi: don't install GTKs for IBSS vifs on resume
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Antonio Quartulli <antonio@meshcoding.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Antonio Quartulli <antonio@open-mesh.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 18 Dec 2013 18:37:46 -0500
+From: Henrik Austad <henrik@austad.us>
+To: linux-rt-users@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org, Henrik Austad <henrik@austad.us>
+Subject: [PATCH 00/10] update of make iwlwifi RT friendly
+Date: Thu, 19 Dec 2013 00:25:55 +0100
+Message-Id: <1387409165-28319-1-git-send-email-henrik@austad.us> (sfid-20131219_003758_451897_5EE04E25)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->
-> When performing keys reprogramming on HW resume, GTKs
-> belonging to IBSS stations should be skipped and not
-> installed onto the device.
->
-> Such keys are not installed by set_key() and the same
-> behaviour has to be kept on reprogramming (mac80211
-> is already performing enc/dec in SW for those keys).
->
-> Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
-> ---
->
-> * compiled tested only *
->
->  drivers/net/wireless/iwlwifi/dvm/lib.c | 5 +++++
->  drivers/net/wireless/iwlwifi/mvm/d3.c  | 5 +++++
->  2 files changed, 10 insertions(+)
->
-> diff --git a/drivers/net/wireless/iwlwifi/dvm/lib.c b/drivers/net/wireless/iwlwifi/dvm/lib.c
-> index 3d5bdc4..96be24d 100644
-> --- a/drivers/net/wireless/iwlwifi/dvm/lib.c
-> +++ b/drivers/net/wireless/iwlwifi/dvm/lib.c
-> @@ -929,6 +929,11 @@ static void iwlagn_wowlan_program_keys(struct ieee80211_hw *hw,
->         u16 p1k[IWLAGN_P1K_SIZE];
->         int ret, i;
->
-> +       /* Group keys for IBSS interfaces are not stored in HW */
-> +       if (vif->type == NL80211_IFTYPE_ADHOC &&
-> +           !(key->flags & IEEE80211_KEY_FLAG_PAIRWISE))
-> +               return;
-> +
->         mutex_lock(&priv->mutex);
->
->         if ((key->cipher == WLAN_CIPHER_SUITE_WEP40 ||
-> diff --git a/drivers/net/wireless/iwlwifi/mvm/d3.c b/drivers/net/wireless/iwlwifi/mvm/d3.c
-> index 6f45966..53182e6 100644
-> --- a/drivers/net/wireless/iwlwifi/mvm/d3.c
-> +++ b/drivers/net/wireless/iwlwifi/mvm/d3.c
-> @@ -156,6 +156,11 @@ static void iwl_mvm_wowlan_program_keys(struct ieee80211_hw *hw,
->         u16 p1k[IWL_P1K_SIZE];
->         int ret, i;
->
-> +       /* Group keys for IBSS interfaces are not stored in HW */
-> +       if (vif->type == NL80211_IFTYPE_ADHOC &&
-> +           !(key->flags & IEEE80211_KEY_FLAG_PAIRWISE))
-> +               return;
-> +
->         mutex_lock(&mvm->mutex);
+This is a move of the series posted by Emmanuel a few days ago to the
+tip of Linus' master. It also applies pretty easily to 3.12.5-rt5
 
-This is WoWLAN code - so you I must miss something here...
-We don't support IBSS in WoWLAN (thinking about it even makes me feel bad).
+0010: iwlwifi: pcie: stop using _irqsave
+  * There's no function iwl_trans_pcie_op_mode_leave(), instead
+    iwl_trans_pcie_stop_hw() was updated
+
+A part from that, the port was relatively straight forward, but someone
+should probably have a look to make sure I didn't miss anything
+
+So, some tests on my laptop (Lenovo X220, i5-2520M)
+
+3.12.1-rt4 (which has Sebastians iwlwifi workaround):
+
+cyclictest -p80 -i 1000 -l500000 -a -n -m -t2
+# /dev/cpu_dma_latency set to 0us
+policy: fifo: loadavg: 0.40 2.19 1.69 2/513 4682
+
+T: 0 ( 4118) P:80 I:1000 C: 500000 Min:      2 Act:   12 Avg:    8 Max:      47
+T: 1 ( 4119) P:80 I:1500 C: 333338 Min:      2 Act:   20 Avg:   11 Max:      49
+
+Over time (~6hr run), Max grew to about 300us
+
+3.12.5-rt6 (with the iwlwifi patches):
+cyclictest -p80 -i 1000 -a -n -m -t2
+# /dev/cpu_dma_latency set to 0us
+policy: fifo: loadavg: 0.35 0.44 0.40 2/518 4244
+
+T: 0 ( 3132) P:80 I:1000 C:1492239 Min:      2 Act:    3 Avg:    2 Max:    3089
+T: 1 ( 3133) P:80 I:1500 C: 994824 Min:      2 Act:    3 Avg:    4 Max:    2206
+
+Granted, this was a longer run, but a 3ms spike is pretty awful. Still
+trying to recreate that with traces running, but no luck so
+far. Removing the iwlwifi module gives low values for cyclictest,
+consistent with 3.12.1-rt4 (with iwlwifi disabled).
+
+
+
+Emmanuel Grumbach (10):
+  iwlwifi: pcie: clean up ICT allocation code
+  iwlwifi: pcie: track interrupt mask in SW
+  iwlwifi: pcie: re-organize the PCIe ISR code
+  iwlwifi: pcie: move the ICT / non-ICT handling functions
+  iwlwifi: pcie: read the interrupt cause from the handler
+  iwlwifi: pcie: determine the interrupt type in the handler
+  iwlwifi: pcie: return inta from iwl_pcie_int_cause_{non_}ict
+  iwlwifi: pcie: no need to save inta in trans_pcie
+  iwlwifi: pcie: move interrupt prints to the common handler
+  iwlwifi: pcie: stop using _irqsave
+
+ drivers/net/wireless/iwlwifi/iwl-csr.h       |    3 +-
+ drivers/net/wireless/iwlwifi/pcie/internal.h |    9 +-
+ drivers/net/wireless/iwlwifi/pcie/rx.c       |  393 +++++++++++---------------
+ drivers/net/wireless/iwlwifi/pcie/trans.c    |   25 +-
+ drivers/net/wireless/iwlwifi/pcie/tx.c       |   10 +-
+ 5 files changed, 184 insertions(+), 256 deletions(-)
+
+-- 
+1.7.10.4
+
