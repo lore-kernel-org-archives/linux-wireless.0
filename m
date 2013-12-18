@@ -1,155 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from erley.org ([97.107.129.9]:35203 "EHLO remote.erley.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750743Ab3LKHxr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Dec 2013 02:53:47 -0500
-Message-ID: <52A819F8.1050302@erley.org> (sfid-20131211_085350_701769_75626608)
-Date: Wed, 11 Dec 2013 01:53:28 -0600
-From: Pat Erley <pat-lkml@erley.org>
+Received: from mail-qc0-f171.google.com ([209.85.216.171]:36969 "EHLO
+	mail-qc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753313Ab3LRMwn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Dec 2013 07:52:43 -0500
+Date: Wed, 18 Dec 2013 10:52:36 -0200
+From: Gustavo Padovan <gustavo@padovan.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: bluetooth 2013-12-18
+Message-ID: <20131218125236.GA1376@joana> (sfid-20131218_135257_451655_07FD2278)
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Kam <kampowchicken@gmail.com>, linux-wireless@vger.kernel.org
-Subject: Re: rtl8723ae owner.
-References: <loom.20131211T021101-974@post.gmane.org> <52A7DC0C.8090902@lwfinger.net> <loom.20131211T045200-389@post.gmane.org> <52A7EB67.7090808@lwfinger.net>
-In-Reply-To: <52A7EB67.7090808@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="Dxnq1zWXvFF0Q93v"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/10/2013 10:34 PM, Larry Finger wrote:
-> On 12/10/2013 10:19 PM, Kam wrote:
->> Larry Finger <Larry.Finger@...> writes:
->>
->>>
->>> On 12/10/2013 07:42 PM, Kam wrote:
->>>> I have the rtl8723ae PCIe wifi card. I've read through the messages
->>>> on the
->>>> forums and experience similar issues to others who have inquired
->>>> about the
->>>> card. I experience sluggish connections and disconnects, I for the most
->>>> can't connect to my school wifi at all.
->>>>
->>>> I switched my router to 'AP' today after reading through the posts
->>>> here and
->>>> initially the connection was faster than I've experienced thus
->>>> far(since
->>>> switching to linux last year), I ended up shutting down the computer
->>>> eventually and after turning it back on few hours later, It was back
->>>> to the
->>>> slow sluggish connection.
->>>
->>> What does switching the router to 'AP' mean? If it was not an AP
->>> before, you
->>> would never have been able to connect to it.
->>>
->>>> I've collected all the output that I could think of and wanted to
->>>> contribute
->>>> it in hopes that it can assist the devs in testing/debugging the
->>>> issues with
->>>> the card. The text file is a little but over 800 lines, so I will
->>>> post it on
->>>> fpaste, if this isn't acceptable please let me know and I will
->>>> repost the
->>>> text in preferred format. I am about ready to smoke the beacons off
->>>> this
->>>> thing :P.
->>>
->>> One thing missing in what you posted is any messages from dmesg that
->>> describe
->>> the disconnects.
->>>
->>> The only thing I noted in your posting is that your channel is about
->>> as badly
->>> chosen as is possible. Wifi is not like TV. The channel spacing is 5
->>> MHz, but
->>> the width for 802.11g is 20 MHz, and 802.11n is 40 MHz. If you do the
->> math, your
->>> choice of channel 9 overlaps *every* AP in your neighborhood. At -60
->>> dBm,
->> your
->>> signal is not strong, and is even weaker than Home2.
->>>
->>> I would choose a channel as low as possible. That would be #1 for
->>> 802.11g.
->> Your
->>> AP may not allow lower than #3 for 802.11n.
->>>
->>> Next, you might try loading the module with the option "ips=0". That
->>> will
->>> disable power save mode, and it might help.
->>>
->>> I have been running a long-term test of rtl8723ae. After 100 hours, I
->>> have
->> had a
->>> total of 11 disconnects. Each of them has reconnected with very little
->>> interruption in service. The difference is that my channel is chosen to
->> have as
->>> little interference as possible, and my signal strength is -44 dBm.
->>>
->>> Larry
->>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe
->>> linux-wireless" in
->>> the body of a message to majordomo@...
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>
->>>
->>
->>
->>
->> Thank you for the prompt response, I really appreciate it. And I would
->> like
->> to apologize ahead of time in case I mess up the format.
->>
->>> What does switching the router to 'AP' mean? If it was not an AP
->>> before, you
->>> would never have been able to connect to it.
->>
->> Unfortunately my router has a check box under Advanced > Advanced Setup >
->> Wireless Settings that switches the router to AP Mode. I looked into the
->> manual after seeing the posting here and it's how I discovered it. It was
->> never checked until today.
->>
->>> From the manual:
->> "AP Mode. You can make the WNDR3400v2 function as an access point."
->> Page 77:
->> http://www.downloads.netgear.com/files/GDC/WNDR3400V2/WNDR3400v2_UM_23JAN2013.pdf
->>
->
-> I also have a WNDR3400V2, which has been functional as a 2.4/5 GHz AP
-> for the two years that I have owned it, and that box has never been
-> checked. I have no idea what might be its effect, but it certainly was
-> an AP before you checked that box.
 
-I believe (had a similar wndr device) that it has something to do with 
-the way the device bridges wifi to the lan/wan.  On mine, with it 
-checked, I was able to use the device as a stand alone AP rather than an 
-AP/Router.  Trying to do that without it checked enabled some additional 
-firewalling on the lan/wifi bridge.
+--Dxnq1zWXvFF0Q93v
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
->
->>> The only thing I noted in your posting is that your channel is about
->>> as badly
->>> chosen as is possible.
->>
->> Channel selection isn't done by me, it is set to "auto" mode at the
->> router
->> settings which explains that it will choose the best channel. I
->> appreciate
->> you pointing that out because now it will give me more options to play
->> around with. I have seen the ips posting else where and will test this
->> once
->> I configure the channel. Thank you.
->
-> I never select the auto channel selection. You never know what strong
-> sources in your neighborhood might be off when it makes the choice.
->
-> Larry
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe
-> linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hi John,
 
+Two patches in this pull request. An important fix from Marcel in the
+permission check for HCI User Channels, there was a extra check for
+CAP_NET_RAW, and it was now removed. These channels should only require
+CAP_NET_ADMIN. The other patch is a device id addition.
+
+Please pull or let me know of any problems! Thanks.
+
+        Gustavo
+
+---
+The following changes since commit eafbdde9c5629bea58df07275c5917eb42afbbe7:
+
+  rtlwifi: rtl8192cu: Fix more pointer arithmetic errors (2013-11-15 14:29:33 -0500)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth.git for-upstream
+
+for you to fetch changes up to 1bc5ad168f441f6f8bfd944288a5f7b4963ac1f6:
+
+  Bluetooth: Fix HCI User Channel permission check in hci_sock_sendmsg (2013-12-17 13:47:27 +0200)
+
+----------------------------------------------------------------
+Marcel Holtmann (1):
+      Bluetooth: Fix HCI User Channel permission check in hci_sock_sendmsg
+
+Marco Piazza (1):
+      Bluetooth: Add support for Toshiba Bluetooth device [0930:0220]
+
+ drivers/bluetooth/ath3k.c |  2 ++
+ drivers/bluetooth/btusb.c |  1 +
+ net/bluetooth/hci_sock.c  | 26 ++++++++++++++++----------
+ 3 files changed, 19 insertions(+), 10 deletions(-)
+
+
+--Dxnq1zWXvFF0Q93v
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.15 (GNU/Linux)
+
+iQIcBAEBAgAGBQJSsZqUAAoJEPs3PUX4s20oc+wQALE4nVpiebImQrqwbmxPKvfW
+3iq8A+0/7FAN3HkwBV3eZcxAkDcxWUH+Gpk4yYfQBgFyEk+cZRP3sZ8ueK7pyw0e
+af6EQ1DQReO1ESqquuwg7FKmAReCSsQD7SMOf6lgajcPIaD0K+qBZh0U7umbXsYH
+5vIbwvdmoYbbShs+gknbJKjoRyceYCe1hZ7a6AenlgUOtT7i6bLNPSO6Jew2s9p8
+V7XVrHRmQOtIdRGW0HtiJLUWvaI7cuxU1FIgTFAyawWG/OmB2wZ8zE/UIBWjB/35
+JM5JaYgWMKIJuWmn9vgMigCmRy7MnTCnhQ9c8YhY+Xp/IC73tONmAhdimEL4g8hO
+9lj0kbgOPcRBVpDbFBruesFUm/QU1cOkT6ojcqbgdL+QvsI2R3vDUj6U5X26v9xv
+VcMAnOSBcClgeZNvd6NDe9IVdgpZgKYnqZ8xYd+yg0ca4c8SE/TXY3HMcf8m2KY3
+ZIHcWP4YqqSVU8MwoYiL9mXX7/m9QOZ6SY0RlUXN449bftIuSvrxIlaexp+rwufB
+13+MmL611U1LXX4Dz4JSMfm/WkTZB5iNDwjdkSgnBkvfai3RjTUcBVsz9UwGeTIE
+X69dFEvzD4I0JgaEHeRY3lisJKLhTm+t1b2b2agYirIssLKpYWqc9A41IVOqUp1W
+VuUrjMLWcK4foa8d7YHZ
+=yAmU
+-----END PGP SIGNATURE-----
+
+--Dxnq1zWXvFF0Q93v--
