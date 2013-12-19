@@ -1,60 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:35056 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754442Ab3LCTPc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Dec 2013 14:15:32 -0500
-From: Ilan Peer <ilan.peer@intel.com>
+Received: from s3.sipsolutions.net ([144.76.43.152]:53580 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755349Ab3LSMf2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Dec 2013 07:35:28 -0500
+Message-ID: <1387456523.4298.8.camel@jlt4.sipsolutions.net> (sfid-20131219_133535_420198_B2B8142C)
+Subject: Re: [PATCH] mac80211: remove unnecessary iflist_mtx locking
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: wireless-regdb@lists.infradead.org, Ilan Peer <ilan.peer@intel.com>
-Subject: [PATCH v2 2/6] cfg80211: Add Kconfig option for cellular BS hints
-Date: Tue,  3 Dec 2013 21:16:02 +0200
-Message-Id: <1386098166-24196-3-git-send-email-ilan.peer@intel.com> (sfid-20131203_201537_726166_50F52C75)
-In-Reply-To: <1386098166-24196-1-git-send-email-ilan.peer@intel.com>
-References: <1386098166-24196-1-git-send-email-ilan.peer@intel.com>
+Cc: sw@simonwunderlich.de
+Date: Thu, 19 Dec 2013 13:35:23 +0100
+In-Reply-To: <1387393315-15671-1-git-send-email-johannes@sipsolutions.net> (sfid-20131218_200202_219087_C4056ED1)
+References: <1387393315-15671-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20131218_200202_219087_C4056ED1)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move the regulatory cellular base station hints support under
-a specific configuration option and make the option depend
-on CFG80211_CERTIFICATION_ONUS.
+On Wed, 2013-12-18 at 20:01 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> The radar detection code changed a few times, and due to
+> the changes some iflist_mtx locking stayed in that isn't
+> actually necessary - remove it.
+> 
+> One version of the code needed it because an AP interface's
+> VLAN list was changed to use this, but then we moved the
+> list handling outside of the chanctx handling and thus the
+> locking was no longer needed.
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
----
- net/wireless/Kconfig |    7 +++++++
- net/wireless/reg.c   |    2 +-
- 2 files changed, 8 insertions(+), 1 deletion(-)
+Applied.
 
-diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
-index 16d08b3..81c05e4 100644
---- a/net/wireless/Kconfig
-+++ b/net/wireless/Kconfig
-@@ -95,6 +95,13 @@ config CFG80211_CERTIFICATION_ONUS
- 	  you are a wireless researcher and are working in a controlled
- 	  and approved environment by your local regulatory agency.
- 
-+config CFG80211_REG_CELLULAR_HINTS
-+	bool "cfg80211 regulatory support for cellular base station hints"
-+	depends on CFG80211_CERTIFICATION_ONUS
-+	---help---
-+	  This option adds support for drivers that can receive regulatory
-+	  hints from cellular base stations
-+
- config CFG80211_DEFAULT_PS
- 	bool "enable powersave by default"
- 	depends on CFG80211
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 80fe9b3..2449dce 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -992,7 +992,7 @@ bool reg_last_request_cell_base(void)
- 	return reg_request_cell_base(get_last_request());
- }
- 
--#ifdef CONFIG_CFG80211_CERTIFICATION_ONUS
-+#ifdef CONFIG_CFG80211_REG_CELLULAR_HINTS
- /* Core specific check */
- static enum reg_request_treatment
- reg_ignore_cell_hint(struct regulatory_request *pending_request)
--- 
-1.7.10.4
+johannes
 
