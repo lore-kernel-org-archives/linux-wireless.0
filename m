@@ -1,81 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:61710 "EHLO
-	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750805Ab3LJD2W (ORCPT
+Received: from mail-pb0-f41.google.com ([209.85.160.41]:53973 "EHLO
+	mail-pb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756515Ab3LSUxf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Dec 2013 22:28:22 -0500
-Date: Mon, 9 Dec 2013 19:28:00 -0800
-From: Tony Lindgren <tony@atomide.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Luciano Coelho <luca@coelho.fi>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Rob Landley <rob@landley.net>,
-	Russell King <linux@arm.linux.org.uk>,
-	Felipe Balbi <balbi@ti.com>,
-	Sachin Kamat <sachin.kamat@linaro.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bill Pemberton <wfp5p@virginia.edu>,
-	devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Luciano Coelho <coelho@ti.com>
-Subject: Re: [PATCH 1/4] wl1251: split wl251 platform data to a separate
- structure
-Message-ID: <20131210032800.GE13171@atomide.com> (sfid-20131210_042849_375544_BA58DB5A)
-References: <1382890469-25286-1-git-send-email-sre@debian.org>
- <1382890469-25286-2-git-send-email-sre@debian.org>
- <20131114185132.GQ10317@atomide.com>
- <20131114230330.GB6383@earth.universe>
- <20131114232217.GV10317@atomide.com>
- <20131115143254.GA7079@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20131115143254.GA7079@tuxdriver.com>
+	Thu, 19 Dec 2013 15:53:35 -0500
+Received: by mail-pb0-f41.google.com with SMTP id jt11so1665181pbb.28
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Dec 2013 12:53:34 -0800 (PST)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: johannes@sipsolutions.net
+Cc: linux@eikelenboom.it, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 2/3] cfg80211: fix processing world regdomain when non modular
+Date: Thu, 19 Dec 2013 12:53:18 -0800
+Message-Id: <1387486399-4053-3-git-send-email-mcgrof@do-not-panic.com> (sfid-20131219_215337_892186_ABFD3853)
+In-Reply-To: <1387486399-4053-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1387486399-4053-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* John W. Linville <linville@tuxdriver.com> [131115 06:46]:
-> On Thu, Nov 14, 2013 at 03:22:18PM -0800, Tony Lindgren wrote:
-> > * Sebastian Reichel <sre@debian.org> [131114 15:04]:
-> > > On Thu, Nov 14, 2013 at 10:51:33AM -0800, Tony Lindgren wrote:
-> > > > [...]
-> > > >
-> > > > If this is not going into v3.13, these will cause conflicts
-> > > > with the mach-omap2/board-*.c files for v3.14.
-> > > > 
-> > > > So it might be best to do a minimal header patch first that
-> > > > can be merged in by both linux-omap and wireless trees.
-> > > 
-> > > I guess this patch is pretty minimal. It also seems to be acked by
-> > > the involved Maintainers, so maybe just merge Patch 1 without the
-> > > other patches?
-> > > 
-> > > This does not solve the problem with the struct modification from
-> > > the second patch, but I guess it's the more intrusive patch.
-> > 
-> > Once at least the first two patches are ready, how about I queue
-> > them after -rc1 and set up an immutable branch that can be merged
-> > in by linux-omap tree and the wireless tree?
-> 
-> That sounds reasonable to me.
+This allows processing of the last regulatory request when
+we determine its still pending. This fixes the issue reported
+by Sander of when cfg80211 is built-in and no further regulatory
+domain processing can happen. This occurred because if the
+filesystem was not mounted upon kicking off the udev rule
+to run CRDA then the last request will always be left
+unprocessed.
 
-OK sorry it took a while, I was chasing bugs and did not get around
-to doing this until now. I've applied only the first two patches from
-the v2 set of patches later on in this thread against v3.13-rc1 into
-a signed tag wl1251-pdata-signed here:
+Reported-by: Sander Eikelenboom <linux@eikelenboom.it>
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+---
+ net/wireless/reg.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-http://git.kernel.org/cgit/linux/kernel/git/tmlind/linux-omap.git/tag/?id=wl1251-pdata-signed
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 5be2d7c..ecf364e 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1737,7 +1737,7 @@ static void reg_process_pending_hints(void)
+ 
+ 	/* When last_request->processed becomes true this will be rescheduled */
+ 	if (lr && !lr->processed) {
+-		REG_DBG_PRINT("Pending regulatory request, waiting for it to be processed...\n");
++		reg_process_hint(lr);
+ 		return;
+ 	}
+ 
+-- 
+1.8.4.3
 
-John, please feel free to pull the branch above also into the wireless
-tree so you can apply the remaining wl1251 patches from Sebastian.
-This way things keep working without creating merge conflicts with the
-linux-omap tree.
-
-Regards,
-
-Tony
