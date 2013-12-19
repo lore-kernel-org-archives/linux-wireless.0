@@ -1,63 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from webmail.solarflare.com ([12.187.104.25]:22828 "EHLO
-	webmail.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751230Ab3LKWPl (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:54103 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753908Ab3LSPcY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Dec 2013 17:15:41 -0500
-Message-ID: <1386800135.1516.296.camel@bwh-desktop.uk.level5networks.com> (sfid-20131211_231602_583269_301EBA57)
-Subject: Re: Re: [PATCH v2 15/16] wl1251: Add sysfs file address for setting
- permanent mac address
-From: Ben Hutchings <bhutchings@solarflare.com>
-To: Ivajlo Dimitrov <ivo.g.dimitrov.75@gmail.com>
-CC: Pali =?ISO-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>,
-	Dan Williams <dcbw@redhat.com>, Kalle Valo <kvalo@adurom.com>,
-	Luciano Coelho <luca@coelho.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <freemangordon@abv.bg>,
-	<aaro.koskinen@iki.fi>, <pavel@ucw.cz>, <sre@ring0.de>,
-	<joni.lapilainen@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Felipe Contreras <felipe.contreras@gmail.com>
-Date: Wed, 11 Dec 2013 22:15:35 +0000
-In-Reply-To: <52A8DA9A.50501@gmail.com>
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
-		 <201312101814.35112@pali> <1386697762.30202.6.camel@dcbw.foobar.com>
-		 <201312101852.17030@pali>
-	 <1386796654.1516.268.camel@bwh-desktop.uk.level5networks.com>
-	 <52A8DA9A.50501@gmail.com>
+	Thu, 19 Dec 2013 10:32:24 -0500
+Message-ID: <1387467139.4298.12.camel@jlt4.sipsolutions.net> (sfid-20131219_163228_966210_F3E24A75)
+Subject: Re: [PATCHv2 2/2] mac80211: Add support for QoS mapping
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: linux-wireless@vger.kernel.org,
+	Kyeyoon Park <kyeyoonp@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+Date: Thu, 19 Dec 2013 16:32:19 +0100
+In-Reply-To: <20131217070443.GA9818@w1.fi>
+References: <20131217070443.GA9818@w1.fi>
 Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2013-12-11 at 23:35 +0200, Ivajlo Dimitrov wrote:
-> On 11.12.2013 23:17, Ben Hutchings wrote:
-> > I think that's an even worse idea.  This is not firmware and it already
-> > exists in separate storage.
-> >
-> > I think that rx51_init_wl1251() in
-> > arch/arm/mach-omap2/board-rx51-peripherals.c should either copy the MAC
-> > address out of NVRAM, or if it's too early to do that, then schedule a
-> > function to run later and only then set up wl1251 platform data.
-> >
-> > Ben.
-> >
+On Mon, 2013-12-16 at 23:04 -0800, Jouni Malinen wrote:
+> From: Kyeyoon Park <kyeyoonp@qca.qualcomm.com>
 > 
-> And how will that work with DT when board files will be in the history?
+> Implement set_qos_map() handler for mac80211 to enable QoS mapping
+> functionality.
 
-1. Boot loader reads the MAC address from NVRAM and puts it in the DT
-node.
-or
-2. NVRAM reading is done by a tiny driver that is loaded based on the
-platform name and updates the DT node in memory.  (But I don't know how
-wl1251 should decide to defer probing if it's probed before that other
-driver.)
+Applied both.
 
-Ben.
-
--- 
-Ben Hutchings, Staff Engineer, Solarflare
-Not speaking for my employer; that's the marketing department's job.
-They asked us to note that Solarflare product names are trademarked.
+johannes
 
