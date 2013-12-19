@@ -1,91 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f169.google.com ([209.85.215.169]:37435 "EHLO
-	mail-ea0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751007Ab3LQJod (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:41405 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752338Ab3LSPlq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Dec 2013 04:44:33 -0500
-Received: by mail-ea0-f169.google.com with SMTP id l9so2364554eaj.0
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Dec 2013 01:44:32 -0800 (PST)
-Date: Tue, 17 Dec 2013 10:43:25 +0100
-From: Henrik Austad <henrik@austad.us>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
-	Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-	"linux-rt-users@vger.kernel.org" <linux-rt-users@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC 00/10] make iwlwifi RT friendly
-Message-ID: <20131217094325.GA2413@austad.us> (sfid-20131217_104440_540419_BE183367)
-References: <1386750826-25219-1-git-send-email-emmanuel.grumbach@intel.com>
- <20131215154843.GL31090@linutronix.de>
- <52ADEAAF.3080107@gmail.com>
- <52ADEB0D.3080306@linutronix.de>
- <52ADEBDF.5060406@gmail.com>
- <20131217092120.GA28480@austad.us>
- <0BA3FCBA62E2DC44AF3030971E174FB303D2233A@HASMSX103.ger.corp.intel.com>
+	Thu, 19 Dec 2013 10:41:46 -0500
+Message-ID: <52B31392.2070705@broadcom.com> (sfid-20131219_164150_130453_FF868A51)
+Date: Thu, 19 Dec 2013 16:41:06 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="LZvS9be/3tNcYl/X"
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB303D2233A@HASMSX103.ger.corp.intel.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>, Naughtboy <skylvlinux@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: bcm43236 complient in the compat-wireless-3.6.81???
+References: <CAKH5=Lv=7CroQcx6x_JONnE+6mOTH1sLLcSxntGq2fogn-t4+Q@mail.gmail.com>	<52B2E638.8060906@hauke-m.de> <CAKH5=LsaEw7GEHs5nb1omDeSMmcoFSXo8EEy+DeXvyXF5_1M_g@mail.gmail.com> <52B300FC.7070204@hauke-m.de>
+In-Reply-To: <52B300FC.7070204@hauke-m.de>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 12/19/2013 03:21 PM, Hauke Mehrtens wrote:
+> On 12/19/2013 03:14 PM, Naughtboy wrote:
+>> hello   guys
+>> rev 3 ? where can i gain  this linux source code ?
+>> thanks  advnace
+> 
+> This device is supported by brcmfmac:
+> http://wireless.kernel.org/en/users/Drivers/brcm80211
 
---LZvS9be/3tNcYl/X
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+It is in the kernel tree under
+'drivers/net/wireless/brcm80211/brcmfmac'. We only support rev 3 because
+rev 2 and earlier do not have enough memory to run fullmac firmware.
+However, I have not found any rev 3 on the market. If you have please
+let me know.
 
-On Tue, Dec 17, 2013 at 09:32:14AM +0000, Grumbach, Emmanuel wrote:
-> >=20
-> > On Sun, Dec 15, 2013 at 07:50:23PM +0200, Emmanuel Grumbach wrote:
-> > >
-> > >
-> > > On 12/15/2013 07:46 PM, Sebastian Andrzej Siewior wrote:
-> > > > On 12/15/2013 06:45 PM, Emmanuel Grumbach wrote:
-> > > >> No we don't. The primary interrupt just tells the hardware to stop
-> > > >> firing interrupts and wakes up the thread as written above.
-> > > >
-> > > > Sounds great then.
-> > > >
-> > >
-> > > Ok - I guess I'll submit then internally then before we send them ups=
-tream.
-> >=20
-> > I'm trying to mash this on top of 3.12.5 for the latest rt-release, and=
- especially
-> > drivers/net/wireless/iwlwifi/pcie/rx.c is not particularly compatible w=
-ith your
-> > patches, especially iwl_pcie_int_cause_non_ict(), which as been moved,
-> > renamed and given new return values.
->=20
-> iwl_pcie_int_cause_non_ict didn't exist before my patch. I am not sure I =
-follow here...
+Gr. AvS
 
-bah, git is messing with my head, iwl_pcie_is_non_ict() used a lot of the=
-=20
-same code as iwl_pcie_isr(), so I mistakenly saw it as a rename (which got=
-=20
-me a bit confused). Looking closer and applying enough braincells to form a=
-=20
-synapse, I see that it has just moved further down.
+> The source code is in a recent linux kernel or in backports:
+> http://drvbp1.linux-foundation.org/~mcgrof/rel-html/backports/
+> 
+> Hauke
+> 
+>>
+>> 2013/12/19 Hauke Mehrtens <hauke@hauke-m.de>:
+>>> On 12/19/2013 11:03 AM, Naughtboy wrote:
+>>>> hi erveryone !
+>>>> i  have a usb dongle bcm43236
+>>>> i wan to trsan it in the mips bcm47xx
+>>>> but i search in hte www , and didn't find the driver for bcm43236
+>>>> linux soucre code !!
+>>>> i have find and study  http://wireless.kernel.org/en/users/Drivers/b43
+>>>>
+>>>> and  find   http://wireless.kernel.org/en/users/Drivers/b43 do nothing
+>>>> usefull !!
+>>>>
+>>>> anyone can do one hand?
+>>>> thanks advance !!
+>>>>
+>>>> -----Naughyboy !
+>>>
+>>> Hi,
+>>>
+>>> I assume you have a bcm43236 rev 2 as all the bcm43236s connected to a
+>>> MIPS BCM47XX SoC I saw have that rev.  There is probably no open source
+>>> driver for the bcm43236 rev 2, just rev 3 is supported by brcmfmac.
+>>>
+>>> Hauke
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-> I am not sure I'll have the time to fulfill your request, but I'll try.
-
-Fair enough, I'll give the rt-port of the patches another go :)
-
---=20
-Henrik Austad
-
---LZvS9be/3tNcYl/X
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iEYEARECAAYFAlKwHL0ACgkQ6k5VT6v45lnfUgCg0IaXo6/+NE+rubadYsvcOQ7X
-m6IAn0E8UdKj/Hf1uDdF8fkZkhs4JJ8a
-=XkMX
------END PGP SIGNATURE-----
-
---LZvS9be/3tNcYl/X--
