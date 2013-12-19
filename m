@@ -1,93 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:49841 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753079Ab3LCHSp (ORCPT
+Received: from mail-pd0-f176.google.com ([209.85.192.176]:46289 "EHLO
+	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756534Ab3LSUxj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Dec 2013 02:18:45 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Ujjal Roy <royujjal@gmail.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 05/12] mwifiex: avoid using variable name eth_hdr
-Date: Mon, 2 Dec 2013 23:17:52 -0800
-Message-ID: <1386055079-6623-6-git-send-email-bzhao@marvell.com> (sfid-20131203_082500_195601_585C1635)
-In-Reply-To: <1386055079-6623-1-git-send-email-bzhao@marvell.com>
-References: <1386055079-6623-1-git-send-email-bzhao@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 19 Dec 2013 15:53:39 -0500
+Received: by mail-pd0-f176.google.com with SMTP id w10so1604319pde.35
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Dec 2013 12:53:39 -0800 (PST)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: johannes@sipsolutions.net
+Cc: linux@eikelenboom.it, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 3/3] cfg80211: processing regulatory requests on netdev notifier
+Date: Thu, 19 Dec 2013 12:53:19 -0800
+Message-Id: <1387486399-4053-4-git-send-email-mcgrof@do-not-panic.com> (sfid-20131219_215342_688722_79CA05BA)
+In-Reply-To: <1387486399-4053-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1387486399-4053-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-eth_hdr is defined in kernel. Use a different variable name in
-our functions.
+This adds a trigger to review any pending regulatory
+requests whenever an 802.11 device interface is brought
+down or up. We use this as an opportunistic trigger
+for checking the regulatory work queues as otherwise
+they they're only checked upon an initial regulatory
+request or when beacon hints are found.
 
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+This opportunistic mechanism can be used to trigger
+kicking the queues regulatory queues at any time from
+userspace without having to change the regulatory state.
+
+Reported-by: Sander Eikelenboom <linux@eikelenboom.it>
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- drivers/net/wireless/mwifiex/sta_rx.c | 20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+ net/wireless/core.c | 2 ++
+ net/wireless/reg.c  | 5 +++++
+ net/wireless/reg.h  | 1 +
+ 3 files changed, 8 insertions(+)
 
-diff --git a/drivers/net/wireless/mwifiex/sta_rx.c b/drivers/net/wireless/mwifiex/sta_rx.c
-index 4523899..d74192d 100644
---- a/drivers/net/wireless/mwifiex/sta_rx.c
-+++ b/drivers/net/wireless/mwifiex/sta_rx.c
-@@ -36,12 +36,12 @@ mwifiex_discard_gratuitous_arp(struct mwifiex_private *priv,
- 			       struct sk_buff *skb)
- {
- 	const struct mwifiex_arp_eth_header *arp;
--	struct ethhdr *eth_hdr;
-+	struct ethhdr *eth;
- 	struct ipv6hdr *ipv6;
- 	struct icmp6hdr *icmpv6;
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index d89dee2..bc0f518 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -812,6 +812,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 		SET_NETDEV_DEVTYPE(dev, &wiphy_type);
+ 		break;
+ 	case NETDEV_REGISTER:
++		reg_process_pending_work();
+ 		/*
+ 		 * NB: cannot take rdev->mtx here because this may be
+ 		 * called within code protected by it when interfaces
+@@ -871,6 +872,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 		wake_up(&rdev->dev_wait);
+ 		break;
+ 	case NETDEV_UP:
++		reg_process_pending_work();
+ 		cfg80211_update_iface_num(rdev, wdev->iftype, 1);
+ 		wdev_lock(wdev);
+ 		switch (wdev->iftype) {
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index ecf364e..1a049b3 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -196,6 +196,11 @@ static DECLARE_WORK(reg_work, reg_todo);
+ static void reg_timeout_work(struct work_struct *work);
+ static DECLARE_DELAYED_WORK(reg_timeout, reg_timeout_work);
  
--	eth_hdr = (struct ethhdr *)skb->data;
--	switch (ntohs(eth_hdr->h_proto)) {
-+	eth = (struct ethhdr *)skb->data;
-+	switch (ntohs(eth->h_proto)) {
- 	case ETH_P_ARP:
- 		arp = (void *)(skb->data + sizeof(struct ethhdr));
- 		if (arp->hdr.ar_op == htons(ARPOP_REPLY) ||
-@@ -87,7 +87,7 @@ int mwifiex_process_rx_packet(struct mwifiex_private *priv,
- 	struct rx_packet_hdr *rx_pkt_hdr;
- 	struct rxpd *local_rx_pd;
- 	int hdr_chop;
--	struct ethhdr *eth_hdr;
-+	struct ethhdr *eth;
++void reg_process_pending_work(void)
++{
++	schedule_work(&reg_work);
++}
++
+ /* We keep a static world regulatory domain in case of the absence of CRDA */
+ static const struct ieee80211_regdomain world_regdom = {
+ 	.n_reg_rules = 6,
+diff --git a/net/wireless/reg.h b/net/wireless/reg.h
+index 02bd8f4..063fb7a 100644
+--- a/net/wireless/reg.h
++++ b/net/wireless/reg.h
+@@ -36,6 +36,7 @@ void regulatory_exit(void);
+ int set_regdom(const struct ieee80211_regdomain *rd);
  
- 	local_rx_pd = (struct rxpd *) (skb->data);
+ bool reg_last_request_cell_base(void);
++void reg_process_pending_work(void);
  
-@@ -109,7 +109,7 @@ int mwifiex_process_rx_packet(struct mwifiex_private *priv,
- 		 *  To create the Ethernet II, just move the src, dst address
- 		 *    right before the snap_type.
- 		 */
--		eth_hdr = (struct ethhdr *)
-+		eth = (struct ethhdr *)
- 			((u8 *) &rx_pkt_hdr->eth803_hdr
- 			 + sizeof(rx_pkt_hdr->eth803_hdr) +
- 			 sizeof(rx_pkt_hdr->rfc1042_hdr)
-@@ -117,14 +117,14 @@ int mwifiex_process_rx_packet(struct mwifiex_private *priv,
- 			 - sizeof(rx_pkt_hdr->eth803_hdr.h_source)
- 			 - sizeof(rx_pkt_hdr->rfc1042_hdr.snap_type));
- 
--		memcpy(eth_hdr->h_source, rx_pkt_hdr->eth803_hdr.h_source,
--		       sizeof(eth_hdr->h_source));
--		memcpy(eth_hdr->h_dest, rx_pkt_hdr->eth803_hdr.h_dest,
--		       sizeof(eth_hdr->h_dest));
-+		memcpy(eth->h_source, rx_pkt_hdr->eth803_hdr.h_source,
-+		       sizeof(eth->h_source));
-+		memcpy(eth->h_dest, rx_pkt_hdr->eth803_hdr.h_dest,
-+		       sizeof(eth->h_dest));
- 
- 		/* Chop off the rxpd + the excess memory from the 802.2/llc/snap
- 		   header that was removed. */
--		hdr_chop = (u8 *) eth_hdr - (u8 *) local_rx_pd;
-+		hdr_chop = (u8 *) eth - (u8 *) local_rx_pd;
- 	} else {
- 		/* Chop off the rxpd */
- 		hdr_chop = (u8 *) &rx_pkt_hdr->eth803_hdr -
+ /**
+  * regulatory_hint_found_beacon - hints a beacon was found on a channel
 -- 
-1.8.2.3
+1.8.4.3
 
