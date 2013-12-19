@@ -1,111 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:36269 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751095Ab3LQKMq (ORCPT
+Received: from mail-pb0-f53.google.com ([209.85.160.53]:62347 "EHLO
+	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755275Ab3LSS0b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Dec 2013 05:12:46 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: Circular lock with mac80211_hwsim and DFS
-Date: Tue, 17 Dec 2013 12:12:41 +0200
-Message-ID: <87lhzjeqg6.fsf@kamboji.qca.qualcomm.com> (sfid-20131217_111250_394625_7CF651F6)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 19 Dec 2013 13:26:31 -0500
+Received: by mail-pb0-f53.google.com with SMTP id ma3so1491881pbc.40
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Dec 2013 10:26:30 -0800 (PST)
+From: Thomas Pedersen <twpedersen@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	open80211s <devel@lists.open80211s.org>,
+	Thomas Pedersen <twpedersen@gmail.com>
+Subject: [PATCH v3 2/2] mac80211: sync dtim_count to TSF
+Date: Thu, 19 Dec 2013 10:25:15 -0800
+Message-Id: <1387477515-3583-2-git-send-email-twpedersen@gmail.com> (sfid-20131219_192635_465719_C880076F)
+In-Reply-To: <1387477515-3583-1-git-send-email-twpedersen@gmail.com>
+References: <1387477515-3583-1-git-send-email-twpedersen@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On starting a mesh or AP BSS, the interface dtim_count
+countdown should match that of the driver TSF.
 
-I tried to run a simple DFS test with mac80211_hwsim for the first time
-but got the deadlock below. Is this a regression or has DFS ever worked
-with hwsim?
+Signed-off-by: Thomas Pedersen <twpedersen@gmail.com>
+---
 
-Using 31e1798fbf from mac80211-next.
+v2:
+	adjust dtim_count instead of setting TSF=0
+	(Sergey)
 
-[  232.576709] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
-[  232.584928] 
-[  232.585383] ======================================================
-[  232.586828] [ INFO: possible circular locking dependency detected ]
-[  232.587735] 3.12.0+ #3 Not tainted
-[  232.588314] -------------------------------------------------------
-[  232.589189] hostapd/611 is trying to acquire lock:
-[  232.590039]  (&local->chanctx_mtx){+.+.+.}, at: [<ffffffff8143fffa>] ieee80211_vif_use_channel+0x5a/0x160
-[  232.591249] 
-[  232.591249] but task is already holding lock:
-[  232.591249]  (&local->iflist_mtx){+.+...}, at: [<ffffffff814230ca>] ieee80211_start_radar_detection+0x7a/0xe0
-[  232.591249] 
-[  232.591249] which lock already depends on the new lock.
-[  232.591249] 
-[  232.591249] 
-[  232.591249] the existing dependency chain (in reverse order) is:
-[  232.591249] 
--> #2 (&local->iflist_mtx){+.+...}:
-[  232.591249]        [<ffffffff8108a938>] check_prevs_add+0x148/0x1e0
-[  232.591249]        [<ffffffff8108ae31>] validate_chain.isra.33+0x461/0x720
-[  232.591249]        [<ffffffff8108e374>] __lock_acquire+0x424/0xad0
-[  232.591249]        [<ffffffff810902fa>] lock_acquire+0xaa/0x200
-[  232.591249]        [<ffffffff814852a0>] mutex_lock_nested+0x70/0x530
-[  232.591249]        [<ffffffff814068ec>] ieee80211_offchannel_stop_vifs+0x4c/0x130
-[  232.591249]        [<ffffffff81403e94>] ieee80211_start_sw_scan+0x84/0x2d0
-[  232.591249]        [<ffffffff8140445d>] __ieee80211_start_scan+0x37d/0x7d0
-[  232.591249]        [<ffffffff8140543b>] ieee80211_request_scan+0x3b/0x60
-[  232.591249]        [<ffffffff8142080c>] ieee80211_scan+0x8c/0x90
-[  232.591249]        [<ffffffff813d2445>] nl80211_trigger_scan+0x575/0x870
-[  232.591249]        [<ffffffff812e52e3>] genl_family_rcv_msg+0x323/0x380
-[  232.591249]        [<ffffffff812e5384>] genl_rcv_msg+0x44/0x80
-[  232.591249]        [<ffffffff812e44d9>] netlink_rcv_skb+0xa9/0xd0
-[  232.591249]        [<ffffffff812e468c>] genl_rcv+0x2c/0x40
-[  232.591249]        [<ffffffff812e2da9>] netlink_unicast+0x159/0x1d0
-[  232.591249]        [<ffffffff812e358c>] netlink_sendmsg+0x38c/0x410
-[  232.591249]        [<ffffffff812a638c>] sock_sendmsg+0x6c/0x90
-[  232.591249]        [<ffffffff812a6656>] ___sys_sendmsg.part.36+0x2a6/0x2b0
-[  232.591249]        [<ffffffff812a7f69>] __sys_sendmsg+0xb9/0xd0
-[  232.591249]        [<ffffffff812a7f8e>] SyS_sendmsg+0xe/0x10
-[  232.591249]        [<ffffffff8148b3a9>] system_call_fastpath+0x16/0x1b
-[  232.591249] 
--> #1 (&local->mtx){+.+...}:
-[  232.591249]        [<ffffffff8108a938>] check_prevs_add+0x148/0x1e0
-[  232.591249]        [<ffffffff8108ae31>] validate_chain.isra.33+0x461/0x720
-[  232.591249]        [<ffffffff8108e374>] __lock_acquire+0x424/0xad0
-[  232.591249]        [<ffffffff810902fa>] lock_acquire+0xaa/0x200
-[  232.591249]        [<ffffffff814852a0>] mutex_lock_nested+0x70/0x530
-[  232.591249]        [<ffffffff8143e9bd>] ieee80211_new_chanctx+0xad/0x430
-[  232.591249]        [<ffffffff814400ee>] ieee80211_vif_use_channel+0x14e/0x160
-[  232.591249]        [<ffffffff81421c17>] ieee80211_start_ap+0x87/0x6f0
-[  232.591249]        [<ffffffff813cd24d>] nl80211_start_ap+0x37d/0x7d0
-[  232.591249]        [<ffffffff812e52e3>] genl_family_rcv_msg+0x323/0x380
-[  232.591249]        [<ffffffff812e5384>] genl_rcv_msg+0x44/0x80
-[  232.591249]        [<ffffffff812e44d9>] netlink_rcv_skb+0xa9/0xd0
-[  232.591249]        [<ffffffff812e468c>] genl_rcv+0x2c/0x40
-[  232.591249]        [<ffffffff812e2da9>] netlink_unicast+0x159/0x1d0
-[  232.591249]        [<ffffffff812e358c>] netlink_sendmsg+0x38c/0x410
-[  232.591249]        [<ffffffff812a638c>] sock_sendmsg+0x6c/0x90
-[  232.591249]        [<ffffffff812a6656>] ___sys_sendmsg.part.36+0x2a6/0x2b0
-[  232.591249]        [<ffffffff812a7f69>] __sys_sendmsg+0xb9/0xd0
-[  232.591249]        [<ffffffff812a7f8e>] SyS_sendmsg+0xe/0x10
-[  232.591249]        [<ffffffff8148b3a9>] system_call_fastpath+0x16/0x1b
-[  232.591249] 
--> #0 (&local->chanctx_mtx){+.+.+.}:
-[  232.591249]        [<ffffffff8108a7da>] check_prev_add+0x82a/0x840
-[  232.591249]        [<ffffffff8108a938>] check_prevs_add+0x148/0x1e0
-[  232.591249]        [<ffffffff8108ae31>] validate_chain.isra.33+0x461/0x720
-[  232.591249]        [<ffffffff8108e374>] __lock_acquire+0x424/0xad0
-[  232.591249]        [<ffffffff810902fa>] lock_acquire+0xaa/0x200
-[  232.591249]        [<ffffffff814852a0>] mutex_lock_nested+0x70/0x530
-[  232.591249]        [<ffffffff8143fffa>] ieee80211_vif_use_channel+0x5a/0x160
-[  232.591249]        [<ffffffff814230db>] ieee80211_start_radar_detection+0x8b/0xe0
-[  232.591249]        [<ffffffff813c9551>] nl80211_start_radar_detection+0x111/0x150
-[  232.591249]        [<ffffffff812e52e3>] genl_family_rcv_msg+0x323/0x380
-[  232.591249]        [<ffffffff812e5384>] genl_rcv_msg+0x44/0x80
-[  232.591249]        [<ffffffff812e44d9>] netlink_rcv_skb+0xa9/0xd0
-[  232.591249]        [<ffffffff812e468c>] genl_rcv+0x2c/0x40
-[  232.591249]        [<ffffffff812e2da9>] netlink_unicast+0x159/0x1d0
-[  232.591249]        [<ffffffff812e358c>] netlink_sendmsg+0x38c/0x410
-[  232.591249]        [<ffffffff812a638c>] sock_sendmsg+0x6c/0x90
-[  232.591249]        [<ffffffff812a6656>] ___sys_sendmsg.part.36+0x2a6/0x2b0
-[  232.591249]        [<ffffffff812a7f69>] __sys_sendmsg+0xb9/0xd0
-[  232.591249]        [<ffffffff812a7f8e>] SyS_sendmsg+0xe/0x10
-[  232.591249]        [<ffffffff8148b3a9>] system_call_fastpath+0x16/0x1b
+v3:
+	handle interface types other than mesh, and drop
+	IBSS dtim calculation since mac80211 doesn't
+	support ad-hoc PS.
 
+ net/mac80211/cfg.c            |    2 ++
+ net/mac80211/debugfs_netdev.c |    1 +
+ net/mac80211/ieee80211_i.h    |    2 ++
+ net/mac80211/mesh.c           |    1 +
+ net/mac80211/util.c           |   40 ++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 46 insertions(+)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index ac18528..8211d30 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -951,6 +951,7 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 			      struct cfg80211_ap_settings *params)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_local *local = sdata->local;
+ 	struct beacon_data *old;
+ 	struct ieee80211_sub_if_data *vlan;
+ 	u32 changed = BSS_CHANGED_BEACON_INT |
+@@ -1030,6 +1031,7 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 		return err;
+ 	}
+ 
++	ieee80211_recalc_dtim(local, sdata);
+ 	ieee80211_bss_info_change_notify(sdata, changed);
+ 
+ 	netif_carrier_on(dev);
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index 04b5a14..89160f7 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -468,6 +468,7 @@ static ssize_t ieee80211_if_parse_tsf(
+ 		}
+ 	}
+ 
++	ieee80211_recalc_dtim(local, sdata);
+ 	return buflen;
+ }
+ __IEEE80211_IF_FILE_W(tsf);
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 33ebe08..337fcad 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1794,6 +1794,8 @@ ieee80211_cs_get(struct ieee80211_local *local, u32 cipher,
+ int ieee80211_cs_headroom(struct ieee80211_local *local,
+ 			  struct cfg80211_crypto_settings *crypto,
+ 			  enum nl80211_iftype iftype);
++void ieee80211_recalc_dtim(struct ieee80211_local *local,
++			   struct ieee80211_sub_if_data *sdata);
+ 
+ #ifdef CONFIG_MAC80211_NOINLINE
+ #define debug_noinline noinline
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 5a74b24..5b919ca 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -807,6 +807,7 @@ int ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
+ 		return -ENOMEM;
+ 	}
+ 
++	ieee80211_recalc_dtim(local, sdata);
+ 	ieee80211_bss_info_change_notify(sdata, changed);
+ 
+ 	netif_carrier_on(sdata->dev);
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 656648b..d51d6c1 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2588,3 +2588,43 @@ int ieee80211_cs_headroom(struct ieee80211_local *local,
+ 
+ 	return headroom;
+ }
++
++void ieee80211_recalc_dtim(struct ieee80211_local *local,
++			   struct ieee80211_sub_if_data *sdata)
++{
++	u64 tsf = drv_get_tsf(local, sdata);
++	u64 dtim_count = 0;
++	u16 beacon_int = sdata->vif.bss_conf.beacon_int * 1024;
++	u8 dtim_period = sdata->vif.bss_conf.dtim_period;
++	struct ps_data *ps;
++	u8 bcns_from_dtim;
++
++	if (tsf == -1ULL || !beacon_int || !dtim_period)
++		return;
++
++	if (sdata->vif.type == NL80211_IFTYPE_AP ||
++	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN) {
++		if (!sdata->bss)
++			return;
++
++		ps = &sdata->bss->ps;
++	} else if (ieee80211_vif_is_mesh(&sdata->vif))
++		ps = &sdata->u.mesh.ps;
++	else
++		return;
++
++	/*
++	 * actually finds last dtim_count, mac80211 will update in
++	 * __beacon_add_tim().
++	 * dtim_count = dtim_period - (tsf / bcn_int) % dtim_period
++	 */
++	do_div(tsf, beacon_int);
++	bcns_from_dtim = do_div(tsf, dtim_period);
++	/* just had a DTIM */
++	if (!bcns_from_dtim)
++		dtim_count = 0;
++	else
++		dtim_count = dtim_period - bcns_from_dtim;
++
++	ps->dtim_count = dtim_count;
++}
 -- 
-Kalle Valo
+1.7.10.4
+
