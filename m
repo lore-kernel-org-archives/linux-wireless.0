@@ -1,228 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:54246 "EHLO nbd.name"
+Received: from nbd.name ([46.4.11.11]:59656 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751465Ab3LPUtQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Dec 2013 15:49:16 -0500
+	id S1754524Ab3LSRCE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Dec 2013 12:02:04 -0500
 From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH v3] mac80211: add helper functions for tracking P2P NoA state
-Date: Mon, 16 Dec 2013 21:49:14 +0100
-Message-Id: <1387226954-16848-1-git-send-email-nbd@openwrt.org> (sfid-20131216_214919_913155_38DDF92A)
+Cc: linville@tuxdriver.com
+Subject: [PATCH 2/4] ath9k: call ath9k_set_tsfadjust from ath9k_beacon_config
+Date: Thu, 19 Dec 2013 18:01:49 +0100
+Message-Id: <1387472511-86178-2-git-send-email-nbd@openwrt.org> (sfid-20131219_180212_368329_C6907513)
+In-Reply-To: <1387472511-86178-1-git-send-email-nbd@openwrt.org>
+References: <1387472511-86178-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Make that function and ath9k_allow_beacon_config static
+
 Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- include/net/mac80211.h |  47 +++++++++++++++++
- net/mac80211/util.c    | 141 +++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 188 insertions(+)
+ drivers/net/wireless/ath/ath9k/ath9k.h  |  2 --
+ drivers/net/wireless/ath/ath9k/beacon.c | 12 +++++++++---
+ drivers/net/wireless/ath/ath9k/main.c   |  9 ++-------
+ 3 files changed, 11 insertions(+), 12 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 92e060a..6645dcf 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -4629,4 +4629,51 @@ bool ieee80211_tx_prepare_skb(struct ieee80211_hw *hw,
- 			      struct ieee80211_vif *vif, struct sk_buff *skb,
- 			      int band, struct ieee80211_sta **sta);
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 9ad8a67..f2202e7 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -431,12 +431,10 @@ struct ath_beacon {
+ };
  
-+/**
-+ * struct ieee80211_noa_data - holds temporary data for tracking P2P NoA state
-+ *
-+ * @next_tsf: TSF timestamp of the next absent state change
-+ * @has_next_tsf: next absent state change event pending
-+ *
-+ * @absent: descriptor bitmask, set if GO is currently absent
-+ *
-+ * private:
-+ *
-+ * @count: count fields from the NoA descriptors
-+ * @desc: adjusted data from the NoA
-+ */
-+struct ieee80211_noa_data {
-+	u32 next_tsf;
-+	bool has_next_tsf;
-+
-+	u8 absent;
-+
-+	u8 count[IEEE80211_P2P_NOA_DESC_MAX];
-+	struct {
-+		u32 start;
-+		u32 duration;
-+		u32 interval;
-+	} desc[IEEE80211_P2P_NOA_DESC_MAX];
-+};
-+
-+/**
-+ * ieee80211_parse_p2p_noa - initialize NoA tracking data from P2P IE
-+ *
-+ * @attr: P2P NoA IE
-+ * @data: NoA tracking data
-+ * @tsf: current TSF timestamp
-+ *
-+ * Return: number of successfully parsed descriptors
-+ */
-+int ieee80211_parse_p2p_noa(const struct ieee80211_p2p_noa_attr *attr,
-+			    struct ieee80211_noa_data *data, u32 tsf);
-+
-+/**
-+ * ieee80211_update_p2p_noa - get next pending P2P GO absent state change
-+ *
-+ * @data: NoA tracking data
-+ * @tsf: current TSF timestamp
-+ */
-+void ieee80211_update_p2p_noa(struct ieee80211_noa_data *data, u32 tsf);
-+
- #endif /* MAC80211_H */
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 875e172..a607619 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -2554,3 +2554,144 @@ int ieee80211_cs_headroom(struct ieee80211_local *local,
+ void ath9k_beacon_tasklet(unsigned long data);
+-bool ath9k_allow_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif);
+ void ath9k_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 			 u32 changed);
+ void ath9k_beacon_assign_slot(struct ath_softc *sc, struct ieee80211_vif *vif);
+ void ath9k_beacon_remove_slot(struct ath_softc *sc, struct ieee80211_vif *vif);
+-void ath9k_set_tsfadjust(struct ath_softc *sc, struct ieee80211_vif *vif);
+ void ath9k_set_beacon(struct ath_softc *sc);
+ bool ath9k_csa_is_finished(struct ath_softc *sc);
  
- 	return headroom;
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 78ffe76..accfb3b 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -274,7 +274,7 @@ static int ath9k_beacon_choose_slot(struct ath_softc *sc)
+ 	return slot;
  }
+ 
+-void ath9k_set_tsfadjust(struct ath_softc *sc, struct ieee80211_vif *vif)
++static void ath9k_set_tsfadjust(struct ath_softc *sc, struct ieee80211_vif *vif)
+ {
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ath_beacon_config *cur_conf = &sc->cur_beacon_conf;
+@@ -622,7 +622,8 @@ static void ath9k_beacon_config_adhoc(struct ath_softc *sc,
+ 		set_bit(SC_OP_BEACONS, &sc->sc_flags);
+ }
+ 
+-bool ath9k_allow_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif)
++static bool ath9k_allow_beacon_config(struct ath_softc *sc,
++				      struct ieee80211_vif *vif)
+ {
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ath_vif *avp = (void *)vif->drv_priv;
+@@ -693,12 +694,17 @@ void ath9k_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 	unsigned long flags;
+ 	bool skip_beacon = false;
+ 
++	if (vif->type == NL80211_IFTYPE_AP)
++		ath9k_set_tsfadjust(sc, vif);
 +
-+static bool
-+ieee80211_extend_noa_desc(struct ieee80211_noa_data *data, u32 tsf, int i)
-+{
-+	s32 end = data->desc[i].start + data->desc[i].duration - (tsf + 1);
-+	int skip;
++	if (!ath9k_allow_beacon_config(sc, vif))
++		return;
 +
-+	if (end > 0)
-+		return false;
-+
-+	/* End time is in the past, check for repetitions */
-+	skip = DIV_ROUND_UP(-end, data->desc[i].interval);
-+	if (data->count[i] < 255) {
-+		if (data->count[i] <= skip) {
-+			data->count[i] = 0;
-+			return false;
-+		}
-+
-+		data->count[i] -= skip;
-+	}
-+
-+	data->desc[i].start += skip * data->desc[i].interval;
-+
-+	return true;
-+}
-+
-+static bool
-+ieee80211_extend_absent_time(struct ieee80211_noa_data *data, u32 tsf,
-+			     s32 *offset)
-+{
-+	bool ret = false;
-+	int i;
-+
-+	for (i = 0; i < IEEE80211_P2P_NOA_DESC_MAX; i++) {
-+		s32 cur;
-+
-+		if (!data->count[i])
-+			continue;
-+
-+		if (ieee80211_extend_noa_desc(data, tsf + *offset, i))
-+			ret = true;
-+
-+		cur = data->desc[i].start - tsf;
-+		if (cur > *offset)
-+			continue;
-+
-+		cur = data->desc[i].start + data->desc[i].duration - tsf;
-+		if (cur > *offset)
-+			*offset = cur;
-+	}
-+
-+	return ret;
-+}
-+
-+static u32
-+ieee80211_get_noa_absent_time(struct ieee80211_noa_data *data, u32 tsf)
-+{
-+	s32 offset = 0;
-+	int tries = 0;
-+
-+	/*
-+	 * arbitrary limit, used to avoid infinite loops when combined NoA
-+	 * descriptors cover the full time period.
-+	 */
-+	int max_tries = 5;
-+
-+	ieee80211_extend_absent_time(data, tsf, &offset);
-+	do {
-+		if (!ieee80211_extend_absent_time(data, tsf, &offset))
-+			break;
-+
-+		tries++;
-+	} while (tries < max_tries);
-+
-+	return offset;
-+}
-+
-+void ieee80211_update_p2p_noa(struct ieee80211_noa_data *data, u32 tsf)
-+{
-+	u32 next_offset = BIT(31) - 1;
-+	int i;
-+
-+	data->absent = 0;
-+	data->has_next_tsf = false;
-+	for (i = 0; i < IEEE80211_P2P_NOA_DESC_MAX; i++) {
-+		s32 start;
-+
-+		if (!data->count[i])
-+			continue;
-+
-+		ieee80211_extend_noa_desc(data, tsf, i);
-+		start = data->desc[i].start - tsf;
-+		if (start <= 0)
-+			data->absent |= BIT(i);
-+
-+		if (next_offset > start)
-+			next_offset = start;
-+
-+		data->has_next_tsf = true;
-+	}
-+
-+	if (data->absent)
-+		next_offset = ieee80211_get_noa_absent_time(data, tsf);
-+
-+	data->next_tsf = tsf + next_offset;
-+}
-+EXPORT_SYMBOL(ieee80211_update_p2p_noa);
-+
-+int ieee80211_parse_p2p_noa(const struct ieee80211_p2p_noa_attr *attr,
-+			    struct ieee80211_noa_data *data, u32 tsf)
-+{
-+	int ret = 0;
-+	int i;
-+
-+	memset(data, 0, sizeof(*data));
-+
-+	for (i = 0; i < IEEE80211_P2P_NOA_DESC_MAX; i++) {
-+		const struct ieee80211_p2p_noa_desc *desc = &attr->desc[i];
-+
-+		if (!desc->count || !desc->duration)
-+			continue;
-+
-+		data->count[i] = desc->count;
-+		data->desc[i].start = le32_to_cpu(desc->start_time);
-+		data->desc[i].duration = le32_to_cpu(desc->duration);
-+		data->desc[i].interval = le32_to_cpu(desc->interval);
-+
-+		if (data->count[i] > 1 &&
-+		    data->desc[i].interval < data->desc[i].duration)
-+			continue;
-+
-+		ieee80211_extend_noa_desc(data, tsf, i);
-+		ret++;
-+	}
-+
-+	if (ret)
-+		ieee80211_update_p2p_noa(data, tsf);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL(ieee80211_parse_p2p_noa);
+ 	if (sc->sc_ah->opmode == NL80211_IFTYPE_STATION) {
+ 		ath9k_cache_beacon_config(sc, bss_conf);
+ 		ath9k_set_beacon(sc);
+ 		set_bit(SC_OP_BEACONS, &sc->sc_flags);
+ 		return;
+-
+ 	}
+ 
+ 	/*
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index cda342e..21b764b 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1665,13 +1665,8 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
+ 	}
+ 
+ 	if ((changed & BSS_CHANGED_BEACON_ENABLED) ||
+-	    (changed & BSS_CHANGED_BEACON_INT)) {
+-		if (ah->opmode == NL80211_IFTYPE_AP &&
+-		    bss_conf->enable_beacon)
+-			ath9k_set_tsfadjust(sc, vif);
+-		if (ath9k_allow_beacon_config(sc, vif))
+-			ath9k_beacon_config(sc, vif, changed);
+-	}
++	    (changed & BSS_CHANGED_BEACON_INT))
++		ath9k_beacon_config(sc, vif, changed);
+ 
+ 	if (changed & BSS_CHANGED_ERP_SLOT) {
+ 		if (bss_conf->use_short_slot)
 -- 
 1.8.3.4 (Apple Git-47)
 
