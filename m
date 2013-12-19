@@ -1,75 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.18]:49961 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753915Ab3LaReA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Dec 2013 12:34:00 -0500
-Received: from spike ([81.217.122.98]) by mail.gmx.com (mrgmx102) with ESMTPSA
- (Nemesis) id 0M2FhY-1V8Z6o2DRM-00s79L for <linux-wireless@vger.kernel.org>;
- Tue, 31 Dec 2013 18:33:58 +0100
-Date: Tue, 31 Dec 2013 18:33:57 +0100
-From: Christian Engelmayer <cengelma@gmx.at>
-To: Solomon Peachy <pizza@shaftnet.org>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] wireless: cw1200: Fix memory leak in cw1200_wow_suspend()
-Message-ID: <20131231183357.3664e978@spike> (sfid-20131231_183404_551762_2F30ED8B)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-ve0-f176.google.com ([209.85.128.176]:56303 "EHLO
+	mail-ve0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755926Ab3LSP5A (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Dec 2013 10:57:00 -0500
+Received: by mail-ve0-f176.google.com with SMTP id oz11so755418veb.7
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Dec 2013 07:56:59 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1387442279-1526-2-git-send-email-twpedersen@gmail.com>
+References: <1387442279-1526-1-git-send-email-twpedersen@gmail.com> <1387442279-1526-2-git-send-email-twpedersen@gmail.com>
+From: Sergey Ryazanov <ryazanov.s.a@gmail.com>
+Date: Thu, 19 Dec 2013 19:56:39 +0400
+Message-ID: <CAHNKnsR1yfSZaZiDS3k27ZcpDxbLohP2DNOLz=eoJqpZWS5udQ@mail.gmail.com> (sfid-20131219_165713_735185_2C3D6837)
+Subject: Re: [PATCH 2/2] mac80211: sync dtim_count to TSF
+To: Thomas Pedersen <twpedersen@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	open80211s <devel@lists.open80211s.org>,
+	Thomas Pedersen <thomas@cozybit.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix a memory leak in the cw1200_wow_suspend() error handling path.
+2013/12/19 Thomas Pedersen <twpedersen@gmail.com>:
+> On starting a mesh, ad-hoc, or AP BSS, the interface
+> dtim_count countdown should match that of the driver TSF.
+>
+...
+>
+> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+> index ac18528..8211d30 100644
+> --- a/net/mac80211/cfg.c
+> +++ b/net/mac80211/cfg.c
+> @@ -951,6 +951,7 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+>                               struct cfg80211_ap_settings *params)
+>  {
+>         struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+> +       struct ieee80211_local *local = sdata->local;
+>         struct beacon_data *old;
+>         struct ieee80211_sub_if_data *vlan;
+>         u32 changed = BSS_CHANGED_BEACON_INT |
+> @@ -1030,6 +1031,7 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+>                 return err;
+>         }
+>
+> +       ieee80211_recalc_dtim(local, sdata);
+>         ieee80211_bss_info_change_notify(sdata, changed);
+>
+>         netif_carrier_on(dev);
+> diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+> index 04b5a14..89160f7 100644
+> --- a/net/mac80211/debugfs_netdev.c
+> +++ b/net/mac80211/debugfs_netdev.c
+> @@ -468,6 +468,7 @@ static ssize_t ieee80211_if_parse_tsf(
+>                 }
+>         }
+>
+> +       ieee80211_recalc_dtim(local, sdata);
+>         return buflen;
+>  }
+>  __IEEE80211_IF_FILE_W(tsf);
+> diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+> index d6ba8414..a92c8a9 100644
+> --- a/net/mac80211/ibss.c
+> +++ b/net/mac80211/ibss.c
+> @@ -369,6 +369,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+>                 return;
+>         }
+>
+> +       ieee80211_recalc_dtim(local, sdata);
+>         ieee80211_bss_info_change_notify(sdata, bss_change);
+>
+>         ifibss->state = IEEE80211_IBSS_MLME_JOINED;
+...
+> diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+> index 5a74b24..5b919ca 100644
+> --- a/net/mac80211/mesh.c
+> +++ b/net/mac80211/mesh.c
+> @@ -807,6 +807,7 @@ int ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
+>                 return -ENOMEM;
+>         }
+>
+> +       ieee80211_recalc_dtim(local, sdata);
+>         ieee80211_bss_info_change_notify(sdata, changed);
+>
+>         netif_carrier_on(sdata->dev);
+> diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+> index 656648b..599cf37 100644
+> --- a/net/mac80211/util.c
+> +++ b/net/mac80211/util.c
+> @@ -2588,3 +2588,31 @@ int ieee80211_cs_headroom(struct ieee80211_local *local,
+>
+>         return headroom;
+>  }
+> +
+> +void ieee80211_recalc_dtim(struct ieee80211_local *local,
+> +                          struct ieee80211_sub_if_data *sdata)
+> +{
+...
+> +       sdata->u.mesh.ps.dtim_count = dtim_count;
+> +}
 
-Signed-off-by: Christian Engelmayer <cengelma@gmx.at>
----
- drivers/net/wireless/cw1200/pm.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+Apologize for my intrusiveness, but could this write operation lead to
+unpredictable results for non-mesh interfaces?
 
-diff --git a/drivers/net/wireless/cw1200/pm.c b/drivers/net/wireless/cw1200/pm.c
-index b37abb9..6907c8f 100644
---- a/drivers/net/wireless/cw1200/pm.c
-+++ b/drivers/net/wireless/cw1200/pm.c
-@@ -225,7 +225,7 @@ int cw1200_wow_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
- 		cw1200_set_pm(priv, &priv->powersave_mode);
- 		if (wait_event_interruptible_timeout(priv->ps_mode_switch_done,
- 						     !priv->ps_mode_switch_in_progress, 1*HZ) <= 0) {
--			goto revert3;
-+			goto revert4;
- 		}
- 	}
- 
-@@ -254,11 +254,11 @@ int cw1200_wow_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
- 
- 	/* Stop serving thread */
- 	if (cw1200_bh_suspend(priv))
--		goto revert4;
-+		goto revert5;
- 
- 	ret = timer_pending(&priv->mcast_timeout);
- 	if (ret)
--		goto revert5;
-+		goto revert6;
- 
- 	/* Store suspend state */
- 	pm_state->suspend_state = state;
-@@ -280,9 +280,9 @@ int cw1200_wow_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
- 
- 	return 0;
- 
--revert5:
-+revert6:
- 	WARN_ON(cw1200_bh_resume(priv));
--revert4:
-+revert5:
- 	cw1200_resume_work(priv, &priv->bss_loss_work,
- 			   state->bss_loss_tmo);
- 	cw1200_resume_work(priv, &priv->join_timeout,
-@@ -291,6 +291,7 @@ revert4:
- 			   state->direct_probe);
- 	cw1200_resume_work(priv, &priv->link_id_gc_work,
- 			   state->link_id_gc);
-+revert4:
- 	kfree(state);
- revert3:
- 	wsm_set_udp_port_filter(priv, &cw1200_udp_port_filter_off);
 -- 
-1.8.3.2
+BR,
+Sergey
