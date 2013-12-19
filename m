@@ -1,69 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f178.google.com ([209.85.215.178]:56677 "EHLO
-	mail-ea0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754875Ab3LaRBE (ORCPT
+Received: from mail-pb0-f47.google.com ([209.85.160.47]:55719 "EHLO
+	mail-pb0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756515Ab3LSUxa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Dec 2013 12:01:04 -0500
-Received: by mail-ea0-f178.google.com with SMTP id d10so5743874eaj.9
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Dec 2013 09:01:03 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Oren Givon <oren.givon@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH] iwlwifi: add new devices for 7265 series
-Date: Tue, 31 Dec 2013 19:00:57 +0200
-Message-Id: <1388509257-21100-1-git-send-email-egrumbach@gmail.com> (sfid-20131231_180108_048768_E1B9F029)
-In-Reply-To: <52C2F7EA.3050600@gmail.com>
-References: <52C2F7EA.3050600@gmail.com>
+	Thu, 19 Dec 2013 15:53:30 -0500
+Received: by mail-pb0-f47.google.com with SMTP id um1so1651227pbc.34
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Dec 2013 12:53:29 -0800 (PST)
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: johannes@sipsolutions.net
+Cc: linux@eikelenboom.it, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 1/3] cfg80211: allow reprocessing of pending requests
+Date: Thu, 19 Dec 2013 12:53:17 -0800
+Message-Id: <1387486399-4053-2-git-send-email-mcgrof@do-not-panic.com> (sfid-20131219_215332_946246_6C654467)
+In-Reply-To: <1387486399-4053-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1387486399-4053-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Oren Givon <oren.givon@intel.com>
+This addresses the RCU component of allowing us to reprocess
+the last regulatory request.
 
-Add new device / subdevice ID for 7265 series.
-Fix 2 mistakes on the way.
-
-Signed-off-by: Oren Givon <oren.givon@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Reported-by: Sander Eikelenboom <linux@eikelenboom.it>
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
 ---
- drivers/net/wireless/iwlwifi/pcie/drv.c |   10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ net/wireless/reg.c | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/drv.c b/drivers/net/wireless/iwlwifi/pcie/drv.c
-index 8660502..e627254 100644
---- a/drivers/net/wireless/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/drv.c
-@@ -357,21 +357,27 @@ static DEFINE_PCI_DEVICE_TABLE(iwl_hw_card_ids) = {
- 	{IWL_PCI_DEVICE(0x095B, 0x5310, iwl7265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x095B, 0x5302, iwl7265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x095B, 0x5210, iwl7265_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x095B, 0x5012, iwl7265_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x095B, 0x500A, iwl7265_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x095A, 0x5012, iwl7265_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x095A, 0x500A, iwl7265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x095A, 0x5410, iwl7265_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x095A, 0x5400, iwl7265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x095A, 0x1010, iwl7265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x095A, 0x5000, iwl7265_2n_cfg)},
- 	{IWL_PCI_DEVICE(0x095B, 0x5200, iwl7265_2n_cfg)},
- 	{IWL_PCI_DEVICE(0x095A, 0x5002, iwl7265_n_cfg)},
- 	{IWL_PCI_DEVICE(0x095B, 0x5202, iwl7265_n_cfg)},
- 	{IWL_PCI_DEVICE(0x095A, 0x9010, iwl7265_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x095A, 0x9110, iwl7265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x095A, 0x9210, iwl7265_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x095A, 0x9510, iwl7265_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x095A, 0x9310, iwl7265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x095A, 0x9410, iwl7265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x095A, 0x5020, iwl7265_2n_cfg)},
- 	{IWL_PCI_DEVICE(0x095A, 0x502A, iwl7265_2n_cfg)},
- 	{IWL_PCI_DEVICE(0x095A, 0x5420, iwl7265_2n_cfg)},
- 	{IWL_PCI_DEVICE(0x095A, 0x5090, iwl7265_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x095A, 0x5190, iwl7265_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x095A, 0x5590, iwl7265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x095B, 0x5290, iwl7265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x095A, 0x5490, iwl7265_2ac_cfg)},
- #endif /* CONFIG_IWLMVM */
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 9b897fc..5be2d7c 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -244,19 +244,21 @@ static char user_alpha2[2];
+ module_param(ieee80211_regdom, charp, 0444);
+ MODULE_PARM_DESC(ieee80211_regdom, "IEEE 802.11 regulatory domain code");
+ 
+-static void reg_kfree_last_request(void)
++static void reg_kfree_last_request(struct regulatory_request *lr)
+ {
+-	struct regulatory_request *lr;
+-
+-	lr = get_last_request();
+-
+ 	if (lr != &core_request_world && lr)
+ 		kfree_rcu(lr, rcu_head);
+ }
+ 
+ static void reg_update_last_request(struct regulatory_request *request)
+ {
+-	reg_kfree_last_request();
++	struct regulatory_request *lr;
++
++	lr = get_last_request();
++	if (lr == request)
++		return;
++
++	reg_kfree_last_request(lr);
+ 	rcu_assign_pointer(last_request, request);
+ }
+ 
 -- 
-1.7.9.5
+1.8.4.3
 
