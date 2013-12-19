@@ -1,66 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:35823 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753074Ab3LCHSl (ORCPT
+Received: from s3.sipsolutions.net ([144.76.43.152]:53582 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754563Ab3LSMft (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Dec 2013 02:18:41 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Ujjal Roy <royujjal@gmail.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 00/12] mwifiex updates for 3.14
-Date: Mon, 2 Dec 2013 23:17:47 -0800
-Message-ID: <1386055079-6623-1-git-send-email-bzhao@marvell.com> (sfid-20131203_081850_653690_1DDAA666)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 19 Dec 2013 07:35:49 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:256)
+	(Exim 4.82)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1VtcpQ-0006RC-BZ
+	for linux-wireless@vger.kernel.org; Thu, 19 Dec 2013 13:35:48 +0100
+Message-ID: <1387456546.4298.9.camel@jlt4.sipsolutions.net> (sfid-20131219_133557_400695_8236E9DF)
+Subject: Re: [PATCH v2] mac80211: fix iflist_mtx/mtx locking in radar
+ detection
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Thu, 19 Dec 2013 13:35:46 +0100
+In-Reply-To: <1387395944-17785-1-git-send-email-johannes@sipsolutions.net> (sfid-20131218_204552_502543_D48E4AAE)
+References: <1387395944-17785-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20131218_204552_502543_D48E4AAE)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These patches improve statistics update as well as
-endian conversion. Some of them appear to be suitable
-for earlier kernel versions but I want to have them
-well cooked in 3.14.
+On Wed, 2013-12-18 at 20:45 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> The scan code creates an iflist_mtx -> mtx locking dependency,
+> and a few other places, notably radar detection, were creating
+> the opposite dependency, causing lockdep to complain. As scan
+> and radar detection are mutually exclusive, the deadlock can't
+> really happen in practice, but it's still bad form.
+> 
+> A similar issue exists in the monitor mode code, but this is
+> only used by channel-context drivers right now and those have
+> to have hardware scan, so that also can't happen.
+> 
+> Still, fix these issues by making some of the channel context
+> code require the mtx to be held rather than acquiring it, thus
+> allowing the monitor/radar callers to keep the iflist_mtx->mtx
+> lock ordering.
+> 
+> While at it, also fix access to the local->scanning variable
+> in the radar code, and document that radar_detect_enabled is
+> now properly protected by the mtx.
+> 
+> All this would now introduce an ABBA deadlock between the DFS
+> work cancelling and local->mtx, so change the locking there a
+> bit to not need to use cancel_delayed_work_sync() but be able
+> to just use cancel_delayed_work(). The work is also safely
+> stopped/removed when the interface is stopped, so no extra
+> changes are needed.
 
-Amitkumar Karwar (5):
-  mwifiex: declare snap_type as __be16 variable
-  mwifiex: remove rfc1042_eth_hdr variable
-  mwifiex: fix an issue with Appletalk devices
-  mwifiex: remove redundant goto exit_remove statement
-  mwifiex: improvements in mwifiex_ret_tx_power_cfg()
+Applied.
 
-Bing Zhao (1):
-  mwifiex: avoid using variable name eth_hdr
-
-Ujjal Roy (6):
-  mwifiex: use little-endian variables in firmware structures
-  mwifiex: fix rx_pending count imbalance
-  mwifiex: correct RX byte count statistics
-  mwifiex: correct TX byte count statistics
-  mwifiex: update statistics for bridged packets on AP interface
-  mwifiex: do not flood kmsg/dmesg with USB debug messages
-
- drivers/net/wireless/mwifiex/11n_aggr.c    |  6 ++--
- drivers/net/wireless/mwifiex/cfg80211.c    |  1 +
- drivers/net/wireless/mwifiex/cmdevt.c      |  4 +--
- drivers/net/wireless/mwifiex/decl.h        |  1 +
- drivers/net/wireless/mwifiex/fw.h          | 30 ++++++++++----------
- drivers/net/wireless/mwifiex/init.c        |  3 +-
- drivers/net/wireless/mwifiex/main.c        |  9 ++----
- drivers/net/wireless/mwifiex/main.h        |  2 +-
- drivers/net/wireless/mwifiex/sta_cmd.c     |  2 +-
- drivers/net/wireless/mwifiex/sta_cmdresp.c | 35 +++++++++++-------------
- drivers/net/wireless/mwifiex/sta_rx.c      | 44 +++++++++++++-----------------
- drivers/net/wireless/mwifiex/sta_tx.c      |  1 +
- drivers/net/wireless/mwifiex/txrx.c        | 15 +++++++---
- drivers/net/wireless/mwifiex/uap_txrx.c    | 39 +++++++++++++++-----------
- drivers/net/wireless/mwifiex/usb.c         |  4 +--
- drivers/net/wireless/mwifiex/util.c        |  5 ++--
- 16 files changed, 103 insertions(+), 98 deletions(-)
-
--- 
-1.8.2.3
+johannes
 
