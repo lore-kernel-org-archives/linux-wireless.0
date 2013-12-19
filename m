@@ -1,95 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:59406 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932286Ab3LIUdM (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:46948 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751196Ab3LSKdy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Dec 2013 15:33:12 -0500
-Message-ID: <1386621181.3878.87.camel@porter.coelho.fi> (sfid-20131209_213316_052722_DCBDB4D6)
-Subject: Re: [PATCH] MAINTAINERS: remove myself as maintainer of TI WiLink
- drivers
-From: Luca Coelho <luca@coelho.fi>
-To: linville@tuxdriver.com
-Cc: balbi@ti.com, linux-wireless@vger.kernel.org
-Date: Mon, 09 Dec 2013 22:33:01 +0200
-In-Reply-To: <1386620912-9292-1-git-send-email-luca@coelho.fi>
-References: <1386620912-9292-1-git-send-email-luca@coelho.fi>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
-	boundary="=-mWii1unmLws1XIq2wGDx"
+	Thu, 19 Dec 2013 05:33:54 -0500
+Message-ID: <1387449216.21926.40.camel@deadeye.wl.decadent.org.uk> (sfid-20131219_113358_465912_F8AAC8AF)
+Subject: Re: pull request: firmware for Intel Wireless adapter - 7260 / 3160
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	Matt Chen <machen@suse.com>,
+	John Linville <linville@tuxdriver.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>
+Date: Thu, 19 Dec 2013 10:33:36 +0000
+In-Reply-To: <52AF37CE.4020906@gmail.com>
+References: <CANUX_P3PxN3ENgizJ-V5D0Of45AFoGcJ2wuzW-8ZwzToxTkcdQ@mail.gmail.com>
+	 <52AF37CE.4020906@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-FfgxPjgM9X9fQA6ySGYK"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-mWii1unmLws1XIq2wGDx
+--=-FfgxPjgM9X9fQA6ySGYK
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-Hi John,
-
-Can you start taking wl12xx/wl1251 patches directly into your tree from
-now on?
-
-I'm not going to send any more pull requests for the WiLink drivers.
-
---
-Cheers,
-Luca.
-
-On Mon, 2013-12-09 at 22:28 +0200, Luciano Coelho wrote:
-> I don't have the time to maintain the TI WiLink WLAN drivers anymore.
-> Remove my name and mark them as Orphan.
+On Mon, 2013-12-16 at 19:26 +0200, Emmanuel Grumbach wrote:
+> Hi Ben,
 >=20
-> Signed-off-by: Luciano Coelho <luca@coelho.fi>
-> ---
+> I have a new firmware for 7260 / 3160 - new version is 22.1.7.0.
 >=20
-> Unfortunately I don't have the time to maintain the WiLink drivers
-> anymore.  Does anyone want to step forward to take it over?
->=20
->  MAINTAINERS | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
->=20
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index e65a2c2..265bf79 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -8560,12 +8560,11 @@ S:	Maintained
->  F:	sound/soc/codecs/twl4030*
-> =20
->  TI WILINK WIRELESS DRIVERS
-> -M:	Luciano Coelho <luca@coelho.fi>
->  L:	linux-wireless@vger.kernel.org
->  W:	http://wireless.kernel.org/en/users/Drivers/wl12xx
->  W:	http://wireless.kernel.org/en/users/Drivers/wl1251
->  T:	git git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git
-> -S:	Maintained
-> +S:	Orphan
->  F:	drivers/net/wireless/ti/
->  F:	include/linux/wl12xx.h
-> =20
+> Please pull - thanks!
 
+You need to update the version number in WHENCE.
 
---=-mWii1unmLws1XIq2wGDx
+Ben.
+
+> The following changes since commit 7d0c7a8cfd78388d90cc784a185b19dcbdbce8=
+24:
+>=20
+>   Merge branch 'wilink4' of
+> git://git.kernel.org/pub/scm/linux/kernel/git/balbi/linux-firmware
+> (2013-10-13 21:11:46 +0100)
+>=20
+> are available in the git repository at:
+>=20
+>=20
+>   git://git.kernel.org/pub/scm/linux/kernel/git/egrumbach/linux-firmware
+> master
+>=20
+> for you to fetch changes up to 478227556dfc3563892c3e1ec3abfa03c663e10d:
+>=20
+>   iwlwifi: update firmware for 7260 / 3160 devices (2013-12-15 21:40:38
+> +0200)
+>=20
+> ----------------------------------------------------------------
+> Emmanuel Grumbach (1):
+>       iwlwifi: update firmware for 7260 / 3160 devices
+>=20
+>  iwlwifi-3160-7.ucode |  Bin 670172 -> 670484 bytes
+>  iwlwifi-7260-7.ucode |  Bin 682892 -> 683236 bytes
+>  2 files changed, 0 insertions(+), 0 deletions(-)
+>=20
+
+--=20
+Ben Hutchings
+It is easier to write an incorrect program than to understand a correct one=
+.
+
+--=-FfgxPjgM9X9fQA6ySGYK
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.15 (GNU/Linux)
 
-iQIcBAABAgAGBQJSpij9AAoJEKFHnKIaPMX6rFsP/ixOzZ2qWWbixicpxIWf2doF
-ppqrxizUnXz73dFN7Lk9wEFPa10p+SjXT9hHFXqueFTXGncwB7P3O4Wjvi4c/uIi
-RmEAEnpRaGSsr/giKyVjqYrxuaVuBNg3txPtGXHm0HBwVzBccy460CwHJbCkx0Do
-2e2tB+tHfdyO8QZYiUaIKcgBrWN17aLn7bvc4VYmeJPkk+mIO7vJUxhtwCuijPp8
-LmYMcMjFri82aGIJ5msQMuT+NLk9c6qz3G6OfSADyK4xOqTGBlxz6h/dmS4gkaqL
-/76E52j+GXHc5Y5OO23b58M7SxIrUx21p9entWc5MBK399Ymau5GRvlRDbvvJYCX
-Iqu4VtFmngRhMCbzRpzHF1c7ZpR0Iva+ViXFdJ65XeuLbqzTzDZqvY/GjgVC8vDW
-LAxXtzeQBo00WqXGUozVmXHd4IptB0PlyV9p2oW31+F0vbLWYSnZxC8vDAUxXP1W
-5pVBEO0ab15OinY6StUZ9vEOfXf5jrh71tbOe51lCr2L7/GMm7toKLwt555rbMqf
-xbsZqISJkMyE5jQ5RYn4O/UULWl9bPRdoLA8tF2kjPuMYJ0yWNlh50ieFkiv0x6F
-11Nzi4xEig69gee/Dsv9Fd5b1/gY5ScA+JT/DTs7ZVTRCXuv1OkZVZJyHSq3vTim
-Y8bToiCeFAIKc91tLY+g
-=bF89
+iQIVAwUAUrLLgOe/yOyVhhEJAQoJig//ctJDQmlMNTGSeyIW7rJF7/mp57sw7oxc
+fTgkTpFHNeZONWoxcspvPF0ljPAtNyFq+Z6Nl0Oj3CtNFiFe89raf3f2BTEkTjmb
+e4umMTrLFJCFA+q3Q63EWN5Ll/BVE8hDKaz2b/QvtSyqN8NFtT9Sova29pXRYmr9
+vikPEwVF67dFyswGV+rwrJaXovFi8uCocDRUQt8/+1IEkeipwzCnysgd0RxdfWkS
+aHTJI5HfPU+4bvTxaOlYWJgv2uBnjdOphaP9EwGXzy+hxCKzQuweqSx/F6waN9IQ
+H9kfG6cBW8JzhrR4riL8KmXbFiegyy0nGXJaYPnsdzIItnVPIy0wcUp8mDWVKe1Z
+ktIsVS8uWrC9pVm1kqvyQJ4LNoRwS7BE/WM7mdm/iG9aima6CsLgPZVjkD0sCuE8
+tIydrT9+kDmqLtH13ghUh9FlSXY5hDCCayBNLPV8DFj0PNZ/w+Mq94hXHD5vDeGJ
+Nbgqa+EBgULkf3pF3JoBJ1u3dOlDD195tk7mIMuSlXNa3oRfYOAh3w1myvA6UpjF
+sFM+eclOiWDxE5dBEY0Yc5Wtgxi6BqCpoZVdEDxU3uxc4bR1R3bjApPR5Ys8wiZ8
+hJanwHvlxB3/JjEQ1DVNdS2+cFiOd3elPOAgNraptsGeef/xanB3gHFSREtlEjZd
+WL4AI1C75YA=
+=J+9f
 -----END PGP SIGNATURE-----
 
---=-mWii1unmLws1XIq2wGDx--
-
+--=-FfgxPjgM9X9fQA6ySGYK--
