@@ -1,76 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f42.google.com ([209.85.215.42]:59584 "EHLO
-	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752477Ab3LKLRG (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:41728 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753541Ab3LTIpU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Dec 2013 06:17:06 -0500
+	Fri, 20 Dec 2013 03:45:20 -0500
+From: "BAHINI, Henri" <hbahini@qca.qualcomm.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+CC: "Chauhan, Rajesh" <rajeshc@qca.qualcomm.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Malinen, Jouni" <jouni@qca.qualcomm.com>,
+	"Johnson, Jeff" <jjohnson@qca.qualcomm.com>,
+	"Chang, Leo" <schang@qca.qualcomm.com>,
+	"Luo, Xun" <xunl@qca.qualcomm.com>,
+	"Thalappil, Sameer" <sameert@qca.qualcomm.com>,
+	"Hussain, Arif" <c_arifh@qca.qualcomm.com>
+Subject: RE: [PATCHv3] cfg80211: add support for frequency interference event
+Date: Fri, 20 Dec 2013 08:45:07 +0000
+Message-ID: <8AC12462F1AA0E4EA8FEB46307AAD6F650AAB222@nasanexd02f.na.qualcomm.com> (sfid-20131220_094524_148134_77316BFE)
+References: <1384198356-427-1-git-send-email-rajeshc@qca.qualcomm.com>
+ <1386077130.4393.21.camel@jlt4.sipsolutions.net>
+ <CAB=NE6Xa-bdLQm8uAg9wCE0fdp4KPBZ46d5FHVHp6wCvN5=dUA@mail.gmail.com>
+ <1386145204.4284.4.camel@jlt4.sipsolutions.net>
+ <1386145241.4284.5.camel@jlt4.sipsolutions.net>
+ <D19FD2B13A40CD4B8DA64DB9B8F112E93E5CF51C@nasanexd01a.na.qualcomm.com>
+ <CAB=NE6VNZDwGj4WWkgCmWxs_xLBZhXn44vo0TEdqo84xsRbZ2Q@mail.gmail.com>
+ <8AC12462F1AA0E4EA8FEB46307AAD6F650AAB068@nasanexd02f.na.qualcomm.com>
+ <CAB=NE6W3Et-4mDEet5DSDrM=yP60oODvEUGz=RtZj-gDgLNUbw@mail.gmail.com>
+ <8AC12462F1AA0E4EA8FEB46307AAD6F650AAB122@nasanexd02f.na.qualcomm.com>
+ <CAB=NE6WFOsjRgPyGjudc4c4JVoF-v=nnz2grknOai6=rYxrApA@mail.gmail.com>
+In-Reply-To: <CAB=NE6WFOsjRgPyGjudc4c4JVoF-v=nnz2grknOai6=rYxrApA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1386750826-25219-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1386750826-25219-1-git-send-email-emmanuel.grumbach@intel.com>
-Date: Wed, 11 Dec 2013 13:17:04 +0200
-Message-ID: <CANUX_P3g_WFvpiUZi9h1MKbHRcDtTdrLjem6n0mSf9wwv_+UwA@mail.gmail.com> (sfid-20131211_121713_233193_7B05EE39)
-Subject: Re: [RFC 00/10] make iwlwifi RT friendly
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-rt-users@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 11, 2013 at 10:33 AM, Emmanuel Grumbach
-<emmanuel.grumbach@intel.com> wrote:
-> RT folks have raised issues with iwlwifi wrt. RT kernel some time
-> ago. Johannes had a few patches to address this, but I had a few
-> concerns with them. This series tries to address the RT concerns:
-> * we don't do anything in hard-irq context besides stopping the
->   interrupts in the device.
-> * the interrupt cause is read from the irq handler and is handled
->   there.
->
-
-Well - this was a bit unfair :)
-The code I get is probably very similar (and inspired) from Johannes's
-work. But I guess I was missing:
-iwlwifi: pcie: track interrupt mask in SW.
-
-
-> This allows us to avoid the usage of _irqsave all over the driver
-> and also avoids any kind of locks in the hard-irq context.
-> We still have some work to do with the locks in the handler.
-> I believe the locking model can be improved there.
->
-> This patch series is split is very small patches. While this can
-> annoy the reader - it helped me much to make sure I don't do anything
-> wrong (well - I am still not sure) - and IMHO, it makes the review easier.
-> For example, in patch
->     iwlwifi: pcie: move the ICT / non-ICT handling functions
-> I just copy code from place to place without changing a bit. This makes
-> the significant diff smaller.
->
-> Emmanuel Grumbach (10):
->   iwlwifi: pcie: clean up ICT allocation code
->   iwlwifi: pcie: track interrupt mask in SW
->   iwlwifi: pcie: re-organize the PCIe ISR code
->   iwlwifi: pcie: move the ICT / non-ICT handling functions
->   iwlwifi: pcie: read the interrupt cause from the handler
->   iwlwifi: pcie: determine the interrupt type in the handler
->   iwlwifi: pcie: return inta from iwl_pcie_int_cause_{non_}ict
->   iwlwifi: pcie: no need to save inta in trans_pcie
->   iwlwifi: pcie: move interrupt prints to the common handler
->   iwlwifi: pcie: stop using _irqsave
->
->  drivers/net/wireless/iwlwifi/iwl-csr.h       |   3 +-
->  drivers/net/wireless/iwlwifi/pcie/internal.h |   9 +-
->  drivers/net/wireless/iwlwifi/pcie/rx.c       | 389 +++++++++++----------------
->  drivers/net/wireless/iwlwifi/pcie/trans.c    |  27 +-
->  drivers/net/wireless/iwlwifi/pcie/tx.c       |  10 +-
->  5 files changed, 185 insertions(+), 253 deletions(-)
->
-> --
-> 1.8.3.2
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+SSBkbyBhcHByZWNpYXRlIHlvdXIgZmVlZGJhY2sgYW5kIHVuZGVyc3RhbmRpbmcsIEx1aXMuDQoN
+ClBsZWFzZSBjb25zaWRlciB0aGF0IHRoZSB3Y24zNnh4IGRyaXZlciB0aGF0IGlzIGFscmVhZHkg
+dXAgc3RyZWFtZWQgd2lsbCBtYWtlIHVzZWQgb2YgdGhpcyBBUEkgaW4gZHVlIGNvdXJzZTogaXQg
+aXMgYWxyZWFkeSBpbiB0aGUgcGxhbm5pbmcgaW4gdGhlIGNvdXJzZSBvZiBmaXJzdCBoYWxmIG9m
+IG5leHQgeWVhciBhcyB3ZSBpbnRlbnNpZnkgdGhlIHB1c2ggb2Ygc29tZSBvZiBvdXIgZmVhdHVy
+ZXMgdG8gdGhpcyBkcml2ZXIuDQpQbGVhc2UgYWxzbyBjb25zaWRlciB0aGF0IHRoZSBjb3JyZXNw
+b25kaW5nIGNoYW5nZXMgaW4gdGhlIHN1cHBsaWNhbnQgd2lsbCBiZSBwaWNrZWQgdXAgYnkgSm91
+bmkncyB0cmVlIGFzIHNvb24gYXMgdGhpcyBjZmc4MDIxMSBBUEkgaXMgdXAgc3RyZWFtZWQuIEpv
+dW5pIGNhbiB2b3VjaCBmb3IgdGhpcy4NCg0KV2l0aCBhYm92ZSwgSSBhcHByZWNpYXRlIHlvdSBn
+dXlzIGNvbnNpZGVyaW5nIHRoaXMgQVBJLg0KDQpUaGFua3MsDQotSGVucmkgDQo=
