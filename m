@@ -1,39 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:60774 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752558Ab3LPKWl (ORCPT
+Received: from mail-we0-f172.google.com ([74.125.82.172]:45258 "EHLO
+	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751825Ab3LTIhg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Dec 2013 05:22:41 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/2] ath9k patches
-Date: Mon, 16 Dec 2013 15:47:39 +0530
-Message-Id: <1387189061-505-1-git-send-email-sujith@msujith.org> (sfid-20131216_112244_515680_B521588D)
+	Fri, 20 Dec 2013 03:37:36 -0500
+Received: by mail-we0-f172.google.com with SMTP id p61so2165064wes.31
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Dec 2013 00:37:35 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <8AC12462F1AA0E4EA8FEB46307AAD6F650AAB122@nasanexd02f.na.qualcomm.com>
+References: <1384198356-427-1-git-send-email-rajeshc@qca.qualcomm.com>
+ <1386077130.4393.21.camel@jlt4.sipsolutions.net> <CAB=NE6Xa-bdLQm8uAg9wCE0fdp4KPBZ46d5FHVHp6wCvN5=dUA@mail.gmail.com>
+ <1386145204.4284.4.camel@jlt4.sipsolutions.net> <1386145241.4284.5.camel@jlt4.sipsolutions.net>
+ <D19FD2B13A40CD4B8DA64DB9B8F112E93E5CF51C@nasanexd01a.na.qualcomm.com>
+ <CAB=NE6VNZDwGj4WWkgCmWxs_xLBZhXn44vo0TEdqo84xsRbZ2Q@mail.gmail.com>
+ <8AC12462F1AA0E4EA8FEB46307AAD6F650AAB068@nasanexd02f.na.qualcomm.com>
+ <CAB=NE6W3Et-4mDEet5DSDrM=yP60oODvEUGz=RtZj-gDgLNUbw@mail.gmail.com> <8AC12462F1AA0E4EA8FEB46307AAD6F650AAB122@nasanexd02f.na.qualcomm.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Fri, 20 Dec 2013 00:37:15 -0800
+Message-ID: <CAB=NE6WFOsjRgPyGjudc4c4JVoF-v=nnz2grknOai6=rYxrApA@mail.gmail.com> (sfid-20131220_093739_714511_EDCFE2C0)
+Subject: Re: [PATCHv3] cfg80211: add support for frequency interference event
+To: "BAHINI, Henri" <hbahini@qca.qualcomm.com>
+Cc: "Chauhan, Rajesh" <rajeshc@qca.qualcomm.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Malinen, Jouni" <jouni@qca.qualcomm.com>,
+	"Johnson, Jeff" <jjohnson@qca.qualcomm.com>,
+	"Chang, Leo" <schang@qca.qualcomm.com>,
+	"Luo, Xun" <xunl@qca.qualcomm.com>,
+	"Thalappil, Sameer" <sameert@qca.qualcomm.com>,
+	"Hussain, Arif" <c_arifh@qca.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Fri, Dec 20, 2013 at 12:30 AM, BAHINI, Henri
+<hbahini@qca.qualcomm.com> wrote:
+> Please do educate us a bit!
+> We were not aware of the requirement that all patches contributions to the cfg/nl have to be for driver
+> that are already up streamed.
 
-Nothing major - the spectral code that was scattered around
-has been collected in spectral.c and some minor cleanup in ath9k.h.
-These apply on top of Felix's pending patches.
+Its not and this will depend on the driver / approach / and intent but
+it does help.
 
-Sujith Manoharan (2):
-  ath9k: Cleanup spectral scan code
-  ath9k: Cleanup ath9k.h
+> As for our effort for upstreaming our driver, we should take this out of this context since there
+> are factors driving this that are completely orthogonal to this discussion.
 
- drivers/net/wireless/ath/ath9k/Makefile   |   4 +-
- drivers/net/wireless/ath/ath9k/ath9k.h    | 358 +++++---------------
- drivers/net/wireless/ath/ath9k/debug.c    | 311 +----------------
- drivers/net/wireless/ath/ath9k/init.c     |   2 +-
- drivers/net/wireless/ath/ath9k/recv.c     | 181 ----------
- drivers/net/wireless/ath/ath9k/spectral.c | 543 ++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/spectral.h | 212 ++++++++++++
- 7 files changed, 840 insertions(+), 771 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath9k/spectral.c
- create mode 100644 drivers/net/wireless/ath/ath9k/spectral.h
+That's true but it makes it harder for provide examples of the patches
+you are introducing. Typically we just remove code that's unused. If
+you have no intent on upstreaming then what's the point of doing tons
+of review and consideration on API that we deeply care of for
+userspace? The patch is debatable as-is already, I've provided my
+feedback on it before and if you don't get good feedback from others
+and also if some of this is because you are not upstreaming then I'm
+trying to highlight for you that perhaps that should be of a little
+more importance to you.
 
--- 
-1.8.5.1
-
+  Luis
