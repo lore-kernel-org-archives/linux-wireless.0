@@ -1,92 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f179.google.com ([209.85.215.179]:45439 "EHLO
-	mail-ea0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754614Ab3LHJ1a (ORCPT
+Received: from mail-pb0-f42.google.com ([209.85.160.42]:48501 "EHLO
+	mail-pb0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753071Ab3LTIlv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Dec 2013 04:27:30 -0500
-From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Luciano Coelho <luca@coelho.fi>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
-	joni.lapilainen@gmail.com,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Felipe Contreras <felipe.contreras@gmail.com>,
-	David Gnedt <david.gnedt@davizone.at>,
-	=?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
-Subject: [PATCH v2 11/16] wl1251: disable retry and ACK policy for injected packets
-Date: Sun,  8 Dec 2013 10:25:09 +0100
-Message-Id: <1386494714-21070-12-git-send-email-pali.rohar@gmail.com> (sfid-20131208_103357_164357_55E1D86C)
-In-Reply-To: <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
- <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Fri, 20 Dec 2013 03:41:51 -0500
+Received: by mail-pb0-f42.google.com with SMTP id uo5so2349802pbc.1
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Dec 2013 00:41:50 -0800 (PST)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	devel@lists.open80211s.org, distro11s@cozybit.com,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] mac80211: enable WME for peer mesh STA
+Date: Fri, 20 Dec 2013 16:39:52 +0800
+Message-Id: <1387528792-27198-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20131220_094156_992477_4F41EEA4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Gnedt <david.gnedt@davizone.at>
+Enable the WME for peer mesh STA so that the driver, 
+such as wcn36xx, will pick this up and enabling it in HW.
 
-Set the retry limit to 0 and disable the ACK policy for injected packets.
-
-Signed-off-by: David Gnedt <david.gnedt@davizone.at>
-Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
 ---
- drivers/net/wireless/ti/wl1251/acx.c |    8 +++++++-
- drivers/net/wireless/ti/wl1251/tx.c  |    7 ++++++-
- 2 files changed, 13 insertions(+), 2 deletions(-)
+ net/mac80211/mesh_plink.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/ti/wl1251/acx.c b/drivers/net/wireless/ti/wl1251/acx.c
-index f772e62..8f420d0 100644
---- a/drivers/net/wireless/ti/wl1251/acx.c
-+++ b/drivers/net/wireless/ti/wl1251/acx.c
-@@ -943,12 +943,18 @@ int wl1251_acx_rate_policies(struct wl1251 *wl)
- 	}
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index cf83217..e8f60aa 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -437,6 +437,7 @@ __mesh_sta_info_alloc(struct ieee80211_sub_if_data *sdata, u8 *hw_addr)
+ 	sta_info_pre_move_state(sta, IEEE80211_STA_AUTHORIZED);
  
- 	/* configure one default (one-size-fits-all) rate class */
--	acx->rate_class_cnt = 1;
-+	acx->rate_class_cnt = 2;
- 	acx->rate_class[0].enabled_rates = ACX_RATE_MASK_UNSPECIFIED;
- 	acx->rate_class[0].short_retry_limit = ACX_RATE_RETRY_LIMIT;
- 	acx->rate_class[0].long_retry_limit = ACX_RATE_RETRY_LIMIT;
- 	acx->rate_class[0].aflags = 0;
+ 	set_sta_flag(sta, WLAN_STA_WME);
++	sta->sta.wme = true;
  
-+	/* no-retry rate class */
-+	acx->rate_class[1].enabled_rates = ACX_RATE_MASK_UNSPECIFIED;
-+	acx->rate_class[1].short_retry_limit = 0;
-+	acx->rate_class[1].long_retry_limit = 0;
-+	acx->rate_class[1].aflags = 0;
-+
- 	ret = wl1251_cmd_configure(wl, ACX_RATE_POLICY, acx, sizeof(*acx));
- 	if (ret < 0) {
- 		wl1251_warning("Setting of rate policies failed: %d", ret);
-diff --git a/drivers/net/wireless/ti/wl1251/tx.c b/drivers/net/wireless/ti/wl1251/tx.c
-index 216334d..4516180 100644
---- a/drivers/net/wireless/ti/wl1251/tx.c
-+++ b/drivers/net/wireless/ti/wl1251/tx.c
-@@ -90,8 +90,12 @@ static void wl1251_tx_control(struct tx_double_buffer_desc *tx_hdr,
- 	/* 802.11 packets */
- 	tx_hdr->control.packet_type = 0;
- 
--	if (control->flags & IEEE80211_TX_CTL_NO_ACK)
-+	/* Also disable retry and ACK policy for injected packets */
-+	if ((control->flags & IEEE80211_TX_CTL_NO_ACK) ||
-+	    (control->flags & IEEE80211_TX_CTL_INJECTED)) {
-+		tx_hdr->control.rate_policy = 1;
- 		tx_hdr->control.ack_policy = 1;
-+	}
- 
- 	tx_hdr->control.tx_complete = 1;
- 
-@@ -422,6 +426,7 @@ static void wl1251_tx_packet_cb(struct wl1251 *wl,
- 	info = IEEE80211_SKB_CB(skb);
- 
- 	if (!(info->flags & IEEE80211_TX_CTL_NO_ACK) &&
-+	    !(info->flags & IEEE80211_TX_CTL_INJECTED) &&
- 	    (result->status == TX_SUCCESS))
- 		info->flags |= IEEE80211_TX_STAT_ACK;
- 
+ 	return sta;
+ }
 -- 
 1.7.9.5
 
