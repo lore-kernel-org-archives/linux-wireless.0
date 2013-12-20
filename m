@@ -1,85 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ring0.de ([91.143.88.219]:39893 "EHLO smtp.ring0.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756554Ab3LFAWq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 19:22:46 -0500
-From: Sebastian Reichel <sre@debian.org>
-To: Sebastian Reichel <sre@ring0.de>, Luciano Coelho <luca@coelho.fi>,
-	Tony Lindgren <tony@atomide.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: Rob Herring <rob.herring@calxeda.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Rob Landley <rob@landley.net>,
-	Kumar Gala <galak@codeaurora.org>, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-omap@vger.kernel.org, netdev@vger.kernel.org,
-	Sebastian Reichel <sre@debian.org>
-Subject: [PATCHv2 5/5] Documentation: dt: wireless: Add wl1251
-Date: Fri,  6 Dec 2013 01:22:16 +0100
-Message-Id: <1386289336-26704-6-git-send-email-sre@debian.org> (sfid-20131206_012413_611087_2FDA377F)
-In-Reply-To: <1386289336-26704-1-git-send-email-sre@debian.org>
-References: <1382890469-25286-1-git-send-email-sre@debian.org>
- <1386289336-26704-1-git-send-email-sre@debian.org>
+Received: from mail-bk0-f43.google.com ([209.85.214.43]:35084 "EHLO
+	mail-bk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932085Ab3LTCWx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Dec 2013 21:22:53 -0500
+Received: by mail-bk0-f43.google.com with SMTP id mz12so1000780bkb.30
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Dec 2013 18:22:52 -0800 (PST)
+MIME-Version: 1.0
+Date: Fri, 20 Dec 2013 10:22:51 +0800
+Message-ID: <CAPgLHd8Cn-UkVp1VMpAuR2w64-3BgxfHCqnqo3bjGGYtW0-RwQ@mail.gmail.com> (sfid-20131220_032259_740345_D2FA8BFA)
+Subject: [PATCH -next] ath9k: fix sparse non static symbol warning
+From: Wei Yongjun <weiyj.lk@gmail.com>
+To: ath9k-devel@qca.qualcomm.com, linville@tuxdriver.com,
+	c_manoha@qca.qualcomm.com
+Cc: yongjun_wei@trendmicro.com.cn, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add device tree binding documentation for Texas Instrument's wl1251
-wireless lan chip. For now only the SPI binding is documented.
+From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-Signed-off-by: Sebastian Reichel <sre@debian.org>
+Fixes the following sparse warning:
+
+drivers/net/wireless/ath/ath9k/spectral.c:500:24: warning:
+ symbol 'rfs_spec_scan_cb' was not declared. Should it be static?
+
+Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 ---
- .../devicetree/bindings/net/wireless/ti,wl1251.txt | 39 ++++++++++++++++++++++
- 1 file changed, 39 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt
+ drivers/net/wireless/ath/ath9k/spectral.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt b/Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt
-new file mode 100644
-index 0000000..189ae5c
---- /dev/null
-+++ b/Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt
-@@ -0,0 +1,39 @@
-+* Texas Instruments wl1251 wireless lan controller
-+
-+The wl1251 chip can be connected via SPI or via SDIO. This
-+document describes the binding for the SPI connected chip.
-+
-+Required properties:
-+- compatible :        Should be "ti,wl1251"
-+- reg :               Chip select address of device
-+- spi-max-frequency : Maximum SPI clocking speed of device in Hz
-+- interrupts :        Should contain interrupt line
-+- interrupt-parent :  Should be the phandle for the interrupt controller
-+                      that services interrupts for this device
-+- vio-supply :        phandle to regulator providing VIO
-+- ti,power-gpio :     GPIO connected to chip's PMEN pin
-+
-+Optional properties:
-+- ti,wl1251-has-eeprom : boolean, the wl1251 has an eeprom connected, which
-+                         provides configuration data (calibration, MAC, ...)
-+- Please consult Documentation/devicetree/bindings/spi/spi-bus.txt
-+  for optional SPI connection related properties,
-+
-+Examples:
-+
-+&spi1 {
-+	wl1251@0 {
-+		compatible = "ti,wl1251";
-+
-+		reg = <0>;
-+		spi-max-frequency = <48000000>;
-+		spi-cpol;
-+		spi-cpha;
-+
-+		interrupt-parent = <&gpio2>;
-+		interrupts = <10 IRQ_TYPE_NONE>; /* gpio line 42 */
-+
-+		vio-supply = <&vio>;
-+		ti,power-gpio = <&gpio3 23 GPIO_ACTIVE_HIGH>; /* 87 */
-+	};
-+};
--- 
-1.8.4.3
+diff --git a/drivers/net/wireless/ath/ath9k/spectral.c b/drivers/net/wireless/ath/ath9k/spectral.c
+index 11adb5e..99f4de9 100644
+--- a/drivers/net/wireless/ath/ath9k/spectral.c
++++ b/drivers/net/wireless/ath/ath9k/spectral.c
+@@ -497,7 +497,7 @@ static int remove_buf_file_handler(struct dentry *dentry)
+ 	return 0;
+ }
+ 
+-struct rchan_callbacks rfs_spec_scan_cb = {
++static struct rchan_callbacks rfs_spec_scan_cb = {
+ 	.create_buf_file = create_buf_file_handler,
+ 	.remove_buf_file = remove_buf_file_handler,
+ };
 
