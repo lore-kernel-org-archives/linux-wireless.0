@@ -1,49 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f43.google.com ([209.85.215.43]:54487 "EHLO
-	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751429Ab3LLF65 (ORCPT
+Received: from mail-ob0-f172.google.com ([209.85.214.172]:35896 "EHLO
+	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755568Ab3LTH5f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Dec 2013 00:58:57 -0500
-Received: by mail-la0-f43.google.com with SMTP id n7so4510865lam.16
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Dec 2013 21:58:55 -0800 (PST)
+	Fri, 20 Dec 2013 02:57:35 -0500
+Received: by mail-ob0-f172.google.com with SMTP id gq1so2374969obb.31
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Dec 2013 23:57:34 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <52A8BA8B.6040104@gmail.com>
-References: <52A40FE5.30004@gmail.com>
-	<CANUX_P0iO2YdDGO6_GcBOA2A6QvUfYQNz8E2L2SjLpMPYYviuQ@mail.gmail.com>
-	<52A8BA8B.6040104@gmail.com>
-Date: Thu, 12 Dec 2013 07:58:55 +0200
-Message-ID: <CANUX_P1VC80TAexTJfR8EQWBGfOXpQOdj75piKaaJ=to9tuRuQ@mail.gmail.com> (sfid-20131212_065900_835688_F24CE457)
-Subject: Re: Random lock-ups (?) of Centrino Ultimate-N 6300 (iwlwifi)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Jeremy Johnathan Rodent <rat.o.drat@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <52B31392.2070705@broadcom.com>
+References: <CAKH5=Lv=7CroQcx6x_JONnE+6mOTH1sLLcSxntGq2fogn-t4+Q@mail.gmail.com>
+	<52B2E638.8060906@hauke-m.de>
+	<CAKH5=LsaEw7GEHs5nb1omDeSMmcoFSXo8EEy+DeXvyXF5_1M_g@mail.gmail.com>
+	<52B300FC.7070204@hauke-m.de>
+	<52B31392.2070705@broadcom.com>
+Date: Fri, 20 Dec 2013 08:57:34 +0100
+Message-ID: <CACna6rwU8hroahpVsM7KTJD1iM2=12JuErr5LgCvswx+XsTjjA@mail.gmail.com> (sfid-20131220_085740_041168_90746CED)
+Subject: Re: bcm43236 complient in the compat-wireless-3.6.81???
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	Naughtboy <skylvlinux@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> can you please apply this and report back?
->>
->> diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c
->> b/drivers/net/wireless/iwlwifi/pcie/tx.c
->> index c5746ed..0a1f39c 100644
->> --- a/drivers/net/wireless/iwlwifi/pcie/tx.c
->> +++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
->> @@ -708,10 +708,6 @@ void iwl_pcie_tx_start(struct iwl_trans *trans,
->> u32 scd_base_addr)
->>          reg_val = iwl_read_direct32(trans, FH_TX_CHICKEN_BITS_REG);
->>          iwl_write_direct32(trans, FH_TX_CHICKEN_BITS_REG,
->>                             reg_val | FH_TX_CHICKEN_BITS_SCD_AUTO_RETRY_EN);
->> -
->> -       /* Enable L1-Active */
->> -       iwl_clear_bits_prph(trans, APMG_PCIDEV_STT_REG,
->> -                           APMG_PCIDEV_STT_VAL_L1_ACT_DIS);
->>   }
->>
->>   void iwl_trans_pcie_tx_reset(struct iwl_trans *trans)
->
-> Sorry it took so long.
-> I've built 3.12.3 with this patch applied. What now?
+2013/12/19 Arend van Spriel <arend@broadcom.com>:
+> It is in the kernel tree under
+> 'drivers/net/wireless/brcm80211/brcmfmac'. We only support rev 3 because
+> rev 2 and earlier do not have enough memory to run fullmac firmware.
+> However, I have not found any rev 3 on the market. If you have please
+> let me know.
 
-Does it help?
-Do you still the same issues?
-If yes - please share the log again.
+Could you say something more about rev 2? How does it work with
+internal Broadcom driver? Is the firmware stored somewhere else? Does
+it have some another kind of memory?
+
+Apart from the firmware storing issue, is the communication between
+driver and hardware the same?
