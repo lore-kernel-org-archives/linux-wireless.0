@@ -1,133 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vserver.eikelenboom.it ([84.200.39.61]:41318 "EHLO
-	smtp.eikelenboom.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750968Ab3LKSLM (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:9342 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754433Ab3LTHoK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Dec 2013 13:11:12 -0500
-Date: Wed, 11 Dec 2013 19:11:04 +0100
-From: Sander Eikelenboom <linux@eikelenboom.it>
-Message-ID: <871324710.20131211191104@eikelenboom.it> (sfid-20131211_191138_162874_20F90D40)
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-CC: "Berg, Johannes" <johannes.berg@intel.com>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [cfg80211 / iwlwifi] setting wireless regulatory domain doesn't work.
-In-Reply-To: <CAB=NE6UfumA2xez1DvtDSBDZ72WF_tOozFo_8LRnMryYiSqD-A@mail.gmail.com>
-References: <1507831110.20131018194349@eikelenboom.it> <792757788.20131023142849@eikelenboom.it> <1819533168.20131211161710@eikelenboom.it> <CAB=NE6V-RSnqbAC-0tfYK=WGJLp1aPC2UpFDurs49h+wXr9UfQ@mail.gmail.com> <1818324675.20131211175350@eikelenboom.it> <CAB=NE6Wf=T0bGLSYPDyb=-fMAVnGcbGkeaBiNrzwV-Lpxr6VZg@mail.gmail.com> <1342235583.20131211182804@eikelenboom.it> <CAB=NE6UfumA2xez1DvtDSBDZ72WF_tOozFo_8LRnMryYiSqD-A@mail.gmail.com>
+	Fri, 20 Dec 2013 02:44:10 -0500
+From: "Chauhan, Rajesh" <rajeshc@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Malinen, Jouni" <jouni@qca.qualcomm.com>,
+	"BAHINI, Henri" <hbahini@qca.qualcomm.com>,
+	"Johnson, Jeff" <jjohnson@qca.qualcomm.com>,
+	"Chang, Leo" <schang@qca.qualcomm.com>,
+	"Luo, Xun" <xunl@qca.qualcomm.com>,
+	"Thalappil, Sameer" <sameert@qca.qualcomm.com>,
+	"Hussain, Arif" <c_arifh@qca.qualcomm.com>,
+	"Chauhan, Rajesh" <rajeshc@qca.qualcomm.com>
+Subject: RE: [PATCHv3] cfg80211: add support for frequency interference event
+Date: Fri, 20 Dec 2013 07:44:08 +0000
+Message-ID: <D19FD2B13A40CD4B8DA64DB9B8F112E93E5CF51C@nasanexd01a.na.qualcomm.com> (sfid-20131220_084418_496823_0E8F6193)
+References: <1384198356-427-1-git-send-email-rajeshc@qca.qualcomm.com>
+	 <1386077130.4393.21.camel@jlt4.sipsolutions.net>
+	 <CAB=NE6Xa-bdLQm8uAg9wCE0fdp4KPBZ46d5FHVHp6wCvN5=dUA@mail.gmail.com>
+	 (sfid-20131203_173549_913735_1E946CDE)
+ <1386145204.4284.4.camel@jlt4.sipsolutions.net>
+	 (sfid-20131204_092013_820427_3AA619B7)
+ <1386145241.4284.5.camel@jlt4.sipsolutions.net>
+In-Reply-To: <1386145241.4284.5.camel@jlt4.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-Wednesday, December 11, 2013, 6:53:07 PM, you wrote:
-
-> On Wed, Dec 11, 2013 at 6:28 PM, Sander Eikelenboom
-> <linux@eikelenboom.it> wrote:
->> Wednesday, December 11, 2013, 6:14:16 PM, you wrote:
->>> Yeap, that's the case for Intel Atheros, and I think nowadays new
->>> broadcom upstream drivers too. Users should not have to be involved on
->>> setting the regulatory domain, everything should just work
->>> automatically.
->>
->> Erhmm yes that works, under the assumption that the device is not leaving the country it was programmed for at the factory.
-
-> Moving out of a region that you purchased a device is called to "world
-> roam". Believe it or not some devices are designed with the intent you
-> do not take it out of a country. The Playstation comes to mind as an
-> example but I believe some Apple tablets are also in the same
-> situation. Some devices like mobile phones obviously need to support
-> world roaming and they do, what they do then is build architecture to
-> support a base set and then rely on your APs around to see the country
-> IE to determine region. Some other devices rely on cellular base
-> station information, but that is allowed only in a few countries right
-> now and in the US at least this requires some sort of special review
-> from FCC on the design. We support all this in the Linux kernel today,
-> its up to system integrators to do things and certify things properly.
-
->> (Or you like to be limited in your abilities, channel 12 and 13 are legal here)
->> That there is a restriction on boot or on first use, i can understand. Crippling a device for it's life time though.
-
-> The best way to address all this is by automatic region awareness and
-> doing the right thing on devices, this however requires good
-> architecture / calibration data  / etc and all that needs to be
-> verified by the system integrators, and finally they need to be
-> certified. If you want to hack your firmware and software go at it,
-> just be aware there are reasons for things.
-
-Well the general problem seems to be "we don't trust the user" so we FORCE him to the lowest
-common denominator (without a way to overrule that) so he is forced to operate *well* within the law.
-
->>> It doesn't seem like you are getting your original requests getting
->>> processed, so I don't think CRDA is passing it. Can you verify running
->>> from CRDA code:
->>
->> They don't get processed unless i remove the return from the code as i indicated.
->> If i remove that return it processes the request.
->>
->>> ./regdbdump /usr/lib/crda/regulatory.bin
->>
->> Although it's in a different location on Debian, /lib/crda/regulatory.bin
->> the dump seems fine.
-
-> OK thanks. Can you send a patch of what exact change you made, it was
-> unclear from the paste you made.
-
-> diff -u file.c.orig file.c
-
-Well i just did a pull from wireless-next, to try Avinash Patil's patch.
-net/wireless/reg.c had already changed much so i couldn't apply his patch without.
-
-With his patch it sets the regulatory domain, although as now expected i still can not use channels 12 and 13 yet,
-probably due to those firmware restrictions.
-
-His patch is copy pasted below.
-
-
->   Luis
-
-
----------- Forwarded message ----------
-From: "Avinash Patil" <patila@marvell.com>
-Date: Dec 6, 2013 8:31 PM
-Subject: [RFC] cfg80211: set regulatory request processed for initiator core
-To: <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>
-Cc:
-
-During cfg80211 init, cfg80211 initializes regulatory to set to
-world domain. Here we dont set last request processed flag.
-This results into further request set to pending indefinitely.
-
-This patch fixes this by setting last request to processed.
-
-Signed-off-by: Avinash Patil <patila@marvell.com>
----
- net/wireless/reg.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index ec54e1a..70a8f0a 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1670,6 +1670,8 @@ static void reg_process_hint(struct
-regulatory_request *reg_request)
-        switch (reg_request->initiator) {
-        case NL80211_REGDOM_SET_BY_CORE:
-                reg_process_hint_core(reg_request);
-+               nl80211_send_reg_change_event(reg_request);
-+               reg_set_request_processed();
-                return;
-        case NL80211_REGDOM_SET_BY_USER:
-                treatment = reg_process_hint_user(reg_request);
---
-1.7.3.4
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+SGVsbG8gSm9oYW5uZXMsDQoNClBsZWFzZSBhbGxvdyBtZSB0byBjbGFyaWZ5IGhlcmUuIA0KDQpT
+byB0aGUgZmllbGQgImludGVyZmVyZW5jZV9zb3VyY2UiICBpbiB0aGUgc3RydWN0ICJjZmc4MDIx
+MV9hdm9pZF9mcmVxdWVuY3lfcmFuZ2UiIGlzIG5vdCBiZWluZyBlZmZlY3RpdmVseSB1c2VkIGN1
+cnJlbnRseS4gVGhhdCBmaWVsZCB3YXMgYWRkZWQgcGVyIHN1Z2dlc3Rpb24gZnJvbSBMdWlzIGZv
+ciBmdXR1cmUgdXNlLiBCdXQgaWYgeW91IGFyZSBhZHZpc2luZyB0byByZW1vdmUgaXQgdGhlbiB5
+ZXMgd2UgY2FuIHJlbW92ZSB0aGF0IGZpZWxkLg0KDQpUaGUgQVBJIGNmZzgwMjExX2F2b2lkX2Zy
+ZXF1ZW5jeV9ldmVudCgpIHdoaWNoIGlzIGludHJvZHVjZWQgaW4gdGhpcyBwYXRjaCBzaGFsbCBi
+ZSB1c2VkIGJ5IG91ciBXTEFOIGRyaXZlciB3aGljaCBpcyBhbiBvcGVuIHNvdXJjZSBkcml2ZXIu
+IFdMQU4gZHJpdmVyIHNoYWxsIGludm9rZSB0aGlzIGV2ZW50IEFQSSB0byBwYXNzIGZyZXF1ZW5j
+eSBpbmZvcm1hdGlvbiB0byBXUEEgU3VwcGxpY2FudC4gV2UgYWxzbyBoYXZlIGEgcGF0Y2ggcmVh
+ZHkgZm9yIFdQQSBzdXBwbGljYW50IHdoaWNoIEpvdW5pIHdvdWxkIHVwc3RyZWFtIG9uY2Uga2Vy
+bmVsIHBhdGNoIGlzIGJsZXNzZWQgYW5kIHVwIHN0cmVhbWVkLg0KDQpJIHdpbGwgcmVtb3ZlIGZp
+ZWxkICJpbnRlcmZlcmVuY2Vfc291cmNlIiBhbmQgc2VuZCByZXZpc2VkIHBhdGNoIGFuZCBhbHNv
+IGluY29ycG9yYXRlIHlvdXIgb3RoZXIgY29tbWVudHMuIFBsLiBkbyBsZXQgdXMga25vdyBpZiB5
+b3Ugc3RpbGwgc2VlIGFueSBpc3N1ZS4NCg0KUmVnYXJkcywNClJhamVzaCBDaGF1aGFuDQoNCg0K
+LS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEpvaGFubmVzIEJlcmcgW21haWx0bzpq
+b2hhbm5lc0BzaXBzb2x1dGlvbnMubmV0XSANClNlbnQ6IFdlZG5lc2RheSwgRGVjZW1iZXIgMDQs
+IDIwMTMgMTI6MjEgQU0NClRvOiBMdWlzIFIuIFJvZHJpZ3Vleg0KQ2M6IENoYXVoYW4sIFJhamVz
+aDsgbGludXgtd2lyZWxlc3M7IE1hbGluZW4sIEpvdW5pOyBCQUhJTkksIEhlbnJpOyBKb2huc29u
+LCBKZWZmOyBDaGFuZywgTGVvOyBMdW8sIFh1bjsgVGhhbGFwcGlsLCBTYW1lZXI7IEh1c3NhaW4s
+IEFyaWYNClN1YmplY3Q6IFJlOiBbUEFUQ0h2M10gY2ZnODAyMTE6IGFkZCBzdXBwb3J0IGZvciBm
+cmVxdWVuY3kgaW50ZXJmZXJlbmNlIGV2ZW50DQoNCk9uIFdlZCwgMjAxMy0xMi0wNCBhdCAwOToy
+MCArMDEwMCwgSm9oYW5uZXMgQmVyZyB3cm90ZToNCj4gT24gVHVlLCAyMDEzLTEyLTAzIGF0IDE3
+OjM1ICswMTAwLCBMdWlzIFIuIFJvZHJpZ3VleiB3cm90ZToNCj4gPiBPbiBUdWUsIERlYyAzLCAy
+MDEzIGF0IDI6MjUgUE0sIEpvaGFubmVzIEJlcmcgPGpvaGFubmVzQHNpcHNvbHV0aW9ucy5uZXQ+
+IHdyb3RlOg0KPiA+ID4+ICsgKiBAaW50ZXJmZXJlbmNlX3NvdXJjZTogZW51bSBubDgwMjExX2Zy
+ZXFfaW50ZXJmZXJlbmNlX3NvdXJjZV90eXBlDQo+ID4gPj4gKyAqICAgaXMgdXNlZCB0byBzcGVj
+aWZ5IHNvdXJjZSBvZiBpbnRlcmZlcmVuY2UuDQo+ID4gPg0KPiA+ID4gRG8gd2UgZXhwZWN0IHRo
+YXQgZGlmZmVyZW50IHNvdXJjZXMgd291bGQgYmUgdHJlYXRlZCBkaWZmZXJlbnRseT8gDQo+ID4g
+PiBJZiBub3QsIHdoYXQgdXNlIGlzIHRoaXM/DQo+ID4gDQo+ID4gVGhhdCB3YXMgYmVjYXVzZSBv
+ZiBteSBuYWdnaW5nLCB3aXRob3V0IHN1Y2ggYSBmaWVsZCB0aGUgdHlwZSBvZiANCj4gPiBpbnRl
+cmZlcmVuY2Ugd291bGQgYmUgY29tcGxldGVseSBhbWJpZ3VvdXMgYW5kIHdlJ2QgaGF2ZSBubyB1
+c2VycyBvbiANCj4gPiB0aGUgTGludXgga2VybmVsIG9mIHRoaXMgQVBJLA0KPiANCj4gV2FpdCwg
+d2UgaGF2ZSBubyB1c2VycyBmb3IgdGhpcyBBUEk/IEZvcmdldCBpdCB0aGVuIC0gSSB0aG91Z2h0
+IHlvdSANCj4gd2VyZSBnb2luZyB0byBwb3N0IGEgcGF0Y2ggc29vbi4gSSBndWVzcyBJIHNob3Vs
+ZCBoYXZlIGxlYXJuZWQgYnkgbm93IA0KPiBub3QgdG8gdHJ1c3QgUUNBIHdpdGggdGhpcy4NCj4g
+DQo+IEknbGwgZHJvcCB0aGlzIHVudGlsIEkgc2VlIGEgcGF0Y2ggdXNpbmcgaXQuDQoNCllvdSBj
+YW4gc2VlIHRoaXMgYXMgYSBjYXJyb3QgKG9yIHN0aWNrLCBkZXBlbmRpbmcgb24gaG93IHlvdSBs
+b29rIGF0IGl0KSBmb3IgdXBzdHJlYW1pbmcgdGhlIGRyaXZlciB0aGF0IHdhbnRzIGl0Lg0KDQpq
+b2hhbm5lcw0KDQo=
