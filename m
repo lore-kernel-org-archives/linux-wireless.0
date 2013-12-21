@@ -1,79 +1,407 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:5818 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752704Ab3LYDao (ORCPT
+Received: from mail-ea0-f180.google.com ([209.85.215.180]:60536 "EHLO
+	mail-ea0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755414Ab3LUTZ7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Dec 2013 22:30:44 -0500
-Message-ID: <52BA5133.5040307@huawei.com> (sfid-20131225_043215_704942_90637B41)
-Date: Wed, 25 Dec 2013 11:29:55 +0800
-From: Ding Tianhong <dingtianhong@huawei.com>
-MIME-Version: 1.0
-To: Bing Zhao <bzhao@marvell.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>, Netdev <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH v3 17/19] mwifiex: slight optimization of addr compare
-Content-Type: text/plain; charset="UTF-8"
+	Sat, 21 Dec 2013 14:25:59 -0500
+Received: by mail-ea0-f180.google.com with SMTP id f15so1650404eak.39
+        for <linux-wireless@vger.kernel.org>; Sat, 21 Dec 2013 11:25:57 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH] ath10k: add set_bitrate_mask callback
+Date: Sat, 21 Dec 2013 20:25:46 +0100
+Message-Id: <1387653946-2988-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131221_202616_512220_51829C87)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use possibly more efficient ether_addr_equal
-instead of memcmp.
+Add set_bitrate_mask callback. Currently
+ath10k HW is limited to handle only single
+fixed rate setting or limit number of used
+spatial streams.
 
-Cc: Bing Zhao <bzhao@marvell.com>
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Signed-off-by: Weilong Chen <chenweilong@huawei.com>
-Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+Example:
+iw wlanX set bitrates legacy-5 ht-mcs-5 vht-mcs-5 2:9
+will setup VHT, nss=2, mcs=9
+
+iw wlanX set bitrates legacy-5 18 ht-mcs-5 vht-mcs-5
+will setup legacy, 18Mbps
+
+iw wlanX set bitrates legacy-5 ht-mcs-5 3 vht-mcs-5
+will setup HT, nss=1, mcs=3
+
+iw wlanX set bitrate legacy-5 ht-mcs-5 vht-mcs-5 1:0-9
+will setup nss=1
+
+iw wlanX set bitrate legacy-5 ht-mcs-5 vht-mcs-5 1:0-9 2:0-9
+will setup nss=2
+
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
- drivers/net/wireless/mwifiex/11n.c         | 2 +-
- drivers/net/wireless/mwifiex/sta_cmdresp.c | 3 +--
- drivers/net/wireless/mwifiex/sta_rx.c      | 2 +-
- 3 files changed, 3 insertions(+), 4 deletions(-)
+Depends on, nl80211: add VHT support for set_bitrate_mask
+iw setup example base on, iw: add VHT MCS/NSS set support to set bitrates
 
-diff --git a/drivers/net/wireless/mwifiex/11n.c b/drivers/net/wireless/mwifiex/11n.c
-index 0b803c0..6261f8c 100644
---- a/drivers/net/wireless/mwifiex/11n.c
-+++ b/drivers/net/wireless/mwifiex/11n.c
-@@ -483,7 +483,7 @@ mwifiex_get_ba_tbl(struct mwifiex_private *priv, int tid, u8 *ra)
+ drivers/net/wireless/ath/ath10k/core.h |    3 +
+ drivers/net/wireless/ath/ath10k/mac.c  |  294 ++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h  |   18 ++
+ 3 files changed, 315 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 79726e0..3817e32 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -253,6 +253,9 @@ struct ath10k_vif {
+ 			u8 bssid[ETH_ALEN];
+ 		} ibss;
+ 	} u;
++
++	u8 fixed_rate;
++	u8 fixed_nss;
+ };
  
- 	spin_lock_irqsave(&priv->tx_ba_stream_tbl_lock, flags);
- 	list_for_each_entry(tx_ba_tsr_tbl, &priv->tx_ba_stream_tbl_ptr, list) {
--		if (!memcmp(tx_ba_tsr_tbl->ra, ra, ETH_ALEN) &&
-+		if (ether_addr_equal_unaligned(tx_ba_tsr_tbl->ra, ra) &&
- 		    tx_ba_tsr_tbl->tid == tid) {
- 			spin_unlock_irqrestore(&priv->tx_ba_stream_tbl_lock,
- 					       flags);
-diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-index 5511946..24523e4 100644
---- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
-+++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-@@ -782,8 +782,7 @@ static int mwifiex_ret_ibss_coalescing_status(struct mwifiex_private *priv,
- 	}
+ struct ath10k_vif_iter {
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index ce9ef349..5d289d4 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3310,6 +3310,299 @@ exit:
+ 	return ret;
+ }
  
- 	/* If BSSID is diff, modify current BSS parameters */
--	if (memcmp(priv->curr_bss_params.bss_descriptor.mac_address,
--		   ibss_coal_resp->bssid, ETH_ALEN)) {
-+	if (!ether_addr_equal(priv->curr_bss_params.bss_descriptor.mac_address, ibss_coal_resp->bssid)) {
- 		/* BSSID */
- 		memcpy(priv->curr_bss_params.bss_descriptor.mac_address,
- 		       ibss_coal_resp->bssid, ETH_ALEN);
-diff --git a/drivers/net/wireless/mwifiex/sta_rx.c b/drivers/net/wireless/mwifiex/sta_rx.c
-index 0bb510d..4651d67 100644
---- a/drivers/net/wireless/mwifiex/sta_rx.c
-+++ b/drivers/net/wireless/mwifiex/sta_rx.c
-@@ -224,7 +224,7 @@ int mwifiex_process_sta_rx_packet(struct mwifiex_private *priv,
- 	 * directly to os. Don't pass thru rx reordering
- 	 */
- 	if (!IS_11N_ENABLED(priv) ||
--	    memcmp(priv->curr_addr, rx_pkt_hdr->eth803_hdr.h_dest, ETH_ALEN)) {
-+	    !ether_addr_equal_unaligned(priv->curr_addr, rx_pkt_hdr->eth803_hdr.h_dest)) {
- 		mwifiex_process_rx_packet(priv, skb);
- 		return ret;
- 	}
++/* Helper table for legacy fixed_rate/bitrate_mask */
++static const u8 cck_ofdm_rate[] = {
++	/* CCK */
++	3, /* 1Mbps */
++	2, /* 2Mbps */
++	1, /* 5.5Mbps */
++	0, /* 11Mbps */
++	/* OFDM */
++	3, /* 6Mbps */
++	7, /* 9Mbps */
++	2, /* 12Mbps */
++	6, /* 18Mbps */
++	1, /* 24Mbps */
++	5, /* 36Mbps */
++	0, /* 48Mbps */
++	4, /* 54Mbps */
++};
++
++/* Check if only one bit set */
++static int ath10k_check_single_mask(u32 mask)
++{
++	int bit;
++
++	bit = ffs(mask);
++	if (!bit)
++		return 0;
++
++	mask &= ~BIT(bit - 1);
++	if (mask)
++		return 2;
++
++	return 1;
++}
++
++static bool
++ath10k_default_bitrate_mask(struct ath10k *ar,
++			    enum ieee80211_band band,
++			    const struct cfg80211_bitrate_mask *mask)
++{
++	u32 legacy = 0x00ff;
++	u8 ht = 0xff, i;
++	u16 vht = 0x3ff;
++
++	switch (band) {
++	case IEEE80211_BAND_2GHZ:
++		legacy = 0x00fff;
++		vht = 0;
++		break;
++	case IEEE80211_BAND_5GHZ:
++		break;
++	default:
++		return false;
++	}
++
++	if (mask->control[band].legacy != legacy)
++		return false;
++
++	for (i = 0; i < ar->num_rf_chains; i++)
++		if (mask->control[band].ht_mcs[i] != ht)
++			return false;
++
++	for (i = 0; i < ar->num_rf_chains; i++)
++		if (mask->control[band].vht_mcs[i] != vht)
++			return false;
++
++	return true;
++}
++
++static bool
++ath10k_bitrate_mask_nss(const struct cfg80211_bitrate_mask *mask,
++			enum ieee80211_band band,
++			u8 *fixed_nss)
++{
++	int ht_nss = 0, vht_nss = 0, i;
++
++	/* check legacy */
++	if (ath10k_check_single_mask(mask->control[band].legacy))
++		return false;
++
++	/* check HT */
++	for (i = 0; i < IEEE80211_HT_MCS_MASK_LEN; i++) {
++		if (mask->control[band].ht_mcs[i] == 0xff)
++			continue;
++		else if (mask->control[band].ht_mcs[i] == 0x00)
++			break;
++		else
++			return false;
++	}
++
++	ht_nss = i;
++
++	/* check VHT */
++	for (i = 0; i < NL80211_VHT_NSS_MAX; i++) {
++		if (mask->control[band].vht_mcs[i] == 0x03ff)
++			continue;
++		else if (mask->control[band].vht_mcs[i] == 0x0000)
++			break;
++		else
++			return false;
++	}
++
++	vht_nss = i;
++
++	if (ht_nss > 0 && vht_nss > 0)
++		return false;
++
++	if (ht_nss)
++		*fixed_nss = ht_nss;
++	else if (vht_nss)
++		*fixed_nss = vht_nss;
++	else
++		return false;
++
++	return true;
++}
++
++static bool
++ath10k_bitrate_mask_correct(const struct cfg80211_bitrate_mask *mask,
++			    enum ieee80211_band band,
++			    enum wmi_rate_preamble *preamble)
++{
++	int legacy = 0, ht = 0, vht = 0, i;
++
++	*preamble = WMI_RATE_PREAMBLE_OFDM;
++
++	/* check legacy */
++	legacy = ath10k_check_single_mask(mask->control[band].legacy);
++	if (legacy > 1)
++		return false;
++
++	/* check HT */
++	for (i = 0; i < IEEE80211_HT_MCS_MASK_LEN; i++)
++		ht += ath10k_check_single_mask(mask->control[band].ht_mcs[i]);
++	if (ht > 1)
++		return false;
++
++	/* check VHT */
++	for (i = 0; i < NL80211_VHT_NSS_MAX; i++)
++		vht += ath10k_check_single_mask(mask->control[band].vht_mcs[i]);
++	if (vht > 1)
++		return false;
++
++	/* Currently we support only one fixed_rate */
++	if ((legacy + ht + vht) != 1)
++		return false;
++
++	if (ht)
++		*preamble = WMI_RATE_PREAMBLE_HT;
++	else if (vht)
++		*preamble = WMI_RATE_PREAMBLE_VHT;
++
++	return true;
++}
++
++static bool
++ath10k_bitrate_mask_rate(const struct cfg80211_bitrate_mask *mask,
++			 enum ieee80211_band band,
++			 u8 *fixed_rate,
++			 u8 *fixed_nss)
++{
++	u8 rate = 0, pream = 0, nss = 0, i;
++	enum wmi_rate_preamble preamble;
++
++	/* Check if single rate correct */
++	if (!ath10k_bitrate_mask_correct(mask, band, &preamble))
++		return false;
++
++	pream = preamble;
++
++	switch (preamble) {
++	case WMI_RATE_PREAMBLE_CCK:
++	case WMI_RATE_PREAMBLE_OFDM:
++		i = ffs(mask->control[band].legacy) - 1;
++
++		if (band == IEEE80211_BAND_2GHZ && i < 4)
++			pream = WMI_RATE_PREAMBLE_CCK;
++
++		if (band == IEEE80211_BAND_5GHZ)
++			i += 4;
++
++		WARN_ON(i >= ARRAY_SIZE(cck_ofdm_rate));
++		rate = cck_ofdm_rate[i];
++		break;
++	case WMI_RATE_PREAMBLE_HT:
++		for (i = 0; i < IEEE80211_HT_MCS_MASK_LEN; i++)
++			if (mask->control[band].ht_mcs[i])
++				break;
++
++		rate = ffs(mask->control[band].ht_mcs[i]) - 1;
++		nss = i;
++		break;
++	case WMI_RATE_PREAMBLE_VHT:
++		for (i = 0; i < NL80211_VHT_NSS_MAX; i++)
++			if (mask->control[band].vht_mcs[i])
++				break;
++
++		rate = ffs(mask->control[band].vht_mcs[i]) - 1;
++		nss = i;
++		break;
++	}
++
++	*fixed_nss = nss + 1;
++	nss <<= 4;
++	pream <<= 6;
++
++	ath10k_dbg(ATH10K_DBG_MAC, "mac fixed rate pream 0x%02x nss 0x%02x rate 0x%02x\n",
++		   pream, nss, rate);
++
++	*fixed_rate = pream | nss | rate;
++
++	return true;
++}
++
++static bool ath10k_get_fixed_rate_nss(const struct cfg80211_bitrate_mask *mask,
++				      enum ieee80211_band band,
++				      u8 *fixed_rate,
++				      u8 *fixed_nss)
++{
++	/* First check full NSS mask, if we can simply limit NSS */
++	if (ath10k_bitrate_mask_nss(mask, band, fixed_nss))
++		return true;
++
++	/* Next Check single rate is set */
++	return ath10k_bitrate_mask_rate(mask, band, fixed_rate, fixed_nss);
++}
++
++static int ath10k_set_fixed_rate_param(struct ath10k_vif *arvif,
++				       u8 fixed_rate,
++				       u8 fixed_nss)
++{
++	struct ath10k *ar = arvif->ar;
++	u32 vdev_param;
++	int ret = 0;
++
++	mutex_lock(&ar->conf_mutex);
++
++	if (arvif->fixed_rate == fixed_rate &&
++	    arvif->fixed_nss == fixed_nss)
++		goto exit;
++
++	if (fixed_rate == WMI_FIXED_RATE_NONE)
++		ath10k_dbg(ATH10K_DBG_MAC, "mac disable fixed bitrate mask\n");
++
++	vdev_param = ar->wmi.vdev_param->fixed_rate;
++	ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id,
++					vdev_param, fixed_rate);
++	if (ret) {
++		ath10k_warn("Could not set fixed_rate param 0x%02x: %d\n",
++			    fixed_rate, ret);
++		ret = -EINVAL;
++		goto exit;
++	}
++
++	arvif->fixed_rate = fixed_rate;
++
++	vdev_param = ar->wmi.vdev_param->nss;
++	ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id,
++					vdev_param, fixed_nss);
++
++	if (ret) {
++		ath10k_warn("Could not set fixed_nss param %d: %d\n",
++			    fixed_nss, ret);
++		ret = -EINVAL;
++		goto exit;
++	}
++
++	arvif->fixed_nss = fixed_nss;
++
++exit:
++	mutex_unlock(&ar->conf_mutex);
++	return ret;
++}
++
++static int ath10k_set_bitrate_mask(struct ieee80211_hw *hw,
++				   struct ieee80211_vif *vif,
++				   const struct cfg80211_bitrate_mask *mask)
++{
++	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
++	struct ath10k *ar = arvif->ar;
++	enum ieee80211_band band = ar->hw->conf.chandef.chan->band;
++	struct wmi_vdev_fixed_rate fixed_rate = { .rate = WMI_FIXED_RATE_NONE };
++	u8 fixed_nss = ar->num_rf_chains;
++
++	if (!ath10k_default_bitrate_mask(ar, band, mask)) {
++		if (!ath10k_get_fixed_rate_nss(mask, band,
++					       &fixed_rate.rate,
++					       &fixed_nss))
++			return -EINVAL;
++	}
++
++	return ath10k_set_fixed_rate_param(arvif, fixed_rate.rate, fixed_nss);
++}
++
+ static const struct ieee80211_ops ath10k_ops = {
+ 	.tx				= ath10k_tx,
+ 	.start				= ath10k_start,
+@@ -3332,6 +3625,7 @@ static const struct ieee80211_ops ath10k_ops = {
+ 	.tx_last_beacon			= ath10k_tx_last_beacon,
+ 	.restart_complete		= ath10k_restart_complete,
+ 	.get_survey			= ath10k_get_survey,
++	.set_bitrate_mask		= ath10k_set_bitrate_mask,
+ #ifdef CONFIG_PM
+ 	.suspend			= ath10k_suspend,
+ 	.resume				= ath10k_resume,
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 0087d69..ee9afb9 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -3003,6 +3003,24 @@ struct wmi_vdev_install_key_arg {
+ 	const void *key_data;
+ };
+ 
++/*
++ * CCK:  0 - 11Mbps, 1 - 5,5Mbps, 2 - 2Mbps, 3 - 1Mbps,
++ *       4 - 11Mbps (s), 5 - 5,5Mbps (s), 6 - 2Mbps (s)
++ * OFDM: 0 - 48Mbps, 1 - 24Mbps, 2 - 12Mbps, 3 - 6Mbps,
++ *       4 - 54Mbps, 5 - 36Mbps, 6 - 18Mbps, 7 - 9Mbps
++ * HT/VHT: MCS index
++ */
++struct wmi_vdev_fixed_rate {
++	union {
++		u8 rate;
++		struct {
++			u8 preamble:2, /* %WMI_RATE_PREAMBLE_ */
++			   nss:2,
++			   rate_mcs:4; /* see above */
++		} __packed;
++	} __packed;
++} __packed;
++
+ /* Preamble types to be used with VDEV fixed rate configuration */
+ enum wmi_rate_preamble {
+ 	WMI_RATE_PREAMBLE_OFDM,
 -- 
-1.8.0
-
+1.7.9.5
 
