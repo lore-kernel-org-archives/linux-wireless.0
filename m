@@ -1,50 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f181.google.com ([209.85.215.181]:50695 "EHLO
-	mail-ea0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751000Ab3LEF5V (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:49324 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750877Ab3LWHTc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 00:57:21 -0500
-Received: by mail-ea0-f181.google.com with SMTP id m10so11199749eaj.12
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Dec 2013 21:57:20 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: fix WEP Shared authentication
-Date: Thu,  5 Dec 2013 06:53:41 +0100
-Message-Id: <1386222821-3062-1-git-send-email-michal.kazior@tieto.com> (sfid-20131205_065725_028373_ED0F7CCD)
+	Mon, 23 Dec 2013 02:19:32 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org
+Subject: [RFC 5/9] ath9k: Fix PHY restart workaround
+Date: Mon, 23 Dec 2013 12:44:22 +0530
+Message-Id: <1387782866-19847-6-git-send-email-sujith@msujith.org> (sfid-20131223_081938_275152_A565AF13)
+In-Reply-To: <1387782866-19847-1-git-send-email-sujith@msujith.org>
+References: <1387782866-19847-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Frames received from FW were treated incorrectly.
-This led to stations being unable to associate to
-WEP Shared ath10k AP. This was indicated by a
-bizarre hostapd message:
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-  Unsupported authentication algorithm (36088)
+The PHY restart workaround that handles baseband hangs
+for packets with unsupported rates is required only
+for a HW bug in AR9300 v2.2. All the subsequent chips in
+the AR9003 family do not require this driver fix since
+it has been addressed in the HW.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Since the value of the AR_PHY_RESTART register is written
+with the default initvals, make sure that PHY restart is
+always disabled once this particular BB hang signaure has
+been encountered.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath10k/wmi.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c | 17 ++++++++---------
+ drivers/net/wireless/ath/ath9k/hw.c         |  5 +++--
+ 2 files changed, 11 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index c654137..ce6475a 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -937,7 +937,11 @@ static int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
- 	hdr = (struct ieee80211_hdr *)skb->data;
- 	fc = le16_to_cpu(hdr->frame_control);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index 9f051a0..b020331 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -1930,6 +1930,7 @@ EXPORT_SYMBOL(ar9003_hw_bb_watchdog_dbg_info);
  
--	if (fc & IEEE80211_FCTL_PROTECTED) {
-+	/* FW delivers WEP Shared Auth frame with Protected Bit set and
-+	 * encrypted payload. However in case of PMF it delivers decrypted
-+	 * frames with Protected Bit set. */
-+	if (ieee80211_has_protected(hdr->frame_control) &&
-+	    !ieee80211_is_auth(hdr->frame_control)) {
- 		status->flag |= RX_FLAG_DECRYPTED | RX_FLAG_IV_STRIPPED |
- 				RX_FLAG_MMIC_STRIPPED;
- 		hdr->frame_control = __cpu_to_le16(fc &
+ void ar9003_hw_disable_phy_restart(struct ath_hw *ah)
+ {
++	u8 result;
+ 	u32 val;
+ 
+ 	/* While receiving unsupported rate frame rx state machine
+@@ -1937,15 +1938,13 @@ void ar9003_hw_disable_phy_restart(struct ath_hw *ah)
+ 	 * state, BB would go hang. If RXSM is in 0xb state after
+ 	 * first bb panic, ensure to disable the phy_restart.
+ 	 */
+-	if (!((MS(ah->bb_watchdog_last_status,
+-		  AR_PHY_WATCHDOG_RX_OFDM_SM) == 0xb) ||
+-	    ah->bb_hang_rx_ofdm))
+-		return;
+-
+-	ah->bb_hang_rx_ofdm = true;
+-	val = REG_READ(ah, AR_PHY_RESTART);
+-	val &= ~AR_PHY_RESTART_ENA;
++	result = MS(ah->bb_watchdog_last_status, AR_PHY_WATCHDOG_RX_OFDM_SM);
+ 
+-	REG_WRITE(ah, AR_PHY_RESTART, val);
++	if ((result == 0xb) || ah->bb_hang_rx_ofdm) {
++		ah->bb_hang_rx_ofdm = true;
++		val = REG_READ(ah, AR_PHY_RESTART);
++		val &= ~AR_PHY_RESTART_ENA;
++		REG_WRITE(ah, AR_PHY_RESTART, val);
++	}
+ }
+ EXPORT_SYMBOL(ar9003_hw_disable_phy_restart);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 7aa7835..fc4bb48 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1935,10 +1935,11 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	ath9k_hw_loadnf(ah, chan);
+ 	ath9k_hw_start_nfcal(ah, true);
+ 
+-	if (AR_SREV_9300_20_OR_LATER(ah)) {
++	if (AR_SREV_9300_20_OR_LATER(ah))
+ 		ar9003_hw_bb_watchdog_config(ah);
++
++	if (ah->config.hw_hang_checks & HW_PHYRESTART_CLC_WAR)
+ 		ar9003_hw_disable_phy_restart(ah);
+-	}
+ 
+ 	ath9k_hw_apply_gpio_override(ah);
+ 
 -- 
-1.8.4.rc3
+1.8.5.2
 
