@@ -1,57 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f170.google.com ([209.85.215.170]:51062 "EHLO
-	mail-ea0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752978Ab3LQUox (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:47149 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750877Ab3LWHTj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Dec 2013 15:44:53 -0500
-Received: by mail-ea0-f170.google.com with SMTP id k10so3165920eaj.1
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Dec 2013 12:44:52 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+	Mon, 23 Dec 2013 02:19:39 -0500
+From: Sujith Manoharan <sujith@msujith.org>
 To: linux-wireless@vger.kernel.org
-Cc: Eyal Shapira <eyal@wizery.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 05/36] iwlwifi: set VHT beamformee STS cap correctly
-Date: Tue, 17 Dec 2013 22:44:08 +0200
-Message-Id: <1387313079-28123-5-git-send-email-egrumbach@gmail.com> (sfid-20131217_214458_858140_10351E05)
-In-Reply-To: <52B0B72A.5070704@gmail.com>
-References: <52B0B72A.5070704@gmail.com>
+Cc: ath9k-devel@lists.ath9k.org
+Subject: [RFC 8/9] ath9k: Fix baseband watchdog reset
+Date: Mon, 23 Dec 2013 12:44:25 +0530
+Message-Id: <1387782866-19847-9-git-send-email-sujith@msujith.org> (sfid-20131223_081943_301710_EEF823C4)
+In-Reply-To: <1387782866-19847-1-git-send-email-sujith@msujith.org>
+References: <1387782866-19847-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-It was set to zero which reflects support of a single STS.
-Set according to the number of Rx antennas which correctly
-reflects the number of STSs the STA can receive in a VHT NDP.
-This improves beamforming and has been tested to improve Rx
-throughput.
+Do a HW reset only for required signatures.
 
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-nvm-parse.c |    3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/ath/ath9k/main.c | 27 +++++++++++++++++++--------
+ 1 file changed, 19 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-index 94aef22..e366f12 100644
---- a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
-@@ -263,11 +263,14 @@ static void iwl_init_vht_hw_capab(const struct iwl_cfg *cfg,
- 				  struct iwl_nvm_data *data,
- 				  struct ieee80211_sta_vht_cap *vht_cap)
- {
-+	int bf_sts_cap = num_of_ant(data->valid_rx_ant) - 1;
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 894c892..24e2654 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -448,14 +448,8 @@ void ath9k_tasklet(unsigned long data)
+ 	ath9k_ps_wakeup(sc);
+ 	spin_lock(&sc->sc_pcu_lock);
+ 
+-	if ((status & ATH9K_INT_FATAL) ||
+-	    (status & ATH9K_INT_BB_WATCHDOG)) {
+-
+-		if (status & ATH9K_INT_FATAL)
+-			type = RESET_TYPE_FATAL_INT;
+-		else
+-			type = RESET_TYPE_BB_WATCHDOG;
+-
++	if (status & ATH9K_INT_FATAL) {
++		type = RESET_TYPE_FATAL_INT;
+ 		ath9k_queue_reset(sc, type);
+ 
+ 		/*
+@@ -467,6 +461,23 @@ void ath9k_tasklet(unsigned long data)
+ 		goto out;
+ 	}
+ 
++	if ((ah->config.hw_hang_checks & HW_BB_WATCHDOG) &&
++	    (status & ATH9K_INT_BB_WATCHDOG)) {
++		if (ar9003_hw_bb_watchdog_check(ah)) {
++			type = RESET_TYPE_BB_WATCHDOG;
++			ath9k_queue_reset(sc, type);
 +
- 	vht_cap->vht_supported = true;
- 
- 	vht_cap->cap = IEEE80211_VHT_CAP_SHORT_GI_80 |
- 		       IEEE80211_VHT_CAP_RXSTBC_1 |
- 		       IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE |
-+		       bf_sts_cap << IEEE80211_VHT_CAP_BEAMFORMEE_STS_SHIFT |
- 		       7 << IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_SHIFT;
- 
- 	if (iwlwifi_mod_params.amsdu_size_8K)
++			/*
++			 * Increment the ref. counter here so that
++			 * interrupts are enabled in the reset routine.
++			 */
++			atomic_inc(&ah->intr_ref_cnt);
++			ath_dbg(common, ANY,
++				"BB_WATCHDOG: Skipping interrupts\n");
++			goto out;
++		}
++	}
++
+ 	spin_lock_irqsave(&sc->sc_pm_lock, flags);
+ 	if ((status & ATH9K_INT_TSFOOR) && sc->ps_enabled) {
+ 		/*
 -- 
-1.7.9.5
+1.8.5.2
 
