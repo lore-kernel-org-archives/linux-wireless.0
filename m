@@ -1,60 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f169.google.com ([209.85.217.169]:43632 "EHLO
-	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752961Ab3LZMru (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:33089 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750877Ab3LWHTZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Dec 2013 07:47:50 -0500
-Received: by mail-lb0-f169.google.com with SMTP id u14so3765278lbd.0
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Dec 2013 04:47:49 -0800 (PST)
-Message-ID: <52BC2576.3090601@cogentembedded.com> (sfid-20131226_134844_531281_75C85856)
-Date: Thu, 26 Dec 2013 16:47:50 +0400
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-MIME-Version: 1.0
-To: Ding Tianhong <dingtianhong@huawei.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3.5 18/19] rtlwifi: slight optimization of addr compare
-References: <52BC15EA.2020603@huawei.com>
-In-Reply-To: <52BC15EA.2020603@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Mon, 23 Dec 2013 02:19:25 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org
+Subject: [RFC 0/9] ath9k patches
+Date: Mon, 23 Dec 2013 12:44:17 +0530
+Message-Id: <1387782866-19847-1-git-send-email-sujith@msujith.org> (sfid-20131223_081928_794984_8CD14A6F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-On 26-12-2013 15:41, Ding Tianhong wrote:
+Hi,
 
-> Use possibly more efficient ether_addr_equal_unaligned
-> instead of memcmp.
+This series has a number of fixes for the baseband watchdog
+code and the hang signatures have been updated.
 
-> Cc: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Chaoming Li <chaoming_li@realsil.com.cn>
-> Cc: John W. Linville <linville@tuxdriver.com>
-> Cc: linux-wireless@vger.kernel.org
-> Cc: netdev@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> Signed-off-by: Weilong Chen <chenweilong@huawei.com>
-> Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
-> ---
->   drivers/net/wireless/rtlwifi/cam.c | 4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
+The RX poll routine has been removed.
 
-> diff --git a/drivers/net/wireless/rtlwifi/cam.c b/drivers/net/wireless/rtlwifi/cam.c
-> index 0e510f7..0276153 100644
-> --- a/drivers/net/wireless/rtlwifi/cam.c
-> +++ b/drivers/net/wireless/rtlwifi/cam.c
-[...]
-> @@ -335,7 +335,7 @@ void rtl_cam_del_entry(struct ieee80211_hw *hw, u8 *sta_addr)
->   		addr = rtlpriv->sec.hwsec_cam_sta_addr[i];
->   		bitmap = (rtlpriv->sec.hwsec_cam_bitmap) >> i;
->   		if (((bitmap & BIT(0)) == BIT(0)) &&
-> -		    (memcmp(addr, sta_addr, ETH_ALEN) == 0)) {
-> +		    (ether_addr_equal_unaligned(addr, sta_addr))) {
+The HW hang check function is simple now and is currently
+used only in the beacon transmission patch. For normal transmission,
+we already have the TX poll routine, but it would help to
+monitor GTT interrupts and check the HW periodically.
+We can unify the normal TX poll function and the GTT monitoring
+logic.
 
-    It's pointless to enclose function call in parens, again.
+Right now, beacon transmission doesn't have any fancy logic
+for identifying strong interference. We just do a Noise Floor
+calibration in case we miss 3 beacons. This can probably be improved
+by adjusting the immunity levels.
 
-WBR, Sergei
+Code to handle MAC/BB hangs in the AR9002 family is yet to be added.
+
+Please review !
+
+Sujith
+
+Sujith Manoharan (9):
+  ath9k: Fix max AMPDU size calculation
+  ath9k: Register supported HW hang checks
+  ath9k: Add HW callbacks for MAC/BB hang checks
+  ath9k: Fix MAC HW hang check for AR9003
+  ath9k: Fix PHY restart workaround
+  ath9k: Fix baseband watchdog interrupts
+  ath9k: Identify baseband watchdog signatures
+  ath9k: Fix baseband watchdog reset
+  ath9k: Remove RX Poll
+
+ drivers/net/wireless/ath/ath9k/ar9002_hw.c  |  15 ++++
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c  | 113 ++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c |  79 ++++++++++++++++---
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h |   2 +
+ drivers/net/wireless/ath/ath9k/ath9k.h      |   7 +-
+ drivers/net/wireless/ath/ath9k/beacon.c     |  10 ++-
+ drivers/net/wireless/ath/ath9k/hw-ops.h     |  15 ++++
+ drivers/net/wireless/ath/ath9k/hw.c         |  80 +-------------------
+ drivers/net/wireless/ath/ath9k/hw.h         |  26 +++++--
+ drivers/net/wireless/ath/ath9k/init.c       |   2 -
+ drivers/net/wireless/ath/ath9k/link.c       |  63 ++--------------
+ drivers/net/wireless/ath/ath9k/mac.c        |  24 +++++-
+ drivers/net/wireless/ath/ath9k/main.c       |  48 ++++++------
+ drivers/net/wireless/ath/ath9k/recv.c       |   4 -
+ drivers/net/wireless/ath/ath9k/reg.h        |   1 +
+ drivers/net/wireless/ath/ath9k/wow.c        |   1 -
+ drivers/net/wireless/ath/ath9k/xmit.c       |   9 +--
+ 17 files changed, 305 insertions(+), 194 deletions(-)
+
+-- 
+1.8.5.2
 
