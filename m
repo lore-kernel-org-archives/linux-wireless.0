@@ -1,121 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f44.google.com ([74.125.83.44]:64134 "EHLO
-	mail-ee0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753925Ab3LaRQN (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:42978 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752670Ab3LXFTm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Dec 2013 12:16:13 -0500
-Received: by mail-ee0-f44.google.com with SMTP id b57so5679473eek.3
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Dec 2013 09:16:12 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 08/28] iwlwifi: pcie: no need to save inta in trans_pcie
-Date: Tue, 31 Dec 2013 19:15:37 +0200
-Message-Id: <1388510157-23345-8-git-send-email-egrumbach@gmail.com> (sfid-20131231_181624_052179_8C60B293)
-In-Reply-To: <52C2FB68.2010708@gmail.com>
-References: <52C2FB68.2010708@gmail.com>
+	Tue, 24 Dec 2013 00:19:42 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 11/11] ath9k: Fix "cc_lock" usage
+Date: Tue, 24 Dec 2013 10:44:27 +0530
+Message-Id: <1387862067-25457-11-git-send-email-sujith@msujith.org> (sfid-20131224_062000_294051_54A500C9)
+In-Reply-To: <1387862067-25457-1-git-send-email-sujith@msujith.org>
+References: <1387862067-25457-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-This was useful when the handling was not in the same
-context as the interrupt cause retrieval: we could have
-several hard interrupts until the handler gets called.
-Since we retrieve the interrupt cause in the handler itself,
-there is no need to OR the interrupt causes.
+IRQ save/restore is not required for the cycle counters
+since they are accessed only from softirq and process context.
 
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/pcie/internal.h |    1 -
- drivers/net/wireless/iwlwifi/pcie/rx.c       |   22 +++++++---------------
- 2 files changed, 7 insertions(+), 16 deletions(-)
+ drivers/net/wireless/ath/ath9k/link.c |  4 ++--
+ drivers/net/wireless/ath/ath9k/main.c | 20 +++++++++-----------
+ 2 files changed, 11 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/internal.h b/drivers/net/wireless/iwlwifi/pcie/internal.h
-index 6a32ecc..9dfee7e 100644
---- a/drivers/net/wireless/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/iwlwifi/pcie/internal.h
-@@ -273,7 +273,6 @@ struct iwl_trans_pcie {
- 	__le32 *ict_tbl;
- 	dma_addr_t ict_tbl_dma;
- 	int ict_index;
--	u32 inta;
- 	bool use_ict;
- 	struct isr_statistics isr_stats;
+diff --git a/drivers/net/wireless/ath/ath9k/link.c b/drivers/net/wireless/ath/ath9k/link.c
+index c92ca81..2b909bf 100644
+--- a/drivers/net/wireless/ath/ath9k/link.c
++++ b/drivers/net/wireless/ath/ath9k/link.c
+@@ -362,10 +362,10 @@ void ath_ani_calibrate(unsigned long data)
  
-diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
-index a042c4a..9e019e5 100644
---- a/drivers/net/wireless/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
-@@ -838,18 +838,16 @@ static u32 iwl_pcie_int_cause_non_ict(struct iwl_trans *trans)
- 		 * the handler can be scheduled because of a previous
- 		 * interrupt.
- 		 */
--		if (test_bit(STATUS_INT_ENABLED, &trans->status) &&
--		    !trans_pcie->inta)
-+		if (test_bit(STATUS_INT_ENABLED, &trans->status) && !inta)
- 			iwl_enable_interrupts(trans);
--		return trans_pcie->inta;
-+		return inta;
+ 	/* Call ANI routine if necessary */
+ 	if (aniflag) {
+-		spin_lock_irqsave(&common->cc_lock, flags);
++		spin_lock_bh(&common->cc_lock);
+ 		ath9k_hw_ani_monitor(ah, ah->curchan);
+ 		ath_update_survey_stats(sc);
+-		spin_unlock_irqrestore(&common->cc_lock, flags);
++		spin_unlock_bh(&common->cc_lock);
  	}
  
- 	if ((inta == 0xFFFFFFFF) || ((inta & 0xFFFFFFF0) == 0xa5a5a5a0)) {
- 		/* Hardware disappeared. It might have already raised
- 		 * an interrupt */
- 		IWL_WARN(trans, "HARDWARE GONE?? INTA == 0x%08x\n", inta);
--		trans_pcie->inta = 0xFFFFFFFF;
--		return trans_pcie->inta;
-+		return 0xFFFFFFFF;
- 	}
- 
- 	if (iwl_have_debug_level(IWL_DL_ISR))
-@@ -858,9 +856,8 @@ static u32 iwl_pcie_int_cause_non_ict(struct iwl_trans *trans)
- 			      inta, trans_pcie->inta_mask,
- 			      iwl_read32(trans, CSR_FH_INT_STATUS));
- 
--	trans_pcie->inta |= inta;
- 	/* the thread will service interrupts and re-enable them */
--	return trans_pcie->inta;
-+	return inta;
- }
- 
- /* a device (PCI-E) page is 4096 bytes long */
-@@ -934,21 +931,19 @@ static u32 iwl_pcie_int_cause_ict(struct iwl_trans *trans)
- 			      iwl_read32(trans, CSR_INT_MASK));
- 
- 	inta &= trans_pcie->inta_mask;
--	trans_pcie->inta |= inta;
- 
- 	/* iwl_pcie_tasklet() will service interrupts and re-enable them */
- 	if (likely(inta))
--		return trans_pcie->inta;
-+		return inta;
- 
-  none:
- 	/* re-enable interrupts here since we don't have anything to service.
- 	 * only Re-enable if disabled by irq.
+ 	/* Perform calibration if necessary */
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 3900fa5..5b88572 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -118,11 +118,11 @@ void ath9k_ps_wakeup(struct ath_softc *sc)
+ 	 * survey data results.
  	 */
--	if (test_bit(STATUS_INT_ENABLED, &trans->status) &&
--	    !trans_pcie->inta)
-+	if (test_bit(STATUS_INT_ENABLED, &trans->status) && !inta)
- 		iwl_enable_interrupts(trans);
+ 	if (power_mode != ATH9K_PM_AWAKE) {
+-		spin_lock(&common->cc_lock);
++		spin_lock_bh(&common->cc_lock);
+ 		ath_hw_cycle_counters_update(common);
+ 		memset(&common->cc_survey, 0, sizeof(common->cc_survey));
+ 		memset(&common->cc_ani, 0, sizeof(common->cc_ani));
+-		spin_unlock(&common->cc_lock);
++		spin_unlock_bh(&common->cc_lock);
+ 	}
  
--	return trans_pcie->inta;
-+	return inta;
+  unlock:
+@@ -157,9 +157,9 @@ void ath9k_ps_restore(struct ath_softc *sc)
+ 		goto unlock;
+ 	}
+ 
+-	spin_lock(&common->cc_lock);
++	spin_lock_bh(&common->cc_lock);
+ 	ath_hw_cycle_counters_update(common);
+-	spin_unlock(&common->cc_lock);
++	spin_unlock_bh(&common->cc_lock);
+ 
+ 	ath9k_hw_setpower(sc->sc_ah, mode);
+ 
+@@ -330,7 +330,6 @@ static int ath_set_channel(struct ath_softc *sc, struct cfg80211_chan_def *chand
+ 	struct ieee80211_hw *hw = sc->hw;
+ 	struct ath9k_channel *hchan;
+ 	struct ieee80211_channel *chan = chandef->chan;
+-	unsigned long flags;
+ 	bool offchannel;
+ 	int pos = chan->hw_value;
+ 	int old_pos = -1;
+@@ -348,9 +347,9 @@ static int ath_set_channel(struct ath_softc *sc, struct cfg80211_chan_def *chand
+ 		chan->center_freq, chandef->width);
+ 
+ 	/* update survey stats for the old channel before switching */
+-	spin_lock_irqsave(&common->cc_lock, flags);
++	spin_lock_bh(&common->cc_lock);
+ 	ath_update_survey_stats(sc);
+-	spin_unlock_irqrestore(&common->cc_lock, flags);
++	spin_unlock_bh(&common->cc_lock);
+ 
+ 	ath9k_cmn_get_channel(hw, ah, chandef);
+ 
+@@ -1789,13 +1788,12 @@ static int ath9k_get_survey(struct ieee80211_hw *hw, int idx,
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ieee80211_supported_band *sband;
+ 	struct ieee80211_channel *chan;
+-	unsigned long flags;
+ 	int pos;
+ 
+ 	if (config_enabled(CONFIG_ATH9K_TX99))
+ 		return -EOPNOTSUPP;
+ 
+-	spin_lock_irqsave(&common->cc_lock, flags);
++	spin_lock_bh(&common->cc_lock);
+ 	if (idx == 0)
+ 		ath_update_survey_stats(sc);
+ 
+@@ -1809,7 +1807,7 @@ static int ath9k_get_survey(struct ieee80211_hw *hw, int idx,
+ 		sband = hw->wiphy->bands[IEEE80211_BAND_5GHZ];
+ 
+ 	if (!sband || idx >= sband->n_channels) {
+-		spin_unlock_irqrestore(&common->cc_lock, flags);
++		spin_unlock_bh(&common->cc_lock);
+ 		return -ENOENT;
+ 	}
+ 
+@@ -1817,7 +1815,7 @@ static int ath9k_get_survey(struct ieee80211_hw *hw, int idx,
+ 	pos = chan->hw_value;
+ 	memcpy(survey, &sc->survey[pos], sizeof(*survey));
+ 	survey->channel = chan;
+-	spin_unlock_irqrestore(&common->cc_lock, flags);
++	spin_unlock_bh(&common->cc_lock);
+ 
+ 	return 0;
  }
- 
- irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
-@@ -1001,9 +996,6 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
- 		IWL_DEBUG_ISR(trans, "inta 0x%08x, enabled 0x%08x\n",
- 			      inta, iwl_read32(trans, CSR_INT_MASK));
- 
--	/* saved interrupt in inta variable now we can reset trans_pcie->inta */
--	trans_pcie->inta = 0;
--
- 	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
- 
- 	/* Now service all interrupt bits discovered above. */
 -- 
-1.7.9.5
+1.8.5.2
 
