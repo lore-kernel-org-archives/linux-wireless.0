@@ -1,223 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:43087 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752661Ab3LFLDs (ORCPT
+Received: from mail-ee0-f44.google.com ([74.125.83.44]:50383 "EHLO
+	mail-ee0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750730Ab3LXXbv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Dec 2013 06:03:48 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 05/16] ath9k: Update AR9331 v1.1 initvals
-Date: Fri,  6 Dec 2013 16:28:43 +0530
-Message-Id: <1386327534-31105-6-git-send-email-sujith@msujith.org> (sfid-20131206_120400_638989_DF126A60)
-In-Reply-To: <1386327534-31105-1-git-send-email-sujith@msujith.org>
-References: <1386327534-31105-1-git-send-email-sujith@msujith.org>
+	Tue, 24 Dec 2013 18:31:51 -0500
+Received: by mail-ee0-f44.google.com with SMTP id b57so3127907eek.3
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Dec 2013 15:31:49 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Scott S <scotta1265@gmail.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>
+Subject: Re: will rtl8192su driver work for 64-bit kernel 3.2.0-23-generic?
+Date: Wed, 25 Dec 2013 00:31:42 +0100
+Message-ID: <106771444.37oG374YIb@debian64> (sfid-20131225_003217_118259_EF9F5356)
+In-Reply-To: <CAGqmZoTrBnxcemEjc67o==K_TZCm8D+yr3BjqiaTKfXsRugaPA@mail.gmail.com>
+References: <CAGqmZoR8rXm5hNp6pMfESMM7a31aVpNeeGwxMY1Ng4sUXsJ_tg@mail.gmail.com> <3015747.JIT0jyjz1q@debian64> <CAGqmZoTrBnxcemEjc67o==K_TZCm8D+yr3BjqiaTKfXsRugaPA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Tuesday, December 24, 2013 03:59:19 PM Scott S wrote:
+> >>> I'm looking for a better driver for a Rosewill RNX-N180UBE USB wifi on
+> >>> 64-bit Linux Mint 13 (Ubuntu 12LTS Kernel 3.2.0-23) the Ubuntu driver
+> >>> is junk+10.
+> 
+> -------------------------------------
+> 
+> >in what way is it junk? Is it crashing/misbehaving, does it lack important
+> >features, is the wifi connection unstable, or is something else bothering
+> >you?
+> 
+> Well, let's see, this is a new USB antenna, but this is what I've
+> noticed so far:
+> 
+> Sometimes I get a "black screen of death" crash when watching hi-speed
+> streaming videos on Amazon or NFL.com, or during shut-down , but not
+> sure, because sometimes the message is Kernel BUG: xxxxxxx whatever
+> and  ---cut here------ and other messages... but I only get those
+> messages when this one is plugged in. (I have 2 other USB antennas
+> that I can't get to work well either, but of the 3, this one works the
+> best) hahaha :)
+> 
+> Here's some of the other problems I've noticed:
+> 
+> It doesn't turn-off from the applet (the signal strength indicator
+> always stays on, then it's locked up. Won't do jack on/off)
+> Suspend wake-up problems.
+> Crashes when uplugged, but not all the time...
+> 
+> System won't completely shutdown when plugged in or after unplugged,
+> and more error messages.
+> 
+> (I've had some success using using CTRL+ALT+PrnScr REISUB sometimes
+> for a complete shutdown.)
+> 
+> Other than that, it works great! No, really. Better than my other 2.
+> When it works, it's fast.
 
-* Update radio/baseband/gain tables.
-* Mark ar9331_modes_high_power_tx_gain_1p1 as a duplicate
-* ar9331_1p1_mac_postamble is not a duplicate.
+This is great data (do you think you could capture a few of those error
+messages?). Since all this sounds like "just" driver problems... and they
+can be fixed (or are already fixed, after all 3.2 was releases almost two
+years ago). Do you know the module name of the driver you are currently
+using? ("lsmod" can tell you that, it should be something like r8712u, 
+rtl8190n or rtl8192su). Maybe there is already an intermediate solution.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- .../net/wireless/ath/ath9k/ar9330_1p1_initvals.h   | 128 ++++-----------------
- 1 file changed, 24 insertions(+), 104 deletions(-)
+> > Oh, you can help with the rtl8192su-mac80211 driver rewrite. This would
+> > certainly make a difference :-D
+> 
+> I really wish I could. I love Linux.
+> 
+> But wait a minute, if it's doomed anyway. :/
+Wait a minute ;-).  r92su is "doomed" since it doesn't provide any major
+improvements over r8712u (apart from the cfg80211 interface). However,
+the rtl8192su-mac80211 driver is not doomed, but it needs "free hands".
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9330_1p1_initvals.h b/drivers/net/wireless/ath/ath9k/ar9330_1p1_initvals.h
-index 6e1756b..f76139b 100644
---- a/drivers/net/wireless/ath/ath9k/ar9330_1p1_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9330_1p1_initvals.h
-@@ -18,6 +18,10 @@
- #ifndef INITVALS_9330_1P1_H
- #define INITVALS_9330_1P1_H
+> Thanks for the response and Merry Christmas Happy New Year
+Thank you, the same to you.
  
-+#define ar9331_1p1_baseband_core_txfir_coeff_japan_2484 ar9300_2p2_baseband_core_txfir_coeff_japan_2484
-+
-+#define ar9331_modes_high_power_tx_gain_1p1 ar9331_modes_lowest_ob_db_tx_gain_1p1
-+
- static const u32 ar9331_1p1_baseband_postamble[][5] = {
- 	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
- 	{0x00009810, 0xd00a8005, 0xd00a8005, 0xd00a8005, 0xd00a8005},
-@@ -55,7 +59,7 @@ static const u32 ar9331_1p1_baseband_postamble[][5] = {
- 	{0x0000a284, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
- 	{0x0000a288, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
- 	{0x0000a28c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
--	{0x0000a2c4, 0x00158d18, 0x00158d18, 0x00158d18, 0x00158d18},
-+	{0x0000a2c4, 0x00158d18, 0x00158d18, 0x00058d18, 0x00058d18},
- 	{0x0000a2d0, 0x00071982, 0x00071982, 0x00071982, 0x00071982},
- 	{0x0000a2d8, 0xf999a83a, 0xf999a83a, 0xf999a83a, 0xf999a83a},
- 	{0x0000a358, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-@@ -252,7 +256,7 @@ static const u32 ar9331_modes_low_ob_db_tx_gain_1p1[][5] = {
- 	{0x0000a2e0, 0xffffcc84, 0xffffcc84, 0xffffcc84, 0xffffcc84},
- 	{0x0000a2e4, 0xfffff000, 0xfffff000, 0xfffff000, 0xfffff000},
- 	{0x0000a2e8, 0xfffe0000, 0xfffe0000, 0xfffe0000, 0xfffe0000},
--	{0x0000a410, 0x000050d7, 0x000050d7, 0x000050d0, 0x000050d0},
-+	{0x0000a410, 0x000050d7, 0x000050d7, 0x000050d4, 0x000050d4},
- 	{0x0000a500, 0x00022200, 0x00022200, 0x00000000, 0x00000000},
- 	{0x0000a504, 0x05062002, 0x05062002, 0x04000002, 0x04000002},
- 	{0x0000a508, 0x0c002e00, 0x0c002e00, 0x08000004, 0x08000004},
-@@ -337,8 +341,6 @@ static const u32 ar9331_modes_low_ob_db_tx_gain_1p1[][5] = {
- 	{0x00016284, 0x14d3f000, 0x14d3f000, 0x14d3f000, 0x14d3f000},
- };
- 
--#define ar9331_1p1_baseband_core_txfir_coeff_japan_2484 ar9462_2p0_baseband_core_txfir_coeff_japan_2484
--
- static const u32 ar9331_1p1_xtal_25M[][2] = {
- 	/* Addr      allmodes  */
- 	{0x00007038, 0x000002f8},
-@@ -373,17 +375,17 @@ static const u32 ar9331_1p1_radio_core[][2] = {
- 	{0x000160b4, 0x92480040},
- 	{0x000160c0, 0x006db6db},
- 	{0x000160c4, 0x0186db60},
--	{0x000160c8, 0x6db4db6c},
-+	{0x000160c8, 0x6db6db6c},
- 	{0x000160cc, 0x6de6c300},
- 	{0x000160d0, 0x14500820},
- 	{0x00016100, 0x04cb0001},
- 	{0x00016104, 0xfff80015},
- 	{0x00016108, 0x00080010},
- 	{0x0001610c, 0x00170000},
--	{0x00016140, 0x10800000},
-+	{0x00016140, 0x50804000},
- 	{0x00016144, 0x01884080},
- 	{0x00016148, 0x000080c0},
--	{0x00016280, 0x01000015},
-+	{0x00016280, 0x01001015},
- 	{0x00016284, 0x14d20000},
- 	{0x00016288, 0x00318000},
- 	{0x0001628c, 0x50000000},
-@@ -622,12 +624,12 @@ static const u32 ar9331_1p1_baseband_core[][2] = {
- 	{0x0000a370, 0x00000000},
- 	{0x0000a390, 0x00000001},
- 	{0x0000a394, 0x00000444},
--	{0x0000a398, 0x001f0e0f},
--	{0x0000a39c, 0x0075393f},
--	{0x0000a3a0, 0xb79f6427},
--	{0x0000a3a4, 0x00000000},
--	{0x0000a3a8, 0xaaaaaaaa},
--	{0x0000a3ac, 0x3c466478},
-+	{0x0000a398, 0x00000000},
-+	{0x0000a39c, 0x210d0401},
-+	{0x0000a3a0, 0xab9a7144},
-+	{0x0000a3a4, 0x00000011},
-+	{0x0000a3a8, 0x3c3c003d},
-+	{0x0000a3ac, 0x30310030},
- 	{0x0000a3c0, 0x20202020},
- 	{0x0000a3c4, 0x22222220},
- 	{0x0000a3c8, 0x20200020},
-@@ -686,100 +688,18 @@ static const u32 ar9331_1p1_baseband_core[][2] = {
- 	{0x0000a7dc, 0x00000001},
- };
- 
--static const u32 ar9331_modes_high_power_tx_gain_1p1[][5] = {
-+static const u32 ar9331_1p1_mac_postamble[][5] = {
- 	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
--	{0x0000a2d8, 0x7999a83a, 0x7999a83a, 0x7999a83a, 0x7999a83a},
--	{0x0000a2dc, 0xffff2a52, 0xffff2a52, 0xffff2a52, 0xffff2a52},
--	{0x0000a2e0, 0xffffcc84, 0xffffcc84, 0xffffcc84, 0xffffcc84},
--	{0x0000a2e4, 0xfffff000, 0xfffff000, 0xfffff000, 0xfffff000},
--	{0x0000a2e8, 0xfffe0000, 0xfffe0000, 0xfffe0000, 0xfffe0000},
--	{0x0000a410, 0x000050d7, 0x000050d7, 0x000050d0, 0x000050d0},
--	{0x0000a500, 0x00022200, 0x00022200, 0x00000000, 0x00000000},
--	{0x0000a504, 0x05062002, 0x05062002, 0x04000002, 0x04000002},
--	{0x0000a508, 0x0c002e00, 0x0c002e00, 0x08000004, 0x08000004},
--	{0x0000a50c, 0x11062202, 0x11062202, 0x0d000200, 0x0d000200},
--	{0x0000a510, 0x17022e00, 0x17022e00, 0x11000202, 0x11000202},
--	{0x0000a514, 0x1d000ec2, 0x1d000ec2, 0x15000400, 0x15000400},
--	{0x0000a518, 0x25020ec0, 0x25020ec0, 0x19000402, 0x19000402},
--	{0x0000a51c, 0x2b020ec3, 0x2b020ec3, 0x1d000404, 0x1d000404},
--	{0x0000a520, 0x2f001f04, 0x2f001f04, 0x23000a00, 0x23000a00},
--	{0x0000a524, 0x35001fc4, 0x35001fc4, 0x27000a02, 0x27000a02},
--	{0x0000a528, 0x3c022f04, 0x3c022f04, 0x2b000a04, 0x2b000a04},
--	{0x0000a52c, 0x41023e85, 0x41023e85, 0x2d000a20, 0x2d000a20},
--	{0x0000a530, 0x48023ec6, 0x48023ec6, 0x31000a22, 0x31000a22},
--	{0x0000a534, 0x4d023f01, 0x4d023f01, 0x35000a24, 0x35000a24},
--	{0x0000a538, 0x53023f4b, 0x53023f4b, 0x38000a43, 0x38000a43},
--	{0x0000a53c, 0x5a027f09, 0x5a027f09, 0x3b000e42, 0x3b000e42},
--	{0x0000a540, 0x5f027fc9, 0x5f027fc9, 0x3f000e44, 0x3f000e44},
--	{0x0000a544, 0x6502feca, 0x6502feca, 0x42000e64, 0x42000e64},
--	{0x0000a548, 0x6b02ff4a, 0x6b02ff4a, 0x46000e66, 0x46000e66},
--	{0x0000a54c, 0x7203feca, 0x7203feca, 0x4a000ea6, 0x4a000ea6},
--	{0x0000a550, 0x7703ff0b, 0x7703ff0b, 0x4a000ea6, 0x4a000ea6},
--	{0x0000a554, 0x7d06ffcb, 0x7d06ffcb, 0x4a000ea6, 0x4a000ea6},
--	{0x0000a558, 0x8407ff0b, 0x8407ff0b, 0x4a000ea6, 0x4a000ea6},
--	{0x0000a55c, 0x8907ffcb, 0x8907ffcb, 0x4a000ea6, 0x4a000ea6},
--	{0x0000a560, 0x900fff0b, 0x900fff0b, 0x4a000ea6, 0x4a000ea6},
--	{0x0000a564, 0x960fffcb, 0x960fffcb, 0x4a000ea6, 0x4a000ea6},
--	{0x0000a568, 0x9c1fff0b, 0x9c1fff0b, 0x4a000ea6, 0x4a000ea6},
--	{0x0000a56c, 0x9c1fff0b, 0x9c1fff0b, 0x4a000ea6, 0x4a000ea6},
--	{0x0000a570, 0x9c1fff0b, 0x9c1fff0b, 0x4a000ea6, 0x4a000ea6},
--	{0x0000a574, 0x9c1fff0b, 0x9c1fff0b, 0x4a000ea6, 0x4a000ea6},
--	{0x0000a578, 0x9c1fff0b, 0x9c1fff0b, 0x4a000ea6, 0x4a000ea6},
--	{0x0000a57c, 0x9c1fff0b, 0x9c1fff0b, 0x4a000ea6, 0x4a000ea6},
--	{0x0000a580, 0x00022200, 0x00022200, 0x00000000, 0x00000000},
--	{0x0000a584, 0x05062002, 0x05062002, 0x04000002, 0x04000002},
--	{0x0000a588, 0x0c002e00, 0x0c002e00, 0x08000004, 0x08000004},
--	{0x0000a58c, 0x11062202, 0x11062202, 0x0b000200, 0x0b000200},
--	{0x0000a590, 0x17022e00, 0x17022e00, 0x0f000202, 0x0f000202},
--	{0x0000a594, 0x1d000ec2, 0x1d000ec2, 0x11000400, 0x11000400},
--	{0x0000a598, 0x25020ec0, 0x25020ec0, 0x15000402, 0x15000402},
--	{0x0000a59c, 0x2b020ec3, 0x2b020ec3, 0x19000404, 0x19000404},
--	{0x0000a5a0, 0x2f001f04, 0x2f001f04, 0x1b000603, 0x1b000603},
--	{0x0000a5a4, 0x35001fc4, 0x35001fc4, 0x1f000a02, 0x1f000a02},
--	{0x0000a5a8, 0x3c022f04, 0x3c022f04, 0x23000a04, 0x23000a04},
--	{0x0000a5ac, 0x41023e85, 0x41023e85, 0x26000a20, 0x26000a20},
--	{0x0000a5b0, 0x48023ec6, 0x48023ec6, 0x2a000e20, 0x2a000e20},
--	{0x0000a5b4, 0x4d023f01, 0x4d023f01, 0x2e000e22, 0x2e000e22},
--	{0x0000a5b8, 0x53023f4b, 0x53023f4b, 0x31000e24, 0x31000e24},
--	{0x0000a5bc, 0x5a027f09, 0x5a027f09, 0x34001640, 0x34001640},
--	{0x0000a5c0, 0x5f027fc9, 0x5f027fc9, 0x38001660, 0x38001660},
--	{0x0000a5c4, 0x6502feca, 0x6502feca, 0x3b001861, 0x3b001861},
--	{0x0000a5c8, 0x6b02ff4a, 0x6b02ff4a, 0x3e001a81, 0x3e001a81},
--	{0x0000a5cc, 0x7203feca, 0x7203feca, 0x42001a83, 0x42001a83},
--	{0x0000a5d0, 0x7703ff0b, 0x7703ff0b, 0x44001c84, 0x44001c84},
--	{0x0000a5d4, 0x7d06ffcb, 0x7d06ffcb, 0x48001ce3, 0x48001ce3},
--	{0x0000a5d8, 0x8407ff0b, 0x8407ff0b, 0x4c001ce5, 0x4c001ce5},
--	{0x0000a5dc, 0x8907ffcb, 0x8907ffcb, 0x50001ce9, 0x50001ce9},
--	{0x0000a5e0, 0x900fff0b, 0x900fff0b, 0x54001ceb, 0x54001ceb},
--	{0x0000a5e4, 0x960fffcb, 0x960fffcb, 0x56001eec, 0x56001eec},
--	{0x0000a5e8, 0x9c1fff0b, 0x9c1fff0b, 0x56001eec, 0x56001eec},
--	{0x0000a5ec, 0x9c1fff0b, 0x9c1fff0b, 0x56001eec, 0x56001eec},
--	{0x0000a5f0, 0x9c1fff0b, 0x9c1fff0b, 0x56001eec, 0x56001eec},
--	{0x0000a5f4, 0x9c1fff0b, 0x9c1fff0b, 0x56001eec, 0x56001eec},
--	{0x0000a5f8, 0x9c1fff0b, 0x9c1fff0b, 0x56001eec, 0x56001eec},
--	{0x0000a5fc, 0x9c1fff0b, 0x9c1fff0b, 0x56001eec, 0x56001eec},
--	{0x0000a600, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
--	{0x0000a604, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
--	{0x0000a608, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
--	{0x0000a60c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
--	{0x0000a610, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
--	{0x0000a614, 0x01404000, 0x01404000, 0x01404000, 0x01404000},
--	{0x0000a618, 0x01404501, 0x01404501, 0x01404501, 0x01404501},
--	{0x0000a61c, 0x02008802, 0x02008802, 0x02008802, 0x02008802},
--	{0x0000a620, 0x0280c802, 0x0280c802, 0x0280c802, 0x0280c802},
--	{0x0000a624, 0x03010a03, 0x03010a03, 0x03010a03, 0x03010a03},
--	{0x0000a628, 0x03010c04, 0x03010c04, 0x03010c04, 0x03010c04},
--	{0x0000a62c, 0x03010c04, 0x03010c04, 0x03010c04, 0x03010c04},
--	{0x0000a630, 0x03010c04, 0x03010c04, 0x03010c04, 0x03010c04},
--	{0x0000a634, 0x03010c04, 0x03010c04, 0x03010c04, 0x03010c04},
--	{0x0000a638, 0x03010c04, 0x03010c04, 0x03010c04, 0x03010c04},
--	{0x0000a63c, 0x03010c04, 0x03010c04, 0x03010c04, 0x03010c04},
--	{0x00016044, 0x034922db, 0x034922db, 0x034922db, 0x034922db},
--	{0x00016284, 0x14d3f000, 0x14d3f000, 0x14d3f000, 0x14d3f000},
-+	{0x00001030, 0x00000230, 0x00000460, 0x000002c0, 0x00000160},
-+	{0x00001070, 0x00000168, 0x000002d0, 0x00000318, 0x0000018c},
-+	{0x000010b0, 0x00000e60, 0x00001cc0, 0x00007c70, 0x00003e38},
-+	{0x00008014, 0x03e803e8, 0x07d007d0, 0x10801600, 0x08400b00},
-+	{0x0000801c, 0x128d8027, 0x128d804f, 0x12e00057, 0x12e0002b},
-+	{0x00008120, 0x08f04800, 0x08f04800, 0x08f04810, 0x08f04810},
-+	{0x000081d0, 0x00003210, 0x00003210, 0x0000320a, 0x0000320a},
-+	{0x00008318, 0x00003e80, 0x00007d00, 0x00006880, 0x00003440},
- };
- 
--#define ar9331_1p1_mac_postamble ar9300_2p2_mac_postamble
--
- static const u32 ar9331_1p1_soc_preamble[][2] = {
- 	/* Addr      allmodes  */
- 	{0x00007020, 0x00000000},
--- 
-1.8.4.2
-
+Christian
