@@ -1,132 +1,273 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:48776 "EHLO
+Received: from s72.web-hosting.com ([198.187.29.21]:33719 "EHLO
 	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750877Ab3LWHTg (ORCPT
+	with ESMTP id S1752287Ab3LXFTi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Dec 2013 02:19:36 -0500
+	Tue, 24 Dec 2013 00:19:38 -0500
 From: Sujith Manoharan <sujith@msujith.org>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org
-Subject: [RFC 7/9] ath9k: Identify baseband watchdog signatures
-Date: Mon, 23 Dec 2013 12:44:24 +0530
-Message-Id: <1387782866-19847-8-git-send-email-sujith@msujith.org> (sfid-20131223_081941_995592_7D1AA4C3)
-In-Reply-To: <1387782866-19847-1-git-send-email-sujith@msujith.org>
-References: <1387782866-19847-1-git-send-email-sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 09/11] ath9k: Remove RX Poll
+Date: Tue, 24 Dec 2013 10:44:25 +0530
+Message-Id: <1387862067-25457-9-git-send-email-sujith@msujith.org> (sfid-20131224_061959_465389_26D8085A)
+In-Reply-To: <1387862067-25457-1-git-send-email-sujith@msujith.org>
+References: <1387862067-25457-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-A full HW reset is not required for all baseband watchdog
-signatures. Some BB watchdog updates are benign and can
-be discarded, some require re-programming of certain registers
-and others require a chip reset.
+This patch removes the convoluted and hacky method of
+monitoring for connectivity. We rely on mac80211's connection
+loss logic and doing it in the driver is not necessary.
 
-This patch adds a routine to identify such signatures.
+The HW check for MAC/BB hangs is also simplified, there
+is no need to have a separate work instance for it.
 
 Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_phy.c | 62 +++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/ar9003_phy.h |  2 +
- drivers/net/wireless/ath/ath9k/hw.h         |  1 +
- 3 files changed, 65 insertions(+)
+ drivers/net/wireless/ath/ath9k/ath9k.h  |  7 +---
+ drivers/net/wireless/ath/ath9k/beacon.c | 10 ++++--
+ drivers/net/wireless/ath/ath9k/init.c   |  2 --
+ drivers/net/wireless/ath/ath9k/link.c   | 63 +++++----------------------------
+ drivers/net/wireless/ath/ath9k/main.c   |  7 ----
+ drivers/net/wireless/ath/ath9k/recv.c   |  4 ---
+ drivers/net/wireless/ath/ath9k/wow.c    |  1 -
+ 7 files changed, 17 insertions(+), 77 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index b020331..9b1494c 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -1814,6 +1814,68 @@ void ar9003_hw_attach_phy_ops(struct ath_hw *ah)
- 	memcpy(ah->nf_regs, ar9300_cca_regs, sizeof(ah->nf_regs));
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index f2202e7..f622a98 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -455,10 +455,8 @@ bool ath9k_csa_is_finished(struct ath_softc *sc);
+ 
+ void ath_tx_complete_poll_work(struct work_struct *work);
+ void ath_reset_work(struct work_struct *work);
+-void ath_hw_check(struct work_struct *work);
++bool ath_hw_check(struct ath_softc *sc);
+ void ath_hw_pll_work(struct work_struct *work);
+-void ath_rx_poll(unsigned long data);
+-void ath_start_rx_poll(struct ath_softc *sc, u8 nbeacon);
+ void ath_paprd_calibrate(struct work_struct *work);
+ void ath_ani_calibrate(unsigned long data);
+ void ath_start_ani(struct ath_softc *sc);
+@@ -722,12 +720,10 @@ struct ath_softc {
+ 	spinlock_t sc_pcu_lock;
+ 	struct mutex mutex;
+ 	struct work_struct paprd_work;
+-	struct work_struct hw_check_work;
+ 	struct work_struct hw_reset_work;
+ 	struct completion paprd_complete;
+ 	wait_queue_head_t tx_wait;
+ 
+-	unsigned int hw_busy_count;
+ 	unsigned long sc_flags;
+ 	unsigned long driver_data;
+ 
+@@ -761,7 +757,6 @@ struct ath_softc {
+ 	struct ath_beacon_config cur_beacon_conf;
+ 	struct delayed_work tx_complete_work;
+ 	struct delayed_work hw_pll_work;
+-	struct timer_list rx_poll_timer;
+ 	struct timer_list sleep_timer;
+ 
+ #ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 112aff7..2e8bba0 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -337,8 +337,14 @@ void ath9k_beacon_tasklet(unsigned long data)
+ 
+ 		ath9k_hw_check_nav(ah);
+ 
+-		if (!ath9k_hw_check_alive(ah))
+-			ieee80211_queue_work(sc->hw, &sc->hw_check_work);
++		/*
++		 * If the previous beacon has not been transmitted
++		 * and a MAC/BB hang has been identified, return
++		 * here because a chip reset would have been
++		 * initiated.
++		 */
++		if (!ath_hw_check(sc))
++			return;
+ 
+ 		if (sc->beacon.bmisscnt < BSTUCK_THRESH * sc->nbcnvifs) {
+ 			ath_dbg(common, BSTUCK,
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index e63465b7..f2a17fc 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -763,10 +763,8 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 
+ 	setup_timer(&sc->sleep_timer, ath_ps_full_sleep, (unsigned long)sc);
+ 	INIT_WORK(&sc->hw_reset_work, ath_reset_work);
+-	INIT_WORK(&sc->hw_check_work, ath_hw_check);
+ 	INIT_WORK(&sc->paprd_work, ath_paprd_calibrate);
+ 	INIT_DELAYED_WORK(&sc->hw_pll_work, ath_hw_pll_work);
+-	setup_timer(&sc->rx_poll_timer, ath_rx_poll, (unsigned long)sc);
+ 
+ 	/*
+ 	 * Cache line size is used to size and align various
+diff --git a/drivers/net/wireless/ath/ath9k/link.c b/drivers/net/wireless/ath/ath9k/link.c
+index aed7e29..c92ca81 100644
+--- a/drivers/net/wireless/ath/ath9k/link.c
++++ b/drivers/net/wireless/ath/ath9k/link.c
+@@ -65,50 +65,26 @@ void ath_tx_complete_poll_work(struct work_struct *work)
+ /*
+  * Checks if the BB/MAC is hung.
+  */
+-void ath_hw_check(struct work_struct *work)
++bool ath_hw_check(struct ath_softc *sc)
+ {
+-	struct ath_softc *sc = container_of(work, struct ath_softc, hw_check_work);
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+-	unsigned long flags;
+-	int busy;
+-	u8 is_alive, nbeacon = 1;
+ 	enum ath_reset_type type;
++	bool is_alive;
+ 
+ 	ath9k_ps_wakeup(sc);
++
+ 	is_alive = ath9k_hw_check_alive(sc->sc_ah);
+ 
+-	if ((is_alive && !AR_SREV_9300(sc->sc_ah)) || sc->tx99_state)
+-		goto out;
+-	else if (!is_alive && AR_SREV_9300(sc->sc_ah)) {
++	if (!is_alive) {
+ 		ath_dbg(common, RESET,
+-			"DCU stuck is detected. Schedule chip reset\n");
++			"HW hang detected, schedule chip reset\n");
+ 		type = RESET_TYPE_MAC_HANG;
+-		goto sched_reset;
+-	}
+-
+-	spin_lock_irqsave(&common->cc_lock, flags);
+-	busy = ath_update_survey_stats(sc);
+-	spin_unlock_irqrestore(&common->cc_lock, flags);
+-
+-	ath_dbg(common, RESET, "Possible baseband hang, busy=%d (try %d)\n",
+-		busy, sc->hw_busy_count + 1);
+-	if (busy >= 99) {
+-		if (++sc->hw_busy_count >= 3) {
+-			type = RESET_TYPE_BB_HANG;
+-			goto sched_reset;
+-		}
+-	} else if (busy >= 0) {
+-		sc->hw_busy_count = 0;
+-		nbeacon = 3;
++		ath9k_queue_reset(sc, type);
+ 	}
+ 
+-	ath_start_rx_poll(sc, nbeacon);
+-	goto out;
+-
+-sched_reset:
+-	ath9k_queue_reset(sc, type);
+-out:
+ 	ath9k_ps_restore(sc);
++
++	return is_alive;
  }
  
-+/*
-+ * Baseband Watchdog signatures:
-+ *
-+ * 0x04000539: BB hang when operating in HT40 DFS Channel.
-+ *             Full chip reset is not required, but a recovery
-+ *             mechanism is needed.
-+ *
-+ * 0x1300000a: Related to CAC deafness.
-+ *             Chip reset is not required.
-+ *
-+ * 0x0400000a: Related to CAC deafness.
-+ *             Full chip reset is required.
-+ *
-+ * 0x04000b09: RX state machine gets into an illegal state
-+ *             when a packet with unsupported rate is received.
-+ *             Full chip reset is required and PHY_RESTART has
-+ *             to be disabled.
-+ *
-+ * 0x04000409: Packet stuck on receive.
-+ *             Full chip reset is required for all chips except AR9340.
-+ */
-+
-+/*
-+ * ar9003_hw_bb_watchdog_check(): Returns true if a chip reset is required.
-+ */
-+bool ar9003_hw_bb_watchdog_check(struct ath_hw *ah)
-+{
-+	u32 val;
-+
-+	switch(ah->bb_watchdog_last_status) {
-+	case 0x04000539:
-+		val = REG_READ(ah, AR_PHY_RADAR_0);
-+		val &= (~AR_PHY_RADAR_0_FIRPWR);
-+		val |= SM(0x7f, AR_PHY_RADAR_0_FIRPWR);
-+		REG_WRITE(ah, AR_PHY_RADAR_0, val);
-+		udelay(1);
-+		val = REG_READ(ah, AR_PHY_RADAR_0);
-+		val &= ~AR_PHY_RADAR_0_FIRPWR;
-+		val |= SM(AR9300_DFS_FIRPWR, AR_PHY_RADAR_0_FIRPWR);
-+		REG_WRITE(ah, AR_PHY_RADAR_0, val);
-+
-+		return false;
-+	case 0x1300000a:
-+		return false;
-+	case 0x0400000a:
-+	case 0x04000b09:
-+		return true;
-+	case 0x04000409:
-+		if (AR_SREV_9340(ah))
-+			return false;
-+		else
-+			return true;
-+	default:
-+		/*
-+		 * For any other unknown signatures, do a
-+		 * full chip reset.
-+		 */
-+		return true;
-+	}
-+}
-+EXPORT_SYMBOL(ar9003_hw_bb_watchdog_check);
-+
- void ar9003_hw_bb_watchdog_config(struct ath_hw *ah)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-index 1b44171..94a8598 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-@@ -1334,4 +1334,6 @@
- #define AR_PHY_65NM_RXRF_AGC_AGC_OUT                   0x00000004
- #define AR_PHY_65NM_RXRF_AGC_AGC_OUT_S                 2
+ /*
+@@ -162,29 +138,6 @@ void ath_hw_pll_work(struct work_struct *work)
+ }
  
-+#define AR9300_DFS_FIRPWR -28
-+
- #endif  /* AR9003_PHY_H */
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index cb930d6..7632509 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -1044,6 +1044,7 @@ void ar9002_hw_enable_async_fifo(struct ath_hw *ah);
-  * Code specific to AR9003, we stuff these here to avoid callbacks
-  * for older families
+ /*
+- * RX Polling - monitors baseband hangs.
+- */
+-void ath_start_rx_poll(struct ath_softc *sc, u8 nbeacon)
+-{
+-	if (!AR_SREV_9300(sc->sc_ah))
+-		return;
+-
+-	if (!test_bit(SC_OP_PRIM_STA_VIF, &sc->sc_flags))
+-		return;
+-
+-	mod_timer(&sc->rx_poll_timer, jiffies + msecs_to_jiffies
+-		  (nbeacon * sc->cur_beacon_conf.beacon_interval));
+-}
+-
+-void ath_rx_poll(unsigned long data)
+-{
+-	struct ath_softc *sc = (struct ath_softc *)data;
+-
+-	if (!test_bit(SC_OP_INVALID, &sc->sc_flags))
+-		ieee80211_queue_work(sc->hw, &sc->hw_check_work);
+-}
+-
+-/*
+  * PA Pre-distortion.
   */
-+bool ar9003_hw_bb_watchdog_check(struct ath_hw *ah);
- void ar9003_hw_bb_watchdog_config(struct ath_hw *ah);
- void ar9003_hw_bb_watchdog_read(struct ath_hw *ah);
- void ar9003_hw_bb_watchdog_dbg_info(struct ath_hw *ah);
+ static void ath_paprd_activate(struct ath_softc *sc)
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 24e2654..212652f 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -170,7 +170,6 @@ void ath9k_ps_restore(struct ath_softc *sc)
+ static void __ath_cancel_work(struct ath_softc *sc)
+ {
+ 	cancel_work_sync(&sc->paprd_work);
+-	cancel_work_sync(&sc->hw_check_work);
+ 	cancel_delayed_work_sync(&sc->tx_complete_work);
+ 	cancel_delayed_work_sync(&sc->hw_pll_work);
+ 
+@@ -194,7 +193,6 @@ void ath_restart_work(struct ath_softc *sc)
+ 		ieee80211_queue_delayed_work(sc->hw, &sc->hw_pll_work,
+ 				     msecs_to_jiffies(ATH_PLL_WORK_INTERVAL));
+ 
+-	ath_start_rx_poll(sc, 3);
+ 	ath_start_ani(sc);
+ }
+ 
+@@ -204,11 +202,7 @@ static bool ath_prepare_reset(struct ath_softc *sc)
+ 	bool ret = true;
+ 
+ 	ieee80211_stop_queues(sc->hw);
+-
+-	sc->hw_busy_count = 0;
+ 	ath_stop_ani(sc);
+-	del_timer_sync(&sc->rx_poll_timer);
+-
+ 	ath9k_hw_disable_interrupts(ah);
+ 
+ 	if (!ath_drain_all_txq(sc))
+@@ -867,7 +861,6 @@ static void ath9k_stop(struct ieee80211_hw *hw)
+ 	mutex_lock(&sc->mutex);
+ 
+ 	ath_cancel_work(sc);
+-	del_timer_sync(&sc->rx_poll_timer);
+ 
+ 	if (test_bit(SC_OP_INVALID, &sc->sc_flags)) {
+ 		ath_dbg(common, ANY, "Device not present\n");
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 3692b2a..470e1c0 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -1077,10 +1077,6 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
+ 	}
+ 
+ 	rx_stats->is_mybeacon = ath9k_is_mybeacon(sc, hdr);
+-	if (rx_stats->is_mybeacon) {
+-		sc->hw_busy_count = 0;
+-		ath_start_rx_poll(sc, 3);
+-	}
+ 
+ 	if (ath9k_process_rate(common, hw, rx_stats, rx_status)) {
+ 		ret =-EINVAL;
+diff --git a/drivers/net/wireless/ath/ath9k/wow.c b/drivers/net/wireless/ath/ath9k/wow.c
+index f1cde81..1b3230f 100644
+--- a/drivers/net/wireless/ath/ath9k/wow.c
++++ b/drivers/net/wireless/ath/ath9k/wow.c
+@@ -197,7 +197,6 @@ int ath9k_suspend(struct ieee80211_hw *hw,
+ 
+ 	ath_cancel_work(sc);
+ 	ath_stop_ani(sc);
+-	del_timer_sync(&sc->rx_poll_timer);
+ 
+ 	if (test_bit(SC_OP_INVALID, &sc->sc_flags)) {
+ 		ath_dbg(common, ANY, "Device not present\n");
 -- 
 1.8.5.2
 
