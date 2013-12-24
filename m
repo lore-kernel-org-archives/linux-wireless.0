@@ -1,73 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:41888 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752420Ab3LFLD7 (ORCPT
+Received: from szxga01-in.huawei.com ([119.145.14.64]:35379 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752846Ab3LXLaL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Dec 2013 06:03:59 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 12/16] ath9k: Fix regulatory compliance
-Date: Fri,  6 Dec 2013 16:28:50 +0530
-Message-Id: <1386327534-31105-13-git-send-email-sujith@msujith.org> (sfid-20131206_120420_011569_12F2A71E)
-In-Reply-To: <1386327534-31105-1-git-send-email-sujith@msujith.org>
-References: <1386327534-31105-1-git-send-email-sujith@msujith.org>
+	Tue, 24 Dec 2013 06:30:11 -0500
+Message-ID: <52B97016.8080705@huawei.com> (sfid-20131224_123129_195839_23CAC080)
+Date: Tue, 24 Dec 2013 19:29:26 +0800
+From: Ding Tianhong <dingtianhong@huawei.com>
+MIME-Version: 1.0
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>, Netdev <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH v2 19/20] rtlwifi: slight optimization of addr compare
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Use possibly more efficient ether_addr_equal_unaligned
+instead of memcmp.
 
-Adjusting the CCA registers for maximum permissible
-noise floor in ETSI/Japan domains has to be done for
-all AR9003 family chips.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Weilong Chen <chenweilong@huawei.com>
+Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_phy.h | 5 +++--
- drivers/net/wireless/ath/ath9k/hw.c         | 6 +++---
- 2 files changed, 6 insertions(+), 5 deletions(-)
+ drivers/net/wireless/rtlwifi/cam.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-index 2af667b..bbbfc4d 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-@@ -341,14 +341,15 @@
- #define AR_PHY_CCA_MAX_GOOD_VAL_9300_2GHZ     -95
- #define AR_PHY_CCA_MAX_GOOD_VAL_9300_5GHZ     -100
- 
-+#define AR_PHY_CCA_MAX_GOOD_VAL_9300_FCC_2GHZ -95
-+#define AR_PHY_CCA_MAX_GOOD_VAL_9300_FCC_5GHZ -100
-+
- #define AR_PHY_CCA_NOM_VAL_9462_2GHZ          -127
- #define AR_PHY_CCA_MIN_GOOD_VAL_9462_2GHZ     -127
- #define AR_PHY_CCA_MAX_GOOD_VAL_9462_2GHZ     -60
--#define AR_PHY_CCA_MAX_GOOD_VAL_9462_FCC_2GHZ -95
- #define AR_PHY_CCA_NOM_VAL_9462_5GHZ          -127
- #define AR_PHY_CCA_MIN_GOOD_VAL_9462_5GHZ     -127
- #define AR_PHY_CCA_MAX_GOOD_VAL_9462_5GHZ     -60
--#define AR_PHY_CCA_MAX_GOOD_VAL_9462_FCC_5GHZ -100
- 
- #define AR_PHY_CCA_NOM_VAL_9330_2GHZ          -118
- 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 779d38a..4ee24b1 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -548,11 +548,11 @@ static int ath9k_hw_post_init(struct ath_hw *ah)
- 	 * EEPROM needs to be initialized before we do this.
- 	 * This is required for regulatory compliance.
- 	 */
--	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
-+	if (AR_SREV_9300_20_OR_LATER(ah)) {
- 		u16 regdmn = ah->eep_ops->get_eeprom(ah, EEP_REG_0);
- 		if ((regdmn & 0xF0) == CTL_FCC) {
--			ah->nf_2g.max = AR_PHY_CCA_MAX_GOOD_VAL_9462_FCC_2GHZ;
--			ah->nf_5g.max = AR_PHY_CCA_MAX_GOOD_VAL_9462_FCC_5GHZ;
-+			ah->nf_2g.max = AR_PHY_CCA_MAX_GOOD_VAL_9300_FCC_2GHZ;
-+			ah->nf_5g.max = AR_PHY_CCA_MAX_GOOD_VAL_9300_FCC_5GHZ;
- 		}
+diff --git a/drivers/net/wireless/rtlwifi/cam.c b/drivers/net/wireless/rtlwifi/cam.c
+index 0e510f7..0276153 100644
+--- a/drivers/net/wireless/rtlwifi/cam.c
++++ b/drivers/net/wireless/rtlwifi/cam.c
+@@ -295,7 +295,7 @@ u8 rtl_cam_get_free_entry(struct ieee80211_hw *hw, u8 *sta_addr)
+ 	/* Does STA already exist? */
+ 	for (i = 4; i < TOTAL_CAM_ENTRY; i++) {
+ 		addr = rtlpriv->sec.hwsec_cam_sta_addr[i];
+-		if (memcmp(addr, sta_addr, ETH_ALEN) == 0)
++		if (ether_addr_equal_unaligned(addr, sta_addr))
+ 			return i;
  	}
- 
+ 	/* Get a free CAM entry. */
+@@ -335,7 +335,7 @@ void rtl_cam_del_entry(struct ieee80211_hw *hw, u8 *sta_addr)
+ 		addr = rtlpriv->sec.hwsec_cam_sta_addr[i];
+ 		bitmap = (rtlpriv->sec.hwsec_cam_bitmap) >> i;
+ 		if (((bitmap & BIT(0)) == BIT(0)) &&
+-		    (memcmp(addr, sta_addr, ETH_ALEN) == 0)) {
++		    (ether_addr_equal_unaligned(addr, sta_addr))) {
+ 			/* Remove from HW Security CAM */
+ 			eth_zero_addr(rtlpriv->sec.hwsec_cam_sta_addr[i]);
+ 			rtlpriv->sec.hwsec_cam_bitmap &= ~(BIT(0) << i);
 -- 
-1.8.4.2
+1.8.0
+
 
