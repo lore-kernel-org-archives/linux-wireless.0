@@ -1,163 +1,186 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from asav4.altibox.net ([81.167.36.153]:45353 "EHLO
-	asav4.altibox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751486Ab3LRXhr (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:60839 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751185Ab3LXFTb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Dec 2013 18:37:47 -0500
-From: Henrik Austad <henrik@austad.us>
-To: linux-rt-users@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 09/10] iwlwifi: pcie: move interrupt prints to the common handler
-Date: Thu, 19 Dec 2013 00:26:04 +0100
-Message-Id: <1387409165-28319-10-git-send-email-henrik@austad.us> (sfid-20131219_003804_529291_34D8BF98)
-In-Reply-To: <1387409165-28319-1-git-send-email-henrik@austad.us>
-References: <1387409165-28319-1-git-send-email-henrik@austad.us>
+	Tue, 24 Dec 2013 00:19:31 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 02/11] ath9k: Register supported HW hang checks
+Date: Tue, 24 Dec 2013 10:44:18 +0530
+Message-Id: <1387862067-25457-2-git-send-email-sujith@msujith.org> (sfid-20131224_063435_491966_E2FC446A)
+In-Reply-To: <1387862067-25457-1-git-send-email-sujith@msujith.org>
+References: <1387862067-25457-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Handling interrupt with no cause and printing logs doesn't
-need to be ICT / non-ICT specific move this to the common
-code.
+HW hang checks have to be done on a per-chip basis.
 
-Change-Id: I741894a8079faf0bf192a63ea5f40de5d08c433c
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/pcie/rx.c |   93 +++++++++++---------------------
- 1 file changed, 31 insertions(+), 62 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9002_hw.c | 15 +++++++++++++++
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c | 21 +++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/hw-ops.h    |  5 +++++
+ drivers/net/wireless/ath/ath9k/hw.c        |  5 +----
+ drivers/net/wireless/ath/ath9k/hw.h        | 22 +++++++++++++++++-----
+ 5 files changed, 59 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
-index 4678957..0977ed5 100644
---- a/drivers/net/wireless/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
-@@ -822,45 +822,6 @@ static u32 iwl_pcie_int_cause_non_ict(struct iwl_trans *trans)
- 	/* Discover which interrupts are active/pending */
- 	inta = iwl_read32(trans, CSR_INT);
- 
--	if (inta & (~trans_pcie->inta_mask)) {
--		IWL_DEBUG_ISR(trans,
--			      "We got a masked interrupt (0x%08x)...Ack and ignore\n",
--			      inta & (~trans_pcie->inta_mask));
--		iwl_write32(trans, CSR_INT, inta & (~trans_pcie->inta_mask));
--		inta &= trans_pcie->inta_mask;
--	}
--
--	/* Ignore interrupt if there's nothing in NIC to service.
--	 * This may be due to IRQ shared with another device,
--	 * or due to sporadic interrupts thrown from our NIC. */
--	if (!inta) {
--		IWL_DEBUG_ISR(trans, "Ignore interrupt, inta == 0\n");
--		goto none;
--	}
--
--	if ((inta == 0xFFFFFFFF) || ((inta & 0xFFFFFFF0) == 0xa5a5a5a0)) {
--		/* Hardware disappeared. It might have already raised
--		 * an interrupt */
--		IWL_WARN(trans, "HARDWARE GONE?? INTA == 0x%08x\n", inta);
--		return inta;
--	}
--
--	if (iwl_have_debug_level(IWL_DL_ISR))
--		IWL_DEBUG_ISR(trans,
--			      "ISR inta 0x%08x, enabled 0x%08x, fh 0x%08x\n",
--			      inta, trans_pcie->inta_mask,
--			      iwl_read32(trans, CSR_FH_INT_STATUS));
--
--	/* the thread will service interrupts and re-enable them */
--	if (likely(inta))
--		return inta;
--
--none:
--	/* re-enable interrupts here since we don't have anything to service. */
--	/* only Re-enable if disabled by irq  and no schedules tasklet. */
--	if (test_bit(STATUS_INT_ENABLED, &trans_pcie->status) && !inta)
--		iwl_enable_interrupts(trans);
--
- 	return inta;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+index 149aba3..d480d2f 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+@@ -383,6 +383,20 @@ void ar9002_hw_enable_async_fifo(struct ath_hw *ah)
+ 	}
  }
  
-@@ -891,10 +852,8 @@ static u32 iwl_pcie_int_cause_ict(struct iwl_trans *trans)
- 	 * or due to sporadic interrupts thrown from our NIC. */
- 	read = le32_to_cpu(trans_pcie->ict_tbl[trans_pcie->ict_index]);
- 	trace_iwlwifi_dev_ict_read(trans->dev, trans_pcie->ict_index, read);
--	if (!read) {
--		IWL_DEBUG_ISR(trans, "Ignore interrupt, inta == 0\n");
--		goto none;
--	}
-+	if (!read)
-+		return 0;
- 
- 	/*
- 	 * Collect all entries up to the first 0, starting from ict_index;
-@@ -928,25 +887,6 @@ static u32 iwl_pcie_int_cause_ict(struct iwl_trans *trans)
- 		val |= 0x8000;
- 
- 	inta = (0xff & val) | ((0xff00 & val) << 16);
--	IWL_DEBUG_ISR(trans, "ISR inta 0x%08x, enabled(sw) 0x%08x ict 0x%08x\n",
--		      inta, trans_pcie->inta_mask, val);
--	if (iwl_have_debug_level(IWL_DL_ISR))
--		IWL_DEBUG_ISR(trans, "enabled(hw) 0x%08x\n",
--			      iwl_read32(trans, CSR_INT_MASK));
--
--	inta &= trans_pcie->inta_mask;
--
--	/* iwl_pcie_tasklet() will service interrupts and re-enable them */
--	if (likely(inta))
--		return inta;
--
-- none:
--	/* re-enable interrupts here since we don't have anything to service.
--	 * only Re-enable if disabled by irq.
--	 */
--	if (test_bit(STATUS_INT_ENABLED, &trans_pcie->status) && !inta)
--		iwl_enable_interrupts(trans);
--
- 	return inta;
- }
- 
-@@ -972,11 +912,40 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
- 	else
- 		inta = iwl_pcie_int_cause_non_ict(trans);
- 
-+	if (iwl_have_debug_level(IWL_DL_ISR)) {
-+		IWL_DEBUG_ISR(trans,
-+					  "ISR inta 0x%08x, enabled 0x%08x(sw), enabled(hw) 0x%08x, fh 0x%08x\n",
-+					  inta, trans_pcie->inta_mask,
-+					  iwl_read32(trans, CSR_INT_MASK),
-+					  iwl_read32(trans, CSR_FH_INT_STATUS));
-+		if (inta & (~trans_pcie->inta_mask))
-+			IWL_DEBUG_ISR(trans,
-+				      "We got a masked interrupt (0x%08x)\n",
-+				      inta & (~trans_pcie->inta_mask));
++static void ar9002_hw_init_hang_checks(struct ath_hw *ah)
++{
++	if (AR_SREV_9100(ah) || AR_SREV_9160(ah)) {
++		ah->config.hw_hang_checks |= HW_BB_RIFS_HANG;
++		ah->config.hw_hang_checks |= HW_BB_DFS_HANG;
 +	}
 +
-+	inta &= trans_pcie->inta_mask;
++	if (AR_SREV_9280(ah))
++		ah->config.hw_hang_checks |= HW_BB_RX_CLEAR_STUCK_HANG;
++
++	if (AR_SREV_5416(ah) || AR_SREV_9100(ah) || AR_SREV_9160(ah))
++		ah->config.hw_hang_checks |= HW_MAC_HANG;
++}
++
+ /* Sets up the AR5008/AR9001/AR9002 hardware familiy callbacks */
+ int ar9002_hw_attach_ops(struct ath_hw *ah)
+ {
+@@ -395,6 +409,7 @@ int ar9002_hw_attach_ops(struct ath_hw *ah)
+ 		return ret;
+ 
+ 	priv_ops->init_mode_gain_regs = ar9002_hw_init_mode_gain_regs;
++	priv_ops->init_hang_checks = ar9002_hw_init_hang_checks;
+ 
+ 	ops->config_pci_powersave = ar9002_hw_configpcipowersave;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+index 29613eb..f1d3c4a 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+@@ -872,6 +872,26 @@ static void ar9003_hw_configpcipowersave(struct ath_hw *ah,
+ 	}
+ }
+ 
++static void ar9003_hw_init_hang_checks(struct ath_hw *ah)
++{
++	/*
++	 * All chips support detection of BB/MAC hangs.
++	 */
++	ah->config.hw_hang_checks |= HW_BB_WATCHDOG;
++	ah->config.hw_hang_checks |= HW_MAC_HANG;
 +
 +	/*
-+	 * Ignore interrupt if there's nothing in NIC to service.
-+	 * This may be due to IRQ shared with another device,
-+	 * or due to sporadic interrupts thrown from our NIC.\
++	 * This is not required for AR9580 1.0
 +	 */
- 	if (!inta) {
-+		IWL_DEBUG_ISR(trans, "Ignore interrupt, inta == 0\n");
-+		/* Re-enable interrupts here since we don't have anything to service */
-+		if (test_bit(STATUS_INT_ENABLED, &trans_pcie->status))
-+			iwl_enable_interrupts(trans);
- 		spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
- 		return IRQ_NONE;
- 	}
++	if (AR_SREV_9300_22(ah))
++		ah->config.hw_hang_checks |= HW_PHYRESTART_CLC_WAR;
++
++	if (AR_SREV_9330(ah))
++		ah->bb_watchdog_timeout_ms = 85;
++	else
++		ah->bb_watchdog_timeout_ms = 25;
++}
++
+ /* Sets up the AR9003 hardware familiy callbacks */
+ void ar9003_hw_attach_ops(struct ath_hw *ah)
+ {
+@@ -880,6 +900,7 @@ void ar9003_hw_attach_ops(struct ath_hw *ah)
  
-+	if ((inta == 0xFFFFFFFF) || ((inta & 0xFFFFFFF0) == 0xa5a5a5a0)) {
-+		/* Hardware disappeared. It might have already raised an interrupt */
-+		IWL_WARN(trans, "HARDWARE GONE?? INTA == 0x%08x\n", inta);
-+	}
+ 	ar9003_hw_init_mode_regs(ah);
+ 	priv_ops->init_mode_gain_regs = ar9003_hw_init_mode_gain_regs;
++	priv_ops->init_hang_checks = ar9003_hw_init_hang_checks;
+ 
+ 	ops->config_pci_powersave = ar9003_hw_configpcipowersave;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
+index cc58a8e..bd95eae 100644
+--- a/drivers/net/wireless/ath/ath9k/hw-ops.h
++++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
+@@ -107,6 +107,11 @@ static inline void ath9k_hw_set_bt_ant_diversity(struct ath_hw *ah, bool enable)
+ 
+ /* Private hardware call ops */
+ 
++static inline void ath9k_hw_init_hang_checks(struct ath_hw *ah)
++{
++	ath9k_hw_private_ops(ah)->init_hang_checks(ah);
++}
 +
+ /* PHY ops */
+ 
+ static inline int ath9k_hw_rf_set_freq(struct ath_hw *ah,
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index a4b1ae0..d4fb74f 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -636,10 +636,7 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 	else
+ 		ah->tx_trig_level = (AR_FTRIG_512B >> AR_FTRIG_S);
+ 
+-	if (AR_SREV_9330(ah))
+-		ah->bb_watchdog_timeout_ms = 85;
+-	else
+-		ah->bb_watchdog_timeout_ms = 25;
++	ath9k_hw_init_hang_checks(ah);
+ 
+ 	common->state = ATH_HW_INITIALIZED;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 6132ffe..0a3cfc5 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -277,6 +277,21 @@ struct ath9k_hw_capabilities {
+ 	u8 txs_len;
+ };
+ 
++#define AR_NO_SPUR      	0x8000
++#define AR_BASE_FREQ_2GHZ   	2300
++#define AR_BASE_FREQ_5GHZ   	4900
++#define AR_SPUR_FEEQ_BOUND_HT40 19
++#define AR_SPUR_FEEQ_BOUND_HT20 10
 +
- 	/* Ack/clear/reset pending uCode interrupts.
- 	 * Note:  Some bits in CSR_INT are "OR" of bits in CSR_FH_INT_STATUS,
- 	 */
++enum ath9k_hw_hang_checks {
++	HW_BB_WATCHDOG            = BIT(0),
++	HW_PHYRESTART_CLC_WAR     = BIT(1),
++	HW_BB_RIFS_HANG           = BIT(2),
++	HW_BB_DFS_HANG            = BIT(3),
++	HW_BB_RX_CLEAR_STUCK_HANG = BIT(4),
++	HW_MAC_HANG               = BIT(5),
++};
++
+ struct ath9k_ops_config {
+ 	int dma_beacon_response_time;
+ 	int sw_beacon_response_time;
+@@ -292,13 +307,9 @@ struct ath9k_ops_config {
+ 	int serialize_regmode;
+ 	bool rx_intr_mitigation;
+ 	bool tx_intr_mitigation;
+-#define AR_NO_SPUR      	0x8000
+-#define AR_BASE_FREQ_2GHZ   	2300
+-#define AR_BASE_FREQ_5GHZ   	4900
+-#define AR_SPUR_FEEQ_BOUND_HT40 19
+-#define AR_SPUR_FEEQ_BOUND_HT20 10
+ 	u8 max_txtrig_level;
+ 	u16 ani_poll_interval; /* ANI poll interval in ms */
++	u16 hw_hang_checks;
+ 
+ 	/* Platform specific config */
+ 	u32 aspm_l1_fix;
+@@ -573,6 +584,7 @@ struct ath_hw_radar_conf {
+  *	register settings through the register initialization.
+  */
+ struct ath_hw_private_ops {
++	void (*init_hang_checks)(struct ath_hw *ah);
+ 	/* Calibration ops */
+ 	void (*init_cal_settings)(struct ath_hw *ah);
+ 	bool (*init_cal)(struct ath_hw *ah, struct ath9k_channel *chan);
 -- 
-1.7.10.4
+1.8.5.2
 
