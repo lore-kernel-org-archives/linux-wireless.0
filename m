@@ -1,97 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f170.google.com ([209.85.215.170]:60489 "EHLO
-	mail-ea0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756028Ab3LSMjG (ORCPT
+Received: from szxga03-in.huawei.com ([119.145.14.66]:27981 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752351Ab3LXL3W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Dec 2013 07:39:06 -0500
-Received: by mail-ea0-f170.google.com with SMTP id k10so445523eaj.15
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Dec 2013 04:39:05 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH] nl80211: add Guard Interval support for set_bitrate_mask
-Date: Thu, 19 Dec 2013 13:38:54 +0100
-Message-Id: <1387456734-2776-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131219_133913_258585_55C8DC32)
+	Tue, 24 Dec 2013 06:29:22 -0500
+Message-ID: <52B96FDA.2020009@huawei.com> (sfid-20131224_123353_763440_ADA99CFE)
+Date: Tue, 24 Dec 2013 19:28:26 +0800
+From: Ding Tianhong <dingtianhong@huawei.com>
+MIME-Version: 1.0
+To: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Netdev <netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 08/20] zd1211rw: slight optimization of addr compare
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allow to force SGI, LGI.
-Mainly for test purpose.
+Use possibly more efficient ether_addr_equal
+instead of memcmp.
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: Daniel Drake <dsd@gentoo.org>
+Cc: Ulrich Kunitz <kune@deine-taler.de>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Tan Xiaojun <tanxiaojun@huawei.com>
+Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
 ---
- include/net/cfg80211.h       |    1 +
- include/uapi/linux/nl80211.h |    8 ++++++++
- net/wireless/nl80211.c       |    3 +++
- 3 files changed, 12 insertions(+)
+ drivers/net/wireless/zd1211rw/zd_mac.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 80a1021..514c612 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1768,6 +1768,7 @@ struct cfg80211_bitrate_mask {
- 		u32 legacy;
- 		u8 ht_mcs[IEEE80211_HT_MCS_MASK_LEN];
- 		u16 vht_mcs[NL80211_VHT_NSS_MAX];
-+		enum nl80211_txrate_gi gi;
- 	} control[IEEE80211_NUM_BANDS];
- };
- /**
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index e130790..a7a8aa2 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -3114,6 +3114,7 @@ enum nl80211_key_attributes {
-  *	in an array of MCS numbers.
-  * @NL80211_TXRATE_VHT: VHT rates allowed for TX rate selection,
-  *	see &struct nl80211_txrate_vht
-+ * @NL80211_TXRATE_GI: configure GI, see &enum nl80211_txrate_gi
-  * @__NL80211_TXRATE_AFTER_LAST: internal
-  * @NL80211_TXRATE_MAX: highest TX rate attribute
-  */
-@@ -3122,6 +3123,7 @@ enum nl80211_tx_rate_attributes {
- 	NL80211_TXRATE_LEGACY,
- 	NL80211_TXRATE_HT,
- 	NL80211_TXRATE_VHT,
-+	NL80211_TXRATE_GI,
+diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
+index eff79a3..e7af261 100644
+--- a/drivers/net/wireless/zd1211rw/zd_mac.c
++++ b/drivers/net/wireless/zd1211rw/zd_mac.c
+@@ -532,9 +532,8 @@ void zd_mac_tx_failed(struct urb *urb)
+ 		tx_hdr = (struct ieee80211_hdr *)skb->data;
  
- 	/* keep last */
- 	__NL80211_TXRATE_AFTER_LAST,
-@@ -3139,6 +3141,12 @@ struct nl80211_txrate_vht {
- 	__u16 mcs[NL80211_VHT_NSS_MAX];
- };
+ 		/* we skip all frames not matching the reported destination */
+-		if (unlikely(memcmp(tx_hdr->addr1, tx_status->mac, ETH_ALEN))) {
++		if (unlikely(!ether_addr_equal(tx_hdr->addr1, tx_status->mac)))
+ 			continue;
+-		}
  
-+enum nl80211_txrate_gi {
-+	NL80211_TXRATE_DEFAULT_GI,
-+	NL80211_TXRATE_FORCE_SGI,
-+	NL80211_TXRATE_FORCE_LGI,
-+};
-+
- /**
-  * enum nl80211_band - Frequency band
-  * @NL80211_BAND_2GHZ: 2.4 GHz ISM band
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 04681a4..7e759ad8 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -7394,6 +7394,7 @@ static const struct nla_policy nl80211_txattr_policy[NL80211_TXRATE_MAX + 1] = {
- 	[NL80211_TXRATE_HT] = { .type = NLA_BINARY,
- 				.len = NL80211_MAX_SUPP_HT_RATES },
- 	[NL80211_TXRATE_VHT] = { .len = sizeof(struct nl80211_txrate_vht)},
-+	[NL80211_TXRATE_GI] = { .type = NLA_U8 },
- };
+ 		/* we skip all frames not matching the reported final rate */
  
- static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
-@@ -7474,6 +7475,8 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
- 					mask.control[band].vht_mcs))
- 				return -EINVAL;
- 		}
-+		if (tb[NL80211_TXRATE_GI])
-+			mask.control[band].gi = nla_get_u8(tb[NL80211_TXRATE_GI]);
+@@ -997,7 +996,7 @@ static int filter_ack(struct ieee80211_hw *hw, struct ieee80211_hdr *rx_hdr,
+ 		    continue;
  
- 		if (mask.control[band].legacy == 0) {
- 			/* don't allow empty legacy rates if HT or VHT
+ 		tx_hdr = (struct ieee80211_hdr *)skb->data;
+-		if (likely(!memcmp(tx_hdr->addr2, rx_hdr->addr1, ETH_ALEN)))
++		if (likely(ether_addr_equal(tx_hdr->addr2, rx_hdr->addr1)))
+ 		{
+ 			found = 1;
+ 			break;
 -- 
-1.7.9.5
+1.8.0
+
 
