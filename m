@@ -1,30 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:41436 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753685Ab3LPOJW (ORCPT
+Received: from szxga03-in.huawei.com ([119.145.14.66]:28280 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752600Ab3LXL3z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Dec 2013 09:09:22 -0500
-Message-ID: <1387202958.2057.3.camel@jlt4.sipsolutions.net> (sfid-20131216_150924_600180_743CE40D)
-Subject: Re: [PATCH v10 0/5] CSA beacon count changes
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luciano Coelho <luciano.coelho@intel.com>
-Cc: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
-	yeohchunyeow@gmail.com, yeohchunyeow@cozybit.com
-Date: Mon, 16 Dec 2013 15:09:18 +0100
-In-Reply-To: <1386962034-7141-1-git-send-email-luciano.coelho@intel.com> (sfid-20131213_201402_248218_84DAF0A4)
-References: <1386962034-7141-1-git-send-email-luciano.coelho@intel.com>
-	 (sfid-20131213_201402_248218_84DAF0A4)
+	Tue, 24 Dec 2013 06:29:55 -0500
+Message-ID: <52B97012.1010106@huawei.com> (sfid-20131224_123239_368749_E373FDB6)
+Date: Tue, 24 Dec 2013 19:29:22 +0800
+From: Ding Tianhong <dingtianhong@huawei.com>
+MIME-Version: 1.0
+To: Bing Zhao <bzhao@marvell.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>, Netdev <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH v2 18/20] mwifiex: slight optimization of addr compare
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-12-13 at 21:13 +0200, Luciano Coelho wrote:
-> A couple more changes, this time only in the commit logs.
+Use possibly more efficient ether_addr_equal
+instead of memcmp.
 
-These don't apply (any more, could be due to merging wireless-next?). I
-don't trust myself to do the needed fixups since there are a lot of odd
-mesh conflicts...
+Cc: Bing Zhao <bzhao@marvell.com>
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Weilong Chen <chenweilong@huawei.com>
+Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+---
+ drivers/net/wireless/mwifiex/11n.c         | 2 +-
+ drivers/net/wireless/mwifiex/sta_cmdresp.c | 3 +--
+ drivers/net/wireless/mwifiex/sta_rx.c      | 2 +-
+ 3 files changed, 3 insertions(+), 4 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/mwifiex/11n.c b/drivers/net/wireless/mwifiex/11n.c
+index 0b803c0..6261f8c 100644
+--- a/drivers/net/wireless/mwifiex/11n.c
++++ b/drivers/net/wireless/mwifiex/11n.c
+@@ -483,7 +483,7 @@ mwifiex_get_ba_tbl(struct mwifiex_private *priv, int tid, u8 *ra)
+ 
+ 	spin_lock_irqsave(&priv->tx_ba_stream_tbl_lock, flags);
+ 	list_for_each_entry(tx_ba_tsr_tbl, &priv->tx_ba_stream_tbl_ptr, list) {
+-		if (!memcmp(tx_ba_tsr_tbl->ra, ra, ETH_ALEN) &&
++		if (ether_addr_equal_unaligned(tx_ba_tsr_tbl->ra, ra) &&
+ 		    tx_ba_tsr_tbl->tid == tid) {
+ 			spin_unlock_irqrestore(&priv->tx_ba_stream_tbl_lock,
+ 					       flags);
+diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+index 5511946..24523e4 100644
+--- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
++++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+@@ -782,8 +782,7 @@ static int mwifiex_ret_ibss_coalescing_status(struct mwifiex_private *priv,
+ 	}
+ 
+ 	/* If BSSID is diff, modify current BSS parameters */
+-	if (memcmp(priv->curr_bss_params.bss_descriptor.mac_address,
+-		   ibss_coal_resp->bssid, ETH_ALEN)) {
++	if (!ether_addr_equal(priv->curr_bss_params.bss_descriptor.mac_address, ibss_coal_resp->bssid)) {
+ 		/* BSSID */
+ 		memcpy(priv->curr_bss_params.bss_descriptor.mac_address,
+ 		       ibss_coal_resp->bssid, ETH_ALEN);
+diff --git a/drivers/net/wireless/mwifiex/sta_rx.c b/drivers/net/wireless/mwifiex/sta_rx.c
+index 0bb510d..4651d67 100644
+--- a/drivers/net/wireless/mwifiex/sta_rx.c
++++ b/drivers/net/wireless/mwifiex/sta_rx.c
+@@ -224,7 +224,7 @@ int mwifiex_process_sta_rx_packet(struct mwifiex_private *priv,
+ 	 * directly to os. Don't pass thru rx reordering
+ 	 */
+ 	if (!IS_11N_ENABLED(priv) ||
+-	    memcmp(priv->curr_addr, rx_pkt_hdr->eth803_hdr.h_dest, ETH_ALEN)) {
++	    !ether_addr_equal_unaligned(priv->curr_addr, rx_pkt_hdr->eth803_hdr.h_dest)) {
+ 		mwifiex_process_rx_packet(priv, skb);
+ 		return ret;
+ 	}
+-- 
+1.8.0
+
 
