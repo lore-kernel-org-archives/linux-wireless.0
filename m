@@ -1,117 +1,239 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f51.google.com ([209.85.160.51]:45247 "EHLO
-	mail-pb0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750814Ab3LKEev (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:41268 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750714Ab3LXFTb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Dec 2013 23:34:51 -0500
-Received: by mail-pb0-f51.google.com with SMTP id up15so9202659pbc.10
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Dec 2013 20:34:50 -0800 (PST)
-Message-ID: <52A7EB67.7090808@lwfinger.net> (sfid-20131211_053454_736728_84048DE5)
-Date: Tue, 10 Dec 2013 22:34:47 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Kam <kampowchicken@gmail.com>, linux-wireless@vger.kernel.org
-Subject: Re: rtl8723ae owner.
-References: <loom.20131211T021101-974@post.gmane.org> <52A7DC0C.8090902@lwfinger.net> <loom.20131211T045200-389@post.gmane.org>
-In-Reply-To: <loom.20131211T045200-389@post.gmane.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 24 Dec 2013 00:19:31 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 03/11] ath9k: Add HW callbacks for MAC/BB hang checks
+Date: Tue, 24 Dec 2013 10:44:19 +0530
+Message-Id: <1387862067-25457-3-git-send-email-sujith@msujith.org> (sfid-20131224_061953_598023_36C463E8)
+In-Reply-To: <1387862067-25457-1-git-send-email-sujith@msujith.org>
+References: <1387862067-25457-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/10/2013 10:19 PM, Kam wrote:
-> Larry Finger <Larry.Finger@...> writes:
->
->>
->> On 12/10/2013 07:42 PM, Kam wrote:
->>> I have the rtl8723ae PCIe wifi card. I've read through the messages on the
->>> forums and experience similar issues to others who have inquired about the
->>> card. I experience sluggish connections and disconnects, I for the most
->>> can't connect to my school wifi at all.
->>>
->>> I switched my router to 'AP' today after reading through the posts here and
->>> initially the connection was faster than I've experienced thus far(since
->>> switching to linux last year), I ended up shutting down the computer
->>> eventually and after turning it back on few hours later, It was back to the
->>> slow sluggish connection.
->>
->> What does switching the router to 'AP' mean? If it was not an AP before, you
->> would never have been able to connect to it.
->>
->>> I've collected all the output that I could think of and wanted to contribute
->>> it in hopes that it can assist the devs in testing/debugging the issues with
->>> the card. The text file is a little but over 800 lines, so I will post it on
->>> fpaste, if this isn't acceptable please let me know and I will repost the
->>> text in preferred format. I am about ready to smoke the beacons off this
->>> thing :P.
->>
->> One thing missing in what you posted is any messages from dmesg that describe
->> the disconnects.
->>
->> The only thing I noted in your posting is that your channel is about as badly
->> chosen as is possible. Wifi is not like TV. The channel spacing is 5 MHz, but
->> the width for 802.11g is 20 MHz, and 802.11n is 40 MHz. If you do the
-> math, your
->> choice of channel 9 overlaps *every* AP in your neighborhood. At -60 dBm,
-> your
->> signal is not strong, and is even weaker than Home2.
->>
->> I would choose a channel as low as possible. That would be #1 for 802.11g.
-> Your
->> AP may not allow lower than #3 for 802.11n.
->>
->> Next, you might try loading the module with the option "ips=0". That will
->> disable power save mode, and it might help.
->>
->> I have been running a long-term test of rtl8723ae. After 100 hours, I have
-> had a
->> total of 11 disconnects. Each of them has reconnected with very little
->> interruption in service. The difference is that my channel is chosen to
-> have as
->> little interference as possible, and my signal strength is -44 dBm.
->>
->> Larry
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@...
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>
->
->
->
-> Thank you for the prompt response, I really appreciate it. And I would like
-> to apologize ahead of time in case I mess up the format.
->
->> What does switching the router to 'AP' mean? If it was not an AP before, you
->> would never have been able to connect to it.
->
-> Unfortunately my router has a check box under Advanced > Advanced Setup >
-> Wireless Settings that switches the router to AP Mode. I looked into the
-> manual after seeing the posting here and it's how I discovered it. It was
-> never checked until today.
->
->>From the manual:
-> "AP Mode. You can make the WNDR3400v2 function as an access point."
-> Page 77:
-> http://www.downloads.netgear.com/files/GDC/WNDR3400V2/WNDR3400v2_UM_23JAN2013.pdf
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-I also have a WNDR3400V2, which has been functional as a 2.4/5 GHz AP for the 
-two years that I have owned it, and that box has never been checked. I have no 
-idea what might be its effect, but it certainly was an AP before you checked 
-that box.
+This is required for adding separate hang check
+routines for AR9002 and AR9003.
 
->> The only thing I noted in your posting is that your channel is about as badly
->> chosen as is possible.
->
-> Channel selection isn't done by me, it is set to "auto" mode at the router
-> settings which explains that it will choose the best channel. I appreciate
-> you pointing that out because now it will give me more options to play
-> around with. I have seen the ips posting else where and will test this once
-> I configure the channel. Thank you.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c | 72 ++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/hw-ops.h    | 10 +++++
+ drivers/net/wireless/ath/ath9k/hw.c        | 70 -----------------------------
+ drivers/net/wireless/ath/ath9k/hw.h        |  3 ++
+ 4 files changed, 85 insertions(+), 70 deletions(-)
 
-I never select the auto channel selection. You never know what strong sources in 
-your neighborhood might be off when it makes the choice.
-
-Larry
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+index f1d3c4a..75a6d85 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+@@ -892,6 +892,77 @@ static void ar9003_hw_init_hang_checks(struct ath_hw *ah)
+ 		ah->bb_watchdog_timeout_ms = 25;
+ }
+ 
++static bool ath9k_hw_check_dcs(u32 dma_dbg, u32 num_dcu_states,
++			       int *hang_state, int *hang_pos)
++{
++	static u32 dcu_chain_state[] = {5, 6, 9}; /* DCU chain stuck states */
++	u32 chain_state, dcs_pos, i;
++
++	for (dcs_pos = 0; dcs_pos < num_dcu_states; dcs_pos++) {
++		chain_state = (dma_dbg >> (5 * dcs_pos)) & 0x1f;
++		for (i = 0; i < 3; i++) {
++			if (chain_state == dcu_chain_state[i]) {
++				*hang_state = chain_state;
++				*hang_pos = dcs_pos;
++				return true;
++			}
++		}
++	}
++	return false;
++}
++
++#define DCU_COMPLETE_STATE        1
++#define DCU_COMPLETE_STATE_MASK 0x3
++#define NUM_STATUS_READS         50
++
++static bool ar9003_hw_detect_mac_hang(struct ath_hw *ah)
++{
++	u32 chain_state, comp_state, dcs_reg = AR_DMADBG_4;
++	u32 i, hang_pos, hang_state, num_state = 6;
++
++	comp_state = REG_READ(ah, AR_DMADBG_6);
++
++	if ((comp_state & DCU_COMPLETE_STATE_MASK) != DCU_COMPLETE_STATE) {
++		ath_dbg(ath9k_hw_common(ah), RESET,
++			"MAC Hang signature not found at DCU complete\n");
++		return false;
++	}
++
++	chain_state = REG_READ(ah, dcs_reg);
++	if (ath9k_hw_check_dcs(chain_state, num_state, &hang_state, &hang_pos))
++		goto hang_check_iter;
++
++	dcs_reg = AR_DMADBG_5;
++	num_state = 4;
++	chain_state = REG_READ(ah, dcs_reg);
++	if (ath9k_hw_check_dcs(chain_state, num_state, &hang_state, &hang_pos))
++		goto hang_check_iter;
++
++	ath_dbg(ath9k_hw_common(ah), RESET,
++		"MAC Hang signature 1 not found\n");
++	return false;
++
++hang_check_iter:
++	ath_dbg(ath9k_hw_common(ah), RESET,
++		"DCU registers: chain %08x complete %08x Hang: state %d pos %d\n",
++		chain_state, comp_state, hang_state, hang_pos);
++
++	for (i = 0; i < NUM_STATUS_READS; i++) {
++		chain_state = REG_READ(ah, dcs_reg);
++		chain_state = (chain_state >> (5 * hang_pos)) & 0x1f;
++		comp_state = REG_READ(ah, AR_DMADBG_6);
++
++		if (((comp_state & DCU_COMPLETE_STATE_MASK) !=
++					DCU_COMPLETE_STATE) ||
++		    (chain_state != hang_state))
++			return false;
++	}
++
++	ath_dbg(ath9k_hw_common(ah), RESET, "MAC Hang signature 1 found\n");
++
++	return true;
++}
++
+ /* Sets up the AR9003 hardware familiy callbacks */
+ void ar9003_hw_attach_ops(struct ath_hw *ah)
+ {
+@@ -901,6 +972,7 @@ void ar9003_hw_attach_ops(struct ath_hw *ah)
+ 	ar9003_hw_init_mode_regs(ah);
+ 	priv_ops->init_mode_gain_regs = ar9003_hw_init_mode_gain_regs;
+ 	priv_ops->init_hang_checks = ar9003_hw_init_hang_checks;
++	priv_ops->detect_mac_hang = ar9003_hw_detect_mac_hang;
+ 
+ 	ops->config_pci_powersave = ar9003_hw_configpcipowersave;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
+index bd95eae..0b2550a 100644
+--- a/drivers/net/wireless/ath/ath9k/hw-ops.h
++++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
+@@ -112,6 +112,16 @@ static inline void ath9k_hw_init_hang_checks(struct ath_hw *ah)
+ 	ath9k_hw_private_ops(ah)->init_hang_checks(ah);
+ }
+ 
++static inline bool ath9k_hw_detect_mac_hang(struct ath_hw *ah)
++{
++	return ath9k_hw_private_ops(ah)->detect_mac_hang(ah);
++}
++
++static inline bool ath9k_hw_detect_bb_hang(struct ath_hw *ah)
++{
++	return ath9k_hw_private_ops(ah)->detect_bb_hang(ah);
++}
++
+ /* PHY ops */
+ 
+ static inline int ath9k_hw_rf_set_freq(struct ath_hw *ah,
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index d4fb74f..7aa7835 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1529,76 +1529,6 @@ static void ath9k_hw_apply_gpio_override(struct ath_hw *ah)
+ 	}
+ }
+ 
+-static bool ath9k_hw_check_dcs(u32 dma_dbg, u32 num_dcu_states,
+-			       int *hang_state, int *hang_pos)
+-{
+-	static u32 dcu_chain_state[] = {5, 6, 9}; /* DCU chain stuck states */
+-	u32 chain_state, dcs_pos, i;
+-
+-	for (dcs_pos = 0; dcs_pos < num_dcu_states; dcs_pos++) {
+-		chain_state = (dma_dbg >> (5 * dcs_pos)) & 0x1f;
+-		for (i = 0; i < 3; i++) {
+-			if (chain_state == dcu_chain_state[i]) {
+-				*hang_state = chain_state;
+-				*hang_pos = dcs_pos;
+-				return true;
+-			}
+-		}
+-	}
+-	return false;
+-}
+-
+-#define DCU_COMPLETE_STATE        1
+-#define DCU_COMPLETE_STATE_MASK 0x3
+-#define NUM_STATUS_READS         50
+-static bool ath9k_hw_detect_mac_hang(struct ath_hw *ah)
+-{
+-	u32 chain_state, comp_state, dcs_reg = AR_DMADBG_4;
+-	u32 i, hang_pos, hang_state, num_state = 6;
+-
+-	comp_state = REG_READ(ah, AR_DMADBG_6);
+-
+-	if ((comp_state & DCU_COMPLETE_STATE_MASK) != DCU_COMPLETE_STATE) {
+-		ath_dbg(ath9k_hw_common(ah), RESET,
+-			"MAC Hang signature not found at DCU complete\n");
+-		return false;
+-	}
+-
+-	chain_state = REG_READ(ah, dcs_reg);
+-	if (ath9k_hw_check_dcs(chain_state, num_state, &hang_state, &hang_pos))
+-		goto hang_check_iter;
+-
+-	dcs_reg = AR_DMADBG_5;
+-	num_state = 4;
+-	chain_state = REG_READ(ah, dcs_reg);
+-	if (ath9k_hw_check_dcs(chain_state, num_state, &hang_state, &hang_pos))
+-		goto hang_check_iter;
+-
+-	ath_dbg(ath9k_hw_common(ah), RESET,
+-		"MAC Hang signature 1 not found\n");
+-	return false;
+-
+-hang_check_iter:
+-	ath_dbg(ath9k_hw_common(ah), RESET,
+-		"DCU registers: chain %08x complete %08x Hang: state %d pos %d\n",
+-		chain_state, comp_state, hang_state, hang_pos);
+-
+-	for (i = 0; i < NUM_STATUS_READS; i++) {
+-		chain_state = REG_READ(ah, dcs_reg);
+-		chain_state = (chain_state >> (5 * hang_pos)) & 0x1f;
+-		comp_state = REG_READ(ah, AR_DMADBG_6);
+-
+-		if (((comp_state & DCU_COMPLETE_STATE_MASK) !=
+-					DCU_COMPLETE_STATE) ||
+-		    (chain_state != hang_state))
+-			return false;
+-	}
+-
+-	ath_dbg(ath9k_hw_common(ah), RESET, "MAC Hang signature 1 found\n");
+-
+-	return true;
+-}
+-
+ void ath9k_hw_check_nav(struct ath_hw *ah)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 0a3cfc5..cb930d6 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -585,6 +585,9 @@ struct ath_hw_radar_conf {
+  */
+ struct ath_hw_private_ops {
+ 	void (*init_hang_checks)(struct ath_hw *ah);
++	bool (*detect_mac_hang)(struct ath_hw *ah);
++	bool (*detect_bb_hang)(struct ath_hw *ah);
++
+ 	/* Calibration ops */
+ 	void (*init_cal_settings)(struct ath_hw *ah);
+ 	bool (*init_cal)(struct ath_hw *ah, struct ath9k_channel *chan);
+-- 
+1.8.5.2
 
