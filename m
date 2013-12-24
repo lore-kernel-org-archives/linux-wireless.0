@@ -1,76 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:51100 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757239Ab3LWLlI (ORCPT
+Received: from szxga01-in.huawei.com ([119.145.14.64]:35332 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752763Ab3LXLaF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Dec 2013 06:41:08 -0500
-Received: by mail-pa0-f44.google.com with SMTP id fa1so5217547pad.17
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Dec 2013 03:41:08 -0800 (PST)
-From: Fred Chou <fred.chou.nd@gmail.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Fred Chou <fred.chou.nd@gmail.com>
-Subject: [PATCH] mac80211: reorder packet checking and processing
-Date: Mon, 23 Dec 2013 19:42:55 +0800
-Message-Id: <1387798975-17708-1-git-send-email-fred.chou.nd@gmail.com> (sfid-20131223_124112_877063_6AC29F4E)
+	Tue, 24 Dec 2013 06:30:05 -0500
+Message-ID: <52B97009.3020008@huawei.com> (sfid-20131224_123223_695370_6E9D0196)
+Date: Tue, 24 Dec 2013 19:29:13 +0800
+From: Ding Tianhong <dingtianhong@huawei.com>
+MIME-Version: 1.0
+To: Solomon Peachy <pizza@shaftnet.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>, Netdev <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH v2 16/20] cw1200: atm: slight optimization of addr compare
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Check received packet length first and drop the packet
-if it is shorter than MAC header. Process packet after
-the checking. 
+Use possibly more efficient ether_addr_equal
+instead of memcmp.
 
-Signed-off-by: 	Fred Chou <fred.chou.nd@gmail.com>
+Cc: Solomon Peachy <pizza@shaftnet.org>
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Weilong Chen <chenweilong@huawei.com>
+Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
 ---
- net/mac80211/rx.c |   24 ++++++++++++++----------
- 1 file changed, 14 insertions(+), 10 deletions(-)
+ drivers/net/wireless/cw1200/sta.c  | 5 +++--
+ drivers/net/wireless/cw1200/txrx.c | 3 +--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 688e0aa..95b8cd9 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -3145,20 +3145,21 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
- 	struct sta_info *sta, *tmp, *prev_sta;
- 	int err = 0;
+diff --git a/drivers/net/wireless/cw1200/sta.c b/drivers/net/wireless/cw1200/sta.c
+index 010b252..103f7bc 100644
+--- a/drivers/net/wireless/cw1200/sta.c
++++ b/drivers/net/wireless/cw1200/sta.c
+@@ -13,6 +13,7 @@
+ #include <linux/sched.h>
+ #include <linux/firmware.h>
+ #include <linux/module.h>
++#include <linux/etherdevice.h>
  
--	fc = ((struct ieee80211_hdr *)skb->data)->frame_control;
--	memset(&rx, 0, sizeof(rx));
--	rx.skb = skb;
--	rx.local = local;
-+	hdr = (struct ieee80211_hdr *)skb->data;
-+	fc = hdr->frame_control;
- 
-+	/* drop frame if too short for header */
-+	if (skb->len < ieee80211_hdrlen(fc)) {
-+		dev_kfree_skb(skb);
-+		return;
-+	}
-+
-+	/* update counter only for reliable packet */
- 	if (ieee80211_is_data(fc) || ieee80211_is_mgmt(fc))
- 		local->dot11ReceivedFragmentCount++;
- 
- 	if (ieee80211_is_mgmt(fc)) {
--		/* drop frame if too short for header */
--		if (skb->len < ieee80211_hdrlen(fc))
--			err = -ENOBUFS;
--		else
--			err = skb_linearize(skb);
-+		err = skb_linearize(skb);
- 	} else {
- 		err = !pskb_may_pull(skb, ieee80211_hdrlen(fc));
+ #include "cw1200.h"
+ #include "sta.h"
+@@ -555,8 +556,8 @@ u64 cw1200_prepare_multicast(struct ieee80211_hw *hw,
+ 		pr_debug("[STA] multicast: %pM\n", ha->addr);
+ 		memcpy(&priv->multicast_filter.macaddrs[count],
+ 		       ha->addr, ETH_ALEN);
+-		if (memcmp(ha->addr, broadcast_ipv4, ETH_ALEN) &&
+-		    memcmp(ha->addr, broadcast_ipv6, ETH_ALEN))
++		if (!ether_addr_equal(ha->addr, broadcast_ipv4) &&
++		    !ether_addr_equal(ha->addr, broadcast_ipv6))
+ 			priv->has_multicast_subscription = true;
+ 		count++;
  	}
-@@ -3168,7 +3169,10 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
- 		return;
- 	}
- 
--	hdr = (struct ieee80211_hdr *)skb->data;
-+	memset(&rx, 0, sizeof(rx));
-+	rx.skb = skb;
-+	rx.local = local;
-+
- 	ieee80211_parse_qos(&rx);
- 	ieee80211_verify_alignment(&rx);
- 
+diff --git a/drivers/net/wireless/cw1200/txrx.c b/drivers/net/wireless/cw1200/txrx.c
+index e824d4d..0bd5411 100644
+--- a/drivers/net/wireless/cw1200/txrx.c
++++ b/drivers/net/wireless/cw1200/txrx.c
+@@ -1166,8 +1166,7 @@ void cw1200_rx_cb(struct cw1200_common *priv,
+ 			return;
+ 	} else if (ieee80211_is_beacon(frame->frame_control) &&
+ 		   !arg->status && priv->vif &&
+-		   !memcmp(ieee80211_get_SA(frame), priv->vif->bss_conf.bssid,
+-			   ETH_ALEN)) {
++		   ether_addr_equal(ieee80211_get_SA(frame), priv->vif->bss_conf.bssid)) {
+ 		const u8 *tim_ie;
+ 		u8 *ies = ((struct ieee80211_mgmt *)
+ 			  (skb->data))->u.beacon.variable;
 -- 
-1.7.9.5
+1.8.0
+
 
