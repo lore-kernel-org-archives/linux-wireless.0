@@ -1,226 +1,188 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:59887 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753212Ab3LFLcY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Dec 2013 06:32:24 -0500
-From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
-	Ulrich Kunitz <kune@deine-taler.de>
-Subject: [net 1/5] zd1211rw: Fix FSF address in file headers
-Date: Fri,  6 Dec 2013 03:32:10 -0800
-Message-Id: <1386329534-21739-1-git-send-email-jeffrey.t.kirsher@intel.com> (sfid-20131206_123255_302622_CDFB743E)
+Received: from s72.web-hosting.com ([198.187.29.21]:54269 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751150Ab3LXFTb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Dec 2013 00:19:31 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 04/11] ath9k: Fix MAC HW hang check for AR9003
+Date: Tue, 24 Dec 2013 10:44:20 +0530
+Message-Id: <1387862067-25457-4-git-send-email-sujith@msujith.org> (sfid-20131224_061956_280810_74239BB4)
+In-Reply-To: <1387862067-25457-1-git-send-email-sujith@msujith.org>
+References: <1387862067-25457-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Several files refer to an old address for the Free Software Foundation
-in the file header comment.  Resolve by replacing the address with
-the URL <http://www.gnu.org/licenses/> so that we do not have to keep
-updating the header comments anytime the address changes.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-CC: linux-wireless@vger.kernel.org
-CC: Daniel Drake <dsd@gentoo.org>
-CC: Ulrich Kunitz <kune@deine-taler.de>
-Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+The current method of identifying MAC hangs is
+convoluted and also, the signatures are wrong and
+don't apply to all the chips in the AR9003 family.
+Fix this by cleaning up the code and checking for
+the correct hang signatures.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/zd1211rw/zd_chip.c       | 3 +--
- drivers/net/wireless/zd1211rw/zd_chip.h       | 3 +--
- drivers/net/wireless/zd1211rw/zd_def.h        | 3 +--
- drivers/net/wireless/zd1211rw/zd_mac.c        | 3 +--
- drivers/net/wireless/zd1211rw/zd_mac.h        | 3 +--
- drivers/net/wireless/zd1211rw/zd_rf.c         | 3 +--
- drivers/net/wireless/zd1211rw/zd_rf.h         | 3 +--
- drivers/net/wireless/zd1211rw/zd_rf_al2230.c  | 3 +--
- drivers/net/wireless/zd1211rw/zd_rf_al7230b.c | 3 +--
- drivers/net/wireless/zd1211rw/zd_rf_rf2959.c  | 3 +--
- drivers/net/wireless/zd1211rw/zd_rf_uw2453.c  | 3 +--
- drivers/net/wireless/zd1211rw/zd_usb.c        | 3 +--
- drivers/net/wireless/zd1211rw/zd_usb.h        | 3 +--
- 13 files changed, 13 insertions(+), 26 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c | 130 +++++++++++++++++------------
+ 1 file changed, 75 insertions(+), 55 deletions(-)
 
-diff --git a/drivers/net/wireless/zd1211rw/zd_chip.c b/drivers/net/wireless/zd1211rw/zd_chip.c
-index 71ab320..73a49b8 100644
---- a/drivers/net/wireless/zd1211rw/zd_chip.c
-+++ b/drivers/net/wireless/zd1211rw/zd_chip.c
-@@ -14,8 +14,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the Free Software
-- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+index 75a6d85..f3c4102 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+@@ -892,75 +892,95 @@ static void ar9003_hw_init_hang_checks(struct ath_hw *ah)
+ 		ah->bb_watchdog_timeout_ms = 25;
+ }
  
- /* This file implements all the hardware specific functions for the ZD1211
-diff --git a/drivers/net/wireless/zd1211rw/zd_chip.h b/drivers/net/wireless/zd1211rw/zd_chip.h
-index 7ab9222..b03786c 100644
---- a/drivers/net/wireless/zd1211rw/zd_chip.h
-+++ b/drivers/net/wireless/zd1211rw/zd_chip.h
-@@ -14,8 +14,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the Free Software
-- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
+-static bool ath9k_hw_check_dcs(u32 dma_dbg, u32 num_dcu_states,
+-			       int *hang_state, int *hang_pos)
+-{
+-	static u32 dcu_chain_state[] = {5, 6, 9}; /* DCU chain stuck states */
+-	u32 chain_state, dcs_pos, i;
+-
+-	for (dcs_pos = 0; dcs_pos < num_dcu_states; dcs_pos++) {
+-		chain_state = (dma_dbg >> (5 * dcs_pos)) & 0x1f;
+-		for (i = 0; i < 3; i++) {
+-			if (chain_state == dcu_chain_state[i]) {
+-				*hang_state = chain_state;
+-				*hang_pos = dcs_pos;
+-				return true;
+-			}
+-		}
+-	}
+-	return false;
+-}
++/*
++ * MAC HW hang check
++ * =================
++ *
++ * Signature: dcu_chain_state is 0x6 and dcu_complete_state is 0x1.
++ *
++ * The state of each DCU chain (mapped to TX queues) is available from these
++ * DMA debug registers:
++ *
++ * Chain 0 state : Bits 4:0   of AR_DMADBG_4
++ * Chain 1 state : Bits 9:5   of AR_DMADBG_4
++ * Chain 2 state : Bits 14:10 of AR_DMADBG_4
++ * Chain 3 state : Bits 19:15 of AR_DMADBG_4
++ * Chain 4 state : Bits 24:20 of AR_DMADBG_4
++ * Chain 5 state : Bits 29:25 of AR_DMADBG_4
++ * Chain 6 state : Bits 4:0   of AR_DMADBG_5
++ * Chain 7 state : Bits 9:5   of AR_DMADBG_5
++ * Chain 8 state : Bits 14:10 of AR_DMADBG_5
++ * Chain 9 state : Bits 19:15 of AR_DMADBG_5
++ *
++ * The DCU chain state "0x6" means "WAIT_FRDONE" - wait for TX frame to be done.
++ */
  
- #ifndef _ZD_CHIP_H
-diff --git a/drivers/net/wireless/zd1211rw/zd_def.h b/drivers/net/wireless/zd1211rw/zd_def.h
-index 9a1b013..41bd755 100644
---- a/drivers/net/wireless/zd1211rw/zd_def.h
-+++ b/drivers/net/wireless/zd1211rw/zd_def.h
-@@ -14,8 +14,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the Free Software
-- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
+-#define DCU_COMPLETE_STATE        1
+-#define DCU_COMPLETE_STATE_MASK 0x3
+-#define NUM_STATUS_READS         50
++#define NUM_STATUS_READS 50
  
- #ifndef _ZD_DEF_H
-diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
-index c6208a7..eff79a3 100644
---- a/drivers/net/wireless/zd1211rw/zd_mac.c
-+++ b/drivers/net/wireless/zd1211rw/zd_mac.c
-@@ -16,8 +16,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the Free Software
-- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
+-static bool ar9003_hw_detect_mac_hang(struct ath_hw *ah)
++static bool ath9k_hw_verify_hang(struct ath_hw *ah, unsigned int queue)
+ {
+-	u32 chain_state, comp_state, dcs_reg = AR_DMADBG_4;
+-	u32 i, hang_pos, hang_state, num_state = 6;
++	u32 dma_dbg_chain, dma_dbg_complete;
++	u8 dcu_chain_state, dcu_complete_state;
++	int i;
  
- #include <linux/netdevice.h>
-diff --git a/drivers/net/wireless/zd1211rw/zd_mac.h b/drivers/net/wireless/zd1211rw/zd_mac.h
-index c01eca8..5a48423 100644
---- a/drivers/net/wireless/zd1211rw/zd_mac.h
-+++ b/drivers/net/wireless/zd1211rw/zd_mac.h
-@@ -14,8 +14,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the Free Software
-- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
+-	comp_state = REG_READ(ah, AR_DMADBG_6);
++	for (i = 0; i < NUM_STATUS_READS; i++) {
++		if (queue < 6)
++			dma_dbg_chain = REG_READ(ah, AR_DMADBG_4);
++		else
++			dma_dbg_chain = REG_READ(ah, AR_DMADBG_5);
  
- #ifndef _ZD_MAC_H
-diff --git a/drivers/net/wireless/zd1211rw/zd_rf.c b/drivers/net/wireless/zd1211rw/zd_rf.c
-index c875ee0..dc179c4 100644
---- a/drivers/net/wireless/zd1211rw/zd_rf.c
-+++ b/drivers/net/wireless/zd1211rw/zd_rf.c
-@@ -14,8 +14,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the Free Software
-- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
+-	if ((comp_state & DCU_COMPLETE_STATE_MASK) != DCU_COMPLETE_STATE) {
+-		ath_dbg(ath9k_hw_common(ah), RESET,
+-			"MAC Hang signature not found at DCU complete\n");
+-		return false;
+-	}
++		dma_dbg_complete = REG_READ(ah, AR_DMADBG_6);
  
- #include <linux/errno.h>
-diff --git a/drivers/net/wireless/zd1211rw/zd_rf.h b/drivers/net/wireless/zd1211rw/zd_rf.h
-index 725b7c9..8f14e25 100644
---- a/drivers/net/wireless/zd1211rw/zd_rf.h
-+++ b/drivers/net/wireless/zd1211rw/zd_rf.h
-@@ -14,8 +14,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the Free Software
-- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
+-	chain_state = REG_READ(ah, dcs_reg);
+-	if (ath9k_hw_check_dcs(chain_state, num_state, &hang_state, &hang_pos))
+-		goto hang_check_iter;
++		dcu_chain_state = (dma_dbg_chain >> (5 * queue)) & 0x1f;
++		dcu_complete_state = dma_dbg_complete & 0x3;
  
- #ifndef _ZD_RF_H
-diff --git a/drivers/net/wireless/zd1211rw/zd_rf_al2230.c b/drivers/net/wireless/zd1211rw/zd_rf_al2230.c
-index 12babcb..99aed7d 100644
---- a/drivers/net/wireless/zd1211rw/zd_rf_al2230.c
-+++ b/drivers/net/wireless/zd1211rw/zd_rf_al2230.c
-@@ -14,8 +14,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the Free Software
-- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
+-	dcs_reg = AR_DMADBG_5;
+-	num_state = 4;
+-	chain_state = REG_READ(ah, dcs_reg);
+-	if (ath9k_hw_check_dcs(chain_state, num_state, &hang_state, &hang_pos))
+-		goto hang_check_iter;
++		if ((dcu_chain_state != 0x6) || (dcu_complete_state != 0x1))
++			return false;
++	}
  
- #include <linux/kernel.h>
-diff --git a/drivers/net/wireless/zd1211rw/zd_rf_al7230b.c b/drivers/net/wireless/zd1211rw/zd_rf_al7230b.c
-index 385c670..5fea485 100644
---- a/drivers/net/wireless/zd1211rw/zd_rf_al7230b.c
-+++ b/drivers/net/wireless/zd1211rw/zd_rf_al7230b.c
-@@ -14,8 +14,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the Free Software
-- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
+ 	ath_dbg(ath9k_hw_common(ah), RESET,
+-		"MAC Hang signature 1 not found\n");
+-	return false;
++		"MAC Hang signature found for queue: %d\n", queue);
  
- #include <linux/kernel.h>
-diff --git a/drivers/net/wireless/zd1211rw/zd_rf_rf2959.c b/drivers/net/wireless/zd1211rw/zd_rf_rf2959.c
-index 784d9cc..a93f657 100644
---- a/drivers/net/wireless/zd1211rw/zd_rf_rf2959.c
-+++ b/drivers/net/wireless/zd1211rw/zd_rf_rf2959.c
-@@ -14,8 +14,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the Free Software
-- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
+-hang_check_iter:
+-	ath_dbg(ath9k_hw_common(ah), RESET,
+-		"DCU registers: chain %08x complete %08x Hang: state %d pos %d\n",
+-		chain_state, comp_state, hang_state, hang_pos);
++	return true;
++}
  
- #include <linux/kernel.h>
-diff --git a/drivers/net/wireless/zd1211rw/zd_rf_uw2453.c b/drivers/net/wireless/zd1211rw/zd_rf_uw2453.c
-index c4d324e..61b9240 100644
---- a/drivers/net/wireless/zd1211rw/zd_rf_uw2453.c
-+++ b/drivers/net/wireless/zd1211rw/zd_rf_uw2453.c
-@@ -14,8 +14,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the Free Software
-- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
+-	for (i = 0; i < NUM_STATUS_READS; i++) {
+-		chain_state = REG_READ(ah, dcs_reg);
+-		chain_state = (chain_state >> (5 * hang_pos)) & 0x1f;
+-		comp_state = REG_READ(ah, AR_DMADBG_6);
++static bool ar9003_hw_detect_mac_hang(struct ath_hw *ah)
++{
++	u32 dma_dbg_4, dma_dbg_5, dma_dbg_6, chk_dbg;
++	u8 dcu_chain_state, dcu_complete_state;
++	bool dcu_wait_frdone = false;
++	unsigned long chk_dcu = 0;
++	unsigned int i = 0;
++
++	dma_dbg_4 = REG_READ(ah, AR_DMADBG_4);
++	dma_dbg_5 = REG_READ(ah, AR_DMADBG_5);
++	dma_dbg_6 = REG_READ(ah, AR_DMADBG_6);
++
++	dcu_complete_state = dma_dbg_6 & 0x3;
++	if (dcu_complete_state != 0x1)
++		goto exit;
++
++	for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++) {
++		if (i < 6)
++			chk_dbg = dma_dbg_4;
++		else
++			chk_dbg = dma_dbg_5;
  
- #include <linux/kernel.h>
-diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
-index 84d94f5..a912dc0 100644
---- a/drivers/net/wireless/zd1211rw/zd_usb.c
-+++ b/drivers/net/wireless/zd1211rw/zd_usb.c
-@@ -15,8 +15,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the Free Software
-- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
+-		if (((comp_state & DCU_COMPLETE_STATE_MASK) !=
+-					DCU_COMPLETE_STATE) ||
+-		    (chain_state != hang_state))
+-			return false;
++		dcu_chain_state = (chk_dbg >> (5 * i)) & 0x1f;
++		if (dcu_chain_state == 0x6) {
++			dcu_wait_frdone = true;
++			chk_dcu |= BIT(i);
++		}
+ 	}
  
- #include <linux/kernel.h>
-diff --git a/drivers/net/wireless/zd1211rw/zd_usb.h b/drivers/net/wireless/zd1211rw/zd_usb.h
-index 45e3bb2..a9075f2 100644
---- a/drivers/net/wireless/zd1211rw/zd_usb.h
-+++ b/drivers/net/wireless/zd1211rw/zd_usb.h
-@@ -14,8 +14,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the Free Software
-- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
+-	ath_dbg(ath9k_hw_common(ah), RESET, "MAC Hang signature 1 found\n");
+-
+-	return true;
++	if ((dcu_complete_state == 0x1) && dcu_wait_frdone) {
++		for_each_set_bit(i, &chk_dcu, ATH9K_NUM_TX_QUEUES) {
++			if (ath9k_hw_verify_hang(ah, i))
++				return true;
++		}
++	}
++exit:
++	return false;
+ }
  
- #ifndef _ZD_USB_H
+ /* Sets up the AR9003 hardware familiy callbacks */
 -- 
-1.8.3.1
+1.8.5.2
 
