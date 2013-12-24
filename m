@@ -1,190 +1,256 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out05.msg.oleane.net ([62.161.7.3]:42383 "EHLO
-	smtp-out05.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750838Ab3LKSY3 convert rfc822-to-8bit (ORCPT
+Received: from szxga02-in.huawei.com ([119.145.14.65]:11863 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752929Ab3LXLag (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Dec 2013 13:24:29 -0500
-Received: from smtp04.msg.oleane.net (smtp04.mail.priv [172.17.20.113])
-	by smtp-out05.msg.oleane.net with ESMTP id rBBGCAjE031854
-	for <linux-wireless@vger.kernel.org>; Wed, 11 Dec 2013 17:12:10 +0100
-Received: from acksys.fr ([195.6.104.67]) (authenticated)
-	by smtp04.msg.oleane.net (MTA) with ESMTP id rBBFplx5014767
-	for <linux-wireless@vger.kernel.org>; Wed, 11 Dec 2013 16:51:49 +0100
-Subject: [RFC mac80211] Add field in radiotap parser
-Date: Wed, 11 Dec 2013 16:51:45 +0100
+	Tue, 24 Dec 2013 06:30:36 -0500
+Message-ID: <52B97004.40901@huawei.com> (sfid-20131224_123104_209999_D2D3DF4B)
+Date: Tue, 24 Dec 2013 19:29:08 +0800
+From: Ding Tianhong <dingtianhong@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Message-ID: <773DB8A82AB6A046AE0195C68612A319016C1220@sbs2003.acksys.local> (sfid-20131211_192432_659202_4A00E55D)
-From: "Cedric VONCKEN" <cedric.voncken@acksys.fr>
-To: <linux-wireless@vger.kernel.org>
+To: Jouni Malinen <j@w1.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>, Netdev <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH v2 15/20] hostap: slight optimization of addr compare
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In radiotap parser I added the field management for
-IEEE80211_RADIOTAP_RATE and IEEE80211_RADIOTAP_MCS (to inject packet at
-specific rate).
-My modifications worked on compat 2013-04-16 and ath9K.
+Use possibly more efficient ether_addr_equal
+instead of memcmp.
 
-I preparing the patch for the latest wireless version, and all value for
-the flags field in struct ieee80211_tx_info are used (declared in enum
-mac80211_tx_control_flags in mac80211.h).
+Cc: Jouni Malinen <j@w1.fi>
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Weilong Chen <chenweilong@huawei.com>
+Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+---
+ drivers/net/wireless/hostap/hostap_80211_tx.c |  4 ++--
+ drivers/net/wireless/hostap/hostap_ap.c       | 28 +++++++++++++--------------
+ drivers/net/wireless/hostap/hostap_hw.c       |  2 +-
+ drivers/net/wireless/hostap/hostap_ioctl.c    |  4 ++--
+ drivers/net/wireless/hostap/hostap_main.c     |  8 +++-----
+ 5 files changed, 22 insertions(+), 24 deletions(-)
 
-I need to add this to bypass the RC in mac80211. 
-
-How I can add the new flag ?
-	- I change the flags type to u64
-	- I add a second flag field in the struct ieee80211_tx_info (for
-exemple flags_ext)
-
-My patch for the compat 2013-04-16 (the bit 31 is not used in this
-version)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 87a8e0b..0445c27 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -494,6 +494,7 @@ enum mac80211_tx_control_flags {
- 	IEEE80211_TX_STATUS_EOSP		= BIT(28),
- 	IEEE80211_TX_CTL_USE_MINRATE		= BIT(29),
- 	IEEE80211_TX_CTL_DONTFRAG		= BIT(30),
-+	IEEE80211_TX_CTL_RC_BYPASS		= BIT(31),
- };
+diff --git a/drivers/net/wireless/hostap/hostap_80211_tx.c b/drivers/net/wireless/hostap/hostap_80211_tx.c
+index 344a981..8bde776 100644
+--- a/drivers/net/wireless/hostap/hostap_80211_tx.c
++++ b/drivers/net/wireless/hostap/hostap_80211_tx.c
+@@ -1,5 +1,6 @@
+ #include <linux/slab.h>
+ #include <linux/export.h>
++#include <linux/etherdevice.h>
  
- #define IEEE80211_TX_CTL_STBC_SHIFT		23
-@@ -509,7 +510,8 @@ enum mac80211_tx_control_flags {
- 	IEEE80211_TX_STAT_AMPDU | IEEE80211_TX_STAT_AMPDU_NO_BACK |
-\
- 	IEEE80211_TX_CTL_RATE_CTRL_PROBE | IEEE80211_TX_CTL_NO_PS_BUFFER
-|    \
- 	IEEE80211_TX_CTL_MORE_FRAMES | IEEE80211_TX_CTL_LDPC |
-\
--	IEEE80211_TX_CTL_STBC | IEEE80211_TX_STATUS_EOSP)
-+	IEEE80211_TX_CTL_STBC | IEEE80211_TX_STATUS_EOSP |
-\
-+	IEEE80211_TX_CTL_RC_BYPASS)
+ #include "hostap_80211.h"
+ #include "hostap_common.h"
+@@ -103,8 +104,7 @@ netdev_tx_t hostap_data_start_xmit(struct sk_buff *skb,
+ 			return NETDEV_TX_OK;
+ 		} else if (local->iw_mode == IW_MODE_INFRA &&
+ 			   (local->wds_type & HOSTAP_WDS_AP_CLIENT) &&
+-			   memcmp(skb->data + ETH_ALEN, dev->dev_addr,
+-				  ETH_ALEN) != 0) {
++			   !ether_addr_equal(skb->data + ETH_ALEN, dev->dev_addr)) {
+ 			/* AP client mode: send frames with foreign src addr
+ 			 * using 4-addr WDS frames */
+ 			use_wds = WDS_COMPLIANT_FRAME;
+diff --git a/drivers/net/wireless/hostap/hostap_ap.c b/drivers/net/wireless/hostap/hostap_ap.c
+index d6033a8..d36e252 100644
+--- a/drivers/net/wireless/hostap/hostap_ap.c
++++ b/drivers/net/wireless/hostap/hostap_ap.c
+@@ -24,6 +24,7 @@
+ #include <linux/slab.h>
+ #include <linux/export.h>
+ #include <linux/moduleparam.h>
++#include <linux/etherdevice.h>
  
- /**
-  * enum mac80211_rate_control_flags - per-rate flags set by the
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 904c3b6..dc414d5 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1308,7 +1308,8 @@ static int invoke_tx_handlers(struct
-ieee80211_tx_data *tx)
- 	CALL_TXH(ieee80211_tx_h_ps_buf);
- 	CALL_TXH(ieee80211_tx_h_check_control_port_protocol);
- 	CALL_TXH(ieee80211_tx_h_select_key);
--	if (!(tx->local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL))
-+	if (!(tx->local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL) &&
-+		!(info->flags & IEEE80211_TX_CTL_RC_BYPASS))
- 		CALL_TXH(ieee80211_tx_h_rate_ctrl);
+ #include "hostap_wlan.h"
+ #include "hostap.h"
+@@ -106,13 +107,12 @@ static void ap_sta_hash_del(struct ap_data *ap, struct sta_info *sta)
  
- 	if (unlikely(info->flags & IEEE80211_TX_INTFL_RETRANSMISSION)) {
-@@ -1462,16 +1463,25 @@ void ieee80211_xmit(struct ieee80211_sub_if_data
-*sdata, struct sk_buff *skb,
- 	ieee80211_tx(sdata, skb, false, band);
- }
+ 	s = ap->sta_hash[STA_HASH(sta->addr)];
+ 	if (s == NULL) return;
+-	if (memcmp(s->addr, sta->addr, ETH_ALEN) == 0) {
++	if (ether_addr_equal(s->addr, sta->addr)) {
+ 		ap->sta_hash[STA_HASH(sta->addr)] = s->hnext;
+ 		return;
+ 	}
  
--static bool ieee80211_parse_tx_radiotap(struct sk_buff *skb)
-+static bool ieee80211_parse_tx_radiotap(struct sk_buff *skb,
-+					struct ieee80211_local *local)
- {
- 	struct ieee80211_radiotap_iterator iterator;
- 	struct ieee80211_radiotap_header *rthdr =
- 		(struct ieee80211_radiotap_header *) skb->data;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
--	int ret = ieee80211_radiotap_iterator_init(&iterator, rthdr,
-skb->len,
--						   NULL);
-+	struct ieee80211_channel *chan = local->monitor_chandef.chan;
-+	struct ieee80211_supported_band *sband =
-+		local->hw.wiphy->bands[chan->band];
- 	u16 txflags;
-+	s8 rate_idx;
-+	u16 bit_rate;
-+	int i;
-+	unsigned char known;
-+	unsigned char flags;
+-	while (s->hnext != NULL && memcmp(s->hnext->addr, sta->addr, ETH_ALEN)
+-	       != 0)
++	while (s->hnext != NULL && !ether_addr_equal(s->hnext->addr, sta->addr))
+ 		s = s->hnext;
+ 	if (s->hnext != NULL)
+ 		s->hnext = s->hnext->hnext;
+@@ -435,7 +435,7 @@ int ap_control_del_mac(struct mac_restrictions *mac_restrictions, u8 *mac)
+ 	     ptr != &mac_restrictions->mac_list; ptr = ptr->next) {
+ 		entry = list_entry(ptr, struct mac_entry, list);
  
-+	int ret = ieee80211_radiotap_iterator_init(&iterator, rthdr,
-skb->len,
-+						   NULL);
- 	info->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT |
- 		       IEEE80211_TX_CTL_DONTFRAG;
+-		if (memcmp(entry->addr, mac, ETH_ALEN) == 0) {
++		if (ether_addr_equal(entry->addr, mac)) {
+ 			list_del(ptr);
+ 			kfree(entry);
+ 			mac_restrictions->entries--;
+@@ -459,7 +459,7 @@ static int ap_control_mac_deny(struct mac_restrictions *mac_restrictions,
  
-@@ -1521,6 +1531,58 @@ static bool ieee80211_parse_tx_radiotap(struct
-sk_buff *skb)
- 				info->flags |= IEEE80211_TX_CTL_NO_ACK;
+ 	spin_lock_bh(&mac_restrictions->lock);
+ 	list_for_each_entry(entry, &mac_restrictions->mac_list, list) {
+-		if (memcmp(entry->addr, mac, ETH_ALEN) == 0) {
++		if (ether_addr_equal(entry->addr, mac)) {
+ 			found = 1;
  			break;
+ 		}
+@@ -957,7 +957,7 @@ static struct sta_info* ap_get_sta(struct ap_data *ap, u8 *sta)
+ 	struct sta_info *s;
  
-+		case IEEE80211_RADIOTAP_RATE:
-+			rate_idx = -1;
-+			/* convert legacy rate; NB: .5 Mb/s -> 100 kb/s
-*/
-+			bit_rate = *iterator.this_arg * 5;
-+			for (i = 0; i<  sband->n_bitrates; i++){
-+				if (sband->bitrates[i].bitrate ==
-bit_rate) {
-+					rate_idx = i;
-+					break;
-+				}
-+			}
-+			/* Rate not available - rejecting */
-+			if (rate_idx<  0)
-+				return false;
-+
-+			info->flags |= IEEE80211_TX_CTL_RC_BYPASS;
-+			info->control.rates[0].idx = rate_idx;
-+			info->control.rates[0].count = 1;
-+			break;
-+
-+		case IEEE80211_RADIOTAP_MCS:
-+			known = iterator.this_arg[0];
-+			flags = iterator.this_arg[1];
-+			rate_idx = iterator.this_arg[2];
-+
-+			/* 11n not supported - rejecting */
-+			if(!sband->ht_cap.ht_supported) {
-+				return false;
-+			}
-+
-+			/* set mcs */
-+			if(known & IEEE80211_RADIOTAP_MCS_HAVE_MCS) {
-+				info->control.rates[0].idx = rate_idx;
-+				info->control.rates[0].flags |=
-+					IEEE80211_TX_RC_MCS;
-+			}
-+
-+			/* set GI */
-+			if ((known & IEEE80211_RADIOTAP_MCS_HAVE_GI) &&
-+				( flags & IEEE80211_RADIOTAP_MCS_SGI))
-+				info->control.rates[0].flags |=
-+					IEEE80211_TX_RC_SHORT_GI;
-+
-+			/* set bandwith */
-+			if ((known & IEEE80211_RADIOTAP_MCS_HAVE_BW) &&
-+			    (flags & IEEE80211_RADIOTAP_MCS_BW_40))
-+				info->control.rates[0].flags |=
-+					IEEE80211_TX_RC_40_MHZ_WIDTH;
-+
-+			info->control.rates[0].count = 1;
-+			info->flags |= IEEE80211_TX_CTL_RC_BYPASS;
-+			break;
-+
- 		/*
- 		 * Please update the file
- 		 * Documentation/networking/mac80211-injection.txt
-@@ -1616,7 +1678,7 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct
-sk_buff *skb,
- 		      IEEE80211_TX_CTL_INJECTED;
+ 	s = ap->sta_hash[STA_HASH(sta)];
+-	while (s != NULL && memcmp(s->addr, sta, ETH_ALEN) != 0)
++	while (s != NULL && !ether_addr_equal(s->addr, sta))
+ 		s = s->hnext;
+ 	return s;
+ }
+@@ -1391,7 +1391,7 @@ static void handle_authen(local_info_t *local, struct sk_buff *skb,
+ 	status_code = __le16_to_cpu(*pos);
+ 	pos++;
  
- 	/* process and remove the injection radiotap header */
--	if (!ieee80211_parse_tx_radiotap(skb))
-+	if (!ieee80211_parse_tx_radiotap(skb,local))
- 		goto fail;
+-	if (memcmp(dev->dev_addr, hdr->addr2, ETH_ALEN) == 0 ||
++	if (ether_addr_equal(dev->dev_addr, hdr->addr2) ||
+ 	    ap_control_mac_deny(&ap->mac_restrictions, hdr->addr2)) {
+ 		txt = "authentication denied";
+ 		resp = WLAN_STATUS_UNSPECIFIED_FAILURE;
+@@ -1935,7 +1935,7 @@ static void handle_pspoll(local_info_t *local,
+ 	PDEBUG(DEBUG_PS2, "handle_pspoll: BSSID=%pM, TA=%pM PWRMGT=%d\n",
+ 	       hdr->addr1, hdr->addr2, !!ieee80211_has_pm(hdr->frame_control));
  
- 	rcu_read_lock();
+-	if (memcmp(hdr->addr1, dev->dev_addr, ETH_ALEN)) {
++	if (!ether_addr_equal(hdr->addr1, dev->dev_addr)) {
+ 		PDEBUG(DEBUG_AP,
+ 		       "handle_pspoll - addr1(BSSID)=%pM not own MAC\n",
+ 		       hdr->addr1);
+@@ -2230,7 +2230,7 @@ static void handle_ap_item(local_info_t *local, struct sk_buff *skb,
+ 			goto done;
+ 		}
+ 
+-		if (memcmp(hdr->addr1, dev->dev_addr, ETH_ALEN)) {
++		if (!ether_addr_equal(hdr->addr1, dev->dev_addr)) {
+ 			PDEBUG(DEBUG_AP, "handle_ap_item - addr1(BSSID)=%pM"
+ 			       " not own MAC\n", hdr->addr1);
+ 			goto done;
+@@ -2267,13 +2267,13 @@ static void handle_ap_item(local_info_t *local, struct sk_buff *skb,
+ 		goto done;
+ 	}
+ 
+-	if (memcmp(hdr->addr1, dev->dev_addr, ETH_ALEN)) {
++	if (!ether_addr_equal(hdr->addr1, dev->dev_addr)) {
+ 		PDEBUG(DEBUG_AP, "handle_ap_item - addr1(DA)=%pM"
+ 		       " not own MAC\n", hdr->addr1);
+ 		goto done;
+ 	}
+ 
+-	if (memcmp(hdr->addr3, dev->dev_addr, ETH_ALEN)) {
++	if (!ether_addr_equal(hdr->addr3, dev->dev_addr)) {
+ 		PDEBUG(DEBUG_AP, "handle_ap_item - addr3(BSSID)=%pM"
+ 		       " not own MAC\n", hdr->addr3);
+ 		goto done;
+@@ -3035,7 +3035,7 @@ ap_rx_ret hostap_handle_sta_rx(local_info_t *local, struct net_device *dev,
+ 		if (!wds) {
+ 			/* FromDS frame - not for us; probably
+ 			 * broadcast/multicast in another BSS - drop */
+-			if (memcmp(hdr->addr1, dev->dev_addr, ETH_ALEN) == 0) {
++			if (ether_addr_equal(hdr->addr1, dev->dev_addr)) {
+ 				printk(KERN_DEBUG "Odd.. FromDS packet "
+ 				       "received with own BSSID\n");
+ 				hostap_dump_rx_80211(dev->name, skb, rx_stats);
+@@ -3044,7 +3044,7 @@ ap_rx_ret hostap_handle_sta_rx(local_info_t *local, struct net_device *dev,
+ 			goto out;
+ 		}
+ 	} else if (stype == IEEE80211_STYPE_NULLFUNC && sta == NULL &&
+-		   memcmp(hdr->addr1, dev->dev_addr, ETH_ALEN) == 0) {
++		   ether_addr_equal(hdr->addr1, dev->dev_addr)) {
+ 
+ 		if (local->hostapd) {
+ 			prism2_rx_80211(local->apdev, skb, rx_stats,
+@@ -3073,7 +3073,7 @@ ap_rx_ret hostap_handle_sta_rx(local_info_t *local, struct net_device *dev,
+ 		/* If BSSID (Addr3) is foreign, this frame is a normal
+ 		 * broadcast frame from an IBSS network. Drop it silently.
+ 		 * If BSSID is own, report the dropping of this frame. */
+-		if (memcmp(hdr->addr3, dev->dev_addr, ETH_ALEN) == 0) {
++		if (ether_addr_equal(hdr->addr3, dev->dev_addr)) {
+ 			printk(KERN_DEBUG "%s: dropped received packet from %pM"
+ 			       " with no ToDS flag "
+ 			       "(type=0x%02x, subtype=0x%02x)\n", dev->name,
+diff --git a/drivers/net/wireless/hostap/hostap_hw.c b/drivers/net/wireless/hostap/hostap_hw.c
+index c275dc1..6df3ee5 100644
+--- a/drivers/net/wireless/hostap/hostap_hw.c
++++ b/drivers/net/wireless/hostap/hostap_hw.c
+@@ -2175,7 +2175,7 @@ static void hostap_tx_callback(local_info_t *local,
+ 	struct hostap_tx_callback_info *cb;
+ 
+ 	/* Make sure that frame was from us. */
+-	if (memcmp(txdesc->addr2, local->dev->dev_addr, ETH_ALEN)) {
++	if (!ether_addr_equal(txdesc->addr2, local->dev->dev_addr)) {
+ 		printk(KERN_DEBUG "%s: TX callback - foreign frame\n",
+ 		       local->dev->name);
+ 		return;
+diff --git a/drivers/net/wireless/hostap/hostap_ioctl.c b/drivers/net/wireless/hostap/hostap_ioctl.c
+index e509030..2454a74 100644
+--- a/drivers/net/wireless/hostap/hostap_ioctl.c
++++ b/drivers/net/wireless/hostap/hostap_ioctl.c
+@@ -655,7 +655,7 @@ static int hostap_join_ap(struct net_device *dev)
+ 		if (!local->last_scan_results)
+ 			break;
+ 		entry = &local->last_scan_results[i];
+-		if (memcmp(local->preferred_ap, entry->bssid, ETH_ALEN) == 0) {
++		if (ether_addr_equal(local->preferred_ap, entry->bssid)) {
+ 			req.channel = entry->chid;
+ 			break;
+ 		}
+@@ -1978,7 +1978,7 @@ static inline int prism2_translate_scan(local_info_t *local,
+ 		list_for_each(ptr, &local->bss_list) {
+ 			struct hostap_bss_info *bss;
+ 			bss = list_entry(ptr, struct hostap_bss_info, list);
+-			if (memcmp(bss->bssid, scan->bssid, ETH_ALEN) == 0) {
++			if (ether_addr_equal(bss->bssid, scan->bssid)) {
+ 				bss->included = 1;
+ 				current_ev = __prism2_translate_scan(
+ 					local, info, scan, bss, current_ev,
+diff --git a/drivers/net/wireless/hostap/hostap_main.c b/drivers/net/wireless/hostap/hostap_main.c
+index a1257c9..67db34e 100644
+--- a/drivers/net/wireless/hostap/hostap_main.c
++++ b/drivers/net/wireless/hostap/hostap_main.c
+@@ -155,8 +155,7 @@ int prism2_wds_add(local_info_t *local, u8 *remote_addr,
+ 
+ 		if (prism2_wds_special_addr(iface->u.wds.remote_addr))
+ 			empty = iface;
+-		else if (memcmp(iface->u.wds.remote_addr, remote_addr,
+-				ETH_ALEN) == 0) {
++		else if (ether_addr_equal(iface->u.wds.remote_addr, remote_addr)) {
+ 			match = iface;
+ 			break;
+ 		}
+@@ -214,8 +213,7 @@ int prism2_wds_del(local_info_t *local, u8 *remote_addr,
+ 		if (iface->type != HOSTAP_INTERFACE_WDS)
+ 			continue;
+ 
+-		if (memcmp(iface->u.wds.remote_addr, remote_addr,
+-			   ETH_ALEN) == 0) {
++		if (ether_addr_equal(iface->u.wds.remote_addr, remote_addr)) {
+ 			selected = iface;
+ 			break;
+ 		}
+@@ -1085,7 +1083,7 @@ int prism2_sta_deauth(local_info_t *local, u16 reason)
+ 
+ 	if (local->iw_mode != IW_MODE_INFRA ||
+ 	    is_zero_ether_addr(local->bssid) ||
+-	    memcmp(local->bssid, "\x44\x44\x44\x44\x44\x44", ETH_ALEN) == 0)
++	    ether_addr_equal(local->bssid, "\x44\x44\x44\x44\x44\x44"))
+ 		return 0;
+ 
+ 	ret = prism2_sta_send_mgmt(local, local->bssid, IEEE80211_STYPE_DEAUTH,
+-- 
+1.8.0
 
-Cedric Voncken
+
 
