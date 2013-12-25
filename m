@@ -1,167 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f45.google.com ([74.125.83.45]:43023 "EHLO
-	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754568Ab3LaRQP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Dec 2013 12:16:15 -0500
-Received: by mail-ee0-f45.google.com with SMTP id d49so5500496eek.18
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Dec 2013 09:16:14 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 09/28] iwlwifi: pcie: move interrupt prints to the common handler
-Date: Tue, 31 Dec 2013 19:15:38 +0200
-Message-Id: <1388510157-23345-9-git-send-email-egrumbach@gmail.com> (sfid-20131231_183436_929485_EED225D7)
-In-Reply-To: <52C2FB68.2010708@gmail.com>
-References: <52C2FB68.2010708@gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:39382 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751666Ab3LYKiY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Dec 2013 05:38:24 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: wzyboy <wzyboy@wzyboy.org>, Emmanuel Grumbach <egrumbach@gmail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bj?rn Mork <bjorn@mork.no>
+Subject: RE: [Ilw] Intel Wireless 7260 hardware timed out randomly
+Date: Wed, 25 Dec 2013 10:38:20 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB303D297F0@HASMSX103.ger.corp.intel.com> (sfid-20131225_113837_781459_EA46E2A3)
+References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
+ <52828364.6080103@gmail.com>
+ <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
+ <CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
+ <CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
+ <CALkVjQaTnocYnV4GM=LHuYwMRZ=sOZnSrtna4C6anNAWr4O7=A@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02E49@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZdPuE2F+ZARBLha-+iOMA4AjDWHO4=ssnuF2Uu87RyuQ@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02EC1@HASMSX103.ger.corp.intel.com>
+ <CALkVjQbPTkGuEa8hLVZE0OVatw7ho=D+D51Qu68PRx-0dYay7w@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02FC6@HASMSX103.ger.corp.intel.com>
+ <CAErSpo6bKOpycD=cp08aBqp2U-u7sdbTSBYoHop1-1Hkmr3F-g@mail.gmail.com>
+ <CALkVjQaOHix5uxFGd-62negbfubz-rdP+zmj9w5wDEa1rCA75Q@mail.gmail.com>
+ <5285E028.20906@gmail.com>
+ <CALkVjQYT9P--dgez064je4vM-xve4uF5ptOVVk3DuVoQiWQvew@mail.gmail.com>
+ <CANUX_P1j9QNGQ2n02KpXsuMQcZo9uOsSN-zZ8yNS1e5+Y9bJOA@mail.gmail.com>
+ <CALkVjQYFJzP1E_YayPOjRu3u85WdpDojDD+DmU9ZehY7ZHF0AA@mail.gmail.com>
+In-Reply-To: <CALkVjQYFJzP1E_YayPOjRu3u85WdpDojDD+DmU9ZehY7ZHF0AA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-
-Handling interrupt with no cause and printing logs doesn't
-need to be ICT / non-ICT specific move this to the common
-code.
-
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/pcie/rx.c |   95 ++++++++++++--------------------
- 1 file changed, 34 insertions(+), 61 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
-index 9e019e5..2e11512 100644
---- a/drivers/net/wireless/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
-@@ -819,43 +819,6 @@ static u32 iwl_pcie_int_cause_non_ict(struct iwl_trans *trans)
- 	/* Discover which interrupts are active/pending */
- 	inta = iwl_read32(trans, CSR_INT);
- 
--	if (inta & (~trans_pcie->inta_mask)) {
--		IWL_DEBUG_ISR(trans,
--			      "We got a masked interrupt (0x%08x)...Ack and ignore\n",
--			      inta & (~trans_pcie->inta_mask));
--		iwl_write32(trans, CSR_INT, inta & (~trans_pcie->inta_mask));
--		inta &= trans_pcie->inta_mask;
--	}
--
--	/* Ignore interrupt if there's nothing in NIC to service.
--	 * This may be due to IRQ shared with another device,
--	 * or due to sporadic interrupts thrown from our NIC. */
--	if (!inta) {
--		IWL_DEBUG_ISR(trans, "Ignore interrupt, inta == 0\n");
--		/*
--		 * Re-enable interrupts here since we don't have anything to
--		 * service, but only in case the handler won't run. Note that
--		 * the handler can be scheduled because of a previous
--		 * interrupt.
--		 */
--		if (test_bit(STATUS_INT_ENABLED, &trans->status) && !inta)
--			iwl_enable_interrupts(trans);
--		return inta;
--	}
--
--	if ((inta == 0xFFFFFFFF) || ((inta & 0xFFFFFFF0) == 0xa5a5a5a0)) {
--		/* Hardware disappeared. It might have already raised
--		 * an interrupt */
--		IWL_WARN(trans, "HARDWARE GONE?? INTA == 0x%08x\n", inta);
--		return 0xFFFFFFFF;
--	}
--
--	if (iwl_have_debug_level(IWL_DL_ISR))
--		IWL_DEBUG_ISR(trans,
--			      "ISR inta 0x%08x, enabled 0x%08x, fh 0x%08x\n",
--			      inta, trans_pcie->inta_mask,
--			      iwl_read32(trans, CSR_FH_INT_STATUS));
--
- 	/* the thread will service interrupts and re-enable them */
- 	return inta;
- }
-@@ -887,10 +850,8 @@ static u32 iwl_pcie_int_cause_ict(struct iwl_trans *trans)
- 	 * or due to sporadic interrupts thrown from our NIC. */
- 	read = le32_to_cpu(trans_pcie->ict_tbl[trans_pcie->ict_index]);
- 	trace_iwlwifi_dev_ict_read(trans->dev, trans_pcie->ict_index, read);
--	if (!read) {
--		IWL_DEBUG_ISR(trans, "Ignore interrupt, inta == 0\n");
--		goto none;
--	}
-+	if (!read)
-+		return 0;
- 
- 	/*
- 	 * Collect all entries up to the first 0, starting from ict_index;
-@@ -924,25 +885,6 @@ static u32 iwl_pcie_int_cause_ict(struct iwl_trans *trans)
- 		val |= 0x8000;
- 
- 	inta = (0xff & val) | ((0xff00 & val) << 16);
--	IWL_DEBUG_ISR(trans, "ISR inta 0x%08x, enabled(sw) 0x%08x ict 0x%08x\n",
--		      inta, trans_pcie->inta_mask, val);
--	if (iwl_have_debug_level(IWL_DL_ISR))
--		IWL_DEBUG_ISR(trans, "enabled(hw) 0x%08x\n",
--			      iwl_read32(trans, CSR_INT_MASK));
--
--	inta &= trans_pcie->inta_mask;
--
--	/* iwl_pcie_tasklet() will service interrupts and re-enable them */
--	if (likely(inta))
--		return inta;
--
-- none:
--	/* re-enable interrupts here since we don't have anything to service.
--	 * only Re-enable if disabled by irq.
--	 */
--	if (test_bit(STATUS_INT_ENABLED, &trans->status) && !inta)
--		iwl_enable_interrupts(trans);
--
- 	return inta;
- }
- 
-@@ -968,13 +910,44 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
- 	else
- 		inta = iwl_pcie_int_cause_non_ict(trans);
- 
-+	if (iwl_have_debug_level(IWL_DL_ISR)) {
-+		IWL_DEBUG_ISR(trans,
-+			      "ISR inta 0x%08x, enabled 0x%08x(sw), enabled(hw) 0x%08x, fh 0x%08x\n",
-+			      inta, trans_pcie->inta_mask,
-+			      iwl_read32(trans, CSR_INT_MASK),
-+			      iwl_read32(trans, CSR_FH_INT_STATUS));
-+		if (inta & (~trans_pcie->inta_mask))
-+			IWL_DEBUG_ISR(trans,
-+				      "We got a masked interrupt (0x%08x)\n",
-+				      inta & (~trans_pcie->inta_mask));
-+	}
-+
-+	inta &= trans_pcie->inta_mask;
-+
-+	/*
-+	 * Ignore interrupt if there's nothing in NIC to service.
-+	 * This may be due to IRQ shared with another device,
-+	 * or due to sporadic interrupts thrown from our NIC.
-+	 */
- 	if (unlikely(!inta)) {
-+		IWL_DEBUG_ISR(trans, "Ignore interrupt, inta == 0\n");
-+		/*
-+		 * Re-enable interrupts here since we don't
-+		 * have anything to service
-+		 */
-+		if (test_bit(STATUS_INT_ENABLED, &trans->status))
-+			iwl_enable_interrupts(trans);
- 		spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
- 		lock_map_release(&trans->sync_cmd_lockdep_map);
- 		return IRQ_NONE;
- 	}
- 
--	if (unlikely(inta == 0xFFFFFFFF)) {
-+	if (unlikely(inta == 0xFFFFFFFF || (inta & 0xFFFFFFF0) == 0xa5a5a5a0)) {
-+		/*
-+		 * Hardware disappeared. It might have
-+		 * already raised an interrupt.
-+		 */
-+		IWL_WARN(trans, "HARDWARE GONE?? INTA == 0x%08x\n", inta);
- 		spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
- 		goto out;
- 	}
--- 
-1.7.9.5
-
+PiANCj4gDQo+IEdsYWQgdG8gc2VlIHlvdSBhZ2FpbiA6LSkNCj4gDQo+IEkndmUgY29tcGlsZWQg
+TGludXggMy4xMi41IHdpdGggeW91ciBwYXRjaCwgcmVtb3ZlZCAic2V0cGNpIiB0cmljayBhbmQN
+Cj4gcmVib290ZWQuDQo+IA0KPiBEdXJpbmcgdGhlIGJvb3Qgb2YgbmV3IGtlcm5lbCwgSSBjYW4g
+c2VlIGFkZGl0aW9uYWwgKGVycm9yKSBtZXNzYWdlcyBhbW9uZw0KPiAic3lzdGVtZC1mc2NrIiBs
+aW5lcyBidXQgSSB3YXMgbm90IGZhc3QgZW5vdWdoIHRvIHRha2UgcGhvdG9zIGZvciB0aGVtDQo+
+IGJlZm9yZSB0aGV5IGRpc2FwcGVhcmVkIChmbHVzaGVkIGF3YXkpIGJ5IHR0eSBsb2dpbiBpbnRl
+cmZhY2UuDQo+IA0KPiBBZnRlciBsb2dnaW5nIGluLCBJIGZpbmQgdGhhdCBuZXRjZmcgZGlkIG5v
+dCBjb25uZWN0IHRvIGRvcm1pdG9yeSdzIFdpLUZpIGFzDQo+IGJlZm9yZS4gSSBydW4gImxzcGNp
+IC12dnh4eCIgYW5kIGZpbmQgdGhhdCB0aGUgaW50ZXJmYWNlIGlzIGZpbGxlZCB3aXRoICJmZiIu
+IEkndmUNCj4gYXR0YWNoZWQgdGhlIG91dHB1dCBvZiAibHNwY2kgLXZ2eHh4IiBhbmQgImRtZXNn
+Ii4NCj4gDQoNClNvIGl0IGRpZG4ndCB3b3JrIC0gb2suIEkgYW0gbm90IHN1cnByaXNlZCwgYnV0
+IEkgc3RpbGwgd2FudGVkIHRvIGtub3cuDQpUaGlzIHBhdGNoIGlzIHN1cHBvc2VkIHRvIGZpeCBz
+b21lIHRpbWluZyBpc3N1ZSBpbiB0aGUgd2FrZSB1cCBmcm9tIEwxLg0KVGhhbmtzIGZvciB0ZXN0
+aW5nLg0KDQo+IA0KPiAoQW5kIGhlcmUgaXMgc29tZXRoaW5nICJmdW4iOiBJIHJldmVydGVkIG15
+IGtlcm5lbCB0byBBcmNoJ3Mgb2ZmaWNpYWwNCj4gMy4xMi41IGFuZCByZWJvb3RlZCwgYW5kIHRo
+ZSBpbnRlcmZhY2UgaXMgdG90YWxseSBtaXNzaW5nISBJIG1lYW4sIGl0DQo+IGRpc2FwcGVhcmVk
+IGZyb20gdGhlIG91dHB1dCBvZiAiaXAgbGluayIuIEkgY2Fubm90IGV2ZW4gc2VlIGl0IGluICJs
+c3BjaSAtDQo+IHZ2eHh4Iiwgbm90IGV2ZW4gImZmIi4gVGhlIHN0cmFuZ2UgZWZmZWN0IHZhbmlz
+aGVkIGFmdGVyIG9uZSBtb3JlIHJlYm9vdA0KPiBhbmQgYSBjb2xkIGJvb3QuKQ0KDQpHcmVhdCAt
+IHRoYXQgY2FuIGhhcHBlbiBzb21ldGltZXMgd2hlbiBzb21ldGhpbmcgZ29lcyB3cm9uZy4uLg0K
