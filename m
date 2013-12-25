@@ -1,77 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39968 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932582Ab3LIUpW (ORCPT
+Received: from szxga03-in.huawei.com ([119.145.14.66]:54795 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751448Ab3LYD3g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Dec 2013 15:45:22 -0500
-Date: Mon, 9 Dec 2013 15:30:57 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Subject: Re: Pull request: ath 20131203
-Message-ID: <20131209203057.GC3359@tuxdriver.com> (sfid-20131209_214530_771813_638464EF)
-References: <87txep52hf.fsf@kamboji.qca.qualcomm.com>
+	Tue, 24 Dec 2013 22:29:36 -0500
+Message-ID: <52BA50E4.4040808@huawei.com> (sfid-20131225_043442_875644_58F6EEE1)
+Date: Wed, 25 Dec 2013 11:28:36 +0800
+From: Ding Tianhong <dingtianhong@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87txep52hf.fsf@kamboji.qca.qualcomm.com>
+To: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>, Netdev <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH v3 07/19] zd1211rw: slight optimization of addr compare
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 03, 2013 at 06:22:04PM +0200, Kalle Valo wrote:
-> Hi John,
-> 
-> here are ath10k patches which accumulated during the merge window.
-> 
-> Janusz and Marek implemented DFS support to ath10k, but the code is not
-> enabled yet due to missing cfg80211/mac80211 patches (it will be enabled
-> in the next pull request). Michal did some device reset fixes and made
-> it possible for ath10k to share an interrupt with another device. And
-> lots of smaller fixes from different people.
-> 
-> This time there are two conflicts, one in htc.c and other in mac.c. For
-> the htc change just delete the hunk. For the mac.c conflict take the
-> hunk from cfb27d29b61 (the bigger one) and rename
-> IEEE80211_CHAN_PASSIVE_SCAN to IEEE80211_CHAN_NO_IR. After you have
-> fixed the conflicts 'git diff' should show you this:
-> 
-> diff --cc drivers/net/wireless/ath/ath10k/htc.c
-> index edae50b,b068ae0..0000000
-> --- a/drivers/net/wireless/ath/ath10k/htc.c
-> +++ b/drivers/net/wireless/ath/ath10k/htc.c
-> diff --cc drivers/net/wireless/ath/ath10k/mac.c
-> index 06fe2b8,7d3d3ac..0000000
-> --- a/drivers/net/wireless/ath/ath10k/mac.c
-> +++ b/drivers/net/wireless/ath/ath10k/mac.c
-> @@@ -1356,7 -1482,10 +1482,10 @@@ static int ath10k_update_channel_list(s
->                         ch->ht40plus =
->                                 !(channel->flags & IEEE80211_CHAN_NO_HT40PLUS);
->   
-> +                       ch->chan_radar =
-> +                               !!(channel->flags & IEEE80211_CHAN_RADAR);
-> + 
->  -                      passive = channel->flags & IEEE80211_CHAN_PASSIVE_SCAN;
->  +                      passive = channel->flags & IEEE80211_CHAN_NO_IR;
->                         ch->passive = passive;
->   
->                         ch->freq = channel->center_freq;
-> 
-> Please let me know if you prefer me to handle the conflict differently
-> or if there are any other problems with the pull request.
-> 
-> The following changes since commit a1b13b9ad3759dca24c6b721ee026c540a4e6564:
-> 
->   rt2x00: rt2800pci: use module_pci_driver macro (2013-10-18 14:07:00 -0400)
-> 
-> are available in the git repository at:
-> 
->   git://github.com/kvalo/ath.git tags/for-linville-20131203
-> 
-> for you to fetch changes up to cfb27d29b61cc32c0bb75f741aeabb9c6e6af742:
-> 
->   ath10k: fix multi BSSID with WPA on FW 10.1 (2013-12-02 18:51:13 +0200)
+Use possibly more efficient ether_addr_equal
+instead of memcmp.
 
-Pulling now -- thanks for the advice on the merge fixup!
+Cc: Daniel Drake <dsd@gentoo.org>
+Cc: Ulrich Kunitz <kune@deine-taler.de>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Tan Xiaojun <tanxiaojun@huawei.com>
+Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+---
+ drivers/net/wireless/zd1211rw/zd_mac.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
+index eff79a3..e7af261 100644
+--- a/drivers/net/wireless/zd1211rw/zd_mac.c
++++ b/drivers/net/wireless/zd1211rw/zd_mac.c
+@@ -532,9 +532,8 @@ void zd_mac_tx_failed(struct urb *urb)
+ 		tx_hdr = (struct ieee80211_hdr *)skb->data;
+ 
+ 		/* we skip all frames not matching the reported destination */
+-		if (unlikely(memcmp(tx_hdr->addr1, tx_status->mac, ETH_ALEN))) {
++		if (unlikely(!ether_addr_equal(tx_hdr->addr1, tx_status->mac)))
+ 			continue;
+-		}
+ 
+ 		/* we skip all frames not matching the reported final rate */
+ 
+@@ -997,7 +996,7 @@ static int filter_ack(struct ieee80211_hw *hw, struct ieee80211_hdr *rx_hdr,
+ 		    continue;
+ 
+ 		tx_hdr = (struct ieee80211_hdr *)skb->data;
+-		if (likely(!memcmp(tx_hdr->addr2, rx_hdr->addr1, ETH_ALEN)))
++		if (likely(ether_addr_equal(tx_hdr->addr2, rx_hdr->addr1)))
+ 		{
+ 			found = 1;
+ 			break;
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.8.0
+
+
