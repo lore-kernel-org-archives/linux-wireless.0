@@ -1,53 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:42898 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752790Ab3LCKvX (ORCPT
+Received: from mail-vb0-f47.google.com ([209.85.212.47]:41924 "EHLO
+	mail-vb0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753407Ab3LZQOE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Dec 2013 05:51:23 -0500
-Message-ID: <1386067879.4393.7.camel@jlt4.sipsolutions.net> (sfid-20131203_115126_087250_5CEF08D2)
-Subject: Re: [RFC] cfg80211/mac80211: drop GTK-protected unicast IP packets
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
-Cc: linux-wireless@vger.kernel.org, j@w1.fi
-Date: Tue, 03 Dec 2013 11:51:19 +0100
-In-Reply-To: <1386067682.4393.5.camel@jlt4.sipsolutions.net> (sfid-20131203_114810_996608_4C530AAE)
-References: <1386010316-2540-1-git-send-email-johannes@sipsolutions.net>
-	 <529DA7FB.6020600@lri.fr> <1386063957.4393.4.camel@jlt4.sipsolutions.net>
-	 <529DB560.40805@lri.fr> <1386067682.4393.5.camel@jlt4.sipsolutions.net>
-	 (sfid-20131203_114810_996608_4C530AAE)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 26 Dec 2013 11:14:04 -0500
+Received: by mail-vb0-f47.google.com with SMTP id q12so4208114vbe.20
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Dec 2013 08:14:03 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAGb2v67mmYnyPeOd4Wwp1zHs7EC_Gr+gEdaaMWeKP5z_Z_SVGA@mail.gmail.com>
+References: <52A040CE.5040706@schinagl.nl> <CAFXj5xjJ0DTa0Qo1avLboQF-e3TFv3aEr_jjkuZjinwuTzXykQ@mail.gmail.com>
+ <52A09B5B.70800@schinagl.nl> <CAGRGNgWBgWqoPUdHSm2OXGb8r-ca5NX2z4_v0eG6oOMgJRd3HQ@mail.gmail.com>
+ <52B17973.1000608@broadcom.com> <52B19F38.7060503@redhat.com>
+ <52B1CA51.4010202@broadcom.com> <CAGb2v67cnP0yth0xxBKcaW_T2fF+4nP4r6h9NLqy5FV2x=hO=Q@mail.gmail.com>
+ <CAGb2v67mmYnyPeOd4Wwp1zHs7EC_Gr+gEdaaMWeKP5z_Z_SVGA@mail.gmail.com>
+From: Chen-Yu Tsai <wens@csie.org>
+Date: Fri, 27 Dec 2013 00:13:43 +0800
+Message-ID: <CAGb2v66646-1Sye=Eb04_SoeCGBU064OePcxDi7th1fqU8XfBg@mail.gmail.com> (sfid-20131226_171410_326959_90AC1C01)
+Subject: Re: [linux-sunxi] Firmware for Bluetooth (and wifi)
+To: linux-sunxi <linux-sunxi@googlegroups.com>
+Cc: Hans de Goede <hdegoede@redhat.com>,
+	Julian Calaby <julian.calaby@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>,
+	Olliver Schinagl <oliver+list@schinagl.nl>, benn@cubietech.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-12-03 at 11:48 +0100, Johannes Berg wrote:
-> On Tue, 2013-12-03 at 11:41 +0100, Nicolas Cavallari wrote:
-> > On 03/12/2013 10:45, Johannes Berg wrote:
-> > > On Tue, 2013-12-03 at 10:44 +0100, Nicolas Cavallari wrote:
-> > >> On 02/12/2013 19:51, Johannes Berg wrote:
-> > >>> +			if (!ipv4_is_multicast(ip.hdr4.daddr))
-> > >>> +				return -1;
-> > >>
-> > >> So broadcasting to e.g. 192.168.255.255 is now forbidden ?
-> > > 
-> > > Please, read the patch :)
-> > 
-> > I read the patch further. ipv4_is_multicast only checks if the
-> > address is in 224/4, so this patch makes __ieee80211_data_to_8023
-> > returns 0 for 224.0.0.0 to 239.255.255.255, and returns -1 for
-> > everything else, including the 255.255.255.255, 192.168.255.255 and
-> > other limited broadcast addresses, which are actually indistinguishable
-> > from unicast addresses if you don't know the IP configuration.
-> > 
-> > If __ieee80211_data_to_8023 returns -1, the packet is dropped as
-> > being unusable -- no less.
-> 
-> You still haven't even begun to understand the patch. It only cares
-> about GTK-encrypted frames.
+Hi,
 
-Also, all your analysis is basically saying that I missed some cases.
-That's fine and not much to worry about I guess (in particular if the
-patch isn't needed at all.)
+On Thu, Dec 19, 2013 at 6:12 PM, Chen-Yu Tsai <wens@csie.org> wrote:
+> Hi,
+>
+> On Thu, Dec 19, 2013 at 12:39 AM, Chen-Yu Tsai <wens@csie.org> wrote:
+>> Hi,
+>>
+>> On Thu, Dec 19, 2013 at 12:16 AM, Arend van Spriel <arend@broadcom.com> wrote:
+>>> On 12/18/2013 02:12 PM, Hans de Goede wrote:
+>>>> Hi,
+>>>>
+>>>> On 12/18/2013 11:31 AM, Arend van Spriel wrote:
+>>>>> On 12/05/2013 10:46 PM, Julian Calaby wrote:
+>>>>>> Firstly, are there any plans to support the BCM43362 chipset with the
+>>>>>> brcmfmac driver in the near future?
+>>>>>
+>>>>> Hi Julian,
+>>>>>
+>>>>> I am working on a patch to support this chip. It is looking promising.
+>>>>> Just have to go after a firmware image to be sure.
+>>>>
+>>>> Cool. Do you have a cubietruck? With my latest wip tree:
+>>>> https://github.com/jwrdegoede/linux-sunxi/commits/sunxi-next
+>>>
+>>> No cubietruck here. I googled the term last week because it came up and
+>>> found embeddedcomputer.nl selling it.
+>>>
+>>>> We've mmc/sdio controller support on top of 3.13-rc4, it would be
+>>>> nice if we could also get the wifi and bluetooth to work here.
+>
+> I got the chip to respond to probing. It is BCM43362 for sure.
+>
+>   root@cubietruck:/sys/bus/mmc/devices/mmc1:0001/mmc1:0001:1# cat device
+>   0xa962
+>   root@cubietruck:/sys/bus/mmc/devices/mmc1:0001/mmc1:0001:1# cat vendor
+>   0x02d0
+>
+> Vendor ID is Broadcom. Device ID is 43362.
+> But I get two devices, mmc1:0001:1 and mmc1:0001:2. I don't know
+> if this is normal or not.
 
-johannes
+Merry Christmas everyone. I got AP6210 (BCM43362) to work with mainline
+brcmfmac driver. I only tested managed mode. Monitor mode does not work.
+You can use firmware from CubieTech images.
 
+Things missing:
+
+  1. output clock is using default 32KHz from 24M / 750.
+     need to find some place to put clk_set_rate call.
+
+  2. BCM43362 out-of-band interrupts not supported.
+     OOB interrupt in brcmfmac is set using platform data.
+     Need to put this is board code, or add device tree support.
+
+Core ID and addresses were found using bcmdhd driver debug output.
+Arend might want to take a look at the patch:
+
+  https://github.com/wens/linux/commit/d945809d27de930eba5db0ca4bb7936e3ca88865
+
+Working tree:
+
+  https://github.com/wens/linux/tree/wip/sunxi-next-wifi
+
+Comments welcome :)
+
+
+ChenYu
+
+>
+> Bluetooth still isn't responding.
+
+Bluetooth still not working. :(
+Has anyone had any luck with this?
+
+>
+>>>> I'm certainly willing to give some patches for this a try. Do you
+>>>> have an example of what the dts file for a board with broadcom sdio
+>>>> wifi looks like ?
+>>>
+>>> I am still struggling with dts changes for a Pandaboard. As I understood
+>>> the cubietruck uses AP6210 module and the dts really depends on how
+>>> things are wired up with it. Apart from the SDIO lines it may have an
+>>> additional GPIO output to power the module and GPIO inputs to wakeup the
+>>> host and interrupt line.
+>>
+>> Yes it does. 2 GPIO lines for power, 1 for WiFi, 1 for BT.
+>> Also takes 2 GPIO inputs for interrupts. Not sure how to feed this
+>> to the driver. Last, it takes a clock output out of the A20 for the
+>> low power 32k clock. Not sure if this is mandatory?
+>>
+>> I've read the schematics more than a few times. I can get a dts out
+>> tomorrow. I was planning on doing the clock output and rfkill part
+>> first.
+>
+> Here's my tree, in case anyone wants to play around. It will be rebased
+> a lot.
+>
+>   https://github.com/wens/linux/tree/wip/sunxi-next-wifi
+>
+> The DT is not finished yet. External interrupts and low power clock are
+> still missing. Can anyone provide an example for useing the PIO EINT
+> interrupt pins?
+>
+>
+> Cheers,
+>
+> ChenYu
