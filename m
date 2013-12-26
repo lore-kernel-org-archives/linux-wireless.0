@@ -1,38 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:60493 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751331Ab3LaEZD convert rfc822-to-8bit (ORCPT
+Received: from szxga02-in.huawei.com ([119.145.14.65]:4104 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753094Ab3LZLlk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Dec 2013 23:25:03 -0500
-Received: by mail-ob0-f172.google.com with SMTP id gq1so12318958obb.17
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Dec 2013 20:25:02 -0800 (PST)
+	Thu, 26 Dec 2013 06:41:40 -0500
+Message-ID: <52BC15BB.8010500@huawei.com> (sfid-20131226_124519_423785_52B549F8)
+Date: Thu, 26 Dec 2013 19:40:43 +0800
+From: Ding Tianhong <dingtianhong@huawei.com>
 MIME-Version: 1.0
-From: Pierre Bourdon <delroth@gmail.com>
-Date: Tue, 31 Dec 2013 05:24:42 +0100
-Message-ID: <CA+V6dmh7Udn96GG0XGaabx-t6ZViu1RGk-xTawa_KbnCdro9Ew@mail.gmail.com> (sfid-20131231_052532_890939_E8ECD40B)
-Subject: Exporting the TSF to userland
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>, Netdev <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH v3.5 07/19] zd1211rw: slight optimization of addr compare
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello linux-wireless,
+Use possibly more efficient ether_addr_equal
+instead of memcmp.
 
-I'm a developer of libdrc, a project that allows Linux computers to
-control a Wii U GamePad. Because of how the device operates, our
-library needs to be able to read the TSF value of the access point
-device from userland.
+Cc: Daniel Drake <dsd@gentoo.org>
+Cc: Ulrich Kunitz <kune@deine-taler.de>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Tan Xiaojun <tanxiaojun@huawei.com>
+Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+---
+ drivers/net/wireless/zd1211rw/zd_mac.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-We currently have a hacky patch that works for our use cases, but it
-would be a lot more convenient if that feature could be upstreamed.
-What would be the best way to proceed?
-
-Our current patch:
-https://bitbucket.org/memahaxx/drc-mac80211/commits/4a9823cf2a6733bc15a05cffaebd8850d07451a7
-
-Thanks,
-
+diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
+index eff79a3..e7af261 100644
+--- a/drivers/net/wireless/zd1211rw/zd_mac.c
++++ b/drivers/net/wireless/zd1211rw/zd_mac.c
+@@ -532,9 +532,8 @@ void zd_mac_tx_failed(struct urb *urb)
+ 		tx_hdr = (struct ieee80211_hdr *)skb->data;
+ 
+ 		/* we skip all frames not matching the reported destination */
+-		if (unlikely(memcmp(tx_hdr->addr1, tx_status->mac, ETH_ALEN))) {
++		if (unlikely(!ether_addr_equal(tx_hdr->addr1, tx_status->mac)))
+ 			continue;
+-		}
+ 
+ 		/* we skip all frames not matching the reported final rate */
+ 
+@@ -997,7 +996,7 @@ static int filter_ack(struct ieee80211_hw *hw, struct ieee80211_hdr *rx_hdr,
+ 		    continue;
+ 
+ 		tx_hdr = (struct ieee80211_hdr *)skb->data;
+-		if (likely(!memcmp(tx_hdr->addr2, rx_hdr->addr1, ETH_ALEN)))
++		if (likely(ether_addr_equal(tx_hdr->addr2, rx_hdr->addr1)))
+ 		{
+ 			found = 1;
+ 			break;
 -- 
-Pierre "delroth" Bourdon <delroth@gmail.com>
-Software Engineer @ Zürich, Switzerland
-http://code.delroth.net/
+1.8.0
+
+
