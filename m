@@ -1,118 +1,203 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f43.google.com ([209.85.160.43]:39906 "EHLO
-	mail-pb0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751328Ab3K3X7l (ORCPT
+Received: from szxga03-in.huawei.com ([119.145.14.66]:28761 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753143Ab3LZLmB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Nov 2013 18:59:41 -0500
-Message-ID: <529A7BEF.6020100@gmail.com> (sfid-20131201_010040_822431_55AC3E95)
-Date: Sun, 01 Dec 2013 07:59:43 +0800
-From: Chen Gang <gang.chen.5i5j@gmail.com>
+	Thu, 26 Dec 2013 06:42:01 -0500
+Message-ID: <52BC15E3.1020501@huawei.com> (sfid-20131226_124425_600433_1156B4E6)
+Date: Thu, 26 Dec 2013 19:41:23 +0800
+From: Ding Tianhong <dingtianhong@huawei.com>
 MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
+To: Stanislav Yakovlev <stas.yakovlev@gmail.com>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	rkuo <rkuo@codeaurora.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	David Miller <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
-Subject: Re: [PATCH] net: mac80211: tx.c: be sure of 'sdata->vif.type' must
- be NL80211_IFTYPE_AP when be in NL80211_IFTYPE_AP case
-References: <528AEFB7.4060301@gmail.com>  <20131125011938.GB18921@codeaurora.org> <5292B845.3010404@gmail.com>  <5292B8A0.7020409@gmail.com> <5294255E.7040105@gmail.com>  <52957ADA.2080704@gmail.com>  (sfid-20131127_055211_558798_A7DF5684) <1385739487.8656.1.camel@jlt4.sipsolutions.net>  <5299D306.7070701@gmail.com>  (sfid-20131130_125901_519610_EDA4068E) <1385816013.4327.1.camel@jlt4.sipsolutions.net>  <5299ED38.4090509@gmail.com> <5299EFDD.6060405@gmail.com>  (sfid-20131130_150205_984535_068F14A9) <1385842134.6108.4.camel@jlt4.sipsolutions.net> <1385843940.2664.4.camel@joe-AO722> <529A7955.9010507@gmail.com>
-In-Reply-To: <529A7955.9010507@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	<linux-wireless@vger.kernel.org>, Netdev <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH v3.5 16/19] ipw2x00: slight optimization of addr compare
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/01/2013 07:48 AM, Chen Gang wrote:
-> On 12/01/2013 04:39 AM, Joe Perches wrote:
->> On Sat, 2013-11-30 at 21:08 +0100, Johannes Berg wrote:
->>> On Sat, 2013-11-30 at 22:02 +0800, Chen Gang wrote:
->>>>  - fall-through is obvious (although I did not notice it, originally).
->>>>
->>>>  - Check 'A' again just near by "case A" seems a little strange.
->>>>
->>>>  - Some compilers aren't quit smart enough to know 'chanctx_conf' is OK.
->>>
->>> I know. If you have any good ideas of how to make it more obvious to the
->>> compiler, I'm all ears, I just don't like any of the solutions offered
->>> so far (and you aren't the first to do so either) :-)
->>>
-> 
-> OK, thanks.
-> 
->>> FWIW, I find the label to be odd because if you're familiar with the
->>> code then AP/AP_VLAN *should* be identical except for two special things
->>> that are now linearly & neatly handled in the code (the first being the
->>> 4-addr station, the second the chanctx assignment which always has to be
->>> done regardless of 4-addr). IMHO the == check after case should be
->>> enough to make a human reader take a closer look. I understand that you
->>> didn't and that's OK since you were just trying to squelch compile
->>> warnings, but I don't see that this one warrants much attention.
->>
->> The label/test could be moved to save a couple of lines
->> of duplicated code.
->>
-> 
-> Hmm... for me, it must be an implementation which can satisfy all of us.
-> 
-> If ieee80211_subif_start_xmit() is not performance sensitive (I guess
-> so), we can use some short static functions instead of some code blocks
-> within ieee80211_subif_start_xmit().
-> 
->  - ieee80211_subif_start_xmit() is a long function (600+ lines).
-> 
+Use possibly more efficient ether_addr_equal
+instead of memcmp.
 
-Oh, one typo issue (need use 400+ instead of 600+), it is a long
-function (although not quite long).
+Cc: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Weilong Chen <chenweilong@huawei.com>
+Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+---
+ drivers/net/wireless/ipw2x00/ipw2200.c   | 34 ++++++++++++++++----------------
+ drivers/net/wireless/ipw2x00/libipw_rx.c | 10 +++++-----
+ 2 files changed, 22 insertions(+), 22 deletions(-)
 
->  - use short static function can share some code.
-> 
->  - if code can be shared, the work flow can be more clearer too (don't
->    need fall-through or goto).
-> 
-> 
-> And I guess, the implementation below can cause panic when
-> "sdata->vif.type == NL80211_IFTYPE_AP_VLAN".  :-(
-> 
->> Maybe:
->>
->>  net/mac80211/tx.c | 14 ++++++--------
->>  1 file changed, 6 insertions(+), 8 deletions(-)
->>
->> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
->> index 70b5a05..b2160f4 100644
->> --- a/net/mac80211/tx.c
->> +++ b/net/mac80211/tx.c
->> @@ -1777,18 +1777,16 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
->>  		}
->>  		ap_sdata = container_of(sdata->bss, struct ieee80211_sub_if_data,
->>  					u.ap);
->> -		chanctx_conf = rcu_dereference(ap_sdata->vif.chanctx_conf);
->> -		if (!chanctx_conf)
->> -			goto fail_rcu;
->> -		band = chanctx_conf->def.chan->band;
->> -		if (sta)
->> -			break;
->>  		/* fall through */
->>  	case NL80211_IFTYPE_AP:
->> -		if (sdata->vif.type == NL80211_IFTYPE_AP)
->> -			chanctx_conf = rcu_dereference(sdata->vif.chanctx_conf);
->> +		chanctx_conf = rcu_dereference(ap_sdata->vif.chanctx_conf);
->>  		if (!chanctx_conf)
->>  			goto fail_rcu;
->> +		if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN) {
->> +			band = chanctx_conf->def.chan->band;
->> +			if (sta)
->> +				break;
->> +		}
->>  		fc |= cpu_to_le16(IEEE80211_FCTL_FROMDS);
->>  		/* DA BSSID SA */
->>  		memcpy(hdr.addr1, skb->data, ETH_ALEN);
->>
->>
-> 
-> 
-
-
+diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
+index 9244b36..1393260 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2200.c
++++ b/drivers/net/wireless/ipw2x00/ipw2200.c
+@@ -3012,7 +3012,7 @@ static void ipw_remove_current_network(struct ipw_priv *priv)
+ 	spin_lock_irqsave(&priv->ieee->lock, flags);
+ 	list_for_each_safe(element, safe, &priv->ieee->network_list) {
+ 		network = list_entry(element, struct libipw_network, list);
+-		if (!memcmp(network->bssid, priv->bssid, ETH_ALEN)) {
++		if (ether_addr_equal(network->bssid, priv->bssid)) {
+ 			list_del(element);
+ 			list_add_tail(&network->list,
+ 				      &priv->ieee->network_free_list);
+@@ -3921,7 +3921,7 @@ static u8 ipw_add_station(struct ipw_priv *priv, u8 * bssid)
+ 	int i;
+ 
+ 	for (i = 0; i < priv->num_stations; i++) {
+-		if (!memcmp(priv->stations[i], bssid, ETH_ALEN)) {
++		if (ether_addr_equal(priv->stations[i], bssid)) {
+ 			/* Another node is active in network */
+ 			priv->missed_adhoc_beacons = 0;
+ 			if (!(priv->config & CFG_STATIC_CHANNEL))
+@@ -3953,7 +3953,7 @@ static u8 ipw_find_station(struct ipw_priv *priv, u8 * bssid)
+ 	int i;
+ 
+ 	for (i = 0; i < priv->num_stations; i++)
+-		if (!memcmp(priv->stations[i], bssid, ETH_ALEN))
++		if (ether_addr_equal(priv->stations[i], bssid))
+ 			return i;
+ 
+ 	return IPW_INVALID_STATION;
+@@ -5622,7 +5622,7 @@ static int ipw_find_adhoc_network(struct ipw_priv *priv,
+ 		return 0;
+ 	}
+ 
+-	if (!memcmp(network->bssid, priv->bssid, ETH_ALEN)) {
++	if (ether_addr_equal(network->bssid, priv->bssid)) {
+ 		IPW_DEBUG_MERGE("Network '%s (%pM)' excluded "
+ 				"because of the same BSSID match: %pM"
+ 				".\n", print_ssid(ssid, network->ssid,
+@@ -5849,7 +5849,7 @@ static int ipw_best_network(struct ipw_priv *priv,
+ 	}
+ 
+ 	if ((priv->config & CFG_STATIC_BSSID) &&
+-	    memcmp(network->bssid, priv->bssid, ETH_ALEN)) {
++	    !ether_addr_equal(network->bssid, priv->bssid)) {
+ 		IPW_DEBUG_ASSOC("Network '%s (%pM)' excluded "
+ 				"because of BSSID mismatch: %pM.\n",
+ 				print_ssid(ssid, network->ssid,
+@@ -6988,7 +6988,7 @@ static int ipw_qos_handle_probe_response(struct ipw_priv *priv,
+ 	}
+ 	if ((priv->status & STATUS_ASSOCIATED) &&
+ 	    (priv->ieee->iw_mode == IW_MODE_ADHOC) && (active_network == 0)) {
+-		if (memcmp(network->bssid, priv->bssid, ETH_ALEN))
++		if (!ether_addr_equal(network->bssid, priv->bssid))
+ 			if (network->capability & WLAN_CAPABILITY_IBSS)
+ 				if ((network->ssid_len ==
+ 				     priv->assoc_network->ssid_len) &&
+@@ -8210,29 +8210,29 @@ static int is_network_packet(struct ipw_priv *priv,
+ 	switch (priv->ieee->iw_mode) {
+ 	case IW_MODE_ADHOC:	/* Header: Dest. | Source    | BSSID */
+ 		/* packets from our adapter are dropped (echo) */
+-		if (!memcmp(header->addr2, priv->net_dev->dev_addr, ETH_ALEN))
++		if (ether_addr_equal(header->addr2, priv->net_dev->dev_addr))
+ 			return 0;
+ 
+ 		/* {broad,multi}cast packets to our BSSID go through */
+ 		if (is_multicast_ether_addr(header->addr1))
+-			return !memcmp(header->addr3, priv->bssid, ETH_ALEN);
++			return ether_addr_equal(header->addr3, priv->bssid);
+ 
+ 		/* packets to our adapter go through */
+-		return !memcmp(header->addr1, priv->net_dev->dev_addr,
+-			       ETH_ALEN);
++		return ether_addr_equal(header->addr1,
++					priv->net_dev->dev_addr);
+ 
+ 	case IW_MODE_INFRA:	/* Header: Dest. | BSSID | Source */
+ 		/* packets from our adapter are dropped (echo) */
+-		if (!memcmp(header->addr3, priv->net_dev->dev_addr, ETH_ALEN))
++		if (ether_addr_equal(header->addr3, priv->net_dev->dev_addr))
+ 			return 0;
+ 
+ 		/* {broad,multi}cast packets to our BSS go through */
+ 		if (is_multicast_ether_addr(header->addr1))
+-			return !memcmp(header->addr2, priv->bssid, ETH_ALEN);
++			return ether_addr_equal(header->addr2, priv->bssid);
+ 
+ 		/* packets to our adapter go through */
+-		return !memcmp(header->addr1, priv->net_dev->dev_addr,
+-			       ETH_ALEN);
++		return ether_addr_equal(header->addr1,
++					priv->net_dev->dev_addr);
+ 	}
+ 
+ 	return 1;
+@@ -8260,7 +8260,7 @@ static  int is_duplicate_packet(struct ipw_priv *priv,
+ 			list_for_each(p, &priv->ibss_mac_hash[index]) {
+ 				entry =
+ 				    list_entry(p, struct ipw_ibss_seq, list);
+-				if (!memcmp(entry->mac, mac, ETH_ALEN))
++				if (ether_addr_equal(entry->mac, mac))
+ 					break;
+ 			}
+ 			if (p == &priv->ibss_mac_hash[index]) {
+@@ -8329,7 +8329,7 @@ static void ipw_handle_mgmt_packet(struct ipw_priv *priv,
+ 	      IEEE80211_STYPE_PROBE_RESP) ||
+ 	     (WLAN_FC_GET_STYPE(le16_to_cpu(header->frame_ctl)) ==
+ 	      IEEE80211_STYPE_BEACON))) {
+-		if (!memcmp(header->addr3, priv->bssid, ETH_ALEN))
++		if (ether_addr_equal(header->addr3, priv->bssid))
+ 			ipw_add_station(priv, header->addr2);
+ 	}
+ 
+@@ -9045,7 +9045,7 @@ static int ipw_wx_set_wap(struct net_device *dev,
+ 	}
+ 
+ 	priv->config |= CFG_STATIC_BSSID;
+-	if (!memcmp(priv->bssid, wrqu->ap_addr.sa_data, ETH_ALEN)) {
++	if (ether_addr_equal(priv->bssid, wrqu->ap_addr.sa_data)) {
+ 		IPW_DEBUG_WX("BSSID set to current BSSID.\n");
+ 		mutex_unlock(&priv->mutex);
+ 		return 0;
+diff --git a/drivers/net/wireless/ipw2x00/libipw_rx.c b/drivers/net/wireless/ipw2x00/libipw_rx.c
+index 9ffe659..5c62538 100644
+--- a/drivers/net/wireless/ipw2x00/libipw_rx.c
++++ b/drivers/net/wireless/ipw2x00/libipw_rx.c
+@@ -874,13 +874,13 @@ void libipw_rx_any(struct libipw_device *ieee,
+ 	switch (ieee->iw_mode) {
+ 	case IW_MODE_ADHOC:
+ 		/* our BSS and not from/to DS */
+-		if (memcmp(hdr->addr3, ieee->bssid, ETH_ALEN) == 0)
++		if (ether_addr_equal(hdr->addr3, ieee->bssid))
+ 		if ((fc & (IEEE80211_FCTL_TODS+IEEE80211_FCTL_FROMDS)) == 0) {
+ 			/* promisc: get all */
+ 			if (ieee->dev->flags & IFF_PROMISC)
+ 				is_packet_for_us = 1;
+ 			/* to us */
+-			else if (memcmp(hdr->addr1, ieee->dev->dev_addr, ETH_ALEN) == 0)
++			else if (ether_addr_equal(hdr->addr1, ieee->dev->dev_addr))
+ 				is_packet_for_us = 1;
+ 			/* mcast */
+ 			else if (is_multicast_ether_addr(hdr->addr1))
+@@ -889,18 +889,18 @@ void libipw_rx_any(struct libipw_device *ieee,
+ 		break;
+ 	case IW_MODE_INFRA:
+ 		/* our BSS (== from our AP) and from DS */
+-		if (memcmp(hdr->addr2, ieee->bssid, ETH_ALEN) == 0)
++		if (ether_addr_equal(hdr->addr2, ieee->bssid))
+ 		if ((fc & (IEEE80211_FCTL_TODS+IEEE80211_FCTL_FROMDS)) == IEEE80211_FCTL_FROMDS) {
+ 			/* promisc: get all */
+ 			if (ieee->dev->flags & IFF_PROMISC)
+ 				is_packet_for_us = 1;
+ 			/* to us */
+-			else if (memcmp(hdr->addr1, ieee->dev->dev_addr, ETH_ALEN) == 0)
++			else if (ether_addr_equal(hdr->addr1, ieee->dev->dev_addr))
+ 				is_packet_for_us = 1;
+ 			/* mcast */
+ 			else if (is_multicast_ether_addr(hdr->addr1)) {
+ 				/* not our own packet bcasted from AP */
+-				if (memcmp(hdr->addr3, ieee->dev->dev_addr, ETH_ALEN))
++				if (!ether_addr_equal(hdr->addr3, ieee->dev->dev_addr))
+ 					is_packet_for_us = 1;
+ 			}
+ 		}
 -- 
-Chen Gang
+1.8.0
+
+
