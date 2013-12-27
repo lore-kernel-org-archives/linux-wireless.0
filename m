@@ -1,87 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f47.google.com ([74.125.83.47]:35487 "EHLO
-	mail-ee0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754601Ab3LaRQT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Dec 2013 12:16:19 -0500
-Received: by mail-ee0-f47.google.com with SMTP id e51so4774706eek.20
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Dec 2013 09:16:18 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 12/28] iwlwifi: mvm: fix AC / FIFO mapping
-Date: Tue, 31 Dec 2013 19:15:41 +0200
-Message-Id: <1388510157-23345-12-git-send-email-egrumbach@gmail.com> (sfid-20131231_183437_301369_9FD694F5)
-In-Reply-To: <52C2FB68.2010708@gmail.com>
-References: <52C2FB68.2010708@gmail.com>
+Received: from isrv.corpit.ru ([86.62.121.231]:56934 "EHLO isrv.corpit.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754742Ab3L0VIR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Dec 2013 16:08:17 -0500
+Message-ID: <52BDE9DC.5040206@msgid.tls.msk.ru> (sfid-20131227_220821_640596_139D2FB8)
+Date: Sat, 28 Dec 2013 00:58:04 +0400
+From: Michael Tokarev <mjt@tls.msk.ru>
+MIME-Version: 1.0
+To: brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org
+Subject: BCM4313 & brcmsmac & 3.12: only semi-working?
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Hello.
 
-The AC / fifo mapping was wrong - BE packets landed in VO
-FIFO. The iwl_mvm_tx_fifo enumeration isn't in the same
-order as ieee80211_ac_numbers enumeration.
-Since the firmware relies on fifo / ac mapping - this led
-to wrong behavior. E.g. the firmware sends beacon with the
-same QoS parameters as VO, and it actually took the
-parameters of BK. There are probably more severe issues.
+Got a Lenovo Thinkpad notebook with the following wifi card:
 
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c |   25 +++++++++++++++----------
- 1 file changed, 15 insertions(+), 10 deletions(-)
+03:00.0 Network controller [0280]: Broadcom Corporation BCM4313 802.11b/g/n Wireless LAN Controller [14e4:4727] (rev 01)
+	Subsystem: Broadcom Corporation Device [14e4:0608]
+	Flags: bus master, fast devsel, latency 0, IRQ 17
+	Memory at f1600000 (64-bit, non-prefetchable) [size=16K]
+	Capabilities: [40] Power Management version 3
+	Capabilities: [58] Vendor Specific Information: Len=78 <?>
+	Capabilities: [48] MSI: Enable- Count=1/1 Maskable- 64bit+
+	Capabilities: [d0] Express Endpoint, MSI 00
+	Capabilities: [100] Advanced Error Reporting
+	Capabilities: [13c] Virtual Channel
+	Capabilities: [160] Device Serial Number 00-00-24-ff-ff-fe-48-d2
+	Capabilities: [16c] Power Budgeting <?>
+	Kernel driver in use: bcma-pci-bridge
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-index fb93961..eaaf2db 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-@@ -69,10 +69,10 @@
- #include "mvm.h"
- 
- const u8 iwl_mvm_ac_to_tx_fifo[] = {
--	IWL_MVM_TX_FIFO_BK,
--	IWL_MVM_TX_FIFO_BE,
--	IWL_MVM_TX_FIFO_VI,
- 	IWL_MVM_TX_FIFO_VO,
-+	IWL_MVM_TX_FIFO_VI,
-+	IWL_MVM_TX_FIFO_BE,
-+	IWL_MVM_TX_FIFO_BK,
- };
- 
- struct iwl_mvm_mac_iface_iterator_data {
-@@ -586,18 +586,23 @@ static void iwl_mvm_mac_ctxt_cmd_common(struct iwl_mvm *mvm,
- 		cpu_to_le32(vif->bss_conf.use_short_slot ?
- 			    MAC_FLG_SHORT_SLOT : 0);
- 
--	for (i = 0; i < AC_NUM; i++) {
--		cmd->ac[i].cw_min = cpu_to_le16(mvmvif->queue_params[i].cw_min);
--		cmd->ac[i].cw_max = cpu_to_le16(mvmvif->queue_params[i].cw_max);
--		cmd->ac[i].aifsn = mvmvif->queue_params[i].aifs;
--		cmd->ac[i].edca_txop =
-+	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
-+		u8 txf = iwl_mvm_ac_to_tx_fifo[i];
-+
-+		cmd->ac[txf].cw_min =
-+			cpu_to_le16(mvmvif->queue_params[i].cw_min);
-+		cmd->ac[txf].cw_max =
-+			cpu_to_le16(mvmvif->queue_params[i].cw_max);
-+		cmd->ac[txf].edca_txop =
- 			cpu_to_le16(mvmvif->queue_params[i].txop * 32);
--		cmd->ac[i].fifos_mask = BIT(iwl_mvm_ac_to_tx_fifo[i]);
-+		cmd->ac[txf].aifsn = mvmvif->queue_params[i].aifs;
-+		cmd->ac[txf].fifos_mask = BIT(txf);
- 	}
- 
- 	/* in AP mode, the MCAST FIFO takes the EDCA params from VO */
- 	if (vif->type == NL80211_IFTYPE_AP)
--		cmd->ac[AC_VO].fifos_mask |= BIT(IWL_MVM_TX_FIFO_MCAST);
-+		cmd->ac[IWL_MVM_TX_FIFO_VO].fifos_mask |=
-+			BIT(IWL_MVM_TX_FIFO_MCAST);
- 
- 	if (vif->bss_conf.qos)
- 		cmd->qos_flags |= cpu_to_le32(MAC_QOS_FLG_UPDATE_EDCA);
--- 
-1.7.9.5
+With 3.12 kernel, the device is recognized and it is possible to
+connect to the access point and exchange some data.  In 3.10,
+even connection (assotiation with the AP) was quite a bit
+problematic, and packet exchange never worked).
 
+However, after receiving a few packets (about 100 packets), the
+interface almost stops receiving data, except a few packets once
+in a while.  For example, when d/loading some file over wifi, first
+part (very beginning) gets d/loaded fine, and next d/load stalls,
+with Rx counter of the card not changing.  Terminating the process
+makes the counter to increase by one or two.
+
+Stopping and re-starting the interface in NetworkManager makes
+it go again, also for just about 100 packets, till it stalls
+again.
+
+Sometimes it works longer, say, 500 or even 1000 packets, but
+at the end it stalls anyway.
+
+Here's a typical iwconfig output:
+
+wlan0     IEEE 802.11bgn  ESSID:"mjt"
+          Mode:Managed  Frequency:2.412 GHz  Access Point: 64:70:02:29:D9:30
+          Bit Rate=1 Mb/s   Tx-Power=19 dBm
+          Retry  long limit:7   RTS thr:off   Fragment thr:off
+          Encryption key:off
+          Power Management:off
+          Link Quality=56/70  Signal level=-54 dBm
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:84  Invalid misc:13   Missed beacon:0
+
+(Note the bitrate of 1Mbps: the AP is pretty much capable of
+running at 54Mbps, and actually my smartphone, when used in
+exactly the same place, goes at full 54Mbps just fine.  The
+signal conditions are very well in here, AP is about 15 meters
+away, stright visible.  When I force-reconnect it, it displays
+some more sane value here for a few moments but drops to 1mbps
+anyway).
+
+Here's some dmesg output when I start/stop wifi network and
+try to d/load something:
+
+...
+[28031.696294] brcmsmac bcma0:0: brcms_ops_bss_info_changed: qos enabled: false (implement)
+[28031.696307] brcmsmac bcma0:0: brcms_ops_config: change power-save mode: false (implement)
+[28033.640097] wlan0: authenticate with 64:70:02:29:d9:30
+[28033.642395] wlan0: send auth to 64:70:02:29:d9:30 (try 1/3)
+[28033.644624] wlan0: authenticated
+[28033.645452] wlan0: associate with 64:70:02:29:d9:30 (try 1/3)
+[28033.650163] wlan0: RX AssocResp from 64:70:02:29:d9:30 (capab=0x411 status=0 aid=1)
+[28033.651697] brcmsmac bcma0:0: brcmsmac: brcms_ops_bss_info_changed: associated
+[28033.651702] brcmsmac bcma0:0: brcms_ops_bss_info_changed: qos enabled: true (implement)
+[28033.651710] wlan0: associated
+[28033.921528] brcmsmac bcma0:0: brcms_ops_bss_info_changed: arp filtering: 1 addresses (implement)
+[28149.522205] wlan0: deauthenticating from 64:70:02:29:d9:30 by local choice (reason=3)
+[28149.535454] brcmsmac bcma0:0: brcmsmac: brcms_ops_bss_info_changed: disassociated
+[28149.535469] brcmsmac bcma0:0: brcms_ops_bss_info_changed: arp filtering: 1 addresses (implement)
+[28149.535476] brcmsmac bcma0:0: brcms_ops_bss_info_changed: qos enabled: false (implement)
+[28149.538431] cfg80211: Calling CRDA to update world regulatory domain
+[28152.718056] brcmsmac bcma0:0: brcms_ops_bss_info_changed: qos enabled: false (implement)
+[28152.718074] brcmsmac bcma0:0: brcms_ops_config: change power-save mode: false (implement)
+[28154.564599] wlan0: authenticate with 64:70:02:29:d9:30
+[28154.567108] wlan0: send auth to 64:70:02:29:d9:30 (try 1/3)
+[28154.569527] wlan0: authenticated
+[28154.570232] wlan0: associate with 64:70:02:29:d9:30 (try 1/3)
+[28154.574687] wlan0: RX AssocResp from 64:70:02:29:d9:30 (capab=0x411 status=0 aid=1)
+[28154.575257] brcmsmac bcma0:0: brcmsmac: brcms_ops_bss_info_changed: associated
+[28154.575261] brcmsmac bcma0:0: brcms_ops_bss_info_changed: qos enabled: true (implement)
+[28154.575268] wlan0: associated
+...
+
+
+The same notebook with the same wifi card works just fine under
+windows (both windows 7 and 8), demonstrating stable reliable
+about-54Mbps connection.
+
+Is there any hope to get this device working under linux?
+
+I can re-build kernels and stuff, enable debugging etc, -- that's
+no problem, but I've really limited time.
+
+I purchased this notebook especially to be used when travelling,
+to be able to access to my office/work network over hotel wifi,
+I plan to have a trip starting Jan-2.  After figuring out that
+it doesn't quite work as I'd expect it to do, I purchased another
+wifi card, just to face another issue: it my notebook refuses to
+_boot_ while that card is inserted! (it was a completely new
+and unexpected "feature", now I know what it is, and will avoid
+lenovo and HP notebooks in the future), -- so I returned the card
+back.  But now I'm again without wifi, and I can't return the
+notebook...
+
+P.S. I tried to find archives of brcm80211 list, or a way to
+subscribe to it before posting, but found neither.  Are there
+archives?
+
+Thanks,
+
+/mjt
