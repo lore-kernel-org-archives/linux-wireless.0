@@ -1,144 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f169.google.com ([209.85.215.169]:62218 "EHLO
-	mail-ea0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754608Ab3LHJ13 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Dec 2013 04:27:29 -0500
-From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Luciano Coelho <luca@coelho.fi>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
-	joni.lapilainen@gmail.com,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Felipe Contreras <felipe.contreras@gmail.com>,
-	David Gnedt <david.gnedt@davizone.at>,
-	=?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
-Subject: [PATCH v2 10/16] wl1251: enable tx path in monitor mode if necessary for packet injection
-Date: Sun,  8 Dec 2013 10:25:08 +0100
-Message-Id: <1386494714-21070-11-git-send-email-pali.rohar@gmail.com> (sfid-20131208_103249_075836_3FA466DC)
-In-Reply-To: <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
- <1386494714-21070-1-git-send-email-pali.rohar@gmail.com>
+Received: from mantis.wzyboy.im ([199.83.51.51]:51454 "EHLO mantis.wzyboy.im"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752892Ab3L1J5z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Dec 2013 04:57:55 -0500
 MIME-Version: 1.0
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB303D297F0@HASMSX103.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
+ <52828364.6080103@gmail.com> <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
+ <CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
+ <CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
+ <CALkVjQaTnocYnV4GM=LHuYwMRZ=sOZnSrtna4C6anNAWr4O7=A@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02E49@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZdPuE2F+ZARBLha-+iOMA4AjDWHO4=ssnuF2Uu87RyuQ@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02EC1@HASMSX103.ger.corp.intel.com>
+ <CALkVjQbPTkGuEa8hLVZE0OVatw7ho=D+D51Qu68PRx-0dYay7w@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02FC6@HASMSX103.ger.corp.intel.com>
+ <CAErSpo6bKOpycD=cp08aBqp2U-u7sdbTSBYoHop1-1Hkmr3F-g@mail.gmail.com>
+ <CALkVjQaOHix5uxFGd-62negbfubz-rdP+zmj9w5wDEa1rCA75Q@mail.gmail.com>
+ <5285E028.20906@gmail.com> <CALkVjQYT9P--dgez064je4vM-xve4uF5ptOVVk3DuVoQiWQvew@mail.gmail.com>
+ <CANUX_P1j9QNGQ2n02KpXsuMQcZo9uOsSN-zZ8yNS1e5+Y9bJOA@mail.gmail.com>
+ <CALkVjQYFJzP1E_YayPOjRu3u85WdpDojDD+DmU9ZehY7ZHF0AA@mail.gmail.com> <0BA3FCBA62E2DC44AF3030971E174FB303D297F0@HASMSX103.ger.corp.intel.com>
+From: wzyboy <wzyboy@wzyboy.org>
+Date: Sat, 28 Dec 2013 17:57:39 +0800
+Message-ID: <CALkVjQaJ94osfBwnrpKBk4tE_+=XMqznXY=qVv5KdzSkvsthaA@mail.gmail.com> (sfid-20131228_105758_944173_9487950F)
+Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Bj?rn Mork" <bjorn@mork.no>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Gnedt <david.gnedt@davizone.at>
+(Sorry for sending this mail multiple times...)
 
-If necessary enable the tx path in monitor mode for packet injection using
-the JOIN command with BSS_TYPE_STA_BSS and zero BSSID.
+Hi,
 
-Signed-off-by: David Gnedt <david.gnedt@davizone.at>
-Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
----
- drivers/net/wireless/ti/wl1251/main.c   |    5 +++++
- drivers/net/wireless/ti/wl1251/tx.c     |   25 +++++++++++++++++++++++++
- drivers/net/wireless/ti/wl1251/wl1251.h |    1 +
- 3 files changed, 31 insertions(+)
+yesterday a friend of mine told me that one can now install Windows
+8/8.1 on a USB device natively. So I tried this so-called "Windows To
+Go" technology.
 
-diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
-index b6f11b8..bb6e873 100644
---- a/drivers/net/wireless/ti/wl1251/main.c
-+++ b/drivers/net/wireless/ti/wl1251/main.c
-@@ -487,6 +487,7 @@ static void wl1251_op_stop(struct ieee80211_hw *hw)
- 	wl->rssi_thold = 0;
- 	wl->channel = WL1251_DEFAULT_CHANNEL;
- 	wl->monitor_present = false;
-+	wl->joined = false;
- 
- 	wl1251_debugfs_reset(wl);
- 
-@@ -546,6 +547,7 @@ static void wl1251_op_remove_interface(struct ieee80211_hw *hw,
- 	mutex_lock(&wl->mutex);
- 	wl1251_debug(DEBUG_MAC80211, "mac80211 remove interface");
- 	wl->vif = NULL;
-+	memset(wl->bssid, 0, ETH_ALEN);
- 	mutex_unlock(&wl->mutex);
- }
- 
-@@ -624,6 +626,7 @@ static int wl1251_op_config(struct ieee80211_hw *hw, u32 changed)
- 		 * at firmware level.
- 		 */
- 		if (wl->vif == NULL) {
-+			wl->joined = false;
- 			ret = wl1251_cmd_data_path_rx(wl, wl->channel, 1);
- 		} else {
- 			ret = wl1251_join(wl, wl->bss_type, wl->channel,
-@@ -1612,7 +1615,9 @@ struct ieee80211_hw *wl1251_alloc_hw(void)
- 	INIT_DELAYED_WORK(&wl->elp_work, wl1251_elp_work);
- 	wl->channel = WL1251_DEFAULT_CHANNEL;
- 	wl->monitor_present = false;
-+	wl->joined = false;
- 	wl->scanning = false;
-+	wl->bss_type = MAX_BSS_TYPE;
- 	wl->default_key = 0;
- 	wl->listen_int = 1;
- 	wl->rx_counter = 0;
-diff --git a/drivers/net/wireless/ti/wl1251/tx.c b/drivers/net/wireless/ti/wl1251/tx.c
-index 3cc82fd..216334d 100644
---- a/drivers/net/wireless/ti/wl1251/tx.c
-+++ b/drivers/net/wireless/ti/wl1251/tx.c
-@@ -28,6 +28,7 @@
- #include "tx.h"
- #include "ps.h"
- #include "io.h"
-+#include "event.h"
- 
- static bool wl1251_tx_double_buffer_busy(struct wl1251 *wl, u32 data_out_count)
- {
-@@ -277,6 +278,26 @@ static void wl1251_tx_trigger(struct wl1251 *wl)
- 		TX_STATUS_DATA_OUT_COUNT_MASK;
- }
- 
-+static void enable_tx_for_packet_injection(struct wl1251 *wl)
-+{
-+	int ret;
-+
-+	ret = wl1251_cmd_join(wl, BSS_TYPE_STA_BSS, wl->channel,
-+			      wl->beacon_int, wl->dtim_period);
-+	if (ret < 0) {
-+		wl1251_warning("join failed");
-+		return;
-+	}
-+
-+	ret = wl1251_event_wait(wl, JOIN_EVENT_COMPLETE_ID, 100);
-+	if (ret < 0) {
-+		wl1251_warning("join timeout");
-+		return;
-+	}
-+
-+	wl->joined = true;
-+}
-+
- /* caller must hold wl->mutex */
- static int wl1251_tx_frame(struct wl1251 *wl, struct sk_buff *skb)
- {
-@@ -298,6 +319,10 @@ static int wl1251_tx_frame(struct wl1251 *wl, struct sk_buff *skb)
- 		}
- 	}
- 
-+	/* Enable tx path in monitor mode for packet injection */
-+	if ((wl->vif == NULL) && !wl->joined)
-+		enable_tx_for_packet_injection(wl);
-+
- 	ret = wl1251_tx_path_status(wl);
- 	if (ret < 0)
- 		return ret;
-diff --git a/drivers/net/wireless/ti/wl1251/wl1251.h b/drivers/net/wireless/ti/wl1251/wl1251.h
-index 93c18d2..89f07f6 100644
---- a/drivers/net/wireless/ti/wl1251/wl1251.h
-+++ b/drivers/net/wireless/ti/wl1251/wl1251.h
-@@ -311,6 +311,7 @@ struct wl1251 {
- 	u8 listen_int;
- 	int channel;
- 	bool monitor_present;
-+	bool joined;
- 
- 	void *target_mem_map;
- 	struct acx_data_path_params_resp *data_path;
+Now I have successfully deployed a Windows 8.1 installation on my
+external USB HDD and booted my laptop up with it. That is to say, I
+can now observe how Intel 7260 acts under Windows.
+
+Could you tell me what should I do to gather debugging information
+such as L1 mode etc in Windows? I will send them to you then. Maybe
+this could help, to figure out what the bug of iwlwifi is.
+
 -- 
-1.7.9.5
-
+wzyboy
