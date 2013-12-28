@@ -1,100 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f45.google.com ([74.125.83.45]:40425 "EHLO
-	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751993Ab3LQUpN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Dec 2013 15:45:13 -0500
-Received: by mail-ee0-f45.google.com with SMTP id d49so3141868eek.4
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Dec 2013 12:45:11 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eyal Shapira <eyal@wizery.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 19/36] iwlwifi: mvm: rs: move rs_program_fix_rate to cleanup ifdefs
-Date: Tue, 17 Dec 2013 22:44:22 +0200
-Message-Id: <1387313079-28123-19-git-send-email-egrumbach@gmail.com> (sfid-20131217_214627_760752_C0DA4D4A)
-In-Reply-To: <52B0B72A.5070704@gmail.com>
-References: <52B0B72A.5070704@gmail.com>
+Received: from mantis.wzyboy.im ([199.83.51.51]:51442 "EHLO mantis.wzyboy.im"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755093Ab3L1JzL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Dec 2013 04:55:11 -0500
+MIME-Version: 1.0
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB303D297F0@HASMSX103.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
+ <52828364.6080103@gmail.com> <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
+ <CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
+ <CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
+ <CALkVjQaTnocYnV4GM=LHuYwMRZ=sOZnSrtna4C6anNAWr4O7=A@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02E49@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZdPuE2F+ZARBLha-+iOMA4AjDWHO4=ssnuF2Uu87RyuQ@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02EC1@HASMSX103.ger.corp.intel.com>
+ <CALkVjQbPTkGuEa8hLVZE0OVatw7ho=D+D51Qu68PRx-0dYay7w@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02FC6@HASMSX103.ger.corp.intel.com>
+ <CAErSpo6bKOpycD=cp08aBqp2U-u7sdbTSBYoHop1-1Hkmr3F-g@mail.gmail.com>
+ <CALkVjQaOHix5uxFGd-62negbfubz-rdP+zmj9w5wDEa1rCA75Q@mail.gmail.com>
+ <5285E028.20906@gmail.com> <CALkVjQYT9P--dgez064je4vM-xve4uF5ptOVVk3DuVoQiWQvew@mail.gmail.com>
+ <CANUX_P1j9QNGQ2n02KpXsuMQcZo9uOsSN-zZ8yNS1e5+Y9bJOA@mail.gmail.com>
+ <CALkVjQYFJzP1E_YayPOjRu3u85WdpDojDD+DmU9ZehY7ZHF0AA@mail.gmail.com> <0BA3FCBA62E2DC44AF3030971E174FB303D297F0@HASMSX103.ger.corp.intel.com>
+From: wzyboy <wzyboy@wzyboy.org>
+Date: Sat, 28 Dec 2013 17:54:55 +0800
+Message-ID: <CALkVjQZWdFPLZmNq36c3CYP8dRM9QD8Xg0VDgebD-vSe2CxfVA@mail.gmail.com> (sfid-20131228_105518_795198_7927734D)
+Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Bj?rn Mork" <bjorn@mork.no>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+Hi,
 
-Move rs_program_fix_rate right before it's caller where we're
-already in the context of an ifdef CPTCFG_MAC80211_DEBUGFS so
-we can get rid of the extra ifdefs surrounding the original
-location.
+yesterday a friend of mine told me that one can now install Windows
+8/8.1 on a USB device natively. So I tried this so-called "Windows To
+Go" technology.
 
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/rs.c |   46 ++++++++++++++++-----------------
- 1 file changed, 22 insertions(+), 24 deletions(-)
+Now I have successfully deployed a Windows 8.1 installation on my
+external USB HDD and booted my laptop up with it. That is to say, I
+can now observe how Intel 7260 acts under Windows.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
-index bf6e29f..83306a0 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
-@@ -504,30 +504,6 @@ static inline u8 rs_is_valid_ant(u8 valid_antenna, u8 ant_type)
- 	return (ant_type & valid_antenna) == ant_type;
- }
- 
--#ifdef CONFIG_MAC80211_DEBUGFS
--/**
-- * Program the device to use fixed rate for frame transmit
-- * This is for debugging/testing only
-- * once the device start use fixed rate, we need to reload the module
-- * to being back the normal operation.
-- */
--static void rs_program_fix_rate(struct iwl_mvm *mvm,
--				struct iwl_lq_sta *lq_sta)
--{
--	lq_sta->active_legacy_rate = 0x0FFF;	/* 1 - 54 MBits, includes CCK */
--	lq_sta->active_siso_rate   = 0x1FD0;	/* 6 - 60 MBits, no 9, no CCK */
--	lq_sta->active_mimo2_rate  = 0x1FD0;	/* 6 - 60 MBits, no 9, no CCK */
--
--	IWL_DEBUG_RATE(mvm, "sta_id %d rate 0x%X\n",
--		       lq_sta->lq.sta_id, lq_sta->dbg_fixed_rate);
--
--	if (lq_sta->dbg_fixed_rate) {
--		rs_fill_link_cmd(NULL, NULL, lq_sta, lq_sta->dbg_fixed_rate);
--		iwl_mvm_send_lq_cmd(lq_sta->drv, &lq_sta->lq, false);
--	}
--}
--#endif
--
- static int rs_tl_turn_on_agg_for_tid(struct iwl_mvm *mvm,
- 				      struct iwl_lq_sta *lq_data, u8 tid,
- 				      struct ieee80211_sta *sta)
-@@ -2612,6 +2588,28 @@ static int rs_pretty_print_rate(char *buf, const u32 rate)
- 		       (rate & RATE_MCS_ZLF_MSK) ? "ZLF " : "");
- }
- 
-+/**
-+ * Program the device to use fixed rate for frame transmit
-+ * This is for debugging/testing only
-+ * once the device start use fixed rate, we need to reload the module
-+ * to being back the normal operation.
-+ */
-+static void rs_program_fix_rate(struct iwl_mvm *mvm,
-+				struct iwl_lq_sta *lq_sta)
-+{
-+	lq_sta->active_legacy_rate = 0x0FFF;	/* 1 - 54 MBits, includes CCK */
-+	lq_sta->active_siso_rate   = 0x1FD0;	/* 6 - 60 MBits, no 9, no CCK */
-+	lq_sta->active_mimo2_rate  = 0x1FD0;	/* 6 - 60 MBits, no 9, no CCK */
-+
-+	IWL_DEBUG_RATE(mvm, "sta_id %d rate 0x%X\n",
-+		       lq_sta->lq.sta_id, lq_sta->dbg_fixed_rate);
-+
-+	if (lq_sta->dbg_fixed_rate) {
-+		rs_fill_link_cmd(NULL, NULL, lq_sta, lq_sta->dbg_fixed_rate);
-+		iwl_mvm_send_lq_cmd(lq_sta->drv, &lq_sta->lq, false);
-+	}
-+}
-+
- static ssize_t rs_sta_dbgfs_scale_table_write(struct file *file,
- 			const char __user *user_buf, size_t count, loff_t *ppos)
- {
 -- 
-1.7.9.5
+wzyboy
 
+Could you tell me what should I do to gather debugging information
+such as L1 mode etc in Windows? I will send them to you then. Maybe
+this could help, to figure out what the bug of iwlwifi is.
