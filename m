@@ -1,72 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f182.google.com ([209.85.192.182]:40865 "EHLO
-	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753147Ab3LSIzE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Dec 2013 03:55:04 -0500
-From: Rashika Kheria <rashika.kheria@gmail.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, josh@joshtriplett.org
-Subject: =?UTF-8?q?=5BPATCH=20v3=206/8=5D=20drivers=3A=20net=3A=20Mark=20functions=20as=20static=20in=204965-debug=2Ec?=
-Date: Thu, 19 Dec 2013 14:24:38 +0530
-Message-Id: <b5de1ef19267bbdb0b6f8b36f74b7f59f833cffd.1387382457.git.rashika.kheria@gmail.com> (sfid-20131219_095650_590998_38DBAFE0)
-In-Reply-To: <04fe932bc3585620c91d511bb0894e45bb762ffa.1387382457.git.rashika.kheria@gmail.com>
-References: <04fe932bc3585620c91d511bb0894e45bb762ffa.1387382457.git.rashika.kheria@gmail.com>
+Received: from mantis.wzyboy.im ([199.83.51.51]:51573 "EHLO mantis.wzyboy.im"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751426Ab3L2NGl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 Dec 2013 08:06:41 -0500
 MIME-Version: 1.0
+In-Reply-To: <CANUX_P21k4Tm460u1_SSD6Xrv2huDZR_EdZjOPh5wdhUfkqZGg@mail.gmail.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
+ <52828364.6080103@gmail.com> <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
+ <CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
+ <CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
+ <CALkVjQaTnocYnV4GM=LHuYwMRZ=sOZnSrtna4C6anNAWr4O7=A@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02E49@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZdPuE2F+ZARBLha-+iOMA4AjDWHO4=ssnuF2Uu87RyuQ@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02EC1@HASMSX103.ger.corp.intel.com>
+ <CALkVjQbPTkGuEa8hLVZE0OVatw7ho=D+D51Qu68PRx-0dYay7w@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02FC6@HASMSX103.ger.corp.intel.com>
+ <CAErSpo6bKOpycD=cp08aBqp2U-u7sdbTSBYoHop1-1Hkmr3F-g@mail.gmail.com>
+ <CALkVjQaOHix5uxFGd-62negbfubz-rdP+zmj9w5wDEa1rCA75Q@mail.gmail.com>
+ <5285E028.20906@gmail.com> <CALkVjQYT9P--dgez064je4vM-xve4uF5ptOVVk3DuVoQiWQvew@mail.gmail.com>
+ <CANUX_P1j9QNGQ2n02KpXsuMQcZo9uOsSN-zZ8yNS1e5+Y9bJOA@mail.gmail.com>
+ <CALkVjQYFJzP1E_YayPOjRu3u85WdpDojDD+DmU9ZehY7ZHF0AA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB303D297F0@HASMSX103.ger.corp.intel.com>
+ <CALkVjQaJ94osfBwnrpKBk4tE_+=XMqznXY=qVv5KdzSkvsthaA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB303D2D2C5@HASMSX103.ger.corp.intel.com>
+ <CALkVjQaWBq6--sekifyGfJt9FDigsk56eXMUv9YR3sDVnVcX=Q@mail.gmail.com> <CANUX_P21k4Tm460u1_SSD6Xrv2huDZR_EdZjOPh5wdhUfkqZGg@mail.gmail.com>
+From: wzyboy <wzyboy@wzyboy.org>
+Date: Sun, 29 Dec 2013 21:06:24 +0800
+Message-ID: <CALkVjQZ1LA_x=O6mH+mW5S_XB610e=Jt6uhsPyGucTvLLmRuwQ@mail.gmail.com> (sfid-20131229_140648_587911_5892A380)
+Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Bj?rn Mork" <bjorn@mork.no>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch marks the function il4965_ucode_rx_stats_read(),
-il4965_ucode_tx_stats_read() and il4965_ucode_general_stats_read() in
-4965-debug.c as static because they are not used outside this file.
+2013/12/29 Emmanuel Grumbach <egrumbach@gmail.com>:
+> looks like all the power features are enabled... including the ones I
+> told you to disable.
+> I am lost now...
 
-Thus, it also removes the following warnings in
-wireless/iwlegacy/4965-debug.c:
 
-drivers/net/wireless/iwlegacy/4965-debug.c:59:1: warning: no previous prototype for ‘il4965_ucode_rx_stats_read’ [-Wmissing-prototypes]
-drivers/net/wireless/iwlegacy/4965-debug.c:471:1: warning: no previous prototype for ‘il4965_ucode_tx_stats_read’ [-Wmissing-prototypes]
-drivers/net/wireless/iwlegacy/4965-debug.c:637:1: warning: no previous prototype for ‘il4965_ucode_general_stats_read’ [-Wmissing-prototypes]
+Oh... That sounds bad. But I thought both Windows and Linux driver for
+this NIC is written by Intel?
 
-Signed-off-by: Rashika Kheria <rashika.kheria@gmail.com>
-Reviewed-by: Josh Triplett <josh@joshtriplett.org>
----
- drivers/net/wireless/iwlegacy/4965-debug.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlegacy/4965-debug.c b/drivers/net/wireless/iwlegacy/4965-debug.c
-index c8153fc..e0597bf 100644
---- a/drivers/net/wireless/iwlegacy/4965-debug.c
-+++ b/drivers/net/wireless/iwlegacy/4965-debug.c
-@@ -55,7 +55,7 @@ il4965_stats_flag(struct il_priv *il, char *buf, int bufsz)
- 	return p;
- }
- 
--ssize_t
-+static ssize_t
- il4965_ucode_rx_stats_read(struct file *file, char __user *user_buf,
- 			   size_t count, loff_t *ppos)
- {
-@@ -467,7 +467,7 @@ il4965_ucode_rx_stats_read(struct file *file, char __user *user_buf,
- 	return ret;
- }
- 
--ssize_t
-+static ssize_t
- il4965_ucode_tx_stats_read(struct file *file, char __user *user_buf,
- 			   size_t count, loff_t *ppos)
- {
-@@ -633,7 +633,7 @@ il4965_ucode_tx_stats_read(struct file *file, char __user *user_buf,
- 	return ret;
- }
- 
--ssize_t
-+static ssize_t
- il4965_ucode_general_stats_read(struct file *file, char __user *user_buf,
- 				size_t count, loff_t *ppos)
- {
 -- 
-1.7.9.5
-
+wzyboy
