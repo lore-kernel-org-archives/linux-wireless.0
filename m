@@ -1,45 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:56994 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752259Ab3LEIvG (ORCPT
+Received: from mail-we0-f181.google.com ([74.125.82.181]:34864 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751545Ab3L2Lnm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 03:51:06 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org
-Subject: [RFC 03/12] ath9k: Update mac_postamble for AR9003 family
-Date: Thu,  5 Dec 2013 14:16:08 +0530
-Message-Id: <1386233177-11132-4-git-send-email-sujith@msujith.org> (sfid-20131205_095109_994674_C5F58AB4)
-In-Reply-To: <1386233177-11132-1-git-send-email-sujith@msujith.org>
-References: <1386233177-11132-1-git-send-email-sujith@msujith.org>
+	Sun, 29 Dec 2013 06:43:42 -0500
+Received: by mail-we0-f181.google.com with SMTP id x55so9491654wes.12
+        for <linux-wireless@vger.kernel.org>; Sun, 29 Dec 2013 03:43:41 -0800 (PST)
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <CANUX_P3EwRW=+1SwHQN81hKKGZiVBFDcmLZAqknXZE+UzL_fTA@mail.gmail.com>
+References: <CANUX_P3EwRW=+1SwHQN81hKKGZiVBFDcmLZAqknXZE+UzL_fTA@mail.gmail.com>
+Date: Sun, 29 Dec 2013 12:43:41 +0100
+Message-ID: <CA+icZUUvK749V302H7s5etznVQYqN3bA5WYn04YCmcyydss-tg@mail.gmail.com> (sfid-20131229_124404_474300_F7F49527)
+Subject: Re: [ANN] New firmware for Intel 7260 / 3160
+From: Sedat Dilek <sedat.dilek@gmail.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Sun, Dec 29, 2013 at 11:02 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+> Hi,
+>
+> We have released a new firmware for 3160 and for 7260 Intel devices.
+> This firmware includes the neww APIs we have been implementing for a while now.
+> We have here bug fixes along with better power save and P2P support.
+> Anyone who wants to use this firmware must have 3.13 at least.
+> The new file name is iwlwifi-{7260,3160}-8.ucode.
+> Just copy the file into /lib/firmware - if the driver / kernel
+> supports the new firmware, it will load the new one. If not,
+> iwlwifi-{7260,3160}-7.ucode will be loaded and everything should work
+> just fine.
+>
+> The firmware for 7260 is available at [1] and for 3160 at [2].
+> I encourage people running 3.13 and up to take the new firmware and
+> report issues.
+> The new firmware's version is 22.15.8.0:
+>
+> $ dmesg | grep loaded\ firmware
+> [ 8871.825758] iwlwifi 0000:02:00.0: loaded firmware version 22.15.8.0
+> op_mode iwlmvm
+>
+> [1] - http://wireless.kernel.org/en/users/Drivers/iwlwifi?action=AttachFile&do=get&target=iwlwifi-7260-ucode-22.15.8.0.tgz
+> [2] - http://wireless.kernel.org/en/users/Drivers/iwlwifi?action=AttachFile&do=get&target=iwlwifi-3160-ucode-22.15.8.0.tgz
+>
 
-Enable the ALWAYS_KEYSEARCH bit in the initvals. Currently
-this is done in the driver, but adding this to the initvals
-makes it easier to be in sync with the INI files given
-by the systems engineering team.
+Shouldn't such stuff also go to the linux-firmware-folks?
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+- Sedat -
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-index 97b4bd1..7243674 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-@@ -303,7 +303,7 @@ static const u32 ar9300_2p2_mac_postamble[][5] = {
- 	{0x000010b0, 0x00000e60, 0x00001cc0, 0x00007c70, 0x00003e38},
- 	{0x00008014, 0x03e803e8, 0x07d007d0, 0x10801600, 0x08400b00},
- 	{0x0000801c, 0x128d8027, 0x128d804f, 0x12e00057, 0x12e0002b},
--	{0x00008120, 0x08f04800, 0x08f04800, 0x08f04810, 0x08f04810},
-+	{0x00008120, 0x18f04800, 0x18f04800, 0x18f04810, 0x18f04810},
- 	{0x000081d0, 0x00003210, 0x00003210, 0x0000320a, 0x0000320a},
- 	{0x00008318, 0x00003e80, 0x00007d00, 0x00006880, 0x00003440},
- };
--- 
-1.8.4.2
+[1] http://git.kernel.org/cgit/linux/kernel/git/firmware/linux-firmware.git/
 
+> Emmanuel Grumbach
+> egrumbach@gmail.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
