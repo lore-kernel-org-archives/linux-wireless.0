@@ -1,142 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:20040 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750957Ab3LKIfH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Dec 2013 03:35:07 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-rt-users@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [RFC 07/10] iwlwifi: pcie: return inta from iwl_pcie_int_cause_{non_}ict
-Date: Wed, 11 Dec 2013 10:33:43 +0200
-Message-Id: <1386750826-25219-9-git-send-email-emmanuel.grumbach@intel.com> (sfid-20131211_093514_337175_0D784696)
-In-Reply-To: <1386750826-25219-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1386750826-25219-1-git-send-email-emmanuel.grumbach@intel.com>
+Received: from mail-lb0-f175.google.com ([209.85.217.175]:39917 "EHLO
+	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751650Ab3L2LpV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 Dec 2013 06:45:21 -0500
+MIME-Version: 1.0
+In-Reply-To: <CALkVjQaWBq6--sekifyGfJt9FDigsk56eXMUv9YR3sDVnVcX=Q@mail.gmail.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+	<CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
+	<52828364.6080103@gmail.com>
+	<CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
+	<CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
+	<CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
+	<CALkVjQaTnocYnV4GM=LHuYwMRZ=sOZnSrtna4C6anNAWr4O7=A@mail.gmail.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB301E02E49@HASMSX103.ger.corp.intel.com>
+	<CALkVjQZdPuE2F+ZARBLha-+iOMA4AjDWHO4=ssnuF2Uu87RyuQ@mail.gmail.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB301E02EC1@HASMSX103.ger.corp.intel.com>
+	<CALkVjQbPTkGuEa8hLVZE0OVatw7ho=D+D51Qu68PRx-0dYay7w@mail.gmail.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB301E02FC6@HASMSX103.ger.corp.intel.com>
+	<CAErSpo6bKOpycD=cp08aBqp2U-u7sdbTSBYoHop1-1Hkmr3F-g@mail.gmail.com>
+	<CALkVjQaOHix5uxFGd-62negbfubz-rdP+zmj9w5wDEa1rCA75Q@mail.gmail.com>
+	<5285E028.20906@gmail.com>
+	<CALkVjQYT9P--dgez064je4vM-xve4uF5ptOVVk3DuVoQiWQvew@mail.gmail.com>
+	<CANUX_P1j9QNGQ2n02KpXsuMQcZo9uOsSN-zZ8yNS1e5+Y9bJOA@mail.gmail.com>
+	<CALkVjQYFJzP1E_YayPOjRu3u85WdpDojDD+DmU9ZehY7ZHF0AA@mail.gmail.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB303D297F0@HASMSX103.ger.corp.intel.com>
+	<CALkVjQaJ94osfBwnrpKBk4tE_+=XMqznXY=qVv5KdzSkvsthaA@mail.gmail.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB303D2D2C5@HASMSX103.ger.corp.intel.com>
+	<CALkVjQaWBq6--sekifyGfJt9FDigsk56eXMUv9YR3sDVnVcX=Q@mail.gmail.com>
+Date: Sun, 29 Dec 2013 13:45:19 +0200
+Message-ID: <CANUX_P21k4Tm460u1_SSD6Xrv2huDZR_EdZjOPh5wdhUfkqZGg@mail.gmail.com> (sfid-20131229_124527_391480_589C45ED)
+Subject: Re: [Ilw] Intel Wireless 7260 hardware timed out randomly
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: wzyboy <wzyboy@wzyboy.org>
+Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Bj?rn Mork" <bjorn@mork.no>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These functions are meant to return an interrupt cause and
-not an irqreturn_t.
+>
+>
+> Here are the output of "PCI" and "PCI Index" of Intel Wireless.
+>
+>
 
-The only drawback is that we will return IRQ_NONE instead
-of IRQ_HANDLED when error occurs - but that shouldn't be
-an issue.
-
-Change-Id: I2de5c0d39fafb2a00429c314a2a5f0336347233d
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/pcie/rx.c | 31 ++++++++++++-------------------
- 1 file changed, 12 insertions(+), 19 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
-index 58d3f64..3ddf012 100644
---- a/drivers/net/wireless/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
-@@ -807,7 +807,7 @@ static void iwl_pcie_irq_handle_error(struct iwl_trans *trans)
- 	wake_up(&trans_pcie->wait_command_queue);
- }
- 
--static irqreturn_t iwl_pcie_int_cause_non_ict(struct iwl_trans *trans)
-+static u32 iwl_pcie_int_cause_non_ict(struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	u32 inta;
-@@ -841,14 +841,14 @@ static irqreturn_t iwl_pcie_int_cause_non_ict(struct iwl_trans *trans)
- 		if (test_bit(STATUS_INT_ENABLED, &trans->status) &&
- 		    !trans_pcie->inta)
- 			iwl_enable_interrupts(trans);
--		return IRQ_NONE;
-+		return trans_pcie->inta;
- 	}
- 
- 	if ((inta == 0xFFFFFFFF) || ((inta & 0xFFFFFFF0) == 0xa5a5a5a0)) {
- 		/* Hardware disappeared. It might have already raised
- 		 * an interrupt */
- 		IWL_WARN(trans, "HARDWARE GONE?? INTA == 0x%08x\n", inta);
--		return IRQ_HANDLED;
-+		return trans_pcie->inta;
- 	}
- 
- 	if (iwl_have_debug_level(IWL_DL_ISR))
-@@ -859,7 +859,7 @@ static irqreturn_t iwl_pcie_int_cause_non_ict(struct iwl_trans *trans)
- 
- 	trans_pcie->inta |= inta;
- 	/* the thread will service interrupts and re-enable them */
--	return IRQ_WAKE_THREAD;
-+	return trans_pcie->inta;
- }
- 
- /* a device (PCI-E) page is 4096 bytes long */
-@@ -875,10 +875,9 @@ static irqreturn_t iwl_pcie_int_cause_non_ict(struct iwl_trans *trans)
-  * the interrupt we need to service, driver will set the entries back to 0 and
-  * set index.
-  */
--static irqreturn_t iwl_pcie_int_cause_ict(struct iwl_trans *trans)
-+static u32 iwl_pcie_int_cause_ict(struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--	irqreturn_t ret;
- 	u32 inta;
- 	u32 val = 0;
- 	u32 read;
-@@ -938,9 +937,7 @@ static irqreturn_t iwl_pcie_int_cause_ict(struct iwl_trans *trans)
- 
- 	/* iwl_pcie_tasklet() will service interrupts and re-enable them */
- 	if (likely(inta))
--		return IRQ_WAKE_THREAD;
--
--	ret = IRQ_HANDLED;
-+		return trans_pcie->inta;
- 
-  none:
- 	/* re-enable interrupts here since we don't have anything to service.
-@@ -950,7 +947,7 @@ static irqreturn_t iwl_pcie_int_cause_ict(struct iwl_trans *trans)
- 	    !trans_pcie->inta)
- 		iwl_enable_interrupts(trans);
- 
--	return ret;
-+	return trans_pcie->inta;
- }
- 
- irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
-@@ -961,7 +958,6 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
- 	u32 inta = 0;
- 	u32 handled = 0;
- 	unsigned long flags;
--	irqreturn_t ret;
- 	u32 i;
- 
- 	lock_map_acquire(&trans->sync_cmd_lockdep_map);
-@@ -972,13 +968,13 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
- 	 * use legacy interrupt.
- 	 */
- 	if (likely(trans_pcie->use_ict))
--		ret = iwl_pcie_int_cause_ict(trans);
-+		inta = iwl_pcie_int_cause_ict(trans);
- 	else
--		ret = iwl_pcie_int_cause_non_ict(trans);
-+		inta = iwl_pcie_int_cause_non_ict(trans);
- 
--	if (ret != IRQ_WAKE_THREAD) {
-+	if (!inta) {
- 		spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
--		return ret;
-+		return IRQ_NONE;
- 	}
- 
- 	/* Ack/clear/reset pending uCode interrupts.
-@@ -992,10 +988,7 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
- 	 * hardware bugs here by ACKing all the possible interrupts so that
- 	 * interrupt coalescing can still be achieved.
- 	 */
--	iwl_write32(trans, CSR_INT,
--		    trans_pcie->inta | ~trans_pcie->inta_mask);
--
--	inta = trans_pcie->inta;
-+	iwl_write32(trans, CSR_INT, inta | ~trans_pcie->inta_mask);
- 
- 	if (iwl_have_debug_level(IWL_DL_ISR))
- 		IWL_DEBUG_ISR(trans, "inta 0x%08x, enabled 0x%08x\n",
--- 
-1.8.3.2
-
+looks like all the power features are enabled... including the ones I
+told you to disable.
+I am lost now...
