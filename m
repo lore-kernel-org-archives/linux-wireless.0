@@ -1,58 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f169.google.com ([209.85.192.169]:45017 "EHLO
-	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753925Ab3LDCKa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Dec 2013 21:10:30 -0500
-Message-ID: <529E8F90.1020205@gmail.com> (sfid-20131204_031055_819388_B39CF8AE)
-Date: Wed, 04 Dec 2013 10:12:32 +0800
-From: Chen Gang <gang.chen.5i5j@gmail.com>
+Received: from mga02.intel.com ([134.134.136.20]:14792 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751048Ab3L2IPF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 Dec 2013 03:15:05 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: wzyboy <wzyboy@wzyboy.org>
+CC: Emmanuel Grumbach <egrumbach@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bj?rn Mork <bjorn@mork.no>
+Subject: RE: [Ilw] Intel Wireless 7260 hardware timed out randomly
+Date: Sun, 29 Dec 2013 08:14:50 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB303D2D2C5@HASMSX103.ger.corp.intel.com> (sfid-20131229_091538_815922_192F9242)
+References: <0BA3FCBA62E2DC44AF3030971E174FB301DEA052@HASMSX103.ger.corp.intel.com>
+ <CAErSpo77vnfRvEdgj470WWKo_8p8cv2xQUdaGQvvkY3tPBXzyQ@mail.gmail.com>
+ <52828364.6080103@gmail.com>
+ <CAErSpo6JdKgU0M-wu84_U2Hb4-4mdSr_V8f70Pi-ox8H45+Diw@mail.gmail.com>
+ <CALkVjQZZVHUxuBkS+ret23Bt61TV_x_kj-ey=y93gC0e3cw__Q@mail.gmail.com>
+ <CAErSpo6xCUDqfvKB66nZJYBOWnZLEcSJ39+aTGnKKnuZP6+dRQ@mail.gmail.com>
+ <CALkVjQaTnocYnV4GM=LHuYwMRZ=sOZnSrtna4C6anNAWr4O7=A@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02E49@HASMSX103.ger.corp.intel.com>
+ <CALkVjQZdPuE2F+ZARBLha-+iOMA4AjDWHO4=ssnuF2Uu87RyuQ@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02EC1@HASMSX103.ger.corp.intel.com>
+ <CALkVjQbPTkGuEa8hLVZE0OVatw7ho=D+D51Qu68PRx-0dYay7w@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB301E02FC6@HASMSX103.ger.corp.intel.com>
+ <CAErSpo6bKOpycD=cp08aBqp2U-u7sdbTSBYoHop1-1Hkmr3F-g@mail.gmail.com>
+ <CALkVjQaOHix5uxFGd-62negbfubz-rdP+zmj9w5wDEa1rCA75Q@mail.gmail.com>
+ <5285E028.20906@gmail.com>
+ <CALkVjQYT9P--dgez064je4vM-xve4uF5ptOVVk3DuVoQiWQvew@mail.gmail.com>
+ <CANUX_P1j9QNGQ2n02KpXsuMQcZo9uOsSN-zZ8yNS1e5+Y9bJOA@mail.gmail.com>
+ <CALkVjQYFJzP1E_YayPOjRu3u85WdpDojDD+DmU9ZehY7ZHF0AA@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB303D297F0@HASMSX103.ger.corp.intel.com>
+ <CALkVjQaJ94osfBwnrpKBk4tE_+=XMqznXY=qVv5KdzSkvsthaA@mail.gmail.com>
+In-Reply-To: <CALkVjQaJ94osfBwnrpKBk4tE_+=XMqznXY=qVv5KdzSkvsthaA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Joe Perches <joe@perches.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	rkuo <rkuo@codeaurora.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	David Miller <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
-Subject: Re: [PATCH] net: mac80211: tx.c: be sure of 'sdata->vif.type' must
- be NL80211_IFTYPE_AP when be in NL80211_IFTYPE_AP case
-References: <528AEFB7.4060301@gmail.com>  <20131125011938.GB18921@codeaurora.org> <5292B845.3010404@gmail.com>  <5292B8A0.7020409@gmail.com> <5294255E.7040105@gmail.com>  <52957ADA.2080704@gmail.com>  (sfid-20131127_055211_558798_A7DF5684) <1385739487.8656.1.camel@jlt4.sipsolutions.net>  <5299D306.7070701@gmail.com>  (sfid-20131130_125901_519610_EDA4068E) <1385816013.4327.1.camel@jlt4.sipsolutions.net>  <5299ED38.4090509@gmail.com> <5299EFDD.6060405@gmail.com>  (sfid-20131130_150205_984535_068F14A9) <1385842134.6108.4.camel@jlt4.sipsolutions.net>  <1385843940.2664.4.camel@joe-AO722>  <1385890523.4171.1.camel@jlt4.sipsolutions.net>  <1385937499.2664.21.camel@joe-AO722> <1385995738.20277.4.camel@jlt4.sipsolutions.net>
-In-Reply-To: <1385995738.20277.4.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset=GB2312
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/02/2013 10:48 PM, Johannes Berg wrote:
-> On Sun, 2013-12-01 at 14:38 -0800, Joe Perches wrote:
->> On Sun, 2013-12-01 at 10:35 +0100, Johannes Berg wrote:
->>> Good try, but no, now ap_sdata isn't even assigned. :)
->>
->> Right.  Oh well.  There's no improving this without
->> significant rewrite.  Even then, there may not be much
->> overall improvement.
-> 
-> I could see an improvement if we were to actually make changes to assign
-> the pointer based on the iftype, when that changes, so that each
-> function only has to handle the right type and we don't need the switch
-> statement at all...
-> 
-
-OK, thanks, it is one of good ideas to me (which I can not find).  :-)
-
-
-> But that's tricky to get right and I'm between vacations and holidays
-> and all that ...
-> 
-
-It is really not urgent, and for keeping quality, it is necessary to
-spend suitable time resource (e.g 1 hour or more) to  make, review and
-test this kind of patch carefully by oneself.
-
-So could you please help improve it when you have suitable related time
-resources?
-
-
-Thanks.
--- 
-Chen Gang
+PiBIaSwNCj4gDQo+IHllc3RlcmRheSBhIGZyaWVuZCBvZiBtaW5lIHRvbGQgbWUgdGhhdCBvbmUg
+Y2FuIG5vdyBpbnN0YWxsIFdpbmRvd3MNCj4gOC84LjEgb24gYSBVU0IgZGV2aWNlIG5hdGl2ZWx5
+LiBTbyBJIHRyaWVkIHRoaXMgc28tY2FsbGVkICJXaW5kb3dzIFRvIEdvIg0KPiB0ZWNobm9sb2d5
+Lg0KPiANCj4gTm93IEkgaGF2ZSBzdWNjZXNzZnVsbHkgZGVwbG95ZWQgYSBXaW5kb3dzIDguMSBp
+bnN0YWxsYXRpb24gb24gbXkgZXh0ZXJuYWwNCj4gVVNCIEhERCBhbmQgYm9vdGVkIG15IGxhcHRv
+cCB1cCB3aXRoIGl0LiBUaGF0IGlzIHRvIHNheSwgSSBjYW4gbm93IG9ic2VydmUNCj4gaG93IElu
+dGVsIDcyNjAgYWN0cyB1bmRlciBXaW5kb3dzLg0KPiANCj4gQ291bGQgeW91IHRlbGwgbWUgd2hh
+dCBzaG91bGQgSSBkbyB0byBnYXRoZXIgZGVidWdnaW5nIGluZm9ybWF0aW9uIHN1Y2ggYXMNCj4g
+TDEgbW9kZSBldGMgaW4gV2luZG93cz8gSSB3aWxsIHNlbmQgdGhlbSB0byB5b3UgdGhlbi4gTWF5
+YmUgdGhpcyBjb3VsZA0KPiBoZWxwLCB0byBmaWd1cmUgb3V0IHdoYXQgdGhlIGJ1ZyBvZiBpd2x3
+aWZpIGlzLg0KDQpodHRwOi8vcndldmVyeXRoaW5nLmNvbS8NCg==
