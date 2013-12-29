@@ -1,58 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:58326 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752611Ab3LHHn3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Dec 2013 02:43:29 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Luciano Coelho <luciano.coelho@intel.com>
-Subject: [PATCH] mac80211: make ieee80211_assign_beacon() static
-Date: Sun,  8 Dec 2013 09:42:25 +0200
-Message-Id: <1386488545-15901-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20131208_084346_998664_C0FF2CAD)
+Received: from mail-lb0-f170.google.com ([209.85.217.170]:53414 "EHLO
+	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751786Ab3L2LwX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 Dec 2013 06:52:23 -0500
+Received: by mail-lb0-f170.google.com with SMTP id c11so5055755lbj.15
+        for <linux-wireless@vger.kernel.org>; Sun, 29 Dec 2013 03:52:22 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CA+icZUWR2dJ1=MhBfqdDzdmrFNM6_6kG2D4-VRt3wamFCxcrMA@mail.gmail.com>
+References: <CANUX_P3EwRW=+1SwHQN81hKKGZiVBFDcmLZAqknXZE+UzL_fTA@mail.gmail.com>
+	<CA+icZUUvK749V302H7s5etznVQYqN3bA5WYn04YCmcyydss-tg@mail.gmail.com>
+	<CANUX_P1tqa+Y6gO_2XGYvF38r5hejYJjMmB2jhuO4vLirDQdwg@mail.gmail.com>
+	<CA+icZUWR2dJ1=MhBfqdDzdmrFNM6_6kG2D4-VRt3wamFCxcrMA@mail.gmail.com>
+Date: Sun, 29 Dec 2013 13:52:22 +0200
+Message-ID: <CANUX_P3d94BXqmDULt0JrAqBMCbp-3eQHyB64tudrfkwzaamew@mail.gmail.com> (sfid-20131229_125226_216370_9A728E08)
+Subject: Re: [ANN] New firmware for Intel 7260 / 3160
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: sedat.dilek@gmail.com
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+Emmanuel Grumbach
+egrumbach@gmail.com
 
-This function is not used anywhere else than in cfg.c, so there's no
-need to export it.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/cfg.c         | 4 ++--
- net/mac80211/ieee80211_i.h | 2 --
- 2 files changed, 2 insertions(+), 4 deletions(-)
+On Sun, Dec 29, 2013 at 1:50 PM, Sedat Dilek <sedat.dilek@gmail.com> wrote:
+> On Sun, Dec 29, 2013 at 12:47 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>>>> Hi,
+>>>>
+>>>> We have released a new firmware for 3160 and for 7260 Intel devices.
+>>>> This firmware includes the neww APIs we have been implementing for a while now.
+>>>> We have here bug fixes along with better power save and P2P support.
+>>>> Anyone who wants to use this firmware must have 3.13 at least.
+>>>> The new file name is iwlwifi-{7260,3160}-8.ucode.
+>>>> Just copy the file into /lib/firmware - if the driver / kernel
+>>>> supports the new firmware, it will load the new one. If not,
+>>>> iwlwifi-{7260,3160}-7.ucode will be loaded and everything should work
+>>>> just fine.
+>>>>
+>>>> The firmware for 7260 is available at [1] and for 3160 at [2].
+>>>> I encourage people running 3.13 and up to take the new firmware and
+>>>> report issues.
+>>>> The new firmware's version is 22.15.8.0:
+>>>>
+>>>> $ dmesg | grep loaded\ firmware
+>>>> [ 8871.825758] iwlwifi 0000:02:00.0: loaded firmware version 22.15.8.0
+>>>> op_mode iwlmvm
+>>>>
+>>>> [1] - http://wireless.kernel.org/en/users/Drivers/iwlwifi?action=AttachFile&do=get&target=iwlwifi-7260-ucode-22.15.8.0.tgz
+>>>> [2] - http://wireless.kernel.org/en/users/Drivers/iwlwifi?action=AttachFile&do=get&target=iwlwifi-3160-ucode-22.15.8.0.tgz
+>>>>
+>>>
+>>> Shouldn't such stuff also go to the linux-firmware-folks?
+>>>
+>>
+>> It will - don't worry. I already have a pull request pending to
+>> linux-firmware anyway.
+>> I'll add that new firmware to my fork of linux-firmware [1] tonight.
+>>
+>
+> Good.
+> For future announces like this one you can CC them?
+>
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index a30aa95..b61c594 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -873,8 +873,8 @@ static int ieee80211_set_probe_resp(struct ieee80211_sub_if_data *sdata,
- 	return 0;
- }
- 
--int ieee80211_assign_beacon(struct ieee80211_sub_if_data *sdata,
--			    struct cfg80211_beacon_data *params)
-+static int ieee80211_assign_beacon(struct ieee80211_sub_if_data *sdata,
-+				   struct cfg80211_beacon_data *params)
- {
- 	struct beacon_data *new, *old;
- 	int new_head_len, new_tail_len;
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 0a16e2c..44cd681 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1438,8 +1438,6 @@ void ieee80211_del_virtual_monitor(struct ieee80211_local *local);
- 
- bool __ieee80211_recalc_txpower(struct ieee80211_sub_if_data *sdata);
- void ieee80211_recalc_txpower(struct ieee80211_sub_if_data *sdata);
--int ieee80211_assign_beacon(struct ieee80211_sub_if_data *sdata,
--			    struct cfg80211_beacon_data *params);
- 
- static inline bool ieee80211_sdata_running(struct ieee80211_sub_if_data *sdata)
- {
--- 
-1.8.3.2
-
+I wasn't aware of such a mailing list. I usually send an announcement
+on linux-wireless and then send a pull request to Ben Hutchings. If
+you think I should change this process, I'd happy to know how to
+improve it.
