@@ -1,46 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:49959 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757528Ab3LFLc1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Dec 2013 06:32:27 -0500
-From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: [net 5/5] rfkill: Fix FSF address in file headers
-Date: Fri,  6 Dec 2013 03:32:14 -0800
-Message-Id: <1386329534-21739-5-git-send-email-jeffrey.t.kirsher@intel.com> (sfid-20131206_123257_671306_3F814CA2)
-In-Reply-To: <1386329534-21739-1-git-send-email-jeffrey.t.kirsher@intel.com>
-References: <1386329534-21739-1-git-send-email-jeffrey.t.kirsher@intel.com>
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:25199 "EHLO
+	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756199Ab3L3RTG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Dec 2013 12:19:06 -0500
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: kernel-janitors@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 3/11] mac80211: use ether_addr_equal_64bits
+Date: Mon, 30 Dec 2013 19:14:59 +0100
+Message-Id: <1388427307-8691-4-git-send-email-Julia.Lawall@lip6.fr> (sfid-20131230_182339_915063_432F706F)
+In-Reply-To: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>
+References: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Several files refer to an old address for the Free Software Foundation
-in the file header comment.  Resolve by replacing the address with
-the URL <http://www.gnu.org/licenses/> so that we do not have to keep
-updating the header comments anytime the address changes.
+From: Julia Lawall <Julia.Lawall@lip6.fr>
 
-CC: linux-wireless@vger.kernel.org
-Signed-off-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Ether_addr_equal_64bits is more efficient than ether_addr_equal, and can be
+used when each argument is an array within a structure that contains at
+least two bytes of data beyond the array.
+
+The structures involved are:
+ieee80211_hdr defined in include/linux/ieee80211.h and
+p54_common defined in drivers/net/wireless/p54/p54.h
+
+This was done using Coccinelle (http://coccinelle.lip6.fr/).
+
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+
 ---
- net/rfkill/core.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+The semantic patch used is rather long and can be found in message 0 of
+this patch series.
 
-diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-index 1bacc10..ed7e0b4 100644
---- a/net/rfkill/core.c
-+++ b/net/rfkill/core.c
-@@ -14,9 +14,7 @@
-  * GNU General Public License for more details.
-  *
-  * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the
-- * Free Software Foundation, Inc.,
-- * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ * along with this program; if not, see <http://www.gnu.org/licenses/>.
-  */
+ drivers/net/wireless/p54/txrx.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/p54/txrx.c b/drivers/net/wireless/p54/txrx.c
+index f95de0d..b7cc7c2 100644
+--- a/drivers/net/wireless/p54/txrx.c
++++ b/drivers/net/wireless/p54/txrx.c
+@@ -308,7 +308,7 @@ static void p54_pspoll_workaround(struct p54_common *priv, struct sk_buff *skb)
+ 		return;
  
- #include <linux/kernel.h>
--- 
-1.8.3.1
+ 	/* only consider beacons from the associated BSSID */
+-	if (!ether_addr_equal(hdr->addr3, priv->bssid))
++	if (!ether_addr_equal_64bits(hdr->addr3, priv->bssid))
+ 		return;
+ 
+ 	tim = p54_find_ie(skb, WLAN_EID_TIM);
 
