@@ -1,179 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:51762 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756340Ab3LEMgF (ORCPT
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:25199 "EHLO
+	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756136Ab3L3RTE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 07:36:05 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 8/8] mac80211: free all AP/VLAN keys at once
-Date: Thu,  5 Dec 2013 13:35:56 +0100
-Message-Id: <1386246956-14257-9-git-send-email-johannes@sipsolutions.net> (sfid-20131205_133625_013593_EA235566)
-In-Reply-To: <1386246956-14257-1-git-send-email-johannes@sipsolutions.net>
-References: <1386192610.5660.4.camel@jlt4.sipsolutions.net>
- <1386246956-14257-1-git-send-email-johannes@sipsolutions.net>
+	Mon, 30 Dec 2013 12:19:04 -0500
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: Ivo van Doorn <IvDoorn@gmail.com>
+Cc: kernel-janitors@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 1/11] rt2x00: use ether_addr_equal_64bits
+Date: Mon, 30 Dec 2013 19:14:57 +0100
+Message-Id: <1388427307-8691-2-git-send-email-Julia.Lawall@lip6.fr> (sfid-20131230_182438_957178_696B3551)
+In-Reply-To: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>
+References: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Julia Lawall <Julia.Lawall@lip6.fr>
 
-When the AP interface is stopped, free all AP and VLAN keys at
-once to only require synchronize_net() once. Since that does
-synchronize_net(), also move two such calls into the function
-(using the new force_synchronize parameter) to avoid doing it
-twice.
+Ether_addr_equal_64bits is more efficient than ether_addr_equal, and can be
+used when each argument is an array within a structure that contains at
+least two bytes of data beyond the array.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+The structures involved are:
+ieee80211_bar defined in include/linux/ieee80211.h and
+rt2x00_bar_list_entry defined in drivers/net/wireless/rt2x00/rt2x00.h.
+
+This was done using Coccinelle (http://coccinelle.lip6.fr/).
+
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+
 ---
- net/mac80211/cfg.c   |  5 +----
- net/mac80211/iface.c | 19 ++++++++-----------
- net/mac80211/key.c   | 44 ++++++++++++++++++++++++++++++++------------
- net/mac80211/key.h   |  3 ++-
- 4 files changed, 43 insertions(+), 28 deletions(-)
+The semantic patch used is rather long and can be found in message 0 of
+this patch series.
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index b045deb2..556809a 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1098,10 +1098,7 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
- 		kfree_rcu(old_probe_resp, rcu_head);
+ drivers/net/wireless/rt2x00/rt2x00dev.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 00c3fae..2bde672 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -565,10 +565,10 @@ static void rt2x00lib_rxdone_check_ba(struct rt2x00_dev *rt2x00dev,
  
- 	__sta_info_flush(sdata, true);
--	synchronize_net();
--	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
--		ieee80211_free_keys(vlan);
--	ieee80211_free_keys(sdata);
-+	ieee80211_free_keys(sdata, true);
+ #undef TID_CHECK
  
- 	sdata->vif.bss_conf.enable_beacon = false;
- 	sdata->vif.bss_conf.ssid_len = 0;
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index c5e9a11..3ef9674 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -889,18 +889,15 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 		cancel_work_sync(&sdata->work);
- 		/*
- 		 * When we get here, the interface is marked down.
-+		 * Free the remaining keys, if there are any
-+		 * (shouldn't be, except maybe in WDS mode?)
- 		 *
--		 * We need synchronize_rcu() to wait for the RX path in
--		 * case it is using the interface and enqueuing frames
--		 * at this very time on another CPU.
-+		 * Force the key freeing to always synchronize_net()
-+		 * to wait for the RX path in case it is using this
-+		 * interface enqueuing frames * at this very time on
-+		 * another CPU.
- 		 */
--		synchronize_rcu();
--
--		/*
--		 * Free all remaining keys, there shouldn't be any,
--		 * except maybe in WDS mode?
--		 */
--		ieee80211_free_keys(sdata);
-+		ieee80211_free_keys(sdata, true);
+-		if (!ether_addr_equal(ba->ra, entry->ta))
++		if (!ether_addr_equal_64bits(ba->ra, entry->ta))
+ 			continue;
  
- 		/* fall through */
- 	case NL80211_IFTYPE_AP:
-@@ -1026,7 +1023,7 @@ static void ieee80211_teardown_sdata(struct ieee80211_sub_if_data *sdata)
- 	int i;
+-		if (!ether_addr_equal(ba->ta, entry->ra))
++		if (!ether_addr_equal_64bits(ba->ta, entry->ra))
+ 			continue;
  
- 	/* free extra data */
--	ieee80211_free_keys(sdata);
-+	ieee80211_free_keys(sdata, false);
- 
- 	ieee80211_debugfs_remove_netdev(sdata);
- 
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index 12e6154..6ff65a1 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -589,14 +589,10 @@ void ieee80211_iter_keys(struct ieee80211_hw *hw,
- }
- EXPORT_SYMBOL(ieee80211_iter_keys);
- 
--void ieee80211_free_keys(struct ieee80211_sub_if_data *sdata)
-+static void ieee80211_free_keys_iface(struct ieee80211_sub_if_data *sdata,
-+				      struct list_head *keys)
- {
- 	struct ieee80211_key *key, *tmp;
--	LIST_HEAD(keys);
--
--	cancel_delayed_work_sync(&sdata->dec_tailroom_needed_wk);
--
--	mutex_lock(&sdata->local->key_mtx);
- 
- 	sdata->crypto_tx_tailroom_needed_cnt -=
- 		sdata->crypto_tx_tailroom_pending_dec;
-@@ -608,21 +604,45 @@ void ieee80211_free_keys(struct ieee80211_sub_if_data *sdata)
- 		ieee80211_key_replace(key->sdata, key->sta,
- 				key->conf.flags & IEEE80211_KEY_FLAG_PAIRWISE,
- 				key, NULL);
--		list_add_tail(&key->list, &keys);
-+		list_add_tail(&key->list, keys);
- 	}
- 
- 	ieee80211_debugfs_key_update_default(sdata);
-+}
- 
--	if (!list_empty(&keys)) {
--		synchronize_net();
--		list_for_each_entry_safe(key, tmp, &keys, list)
--			__ieee80211_key_destroy(key, false);
-+void ieee80211_free_keys(struct ieee80211_sub_if_data *sdata,
-+			 bool force_synchronize)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_sub_if_data *vlan;
-+	struct ieee80211_key *key, *tmp;
-+	LIST_HEAD(keys);
-+
-+	cancel_delayed_work_sync(&sdata->dec_tailroom_needed_wk);
-+
-+	mutex_lock(&local->key_mtx);
-+
-+	ieee80211_free_keys_iface(sdata, &keys);
-+
-+	if (sdata->vif.type == NL80211_IFTYPE_AP) {
-+		list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
-+			ieee80211_free_keys_iface(vlan, &keys);
- 	}
- 
-+	if (!list_empty(&keys) || force_synchronize)
-+		synchronize_net();
-+	list_for_each_entry_safe(key, tmp, &keys, list)
-+		__ieee80211_key_destroy(key, false);
-+
- 	WARN_ON_ONCE(sdata->crypto_tx_tailroom_needed_cnt ||
- 		     sdata->crypto_tx_tailroom_pending_dec);
-+	if (sdata->vif.type == NL80211_IFTYPE_AP) {
-+		list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
-+			WARN_ON_ONCE(vlan->crypto_tx_tailroom_needed_cnt ||
-+				     vlan->crypto_tx_tailroom_pending_dec);
-+	}
- 
--	mutex_unlock(&sdata->local->key_mtx);
-+	mutex_unlock(&local->key_mtx);
- }
- 
- void ieee80211_free_sta_keys(struct ieee80211_local *local,
-diff --git a/net/mac80211/key.h b/net/mac80211/key.h
-index 0aebb88..19db686 100644
---- a/net/mac80211/key.h
-+++ b/net/mac80211/key.h
-@@ -136,7 +136,8 @@ void ieee80211_set_default_key(struct ieee80211_sub_if_data *sdata, int idx,
- 			       bool uni, bool multi);
- void ieee80211_set_default_mgmt_key(struct ieee80211_sub_if_data *sdata,
- 				    int idx);
--void ieee80211_free_keys(struct ieee80211_sub_if_data *sdata);
-+void ieee80211_free_keys(struct ieee80211_sub_if_data *sdata,
-+			 bool force_synchronize);
- void ieee80211_free_sta_keys(struct ieee80211_local *local,
- 			     struct sta_info *sta);
- void ieee80211_enable_keys(struct ieee80211_sub_if_data *sdata);
--- 
-1.8.4.rc3
+ 		/* Mark BAR since we received the according BA */
 
