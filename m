@@ -1,51 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:59650 "EHLO nbd.name"
+Received: from purkki.adurom.net ([80.68.90.206]:51335 "EHLO purkki.adurom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753515Ab3LSRCA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Dec 2013 12:02:00 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
-Subject: [PATCH 3/4] ath9k: fix TSF offset precision issue
-Date: Thu, 19 Dec 2013 18:01:50 +0100
-Message-Id: <1387472511-86178-3-git-send-email-nbd@openwrt.org> (sfid-20131219_180204_775316_9ECAC05F)
-In-Reply-To: <1387472511-86178-1-git-send-email-nbd@openwrt.org>
-References: <1387472511-86178-1-git-send-email-nbd@openwrt.org>
+	id S1755825Ab3L3OLY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Dec 2013 09:11:24 -0500
+From: Kalle Valo <kvalo@adurom.com>
+To: RAVI MANOHAR <ravimanohar.kota@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: subscription to ath6kl mailing list - clarification
+References: <CALg6E0tdErZyQj3TcL30Uc_3-D7YxgtoUV9buP9_AAZDKGFT0A@mail.gmail.com>
+Date: Mon, 30 Dec 2013 16:11:22 +0200
+In-Reply-To: <CALg6E0tdErZyQj3TcL30Uc_3-D7YxgtoUV9buP9_AAZDKGFT0A@mail.gmail.com>
+	(RAVI MANOHAR's message of "Sun, 29 Dec 2013 11:58:59 +0530")
+Message-ID: <87zjnio2d1.fsf@purkki.adurom.net> (sfid-20131230_151128_211605_37771D41)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dividing the beacon interval by ATH_BCBUF (8) truncates the result for
-the default beacon interval of 100.
-Fix the calculation by moving the division after conversion from TU to
-microseconds.
+RAVI MANOHAR <ravimanohar.kota@gmail.com> writes:
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/beacon.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+> How could i subscribe to ath6kl devel mailing list so
+> that i get the email alerts to my personal ID - this one ?
+>
+> I subscribed to ath9k this way , but couldnt find the same for ath6kl.
 
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index accfb3b..112aff7 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -279,13 +279,14 @@ static void ath9k_set_tsfadjust(struct ath_softc *sc, struct ieee80211_vif *vif)
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_beacon_config *cur_conf = &sc->cur_beacon_conf;
- 	struct ath_vif *avp = (void *)vif->drv_priv;
--	u64 tsfadjust;
-+	u32 tsfadjust;
- 
- 	if (avp->av_bslot == 0)
- 		return;
- 
--	tsfadjust = cur_conf->beacon_interval * avp->av_bslot / ATH_BCBUF;
--	avp->tsf_adjust = cpu_to_le64(TU_TO_USEC(tsfadjust));
-+	tsfadjust = cur_conf->beacon_interval * avp->av_bslot;
-+	tsfadjust = TU_TO_USEC(tsfadjust) / ATH_BCBUF;
-+	avp->tsf_adjust = cpu_to_le64(tsfadjust);
- 
- 	ath_dbg(common, CONFIG, "tsfadjust is: %llu for bslot: %d\n",
- 		(unsigned long long)tsfadjust, avp->av_bslot);
+There is no public mailing list for ath6kl, but I have been planning to
+create one soon. Once that is done I'll announce it here.
+
 -- 
-1.8.3.4 (Apple Git-47)
-
+Kalle Valo
