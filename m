@@ -1,46 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f169.google.com ([209.85.217.169]:32830 "EHLO
-	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752857Ab3LPJgT (ORCPT
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:37279 "EHLO
+	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756213Ab3L3RTI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Dec 2013 04:36:19 -0500
-Received: by mail-lb0-f169.google.com with SMTP id u14so752675lbd.0
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Dec 2013 01:36:17 -0800 (PST)
-MIME-Version: 1.0
-Date: Mon, 16 Dec 2013 11:36:17 +0200
-Message-ID: <CANUX_P3PxN3ENgizJ-V5D0Of45AFoGcJ2wuzW-8ZwzToxTkcdQ@mail.gmail.com> (sfid-20131216_103635_342175_949DA08C)
-Subject: [ANN] New firmware for Intel 7260 / 3160
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Seth Forshee <seth.forshee@canonical.com>,
-	Matt Chen <machen@suse.com>,
-	John Linville <linville@tuxdriver.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 30 Dec 2013 12:19:08 -0500
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: kernel-janitors@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 7/11] iwlegacy: use ether_addr_equal_64bits
+Date: Mon, 30 Dec 2013 19:15:03 +0100
+Message-Id: <1388427307-8691-8-git-send-email-Julia.Lawall@lip6.fr> (sfid-20131230_182241_822957_9E9FCA5B)
+In-Reply-To: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>
+References: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Julia Lawall <Julia.Lawall@lip6.fr>
 
-We have released a new firmware for 3160 and for 7260 Intel devices.
-This firmware is not the firmware that has been long announced. It is
-based on the existing code base and has a few bug fixes. This firmware
-is supported starting 3.10. A new firmware based on a newer code base
-will follow - that new firmware will be supported starting 3.13.
+Ether_addr_equal_64bits is more efficient than ether_addr_equal, and can be
+used when each argument is an array within a structure that contains at
+least two bytes of data beyond the array.
 
-I strongly recommend to move to the new firmware - it solves a few
-issues that were raised by users.
+The structures involved are:
+ieee80211_hdr defined in include/linux/ieee80211.h,
+il_priv defined in drivers/net/wireless/iwlegacy/common.h and
+il_rxon_cmd defined in drivers/net/wireless/iwlegacy/commands.h
 
-The firmware for 7260 is available at [1] and for 3160 at [2].
-I will send a pull request to linux-firmware.git soon.
-The new firmware's version number is 22.1.7.0:
+This was done using Coccinelle (http://coccinelle.lip6.fr/).
 
-$ dmesg | grep loaded firmware
-loaded firmware version 22.1.7.0 op_mode iwlmvm
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
 
-[1] - http://wireless.kernel.org/en/users/Drivers/iwlwifi?action=AttachFile&do=get&target=iwlwifi-7260-ucode-22.1.7.0.tgz
-[2] - http://wireless.kernel.org/en/users/Drivers/iwlwifi?action=AttachFile&do=get&target=iwlwifi-3160-ucode-22.1.7.0.tgz
+---
+The semantic patch used is rather long and can be found in message 0 of
+this patch series.
 
-Emmanuel Grumbach
-egrumbach@gmail.com
+ drivers/net/wireless/iwlegacy/3945.c   |    4 ++--
+ drivers/net/wireless/iwlegacy/common.c |    8 ++++----
+ 2 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlegacy/3945.c b/drivers/net/wireless/iwlegacy/3945.c
+index f09e257..27e543c 100644
+--- a/drivers/net/wireless/iwlegacy/3945.c
++++ b/drivers/net/wireless/iwlegacy/3945.c
+@@ -466,10 +466,10 @@ il3945_is_network_packet(struct il_priv *il, struct ieee80211_hdr *header)
+ 	switch (il->iw_mode) {
+ 	case NL80211_IFTYPE_ADHOC:	/* Header: Dest. | Source    | BSSID */
+ 		/* packets to our IBSS update information */
+-		return ether_addr_equal(header->addr3, il->bssid);
++		return ether_addr_equal_64bits(header->addr3, il->bssid);
+ 	case NL80211_IFTYPE_STATION:	/* Header: Dest. | AP{BSSID} | Source */
+ 		/* packets to our IBSS update information */
+-		return ether_addr_equal(header->addr2, il->bssid);
++		return ether_addr_equal_64bits(header->addr2, il->bssid);
+ 	default:
+ 		return 1;
+ 	}
+diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
+index a27b14c..da4d24d 100644
+--- a/drivers/net/wireless/iwlegacy/common.c
++++ b/drivers/net/wireless/iwlegacy/common.c
+@@ -3746,10 +3746,10 @@ il_full_rxon_required(struct il_priv *il)
+ 
+ 	/* These items are only settable from the full RXON command */
+ 	CHK(!il_is_associated(il));
+-	CHK(!ether_addr_equal(staging->bssid_addr, active->bssid_addr));
+-	CHK(!ether_addr_equal(staging->node_addr, active->node_addr));
+-	CHK(!ether_addr_equal(staging->wlap_bssid_addr,
+-			      active->wlap_bssid_addr));
++	CHK(!ether_addr_equal_64bits(staging->bssid_addr, active->bssid_addr));
++	CHK(!ether_addr_equal_64bits(staging->node_addr, active->node_addr));
++	CHK(!ether_addr_equal_64bits(staging->wlap_bssid_addr,
++				     active->wlap_bssid_addr));
+ 	CHK_NEQ(staging->dev_type, active->dev_type);
+ 	CHK_NEQ(staging->channel, active->channel);
+ 	CHK_NEQ(staging->air_propagation, active->air_propagation);
