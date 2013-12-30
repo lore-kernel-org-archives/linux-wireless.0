@@ -1,65 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f176.google.com ([74.125.82.176]:35687 "EHLO
-	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752106Ab3L2LuQ (ORCPT
+Received: from mail-pd0-f172.google.com ([209.85.192.172]:51101 "EHLO
+	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932169Ab3L3VIw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Dec 2013 06:50:16 -0500
-Received: by mail-we0-f176.google.com with SMTP id p61so9236909wes.21
-        for <linux-wireless@vger.kernel.org>; Sun, 29 Dec 2013 03:50:14 -0800 (PST)
+	Mon, 30 Dec 2013 16:08:52 -0500
+Message-ID: <52C1E0DF.2000800@lwfinger.net> (sfid-20131230_220920_886304_9E4F8C73)
+Date: Mon, 30 Dec 2013 15:08:47 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <CANUX_P1tqa+Y6gO_2XGYvF38r5hejYJjMmB2jhuO4vLirDQdwg@mail.gmail.com>
-References: <CANUX_P3EwRW=+1SwHQN81hKKGZiVBFDcmLZAqknXZE+UzL_fTA@mail.gmail.com>
-	<CA+icZUUvK749V302H7s5etznVQYqN3bA5WYn04YCmcyydss-tg@mail.gmail.com>
-	<CANUX_P1tqa+Y6gO_2XGYvF38r5hejYJjMmB2jhuO4vLirDQdwg@mail.gmail.com>
-Date: Sun, 29 Dec 2013 12:50:14 +0100
-Message-ID: <CA+icZUWR2dJ1=MhBfqdDzdmrFNM6_6kG2D4-VRt3wamFCxcrMA@mail.gmail.com> (sfid-20131229_125020_651208_EC3AAB96)
-Subject: Re: [ANN] New firmware for Intel 7260 / 3160
-From: Sedat Dilek <sedat.dilek@gmail.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
+To: Julia Lawall <Julia.Lawall@lip6.fr>
+CC: kernel-janitors@vger.kernel.org,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 6/11] rtlwifi: use ether_addr_equal_64bits
+References: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr> <1388427307-8691-7-git-send-email-Julia.Lawall@lip6.fr>
+In-Reply-To: <1388427307-8691-7-git-send-email-Julia.Lawall@lip6.fr>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Dec 29, 2013 at 12:47 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
->>> Hi,
->>>
->>> We have released a new firmware for 3160 and for 7260 Intel devices.
->>> This firmware includes the neww APIs we have been implementing for a while now.
->>> We have here bug fixes along with better power save and P2P support.
->>> Anyone who wants to use this firmware must have 3.13 at least.
->>> The new file name is iwlwifi-{7260,3160}-8.ucode.
->>> Just copy the file into /lib/firmware - if the driver / kernel
->>> supports the new firmware, it will load the new one. If not,
->>> iwlwifi-{7260,3160}-7.ucode will be loaded and everything should work
->>> just fine.
->>>
->>> The firmware for 7260 is available at [1] and for 3160 at [2].
->>> I encourage people running 3.13 and up to take the new firmware and
->>> report issues.
->>> The new firmware's version is 22.15.8.0:
->>>
->>> $ dmesg | grep loaded\ firmware
->>> [ 8871.825758] iwlwifi 0000:02:00.0: loaded firmware version 22.15.8.0
->>> op_mode iwlmvm
->>>
->>> [1] - http://wireless.kernel.org/en/users/Drivers/iwlwifi?action=AttachFile&do=get&target=iwlwifi-7260-ucode-22.15.8.0.tgz
->>> [2] - http://wireless.kernel.org/en/users/Drivers/iwlwifi?action=AttachFile&do=get&target=iwlwifi-3160-ucode-22.15.8.0.tgz
->>>
->>
->> Shouldn't such stuff also go to the linux-firmware-folks?
->>
+On 12/30/2013 12:15 PM, Julia Lawall wrote:
+> From: Julia Lawall <Julia.Lawall@lip6.fr>
 >
-> It will - don't worry. I already have a pull request pending to
-> linux-firmware anyway.
-> I'll add that new firmware to my fork of linux-firmware [1] tonight.
+> Ether_addr_equal_64bits is more efficient than ether_addr_equal, and can be
+> used when each argument is an array within a structure that contains at
+> least two bytes of data beyond the array.
+>
+> The structures involved are:
+> ieee80211_hdr defined in include/linux/ieee80211.h and
+> rtl_mac defined in drivers/net/wireless/rtlwifi/wifi.h
+>
+> This was done using Coccinelle (http://coccinelle.lip6.fr/).
+>
+> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+
+Larry
+
+
+>
+> ---
+> The semantic patch used is rather long and can be found in message 0 of
+> this patch series.
+>
+>   drivers/net/wireless/rtlwifi/base.c |    4 ++--
+>   drivers/net/wireless/rtlwifi/ps.c   |    4 ++--
+>   2 files changed, 4 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rtlwifi/ps.c b/drivers/net/wireless/rtlwifi/ps.c
+> index 0d81f76..deedae3 100644
+> --- a/drivers/net/wireless/rtlwifi/ps.c
+> +++ b/drivers/net/wireless/rtlwifi/ps.c
+> @@ -478,7 +478,7 @@ void rtl_swlps_beacon(struct ieee80211_hw *hw, void *data, unsigned int len)
+>   		return;
+>
+>   	/* and only beacons from the associated BSSID, please */
+> -	if (!ether_addr_equal(hdr->addr3, rtlpriv->mac80211.bssid))
+> +	if (!ether_addr_equal_64bits(hdr->addr3, rtlpriv->mac80211.bssid))
+>   		return;
+>
+>   	rtlpriv->psc.last_beacon = jiffies;
+> @@ -923,7 +923,7 @@ void rtl_p2p_info(struct ieee80211_hw *hw, void *data, unsigned int len)
+>   		return;
+>
+>   	/* and only beacons from the associated BSSID, please */
+> -	if (!ether_addr_equal(hdr->addr3, rtlpriv->mac80211.bssid))
+> +	if (!ether_addr_equal_64bits(hdr->addr3, rtlpriv->mac80211.bssid))
+>   		return;
+>
+>   	/* check if this really is a beacon */
+> diff --git a/drivers/net/wireless/rtlwifi/base.c b/drivers/net/wireless/rtlwifi/base.c
+> index fcf9b62..d63a12c 100644
+> --- a/drivers/net/wireless/rtlwifi/base.c
+> +++ b/drivers/net/wireless/rtlwifi/base.c
+> @@ -1293,7 +1293,7 @@ void rtl_beacon_statistic(struct ieee80211_hw *hw, struct sk_buff *skb)
+>   		return;
+>
+>   	/* and only beacons from the associated BSSID, please */
+> -	if (!ether_addr_equal(hdr->addr3, rtlpriv->mac80211.bssid))
+> +	if (!ether_addr_equal_64bits(hdr->addr3, rtlpriv->mac80211.bssid))
+>   		return;
+>
+>   	rtlpriv->link_info.bcn_rx_inperiod++;
+> @@ -1781,7 +1781,7 @@ void rtl_recognize_peer(struct ieee80211_hw *hw, u8 *data, unsigned int len)
+>   		return;
+>
+>   	/* and only beacons from the associated BSSID, please */
+> -	if (!ether_addr_equal(hdr->addr3, rtlpriv->mac80211.bssid))
+> +	if (!ether_addr_equal_64bits(hdr->addr3, rtlpriv->mac80211.bssid))
+>   		return;
+>
+>   	if (rtl_find_221_ie(hw, data, len))
+>
 >
 
-Good.
-For future announces like this one you can CC them?
-
-- Sedat -
-
-> [1] - https://git.kernel.org/cgit/linux/kernel/git/egrumbach/linux-firmware.git/
