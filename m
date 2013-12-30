@@ -1,53 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0187.hostedemail.com ([216.40.44.187]:45205 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S932343Ab3L3XRI (ORCPT
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:37280 "EHLO
+	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756218Ab3L3RTJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Dec 2013 18:17:08 -0500
-Message-ID: <1388445422.26796.38.camel@joe-AO722> (sfid-20131231_001730_120059_1E375805)
-Subject: Re: [PATCH 4/11]  use ether_addr_equal_64bits
-From: Joe Perches <joe@perches.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-	Julia Lawall <julia.lawall@lip6.fr>,
-	kernel-janitors@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
+	Mon, 30 Dec 2013 12:19:09 -0500
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: kernel-janitors@vger.kernel.org,
 	"John W. Linville" <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Date: Mon, 30 Dec 2013 15:17:02 -0800
-In-Reply-To: <1388445188.18164.0.camel@jlt4.sipsolutions.net>
+Subject: [PATCH 11/11] carl9170: use ether_addr_equal_64bits
+Date: Mon, 30 Dec 2013 19:15:07 +0100
+Message-Id: <1388427307-8691-12-git-send-email-Julia.Lawall@lip6.fr> (sfid-20131230_182405_855650_D3F899B1)
+In-Reply-To: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>
 References: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>
-	 <1388427307-8691-5-git-send-email-Julia.Lawall@lip6.fr>
-	 <1388429761.4410.1.camel@jlt4.sipsolutions.net>
-	 <alpine.DEB.2.02.1312302057420.2209@localhost6.localdomain6>
-	 <1388438724.4573.2.camel@jlt4.sipsolutions.net>
-	 <20131230215701.GA4938@khazad-dum.debian.net>
-	 <1388445188.18164.0.camel@jlt4.sipsolutions.net>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-12-31 at 00:13 +0100, Johannes Berg wrote:
-> On Mon, 2013-12-30 at 19:57 -0200, Henrique de Moraes Holschuh wrote:
-> > On Mon, 30 Dec 2013, Johannes Berg wrote:
-> > > On Mon, 2013-12-30 at 20:58 +0100, Julia Lawall wrote:
-> > > > > Is there any way we could catch (sparse, or some other script?) that
-> > > > > struct reorganising won't break the condition needed ("within a
-> > > > > structure that contains at least two more bytes")?
-> > > > 
-> > > > What kind of reorganizing could happen?  Do you mean that the programmer 
-> > > > might do at some time in the future, or something the compiler might do?
-> > > 
-> > > I'm just thinking of a programmer, e.g. changing a struct like this:
-> > > 
-> > >  struct foo {
-> > >    u8 addr[ETH_ALEN];
-> > > -  u16 dummy;
-> > >  };
+From: Julia Lawall <Julia.Lawall@lip6.fr>
 
-I don't know of a way to catch that.
-Anyone else?
+Ether_addr_equal_64bits is more efficient than ether_addr_equal, and can be
+used when each argument is an array within a structure that contains at
+least two bytes of data beyond the array.
+
+The structures involved are:
+ieee80211_hdr defined in include/linux/ieee80211.h,
+ieee80211_bar defined in include/linux/ieee80211.h and
+ath_common defined in drivers/net/wireless/ath/ath.h
+
+This was done using Coccinelle (http://coccinelle.lip6.fr/).
+
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+
+---
+The semantic patch used is rather long and can be found in message 0 of
+this patch series.
+
+ drivers/net/wireless/ath/carl9170/rx.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/carl9170/rx.c b/drivers/net/wireless/ath/carl9170/rx.c
+index e935f61..acd7ddc 100644
+--- a/drivers/net/wireless/ath/carl9170/rx.c
++++ b/drivers/net/wireless/ath/carl9170/rx.c
+@@ -536,7 +536,7 @@ static void carl9170_ps_beacon(struct ar9170 *ar, void *data, unsigned int len)
+ 		return;
+ 
+ 	/* and only beacons from the associated BSSID, please */
+-	if (!ether_addr_equal(hdr->addr3, ar->common.curbssid) ||
++	if (!ether_addr_equal_64bits(hdr->addr3, ar->common.curbssid) ||
+ 	    !ar->common.curaid)
+ 		return;
+ 
+@@ -602,8 +602,8 @@ static void carl9170_ba_check(struct ar9170 *ar, void *data, unsigned int len)
+ 
+ 		if (bar->start_seq_num == entry_bar->start_seq_num &&
+ 		    TID_CHECK(bar->control, entry_bar->control) &&
+-		    ether_addr_equal(bar->ra, entry_bar->ta) &&
+-		    ether_addr_equal(bar->ta, entry_bar->ra)) {
++		    ether_addr_equal_64bits(bar->ra, entry_bar->ta) &&
++		    ether_addr_equal_64bits(bar->ta, entry_bar->ra)) {
+ 			struct ieee80211_tx_info *tx_info;
+ 
+ 			tx_info = IEEE80211_SKB_CB(entry_skb);
 
