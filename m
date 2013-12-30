@@ -1,62 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:54795 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751448Ab3LYD3g (ORCPT
+Received: from mail-ea0-f171.google.com ([209.85.215.171]:57371 "EHLO
+	mail-ea0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751415Ab3L3IIH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Dec 2013 22:29:36 -0500
-Message-ID: <52BA50E4.4040808@huawei.com> (sfid-20131225_043442_875644_58F6EEE1)
-Date: Wed, 25 Dec 2013 11:28:36 +0800
-From: Ding Tianhong <dingtianhong@huawei.com>
-MIME-Version: 1.0
-To: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>, Netdev <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH v3 07/19] zd1211rw: slight optimization of addr compare
-Content-Type: text/plain; charset="UTF-8"
+	Mon, 30 Dec 2013 03:08:07 -0500
+Received: by mail-ea0-f171.google.com with SMTP id h10so4985915eak.30
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Dec 2013 00:08:06 -0800 (PST)
+From: Marek Puzyniak <marek.puzyniak@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Marek Puzyniak <marek.puzyniak@tieto.com>
+Subject: [PATCH] ath10k: disable STA KICKOUT in FW
+Date: Mon, 30 Dec 2013 09:07:51 +0100
+Message-Id: <1388390871-3932-1-git-send-email-marek.puzyniak@tieto.com> (sfid-20131230_090811_598346_D9D4EC12)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use possibly more efficient ether_addr_equal
-instead of memcmp.
+Currently ath10k is not using STA KICKOUT firmware functionality.
+In order to avoid unwanted FW events this functionality should be
+disabled when not used.
 
-Cc: Daniel Drake <dsd@gentoo.org>
-Cc: Ulrich Kunitz <kune@deine-taler.de>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Signed-off-by: Tan Xiaojun <tanxiaojun@huawei.com>
-Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
 ---
- drivers/net/wireless/zd1211rw/zd_mac.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath10k/mac.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
-index eff79a3..e7af261 100644
---- a/drivers/net/wireless/zd1211rw/zd_mac.c
-+++ b/drivers/net/wireless/zd1211rw/zd_mac.c
-@@ -532,9 +532,8 @@ void zd_mac_tx_failed(struct urb *urb)
- 		tx_hdr = (struct ieee80211_hdr *)skb->data;
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 5b45f3a..93416ab 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2292,11 +2292,20 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
+ 	}
  
- 		/* we skip all frames not matching the reported destination */
--		if (unlikely(memcmp(tx_hdr->addr1, tx_status->mac, ETH_ALEN))) {
-+		if (unlikely(!ether_addr_equal(tx_hdr->addr1, tx_status->mac)))
- 			continue;
--		}
+ 	if (arvif->vdev_type == WMI_VDEV_TYPE_AP) {
++		u32 param_id;
++
+ 		ret = ath10k_peer_create(ar, arvif->vdev_id, vif->addr);
+ 		if (ret) {
+ 			ath10k_warn("Failed to create peer for AP: %d\n", ret);
+ 			goto err_vdev_delete;
+ 		}
++
++		param_id = ar->wmi.pdev_param->sta_kickout_th;
++
++		/* Disable STA KICKOUT functionality in FW */
++		ret = ath10k_wmi_pdev_set_param(ar, param_id, 0);
++		if (ret)
++			ath10k_warn("Failed to disable STA KICKOUT\n");
+ 	}
  
- 		/* we skip all frames not matching the reported final rate */
- 
-@@ -997,7 +996,7 @@ static int filter_ack(struct ieee80211_hw *hw, struct ieee80211_hdr *rx_hdr,
- 		    continue;
- 
- 		tx_hdr = (struct ieee80211_hdr *)skb->data;
--		if (likely(!memcmp(tx_hdr->addr2, rx_hdr->addr1, ETH_ALEN)))
-+		if (likely(ether_addr_equal(tx_hdr->addr2, rx_hdr->addr1)))
- 		{
- 			found = 1;
- 			break;
+ 	if (arvif->vdev_type == WMI_VDEV_TYPE_STA) {
 -- 
-1.8.0
-
+1.8.1.2
 
