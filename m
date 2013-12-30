@@ -1,110 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.21]:37507 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753212Ab3LFLDo (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:60267 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755944Ab3L3OZ0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Dec 2013 06:03:44 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 00/16] ath9k patches
-Date: Fri,  6 Dec 2013 16:28:38 +0530
-Message-Id: <1386327534-31105-1-git-send-email-sujith@msujith.org> (sfid-20131206_120352_634092_FD54C1DE)
+	Mon, 30 Dec 2013 09:25:26 -0500
+Message-ID: <1388413508.2900.54.camel@deadeye.wl.decadent.org.uk> (sfid-20131230_152545_921212_0D620442)
+Subject: Re: [Ilw] Re: pull request: firmware for Intel Wireless adapter -
+ 7260	/ 3160
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	Matt Chen <machen@suse.com>
+Date: Mon, 30 Dec 2013 15:25:08 +0100
+In-Reply-To: <52B33D43.1080209@gmail.com>
+References: <CANUX_P3PxN3ENgizJ-V5D0Of45AFoGcJ2wuzW-8ZwzToxTkcdQ@mail.gmail.com>
+		<52AF37CE.4020906@gmail.com>
+	 <1387449216.21926.40.camel@deadeye.wl.decadent.org.uk>
+	 <0BA3FCBA62E2DC44AF3030971E174FB303D24E3E@HASMSX103.ger.corp.intel.com>
+	 <52B33D43.1080209@gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-CbFx9enPwgOsVHQWXHSp"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-This series updates initvals for the AR9003/AR9004 family and also
-has a few HW code fixes.
+--=-CbFx9enPwgOsVHQWXHSp
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-AR9300 v2.2
-------------
+On Thu, 2013-12-19 at 20:38 +0200, Emmanuel Grumbach wrote:
+> >>
+> >> On Mon, 2013-12-16 at 19:26 +0200, Emmanuel Grumbach wrote:
+> >>> Hi Ben,
+> >>>
+> >>> I have a new firmware for 7260 / 3160 - new version is 22.1.7.0.
+> >>>
+> >>> Please pull - thanks!
+> >>
+> >> You need to update the version number in WHENCE.
+> >>
+> >> Ben.
+> >>
+> > Oops - thanks...
+> > I can't push again from here - will do later and resend the pull-reques=
+t.
+> > Sorry.
+> >=20
+>=20
+> Here you go - new head: 824994715e0276e64cdbf2badbe02921a78fb287
+> Thanks for the good catch.
 
-* Update the high_power TX gain table that is used by default
-  for v2.2 cards.
+Pulled and pushed out, thanks.
 
-* Handle the Buffalo-specific array via platform_data for
-  the specific device - an OpenWrt patch for WZR-HP-G450H will be
-  sent once the backports package is updated.
+Ben.
 
-AR9331 v1.1/v1.2
------------------
+--=20
+Ben Hutchings
+Logic doesn't apply to the real world. - Marvin Minsky
 
-* Updates for radio/baseband arrays.
-  These probably require HW code updates (hence the RFC).
+--=-CbFx9enPwgOsVHQWXHSp
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-AR955x/AR9485/AR9462/AR9565
----------------------------
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.15 (GNU/Linux)
 
-* Remove a number of duplicates, reducing module size.
+iQIVAwUAUsGCROe/yOyVhhEJAQoC3RAAzWIec23IA4FCH0p6qlkpGnZA8Q6Thlmx
+STEWWPrys+oSwLZQFZ4U4CLhfi/36tTbDYsO/cSNlLIvdC0chCqaacLmm6Ldzxy2
+hvW9wVLR/e80IanniX2wDwmOYDnu4OofymEoYkwtKr1sw8tvMl+CjD4z4hfTroPE
+b5L24wdTzLynD6LlY4gCJm1Ny5Gldo4syRj/pbnThUQxV3ePcHFgGIqMbZX87b8j
+ErPD0hULG8WnSXFbti6h5/qvQsvWqfp630lbehiiIkh1StIufS7S195NJQ+NqeVF
+5vO8PAYIjszdzJ8DXHhAgAQSJXqml0v7IkE0JIwZNN47k9O4cbKE1yQo0zphIHQt
+tVtwGO5eDv5XhDpIaecHsYZWzaHj2xu1WPn7GzATEYYWZdzHnIk3Jax7hDcbS+TR
+ZVvDM/p181QD4UKomaPKSFFosApAUWPyhp7hUiDndJpDP7JFpmN2cBJ40kZ9fDyW
+EAheI5XWOmZ1alhFZ99kDzq7K/p3Li5zCXvpFVxwN98BeZJ+we2mP9cJpkzPlS+4
+AiXnbikDYRUR36c9mJ8i1lYXCVjG+1pPdBqvdCrsxjhWTddGpELGTiExFR2t6ESH
+xspMdqJN0t2P38VJ2oZTeEWy6t42bfOofY9SN2uikumDZnQAj1XxCAfbD3YlgHNj
+T/g6SDbKLlQ=
+=8B7C
+-----END PGP SIGNATURE-----
 
-DFS
-----
-
-* Use DFS-specific baseband parameters when using a DFS channel.
-
-With this series, all the INI files have been updated, verify_checksum shows:
-
-ar9003-2p2     e08640f0fc48a9a2a5f90699bd530123b238b4b1 pass
-ar9330-1p1     4e08677bf31000d97bcccfbe82b03bbb068376c3 pass
-ar9330-1p2     688f60aac1986d9c09043c03c3917936dedb48b9 pass
-ar9340         8817822fa8eeb9cd71f50258fb21dab3078524e7 pass
-ar9462-1p0     da39a3ee5e6b4b0d3255bfef95601890afd80709 pass
-ar9485         e73550261601ea10d6bfec752a57fb43bae3cfb4 pass
-ar955x-1p0     afeaaa07c1833c69642a3a5fc5cbd6b24ce8515b pass
-ar9565-1p0     d03982594e7e6ef2a7eac0bbe601379580ed3af3 pass
-ar9580-1p0     1134cdb72d89a643b94ecb6475a7c5e0ddaa1637 pass
-
-All the initval tool changes have been pushed to:
-https://github.com/sujith/qca-swiss-army-knife/commits/master
-
-The AR9330 changes were tested on an AP121 and performance was reasonable:
-in HT20, RX was about 41 Mbps and TX was 46 Mbps.
-
-Sujith
-
-Sujith Manoharan (16):
-  ath9k: Add initval arrays for DFS channels
-  ath9k: Initialize baseband for DFS channels
-  ath9k: Update mac_postamble for AR9003 family
-  ath9k: Remove AR955x INI duplicates
-  ath9k: Update AR9331 v1.1 initvals
-  ath9k: Update AR9331 v1.2 initvals
-  ath9k: Use a separate TX gain table for WZR-HP-G450H
-  ath9k: Update high power gain table for AR9300
-  ath9k: Identify duplicate AR9485 initvals
-  ath9k: Identify duplicate AR9462 v2.0 initvals
-  ath9k: Identify duplicate AR9565 v1.0 initvals
-  ath9k: Fix regulatory compliance
-  ath9k: Remove AR9330 v1.0 macro as it's not supported
-  ath9k: Enable manual peak calibration for AR9331 v1.1
-  ath9k: Fix internal regulator for AR955x
-  ath9k: Apply tuning caps for AR9330 and AR9485
-
- .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   | 191 +++---
- .../wireless/ath/ath9k/ar9003_buffalo_initvals.h   | 126 ++++
- drivers/net/wireless/ath/ath9k/ar9003_calib.c      |  29 +-
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c     |   4 +-
- drivers/net/wireless/ath/ath9k/ar9003_hw.c         |  18 +-
- drivers/net/wireless/ath/ath9k/ar9003_phy.c        |   6 +
- drivers/net/wireless/ath/ath9k/ar9003_phy.h        |   5 +-
- .../net/wireless/ath/ath9k/ar9330_1p1_initvals.h   | 128 +---
- .../net/wireless/ath/ath9k/ar9330_1p2_initvals.h   | 401 ++++++++++--
- drivers/net/wireless/ath/ath9k/ar9340_initvals.h   |   2 +
- .../net/wireless/ath/ath9k/ar9462_2p0_initvals.h   | 697 +++------------------
- drivers/net/wireless/ath/ath9k/ar9485_initvals.h   | 117 +---
- .../net/wireless/ath/ath9k/ar955x_1p0_initvals.h   | 540 +---------------
- .../net/wireless/ath/ath9k/ar9565_1p0_initvals.h   |  85 +--
- .../net/wireless/ath/ath9k/ar9580_1p0_initvals.h   |  13 +-
- drivers/net/wireless/ath/ath9k/hw.c                |   6 +-
- drivers/net/wireless/ath/ath9k/hw.h                |   2 +
- drivers/net/wireless/ath/ath9k/init.c              |  36 +-
- drivers/net/wireless/ath/ath9k/reg.h               |   3 -
- include/linux/ath9k_platform.h                     |   2 +
- 20 files changed, 776 insertions(+), 1635 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath9k/ar9003_buffalo_initvals.h
-
--- 
-1.8.4.2
-
+--=-CbFx9enPwgOsVHQWXHSp--
