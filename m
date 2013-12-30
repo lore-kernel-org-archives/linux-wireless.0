@@ -1,150 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:46925 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754518Ab3LDWj0 (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:56820 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754074Ab3L3EVo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Dec 2013 17:39:26 -0500
-Received: by mail-ob0-f172.google.com with SMTP id gq1so16968196obb.3
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Dec 2013 14:39:26 -0800 (PST)
-Message-ID: <529FAF1B.5040706@lwfinger.net> (sfid-20131204_233943_728194_0E0DBCAF)
-Date: Wed, 04 Dec 2013 16:39:23 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: =?UTF-8?B?RGF2aWQgUGluaWxsYSBDYXBhcnLDs3M=?= <dpini@caliu.cat>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Weak Signal and slow tx Rate with RTL8723AE
-References: <CA+OxbLhpRV2GhHbYD_VpoWgdYfR1uV4g38OO=gT4WPEt=F8_Og@mail.gmail.com>
-In-Reply-To: <CA+OxbLhpRV2GhHbYD_VpoWgdYfR1uV4g38OO=gT4WPEt=F8_Og@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Sun, 29 Dec 2013 23:21:44 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 4/4] ath9k: Initialize QCA953x INI arrays
+Date: Mon, 30 Dec 2013 09:46:36 +0530
+Message-Id: <1388376996-614-5-git-send-email-sujith@msujith.org> (sfid-20131230_052152_067384_6DAD5D1D)
+In-Reply-To: <1388376996-614-1-git-send-email-sujith@msujith.org>
+References: <1388376996-614-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/04/2013 03:40 PM, David Pinilla Caparrós wrote:
-> Hello,
->
-> I have mailed with Larry Finger asking for a problem and he has
-> pointed me to this list.
->
-> I am an Arch Linux User with a Clevo based laptop.
->
-> It ships with the RTL8723AE. I have been reading posts around the net
-> and found that some people are having problems and talking about the
-> driver and something about the RX or TX Power.
->
->
-> With the 2 APs wich I usually use I can only reach 18Mb/s of Bit rate
-> whatever the signal level or link quality is. Both of them are 802.11
-> G and not N I think.
->
-> The connection is very unstable. Sometimes powering the wifi off and
-> on increases the performance a bit when it's impossible to do anything
-> (pings to gateway don't reply)
->
-> If they are related to the driver, I would be proud to help with
-> anything that I am able to. Testing for example.
->
-> I have a recent version of the stable Kernel but I dont know if the
-> firmware files are up to date.
->
->
->
-> Some data:
->
-> 03:00.0 Network controller: Realtek Semiconductor Co., Ltd. RTL8723AE
-> PCIe Wireless Network Adapter
->      Subsystem: Realtek Semiconductor Co., Ltd. Device 0726
->      Flags: bus master, fast devsel, latency 0, IRQ 18
->      I/O ports at d000 [size=256]
->      Memory at f7900000 (64-bit, non-prefetchable) [size=16K]
->      Capabilities: [40] Power Management version 3
->      Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
->      Capabilities: [70] Express Endpoint, MSI 00
->      Capabilities: [100] Advanced Error Reporting
->      Capabilities: [140] Virtual Channel
->      Capabilities: [160] Device Serial Number 01-23-87-fe-ff-4c-e0-00
->      Kernel driver in use: rtl8723ae
->      Kernel modules: rtl8723ae
->
->   root  ~  dmesg | grep rtl
-> [    2.734124] rtl8723ae 0000:03:00.0: enabling device (0000 -> 0003)
-> [    2.749732] rtl8723ae: Using firmware rtlwifi/rtl8723fw_B.bin
-> [    2.752940] ieee80211 phy0: Selected rate control algorithm 'rtl_rc'
-> [    2.753057] rtlwifi: wireless switch is on
-> [ 8838.570486] rtlwifi: wireless switch is o
->
->
->   root  ~  uname -a
-> Linux DPini-Laptop 3.12.2-1-ARCH #1 SMP PREEMPT Fri Nov 29 21:14:15
-> CET 2013 x86_64 GNU/Linux
->
->
-> Iwconfig:
->
-> wlp3s0    IEEE 802.11bgn  ESSID:"Pinis_AP"
->            Mode:Managed  Frequency:2.462 GHz  Access Point: 00:1A:2B:12:34:56
->            Bit Rate=18 Mb/s   Tx-Power=20 dBm
->            Retry  long limit:7   RTS thr=2347 B   Fragment thr:off
->            Encryption key:off
->            Power Management:off
->            Link Quality=50/70  Signal level=-60 dBm
->            Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
->            Tx excessive retries:0  Invalid misc:9   Missed beacon:0
->
->   root  ~  rfkill list
-> 0: phy0: Wireless LAN
->      Soft blocked: no
->      Hard blocked: no
-> 1: hci0: Bluetooth
->      Soft blocked: no
->      Hard blocked: no
->
->   root  ⋯  lib  firmware  rtlwifi  md5sum rtl8723fw*
-> ce50dfe07dbb1bfe9e14bdb315a4b28a  rtl8723fw_B.bin
-> 69ccaffbe94cc0ef1b89c25290e19b2e  rtl8723fw.bin
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Those md5sums match those of the latest firmware.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c | 48 +++++++++++++++++++++++++++++-
+ 1 file changed, 47 insertions(+), 1 deletion(-)
 
-Your signal is a bit lower than mine. My iwconfig shows
-
-wlp14s0   IEEE 802.11bgn  ESSID:"NETGEAR81"
-           Mode:Managed  Frequency:2.437 GHz  Access Point: 20:E5:2A:01:F7:EA
-           Bit Rate=7.2 Mb/s   Tx-Power=20 dBm
-           Retry  long limit:7   RTS thr=2347 B   Fragment thr:off
-           Power Management:off
-           Link Quality=60/70  Signal level=-50 dBm
-           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-           Tx excessive retries:0  Invalid misc:2254   Missed beacon:0
-
-My AP is 802.11n. Note that the 7.2 Mbps is misleading. When I pushed data 
-through using netperf, it jumped to 72.2 Mbps, and my throughput was
-
-TCP_MAERTS Test:  30.64 27.65 30.54 28.86 33.33 33.59 37.86 39.40 39.76 37.20
-RX Results: max 39.76, min 27.65. Mean 33.88(4.22)
-
-TCP_STREAM Test:  35.34 37.34 29.59 20.10 36.11 40.24 40.67 41.93 38.08 33.93
-TX Results: max 41.93, min 20.10. Mean 35.33(6.13)
-
-When I switch to an 802.11g AP, I get the following:
-
-TCP_MAERTS Test:  10.77 10.81 11.53 11.69 10.46 10.16 11.04 10.66  7.34 10.90
-RX Results: max 11.69, min  7.34. Mean 10.54(1.15)
-
-TCP_STREAM Test:   5.74  6.24  6.76  6.43  7.37  6.23  7.63  7.07  7.07  6.50
-TX Results: max  7.63, min  5.74. Mean  6.70(0.55)
-
-Those numbers could probably be improved, but without any details on how the 
-chip works, what could one do. Messing with power settings on the amplifiers 
-could lead to destruction of radios. I cannot take that chance.
-
-As to stability, I am in the middle of a long-term test of rtl8723ae. After 
-roughly 86,000 seconds of connect time, I have had only 9 disconnections, and 
-all were due to a bug in the roaming code that I have so far been unable to 
-find. The interface thinks it has lost the APs beacons, does a disconnect, and 
-immediately reconnects. Otherwise, the connection was stable until I forced a 
-reconnect to my G AP for this reply.
-
-Unfortunately, I have no idea what to do for your complaints. If you want higher 
-throughput, then an 802.11n AP seems warranted.
-
-Larry
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+index f3c4102..ec1da0c 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+@@ -28,6 +28,7 @@
+ #include "ar9462_2p1_initvals.h"
+ #include "ar9565_1p0_initvals.h"
+ #include "ar9565_1p1_initvals.h"
++#include "ar953x_initvals.h"
+ 
+ /* General hardware code for the AR9003 hadware family */
+ 
+@@ -308,6 +309,31 @@ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
+ 		/* Fast clock modal settings */
+ 		INIT_INI_ARRAY(&ah->iniModesFastClock,
+ 				ar955x_1p0_modes_fast_clock);
++	} else if (AR_SREV_9531(ah)) {
++		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_CORE],
++			       qca953x_1p0_mac_core);
++		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_POST],
++			       qca953x_1p0_mac_postamble);
++		INIT_INI_ARRAY(&ah->iniBB[ATH_INI_CORE],
++			       qca953x_1p0_baseband_core);
++		INIT_INI_ARRAY(&ah->iniBB[ATH_INI_POST],
++			       qca953x_1p0_baseband_postamble);
++		INIT_INI_ARRAY(&ah->iniRadio[ATH_INI_CORE],
++			       qca953x_1p0_radio_core);
++		INIT_INI_ARRAY(&ah->iniRadio[ATH_INI_POST],
++			       qca953x_1p0_radio_postamble);
++		INIT_INI_ARRAY(&ah->iniSOC[ATH_INI_PRE],
++			       qca953x_1p0_soc_preamble);
++		INIT_INI_ARRAY(&ah->iniSOC[ATH_INI_POST],
++			       qca953x_1p0_soc_postamble);
++		INIT_INI_ARRAY(&ah->iniModesRxGain,
++			       qca953x_1p0_common_wo_xlna_rx_gain_table);
++		INIT_INI_ARRAY(&ah->ini_modes_rx_gain_bounds,
++			       qca953x_1p0_common_wo_xlna_rx_gain_bounds);
++		INIT_INI_ARRAY(&ah->iniModesTxGain,
++			       qca953x_1p0_modes_no_xpa_tx_gain_table);
++		INIT_INI_ARRAY(&ah->iniModesFastClock,
++			       qca953x_1p0_modes_fast_clock);
+ 	} else if (AR_SREV_9580(ah)) {
+ 		/* mac */
+ 		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_CORE],
+@@ -485,6 +511,9 @@ static void ar9003_tx_gain_table_mode0(struct ath_hw *ah)
+ 	else if (AR_SREV_9550(ah))
+ 		INIT_INI_ARRAY(&ah->iniModesTxGain,
+ 			ar955x_1p0_modes_xpa_tx_gain_table);
++	else if (AR_SREV_9531(ah))
++		INIT_INI_ARRAY(&ah->iniModesTxGain,
++			qca953x_1p0_modes_xpa_tx_gain_table);
+ 	else if (AR_SREV_9580(ah))
+ 		INIT_INI_ARRAY(&ah->iniModesTxGain,
+ 			ar9580_1p0_lowest_ob_db_tx_gain_table);
+@@ -525,7 +554,14 @@ static void ar9003_tx_gain_table_mode1(struct ath_hw *ah)
+ 	else if (AR_SREV_9550(ah))
+ 		INIT_INI_ARRAY(&ah->iniModesTxGain,
+ 			ar955x_1p0_modes_no_xpa_tx_gain_table);
+-	else if (AR_SREV_9462_21(ah))
++	else if (AR_SREV_9531(ah)) {
++		if (AR_SREV_9531_11(ah))
++			INIT_INI_ARRAY(&ah->iniModesTxGain,
++				       qca953x_1p1_modes_no_xpa_tx_gain_table);
++		else
++			INIT_INI_ARRAY(&ah->iniModesTxGain,
++				       qca953x_1p0_modes_no_xpa_tx_gain_table);
++	} else if (AR_SREV_9462_21(ah))
+ 		INIT_INI_ARRAY(&ah->iniModesTxGain,
+ 			ar9462_2p1_modes_high_ob_db_tx_gain);
+ 	else if (AR_SREV_9462_20(ah))
+@@ -699,6 +735,11 @@ static void ar9003_rx_gain_table_mode0(struct ath_hw *ah)
+ 				ar955x_1p0_common_rx_gain_table);
+ 		INIT_INI_ARRAY(&ah->ini_modes_rx_gain_bounds,
+ 				ar955x_1p0_common_rx_gain_bounds);
++	} else if (AR_SREV_9531(ah)) {
++		INIT_INI_ARRAY(&ah->iniModesRxGain,
++			       qca953x_1p0_common_rx_gain_table);
++		INIT_INI_ARRAY(&ah->ini_modes_rx_gain_bounds,
++			       qca953x_1p0_common_rx_gain_bounds);
+ 	} else if (AR_SREV_9580(ah))
+ 		INIT_INI_ARRAY(&ah->iniModesRxGain,
+ 				ar9580_1p0_rx_gain_table);
+@@ -744,6 +785,11 @@ static void ar9003_rx_gain_table_mode1(struct ath_hw *ah)
+ 			ar955x_1p0_common_wo_xlna_rx_gain_table);
+ 		INIT_INI_ARRAY(&ah->ini_modes_rx_gain_bounds,
+ 			ar955x_1p0_common_wo_xlna_rx_gain_bounds);
++	} else if (AR_SREV_9531(ah)) {
++		INIT_INI_ARRAY(&ah->iniModesRxGain,
++			       qca953x_1p0_common_wo_xlna_rx_gain_table);
++		INIT_INI_ARRAY(&ah->ini_modes_rx_gain_bounds,
++			       qca953x_1p0_common_wo_xlna_rx_gain_bounds);
+ 	} else if (AR_SREV_9580(ah))
+ 		INIT_INI_ARRAY(&ah->iniModesRxGain,
+ 			ar9580_1p0_wo_xlna_rx_gain_table);
+-- 
+1.8.5.2
 
