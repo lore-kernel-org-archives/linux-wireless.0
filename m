@@ -1,86 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:64809 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752579Ab3LJTVy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Dec 2013 14:21:54 -0500
-Message-ID: <1386703339.30202.19.camel@dcbw.foobar.com> (sfid-20131210_202213_509209_CB98237B)
-Subject: Re: [PATCH v2 15/16] wl1251: Add sysfs file address for setting
- permanent mac address
-From: Dan Williams <dcbw@redhat.com>
-To: Pali =?ISO-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
-Cc: Kalle Valo <kvalo@adurom.com>, Luciano Coelho <luca@coelho.fi>,
+Received: from mail-ea0-f171.google.com ([209.85.215.171]:43450 "EHLO
+	mail-ea0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755867Ab3L3SLJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Dec 2013 13:11:09 -0500
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Julia Lawall <Julia.Lawall@lip6.fr>
+Cc: kernel-janitors@vger.kernel.org,
 	"John W. Linville" <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
-	aaro.koskinen@iki.fi, pavel@ucw.cz, sre@ring0.de,
-	joni.lapilainen@gmail.com,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Felipe Contreras <felipe.contreras@gmail.com>
-Date: Tue, 10 Dec 2013 13:22:19 -0600
-In-Reply-To: <201312101852.17030@pali>
-References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com>
-	 <201312101814.35112@pali> <1386697762.30202.6.camel@dcbw.foobar.com>
-	 <201312101852.17030@pali>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 11/11] carl9170: use ether_addr_equal_64bits
+Date: Mon, 30 Dec 2013 19:10:58 +0100
+Message-ID: <10609239.5b8Q6kF6b9@debian64> (sfid-20131230_191132_083487_2E95F64C)
+In-Reply-To: <1388427307-8691-12-git-send-email-Julia.Lawall@lip6.fr>
+References: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr> <1388427307-8691-12-git-send-email-Julia.Lawall@lip6.fr>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2013-12-10 at 18:52 +0100, Pali Rohár wrote:
-> On Tuesday 10 December 2013 18:49:22 Dan Williams wrote:
-> > On Tue, 2013-12-10 at 18:14 +0100, Pali Rohár wrote:
-> > > On Tuesday 10 December 2013 17:10:50 Pali Rohár wrote:
-> > > > On Tuesday 10 December 2013 16:49:23 Kalle Valo wrote:
-> > > > > Pali Rohár <pali.rohar@gmail.com> writes:
-> > > > > > Driver wl1251 generating mac address randomly at
-> > > > > > startup and there is no way to set permanent mac
-> > > > > > address via SET_IEEE80211_PERM_ADDR. This patch
-> > > > > > export sysfs file which can set permanent mac address
-> > > > > > by userspace helper program. Patch is needed for
-> > > > > > devices which do not store mac address in internal
-> > > > > > wl1251 eeprom.
-> > > > > > 
-> > > > > > Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
-> > > > > 
-> > > > > We have ioctl() command for setting the mac address.
-> > > > 
-> > > > Really? Is there ioctl for setting permanent mac address?
-> > > > Can you show me it?
-> > > 
-> > > Now I looked at it again and I did not found any ioctl for
-> > > it. There is only ioctl cmd for getting address, not
-> > > setting it.
-> > > 
-> > > #define SIOCETHTOOL 0x8946
-> > > 
-> > > /* Get permanent hardware address */
-> > > #define ETHTOOL_GPERMADDR 0x00000020
-> > 
-> > Yeah, because it's supposed to be permanent and unchanging. 
-> > Which means if there was an ioctl for it, that would be
-> > contrary to the purpose of a permanent MAC address.
-> > 
-> > I realize the N900 stores the WiFi MAC address completely
-> > differently than many other systems, and that's why this
-> > sysfs file was created.  I don't really have a great
-> > converged solution for that, other than what you've currently
-> > got, or perhaps adding SPERMADDR to ethtool.  One thing I
-> > *would* like though, is a restriction on the sysfs file such
-> > that if the permanent MAC is already set, it cannot be set
-> > again.  Otherwise the permanent MAC address isn't permanent
-> > at all.
-> > 
-> > Dan
+On Monday, December 30, 2013 07:15:07 PM Julia Lawall wrote:
+> From: Julia Lawall <Julia.Lawall@lip6.fr>
 > 
-> Maybe another way could be to use request_firmware to load address 
-> from userspace... Or what do you think?
-
-That sounds like a great idea to try.  A number of devices either need
-stub firmware to read the MAC from EEPROM, or do use request_firmware()
-to load firmware before they read the MAC.  You may have to use
-request_firmware() synchronously though to ensure that the MAC is read
-before registering with mac80211.
-
-Dan
-
-
+> Ether_addr_equal_64bits is more efficient than ether_addr_equal, and can be
+> used when each argument is an array within a structure that contains at
+> least two bytes of data beyond the array.
+> 
+> The structures involved are:
+> ieee80211_hdr defined in include/linux/ieee80211.h,
+> ieee80211_bar defined in include/linux/ieee80211.h and
+> ath_common defined in drivers/net/wireless/ath/ath.h
+> 
+> This was done using Coccinelle (http://coccinelle.lip6.fr/).
+> 
+> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+Acked-by: Christian Lamparter <chunkeey@googlemail.com>
