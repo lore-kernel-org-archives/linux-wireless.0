@@ -1,46 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:41638 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750881Ab3LKPIF (ORCPT
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:37279 "EHLO
+	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756217Ab3L3RTJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Dec 2013 10:08:05 -0500
-Message-ID: <52A87FBD.4000901@candelatech.com> (sfid-20131211_160809_550133_AC3957F1)
-Date: Wed, 11 Dec 2013 07:07:41 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Question on software-crypt mode.
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 30 Dec 2013 12:19:09 -0500
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 10/11] at76c50x-usb: use ether_addr_equal_64bits
+Date: Mon, 30 Dec 2013 19:15:06 +0100
+Message-Id: <1388427307-8691-11-git-send-email-Julia.Lawall@lip6.fr> (sfid-20131230_182354_894849_DC3B313D)
+In-Reply-To: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>
+References: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
+From: Julia Lawall <Julia.Lawall@lip6.fr>
 
-I am trying to implement software-crypt for ath10k so that it can do crypt
-with multiple stations connected to same AP.
+Ether_addr_equal_64bits is more efficient than ether_addr_equal, and can be
+used when each argument is an array within a structure that contains at
+least two bytes of data beyond the array.
 
-I tried using ath9k's approach and just not setting keys, but that does not work at all
-(no stations can communicate).
+The structures involved are:
+at76_priv defined in drivers/net/wireless/at76c50x-usb.h and
+ieee80211_mgmt defined in include/linux/ieee80211.h
 
-If I basically leave code as is, then secondary stations can associate but never
-get DHCP.  I see FCS and hw-crypt errored packets being received from the
-ath10k firmware/chip.  This is probably because the chip/firmware decodes the
-secondary station's packets with the first station's keys.
-Transmitted packets (as sniffed from the AP) do appear fine.
+This was done using Coccinelle (http://coccinelle.lip6.fr/).
 
-I was thinking to just take all fcs and/or crypt-errored packets in
-the receive path and somehow send them up the stack for the software-crypt
-layer to (re)decrypt.  I think I have managed to get ath10k to send them
-up, but still DHCP does not complete.
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
 
-Does anyone have any suggestions for things to try or code to look at in
-detail?
+---
+The semantic patch used is rather long and can be found in message 0 of
+this patch series.
 
-Thanks,
-Ben
+ drivers/net/wireless/at76c50x-usb.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+diff --git a/drivers/net/wireless/at76c50x-usb.c b/drivers/net/wireless/at76c50x-usb.c
+index 34c8a33..031d4ec 100644
+--- a/drivers/net/wireless/at76c50x-usb.c
++++ b/drivers/net/wireless/at76c50x-usb.c
+@@ -1721,7 +1721,7 @@ static void at76_mac80211_tx(struct ieee80211_hw *hw,
+ 	 * following workaround is necessary. If the TX frame is an
+ 	 * authentication frame extract the bssid and send the CMD_JOIN. */
+ 	if (mgmt->frame_control & cpu_to_le16(IEEE80211_STYPE_AUTH)) {
+-		if (!ether_addr_equal(priv->bssid, mgmt->bssid)) {
++		if (!ether_addr_equal_64bits(priv->bssid, mgmt->bssid)) {
+ 			memcpy(priv->bssid, mgmt->bssid, ETH_ALEN);
+ 			ieee80211_queue_work(hw, &priv->work_join_bssid);
+ 			dev_kfree_skb_any(skb);
 
