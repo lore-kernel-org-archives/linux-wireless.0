@@ -1,46 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f169.google.com ([209.85.215.169]:62511 "EHLO
-	mail-ea0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751578Ab3LHIqe (ORCPT
+Received: from out3-smtp.messagingengine.com ([66.111.4.27]:50828 "EHLO
+	out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932222Ab3L3V5G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Dec 2013 03:46:34 -0500
-From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, David Gnedt <david.gnedt@davizone.at>
-Subject: [PATCH] mac80211: fix TX device statistics for monitor interfaces
-Date: Sun,  8 Dec 2013 09:45:57 +0100
-Message-Id: <1386492357-20826-1-git-send-email-pali.rohar@gmail.com> (sfid-20131208_094724_638029_F2247FFC)
-In-Reply-To: <87iowiszyu.fsf@purkki.adurom.net>
-References: <87iowiszyu.fsf@purkki.adurom.net>
+	Mon, 30 Dec 2013 16:57:06 -0500
+Date: Mon, 30 Dec 2013 19:57:01 -0200
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Julia Lawall <julia.lawall@lip6.fr>,
+	kernel-janitors@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 4/11]  use ether_addr_equal_64bits
+Message-ID: <20131230215701.GA4938@khazad-dum.debian.net> (sfid-20131230_225739_349064_BAFCA748)
+References: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>
+ <1388427307-8691-5-git-send-email-Julia.Lawall@lip6.fr>
+ <1388429761.4410.1.camel@jlt4.sipsolutions.net>
+ <alpine.DEB.2.02.1312302057420.2209@localhost6.localdomain6>
+ <1388438724.4573.2.camel@jlt4.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1388438724.4573.2.camel@jlt4.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Gnedt <david.gnedt@davizone.at>
+On Mon, 30 Dec 2013, Johannes Berg wrote:
+> On Mon, 2013-12-30 at 20:58 +0100, Julia Lawall wrote:
+> > > Is there any way we could catch (sparse, or some other script?) that
+> > > struct reorganising won't break the condition needed ("within a
+> > > structure that contains at least two more bytes")?
+> > 
+> > What kind of reorganizing could happen?  Do you mean that the programmer 
+> > might do at some time in the future, or something the compiler might do?
+> 
+> I'm just thinking of a programmer, e.g. changing a struct like this:
+> 
+>  struct foo {
+>    u8 addr[ETH_ALEN];
+> -  u16 dummy;
+>  };
+> 
+> for example.
 
-Count TX packets and bytes also for monitor interfaces.
+That is easily resolved by:
 
-Signed-off-by: David Gnedt <david.gnedt@davizone.at>
----
- net/mac80211/tx.c |    3 +++
- 1 file changed, 3 insertions(+)
+struct foo {
+	u8 addr[ETH_ALEN];
+	u16 required_padding;	/* do not remove upon pain of death */
+};
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index c558b24..37b38fb 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1623,6 +1623,9 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
- 	if (unlikely(skb->len < len_rthdr))
- 		goto fail; /* skb too short for claimed rt header extent */
- 
-+	dev->stats.tx_packets++;
-+	dev->stats.tx_bytes += skb->len;
-+
- 	/*
- 	 * fix up the pointers accounting for the radiotap
- 	 * header still being in there.  We are being given
+Preferably with a comment nearby explaining just why that padding is so
+important in the first place.
+
+Unfortunately, we do have a lot of code with unexplained padding that one
+should never remove, and it is often nowhere nearly as obvious as stray
+elements with idiotic non-explanatory names in a structure.
+
+One example is the via-rng hw_random driver, where the buffer used by the
+"xstore" via-specific instriction *MUST* be longer than what the "xstore"
+instruction is documented to require due to CPU errata (you ask it to write
+from 1 to 8 bytes, and it may end up writing 16 bytes).  The xstore buffer
+is an array that was made long enough to avoid the errata, but that fact is
+documented only in a git commit message.
+
 -- 
-1.7.9.5
-
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
