@@ -1,57 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f177.google.com ([209.85.215.177]:36334 "EHLO
-	mail-ea0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755037Ab3LCUO1 (ORCPT
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:37279 "EHLO
+	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756142Ab3L3RTF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Dec 2013 15:14:27 -0500
-Received: by mail-ea0-f177.google.com with SMTP id n15so10093069ead.22
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Dec 2013 12:14:26 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: p2p@posteo.de
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: RTL8188S
-Date: Tue, 03 Dec 2013 21:14:22 +0100
-Message-ID: <1708062.P25CKJLDQp@blech> (sfid-20131203_211449_071172_2B6A6B26)
-In-Reply-To: <71e5f26b0cd51bcceb26565aa236fe7a@posteo.de>
-References: <a3a1cb41444ae8dd89db830ae927491f@posteo.de> <1783016.HDzIMuL15q@blech> <71e5f26b0cd51bcceb26565aa236fe7a@posteo.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 30 Dec 2013 12:19:05 -0500
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: kernel-janitors@vger.kernel.org,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 2/11] ath5k: use ether_addr_equal_64bits
+Date: Mon, 30 Dec 2013 19:14:58 +0100
+Message-Id: <1388427307-8691-3-git-send-email-Julia.Lawall@lip6.fr> (sfid-20131230_182212_802868_99F6C68B)
+In-Reply-To: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>
+References: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello - Still don't know your Name - 
-On Tuesday, December 03, 2013 08:14:08 PM p2p@posteo.de wrote:
-> Am 26.11.2013 21:38 schrieb Christian Lamparter:
->
-> We need the "p2p magic" to develop a linux miracast sink.
-Sounds a bit like OpenWFD [0], or is this unrelated? 
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+
+Ether_addr_equal_64bits is more efficient than ether_addr_equal, and can be
+used when each argument is an array within a structure that contains at
+least two bytes of data beyond the array.
+
+The structures involved are:
+ieee80211_mgmt defined in include/linux/ieee80211.h and
+ath_common defined in drivers/net/wireless/ath/ath.h
+
+This was done using Coccinelle (http://coccinelle.lip6.fr/).
+
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+
+---
+The semantic patch used is rather long and can be found in message 0 of
+this patch series.
+
+ drivers/net/wireless/ath/ath5k/base.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 69f58b0..6396ad4 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -1245,7 +1245,7 @@ ath5k_check_ibss_tsf(struct ath5k_hw *ah, struct sk_buff *skb,
  
-> >> I followed the thread.
-> >> It shows me that it makes no sense. I am a beginner and I only can
-> >> spent time for it if someone tells me for example: fill this module 
-> >> with
-> >> code for this specific function. I have good literature and I think 
-> >> I
-> >> can try to help but not lead something.
-> >
-> > Hey that's great, that's exactly what needs to be "done". ;-)
-> >
-> 
-> I don't know yet if I have the time to take part. But as I wrote I have 
-> a good book which describes in detail driver development for 2.6 kernel.
-> 
-> What do you think how many LOC have to been written?
-Ok?!
-
-rtl8192cu has around 8600 LOCs, rtl8192se has around 10700. That said,
-realtek's own 8190n driver comes in at 90 000+ LOCs driver [of course,
-that driver comes with its own stack, sme and maybe a few other bells
-and whiles]. I guess the answer here is really: take what ever number
-you prefer :-D.
-
-Regards,
-
-Christian
-
-[0] <http://www.freedesktop.org/wiki/Software/openwfd/>
+ 	if (ieee80211_is_beacon(mgmt->frame_control) &&
+ 	    le16_to_cpu(mgmt->u.beacon.capab_info) & WLAN_CAPABILITY_IBSS &&
+-	    ether_addr_equal(mgmt->bssid, common->curbssid)) {
++	    ether_addr_equal_64bits(mgmt->bssid, common->curbssid)) {
+ 		/*
+ 		 * Received an IBSS beacon with the same BSSID. Hardware *must*
+ 		 * have updated the local TSF. We have to work around various
+@@ -1309,7 +1309,7 @@ ath5k_update_beacon_rssi(struct ath5k_hw *ah, struct sk_buff *skb, int rssi)
+ 
+ 	/* only beacons from our BSSID */
+ 	if (!ieee80211_is_beacon(mgmt->frame_control) ||
+-	    !ether_addr_equal(mgmt->bssid, common->curbssid))
++	    !ether_addr_equal_64bits(mgmt->bssid, common->curbssid))
+ 		return;
+ 
+ 	ewma_add(&ah->ah_beacon_rssi_avg, rssi);
 
