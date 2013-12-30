@@ -1,33 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f42.google.com ([209.85.160.42]:58948 "EHLO
-	mail-pb0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750830Ab3LMG3c (ORCPT
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:56920 "EHLO
+	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932094Ab3L3T67 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Dec 2013 01:29:32 -0500
-Received: by mail-pb0-f42.google.com with SMTP id uo5so1986159pbc.15
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Dec 2013 22:29:32 -0800 (PST)
-Message-ID: <52AAA948.1000509@lwfinger.net> (sfid-20131213_072936_298027_A8C3AA37)
-Date: Fri, 13 Dec 2013 00:29:28 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 30 Dec 2013 14:58:59 -0500
+Date: Mon, 30 Dec 2013 20:58:55 +0100 (CET)
+From: Julia Lawall <julia.lawall@lip6.fr>
+To: Johannes Berg <johannes@sipsolutions.net>
+cc: Julia Lawall <Julia.Lawall@lip6.fr>,
+	kernel-janitors@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 4/11]  use ether_addr_equal_64bits
+In-Reply-To: <1388429761.4410.1.camel@jlt4.sipsolutions.net>
+Message-ID: <alpine.DEB.2.02.1312302057420.2209@localhost6.localdomain6> (sfid-20131230_205931_253981_691C5F4F)
+References: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>  <1388427307-8691-5-git-send-email-Julia.Lawall@lip6.fr>  (sfid-20131230_182319_112673_F481A1D3) <1388429761.4410.1.camel@jlt4.sipsolutions.net>
 MIME-Version: 1.0
-To: Naughtboy <skylvlinux@gmail.com>, b43-dev@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: where can download bcm43236 linux driver code!!
-References: <CAKH5=LsbEAVX4_=EEukJnGkKbiG--RzywvK+wOGhmh3zz6pkxA@mail.gmail.com>
-In-Reply-To: <CAKH5=LsbEAVX4_=EEukJnGkKbiG--RzywvK+wOGhmh3zz6pkxA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/12/2013 08:48 PM, Naughtboy wrote:
-> hell big guys
-> now i have a usbdognle  bcm4323
-> but i did'nt have it driver code (linux)
-> if you kown it , please let'us kown it
-> thanks adanvce!!
+> Seems to be missing an "iwlwifi:" or so prefix, but I guess we can add
+> it when we take the patch ...
 
-As far as I know, there are no Linux drivers for any Broadcom USB adapters.
+Sorry.  Not sure why that happened.  I'll look into it.
 
-Larry
+> Is there any way we could catch (sparse, or some other script?) that
+> struct reorganising won't break the condition needed ("within a
+> structure that contains at least two more bytes")?
 
+What kind of reorganizing could happen?  Do you mean that the programmer 
+might do at some time in the future, or something the compiler might do?
 
+julia
