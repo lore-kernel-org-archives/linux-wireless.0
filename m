@@ -1,58 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f172.google.com ([74.125.82.172]:45258 "EHLO
-	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751825Ab3LTIhg (ORCPT
+Received: from mail-ee0-f45.google.com ([74.125.83.45]:43102 "EHLO
+	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753911Ab3LaR03 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Dec 2013 03:37:36 -0500
-Received: by mail-we0-f172.google.com with SMTP id p61so2165064wes.31
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Dec 2013 00:37:35 -0800 (PST)
+	Tue, 31 Dec 2013 12:26:29 -0500
+Received: by mail-ee0-f45.google.com with SMTP id d49so5503908eek.18
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Dec 2013 09:26:28 -0800 (PST)
+Message-ID: <52C2FE41.3080409@gmail.com> (sfid-20131231_182632_827946_3FFD7A97)
+Date: Tue, 31 Dec 2013 19:26:25 +0200
+From: Emmanuel Grumbach <egrumbach@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <8AC12462F1AA0E4EA8FEB46307AAD6F650AAB122@nasanexd02f.na.qualcomm.com>
-References: <1384198356-427-1-git-send-email-rajeshc@qca.qualcomm.com>
- <1386077130.4393.21.camel@jlt4.sipsolutions.net> <CAB=NE6Xa-bdLQm8uAg9wCE0fdp4KPBZ46d5FHVHp6wCvN5=dUA@mail.gmail.com>
- <1386145204.4284.4.camel@jlt4.sipsolutions.net> <1386145241.4284.5.camel@jlt4.sipsolutions.net>
- <D19FD2B13A40CD4B8DA64DB9B8F112E93E5CF51C@nasanexd01a.na.qualcomm.com>
- <CAB=NE6VNZDwGj4WWkgCmWxs_xLBZhXn44vo0TEdqo84xsRbZ2Q@mail.gmail.com>
- <8AC12462F1AA0E4EA8FEB46307AAD6F650AAB068@nasanexd02f.na.qualcomm.com>
- <CAB=NE6W3Et-4mDEet5DSDrM=yP60oODvEUGz=RtZj-gDgLNUbw@mail.gmail.com> <8AC12462F1AA0E4EA8FEB46307AAD6F650AAB122@nasanexd02f.na.qualcomm.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Fri, 20 Dec 2013 00:37:15 -0800
-Message-ID: <CAB=NE6WFOsjRgPyGjudc4c4JVoF-v=nnz2grknOai6=rYxrApA@mail.gmail.com> (sfid-20131220_093739_714511_EDCFE2C0)
-Subject: Re: [PATCHv3] cfg80211: add support for frequency interference event
-To: "BAHINI, Henri" <hbahini@qca.qualcomm.com>
-Cc: "Chauhan, Rajesh" <rajeshc@qca.qualcomm.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Malinen, Jouni" <jouni@qca.qualcomm.com>,
-	"Johnson, Jeff" <jjohnson@qca.qualcomm.com>,
-	"Chang, Leo" <schang@qca.qualcomm.com>,
-	"Luo, Xun" <xunl@qca.qualcomm.com>,
-	"Thalappil, Sameer" <sameert@qca.qualcomm.com>,
-	"Hussain, Arif" <c_arifh@qca.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
+To: Ben Hutchings <ben@decadent.org.uk>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>, hui.xiao@intel.com
+Subject: pull request: firmware for Intel Wireless adapter - 7260 / 3160
+References: <CANUX_P3EwRW=+1SwHQN81hKKGZiVBFDcmLZAqknXZE+UzL_fTA@mail.gmail.com>
+In-Reply-To: <CANUX_P3EwRW=+1SwHQN81hKKGZiVBFDcmLZAqknXZE+UzL_fTA@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="l47AFSkMjF34jfkc3QUaG1nWD6QMSW0Ls"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 20, 2013 at 12:30 AM, BAHINI, Henri
-<hbahini@qca.qualcomm.com> wrote:
-> Please do educate us a bit!
-> We were not aware of the requirement that all patches contributions to the cfg/nl have to be for driver
-> that are already up streamed.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--l47AFSkMjF34jfkc3QUaG1nWD6QMSW0Ls
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-Its not and this will depend on the driver / approach / and intent but
-it does help.
+Hi Ben,
 
-> As for our effort for upstreaming our driver, we should take this out of this context since there
-> are factors driving this that are completely orthogonal to this discussion.
+This is another pull request for another firmware. I am sorry not to
+have put this together in the same pull request, but I just didn't know
+when that new firmware would come out.
+It doesn't replace the older one:
+* iwlwifi-{7260,3160}-7.ucode is supported starting from 3.10
+* iwlwifi-{7260,3160}-8.ucode is supported starting from 3.13
 
-That's true but it makes it harder for provide examples of the patches
-you are introducing. Typically we just remove code that's unused. If
-you have no intent on upstreaming then what's the point of doing tons
-of review and consideration on API that we deeply care of for
-userspace? The patch is debatable as-is already, I've provided my
-feedback on it before and if you don't get good feedback from others
-and also if some of this is because you are not upstreaming then I'm
-trying to highlight for you that perhaps that should be of a little
-more importance to you.
+This is why I don't remove the -7.ucode.
+At some point (maybe around 3.15) we will stop supporting -7.ucode.
+Thanks!
 
-  Luis
+The following changes since commit 52d77db9f133afe4d2b26aeccfd603745f45fd=
+a1:
+
+  Merge branch 'master' of
+git://git.kernel.org/pub/scm/linux/kernel/git/egrumbach/linux-firmware
+(2013-12-30 15:22:40 +0100)
+
+are available in the git repository at:
+
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/egrumbach/linux-firmware
+master
+
+for you to fetch changes up to 11fdbda75cebef71e878fd0dfa6bfca984be35f4:
+
+  iwlwifi: update firmware for 7260 / 3160 devices (2013-12-30 18:59:33
++0200)
+
+----------------------------------------------------------------
+Emmanuel Grumbach (1):
+      iwlwifi: update firmware for 7260 / 3160 devices
+
+ WHENCE               |    6 ++++++
+ iwlwifi-3160-8.ucode |  Bin 0 -> 662032 bytes
+ iwlwifi-7260-8.ucode |  Bin 0 -> 674628 bytes
+ 3 files changed, 6 insertions(+)
+ create mode 100644 iwlwifi-3160-8.ucode
+ create mode 100644 iwlwifi-7260-8.ucode
+
+
+
+--l47AFSkMjF34jfkc3QUaG1nWD6QMSW0Ls
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJSwv5BAAoJEC0Llv5uNjIByAQP/2277uylzQELj30/2ULwU+mg
+80tVe0zq3Ier4ifoZSXp1iZrMOE6j4Yg9uNyk/W6f98Vua3f68L1PvfQTpftOGPY
+m+SwQrSuU8h16KQgn11CAqgyit6KT5kOqEY0NZ9H7a67Ec8HpuyT1qg+GxkWU0ll
+o4XYRH+dblih3Pnd0W9lD8LcEnp8da5FEaZJwyAQlttGeIa542wPsZWangnOkl/b
+P47Qx7vfYkmRYBdevgY+BBsvJ6yoRgM9HAn3QEXGQRDdKy+20qh7r2lH6DNM0q9h
+tiafSAQ/S+Hc70o7REBjXuacoLMnU+lUqyJU7ImOYBbZxHHNMkcx3i7UIu8DEonx
+CrbSSFv2c6D+oRukLU8mtY+V6JYXuZ4rdbi5E9bU4O+Tf0FGX9Paor3Lu6NyuaiA
+KcZRVT5p5hKlc+z8C5Ma8921og8slzbVb5z1rjdv93eXAe5lDcfAJ2vMjuzi+yQ0
+LyssT65ZfD36FBYMxAUvt8/XE8AvwgCzNP+OoTB5WfEQlrvq1D7fArJ9173s6ukU
+FhjEdOOK6zy5O3yQg0YS5XCVqNnZBW2EFNvHclnaHS/vm5sOomTulwpsiS/RvnJ0
+P6ZXuT5+IZClYn5d+ozX5jUDeYMZU2Pelo6N4Zx425Z4Z2ea2Nm51jOoZEVkL1i5
+ajys1LFqmKbXPouEfgt2
+=Lv0l
+-----END PGP SIGNATURE-----
+
+--l47AFSkMjF34jfkc3QUaG1nWD6QMSW0Ls--
