@@ -1,61 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:25199 "EHLO
-	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756136Ab3L3RTE (ORCPT
+Received: from mail-ob0-f172.google.com ([209.85.214.172]:60493 "EHLO
+	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751331Ab3LaEZD convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Dec 2013 12:19:04 -0500
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: Ivo van Doorn <IvDoorn@gmail.com>
-Cc: kernel-janitors@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 1/11] rt2x00: use ether_addr_equal_64bits
-Date: Mon, 30 Dec 2013 19:14:57 +0100
-Message-Id: <1388427307-8691-2-git-send-email-Julia.Lawall@lip6.fr> (sfid-20131230_182438_957178_696B3551)
-In-Reply-To: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>
-References: <1388427307-8691-1-git-send-email-Julia.Lawall@lip6.fr>
+	Mon, 30 Dec 2013 23:25:03 -0500
+Received: by mail-ob0-f172.google.com with SMTP id gq1so12318958obb.17
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Dec 2013 20:25:02 -0800 (PST)
+MIME-Version: 1.0
+From: Pierre Bourdon <delroth@gmail.com>
+Date: Tue, 31 Dec 2013 05:24:42 +0100
+Message-ID: <CA+V6dmh7Udn96GG0XGaabx-t6ZViu1RGk-xTawa_KbnCdro9Ew@mail.gmail.com> (sfid-20131231_052532_890939_E8ECD40B)
+Subject: Exporting the TSF to userland
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <Julia.Lawall@lip6.fr>
+Hello linux-wireless,
 
-Ether_addr_equal_64bits is more efficient than ether_addr_equal, and can be
-used when each argument is an array within a structure that contains at
-least two bytes of data beyond the array.
+I'm a developer of libdrc, a project that allows Linux computers to
+control a Wii U GamePad. Because of how the device operates, our
+library needs to be able to read the TSF value of the access point
+device from userland.
 
-The structures involved are:
-ieee80211_bar defined in include/linux/ieee80211.h and
-rt2x00_bar_list_entry defined in drivers/net/wireless/rt2x00/rt2x00.h.
+We currently have a hacky patch that works for our use cases, but it
+would be a lot more convenient if that feature could be upstreamed.
+What would be the best way to proceed?
 
-This was done using Coccinelle (http://coccinelle.lip6.fr/).
+Our current patch:
+https://bitbucket.org/memahaxx/drc-mac80211/commits/4a9823cf2a6733bc15a05cffaebd8850d07451a7
 
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+Thanks,
 
----
-The semantic patch used is rather long and can be found in message 0 of
-this patch series.
-
- drivers/net/wireless/rt2x00/rt2x00dev.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 00c3fae..2bde672 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -565,10 +565,10 @@ static void rt2x00lib_rxdone_check_ba(struct rt2x00_dev *rt2x00dev,
- 
- #undef TID_CHECK
- 
--		if (!ether_addr_equal(ba->ra, entry->ta))
-+		if (!ether_addr_equal_64bits(ba->ra, entry->ta))
- 			continue;
- 
--		if (!ether_addr_equal(ba->ta, entry->ra))
-+		if (!ether_addr_equal_64bits(ba->ta, entry->ra))
- 			continue;
- 
- 		/* Mark BAR since we received the according BA */
-
+-- 
+Pierre "delroth" Bourdon <delroth@gmail.com>
+Software Engineer @ Zürich, Switzerland
+http://code.delroth.net/
