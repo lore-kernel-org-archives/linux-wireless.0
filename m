@@ -1,83 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f46.google.com ([74.125.82.46]:46588 "EHLO
-	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751515Ab3LBNJi convert rfc822-to-8bit (ORCPT
+Received: from mail-ee0-f47.google.com ([74.125.83.47]:35487 "EHLO
+	mail-ee0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754601Ab3LaRQT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Dec 2013 08:09:38 -0500
-Received: by mail-wg0-f46.google.com with SMTP id m15so11653836wgh.1
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Dec 2013 05:09:37 -0800 (PST)
-From: Michal Nazarewicz <mina86@mina86.com>
-To: Peter Stuge <peter@stuge.se>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Eugene Krasnikov <k.eugene.e@gmail.com>,
-	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCHv2] net: wireless: wcn36xx: fix potential NULL pointer dereference
-In-Reply-To: <20131201004715.11125.qmail@stuge.se>
-References: <1385744870-10164-1-git-send-email-mpn@google.com> <20131201004715.11125.qmail@stuge.se>
-Date: Mon, 02 Dec 2013 14:09:34 +0100
-Message-ID: <xa1tiov78kmp.fsf@mina86.com> (sfid-20131202_140942_679142_790D6871)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Tue, 31 Dec 2013 12:16:19 -0500
+Received: by mail-ee0-f47.google.com with SMTP id e51so4774706eek.20
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Dec 2013 09:16:18 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 12/28] iwlwifi: mvm: fix AC / FIFO mapping
+Date: Tue, 31 Dec 2013 19:15:41 +0200
+Message-Id: <1388510157-23345-12-git-send-email-egrumbach@gmail.com> (sfid-20131231_183437_301369_9FD694F5)
+In-Reply-To: <52C2FB68.2010708@gmail.com>
+References: <52C2FB68.2010708@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-If kmalloc fails wcn36xx_smd_rsp_process will attempt to dereference
-a NULL pointer.  There might be a better error recovery then just
-printing an error, but printing an error message is better then the
-current behaviour.
+The AC / fifo mapping was wrong - BE packets landed in VO
+FIFO. The iwl_mvm_tx_fifo enumeration isn't in the same
+order as ieee80211_ac_numbers enumeration.
+Since the firmware relies on fifo / ac mapping - this led
+to wrong behavior. E.g. the firmware sends beacon with the
+same QoS parameters as VO, and it actually took the
+parameters of BK. There are probably more severe issues.
 
-Signed-off-by: Michal Nazarewicz <mina86@mina86.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/wcn36xx/smd.c | 19 +++++++++++++------
- 1 file changed, 13 insertions(+), 6 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c |   25 +++++++++++++++----------
+ 1 file changed, 15 insertions(+), 10 deletions(-)
 
-On Sun, Dec 01 2013, Peter Stuge wrote:
-> Michal Nazarewicz wrote:
->> +			wcn36xx_err("Run out of memory while hnadling SMD_EVENT (%d)\n",
->> +				    msg_header->msg_type);
->
-> Typo hnadling.
-
-Fixed.
-
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index de9eb2c..3663394 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -2041,13 +2041,20 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
- 	case WCN36XX_HAL_DELETE_STA_CONTEXT_IND:
- 		mutex_lock(&wcn->hal_ind_mutex);
- 		msg_ind = kmalloc(sizeof(*msg_ind), GFP_KERNEL);
--		msg_ind->msg_len = len;
--		msg_ind->msg = kmalloc(len, GFP_KERNEL);
--		memcpy(msg_ind->msg, buf, len);
--		list_add_tail(&msg_ind->list, &wcn->hal_ind_queue);
--		queue_work(wcn->hal_ind_wq, &wcn->hal_ind_work);
--		wcn36xx_dbg(WCN36XX_DBG_HAL, "indication arrived\n");
-+		if (msg_ind) {
-+			msg_ind->msg_len = len;
-+			msg_ind->msg = kmalloc(len, GFP_KERNEL);
-+			memcpy(msg_ind->msg, buf, len);
-+			list_add_tail(&msg_ind->list, &wcn->hal_ind_queue);
-+			queue_work(wcn->hal_ind_wq, &wcn->hal_ind_work);
-+			wcn36xx_dbg(WCN36XX_DBG_HAL, "indication arrived\n");
-+		}
- 		mutex_unlock(&wcn->hal_ind_mutex);
-+		if (msg_ind)
-+			break;
-+		/* FIXME: Do something smarter then just printing an error. */
-+		wcn36xx_err("Run out of memory while handling SMD_EVENT (%d)\n",
-+			    msg_header->msg_type);
- 		break;
- 	default:
- 		wcn36xx_err("SMD_EVENT (%d) not supported\n",
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+index fb93961..eaaf2db 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+@@ -69,10 +69,10 @@
+ #include "mvm.h"
+ 
+ const u8 iwl_mvm_ac_to_tx_fifo[] = {
+-	IWL_MVM_TX_FIFO_BK,
+-	IWL_MVM_TX_FIFO_BE,
+-	IWL_MVM_TX_FIFO_VI,
+ 	IWL_MVM_TX_FIFO_VO,
++	IWL_MVM_TX_FIFO_VI,
++	IWL_MVM_TX_FIFO_BE,
++	IWL_MVM_TX_FIFO_BK,
+ };
+ 
+ struct iwl_mvm_mac_iface_iterator_data {
+@@ -586,18 +586,23 @@ static void iwl_mvm_mac_ctxt_cmd_common(struct iwl_mvm *mvm,
+ 		cpu_to_le32(vif->bss_conf.use_short_slot ?
+ 			    MAC_FLG_SHORT_SLOT : 0);
+ 
+-	for (i = 0; i < AC_NUM; i++) {
+-		cmd->ac[i].cw_min = cpu_to_le16(mvmvif->queue_params[i].cw_min);
+-		cmd->ac[i].cw_max = cpu_to_le16(mvmvif->queue_params[i].cw_max);
+-		cmd->ac[i].aifsn = mvmvif->queue_params[i].aifs;
+-		cmd->ac[i].edca_txop =
++	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
++		u8 txf = iwl_mvm_ac_to_tx_fifo[i];
++
++		cmd->ac[txf].cw_min =
++			cpu_to_le16(mvmvif->queue_params[i].cw_min);
++		cmd->ac[txf].cw_max =
++			cpu_to_le16(mvmvif->queue_params[i].cw_max);
++		cmd->ac[txf].edca_txop =
+ 			cpu_to_le16(mvmvif->queue_params[i].txop * 32);
+-		cmd->ac[i].fifos_mask = BIT(iwl_mvm_ac_to_tx_fifo[i]);
++		cmd->ac[txf].aifsn = mvmvif->queue_params[i].aifs;
++		cmd->ac[txf].fifos_mask = BIT(txf);
+ 	}
+ 
+ 	/* in AP mode, the MCAST FIFO takes the EDCA params from VO */
+ 	if (vif->type == NL80211_IFTYPE_AP)
+-		cmd->ac[AC_VO].fifos_mask |= BIT(IWL_MVM_TX_FIFO_MCAST);
++		cmd->ac[IWL_MVM_TX_FIFO_VO].fifos_mask |=
++			BIT(IWL_MVM_TX_FIFO_MCAST);
+ 
+ 	if (vif->bss_conf.qos)
+ 		cmd->qos_flags |= cpu_to_le32(MAC_QOS_FLG_UPDATE_EDCA);
 -- 
-1.8.4.1
+1.7.9.5
 
--- 
-Best regards,                                         _     _
-.o. | Liege of Serenely Enlightened Majesty of      o' \,=./ `o
-..o | Computer Science,  Michał “mina86” Nazarewicz    (o o)
-ooo +--<mpn@google.com>--<xmpp:mina86@jabber.org>--ooO--(_)--Ooo--
