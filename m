@@ -1,569 +1,752 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f182.google.com ([209.85.215.182]:42391 "EHLO
-	mail-ea0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753728Ab3LQUot (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.21]:46518 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755518Ab3LaCrN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Dec 2013 15:44:49 -0500
-Received: by mail-ea0-f182.google.com with SMTP id a15so3162726eae.13
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Dec 2013 12:44:48 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Lilach Edelstein <lilach.edelstein@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 02/36] iwlwifi: mvm: Add Smart FIFO support
-Date: Tue, 17 Dec 2013 22:44:05 +0200
-Message-Id: <1387313079-28123-2-git-send-email-egrumbach@gmail.com> (sfid-20131217_214453_505826_6677B609)
-In-Reply-To: <52B0B72A.5070704@gmail.com>
-References: <52B0B72A.5070704@gmail.com>
+	Mon, 30 Dec 2013 21:47:13 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH v2 3/5] ath9k: Add QCA953x initvals
+Date: Tue, 31 Dec 2013 08:12:00 +0530
+Message-Id: <1388457722-29643-3-git-send-email-sujith@msujith.org> (sfid-20131231_034722_192591_34D199D6)
+In-Reply-To: <1388457722-29643-1-git-send-email-sujith@msujith.org>
+References: <1388457722-29643-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lilach Edelstein <lilach.edelstein@intel.com>
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Send firmware a Smart FIFO Configuration host command to allow
-interrupt coalescing. The smart FIFO is enabled when there is
-only one bound interface (other than  p2p devices which are
-ignored) and it is of type station, and activated while the
-station is associated.
-
-Smart Fifo allows aggragations of DMA transactions and by that
-causes processor and memory controller to stay for a longer time
-on lower c-states, thus saving platform power.
-Firmware relies on driver to activate and disable it.
-
-Signed-off-by: Lilach Edelstein <lilach.edelstein@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/Makefile   |    2 +-
- drivers/net/wireless/iwlwifi/mvm/binding.c  |   16 +-
- drivers/net/wireless/iwlwifi/mvm/fw-api.h   |   62 ++++++
- drivers/net/wireless/iwlwifi/mvm/fw.c       |    4 +
- drivers/net/wireless/iwlwifi/mvm/mac80211.c |   21 ++
- drivers/net/wireless/iwlwifi/mvm/mvm.h      |    7 +
- drivers/net/wireless/iwlwifi/mvm/ops.c      |    1 +
- drivers/net/wireless/iwlwifi/mvm/sf.c       |  291 +++++++++++++++++++++++++++
- 8 files changed, 402 insertions(+), 2 deletions(-)
- create mode 100644 drivers/net/wireless/iwlwifi/mvm/sf.c
+ drivers/net/wireless/ath/ath9k/ar953x_initvals.h | 718 +++++++++++++++++++++++
+ 1 file changed, 718 insertions(+)
+ create mode 100644 drivers/net/wireless/ath/ath9k/ar953x_initvals.h
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/Makefile b/drivers/net/wireless/iwlwifi/mvm/Makefile
-index 285d8c7..3ea47ab 100644
---- a/drivers/net/wireless/iwlwifi/mvm/Makefile
-+++ b/drivers/net/wireless/iwlwifi/mvm/Makefile
-@@ -1,6 +1,6 @@
- obj-$(CONFIG_IWLMVM)   += iwlmvm.o
- iwlmvm-y += fw.o mac80211.o nvm.o ops.o phy-ctxt.o mac-ctxt.o
--iwlmvm-y += utils.o rx.o tx.o binding.o quota.o sta.o
-+iwlmvm-y += utils.o rx.o tx.o binding.o quota.o sta.o sf.o
- iwlmvm-y += scan.o time-event.o rs.o
- iwlmvm-y += power.o power_legacy.o bt-coex.o
- iwlmvm-y += led.o tt.o
-diff --git a/drivers/net/wireless/iwlwifi/mvm/binding.c b/drivers/net/wireless/iwlwifi/mvm/binding.c
-index 93fd145..57d3eed 100644
---- a/drivers/net/wireless/iwlwifi/mvm/binding.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/binding.c
-@@ -183,15 +183,29 @@ int iwl_mvm_binding_add_vif(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- 	if (WARN_ON_ONCE(!mvmvif->phy_ctxt))
- 		return -EINVAL;
- 
-+	/*
-+	 * Update SF - Disable if needed. if this fails, SF might still be on
-+	 * while many macs are bound, which is forbidden - so fail the binding.
-+	 */
-+	if (iwl_mvm_sf_update(mvm, vif, false))
-+		return -EINVAL;
-+
- 	return iwl_mvm_binding_update(mvm, vif, mvmvif->phy_ctxt, true);
- }
- 
- int iwl_mvm_binding_remove_vif(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- {
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+	int ret;
- 
- 	if (WARN_ON_ONCE(!mvmvif->phy_ctxt))
- 		return -EINVAL;
- 
--	return iwl_mvm_binding_update(mvm, vif, mvmvif->phy_ctxt, false);
-+	ret = iwl_mvm_binding_update(mvm, vif, mvmvif->phy_ctxt, false);
-+
-+	if (!ret)
-+		if (iwl_mvm_sf_update(mvm, vif, true))
-+			IWL_ERR(mvm, "Failed to update SF state\n");
-+
-+	return ret;
- }
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
-index bad5a55..3af4133 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw-api.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
-@@ -183,6 +183,7 @@ enum {
- 	BT_PROFILE_NOTIFICATION = 0xce,
- 	BT_COEX_CI = 0x5d,
- 
-+	REPLY_SF_CFG_CMD = 0xd1,
- 	REPLY_BEACON_FILTERING_CMD = 0xd2,
- 
- 	REPLY_DEBUG_CMD = 0xf0,
-@@ -1363,4 +1364,65 @@ struct iwl_notif_statistics { /* STATISTICS_NTFY_API_S_VER_8 */
- 	struct mvm_statistics_general general;
- } __packed;
- 
-+/***********************************
-+ * Smart Fifo API
-+ ***********************************/
-+/* Smart Fifo state */
-+enum iwl_sf_state {
-+	SF_LONG_DELAY_ON = 0, /* should never be called by driver */
-+	SF_FULL_ON,
-+	SF_UNINIT,
-+	SF_INIT_OFF,
-+	SF_HW_NUM_STATES
-+};
-+
-+/* Smart Fifo possible scenario */
-+enum iwl_sf_scenario {
-+	SF_SCENARIO_SINGLE_UNICAST,
-+	SF_SCENARIO_AGG_UNICAST,
-+	SF_SCENARIO_MULTICAST,
-+	SF_SCENARIO_BA_RESP,
-+	SF_SCENARIO_TX_RESP,
-+	SF_NUM_SCENARIO
-+};
-+
-+#define SF_TRANSIENT_STATES_NUMBER 2	/* SF_LONG_DELAY_ON and SF_FULL_ON */
-+#define SF_NUM_TIMEOUT_TYPES 2		/* Aging timer and Idle timer */
-+
-+/* smart FIFO default values */
-+#define SF_W_MARK_SISO 4096
-+#define SF_W_MARK_MIMO2 8192
-+#define SF_W_MARK_MIMO3 6144
-+#define SF_W_MARK_LEGACY 4096
-+#define SF_W_MARK_SCAN 4096
-+
-+/* SF Scenarios timers for FULL_ON state (aligned to 32 uSec) */
-+#define SF_SINGLE_UNICAST_IDLE_TIMER 320	/* 300 uSec  */
-+#define SF_SINGLE_UNICAST_AGING_TIMER 2016	/* 2 mSec */
-+#define SF_AGG_UNICAST_IDLE_TIMER 320		/* 300 uSec */
-+#define SF_AGG_UNICAST_AGING_TIMER 2016		/* 2 mSec */
-+#define SF_MCAST_IDLE_TIMER 2016		/* 2 mSec */
-+#define SF_MCAST_AGING_TIMER 10016		/* 10 mSec */
-+#define SF_BA_IDLE_TIMER 320			/* 300 uSec */
-+#define SF_BA_AGING_TIMER 2016			/* 2 mSec */
-+#define SF_TX_RE_IDLE_TIMER 320			/* 300 uSec */
-+#define SF_TX_RE_AGING_TIMER 2016		/* 2 mSec */
-+
-+#define SF_LONG_DELAY_AGING_TIMER 1000000	/* 1 Sec */
-+
-+/**
-+ * Smart Fifo configuration command.
-+ * @state: smart fifo state, types listed in iwl_sf_sate.
-+ * @watermark: Minimum allowed availabe free space in RXF for transient state.
-+ * @long_delay_timeouts: aging and idle timer values for each scenario
-+ * in long delay state.
-+ * @full_on_timeouts: timer values for each scenario in full on state.
-+ */
-+struct iwl_sf_cfg_cmd {
-+	enum iwl_sf_state state;
-+	__le32 watermark[SF_TRANSIENT_STATES_NUMBER];
-+	__le32 long_delay_timeouts[SF_NUM_SCENARIO][SF_NUM_TIMEOUT_TYPES];
-+	__le32 full_on_timeouts[SF_NUM_SCENARIO][SF_NUM_TIMEOUT_TYPES];
-+} __packed; /* SF_CFG_API_S_VER_2 */
-+
- #endif /* __fw_api_h__ */
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw.c b/drivers/net/wireless/iwlwifi/mvm/fw.c
-index 70e5297..b2bfa73 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw.c
-@@ -386,6 +386,10 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
- 		goto error;
- 	}
- 
-+	ret = iwl_mvm_sf_update(mvm, NULL, false);
-+	if (ret)
-+		IWL_ERR(mvm, "Failed to initialize Smart Fifo\n");
-+
- 	ret = iwl_send_tx_ant_cfg(mvm, iwl_fw_valid_tx_ant(mvm->fw));
- 	if (ret)
- 		goto error;
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index afc4419..f0f8b2c 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -850,7 +850,16 @@ static void iwl_mvm_bss_info_changed_station(struct iwl_mvm *mvm,
- 				iwl_mvm_protect_session(mvm, vif, dur, dur,
- 							5 * dur);
- 			}
-+
-+			iwl_mvm_sf_update(mvm, vif, false);
- 		} else if (mvmvif->ap_sta_id != IWL_MVM_STATION_COUNT) {
-+			/*
-+			 * If update fails - SF might be running in associated
-+			 * mode while disassociated - which is forbidden.
-+			 */
-+			WARN_ONCE(iwl_mvm_sf_update(mvm, vif, false),
-+				  "Failed to update SF upon disassociation\n");
-+
- 			/* remove AP station now that the MAC is unassoc */
- 			ret = iwl_mvm_rm_sta_id(mvm, vif, mvmvif->ap_sta_id);
- 			if (ret)
-@@ -1200,6 +1209,17 @@ static int iwl_mvm_mac_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
- 	return 0;
- }
- 
-+static void iwl_mvm_sta_rc_update(struct ieee80211_hw *hw,
-+				  struct ieee80211_vif *vif,
-+				  struct ieee80211_sta *sta, u32 changed)
-+{
-+	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
-+
-+	if (vif->type == NL80211_IFTYPE_STATION &&
-+	    changed & IEEE80211_RC_NSS_CHANGED)
-+		iwl_mvm_sf_update(mvm, vif, false);
-+}
-+
- static int iwl_mvm_mac_conf_tx(struct ieee80211_hw *hw,
- 			       struct ieee80211_vif *vif, u16 ac,
- 			       const struct ieee80211_tx_queue_params *params)
-@@ -1765,6 +1785,7 @@ struct ieee80211_ops iwl_mvm_hw_ops = {
- 	.sta_notify = iwl_mvm_mac_sta_notify,
- 	.allow_buffered_frames = iwl_mvm_mac_allow_buffered_frames,
- 	.set_rts_threshold = iwl_mvm_mac_set_rts_threshold,
-+	.sta_rc_update = iwl_mvm_sta_rc_update,
- 	.conf_tx = iwl_mvm_mac_conf_tx,
- 	.mgd_prepare_tx = iwl_mvm_mac_mgd_prepare_tx,
- 	.sched_scan_start = iwl_mvm_mac_sched_scan_start,
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index 7dc57cf..bd072c7 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -489,6 +489,9 @@ struct iwl_mvm {
- 	u8 scan_last_antenna_idx; /* to toggle TX between antennas */
- 	u8 mgmt_last_antenna_idx;
- 
-+	/* last smart fifo state that was successfully sent to firmware */
-+	enum iwl_sf_state sf_state;
-+
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- 	struct dentry *debugfs_dir;
- 	u32 dbgfs_sram_offset, dbgfs_sram_len;
-@@ -869,4 +872,8 @@ void iwl_mvm_tt_initialize(struct iwl_mvm *mvm);
- void iwl_mvm_tt_exit(struct iwl_mvm *mvm);
- void iwl_mvm_set_hw_ctkill_state(struct iwl_mvm *mvm, bool state);
- 
-+/* smart fifo */
-+int iwl_mvm_sf_update(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
-+		      bool added_vif);
-+
- #endif /* __IWL_MVM_H__ */
-diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
-index d86083c..cae6123 100644
---- a/drivers/net/wireless/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
-@@ -359,6 +359,7 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 		mvm->aux_queue = 11;
- 		mvm->first_agg_queue = 12;
- 	}
-+	mvm->sf_state = SF_UNINIT;
- 
- 	mutex_init(&mvm->mutex);
- 	spin_lock_init(&mvm->async_handlers_lock);
-diff --git a/drivers/net/wireless/iwlwifi/mvm/sf.c b/drivers/net/wireless/iwlwifi/mvm/sf.c
+diff --git a/drivers/net/wireless/ath/ath9k/ar953x_initvals.h b/drivers/net/wireless/ath/ath9k/ar953x_initvals.h
 new file mode 100644
-index 0000000..97bb3c3
+index 0000000..3c9113d
 --- /dev/null
-+++ b/drivers/net/wireless/iwlwifi/mvm/sf.c
-@@ -0,0 +1,291 @@
-+/******************************************************************************
++++ b/drivers/net/wireless/ath/ath9k/ar953x_initvals.h
+@@ -0,0 +1,718 @@
++/*
++ * Copyright (c) 2010-2011 Atheros Communications Inc.
++ * Copyright (c) 2011-2012 Qualcomm Atheros Inc.
 + *
-+ * This file is provided under a dual BSD/GPLv2 license.  When using or
-+ * redistributing this file, you may do so under either license.
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
 + *
-+ * GPL LICENSE SUMMARY
-+ *
-+ * Copyright(c) 2013 Intel Corporation. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
-+ * USA
-+ *
-+ * The full GNU General Public License is included in this distribution
-+ * in the file called COPYING.
-+ *
-+ * Contact Information:
-+ *  Intel Linux Wireless <ilw@linux.intel.com>
-+ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-+ *
-+ * BSD LICENSE
-+ *
-+ * Copyright(c) 2013 Intel Corporation. All rights reserved.
-+ * All rights reserved.
-+ *
-+ * Redistribution and use in source and binary forms, with or without
-+ * modification, are permitted provided that the following conditions
-+ * are met:
-+ *
-+ *  * Redistributions of source code must retain the above copyright
-+ *    notice, this list of conditions and the following disclaimer.
-+ *  * Redistributions in binary form must reproduce the above copyright
-+ *    notice, this list of conditions and the following disclaimer in
-+ *    the documentation and/or other materials provided with the
-+ *    distribution.
-+ *  * Neither the name Intel Corporation nor the names of its
-+ *    contributors may be used to endorse or promote products derived
-+ *    from this software without specific prior written permission.
-+ *
-+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-+ *
-+ *****************************************************************************/
-+#include "mvm.h"
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
 +
-+/* For counting bound interfaces */
-+struct iwl_mvm_active_iface_iterator_data {
-+	struct ieee80211_vif *ignore_vif;
-+	u8 sta_vif_ap_sta_id;
-+	enum iwl_sf_state sta_vif_state;
-+	int num_active_macs;
++#ifndef INITVALS_953X_H
++#define INITVALS_953X_H
++
++#define qca953x_1p0_mac_postamble ar9300_2p2_mac_postamble
++
++#define qca953x_1p0_soc_postamble ar9300_2p2_soc_postamble
++
++#define qca953x_1p0_common_rx_gain_table ar9300Common_rx_gain_table_2p2
++
++#define qca953x_1p0_common_wo_xlna_rx_gain_table ar9300Common_wo_xlna_rx_gain_table_2p2
++
++#define qca953x_1p0_modes_fast_clock ar9300Modes_fast_clock_2p2
++
++static const u32 qca953x_1p0_mac_core[][2] = {
++	/* Addr      allmodes  */
++	{0x00000008, 0x00000000},
++	{0x00000030, 0x00020085},
++	{0x00000034, 0x00000005},
++	{0x00000040, 0x00000000},
++	{0x00000044, 0x00000000},
++	{0x00000048, 0x00000008},
++	{0x0000004c, 0x00000010},
++	{0x00000050, 0x00000000},
++	{0x00001040, 0x002ffc0f},
++	{0x00001044, 0x002ffc0f},
++	{0x00001048, 0x002ffc0f},
++	{0x0000104c, 0x002ffc0f},
++	{0x00001050, 0x002ffc0f},
++	{0x00001054, 0x002ffc0f},
++	{0x00001058, 0x002ffc0f},
++	{0x0000105c, 0x002ffc0f},
++	{0x00001060, 0x002ffc0f},
++	{0x00001064, 0x002ffc0f},
++	{0x000010f0, 0x00000100},
++	{0x00001270, 0x00000000},
++	{0x000012b0, 0x00000000},
++	{0x000012f0, 0x00000000},
++	{0x0000143c, 0x00000000},
++	{0x0000147c, 0x00000000},
++	{0x00008000, 0x00000000},
++	{0x00008004, 0x00000000},
++	{0x00008008, 0x00000000},
++	{0x0000800c, 0x00000000},
++	{0x00008018, 0x00000000},
++	{0x00008020, 0x00000000},
++	{0x00008038, 0x00000000},
++	{0x0000803c, 0x00000000},
++	{0x00008040, 0x00000000},
++	{0x00008044, 0x00000000},
++	{0x00008048, 0x00000000},
++	{0x0000804c, 0xffffffff},
++	{0x00008054, 0x00000000},
++	{0x00008058, 0x00000000},
++	{0x0000805c, 0x000fc78f},
++	{0x00008060, 0x0000000f},
++	{0x00008064, 0x00000000},
++	{0x00008070, 0x00000310},
++	{0x00008074, 0x00000020},
++	{0x00008078, 0x00000000},
++	{0x0000809c, 0x0000000f},
++	{0x000080a0, 0x00000000},
++	{0x000080a4, 0x02ff0000},
++	{0x000080a8, 0x0e070605},
++	{0x000080ac, 0x0000000d},
++	{0x000080b0, 0x00000000},
++	{0x000080b4, 0x00000000},
++	{0x000080b8, 0x00000000},
++	{0x000080bc, 0x00000000},
++	{0x000080c0, 0x2a800000},
++	{0x000080c4, 0x06900168},
++	{0x000080c8, 0x13881c22},
++	{0x000080cc, 0x01f40000},
++	{0x000080d0, 0x00252500},
++	{0x000080d4, 0x00a00000},
++	{0x000080d8, 0x00400000},
++	{0x000080dc, 0x00000000},
++	{0x000080e0, 0xffffffff},
++	{0x000080e4, 0x0000ffff},
++	{0x000080e8, 0x3f3f3f3f},
++	{0x000080ec, 0x00000000},
++	{0x000080f0, 0x00000000},
++	{0x000080f4, 0x00000000},
++	{0x000080fc, 0x00020000},
++	{0x00008100, 0x00000000},
++	{0x00008108, 0x00000052},
++	{0x0000810c, 0x00000000},
++	{0x00008110, 0x00000000},
++	{0x00008114, 0x000007ff},
++	{0x00008118, 0x000000aa},
++	{0x0000811c, 0x00003210},
++	{0x00008124, 0x00000000},
++	{0x00008128, 0x00000000},
++	{0x0000812c, 0x00000000},
++	{0x00008130, 0x00000000},
++	{0x00008134, 0x00000000},
++	{0x00008138, 0x00000000},
++	{0x0000813c, 0x0000ffff},
++	{0x00008140, 0x000000fe},
++	{0x00008144, 0xffffffff},
++	{0x00008168, 0x00000000},
++	{0x0000816c, 0x00000000},
++	{0x000081c0, 0x00000000},
++	{0x000081c4, 0x33332210},
++	{0x000081ec, 0x00000000},
++	{0x000081f0, 0x00000000},
++	{0x000081f4, 0x00000000},
++	{0x000081f8, 0x00000000},
++	{0x000081fc, 0x00000000},
++	{0x00008240, 0x00100000},
++	{0x00008244, 0x0010f3d7},
++	{0x00008248, 0x00000852},
++	{0x0000824c, 0x0001e7ae},
++	{0x00008250, 0x00000000},
++	{0x00008254, 0x00000000},
++	{0x00008258, 0x00000000},
++	{0x0000825c, 0x40000000},
++	{0x00008260, 0x00080922},
++	{0x00008264, 0x9d400010},
++	{0x00008268, 0xffffffff},
++	{0x0000826c, 0x0000ffff},
++	{0x00008270, 0x00000000},
++	{0x00008274, 0x40000000},
++	{0x00008278, 0x003e4180},
++	{0x0000827c, 0x00000004},
++	{0x00008284, 0x0000002c},
++	{0x00008288, 0x0000002c},
++	{0x0000828c, 0x000000ff},
++	{0x00008294, 0x00000000},
++	{0x00008298, 0x00000000},
++	{0x0000829c, 0x00000000},
++	{0x00008300, 0x00001d40},
++	{0x00008314, 0x00000000},
++	{0x0000831c, 0x0000010d},
++	{0x00008328, 0x00000000},
++	{0x0000832c, 0x0000001f},
++	{0x00008330, 0x00000302},
++	{0x00008334, 0x00000700},
++	{0x00008338, 0xffff0000},
++	{0x0000833c, 0x02400000},
++	{0x00008340, 0x000107ff},
++	{0x00008344, 0xaa48107b},
++	{0x00008348, 0x008f0000},
++	{0x0000835c, 0x00000000},
++	{0x00008360, 0xffffffff},
++	{0x00008364, 0xffffffff},
++	{0x00008368, 0x00000000},
++	{0x00008370, 0x00000000},
++	{0x00008374, 0x000000ff},
++	{0x00008378, 0x00000000},
++	{0x0000837c, 0x00000000},
++	{0x00008380, 0xffffffff},
++	{0x00008384, 0xffffffff},
++	{0x00008390, 0xffffffff},
++	{0x00008394, 0xffffffff},
++	{0x00008398, 0x00000000},
++	{0x0000839c, 0x00000000},
++	{0x000083a0, 0x00000000},
++	{0x000083a4, 0x0000fa14},
++	{0x000083a8, 0x000f0c00},
++	{0x000083ac, 0x33332210},
++	{0x000083b0, 0x33332210},
++	{0x000083b4, 0x33332210},
++	{0x000083b8, 0x33332210},
++	{0x000083bc, 0x00000000},
++	{0x000083c0, 0x00000000},
++	{0x000083c4, 0x00000000},
++	{0x000083c8, 0x00000000},
++	{0x000083cc, 0x00000200},
++	{0x000083d0, 0x8c7901ff},
 +};
 +
-+/*
-+ * Count bound interfaces which are not p2p, besides data->ignore_vif.
-+ * data->station_vif will point to one bound vif of type station, if exists.
-+ */
-+static void iwl_mvm_bound_iface_iterator(void *_data, u8 *mac,
-+					 struct ieee80211_vif *vif)
-+{
-+	struct iwl_mvm_active_iface_iterator_data *data = _data;
-+	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+
-+	if (vif == data->ignore_vif || !mvmvif->phy_ctxt ||
-+	    vif->type == NL80211_IFTYPE_P2P_DEVICE)
-+		return;
-+
-+	data->num_active_macs++;
-+
-+	if (vif->type == NL80211_IFTYPE_STATION) {
-+		data->sta_vif_ap_sta_id = mvmvif->ap_sta_id;
-+		if (vif->bss_conf.assoc)
-+			data->sta_vif_state = SF_FULL_ON;
-+		else
-+			data->sta_vif_state = SF_INIT_OFF;
-+	}
-+}
-+
-+/*
-+ * Aging and idle timeouts for the different possible scenarios
-+ * in SF_FULL_ON state.
-+ */
-+static const __le32 sf_full_timeout[SF_NUM_SCENARIO][SF_NUM_TIMEOUT_TYPES] = {
-+	{
-+		cpu_to_le32(SF_SINGLE_UNICAST_AGING_TIMER),
-+		cpu_to_le32(SF_SINGLE_UNICAST_IDLE_TIMER)
-+	},
-+	{
-+		cpu_to_le32(SF_AGG_UNICAST_AGING_TIMER),
-+		cpu_to_le32(SF_AGG_UNICAST_IDLE_TIMER)
-+	},
-+	{
-+		cpu_to_le32(SF_MCAST_AGING_TIMER),
-+		cpu_to_le32(SF_MCAST_IDLE_TIMER)
-+	},
-+	{
-+		cpu_to_le32(SF_BA_AGING_TIMER),
-+		cpu_to_le32(SF_BA_IDLE_TIMER)
-+	},
-+	{
-+		cpu_to_le32(SF_TX_RE_AGING_TIMER),
-+		cpu_to_le32(SF_TX_RE_IDLE_TIMER)
-+	},
++static const u32 qca953x_1p0_baseband_core[][2] = {
++	/* Addr      allmodes  */
++	{0x00009800, 0xafe68e30},
++	{0x00009804, 0xfd14e000},
++	{0x00009808, 0x9c0a9f6b},
++	{0x0000980c, 0x04900000},
++	{0x00009814, 0x0280c00a},
++	{0x00009818, 0x00000000},
++	{0x0000981c, 0x00020028},
++	{0x00009834, 0x6400a190},
++	{0x00009838, 0x0108ecff},
++	{0x0000983c, 0x14000600},
++	{0x00009880, 0x201fff00},
++	{0x00009884, 0x00001042},
++	{0x000098a4, 0x00200400},
++	{0x000098b0, 0x32840bbe},
++	{0x000098bc, 0x00000002},
++	{0x000098d0, 0x004b6a8e},
++	{0x000098d4, 0x00000820},
++	{0x000098dc, 0x00000000},
++	{0x000098f0, 0x00000000},
++	{0x000098f4, 0x00000000},
++	{0x00009c04, 0xff55ff55},
++	{0x00009c08, 0x0320ff55},
++	{0x00009c0c, 0x00000000},
++	{0x00009c10, 0x00000000},
++	{0x00009c14, 0x00046384},
++	{0x00009c18, 0x05b6b440},
++	{0x00009c1c, 0x00b6b440},
++	{0x00009d00, 0xc080a333},
++	{0x00009d04, 0x40206c10},
++	{0x00009d08, 0x009c4060},
++	{0x00009d0c, 0x9883800a},
++	{0x00009d10, 0x01884061},
++	{0x00009d14, 0x00c0040b},
++	{0x00009d18, 0x00000000},
++	{0x00009e08, 0x0038230c},
++	{0x00009e24, 0x990bb515},
++	{0x00009e28, 0x0c6f0000},
++	{0x00009e30, 0x06336f77},
++	{0x00009e34, 0x6af6532f},
++	{0x00009e38, 0x0cc80c00},
++	{0x00009e40, 0x0d261820},
++	{0x00009e4c, 0x00001004},
++	{0x00009e50, 0x00ff03f1},
++	{0x00009fc0, 0x813e4788},
++	{0x00009fc4, 0x0001efb5},
++	{0x00009fcc, 0x40000014},
++	{0x00009fd0, 0x01193b91},
++	{0x0000a20c, 0x00000000},
++	{0x0000a220, 0x00000000},
++	{0x0000a224, 0x00000000},
++	{0x0000a228, 0x10002310},
++	{0x0000a23c, 0x00000000},
++	{0x0000a244, 0x0c000000},
++	{0x0000a248, 0x00000140},
++	{0x0000a2a0, 0x00000007},
++	{0x0000a2c0, 0x00000007},
++	{0x0000a2c8, 0x00000000},
++	{0x0000a2d4, 0x00000000},
++	{0x0000a2ec, 0x00000000},
++	{0x0000a2f0, 0x00000000},
++	{0x0000a2f4, 0x00000000},
++	{0x0000a2f8, 0x00000000},
++	{0x0000a344, 0x00000000},
++	{0x0000a34c, 0x00000000},
++	{0x0000a350, 0x0000a000},
++	{0x0000a364, 0x00000000},
++	{0x0000a370, 0x00000000},
++	{0x0000a390, 0x00000001},
++	{0x0000a394, 0x00000444},
++	{0x0000a398, 0x1f020503},
++	{0x0000a39c, 0x29180c03},
++	{0x0000a3a0, 0x9a8b6844},
++	{0x0000a3a4, 0x000000ff},
++	{0x0000a3a8, 0x6a6a6a6a},
++	{0x0000a3ac, 0x6a6a6a6a},
++	{0x0000a3b0, 0x00c8641a},
++	{0x0000a3b4, 0x0000001a},
++	{0x0000a3b8, 0x0088642a},
++	{0x0000a3bc, 0x000001fa},
++	{0x0000a3c0, 0x20202020},
++	{0x0000a3c4, 0x22222220},
++	{0x0000a3c8, 0x20200020},
++	{0x0000a3cc, 0x20202020},
++	{0x0000a3d0, 0x20202020},
++	{0x0000a3d4, 0x20202020},
++	{0x0000a3d8, 0x20202020},
++	{0x0000a3dc, 0x20202020},
++	{0x0000a3e0, 0x20202020},
++	{0x0000a3e4, 0x20202020},
++	{0x0000a3e8, 0x20202020},
++	{0x0000a3ec, 0x20202020},
++	{0x0000a3f0, 0x00000000},
++	{0x0000a3f4, 0x00000000},
++	{0x0000a3f8, 0x0c9bd380},
++	{0x0000a3fc, 0x000f0f01},
++	{0x0000a400, 0x8fa91f01},
++	{0x0000a404, 0x00000000},
++	{0x0000a408, 0x0e79e5c6},
++	{0x0000a40c, 0x00820820},
++	{0x0000a414, 0x1ce42108},
++	{0x0000a418, 0x2d001dce},
++	{0x0000a41c, 0x1ce73908},
++	{0x0000a420, 0x000001ce},
++	{0x0000a424, 0x1ce738e7},
++	{0x0000a428, 0x000001ce},
++	{0x0000a42c, 0x1ce739ce},
++	{0x0000a430, 0x1ce739ce},
++	{0x0000a434, 0x00000000},
++	{0x0000a438, 0x00001801},
++	{0x0000a43c, 0x00100000},
++	{0x0000a444, 0x00000000},
++	{0x0000a448, 0x05000080},
++	{0x0000a44c, 0x00000001},
++	{0x0000a450, 0x00010000},
++	{0x0000a458, 0x00000000},
++	{0x0000a644, 0xbfad9d74},
++	{0x0000a648, 0x0048060a},
++	{0x0000a64c, 0x00003c37},
++	{0x0000a670, 0x03020100},
++	{0x0000a674, 0x09080504},
++	{0x0000a678, 0x0d0c0b0a},
++	{0x0000a67c, 0x13121110},
++	{0x0000a680, 0x31301514},
++	{0x0000a684, 0x35343332},
++	{0x0000a688, 0x00000036},
++	{0x0000a690, 0x08000838},
++	{0x0000a7cc, 0x00000000},
++	{0x0000a7d0, 0x00000000},
++	{0x0000a7d4, 0x00000004},
++	{0x0000a7dc, 0x00000000},
++	{0x0000a8d0, 0x004b6a8e},
++	{0x0000a8d4, 0x00000820},
++	{0x0000a8dc, 0x00000000},
++	{0x0000a8f0, 0x00000000},
++	{0x0000a8f4, 0x00000000},
++	{0x0000b2d0, 0x00000080},
++	{0x0000b2d4, 0x00000000},
++	{0x0000b2ec, 0x00000000},
++	{0x0000b2f0, 0x00000000},
++	{0x0000b2f4, 0x00000000},
++	{0x0000b2f8, 0x00000000},
++	{0x0000b408, 0x0e79e5c0},
++	{0x0000b40c, 0x00820820},
++	{0x0000b420, 0x00000000},
 +};
 +
-+static void iwl_mvm_fill_sf_command(struct iwl_sf_cfg_cmd *sf_cmd,
-+				    struct ieee80211_sta *sta)
-+{
-+	int i, j, watermark;
++static const u32 qca953x_1p0_baseband_postamble[][5] = {
++	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
++	{0x00009810, 0xd00a8005, 0xd00a8005, 0xd00a8011, 0xd00a8011},
++	{0x00009820, 0x206a022e, 0x206a022e, 0x206a012e, 0x206a012e},
++	{0x00009824, 0x5ac640d0, 0x5ac640d0, 0x5ac640d0, 0x5ac640d0},
++	{0x00009828, 0x06903081, 0x06903081, 0x06903881, 0x06903881},
++	{0x0000982c, 0x05eea6d4, 0x05eea6d4, 0x05eea6d4, 0x05eea6d4},
++	{0x00009830, 0x0000059c, 0x0000059c, 0x0000119c, 0x0000119c},
++	{0x00009c00, 0x000000c4, 0x000000c4, 0x000000c4, 0x000000c4},
++	{0x00009e00, 0x0372111a, 0x0372111a, 0x037216a0, 0x037216a0},
++	{0x00009e04, 0x001c2020, 0x001c2020, 0x001c2020, 0x001c2020},
++	{0x00009e0c, 0x6c4000e2, 0x6d4000e2, 0x6d4000e2, 0x6c4000e2},
++	{0x00009e10, 0x7ec88d2e, 0x7ec88d2e, 0x7ec84d2e, 0x7ec84d2e},
++	{0x00009e14, 0x37b95d5e, 0x37b9605e, 0x3379605e, 0x33795d5e},
++	{0x00009e18, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x00009e1c, 0x0001cf9c, 0x0001cf9c, 0x00021f9c, 0x00021f9c},
++	{0x00009e20, 0x000003b5, 0x000003b5, 0x000003ce, 0x000003ce},
++	{0x00009e2c, 0x0000001c, 0x0000001c, 0x00000021, 0x00000021},
++	{0x00009e3c, 0xcfa10820, 0xcfa10820, 0xcfa10822, 0xcfa10822},
++	{0x00009e44, 0xfe321e27, 0xfe321e27, 0xfe291e27, 0xfe291e27},
++	{0x00009e48, 0x5030201a, 0x5030201a, 0x50302012, 0x50302012},
++	{0x00009fc8, 0x0003f000, 0x0003f000, 0x0001a000, 0x0001a000},
++	{0x0000a204, 0x005c0ec0, 0x005c0ec4, 0x005c0ec4, 0x005c0ec0},
++	{0x0000a208, 0x00000104, 0x00000104, 0x00000004, 0x00000004},
++	{0x0000a22c, 0x07e26a2f, 0x07e26a2f, 0x01026a2f, 0x01026a2f},
++	{0x0000a230, 0x0000000a, 0x00000014, 0x00000016, 0x0000000b},
++	{0x0000a234, 0x00000fff, 0x10000fff, 0x10000fff, 0x00000fff},
++	{0x0000a238, 0xffb01018, 0xffb01018, 0xffb01018, 0xffb01018},
++	{0x0000a250, 0x00000000, 0x00000000, 0x00000210, 0x00000108},
++	{0x0000a254, 0x000007d0, 0x00000fa0, 0x00001130, 0x00000898},
++	{0x0000a258, 0x02020002, 0x02020002, 0x02020002, 0x02020002},
++	{0x0000a25c, 0x01000e0e, 0x01000e0e, 0x01010e0e, 0x01010e0e},
++	{0x0000a260, 0x0a021501, 0x0a021501, 0x3a021501, 0x3a021501},
++	{0x0000a264, 0x00000e0e, 0x00000e0e, 0x01000e0e, 0x01000e0e},
++	{0x0000a280, 0x00000007, 0x00000007, 0x0000000b, 0x0000000b},
++	{0x0000a284, 0x00000000, 0x00000000, 0x00000010, 0x00000010},
++	{0x0000a288, 0x00000110, 0x00000110, 0x00000110, 0x00000110},
++	{0x0000a28c, 0x00022222, 0x00022222, 0x00022222, 0x00022222},
++	{0x0000a2c4, 0x00158d18, 0x00158d18, 0x00158d18, 0x00158d18},
++	{0x0000a2cc, 0x18c50033, 0x18c43433, 0x18c41033, 0x18c44c33},
++	{0x0000a2d0, 0x00041982, 0x00041982, 0x00041982, 0x00041982},
++	{0x0000a2d8, 0x7999a83b, 0x7999a83b, 0x7999a83b, 0x7999a83b},
++	{0x0000a358, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a830, 0x0000019c, 0x0000019c, 0x0000019c, 0x0000019c},
++	{0x0000ae04, 0x001c0000, 0x001c0000, 0x001c0000, 0x001c0000},
++	{0x0000ae18, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000ae1c, 0x0000019c, 0x0000019c, 0x0000019c, 0x0000019c},
++	{0x0000ae20, 0x000001b5, 0x000001b5, 0x000001ce, 0x000001ce},
++	{0x0000b284, 0x00000000, 0x00000000, 0x00000010, 0x00000010},
++};
 +
-+	sf_cmd->watermark[SF_LONG_DELAY_ON] = cpu_to_le32(SF_W_MARK_SCAN);
++static const u32 qca953x_1p0_radio_core[][2] = {
++	/* Addr      allmodes  */
++	{0x00016000, 0x36db6db6},
++	{0x00016004, 0x6db6db40},
++	{0x00016008, 0x73f00000},
++	{0x0001600c, 0x00000000},
++	{0x00016040, 0x3f80fff8},
++	{0x0001604c, 0x000f0278},
++	{0x00016050, 0x8036db6c},
++	{0x00016054, 0x6db60000},
++	{0x00016080, 0x00080000},
++	{0x00016084, 0x0e48048c},
++	{0x00016088, 0x14214514},
++	{0x0001608c, 0x119f080a},
++	{0x00016090, 0x24926490},
++	{0x00016094, 0x00000000},
++	{0x000160a0, 0xc2108ffe},
++	{0x000160a4, 0x812fc370},
++	{0x000160a8, 0x423c8000},
++	{0x000160b4, 0x92480080},
++	{0x000160c0, 0x006db6d8},
++	{0x000160c4, 0x24b6db6c},
++	{0x000160c8, 0x6db6db6c},
++	{0x000160cc, 0x6db6fb7c},
++	{0x000160d0, 0x6db6da44},
++	{0x00016100, 0x07ff8001},
++	{0x00016108, 0x00080010},
++	{0x00016144, 0x01884080},
++	{0x00016148, 0x000080d8},
++	{0x00016280, 0x01000901},
++	{0x00016284, 0x15d30000},
++	{0x00016288, 0x00318000},
++	{0x0001628c, 0x50000000},
++	{0x00016380, 0x00000000},
++	{0x00016384, 0x00000000},
++	{0x00016388, 0x00800700},
++	{0x0001638c, 0x00800700},
++	{0x00016390, 0x00800700},
++	{0x00016394, 0x00000000},
++	{0x00016398, 0x00000000},
++	{0x0001639c, 0x00000000},
++	{0x000163a0, 0x00000001},
++	{0x000163a4, 0x00000001},
++	{0x000163a8, 0x00000000},
++	{0x000163ac, 0x00000000},
++	{0x000163b0, 0x00000000},
++	{0x000163b4, 0x00000000},
++	{0x000163b8, 0x00000000},
++	{0x000163bc, 0x00000000},
++	{0x000163c0, 0x000000a0},
++	{0x000163c4, 0x000c0000},
++	{0x000163c8, 0x14021402},
++	{0x000163cc, 0x00001402},
++	{0x000163d0, 0x00000000},
++	{0x000163d4, 0x00000000},
++	{0x00016400, 0x36db6db6},
++	{0x00016404, 0x6db6db40},
++	{0x00016408, 0x73f00000},
++	{0x0001640c, 0x00000000},
++	{0x00016440, 0x3f80fff8},
++	{0x0001644c, 0x000f0278},
++	{0x00016450, 0x8036db6c},
++	{0x00016454, 0x6db60000},
++	{0x00016500, 0x07ff8001},
++	{0x00016508, 0x00080010},
++	{0x00016544, 0x01884080},
++	{0x00016548, 0x000080d8},
++	{0x00016780, 0x00000000},
++	{0x00016784, 0x00000000},
++	{0x00016788, 0x00800700},
++	{0x0001678c, 0x00800700},
++	{0x00016790, 0x00800700},
++	{0x00016794, 0x00000000},
++	{0x00016798, 0x00000000},
++	{0x0001679c, 0x00000000},
++	{0x000167a0, 0x00000001},
++	{0x000167a4, 0x00000001},
++	{0x000167a8, 0x00000000},
++	{0x000167ac, 0x00000000},
++	{0x000167b0, 0x00000000},
++	{0x000167b4, 0x00000000},
++	{0x000167b8, 0x00000000},
++	{0x000167bc, 0x00000000},
++	{0x000167c0, 0x000000a0},
++	{0x000167c4, 0x000c0000},
++	{0x000167c8, 0x14021402},
++	{0x000167cc, 0x00001402},
++	{0x000167d0, 0x00000000},
++	{0x000167d4, 0x00000000},
++};
 +
-+	/*
-+	 * If we are in association flow - check antenna configuration
-+	 * capabilities of the AP station, and choose the watermark accordingly.
-+	 */
-+	if (sta) {
-+		if (sta->ht_cap.ht_supported || sta->vht_cap.vht_supported) {
-+			switch (sta->rx_nss) {
-+			case 1:
-+				watermark = SF_W_MARK_SISO;
-+				break;
-+			case 2:
-+				watermark = SF_W_MARK_MIMO2;
-+				break;
-+			default:
-+				watermark = SF_W_MARK_MIMO3;
-+				break;
-+			}
-+		} else {
-+			watermark = SF_W_MARK_LEGACY;
-+		}
-+	/* default watermark value for unassociated mode. */
-+	} else {
-+		watermark = SF_W_MARK_MIMO2;
-+	}
-+	sf_cmd->watermark[SF_FULL_ON] = cpu_to_le32(watermark);
++static const u32 qca953x_1p0_radio_postamble[][5] = {
++	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
++	{0x00016098, 0xd2dd5554, 0xd2dd5554, 0xc4128f5c, 0xc4128f5c},
++	{0x0001609c, 0x0a566f3a, 0x0a566f3a, 0x0fd08f25, 0x0fd08f25},
++	{0x000160ac, 0xa4647c00, 0xa4647c00, 0x24646800, 0x24646800},
++	{0x000160b0, 0x01885f52, 0x01885f52, 0x00fe7f46, 0x00fe7f46},
++	{0x00016104, 0xb7a00001, 0xb7a00001, 0xfff80005, 0xfff80005},
++	{0x0001610c, 0xc0000000, 0xc0000000, 0x00000000, 0x00000000},
++	{0x00016140, 0x10804008, 0x10804008, 0x50804000, 0x50804000},
++	{0x00016504, 0xb7a00001, 0xb7a00001, 0xfff80001, 0xfff80001},
++	{0x0001650c, 0xc0000000, 0xc0000000, 0x00000000, 0x00000000},
++	{0x00016540, 0x10804008, 0x10804008, 0x50804000, 0x50804000},
++};
 +
-+	for (i = 0; i < SF_NUM_SCENARIO; i++) {
-+		for (j = 0; j < SF_NUM_TIMEOUT_TYPES; j++) {
-+			sf_cmd->long_delay_timeouts[i][j] =
-+					cpu_to_le32(SF_LONG_DELAY_AGING_TIMER);
-+		}
-+	}
-+	BUILD_BUG_ON(sizeof(sf_full_timeout) !=
-+		     sizeof(__le32) * SF_NUM_SCENARIO * SF_NUM_TIMEOUT_TYPES);
++static const u32 qca953x_1p0_soc_preamble[][2] = {
++	/* Addr      allmodes  */
++	{0x00007000, 0x00000000},
++	{0x00007004, 0x00000000},
++	{0x00007008, 0x00000000},
++	{0x0000700c, 0x00000000},
++	{0x0000701c, 0x00000000},
++	{0x00007020, 0x00000000},
++	{0x00007024, 0x00000000},
++	{0x00007028, 0x00000000},
++	{0x0000702c, 0x00000000},
++	{0x00007030, 0x00000000},
++	{0x00007034, 0x00000002},
++	{0x00007038, 0x000004c2},
++	{0x00007048, 0x00000000},
++};
 +
-+	memcpy(sf_cmd->full_on_timeouts, sf_full_timeout,
-+	       sizeof(sf_full_timeout));
-+}
++static const u32 qca953x_1p0_common_rx_gain_bounds[][5] = {
++	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
++	{0x00009e44, 0xfe321e27, 0xfe321e27, 0xfe291e27, 0xfe291e27},
++	{0x00009e48, 0x5030201a, 0x5030201a, 0x50302018, 0x50302018},
++};
 +
-+static int iwl_mvm_sf_config(struct iwl_mvm *mvm, u8 sta_id,
-+			     enum iwl_sf_state new_state)
-+{
-+	struct iwl_sf_cfg_cmd sf_cmd = {
-+		.state = new_state,
-+	};
-+	struct ieee80211_sta *sta;
-+	int ret = 0;
++static const u32 qca953x_1p0_common_wo_xlna_rx_gain_bounds[][5] = {
++	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
++	{0x00009e44, 0xfe321e27, 0xfe321e27, 0xfe291e27, 0xfe291e27},
++	{0x00009e48, 0x5030201a, 0x5030201a, 0x50302012, 0x50302012},
++};
 +
-+	/*
-+	 * If an associated AP sta changed its antenna configuration, the state
-+	 * will remain FULL_ON but SF parameters need to be reconsidered.
-+	 */
-+	if (new_state != SF_FULL_ON && mvm->sf_state == new_state)
-+		return 0;
++static const u32 qca953x_1p0_modes_xpa_tx_gain_table[][2] = {
++	/* Addr      allmodes  */
++	{0x0000a2dc, 0xfffd5aaa},
++	{0x0000a2e0, 0xfffe9ccc},
++	{0x0000a2e4, 0xffffe0f0},
++	{0x0000a2e8, 0xfffcff00},
++	{0x0000a410, 0x000050da},
++	{0x0000a500, 0x00000000},
++	{0x0000a504, 0x04000002},
++	{0x0000a508, 0x08000004},
++	{0x0000a50c, 0x0c000006},
++	{0x0000a510, 0x0f00000a},
++	{0x0000a514, 0x1300000c},
++	{0x0000a518, 0x1700000e},
++	{0x0000a51c, 0x1b000064},
++	{0x0000a520, 0x1f000242},
++	{0x0000a524, 0x23000229},
++	{0x0000a528, 0x270002a2},
++	{0x0000a52c, 0x2c001203},
++	{0x0000a530, 0x30001803},
++	{0x0000a534, 0x33000881},
++	{0x0000a538, 0x38001809},
++	{0x0000a53c, 0x3a000814},
++	{0x0000a540, 0x3f001a0c},
++	{0x0000a544, 0x43001a0e},
++	{0x0000a548, 0x46001812},
++	{0x0000a54c, 0x49001884},
++	{0x0000a550, 0x4d001e84},
++	{0x0000a554, 0x50001e69},
++	{0x0000a558, 0x550006f4},
++	{0x0000a55c, 0x59000ad3},
++	{0x0000a560, 0x5e000ad5},
++	{0x0000a564, 0x61001ced},
++	{0x0000a568, 0x660018d4},
++	{0x0000a56c, 0x660018d4},
++	{0x0000a570, 0x660018d4},
++	{0x0000a574, 0x660018d4},
++	{0x0000a578, 0x660018d4},
++	{0x0000a57c, 0x660018d4},
++	{0x0000a600, 0x00000000},
++	{0x0000a604, 0x00000000},
++	{0x0000a608, 0x00000000},
++	{0x0000a60c, 0x03804000},
++	{0x0000a610, 0x0300ca02},
++	{0x0000a614, 0x00000e04},
++	{0x0000a618, 0x03014000},
++	{0x0000a61c, 0x00000000},
++	{0x0000a620, 0x00000000},
++	{0x0000a624, 0x03014000},
++	{0x0000a628, 0x03804c05},
++	{0x0000a62c, 0x0701de06},
++	{0x0000a630, 0x07819c07},
++	{0x0000a634, 0x0701dc07},
++	{0x0000a638, 0x0701dc07},
++	{0x0000a63c, 0x0701dc07},
++	{0x0000b2dc, 0xfffd5aaa},
++	{0x0000b2e0, 0xfffe9ccc},
++	{0x0000b2e4, 0xffffe0f0},
++	{0x0000b2e8, 0xfffcff00},
++	{0x00016044, 0x010002d4},
++	{0x00016048, 0x66482400},
++	{0x00016280, 0x01000015},
++	{0x00016444, 0x010002d4},
++	{0x00016448, 0x66482400},
++};
 +
-+	switch (new_state) {
-+	case SF_UNINIT:
-+		break;
-+	case SF_FULL_ON:
-+		if (sta_id == IWL_MVM_STATION_COUNT) {
-+			IWL_ERR(mvm,
-+				"No station: Cannot switch SF to FULL_ON\n");
-+			return -EINVAL;
-+		}
-+		rcu_read_lock();
-+		sta = rcu_dereference(mvm->fw_id_to_mac_id[sta_id]);
-+		if (IS_ERR_OR_NULL(sta)) {
-+			IWL_ERR(mvm, "Invalid station id\n");
-+			rcu_read_unlock();
-+			return -EINVAL;
-+		}
-+		iwl_mvm_fill_sf_command(&sf_cmd, sta);
-+		rcu_read_unlock();
-+		break;
-+	case SF_INIT_OFF:
-+		iwl_mvm_fill_sf_command(&sf_cmd, NULL);
-+		break;
-+	default:
-+		WARN_ONCE(1, "Invalid state: %d. not sending Smart Fifo cmd\n",
-+			  new_state);
-+		return -EINVAL;
-+	}
++static const u32 qca953x_1p0_modes_no_xpa_tx_gain_table[][2] = {
++	/* Addr      allmodes  */
++	{0x0000a2dc, 0xffd5f552},
++	{0x0000a2e0, 0xffe60664},
++	{0x0000a2e4, 0xfff80780},
++	{0x0000a2e8, 0xfffff800},
++	{0x0000a410, 0x000050d6},
++	{0x0000a500, 0x00060020},
++	{0x0000a504, 0x04060060},
++	{0x0000a508, 0x080600a0},
++	{0x0000a50c, 0x0c068020},
++	{0x0000a510, 0x10068060},
++	{0x0000a514, 0x140680a0},
++	{0x0000a518, 0x18090040},
++	{0x0000a51c, 0x1b090080},
++	{0x0000a520, 0x1f0900c0},
++	{0x0000a524, 0x240c0041},
++	{0x0000a528, 0x280d0021},
++	{0x0000a52c, 0x2d0f0061},
++	{0x0000a530, 0x310f00a1},
++	{0x0000a534, 0x350e00a2},
++	{0x0000a538, 0x360e80a2},
++	{0x0000a53c, 0x380f00a2},
++	{0x0000a540, 0x3b0e00a3},
++	{0x0000a544, 0x3d110083},
++	{0x0000a548, 0x3e1100a3},
++	{0x0000a54c, 0x401100e3},
++	{0x0000a550, 0x421380e3},
++	{0x0000a554, 0x431780e3},
++	{0x0000a558, 0x461f80e3},
++	{0x0000a55c, 0x461f80e3},
++	{0x0000a560, 0x461f80e3},
++	{0x0000a564, 0x461f80e3},
++	{0x0000a568, 0x461f80e3},
++	{0x0000a56c, 0x461f80e3},
++	{0x0000a570, 0x461f80e3},
++	{0x0000a574, 0x461f80e3},
++	{0x0000a578, 0x461f80e3},
++	{0x0000a57c, 0x461f80e3},
++	{0x0000a600, 0x00000000},
++	{0x0000a604, 0x00000000},
++	{0x0000a608, 0x00000000},
++	{0x0000a60c, 0x00804201},
++	{0x0000a610, 0x01008201},
++	{0x0000a614, 0x0180c402},
++	{0x0000a618, 0x0180c603},
++	{0x0000a61c, 0x0180c603},
++	{0x0000a620, 0x01c10603},
++	{0x0000a624, 0x01c10704},
++	{0x0000a628, 0x02c18b05},
++	{0x0000a62c, 0x0301cc07},
++	{0x0000a630, 0x0301cc07},
++	{0x0000a634, 0x0301cc07},
++	{0x0000a638, 0x0301cc07},
++	{0x0000a63c, 0x0301cc07},
++	{0x0000b2dc, 0xffd5f552},
++	{0x0000b2e0, 0xffe60664},
++	{0x0000b2e4, 0xfff80780},
++	{0x0000b2e8, 0xfffff800},
++	{0x00016044, 0x049242db},
++	{0x00016048, 0x6c927a70},
++	{0x00016444, 0x049242db},
++	{0x00016448, 0x6c927a70},
++};
 +
-+	ret = iwl_mvm_send_cmd_pdu(mvm, REPLY_SF_CFG_CMD, CMD_ASYNC,
-+				   sizeof(sf_cmd), &sf_cmd);
-+	if (!ret)
-+		mvm->sf_state = new_state;
++static const u32 qca953x_1p1_modes_no_xpa_tx_gain_table[][2] = {
++	/* Addr      allmodes  */
++	{0x0000a2dc, 0xffd5f552},
++	{0x0000a2e0, 0xffe60664},
++	{0x0000a2e4, 0xfff80780},
++	{0x0000a2e8, 0xfffff800},
++	{0x0000a410, 0x000050de},
++	{0x0000a500, 0x00000061},
++	{0x0000a504, 0x04000063},
++	{0x0000a508, 0x08000065},
++	{0x0000a50c, 0x0c000261},
++	{0x0000a510, 0x10000263},
++	{0x0000a514, 0x14000265},
++	{0x0000a518, 0x18000482},
++	{0x0000a51c, 0x1b000484},
++	{0x0000a520, 0x1f000486},
++	{0x0000a524, 0x240008c2},
++	{0x0000a528, 0x28000cc1},
++	{0x0000a52c, 0x2d000ce3},
++	{0x0000a530, 0x31000ce5},
++	{0x0000a534, 0x350010e5},
++	{0x0000a538, 0x360012e5},
++	{0x0000a53c, 0x380014e5},
++	{0x0000a540, 0x3b0018e5},
++	{0x0000a544, 0x3d001d04},
++	{0x0000a548, 0x3e001d05},
++	{0x0000a54c, 0x40001d07},
++	{0x0000a550, 0x42001f27},
++	{0x0000a554, 0x43001f67},
++	{0x0000a558, 0x46001fe7},
++	{0x0000a55c, 0x47001f2b},
++	{0x0000a560, 0x49001f0d},
++	{0x0000a564, 0x4b001ed2},
++	{0x0000a568, 0x4c001ed4},
++	{0x0000a56c, 0x4e001f15},
++	{0x0000a570, 0x4f001ff6},
++	{0x0000a574, 0x4f001ff6},
++	{0x0000a578, 0x4f001ff6},
++	{0x0000a57c, 0x4f001ff6},
++	{0x0000a600, 0x00000000},
++	{0x0000a604, 0x00000000},
++	{0x0000a608, 0x00000000},
++	{0x0000a60c, 0x00804201},
++	{0x0000a610, 0x01008201},
++	{0x0000a614, 0x0180c402},
++	{0x0000a618, 0x0180c603},
++	{0x0000a61c, 0x0180c603},
++	{0x0000a620, 0x01c10603},
++	{0x0000a624, 0x01c10704},
++	{0x0000a628, 0x02c18b05},
++	{0x0000a62c, 0x02c14c07},
++	{0x0000a630, 0x01008704},
++	{0x0000a634, 0x01c10402},
++	{0x0000a638, 0x0301cc07},
++	{0x0000a63c, 0x0301cc07},
++	{0x0000b2dc, 0xffd5f552},
++	{0x0000b2e0, 0xffe60664},
++	{0x0000b2e4, 0xfff80780},
++	{0x0000b2e8, 0xfffff800},
++	{0x00016044, 0x049242db},
++	{0x00016048, 0x6c927a70},
++	{0x00016444, 0x049242db},
++	{0x00016448, 0x6c927a70},
++};
 +
-+	return ret;
-+}
-+
-+/*
-+ * Update Smart fifo:
-+ * Count bound interfaces that are not to be removed, ignoring p2p devices,
-+ * and set new state accordingly.
-+ */
-+int iwl_mvm_sf_update(struct iwl_mvm *mvm, struct ieee80211_vif *changed_vif,
-+		      bool remove_vif)
-+{
-+	enum iwl_sf_state new_state;
-+	u8 sta_id = IWL_MVM_STATION_COUNT;
-+	struct iwl_mvm_vif *mvmvif = NULL;
-+	struct iwl_mvm_active_iface_iterator_data data = {
-+		.ignore_vif = changed_vif,
-+		.sta_vif_state = SF_UNINIT,
-+		.sta_vif_ap_sta_id = IWL_MVM_STATION_COUNT,
-+	};
-+
-+	if (IWL_UCODE_API(mvm->fw->ucode_ver) < 8)
-+		return 0;
-+
-+	/*
-+	 * Ignore the call if we are in HW Restart flow, or if the handled
-+	 * vif is a p2p device.
-+	 */
-+	if (test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status) ||
-+	    (changed_vif && changed_vif->type == NL80211_IFTYPE_P2P_DEVICE))
-+		return 0;
-+
-+	ieee80211_iterate_active_interfaces_atomic(mvm->hw,
-+						   IEEE80211_IFACE_ITER_NORMAL,
-+						   iwl_mvm_bound_iface_iterator,
-+						   &data);
-+
-+	/* If changed_vif exists and is not to be removed, add to the count */
-+	if (changed_vif && !remove_vif)
-+		data.num_active_macs++;
-+
-+	switch (data.num_active_macs) {
-+	case 0:
-+		/* If there are no active macs - change state to SF_INIT_OFF */
-+		new_state = SF_INIT_OFF;
-+		break;
-+	case 1:
-+		if (remove_vif) {
-+			/* The one active mac left is of type station
-+			 * and we filled the relevant data during iteration
-+			 */
-+			new_state = data.sta_vif_state;
-+			sta_id = data.sta_vif_ap_sta_id;
-+		} else {
-+			if (WARN_ON(!changed_vif))
-+				return -EINVAL;
-+			if (changed_vif->type != NL80211_IFTYPE_STATION) {
-+				new_state = SF_UNINIT;
-+			} else if (changed_vif->bss_conf.assoc) {
-+				mvmvif = iwl_mvm_vif_from_mac80211(changed_vif);
-+				sta_id = mvmvif->ap_sta_id;
-+				new_state = SF_FULL_ON;
-+			} else {
-+				new_state = SF_INIT_OFF;
-+			}
-+		}
-+		break;
-+	default:
-+		/* If there are multiple active macs - change to SF_UNINIT */
-+		new_state = SF_UNINIT;
-+	}
-+	return iwl_mvm_sf_config(mvm, sta_id, new_state);
-+}
++#endif /* INITVALS_953X_H */
 -- 
-1.7.9.5
+1.8.5.2
 
