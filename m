@@ -1,31 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm10-vm5.bullet.mail.ne1.yahoo.com ([98.138.91.232]:30458 "HELO
-	nm10-vm5.bullet.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752035Ab3L2TDU convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Dec 2013 14:03:20 -0500
-Message-ID: <1388343799.76867.YahooMailNeo@web122305.mail.ne1.yahoo.com> (sfid-20131229_200343_928191_C0D42AF5)
-Date: Sun, 29 Dec 2013 11:03:19 -0800 (PST)
-From: Anand Moon <moon.linux@yahoo.com>
-Reply-To: Anand Moon <moon.linux@yahoo.com>
-Subject: ath10 packet capture.
-To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: from mail-ee0-f44.google.com ([74.125.83.44]:38202 "EHLO
+	mail-ee0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754819Ab3LaRQV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 Dec 2013 12:16:21 -0500
+Received: by mail-ee0-f44.google.com with SMTP id b57so5593161eek.17
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Dec 2013 09:16:20 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eytan Lifshitz <eytan.lifshitz@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 13/28] iwlwifi: mvm: fix possible memory leak
+Date: Tue, 31 Dec 2013 19:15:42 +0200
+Message-Id: <1388510157-23345-13-git-send-email-egrumbach@gmail.com> (sfid-20131231_183437_742488_AC2081E1)
+In-Reply-To: <52C2FB68.2010708@gmail.com>
+References: <52C2FB68.2010708@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
+From: Eytan Lifshitz <eytan.lifshitz@intel.com>
 
-Could some one please share a sample wireless capture for 5gz n and 5gz 11ac.
-It will be helpful for me to understand some internal flags and packet information.
+In case of invalid section_id, the function returns after
+it aleready allocated memory. Fixed by change the order of actions.
 
--Anand Moon
+Signed-off-by: Eytan Lifshitz <eytan.lifshitz@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/nvm.c |   11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
------BEGIN PGP MESSAGE-----
-Version: GnuPG v1.4.14 (GNU/Linux)
-jA0EAwMCYq3dHqTzwcVgyRxC1j+oLxS8Yw92EIeKln+x3eAWzd7mM/pUluRo
-=0RYk
------END PGP MESSAGE-----
+diff --git a/drivers/net/wireless/iwlwifi/mvm/nvm.c b/drivers/net/wireless/iwlwifi/mvm/nvm.c
+index 48089b1..c03406f 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/nvm.c
++++ b/drivers/net/wireless/iwlwifi/mvm/nvm.c
+@@ -367,16 +367,17 @@ static int iwl_mvm_read_external_nvm(struct iwl_mvm *mvm)
+ 			break;
+ 		}
+ 
++		if (WARN(section_id >= NVM_NUM_OF_SECTIONS,
++			 "Invalid NVM section ID %d\n", section_id)) {
++			ret = -EINVAL;
++			break;
++		}
++
+ 		temp = kmemdup(file_sec->data, section_size, GFP_KERNEL);
+ 		if (!temp) {
+ 			ret = -ENOMEM;
+ 			break;
+ 		}
+-		if (WARN_ON(section_id >= NVM_NUM_OF_SECTIONS)) {
+-			IWL_ERR(mvm, "Invalid NVM section ID\n");
+-			ret = -EINVAL;
+-			break;
+-		}
+ 		mvm->nvm_sections[section_id].data = temp;
+ 		mvm->nvm_sections[section_id].length = section_size;
+ 
+-- 
+1.7.9.5
 
