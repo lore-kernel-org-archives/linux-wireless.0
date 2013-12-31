@@ -1,32 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f44.google.com ([209.85.215.44]:59930 "EHLO
-	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751366Ab3LAA6a (ORCPT
+Received: from mail-ea0-f176.google.com ([209.85.215.176]:45419 "EHLO
+	mail-ea0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753925Ab3LaRQG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Nov 2013 19:58:30 -0500
-Received: by mail-la0-f44.google.com with SMTP id ep20so7710286lab.31
-        for <linux-wireless@vger.kernel.org>; Sat, 30 Nov 2013 16:58:28 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <21146.33378.141904.187743@gargle.gargle.HOWL>
-References: <CAEk6gTCqKgt9zX0Xs147GYfxDw2Ex-1NkG4KZ_m_pdf1M8eDLw@mail.gmail.com>
-	<21146.33378.141904.187743@gargle.gargle.HOWL>
-Date: Sun, 1 Dec 2013 01:58:28 +0100
-Message-ID: <CAEk6gTBS=WKfmDpzhd7istgCFnxMOpqJJnr7PUwKQ=uHeS0cdw@mail.gmail.com> (sfid-20131201_015833_121734_6A92F93C)
-Subject: Re: multi-wiphy (virtual radios that can be used with multiple channels)
-From: Drasko DRASKOVIC <drasko.draskovic@gmail.com>
-To: Sujith Manoharan <sujith@msujith.org>
-Cc: linux-wireless@vger.kernel.org,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>, j@w1.fi
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 31 Dec 2013 12:16:06 -0500
+Received: by mail-ea0-f176.google.com with SMTP id h14so5572683eaj.35
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Dec 2013 09:16:04 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 01/28] iwlwifi: pcie: clean up ICT allocation code
+Date: Tue, 31 Dec 2013 19:15:30 +0200
+Message-Id: <1388510157-23345-1-git-send-email-egrumbach@gmail.com> (sfid-20131231_181609_985734_292A248D)
+In-Reply-To: <52C2FB68.2010708@gmail.com>
+References: <52C2FB68.2010708@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Dec 1, 2013 at 1:27 AM, Sujith Manoharan <sujith@msujith.org> wrote:
-> Multi Channel Concurrency is required to do this, but ath9k doesn't
-> support it right now.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-That would imply that HW is capable of doing this, but SW driver
-components are missing (and can/will be added in the future)?
+Since iwl_trans_pcie_alloc_ict is called in the PCIe
+allocation code, we always set CSR_INT_BIT_RX_PERIODIC.
+Move that bit to the default list of interrupts we enable
+and simplify the code.
+Also use dma_zalloc_ and avoid to memset the memory
+afterwards.
+trans_pcie->ict_index is 0 since trans_pcie has just been
+kzalloced, remove the redundant assignment.
 
-BR,
-Drasko
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-csr.h |    3 ++-
+ drivers/net/wireless/iwlwifi/pcie/rx.c |   15 ++++-----------
+ 2 files changed, 6 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-csr.h b/drivers/net/wireless/iwlwifi/iwl-csr.h
+index da4eca8..bbab26e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-csr.h
++++ b/drivers/net/wireless/iwlwifi/iwl-csr.h
+@@ -198,7 +198,8 @@
+ 				 CSR_INT_BIT_RF_KILL | \
+ 				 CSR_INT_BIT_SW_RX   | \
+ 				 CSR_INT_BIT_WAKEUP  | \
+-				 CSR_INT_BIT_ALIVE)
++				 CSR_INT_BIT_ALIVE   | \
++				 CSR_INT_BIT_RX_PERIODIC)
+ 
+ /* interrupt flags in FH (flow handler) (PCI busmaster DMA) */
+ #define CSR_FH_INT_BIT_ERR       (1 << 31) /* Error */
+diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
+index 7aeec5c..b3e6564 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
+@@ -1048,7 +1048,7 @@ int iwl_pcie_alloc_ict(struct iwl_trans *trans)
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 
+ 	trans_pcie->ict_tbl =
+-		dma_alloc_coherent(trans->dev, ICT_SIZE,
++		dma_zalloc_coherent(trans->dev, ICT_SIZE,
+ 				   &trans_pcie->ict_tbl_dma,
+ 				   GFP_KERNEL);
+ 	if (!trans_pcie->ict_tbl)
+@@ -1060,17 +1060,10 @@ int iwl_pcie_alloc_ict(struct iwl_trans *trans)
+ 		return -EINVAL;
+ 	}
+ 
+-	IWL_DEBUG_ISR(trans, "ict dma addr %Lx\n",
+-		      (unsigned long long)trans_pcie->ict_tbl_dma);
++	IWL_DEBUG_ISR(trans, "ict dma addr %Lx ict vir addr %p\n",
++		      (unsigned long long)trans_pcie->ict_tbl_dma,
++		      trans_pcie->ict_tbl);
+ 
+-	IWL_DEBUG_ISR(trans, "ict vir addr %p\n", trans_pcie->ict_tbl);
+-
+-	/* reset table and index to all 0 */
+-	memset(trans_pcie->ict_tbl, 0, ICT_SIZE);
+-	trans_pcie->ict_index = 0;
+-
+-	/* add periodic RX interrupt */
+-	trans_pcie->inta_mask |= CSR_INT_BIT_RX_PERIODIC;
+ 	return 0;
+ }
+ 
+-- 
+1.7.9.5
+
