@@ -1,77 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:41172 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751851Ab3LCEqn (ORCPT
+Received: from mail-ee0-f52.google.com ([74.125.83.52]:65430 "EHLO
+	mail-ee0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753925Ab3LaRQL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Dec 2013 23:46:43 -0500
-From: Chet Lanctot <clanctot@codeaurora.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Chet Lanctot <clanctot@codeaurora.org>
-Subject: [PATCH 0/2 V2] nl80211/cfg80211: Support PMF on drivers with integrated AP SME
-Date: Mon,  2 Dec 2013 20:46:23 -0800
-Message-Id: <1386045985-2398-1-git-send-email-clanctot@codeaurora.org> (sfid-20131203_054703_485161_09EF8F53)
+	Tue, 31 Dec 2013 12:16:11 -0500
+Received: by mail-ee0-f52.google.com with SMTP id d17so5624912eek.11
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Dec 2013 09:16:10 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 06/28] iwlwifi: pcie: determine the interrupt type in the handler
+Date: Tue, 31 Dec 2013 19:15:35 +0200
+Message-Id: <1388510157-23345-6-git-send-email-egrumbach@gmail.com> (sfid-20131231_181619_318436_87338530)
+In-Reply-To: <52C2FB68.2010708@gmail.com>
+References: <52C2FB68.2010708@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These patches represent a small number of extensions to the
-nl80211/cfg80211 interface to support Protected Management Frames
-(PMF, 802.11w) on an AP when the AP SME is integrated into the
-device driver or device firmware.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Device drivers that implement AP SME handle connection requests
-from stations internally.  These patches allow hostapd to specify
-to the device driver the PMF state that should be used when these
-connections are made.
+Instead of having:
+iwl_pcie_irq_handler
+	iwl_pcie_isr_ict
+		iwl_pcie_isr_non_ict
 
-Also, these patches allow device drivers that do not implement the
-SA Query procedure (part of PMF) to communicate the need for hostapd
-do this procedure.  Normally the software component handling
-connection requests would do SA Query. These patches provide a way
-for the device driver to shift SA Query processing to hostapd where
-it is already fully implemented.
+we now have:
 
-The following changes are made to nl80211/cfg80211.
+iwl_pcie_irq_handler:
+	if (use_ict))
+		iwl_pcie_int_cause_ict;
+	else
+		iwl_pcie_int_cause_non_ict;
 
-1.  A new nl80211_ap_sme_feature is defined which is used by drivers
-to inform hostapd that the driver does not support the SA query
-procedure.  hostapd must register for Re/Association Request frames
-from the driver so that these frames can be delivered by the driver
-to start an SA Query procedure.  An example of code in
-the driver that sets this feature is as follows:
-     struct wiphy *wiphy; /* wiphy defined in cfg80211.h */
-     .
-     .
-     .
-     wiphy->ap_sme_capa |= BIT(NL80211_AP_SME_FEATURE_NO_SA_QUERY);
+This is much clearer.
 
-2.  A new entry is made in cfg80211_ap_settings to inform drivers
-whether management frame protection should be used for station connections.
-This entry is passed by hostapd using NL80211_CMD_START_AP and it is only
-used when the device is acting as an AP.  Existing type nl80211_mfp defines the
-values that can be used for this entry.  Existing value NL80211_MFP_NO
-means that PMF connections cannot be made with stations. Existing value
-NL80211_MFP_REQUIRED means that all station connections must be PMF
-protected.  A new value NL80211_MFP_OPTIONAL is defined which means
-that a connection can be made if the station supports it, but it is
-not required.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/pcie/rx.c |   22 ++++++++++------------
+ 1 file changed, 10 insertions(+), 12 deletions(-)
 
-3.  A new station flag is defined that indicates to the driver that
-hostapd has completed the SA Query procedure for that station (SA
-Query timed out) and the driver should process the next Re/Association
-Request normally and not pass it to hostapd.
-
-Chet Lanctot (2):
-  nl80211/cfg80211: Add support for drivers with AP SME that require
-    PMF SA Query assistance
-  nl80211/cfg80211: Enable station PMF requirement to be specified to
-    driver with AP SME
-
- include/net/cfg80211.h       |  4 ++++
- include/uapi/linux/nl80211.h | 26 ++++++++++++++++++++------
- net/wireless/nl80211.c       | 16 +++++++++++++---
- 3 files changed, 37 insertions(+), 9 deletions(-)
-
+diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
+index 5044fbd..58d3f64 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
+@@ -807,8 +807,7 @@ static void iwl_pcie_irq_handle_error(struct iwl_trans *trans)
+ 	wake_up(&trans_pcie->wait_command_queue);
+ }
+ 
+-/* legacy (non-ICT) ISR. Assumes that trans_pcie->irq_lock is held */
+-static irqreturn_t iwl_pcie_isr_non_ict(struct iwl_trans *trans)
++static irqreturn_t iwl_pcie_int_cause_non_ict(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	u32 inta;
+@@ -876,7 +875,7 @@ static irqreturn_t iwl_pcie_isr_non_ict(struct iwl_trans *trans)
+  * the interrupt we need to service, driver will set the entries back to 0 and
+  * set index.
+  */
+-static irqreturn_t iwl_pcie_isr_ict(struct iwl_trans *trans)
++static irqreturn_t iwl_pcie_int_cause_ict(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	irqreturn_t ret;
+@@ -884,14 +883,6 @@ static irqreturn_t iwl_pcie_isr_ict(struct iwl_trans *trans)
+ 	u32 val = 0;
+ 	u32 read;
+ 
+-	/* dram interrupt table not set yet,
+-	 * use legacy interrupt.
+-	 */
+-	if (unlikely(!trans_pcie->use_ict)) {
+-		ret = iwl_pcie_isr_non_ict(trans);
+-		return ret;
+-	}
+-
+ 	trace_iwlwifi_dev_irq(trans->dev);
+ 
+ 	/* Ignore interrupt if there's nothing in NIC to service.
+@@ -977,7 +968,14 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
+ 
+ 	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
+ 
+-	ret = iwl_pcie_isr_ict(trans);
++	/* dram interrupt table not set yet,
++	 * use legacy interrupt.
++	 */
++	if (likely(trans_pcie->use_ict))
++		ret = iwl_pcie_int_cause_ict(trans);
++	else
++		ret = iwl_pcie_int_cause_non_ict(trans);
++
+ 	if (ret != IRQ_WAKE_THREAD) {
+ 		spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
+ 		return ret;
 -- 
-1.7.12.rc0.22.gcdd159b
+1.7.9.5
 
