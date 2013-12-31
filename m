@@ -1,491 +1,296 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f169.google.com ([209.85.215.169]:63023 "EHLO
-	mail-ea0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753932Ab3LQUpK (ORCPT
+Received: from mail-bk0-f52.google.com ([209.85.214.52]:36309 "EHLO
+	mail-bk0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752027Ab3LaJb7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Dec 2013 15:45:10 -0500
-Received: by mail-ea0-f169.google.com with SMTP id l9so2676155eaj.14
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Dec 2013 12:45:09 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Arik Nemtsov <arik@wizery.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 17/36] iwlwifi: trans: use a unified transport status
-Date: Tue, 17 Dec 2013 22:44:20 +0200
-Message-Id: <1387313079-28123-17-git-send-email-egrumbach@gmail.com> (sfid-20131217_214632_839904_62ED0050)
-In-Reply-To: <52B0B72A.5070704@gmail.com>
-References: <52B0B72A.5070704@gmail.com>
+	Tue, 31 Dec 2013 04:31:59 -0500
+From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
+To: Pavel Machek <pavel@ucw.cz>
+Subject: Re: [PATCH v2 06/16] wl1251: configure hardware en-/decryption for monitor mode
+Date: Tue, 31 Dec 2013 10:31:49 +0100
+Cc: Luciano Coelho <luca@coelho.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, freemangordon@abv.bg,
+	aaro.koskinen@iki.fi, sre@ring0.de, joni.lapilainen@gmail.com,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Felipe Contreras <felipe.contreras@gmail.com>,
+	David Gnedt <david.gnedt@davizone.at>
+References: <1382819655-30430-1-git-send-email-pali.rohar@gmail.com> <1386494714-21070-7-git-send-email-pali.rohar@gmail.com> <20131210093518.GF22756@amd.pavel.ucw.cz>
+In-Reply-To: <20131210093518.GF22756@amd.pavel.ucw.cz>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart2381312.4Q349YzYGQ";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <201312311031.53539@pali> (sfid-20131231_103256_036788_D6FA4E1B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+--nextPart2381312.4Q349YzYGQ
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 
-The same bits are employed in all transport layers. Put the status
-field in the common transport layer. This allows us to employ them
-in common transport code.
+On Tuesday 10 December 2013 10:35:18 Pavel Machek wrote:
+> Hi!
+>=20
+> > --- a/drivers/net/wireless/ti/wl1251/tx.c
+> > +++ b/drivers/net/wireless/ti/wl1251/tx.c
+> > @@ -287,6 +287,9 @@ static int wl1251_tx_frame(struct wl1251
+> > *wl, struct sk_buff *skb)
+> >=20
+> >  	info =3D IEEE80211_SKB_CB(skb);
+> >  =09
+> >  	if (info->control.hw_key) {
+> >=20
+> > +		if (unlikely(wl->monitor_present))
+> > +			return -1;
+> > +
+>=20
+> This function seems to use 0/-errno convention. So probably
+> "return -EINVAL"?
+>=20
+> With that fixed:
+>=20
+> Reviewed-by: Pavel Machek <pavel@ucw.cz>
+>=20
+> Thanks,
+> 									Pavel
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-trans.h     |   20 +++++++++++++
- drivers/net/wireless/iwlwifi/pcie/internal.h |   29 ++-----------------
- drivers/net/wireless/iwlwifi/pcie/rx.c       |   27 ++++++++---------
- drivers/net/wireless/iwlwifi/pcie/trans.c    |   40 +++++++++++---------------
- drivers/net/wireless/iwlwifi/pcie/tx.c       |   30 +++++++++----------
- 5 files changed, 65 insertions(+), 81 deletions(-)
+Here is new version with above fix:
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index 43ea124..6419603 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -317,6 +317,24 @@ enum iwl_d3_status {
- };
- 
- /**
-+ * enum iwl_trans_status: transport status flags
-+ * @STATUS_SYNC_HCMD_ACTIVE: a SYNC command is being processed
-+ * @STATUS_DEVICE_ENABLED: APM is enabled
-+ * @STATUS_TPOWER_PMI: the device might be asleep (need to wake it up)
-+ * @STATUS_INT_ENABLED: interrupts are enabled
-+ * @STATUS_RFKILL: the HW RFkill switch is in KILL position
-+ * @STATUS_FW_ERROR: the fw is in error state
-+ */
-+enum iwl_trans_status {
-+	STATUS_SYNC_HCMD_ACTIVE,
-+	STATUS_DEVICE_ENABLED,
-+	STATUS_TPOWER_PMI,
-+	STATUS_INT_ENABLED,
-+	STATUS_RFKILL,
-+	STATUS_FW_ERROR,
-+};
-+
-+/**
-  * struct iwl_trans_config - transport configuration
-  *
-  * @op_mode: pointer to the upper layer.
-@@ -479,6 +497,7 @@ enum iwl_trans_state {
-  * @ops - pointer to iwl_trans_ops
-  * @op_mode - pointer to the op_mode
-  * @cfg - pointer to the configuration
-+ * @status: a bit-mask of transport status flags
-  * @dev - pointer to struct device * that represents the device
-  * @hw_id: a u32 with the ID of the device / subdevice.
-  *	Set during transport allocation.
-@@ -499,6 +518,7 @@ struct iwl_trans {
- 	struct iwl_op_mode *op_mode;
- 	const struct iwl_cfg *cfg;
- 	enum iwl_trans_state state;
-+	unsigned long status;
- 
- 	struct device *dev;
- 	u32 hw_rev;
-diff --git a/drivers/net/wireless/iwlwifi/pcie/internal.h b/drivers/net/wireless/iwlwifi/pcie/internal.h
-index 051268c..8a2de33 100644
---- a/drivers/net/wireless/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/iwlwifi/pcie/internal.h
-@@ -256,7 +256,6 @@ iwl_pcie_get_scratchbuf_dma(struct iwl_txq *txq, int idx)
-  * @hw_base: pci hardware address support
-  * @ucode_write_complete: indicates that the ucode has been copied.
-  * @ucode_write_waitq: wait queue for uCode load
-- * @status - transport specific status flags
-  * @cmd_queue - command queue number
-  * @rx_buf_size_8k: 8 kB RX buffer size
-  * @bc_table_dword: true if the BC table expects DWORD (as opposed to bytes)
-@@ -296,7 +295,6 @@ struct iwl_trans_pcie {
- 	wait_queue_head_t ucode_write_waitq;
- 	wait_queue_head_t wait_command_queue;
- 
--	unsigned long status;
- 	u8 cmd_queue;
- 	u8 cmd_fifo;
- 	u8 n_no_reclaim_cmds;
-@@ -315,24 +313,6 @@ struct iwl_trans_pcie {
- 	spinlock_t reg_lock;
- };
- 
--/**
-- * enum iwl_pcie_status: status of the PCIe transport
-- * @STATUS_HCMD_ACTIVE: a SYNC command is being processed
-- * @STATUS_DEVICE_ENABLED: APM is enabled
-- * @STATUS_TPOWER_PMI: the device might be asleep (need to wake it up)
-- * @STATUS_INT_ENABLED: interrupts are enabled
-- * @STATUS_RFKILL: the HW RFkill switch is in KILL position
-- * @STATUS_FW_ERROR: the fw is in error state
-- */
--enum iwl_pcie_status {
--	STATUS_HCMD_ACTIVE,
--	STATUS_DEVICE_ENABLED,
--	STATUS_TPOWER_PMI,
--	STATUS_INT_ENABLED,
--	STATUS_RFKILL,
--	STATUS_FW_ERROR,
--};
--
- #define IWL_TRANS_GET_PCIE_TRANS(_iwl_trans) \
- 	((struct iwl_trans_pcie *) ((_iwl_trans)->trans_specific))
- 
-@@ -399,8 +379,7 @@ void iwl_pcie_dump_csr(struct iwl_trans *trans);
- ******************************************************/
- static inline void iwl_disable_interrupts(struct iwl_trans *trans)
- {
--	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--	clear_bit(STATUS_INT_ENABLED, &trans_pcie->status);
-+	clear_bit(STATUS_INT_ENABLED, &trans->status);
- 
- 	/* disable interrupts from uCode/NIC to host */
- 	iwl_write32(trans, CSR_INT_MASK, 0x00000000);
-@@ -417,7 +396,7 @@ static inline void iwl_enable_interrupts(struct iwl_trans *trans)
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 
- 	IWL_DEBUG_ISR(trans, "Enabling interrupts\n");
--	set_bit(STATUS_INT_ENABLED, &trans_pcie->status);
-+	set_bit(STATUS_INT_ENABLED, &trans->status);
- 	iwl_write32(trans, CSR_INT_MASK, trans_pcie->inta_mask);
- }
- 
-@@ -479,9 +458,7 @@ static inline bool iwl_is_rfkill_set(struct iwl_trans *trans)
- 
- static inline void iwl_nic_error(struct iwl_trans *trans)
- {
--	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--
--	set_bit(STATUS_FW_ERROR, &trans_pcie->status);
-+	set_bit(STATUS_FW_ERROR, &trans->status);
- 	iwl_op_mode_nic_error(trans->op_mode);
- }
- 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
-index 1d6bf7b..bbbb3ca 100644
---- a/drivers/net/wireless/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
-@@ -162,11 +162,8 @@ static void iwl_pcie_rxq_inc_wr_ptr(struct iwl_trans *trans,
- 		rxq->write_actual = (rxq->write & ~0x7);
- 		iwl_write32(trans, FH_RSCSR_CHNL0_WPTR, rxq->write_actual);
- 	} else {
--		struct iwl_trans_pcie *trans_pcie =
--			IWL_TRANS_GET_PCIE_TRANS(trans);
--
- 		/* If power-saving is in use, make sure device is awake */
--		if (test_bit(STATUS_TPOWER_PMI, &trans_pcie->status)) {
-+		if (test_bit(STATUS_TPOWER_PMI, &trans->status)) {
- 			reg = iwl_read32(trans, CSR_UCODE_DRV_GP1);
- 
- 			if (reg & CSR_UCODE_DRV_GP1_BIT_MAC_SLEEP) {
-@@ -222,7 +219,7 @@ static void iwl_pcie_rxq_restock(struct iwl_trans *trans)
- 	 * stopped, we cannot access the HW (in particular not prph).
- 	 * So don't try to restock if the APM has been already stopped.
- 	 */
--	if (!test_bit(STATUS_DEVICE_ENABLED, &trans_pcie->status))
-+	if (!test_bit(STATUS_DEVICE_ENABLED, &trans->status))
- 		return;
- 
- 	spin_lock_irqsave(&rxq->lock, flags);
-@@ -791,7 +788,7 @@ static void iwl_pcie_irq_handle_error(struct iwl_trans *trans)
- 			     APMS_CLK_VAL_MRB_FUNC_MODE) ||
- 	     (iwl_read_prph(trans, APMG_PS_CTRL_REG) &
- 			    APMG_PS_CTRL_VAL_RESET_REQ))) {
--		clear_bit(STATUS_HCMD_ACTIVE, &trans_pcie->status);
-+		clear_bit(STATUS_SYNC_HCMD_ACTIVE, &trans->status);
- 		iwl_op_mode_wimax_active(trans->op_mode);
- 		wake_up(&trans_pcie->wait_command_queue);
- 		return;
-@@ -801,8 +798,8 @@ static void iwl_pcie_irq_handle_error(struct iwl_trans *trans)
- 	iwl_dump_fh(trans, NULL);
- 
- 	/* set the ERROR bit before we wake up the caller */
--	set_bit(STATUS_FW_ERROR, &trans_pcie->status);
--	clear_bit(STATUS_HCMD_ACTIVE, &trans_pcie->status);
-+	set_bit(STATUS_FW_ERROR, &trans->status);
-+	clear_bit(STATUS_SYNC_HCMD_ACTIVE, &trans->status);
- 	wake_up(&trans_pcie->wait_command_queue);
- 
- 	local_bh_disable();
-@@ -894,14 +891,14 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
- 
- 		iwl_op_mode_hw_rf_kill(trans->op_mode, hw_rfkill);
- 		if (hw_rfkill) {
--			set_bit(STATUS_RFKILL, &trans_pcie->status);
--			if (test_and_clear_bit(STATUS_HCMD_ACTIVE,
--					       &trans_pcie->status))
-+			set_bit(STATUS_RFKILL, &trans->status);
-+			if (test_and_clear_bit(STATUS_SYNC_HCMD_ACTIVE,
-+					       &trans->status))
- 				IWL_DEBUG_RF_KILL(trans,
- 						  "Rfkill while SYNC HCMD in flight\n");
- 			wake_up(&trans_pcie->wait_command_queue);
- 		} else {
--			clear_bit(STATUS_RFKILL, &trans_pcie->status);
-+			clear_bit(STATUS_RFKILL, &trans->status);
- 		}
- 
- 		handled |= CSR_INT_BIT_RF_KILL;
-@@ -1005,7 +1002,7 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
- 
- 	/* Re-enable all interrupts */
- 	/* only Re-enable if disabled by irq */
--	if (test_bit(STATUS_INT_ENABLED, &trans_pcie->status))
-+	if (test_bit(STATUS_INT_ENABLED, &trans->status))
- 		iwl_enable_interrupts(trans);
- 	/* Re-enable RF_KILL if it occurred */
- 	else if (handled & CSR_INT_BIT_RF_KILL)
-@@ -1160,7 +1157,7 @@ static irqreturn_t iwl_pcie_isr(int irq, void *data)
- 		 * the handler can be scheduled because of a previous
- 		 * interrupt.
- 		 */
--		if (test_bit(STATUS_INT_ENABLED, &trans_pcie->status) &&
-+		if (test_bit(STATUS_INT_ENABLED, &trans->status) &&
- 		    !trans_pcie->inta)
- 			iwl_enable_interrupts(trans);
- 		return IRQ_NONE;
-@@ -1290,7 +1287,7 @@ irqreturn_t iwl_pcie_isr_ict(int irq, void *data)
- 	/* re-enable interrupts here since we don't have anything to service.
- 	 * only Re-enable if disabled by irq.
- 	 */
--	if (test_bit(STATUS_INT_ENABLED, &trans_pcie->status) &&
-+	if (test_bit(STATUS_INT_ENABLED, &trans->status) &&
- 	    !trans_pcie->inta)
- 		iwl_enable_interrupts(trans);
- 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
-index 43eed4d..28c62a5 100644
---- a/drivers/net/wireless/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
-@@ -150,7 +150,6 @@ static void iwl_pcie_apm_config(struct iwl_trans *trans)
-  */
- static int iwl_pcie_apm_init(struct iwl_trans *trans)
- {
--	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	int ret = 0;
- 	IWL_DEBUG_INFO(trans, "Init card's basic functions\n");
- 
-@@ -223,7 +222,7 @@ static int iwl_pcie_apm_init(struct iwl_trans *trans)
- 	/* Clear the interrupt in APMG if the NIC is in RFKILL */
- 	iwl_write_prph(trans, APMG_RTC_INT_STT_REG, APMG_RTC_INT_STT_RFKILL);
- 
--	set_bit(STATUS_DEVICE_ENABLED, &trans_pcie->status);
-+	set_bit(STATUS_DEVICE_ENABLED, &trans->status);
- 
- out:
+=46rom: =3D?UTF-8?q?Pali=3D20Roh=3DC3=3DA1r?=3D <pali.rohar@gmail.com>
+Subject: [PATCH v2 06/16] wl1251: configure hardware en-/decryption for mon=
+itor mode
+Date: Sun,  8 Dec 2013 10:25:04 +0100
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset=3DUTF-8
+Content-Transfer-Encoding: 8bit
+
+=46rom: David Gnedt <david.gnedt@davizone.at>
+
+Disable hardware encryption (DF_ENCRYPTION_DISABLE) and decryption
+(DF_SNIFF_MODE_ENABLE) via wl1251_acx_feature_cfg while monitor interface is
+present.
+
+Signed-off-by: David Gnedt <david.gnedt@davizone.at>
+Signed-off-by: Pali Roh=C3=A1r <pali.rohar@gmail.com>
+=2D--
+ drivers/net/wireless/ti/wl1251/acx.c    |    6 +++---
+ drivers/net/wireless/ti/wl1251/acx.h    |    2 +-
+ drivers/net/wireless/ti/wl1251/init.c   |    2 +-
+ drivers/net/wireless/ti/wl1251/main.c   |   34 ++++++++++++++++++++++++++-=
+=2D---
+ drivers/net/wireless/ti/wl1251/rx.c     |    2 +-
+ drivers/net/wireless/ti/wl1251/tx.c     |    3 +++
+ drivers/net/wireless/ti/wl1251/wl1251.h |    1 +
+ 7 files changed, 39 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/net/wireless/ti/wl1251/acx.c b/drivers/net/wireless/ti=
+/wl1251/acx.c
+index 5f4a552..1ec98e9 100644
+=2D-- a/drivers/net/wireless/ti/wl1251/acx.c
++++ b/drivers/net/wireless/ti/wl1251/acx.c
+@@ -209,7 +209,7 @@ out:
  	return ret;
-@@ -249,10 +248,9 @@ static int iwl_pcie_apm_stop_master(struct iwl_trans *trans)
- 
- static void iwl_pcie_apm_stop(struct iwl_trans *trans)
+ }
+=20
+=2Dint wl1251_acx_feature_cfg(struct wl1251 *wl)
++int wl1251_acx_feature_cfg(struct wl1251 *wl, u32 data_flow_options)
  {
--	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	IWL_DEBUG_INFO(trans, "Stop card, put in low power state\n");
- 
--	clear_bit(STATUS_DEVICE_ENABLED, &trans_pcie->status);
-+	clear_bit(STATUS_DEVICE_ENABLED, &trans->status);
- 
- 	/* Stop device's DMA activity */
- 	iwl_pcie_apm_stop_master(trans);
-@@ -582,7 +580,6 @@ static int iwl_pcie_load_given_ucode(struct iwl_trans *trans,
- static int iwl_trans_pcie_start_fw(struct iwl_trans *trans,
- 				   const struct fw_img *fw, bool run_in_rfkill)
- {
--	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	struct acx_feature_config *feature;
  	int ret;
- 	bool hw_rfkill;
- 
-@@ -592,16 +589,16 @@ static int iwl_trans_pcie_start_fw(struct iwl_trans *trans,
- 		return -EIO;
+@@ -222,8 +222,8 @@ int wl1251_acx_feature_cfg(struct wl1251 *wl)
+ 		goto out;
  	}
- 
--	clear_bit(STATUS_FW_ERROR, &trans_pcie->status);
-+	clear_bit(STATUS_FW_ERROR, &trans->status);
- 
- 	iwl_enable_rfkill_int(trans);
- 
- 	/* If platform's RF_KILL switch is NOT set to KILL */
- 	hw_rfkill = iwl_is_rfkill_set(trans);
- 	if (hw_rfkill)
--		set_bit(STATUS_RFKILL, &trans_pcie->status);
-+		set_bit(STATUS_RFKILL, &trans->status);
- 	else
--		clear_bit(STATUS_RFKILL, &trans_pcie->status);
-+		clear_bit(STATUS_RFKILL, &trans->status);
- 	iwl_op_mode_hw_rf_kill(trans->op_mode, hw_rfkill);
- 	if (hw_rfkill && !run_in_rfkill)
- 		return -ERFKILL;
-@@ -658,7 +655,7 @@ static void iwl_trans_pcie_stop_device(struct iwl_trans *trans)
- 	 * restart. So don't process again if the device is
- 	 * already dead.
- 	 */
--	if (test_bit(STATUS_DEVICE_ENABLED, &trans_pcie->status)) {
-+	if (test_bit(STATUS_DEVICE_ENABLED, &trans->status)) {
- 		iwl_pcie_tx_stop(trans);
- 		iwl_pcie_rx_stop(trans);
- 
-@@ -686,11 +683,11 @@ static void iwl_trans_pcie_stop_device(struct iwl_trans *trans)
- 	iwl_write32(trans, CSR_RESET, CSR_RESET_REG_FLAG_NEVO_RESET);
- 
- 	/* clear all status bits */
--	clear_bit(STATUS_HCMD_ACTIVE, &trans_pcie->status);
--	clear_bit(STATUS_INT_ENABLED, &trans_pcie->status);
--	clear_bit(STATUS_DEVICE_ENABLED, &trans_pcie->status);
--	clear_bit(STATUS_TPOWER_PMI, &trans_pcie->status);
--	clear_bit(STATUS_RFKILL, &trans_pcie->status);
-+	clear_bit(STATUS_SYNC_HCMD_ACTIVE, &trans->status);
-+	clear_bit(STATUS_INT_ENABLED, &trans->status);
-+	clear_bit(STATUS_DEVICE_ENABLED, &trans->status);
-+	clear_bit(STATUS_TPOWER_PMI, &trans->status);
-+	clear_bit(STATUS_RFKILL, &trans->status);
- 
- 	/*
- 	 * Even if we stop the HW, we still want the RF kill
-@@ -706,9 +703,9 @@ static void iwl_trans_pcie_stop_device(struct iwl_trans *trans)
- 	 */
- 	hw_rfkill = iwl_is_rfkill_set(trans);
- 	if (hw_rfkill)
--		set_bit(STATUS_RFKILL, &trans_pcie->status);
-+		set_bit(STATUS_RFKILL, &trans->status);
- 	else
--		clear_bit(STATUS_RFKILL, &trans_pcie->status);
-+		clear_bit(STATUS_RFKILL, &trans->status);
- 	iwl_op_mode_hw_rf_kill(trans->op_mode, hw_rfkill);
- }
- 
-@@ -794,7 +791,6 @@ static int iwl_trans_pcie_d3_resume(struct iwl_trans *trans,
- 
- static int iwl_trans_pcie_start_hw(struct iwl_trans *trans)
+=20
+=2D	/* DF_ENCRYPTION_DISABLE and DF_SNIFF_MODE_ENABLE are disabled */
+=2D	feature->data_flow_options =3D 0;
++	/* DF_ENCRYPTION_DISABLE and DF_SNIFF_MODE_ENABLE can be set */
++	feature->data_flow_options =3D data_flow_options;
+ 	feature->options =3D 0;
+=20
+ 	ret =3D wl1251_cmd_configure(wl, ACX_FEATURE_CFG,
+diff --git a/drivers/net/wireless/ti/wl1251/acx.h b/drivers/net/wireless/ti=
+/wl1251/acx.h
+index 4444cd0..bea2e67 100644
+=2D-- a/drivers/net/wireless/ti/wl1251/acx.h
++++ b/drivers/net/wireless/ti/wl1251/acx.h
+@@ -1455,7 +1455,7 @@ int wl1251_acx_wake_up_conditions(struct wl1251 *wl, =
+u8 wake_up_event,
+ int wl1251_acx_sleep_auth(struct wl1251 *wl, u8 sleep_auth);
+ int wl1251_acx_fw_version(struct wl1251 *wl, char *buf, size_t len);
+ int wl1251_acx_tx_power(struct wl1251 *wl, int power);
+=2Dint wl1251_acx_feature_cfg(struct wl1251 *wl);
++int wl1251_acx_feature_cfg(struct wl1251 *wl, u32 data_flow_options);
+ int wl1251_acx_mem_map(struct wl1251 *wl,
+ 		       struct acx_header *mem_map, size_t len);
+ int wl1251_acx_data_path_params(struct wl1251 *wl,
+diff --git a/drivers/net/wireless/ti/wl1251/init.c b/drivers/net/wireless/t=
+i/wl1251/init.c
+index 424ce01..92de289 100644
+=2D-- a/drivers/net/wireless/ti/wl1251/init.c
++++ b/drivers/net/wireless/ti/wl1251/init.c
+@@ -33,7 +33,7 @@ int wl1251_hw_init_hwenc_config(struct wl1251 *wl)
  {
--	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	bool hw_rfkill;
- 	int err;
- 
-@@ -816,9 +812,9 @@ static int iwl_trans_pcie_start_hw(struct iwl_trans *trans)
- 
- 	hw_rfkill = iwl_is_rfkill_set(trans);
- 	if (hw_rfkill)
--		set_bit(STATUS_RFKILL, &trans_pcie->status);
-+		set_bit(STATUS_RFKILL, &trans->status);
- 	else
--		clear_bit(STATUS_RFKILL, &trans_pcie->status);
-+		clear_bit(STATUS_RFKILL, &trans->status);
- 	iwl_op_mode_hw_rf_kill(trans->op_mode, hw_rfkill);
- 
- 	return 0;
-@@ -924,12 +920,10 @@ void iwl_trans_pcie_free(struct iwl_trans *trans)
- 
- static void iwl_trans_pcie_set_pmi(struct iwl_trans *trans, bool state)
- {
--	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--
- 	if (state)
--		set_bit(STATUS_TPOWER_PMI, &trans_pcie->status);
-+		set_bit(STATUS_TPOWER_PMI, &trans->status);
- 	else
--		clear_bit(STATUS_TPOWER_PMI, &trans_pcie->status);
-+		clear_bit(STATUS_TPOWER_PMI, &trans->status);
- }
- 
- static bool iwl_trans_pcie_grab_nic_access(struct iwl_trans *trans, bool silent,
-diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
-index a4ef5cc..a36884e 100644
---- a/drivers/net/wireless/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
-@@ -300,10 +300,8 @@ void iwl_pcie_txq_inc_wr_ptr(struct iwl_trans *trans, struct iwl_txq *txq)
- 		iwl_write32(trans, HBUS_TARG_WRPTR,
- 			    txq->q.write_ptr | (txq_id << 8));
- 	} else {
--		struct iwl_trans_pcie *trans_pcie =
--			IWL_TRANS_GET_PCIE_TRANS(trans);
- 		/* if we're trying to save power */
--		if (test_bit(STATUS_TPOWER_PMI, &trans_pcie->status)) {
-+		if (test_bit(STATUS_TPOWER_PMI, &trans->status)) {
- 			/* wake up nic if it's powered down ...
- 			 * uCode will wake up, and interrupt us again, so next
- 			 * time we'll skip this part. */
-@@ -1449,12 +1447,12 @@ void iwl_pcie_hcmd_complete(struct iwl_trans *trans,
- 	iwl_pcie_cmdq_reclaim(trans, txq_id, index);
- 
- 	if (!(meta->flags & CMD_ASYNC)) {
--		if (!test_bit(STATUS_HCMD_ACTIVE, &trans_pcie->status)) {
-+		if (!test_bit(STATUS_SYNC_HCMD_ACTIVE, &trans->status)) {
- 			IWL_WARN(trans,
- 				 "HCMD_ACTIVE already clear for command %s\n",
- 				 get_cmd_string(trans_pcie, cmd->hdr.cmd));
- 		}
--		clear_bit(STATUS_HCMD_ACTIVE, &trans_pcie->status);
-+		clear_bit(STATUS_SYNC_HCMD_ACTIVE, &trans->status);
- 		IWL_DEBUG_INFO(trans, "Clearing HCMD_ACTIVE for command %s\n",
- 			       get_cmd_string(trans_pcie, cmd->hdr.cmd));
- 		wake_up(&trans_pcie->wait_command_queue);
-@@ -1499,8 +1497,8 @@ static int iwl_pcie_send_hcmd_sync(struct iwl_trans *trans,
- 	IWL_DEBUG_INFO(trans, "Attempting to send sync command %s\n",
- 		       get_cmd_string(trans_pcie, cmd->id));
- 
--	if (WARN(test_and_set_bit(STATUS_HCMD_ACTIVE,
--				  &trans_pcie->status),
-+	if (WARN(test_and_set_bit(STATUS_SYNC_HCMD_ACTIVE,
-+				  &trans->status),
- 		 "Command %s: a command is already active!\n",
- 		 get_cmd_string(trans_pcie, cmd->id)))
- 		return -EIO;
-@@ -1511,7 +1509,7 @@ static int iwl_pcie_send_hcmd_sync(struct iwl_trans *trans,
- 	cmd_idx = iwl_pcie_enqueue_hcmd(trans, cmd);
- 	if (cmd_idx < 0) {
- 		ret = cmd_idx;
--		clear_bit(STATUS_HCMD_ACTIVE, &trans_pcie->status);
-+		clear_bit(STATUS_SYNC_HCMD_ACTIVE, &trans->status);
- 		IWL_ERR(trans,
- 			"Error sending %s: enqueue_hcmd failed: %d\n",
- 			get_cmd_string(trans_pcie, cmd->id), ret);
-@@ -1523,8 +1521,8 @@ static int iwl_pcie_send_hcmd_sync(struct iwl_trans *trans,
- 
- 		timeout -= COMMAND_POKE_TIMEOUT;
- 		ret = wait_event_timeout(trans_pcie->wait_command_queue,
--					 !test_bit(STATUS_HCMD_ACTIVE,
--						   &trans_pcie->status),
-+					 !test_bit(STATUS_SYNC_HCMD_ACTIVE,
-+						   &trans->status),
- 					 COMMAND_POKE_TIMEOUT);
- 		if (ret)
- 			break;
-@@ -1552,7 +1550,7 @@ static int iwl_pcie_send_hcmd_sync(struct iwl_trans *trans,
- 		IWL_ERR(trans, "Current CMD queue read_ptr %d write_ptr %d\n",
- 			q->read_ptr, q->write_ptr);
- 
--		clear_bit(STATUS_HCMD_ACTIVE, &trans_pcie->status);
-+		clear_bit(STATUS_SYNC_HCMD_ACTIVE, &trans->status);
- 		IWL_DEBUG_INFO(trans, "Clearing HCMD_ACTIVE for command %s\n",
- 			       get_cmd_string(trans_pcie, cmd->id));
- 		ret = -ETIMEDOUT;
-@@ -1562,7 +1560,7 @@ static int iwl_pcie_send_hcmd_sync(struct iwl_trans *trans,
- 		goto cancel;
+ 	int ret;
+=20
+=2D	ret =3D wl1251_acx_feature_cfg(wl);
++	ret =3D wl1251_acx_feature_cfg(wl, 0);
+ 	if (ret < 0) {
+ 		wl1251_warning("couldn't set feature config");
+ 		return ret;
+diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/t=
+i/wl1251/main.c
+index 0e27f1f..39a6105 100644
+=2D-- a/drivers/net/wireless/ti/wl1251/main.c
++++ b/drivers/net/wireless/ti/wl1251/main.c
+@@ -485,6 +485,7 @@ static void wl1251_op_stop(struct ieee80211_hw *hw)
+ 	wl->power_level =3D WL1251_DEFAULT_POWER_LEVEL;
+ 	wl->rssi_thold =3D 0;
+ 	wl->channel =3D WL1251_DEFAULT_CHANNEL;
++	wl->monitor_present =3D false;
+=20
+ 	wl1251_debugfs_reset(wl);
+=20
+@@ -577,8 +578,10 @@ static int wl1251_op_config(struct ieee80211_hw *hw, u=
+32 changed)
+ 	channel =3D ieee80211_frequency_to_channel(
+ 			conf->chandef.chan->center_freq);
+=20
+=2D	wl1251_debug(DEBUG_MAC80211, "mac80211 config ch %d psm %s power %d",
++	wl1251_debug(DEBUG_MAC80211,
++		     "mac80211 config ch %d monitor %s psm %s power %d",
+ 		     channel,
++		     conf->flags & IEEE80211_CONF_MONITOR ? "on" : "off",
+ 		     conf->flags & IEEE80211_CONF_PS ? "on" : "off",
+ 		     conf->power_level);
+=20
+@@ -588,6 +591,22 @@ static int wl1251_op_config(struct ieee80211_hw *hw, u=
+32 changed)
+ 	if (ret < 0)
+ 		goto out;
+=20
++	if (changed & IEEE80211_CONF_CHANGE_MONITOR) {
++		u32 mode;
++
++		if (conf->flags & IEEE80211_CONF_MONITOR) {
++			wl->monitor_present =3D true;
++			mode =3D DF_SNIFF_MODE_ENABLE | DF_ENCRYPTION_DISABLE;
++		} else {
++			wl->monitor_present =3D false;
++			mode =3D 0;
++		}
++
++		ret =3D wl1251_acx_feature_cfg(wl, mode);
++		if (ret < 0)
++			goto out_sleep;
++	}
++
+ 	if (channel !=3D wl->channel) {
+ 		wl->channel =3D channel;
+=20
+@@ -804,12 +823,12 @@ static int wl1251_op_set_key(struct ieee80211_hw *hw,=
+ enum set_key_cmd cmd,
+=20
+ 	mutex_lock(&wl->mutex);
+=20
+=2D	ret =3D wl1251_ps_elp_wakeup(wl);
+=2D	if (ret < 0)
+=2D		goto out_unlock;
+=2D
+ 	switch (cmd) {
+ 	case SET_KEY:
++		if (wl->monitor_present) {
++			ret =3D -EOPNOTSUPP;
++			goto out_unlock;
++		}
+ 		wl_cmd->key_action =3D KEY_ADD_OR_REPLACE;
+ 		break;
+ 	case DISABLE_KEY:
+@@ -820,6 +839,10 @@ static int wl1251_op_set_key(struct ieee80211_hw *hw, =
+enum set_key_cmd cmd,
+ 		break;
  	}
- 
--	if (test_bit(STATUS_FW_ERROR, &trans_pcie->status)) {
-+	if (test_bit(STATUS_FW_ERROR, &trans->status)) {
- 		IWL_ERR(trans, "FW error in SYNC CMD %s\n",
- 			get_cmd_string(trans_pcie, cmd->id));
- 		dump_stack();
-@@ -1571,7 +1569,7 @@ static int iwl_pcie_send_hcmd_sync(struct iwl_trans *trans,
- 	}
- 
- 	if (!(cmd->flags & CMD_SEND_IN_RFKILL) &&
--	    test_bit(STATUS_RFKILL, &trans_pcie->status)) {
-+	    test_bit(STATUS_RFKILL, &trans->status)) {
- 		IWL_DEBUG_RF_KILL(trans, "RFKILL in SYNC CMD... no rsp\n");
- 		ret = -ERFKILL;
- 		goto cancel;
-@@ -1608,13 +1606,11 @@ cancel:
- 
- int iwl_trans_pcie_send_hcmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
- {
--	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--
--	if (test_bit(STATUS_FW_ERROR, &trans_pcie->status))
-+	if (test_bit(STATUS_FW_ERROR, &trans->status))
- 		return -EIO;
- 
- 	if (!(cmd->flags & CMD_SEND_IN_RFKILL) &&
--	    test_bit(STATUS_RFKILL, &trans_pcie->status)) {
-+	    test_bit(STATUS_RFKILL, &trans->status)) {
- 		IWL_DEBUG_RF_KILL(trans, "Dropping CMD 0x%x: RF KILL\n",
- 				  cmd->id);
- 		return -ERFKILL;
--- 
+=20
++	ret =3D wl1251_ps_elp_wakeup(wl);
++	if (ret < 0)
++		goto out_unlock;
++
+ 	ret =3D wl1251_set_key_type(wl, wl_cmd, cmd, key, addr);
+ 	if (ret < 0) {
+ 		wl1251_error("Set KEY type failed");
+@@ -1520,6 +1543,7 @@ struct ieee80211_hw *wl1251_alloc_hw(void)
+=20
+ 	INIT_DELAYED_WORK(&wl->elp_work, wl1251_elp_work);
+ 	wl->channel =3D WL1251_DEFAULT_CHANNEL;
++	wl->monitor_present =3D false;
+ 	wl->scanning =3D false;
+ 	wl->default_key =3D 0;
+ 	wl->listen_int =3D 1;
+diff --git a/drivers/net/wireless/ti/wl1251/rx.c b/drivers/net/wireless/ti/=
+wl1251/rx.c
+index 23289d4..123c4bb 100644
+=2D-- a/drivers/net/wireless/ti/wl1251/rx.c
++++ b/drivers/net/wireless/ti/wl1251/rx.c
+@@ -83,7 +83,7 @@ static void wl1251_rx_status(struct wl1251 *wl,
+=20
+ 	status->flag |=3D RX_FLAG_MACTIME_START;
+=20
+=2D	if (desc->flags & RX_DESC_ENCRYPTION_MASK) {
++	if (!wl->monitor_present && (desc->flags & RX_DESC_ENCRYPTION_MASK)) {
+ 		status->flag |=3D RX_FLAG_IV_STRIPPED | RX_FLAG_MMIC_STRIPPED;
+=20
+ 		if (likely(!(desc->flags & RX_DESC_DECRYPT_FAIL)))
+diff --git a/drivers/net/wireless/ti/wl1251/tx.c b/drivers/net/wireless/ti/=
+wl1251/tx.c
+index 28121c5..3cc82fd 100644
+=2D-- a/drivers/net/wireless/ti/wl1251/tx.c
++++ b/drivers/net/wireless/ti/wl1251/tx.c
+@@ -287,6 +287,9 @@ static int wl1251_tx_frame(struct wl1251 *wl, struct sk=
+_buff *skb)
+ 	info =3D IEEE80211_SKB_CB(skb);
+=20
+ 	if (info->control.hw_key) {
++		if (unlikely(wl->monitor_present))
++			return -EINVAL;
++
+ 		idx =3D info->control.hw_key->hw_key_idx;
+ 		if (unlikely(wl->default_key !=3D idx)) {
+ 			ret =3D wl1251_acx_default_key(wl, idx);
+diff --git a/drivers/net/wireless/ti/wl1251/wl1251.h b/drivers/net/wireless=
+/ti/wl1251/wl1251.h
+index de9e418..45df03a 100644
+=2D-- a/drivers/net/wireless/ti/wl1251/wl1251.h
++++ b/drivers/net/wireless/ti/wl1251/wl1251.h
+@@ -309,6 +309,7 @@ struct wl1251 {
+ 	u8 bss_type;
+ 	u8 listen_int;
+ 	int channel;
++	bool monitor_present;
+=20
+ 	void *target_mem_map;
+ 	struct acx_data_path_params_resp *data_path;
+=2D-=20
 1.7.9.5
 
+=2D-=20
+Pali Roh=C3=A1r
+pali.rohar@gmail.com
+
+
+--nextPart2381312.4Q349YzYGQ
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEABECAAYFAlLCjwYACgkQi/DJPQPkQ1KEsACgpLdRFqjfXs5flZgnFK0ODHSN
+wDUAn35Wrz3FEWa/+ElWPiJPU5LXlAf5
+=+rRo
+-----END PGP SIGNATURE-----
+
+--nextPart2381312.4Q349YzYGQ--
