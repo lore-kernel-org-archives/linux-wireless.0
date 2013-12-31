@@ -1,49 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:58682 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756305Ab3LTMY6 (ORCPT
+Received: from mail-ee0-f51.google.com ([74.125.83.51]:34175 "EHLO
+	mail-ee0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755650Ab3LaRQe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Dec 2013 07:24:58 -0500
-Message-ID: <52B43718.504@broadcom.com> (sfid-20131220_132502_475674_AEF3A4AD)
-Date: Fri, 20 Dec 2013 13:24:56 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: Hauke Mehrtens <hauke@hauke-m.de>,
-	Naughtboy <skylvlinux@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: bcm43236 complient in the compat-wireless-3.6.81???
-References: <CAKH5=Lv=7CroQcx6x_JONnE+6mOTH1sLLcSxntGq2fogn-t4+Q@mail.gmail.com>	<52B2E638.8060906@hauke-m.de>	<CAKH5=LsaEw7GEHs5nb1omDeSMmcoFSXo8EEy+DeXvyXF5_1M_g@mail.gmail.com>	<52B300FC.7070204@hauke-m.de>	<52B31392.2070705@broadcom.com> <CACna6rwU8hroahpVsM7KTJD1iM2=12JuErr5LgCvswx+XsTjjA@mail.gmail.com>
-In-Reply-To: <CACna6rwU8hroahpVsM7KTJD1iM2=12JuErr5LgCvswx+XsTjjA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+	Tue, 31 Dec 2013 12:16:34 -0500
+Received: by mail-ee0-f51.google.com with SMTP id b15so5638974eek.38
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Dec 2013 09:16:33 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Ilan Peer <ilan.peer@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 22/28] iwlwifi: mvm: Add a missed beacons threshold
+Date: Tue, 31 Dec 2013 19:15:51 +0200
+Message-Id: <1388510157-23345-22-git-send-email-egrumbach@gmail.com> (sfid-20131231_183436_460569_DFB5C8F1)
+In-Reply-To: <52C2FB68.2010708@gmail.com>
+References: <52C2FB68.2010708@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/20/2013 08:57 AM, Rafał Miłecki wrote:
-> 2013/12/19 Arend van Spriel <arend@broadcom.com>:
->> It is in the kernel tree under
->> 'drivers/net/wireless/brcm80211/brcmfmac'. We only support rev 3 because
->> rev 2 and earlier do not have enough memory to run fullmac firmware.
->> However, I have not found any rev 3 on the market. If you have please
->> let me know.
-> 
-> Could you say something more about rev 2? How does it work with
-> internal Broadcom driver? Is the firmware stored somewhere else? Does
-> it have some another kind of memory?
+From: Ilan Peer <ilan.peer@intel.com>
 
-It has a split-mac design. So at one end the spectrum there is
-mac80211-type drivers and at the other side are fullmac drivers like
-brcmfmac. rev 2 driver sits right in the middle of that with part of the
-802.11 stack running on the host and part on the device. This device has
-not enough memory to run the fullmac firmware.
+Instead of always calling ieee80211_beacon_loss() on every missed
+beacons notification, call this function only if the number of
+consecutive missed beacons from last rx is higher than a predefined
+threshold.
 
-Gr. AvS
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c |   25 ++++++++++++++++++++-----
+ drivers/net/wireless/iwlwifi/mvm/mvm.h      |    1 +
+ 2 files changed, 21 insertions(+), 5 deletions(-)
 
-> Apart from the firmware storing issue, is the communication between
-> driver and hardware the same?
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+index eaaf2db..761cca3 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+@@ -1191,10 +1191,18 @@ int iwl_mvm_rx_beacon_notif(struct iwl_mvm *mvm,
+ static void iwl_mvm_beacon_loss_iterator(void *_data, u8 *mac,
+ 					 struct ieee80211_vif *vif)
+ {
+-	u16 *id = _data;
++	struct iwl_missed_beacons_notif *missed_beacons = _data;
+ 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+ 
+-	if (mvmvif->id == *id)
++	if (mvmvif->id != (u16)le32_to_cpu(missed_beacons->mac_id))
++		return;
++
++	/*
++	 * TODO: the threshold should be adjusted based on latency conditions,
++	 * and/or in case of a CS flow on one of the other AP vifs.
++	 */
++	if (le32_to_cpu(missed_beacons->consec_missed_beacons_since_last_rx) >
++	     IWL_MVM_MISSED_BEACONS_THRESHOLD)
+ 		ieee80211_beacon_loss(vif);
+ }
+ 
+@@ -1203,12 +1211,19 @@ int iwl_mvm_rx_missed_beacons_notif(struct iwl_mvm *mvm,
+ 				    struct iwl_device_cmd *cmd)
+ {
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+-	struct iwl_missed_beacons_notif *missed_beacons = (void *)pkt->data;
+-	u16 id = (u16)le32_to_cpu(missed_beacons->mac_id);
++	struct iwl_missed_beacons_notif *mb = (void *)pkt->data;
++
++	IWL_DEBUG_INFO(mvm,
++		       "missed bcn mac_id=%u, consecutive=%u (%u, %u, %u)\n",
++		       le32_to_cpu(mb->mac_id),
++		       le32_to_cpu(mb->consec_missed_beacons),
++		       le32_to_cpu(mb->consec_missed_beacons_since_last_rx),
++		       le32_to_cpu(mb->num_recvd_beacons),
++		       le32_to_cpu(mb->num_expected_beacons));
+ 
+ 	ieee80211_iterate_active_interfaces_atomic(mvm->hw,
+ 						   IEEE80211_IFACE_ITER_NORMAL,
+ 						   iwl_mvm_beacon_loss_iterator,
+-						   &id);
++						   mb);
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index 84edf36..ca8a904 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -81,6 +81,7 @@
+ #define IWL_MVM_MAX_ADDRESSES		5
+ /* RSSI offset for WkP */
+ #define IWL_RSSI_OFFSET 50
++#define IWL_MVM_MISSED_BEACONS_THRESHOLD 8
+ 
+ enum iwl_mvm_tx_fifo {
+ 	IWL_MVM_TX_FIFO_BK = 0,
+-- 
+1.7.9.5
 
