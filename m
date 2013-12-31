@@ -1,83 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:62494 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754647Ab3LDIb6 (ORCPT
+Received: from mail-ea0-f177.google.com ([209.85.215.177]:50747 "EHLO
+	mail-ea0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754345Ab3LaRQN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Dec 2013 03:31:58 -0500
-Received: by mail-wi0-f175.google.com with SMTP id hi5so7841322wib.14
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Dec 2013 00:31:58 -0800 (PST)
-MIME-Version: 1.0
-Date: Wed, 4 Dec 2013 09:31:57 +0100
-Message-ID: <CADnKcViSH_VEgJH1=twMtwH+sWV6NaDx=sq359KCdmCS2EuVNw@mail.gmail.com> (sfid-20131204_093203_309404_592550E1)
-Subject: Re: [PATCH v3] cfg80211: fix dfs channel state after stopping AP
-From: Marek Puzyniak <marek.puzyniak@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 31 Dec 2013 12:16:13 -0500
+Received: by mail-ea0-f177.google.com with SMTP id n15so5651219ead.36
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Dec 2013 09:16:11 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 07/28] iwlwifi: pcie: return inta from iwl_pcie_int_cause_{non_}ict
+Date: Tue, 31 Dec 2013 19:15:36 +0200
+Message-Id: <1388510157-23345-7-git-send-email-egrumbach@gmail.com> (sfid-20131231_181621_197989_525D8914)
+In-Reply-To: <52C2FB68.2010708@gmail.com>
+References: <52C2FB68.2010708@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3 December 2013 15:18, Johannes Berg <johannes@sipsolutions.net> wrote:
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
->> +             if (cfg80211_chandef_dfs_required(wdev->wiphy, &wdev->preset_chandef))
->> +                     cfg80211_leave_dfs_chandef(wdev->wiphy, &wdev->preset_chandef);
->
-> *far* too long lines. Read CodingStyle documentation please.
->
-> Also, any reason to not always call cfg80211_leave_dfs_chandef()?
+These functions are meant to return an interrupt cause and
+not an irqreturn_t.
+We still return IRQ_HANDLED if we had an error and IRQ_NONE
+if our device hasn't fired any interrupt.
 
-I had only cfg80211_leave_dfs_chandef() but then I added if() and
-exceeded  80 lines.
-So I will call always cfg80211_leave_dfs_chandef().
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/pcie/rx.c |   38 ++++++++++++++++----------------
+ 1 file changed, 19 insertions(+), 19 deletions(-)
 
->> +static void cfg80211_leave_dfs_chans(struct wiphy *wiphy,
->> +                                  u32 center_freq,
->> +                                  u32 bandwidth)
->> +{
->> +     struct ieee80211_channel *c;
->> +     u32 freq, start_freq, end_freq;
->> +
->> +     start_freq = cfg80211_get_start_freq(center_freq, bandwidth);
->> +     end_freq = cfg80211_get_end_freq(center_freq, bandwidth);
->> +
->> +     for (freq = start_freq; freq <= end_freq; freq += 20) {
->> +             c = ieee80211_get_channel(wiphy, freq);
->> +             if (!c)
->> +                     continue;
->> +             if (!(c->flags & IEEE80211_CHAN_RADAR))
->> +                     continue;
->> +             if (c->dfs_state != NL80211_DFS_AVAILABLE)
->> +                     continue;
->> +
->> +             cfg80211_set_chans_dfs_state(wiphy, freq, 20, NL80211_DFS_USABLE);
->
-> This seems to catch it anyway.
->
-> This also seems a bit wrong, if regulatory happens to change and say the
-> RADAR flag goes away, then this won't set it to USABLE, and then if the
-> RADAR flag later re-appears? I guess Luis should handle that in reg.c
-> though or so?
+diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
+index 58d3f64..a042c4a 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
+@@ -807,7 +807,7 @@ static void iwl_pcie_irq_handle_error(struct iwl_trans *trans)
+ 	wake_up(&trans_pcie->wait_command_queue);
+ }
+ 
+-static irqreturn_t iwl_pcie_int_cause_non_ict(struct iwl_trans *trans)
++static u32 iwl_pcie_int_cause_non_ict(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	u32 inta;
+@@ -841,14 +841,15 @@ static irqreturn_t iwl_pcie_int_cause_non_ict(struct iwl_trans *trans)
+ 		if (test_bit(STATUS_INT_ENABLED, &trans->status) &&
+ 		    !trans_pcie->inta)
+ 			iwl_enable_interrupts(trans);
+-		return IRQ_NONE;
++		return trans_pcie->inta;
+ 	}
+ 
+ 	if ((inta == 0xFFFFFFFF) || ((inta & 0xFFFFFFF0) == 0xa5a5a5a0)) {
+ 		/* Hardware disappeared. It might have already raised
+ 		 * an interrupt */
+ 		IWL_WARN(trans, "HARDWARE GONE?? INTA == 0x%08x\n", inta);
+-		return IRQ_HANDLED;
++		trans_pcie->inta = 0xFFFFFFFF;
++		return trans_pcie->inta;
+ 	}
+ 
+ 	if (iwl_have_debug_level(IWL_DL_ISR))
+@@ -859,7 +860,7 @@ static irqreturn_t iwl_pcie_int_cause_non_ict(struct iwl_trans *trans)
+ 
+ 	trans_pcie->inta |= inta;
+ 	/* the thread will service interrupts and re-enable them */
+-	return IRQ_WAKE_THREAD;
++	return trans_pcie->inta;
+ }
+ 
+ /* a device (PCI-E) page is 4096 bytes long */
+@@ -875,10 +876,9 @@ static irqreturn_t iwl_pcie_int_cause_non_ict(struct iwl_trans *trans)
+  * the interrupt we need to service, driver will set the entries back to 0 and
+  * set index.
+  */
+-static irqreturn_t iwl_pcie_int_cause_ict(struct iwl_trans *trans)
++static u32 iwl_pcie_int_cause_ict(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+-	irqreturn_t ret;
+ 	u32 inta;
+ 	u32 val = 0;
+ 	u32 read;
+@@ -938,9 +938,7 @@ static irqreturn_t iwl_pcie_int_cause_ict(struct iwl_trans *trans)
+ 
+ 	/* iwl_pcie_tasklet() will service interrupts and re-enable them */
+ 	if (likely(inta))
+-		return IRQ_WAKE_THREAD;
+-
+-	ret = IRQ_HANDLED;
++		return trans_pcie->inta;
+ 
+  none:
+ 	/* re-enable interrupts here since we don't have anything to service.
+@@ -950,7 +948,7 @@ static irqreturn_t iwl_pcie_int_cause_ict(struct iwl_trans *trans)
+ 	    !trans_pcie->inta)
+ 		iwl_enable_interrupts(trans);
+ 
+-	return ret;
++	return trans_pcie->inta;
+ }
+ 
+ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
+@@ -961,7 +959,6 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
+ 	u32 inta = 0;
+ 	u32 handled = 0;
+ 	unsigned long flags;
+-	irqreturn_t ret;
+ 	u32 i;
+ 
+ 	lock_map_acquire(&trans->sync_cmd_lockdep_map);
+@@ -972,13 +969,19 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
+ 	 * use legacy interrupt.
+ 	 */
+ 	if (likely(trans_pcie->use_ict))
+-		ret = iwl_pcie_int_cause_ict(trans);
++		inta = iwl_pcie_int_cause_ict(trans);
+ 	else
+-		ret = iwl_pcie_int_cause_non_ict(trans);
++		inta = iwl_pcie_int_cause_non_ict(trans);
+ 
+-	if (ret != IRQ_WAKE_THREAD) {
++	if (unlikely(!inta)) {
+ 		spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
+-		return ret;
++		lock_map_release(&trans->sync_cmd_lockdep_map);
++		return IRQ_NONE;
++	}
++
++	if (unlikely(inta == 0xFFFFFFFF)) {
++		spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
++		goto out;
+ 	}
+ 
+ 	/* Ack/clear/reset pending uCode interrupts.
+@@ -992,10 +995,7 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
+ 	 * hardware bugs here by ACKing all the possible interrupts so that
+ 	 * interrupt coalescing can still be achieved.
+ 	 */
+-	iwl_write32(trans, CSR_INT,
+-		    trans_pcie->inta | ~trans_pcie->inta_mask);
+-
+-	inta = trans_pcie->inta;
++	iwl_write32(trans, CSR_INT, inta | ~trans_pcie->inta_mask);
+ 
+ 	if (iwl_have_debug_level(IWL_DL_ISR))
+ 		IWL_DEBUG_ISR(trans, "inta 0x%08x, enabled 0x%08x\n",
+-- 
+1.7.9.5
 
-Yes, you are right. It does not matter if RADAR flag is set. When we
-are leaving AP mode then none of channels should have dfs_state =
-NL80211_DFS_AVAILABLE. So all DFS_AVAILABLE channel will be set to
-DFS_USABLE.
-
-I will send new version of this patch.
-
-Concerning your question whether this patch is needed in 3.13. I think
-this is rather important issue. Look at such situation:
-*start AP on DFS channel,
-*CAC pass - channel dfs_state changes to AVAILABLE, AP starts beaconing,
-*stop AP by killing hostapd, channel dfs_state stays AVAILABLE,
-*start AP again, it starts beaconig immediately, there is no CAC
-beacuse channel dfs_state is AVAILABLE.
-
-Purpose of this patch is to change channel dfs_state to USABLE when
-leaving/stoping AP, so starting AP again will trigger first CAC and
-after successful CAC starts beaconig.
-
-
-> johannes
-Marek
