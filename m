@@ -1,115 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ea0-f180.google.com ([209.85.215.180]:62784 "EHLO
-	mail-ea0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754329Ab3LEJVn (ORCPT
+Received: from mail-ee0-f45.google.com ([74.125.83.45]:43023 "EHLO
+	mail-ee0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754568Ab3LaRQP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Dec 2013 04:21:43 -0500
-Received: by mail-ea0-f180.google.com with SMTP id f15so11281358eak.11
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Dec 2013 01:21:42 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 4/4] cfg80211: prevent race condition on scan request cleanup
-Date: Thu,  5 Dec 2013 11:21:29 +0200
-Message-Id: <1386235289-27278-4-git-send-email-eliad@wizery.com> (sfid-20131205_102151_137713_3277E5FB)
-In-Reply-To: <1386235289-27278-1-git-send-email-eliad@wizery.com>
-References: <1386235289-27278-1-git-send-email-eliad@wizery.com>
+	Tue, 31 Dec 2013 12:16:15 -0500
+Received: by mail-ee0-f45.google.com with SMTP id d49so5500496eek.18
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Dec 2013 09:16:14 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 09/28] iwlwifi: pcie: move interrupt prints to the common handler
+Date: Tue, 31 Dec 2013 19:15:38 +0200
+Message-Id: <1388510157-23345-9-git-send-email-egrumbach@gmail.com> (sfid-20131231_183436_929485_EED225D7)
+In-Reply-To: <52C2FB68.2010708@gmail.com>
+References: <52C2FB68.2010708@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-___cfg80211_scan_done() can be called in some cases
-(e.g. on NETDEV_DOWN) before the low level driver
-notified scan completion (which is indicated by
-passing leak=true).
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Clearing rdev->scan_req in this case is buggy, as
-scan_done_wk might have already being queued/running
-(and can't be flushed as it takes rtnl()).
+Handling interrupt with no cause and printing logs doesn't
+need to be ICT / non-ICT specific move this to the common
+code.
 
-If a new scan will be requested at this stage, the
-scan_done_wk will try freeing it (instead of the
-previous scan), and this will later result in
-a use after free.
-
-Solve it by freeing scan_req (and clearing it) only
-when leak=false. Otherwise, instead of freeing it
-mark the request as pending_cleanup, and free it
-later on (by the work).
-
-An example backtrace after such crash:
-Unable to handle kernel paging request at virtual address fffffee5
-pgd = c0004000
-[fffffee5] *pgd=9fdf6821, *pte=00000000, *ppte=00000000
-Internal error: Oops: 17 [#1] SMP ARM
-PC is at cfg80211_scan_done+0x28/0xc4 [cfg80211]
-LR is at __ieee80211_scan_completed+0xe4/0x2dc [mac80211]
-[<bf0077b0>] (cfg80211_scan_done+0x28/0xc4 [cfg80211])
-[<bf0973d4>] (__ieee80211_scan_completed+0xe4/0x2dc [mac80211])
-[<bf0982cc>] (ieee80211_scan_work+0x94/0x4f0 [mac80211])
-[<c005fd10>] (process_one_work+0x1b0/0x4a8)
-[<c0060404>] (worker_thread+0x138/0x37c)
-[<c0066d70>] (kthread+0xa4/0xb0)
-
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
-i encountered this one while adding some intentional delays in order
-to reproduce a different issue. this is probably not a real-world scenario.
+ drivers/net/wireless/iwlwifi/pcie/rx.c |   95 ++++++++++++--------------------
+ 1 file changed, 34 insertions(+), 61 deletions(-)
 
- include/net/cfg80211.h |  2 +-
- net/wireless/scan.c    | 13 ++++++++++---
- 2 files changed, 11 insertions(+), 4 deletions(-)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 3f4eff0..c12259e 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1376,7 +1376,7 @@ struct cfg80211_scan_request {
- 	/* internal */
- 	struct wiphy *wiphy;
- 	unsigned long scan_start;
--	bool aborted, notified;
-+	bool aborted, notified, pending_cleanup;
- 	bool no_cck;
+diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
+index 9e019e5..2e11512 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
+@@ -819,43 +819,6 @@ static u32 iwl_pcie_int_cause_non_ict(struct iwl_trans *trans)
+ 	/* Discover which interrupts are active/pending */
+ 	inta = iwl_read32(trans, CSR_INT);
  
- 	u32 min_dwell;
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index d960e4a..1ec43a8 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -176,6 +176,9 @@ void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev, bool leak)
- 	if (!request)
- 		return;
- 
-+	if (request->pending_cleanup)
-+		goto free_request;
-+
- 	wdev = request->wdev;
+-	if (inta & (~trans_pcie->inta_mask)) {
+-		IWL_DEBUG_ISR(trans,
+-			      "We got a masked interrupt (0x%08x)...Ack and ignore\n",
+-			      inta & (~trans_pcie->inta_mask));
+-		iwl_write32(trans, CSR_INT, inta & (~trans_pcie->inta_mask));
+-		inta &= trans_pcie->inta_mask;
+-	}
+-
+-	/* Ignore interrupt if there's nothing in NIC to service.
+-	 * This may be due to IRQ shared with another device,
+-	 * or due to sporadic interrupts thrown from our NIC. */
+-	if (!inta) {
+-		IWL_DEBUG_ISR(trans, "Ignore interrupt, inta == 0\n");
+-		/*
+-		 * Re-enable interrupts here since we don't have anything to
+-		 * service, but only in case the handler won't run. Note that
+-		 * the handler can be scheduled because of a previous
+-		 * interrupt.
+-		 */
+-		if (test_bit(STATUS_INT_ENABLED, &trans->status) && !inta)
+-			iwl_enable_interrupts(trans);
+-		return inta;
+-	}
+-
+-	if ((inta == 0xFFFFFFFF) || ((inta & 0xFFFFFFF0) == 0xa5a5a5a0)) {
+-		/* Hardware disappeared. It might have already raised
+-		 * an interrupt */
+-		IWL_WARN(trans, "HARDWARE GONE?? INTA == 0x%08x\n", inta);
+-		return 0xFFFFFFFF;
+-	}
+-
+-	if (iwl_have_debug_level(IWL_DL_ISR))
+-		IWL_DEBUG_ISR(trans,
+-			      "ISR inta 0x%08x, enabled 0x%08x, fh 0x%08x\n",
+-			      inta, trans_pcie->inta_mask,
+-			      iwl_read32(trans, CSR_FH_INT_STATUS));
+-
+ 	/* the thread will service interrupts and re-enable them */
+ 	return inta;
+ }
+@@ -887,10 +850,8 @@ static u32 iwl_pcie_int_cause_ict(struct iwl_trans *trans)
+ 	 * or due to sporadic interrupts thrown from our NIC. */
+ 	read = le32_to_cpu(trans_pcie->ict_tbl[trans_pcie->ict_index]);
+ 	trace_iwlwifi_dev_ict_read(trans->dev, trans_pcie->ict_index, read);
+-	if (!read) {
+-		IWL_DEBUG_ISR(trans, "Ignore interrupt, inta == 0\n");
+-		goto none;
+-	}
++	if (!read)
++		return 0;
  
  	/*
-@@ -209,7 +212,6 @@ void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev, bool leak)
- 	if (wdev->netdev)
- 		dev_put(wdev->netdev);
+ 	 * Collect all entries up to the first 0, starting from ict_index;
+@@ -924,25 +885,6 @@ static u32 iwl_pcie_int_cause_ict(struct iwl_trans *trans)
+ 		val |= 0x8000;
  
--	rdev->scan_req = NULL;
- 
- 	/*
- 	 * OK. If this is invoked with "leak" then we can't
-@@ -219,8 +221,13 @@ void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev, bool leak)
- 	 * the scan request or not ... if it accesses the dev
- 	 * in there (it shouldn't anyway) then it may crash.
- 	 */
--	if (!leak)
--		kfree(request);
-+	if (leak) {
-+		request->pending_cleanup = true;
-+		return;
-+	}
-+free_request:
-+	rdev->scan_req = NULL;
-+	kfree(request);
+ 	inta = (0xff & val) | ((0xff00 & val) << 16);
+-	IWL_DEBUG_ISR(trans, "ISR inta 0x%08x, enabled(sw) 0x%08x ict 0x%08x\n",
+-		      inta, trans_pcie->inta_mask, val);
+-	if (iwl_have_debug_level(IWL_DL_ISR))
+-		IWL_DEBUG_ISR(trans, "enabled(hw) 0x%08x\n",
+-			      iwl_read32(trans, CSR_INT_MASK));
+-
+-	inta &= trans_pcie->inta_mask;
+-
+-	/* iwl_pcie_tasklet() will service interrupts and re-enable them */
+-	if (likely(inta))
+-		return inta;
+-
+- none:
+-	/* re-enable interrupts here since we don't have anything to service.
+-	 * only Re-enable if disabled by irq.
+-	 */
+-	if (test_bit(STATUS_INT_ENABLED, &trans->status) && !inta)
+-		iwl_enable_interrupts(trans);
+-
+ 	return inta;
  }
  
- void __cfg80211_scan_done(struct work_struct *wk)
+@@ -968,13 +910,44 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
+ 	else
+ 		inta = iwl_pcie_int_cause_non_ict(trans);
+ 
++	if (iwl_have_debug_level(IWL_DL_ISR)) {
++		IWL_DEBUG_ISR(trans,
++			      "ISR inta 0x%08x, enabled 0x%08x(sw), enabled(hw) 0x%08x, fh 0x%08x\n",
++			      inta, trans_pcie->inta_mask,
++			      iwl_read32(trans, CSR_INT_MASK),
++			      iwl_read32(trans, CSR_FH_INT_STATUS));
++		if (inta & (~trans_pcie->inta_mask))
++			IWL_DEBUG_ISR(trans,
++				      "We got a masked interrupt (0x%08x)\n",
++				      inta & (~trans_pcie->inta_mask));
++	}
++
++	inta &= trans_pcie->inta_mask;
++
++	/*
++	 * Ignore interrupt if there's nothing in NIC to service.
++	 * This may be due to IRQ shared with another device,
++	 * or due to sporadic interrupts thrown from our NIC.
++	 */
+ 	if (unlikely(!inta)) {
++		IWL_DEBUG_ISR(trans, "Ignore interrupt, inta == 0\n");
++		/*
++		 * Re-enable interrupts here since we don't
++		 * have anything to service
++		 */
++		if (test_bit(STATUS_INT_ENABLED, &trans->status))
++			iwl_enable_interrupts(trans);
+ 		spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
+ 		lock_map_release(&trans->sync_cmd_lockdep_map);
+ 		return IRQ_NONE;
+ 	}
+ 
+-	if (unlikely(inta == 0xFFFFFFFF)) {
++	if (unlikely(inta == 0xFFFFFFFF || (inta & 0xFFFFFFF0) == 0xa5a5a5a0)) {
++		/*
++		 * Hardware disappeared. It might have
++		 * already raised an interrupt.
++		 */
++		IWL_WARN(trans, "HARDWARE GONE?? INTA == 0x%08x\n", inta);
+ 		spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
+ 		goto out;
+ 	}
 -- 
-1.8.5.rc1
+1.7.9.5
 
