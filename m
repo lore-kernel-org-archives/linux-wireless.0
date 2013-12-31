@@ -1,59 +1,240 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:24604 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754128Ab3LTIau (ORCPT
+Received: from mail-ea0-f176.google.com ([209.85.215.176]:58048 "EHLO
+	mail-ea0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754345Ab3LaRQS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Dec 2013 03:30:50 -0500
-From: "BAHINI, Henri" <hbahini@qca.qualcomm.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-CC: "Chauhan, Rajesh" <rajeshc@qca.qualcomm.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Malinen, Jouni" <jouni@qca.qualcomm.com>,
-	"Johnson, Jeff" <jjohnson@qca.qualcomm.com>,
-	"Chang, Leo" <schang@qca.qualcomm.com>,
-	"Luo, Xun" <xunl@qca.qualcomm.com>,
-	"Thalappil, Sameer" <sameert@qca.qualcomm.com>,
-	"Hussain, Arif" <c_arifh@qca.qualcomm.com>
-Subject: RE: [PATCHv3] cfg80211: add support for frequency interference event
-Date: Fri, 20 Dec 2013 08:30:48 +0000
-Message-ID: <8AC12462F1AA0E4EA8FEB46307AAD6F650AAB122@nasanexd02f.na.qualcomm.com> (sfid-20131220_093054_414995_F55D5A57)
-References: <1384198356-427-1-git-send-email-rajeshc@qca.qualcomm.com>
- <1386077130.4393.21.camel@jlt4.sipsolutions.net>
- <CAB=NE6Xa-bdLQm8uAg9wCE0fdp4KPBZ46d5FHVHp6wCvN5=dUA@mail.gmail.com>
- <1386145204.4284.4.camel@jlt4.sipsolutions.net>
- <1386145241.4284.5.camel@jlt4.sipsolutions.net>
- <D19FD2B13A40CD4B8DA64DB9B8F112E93E5CF51C@nasanexd01a.na.qualcomm.com>
- <CAB=NE6VNZDwGj4WWkgCmWxs_xLBZhXn44vo0TEdqo84xsRbZ2Q@mail.gmail.com>
- <8AC12462F1AA0E4EA8FEB46307AAD6F650AAB068@nasanexd02f.na.qualcomm.com>
- <CAB=NE6W3Et-4mDEet5DSDrM=yP60oODvEUGz=RtZj-gDgLNUbw@mail.gmail.com>
-In-Reply-To: <CAB=NE6W3Et-4mDEet5DSDrM=yP60oODvEUGz=RtZj-gDgLNUbw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Tue, 31 Dec 2013 12:16:18 -0500
+Received: by mail-ea0-f176.google.com with SMTP id h14so5531740eaj.21
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Dec 2013 09:16:17 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 11/28] iwlwifi: pcie: use don't disable interrupt when rxq->lock is taken
+Date: Tue, 31 Dec 2013 19:15:40 +0200
+Message-Id: <1388510157-23345-11-git-send-email-egrumbach@gmail.com> (sfid-20131231_183437_428092_67448EFF)
+In-Reply-To: <52C2FB68.2010708@gmail.com>
+References: <52C2FB68.2010708@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-UGxlYXNlIGRvIGVkdWNhdGUgdXMgYSBiaXQhDQpXZSB3ZXJlIG5vdCBhd2FyZSBvZiB0aGUgcmVx
-dWlyZW1lbnQgdGhhdCBhbGwgcGF0Y2hlcyBjb250cmlidXRpb25zIHRvIHRoZSBjZmcvbmwgaGF2
-ZSB0byBiZSBmb3IgZHJpdmVyIHRoYXQgYXJlIGFscmVhZHkgdXAgc3RyZWFtZWQuDQoNCkFzIGZv
-ciBvdXIgZWZmb3J0IGZvciB1cHN0cmVhbWluZyBvdXIgZHJpdmVyLCB3ZSBzaG91bGQgdGFrZSB0
-aGlzIG91dCBvZiB0aGlzIGNvbnRleHQgc2luY2UgdGhlcmUgYXJlIGZhY3RvcnMgZHJpdmluZyB0
-aGlzIHRoYXQgYXJlIGNvbXBsZXRlbHkgb3J0aG9nb25hbCB0byB0aGlzIGRpc2N1c3Npb24uDQoN
-ClRoYW5rcywNCi1IZW5yaQ0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IG1jZ3Jv
-ZkBnbWFpbC5jb20gW21haWx0bzptY2dyb2ZAZ21haWwuY29tXSBPbiBCZWhhbGYgT2YgTHVpcyBS
-LiBSb2RyaWd1ZXoNClNlbnQ6IEZyaWRheSwgRGVjZW1iZXIgMjAsIDIwMTMgMTI6MjYgQU0NClRv
-OiBCQUhJTkksIEhlbnJpDQpDYzogQ2hhdWhhbiwgUmFqZXNoOyBKb2hhbm5lcyBCZXJnOyBsaW51
-eC13aXJlbGVzczsgTWFsaW5lbiwgSm91bmk7IEpvaG5zb24sIEplZmY7IENoYW5nLCBMZW87IEx1
-bywgWHVuOyBUaGFsYXBwaWwsIFNhbWVlcjsgSHVzc2FpbiwgQXJpZg0KU3ViamVjdDogUmU6IFtQ
-QVRDSHYzXSBjZmc4MDIxMTogYWRkIHN1cHBvcnQgZm9yIGZyZXF1ZW5jeSBpbnRlcmZlcmVuY2Ug
-ZXZlbnQNCg0KT24gRnJpLCBEZWMgMjAsIDIwMTMgYXQgMTI6MTYgQU0sIEJBSElOSSwgSGVucmkg
-PGhiYWhpbmlAcWNhLnF1YWxjb21tLmNvbT4gd3JvdGU6DQo+IEx1aXMtDQo+ICAgQ2FuIHdlIGJl
-IGEgYml0IHByb2Zlc3Npb25hbCBoZXJlIGFuZCBsaW1pdCB0aGUgZGlzY3Vzc2lvbiB0byB0aGUg
-cGF0Y2ggdGhhdCB3ZSdyZSBpbnRyb2R1Y2luZy4NCj4gICBSYWplc2ggZG9lcyBub3QgZGVjaWRl
-IHdoZW4gdGhlIGRyaXZlciBnZXRzIHVwIHN0cmVhbWVkLg0KDQpMZXQncyBiZSBwcm9mZXNzaW9u
-YWwuIFdobyB0aGUgZnVjayBkZWNpZGVzIHRvIHRyeSB0byBpbnRyb2R1Y2UgQVBJcyBmb3Igc2hp
-dCBmb3IgZHJpdmVycyB0aGF0IGFyZSBub3QgdXBzdHJlYW0gPw0KDQo+ICBDYW4gd2UgZ2V0IHRo
-aXMgZGlzY3Vzc2lvbiBvdXRzaWRlIG9mIHRoZSBjb250ZXh0IG9mIHRoaXMgcGF0Y2g/DQoNCldo
-YXQgdHlwZSBvZiBzZXJpb3VzIGVmZm9ydCBhcmUgeW91IHB1dHRpbmcgaW50byBnZXR0aW5nIHlv
-dXIgZHJpdmVyIHVwc3RyZWFtPyBPdGhlcndpc2UgaXQgc2VlbXMgdG8gbWUgbGlrZSBhIHdhc3Rl
-IG9mIG15IGFuZCBvdGhlcidzIG93biB0aW1lIGZvciByZXZpZXcuDQoNCiAgTHVpcw0K
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+
+This lock was never acquired in the primary interrupt
+handler, but since it was acquired along with irq_lock
+which had to disable interrupts, rxq->lock had to disable
+interrupts too.
+Now that trans_pcie->irq_lock isn't acquired in the primary
+interrupt handler, rxq->lock can let interrupt enabled.
+
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/pcie/rx.c |   50 ++++++++++++++------------------
+ 1 file changed, 22 insertions(+), 28 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/pcie/rx.c b/drivers/net/wireless/iwlwifi/pcie/rx.c
+index 7ab510e..e06a3fe 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/rx.c
+@@ -148,10 +148,9 @@ int iwl_pcie_rx_stop(struct iwl_trans *trans)
+ static void iwl_pcie_rxq_inc_wr_ptr(struct iwl_trans *trans,
+ 				    struct iwl_rxq *rxq)
+ {
+-	unsigned long flags;
+ 	u32 reg;
+ 
+-	spin_lock_irqsave(&rxq->lock, flags);
++	spin_lock(&rxq->lock);
+ 
+ 	if (rxq->need_update == 0)
+ 		goto exit_unlock;
+@@ -190,7 +189,7 @@ static void iwl_pcie_rxq_inc_wr_ptr(struct iwl_trans *trans,
+ 	rxq->need_update = 0;
+ 
+  exit_unlock:
+-	spin_unlock_irqrestore(&rxq->lock, flags);
++	spin_unlock(&rxq->lock);
+ }
+ 
+ /*
+@@ -209,7 +208,6 @@ static void iwl_pcie_rxq_restock(struct iwl_trans *trans)
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	struct iwl_rxq *rxq = &trans_pcie->rxq;
+ 	struct iwl_rx_mem_buffer *rxb;
+-	unsigned long flags;
+ 
+ 	/*
+ 	 * If the device isn't enabled - not need to try to add buffers...
+@@ -222,7 +220,7 @@ static void iwl_pcie_rxq_restock(struct iwl_trans *trans)
+ 	if (!test_bit(STATUS_DEVICE_ENABLED, &trans->status))
+ 		return;
+ 
+-	spin_lock_irqsave(&rxq->lock, flags);
++	spin_lock(&rxq->lock);
+ 	while ((iwl_rxq_space(rxq) > 0) && (rxq->free_count)) {
+ 		/* The overwritten rxb must be a used one */
+ 		rxb = rxq->queue[rxq->write];
+@@ -239,7 +237,7 @@ static void iwl_pcie_rxq_restock(struct iwl_trans *trans)
+ 		rxq->write = (rxq->write + 1) & RX_QUEUE_MASK;
+ 		rxq->free_count--;
+ 	}
+-	spin_unlock_irqrestore(&rxq->lock, flags);
++	spin_unlock(&rxq->lock);
+ 	/* If the pre-allocated buffer pool is dropping low, schedule to
+ 	 * refill it */
+ 	if (rxq->free_count <= RX_LOW_WATERMARK)
+@@ -248,9 +246,9 @@ static void iwl_pcie_rxq_restock(struct iwl_trans *trans)
+ 	/* If we've added more space for the firmware to place data, tell it.
+ 	 * Increment device's write pointer in multiples of 8. */
+ 	if (rxq->write_actual != (rxq->write & ~0x7)) {
+-		spin_lock_irqsave(&rxq->lock, flags);
++		spin_lock(&rxq->lock);
+ 		rxq->need_update = 1;
+-		spin_unlock_irqrestore(&rxq->lock, flags);
++		spin_unlock(&rxq->lock);
+ 		iwl_pcie_rxq_inc_wr_ptr(trans, rxq);
+ 	}
+ }
+@@ -270,16 +268,15 @@ static void iwl_pcie_rxq_alloc_rbs(struct iwl_trans *trans, gfp_t priority)
+ 	struct iwl_rxq *rxq = &trans_pcie->rxq;
+ 	struct iwl_rx_mem_buffer *rxb;
+ 	struct page *page;
+-	unsigned long flags;
+ 	gfp_t gfp_mask = priority;
+ 
+ 	while (1) {
+-		spin_lock_irqsave(&rxq->lock, flags);
++		spin_lock(&rxq->lock);
+ 		if (list_empty(&rxq->rx_used)) {
+-			spin_unlock_irqrestore(&rxq->lock, flags);
++			spin_unlock(&rxq->lock);
+ 			return;
+ 		}
+-		spin_unlock_irqrestore(&rxq->lock, flags);
++		spin_unlock(&rxq->lock);
+ 
+ 		if (rxq->free_count > RX_LOW_WATERMARK)
+ 			gfp_mask |= __GFP_NOWARN;
+@@ -308,17 +305,17 @@ static void iwl_pcie_rxq_alloc_rbs(struct iwl_trans *trans, gfp_t priority)
+ 			return;
+ 		}
+ 
+-		spin_lock_irqsave(&rxq->lock, flags);
++		spin_lock(&rxq->lock);
+ 
+ 		if (list_empty(&rxq->rx_used)) {
+-			spin_unlock_irqrestore(&rxq->lock, flags);
++			spin_unlock(&rxq->lock);
+ 			__free_pages(page, trans_pcie->rx_page_order);
+ 			return;
+ 		}
+ 		rxb = list_first_entry(&rxq->rx_used, struct iwl_rx_mem_buffer,
+ 				       list);
+ 		list_del(&rxb->list);
+-		spin_unlock_irqrestore(&rxq->lock, flags);
++		spin_unlock(&rxq->lock);
+ 
+ 		BUG_ON(rxb->page);
+ 		rxb->page = page;
+@@ -329,9 +326,9 @@ static void iwl_pcie_rxq_alloc_rbs(struct iwl_trans *trans, gfp_t priority)
+ 				     DMA_FROM_DEVICE);
+ 		if (dma_mapping_error(trans->dev, rxb->page_dma)) {
+ 			rxb->page = NULL;
+-			spin_lock_irqsave(&rxq->lock, flags);
++			spin_lock(&rxq->lock);
+ 			list_add(&rxb->list, &rxq->rx_used);
+-			spin_unlock_irqrestore(&rxq->lock, flags);
++			spin_unlock(&rxq->lock);
+ 			__free_pages(page, trans_pcie->rx_page_order);
+ 			return;
+ 		}
+@@ -340,12 +337,12 @@ static void iwl_pcie_rxq_alloc_rbs(struct iwl_trans *trans, gfp_t priority)
+ 		/* and also 256 byte aligned! */
+ 		BUG_ON(rxb->page_dma & DMA_BIT_MASK(8));
+ 
+-		spin_lock_irqsave(&rxq->lock, flags);
++		spin_lock(&rxq->lock);
+ 
+ 		list_add_tail(&rxb->list, &rxq->rx_free);
+ 		rxq->free_count++;
+ 
+-		spin_unlock_irqrestore(&rxq->lock, flags);
++		spin_unlock(&rxq->lock);
+ 	}
+ }
+ 
+@@ -510,7 +507,6 @@ int iwl_pcie_rx_init(struct iwl_trans *trans)
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	struct iwl_rxq *rxq = &trans_pcie->rxq;
+ 	int i, err;
+-	unsigned long flags;
+ 
+ 	if (!rxq->bd) {
+ 		err = iwl_pcie_rx_alloc(trans);
+@@ -518,7 +514,7 @@ int iwl_pcie_rx_init(struct iwl_trans *trans)
+ 			return err;
+ 	}
+ 
+-	spin_lock_irqsave(&rxq->lock, flags);
++	spin_lock(&rxq->lock);
+ 
+ 	INIT_WORK(&trans_pcie->rx_replenish, iwl_pcie_rx_replenish_work);
+ 
+@@ -534,7 +530,7 @@ int iwl_pcie_rx_init(struct iwl_trans *trans)
+ 	rxq->read = rxq->write = 0;
+ 	rxq->write_actual = 0;
+ 	memset(rxq->rb_stts, 0, sizeof(*rxq->rb_stts));
+-	spin_unlock_irqrestore(&rxq->lock, flags);
++	spin_unlock(&rxq->lock);
+ 
+ 	iwl_pcie_rx_replenish(trans);
+ 
+@@ -552,7 +548,6 @@ void iwl_pcie_rx_free(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	struct iwl_rxq *rxq = &trans_pcie->rxq;
+-	unsigned long flags;
+ 
+ 	/*if rxq->bd is NULL, it means that nothing has been allocated,
+ 	 * exit now */
+@@ -563,9 +558,9 @@ void iwl_pcie_rx_free(struct iwl_trans *trans)
+ 
+ 	cancel_work_sync(&trans_pcie->rx_replenish);
+ 
+-	spin_lock_irqsave(&rxq->lock, flags);
++	spin_lock(&rxq->lock);
+ 	iwl_pcie_rxq_free_rbs(trans);
+-	spin_unlock_irqrestore(&rxq->lock, flags);
++	spin_unlock(&rxq->lock);
+ 
+ 	dma_free_coherent(trans->dev, sizeof(__le32) * RX_QUEUE_SIZE,
+ 			  rxq->bd, rxq->bd_dma);
+@@ -588,7 +583,6 @@ static void iwl_pcie_rx_handle_rb(struct iwl_trans *trans,
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	struct iwl_rxq *rxq = &trans_pcie->rxq;
+ 	struct iwl_txq *txq = &trans_pcie->txq[trans_pcie->cmd_queue];
+-	unsigned long flags;
+ 	bool page_stolen = false;
+ 	int max_len = PAGE_SIZE << trans_pcie->rx_page_order;
+ 	u32 offset = 0;
+@@ -690,7 +684,7 @@ static void iwl_pcie_rx_handle_rb(struct iwl_trans *trans,
+ 	/* Reuse the page if possible. For notification packets and
+ 	 * SKBs that fail to Rx correctly, add them back into the
+ 	 * rx_free list for reuse later. */
+-	spin_lock_irqsave(&rxq->lock, flags);
++	spin_lock(&rxq->lock);
+ 	if (rxb->page != NULL) {
+ 		rxb->page_dma =
+ 			dma_map_page(trans->dev, rxb->page, 0,
+@@ -711,7 +705,7 @@ static void iwl_pcie_rx_handle_rb(struct iwl_trans *trans,
+ 		}
+ 	} else
+ 		list_add_tail(&rxb->list, &rxq->rx_used);
+-	spin_unlock_irqrestore(&rxq->lock, flags);
++	spin_unlock(&rxq->lock);
+ }
+ 
+ /*
+-- 
+1.7.9.5
+
