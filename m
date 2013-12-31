@@ -1,41 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([144.76.43.152]:41129 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753648Ab3LPMg7 (ORCPT
+Received: from mail-ee0-f41.google.com ([74.125.83.41]:39169 "EHLO
+	mail-ee0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755650Ab3LaRQh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Dec 2013 07:36:59 -0500
-Message-ID: <1387197416.4665.15.camel@jlt4.sipsolutions.net> (sfid-20131216_133702_514978_251C4386)
-Subject: Re: [BUG] P2P setup timeout
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Herrmann <dh.herrmann@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 16 Dec 2013 13:36:56 +0100
-In-Reply-To: <CANq1E4R--OowH-LCUX4oSxsJu7yf_2e6Jei8tP+i_BQ_QHiKkw@mail.gmail.com> (sfid-20131206_111836_809074_6F087586)
-References: <CANq1E4R--OowH-LCUX4oSxsJu7yf_2e6Jei8tP+i_BQ_QHiKkw@mail.gmail.com>
-	 (sfid-20131206_111836_809074_6F087586)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 31 Dec 2013 12:16:37 -0500
+Received: by mail-ee0-f41.google.com with SMTP id t10so5667780eei.0
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Dec 2013 09:16:36 -0800 (PST)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Ilan Peer <ilan.peer@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 24/28] iwlwifi: mvm: change the parameters for calculating an AP TBTT
+Date: Tue, 31 Dec 2013 19:15:53 +0200
+Message-Id: <1388510157-23345-24-git-send-email-egrumbach@gmail.com> (sfid-20131231_183437_046532_5A55B41E)
+In-Reply-To: <52C2FB68.2010708@gmail.com>
+References: <52C2FB68.2010708@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2013-12-06 at 11:18 +0100, David Herrmann wrote:
-> Hi
-> 
-> I am currently working on user-space helpers for P2P setup as part of
-> an Open-Source Miracast implementation (openwfd). I can set up a
-> P2P-group with my Android test-device just fine, however, it only
-> works if initiated by the GNU/Linux host. Once I initiate the
-> p2p-connect from the Android device, it creates a group and sends me a
-> p2p-invitation which I am unable to accept.
-> 
-> I am running wpa_supplicant-git from today (but also tried older
-> versions), ath9k-htc from linus-git (3.13-rc2) and the relevant log
-> files are appended.
+From: Ilan Peer <ilan.peer@intel.com>
 
-Can you check in a sniffer what the frame bitrates are that go out? This
-seems suspicious:
+Change the parameters for calculating an AP TBTT to 64/36 instead of
+80/20, to increase the interval between a station vif and an AP
+vif TBTT events.
 
-nl80211: Set TX rates failed: ret=-100 (Network is down)
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+index 761cca3..510cf9f 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+@@ -1012,7 +1012,7 @@ static void iwl_mvm_mac_ctxt_cmd_fill_ap(struct iwl_mvm *mvm,
+ 			iwl_mvm_mac_ap_iterator, &data);
+ 
+ 		if (data.beacon_device_ts) {
+-			u32 rand = (prandom_u32() % (80 - 20)) + 20;
++			u32 rand = (prandom_u32() % (64 - 36)) + 36;
+ 			mvmvif->ap_beacon_time = data.beacon_device_ts +
+ 				ieee80211_tu_to_usec(data.beacon_int * rand /
+ 						     100);
+-- 
+1.7.9.5
 
